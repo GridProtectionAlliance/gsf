@@ -19,6 +19,28 @@ Imports TVA.Shared.Bit
 
 Namespace EE.Phasor.PDCstream
 
+    Public Enum PhasorType
+        Voltage
+        Current
+        DontCare
+    End Enum
+
+    Public Enum PointType
+        PhasorMagnitude
+        PhasorAngle
+        Frequency
+        DfDt
+        DigitalValue
+        StatusFlags
+    End Enum
+
+    Public Enum PointArchiveStyle
+        Raw
+        Average
+        Minimum
+        Maximum
+    End Enum
+
     <Flags()> _
     Public Enum ChannelFlags As Byte
         DataIsValid = Bit0              ' Valid if not set (yes = 0)

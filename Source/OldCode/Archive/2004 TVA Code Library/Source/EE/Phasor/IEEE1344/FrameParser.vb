@@ -39,12 +39,14 @@ Namespace EE.Phasor.IEEE1344
             Dim parsedImage As New FrameParser(binaryImage, startIndex)
 
             Select Case parsedImage.FrameType
+                Case PMUFrameType.DataFrame
+                    frame = New DataFrame(parsedImage, binaryImage, startIndex + CommonBinaryLength)
                 Case PMUFrameType.HeaderFrame
                     frame = New HeaderFrame(parsedImage, binaryImage, startIndex + CommonBinaryLength)
                 Case PMUFrameType.ConfigurationFrame
                     frame = New ConfigurationFrame(parsedImage, binaryImage, startIndex + CommonBinaryLength)
-                Case PMUFrameType.DataFrame
-                    frame = New DataFrame(parsedImage, binaryImage, startIndex + CommonBinaryLength)
+                Case Else
+                    frame = parsedImage
             End Select
 
             Return parsedImage.FrameType

@@ -26,15 +26,6 @@ Namespace EE.Phasor.IEEE1344
     ' a data broadcast until a command has been sent to "turn on" the real-time stream.
     Public Class CommandFrame
 
-        Public Enum PMUCommand
-            DisableRealTimeData
-            EnableRealTimeData
-            SendHeaderFile
-            SendConfigFile1
-            SendConfigFile2
-            ReceiveReferencePhasor
-        End Enum
-
         Public Const BinaryLength As Integer = 16
 
         Private m_timetag As NtpTimeTag
@@ -60,10 +51,10 @@ Namespace EE.Phasor.IEEE1344
             Else
                 m_timetag = New NtpTimeTag(Convert.ToDouble(EndianOrder.ReverseToInt32(binaryImage, startIndex)))
                 m_pmuIDCode = EndianOrder.ReverseToInt64(binaryImage, startIndex + 4)
-                CommandWord = EndianOrder.ReverseToInt16(binaryImage, startIndex + 12)
+                m_command = EndianOrder.ReverseToInt16(binaryImage, startIndex + 12)
 
                 ' Validate buffer check sum
-                If EndianOrder.ReverseToInt16(binaryImage, startIndex + 14) <> CRC16(-1, binaryImage, 0, 14) Then _
+                If EndianOrder.ReverseToInt16(binaryImage, startIndex + BinaryLength - 2) <> CRC16(-1, binaryImage, startIndex, BinaryLength - 2) Then _
                     Throw New ArgumentException("Invalid buffer image detected - CRC16 of command frame did not match")
             End If
 
@@ -96,51 +87,13 @@ Namespace EE.Phasor.IEEE1344
             End Set
         End Property
 
-        Private Property CommandWord() As Int16
-            Get
-                Dim word As Int16
-
-                Select Case m_command
-                    Case PMUCommand.DisableRealTimeData
-                        word = Bit0
-                    Case PMUCommand.EnableRealTimeData
-                        word = Bit1
-                    Case PMUCommand.SendHeaderFile
-                        word = Bit0 Or Bit1
-                    Case PMUCommand.SendConfigFile1
-                        word = Bit2
-                    Case PMUCommand.SendConfigFile2
-                        word = Bit0 Or Bit2
-                    Case PMUCommand.ReceiveReferencePhasor
-                        word = Bit3
-                End Select
-
-                Return word
-            End Get
-            Set(ByVal Value As Int16)
-                If (Value And Bit0) > 0 Then
-                    m_command = PMUCommand.DisableRealTimeData
-                ElseIf (Value And Bit1) > 0 Then
-                    m_command = PMUCommand.EnableRealTimeData
-                ElseIf (Value And Bit0) > 0 And (Value And Bit1) > 0 Then
-                    m_command = PMUCommand.SendHeaderFile
-                ElseIf (Value And Bit2) > 0 Then
-                    m_command = PMUCommand.SendConfigFile1
-                ElseIf (Value And Bit0) > 0 And (Value And Bit2) > 0 Then
-                    m_command = PMUCommand.SendConfigFile2
-                ElseIf (Value And Bit3) > 0 Then
-                    m_command = PMUCommand.ReceiveReferencePhasor
-                End If
-            End Set
-        End Property
-
         Public ReadOnly Property BinaryImage() As Byte()
             Get
                 Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BinaryLength)
 
                 EndianOrder.SwapCopy(BitConverter.GetBytes(Convert.ToUInt32(m_timetag.Value)), 0, buffer, 0, 4)
                 EndianOrder.SwapCopy(BitConverter.GetBytes(m_pmuIDCode), 0, buffer, 4, 8)
-                EndianOrder.SwapCopy(BitConverter.GetBytes(CommandWord), 0, buffer, 12, 2)
+                EndianOrder.SwapCopy(BitConverter.GetBytes(m_command), 0, buffer, 12, 2)
                 EndianOrder.SwapCopy(BitConverter.GetBytes(CRC16(-1, buffer, 0, 14)), 0, buffer, 14, 2)
 
                 Return buffer

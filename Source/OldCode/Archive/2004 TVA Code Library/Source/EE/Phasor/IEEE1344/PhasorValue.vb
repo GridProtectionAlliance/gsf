@@ -18,7 +18,7 @@
 Imports TVA.Interop
 Imports TVA.Shared.Math
 
-Namespace EE.Phasor.PDCstream
+Namespace EE.Phasor.IEEE1344
 
     Public Class PhasorValue
 
@@ -50,8 +50,7 @@ Namespace EE.Phasor.PDCstream
         ' Create phasor from scaled rectangular coordinates
         Public Shared Function CreateFromScaledRectangularValues(ByVal phasorDefinition As PhasorDefinition, ByVal real As Double, ByVal imaginary As Double) As PhasorValue
 
-            Dim scale As Double = phasorDefinition.ScalingFactor(phasorDefinition)
-            Return CreateFromUnscaledRectangularValues(phasorDefinition, real / scale, imaginary / scale)
+            Return CreateFromUnscaledRectangularValues(phasorDefinition, real, imaginary)
 
         End Function
 
@@ -107,13 +106,12 @@ Namespace EE.Phasor.PDCstream
 
         Public ReadOnly Property ScalingFactor() As Double
             Get
-                Return PhasorDefinition.ScalingFactor(m_phasorDefinition)
             End Get
         End Property
 
         Public Property Angle() As Double
             Get
-                Return (Math.Atan2(m_imaginary, m_real) + (m_phasorDefinition.Offset * Math.PI / 180)) * 180 / Math.PI
+                Return Math.Atan2(m_imaginary, m_real) * 180 / Math.PI
             End Get
             Set(ByVal Value As Double)
                 ' We store angle as one of our required composite values

@@ -27,14 +27,16 @@ Namespace EE.Phasor.IEEE1344
 
         Inherits BaseFrame
 
+        Protected Const SampleCountMask As Int16 = Not FrameTypeMask
+
         Public Sub New()
 
             MyBase.New()
-            m_frameType = PMUFrameType.DataFrame
+            SetFrameType(PMUFrameType.DataFrame)
 
         End Sub
 
-        Friend Sub New(ByVal parsedImage As FrameParser, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+        Protected Friend Sub New(ByVal parsedImage As BaseFrame, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
 
             Me.New()
 
@@ -43,15 +45,34 @@ Namespace EE.Phasor.IEEE1344
 
         End Sub
 
+        Public Overridable Property SampleCount() As Int16
+            Get
+                Return m_sampleCount And SampleCountMask
+            End Get
+            Set(ByVal Value As Int16)
+                If Value > MaximumSampleCount Then
+                    Throw New OverflowException("Sample count value cannot exceed " & MaximumSampleCount)
+                Else
+                    m_sampleCount = (m_sampleCount And Not SampleCountMask) Or Value
+                End If
+            End Set
+        End Property
+
+        Public ReadOnly Property MaximumSampleCount() As Int16
+            Get
+                Return SampleCountMask
+            End Get
+        End Property
+
         Protected Overrides ReadOnly Property Name() As String
             Get
-
+                Return "IEEE1344.DataFrame"
             End Get
         End Property
 
         Public Overrides ReadOnly Property BinaryLength() As Integer
             Get
-                Dim length As Integer = CommonBinaryLength
+                Dim length As Integer = CommonBinaryLength + 2
 
                 Return length
             End Get

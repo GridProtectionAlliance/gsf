@@ -86,11 +86,11 @@ Namespace EE.Phasor.PDCstream
 
         Public Property DataIsValid() As Boolean
             Get
-                Return Not ((m_flags And ChannelFlags.DataIsValid) > 0)
+                Return ((m_flags And ChannelFlags.DataIsValid) = 0)
             End Get
             Set(ByVal Value As Boolean)
                 If Value Then
-                    m_flags = m_flags Or Not ChannelFlags.DataIsValid
+                    m_flags = m_flags And Not ChannelFlags.DataIsValid
                 Else
                     m_flags = m_flags Or ChannelFlags.DataIsValid
                 End If
@@ -105,18 +105,18 @@ Namespace EE.Phasor.PDCstream
                 If Value Then
                     m_flags = m_flags Or ChannelFlags.TransmissionErrors
                 Else
-                    m_flags = m_flags Or Not ChannelFlags.TransmissionErrors
+                    m_flags = m_flags And Not ChannelFlags.TransmissionErrors
                 End If
             End Set
         End Property
 
         Public Property PMUSynchronized() As Boolean
             Get
-                Return Not ((m_flags And ChannelFlags.PMUSynchronized) > 0)
+                Return ((m_flags And ChannelFlags.PMUSynchronized) = 0)
             End Get
             Set(ByVal Value As Boolean)
                 If Value Then
-                    m_flags = m_flags Or Not ChannelFlags.PMUSynchronized
+                    m_flags = m_flags And Not ChannelFlags.PMUSynchronized
                 Else
                     m_flags = m_flags Or ChannelFlags.PMUSynchronized
                 End If
@@ -131,18 +131,18 @@ Namespace EE.Phasor.PDCstream
                 If Value Then
                     m_flags = m_flags Or ChannelFlags.DataSortedByArrival
                 Else
-                    m_flags = m_flags Or Not ChannelFlags.DataSortedByArrival
+                    m_flags = m_flags And Not ChannelFlags.DataSortedByArrival
                 End If
             End Set
         End Property
 
         Public Property DataIsSortedByTimestamp() As Boolean
             Get
-                Return Not ((m_flags And ChannelFlags.DataSortedByTimestamp) > 0)
+                Return ((m_flags And ChannelFlags.DataSortedByTimestamp) = 0)
             End Get
             Set(ByVal Value As Boolean)
                 If Value Then
-                    m_flags = m_flags Or Not ChannelFlags.DataSortedByTimestamp
+                    m_flags = m_flags And Not ChannelFlags.DataSortedByTimestamp
                 Else
                     m_flags = m_flags Or ChannelFlags.DataSortedByTimestamp
                 End If
@@ -157,7 +157,7 @@ Namespace EE.Phasor.PDCstream
                 If Value Then
                     m_flags = m_flags Or ChannelFlags.PDCExchangeFormat
                 Else
-                    m_flags = m_flags Or Not ChannelFlags.PDCExchangeFormat
+                    m_flags = m_flags And Not ChannelFlags.PDCExchangeFormat
                 End If
             End Set
         End Property
@@ -170,18 +170,18 @@ Namespace EE.Phasor.PDCstream
                 If Value Then
                     m_flags = m_flags Or ChannelFlags.MacrodyneFormat
                 Else
-                    m_flags = m_flags Or Not ChannelFlags.MacrodyneFormat
+                    m_flags = m_flags And Not ChannelFlags.MacrodyneFormat
                 End If
             End Set
         End Property
 
         Public Property UsingIEEEFormat() As Boolean
             Get
-                Return Not ((m_flags And ChannelFlags.MacrodyneFormat) > 0)
+                Return ((m_flags And ChannelFlags.MacrodyneFormat) = 0)
             End Get
             Set(ByVal Value As Boolean)
                 If Value Then
-                    m_flags = m_flags Or Not ChannelFlags.MacrodyneFormat
+                    m_flags = m_flags And Not ChannelFlags.MacrodyneFormat
                 Else
                     m_flags = m_flags Or ChannelFlags.MacrodyneFormat
                 End If
@@ -190,11 +190,11 @@ Namespace EE.Phasor.PDCstream
 
         Public Property TimestampIsIncluded() As Boolean
             Get
-                Return Not ((m_flags And ChannelFlags.TimestampIncluded) > 0)
+                Return ((m_flags And ChannelFlags.TimestampIncluded) = 0)
             End Get
             Set(ByVal Value As Boolean)
                 If Value Then
-                    m_flags = m_flags Or Not ChannelFlags.TimestampIncluded
+                    m_flags = m_flags And Not ChannelFlags.TimestampIncluded
                 Else
                     m_flags = m_flags Or ChannelFlags.TimestampIncluded
                 End If

@@ -22,37 +22,38 @@ Imports TVA.Compression.Common
 
 Namespace EE.Phasor.IEEE1344
 
-    ' This class represents the common functionality of all the IEEE1344 message frames that can be sent from a PMU.
+    ' This class represents the common definition of all the IEEE1344 message frames that can be sent from a PMU.
     Public MustInherit Class BaseFrame
 
-        Protected m_frameType As PMUFrameType
         Protected m_timeTag As NtpTimeTag
-        Protected m_triggerStatus As PMUTriggerStatus
-        Protected m_sampleCountWord As Int16
-        Protected m_statusWord As Int16
-        Protected m_crc16 As Int16
+        Protected m_sampleCount As Int16
+        Protected m_status As Int16
 
         Protected Const CommonBinaryLength As Integer = 8
+        Protected Const FrameTypeMask As Int16 = Bit13 Or Bit14 Or Bit15
+        Protected Const TriggerMask As Int16 = Bit11 Or Bit12 Or Bit13
+        Protected Const FrameLengthMask As Int16 = Not (TriggerMask Or Bit14 Or Bit15)
 
-        Public Sub New()
+        Protected Sub New()
 
-            m_triggerStatus = PMUTriggerStatus.None
-            m_crc16 = -1
+            m_timeTag = New NtpTimeTag(DateTime.Now)
 
         End Sub
 
-        Public Sub New(ByVal binaryImage As Byte(), ByVal startIndex As Integer)
-
-            Me.New()
+        Protected Sub New(ByVal binaryImage As Byte(), ByVal startIndex As Integer)
 
             If binaryImage Is Nothing Then
                 Throw New ArgumentNullException("BinaryImage was null - could not create " & Name)
-            ElseIf binaryImage.Length - startIndex < BinaryLength Then
+            ElseIf binaryImage.Length - startIndex <= CommonBinaryLength Then
                 Throw New ArgumentException("BinaryImage size from startIndex is too small - could not create " & Name)
             Else
                 m_timeTag = New NtpTimeTag(Convert.ToDouble(EndianOrder.ReverseToInt32(binaryImage, startIndex)))
-                SampleCountWord = EndianOrder.ReverseToInt16(binaryImage, startIndex + 4)
-                StatusWord = EndianOrder.ReverseToInt16(binaryImage, startIndex + 6)
+                m_sampleCount = EndianOrder.ReverseToInt16(binaryImage, startIndex + 4)
+                m_status = EndianOrder.ReverseToInt16(binaryImage, startIndex + 6)
+
+                ' Validate buffer check sum
+                If EndianOrder.ReverseToInt16(binaryImage, startIndex + FrameLength - 2) <> CRC16(-1, binaryImage, startIndex, FrameLength - 2) Then _
+                    Throw New ArgumentException("Invalid buffer image detected - CRC16 of " & Name & " did not match")
             End If
 
         End Sub
@@ -60,23 +61,14 @@ Namespace EE.Phasor.IEEE1344
         Protected Sub Clone(ByVal source As BaseFrame)
 
             With source
-                m_frameType = .m_frameType
                 m_timeTag = .m_timeTag
-                m_triggerStatus = .m_triggerStatus
-                m_sampleCountWord = .m_sampleCountWord
-                m_statusWord = .m_statusWord
-                m_crc16 = .m_crc16
+                m_sampleCount = .m_sampleCount
+                m_status = .m_status
             End With
 
         End Sub
 
-        Public ReadOnly Property FrameType() As PMUFrameType
-            Get
-                Return m_frameType
-            End Get
-        End Property
-
-        Public Property SecondOfCentury() As NtpTimeTag
+        Public Property TimeTag() As NtpTimeTag
             Get
                 Return m_timeTag
             End Get
@@ -85,73 +77,95 @@ Namespace EE.Phasor.IEEE1344
             End Set
         End Property
 
-        Protected Overridable ReadOnly Property Name() As String
+        Public ReadOnly Property FrameType() As PMUFrameType
             Get
-                Return Me.GetType.Name
+                Return m_sampleCount And FrameTypeMask
             End Get
         End Property
 
+        Protected Sub SetFrameType(ByVal frameType As PMUFrameType)
+
+            m_sampleCount = (m_sampleCount And Not FrameTypeMask) Or frameType
+
+        End Sub
+
         Public Property SynchronizationIsValid() As Boolean
             Get
-                Return ((m_statusWord And Bit15) = 0)
+                Return ((m_status And Bit15) = 0)
             End Get
             Set(ByVal Value As Boolean)
                 If Value Then
-                    m_statusWord = m_statusWord Or Not Bit15
+                    m_status = m_status And Not Bit15
                 Else
-                    m_statusWord = m_statusWord Or Bit15
+                    m_status = m_status Or Bit15
                 End If
             End Set
         End Property
 
         Public Property DataIsValid() As Boolean
             Get
-                Return ((m_statusWord And Bit14) = 0)
+                Return ((m_status And Bit14) = 0)
             End Get
             Set(ByVal Value As Boolean)
                 If Value Then
-                    m_statusWord = m_statusWord Or Not Bit14
+                    m_status = m_status And Not Bit14
                 Else
-                    m_statusWord = m_statusWord Or Bit14
+                    m_status = m_status Or Bit14
                 End If
             End Set
         End Property
 
         Public Property TriggerStatus() As PMUTriggerStatus
             Get
-                Return m_triggerStatus
+                Return m_status And TriggerMask
             End Get
             Set(ByVal Value As PMUTriggerStatus)
-                Select Case Value
-                    Case PMUTriggerStatus.None
-                    Case PMUTriggerStatus.FrequencyTrigger
-                    Case PMUTriggerStatus.DfDtTrigger
-                    Case PMUTriggerStatus.AngleTrigger
-                    Case PMUTriggerStatus.OverCurrentTrigger
-                    Case PMUTriggerStatus.UnderVoltageTrigger
-                    Case PMUTriggerStatus.RateTrigger
-                    Case PMUTriggerStatus.Undetermined
-                End Select
+                m_status = (m_status And Not TriggerMask) Or Value
             End Set
         End Property
 
-        Private WriteOnly Property SampleCountWord() As Int16
+        Public Property FrameLength() As Int16
+            Get
+                Return m_status And FrameLengthMask
+            End Get
             Set(ByVal Value As Int16)
-                m_sampleCountWord = Value
-
-            End Set
-        End Property
-
-        Private WriteOnly Property StatusWord() As Int16
-            Set(ByVal Value As Int16)
-                m_statusWord = Value
-
-                If (m_statusWord And Bit13) > 0 And (m_statusWord And Bit12) > 0 And (m_statusWord And Bit11) > 0 Then
-                    m_triggerStatus = PMUTriggerStatus.FrequencyTrigger
+                If Value > MaximumFrameLength Then
+                    Throw New OverflowException("Frame length value cannot exceed " & MaximumFrameLength)
                 Else
-                    m_triggerStatus = PMUTriggerStatus.None
+                    m_status = (m_status And Not FrameLengthMask) Or Value
                 End If
             End Set
+        End Property
+
+        Public ReadOnly Property DataLength() As Int16
+            Get
+                ' Data length will be frame length minus common header length minus crc16
+                Return FrameLength - CommonBinaryLength - 2
+            End Get
+        End Property
+
+        Public ReadOnly Property MaximumFrameLength() As Int16
+            Get
+                Return FrameLengthMask
+            End Get
+        End Property
+
+        Public ReadOnly Property MaximumDataLength() As Int16
+            Get
+                Return MaximumFrameLength - CommonBinaryLength - 2
+            End Get
+        End Property
+
+        Protected Sub AppendCRC16(ByVal dataBuffer As Byte(), ByVal dataStartIndex As Integer, ByVal dataLength As Integer)
+
+            EndianOrder.SwapCopy(BitConverter.GetBytes(CRC16(-1, dataBuffer, dataStartIndex, dataLength)), dataStartIndex, dataBuffer, dataLength, 2)
+
+        End Sub
+
+        Protected Overridable ReadOnly Property Name() As String
+            Get
+                Return "IEEE1344.BaseFrame"
+            End Get
         End Property
 
         Public MustOverride ReadOnly Property BinaryLength() As Integer
@@ -162,8 +176,8 @@ Namespace EE.Phasor.IEEE1344
                 Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), CommonBinaryLength)
 
                 EndianOrder.SwapCopy(BitConverter.GetBytes(Convert.ToUInt32(m_timeTag.Value)), 0, buffer, 0, 4)
-                EndianOrder.SwapCopy(BitConverter.GetBytes(m_sampleCountWord), 0, buffer, 4, 2)
-                EndianOrder.SwapCopy(BitConverter.GetBytes(m_statusWord), 0, buffer, 6, 2)
+                EndianOrder.SwapCopy(BitConverter.GetBytes(m_sampleCount), 0, buffer, 4, 2)
+                EndianOrder.SwapCopy(BitConverter.GetBytes(m_status), 0, buffer, 6, 2)
 
                 Return buffer
             End Get

@@ -121,12 +121,27 @@
                     BuildAction = "Compile"
                 />
                 <File
+                    RelPath = "Phasor\IEEE1344\DigitalDefinition.vb"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
                     RelPath = "Phasor\IEEE1344\FrameParser.vb"
                     SubType = "Code"
                     BuildAction = "Compile"
                 />
                 <File
                     RelPath = "Phasor\IEEE1344\HeaderFrame.vb"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "Phasor\IEEE1344\PhasorDefinition.vb"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "Phasor\IEEE1344\PhasorValue.vb"
                     SubType = "Code"
                     BuildAction = "Compile"
                 />

@@ -17,22 +17,6 @@
 
 Namespace EE.Phasor.PDCstream
 
-    Public Enum PointType
-        PhasorMagnitude
-        PhasorAngle
-        Frequency
-        DfDt
-        DigitalValue
-        StatusFlags
-    End Enum
-
-    Public Enum PointArchiveStyle
-        Raw
-        Average
-        Minimum
-        Maximum
-    End Enum
-
     Public Structure PMUDataPoint
 
         Public PMU As PMUDefinition
