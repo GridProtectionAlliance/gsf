@@ -4,6 +4,10 @@
 	Version="7.10"
 	Name="Compression"
 	ProjectGUID="{F611B9BA-C69D-449B-B596-FABFB746EA2A}"
+	SccProjectName="SAK"
+	SccAuxPath="SAK"
+	SccLocalPath="SAK"
+	SccProvider="SAK"
 	Keyword="ManagedCProj">
 	<Platforms>
 		<Platform

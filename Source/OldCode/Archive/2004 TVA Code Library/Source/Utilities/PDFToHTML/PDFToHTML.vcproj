@@ -5,6 +5,10 @@
 	Name="Utilities.PDFToHTML"
 	ProjectGUID="{3E2B7CC0-7EB6-4C27-962F-AEBCE54C9AD7}"
 	RootNamespace="TVA"
+	SccProjectName="SAK"
+	SccAuxPath="SAK"
+	SccLocalPath="SAK"
+	SccProvider="SAK"
 	Keyword="ManagedCProj">
 	<Platforms>
 		<Platform

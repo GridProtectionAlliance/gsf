@@ -4,6 +4,9 @@
         ProductVersion = "7.10.3077"
         SchemaVersion = "2.0"
         ProjectGuid = "{73A520C6-E18E-42C8-8753-98307D1EF2DE}"
+        SccProjectName = '"$/TVA Code Library/Source/Parsers/HTMLParser", RVOAAAAA'
+        SccLocalPath = "."
+        SccProvider = "MSSCCI:Microsoft Visual SourceSafe"
     >
         <Build>
             <Settings
