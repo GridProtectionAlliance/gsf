@@ -53,75 +53,99 @@ Namespace EE.Phasor
 
     End Class
 
-    Public Class PhasorDefinitions
+    Public MustInherit Class ChannelDefinitions
 
         Inherits CollectionBase
 
-        Public Sub Add(ByVal value As IPhasorDefinition)
+        Protected Sub _Add(ByVal value As IChannelDefinition)
 
             List.Add(value)
+
+        End Sub
+
+        Protected ReadOnly Property _Item(ByVal index As Integer) As IChannelDefinition
+            Get
+                Return DirectCast(List.Item(index), IChannelDefinition)
+            End Get
+        End Property
+
+        Public Sub Sort()
+
+            Array.Sort(List)
+
+        End Sub
+
+    End Class
+
+    Public Class PhasorDefinitions
+
+        Inherits ChannelDefinitions
+
+        Public Sub Add(ByVal value As IPhasorDefinition)
+
+            MyBase._Add(value)
 
         End Sub
 
         Default Public ReadOnly Property Item(ByVal index As Integer) As IPhasorDefinition
             Get
-                Return DirectCast(List.Item(index), IPhasorDefinition)
+                Return DirectCast(MyBase._Item(index), IPhasorDefinition)
             End Get
         End Property
 
-        Public Sub Sort()
+    End Class
 
-            Array.Sort(List)
+    Public Class FrequencyDefinitions
+
+        Inherits ChannelDefinitions
+
+        Public Sub Add(ByVal value As IFrequencyDefinition)
+
+            MyBase._Add(value)
 
         End Sub
+
+        Default Public ReadOnly Property Item(ByVal index As Integer) As IFrequencyDefinition
+            Get
+                Return DirectCast(MyBase._Item(index), IFrequencyDefinition)
+            End Get
+        End Property
 
     End Class
 
     Public Class AnalogDefinitions
 
-        Inherits CollectionBase
+        Inherits ChannelDefinitions
 
         Public Sub Add(ByVal value As IAnalogDefinition)
 
-            List.Add(value)
+            MyBase._Add(value)
 
         End Sub
 
         Default Public ReadOnly Property Item(ByVal index As Integer) As IAnalogDefinition
             Get
-                Return DirectCast(List.Item(index), IAnalogDefinition)
+                Return DirectCast(MyBase._Item(index), IAnalogDefinition)
             End Get
         End Property
-
-        Public Sub Sort()
-
-            Array.Sort(List)
-
-        End Sub
 
     End Class
 
     Public Class DigitalDefinitions
 
-        Inherits CollectionBase
+        Inherits ChannelDefinitions
 
         Public Sub Add(ByVal value As IDigitalDefinition)
 
-            List.Add(value)
+            MyBase._Add(value)
 
         End Sub
 
         Default Public ReadOnly Property Item(ByVal index As Integer) As IDigitalDefinition
             Get
-                Return DirectCast(List.Item(index), IDigitalDefinition)
+                Return DirectCast(MyBase._Item(index), IDigitalDefinition)
             End Get
         End Property
-
-        Public Sub Sort()
-
-            Array.Sort(List)
-
-        End Sub
 
     End Class
 

@@ -28,9 +28,9 @@ Namespace EE.Phasor
 
         Property Label() As String
 
-        ReadOnly Property MaximumLabelLength() As Integer
-
         ReadOnly Property LabelImage() As Byte()
+
+        ReadOnly Property MaximumLabelLength() As Integer
 
         ReadOnly Property BinaryLength() As Integer
 

@@ -28,7 +28,7 @@ Namespace EE.Phasor
         Implements IDataFrame
 
         Protected m_timeTag As NtpTimeTag
-        Protected m_sampleCount As Int16
+        Protected m_sampleCount As Int16    ' TODO: Validate cross protocol compatibility of sample count and status...
         Protected m_status As Int16
 
         Protected Sub New()
@@ -82,7 +82,7 @@ Namespace EE.Phasor
 
         Public Overridable ReadOnly Property Name() As String Implements IDataFrame.Name
             Get
-                Return "PhasorFrameBase"
+                Return "TVA.EE.Phasor.DataFrameBase"
             End Get
         End Property
 

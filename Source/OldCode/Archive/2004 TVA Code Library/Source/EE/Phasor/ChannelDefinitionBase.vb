@@ -72,6 +72,12 @@ Namespace EE.Phasor
             End Get
         End Property
 
+        Public Overridable ReadOnly Property MaximumLabelLength() As Integer Implements IChannelDefinition.MaximumLabelLength
+            Get
+                Return 16
+            End Get
+        End Property
+
         Public MustOverride ReadOnly Property BinaryLength() As Integer Implements IChannelDefinition.BinaryLength
 
         Public MustOverride ReadOnly Property BinaryImage() As Byte() Implements IChannelDefinition.BinaryImage
@@ -83,12 +89,6 @@ Namespace EE.Phasor
             Set(ByVal Value As Integer)
                 m_index = Value
             End Set
-        End Property
-
-        Public Overridable ReadOnly Property MaximumLabelLength() As Integer Implements IChannelDefinition.MaximumLabelLength
-            Get
-                Return 16
-            End Get
         End Property
 
         Public Overridable Function CompareTo(ByVal obj As Object) As Integer Implements IComparable.CompareTo
