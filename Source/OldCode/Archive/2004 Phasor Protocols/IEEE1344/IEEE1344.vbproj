@@ -81,19 +81,19 @@
                     Name = "TVA.Shared"
                     AssemblyName = "TVA.Shared"
                     HintPath = "\\opdat\opdat\CtrlSys\CodeLibrary\Builds\Beta\TVA.Shared.dll"
-                    Private = "True"
+                    Private = "False"
                 />
                 <Reference
                     Name = "TVA.Config"
                     AssemblyName = "TVA.Config"
                     HintPath = "\\opdat\opdat\CtrlSys\CodeLibrary\Builds\Beta\TVA.Config.dll"
-                    Private = "True"
+                    Private = "False"
                 />
                 <Reference
                     Name = "TVA.Forms"
                     AssemblyName = "TVA.Forms"
                     HintPath = "\\opdat\opdat\CtrlSys\CodeLibrary\Builds\Beta\TVA.Forms.dll"
-                    Private = "True"
+                    Private = "False"
                 />
                 <Reference
                     Name = "TVA.Compression"
@@ -105,18 +105,19 @@
                     Name = "TVA.ErrorManagement"
                     AssemblyName = "TVA.ErrorManagement"
                     HintPath = "\\opdat\opdat\CtrlSys\CodeLibrary\Builds\Beta\TVA.ErrorManagement.dll"
-                    Private = "True"
+                    Private = "False"
                 />
                 <Reference
                     Name = "dundaswinchart"
                     AssemblyName = "DundasWinChart"
                     HintPath = "C:\program files\dundas software\charting\wincontrol\bin\dundaswinchart.dll"
-                    Private = "True"
+                    Private = "False"
                 />
                 <Reference
                     Name = "TVA.EE"
                     AssemblyName = "TVA.EE"
                     HintPath = "\\opdat\opdat\CtrlSys\CodeLibrary\Builds\Beta\TVA.EE.dll"
+                    Private = "False"
                 />
             </References>
             <Imports>
@@ -161,6 +162,54 @@
                 <File
                     RelPath = "TVAService.ico"
                     BuildAction = "Content"
+                />
+                <File
+                    RelPath = "Embedded Resources\DundasWinChart.dll"
+                    BuildAction = "EmbeddedResource"
+                />
+                <File
+                    RelPath = "Embedded Resources\TVA.Config.dll"
+                    BuildAction = "EmbeddedResource"
+                />
+                <File
+                    RelPath = "Embedded Resources\TVA.EE.dll"
+                    BuildAction = "EmbeddedResource"
+                />
+                <File
+                    RelPath = "Embedded Resources\TVA.ErrorManagement.dll"
+                    BuildAction = "EmbeddedResource"
+                />
+                <File
+                    RelPath = "Embedded Resources\TVA.ESO.Ssam.dll"
+                    BuildAction = "EmbeddedResource"
+                />
+                <File
+                    RelPath = "Embedded Resources\TVA.Forms.dll"
+                    BuildAction = "EmbeddedResource"
+                />
+                <File
+                    RelPath = "Embedded Resources\TVA.Interop.dll"
+                    BuildAction = "EmbeddedResource"
+                />
+                <File
+                    RelPath = "Embedded Resources\TVA.Remoting.dll"
+                    BuildAction = "EmbeddedResource"
+                />
+                <File
+                    RelPath = "Embedded Resources\TVA.Services.dll"
+                    BuildAction = "EmbeddedResource"
+                />
+                <File
+                    RelPath = "Embedded Resources\TVA.Shared.dll"
+                    BuildAction = "EmbeddedResource"
+                />
+                <File
+                    RelPath = "Embedded Resources\TVA.Threading.dll"
+                    BuildAction = "EmbeddedResource"
+                />
+                <File
+                    RelPath = "Embedded Resources\TVA.VarEval.dll"
+                    BuildAction = "EmbeddedResource"
                 />
             </Include>
         </Files>
