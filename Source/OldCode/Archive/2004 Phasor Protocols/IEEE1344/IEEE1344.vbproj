@@ -108,16 +108,15 @@
                     Private = "True"
                 />
                 <Reference
-                    Name = "TVA.EE"
-                    AssemblyName = "TVA.EE"
-                    HintPath = "\\opdat\opdat\CtrlSys\CodeLibrary\Builds\Beta\TVA.EE.dll"
-                    Private = "True"
-                />
-                <Reference
                     Name = "dundaswinchart"
                     AssemblyName = "DundasWinChart"
                     HintPath = "C:\program files\dundas software\charting\wincontrol\bin\dundaswinchart.dll"
                     Private = "True"
+                />
+                <Reference
+                    Name = "TVA.EE"
+                    AssemblyName = "TVA.EE"
+                    HintPath = "\\opdat\opdat\CtrlSys\CodeLibrary\Builds\Beta\TVA.EE.dll"
                 />
             </References>
             <Imports>
