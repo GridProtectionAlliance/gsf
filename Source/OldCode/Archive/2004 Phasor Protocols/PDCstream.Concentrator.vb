@@ -221,7 +221,7 @@ Namespace PDCstream
                                         Try
                                             binaryLength = .BinaryLength
 
-                                            ' Send binary image over UDP broadcast channels
+                                            ' Send binary data packet image over UDP broadcast channels
                                             For z = 0 To m_broadcastIPs.Length - 1
                                                 m_udpClient.Send(.BinaryImage, binaryLength, m_broadcastIPs(z))
                                             Next
@@ -307,7 +307,6 @@ Namespace PDCstream
                     .Append("  Concentration process is: " & IIf(Enabled, "Enabled", "Disabled") & vbCrLf)
                     .Append("  Current processing state: " & IIf(Processing, "Executing", "Idle") & vbCrLf)
                     .Append("    Total process run time: " & SecondsToText(RunTime) & vbCrLf)
-                    '.Append("        Queued point count: " & m_dataQueue.QueuedPointCount & vbCrLf)
                     .Append("          Discarded points: " & m_dataQueue.DiscardedPoints & vbCrLf)
                     .Append("         Current base time: " & m_dataQueue.BaseTime.ToString("dd-MMM-yyyy HH:mm:ss.fff") & vbCrLf)
                     .Append("            Queued samples: " & m_dataQueue.SampleCount & vbCrLf)

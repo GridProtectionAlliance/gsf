@@ -28,8 +28,8 @@ Namespace PDCstream
     Public Class PhasorValue
 
         Private m_phasorDefinition As PhasorDefinition
-        Private m_real As UInt16
-        Private m_imaginary As UInt16
+        Private m_real As Int16
+        Private m_imaginary As Int16
         Private m_compositeValues As CompositeValues
 
         Private Enum CompositeValue
@@ -41,7 +41,7 @@ Namespace PDCstream
 
         Public Shared ReadOnly Property Empty(ByVal phasorDefinition As PhasorDefinition) As PhasorValue
             Get
-                Return New PhasorValue(phasorDefinition, Convert.ToUInt16(0), Convert.ToUInt16(0))
+                Return New PhasorValue(phasorDefinition, 0, 0)
             End Get
         End Property
 
@@ -56,12 +56,12 @@ Namespace PDCstream
         Public Shared Function CreateFromScaledRectangularValues(ByVal phasorDefinition As PhasorDefinition, ByVal real As Double, ByVal imaginary As Double) As PhasorValue
 
             Dim scale As Double = phasorDefinition.ScalingFactor(phasorDefinition)
-            Return CreateFromUnscaledRectangularValues(phasorDefinition, Convert.ToUInt16(real / scale), Convert.ToUInt16(imaginary / scale))
+            Return CreateFromUnscaledRectangularValues(phasorDefinition, real / scale, imaginary / scale)
 
         End Function
 
         ' Create phasor from unscaled rectangular coordinates
-        Public Shared Function CreateFromUnscaledRectangularValues(ByVal phasorDefinition As PhasorDefinition, ByVal real As UInt16, ByVal imaginary As UInt16) As PhasorValue
+        Public Shared Function CreateFromUnscaledRectangularValues(ByVal phasorDefinition As PhasorDefinition, ByVal real As Int16, ByVal imaginary As Int16) As PhasorValue
 
             Return New PhasorValue(phasorDefinition, real, imaginary)
 
@@ -84,18 +84,18 @@ Namespace PDCstream
         ' Calculate watts from imaginary and real components of two phasors
         Public Shared Function CalculatePower(ByVal voltage As PhasorValue, ByVal current As PhasorValue) As Double
 
-            Return 3 * (((voltage.UnscaledReal * current.UnscaledReal) + (voltage.UnscaledImaginary * current.UnscaledImaginary)) * voltage.ScalingFactor * current.ScalingFactor)
+            Return 3 * (((voltage.Real * current.Real) + (voltage.Imaginary * current.Imaginary)) * voltage.ScalingFactor * current.ScalingFactor)
 
         End Function
 
         ' Calculate vars from imaginary and real components of two phasors
         Public Shared Function CalculateVars(ByVal voltage As PhasorValue, ByVal current As PhasorValue) As Double
 
-            Return 3 * (((voltage.UnscaledImaginary * current.UnscaledReal) - (voltage.UnscaledReal * current.UnscaledImaginary)) * voltage.ScalingFactor * current.ScalingFactor)
+            Return 3 * (((voltage.Imaginary * current.Real) - (voltage.Real * current.Imaginary)) * voltage.ScalingFactor * current.ScalingFactor)
 
         End Function
 
-        Private Sub New(ByVal phasorDefinition As PhasorDefinition, ByVal real As UInt16, ByVal imaginary As UInt16)
+        Private Sub New(ByVal phasorDefinition As PhasorDefinition, ByVal real As Int16, ByVal imaginary As Int16)
 
             m_phasorDefinition = phasorDefinition
             m_real = real
@@ -118,98 +118,73 @@ Namespace PDCstream
 
         Public Property Angle() As Double
             Get
-                Return (Math.Atan2(UnscaledImaginary, UnscaledReal) + (m_phasorDefinition.Offset * Math.PI / 180)) * 180 / Math.PI
+                Return (Math.Atan2(m_imaginary, m_real) + (m_phasorDefinition.Offset * Math.PI / 180)) * 180 / Math.PI
             End Get
             Set(ByVal Value As Double)
                 ' We store angle as one of our required composite values
                 m_compositeValues(CompositeValue.Angle) = Value
 
                 ' If all composite values have been received, we can calculate phasor's real and imaginary values
-                CreatePhasorValue()
+                CalculatePhasorValue()
             End Set
         End Property
 
         Public Property Magnitude() As Double
             Get
-                Return Math.Sqrt(UnscaledReal * UnscaledReal + UnscaledImaginary * UnscaledImaginary) * ScalingFactor()
+                Return Math.Sqrt(m_real * m_real + m_imaginary * m_imaginary) * ScalingFactor()
             End Get
             Set(ByVal Value As Double)
                 ' We store magnitude as one of our required composite values
                 m_compositeValues(CompositeValue.Magnitude) = Value
 
                 ' If all composite values have been received, we can calculate phasor's real and imaginary values
-                CreatePhasorValue()
+                CalculatePhasorValue()
             End Set
         End Property
 
-        Public ReadOnly Property Real() As UInt16
+        Public ReadOnly Property Real() As Int16
             Get
                 Return m_real
             End Get
         End Property
 
-        Public ReadOnly Property Imaginary() As UInt16
+        Public ReadOnly Property Imaginary() As Int16
             Get
                 Return m_imaginary
             End Get
         End Property
 
-        ' In .NET, unsigned ints aren't typically usable directly in equations, so we provide these functions to provide usable values
-        Public ReadOnly Property UnscaledReal() As Double
-            Get
-                Return Convert.ToDouble(m_real)
-            End Get
-        End Property
-
-        Public ReadOnly Property UnscaledImaginary() As Double
-            Get
-                Return Convert.ToDouble(m_imaginary)
-            End Get
-        End Property
-
         Public ReadOnly Property ScaledReal() As Double
             Get
-                Return UnscaledReal * ScalingFactor
+                Return m_real * ScalingFactor
             End Get
         End Property
 
         Public ReadOnly Property ScaledImaginary() As Double
             Get
-                Return UnscaledImaginary * ScalingFactor
+                Return m_imaginary * ScalingFactor
             End Get
         End Property
 
         Public ReadOnly Property IsEmpty() As Boolean
             Get
-                Return (UnscaledReal = 0 And UnscaledImaginary = 0)
+                Return (m_real = 0 And m_imaginary = 0)
             End Get
         End Property
 
-        Private Sub CreatePhasorValue()
+        Private Sub CalculatePhasorValue()
 
-            Dim angle, magnitude, scale As Double
+            If m_compositeValues.AllReceived Then
+                Dim angle, magnitude, scale As Double
 
-            Try
-                If m_compositeValues.AllReceived Then
-                    ' All values received, create a new phasor value from composite values
-                    angle = m_compositeValues(CompositeValue.Angle)
-                    magnitude = m_compositeValues(CompositeValue.Magnitude)
-                    scale = PhasorDefinition.ScalingFactor(m_phasorDefinition)
+                ' All values received, create a new phasor value from composite values
+                angle = m_compositeValues(CompositeValue.Angle)
+                magnitude = m_compositeValues(CompositeValue.Magnitude)
+                scale = ScalingFactor
 
-                    m_real = Convert.ToUInt16(CalculateRealComponent(angle, magnitude) / scale)
-                    m_imaginary = Convert.ToUInt16(CalculateImaginaryComponent(angle, magnitude) / scale)
-                End If
-            Catch ex As Exception
-
-                ' TODO: remove debug code...
-                Debug.WriteLine("PDCstream.PhasorValue.CreatePhasorValue exception: " & ex.Message)
-                Debug.WriteLine("         angle = " & angle)
-                Debug.WriteLine("     magnitude = " & magnitude)
-                Debug.WriteLine("         scale = " & scale)
-                Debug.WriteLine("   real (calc) = " & CalculateRealComponent(angle, magnitude))
-                Debug.WriteLine("   imag (calc) = " & CalculateImaginaryComponent(angle, magnitude))
-
-            End Try
+                m_real = CalculateRealComponent(angle, magnitude) / scale
+                m_imaginary = CalculateImaginaryComponent(angle, magnitude) / scale
+            End If
 
         End Sub
 

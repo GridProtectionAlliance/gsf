@@ -62,9 +62,9 @@ Namespace PDCstream
             Get
                 With phasor
                     If .Type = PhasorType.Voltage Then
-                        Return 1 / (.CalFactor * .Ratio)
+                        Return .CalFactor * .Ratio
                     Else
-                        Return 1 / (.CalFactor * .Ratio / .Shunt)
+                        Return .CalFactor * .Ratio / .Shunt
                     End If
                 End With
             End Get
