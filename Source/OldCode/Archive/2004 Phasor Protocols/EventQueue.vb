@@ -88,7 +88,35 @@ Public Class EventQueue
 
     ' After a listener has been created, we will have a connection to the source DatAWare server - we use this
     ' connection to create a cross-reference list between DatAWare points and PMU data...
-    ' Server point list should be reloaded any time new points are added...
+    Public Sub DefinePointList(ByVal listener As PDCListener)
+
+        With listener
+            ' We'll try three times to connect to DatAWare and load points before giving up...
+            For x As Integer = 1 To 3
+                ' Load all the point definitions from the associated DatAWare server (this takes a second)
+                Try
+                    Dim serverPoints As New PMUServerPoints(m_parent.Concentrator, .Connection, .UserName, .Password)
+
+                    SyncLock m_serverPoints.SyncRoot
+                        m_serverPoints.Add(.Connection.PlantCode, serverPoints)
+                    End SyncLock
+
+                    ' If load was successful, we'll exit retry loop
+                    Exit For
+                Catch ex As Exception
+                    If x = 3 Then
+                        ' Log this exception to the event log, the local status log and any remote clients
+                        UpdateStatus("Failed to load point list from DatAWare server """ & .Connection.Server & " (" & _
+                            .Connection.PlantCode & ")"" due to exception: " & ex.Message, True, EventLogEntryType.Error)
+                        Throw ex
+                    End If
+                End Try
+            Next
+        End With
+
+    End Sub
+
+    ' Attempt to reload server point list - you should do this any time new points are added...
     Public Sub RefreshPointList(ByVal listener As PDCListener)
 
         With listener
@@ -99,11 +127,7 @@ Public Class EventQueue
                     Dim serverPoints As New PMUServerPoints(m_parent.Concentrator, .Connection, .UserName, .Password)
 
                     SyncLock m_serverPoints.SyncRoot
-                        If m_serverPoints(.Connection.PlantCode) Is Nothing Then
-                            m_serverPoints.Add(.Connection.PlantCode, serverPoints)
-                        Else
-                            m_serverPoints(.Connection.PlantCode) = serverPoints
-                        End If
+                        m_serverPoints(.Connection.PlantCode) = serverPoints
                     End SyncLock
 
                     ' If load was successful, we'll exit retry loop
@@ -135,11 +159,12 @@ Public Class EventQueue
         End Get
     End Property
 
-    Public Sub QueueEventData(ByVal plantCode As String, ByVal eventBuffer As Byte(), ByVal offset As Integer, ByVal length As Integer)
+    Public Sub QueueEventData(ByVal plantCode As String, ByVal eventBuffer As Byte())
 
         ' Note: although you could go ahead and sort items here directly without queuing this work up, doing this could
         ' cause the TCP stream from DatAWare to start to get backed-up causing inherent delays in real-time data
-        If Enabled Then ThreadPool.QueueUserWorkItem(AddressOf ProcessEventBuffer, New DataPacket(plantCode, eventBuffer, offset, length))
+        If Enabled Then ThreadPool.QueueUserWorkItem(AddressOf ProcessEventBuffer, New DataPacket(plantCode, eventBuffer))
+        ProcessEventBuffer(New DataPacket(plantCode, eventBuffer))
         m_packetsReceived += 1
 
     End Sub
@@ -149,15 +174,11 @@ Public Class EventQueue
 
         Public PlantCode As String
         Public EventBuffer As Byte()
-        Public Offset As Integer
-        Public Length As Integer
 
-        Public Sub New(ByVal plantCode As String, ByVal eventBuffer As Byte(), ByVal offset As Integer, ByVal length As Integer)
+        Public Sub New(ByVal plantCode As String, ByVal eventBuffer As Byte())
 
             Me.PlantCode = plantCode
             Me.EventBuffer = eventBuffer
-            Me.Offset = offset
-            Me.Length = length
 
         End Sub
 
@@ -173,7 +194,7 @@ Public Class EventQueue
             Dim dataPoint As PMUDataPoint
 
             ' Parse events out of data packet and create a new PMU data point from timestamp and value
-            For packetIndex As Integer = eventData.Offset To eventData.Length - 1 Step DatAWare.StandardEvent.BinaryLength
+            For packetIndex As Integer = 0 To eventData.EventBuffer.Length - 1 Step DatAWare.StandardEvent.BinaryLength
                 If packetIndex + DatAWare.StandardEvent.BinaryLength < eventData.EventBuffer.Length Then
                     With New DatAWare.StandardEvent(eventData.EventBuffer, packetIndex)
                         ' Make sure we have a point defined for this value
@@ -205,27 +226,9 @@ Public Class EventQueue
 
     End Sub
 
-    Private Sub m_dataQueue_DataSortingError(ByVal message As String) Handles m_dataQueue.DataSortingError
+    Private Sub m_dataQueue_DataError(ByVal message As String) Handles m_dataQueue.DataError
 
-        ' When errors happen with data being processed at 30 samples per second - you can get a hefty volume of errors very quickly,
-        ' so to keep from flooding the message queue - we'll only send a handful of messages every couple of seconds
-        Static lastMessageTicks As Long
-        Static sentMessageCount As Long
-        Const messageTimespan As Integer = 2    ' Timespan, in seconds, over which to monitor message volume
-        Const maximumMessages As Integer = 6    ' Maximum number of messages to be tolerated during timespan
-        Dim sendMessage As Boolean
-
-        If (DateTime.Now.Ticks - lastMessageTicks) / 10000000L < messageTimespan Then
-            sendMessage = (sentMessageCount < maximumMessages)
-            sentMessageCount += 1
-        Else
-            If sentMessageCount > maximumMessages Then m_parent.UpdateStatus("WARNING: " & (sentMessageCount - maximumMessages) & " error messages discarded to avoid flooding message queue...")
-            sendMessage = True
-            sentMessageCount = 0
-            lastMessageTicks = DateTime.Now.Ticks
-        End If
-
-        If sendMessage Then m_parent.UpdateStatus(message)
+        UpdateStatus(message)
 
     End Sub
 
@@ -264,15 +267,13 @@ Public Class EventQueue
                 m_dataQueue.SortDataPoint(dataPoint)
             Next
 
-            ' Update the point values in next sample
-            If sampleIndex + 1 <= m_dataQueue.SampleCount - 1 Then
-                With m_dataQueue.Sample(sampleIndex + 1)
-                    For y As Integer = 0 To .Rows.Length - 1
-                        dataPoint.Timestamp = .Rows(y).TimeStamp
-                        m_dataQueue.SortDataPoint(dataPoint)
-                    Next
-                End With
-            End If
+            ' Update the point value in all remaining samples
+            For x As Integer = sampleIndex + 1 To m_dataQueue.SampleCount - 1
+                For y As Integer = 0 To m_dataQueue.Sample(x).Rows.Length - 1
+                    dataPoint.Timestamp = m_dataQueue.Sample(x).Rows(y).TimeStamp
+                    m_dataQueue.SortDataPoint(dataPoint)
+                Next
+            Next
         End If
 
     End Sub

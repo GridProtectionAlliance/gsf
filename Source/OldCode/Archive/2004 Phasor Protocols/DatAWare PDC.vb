@@ -27,15 +27,16 @@ Imports TVA.ESO.Ssam
 Imports TVA.ESO.Ssam.SsamEntityTypeID
 Imports TVA.ESO.Ssam.SsamEventTypeID
 Imports TVA.Services
+Imports TVA.EE.Phasor.PDCstream
 
 Public Class DatAWarePDC
 
     Inherits System.ServiceProcess.ServiceBase
 
-    Public WithEvents Concentrator As PDCstream.Concentrator
-    Public EventQueue As DatAWare.EventQueue
-    Public Listeners As DatAWare.Listener()
-    Public Aggregator As DatAWare.Aggregator
+    Public WithEvents Concentrator As Concentrator
+    Public EventQueue As EventQueue
+    Public Listeners As PDCListener()
+    Public Aggregator As Aggregator
 
     Friend Const PasswordKey As String = "B1864405-59C0-4157-AB38-0417AFDBD395"
 
@@ -414,13 +415,13 @@ Public Class DatAWarePDC
         Next
 
         ' Create an instance of the PDC concentrator
-        Concentrator = New PDCstream.Concentrator(Me, Variables("DatAWare.PDC.ConfigFile"), Variables("DatAWare.PDC.LagTime"), broadcastIPs)
+        Concentrator = New Concentrator(Me, Variables("DatAWare.PDC.ConfigFile"), Variables("DatAWare.PDC.LagTime"), broadcastIPs)
 
         ' Create an instance of the DatAWare event queue
-        EventQueue = New DatAWare.EventQueue(Me)
+        EventQueue = New EventQueue(Me)
 
         ' Create a new PMU data aggregator
-        Aggregator = New DatAWare.Aggregator(Me)
+        Aggregator = New Aggregator(Me)
 
         ' Register these service components
         With ServiceHelper.Components
@@ -436,35 +437,20 @@ Public Class DatAWarePDC
 
         For x As Integer = 0 To Listeners.Length - 1
             ' Define the listener on the specified port associated with the specified DatAWare server
-            Listeners(x) = New DatAWare.Listener(Me, _
+            Listeners(x) = New PDCListener(Me, _
                 Variables("DatAWare.Listener" & x & ".Port"), _
                 Variables("DatAWare.Listener" & x & ".Server"), _
                 Variables("DatAWare.Listener" & x & ".PlantCode"), _
-                Variables("DatAWare.Listener" & x & ".TimeZone"))
+                Variables("DatAWare.Listener" & x & ".TimeZone"), _
+                Variables("DatAWare.Listener" & x & ".UserName"), _
+                Decrypt(Variables("DatAWare.Listener" & x & ".Password"), PasswordKey, EncryptLevel.Level4))
 
             ' Register the listener component
             ServiceHelper.Components.Add(Listeners(x))
 
-            ' We'll try three times to connect to DatAWare and retrieve points before giving up...
-            For y As Integer = 1 To 3
-                ' Load all the point definitions from the associated DatAWare server (this takes a second)
-                Try
-                    ' Note that this step is mission critical - we can't start broadcasting and archiving if we don't
-                    ' get a point list from the DatAWare server...
-                    EventQueue.DefinePointList(Listeners(x).Connection, Variables("DatAWare.Listener" & x & ".UserName"), _
-                        Decrypt(Variables("DatAWare.Listener" & x & ".Password"), PasswordKey, EncryptLevel.Level4))
-
-                    ' If load was successful, we'll exit retry loop
-                    Exit For
-                Catch ex As Exception
-                    If y = 3 Then
-                        ' Log this exception to the event log, the local status log and any remote clients
-                        UpdateStatus("Failed to load point list from DatAWare server """ & Listeners(x).Connection.Server & " (" & _
-                            Listeners(x).Connection.PlantCode & ")"" due to exception: " & ex.Message, True, EventLogEntryType.Error)
-                        Exit Sub
-                    End If
-                End Try
-            Next
+            ' Load point list from associated DatAWare server.  Note that this step is mission critical - we can't
+            ' start broadcasting and archiving if we don't get a point list from the DatAWare server...
+            EventQueue.DefinePointList(Listeners(x))
         Next
 
         ' Start the DatAWare listeners...
@@ -483,7 +469,7 @@ Public Class DatAWarePDC
 
     End Sub
 
-    Private Sub Concentrator_SamplePublished(ByVal sample As PDCstream.DataSample) Handles Concentrator.SamplePublished
+    Private Sub Concentrator_SamplePublished(ByVal sample As DataSample) Handles Concentrator.SamplePublished
 
         ' TODO: Once a sample is published, we should pass it along to the aggregator for aggregation and archival
 
@@ -514,9 +500,9 @@ Public Class DatAWarePDC
         ' You should never have very many unpublished samples queued up - each sample represents one second of data,
         ' so the total number of unpublished samples equals the number of seconds the PDC is behind real-time...
         If total > highSampleCount Then
-            ' Don't send any warnings more than every 10 seconds
-            If Not warningState Or (DateTime.Now.Ticks - lastWarning) / 10000000L > 10 Then
-                UpdateStatus("WARNING: There are " & total & " unpublished samples in the queue, real-time stream could be falling behind...")
+            ' Don't send any warnings more than every 30 seconds
+            If Not warningState Or (DateTime.Now.Ticks - lastWarning) / 10000000L > 30 Then
+                UpdateStatus("WARNING: There are " & total & " unpublished samples in the queue, real-time stream could be falling behind...", False, EventLogEntryType.Warning)
                 lastWarning = DateTime.Now.Ticks
             End If
             warningState = True

@@ -66,10 +66,6 @@
                     AssemblyName = "System"
                 />
                 <Reference
-                    Name = "System.Data"
-                    AssemblyName = "System.Data"
-                />
-                <Reference
                     Name = "System.ServiceProcess"
                     AssemblyName = "System.ServiceProcess"
                 />
@@ -128,23 +124,43 @@
                     Lcid = "0"
                     WrapperTool = "tlbimp"
                 />
+                <Reference
+                    Name = "TVA.DatAWare"
+                    AssemblyName = "TVA.DatAWare"
+                    HintPath = "\\opdat\opdat\CtrlSys\CodeLibrary\Builds\Beta\TVA.DatAWare.dll"
+                />
+                <Reference
+                    Name = "TVA.EE"
+                    AssemblyName = "TVA.EE"
+                    HintPath = "\\opdat\opdat\CtrlSys\CodeLibrary\Builds\Beta\TVA.EE.dll"
+                />
             </References>
             <Imports>
                 <Import Namespace = "Microsoft.VisualBasic" />
                 <Import Namespace = "System" />
                 <Import Namespace = "System.Collections" />
-                <Import Namespace = "System.Data" />
                 <Import Namespace = "System.Diagnostics" />
+                <Import Namespace = "TVA" />
             </Imports>
         </Build>
         <Files>
             <Include>
+                <File
+                    RelPath = "Aggregator.vb"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
                 <File
                     RelPath = "app.config"
                     BuildAction = "None"
                 />
                 <File
                     RelPath = "AssemblyInfo.vb"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "Concentrator.vb"
                     SubType = "Code"
                     BuildAction = "Compile"
                 />
@@ -159,32 +175,7 @@
                     BuildAction = "EmbeddedResource"
                 />
                 <File
-                    RelPath = "DatAWare.Aggregator.vb"
-                    SubType = "Code"
-                    BuildAction = "Compile"
-                />
-                <File
-                    RelPath = "DatAWare.Common.vb"
-                    SubType = "Code"
-                    BuildAction = "Compile"
-                />
-                <File
-                    RelPath = "DatAWare.EventQueue.vb"
-                    SubType = "Code"
-                    BuildAction = "Compile"
-                />
-                <File
-                    RelPath = "DatAWare.Listener.vb"
-                    SubType = "Code"
-                    BuildAction = "Compile"
-                />
-                <File
-                    RelPath = "DatAWare.PMUServerPoints.vb"
-                    SubType = "Code"
-                    BuildAction = "Compile"
-                />
-                <File
-                    RelPath = "Interop.vb"
+                    RelPath = "EventQueue.vb"
                     SubType = "Code"
                     BuildAction = "Compile"
                 />
@@ -193,77 +184,12 @@
                     BuildAction = "Content"
                 />
                 <File
-                    RelPath = "PDCstream.Common.vb"
+                    RelPath = "PDCListener.vb"
                     SubType = "Code"
                     BuildAction = "Compile"
                 />
                 <File
-                    RelPath = "PDCstream.CompositeValues.vb"
-                    SubType = "Code"
-                    BuildAction = "Compile"
-                />
-                <File
-                    RelPath = "PDCstream.Concentrator.vb"
-                    SubType = "Code"
-                    BuildAction = "Compile"
-                />
-                <File
-                    RelPath = "PDCstream.ConfigFile.vb"
-                    SubType = "Code"
-                    BuildAction = "Compile"
-                />
-                <File
-                    RelPath = "PDCstream.DataPacket.vb"
-                    SubType = "Code"
-                    BuildAction = "Compile"
-                />
-                <File
-                    RelPath = "PDCstream.DataQueue.vb"
-                    SubType = "Code"
-                    BuildAction = "Compile"
-                />
-                <File
-                    RelPath = "PDCstream.DataSample.vb"
-                    SubType = "Code"
-                    BuildAction = "Compile"
-                />
-                <File
-                    RelPath = "PDCstream.DescriptorPacket.vb"
-                    SubType = "Code"
-                    BuildAction = "Compile"
-                />
-                <File
-                    RelPath = "PDCstream.FrequencyDefinition.vb"
-                    SubType = "Code"
-                    BuildAction = "Compile"
-                />
-                <File
-                    RelPath = "PDCstream.FrequencyValue.vb"
-                    SubType = "Code"
-                    BuildAction = "Compile"
-                />
-                <File
-                    RelPath = "PDCstream.PhasorDefinition.vb"
-                    SubType = "Code"
-                    BuildAction = "Compile"
-                />
-                <File
-                    RelPath = "PDCstream.PhasorValue.vb"
-                    SubType = "Code"
-                    BuildAction = "Compile"
-                />
-                <File
-                    RelPath = "PDCstream.PMUDataCell.vb"
-                    SubType = "Code"
-                    BuildAction = "Compile"
-                />
-                <File
-                    RelPath = "PDCstream.PMUDataPoint.vb"
-                    SubType = "Code"
-                    BuildAction = "Compile"
-                />
-                <File
-                    RelPath = "PDCstream.PMUDefinition.vb"
+                    RelPath = "PMUServerPoints.vb"
                     SubType = "Code"
                     BuildAction = "Compile"
                 />
