@@ -25,6 +25,7 @@ Namespace EE.Phasor.PDCstream
         DontCare
     End Enum
 
+    ' TODO: Remove this from here - this should only be defined in Super PDC...
     Public Enum PointType
         PhasorMagnitude
         PhasorAngle
@@ -34,6 +35,7 @@ Namespace EE.Phasor.PDCstream
         StatusFlags
     End Enum
 
+    ' TODO: Remove this from here - this should only be defined in Super PDC...
     Public Enum PointArchiveStyle
         Raw
         Average

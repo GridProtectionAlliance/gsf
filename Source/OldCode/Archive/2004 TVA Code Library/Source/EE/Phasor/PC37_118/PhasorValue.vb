@@ -18,7 +18,7 @@
 Imports TVA.Interop
 Imports TVA.Shared.Math
 
-Namespace EE.Phasor.IEEE1344
+Namespace EE.Phasor.PC37_118
 
     Public Class PhasorValue
 
