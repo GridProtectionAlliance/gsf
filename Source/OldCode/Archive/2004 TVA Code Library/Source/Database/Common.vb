@@ -735,9 +735,6 @@ Namespace Database
                 ' and the code is willing to use the default.  To do this fill the extended ParamValue as Nothing/Null
                 Dim startIndex As Integer = paramValues.Length
                 ReDim Preserve paramValues(cmd.Parameters.Count - 1) ' Make the Values array match the Parameters of the Stored Proc
-                For i As Integer = startIndex To cmd.Parameters.Count - 1
-                    paramValues(i) = Nothing
-                Next
             End If
 
             ' Assign the values to the the Parameters.
