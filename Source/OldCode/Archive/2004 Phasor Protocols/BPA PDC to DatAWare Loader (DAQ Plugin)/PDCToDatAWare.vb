@@ -141,8 +141,8 @@ Namespace PDCToDatAWare
         Private queuedUnits As ArrayList
         Private processedCount As Long
         Private isProcessing As Boolean
-        Private startTime As Single
-        Private stopTime As Single
+        Private startTime As Long
+        Private stopTime As Long
         Private WithEvents processTimer As Timers.Timer
 
         Public Sub New(ByVal timeZone As String)
@@ -334,7 +334,7 @@ Namespace PDCToDatAWare
             Get
                 With New StringBuilder
                     .Append("  Current processing state: " & IIf(Processing, "Executing", "Idle") & vbCrLf)
-                    .Append("    Total process run time: " & RunTime() & vbCrLf)
+                    .Append("    Total process run time: " & SecondsToText(RunTime) & vbCrLf)
                     .Append("    PDC reader config file: " & Variables("PDCDataReader.ConfigFile") & vbCrLf)
                     .Append("      PDC reader data port: " & Variables("PDCDataReader.ListenPort") & vbCrLf)
                     .Append("      Point index csv file: " & Variables("DatAWare.PointListFile") & vbCrLf)
@@ -364,29 +364,29 @@ Namespace PDCToDatAWare
                 isProcessing = Value
 
                 If isProcessing Then
-                    startTime = Timer
+                    startTime = DateTime.Now.Ticks
                     stopTime = 0
                 Else
-                    stopTime = Timer
+                    stopTime = DateTime.Now.Ticks
                 End If
             End Set
         End Property
 
-        Public ReadOnly Property RunTime() As String
+        Public ReadOnly Property RunTime() As Long
             Get
-                Dim ProcessingTime As Single
+                Dim processingTime As Long
 
                 If startTime > 0 Then
                     If stopTime > 0 Then
-                        ProcessingTime = stopTime - startTime
+                        processingTime = stopTime - startTime
                     Else
-                        ProcessingTime = Timer - startTime
+                        processingTime = DateTime.Now.Ticks - startTime
                     End If
                 End If
 
-                If ProcessingTime < 0 Then ProcessingTime = 0
+                If processingTime < 0 Then processingTime = 0
 
-                Return SecondsToText(ProcessingTime)
+                Return processingTime
             End Get
         End Property
 

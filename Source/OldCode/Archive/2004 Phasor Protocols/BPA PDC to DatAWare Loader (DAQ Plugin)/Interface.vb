@@ -123,7 +123,7 @@ Public Class [Interface]
         MyBase.New()
 
         SharedConfigFileName = [Assembly].GetExecutingAssembly.Location & ".config"
-        Variables.Create("DatAWare.TimeZone", "Central Standard Time", VariableType.Text, "DatAWare Server TimeZone")
+        Variables.Create("DatAWare.TimeZone", "GMT Standard Time", VariableType.Text, "DatAWare Server TimeZone")
         Variables.Create("DatAWare.PointListFile", ApplicationPath & "PM_DBASE.csv", VariableType.Text, "DatAWare Point List File")
         Variables.Create("PDCDataReader.ConfigFile", ApplicationPath & "TVA_PDC.ini", VariableType.Text, "BPA PDC Configuration File")
         Variables.Create("PDCDataReader.ListenPort", 3050, VariableType.Int, "BPA PDC UDP Port to Listen On")
