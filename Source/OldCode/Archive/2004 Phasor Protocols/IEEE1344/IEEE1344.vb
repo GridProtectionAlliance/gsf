@@ -752,6 +752,18 @@ Public Class IEEE1344Listener
         LoadMRUList(PMUIP, "PMU.MRU.IP")
         LoadMRUList(PMUID, "PMU.MRU.ID")
 
+        ' We auto-launch with specified command line parameters, if provided
+        If Len(VB.Command) > 0 Then
+            With VB.Command.Split("/"c)
+                If .Length >= 3 Then
+                    PMUIP.Text = .GetValue(0)
+                    PMUID.Text = .GetValue(1)
+                    PMUPort.Text = .GetValue(2)
+                    Listen_Click(Me, Nothing)
+                End If
+            End With
+        End If
+
     End Sub
 
     Private Sub LoadMRUList(ByVal comboBox As System.Windows.Forms.ComboBox, ByVal setting As String)
@@ -950,19 +962,6 @@ Public Class IEEE1344Listener
         End If
 
     End Sub
-
-    Private Function GetYValues(ByVal values As Double()) As String
-
-        With New StringBuilder
-            For x As Integer = 0 To values.Length - 1
-                If x > 0 Then .Append(","c)
-                .Append(values(x))
-            Next
-
-            Return .ToString
-        End With
-
-    End Function
 
     Private Sub parser_ReceivedHeaderFile(ByVal headerFile As IEEE1344.HeaderFile) Handles m_parser.ReceivedHeaderFile
 
