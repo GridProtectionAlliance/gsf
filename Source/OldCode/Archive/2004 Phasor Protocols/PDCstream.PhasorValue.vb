@@ -15,6 +15,8 @@
 '
 '***********************************************************************
 
+Imports DatAWarePDC.Interop
+
 Namespace PDCstream
 
     Public Enum PhasorType
@@ -178,8 +180,8 @@ Namespace PDCstream
             Get
                 Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BinaryLength)
 
-                Array.Copy(BitConverter.GetBytes(m_real), 0, buffer, 0, 2)
-                Array.Copy(BitConverter.GetBytes(m_imaginary), 0, buffer, 2, 2)
+                EndianOrder.SwapCopy(BitConverter.GetBytes(m_real), 0, buffer, 0, 2)
+                EndianOrder.SwapCopy(BitConverter.GetBytes(m_imaginary), 0, buffer, 2, 2)
 
                 Return buffer
             End Get

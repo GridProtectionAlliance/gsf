@@ -105,6 +105,7 @@ Namespace DatAWare
             End Get
         End Property
 
+        ' This combines a lookup and return in a single step...
         Public Function GetPoint(ByVal databaseIndex As Integer, ByRef dataPoint As PMUDataPoint) As Boolean
 
             Dim point As Object = m_points(databaseIndex)
