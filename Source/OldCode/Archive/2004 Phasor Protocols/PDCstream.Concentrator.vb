@@ -175,6 +175,7 @@ Namespace PDCstream
             Dim binaryLength As Integer
             Dim broadcastIP As IPEndPoint
             Dim x, y, z As Integer
+            Dim packetSent As Boolean
 
             ' Check for non-published samples...
             For x = 0 To m_dataQueue.SampleCount - 1
@@ -204,12 +205,18 @@ Namespace PDCstream
                                             UpdateStatus("Error publishing data packet: " & ex.Message)
                                             .Published = packetIsStale
                                         End Try
+
+                                        ' Although we could go ahead and send multiple packets here, a normal PDC doesn't, it only sends one packet
+                                        ' at every sample interval - so to make possible clients happy, we'll do the same...
+                                        packetSent = .Published
+                                        Exit For
                                     End If
                                 End If
                             End With
                         Next
                     End If
                 End With
+                If packetSent Then Exit For
             Next
 
             m_processTimer.Enabled = (m_enabled And m_dataQueue.SampleCount > 0)

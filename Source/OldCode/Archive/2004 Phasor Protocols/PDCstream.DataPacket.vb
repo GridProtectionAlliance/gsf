@@ -104,11 +104,11 @@ Namespace PDCstream
                 Dim index As Integer
 
                 buffer(0) = SyncByte
-                buffer(1) = m_index + 1
-                Array.Copy(BitConverter.GetBytes(Convert.ToUInt16(buffer.Length \ 2)), 0, buffer, 2, 2)
-                Array.Copy(BitConverter.GetBytes(Convert.ToUInt32(m_timeTag.Value)), 0, buffer, 4, 4)
-                Array.Copy(BitConverter.GetBytes(Convert.ToUInt16(m_index)), 0, buffer, 8, 2)
-                Array.Copy(BitConverter.GetBytes(Convert.ToUInt16(Cells.Length)), 0, buffer, 10, 2)
+                buffer(1) = 1
+                EndianOrder.SwapCopy(BitConverter.GetBytes(Convert.ToUInt16(buffer.Length \ 2)), 0, buffer, 2, 2)
+                EndianOrder.SwapCopy(BitConverter.GetBytes(Convert.ToUInt32(m_timeTag.Value)), 0, buffer, 4, 4)
+                EndianOrder.SwapCopy(BitConverter.GetBytes(Convert.ToUInt16(m_index)), 0, buffer, 8, 2)
+                EndianOrder.SwapCopy(BitConverter.GetBytes(Convert.ToUInt16(Cells.Length)), 0, buffer, 10, 2)
                 index = 12
 
                 For x As Integer = 0 To Cells.Length - 1
@@ -117,7 +117,7 @@ Namespace PDCstream
                 Next
 
                 ' Add check sum
-                Array.Copy(BitConverter.GetBytes(XorCheckSum(buffer, 0, index)), 0, buffer, index, 2)
+                EndianOrder.SwapCopy(BitConverter.GetBytes(XorCheckSum(buffer, 0, index)), 0, buffer, index, 2)
 
                 Return buffer
             End Get

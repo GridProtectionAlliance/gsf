@@ -72,7 +72,7 @@ Namespace PDCstream
         Default Public ReadOnly Property Sample(ByVal baseTime As DateTime) As DataSample
             Get
                 SyncLock m_dataSamples.SyncRoot
-                    Return DirectCast(m_dataSamples(baseTime), DataSample)
+                    Return DirectCast(m_dataSamples(baseTime.Ticks), DataSample)
                 End SyncLock
             End Get
         End Property
@@ -80,7 +80,7 @@ Namespace PDCstream
         Public Function GetSampleIndex(ByVal baseTime As DateTime) As Integer
 
             SyncLock m_dataSamples.SyncRoot
-                Return m_dataSamples.IndexOfKey(baseTime)
+                Return m_dataSamples.IndexOfKey(baseTime.Ticks)
             End SyncLock
 
         End Function
@@ -101,7 +101,7 @@ Namespace PDCstream
             SyncLock m_dataSamples.SyncRoot
                 For x = 0 To m_dataSamples.Count - 1
                     With DirectCast(m_dataSamples.GetByIndex(x), DataSample)
-                        If .Published Then publishedSamples.Add(.Timestamp)
+                        If .Published Then publishedSamples.Add(.Timestamp.Ticks)
                     End With
                 Next
 
@@ -159,7 +159,7 @@ Namespace PDCstream
                 If DistanceFromBaseTime(.Timestamp) > 0 Then AddNewSample(.Timestamp)
 
                 ' Find sample for this timestamp
-                Dim sample As DataSample = m_dataSamples(BaselinedTimestamp(.Timestamp))
+                Dim sample As DataSample = m_dataSamples(BaselinedTimestamp(.Timestamp).Ticks)
 
                 If sample Is Nothing Then
                     ' No samples exists for this timestamp - data must be very old
@@ -265,7 +265,7 @@ Namespace PDCstream
             Dim dataSample As New DataSample(m_configFile, baseTime)
 
             SyncLock m_dataSamples.SyncRoot
-                m_dataSamples.Add(baseTime, dataSample)
+                m_dataSamples.Add(baseTime.Ticks, dataSample)
             End SyncLock
 
             RaiseEvent NewDataSampleCreated(dataSample)
@@ -285,7 +285,7 @@ Namespace PDCstream
                 If .Millisecond = 0 Then
                     Return timestamp
                 Else
-                    Return New DateTime(.Year, .Month, .Day, .Hour, .Minute, .Second)
+                    Return New DateTime(.Year, .Month, .Day, .Hour, .Minute, .Second, 0)
                 End If
             End With
 

@@ -15,6 +15,7 @@
 '
 '***********************************************************************
 
+Imports DatAWarePDC.Interop
 Imports DatAWarePDC.PDCstream.Common
 
 Namespace PDCstream
@@ -216,20 +217,20 @@ Namespace PDCstream
                 buffer(1) = m_pmuDefinition.SampleRate
                 buffer(2) = 2
                 buffer(3) = PhasorValues.Length
-                Array.Copy(BitConverter.GetBytes(Convert.ToUInt16(m_sampleNumber)), 0, buffer, 4, 2)
-                Array.Copy(BitConverter.GetBytes(StatusFlags), 0, buffer, 6, 2)
+                EndianOrder.SwapCopy(BitConverter.GetBytes(Convert.ToUInt16(m_sampleNumber)), 0, buffer, 4, 2)
+                EndianOrder.SwapCopy(BitConverter.GetBytes(StatusFlags), 0, buffer, 6, 2)
                 index = 8
 
                 For x As Integer = 0 To PhasorValues.Length - 1
-                    Array.Copy(PhasorValues(x).BinaryImage, 0, buffer, index, PhasorValue.BinaryLength)
+                    EndianOrder.SwapCopy(PhasorValues(x).BinaryImage, 0, buffer, index, PhasorValue.BinaryLength)
                     index += PhasorValue.BinaryLength
                 Next
 
-                Array.Copy(FrequencyValue.BinaryImage, 0, buffer, index, FrequencyValue.BinaryLength)
+                EndianOrder.SwapCopy(FrequencyValue.BinaryImage, 0, buffer, index, FrequencyValue.BinaryLength)
                 index += FrequencyValue.BinaryLength
 
-                Array.Copy(BitConverter.GetBytes(Digital0), 0, buffer, index, 2)
-                Array.Copy(BitConverter.GetBytes(Digital1), 0, buffer, index + 2, 2)
+                EndianOrder.SwapCopy(BitConverter.GetBytes(Digital0), 0, buffer, index, 2)
+                EndianOrder.SwapCopy(BitConverter.GetBytes(Digital1), 0, buffer, index + 2, 2)
 
                 Return buffer
             End Get

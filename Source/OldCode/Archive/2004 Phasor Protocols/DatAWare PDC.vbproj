@@ -184,7 +184,7 @@
                     BuildAction = "Compile"
                 />
                 <File
-                    RelPath = "Interop.Unix.vb"
+                    RelPath = "Interop.vb"
                     SubType = "Code"
                     BuildAction = "Compile"
                 />
