@@ -1,5 +1,5 @@
 '***********************************************************************
-'  IDigitalDefinition.vb - Digital definition interface
+'  IDigitalDefinition.vb - Digital data definition interface
 '  Copyright © 2005 - TVA, all rights reserved
 '
 '  Build Environment: VB.NET, Visual Studio 2003
@@ -17,22 +17,10 @@
 
 Namespace EE.Phasor
 
-    ' This class represents the protocol independent interface of a digital value definition.
+    ' This interface represents a protocol independent digital value definition.
     Public Interface IDigitalDefinition
 
-        Inherits IComparable
-
-        Property Index() As Integer
-
-        ReadOnly Property MaximumLabelLength() As Integer
-
-        Property Label() As String
-
-        ReadOnly Property LabelImage() As Byte()
-
-        ReadOnly Property BinaryLength() As Integer
-
-        ReadOnly Property BinaryImage() As Byte()
+        Inherits IChannelDefinition
 
     End Interface
 

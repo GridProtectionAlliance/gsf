@@ -19,7 +19,7 @@ Imports System.Text
 
 Namespace EE.Phasor
 
-    ' This class represents the protocol independent definition of a phasor value.
+    ' This class represents the common implementation of the protocol independent definition of a phasor value definition.
     Public MustInherit Class PhasorDefinitionBase
 
         Implements IPhasorDefinition
@@ -44,10 +44,13 @@ Namespace EE.Phasor
             End Set
         End Property
 
-        Public Overridable ReadOnly Property ScalingFactor() As Double Implements IPhasorDefinition.ScalingFactor
+        Public Overridable Property ScalingFactor() As Double Implements IPhasorDefinition.ScalingFactor
             Get
                 Return CalFactor
             End Get
+            Set(ByVal Value As Double)
+                CalFactor = Value
+            End Set
         End Property
 
         Public MustOverride Property CalFactor() As Double Implements IPhasorDefinition.CalFactor

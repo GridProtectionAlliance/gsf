@@ -53,7 +53,7 @@
                     DebugSymbols = "false"
                     IncrementalBuild = "false"
                     Optimize = "true"
-                    OutputPath = "..\bin\"
+                    OutputPath = "..\..\bin\"
                     RegisterForComInterop = "false"
                     RemoveIntegerChecks = "false"
                     TreatWarningsAsErrors = "false"
@@ -96,12 +96,37 @@
                     BuildAction = "Compile"
                 />
                 <File
+                    RelPath = "ChannelDefinitionBase.vb"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
                     RelPath = "Collections.vb"
                     SubType = "Code"
                     BuildAction = "Compile"
                 />
                 <File
                     RelPath = "Common.vb"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "DataFrameBase.vb"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "IAnalogDefintion.vb"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "IChannelDefinition.vb"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "IDataFrame.vb"
                     SubType = "Code"
                     BuildAction = "Compile"
                 />
@@ -116,22 +141,12 @@
                     BuildAction = "Compile"
                 />
                 <File
-                    RelPath = "IPhasorFrame.vb"
-                    SubType = "Code"
-                    BuildAction = "Compile"
-                />
-                <File
                     RelPath = "IPhasorValue.vb"
                     SubType = "Code"
                     BuildAction = "Compile"
                 />
                 <File
                     RelPath = "PhasorDefinitionBase.vb"
-                    SubType = "Code"
-                    BuildAction = "Compile"
-                />
-                <File
-                    RelPath = "PhasorFrameBase.vb"
                     SubType = "Code"
                     BuildAction = "Compile"
                 />

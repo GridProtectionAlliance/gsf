@@ -74,9 +74,9 @@ Namespace DatAWare
         Private m_packetsAccepted As Long
         Private m_packetsRejected As Long
         Private m_bytesReceived As Long
+        Private m_udpBufferSize As Integer
 
-        Private Const TCPBufferSize As Integer = 4096   ' 4Kb buffer
-        Private Const UDPBufferSize As Integer = 524288 ' 512Kb buffer
+        Private Const BufferSize As Integer = 4096   ' 4Kb buffer
 
         ' Initialize listener to directly process standard DatAWare events
         Public Sub New( _
@@ -92,6 +92,7 @@ Namespace DatAWare
             m_serverPort = serverPort
             m_enabled = True
             m_clientThreads = New Hashtable
+            m_udpBufferSize = BufferSize
 
         End Sub
 
@@ -108,6 +109,7 @@ Namespace DatAWare
             m_serverPort = serverPort
             m_enabled = True
             m_clientThreads = New Hashtable
+            m_udpBufferSize = BufferSize
 
         End Sub
 
@@ -131,6 +133,15 @@ Namespace DatAWare
             Get
                 Return m_protocol
             End Get
+        End Property
+
+        Public Property UDPBufferSize() As Integer
+            Get
+                Return m_udpBufferSize
+            End Get
+            Set(ByVal Value As Integer)
+                m_udpBufferSize = Value
+            End Set
         End Property
 
         Public ReadOnly Property ServerPort() As Integer
@@ -243,11 +254,16 @@ Namespace DatAWare
             Else
                 ' In UDP mode, we just listen on a single connection using the specified port
                 Dim udpSocket As New Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp)
-                Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), 524288)
+                Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), m_udpBufferSize)
                 Dim remoteEP As System.Net.EndPoint = CType(New IPEndPoint(IPAddress.Any, m_serverPort), System.Net.EndPoint)
+                Dim clientData As MemoryStream
+                Dim eventBuffer As Byte()
+                Dim events As Integer
+                Dim remainder As Integer
                 Dim read As Integer
 
                 udpSocket.Bind(remoteEP)
+                clientData = New MemoryStream
 
                 m_updateStatus("New UDP client connection established for " & Name & "...")
 
@@ -259,9 +275,39 @@ Namespace DatAWare
 
                         ' If we get no data we'll just go back to listening...
                         If read > 0 Then
+                            ' Get all data acquired from the data stream
+                            If clientData.Length > 0 Then
+                                ' There was data left over from last pass, append new data to this data
+                                clientData.Write(buffer, 0, read)
+                                eventBuffer = clientData.ToArray()
+                                clientData = New MemoryStream
+                                read = eventBuffer.Length
+                            Else
+                                ' Just use buffer directly
+                                eventBuffer = buffer
+                            End If
+
+                            ' We may not have received an even number of events - so we check for that
+                            events = Math.DivRem(read, StandardEvent.BinaryLength, remainder)
+
+                            If remainder > 0 Then
+                                ' We have a little bit of the next event in this packet, so we'll take care of that...
+                                Dim evenLength As Integer = events * StandardEvent.BinaryLength
+                                Dim evenPacket As Byte() = Array.CreateInstance(GetType(Byte), evenLength)
+
+                                ' Get all complete event data from this packet for processing...
+                                Array.Copy(eventBuffer, 0, evenPacket, 0, evenLength)
+
+                                ' Leave remainder of event data in the buffer for the next pass
+                                clientData.Write(eventBuffer, evenLength, eventBuffer.Length - evenLength)
+
+                                eventBuffer = evenPacket
+                                read = eventBuffer.Length
+                            End If
+
                             ' Process the network data packet...
                             m_bytesReceived += read
-                            m_processEventBuffer(buffer, 0, read)
+                            m_processEventBuffer(eventBuffer, 0, read)
                             m_packetsAccepted += 1
                         End If
                     Catch ex As ThreadAbortException
@@ -289,7 +335,7 @@ Namespace DatAWare
             Dim clientStream As NetworkStream
             Dim clientData As MemoryStream
             Dim eventBuffer As Byte()
-            Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), TCPBufferSize)
+            Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BufferSize)
             Dim read As Integer
             Dim events As Integer
             Dim remainder As Integer
@@ -306,7 +352,7 @@ Namespace DatAWare
                 Try
                     Do
                         ' Block thread until we've read some data...
-                        read = clientStream.Read(buffer, 0, TCPBufferSize)
+                        read = clientStream.Read(buffer, 0, BufferSize)
                         clientData.Write(buffer, 0, read)
                     Loop While clientStream.DataAvailable
 

@@ -1,5 +1,5 @@
 '***********************************************************************
-'  IPhasorDefinition.vb - Phasor data definition interface
+'  IAnalogDefinition.vb - Analog data definition interface
 '  Copyright © 2005 - TVA, all rights reserved
 '
 '  Build Environment: VB.NET, Visual Studio 2003
@@ -17,18 +17,10 @@
 
 Namespace EE.Phasor
 
-    ' This class represents the protocol independent interface of a phasor value definition.
-    Public Interface IPhasorDefinition
+    ' This interface represents a protocol independent analog value definition.
+    Public Interface IAnalogDefinition
 
         Inherits IChannelDefinition
-
-        Property [Type]() As PhasorType
-
-        Property VoltageReference() As IPhasorDefinition
-
-        Property CalFactor() As Double
-
-        ReadOnly Property MaximumCalFactor() As Int32
 
     End Interface
 

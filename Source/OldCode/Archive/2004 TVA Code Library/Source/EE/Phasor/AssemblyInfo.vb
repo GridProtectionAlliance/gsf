@@ -8,8 +8,8 @@ Imports System.Runtime.InteropServices
 
 ' Review the values of the assembly attributes
 
-<Assembly: AssemblyTitle("TVA .NET Code Library: Electrical Engineering")> 
-<Assembly: AssemblyDescription("Shared .NET Electrical Engineering Code Library ")> 
+<Assembly: AssemblyTitle("TVA .NET Code Library: Phasor Protocols")> 
+<Assembly: AssemblyDescription("Shared .NET Electrical Engineering Phasor Protocol Code Library ")> 
 <Assembly: AssemblyCompany("TVA")> 
 <Assembly: AssemblyProduct("Shared .NET Code Library for TVA")> 
 <Assembly: AssemblyCopyright("Copyright © 2005, TVA - All rights reserved")> 
@@ -29,4 +29,4 @@ Imports System.Runtime.InteropServices
 ' You can specify all the values or you can default the Build and Revision Numbers 
 ' by using the '*' as shown below:
 
-<Assembly: AssemblyVersion("7.5.5.47890")> 
+<Assembly: AssemblyVersion("7.5.8.61940")> 

@@ -13,6 +13,10 @@
 '  11/12/2004 - James R Carroll
 '       Initial version of source generated
 '
+' TODO: Make sure these properties are defined for PC37.118
+'        Property NormalStatus() As Int16
+'        Property CurrentInputs() As Int16
+'
 '***********************************************************************
 
 Imports System.Text

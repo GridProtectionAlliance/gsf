@@ -77,6 +77,30 @@ Namespace EE.Phasor
 
     End Class
 
+    Public Class AnalogDefinitions
+
+        Inherits CollectionBase
+
+        Public Sub Add(ByVal value As IAnalogDefinition)
+
+            List.Add(value)
+
+        End Sub
+
+        Default Public ReadOnly Property Item(ByVal index As Integer) As IAnalogDefinition
+            Get
+                Return DirectCast(List.Item(index), IAnalogDefinition)
+            End Get
+        End Property
+
+        Public Sub Sort()
+
+            Array.Sort(List)
+
+        End Sub
+
+    End Class
+
     Public Class DigitalDefinitions
 
         Inherits CollectionBase

@@ -37,6 +37,10 @@ Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "Database", "Database\Databa
 		{40A043F2-E010-4E65-B28A-D3536785E0C9} = {40A043F2-E010-4E65-B28A-D3536785E0C9}
 	EndProjectSection
 EndProject
+Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "EE.Phasor", "EE\Phasor\EE.Phasor.vbproj", "{AEBCFD16-5FB0-433E-95F1-7975418E7887}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
+EndProject
 Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "ErrorManagement", "ErrorManagement\ErrorManagement.vbproj", "{A158CA96-A27F-41B2-BB67-C1EB998AC9AD}"
 	ProjectSection(ProjectDependencies) = postProject
 		{69E9EEA7-DE7B-4D86-843C-BB3F8D9A6977} = {69E9EEA7-DE7B-4D86-843C-BB3F8D9A6977}
@@ -153,10 +157,6 @@ Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "DatAWare", "DatAWare\DatAWa
 	ProjectSection(ProjectDependencies) = postProject
 	EndProjectSection
 EndProject
-Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "EE", "EE\EE.vbproj", "{AEBCFD16-5FB0-433E-95F1-7975418E7887}"
-	ProjectSection(ProjectDependencies) = postProject
-	EndProjectSection
-EndProject
 Global
 	GlobalSection(SourceCodeControl) = preSolution
 		SccNumberOfProjects = 25
@@ -255,7 +255,7 @@ Global
 		SccLocalPath23 = .
 		CanCheckoutShared = false
 		SccProjectFilePathRelativizedFromConnection23 = DatAWare\\
-		SccProjectUniqueName24 = EE\\EE.vbproj
+		SccProjectUniqueName24 = EE\\EE.Phasor.vbproj
 		SccLocalPath24 = .
 		CanCheckoutShared = false
 		SccProjectFilePathRelativizedFromConnection24 = EE\\
