@@ -6,6 +6,7 @@ Imports System.IO
 Imports System.Text
 Imports System.ComponentModel
 Imports System.Drawing
+Imports System.Threading
 Imports System.Threading.Thread
 Imports TVA.Parsers.HTMLParser
 Imports TVA.Parsers.HTMLParser.HTMLAttributeExtractor
@@ -14,6 +15,7 @@ Imports TVA.Shared.DateTime
 Imports TVA.Services
 Imports TVA.Threading
 Imports Microsoft.Win32
+Imports VB = Microsoft.VisualBasic
 
 Namespace Utilities.Crawlers
 
@@ -408,291 +410,6 @@ Namespace Utilities.Crawlers
 
         End Class
 
-        ' This class indexes a URL on an independent thread
-        Private Class URLIndexer
-
-            Private Parent As WebCrawler
-            Private WithEvents ThreadState As RunThread
-            Private ThreadComplete As Boolean
-            Private SourceURL As String
-            Private URL As String
-
-            Public Sub New(ByVal Parent As WebCrawler, ByVal SourceURL As String, ByVal URL As String)
-
-                Me.Parent = Parent
-                Me.SourceURL = SourceURL
-                Me.URL = ScrubbedURL(SourceURL, URL)
-
-            End Sub
-
-            Public Sub StartIndexing()
-
-                ThreadComplete = False
-                ThreadState = RunThread.ExecuteNonPublicMethod(Me, "IndexURL")
-
-            End Sub
-
-            Public ReadOnly Property IndexComplete() As Boolean
-                Get
-                    Return ThreadComplete
-                End Get
-            End Property
-
-            Public Sub Abort()
-
-                If Not ThreadState Is Nothing Then ThreadState.Abort()
-
-            End Sub
-
-            Private Sub IndexURL()
-
-                ' Index hyper-link if hasn't been done already
-                If Not Parent.PageHasBeenIndexed(URL) Then
-                    ' Get parsed HTML document and attributes from URL
-                    Dim NewPage As Page = Parent.GetResponse(SourceURL, URL)
-
-                    If IIf(Parent.IgnorePageDirectives, True, NewPage.IndexMe) Then
-                        ' If end-user didn't override "PageHasBeenIndexed" functionality, then we just use an array list
-                        ' to keep up with whether or not a page has been indexed.  It should be well noted that this
-                        ' is *only* OK for "small" crawls - indexing large sites requires a database
-                        If Not Parent.IndexedURLs Is Nothing Then
-                            ' Add this URL to the "indexed" list - this is fast, but not scalable - end-user should
-                            ' override this functionality for large unrestricted crawls...
-                            With Parent.IndexedURLs
-                                SyncLock .SyncRoot
-                                    .Add(URL)
-                                    .Sort()
-                                End SyncLock
-                            End With
-                        End If
-
-                        ' Provide page to user for indexing (or whatever they're crawling pages for...)
-                        ' Note: end-user has to keep track of whether or not page has been indexed if they have
-                        ' overridden default "PageHasBeenIndexed" function
-                        Parent.IndexedPages += 1
-                        Parent.RaiseIndexPage(NewPage)
-
-                        ' Handle indexing of any "AlsoIndex" page directives
-                        For Each alsoIndexURL As String In NewPage.AlsoIndex
-                            If Len(alsoIndexURL) > 0 Then Parent.AddURLToIndex(URL, alsoIndexURL)
-                        Next
-
-                        ' Check to see if we need to crawl file system based on any found page directives...
-                        If Not Parent.IgnorePageDirectives And Parent.FileSystemIndexingAllowed Then
-                            ' We only crawl file system when both the file system root and file web root directives have been specified
-                            If Len(NewPage.FileSystemRoot) > 0 And Len(NewPage.FileWebRoot) > 0 Then
-                                Parent.FileSystemIndexRequests.QueueIndexRequest(NewPage)
-                            End If
-                        End If
-
-                        If IIf(Parent.IgnorePageDirectives, Parent.FollowLinksDefault, NewPage.FollowLinks) Then
-                            ' Recurse through any frames on this page
-                            For Each frameSourceURL As String In HTMLFrameSourceExtractor.FrameSourceList(NewPage.ParsedHTMLDocument)
-                                If Len(frameSourceURL) > 0 Then Parent.AddURLToIndex(URL, frameSourceURL)
-                            Next
-
-                            ' Recurse through any links on this page
-                            For Each anchorURL As String In HTMLAnchorExtractor.AnchorList(NewPage.ParsedHTMLDocument)
-                                If Len(anchorURL) > 0 Then Parent.AddURLToIndex(URL, anchorURL)
-                            Next
-                        End If
-                    End If
-                End If
-
-            End Sub
-
-            Private Sub ThreadState_ThreadComplete() Handles ThreadState.ThreadComplete
-
-                ThreadComplete = True
-
-            End Sub
-
-            Private Sub ThreadState_ThreadExecError(ByVal ex As Exception) Handles ThreadState.ThreadExecError
-
-                Parent.RaiseCrawlerError(URL, "Indexing URL", "Failed to index URL due to exception: " & ex.Message)
-
-            End Sub
-
-            ' URL scrubber for those nasty URL's
-            Private Function ScrubbedURL(ByVal SourceURL As String, ByVal URL As String) As String
-
-                Try
-                    URL = Trim(URL)
-
-                    If Len(URL) > 0 Then
-                        Dim chrQuote As Char
-
-                        ' Remove any out-of-place prefixing or suffixing quotes
-                        chrQuote = URL.Chars(0)
-
-                        Do While chrQuote = "'"c Or chrQuote = """"c
-                            URL = Mid(URL, 2)
-                            chrQuote = URL.Chars(0)
-                        Loop
-
-                        chrQuote = URL.Chars(URL.Length - 1)
-
-                        Do While chrQuote = "'"c Or chrQuote = """"c
-                            URL = Left(URL, URL.Length - 1)
-                            chrQuote = URL.Chars(URL.Length - 1)
-                        Loop
-
-                        If Len(URL) > 0 Then
-                            ' Make sure URL is a supported scheme (i.e., ignore mailto:, javascript:, etc...)
-                            Dim Colon As Integer = InStr(URL, ":")
-
-                            If Colon > 0 Then
-                                If Parent.Schemes.BinarySearch(Left(URL, Colon - 1), CaseInsensitiveComparer.Default) < 0 Then
-                                    URL = ""
-                                End If
-                            End If
-
-                            If Len(URL) > 0 Then
-                                ' If path is not fully qualified, we must assume it's a relative path...
-                                If URL.IndexOf("://") < 0 And Len(SourceURL) > 0 Then
-                                    Dim SourceURI As New Uri(SourceURL)
-
-                                    If URL.StartsWith("/") Then
-                                        ' Relative server only
-                                        URL = GetBaseURI(SourceURI) & URL
-                                    Else
-                                        ' Relative server and path
-                                        URL = GetBaseURI(SourceURI) & GetSourcePath(SourceURI) & URL
-                                    End If
-                                End If
-                            End If
-
-                            ' Finally we make sure to get a standard DNS host name for all of our URL's:
-                            Try
-                                With New Uri(URL)
-                                    URL = .Scheme & "://" & Dns.Resolve(.Host).HostName & IIf(.IsDefaultPort, "", ":" & .Port) & .PathAndQuery
-                                End With
-                            Catch
-                                ' If we failed to resolve DNS host name, we stick with what we have
-                            End Try
-                        End If
-                    End If
-                Catch ex As Exception
-                    ' If we're having trouble with the URL, we'll skip it...
-                    URL = ""
-                End Try
-
-                ' We allow end user to restrict URL following based on their own criteria...
-                If Len(URL) > 0 AndAlso Not Parent.FollowURL(URL) Then URL = ""
-
-                Return URL
-
-            End Function
-
-            Private Function GetBaseURI(ByVal SourceURI As Uri) As String
-
-                With SourceURI
-                    Return .Scheme & "://" & .Host & IIf(.IsDefaultPort, "", ":" & .Port)
-                End With
-
-            End Function
-
-            Private Function GetSourcePath(ByVal SourceURI As Uri) As String
-
-                With SourceURI
-                    Return JustPath(.AbsolutePath).Replace("\", "/")
-                End With
-
-            End Function
-
-        End Class
-
-        ' This class processes a batch of URLs for indexing at once - since each URL is indexed on a seperate thread, the
-        ' batch size will be equal to the number of indexing threads
-        Private Class URLBatchProcessingQueue
-
-            Private Parent As WebCrawler
-            Private Queue As ArrayList
-            Private BatchSize As Integer
-            Private Timeout As Integer
-
-            Public Sub New(ByVal Parent As WebCrawler, ByVal Queue As ArrayList, ByVal BatchSize As Integer, ByVal Timeout As Integer)
-
-                Me.Parent = Parent
-                Me.Queue = Queue
-                Me.BatchSize = BatchSize
-                Me.Timeout = Timeout * 1000 ' Convert timeout to milliseconds
-
-            End Sub
-
-            Public ReadOnly Property Count() As Integer
-                Get
-                    Return Queue.Count
-                End Get
-            End Property
-
-            Default Public ReadOnly Property Item(ByVal Index As Integer) As URLIndexer
-                Get
-                    Return DirectCast(Queue(Index), URLIndexer)
-                End Get
-            End Property
-
-            Public Sub ProcessBatch()
-
-                Dim Batch As New ArrayList
-                Dim AllComplete As Boolean
-                Dim SleepCount As Integer
-
-                ' Grab next batch of items for processing
-                For x As Integer = 1 To BatchSize
-                    If Count > 0 Then
-                        Batch.Add(Queue(0))
-                        Queue.RemoveAt(0)
-                    End If
-                Next
-
-                ' Start processing
-                For Each QueuedURL As URLIndexer In Batch
-                    QueuedURL.StartIndexing()
-                Next
-
-                ' Hang out until processing is complete
-                While Not AllComplete
-                    AllComplete = True
-
-                    For Each QueuedURL As URLIndexer In Batch
-                        If Not QueuedURL.IndexComplete Then
-                            AllComplete = False
-                            Exit For
-                        End If
-                    Next
-
-                    If Not Parent.IsActive Then
-                        ' Respect any process cancellations states
-                        Exit While
-                    ElseIf Not AllComplete Then
-                        ' All threads should be complete in timeout specified, all unfinished processing
-                        ' will be aborted...
-                        If SleepCount * 100 >= Timeout Then
-                            For Each QueuedURL As URLIndexer In Batch
-                                If Not QueuedURL.IndexComplete Then QueuedURL.Abort()
-                            Next
-                            Exit While
-                        End If
-
-                        ' Sleep parent thread till subordinate threads finish
-                        SleepCount += 1
-                        CurrentThread.Sleep(100)
-                    End If
-                End While
-
-                ' Requeue any items that didn't finish processing
-                If Not AllComplete Then
-                    ' Try to preserve the original incoming order as best as possible
-                    For x As Integer = Batch.Count - 1 To 0 Step -1
-                        If Not DirectCast(Batch(x), URLIndexer).IndexComplete Then Queue.Insert(0, Batch(x))
-                    Next
-                End If
-
-            End Sub
-
-        End Class
-
         ' This class indexes a file system path on an independent thread
         Private Class FileSystemIndexer
 
@@ -954,8 +671,8 @@ Namespace Utilities.Crawlers
         Private URLQueue As ArrayList                               ' Queue of URL's to be processes
         Private WithEvents QueueTimer As Timers.Timer               ' URL queue processing timer
         Private Processing As Boolean                               ' Determines if crawler is active
-        Private StartTime As Double                                 ' Start timer value of indexing run
-        Private StopTime As Double                                  ' Stop timer value of indexing run
+        Private StartTime As Long                                   ' Start timer value of indexing run
+        Private StopTime As Long                                    ' Stop timer value of indexing run
         Private FileSystemIndexRequests As FileSystemIndexingQueue  ' File system indexing queue
         Private Shared CachedFilePatterns As New Hashtable          ' Cached file match patterns
 
@@ -964,6 +681,7 @@ Namespace Utilities.Crawlers
         Private CrawlerStartPage As String
         Private CrawlerValidSchemes As String
         Private CrawlerMaximumThreads As Integer
+        Private CrawlerActiveThreads As Integer
         Private CrawlerPageIndexTimeout As Integer
         Private CrawlerIgnorePageDirectives As Boolean
         Private CrawlerIndexMeDefault As Boolean
@@ -978,10 +696,11 @@ Namespace Utilities.Crawlers
         Private CrawlerEnabled As Boolean
         Private CrawlerEncoding As Encoding
 
-        Private Const BufferSize As Integer = 262144 ' 256K
+        Private Const BufferSize As Integer = 4096 ' 4K
 
         Public Sub New()
 
+            UrlIndexer.Parent = Me
             UserHTMLExtraction = AddressOf DefaultUserHTMLExtraction
             UserHTMLConversion = AddressOf DefaultUserHTMLConversion
             FollowURL = AddressOf DefaultFollowURL
@@ -995,7 +714,7 @@ Namespace Utilities.Crawlers
             CrawlerDirectiveName = "INDEX"
             CrawlerStartPage = "http://www.msn.com/"
             CrawlerMaximumThreads = 5
-            CrawlerPageIndexTimeout = 30
+            CrawlerPageIndexTimeout = 10
             CrawlerIgnorePageDirectives = False
             CrawlerIndexMeDefault = True
             CrawlerFollowLinksDefault = True
@@ -1080,7 +799,14 @@ Namespace Utilities.Crawlers
             End Set
         End Property
 
-        <Browsable(True), Category("Configuration"), Description("Define the maximum number of seconds allowed for a page to be indexed before aborting."), DefaultValue(30)> _
+        <Browsable(False)> _
+        Public ReadOnly Property ActiveThreads() As Integer
+            Get
+                Return CrawlerActiveThreads
+            End Get
+        End Property
+
+        <Browsable(True), Category("Configuration"), Description("Define the maximum number of seconds allowed for a page to be indexed before aborting."), DefaultValue(10)> _
         Public Property PageIndexTimeout() As Integer
             Get
                 Return CrawlerPageIndexTimeout
@@ -1108,7 +834,7 @@ Namespace Utilities.Crawlers
             Set(ByVal Value As Boolean)
                 CrawlerEnabled = Value
 
-                If Value And Not DesignMode Then
+                If Not DesignMode Then
                     ' Resume crawling, if needed
                     QueueTimer.Enabled = (Processing And URLQueueCount > 0)
                 End If
@@ -1294,6 +1020,84 @@ Namespace Utilities.Crawlers
             End Get
         End Property
 
+        Private Class URLIndexer
+
+            Inherits ThreadBase
+
+            Public Shared Parent As WebCrawler
+            Public SourceURL As String
+            Public URL As String
+
+            Public Sub New(ByVal SourceURL As String, ByVal URL As String)
+
+                Me.SourceURL = SourceURL
+                Me.URL = Parent.ScrubbedURL(SourceURL, URL)
+
+            End Sub
+
+            Protected Overrides Sub ThreadProc()
+                Try
+                    If Len(URL) > 0 Then
+                        ' Index hyper-link if hasn't been done already
+                        If Not Parent.PageHasBeenIndexed(URL) Then
+                            ' Get parsed HTML document and attributes from URL
+                            Dim NewPage As Page = Parent.GetResponse(SourceURL, URL)
+
+                            If IIf(Parent.IgnorePageDirectives, True, NewPage.IndexMe) Then
+                                ' If end-user didn't override "PageHasBeenIndexed" functionality, then we just use an array list
+                                ' to keep up with whether or not a page has been indexed.  It should be well noted that this
+                                ' is *only* OK for "small" crawls - indexing large sites requires a database
+                                If Not Parent.IndexedURLs Is Nothing Then
+                                    ' Add this URL to the "indexed" list - this is fast, but not scalable - end-user should
+                                    ' override this functionality for large unrestricted crawls...
+                                    With Parent.IndexedURLs
+                                        SyncLock .SyncRoot
+                                            .Add(URL)
+                                            .Sort()
+                                        End SyncLock
+                                    End With
+                                End If
+
+                                ' Provide page to user for indexing (or whatever they're crawling pages for...)
+                                ' Note: end-user has to keep track of whether or not page has been indexed if they have
+                                ' overridden default "PageHasBeenIndexed" function
+                                Parent.IndexedPages += 1
+                                Parent.RaiseIndexPage(NewPage)
+
+                                ' Handle indexing of any "AlsoIndex" page directives
+                                For Each alsoIndexURL As String In NewPage.AlsoIndex
+                                    If Len(alsoIndexURL) > 0 Then Parent.AddURLToIndex(URL, alsoIndexURL)
+                                Next
+
+                                ' Check to see if we need to crawl file system based on any found page directives...
+                                If Not Parent.IgnorePageDirectives And Parent.FileSystemIndexingAllowed Then
+                                    ' We only crawl file system when both the file system root and file web root directives have been specified
+                                    If Len(NewPage.FileSystemRoot) > 0 And Len(NewPage.FileWebRoot) > 0 Then
+                                        Parent.FileSystemIndexRequests.QueueIndexRequest(NewPage)
+                                    End If
+                                End If
+
+                                If IIf(Parent.IgnorePageDirectives, Parent.FollowLinksDefault, NewPage.FollowLinks) Then
+                                    ' Recurse through any frames on this page
+                                    For Each frameSourceURL As String In HTMLFrameSourceExtractor.FrameSourceList(NewPage.ParsedHTMLDocument)
+                                        If Len(frameSourceURL) > 0 Then Parent.AddURLToIndex(URL, frameSourceURL)
+                                    Next
+
+                                    ' Recurse through any links on this page
+                                    For Each anchorURL As String In HTMLAnchorExtractor.AnchorList(NewPage.ParsedHTMLDocument)
+                                        If Len(anchorURL) > 0 Then Parent.AddURLToIndex(URL, anchorURL)
+                                    Next
+                                End If
+                            End If
+                        End If
+                    End If
+                Catch ex As Exception
+                    Parent.RaiseCrawlerError(URL, "Indexing URL", "Failed to index URL due to exception: " & ex.Message)
+                End Try
+            End Sub
+
+        End Class
+
         Private Sub RaiseCrawlerError(ByVal URL As String, ByVal [Step] As String, ByVal [Error] As String)
 
             Try
@@ -1328,16 +1132,18 @@ Namespace Utilities.Crawlers
         Public Sub AddURLToIndex(ByVal URL As String)
 
             SyncLock URLQueue.SyncRoot
-                URLQueue.Add(New URLIndexer(Me, "", URL))
+                URLQueue.Add(New URLIndexer("", URL))
             End SyncLock
+            QueueTimer.Enabled = True
 
         End Sub
 
         Private Sub AddURLToIndex(ByVal SourceURL As String, ByVal URL As String)
 
             SyncLock URLQueue.SyncRoot
-                URLQueue.Add(New URLIndexer(Me, SourceURL, URL))
+                URLQueue.Add(New URLIndexer(SourceURL, URL))
             End SyncLock
+            QueueTimer.Enabled = True
 
         End Sub
 
@@ -1355,34 +1161,79 @@ Namespace Utilities.Crawlers
             If Not CrawlerEnabled Then Throw New InvalidOperationException("Cannot start indexing - web crawler is not enabled.  Check ""Enabled"" property.")
             If IsActive Then Throw New InvalidOperationException("Indexing already in progress.")
 
-            SyncLock URLQueue.SyncRoot
-                URLQueue.Insert(0, New URLIndexer(Me, "", CrawlerStartPage))
-            End SyncLock
+            AddURLToIndex(CrawlerStartPage)
 
             IndexedPages = 0
             Processing = True
             StopTime = 0
-            StartTime = Timer
-            QueueTimer.Enabled = True
+            StartTime = Now.Ticks
 
         End Sub
 
         Public Sub StopIndexing() Implements ICrawler.StopIndexing
 
             Processing = False
-            StopTime = Timer
+            StopTime = Now.Ticks
+
+        End Sub
+
+        Private Sub QueueTimer_Elapsed(ByVal sender As Object, ByVal e As System.Timers.ElapsedEventArgs) Handles QueueTimer.Elapsed
+
+            Dim indexer As URLIndexer
+
+            If CrawlerActiveThreads < CrawlerMaximumThreads Then
+                Try
+                    Interlocked.Increment(CrawlerActiveThreads)
+
+                    SyncLock URLQueue.SyncRoot
+                        If URLQueue.Count > 0 Then
+                            indexer = URLQueue(0)
+                            URLQueue.RemoveAt(0)
+                        End If
+                    End SyncLock
+
+                    If Not indexer Is Nothing Then
+                        With indexer
+                            .Start()
+                            If Not .Thread.Join(CrawlerPageIndexTimeout * 1000) Then .Abort()
+                        End With
+                    End If
+                Catch
+                    Throw
+                Finally
+                    Interlocked.Decrement(CrawlerActiveThreads)
+                End Try
+            End If
+
+            If URLQueueCount > 0 Then
+                ' Keep queue timer alive so long as there are URL's to index...
+                QueueTimer.Enabled = (Enabled And Processing And URLQueueCount > 0)
+            Else
+                ' We've finished crawling if no URL's are in the queue and no threads are active
+                If CrawlerActiveThreads <= 0 Then
+                    RaiseIndexingComplete()
+                Else
+                    QueueTimer.Enabled = (Enabled And Processing)
+                End If
+            End If
 
         End Sub
 
         Public ReadOnly Property RunTime() As Double Implements ICrawler.RunTime
             Get
-                If StopTime > StartTime Then
-                    Return StopTime - StartTime
-                ElseIf StartTime > 0 Then
-                    Return Timer - StartTime
-                Else
-                    Return 0
+                Dim ProcessingTime As Long
+
+                If StartTime > 0 Then
+                    If StopTime > 0 Then
+                        ProcessingTime = StopTime - StartTime
+                    Else
+                        ProcessingTime = Now.Ticks - StartTime
+                    End If
                 End If
+
+                If ProcessingTime < 0 Then ProcessingTime = 0
+
+                Return ProcessingTime / 10000000L
             End Get
         End Property
 
@@ -1392,49 +1243,6 @@ Namespace Utilities.Crawlers
                 Return (CrawlerEnabled And (Processing Or FileSystemIndexRequests.IsActive))
             End Get
         End Property
-
-        Private Sub QueueTimer_Elapsed(ByVal sender As Object, ByVal e As System.Timers.ElapsedEventArgs) Handles QueueTimer.Elapsed
-
-            Try
-                Dim WorkQueue As URLBatchProcessingQueue
-
-                ' Create a synchronized process queue to work from (keeps total synclock time down to a minimum)
-                SyncLock URLQueue.SyncRoot
-                    WorkQueue = New URLBatchProcessingQueue(Me, URLQueue.Clone(), CrawlerMaximumThreads, CrawlerPageIndexTimeout)
-                    URLQueue.Clear()
-                End SyncLock
-
-                ' We'll keep spawning a batch of URL's off for processing until they're all processed
-                While WorkQueue.Count > 0
-                    WorkQueue.ProcessBatch()
-
-                    ' Calling StopIndexing will set the processing flag to false, we should respect this state if encountered
-                    If Not IsActive Then Exit While
-                End While
-
-                If CrawlerEnabled Then
-                    If Processing Then Processing = (URLQueueCount > 0)
-
-                    ' If we've finished processing all queue items, and no more have been added to the queue, then
-                    ' the crawl is complete...
-                    If Not Processing Then RaiseIndexingComplete()
-
-                    QueueTimer.Enabled = Processing
-                Else
-                    ' If crawler was disabled, we don't want to loose any unprocessed URL's so we recache them
-                    SyncLock URLQueue.SyncRoot
-                        ' Try to preserve the original incoming order as best as possible
-                        For x As Integer = WorkQueue.Count - 1 To 0 Step -1
-                            URLQueue.Insert(0, WorkQueue(x))
-                        Next
-                    End SyncLock
-                End If
-            Catch ex As Exception
-                RaiseCrawlerError("", "Processing URL Queue", "Failed while processing URL queue due to exception: " & ex.Message)
-                QueueTimer.Enabled = Processing
-            End Try
-
-        End Sub
 
         ' Return parsed HTML document and attributes based on content-type of web response
         Private Function GetResponse(ByVal SourceURL As String, ByVal URL As String) As Page
@@ -1479,21 +1287,110 @@ Namespace Utilities.Crawlers
         End Function
 
         ' Read HTML from stream
-        Private Function GetHTML(ByVal Source As Stream) As String
+        Private Function GetHTML(ByVal Source As IO.Stream) As String
 
             Dim Response As New StringBuilder
             Dim Buffer As Byte() = System.Array.CreateInstance(GetType(Byte), BufferSize)
+            Dim Html As Char()
             Dim BytesRead As Integer
 
             With Source
                 BytesRead = .Read(Buffer, 0, BufferSize)
-                While BytesRead > 0
-                    Response.Append(CrawlerEncoding.GetChars(Buffer, 0, BytesRead), 0, BytesRead)
+                Do While BytesRead > 0
+                    Html = CrawlerEncoding.GetChars(Buffer, 0, BytesRead)
+                    Response.Append(Html, 0, Html.Length)
                     BytesRead = .Read(Buffer, 0, BufferSize)
-                End While
+                Loop
             End With
 
             Return Response.ToString()
+
+        End Function
+
+        ' URL scrubber for those nasty URL's
+        Private Function ScrubbedURL(ByVal SourceURL As String, ByVal URL As String) As String
+
+            Try
+                URL = Trim(URL)
+
+                If Len(URL) > 0 Then
+                    Dim chrQuote As Char
+
+                    ' Remove any out-of-place prefixing or suffixing quotes
+                    chrQuote = URL.Chars(0)
+
+                    Do While chrQuote = "'"c Or chrQuote = """"c
+                        URL = Mid(URL, 2)
+                        chrQuote = URL.Chars(0)
+                    Loop
+
+                    chrQuote = URL.Chars(URL.Length - 1)
+
+                    Do While chrQuote = "'"c Or chrQuote = """"c
+                        URL = Left(URL, URL.Length - 1)
+                        chrQuote = URL.Chars(URL.Length - 1)
+                    Loop
+
+                    Try
+                        If Len(URL) > 0 Then
+                            ' Make sure URL is a supported scheme (i.e., ignore mailto:, javascript:, etc...)
+                            Dim Colon As Integer = InStr(URL, ":")
+
+                            If Colon > 0 Then
+                                If Schemes.BinarySearch(Left(URL, Colon - 1), CaseInsensitiveComparer.Default) < 0 Then
+                                    URL = ""
+                                End If
+                            End If
+
+                            If Len(URL) > 0 Then
+                                ' If path is not fully qualified, we must assume it's a relative path...
+                                If URL.IndexOf("://") < 0 And Len(SourceURL) > 0 Then
+                                    Dim SourceURI As New Uri(SourceURL)
+
+                                    If URL.StartsWith("/") Then
+                                        ' Relative server only
+                                        URL = GetBaseURI(SourceURI) & URL
+                                    Else
+                                        ' Relative server and path
+                                        URL = GetBaseURI(SourceURI) & GetSourcePath(SourceURI) & URL
+                                    End If
+                                End If
+
+                                ' Finally we make sure to get a standard DNS host name for all of our URL's:
+                                With New Uri(URL)
+                                    URL = .Scheme & "://" & Dns.Resolve(.Host).HostName & IIf(.IsDefaultPort, "", ":" & .Port) & .PathAndQuery
+                                End With
+                            End If
+                        End If
+                    Catch
+                        ' If we failed to adjust URL or resolve DNS host name, we stick with what we have
+                    End Try
+                End If
+            Catch ex As Exception
+                ' If we're having trouble with the URL, we'll skip it...
+                URL = ""
+            End Try
+
+            ' We allow end user to restrict URL following based on their own criteria...
+            If Len(URL) > 0 AndAlso Not FollowURL(URL) Then URL = ""
+
+            Return URL
+
+        End Function
+
+        Private Function GetBaseURI(ByVal SourceURI As Uri) As String
+
+            With SourceURI
+                Return .Scheme & "://" & .Host & IIf(.IsDefaultPort, "", ":" & .Port)
+            End With
+
+        End Function
+
+        Private Function GetSourcePath(ByVal SourceURI As Uri) As String
+
+            With SourceURI
+                Return JustPath(.AbsolutePath).Replace("\", "/")
+            End With
 
         End Function
 
@@ -1562,6 +1459,8 @@ Namespace Utilities.Crawlers
                 strStatus.Append("  Total indexed pages: " & IndexedPages & vbCrLf)
                 strStatus.Append("     Total crawl time: " & SecondsToText(RunTime).ToLower() & vbCrLf)
                 strStatus.Append("      Maximum threads: " & CrawlerMaximumThreads & vbCrLf)
+                strStatus.Append("       Active threads: " & CrawlerActiveThreads & vbCrLf)
+                strStatus.Append("      URL queue count: " & URLQueueCount & vbCrLf)
                 strStatus.Append(" File system indexing: " & IIf(FileSystemIndexRequests.IsActive, "Indexing: " & FileSystemIndexRequests.QueueCount & " queued", "Idle") & vbCrLf)
 
                 Return strStatus.ToString()
