@@ -16,7 +16,6 @@
 '***********************************************************************
 
 Imports TVA.Interop
-Imports TVA.EE.Phasor.PDCstream.Common
 
 Namespace EE.Phasor.PDCstream
 

@@ -19,32 +19,22 @@ Imports TVA.Shared.Bit
 
 Namespace EE.Phasor.PDCstream
 
-    Public Class Common
+    <Flags()> _
+    Public Enum ChannelFlags As Byte
+        DataIsValid = Bit0              ' Valid if not set (yes = 0)
+        TransmissionErrors = Bit1       ' Errors if set (yes = 1)
+        PMUSynchronized = Bit2          ' Not sync'd if set (yes = 0)
+        DataSortedByArrival = Bit3      ' Data out of sync if set (yes = 1)
+        DataSortedByTimestamp = Bit4    ' Sorted by timestamp if not set (yes = 0)
+        PDCExchangeFormat = Bit5        ' PDC format if set (yes = 1)
+        MacrodyneFormat = Bit6          ' Macrodyne or IEEE format (Macrodyne = 1)
+        TimestampIncluded = Bit7        ' Timestamp included if not set (yes = 0)
+    End Enum
 
-        Private Sub New()
-
-            ' This is a shared function class not meant for instantiation
-
-        End Sub
-
-        <Flags()> _
-        Public Enum ChannelFlags As Byte
-            DataIsValid = Bit0              ' Valid if not set (yes = 0)
-            TransmissionErrors = Bit1       ' Errors if set (yes = 1)
-            PMUSynchronized = Bit2          ' Not sync'd if set (yes = 0)
-            DataSortedByArrival = Bit3      ' Data out of sync if set (yes = 1)
-            DataSortedByTimestamp = Bit4    ' Sorted by timestamp if not set (yes = 0)
-            PDCExchangeFormat = Bit5        ' PDC format if set (yes = 1)
-            MacrodyneFormat = Bit6          ' Macrodyne or IEEE format (Macrodyne = 1)
-            TimestampIncluded = Bit7        ' Timestamp included if not set (yes = 0)
-        End Enum
-
-        <Flags()> _
-        Public Enum PMUStatusFlags As Byte
-            SyncInvalid = Bit0
-            DataInvalid = Bit1
-        End Enum
-
-    End Class
+    <Flags()> _
+    Public Enum PMUStatusFlags As Byte
+        SyncInvalid = Bit0
+        DataInvalid = Bit1
+    End Enum
 
 End Namespace

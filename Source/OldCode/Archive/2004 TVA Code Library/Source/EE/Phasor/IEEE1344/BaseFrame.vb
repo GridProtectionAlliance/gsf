@@ -22,23 +22,6 @@ Imports TVA.Compression.Common
 
 Namespace EE.Phasor.IEEE1344
 
-    Public Enum PMUFrameType
-        DataFrame
-        HeaderFrame
-        ConfigurationFrame
-    End Enum
-
-    Public Enum PMUTriggerStatus
-        None
-        FrequencyTrigger
-        DfDtTrigger
-        AngleTrigger
-        OverCurrentTrigger
-        UnderVoltageTrigger
-        RateTrigger
-        Undetermined
-    End Enum
-
     ' This class represents the common functionality of all the IEEE1344 message frames that can be sent from a PMU.
     Public MustInherit Class BaseFrame
 

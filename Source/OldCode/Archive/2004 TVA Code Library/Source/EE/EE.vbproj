@@ -106,6 +106,11 @@
                     BuildAction = "Compile"
                 />
                 <File
+                    RelPath = "Phasor\IEEE1344\Common.vb"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
                     RelPath = "Phasor\IEEE1344\ConfigurationFrame.vb"
                     SubType = "Code"
                     BuildAction = "Compile"
