@@ -1,5 +1,5 @@
 '***********************************************************************
-'  DataFrameBase.vb - Basic phasor data frame
+'  DataFrameBase.vb - Data frame base class
 '  Copyright © 2004 - TVA, all rights reserved
 '
 '  Build Environment: VB.NET, Visual Studio 2003
@@ -22,12 +22,10 @@ Imports TVA.Compression.Common
 
 Namespace EE.Phasor
 
-    Public Interface IDataFrame
-
-    End Interface
-
-    ' This class represents the common definition of all phasor message frames that can be sent or received from a PMU.
+    ' This class represents the protocol independent common implementation of all data frames that can be sent or received from a PMU.
     Public MustInherit Class DataFrameBase
+
+        Implements IDataFrame
 
         Protected m_timeTag As NtpTimeTag
         Protected m_sampleCount As Int16
@@ -38,7 +36,8 @@ Namespace EE.Phasor
             m_timeTag = New NtpTimeTag(DateTime.Now)
 
         End Sub
-        Protected Sub Clone(ByVal source As DataFrameBase)
+
+        Protected Overridable Sub Clone(ByVal source As DataFrameBase)
 
             With source
                 m_timeTag = .m_timeTag
@@ -48,7 +47,7 @@ Namespace EE.Phasor
 
         End Sub
 
-        Public Property TimeTag() As NtpTimeTag
+        Public Overridable Property TimeTag() As NtpTimeTag Implements IDataFrame.TimeTag
             Get
                 Return m_timeTag
             End Get
@@ -57,15 +56,23 @@ Namespace EE.Phasor
             End Set
         End Property
 
-        Public ReadOnly Property This() As DataFrameBase
+        Public MustOverride Property Milliseconds() As Double Implements IDataFrame.Milliseconds
+
+        Public Overridable ReadOnly Property Timestamp() As DateTime Implements IDataFrame.Timestamp
+            Get
+                Return TimeTag.ToDateTime.AddMilliseconds(Milliseconds)
+            End Get
+        End Property
+
+        Public Overridable ReadOnly Property This() As IDataFrame Implements IDataFrame.This
             Get
                 Return Me
             End Get
         End Property
 
-        Public MustOverride Property SynchronizationIsValid() As Boolean
+        Public MustOverride Property SynchronizationIsValid() As Boolean Implements IDataFrame.SynchronizationIsValid
 
-        Public MustOverride Property DataIsValid() As Boolean
+        Public MustOverride Property DataIsValid() As Boolean Implements IDataFrame.DataIsValid
 
         Protected Overridable Sub AppendCRC(ByVal buffer As Byte(), ByVal startIndex As Integer)
 
@@ -73,19 +80,19 @@ Namespace EE.Phasor
 
         End Sub
 
-        Protected Overridable ReadOnly Property Name() As String
+        Public Overridable ReadOnly Property Name() As String Implements IDataFrame.Name
             Get
-                Return "Phasor.FrameBase"
+                Return "PhasorFrameBase"
             End Get
         End Property
 
-        Public MustOverride Property DataLength() As Int16
+        Public MustOverride Property DataLength() As Int16 Implements IDataFrame.DataLength
 
-        Public MustOverride Property DataImage() As Byte()
+        Public MustOverride Property DataImage() As Byte() Implements IDataFrame.DataImage
 
-        Public MustOverride Property BinaryLength() As Int16
+        Public MustOverride Property BinaryLength() As Int16 Implements IDataFrame.BinaryLength
 
-        Public MustOverride ReadOnly Property BinaryImage() As Byte()
+        Public MustOverride ReadOnly Property BinaryImage() As Byte() Implements IDataFrame.BinaryImage
 
     End Class
 

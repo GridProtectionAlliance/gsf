@@ -1,5 +1,5 @@
 '***********************************************************************
-'  IPhasorDefinition.vb - Phasor value definition interface
+'  AnalogDefinitionBase.vb - Analog value definition base class
 '  Copyright © 2005 - TVA, all rights reserved
 '
 '  Build Environment: VB.NET, Visual Studio 2003
@@ -17,15 +17,24 @@
 
 Namespace EE.Phasor
 
-    ' This class represents the protocol independent interface of a phasor value definition.
-    Public Interface IPhasorDefinition
+    ' This class represents the common implementation of the protocol independent definition of an analog value.
+    Public MustInherit Class AnalogDefinitionBase
 
-        Inherits IChannelDefinition
+        Inherits ChannelDefinitionBase
+        Implements IAnalogDefinition
 
-        Property [Type]() As PhasorType
+        Protected Sub New()
 
-        Property VoltageReference() As IPhasorDefinition
+            MyBase.New()
 
-    End Interface
+        End Sub
+
+        Protected Sub New(ByVal index As Integer, ByVal label As String, ByVal scale As Double)
+
+            MyBase.New(index, label, scale)
+
+        End Sub
+
+    End Class
 
 End Namespace

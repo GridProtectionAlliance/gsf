@@ -1,5 +1,5 @@
 '***********************************************************************
-'  IDigitalDefinition.vb - Digital data definition interface
+'  IDigitalDefinition.vb - Digital value definition interface
 '  Copyright © 2005 - TVA, all rights reserved
 '
 '  Build Environment: VB.NET, Visual Studio 2003

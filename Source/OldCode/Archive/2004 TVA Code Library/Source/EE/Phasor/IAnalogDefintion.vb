@@ -1,5 +1,5 @@
 '***********************************************************************
-'  IAnalogDefinition.vb - Analog data definition interface
+'  IAnalogDefinition.vb - Analog value definition interface
 '  Copyright © 2005 - TVA, all rights reserved
 '
 '  Build Environment: VB.NET, Visual Studio 2003

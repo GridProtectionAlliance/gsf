@@ -24,13 +24,23 @@ Namespace EE.Phasor
 
         Implements IChannelDefinition
 
+        Protected m_index As Integer
         Protected m_label As String
         Protected m_scale As Double
 
         Protected Sub New()
 
+            m_index = 0
             m_label = ""
             m_scale = 1.0
+
+        End Sub
+
+        Protected Sub New(ByVal index As Integer, ByVal label As String, ByVal scale As Double)
+
+            m_index = index
+            m_label = label
+            m_scale = scale
 
         End Sub
 
@@ -66,7 +76,14 @@ Namespace EE.Phasor
 
         Public MustOverride ReadOnly Property BinaryImage() As Byte() Implements IChannelDefinition.BinaryImage
 
-        Public MustOverride Property Index() As Integer Implements IChannelDefinition.Index
+        Public Overridable Property Index() As Integer Implements IChannelDefinition.Index
+            Get
+                Return m_index
+            End Get
+            Set(ByVal Value As Integer)
+                m_index = Value
+            End Set
+        End Property
 
         Public Overridable ReadOnly Property MaximumLabelLength() As Integer Implements IChannelDefinition.MaximumLabelLength
             Get

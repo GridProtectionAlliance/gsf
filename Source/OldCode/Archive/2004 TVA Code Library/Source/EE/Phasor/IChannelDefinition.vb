@@ -26,9 +26,9 @@ Namespace EE.Phasor
 
         Property ScalingFactor() As Double
 
-        ReadOnly Property MaximumLabelLength() As Integer
-
         Property Label() As String
+
+        ReadOnly Property MaximumLabelLength() As Integer
 
         ReadOnly Property LabelImage() As Byte()
 

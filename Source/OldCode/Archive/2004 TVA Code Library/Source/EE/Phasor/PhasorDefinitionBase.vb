@@ -1,5 +1,5 @@
 '***********************************************************************
-'  PhasorDefinitionBase.vb - Phasor definition base class
+'  PhasorDefinitionBase.vb - Phasor value definition base class
 '  Copyright © 2005 - TVA, all rights reserved
 '
 '  Build Environment: VB.NET, Visual Studio 2003
@@ -19,19 +19,30 @@ Imports System.Text
 
 Namespace EE.Phasor
 
-    ' This class represents the common implementation of the protocol independent definition of a phasor value definition.
+    ' This class represents the common implementation of the protocol independent definition of a phasor value.
     Public MustInherit Class PhasorDefinitionBase
 
+        Inherits ChannelDefinitionBase
         Implements IPhasorDefinition
 
-        Protected m_label As String
         Protected m_type As PhasorType
         Protected m_voltageReference As IPhasorDefinition
 
         Protected Sub New()
 
-            m_label = ""
+            MyBase.New()
+
             m_type = PhasorType.Voltage
+            m_voltageReference = Me
+
+        End Sub
+
+        Protected Sub New(ByVal index As Integer, ByVal label As String, ByVal scale As Double, ByVal type As PhasorType, ByVal voltageReference As IPhasorDefinition)
+
+            MyBase.New(index, label, scale)
+
+            m_type = type
+            m_voltageReference = voltageReference
 
         End Sub
 
@@ -44,45 +55,30 @@ Namespace EE.Phasor
             End Set
         End Property
 
-        Public Overridable Property ScalingFactor() As Double Implements IPhasorDefinition.ScalingFactor
+        Public Overrides Property ScalingFactor() As Double
             Get
-                Return CalFactor
+                Return m_scale
             End Get
             Set(ByVal Value As Double)
-                CalFactor = Value
+                m_scale = Value
+                If ConversionFactor > MaximumConversionFactor Then Throw New OverflowException("Conversion factor value (ScalingFactor * 10000) cannot exceed " & MaximumConversionFactor)
             End Set
         End Property
 
-        Public MustOverride Property CalFactor() As Double Implements IPhasorDefinition.CalFactor
-
-        Public MustOverride ReadOnly Property MaximumCalFactor() As Int32 Implements IPhasorDefinition.MaximumCalFactor
-
-        Public Overridable Property Label() As String Implements IPhasorDefinition.Label
+        Protected Overridable ReadOnly Property ConversionFactor() As Int32
             Get
-                Return m_label
-            End Get
-            Set(ByVal Value As String)
-                If Len(Value) > MaximumLabelLength Then
-                    Throw New OverflowException("Label length cannot exceed " & MaximumLabelLength)
-                Else
-                    m_label = Trim(Replace(Value, Chr(20), " "))
-                End If
-            End Set
-        End Property
-
-        Public Overridable ReadOnly Property LabelImage() As Byte() Implements IPhasorDefinition.LabelImage
-            Get
-                Return Encoding.ASCII.GetBytes(m_label.PadRight(MaximumLabelLength))
+                Return Convert.ToInt32(m_scale * 100000)
             End Get
         End Property
 
-        Public MustOverride ReadOnly Property BinaryLength() As Integer Implements IPhasorDefinition.BinaryLength
+        Protected Overridable ReadOnly Property MaximumConversionFactor() As Int32
+            Get
+                ' Typical conversion factor should fit within 3 bytes (i.e., 24 bits) of space
+                Return 2 ^ 24
+            End Get
+        End Property
 
-        Public MustOverride ReadOnly Property BinaryImage() As Byte() Implements IPhasorDefinition.BinaryImage
-
-        Public MustOverride Property Index() As Integer Implements IPhasorDefinition.Index
-
-        Public Overridable ReadOnly Property MaximumLabelLength() As Integer Implements IPhasorDefinition.MaximumLabelLength
+        Public Overrides ReadOnly Property MaximumLabelLength() As Integer
             Get
                 Return 16
             End Get
@@ -90,11 +86,7 @@ Namespace EE.Phasor
 
         Public Overridable Property VoltageReference() As IPhasorDefinition Implements IPhasorDefinition.VoltageReference
             Get
-                If m_type = PhasorType.Voltage Then
-                    Return Me
-                Else
-                    Return m_voltageReference
-                End If
+                Return m_voltageReference
             End Get
             Set(ByVal Value As IPhasorDefinition)
                 If m_type = PhasorType.Voltage Then
@@ -106,17 +98,6 @@ Namespace EE.Phasor
                 End If
             End Set
         End Property
-
-        Public Overridable Function CompareTo(ByVal obj As Object) As Integer Implements IComparable.CompareTo
-
-            ' We sort phasor defintions by index
-            If TypeOf obj Is IPhasorDefinition Then
-                Return Index.CompareTo(DirectCast(obj, IPhasorDefinition).Index)
-            Else
-                Throw New ArgumentException("PhasorDefinition can only be compared to other PhasorDefinitions")
-            End If
-
-        End Function
 
     End Class
 

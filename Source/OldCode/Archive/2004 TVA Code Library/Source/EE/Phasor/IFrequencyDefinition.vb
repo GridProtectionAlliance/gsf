@@ -1,5 +1,5 @@
 '***********************************************************************
-'  IPhasorDefinition.vb - Phasor value definition interface
+'  IFrequencyDefinition.vb - Frequency and df/dt value definition interface
 '  Copyright © 2005 - TVA, all rights reserved
 '
 '  Build Environment: VB.NET, Visual Studio 2003
@@ -17,14 +17,18 @@
 
 Namespace EE.Phasor
 
-    ' This class represents the protocol independent interface of a phasor value definition.
-    Public Interface IPhasorDefinition
+    ' This interface represents a protocol independent frequency and df/dt value definition.
+    Public Interface IFrequencyDefinition
 
         Inherits IChannelDefinition
 
-        Property [Type]() As PhasorType
+        Property Offset() As Double
 
-        Property VoltageReference() As IPhasorDefinition
+        Property DfDtScalingFactor() As Double
+
+        Property DfDtOffset() As Double
+
+        Property NominalFrequency() As LineFrequency
 
     End Interface
 

@@ -91,6 +91,11 @@
         <Files>
             <Include>
                 <File
+                    RelPath = "AnalogDefinitionBase.vb"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
                     RelPath = "AssemblyInfo.vb"
                     SubType = "Code"
                     BuildAction = "Compile"
@@ -116,6 +121,16 @@
                     BuildAction = "Compile"
                 />
                 <File
+                    RelPath = "DigitalDefinitionBase.vb"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "FrequencyDefinitionBase.vb"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
                     RelPath = "IAnalogDefintion.vb"
                     SubType = "Code"
                     BuildAction = "Compile"
@@ -132,6 +147,11 @@
                 />
                 <File
                     RelPath = "IDigitalDefinition.vb"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "IFrequencyDefinition.vb"
                     SubType = "Code"
                     BuildAction = "Compile"
                 />
