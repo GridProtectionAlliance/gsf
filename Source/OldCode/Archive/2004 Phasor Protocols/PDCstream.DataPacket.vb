@@ -27,7 +27,7 @@ Namespace PDCstream
 
         Private m_configFile As ConfigFile
         Private m_timeTag As Unix.TimeTag
-        Private m_timestamp As DateTime
+        Private m_timeStamp As DateTime
         Private m_index As Integer
 
         Public Cells As PMUDataCell()
@@ -42,7 +42,7 @@ Namespace PDCstream
             m_index = index
 
             ' We precalculate a regular .NET timestamp with milliseconds sitting in the middle of the sample index
-            m_timestamp = timeStamp.AddMilliseconds((m_index + 0.5@) * (1000@ / m_configFile.SampleRate))
+            m_timeStamp = timeStamp.AddMilliseconds((m_index + 0.5@) * (1000@ / m_configFile.SampleRate))
 
             With m_configFile
                 Cells = Array.CreateInstance(GetType(PMUDataCell), .PMUCount)
@@ -66,9 +66,9 @@ Namespace PDCstream
             End Get
         End Property
 
-        Public ReadOnly Property Timestamp() As DateTime
+        Public ReadOnly Property TimeStamp() As DateTime
             Get
-                Return m_timestamp
+                Return m_timeStamp
             End Get
         End Property
 
