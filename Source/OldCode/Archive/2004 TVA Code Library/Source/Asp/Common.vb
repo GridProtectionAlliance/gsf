@@ -267,7 +267,8 @@ Namespace Asp
                     .Append("       varPopupName = varUrl.replace(varRegExp, '');" & vbCrLf)
                     .Append("       if (varCenter) {varPopup = window.open(varUrl, varPopupName, 'height=' + varHeight + ',width=' + varWidth + ',top=' + ((screen.availHeight / 2) - (varHeight / 2)) + ',left=' + ((screen.availWidth / 2) - (varWidth / 2)) + ',resizable=' + varResizable + ',scrollbars=' + varScrollbars + ',toolbar=' + varToolbar + ',menubar=' + varMenubar + ',location=' + varLocation + ',status=' + varStatus + ',directories=' + varDirectories);}" & vbCrLf)
                     .Append("       else {varPopup = window.open(varUrl, varPopupName, 'height=' + varHeight + ',width=' + varWidth + ',top=' + varTop + ',left=' + varLeft + ',resizable=' + varResizable + ',scrollbars=' + varScrollbars + ',toolbar=' + varToolbar + ',menubar=' + varMenubar + ',location=' + varLocation + ',status=' + varStatus + ',directories=' + varDirectories);}" & vbCrLf)
-                    .Append("       if (window.focus) {varPopup.focus();}" & vbCrLf)
+                    '.Append("       if (window.focus) {varPopup.focus();}" & vbCrLf)
+                    .Append("       varPopup.focus();" & vbCrLf)
                     .Append("   }" & vbCrLf)
                     .Append("</script>" & vbCrLf)
 
@@ -290,9 +291,9 @@ Namespace Asp
 
             Dim strShowPopupScript As String
             If Center Then
-                strShowPopupScript = "varPopup = window.open('" & Url & "', 'Popup', 'height=" & Height & ",width=" & Width & ",top=' + ((screen.availHeight / 2) - " & (Height / 2) & ") + ',left=' + ((screen.availWidth / 2) - " & (Width / 2) & ") + ',resizable=" & Math.Abs(CInt(Resizable)) & ",scrollbars=" & Math.Abs(CInt(Scrollbars)) & ",toolbar=" & Math.Abs(CInt(Toolbar)) & ",menubar=" & Math.Abs(CInt(Menubar)) & ",location=" & Math.Abs(CInt(Location)) & ",status=" & Math.Abs(CInt(Status)) & ",directories=" & Math.Abs(CInt(Directories)) & "'); if (window.focus) {varPopup.focus();} return (false);"
+                strShowPopupScript = "varPopup = window.open('" & Url & "', 'Popup', 'height=" & Height & ",width=" & Width & ",top=' + ((screen.availHeight / 2) - " & (Height / 2) & ") + ',left=' + ((screen.availWidth / 2) - " & (Width / 2) & ") + ',resizable=" & Math.Abs(CInt(Resizable)) & ",scrollbars=" & Math.Abs(CInt(Scrollbars)) & ",toolbar=" & Math.Abs(CInt(Toolbar)) & ",menubar=" & Math.Abs(CInt(Menubar)) & ",location=" & Math.Abs(CInt(Location)) & ",status=" & Math.Abs(CInt(Status)) & ",directories=" & Math.Abs(CInt(Directories)) & "'); varPopup.focus(); return (false);"
             Else
-                strShowPopupScript = "varPopup = window.open('" & Url & "', 'Popup', 'height=" & Height & ",width=" & Width & ",top=" & Top & ",left=" & Left & ",resizable=" & Math.Abs(CInt(Resizable)) & ",scrollbars=" & Math.Abs(CInt(Scrollbars)) & ",toolbar=" & Math.Abs(CInt(Toolbar)) & ",menubar=" & Math.Abs(CInt(Menubar)) & ",location=" & Math.Abs(CInt(Location)) & ",status=" & Math.Abs(CInt(Status)) & ",directories=" & Math.Abs(CInt(Directories)) & "'); if (window.focus) {varPopup.focus();} return (false);"
+                strShowPopupScript = "varPopup = window.open('" & Url & "', 'Popup', 'height=" & Height & ",width=" & Width & ",top=" & Top & ",left=" & Left & ",resizable=" & Math.Abs(CInt(Resizable)) & ",scrollbars=" & Math.Abs(CInt(Scrollbars)) & ",toolbar=" & Math.Abs(CInt(Toolbar)) & ",menubar=" & Math.Abs(CInt(Menubar)) & ",location=" & Math.Abs(CInt(Location)) & ",status=" & Math.Abs(CInt(Status)) & ",directories=" & Math.Abs(CInt(Directories)) & "'); varPopup.focus(); return (false);"
             End If
 
             Select Case Control.GetType.ToString()
@@ -627,6 +628,23 @@ Namespace Asp
                     .Append("</script>" & vbCrLf)
 
                     Page.RegisterStartupScript("PushToBack", .ToString())
+                End With
+            End If
+
+        End Sub
+
+#End Region
+
+#Region "Code for PlayBackgroundSound"
+
+        'Pinal Patel 03/15/05:  Plays sound in the background. Not tied to a web control.
+        Public Shared Sub PlayBackgroundSound(ByVal Page As System.Web.UI.Page, ByVal SoundFilename As String, Optional ByVal LoopCount As Integer = 0)
+
+            If Not Page.IsStartupScriptRegistered("PlayBackgroundSound") Then
+                With New StringBuilder
+                    .Append("<BGSOUND SRC=""" & SoundFilename & """ LOOP=""" & LoopCount & """>" & vbCrLf)
+
+                    Page.RegisterStartupScript("PlayBackgroundSound", .ToString())
                 End With
             End If
 
