@@ -29,7 +29,7 @@ Imports System.Security.Permissions
 ' You can specify all the values or you can default the Build and Revision Numbers 
 ' by using the '*' as shown below:
 
-<Assembly: AssemblyVersion("7.5.8.61940")> 
+<Assembly: AssemblyVersion("7.5.9.60732")> 
 
 ' This added so this assembly can impersonate other users
 <Assembly: SecurityPermissionAttribute(SecurityAction.RequestMinimum, UnmanagedCode:=True)> 

@@ -28,8 +28,6 @@ Namespace EE.Phasor
         Implements IDataFrame
 
         Protected m_timeTag As NtpTimeTag
-        Protected m_sampleCount As Int16    ' TODO: Validate cross protocol compatibility of sample count and status...
-        Protected m_status As Int16
 
         Protected Sub New()
 
@@ -41,8 +39,6 @@ Namespace EE.Phasor
 
             With source
                 m_timeTag = .m_timeTag
-                m_sampleCount = .m_sampleCount
-                m_status = .m_status
             End With
 
         End Sub
@@ -74,12 +70,6 @@ Namespace EE.Phasor
 
         Public MustOverride Property DataIsValid() As Boolean Implements IDataFrame.DataIsValid
 
-        Protected Overridable Sub AppendCRC(ByVal buffer As Byte(), ByVal startIndex As Integer)
-
-            EndianOrder.SwapCopyBytes(CRC16(-1, buffer, 0, startIndex), buffer, startIndex)
-
-        End Sub
-
         Public Overridable ReadOnly Property Name() As String Implements IDataFrame.Name
             Get
                 Return "TVA.EE.Phasor.DataFrameBase"
@@ -93,6 +83,24 @@ Namespace EE.Phasor
         Public MustOverride Property BinaryLength() As Int16 Implements IDataFrame.BinaryLength
 
         Public MustOverride ReadOnly Property BinaryImage() As Byte() Implements IDataFrame.BinaryImage
+
+        Protected Overridable Function ChecksumIsValid(ByVal buffer As Byte(), ByVal startIndex As Integer) As Boolean
+
+            Return EndianOrder.ReverseToInt16(buffer, startIndex + DataLength - 2) = CalculateChecksum(buffer, startIndex, DataLength - 2)
+
+        End Function
+
+        Protected Overridable Sub AppendChecksum(ByVal buffer As Byte(), ByVal startIndex As Integer)
+
+            EndianOrder.SwapCopyBytes(CalculateChecksum(buffer, 0, startIndex), buffer, startIndex)
+
+        End Sub
+
+        Protected Overridable Function CalculateChecksum(ByVal buffer As Byte(), ByVal offset As Integer, ByVal length As Integer) As Int16
+
+            Return CRC_CCITT(-1, buffer, offset, length)
+
+        End Function
 
     End Class
 

@@ -1466,7 +1466,7 @@ Namespace [Shared]
 
         End Function
 
-        ' We define a few common timezones for convinience
+        ' We define a few common timezones for convenience
         Private Shared tzGMT As Win32TimeZone
         Private Shared tzEST As Win32TimeZone
         Private Shared tzCST As Win32TimeZone
@@ -1507,6 +1507,77 @@ Namespace [Shared]
                 Return tzPST
             End Get
         End Property
+
+        Public Shared Function LocalTimeToGMT(ByVal localTime As System.DateTime) As System.DateTime
+
+            Return localTime.ToUniversalTime()
+
+        End Function
+
+        Public Shared Function LocalTimeToEST(ByVal localTime As System.DateTime) As System.DateTime
+
+            Dim destOffset As Double
+
+            ' Calculate exact GMT offset of destination timezone in hours
+            With EST.GetUtcOffset(localTime)
+                destOffset = .Hours + .Minutes / 60
+            End With
+
+            Return localTime.ToUniversalTime().AddHours(destOffset)
+
+        End Function
+
+        Public Shared Function LocalTimeToCST(ByVal localTime As System.DateTime) As System.DateTime
+
+            Dim destOffset As Double
+
+            ' Calculate exact GMT offset of destination timezone in hours
+            With CST.GetUtcOffset(localTime)
+                destOffset = .Hours + .Minutes / 60
+            End With
+
+            Return localTime.ToUniversalTime().AddHours(destOffset)
+
+        End Function
+
+        Public Shared Function LocalTimeToMST(ByVal localTime As System.DateTime) As System.DateTime
+
+            Dim destOffset As Double
+
+            ' Calculate exact GMT offset of destination timezone in hours
+            With MST.GetUtcOffset(localTime)
+                destOffset = .Hours + .Minutes / 60
+            End With
+
+            Return localTime.ToUniversalTime().AddHours(destOffset)
+
+        End Function
+
+        Public Shared Function LocalTimeToPST(ByVal localTime As System.DateTime) As System.DateTime
+
+            Dim destOffset As Double
+
+            ' Calculate exact GMT offset of destination timezone in hours
+            With PST.GetUtcOffset(localTime)
+                destOffset = .Hours + .Minutes / 60
+            End With
+
+            Return localTime.ToUniversalTime().AddHours(destOffset)
+
+        End Function
+
+        Public Shared Function TimeZoneToTimeZone(ByVal sourceTime As System.DateTime, ByVal sourceStandardName As String, ByVal destStandardName As String) As System.DateTime
+
+            Dim destOffset As Double
+
+            ' Calculate exact GMT offset of destination timezone in hours
+            With GetWin32TimeZone(destStandardName).GetUtcOffset(sourceTime)
+                destOffset = .Hours + .Minutes / 60
+            End With
+
+            Return GetWin32TimeZone(sourceStandardName).ToUniversalTime(sourceTime).AddHours(destOffset)
+
+        End Function
 
     End Class
 
