@@ -76,7 +76,6 @@
                 <Reference
                     Name = "System.Data"
                     AssemblyName = "System.Data"
-                    HintPath = "..\..\..\..\..\..\WINDOWS\Microsoft.NET\Framework\v1.1.4322\System.Data.dll"
                 />
                 <Reference
                     Name = "PDCDATAREADERLib"
@@ -100,19 +99,21 @@
                     Name = "TVA.Shared"
                     AssemblyName = "TVA.Shared"
                     HintPath = "\\opdat\opdat\CtrlSys\CodeLibrary\Builds\Release\Current\TVA.Shared.dll"
-                    Private = "True"
-                />
-                <Reference
-                    Name = "TVA.Config"
-                    AssemblyName = "TVA.Config"
-                    HintPath = "\\opdat\opdat\CtrlSys\CodeLibrary\Builds\Release\Current\TVA.Config.dll"
-                    Private = "True"
                 />
                 <Reference
                     Name = "TVA.Database"
                     AssemblyName = "TVA.Database"
                     HintPath = "\\opdat\opdat\CtrlSys\CodeLibrary\Builds\Release\Current\TVA.Database.dll"
-                    Private = "True"
+                />
+                <Reference
+                    Name = "TVA.Config"
+                    AssemblyName = "TVA.Config"
+                    HintPath = "\\opdat\opdat\CtrlSys\CodeLibrary\Builds\Release\Current\TVA.Config.dll"
+                />
+                <Reference
+                    Name = "TVA.DatAWare"
+                    AssemblyName = "TVA.DatAWare"
+                    HintPath = "\\opdat\opdat\CtrlSys\CodeLibrary\Builds\Release\Current\TVA.DatAWare.dll"
                 />
             </References>
             <Imports>
@@ -138,11 +139,6 @@
                     RelPath = "Configuration.resx"
                     DependentUpon = "Configuration.vb"
                     BuildAction = "EmbeddedResource"
-                />
-                <File
-                    RelPath = "DatAWare.vb"
-                    SubType = "Code"
-                    BuildAction = "Compile"
                 />
                 <File
                     RelPath = "Interface.vb"
@@ -179,39 +175,47 @@
                     BuildAction = "None"
                 />
                 <File
-                    RelPath = "Embedded Assemblies\AxInterop.PDCDATAREADERLib.dll"
+                    RelPath = "bin\AxInterop.PDCDATAREADERLib.dll"
                     BuildAction = "EmbeddedResource"
                 />
                 <File
-                    RelPath = "Embedded Assemblies\Interop.PDCDATAREADERLib.dll"
+                    RelPath = "bin\Interop.DWApi.dll"
                     BuildAction = "EmbeddedResource"
                 />
                 <File
-                    RelPath = "Embedded Assemblies\TVA.Config.dll"
+                    RelPath = "bin\Interop.PDCDATAREADERLib.dll"
                     BuildAction = "EmbeddedResource"
                 />
                 <File
-                    RelPath = "Embedded Assemblies\TVA.Database.dll"
+                    RelPath = "bin\TVA.Config.dll"
                     BuildAction = "EmbeddedResource"
                 />
                 <File
-                    RelPath = "Embedded Assemblies\TVA.Remoting.dll"
+                    RelPath = "bin\TVA.Database.dll"
                     BuildAction = "EmbeddedResource"
                 />
                 <File
-                    RelPath = "Embedded Assemblies\TVA.Services.dll"
+                    RelPath = "bin\TVA.DatAWare.dll"
                     BuildAction = "EmbeddedResource"
                 />
                 <File
-                    RelPath = "Embedded Assemblies\TVA.Shared.dll"
+                    RelPath = "bin\TVA.Remoting.dll"
                     BuildAction = "EmbeddedResource"
                 />
                 <File
-                    RelPath = "Embedded Assemblies\TVA.Threading.dll"
+                    RelPath = "bin\TVA.Services.dll"
                     BuildAction = "EmbeddedResource"
                 />
                 <File
-                    RelPath = "Embedded Assemblies\TVA.VarEval.dll"
+                    RelPath = "bin\TVA.Shared.dll"
+                    BuildAction = "EmbeddedResource"
+                />
+                <File
+                    RelPath = "bin\TVA.Threading.dll"
+                    BuildAction = "EmbeddedResource"
+                />
+                <File
+                    RelPath = "bin\TVA.VarEval.dll"
                     BuildAction = "EmbeddedResource"
                 />
             </Include>

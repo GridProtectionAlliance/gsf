@@ -27,7 +27,7 @@ Imports System.Reflection
 Imports System.Runtime.InteropServices
 Imports TVA.Config.Common
 Imports TVA.Shared.FilePath
-Imports BpaPdcLoader.DatAWare
+Imports TVA.DatAWare
 
 <ComClass([Interface].ClassId, [Interface].InterfaceId, [Interface].EventsId)> _
 Public Class [Interface]
@@ -56,6 +56,7 @@ Public Class [Interface]
     Shared Sub New()
 
         ' Load embedded assemblies...
+        LoadAssembly("Interop.DWApi")
         LoadAssembly("Interop.PDCDATAREADERLib")
         LoadAssembly("AxInterop.PDCDATAREADERLib")
         LoadAssembly("TVA.Shared")
@@ -65,6 +66,7 @@ Public Class [Interface]
         LoadAssembly("TVA.Remoting")
         LoadAssembly("TVA.Services")
         LoadAssembly("TVA.Database")
+        LoadAssembly("TVA.DatAWare")
 
     End Sub
 
@@ -109,7 +111,6 @@ Public Class [Interface]
 
                 ' Load assembly from binary buffer
                 resourceAssembly = [Assembly].Load(buffer)
-
                 Exit For
             End If
         Next
@@ -125,8 +126,6 @@ Public Class [Interface]
         SharedConfigFileName = [Assembly].GetExecutingAssembly.Location & ".config"
         Variables.Create("DatAWare.TimeZone", "GMT Standard Time", VariableType.Text, "DatAWare Server TimeZone")
         Variables.Create("DatAWare.PointListFile", ApplicationPath & "PM_DBASE.csv", VariableType.Text, "DatAWare Point List File")
-        Variables.Create("PDCDataReader.ConfigFile", ApplicationPath & "TVA_PDC.ini", VariableType.Text, "BPA PDC Configuration File")
-        Variables.Create("PDCDataReader.ListenPort", 3050, VariableType.Int, "BPA PDC UDP Port to Listen On")
         Variables.Save()
 
         ' Create an instance of the PDC to DatAWare conversion class
@@ -151,6 +150,17 @@ Public Class [Interface]
         End Get
         Set(ByVal Value As Integer)
             m_instance = Value
+
+            ' Create settings for this instance
+            Variables.Create("PDCDataReader.ConfigFile" & m_instance, ApplicationPath & "TVA_PDC.ini", VariableType.Text, "BPA PDC Configuration File for DAQ instance " & m_instance)
+            Variables.Create("PDCDataReader.ListenPort" & m_instance, 3050, VariableType.Int, "BPA PDC UDP Port to Listen On for DAQ instance " & m_instance)
+            Variables.Save()
+
+            ' Intialize forms for this instance
+            m_pdcDataReader.Instance = m_instance
+            m_converter.Instance = m_instance
+            statusWindow.Instance = m_instance
+            configWindow.Instance = m_instance
         End Set
     End Property
 
@@ -227,7 +237,7 @@ Public Class [Interface]
             For x As Integer = 0 To events.Length - 1
                 ' We only archive events that have a valid timestamp...
                 If events(x).TTag.Value > 0 Then
-                    Array.Copy(events(x).BinaryValue, 0, buffer, byteCount, StandardEvent.BinaryLength)
+                    Array.Copy(events(x).BinaryImage, 0, buffer, byteCount, StandardEvent.BinaryLength)
                     byteCount += StandardEvent.BinaryLength
                 End If
             Next

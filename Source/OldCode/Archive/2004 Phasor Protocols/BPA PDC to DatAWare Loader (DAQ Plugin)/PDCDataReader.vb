@@ -40,19 +40,23 @@ Public Class PDCDataReader
         Me.daqInterface = daqInterface
         statusLog = [Interface].ApplicationPath & "PDCDataReader.log"
 
-        Try
-            If AxPDCDataReader.Initialize(Variables("PDCDataReader.ConfigFile"), Variables("PDCDataReader.ListenPort")) Then
-                LogMessage("PDC data reader initialized OK!")
-            Else
-                LogMessage("PDC data reader failed to initialize!")
-            End If
-        Catch ex As Exception
-            LogMessage("PDC data reader failed to initialize due to exception: " & ex.Message)
-        End Try
-
-        daqInterface.UpdateStatus(vbCrLf & daqInterface.converter.Status)
-
     End Sub
+
+    Public WriteOnly Property Instance() As Integer
+        Set(ByVal Value As Integer)
+            Try
+                If AxPDCDataReader.Initialize(Variables("PDCDataReader.ConfigFile" & Value), Variables("PDCDataReader.ListenPort" & Value)) Then
+                    LogMessage("PDC data reader initialized OK for instance " & Value & "!")
+                Else
+                    LogMessage("PDC data reader failed to initialize for instance " & Value & "!")
+                End If
+            Catch ex As Exception
+                LogMessage("PDC data reader failed to initialize for instance " & Value & " due to exception: " & ex.Message)
+            End Try
+
+            daqInterface.UpdateStatus(vbCrLf & daqInterface.converter.Status)
+        End Set
+    End Property
 
 #Region " Windows Form Designer generated code "
 
@@ -116,10 +120,14 @@ Public Class PDCDataReader
 
         daqInterface.UpdateStatus(message)
 
-        With File.AppendText(statusLog)
-            .WriteLine(Now() & ": " & message & vbCrLf)
-            .Close()
-        End With
+        Try
+            With File.AppendText(statusLog)
+                .WriteLine(Now() & ": " & message & vbCrLf)
+                .Close()
+            End With
+        Catch ex As Exception
+            daqInterface.UpdateStatus("Error logging status message: " & ex.Message)
+        End Try
 
     End Sub
 
@@ -152,8 +160,8 @@ Public Class PDCDataReader
 
     Private Sub AxPDCDataReader_NewDescriptorEvent(ByVal sender As Object, ByVal e As System.EventArgs) Handles AxPDCDataReader.NewDescriptorEvent
 
-        daqInterface.converter.LoadDescriptorData(Variables("DatAWare.PointListFile"), AxPDCDataReader.GetAnalogNames(), AxPDCDataReader.GetDigitalNames())
         LogMessage("Received new PDC descriptor")
+        daqInterface.converter.LoadDescriptorData(Variables("DatAWare.PointListFile"), AxPDCDataReader.GetAnalogNames(), AxPDCDataReader.GetDigitalNames())
 
     End Sub
 
