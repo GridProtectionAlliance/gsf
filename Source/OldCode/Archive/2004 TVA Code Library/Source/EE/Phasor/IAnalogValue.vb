@@ -1,5 +1,5 @@
 '***********************************************************************
-'  IPhasorValue.vb - Phasor value interface
+'  IAnalogValue.vb - Analog value interface
 '  Copyright © 2005 - TVA, all rights reserved
 '
 '  Build Environment: VB.NET, Visual Studio 2003
@@ -17,26 +17,16 @@
 
 Namespace EE.Phasor
 
-    ' This class represents the protocol independent interface of a phasor value.
-    Public Interface IPhasorValue
+    ' This interface represents a protocol independent analog value.
+    Public Interface IAnalogValue
 
         Inherits IChannelValue
 
-        ReadOnly Property Definition() As IPhasorDefinition
+        ReadOnly Property Definition() As IAnalogDefinition
 
-        Property PhasorFormat() As PhasorFormat
+        Property Value() As Double
 
-        Property Angle() As Double
-
-        Property Magnitude() As Double
-
-        Property Real() As Double
-
-        Property Imaginary() As Double
-
-        Property UnscaledReal() As Int16
-
-        Property UnscaledImaginary() As Int16
+        Property UnscaledValue() As Int16
 
     End Interface
 

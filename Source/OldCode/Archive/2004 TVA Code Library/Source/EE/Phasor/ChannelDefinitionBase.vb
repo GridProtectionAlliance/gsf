@@ -44,6 +44,17 @@ Namespace EE.Phasor
 
         End Sub
 
+        Public MustOverride ReadOnly Property InheritedType() As Type Implements IChannelDefinition.InheritedType
+
+        Public Overridable Property Index() As Integer Implements IChannelDefinition.Index
+            Get
+                Return m_index
+            End Get
+            Set(ByVal Value As Integer)
+                m_index = Value
+            End Set
+        End Property
+
         Public Overridable Property ScalingFactor() As Double Implements IChannelDefinition.ScalingFactor
             Get
                 Return m_scale
@@ -81,15 +92,6 @@ Namespace EE.Phasor
         Public MustOverride ReadOnly Property BinaryLength() As Integer Implements IChannelDefinition.BinaryLength
 
         Public MustOverride ReadOnly Property BinaryImage() As Byte() Implements IChannelDefinition.BinaryImage
-
-        Public Overridable Property Index() As Integer Implements IChannelDefinition.Index
-            Get
-                Return m_index
-            End Get
-            Set(ByVal Value As Integer)
-                m_index = Value
-            End Set
-        End Property
 
         Public Overridable Function CompareTo(ByVal obj As Object) As Integer Implements IComparable.CompareTo
 

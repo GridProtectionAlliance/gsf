@@ -96,12 +96,22 @@
                     BuildAction = "Compile"
                 />
                 <File
+                    RelPath = "AnalogValueBase.vb"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
                     RelPath = "AssemblyInfo.vb"
                     SubType = "Code"
                     BuildAction = "Compile"
                 />
                 <File
                     RelPath = "ChannelDefinitionBase.vb"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "ChannelValueBase.vb"
                     SubType = "Code"
                     BuildAction = "Compile"
                 />
@@ -126,7 +136,17 @@
                     BuildAction = "Compile"
                 />
                 <File
+                    RelPath = "DigitalValueBase.vb"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
                     RelPath = "FrequencyDefinitionBase.vb"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "FrequencyValueBase.vb"
                     SubType = "Code"
                     BuildAction = "Compile"
                 />
@@ -136,7 +156,17 @@
                     BuildAction = "Compile"
                 />
                 <File
+                    RelPath = "IAnalogValue.vb"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
                     RelPath = "IChannelDefinition.vb"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "IChannelValue.vb"
                     SubType = "Code"
                     BuildAction = "Compile"
                 />
@@ -151,7 +181,17 @@
                     BuildAction = "Compile"
                 />
                 <File
+                    RelPath = "IDigitalValue.vb"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
                     RelPath = "IFrequencyDefinition.vb"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "IFrequencyValue.vb"
                     SubType = "Code"
                     BuildAction = "Compile"
                 />

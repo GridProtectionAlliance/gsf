@@ -1,5 +1,5 @@
 '***********************************************************************
-'  IPhasorValue.vb - Phasor value interface
+'  IDigitalValue.vb - Digital value interface
 '  Copyright © 2005 - TVA, all rights reserved
 '
 '  Build Environment: VB.NET, Visual Studio 2003
@@ -17,26 +17,14 @@
 
 Namespace EE.Phasor
 
-    ' This class represents the protocol independent interface of a phasor value.
-    Public Interface IPhasorValue
+    ' This interface represents a protocol independent digital value.
+    Public Interface IDigitalValue
 
         Inherits IChannelValue
 
-        ReadOnly Property Definition() As IPhasorDefinition
+        ReadOnly Property Definition() As IDigitalDefinition
 
-        Property PhasorFormat() As PhasorFormat
-
-        Property Angle() As Double
-
-        Property Magnitude() As Double
-
-        Property Real() As Double
-
-        Property Imaginary() As Double
-
-        Property UnscaledReal() As Int16
-
-        Property UnscaledImaginary() As Int16
+        Property Value() As Int16
 
     End Interface
 

@@ -1,5 +1,5 @@
 '***********************************************************************
-'  IPhasorValue.vb - Phasor value interface
+'  IFrequencyValue.vb - Frequency value interface
 '  Copyright © 2005 - TVA, all rights reserved
 '
 '  Build Environment: VB.NET, Visual Studio 2003
@@ -17,26 +17,20 @@
 
 Namespace EE.Phasor
 
-    ' This class represents the protocol independent interface of a phasor value.
-    Public Interface IPhasorValue
+    ' This class represents the protocol independent interface of a frequency value.
+    Public Interface IFrequencyValue
 
         Inherits IChannelValue
 
-        ReadOnly Property Definition() As IPhasorDefinition
+        ReadOnly Property Definition() As IFrequencyDefinition
 
-        Property PhasorFormat() As PhasorFormat
+        Property Frequency() As Double
 
-        Property Angle() As Double
+        Property DfDt() As Double
 
-        Property Magnitude() As Double
+        Property UnscaledFrequency() As Int16
 
-        Property Real() As Double
-
-        Property Imaginary() As Double
-
-        Property UnscaledReal() As Int16
-
-        Property UnscaledImaginary() As Int16
+        Property UnscaledDfDt() As Int16
 
     End Interface
 

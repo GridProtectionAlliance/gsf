@@ -22,6 +22,8 @@ Namespace EE.Phasor
 
         Inherits IComparable
 
+        ReadOnly Property InheritedType() As Type
+
         Property Index() As Integer
 
         Property ScalingFactor() As Double

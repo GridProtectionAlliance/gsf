@@ -23,10 +23,10 @@ Namespace EE.Phasor
     ' This class represents the protocol independent definition of a phasor value.
     Public MustInherit Class PhasorValueBase
 
+        Inherits ChannelValueBase
         Implements IPhasorValue
 
         Protected m_phasorFormat As PhasorFormat
-        Protected m_dataFormat As DataFormat
         Protected m_phasorDefinition As IPhasorDefinition
         Protected m_real As Double
         Protected m_imaginary As Double
@@ -92,10 +92,23 @@ Namespace EE.Phasor
 
         End Function
 
-        Protected Sub New(ByVal phasorFormat As PhasorFormat, ByVal dataFormat As DataFormat, ByVal phasorDefinition As IPhasorDefinition, ByVal real As Double, ByVal imaginary As Double)
+        Protected Sub New()
+
+            MyBase.New()
+
+            m_phasorFormat = PhasorFormat.Rectangular
+            m_phasorDefinition = Nothing
+            m_real = 0
+            m_imaginary = 0
+            m_compositeValues = New CompositeValues(2)
+
+        End Sub
+
+        Protected Sub New(ByVal dataFormat As DataFormat, ByVal phasorFormat As PhasorFormat, ByVal phasorDefinition As IPhasorDefinition, ByVal real As Double, ByVal imaginary As Double)
+
+            MyBase.New(dataFormat)
 
             m_phasorFormat = phasorFormat
-            m_dataFormat = dataFormat
             m_phasorDefinition = phasorDefinition
             m_real = real
             m_imaginary = imaginary
@@ -103,20 +116,21 @@ Namespace EE.Phasor
 
         End Sub
 
-        Protected Sub New(ByVal phasorFormat As PhasorFormat, ByVal dataFormat As DataFormat, ByVal phasorDefinition As IPhasorDefinition, ByVal unscaledReal As Int16, ByVal unscaledImaginary As Int16)
+        Protected Sub New(ByVal dataFormat As DataFormat, ByVal phasorFormat As PhasorFormat, ByVal phasorDefinition As IPhasorDefinition, ByVal unscaledReal As Int16, ByVal unscaledImaginary As Int16)
 
-            Me.New(phasorFormat, dataFormat, phasorDefinition, unscaledReal * phasorDefinition.ScalingFactor, unscaledImaginary * phasorDefinition.ScalingFactor)
+            Me.New(dataFormat, phasorFormat, phasorDefinition, unscaledReal * phasorDefinition.ScalingFactor, unscaledImaginary * phasorDefinition.ScalingFactor)
 
         End Sub
 
-        Protected Sub New(ByVal phasorFormat As PhasorFormat, ByVal dataFormat As DataFormat, ByVal phasorDefinition As IPhasorDefinition, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+        Protected Sub New(ByVal dataFormat As DataFormat, ByVal phasorFormat As PhasorFormat, ByVal phasorDefinition As IPhasorDefinition, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+
+            MyBase.New(dataFormat)
 
             m_phasorFormat = phasorFormat
-            m_dataFormat = dataFormat
             m_phasorDefinition = phasorDefinition
 
-            If phasorFormat = phasorFormat.Rectangular Then
-                If dataFormat = dataFormat.FixedInteger Then
+            If phasorFormat = EE.Phasor.PhasorFormat.Rectangular Then
+                If dataFormat = EE.Phasor.DataFormat.FixedInteger Then
                     UnscaledReal = EndianOrder.ReverseToInt16(binaryImage, startIndex)
                     UnscaledImaginary = EndianOrder.ReverseToInt16(binaryImage, startIndex + 2)
                 Else
@@ -127,7 +141,7 @@ Namespace EE.Phasor
                 Dim magnitude As Double
                 Dim angle As Double
 
-                If dataFormat = dataFormat.FixedInteger Then
+                If dataFormat = EE.Phasor.DataFormat.FixedInteger Then
                     magnitude = Convert.ToDouble(EndianOrder.ReverseToUInt16(binaryImage, startIndex))
                     angle = EndianOrder.ReverseToInt16(binaryImage, startIndex + 2) * 180 / Math.PI / 10000
                 Else
@@ -151,16 +165,6 @@ Namespace EE.Phasor
                 m_phasorFormat = Value
             End Set
         End Property
-
-        Public Overridable Property DataFormat() As DataFormat Implements IPhasorValue.DataFormat
-            Get
-                Return m_dataFormat
-            End Get
-            Set(ByVal Value As DataFormat)
-                m_dataFormat = Value
-            End Set
-        End Property
-
 
         Public Overridable ReadOnly Property Definition() As IPhasorDefinition Implements IPhasorValue.Definition
             Get
@@ -230,7 +234,13 @@ Namespace EE.Phasor
             End Set
         End Property
 
-        Public Overridable ReadOnly Property IsEmpty() As Boolean Implements IPhasorValue.IsEmpty
+        Public Overrides ReadOnly Property Values() As Double()
+            Get
+                Return New Double() {m_real, m_imaginary}
+            End Get
+        End Property
+
+        Public Overrides ReadOnly Property IsEmpty() As Boolean
             Get
                 Return (m_real = 0 And m_imaginary = 0)
             End Get
@@ -251,9 +261,9 @@ Namespace EE.Phasor
 
         End Sub
 
-        Public Overridable ReadOnly Property BinaryLength() As Integer Implements IPhasorValue.BinaryLength
+        Public Overrides ReadOnly Property BinaryLength() As Integer
             Get
-                If m_dataFormat = DataFormat.FixedInteger Then
+                If m_dataFormat = EE.Phasor.DataFormat.FixedInteger Then
                     Return 4
                 Else
                     Return 8
@@ -261,12 +271,12 @@ Namespace EE.Phasor
             End Get
         End Property
 
-        Public Overridable ReadOnly Property BinaryImage() As Byte() Implements IPhasorValue.BinaryImage
+        Public Overrides ReadOnly Property BinaryImage() As Byte()
             Get
                 Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BinaryLength)
 
-                If m_phasorFormat = PhasorFormat.Rectangular Then
-                    If m_dataFormat = DataFormat.FixedInteger Then
+                If m_phasorFormat = EE.Phasor.PhasorFormat.Rectangular Then
+                    If m_dataFormat = EE.Phasor.DataFormat.FixedInteger Then
                         EndianOrder.SwapCopyBytes(UnscaledReal, buffer, 0)
                         EndianOrder.SwapCopyBytes(UnscaledImaginary, buffer, 2)
                     Else
@@ -274,7 +284,7 @@ Namespace EE.Phasor
                         EndianOrder.SwapCopyBytes(Convert.ToSingle(m_imaginary), buffer, 4)
                     End If
                 Else
-                    If m_dataFormat = DataFormat.FixedInteger Then
+                    If m_dataFormat = EE.Phasor.DataFormat.FixedInteger Then
                         EndianOrder.SwapCopyBytes(Convert.ToUInt16(Magnitude), buffer, 0)
                         EndianOrder.SwapCopyBytes(Convert.ToInt16(Angle * Math.PI / 180 * 10000), buffer, 2)
                     Else

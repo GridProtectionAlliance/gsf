@@ -38,12 +38,16 @@ Namespace EE.Phasor
         End Sub
 
         <EditorBrowsable(EditorBrowsableState.Never)> _
-        Public Overrides Property ScalingFactor() As Double
+        Public NotOverridable Overrides Property ScalingFactor() As Double
             Get
                 Return m_scale
             End Get
             Set(ByVal Value As Double)
-                Throw New NotImplementedException("Digital values are not scaled")
+                If Value = 1.0 Then
+                    m_scale = Value
+                Else
+                    Throw New NotImplementedException("Digital values are not scaled")
+                End If
             End Set
         End Property
 

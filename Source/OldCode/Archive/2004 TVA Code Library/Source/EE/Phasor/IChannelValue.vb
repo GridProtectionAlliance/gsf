@@ -1,5 +1,5 @@
 '***********************************************************************
-'  IPhasorValue.vb - Phasor value interface
+'  IChannelValue.vb - Channel data interface
 '  Copyright © 2005 - TVA, all rights reserved
 '
 '  Build Environment: VB.NET, Visual Studio 2003
@@ -17,27 +17,22 @@
 
 Namespace EE.Phasor
 
-    ' This class represents the protocol independent interface of a phasor value.
-    Public Interface IPhasorValue
+    ' This interface represents a protocol independent representation of any kind of data.
+    Public Interface IChannelValue
 
-        Inherits IChannelValue
+        ReadOnly Property InheritedType() As Type
 
-        ReadOnly Property Definition() As IPhasorDefinition
+        Property DataFormat() As DataFormat
 
-        Property PhasorFormat() As PhasorFormat
+        ReadOnly Property Values() As Double()
 
-        Property Angle() As Double
+        ReadOnly Property IsEmpty() As Boolean
 
-        Property Magnitude() As Double
+        ReadOnly Property BinaryLength() As Integer
 
-        Property Real() As Double
-
-        Property Imaginary() As Double
-
-        Property UnscaledReal() As Int16
-
-        Property UnscaledImaginary() As Int16
+        ReadOnly Property BinaryImage() As Byte()
 
     End Interface
+
 
 End Namespace
