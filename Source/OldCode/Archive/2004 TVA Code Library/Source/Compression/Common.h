@@ -44,26 +44,37 @@ namespace TVA
 		{
 			public: 
 				static System::Byte Compress(System::Byte Data[]) [];
-				static System::Byte Compress(System::Byte Data[], CompressLevel Strength) [];
+				static System::Byte Compress(System::Byte Data[], CompressLevel Strength) [];			
 				static Stream* Compress(Stream* InStream);
 				static Stream* Compress(Stream* InStream, CompressLevel Strength);
 				static void Compress(Stream* InStream, Stream* OutStream, CompressLevel Strength, ProgressEventHandler* ProgressHandler);
+				
 				static System::Byte Uncompress(System::Byte Data[], int UncompressedSize) [];
 				static Stream* Uncompress(System::IO::Stream* InStream);
 				static void Uncompress(Stream* InStream, Stream* OutStream, ProgressEventHandler* ProgressHandler);
+				
 				static void CompressFile(String* SourceFileName, String* DestFileName);
 				static void CompressFile(String* SourceFileName, String* DestFileName, CompressLevel Strength);
 				static void CompressFile(String* SourceFileName, String* DestFileName, CompressLevel Strength, ProgressEventHandler* ProgressHandler);
+				
 				static void UncompressFile(String* SourceFileName, String* DestFileName);
 				static void UncompressFile(String* SourceFileName, String* DestFileName, ProgressEventHandler* ProgressHandler);
+				
 				static Int32 CRC32(Int32 CRC, System::Byte Data[], int Offset, int Count);
 				static Int32 CRC32(System::Byte Data[]);
 				static Int32 CRC32(Stream* InStream);
 				static Int32 CRC32(String* FileName);
+				
 				static Int16 CRC16(Int16 CRC, System::Byte Data[], int Offset, int Count);
 				static Int16 CRC16(System::Byte Data[]);
 				static Int16 CRC16(Stream* InStream);
 				static Int16 CRC16(String* FileName);
+				
+				static Int16 QuickCRC16(Int16 CRC, System::Byte Data[], int Offset, int Count);
+				static Int16 QuickCRC16(System::Byte Data[]);
+				static Int16 QuickCRC16(Stream* InStream);
+				static Int16 QuickCRC16(String* FileName);
+				
 				static String* ZLibVersion();
 			private:
 				Common(){}
