@@ -15,7 +15,7 @@ import System.Runtime.InteropServices;
 [assembly: AssemblyTrademark("Author: James Ritchie Carroll")]
 [assembly: CLSCompliant(true)]
 [assembly: Guid("1ABB1D87-010F-43B3-9A54-E74B691C008A")]
-[assembly: AssemblyVersion("7.5.1.64432")]
+[assembly: AssemblyVersion("7.5.5.47890")]
 
 // NOTE!  In a VB.NET project, Visual Studio doesn't support custom build steps,
 // so if you make changes to this code you must "manually" compile them by running

@@ -27,6 +27,8 @@ Namespace EE.Phasor
 
         Property VoltageReference() As IPhasorDefinition
 
+        ReadOnly Property ScalingFactor() As Double
+
         Property CalFactor() As Double
 
         Property Label() As String

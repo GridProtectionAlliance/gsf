@@ -22,7 +22,7 @@ Namespace [Shared]
         ' Encryption algorithms are cumulative, the levels represent tradeoffs on speed vs. cipher strength - level 1
         ' will have the fastest encryption speed with the simplest encryption strength - level 4 will have the
         ' strongest cumulative encryption strength with the slowest encryption speed
-        ' See ms-help://MS.VSCC/MS.MSDNVS/cpref/html/frlrfsystemsecuritycryptographysymmetricalgorithmclasstopic.htm
+        ' See ms-help://MS.VSCC.2003/MS.MSDNQTR.2003JUL.1033/cpguide/html/cpconcryptographyoverview.htm
         ' for information on the symmetric encryption algorithms
         Public Enum EncryptLevel
             [Level1]    ' Adds simple multi-alogorithm XOR based encryption
@@ -426,9 +426,9 @@ Namespace [Shared]
         Public Shared Function Crypt(ByVal Data As Byte(), ByVal EncryptionKey As Byte()) As Byte()
 
             ' The longer the encryption key the better the encryption
-            ' Repeated encryption sequences do not occur for (3 * EncryptionKey.Length) bytes
+            ' Repeated encryption sequences do not occur for (3 * EncryptionKey.Length) unique bytes
 
-            Dim CryptData As Byte() = Array.CreateInstance(GetType(Byte), Data.Length)
+            Dim cryptData As Byte() = Array.CreateInstance(GetType(Byte), Data.Length)
             Dim lngKeyPos As Long
             Dim intAlgorithm As Integer
             Dim intChar As Integer
@@ -442,18 +442,18 @@ Namespace [Shared]
             intAlgorithm = 0
 
             For x = 0 To Data.Length - 1
-                CryptData(x) = Data(x)
-                If CryptData(x) > 0 Then
+                cryptData(x) = Data(x)
+                If cryptData(x) > 0 Then
                     Select Case intAlgorithm
                         Case 0
                             intChar = EncryptionKey(lngKeyPos)
-                            If CryptData(x) <> intChar Then CryptData(x) = (CryptData(x) Xor intChar)
+                            If cryptData(x) <> intChar Then cryptData(x) = (cryptData(x) Xor intChar)
                         Case 1
                             intChar = Int(Rnd() * (EncryptionKey(lngKeyPos) + 1))
-                            If CryptData(x) <> intChar Then CryptData(x) = (CryptData(x) Xor intChar)
+                            If cryptData(x) <> intChar Then cryptData(x) = (cryptData(x) Xor intChar)
                         Case 2
                             intChar = Int(Rnd() * 256)
-                            If CryptData(x) <> intChar Then CryptData(x) = (CryptData(x) Xor intChar)
+                            If cryptData(x) <> intChar Then cryptData(x) = (cryptData(x) Xor intChar)
                     End Select
                 End If
 
@@ -468,7 +468,7 @@ Namespace [Shared]
                 End If
             Next
 
-            Return CryptData
+            Return cryptData
 
         End Function
 
@@ -512,14 +512,14 @@ Namespace [Shared]
                 Throw New InvalidOperationException("Cannot calculate key from negative seed")
             End If
 
-            If HiByte(HiWord(Seed)) > 0 Then
+            If LoByte(LoWord(Seed)) > 0 Then
                 Throw New InvalidOperationException("Seed is too large (function was designed for timer values)")
             End If
 
             ' Break seed into its component bytes
-            bytSeed(0) = LoByte(HiWord(Seed))
-            bytSeed(1) = HiByte(LoWord(Seed))
-            bytSeed(2) = LoByte(LoWord(Seed))
+            bytSeed(0) = HiByte(HiWord(Seed))
+            bytSeed(1) = LoByte(HiWord(Seed))
+            bytSeed(2) = HiByte(LoWord(Seed))
 
             ' Create alpha-numeric key string
             Randomize()
@@ -576,8 +576,8 @@ Namespace [Shared]
                         End If
                     Next
 
-                    ' Create seed from its components bytes
-                    Return MakeDWord(MakeWord(0, bytSeed(0)), MakeWord(bytSeed(1), bytSeed(2)))
+                    ' Create seed from its component bytes
+                    Return MakeDWord(MakeWord(bytSeed(0), bytSeed(1)), MakeWord(bytSeed(2), 0))
                 End If
             End If
 

@@ -43,6 +43,12 @@ Namespace EE.Phasor
             End Set
         End Property
 
+        Public Overridable ReadOnly Property ScalingFactor() As Double Implements IPhasorDefinition.ScalingFactor
+            Get
+                Return CalFactor
+            End Get
+        End Property
+
         Public MustOverride Property CalFactor() As Double Implements IPhasorDefinition.CalFactor
 
         Public MustOverride ReadOnly Property MaximumCalFactor() As Int32 Implements IPhasorDefinition.MaximumCalFactor

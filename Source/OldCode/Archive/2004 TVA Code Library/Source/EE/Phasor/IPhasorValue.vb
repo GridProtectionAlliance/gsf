@@ -19,9 +19,9 @@ Namespace EE.Phasor
 
     Public Interface IPhasorValue
 
-        ReadOnly Property PhasorDefinition() As IPhasorDefinition
+        ReadOnly Property Definition() As IPhasorDefinition
 
-        ReadOnly Property ScalingFactor() As Double
+        Property Format() As PhasorFormat
 
         Property Angle() As Double
 
@@ -39,7 +39,7 @@ Namespace EE.Phasor
 
         ReadOnly Property BinaryLength() As Integer
 
-        ReadOnly Property BinaryImage(ByVal phasorFormat As PhasorFormat) As Byte()
+        ReadOnly Property BinaryImage() As Byte()
 
     End Interface
 

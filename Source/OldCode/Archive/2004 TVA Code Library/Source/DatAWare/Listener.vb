@@ -30,8 +30,13 @@ Namespace DatAWare
         Implements IDisposable
 
         Public Delegate Sub ProcessEventSignature(ByVal [event] As StandardEvent)
-        Public Delegate Sub ProcessEventBufferSignature(ByVal eventBuffer As Byte())
+        Public Delegate Sub ProcessEventBufferSignature(ByVal eventBuffer As Byte(), ByVal offset As Integer, ByVal length As Integer)
         Public Delegate Sub UpdateStatusSignature(ByVal status As String)
+
+        Public Enum NetworkProtocol
+            TCP
+            UDP
+        End Enum
 
         Public Class EventProcessor
 
@@ -43,10 +48,10 @@ Namespace DatAWare
 
             End Sub
 
-            Public Sub ProcessEventBuffer(ByVal eventBuffer As Byte())
+            Public Sub ProcessEventBuffer(ByVal eventBuffer As Byte(), ByVal offset As Integer, ByVal length As Integer)
 
                 ' Parse standard DatAWare events out of network data packet
-                For packetIndex As Integer = 0 To eventBuffer.Length - 1 Step StandardEvent.BinaryLength
+                For packetIndex As Integer = offset To length - 1 Step StandardEvent.BinaryLength
                     If packetIndex + StandardEvent.BinaryLength < eventBuffer.Length Then
                         m_processEvent(New StandardEvent(eventBuffer, packetIndex))
                     End If
@@ -56,6 +61,7 @@ Namespace DatAWare
 
         End Class
 
+        Private m_protocol As NetworkProtocol
         Private m_eventProcessor As EventProcessor
         Private m_processEventBuffer As ProcessEventBufferSignature
         Private m_updateStatus As UpdateStatusSignature
@@ -69,14 +75,17 @@ Namespace DatAWare
         Private m_packetsRejected As Long
         Private m_bytesReceived As Long
 
-        Private Const BufferSize As Integer = 4096 ' 4Kb buffer
+        Private Const TCPBufferSize As Integer = 4096   ' 4Kb buffer
+        Private Const UDPBufferSize As Integer = 524288 ' 512Kb buffer
 
         ' Initialize listener to directly process standard DatAWare events
         Public Sub New( _
+            ByVal protocol As NetworkProtocol, _
             ByVal processEventFunction As ProcessEventSignature, _
             ByVal updateStatusFunction As UpdateStatusSignature, _
             ByVal serverPort As Integer)
 
+            m_protocol = protocol
             m_eventProcessor = New EventProcessor(processEventFunction)
             m_processEventBuffer = AddressOf m_eventProcessor.ProcessEventBuffer
             m_updateStatus = updateStatusFunction
@@ -88,10 +97,12 @@ Namespace DatAWare
 
         ' Initialize listener to directly process DatAWare network buffer
         Public Sub New( _
+            ByVal protocol As NetworkProtocol, _
             ByVal processEventBufferFunction As ProcessEventBufferSignature, _
             ByVal updateStatusFunction As UpdateStatusSignature, _
             ByVal serverPort As Integer)
 
+            m_protocol = protocol
             m_processEventBuffer = processEventBufferFunction
             m_updateStatus = updateStatusFunction
             m_serverPort = serverPort
@@ -114,6 +125,12 @@ Namespace DatAWare
                     If IsRunning Then [Stop]()
                 End If
             End Set
+        End Property
+
+        Public ReadOnly Property Protocol() As NetworkProtocol
+            Get
+                Return m_protocol
+            End Get
         End Property
 
         Public ReadOnly Property ServerPort() As Integer
@@ -192,45 +209,87 @@ Namespace DatAWare
         ' This procedure is meant to be executed on a seperate thread...
         Private Sub ListenForConnections()
 
-            Dim listener As New TcpListener(Dns.Resolve(System.Environment.MachineName).AddressList(0), m_serverPort)
+            If m_protocol = NetworkProtocol.TCP Then
+                ' When we are in TCP mode, we can accept connections from multiple clients
+                Dim listener As New TcpListener(Dns.Resolve(System.Environment.MachineName).AddressList(0), m_serverPort)
 
-            Try
-                Dim client As TcpClient
+                Try
+                    Dim client As TcpClient
 
-                ' Start the web server
-                listener.Start()
+                    ' Start the web server
+                    listener.Start()
 
-                ' Enter the listening loop
-                m_updateStatus(Name & " started")
+                    ' Enter the listening loop
+                    m_updateStatus(Name & " started")
 
-                Do While True
-                    ' Block thread until next client connection accepted...
-                    client = listener.AcceptTcpClient()
+                    Do While True
+                        ' Block thread until next client connection accepted...
+                        client = listener.AcceptTcpClient()
 
-                    ' Process client request on an independent thread so we can keep listening for new requests
-                    SyncLock m_clientThreads.SyncRoot
-                        Dim threadID As Guid = Guid.NewGuid
-                        m_clientThreads.Add(threadID, RunThread.ExecuteNonPublicMethod(Me, "AcceptClientData", client, threadID))
-                    End SyncLock
+                        ' Process client request on an independent thread so we can keep listening for new requests
+                        SyncLock m_clientThreads.SyncRoot
+                            Dim threadID As Guid = Guid.NewGuid
+                            m_clientThreads.Add(threadID, RunThread.ExecuteNonPublicMethod(Me, "AcceptTCPClientData", client, threadID))
+                        End SyncLock
 
-                    m_updateStatus("New client connection established for " & Name & "...")
+                        m_updateStatus("New TCP client connection established for " & Name & "...")
+                    Loop
+                Catch ex As Exception
+                    m_updateStatus(Name & " exception: " & ex.Message)
+                Finally
+                    If Not listener Is Nothing Then listener.Stop()
+                    m_updateStatus(Name & " stopped")
+                End Try
+            Else
+                ' In UDP mode, we just listen on a single connection using the specified port
+                Dim udpSocket As New Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp)
+                Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), 524288)
+                Dim remoteEP As System.Net.EndPoint = CType(New IPEndPoint(IPAddress.Any, m_serverPort), System.Net.EndPoint)
+                Dim read As Integer
+
+                udpSocket.Bind(remoteEP)
+
+                m_updateStatus("New UDP client connection established for " & Name & "...")
+
+                ' Enter the data read loop
+                Do While Enabled
+                    Try
+                        ' Block thread until we've read some data...
+                        read = udpSocket.ReceiveFrom(buffer, remoteEP)
+
+                        ' If we get no data we'll just go back to listening...
+                        If read > 0 Then
+                            ' Process the network data packet...
+                            m_bytesReceived += read
+                            m_processEventBuffer(buffer, 0, read)
+                            m_packetsAccepted += 1
+                        End If
+                    Catch ex As ThreadAbortException
+                        ' If we received an abort exception, we'll egress gracefully
+                        Exit Do
+                    Catch ex As IOException
+                        ' This will get thrown if the thread is being aborted and we are sitting in a blocked stream read, so
+                        ' in this case we'll bow out gracefully as well...
+                        Exit Do
+                    Catch ex As Exception
+                        m_updateStatus("Exception occurred for " & Name & " while accepting client data: " & ex.Message)
+                        m_packetsRejected += 1
+                    End Try
                 Loop
-            Catch ex As Exception
-                m_updateStatus(Name & " exception: " & ex.Message)
-            Finally
-                If Not listener Is Nothing Then listener.Stop()
-                m_updateStatus(Name & " stopped")
-            End Try
+
+                ' Close client connection
+                If Not udpSocket Is Nothing Then udpSocket.Close()
+            End If
 
         End Sub
 
         ' This procedure is meant to be executed on a seperate thread...
-        Private Sub AcceptClientData(ByVal client As TcpClient, ByVal threadID As Guid)
+        Private Sub AcceptTCPClientData(ByVal client As TcpClient, ByVal threadID As Guid)
 
             Dim clientStream As NetworkStream
             Dim clientData As MemoryStream
             Dim eventBuffer As Byte()
-            Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BufferSize)
+            Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), TCPBufferSize)
             Dim read As Integer
             Dim events As Integer
             Dim remainder As Integer
@@ -247,7 +306,7 @@ Namespace DatAWare
                 Try
                     Do
                         ' Block thread until we've read some data...
-                        read = clientStream.Read(buffer, 0, BufferSize)
+                        read = clientStream.Read(buffer, 0, TCPBufferSize)
                         clientData.Write(buffer, 0, read)
                     Loop While clientStream.DataAvailable
 
@@ -276,7 +335,7 @@ Namespace DatAWare
 
                         ' Process the network data packet...
                         m_bytesReceived += eventBuffer.Length
-                        m_processEventBuffer(eventBuffer)
+                        m_processEventBuffer(eventBuffer, 0, eventBuffer.Length)
 
                         ' If client was finished sending packet, send acknowledgement back to DatAWare...
                         If remainder = 0 And Not clientStream.DataAvailable Then
@@ -350,6 +409,7 @@ Namespace DatAWare
             Get
                 With New StringBuilder
                     .Append("   DatAWare listener state: " & IIf(IsRunning, "Running", "Stopped") & vbCrLf)
+                    .Append("          Network protocol: " & [Enum].GetName(GetType(NetworkProtocol), m_protocol) & vbCrLf)
                     .Append("         Listening on port: " & m_serverPort & vbCrLf)
                     .Append("            Listening time: " & SecondsToText(RunTime) & vbCrLf)
                     .Append("            Threads in use: " & ThreadsInUse & vbCrLf)
