@@ -208,7 +208,9 @@ Public Class DatAWarePDC
         Variables.Create("DatAWare.Listener0.UserName", "DatAWarePDC", VariableType.Text, "Username used to connect to DatAWare server this listener is associated with")
         Variables.Create("DatAWare.Listener0.Password", "4kqd4WHPevelrySArtKLlp4nV5ykh90Xe3EuJotBg1Y=", VariableType.Text, "Encrypted password used to connect to DatAWare server this listener is associated with - use GenPassword to create password")
         Variables.Create("DatAWare.PDC.ConfigFile", ServiceHelper.AppPath & "TVA_PDC.ini", VariableType.Text, "PDC Configuration File used by the DatAWare Phasor Data Concentrator")
-        Variables.Create("DatAWare.PDC.LagTime", 0.75, VariableType.Float, "Lag time, in seconds, used to determine how long to wait before data is broadcasted (Note: typically set to be slightly greater than the DatAWare polling interval)")
+        Variables.Create("DatAWare.PDC.LagTime", 3.0#, VariableType.Float, "Maximum time deviation, in seconds, tolerated before data packet is published (i.e., how long to wait for data before broadcast)")
+        Variables.Create("DatAWare.PDC.IntervalAdjustment", 1.5#, VariableType.Float, "Adjustment, in seconds, used to increase broadcast timer interval if needed (ensures that the actual broadcast rate will be slightly higher than the sample rate)")
+        Variables.Create("DatAWare.PDC.HighSampleCount", 6, VariableType.Int, "High warning limit for the concentrator sample count, warning raised when unpublished sample count exceeds this value.  Too many queued samples means concentrator is falling behind.")
         Variables.Create("DatAWare.PDC.BroadcastPoints.Total", 1, VariableType.Int, "Total number of PDCstream UDP broadcast points")
         Variables.Create("DatAWare.PDC.BroadcastPoint0.IP", "152.85.255.255", VariableType.Text, "IP used for this broadcast point - can be single IP or you can use 255.255 for sub-net suffix for broadcast (e.g., 152.85.255.255)")
         Variables.Create("DatAWare.PDC.BroadcastPoint0.Port", 3060, VariableType.Int, "Port used for this broadcast point")
@@ -413,13 +415,13 @@ Public Class DatAWarePDC
         Next
 
         ' Create an instance of the PDC concentrator
-        Concentrator = New PDCstream.Concentrator(Me, Variables("DatAWare.PDC.ConfigFile"), Variables("DatAWare.PDC.LagTime"), broadcastIPs)
+        Concentrator = New PDCstream.Concentrator(Me, Variables("DatAWare.PDC.ConfigFile"), Variables("DatAWare.PDC.LagTime"), Variables("DatAWare.PDC.IntervalAdjustment"), broadcastIPs)
 
         ' Create an instance of the DatAWare event queue
         EventQueue = New DatAWare.EventQueue(Me)
 
         ' Create a new PMU data aggregator
-        Aggregator = New DatAWare.Aggregator(Me, Concentrator)
+        Aggregator = New DatAWare.Aggregator(Me)
 
         ' Register these service components
         With ServiceHelper.Components
@@ -486,17 +488,33 @@ Public Class DatAWarePDC
 
         ' TODO: Once a sample is published, we should pass it along to the aggregator for aggregation and archival
 
+        'With New Text.StringBuilder
+        '    Dim row As PDCstream.DescriptorPacket
+
+        '    .Append("Sample @ " & sample.Timestamp & " rows:" & vbCrLf)
+        '    For x As Integer = 0 To sample.Rows.Length - 1
+        '        .Append("  " & x.ToString.PadLeft(2, "0"c) & ": ")
+        '        For y As Integer = 0 To sample.Rows(x).Cells.Length - 1
+        '            If y > 0 Then .Append(", ")
+        '            .Append(sample.Rows(x).Cells(y).FrequencyValue.ScaledFrequency.ToString("00.0000"))
+        '        Next
+        '        .Append(vbCrLf)
+        '    Next
+
+        '    UpdateStatus(.ToString)
+        'End With
+
     End Sub
 
     Private Sub Concentrator_UnpublishedSamples(ByVal total As Integer) Handles Concentrator.UnpublishedSamples
 
+        Static highSampleCount As Integer = Variables("DatAWare.PDC.HighSampleCount")
         Static lastWarning As Long
         Static warningState As Boolean
 
-        ' TODO: You should never have very many unpublished samples queued up - each sample represents one second of data,
+        ' You should never have very many unpublished samples queued up - each sample represents one second of data,
         ' so the total number of unpublished samples equals the number of seconds the PDC is behind real-time...
-        ' TODO: define tolerable sample count...
-        If total > 6 Then
+        If total > highSampleCount Then
             ' Don't send any warnings more than every 10 seconds
             If (DateTime.Now.Ticks - lastWarning) / 10000000L > 10 Then
                 UpdateStatus("WARNING: There are " & total & " unpublished samples in the queue, real-time stream could be falling behind...")

@@ -42,7 +42,7 @@ Namespace PDCstream
             m_index = index
 
             ' We precalculate a regular .NET timestamp with milliseconds sitting in the middle of the sample index
-            m_timestamp = timeStamp.AddMilliseconds((m_index + 0.5) * (1000 / m_configFile.SampleRate))
+            m_timestamp = timeStamp.AddMilliseconds((m_index + 0.5@) * (1000@ / m_configFile.SampleRate))
 
             With m_configFile
                 Cells = Array.CreateInstance(GetType(PMUDataCell), .PMUCount)

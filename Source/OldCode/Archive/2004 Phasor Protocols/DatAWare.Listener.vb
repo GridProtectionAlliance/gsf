@@ -230,6 +230,7 @@ Namespace DatAWare
 
             ' Open client data stream...
             clientStream = client.GetStream()
+            client.ReceiveBufferSize = BufferSize
             clientData = New MemoryStream
 
             ' Enter the data read loop
