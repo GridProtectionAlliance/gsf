@@ -82,6 +82,7 @@
                 />
                 <File
                     RelPath = "QueueThread.vb"
+                    SubType = "Code"
                     BuildAction = "Compile"
                 />
                 <File

@@ -16,45 +16,45 @@ Namespace Threading
         Public Parameters As Object()
         Public InvokeAttributes As BindingFlags
 
-        Public Shared Sub ExecuteMethod(ByVal Instance As Object, ByVal MethodName As String, ByVal ParamArray Params As Object()) As RunThread
+        Public Shared Sub ExecuteMethod(ByVal Instance As Object, ByVal MethodName As String, ByVal ParamArray Params As Object())
 
             Execute(Instance.GetType(), Instance, MethodName, BindingFlags.InvokeMethod Or BindingFlags.Instance Or BindingFlags.Public, Params)
 
         End Sub
 
-        Public Shared Sub ExecuteNonPublicMethod(ByVal Instance As Object, ByVal MethodName As String, ByVal ParamArray Params As Object()) As RunThread
+        Public Shared Sub ExecuteNonPublicMethod(ByVal Instance As Object, ByVal MethodName As String, ByVal ParamArray Params As Object())
 
             Execute(Instance.GetType(), Instance, MethodName, BindingFlags.InvokeMethod Or BindingFlags.Instance Or BindingFlags.NonPublic, Params)
 
         End Sub
 
-        Public Shared Sub ExecuteSharedMethod(ByVal ObjectType As Type, ByVal MethodName As String, ByVal ParamArray Params As Object()) As RunThread
+        Public Shared Sub ExecuteSharedMethod(ByVal ObjectType As Type, ByVal MethodName As String, ByVal ParamArray Params As Object())
 
             Execute(ObjectType, Nothing, MethodName, BindingFlags.InvokeMethod Or BindingFlags.Static Or BindingFlags.Public, Params)
 
         End Sub
 
-        Public Shared Sub ExecuteNonPublicSharedMethod(ByVal ObjectType As Type, ByVal MethodName As String, ByVal ParamArray Params As Object()) As RunThread
+        Public Shared Sub ExecuteNonPublicSharedMethod(ByVal ObjectType As Type, ByVal MethodName As String, ByVal ParamArray Params As Object())
 
             Execute(ObjectType, Nothing, MethodName, BindingFlags.InvokeMethod Or BindingFlags.Static Or BindingFlags.NonPublic, Params)
 
         End Sub
 
-        Public Shared Sub ExecutePropertyGet(ByVal Instance As Object, ByVal MethodName As String, ByVal ParamArray Params As Object()) As RunThread
+        Public Shared Sub ExecutePropertyGet(ByVal Instance As Object, ByVal MethodName As String, ByVal ParamArray Params As Object())
 
             Execute(Instance.GetType(), Instance, MethodName, BindingFlags.GetProperty Or BindingFlags.Instance Or BindingFlags.Public, Params)
 
         End Sub
 
-        Public Shared Sub ExecutePropertySet(ByVal Instance As Object, ByVal MethodName As String, ByVal ParamArray Params As Object()) As RunThread
+        Public Shared Sub ExecutePropertySet(ByVal Instance As Object, ByVal MethodName As String, ByVal ParamArray Params As Object())
 
             Execute(Instance.GetType(), Instance, MethodName, BindingFlags.SetProperty Or BindingFlags.Instance Or BindingFlags.Public, Params)
 
         End Sub
 
-        Public Shared Sub Execute(ByVal ObjectType As Type, ByVal Instance As Object, ByVal MethodName As String, ByVal InvokeAttributes As BindingFlags, ByVal ParamArray Params As Object()) As RunThread
+        Public Shared Sub Execute(ByVal ObjectType As Type, ByVal Instance As Object, ByVal MethodName As String, ByVal InvokeAttributes As BindingFlags, ByVal ParamArray Params As Object())
 
-            Dim qt As New QueueThread()
+            Dim qt As New QueueThread
 
             With qt
                 .ObjectType = ObjectType

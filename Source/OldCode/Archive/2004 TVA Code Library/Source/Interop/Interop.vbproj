@@ -65,20 +65,11 @@
                     Name = "System"
                     AssemblyName = "System"
                 />
-                <Reference
-                    Name = "System.Data"
-                    AssemblyName = "System.Data"
-                />
-                <Reference
-                    Name = "System.XML"
-                    AssemblyName = "System.Xml"
-                />
             </References>
             <Imports>
                 <Import Namespace = "Microsoft.VisualBasic" />
                 <Import Namespace = "System" />
                 <Import Namespace = "System.Collections" />
-                <Import Namespace = "System.Data" />
                 <Import Namespace = "System.Diagnostics" />
             </Imports>
         </Build>

@@ -1,6 +1,6 @@
 '***********************************************************************
 '  Listener.vb -  DatAWare Network Packet Listener / Parser
-'  Copyright © 2004 - TVA, all rights reserved
+'  Copyright © 2005 - TVA, all rights reserved
 '
 '  Build Environment: VB.NET, Visual Studio 2003
 '  Primary Developer: James R Carroll, System Analyst [WESTAFF]
@@ -100,23 +100,6 @@ Namespace DatAWare
 
         End Sub
 
-        Protected Overrides Sub Finalize()
-
-            MyBase.Finalize()
-            Dispose()
-
-        End Sub
-
-        Public Overridable Sub Dispose() Implements IDisposable.Dispose
-
-            GC.SuppressFinalize(Me)
-
-            ' Any needed shutdown code for your primary service process should be added here - note that this class
-            ' instance is available for the duration of the service lifetime...
-            [Stop]()
-
-        End Sub
-
         Public Overridable Property Enabled() As Boolean
             Get
                 Return m_enabled
@@ -124,7 +107,7 @@ Namespace DatAWare
             Set(ByVal Value As Boolean)
                 m_enabled = Value
 
-                ' When service is paused we stop listening, we start listening again when service is resumed...
+                ' When disabled we stop listening, we start listening again when enabled...
                 If m_enabled Then
                     If Not IsRunning Then Start()
                 Else
@@ -180,7 +163,7 @@ Namespace DatAWare
 
         End Sub
 
-        Public Overridable Sub [Stop]()
+        Public Overridable Sub [Stop]() Implements IDisposable.Dispose
 
             ' Stop listening thread
             If IsRunning Then
@@ -285,7 +268,7 @@ Namespace DatAWare
                             eventBuffer = evenPacket
                         End If
 
-                        ' Queue this data packet for concentration...
+                        ' Process the network data packet...
                         m_bytesReceived += eventBuffer.Length
                         m_processEventBuffer(eventBuffer)
 
