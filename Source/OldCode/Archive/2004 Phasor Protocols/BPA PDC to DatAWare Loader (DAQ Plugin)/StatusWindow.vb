@@ -10,6 +10,7 @@ Public Class StatusWindow
 
     Inherits System.Windows.Forms.Form
 
+    Friend ParentInterface As [Interface]
     Private Const MaximumStatusLength As Integer = 65536
 
 #Region " Windows Form Designer generated code "
@@ -123,6 +124,17 @@ Public Class StatusWindow
         ' We don't ever close this form, we just hide it...
         Me.Hide()
         e.Cancel = True
+
+    End Sub
+
+    ' We show conversion stats when user double clicks on status window...
+    Private Sub StatusWindow_DoubleClick(ByVal sender As Object, ByVal e As System.EventArgs) Handles MyBase.DoubleClick
+
+        Try
+            UpdateStatus(ParentInterface.converter.Status)
+        Catch ex As Exception
+            UpdateStatus("Failed to show stats due to exception: " & ex.Message)
+        End Try
 
     End Sub
 

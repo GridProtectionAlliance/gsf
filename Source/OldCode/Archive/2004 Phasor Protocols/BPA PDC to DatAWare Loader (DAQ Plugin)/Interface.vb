@@ -291,8 +291,10 @@ Public Class [Interface]
             ' Create a new config window if needed
             If m_statusWindow Is Nothing Then
                 m_statusWindow = New BpaPdcLoader.StatusWindow
+                m_statusWindow.ParentInterface = Me
             ElseIf m_statusWindow.IsDisposed Then
                 m_statusWindow = New BpaPdcLoader.StatusWindow
+                m_statusWindow.ParentInterface = Me
             End If
 
             Return m_statusWindow
