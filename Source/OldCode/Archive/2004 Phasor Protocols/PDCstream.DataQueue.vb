@@ -24,28 +24,20 @@ Namespace PDCstream
 
         Private m_configFile As ConfigFile
         Private m_dataSamples As SortedList
-        Private m_pointQueue As ArrayList
         Private m_baseTime As DateTime      ' This represents the most recent encountered timestamp baselined at the bottom of the second
+        Private m_baseTimeSet As Boolean
         Private m_discardedPoints As Long
-        Private WithEvents m_queueTimer As Timers.Timer
+        Private m_sampleRate As Double
 
         Public Event NewDataSampleCreated(ByVal newDataSample As DataSample)
+        Public Event DataError(ByVal message As String)
 
         Public Sub New(ByVal configFile As ConfigFile)
 
             m_configFile = configFile
             m_dataSamples = New SortedList
-            m_pointQueue = New ArrayList
             m_baseTime = DateTime.Now.Subtract(New TimeSpan(1, 0, 0, 0))    ' Initialize base time to yesterday...
-            m_queueTimer = New Timers.Timer
-
-            ' We want to keep the process queue as busy as possible, so we'll process data
-            ' at up to twice the sample rate - this is effective because multiple DatAWare
-            ' servers can be posting data at any given moment during a second...
-            With m_queueTimer
-                .Interval = 1000 / m_configFile.SampleRate / 2
-                .AutoReset = False
-            End With
+            m_sampleRate = 1000 / m_configFile.SampleRate
 
         End Sub
 
@@ -112,169 +104,130 @@ Namespace PDCstream
 
         End Sub
 
-        Public ReadOnly Property QueuedPointCount() As Integer
-            Get
-                SyncLock m_pointQueue.SyncRoot
-                    Return m_pointQueue.Count
-                End SyncLock
-            End Get
-        End Property
-
-        Public Sub QueueDataPoint(ByVal dataPoint As PMUDataPoint)
-
-            SyncLock m_pointQueue.SyncRoot
-                m_pointQueue.Add(dataPoint)
-            End SyncLock
-
-            m_queueTimer.Enabled = True
-
-        End Sub
-
-        Private Sub m_queueTimer_Elapsed(ByVal sender As Object, ByVal e As System.Timers.ElapsedEventArgs) Handles m_queueTimer.Elapsed
-
-            Dim dataPoints As PMUDataPoint()
-
-            ' Get data points to process
-            SyncLock m_pointQueue.SyncRoot
-                If m_pointQueue.Count > 0 Then
-                    dataPoints = m_pointQueue.ToArray(GetType(PMUDataPoint))
-                    m_pointQueue.Clear()
-                End If
-            End SyncLock
-
-            If Not dataPoints Is Nothing Then
-                For x As Integer = 0 To dataPoints.Length - 1
-                    ProcessDataPoint(dataPoints(x))
-                Next
-            End If
-
-            m_queueTimer.Enabled = (QueuedPointCount > 0)
-
-        End Sub
-
         ' Data comes in one-point at a time, so we use this function to place the point in its proper sample and row/cell position
-        Private Sub ProcessDataPoint(ByVal dataPoint As PMUDataPoint)
+        Public Sub SortDataPoint(ByVal dataPoint As PMUDataPoint)
 
-            With dataPoint
-                If DistanceFromBaseTime(.Timestamp) > 0 Then AddNewSample(.Timestamp)
+            Try
+                With dataPoint
+                    ' Find sample for this timestamp
+                    Dim sample As DataSample = GetSample(.Timestamp)
 
-                ' Find sample for this timestamp
-                Dim sample As DataSample = m_dataSamples(BaselinedTimestamp(.Timestamp).Ticks)
+                    If sample Is Nothing Then
+                        ' No samples exist for this timestamp - data must be very old
+                        m_discardedPoints += 1
+                    Else
+                        ' We've found the right sample for this data, so lets access the proper data cell by first calculating the
+                        ' proper sample index (i.e., the row) - we can then directly access the correct cell using the PMU index
+                        Dim rowIndex As Integer = Math.Floor((.Timestamp.Millisecond + 1) / m_sampleRate)
 
-                If sample Is Nothing Then
-                    ' No samples exists for this timestamp - data must be very old
-                    m_discardedPoints += 1
-                Else
-                    ' We've found the right sample for this data, so lets access the proper data cell by first calculating the
-                    ' proper sample index (i.e., the row) - we can then directly access the correct cell using the PMU index
-                    Dim dataCell As PMUDataCell = sample.Rows(Math.Floor(.Timestamp.Millisecond / (1000 / m_configFile.SampleRate))).Cells(dataPoint.PMU.Index)
+                        If rowIndex < 0 Or rowIndex >= sample.Rows.Length Then
+                            ' TODO: remove debug code...
+                            Debug.WriteLine("PDCstream.DataQueue.SortDataPoint: Invalid row index " & rowIndex & " calculated from Math.Floor (" & .Timestamp.Millisecond & " + 1) / " & m_sampleRate)
+                        Else
+                            Dim dataCell As PMUDataCell = sample.Rows(rowIndex).Cells(.PMU.Index)
 
-                    Select Case .Type
-                        Case PointType.PhasorAngle
-                            dataCell.PhasorValues(.Index).CompositeValues(PhasorValue.PolarCompositeValue.Angle) = .Value
-                            CreatePhasorValue(dataCell, .Index)
-                        Case PointType.PhasorMagnitude
-                            dataCell.PhasorValues(.Index).CompositeValues(PhasorValue.PolarCompositeValue.Magnitude) = .Value
-                            CreatePhasorValue(dataCell, .Index)
-                        Case PointType.Frequency
-                            dataCell.FrequencyValue.CompositeValues(FrequencyValue.CompositeValue.Frequency) = .Value
-                            CreateFrequencyValue(dataCell)
-                        Case PointType.DfDt
-                            dataCell.FrequencyValue.CompositeValues(FrequencyValue.CompositeValue.DfDt) = .Value
-                            CreateFrequencyValue(dataCell)
-                        Case PointType.DigitalValue
-                            If .Index = 0 Then
-                                dataCell.Digital0 = Convert.ToUInt16(.Value)
-                            Else
-                                dataCell.Digital1 = Convert.ToUInt16(.Value)
-                            End If
-                        Case PointType.StatusFlags
-                            dataCell.StatusFlags = Convert.ToUInt16(.Value)
-                    End Select
-                End If
-            End With
-
-        End Sub
-
-        Private Sub CreatePhasorValue(ByVal dataCell As PMUDataCell, ByVal phasorIndex As Integer)
-
-            Dim value As PhasorValue
-
-            With dataCell.PhasorValues(phasorIndex)
-                If .CompositeValues.AllReceived Then
-                    ' All values received, create a new phasor value from composite values
-                    value = PhasorValue.CreateFromPolarValues(dataCell.PMUDefinition.Phasors(phasorIndex), _
-                        .CompositeValues(PhasorValue.PolarCompositeValue.Angle), _
-                        .CompositeValues(PhasorValue.PolarCompositeValue.Magnitude))
-
-                    ' We hang on to composite values since with received on change points
-                    ' indivdual values may change over time
-                    value.CompositeValues = .CompositeValues
-                End If
-            End With
-
-            If Not value Is Nothing Then dataCell.PhasorValues(phasorIndex) = value
-
-        End Sub
-
-        Private Sub CreateFrequencyValue(ByVal dataCell As PMUDataCell)
-
-            Dim value As FrequencyValue
-
-            With dataCell.FrequencyValue
-                If .CompositeValues.AllReceived Then
-                    ' All values received, create a new frequency value from composite values
-                    value = FrequencyValue.CreateFromScaledValues(dataCell.PMUDefinition.Frequency, _
-                        .CompositeValues(FrequencyValue.CompositeValue.Frequency), _
-                        .CompositeValues(FrequencyValue.CompositeValue.DfDt))
-
-                    ' We hang on to composite values since with received on change points
-                    ' indivdual values may change over time
-                    value.CompositeValues = .CompositeValues
-                End If
-            End With
-
-            If Not value Is Nothing Then dataCell.FrequencyValue = value
+                            Select Case .Type
+                                Case PointType.PhasorAngle
+                                    If .Index < 0 Or .Index >= dataCell.PhasorValues.Length Then
+                                        ' TODO: remove debug code...
+                                        Debug.WriteLine("PDCstream.DataQueue.SortDataPoint: Invalid phasor value index " & .Index & " encountered for " & .PMU.ID & "-PhasorAngle")
+                                    Else
+                                        dataCell.PhasorValues(.Index).Angle = .Value
+                                    End If
+                                Case PointType.PhasorMagnitude
+                                    If .Index < 0 Or .Index >= dataCell.PhasorValues.Length Then
+                                        ' TODO: remove debug code...
+                                        Debug.WriteLine("PDCstream.DataQueue.SortDataPoint: Invalid phasor value index " & .Index & " encountered for " & .PMU.ID & "-PhasorMagnitude")
+                                    Else
+                                        dataCell.PhasorValues(.Index).Magnitude = .Value
+                                    End If
+                                Case PointType.Frequency
+                                    dataCell.FrequencyValue.ScaledFrequency = .Value
+                                Case PointType.DfDt
+                                    dataCell.FrequencyValue.ScaledDfDt = .Value
+                                Case PointType.DigitalValue
+                                    Try
+                                        If .Index = 0 Then
+                                            dataCell.Digital0 = Convert.ToUInt16(.Value)
+                                        Else
+                                            dataCell.Digital1 = Convert.ToUInt16(.Value)
+                                        End If
+                                    Catch ex As Exception
+                                        ' TODO: remove debug code...
+                                        Debug.WriteLine("PDCstream.DataQueue.SortDataPoint: Failed to set digital value from " & .Value & ": " & ex.Message)
+                                    End Try
+                                Case PointType.StatusFlags
+                                    Try
+                                        dataCell.StatusFlags = Convert.ToUInt16(.Value)
+                                    Catch ex As Exception
+                                        ' TODO: remove debug code...
+                                        Debug.WriteLine("PDCstream.DataQueue.SortDataPoint: Failed to set status flags from " & .Value & ": " & ex.Message)
+                                    End Try
+                            End Select
+                        End If
+                    End If
+                End With
+            Catch ex As Exception
+                ' We don't want to pass-up any data errors from here because they would bubble as errors in the DatAWare listener,
+                ' so we just log the exceptions and post them to any remote clients
+                RaiseEvent DataError("Error sorting data point: " & ex.Message)
+            End Try
 
         End Sub
 
-        ' When data from a new second is first encountered, we allocate a full data sample for that second
-        <MethodImpl(MethodImplOptions.Synchronized)> _
-        Private Sub AddNewSample(ByVal timeStamp As DateTime)
+        Private Function GetSample(ByVal timestamp As DateTime) As DataSample
 
-            ' Baseline timestamp at bottom of the new second, this becomes the new maximum second
-            Dim baseTime As DateTime = BaselinedTimestamp(timeStamp)
-            Dim difference As Integer = DistanceFromBaseTime(baseTime)
+            ' Baseline timestamp at bottom of the new second
+            Dim baseTime As DateTime = BaselinedTimestamp(timestamp)
+            Dim sample As DataSample = DirectCast(m_dataSamples(baseTime.Ticks), DataSample)
 
-            ' Check difference between baseTime and last baseTime and fill any gaps
-            If difference > 0 Then
-                If difference > 1 And m_baseTime > DateTime.MinValue Then
-                    For x As Integer = 1 To difference - 1
-                        CreateDataSample(m_baseTime.AddSeconds(x))
-                    Next
+            ' If sample for this timestamp doesn't exist, create one for it...
+            If sample Is Nothing Then
+                ' Check difference between baseTime and last baseTime and fill any gaps
+                Dim difference As Integer = DistanceFromBaseTime(baseTime)
+
+                If difference > 0 Then
+                    If difference > 1 And m_baseTimeSet Then
+                        For x As Integer = 1 To difference - 1
+                            CreateDataSample(m_baseTime.AddSeconds(x))
+                        Next
+                    End If
+
+                    ' Set this time as the new base time
+                    m_baseTime = baseTime
+                    m_baseTimeSet = True
+                    CreateDataSample(m_baseTime)
                 End If
 
-                m_baseTime = baseTime
-                CreateDataSample(m_baseTime)
+                ' Return new sample for this timestamp, if added
+                Return DirectCast(m_dataSamples(baseTime.Ticks), DataSample)
+            Else
+                ' Return sample for this timestamp
+                Return sample
             End If
 
-        End Sub
+        End Function
 
         Private Function CreateDataSample(ByVal baseTime As DateTime) As DataSample
 
-            Dim dataSample As New DataSample(m_configFile, baseTime)
-
             SyncLock m_dataSamples.SyncRoot
-                m_dataSamples.Add(baseTime.Ticks, dataSample)
+                If m_dataSamples(baseTime.Ticks) Is Nothing Then
+                    Dim dataSample As New DataSample(m_configFile, baseTime)
+                    m_dataSamples.Add(baseTime.Ticks, dataSample)
+                    RaiseEvent NewDataSampleCreated(dataSample)
+                End If
             End SyncLock
-
-            RaiseEvent NewDataSampleCreated(dataSample)
 
         End Function
 
         Public Function DistanceFromBaseTime(ByVal timeStamp As DateTime) As Integer
 
-            Return Math.Floor(timeStamp.Subtract(m_baseTime).Ticks / 10000000L)
+            If m_baseTimeSet Then
+                Return Math.Floor(timeStamp.Subtract(m_baseTime).Ticks / 10000000L)
+            Else
+                ' If the basetime has not been set, we should always return a large positive difference...
+                Return 1000
+            End If
 
         End Function
 

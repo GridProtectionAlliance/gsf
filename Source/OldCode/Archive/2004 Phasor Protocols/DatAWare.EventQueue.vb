@@ -17,6 +17,7 @@
 '***********************************************************************
 
 Imports System.Text
+Imports System.Threading
 Imports TVA.Config.Common
 Imports TVA.Shared.DateTime
 Imports TVA.Services
@@ -28,6 +29,20 @@ Namespace DatAWare
 
         Implements IServiceComponent
         Implements IDisposable
+
+        Private Class DataPacket
+
+            Public PlantCode As String
+            Public EventBuffer As Byte()
+
+            Public Sub New(ByVal plantCode As String, ByVal eventBuffer As Byte())
+
+                Me.PlantCode = plantCode
+                Me.EventBuffer = eventBuffer
+
+            End Sub
+
+        End Class
 
         Private m_parent As DatAWarePDC
         Private m_configFile As ConfigFile
@@ -112,40 +127,49 @@ Namespace DatAWare
             End Get
         End Property
 
-        Public Sub QueueEventData(ByVal plantCode As String, ByVal dataPacket As Byte())
+        Public Sub QueueEventData(ByVal plantCode As String, ByVal eventBuffer As Byte())
 
-            If Enabled Then
-                Dim pointValue As PMUDataPoint
-                Dim index As Integer
-
-                ' Parse events out of data packet and create a new PMU data point from timestamp and value
-                For packetIndex As Integer = 0 To dataPacket.Length - 1 Step StandardEvent.BinaryLength
-                    If packetIndex + StandardEvent.BinaryLength < dataPacket.Length Then
-                        With New StandardEvent(dataPacket, packetIndex)
-                            ' Make sure we have a point defined for this value
-                            If Points(plantCode).GetPoint(.DatabaseIndex, pointValue) Then
-                                pointValue.Timestamp = .TTag.ToDateTime
-                                pointValue.Value = .Value
-
-                                ' If the new value is received on change, we'll update the samples in our current
-                                ' data queue to use latest value...
-                                If pointValue.ReceivedOnChange Then
-                                    Points(plantCode)(.DatabaseIndex) = pointValue
-                                    UpdateReceivedOnChangePoints(pointValue)
-                                End If
-
-                                ' Add this point value to the PDC concentrator data queue
-                                m_dataQueue.QueueDataPoint(pointValue)
-                            End If
-                        End With
-
-                        index += 1
-                        m_processedEvents += 1
-                    End If
-                Next
-            End If
-
+            If Enabled Then ThreadPool.QueueUserWorkItem(AddressOf ProcessEventBuffer, New DataPacket(plantCode, eventBuffer))
             m_packetsReceived += 1
+
+        End Sub
+
+        ' This method is expected to be run on an independent thread...
+        Private Sub ProcessEventBuffer(ByVal stateInfo As Object)
+
+            Dim eventData As DataPacket = DirectCast(stateInfo, DataPacket)
+            Dim dataPoint As PMUDataPoint
+
+            ' Parse events out of data packet and create a new PMU data point from timestamp and value
+            For packetIndex As Integer = 0 To eventData.EventBuffer.Length - 1 Step StandardEvent.BinaryLength
+                If packetIndex + StandardEvent.BinaryLength < eventData.EventBuffer.Length Then
+                    With New StandardEvent(eventData.EventBuffer, packetIndex)
+                        ' Make sure we have a point defined for this value
+                        If Points(eventData.PlantCode).GetPoint(.DatabaseIndex, dataPoint) Then
+                            dataPoint.Timestamp = .TTag.ToDateTime
+                            dataPoint.Value = .Value
+
+                            ' If the new value is received on change, we'll update the samples in our current
+                            ' data queue to use latest value...
+                            If dataPoint.ReceivedOnChange Then
+                                Points(eventData.PlantCode)(.DatabaseIndex) = dataPoint
+                                UpdateReceivedOnChangePoints(dataPoint)
+                            End If
+
+                            ' Add this point value to the PDC concentrator data queue
+                            m_dataQueue.SortDataPoint(dataPoint)
+                        End If
+                    End With
+
+                    m_processedEvents += 1
+                End If
+            Next
+
+        End Sub
+
+        Private Sub m_dataQueue_DataError(ByVal message As String) Handles m_dataQueue.DataError
+
+            UpdateStatus(message)
 
         End Sub
 
@@ -161,7 +185,7 @@ Namespace DatAWare
                     For Each dataPoint As PMUDataPoint In pointSet
                         If dataPoint.ReceivedOnChange Then
                             dataPoint.Timestamp = timestamp
-                            m_dataQueue.QueueDataPoint(dataPoint)
+                            m_dataQueue.SortDataPoint(dataPoint)
                         End If
                     Next
                 Next
@@ -181,14 +205,14 @@ Namespace DatAWare
                 ' Update all values in current sample starting with current time interval
                 For offset As Double = (Math.Floor(timestamp.Millisecond / stepInterval) + 0.5) * stepInterval To 999 Step stepInterval
                     dataPoint.Timestamp = baseTime.AddMilliseconds(offset)
-                    m_dataQueue.QueueDataPoint(dataPoint)
+                    m_dataQueue.SortDataPoint(dataPoint)
                 Next
 
                 ' Update the point value in all remaining samples
                 For x As Integer = sampleIndex + 1 To m_dataQueue.SampleCount - 1
                     For y As Integer = 0 To m_dataQueue.Sample(x).Rows.Length - 1
                         dataPoint.Timestamp = m_dataQueue.Sample(x).Rows(y).Timestamp
-                        m_dataQueue.QueueDataPoint(dataPoint)
+                        m_dataQueue.SortDataPoint(dataPoint)
                     Next
                 Next
             End If

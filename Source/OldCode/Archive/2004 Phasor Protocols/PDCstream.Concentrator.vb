@@ -39,14 +39,15 @@ Namespace PDCstream
         Private m_parent As DatAWarePDC
         Private m_configFile As ConfigFile
         Private m_dataQueue As DataQueue
+        Private m_descriptor As DescriptorPacket
         Private m_udpClient As UdpClient
         Private m_broadcastIPs As IPEndPoint()
         Private WithEvents m_processTimer As Timers.Timer
         Private WithEvents m_sweepTimer As Timers.Timer
         Private m_enabled As Boolean
         Private m_processing As Boolean
-        Private m_startTime As Single
-        Private m_stopTime As Single
+        Private m_startTime As Long
+        Private m_stopTime As Long
         Private m_bytesBroadcasted As Long
         Private m_packetsPublished As Long
 
@@ -59,6 +60,7 @@ Namespace PDCstream
             m_parent = parent
             m_configFile = New ConfigFile(configFileName)
             m_dataQueue = New DataQueue(m_configFile)
+            m_descriptor = New DescriptorPacket(m_configFile)
             m_udpClient = New UdpClient
             m_broadcastIPs = broadcastIPs
             m_processTimer = New Timers.Timer
@@ -66,10 +68,11 @@ Namespace PDCstream
             m_enabled = True
             m_processing = False
 
-            ' We check for ready-to-publish or stale data packets at the sample rate interval
+            ' We publish data packets at the specified sample rate
             With m_processTimer
                 .Interval = 1000 / m_configFile.SampleRate
-                .AutoReset = False
+                .AutoReset = True
+                .Enabled = False
             End With
 
             ' We check for samples that need to be removed every second
@@ -131,7 +134,9 @@ Namespace PDCstream
                     m_stopTime = 0
                     m_bytesBroadcasted = 0
                     m_packetsPublished = 0
+                    m_processTimer.Enabled = True
                 Else
+                    m_processTimer.Enabled = False
                     m_stopTime = DateTime.Now.Ticks
                 End If
             End Set
@@ -171,11 +176,37 @@ Namespace PDCstream
 
         Private Sub m_processTimer_Elapsed(ByVal sender As Object, ByVal e As System.Timers.ElapsedEventArgs) Handles m_processTimer.Elapsed
 
-            Dim packetIsStale As Boolean
-            Dim binaryLength As Integer
-            Dim broadcastIP As IPEndPoint
-            Dim x, y, z As Integer
+            ' Since a typical process rate is 30 samples per second do eveything you can to make sure this
+            ' function executes as quickly as possible...
+            Static sentDescriptor As Boolean
+            Static binaryLength As Integer
+            Static x, y, z As Integer
             Dim packetSent As Boolean
+
+            ' Send a descriptor packet at the top of each minute...
+            With DateTime.Now
+                If .Second = 0 Then
+                    If Not sentDescriptor Then
+                        sentDescriptor = True
+                        Try
+                            With m_descriptor
+                                binaryLength = .BinaryLength
+
+                                ' Send binary descriptor image over UDP broadcast channels
+                                For x = 0 To m_broadcastIPs.Length - 1
+                                    m_udpClient.Send(.BinaryImage, binaryLength, m_broadcastIPs(x))
+                                Next
+                            End With
+
+                            m_bytesBroadcasted += binaryLength
+                        Catch ex As Exception
+                            UpdateStatus("Error publishing descriptor packet: " & ex.Message)
+                        End Try
+                    End If
+                Else
+                    sentDescriptor = False
+                End If
+            End With
 
             ' Check for non-published samples...
             For x = 0 To m_dataQueue.SampleCount - 1
@@ -185,11 +216,8 @@ Namespace PDCstream
                         For y = 0 To .Rows.Length - 1
                             With .Rows(y)
                                 If Not .Published Then
-                                    ' Determine if packet is stale (number of whole seconds past base time are 1 or more...)
-                                    packetIsStale = (m_dataQueue.DistanceFromBaseTime(.Timestamp) > 0)
-
-                                    ' We send any non-published data-packets that may be getting stale or any packets that are ready to go
-                                    If .ReadyToPublish Or packetIsStale Then
+                                    ' We only send non-published data-packets that are more than one second old
+                                    If m_dataQueue.DistanceFromBaseTime(.Timestamp) < 0 Then
                                         Try
                                             binaryLength = .BinaryLength
 
@@ -198,19 +226,20 @@ Namespace PDCstream
                                                 m_udpClient.Send(.BinaryImage, binaryLength, m_broadcastIPs(z))
                                             Next
 
-                                            .Published = True
                                             m_bytesBroadcasted += binaryLength
                                             m_packetsPublished += 1
                                         Catch ex As Exception
                                             UpdateStatus("Error publishing data packet: " & ex.Message)
-                                            .Published = packetIsStale
+                                        Finally
+                                            ' Even an attempt at publishing counts - we don't have time to go back and try again...
+                                            .Published = True
                                         End Try
-
-                                        ' Although we could go ahead and send multiple packets here, a normal PDC doesn't, it only sends one packet
-                                        ' at every sample interval - so to make possible clients happy, we'll do the same...
-                                        packetSent = .Published
-                                        Exit For
                                     End If
+
+                                    ' Under normal circumstances, this should be all we need to try to send - so we won't
+                                    ' waste cycles looking for anything else that we'll catch at the next pass...
+                                    packetSent = True
+                                    Exit For
                                 End If
                             End With
                         Next
@@ -219,16 +248,13 @@ Namespace PDCstream
                 If packetSent Then Exit For
             Next
 
-            m_processTimer.Enabled = (m_enabled And m_dataQueue.SampleCount > 0)
-
         End Sub
 
         Private Sub m_sweepTimer_Elapsed(ByVal sender As Object, ByVal e As System.Timers.ElapsedEventArgs) Handles m_sweepTimer.Elapsed
 
             If m_enabled Then
-                ' Kick-start process timer if needed
+                ' Start process timer if needed
                 If m_dataQueue.SampleCount > 0 And Not m_processing Then
-                    m_processTimer.Enabled = True
                     Processing = True
                 End If
 
@@ -281,10 +307,14 @@ Namespace PDCstream
                     .Append("  Concentration process is: " & IIf(Enabled, "Enabled", "Disabled") & vbCrLf)
                     .Append("  Current processing state: " & IIf(Processing, "Executing", "Idle") & vbCrLf)
                     .Append("    Total process run time: " & SecondsToText(RunTime) & vbCrLf)
-                    .Append("          Broadcast volume: " & (m_bytesBroadcasted / 1024 / 1024).ToString("0.00") & " Mb" & vbCrLf)
+                    '.Append("        Queued point count: " & m_dataQueue.QueuedPointCount & vbCrLf)
+                    .Append("          Discarded points: " & m_dataQueue.DiscardedPoints & vbCrLf)
+                    .Append("         Current base time: " & m_dataQueue.BaseTime.ToString("dd-MMM-yyyy HH:mm:ss.fff") & vbCrLf)
+                    .Append("            Queued samples: " & m_dataQueue.SampleCount & vbCrLf)
+                    .Append("    Data packets published: " & m_packetsPublished & vbCrLf)
+                    .Append("  Data packet publish rate: " & (m_packetsPublished / RunTime).ToString("0.00") & " samples/sec" & vbCrLf)
                     .Append("            Broadcast rate: " & (m_bytesBroadcasted * 8 / RunTime / 1024 / 1024).ToString("0.00") & " mbps" & vbCrLf)
-                    .Append("         Samples published: " & m_packetsPublished / m_configFile.SampleRate & vbCrLf)
-                    .Append("               Sample rate: " & (m_packetsPublished / m_configFile.SampleRate / RunTime).ToString("0.00") & " samples/sec" & vbCrLf)
+                    .Append("    Total broadcast volume: " & (m_bytesBroadcasted / 1024 / 1024).ToString("0.00") & " Mb" & vbCrLf)
 
                     Return .ToString()
                 End With

@@ -52,15 +52,16 @@ Namespace PDCstream
             DataInvalid = Bit1
         End Enum
 
-        Public Shared Function XorCheckSum(ByVal data As Byte(), ByVal startIndex As Integer, ByVal length As Integer) As UInt16
+        Public Shared Function XorCheckSum(ByVal data As Byte(), ByVal startIndex As Integer, ByVal length As Integer) As Int16
 
             Dim sum As Int16
 
-            For x As Integer = 0 To length - 1
-                sum = sum Xor data(startIndex + x)
+            ' Word length XOR check-sum
+            For x As Integer = 0 To length - 1 Step 2
+                sum = sum Xor BitConverter.ToInt16(data, startIndex + x)
             Next
 
-            Return Convert.ToUInt16(sum)
+            Return sum
 
         End Function
 

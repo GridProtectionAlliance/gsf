@@ -42,10 +42,10 @@ Namespace PDCstream
 
             ' Initialize phasor values and frequency value with an "empty" value
             For x As Integer = 0 To PhasorValues.Length - 1
-                PhasorValues(x) = PhasorValue.Empty
+                PhasorValues(x) = PhasorValue.Empty(m_pmuDefinition.Phasors(x))
             Next
 
-            FrequencyValue = FrequencyValue.Empty
+            FrequencyValue = FrequencyValue.Empty(m_pmuDefinition.Frequency)
 
         End Sub
 
@@ -214,19 +214,19 @@ Namespace PDCstream
                 Dim index As Integer
 
                 buffer(0) = m_flags
-                buffer(1) = m_pmuDefinition.SampleRate
-                buffer(2) = 2
-                buffer(3) = PhasorValues.Length
+                buffer(1) = Convert.ToByte(m_pmuDefinition.SampleRate)
+                buffer(2) = Convert.ToByte(2)
+                buffer(3) = Convert.ToByte(PhasorValues.Length)
                 EndianOrder.SwapCopy(BitConverter.GetBytes(Convert.ToUInt16(m_sampleNumber)), 0, buffer, 4, 2)
                 EndianOrder.SwapCopy(BitConverter.GetBytes(StatusFlags), 0, buffer, 6, 2)
                 index = 8
 
                 For x As Integer = 0 To PhasorValues.Length - 1
-                    EndianOrder.SwapCopy(PhasorValues(x).BinaryImage, 0, buffer, index, PhasorValue.BinaryLength)
+                    Array.Copy(PhasorValues(x).BinaryImage, 0, buffer, index, PhasorValue.BinaryLength)
                     index += PhasorValue.BinaryLength
                 Next
 
-                EndianOrder.SwapCopy(FrequencyValue.BinaryImage, 0, buffer, index, FrequencyValue.BinaryLength)
+                Array.Copy(FrequencyValue.BinaryImage, 0, buffer, index, FrequencyValue.BinaryLength)
                 index += FrequencyValue.BinaryLength
 
                 EndianOrder.SwapCopy(BitConverter.GetBytes(Digital0), 0, buffer, index, 2)

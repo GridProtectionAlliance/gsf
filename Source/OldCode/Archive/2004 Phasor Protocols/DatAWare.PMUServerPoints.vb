@@ -183,7 +183,9 @@ Namespace DatAWare
                 Loop
 
                 If charIndex > 0 Then
-                    .Index = Convert.ToInt32(descriptor.Substring(0, charIndex))
+                    ' We subtract one from the index to make it zero based...
+                    .Index = Convert.ToInt32(descriptor.Substring(0, charIndex)) - 1
+
                     If charIndex < descriptor.Length Then
                         descriptor = descriptor.Substring(charIndex)
                     Else
