@@ -14,18 +14,17 @@ Public Class IEEE1344Listener
 
     Inherits System.Windows.Forms.Form
 
-    Private WithEvents m_parser As IEEE1344.FrameParser
-    Private m_configFile As IEEE1344.ConfigurationFile
-    Private m_initializingTitle As Dundas.Charting.WinControl.Title
-    Private m_frequencyTitle As String
-    Private m_phasorTitle As String
-    Private m_frameQueue As ArrayList
-    Private m_frequencyRange As DataPoints
-    Private m_frameCount As Long
-    Private m_firstFrame As Long
-    Private m_startTime As Long
-    Private m_total As Long
-    
+    Private WithEvents parser As IEEE1344.FrameParser
+    Private initializingTitle As Dundas.Charting.WinControl.Title
+    Private frequencyTitle As String
+    Private phasorTitle As String
+    Private frameQueue As ArrayList
+    Private frequencyRange As DataPoints
+    Private frameCount As Long
+    Private firstFrame As Long
+    Private startTime As Long
+    Private total As Long
+
     Const FrequencyPoints As Integer = 50
     Const PhasorPoints As Integer = 20
 
@@ -34,19 +33,6 @@ Public Class IEEE1344Listener
     Public Sub New()
 
         MyBase.New()
-
-        LoadAssembly("DundasWinChart")
-        LoadAssembly("TVA.Shared")
-        LoadAssembly("TVA.Threading")
-        LoadAssembly("TVA.VarEval")
-        LoadAssembly("TVA.Config")
-        LoadAssembly("TVA.Forms")
-        LoadAssembly("TVA.Interop")
-        LoadAssembly("TVA.EE")
-        LoadAssembly("TVA.ESO.Ssam")
-        LoadAssembly("TVA.ErrorManagement")
-        LoadAssembly("TVA.Remoting")
-        LoadAssembly("TVA.Services")
 
         'This call is required by the Windows Form Designer.
         InitializeComponent()
@@ -101,11 +87,6 @@ Public Class IEEE1344Listener
     Friend WithEvents PMUPort As System.Windows.Forms.TextBox
     Friend WithEvents PMUIP As System.Windows.Forms.ComboBox
     Friend WithEvents PMUID As System.Windows.Forms.ComboBox
-    Friend WithEvents PhasorSelectionGroupBox As System.Windows.Forms.GroupBox
-    Friend WithEvents VoltagePhasorLabel As System.Windows.Forms.Label
-    Friend WithEvents VoltagePhasor As System.Windows.Forms.ComboBox
-    Friend WithEvents CurrentPhasor As System.Windows.Forms.ComboBox
-    Friend WithEvents CurrentPhasorLabel As System.Windows.Forms.Label
     <System.Diagnostics.DebuggerStepThrough()> Private Sub InitializeComponent()
         Dim ChartArea1 As Dundas.Charting.WinControl.ChartArea = New Dundas.Charting.WinControl.ChartArea
         Dim ChartArea2 As Dundas.Charting.WinControl.ChartArea = New Dundas.Charting.WinControl.ChartArea
@@ -117,9 +98,6 @@ Public Class IEEE1344Listener
         Dim Title2 As Dundas.Charting.WinControl.Title = New Dundas.Charting.WinControl.Title
         Dim Title3 As Dundas.Charting.WinControl.Title = New Dundas.Charting.WinControl.Title
         Dim Title4 As Dundas.Charting.WinControl.Title = New Dundas.Charting.WinControl.Title
-        Dim Title5 As Dundas.Charting.WinControl.Title = New Dundas.Charting.WinControl.Title
-        Dim Title6 As Dundas.Charting.WinControl.Title = New Dundas.Charting.WinControl.Title
-        Dim Title7 As Dundas.Charting.WinControl.Title = New Dundas.Charting.WinControl.Title
         Dim configurationAppSettings As System.Configuration.AppSettingsReader = New System.Configuration.AppSettingsReader
         Dim resources As System.Resources.ResourceManager = New System.Resources.ResourceManager(GetType(IEEE1344Listener))
         Me.DataFrame = New System.Windows.Forms.Label
@@ -152,32 +130,26 @@ Public Class IEEE1344Listener
         Me.PMUPort = New System.Windows.Forms.TextBox
         Me.PMUIP = New System.Windows.Forms.ComboBox
         Me.PMUID = New System.Windows.Forms.ComboBox
-        Me.PhasorSelectionGroupBox = New System.Windows.Forms.GroupBox
-        Me.CurrentPhasor = New System.Windows.Forms.ComboBox
-        Me.CurrentPhasorLabel = New System.Windows.Forms.Label
-        Me.VoltagePhasor = New System.Windows.Forms.ComboBox
-        Me.VoltagePhasorLabel = New System.Windows.Forms.Label
         CType(Me.DataChart, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.TriggerGroupBox.SuspendLayout()
         CType(Me.FrameProcessor, System.ComponentModel.ISupportInitialize).BeginInit()
-        Me.PhasorSelectionGroupBox.SuspendLayout()
         Me.SuspendLayout()
         '
         'DataFrame
         '
         Me.DataFrame.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left), System.Windows.Forms.AnchorStyles)
         Me.DataFrame.Font = New System.Drawing.Font("Courier New", 9.75!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.DataFrame.Location = New System.Drawing.Point(8, 400)
+        Me.DataFrame.Location = New System.Drawing.Point(8, 336)
         Me.DataFrame.Name = "DataFrame"
         Me.DataFrame.Size = New System.Drawing.Size(318, 104)
-        Me.DataFrame.TabIndex = 18
+        Me.DataFrame.TabIndex = 17
         '
         'SamplesLabel
         '
         Me.SamplesLabel.Location = New System.Drawing.Point(0, 40)
         Me.SamplesLabel.Name = "SamplesLabel"
         Me.SamplesLabel.Size = New System.Drawing.Size(56, 16)
-        Me.SamplesLabel.TabIndex = 8
+        Me.SamplesLabel.TabIndex = 7
         Me.SamplesLabel.Text = "Samples:"
         Me.SamplesLabel.TextAlign = System.Drawing.ContentAlignment.MiddleRight
         '
@@ -186,7 +158,7 @@ Public Class IEEE1344Listener
         Me.SampleCount.Location = New System.Drawing.Point(56, 40)
         Me.SampleCount.Name = "SampleCount"
         Me.SampleCount.Size = New System.Drawing.Size(72, 16)
-        Me.SampleCount.TabIndex = 9
+        Me.SampleCount.TabIndex = 8
         Me.SampleCount.Text = "0"
         Me.SampleCount.TextAlign = System.Drawing.ContentAlignment.MiddleLeft
         '
@@ -195,7 +167,7 @@ Public Class IEEE1344Listener
         Me.SampleRate.Location = New System.Drawing.Point(200, 40)
         Me.SampleRate.Name = "SampleRate"
         Me.SampleRate.Size = New System.Drawing.Size(56, 16)
-        Me.SampleRate.TabIndex = 11
+        Me.SampleRate.TabIndex = 10
         Me.SampleRate.Text = "0"
         Me.SampleRate.TextAlign = System.Drawing.ContentAlignment.MiddleRight
         '
@@ -204,7 +176,7 @@ Public Class IEEE1344Listener
         Me.SampleRateLabel.Location = New System.Drawing.Point(120, 40)
         Me.SampleRateLabel.Name = "SampleRateLabel"
         Me.SampleRateLabel.Size = New System.Drawing.Size(80, 16)
-        Me.SampleRateLabel.TabIndex = 10
+        Me.SampleRateLabel.TabIndex = 9
         Me.SampleRateLabel.Text = "Sample Rate:"
         Me.SampleRateLabel.TextAlign = System.Drawing.ContentAlignment.MiddleRight
         '
@@ -213,7 +185,7 @@ Public Class IEEE1344Listener
         Me.SamplesPerSecLabel.Location = New System.Drawing.Point(256, 40)
         Me.SamplesPerSecLabel.Name = "SamplesPerSecLabel"
         Me.SamplesPerSecLabel.Size = New System.Drawing.Size(88, 16)
-        Me.SamplesPerSecLabel.TabIndex = 12
+        Me.SamplesPerSecLabel.TabIndex = 11
         Me.SamplesPerSecLabel.Text = "samples/second"
         Me.SamplesPerSecLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft
         '
@@ -239,7 +211,7 @@ Public Class IEEE1344Listener
         Me.ConnectToIPLabel.Name = "ConnectToIPLabel"
         Me.ConnectToIPLabel.Size = New System.Drawing.Size(80, 16)
         Me.ConnectToIPLabel.TabIndex = 0
-        Me.ConnectToIPLabel.Text = "Connect to &IP:"
+        Me.ConnectToIPLabel.Text = "&Connect to IP:"
         Me.ConnectToIPLabel.TextAlign = System.Drawing.ContentAlignment.MiddleRight
         '
         'IDLabel
@@ -248,7 +220,7 @@ Public Class IEEE1344Listener
         Me.IDLabel.Name = "IDLabel"
         Me.IDLabel.Size = New System.Drawing.Size(32, 16)
         Me.IDLabel.TabIndex = 2
-        Me.IDLabel.Text = "I&D:"
+        Me.IDLabel.Text = "&ID:"
         Me.IDLabel.TextAlign = System.Drawing.ContentAlignment.MiddleRight
         '
         'DataChart
@@ -275,7 +247,15 @@ Public Class IEEE1344Listener
         ChartArea1.AxisX.MajorTickMark.IntervalOffsetType = Dundas.Charting.WinControl.DateTimeIntervalType.Auto
         ChartArea1.AxisX.MajorTickMark.IntervalType = Dundas.Charting.WinControl.DateTimeIntervalType.Auto
         ChartArea1.AxisX.MinorGrid.Enabled = False
+        ChartArea1.AxisX.MinorGrid.Interval = 0
+        ChartArea1.AxisX.MinorGrid.IntervalOffset = 0
+        ChartArea1.AxisX.MinorGrid.IntervalOffsetType = Dundas.Charting.WinControl.DateTimeIntervalType.Auto
+        ChartArea1.AxisX.MinorGrid.IntervalType = Dundas.Charting.WinControl.DateTimeIntervalType.Auto
         ChartArea1.AxisX.MinorTickMark.Enabled = False
+        ChartArea1.AxisX.MinorTickMark.Interval = 0
+        ChartArea1.AxisX.MinorTickMark.IntervalOffset = 0
+        ChartArea1.AxisX.MinorTickMark.IntervalOffsetType = Dundas.Charting.WinControl.DateTimeIntervalType.Auto
+        ChartArea1.AxisX.MinorTickMark.IntervalType = Dundas.Charting.WinControl.DateTimeIntervalType.Auto
         ChartArea1.AxisX2.LabelStyle.Interval = 0
         ChartArea1.AxisX2.LabelStyle.IntervalOffset = 0
         ChartArea1.AxisX2.LabelStyle.IntervalOffsetType = Dundas.Charting.WinControl.DateTimeIntervalType.Auto
@@ -288,6 +268,14 @@ Public Class IEEE1344Listener
         ChartArea1.AxisX2.MajorTickMark.IntervalOffset = 0
         ChartArea1.AxisX2.MajorTickMark.IntervalOffsetType = Dundas.Charting.WinControl.DateTimeIntervalType.Auto
         ChartArea1.AxisX2.MajorTickMark.IntervalType = Dundas.Charting.WinControl.DateTimeIntervalType.Auto
+        ChartArea1.AxisX2.MinorGrid.Interval = 0
+        ChartArea1.AxisX2.MinorGrid.IntervalOffset = 0
+        ChartArea1.AxisX2.MinorGrid.IntervalOffsetType = Dundas.Charting.WinControl.DateTimeIntervalType.Auto
+        ChartArea1.AxisX2.MinorGrid.IntervalType = Dundas.Charting.WinControl.DateTimeIntervalType.Auto
+        ChartArea1.AxisX2.MinorTickMark.Interval = 0
+        ChartArea1.AxisX2.MinorTickMark.IntervalOffset = 0
+        ChartArea1.AxisX2.MinorTickMark.IntervalOffsetType = Dundas.Charting.WinControl.DateTimeIntervalType.Auto
+        ChartArea1.AxisX2.MinorTickMark.IntervalType = Dundas.Charting.WinControl.DateTimeIntervalType.Auto
         ChartArea1.AxisY.LabelStyle.Enabled = False
         ChartArea1.AxisY.LabelStyle.Interval = 0
         ChartArea1.AxisY.LabelStyle.IntervalOffset = 0
@@ -305,7 +293,15 @@ Public Class IEEE1344Listener
         ChartArea1.AxisY.MajorTickMark.IntervalOffsetType = Dundas.Charting.WinControl.DateTimeIntervalType.Auto
         ChartArea1.AxisY.MajorTickMark.IntervalType = Dundas.Charting.WinControl.DateTimeIntervalType.Auto
         ChartArea1.AxisY.MinorGrid.Enabled = False
+        ChartArea1.AxisY.MinorGrid.Interval = 0
+        ChartArea1.AxisY.MinorGrid.IntervalOffset = 0
+        ChartArea1.AxisY.MinorGrid.IntervalOffsetType = Dundas.Charting.WinControl.DateTimeIntervalType.Auto
+        ChartArea1.AxisY.MinorGrid.IntervalType = Dundas.Charting.WinControl.DateTimeIntervalType.Auto
         ChartArea1.AxisY.MinorTickMark.Enabled = False
+        ChartArea1.AxisY.MinorTickMark.Interval = 0
+        ChartArea1.AxisY.MinorTickMark.IntervalOffset = 0
+        ChartArea1.AxisY.MinorTickMark.IntervalOffsetType = Dundas.Charting.WinControl.DateTimeIntervalType.Auto
+        ChartArea1.AxisY.MinorTickMark.IntervalType = Dundas.Charting.WinControl.DateTimeIntervalType.Auto
         ChartArea1.AxisY2.LabelStyle.Interval = 0
         ChartArea1.AxisY2.LabelStyle.IntervalOffset = 0
         ChartArea1.AxisY2.LabelStyle.IntervalOffsetType = Dundas.Charting.WinControl.DateTimeIntervalType.Auto
@@ -321,18 +317,22 @@ Public Class IEEE1344Listener
         ChartArea1.AxisY2.MajorTickMark.IntervalOffsetType = Dundas.Charting.WinControl.DateTimeIntervalType.Auto
         ChartArea1.AxisY2.MajorTickMark.IntervalType = Dundas.Charting.WinControl.DateTimeIntervalType.Auto
         ChartArea1.AxisY2.MinorGrid.Enabled = False
+        ChartArea1.AxisY2.MinorGrid.Interval = 0
+        ChartArea1.AxisY2.MinorGrid.IntervalOffset = 0
+        ChartArea1.AxisY2.MinorGrid.IntervalOffsetType = Dundas.Charting.WinControl.DateTimeIntervalType.Auto
+        ChartArea1.AxisY2.MinorGrid.IntervalType = Dundas.Charting.WinControl.DateTimeIntervalType.Auto
         ChartArea1.AxisY2.MinorTickMark.Enabled = False
+        ChartArea1.AxisY2.MinorTickMark.Interval = 0
+        ChartArea1.AxisY2.MinorTickMark.IntervalOffset = 0
+        ChartArea1.AxisY2.MinorTickMark.IntervalOffsetType = Dundas.Charting.WinControl.DateTimeIntervalType.Auto
+        ChartArea1.AxisY2.MinorTickMark.IntervalType = Dundas.Charting.WinControl.DateTimeIntervalType.Auto
         ChartArea1.BorderWidth = 0
-        ChartArea1.InnerPlotPosition.Auto = False
-        ChartArea1.InnerPlotPosition.Height = 100.0!
-        ChartArea1.InnerPlotPosition.Width = 100.0!
         ChartArea1.Name = "Frequency"
         ChartArea1.Position.Auto = False
         ChartArea1.Position.Height = 30.0!
         ChartArea1.Position.Width = 90.0!
         ChartArea1.Position.X = 3.5!
         ChartArea1.Position.Y = 10.0!
-        ChartArea2.AxisX.Enabled = Dundas.Charting.WinControl.AxisEnabled.True
         ChartArea2.AxisX.LabelStyle.Enabled = False
         ChartArea2.AxisX.LabelStyle.Interval = 0
         ChartArea2.AxisX.LabelStyle.IntervalOffset = 0
@@ -351,7 +351,15 @@ Public Class IEEE1344Listener
         ChartArea2.AxisX.MajorTickMark.IntervalType = Dundas.Charting.WinControl.DateTimeIntervalType.Auto
         ChartArea2.AxisX.MarksNextToAxis = False
         ChartArea2.AxisX.MinorGrid.Enabled = False
+        ChartArea2.AxisX.MinorGrid.Interval = 0
+        ChartArea2.AxisX.MinorGrid.IntervalOffset = 0
+        ChartArea2.AxisX.MinorGrid.IntervalOffsetType = Dundas.Charting.WinControl.DateTimeIntervalType.Auto
+        ChartArea2.AxisX.MinorGrid.IntervalType = Dundas.Charting.WinControl.DateTimeIntervalType.Auto
         ChartArea2.AxisX.MinorTickMark.Enabled = False
+        ChartArea2.AxisX.MinorTickMark.Interval = 0
+        ChartArea2.AxisX.MinorTickMark.IntervalOffset = 0
+        ChartArea2.AxisX.MinorTickMark.IntervalOffsetType = Dundas.Charting.WinControl.DateTimeIntervalType.Auto
+        ChartArea2.AxisX.MinorTickMark.IntervalType = Dundas.Charting.WinControl.DateTimeIntervalType.Auto
         ChartArea2.AxisX2.LabelStyle.Interval = 0
         ChartArea2.AxisX2.LabelStyle.IntervalOffset = 0
         ChartArea2.AxisX2.LabelStyle.IntervalOffsetType = Dundas.Charting.WinControl.DateTimeIntervalType.Auto
@@ -364,6 +372,14 @@ Public Class IEEE1344Listener
         ChartArea2.AxisX2.MajorTickMark.IntervalOffset = 0
         ChartArea2.AxisX2.MajorTickMark.IntervalOffsetType = Dundas.Charting.WinControl.DateTimeIntervalType.Auto
         ChartArea2.AxisX2.MajorTickMark.IntervalType = Dundas.Charting.WinControl.DateTimeIntervalType.Auto
+        ChartArea2.AxisX2.MinorGrid.Interval = 0
+        ChartArea2.AxisX2.MinorGrid.IntervalOffset = 0
+        ChartArea2.AxisX2.MinorGrid.IntervalOffsetType = Dundas.Charting.WinControl.DateTimeIntervalType.Auto
+        ChartArea2.AxisX2.MinorGrid.IntervalType = Dundas.Charting.WinControl.DateTimeIntervalType.Auto
+        ChartArea2.AxisX2.MinorTickMark.Interval = 0
+        ChartArea2.AxisX2.MinorTickMark.IntervalOffset = 0
+        ChartArea2.AxisX2.MinorTickMark.IntervalOffsetType = Dundas.Charting.WinControl.DateTimeIntervalType.Auto
+        ChartArea2.AxisX2.MinorTickMark.IntervalType = Dundas.Charting.WinControl.DateTimeIntervalType.Auto
         ChartArea2.AxisY.Enabled = Dundas.Charting.WinControl.AxisEnabled.False
         ChartArea2.AxisY.LabelStyle.Format = "000"
         ChartArea2.AxisY.LabelStyle.Interval = 0
@@ -382,7 +398,15 @@ Public Class IEEE1344Listener
         ChartArea2.AxisY.MajorTickMark.IntervalOffsetType = Dundas.Charting.WinControl.DateTimeIntervalType.Auto
         ChartArea2.AxisY.MajorTickMark.IntervalType = Dundas.Charting.WinControl.DateTimeIntervalType.Auto
         ChartArea2.AxisY.MinorGrid.Enabled = False
+        ChartArea2.AxisY.MinorGrid.Interval = 0
+        ChartArea2.AxisY.MinorGrid.IntervalOffset = 0
+        ChartArea2.AxisY.MinorGrid.IntervalOffsetType = Dundas.Charting.WinControl.DateTimeIntervalType.Auto
+        ChartArea2.AxisY.MinorGrid.IntervalType = Dundas.Charting.WinControl.DateTimeIntervalType.Auto
         ChartArea2.AxisY.MinorTickMark.Enabled = False
+        ChartArea2.AxisY.MinorTickMark.Interval = 0
+        ChartArea2.AxisY.MinorTickMark.IntervalOffset = 0
+        ChartArea2.AxisY.MinorTickMark.IntervalOffsetType = Dundas.Charting.WinControl.DateTimeIntervalType.Auto
+        ChartArea2.AxisY.MinorTickMark.IntervalType = Dundas.Charting.WinControl.DateTimeIntervalType.Auto
         ChartArea2.AxisY2.Enabled = Dundas.Charting.WinControl.AxisEnabled.True
         ChartArea2.AxisY2.LabelsAutoFit = False
         ChartArea2.AxisY2.LabelStyle.Font = New System.Drawing.Font("Verdana", 7.25!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
@@ -404,24 +428,31 @@ Public Class IEEE1344Listener
         ChartArea2.AxisY2.MajorTickMark.IntervalType = Dundas.Charting.WinControl.DateTimeIntervalType.Auto
         ChartArea2.AxisY2.MarksNextToAxis = False
         ChartArea2.AxisY2.MinorGrid.Enabled = False
+        ChartArea2.AxisY2.MinorGrid.Interval = 0
+        ChartArea2.AxisY2.MinorGrid.IntervalOffset = 0
+        ChartArea2.AxisY2.MinorGrid.IntervalOffsetType = Dundas.Charting.WinControl.DateTimeIntervalType.Auto
+        ChartArea2.AxisY2.MinorGrid.IntervalType = Dundas.Charting.WinControl.DateTimeIntervalType.Auto
         ChartArea2.AxisY2.MinorTickMark.Enabled = False
+        ChartArea2.AxisY2.MinorTickMark.Interval = 0
+        ChartArea2.AxisY2.MinorTickMark.IntervalOffset = 0
+        ChartArea2.AxisY2.MinorTickMark.IntervalOffsetType = Dundas.Charting.WinControl.DateTimeIntervalType.Auto
+        ChartArea2.AxisY2.MinorTickMark.IntervalType = Dundas.Charting.WinControl.DateTimeIntervalType.Auto
         ChartArea2.BorderWidth = 0
         ChartArea2.Name = "Phasors"
         ChartArea2.Position.Auto = False
         ChartArea2.Position.Height = 60.0!
-        ChartArea2.Position.Width = 65.0!
+        ChartArea2.Position.Width = 77.0!
         ChartArea2.Position.X = 4.0!
         ChartArea2.Position.Y = 40.0!
         Me.DataChart.ChartAreas.Add(ChartArea1)
         Me.DataChart.ChartAreas.Add(ChartArea2)
-        Legend1.AutoFitText = False
         Legend1.Enabled = False
         Legend1.Name = "Default"
+        Legend2.Alignment = System.Drawing.StringAlignment.Center
         Legend2.AutoFitText = False
-        Legend2.BorderWidth = 0
         Legend2.DockInsideChartArea = False
         Legend2.DockToChartArea = "Phasors"
-        Legend2.Font = New System.Drawing.Font("Lucida Console", 7.25!)
+        Legend2.EquallySpacedItems = True
         Legend2.Name = "PhasorLegend"
         Me.DataChart.Legends.Add(Legend1)
         Me.DataChart.Legends.Add(Legend2)
@@ -438,81 +469,31 @@ Public Class IEEE1344Listener
         Series2.Name = "PhasorReference"
         Me.DataChart.Series.Add(Series1)
         Me.DataChart.Series.Add(Series2)
-        Me.DataChart.Size = New System.Drawing.Size(538, 312)
+        Me.DataChart.Size = New System.Drawing.Size(448, 248)
         Me.DataChart.SoftShadows = False
-        Me.DataChart.TabIndex = 16
+        Me.DataChart.TabIndex = 14
         Me.DataChart.TabStop = False
         Title1.DockOffset = -1
         Title1.Font = New System.Drawing.Font("Verdana", 8.25!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Title1.Position.Auto = False
-        Title1.Position.Height = 4.740724!
-        Title1.Position.Width = 94.0!
-        Title1.Position.X = 3.0!
-        Title1.Position.Y = 2.0!
         Title1.Text = "PMU ID"
         Title2.Docking = Dundas.Charting.WinControl.Docking.Left
         Title2.DockOffset = -4
         Title2.DockToChartArea = "Frequency"
         Title2.Font = New System.Drawing.Font("Verdana", 8.0!)
-        Title2.Position.Auto = False
-        Title2.Position.Height = 28.2!
-        Title2.Position.Width = 2.66236!
-        Title2.Position.X = 0.4000001!
-        Title2.Position.Y = 10.9!
         Title2.Text = "Freq"
         Title3.Docking = Dundas.Charting.WinControl.Docking.Left
         Title3.DockOffset = -5
         Title3.DockToChartArea = "Phasors"
         Title3.Font = New System.Drawing.Font("Verdana", 8.0!)
-        Title3.Position.Auto = False
-        Title3.Position.Height = 51.7!
-        Title3.Position.Width = 2.66236!
-        Title3.Position.X = 0.6500001!
-        Title3.Position.Y = 44.15!
         Title3.Text = "Phase Angles"
-        Title4.Alignment = System.Drawing.ContentAlignment.BottomRight
         Title4.Docking = Dundas.Charting.WinControl.Docking.Bottom
-        Title4.DockInsideChartArea = False
-        Title4.DockOffset = 2
-        Title4.Font = New System.Drawing.Font("Verdana", 7.25!)
-        Title4.Position.Auto = False
-        Title4.Position.Height = 4.16609!
-        Title4.Position.Width = 94.0!
-        Title4.Position.X = 3.0!
-        Title4.Position.Y = 94.83391!
-        Title4.Text = "Vars: unavailable"
-        Title5.Alignment = System.Drawing.ContentAlignment.BottomRight
-        Title5.Docking = Dundas.Charting.WinControl.Docking.Bottom
-        Title5.DockInsideChartArea = False
-        Title5.DockOffset = 4
-        Title5.Font = New System.Drawing.Font("Verdana", 7.25!)
-        Title5.Position.Auto = False
-        Title5.Position.Height = 4.16609!
-        Title5.Position.Width = 94.0!
-        Title5.Position.X = 3.0!
-        Title5.Position.Y = 89.66782!
-        Title5.Text = "Power: unavailable"
-        Title6.Alignment = System.Drawing.ContentAlignment.BottomRight
-        Title6.Docking = Dundas.Charting.WinControl.Docking.Bottom
-        Title6.DockOffset = 6
-        Title6.Font = New System.Drawing.Font("Verdana", 7.25!)
-        Title6.Position.Auto = False
-        Title6.Position.Height = 4.16609!
-        Title6.Position.Width = 94.0!
-        Title6.Position.X = 3.0!
-        Title6.Position.Y = 84.50172!
-        Title6.Text = "Phasors Not Selected"
-        Title7.Alignment = System.Drawing.ContentAlignment.BottomCenter
-        Title7.DockOffset = 35
-        Title7.Font = New System.Drawing.Font("Verdana", 9.25!, System.Drawing.FontStyle.Italic)
-        Title7.Text = "Initializing..."
+        Title4.DockOffset = -50
+        Title4.Font = New System.Drawing.Font("Verdana", 9.75!, System.Drawing.FontStyle.Italic, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Title4.Text = "Initializing..."
         Me.DataChart.Titles.Add(Title1)
         Me.DataChart.Titles.Add(Title2)
         Me.DataChart.Titles.Add(Title3)
         Me.DataChart.Titles.Add(Title4)
-        Me.DataChart.Titles.Add(Title5)
-        Me.DataChart.Titles.Add(Title6)
-        Me.DataChart.Titles.Add(Title7)
         '
         'TextErrorListener
         '
@@ -524,41 +505,41 @@ Public Class IEEE1344Listener
         Me.HeaderFrame.Anchor = CType(((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left) _
                     Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.HeaderFrame.BorderStyle = System.Windows.Forms.BorderStyle.None
-        Me.HeaderFrame.Location = New System.Drawing.Point(334, 400)
+        Me.HeaderFrame.Location = New System.Drawing.Point(334, 336)
         Me.HeaderFrame.Multiline = True
         Me.HeaderFrame.Name = "HeaderFrame"
         Me.HeaderFrame.ReadOnly = True
         Me.HeaderFrame.ScrollBars = System.Windows.Forms.ScrollBars.Vertical
-        Me.HeaderFrame.Size = New System.Drawing.Size(338, 112)
-        Me.HeaderFrame.TabIndex = 20
+        Me.HeaderFrame.Size = New System.Drawing.Size(248, 112)
+        Me.HeaderFrame.TabIndex = 19
         Me.HeaderFrame.Text = ""
         '
         'PMUHeaderLabel
         '
         Me.PMUHeaderLabel.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left), System.Windows.Forms.AnchorStyles)
-        Me.PMUHeaderLabel.Location = New System.Drawing.Point(333, 384)
+        Me.PMUHeaderLabel.Location = New System.Drawing.Point(333, 320)
         Me.PMUHeaderLabel.Name = "PMUHeaderLabel"
         Me.PMUHeaderLabel.Size = New System.Drawing.Size(136, 23)
-        Me.PMUHeaderLabel.TabIndex = 19
+        Me.PMUHeaderLabel.TabIndex = 18
         Me.PMUHeaderLabel.Text = "PMU &Header:"
         '
         'DataFrameLabel
         '
         Me.DataFrameLabel.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left), System.Windows.Forms.AnchorStyles)
-        Me.DataFrameLabel.Location = New System.Drawing.Point(8, 384)
+        Me.DataFrameLabel.Location = New System.Drawing.Point(8, 320)
         Me.DataFrameLabel.Name = "DataFrameLabel"
         Me.DataFrameLabel.Size = New System.Drawing.Size(136, 23)
-        Me.DataFrameLabel.TabIndex = 17
+        Me.DataFrameLabel.TabIndex = 16
         Me.DataFrameLabel.Text = "Data Frame:"
         '
         'CopyrightLabel
         '
         Me.CopyrightLabel.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left), System.Windows.Forms.AnchorStyles)
         Me.CopyrightLabel.Font = New System.Drawing.Font("Verdana", 6.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.CopyrightLabel.Location = New System.Drawing.Point(8, 503)
+        Me.CopyrightLabel.Location = New System.Drawing.Point(8, 439)
         Me.CopyrightLabel.Name = "CopyrightLabel"
         Me.CopyrightLabel.Size = New System.Drawing.Size(336, 16)
-        Me.CopyrightLabel.TabIndex = 21
+        Me.CopyrightLabel.TabIndex = 20
         Me.CopyrightLabel.Text = "Copyright © 2005, TVA  Version 1.0.0.1, James R Carroll"
         Me.CopyrightLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft
         '
@@ -572,16 +553,16 @@ Public Class IEEE1344Listener
         Me.TriggerGroupBox.Controls.Add(Me.AngleTrigger)
         Me.TriggerGroupBox.Controls.Add(Me.DfDtTrigger)
         Me.TriggerGroupBox.Controls.Add(Me.FrequencyTrigger)
-        Me.TriggerGroupBox.Location = New System.Drawing.Point(554, 58)
+        Me.TriggerGroupBox.Location = New System.Drawing.Point(464, 58)
         Me.TriggerGroupBox.Name = "TriggerGroupBox"
-        Me.TriggerGroupBox.Size = New System.Drawing.Size(120, 190)
+        Me.TriggerGroupBox.Size = New System.Drawing.Size(120, 254)
         Me.TriggerGroupBox.TabIndex = 15
         Me.TriggerGroupBox.TabStop = False
         Me.TriggerGroupBox.Text = "Triggers:"
         '
         'CustomTrigger
         '
-        Me.CustomTrigger.Location = New System.Drawing.Point(8, 160)
+        Me.CustomTrigger.Location = New System.Drawing.Point(8, 216)
         Me.CustomTrigger.Name = "CustomTrigger"
         Me.CustomTrigger.TabIndex = 6
         Me.CustomTrigger.TabStop = False
@@ -589,7 +570,7 @@ Public Class IEEE1344Listener
         '
         'RateTrigger
         '
-        Me.RateTrigger.Location = New System.Drawing.Point(8, 136)
+        Me.RateTrigger.Location = New System.Drawing.Point(8, 184)
         Me.RateTrigger.Name = "RateTrigger"
         Me.RateTrigger.TabIndex = 5
         Me.RateTrigger.TabStop = False
@@ -597,7 +578,7 @@ Public Class IEEE1344Listener
         '
         'UnderVoltageTrigger
         '
-        Me.UnderVoltageTrigger.Location = New System.Drawing.Point(8, 112)
+        Me.UnderVoltageTrigger.Location = New System.Drawing.Point(8, 152)
         Me.UnderVoltageTrigger.Name = "UnderVoltageTrigger"
         Me.UnderVoltageTrigger.TabIndex = 4
         Me.UnderVoltageTrigger.TabStop = False
@@ -605,7 +586,7 @@ Public Class IEEE1344Listener
         '
         'OverCurrentTrigger
         '
-        Me.OverCurrentTrigger.Location = New System.Drawing.Point(8, 88)
+        Me.OverCurrentTrigger.Location = New System.Drawing.Point(8, 120)
         Me.OverCurrentTrigger.Name = "OverCurrentTrigger"
         Me.OverCurrentTrigger.TabIndex = 3
         Me.OverCurrentTrigger.TabStop = False
@@ -613,7 +594,7 @@ Public Class IEEE1344Listener
         '
         'AngleTrigger
         '
-        Me.AngleTrigger.Location = New System.Drawing.Point(8, 64)
+        Me.AngleTrigger.Location = New System.Drawing.Point(8, 88)
         Me.AngleTrigger.Name = "AngleTrigger"
         Me.AngleTrigger.TabIndex = 2
         Me.AngleTrigger.TabStop = False
@@ -621,7 +602,7 @@ Public Class IEEE1344Listener
         '
         'DfDtTrigger
         '
-        Me.DfDtTrigger.Location = New System.Drawing.Point(8, 40)
+        Me.DfDtTrigger.Location = New System.Drawing.Point(8, 56)
         Me.DfDtTrigger.Name = "DfDtTrigger"
         Me.DfDtTrigger.TabIndex = 1
         Me.DfDtTrigger.TabStop = False
@@ -629,7 +610,7 @@ Public Class IEEE1344Listener
         '
         'FrequencyTrigger
         '
-        Me.FrequencyTrigger.Location = New System.Drawing.Point(8, 16)
+        Me.FrequencyTrigger.Location = New System.Drawing.Point(8, 24)
         Me.FrequencyTrigger.Name = "FrequencyTrigger"
         Me.FrequencyTrigger.TabIndex = 0
         Me.FrequencyTrigger.TabStop = False
@@ -646,7 +627,7 @@ Public Class IEEE1344Listener
         Me.GraphFrameLagLabel.Location = New System.Drawing.Point(352, 40)
         Me.GraphFrameLagLabel.Name = "GraphFrameLagLabel"
         Me.GraphFrameLagLabel.Size = New System.Drawing.Size(96, 16)
-        Me.GraphFrameLagLabel.TabIndex = 13
+        Me.GraphFrameLagLabel.TabIndex = 12
         Me.GraphFrameLagLabel.Text = "Graph frame lag:"
         Me.GraphFrameLagLabel.TextAlign = System.Drawing.ContentAlignment.MiddleRight
         '
@@ -655,7 +636,7 @@ Public Class IEEE1344Listener
         Me.GraphFrameLag.Location = New System.Drawing.Point(448, 40)
         Me.GraphFrameLag.Name = "GraphFrameLag"
         Me.GraphFrameLag.Size = New System.Drawing.Size(64, 16)
-        Me.GraphFrameLag.TabIndex = 14
+        Me.GraphFrameLag.TabIndex = 13
         Me.GraphFrameLag.Text = "0"
         Me.GraphFrameLag.TextAlign = System.Drawing.ContentAlignment.MiddleLeft
         '
@@ -682,57 +663,10 @@ Public Class IEEE1344Listener
         Me.PMUID.Sorted = True
         Me.PMUID.TabIndex = 3
         '
-        'PhasorSelectionGroupBox
-        '
-        Me.PhasorSelectionGroupBox.Anchor = CType((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.PhasorSelectionGroupBox.Controls.Add(Me.CurrentPhasor)
-        Me.PhasorSelectionGroupBox.Controls.Add(Me.CurrentPhasorLabel)
-        Me.PhasorSelectionGroupBox.Controls.Add(Me.VoltagePhasor)
-        Me.PhasorSelectionGroupBox.Controls.Add(Me.VoltagePhasorLabel)
-        Me.PhasorSelectionGroupBox.Location = New System.Drawing.Point(552, 256)
-        Me.PhasorSelectionGroupBox.Name = "PhasorSelectionGroupBox"
-        Me.PhasorSelectionGroupBox.Size = New System.Drawing.Size(120, 120)
-        Me.PhasorSelectionGroupBox.TabIndex = 7
-        Me.PhasorSelectionGroupBox.TabStop = False
-        Me.PhasorSelectionGroupBox.Text = "Phasor Selection:"
-        '
-        'CurrentPhasor
-        '
-        Me.CurrentPhasor.Location = New System.Drawing.Point(8, 88)
-        Me.CurrentPhasor.Name = "CurrentPhasor"
-        Me.CurrentPhasor.Size = New System.Drawing.Size(104, 21)
-        Me.CurrentPhasor.Sorted = True
-        Me.CurrentPhasor.TabIndex = 3
-        '
-        'CurrentPhasorLabel
-        '
-        Me.CurrentPhasorLabel.Location = New System.Drawing.Point(8, 72)
-        Me.CurrentPhasorLabel.Name = "CurrentPhasorLabel"
-        Me.CurrentPhasorLabel.Size = New System.Drawing.Size(88, 16)
-        Me.CurrentPhasorLabel.TabIndex = 2
-        Me.CurrentPhasorLabel.Text = "&Current Phasor:"
-        '
-        'VoltagePhasor
-        '
-        Me.VoltagePhasor.Location = New System.Drawing.Point(8, 40)
-        Me.VoltagePhasor.Name = "VoltagePhasor"
-        Me.VoltagePhasor.Size = New System.Drawing.Size(104, 21)
-        Me.VoltagePhasor.Sorted = True
-        Me.VoltagePhasor.TabIndex = 1
-        '
-        'VoltagePhasorLabel
-        '
-        Me.VoltagePhasorLabel.Location = New System.Drawing.Point(8, 24)
-        Me.VoltagePhasorLabel.Name = "VoltagePhasorLabel"
-        Me.VoltagePhasorLabel.Size = New System.Drawing.Size(88, 16)
-        Me.VoltagePhasorLabel.TabIndex = 0
-        Me.VoltagePhasorLabel.Text = "&Voltage Phasor:"
-        '
         'IEEE1344Listener
         '
         Me.AutoScaleBaseSize = New System.Drawing.Size(5, 13)
-        Me.ClientSize = New System.Drawing.Size(682, 517)
-        Me.Controls.Add(Me.PhasorSelectionGroupBox)
+        Me.ClientSize = New System.Drawing.Size(592, 453)
         Me.Controls.Add(Me.PMUID)
         Me.Controls.Add(Me.PMUIP)
         Me.Controls.Add(Me.PMUPort)
@@ -755,69 +689,18 @@ Public Class IEEE1344Listener
         Me.Controls.Add(Me.SamplesLabel)
         Me.Controls.Add(Me.PMUHeaderLabel)
         Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
-        Me.MinimumSize = New System.Drawing.Size(690, 544)
+        Me.MinimumSize = New System.Drawing.Size(600, 480)
         Me.Name = "IEEE1344Listener"
         Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen
         Me.Text = "IEEE Std 1344-1995 PMU Connection Test and Sample Rate Calculator"
         CType(Me.DataChart, System.ComponentModel.ISupportInitialize).EndInit()
         Me.TriggerGroupBox.ResumeLayout(False)
         CType(Me.FrameProcessor, System.ComponentModel.ISupportInitialize).EndInit()
-        Me.PhasorSelectionGroupBox.ResumeLayout(False)
         Me.ResumeLayout(False)
 
     End Sub
 
 #End Region
-
-    Private Sub LoadAssembly(ByVal assemblyName As String)
-
-        Static addedResolver As Boolean
-
-        ' Hook into assembly resolve event for current domain so we can load assembly from embedded resource
-        If Not addedResolver Then
-            AddHandler AppDomain.CurrentDomain.AssemblyResolve, AddressOf ResolveAssemblyFromResource
-            addedResolver = True
-        End If
-
-        ' Load the assembly (this will invoke event that will resolve assembly from resource)
-        AppDomain.CurrentDomain.Load(assemblyName)
-
-    End Sub
-
-    Private Function ResolveAssemblyFromResource(ByVal sender As Object, ByVal args As ResolveEventArgs) As [Assembly]
-
-        Static rootNameSpace As String
-        Dim resourceAssembly As [Assembly]
-        Dim shortName As String = args.Name.Split(","c)(0)
-        Dim buffer As Byte()
-
-        ' Get root namespace of executing assembly since all embedded resources will be prefixed with this
-        If rootNameSpace Is Nothing Then
-            rootNameSpace = Me.GetType.AssemblyQualifiedName
-            rootNameSpace = rootNameSpace.Substring(0, rootNameSpace.IndexOf("."c))
-        End If
-
-        ' Loop through all of the resources in the executing assembly
-        For Each name As String In [Assembly].GetExecutingAssembly.GetManifestResourceNames()
-            ' See if the embedded resource name matches assembly we are trying to load
-            If String.Compare(Path.GetFileNameWithoutExtension(name), rootNameSpace & "." & shortName, True) = 0 Then
-                ' If so, load embedded resource assembly into a binary buffer
-                With [Assembly].GetExecutingAssembly.GetManifestResourceStream(name)
-                    buffer = Array.CreateInstance(GetType(Byte), .Length)
-                    .Read(buffer, 0, .Length)
-                    .Close()
-                End With
-
-                ' Load assembly from binary buffer
-                resourceAssembly = [Assembly].Load(buffer)
-
-                Exit For
-            End If
-        Next
-
-        Return resourceAssembly
-
-    End Function
 
     Private Sub IEEE1344Listener_Load(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles MyBase.Load
 
@@ -839,31 +722,19 @@ Public Class IEEE1344Listener
 
         ' Initialize chart title states
         With DataChart
-            m_frequencyTitle = .Titles(1).Text
-            m_phasorTitle = .Titles(2).Text
-            m_initializingTitle = .Titles(6)
-            .Titles.RemoveAt(6)
+            frequencyTitle = .Titles(1).Text
+            phasorTitle = .Titles(2).Text
+            initializingTitle = .Titles(3)
+            .Titles.RemoveAt(3)
         End With
 
         Variables.Save()
 
-        m_frameQueue = New ArrayList
-        m_frequencyRange = New DataPoints
+        frameQueue = New ArrayList
+        frequencyRange = New DataPoints
 
         LoadMRUList(PMUIP, "PMU.MRU.IP")
         LoadMRUList(PMUID, "PMU.MRU.ID")
-
-        ' We auto-launch with specified command line parameters, if provided
-        If Len(VB.Command) > 0 Then
-            With VB.Command.Split("/"c)
-                If .Length >= 3 Then
-                    PMUIP.Text = .GetValue(0)
-                    PMUID.Text = .GetValue(1)
-                    PMUPort.Text = .GetValue(2)
-                    Listen_Click(Me, Nothing)
-                End If
-            End With
-        End If
 
     End Sub
 
@@ -881,9 +752,9 @@ Public Class IEEE1344Listener
 
     Private Sub IEEE1344Listener_Closing(ByVal sender As Object, ByVal e As System.ComponentModel.CancelEventArgs) Handles MyBase.Closing
 
-        If Not m_parser Is Nothing Then
-            m_parser.DisableRealTimeData()
-            m_parser.Disconnect()
+        If Not parser Is Nothing Then
+            parser.DisableRealTimeData()
+            parser.Disconnect()
         End If
 
         SaveWindowLocation(Me)
@@ -909,15 +780,15 @@ Public Class IEEE1344Listener
 
     Private Sub Listen_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles Listen.Click
 
-        If m_parser Is Nothing Then
+        If parser Is Nothing Then
             ' Start frame parser
             Try
                 Listen.Text = "&Stop"
-                m_parser = New IEEE1344.FrameParser(PMUID.Text, PMUIP.Text, PMUPort.Text, IEEE1344.PhasorFormat.Rectangular)
+                parser = New IEEE1344.FrameParser(PMUID.Text, PMUIP.Text, PMUPort.Text, IEEE1344.PhasorFormat.Rectangular)
 
-                m_parser.Connect()
-                m_parser.EnableRealTimeData()
-                m_parser.RetrieveHeaderFile()
+                parser.Connect()
+                parser.EnableRealTimeData()
+                parser.RetrieveHeaderFile()
 
                 ' If we successfully connect to a PMU, we'll add the IP and ID to the pick lists for future reference
                 With PMUIP
@@ -930,23 +801,20 @@ Public Class IEEE1344Listener
             Catch ex As Exception
                 MsgBox(ex.Message, MsgBoxStyle.OKOnly Or MsgBoxStyle.Exclamation)
                 Listen.Text = "&Listen"
-                m_parser = Nothing
+                parser = Nothing
             End Try
         Else
             ' Stop frame parser and reinitialize
             Try
-                If Not m_parser Is Nothing Then
-                    m_parser.DisableRealTimeData()
-                    m_parser.Disconnect()
+                If Not parser Is Nothing Then
+                    parser.DisableRealTimeData()
+                    parser.Disconnect()
                 End If
 
                 With DataChart
                     .Titles(0).Text = "PMU ID"
-                    .Titles(1).Text = m_frequencyTitle
-                    .Titles(2).Text = m_phasorTitle
-                    .Titles(3).Text = "Vars: unavailable"
-                    .Titles(4).Text = "Power: unavailable"
-                    .Titles(5).Text = "Phasors Not Selected"
+                    .Titles(1).Text = frequencyTitle
+                    .Titles(2).Text = phasorTitle
 
                     ' Clear all existing data
                     For x As Integer = .Series.Count - 1 To 0 Step -1
@@ -958,18 +826,12 @@ Public Class IEEE1344Listener
                     Next
                 End With
 
-                CurrentPhasor.Text = ""
-                CurrentPhasor.Items.Clear()
-
-                VoltagePhasor.Text = ""
-                VoltagePhasor.Items.Clear()
-
-                m_frameQueue.Clear()
-                m_frequencyRange.Clear()
-                m_firstFrame = 0
-                m_frameCount = 0
-                m_startTime = 0
-                m_total = 0
+                frameQueue.Clear()
+                frequencyRange.Clear()
+                firstFrame = 0
+                frameCount = 0
+                startTime = 0
+                total = 0
 
                 FrameProcessor.Enabled = False
 
@@ -990,21 +852,21 @@ Public Class IEEE1344Listener
                 LogException(ex.Message)
             Finally
                 Listen.Text = "&Listen"
-                m_parser = Nothing
+                parser = Nothing
             End Try
         End If
 
     End Sub
 
-    Private Sub parser_DataStreamException(ByVal ex As System.Exception) Handles m_parser.DataStreamException
+    Private Sub parser_DataStreamException(ByVal ex As System.Exception) Handles parser.DataStreamException
 
         LogException("Data Stream Exception: " & ex.Message)
 
     End Sub
 
-    Private Sub parser_ReceivedConfigFile2(ByVal configFile As IEEE1344.ConfigurationFile) Handles m_parser.ReceivedConfigFile2
+    Private Sub parser_ReceivedConfigFile2(ByVal configFile As IEEE1344.ConfigurationFile) Handles parser.ReceivedConfigFile2
 
-        m_configFile = configFile
+        Debug.WriteLine("Config File 2 Received for " & configFile.StationName)
 
         ' Configure chart series
         With DataChart
@@ -1012,7 +874,7 @@ Public Class IEEE1344Listener
                 " - Nominal Frequency " & IIf(configFile.LineFrequency = IEEE1344.PMULineFrequency._50Hz, "50Hz", "60Hz") & _
                 ", " & configFile.Period / 100 & " cycles / data transmission"
 
-            If Not m_initializingTitle Is Nothing Then .Titles.Add(m_initializingTitle)
+            If Not initializingTitle Is Nothing Then .Titles.Add(initializingTitle)
 
             For x As Integer = 0 To configFile.PhasorDefinitions.Count - 1
                 .Series.Add("Phasors" & x)
@@ -1023,55 +885,57 @@ Public Class IEEE1344Listener
                     .Legend = "PhasorLegend"
                     .LegendText = configFile.PhasorDefinitions(x).Label
                 End With
-
-                ' Load voltage and current phasors into appropriate picklists used for power/var calculations
-                Select Case configFile.PhasorDefinitions(x).Type
-                    Case IEEE1344.PhasorType.Voltage
-                        VoltagePhasor.Items.Add(configFile.PhasorDefinitions(x).Label)
-                    Case IEEE1344.PhasorType.Current
-                        CurrentPhasor.Items.Add(configFile.PhasorDefinitions(x).Label)
-                End Select
             Next
-
-            'If VoltagePhasor.SelectedIndex = -1 And VoltagePhasor.Items.Count > 0 Then VoltagePhasor.SelectedIndex = 0
-            'If CurrentPhasor.SelectedIndex = -1 And CurrentPhasor.Items.Count > 0 Then CurrentPhasor.SelectedIndex = 0
         End With
 
     End Sub
 
-    Private Sub parser_ReceivedDataFrame(ByVal frame As IEEE1344.DataFrame) Handles m_parser.ReceivedDataFrame
+    Private Sub parser_ReceivedDataFrame(ByVal frame As IEEE1344.DataFrame) Handles parser.ReceivedDataFrame
 
-        If m_startTime = 0 Then m_startTime = DateTime.Now.Ticks
+        If startTime = 0 Then startTime = DateTime.Now.Ticks
 
         ' We queue up this data frame for post processing (i.e., graphing etc.) so that we don't slow down the real-time data stream
-        SyncLock m_frameQueue.SyncRoot
-            m_frameQueue.Add(frame)
+        SyncLock frameQueue.SyncRoot
+            frameQueue.Add(frame)
         End SyncLock
 
         FrameProcessor.Enabled = True
 
         ' We calculate sample rate here to get an accurate sample rate
-        m_total += 1
+        total += 1
 
-        SampleCount.Text = m_total.ToString
+        SampleCount.Text = total.ToString
 
-        If m_total Mod 30 = 0 Then
-            SampleRate.Text = (m_total / ((DateTime.Now.Ticks - m_startTime) / 10000000L)).ToString("0.0000")
+        If total Mod 30 = 0 Then
+            SampleRate.Text = (total / ((DateTime.Now.Ticks - startTime) / 10000000L)).ToString("0.0000")
 
-            SyncLock m_frameQueue.SyncRoot
-                GraphFrameLag.Text = m_frameQueue.Count
+            SyncLock frameQueue.SyncRoot
+                GraphFrameLag.Text = frameQueue.Count
             End SyncLock
         End If
 
     End Sub
 
-    Private Sub parser_ReceivedHeaderFile(ByVal headerFile As IEEE1344.HeaderFile) Handles m_parser.ReceivedHeaderFile
+    Private Function GetYValues(ByVal values As Double()) As String
+
+        With New StringBuilder
+            For x As Integer = 0 To values.Length - 1
+                If x > 0 Then .Append(","c)
+                .Append(values(x))
+            Next
+
+            Return .ToString
+        End With
+
+    End Function
+
+    Private Sub parser_ReceivedHeaderFile(ByVal headerFile As IEEE1344.HeaderFile) Handles parser.ReceivedHeaderFile
 
         HeaderFrame.Text = headerFile.Data
 
     End Sub
 
-    Private Sub parser_ReceivedUnknownFrame(ByVal frame As IEEE1344.BaseFrame) Handles m_parser.ReceivedUnknownFrame
+    Private Sub parser_ReceivedUnknownFrame(ByVal frame As IEEE1344.BaseFrame) Handles parser.ReceivedUnknownFrame
 
         LogException("Received unknown frame type: " & frame.FrameLength & " bytes")
 
@@ -1093,10 +957,10 @@ Public Class IEEE1344Listener
 
         Dim frame As IEEE1344.DataFrame
 
-        SyncLock m_frameQueue.SyncRoot
-            If m_frameQueue.Count > 0 Then
-                frame = m_frameQueue(0)
-                m_frameQueue.RemoveAt(0)
+        SyncLock frameQueue.SyncRoot
+            If frameQueue.Count > 0 Then
+                frame = frameQueue(0)
+                frameQueue.RemoveAt(0)
             End If
         End SyncLock
 
@@ -1106,25 +970,24 @@ Public Class IEEE1344Listener
             Dim frequency As Double
             Dim x, phasors As Integer
 
-            If m_firstFrame = 0 Then m_firstFrame = frame.Timestamp.Ticks
-            maxTicks = (frame.Timestamp.Ticks - m_firstFrame) / 10000L
-            m_frameCount += 1
+            If firstFrame = 0 Then firstFrame = frame.Timestamp.Ticks
+            maxTicks = (frame.Timestamp.Ticks - firstFrame) / 10000L
+            frameCount += 1
 
             With DataChart
                 With .Series("Frequency")
                     frequency = frame.Frequency
-                    m_frequencyRange.Add(frequency)
+                    frequencyRange.Add(frequency)
                     .Points.AddXY(maxTicks, frequency)
                     Do While .Points.Count > FrequencyPoints
-                        m_frequencyRange.Remove(.Points(0).YValues(0))
+                        frequencyRange.Remove(.Points(0).YValues(0))
                         .Points.RemoveAt(0)
                         minTicks = .Points(0).XValue
                     Loop
                 End With
 
-                If (m_frameCount - 1) Mod 120 = 0 Then
+                If (frameCount - 1) Mod 120 = 0 Then
                     Dim minPhasorTicks As Long
-
                     phasors = frame.PhasorValues.Count
 
                     For x = 0 To phasors - 1
@@ -1139,48 +1002,26 @@ Public Class IEEE1344Listener
                         End With
                     Next
 
-                    .Titles(2).Text = m_phasorTitle & " / " & (maxTicks - minPhasorTicks + 1) \ 1000L & "s"
-
-                    ' Calculate and display power and vars using selected phasors
-                    If CurrentPhasor.SelectedIndex > -1 And VoltagePhasor.SelectedIndex > -1 Then
-                        Dim voltage As IEEE1344.PhasorValue = frame.PhasorValues(VoltagePhasor.SelectedIndex)
-                        Dim current As IEEE1344.PhasorValue = frame.PhasorValues(CurrentPhasor.SelectedIndex)
-                        .Titles(3).Text = "Vars: " & (IEEE1344.PhasorValue.CalculateVars(voltage, current) / 1000000).ToString("0.0") & " MVars"
-                        .Titles(4).Text = "Power: " & (IEEE1344.PhasorValue.CalculatePower(voltage, current) / 1000000).ToString("0.0") & " MW"
-                    Else
-                        .Titles(3).Text = "Vars: unavailable"
-                        .Titles(4).Text = "Power: unavailable"
-                        .Titles(5).Text = "Phasors Not Selected"
-                    End If
-
-                    For x = 0 To phasors - 1
-                        With .Series("Phasors" & x)
-                            .LegendText = _
-                                VB.Left(m_configFile.PhasorDefinitions(x).Label, 12).PadRight(13) & _
-                                IIf(m_configFile.PhasorDefinitions(x).Type = IEEE1344.PhasorType.Voltage, _
-                                    Convert.ToInt32((frame.PhasorValues(x).Magnitude * Math.Sqrt(3)) / 1000) & "KV", _
-                                    Convert.ToInt32(frame.PhasorValues(x).Magnitude) & "A")
-                        End With
-                    Next
+                    .Titles(2).Text = phasorTitle & " / " & (maxTicks - minPhasorTicks + 1) \ 1000L & "s"
 
                     With .ChartAreas("Phasors")
                         .AxisX.Maximum = maxTicks
                         .AxisX.Minimum = minPhasorTicks
-                        .AxisY2.Minimum = -180
-                        .AxisY2.Maximum = 360
+                        .AxisY.Minimum = Double.NaN '-180
+                        .AxisY.Maximum = Double.NaN '360
                     End With
                 End If
 
-                If minTicks > 0 And m_frameCount Mod 4 = 0 Then
+                If minTicks > 0 And frameCount Mod 4 = 0 Then
                     ' Remove "Initializing" title...                    
-                    If .Titles.Count > 6 Then .Titles.RemoveAt(6)
-                    .Titles(1).Text = m_frequencyTitle & " / " & ((maxTicks - minTicks + 1) / 1000L).ToString("0.0") & "s"
+                    If .Titles.Count > 3 Then .Titles.RemoveAt(3)
+                    .Titles(1).Text = frequencyTitle & " / " & ((maxTicks - minTicks + 1) / 1000L).ToString("0.0") & "s"
 
                     With .ChartAreas("Frequency")
                         .AxisX.Maximum = maxTicks
                         .AxisX.Minimum = minTicks
-                        .AxisY.Minimum = m_frequencyRange.Minimum(-0.0001)
-                        .AxisY.Maximum = m_frequencyRange.Maximum(0.0001)
+                        .AxisY.Minimum = frequencyRange.Minimum(-0.0001)
+                        .AxisY.Maximum = frequencyRange.Maximum(0.0001)
                     End With
 
                     .Invalidate()
@@ -1221,8 +1062,8 @@ Public Class IEEE1344Listener
             End Select
         End If
 
-        SyncLock m_frameQueue.SyncRoot
-            FrameProcessor.Enabled = (m_frameQueue.Count > 0)
+        SyncLock frameQueue.SyncRoot
+            FrameProcessor.Enabled = (frameQueue.Count > 0)
         End SyncLock
 
     End Sub
@@ -1233,22 +1074,6 @@ Public Class IEEE1344Listener
             .SelectionStart = 0
             .SelectionLength = Len(.Text)
         End With
-
-    End Sub
-
-    Private Sub CurrentPhasor_SelectedIndexChanged(ByVal sender As Object, ByVal e As System.EventArgs) Handles CurrentPhasor.SelectedIndexChanged
-
-        DataChart.Titles(3).Text = "Vars: calculating"
-        DataChart.Titles(4).Text = "Power: calculating"
-        DataChart.Titles(5).Text = VoltagePhasor.Text & " / " & CurrentPhasor.Text
-
-    End Sub
-
-    Private Sub VoltagePhasor_SelectedIndexChanged(ByVal sender As Object, ByVal e As System.EventArgs) Handles VoltagePhasor.SelectedIndexChanged
-
-        DataChart.Titles(3).Text = "Vars: calculating"
-        DataChart.Titles(4).Text = "Power: calculating"
-        DataChart.Titles(5).Text = VoltagePhasor.Text & " / " & CurrentPhasor.Text
 
     End Sub
 
