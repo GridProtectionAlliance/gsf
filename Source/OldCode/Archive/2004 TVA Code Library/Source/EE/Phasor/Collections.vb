@@ -17,19 +17,37 @@
 
 Namespace EE.Phasor
 
-    Public Class PhasorValues
+    Public MustInherit Class ChannelValues
 
         Inherits CollectionBase
 
-        Public Sub Add(ByVal value As IPhasorValue)
+        Protected Sub _Add(ByVal value As IChannelValue)
 
             List.Add(value)
 
         End Sub
 
-        Default Public ReadOnly Property Item(ByVal index As Integer) As IPhasorValue
+        Protected ReadOnly Property _Item(ByVal index As Integer) As IChannelValue
             Get
-                Return DirectCast(List.Item(index), IPhasorValue)
+                Return DirectCast(List.Item(index), IChannelValue)
+            End Get
+        End Property
+
+    End Class
+
+    Public Class AnalogValues
+
+        Inherits ChannelValues
+
+        Public Sub Add(ByVal value As IAnalogValue)
+
+            MyBase._Add(value)
+
+        End Sub
+
+        Default Public ReadOnly Property Item(ByVal index As Integer) As IAnalogValue
+            Get
+                Return DirectCast(MyBase._Item(index), IAnalogValue)
             End Get
         End Property
 
@@ -37,17 +55,53 @@ Namespace EE.Phasor
 
     Public Class DigitalValues
 
-        Inherits CollectionBase
+        Inherits ChannelValues
 
-        Public Sub Add(ByVal value As Int16)
+        Public Sub Add(ByVal value As IDigitalValue)
 
-            List.Add(value)
+            MyBase._Add(value)
 
         End Sub
 
-        Default Public ReadOnly Property Item(ByVal index As Integer) As Int16
+        Default Public ReadOnly Property Item(ByVal index As Integer) As IDigitalValue
             Get
-                Return DirectCast(List.Item(index), Int16)
+                Return DirectCast(MyBase._Item(index), IDigitalValue)
+            End Get
+        End Property
+
+    End Class
+
+    Public Class FrequencyValues
+
+        Inherits ChannelValues
+
+        Public Sub Add(ByVal value As IFrequencyValue)
+
+            MyBase._Add(value)
+
+        End Sub
+
+        Default Public ReadOnly Property Item(ByVal index As Integer) As IFrequencyValue
+            Get
+                Return DirectCast(MyBase._Item(index), IFrequencyValue)
+            End Get
+        End Property
+
+    End Class
+
+    Public Class PhasorValues
+
+        Inherits ChannelValues
+
+        Public Sub Add(ByVal value As IPhasorValue)
+
+            MyBase._Add(value)
+
+        End Sub
+
+        Default Public ReadOnly Property Item(ByVal index As Integer) As IPhasorValue
+            Get
+                Return DirectCast(MyBase._Item(index), IPhasorValue)
             End Get
         End Property
 
@@ -74,42 +128,6 @@ Namespace EE.Phasor
             Array.Sort(List)
 
         End Sub
-
-    End Class
-
-    Public Class PhasorDefinitions
-
-        Inherits ChannelDefinitions
-
-        Public Sub Add(ByVal value As IPhasorDefinition)
-
-            MyBase._Add(value)
-
-        End Sub
-
-        Default Public ReadOnly Property Item(ByVal index As Integer) As IPhasorDefinition
-            Get
-                Return DirectCast(MyBase._Item(index), IPhasorDefinition)
-            End Get
-        End Property
-
-    End Class
-
-    Public Class FrequencyDefinitions
-
-        Inherits ChannelDefinitions
-
-        Public Sub Add(ByVal value As IFrequencyDefinition)
-
-            MyBase._Add(value)
-
-        End Sub
-
-        Default Public ReadOnly Property Item(ByVal index As Integer) As IFrequencyDefinition
-            Get
-                Return DirectCast(MyBase._Item(index), IFrequencyDefinition)
-            End Get
-        End Property
 
     End Class
 
@@ -144,6 +162,42 @@ Namespace EE.Phasor
         Default Public ReadOnly Property Item(ByVal index As Integer) As IDigitalDefinition
             Get
                 Return DirectCast(MyBase._Item(index), IDigitalDefinition)
+            End Get
+        End Property
+
+    End Class
+
+    Public Class FrequencyDefinitions
+
+        Inherits ChannelDefinitions
+
+        Public Sub Add(ByVal value As IFrequencyDefinition)
+
+            MyBase._Add(value)
+
+        End Sub
+
+        Default Public ReadOnly Property Item(ByVal index As Integer) As IFrequencyDefinition
+            Get
+                Return DirectCast(MyBase._Item(index), IFrequencyDefinition)
+            End Get
+        End Property
+
+    End Class
+
+    Public Class PhasorDefinitions
+
+        Inherits ChannelDefinitions
+
+        Public Sub Add(ByVal value As IPhasorDefinition)
+
+            MyBase._Add(value)
+
+        End Sub
+
+        Default Public ReadOnly Property Item(ByVal index As Integer) As IPhasorDefinition
+            Get
+                Return DirectCast(MyBase._Item(index), IPhasorDefinition)
             End Get
         End Property
 
