@@ -596,6 +596,44 @@ Namespace Asp
 
 #End Region
 
+#Region "Code for BringToFront"
+
+        'Pinal Patel 03/14/05:  Brings the web page to the front. Not tied to a web control.
+        Public Shared Sub BringToFront(ByVal Page As System.Web.UI.Page)
+
+            If Not Page.IsStartupScriptRegistered("BringToFront") Then
+                With New StringBuilder
+                    .Append("<script language=""javascript"">" & vbCrLf)
+                    .Append("   window.focus();" & vbCrLf)
+                    .Append("</script>" & vbCrLf)
+
+                    Page.RegisterStartupScript("BringToFront", .ToString())
+                End With
+            End If
+
+        End Sub
+
+#End Region
+
+#Region "Code for PushToBack"
+
+        'Pinal Patel 03/14/05:  Push the web page back (like minimize). Not tied to a web control.
+        Public Shared Sub PushToBack(ByVal Page As System.Web.UI.Page)
+
+            If Not Page.IsStartupScriptRegistered("PushToBack") Then
+                With New StringBuilder
+                    .Append("<script language=""javascript"">" & vbCrLf)
+                    .Append("   window.blur();" & vbCrLf)
+                    .Append("</script>" & vbCrLf)
+
+                    Page.RegisterStartupScript("PushToBack", .ToString())
+                End With
+            End If
+
+        End Sub
+
+#End Region
+
         Public Function HEXtoRGB(ByVal clr As String) As Array
 
             Dim clrR As String
