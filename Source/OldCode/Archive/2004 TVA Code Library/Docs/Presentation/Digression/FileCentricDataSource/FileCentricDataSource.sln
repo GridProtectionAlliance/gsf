@@ -1,0 +1,21 @@
+Microsoft Visual Studio Solution File, Format Version 8.00
+Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "FileCentricDataSource", "FileCentricDataSource.vbproj", "{35A8BCFE-8807-4A74-93EF-75BCF65AD5D4}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfiguration) = preSolution
+		Debug = Debug
+		Release = Release
+	EndGlobalSection
+	GlobalSection(ProjectConfiguration) = postSolution
+		{35A8BCFE-8807-4A74-93EF-75BCF65AD5D4}.Debug.ActiveCfg = Debug|.NET
+		{35A8BCFE-8807-4A74-93EF-75BCF65AD5D4}.Debug.Build.0 = Debug|.NET
+		{35A8BCFE-8807-4A74-93EF-75BCF65AD5D4}.Release.ActiveCfg = Release|.NET
+		{35A8BCFE-8807-4A74-93EF-75BCF65AD5D4}.Release.Build.0 = Release|.NET
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+	EndGlobalSection
+	GlobalSection(ExtensibilityAddIns) = postSolution
+	EndGlobalSection
+EndGlobal
