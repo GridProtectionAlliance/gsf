@@ -108,13 +108,13 @@ Namespace PDCstream
         ' Data comes in one-point at a time, so we use this function to place the point in its proper sample and row/cell position
         Public Sub SortDataPoint(ByVal dataPoint As PMUDataPoint)
 
-            Try
-                With dataPoint
+            With dataPoint
+                Try
                     ' Find sample for this timestamp
                     Dim sample As DataSample = GetSample(.Timestamp)
 
                     If sample Is Nothing Then
-                        ' No samples exist for this timestamp - data must be very old
+                        ' No samples exist for this timestamp - data must be old
                         m_discardedPoints += 1
                     Else
                         ' We've found the right sample for this data, so lets access the proper data cell by first calculating the
@@ -140,27 +140,25 @@ Namespace PDCstream
                                 dataCell.StatusFlags = ParseInt16(.Value)
                         End Select
                     End If
-                End With
-            Catch ex As Exception
-                ' We don't want to pass-up any data errors from here because they would bubble as errors in the DatAWare listener,
-                ' so we just raise event so any clients can log the exceptions or post them to remote clients
-                With dataPoint
+                Catch ex As Exception
+                    ' We don't want to pass-up any data errors from here because they would bubble as errors in the DatAWare listener,
+                    ' so we just raise event so any clients can log the exceptions or post them to remote clients
                     RaiseEvent DataError("Error sorting data point " & .PMU.ID & "-" & [Enum].GetName(GetType(PointType), .Type) & .Index & "@" & .Timestamp.ToString("dd-MMM-yyyy HH:mm:ss.fff") & ": " & ex.Message)
-                End With
-            End Try
+                End Try
+            End With
 
         End Sub
 
         Private Function GetSample(ByVal timestamp As DateTime) As DataSample
 
-            ' Baseline timestamp at bottom of the new second
+            ' Baseline timestamp at bottom of the second
             Dim baseTime As DateTime = BaselinedTimestamp(timestamp)
             Dim sample As DataSample = DirectCast(m_dataSamples(baseTime.Ticks), DataSample)
 
             ' If sample for this timestamp doesn't exist, create one for it...
             If sample Is Nothing Then
-                ' Check difference between baseTime and last baseTime and fill any gaps
-                Dim difference As Integer = DistanceFromBaseTime(baseTime)
+                ' Check difference between baseTime and last baseTime in whole seconds and fill any gaps
+                Dim difference As Integer = Math.Floor(DistanceFromBaseTime(baseTime))
 
                 If difference > 0 Then
                     If difference > 1 And m_baseTimeSet Then
@@ -196,10 +194,10 @@ Namespace PDCstream
 
         End Function
 
-        Public Function DistanceFromBaseTime(ByVal timeStamp As DateTime) As Integer
+        Public Function DistanceFromBaseTime(ByVal timeStamp As DateTime) As Double
 
             If m_baseTimeSet Then
-                Return Math.Floor(timeStamp.Subtract(m_baseTime).Ticks / 10000000L)
+                Return (timeStamp.Ticks - m_baseTime.Ticks) / 10000000L
             Else
                 ' If the basetime has not been set, we should always return a large positive difference...
                 Return 1000

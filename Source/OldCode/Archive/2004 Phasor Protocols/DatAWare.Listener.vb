@@ -46,6 +46,7 @@ Namespace DatAWare
         Private m_clientThreads As Hashtable
         Private m_packetsAccepted As Long
         Private m_packetsRejected As Long
+        Private m_bytesReceived As Long
 
         Private Const BufferSize As Integer = 524288 ' 512Kb buffer
 
@@ -191,7 +192,7 @@ Namespace DatAWare
                 listener.Start()
 
                 ' Enter the listening loop
-                UpdateStatus("Listener started")
+                UpdateStatus(Name & " started")
 
                 Do While True
                     ' Block thread until next client connection accepted...
@@ -203,13 +204,13 @@ Namespace DatAWare
                         m_clientThreads.Add(threadID, RunThread.ExecuteNonPublicMethod(Me, "AcceptClientData", client, threadID))
                     End SyncLock
 
-                    UpdateStatus("New client connection established...")
+                    UpdateStatus("New client connection established for " & Name & "...")
                 Loop
             Catch ex As Exception
-                UpdateStatus("Listener exception: " & ex.Message)
+                UpdateStatus(Name & " exception: " & ex.Message)
             Finally
                 If Not listener Is Nothing Then listener.Stop()
-                UpdateStatus("Listener stopped")
+                UpdateStatus(Name & " stopped")
             End Try
 
         End Sub
@@ -264,6 +265,7 @@ Namespace DatAWare
                         End If
 
                         ' Queue this data packet for concentration...
+                        m_bytesReceived += eventBuffer.Length
                         m_parent.EventQueue.QueueEventData(m_connection.PlantCode, eventBuffer)
 
                         ' If client was finished sending packet, send acknowledgement back to DatAWare...
@@ -280,7 +282,7 @@ Namespace DatAWare
                     ' in this case we'll bow out gracefully as well...
                     Exit Do
                 Catch ex As Exception
-                    UpdateStatus("Exception occurred while accepting client data: " & ex.Message)
+                    UpdateStatus("Exception occurred for " & Name & " while accepting client data: " & ex.Message)
 
                     ' We monitor for exceptions that occur in quick succession
                     If DateTime.Now.Ticks - errorTime > 100000000L Then
@@ -335,7 +337,7 @@ Namespace DatAWare
         ' Service component implementation
         Public ReadOnly Property Name() As String Implements IServiceComponent.Name
             Get
-                Return Me.GetType.Name & " (" & m_serverPort & ")"
+                Return "DatAWare Listener for " & m_connection.Server & " (" & m_connection.PlantCode & ") on port " & m_serverPort
             End Get
         End Property
 
@@ -360,15 +362,18 @@ Namespace DatAWare
         Public ReadOnly Property Status() As String Implements IServiceComponent.Status
             Get
                 With New StringBuilder
-                    .Append("     DatAWare server: " & Connection.Server & vbCrLf)
-                    .Append("          Plant code: " & Connection.PlantCode & vbCrLf)
-                    .Append("           Time zone: " & Connection.TimeZone.DisplayName & vbCrLf)
-                    .Append("   Listening on port: " & m_serverPort & vbCrLf)
-                    .Append("      Listener state: " & IIf(IsRunning, "Running", "Stopped") & vbCrLf)
-                    .Append("      Listening time: " & SecondsToText(RunTime) & vbCrLf)
-                    .Append("      Threads in use: " & ThreadsInUse & vbCrLf)
-                    .Append("    Packets Accepted: " & m_packetsAccepted & vbCrLf)
-                    .Append("    Packets Rejected: " & m_packetsRejected & vbCrLf)
+                    .Append("   DatAWare listener state: " & IIf(IsRunning, "Running", "Stopped") & vbCrLf)
+                    .Append("       Listening to server: " & Connection.Server & vbCrLf)
+                    .Append("                Plant code: " & Connection.PlantCode & vbCrLf)
+                    .Append("                 Time zone: " & Connection.TimeZone.DisplayName & vbCrLf)
+                    .Append("         Listening on port: " & m_serverPort & vbCrLf)
+                    .Append("            Listening time: " & SecondsToText(RunTime) & vbCrLf)
+                    .Append("            Threads in use: " & ThreadsInUse & vbCrLf)
+                    .Append("    Event packets accepted: " & m_packetsAccepted & vbCrLf)
+                    .Append("    Event packets rejected: " & m_packetsRejected & vbCrLf)
+                    .Append("     Packet broadcast rate: " & m_packetsAccepted / RunTime & " packets/sec" & vbCrLf)
+                    .Append("       Data broadcast rate: " & (m_bytesReceived * 8 / RunTime / 1024 / 1024).ToString("0.00") & " mbps" & vbCrLf)
+                    .Append("    Total broadcast volume: " & (m_bytesReceived / 1024 / 1024).ToString("0.00") & " Mb" & vbCrLf)
 
                     Return .ToString()
                 End With
