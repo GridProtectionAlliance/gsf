@@ -324,6 +324,7 @@ Namespace PDCstream
                     .Append("      Local time deviation: " & m_dataQueue.DistanceFromBaseTime(PDCstream.DataQueue.BaselinedTimestamp(DateTime.Now.ToUniversalTime())) & " seconds" & vbCrLf)
                     .Append("            Queued samples: " & m_dataQueue.SampleCount & vbCrLf)
                     .Append("          Defined lag time: " & m_lagTime & " seconds" & vbCrLf)
+                    .Append(" Data publication interval: " & m_processTimer.Interval & " ms" & vbCrLf)
                     .Append("    Data packets published: " & m_packetsPublished & vbCrLf)
                     .Append("  Data packet publish rate: " & (m_packetsPublished / RunTime).ToString("0.00") & " samples/sec" & vbCrLf)
                     .Append("            Broadcast rate: " & (m_bytesBroadcasted * 8 / RunTime / 1024 / 1024).ToString("0.00") & " mbps" & vbCrLf)
