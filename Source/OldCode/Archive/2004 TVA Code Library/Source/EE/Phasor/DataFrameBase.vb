@@ -1,5 +1,5 @@
 '***********************************************************************
-'  FrameBase.vb - Basic phasor frame
+'  DataFrameBase.vb - Basic phasor data frame
 '  Copyright © 2004 - TVA, all rights reserved
 '
 '  Build Environment: VB.NET, Visual Studio 2003
@@ -22,8 +22,12 @@ Imports TVA.Compression.Common
 
 Namespace EE.Phasor
 
+    Public Interface IDataFrame
+
+    End Interface
+
     ' This class represents the common definition of all phasor message frames that can be sent or received from a PMU.
-    Public MustInherit Class FrameBase
+    Public MustInherit Class DataFrameBase
 
         Protected m_timeTag As NtpTimeTag
         Protected m_sampleCount As Int16
@@ -34,7 +38,7 @@ Namespace EE.Phasor
             m_timeTag = New NtpTimeTag(DateTime.Now)
 
         End Sub
-        Protected Sub Clone(ByVal source As FrameBase)
+        Protected Sub Clone(ByVal source As DataFrameBase)
 
             With source
                 m_timeTag = .m_timeTag
@@ -53,7 +57,7 @@ Namespace EE.Phasor
             End Set
         End Property
 
-        Public ReadOnly Property This() As FrameBase
+        Public ReadOnly Property This() As DataFrameBase
             Get
                 Return Me
             End Get
