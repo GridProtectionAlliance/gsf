@@ -596,6 +596,29 @@ Namespace Asp
 
 #End Region
 
+        Public Function HEXtoRGB(ByVal clr As String) As Array
+
+            Dim clrR As String
+            Dim clrG As String
+            Dim clrB As String
+            Dim rgb(2) As String
+
+            clr = Right(clr, Len(clr) - 1)
+            clrR = Left$(clr, 2)
+            clrG = Mid$(clr, 3, 2)
+            clrB = Right$(clr, 2)
+            clr = CLng("&H" & clrB & clrG & clrR)
+            clrB = (clr \ 65536) And &HFF
+            clrG = (clr \ 256) And &HFF
+            clrR = clr And &HFF
+            rgb(0) = clrR
+            rgb(1) = clrG
+            rgb(2) = clrB
+
+            Return rgb
+
+        End Function
+
     End Class
 
 End Namespace
