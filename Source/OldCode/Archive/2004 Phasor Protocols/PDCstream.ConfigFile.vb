@@ -17,7 +17,10 @@
 
 Imports System.IO
 Imports System.Text
+Imports System.Reflection.Assembly
+Imports System.Security.Principal
 Imports TVA.Shared.String
+Imports TVA.Shared.Common
 
 Namespace PDCstream
 
@@ -217,7 +220,80 @@ Namespace PDCstream
             End Get
         End Property
 
+        Public ReadOnly Property OutputContent() As String
+            Get
+                With New StringBuilder
+                    .Append("; File - " & m_configFileName & vbCrLf)
+                    .Append("; Auto-generated on " & Now() & " by TVA DatAWare PDC" & vbCrLf)
+                    .Append(";    Assembly: " & GetShortAssemblyName(GetExecutingAssembly) & vbCrLf)
+                    .Append(";    Compiled: " & File.GetLastWriteTime(GetExecutingAssembly.Location) & vbCrLf)
+                    .Append(";" & vbCrLf)
+                    .Append(";" & vbCrLf)
+                    .Append("; Format:" & vbCrLf)
+                    .Append(";   Each Column in data file is given a bracketed identifier, numbered in the order it" & vbCrLf)
+                    .Append(";   appears in the data file, and identified by data type ( PMU, PDC, or other)" & vbCrLf)
+                    .Append(";     PMU designates column data format from a single PMU" & vbCrLf)
+                    .Append(";     PDC designates column data format from another PDC which is somewhat different from a single PMU" & vbCrLf)
+                    .Append(";   Default gives default values for a processing algorithm in case quantities are omitted" & vbCrLf)
+                    .Append(";   Name= gives the overall station name for print labels" & vbCrLf)
+                    .Append(";   NumberPhasors= :  for PMU data, gives the number of phasors contained in column" & vbCrLf)
+                    .Append(";                     for PDC data, gives the number of PMUs data included in the column" & vbCrLf)
+                    .Append(";                     Note - for PDC data, there will be 2 phasors & 1 freq per PMU" & vbCrLf)
+                    .Append(";   Quantities within the column are listed by PhasorI=, Frequency=, etc" & vbCrLf)
+                    .Append(";   Each quantity has 7 comma separated fields followed by an optional comment" & vbCrLf)
+                    .Append(";" & vbCrLf)
+                    .Append(";   Phasor entry format:  Type, Ratio, Cal Factor, Offset, Shunt, VoltageRef/Class, Label  ;Comments" & vbCrLf)
+                    .Append(";    Type:       Type of measurement, V=voltage, I=current, N=don't care, single ASCII character" & vbCrLf)
+                    .Append(";    Ratio:      PT/CT ratio N:1 where N is a floating point number" & vbCrLf)
+                    .Append(";    Cal Factor: Conversion factor between integer in file and secondary volts, floating point" & vbCrLf)
+                    .Append(";    Offset:     Phase Offset to correct for phase angle measurement errors or differences, floating point" & vbCrLf)
+                    .Append(";    Shunt:      Current- shunt resistence in ohms, or the equivalent ratio for aux CTs, floating point" & vbCrLf)
+                    .Append(";                Voltage- empty, not used" & vbCrLf)
+                    .Append(";    VoltageRef: Current- phasor number (1-10) of voltage phasor to use for power calculation, integer" & vbCrLf)
+                    .Append(";                Voltage- voltage class, standard l-l voltages, 500, 230, 115, etc, integer" & vbCrLf)
+                    .Append(";    Label:      Phasor quantity label for print label, text" & vbCrLf)
+                    .Append(";    Comments:   All text after the semicolon on a line are optional comments not for processing" & vbCrLf)
+                    .Append(";" & vbCrLf)
+                    .Append(";   Voltage Magnitude = MAG(Real,Imaginary) * CalFactor  * PTR    (line-neutral)" & vbCrLf)
+                    .Append(";   Current Magnitude = MAG(Real,Imaginary)  * CalFactor * CTR / Shunt   (phase current)" & vbCrLf)
+                    .Append(";   Phase Angle = ATAN(Imaginary/Real) + Phase Offset   (usually degrees)" & vbCrLf)
+                    .Append(";     Note: Usually phase Offset is 0, but is sometimes required for comparing measurements" & vbCrLf)
+                    .Append(";           from different systems or through transformer banks" & vbCrLf)
+                    .Append(";" & vbCrLf)
+                    .Append(";   Frequency entry format:  scale, offset, dF/dt scale, dF/dt offset, dummy, label  ;Comments" & vbCrLf)
+                    .Append(";   Frequency = Number / scale + offset" & vbCrLf)
+                    .Append(";   dF/dt = Number / (dF/dt scale) + (dF/dt offset)" & vbCrLf)
+                    .Append(";" & vbCrLf)
+                    .Append(";" & vbCrLf)
+
+                    .Append("[DEFAULT]" & vbCrLf)
+                    .Append("PhasorV=" & PhasorDefinition.ConfigFileFormat(DefaultPhasorV) & vbCrLf)
+                    .Append("PhasorI=" & PhasorDefinition.ConfigFileFormat(DefaultPhasorI) & vbCrLf)
+                    .Append("Frequency=" & FrequencyDefinition.ConfigFileFormat(DefaultFrequency) & vbCrLf)
+                    .Append(vbCrLf)
+
+                    .Append("[CONFIG]" & vbCrLf)
+                    .Append("SampleRate=" & m_sampleRate & vbCrLf)
+                    .Append("NumberOfPMUs=" & PMUCount & vbCrLf)
+                    .Append(vbCrLf)
+
+                    For x As Integer = 0 To PMUCount - 1
+                        .Append("[" & Me(x).ID & "]" & vbCrLf)
+                        .Append("Name=" & Me(x).Name & vbCrLf)
+                        .Append("PMU=" & x & vbCrLf)
+                        .Append("NumberPhasors=" & Me(x).Phasors.Length & vbCrLf)
+                        For y As Integer = 0 To Me(x).Phasors.Length - 1
+                            .Append("Phasor" & (y + 1) & "=" & PhasorDefinition.ConfigFileFormat(Me(x).Phasors(y)) & vbCrLf)
+                        Next
+                        .Append("Frequency=" & FrequencyDefinition.ConfigFileFormat(Me(x).Frequency) & vbCrLf)
+                        .Append(vbCrLf)
+                    Next
+
+                    Return .ToString()
+                End With
+            End Get
+        End Property
+
     End Class
 
 End Namespace
-

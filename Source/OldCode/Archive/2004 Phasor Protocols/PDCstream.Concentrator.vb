@@ -17,7 +17,7 @@
 '  at which data data is coming into the concentrator.  DatAWare
 '  allows some flexibility in its polling interval, so if you set
 '  DatAWare to poll and broadcast at a rate of .10 seconds, you
-'  might set the lag time to .20 to make sure you've had time to
+'  might set the lag time to .50 to make sure you've had time to
 '  receive all the data from the reporting servers - this works
 '  since the data coming in is GPS based and should be very close
 '  in time...
@@ -28,6 +28,7 @@ Imports System.Text
 Imports System.Net
 Imports System.Net.Sockets
 Imports TVA.Shared.DateTime
+Imports TVA.Shared.FilePath
 Imports TVA.Services
 
 Namespace PDCstream
@@ -185,7 +186,7 @@ Namespace PDCstream
             Static sentDescriptor As Boolean
             Dim binaryLength As Integer
             Dim x, y, z As Integer
-            Dim packetSent As Boolean
+            'Dim packetSent As Boolean
 
             ' Send a descriptor packet at the top of each minute...
             With DateTime.Now
@@ -240,16 +241,16 @@ Namespace PDCstream
                                         End Try
                                     End If
 
-                                    ' Under normal circumstances, this should be all we need to try to send - so we won't
-                                    ' waste cycles looking for anything else that we'll catch at the next pass...
-                                    packetSent = True
-                                    Exit For
+                                    '' Under normal circumstances, this should be all we need to try to send - so we won't
+                                    '' waste cycles looking for anything else that we'll catch at the next pass...
+                                    'packetSent = True
+                                    'Exit For
                                 End If
                             End With
                         Next
                     End If
                 End With
-                If packetSent Then Exit For
+                'If packetSent Then Exit For
             Next
 
         End Sub
@@ -313,26 +314,14 @@ Namespace PDCstream
 
         Public ReadOnly Property Status() As String Implements IServiceComponent.Status
             Get
-                Dim pastNonPublished As Boolean
+                Dim publishingSample As Long
+                Dim sampleDetail As String
 
                 With New StringBuilder
-                    .Append("  Concentration process is: " & IIf(Enabled, "Enabled", "Disabled") & vbCrLf)
-                    .Append("  Current processing state: " & IIf(Processing, "Executing", "Idle") & vbCrLf)
-                    .Append("    Total process run time: " & SecondsToText(RunTime) & vbCrLf)
-                    .Append("          Discarded points: " & m_dataQueue.DiscardedPoints & vbCrLf)
-                    .Append("         Current base time: " & m_dataQueue.BaseTime.ToString("dd-MMM-yyyy HH:mm:ss.fff") & vbCrLf)
-                    .Append("      Local time deviation: " & m_dataQueue.DistanceFromBaseTime(PDCstream.DataQueue.BaselinedTimestamp(DateTime.Now.ToUniversalTime())) & " seconds" & vbCrLf)
-                    .Append("            Queued samples: " & m_dataQueue.SampleCount & vbCrLf)
-                    .Append("          Defined lag time: " & m_lagTime & " seconds" & vbCrLf)
-                    .Append(" Data publication interval: " & m_processTimer.Interval & " ms" & vbCrLf)
-                    .Append("    Data packets published: " & m_packetsPublished & vbCrLf)
-                    .Append("  Data packet publish rate: " & (m_packetsPublished / RunTime).ToString("0.00") & " samples/sec" & vbCrLf)
-                    .Append("            Broadcast rate: " & (m_bytesBroadcasted * 8 / RunTime / 1024 / 1024).ToString("0.00") & " mbps" & vbCrLf)
-                    .Append("    Total broadcast volume: " & (m_bytesBroadcasted / 1024 / 1024).ToString("0.00") & " Mb" & vbCrLf)
-                    .Append(vbCrLf & "Sample Details: " & vbCrLf & vbCrLf)
+                    Dim pastNonPublished As Boolean
 
                     For x As Integer = 0 To m_dataQueue.SampleCount - 1
-                        .Append("     Sample " & x & " @ " & m_dataQueue(x).Timestamp.ToString("dd-MMM-yyyy HH:mm:ss") & ": ")
+                        .Append(vbCrLf & "     Sample " & x & " @ " & m_dataQueue(x).Timestamp.ToString("dd-MMM-yyyy HH:mm:ss") & ": ")
 
                         If m_dataQueue(x).Published Then
                             .Append("published, awaiting aggregation...")
@@ -341,11 +330,35 @@ Namespace PDCstream
                         Else
                             .Append("publishing...")
                             pastNonPublished = True
+                            publishingSample = m_dataQueue(x).Timestamp.Ticks
                         End If
 
                         .Append(vbCrLf)
-                        .Append(vbCrLf)
                     Next
+
+                    sampleDetail = .ToString
+                End With
+
+                With New StringBuilder
+                    .Append("  Concentration process is: " & IIf(Enabled, "Enabled", "Disabled") & vbCrLf)
+                    .Append("  Current processing state: " & IIf(Processing, "Executing", "Idle") & vbCrLf)
+                    .Append("    Total process run time: " & SecondsToText(RunTime) & vbCrLf)
+                    .Append("          Discarded points: " & m_dataQueue.DiscardedPoints & vbCrLf)
+                    .Append("         Current base time: " & m_dataQueue.BaseTime.ToString("dd-MMM-yyyy HH:mm:ss") & vbCrLf)
+                    .Append("      Queue time deviation: " & m_dataQueue.DistanceFromBaseTime(PDCstream.DataQueue.BaselinedTimestamp(DateTime.Now.ToUniversalTime())) & " seconds" & vbCrLf)
+                    .Append("    Publish time deviation: " & ((DateTime.Now.ToUniversalTime().Ticks - publishingSample) / 10000000L).ToString("0.00") & " seconds" & vbCrLf)
+                    .Append("            Queued samples: " & m_dataQueue.SampleCount & vbCrLf)
+                    .Append("          Defined lag time: " & m_lagTime & " seconds" & vbCrLf)
+                    .Append(" Data publication interval: " & m_processTimer.Interval & " ms" & vbCrLf)
+                    .Append("    Data packets published: " & m_packetsPublished & vbCrLf)
+                    .Append("  Data packet publish rate: " & (m_packetsPublished / RunTime).ToString("0.00") & " samples/sec" & vbCrLf)
+                    .Append("            Broadcast rate: " & (m_bytesBroadcasted * 8 / RunTime / 1024 / 1024).ToString("0.00") & " mbps" & vbCrLf)
+                    .Append("    Total broadcast volume: " & (m_bytesBroadcasted / 1024 / 1024).ToString("0.00") & " Mb" & vbCrLf)
+                    .Append("    Referenced config file: " & TrimFileName(m_configFile.ConfigFileName, 50) & vbCrLf)
+                    .Append("       Defined sample rate: " & m_configFile.SampleRate & vbCrLf)
+                    .Append("        Total defined PMUs: " & m_configFile.PMUCount & vbCrLf)
+                    .Append(vbCrLf & "Current sample details:" & vbCrLf & sampleDetail)
+
 
                     Return .ToString()
                 End With

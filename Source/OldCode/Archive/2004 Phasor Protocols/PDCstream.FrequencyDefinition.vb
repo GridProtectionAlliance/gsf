@@ -15,6 +15,8 @@
 '
 '***********************************************************************
 
+Imports System.Text
+
 Namespace PDCstream
 
     Public Class FrequencyDefinition
@@ -39,6 +41,22 @@ Namespace PDCstream
             If entry.Length > 6 Then Label = Trim(entry(6)) Else Label = configFile.DefaultFrequency.Label
 
         End Sub
+
+        Public Shared ReadOnly Property ConfigFileFormat(ByVal frequency As FrequencyDefinition) As String
+            Get
+                With New StringBuilder
+                    .Append("F," & _
+                        frequency.Scale & "," & _
+                        frequency.Offset & "," & _
+                        frequency.DfDtScale & "," & _
+                        frequency.DfDtOffset & "," & _
+                        frequency.Dummy & "," & _
+                        frequency.Label)
+
+                    Return .ToString()
+                End With
+            End Get
+        End Property
 
     End Class
 
