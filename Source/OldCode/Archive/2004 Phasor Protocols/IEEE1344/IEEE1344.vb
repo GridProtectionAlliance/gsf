@@ -35,6 +35,19 @@ Public Class IEEE1344Listener
 
         MyBase.New()
 
+        LoadAssembly("DundasWinChart")
+        LoadAssembly("TVA.Shared")
+        LoadAssembly("TVA.Threading")
+        LoadAssembly("TVA.VarEval")
+        LoadAssembly("TVA.Config")
+        LoadAssembly("TVA.Forms")
+        LoadAssembly("TVA.Interop")
+        LoadAssembly("TVA.EE")
+        LoadAssembly("TVA.ESO.Ssam")
+        LoadAssembly("TVA.ErrorManagement")
+        LoadAssembly("TVA.Remoting")
+        LoadAssembly("TVA.Services")
+
         'This call is required by the Windows Form Designer.
         InitializeComponent()
 
@@ -755,6 +768,56 @@ Public Class IEEE1344Listener
     End Sub
 
 #End Region
+
+    Private Sub LoadAssembly(ByVal assemblyName As String)
+
+        Static addedResolver As Boolean
+
+        ' Hook into assembly resolve event for current domain so we can load assembly from embedded resource
+        If Not addedResolver Then
+            AddHandler AppDomain.CurrentDomain.AssemblyResolve, AddressOf ResolveAssemblyFromResource
+            addedResolver = True
+        End If
+
+        ' Load the assembly (this will invoke event that will resolve assembly from resource)
+        AppDomain.CurrentDomain.Load(assemblyName)
+
+    End Sub
+
+    Private Function ResolveAssemblyFromResource(ByVal sender As Object, ByVal args As ResolveEventArgs) As [Assembly]
+
+        Static rootNameSpace As String
+        Dim resourceAssembly As [Assembly]
+        Dim shortName As String = args.Name.Split(","c)(0)
+        Dim buffer As Byte()
+
+        ' Get root namespace of executing assembly since all embedded resources will be prefixed with this
+        If rootNameSpace Is Nothing Then
+            rootNameSpace = Me.GetType.AssemblyQualifiedName
+            rootNameSpace = rootNameSpace.Substring(0, rootNameSpace.IndexOf("."c))
+        End If
+
+        ' Loop through all of the resources in the executing assembly
+        For Each name As String In [Assembly].GetExecutingAssembly.GetManifestResourceNames()
+            ' See if the embedded resource name matches assembly we are trying to load
+            If String.Compare(Path.GetFileNameWithoutExtension(name), rootNameSpace & "." & shortName, True) = 0 Then
+                ' If so, load embedded resource assembly into a binary buffer
+                With [Assembly].GetExecutingAssembly.GetManifestResourceStream(name)
+                    buffer = Array.CreateInstance(GetType(Byte), .Length)
+                    .Read(buffer, 0, .Length)
+                    .Close()
+                End With
+
+                ' Load assembly from binary buffer
+                resourceAssembly = [Assembly].Load(buffer)
+
+                Exit For
+            End If
+        Next
+
+        Return resourceAssembly
+
+    End Function
 
     Private Sub IEEE1344Listener_Load(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles MyBase.Load
 
