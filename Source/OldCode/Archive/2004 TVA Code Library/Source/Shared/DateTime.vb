@@ -2,6 +2,7 @@
 ' 06/10/2004 JRC - Added SecondsToText overload to allow custom time names, e.g., 1 Min 2 Secs
 ' 06/10/2004 JRC - Integrated external source for Michael R. Brumm's TimeZone management into TVA.Shared.DateTime "as-is",
 ' for updates and more information, visit: http://www.michaelbrumm.com/simpletimezone.html or contact me@michaelbrumm.com
+' 01/05/2005 JRC - Added BaselinedTimestamp function
 
 Option Explicit On 
 Option Compare Binary
@@ -35,6 +36,19 @@ Namespace [Shared]
             ' This class contains only global functions and is not meant to be instantiated
 
         End Sub
+
+        ' This function removes any milliseconds from a timestamp value to baseline the time at the bottom of the second
+        Public Shared Function BaselinedTimestamp(ByVal timestamp As System.DateTime) As System.DateTime
+
+            With timestamp
+                If .Millisecond = 0 Then
+                    Return timestamp
+                Else
+                    Return New System.DateTime(.Year, .Month, .Day, .Hour, .Minute, .Second, 0)
+                End If
+            End With
+
+        End Function
 
         ' Turns number of given seconds into years/days/hours/minutes string - set second precision to -1 to suppress seconds display
         Public Shared Function SecondsToText(ByVal Seconds As Single, Optional ByVal SecondPrecision As Integer = 0) As String
