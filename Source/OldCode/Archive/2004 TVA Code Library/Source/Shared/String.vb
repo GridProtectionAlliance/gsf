@@ -7,7 +7,9 @@ Imports System.Text
 
 Namespace [Shared]
 
-    ' Common String Functions
+    ''' <summary>
+    ''' Common String Functions
+    ''' </summary>
     Public Class [String]
 
         Private Sub New()
@@ -16,7 +18,10 @@ Namespace [Shared]
 
         End Sub
 
-        ' Does a "fast" concat - System.String.Concat is very slow (http://www.developer.com/net/cplus/article.php/3304901)
+        ''' <summary>
+        ''' Does a "fast" concat - System.String.Concat is very slow (http://www.developer.com/net/cplus/article.php/3304901)
+        ''' <param name="args">String parameters to concatenate</param>
+        ''' </summary>
         Public Shared Function Concat(ByVal ParamArray args As String()) As String
 
             If args Is Nothing Then
