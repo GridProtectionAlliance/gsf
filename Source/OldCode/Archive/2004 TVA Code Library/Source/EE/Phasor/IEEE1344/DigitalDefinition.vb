@@ -21,6 +21,27 @@ Imports TVA.Shared.Bit
 
 Namespace EE.Phasor.IEEE1344
 
+    Public Class DigitalDefinitions
+
+        Inherits CollectionBase
+
+        Friend Sub New()
+        End Sub
+
+        Public Sub Add(ByVal value As DigitalDefinition)
+
+            List.Add(value)
+
+        End Sub
+
+        Default Public ReadOnly Property Item(ByVal index As Integer) As DigitalDefinition
+            Get
+                Return DirectCast(List.Item(index), DigitalDefinition)
+            End Get
+        End Property
+
+    End Class
+
     Public Class DigitalDefinition
 
         Public Const BinaryLength As Integer = 2

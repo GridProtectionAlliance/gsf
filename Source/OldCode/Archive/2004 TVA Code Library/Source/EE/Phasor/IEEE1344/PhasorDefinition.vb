@@ -20,6 +20,27 @@ Imports TVA.Interop
 
 Namespace EE.Phasor.IEEE1344
 
+    Public Class PhasorDefinitions
+
+        Inherits CollectionBase
+
+        Friend Sub New()
+        End Sub
+
+        Public Sub Add(ByVal value As PhasorDefinition)
+
+            List.Add(value)
+
+        End Sub
+
+        Default Public ReadOnly Property Item(ByVal index As Integer) As PhasorDefinition
+            Get
+                Return DirectCast(List.Item(index), PhasorDefinition)
+            End Get
+        End Property
+
+    End Class
+
     Public Class PhasorDefinition
 
         Public Const BinaryLength As Integer = 4

@@ -30,8 +30,8 @@ Namespace EE.Phasor.IEEE1344
 
         Protected m_stationName As String
         Protected m_pmuIDCode As Int64
-        Protected m_phasors As ArrayList
-        Protected m_digitals As ArrayList
+        Protected m_phasors As PhasorDefinitions
+        Protected m_digitals As DigitalDefinitions
         Protected m_freqFlags As Int16
         Protected m_period As Int16
 
@@ -42,8 +42,8 @@ Namespace EE.Phasor.IEEE1344
             MyBase.New()
             SetFrameType(PMUFrameType.ConfigurationFrame)
 
-            m_phasors = New ArrayList
-            m_digitals = New ArrayList
+            m_phasors = New PhasorDefinitions
+            m_digitals = New DigitalDefinitions
 
         End Sub
 
@@ -82,6 +82,18 @@ Namespace EE.Phasor.IEEE1344
             m_period = EndianOrder.ReverseToInt16(binaryImage, freqOffset + 2)
 
         End Sub
+
+        Public ReadOnly Property Phasors() As PhasorDefinitions
+            Get
+                Return m_phasors
+            End Get
+        End Property
+
+        Public ReadOnly Property Digitals() As DigitalDefinitions
+            Get
+                Return m_digitals
+            End Get
+        End Property
 
         Public Overridable Property IsFirstFrame() As Boolean
             Get
