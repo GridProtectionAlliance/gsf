@@ -81,78 +81,6 @@
         }
         "Entry"
         {
-        "MsmKey" = "8:_2E4F4483C2064696B8434D39A958071B"
-        "OwnerKey" = "8:_132E6AF97DB2AE46B9819AC665C64071"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_2E4F4483C2064696B8434D39A958071B"
-        "OwnerKey" = "8:_6DF70A975146474488FBBB78682C8337"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_2E4F4483C2064696B8434D39A958071B"
-        "OwnerKey" = "8:_5066C8A47EF84F65AD77BAFF41EEFA9E"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_2E4F4483C2064696B8434D39A958071B"
-        "OwnerKey" = "8:_AA35199024AD89B4CA930B47CE67063A"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_2E4F4483C2064696B8434D39A958071B"
-        "OwnerKey" = "8:_F4892AF2209A520CE20F0AD098A2342F"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_2E4F4483C2064696B8434D39A958071B"
-        "OwnerKey" = "8:_EA7C13A5D54FC30E80835C08EDD20AD5"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_2E4F4483C2064696B8434D39A958071B"
-        "OwnerKey" = "8:_69506A8C643C34D80D649B4A1682C58E"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_2E4F4483C2064696B8434D39A958071B"
-        "OwnerKey" = "8:_007A426C6560A0B09FE3211102158035"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_2E4F4483C2064696B8434D39A958071B"
-        "OwnerKey" = "8:_8313C3DF538ED83288CE9D2AE4A46D2E"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_2E4F4483C2064696B8434D39A958071B"
-        "OwnerKey" = "8:_2843E789983405E9936F6B2FDCB94D57"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_2E4F4483C2064696B8434D39A958071B"
-        "OwnerKey" = "8:_B8CCA926486A170C9BDCD00DD0178B32"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_2E4F4483C2064696B8434D39A958071B"
-        "OwnerKey" = "8:_4E47203203704011A25804DAE094730C"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
         "MsmKey" = "8:_4E47203203704011A25804DAE094730C"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
@@ -239,6 +167,78 @@
         {
         "MsmKey" = "8:_B8CCA926486A170C9BDCD00DD0178B32"
         "OwnerKey" = "8:_69506A8C643C34D80D649B4A1682C58E"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_C6BCF1071B7748D9A294463A150735DA"
+        "OwnerKey" = "8:_132E6AF97DB2AE46B9819AC665C64071"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_C6BCF1071B7748D9A294463A150735DA"
+        "OwnerKey" = "8:_6DF70A975146474488FBBB78682C8337"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_C6BCF1071B7748D9A294463A150735DA"
+        "OwnerKey" = "8:_5066C8A47EF84F65AD77BAFF41EEFA9E"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_C6BCF1071B7748D9A294463A150735DA"
+        "OwnerKey" = "8:_AA35199024AD89B4CA930B47CE67063A"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_C6BCF1071B7748D9A294463A150735DA"
+        "OwnerKey" = "8:_F4892AF2209A520CE20F0AD098A2342F"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_C6BCF1071B7748D9A294463A150735DA"
+        "OwnerKey" = "8:_EA7C13A5D54FC30E80835C08EDD20AD5"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_C6BCF1071B7748D9A294463A150735DA"
+        "OwnerKey" = "8:_69506A8C643C34D80D649B4A1682C58E"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_C6BCF1071B7748D9A294463A150735DA"
+        "OwnerKey" = "8:_007A426C6560A0B09FE3211102158035"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_C6BCF1071B7748D9A294463A150735DA"
+        "OwnerKey" = "8:_8313C3DF538ED83288CE9D2AE4A46D2E"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_C6BCF1071B7748D9A294463A150735DA"
+        "OwnerKey" = "8:_2843E789983405E9936F6B2FDCB94D57"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_C6BCF1071B7748D9A294463A150735DA"
+        "OwnerKey" = "8:_B8CCA926486A170C9BDCD00DD0178B32"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_C6BCF1071B7748D9A294463A150735DA"
+        "OwnerKey" = "8:_4E47203203704011A25804DAE094730C"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -722,7 +722,7 @@
             }
             "{58C0ADA3-3CEA-43BD-A3B3-2EA121BC8217}:_4DA722C4311347C8A132A40FCECAF80D"
             {
-            "DefaultLocation" = "8:D:\\apps\\[ProductName]"
+            "DefaultLocation" = "8:[ProgramFilesFolder][Manufacturer]\\[ProductName]"
             "Name" = "8:#1925"
             "AlwaysCreate" = "11:FALSE"
             "Condition" = "8:"
@@ -759,7 +759,7 @@
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:DatAWare Phasor Data Concentrator"
         "ProductCode" = "8:{AF007B4A-DE72-41BF-9F0F-BF0CA6C06F41}"
-        "PackageCode" = "8:{0272F474-6EEE-4066-83E0-4991AB19B22F}"
+        "PackageCode" = "8:{2722EC2A-7941-4A1A-B0D0-F9A23736980B}"
         "UpgradeCode" = "8:{489BBC38-0C27-4287-A7F0-EB6DB84F1524}"
         "RestartWWWService" = "11:FALSE"
         "RemovePreviousVersions" = "11:FALSE"
@@ -1270,7 +1270,7 @@
         }
         "MergeModule"
         {
-            "{35A69C6E-5BA4-440D-803D-762B59A45393}:_2E4F4483C2064696B8434D39A958071B"
+            "{35A69C6E-5BA4-440D-803D-762B59A45393}:_C6BCF1071B7748D9A294463A150735DA"
             {
             "UseDynamicProperties" = "11:TRUE"
             "IsDependency" = "11:TRUE"

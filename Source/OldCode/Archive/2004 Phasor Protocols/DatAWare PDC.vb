@@ -27,16 +27,15 @@ Imports TVA.ESO.Ssam
 Imports TVA.ESO.Ssam.SsamEntityTypeID
 Imports TVA.ESO.Ssam.SsamEventTypeID
 Imports TVA.Services
-Imports TVA.EE.Phasor.PDCstream
 
 Public Class DatAWarePDC
 
     Inherits System.ServiceProcess.ServiceBase
 
-    Public WithEvents Concentrator As Concentrator
-    Public EventQueue As EventQueue
-    Public Listeners As PDCListener()
-    Public Aggregator As Aggregator
+    Public Concentrator As PDCstream.Concentrator
+    Public EventQueue As DatAWare.EventQueue
+    Public Listeners As DatAWare.Listener()
+    Public Aggregator As DatAWare.Aggregator
 
     Friend Const PasswordKey As String = "B1864405-59C0-4157-AB38-0417AFDBD395"
 
@@ -195,30 +194,26 @@ Public Class DatAWarePDC
         InitializeComponent()
 
         ' Make sure status log variables exist for this service
-        Variables.Create("DatAWare.PDC.ConfigFile", ServiceHelper.AppPath & "TVA_PDC.ini", VariableType.Text, "PDC Configuration File used by the DatAWare Phasor Data Concentrator")
-        Variables.Create("DatAWare.PDC.LagTime", 2.0#, VariableType.Float, "Maximum time deviation, in seconds, tolerated before data packet is published (i.e., how long to wait for data before broadcast)")
-        Variables.Create("DatAWare.PDC.HighSampleCount", 5, VariableType.Int, "High warning limit for the concentrator sample count, warning raised when unpublished sample count exceeds this value.  Too many queued samples means concentrator is falling behind.")
-        Variables.Create("DatAWare.PDC.BroadcastPoints.Total", 1, VariableType.Int, "Total number of PDCstream UDP broadcast points")
-        Variables.Create("DatAWare.PDC.BroadcastPoint0.IP", "152.85.255.255", VariableType.Text, "IP used for this broadcast point - can be single IP or you can use 255.255 for sub-net suffix for broadcast (e.g., 152.85.255.255)")
-        Variables.Create("DatAWare.PDC.BroadcastPoint0.Port", 3060, VariableType.Int, "Port used for this broadcast point")
-        Variables.Create("DatAWare.PDC.AggregatedArchive.Server", "pmudw", VariableType.Text, "DatAWare server name used to archive permanent aggregated PMU data")
-        Variables.Create("DatAWare.PDC.AggregatedArchive.PlantCode", "T2", VariableType.Text, "Plant code of DatAWare server used to archive permanent aggregated PMU data")
-        Variables.Create("DatAWare.PDC.AggregatedArchive.TimeZone", "Central Standard Time", VariableType.Text, "Timezone of DatAWare server used to archive permanent aggregated PMU data")
-        Variables.Create("DatAWare.Listeners.Total", 1, VariableType.Int, "Total number of DatAWare listeners to establish")
-        Variables.Create("DatAWare.Listener0.Port", 8500, VariableType.Int, "Port to establish this listener on")
-        Variables.Create("DatAWare.Listener0.Protocol", "UDP", VariableType.Text, "IP protocol to listen on (can be UDP or TCP)")
-        Variables.Create("DatAWare.Listener0.Server", "152.85.98.5", VariableType.Text, "DatAWare server name to associate this listener with")
-        Variables.Create("DatAWare.Listener0.PlantCode", "PM", VariableType.Text, "Plant code of DatAWare server this listener is associated with")
-        Variables.Create("DatAWare.Listener0.TimeZone", "Eastern Standard Time", VariableType.Text, "Timezone of DatAWare server this listener is associated with")
-        Variables.Create("DatAWare.Listener0.UserName", "DatAWarePDC", VariableType.Text, "Username used to connect to DatAWare server this listener is associated with")
-        Variables.Create("DatAWare.Listener0.Password", "4kqd4WHPevelrySArtKLlp4nV5ykh90Xe3EuJotBg1Y=", VariableType.Text, "Encrypted password used to connect to DatAWare server this listener is associated with - use GenPassword to create password")
-        Variables.Create("DatAWare.Listener0.PacketSize", 32768, VariableType.Int, "UDP packet buffer size (only used when protocol is set to UDP)")
         Variables.Create("StatusLog.Template", ServiceHelper.AppPath & "StatusLog.template", VariableType.Text, "Define the status log template database", 1)
         Variables.Create("StatusLog.ConnectString", "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=" & ServiceHelper.AppPath & "StatusLog.mdb", VariableType.Text, "Define the connection string for the local status log database", 2)
         Variables.Create("StatusLog.MaxEntries", 15000, VariableType.Int, "Define the maximum number of entries for the status log database", 3)
         Variables.Create("StatusLog.BackupsToKeep", 5, VariableType.Int, "Define the maximum number of status log database backups to keep", 4)
         Variables.Create("StatusLog.ExceptionThreshold", 10, VariableType.Int, "Maximum number of exceptions to tolerate before recreating the status log database", 5)
         Variables.Create("Ssam.DatAWarePDCHeartbeat", "PR_DATAWAREPDC_HEARTBEAT", VariableType.Text, "SSAM Entity ID: SSAM DatAWare PDC Heartbeat Process - Heartbeat sent every 1 minute")
+        Variables.Create("DatAWare.Listeners.Total", 1, VariableType.Int, "Total number of DatAWare listeners to eastablish")
+        Variables.Create("DatAWare.Listener0.Port", 8500, VariableType.Int, "Port to establish this listener on")
+        Variables.Create("DatAWare.Listener0.Server", "152.85.70.76", VariableType.Text, "DatAWare server name to associate this listener with")
+        Variables.Create("DatAWare.Listener0.PlantCode", "PM", VariableType.Text, "Plant code of DatAWare server this listener is associated with")
+        Variables.Create("DatAWare.Listener0.TimeZone", "Eastern Standard Time", VariableType.Text, "Timezone of DatAWare server this listener is associated with")
+        Variables.Create("DatAWare.Listener0.UserName", "DatAWarePDC", VariableType.Text, "Username used to connect to DatAWare server this listener is associated with")
+        Variables.Create("DatAWare.Listener0.Password", "4kqd4WHPevelrySArtKLlp4nV5ykh90Xe3EuJotBg1Y=", VariableType.Text, "Encrypted password used to connect to DatAWare server this listener is associated with - use GenPassword to create password")
+        Variables.Create("DatAWare.PDC.ConfigFile", ServiceHelper.AppPath & "TVA_PDC.ini", VariableType.Text, "PDC Configuration File used by the DatAWare Phasor Data Concentrator")
+        Variables.Create("DatAWare.PDC.BroadcastPoints.Total", 1, VariableType.Int, "Total number of PDCstream UDP broadcast points")
+        Variables.Create("DatAWare.PDC.BroadcastPoint0.IP", "152.85.255.255", VariableType.Text, "IP used for this broadcast point - can be single IP or you can use 255.255 for sub-net suffix for broadcast (e.g., 152.85.255.255)")
+        Variables.Create("DatAWare.PDC.BroadcastPoint0.Port", 3060, VariableType.Int, "Port used for this broadcast point")
+        Variables.Create("DatAWare.PDC.AggregatedArchive.Server", "pmudw", VariableType.Text, "DatAWare server name used to archive permanent aggregated PMU data")
+        Variables.Create("DatAWare.PDC.AggregatedArchive.PlantCode", "T2", VariableType.Text, "Plant code of DatAWare server used to archive permanent aggregated PMU data")
+        Variables.Create("DatAWare.PDC.AggregatedArchive.TimeZone", "Central Standard Time", VariableType.Text, "Timezone of DatAWare server used to archive permanent aggregated PMU data")
 
         CreateNewStatusLog()
         StatusLog.ConnectString = Variables("StatusLog.ConnectString")
@@ -407,56 +402,7 @@ Public Class DatAWarePDC
 
 #Region " DatAWare PDC Service Event Code "
 
-    Private Sub ServiceHelper_OnStart(ByVal args() As String) ' Handles ServiceHelper.OnStart
-
-        ' Define UDP broadcast end-points
-        Dim broadcastIPs As IPEndPoint() = Array.CreateInstance(GetType(IPEndPoint), Variables("DatAWare.PDC.BroadcastPoints.Total"))
-
-        For x As Integer = 0 To broadcastIPs.Length - 1
-            broadcastIPs(x) = New IPEndPoint(IPAddress.Parse(Variables("DatAWare.PDC.BroadcastPoint" & x & ".IP")), Variables("DatAWare.PDC.BroadcastPoint" & x & ".Port"))
-        Next
-
-        ' Create an instance of the PDC concentrator
-        Concentrator = New Concentrator(Me, Variables("DatAWare.PDC.ConfigFile"), Variables("DatAWare.PDC.LagTime"), broadcastIPs)
-
-        ' Create an instance of the DatAWare event queue
-        EventQueue = New EventQueue(Me)
-
-        ' Create a new PMU data aggregator
-        Aggregator = New Aggregator(Me)
-
-        ' Register these service components
-        With ServiceHelper.Components
-            .Add(StatusLog)
-            .Add(SsamLogger)
-            .Add(Concentrator)
-            .Add(EventQueue)
-            .Add(Aggregator)
-        End With
-
-        Listeners = Array.CreateInstance(GetType(PDCListener), Variables("DatAWare.Listeners.Total"))
-
-        For x As Integer = 0 To Listeners.Length - 1
-            ' Define the listener on the specified port associated with the specified DatAWare server
-            Listeners(x) = New PDCListener(Me, _
-                IIf(String.Compare(Trim(Variables("DatAWare.Listener" & x & ".Protocol")), "UDP", True) = 0, _
-                    DatAWare.Listener.NetworkProtocol.UDP, _
-                    DatAWare.Listener.NetworkProtocol.TCP), _
-                Variables("DatAWare.Listener" & x & ".Port"), _
-                Variables("DatAWare.Listener" & x & ".Server"), _
-                Variables("DatAWare.Listener" & x & ".PlantCode"), _
-                Variables("DatAWare.Listener" & x & ".TimeZone"), _
-                Variables("DatAWare.Listener" & x & ".UserName"), _
-                Decrypt(Variables("DatAWare.Listener" & x & ".Password"), PasswordKey, EncryptLevel.Level4), _
-                Variables("DatAWare.Listener" & x & ".PacketSize"))
-
-            ' Register the listener component
-            ServiceHelper.Components.Add(Listeners(x))
-
-            ' Load point list from associated DatAWare server.  Note that this step is mission critical - we can't
-            ' start broadcasting and archiving if we don't get a point list from the DatAWare server...
-            EventQueue.RefreshPointList(Listeners(x))
-        Next
+    Private Sub ServiceHelper_OnStart(ByVal args() As String) Handles ServiceHelper.OnStart
 
         ' Start the DatAWare listeners...
         For x As Integer = 0 To Listeners.Length - 1
@@ -474,59 +420,48 @@ Public Class DatAWarePDC
 
     End Sub
 
-    Private Sub Concentrator_SamplePublished(ByVal sample As DataSample) Handles Concentrator.SamplePublished
-
-        ' TODO: Once a sample is published, we should pass it along to the aggregator for aggregation and archival
-
-        'With New Text.StringBuilder
-        '    Dim row As PDCstream.DescriptorPacket
-
-        '    .Append("Sample @ " & sample.Timestamp & " rows:" & vbCrLf)
-        '    For x As Integer = 0 To sample.Rows.Length - 1
-        '        .Append("  " & x.ToString.PadLeft(2, "0"c) & ": ")
-        '        For y As Integer = 0 To sample.Rows(x).Cells.Length - 1
-        '            If y > 0 Then .Append(", ")
-        '            .Append(sample.Rows(x).Cells(y).FrequencyValue.ScaledFrequency.ToString("00.0000"))
-        '        Next
-        '        .Append(vbCrLf)
-        '    Next
-
-        '    UpdateStatus(.ToString)
-        'End With
-
-    End Sub
-
-    Private Sub Concentrator_UnpublishedSamples(ByVal total As Integer) Handles Concentrator.UnpublishedSamples
-
-        Static highSampleCount As Integer = Variables("DatAWare.PDC.HighSampleCount")
-        Static lastWarning As Long
-        Static warningState As Boolean
-
-        ' You should never have very many unpublished samples queued up - each sample represents one second of data,
-        ' so the total number of unpublished samples equals the number of seconds the PDC is behind real-time...
-        If total > highSampleCount Then
-            ' Don't send any warnings more than every 30 seconds
-            If Not warningState Or (DateTime.Now.Ticks - lastWarning) / 10000000L > 30 Then
-                UpdateStatus("WARNING: There are " & total & " unpublished samples in the queue, real-time stream could be falling behind...", False, EventLogEntryType.Warning)
-                lastWarning = DateTime.Now.Ticks
-            End If
-            warningState = True
-        Else
-            If warningState Then
-                UpdateStatus("INFO: Warning state terminated, there are now only " & total & " unpublished samples in the queue...")
-            End If
-            warningState = False
-        End If
-
-    End Sub
-
     Private Sub ServiceHelper_ExecuteServiceProcess(ByVal ProcessSchedule As TVA.Services.ScheduleType, ByVal ScheduledTime As System.TimeSpan, ByVal Client As TVA.Remoting.LocalClient, ByVal UserData As Object) Handles ServiceHelper.ExecuteServiceProcess
 
         ' Execute primary service process
-        ServiceHelper_OnStart(Nothing)
-
         'primaryProcess.ExecuteProcess(UserData)
+
+        ' Define UDP broadcast end-points
+        Dim broadcastIPs As IPEndPoint() = Array.CreateInstance(GetType(IPEndPoint), Variables("DatAWare.PDC.BroadcastPoints.Total"))
+
+        For x As Integer = 0 To broadcastIPs.Length - 1
+            broadcastIPs(x) = New IPEndPoint(IPAddress.Parse(Variables("DatAWare.PDC.BroadcastPoint" & x & ".IP")), Variables("DatAWare.PDC.BroadcastPoint" & x & ".Port"))
+        Next
+
+        ' Create an instance of the PDC concentrator
+        Concentrator = New PDCstream.Concentrator(Me, Variables("DatAWare.PDC.ConfigFile"), broadcastIPs)
+
+        ' Create an instance of the DatAWare event queue
+        EventQueue = New DatAWare.EventQueue(Me)
+
         ' Create the DatAware network packet listeners
+        Listeners = Array.CreateInstance(GetType(DatAWare.Listener), Variables("DatAWare.Listeners.Total"))
+
+        For x As Integer = 0 To Listeners.Length - 1
+            Listeners(x) = New DatAWare.Listener(Me, Variables("DatAWare.Listener" & x & ".Port"), Variables("DatAWare.Listener" & x & ".Server"), Variables("DatAWare.Listener" & x & ".PlantCode"), Variables("DatAWare.Listener" & x & ".TimeZone"))
+            EventQueue.DefinePointList(Listeners(x).Connection, Variables("DatAWare.Listener" & x & ".UserName"), Decrypt(Variables("DatAWare.Listener" & x & ".Password"), PasswordKey, EncryptLevel.Level4))
+        Next
+
+        ' Create a new PMU data aggregator
+        Aggregator = New DatAWare.Aggregator(Me, Concentrator)
+
+        ' Register the service components
+        With ServiceHelper.Components
+            .Add(StatusLog)
+            .Add(SsamLogger)
+            .Add(Concentrator)
+            .Add(EventQueue)
+            For x As Integer = 0 To Listeners.Length - 1
+                .Add(Listeners(x))
+            Next
+            .Add(Aggregator)
+        End With
+
+        ServiceHelper_OnStart(Nothing)
 
     End Sub
 
