@@ -71,25 +71,258 @@ Namespace Asp
 
         End Function
 
+#Region "Common function for creating client-side script"
+
+        Private Enum ScriptCode As Integer
+
+            Focus
+            DefaultButton
+            Show
+            ShowDialog
+            ShowPopup
+            Close
+            MsgBox
+            Refresh
+            Maximize
+            Minimize
+            RunClientExe
+
+        End Enum
+
+        Private Shared Function CreateClientSideScript(ByVal Code As ScriptCode) As String
+
+            Select Case Code
+                Case ScriptCode.Focus
+                    'Client-side script for Focus.
+                    With New StringBuilder
+                        .Append("<script language=""javascript"">" & vbCrLf)
+                        .Append("   function Focus(strControlId)" & vbCrLf)
+                        .Append("   {" & vbCrLf)
+                        .Append("       if (document.getElementById(strControlId) != null)" & vbCrLf)
+                        .Append("       {" & vbCrLf)
+                        .Append("           document.getElementById(strControlId).focus();" & vbCrLf)
+                        .Append("       }" & vbCrLf)
+                        .Append("   }" & vbCrLf)
+                        .Append("</script>" & vbCrLf)
+
+                        Return .ToString()
+                    End With
+                Case ScriptCode.DefaultButton
+                    'Client-side script for DefaultButton.
+                    With New StringBuilder
+                        .Append("<script language=""javascript"">" & vbCrLf)
+                        .Append("   function DefaultButton(strControlId)" & vbCrLf)
+                        .Append("   {" & vbCrLf)
+                        .Append("       if (event.keyCode == 13)" & vbCrLf)
+                        .Append("       {" & vbCrLf)
+                        .Append("           event.returnValue = false;" & vbCrLf)
+                        .Append("           event.cancel = true;" & vbCrLf)
+                        .Append("           if (document.getElementById(strControlId) != null)" & vbCrLf)
+                        .Append("           {" & vbCrLf)
+                        .Append("               document.getElementById(strControlId).click();" & vbCrLf)
+                        .Append("           }" & vbCrLf)
+                        .Append("       }" & vbCrLf)
+                        .Append("   }" & vbCrLf)
+                        .Append("</script>" & vbCrLf)
+
+                        Return .ToString()
+                    End With
+                Case ScriptCode.Show
+                    'Client-side script for Show.
+                    With New StringBuilder
+                        .Append("<script language=""javascript"">" & vbCrLf)
+                        .Append("   function Show(strUrl, intHeight, intWidth, intLeft, intTop, intCenter, intHelp, intResizable, intStatus)" & vbCrLf)
+                        .Append("   {" & vbCrLf)
+                        .Append("       window.showModelessDialog(strUrl, window.self,'dialogWidth:' + intWidth + 'px;dialogHeight:' + intHeight + 'px;left:' + intLeft + ';top:' + intTop + ';center:' + intCenter + ';help:' + intHelp + ';resizable:' + intResizable + ';status:' + intStatus);" & vbCrLf)
+                        .Append("       return false;" & vbCrLf)
+                        .Append("   }" & vbCrLf)
+                        .Append("</script>" & vbCrLf)
+
+                        Return .ToString()
+                    End With
+                Case ScriptCode.ShowDialog
+                    'Client-side script for ShowDialog.
+                    With New StringBuilder
+                        .Append("<script language=""javascript"">" & vbCrLf)
+                        .Append("   function ShowDialog(strUrl, strResultHolderId, intHeight, intWidth, intLeft, intTop, intCenter, intHelp, intResizable, intStatus)" & vbCrLf)
+                        .Append("   {" & vbCrLf)
+                        .Append("       strReturnValue = window.showModalDialog(strUrl, window.self,'dialogWidth:' + intWidth + 'px;dialogHeight:' + intHeight + 'px;left:' + intLeft + ';top:' + intTop + ';center:' + intCenter + ';help:' + intHelp + ';resizable:' + intResizable + ';status:' + intStatus);" & vbCrLf)
+                        .Append("       if (strReturnValue != null)" & vbCrLf)
+                        .Append("       {" & vbCrLf)
+                        .Append("           if ((strResultHolderId != null) && (document.getElementById(strResultHolderId) != null))" & vbCrLf)
+                        .Append("           {" & vbCrLf)
+                        .Append("               document.getElementById(strResultHolderId).value = strReturnValue;" & vbCrLf)
+                        .Append("               return false;" & vbCrLf)
+                        .Append("           }" & vbCrLf)
+                        .Append("           else" & vbCrLf)
+                        .Append("           {" & vbCrLf)
+                        .Append("               return true;" & vbCrLf)
+                        .Append("           }" & vbCrLf)
+                        .Append("       }" & vbCrLf)
+                        .Append("       else" & vbCrLf)
+                        .Append("       {" & vbCrLf)
+                        .Append("           return false;" & vbCrLf)
+                        .Append("       }" & vbCrLf)
+                        .Append("   }" & vbCrLf)
+                        .Append("</script>" & vbCrLf)
+
+                        Return .ToString()
+                    End With
+                Case ScriptCode.ShowPopup
+                    'Client-side script for ShowPopup.
+                    With New StringBuilder
+                        .Append("<script language=""javascript"">" & vbCrLf)
+                        .Append("   function ShowPopup(strUrl, intHeight, intWidth, intLeft, intTop, intCenter, intResizable, intScrollbars, intToolbar, intMenubar, intLocation, intStatus, intDirectories)" & vbCrLf)
+                        .Append("   {" & vbCrLf)
+                        .Append("       reSpecialCharacters = /([^a-zA-Z0-9\s])/gi;" & vbCrLf)
+                        .Append("       strPopupName = strUrl.replace(reSpecialCharacters, '');" & vbCrLf)
+                        .Append("       if (intCenter)" & vbCrLf)
+                        .Append("       {" & vbCrLf)
+                        .Append("           objPopup = window.open(strUrl, strPopupName, 'height=' + intHeight + ',width=' + intWidth + ',top=' + ((screen.availHeight / 2) - (intHeight / 2)) + ',left=' + ((screen.availWidth / 2) - (intWidth / 2)) + ',resizable=' + intResizable + ',scrollbars=' + intScrollbars + ',toolbar=' + intToolbar + ',menubar=' + intMenubar + ',location=' + intLocation + ',status=' + intStatus + ',directories=' + intDirectories);" & vbCrLf)
+                        .Append("       }" & vbCrLf)
+                        .Append("       else" & vbCrLf)
+                        .Append("       {" & vbCrLf)
+                        .Append("            objPopup = window.open(strUrl, strPopupName, 'height=' + intHeight + ',width=' + intWidth + ',top=' + intTop + ',left=' + intLeft + ',resizable=' + intResizable + ',scrollbars=' + intScrollbars + ',toolbar=' + intToolbar + ',menubar=' + intMenubar + ',location=' + intLocation + ',status=' + intStatus + ',directories=' + intDirectories);" & vbCrLf)
+                        .Append("       }" & vbCrLf)
+                        .Append("       objPopup.focus();" & vbCrLf)
+                        .Append("       return false;" & vbCrLf)
+                        .Append("   }" & vbCrLf)
+                        .Append("</script>" & vbCrLf)
+
+                        Return .ToString()
+                    End With
+                Case ScriptCode.Close
+                    'Client-side script for Close.
+                    With New StringBuilder
+                        .Append("<script language=""javascript"">" & vbCrLf)
+                        .Append("   function Close(strReturnValue)" & vbCrLf)
+                        .Append("   {" & vbCrLf)
+                        .Append("       if (strReturnValue == '')" & vbCrLf)
+                        .Append("       {" & vbCrLf)
+                        .Append("           strReturnValue = null;" & vbCrLf)
+                        .Append("       }" & vbCrLf)
+                        .Append("       window.returnValue = strReturnValue;" & vbCrLf)
+                        .Append("       window.close();" & vbCrLf)
+                        .Append("       return false;" & vbCrLf)
+                        .Append("   }" & vbCrLf)
+                        .Append("</script>" & vbCrLf)
+
+                        Return .ToString()
+                    End With
+                Case ScriptCode.MsgBox
+                    'Client-side script for MsgBox.
+                    With New StringBuilder
+                        .Append("<script language=""vbscript"">" & vbCrLf)
+                        .Append("   Function ShowMsgBox(strPrompt, strTitle, intButtons, bolDoPostBack)" & vbCrLf)
+                        .Append("       intResult = MsgBox(strPrompt, intButtons ,strTitle)" & vbCrLf)
+                        .Append("       If bolDoPostBack Then" & vbCrLf)
+                        .Append("           If (intResult = vbOK) Or (intResult = vbRetry) Or (intResult = vbYes) Then" & vbCrLf)
+                        .Append("               ShowMsgBox = True" & vbCrLf)
+                        .Append("           Else" & vbCrLf)
+                        .Append("               ShowMsgBox = False" & vbCrLf)
+                        .Append("           End If" & vbCrLf)
+                        .Append("       Else" & vbCrLf)
+                        .Append("           ShowMsgBox = False" & vbCrLf)
+                        .Append("       End If" & vbCrLf)
+                        .Append("   End Function" & vbCrLf)
+                        .Append("</script>" & vbCrLf)
+
+                        Return .ToString()
+                    End With
+                Case ScriptCode.Refresh
+                    'Client-side script for Refresh.
+                    With New StringBuilder
+                        .Append("<script language=""javascript"">" & vbCrLf)
+                        .Append("   function Refresh()" & vbCrLf)
+                        .Append("   {" & vbCrLf)
+                        .Append("       window.location.href = unescape(window.location.pathname);" & vbCrLf)
+                        .Append("       return false;" & vbCrLf)
+                        .Append("   }" & vbCrLf)
+                        .Append("</script>" & vbCrLf)
+
+                        Return .ToString()
+                    End With
+                Case ScriptCode.Maximize
+                    'Client-side script for Maximize.
+                    With New StringBuilder
+                        .Append("<script language=""javascript"">" & vbCrLf)
+                        .Append("   function Maximize()" & vbCrLf)
+                        .Append("   {" & vbCrLf)
+                        .Append("       window.moveTo(0, 0);" & vbCrLf)
+                        .Append("       window.resizeTo(window.screen.availWidth, window.screen.availHeight);" & vbCrLf)
+                        .Append("       return false;" & vbCrLf)
+                        .Append("   }" & vbCrLf)
+                        .Append("</script>" & vbCrLf)
+
+                        Return .ToString()
+                    End With
+                Case ScriptCode.Minimize
+                    'Client-side script for Minimize.
+                    With New StringBuilder
+                        .Append("<script language=""javascript"">" & vbCrLf)
+                        .Append("   function Minimize()" & vbCrLf)
+                        .Append("   {" & vbCrLf)
+                        .Append("       window.blur();" & vbCrLf)
+                        .Append("       return false;" & vbCrLf)
+                        .Append("   }" & vbCrLf)
+                        .Append("</script>" & vbCrLf)
+
+                        Return .ToString()
+                    End With
+                Case ScriptCode.RunClientExe
+                    'Client-side script for RunClientExe.
+                    With New StringBuilder
+                        .Append("<script language=""vbscript"">" & vbCrLf)
+                        .Append("   Function RunClientExe(strExeToRun)" & vbCrLf)
+                        .Append("       On Error Resume Next" & vbCrLf)
+                        .Append("       Set oShell = CreateObject(""WScript.Shell"")" & vbCrLf)
+                        .Append("       intReturnCode = oShell.Run(strExeToRun)" & vbCrLf)
+                        .Append("       Set oShell = Nothing" & vbCrLf)
+                        .Append("       If Err.number <> 0 Then" & vbCrLf)
+                        .Append("           intResult = MsgBox(""Failed to execute "" & strExeToRun & ""."", 16, ""RunClientExe"")" & vbCrLf)
+                        .Append("           RunClientExe = True" & vbCrLf)
+                        .Append("       Else" & vbCrLf)
+                        .Append("           RunClientExe = False" & vbCrLf)
+                        .Append("       End If" & vbCrLf)
+                        .Append("   End Function" & vbCrLf)
+                        .Append("</script>" & vbCrLf)
+
+                        Return .ToString()
+                    End With
+            End Select
+
+        End Function
+
+#End Region
+
+#Region "Common fuction to hookup a control to client-side script."
+
+        Private Shared Sub HookupScriptToControl(ByVal Control As System.Web.UI.Control, ByVal Script As String, Optional ByVal Attribute As String = "OnClick")
+
+            Select Case Control.GetType.ToString()
+                Case "System.Web.UI.WebControls.Button"
+                    CType(Control, System.Web.UI.WebControls.Button).Attributes.Add(Attribute, Script)
+                Case "System.Web.UI.WebControls.LinkButton"
+                    CType(Control, System.Web.UI.WebControls.LinkButton).Attributes.Add(Attribute, Script)
+                Case "System.Web.UI.WebControls.ImageButton"
+                    CType(Control, System.Web.UI.WebControls.ImageButton).Attributes.Add(Attribute, Script)
+                Case "System.Web.UI.WebControls.TextBox"
+                    CType(Control, System.Web.UI.WebControls.TextBox).Attributes.Add(Attribute, Script)
+                Case "System.Web.UI.WebControls.Image"
+                    CType(Control, System.Web.UI.WebControls.Image).Attributes.Add(Attribute, Script)
+            End Select
+
+        End Sub
+
+#End Region
+
 #Region "Code for Focus"
 
         'Pinal Patel 03/04/05: Sets the focus to a web control.
         Public Shared Sub Focus(ByVal Control As System.Web.UI.Control)
 
             If Not Control.Page.IsClientScriptBlockRegistered("Focus") Then
-                With New StringBuilder
-                    .Append("<script language=""javascript"">" & vbCrLf)
-                    .Append("   function Focus(varControlName)" & vbCrLf)
-                    .Append("   {" & vbCrLf)
-                    .Append("       if (document.getElementById(varControlName) != null)" & vbCrLf)
-                    .Append("       {" & vbCrLf)
-                    .Append("           document.getElementById(varControlName).focus();" & vbCrLf)
-                    .Append("       }" & vbCrLf)
-                    .Append("   }" & vbCrLf)
-                    .Append("</script>" & vbCrLf)
-
-                    Control.Page.RegisterClientScriptBlock("Focus", .ToString())
-                End With
+                Control.Page.RegisterClientScriptBlock("Focus", CreateClientSideScript(ScriptCode.Focus))
             End If
 
             With New StringBuilder
@@ -110,7 +343,11 @@ Namespace Asp
         '                       when enter key is pressed in the textbox..
         Public Shared Sub DefaultButton(ByVal Textbox As System.Web.UI.WebControls.TextBox, ByVal Control As System.Web.UI.Control)
 
-            Textbox.Attributes.Add("OnKeyDown", "if (event.keyCode == 13) {event.returnValue = false; event.cancel = true; document.all." & Control.ClientID & ".click();}")
+            If Not Control.Page.IsClientScriptBlockRegistered("DefaultButton") Then
+                Control.Page.RegisterClientScriptBlock("DefaultButton", CreateClientSideScript(ScriptCode.DefaultButton))
+            End If
+
+            Textbox.Attributes.Add("OnKeyDown", "javascript:DefaultButton('" & Control.ClientID() & "')")
 
         End Sub
 
@@ -137,16 +374,7 @@ Namespace Asp
         Public Shared Sub Show(ByVal Page As System.Web.UI.Page, ByVal Url As String, Optional ByVal Height As Integer = 400, Optional ByVal Width As Integer = 600, Optional ByVal Left As Integer = 0, Optional ByVal Top As Integer = 0, Optional ByVal Center As Boolean = True, Optional ByVal Help As Boolean = True, Optional ByVal Resizable As Boolean = False, Optional ByVal Status As Boolean = False)
 
             If Not Page.IsClientScriptBlockRegistered("Show") Then
-                With New StringBuilder
-                    .Append("<script language=""javascript"">" & vbCrLf)
-                    .Append("   function Show(varUrl, varHeight, varWidth, varLeft, varTop, varCenter, varHelp, varResizable, varStatus)" & vbCrLf)
-                    .Append("   {" & vbCrLf)
-                    .Append("       window.showModelessDialog(varUrl, window.self,'dialogWidth:' + varWidth + 'px;dialogHeight:' + varHeight + 'px;left:' + varLeft + ';top:' + varTop + ';center:' + varCenter + ';help:' + varHelp + ';resizable:' + varResizable + ';status:' + varStatus);")
-                    .Append("   }" & vbCrLf)
-                    .Append("</script>" & vbCrLf)
-
-                    Page.RegisterClientScriptBlock("Show", .ToString())
-                End With
+                Page.RegisterClientScriptBlock("Show", CreateClientSideScript(ScriptCode.Show))
             End If
 
             With New StringBuilder
@@ -162,20 +390,11 @@ Namespace Asp
         'Pinal Patel 03/04/05: Shows a web page as modeless dialog. Tied to a web control.
         Public Shared Sub Show(ByVal Control As System.Web.UI.Control, ByVal Url As String, Optional ByVal Height As Integer = 400, Optional ByVal Width As Integer = 600, Optional ByVal Left As Integer = 0, Optional ByVal Top As Integer = 0, Optional ByVal Center As Boolean = True, Optional ByVal Help As Boolean = True, Optional ByVal Resizable As Boolean = False, Optional ByVal Status As Boolean = False)
 
-            Dim strShowScript As String = "window.showModelessDialog('" & Url & "', window.self,'dialogWidth:" & Width & " px;dialogHeight:" & Height & "px;left:" & Left & ";top:" & Top & ";center:" & Math.Abs(CInt(Center)) & ";help:" & Math.Abs(CInt(Help)) & ";resizable:" & Math.Abs(CInt(Resizable)) & ";status:" & Math.Abs(CInt(Status)) & "'); return (false);"
+            If Not Control.Page.IsClientScriptBlockRegistered("Show") Then
+                Control.Page.RegisterClientScriptBlock("Show", CreateClientSideScript(ScriptCode.Show))
+            End If
 
-            Select Case Control.GetType.ToString()
-                Case "System.Web.UI.WebControls.Button"
-                    CType(Control, System.Web.UI.WebControls.Button).Attributes.Add("onclick", strShowScript)
-                Case "System.Web.UI.WebControls.LinkButton"
-                    CType(Control, System.Web.UI.WebControls.LinkButton).Attributes.Add("onclick", strShowScript)
-                Case "System.Web.UI.WebControls.ImageButton"
-                    CType(Control, System.Web.UI.WebControls.ImageButton).Attributes.Add("onclick", strShowScript)
-                Case "System.Web.UI.WebControls.TextBox"
-                    CType(Control, System.Web.UI.WebControls.TextBox).Attributes.Add("onclick", strShowScript)
-                Case "System.Web.UI.WebControls.Image"
-                    CType(Control, System.Web.UI.WebControls.Image).Attributes.Add("onclick", strShowScript)
-            End Select
+            HookupScriptToControl(Control, "javascript:return(Show('" & Url & "', " & Height & ", " & Width & ", " & Left & ", " & Top & ", " & Math.Abs(CInt(Center)) & ", " & Math.Abs(CInt(Help)) & ", " & Math.Abs(CInt(Resizable)) & ", " & Math.Abs(CInt(Status)) & "))")
 
         End Sub
 
@@ -189,33 +408,26 @@ Namespace Asp
         Public Shared Sub ShowDialog(ByVal Page As System.Web.UI.Page, ByVal Url As String, Optional ByVal DialogResultHolder As System.Web.UI.Control = Nothing, Optional ByVal Height As Integer = 400, Optional ByVal Width As Integer = 600, Optional ByVal Left As Integer = 0, Optional ByVal Top As Integer = 0, Optional ByVal Center As Boolean = True, Optional ByVal Help As Boolean = True, Optional ByVal Resizable As Boolean = False, Optional ByVal Status As Boolean = False)
 
             If Not Page.IsClientScriptBlockRegistered("ShowDialog") Then
-                With New StringBuilder
-                    .Append("<input type=""hidden"" name=""EVENT_TARGET"" value=""ShowDialog"" />" & vbCrLf)
-                    .Append("<script language=""javascript"">" & vbCrLf)
-                    .Append("   function ShowDialog(varUrl, varResultHolderName, varFormName, varHeight, varWidth, varLeft, varTop, varCenter, varHelp, varResizable, varStatus)" & vbCrLf)
-                    .Append("   {" & vbCrLf)
-                    .Append("       varReturnValue = window.showModalDialog(varUrl, window.self,'dialogWidth:' + varWidth + 'px;dialogHeight:' + varHeight + 'px;left:' + varLeft + ';top:' + varTop + ';center:' + varCenter + ';help:' + varHelp + ';resizable:' + varResizable + ';status:' + varStatus);" & vbCrLf)
-                    .Append("       if ((varResultHolderName == null) && (varReturnValue != null)) {document.writeln('<script language=\'javascript\'>document.' + varFormName + '.submit()<\/script>');}" & vbCrLf)
-                    .Append("       else if ((varResultHolderName != null) && (varReturnValue != null)) {document.getElementById(varResultHolderName).value = varReturnValue;}" & vbCrLf)
-                    .Append("   }" & vbCrLf)
-                    .Append("</script>" & vbCrLf)
-
-                    Page.RegisterClientScriptBlock("ShowDialog", .ToString())
-                End With
+                Page.RegisterClientScriptBlock("ShowDialog", CreateClientSideScript(ScriptCode.ShowDialog))
             End If
 
             With New StringBuilder
+                .Append("<input type=""hidden"" name=""TVA_EVENT_TARGET"" value=""ShowDialog"" />" & vbCrLf)
+                .Append("<input type=""hidden"" name=""TVA_EVENT_ARGUMENT"" value=""" & Url & """ />" & vbCrLf)
                 .Append("<script language=""javascript"">" & vbCrLf)
-                If DialogResultHolder Is Nothing Then
+                If Not DialogResultHolder Is Nothing Then
+                    .Append("   ShowDialog('" & Url & "', '" & DialogResultHolder.ClientID() & "', " & Height & ", " & Width & ", " & Left & ", " & Top & ", " & Math.Abs(CInt(Center)) & ", " & Math.Abs(CInt(Help)) & ", " & Math.Abs(CInt(Resizable)) & ", " & Math.Abs(CInt(Status)) & ");" & vbCrLf)
+                Else
+                    .Append("   if (ShowDialog('" & Url & "', null, " & Height & ", " & Width & ", " & Left & ", " & Top & ", " & Math.Abs(CInt(Center)) & ", " & Math.Abs(CInt(Help)) & ", " & Math.Abs(CInt(Resizable)) & ", " & Math.Abs(CInt(Status)) & "))" & vbCrLf)
+                    .Append("   {" & vbCrLf)
                     Dim Control As System.Web.UI.Control
                     For Each Control In Page.Controls
                         If TypeOf Control Is System.Web.UI.HtmlControls.HtmlForm Then
-                            .Append("   ShowDialog('" & Url & "', null, '" & Control.ClientID() & "', " & Height & ", " & Width & ", " & Left & ", " & Top & ", " & Math.Abs(CInt(Center)) & ", " & Math.Abs(CInt(Help)) & ", " & Math.Abs(CInt(Resizable)) & ", " & Math.Abs(CInt(Status)) & ");" & vbCrLf)
+                            .Append("       document." & Control.ClientID() & ".submit();" & vbCrLf)
                             Exit For
                         End If
                     Next
-                Else
-                    .Append("   ShowDialog('" & Url & "', '" & DialogResultHolder.ClientID() & "', null, " & Height & ", " & Width & ", " & Left & ", " & Top & ", " & Math.Abs(CInt(Center)) & ", " & Math.Abs(CInt(Help)) & ", " & Math.Abs(CInt(Resizable)) & ", " & Math.Abs(CInt(Status)) & ");" & vbCrLf)
+                    .Append("   }" & vbCrLf)
                 End If
                 .Append("</script>" & vbCrLf)
 
@@ -229,25 +441,15 @@ Namespace Asp
         '                       is not specified.
         Public Shared Sub ShowDialog(ByVal Control As System.Web.UI.Control, ByVal Url As String, Optional ByVal DialogResultHolder As System.Web.UI.Control = Nothing, Optional ByVal Height As Integer = 400, Optional ByVal Width As Integer = 600, Optional ByVal Left As Integer = 0, Optional ByVal Top As Integer = 0, Optional ByVal Center As Boolean = True, Optional ByVal Help As Boolean = True, Optional ByVal Resizable As Boolean = False, Optional ByVal Status As Boolean = False)
 
-            Dim strShowDialogScript As String
-            If DialogResultHolder Is Nothing Then
-                strShowDialogScript = "varReturnValue = window.showModalDialog('" & Url & "', window.self,'dialogWidth:" & Width & " px;dialogHeight:" & Height & "px;left:" & Left & ";top:" & Top & ";center:" & Math.Abs(CInt(Center)) & ";help:" & Math.Abs(CInt(Help)) & ";resizable:" & Math.Abs(CInt(Resizable)) & ";status:" & Math.Abs(CInt(Status)) & "'); if (varReturnValue != null) {return (true);} else {return (false);}"
-            Else
-                strShowDialogScript = "varReturnValue = window.showModalDialog('" & Url & "', window.self,'dialogWidth:" & Width & " px;dialogHeight:" & Height & "px;left:" & Left & ";top:" & Top & ";center:" & Math.Abs(CInt(Center)) & ";help:" & Math.Abs(CInt(Help)) & ";resizable:" & Math.Abs(CInt(Resizable)) & ";status:" & Math.Abs(CInt(Status)) & "'); if (varReturnValue != null) {document.all." & DialogResultHolder.ClientID() & ".value = varReturnValue;} return (false);"
+            If Not Control.Page.IsClientScriptBlockRegistered("ShowDialog") Then
+                Control.Page.RegisterClientScriptBlock("ShowDialog", CreateClientSideScript(ScriptCode.ShowDialog))
             End If
 
-            Select Case Control.GetType.ToString()
-                Case "System.Web.UI.WebControls.Button"
-                    CType(Control, System.Web.UI.WebControls.Button).Attributes.Add("onclick", strShowDialogScript)
-                Case "System.Web.UI.WebControls.LinkButton"
-                    CType(Control, System.Web.UI.WebControls.LinkButton).Attributes.Add("onclick", strShowDialogScript)
-                Case "System.Web.UI.WebControls.ImageButton"
-                    CType(Control, System.Web.UI.WebControls.ImageButton).Attributes.Add("onclick", strShowDialogScript)
-                Case "System.Web.UI.WebControls.TextBox"
-                    CType(Control, System.Web.UI.WebControls.TextBox).Attributes.Add("onclick", strShowDialogScript)
-                Case "System.Web.UI.WebControls.Image"
-                    CType(Control, System.Web.UI.WebControls.Image).Attributes.Add("onclick", strShowDialogScript)
-            End Select
+            If Not DialogResultHolder Is Nothing Then
+                HookupScriptToControl(Control, "javascript:return(ShowDialog('" & Url & "', '" & DialogResultHolder.ClientID() & "', " & Height & ", " & Width & ", " & Left & ", " & Top & ", " & Math.Abs(CInt(Center)) & ", " & Math.Abs(CInt(Help)) & ", " & Math.Abs(CInt(Resizable)) & ", " & Math.Abs(CInt(Status)) & "))")
+            Else
+                HookupScriptToControl(Control, "javascript:return(ShowDialog('" & Url & "', null, " & Height & ", " & Width & ", " & Left & ", " & Top & ", " & Math.Abs(CInt(Center)) & ", " & Math.Abs(CInt(Help)) & ", " & Math.Abs(CInt(Resizable)) & ", " & Math.Abs(CInt(Status)) & "))")
+            End If
 
         End Sub
 
@@ -259,21 +461,7 @@ Namespace Asp
         Public Shared Sub ShowPopup(ByVal Page As System.Web.UI.Page, ByVal Url As String, Optional ByVal Height As Integer = 400, Optional ByVal Width As Integer = 600, Optional ByVal Left As Integer = 0, Optional ByVal Top As Integer = 0, Optional ByVal Center As Boolean = True, Optional ByVal Resizable As Boolean = False, Optional ByVal Scrollbars As Boolean = False, Optional ByVal Toolbar As Boolean = False, Optional ByVal Menubar As Boolean = False, Optional ByVal Location As Boolean = False, Optional ByVal Status As Boolean = False, Optional ByVal Directories As Boolean = False)
 
             If Not Page.IsClientScriptBlockRegistered("ShowPopup") Then
-                With New StringBuilder
-                    .Append("<script language=""javascript"">" & vbCrLf)
-                    .Append("   function ShowPopup(varUrl, varHeight, varWidth, varLeft, varTop, varCenter, varResizable, varScrollbars, varToolbar, varMenubar, varLocation, varStatus, varDirectories)" & vbCrLf)
-                    .Append("   {" & vbCrLf)
-                    .Append("       varRegExp = /([^a-zA-Z0-9\s])/gi;" & vbCrLf)
-                    .Append("       varPopupName = varUrl.replace(varRegExp, '');" & vbCrLf)
-                    .Append("       if (varCenter) {varPopup = window.open(varUrl, varPopupName, 'height=' + varHeight + ',width=' + varWidth + ',top=' + ((screen.availHeight / 2) - (varHeight / 2)) + ',left=' + ((screen.availWidth / 2) - (varWidth / 2)) + ',resizable=' + varResizable + ',scrollbars=' + varScrollbars + ',toolbar=' + varToolbar + ',menubar=' + varMenubar + ',location=' + varLocation + ',status=' + varStatus + ',directories=' + varDirectories);}" & vbCrLf)
-                    .Append("       else {varPopup = window.open(varUrl, varPopupName, 'height=' + varHeight + ',width=' + varWidth + ',top=' + varTop + ',left=' + varLeft + ',resizable=' + varResizable + ',scrollbars=' + varScrollbars + ',toolbar=' + varToolbar + ',menubar=' + varMenubar + ',location=' + varLocation + ',status=' + varStatus + ',directories=' + varDirectories);}" & vbCrLf)
-                    '.Append("       if (window.focus) {varPopup.focus();}" & vbCrLf)
-                    .Append("       varPopup.focus();" & vbCrLf)
-                    .Append("   }" & vbCrLf)
-                    .Append("</script>" & vbCrLf)
-
-                    Page.RegisterClientScriptBlock("ShowPopup", .ToString())
-                End With
+                Page.RegisterClientScriptBlock("ShowPopup", CreateClientSideScript(ScriptCode.ShowPopup))
             End If
 
             With New StringBuilder
@@ -289,25 +477,11 @@ Namespace Asp
         'Pinal Patel 03/04/05: Shows web page as old fashion popup. Tied to a web control.
         Public Shared Sub ShowPopup(ByVal Control As System.Web.UI.Control, ByVal Url As String, Optional ByVal Height As Integer = 400, Optional ByVal Width As Integer = 600, Optional ByVal Left As Integer = 0, Optional ByVal Top As Integer = 0, Optional ByVal Center As Boolean = True, Optional ByVal Resizable As Boolean = False, Optional ByVal Scrollbars As Boolean = False, Optional ByVal Toolbar As Boolean = False, Optional ByVal Menubar As Boolean = False, Optional ByVal Location As Boolean = False, Optional ByVal Status As Boolean = False, Optional ByVal Directories As Boolean = False)
 
-            Dim strShowPopupScript As String
-            If Center Then
-                strShowPopupScript = "varPopup = window.open('" & Url & "', 'Popup', 'height=" & Height & ",width=" & Width & ",top=' + ((screen.availHeight / 2) - " & (Height / 2) & ") + ',left=' + ((screen.availWidth / 2) - " & (Width / 2) & ") + ',resizable=" & Math.Abs(CInt(Resizable)) & ",scrollbars=" & Math.Abs(CInt(Scrollbars)) & ",toolbar=" & Math.Abs(CInt(Toolbar)) & ",menubar=" & Math.Abs(CInt(Menubar)) & ",location=" & Math.Abs(CInt(Location)) & ",status=" & Math.Abs(CInt(Status)) & ",directories=" & Math.Abs(CInt(Directories)) & "'); varPopup.focus(); return (false);"
-            Else
-                strShowPopupScript = "varPopup = window.open('" & Url & "', 'Popup', 'height=" & Height & ",width=" & Width & ",top=" & Top & ",left=" & Left & ",resizable=" & Math.Abs(CInt(Resizable)) & ",scrollbars=" & Math.Abs(CInt(Scrollbars)) & ",toolbar=" & Math.Abs(CInt(Toolbar)) & ",menubar=" & Math.Abs(CInt(Menubar)) & ",location=" & Math.Abs(CInt(Location)) & ",status=" & Math.Abs(CInt(Status)) & ",directories=" & Math.Abs(CInt(Directories)) & "'); varPopup.focus(); return (false);"
+            If Not Control.Page.IsClientScriptBlockRegistered("ShowPopup") Then
+                Control.Page.RegisterClientScriptBlock("ShowPopup", CreateClientSideScript(ScriptCode.ShowPopup))
             End If
 
-            Select Case Control.GetType.ToString()
-                Case "System.Web.UI.WebControls.Button"
-                    CType(Control, System.Web.UI.WebControls.Button).Attributes.Add("onclick", strShowPopupScript)
-                Case "System.Web.UI.WebControls.LinkButton"
-                    CType(Control, System.Web.UI.WebControls.LinkButton).Attributes.Add("onclick", strShowPopupScript)
-                Case "System.Web.UI.WebControls.ImageButton"
-                    CType(Control, System.Web.UI.WebControls.ImageButton).Attributes.Add("onclick", strShowPopupScript)
-                Case "System.Web.UI.WebControls.TextBox"
-                    CType(Control, System.Web.UI.WebControls.TextBox).Attributes.Add("onclick", strShowPopupScript)
-                Case "System.Web.UI.WebControls.Image"
-                    CType(Control, System.Web.UI.WebControls.Image).Attributes.Add("onclick", strShowPopupScript)
-            End Select
+            HookupScriptToControl(Control, "javascript:return(ShowPopup('" & Url & "', " & Height & ", " & Width & ", " & Left & ", " & Top & ", " & Math.Abs(CInt(Center)) & ", " & Math.Abs(CInt(Resizable)) & ", " & Math.Abs(CInt(Scrollbars)) & ", " & Math.Abs(CInt(Toolbar)) & ", " & Math.Abs(CInt(Menubar)) & ", " & Math.Abs(CInt(Location)) & ", " & Math.Abs(CInt(Status)) & ", " & Math.Abs(CInt(Directories)) & "))")
 
         End Sub
 
@@ -319,20 +493,17 @@ Namespace Asp
         '                       window if any (used in conjunction to ShowDialog).
         Public Shared Sub Close(ByVal Page As System.Web.UI.Page, Optional ByVal ReturnValue As String = Nothing)
 
-            If Not Page.IsStartupScriptRegistered("Close") Then
-                With New StringBuilder
-                    .Append("<script language=""javascript"">" & vbCrLf)
-                    If ReturnValue Is Nothing Then
-                        .Append("   window.returnValue = null;" & vbCrLf)
-                    Else
-                        .Append("   window.returnValue = '" & ReturnValue & "';" & vbCrLf)
-                    End If
-                    .Append("   window.close();" & vbCrLf)
-                    .Append("</script>" & vbCrLf)
-
-                    Page.RegisterStartupScript("Close", .ToString())
-                End With
+            If Not Page.IsClientScriptBlockRegistered("Close") Then
+                Page.RegisterClientScriptBlock("Close", CreateClientSideScript(ScriptCode.Close))
             End If
+
+            With New StringBuilder
+                .Append("<script language=""javascript"">" & vbCrLf)
+                .Append("   Close('" & ReturnValue & "');" & vbCrLf)
+                .Append("</script>" & vbCrLf)
+
+                Page.RegisterStartupScript("Close:" & Rnd(), .ToString())
+            End With
 
         End Sub
 
@@ -340,25 +511,11 @@ Namespace Asp
         '                       window if any (used in conjunction with ShowDialog)
         Public Shared Sub Close(ByVal Control As System.Web.UI.Control, Optional ByVal ReturnValue As String = Nothing)
 
-            Dim strCloseScript As String
-            If ReturnValue Is Nothing Then
-                strCloseScript = "window.returnValue = null; window.close();"
-            Else
-                strCloseScript = "window.returnValue = '" & ReturnValue & "'; window.close();"
+            If Not Control.Page.IsClientScriptBlockRegistered("Close") Then
+                Control.Page.RegisterClientScriptBlock("Close", CreateClientSideScript(ScriptCode.Close))
             End If
 
-            Select Case Control.GetType.ToString()
-                Case "System.Web.UI.WebControls.Button"
-                    CType(Control, System.Web.UI.WebControls.Button).Attributes.Add("onclick", strCloseScript)
-                Case "System.Web.UI.WebControls.LinkButton"
-                    CType(Control, System.Web.UI.WebControls.LinkButton).Attributes.Add("onclick", strCloseScript)
-                Case "System.Web.UI.WebControls.ImageButton"
-                    CType(Control, System.Web.UI.WebControls.ImageButton).Attributes.Add("onclick", strCloseScript)
-                Case "System.Web.UI.WebControls.TextBox"
-                    CType(Control, System.Web.UI.WebControls.TextBox).Attributes.Add("onclick", strCloseScript)
-                Case "System.Web.UI.WebControls.Image"
-                    CType(Control, System.Web.UI.WebControls.Image).Attributes.Add("onclick", strCloseScript)
-            End Select
+            HookupScriptToControl(Control, "javascript:return(Close('" & ReturnValue & "'))")
 
         End Sub
 
@@ -389,47 +546,28 @@ Namespace Asp
             SystemModal = 4096
         End Enum
 
-        Private Shared Function CreateMsgBoxFunction() As String
-
-            'Pinal Patel 03/04/05:  Creates a VB Script function that shows a message box and returns a boolean 
-            '                       indicating whether or not a postback is to be performed.
-            With New StringBuilder
-                .Append("<script language=""vbscript"">" & vbCrLf)
-                .Append("   Function ShowMsgBox(strPrompt, strTitle, intButtons, bolDoPostBack)" & vbCrLf)
-                .Append("       varResult = MsgBox(strPrompt, intButtons ,strTitle)" & vbCrLf)
-                .Append("       If bolDoPostBack Then" & vbCrLf)
-                .Append("           If (varResult = vbOK) Or (varResult = vbRetry) Or (varResult = vbYes) Then ShowMsgBox = True Else ShowMsgBox = False" & vbCrLf)
-                .Append("       Else" & vbCrLf)
-                .Append("           ShowMsgBox = False" & vbCrLf)
-                .Append("       End If" & vbCrLf)
-                .Append("   End Function" & vbCrLf)
-                .Append("</script>" & vbCrLf)
-
-                Return .ToString()
-            End With
-
-        End Function
-
         'Pinal Patel 03/04/05:  Show a message box similar to the one available in windows apps. 
         '                       Not tied to a web control. Postbacks when ok/retry/yes is clicked.
         Public Shared Sub MsgBox(ByVal Page As System.Web.UI.Page, ByVal Prompt As String, Optional ByVal Title As String = "Message Box", Optional ByVal Buttons As MsgBoxStyle = MsgBoxStyle.OKOnly, Optional ByVal DoPostBack As Boolean = True)
 
             If Not Page.IsClientScriptBlockRegistered("ShowMsgBox") Then
-                Page.RegisterClientScriptBlock("ShowMsgBox", CreateMsgBoxFunction())
+                Page.RegisterClientScriptBlock("ShowMsgBox", CreateClientSideScript(ScriptCode.MsgBox))
             End If
 
-            Prompt = Regex.Replace(Prompt, vbCrLf, "\n")
             With New StringBuilder
-                .Append("<input type=""hidden"" name=""EVENT_TARGET"" value=""MsgBox"" />" & vbCrLf)
+                .Append("<input type=""hidden"" name=""TVA_EVENT_TARGET"" value=""MsgBox"" />" & vbCrLf)
+                .Append("<input type=""hidden"" name=""TVA_EVENT_ARGUMENT"" value=""" & Title & """ />" & vbCrLf)
                 .Append("<script language=""javascript"">" & vbCrLf)
-                .Append("if (ShowMsgBox('" & Prompt & " ', '" & Title & "', " & Buttons & ", " & LCase(DoPostBack) & ")) " & vbCrLf)
+                .Append("   if (ShowMsgBox('" & JavaScriptEncode(Prompt) & " ', '" & Title & "', " & Buttons & ", " & LCase(DoPostBack) & ")) " & vbCrLf)
+                .Append("   {" & vbCrLf)
                 Dim Control As System.Web.UI.Control
                 For Each Control In Page.Controls
                     If TypeOf Control Is System.Web.UI.HtmlControls.HtmlForm Then
-                        .Append("{document." & Control.ClientID() & ".submit();}" & vbCrLf)
+                        .Append("       document." & Control.ClientID() & ".submit();" & vbCrLf)
                         Exit For
                     End If
                 Next
+                .Append("   }" & vbCrLf)
                 .Append("</script>" & vbCrLf)
 
                 Page.RegisterStartupScript("ShowMsgBox:" & Rnd(), .ToString())
@@ -442,24 +580,10 @@ Namespace Asp
         Public Shared Sub MsgBox(ByVal Control As System.Web.UI.Control, ByVal Prompt As String, Optional ByVal Title As String = "Message Box", Optional ByVal Buttons As MsgBoxStyle = MsgBoxStyle.OKOnly, Optional ByVal DoPostBack As Boolean = True)
 
             If Not Control.Page.IsClientScriptBlockRegistered("ShowMsgBox") Then
-                Control.Page.RegisterClientScriptBlock("ShowMsgBox", CreateMsgBoxFunction())
+                Control.Page.RegisterClientScriptBlock("ShowMsgBox", CreateClientSideScript(ScriptCode.MsgBox))
             End If
 
-            Prompt = Regex.Replace(Prompt, vbCrLf, "\n")
-            Dim strMsgBox As String = "return(ShowMsgBox('" & Prompt & " ', '" & Title & "', " & Buttons & ", " & LCase(DoPostBack) & "));"
-
-            Select Case Control.GetType.ToString()
-                Case "System.Web.UI.WebControls.Button"
-                    CType(Control, System.Web.UI.WebControls.Button).Attributes.Add("onclick", strMsgBox)
-                Case "System.Web.UI.WebControls.LinkButton"
-                    CType(Control, System.Web.UI.WebControls.LinkButton).Attributes.Add("onclick", strMsgBox)
-                Case "System.Web.UI.WebControls.ImageButton"
-                    CType(Control, System.Web.UI.WebControls.ImageButton).Attributes.Add("onclick", strMsgBox)
-                Case "System.Web.UI.WebControls.TextBox"
-                    CType(Control, System.Web.UI.WebControls.TextBox).Attributes.Add("onclick", strMsgBox)
-                Case "System.Web.UI.WebControls.Image"
-                    CType(Control, System.Web.UI.WebControls.Image).Attributes.Add("onclick", strMsgBox)
-            End Select
+            HookupScriptToControl(Control, "javascript:return(ShowMsgBox('" & JavaScriptEncode(Prompt) & " ', '" & Title & "', " & Buttons & ", " & LCase(DoPostBack) & "))")
 
         End Sub
 
@@ -470,24 +594,28 @@ Namespace Asp
         'Pinal Patel 03/08/05: Causes the web page to refresh. Not tied to a web control.
         Public Shared Sub Refresh(ByVal Page As System.Web.UI.Page, Optional ByVal PostRefresh As Boolean = False)
 
-            If Not PostRefresh Then
-                If Not Page.IsClientScriptBlockRegistered("Refresh") Then
+            If Not Page.IsClientScriptBlockRegistered("Refresh") Then
+                Page.RegisterClientScriptBlock("Refresh", CreateClientSideScript(ScriptCode.Refresh))
+            End If
+
+            If PostRefresh Then
+                If Not Page.IsStartupScriptRegistered("PostRefresh") Then
                     With New StringBuilder
                         .Append("<script language=""javascript"">" & vbCrLf)
-                        .Append("   window.location.href = unescape(window.location.pathname);" & vbCrLf)
+                        .Append("   Refresh();" & vbCrLf)
                         .Append("</script>" & vbCrLf)
 
-                        Page.RegisterClientScriptBlock("Refresh", .ToString())
+                        Page.RegisterStartupScript("PostRefresh", .ToString())
                     End With
                 End If
             Else
-                If Not Page.IsStartupScriptRegistered("Refresh") Then
+                If Not Page.IsClientScriptBlockRegistered("PreRefresh") Then
                     With New StringBuilder
                         .Append("<script language=""javascript"">" & vbCrLf)
-                        .Append("   window.location.href = unescape(window.location.pathname);" & vbCrLf)
+                        .Append("   Refresh();" & vbCrLf)
                         .Append("</script>" & vbCrLf)
 
-                        Page.RegisterStartupScript("Refresh", .ToString())
+                        Page.RegisterClientScriptBlock("PreRefresh", .ToString())
                     End With
                 End If
             End If
@@ -497,20 +625,11 @@ Namespace Asp
         'Pinal Patel 03/08/05: Causes the web page to refresh. Tied to a web control.
         Public Shared Sub Refresh(ByVal Control As System.Web.UI.Control)
 
-            Dim strRefreshScript As String = "window.location.href = unescape(window.location.pathname); return (false);"
+            If Not Control.Page.IsClientScriptBlockRegistered("Refresh") Then
+                Control.Page.RegisterClientScriptBlock("Refresh", CreateClientSideScript(ScriptCode.Refresh))
+            End If
 
-            Select Case Control.GetType.ToString()
-                Case "System.Web.UI.WebControls.Button"
-                    CType(Control, System.Web.UI.WebControls.Button).Attributes.Add("onclick", strRefreshScript)
-                Case "System.Web.UI.WebControls.LinkButton"
-                    CType(Control, System.Web.UI.WebControls.LinkButton).Attributes.Add("onclick", strRefreshScript)
-                Case "System.Web.UI.WebControls.ImageButton"
-                    CType(Control, System.Web.UI.WebControls.ImageButton).Attributes.Add("onclick", strRefreshScript)
-                Case "System.Web.UI.WebControls.TextBox"
-                    CType(Control, System.Web.UI.WebControls.TextBox).Attributes.Add("onclick", strRefreshScript)
-                Case "System.Web.UI.WebControls.Image"
-                    CType(Control, System.Web.UI.WebControls.Image).Attributes.Add("onclick", strRefreshScript)
-            End Select
+            HookupScriptToControl(Control, "javascript:return(Refresh())")
 
         End Sub
 
@@ -521,36 +640,28 @@ Namespace Asp
         'Pinal Patel 03/09/05: Maximizes the web page to available screen size. Not tied to a web control.
         Public Shared Sub Maximize(ByVal Page As System.Web.UI.Page)
 
-            If Not Page.IsStartupScriptRegistered("Maximize") Then
-                With New StringBuilder
-                    .Append("<script language=""javascript"">" & vbCrLf)
-                    .Append("   window.moveTo(0, 0);" & vbCrLf)
-                    .Append("   window.resizeTo(window.screen.availWidth, window.screen.availHeight);" & vbCrLf)
-                    .Append("</script>" & vbCrLf)
-
-                    Page.RegisterStartupScript("Maximize", .ToString())
-                End With
+            If Not Page.IsClientScriptBlockRegistered("Maximize") Then
+                Page.RegisterClientScriptBlock("Maximize", CreateClientSideScript(ScriptCode.Maximize))
             End If
+
+            With New StringBuilder
+                .Append("<script language=""javascript"">" & vbCrLf)
+                .Append("   Maximize();" & vbCrLf)
+                .Append("</script>" & vbCrLf)
+
+                Page.RegisterStartupScript("Maximize:" & Rnd(), .ToString())
+            End With
 
         End Sub
 
         'Pinal Patel 03/09/05: Maximizes the web page to available screen size. Tied to a web control.
         Public Shared Sub Maximize(ByVal Control As System.Web.UI.Control)
 
-            Dim strMaximizeScript As String = "window.moveTo(0, 0); window.resizeTo(window.screen.availWidth, window.screen.availHeight); return (false);"
+            If Not Control.Page.IsClientScriptBlockRegistered("Maximize") Then
+                Control.Page.RegisterClientScriptBlock("Maximize", CreateClientSideScript(ScriptCode.Maximize))
+            End If
 
-            Select Case Control.GetType.ToString()
-                Case "System.Web.UI.WebControls.Button"
-                    CType(Control, System.Web.UI.WebControls.Button).Attributes.Add("onclick", strMaximizeScript)
-                Case "System.Web.UI.WebControls.LinkButton"
-                    CType(Control, System.Web.UI.WebControls.LinkButton).Attributes.Add("onclick", strMaximizeScript)
-                Case "System.Web.UI.WebControls.ImageButton"
-                    CType(Control, System.Web.UI.WebControls.ImageButton).Attributes.Add("onclick", strMaximizeScript)
-                Case "System.Web.UI.WebControls.TextBox"
-                    CType(Control, System.Web.UI.WebControls.TextBox).Attributes.Add("onclick", strMaximizeScript)
-                Case "System.Web.UI.WebControls.Image"
-                    CType(Control, System.Web.UI.WebControls.Image).Attributes.Add("onclick", strMaximizeScript)
-            End Select
+            HookupScriptToControl(Control, "javascript:return(Maximize())")
 
         End Sub
 
@@ -562,15 +673,17 @@ Namespace Asp
         '                       Not tied to a web control.
         Public Shared Sub Minimize(ByVal Page As System.Web.UI.Page)
 
-            If Not Page.IsStartupScriptRegistered("Minimize") Then
-                With New StringBuilder
-                    .Append("<script language=""javascript"">" & vbCrLf)
-                    .Append("   window.blur();" & vbCrLf)
-                    .Append("</script>" & vbCrLf)
-
-                    Page.RegisterStartupScript("Maximize", .ToString())
-                End With
+            If Not Page.IsClientScriptBlockRegistered("Minimize") Then
+                Page.RegisterClientScriptBlock("Minimize", CreateClientSideScript(ScriptCode.Minimize))
             End If
+
+            With New StringBuilder
+                .Append("<script language=""javascript"">" & vbCrLf)
+                .Append("   Minimize();" & vbCrLf)
+                .Append("</script>" & vbCrLf)
+
+                Page.RegisterStartupScript("Minimize:" & Rnd(), .ToString())
+            End With
 
         End Sub
 
@@ -578,20 +691,11 @@ Namespace Asp
         '                       Tied to a web control.
         Public Shared Sub Minimize(ByVal Control As System.Web.UI.Control)
 
-            Dim strMinimizeScript As String = "window.blur(); return (false);"
+            If Not Control.Page.IsClientScriptBlockRegistered("Minimize") Then
+                Control.Page.RegisterClientScriptBlock("Minimize", CreateClientSideScript(ScriptCode.Minimize))
+            End If
 
-            Select Case Control.GetType.ToString()
-                Case "System.Web.UI.WebControls.Button"
-                    CType(Control, System.Web.UI.WebControls.Button).Attributes.Add("onclick", strMinimizeScript)
-                Case "System.Web.UI.WebControls.LinkButton"
-                    CType(Control, System.Web.UI.WebControls.LinkButton).Attributes.Add("onclick", strMinimizeScript)
-                Case "System.Web.UI.WebControls.ImageButton"
-                    CType(Control, System.Web.UI.WebControls.ImageButton).Attributes.Add("onclick", strMinimizeScript)
-                Case "System.Web.UI.WebControls.TextBox"
-                    CType(Control, System.Web.UI.WebControls.TextBox).Attributes.Add("onclick", strMinimizeScript)
-                Case "System.Web.UI.WebControls.Image"
-                    CType(Control, System.Web.UI.WebControls.Image).Attributes.Add("onclick", strMinimizeScript)
-            End Select
+            HookupScriptToControl(Control, "javascript:return(Minimize())")
 
         End Sub
 
@@ -647,6 +751,38 @@ Namespace Asp
                     Page.RegisterStartupScript("PlayBackgroundSound", .ToString())
                 End With
             End If
+
+        End Sub
+
+#End Region
+
+#Region "Code for RunClientExe"
+
+        '03/22/05 Pinal Patel
+        Public Shared Sub RunClientExe(ByVal Page As System.Web.UI.Page, ByVal Executable As String)
+
+            If Not Page.IsClientScriptBlockRegistered("RunClientExe") Then
+                Page.RegisterClientScriptBlock("RunClientExe", CreateClientSideScript(ScriptCode.RunClientExe))
+            End If
+
+            With New StringBuilder
+                .Append("<script language=""javascript"">" & vbCrLf)
+                .Append("   RunClientExe('" & JavaScriptEncode(Executable) & "');" & vbCrLf)
+                .Append("</script>" & vbCrLf)
+
+                Page.RegisterStartupScript("RunClientExe:" & Rnd(), .ToString())
+            End With
+
+        End Sub
+
+        '03/22/05 Pinal Patel
+        Public Shared Sub RunClientExe(ByVal Control As System.Web.UI.Control, ByVal Executable As String)
+
+            If Not Control.Page.IsClientScriptBlockRegistered("RunClientExe") Then
+                Control.Page.RegisterClientScriptBlock("RunClientExe", CreateClientSideScript(ScriptCode.RunClientExe))
+            End If
+
+            HookupScriptToControl(Control, "javascript:return(RunClientExe('" & JavaScriptEncode(Executable) & "'))")
 
         End Sub
 

@@ -163,6 +163,16 @@
                     BuildAction = "Compile"
                 />
                 <File
+                    RelPath = "PopUpErrorListener.resx"
+                    DependentUpon = "PopUpErrorListener.vb"
+                    BuildAction = "EmbeddedResource"
+                />
+                <File
+                    RelPath = "SmtpTraceListener.vb"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
                     RelPath = "SsamErrorListener.vb"
                     SubType = "Component"
                     BuildAction = "Compile"
