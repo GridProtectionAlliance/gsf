@@ -26,10 +26,11 @@ IF "%TARGET%"=="Release" SET DEPLOYTARGET=Beta
 IF "%DEPLOYTARGET%"=="" SET DEPLOYTARGET=Beta
 
 REM Create a zip archive of the source code
-%UTILITY%WZZIP.EXE -ex -o -p -r -u %ARCHIVEPATH%TVACodeLibrary%DEPLOYTARGET%.zip %SOURCE%*.*
+REM %UTILITY%WZZIP.EXE -ex -o -p -r -u %ARCHIVEPATH%TVACodeLibrary%DEPLOYTARGET%.zip %SOURCE%*.*
+%UTILITY%WZZIP.EXE -ex -o -p -r -u ..\..\TVACodeLibrary%DEPLOYTARGET%.zip %SOURCE%*.*
 
 REM Make a raw backup of the source code...
-XCOPY %SOURCE%*.* %ARCHIVEPATH%Backup\*.* /E /V /C /H /R /K /Y
+REM XCOPY %SOURCE%*.* %ARCHIVEPATH%Backup\*.* /E /V /C /H /R /K /Y
 
 REM Deploy build assemblies...
 XCOPY %SOURCE%bin\*.* %DEPLOYPATH%Builds\%DEPLOYTARGET%\*.* /E /V /C /H /R /K /Y

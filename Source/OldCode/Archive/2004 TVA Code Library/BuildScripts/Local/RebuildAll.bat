@@ -17,7 +17,7 @@ ECHO ú
 CALL SetPaths.bat
 
 REM Download current source code
-CALL %SUPPORT%DownloadToLocal.bat
+REM CALL %SUPPORT%DownloadToLocal.bat
 
 REM Update build version
 CALL %SUPPORT%UpdateBuildVersion.bat
