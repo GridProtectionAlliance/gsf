@@ -34,6 +34,9 @@ Namespace EE.Phasor.IEEE1344
         Protected Const TriggerMask As Int16 = Bit11 Or Bit12 Or Bit13
         Protected Const FrameLengthMask As Int16 = Not (TriggerMask Or Bit14 Or Bit15)
 
+        Public Const MaximumFrameLength As Int16 = FrameLengthMask
+        Public Const MaximumDataLength As Int16 = MaximumFrameLength - CommonBinaryLength - 2
+
         Protected Sub New()
 
             m_timeTag = New NtpTimeTag(DateTime.Now)
@@ -47,7 +50,7 @@ Namespace EE.Phasor.IEEE1344
             ElseIf binaryImage.Length - startIndex <= CommonBinaryLength Then
                 Throw New ArgumentException("BinaryImage size from startIndex is too small - could not create " & Name)
             Else
-                m_timeTag = New NtpTimeTag(Convert.ToDouble(EndianOrder.ReverseToInt32(binaryImage, startIndex)))
+                m_timeTag = New NtpTimeTag(Convert.ToDouble(EndianOrder.ReverseToUInt32(binaryImage, startIndex)))
                 m_sampleCount = EndianOrder.ReverseToInt16(binaryImage, startIndex + 4)
                 m_status = EndianOrder.ReverseToInt16(binaryImage, startIndex + 6)
 
@@ -89,6 +92,12 @@ Namespace EE.Phasor.IEEE1344
 
         End Sub
 
+        Public ReadOnly Property This() As BaseFrame
+            Get
+                Return Me
+            End Get
+        End Property
+
         Public Property SynchronizationIsValid() As Boolean
             Get
                 Return ((m_status And Bit15) = 0)
@@ -124,6 +133,32 @@ Namespace EE.Phasor.IEEE1344
             End Set
         End Property
 
+        Protected Sub AppendCRC16(ByVal buffer As Byte(), ByVal startIndex As Integer)
+
+            EndianOrder.SwapCopyBytes(CRC16(-1, buffer, 0, startIndex), buffer, startIndex)
+
+        End Sub
+
+        Protected Overridable ReadOnly Property Name() As String
+            Get
+                Return "IEEE1344.BaseFrame"
+            End Get
+        End Property
+
+        Public Property DataLength() As Int16
+            Get
+                ' Data length will be frame length minus common header length minus crc16
+                Return FrameLength - CommonBinaryLength - 2
+            End Get
+            Set(ByVal Value As Int16)
+                If Value > MaximumDataLength Then
+                    Throw New OverflowException("Data length value cannot exceed " & MaximumDataLength)
+                Else
+                    FrameLength = Value + CommonBinaryLength + 2
+                End If
+            End Set
+        End Property
+
         Public Property FrameLength() As Int16
             Get
                 Return m_status And FrameLengthMask
@@ -137,47 +172,18 @@ Namespace EE.Phasor.IEEE1344
             End Set
         End Property
 
-        Public ReadOnly Property DataLength() As Int16
+        Public MustOverride Property DataImage() As Byte()
+
+        Public Overridable ReadOnly Property BinaryImage() As Byte()
             Get
-                ' Data length will be frame length minus common header length minus crc16
-                Return FrameLength - CommonBinaryLength - 2
-            End Get
-        End Property
+                Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), FrameLength)
+                Dim image As Byte() = DataImage()
 
-        Public ReadOnly Property MaximumFrameLength() As Int16
-            Get
-                Return FrameLengthMask
-            End Get
-        End Property
-
-        Public ReadOnly Property MaximumDataLength() As Int16
-            Get
-                Return MaximumFrameLength - CommonBinaryLength - 2
-            End Get
-        End Property
-
-        Protected Sub AppendCRC16(ByVal dataBuffer As Byte(), ByVal dataStartIndex As Integer, ByVal dataLength As Integer)
-
-            EndianOrder.SwapCopy(BitConverter.GetBytes(CRC16(-1, dataBuffer, dataStartIndex, dataLength)), dataStartIndex, dataBuffer, dataLength, 2)
-
-        End Sub
-
-        Protected Overridable ReadOnly Property Name() As String
-            Get
-                Return "IEEE1344.BaseFrame"
-            End Get
-        End Property
-
-        Public MustOverride ReadOnly Property BinaryLength() As Integer
-        Public MustOverride ReadOnly Property BinaryImage() As Byte()
-
-        Protected ReadOnly Property CommonBinaryImage() As Byte()
-            Get
-                Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), CommonBinaryLength)
-
-                EndianOrder.SwapCopy(BitConverter.GetBytes(Convert.ToUInt32(m_timeTag.Value)), 0, buffer, 0, 4)
-                EndianOrder.SwapCopy(BitConverter.GetBytes(m_sampleCount), 0, buffer, 4, 2)
-                EndianOrder.SwapCopy(BitConverter.GetBytes(m_status), 0, buffer, 6, 2)
+                EndianOrder.SwapCopyBytes(Convert.ToUInt32(m_timeTag.Value), buffer, 0)
+                EndianOrder.SwapCopyBytes(m_sampleCount, buffer, 4)
+                EndianOrder.SwapCopyBytes(m_status, buffer, 6)
+                Array.Copy(image, 0, buffer, 8, image.Length)
+                AppendCRC16(buffer, 8 + image.Length)
 
                 Return buffer
             End Get

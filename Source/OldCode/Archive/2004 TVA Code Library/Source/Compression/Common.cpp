@@ -428,8 +428,8 @@ Int16 Common::CRC16(String* FileName)
 	return crc;
 }
 
-// Return CRC16 checksum for specified portion of given buffer
-Int16 Common::QuickCRC16(Int16 CRC, System::Byte Data[], int Offset, int Count)
+// Return CRC-CCITT checksum for specified portion of given buffer
+Int16 Common::CRC_CCITT(Int16 CRC, System::Byte Data[], int Offset, int Count)
 {
 	UInt16 crc = (UInt16)CRC, temp, quick;
 
@@ -448,25 +448,25 @@ Int16 Common::QuickCRC16(Int16 CRC, System::Byte Data[], int Offset, int Count)
 	return (Int16)crc;
 }
 
-// Return CRC16 checksum of entire given buffer
-Int16 Common::QuickCRC16(System::Byte Data[])
+// Return CRC-CCITT checksum of entire given buffer
+Int16 Common::CRC_CCITT(System::Byte Data[])
 {
-	return QuickCRC16(-1, Data, 0, Data->get_Length());
+	return CRC_CCITT(-1, Data, 0, Data->get_Length());
 }
 
-// Return CRC16 checksum of entire given stream
-Int16 Common::QuickCRC16(Stream* InStream)
+// Return CRC-CCITT checksum of entire given stream
+Int16 Common::CRC_CCITT(Stream* InStream)
 {
 	System::Byte inBuffer[] = new System::Byte[BufferSize];
 	Int16 crc = -1, read;
 
-	// Calculate CRC16 checksum for stream
+	// Calculate CRC-CCITT checksum for stream
 	read = InStream->Read(inBuffer, 0, BufferSize);
 
 	while (read)
 	{
-		// Calculate CRC16 checksum for given buffer...
-		crc = QuickCRC16(crc, inBuffer, 0, read);
+		// Calculate CRC-CCITT checksum for given buffer...
+		crc = CRC_CCITT(crc, inBuffer, 0, read);
 
 		// Read next buffer from stream
 		read = InStream->Read(inBuffer, 0, BufferSize);
@@ -475,12 +475,12 @@ Int16 Common::QuickCRC16(Stream* InStream)
 	return crc;
 }
 
-// Return CRC16 checksum of given file
-Int16 Common::QuickCRC16(String* FileName)
+// Return CRC-CCITT checksum of given file
+Int16 Common::CRC_CCITT(String* FileName)
 {
 	FileStream* fileStream = File::Open(FileName, FileMode::Open, FileAccess::Read, FileShare::Read);
 
-	Int16 crc = QuickCRC16(fileStream);
+	Int16 crc = CRC_CCITT(fileStream);
 
 	fileStream->Close();
 

@@ -19,6 +19,11 @@ Imports TVA.Shared.Bit
 
 Namespace EE.Phasor.IEEE1344
 
+    Public Enum PhasorFormat
+        Rectangular
+        Polar
+    End Enum
+
     Public Enum PhasorType As Byte
         Voltage
         Current

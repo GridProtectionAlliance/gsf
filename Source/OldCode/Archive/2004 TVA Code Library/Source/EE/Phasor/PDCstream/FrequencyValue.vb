@@ -109,8 +109,8 @@ Namespace EE.Phasor.PDCstream
             Get
                 Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BinaryLength)
 
-                EndianOrder.SwapCopy(BitConverter.GetBytes(m_frequency), 0, buffer, 0, 2)
-                EndianOrder.SwapCopy(BitConverter.GetBytes(m_dfdt), 0, buffer, 2, 2)
+                EndianOrder.SwapCopyBytes(m_frequency, buffer, 0)
+                EndianOrder.SwapCopyBytes(m_dfdt, buffer, 2)
 
                 Return buffer
             End Get

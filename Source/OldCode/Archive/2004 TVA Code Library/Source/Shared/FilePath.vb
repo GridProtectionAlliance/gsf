@@ -50,29 +50,29 @@ Namespace [Shared]
             Dim FilePattern As String
 
             If Len(FileNameCharPattern) = 0 Then
-                Dim sb As New StringBuilder
-                Dim c As Char
+                With New StringBuilder
+                    ' Define a regular expression pattern for a valid file name character, we do this by
+                    ' allowing any characters except those that would not be valid as part of a filename,
+                    ' this essentially builds the "?" wildcard pattern match
+                    .Append("[^")
+                    .Append(GetRegexUnicodeChar(Path.DirectorySeparatorChar))
+                    .Append(GetRegexUnicodeChar(Path.AltDirectorySeparatorChar))
+                    .Append(GetRegexUnicodeChar(Path.PathSeparator))
+                    .Append(GetRegexUnicodeChar(Path.VolumeSeparatorChar))
 
-                ' Define a regular expression pattern for a valid file name character, we do this by
-                ' allowing any characters except those that would not be valid as part of a filename,
-                ' this essentially builds the "?" wildcard pattern match
-                sb.Append("[^")
-                sb.Append(GetRegexUnicodeChar(Path.DirectorySeparatorChar))
-                sb.Append(GetRegexUnicodeChar(Path.AltDirectorySeparatorChar))
-                sb.Append(GetRegexUnicodeChar(Path.PathSeparator))
-                sb.Append(GetRegexUnicodeChar(Path.VolumeSeparatorChar))
+                    For Each c As Char In Path.InvalidPathChars
+                        .Append(GetRegexUnicodeChar(c))
+                    Next
 
-                For Each c In Path.InvalidPathChars
-                    sb.Append(GetRegexUnicodeChar(c))
-                Next
-
-                sb.Append("]")
-                FileNameCharPattern = sb.ToString()
+                    .Append("]")
+                    FileNameCharPattern = .ToString()
+                End With
             End If
 
             FilePattern = Replace(FileSpec, "\", "\u005C")      ' Backslash in Regex means special sequence, here we really want a backslash
             FilePattern = Replace(FilePattern, ".", "\u002E")   ' Dot in Regex means any character, here we really want a dot
             FilePattern = Replace(FilePattern, "?", FileNameCharPattern)
+
             Return "^" & Replace(FilePattern, "*", "(" & FileNameCharPattern & ")*") & "$"
 
         End Function

@@ -115,10 +115,10 @@ Namespace EE.Phasor.PDCstream
 
                 buffer(0) = SyncByte
                 buffer(1) = Convert.ToByte(1)
-                EndianOrder.SwapCopy(BitConverter.GetBytes(Convert.ToInt16(buffer.Length \ 2)), 0, buffer, 2, 2)
-                EndianOrder.SwapCopy(BitConverter.GetBytes(Convert.ToUInt32(m_timeTag.Value)), 0, buffer, 4, 4)
-                EndianOrder.SwapCopy(BitConverter.GetBytes(Convert.ToInt16(m_index)), 0, buffer, 8, 2)
-                EndianOrder.SwapCopy(BitConverter.GetBytes(Convert.ToInt16(Cells.Length)), 0, buffer, 10, 2)
+                EndianOrder.SwapCopyBytes(Convert.ToInt16(buffer.Length \ 2), buffer, 2)
+                EndianOrder.SwapCopyBytes(Convert.ToUInt32(m_timeTag.Value), buffer, 4)
+                EndianOrder.SwapCopyBytes(Convert.ToInt16(m_index), buffer, 8)
+                EndianOrder.SwapCopyBytes(Convert.ToInt16(Cells.Length), buffer, 10)
                 index = 12
 
                 For x As Integer = 0 To Cells.Length - 1

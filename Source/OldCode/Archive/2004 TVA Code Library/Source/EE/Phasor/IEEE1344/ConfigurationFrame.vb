@@ -19,7 +19,6 @@ Imports System.Text
 Imports TVA.Interop
 Imports TVA.Shared.Bit
 Imports TVA.Shared.DateTime
-Imports TVA.Compression.Common
 
 Namespace EE.Phasor.IEEE1344
 
@@ -28,22 +27,16 @@ Namespace EE.Phasor.IEEE1344
 
         Inherits BaseFrame
 
-        Protected m_stationName As String
-        Protected m_pmuIDCode As Int64
-        Protected m_phasorDefinitions As PhasorDefinitions
-        Protected m_digitalDefinitions As DigitalDefinitions
-        Protected m_freqFlags As Int16
-        Protected m_period As Int16
+        Protected m_data As Byte()
 
         Protected Const FrameCountMask As Int16 = Not (FrameTypeMask Or Bit11 Or Bit12)
+
+        Public Const MaximumFrameCount As Int16 = FrameCountMask
 
         Public Sub New()
 
             MyBase.New()
             SetFrameType(PMUFrameType.ConfigurationFrame)
-
-            m_phasorDefinitions = New PhasorDefinitions
-            m_digitalDefinitions = New DigitalDefinitions
 
         End Sub
 
@@ -54,45 +47,24 @@ Namespace EE.Phasor.IEEE1344
             ' No need to reparse data, so we pickup what's already been parsed...
             Clone(parsedImage)
 
-            Dim phasorCount, digitalCount, phasorOffset, digitalOffset, freqOffset, x As Int16
-
-            m_stationName = Trim(Encoding.ASCII.GetString(binaryImage, startIndex, 16))
-            m_pmuIDCode = EndianOrder.ReverseToInt64(binaryImage, startIndex + 16)
-            phasorCount = EndianOrder.ReverseToInt16(binaryImage, startIndex + 24)
-            digitalCount = EndianOrder.ReverseToInt16(binaryImage, startIndex + 26)
-
-            startIndex += 28
-            phasorOffset = startIndex + (phasorCount + digitalCount) * 16
-            digitalOffset = phasorOffset + phasorCount * 4
-            freqOffset = digitalOffset + digitalCount * 2
-
-            ' Load phasors
-            For x = 0 To phasorCount - 1
-                m_phasorDefinitions.Add(New PhasorDefinition(Encoding.ASCII.GetString(binaryImage, startIndex + x * 16, 16), binaryImage, phasorOffset + x * 4))
-            Next
-
-            startIndex += phasorCount * 16
-
-            ' Load digitals
-            For x = 0 To digitalCount - 1
-                m_digitalDefinitions.Add(New DigitalDefinition(Encoding.ASCII.GetString(binaryImage, startIndex + x * 16, 16), binaryImage, phasorOffset + x * 2))
-            Next
-
-            m_freqFlags = EndianOrder.ReverseToInt16(binaryImage, freqOffset)
-            m_period = EndianOrder.ReverseToInt16(binaryImage, freqOffset + 2)
+            ' Get configuration data
+            m_data = Array.CreateInstance(GetType(Byte), DataLength)
+            Buffer.BlockCopy(binaryImage, startIndex, m_data, 0, m_data.Length)
 
         End Sub
 
-        Public ReadOnly Property PhasorDefinitions() As PhasorDefinitions
+        Public Overrides Property DataImage() As Byte()
             Get
-                Return m_phasorDefinitions
+                Return m_data
             End Get
-        End Property
-
-        Public ReadOnly Property DigitalDefinitions() As DigitalDefinitions
-            Get
-                Return m_digitalDefinitions
-            End Get
+            Set(ByVal Value As Byte())
+                If Value.Length > MaximumDataLength Then
+                    Throw New OverflowException("Data length cannot exceed " & MaximumDataLength & " per frame")
+                Else
+                    m_data = Value
+                    DataLength = Value.Length
+                End If
+            End Set
         End Property
 
         Public Overridable Property IsFirstFrame() As Boolean
@@ -110,13 +82,13 @@ Namespace EE.Phasor.IEEE1344
 
         Public Overridable Property IsLastFrame() As Boolean
             Get
-                Return ((m_sampleCount And Bit11) > 0)
+                Return ((m_sampleCount And Bit11) = 0)
             End Get
             Set(ByVal Value As Boolean)
                 If Value Then
-                    m_sampleCount = m_sampleCount Or Bit11
-                Else
                     m_sampleCount = m_sampleCount And Not Bit11
+                Else
+                    m_sampleCount = m_sampleCount Or Bit11
                 End If
             End Set
         End Property
@@ -134,78 +106,9 @@ Namespace EE.Phasor.IEEE1344
             End Set
         End Property
 
-        Public ReadOnly Property MaximumFrameCount() As Int16
-            Get
-                Return FrameCountMask
-            End Get
-        End Property
-
-        Public Property FrequencyIsIncluded() As Boolean
-            Get
-                Return ((m_freqFlags And Bit8) = 0)
-            End Get
-            Set(ByVal Value As Boolean)
-                If Value Then
-                    m_freqFlags = m_freqFlags And Not Bit8
-                Else
-                    m_freqFlags = m_freqFlags Or Bit8
-                End If
-            End Set
-        End Property
-
-        Public Property DfDtIsIncluded() As Boolean
-            Get
-                Return ((m_freqFlags And Bit9) = 0)
-            End Get
-            Set(ByVal Value As Boolean)
-                If Value Then
-                    m_freqFlags = m_freqFlags And Not Bit9
-                Else
-                    m_freqFlags = m_freqFlags Or Bit9
-                End If
-            End Set
-        End Property
-
-        Public Property LineFrequency() As PMULineFrequency
-            Get
-                If (m_freqFlags And Bit0) > 0 Then
-                    Return PMULineFrequency._50Hz
-                Else
-                    Return PMULineFrequency._60Hz
-                End If
-            End Get
-            Set(ByVal Value As PMULineFrequency)
-                If Value = PMULineFrequency._50Hz Then
-                    m_freqFlags = m_freqFlags Or Bit0
-                Else
-                    m_freqFlags = m_freqFlags And Not Bit0
-                End If
-            End Set
-        End Property
-
         Protected Overrides ReadOnly Property Name() As String
             Get
                 Return "IEEE1344.ConfigurationFrame"
-            End Get
-        End Property
-
-        Public Overrides ReadOnly Property BinaryLength() As Integer
-            Get
-                Dim length As Integer = CommonBinaryLength + 2
-
-                Return length
-            End Get
-        End Property
-
-        Public Overrides ReadOnly Property BinaryImage() As Byte()
-            Get
-                Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BinaryLength)
-
-                Array.Copy(MyBase.CommonBinaryImage, 0, buffer, 0, CommonBinaryLength)
-
-                'AppendCRC16(buffer, 0, CommonBinaryLength + m_data.Length)
-
-                Return buffer
             End Get
         End Property
 

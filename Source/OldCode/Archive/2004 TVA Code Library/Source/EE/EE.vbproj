@@ -101,12 +101,22 @@
                     BuildAction = "Compile"
                 />
                 <File
+                    RelPath = "Phasor\IEEE1344\Collections.vb"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
                     RelPath = "Phasor\IEEE1344\CommandFrame.vb"
                     SubType = "Code"
                     BuildAction = "Compile"
                 />
                 <File
                     RelPath = "Phasor\IEEE1344\Common.vb"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "Phasor\IEEE1344\ConfigurationFile.vb"
                     SubType = "Code"
                     BuildAction = "Compile"
                 />
@@ -127,6 +137,11 @@
                 />
                 <File
                     RelPath = "Phasor\IEEE1344\FrameParser.vb"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "Phasor\IEEE1344\HeaderFile.vb"
                     SubType = "Code"
                     BuildAction = "Compile"
                 />

@@ -70,10 +70,10 @@ namespace TVA
 				static Int16 CRC16(Stream* InStream);
 				static Int16 CRC16(String* FileName);
 				
-				static Int16 QuickCRC16(Int16 CRC, System::Byte Data[], int Offset, int Count);
-				static Int16 QuickCRC16(System::Byte Data[]);
-				static Int16 QuickCRC16(Stream* InStream);
-				static Int16 QuickCRC16(String* FileName);
+				static Int16 CRC_CCITT(Int16 CRC, System::Byte Data[], int Offset, int Count);
+				static Int16 CRC_CCITT(System::Byte Data[]);
+				static Int16 CRC_CCITT(Stream* InStream);
+				static Int16 CRC_CCITT(String* FileName);
 				
 				static String* ZLibVersion();
 			private:

@@ -21,30 +21,10 @@ Imports TVA.Shared.Bit
 
 Namespace EE.Phasor.IEEE1344
 
-    Public Class DigitalDefinitions
-
-        Inherits CollectionBase
-
-        Friend Sub New()
-        End Sub
-
-        Public Sub Add(ByVal value As DigitalDefinition)
-
-            List.Add(value)
-
-        End Sub
-
-        Default Public ReadOnly Property Item(ByVal index As Integer) As DigitalDefinition
-            Get
-                Return DirectCast(List.Item(index), DigitalDefinition)
-            End Get
-        End Property
-
-    End Class
-
     Public Class DigitalDefinition
 
         Public Const BinaryLength As Integer = 2
+        Public Const MaximumLabelLength As Integer = 16
 
         Private m_label As String
         Private m_flags As Int16
@@ -105,12 +85,6 @@ Namespace EE.Phasor.IEEE1344
             End Set
         End Property
 
-        Public ReadOnly Property MaximumLabelLength()
-            Get
-                Return 16
-            End Get
-        End Property
-
         Public ReadOnly Property LabelImage() As Byte()
             Get
                 Return Encoding.ASCII.GetBytes(m_label.PadRight(MaximumLabelLength))
@@ -121,7 +95,7 @@ Namespace EE.Phasor.IEEE1344
             Get
                 Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BinaryLength)
 
-                EndianOrder.SwapCopy(BitConverter.GetBytes(m_flags), 0, buffer, 0, 2)
+                EndianOrder.SwapCopyBytes(m_flags, buffer, 0)
 
                 Return buffer
             End Get

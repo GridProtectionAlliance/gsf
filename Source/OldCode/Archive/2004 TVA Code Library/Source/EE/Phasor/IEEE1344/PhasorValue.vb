@@ -50,7 +50,8 @@ Namespace EE.Phasor.IEEE1344
         ' Create phasor from scaled rectangular coordinates
         Public Shared Function CreateFromScaledRectangularValues(ByVal phasorDefinition As PhasorDefinition, ByVal real As Double, ByVal imaginary As Double) As PhasorValue
 
-            Return CreateFromUnscaledRectangularValues(phasorDefinition, real, imaginary)
+            Dim scale As Double = phasorDefinition.CalFactor
+            Return CreateFromUnscaledRectangularValues(phasorDefinition, real / scale, imaginary / scale)
 
         End Function
 
@@ -78,16 +79,41 @@ Namespace EE.Phasor.IEEE1344
         ' Calculate watts from imaginary and real components of two phasors
         Public Shared Function CalculatePower(ByVal voltage As PhasorValue, ByVal current As PhasorValue) As Double
 
-            Return 3 * (((voltage.Real * current.Real) + (voltage.Imaginary * current.Imaginary)) * voltage.ScalingFactor * current.ScalingFactor)
+            Return 3 * _
+                (Convert.ToDouble(voltage.Real) * Convert.ToDouble(current.Real) + _
+                Convert.ToDouble(voltage.Imaginary) * Convert.ToDouble(current.Imaginary))
 
         End Function
 
         ' Calculate vars from imaginary and real components of two phasors
         Public Shared Function CalculateVars(ByVal voltage As PhasorValue, ByVal current As PhasorValue) As Double
 
-            Return 3 * (((voltage.Imaginary * current.Real) - (voltage.Real * current.Imaginary)) * voltage.ScalingFactor * current.ScalingFactor)
+            Return 3 * _
+                (Convert.ToDouble(voltage.Imaginary) * Convert.ToDouble(current.Real) - _
+                Convert.ToDouble(voltage.Real) * Convert.ToDouble(current.Imaginary))
 
         End Function
+
+        Public Sub New(ByVal phasorDefinition As PhasorDefinition, ByVal binaryImage As Byte(), ByVal startIndex As Integer, ByVal phasorFormat As PhasorFormat)
+
+            m_phasorDefinition = phasorDefinition
+
+            If phasorFormat = phasorFormat.Rectangular Then
+                m_real = EndianOrder.ReverseToInt16(binaryImage, startIndex)
+                m_imaginary = EndianOrder.ReverseToInt16(binaryImage, startIndex + 2)
+            Else
+                Dim magnitude As Double = EndianOrder.ReverseToInt16(binaryImage, startIndex)
+                Dim angle As Double = EndianOrder.ReverseToInt16(binaryImage, startIndex + 2) * 180 / Math.PI / 10000
+
+                With CreateFromPolarValues(phasorDefinition, angle, magnitude)
+                    m_real = .Real
+                    m_imaginary = .Imaginary
+                End With
+            End If
+
+            m_compositeValues = New CompositeValues(2)
+
+        End Sub
 
         Private Sub New(ByVal phasorDefinition As PhasorDefinition, ByVal real As Int16, ByVal imaginary As Int16)
 
@@ -106,6 +132,7 @@ Namespace EE.Phasor.IEEE1344
 
         Public ReadOnly Property ScalingFactor() As Double
             Get
+                Return m_phasorDefinition.CalFactor
             End Get
         End Property
 
@@ -124,7 +151,10 @@ Namespace EE.Phasor.IEEE1344
 
         Public Property Magnitude() As Double
             Get
-                Return Math.Sqrt(m_real * m_real + m_imaginary * m_imaginary) * ScalingFactor()
+                Return Math.Sqrt( _
+                    Convert.ToDouble(m_real) * Convert.ToDouble(m_real) + _
+                    Convert.ToDouble(m_imaginary) * Convert.ToDouble(m_imaginary)) * _
+                    ScalingFactor()
             End Get
             Set(ByVal Value As Double)
                 ' We store magnitude as one of our required composite values
@@ -149,13 +179,13 @@ Namespace EE.Phasor.IEEE1344
 
         Public ReadOnly Property ScaledReal() As Double
             Get
-                Return m_real * ScalingFactor
+                Return Convert.ToDouble(m_real) * ScalingFactor
             End Get
         End Property
 
         Public ReadOnly Property ScaledImaginary() As Double
             Get
-                Return m_imaginary * ScalingFactor
+                Return Convert.ToDouble(m_imaginary) * ScalingFactor
             End Get
         End Property
 
@@ -181,12 +211,17 @@ Namespace EE.Phasor.IEEE1344
 
         End Sub
 
-        Public ReadOnly Property BinaryImage() As Byte()
+        Public ReadOnly Property BinaryImage(ByVal phasorFormat As PhasorFormat) As Byte()
             Get
                 Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BinaryLength)
 
-                EndianOrder.SwapCopy(BitConverter.GetBytes(m_real), 0, buffer, 0, 2)
-                EndianOrder.SwapCopy(BitConverter.GetBytes(m_imaginary), 0, buffer, 2, 2)
+                If phasorFormat = phasorFormat.Rectangular Then
+                    EndianOrder.SwapCopyBytes(m_real, buffer, 0)
+                    EndianOrder.SwapCopyBytes(m_imaginary, buffer, 2)
+                Else
+                    EndianOrder.SwapCopyBytes(Convert.ToInt16(Magnitude), buffer, 0)
+                    EndianOrder.SwapCopyBytes(Convert.ToInt16(Angle * Math.PI / 180 * 10000), buffer, 2)
+                End If
 
                 Return buffer
             End Get

@@ -32,6 +32,8 @@ Namespace EE.Phasor.IEEE1344
 
         Protected Const FrameCountMask As Int16 = Not (FrameTypeMask Or Bit11 Or Bit12)
 
+        Public Const MaximumFrameCount As Int16 = FrameCountMask
+
         Public Sub New()
 
             MyBase.New()
@@ -67,13 +69,13 @@ Namespace EE.Phasor.IEEE1344
 
         Public Overridable Property IsLastFrame() As Boolean
             Get
-                Return ((m_sampleCount And Bit11) > 0)
+                Return ((m_sampleCount And Bit11) = 0)
             End Get
             Set(ByVal Value As Boolean)
                 If Value Then
-                    m_sampleCount = m_sampleCount Or Bit11
-                Else
                     m_sampleCount = m_sampleCount And Not Bit11
+                Else
+                    m_sampleCount = m_sampleCount Or Bit11
                 End If
             End Set
         End Property
@@ -91,21 +93,25 @@ Namespace EE.Phasor.IEEE1344
             End Set
         End Property
 
-        Public ReadOnly Property MaximumFrameCount() As Int16
-            Get
-                Return FrameCountMask
-            End Get
-        End Property
-
         Public Property Data() As String
             Get
                 Return m_data
             End Get
             Set(ByVal Value As String)
-                If Len(Value) > MaximumDataLength Then
+                m_data = Value
+            End Set
+        End Property
+
+        Public Overrides Property DataImage() As Byte()
+            Get
+                Return Encoding.ASCII.GetBytes(m_data)
+            End Get
+            Set(ByVal Value As Byte())
+                If Value.Length > MaximumDataLength Then
                     Throw New OverflowException("Data length cannot exceed " & MaximumDataLength & " per frame")
                 Else
-                    m_data = Value
+                    m_data = Encoding.ASCII.GetString(Value)
+                    DataLength = Len(m_data)
                 End If
             End Set
         End Property
@@ -113,28 +119,6 @@ Namespace EE.Phasor.IEEE1344
         Protected Overrides ReadOnly Property Name() As String
             Get
                 Return "IEEE1344.HeaderFrame"
-            End Get
-        End Property
-
-        Public Overrides ReadOnly Property BinaryLength() As Integer
-            Get
-                Dim length As Integer = CommonBinaryLength + 2
-
-                length += m_data.Length
-
-                Return length
-            End Get
-        End Property
-
-        Public Overrides ReadOnly Property BinaryImage() As Byte()
-            Get
-                Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BinaryLength)
-
-                Array.Copy(MyBase.CommonBinaryImage, 0, buffer, 0, CommonBinaryLength)
-                Array.Copy(Encoding.ASCII.GetBytes(m_data), 0, buffer, CommonBinaryLength, m_data.Length)
-                AppendCRC16(buffer, 0, CommonBinaryLength + m_data.Length)
-
-                Return buffer
             End Get
         End Property
 

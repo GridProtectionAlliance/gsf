@@ -48,9 +48,9 @@ Namespace Interop
 
         Public Shared Function ReverseToBoolean(ByVal reverseBytes As Byte(), ByVal startIndex As Integer) As Boolean
 
-            Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), 2)
+            Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), 1)
 
-            SwapCopy(reverseBytes, startIndex, buffer, 0, 2)
+            SwapCopy(reverseBytes, startIndex, buffer, 0, 1)
 
             Return BitConverter.ToBoolean(buffer, 0)
 
@@ -205,6 +205,66 @@ Namespace Interop
             Return ReverseBuffer(BitConverter.GetBytes(value))
 
         End Function
+
+        Public Shared Sub SwapCopyBytes(ByVal value As Boolean, ByVal destinationArray As Array, ByVal destinationIndex As Integer)
+
+            SwapCopy(BitConverter.GetBytes(value), 0, destinationArray, destinationIndex, 1)
+
+        End Sub
+
+        Public Shared Sub SwapCopyBytes(ByVal value As Char, ByVal destinationArray As Array, ByVal destinationIndex As Integer)
+
+            SwapCopy(BitConverter.GetBytes(value), 0, destinationArray, destinationIndex, 2)
+
+        End Sub
+
+        Public Shared Sub SwapCopyBytes(ByVal value As Double, ByVal destinationArray As Array, ByVal destinationIndex As Integer)
+
+            SwapCopy(BitConverter.GetBytes(value), 0, destinationArray, destinationIndex, 8)
+
+        End Sub
+
+        Public Shared Sub SwapCopyBytes(ByVal value As Int16, ByVal destinationArray As Array, ByVal destinationIndex As Integer)
+
+            SwapCopy(BitConverter.GetBytes(value), 0, destinationArray, destinationIndex, 2)
+
+        End Sub
+
+        Public Shared Sub SwapCopyBytes(ByVal value As Int32, ByVal destinationArray As Array, ByVal destinationIndex As Integer)
+
+            SwapCopy(BitConverter.GetBytes(value), 0, destinationArray, destinationIndex, 4)
+
+        End Sub
+
+        Public Shared Sub SwapCopyBytes(ByVal value As Int64, ByVal destinationArray As Array, ByVal destinationIndex As Integer)
+
+            SwapCopy(BitConverter.GetBytes(value), 0, destinationArray, destinationIndex, 8)
+
+        End Sub
+
+        Public Shared Sub SwapCopyBytes(ByVal value As Single, ByVal destinationArray As Array, ByVal destinationIndex As Integer)
+
+            SwapCopy(BitConverter.GetBytes(value), 0, destinationArray, destinationIndex, 4)
+
+        End Sub
+
+        Public Shared Sub SwapCopyBytes(ByVal value As UInt16, ByVal destinationArray As Array, ByVal destinationIndex As Integer)
+
+            SwapCopy(BitConverter.GetBytes(value), 0, destinationArray, destinationIndex, 2)
+
+        End Sub
+
+        Public Shared Sub SwapCopyBytes(ByVal value As UInt32, ByVal destinationArray As Array, ByVal destinationIndex As Integer)
+
+            SwapCopy(BitConverter.GetBytes(value), 0, destinationArray, destinationIndex, 4)
+
+        End Sub
+
+        Public Shared Sub SwapCopyBytes(ByVal value As UInt64, ByVal destinationArray As Array, ByVal destinationIndex As Integer)
+
+            SwapCopy(BitConverter.GetBytes(value), 0, destinationArray, destinationIndex, 8)
+
+        End Sub
 
     End Class
 

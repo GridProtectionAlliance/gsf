@@ -20,30 +20,10 @@ Imports TVA.Interop
 
 Namespace EE.Phasor.IEEE1344
 
-    Public Class PhasorDefinitions
-
-        Inherits CollectionBase
-
-        Friend Sub New()
-        End Sub
-
-        Public Sub Add(ByVal value As PhasorDefinition)
-
-            List.Add(value)
-
-        End Sub
-
-        Default Public ReadOnly Property Item(ByVal index As Integer) As PhasorDefinition
-            Get
-                Return DirectCast(List.Item(index), PhasorDefinition)
-            End Get
-        End Property
-
-    End Class
-
     Public Class PhasorDefinition
 
         Public Const BinaryLength As Integer = 4
+        Public Const MaximumLabelLength As Integer = 16
 
         Private m_label As String
         Private m_type As PhasorType
@@ -59,19 +39,14 @@ Namespace EE.Phasor.IEEE1344
 
             Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BinaryLength)
 
-            m_label = label
+            ' Validate and store phasor label
+            Me.Label = label
 
-            EndianOrder.SwapCopy(binaryImage, 0, buffer, 0, BinaryLength)
+            ' Get phasor type from first byte
+            m_type = binaryImage(startIndex)
 
-            ' Get phasor type
-            m_type = buffer(0)
-
-            ' Scoot the three calfactor bytes down so we can convert them to a 32-bit integer
-            For x As Integer = 0 To 2
-                buffer(x) = buffer(x + 1)
-            Next
-
-            buffer(3) = 0
+            ' Last three bytes represent scaling factor
+            EndianOrder.SwapCopy(binaryImage, startIndex + 1, buffer, 0, BinaryLength - 1)
 
             m_calFactor = BitConverter.ToInt32(buffer, 0)
 
@@ -111,15 +86,9 @@ Namespace EE.Phasor.IEEE1344
                 If Len(Value) > MaximumLabelLength Then
                     Throw New OverflowException("Label length cannot exceed " & MaximumLabelLength)
                 Else
-                    m_label = Value
+                    m_label = Trim(Replace(Value, Chr(20), " "))
                 End If
             End Set
-        End Property
-
-        Public ReadOnly Property MaximumLabelLength()
-            Get
-                Return 16
-            End Get
         End Property
 
         Public ReadOnly Property LabelImage() As Byte()
@@ -132,17 +101,13 @@ Namespace EE.Phasor.IEEE1344
             Get
                 Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BinaryLength)
 
-                Array.Copy(BitConverter.GetBytes(m_calFactor), 0, buffer, 0, 4)
-
-                ' Scoot the three calfactor bytes up so we can include the phasor type byte
-                For x As Integer = 3 To 1 Step -1
-                    buffer(x) = buffer(x - 1)
-                Next
-
                 ' Include phasor type
                 buffer(0) = m_type
 
-                Return EndianOrder.ReverseBuffer(buffer)
+                ' Include calfactor
+                EndianOrder.SwapCopy(BitConverter.GetBytes(m_calFactor), 0, buffer, 1, 3)
+
+                Return buffer
             End Get
         End Property
 

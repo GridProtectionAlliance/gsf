@@ -267,14 +267,19 @@ Namespace [Shared]
 
         Public Shared Function HexEncode(ByVal Data As Byte()) As String
 
-            Dim strHex As New StringBuilder
-            Dim x As Integer
+            Return HexEncode(Data, 0, Data.Length)
 
-            For x = 0 To Data.Length - 1
-                strHex.Append(Data(x).ToString("x"c).PadLeft(2, "0"c))
-            Next
+        End Function
 
-            Return strHex.ToString()
+        Public Shared Function HexEncode(ByVal Data As Byte(), ByVal offset As Integer, ByVal length As Integer) As String
+
+            With New StringBuilder
+                For x As Integer = 0 To length - 1
+                    .Append(Data(offset + x).ToString("x"c).PadLeft(2, "0"c))
+                Next
+
+                Return .ToString()
+            End With
 
         End Function
 
@@ -327,7 +332,6 @@ Namespace [Shared]
             Return Encoding.Unicode.GetString(Base64Decode(Str))
 
         End Function
-
 
     End Class
 

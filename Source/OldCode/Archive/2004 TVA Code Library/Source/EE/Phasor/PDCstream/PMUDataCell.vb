@@ -216,8 +216,8 @@ Namespace EE.Phasor.PDCstream
                 buffer(1) = Convert.ToByte(m_pmuDefinition.SampleRate)
                 buffer(2) = Convert.ToByte(2)
                 buffer(3) = Convert.ToByte(PhasorValues.Length)
-                EndianOrder.SwapCopy(BitConverter.GetBytes(Convert.ToInt16(m_sampleNumber)), 0, buffer, 4, 2)
-                EndianOrder.SwapCopy(BitConverter.GetBytes(StatusFlags), 0, buffer, 6, 2)
+                EndianOrder.SwapCopyBytes(Convert.ToInt16(m_sampleNumber), buffer, 4)
+                EndianOrder.SwapCopyBytes(StatusFlags, buffer, 6)
                 index = 8
 
                 For x As Integer = 0 To PhasorValues.Length - 1
@@ -228,8 +228,8 @@ Namespace EE.Phasor.PDCstream
                 Array.Copy(FrequencyValue.BinaryImage, 0, buffer, index, FrequencyValue.BinaryLength)
                 index += FrequencyValue.BinaryLength
 
-                EndianOrder.SwapCopy(BitConverter.GetBytes(Digital0), 0, buffer, index, 2)
-                EndianOrder.SwapCopy(BitConverter.GetBytes(Digital1), 0, buffer, index + 2, 2)
+                EndianOrder.SwapCopyBytes(Digital0, buffer, index)
+                EndianOrder.SwapCopyBytes(Digital1, buffer, index + 2)
 
                 Return buffer
             End Get

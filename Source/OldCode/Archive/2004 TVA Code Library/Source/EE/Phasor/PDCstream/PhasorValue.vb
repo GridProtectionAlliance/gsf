@@ -79,14 +79,20 @@ Namespace EE.Phasor.PDCstream
         ' Calculate watts from imaginary and real components of two phasors
         Public Shared Function CalculatePower(ByVal voltage As PhasorValue, ByVal current As PhasorValue) As Double
 
-            Return 3 * (((voltage.Real * current.Real) + (voltage.Imaginary * current.Imaginary)) * voltage.ScalingFactor * current.ScalingFactor)
+            Return 3 * _
+                (((Convert.ToDouble(voltage.Real) * Convert.ToDouble(current.Real)) + _
+                (Convert.ToDouble(voltage.Imaginary) * Convert.ToDouble(current.Imaginary))) * _
+                voltage.ScalingFactor * current.ScalingFactor)
 
         End Function
 
         ' Calculate vars from imaginary and real components of two phasors
         Public Shared Function CalculateVars(ByVal voltage As PhasorValue, ByVal current As PhasorValue) As Double
 
-            Return 3 * (((voltage.Imaginary * current.Real) - (voltage.Real * current.Imaginary)) * voltage.ScalingFactor * current.ScalingFactor)
+            Return 3 * _
+                (((Convert.ToDouble(voltage.Imaginary) * Convert.ToDouble(current.Real)) - _
+                (Convert.ToDouble(voltage.Real) * Convert.ToDouble(current.Imaginary))) * _
+                voltage.ScalingFactor * current.ScalingFactor)
 
         End Function
 
@@ -126,7 +132,10 @@ Namespace EE.Phasor.PDCstream
 
         Public Property Magnitude() As Double
             Get
-                Return Math.Sqrt(m_real * m_real + m_imaginary * m_imaginary) * ScalingFactor()
+                Return Math.Sqrt( _
+                    Convert.ToDouble(m_real) * Convert.ToDouble(m_real) + _
+                    Convert.ToDouble(m_imaginary) * Convert.ToDouble(m_imaginary)) * _
+                    ScalingFactor()
             End Get
             Set(ByVal Value As Double)
                 ' We store magnitude as one of our required composite values
@@ -151,13 +160,13 @@ Namespace EE.Phasor.PDCstream
 
         Public ReadOnly Property ScaledReal() As Double
             Get
-                Return m_real * ScalingFactor
+                Return Convert.ToDouble(m_real) * ScalingFactor
             End Get
         End Property
 
         Public ReadOnly Property ScaledImaginary() As Double
             Get
-                Return m_imaginary * ScalingFactor
+                Return Convert.ToDouble(m_imaginary) * ScalingFactor
             End Get
         End Property
 
@@ -187,8 +196,8 @@ Namespace EE.Phasor.PDCstream
             Get
                 Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BinaryLength)
 
-                EndianOrder.SwapCopy(BitConverter.GetBytes(m_real), 0, buffer, 0, 2)
-                EndianOrder.SwapCopy(BitConverter.GetBytes(m_imaginary), 0, buffer, 2, 2)
+                EndianOrder.SwapCopyBytes(m_real, buffer, 0)
+                EndianOrder.SwapCopyBytes(m_imaginary, buffer, 2)
 
                 Return buffer
             End Get
