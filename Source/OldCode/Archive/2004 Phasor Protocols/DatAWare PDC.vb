@@ -495,6 +495,7 @@ Public Class DatAWarePDC
 
         ' TODO: You should never have very many unpublished samples queued up - each sample represents one second of data,
         ' so the total number of unpublished samples equals the number of seconds the PDC is behind real-time...
+        ' TODO: define tolerable sample count...
         If total > 6 Then
             ' Don't send any warnings more than every 10 seconds
             If (DateTime.Now.Ticks - lastWarning) / 10000000L > 10 Then
