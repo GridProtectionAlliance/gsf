@@ -26,7 +26,12 @@ Namespace EE.Phasor
 
         Property Index() As Integer
 
-        Property ScalingFactor() As Double
+        ' Offset provided for end-implementation convenience, base classes should not apply offset to any values
+        Property Offset() As Double
+
+        Property ScalingFactor() As Integer
+
+        ReadOnly Property MaximumScalingFactor() As Integer
 
         Property Label() As String
 

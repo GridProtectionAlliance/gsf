@@ -57,8 +57,8 @@ Namespace EE.Phasor
         ' Note: This method is expected to implemented as a public shared method in derived class automatically passing in phasorValueType
         Protected Shared Function CreateFromUnscaledRectangularValues(ByVal phasorValueType As Type, ByVal phasorFormat As PhasorFormat, ByVal dataFormat As DataFormat, ByVal phasorDefinition As IPhasorDefinition, ByVal real As Int16, ByVal imaginary As Int16) As IPhasorValue
 
-            Dim scale As Double = phasorDefinition.ScalingFactor
-            Return CreateFromRectangularValues(phasorValueType, phasorFormat, dataFormat, phasorDefinition, real * scale, imaginary * scale)
+            Dim scale As Integer = phasorDefinition.ScalingFactor
+            Return CreateFromRectangularValues(phasorValueType, phasorFormat, dataFormat, phasorDefinition, real / scale, imaginary / scale)
 
         End Function
 
@@ -118,7 +118,7 @@ Namespace EE.Phasor
 
         Protected Sub New(ByVal dataFormat As DataFormat, ByVal phasorFormat As PhasorFormat, ByVal phasorDefinition As IPhasorDefinition, ByVal unscaledReal As Int16, ByVal unscaledImaginary As Int16)
 
-            Me.New(dataFormat, phasorFormat, phasorDefinition, unscaledReal * phasorDefinition.ScalingFactor, unscaledImaginary * phasorDefinition.ScalingFactor)
+            Me.New(dataFormat, phasorFormat, phasorDefinition, unscaledReal / phasorDefinition.ScalingFactor, unscaledImaginary / phasorDefinition.ScalingFactor)
 
         End Sub
 
@@ -218,19 +218,19 @@ Namespace EE.Phasor
 
         Public Overridable Property UnscaledReal() As Int16 Implements IPhasorValue.UnscaledReal
             Get
-                Return Convert.ToInt16(m_real / m_phasorDefinition.ScalingFactor)
+                Return Convert.ToInt16(m_real * m_phasorDefinition.ScalingFactor)
             End Get
             Set(ByVal Value As Int16)
-                m_real = Value * m_phasorDefinition.ScalingFactor
+                m_real = Value / m_phasorDefinition.ScalingFactor
             End Set
         End Property
 
         Public Overridable Property UnscaledImaginary() As Int16 Implements IPhasorValue.UnscaledImaginary
             Get
-                Return Convert.ToInt16(m_imaginary / m_phasorDefinition.ScalingFactor)
+                Return Convert.ToInt16(m_imaginary * m_phasorDefinition.ScalingFactor)
             End Get
             Set(ByVal Value As Int16)
-                m_imaginary = Value * m_phasorDefinition.ScalingFactor
+                m_imaginary = Value / m_phasorDefinition.ScalingFactor
             End Set
         End Property
 

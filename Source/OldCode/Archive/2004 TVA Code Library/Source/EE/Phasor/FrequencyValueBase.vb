@@ -1,5 +1,5 @@
 '***********************************************************************
-'  FrequencyValueBase.vb - Frequency value base class
+'  FrequencyValueBase.vb - Frequency and DfDt value base class
 '  Copyright © 2004 - TVA, all rights reserved
 '
 '  Build Environment: VB.NET, Visual Studio 2003
@@ -20,7 +20,7 @@ Imports TVA.Shared.Math
 
 Namespace EE.Phasor
 
-    ' This class represents the protocol independent definition of a frequency value.
+    ' This class represents the protocol independent definition of a frequency and dfdt value.
     Public MustInherit Class FrequencyValueBase
 
         Inherits ChannelValueBase
@@ -35,8 +35,8 @@ Namespace EE.Phasor
             MyBase.New()
 
             m_frequencyDefinition = Nothing
-            m_frequency = 0
-            m_dfdt = 0
+            m_frequency = 0.0
+            m_dfdt = 0.0
 
         End Sub
 
@@ -52,7 +52,9 @@ Namespace EE.Phasor
 
         Protected Sub New(ByVal dataFormat As DataFormat, ByVal frequencyDefinition As IFrequencyDefinition, ByVal unscaledFrequency As Int16, ByVal unscaledDfDt As Int16)
 
-            Me.New(dataFormat, frequencyDefinition, unscaledFrequency * frequencyDefinition.ScalingFactor, unscaledDfDt * frequencyDefinition.ScalingFactor)
+            Me.New(dataFormat, frequencyDefinition, _
+                unscaledFrequency / frequencyDefinition.ScalingFactor + frequencyDefinition.NominalFrequencyOffset, _
+                unscaledDfDt / frequencyDefinition.DfDtScalingFactor)
 
         End Sub
 
@@ -66,7 +68,7 @@ Namespace EE.Phasor
                 UnscaledFrequency = EndianOrder.ReverseToInt16(binaryImage, startIndex)
                 UnscaledDfDt = EndianOrder.ReverseToInt16(binaryImage, startIndex + 2)
             Else
-                m_frequency = EndianOrder.ReverseToSingle(binaryImage, startIndex)
+                m_frequency = EndianOrder.ReverseToSingle(binaryImage, startIndex) + frequencyDefinition.NominalFrequencyOffset
                 m_dfdt = EndianOrder.ReverseToSingle(binaryImage, startIndex + 4)
             End If
 
@@ -98,19 +100,23 @@ Namespace EE.Phasor
 
         Public Overridable Property UnscaledFrequency() As Int16 Implements IFrequencyValue.UnscaledFrequency
             Get
-                Return Convert.ToInt16(m_frequency / m_frequencyDefinition.ScalingFactor)
+                With m_frequencyDefinition
+                    Return Convert.ToInt16((m_frequency - .NominalFrequencyOffset) * .ScalingFactor)
+                End With
             End Get
             Set(ByVal Value As Int16)
-                m_frequency = Value * m_frequencyDefinition.ScalingFactor
+                With m_frequencyDefinition
+                    m_frequency = Value / .ScalingFactor + .NominalFrequencyOffset
+                End With
             End Set
         End Property
 
         Public Overridable Property UnscaledDfDt() As Int16 Implements IFrequencyValue.UnscaledDfDt
             Get
-                Return Convert.ToInt16(m_dfdt / m_frequencyDefinition.ScalingFactor)
+                Return Convert.ToInt16(m_dfdt * m_frequencyDefinition.DfDtScalingFactor)
             End Get
             Set(ByVal Value As Int16)
-                m_dfdt = Value * m_frequencyDefinition.ScalingFactor
+                m_dfdt = Value / m_frequencyDefinition.DfDtScalingFactor
             End Set
         End Property
 
@@ -144,7 +150,7 @@ Namespace EE.Phasor
                     EndianOrder.SwapCopyBytes(UnscaledFrequency, buffer, 0)
                     EndianOrder.SwapCopyBytes(UnscaledDfDt, buffer, 2)
                 Else
-                    EndianOrder.SwapCopyBytes(Convert.ToSingle(m_frequency), buffer, 0)
+                    EndianOrder.SwapCopyBytes(Convert.ToSingle(m_frequency - m_frequencyDefinition.NominalFrequencyOffset), buffer, 0)
                     EndianOrder.SwapCopyBytes(Convert.ToSingle(m_dfdt), buffer, 4)
                 End If
 

@@ -22,7 +22,7 @@ Imports TVA.Compression.Common
 
 Namespace EE.Phasor
 
-    ' This interface represents the protocol independent for any frame of data.
+    ' This interface represents the protocol independent representation of any frame of data.
     Public Interface IDataFrame
 
         Property TimeTag() As NtpTimeTag

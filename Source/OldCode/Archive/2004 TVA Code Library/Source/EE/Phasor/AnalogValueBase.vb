@@ -48,7 +48,7 @@ Namespace EE.Phasor
 
         Protected Sub New(ByVal dataFormat As DataFormat, ByVal analogDefinition As IAnalogDefinition, ByVal unscaledValue As Int16)
 
-            Me.New(dataFormat, analogDefinition, unscaledValue * analogDefinition.ScalingFactor)
+            Me.New(dataFormat, analogDefinition, unscaledValue / analogDefinition.ScalingFactor)
 
         End Sub
 
@@ -72,7 +72,7 @@ Namespace EE.Phasor
             End Get
         End Property
 
-        Public Property Value() As Double Implements IAnalogValue.Value
+        Public Overridable Property Value() As Double Implements IAnalogValue.Value
             Get
                 Return m_value
             End Get
@@ -81,12 +81,12 @@ Namespace EE.Phasor
             End Set
         End Property
 
-        Public Property UnscaledValue() As Int16 Implements IAnalogValue.UnscaledValue
+        Public Overridable Property UnscaledValue() As Int16 Implements IAnalogValue.UnscaledValue
             Get
-                Return Convert.ToInt16(m_value / m_analogDefinition.ScalingFactor)
+                Return Convert.ToInt16(m_value * m_analogDefinition.ScalingFactor)
             End Get
             Set(ByVal Value As Int16)
-                m_value = Value * m_analogDefinition.ScalingFactor
+                m_value = Value / m_analogDefinition.ScalingFactor
             End Set
         End Property
 

@@ -37,9 +37,9 @@ Namespace EE.Phasor
 
         End Sub
 
-        Protected Sub New(ByVal index As Integer, ByVal label As String, ByVal scale As Double, ByVal type As PhasorType, ByVal voltageReference As IPhasorDefinition)
+        Protected Sub New(ByVal index As Integer, ByVal label As String, ByVal scale As Integer, ByVal offset As Double, ByVal type As PhasorType, ByVal voltageReference As IPhasorDefinition)
 
-            MyBase.New(index, label, scale)
+            MyBase.New(index, label, scale, offset)
 
             m_type = type
             m_voltageReference = voltageReference
@@ -53,35 +53,6 @@ Namespace EE.Phasor
             Set(ByVal Value As PhasorType)
                 m_type = Value
             End Set
-        End Property
-
-        Public Overrides Property ScalingFactor() As Double
-            Get
-                Return m_scale
-            End Get
-            Set(ByVal Value As Double)
-                m_scale = Value
-                If ConversionFactor > MaximumConversionFactor Then Throw New OverflowException("Conversion factor value (ScalingFactor * 10000) cannot exceed " & MaximumConversionFactor)
-            End Set
-        End Property
-
-        Protected Overridable ReadOnly Property ConversionFactor() As Int32
-            Get
-                Return Convert.ToInt32(m_scale * 100000)
-            End Get
-        End Property
-
-        Protected Overridable ReadOnly Property MaximumConversionFactor() As Int32
-            Get
-                ' Typical conversion factor should fit within 3 bytes (i.e., 24 bits) of space
-                Return 2 ^ 24
-            End Get
-        End Property
-
-        Public Overrides ReadOnly Property MaximumLabelLength() As Integer
-            Get
-                Return 16
-            End Get
         End Property
 
         Public Overridable Property VoltageReference() As IPhasorDefinition Implements IPhasorDefinition.VoltageReference

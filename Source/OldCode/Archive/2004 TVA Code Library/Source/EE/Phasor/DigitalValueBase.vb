@@ -71,12 +71,12 @@ Namespace EE.Phasor
                 If Value = EE.Phasor.DataFormat.FixedInteger Then
                     m_dataFormat = Value
                 Else
-                    Throw New NotImplementedException("Digital values can only be fixed integers")
+                    Throw New NotImplementedException("Digital values represent bit flags and thus can only be fixed integers")
                 End If
             End Set
         End Property
 
-        Public Property Value() As Int16 Implements IDigitalValue.Value
+        Public Overridable Property Value() As Int16 Implements IDigitalValue.Value
             Get
                 Return m_value
             End Get

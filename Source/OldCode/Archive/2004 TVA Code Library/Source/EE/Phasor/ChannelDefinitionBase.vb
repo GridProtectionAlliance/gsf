@@ -26,21 +26,25 @@ Namespace EE.Phasor
 
         Protected m_index As Integer
         Protected m_label As String
-        Protected m_scale As Double
+        Protected m_scale As Integer
+        Protected m_offset As Double
 
         Protected Sub New()
 
             m_index = 0
             m_label = ""
-            m_scale = 1.0
+            m_scale = 1
+            m_offset = 0.0
 
         End Sub
 
-        Protected Sub New(ByVal index As Integer, ByVal label As String, ByVal scale As Double)
+        Protected Sub New(ByVal index As Integer, ByVal label As String, ByVal scale As Integer, ByVal offset As Double)
 
             m_index = index
-            m_label = label
-            m_scale = scale
+            m_offset = offset
+
+            Me.Label = label
+            Me.ScalingFactor = scale
 
         End Sub
 
@@ -55,13 +59,30 @@ Namespace EE.Phasor
             End Set
         End Property
 
-        Public Overridable Property ScalingFactor() As Double Implements IChannelDefinition.ScalingFactor
+        Public Overridable Property Offset() As Double Implements IChannelDefinition.Offset
+            Get
+                Return m_offset
+            End Get
+            Set(ByVal Value As Double)
+                m_offset = Value
+            End Set
+        End Property
+
+        Public Overridable Property ScalingFactor() As Integer Implements IChannelDefinition.ScalingFactor
             Get
                 Return m_scale
             End Get
-            Set(ByVal Value As Double)
+            Set(ByVal Value As Integer)
+                If Value > MaximumScalingFactor Then Throw New OverflowException("Scaling factor value cannot exceed " & MaximumScalingFactor)
                 m_scale = Value
             End Set
+        End Property
+
+        Public Overridable ReadOnly Property MaximumScalingFactor() As Integer Implements IChannelDefinition.MaximumScalingFactor
+            Get
+                ' Typical scaling/conversion factors should fit within 3 bytes (i.e., 24 bits) of space
+                Return 2 ^ 24
+            End Get
         End Property
 
         Public Overridable Property Label() As String Implements IChannelDefinition.Label
@@ -85,6 +106,7 @@ Namespace EE.Phasor
 
         Public Overridable ReadOnly Property MaximumLabelLength() As Integer Implements IChannelDefinition.MaximumLabelLength
             Get
+                ' Typical label length is 16 characters
                 Return 16
             End Get
         End Property

@@ -29,9 +29,9 @@ Namespace EE.Phasor
 
         End Sub
 
-        Protected Sub New(ByVal index As Integer, ByVal label As String, ByVal scale As Double)
+        Protected Sub New(ByVal index As Integer, ByVal label As String, ByVal scale As Integer, ByVal offset As Double)
 
-            MyBase.New(index, label, scale)
+            MyBase.New(index, label, scale, offset)
 
         End Sub
 

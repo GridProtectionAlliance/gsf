@@ -33,20 +33,34 @@ Namespace EE.Phasor
 
         Protected Sub New(ByVal index As Integer, ByVal label As String)
 
-            MyBase.New(index, label, 1.0)
+            MyBase.New(index, label, 1, 0)
 
         End Sub
 
         <EditorBrowsable(EditorBrowsableState.Never)> _
-        Public NotOverridable Overrides Property ScalingFactor() As Double
+        Public NotOverridable Overrides Property Offset() As Double
+            Get
+                Return m_offset
+            End Get
+            Set(ByVal Value As Double)
+                If Value = 0 Then
+                    m_offset = Value
+                Else
+                    Throw New NotImplementedException("Digital values represent bit flags and thus do not support an offset")
+                End If
+            End Set
+        End Property
+
+        <EditorBrowsable(EditorBrowsableState.Never)> _
+        Public NotOverridable Overrides Property ScalingFactor() As Integer
             Get
                 Return m_scale
             End Get
-            Set(ByVal Value As Double)
-                If Value = 1.0 Then
+            Set(ByVal Value As Integer)
+                If Value = 1 Then
                     m_scale = Value
                 Else
-                    Throw New NotImplementedException("Digital values are not scaled")
+                    Throw New NotImplementedException("Digital values represent bit flags and thus are not scaled")
                 End If
             End Set
         End Property

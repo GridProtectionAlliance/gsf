@@ -23,8 +23,7 @@ Namespace EE.Phasor
         Inherits ChannelDefinitionBase
         Implements IFrequencyDefinition
 
-        Protected m_offset As Double
-        Protected m_dfdtScale As Double
+        Protected m_dfdtScale As Integer
         Protected m_dfdtOffset As Double
         Protected m_nominalFrequency As LineFrequency
 
@@ -32,44 +31,25 @@ Namespace EE.Phasor
 
             MyBase.New()
 
-            m_scale = 1000.0
-            m_offset = 0.0
-            m_dfdtScale = 100.0
+            m_scale = 1000
+            m_dfdtScale = 100
             m_dfdtOffset = 0.0
             m_nominalFrequency = LineFrequency._60Hz
 
         End Sub
 
-        Protected Sub New(ByVal index As Integer, ByVal label As String, ByVal scale As Double, ByVal offset As Double, ByVal dfdtScale As Double, ByVal dfdtOffset As Double, ByVal nominalLineFrequency As LineFrequency)
+        Protected Sub New(ByVal index As Integer, ByVal label As String, ByVal scale As Integer, ByVal offset As Double, ByVal dfdtScale As Double, ByVal dfdtOffset As Double, ByVal nominalLineFrequency As LineFrequency)
 
-            MyBase.New(index, label, scale)
+            MyBase.New(index, label, scale, offset)
 
-            m_offset = offset
-            m_dfdtScale = dfdtScale
             m_dfdtOffset = dfdtOffset
             m_nominalFrequency = nominalLineFrequency
 
+            Me.DfDtScalingFactor = dfdtScale
+
         End Sub
 
-        Public Property Offset() As Double Implements IFrequencyDefinition.Offset
-            Get
-                Return m_offset
-            End Get
-            Set(ByVal Value As Double)
-                m_offset = Value
-            End Set
-        End Property
-
-        Public Property DfDtScalingFactor() As Double Implements IFrequencyDefinition.DfDtScalingFactor
-            Get
-                Return m_dfdtScale
-            End Get
-            Set(ByVal Value As Double)
-                m_dfdtScale = Value
-            End Set
-        End Property
-
-        Public Property DfDtOffset() As Double Implements IFrequencyDefinition.DfDtOffset
+        Public Overridable Property DfDtOffset() As Double Implements IFrequencyDefinition.DfDtOffset
             Get
                 Return m_dfdtOffset
             End Get
@@ -78,13 +58,40 @@ Namespace EE.Phasor
             End Set
         End Property
 
-        Public Property NominalFrequency() As LineFrequency Implements IFrequencyDefinition.NominalFrequency
+        Public Overridable Property DfDtScalingFactor() As Integer Implements IFrequencyDefinition.DfDtScalingFactor
+            Get
+                Return m_dfdtScale
+            End Get
+            Set(ByVal Value As Integer)
+                If Value > MaximumDfDtScalingFactor Then Throw New OverflowException("DfDt scaling factor value cannot exceed " & MaximumDfDtScalingFactor)
+                m_dfdtScale = Value
+            End Set
+        End Property
+
+        Public Overridable ReadOnly Property MaximumDfDtScalingFactor() As Integer Implements IFrequencyDefinition.MaximumDfDtScalingFactor
+            Get
+                ' Typical scaling/conversion factors should fit within 3 bytes (i.e., 24 bits) of space
+                Return 2 ^ 24
+            End Get
+        End Property
+
+        Public Overridable Property NominalFrequency() As LineFrequency Implements IFrequencyDefinition.NominalFrequency
             Get
                 Return m_nominalFrequency
             End Get
             Set(ByVal Value As LineFrequency)
                 m_nominalFrequency = Value
             End Set
+        End Property
+
+        Public Overridable ReadOnly Property NominalFrequencyOffset() As Double Implements IFrequencyDefinition.NominalFrequencyOffset
+            Get
+                If m_nominalFrequency = LineFrequency._60Hz Then
+                    Return 60.0
+                Else
+                    Return 50.0
+                End If
+            End Get
         End Property
 
     End Class
