@@ -30,6 +30,7 @@ Imports System.Net.Sockets
 Imports System.Threading
 Imports TVA.Shared.DateTime
 Imports TVA.Shared.FilePath
+Imports TVA.Shared.Common
 Imports TVA.Services
 Imports TVA.Threading
 
@@ -47,6 +48,11 @@ Namespace PDCstream
         Private m_udpClient As UdpClient
         Private m_broadcastIPs As IPEndPoint()
         Private m_lagTime As Double
+        Private m_intervalAdjustment As Double
+        Private m_sentDescriptor As Boolean
+        Private m_sampleRate As Double
+        Private m_sampleIndex As Integer
+        Private m_sampleTime As Long
         Private WithEvents m_processTimer As Timers.Timer
         Private WithEvents m_sweepTimer As Timers.Timer
         Private m_enabled As Boolean
@@ -55,7 +61,6 @@ Namespace PDCstream
         Private m_stopTime As Long
         Private m_bytesBroadcasted As Long
         Private m_packetsPublished As Long
-        Private m_sentDescriptor As Boolean
 
         Public Event SamplePublished(ByVal sample As DataSample)
         Public Event UnpublishedSamples(ByVal total As Integer)
@@ -71,16 +76,17 @@ Namespace PDCstream
             m_udpClient = New UdpClient
             m_broadcastIPs = broadcastIPs
             m_lagTime = lagTime
+            m_intervalAdjustment = intervalAdjustment
             m_processTimer = New Timers.Timer
             m_sweepTimer = New Timers.Timer
             m_enabled = True
             m_processing = False
+            m_sampleRate = 1000 / m_configFile.SampleRate
 
-            ' We define a process timer to send samples at the specified interval - we allow a user definable adjustment
-            ' to make sure the desired broadcast rate is maintained...
+            ' We define a process timer to send samples at the specified sample rate
             With m_processTimer
-                .Interval = Math.Floor(1000@ / m_configFile.SampleRate) - intervalAdjustment
-                .AutoReset = True
+                .Interval = m_sampleRate - m_intervalAdjustment
+                .AutoReset = False
                 .Enabled = False
             End With
 
@@ -143,10 +149,12 @@ Namespace PDCstream
                     m_stopTime = 0
                     m_bytesBroadcasted = 0
                     m_packetsPublished = 0
+                    m_startTime = DateTime.Now.Ticks
+                    m_sampleTime = m_startTime
+                    m_sampleIndex = 0
 
                     ' Start process timer
                     m_processTimer.Enabled = True
-                    m_startTime = DateTime.Now.Ticks
                 Else
                     ' Stop process timer
                     m_processTimer.Enabled = False
@@ -239,6 +247,7 @@ Namespace PDCstream
 
                                             m_bytesBroadcasted += binaryLength
                                             m_packetsPublished += 1
+                                            m_sampleIndex += 1
                                         Catch ex As Exception
                                             UpdateStatus("Error publishing data packet: " & ex.Message)
                                         Finally
@@ -258,6 +267,32 @@ Namespace PDCstream
                 End With
                 If exitLoop Then Exit For
             Next
+
+            If m_sampleIndex >= m_configFile.SampleRate Then
+                ' Adjust process rate as needed to make sure we don't fall behind or get too far ahead...
+                Dim processRate As Double = m_sampleIndex / ((DateTime.Now.Ticks - m_sampleTime) / 10000000L)
+
+                If processRate < m_configFile.SampleRate + m_intervalAdjustment Then
+                    ' Falling behind desired rate, shorten interval...
+                    If m_processTimer.Interval >= 1 + m_intervalAdjustment Then
+                        m_processTimer.Interval -= m_intervalAdjustment
+                    Else
+                        m_processTimer.Interval = 1
+                    End If
+                ElseIf processRate > m_configFile.SampleRate + m_intervalAdjustment And m_dataQueue.SampleCount <= m_lagTime Then
+                    ' Getting ahead of rate, increase interval...
+                    If m_processTimer.Interval <= m_sampleRate - m_intervalAdjustment Then
+                        m_processTimer.Interval += m_intervalAdjustment
+                    Else
+                        m_processTimer.Interval = m_sampleRate
+                    End If
+                End If
+
+                m_sampleIndex = 0
+                m_sampleTime = DateTime.Now.Ticks
+            End If
+
+            m_processTimer.Enabled = True
 
         End Sub
 
@@ -356,7 +391,7 @@ Namespace PDCstream
                     .Append("       Current server time: " & currentTime.ToString("dd-MMM-yyyy HH:mm:ss") & vbCrLf)
                     .Append("        Most recent sample: " & m_dataQueue.BaseTime.ToString("dd-MMM-yyyy HH:mm:ss") & ", " & m_dataQueue.DistanceFromBaseTime(currentTime) & " second deviation" & vbCrLf)
                     .Append("         Publishing sample: " & publishingSample.ToString("dd-MMM-yyyy HH:mm:ss") & ", " & (currentTime.Ticks - publishingSample.Ticks) / 10000000L & " second deviation" & vbCrLf)
-                    .Append("    Process timer interval: " & m_processTimer.Interval & " ms" & vbCrLf)
+                    .Append("   Adjusted timer interval: " & m_processTimer.Interval.ToString("0.00") & " ms" & vbCrLf)
                     .Append("    Data packets published: " & m_packetsPublished & vbCrLf)
                     .Append("         Mean publish rate: " & (m_packetsPublished / RunTime).ToString("0.00") & " samples/sec" & vbCrLf)
                     .Append("       Mean broadcast rate: " & (m_bytesBroadcasted * 8 / RunTime / 1024 / 1024).ToString("0.00") & " mbps" & vbCrLf)

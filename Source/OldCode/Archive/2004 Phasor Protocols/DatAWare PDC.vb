@@ -196,7 +196,7 @@ Public Class DatAWarePDC
         ' Make sure status log variables exist for this service
         Variables.Create("DatAWare.PDC.ConfigFile", ServiceHelper.AppPath & "TVA_PDC.ini", VariableType.Text, "PDC Configuration File used by the DatAWare Phasor Data Concentrator")
         Variables.Create("DatAWare.PDC.LagTime", 3.0#, VariableType.Float, "Maximum time deviation, in seconds, tolerated before data packet is published (i.e., how long to wait for data before broadcast)")
-        Variables.Create("DatAWare.PDC.IntervalAdjustment", 1.5#, VariableType.Float, "Adjustment, in seconds, used to increase broadcast timer interval if needed (ensures that the actual broadcast rate will be slightly higher than the sample rate)")
+        Variables.Create("DatAWare.PDC.IntervalAdjustment", 3.0#, VariableType.Float, "Time span, in milliseconds, used to adjust broadcast timer interval as needed to maintain the sample rate")
         Variables.Create("DatAWare.PDC.HighSampleCount", 6, VariableType.Int, "High warning limit for the concentrator sample count, warning raised when unpublished sample count exceeds this value.  Too many queued samples means concentrator is falling behind.")
         Variables.Create("DatAWare.PDC.BroadcastPoints.Total", 1, VariableType.Int, "Total number of PDCstream UDP broadcast points")
         Variables.Create("DatAWare.PDC.BroadcastPoint0.IP", "152.85.255.255", VariableType.Text, "IP used for this broadcast point - can be single IP or you can use 255.255 for sub-net suffix for broadcast (e.g., 152.85.255.255)")
