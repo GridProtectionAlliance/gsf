@@ -159,7 +159,7 @@ Namespace Asp
 
         End Sub
 
-        'Shows a web page as modeless dialog. Tied to a web control.
+        'Pinal Patel 03/04/05: Shows a web page as modeless dialog. Tied to a web control.
         Public Shared Sub Show(ByVal Control As System.Web.UI.Control, ByVal Url As String, Optional ByVal Height As Integer = 400, Optional ByVal Width As Integer = 600, Optional ByVal Left As Integer = 0, Optional ByVal Top As Integer = 0, Optional ByVal Center As Boolean = True, Optional ByVal Help As Boolean = True, Optional ByVal Resizable As Boolean = False, Optional ByVal Status As Boolean = False)
 
             Dim strShowScript As String = "window.showModelessDialog('" & Url & "', window.self,'dialogWidth:" & Width & " px;dialogHeight:" & Height & "px;left:" & Left & ";top:" & Top & ";center:" & Math.Abs(CInt(Center)) & ";help:" & Math.Abs(CInt(Help)) & ";resizable:" & Math.Abs(CInt(Resizable)) & ";status:" & Math.Abs(CInt(Status)) & "'); return (false);"
@@ -224,7 +224,9 @@ Namespace Asp
 
         End Sub
 
-        'Shows a web page as modal dialog. Tied to a web control. Postback occurs only if a value is returned by the child window (displayed as dialog) and DialogResultHolder is not specified.
+        'Pinal Patel 03/04/05:  Shows a web page as modal dialog. Tied to a web control. Postback occurs only if 
+        '                       a value is returned by the child window (displayed as dialog) and DialogResultHolder 
+        '                       is not specified.
         Public Shared Sub ShowDialog(ByVal Control As System.Web.UI.Control, ByVal Url As String, Optional ByVal DialogResultHolder As System.Web.UI.Control = Nothing, Optional ByVal Height As Integer = 400, Optional ByVal Width As Integer = 600, Optional ByVal Left As Integer = 0, Optional ByVal Top As Integer = 0, Optional ByVal Center As Boolean = True, Optional ByVal Help As Boolean = True, Optional ByVal Resizable As Boolean = False, Optional ByVal Status As Boolean = False)
 
             Dim strShowDialogScript As String
@@ -261,8 +263,10 @@ Namespace Asp
                     .Append("<script language=""javascript"">" & vbCrLf)
                     .Append("   function ShowPopup(varUrl, varHeight, varWidth, varLeft, varTop, varCenter, varResizable, varScrollbars, varToolbar, varMenubar, varLocation, varStatus, varDirectories)" & vbCrLf)
                     .Append("   {" & vbCrLf)
-                    .Append("       if (varCenter) {varPopup = window.open(varUrl, 'Popup' + Math.floor(Math.random() * 101), 'height=' + varHeight + ',width=' + varWidth + ',top=' + ((screen.availHeight / 2) - (varHeight / 2)) + ',left=' + ((screen.availWidth / 2) - (varWidth / 2)) + ',resizable=' + varResizable + ',scrollbars=' + varScrollbars + ',toolbar=' + varToolbar + ',menubar=' + varMenubar + ',location=' + varLocation + ',status=' + varStatus + ',directories=' + varDirectories);}" & vbCrLf)
-                    .Append("       else {varPopup = window.open(varUrl, 'Popup' + Math.floor(Math.random() * 101), 'height=' + varHeight + ',width=' + varWidth + ',top=' + varTop + ',left=' + varLeft + ',resizable=' + varResizable + ',scrollbars=' + varScrollbars + ',toolbar=' + varToolbar + ',menubar=' + varMenubar + ',location=' + varLocation + ',status=' + varStatus + ',directories=' + varDirectories);}" & vbCrLf)
+                    .Append("       varRegExp = /([^a-zA-Z0-9\s])/gi;" & vbCrLf)
+                    .Append("       varPopupName = varUrl.replace(varRegExp, '');" & vbCrLf)
+                    .Append("       if (varCenter) {varPopup = window.open(varUrl, varPopupName, 'height=' + varHeight + ',width=' + varWidth + ',top=' + ((screen.availHeight / 2) - (varHeight / 2)) + ',left=' + ((screen.availWidth / 2) - (varWidth / 2)) + ',resizable=' + varResizable + ',scrollbars=' + varScrollbars + ',toolbar=' + varToolbar + ',menubar=' + varMenubar + ',location=' + varLocation + ',status=' + varStatus + ',directories=' + varDirectories);}" & vbCrLf)
+                    .Append("       else {varPopup = window.open(varUrl, varPopupName, 'height=' + varHeight + ',width=' + varWidth + ',top=' + varTop + ',left=' + varLeft + ',resizable=' + varResizable + ',scrollbars=' + varScrollbars + ',toolbar=' + varToolbar + ',menubar=' + varMenubar + ',location=' + varLocation + ',status=' + varStatus + ',directories=' + varDirectories);}" & vbCrLf)
                     .Append("       if (window.focus) {varPopup.focus();}" & vbCrLf)
                     .Append("   }" & vbCrLf)
                     .Append("</script>" & vbCrLf)
@@ -281,7 +285,7 @@ Namespace Asp
 
         End Sub
 
-        'Shows web page as old fashion popup. Tied to a web control.
+        'Pinal Patel 03/04/05: Shows web page as old fashion popup. Tied to a web control.
         Public Shared Sub ShowPopup(ByVal Control As System.Web.UI.Control, ByVal Url As String, Optional ByVal Height As Integer = 400, Optional ByVal Width As Integer = 600, Optional ByVal Left As Integer = 0, Optional ByVal Top As Integer = 0, Optional ByVal Center As Boolean = True, Optional ByVal Resizable As Boolean = False, Optional ByVal Scrollbars As Boolean = False, Optional ByVal Toolbar As Boolean = False, Optional ByVal Menubar As Boolean = False, Optional ByVal Location As Boolean = False, Optional ByVal Status As Boolean = False, Optional ByVal Directories As Boolean = False)
 
             Dim strShowPopupScript As String
@@ -361,7 +365,7 @@ Namespace Asp
 
 #Region "Code for MsgBox"
 
-        'Pinal Patel 03/04/05:Enumeration to specify message box style
+        'Pinal Patel 03/04/05: Enumeration to specify message box style.
         Public Enum MsgBoxStyle As Integer
             OKOnly = 0
             OKCancel = 1
@@ -454,6 +458,138 @@ Namespace Asp
                     CType(Control, System.Web.UI.WebControls.TextBox).Attributes.Add("onclick", strMsgBox)
                 Case "System.Web.UI.WebControls.Image"
                     CType(Control, System.Web.UI.WebControls.Image).Attributes.Add("onclick", strMsgBox)
+            End Select
+
+        End Sub
+
+#End Region
+
+#Region "Code for Refresh"
+
+        'Pinal Patel 03/08/05: Causes the web page to refresh. Not tied to a web control.
+        Public Shared Sub Refresh(ByVal Page As System.Web.UI.Page, Optional ByVal PostRefresh As Boolean = False)
+
+            If Not PostRefresh Then
+                If Not Page.IsClientScriptBlockRegistered("Refresh") Then
+                    With New StringBuilder
+                        .Append("<script language=""javascript"">" & vbCrLf)
+                        .Append("   window.location.href = unescape(window.location.pathname);" & vbCrLf)
+                        .Append("</script>" & vbCrLf)
+
+                        Page.RegisterClientScriptBlock("Refresh", .ToString())
+                    End With
+                End If
+            Else
+                If Not Page.IsStartupScriptRegistered("Refresh") Then
+                    With New StringBuilder
+                        .Append("<script language=""javascript"">" & vbCrLf)
+                        .Append("   window.location.href = unescape(window.location.pathname);" & vbCrLf)
+                        .Append("</script>" & vbCrLf)
+
+                        Page.RegisterStartupScript("Refresh", .ToString())
+                    End With
+                End If
+            End If
+
+        End Sub
+
+        'Pinal Patel 03/08/05: Causes the web page to refresh. Tied to a web control.
+        Public Shared Sub Refresh(ByVal Control As System.Web.UI.Control)
+
+            Dim strRefreshScript As String = "window.location.href = unescape(window.location.pathname); return (false);"
+
+            Select Case Control.GetType.ToString()
+                Case "System.Web.UI.WebControls.Button"
+                    CType(Control, System.Web.UI.WebControls.Button).Attributes.Add("onclick", strRefreshScript)
+                Case "System.Web.UI.WebControls.LinkButton"
+                    CType(Control, System.Web.UI.WebControls.LinkButton).Attributes.Add("onclick", strRefreshScript)
+                Case "System.Web.UI.WebControls.ImageButton"
+                    CType(Control, System.Web.UI.WebControls.ImageButton).Attributes.Add("onclick", strRefreshScript)
+                Case "System.Web.UI.WebControls.TextBox"
+                    CType(Control, System.Web.UI.WebControls.TextBox).Attributes.Add("onclick", strRefreshScript)
+                Case "System.Web.UI.WebControls.Image"
+                    CType(Control, System.Web.UI.WebControls.Image).Attributes.Add("onclick", strRefreshScript)
+            End Select
+
+        End Sub
+
+#End Region
+
+#Region "Code for Maximize"
+
+        'Pinal Patel 03/09/05: Maximizes the web page to available screen size. Not tied to a web control.
+        Public Shared Sub Maximize(ByVal Page As System.Web.UI.Page)
+
+            If Not Page.IsStartupScriptRegistered("Maximize") Then
+                With New StringBuilder
+                    .Append("<script language=""javascript"">" & vbCrLf)
+                    .Append("   window.moveTo(0, 0);" & vbCrLf)
+                    .Append("   window.resizeTo(window.screen.availWidth, window.screen.availHeight);" & vbCrLf)
+                    .Append("</script>" & vbCrLf)
+
+                    Page.RegisterStartupScript("Maximize", .ToString())
+                End With
+            End If
+
+        End Sub
+
+        'Pinal Patel 03/09/05: Maximizes the web page to available screen size. Tied to a web control.
+        Public Shared Sub Maximize(ByVal Control As System.Web.UI.Control)
+
+            Dim strMaximizeScript As String = "window.moveTo(0, 0); window.resizeTo(window.screen.availWidth, window.screen.availHeight); return (false);"
+
+            Select Case Control.GetType.ToString()
+                Case "System.Web.UI.WebControls.Button"
+                    CType(Control, System.Web.UI.WebControls.Button).Attributes.Add("onclick", strMaximizeScript)
+                Case "System.Web.UI.WebControls.LinkButton"
+                    CType(Control, System.Web.UI.WebControls.LinkButton).Attributes.Add("onclick", strMaximizeScript)
+                Case "System.Web.UI.WebControls.ImageButton"
+                    CType(Control, System.Web.UI.WebControls.ImageButton).Attributes.Add("onclick", strMaximizeScript)
+                Case "System.Web.UI.WebControls.TextBox"
+                    CType(Control, System.Web.UI.WebControls.TextBox).Attributes.Add("onclick", strMaximizeScript)
+                Case "System.Web.UI.WebControls.Image"
+                    CType(Control, System.Web.UI.WebControls.Image).Attributes.Add("onclick", strMaximizeScript)
+            End Select
+
+        End Sub
+
+#End Region
+
+#Region "Code for Minimize"
+
+        'Pinal Patel 03/09/05:  Performs a fake minimize by pushing the web page into the background.
+        '                       Not tied to a web control.
+        Public Shared Sub Minimize(ByVal Page As System.Web.UI.Page)
+
+            If Not Page.IsStartupScriptRegistered("Minimize") Then
+                With New StringBuilder
+                    .Append("<script language=""javascript"">" & vbCrLf)
+                    .Append("   window.blur();" & vbCrLf)
+                    .Append("</script>" & vbCrLf)
+
+                    Page.RegisterStartupScript("Maximize", .ToString())
+                End With
+            End If
+
+        End Sub
+
+        'Pinal Patel 03/09/05:  Performs a fake minimize by pushing the web page into the background.
+        '                       Tied to a web control.
+        Public Shared Sub Minimize(ByVal Control As System.Web.UI.Control)
+
+            Dim strMinimizeScript As String = "window.blur(); return (false);"
+
+            Select Case Control.GetType.ToString()
+                Case "System.Web.UI.WebControls.Button"
+                    CType(Control, System.Web.UI.WebControls.Button).Attributes.Add("onclick", strMinimizeScript)
+                Case "System.Web.UI.WebControls.LinkButton"
+                    CType(Control, System.Web.UI.WebControls.LinkButton).Attributes.Add("onclick", strMinimizeScript)
+                Case "System.Web.UI.WebControls.ImageButton"
+                    CType(Control, System.Web.UI.WebControls.ImageButton).Attributes.Add("onclick", strMinimizeScript)
+                Case "System.Web.UI.WebControls.TextBox"
+                    CType(Control, System.Web.UI.WebControls.TextBox).Attributes.Add("onclick", strMinimizeScript)
+                Case "System.Web.UI.WebControls.Image"
+                    CType(Control, System.Web.UI.WebControls.Image).Attributes.Add("onclick", strMinimizeScript)
             End Select
 
         End Sub

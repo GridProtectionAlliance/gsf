@@ -71,9 +71,9 @@
                     HintPath = "C:\WINDOWS\Microsoft.NET\Framework\v1.1.4322\System.Web.dll"
                 />
                 <Reference
-                    Name = "Shared"
-                    Project = "{40A043F2-E010-4E65-B28A-D3536785E0C9}"
-                    Package = "{F184B08F-C81C-45F6-A57F-5ABD9991F28F}"
+                    Name = "TVA.Shared"
+                    AssemblyName = "TVA.Shared"
+                    HintPath = "\\opdat\opdat\CtrlSys\CodeLibrary\Builds\Beta\TVA.Shared.dll"
                 />
             </References>
             <Imports>
