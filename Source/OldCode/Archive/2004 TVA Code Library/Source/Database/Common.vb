@@ -102,10 +102,12 @@ Namespace Database
 
             cmd.CommandTimeout = Timeout
 
-            If Parameters.Length > 0 Then
-                For Each Param As OleDbParameter In Parameters
-                    cmd.Parameters.Add(Param)
-                Next
+            If Not Parameters Is Nothing Then
+                If Parameters.Length > 0 Then
+                    For Each Param As OleDbParameter In Parameters
+                        cmd.Parameters.Add(Param)
+                    Next
+                End If
             End If
 
             Return cmd.ExecuteNonQuery()
@@ -139,10 +141,12 @@ Namespace Database
 
             cmd.CommandTimeout = Timeout
 
-            If Parameters.Length > 0 Then
-                For Each Param As SqlParameter In Parameters
-                    cmd.Parameters.Add(Param)
-                Next
+            If Not Parameters Is Nothing Then
+                If Parameters.Length > 0 Then
+                    For Each Param As SqlParameter In Parameters
+                        cmd.Parameters.Add(Param)
+                    Next
+                End If
             End If
 
             Return cmd.ExecuteNonQuery()
@@ -174,10 +178,12 @@ Namespace Database
 
             Dim cmd As New OracleCommand(Sql, Connection)
 
-            If Parameters.Length > 0 Then
-                For Each Param As OracleParameter In Parameters
-                    cmd.Parameters.Add(Param)
-                Next
+            If Not Parameters Is Nothing Then
+                If Parameters.Length > 0 Then
+                    For Each Param As OracleParameter In Parameters
+                        cmd.Parameters.Add(Param)
+                    Next
+                End If
             End If
 
             Return cmd.ExecuteNonQuery()
@@ -209,10 +215,12 @@ Namespace Database
 
             cmd.CommandTimeout = Timeout
 
-            If Parameters.Length > 0 Then
-                For Each Param As OleDbParameter In Parameters
-                    cmd.Parameters.Add(Param)
-                Next
+            If Not Parameters Is Nothing Then
+                If Parameters.Length > 0 Then
+                    For Each Param As OleDbParameter In Parameters
+                        cmd.Parameters.Add(Param)
+                    Next
+                End If
             End If
 
             If Behavior = CommandBehavior.Default Then
@@ -254,10 +262,12 @@ Namespace Database
 
             cmd.CommandTimeout = Timeout
 
-            If Parameters.Length > 0 Then
-                For Each Param As SqlParameter In Parameters
-                    cmd.Parameters.Add(Param)
-                Next
+            If Not Parameters Is Nothing Then
+                If Parameters.Length > 0 Then
+                    For Each Param As SqlParameter In Parameters
+                        cmd.Parameters.Add(Param)
+                    Next
+                End If
             End If
 
             If Behavior = CommandBehavior.Default Then
@@ -297,10 +307,12 @@ Namespace Database
 
             Dim cmd As New OracleCommand(Sql, Connection)
 
-            If Parameters.Length > 0 Then
-                For Each Param As OracleParameter In Parameters
-                    cmd.Parameters.Add(Param)
-                Next
+            If Not Parameters Is Nothing Then
+                If Parameters.Length > 0 Then
+                    For Each Param As OracleParameter In Parameters
+                        cmd.Parameters.Add(Param)
+                    Next
+                End If
             End If
 
             If Behavior = CommandBehavior.Default Then
@@ -340,10 +352,12 @@ Namespace Database
 
             cmd.CommandTimeout = Timeout
 
-            If Parameters.Length > 0 Then
-                For Each Param As OleDbParameter In Parameters
-                    cmd.Parameters.Add(Param)
-                Next
+            If Not Parameters Is Nothing Then
+                If Parameters.Length > 0 Then
+                    For Each Param As OleDbParameter In Parameters
+                        cmd.Parameters.Add(Param)
+                    Next
+                End If
             End If
 
             Return cmd.ExecuteScalar()
@@ -377,10 +391,12 @@ Namespace Database
 
             cmd.CommandTimeout = Timeout
 
-            If Parameters.Length > 0 Then
-                For Each Param As SqlParameter In Parameters
-                    cmd.Parameters.Add(Param)
-                Next
+            If Not Parameters Is Nothing Then
+                If Parameters.Length > 0 Then
+                    For Each Param As SqlParameter In Parameters
+                        cmd.Parameters.Add(Param)
+                    Next
+                End If
             End If
 
             Return cmd.ExecuteScalar()
@@ -412,10 +428,12 @@ Namespace Database
 
             Dim cmd As New OracleCommand(Sql, Connection)
 
-            If Parameters.Length > 0 Then
-                For Each Param As OracleParameter In Parameters
-                    cmd.Parameters.Add(Param)
-                Next
+            If Not Parameters Is Nothing Then
+                If Parameters.Length > 0 Then
+                    For Each Param As OracleParameter In Parameters
+                        cmd.Parameters.Add(Param)
+                    Next
+                End If
             End If
 
             Return cmd.ExecuteScalar()
@@ -543,10 +561,12 @@ Namespace Database
 
             cmd.CommandTimeout = Timeout
 
-            If Parameters.Length > 0 Then
-                For Each Param As OleDbParameter In Parameters
-                    cmd.Parameters.Add(Param)
-                Next
+            If Not Parameters Is Nothing Then
+                If Parameters.Length > 0 Then
+                    For Each Param As OleDbParameter In Parameters
+                        cmd.Parameters.Add(Param)
+                    Next
+                End If
             End If
 
             Dim da As New OleDbDataAdapter(cmd)
@@ -603,10 +623,12 @@ Namespace Database
 
             cmd.CommandTimeout = Timeout
 
-            If Parameters.Length > 0 Then
-                For Each Param As SqlParameter In Parameters
-                    cmd.Parameters.Add(Param)
-                Next
+            If Not Parameters Is Nothing Then
+                If Parameters.Length > 0 Then
+                    For Each Param As SqlParameter In Parameters
+                        cmd.Parameters.Add(Param)
+                    Next
+                End If
             End If
 
             Dim da As New SqlDataAdapter(cmd)
@@ -669,10 +691,12 @@ Namespace Database
 
             Dim cmd As New OracleCommand(Sql, Connection)
 
-            If Parameters.Length > 0 Then
-                For Each Param As OracleParameter In Parameters
-                    cmd.Parameters.Add(Param)
-                Next
+            If Not Parameters Is Nothing Then
+                If Parameters.Length > 0 Then
+                    For Each Param As OracleParameter In Parameters
+                        cmd.Parameters.Add(Param)
+                    Next
+                End If
             End If
 
             Dim da As New OracleDataAdapter(cmd)
