@@ -96,6 +96,11 @@
                     BuildAction = "Compile"
                 />
                 <File
+                    RelPath = "Phasor\IEEE1344\BaseFrame.vb"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
                     RelPath = "Phasor\IEEE1344\CommandFrame.vb"
                     SubType = "Code"
                     BuildAction = "Compile"
@@ -107,6 +112,11 @@
                 />
                 <File
                     RelPath = "Phasor\IEEE1344\DataFrame.vb"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "Phasor\IEEE1344\FrameParser.vb"
                     SubType = "Code"
                     BuildAction = "Compile"
                 />

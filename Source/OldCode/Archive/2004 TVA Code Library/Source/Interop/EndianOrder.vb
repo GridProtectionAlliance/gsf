@@ -12,6 +12,9 @@
 '  ---------------------------------------------------------------------
 '  11/12/2004 - James R Carroll
 '       Initial version of source generated
+'  01/14/2005 - James R Carroll
+'       Added GetReverseByte overloads, and ReverseTo<Type> functions
+'       Changes reviewed by John Shugart
 '
 '***********************************************************************
 
@@ -34,6 +37,174 @@ Namespace Interop
             Next
 
         End Sub
+
+        ' This function reverses a buffer - reversed buffer is also return value
+        Public Shared Function ReverseBuffer(ByVal buffer As Byte()) As Byte()
+
+            Array.Reverse(buffer)
+            Return buffer
+
+        End Function
+
+        Public Shared Function ReverseToBoolean(ByVal reverseBytes As Byte(), ByVal startIndex As Integer) As Boolean
+
+            Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), 2)
+
+            SwapCopy(reverseBytes, startIndex, buffer, 0, 2)
+
+            Return BitConverter.ToBoolean(buffer, 0)
+
+        End Function
+
+        Public Shared Function ReverseToChar(ByVal reverseBytes As Byte(), ByVal startIndex As Integer) As Char
+
+            Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), 2)
+
+            SwapCopy(reverseBytes, startIndex, buffer, 0, 2)
+
+            Return BitConverter.ToChar(buffer, 0)
+
+        End Function
+
+        Public Shared Function ReverseToDouble(ByVal reverseBytes As Byte(), ByVal startIndex As Integer) As Double
+
+            Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), 8)
+
+            SwapCopy(reverseBytes, startIndex, buffer, 0, 8)
+
+            Return BitConverter.ToDouble(buffer, 0)
+
+        End Function
+
+        Public Shared Function ReverseToInt16(ByVal reverseBytes As Byte(), ByVal startIndex As Integer) As Int16
+
+            Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), 2)
+
+            SwapCopy(reverseBytes, startIndex, buffer, 0, 2)
+
+            Return BitConverter.ToInt16(buffer, 0)
+
+        End Function
+
+        Public Shared Function ReverseToInt32(ByVal reverseBytes As Byte(), ByVal startIndex As Integer) As Int32
+
+            Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), 4)
+
+            SwapCopy(reverseBytes, startIndex, buffer, 0, 4)
+
+            Return BitConverter.ToInt32(buffer, 0)
+
+        End Function
+
+        Public Shared Function ReverseToInt64(ByVal reverseBytes As Byte(), ByVal startIndex As Integer) As Int64
+
+            Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), 8)
+
+            SwapCopy(reverseBytes, startIndex, buffer, 0, 8)
+
+            Return BitConverter.ToInt64(buffer, 0)
+
+        End Function
+
+        Public Shared Function ReverseToSingle(ByVal reverseBytes As Byte(), ByVal startIndex As Integer) As Single
+
+            Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), 4)
+
+            SwapCopy(reverseBytes, startIndex, buffer, 0, 4)
+
+            Return BitConverter.ToSingle(buffer, 0)
+
+        End Function
+
+        Public Shared Function ReverseToUInt16(ByVal reverseBytes As Byte(), ByVal startIndex As Integer) As UInt16
+
+            Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), 2)
+
+            SwapCopy(reverseBytes, startIndex, buffer, 0, 2)
+
+            Return BitConverter.ToUInt16(buffer, 0)
+
+        End Function
+
+        Public Shared Function ReverseToUInt32(ByVal reverseBytes As Byte(), ByVal startIndex As Integer) As UInt32
+
+            Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), 4)
+
+            SwapCopy(reverseBytes, startIndex, buffer, 0, 4)
+
+            Return BitConverter.ToUInt32(buffer, 0)
+
+        End Function
+
+        Public Shared Function ReverseToUInt64(ByVal reverseBytes As Byte(), ByVal startIndex As Integer) As UInt64
+
+            Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), 8)
+
+            SwapCopy(reverseBytes, startIndex, buffer, 0, 8)
+
+            Return BitConverter.ToUInt64(buffer, 0)
+
+        End Function
+
+        Public Shared Function GetReverseBytes(ByVal value As Boolean) As Byte()
+
+            Return ReverseBuffer(BitConverter.GetBytes(value))
+
+        End Function
+
+        Public Shared Function GetReverseBytes(ByVal value As Char) As Byte()
+
+            Return ReverseBuffer(BitConverter.GetBytes(value))
+
+        End Function
+
+        Public Shared Function GetReverseBytes(ByVal value As Double) As Byte()
+
+            Return ReverseBuffer(BitConverter.GetBytes(value))
+
+        End Function
+
+        Public Shared Function GetReverseBytes(ByVal value As Int16) As Byte()
+
+            Return ReverseBuffer(BitConverter.GetBytes(value))
+
+        End Function
+
+        Public Shared Function GetReverseBytes(ByVal value As Int32) As Byte()
+
+            Return ReverseBuffer(BitConverter.GetBytes(value))
+
+        End Function
+
+        Public Shared Function GetReverseBytes(ByVal value As Int64) As Byte()
+
+            Return ReverseBuffer(BitConverter.GetBytes(value))
+
+        End Function
+
+        Public Shared Function GetReverseBytes(ByVal value As Single) As Byte()
+
+            Return ReverseBuffer(BitConverter.GetBytes(value))
+
+        End Function
+
+        Public Shared Function GetReverseBytes(ByVal value As UInt16) As Byte()
+
+            Return ReverseBuffer(BitConverter.GetBytes(value))
+
+        End Function
+
+        Public Shared Function GetReverseBytes(ByVal value As UInt32) As Byte()
+
+            Return ReverseBuffer(BitConverter.GetBytes(value))
+
+        End Function
+
+        Public Shared Function GetReverseBytes(ByVal value As UInt64) As Byte()
+
+            Return ReverseBuffer(BitConverter.GetBytes(value))
+
+        End Function
 
     End Class
 

@@ -25,14 +25,45 @@ Namespace EE.Phasor.IEEE1344
     ' This class represents a header frame that can be sent from a PMU.
     Public Class HeaderFrame
 
-        Public Const BinaryLength As Integer = 16
+        Inherits BaseFrame
 
         Public Sub New()
 
+            MyBase.New()
+            m_frameType = PMUFrameType.HeaderFrame
+
         End Sub
 
-        Public ReadOnly Property BinaryImage() As Byte()
+        Friend Sub New(ByVal parsedImage As FrameParser, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+
+            Me.New()
+
+            ' No need to reparse data, so we pickup what's already been parsed...
+            Clone(parsedImage)
+
+        End Sub
+
+        Protected Overrides ReadOnly Property Name() As String
             Get
+
+            End Get
+        End Property
+
+        Public Overrides ReadOnly Property BinaryLength() As Integer
+            Get
+                Dim length As Integer = CommonBinaryLength
+
+                Return length
+            End Get
+        End Property
+
+        Public Overrides ReadOnly Property BinaryImage() As Byte()
+            Get
+                Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BinaryLength)
+
+                Array.Copy(MyBase.CommonBinaryImage, 0, buffer, 0, CommonBinaryLength)
+
+                Return buffer
             End Get
         End Property
 

@@ -3,6 +3,7 @@
 ' 06/10/2004 JRC - Integrated external source for Michael R. Brumm's TimeZone management into TVA.Shared.DateTime "as-is",
 ' for updates and more information, visit: http://www.michaelbrumm.com/simpletimezone.html or contact me@michaelbrumm.com
 ' 01/05/2005 JRC - Added BaselinedTimestamp function
+' 01/14/2005 JRC - Added NtpTimeTag class to handle standard Network Time Protocol timestamps
 
 Option Explicit On 
 Option Compare Binary
@@ -197,6 +198,68 @@ Namespace [Shared]
             Return Month
 
         End Function
+
+        ' Standard Network Time Protocol timestamp
+        Public Class NtpTimeTag
+
+            Implements IComparable
+
+            ' NTP dates are measured as the number of seconds since 1/1/1900, so we calculate this
+            ' date to get offset in ticks for later conversion...
+            Private Shared ntpDateOffsetTicks As Long = (New System.DateTime(1900, 1, 1, 0, 0, 0)).Ticks
+
+            Private m_seconds As Double
+
+            Public Sub New(ByVal seconds As Double)
+
+                Value = seconds
+
+            End Sub
+
+            Public Sub New(ByVal dtm As System.DateTime)
+
+                ' Zero base 100-nanosecond ticks from 1/1/1900 and convert to seconds
+                Value = (dtm.Ticks - ntpDateOffsetTicks) / 10000000L
+
+            End Sub
+
+            Public Property Value() As Double
+                Get
+                    Return m_seconds
+                End Get
+                Set(ByVal val As Double)
+                    m_seconds = val
+                    If m_seconds < 0 Then m_seconds = 0
+                End Set
+            End Property
+
+            Public Function ToDateTime() As System.DateTime
+
+                ' Convert m_seconds to 100-nanosecond ticks and add the 1/1/1900 offset
+                Return New System.DateTime(m_seconds * 10000000L + ntpDateOffsetTicks)
+
+            End Function
+
+            Public Overrides Function ToString() As String
+
+                Return ToDateTime.ToString("dd-MMM-yyyy HH:mm:ss.fff")
+
+            End Function
+
+            ' NtpTimeTag are sorted in value order
+            Public Function CompareTo(ByVal obj As Object) As Integer Implements System.IComparable.CompareTo
+
+                If TypeOf obj Is NtpTimeTag Then
+                    Return m_seconds.CompareTo(DirectCast(obj, NtpTimeTag).Value)
+                ElseIf TypeOf obj Is Double Then
+                    Return m_seconds.CompareTo(CDbl(obj))
+                Else
+                    Throw New ArgumentException("NtpTimeTag can only be compared with other NtpTimeTags...")
+                End If
+
+            End Function
+
+        End Class
 
         ' *************************************************************************************************************
         '

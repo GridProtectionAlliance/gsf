@@ -87,7 +87,7 @@ Namespace EE.Phasor.PDCstream
 
         Public Property DataIsValid() As Boolean
             Get
-                Return Not (m_flags And ChannelFlags.DataIsValid)
+                Return Not ((m_flags And ChannelFlags.DataIsValid) > 0)
             End Get
             Set(ByVal Value As Boolean)
                 If Value Then
@@ -100,7 +100,7 @@ Namespace EE.Phasor.PDCstream
 
         Public Property TransmissionErrors() As Boolean
             Get
-                Return (m_flags And ChannelFlags.TransmissionErrors)
+                Return ((m_flags And ChannelFlags.TransmissionErrors) > 0)
             End Get
             Set(ByVal Value As Boolean)
                 If Value Then
@@ -113,7 +113,7 @@ Namespace EE.Phasor.PDCstream
 
         Public Property PMUSynchronized() As Boolean
             Get
-                Return Not (m_flags And ChannelFlags.PMUSynchronized)
+                Return Not ((m_flags And ChannelFlags.PMUSynchronized) > 0)
             End Get
             Set(ByVal Value As Boolean)
                 If Value Then
@@ -126,7 +126,7 @@ Namespace EE.Phasor.PDCstream
 
         Public Property DataIsSortedByArrival() As Boolean
             Get
-                Return (m_flags And ChannelFlags.DataSortedByArrival)
+                Return ((m_flags And ChannelFlags.DataSortedByArrival) > 0)
             End Get
             Set(ByVal Value As Boolean)
                 If Value Then
@@ -139,7 +139,7 @@ Namespace EE.Phasor.PDCstream
 
         Public Property DataIsSortedByTimestamp() As Boolean
             Get
-                Return Not (m_flags And ChannelFlags.DataSortedByTimestamp)
+                Return Not ((m_flags And ChannelFlags.DataSortedByTimestamp) > 0)
             End Get
             Set(ByVal Value As Boolean)
                 If Value Then
@@ -152,7 +152,7 @@ Namespace EE.Phasor.PDCstream
 
         Public Property UsingPDCExchangeFormat() As Boolean
             Get
-                Return (m_flags And ChannelFlags.PDCExchangeFormat)
+                Return ((m_flags And ChannelFlags.PDCExchangeFormat) > 0)
             End Get
             Set(ByVal Value As Boolean)
                 If Value Then
@@ -165,7 +165,7 @@ Namespace EE.Phasor.PDCstream
 
         Public Property UsingMacrodyneFormat() As Boolean
             Get
-                Return (m_flags And ChannelFlags.MacrodyneFormat)
+                Return ((m_flags And ChannelFlags.MacrodyneFormat) > 0)
             End Get
             Set(ByVal Value As Boolean)
                 If Value Then
@@ -178,7 +178,7 @@ Namespace EE.Phasor.PDCstream
 
         Public Property UsingIEEEFormat() As Boolean
             Get
-                Return Not (m_flags And ChannelFlags.MacrodyneFormat)
+                Return Not ((m_flags And ChannelFlags.MacrodyneFormat) > 0)
             End Get
             Set(ByVal Value As Boolean)
                 If Value Then
@@ -191,7 +191,7 @@ Namespace EE.Phasor.PDCstream
 
         Public Property TimestampIsIncluded() As Boolean
             Get
-                Return Not (m_flags And ChannelFlags.TimestampIncluded)
+                Return Not ((m_flags And ChannelFlags.TimestampIncluded) > 0)
             End Get
             Set(ByVal Value As Boolean)
                 If Value Then

@@ -510,6 +510,8 @@ Global
 		{AEBCFD16-5FB0-433E-95F1-7975418E7887}.ReleaseWithoutCrtdll.Build.0 = Release|.NET
 	EndGlobalSection
 	GlobalSection(SolutionItems) = postSolution
+		Build.ts = Build.ts
+		Build.ver = Build.ver
 		README1ST!!!.TXT = README1ST!!!.TXT
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution

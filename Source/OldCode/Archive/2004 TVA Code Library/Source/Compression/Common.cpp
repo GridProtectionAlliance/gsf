@@ -287,26 +287,26 @@ void Common::UncompressFile(String* SourceFileName, String* DestFileName, Progre
 }
 
 // Return CRC32 checksum for specified portion of given buffer
-int Common::CRC32(int CRC, System::Byte Data[], int Offset, int Count)
+Int32 Common::CRC32(Int32 CRC, System::Byte Data[], int Offset, int Count)
 {
 	// pin buffer so it can be safely passed into unmanaged code...
 	System::Byte __pin * sourceBuff = &Data[Offset];
 
 	// Calculate CRC32 checksum for given buffer...
-	return (int)crc32((unsigned long)CRC, sourceBuff, Count);
+	return (Int32)crc32((unsigned long)CRC, sourceBuff, Count);
 }
 
 // Return CRC32 checksum of entire given buffer
-int Common::CRC32(System::Byte Data[])
+Int32 Common::CRC32(System::Byte Data[])
 {
 	return CRC32(0, Data, 0, Data->get_Length());
 }
 
 // Return CRC32 checksum of entire given stream
-int Common::CRC32(Stream* InStream)
+Int32 Common::CRC32(Stream* InStream)
 {
 	System::Byte inBuffer[] = new System::Byte[BufferSize];
-	int crc = 0, read;
+	Int32 crc = 0, read;
 
 	// Calculate CRC32 checksum for stream
 	read = InStream->Read(inBuffer, 0, BufferSize);
@@ -324,11 +324,70 @@ int Common::CRC32(Stream* InStream)
 }
 
 // Return CRC32 checksum of given file
-int Common::CRC32(String* FileName)
+Int32 Common::CRC32(String* FileName)
 {
 	FileStream* fileStream = File::Open(FileName, FileMode::Open, FileAccess::Read, FileShare::Read);
 
-	int crc = CRC32(fileStream);
+	Int32 crc = CRC32(fileStream);
+
+	fileStream->Close();
+
+	return crc;
+}
+
+// Return CRC16 checksum for specified portion of given buffer
+Int16 Common::CRC16(Int16 CRC, System::Byte Data[], int Offset, int Count)
+{
+	UInt16 crc = (UInt16)CRC, temp, quick;
+
+	for (int x = 0; x < Data->get_Length(); x++)
+	{
+		temp = (crc >> 8) ^ Data[x];
+		crc <<= 8;
+		quick = temp ^ (temp >> 4);
+		crc ^= quick;
+		quick <<= 5;
+		crc ^= quick;
+		quick <<= 7;
+		crc ^= quick;
+	}
+
+	return (Int16)crc;
+}
+
+// Return CRC16 checksum of entire given buffer
+Int16 Common::CRC16(System::Byte Data[])
+{
+	return CRC16(-1, Data, 0, Data->get_Length());
+}
+
+// Return CRC16 checksum of entire given stream
+Int16 Common::CRC16(Stream* InStream)
+{
+	System::Byte inBuffer[] = new System::Byte[BufferSize];
+	Int16 crc = -1, read;
+
+	// Calculate CRC16 checksum for stream
+	read = InStream->Read(inBuffer, 0, BufferSize);
+
+	while (read)
+	{
+		// Calculate CRC16 checksum for given buffer...
+		crc = CRC16(crc, inBuffer, 0, read);
+
+		// Read next buffer from stream
+		read = InStream->Read(inBuffer, 0, BufferSize);
+	}
+
+	return crc;
+}
+
+// Return CRC16 checksum of given file
+Int16 Common::CRC16(String* FileName)
+{
+	FileStream* fileStream = File::Open(FileName, FileMode::Open, FileAccess::Read, FileShare::Read);
+
+	Int16 crc = CRC16(fileStream);
 
 	fileStream->Close();
 

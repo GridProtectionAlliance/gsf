@@ -27,15 +27,6 @@ Namespace [Shared]
 
         End Sub
 
-        Public Const Bit0 As Byte = &H1     ' 00000001 = 1
-        Public Const Bit1 As Byte = &H2     ' 00000010 = 2
-        Public Const Bit2 As Byte = &H4     ' 00000100 = 4
-        Public Const Bit3 As Byte = &H8     ' 00001000 = 8
-        Public Const Bit4 As Byte = &H10    ' 00010000 = 16
-        Public Const Bit5 As Byte = &H20    ' 00100000 = 32
-        Public Const Bit6 As Byte = &H40    ' 01000000 = 64
-        Public Const Bit7 As Byte = &H80    ' 10000000 = 128
-
         ' Calculate word length XOR check-sum on specified portion of a buffer
         Public Shared Function XorCheckSum(ByVal data As Byte(), ByVal startIndex As Integer, ByVal length As Integer) As Int16
 

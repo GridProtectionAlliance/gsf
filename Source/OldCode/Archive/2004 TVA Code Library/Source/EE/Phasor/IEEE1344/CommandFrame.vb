@@ -37,29 +37,66 @@ Namespace EE.Phasor.IEEE1344
 
         Public Const BinaryLength As Integer = 16
 
+        Private m_timetag As NtpTimeTag
         Private m_pmuIDCode As Int64
         Private m_command As PMUCommand
 
+        ' Use this contructor to send a command to a PMU
         Public Sub New(ByVal pmuIDCode As Int64, ByVal command As PMUCommand)
 
             m_pmuIDCode = pmuIDCode
             m_command = command
+            m_timetag = New NtpTimeTag(DateTime.Now)
 
         End Sub
 
-        Public ReadOnly Property PMUIDCode() As Int64
+        ' Use this constuctor to receive a command (i.e., your code is acting as a PMU)
+        Public Sub New(ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+
+            If binaryImage Is Nothing Then
+                Throw New ArgumentNullException("BinaryImage was null - could not create command frame")
+            ElseIf binaryImage.Length - startIndex < BinaryLength Then
+                Throw New ArgumentException("BinaryImage size from startIndex is too small - could not create command frame")
+            Else
+                m_timetag = New NtpTimeTag(Convert.ToDouble(EndianOrder.ReverseToInt32(binaryImage, startIndex)))
+                m_pmuIDCode = EndianOrder.ReverseToInt64(binaryImage, startIndex + 4)
+                CommandWord = EndianOrder.ReverseToInt16(binaryImage, startIndex + 12)
+
+                ' Validate buffer check sum
+                If EndianOrder.ReverseToInt16(binaryImage, startIndex + 14) <> CRC16(-1, binaryImage, 0, 14) Then _
+                    Throw New ArgumentException("Invalid buffer image detected - CRC16 of command frame did not match")
+            End If
+
+        End Sub
+
+        Public Property SecondOfCentury() As NtpTimeTag
+            Get
+                Return m_timetag
+            End Get
+            Set(ByVal Value As NtpTimeTag)
+                m_timetag = Value
+            End Set
+        End Property
+
+        Public Property PMUIDCode() As Int64
             Get
                 Return m_pmuIDCode
             End Get
+            Set(ByVal Value As Int64)
+                m_pmuIDCode = Value
+            End Set
         End Property
 
-        Public ReadOnly Property Command() As PMUCommand
+        Public Property Command() As PMUCommand
             Get
                 Return m_command
             End Get
+            Set(ByVal Value As PMUCommand)
+                m_command = Value
+            End Set
         End Property
 
-        Private ReadOnly Property CommandWord() As Int16
+        Private Property CommandWord() As Int16
             Get
                 Dim word As Int16
 
@@ -80,14 +117,28 @@ Namespace EE.Phasor.IEEE1344
 
                 Return word
             End Get
+            Set(ByVal Value As Int16)
+                If (Value And Bit0) > 0 Then
+                    m_command = PMUCommand.DisableRealTimeData
+                ElseIf (Value And Bit1) > 0 Then
+                    m_command = PMUCommand.EnableRealTimeData
+                ElseIf (Value And Bit0) > 0 And (Value And Bit1) > 0 Then
+                    m_command = PMUCommand.SendHeaderFile
+                ElseIf (Value And Bit2) > 0 Then
+                    m_command = PMUCommand.SendConfigFile1
+                ElseIf (Value And Bit0) > 0 And (Value And Bit2) > 0 Then
+                    m_command = PMUCommand.SendConfigFile2
+                ElseIf (Value And Bit3) > 0 Then
+                    m_command = PMUCommand.ReceiveReferencePhasor
+                End If
+            End Set
         End Property
 
         Public ReadOnly Property BinaryImage() As Byte()
             Get
                 Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BinaryLength)
-                Dim timeTag As New NtpTimeTag(DateTime.Now)
 
-                EndianOrder.SwapCopy(BitConverter.GetBytes(Convert.ToUInt32(timeTag.Value)), 0, buffer, 0, 4)
+                EndianOrder.SwapCopy(BitConverter.GetBytes(Convert.ToUInt32(m_timetag.Value)), 0, buffer, 0, 4)
                 EndianOrder.SwapCopy(BitConverter.GetBytes(m_pmuIDCode), 0, buffer, 4, 8)
                 EndianOrder.SwapCopy(BitConverter.GetBytes(CommandWord), 0, buffer, 12, 2)
                 EndianOrder.SwapCopy(BitConverter.GetBytes(CRC16(-1, buffer, 0, 14)), 0, buffer, 14, 2)

@@ -56,10 +56,14 @@ namespace TVA
 				static void CompressFile(String* SourceFileName, String* DestFileName, CompressLevel Strength, ProgressEventHandler* ProgressHandler);
 				static void UncompressFile(String* SourceFileName, String* DestFileName);
 				static void UncompressFile(String* SourceFileName, String* DestFileName, ProgressEventHandler* ProgressHandler);
-				static int CRC32(int CRC, System::Byte Data[], int Offset, int Count);
-				static int CRC32(System::Byte Data[]);
-				static int CRC32(Stream* InStream);
-				static int CRC32(String* FileName);
+				static Int32 CRC32(Int32 CRC, System::Byte Data[], int Offset, int Count);
+				static Int32 CRC32(System::Byte Data[]);
+				static Int32 CRC32(Stream* InStream);
+				static Int32 CRC32(String* FileName);
+				static Int16 CRC16(Int16 CRC, System::Byte Data[], int Offset, int Count);
+				static Int16 CRC16(System::Byte Data[]);
+				static Int16 CRC16(Stream* InStream);
+				static Int16 CRC16(String* FileName);
 				static String* ZLibVersion();
 			private:
 				Common(){}
