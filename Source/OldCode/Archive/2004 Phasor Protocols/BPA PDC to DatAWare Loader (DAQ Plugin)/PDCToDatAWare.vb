@@ -372,7 +372,7 @@ Namespace PDCToDatAWare
             End Set
         End Property
 
-        Public ReadOnly Property RunTime() As Long
+        Public ReadOnly Property RunTime() As Double
             Get
                 Dim processingTime As Long
 
@@ -386,7 +386,7 @@ Namespace PDCToDatAWare
 
                 If processingTime < 0 Then processingTime = 0
 
-                Return processingTime
+                Return processingTime / 10000000L
             End Get
         End Property
 
