@@ -86,12 +86,12 @@
                     BuildAction = "Compile"
                 />
                 <File
-                    RelPath = "Unix.vb"
+                    RelPath = "Unix\TimeTag.vb"
                     SubType = "Code"
                     BuildAction = "Compile"
                 />
                 <File
-                    RelPath = "Windows.vb"
+                    RelPath = "Windows\IniFile.vb"
                     SubType = "Code"
                     BuildAction = "Compile"
                 />
