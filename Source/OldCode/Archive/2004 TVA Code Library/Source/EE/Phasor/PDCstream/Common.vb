@@ -15,7 +15,7 @@
 '
 '***********************************************************************
 
-Imports TVA.Shared.Math
+Imports TVA.Shared.Bit
 
 Namespace EE.Phasor.PDCstream
 
