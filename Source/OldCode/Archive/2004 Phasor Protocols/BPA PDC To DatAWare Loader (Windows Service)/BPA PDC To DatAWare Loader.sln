@@ -1,0 +1,76 @@
+Microsoft Visual Studio Solution File, Format Version 8.00
+Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "BPA PDC To DatAWare Loader", "BPA PDC To DatAWare Loader.vbproj", "{C4C3B6F4-C557-46C9-A650-35B1AF949F37}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
+EndProject
+Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "ConsoleMonitor", "ConsoleMonitor\ConsoleMonitor.vbproj", "{595225D7-B237-4B71-AB35-1E1776D2832D}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
+EndProject
+Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "Setup", "Setup\Setup.vdproj", "{056708AF-2431-4DEE-A43C-2B7AA1E696F6}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
+EndProject
+Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "PDCMessages", "PDCMessages\PDCMessages.vbproj", "{20C6750F-C0EA-4EE3-AA9D-3E06ABD56233}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
+EndProject
+Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "PDCDataReader", "PDCDataReader\PDCDataReader.vbproj", "{CAA26FBA-31DF-4FB3-A5D6-14B8136C15E2}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SourceCodeControl) = preSolution
+		SccNumberOfProjects = 6
+		SccLocalPath0 = .
+		CanCheckoutShared = false
+		SolutionUniqueID = {F759F913-5F26-4DC5-BDDB-65D10414837C}
+		SccProjectUniqueName1 = BPA\u0020PDC\u0020To\u0020DatAWare\u0020Loader.vbproj
+		SccLocalPath1 = .
+		CanCheckoutShared = false
+		SccProjectUniqueName2 = ConsoleMonitor\\ConsoleMonitor.vbproj
+		SccLocalPath2 = .
+		CanCheckoutShared = false
+		SccProjectFilePathRelativizedFromConnection2 = ConsoleMonitor\\
+		SccProjectUniqueName3 = PDCDataReader\\PDCDataReader.vbproj
+		SccLocalPath3 = .
+		CanCheckoutShared = false
+		SccProjectFilePathRelativizedFromConnection3 = PDCDataReader\\
+		SccProjectUniqueName4 = PDCMessages\\PDCMessages.vbproj
+		SccLocalPath4 = .
+		CanCheckoutShared = false
+		SccProjectFilePathRelativizedFromConnection4 = PDCMessages\\
+		SccProjectUniqueName5 = Setup\\Setup.vdproj
+		SccLocalPath5 = .
+		CanCheckoutShared = false
+		SccProjectFilePathRelativizedFromConnection5 = Setup\\
+	EndGlobalSection
+	GlobalSection(SolutionConfiguration) = preSolution
+		Debug = Debug
+		Release = Release
+	EndGlobalSection
+	GlobalSection(ProjectConfiguration) = postSolution
+		{C4C3B6F4-C557-46C9-A650-35B1AF949F37}.Debug.ActiveCfg = Debug|.NET
+		{C4C3B6F4-C557-46C9-A650-35B1AF949F37}.Debug.Build.0 = Debug|.NET
+		{C4C3B6F4-C557-46C9-A650-35B1AF949F37}.Release.ActiveCfg = Release|.NET
+		{C4C3B6F4-C557-46C9-A650-35B1AF949F37}.Release.Build.0 = Release|.NET
+		{595225D7-B237-4B71-AB35-1E1776D2832D}.Debug.ActiveCfg = Debug|.NET
+		{595225D7-B237-4B71-AB35-1E1776D2832D}.Debug.Build.0 = Debug|.NET
+		{595225D7-B237-4B71-AB35-1E1776D2832D}.Release.ActiveCfg = Release|.NET
+		{595225D7-B237-4B71-AB35-1E1776D2832D}.Release.Build.0 = Release|.NET
+		{056708AF-2431-4DEE-A43C-2B7AA1E696F6}.Debug.ActiveCfg = Debug
+		{056708AF-2431-4DEE-A43C-2B7AA1E696F6}.Release.ActiveCfg = Release
+		{20C6750F-C0EA-4EE3-AA9D-3E06ABD56233}.Debug.ActiveCfg = Debug|.NET
+		{20C6750F-C0EA-4EE3-AA9D-3E06ABD56233}.Debug.Build.0 = Debug|.NET
+		{20C6750F-C0EA-4EE3-AA9D-3E06ABD56233}.Release.ActiveCfg = Release|.NET
+		{20C6750F-C0EA-4EE3-AA9D-3E06ABD56233}.Release.Build.0 = Release|.NET
+		{CAA26FBA-31DF-4FB3-A5D6-14B8136C15E2}.Debug.ActiveCfg = Debug|.NET
+		{CAA26FBA-31DF-4FB3-A5D6-14B8136C15E2}.Debug.Build.0 = Debug|.NET
+		{CAA26FBA-31DF-4FB3-A5D6-14B8136C15E2}.Release.ActiveCfg = Release|.NET
+		{CAA26FBA-31DF-4FB3-A5D6-14B8136C15E2}.Release.Build.0 = Release|.NET
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+	EndGlobalSection
+	GlobalSection(ExtensibilityAddIns) = postSolution
+	EndGlobalSection
+EndGlobal
