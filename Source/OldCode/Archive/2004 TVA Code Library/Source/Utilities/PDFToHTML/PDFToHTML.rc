@@ -53,8 +53,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 7,3,2,54786
- PRODUCTVERSION 7,3,2,54786
+ FILEVERSION 7,3,6,61900
+ PRODUCTVERSION 7,3,6,61900
  FILEFLAGSMASK 0x17L
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -69,17 +69,17 @@ BEGIN
     BEGIN
         BLOCK "040904b0"
         BEGIN
-            VALUE "Assembly Version", "7.3.2.54786"
+            VALUE "Assembly Version", "7.3.6.61900"
             VALUE "Comments", ".NET PDF to HTML Conversion Code Library"
             VALUE "CompanyName", "TVA"
             VALUE "FileDescription", "TVA .NET Code Library: PDF to HTML Converter"
-            VALUE "FileVersion", "7.3.2.54786"
+            VALUE "FileVersion", "7.3.6.61900"
             VALUE "InternalName", "TVA.Utilities.PDFToHTML.dll"
             VALUE "LegalCopyright", "Copyright © 2004, TVA - All rights reserved.  This .NET library uses code from the ""pdftohtml"" project developed by Gueorgui Ovtcharov and Rainer Dorsch.  The ""pdftohtml"" project uses PDF reading code from Derek Noonburg's ""xpdf"" package, Copyright © 1996-2003.  PDF data structures, operators, and specification Copyright © 1995 Adobe Systems Inc."
             VALUE "LegalTrademarks", "Authors: James Ritchie Carroll (.NET wrapper), Gueorgui Ovtcharov, Rainer Dorsch and Mikhail Kruk (pdftohtml), Derek Noonburg (xpdf)"
             VALUE "OriginalFilename", "TVA.Utilities.PDFToHTML.dll"
             VALUE "ProductName", "Shared .NET Code Library for TVA"
-            VALUE "ProductVersion", "7.3.2.54786"
+            VALUE "ProductVersion", "7.3.6.61900"
         END
     END
     BLOCK "VarFileInfo"

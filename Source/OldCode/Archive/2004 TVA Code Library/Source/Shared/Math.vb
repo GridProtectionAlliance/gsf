@@ -60,7 +60,7 @@ Namespace [Shared]
 
         End Function
 
-        ' You can use this class to temporaily cache composite values until they've all been
+        ' You can use this class to temporarily cache composite values until they've all been
         ' received so that a compound value can be created
         Public Class CompositeValues
 
