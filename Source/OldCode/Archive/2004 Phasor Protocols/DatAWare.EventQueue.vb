@@ -187,14 +187,14 @@ Namespace DatAWare
         ' When we receive a new point marked as "received on change", we update all the values from this point in time on...
         Private Sub UpdateReceivedOnChangePoints(ByVal dataPoint As PMUDataPoint)
 
-            Dim stepInterval As Double = 1000 / m_configFile.SampleRate
+            Dim stepInterval As Decimal = 1000@ / m_configFile.SampleRate
             Dim timestamp As DateTime = dataPoint.Timestamp
             Dim baseTime As DateTime = DataQueue.BaselinedTimestamp(timestamp)
             Dim sampleIndex As Integer = m_dataQueue.GetSampleIndex(baseTime)
 
             If sampleIndex > -1 Then
                 ' Update all values in current sample starting with current time interval
-                For offset As Double = (Math.Floor(timestamp.Millisecond / stepInterval) + 0.5) * stepInterval To 999 Step stepInterval
+                For offset As Double = (Math.Floor(timestamp.Millisecond / stepInterval) + 0.5@) * stepInterval To 999 Step stepInterval
                     dataPoint.Timestamp = baseTime.AddMilliseconds(offset)
                     m_dataQueue.SortDataPoint(dataPoint)
                 Next
@@ -207,6 +207,7 @@ Namespace DatAWare
                     Next
                 Next
             End If
+
         End Sub
 
 #End Region

@@ -40,7 +40,7 @@ Namespace DatAWare
         Private m_stopTime As Long
 
         ' Class auto-generated using TVA service template at Fri Nov 5 09:43:23 EST 2004
-        Public Sub New(ByVal parent As DatAWarePDC, ByVal concentrator As PDCstream.Concentrator)
+        Public Sub New(ByVal parent As DatAWarePDC)
 
             m_parent = parent
             m_enabled = True

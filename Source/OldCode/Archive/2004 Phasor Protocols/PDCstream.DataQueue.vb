@@ -28,7 +28,12 @@ Namespace PDCstream
         Private m_baseTime As DateTime      ' This represents the most recent encountered timestamp baselined at the bottom of the second
         Private m_baseTimeSet As Boolean
         Private m_discardedPoints As Long
-        Private m_sampleRate As Double
+        Private m_sampleRate As Decimal     ' We use a 64-bit floating point here to avoid round-off errors in calculations dealing with the sample rate
+
+        ' Note issues with Math.Floor:
+        '   500 / (1000 / 30) = 15 (calculator shows round-off error: 15.000000000000000000000000000002)
+        '   Using doubles  (32-bit floats): Math.Floor(500# / (1000# / 30#)) = 14
+        '   Using decimals (64-bit floats): Math.Floor(500@ / (1000@ / 30@)) = 15
 
         Public Event NewDataSampleCreated(ByVal newDataSample As DataSample)
         Public Event DataError(ByVal message As String)
@@ -38,7 +43,7 @@ Namespace PDCstream
             m_configFile = configFile
             m_dataSamples = New SortedList
             m_baseTime = DateTime.Now.Subtract(New TimeSpan(1, 0, 0, 0))    ' Initialize base time to yesterday...
-            m_sampleRate = 1000 / m_configFile.SampleRate
+            m_sampleRate = 1000@ / m_configFile.SampleRate
 
         End Sub
 
@@ -119,7 +124,7 @@ Namespace PDCstream
                     Else
                         ' We've found the right sample for this data, so lets access the proper data cell by first calculating the
                         ' proper sample index (i.e., the row) - we can then directly access the correct cell using the PMU index
-                        Dim dataCell As PMUDataCell = sample.Rows(Math.Floor((.Timestamp.Millisecond + 1) / m_sampleRate)).Cells(.PMU.Index)
+                        Dim dataCell As PMUDataCell = sample.Rows(Math.Floor((.Timestamp.Millisecond + 1@) / m_sampleRate)).Cells(.PMU.Index)
 
                         Select Case .Type
                             Case PointType.PhasorAngle
