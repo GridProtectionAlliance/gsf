@@ -1,5 +1,5 @@
 '***********************************************************************
-'  DescriptorPacket.vb - PDC stream descriptor packet
+'  DataPacket.vb - PDC stream data packet
 '  Copyright © 2004 - TVA, all rights reserved
 '
 '  Build Environment: VB.NET, Visual Studio 2003

@@ -643,7 +643,6 @@ Namespace Utilities.Crawlers
         ' to prevent end user confusion with the IndexPage event which perfroms the same function...
         <EditorBrowsable(EditorBrowsableState.Never)> _
         Public Event IndexDocument(ByVal Document As Object) Implements ICrawler.IndexDocument
-
         ' We allow end user to restrict URL following based on their own criteria...
         Public Delegate Function FollowURLSignature(ByVal URL As String) As Boolean
 
@@ -668,8 +667,10 @@ Namespace Utilities.Crawlers
         Private IndexedPages As Long                                ' Total indexed page count
         Private Schemes As ArrayList                                ' Valid URI scheme list
         Private HTMLFileExtensions As ArrayList                     ' HTML file type extension list
-        Private URLQueue As ArrayList                               ' Queue of URL's to be processes
+        Private URLQueue As IList                                   ' Queue of URL's to be processes - user can override with custom list...
         Private WithEvents QueueTimer As Timers.Timer               ' URL queue processing timer
+        Private WithEvents QueueMonitor As Timers.Timer             ' URL queue monitor
+        Private LastScan As Long                                    ' Time of last scan...
         Private Processing As Boolean                               ' Determines if crawler is active
         Private StartTime As Long                                   ' Start timer value of indexing run
         Private StopTime As Long                                    ' Stop timer value of indexing run
@@ -708,6 +709,7 @@ Namespace Utilities.Crawlers
             IndexedURLs = New ArrayList
             URLQueue = New ArrayList
             QueueTimer = New Timers.Timer
+            QueueMonitor = New Timers.Timer
             ValidSchemes = "http;https"
             HTMLFileTypes = ".HTML;.HTM;.TXT"
             FileSystemIndexRequests = New FileSystemIndexingQueue(Me)
@@ -730,6 +732,12 @@ Namespace Utilities.Crawlers
             With QueueTimer
                 .Interval = 100
                 .AutoReset = False
+                .Enabled = False
+            End With
+
+            With QueueMonitor
+                .Interval = 500
+                .AutoReset = True
                 .Enabled = False
             End With
 
@@ -1020,6 +1028,16 @@ Namespace Utilities.Crawlers
             End Get
         End Property
 
+        <Browsable(False), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)> _
+        Public Property URLIndexQueue() As IList
+            Get
+                Return URLQueue
+            End Get
+            Set(ByVal Value As IList)
+                URLQueue = Value
+            End Set
+        End Property
+
         Private Class URLIndexer
 
             Inherits ThreadBase
@@ -1110,10 +1128,8 @@ Namespace Utilities.Crawlers
 
         Private Sub RaiseIndexingComplete()
 
-            If Not IsActive Then
-                StopIndexing()
-                RaiseEvent IndexingComplete()
-            End If
+            StopIndexing()
+            RaiseEvent IndexingComplete()
 
         End Sub
 
@@ -1131,10 +1147,7 @@ Namespace Utilities.Crawlers
 
         Public Sub AddURLToIndex(ByVal URL As String)
 
-            SyncLock URLQueue.SyncRoot
-                URLQueue.Add(New URLIndexer("", URL))
-            End SyncLock
-            QueueTimer.Enabled = True
+            AddURLToIndex("", URL)
 
         End Sub
 
@@ -1167,13 +1180,33 @@ Namespace Utilities.Crawlers
             Processing = True
             StopTime = 0
             StartTime = Now.Ticks
+            QueueMonitor.Enabled = True
 
         End Sub
 
         Public Sub StopIndexing() Implements ICrawler.StopIndexing
 
+            QueueMonitor.Enabled = False
             Processing = False
             StopTime = Now.Ticks
+
+        End Sub
+
+        Private Sub QueueMonitor_Elapsed(ByVal sender As Object, ByVal e As System.Timers.ElapsedEventArgs) Handles QueueMonitor.Elapsed
+
+            ' If we pass through two seconds with no active threads and nothing in the queue, we'll know indexing has completed...
+            If CrawlerActiveThreads <= 0 And URLQueueCount = 0 Then
+                If LastScan > 0 Then
+                    If (DateTime.Now.Ticks - LastScan) / 10000000L > 2 Then
+                        RaiseIndexingComplete()
+                        Processing = False
+                    End If
+                Else
+                    LastScan = DateTime.Now.Ticks
+                End If
+            Else
+                LastScan = DateTime.Now.Ticks
+            End If
 
         End Sub
 
@@ -1198,24 +1231,15 @@ Namespace Utilities.Crawlers
                             If Not .Thread.Join(CrawlerPageIndexTimeout * 1000) Then .Abort()
                         End With
                     End If
-                Catch
-                    Throw
+                Catch ex As Exception
+                    RaiseCrawlerError(indexer.URL, "URL Index Thread", "Index thread failed to fully crawl page due to exception: " & ex.Message)
                 Finally
                     Interlocked.Decrement(CrawlerActiveThreads)
                 End Try
             End If
 
-            If URLQueueCount > 0 Then
-                ' Keep queue timer alive so long as there are URL's to index...
-                QueueTimer.Enabled = (Enabled And Processing And URLQueueCount > 0)
-            Else
-                ' We've finished crawling if no URL's are in the queue and no threads are active
-                If CrawlerActiveThreads <= 0 Then
-                    RaiseIndexingComplete()
-                Else
-                    QueueTimer.Enabled = (Enabled And Processing)
-                End If
-            End If
+            ' Keep queue timer alive so long as there are URL's to index...
+            QueueTimer.Enabled = (Enabled And Processing And URLQueueCount > 0)
 
         End Sub
 
@@ -1460,7 +1484,14 @@ Namespace Utilities.Crawlers
                 strStatus.Append("     Total crawl time: " & SecondsToText(RunTime).ToLower() & vbCrLf)
                 strStatus.Append("      Maximum threads: " & CrawlerMaximumThreads & vbCrLf)
                 strStatus.Append("       Active threads: " & CrawlerActiveThreads & vbCrLf)
-                strStatus.Append("      URL queue count: " & URLQueueCount & vbCrLf)
+                SyncLock URLQueue.SyncRoot
+                    strStatus.Append("      URL queue count: " & URLQueue.Count & vbCrLf)
+                    If URLQueue.Count > 0 Then
+                        strStatus.Append("       Top queue item: " & DirectCast(URLQueue(0), URLIndexer).URL & vbCrLf)
+                    Else
+                        strStatus.Append("       Top queue item: <queue is empty>" & vbCrLf)
+                    End If
+                End SyncLock
                 strStatus.Append(" File system indexing: " & IIf(FileSystemIndexRequests.IsActive, "Indexing: " & FileSystemIndexRequests.QueueCount & " queued", "Idle") & vbCrLf)
 
                 Return strStatus.ToString()

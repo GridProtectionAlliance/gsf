@@ -116,6 +116,12 @@ Namespace DatAWare
             End Set
         End Property
 
+        Public ReadOnly Property ServerPort() As Integer
+            Get
+                Return m_serverPort
+            End Get
+        End Property
+
         Public Overridable ReadOnly Property RunTime() As Double
             Get
                 Dim ProcessingTime As Long

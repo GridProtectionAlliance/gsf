@@ -1,5 +1,5 @@
 '***********************************************************************
-'  Windows.vb - Older Windows Versions Interoperability Classes
+'  IniFile.vb - Older Windows Versions Interoperability Classes
 '  Copyright © 2005 - TVA, all rights reserved
 '
 '  Build Environment: VB.NET, Visual Studio 2003

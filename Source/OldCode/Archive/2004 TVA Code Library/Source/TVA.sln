@@ -153,9 +153,13 @@ Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "DatAWare", "DatAWare\DatAWa
 	ProjectSection(ProjectDependencies) = postProject
 	EndProjectSection
 EndProject
+Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "EE", "EE\EE.vbproj", "{AEBCFD16-5FB0-433E-95F1-7975418E7887}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SourceCodeControl) = preSolution
-		SccNumberOfProjects = 24
+		SccNumberOfProjects = 25
 		SccLocalPath0 = .
 		CanCheckoutShared = false
 		SolutionUniqueID = {BA434792-5D37-40FD-848C-659B0D8E723E}
@@ -251,6 +255,10 @@ Global
 		SccLocalPath23 = .
 		CanCheckoutShared = false
 		SccProjectFilePathRelativizedFromConnection23 = DatAWare\\
+		SccProjectUniqueName24 = EE\\EE.vbproj
+		SccLocalPath24 = .
+		CanCheckoutShared = false
+		SccProjectFilePathRelativizedFromConnection24 = EE\\
 	EndGlobalSection
 	GlobalSection(SolutionConfiguration) = preSolution
 		Debug = Debug
@@ -490,6 +498,16 @@ Global
 		{123904DA-3BCE-4529-84C3-43ABB4A13A5E}.ReleaseWithoutAsm.Build.0 = Release|.NET
 		{123904DA-3BCE-4529-84C3-43ABB4A13A5E}.ReleaseWithoutCrtdll.ActiveCfg = Release|.NET
 		{123904DA-3BCE-4529-84C3-43ABB4A13A5E}.ReleaseWithoutCrtdll.Build.0 = Release|.NET
+		{AEBCFD16-5FB0-433E-95F1-7975418E7887}.Debug.ActiveCfg = Debug|.NET
+		{AEBCFD16-5FB0-433E-95F1-7975418E7887}.Debug.Build.0 = Debug|.NET
+		{AEBCFD16-5FB0-433E-95F1-7975418E7887}.Release.ActiveCfg = Release|.NET
+		{AEBCFD16-5FB0-433E-95F1-7975418E7887}.Release.Build.0 = Release|.NET
+		{AEBCFD16-5FB0-433E-95F1-7975418E7887}.ReleaseAxp.ActiveCfg = Release|.NET
+		{AEBCFD16-5FB0-433E-95F1-7975418E7887}.ReleaseAxp.Build.0 = Release|.NET
+		{AEBCFD16-5FB0-433E-95F1-7975418E7887}.ReleaseWithoutAsm.ActiveCfg = Release|.NET
+		{AEBCFD16-5FB0-433E-95F1-7975418E7887}.ReleaseWithoutAsm.Build.0 = Release|.NET
+		{AEBCFD16-5FB0-433E-95F1-7975418E7887}.ReleaseWithoutCrtdll.ActiveCfg = Release|.NET
+		{AEBCFD16-5FB0-433E-95F1-7975418E7887}.ReleaseWithoutCrtdll.Build.0 = Release|.NET
 	EndGlobalSection
 	GlobalSection(SolutionItems) = postSolution
 		README1ST!!!.TXT = README1ST!!!.TXT

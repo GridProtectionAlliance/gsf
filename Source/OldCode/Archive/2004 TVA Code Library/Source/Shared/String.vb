@@ -1,4 +1,6 @@
 ' James Ritchie Carroll - 2003
+' 01/10/2005 JRC - Added fast "Concat" function
+
 Option Explicit On 
 
 Imports System.Text
@@ -13,6 +15,23 @@ Namespace [Shared]
             ' This class contains only global functions and is not meant to be instantiated
 
         End Sub
+
+        ' Does a "fast" concat - System.String.Concat is very slow (http://www.developer.com/net/cplus/article.php/3304901)
+        Public Shared Function Concat(ByVal ParamArray args As String()) As String
+
+            If args Is Nothing Then
+                Return ""
+            Else
+                With New StringBuilder
+                    For x As Integer = 0 To args.Length - 1
+                        .Append(args(x))
+                    Next
+
+                    Return .ToString
+                End With
+            End If
+
+        End Function
 
         ' Ensures parameter is not an empty string
         Public Shared Function NotEmpty(ByVal TestData As Object, Optional ByVal NotReturnValue As String = " ") As String
