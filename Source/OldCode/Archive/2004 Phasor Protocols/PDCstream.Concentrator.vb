@@ -30,9 +30,7 @@ Imports System.Net.Sockets
 Imports System.Threading
 Imports TVA.Shared.DateTime
 Imports TVA.Shared.FilePath
-Imports TVA.Shared.Common
 Imports TVA.Services
-Imports TVA.Threading
 
 Namespace PDCstream
 
@@ -48,13 +46,12 @@ Namespace PDCstream
         Private m_udpClient As UdpClient
         Private m_broadcastIPs As IPEndPoint()
         Private m_lagTime As Double
-        Private m_intervalAdjustment As Double
+        Private m_sampleRate As Decimal
+        Private m_publishTime As DateTime
         Private m_sentDescriptor As Boolean
-        Private m_sampleRate As Double
-        Private m_sampleIndex As Integer
-        Private m_sampleTime As Long
+        Private m_rowIndex As Integer
         Private WithEvents m_processTimer As Timers.Timer
-        Private WithEvents m_sweepTimer As Timers.Timer
+        Private WithEvents m_monitorTimer As Timers.Timer
         Private m_enabled As Boolean
         Private m_processing As Boolean
         Private m_startTime As Long
@@ -67,7 +64,7 @@ Namespace PDCstream
 
 #Region " Common Primary Service Process Code "
 
-        Public Sub New(ByVal parent As DatAWarePDC, ByVal configFileName As String, ByVal lagTime As Double, ByVal intervalAdjustment As Double, ByVal broadcastIPs As IPEndPoint())
+        Public Sub New(ByVal parent As DatAWarePDC, ByVal configFileName As String, ByVal lagTime As Double, ByVal broadcastIPs As IPEndPoint())
 
             m_parent = parent
             m_configFile = New ConfigFile(configFileName)
@@ -76,22 +73,21 @@ Namespace PDCstream
             m_udpClient = New UdpClient
             m_broadcastIPs = broadcastIPs
             m_lagTime = lagTime
-            m_intervalAdjustment = intervalAdjustment
             m_processTimer = New Timers.Timer
-            m_sweepTimer = New Timers.Timer
+            m_monitorTimer = New Timers.Timer
             m_enabled = True
             m_processing = False
-            m_sampleRate = 1000 / m_configFile.SampleRate
+            m_sampleRate = 1000@ / m_configFile.SampleRate
 
-            ' We define a process timer to send samples at the specified sample rate
+            ' We define a process timer to monitor for samples to send...
             With m_processTimer
-                .Interval = m_sampleRate - m_intervalAdjustment
+                .Interval = 1
                 .AutoReset = False
                 .Enabled = False
             End With
 
             ' We check for samples that need to be removed every second
-            With m_sweepTimer
+            With m_monitorTimer
                 .Interval = 1000
                 .AutoReset = True
                 .Enabled = True
@@ -150,8 +146,8 @@ Namespace PDCstream
                     m_bytesBroadcasted = 0
                     m_packetsPublished = 0
                     m_startTime = DateTime.Now.Ticks
-                    m_sampleTime = m_startTime
-                    m_sampleIndex = 0
+                    m_publishTime = DateTime.Now.AddSeconds(m_lagTime)
+                    m_rowIndex = -1
 
                     ' Start process timer
                     m_processTimer.Enabled = True
@@ -197,129 +193,106 @@ Namespace PDCstream
 
         Private Sub m_processTimer_Elapsed(ByVal sender As Object, ByVal e As System.Timers.ElapsedEventArgs) Handles m_processTimer.Elapsed
 
-            ' Since a typical process rate is 30 samples per second do everything you can to make sure code
-            ' here is optimized to execute as quickly as possible...
-            Dim binaryLength As Integer
-            Dim x, y, z As Integer
-            Dim exitLoop As Boolean
+            Try
+                ' Since a typical process rate is 30 samples per second do everything you can to make sure code
+                ' here is optimized to execute as quickly as possible...
+                Dim currentTime As DateTime = DateTime.Now
+                Dim binaryLength As Integer
+                Dim x, y, z As Integer
+                Dim exitLoop As Boolean
 
-            ' Send a descriptor packet at the top of each minute...
-            With DateTime.Now
-                If .Second = 0 Then
-                    If Not m_sentDescriptor Then
-                        m_sentDescriptor = True
-                        Try
-                            With m_descriptor
-                                binaryLength = .BinaryLength
+                ' Send a descriptor packet at the top of each minute...
+                With currentTime
+                    If .Second = 0 Then
+                        If Not m_sentDescriptor Then
+                            m_sentDescriptor = True
+                            Try
+                                With m_descriptor
+                                    binaryLength = .BinaryLength
 
-                                ' Send binary descriptor image over UDP broadcast channels
-                                For x = 0 To m_broadcastIPs.Length - 1
-                                    m_udpClient.Send(.BinaryImage, binaryLength, m_broadcastIPs(x))
-                                Next
-                            End With
+                                    ' Send binary descriptor image over UDP broadcast channels
+                                    For x = 0 To m_broadcastIPs.Length - 1
+                                        m_udpClient.Send(.BinaryImage, binaryLength, m_broadcastIPs(x))
+                                    Next
+                                End With
 
-                            m_bytesBroadcasted += binaryLength
-                        Catch ex As Exception
-                            UpdateStatus("Error publishing descriptor packet: " & ex.Message)
-                        End Try
-                    End If
-                Else
-                    m_sentDescriptor = False
-                End If
-            End With
-
-            ' Check for non-published samples...
-            For x = 0 To m_dataQueue.SampleCount - 1
-                With m_dataQueue(x)
-                    If Not .Published Then
-                        ' Check for non-published packets in this sample...
-                        For y = 0 To .Rows.Length - 1
-                            With .Rows(y)
-                                If Not .Published Then
-                                    If m_dataQueue.DistanceFromBaseTime(.Timestamp) < m_lagTime Then
-                                        Try
-                                            binaryLength = .BinaryLength
-
-                                            ' Send binary data packet image over UDP broadcast channels
-                                            For z = 0 To m_broadcastIPs.Length - 1
-                                                m_udpClient.Send(.BinaryImage, binaryLength, m_broadcastIPs(z))
-                                            Next
-
-                                            m_bytesBroadcasted += binaryLength
-                                            m_packetsPublished += 1
-                                            m_sampleIndex += 1
-                                        Catch ex As Exception
-                                            UpdateStatus("Error publishing data packet: " & ex.Message)
-                                        Finally
-                                            ' Even an attempt at publishing counts - we don't have time to go back and try again...
-                                            .Published = True
-                                        End Try
-                                    End If
-
-                                    ' Under normal circumstances, this should be all we need to try to send - so we won't
-                                    ' waste cycles looking for anything else that we'll catch at the next pass...
-                                    exitLoop = True
-                                    Exit For
-                                End If
-                            End With
-                        Next
+                                m_bytesBroadcasted += binaryLength
+                            Catch ex As Exception
+                                UpdateStatus("Error publishing descriptor packet: " & ex.Message)
+                            End Try
+                        End If
+                    Else
+                        m_sentDescriptor = False
                     End If
                 End With
-                If exitLoop Then Exit For
-            Next
 
-            If m_sampleIndex >= m_configFile.SampleRate Then
-                ' Adjust process rate as needed to make sure we don't fall behind or get too far ahead...
-                Dim processRate As Double = m_sampleIndex / ((DateTime.Now.Ticks - m_sampleTime) / 10000000L)
+                ' Check to see if it's time to broadcast...
+                If currentTime.Ticks > m_publishTime.Ticks Then
+                    ' Access proper data packet out of current sample
+                    Dim currentSample As PDCstream.DataSample = m_dataQueue(0)
 
-                If processRate < m_configFile.SampleRate + m_intervalAdjustment Then
-                    ' Falling behind desired rate, shorten interval...
-                    If m_processTimer.Interval >= 1 + m_intervalAdjustment Then
-                        m_processTimer.Interval -= m_intervalAdjustment
-                    Else
-                        m_processTimer.Interval = 1
+                    If m_rowIndex = -1 Then
+                        ' Make sure we've got enough lag-time between this sample and the most recent sample...
+                        If m_dataQueue.DistanceFromBaseTime(currentSample.Timestamp) <= -m_lagTime Then
+                            m_rowIndex = 0
+                        End If
                     End If
-                ElseIf processRate > m_configFile.SampleRate + m_intervalAdjustment And m_dataQueue.SampleCount <= m_lagTime Then
-                    ' Getting ahead of rate, increase interval...
-                    If m_processTimer.Interval <= m_sampleRate - m_intervalAdjustment Then
-                        m_processTimer.Interval += m_intervalAdjustment
-                    Else
-                        m_processTimer.Interval = m_sampleRate
+
+                    If m_rowIndex > -1 Then
+                        With currentSample.Rows(m_rowIndex)
+                            Try
+                                ' Even an attempt at publishing counts - we don't have time to go back and try again...
+                                .Published = True
+
+                                binaryLength = .BinaryLength
+
+                                ' Send binary data packet image over UDP broadcast channels
+                                For z = 0 To m_broadcastIPs.Length - 1
+                                    m_udpClient.Send(.BinaryImage, binaryLength, m_broadcastIPs(z))
+                                Next
+
+                                m_bytesBroadcasted += binaryLength
+                                m_packetsPublished += 1
+                            Catch ex As Exception
+                                UpdateStatus("Error publishing data packet: " & ex.Message)
+                            End Try
+
+                            ' Increment row index
+                            m_rowIndex += 1
+
+                            If m_rowIndex = m_configFile.SampleRate Then
+                                ' We published this sample, reset row index for next sample
+                                m_rowIndex = -1
+
+                                ' We send out a notification that a new sample has been published so that anyone can have a chance
+                                ' to perform any last steps with the data before we remove it - in our case the DatAWare
+                                ' Aggregator will pick this up and send the averaged sample to the permanent archive...
+                                RaiseEvent SamplePublished(currentSample)
+                                m_dataQueue.RemovePublishedSample()
+                            End If
+                        End With
                     End If
+
+                    ' Set next broadcast time
+                    m_publishTime = m_publishTime.AddMilliseconds(m_sampleRate)
                 End If
-
-                m_sampleIndex = 0
-                m_sampleTime = DateTime.Now.Ticks
-            End If
-
-            m_processTimer.Enabled = True
+            Catch
+                Throw
+            Finally
+                m_processTimer.Enabled = m_enabled
+            End Try
 
         End Sub
 
-        Private Sub m_sweepTimer_Elapsed(ByVal sender As Object, ByVal e As System.Timers.ElapsedEventArgs) Handles m_sweepTimer.Elapsed
+        Private Sub m_monitorTimer_Elapsed(ByVal sender As Object, ByVal e As System.Timers.ElapsedEventArgs) Handles m_monitorTimer.Elapsed
 
             If m_enabled Then
-                Dim unpublishedSamples As Integer
-
                 ' Start process thread if needed
-                If m_dataQueue.SampleCount > 0 And Not m_processing Then
+                If m_dataQueue.SampleCount > 1 And Not m_processing Then
                     Processing = True
                 End If
 
-                For x As Integer = 0 To m_dataQueue.SampleCount - 1
-                    If m_dataQueue(x).Published Then
-                        ' We send out a notification that a new sample has been published so that anyone can have a chance
-                        ' to perform any last steps with the data before we remove it - in our case the DatAWare
-                        ' Aggregator will pick this up and send the averaged sample to the permanent archive...
-                        RaiseEvent SamplePublished(m_dataQueue(x))
-                    Else
-                        unpublishedSamples += 1
-                    End If
-                Next
-
-                m_dataQueue.RemovePublishedSamples()
-
-                RaiseEvent UnpublishedSamples(unpublishedSamples)
+                RaiseEvent UnpublishedSamples(m_dataQueue.SampleCount - 1)
             ElseIf m_processing Then
                 Processing = False
             End If
@@ -360,19 +333,14 @@ Namespace PDCstream
                 Dim currentTime As DateTime = PDCstream.DataQueue.BaselinedTimestamp(DateTime.Now.ToUniversalTime())
 
                 With New StringBuilder
-                    Dim pastNonPublished As Boolean
-
                     For x As Integer = 0 To m_dataQueue.SampleCount - 1
                         .Append(vbCrLf & "     Sample " & x & " @ " & m_dataQueue(x).Timestamp.ToString("dd-MMM-yyyy HH:mm:ss") & ": ")
 
-                        If m_dataQueue(x).Published Then
-                            .Append("published, awaiting aggregation...")
-                        ElseIf pastNonPublished Then
-                            .Append("concentrating...")
-                        Else
+                        If x = 0 Then
                             .Append("publishing...")
-                            pastNonPublished = True
                             publishingSample = m_dataQueue(x).Timestamp
+                        Else
+                            .Append("concentrating...")
                         End If
 
                         .Append(vbCrLf)
@@ -391,7 +359,6 @@ Namespace PDCstream
                     .Append("       Current server time: " & currentTime.ToString("dd-MMM-yyyy HH:mm:ss") & vbCrLf)
                     .Append("        Most recent sample: " & m_dataQueue.BaseTime.ToString("dd-MMM-yyyy HH:mm:ss") & ", " & m_dataQueue.DistanceFromBaseTime(currentTime) & " second deviation" & vbCrLf)
                     .Append("         Publishing sample: " & publishingSample.ToString("dd-MMM-yyyy HH:mm:ss") & ", " & (currentTime.Ticks - publishingSample.Ticks) / 10000000L & " second deviation" & vbCrLf)
-                    .Append("   Adjusted timer interval: " & m_processTimer.Interval.ToString("0.00") & " ms" & vbCrLf)
                     .Append("    Data packets published: " & m_packetsPublished & vbCrLf)
                     .Append("         Mean publish rate: " & (m_packetsPublished / RunTime).ToString("0.00") & " samples/sec" & vbCrLf)
                     .Append("       Mean broadcast rate: " & (m_bytesBroadcasted * 8 / RunTime / 1024 / 1024).ToString("0.00") & " mbps" & vbCrLf)

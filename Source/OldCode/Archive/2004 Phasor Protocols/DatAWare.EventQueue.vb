@@ -116,45 +116,68 @@ Namespace DatAWare
 
         Public Sub QueueEventData(ByVal plantCode As String, ByVal eventBuffer As Byte())
 
-            If Enabled Then
-                Try
-                    m_activeThreads += 1
-
-                    Dim dataPoint As PMUDataPoint
-
-                    ' Parse events out of data packet and create a new PMU data point from timestamp and value
-                    For packetIndex As Integer = 0 To eventBuffer.Length - 1 Step StandardEvent.BinaryLength
-                        If packetIndex + StandardEvent.BinaryLength < eventBuffer.Length Then
-                            With New StandardEvent(eventBuffer, packetIndex)
-                                ' Make sure we have a point defined for this value
-                                If Points(plantCode).GetPoint(.DatabaseIndex, dataPoint) Then
-                                    dataPoint.Timestamp = .TTag.ToDateTime
-                                    dataPoint.Value = .Value
-
-                                    ' If the new value is received on change, we'll update the samples in our current
-                                    ' data queue to use latest value...
-                                    If dataPoint.ReceivedOnChange Then
-                                        Points(plantCode)(.DatabaseIndex) = dataPoint
-                                        UpdateReceivedOnChangePoints(dataPoint)
-                                    End If
-
-                                    ' Add this point value to the PDC concentrator data queue
-                                    m_dataQueue.SortDataPoint(dataPoint)
-                                End If
-                            End With
-
-                            m_processedEvents += 1
-                        End If
-                    Next
-                Catch ex As Exception
-                    UpdateStatus("Exception in DatAWare.EventQueue.ProcessEventBuffer: " & ex.Message)
-                    Throw ex
-                Finally
-                    m_activeThreads -= 1
-                End Try
-            End If
-
+            ' Note: although you could go ahead and sort items here directly without queuing this work up, doing this could
+            ' cause the TCP stream from DatAWare to start to get backed-up causing inherent delays in real-time data
+            If Enabled Then ThreadPool.QueueUserWorkItem(AddressOf ProcessEventBuffer, New DataPacket(plantCode, eventBuffer))
+            ProcessEventBuffer(New DataPacket(plantCode, eventBuffer))
             m_packetsReceived += 1
+
+        End Sub
+
+        ' We use this class to hold queued event data for worker thread
+        Private Class DataPacket
+
+            Public PlantCode As String
+            Public EventBuffer As Byte()
+
+            Public Sub New(ByVal plantCode As String, ByVal eventBuffer As Byte())
+
+                Me.PlantCode = plantCode
+                Me.EventBuffer = eventBuffer
+
+            End Sub
+
+        End Class
+
+        ' This method is expected to be run on an independent thread...
+        Private Sub ProcessEventBuffer(ByVal stateInfo As Object)
+
+            Try
+                m_activeThreads += 1
+
+                Dim eventData As DataPacket = DirectCast(stateInfo, DataPacket)
+                Dim dataPoint As PMUDataPoint
+
+                ' Parse events out of data packet and create a new PMU data point from timestamp and value
+                For packetIndex As Integer = 0 To eventData.EventBuffer.Length - 1 Step StandardEvent.BinaryLength
+                    If packetIndex + StandardEvent.BinaryLength < eventData.EventBuffer.Length Then
+                        With New StandardEvent(eventData.EventBuffer, packetIndex)
+                            ' Make sure we have a point defined for this value
+                            If Points(eventData.PlantCode).GetPoint(.DatabaseIndex, dataPoint) Then
+                                dataPoint.Timestamp = .TTag.ToDateTime
+                                dataPoint.Value = .Value
+
+                                ' If the new value is received on change, we'll update the samples in our current
+                                ' data queue to use latest value...
+                                If dataPoint.ReceivedOnChange Then
+                                    Points(eventData.PlantCode)(.DatabaseIndex) = dataPoint
+                                    UpdateReceivedOnChangePoints(dataPoint)
+                                End If
+
+                                ' Add this point value to the PDC concentrator data queue
+                                m_dataQueue.SortDataPoint(dataPoint)
+                            End If
+                        End With
+
+                        m_processedEvents += 1
+                    End If
+                Next
+            Catch ex As Exception
+                UpdateStatus("Exception in DatAWare.EventQueue.ProcessEventBuffer: " & ex.Message)
+                Throw ex
+            Finally
+                m_activeThreads -= 1
+            End Try
 
         End Sub
 
@@ -170,7 +193,7 @@ Namespace DatAWare
             Dim timestamp As DateTime
 
             For x As Integer = 0 To newDataSample.Rows.Length - 1
-                timestamp = newDataSample.Rows(x).Timestamp
+                timestamp = newDataSample.Rows(x).TimeStamp
 
                 For Each pointSet As PMUServerPoints In m_serverPoints.Values
                     For Each dataPoint As PMUDataPoint In pointSet
@@ -202,7 +225,7 @@ Namespace DatAWare
                 ' Update the point value in all remaining samples
                 For x As Integer = sampleIndex + 1 To m_dataQueue.SampleCount - 1
                     For y As Integer = 0 To m_dataQueue.Sample(x).Rows.Length - 1
-                        dataPoint.Timestamp = m_dataQueue.Sample(x).Rows(y).Timestamp
+                        dataPoint.Timestamp = m_dataQueue.Sample(x).Rows(y).TimeStamp
                         m_dataQueue.SortDataPoint(dataPoint)
                     Next
                 Next

@@ -195,9 +195,8 @@ Public Class DatAWarePDC
 
         ' Make sure status log variables exist for this service
         Variables.Create("DatAWare.PDC.ConfigFile", ServiceHelper.AppPath & "TVA_PDC.ini", VariableType.Text, "PDC Configuration File used by the DatAWare Phasor Data Concentrator")
-        Variables.Create("DatAWare.PDC.LagTime", 3.0#, VariableType.Float, "Maximum time deviation, in seconds, tolerated before data packet is published (i.e., how long to wait for data before broadcast)")
-        Variables.Create("DatAWare.PDC.IntervalAdjustment", 3.0#, VariableType.Float, "Time span, in milliseconds, used to adjust broadcast timer interval as needed to maintain the sample rate")
-        Variables.Create("DatAWare.PDC.HighSampleCount", 6, VariableType.Int, "High warning limit for the concentrator sample count, warning raised when unpublished sample count exceeds this value.  Too many queued samples means concentrator is falling behind.")
+        Variables.Create("DatAWare.PDC.LagTime", 2.0#, VariableType.Float, "Maximum time deviation, in seconds, tolerated before data packet is published (i.e., how long to wait for data before broadcast)")
+        Variables.Create("DatAWare.PDC.HighSampleCount", 5, VariableType.Int, "High warning limit for the concentrator sample count, warning raised when unpublished sample count exceeds this value.  Too many queued samples means concentrator is falling behind.")
         Variables.Create("DatAWare.PDC.BroadcastPoints.Total", 1, VariableType.Int, "Total number of PDCstream UDP broadcast points")
         Variables.Create("DatAWare.PDC.BroadcastPoint0.IP", "152.85.255.255", VariableType.Text, "IP used for this broadcast point - can be single IP or you can use 255.255 for sub-net suffix for broadcast (e.g., 152.85.255.255)")
         Variables.Create("DatAWare.PDC.BroadcastPoint0.Port", 3060, VariableType.Int, "Port used for this broadcast point")
@@ -415,7 +414,7 @@ Public Class DatAWarePDC
         Next
 
         ' Create an instance of the PDC concentrator
-        Concentrator = New PDCstream.Concentrator(Me, Variables("DatAWare.PDC.ConfigFile"), Variables("DatAWare.PDC.LagTime"), Variables("DatAWare.PDC.IntervalAdjustment"), broadcastIPs)
+        Concentrator = New PDCstream.Concentrator(Me, Variables("DatAWare.PDC.ConfigFile"), Variables("DatAWare.PDC.LagTime"), broadcastIPs)
 
         ' Create an instance of the DatAWare event queue
         EventQueue = New DatAWare.EventQueue(Me)
@@ -516,7 +515,7 @@ Public Class DatAWarePDC
         ' so the total number of unpublished samples equals the number of seconds the PDC is behind real-time...
         If total > highSampleCount Then
             ' Don't send any warnings more than every 10 seconds
-            If (DateTime.Now.Ticks - lastWarning) / 10000000L > 10 Then
+            If Not warningState Or (DateTime.Now.Ticks - lastWarning) / 10000000L > 10 Then
                 UpdateStatus("WARNING: There are " & total & " unpublished samples in the queue, real-time stream could be falling behind...")
                 lastWarning = DateTime.Now.Ticks
             End If

@@ -48,7 +48,7 @@ Namespace DatAWare
         Private m_packetsRejected As Long
         Private m_bytesReceived As Long
 
-        Private Const BufferSize As Integer = 524288 ' 512Kb buffer
+        Private Const BufferSize As Integer = 4096 ' 4Kb buffer
 
 #Region " Setup and Class Definition Code "
 
@@ -230,7 +230,7 @@ Namespace DatAWare
 
             ' Open client data stream...
             clientStream = client.GetStream()
-            client.ReceiveBufferSize = BufferSize
+            'client.ReceiveBufferSize = BufferSize
             clientData = New MemoryStream
 
             ' Enter the data read loop

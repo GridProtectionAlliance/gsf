@@ -91,21 +91,10 @@ Namespace PDCstream
             End Get
         End Property
 
-        Public Sub RemovePublishedSamples()
-
-            Dim publishedSamples As New ArrayList
-            Dim x As Integer
+        Public Sub RemovePublishedSample()
 
             SyncLock m_dataSamples.SyncRoot
-                For x = 0 To m_dataSamples.Count - 1
-                    With DirectCast(m_dataSamples.GetByIndex(x), DataSample)
-                        If .Published Then publishedSamples.Add(.Timestamp.Ticks)
-                    End With
-                Next
-
-                For x = 0 To publishedSamples.Count - 1
-                    m_dataSamples.Remove(publishedSamples(x))
-                Next
+                m_dataSamples.RemoveAt(0)
             End SyncLock
 
         End Sub
@@ -124,7 +113,7 @@ Namespace PDCstream
                     Else
                         ' We've found the right sample for this data, so lets access the proper data cell by first calculating the
                         ' proper sample index (i.e., the row) - we can then directly access the correct cell using the PMU index
-                        Dim dataCell As PMUDataCell = sample.Rows(Math.Floor((.Timestamp.Millisecond + 1@) / m_sampleRate)).Cells(.PMU.Index)
+                        Dim dataCell As PMUDataCell = sample.Rows(GetRowIndex(.Timestamp)).Cells(.PMU.Index)
 
                         Select Case .Type
                             Case PointType.PhasorAngle
@@ -153,6 +142,20 @@ Namespace PDCstream
             End With
 
         End Sub
+
+        Public Function GetRowIndex(ByVal timestamp As DateTime) As Integer
+
+            Dim rowIndex As Integer = Math.Floor((timestamp.Millisecond + 1@) / m_sampleRate)
+
+            If rowIndex < 0 Then
+                rowIndex = 0
+            ElseIf rowIndex > m_configFile.SampleRate - 1 Then
+                rowIndex = m_configFile.SampleRate - 1
+            End If
+
+            Return rowIndex
+
+        End Function
 
         Private Function GetSample(ByVal timestamp As DateTime) As DataSample
 
