@@ -25,18 +25,11 @@ Namespace PDCstream
         Private m_frequency As UInt16
         Private m_dfdt As UInt16
 
-        Public Enum CompositeValue
-            Frequency
-            DfDt
-        End Enum
-
-        Public CompositeValues As New CompositeValues(2)
-
         Public Const BinaryLength As Integer = 4
 
-        Public Shared ReadOnly Property Empty() As FrequencyValue
+        Public Shared ReadOnly Property Empty(ByVal frequencyDefinition As FrequencyDefinition) As FrequencyValue
             Get
-                Return New FrequencyValue(Nothing, Convert.ToUInt16(0), Convert.ToUInt16(0))
+                Return New FrequencyValue(frequencyDefinition, Convert.ToUInt16(0), Convert.ToUInt16(0))
             End Get
         End Property
 
@@ -93,20 +86,42 @@ Namespace PDCstream
             End Get
         End Property
 
-        Public ReadOnly Property ScaledFrequency() As Double
+        Public Property ScaledFrequency() As Double
             Get
                 With m_frequencyDefinition
                     Return UnscaledFrequency / .Scale + .Offset
                 End With
             End Get
+            Set(ByVal Value As Double)
+                Try
+                    With m_frequencyDefinition
+                        m_frequency = Convert.ToUInt16((Value - .Offset) * .Scale)
+                    End With
+                Catch ex As Exception
+                    ' TODO: remove debug code...
+                    Debug.WriteLine("PDCstream.FrequencyValue.ScaledFrequency exception: " & ex.Message)
+                    Debug.WriteLine("         Value = " & Value)
+                End Try
+            End Set
         End Property
 
-        Public ReadOnly Property ScaledDfDt() As Double
+        Public Property ScaledDfDt() As Double
             Get
                 With m_frequencyDefinition
                     Return UnscaledDfDt / .DfDtScale + .DfDtOffset
                 End With
             End Get
+            Set(ByVal Value As Double)
+                Try
+                    With m_frequencyDefinition
+                        m_dfdt = Convert.ToUInt16((Value - .DfDtOffset) * .DfDtScale)
+                    End With
+                Catch ex As Exception
+                    ' TODO: remove debug code...
+                    Debug.WriteLine("PDCstream.FrequencyValue.ScaledDfDt exception: " & ex.Message)
+                    Debug.WriteLine("         Value = " & Value)
+                End Try
+            End Set
         End Property
 
         Public ReadOnly Property IsEmpty() As Boolean

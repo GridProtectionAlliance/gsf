@@ -29,6 +29,7 @@ Namespace PDCstream
         End Structure
 
         Private m_compositeValues As CompositeValue()
+        Private m_allReceived As Boolean
 
         Public Sub New(ByVal count As Integer)
 
@@ -62,16 +63,21 @@ Namespace PDCstream
 
         Public ReadOnly Property AllReceived() As Boolean
             Get
-                Dim allValuesReceived As Boolean = True
+                If m_allReceived Then
+                    Return True
+                Else
+                    Dim allValuesReceived As Boolean = True
 
-                For x As Integer = 0 To m_compositeValues.Length - 1
-                    If Not m_compositeValues(x).Received Then
-                        allValuesReceived = False
-                        Exit For
-                    End If
-                Next
+                    For x As Integer = 0 To m_compositeValues.Length - 1
+                        If Not m_compositeValues(x).Received Then
+                            allValuesReceived = False
+                            Exit For
+                        End If
+                    Next
 
-                Return allValuesReceived
+                    If allValuesReceived Then m_allReceived = True
+                    Return allValuesReceived
+                End If
             End Get
         End Property
 

@@ -27,6 +27,7 @@ Namespace PDCstream
 
         Private m_configFile As ConfigFile
         Private m_timeTag As Unix.TimeTag
+        Private m_timestamp As DateTime
         Private m_index As Integer
 
         Public Cells As PMUDataCell()
@@ -39,6 +40,9 @@ Namespace PDCstream
             m_configFile = configFile
             m_timeTag = New Unix.TimeTag(timeStamp)
             m_index = index
+
+            ' We precalculate a regular .NET timestamp with milliseconds sitting in the middle of the sample index
+            m_timestamp = timeStamp.AddMilliseconds((m_index + 0.5) * (1000 / m_configFile.SampleRate))
 
             With m_configFile
                 Cells = Array.CreateInstance(GetType(PMUDataCell), .PMUCount)
@@ -62,26 +66,32 @@ Namespace PDCstream
             End Get
         End Property
 
-        ' This provides a regular .NET timestamp with milliseconds sitting in the middle of the sample index
         Public ReadOnly Property Timestamp() As DateTime
             Get
-                Return m_timeTag.ToDateTime.AddMilliseconds((m_index + 0.5) * (1000 / m_configFile.SampleRate))
+                Return m_timestamp
             End Get
         End Property
 
         Public ReadOnly Property ReadyToPublish() As Boolean
             Get
-                Dim isReady As Boolean = True
+                Static packetReady As Boolean
 
-                ' If we have data for each cell in the row, we can go ahead and publish it...
-                For x As Integer = 0 To Cells.Length - 1
-                    If Cells(x).IsEmpty Then
-                        isReady = False
-                        Exit For
-                    End If
-                Next
+                If Not packetReady Then
+                    Dim isReady As Boolean = True
 
-                Return isReady
+                    ' If we have data for each cell in the row, we can go ahead and publish it...
+                    For x As Integer = 0 To Cells.Length - 1
+                        If Cells(x).IsEmpty Then
+                            isReady = False
+                            Exit For
+                        End If
+                    Next
+
+                    If isReady Then packetReady = True
+                    Return isReady
+                Else
+                    Return True
+                End If
             End Get
         End Property
 
@@ -104,7 +114,7 @@ Namespace PDCstream
                 Dim index As Integer
 
                 buffer(0) = SyncByte
-                buffer(1) = 1
+                buffer(1) = Convert.ToByte(1)
                 EndianOrder.SwapCopy(BitConverter.GetBytes(Convert.ToUInt16(buffer.Length \ 2)), 0, buffer, 2, 2)
                 EndianOrder.SwapCopy(BitConverter.GetBytes(Convert.ToUInt32(m_timeTag.Value)), 0, buffer, 4, 4)
                 EndianOrder.SwapCopy(BitConverter.GetBytes(Convert.ToUInt16(m_index)), 0, buffer, 8, 2)
@@ -117,7 +127,7 @@ Namespace PDCstream
                 Next
 
                 ' Add check sum
-                EndianOrder.SwapCopy(BitConverter.GetBytes(XorCheckSum(buffer, 0, index)), 0, buffer, index, 2)
+                Array.Copy(BitConverter.GetBytes(XorCheckSum(buffer, 0, index)), 0, buffer, index, 2)
 
                 Return buffer
             End Get

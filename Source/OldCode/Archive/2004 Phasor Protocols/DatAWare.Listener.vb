@@ -214,15 +214,18 @@ Namespace DatAWare
 
         End Sub
 
+        ' This procedure is meant to be executed on a seperate thread...
         Private Sub AcceptClientData(ByVal client As TcpClient, ByVal threadID As Guid)
 
             Dim clientStream As NetworkStream
             Dim clientData As MemoryStream
-            Dim dataPacket As Byte()
+            Dim eventBuffer As Byte()
             Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BufferSize)
             Dim read As Integer
             Dim events As Integer
             Dim remainder As Integer
+            Dim errorCount As Integer
+            Dim errorTime As Long
 
             ' Open client data stream...
             clientStream = client.GetStream()
@@ -238,56 +241,73 @@ Namespace DatAWare
                     Loop While clientStream.DataAvailable
 
                     ' Get all data acquired from TCP client data stream
-                    dataPacket = clientData.ToArray()
+                    eventBuffer = clientData.ToArray()
                     clientData = New MemoryStream
 
-                    ' We may not have received an even number of events - so we check for that
-                    events = Math.DivRem(dataPacket.Length, StandardEvent.BinaryLength, remainder)
+                    ' Every so often we get no data, if so we'll just go back to listening...
+                    If eventBuffer.Length > 0 Then
+                        ' We may not have received an even number of events - so we check for that
+                        events = Math.DivRem(eventBuffer.Length, StandardEvent.BinaryLength, remainder)
 
-                    If remainder > 0 Then
-                        ' We have a little bit of the next event in this packet, so we'll take care of that...
-                        Dim evenLength As Integer = events * StandardEvent.BinaryLength
-                        Dim evenPacket As Byte() = Array.CreateInstance(GetType(Byte), evenLength)
+                        If remainder > 0 Then
+                            ' We have a little bit of the next event in this packet, so we'll take care of that...
+                            Dim evenLength As Integer = events * StandardEvent.BinaryLength
+                            Dim evenPacket As Byte() = Array.CreateInstance(GetType(Byte), evenLength)
 
-                        ' Get all complete event data from this packet for processing...
-                        Array.Copy(dataPacket, 0, evenPacket, 0, evenLength)
+                            ' Get all complete event data from this packet for processing...
+                            Array.Copy(eventBuffer, 0, evenPacket, 0, evenLength)
 
-                        ' Leave remainder of event data in the buffer for the next pass
-                        clientData = New MemoryStream
-                        clientData.Write(dataPacket, evenLength, dataPacket.Length - evenLength)
+                            ' Leave remainder of event data in the buffer for the next pass
+                            clientData.Write(eventBuffer, evenLength, eventBuffer.Length - evenLength)
 
-                        dataPacket = evenPacket
+                            eventBuffer = evenPacket
+                        End If
+
+                        ' Queue this data packet for concentration...
+                        m_parent.EventQueue.QueueEventData(m_connection.PlantCode, eventBuffer)
+
+                        ' If client was finished sending packet, send acknowledgement back to DatAWare...
+                        If remainder = 0 Then
+                            SendResponse(clientStream, "ACK")
+                            m_packetsAccepted += 1
+                        End If
                     End If
-
-                    ' Queue this data packet for concentration...
-                    m_parent.EventQueue.QueueEventData(m_connection.PlantCode, dataPacket)
-
-                    ' If client was finished sending packet, send acknowledgement back to DatAWare...
-                    If remainder = 0 Then
-                        SendResponse(clientStream, "ACK")
-                        m_packetsAccepted += 1
-                    End If
-                Catch ex As SocketException
-                    UpdateStatus("Socket level exception occurred while accepting client data: " & ex.Message)
-
-                    Try
-                        ' We'll "attempt" to send an error response back to DatAWare
-                        SendResponse(clientStream, "NAK - Socket Error: " & ex.Message)
-                    Catch
-                    End Try
-
-                    m_packetsRejected += 1
-
-                    ' We close the client connection when we get a socket level exception - something
-                    ' wrong at this level may indicate a more serious issue - DatAWare will attempt
-                    ' to automatically reconnect in 30 seconds...
+                Catch ex As ThreadAbortException
+                    ' If we received an abort exception, we'll egress gracefully
+                    Exit Do
+                Catch ex As IO.IOException
+                    ' This will get thrown if the thread is being aborted and we are sitting in a blocked stream read, so
+                    ' in this case we'll bow out gracefully as well...
                     Exit Do
                 Catch ex As Exception
                     UpdateStatus("Exception occurred while accepting client data: " & ex.Message)
 
-                    ' Send an error response back to DatAWare
-                    SendResponse(clientStream, "NAK - " & ex.Message)
-                    m_packetsRejected += 1
+                    ' We monitor for exceptions that occur in quick succession
+                    If DateTime.Now.Ticks - errorTime > 100000000L Then
+                        errorTime = DateTime.Now.Ticks
+                        errorCount = 1
+                    End If
+
+                    errorCount += 1
+
+                    ' We close the client connection when we get 5 or more exceptions within a ten second
+                    ' timespan, DatAWare will attempt to automatically reconnect in 30 seconds...
+                    If errorCount >= 5 Then
+                        Try
+                            SendResponse(clientStream, "NAK - Client connection terminated due to excessive exceptions.")
+                        Catch
+                        End Try
+
+                        Exit Do
+                    Else
+                        Try
+                            ' We'll attempt to send an error response back to DatAWare
+                            SendResponse(clientStream, "NAK - " & ex.Message)
+                        Catch
+                        End Try
+
+                        m_packetsRejected += 1
+                    End If
                 End Try
             Loop
 

@@ -24,6 +24,7 @@ Namespace PDCstream
 
         Private m_configFile As ConfigFile
         Private m_timeStamp As DateTime
+        Private m_published As Boolean
 
         Public Rows As DataPacket()
 
@@ -47,19 +48,24 @@ Namespace PDCstream
 
         Public ReadOnly Property Published() As Boolean
             Get
-                Dim allPublished As Boolean = True
+                If Not m_published Then
+                    Dim allPublished As Boolean = True
 
-                ' The sample has been completely processed once all data packets have been published - once all
-                ' the packets have been published, the data can be collated and sent to the permanent archive or
-                ' whatever else...
-                For x As Integer = 0 To Rows.Length - 1
-                    If Not Rows(x).Published Then
-                        allPublished = False
-                        Exit For
-                    End If
-                Next
+                    ' The sample has been completely processed once all data packets have been published - once all
+                    ' the packets have been published, the data can be collated and sent to the permanent archive or
+                    ' whatever else...
+                    For x As Integer = 0 To Rows.Length - 1
+                        If Not Rows(x).Published Then
+                            allPublished = False
+                            Exit For
+                        End If
+                    Next
 
-                Return allPublished
+                    If allPublished Then m_published = True
+                    Return allPublished
+                Else
+                    Return True
+                End If
             End Get
         End Property
 
