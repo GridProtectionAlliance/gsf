@@ -729,11 +729,10 @@ Namespace Database
             If cmd.Parameters.Count <> paramValues.Length Then
                 ' If there are more values provide than parameters throw an error
                 If paramValues.Length > cmd.Parameters.Count Then _
-                    Throw New Exception("You have supplied more Values than Parameters listed for the Stored Procedure")
+                    Throw New ArgumentException("You have supplied more Values than Parameters listed for the Stored Procedure")
 
                 ' Otherwise assume that the missing values are for Parameters that have default values
                 ' and the code is willing to use the default.  To do this fill the extended ParamValue as Nothing/Null
-                Dim startIndex As Integer = paramValues.Length
                 ReDim Preserve paramValues(cmd.Parameters.Count - 1) ' Make the Values array match the Parameters of the Stored Proc
             End If
 
