@@ -39,12 +39,6 @@
         }
         "Entry"
         {
-        "MsmKey" = "8:_2B7CB9E49381495424BFC87D80037536"
-        "OwnerKey" = "8:_919FE7968CEC4E38A7B2D44A6D6F1B80"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
         "MsmKey" = "8:_42548245D7044C9AA37A475678938248"
         "OwnerKey" = "8:_06118F19D05EB0DCB3BCAEB854CB018F"
         "MsmSig" = "8:_UNDEFINED"
@@ -99,62 +93,68 @@
         }
         "Entry"
         {
-        "MsmKey" = "8:_7D47D98A40C842D4B0BCED3198128408"
+        "MsmKey" = "8:_727846B1ECC94ED7962EDFDC97ADB15B"
         "OwnerKey" = "8:_42548245D7044C9AA37A475678938248"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_7D47D98A40C842D4B0BCED3198128408"
+        "MsmKey" = "8:_727846B1ECC94ED7962EDFDC97ADB15B"
         "OwnerKey" = "8:_919FE7968CEC4E38A7B2D44A6D6F1B80"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_7D47D98A40C842D4B0BCED3198128408"
+        "MsmKey" = "8:_727846B1ECC94ED7962EDFDC97ADB15B"
         "OwnerKey" = "8:_F55247639ACEA269B7238748A288E0AB"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_7D47D98A40C842D4B0BCED3198128408"
+        "MsmKey" = "8:_727846B1ECC94ED7962EDFDC97ADB15B"
         "OwnerKey" = "8:_4703A60C7A80DF5D9F725C1A4C16C9F4"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_7D47D98A40C842D4B0BCED3198128408"
+        "MsmKey" = "8:_727846B1ECC94ED7962EDFDC97ADB15B"
         "OwnerKey" = "8:_EEB2507E2507FAC75D049173A2B802D9"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_7D47D98A40C842D4B0BCED3198128408"
+        "MsmKey" = "8:_727846B1ECC94ED7962EDFDC97ADB15B"
         "OwnerKey" = "8:_701F7521AEFF411889D40CA744E178E2"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_7D47D98A40C842D4B0BCED3198128408"
+        "MsmKey" = "8:_727846B1ECC94ED7962EDFDC97ADB15B"
         "OwnerKey" = "8:_A2E859697D8C6C919E6A2E9FBC9B442C"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_7D47D98A40C842D4B0BCED3198128408"
+        "MsmKey" = "8:_727846B1ECC94ED7962EDFDC97ADB15B"
         "OwnerKey" = "8:_FDDE78C4FB10BFAB5228F4A2F0F8778A"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_7D47D98A40C842D4B0BCED3198128408"
+        "MsmKey" = "8:_727846B1ECC94ED7962EDFDC97ADB15B"
         "OwnerKey" = "8:_06118F19D05EB0DCB3BCAEB854CB018F"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_7D47D98A40C842D4B0BCED3198128408"
+        "MsmKey" = "8:_727846B1ECC94ED7962EDFDC97ADB15B"
         "OwnerKey" = "8:_10E7CC28F8F5D0885A98AF8E98D7896B"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_8BE947BC9C483B9DFB6623BBD1E20487"
+        "OwnerKey" = "8:_919FE7968CEC4E38A7B2D44A6D6F1B80"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -338,26 +338,6 @@
             "IsDependency" = "11:TRUE"
             "IsolateTo" = "8:"
             }
-            "{A582A373-4685-4296-BEFE-614B80A702C3}:_2B7CB9E49381495424BFC87D80037536"
-            {
-            "SourcePath" = "8:BpaPdcLoader.tlb"
-            "TargetName" = "8:BpaPdcLoader.tlb"
-            "Tag" = "8:"
-            "Folder" = "8:_2B3431899A3F46F988BB0BB891597DA1"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:2"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:TRUE"
-            "IsolateTo" = "8:"
-            }
             "{FB480208-1853-44D0-9ABD-A3B734C3FAAA}:_42548245D7044C9AA37A475678938248"
             {
             "AssemblyRegister" = "3:1"
@@ -447,6 +427,26 @@
             "SharedLegacy" = "11:FALSE"
             "PackageAs" = "3:1"
             "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:TRUE"
+            "IsolateTo" = "8:"
+            }
+            "{A582A373-4685-4296-BEFE-614B80A702C3}:_8BE947BC9C483B9DFB6623BBD1E20487"
+            {
+            "SourcePath" = "8:BpaPdcLoader.tlb"
+            "TargetName" = "8:BpaPdcLoader.tlb"
+            "Tag" = "8:"
+            "Folder" = "8:_2B3431899A3F46F988BB0BB891597DA1"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:2"
             "Exclude" = "11:FALSE"
             "IsDependency" = "11:TRUE"
             "IsolateTo" = "8:"
@@ -745,6 +745,192 @@
             {
                 "Keys"
                 {
+                    "{6A471EEF-D31B-40F8-BCF6-C9E8EC783F36}:_E58EA98E823448609D2984748DF465D1"
+                    {
+                    "Name" = "8:CLSID"
+                    "Condition" = "8:"
+                    "AlwaysCreate" = "11:FALSE"
+                    "DeleteAtUninstall" = "11:FALSE"
+                    "Transitive" = "11:FALSE"
+                        "Keys"
+                        {
+                            "{6A471EEF-D31B-40F8-BCF6-C9E8EC783F36}:_C77D5A3A00CB4797983BD4D9283276C1"
+                            {
+                            "Name" = "8:{36306D7A-8EA0-4AD5-A790-FB16B79EC32C}"
+                            "Condition" = "8:"
+                            "AlwaysCreate" = "11:FALSE"
+                            "DeleteAtUninstall" = "11:FALSE"
+                            "Transitive" = "11:FALSE"
+                                "Keys"
+                                {
+                                    "{6A471EEF-D31B-40F8-BCF6-C9E8EC783F36}:_056AD59B806343B083F5D81E34F0EDB6"
+                                    {
+                                    "Name" = "8:ProgId"
+                                    "Condition" = "8:"
+                                    "AlwaysCreate" = "11:FALSE"
+                                    "DeleteAtUninstall" = "11:FALSE"
+                                    "Transitive" = "11:FALSE"
+                                        "Keys"
+                                        {
+                                        }
+                                        "Values"
+                                        {
+                                            "{35AE352C-BC79-4EF9-ABD8-61F467188583}:_97E816F10C8C4D379F374326D7063D53"
+                                            {
+                                            "Name" = "8:"
+                                            "Condition" = "8:"
+                                            "Transitive" = "11:FALSE"
+                                            "ValueTypes" = "3:1"
+                                            "Value" = "8:BpaPdcLoader.Interface"
+                                            }
+                                        }
+                                    }
+                                    "{6A471EEF-D31B-40F8-BCF6-C9E8EC783F36}:_0D30BF1C5864437994BF765721A232E5"
+                                    {
+                                    "Name" = "8:Implemented Categories"
+                                    "Condition" = "8:"
+                                    "AlwaysCreate" = "11:FALSE"
+                                    "DeleteAtUninstall" = "11:FALSE"
+                                    "Transitive" = "11:FALSE"
+                                        "Keys"
+                                        {
+                                            "{6A471EEF-D31B-40F8-BCF6-C9E8EC783F36}:_B668FE76591A4A15A92F074934746854"
+                                            {
+                                            "Name" = "8:{62C8FE65-4EBB-45e7-B440-6E39B2CDBF29}"
+                                            "Condition" = "8:"
+                                            "AlwaysCreate" = "11:FALSE"
+                                            "DeleteAtUninstall" = "11:FALSE"
+                                            "Transitive" = "11:FALSE"
+                                                "Keys"
+                                                {
+                                                }
+                                                "Values"
+                                                {
+                                                }
+                                            }
+                                        }
+                                        "Values"
+                                        {
+                                        }
+                                    }
+                                    "{6A471EEF-D31B-40F8-BCF6-C9E8EC783F36}:_5D7D740B0EE440D084C74EB221165C33"
+                                    {
+                                    "Name" = "8:InprocServer32"
+                                    "Condition" = "8:"
+                                    "AlwaysCreate" = "11:FALSE"
+                                    "DeleteAtUninstall" = "11:FALSE"
+                                    "Transitive" = "11:FALSE"
+                                        "Keys"
+                                        {
+                                            "{6A471EEF-D31B-40F8-BCF6-C9E8EC783F36}:_73212E11307C4FCB89423ECBD7CFBFB9"
+                                            {
+                                            "Name" = "8:1.0.1825.24503"
+                                            "Condition" = "8:"
+                                            "AlwaysCreate" = "11:FALSE"
+                                            "DeleteAtUninstall" = "11:FALSE"
+                                            "Transitive" = "11:FALSE"
+                                                "Keys"
+                                                {
+                                                }
+                                                "Values"
+                                                {
+                                                    "{35AE352C-BC79-4EF9-ABD8-61F467188583}:_05D83D81E35C429E936D1967DEF3D2F3"
+                                                    {
+                                                    "Name" = "8:Assembly"
+                                                    "Condition" = "8:"
+                                                    "Transitive" = "11:FALSE"
+                                                    "ValueTypes" = "3:1"
+                                                    "Value" = "8:BpaPdcLoader, Version=1.0.1825.24503, Culture=neutral, PublicKeyToken=null"
+                                                    }
+                                                    "{35AE352C-BC79-4EF9-ABD8-61F467188583}:_4CED72DD1E37487C851DA33BF7F16560"
+                                                    {
+                                                    "Name" = "8:Class"
+                                                    "Condition" = "8:"
+                                                    "Transitive" = "11:FALSE"
+                                                    "ValueTypes" = "3:1"
+                                                    "Value" = "8:BpaPdcLoader.Interface"
+                                                    }
+                                                    "{35AE352C-BC79-4EF9-ABD8-61F467188583}:_4EAAAF0D69B7484BB2B4A149597BEAA0"
+                                                    {
+                                                    "Name" = "8:RuntimeVersion"
+                                                    "Condition" = "8:"
+                                                    "Transitive" = "11:FALSE"
+                                                    "ValueTypes" = "3:1"
+                                                    "Value" = "8:v1.1.4322"
+                                                    }
+                                                    "{35AE352C-BC79-4EF9-ABD8-61F467188583}:_F198353B581B46EEB7C80E2FCABE85E3"
+                                                    {
+                                                    "Name" = "8:CodeBase"
+                                                    "Condition" = "8:"
+                                                    "Transitive" = "11:FALSE"
+                                                    "ValueTypes" = "3:1"
+                                                    "Value" = "8:file:///D:/apps/archive/DAQ/BpaPdcLoader.dll"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        "Values"
+                                        {
+                                            "{35AE352C-BC79-4EF9-ABD8-61F467188583}:_2F08C41207ED481F918ED78D5099B3FE"
+                                            {
+                                            "Name" = "8:RuntimeVersion"
+                                            "Condition" = "8:"
+                                            "Transitive" = "11:FALSE"
+                                            "ValueTypes" = "3:1"
+                                            "Value" = "8:v1.1.4322"
+                                            }
+                                            "{35AE352C-BC79-4EF9-ABD8-61F467188583}:_6A94BAF929B0478B853D77CA3D47FFAF"
+                                            {
+                                            "Name" = "8:Assembly"
+                                            "Condition" = "8:"
+                                            "Transitive" = "11:FALSE"
+                                            "ValueTypes" = "3:1"
+                                            "Value" = "8:BpaPdcLoader, Version=1.0.1825.24503, Culture=neutral, PublicKeyToken=null"
+                                            }
+                                            "{35AE352C-BC79-4EF9-ABD8-61F467188583}:_786F95BA31A84E3FA62A0BFB7AE7C4FE"
+                                            {
+                                            "Name" = "8:ThreadingModel"
+                                            "Condition" = "8:"
+                                            "Transitive" = "11:FALSE"
+                                            "ValueTypes" = "3:1"
+                                            "Value" = "8:Both"
+                                            }
+                                            "{35AE352C-BC79-4EF9-ABD8-61F467188583}:_BF31D0B440D246F3AEC363E446CD5869"
+                                            {
+                                            "Name" = "8:Class"
+                                            "Condition" = "8:"
+                                            "Transitive" = "11:FALSE"
+                                            "ValueTypes" = "3:1"
+                                            "Value" = "8:BpaPdcLoader.Interface"
+                                            }
+                                            "{35AE352C-BC79-4EF9-ABD8-61F467188583}:_C7FC7A93334542D69D3185A963FF75F2"
+                                            {
+                                            "Name" = "8:"
+                                            "Condition" = "8:"
+                                            "Transitive" = "11:FALSE"
+                                            "ValueTypes" = "3:1"
+                                            "Value" = "8:mscoree.dll"
+                                            }
+                                        }
+                                    }
+                                }
+                                "Values"
+                                {
+                                    "{35AE352C-BC79-4EF9-ABD8-61F467188583}:_3860CB0DFC834D02AF4D2F9467812156"
+                                    {
+                                    "Name" = "8:"
+                                    "Condition" = "8:"
+                                    "Transitive" = "11:FALSE"
+                                    "ValueTypes" = "3:1"
+                                    "Value" = "8:BpaPdcLoader.Interface"
+                                    }
+                                }
+                            }
+                        }
+                        "Values"
+                        {
+                        }
+                    }
                 }
             }
             "HKU"
@@ -1148,7 +1334,7 @@
         }
         "MergeModule"
         {
-            "{35A69C6E-5BA4-440D-803D-762B59A45393}:_7D47D98A40C842D4B0BCED3198128408"
+            "{35A69C6E-5BA4-440D-803D-762B59A45393}:_727846B1ECC94ED7962EDFDC97ADB15B"
             {
             "UseDynamicProperties" = "11:TRUE"
             "IsDependency" = "11:TRUE"
@@ -1167,7 +1353,7 @@
         {
             "{8062640A-2EEE-46E9-AB67-688E9A886E9F}:_919FE7968CEC4E38A7B2D44A6D6F1B80"
             {
-            "SourcePath" = "8:..\\obj\\Debug\\BpaPdcLoader.dll"
+            "SourcePath" = "8:..\\obj\\Release\\BpaPdcLoader.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_2B3431899A3F46F988BB0BB891597DA1"
