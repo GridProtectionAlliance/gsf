@@ -27,7 +27,7 @@ Imports System.Reflection
 Imports System.Runtime.InteropServices
 Imports TVA.Config.Common
 Imports TVA.Shared.FilePath
-Imports TVA.DatAWare
+Imports BpaPdcLoader.DatAWare
 
 <ComClass([Interface].ClassId, [Interface].InterfaceId, [Interface].EventsId)> _
 Public Class [Interface]
@@ -56,7 +56,6 @@ Public Class [Interface]
     Shared Sub New()
 
         ' Load embedded assemblies...
-        LoadAssembly("Interop.DWApi")
         LoadAssembly("Interop.PDCDATAREADERLib")
         LoadAssembly("AxInterop.PDCDATAREADERLib")
         LoadAssembly("TVA.Shared")
@@ -66,7 +65,6 @@ Public Class [Interface]
         LoadAssembly("TVA.Remoting")
         LoadAssembly("TVA.Services")
         LoadAssembly("TVA.Database")
-        LoadAssembly("TVA.DatAWare")
 
     End Sub
 
@@ -111,6 +109,7 @@ Public Class [Interface]
 
                 ' Load assembly from binary buffer
                 resourceAssembly = [Assembly].Load(buffer)
+
                 Exit For
             End If
         Next
@@ -124,8 +123,10 @@ Public Class [Interface]
         MyBase.New()
 
         SharedConfigFileName = [Assembly].GetExecutingAssembly.Location & ".config"
-        Variables.Create("DatAWare.TimeZone", "GMT Standard Time", VariableType.Text, "DatAWare Server TimeZone")
+        Variables.Create("DatAWare.TimeZone", "Central Standard Time", VariableType.Text, "DatAWare Server TimeZone")
         Variables.Create("DatAWare.PointListFile", ApplicationPath & "PM_DBASE.csv", VariableType.Text, "DatAWare Point List File")
+        Variables.Create("PDCDataReader.ConfigFile", ApplicationPath & "TVA_PDC.ini", VariableType.Text, "BPA PDC Configuration File")
+        Variables.Create("PDCDataReader.ListenPort", 3050, VariableType.Int, "BPA PDC UDP Port to Listen On")
         Variables.Save()
 
         ' Create an instance of the PDC to DatAWare conversion class
@@ -150,20 +151,6 @@ Public Class [Interface]
         End Get
         Set(ByVal Value As Integer)
             m_instance = Value
-
-            ' Create settings for this instance
-            Variables.Create("PDCDataReader.ConfigFile" & m_instance, ApplicationPath & "TVA_PDC.ini", VariableType.Text, "BPA PDC Configuration File for DAQ instance " & m_instance)
-            Variables.Create("PDCDataReader.ListenPort" & m_instance, 3050, VariableType.Int, "BPA PDC UDP Port to Listen On for DAQ instance " & m_instance)
-            Variables.Save()
-
-            ' Intialize forms for this instance
-            m_pdcDataReader.Instance = m_instance
-            m_converter.Instance = m_instance
-            statusWindow.Instance = m_instance
-            configWindow.Instance = m_instance
-
-            ' Show initial status after instance variables have been initialized
-            UpdateStatus(vbCrLf & m_converter.Status)
         End Set
     End Property
 
@@ -207,30 +194,18 @@ Public Class [Interface]
     Public Sub Poll(ByRef IntIPBuf() As Byte, ByRef nBytes As Integer, ByRef iReturn As Integer, ByRef Status As Integer)
 
         Try
-            If iReturn = -2 Then
-                ' Intialization request poll event
-                Busy = True
-                m_pollEvents += 1
+            Dim queueIsEmpty As Boolean
 
-                nBytes = FillIPBuffer(IntIPBuf, m_converter.GetEventDatabase())
-                iReturn = 1
+            Busy = True
+            m_pollEvents += 1
 
-                UpdateStatus("Local database intialized..." & vbCrLf)
-            Else
-                ' Standard poll event
-                Dim queueIsEmpty As Boolean
+            nBytes = FillIPBuffer(IntIPBuf, m_converter.GetEventData(queueIsEmpty))
 
-                Busy = True
-                m_pollEvents += 1
+            ' Set iReturn to zero to have DatAWare call the poll event again immediately, else set to one
+            ' (i.e., set to zero if you still have more items in the queue to be processed)
+            iReturn = IIf(queueIsEmpty, 1, 0)
 
-                nBytes = FillIPBuffer(IntIPBuf, m_converter.GetEventData(queueIsEmpty))
-
-                ' Set iReturn to zero to have DatAWare call the poll event again immediately, else set to one
-                ' (i.e., set to zero if you still have more items in the queue to be processed)
-                iReturn = IIf(queueIsEmpty, 1, 0)
-
-                If m_pollEvents Mod 300 = 0 Then UpdateStatus("Poll events processed = " & m_pollEvents & vbCrLf)
-            End If
+            If m_pollEvents Mod 300 = 0 Then UpdateStatus("Poll events processed = " & m_pollEvents & vbCrLf)
         Catch ex As Exception
             UpdateStatus("Exception occured during poll event: " & ex.Message)
             nBytes = 0
@@ -252,7 +227,7 @@ Public Class [Interface]
             For x As Integer = 0 To events.Length - 1
                 ' We only archive events that have a valid timestamp...
                 If events(x).TTag.Value > 0 Then
-                    Array.Copy(events(x).BinaryImage, 0, buffer, byteCount, StandardEvent.BinaryLength)
+                    Array.Copy(events(x).BinaryValue, 0, buffer, byteCount, StandardEvent.BinaryLength)
                     byteCount += StandardEvent.BinaryLength
                 End If
             Next
@@ -316,10 +291,8 @@ Public Class [Interface]
             ' Create a new config window if needed
             If m_statusWindow Is Nothing Then
                 m_statusWindow = New BpaPdcLoader.StatusWindow
-                m_statusWindow.ParentInterface = Me
             ElseIf m_statusWindow.IsDisposed Then
                 m_statusWindow = New BpaPdcLoader.StatusWindow
-                m_statusWindow.ParentInterface = Me
             End If
 
             Return m_statusWindow

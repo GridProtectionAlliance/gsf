@@ -27,7 +27,7 @@ Imports TVA.Shared.DateTime
 Imports TVA.Database.Common
 Imports TVA.Config.Common
 'Imports TVA.ESO.Ssam
-Imports TVA.DatAWare
+Imports BpaPdcLoader.DatAWare
 
 Namespace PDCToDatAWare
 
@@ -88,24 +88,9 @@ Namespace PDCToDatAWare
     <ComVisible(False)> _
     Public Class DataUnit
 
-        Private m_events As ArrayList
+        Public Events As StandardEvent()
 
-        Public Property Events() As StandardEvent()
-            Get
-                Return m_events.ToArray(GetType(StandardEvent))
-            End Get
-            Set(ByVal Value As StandardEvent())
-                m_events = New ArrayList(Value)
-            End Set
-        End Property
-
-        Public ReadOnly Property EventCount() As Integer
-            Get
-                Return m_events.Count
-            End Get
-        End Property
-
-        Public Sub New(ByVal analogIndices As Integer(), ByVal analogData As Double(,), ByVal digitalIndices As Integer(), ByVal digitalData As UInt16(,))
+        Public Sub New(ByVal timeZone As Win32TimeZone, ByVal analogIndices As Integer(), ByVal analogData As Double(,), ByVal digitalIndices As Integer(), ByVal digitalData As UInt16(,))
 
             Dim rowTime As DateTime
             Dim analogEvents As Integer = analogData.GetLength(0) * (analogIndices.Length - 1)
@@ -113,32 +98,29 @@ Namespace PDCToDatAWare
             Dim eventIndex As Integer
             Dim x, y As Integer
 
-            'Events = Array.CreateInstance(GetType(StandardEvent), analogEvents + digitalEvents)
-            m_events = New ArrayList
+            Events = Array.CreateInstance(GetType(StandardEvent), analogEvents + digitalEvents)
 
             For x = 0 To analogData.GetLength(0) - 1
                 ' Get analog row time from this analog data set
-                rowTime = (New PMUDate(analogData(x, 0))).ToDateTime
+                rowTime = timeZone.ToLocalTime((New PMUDate(analogData(x, 0))).ToDateTime)
 
                 ' Populate the DatAWare standard event structures for the analog data
                 For y = 1 To analogIndices.Length - 1
-                    If analogIndices(y) > -1 Then
-                        ' Create a new DatAWare standard event to hold this analog data
-                        m_events.Add(New StandardEvent(analogIndices(y), rowTime, Convert.ToSingle(analogData(x, y))))
-                    End If
+                    ' Create a new DatAWare standard event to hold this analog data
+                    Events(eventIndex) = New StandardEvent(analogIndices(y), rowTime, Convert.ToSingle(analogData(x, y)))
+                    eventIndex += 1
                 Next
             Next
 
             For x = 0 To digitalData.GetLength(0) - 1
                 ' Get digital row time from this digital data set
-                rowTime = (New PMUDate(MakeDWord(Convert.ToInt32(digitalData(x, 0)), Convert.ToInt32(digitalData(x, 1))))).ToDateTime
+                rowTime = timeZone.ToLocalTime((New PMUDate(MakeDWord(Convert.ToInt32(digitalData(x, 0)), Convert.ToInt32(digitalData(x, 1))))).ToDateTime)
 
                 ' Populate the DatAWare standard event structures for the digital data
                 For y = 3 To digitalIndices.Length - 1
-                    If digitalIndices(y) > -1 Then
-                        ' Create a new DatAWare standard event to hold this digital data
-                        m_events.Add(New StandardEvent(digitalIndices(y), rowTime, Convert.ToSingle(digitalData(x, y))))
-                    End If
+                    ' Create a new DatAWare standard event to hold this digital data
+                    Events(eventIndex) = New StandardEvent(digitalIndices(y), rowTime, Convert.ToSingle(digitalData(x, y)))
+                    eventIndex += 1
                 Next
             Next
 
@@ -153,19 +135,19 @@ Namespace PDCToDatAWare
     <ComVisible(False)> _
     Public Class Converter
 
+        Private timeZone As Win32TimeZone
         Private analogIndices As Integer()
         Private digitalIndices As Integer()
         Private queuedUnits As ArrayList
         Private processedCount As Long
         Private isProcessing As Boolean
-        Private startTime As Long
-        Private stopTime As Long
+        Private startTime As Single
+        Private stopTime As Single
         Private WithEvents processTimer As Timers.Timer
 
-        Public Instance As Integer
+        Public Sub New(ByVal timeZone As String)
 
-        Public Sub New()
-
+            Me.timeZone = GetWin32TimeZone(timeZone)
             Me.isProcessing = False
             Me.queuedUnits = New ArrayList
 
@@ -173,7 +155,7 @@ Namespace PDCToDatAWare
 
         Public Sub QueueNewData(ByVal analogData As Double(,), ByVal digitalData As UInt16(,))
 
-            Dim newData As New DataUnit(analogIndices, analogData, digitalIndices, digitalData)
+            Dim newData As New DataUnit(timeZone, analogIndices, analogData, digitalIndices, digitalData)
 
             SyncLock queuedUnits.SyncRoot
                 queuedUnits.Add(newData)
@@ -231,17 +213,21 @@ Namespace PDCToDatAWare
             Next
 
             ' Produce an exception list of points not defined in DatAWare
-            With IO.File.CreateText([Interface].ApplicationPath & "UndefinedAnalogIndices" & Instance & ".csv")
+            With IO.File.CreateText([Interface].ApplicationPath & "UndefinedAnalogIndices.csv")
                 For x As Integer = 0 To analogIndices.Length - 1
-                    If analogIndices(x) = -1 Then .WriteLine(analogNames(x))
+                    If analogIndices(x) = -1 Then
+                        .WriteLine(analogNames(x))
+                    End If
                 Next
                 .Close()
             End With
 
             ' Produce an exception list of points not defined in DatAWare
-            With IO.File.CreateText([Interface].ApplicationPath & "UndefinedDigitalIndices" & Instance & ".csv")
+            With IO.File.CreateText([Interface].ApplicationPath & "UndefinedDigitalIndices.csv")
                 For x As Integer = 0 To digitalIndices.Length - 1
-                    If digitalIndices(x) = -1 Then .WriteLine(digitalNames(x))
+                    If digitalIndices(x) = -1 Then
+                        .WriteLine(digitalNames(x))
+                    End If
                 Next
                 .Close()
             End With
@@ -281,18 +267,6 @@ Namespace PDCToDatAWare
 
         End Function
 
-        Public Function GetEventDatabase() As StandardEvent()
-
-            Dim standardEvents As New ArrayList
-
-            For Each de As DictionaryEntry In LoadPointIndexTable(Variables("PDCDataReader.PointList" & Instance))
-                standardEvents.Add(New StandardEvent(de.Value, New TimeTag(Date.Now), 0.0!))
-            Next
-
-            Return standardEvents.ToArray(GetType(StandardEvent))
-
-        End Function
-
         Public Function GetEventData(ByRef queueIsEmpty As Boolean) As StandardEvent()
 
             Dim standardEvents As New ArrayList
@@ -310,9 +284,9 @@ Namespace PDCToDatAWare
                             eventData = .Item(0)
 
                             ' See if all the events in this data unit will fit into the buffer
-                            If eventData.EventCount + eventCount <= [Interface].MaximumEvents Then
+                            If eventData.Events.Length + eventCount <= [Interface].MaximumEvents Then
                                 ' All of the events will fit, so we'll add all of them and check the next one
-                                eventCount += eventData.EventCount
+                                eventCount += eventData.Events.Length
                                 standardEvents.AddRange(eventData.Events)
                                 .RemoveAt(0)
                             Else
@@ -320,7 +294,7 @@ Namespace PDCToDatAWare
                                 Dim available As Integer = [Interface].MaximumEvents - eventCount
 
                                 If available > 0 Then
-                                    Dim remaining As Integer = eventData.EventCount - available
+                                    Dim remaining As Integer = eventData.Events.Length - available
                                     Dim willFit As StandardEvent() = Array.CreateInstance(GetType(StandardEvent), available)
                                     Dim wontFit As StandardEvent() = Array.CreateInstance(GetType(StandardEvent), remaining)
 
@@ -359,11 +333,10 @@ Namespace PDCToDatAWare
         Public ReadOnly Property Status() As String
             Get
                 With New StringBuilder
-                    .Append("Converter Status for DAQ Instance " & Instance & ":" & vbCrLf)
                     .Append("  Current processing state: " & IIf(Processing, "Executing", "Idle") & vbCrLf)
-                    .Append("    Total process run time: " & SecondsToText(RunTime) & vbCrLf)
-                    .Append("      Listening on IP port: " & Variables("PDCDataReader.ListenPort" & Instance) & vbCrLf)
-                    .Append("          BPA PDC ini file: " & Variables("PDCDataReader.ConfigFile" & Instance) & vbCrLf)
+                    .Append("    Total process run time: " & RunTime() & vbCrLf)
+                    .Append("    PDC reader config file: " & Variables("PDCDataReader.ConfigFile") & vbCrLf)
+                    .Append("      PDC reader data port: " & Variables("PDCDataReader.ListenPort") & vbCrLf)
                     .Append("      Point index csv file: " & Variables("DatAWare.PointListFile") & vbCrLf)
                     .Append("        Analog point count: " & ArrayLength(analogIndices, -1) & vbCrLf)
                     .Append("       Digital point count: " & ArrayLength(digitalIndices, -3) & vbCrLf)
@@ -391,29 +364,29 @@ Namespace PDCToDatAWare
                 isProcessing = Value
 
                 If isProcessing Then
-                    startTime = DateTime.Now.Ticks
+                    startTime = Timer
                     stopTime = 0
                 Else
-                    stopTime = DateTime.Now.Ticks
+                    stopTime = Timer
                 End If
             End Set
         End Property
 
-        Public ReadOnly Property RunTime() As Double
+        Public ReadOnly Property RunTime() As String
             Get
-                Dim processingTime As Long
+                Dim ProcessingTime As Single
 
                 If startTime > 0 Then
                     If stopTime > 0 Then
-                        processingTime = stopTime - startTime
+                        ProcessingTime = stopTime - startTime
                     Else
-                        processingTime = DateTime.Now.Ticks - startTime
+                        ProcessingTime = Timer - startTime
                     End If
                 End If
 
-                If processingTime < 0 Then processingTime = 0
+                If ProcessingTime < 0 Then ProcessingTime = 0
 
-                Return processingTime / 10000000L
+                Return SecondsToText(ProcessingTime)
             End Get
         End Property
 
