@@ -1,5 +1,5 @@
 '***********************************************************************
-'  DataFrameBase.vb - Basic phasor data frame
+'  PhasorFrameBase.vb - Phasor frame base class
 '  Copyright © 2004 - TVA, all rights reserved
 '
 '  Build Environment: VB.NET, Visual Studio 2003
@@ -22,12 +22,36 @@ Imports TVA.Compression.Common
 
 Namespace EE.Phasor
 
-    Public Interface IDataFrame
+    Public Interface IPhasorFrame
+
+        Property TimeTag() As NtpTimeTag
+
+        Property Milliseconds() As Double
+
+        ReadOnly Property Timestamp() As DateTime
+
+        ReadOnly Property This() As IPhasorFrame
+
+        Property SynchronizationIsValid() As Boolean
+
+        Property DataIsValid() As Boolean
+
+        ReadOnly Property Name() As String
+
+        Property DataLength() As Int16
+
+        Property DataImage() As Byte()
+
+        Property BinaryLength() As Int16
+
+        ReadOnly Property BinaryImage() As Byte()
 
     End Interface
 
     ' This class represents the common definition of all phasor message frames that can be sent or received from a PMU.
-    Public MustInherit Class DataFrameBase
+    Public MustInherit Class PhasorFrameBase
+
+        Implements IPhasorFrame
 
         Protected m_timeTag As NtpTimeTag
         Protected m_sampleCount As Int16
@@ -38,7 +62,8 @@ Namespace EE.Phasor
             m_timeTag = New NtpTimeTag(DateTime.Now)
 
         End Sub
-        Protected Sub Clone(ByVal source As DataFrameBase)
+
+        Protected Sub Clone(ByVal source As PhasorFrameBase)
 
             With source
                 m_timeTag = .m_timeTag
@@ -48,7 +73,7 @@ Namespace EE.Phasor
 
         End Sub
 
-        Public Property TimeTag() As NtpTimeTag
+        Public Property TimeTag() As NtpTimeTag Implements IPhasorFrame.TimeTag
             Get
                 Return m_timeTag
             End Get
@@ -57,7 +82,16 @@ Namespace EE.Phasor
             End Set
         End Property
 
-        Public ReadOnly Property This() As DataFrameBase
+        Public Property Milliseconds() As Double
+            Get
+
+            End Get
+            Set(ByVal Value As Double)
+
+            End Set
+        End Property
+
+        Public ReadOnly Property This() As PhasorFrameBase
             Get
                 Return Me
             End Get
@@ -73,7 +107,7 @@ Namespace EE.Phasor
 
         End Sub
 
-        Protected Overridable ReadOnly Property Name() As String
+        Public Overridable ReadOnly Property Name() As String
             Get
                 Return "Phasor.FrameBase"
             End Get
