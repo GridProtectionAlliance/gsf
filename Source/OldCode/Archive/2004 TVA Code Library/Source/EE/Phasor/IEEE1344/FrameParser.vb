@@ -34,19 +34,22 @@ Namespace EE.Phasor.IEEE1344
 
         End Sub
 
-        Public Shared Function Parse(ByRef frame As BaseFrame, ByVal binaryImage As Byte(), ByVal startIndex As Integer) As PMUFrameType
+        Public Shared Function Parse(ByRef newFrame As BaseFrame, ByVal configFrame As ConfigurationFrame, ByVal binaryImage As Byte(), ByVal startIndex As Integer) As PMUFrameType
 
             Dim parsedImage As New FrameParser(binaryImage, startIndex)
 
             Select Case parsedImage.FrameType
                 Case PMUFrameType.DataFrame
-                    frame = New DataFrame(parsedImage, binaryImage, startIndex + CommonBinaryLength)
+                    ' We can only start parsing data frames once we have successfully parsed a configuration frame...
+                    If Not configFrame Is Nothing Then
+                        newFrame = New DataFrame(parsedImage, configFrame, binaryImage, startIndex + CommonBinaryLength)
+                    End If
                 Case PMUFrameType.HeaderFrame
-                    frame = New HeaderFrame(parsedImage, binaryImage, startIndex + CommonBinaryLength)
+                    newFrame = New HeaderFrame(parsedImage, binaryImage, startIndex + CommonBinaryLength)
                 Case PMUFrameType.ConfigurationFrame
-                    frame = New ConfigurationFrame(parsedImage, binaryImage, startIndex + CommonBinaryLength)
+                    newFrame = New ConfigurationFrame(parsedImage, binaryImage, startIndex + CommonBinaryLength)
                 Case Else
-                    frame = parsedImage
+                    newFrame = parsedImage
             End Select
 
             Return parsedImage.FrameType

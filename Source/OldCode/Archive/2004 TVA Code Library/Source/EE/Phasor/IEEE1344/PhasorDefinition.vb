@@ -45,9 +45,9 @@ Namespace EE.Phasor.IEEE1344
 
         Public Const BinaryLength As Integer = 4
 
-        Protected m_label As String
-        Protected m_type As PhasorType
-        Protected m_calFactor As Int32
+        Private m_label As String
+        Private m_type As PhasorType
+        Private m_calFactor As Int32
 
         Public Sub New()
 

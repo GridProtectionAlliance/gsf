@@ -46,8 +46,8 @@ Namespace EE.Phasor.IEEE1344
 
         Public Const BinaryLength As Integer = 2
 
-        Protected m_label As String
-        Protected m_flags As Int16
+        Private m_label As String
+        Private m_flags As Int16
 
         Public Sub New()
 

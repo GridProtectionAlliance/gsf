@@ -30,8 +30,8 @@ Namespace EE.Phasor.IEEE1344
 
         Protected m_stationName As String
         Protected m_pmuIDCode As Int64
-        Protected m_phasors As PhasorDefinitions
-        Protected m_digitals As DigitalDefinitions
+        Protected m_phasorDefinitions As PhasorDefinitions
+        Protected m_digitalDefinitions As DigitalDefinitions
         Protected m_freqFlags As Int16
         Protected m_period As Int16
 
@@ -42,8 +42,8 @@ Namespace EE.Phasor.IEEE1344
             MyBase.New()
             SetFrameType(PMUFrameType.ConfigurationFrame)
 
-            m_phasors = New PhasorDefinitions
-            m_digitals = New DigitalDefinitions
+            m_phasorDefinitions = New PhasorDefinitions
+            m_digitalDefinitions = New DigitalDefinitions
 
         End Sub
 
@@ -68,14 +68,14 @@ Namespace EE.Phasor.IEEE1344
 
             ' Load phasors
             For x = 0 To phasorCount - 1
-                m_phasors.Add(New PhasorDefinition(Encoding.ASCII.GetString(binaryImage, startIndex + x * 16, 16), binaryImage, phasorOffset + x * 4))
+                m_phasorDefinitions.Add(New PhasorDefinition(Encoding.ASCII.GetString(binaryImage, startIndex + x * 16, 16), binaryImage, phasorOffset + x * 4))
             Next
 
             startIndex += phasorCount * 16
 
             ' Load digitals
             For x = 0 To digitalCount - 1
-                m_digitals.Add(New DigitalDefinition(Encoding.ASCII.GetString(binaryImage, startIndex + x * 16, 16), binaryImage, phasorOffset + x * 2))
+                m_digitalDefinitions.Add(New DigitalDefinition(Encoding.ASCII.GetString(binaryImage, startIndex + x * 16, 16), binaryImage, phasorOffset + x * 2))
             Next
 
             m_freqFlags = EndianOrder.ReverseToInt16(binaryImage, freqOffset)
@@ -83,15 +83,15 @@ Namespace EE.Phasor.IEEE1344
 
         End Sub
 
-        Public ReadOnly Property Phasors() As PhasorDefinitions
+        Public ReadOnly Property PhasorDefinitions() As PhasorDefinitions
             Get
-                Return m_phasors
+                Return m_phasorDefinitions
             End Get
         End Property
 
-        Public ReadOnly Property Digitals() As DigitalDefinitions
+        Public ReadOnly Property DigitalDefinitions() As DigitalDefinitions
             Get
-                Return m_digitals
+                Return m_digitalDefinitions
             End Get
         End Property
 

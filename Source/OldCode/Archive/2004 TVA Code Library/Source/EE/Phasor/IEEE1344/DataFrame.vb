@@ -27,18 +27,24 @@ Namespace EE.Phasor.IEEE1344
 
         Inherits BaseFrame
 
+        Protected m_configFrame As ConfigurationFrame
+
         Protected Const SampleCountMask As Int16 = Not FrameTypeMask
 
-        Public Sub New()
+        Public Sub New(ByVal configFrame As ConfigurationFrame)
 
             MyBase.New()
             SetFrameType(PMUFrameType.DataFrame)
 
+            If configFrame Is Nothing Then Throw New ArgumentNullException("Cannot parse " & Name & " without parsing a configuration frame first")
+
+            m_configFrame = configFrame
+
         End Sub
 
-        Protected Friend Sub New(ByVal parsedImage As BaseFrame, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+        Protected Friend Sub New(ByVal parsedImage As BaseFrame, ByVal configFrame As ConfigurationFrame, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
 
-            Me.New()
+            Me.New(configFrame)
 
             ' No need to reparse data, so we pickup what's already been parsed...
             Clone(parsedImage)
