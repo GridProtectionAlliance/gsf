@@ -15,7 +15,7 @@
 '
 '***********************************************************************
 
-Imports System.Runtime.CompilerServices
+Imports System.Threading
 Imports DatAWarePDC.PDCstream.Common
 
 Namespace PDCstream
@@ -153,23 +153,30 @@ Namespace PDCstream
 
             ' Baseline timestamp at bottom of the second
             Dim baseTime As DateTime = BaselinedTimestamp(timestamp)
+
             Dim sample As DataSample = DirectCast(m_dataSamples(baseTime.Ticks), DataSample)
 
             ' If sample for this timestamp doesn't exist, create one for it...
             If sample Is Nothing Then
-                ' Check difference between baseTime and last baseTime in whole seconds and fill any gaps
-                Dim difference As Integer = Math.Floor(DistanceFromBaseTime(baseTime))
+                Dim difference As Double
 
-                If difference > 0 Then
-                    If difference > 1 And m_baseTimeSet Then
-                        For x As Integer = 1 To difference - 1
+                If m_baseTimeSet Then
+                    ' Check difference between baseTime and last baseTime in seconds and fill any gaps
+                    difference = DistanceFromBaseTime(baseTime)
+
+                    If difference > 1 Then
+                        For x As Integer = 1 To Math.Floor(difference) - 1
                             CreateDataSample(m_baseTime.AddSeconds(x))
                         Next
                     End If
+                Else
+                    m_baseTimeSet = True
+                    difference = 1
+                End If
 
+                If difference > 0 Then
                     ' Set this time as the new base time
                     m_baseTime = baseTime
-                    m_baseTimeSet = True
                     CreateDataSample(m_baseTime)
                 End If
 
@@ -196,12 +203,7 @@ Namespace PDCstream
 
         Public Function DistanceFromBaseTime(ByVal timeStamp As DateTime) As Double
 
-            If m_baseTimeSet Then
-                Return (timeStamp.Ticks - m_baseTime.Ticks) / 10000000L
-            Else
-                ' If the basetime has not been set, we should always return a large positive difference...
-                Return 1000
-            End If
+            Return (timeStamp.Ticks - m_baseTime.Ticks) / 10000000L
 
         End Function
 

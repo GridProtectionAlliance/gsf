@@ -130,7 +130,8 @@ Namespace DatAWare
 
         Public Sub QueueEventData(ByVal plantCode As String, ByVal eventBuffer As Byte())
 
-            If Enabled Then ThreadPool.QueueUserWorkItem(AddressOf ProcessEventBuffer, New DataPacket(plantCode, eventBuffer))
+            'If Enabled Then ThreadPool.QueueUserWorkItem(AddressOf ProcessEventBuffer, New DataPacket(plantCode, eventBuffer))
+            ProcessEventBuffer(New DataPacket(plantCode, eventBuffer))
             m_packetsReceived += 1
 
         End Sub
@@ -168,8 +169,9 @@ Namespace DatAWare
                         m_processedEvents += 1
                     End If
                 Next
-            Catch
-                Throw
+            Catch ex As Exception
+                UpdateStatus("Exception in DatAWare.EventQueue.ProcessEventBuffer: " & ex.Message)
+                Throw ex
             Finally
                 m_activeThreads -= 1
             End Try

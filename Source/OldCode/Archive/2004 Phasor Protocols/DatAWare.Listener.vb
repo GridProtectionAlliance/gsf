@@ -245,7 +245,7 @@ Namespace DatAWare
                     eventBuffer = clientData.ToArray()
                     clientData = New MemoryStream
 
-                    ' Every so often we get no data, if so we'll just go back to listening...
+                    ' If we get no data we'll just go back to listening...
                     If eventBuffer.Length > 0 Then
                         ' We may not have received an even number of events - so we check for that
                         events = Math.DivRem(eventBuffer.Length, StandardEvent.BinaryLength, remainder)
@@ -269,7 +269,7 @@ Namespace DatAWare
                         m_parent.EventQueue.QueueEventData(m_connection.PlantCode, eventBuffer)
 
                         ' If client was finished sending packet, send acknowledgement back to DatAWare...
-                        If remainder = 0 Then
+                        If remainder = 0 And Not clientStream.DataAvailable Then
                             SendResponse(clientStream, "ACK")
                             m_packetsAccepted += 1
                         End If

@@ -15,6 +15,8 @@
 '
 '***********************************************************************
 
+Imports System.Text
+
 Namespace PDCstream
 
     Public Class PhasorDefinition
@@ -66,6 +68,31 @@ Namespace PDCstream
                     Else
                         Return .CalFactor * .Ratio / .Shunt
                     End If
+                End With
+            End Get
+        End Property
+
+        Public Shared ReadOnly Property ConfigFileFormat(ByVal phasor As PhasorDefinition) As String
+            Get
+                With New StringBuilder
+                    Select Case phasor.Type
+                        Case PhasorType.Voltage
+                            .Append("V"c)
+                        Case PhasorType.Current
+                            .Append("I"c)
+                        Case PhasorType.DontCare
+                            .Append("N"c)
+                    End Select
+
+                    .Append("," & _
+                        phasor.Ratio & "," & _
+                        phasor.CalFactor & "," & _
+                        phasor.Offset & "," & _
+                        phasor.Shunt & "," & _
+                        phasor.VoltageRef & "," & _
+                        phasor.Label)
+
+                    Return .ToString()
                 End With
             End Get
         End Property

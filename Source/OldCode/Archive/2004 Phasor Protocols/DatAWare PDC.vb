@@ -490,8 +490,24 @@ Public Class DatAWarePDC
 
     Private Sub Concentrator_UnpublishedSamples(ByVal total As Integer) Handles Concentrator.UnpublishedSamples
 
+        Static lastWarning As Long
+        Static warningState As Boolean
+
         ' TODO: You should never have very many unpublished samples queued up - each sample represents one second of data,
         ' so the total number of unpublished samples equals the number of seconds the PDC is behind real-time...
+        If total > 6 Then
+            ' Don't send any warnings more than every 10 seconds
+            If (DateTime.Now.Ticks - lastWarning) / 10000000L > 10 Then
+                UpdateStatus("WARNING: There are " & total & " unpublished samples in the queue, real-time stream could be falling behind...")
+                lastWarning = DateTime.Now.Ticks
+            End If
+            warningState = True
+        Else
+            If warningState Then
+                UpdateStatus("INFO: Warning state terminated, there are now only " & total & " unpublished samples in the queue...")
+            End If
+            warningState = False
+        End If
 
     End Sub
 
