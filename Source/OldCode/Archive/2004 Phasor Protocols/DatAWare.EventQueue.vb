@@ -23,11 +23,6 @@ Imports TVA.Shared.DateTime
 Imports TVA.Services
 Imports DatAWarePDC.PDCstream
 
-' This code runs a little faster when you don't use a thread pool for the event queue, but it does use about ~1-2% more CPU cycles -
-' if this becomes an issue, the following constant can be set to true to reduce CPU load, however, note that a side-effect of this
-' setting will be a larger time deviation in the real-time broadcast stream...
-#Const ThreadPoolImplementation = False
-
 Namespace DatAWare
 
     Public Class EventQueue
@@ -119,74 +114,6 @@ Namespace DatAWare
             End Get
         End Property
 
-#If ThreadPoolImplementation Then
-
-        Private Class DataPacket
-
-            Public PlantCode As String
-            Public EventBuffer As Byte()
-
-            Public Sub New(ByVal plantCode As String, ByVal eventBuffer As Byte())
-
-                Me.PlantCode = plantCode
-                Me.EventBuffer = eventBuffer
-
-            End Sub
-
-        End Class
-
-        Public Sub QueueEventData(ByVal plantCode As String, ByVal eventBuffer As Byte())
-
-            If Enabled Then ThreadPool.QueueUserWorkItem(AddressOf ProcessEventBuffer, New DataPacket(plantCode, eventBuffer))
-            ProcessEventBuffer(New DataPacket(plantCode, eventBuffer))
-            m_packetsReceived += 1
-
-        End Sub
-
-        ' This method is expected to be run on an independent thread...
-        Private Sub ProcessEventBuffer(ByVal stateInfo As Object)
-
-            Try
-                m_activeThreads += 1
-
-                Dim eventData As DataPacket = DirectCast(stateInfo, DataPacket)
-                Dim dataPoint As PMUDataPoint
-
-                ' Parse events out of data packet and create a new PMU data point from timestamp and value
-                For packetIndex As Integer = 0 To eventData.EventBuffer.Length - 1 Step StandardEvent.BinaryLength
-                    If packetIndex + StandardEvent.BinaryLength < eventData.EventBuffer.Length Then
-                        With New StandardEvent(eventData.EventBuffer, packetIndex)
-                            ' Make sure we have a point defined for this value
-                            If Points(eventData.PlantCode).GetPoint(.DatabaseIndex, dataPoint) Then
-                                dataPoint.Timestamp = .TTag.ToDateTime
-                                dataPoint.Value = .Value
-
-                                ' If the new value is received on change, we'll update the samples in our current
-                                ' data queue to use latest value...
-                                If dataPoint.ReceivedOnChange Then
-                                    Points(eventData.PlantCode)(.DatabaseIndex) = dataPoint
-                                    UpdateReceivedOnChangePoints(dataPoint)
-                                End If
-
-                                ' Add this point value to the PDC concentrator data queue
-                                m_dataQueue.SortDataPoint(dataPoint)
-                            End If
-                        End With
-
-                        m_processedEvents += 1
-                    End If
-                Next
-            Catch ex As Exception
-                UpdateStatus("Exception in DatAWare.EventQueue.ProcessEventBuffer: " & ex.Message)
-                Throw ex
-            Finally
-                m_activeThreads -= 1
-            End Try
-
-        End Sub
-
-#Else
-
         Public Sub QueueEventData(ByVal plantCode As String, ByVal eventBuffer As Byte())
 
             If Enabled Then
@@ -230,8 +157,6 @@ Namespace DatAWare
             m_packetsReceived += 1
 
         End Sub
-
-#End If
 
         Private Sub m_dataQueue_DataError(ByVal message As String) Handles m_dataQueue.DataError
 
@@ -336,4 +261,3 @@ Namespace DatAWare
     End Class
 
 End Namespace
-
