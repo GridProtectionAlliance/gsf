@@ -74,8 +74,9 @@ Namespace PDCstream
             m_processing = False
 
             ' We set the sample rate accordingly allowing for a hint of more time per second to account for uneven rates
+            ' TODO: Make interval adjustment a config parameter...
             With m_processTimer
-                .Interval = Math.Floor(1000 / m_configFile.SampleRate) - 1
+                .Interval = 1000 / m_configFile.SampleRate - 3
                 .AutoReset = True
                 .Enabled = False
             End With
@@ -243,8 +244,7 @@ Namespace PDCstream
 
                                     ' Under normal circumstances, this should be all we need to try to send - so we won't
                                     ' waste cycles looking for anything else that we'll catch at the next pass...
-                                    ' TODO: define tolerable sample count...
-                                    packetSent = (m_dataQueue.SampleCount <= 6)
+                                    packetSent = True
                                     Exit For
                                 End If
                             End With
