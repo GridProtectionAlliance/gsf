@@ -1,7 +1,6 @@
 Imports System.Net
 Imports System.Net.Sockets
 Imports System.Text
-Imports System.IO
 Imports TVA.Forms.Common
 Imports TVA.Config.Common
 Imports TVA.Threading
@@ -179,64 +178,7 @@ Public Class UDPListener
 
         Variables.Save()
 
-        '' TODO: to be removed...  
-        'CalcCheckSum(Application.StartupPath & "\TVA PDC Sample Descriptor.bin", "f0 ba")    ' TVA gen
-        'CalcCheckSum(Application.StartupPath & "\BPA PDC Sample Descriptor.bin", "bb c0")    ' PDC gen
-        'Stop
-
     End Sub
-
-    '' TODO: to be removed...
-    'Private Sub CalcCheckSum(ByVal filename As String, ByVal expected As String)
-
-    '    Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), &H41)
-    '    With File.OpenRead(filename)
-    '        .Read(buffer, 0, buffer.Length)
-    '    End With
-
-    '    Debug.WriteLine(vbCrLf & "Test for file """ & filename & """")
-    '    Debug.WriteLine(" From Stream = " & expected)
-
-    '    'Debug.Write("C# Calculated = ")
-    '    'For Each b As Byte In BitConverter.GetBytes(UnsignedOps.XorCheckSum.CheckWord(buffer, 0, buffer.Length - 2))
-    '    '    Debug.Write(Hex(b).PadLeft(2, "0"c) & " ")
-    '    'Next
-    '    'Debug.WriteLine("")
-
-    '    Debug.Write("VB Calculated = ")
-    '    For Each b As Byte In BitConverter.GetBytes(XorCheckSum(buffer, 0, buffer.Length - 2))
-    '        Debug.Write(Hex(b).PadLeft(2, "0"c) & " ")
-    '    Next
-    '    Debug.WriteLine("")
-
-    'End Sub
-
-    '' TODO: remove this later...
-    'Public Shared Function XorCheckSum(ByVal data As Byte(), ByVal startIndex As Integer, ByVal length As Integer) As Int16
-
-    '    Dim sum As Int16
-
-    '    ' Word length XOR check-sum
-    '    For x As Integer = 0 To length - 1 Step 2
-    '        sum = sum Xor BitConverter.ToInt16(data, startIndex + x)
-    '    Next
-
-    '    Return sum
-
-    'End Function
-
-    'Private Class Word
-
-    '    Public hi As Byte
-    '    Public lo As Byte
-
-    '    Public Shared Function [Xor](ByVal w1 As Word, ByVal w2 As Word)
-
-    '        Dim w1bits As BitArray
-
-    '    End Function
-
-    'End Class
 
     Private Sub SampleRateCalcs_Closing(ByVal sender As Object, ByVal e As System.ComponentModel.CancelEventArgs) Handles MyBase.Closing
 
@@ -249,7 +191,7 @@ Public Class UDPListener
     End Sub
 
     Private Sub Listen_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles Listen.Click
-
+        
         listeningThread = RunThread.ExecuteNonPublicMethod(Me, "UDPListen")
         Listen.Enabled = False
 
@@ -263,7 +205,6 @@ Public Class UDPListener
         Dim total As Long
         Dim remoteEP As System.Net.EndPoint = CType(New IPEndPoint(IPAddress.Any, Port.Value), System.Net.EndPoint)
         Dim startTime As Long = DateTime.Now.Ticks
-        Dim logged As Boolean
 
         udpSocket.Bind(remoteEP)
 
@@ -272,18 +213,6 @@ Public Class UDPListener
                 ' Blocks until a message returns on this socket from a remote host
                 received = udpSocket.ReceiveFrom(buffer, remoteEP)
                 total += 1
-
-                '' TODO: Remove this debug code later...
-                'If buffer(0) = &HAA And buffer(1) = &H0 Then
-                '    Dim ds As FileStream = File.OpenWrite(Application.StartupPath & "\" & Guid.NewGuid.ToString & ".bin")
-                '    ds.Write(buffer, 0, buffer.Length)
-                '    ds.Close()
-                'ElseIf Not logged Then
-                '    logged = True
-                '    Dim ds As FileStream = File.OpenWrite(Application.StartupPath & "\" & Guid.NewGuid.ToString & ".bin")
-                '    ds.Write(buffer, 0, buffer.Length)
-                '    ds.Close()
-                'End If
 
                 With New StringBuilder
                     For i = 0 To received - 1
