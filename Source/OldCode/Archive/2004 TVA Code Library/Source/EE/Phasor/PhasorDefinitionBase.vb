@@ -1,5 +1,5 @@
 '***********************************************************************
-'  PhasorDefinitionBase.vb - Phasor definition base
+'  PhasorDefinitionBase.vb - Phasor definition base class
 '  Copyright © 2005 - TVA, all rights reserved
 '
 '  Build Environment: VB.NET, Visual Studio 2003
@@ -19,6 +19,7 @@ Imports System.Text
 
 Namespace EE.Phasor
 
+    ' This class represents the protocol independent definition of a phasor value.
     Public MustInherit Class PhasorDefinitionBase
 
         Implements IPhasorDefinition

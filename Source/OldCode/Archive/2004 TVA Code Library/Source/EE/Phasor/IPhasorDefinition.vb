@@ -17,6 +17,7 @@
 
 Namespace EE.Phasor
 
+    ' This class represents the protocol independent interface of a phasor value definition.
     Public Interface IPhasorDefinition
 
         Inherits IComparable

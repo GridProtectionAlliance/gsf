@@ -17,6 +17,7 @@
 
 Namespace EE.Phasor
 
+    ' This class represents the protocol independent interface of a digital value definition.
     Public Interface IDigitalDefinition
 
         Inherits IComparable

@@ -20,40 +20,45 @@ Imports TVA.Shared.Math
 
 Namespace EE.Phasor
 
+    ' This class represents the protocol independent definition of a phasor value.
     Public MustInherit Class PhasorValueBase
 
         Implements IPhasorValue
 
-        Private m_phasorFormat As PhasorFormat
-        Private m_phasorDefinition As IPhasorDefinition
-        Private m_real As Int16
-        Private m_imaginary As Int16
-        Private m_compositeValues As CompositeValues
+        Protected m_phasorFormat As PhasorFormat
+        Protected m_dataFormat As DataFormat
+        Protected m_phasorDefinition As IPhasorDefinition
+        Protected m_real As Double
+        Protected m_imaginary As Double
+        Protected m_compositeValues As CompositeValues
 
-        Private Enum CompositeValue
+        Protected Enum CompositeValue
             Angle
             Magnitude
         End Enum
 
         ' Create phasor from polar coordinates (angle expected in Degrees)
-        Public Shared Function CreateFromPolarValues(ByVal phasorValueType As Type, ByVal phasorFormat As PhasorFormat, ByVal phasorDefinition As IPhasorDefinition, ByVal angle As Double, ByVal magnitude As Double) As PhasorValueBase
+        ' Note: This method is expected to implemented as a public shared method in derived class automatically passing in phasorValueType
+        Protected Shared Function CreateFromPolarValues(ByVal phasorValueType As Type, ByVal phasorFormat As PhasorFormat, ByVal dataFormat As DataFormat, ByVal phasorDefinition As IPhasorDefinition, ByVal angle As Double, ByVal magnitude As Double) As IPhasorValue
 
-            Return CreateFromScaledRectangularValues(phasorValueType, phasorFormat, phasorDefinition, CalculateRealComponent(angle, magnitude), CalculateImaginaryComponent(angle, magnitude))
+            Return CreateFromRectangularValues(phasorValueType, phasorFormat, dataFormat, phasorDefinition, CalculateRealComponent(angle, magnitude), CalculateImaginaryComponent(angle, magnitude))
 
         End Function
 
-        ' Create phasor from scaled rectangular coordinates
-        Public Shared Function CreateFromScaledRectangularValues(ByVal phasorValueType As Type, ByVal phasorFormat As PhasorFormat, ByVal phasorDefinition As IPhasorDefinition, ByVal real As Double, ByVal imaginary As Double) As PhasorValueBase
+        ' Create phasor from rectangular coordinates
+        ' Note: This method is expected to implemented as a public shared method in derived class automatically passing in phasorValueType
+        Protected Shared Function CreateFromRectangularValues(ByVal phasorValueType As Type, ByVal phasorFormat As PhasorFormat, ByVal dataFormat As DataFormat, ByVal phasorDefinition As IPhasorDefinition, ByVal real As Double, ByVal imaginary As Double) As IPhasorValue
 
-            Dim scale As Double = phasorDefinition.ScalingFactor
-            Return CreateFromUnscaledRectangularValues(phasorValueType, phasorFormat, phasorDefinition, real / scale, imaginary / scale)
+            Return CType(Activator.CreateInstance(phasorValueType, New Object() {phasorFormat, dataFormat, phasorDefinition, real, imaginary}), IPhasorValue)
 
         End Function
 
         ' Create phasor from unscaled rectangular coordinates
-        Public Shared Function CreateFromUnscaledRectangularValues(ByVal phasorValueType As Type, ByVal phasorFormat As PhasorFormat, ByVal phasorDefinition As IPhasorDefinition, ByVal real As Int16, ByVal imaginary As Int16) As PhasorValueBase
+        ' Note: This method is expected to implemented as a public shared method in derived class automatically passing in phasorValueType
+        Protected Shared Function CreateFromUnscaledRectangularValues(ByVal phasorValueType As Type, ByVal phasorFormat As PhasorFormat, ByVal dataFormat As DataFormat, ByVal phasorDefinition As IPhasorDefinition, ByVal real As Int16, ByVal imaginary As Int16) As IPhasorValue
 
-            Return Reflection.Assembly.GetExecutingAssembly.CreateInstance(phasorValueType.FullName, True, Reflection.BindingFlags.CreateInstance, Nothing, New Object() {phasorFormat, phasorDefinition, real, imaginary}, Nothing, Nothing)
+            Dim scale As Double = phasorDefinition.ScalingFactor
+            Return CreateFromRectangularValues(phasorValueType, phasorFormat, dataFormat, phasorDefinition, real * scale, imaginary * scale)
 
         End Function
 
@@ -74,7 +79,7 @@ Namespace EE.Phasor
         ' Calculate watts from imaginary and real components of two phasors
         Public Shared Function CalculatePower(ByVal voltage As IPhasorValue, ByVal current As IPhasorValue) As Double
 
-            Return 3 * (voltage.ScaledReal * current.ScaledReal + voltage.ScaledImaginary * current.ScaledImaginary)
+            Return 3 * (voltage.Real * current.Real + voltage.Imaginary * current.Imaginary)
             'Return 3 * voltage.Magnitude * current.Magnitude * Math.Cos((voltage.Angle - current.Angle) * Math.PI / 180)
 
         End Function
@@ -82,14 +87,15 @@ Namespace EE.Phasor
         ' Calculate vars from imaginary and real components of two phasors
         Public Shared Function CalculateVars(ByVal voltage As IPhasorValue, ByVal current As IPhasorValue) As Double
 
-            Return 3 * (voltage.ScaledImaginary * current.ScaledReal - voltage.ScaledReal * current.ScaledImaginary)
+            Return 3 * (voltage.Imaginary * current.Real - voltage.Real * current.Imaginary)
             'Return 3 * voltage.Magnitude * current.Magnitude * Math.Sin((voltage.Angle - current.Angle) * Math.PI / 180)
 
         End Function
 
-        Public Sub New(ByVal phasorFormat As PhasorFormat, ByVal phasorDefinition As IPhasorDefinition, ByVal real As Int16, ByVal imaginary As Int16)
+        Protected Sub New(ByVal phasorFormat As PhasorFormat, ByVal dataFormat As DataFormat, ByVal phasorDefinition As IPhasorDefinition, ByVal real As Double, ByVal imaginary As Double)
 
             m_phasorFormat = phasorFormat
+            m_dataFormat = dataFormat
             m_phasorDefinition = phasorDefinition
             m_real = real
             m_imaginary = imaginary
@@ -97,7 +103,47 @@ Namespace EE.Phasor
 
         End Sub
 
-        Public Overridable Property Format() As PhasorFormat Implements IPhasorValue.Format
+        Protected Sub New(ByVal phasorFormat As PhasorFormat, ByVal dataFormat As DataFormat, ByVal phasorDefinition As IPhasorDefinition, ByVal unscaledReal As Int16, ByVal unscaledImaginary As Int16)
+
+            Me.New(phasorFormat, dataFormat, phasorDefinition, unscaledReal * phasorDefinition.ScalingFactor, unscaledImaginary * phasorDefinition.ScalingFactor)
+
+        End Sub
+
+        Protected Sub New(ByVal phasorFormat As PhasorFormat, ByVal dataFormat As DataFormat, ByVal phasorDefinition As IPhasorDefinition, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+
+            m_phasorFormat = phasorFormat
+            m_dataFormat = dataFormat
+            m_phasorDefinition = phasorDefinition
+
+            If phasorFormat = phasorFormat.Rectangular Then
+                If dataFormat = dataFormat.FixedInteger Then
+                    UnscaledReal = EndianOrder.ReverseToInt16(binaryImage, startIndex)
+                    UnscaledImaginary = EndianOrder.ReverseToInt16(binaryImage, startIndex + 2)
+                Else
+                    m_real = EndianOrder.ReverseToSingle(binaryImage, startIndex)
+                    m_imaginary = EndianOrder.ReverseToSingle(binaryImage, startIndex + 4)
+                End If
+            Else
+                Dim magnitude As Double
+                Dim angle As Double
+
+                If dataFormat = dataFormat.FixedInteger Then
+                    magnitude = Convert.ToDouble(EndianOrder.ReverseToUInt16(binaryImage, startIndex))
+                    angle = EndianOrder.ReverseToInt16(binaryImage, startIndex + 2) * 180 / Math.PI / 10000
+                Else
+                    magnitude = EndianOrder.ReverseToSingle(binaryImage, startIndex)
+                    angle = EndianOrder.ReverseToSingle(binaryImage, startIndex + 4) * 180 / Math.PI
+                End If
+
+                m_real = CalculateRealComponent(angle, magnitude)
+                m_imaginary = CalculateImaginaryComponent(angle, magnitude)
+            End If
+
+            m_compositeValues = New CompositeValues(2)
+
+        End Sub
+
+        Public Overridable Property PhasorFormat() As PhasorFormat Implements IPhasorValue.PhasorFormat
             Get
                 Return m_phasorFormat
             End Get
@@ -105,6 +151,16 @@ Namespace EE.Phasor
                 m_phasorFormat = Value
             End Set
         End Property
+
+        Public Overridable Property DataFormat() As DataFormat Implements IPhasorValue.DataFormat
+            Get
+                Return m_dataFormat
+            End Get
+            Set(ByVal Value As DataFormat)
+                m_dataFormat = Value
+            End Set
+        End Property
+
 
         Public Overridable ReadOnly Property Definition() As IPhasorDefinition Implements IPhasorValue.Definition
             Get
@@ -114,52 +170,64 @@ Namespace EE.Phasor
 
         Public Overridable Property Angle() As Double Implements IPhasorValue.Angle
             Get
-                Return Math.Atan2(ScaledImaginary, ScaledReal) * 180 / Math.PI
+                Return Math.Atan2(m_imaginary, m_real) * 180 / Math.PI
             End Get
             Set(ByVal Value As Double)
                 ' We store angle as one of our required composite values
                 m_compositeValues(CompositeValue.Angle) = Value
 
                 ' If all composite values have been received, we can calculate phasor's real and imaginary values
-                CalculatePhasorValue()
+                CalculatePhasorValueFromComposites()
             End Set
         End Property
 
         Public Overridable Property Magnitude() As Double Implements IPhasorValue.Magnitude
             Get
-                Return Math.Sqrt(ScaledReal * ScaledReal + ScaledImaginary * ScaledImaginary)
+                Return Math.Sqrt(m_real * m_real + m_imaginary * m_imaginary)
             End Get
             Set(ByVal Value As Double)
                 ' We store magnitude as one of our required composite values
                 m_compositeValues(CompositeValue.Magnitude) = Value
 
                 ' If all composite values have been received, we can calculate phasor's real and imaginary values
-                CalculatePhasorValue()
+                CalculatePhasorValueFromComposites()
             End Set
         End Property
 
-        Public Overridable ReadOnly Property Real() As Int16 Implements IPhasorValue.Real
+        Public Overridable Property Real() As Double Implements IPhasorValue.Real
             Get
                 Return m_real
             End Get
+            Set(ByVal Value As Double)
+                m_real = Value
+            End Set
         End Property
 
-        Public Overridable ReadOnly Property Imaginary() As Int16 Implements IPhasorValue.Imaginary
+        Public Overridable Property Imaginary() As Double Implements IPhasorValue.Imaginary
             Get
                 Return m_imaginary
             End Get
+            Set(ByVal Value As Double)
+                m_imaginary = Value
+            End Set
         End Property
 
-        Public Overridable ReadOnly Property ScaledReal() As Double Implements IPhasorValue.ScaledReal
+        Public Overridable Property UnscaledReal() As Int16 Implements IPhasorValue.UnscaledReal
             Get
-                Return Convert.ToDouble(m_real) * m_phasorDefinition.ScalingFactor
+                Return Convert.ToInt16(m_real / m_phasorDefinition.ScalingFactor)
             End Get
+            Set(ByVal Value As Int16)
+                m_real = Value * m_phasorDefinition.ScalingFactor
+            End Set
         End Property
 
-        Public Overridable ReadOnly Property ScaledImaginary() As Double Implements IPhasorValue.ScaledImaginary
+        Public Overridable Property UnscaledImaginary() As Int16 Implements IPhasorValue.UnscaledImaginary
             Get
-                Return Convert.ToDouble(m_imaginary) * m_phasorDefinition.ScalingFactor
+                Return Convert.ToInt16(m_imaginary / m_phasorDefinition.ScalingFactor)
             End Get
+            Set(ByVal Value As Int16)
+                m_imaginary = Value * m_phasorDefinition.ScalingFactor
+            End Set
         End Property
 
         Public Overridable ReadOnly Property IsEmpty() As Boolean Implements IPhasorValue.IsEmpty
@@ -168,34 +236,51 @@ Namespace EE.Phasor
             End Get
         End Property
 
-        Protected Overridable Sub CalculatePhasorValue()
+        Protected Overridable Sub CalculatePhasorValueFromComposites()
 
             If m_compositeValues.AllReceived Then
-                Dim angle, magnitude, scale As Double
+                Dim angle, magnitude As Double
 
                 ' All values received, create a new phasor value from composite values
                 angle = m_compositeValues(CompositeValue.Angle)
                 magnitude = m_compositeValues(CompositeValue.Magnitude)
-                scale = m_phasorDefinition.ScalingFactor
 
-                m_real = CalculateRealComponent(angle, magnitude) / scale
-                m_imaginary = CalculateImaginaryComponent(angle, magnitude) / scale
+                m_real = CalculateRealComponent(angle, magnitude)
+                m_imaginary = CalculateImaginaryComponent(angle, magnitude)
             End If
 
         End Sub
 
-        Public MustOverride ReadOnly Property BinaryLength() As Integer Implements IPhasorValue.BinaryLength
+        Public Overridable ReadOnly Property BinaryLength() As Integer Implements IPhasorValue.BinaryLength
+            Get
+                If m_dataFormat = DataFormat.FixedInteger Then
+                    Return 4
+                Else
+                    Return 8
+                End If
+            End Get
+        End Property
 
         Public Overridable ReadOnly Property BinaryImage() As Byte() Implements IPhasorValue.BinaryImage
             Get
                 Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BinaryLength)
 
                 If m_phasorFormat = PhasorFormat.Rectangular Then
-                    EndianOrder.SwapCopyBytes(m_real, buffer, 0)
-                    EndianOrder.SwapCopyBytes(m_imaginary, buffer, 2)
+                    If m_dataFormat = DataFormat.FixedInteger Then
+                        EndianOrder.SwapCopyBytes(UnscaledReal, buffer, 0)
+                        EndianOrder.SwapCopyBytes(UnscaledImaginary, buffer, 2)
+                    Else
+                        EndianOrder.SwapCopyBytes(Convert.ToSingle(m_real), buffer, 0)
+                        EndianOrder.SwapCopyBytes(Convert.ToSingle(m_imaginary), buffer, 4)
+                    End If
                 Else
-                    EndianOrder.SwapCopyBytes(Convert.ToInt16(Magnitude), buffer, 0)
-                    EndianOrder.SwapCopyBytes(Convert.ToInt16(Angle * Math.PI / 180 * 10000), buffer, 2)
+                    If m_dataFormat = DataFormat.FixedInteger Then
+                        EndianOrder.SwapCopyBytes(Convert.ToUInt16(Magnitude), buffer, 0)
+                        EndianOrder.SwapCopyBytes(Convert.ToInt16(Angle * Math.PI / 180 * 10000), buffer, 2)
+                    Else
+                        EndianOrder.SwapCopyBytes(Convert.ToSingle(Magnitude), buffer, 0)
+                        EndianOrder.SwapCopyBytes(Convert.ToSingle(Angle * Math.PI / 180), buffer, 4)
+                    End If
                 End If
 
                 Return buffer

@@ -17,7 +17,7 @@
 
 Namespace EE.Phasor
 
-    Public Enum PhasorFormat
+    Public Enum PhasorFormat As Byte
         Rectangular
         Polar
     End Enum
@@ -27,7 +27,12 @@ Namespace EE.Phasor
         Current
     End Enum
 
-    Public Enum LineFrequency
+    Public Enum DataFormat As Byte
+        FixedInteger
+        FloatingPoint
+    End Enum
+
+    Public Enum LineFrequency As Byte
         _50Hz
         _60Hz
     End Enum

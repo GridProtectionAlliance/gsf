@@ -17,23 +17,26 @@
 
 Namespace EE.Phasor
 
+    ' This class represents the protocol independent interface of a phasor value.
     Public Interface IPhasorValue
 
         ReadOnly Property Definition() As IPhasorDefinition
 
-        Property Format() As PhasorFormat
+        Property PhasorFormat() As PhasorFormat
+
+        Property DataFormat() As DataFormat
 
         Property Angle() As Double
 
         Property Magnitude() As Double
 
-        ReadOnly Property Real() As Int16
+        Property Real() As Double
 
-        ReadOnly Property Imaginary() As Int16
+        Property Imaginary() As Double
 
-        ReadOnly Property ScaledReal() As Double
+        Property UnscaledReal() As Int16
 
-        ReadOnly Property ScaledImaginary() As Double
+        Property UnscaledImaginary() As Int16
 
         ReadOnly Property IsEmpty() As Boolean
 

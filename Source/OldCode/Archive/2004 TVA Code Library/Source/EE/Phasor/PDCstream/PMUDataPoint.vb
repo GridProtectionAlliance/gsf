@@ -17,6 +17,7 @@
 
 Namespace EE.Phasor.PDCstream
 
+    ' TODO: This should only be defined in the Super PDC as well...
     Public Structure PMUDataPoint
 
         Public PMU As PMUDefinition

@@ -22,33 +22,7 @@ Imports TVA.Compression.Common
 
 Namespace EE.Phasor
 
-    Public Interface IPhasorFrame
-
-        Property TimeTag() As NtpTimeTag
-
-        Property Milliseconds() As Double
-
-        ReadOnly Property Timestamp() As DateTime
-
-        ReadOnly Property This() As IPhasorFrame
-
-        Property SynchronizationIsValid() As Boolean
-
-        Property DataIsValid() As Boolean
-
-        ReadOnly Property Name() As String
-
-        Property DataLength() As Int16
-
-        Property DataImage() As Byte()
-
-        Property BinaryLength() As Int16
-
-        ReadOnly Property BinaryImage() As Byte()
-
-    End Interface
-
-    ' This class represents the common definition of all phasor message frames that can be sent or received from a PMU.
+    ' This class represents the protocol independent common definition of all phasor message frames that can be sent or received from a PMU.
     Public MustInherit Class PhasorFrameBase
 
         Implements IPhasorFrame
@@ -63,7 +37,7 @@ Namespace EE.Phasor
 
         End Sub
 
-        Protected Sub Clone(ByVal source As PhasorFrameBase)
+        Protected Overridable Sub Clone(ByVal source As PhasorFrameBase)
 
             With source
                 m_timeTag = .m_timeTag
@@ -73,7 +47,7 @@ Namespace EE.Phasor
 
         End Sub
 
-        Public Property TimeTag() As NtpTimeTag Implements IPhasorFrame.TimeTag
+        Public Overridable Property TimeTag() As NtpTimeTag Implements IPhasorFrame.TimeTag
             Get
                 Return m_timeTag
             End Get
@@ -82,24 +56,23 @@ Namespace EE.Phasor
             End Set
         End Property
 
-        Public Property Milliseconds() As Double
+        Public MustOverride Property Milliseconds() As Double Implements IPhasorFrame.Milliseconds
+
+        Public Overridable ReadOnly Property Timestamp() As DateTime Implements IPhasorFrame.Timestamp
             Get
-
+                Return TimeTag.ToDateTime.AddMilliseconds(Milliseconds)
             End Get
-            Set(ByVal Value As Double)
-
-            End Set
         End Property
 
-        Public ReadOnly Property This() As PhasorFrameBase
+        Public Overridable ReadOnly Property This() As IPhasorFrame Implements IPhasorFrame.This
             Get
                 Return Me
             End Get
         End Property
 
-        Public MustOverride Property SynchronizationIsValid() As Boolean
+        Public MustOverride Property SynchronizationIsValid() As Boolean Implements IPhasorFrame.SynchronizationIsValid
 
-        Public MustOverride Property DataIsValid() As Boolean
+        Public MustOverride Property DataIsValid() As Boolean Implements IPhasorFrame.DataIsValid
 
         Protected Overridable Sub AppendCRC(ByVal buffer As Byte(), ByVal startIndex As Integer)
 
@@ -107,19 +80,19 @@ Namespace EE.Phasor
 
         End Sub
 
-        Public Overridable ReadOnly Property Name() As String
+        Public Overridable ReadOnly Property Name() As String Implements IPhasorFrame.Name
             Get
-                Return "Phasor.FrameBase"
+                Return "PhasorFrameBase"
             End Get
         End Property
 
-        Public MustOverride Property DataLength() As Int16
+        Public MustOverride Property DataLength() As Int16 Implements IPhasorFrame.DataLength
 
-        Public MustOverride Property DataImage() As Byte()
+        Public MustOverride Property DataImage() As Byte() Implements IPhasorFrame.DataImage
 
-        Public MustOverride Property BinaryLength() As Int16
+        Public MustOverride Property BinaryLength() As Int16 Implements IPhasorFrame.BinaryLength
 
-        Public MustOverride ReadOnly Property BinaryImage() As Byte()
+        Public MustOverride ReadOnly Property BinaryImage() As Byte() Implements IPhasorFrame.BinaryImage
 
     End Class
 
