@@ -296,13 +296,11 @@ Namespace DatAWare
                 Dim errorMessage As String
 
                 With m_connection
-
                     .DWAPI.GetDBCount(.PlantCode, pointCount, errorMessage)
 
                     If Len(errorMessage) > 0 Then
                         Throw New InvalidOperationException("Failed to retrieve point count from DatAWare server """ & .Server & """ due to exception: " & errorMessage)
                     End If
-
                 End With
 
                 Return pointCount
@@ -331,7 +329,7 @@ Namespace DatAWare
             End Get
         End Property
 
-        Default Public ReadOnly Property Value(ByVal databaseIndex As Integer, Optional ByVal timeRequest As String = "*", Optional ByVal timeInterval As Integer = 0) As StandardEvent
+        Default Public ReadOnly Property Value(ByVal databaseIndex As Integer, Optional ByVal timeRequest As String = "*", Optional ByVal timeInterval As Single = 0) As StandardEvent
             Get
                 VerifyOpenConnection()
 
@@ -350,7 +348,7 @@ Namespace DatAWare
             End Get
         End Property
 
-        Public ReadOnly Property ValueRange(ByVal databaseIndex As Integer, ByVal startTimeRequest As String, Optional ByVal endTimeRequest As String = "*", Optional ByVal requestCommand As RequestType = RequestType.Raw, Optional ByVal timeInterval As Integer = 0) As StandardEvent()
+        Public ReadOnly Property ValueRange(ByVal databaseIndex As Integer, ByVal startTimeRequest As String, Optional ByVal endTimeRequest As String = "*", Optional ByVal requestCommand As RequestType = RequestType.Raw, Optional ByVal timeInterval As Single = 0) As StandardEvent()
             Get
                 VerifyOpenConnection()
 
@@ -407,17 +405,17 @@ Namespace DatAWare
         Public TextEncoding As Encoding
 
         Private m_index As Integer
-        Private m_description As String             ' 40
-        Private m_hardWareInfo As String            ' 64
-        Private m_pointID As String                 ' 20
-        Private m_synonym1 As String                ' 20
-        Private m_synonym2 As String                ' 20
-        Private m_siteName As String                ' 2
-        Private m_system As String                  ' 4
-        Private m_email As String                   ' 50
-        Private m_pager As String                   ' 30
-        Private m_phone As String                   ' 30
-        Private m_remarks As String                 ' 128
+        Private m_description As String = ""        ' 40
+        Private m_hardWareInfo As String = ""       ' 64
+        Private m_pointID As String = ""            ' 20
+        Private m_synonym1 As String = ""           ' 20
+        Private m_synonym2 As String = ""           ' 20
+        Private m_siteName As String = ""           ' 2
+        Private m_system As String = ""             ' 4
+        Private m_email As String = ""              ' 50
+        Private m_pager As String = ""              ' 30
+        Private m_phone As String = ""              ' 30
+        Private m_remarks As String = ""            ' 128
 
         Public Const BinaryLength As Integer = 754
 

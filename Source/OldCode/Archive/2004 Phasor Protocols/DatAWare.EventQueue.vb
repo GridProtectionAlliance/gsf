@@ -262,8 +262,8 @@ Namespace DatAWare
                     .Append("  Queue is currently: " & IIf(Enabled, "Enabled", "Disabled") & vbCrLf)
                     .Append("    Packets received: " & m_packetsReceived & vbCrLf)
                     .Append("    Processed events: " & m_processedEvents & vbCrLf)
-                    .Append("      Active threads: " & m_activeThreads & vbCrLf)
-                    .Append("   Referenced points: " & vbCrLf & vbCrLf)
+                    .Append("      Active threads: " & m_activeThreads & vbCrLf & vbCrLf)
+                    .Append("  Referencing points on the following DatAWare servers: " & vbCrLf & vbCrLf)
 
                     For Each de As DictionaryEntry In m_serverPoints
                         .Append("        Plant Code " & de.Key & ": " & DirectCast(de.Value, PMUServerPoints).Count & " points")

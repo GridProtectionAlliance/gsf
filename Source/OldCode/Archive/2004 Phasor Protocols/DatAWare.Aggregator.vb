@@ -34,7 +34,6 @@ Namespace DatAWare
 #Region " Common Primary Service Process Code "
 
         Private m_parent As DatAWarePDC
-        Private WithEvents m_concentrator As PDCstream.Concentrator
         Private m_enabled As Boolean
         Private m_processing As Boolean
         Private m_startTime As Long
@@ -44,7 +43,6 @@ Namespace DatAWare
         Public Sub New(ByVal parent As DatAWarePDC, ByVal concentrator As PDCstream.Concentrator)
 
             m_parent = parent
-            m_concentrator = concentrator
             m_enabled = True
             m_processing = False
 
@@ -143,12 +141,6 @@ Namespace DatAWare
         End Property
 
 #End Region
-
-        Private Sub m_concentrator_SamplePublished(ByVal sample As PDCstream.DataSample) Handles m_concentrator.SamplePublished
-
-            ' We queue samples up for aggregation...
-
-        End Sub
 
         Public Sub ExecuteProcess(ByVal UserData As Object)
 

@@ -13,13 +13,14 @@
 '  11/12/2004 - James R Carroll
 '       Initial version of source generated
 '
-'  Note:  Because DatAWare DAQ plug-in's only poll once per second,
-'  data can't be considered stale until after one second, this will
-'  also generally create a one second lag-time in the real-time data
-'  broadcast - the only way to increase this resolution would be
-'  increase the polling interval in DatAWare and this is currently
-'  not configurable.  However, Brian Fox has told me that it
-'  probably wouldn't be hard to add this if this becomes an issue...
+'  Note:  Note that your lag time is closely related to the rate
+'  at which data data is coming into the concentrator.  DatAWare
+'  allows some flexibility in its polling interval, so if you set
+'  DatAWare to poll and broadcast at a rate of .10 seconds, you
+'  might set the lag time to .20 to make sure you've had time to
+'  receive all the data from the reporting servers - this works
+'  since the data coming in is GPS based and should be very close
+'  in time...
 '
 '***********************************************************************
 
@@ -38,6 +39,7 @@ Namespace PDCstream
 
         Private m_parent As DatAWarePDC
         Private m_configFile As ConfigFile
+        Private m_lagTime As Double
         Private m_dataQueue As DataQueue
         Private m_descriptor As DescriptorPacket
         Private m_udpClient As UdpClient
@@ -52,13 +54,15 @@ Namespace PDCstream
         Private m_packetsPublished As Long
 
         Public Event SamplePublished(ByVal sample As DataSample)
+        Public Event UnpublishedSamples(ByVal total As Integer)
 
 #Region " Common Primary Service Process Code "
 
-        Public Sub New(ByVal parent As DatAWarePDC, ByVal configFileName As String, ByVal broadcastIPs As IPEndPoint())
+        Public Sub New(ByVal parent As DatAWarePDC, ByVal configFileName As String, ByVal lagTime As Double, ByVal broadcastIPs As IPEndPoint())
 
             m_parent = parent
             m_configFile = New ConfigFile(configFileName)
+            m_lagTime = lagTime
             m_dataQueue = New DataQueue(m_configFile)
             m_descriptor = New DescriptorPacket(m_configFile)
             m_udpClient = New UdpClient
@@ -68,9 +72,9 @@ Namespace PDCstream
             m_enabled = True
             m_processing = False
 
-            ' We publish data packets at the specified sample rate
+            ' We set the sample rate accordingly allowing for a hint of more time per second to account for uneven rates
             With m_processTimer
-                .Interval = 1000 / m_configFile.SampleRate
+                .Interval = Math.Floor(1000 / m_configFile.SampleRate) - 1
                 .AutoReset = True
                 .Enabled = False
             End With
@@ -130,11 +134,11 @@ Namespace PDCstream
                 m_processing = Value
 
                 If m_processing Then
+                    m_processTimer.Enabled = True
                     m_startTime = DateTime.Now.Ticks
                     m_stopTime = 0
                     m_bytesBroadcasted = 0
                     m_packetsPublished = 0
-                    m_processTimer.Enabled = True
                 Else
                     m_processTimer.Enabled = False
                     m_stopTime = DateTime.Now.Ticks
@@ -179,8 +183,8 @@ Namespace PDCstream
             ' Since a typical process rate is 30 samples per second do eveything you can to make sure this
             ' function executes as quickly as possible...
             Static sentDescriptor As Boolean
-            Static binaryLength As Integer
-            Static x, y, z As Integer
+            Dim binaryLength As Integer
+            Dim x, y, z As Integer
             Dim packetSent As Boolean
 
             ' Send a descriptor packet at the top of each minute...
@@ -216,8 +220,8 @@ Namespace PDCstream
                         For y = 0 To .Rows.Length - 1
                             With .Rows(y)
                                 If Not .Published Then
-                                    ' We only send non-published data-packets that are more than one second old
-                                    If m_dataQueue.DistanceFromBaseTime(.Timestamp) < 0 Then
+                                    ' We only send non-published data-packets that are older than specified lag time
+                                    If m_dataQueue.DistanceFromBaseTime(.Timestamp) <= -m_lagTime Then
                                         Try
                                             binaryLength = .BinaryLength
 
@@ -253,6 +257,8 @@ Namespace PDCstream
         Private Sub m_sweepTimer_Elapsed(ByVal sender As Object, ByVal e As System.Timers.ElapsedEventArgs) Handles m_sweepTimer.Elapsed
 
             If m_enabled Then
+                Dim unpublishedSamples As Integer
+
                 ' Start process timer if needed
                 If m_dataQueue.SampleCount > 0 And Not m_processing Then
                     Processing = True
@@ -264,10 +270,14 @@ Namespace PDCstream
                         ' to perform any last steps with the data before we remove it - in our case the DatAWare
                         ' Aggregator will pick this up and send the averaged sample to the permanent archive...
                         RaiseEvent SamplePublished(m_dataQueue(x))
+                    Else
+                        unpublishedSamples += 1
                     End If
                 Next
 
                 m_dataQueue.RemovePublishedSamples()
+
+                RaiseEvent UnpublishedSamples(unpublishedSamples)
             ElseIf m_processing Then
                 Processing = False
             End If
@@ -303,17 +313,38 @@ Namespace PDCstream
 
         Public ReadOnly Property Status() As String Implements IServiceComponent.Status
             Get
+                Dim pastNonPublished As Boolean
+
                 With New StringBuilder
                     .Append("  Concentration process is: " & IIf(Enabled, "Enabled", "Disabled") & vbCrLf)
                     .Append("  Current processing state: " & IIf(Processing, "Executing", "Idle") & vbCrLf)
                     .Append("    Total process run time: " & SecondsToText(RunTime) & vbCrLf)
                     .Append("          Discarded points: " & m_dataQueue.DiscardedPoints & vbCrLf)
                     .Append("         Current base time: " & m_dataQueue.BaseTime.ToString("dd-MMM-yyyy HH:mm:ss.fff") & vbCrLf)
+                    .Append("      Local time deviation: " & m_dataQueue.DistanceFromBaseTime(PDCstream.DataQueue.BaselinedTimestamp(DateTime.Now.ToUniversalTime())) & " seconds" & vbCrLf)
                     .Append("            Queued samples: " & m_dataQueue.SampleCount & vbCrLf)
+                    .Append("          Defined lag time: " & m_lagTime & " seconds" & vbCrLf)
                     .Append("    Data packets published: " & m_packetsPublished & vbCrLf)
                     .Append("  Data packet publish rate: " & (m_packetsPublished / RunTime).ToString("0.00") & " samples/sec" & vbCrLf)
                     .Append("            Broadcast rate: " & (m_bytesBroadcasted * 8 / RunTime / 1024 / 1024).ToString("0.00") & " mbps" & vbCrLf)
                     .Append("    Total broadcast volume: " & (m_bytesBroadcasted / 1024 / 1024).ToString("0.00") & " Mb" & vbCrLf)
+                    .Append(vbCrLf & "Sample Details: " & vbCrLf & vbCrLf)
+
+                    For x As Integer = 0 To m_dataQueue.SampleCount - 1
+                        .Append("     Sample " & x & " @ " & m_dataQueue(x).Timestamp.ToString("dd-MMM-yyyy HH:mm:ss") & ": ")
+
+                        If m_dataQueue(x).Published Then
+                            .Append("published, awaiting aggregation...")
+                        ElseIf pastNonPublished Then
+                            .Append("concentrating...")
+                        Else
+                            .Append("publishing...")
+                            pastNonPublished = True
+                        End If
+
+                        .Append(vbCrLf)
+                        .Append(vbCrLf)
+                    Next
 
                     Return .ToString()
                 End With
