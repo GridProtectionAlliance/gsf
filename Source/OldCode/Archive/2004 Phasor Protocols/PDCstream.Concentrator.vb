@@ -244,7 +244,7 @@ Namespace PDCstream
 
                                     ' Under normal circumstances, this should be all we need to try to send - so we won't
                                     ' waste cycles looking for anything else that we'll catch at the next pass...
-                                    packetSent = False
+                                    packetSent = True
                                     Exit For
                                 End If
                             End With
