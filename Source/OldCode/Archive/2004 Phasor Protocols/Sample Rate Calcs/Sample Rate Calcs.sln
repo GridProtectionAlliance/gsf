@@ -1,0 +1,30 @@
+Microsoft Visual Studio Solution File, Format Version 8.00
+Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "Sample Rate Calcs", "Sample Rate Calcs.vbproj", "{75777D15-07AF-4303-9A57-624C60641845}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SourceCodeControl) = preSolution
+		SccNumberOfProjects = 2
+		SccLocalPath0 = .
+		CanCheckoutShared = false
+		SolutionUniqueID = {F9466266-9307-4A08-B088-2DF29AD0B762}
+		SccProjectUniqueName1 = Sample\u0020Rate\u0020Calcs.vbproj
+		SccLocalPath1 = .
+		CanCheckoutShared = false
+	EndGlobalSection
+	GlobalSection(SolutionConfiguration) = preSolution
+		Debug = Debug
+		Release = Release
+	EndGlobalSection
+	GlobalSection(ProjectConfiguration) = postSolution
+		{75777D15-07AF-4303-9A57-624C60641845}.Debug.ActiveCfg = Debug|.NET
+		{75777D15-07AF-4303-9A57-624C60641845}.Debug.Build.0 = Debug|.NET
+		{75777D15-07AF-4303-9A57-624C60641845}.Release.ActiveCfg = Release|.NET
+		{75777D15-07AF-4303-9A57-624C60641845}.Release.Build.0 = Release|.NET
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+	EndGlobalSection
+	GlobalSection(ExtensibilityAddIns) = postSolution
+	EndGlobalSection
+EndGlobal

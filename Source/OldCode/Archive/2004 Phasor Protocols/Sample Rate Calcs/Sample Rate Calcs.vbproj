@@ -1,0 +1,170 @@
+<VisualStudioProject>
+    <VisualBasic
+        ProjectType = "Local"
+        ProductVersion = "7.10.3077"
+        SchemaVersion = "2.0"
+        ProjectGuid = "{75777D15-07AF-4303-9A57-624C60641845}"
+        SccProjectName = "SAK"
+        SccLocalPath = "SAK"
+        SccAuxPath = "SAK"
+        SccProvider = "SAK"
+    >
+        <Build>
+            <Settings
+                ApplicationIcon = "TVAService.ico"
+                AssemblyKeyContainerName = ""
+                AssemblyName = "Sample Rate Calcs"
+                AssemblyOriginatorKeyFile = ""
+                AssemblyOriginatorKeyMode = "None"
+                DefaultClientScript = "JScript"
+                DefaultHTMLPageLayout = "Grid"
+                DefaultTargetSchema = "IE50"
+                DelaySign = "false"
+                OutputType = "WinExe"
+                OptionCompare = "Binary"
+                OptionExplicit = "On"
+                OptionStrict = "Off"
+                RootNamespace = "SampleRateCalcs"
+                StartupObject = "SampleRateCalcs.UDPListener"
+            >
+                <Config
+                    Name = "Debug"
+                    BaseAddress = "285212672"
+                    ConfigurationOverrideFile = ""
+                    DefineConstants = ""
+                    DefineDebug = "true"
+                    DefineTrace = "true"
+                    DebugSymbols = "true"
+                    IncrementalBuild = "true"
+                    Optimize = "false"
+                    OutputPath = "bin\"
+                    RegisterForComInterop = "false"
+                    RemoveIntegerChecks = "false"
+                    TreatWarningsAsErrors = "false"
+                    WarningLevel = "1"
+                />
+                <Config
+                    Name = "Release"
+                    BaseAddress = "285212672"
+                    ConfigurationOverrideFile = ""
+                    DefineConstants = ""
+                    DefineDebug = "false"
+                    DefineTrace = "true"
+                    DebugSymbols = "false"
+                    IncrementalBuild = "false"
+                    Optimize = "true"
+                    OutputPath = "bin\"
+                    RegisterForComInterop = "false"
+                    RemoveIntegerChecks = "false"
+                    TreatWarningsAsErrors = "false"
+                    WarningLevel = "1"
+                />
+            </Settings>
+            <References>
+                <Reference
+                    Name = "System"
+                    AssemblyName = "System"
+                />
+                <Reference
+                    Name = "System.Data"
+                    AssemblyName = "System.Data"
+                />
+                <Reference
+                    Name = "System.Drawing"
+                    AssemblyName = "System.Drawing"
+                />
+                <Reference
+                    Name = "System.Windows.Forms"
+                    AssemblyName = "System.Windows.Forms"
+                />
+                <Reference
+                    Name = "System.XML"
+                    AssemblyName = "System.Xml"
+                />
+                <Reference
+                    Name = "TVA.Threading"
+                    AssemblyName = "TVA.Threading"
+                    HintPath = "\\opdat\opdat\CtrlSys\CodeLibrary\Builds\Release\Current\TVA.Threading.dll"
+                />
+                <Reference
+                    Name = "Infragistics.Win.UltraWinEditors.v3.2"
+                    AssemblyName = "Infragistics.Win.UltraWinEditors.v3.2"
+                    HintPath = "..\..\..\..\..\..\..\..\Program Files\Infragistics\NetAdvantage 2004 Volume 2\Windows Forms\Bin\Infragistics.Win.UltraWinEditors.v3.2.dll"
+                    AssemblyFolderKey = "hklm\infragistics.winassemblies.20042"
+                    Private = "True"
+                />
+                <Reference
+                    Name = "Infragistics.Win.v3.2"
+                    AssemblyName = "Infragistics.Win.v3.2"
+                    HintPath = "..\..\..\..\..\..\..\..\Program Files\Infragistics\NetAdvantage 2004 Volume 2\Windows Forms\Bin\Infragistics.Win.v3.2.dll"
+                    AssemblyFolderKey = "hklm\infragistics.winassemblies.20042"
+                    Private = "True"
+                />
+                <Reference
+                    Name = "Infragistics.Shared.v3.2"
+                    AssemblyName = "Infragistics.Shared.v3.2"
+                    HintPath = "..\..\..\..\..\..\..\..\Program Files\Infragistics\NetAdvantage 2004 Volume 2\Windows Forms\Bin\Infragistics.Shared.v3.2.dll"
+                    AssemblyFolderKey = "hklm\infragistics.winassemblies.20042"
+                    Private = "True"
+                />
+                <Reference
+                    Name = "System.Design"
+                    AssemblyName = "System.Design"
+                    HintPath = "..\..\..\..\..\..\..\..\WINDOWS\Microsoft.NET\Framework\v1.1.4322\System.Design.dll"
+                />
+                <Reference
+                    Name = "Microsoft.VisualBasic"
+                    AssemblyName = "Microsoft.VisualBasic"
+                    HintPath = "..\..\..\..\..\..\..\..\WINDOWS\Microsoft.NET\Framework\v1.1.4322\Microsoft.VisualBasic.dll"
+                />
+                <Reference
+                    Name = "TVA.Config"
+                    AssemblyName = "TVA.Config"
+                    HintPath = "\\opdat\opdat\CtrlSys\CodeLibrary\Builds\Release\Current\TVA.Config.dll"
+                />
+                <Reference
+                    Name = "TVA.Forms"
+                    AssemblyName = "TVA.Forms"
+                    HintPath = "\\opdat\opdat\CtrlSys\CodeLibrary\Builds\Release\Current\TVA.Forms.dll"
+                />
+            </References>
+            <Imports>
+                <Import Namespace = "Microsoft.VisualBasic" />
+                <Import Namespace = "System" />
+                <Import Namespace = "System.Collections" />
+                <Import Namespace = "System.Data" />
+                <Import Namespace = "System.Drawing" />
+                <Import Namespace = "System.Diagnostics" />
+                <Import Namespace = "System.Windows.Forms" />
+            </Imports>
+        </Build>
+        <Files>
+            <Include>
+                <File
+                    RelPath = "AssemblyInfo.vb"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "licenses.licx"
+                    BuildAction = "EmbeddedResource"
+                />
+                <File
+                    RelPath = "SampleRateCalcs.vb"
+                    SubType = "Form"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "SampleRateCalcs.resx"
+                    DependentUpon = "SampleRateCalcs.vb"
+                    BuildAction = "EmbeddedResource"
+                />
+                <File
+                    RelPath = "TVAService.ico"
+                    BuildAction = "Content"
+                />
+            </Include>
+        </Files>
+    </VisualBasic>
+</VisualStudioProject>
+
