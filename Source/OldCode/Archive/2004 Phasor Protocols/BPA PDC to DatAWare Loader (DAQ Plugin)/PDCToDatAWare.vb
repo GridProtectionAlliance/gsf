@@ -27,7 +27,7 @@ Imports TVA.Shared.DateTime
 Imports TVA.Database.Common
 Imports TVA.Config.Common
 'Imports TVA.ESO.Ssam
-Imports BpaPdcLoader.DatAWare
+Imports TVA.DatAWare
 
 Namespace PDCToDatAWare
 
@@ -144,6 +144,7 @@ Namespace PDCToDatAWare
         Private startTime As Long
         Private stopTime As Long
         Private WithEvents processTimer As Timers.Timer
+        Public Instance As Integer
 
         Public Sub New(ByVal timeZone As String)
 
@@ -333,10 +334,11 @@ Namespace PDCToDatAWare
         Public ReadOnly Property Status() As String
             Get
                 With New StringBuilder
+                    .Append("Converter Status for DAQ Instance " & Instance & ":" & vbCrLf)
                     .Append("  Current processing state: " & IIf(Processing, "Executing", "Idle") & vbCrLf)
                     .Append("    Total process run time: " & SecondsToText(RunTime) & vbCrLf)
-                    .Append("    PDC reader config file: " & Variables("PDCDataReader.ConfigFile") & vbCrLf)
-                    .Append("      PDC reader data port: " & Variables("PDCDataReader.ListenPort") & vbCrLf)
+                    .Append("      Listening on IP port: " & Variables("PDCDataReader.ListenPort" & Instance) & vbCrLf)
+                    .Append("          BPA PDC ini file: " & Variables("PDCDataReader.ConfigFile" & Instance) & vbCrLf)
                     .Append("      Point index csv file: " & Variables("DatAWare.PointListFile") & vbCrLf)
                     .Append("        Analog point count: " & ArrayLength(analogIndices, -1) & vbCrLf)
                     .Append("       Digital point count: " & ArrayLength(digitalIndices, -3) & vbCrLf)

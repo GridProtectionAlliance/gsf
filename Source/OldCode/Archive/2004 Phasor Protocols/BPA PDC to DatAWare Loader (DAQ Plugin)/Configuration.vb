@@ -6,6 +6,7 @@ Imports TVA.Shared.FilePath
 
 <ComVisible(False)> _
 Public Class Configuration
+
     Inherits System.Windows.Forms.Form
 
 #Region " Windows Form Designer generated code "
@@ -214,18 +215,37 @@ Public Class Configuration
 
 #End Region
 
+    Private m_instance As Integer
+
     Private Sub Configuration_Load(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles MyBase.Load
 
         For Each tz As Win32TimeZone In TimeZones.GetTimeZones()
             timeZone.Items.Add(tz.StandardName)
         Next
 
-        timeZone.SelectedItem = Variables("DatAWare.TimeZone")
-        pointListFile.Text = Variables("DatAWare.PointListFile")
-        pdcConfigFile.Text = Variables("PDCDataReader.ConfigFile")
-        pdcDataPort.Text = Variables("PDCDataReader.ListenPort")
+    End Sub
+
+    Private Sub Configuration_VisibleChanged(ByVal sender As Object, ByVal e As System.EventArgs) Handles MyBase.VisibleChanged
+
+        If Me.Visible Then
+            Variables.Refresh()
+            timeZone.SelectedItem = Variables("DatAWare.TimeZone")
+            pointListFile.Text = Variables("DatAWare.PointListFile")
+            pdcConfigFile.Text = Variables("PDCDataReader.ConfigFile" & m_instance)
+            pdcDataPort.Text = Variables("PDCDataReader.ListenPort" & m_instance)
+        End If
 
     End Sub
+
+    Public Property Instance() As Integer
+        Get
+            Return m_instance
+        End Get
+        Set(ByVal Value As Integer)
+            m_instance = Value
+            Me.Text &= " - Instance " & m_instance
+        End Set
+    End Property
 
     Protected Overrides Sub OnClosing(ByVal e As System.ComponentModel.CancelEventArgs)
 
@@ -248,8 +268,8 @@ Public Class Configuration
 
             Variables("DatAWare.TimeZone") = timeZone.SelectedItem
             Variables("DatAWare.PointListFile") = pointListFile.Text
-            Variables("PDCDataReader.ConfigFile") = pdcConfigFile.Text
-            Variables("PDCDataReader.ListenPort") = pdcDataPort.Text
+            Variables("PDCDataReader.ConfigFile" & m_instance) = pdcConfigFile.Text
+            Variables("PDCDataReader.ListenPort" & m_instance) = pdcDataPort.Text
             Variables.Save()
 
             Me.Hide()

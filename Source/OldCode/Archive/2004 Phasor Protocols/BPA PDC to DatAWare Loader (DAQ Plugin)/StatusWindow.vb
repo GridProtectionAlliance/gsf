@@ -119,6 +119,12 @@ Public Class StatusWindow
 
     End Sub
 
+    Public WriteOnly Property Instance() As Integer
+        Set(ByVal Value As Integer)
+            Me.Text = "[Instance " & Value & "] " & Me.Text
+        End Set
+    End Property
+
     Protected Overrides Sub OnClosing(ByVal e As System.ComponentModel.CancelEventArgs)
 
         ' We don't ever close this form, we just hide it...
