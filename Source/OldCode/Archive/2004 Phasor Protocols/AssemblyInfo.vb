@@ -30,7 +30,7 @@ Imports System.Runtime.InteropServices
 <Assembly: AssemblyCompany("TVA")> 
 <Assembly: AssemblyProduct("TVA Windows Service Template Fri Nov 5 09:43:23 EST 2004")> 
 <Assembly: AssemblyCopyright("Copyright © 2004")> 
-<Assembly: AssemblyTrademark("")> 
+<Assembly: AssemblyTrademark("JRC")> 
 <Assembly: CLSCompliant(True)> 
 
 'The following GUID is for the ID of the typelib if this project is exposed to COM
