@@ -106,6 +106,7 @@ Public Class IEEE1344Listener
         Dim Title4 As Dundas.Charting.WinControl.Title = New Dundas.Charting.WinControl.Title
         Dim Title5 As Dundas.Charting.WinControl.Title = New Dundas.Charting.WinControl.Title
         Dim Title6 As Dundas.Charting.WinControl.Title = New Dundas.Charting.WinControl.Title
+        Dim Title7 As Dundas.Charting.WinControl.Title = New Dundas.Charting.WinControl.Title
         Dim configurationAppSettings As System.Configuration.AppSettingsReader = New System.Configuration.AppSettingsReader
         Dim resources As System.Resources.ResourceManager = New System.Resources.ResourceManager(GetType(IEEE1344Listener))
         Me.DataFrame = New System.Windows.Forms.Label
@@ -309,6 +310,9 @@ Public Class IEEE1344Listener
         ChartArea1.AxisY2.MinorGrid.Enabled = False
         ChartArea1.AxisY2.MinorTickMark.Enabled = False
         ChartArea1.BorderWidth = 0
+        ChartArea1.InnerPlotPosition.Auto = False
+        ChartArea1.InnerPlotPosition.Height = 100.0!
+        ChartArea1.InnerPlotPosition.Width = 100.0!
         ChartArea1.Name = "Frequency"
         ChartArea1.Position.Auto = False
         ChartArea1.Position.Height = 30.0!
@@ -399,13 +403,11 @@ Public Class IEEE1344Listener
         Me.DataChart.ChartAreas.Add(ChartArea2)
         Legend1.AutoFitText = False
         Legend1.Enabled = False
-        Legend1.LegendStyle = Dundas.Charting.WinControl.LegendStyle.Table
         Legend1.Name = "Default"
         Legend2.AutoFitText = False
         Legend2.BorderWidth = 0
         Legend2.DockInsideChartArea = False
         Legend2.DockToChartArea = "Phasors"
-        Legend2.EquallySpacedItems = True
         Legend2.Font = New System.Drawing.Font("Lucida Console", 7.25!)
         Legend2.Name = "PhasorLegend"
         Me.DataChart.Legends.Add(Legend1)
@@ -429,39 +431,75 @@ Public Class IEEE1344Listener
         Me.DataChart.TabStop = False
         Title1.DockOffset = -1
         Title1.Font = New System.Drawing.Font("Verdana", 8.25!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Title1.Position.Auto = False
+        Title1.Position.Height = 4.740724!
+        Title1.Position.Width = 94.0!
+        Title1.Position.X = 3.0!
+        Title1.Position.Y = 2.0!
         Title1.Text = "PMU ID"
         Title2.Docking = Dundas.Charting.WinControl.Docking.Left
         Title2.DockOffset = -4
         Title2.DockToChartArea = "Frequency"
         Title2.Font = New System.Drawing.Font("Verdana", 8.0!)
+        Title2.Position.Auto = False
+        Title2.Position.Height = 28.2!
+        Title2.Position.Width = 2.66236!
+        Title2.Position.X = 0.4000001!
+        Title2.Position.Y = 10.9!
         Title2.Text = "Freq"
         Title3.Docking = Dundas.Charting.WinControl.Docking.Left
         Title3.DockOffset = -5
         Title3.DockToChartArea = "Phasors"
         Title3.Font = New System.Drawing.Font("Verdana", 8.0!)
+        Title3.Position.Auto = False
+        Title3.Position.Height = 51.7!
+        Title3.Position.Width = 2.66236!
+        Title3.Position.X = 0.6500001!
+        Title3.Position.Y = 44.15!
         Title3.Text = "Phase Angles"
         Title4.Alignment = System.Drawing.ContentAlignment.BottomRight
         Title4.Docking = Dundas.Charting.WinControl.Docking.Bottom
         Title4.DockInsideChartArea = False
         Title4.DockOffset = 2
         Title4.Font = New System.Drawing.Font("Verdana", 7.25!)
+        Title4.Position.Auto = False
+        Title4.Position.Height = 4.16609!
+        Title4.Position.Width = 94.0!
+        Title4.Position.X = 3.0!
+        Title4.Position.Y = 94.83391!
         Title4.Text = "Vars: unavailable"
         Title5.Alignment = System.Drawing.ContentAlignment.BottomRight
         Title5.Docking = Dundas.Charting.WinControl.Docking.Bottom
         Title5.DockInsideChartArea = False
         Title5.DockOffset = 4
         Title5.Font = New System.Drawing.Font("Verdana", 7.25!)
+        Title5.Position.Auto = False
+        Title5.Position.Height = 4.16609!
+        Title5.Position.Width = 94.0!
+        Title5.Position.X = 3.0!
+        Title5.Position.Y = 89.66782!
         Title5.Text = "Power: unavailable"
+        Title6.Alignment = System.Drawing.ContentAlignment.BottomRight
         Title6.Docking = Dundas.Charting.WinControl.Docking.Bottom
-        Title6.DockOffset = -50
-        Title6.Font = New System.Drawing.Font("Verdana", 9.75!, System.Drawing.FontStyle.Italic, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Title6.Text = "Initializing..."
+        Title6.DockOffset = 6
+        Title6.Font = New System.Drawing.Font("Verdana", 7.25!)
+        Title6.Position.Auto = False
+        Title6.Position.Height = 4.16609!
+        Title6.Position.Width = 94.0!
+        Title6.Position.X = 3.0!
+        Title6.Position.Y = 84.50172!
+        Title6.Text = "Phasors Not Selected"
+        Title7.Alignment = System.Drawing.ContentAlignment.BottomCenter
+        Title7.DockOffset = 35
+        Title7.Font = New System.Drawing.Font("Verdana", 9.25!, System.Drawing.FontStyle.Italic)
+        Title7.Text = "Initializing..."
         Me.DataChart.Titles.Add(Title1)
         Me.DataChart.Titles.Add(Title2)
         Me.DataChart.Titles.Add(Title3)
         Me.DataChart.Titles.Add(Title4)
         Me.DataChart.Titles.Add(Title5)
         Me.DataChart.Titles.Add(Title6)
+        Me.DataChart.Titles.Add(Title7)
         '
         'TextErrorListener
         '
@@ -740,8 +778,8 @@ Public Class IEEE1344Listener
         With DataChart
             m_frequencyTitle = .Titles(1).Text
             m_phasorTitle = .Titles(2).Text
-            m_initializingTitle = .Titles(5)
-            .Titles.RemoveAt(5)
+            m_initializingTitle = .Titles(6)
+            .Titles.RemoveAt(6)
         End With
 
         Variables.Save()
@@ -845,6 +883,7 @@ Public Class IEEE1344Listener
                     .Titles(2).Text = m_phasorTitle
                     .Titles(3).Text = "Vars: unavailable"
                     .Titles(4).Text = "Power: unavailable"
+                    .Titles(5).Text = "Phasors Not Selected"
 
                     ' Clear all existing data
                     For x As Integer = .Series.Count - 1 To 0 Step -1
@@ -931,8 +970,8 @@ Public Class IEEE1344Listener
                 End Select
             Next
 
-            If VoltagePhasor.SelectedIndex = -1 And VoltagePhasor.Items.Count > 0 Then VoltagePhasor.SelectedIndex = 0
-            If CurrentPhasor.SelectedIndex = -1 And CurrentPhasor.Items.Count > 0 Then CurrentPhasor.SelectedIndex = 0
+            'If VoltagePhasor.SelectedIndex = -1 And VoltagePhasor.Items.Count > 0 Then VoltagePhasor.SelectedIndex = 0
+            'If CurrentPhasor.SelectedIndex = -1 And CurrentPhasor.Items.Count > 0 Then CurrentPhasor.SelectedIndex = 0
         End With
 
     End Sub
@@ -1048,6 +1087,7 @@ Public Class IEEE1344Listener
                     Else
                         .Titles(3).Text = "Vars: unavailable"
                         .Titles(4).Text = "Power: unavailable"
+                        .Titles(5).Text = "Phasors Not Selected"
                     End If
 
                     For x = 0 To phasors - 1
@@ -1055,7 +1095,7 @@ Public Class IEEE1344Listener
                             .LegendText = _
                                 VB.Left(m_configFile.PhasorDefinitions(x).Label, 12).PadRight(13) & _
                                 IIf(m_configFile.PhasorDefinitions(x).Type = IEEE1344.PhasorType.Voltage, _
-                                    Convert.ToInt32(frame.PhasorValues(x).Magnitude / 1000) & "KV", _
+                                    Convert.ToInt32((frame.PhasorValues(x).Magnitude * Math.Sqrt(3)) / 1000) & "KV", _
                                     Convert.ToInt32(frame.PhasorValues(x).Magnitude) & "A")
                         End With
                     Next
@@ -1070,7 +1110,7 @@ Public Class IEEE1344Listener
 
                 If minTicks > 0 And m_frameCount Mod 4 = 0 Then
                     ' Remove "Initializing" title...                    
-                    If .Titles.Count > 5 Then .Titles.RemoveAt(5)
+                    If .Titles.Count > 6 Then .Titles.RemoveAt(6)
                     .Titles(1).Text = m_frequencyTitle & " / " & ((maxTicks - minTicks + 1) / 1000L).ToString("0.0") & "s"
 
                     With .ChartAreas("Frequency")
@@ -1137,6 +1177,7 @@ Public Class IEEE1344Listener
 
         DataChart.Titles(3).Text = "Vars: calculating"
         DataChart.Titles(4).Text = "Power: calculating"
+        DataChart.Titles(5).Text = VoltagePhasor.Text & " / " & CurrentPhasor.Text
 
     End Sub
 
@@ -1144,6 +1185,7 @@ Public Class IEEE1344Listener
 
         DataChart.Titles(3).Text = "Vars: calculating"
         DataChart.Titles(4).Text = "Power: calculating"
+        DataChart.Titles(5).Text = VoltagePhasor.Text & " / " & CurrentPhasor.Text
 
     End Sub
 
