@@ -186,7 +186,7 @@ Namespace PDCstream
             Static sentDescriptor As Boolean
             Dim binaryLength As Integer
             Dim x, y, z As Integer
-            'Dim packetSent As Boolean
+            Dim packetSent As Boolean
 
             ' Send a descriptor packet at the top of each minute...
             With DateTime.Now
@@ -241,16 +241,16 @@ Namespace PDCstream
                                         End Try
                                     End If
 
-                                    '' Under normal circumstances, this should be all we need to try to send - so we won't
-                                    '' waste cycles looking for anything else that we'll catch at the next pass...
-                                    'packetSent = True
-                                    'Exit For
+                                    ' Under normal circumstances, this should be all we need to try to send - so we won't
+                                    ' waste cycles looking for anything else that we'll catch at the next pass...
+                                    packetSent = True
+                                    Exit For
                                 End If
                             End With
                         Next
                     End If
                 End With
-                'If packetSent Then Exit For
+                If packetSent Then Exit For
             Next
 
         End Sub
