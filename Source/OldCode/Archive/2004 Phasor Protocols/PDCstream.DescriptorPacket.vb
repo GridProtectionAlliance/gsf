@@ -73,21 +73,21 @@ Namespace PDCstream
 
                 buffer(0) = SyncByte
                 buffer(1) = PacketFlag
-                EndianOrder.SwapCopy(BitConverter.GetBytes(Convert.ToUInt16(buffer.Length \ 2)), 0, buffer, 2, 2)
+                EndianOrder.SwapCopy(BitConverter.GetBytes(Convert.ToInt16(buffer.Length \ 2)), 0, buffer, 2, 2)
                 buffer(4) = VersionFlag
                 buffer(5) = RevisionNumber
-                EndianOrder.SwapCopy(BitConverter.GetBytes(Convert.ToUInt16(m_configFile.SampleRate)), 0, buffer, 6, 2)
+                EndianOrder.SwapCopy(BitConverter.GetBytes(Convert.ToInt16(m_configFile.SampleRate)), 0, buffer, 6, 2)
                 EndianOrder.SwapCopy(BitConverter.GetBytes(Convert.ToUInt32(RowLength)), 0, buffer, 8, 4)
-                EndianOrder.SwapCopy(BitConverter.GetBytes(Convert.ToUInt16(m_packetsPerSample)), 0, buffer, 12, 2)
-                EndianOrder.SwapCopy(BitConverter.GetBytes(Convert.ToUInt16(m_configFile.PMUCount)), 0, buffer, 14, 2)
+                EndianOrder.SwapCopy(BitConverter.GetBytes(Convert.ToInt16(m_packetsPerSample)), 0, buffer, 12, 2)
+                EndianOrder.SwapCopy(BitConverter.GetBytes(Convert.ToInt16(m_configFile.PMUCount)), 0, buffer, 14, 2)
                 index = 16
 
                 For x As Integer = 0 To m_configFile.PMUCount - 1
                     With m_configFile.PMU(x)
                         ' PMU ID bytes are encoded left-to-right...
                         Array.Copy(Text.Encoding.ASCII.GetBytes(Left(Trim(.ID).PadRight(4), 4)), 0, buffer, index, 4)
-                        EndianOrder.SwapCopy(BitConverter.GetBytes(Convert.ToUInt16(0)), 0, buffer, index + 4, 2)
-                        EndianOrder.SwapCopy(BitConverter.GetBytes(Convert.ToUInt16(.Offset)), 0, buffer, index + 6, 2)
+                        EndianOrder.SwapCopy(BitConverter.GetBytes(Convert.ToInt16(0)), 0, buffer, index + 4, 2)
+                        EndianOrder.SwapCopy(BitConverter.GetBytes(Convert.ToInt16(.Offset)), 0, buffer, index + 6, 2)
                     End With
                     index += 8
                 Next

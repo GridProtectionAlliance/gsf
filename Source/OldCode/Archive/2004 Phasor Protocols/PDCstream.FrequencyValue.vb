@@ -22,32 +22,32 @@ Namespace PDCstream
     Public Class FrequencyValue
 
         Private m_frequencyDefinition As FrequencyDefinition
-        Private m_frequency As UInt16
-        Private m_dfdt As UInt16
+        Private m_frequency As Int16
+        Private m_dfdt As Int16
 
         Public Const BinaryLength As Integer = 4
 
         Public Shared ReadOnly Property Empty(ByVal frequencyDefinition As FrequencyDefinition) As FrequencyValue
             Get
-                Return New FrequencyValue(frequencyDefinition, Convert.ToUInt16(0), Convert.ToUInt16(0))
+                Return New FrequencyValue(frequencyDefinition, 0, 0)
             End Get
         End Property
 
         Public Shared Function CreateFromScaledValues(ByVal frequencyDefinition As FrequencyDefinition, ByVal frequency As Double, ByVal dfdt As Double) As FrequencyValue
 
             With frequencyDefinition
-                Return CreateFromUnscaledValues(frequencyDefinition, Convert.ToUInt16((frequency - .Offset) * .Scale), Convert.ToUInt16((dfdt - .DfDtOffset) * .DfDtScale))
+                Return CreateFromUnscaledValues(frequencyDefinition, (frequency - .Offset) * .Scale, (dfdt - .DfDtOffset) * .DfDtScale)
             End With
 
         End Function
 
-        Public Shared Function CreateFromUnscaledValues(ByVal frequencyDefinition As FrequencyDefinition, ByVal frequency As UInt16, ByVal dfdt As UInt16) As FrequencyValue
+        Public Shared Function CreateFromUnscaledValues(ByVal frequencyDefinition As FrequencyDefinition, ByVal frequency As Int16, ByVal dfdt As Int16) As FrequencyValue
 
             Return New FrequencyValue(frequencyDefinition, frequency, dfdt)
 
         End Function
 
-        Private Sub New(ByVal frequencyDefinition As FrequencyDefinition, ByVal frequency As UInt16, ByVal dfdt As UInt16)
+        Private Sub New(ByVal frequencyDefinition As FrequencyDefinition, ByVal frequency As Int16, ByVal dfdt As Int16)
 
             m_frequencyDefinition = frequencyDefinition
             m_frequency = frequency
@@ -61,72 +61,47 @@ Namespace PDCstream
             End Get
         End Property
 
-        Public ReadOnly Property Frequency() As UInt16
+        Public ReadOnly Property Frequency() As Int16
             Get
                 Return m_frequency
             End Get
         End Property
 
-        Public ReadOnly Property DfDt() As UInt16
+        Public ReadOnly Property DfDt() As Int16
             Get
                 Return m_dfdt
-            End Get
-        End Property
-
-        ' In .NET, unsigned ints aren't typically usable directly in equations, so we provide these functions to provide usable values
-        Public ReadOnly Property UnscaledFrequency() As Double
-            Get
-                Return Convert.ToDouble(m_frequency)
-            End Get
-        End Property
-
-        Public ReadOnly Property UnscaledDfDt() As Double
-            Get
-                Return Convert.ToDouble(m_dfdt)
             End Get
         End Property
 
         Public Property ScaledFrequency() As Double
             Get
                 With m_frequencyDefinition
-                    Return UnscaledFrequency / .Scale + .Offset
+                    Return m_frequency / .Scale + .Offset
                 End With
             End Get
             Set(ByVal Value As Double)
-                Try
-                    With m_frequencyDefinition
-                        m_frequency = Convert.ToUInt16((Value - .Offset) * .Scale)
-                    End With
-                Catch ex As Exception
-                    ' TODO: remove debug code...
-                    Debug.WriteLine("PDCstream.FrequencyValue.ScaledFrequency exception: " & ex.Message)
-                    Debug.WriteLine("         Value = " & Value)
-                End Try
+                With m_frequencyDefinition
+                    m_frequency = (Value - .Offset) * .Scale
+                End With
             End Set
         End Property
 
         Public Property ScaledDfDt() As Double
             Get
                 With m_frequencyDefinition
-                    Return UnscaledDfDt / .DfDtScale + .DfDtOffset
+                    Return m_dfdt / .DfDtScale + .DfDtOffset
                 End With
             End Get
             Set(ByVal Value As Double)
-                Try
-                    With m_frequencyDefinition
-                        m_dfdt = Convert.ToUInt16((Value - .DfDtOffset) * .DfDtScale)
-                    End With
-                Catch ex As Exception
-                    ' TODO: remove debug code...
-                    Debug.WriteLine("PDCstream.FrequencyValue.ScaledDfDt exception: " & ex.Message)
-                    Debug.WriteLine("         Value = " & Value)
-                End Try
+                With m_frequencyDefinition
+                    m_dfdt = (Value - .DfDtOffset) * .DfDtScale
+                End With
             End Set
         End Property
 
         Public ReadOnly Property IsEmpty() As Boolean
             Get
-                Return (UnscaledFrequency = 0 And UnscaledDfDt = 0)
+                Return (m_frequency = 0 And m_dfdt = 0)
             End Get
         End Property
 

@@ -51,6 +51,7 @@ Namespace DatAWare
         Private m_enabled As Boolean
         Private m_packetsReceived As Long
         Private m_processedEvents As Long
+        Private m_activeThreads As Integer
 
 #Region " Setup and Class Definition Code "
 
@@ -137,33 +138,41 @@ Namespace DatAWare
         ' This method is expected to be run on an independent thread...
         Private Sub ProcessEventBuffer(ByVal stateInfo As Object)
 
-            Dim eventData As DataPacket = DirectCast(stateInfo, DataPacket)
-            Dim dataPoint As PMUDataPoint
+            Try
+                m_activeThreads += 1
 
-            ' Parse events out of data packet and create a new PMU data point from timestamp and value
-            For packetIndex As Integer = 0 To eventData.EventBuffer.Length - 1 Step StandardEvent.BinaryLength
-                If packetIndex + StandardEvent.BinaryLength < eventData.EventBuffer.Length Then
-                    With New StandardEvent(eventData.EventBuffer, packetIndex)
-                        ' Make sure we have a point defined for this value
-                        If Points(eventData.PlantCode).GetPoint(.DatabaseIndex, dataPoint) Then
-                            dataPoint.Timestamp = .TTag.ToDateTime
-                            dataPoint.Value = .Value
+                Dim eventData As DataPacket = DirectCast(stateInfo, DataPacket)
+                Dim dataPoint As PMUDataPoint
 
-                            ' If the new value is received on change, we'll update the samples in our current
-                            ' data queue to use latest value...
-                            If dataPoint.ReceivedOnChange Then
-                                Points(eventData.PlantCode)(.DatabaseIndex) = dataPoint
-                                UpdateReceivedOnChangePoints(dataPoint)
+                ' Parse events out of data packet and create a new PMU data point from timestamp and value
+                For packetIndex As Integer = 0 To eventData.EventBuffer.Length - 1 Step StandardEvent.BinaryLength
+                    If packetIndex + StandardEvent.BinaryLength < eventData.EventBuffer.Length Then
+                        With New StandardEvent(eventData.EventBuffer, packetIndex)
+                            ' Make sure we have a point defined for this value
+                            If Points(eventData.PlantCode).GetPoint(.DatabaseIndex, dataPoint) Then
+                                dataPoint.Timestamp = .TTag.ToDateTime
+                                dataPoint.Value = .Value
+
+                                ' If the new value is received on change, we'll update the samples in our current
+                                ' data queue to use latest value...
+                                If dataPoint.ReceivedOnChange Then
+                                    Points(eventData.PlantCode)(.DatabaseIndex) = dataPoint
+                                    UpdateReceivedOnChangePoints(dataPoint)
+                                End If
+
+                                ' Add this point value to the PDC concentrator data queue
+                                m_dataQueue.SortDataPoint(dataPoint)
                             End If
+                        End With
 
-                            ' Add this point value to the PDC concentrator data queue
-                            m_dataQueue.SortDataPoint(dataPoint)
-                        End If
-                    End With
-
-                    m_processedEvents += 1
-                End If
-            Next
+                        m_processedEvents += 1
+                    End If
+                Next
+            Catch
+                Throw
+            Finally
+                m_activeThreads -= 1
+            End Try
 
         End Sub
 
@@ -253,6 +262,7 @@ Namespace DatAWare
                     .Append("  Queue is currently: " & IIf(Enabled, "Enabled", "Disabled") & vbCrLf)
                     .Append("    Packets received: " & m_packetsReceived & vbCrLf)
                     .Append("    Processed events: " & m_processedEvents & vbCrLf)
+                    .Append("      Active threads: " & m_activeThreads & vbCrLf)
                     .Append("   Referenced points: " & vbCrLf & vbCrLf)
 
                     For Each de As DictionaryEntry In m_serverPoints

@@ -52,6 +52,8 @@ Namespace PDCstream
             DataInvalid = Bit1
         End Enum
 
+        ' NOTE: The XOR checksum is the only multi-byte field in the PDC stream that is *not* big-endian encoded, it actually
+        ' ends up in the stream as little-endian encoded - so don't swap the bytes around when you include this...
         Public Shared Function XorCheckSum(ByVal data As Byte(), ByVal startIndex As Integer, ByVal length As Integer) As Int16
 
             Dim sum As Int16
@@ -62,6 +64,16 @@ Namespace PDCstream
             Next
 
             Return sum
+
+        End Function
+
+        Public Shared Function ParseInt16(ByVal source As Double) As Int16
+
+            Try
+                Return BitConverter.ToInt16(BitConverter.GetBytes(Convert.ToUInt16(source)), 0)
+            Catch
+                Return 0
+            End Try
 
         End Function
 

@@ -16,6 +16,7 @@
 '***********************************************************************
 
 Imports System.Runtime.CompilerServices
+Imports DatAWarePDC.PDCstream.Common
 
 Namespace PDCstream
 
@@ -118,59 +119,34 @@ Namespace PDCstream
                     Else
                         ' We've found the right sample for this data, so lets access the proper data cell by first calculating the
                         ' proper sample index (i.e., the row) - we can then directly access the correct cell using the PMU index
-                        Dim rowIndex As Integer = Math.Floor((.Timestamp.Millisecond + 1) / m_sampleRate)
+                        Dim dataCell As PMUDataCell = sample.Rows(Math.Floor((.Timestamp.Millisecond + 1) / m_sampleRate)).Cells(.PMU.Index)
 
-                        If rowIndex < 0 Or rowIndex >= sample.Rows.Length Then
-                            ' TODO: remove debug code...
-                            Debug.WriteLine("PDCstream.DataQueue.SortDataPoint: Invalid row index " & rowIndex & " calculated from Math.Floor (" & .Timestamp.Millisecond & " + 1) / " & m_sampleRate)
-                        Else
-                            Dim dataCell As PMUDataCell = sample.Rows(rowIndex).Cells(.PMU.Index)
-
-                            Select Case .Type
-                                Case PointType.PhasorAngle
-                                    If .Index < 0 Or .Index >= dataCell.PhasorValues.Length Then
-                                        ' TODO: remove debug code...
-                                        Debug.WriteLine("PDCstream.DataQueue.SortDataPoint: Invalid phasor value index " & .Index & " encountered for " & .PMU.ID & "-PhasorAngle")
-                                    Else
-                                        dataCell.PhasorValues(.Index).Angle = .Value
-                                    End If
-                                Case PointType.PhasorMagnitude
-                                    If .Index < 0 Or .Index >= dataCell.PhasorValues.Length Then
-                                        ' TODO: remove debug code...
-                                        Debug.WriteLine("PDCstream.DataQueue.SortDataPoint: Invalid phasor value index " & .Index & " encountered for " & .PMU.ID & "-PhasorMagnitude")
-                                    Else
-                                        dataCell.PhasorValues(.Index).Magnitude = .Value
-                                    End If
-                                Case PointType.Frequency
-                                    dataCell.FrequencyValue.ScaledFrequency = .Value
-                                Case PointType.DfDt
-                                    dataCell.FrequencyValue.ScaledDfDt = .Value
-                                Case PointType.DigitalValue
-                                    Try
-                                        If .Index = 0 Then
-                                            dataCell.Digital0 = Convert.ToUInt16(.Value)
-                                        Else
-                                            dataCell.Digital1 = Convert.ToUInt16(.Value)
-                                        End If
-                                    Catch ex As Exception
-                                        ' TODO: remove debug code...
-                                        Debug.WriteLine("PDCstream.DataQueue.SortDataPoint: Failed to set digital value from " & .Value & ": " & ex.Message)
-                                    End Try
-                                Case PointType.StatusFlags
-                                    Try
-                                        dataCell.StatusFlags = Convert.ToUInt16(.Value)
-                                    Catch ex As Exception
-                                        ' TODO: remove debug code...
-                                        Debug.WriteLine("PDCstream.DataQueue.SortDataPoint: Failed to set status flags from " & .Value & ": " & ex.Message)
-                                    End Try
-                            End Select
-                        End If
+                        Select Case .Type
+                            Case PointType.PhasorAngle
+                                dataCell.PhasorValues(.Index).Angle = .Value
+                            Case PointType.PhasorMagnitude
+                                dataCell.PhasorValues(.Index).Magnitude = .Value
+                            Case PointType.Frequency
+                                dataCell.FrequencyValue.ScaledFrequency = .Value
+                            Case PointType.DfDt
+                                dataCell.FrequencyValue.ScaledDfDt = .Value
+                            Case PointType.DigitalValue
+                                If .Index = 0 Then
+                                    dataCell.Digital0 = ParseInt16(.Value)
+                                Else
+                                    dataCell.Digital1 = ParseInt16(.Value)
+                                End If
+                            Case PointType.StatusFlags
+                                dataCell.StatusFlags = ParseInt16(.Value)
+                        End Select
                     End If
                 End With
             Catch ex As Exception
                 ' We don't want to pass-up any data errors from here because they would bubble as errors in the DatAWare listener,
-                ' so we just log the exceptions and post them to any remote clients
-                RaiseEvent DataError("Error sorting data point: " & ex.Message)
+                ' so we just raise event so any clients can log the exceptions or post them to remote clients
+                With dataPoint
+                    RaiseEvent DataError("Error sorting data point " & .PMU.ID & "-" & [Enum].GetName(GetType(PointType), .Type) & .Index & "@" & .Timestamp.ToString("dd-MMM-yyyy HH:mm:ss.fff") & ": " & ex.Message)
+                End With
             End Try
 
         End Sub

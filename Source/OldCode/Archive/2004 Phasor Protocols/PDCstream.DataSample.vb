@@ -17,7 +17,11 @@
 
 Namespace PDCstream
 
-    ' This class represents a complete sample of data for a given second - a time indexed sub-second set of PMU data rows
+    ' This class represents a complete sample of data for a given second - a time indexed sub-second set of PMU data rows.
+    ' Don't confuse this with a DataPacket even though the config file defines a "sample rate".  The sample rate actually
+    ' defines how many DataPacket's (i.e., rows) there will be in each sample.  The sample rate defined in the config file
+    ' is really the "DataPacket" rate.  Note also that the nomenclature I used for the class names here match what is in
+    ' the PDC stream specification to help make things easier to understand.
     Public Class DataSample
 
         Implements IComparable

@@ -27,11 +27,11 @@ Namespace PDCstream
         Private m_sampleNumber As Integer
         Private m_flags As ChannelFlags
 
-        Public StatusFlags As UInt16
+        Public StatusFlags As Int16
         Public PhasorValues As PhasorValue()
         Public FrequencyValue As FrequencyValue
-        Public Digital0 As UInt16
-        Public Digital1 As UInt16
+        Public Digital0 As Int16
+        Public Digital1 As Int16
 
         Public Sub New(ByVal pmuDefinition As PMUDefinition, ByVal sampleNumber As Integer)
 
@@ -217,7 +217,7 @@ Namespace PDCstream
                 buffer(1) = Convert.ToByte(m_pmuDefinition.SampleRate)
                 buffer(2) = Convert.ToByte(2)
                 buffer(3) = Convert.ToByte(PhasorValues.Length)
-                EndianOrder.SwapCopy(BitConverter.GetBytes(Convert.ToUInt16(m_sampleNumber)), 0, buffer, 4, 2)
+                EndianOrder.SwapCopy(BitConverter.GetBytes(Convert.ToInt16(m_sampleNumber)), 0, buffer, 4, 2)
                 EndianOrder.SwapCopy(BitConverter.GetBytes(StatusFlags), 0, buffer, 6, 2)
                 index = 8
 
