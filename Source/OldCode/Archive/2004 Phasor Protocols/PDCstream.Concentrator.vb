@@ -77,7 +77,7 @@ Namespace PDCstream
             m_monitorTimer = New Timers.Timer
             m_enabled = True
             m_processing = False
-            m_sampleRate = 1000@ / m_configFile.SampleRate
+            m_sampleRate = Math.Floor(1000@ / m_configFile.SampleRate) - 1
 
             ' We define a process timer to monitor for samples to send...
             With m_processTimer
@@ -227,7 +227,7 @@ Namespace PDCstream
                 End With
 
                 ' Check to see if it's time to broadcast...
-                If currentTime.Ticks > m_publishTime.Ticks Then
+                If currentTime.Ticks > m_publishTime.Ticks Or m_dataQueue.SampleCount > m_lagTime + 1 Then
                     ' Access proper data packet out of current sample
                     Dim currentSample As PDCstream.DataSample = m_dataQueue(0)
 
