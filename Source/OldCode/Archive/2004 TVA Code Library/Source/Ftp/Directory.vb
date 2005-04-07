@@ -106,6 +106,7 @@ Namespace Ftp
         Private Shared m_DosListLineStyle2 As New Regex("(?<dir>[\-d])(?<permission>([\-r][\-w][\-xs]){3})\s+\d+\s+\w+\s+\w+\s+(?<size>\d+)\s+(?<timestamp>\w+\s+\d+\s+\d+:\d+)\s+(?<name>.+)") ' IIS FTP Service in Unix Mode
 
         Public Event DirectoryListLineScan(ByVal Line As String)
+        Public Event DirectoryScanException(ByVal ex As Exception)
 
         Friend Sub New(ByVal s As SessionConnected, ByVal CaseInsensitive As Boolean, ByVal fullPath As String)
 
@@ -460,14 +461,18 @@ Namespace Ftp
                 ' We allow users to inspect FTP lineQueue if desired...
                 RaiseEvent DirectoryListLineScan(line)
 
-                info = New ItemInfo
-                If ParseListLine(line, info) Then
-                    If info.IsDirectory Then
-                        m_subDirectories.Add(info.Name, New Directory(m_session, Me, m_caseInsensitive, info))
-                    Else
-                        m_files.Add(info.Name, New File(Me, info))
-                    End If
-                End If
+		Try
+			info = New ItemInfo
+			If ParseListLine(line, info) Then
+			    If info.IsDirectory Then
+				m_subDirectories.Add(info.Name, New Directory(m_session, Me, m_caseInsensitive, info))
+			    Else
+				m_files.Add(info.Name, New File(Me, info))
+			    End If
+			End If
+		Catch ex As Exception
+			RaiseEvent DirectoryScanException(ex)
+		End Try
             Next
 
         End Sub
