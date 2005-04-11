@@ -214,7 +214,7 @@ Namespace PDCToDatAWare
             Next
 
             ' Produce an exception list of points not defined in DatAWare
-            With IO.File.CreateText([Interface].ApplicationPath & "UndefinedAnalogIndices.csv")
+            With IO.File.CreateText([Interface].ApplicationPath & "UndefinedAnalogIndices" & Instance & ".csv")
                 For x As Integer = 0 To analogIndices.Length - 1
                     If analogIndices(x) = -1 Then
                         .WriteLine(analogNames(x))
@@ -224,7 +224,7 @@ Namespace PDCToDatAWare
             End With
 
             ' Produce an exception list of points not defined in DatAWare
-            With IO.File.CreateText([Interface].ApplicationPath & "UndefinedDigitalIndices.csv")
+            With IO.File.CreateText([Interface].ApplicationPath & "UndefinedDigitalIndices" & Instance & ".csv")
                 For x As Integer = 0 To digitalIndices.Length - 1
                     If digitalIndices(x) = -1 Then
                         .WriteLine(digitalNames(x))

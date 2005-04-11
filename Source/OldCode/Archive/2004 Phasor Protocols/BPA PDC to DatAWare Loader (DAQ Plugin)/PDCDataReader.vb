@@ -53,8 +53,6 @@ Public Class PDCDataReader
             Catch ex As Exception
                 LogMessage("PDC data reader failed to initialize for instance " & Value & " due to exception: " & ex.Message)
             End Try
-
-            daqInterface.UpdateStatus(vbCrLf & daqInterface.converter.Status)
         End Set
     End Property
 

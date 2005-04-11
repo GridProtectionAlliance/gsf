@@ -161,6 +161,9 @@ Public Class [Interface]
             m_converter.Instance = m_instance
             statusWindow.Instance = m_instance
             configWindow.Instance = m_instance
+
+            ' Show initial status after instance variables have been initialized
+            UpdateStatus(vbCrLf & m_converter.Status)
         End Set
     End Property
 
