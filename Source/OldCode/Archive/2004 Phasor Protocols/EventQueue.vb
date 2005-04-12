@@ -159,12 +159,11 @@ Public Class EventQueue
         End Get
     End Property
 
-    Public Sub QueueEventData(ByVal plantCode As String, ByVal eventBuffer As Byte())
+    Public Sub QueueEventData(ByVal plantCode As String, ByVal eventBuffer As Byte(), ByVal offset As Integer, ByVal length As Integer)
 
         ' Note: although you could go ahead and sort items here directly without queuing this work up, doing this could
         ' cause the TCP stream from DatAWare to start to get backed-up causing inherent delays in real-time data
-        If Enabled Then ThreadPool.QueueUserWorkItem(AddressOf ProcessEventBuffer, New DataPacket(plantCode, eventBuffer))
-        ProcessEventBuffer(New DataPacket(plantCode, eventBuffer))
+        If Enabled Then ThreadPool.QueueUserWorkItem(AddressOf ProcessEventBuffer, New DataPacket(plantCode, eventBuffer, offset, length))
         m_packetsReceived += 1
 
     End Sub
@@ -174,11 +173,15 @@ Public Class EventQueue
 
         Public PlantCode As String
         Public EventBuffer As Byte()
+        Public Offset As Integer
+        Public Length As Integer
 
-        Public Sub New(ByVal plantCode As String, ByVal eventBuffer As Byte())
+        Public Sub New(ByVal plantCode As String, ByVal eventBuffer As Byte(), ByVal offset As Integer, ByVal length As Integer)
 
             Me.PlantCode = plantCode
             Me.EventBuffer = eventBuffer
+            Me.Offset = offset
+            Me.Length = length
 
         End Sub
 
@@ -194,7 +197,7 @@ Public Class EventQueue
             Dim dataPoint As PMUDataPoint
 
             ' Parse events out of data packet and create a new PMU data point from timestamp and value
-            For packetIndex As Integer = 0 To eventData.EventBuffer.Length - 1 Step DatAWare.StandardEvent.BinaryLength
+            For packetIndex As Integer = eventData.Offset To eventData.Length - 1 Step DatAWare.StandardEvent.BinaryLength
                 If packetIndex + DatAWare.StandardEvent.BinaryLength < eventData.EventBuffer.Length Then
                     With New DatAWare.StandardEvent(eventData.EventBuffer, packetIndex)
                         ' Make sure we have a point defined for this value
@@ -226,9 +229,9 @@ Public Class EventQueue
 
     End Sub
 
-    Private Sub m_dataQueue_DataError(ByVal message As String) Handles m_dataQueue.DataError
+    Private Sub m_dataQueue_DataSortingError(ByVal message As String) Handles m_dataQueue.DataSortingError
 
-        UpdateStatus(message)
+        m_parent.UpdateStatus(message)
 
     End Sub
 
@@ -267,13 +270,15 @@ Public Class EventQueue
                 m_dataQueue.SortDataPoint(dataPoint)
             Next
 
-            ' Update the point value in all remaining samples
-            For x As Integer = sampleIndex + 1 To m_dataQueue.SampleCount - 1
-                For y As Integer = 0 To m_dataQueue.Sample(x).Rows.Length - 1
-                    dataPoint.Timestamp = m_dataQueue.Sample(x).Rows(y).TimeStamp
-                    m_dataQueue.SortDataPoint(dataPoint)
-                Next
-            Next
+            ' Update the point values in next sample
+            If sampleIndex + 1 <= m_dataQueue.SampleCount - 1 Then
+                With m_dataQueue.Sample(sampleIndex + 1)
+                    For y As Integer = 0 To .Rows.Length - 1
+                        dataPoint.Timestamp = .Rows(y).TimeStamp
+                        m_dataQueue.SortDataPoint(dataPoint)
+                    Next
+                End With
+            End If
         End If
 
     End Sub

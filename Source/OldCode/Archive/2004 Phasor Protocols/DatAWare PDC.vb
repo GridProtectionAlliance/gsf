@@ -206,11 +206,13 @@ Public Class DatAWarePDC
         Variables.Create("DatAWare.PDC.AggregatedArchive.TimeZone", "Central Standard Time", VariableType.Text, "Timezone of DatAWare server used to archive permanent aggregated PMU data")
         Variables.Create("DatAWare.Listeners.Total", 1, VariableType.Int, "Total number of DatAWare listeners to establish")
         Variables.Create("DatAWare.Listener0.Port", 8500, VariableType.Int, "Port to establish this listener on")
-        Variables.Create("DatAWare.Listener0.Server", "152.85.70.76", VariableType.Text, "DatAWare server name to associate this listener with")
+        Variables.Create("DatAWare.Listener0.Protocol", "UDP", VariableType.Text, "IP protocol to listen on (can be UDP or TCP)")
+        Variables.Create("DatAWare.Listener0.Server", "152.85.98.5", VariableType.Text, "DatAWare server name to associate this listener with")
         Variables.Create("DatAWare.Listener0.PlantCode", "PM", VariableType.Text, "Plant code of DatAWare server this listener is associated with")
         Variables.Create("DatAWare.Listener0.TimeZone", "Eastern Standard Time", VariableType.Text, "Timezone of DatAWare server this listener is associated with")
         Variables.Create("DatAWare.Listener0.UserName", "DatAWarePDC", VariableType.Text, "Username used to connect to DatAWare server this listener is associated with")
         Variables.Create("DatAWare.Listener0.Password", "4kqd4WHPevelrySArtKLlp4nV5ykh90Xe3EuJotBg1Y=", VariableType.Text, "Encrypted password used to connect to DatAWare server this listener is associated with - use GenPassword to create password")
+        Variables.Create("DatAWare.Listener0.PacketSize", 32768, VariableType.Int, "UDP packet buffer size (only used when protocol is set to UDP)")
         Variables.Create("StatusLog.Template", ServiceHelper.AppPath & "StatusLog.template", VariableType.Text, "Define the status log template database", 1)
         Variables.Create("StatusLog.ConnectString", "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=" & ServiceHelper.AppPath & "StatusLog.mdb", VariableType.Text, "Define the connection string for the local status log database", 2)
         Variables.Create("StatusLog.MaxEntries", 15000, VariableType.Int, "Define the maximum number of entries for the status log database", 3)
@@ -405,7 +407,7 @@ Public Class DatAWarePDC
 
 #Region " DatAWare PDC Service Event Code "
 
-    Private Sub ServiceHelper_OnStart(ByVal args() As String) Handles ServiceHelper.OnStart
+    Private Sub ServiceHelper_OnStart(ByVal args() As String) ' Handles ServiceHelper.OnStart
 
         ' Define UDP broadcast end-points
         Dim broadcastIPs As IPEndPoint() = Array.CreateInstance(GetType(IPEndPoint), Variables("DatAWare.PDC.BroadcastPoints.Total"))
@@ -432,25 +434,28 @@ Public Class DatAWarePDC
             .Add(Aggregator)
         End With
 
-        ' Create the DatAware network packet listeners
-        Listeners = Array.CreateInstance(GetType(DatAWare.Listener), Variables("DatAWare.Listeners.Total"))
+        Listeners = Array.CreateInstance(GetType(PDCListener), Variables("DatAWare.Listeners.Total"))
 
         For x As Integer = 0 To Listeners.Length - 1
             ' Define the listener on the specified port associated with the specified DatAWare server
             Listeners(x) = New PDCListener(Me, _
+                IIf(String.Compare(Trim(Variables("DatAWare.Listener" & x & ".Protocol")), "UDP", True) = 0, _
+                    DatAWare.Listener.NetworkProtocol.UDP, _
+                    DatAWare.Listener.NetworkProtocol.TCP), _
                 Variables("DatAWare.Listener" & x & ".Port"), _
                 Variables("DatAWare.Listener" & x & ".Server"), _
                 Variables("DatAWare.Listener" & x & ".PlantCode"), _
                 Variables("DatAWare.Listener" & x & ".TimeZone"), _
                 Variables("DatAWare.Listener" & x & ".UserName"), _
-                Decrypt(Variables("DatAWare.Listener" & x & ".Password"), PasswordKey, EncryptLevel.Level4))
+                Decrypt(Variables("DatAWare.Listener" & x & ".Password"), PasswordKey, EncryptLevel.Level4), _
+                Variables("DatAWare.Listener" & x & ".PacketSize"))
 
             ' Register the listener component
             ServiceHelper.Components.Add(Listeners(x))
 
             ' Load point list from associated DatAWare server.  Note that this step is mission critical - we can't
             ' start broadcasting and archiving if we don't get a point list from the DatAWare server...
-            EventQueue.DefinePointList(Listeners(x))
+            EventQueue.RefreshPointList(Listeners(x))
         Next
 
         ' Start the DatAWare listeners...
@@ -515,12 +520,15 @@ Public Class DatAWarePDC
 
     End Sub
 
-    'Private Sub ServiceHelper_ExecuteServiceProcess(ByVal ProcessSchedule As TVA.Services.ScheduleType, ByVal ScheduledTime As System.TimeSpan, ByVal Client As TVA.Remoting.LocalClient, ByVal UserData As Object) Handles ServiceHelper.ExecuteServiceProcess
+    Private Sub ServiceHelper_ExecuteServiceProcess(ByVal ProcessSchedule As TVA.Services.ScheduleType, ByVal ScheduledTime As System.TimeSpan, ByVal Client As TVA.Remoting.LocalClient, ByVal UserData As Object) Handles ServiceHelper.ExecuteServiceProcess
 
-    '    ' Execute primary service process
-    '    'primaryProcess.ExecuteProcess(UserData)
+        ' Execute primary service process
+        ServiceHelper_OnStart(Nothing)
 
-    'End Sub
+        'primaryProcess.ExecuteProcess(UserData)
+        ' Create the DatAware network packet listeners
+
+    End Sub
 
     'Private Sub ServiceHelper_ClientNotification(ByVal Client As TVA.Remoting.LocalClient, ByVal sender As Object, ByVal e As System.EventArgs) Handles ServiceHelper.ClientNotification
 

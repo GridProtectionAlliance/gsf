@@ -162,6 +162,10 @@ Public Class PMUServerPoints
                     .Type = PointType.DigitalValue
                 Case "SF"
                     .Type = PointType.StatusFlags
+                Case "MW"
+                    .Type = PointType.Watts
+                Case "MV"
+                    .Type = PointType.Vars
                 Case Else
                     Throw New InvalidOperationException("Unable to create PointDefinition, point type could not be derived from synonym declaration: " & synonym)
             End Select

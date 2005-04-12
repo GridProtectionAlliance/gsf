@@ -232,7 +232,7 @@ Public Class Concentrator
 
                 If m_rowIndex = -1 Then
                     ' Make sure we've got enough lag-time between this sample and the most recent sample...
-                    If m_dataQueue.DistanceFromBaseTime(currentSample.Timestamp) <= -m_lagTime Then
+                    If m_dataQueue.DistanceFromBaseTime(currentSample.Timestamp) <= -m_lagTime OrElse m_dataQueue.SampleCount > m_lagTime + 1 Then
                         m_rowIndex = 0
                     End If
                 End If

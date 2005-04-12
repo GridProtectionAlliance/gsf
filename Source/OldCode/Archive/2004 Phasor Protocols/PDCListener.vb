@@ -1,5 +1,5 @@
 '***********************************************************************
-'  Listener.vb - PDCstream DatAWare Listener
+'  PDCListener.vb - PDCstream DatAWare Listener
 '  Copyright © 2004 - TVA, all rights reserved
 '
 '  Build Environment: VB.NET, Visual Studio 2003
@@ -31,11 +31,12 @@ Public Class PDCListener
     Public UserName As String
     Public Password As String
 
-    Public Sub New(ByVal parent As DatAWarePDC, ByVal serverPort As Integer, ByVal server As String, ByVal plantCode As String, ByVal timeZone As String, ByVal userName As String, ByVal password As String)
+    Public Sub New(ByVal parent As DatAWarePDC, ByVal protocol As DatAWare.Listener.NetworkProtocol, ByVal serverPort As Integer, ByVal server As String, ByVal plantCode As String, ByVal timeZone As String, ByVal userName As String, ByVal password As String, ByVal udpBufferSize As Integer)
 
         m_parent = parent
         m_connection = New DatAWare.Connection(server, plantCode, timeZone, DatAWare.AccessMode.ReadOnly)
-        m_listener = New DatAWare.Listener(AddressOf QueueEventData, AddressOf UpdateStatus, serverPort)
+        m_listener = New DatAWare.Listener(protocol, AddressOf QueueEventData, AddressOf UpdateStatus, serverPort)
+        m_listener.UDPBufferSize = udpBufferSize
 
     End Sub
 
@@ -74,9 +75,9 @@ Public Class PDCListener
 
     End Sub
 
-    Private Sub QueueEventData(ByVal eventBuffer As Byte())
+    Private Sub QueueEventData(ByVal eventBuffer As Byte(), ByVal offset As Integer, ByVal length As Integer)
 
-        m_parent.EventQueue.QueueEventData(m_connection.PlantCode, eventBuffer)
+        m_parent.EventQueue.QueueEventData(m_connection.PlantCode, eventBuffer, offset, length)
 
     End Sub
 
