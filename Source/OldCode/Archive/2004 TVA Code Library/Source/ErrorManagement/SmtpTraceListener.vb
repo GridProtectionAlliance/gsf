@@ -37,7 +37,7 @@ Namespace ErrorManagement
 
             MyBase.New()
             'Initialization data was not provided.
-            Throw New ApplicationException("Missing initialization data for SmtpTraceListner. Initialization data must be provided in the following format: 'sender@email.com,recipient@email.com,smpt.email.com'.")
+            Throw New ArgumentException("Missing initialization data for SmtpTraceListner. Initialization data must be provided in the following format: 'sender@email.com,recipient@email.com,smpt.email.com'.")
 
         End Sub
 
@@ -48,7 +48,7 @@ Namespace ErrorManagement
             Dim SmtpData As String() = InitializationData.Split(",")
             If SmtpData.Length < 3 Then
                 'Insufficient initialization data was provided.
-                Throw New ApplicationException("Insufficient initialization data provided for SmtpTraceListner. Initialization data must be provided in the following format: 'sender@email.com,recipient@email.com,smpt.email.com'.")
+                Throw New ArgumentException("Insufficient initialization data provided for SmtpTraceListner. Initialization data must be provided in the following format: 'sender@email.com,recipient@email.com,smpt.email.com'.")
             End If
 
             'Initialize private variables.
