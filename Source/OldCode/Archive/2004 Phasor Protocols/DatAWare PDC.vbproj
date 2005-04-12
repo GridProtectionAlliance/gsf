@@ -117,6 +117,11 @@
                     HintPath = "\\opdat\opdat\CtrlSys\CodeLibrary\Builds\Release\Current\TVA.Threading.dll"
                 />
                 <Reference
+                    Name = "TVA.DatAWare"
+                    AssemblyName = "TVA.DatAWare"
+                    HintPath = "\\opdat\opdat\CtrlSys\CodeLibrary\Builds\Release\Current\TVA.DatAWare.dll"
+                />
+                <Reference
                     Name = "DWApi"
                     Guid = "{8629DF62-FC28-4576-AAF3-CAB4C010FF34}"
                     VersionMajor = "21"
@@ -125,14 +130,9 @@
                     WrapperTool = "tlbimp"
                 />
                 <Reference
-                    Name = "TVA.DatAWare"
-                    AssemblyName = "TVA.DatAWare"
-                    HintPath = "\\opdat\opdat\CtrlSys\CodeLibrary\Builds\Beta\TVA.DatAWare.dll"
-                />
-                <Reference
-                    Name = "TVA.EE"
-                    AssemblyName = "TVA.EE"
-                    HintPath = "\\opdat\opdat\CtrlSys\CodeLibrary\Builds\Beta\TVA.EE.dll"
+                    Name = "TVA.EE.Phasor"
+                    AssemblyName = "TVA.EE.Phasor"
+                    HintPath = "\\opdat\opdat\CtrlSys\CodeLibrary\Builds\Beta\TVA.EE.Phasor.dll"
                 />
             </References>
             <Imports>
@@ -165,6 +165,11 @@
                     BuildAction = "Compile"
                 />
                 <File
+                    RelPath = "DataQueue.vb"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
                     RelPath = "DatAWare PDC.vb"
                     SubType = "Component"
                     BuildAction = "Compile"
@@ -185,6 +190,11 @@
                 />
                 <File
                     RelPath = "PDCListener.vb"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "PMUDataPoint.vb"
                     SubType = "Code"
                     BuildAction = "Compile"
                 />
