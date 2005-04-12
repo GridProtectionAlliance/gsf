@@ -461,18 +461,18 @@ Namespace Ftp
                 ' We allow users to inspect FTP lineQueue if desired...
                 RaiseEvent DirectoryListLineScan(line)
 
-		Try
-			info = New ItemInfo
-			If ParseListLine(line, info) Then
-			    If info.IsDirectory Then
-				m_subDirectories.Add(info.Name, New Directory(m_session, Me, m_caseInsensitive, info))
-			    Else
-				m_files.Add(info.Name, New File(Me, info))
-			    End If
-			End If
-		Catch ex As Exception
-			RaiseEvent DirectoryScanException(ex)
-		End Try
+                Try
+                    info = New ItemInfo
+                    If ParseListLine(line, info) Then
+                        If info.IsDirectory Then
+                            m_subDirectories.Add(info.Name, New Directory(m_session, Me, m_caseInsensitive, info))
+                        Else
+                            m_files.Add(info.Name, New File(Me, info))
+                        End If
+                    End If
+                Catch ex As Exception
+                    RaiseEvent DirectoryScanException(ex)
+                End Try
             Next
 
         End Sub

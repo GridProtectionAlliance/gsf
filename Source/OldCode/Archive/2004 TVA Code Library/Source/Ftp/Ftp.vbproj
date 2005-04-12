@@ -148,6 +148,11 @@
                     BuildAction = "Compile"
                 />
                 <File
+                    RelPath = "Session.resx"
+                    DependentUpon = "Session.vb"
+                    BuildAction = "EmbeddedResource"
+                />
+                <File
                     RelPath = "SessionConnected.vb"
                     SubType = "Code"
                     BuildAction = "Compile"
