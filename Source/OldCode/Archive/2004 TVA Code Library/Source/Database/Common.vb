@@ -14,6 +14,7 @@ Imports System.Data.OracleClient
 Imports System.ComponentModel
 Imports TVA.Shared.String
 Imports TVA.Shared.DateTime
+Imports TVA.Shared.Common
 
 Namespace Database
 
@@ -823,6 +824,59 @@ Namespace Database
             If Len(strDBDate) = 0 Then strDBDate = "NULL"
 
             Return strDBDate
+
+        End Function
+
+        'Pinal Patel 04/06/05 - Compares two data table column values for equality.
+        Public Shared Function ColumnValuesEqual(ByVal ColumnValue1 As Object, ByVal ColumnValue2 As Object) As Boolean
+
+            If ColumnValue1 Is DBNull.Value And ColumnValue2 Is DBNull.Value Then Return True
+            If ColumnValue1 Is DBNull.Value Or ColumnValue2 Is DBNull.Value Then Return False
+            Return (Compare(ColumnValue1, ColumnValue2) = 0)
+
+        End Function
+
+        'Pinal Patel 04/06/05 - Returns a data table of distinct values in the specified column.
+        Public Shared Function SelectDistinct(ByVal ColumnName As String, ByVal DataTable As DataTable) As DataTable
+
+            Dim objLastValue As Object
+            Dim dtDistinct As DataTable = New DataTable
+            dtDistinct.Columns.Add(ColumnName, DataTable.Columns(ColumnName).GetType())
+            For Each dr As DataRow In DataTable.Select("", ColumnName)
+                If (objLastValue Is Nothing) Or (Not ColumnValuesEqual(objLastValue, dr(ColumnName))) Then
+                    objLastValue = dr(ColumnName)
+                    dtDistinct.Rows.Add(New Object() {objLastValue})
+                End If
+            Next
+
+            Return dtDistinct
+
+        End Function
+
+        'Pinal Patel 04/06/05 - Updates the underlying data source of the specified data table.
+        Public Shared Function UpdateData(ByVal SourceTable As DataTable, ByVal SourceSql As String, ByVal Connection As SqlConnection) As Integer
+
+            Dim da As SqlDataAdapter = New SqlDataAdapter(SourceSql, Connection)
+            Dim cb As SqlCommandBuilder = New SqlCommandBuilder(da)
+            Return da.Update(SourceTable)
+
+        End Function
+
+        'Pinal Patel 04/06/05 - Updates the underlying data source of the specified data table.
+        Public Shared Function UpdateData(ByVal SourceTable As DataTable, ByVal SourceSql As String, ByVal Connection As OleDbConnection) As Integer
+
+            Dim da As OleDbDataAdapter = New OleDbDataAdapter(SourceSql, Connection)
+            Dim cb As OleDbCommandBuilder = New OleDbCommandBuilder(da)
+            Return da.Update(SourceTable)
+
+        End Function
+
+        'Pinal Patel 04/06/05 - Updates the underlying data source of the specified data table.
+        Public Shared Function UpdateData(ByVal SourceTable As DataTable, ByVal SourceSql As String, ByVal Connection As OracleConnection) As Integer
+
+            Dim da As OracleDataAdapter = New OracleDataAdapter(SourceSql, Connection)
+            Dim cb As OracleCommandBuilder = New OracleCommandBuilder(da)
+            Return da.Update(SourceTable)
 
         End Function
 

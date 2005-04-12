@@ -295,22 +295,23 @@ Namespace Asp
 
 #End Region
 
-#Region "Common fuction to hookup a control to client-side script."
+#Region "Common fuction to hookup client-side script to a control."
 
         Private Shared Sub HookupScriptToControl(ByVal Control As System.Web.UI.Control, ByVal Script As String, Optional ByVal Attribute As String = "OnClick")
 
-            Select Case Control.GetType.ToString()
-                Case "System.Web.UI.WebControls.Button"
-                    CType(Control, System.Web.UI.WebControls.Button).Attributes.Add(Attribute, Script)
-                Case "System.Web.UI.WebControls.LinkButton"
-                    CType(Control, System.Web.UI.WebControls.LinkButton).Attributes.Add(Attribute, Script)
-                Case "System.Web.UI.WebControls.ImageButton"
-                    CType(Control, System.Web.UI.WebControls.ImageButton).Attributes.Add(Attribute, Script)
-                Case "System.Web.UI.WebControls.TextBox"
-                    CType(Control, System.Web.UI.WebControls.TextBox).Attributes.Add(Attribute, Script)
-                Case "System.Web.UI.WebControls.Image"
-                    CType(Control, System.Web.UI.WebControls.Image).Attributes.Add(Attribute, Script)
-            End Select
+            If TypeOf Control Is System.Web.UI.WebControls.Button Then
+                CType(Control, System.Web.UI.WebControls.Button).Attributes.Add(Attribute, Script)
+            ElseIf TypeOf Control Is System.Web.UI.WebControls.LinkButton Then
+                CType(Control, System.Web.UI.WebControls.LinkButton).Attributes.Add(Attribute, Script)
+            ElseIf TypeOf Control Is System.Web.UI.WebControls.ImageButton Then
+                CType(Control, System.Web.UI.WebControls.ImageButton).Attributes.Add(Attribute, Script)
+            ElseIf TypeOf Control Is System.Web.UI.WebControls.Image Then
+                CType(Control, System.Web.UI.WebControls.Image).Attributes.Add(Attribute, Script)
+            ElseIf TypeOf Control Is System.Web.UI.WebControls.Label Then
+                CType(Control, System.Web.UI.WebControls.Label).Attributes.Add(Attribute, Script)
+            ElseIf TypeOf Control Is System.Web.UI.WebControls.TextBox Then
+                CType(Control, System.Web.UI.WebControls.TextBox).Attributes.Add(Attribute, Script)
+            End If
 
         End Sub
 
@@ -412,8 +413,8 @@ Namespace Asp
             End If
 
             With New StringBuilder
-                .Append("<input type=""hidden"" name=""TVA_EVENT_TARGET"" value=""ShowDialog"" />" & vbCrLf)
-                .Append("<input type=""hidden"" name=""TVA_EVENT_ARGUMENT"" value=""" & Url & """ />" & vbCrLf)
+                .Append("<input type=""hidden"" name=""TVA_EVENT_TARGET"" value="""" />" & vbCrLf)
+                .Append("<input type=""hidden"" name=""TVA_EVENT_ARGUMENT"" value="""" />" & vbCrLf)
                 .Append("<script language=""javascript"">" & vbCrLf)
                 If Not DialogResultHolder Is Nothing Then
                     .Append("   ShowDialog('" & Url & "', '" & DialogResultHolder.ClientID() & "', " & Height & ", " & Width & ", " & Left & ", " & Top & ", " & Math.Abs(CInt(Center)) & ", " & Math.Abs(CInt(Help)) & ", " & Math.Abs(CInt(Resizable)) & ", " & Math.Abs(CInt(Status)) & ");" & vbCrLf)
@@ -423,6 +424,8 @@ Namespace Asp
                     Dim Control As System.Web.UI.Control
                     For Each Control In Page.Controls
                         If TypeOf Control Is System.Web.UI.HtmlControls.HtmlForm Then
+                            .Append("       " & Control.ClientID() & ".TVA_EVENT_TARGET.value = 'ShowDialog';" & vbCrLf)
+                            .Append("       " & Control.ClientID() & ".TVA_EVENT_ARGUMENT.value = '" & Url & "';" & vbCrLf)
                             .Append("       document." & Control.ClientID() & ".submit();" & vbCrLf)
                             Exit For
                         End If
@@ -555,14 +558,16 @@ Namespace Asp
             End If
 
             With New StringBuilder
-                .Append("<input type=""hidden"" name=""TVA_EVENT_TARGET"" value=""MsgBox"" />" & vbCrLf)
-                .Append("<input type=""hidden"" name=""TVA_EVENT_ARGUMENT"" value=""" & Title & """ />" & vbCrLf)
+                .Append("<input type=""hidden"" name=""TVA_EVENT_TARGET"" value="""" />" & vbCrLf)
+                .Append("<input type=""hidden"" name=""TVA_EVENT_ARGUMENT"" value="""" />" & vbCrLf)
                 .Append("<script language=""javascript"">" & vbCrLf)
                 .Append("   if (ShowMsgBox('" & JavaScriptEncode(Prompt) & " ', '" & Title & "', " & Buttons & ", " & LCase(DoPostBack) & ")) " & vbCrLf)
                 .Append("   {" & vbCrLf)
                 Dim Control As System.Web.UI.Control
                 For Each Control In Page.Controls
                     If TypeOf Control Is System.Web.UI.HtmlControls.HtmlForm Then
+                        .Append("       " & Control.ClientID() & ".TVA_EVENT_TARGET.value = 'MsgBox';" & vbCrLf)
+                        .Append("       " & Control.ClientID() & ".TVA_EVENT_ARGUMENT.value = '" & Title & "';" & vbCrLf)
                         .Append("       document." & Control.ClientID() & ".submit();" & vbCrLf)
                         Exit For
                     End If
