@@ -26,6 +26,15 @@ Namespace EE.Phasor
 
         Protected m_dataFormat As DataFormat
 
+        ' Create channel value from other channel value
+        ' Note: This method is expected to be implemented as a public shared method in derived class automatically passing in channelValueType
+        ' Dervied class must expose a Public Sub New(ByVal channelValue As IChannelValue)
+        Protected Shared Function CreateFrom(ByVal channelValueType As Type, ByVal channelValue As IChannelValue) As IChannelValue
+
+            Return CType(Activator.CreateInstance(channelValueType, New Object() {channelValue}), IChannelValue)
+
+        End Function
+
         Protected Sub New()
 
             m_dataFormat = DataFormat.FloatingPoint
@@ -38,7 +47,19 @@ Namespace EE.Phasor
 
         End Sub
 
+        Protected Sub New(ByVal channelValue As IChannelValue)
+
+            Me.New(channelValue.DataFormat)
+
+        End Sub
+
         Public MustOverride ReadOnly Property InheritedType() As System.Type Implements IChannelValue.InheritedType
+
+        Public Overridable ReadOnly Property This() As IChannelValue Implements IChannelValue.This
+            Get
+                Return Me
+            End Get
+        End Property
 
         Public Overridable Property DataFormat() As DataFormat Implements IChannelValue.DataFormat
             Get

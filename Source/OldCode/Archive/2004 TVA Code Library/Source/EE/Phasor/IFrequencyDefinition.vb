@@ -22,7 +22,7 @@ Namespace EE.Phasor
 
         Inherits IChannelDefinition
 
-        ' Offset provided for end-implementation convenience, base classes should not apply offset to any values
+        ' Offset provided for end-implementation convenience, virtual base classes should not apply offset to any values
         Property DfDtOffset() As Double
 
         Property DfDtScalingFactor() As Integer

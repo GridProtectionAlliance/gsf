@@ -27,6 +27,15 @@ Namespace EE.Phasor
         Protected m_dfdtOffset As Double
         Protected m_nominalFrequency As LineFrequency
 
+        ' Create frequency definition from other frequency definition
+        ' Note: This method is expected to be implemented as a public shared method in derived class automatically passing in frequencyDefinitionType
+        ' Dervied class must expose a Public Sub New(ByVal frequencyDefinition As IFrequencyDefinition)
+        Protected Shared Shadows Function CreateFrom(ByVal frequencyDefinitionType As Type, ByVal frequencyDefinition As IFrequencyDefinition) As IFrequencyDefinition
+
+            Return CType(Activator.CreateInstance(frequencyDefinitionType, New Object() {frequencyDefinition}), IFrequencyDefinition)
+
+        End Function
+
         Protected Sub New()
 
             MyBase.New()
@@ -46,6 +55,13 @@ Namespace EE.Phasor
             m_nominalFrequency = nominalLineFrequency
 
             Me.DfDtScalingFactor = dfdtScale
+
+        End Sub
+
+        Protected Sub New(ByVal frequencyDefinition As IFrequencyDefinition)
+
+            Me.New(frequencyDefinition.Index, frequencyDefinition.Label, frequencyDefinition.ScalingFactor, frequencyDefinition.Offset, _
+                frequencyDefinition.DfDtScalingFactor, frequencyDefinition.DfDtOffset, frequencyDefinition.NominalFrequency)
 
         End Sub
 

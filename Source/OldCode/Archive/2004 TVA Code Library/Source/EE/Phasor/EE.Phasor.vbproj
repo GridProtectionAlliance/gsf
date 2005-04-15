@@ -111,6 +111,11 @@
                     BuildAction = "Compile"
                 />
                 <File
+                    RelPath = "ChannelFrameBase.vb"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
                     RelPath = "ChannelValueBase.vb"
                     SubType = "Code"
                     BuildAction = "Compile"
@@ -122,11 +127,6 @@
                 />
                 <File
                     RelPath = "Common.vb"
-                    SubType = "Code"
-                    BuildAction = "Compile"
-                />
-                <File
-                    RelPath = "DataFrameBase.vb"
                     SubType = "Code"
                     BuildAction = "Compile"
                 />
@@ -166,12 +166,12 @@
                     BuildAction = "Compile"
                 />
                 <File
-                    RelPath = "IChannelValue.vb"
+                    RelPath = "IChannelFrame.vb"
                     SubType = "Code"
                     BuildAction = "Compile"
                 />
                 <File
-                    RelPath = "IDataFrame.vb"
+                    RelPath = "IChannelValue.vb"
                     SubType = "Code"
                     BuildAction = "Compile"
                 />
@@ -196,12 +196,22 @@
                     BuildAction = "Compile"
                 />
                 <File
+                    RelPath = "IPhasorDataFrame.vb"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
                     RelPath = "IPhasorDefinition.vb"
                     SubType = "Code"
                     BuildAction = "Compile"
                 />
                 <File
                     RelPath = "IPhasorValue.vb"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "PhasorDataFrameBase.vb"
                     SubType = "Code"
                     BuildAction = "Compile"
                 />
@@ -361,11 +371,6 @@
                     BuildAction = "Compile"
                 />
                 <File
-                    RelPath = "PDCstream\DataQueue.vb"
-                    SubType = "Code"
-                    BuildAction = "Compile"
-                />
-                <File
                     RelPath = "PDCstream\DataSample.vb"
                     SubType = "Code"
                     BuildAction = "Compile"
@@ -397,11 +402,6 @@
                 />
                 <File
                     RelPath = "PDCstream\PMUDataCell.vb"
-                    SubType = "Code"
-                    BuildAction = "Compile"
-                />
-                <File
-                    RelPath = "PDCstream\PMUDataPoint.vb"
                     SubType = "Code"
                     BuildAction = "Compile"
                 />

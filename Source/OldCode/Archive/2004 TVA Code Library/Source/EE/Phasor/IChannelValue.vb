@@ -22,6 +22,8 @@ Namespace EE.Phasor
 
         ReadOnly Property InheritedType() As Type
 
+        ReadOnly Property This() As IChannelValue
+
         Property DataFormat() As DataFormat
 
         ReadOnly Property Values() As Double()

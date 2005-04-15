@@ -29,6 +29,15 @@ Namespace EE.Phasor
         Protected m_digitalDefinition As IDigitalDefinition
         Protected m_value As Int16
 
+        ' Create digital value from other digital value
+        ' Note: This method is expected to be implemented as a public shared method in derived class automatically passing in digitalValueType
+        ' Dervied class must expose a Public Sub New(ByVal digitalValue As IDigitalValue)
+        Protected Shared Shadows Function CreateFrom(ByVal digitalValueType As Type, ByVal digitalValue As IDigitalValue) As IDigitalValue
+
+            Return CType(Activator.CreateInstance(digitalValueType, New Object() {digitalValue}), IDigitalValue)
+
+        End Function
+
         Protected Sub New()
 
             MyBase.New(EE.Phasor.DataFormat.FixedInteger)
@@ -53,6 +62,12 @@ Namespace EE.Phasor
 
             m_digitalDefinition = digitalDefinition
             m_value = EndianOrder.ReverseToInt16(binaryImage, startIndex)
+
+        End Sub
+
+        Protected Sub New(ByVal digitalValue As IDigitalValue)
+
+            Me.New(digitalValue.Definition, digitalValue.Value)
 
         End Sub
 

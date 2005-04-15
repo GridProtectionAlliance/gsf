@@ -30,6 +30,15 @@ Namespace EE.Phasor
         Protected m_frequency As Double
         Protected m_dfdt As Double
 
+        ' Create frequency value from other frequency value
+        ' Note: This method is expected to be implemented as a public shared method in derived class automatically passing in frequencyValueType
+        ' Dervied class must expose a Public Sub New(ByVal frequencyValue As IFrequencyValue)
+        Protected Shared Shadows Function CreateFrom(ByVal frequencyValueType As Type, ByVal frequencyValue As IFrequencyValue) As IFrequencyValue
+
+            Return CType(Activator.CreateInstance(frequencyValueType, New Object() {frequencyValue}), IFrequencyValue)
+
+        End Function
+
         Protected Sub New()
 
             MyBase.New()
@@ -71,6 +80,12 @@ Namespace EE.Phasor
                 m_frequency = EndianOrder.ReverseToSingle(binaryImage, startIndex) + frequencyDefinition.NominalFrequencyOffset
                 m_dfdt = EndianOrder.ReverseToSingle(binaryImage, startIndex + 4)
             End If
+
+        End Sub
+
+        Protected Sub New(ByVal frequencyValue As IFrequencyValue)
+
+            Me.New(frequencyValue.DataFormat, frequencyValue.Definition, frequencyValue.Frequency, frequencyValue.DfDt)
 
         End Sub
 

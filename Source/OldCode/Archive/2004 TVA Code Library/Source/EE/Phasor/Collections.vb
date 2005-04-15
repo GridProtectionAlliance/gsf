@@ -17,6 +17,42 @@
 
 Namespace EE.Phasor
 
+    Public MustInherit Class ChannelFrames
+
+        Inherits CollectionBase
+
+        Protected Sub _Add(ByVal value As IChannelFrame)
+
+            List.Add(value)
+
+        End Sub
+
+        Protected ReadOnly Property _Item(ByVal index As Integer) As IChannelFrame
+            Get
+                Return DirectCast(List.Item(index), IChannelFrame)
+            End Get
+        End Property
+
+    End Class
+
+    Public Class PhasorDataFrames
+
+        Inherits ChannelFrames
+
+        Public Sub Add(ByVal value As IPhasorDataFrame)
+
+            MyBase._Add(value)
+
+        End Sub
+
+        Default Public ReadOnly Property Item(ByVal index As Integer) As IPhasorDataFrame
+            Get
+                Return DirectCast(MyBase._Item(index), IPhasorDataFrame)
+            End Get
+        End Property
+
+    End Class
+
     Public MustInherit Class ChannelValues
 
         Inherits CollectionBase

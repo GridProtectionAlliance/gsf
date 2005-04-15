@@ -28,6 +28,15 @@ Namespace EE.Phasor
         Protected m_analogDefinition As IAnalogDefinition
         Protected m_value As Double
 
+        ' Create analog value from other analog value
+        ' Note: This method is expected to be implemented as a public shared method in derived class automatically passing in analogValueType
+        ' Dervied class must expose a Public Sub New(ByVal analogValue As IAnalogValue)
+        Protected Shared Shadows Function CreateFrom(ByVal analogValueType As Type, ByVal analogValue As IAnalogValue) As IAnalogValue
+
+            Return CType(Activator.CreateInstance(analogValueType, New Object() {analogValue}), IAnalogValue)
+
+        End Function
+
         Protected Sub New()
 
             MyBase.New()
@@ -63,6 +72,12 @@ Namespace EE.Phasor
             Else
                 m_value = EndianOrder.ReverseToSingle(binaryImage, startIndex)
             End If
+
+        End Sub
+
+        Protected Sub New(ByVal analogValue As IAnalogValue)
+
+            Me.New(analogValue.DataFormat, analogValue.Definition, analogValue.Value)
 
         End Sub
 

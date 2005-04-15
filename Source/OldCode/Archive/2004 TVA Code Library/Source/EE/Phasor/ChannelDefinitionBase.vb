@@ -29,6 +29,15 @@ Namespace EE.Phasor
         Protected m_scale As Integer
         Protected m_offset As Double
 
+        ' Create channel definition from other channel definition
+        ' Note: This method is expected to be implemented as a public shared method in derived class automatically passing in channelDefinitionType
+        ' Dervied class must expose a Public Sub New(ByVal channelDefinition As IChannelDefinition)
+        Protected Shared Function CreateFrom(ByVal channelDefinitionType As Type, ByVal channelDefinition As IChannelDefinition) As IChannelDefinition
+
+            Return CType(Activator.CreateInstance(channelDefinitionType, New Object() {channelDefinition}), IChannelDefinition)
+
+        End Function
+
         Protected Sub New()
 
             m_index = 0
@@ -40,15 +49,28 @@ Namespace EE.Phasor
 
         Protected Sub New(ByVal index As Integer, ByVal label As String, ByVal scale As Integer, ByVal offset As Double)
 
-            m_index = index
-            m_offset = offset
+            With Me
+                .Index = index
+                .Label = label
+                .ScalingFactor = scale
+                .Offset = offset
+            End With
 
-            Me.Label = label
-            Me.ScalingFactor = scale
+        End Sub
+
+        Protected Sub New(ByVal channelDefinition As IChannelDefinition)
+
+            Me.New(channelDefinition.Index, channelDefinition.Label, channelDefinition.ScalingFactor, channelDefinition.Offset)
 
         End Sub
 
         Public MustOverride ReadOnly Property InheritedType() As Type Implements IChannelDefinition.InheritedType
+
+        Public Overridable ReadOnly Property This() As IChannelDefinition Implements IChannelDefinition.This
+            Get
+                Return Me
+            End Get
+        End Property
 
         Public Overridable Property Index() As Integer Implements IChannelDefinition.Index
             Get

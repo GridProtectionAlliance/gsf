@@ -37,8 +37,17 @@ Namespace EE.Phasor
             Magnitude
         End Enum
 
+        ' Create phasor value from other phasor value
+        ' Note: This method is expected to be implemented as a public shared method in derived class automatically passing in phasorValueType
+        ' Dervied class must expose a Public Sub New(ByVal phasorValue As IPhasorValue)
+        Protected Shared Shadows Function CreateFrom(ByVal phasorValueType As Type, ByVal phasorValue As IPhasorValue) As IPhasorValue
+
+            Return CType(Activator.CreateInstance(phasorValueType, New Object() {phasorValue}), IPhasorValue)
+
+        End Function
+
         ' Create phasor from polar coordinates (angle expected in Degrees)
-        ' Note: This method is expected to implemented as a public shared method in derived class automatically passing in phasorValueType
+        ' Note: This method is expected to be implemented as a public shared method in derived class automatically passing in phasorValueType
         Protected Shared Function CreateFromPolarValues(ByVal phasorValueType As Type, ByVal phasorFormat As PhasorFormat, ByVal dataFormat As DataFormat, ByVal phasorDefinition As IPhasorDefinition, ByVal angle As Double, ByVal magnitude As Double) As IPhasorValue
 
             Return CreateFromRectangularValues(phasorValueType, phasorFormat, dataFormat, phasorDefinition, CalculateRealComponent(angle, magnitude), CalculateImaginaryComponent(angle, magnitude))
@@ -46,7 +55,8 @@ Namespace EE.Phasor
         End Function
 
         ' Create phasor from rectangular coordinates
-        ' Note: This method is expected to implemented as a public shared method in derived class automatically passing in phasorValueType
+        ' Note: This method is expected to be implemented as a public shared method in derived class automatically passing in phasorValueType
+        ' Dervied class must expose a Public Sub New(ByVal phasorFormat As PhasorFormat, ByVal dataFormat As DataFormat, ByVal phasorDefinition As IPhasorDefinition, ByVal real As Double, ByVal imaginary As Double)
         Protected Shared Function CreateFromRectangularValues(ByVal phasorValueType As Type, ByVal phasorFormat As PhasorFormat, ByVal dataFormat As DataFormat, ByVal phasorDefinition As IPhasorDefinition, ByVal real As Double, ByVal imaginary As Double) As IPhasorValue
 
             Return CType(Activator.CreateInstance(phasorValueType, New Object() {phasorFormat, dataFormat, phasorDefinition, real, imaginary}), IPhasorValue)
@@ -54,7 +64,7 @@ Namespace EE.Phasor
         End Function
 
         ' Create phasor from unscaled rectangular coordinates
-        ' Note: This method is expected to implemented as a public shared method in derived class automatically passing in phasorValueType
+        ' Note: This method is expected to be implemented as a public shared method in derived class automatically passing in phasorValueType
         Protected Shared Function CreateFromUnscaledRectangularValues(ByVal phasorValueType As Type, ByVal phasorFormat As PhasorFormat, ByVal dataFormat As DataFormat, ByVal phasorDefinition As IPhasorDefinition, ByVal real As Int16, ByVal imaginary As Int16) As IPhasorValue
 
             Dim scale As Integer = phasorDefinition.ScalingFactor
@@ -154,6 +164,12 @@ Namespace EE.Phasor
             End If
 
             m_compositeValues = New CompositeValues(2)
+
+        End Sub
+
+        Protected Sub New(ByVal phasorValue As IPhasorValue)
+
+            Me.New(phasorValue.DataFormat, phasorValue.PhasorFormat, phasorValue.Definition, phasorValue.Real, phasorValue.Imaginary)
 
         End Sub
 

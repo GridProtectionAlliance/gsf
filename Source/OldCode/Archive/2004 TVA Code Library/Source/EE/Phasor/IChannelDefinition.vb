@@ -24,9 +24,11 @@ Namespace EE.Phasor
 
         ReadOnly Property InheritedType() As Type
 
+        ReadOnly Property This() As IChannelDefinition
+
         Property Index() As Integer
 
-        ' Offset provided for end-implementation convenience, base classes should not apply offset to any values
+        ' Offset provided for end-implementation convenience, virtual base classes should not apply offset to any values
         Property Offset() As Double
 
         Property ScalingFactor() As Integer

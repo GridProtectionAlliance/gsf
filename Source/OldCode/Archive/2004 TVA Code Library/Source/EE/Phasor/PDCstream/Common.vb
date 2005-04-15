@@ -25,24 +25,6 @@ Namespace EE.Phasor.PDCstream
         DontCare
     End Enum
 
-    ' TODO: Remove this from here - this should only be defined in Super PDC...
-    Public Enum PointType
-        PhasorMagnitude
-        PhasorAngle
-        Frequency
-        DfDt
-        DigitalValue
-        StatusFlags
-    End Enum
-
-    ' TODO: Remove this from here - this should only be defined in Super PDC...
-    Public Enum PointArchiveStyle
-        Raw
-        Average
-        Minimum
-        Maximum
-    End Enum
-
     <Flags()> _
     Public Enum ChannelFlags As Byte
         DataIsValid = Bit0              ' Valid if not set (yes = 0)
