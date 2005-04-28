@@ -26,9 +26,9 @@ Namespace EE.Phasor
         Inherits ChannelValueBase
         Implements IFrequencyValue
 
-        Protected m_frequencyDefinition As IFrequencyDefinition
-        Protected m_frequency As Double
-        Protected m_dfdt As Double
+        Private m_frequencyDefinition As IFrequencyDefinition
+        Private m_frequency As Double
+        Private m_dfdt As Double
 
         ' Create frequency value from other frequency value
         ' Note: This method is expected to be implemented as a public shared method in derived class automatically passing in frequencyValueType
@@ -38,16 +38,6 @@ Namespace EE.Phasor
             Return CType(Activator.CreateInstance(frequencyValueType, New Object() {frequencyValue}), IFrequencyValue)
 
         End Function
-
-        Protected Sub New()
-
-            MyBase.New()
-
-            m_frequencyDefinition = Nothing
-            m_frequency = 0.0
-            m_dfdt = 0.0
-
-        End Sub
 
         Protected Sub New(ByVal dataFormat As DataFormat, ByVal frequencyDefinition As IFrequencyDefinition, ByVal frequency As Double, ByVal dfdt As Double)
 
@@ -149,7 +139,7 @@ Namespace EE.Phasor
 
         Public Overrides ReadOnly Property BinaryLength() As Integer
             Get
-                If m_dataFormat = EE.Phasor.DataFormat.FixedInteger Then
+                If DataFormat = EE.Phasor.DataFormat.FixedInteger Then
                     Return 4
                 Else
                     Return 8
@@ -161,7 +151,7 @@ Namespace EE.Phasor
             Get
                 Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BinaryLength)
 
-                If m_dataFormat = EE.Phasor.DataFormat.FixedInteger Then
+                If DataFormat = EE.Phasor.DataFormat.FixedInteger Then
                     EndianOrder.SwapCopyBytes(UnscaledFrequency, buffer, 0)
                     EndianOrder.SwapCopyBytes(UnscaledDfDt, buffer, 2)
                 Else

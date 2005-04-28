@@ -26,11 +26,11 @@ Namespace EE.Phasor
         Inherits ChannelValueBase
         Implements IPhasorValue
 
-        Protected m_phasorFormat As PhasorFormat
-        Protected m_phasorDefinition As IPhasorDefinition
-        Protected m_real As Double
-        Protected m_imaginary As Double
-        Protected m_compositeValues As CompositeValues
+        Private m_phasorFormat As PhasorFormat
+        Private m_phasorDefinition As IPhasorDefinition
+        Private m_real As Double
+        Private m_imaginary As Double
+        Private m_compositeValues As CompositeValues
 
         Protected Enum CompositeValue
             Angle
@@ -59,6 +59,7 @@ Namespace EE.Phasor
         ' Dervied class must expose a Public Sub New(ByVal phasorFormat As PhasorFormat, ByVal dataFormat As DataFormat, ByVal phasorDefinition As IPhasorDefinition, ByVal real As Double, ByVal imaginary As Double)
         Protected Shared Function CreateFromRectangularValues(ByVal phasorValueType As Type, ByVal phasorFormat As PhasorFormat, ByVal dataFormat As DataFormat, ByVal phasorDefinition As IPhasorDefinition, ByVal real As Double, ByVal imaginary As Double) As IPhasorValue
 
+            If phasorDefinition Is Nothing Then Throw New ArgumentNullException("No phasor definition specified")
             Return CType(Activator.CreateInstance(phasorValueType, New Object() {phasorFormat, dataFormat, phasorDefinition, real, imaginary}), IPhasorValue)
 
         End Function
@@ -89,6 +90,8 @@ Namespace EE.Phasor
         ' Calculate watts from imaginary and real components of two phasors
         Public Shared Function CalculatePower(ByVal voltage As IPhasorValue, ByVal current As IPhasorValue) As Double
 
+            If voltage Is Nothing Then Throw New ArgumentNullException("No voltage specified")
+            If current Is Nothing Then Throw New ArgumentNullException("No current specified")
             Return 3 * (voltage.Real * current.Real + voltage.Imaginary * current.Imaginary)
             'Return 3 * voltage.Magnitude * current.Magnitude * Math.Cos((voltage.Angle - current.Angle) * Math.PI / 180)
 
@@ -97,22 +100,12 @@ Namespace EE.Phasor
         ' Calculate vars from imaginary and real components of two phasors
         Public Shared Function CalculateVars(ByVal voltage As IPhasorValue, ByVal current As IPhasorValue) As Double
 
+            If voltage Is Nothing Then Throw New ArgumentNullException("No voltage specified")
+            If current Is Nothing Then Throw New ArgumentNullException("No current specified")
             Return 3 * (voltage.Imaginary * current.Real - voltage.Real * current.Imaginary)
             'Return 3 * voltage.Magnitude * current.Magnitude * Math.Sin((voltage.Angle - current.Angle) * Math.PI / 180)
 
         End Function
-
-        Protected Sub New()
-
-            MyBase.New()
-
-            m_phasorFormat = PhasorFormat.Rectangular
-            m_phasorDefinition = Nothing
-            m_real = 0
-            m_imaginary = 0
-            m_compositeValues = New CompositeValues(2)
-
-        End Sub
 
         Protected Sub New(ByVal dataFormat As DataFormat, ByVal phasorFormat As PhasorFormat, ByVal phasorDefinition As IPhasorDefinition, ByVal real As Double, ByVal imaginary As Double)
 
@@ -279,7 +272,7 @@ Namespace EE.Phasor
 
         Public Overrides ReadOnly Property BinaryLength() As Integer
             Get
-                If m_dataFormat = EE.Phasor.DataFormat.FixedInteger Then
+                If DataFormat = EE.Phasor.DataFormat.FixedInteger Then
                     Return 4
                 Else
                     Return 8
@@ -292,7 +285,7 @@ Namespace EE.Phasor
                 Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BinaryLength)
 
                 If m_phasorFormat = EE.Phasor.PhasorFormat.Rectangular Then
-                    If m_dataFormat = EE.Phasor.DataFormat.FixedInteger Then
+                    If DataFormat = EE.Phasor.DataFormat.FixedInteger Then
                         EndianOrder.SwapCopyBytes(UnscaledReal, buffer, 0)
                         EndianOrder.SwapCopyBytes(UnscaledImaginary, buffer, 2)
                     Else
@@ -300,7 +293,7 @@ Namespace EE.Phasor
                         EndianOrder.SwapCopyBytes(Convert.ToSingle(m_imaginary), buffer, 4)
                     End If
                 Else
-                    If m_dataFormat = EE.Phasor.DataFormat.FixedInteger Then
+                    If DataFormat = EE.Phasor.DataFormat.FixedInteger Then
                         EndianOrder.SwapCopyBytes(Convert.ToUInt16(Magnitude), buffer, 0)
                         EndianOrder.SwapCopyBytes(Convert.ToInt16(Angle * Math.PI / 180 * 10000), buffer, 2)
                     Else

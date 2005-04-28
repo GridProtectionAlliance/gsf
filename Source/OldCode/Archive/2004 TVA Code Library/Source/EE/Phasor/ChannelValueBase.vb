@@ -24,7 +24,7 @@ Namespace EE.Phasor
 
         Implements IChannelValue
 
-        Protected m_dataFormat As DataFormat
+        Private m_dataFormat As DataFormat
 
         ' Create channel value from other channel value
         ' Note: This method is expected to be implemented as a public shared method in derived class automatically passing in channelValueType
@@ -34,12 +34,6 @@ Namespace EE.Phasor
             Return CType(Activator.CreateInstance(channelValueType, New Object() {channelValue}), IChannelValue)
 
         End Function
-
-        Protected Sub New()
-
-            m_dataFormat = DataFormat.FloatingPoint
-
-        End Sub
 
         Protected Sub New(ByVal dataFormat As DataFormat)
 

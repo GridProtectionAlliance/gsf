@@ -26,8 +26,8 @@ Namespace EE.Phasor
         Inherits ChannelValueBase
         Implements IDigitalValue
 
-        Protected m_digitalDefinition As IDigitalDefinition
-        Protected m_value As Int16
+        Private m_digitalDefinition As IDigitalDefinition
+        Private m_value As Int16
 
         ' Create digital value from other digital value
         ' Note: This method is expected to be implemented as a public shared method in derived class automatically passing in digitalValueType
@@ -37,15 +37,6 @@ Namespace EE.Phasor
             Return CType(Activator.CreateInstance(digitalValueType, New Object() {digitalValue}), IDigitalValue)
 
         End Function
-
-        Protected Sub New()
-
-            MyBase.New(EE.Phasor.DataFormat.FixedInteger)
-
-            m_digitalDefinition = Nothing
-            m_value = 0
-
-        End Sub
 
         Protected Sub New(ByVal digitalDefinition As IDigitalDefinition, ByVal value As Int16)
 
@@ -80,11 +71,11 @@ Namespace EE.Phasor
         <EditorBrowsable(EditorBrowsableState.Never)> _
         Public NotOverridable Overrides Property DataFormat() As DataFormat
             Get
-                Return m_dataFormat
+                Return MyBase.DataFormat
             End Get
             Set(ByVal Value As DataFormat)
                 If Value = EE.Phasor.DataFormat.FixedInteger Then
-                    m_dataFormat = Value
+                    MyBase.DataFormat = Value
                 Else
                     Throw New NotImplementedException("Digital values represent bit flags and thus can only be fixed integers")
                 End If

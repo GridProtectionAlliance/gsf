@@ -34,12 +34,6 @@ Namespace EE.Phasor
 
         End Function
 
-        Protected Sub New()
-
-            MyBase.New()
-
-        End Sub
-
         Protected Sub New(ByVal index As Integer, ByVal label As String)
 
             MyBase.New(index, label, 1, 0)
@@ -55,11 +49,11 @@ Namespace EE.Phasor
         <EditorBrowsable(EditorBrowsableState.Never)> _
         Public NotOverridable Overrides Property Offset() As Double
             Get
-                Return m_offset
+                Return MyBase.Offset
             End Get
             Set(ByVal Value As Double)
                 If Value = 0 Then
-                    m_offset = Value
+                    MyBase.Offset = Value
                 Else
                     Throw New NotImplementedException("Digital values represent bit flags and thus do not support an offset")
                 End If
@@ -69,11 +63,11 @@ Namespace EE.Phasor
         <EditorBrowsable(EditorBrowsableState.Never)> _
         Public NotOverridable Overrides Property ScalingFactor() As Integer
             Get
-                Return m_scale
+                Return MyBase.ScalingFactor
             End Get
             Set(ByVal Value As Integer)
                 If Value = 1 Then
-                    m_scale = Value
+                    MyBase.ScalingFactor = Value
                 Else
                     Throw New NotImplementedException("Digital values represent bit flags and thus are not scaled")
                 End If

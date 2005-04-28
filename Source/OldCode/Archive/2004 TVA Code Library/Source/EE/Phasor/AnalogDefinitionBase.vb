@@ -32,12 +32,6 @@ Namespace EE.Phasor
 
         End Function
 
-        Protected Sub New()
-
-            MyBase.New()
-
-        End Sub
-
         Protected Sub New(ByVal index As Integer, ByVal label As String, ByVal scale As Integer, ByVal offset As Double)
 
             MyBase.New(index, label, scale, offset)

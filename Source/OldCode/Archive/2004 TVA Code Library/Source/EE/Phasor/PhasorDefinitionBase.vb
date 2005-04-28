@@ -25,8 +25,8 @@ Namespace EE.Phasor
         Inherits ChannelDefinitionBase
         Implements IPhasorDefinition
 
-        Protected m_type As PhasorType
-        Protected m_voltageReference As IPhasorDefinition
+        Private m_type As PhasorType
+        Private m_voltageReference As IPhasorDefinition
 
         ' Create phasor definition from other phasor definition
         ' Note: This method is expected to be implemented as a public shared method in derived class automatically passing in phasorDefinitionType
@@ -36,15 +36,6 @@ Namespace EE.Phasor
             Return CType(Activator.CreateInstance(phasorDefinitionType, New Object() {phasorDefinition}), IPhasorDefinition)
 
         End Function
-
-        Protected Sub New()
-
-            MyBase.New()
-
-            m_type = PhasorType.Voltage
-            m_voltageReference = Me
-
-        End Sub
 
         Protected Sub New(ByVal index As Integer, ByVal label As String, ByVal scale As Integer, ByVal offset As Double, ByVal type As PhasorType, ByVal voltageReference As IPhasorDefinition)
 

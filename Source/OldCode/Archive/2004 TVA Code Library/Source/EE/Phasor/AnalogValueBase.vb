@@ -25,8 +25,8 @@ Namespace EE.Phasor
         Inherits ChannelValueBase
         Implements IAnalogValue
 
-        Protected m_analogDefinition As IAnalogDefinition
-        Protected m_value As Double
+        Private m_analogDefinition As IAnalogDefinition
+        Private m_value As Double
 
         ' Create analog value from other analog value
         ' Note: This method is expected to be implemented as a public shared method in derived class automatically passing in analogValueType
@@ -36,15 +36,6 @@ Namespace EE.Phasor
             Return CType(Activator.CreateInstance(analogValueType, New Object() {analogValue}), IAnalogValue)
 
         End Function
-
-        Protected Sub New()
-
-            MyBase.New()
-
-            m_analogDefinition = Nothing
-            m_value = 0
-
-        End Sub
 
         Protected Sub New(ByVal dataFormat As DataFormat, ByVal analogDefinition As IAnalogDefinition, ByVal value As Double)
 
@@ -119,7 +110,7 @@ Namespace EE.Phasor
 
         Public Overrides ReadOnly Property BinaryLength() As Integer
             Get
-                If m_dataFormat = EE.Phasor.DataFormat.FixedInteger Then
+                If DataFormat = EE.Phasor.DataFormat.FixedInteger Then
                     Return 2
                 Else
                     Return 4
@@ -131,7 +122,7 @@ Namespace EE.Phasor
             Get
                 Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BinaryLength)
 
-                If m_dataFormat = EE.Phasor.DataFormat.FixedInteger Then
+                If DataFormat = EE.Phasor.DataFormat.FixedInteger Then
                     EndianOrder.SwapCopyBytes(UnscaledValue, buffer, 0)
                 Else
                     EndianOrder.SwapCopyBytes(Convert.ToSingle(m_value), buffer, 0)

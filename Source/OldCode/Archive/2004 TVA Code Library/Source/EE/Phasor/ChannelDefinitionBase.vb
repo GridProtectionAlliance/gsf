@@ -24,10 +24,10 @@ Namespace EE.Phasor
 
         Implements IChannelDefinition
 
-        Protected m_index As Integer
-        Protected m_label As String
-        Protected m_scale As Integer
-        Protected m_offset As Double
+        Private m_index As Integer
+        Private m_label As String
+        Private m_scale As Integer
+        Private m_offset As Double
 
         ' Create channel definition from other channel definition
         ' Note: This method is expected to be implemented as a public shared method in derived class automatically passing in channelDefinitionType
@@ -37,15 +37,6 @@ Namespace EE.Phasor
             Return CType(Activator.CreateInstance(channelDefinitionType, New Object() {channelDefinition}), IChannelDefinition)
 
         End Function
-
-        Protected Sub New()
-
-            m_index = 0
-            m_label = ""
-            m_scale = 1
-            m_offset = 0.0
-
-        End Sub
 
         Protected Sub New(ByVal index As Integer, ByVal label As String, ByVal scale As Integer, ByVal offset As Double)
 
@@ -112,7 +103,7 @@ Namespace EE.Phasor
                 Return m_label
             End Get
             Set(ByVal Value As String)
-                If Len(Value) > MaximumLabelLength Then
+                If Len(Trim(Value)) > MaximumLabelLength Then
                     Throw New OverflowException("Label length cannot exceed " & MaximumLabelLength)
                 Else
                     m_label = Trim(Replace(Value, Chr(20), " "))

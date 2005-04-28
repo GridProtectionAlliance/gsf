@@ -28,11 +28,11 @@ Namespace EE.Phasor
         Inherits ChannelFrameBase
         Implements IPhasorDataFrame
 
-        Protected m_phasorFormat As PhasorFormat
-        Protected m_statusFlags As Int16
-        Protected m_phasorValues As PhasorValues
-        Protected m_frequencyValue As IFrequencyValue
-        Protected m_digitalValues As DigitalValues
+        Private m_phasorFormat As PhasorFormat
+        Private m_statusFlags As Int16
+        Private m_phasorValues As PhasorValues
+        Private m_frequencyValue As IFrequencyValue
+        Private m_digitalValues As DigitalValues
 
         ' Create phasor data frame from other phasor data frame
         ' Note: This method is expected to be implemented as a public shared method in derived class automatically passing in phasorDataFrameType
@@ -48,7 +48,6 @@ Namespace EE.Phasor
             MyBase.New()
 
             m_phasorFormat = PhasorFormat.Rectangular
-            m_statusFlags = 0
             m_phasorValues = New PhasorValues
             m_frequencyValue = frequencyValue
             m_digitalValues = New DigitalValues

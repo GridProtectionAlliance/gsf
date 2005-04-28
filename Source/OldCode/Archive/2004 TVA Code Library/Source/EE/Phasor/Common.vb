@@ -33,8 +33,8 @@ Namespace EE.Phasor
     End Enum
 
     Public Enum LineFrequency As Byte
-        _50Hz
-        _60Hz
+        Hz50
+        Hz60
     End Enum
 
 End Namespace

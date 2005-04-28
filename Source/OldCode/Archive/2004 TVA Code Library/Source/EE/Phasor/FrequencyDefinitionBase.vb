@@ -23,9 +23,9 @@ Namespace EE.Phasor
         Inherits ChannelDefinitionBase
         Implements IFrequencyDefinition
 
-        Protected m_dfdtScale As Integer
-        Protected m_dfdtOffset As Double
-        Protected m_nominalFrequency As LineFrequency
+        Private m_dfdtScale As Integer
+        Private m_dfdtOffset As Double
+        Private m_nominalFrequency As LineFrequency
 
         ' Create frequency definition from other frequency definition
         ' Note: This method is expected to be implemented as a public shared method in derived class automatically passing in frequencyDefinitionType
@@ -35,17 +35,6 @@ Namespace EE.Phasor
             Return CType(Activator.CreateInstance(frequencyDefinitionType, New Object() {frequencyDefinition}), IFrequencyDefinition)
 
         End Function
-
-        Protected Sub New()
-
-            MyBase.New()
-
-            m_scale = 1000
-            m_dfdtScale = 100
-            m_dfdtOffset = 0.0
-            m_nominalFrequency = LineFrequency._60Hz
-
-        End Sub
 
         Protected Sub New(ByVal index As Integer, ByVal label As String, ByVal scale As Integer, ByVal offset As Double, ByVal dfdtScale As Double, ByVal dfdtOffset As Double, ByVal nominalLineFrequency As LineFrequency)
 
@@ -102,7 +91,7 @@ Namespace EE.Phasor
 
         Public Overridable ReadOnly Property NominalFrequencyOffset() As Double Implements IFrequencyDefinition.NominalFrequencyOffset
             Get
-                If m_nominalFrequency = LineFrequency._60Hz Then
+                If m_nominalFrequency = LineFrequency.Hz60 Then
                     Return 60.0
                 Else
                     Return 50.0

@@ -27,7 +27,7 @@ Namespace EE.Phasor
 
         Implements IChannelFrame
 
-        Protected m_timeTag As NtpTimeTag
+        Private m_timeTag As NtpTimeTag
 
         ' Create channel frame from other channel frame
         ' Note: This method is expected to be implemented as a public shared method in derived class automatically passing in channelFrameType
