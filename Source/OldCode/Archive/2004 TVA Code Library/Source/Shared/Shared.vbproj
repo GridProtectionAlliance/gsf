@@ -89,11 +89,6 @@
         <Files>
             <Include>
                 <File
-                    RelPath = "Assembly.vb"
-                    SubType = "Code"
-                    BuildAction = "Compile"
-                />
-                <File
                     RelPath = "AssemblyInfo.vb"
                     SubType = "Code"
                     BuildAction = "Compile"
