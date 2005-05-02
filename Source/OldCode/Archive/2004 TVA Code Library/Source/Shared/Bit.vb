@@ -9,8 +9,10 @@
 Option Explicit On 
 
 Namespace [Shared]
+    ''' <summary>
+    ''' Bit Manipulation Functions
+    ''' </summary>
 
-    ' Bit Manipulation Functions
     Public Class Bit
 
         Private Sub New()
@@ -59,10 +61,10 @@ Namespace [Shared]
         Public Const Bit30 As Int32 = 1073741824    ' &H40000000
         Public Const Bit31 As Int32 = -2147483648   ' &H80000000
 
-
-        ' Returns the high byte (Int8) from a word (Int16).  On Intel platforms this should return the high-order byte
-        ' of a 16-bit integer value, i.e., the byte value whose in-memory representation is the same as the left-most,
-        ' most-significant-byte of the integer value.
+        ''' <summary>
+        ''' <para>Returns the high byte (Int8) from a word (Int16).  On Intel platforms this should return the high-order byte of a 16-bit integer value, i.e., the byte value whose in-memory representation is the same as the left-most, most-significant-byte of the integer value.</para>
+        ''' </summary>
+       
         Public Shared Function HiByte(ByVal w As Int16) As Byte
 
             Return BitConverter.GetBytes(w)(0)
@@ -73,6 +75,10 @@ Namespace [Shared]
             'End If
 
         End Function
+        ''' <summary>
+        ''' <para> Returns the high word (Int16) from a double word (Int32).  On Intel platforms this should return the high-order word of a 32-bit integer value, i.e., the word value whose in-memory representation is the same as the left-most, most-significant-word of the integer value.</para>
+        ''' </summary>
+        ''' <param name="dw">Double Word</param>
 
         ' Returns the high word (Int16) from a double word (Int32).  On Intel platforms this should return the high-order word
         ' of a 32-bit integer value, i.e., the word value whose in-memory representation is the same as the left-most,
@@ -87,6 +93,10 @@ Namespace [Shared]
             'End If
 
         End Function
+        ''' <summary>
+        ''' <para>Returns the low byte (Int8) from a word (Int16).  On Intel platforms this should return the low-order byte of a 16-bit integer value, i.e., the byte value whose in-memory representation is the same as the right-most,least-significant-byte of the integer value.</para>
+        ''' </summary>
+        ''' <param name="w">Word</param>
 
         ' Returns the low byte (Int8) from a word (Int16).  On Intel platforms this should return the low-order byte
         ' of a 16-bit integer value, i.e., the byte value whose in-memory representation is the same as the right-most,
@@ -97,6 +107,10 @@ Namespace [Shared]
             'Return w And &HFF
 
         End Function
+        ''' <summary>
+        ''' <para>Returns the low word (Int16) from a double word (Int32).  On Intel platforms this should return the low-order word of a 32-bit integer value, i.e., the word value whose in-memory representation is the same as the right-most, least-significant-word of the integer value.</para>
+        ''' </summary>
+        ''' <param name="dw">Double Word</param>
 
         ' Returns the low word (Int16) from a double word (Int32).  On Intel platforms this should return the low-order word
         ' of a 32-bit integer value, i.e., the word value whose in-memory representation is the same as the right-most,
@@ -111,6 +125,11 @@ Namespace [Shared]
             'End If
 
         End Function
+        ''' <summary>
+        ''' <para>Bits shifts word (Int16) value to the left "n" times.</para>
+        ''' </summary>
+        ''' <param name="w">Word</param>
+        ''' <param name="n">Number of times to shift value to left</param>
 
         ' Bits shifts word (Int16) value to the left "n" times
         <Obsolete("This function has been deprecated, just use new << operator.  Note that this function may be removed from future versions.")> _
@@ -128,6 +147,11 @@ Namespace [Shared]
             'End If
 
         End Function
+        ''' <summary>
+        ''' <para>Bits shifts word (Int16) value to the right "n" times.</para>
+        ''' </summary>
+        ''' <param name="w">Word</param>
+        ''' <param name="n">Number of times to shift value to right</param>
 
         ' Bits shifts word (Int16) value to the right "n" times
         <Obsolete("This function has been deprecated, just use new >> operator.  Note that this function may be removed from future versions.")> _
@@ -145,6 +169,11 @@ Namespace [Shared]
             'End If
 
         End Function
+        ''' <summary>
+        ''' <para>Makes a word (Int16) from two bytes (Int8)</para>
+        ''' </summary>
+        ''' <param name="bHi">Byte</param>
+        ''' <param name="bLo">Byte</param>
 
         ' Makes a word (Int16) from two bytes (Int8)
         Public Shared Function MakeWord(ByVal bHi As Byte, ByVal bLo As Byte) As Int16
@@ -157,7 +186,11 @@ Namespace [Shared]
             'End If
 
         End Function
-
+        ''' <summary>
+        ''' <para> Makes a double word (Int32) from two words (Int16)</para>
+        ''' </summary>
+        ''' <param name="wHi">Word</param>
+        ''' <param name="wLo">Word</param>
         ' Makes a double word (Int32) from two words (Int16)
         Public Shared Function MakeDWord(ByVal wHi As Int16, ByVal wLo As Int16) As Int32
 

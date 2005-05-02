@@ -6,8 +6,10 @@ Imports System.Security.Principal
 Imports System.DirectoryServices
 
 Namespace [Shared]
+    ''' <summary>
+    ''' Common user identity functions
+    ''' </summary>
 
-    ' Common user identity functions
     Public Class Identity
 
         <StructLayout(LayoutKind.Sequential, CharSet:=CharSet.Unicode)> _
@@ -240,7 +242,15 @@ Namespace [Shared]
             impersonatedUser = Nothing
 
         End Sub
-
+        ''' <summary>
+        ''' <para>
+        ''' Connect to NetworkShare
+        ''' </para>
+        ''' </summary>
+        ''' <param name="sharename"> Required. SMTP relay mail server to use to send e-mail. </param>
+        '''<param name="username"> Required.The address of the e-mail sender.</param>
+        ''' <param name="password"> Required.The address of the e-mail recipient.</param>
+        ''' <param name="domain"> Required.The address of the e-mail recipient.</param>
         Public Shared Sub ConnectToNetworkShare(ByVal sharename As String, ByVal username As String, ByVal password As String, ByVal domain As String)
 
             Dim resource As NETRESOURCE

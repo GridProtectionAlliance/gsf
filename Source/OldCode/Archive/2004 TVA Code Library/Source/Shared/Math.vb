@@ -18,7 +18,9 @@ Option Explicit On
 
 Namespace [Shared]
 
-    ' Global Math Functions
+    ''' <summary>
+    ''' Defines global Math functions
+    ''' </summary>
     Public Class Math
 
         Private Sub New()
@@ -27,7 +29,12 @@ Namespace [Shared]
 
         End Sub
 
-        ' Calculate word length XOR check-sum on specified portion of a buffer
+        '''<summary> 
+        '''Calculate word length XOR check-sum on specified portion of a buffer
+        '''</summary>
+        '''<param name="data"> a parameter value of Byte datatype </param>
+        '''<param name="startIndex"> start  </param>
+        '''<param name="length"> Length</param>
         Public Shared Function XorCheckSum(ByVal data As Byte(), ByVal startIndex As Integer, ByVal length As Integer) As Int16
 
             Dim sum As Int16
@@ -39,8 +46,11 @@ Namespace [Shared]
             Return sum
 
         End Function
+        '''<summary> 
+        '''This function will take a double value and properly convert it back into a "signed" 16-bit integer
+        '''</summary>
+        '''<param name="source"> a parameter value of Double datatype </param>
 
-        ' This function will take a double value and properly convert it back into a "signed" 16-bit integer
         Public Shared Function ParseInt16(ByVal source As Double) As Int16
 
             Try
@@ -50,9 +60,13 @@ Namespace [Shared]
             End Try
 
         End Function
-
-        ' You can use this class to temporarily cache composite values until they've all been
+        '''<summary> 
+        ''' <para>
+        '''You can use this class to temporarily cache composite values until they've all been
         ' received so that a compound value can be created
+        ''' </para>
+        '''</summary>
+
         Public Class CompositeValues
 
             Private Structure CompositeValue
@@ -64,13 +78,20 @@ Namespace [Shared]
 
             Private m_compositeValues As CompositeValue()
             Private m_allReceived As Boolean
-
+            '''<summary> 
+            ''' This Constructor creates an instance of an array to store all the composite values.
+            '''</summary>
             Public Sub New(ByVal count As Integer)
 
                 m_compositeValues = Array.CreateInstance(GetType(CompositeValue), count)
 
             End Sub
-
+            '''<summary> 
+            '''Gets or sets the Composite Values to create a Compound value 
+            '''</summary>
+            ''' <value>Composite Value</value>
+            ''' <remarks> The value must be double.
+            ''' </remarks>
             Default Public Property Value(ByVal index As Integer) As Double
                 Get
                     Return m_compositeValues(index).Value
@@ -82,6 +103,10 @@ Namespace [Shared]
                     End With
                 End Set
             End Property
+            '''<summary> 
+            '''Checks to see if Composite Value is received 
+            '''</summary>
+            ''' <value>Readonly value</value>
 
             Public ReadOnly Property Received(ByVal index As Integer) As Boolean
                 Get
@@ -94,6 +119,10 @@ Namespace [Shared]
                     Return m_compositeValues.Length
                 End Get
             End Property
+            '''<summary> 
+            '''Checks to see if all Composite values are received 
+            '''</summary>
+            ''' <value>Readonly value</value>
 
             Public ReadOnly Property AllReceived() As Boolean
                 Get

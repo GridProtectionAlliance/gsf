@@ -7,16 +7,16 @@
 
 Option Explicit On 
 Option Compare Binary
-
 Imports System.Globalization
 Imports Microsoft.Win32
 Imports TVA.Shared.String
-
 Namespace [Shared]
 
+    ''' <summary>
+    ''' Defines common global functions related to Date/Time manipulation
+    ''' </summary>
     ' Common Date/Time Functions
     Public Class [DateTime]
-
         Public Enum TimeName
             Year
             Years
@@ -31,14 +31,13 @@ Namespace [Shared]
             LessThan60Seconds
             NoSeconds
         End Enum
-
         Private Sub New()
-
             ' This class contains only global functions and is not meant to be instantiated
-
         End Sub
-
-        ' This function removes any milliseconds from a timestamp value to baseline the time at the bottom of the second
+        ''' <summary>
+        ''' <para>Removes any milliseconds from a timestamp value to baseline the time at the bottom of the second</para>
+        ''' </summary>
+        '''<param name="timestamp">DateTime</param>
         Public Shared Function BaselinedTimestamp(ByVal timestamp As System.DateTime) As System.DateTime
 
             With timestamp
@@ -50,9 +49,13 @@ Namespace [Shared]
             End With
 
         End Function
+        ''' <summary>
+        ''' <para> Turns number of given seconds into years/days/hours/minutes string - set second precision to -1 to suppress seconds display</para>
+        ''' </summary>
+        '''<param name="Seconds">Seconds to be converted </param>
+        ''' <param name="SecondPrecision">Optional.Precision to suppress seconds display</param>
 
-        ' Turns number of given seconds into years/days/hours/minutes string - set second precision to -1 to suppress seconds display
-        Public Shared Function SecondsToText(ByVal Seconds As Single, Optional ByVal SecondPrecision As Integer = 0) As String
+        Public Shared Function SecondsToText(ByVal Seconds As System.Single, Optional ByVal SecondPrecision As Integer = 0) As String
 
             If SecondPrecision < 0 Then
                 Return SecondsToText(Seconds, New String() {"Year", "Years", "Day", "Days", "Hour", "Hours", "Minute", "Minutes", "Second", "Seconds", "Less Than 1 Minute", "0 Minutes"}, SecondPrecision)
@@ -61,11 +64,15 @@ Namespace [Shared]
             End If
 
         End Function
-
-        ' Turns number of given seconds into years/days/hours/minutes string given string array of time names - need one for each TimeName enum item
-        ' Set second precision to -1 to suppress seconds display.
-        ' Example array: "Year", "Years", "Day", "Days", "Hour", "Hours", "Minute", "Minutes", "Second", "Seconds", "Less Than 60 Seconds", "0 Seconds"
-        Public Shared Function SecondsToText(ByVal Seconds As Single, ByVal TimeNames As String(), Optional ByVal SecondPrecision As Integer = 0) As String
+        ''' <summary>
+        ''' <para> Turns number of given seconds into years/days/hours/minutes string given string array of time names - need one for each TimeName enum item</para>
+        ''' </summary>
+        '''<remarks> <para>Set second precision to -1 to suppress seconds display.Example array: "Year", "Years", "Day", "Days", "Hour", "Hours", "Minute", "Minutes", "Second", "Seconds", "Less Than 60 Seconds", "0 Seconds"</para>
+        '''</remarks>
+        ''' <param name="Seconds">Seconds to be converted</param>
+        ''' <param name="TimeNames">Time Names to which the seconds should be converted</param>
+        ''' <param name="SecondPrecision">Optional.Precision to suppress seconds display </param>
+        Public Shared Function SecondsToText(ByVal Seconds As System.Single, ByVal TimeNames As System.String(), Optional ByVal SecondPrecision As Integer = 0) As String
 
             Dim Years As Integer
             Dim Days As Integer
@@ -122,8 +129,13 @@ Namespace [Shared]
             Return LTrim(TextTime)
 
         End Function
+        '''<summary>
+        ''' <para>
+        ''' Returns 3 letter month abbreviation for given month number (1-12)
+        ''' </para>
+        ''' </summary>
+        ''' <param name="MonthNumber">Month Number</param>
 
-        ' Returns 3 letter month abbreviation for given month number (1-12)
         Public Shared Function GetShortMonth(ByVal MonthNumber As Short) As String
 
             Dim Month As String
@@ -160,8 +172,13 @@ Namespace [Shared]
             Return Month
 
         End Function
+        '''<summary>
+        ''' <para>
+        ''' Returns full month name from given month number (1-12)
+        ''' </para>
+        ''' </summary>
+        ''' <param name="MonthNumber">Month Number</param>
 
-        ' Returns full month name from given month number (1-12)
         Public Shared Function GetLongMonth(ByVal MonthNumber As Short) As String
 
             Dim Month As String
@@ -198,8 +215,11 @@ Namespace [Shared]
             Return Month
 
         End Function
-
-        ' Standard Network Time Protocol timestamp
+        '''<summary>
+        ''' <para>
+        '''  Standard Network Time Protocol timestamp
+        ''' </para>
+        ''' </summary>
         Public Class NtpTimeTag
 
             Implements IComparable
@@ -215,14 +235,23 @@ Namespace [Shared]
                 Value = seconds
 
             End Sub
-
+            '''<summary>
+            ''' <para>
+            '''  Zero base 100-nanosecond ticks from 1/1/1900 and convert to seconds
+            ''' </para>
+            ''' </summary>
             Public Sub New(ByVal dtm As System.DateTime)
-
-                ' Zero base 100-nanosecond ticks from 1/1/1900 and convert to seconds
                 Value = (dtm.Ticks - ntpDateOffsetTicks) / 10000000L
-
             End Sub
-
+            '''<summary>
+            ''' <para>
+            ''' Property
+            ''' </para>
+            ''' </summary>
+            ''' <value>Seconds </value>
+            ''' <remarks> 
+            ''' <para>sets minimum seconds to zero. </para>
+            ''' </remarks>
             Public Property Value() As Double
                 Get
                     Return m_seconds
@@ -232,21 +261,30 @@ Namespace [Shared]
                     If m_seconds < 0 Then m_seconds = 0
                 End Set
             End Property
-
+            '''<summary>
+            ''' <para>
+            '''  Convert m_seconds to 100-nanosecond ticks and add the 1/1/1900 offset
+            ''' </para>
+            ''' </summary>
             Public Function ToDateTime() As System.DateTime
-
-                ' Convert m_seconds to 100-nanosecond ticks and add the 1/1/1900 offset
                 Return New System.DateTime(m_seconds * 10000000L + ntpDateOffsetTicks)
-
             End Function
-
+            '''<summary>
+            ''' <para>
+            '''  Returns String value for datetime
+            ''' </para>
+            ''' </summary>
             Public Overrides Function ToString() As String
 
                 Return ToDateTime.ToString("dd-MMM-yyyy HH:mm:ss.fff")
 
             End Function
+            '''<summary>
+            ''' <para>
+            '''   NtpTimeTag are sorted in value order
+            ''' </para>
+            ''' </summary>
 
-            ' NtpTimeTag are sorted in value order
             Public Function CompareTo(ByVal obj As Object) As Integer Implements System.IComparable.CompareTo
 
                 If TypeOf obj Is NtpTimeTag Then
@@ -284,8 +322,6 @@ Namespace [Shared]
             Private _dayOfWeek As DayOfWeek
             Private _dayOfWeekIndex As Int32
             Private _timeOfDay As TimeSpan
-
-
             ' Constructor without parameters is not allowed.
             Private Sub New()
             End Sub
@@ -353,12 +389,14 @@ Namespace [Shared]
                 _timeOfDay = timeOfDay
 
             End Sub
+            '''<summary>
+            ''' <para>
+            '''  Returns the time and date of the daylight saving change for a particular year. For example:"the 1st Sunday of April at 2:00am" for the year "2000"  is "2000/04/02 02:00"
+            ''' </para>
+            ''' </summary>
+            ''' <param name="year">Year</param>
 
 
-            ' Returns the time and date of the daylight saving change
-            ' for a particular year. For example:
-            '   "the 1st Sunday of April at 2:00am" for the year "2000"
-            '   is "2000/04/02 02:00"
             Public Overridable Function GetDate( _
               ByVal year As Int32 _
             ) As System.DateTime
@@ -423,12 +461,16 @@ Namespace [Shared]
             ' Constructor without parameters is not allowed.
             Private Sub New()
             End Sub
+            '''<summary>
+            ''' <para>
+            '''  Constructor for time zone without daylight saving time.
+            ''' </para>
+            ''' </summary>
 
-            ' Constructor for time zone without daylight saving time.
             Public Sub New( _
               ByVal standardOffset As TimeSpan, _
-              ByVal standardName As String, _
-              ByVal standardAbbreviation As String _
+              ByVal standardName As System.String, _
+              ByVal standardAbbreviation As System.String _
             )
 
                 ' Initialize private storage
@@ -439,8 +481,12 @@ Namespace [Shared]
                 _standardAbbreviation = standardAbbreviation
 
             End Sub
+            '''<summary>
+            ''' <para>
+            '''  Constructor for time zone with or without daylight saving time.
+            ''' </para>
+            ''' </summary>
 
-            ' Constructor for time zone with or without daylight saving time.
             Public Sub New( _
               ByVal standardOffset As TimeSpan, _
               ByVal standardName As String, _
@@ -527,11 +573,14 @@ Namespace [Shared]
                     Return _daylightAbbreviation
                 End Get
             End Property
+            '''<summary>
+            ''' <para>
+            ''' The name is dependent on whether the time zone is in daylight
+            ''' saving time or not. This method can be ambiguous during
+            ''' daylight changes.
+            ''' </para>
+            ''' </summary>
 
-
-            ' The name is dependant on whether the time zone is in daylight
-            ' saving time or not. This method can be ambiguous during
-            ' daylight changes.
             Public Overridable Function GetNameLocalTime( _
               ByVal time As System.DateTime _
             ) As String
@@ -545,8 +594,12 @@ Namespace [Shared]
                 End If
 
             End Function
+            '''<summary>
+            ''' <para>
+            ''' This function is unambiguous during daylight changes.
+            ''' </para>
+            ''' </summary>
 
-            ' This method is unambiguous during daylight changes.
             Public Overridable Function GetNameUniversalTime( _
               ByVal time As System.DateTime _
             ) As String
@@ -559,10 +612,14 @@ Namespace [Shared]
 
             End Function
 
+            '''<summary>
+            ''' <para>
+            ''' The abbreviation is dependant on whether the time zone is in
+            ''' daylight saving time or not. This function can be ambiguous during
+            ''' daylight changes.
+            ''' </para>
+            ''' </summary>
 
-            ' The abbreviation is dependant on whether the time zone is in
-            ' daylight saving time or not. This method can be ambiguous during
-            ' daylight changes.
             Public Overridable Function GetAbbreviationLocalTime( _
               ByVal time As System.DateTime _
             ) As String
@@ -576,8 +633,12 @@ Namespace [Shared]
                 End If
 
             End Function
+            '''<summary>
+            ''' <para>
+            ''' This function is unambiguous during daylight changes.
+            ''' </para>
+            ''' </summary>
 
-            ' This method is unambiguous during daylight changes.
             Public Overridable Function GetAbbreviationUniversalTime( _
               ByVal time As System.DateTime _
             ) As String
@@ -589,10 +650,15 @@ Namespace [Shared]
                 End If
 
             End Function
-
+            '''<summary>
+            ''' <para>
+            ''' Returns daylight changes 
+            ''' </para>
+            ''' </summary>
+            ''' <param name="year">Year to get the daylight changes</param>
 
             Public Overrides Function GetDaylightChanges( _
-              ByVal year As Int32 _
+              ByVal year As System.Int32 _
             ) As DaylightTime
 
                 If ((year < 1) OrElse (year > System.DateTime.MaxValue.Year)) Then
@@ -611,9 +677,12 @@ Namespace [Shared]
                 End If
 
             End Function
+            '''<summary>
+            ''' <para>
+            '''  This method can be ambiguous during daylight changes.
+            ''' </para>
+            ''' </summary>
 
-
-            ' This method can be ambiguous during daylight changes.
             Public Overloads Overrides Function IsDaylightSavingTime( _
               ByVal time As System.DateTime _
             ) As Boolean
@@ -621,9 +690,12 @@ Namespace [Shared]
                 Return IsDaylightSavingTime(time, False)
 
             End Function
+            '''<summary>
+            ''' <para>
+            '''  This method is unambiguous during daylight changes.
+            ''' </para>
+            ''' </summary>
 
-
-            ' This method is unambiguous during daylight changes.
             Public Overridable Function IsDaylightSavingTimeUniversalTime( _
               ByVal time As System.DateTime _
             ) As Boolean
@@ -632,7 +704,11 @@ Namespace [Shared]
                 Return IsDaylightSavingTime(time, True)
 
             End Function
-
+            '''<summary>
+            ''' <para>
+            ''' Return whether the time is within the daylight saving time for this year.
+            ''' </para>
+            ''' </summary>
 
             Private Overloads Function IsDaylightSavingTime( _
               ByVal time As System.DateTime, _
@@ -649,9 +725,8 @@ Namespace [Shared]
                 ' time's year.
                 Dim daylightTimes As DaylightTime
                 daylightTimes = GetDaylightChanges(time.Year)
+                'Return whether the time is within the daylight saving time for this year.
 
-                ' Return whether the time is within the daylight saving
-                ' time for this year.
                 Return IsDaylightSavingTime(time, daylightTimes, fromUtcTime)
 
             End Function
@@ -666,15 +741,18 @@ Namespace [Shared]
 
             End Function
 
-
+            '''<summary>
+            ''' <para>
+            '''  Mirrors .NET Framework TimeZone functionality, which does not throw an exception.
+            ''' </para>
+            ''' </summary>
             Private Overloads Shared Function IsDaylightSavingTime( _
               ByVal time As System.DateTime, _
               ByVal daylightTimes As DaylightTime, _
               ByVal fromUtcTime As Boolean _
             ) As Boolean
 
-                ' Mirrors .NET Framework TimeZone functionality, which 
-                ' does not throw an exception.
+
                 If (daylightTimes Is Nothing) Then
                     Return False
                 End If
@@ -846,10 +924,9 @@ Namespace [Shared]
 
             End Function
 
-
             Public Overridable Function IsAmbiguous( _
-              ByVal time As System.DateTime _
-            ) As Boolean
+               ByVal time As System.DateTime _
+             ) As Boolean
 
                 ' If this time zone is never in daylight saving, then
                 ' return false.
@@ -954,19 +1031,22 @@ Namespace [Shared]
 
             End Function
 
-
-            ' This can return an incorrect time during the time change
-            ' between standard and daylight saving time, because
-            ' times near the daylight saving switch can be ambiguous.
-            '
-            ' For example, if daylight saving ends at:
-            ' "2000/10/29 02:00", and fall back an hour, then is:
-            ' "2000/10/29 01:30", during daylight saving, or not?
-            '
-            ' Consequently, this function is provided for backwards
-            ' compatiblity only, and should be deprecated and replaced
-            ' with the overload that allows daylight saving to be
-            ' specified.
+            '''<summary>
+            ''' <para>
+            ''' This can return an incorrect time during the time change between standard and daylight saving time, because
+            ''' times near the daylight saving switch can be ambiguous.
+            ''' </para>
+            ''' </summary>
+            ''' <remarks>
+            ''' <para>
+            '''  For example, if daylight saving ends at: "2000/10/29 02:00", and fall back an hour, then is:
+            ''' "2000/10/29 01:30", during daylight saving, or not?
+            ''' </para>
+            ''' <para>
+            ''' Consequently, this function is provided for backwards compatiblity only, and should be deprecated and replaced
+            ''' with the overload that allows daylight saving to be specified.
+            ''' </para>
+            ''' </remarks>
             Public Overloads Overrides Function ToUniversalTime( _
               ByVal time As System.DateTime _
             ) As System.DateTime
@@ -986,11 +1066,14 @@ Namespace [Shared]
 
 
             End Function
+            '''<summary>
+            ''' <para>
+            '''' This overload allows the status of daylight saving to be specified along with the time. This conversion
+            ''' is unambiguous and always correct.
+            ''' </para>
+            ''' </summary>
 
 
-            ' This overload allows the status of daylight saving
-            ' to be specified along with the time. This conversion
-            ' is unambiguous and always correct.
             Public Overloads Function ToUniversalTime( _
               ByVal time As System.DateTime, _
               ByVal daylightSaving As Boolean _
@@ -1248,8 +1331,6 @@ Namespace [Shared]
                   )
 
             End Function
-
-
             Public Shared Function GetTimeZone(ByVal index As Int32) As Win32TimeZone
 
                 If (nameRegKeyTimeZones Is Nothing) Then
@@ -1486,6 +1567,12 @@ Namespace [Shared]
                 Return tzEST
             End Get
         End Property
+        '''<summary>
+        '''Readonly Property
+        ''' </summary>
+        ''' <value>
+        ''' Gets the Central Standard Time
+        ''' </value>
 
         Public Shared ReadOnly Property CST() As Win32TimeZone
             Get
@@ -1493,27 +1580,46 @@ Namespace [Shared]
                 Return tzCST
             End Get
         End Property
-
+        '''<summary>
+        '''Readonly Property
+        ''' </summary>
+        ''' <value>
+        ''' Gets the Mountain Standard Time
+        ''' </value>
         Public Shared ReadOnly Property MST() As Win32TimeZone
             Get
                 If tzMST Is Nothing Then tzMST = GetWin32TimeZone("Mountain Standard Time")
                 Return tzMST
             End Get
         End Property
-
+        '''<summary>
+        '''Readonly Property
+        ''' </summary>
+        ''' <value>
+        ''' Gets the Pacific Standard Time
+        ''' </value>
         Public Shared ReadOnly Property PST() As Win32TimeZone
             Get
                 If tzPST Is Nothing Then tzPST = GetWin32TimeZone("Pacific Standard Time")
                 Return tzPST
             End Get
         End Property
-
+        '''<summary>
+        '''Converts the local time to GMT
+        ''' </summary>
+       '''<returns>
+        ''' <para>GMT(UniversalTime)</para>
+        ''' </returns>
         Public Shared Function LocalTimeToGMT(ByVal localTime As System.DateTime) As System.DateTime
 
             Return localTime.ToUniversalTime()
 
         End Function
-
+        '''<summary>
+        ''' <para>
+        ''' Calculate exact GMT offset of destination timezone in hours(Eastern Time)
+        ''' </para>
+        ''' </summary>
         Public Shared Function LocalTimeToEST(ByVal localTime As System.DateTime) As System.DateTime
 
             Dim destOffset As Double
@@ -1526,12 +1632,16 @@ Namespace [Shared]
             Return localTime.ToUniversalTime().AddHours(destOffset)
 
         End Function
-
+        '''<summary>
+        ''' <para>
+        ''' Calculate exact GMT offset of destination timezone in hours
+        ''' </para>
+        ''' </summary>
         Public Shared Function LocalTimeToCST(ByVal localTime As System.DateTime) As System.DateTime
 
             Dim destOffset As Double
 
-            ' Calculate exact GMT offset of destination timezone in hours
+            ' Calculate exact GMT offset of destination timezone in hours(Central Time)
             With CST.GetUtcOffset(localTime)
                 destOffset = .Hours + .Minutes / 60
             End With
@@ -1539,7 +1649,11 @@ Namespace [Shared]
             Return localTime.ToUniversalTime().AddHours(destOffset)
 
         End Function
-
+        '''<summary>
+        ''' <para>
+        ''' Calculate exact GMT offset of destination timezone in hours(MOuntain Time)
+        ''' </para>
+        ''' </summary>
         Public Shared Function LocalTimeToMST(ByVal localTime As System.DateTime) As System.DateTime
 
             Dim destOffset As Double
@@ -1552,7 +1666,11 @@ Namespace [Shared]
             Return localTime.ToUniversalTime().AddHours(destOffset)
 
         End Function
-
+        '''<summary>
+        ''' <para>
+        ''' Calculate exact GMT offset of destination timezone in hours(Pacific Time)
+        ''' </para>
+        ''' </summary>
         Public Shared Function LocalTimeToPST(ByVal localTime As System.DateTime) As System.DateTime
 
             Dim destOffset As Double
