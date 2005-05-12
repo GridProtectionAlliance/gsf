@@ -16,8 +16,8 @@ Namespace [Shared]
 
         Sub New()
 
-            'Get the current executing asembly.
-            m_Assembly = SR.Assembly.GetExecutingAssembly
+            'Get a reference to the assembly.
+            m_Assembly = SR.Assembly.GetEntryAssembly
 
         End Sub
 
