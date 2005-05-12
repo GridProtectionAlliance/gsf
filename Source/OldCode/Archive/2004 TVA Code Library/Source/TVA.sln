@@ -157,9 +157,13 @@ Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "DatAWare", "DatAWare\DatAWa
 	ProjectSection(ProjectDependencies) = postProject
 	EndProjectSection
 EndProject
+Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "ESO.Sdx", "Eso\Sdx\ESO.Sdx.vbproj", "{2BE4865B-A11A-455F-8961-3E26FF27193C}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SourceCodeControl) = preSolution
-		SccNumberOfProjects = 25
+		SccNumberOfProjects = 26
 		SccLocalPath0 = .
 		CanCheckoutShared = false
 		SolutionUniqueID = {BA434792-5D37-40FD-848C-659B0D8E723E}
@@ -255,10 +259,14 @@ Global
 		SccLocalPath23 = .
 		CanCheckoutShared = false
 		SccProjectFilePathRelativizedFromConnection23 = DatAWare\\
-		SccProjectUniqueName24 = EE\\EE.Phasor.vbproj
-		SccLocalPath24 = .
+		SccProjectUniqueName24 = EE\\Phasor\\EE.Phasor.vbproj
+		SccProjectName24 = \u0022$/TVA\u0020Code\u0020Library/Source/EE/Phasor\u0022,\u0020CAYAAAAA
+		SccLocalPath24 = EE\\Phasor
 		CanCheckoutShared = false
-		SccProjectFilePathRelativizedFromConnection24 = EE\\
+		SccProjectUniqueName25 = Eso\\Sdx\\ESO.Sdx.vbproj
+		SccLocalPath25 = .
+		CanCheckoutShared = false
+		SccProjectFilePathRelativizedFromConnection25 = Eso\\Sdx\\
 	EndGlobalSection
 	GlobalSection(SolutionConfiguration) = preSolution
 		Debug = Debug
@@ -318,6 +326,16 @@ Global
 		{FD894316-1489-46BD-B0FF-E9D99E424D0B}.ReleaseWithoutAsm.Build.0 = Release|.NET
 		{FD894316-1489-46BD-B0FF-E9D99E424D0B}.ReleaseWithoutCrtdll.ActiveCfg = Release|.NET
 		{FD894316-1489-46BD-B0FF-E9D99E424D0B}.ReleaseWithoutCrtdll.Build.0 = Release|.NET
+		{AEBCFD16-5FB0-433E-95F1-7975418E7887}.Debug.ActiveCfg = Debug|.NET
+		{AEBCFD16-5FB0-433E-95F1-7975418E7887}.Debug.Build.0 = Debug|.NET
+		{AEBCFD16-5FB0-433E-95F1-7975418E7887}.Release.ActiveCfg = Release|.NET
+		{AEBCFD16-5FB0-433E-95F1-7975418E7887}.Release.Build.0 = Release|.NET
+		{AEBCFD16-5FB0-433E-95F1-7975418E7887}.ReleaseAxp.ActiveCfg = Release|.NET
+		{AEBCFD16-5FB0-433E-95F1-7975418E7887}.ReleaseAxp.Build.0 = Release|.NET
+		{AEBCFD16-5FB0-433E-95F1-7975418E7887}.ReleaseWithoutAsm.ActiveCfg = Release|.NET
+		{AEBCFD16-5FB0-433E-95F1-7975418E7887}.ReleaseWithoutAsm.Build.0 = Release|.NET
+		{AEBCFD16-5FB0-433E-95F1-7975418E7887}.ReleaseWithoutCrtdll.ActiveCfg = Release|.NET
+		{AEBCFD16-5FB0-433E-95F1-7975418E7887}.ReleaseWithoutCrtdll.Build.0 = Release|.NET
 		{A158CA96-A27F-41B2-BB67-C1EB998AC9AD}.Debug.ActiveCfg = Debug|.NET
 		{A158CA96-A27F-41B2-BB67-C1EB998AC9AD}.Debug.Build.0 = Debug|.NET
 		{A158CA96-A27F-41B2-BB67-C1EB998AC9AD}.Release.ActiveCfg = Release|.NET
@@ -498,16 +516,16 @@ Global
 		{123904DA-3BCE-4529-84C3-43ABB4A13A5E}.ReleaseWithoutAsm.Build.0 = Release|.NET
 		{123904DA-3BCE-4529-84C3-43ABB4A13A5E}.ReleaseWithoutCrtdll.ActiveCfg = Release|.NET
 		{123904DA-3BCE-4529-84C3-43ABB4A13A5E}.ReleaseWithoutCrtdll.Build.0 = Release|.NET
-		{AEBCFD16-5FB0-433E-95F1-7975418E7887}.Debug.ActiveCfg = Debug|.NET
-		{AEBCFD16-5FB0-433E-95F1-7975418E7887}.Debug.Build.0 = Debug|.NET
-		{AEBCFD16-5FB0-433E-95F1-7975418E7887}.Release.ActiveCfg = Release|.NET
-		{AEBCFD16-5FB0-433E-95F1-7975418E7887}.Release.Build.0 = Release|.NET
-		{AEBCFD16-5FB0-433E-95F1-7975418E7887}.ReleaseAxp.ActiveCfg = Release|.NET
-		{AEBCFD16-5FB0-433E-95F1-7975418E7887}.ReleaseAxp.Build.0 = Release|.NET
-		{AEBCFD16-5FB0-433E-95F1-7975418E7887}.ReleaseWithoutAsm.ActiveCfg = Release|.NET
-		{AEBCFD16-5FB0-433E-95F1-7975418E7887}.ReleaseWithoutAsm.Build.0 = Release|.NET
-		{AEBCFD16-5FB0-433E-95F1-7975418E7887}.ReleaseWithoutCrtdll.ActiveCfg = Release|.NET
-		{AEBCFD16-5FB0-433E-95F1-7975418E7887}.ReleaseWithoutCrtdll.Build.0 = Release|.NET
+		{2BE4865B-A11A-455F-8961-3E26FF27193C}.Debug.ActiveCfg = Debug|.NET
+		{2BE4865B-A11A-455F-8961-3E26FF27193C}.Debug.Build.0 = Debug|.NET
+		{2BE4865B-A11A-455F-8961-3E26FF27193C}.Release.ActiveCfg = Release|.NET
+		{2BE4865B-A11A-455F-8961-3E26FF27193C}.Release.Build.0 = Release|.NET
+		{2BE4865B-A11A-455F-8961-3E26FF27193C}.ReleaseAxp.ActiveCfg = Release|.NET
+		{2BE4865B-A11A-455F-8961-3E26FF27193C}.ReleaseAxp.Build.0 = Release|.NET
+		{2BE4865B-A11A-455F-8961-3E26FF27193C}.ReleaseWithoutAsm.ActiveCfg = Release|.NET
+		{2BE4865B-A11A-455F-8961-3E26FF27193C}.ReleaseWithoutAsm.Build.0 = Release|.NET
+		{2BE4865B-A11A-455F-8961-3E26FF27193C}.ReleaseWithoutCrtdll.ActiveCfg = Release|.NET
+		{2BE4865B-A11A-455F-8961-3E26FF27193C}.ReleaseWithoutCrtdll.Build.0 = Release|.NET
 	EndGlobalSection
 	GlobalSection(SolutionItems) = postSolution
 		Build.ts = Build.ts

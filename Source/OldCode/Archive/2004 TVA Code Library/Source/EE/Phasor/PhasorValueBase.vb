@@ -32,7 +32,7 @@ Namespace EE.Phasor
         Private m_imaginary As Double
         Private m_compositeValues As CompositeValues
 
-        Protected Enum CompositeValue
+        Private Enum CompositeValue
             Angle
             Magnitude
         End Enum
@@ -207,6 +207,21 @@ Namespace EE.Phasor
             End Set
         End Property
 
+        Private Sub CalculatePhasorValueFromComposites()
+
+            If m_compositeValues.AllReceived Then
+                Dim angle, magnitude As Double
+
+                ' All values received, create a new phasor value from composite values
+                angle = m_compositeValues(CompositeValue.Angle)
+                magnitude = m_compositeValues(CompositeValue.Magnitude)
+
+                m_real = CalculateRealComponent(angle, magnitude)
+                m_imaginary = CalculateImaginaryComponent(angle, magnitude)
+            End If
+
+        End Sub
+
         Public Overridable Property Real() As Double Implements IPhasorValue.Real
             Get
                 Return m_real
@@ -254,21 +269,6 @@ Namespace EE.Phasor
                 Return (m_real = 0 And m_imaginary = 0)
             End Get
         End Property
-
-        Protected Overridable Sub CalculatePhasorValueFromComposites()
-
-            If m_compositeValues.AllReceived Then
-                Dim angle, magnitude As Double
-
-                ' All values received, create a new phasor value from composite values
-                angle = m_compositeValues(CompositeValue.Angle)
-                magnitude = m_compositeValues(CompositeValue.Magnitude)
-
-                m_real = CalculateRealComponent(angle, magnitude)
-                m_imaginary = CalculateImaginaryComponent(angle, magnitude)
-            End If
-
-        End Sub
 
         Public Overrides ReadOnly Property BinaryLength() As Integer
             Get

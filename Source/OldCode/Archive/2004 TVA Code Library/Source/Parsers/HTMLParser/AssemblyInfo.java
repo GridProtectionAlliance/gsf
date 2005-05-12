@@ -26,7 +26,7 @@ import System.Runtime.CompilerServices.*;
 // You can specify all the values or you can default the Revision and Build
 // Numbers by using the '*' as shown below:
 
-/** @assembly AssemblyVersion("7.5.9.60732") */
+/** @assembly AssemblyVersion("7.5.21.18952") */
 
 //
 // In order to sign your assembly you must specify a key to use. Refer to the 

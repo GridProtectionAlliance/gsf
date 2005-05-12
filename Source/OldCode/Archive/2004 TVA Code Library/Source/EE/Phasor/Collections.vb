@@ -17,7 +17,7 @@
 
 Namespace EE.Phasor
 
-    Public MustInherit Class ChannelFrames
+    Public MustInherit Class ChannelFrameCollection
 
         Inherits CollectionBase
 
@@ -35,9 +35,9 @@ Namespace EE.Phasor
 
     End Class
 
-    Public Class PhasorDataFrames
+    Public Class PhasorDataFrameCollection
 
-        Inherits ChannelFrames
+        Inherits ChannelFrameCollection
 
         Public Sub Add(ByVal value As IPhasorDataFrame)
 
@@ -53,7 +53,7 @@ Namespace EE.Phasor
 
     End Class
 
-    Public MustInherit Class ChannelValues
+    Public MustInherit Class ChannelValueCollection
 
         Inherits CollectionBase
 
@@ -71,9 +71,9 @@ Namespace EE.Phasor
 
     End Class
 
-    Public Class AnalogValues
+    Public Class AnalogValueCollection
 
-        Inherits ChannelValues
+        Inherits ChannelValueCollection
 
         Public Sub Add(ByVal value As IAnalogValue)
 
@@ -89,9 +89,9 @@ Namespace EE.Phasor
 
     End Class
 
-    Public Class DigitalValues
+    Public Class DigitalValueCollection
 
-        Inherits ChannelValues
+        Inherits ChannelValueCollection
 
         Public Sub Add(ByVal value As IDigitalValue)
 
@@ -107,9 +107,9 @@ Namespace EE.Phasor
 
     End Class
 
-    Public Class FrequencyValues
+    Public Class FrequencyValueCollection
 
-        Inherits ChannelValues
+        Inherits ChannelValueCollection
 
         Public Sub Add(ByVal value As IFrequencyValue)
 
@@ -125,9 +125,9 @@ Namespace EE.Phasor
 
     End Class
 
-    Public Class PhasorValues
+    Public Class PhasorValueCollection
 
-        Inherits ChannelValues
+        Inherits ChannelValueCollection
 
         Public Sub Add(ByVal value As IPhasorValue)
 
@@ -143,7 +143,7 @@ Namespace EE.Phasor
 
     End Class
 
-    Public MustInherit Class ChannelDefinitions
+    Public MustInherit Class ChannelDefinitionCollection
 
         Inherits CollectionBase
 
@@ -167,9 +167,9 @@ Namespace EE.Phasor
 
     End Class
 
-    Public Class AnalogDefinitions
+    Public Class AnalogDefinitionCollection
 
-        Inherits ChannelDefinitions
+        Inherits ChannelDefinitionCollection
 
         Public Sub Add(ByVal value As IAnalogDefinition)
 
@@ -185,9 +185,9 @@ Namespace EE.Phasor
 
     End Class
 
-    Public Class DigitalDefinitions
+    Public Class DigitalDefinitionCollection
 
-        Inherits ChannelDefinitions
+        Inherits ChannelDefinitionCollection
 
         Public Sub Add(ByVal value As IDigitalDefinition)
 
@@ -203,9 +203,9 @@ Namespace EE.Phasor
 
     End Class
 
-    Public Class FrequencyDefinitions
+    Public Class FrequencyDefinitionCollection
 
-        Inherits ChannelDefinitions
+        Inherits ChannelDefinitionCollection
 
         Public Sub Add(ByVal value As IFrequencyDefinition)
 
@@ -221,9 +221,9 @@ Namespace EE.Phasor
 
     End Class
 
-    Public Class PhasorDefinitions
+    Public Class PhasorDefinitionCollection
 
-        Inherits ChannelDefinitions
+        Inherits ChannelDefinitionCollection
 
         Public Sub Add(ByVal value As IPhasorDefinition)
 

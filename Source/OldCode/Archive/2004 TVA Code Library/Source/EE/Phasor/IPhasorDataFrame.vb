@@ -31,11 +31,11 @@ Namespace EE.Phasor
 
         Property StatusFlags() As Int16
 
-        ReadOnly Property PhasorValues() As PhasorValues
+        ReadOnly Property PhasorValues() As PhasorValueCollection
 
         ReadOnly Property FrequencyValue() As IFrequencyValue
 
-        ReadOnly Property DigitalValues() As DigitalValues
+        ReadOnly Property DigitalValues() As DigitalValueCollection
 
     End Interface
 

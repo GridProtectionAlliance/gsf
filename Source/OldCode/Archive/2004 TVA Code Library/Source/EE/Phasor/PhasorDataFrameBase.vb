@@ -30,9 +30,9 @@ Namespace EE.Phasor
 
         Private m_phasorFormat As PhasorFormat
         Private m_statusFlags As Int16
-        Private m_phasorValues As PhasorValues
+        Private m_phasorValues As PhasorValueCollection
         Private m_frequencyValue As IFrequencyValue
-        Private m_digitalValues As DigitalValues
+        Private m_digitalValues As DigitalValueCollection
 
         ' Create phasor data frame from other phasor data frame
         ' Note: This method is expected to be implemented as a public shared method in derived class automatically passing in phasorDataFrameType
@@ -48,13 +48,13 @@ Namespace EE.Phasor
             MyBase.New()
 
             m_phasorFormat = PhasorFormat.Rectangular
-            m_phasorValues = New PhasorValues
+            m_phasorValues = New PhasorValueCollection
             m_frequencyValue = frequencyValue
-            m_digitalValues = New DigitalValues
+            m_digitalValues = New DigitalValueCollection
 
         End Sub
 
-        Protected Sub New(ByVal timeTag As NtpTimeTag, ByVal milliseconds As Double, ByVal synchronizationIsValid As Boolean, ByVal dataIsValid As Boolean, ByVal dataImage As Byte(), ByVal phasorFormat As PhasorFormat, ByVal statusFlags As Int16, ByVal phasorValues As PhasorValues, ByVal frequencyValue As IFrequencyValue, ByVal digitalValues As DigitalValues)
+        Protected Sub New(ByVal timeTag As NtpTimeTag, ByVal milliseconds As Double, ByVal synchronizationIsValid As Boolean, ByVal dataIsValid As Boolean, ByVal dataImage As Byte(), ByVal phasorFormat As PhasorFormat, ByVal statusFlags As Int16, ByVal phasorValues As PhasorValueCollection, ByVal frequencyValue As IFrequencyValue, ByVal digitalValues As DigitalValueCollection)
 
             MyBase.New(timeTag, milliseconds, synchronizationIsValid, dataIsValid, dataImage)
 
@@ -92,7 +92,7 @@ Namespace EE.Phasor
             End Set
         End Property
 
-        Public Overridable ReadOnly Property PhasorValues() As PhasorValues Implements IPhasorDataFrame.PhasorValues
+        Public Overridable ReadOnly Property PhasorValues() As PhasorValueCollection Implements IPhasorDataFrame.PhasorValues
             Get
                 Return m_phasorValues
             End Get
@@ -104,7 +104,7 @@ Namespace EE.Phasor
             End Get
         End Property
 
-        Public Overridable ReadOnly Property DigitalValues() As DigitalValues Implements IPhasorDataFrame.DigitalValues
+        Public Overridable ReadOnly Property DigitalValues() As DigitalValueCollection Implements IPhasorDataFrame.DigitalValues
             Get
                 Return m_digitalValues
             End Get
