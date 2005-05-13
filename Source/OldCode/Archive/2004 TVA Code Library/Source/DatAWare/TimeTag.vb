@@ -41,6 +41,12 @@ Namespace DatAWare
 
         End Sub
 
+        Public Sub New(ByVal timestamp As String)
+
+            Me.New(Convert.ToDateTime(timestamp))
+
+        End Sub
+
         Public Property Value() As Double
             Get
                 Return ttag

@@ -72,6 +72,12 @@ Namespace DatAWare
         Averaged = 4
     End Enum
 
+    Public Enum ReturnType
+        [Both]
+        [Value]
+        [Structure]
+    End Enum
+
     ' Standard database structure element
     Public Class DatabaseStructure
 
@@ -374,6 +380,12 @@ Namespace DatAWare
 
         End Sub
 
+        Public Sub New(ByVal timestamp As String, ByVal value As Single, Optional ByVal valueQuality As DatAWare.Quality = DatAWare.Quality.Good)
+
+            Me.New(New TimeTag(timestamp), value, valueQuality)
+
+        End Sub
+
         Public Sub New(ByVal binaryImage As Byte(), ByVal startIndex As Integer)
 
             If binaryImage Is Nothing Then
@@ -458,6 +470,12 @@ Namespace DatAWare
         End Sub
 
         Public Sub New(ByVal databaseIndex As Integer, ByVal timestamp As DateTime, ByVal value As Single, Optional ByVal valueQuality As DatAWare.Quality = DatAWare.Quality.Good)
+
+            Me.New(databaseIndex, New TimeTag(timestamp), value, valueQuality)
+
+        End Sub
+
+        Public Sub New(ByVal databaseIndex As Integer, ByVal timestamp As String, ByVal value As Single, Optional ByVal valueQuality As DatAWare.Quality = DatAWare.Quality.Good)
 
             Me.New(databaseIndex, New TimeTag(timestamp), value, valueQuality)
 

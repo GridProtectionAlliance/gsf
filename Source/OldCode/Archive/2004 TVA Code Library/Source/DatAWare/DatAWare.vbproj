@@ -79,7 +79,7 @@
                     Name = "DWApi"
                     Guid = "{8629DF62-FC28-4576-AAF3-CAB4C010FF34}"
                     VersionMajor = "21"
-                    VersionMinor = "3"
+                    VersionMinor = "5"
                     Lcid = "0"
                     WrapperTool = "tlbimp"
                 />

@@ -101,12 +101,53 @@ Namespace DatAWare
                 With m_connection
                     .DWAPI.ReadRange(.PlantCode, databaseIndex, startTimeRequest, endTimeRequest, buffer, requestCommand, timeInterval, eventCount, errorMessage)
 
+                    If Len(errorMessage) > 0 Then
+                        Throw New InvalidOperationException("Failed to retrieve point value range from DatAWare server """ & .Server & """ due to exception: " & errorMessage)
+                    End If
+
                     If eventCount > 0 Then
                         events = Array.CreateInstance(GetType(StandardEvent), eventCount)
 
                         For x As Integer = 0 To eventCount - 1
                             events(x) = New StandardEvent(databaseIndex, New ProcessEvent(buffer, index))
                             index += ProcessEvent.BinaryLength
+                        Next
+                    End If
+                End With
+
+                Return events
+            End Get
+        End Property
+
+        Public ReadOnly Property Values(ByVal databaseIndices As Integer(), Optional ByVal timeRequest As String = "*", Optional ByVal timeInterval As Double = 0) As StandardEvent()
+            Get
+                VerifyOpenConnection()
+
+                Dim events As StandardEvent()
+                Dim eventCount As Integer
+                Dim errorMessage As String
+                Dim returnValues As String()
+                Dim element As String()
+
+                With m_connection
+                    .DWAPI.GetValues(.PlantCode, timeRequest, timeInterval, ReturnType.Value, databaseIndices, returnValues, errorMessage)
+
+                    If Len(errorMessage) > 0 Then
+                        Throw New InvalidOperationException("Failed to retrieve point values from DatAWare server """ & .Server & """ due to exception: " & errorMessage)
+                    End If
+
+                    eventCount = returnValues.Length
+
+                    If eventCount <> databaseIndices.Length Then
+                        Throw New InvalidOperationException("Internal error: number of returned values did not match number of requested values.")
+                    End If
+
+                    If eventCount > 0 Then
+                        events = Array.CreateInstance(GetType(StandardEvent), eventCount)
+
+                        For x As Integer = 0 To eventCount - 1
+                            element = returnValues(x).Split(","c)
+                            events(x) = New StandardEvent(CInt(element(0)), element(2), CSng(element(1)), CType(CInt(element(3)), DatAWare.Quality))
                         Next
                     End If
                 End With
