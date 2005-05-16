@@ -16,7 +16,6 @@
 '***********************************************************************
 
 Imports TVA.Interop
-Imports TVA.Shared.Bit
 Imports TVA.Shared.DateTime
 Imports TVA.Compression.Common
 
@@ -65,7 +64,7 @@ Namespace EE.Phasor
 
         Public MustOverride ReadOnly Property InheritedType() As System.Type Implements IChannelFrame.InheritedType
 
-        Public Overridable ReadOnly Property This() As IChannelFrame Implements IChannelFrame.This
+        Public Overridable ReadOnly Property This() As IChannel Implements IChannelFrame.This
             Get
                 Return Me
             End Get
@@ -98,15 +97,7 @@ Namespace EE.Phasor
             End Get
         End Property
 
-        Public Overridable ReadOnly Property DataLength() As Int16 Implements IChannelFrame.DataLength
-            Get
-                If DataImage Is Nothing Then
-                    Return 0
-                Else
-                    Return DataImage.Length
-                End If
-            End Get
-        End Property
+        Public MustOverride ReadOnly Property DataLength() As Int16 Implements IChannelFrame.DataLength
 
         Public MustOverride Property DataImage() As Byte() Implements IChannelFrame.DataImage
 

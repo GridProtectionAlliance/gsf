@@ -103,7 +103,7 @@ Namespace EE.Phasor
             End Get
         End Property
 
-        Public Overrides ReadOnly Property BinaryLength() As Integer
+        Public Overrides ReadOnly Property BinaryLength() As Int16
             Get
                 Return 2
             End Get

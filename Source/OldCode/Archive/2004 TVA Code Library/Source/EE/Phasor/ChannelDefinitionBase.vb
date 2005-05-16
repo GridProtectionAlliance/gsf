@@ -57,7 +57,7 @@ Namespace EE.Phasor
 
         Public MustOverride ReadOnly Property InheritedType() As Type Implements IChannelDefinition.InheritedType
 
-        Public Overridable ReadOnly Property This() As IChannelDefinition Implements IChannelDefinition.This
+        Public Overridable ReadOnly Property This() As IChannel Implements IChannelDefinition.This
             Get
                 Return Me
             End Get
@@ -124,7 +124,7 @@ Namespace EE.Phasor
             End Get
         End Property
 
-        Public MustOverride ReadOnly Property BinaryLength() As Integer Implements IChannelDefinition.BinaryLength
+        Public MustOverride ReadOnly Property BinaryLength() As Int16 Implements IChannelDefinition.BinaryLength
 
         Public MustOverride ReadOnly Property BinaryImage() As Byte() Implements IChannelDefinition.BinaryImage
 

@@ -161,6 +161,11 @@
                     BuildAction = "Compile"
                 />
                 <File
+                    RelPath = "IChannel.vb"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
                     RelPath = "IChannelDefinition.vb"
                     SubType = "Code"
                     BuildAction = "Compile"
@@ -196,6 +201,11 @@
                     BuildAction = "Compile"
                 />
                 <File
+                    RelPath = "IPhasorDataCell.vb"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
                     RelPath = "IPhasorDataFrame.vb"
                     SubType = "Code"
                     BuildAction = "Compile"
@@ -207,6 +217,11 @@
                 />
                 <File
                     RelPath = "IPhasorValue.vb"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "PhasorDataCellBase.vb"
                     SubType = "Code"
                     BuildAction = "Compile"
                 />

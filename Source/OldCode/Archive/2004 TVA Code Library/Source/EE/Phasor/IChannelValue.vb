@@ -20,9 +20,7 @@ Namespace EE.Phasor
     ' This interface represents a protocol independent representation of any kind of data.
     Public Interface IChannelValue
 
-        ReadOnly Property InheritedType() As Type
-
-        ReadOnly Property This() As IChannelValue
+        Inherits IChannel
 
         Property DataFormat() As DataFormat
 
@@ -30,11 +28,6 @@ Namespace EE.Phasor
 
         ReadOnly Property IsEmpty() As Boolean
 
-        ReadOnly Property BinaryLength() As Integer
-
-        ReadOnly Property BinaryImage() As Byte()
-
     End Interface
-
 
 End Namespace

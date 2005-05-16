@@ -15,8 +15,6 @@
 '
 '***********************************************************************
 
-Imports System.Text
-
 Namespace EE.Phasor
 
     ' This class represents the common implementation of the protocol independent definition of a phasor value.

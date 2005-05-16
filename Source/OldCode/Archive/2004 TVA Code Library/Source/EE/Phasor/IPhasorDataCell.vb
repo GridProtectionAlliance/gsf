@@ -1,5 +1,5 @@
 '***********************************************************************
-'  IChannelFrame.vb - Basic frame interface
+'  IPhasorDataCell.vb - Phasor data cell interface
 '  Copyright © 2004 - TVA, all rights reserved
 '
 '  Build Environment: VB.NET, Visual Studio 2003
@@ -10,35 +10,27 @@
 '
 '  Code Modification History:
 '  ---------------------------------------------------------------------
-'  01/14/2005 - James R Carroll
+'  04/16/2005 - James R Carroll
 '       Initial version of source generated
 '
 '***********************************************************************
 
-Imports TVA.Shared.DateTime
-
 Namespace EE.Phasor
 
-    ' This interface represents the protocol independent representation of any phasor frame.
-    Public Interface IChannelFrame
+    ' This interface represents the protocol independent representation of a set of phasor values.
+    Public Interface IPhasorDataCell
 
         Inherits IChannel
 
-        Property TimeTag() As NtpTimeTag
+        Property StatusFlags() As Int16
 
-        Property Milliseconds() As Double
+        ReadOnly Property PhasorValues() As PhasorValueCollection
 
-        ReadOnly Property Timestamp() As DateTime
+        ReadOnly Property FrequencyValue() As IFrequencyValue
 
-        Property SynchronizationIsValid() As Boolean
+        ReadOnly Property AnalogValues() As AnalogValueCollection
 
-        Property DataIsValid() As Boolean
-
-        ReadOnly Property Name() As String
-
-        ReadOnly Property DataLength() As Int16
-
-        Property DataImage() As Byte()
+        ReadOnly Property DigitalValues() As DigitalValueCollection
 
     End Interface
 

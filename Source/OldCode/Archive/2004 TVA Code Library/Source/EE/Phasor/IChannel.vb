@@ -1,5 +1,5 @@
 '***********************************************************************
-'  IChannelDefinition.vb - Channel data definition interface
+'  IChannel.vb - Channel interface
 '  Copyright © 2005 - TVA, all rights reserved
 '
 '  Build Environment: VB.NET, Visual Studio 2003
@@ -17,25 +17,16 @@
 
 Namespace EE.Phasor
 
-    ' This interface represents a protocol independent definition of any kind of data.
-    Public Interface IChannelDefinition
+    ' This interface represents a protocol independent representation of any data type.
+    Public Interface IChannel
 
-        Inherits IChannel, IComparable
+        ReadOnly Property InheritedType() As Type
 
-        Property Index() As Integer
+        ReadOnly Property This() As IChannel
 
-        ' Offset provided for end-implementation convenience, virtual base classes should not apply offset to any values
-        Property Offset() As Double
+        ReadOnly Property BinaryLength() As Int16
 
-        Property ScalingFactor() As Integer
-
-        ReadOnly Property MaximumScalingFactor() As Integer
-
-        Property Label() As String
-
-        ReadOnly Property LabelImage() As Byte()
-
-        ReadOnly Property MaximumLabelLength() As Integer
+        ReadOnly Property BinaryImage() As Byte()
 
     End Interface
 

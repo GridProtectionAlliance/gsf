@@ -15,11 +15,6 @@
 '
 '***********************************************************************
 
-Imports TVA.Interop
-Imports TVA.Shared.Bit
-Imports TVA.Shared.DateTime
-Imports TVA.Compression.Common
-
 Namespace EE.Phasor
 
     ' This interface represents the protocol independent representation of any frame of phasor data.
@@ -27,15 +22,7 @@ Namespace EE.Phasor
 
         Inherits IChannelFrame
 
-        Property PhasorFormat() As PhasorFormat
-
-        Property StatusFlags() As Int16
-
-        ReadOnly Property PhasorValues() As PhasorValueCollection
-
-        ReadOnly Property FrequencyValue() As IFrequencyValue
-
-        ReadOnly Property DigitalValues() As DigitalValueCollection
+        ReadOnly Property PhasorDataCells() As PhasorDataCellCollection
 
     End Interface
 

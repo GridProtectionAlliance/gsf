@@ -15,10 +15,7 @@
 '
 '***********************************************************************
 
-Imports TVA.Interop
-Imports TVA.Shared.Bit
 Imports TVA.Shared.DateTime
-Imports TVA.Compression.Common
 
 Namespace EE.Phasor
 
@@ -28,11 +25,7 @@ Namespace EE.Phasor
         Inherits ChannelFrameBase
         Implements IPhasorDataFrame
 
-        Private m_phasorFormat As PhasorFormat
-        Private m_statusFlags As Int16
-        Private m_phasorValues As PhasorValueCollection
-        Private m_frequencyValue As IFrequencyValue
-        Private m_digitalValues As DigitalValueCollection
+        Private m_phasorDataCells As PhasorDataCellCollection
 
         ' Create phasor data frame from other phasor data frame
         ' Note: This method is expected to be implemented as a public shared method in derived class automatically passing in phasorDataFrameType
@@ -47,73 +40,64 @@ Namespace EE.Phasor
 
             MyBase.New()
 
-            m_phasorFormat = PhasorFormat.Rectangular
-            m_phasorValues = New PhasorValueCollection
-            m_frequencyValue = frequencyValue
-            m_digitalValues = New DigitalValueCollection
+            m_phasorDataCells = New PhasorDataCellCollection
 
         End Sub
 
-        Protected Sub New(ByVal timeTag As NtpTimeTag, ByVal milliseconds As Double, ByVal synchronizationIsValid As Boolean, ByVal dataIsValid As Boolean, ByVal dataImage As Byte(), ByVal phasorFormat As PhasorFormat, ByVal statusFlags As Int16, ByVal phasorValues As PhasorValueCollection, ByVal frequencyValue As IFrequencyValue, ByVal digitalValues As DigitalValueCollection)
+        Protected Sub New(ByVal timeTag As NtpTimeTag, ByVal milliseconds As Double, ByVal synchronizationIsValid As Boolean, ByVal dataIsValid As Boolean, ByVal dataImage As Byte(), ByVal phasorDataCells As PhasorDataCellCollection)
 
             MyBase.New(timeTag, milliseconds, synchronizationIsValid, dataIsValid, dataImage)
 
-            m_phasorFormat = phasorFormat
-            m_statusFlags = statusFlags
-            m_phasorValues = phasorValues
-            m_frequencyValue = frequencyValue
-            m_digitalValues = digitalValues
+            m_phasorDataCells = phasorDataCells
 
         End Sub
 
         Protected Sub New(ByVal phasorDataFrame As IPhasorDataFrame)
 
             Me.New(phasorDataFrame.TimeTag, phasorDataFrame.Milliseconds, phasorDataFrame.SynchronizationIsValid, phasorDataFrame.DataIsValid, _
-                    phasorDataFrame.DataImage, phasorDataFrame.PhasorFormat, phasorDataFrame.StatusFlags, phasorDataFrame.PhasorValues, _
-                    phasorDataFrame.FrequencyValue, phasorDataFrame.DigitalValues)
+                    phasorDataFrame.DataImage, phasorDataFrame.PhasorDataCells)
 
         End Sub
 
-        Public Overridable Property PhasorFormat() As PhasorFormat Implements IPhasorDataFrame.PhasorFormat
+        Public ReadOnly Property PhasorDataCells() As PhasorDataCellCollection Implements IPhasorDataFrame.PhasorDataCells
             Get
-                Return m_phasorFormat
-            End Get
-            Set(ByVal Value As PhasorFormat)
-                m_phasorFormat = Value
-            End Set
-        End Property
-
-        Public Overridable Property StatusFlags() As Int16 Implements IPhasorDataFrame.StatusFlags
-            Get
-                Return m_statusFlags
-            End Get
-            Set(ByVal Value As Short)
-                m_statusFlags = Value
-            End Set
-        End Property
-
-        Public Overridable ReadOnly Property PhasorValues() As PhasorValueCollection Implements IPhasorDataFrame.PhasorValues
-            Get
-                Return m_phasorValues
-            End Get
-        End Property
-
-        Public ReadOnly Property FrequencyValue() As IFrequencyValue Implements IPhasorDataFrame.FrequencyValue
-            Get
-                Return m_frequencyValue
-            End Get
-        End Property
-
-        Public Overridable ReadOnly Property DigitalValues() As DigitalValueCollection Implements IPhasorDataFrame.DigitalValues
-            Get
-                Return m_digitalValues
+                Return m_phasorDataCells
             End Get
         End Property
 
         Public Overrides ReadOnly Property Name() As String
             Get
-                Return "TVA.EE.Phasor.DataFrameBase"
+                Return "TVA.EE.Phasor.PhasorDataFrameBase"
             End Get
+        End Property
+
+        Public Overrides ReadOnly Property DataLength() As Int16
+            Get
+                Dim length As Int16
+
+                For x As Integer = 0 To m_phasorDataCells.Count - 1
+                    length += m_phasorDataCells(x).BinaryLength
+                Next
+
+                Return length
+            End Get
+        End Property
+
+        Public Overrides Property DataImage() As Byte()
+            Get
+                Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BinaryLength)
+                Dim index As Integer
+
+                For x As Integer = 0 To m_phasorDataCells.Count - 1
+                    Array.Copy(m_phasorDataCells(x).BinaryImage, 0, buffer, index, m_phasorDataCells(x).BinaryLength)
+                    index += m_phasorDataCells(x).BinaryLength
+                Next
+
+                Return buffer
+            End Get
+            Set(ByVal Value() As Byte)
+                Throw New NotImplementedException
+            End Set
         End Property
 
     End Class

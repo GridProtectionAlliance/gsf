@@ -270,7 +270,7 @@ Namespace EE.Phasor
             End Get
         End Property
 
-        Public Overrides ReadOnly Property BinaryLength() As Integer
+        Public Overrides ReadOnly Property BinaryLength() As Int16
             Get
                 If DataFormat = EE.Phasor.DataFormat.FixedInteger Then
                     Return 4

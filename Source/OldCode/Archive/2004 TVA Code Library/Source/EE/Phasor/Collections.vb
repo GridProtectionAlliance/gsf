@@ -17,19 +17,99 @@
 
 Namespace EE.Phasor
 
-    Public MustInherit Class ChannelFrameCollection
+    Public MustInherit Class ChannelCollection
 
         Inherits CollectionBase
 
-        Protected Sub _Add(ByVal value As IChannelFrame)
+        Protected Sub _Add(ByVal value As IChannel)
 
             List.Add(value)
 
         End Sub
 
-        Protected ReadOnly Property _Item(ByVal index As Integer) As IChannelFrame
+        Protected ReadOnly Property _Item(ByVal index As Integer) As IChannel
             Get
-                Return DirectCast(List.Item(index), IChannelFrame)
+                Return DirectCast(List.Item(index), IChannel)
+            End Get
+        End Property
+
+    End Class
+
+    Public MustInherit Class ChanneValueCollection
+
+        Inherits ChannelCollection
+
+        Private m_fixedCount As Integer
+        Private m_floatCount As Integer
+
+        Protected Overloads Sub _Add(ByVal value As IChannelValue)
+
+            If value.DataFormat = DataFormat.FixedInteger Then
+                m_fixedCount += 1
+            Else
+                m_floatCount += 1
+            End If
+
+            MyBase._Add(value)
+
+        End Sub
+
+        Public ReadOnly Property BinaryLength() As Integer
+            Get
+                If List.Count > 0 Then
+                    If m_fixedCount = 0 Or m_floatCount = 0 Then
+                        ' Data types in list are consistent, an easy calculation will derive total binary length
+                        Return _Item(0).BinaryLength * List.Count
+                    Else
+                        ' List has items of different data types, will have to traverse list to calculate total binary length
+                        Dim length As Integer
+
+                        For x As Integer = 0 To List.Count - 1
+                            length += _Item(0).BinaryLength
+                        Next
+
+                        Return length
+                    End If
+                Else
+                    Return 0
+                End If
+            End Get
+        End Property
+
+        Protected Overrides Sub OnClearComplete()
+
+            m_fixedCount = 0
+            m_floatCount = 0
+
+        End Sub
+
+    End Class
+
+    Public MustInherit Class ChannelDefinitionCollection
+
+        Inherits ChannelCollection
+
+        Public Sub Sort()
+
+            Array.Sort(List)
+
+        End Sub
+
+    End Class
+
+    Public Class PhasorDataCellCollection
+
+        Inherits ChannelCollection
+
+        Public Sub Add(ByVal value As IPhasorDataCell)
+
+            MyBase._Add(value)
+
+        End Sub
+
+        Default Public ReadOnly Property Item(ByVal index As Integer) As IPhasorDataCell
+            Get
+                Return DirectCast(MyBase._Item(index), IPhasorDataCell)
             End Get
         End Property
 
@@ -37,7 +117,7 @@ Namespace EE.Phasor
 
     Public Class PhasorDataFrameCollection
 
-        Inherits ChannelFrameCollection
+        Inherits ChannelCollection
 
         Public Sub Add(ByVal value As IPhasorDataFrame)
 
@@ -53,27 +133,9 @@ Namespace EE.Phasor
 
     End Class
 
-    Public MustInherit Class ChannelValueCollection
-
-        Inherits CollectionBase
-
-        Protected Sub _Add(ByVal value As IChannelValue)
-
-            List.Add(value)
-
-        End Sub
-
-        Protected ReadOnly Property _Item(ByVal index As Integer) As IChannelValue
-            Get
-                Return DirectCast(List.Item(index), IChannelValue)
-            End Get
-        End Property
-
-    End Class
-
     Public Class AnalogValueCollection
 
-        Inherits ChannelValueCollection
+        Inherits ChanneValueCollection
 
         Public Sub Add(ByVal value As IAnalogValue)
 
@@ -91,7 +153,7 @@ Namespace EE.Phasor
 
     Public Class DigitalValueCollection
 
-        Inherits ChannelValueCollection
+        Inherits ChanneValueCollection
 
         Public Sub Add(ByVal value As IDigitalValue)
 
@@ -109,7 +171,7 @@ Namespace EE.Phasor
 
     Public Class FrequencyValueCollection
 
-        Inherits ChannelValueCollection
+        Inherits ChanneValueCollection
 
         Public Sub Add(ByVal value As IFrequencyValue)
 
@@ -127,7 +189,7 @@ Namespace EE.Phasor
 
     Public Class PhasorValueCollection
 
-        Inherits ChannelValueCollection
+        Inherits ChanneValueCollection
 
         Public Sub Add(ByVal value As IPhasorValue)
 
@@ -140,30 +202,6 @@ Namespace EE.Phasor
                 Return DirectCast(MyBase._Item(index), IPhasorValue)
             End Get
         End Property
-
-    End Class
-
-    Public MustInherit Class ChannelDefinitionCollection
-
-        Inherits CollectionBase
-
-        Protected Sub _Add(ByVal value As IChannelDefinition)
-
-            List.Add(value)
-
-        End Sub
-
-        Protected ReadOnly Property _Item(ByVal index As Integer) As IChannelDefinition
-            Get
-                Return DirectCast(List.Item(index), IChannelDefinition)
-            End Get
-        End Property
-
-        Public Sub Sort()
-
-            Array.Sort(List)
-
-        End Sub
 
     End Class
 
