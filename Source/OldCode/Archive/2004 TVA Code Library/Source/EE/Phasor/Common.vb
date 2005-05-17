@@ -3,7 +3,7 @@
 '  Copyright © 2005 - TVA, all rights reserved
 '
 '  Build Environment: VB.NET, Visual Studio 2003
-'  Primary Developer: James R Carroll, System Analyst [WESTAFF]
+'  Primary Developer: James R Carroll, System Analyst [TVA]
 '      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
 '       Phone: 423/751-2827
 '       Email: jrcarrol@tva.gov
@@ -36,5 +36,14 @@ Namespace EE.Phasor
         Hz50
         Hz60
     End Enum
+
+    Public Enum NetworkProtocol
+        Tcp
+        Udp
+    End Enum
+
+    Public Delegate Sub ProcessBufferSignature(ByVal buffer As Byte(), ByVal length As Integer)
+
+    Public Delegate Sub UpdateStatusSignature(ByVal status As String)
 
 End Namespace

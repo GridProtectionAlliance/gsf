@@ -80,6 +80,11 @@
                     Project = "{F611B9BA-C69D-449B-B596-FABFB746EA2A}"
                     Package = "{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}"
                 />
+                <Reference
+                    Name = "Threading"
+                    Project = "{F8A7E836-5353-4E1B-B28C-752BA9FD6419}"
+                    Package = "{F184B08F-C81C-45F6-A57F-5ABD9991F28F}"
+                />
             </References>
             <Imports>
                 <Import Namespace = "Microsoft.VisualBasic" />
@@ -227,6 +232,11 @@
                 />
                 <File
                     RelPath = "PhasorDataFrameBase.vb"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "PhasorDataSample.vb"
                     SubType = "Code"
                     BuildAction = "Compile"
                 />

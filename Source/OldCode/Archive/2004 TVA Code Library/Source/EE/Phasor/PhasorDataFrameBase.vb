@@ -3,7 +3,7 @@
 '  Copyright © 2004 - TVA, all rights reserved
 '
 '  Build Environment: VB.NET, Visual Studio 2003
-'  Primary Developer: James R Carroll, System Analyst [WESTAFF]
+'  Primary Developer: James R Carroll, System Analyst [TVA]
 '      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
 '       Phone: 423/751-2827
 '       Email: jrcarrol@tva.gov
@@ -15,7 +15,7 @@
 '
 '***********************************************************************
 
-Imports TVA.Shared.DateTime
+Imports TVA.Interop
 
 Namespace EE.Phasor
 
@@ -44,7 +44,7 @@ Namespace EE.Phasor
 
         End Sub
 
-        Protected Sub New(ByVal timeTag As NtpTimeTag, ByVal milliseconds As Double, ByVal synchronizationIsValid As Boolean, ByVal dataIsValid As Boolean, ByVal dataImage As Byte(), ByVal phasorDataCells As PhasorDataCellCollection)
+        Protected Sub New(ByVal timeTag As Unix.TimeTag, ByVal milliseconds As Double, ByVal synchronizationIsValid As Boolean, ByVal dataIsValid As Boolean, ByVal dataImage As Byte(), ByVal phasorDataCells As PhasorDataCellCollection)
 
             MyBase.New(timeTag, milliseconds, synchronizationIsValid, dataIsValid, dataImage)
 

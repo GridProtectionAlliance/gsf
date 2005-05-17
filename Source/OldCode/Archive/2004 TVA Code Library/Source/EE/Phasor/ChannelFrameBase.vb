@@ -3,7 +3,7 @@
 '  Copyright © 2004 - TVA, all rights reserved
 '
 '  Build Environment: VB.NET, Visual Studio 2003
-'  Primary Developer: James R Carroll, System Analyst [WESTAFF]
+'  Primary Developer: James R Carroll, System Analyst [TVA]
 '      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
 '       Phone: 423/751-2827
 '       Email: jrcarrol@tva.gov
@@ -26,7 +26,8 @@ Namespace EE.Phasor
 
         Implements IChannelFrame
 
-        Private m_timeTag As NtpTimeTag
+        Private m_timeTag As Unix.TimeTag
+        Private m_published As Boolean
 
         ' Create channel frame from other channel frame
         ' Note: This method is expected to be implemented as a public shared method in derived class automatically passing in channelFrameType
@@ -39,11 +40,11 @@ Namespace EE.Phasor
 
         Protected Sub New()
 
-            m_timeTag = New NtpTimeTag(DateTime.Now)
+            m_timeTag = New Unix.TimeTag(DateTime.Now)
 
         End Sub
 
-        Protected Sub New(ByVal timeTag As NtpTimeTag, ByVal milliseconds As Double, ByVal synchronizationIsValid As Boolean, ByVal dataIsValid As Boolean, ByVal dataImage As Byte())
+        Protected Sub New(ByVal timeTag As Unix.TimeTag, ByVal milliseconds As Double, ByVal synchronizationIsValid As Boolean, ByVal dataIsValid As Boolean, ByVal dataImage As Byte())
 
             With Me
                 .TimeTag = timeTag
@@ -70,12 +71,21 @@ Namespace EE.Phasor
             End Get
         End Property
 
-        Public Overridable Property TimeTag() As NtpTimeTag Implements IChannelFrame.TimeTag
+        Public Overridable Property TimeTag() As Unix.TimeTag Implements IChannelFrame.TimeTag
             Get
                 Return m_timeTag
             End Get
-            Set(ByVal Value As NtpTimeTag)
+            Set(ByVal Value As Unix.TimeTag)
                 m_timeTag = Value
+            End Set
+        End Property
+
+        Public Overridable Property NtpTimeTag() As NtpTimeTag
+            Get
+                Return New NtpTimeTag(m_timeTag.ToDateTime)
+            End Get
+            Set(ByVal Value As NtpTimeTag)
+                m_timeTag = New Unix.TimeTag(Value.ToDateTime)
             End Set
         End Property
 
@@ -90,6 +100,15 @@ Namespace EE.Phasor
         Public MustOverride Property SynchronizationIsValid() As Boolean Implements IChannelFrame.SynchronizationIsValid
 
         Public MustOverride Property DataIsValid() As Boolean Implements IChannelFrame.DataIsValid
+
+        Public Overridable Property Published() As Boolean Implements IChannelFrame.Published
+            Get
+                Return m_published
+            End Get
+            Set(ByVal Value As Boolean)
+                m_published = Value
+            End Set
+        End Property
 
         Public Overridable ReadOnly Property Name() As String Implements IChannelFrame.Name
             Get
