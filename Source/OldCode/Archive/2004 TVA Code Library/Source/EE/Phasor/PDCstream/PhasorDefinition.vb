@@ -45,7 +45,7 @@ Namespace EE.Phasor.PDCstream
                 [Type] = PhasorType.Current
                 defaultPhasor = configFile.DefaultPhasorI
             Else
-                [Type] = PhasorType.DontCare
+                [Type] = PhasorType.Voltage
                 defaultPhasor = configFile.DefaultPhasorV
             End If
 
@@ -80,8 +80,6 @@ Namespace EE.Phasor.PDCstream
                             .Append("V"c)
                         Case PhasorType.Current
                             .Append("I"c)
-                        Case PhasorType.DontCare
-                            .Append("N"c)
                     End Select
 
                     .Append("," & _

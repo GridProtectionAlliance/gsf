@@ -37,14 +37,7 @@ Namespace EE.Phasor
             Magnitude
         End Enum
 
-        ' Create phasor value from other phasor value
-        ' Note: This method is expected to be implemented as a public shared method in derived class automatically passing in phasorValueType
-        ' Dervied class must expose a Public Sub New(ByVal phasorValue As IPhasorValue)
-        Protected Shared Shadows Function CreateFrom(ByVal phasorValueType As Type, ByVal phasorValue As IPhasorValue) As IPhasorValue
-
-            Return CType(Activator.CreateInstance(phasorValueType, New Object() {phasorValue}), IPhasorValue)
-
-        End Function
+        ' TODO: change phasor format and data format parameters for each of these shared functions...
 
         ' Create phasor from polar coordinates (angle expected in Degrees)
         ' Note: This method is expected to be implemented as a public shared method in derived class automatically passing in phasorValueType
@@ -107,6 +100,15 @@ Namespace EE.Phasor
 
         End Function
 
+        Protected Sub New()
+
+            MyBase.New()
+
+            m_phasorFormat = PhasorFormat.Rectangular
+            m_compositeValues = New CompositeValues(2)
+
+        End Sub
+
         Protected Sub New(ByVal dataFormat As DataFormat, ByVal phasorFormat As PhasorFormat, ByVal phasorDefinition As IPhasorDefinition, ByVal real As Double, ByVal imaginary As Double)
 
             MyBase.New(dataFormat)
@@ -160,6 +162,7 @@ Namespace EE.Phasor
 
         End Sub
 
+        ' Dervied classes are expected to expose a Public Sub New(ByVal phasorValue As IPhasorValue)
         Protected Sub New(ByVal phasorValue As IPhasorValue)
 
             Me.New(phasorValue.DataFormat, phasorValue.PhasorFormat, phasorValue.Definition, phasorValue.Real, phasorValue.Imaginary)
@@ -175,10 +178,13 @@ Namespace EE.Phasor
             End Set
         End Property
 
-        Public Overridable ReadOnly Property Definition() As IPhasorDefinition Implements IPhasorValue.Definition
+        Public Overridable Property Definition() As IPhasorDefinition Implements IPhasorValue.Definition
             Get
                 Return m_phasorDefinition
             End Get
+            Set(ByVal Value As IPhasorDefinition)
+                m_phasorDefinition = Value
+            End Set
         End Property
 
         Public Overridable Property Angle() As Double Implements IPhasorValue.Angle

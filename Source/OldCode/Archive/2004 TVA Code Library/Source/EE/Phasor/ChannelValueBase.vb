@@ -24,14 +24,11 @@ Namespace EE.Phasor
 
         Private m_dataFormat As DataFormat
 
-        ' Create channel value from other channel value
-        ' Note: This method is expected to be implemented as a public shared method in derived class automatically passing in channelValueType
-        ' Dervied class must expose a Public Sub New(ByVal channelValue As IChannelValue)
-        Protected Shared Function CreateFrom(ByVal channelValueType As Type, ByVal channelValue As IChannelValue) As IChannelValue
+        Protected Sub New()
 
-            Return CType(Activator.CreateInstance(channelValueType, New Object() {channelValue}), IChannelValue)
+            m_dataFormat = DataFormat.FixedInteger
 
-        End Function
+        End Sub
 
         Protected Sub New(ByVal dataFormat As DataFormat)
 
@@ -39,6 +36,7 @@ Namespace EE.Phasor
 
         End Sub
 
+        ' Dervied classes are expected to expose a Protected Sub New(ByVal channelValue As IChannelValue)
         Protected Sub New(ByVal channelValue As IChannelValue)
 
             Me.New(channelValue.DataFormat)

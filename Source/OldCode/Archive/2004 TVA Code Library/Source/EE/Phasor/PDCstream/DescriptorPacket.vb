@@ -51,7 +51,7 @@ Namespace EE.Phasor.PDCstream
                 For x As Integer = 0 To m_configFile.PMUCount - 1
                     With m_configFile.PMU(x)
                         .Offset = length
-                        length += 12 + FrequencyValue.BinaryLength + PhasorValue.BinaryLength * .Phasors.Length
+                        length += 12 + FrequencyValue.CalculateBinaryLength(.Frequency) + PhasorValue.BinaryLength * .Phasors.Length
                     End With
                 Next
 

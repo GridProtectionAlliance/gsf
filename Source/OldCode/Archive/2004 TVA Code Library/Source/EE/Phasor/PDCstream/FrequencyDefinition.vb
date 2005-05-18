@@ -21,40 +21,62 @@ Namespace EE.Phasor.PDCstream
 
     Public Class FrequencyDefinition
 
-        Public Scale As Double
-        Public Offset As Double
-        Public DfDtScale As Double
-        Public DfDtOffset As Double
+        Inherits FrequencyDefinitionBase
+
+        'Public Scale As Double
+        'Public Offset As Double
+        'Public DfDtScale As Double
+        'Public DfDtOffset As Double
+        'Public Label As String
         Public Dummy As Integer
-        Public Label As String
 
         Public Sub New(ByVal configFile As ConfigFile, ByVal entryValue As String)
 
-            Dim entry As String() = entryValue.Split(","c)
+            MyBase.New()
 
-            ' First entry is an F - we just ignore this
-            If entry.Length > 1 Then Scale = CDbl(Trim(entry(1))) Else Scale = configFile.DefaultFrequency.Scale
-            If entry.Length > 2 Then Offset = CDbl(Trim(entry(2))) Else Offset = configFile.DefaultFrequency.Offset
-            If entry.Length > 3 Then DfDtScale = CDbl(Trim(entry(3))) Else DfDtScale = configFile.DefaultFrequency.DfDtScale
-            If entry.Length > 4 Then DfDtOffset = CDbl(Trim(entry(4))) Else DfDtOffset = configFile.DefaultFrequency.DfDtOffset
-            If entry.Length > 5 Then Dummy = CInt(Trim(entry(5))) Else Dummy = configFile.DefaultFrequency.Dummy
-            If entry.Length > 6 Then Label = Trim(entry(6)) Else Label = configFile.DefaultFrequency.Label
+            'Dim entry As String() = entryValue.Split(","c)
+
+            '' First entry is an F - we just ignore this
+            'If entry.Length > 1 Then Scale = CDbl(Trim(entry(1))) Else Scale = configFile.DefaultFrequency.Scale
+            'If entry.Length > 2 Then Offset = CDbl(Trim(entry(2))) Else Offset = configFile.DefaultFrequency.Offset
+            'If entry.Length > 3 Then DfDtScale = CDbl(Trim(entry(3))) Else DfDtScale = configFile.DefaultFrequency.DfDtScale
+            'If entry.Length > 4 Then DfDtOffset = CDbl(Trim(entry(4))) Else DfDtOffset = configFile.DefaultFrequency.DfDtOffset
+            'If entry.Length > 5 Then Dummy = CInt(Trim(entry(5))) Else Dummy = configFile.DefaultFrequency.Dummy
+            'If entry.Length > 6 Then Label = Trim(entry(6)) Else Label = configFile.DefaultFrequency.Label
 
         End Sub
+
+        Public Overrides ReadOnly Property InheritedType() As System.Type
+            Get
+                Return Me.GetType
+            End Get
+        End Property
 
         Public Shared ReadOnly Property ConfigFileFormat(ByVal frequency As FrequencyDefinition) As String
             Get
                 With New StringBuilder
                     .Append("F," & _
-                        frequency.Scale & "," & _
+                        frequency.ScalingFactor & "," & _
                         frequency.Offset & "," & _
-                        frequency.DfDtScale & "," & _
+                        frequency.DfDtScalingFactor & "," & _
                         frequency.DfDtOffset & "," & _
                         frequency.Dummy & "," & _
                         frequency.Label)
 
                     Return .ToString()
                 End With
+            End Get
+        End Property
+
+        Public Overrides ReadOnly Property BinaryLength() As Short
+            Get
+                Throw New NotImplementedException("PDCstream does not include frequency definition in descriptor packet - must be defined in external INI file")
+            End Get
+        End Property
+
+        Public Overrides ReadOnly Property BinaryImage() As Byte()
+            Get
+                Throw New NotImplementedException("PDCstream does not include frequency definition in descriptor packet - must be defined in external INI file")
             End Get
         End Property
 

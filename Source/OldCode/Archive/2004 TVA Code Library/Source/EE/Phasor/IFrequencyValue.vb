@@ -22,7 +22,7 @@ Namespace EE.Phasor
 
         Inherits IChannelValue
 
-        ReadOnly Property Definition() As IFrequencyDefinition
+        Property Definition() As IFrequencyDefinition
 
         Property Frequency() As Double
 

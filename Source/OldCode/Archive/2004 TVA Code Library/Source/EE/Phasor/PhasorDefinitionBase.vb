@@ -26,24 +26,30 @@ Namespace EE.Phasor
         Private m_type As PhasorType
         Private m_voltageReference As IPhasorDefinition
 
-        ' Create phasor definition from other phasor definition
-        ' Note: This method is expected to be implemented as a public shared method in derived class automatically passing in phasorDefinitionType
-        ' Dervied class must expose a Public Sub New(ByVal phasorDefinition As IPhasorDefinition)
-        Protected Shared Shadows Function CreateFrom(ByVal phasorDefinitionType As Type, ByVal phasorDefinition As IPhasorDefinition) As IPhasorDefinition
+        Protected Sub New()
 
-            Return CType(Activator.CreateInstance(phasorDefinitionType, New Object() {phasorDefinition}), IPhasorDefinition)
+            MyBase.New()
 
-        End Function
+            m_type = PhasorType.Voltage
+            m_voltageReference = Me
+
+        End Sub
 
         Protected Sub New(ByVal index As Integer, ByVal label As String, ByVal scale As Integer, ByVal offset As Double, ByVal type As PhasorType, ByVal voltageReference As IPhasorDefinition)
 
             MyBase.New(index, label, scale, offset)
 
             m_type = type
-            m_voltageReference = voltageReference
+
+            If type = PhasorType.Voltage Then
+                m_voltageReference = Me
+            Else
+                m_voltageReference = voltageReference
+            End If
 
         End Sub
 
+        ' Dervied classes are expected to expose a Public Sub New(ByVal phasorDefinition As IPhasorDefinition)
         Protected Sub New(ByVal phasorDefinition As IPhasorDefinition)
 
             Me.New(phasorDefinition.Index, phasorDefinition.Label, phasorDefinition.ScalingFactor, phasorDefinition.Offset, _

@@ -23,14 +23,11 @@ Namespace EE.Phasor
         Inherits ChannelDefinitionBase
         Implements IAnalogDefinition
 
-        ' Create analog definition from other analog definition
-        ' Note: This method is expected to be implemented as a public shared method in derived class automatically passing in analogDefinitionType
-        ' Dervied class must expose a Public Sub New(ByVal analogDefinition As IAnalogDefinition)
-        Protected Shared Shadows Function CreateFrom(ByVal analogDefinitionType As Type, ByVal analogDefinition As IAnalogDefinition) As IAnalogDefinition
+        Protected Sub New()
 
-            Return CType(Activator.CreateInstance(analogDefinitionType, New Object() {analogDefinition}), IAnalogDefinition)
+            MyBase.New()
 
-        End Function
+        End Sub
 
         Protected Sub New(ByVal index As Integer, ByVal label As String, ByVal scale As Integer, ByVal offset As Double)
 
@@ -38,6 +35,7 @@ Namespace EE.Phasor
 
         End Sub
 
+        ' Dervied classes are expected to expose a Public Sub New(ByVal analogDefinition As IAnalogDefinition)
         Protected Sub New(ByVal analogDefinition As IAnalogDefinition)
 
             Me.New(analogDefinition.Index, analogDefinition.Label, analogDefinition.ScalingFactor, analogDefinition.Offset)

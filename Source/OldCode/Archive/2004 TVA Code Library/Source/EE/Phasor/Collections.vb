@@ -35,7 +35,7 @@ Namespace EE.Phasor
 
     End Class
 
-    Public MustInherit Class ChanneValueCollection
+    Public MustInherit Class ChannelValueCollection
 
         Inherits ChannelCollection
 
@@ -44,6 +44,9 @@ Namespace EE.Phasor
 
         Protected Overloads Sub _Add(ByVal value As IChannelValue)
 
+            ' In typical usage, all channel values will be of the same data type - but we can't anticipate all
+            ' possible uses of collection, so we track totals of each data type so we can quickly ascertain if
+            ' all the items in the collection are of the same data type
             If value.DataFormat = DataFormat.FixedInteger Then
                 m_fixedCount += 1
             Else
@@ -58,7 +61,7 @@ Namespace EE.Phasor
             Get
                 If List.Count > 0 Then
                     If m_fixedCount = 0 Or m_floatCount = 0 Then
-                        ' Data types in list are consistent, an easy calculation will derive total binary length
+                        ' Data types in list are consistent, a simple calculation will derive total binary length
                         Return _Item(0).BinaryLength * List.Count
                     Else
                         ' List has items of different data types, will have to traverse list to calculate total binary length
@@ -135,7 +138,7 @@ Namespace EE.Phasor
 
     Public Class AnalogValueCollection
 
-        Inherits ChanneValueCollection
+        Inherits ChannelValueCollection
 
         Public Sub Add(ByVal value As IAnalogValue)
 
@@ -153,7 +156,7 @@ Namespace EE.Phasor
 
     Public Class DigitalValueCollection
 
-        Inherits ChanneValueCollection
+        Inherits ChannelValueCollection
 
         Public Sub Add(ByVal value As IDigitalValue)
 
@@ -171,7 +174,7 @@ Namespace EE.Phasor
 
     Public Class FrequencyValueCollection
 
-        Inherits ChanneValueCollection
+        Inherits ChannelValueCollection
 
         Public Sub Add(ByVal value As IFrequencyValue)
 
@@ -189,7 +192,7 @@ Namespace EE.Phasor
 
     Public Class PhasorValueCollection
 
-        Inherits ChanneValueCollection
+        Inherits ChannelValueCollection
 
         Public Sub Add(ByVal value As IPhasorValue)
 

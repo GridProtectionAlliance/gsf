@@ -27,14 +27,14 @@ Namespace EE.Phasor
         Private m_dfdtOffset As Double
         Private m_nominalFrequency As LineFrequency
 
-        ' Create frequency definition from other frequency definition
-        ' Note: This method is expected to be implemented as a public shared method in derived class automatically passing in frequencyDefinitionType
-        ' Dervied class must expose a Public Sub New(ByVal frequencyDefinition As IFrequencyDefinition)
-        Protected Shared Shadows Function CreateFrom(ByVal frequencyDefinitionType As Type, ByVal frequencyDefinition As IFrequencyDefinition) As IFrequencyDefinition
+        Protected Sub New()
 
-            Return CType(Activator.CreateInstance(frequencyDefinitionType, New Object() {frequencyDefinition}), IFrequencyDefinition)
+            MyBase.New()
 
-        End Function
+            m_dfdtScale = 1
+            m_nominalFrequency = LineFrequency.Hz60
+
+        End Sub
 
         Protected Sub New(ByVal index As Integer, ByVal label As String, ByVal scale As Integer, ByVal offset As Double, ByVal dfdtScale As Double, ByVal dfdtOffset As Double, ByVal nominalLineFrequency As LineFrequency)
 
@@ -47,12 +47,43 @@ Namespace EE.Phasor
 
         End Sub
 
+        ' Dervied classes are expected to expose a Public Sub New(ByVal frequencyDefinition As IFrequencyDefinition)
         Protected Sub New(ByVal frequencyDefinition As IFrequencyDefinition)
 
             Me.New(frequencyDefinition.Index, frequencyDefinition.Label, frequencyDefinition.ScalingFactor, frequencyDefinition.Offset, _
                 frequencyDefinition.DfDtScalingFactor, frequencyDefinition.DfDtOffset, frequencyDefinition.NominalFrequency)
 
         End Sub
+
+        Public Overrides Property Offset() As Double
+            Get
+                If m_nominalFrequency = LineFrequency.Hz60 Then
+                    Return 60.0
+                Else
+                    Return 50.0
+                End If
+            End Get
+            Set(ByVal Value As Double)
+                Select Case Value
+                    Case 50.0
+                        m_nominalFrequency = LineFrequency.Hz50
+                    Case 60.0
+                        m_nominalFrequency = LineFrequency.Hz60
+                    Case Else
+                        m_nominalFrequency = LineFrequency.Hz60
+                        Debug.Assert(False, "Unexpected line frequency offset specified: " & Value & " - defaulting to 60", "The only frequency definition offsets supported by this protocol are 50 and 60 - you will typically set this value using the NominalFrequency property")
+                End Select
+            End Set
+        End Property
+
+        Public Overridable Property NominalFrequency() As LineFrequency Implements IFrequencyDefinition.NominalFrequency
+            Get
+                Return m_nominalFrequency
+            End Get
+            Set(ByVal Value As LineFrequency)
+                m_nominalFrequency = Value
+            End Set
+        End Property
 
         Public Overridable Property DfDtOffset() As Double Implements IFrequencyDefinition.DfDtOffset
             Get
@@ -77,25 +108,6 @@ Namespace EE.Phasor
             Get
                 ' Typical scaling/conversion factors should fit within 3 bytes (i.e., 24 bits) of space
                 Return 2 ^ 24
-            End Get
-        End Property
-
-        Public Overridable Property NominalFrequency() As LineFrequency Implements IFrequencyDefinition.NominalFrequency
-            Get
-                Return m_nominalFrequency
-            End Get
-            Set(ByVal Value As LineFrequency)
-                m_nominalFrequency = Value
-            End Set
-        End Property
-
-        Public Overridable ReadOnly Property NominalFrequencyOffset() As Double Implements IFrequencyDefinition.NominalFrequencyOffset
-            Get
-                If m_nominalFrequency = LineFrequency.Hz60 Then
-                    Return 60.0
-                Else
-                    Return 50.0
-                End If
             End Get
         End Property
 

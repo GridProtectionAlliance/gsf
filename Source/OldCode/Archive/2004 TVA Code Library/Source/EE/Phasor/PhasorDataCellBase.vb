@@ -30,21 +30,20 @@ Namespace EE.Phasor
         Private m_analogValues As AnalogValueCollection
         Private m_digitalValues As DigitalValueCollection
 
-        ' Create phasor data cell from other phasor data cell
-        ' Note: This method is expected to be implemented as a public shared method in derived class automatically passing in phasorDataCellType
-        ' Dervied class must expose a Public Sub New(ByVal phasorDataCell As IPhasorDataCell)
-        Protected Shared Shadows Function CreateFrom(ByVal phasorDataCellType As Type, ByVal phasorDataCell As IPhasorDataCell) As IPhasorDataCell
+        Protected Sub New()
 
-            Return CType(Activator.CreateInstance(phasorDataCellType, New Object() {phasorDataCell}), IPhasorDataCell)
+            MyBase.New()
 
-        End Function
+            m_phasorValues = New PhasorValueCollection
+            m_analogValues = New AnalogValueCollection
+            m_digitalValues = New DigitalValueCollection
+
+        End Sub
 
         Protected Sub New(ByVal frequencyValue As IFrequencyValue)
 
-            m_phasorValues = New PhasorValueCollection
+            Me.New()
             m_frequencyValue = frequencyValue
-            m_analogValues = New AnalogValueCollection
-            m_digitalValues = New DigitalValueCollection
 
         End Sub
 
@@ -58,6 +57,40 @@ Namespace EE.Phasor
 
         End Sub
 
+        Protected Sub New(ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+
+            Me.New()
+
+            ' TODO: In order to generically parse a binary image, you will need some basic information:
+            '       phasor count / phasor type / phasor data format - PhasorDefinitionCollection?
+            '       frequency data type - IFrequencyDefinition?
+            '       analog count / analog data format = AnalogDefinitionCollection?
+            '       digital count - DigitalDefinitionCollection?
+            ' Maybe this can be provided via a general "PhasorConfigurationFrame" class
+            ' Note that all value classes already define binaryImage constructors...
+
+            'Dim x As Integer
+
+            'For x = 0 To m_configFile.PhasorDefinitions.Count - 1
+            '    m_phasorValues.Add(New PhasorValue(m_configFile.PhasorDefinitions(x), binaryImage, startIndex + x * PhasorValue.BinaryLength, PhasorFormat))
+            'Next
+
+            'index = startIndex + m_configFile.PhasorDefinitions.Count * PhasorValue.BinaryLength
+
+            'm_frequency = EndianOrder.ReverseToInt16(binaryImage, index)
+            'm_dfdt = EndianOrder.ReverseToInt16(binaryImage, index + 2)
+
+            'index += 4
+
+            'm_digitalValues.Clear()
+
+            'For x = 0 To m_digitalValues.Count - 1
+            '    m_digitalValues.Add(EndianOrder.ReverseToInt16(binaryImage, index + x * 2))
+            'Next
+
+        End Sub
+
+        ' Dervied classes are expected to expose a Public Sub New(ByVal phasorDataCell As IPhasorDataCell)
         Protected Sub New(ByVal phasorDataCell As IPhasorDataCell)
 
             Me.New(phasorDataCell.StatusFlags, phasorDataCell.PhasorValues, phasorDataCell.FrequencyValue, phasorDataCell.AnalogValues, phasorDataCell.DigitalValues)
@@ -87,10 +120,13 @@ Namespace EE.Phasor
             End Get
         End Property
 
-        Public ReadOnly Property FrequencyValue() As IFrequencyValue Implements IPhasorDataCell.FrequencyValue
+        Public Property FrequencyValue() As IFrequencyValue Implements IPhasorDataCell.FrequencyValue
             Get
                 Return m_frequencyValue
             End Get
+            Set(ByVal Value As IFrequencyValue)
+                m_frequencyValue = Value
+            End Set
         End Property
 
         Public Overridable ReadOnly Property AnalogValues() As AnalogValueCollection Implements IPhasorDataCell.AnalogValues

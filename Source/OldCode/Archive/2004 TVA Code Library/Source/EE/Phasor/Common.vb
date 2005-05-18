@@ -37,13 +37,4 @@ Namespace EE.Phasor
         Hz60
     End Enum
 
-    Public Enum NetworkProtocol
-        Tcp
-        Udp
-    End Enum
-
-    Public Delegate Sub ProcessBufferSignature(ByVal buffer As Byte(), ByVal length As Integer)
-
-    Public Delegate Sub UpdateStatusSignature(ByVal status As String)
-
 End Namespace

@@ -27,16 +27,7 @@ Namespace EE.Phasor
 
         Private m_phasorDataCells As PhasorDataCellCollection
 
-        ' Create phasor data frame from other phasor data frame
-        ' Note: This method is expected to be implemented as a public shared method in derived class automatically passing in phasorDataFrameType
-        ' Dervied class must expose a Public Sub New(ByVal phasorDataFrame As IPhasorDataFrame)
-        Protected Shared Shadows Function CreateFrom(ByVal phasorDataFrameType As Type, ByVal phasorDataFrame As IPhasorDataFrame) As IPhasorDataFrame
-
-            Return CType(Activator.CreateInstance(phasorDataFrameType, New Object() {phasorDataFrame}), IPhasorDataFrame)
-
-        End Function
-
-        Protected Sub New(ByVal frequencyValue As IFrequencyValue)
+        Protected Sub New()
 
             MyBase.New()
 
@@ -52,6 +43,7 @@ Namespace EE.Phasor
 
         End Sub
 
+        ' Dervied classes are expected to expose a Public Sub New(ByVal phasorDataFrame As IPhasorDataFrame)
         Protected Sub New(ByVal phasorDataFrame As IPhasorDataFrame)
 
             Me.New(phasorDataFrame.TimeTag, phasorDataFrame.Milliseconds, phasorDataFrame.SynchronizationIsValid, phasorDataFrame.DataIsValid, _
@@ -85,7 +77,7 @@ Namespace EE.Phasor
 
         Public Overrides Property DataImage() As Byte()
             Get
-                Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BinaryLength)
+                Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), DataLength)
                 Dim index As Integer
 
                 For x As Integer = 0 To m_phasorDataCells.Count - 1
@@ -96,6 +88,7 @@ Namespace EE.Phasor
                 Return buffer
             End Get
             Set(ByVal Value() As Byte)
+                ' TODO: may be possible provide a generic cell creation implementation - especially if configuration frame is available...
                 Throw New NotImplementedException
             End Set
         End Property

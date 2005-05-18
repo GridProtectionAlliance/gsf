@@ -29,15 +29,6 @@ Namespace EE.Phasor
         Private m_timeTag As Unix.TimeTag
         Private m_published As Boolean
 
-        ' Create channel frame from other channel frame
-        ' Note: This method is expected to be implemented as a public shared method in derived class automatically passing in channelFrameType
-        ' Dervied class must expose a Public Sub New(ByVal channelFrame As IChannelFrame)
-        Protected Shared Function CreateFrom(ByVal channelFrameType As Type, ByVal channelFrame As IChannelFrame) As IChannelFrame
-
-            Return CType(Activator.CreateInstance(channelFrameType, New Object() {channelFrame}), IChannelFrame)
-
-        End Function
-
         Protected Sub New()
 
             m_timeTag = New Unix.TimeTag(DateTime.Now)
@@ -56,6 +47,7 @@ Namespace EE.Phasor
 
         End Sub
 
+        ' Dervied classes are expected to expose a Protected Sub New(ByVal channelFrame As IChannelFrame)
         Protected Sub New(ByVal channelFrame As IChannelFrame)
 
             Me.New(channelFrame.TimeTag, channelFrame.Milliseconds, channelFrame.SynchronizationIsValid, _

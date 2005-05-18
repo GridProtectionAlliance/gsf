@@ -25,14 +25,11 @@ Namespace EE.Phasor
         Inherits ChannelDefinitionBase
         Implements IDigitalDefinition
 
-        ' Create digital definition from other digital definition
-        ' Note: This method is expected to be implemented as a public shared method in derived class automatically passing in digitalDefinitionType
-        ' Dervied class must expose a Public Sub New(ByVal digitalDefinition As IDigitalDefinition)
-        Protected Shared Shadows Function CreateFrom(ByVal digitalDefinitionType As Type, ByVal digitalDefinition As IDigitalDefinition) As IDigitalDefinition
+        Protected Sub New()
 
-            Return CType(Activator.CreateInstance(digitalDefinitionType, New Object() {digitalDefinition}), IDigitalDefinition)
+            MyBase.New()
 
-        End Function
+        End Sub
 
         Protected Sub New(ByVal index As Integer, ByVal label As String)
 
@@ -40,6 +37,7 @@ Namespace EE.Phasor
 
         End Sub
 
+        ' Dervied classes are expected to expose a Public Sub New(ByVal digitalDefinition As IDigitalDefinition)
         Protected Sub New(ByVal digitalDefinition As IDigitalDefinition)
 
             Me.New(digitalDefinition.Index, digitalDefinition.Label)

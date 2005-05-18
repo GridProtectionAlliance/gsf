@@ -26,7 +26,7 @@ Namespace EE.Phasor
 
         ReadOnly Property PhasorValues() As PhasorValueCollection
 
-        ReadOnly Property FrequencyValue() As IFrequencyValue
+        Property FrequencyValue() As IFrequencyValue
 
         ReadOnly Property AnalogValues() As AnalogValueCollection
 

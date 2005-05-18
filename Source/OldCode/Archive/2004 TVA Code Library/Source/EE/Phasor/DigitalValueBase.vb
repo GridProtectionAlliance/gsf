@@ -29,14 +29,11 @@ Namespace EE.Phasor
         Private m_digitalDefinition As IDigitalDefinition
         Private m_value As Int16
 
-        ' Create digital value from other digital value
-        ' Note: This method is expected to be implemented as a public shared method in derived class automatically passing in digitalValueType
-        ' Dervied class must expose a Public Sub New(ByVal digitalValue As IDigitalValue)
-        Protected Shared Shadows Function CreateFrom(ByVal digitalValueType As Type, ByVal digitalValue As IDigitalValue) As IDigitalValue
+        Protected Sub New()
 
-            Return CType(Activator.CreateInstance(digitalValueType, New Object() {digitalValue}), IDigitalValue)
+            MyBase.New()
 
-        End Function
+        End Sub
 
         Protected Sub New(ByVal digitalDefinition As IDigitalDefinition, ByVal value As Int16)
 
@@ -56,16 +53,20 @@ Namespace EE.Phasor
 
         End Sub
 
+        ' Dervied classes are expected to expose a Public Sub New(ByVal digitalValue As IDigitalValue)
         Protected Sub New(ByVal digitalValue As IDigitalValue)
 
             Me.New(digitalValue.Definition, digitalValue.Value)
 
         End Sub
 
-        Public Overridable ReadOnly Property Definition() As IDigitalDefinition Implements IDigitalValue.Definition
+        Public Overridable Property Definition() As IDigitalDefinition Implements IDigitalValue.Definition
             Get
                 Return m_digitalDefinition
             End Get
+            Set(ByVal Value As IDigitalDefinition)
+                m_digitalDefinition = Value
+            End Set
         End Property
 
         <EditorBrowsable(EditorBrowsableState.Never)> _

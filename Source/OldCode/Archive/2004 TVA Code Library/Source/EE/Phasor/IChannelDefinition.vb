@@ -24,7 +24,6 @@ Namespace EE.Phasor
 
         Property Index() As Integer
 
-        ' Offset provided for end-implementation convenience, virtual base classes should not apply offset to any values
         Property Offset() As Double
 
         Property ScalingFactor() As Integer

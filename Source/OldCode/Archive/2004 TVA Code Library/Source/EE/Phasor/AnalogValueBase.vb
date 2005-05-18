@@ -28,14 +28,11 @@ Namespace EE.Phasor
         Private m_analogDefinition As IAnalogDefinition
         Private m_value As Double
 
-        ' Create analog value from other analog value
-        ' Note: This method is expected to be implemented as a public shared method in derived class automatically passing in analogValueType
-        ' Dervied class must expose a Public Sub New(ByVal analogValue As IAnalogValue)
-        Protected Shared Shadows Function CreateFrom(ByVal analogValueType As Type, ByVal analogValue As IAnalogValue) As IAnalogValue
+        Protected Sub New()
 
-            Return CType(Activator.CreateInstance(analogValueType, New Object() {analogValue}), IAnalogValue)
+            MyBase.New()
 
-        End Function
+        End Sub
 
         Protected Sub New(ByVal dataFormat As DataFormat, ByVal analogDefinition As IAnalogDefinition, ByVal value As Double)
 
@@ -66,16 +63,20 @@ Namespace EE.Phasor
 
         End Sub
 
+        ' Dervied classes are expected expose a Public Sub New(ByVal analogValue As IAnalogValue)
         Protected Sub New(ByVal analogValue As IAnalogValue)
 
             Me.New(analogValue.DataFormat, analogValue.Definition, analogValue.Value)
 
         End Sub
 
-        Public Overridable ReadOnly Property Definition() As IAnalogDefinition Implements IAnalogValue.Definition
+        Public Overridable Property Definition() As IAnalogDefinition Implements IAnalogValue.Definition
             Get
                 Return m_analogDefinition
             End Get
+            Set(ByVal Value As IAnalogDefinition)
+                m_analogDefinition = Value
+            End Set
         End Property
 
         Public Overridable Property Value() As Double Implements IAnalogValue.Value

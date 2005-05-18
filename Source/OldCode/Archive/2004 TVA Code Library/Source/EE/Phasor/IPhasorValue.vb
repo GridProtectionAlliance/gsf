@@ -22,7 +22,7 @@ Namespace EE.Phasor
 
         Inherits IChannelValue
 
-        ReadOnly Property Definition() As IPhasorDefinition
+        Property Definition() As IPhasorDefinition
 
         Property PhasorFormat() As PhasorFormat
 

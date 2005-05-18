@@ -22,16 +22,13 @@ Namespace EE.Phasor
 
         Inherits IChannelDefinition
 
-        ' Offset provided for end-implementation convenience, virtual base classes should not apply offset to any values
+        Property NominalFrequency() As LineFrequency
+
         Property DfDtOffset() As Double
 
         Property DfDtScalingFactor() As Integer
 
         ReadOnly Property MaximumDfDtScalingFactor() As Integer
-
-        Property NominalFrequency() As LineFrequency
-
-        ReadOnly Property NominalFrequencyOffset() As Double
 
     End Interface
 

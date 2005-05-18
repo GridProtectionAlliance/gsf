@@ -22,7 +22,7 @@ Namespace EE.Phasor
 
         Inherits IChannelValue
 
-        ReadOnly Property Definition() As IAnalogDefinition
+        Property Definition() As IAnalogDefinition
 
         Property Value() As Double
 

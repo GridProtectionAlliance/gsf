@@ -29,14 +29,12 @@ Namespace EE.Phasor
         Private m_scale As Integer
         Private m_offset As Double
 
-        ' Create channel definition from other channel definition
-        ' Note: This method is expected to be implemented as a public shared method in derived class automatically passing in channelDefinitionType
-        ' Dervied class must expose a Public Sub New(ByVal channelDefinition As IChannelDefinition)
-        Protected Shared Function CreateFrom(ByVal channelDefinitionType As Type, ByVal channelDefinition As IChannelDefinition) As IChannelDefinition
+        Protected Sub New()
 
-            Return CType(Activator.CreateInstance(channelDefinitionType, New Object() {channelDefinition}), IChannelDefinition)
+            m_label = "undefined"
+            m_scale = 1
 
-        End Function
+        End Sub
 
         Protected Sub New(ByVal index As Integer, ByVal label As String, ByVal scale As Integer, ByVal offset As Double)
 
@@ -49,6 +47,7 @@ Namespace EE.Phasor
 
         End Sub
 
+        ' Dervied classes are expected to expose a Protected Sub New(ByVal channelDefinition As IChannelDefinition)
         Protected Sub New(ByVal channelDefinition As IChannelDefinition)
 
             Me.New(channelDefinition.Index, channelDefinition.Label, channelDefinition.ScalingFactor, channelDefinition.Offset)
