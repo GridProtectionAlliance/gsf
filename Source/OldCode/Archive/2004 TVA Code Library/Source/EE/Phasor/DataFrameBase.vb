@@ -19,12 +19,13 @@ Imports TVA.Interop
 
 Namespace EE.Phasor
 
-    ' This class represents the protocol independent common implementation of a phasor data frame that can be sent or received from a PMU.
+    ' This class represents the protocol independent common implementation of a data frame that can be sent or received from a PMU.
     Public MustInherit Class DataFrameBase
 
         Inherits ChannelFrameBase
         Implements IDataFrame
 
+        Private m_configurationFrame As IConfigurationFrame
         Private m_dataCells As DataCellCollection
 
         Protected Sub New()
@@ -35,11 +36,12 @@ Namespace EE.Phasor
 
         End Sub
 
-        Protected Sub New(ByVal timeTag As Unix.TimeTag, ByVal milliseconds As Double, ByVal synchronizationIsValid As Boolean, ByVal dataIsValid As Boolean, ByVal dataImage As Byte(), ByVal dataCells As DataCellCollection)
+        Protected Sub New(ByVal timeTag As Unix.TimeTag, ByVal milliseconds As Double, ByVal synchronizationIsValid As Boolean, ByVal dataIsValid As Boolean, ByVal dataImage As Byte(), ByVal configurationFrame As IConfigurationFrame, ByVal dataCells As DataCellCollection)
 
             MyBase.New(timeTag, milliseconds, synchronizationIsValid, dataIsValid, dataImage)
 
-            m_dataCells = dataCells
+            m_configurationFrame = configurationFrame
+            m_dataCells = DataCells
 
         End Sub
 
@@ -47,9 +49,18 @@ Namespace EE.Phasor
         Protected Sub New(ByVal phasorDataFrame As IDataFrame)
 
             Me.New(phasorDataFrame.TimeTag, phasorDataFrame.Milliseconds, phasorDataFrame.SynchronizationIsValid, phasorDataFrame.DataIsValid, _
-                    phasorDataFrame.DataImage, phasorDataFrame.DataCells)
+                    phasorDataFrame.DataImage, phasorDataFrame.ConfigurationFrame, phasorDataFrame.DataCells)
 
         End Sub
+
+        Public Overridable Property ConfigurationFrame() As IConfigurationFrame Implements IDataFrame.ConfigurationFrame
+            Get
+                Return m_configurationFrame
+            End Get
+            Set(ByVal Value As IConfigurationFrame)
+                m_configurationFrame = Value
+            End Set
+        End Property
 
         Public ReadOnly Property DataCells() As DataCellCollection Implements IDataFrame.DataCells
             Get

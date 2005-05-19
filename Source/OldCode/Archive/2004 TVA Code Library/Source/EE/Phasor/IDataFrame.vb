@@ -17,10 +17,12 @@
 
 Namespace EE.Phasor
 
-    ' This interface represents the protocol independent representation of any frame of phasor data.
+    ' This interface represents the protocol independent representation of any frame of data.
     Public Interface IDataFrame
 
         Inherits IChannelFrame
+
+        Property ConfigurationFrame() As IConfigurationFrame
 
         ReadOnly Property DataCells() As DataCellCollection
 
