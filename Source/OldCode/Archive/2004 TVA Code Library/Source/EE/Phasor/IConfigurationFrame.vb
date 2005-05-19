@@ -22,7 +22,9 @@ Namespace EE.Phasor
 
         Inherits IChannelFrame
 
-        'ReadOnly Property DataCells() As DataCellCollection
+        Property IDCode() As Int16
+
+        ReadOnly Property ConfigurationCells() As ConfigurationCellCollection
 
     End Interface
 

@@ -1,5 +1,5 @@
 '***********************************************************************
-'  IChannelFrame.vb - Basic frame interface
+'  IChannelFrame.vb - Channel frame interface
 '  Copyright © 2004 - TVA, all rights reserved
 '
 '  Build Environment: VB.NET, Visual Studio 2003

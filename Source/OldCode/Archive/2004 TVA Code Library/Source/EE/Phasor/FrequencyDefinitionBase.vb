@@ -36,9 +36,9 @@ Namespace EE.Phasor
 
         End Sub
 
-        Protected Sub New(ByVal index As Integer, ByVal label As String, ByVal scale As Integer, ByVal offset As Double, ByVal dfdtScale As Double, ByVal dfdtOffset As Double, ByVal nominalLineFrequency As LineFrequency)
+        Protected Sub New(ByVal dataFormat As DataFormat, ByVal index As Integer, ByVal label As String, ByVal scale As Integer, ByVal offset As Double, ByVal dfdtScale As Double, ByVal dfdtOffset As Double, ByVal nominalLineFrequency As LineFrequency)
 
-            MyBase.New(index, label, scale, offset)
+            MyBase.New(dataFormat, index, label, scale, offset)
 
             m_dfdtOffset = dfdtOffset
             m_nominalFrequency = nominalLineFrequency
@@ -50,8 +50,8 @@ Namespace EE.Phasor
         ' Dervied classes are expected to expose a Public Sub New(ByVal frequencyDefinition As IFrequencyDefinition)
         Protected Sub New(ByVal frequencyDefinition As IFrequencyDefinition)
 
-            Me.New(frequencyDefinition.Index, frequencyDefinition.Label, frequencyDefinition.ScalingFactor, frequencyDefinition.Offset, _
-                frequencyDefinition.DfDtScalingFactor, frequencyDefinition.DfDtOffset, frequencyDefinition.NominalFrequency)
+            Me.New(frequencyDefinition.DataFormat, frequencyDefinition.Index, frequencyDefinition.Label, frequencyDefinition.ScalingFactor, _
+                frequencyDefinition.Offset, frequencyDefinition.DfDtScalingFactor, frequencyDefinition.DfDtOffset, frequencyDefinition.NominalFrequency)
 
         End Sub
 

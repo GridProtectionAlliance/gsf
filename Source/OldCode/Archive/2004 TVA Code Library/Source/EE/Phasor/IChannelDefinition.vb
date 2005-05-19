@@ -22,6 +22,8 @@ Namespace EE.Phasor
 
         Inherits IChannel, IComparable
 
+        Property DataFormat() As DataFormat
+
         Property Index() As Integer
 
         Property Offset() As Double

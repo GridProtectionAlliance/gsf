@@ -26,7 +26,6 @@ Namespace EE.Phasor
         Inherits ChannelValueBase
         Implements IDigitalValue
 
-        Private m_digitalDefinition As IDigitalDefinition
         Private m_value As Int16
 
         Protected Sub New()
@@ -37,18 +36,16 @@ Namespace EE.Phasor
 
         Protected Sub New(ByVal digitalDefinition As IDigitalDefinition, ByVal value As Int16)
 
-            MyBase.New(EE.Phasor.DataFormat.FixedInteger)
+            MyBase.New(digitalDefinition)
 
-            m_digitalDefinition = digitalDefinition
             m_value = value
 
         End Sub
 
         Protected Sub New(ByVal digitalDefinition As IDigitalDefinition, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
 
-            MyBase.New(EE.Phasor.DataFormat.FixedInteger)
+            MyBase.New(digitalDefinition)
 
-            m_digitalDefinition = digitalDefinition
             m_value = EndianOrder.ReverseToInt16(binaryImage, startIndex)
 
         End Sub
@@ -60,27 +57,20 @@ Namespace EE.Phasor
 
         End Sub
 
-        Public Overridable Property Definition() As IDigitalDefinition Implements IDigitalValue.Definition
+        Public Overridable Shadows Property Definition() As IDigitalDefinition Implements IDigitalValue.Definition
             Get
-                Return m_digitalDefinition
+                Return MyBase.Definition
             End Get
             Set(ByVal Value As IDigitalDefinition)
-                m_digitalDefinition = Value
+                MyBase.Definition = Value
             End Set
         End Property
 
         <EditorBrowsable(EditorBrowsableState.Never)> _
-        Public NotOverridable Overrides Property DataFormat() As DataFormat
+        Public NotOverridable Overrides ReadOnly Property DataFormat() As DataFormat
             Get
                 Return MyBase.DataFormat
             End Get
-            Set(ByVal Value As DataFormat)
-                If Value = EE.Phasor.DataFormat.FixedInteger Then
-                    MyBase.DataFormat = Value
-                Else
-                    Throw New NotImplementedException("Digital values represent bit flags and thus can only be fixed integers")
-                End If
-            End Set
         End Property
 
         Public Overridable Property Value() As Int16 Implements IDigitalValue.Value

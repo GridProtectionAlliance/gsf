@@ -22,7 +22,7 @@ Namespace EE.Phasor
 
         Inherits IChannelValue
 
-        Property Definition() As IDigitalDefinition
+        Shadows Property Definition() As IDigitalDefinition
 
         Property Value() As Int16
 

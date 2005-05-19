@@ -24,6 +24,7 @@ Namespace EE.Phasor
 
         Implements IChannelDefinition
 
+        Private m_dataFormat As DataFormat
         Private m_index As Integer
         Private m_label As String
         Private m_scale As Integer
@@ -31,14 +32,16 @@ Namespace EE.Phasor
 
         Protected Sub New()
 
+            m_dataFormat = DataFormat.FixedInteger
             m_label = "undefined"
             m_scale = 1
 
         End Sub
 
-        Protected Sub New(ByVal index As Integer, ByVal label As String, ByVal scale As Integer, ByVal offset As Double)
+        Protected Sub New(ByVal dataFormat As DataFormat, ByVal index As Integer, ByVal label As String, ByVal scale As Integer, ByVal offset As Double)
 
             With Me
+                .DataFormat = dataFormat
                 .Index = index
                 .Label = label
                 .ScalingFactor = scale
@@ -50,7 +53,7 @@ Namespace EE.Phasor
         ' Dervied classes are expected to expose a Protected Sub New(ByVal channelDefinition As IChannelDefinition)
         Protected Sub New(ByVal channelDefinition As IChannelDefinition)
 
-            Me.New(channelDefinition.Index, channelDefinition.Label, channelDefinition.ScalingFactor, channelDefinition.Offset)
+            Me.New(channelDefinition.DataFormat, channelDefinition.Index, channelDefinition.Label, channelDefinition.ScalingFactor, channelDefinition.Offset)
 
         End Sub
 
@@ -60,6 +63,15 @@ Namespace EE.Phasor
             Get
                 Return Me
             End Get
+        End Property
+
+        Public Overridable Property DataFormat() As DataFormat Implements IChannelDefinition.DataFormat
+            Get
+                Return m_dataFormat
+            End Get
+            Set(ByVal Value As DataFormat)
+                m_dataFormat = Value
+            End Set
         End Property
 
         Public Overridable Property Index() As Integer Implements IChannelDefinition.Index

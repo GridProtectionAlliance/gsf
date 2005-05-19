@@ -33,7 +33,7 @@ Namespace EE.Phasor
 
         Protected Sub New(ByVal index As Integer, ByVal label As String)
 
-            MyBase.New(index, label, 1, 0)
+            MyBase.New(EE.Phasor.DataFormat.FixedInteger, index, label, 1, 0)
 
         End Sub
 
@@ -43,6 +43,20 @@ Namespace EE.Phasor
             Me.New(digitalDefinition.Index, digitalDefinition.Label)
 
         End Sub
+
+        <EditorBrowsable(EditorBrowsableState.Never)> _
+        Public NotOverridable Overrides Property DataFormat() As DataFormat
+            Get
+                Return MyBase.DataFormat
+            End Get
+            Set(ByVal Value As DataFormat)
+                If Value = DataFormat.FixedInteger Then
+                    MyBase.DataFormat = Value
+                Else
+                    Throw New NotImplementedException("Digital values represent bit flags and thus can only be fixed integers")
+                End If
+            End Set
+        End Property
 
         <EditorBrowsable(EditorBrowsableState.Never)> _
         Public NotOverridable Overrides Property Offset() As Double

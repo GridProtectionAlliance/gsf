@@ -23,6 +23,7 @@ Namespace EE.Phasor
         Inherits ChannelDefinitionBase
         Implements IPhasorDefinition
 
+        Private m_format As PhasorFormat
         Private m_type As PhasorType
         Private m_voltageReference As IPhasorDefinition
 
@@ -30,15 +31,17 @@ Namespace EE.Phasor
 
             MyBase.New()
 
+            m_format = PhasorFormat.Rectangular
             m_type = PhasorType.Voltage
             m_voltageReference = Me
 
         End Sub
 
-        Protected Sub New(ByVal index As Integer, ByVal label As String, ByVal scale As Integer, ByVal offset As Double, ByVal type As PhasorType, ByVal voltageReference As IPhasorDefinition)
+        Protected Sub New(ByVal dataFormat As DataFormat, ByVal index As Integer, ByVal label As String, ByVal scale As Integer, ByVal offset As Double, ByVal format As PhasorFormat, ByVal type As PhasorType, ByVal voltageReference As IPhasorDefinition)
 
-            MyBase.New(index, label, scale, offset)
+            MyBase.New(dataFormat, index, label, scale, offset)
 
+            m_format = format
             m_type = type
 
             If type = PhasorType.Voltage Then
@@ -52,10 +55,19 @@ Namespace EE.Phasor
         ' Dervied classes are expected to expose a Public Sub New(ByVal phasorDefinition As IPhasorDefinition)
         Protected Sub New(ByVal phasorDefinition As IPhasorDefinition)
 
-            Me.New(phasorDefinition.Index, phasorDefinition.Label, phasorDefinition.ScalingFactor, phasorDefinition.Offset, _
-                phasorDefinition.Type, phasorDefinition.VoltageReference)
+            Me.New(phasorDefinition.DataFormat, phasorDefinition.Index, phasorDefinition.Label, phasorDefinition.ScalingFactor, _
+                phasorDefinition.Offset, phasorDefinition.Format, phasorDefinition.Type, phasorDefinition.VoltageReference)
 
         End Sub
+
+        Public Overridable Property Format() As PhasorFormat Implements IPhasorDefinition.Format
+            Get
+                Return m_format
+            End Get
+            Set(ByVal Value As PhasorFormat)
+                m_format = Value
+            End Set
+        End Property
 
         Public Overridable Property [Type]() As PhasorType Implements IPhasorDefinition.Type
             Get

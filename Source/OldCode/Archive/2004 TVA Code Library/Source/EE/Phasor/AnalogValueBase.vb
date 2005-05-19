@@ -25,7 +25,6 @@ Namespace EE.Phasor
         Inherits ChannelValueBase
         Implements IAnalogValue
 
-        Private m_analogDefinition As IAnalogDefinition
         Private m_value As Double
 
         Protected Sub New()
@@ -34,28 +33,25 @@ Namespace EE.Phasor
 
         End Sub
 
-        Protected Sub New(ByVal dataFormat As DataFormat, ByVal analogDefinition As IAnalogDefinition, ByVal value As Double)
+        Protected Sub New(ByVal analogDefinition As IAnalogDefinition, ByVal value As Double)
 
-            MyBase.New(dataFormat)
+            MyBase.New(analogDefinition)
 
-            m_analogDefinition = analogDefinition
             m_value = value
 
         End Sub
 
-        Protected Sub New(ByVal dataFormat As DataFormat, ByVal analogDefinition As IAnalogDefinition, ByVal unscaledValue As Int16)
+        Protected Sub New(ByVal analogDefinition As IAnalogDefinition, ByVal unscaledValue As Int16)
 
-            Me.New(dataFormat, analogDefinition, unscaledValue / analogDefinition.ScalingFactor)
+            Me.New(analogDefinition, unscaledValue / analogDefinition.ScalingFactor)
 
         End Sub
 
-        Protected Sub New(ByVal dataFormat As DataFormat, ByVal analogDefinition As IAnalogDefinition, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+        Protected Sub New(ByVal analogDefinition As IAnalogDefinition, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
 
-            MyBase.New(dataFormat)
+            MyBase.New(analogDefinition)
 
-            m_analogDefinition = analogDefinition
-
-            If dataFormat = EE.Phasor.DataFormat.FixedInteger Then
+            If DataFormat = DataFormat.FixedInteger Then
                 UnscaledValue = EndianOrder.ReverseToInt16(binaryImage, startIndex)
             Else
                 m_value = EndianOrder.ReverseToSingle(binaryImage, startIndex)
@@ -66,16 +62,16 @@ Namespace EE.Phasor
         ' Dervied classes are expected expose a Public Sub New(ByVal analogValue As IAnalogValue)
         Protected Sub New(ByVal analogValue As IAnalogValue)
 
-            Me.New(analogValue.DataFormat, analogValue.Definition, analogValue.Value)
+            Me.New(analogValue.Definition, analogValue.Value)
 
         End Sub
 
-        Public Overridable Property Definition() As IAnalogDefinition Implements IAnalogValue.Definition
+        Public Overridable Shadows Property Definition() As IAnalogDefinition Implements IAnalogValue.Definition
             Get
-                Return m_analogDefinition
+                Return MyBase.Definition
             End Get
             Set(ByVal Value As IAnalogDefinition)
-                m_analogDefinition = Value
+                MyBase.Definition = Value
             End Set
         End Property
 
@@ -90,10 +86,10 @@ Namespace EE.Phasor
 
         Public Overridable Property UnscaledValue() As Int16 Implements IAnalogValue.UnscaledValue
             Get
-                Return Convert.ToInt16(m_value * m_analogDefinition.ScalingFactor)
+                Return Convert.ToInt16(m_value * Definition.ScalingFactor)
             End Get
             Set(ByVal Value As Int16)
-                m_value = Value / m_analogDefinition.ScalingFactor
+                m_value = Value / Definition.ScalingFactor
             End Set
         End Property
 
@@ -111,7 +107,7 @@ Namespace EE.Phasor
 
         Public Overrides ReadOnly Property BinaryLength() As Int16
             Get
-                If DataFormat = EE.Phasor.DataFormat.FixedInteger Then
+                If DataFormat = DataFormat.FixedInteger Then
                     Return 2
                 Else
                     Return 4
@@ -123,7 +119,7 @@ Namespace EE.Phasor
             Get
                 Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BinaryLength)
 
-                If DataFormat = EE.Phasor.DataFormat.FixedInteger Then
+                If DataFormat = DataFormat.FixedInteger Then
                     EndianOrder.SwapCopyBytes(UnscaledValue, buffer, 0)
                 Else
                     EndianOrder.SwapCopyBytes(Convert.ToSingle(m_value), buffer, 0)

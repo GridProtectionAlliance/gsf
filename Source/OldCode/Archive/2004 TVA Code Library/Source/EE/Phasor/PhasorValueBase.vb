@@ -8,6 +8,8 @@
 '       Phone: 423/751-2827
 '       Email: jrcarrol@tva.gov
 '
+'  Note: Phasors are stored rectangular format internally
+'
 '  Code Modification History:
 '  ---------------------------------------------------------------------
 '  11/12/2004 - James R Carroll
@@ -26,8 +28,6 @@ Namespace EE.Phasor
         Inherits ChannelValueBase
         Implements IPhasorValue
 
-        Private m_phasorFormat As PhasorFormat
-        Private m_phasorDefinition As IPhasorDefinition
         Private m_real As Double
         Private m_imaginary As Double
         Private m_compositeValues As CompositeValues
@@ -37,32 +37,29 @@ Namespace EE.Phasor
             Magnitude
         End Enum
 
-        ' TODO: change phasor format and data format parameters for each of these shared functions...
-
         ' Create phasor from polar coordinates (angle expected in Degrees)
         ' Note: This method is expected to be implemented as a public shared method in derived class automatically passing in phasorValueType
-        Protected Shared Function CreateFromPolarValues(ByVal phasorValueType As Type, ByVal phasorFormat As PhasorFormat, ByVal dataFormat As DataFormat, ByVal phasorDefinition As IPhasorDefinition, ByVal angle As Double, ByVal magnitude As Double) As IPhasorValue
+        Protected Shared Function CreateFromPolarValues(ByVal phasorValueType As Type, ByVal phasorDefinition As IPhasorDefinition, ByVal angle As Double, ByVal magnitude As Double) As IPhasorValue
 
-            Return CreateFromRectangularValues(phasorValueType, phasorFormat, dataFormat, phasorDefinition, CalculateRealComponent(angle, magnitude), CalculateImaginaryComponent(angle, magnitude))
+            Return CreateFromRectangularValues(phasorValueType, phasorDefinition, CalculateRealComponent(angle, magnitude), CalculateImaginaryComponent(angle, magnitude))
 
         End Function
 
         ' Create phasor from rectangular coordinates
         ' Note: This method is expected to be implemented as a public shared method in derived class automatically passing in phasorValueType
-        ' Dervied class must expose a Public Sub New(ByVal phasorFormat As PhasorFormat, ByVal dataFormat As DataFormat, ByVal phasorDefinition As IPhasorDefinition, ByVal real As Double, ByVal imaginary As Double)
-        Protected Shared Function CreateFromRectangularValues(ByVal phasorValueType As Type, ByVal phasorFormat As PhasorFormat, ByVal dataFormat As DataFormat, ByVal phasorDefinition As IPhasorDefinition, ByVal real As Double, ByVal imaginary As Double) As IPhasorValue
+        Protected Shared Function CreateFromRectangularValues(ByVal phasorValueType As Type, ByVal phasorDefinition As IPhasorDefinition, ByVal real As Double, ByVal imaginary As Double) As IPhasorValue
 
             If phasorDefinition Is Nothing Then Throw New ArgumentNullException("No phasor definition specified")
-            Return CType(Activator.CreateInstance(phasorValueType, New Object() {phasorFormat, dataFormat, phasorDefinition, real, imaginary}), IPhasorValue)
+            Return CType(Activator.CreateInstance(phasorValueType, New Object() {phasorDefinition, real, imaginary}), IPhasorValue)
 
         End Function
 
         ' Create phasor from unscaled rectangular coordinates
         ' Note: This method is expected to be implemented as a public shared method in derived class automatically passing in phasorValueType
-        Protected Shared Function CreateFromUnscaledRectangularValues(ByVal phasorValueType As Type, ByVal phasorFormat As PhasorFormat, ByVal dataFormat As DataFormat, ByVal phasorDefinition As IPhasorDefinition, ByVal real As Int16, ByVal imaginary As Int16) As IPhasorValue
+        Protected Shared Function CreateFromUnscaledRectangularValues(ByVal phasorValueType As Type, ByVal phasorDefinition As IPhasorDefinition, ByVal real As Int16, ByVal imaginary As Int16) As IPhasorValue
 
             Dim scale As Integer = phasorDefinition.ScalingFactor
-            Return CreateFromRectangularValues(phasorValueType, phasorFormat, dataFormat, phasorDefinition, real / scale, imaginary / scale)
+            Return CreateFromRectangularValues(phasorValueType, phasorDefinition, real / scale, imaginary / scale)
 
         End Function
 
@@ -104,38 +101,32 @@ Namespace EE.Phasor
 
             MyBase.New()
 
-            m_phasorFormat = PhasorFormat.Rectangular
             m_compositeValues = New CompositeValues(2)
 
         End Sub
 
-        Protected Sub New(ByVal dataFormat As DataFormat, ByVal phasorFormat As PhasorFormat, ByVal phasorDefinition As IPhasorDefinition, ByVal real As Double, ByVal imaginary As Double)
+        Protected Sub New(ByVal phasorDefinition As IPhasorDefinition, ByVal real As Double, ByVal imaginary As Double)
 
-            MyBase.New(dataFormat)
+            MyBase.New(phasorDefinition)
 
-            m_phasorFormat = phasorFormat
-            m_phasorDefinition = phasorDefinition
             m_real = real
             m_imaginary = imaginary
             m_compositeValues = New CompositeValues(2)
 
         End Sub
 
-        Protected Sub New(ByVal dataFormat As DataFormat, ByVal phasorFormat As PhasorFormat, ByVal phasorDefinition As IPhasorDefinition, ByVal unscaledReal As Int16, ByVal unscaledImaginary As Int16)
+        Protected Sub New(ByVal phasorDefinition As IPhasorDefinition, ByVal unscaledReal As Int16, ByVal unscaledImaginary As Int16)
 
-            Me.New(dataFormat, phasorFormat, phasorDefinition, unscaledReal / phasorDefinition.ScalingFactor, unscaledImaginary / phasorDefinition.ScalingFactor)
+            Me.New(phasorDefinition, unscaledReal / phasorDefinition.ScalingFactor, unscaledImaginary / phasorDefinition.ScalingFactor)
 
         End Sub
 
-        Protected Sub New(ByVal dataFormat As DataFormat, ByVal phasorFormat As PhasorFormat, ByVal phasorDefinition As IPhasorDefinition, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+        Protected Sub New(ByVal phasorDefinition As IPhasorDefinition, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
 
-            MyBase.New(dataFormat)
+            MyBase.New(phasorDefinition)
 
-            m_phasorFormat = phasorFormat
-            m_phasorDefinition = phasorDefinition
-
-            If phasorFormat = EE.Phasor.PhasorFormat.Rectangular Then
-                If dataFormat = EE.Phasor.DataFormat.FixedInteger Then
+            If Format = PhasorFormat.Rectangular Then
+                If DataFormat = DataFormat.FixedInteger Then
                     UnscaledReal = EndianOrder.ReverseToInt16(binaryImage, startIndex)
                     UnscaledImaginary = EndianOrder.ReverseToInt16(binaryImage, startIndex + 2)
                 Else
@@ -146,7 +137,7 @@ Namespace EE.Phasor
                 Dim magnitude As Double
                 Dim angle As Double
 
-                If dataFormat = EE.Phasor.DataFormat.FixedInteger Then
+                If DataFormat = DataFormat.FixedInteger Then
                     magnitude = Convert.ToDouble(EndianOrder.ReverseToUInt16(binaryImage, startIndex))
                     angle = EndianOrder.ReverseToInt16(binaryImage, startIndex + 2) * 180 / Math.PI / 10000
                 Else
@@ -165,26 +156,29 @@ Namespace EE.Phasor
         ' Dervied classes are expected to expose a Public Sub New(ByVal phasorValue As IPhasorValue)
         Protected Sub New(ByVal phasorValue As IPhasorValue)
 
-            Me.New(phasorValue.DataFormat, phasorValue.PhasorFormat, phasorValue.Definition, phasorValue.Real, phasorValue.Imaginary)
+            Me.New(phasorValue.Definition, phasorValue.Real, phasorValue.Imaginary)
 
         End Sub
 
-        Public Overridable Property PhasorFormat() As PhasorFormat Implements IPhasorValue.PhasorFormat
+        Public Overridable Shadows Property Definition() As IPhasorDefinition Implements IPhasorValue.Definition
             Get
-                Return m_phasorFormat
+                Return MyBase.Definition
             End Get
-            Set(ByVal Value As PhasorFormat)
-                m_phasorFormat = Value
+            Set(ByVal Value As IPhasorDefinition)
+                MyBase.Definition = Value
             End Set
         End Property
 
-        Public Overridable Property Definition() As IPhasorDefinition Implements IPhasorValue.Definition
+        Public ReadOnly Property Format() As PhasorFormat Implements IPhasorValue.Format
             Get
-                Return m_phasorDefinition
+                Return Definition.Format
             End Get
-            Set(ByVal Value As IPhasorDefinition)
-                m_phasorDefinition = Value
-            End Set
+        End Property
+
+        Public ReadOnly Property Type() As PhasorType Implements IPhasorValue.Type
+            Get
+                Return Definition.Type
+            End Get
         End Property
 
         Public Overridable Property Angle() As Double Implements IPhasorValue.Angle
@@ -248,25 +242,29 @@ Namespace EE.Phasor
 
         Public Overridable Property UnscaledReal() As Int16 Implements IPhasorValue.UnscaledReal
             Get
-                Return Convert.ToInt16(m_real * m_phasorDefinition.ScalingFactor)
+                Return Convert.ToInt16(m_real * Definition.ScalingFactor)
             End Get
             Set(ByVal Value As Int16)
-                m_real = Value / m_phasorDefinition.ScalingFactor
+                m_real = Value / Definition.ScalingFactor
             End Set
         End Property
 
         Public Overridable Property UnscaledImaginary() As Int16 Implements IPhasorValue.UnscaledImaginary
             Get
-                Return Convert.ToInt16(m_imaginary * m_phasorDefinition.ScalingFactor)
+                Return Convert.ToInt16(m_imaginary * Definition.ScalingFactor)
             End Get
             Set(ByVal Value As Int16)
-                m_imaginary = Value / m_phasorDefinition.ScalingFactor
+                m_imaginary = Value / Definition.ScalingFactor
             End Set
         End Property
 
         Public Overrides ReadOnly Property Values() As Double()
             Get
-                Return New Double() {m_real, m_imaginary}
+                If Format = PhasorFormat.Rectangular Then
+                    Return New Double() {m_real, m_imaginary}
+                Else
+                    Return New Double() {Angle, Magnitude}
+                End If
             End Get
         End Property
 
@@ -278,7 +276,7 @@ Namespace EE.Phasor
 
         Public Overrides ReadOnly Property BinaryLength() As Int16
             Get
-                If DataFormat = EE.Phasor.DataFormat.FixedInteger Then
+                If DataFormat = DataFormat.FixedInteger Then
                     Return 4
                 Else
                     Return 8
@@ -290,8 +288,8 @@ Namespace EE.Phasor
             Get
                 Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BinaryLength)
 
-                If m_phasorFormat = EE.Phasor.PhasorFormat.Rectangular Then
-                    If DataFormat = EE.Phasor.DataFormat.FixedInteger Then
+                If Format = PhasorFormat.Rectangular Then
+                    If DataFormat = DataFormat.FixedInteger Then
                         EndianOrder.SwapCopyBytes(UnscaledReal, buffer, 0)
                         EndianOrder.SwapCopyBytes(UnscaledImaginary, buffer, 2)
                     Else
@@ -299,7 +297,7 @@ Namespace EE.Phasor
                         EndianOrder.SwapCopyBytes(Convert.ToSingle(m_imaginary), buffer, 4)
                     End If
                 Else
-                    If DataFormat = EE.Phasor.DataFormat.FixedInteger Then
+                    If DataFormat = DataFormat.FixedInteger Then
                         EndianOrder.SwapCopyBytes(Convert.ToUInt16(Magnitude), buffer, 0)
                         EndianOrder.SwapCopyBytes(Convert.ToInt16(Angle * Math.PI / 180 * 10000), buffer, 2)
                     Else

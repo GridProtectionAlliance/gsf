@@ -17,7 +17,7 @@
 
 Namespace EE.Phasor
 
-    ' This interface represents the protocol independent representation of a set of phasor values.
+    ' This interface represents the protocol independent representation of a set of phasor related data values.
     Public Interface IDataCell
 
         Inherits IChannel

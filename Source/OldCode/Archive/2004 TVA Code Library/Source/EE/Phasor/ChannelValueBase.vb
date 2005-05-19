@@ -22,24 +22,22 @@ Namespace EE.Phasor
 
         Implements IChannelValue
 
-        Private m_dataFormat As DataFormat
+        Private m_definition As IChannelDefinition
 
-        Protected Sub New()
-
-            m_dataFormat = DataFormat.FixedInteger
+        Protected Sub New()            
 
         End Sub
 
-        Protected Sub New(ByVal dataFormat As DataFormat)
+        Protected Sub New(ByVal channelDefinition As IChannelDefinition)
 
-            m_dataFormat = dataFormat
+            m_definition = channelDefinition
 
         End Sub
 
         ' Dervied classes are expected to expose a Protected Sub New(ByVal channelValue As IChannelValue)
         Protected Sub New(ByVal channelValue As IChannelValue)
 
-            Me.New(channelValue.DataFormat)
+            Me.New(channelValue.Definition)
 
         End Sub
 
@@ -51,13 +49,19 @@ Namespace EE.Phasor
             End Get
         End Property
 
-        Public Overridable Property DataFormat() As DataFormat Implements IChannelValue.DataFormat
+        Public Property Definition() As IChannelDefinition Implements IChannelValue.Definition
             Get
-                Return m_dataFormat
+                Return m_definition
             End Get
-            Set(ByVal Value As DataFormat)
-                m_dataFormat = Value
+            Set(ByVal Value As IChannelDefinition)
+                m_definition = Value
             End Set
+        End Property
+
+        Public Overridable ReadOnly Property DataFormat() As DataFormat Implements IChannelValue.DataFormat
+            Get
+                Return m_definition.DataFormat
+            End Get
         End Property
 
         Public MustOverride ReadOnly Property IsEmpty() As Boolean Implements IChannelValue.IsEmpty

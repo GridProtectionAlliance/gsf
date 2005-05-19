@@ -201,6 +201,11 @@
                     BuildAction = "Compile"
                 />
                 <File
+                    RelPath = "IConfigurationCell.vb"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
                     RelPath = "IConfigurationFrame.vb"
                     SubType = "Code"
                     BuildAction = "Compile"

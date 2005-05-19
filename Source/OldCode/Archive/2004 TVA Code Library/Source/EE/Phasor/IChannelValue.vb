@@ -22,7 +22,9 @@ Namespace EE.Phasor
 
         Inherits IChannel
 
-        Property DataFormat() As DataFormat
+        Property Definition() As IChannelDefinition
+
+        ReadOnly Property DataFormat() As DataFormat
 
         ReadOnly Property Values() As Double()
 

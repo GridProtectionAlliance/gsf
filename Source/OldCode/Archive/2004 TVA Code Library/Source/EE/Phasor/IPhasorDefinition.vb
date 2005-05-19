@@ -22,6 +22,8 @@ Namespace EE.Phasor
 
         Inherits IChannelDefinition
 
+        Property Format() As PhasorFormat
+
         Property [Type]() As PhasorType
 
         Property VoltageReference() As IPhasorDefinition

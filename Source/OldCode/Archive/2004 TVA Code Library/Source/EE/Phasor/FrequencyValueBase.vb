@@ -25,7 +25,6 @@ Namespace EE.Phasor
         Inherits ChannelValueBase
         Implements IFrequencyValue
 
-        Private m_frequencyDefinition As IFrequencyDefinition
         Private m_frequency As Double
         Private m_dfdt As Double
 
@@ -35,31 +34,27 @@ Namespace EE.Phasor
 
         End Sub
 
-        Protected Sub New(ByVal dataFormat As DataFormat, ByVal frequencyDefinition As IFrequencyDefinition, ByVal frequency As Double, ByVal dfdt As Double)
+        Protected Sub New(ByVal frequencyDefinition As IFrequencyDefinition, ByVal frequency As Double, ByVal dfdt As Double)
 
-            MyBase.New(dataFormat)
+            MyBase.New(frequencyDefinition)
 
-            m_frequencyDefinition = frequencyDefinition
             m_frequency = frequency
             m_dfdt = dfdt
 
         End Sub
 
-        Protected Sub New(ByVal dataFormat As DataFormat, ByVal frequencyDefinition As IFrequencyDefinition, ByVal unscaledFrequency As Int16, ByVal unscaledDfDt As Int16)
+        Protected Sub New(ByVal frequencyDefinition As IFrequencyDefinition, ByVal unscaledFrequency As Int16, ByVal unscaledDfDt As Int16)
 
-            Me.New(dataFormat, frequencyDefinition, _
-                unscaledFrequency / frequencyDefinition.ScalingFactor + frequencyDefinition.Offset, _
+            Me.New(frequencyDefinition, unscaledFrequency / frequencyDefinition.ScalingFactor + frequencyDefinition.Offset, _
                 unscaledDfDt / frequencyDefinition.DfDtScalingFactor + frequencyDefinition.DfDtOffset)
 
         End Sub
 
-        Protected Sub New(ByVal dataFormat As DataFormat, ByVal frequencyDefinition As IFrequencyDefinition, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+        Protected Sub New(ByVal frequencyDefinition As IFrequencyDefinition, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
 
-            MyBase.New(dataFormat)
+            MyBase.New(frequencyDefinition)
 
-            m_frequencyDefinition = frequencyDefinition
-
-            If dataFormat = EE.Phasor.DataFormat.FixedInteger Then
+            If DataFormat = DataFormat.FixedInteger Then
                 UnscaledFrequency = EndianOrder.ReverseToInt16(binaryImage, startIndex)
                 UnscaledDfDt = EndianOrder.ReverseToInt16(binaryImage, startIndex + 2)
             Else
@@ -74,16 +69,16 @@ Namespace EE.Phasor
         ' Dervied classes are expected to expose a Public Sub New(ByVal frequencyValue As IFrequencyValue)
         Protected Sub New(ByVal frequencyValue As IFrequencyValue)
 
-            Me.New(frequencyValue.DataFormat, frequencyValue.Definition, frequencyValue.Frequency, frequencyValue.DfDt)
+            Me.New(frequencyValue.Definition, frequencyValue.Frequency, frequencyValue.DfDt)
 
         End Sub
 
-        Public Overridable Property Definition() As IFrequencyDefinition Implements IFrequencyValue.Definition
+        Public Overridable Shadows Property Definition() As IFrequencyDefinition Implements IFrequencyValue.Definition
             Get
-                Return m_frequencyDefinition
+                Return MyBase.Definition
             End Get
             Set(ByVal Value As IFrequencyDefinition)
-                m_frequencyDefinition = Value
+                MyBase.Definition = Value
             End Set
         End Property
 
@@ -107,12 +102,12 @@ Namespace EE.Phasor
 
         Public Overridable Property UnscaledFrequency() As Int16 Implements IFrequencyValue.UnscaledFrequency
             Get
-                With m_frequencyDefinition
+                With Definition
                     Return Convert.ToInt16((m_frequency - .Offset) * .ScalingFactor)
                 End With
             End Get
             Set(ByVal Value As Int16)
-                With m_frequencyDefinition
+                With Definition
                     m_frequency = Value / .ScalingFactor + .Offset
                 End With
             End Set
@@ -120,12 +115,12 @@ Namespace EE.Phasor
 
         Public Overridable Property UnscaledDfDt() As Int16 Implements IFrequencyValue.UnscaledDfDt
             Get
-                With m_frequencyDefinition
+                With Definition
                     Return Convert.ToInt16((m_dfdt - .DfDtOffset) * .DfDtScalingFactor)
                 End With
             End Get
             Set(ByVal Value As Int16)
-                With m_frequencyDefinition
+                With Definition
                     m_dfdt = Value / .DfDtScalingFactor + .DfDtOffset
                 End With
             End Set
@@ -145,7 +140,7 @@ Namespace EE.Phasor
 
         Public Overrides ReadOnly Property BinaryLength() As Int16
             Get
-                If DataFormat = EE.Phasor.DataFormat.FixedInteger Then
+                If DataFormat = DataFormat.FixedInteger Then
                     Return 4
                 Else
                     Return 8
@@ -157,11 +152,11 @@ Namespace EE.Phasor
             Get
                 Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BinaryLength)
 
-                If DataFormat = EE.Phasor.DataFormat.FixedInteger Then
+                If DataFormat = DataFormat.FixedInteger Then
                     EndianOrder.SwapCopyBytes(UnscaledFrequency, buffer, 0)
                     EndianOrder.SwapCopyBytes(UnscaledDfDt, buffer, 2)
                 Else
-                    With m_frequencyDefinition
+                    With Definition
                         EndianOrder.SwapCopyBytes(Convert.ToSingle(m_frequency - .Offset), buffer, 0)
                         EndianOrder.SwapCopyBytes(Convert.ToSingle(m_dfdt - .DfDtOffset), buffer, 4)
                     End With

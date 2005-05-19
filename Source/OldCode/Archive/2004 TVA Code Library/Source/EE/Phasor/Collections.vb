@@ -42,7 +42,7 @@ Namespace EE.Phasor
         Private m_fixedCount As Integer
         Private m_floatCount As Integer
 
-        Protected Overloads Sub _Add(ByVal value As IChannelValue)
+        Protected Shadows Sub _Add(ByVal value As IChannelValue)
 
             ' In typical usage, all channel values will be of the same data type - but we can't anticipate all
             ' possible uses of collection, so we track totals of each data type so we can quickly ascertain if
@@ -100,19 +100,55 @@ Namespace EE.Phasor
 
     End Class
 
+    Public Class ConfigurationCellCollection
+
+        Inherits ChannelCollection
+
+        Public Sub Add(ByVal value As IConfigurationCell)
+
+            _Add(value)
+
+        End Sub
+
+        Default Public ReadOnly Property Item(ByVal index As Integer) As IConfigurationCell
+            Get
+                Return DirectCast(_Item(index), IConfigurationCell)
+            End Get
+        End Property
+
+    End Class
+
     Public Class DataCellCollection
 
         Inherits ChannelCollection
 
         Public Sub Add(ByVal value As IDataCell)
 
-            MyBase._Add(value)
+            _Add(value)
 
         End Sub
 
         Default Public ReadOnly Property Item(ByVal index As Integer) As IDataCell
             Get
-                Return DirectCast(MyBase._Item(index), IDataCell)
+                Return DirectCast(_Item(index), IDataCell)
+            End Get
+        End Property
+
+    End Class
+
+    Public Class ConfigurationFrameCollection
+
+        Inherits ChannelCollection
+
+        Public Sub Add(ByVal value As IConfigurationFrame)
+
+            _Add(value)
+
+        End Sub
+
+        Default Public ReadOnly Property Item(ByVal index As Integer) As IConfigurationFrame
+            Get
+                Return DirectCast(_Item(index), IConfigurationFrame)
             End Get
         End Property
 
@@ -124,13 +160,13 @@ Namespace EE.Phasor
 
         Public Sub Add(ByVal value As IDataFrame)
 
-            MyBase._Add(value)
+            _Add(value)
 
         End Sub
 
         Default Public ReadOnly Property Item(ByVal index As Integer) As IDataFrame
             Get
-                Return DirectCast(MyBase._Item(index), IDataFrame)
+                Return DirectCast(_Item(index), IDataFrame)
             End Get
         End Property
 
@@ -142,13 +178,13 @@ Namespace EE.Phasor
 
         Public Sub Add(ByVal value As IAnalogValue)
 
-            MyBase._Add(value)
+            _Add(value)
 
         End Sub
 
         Default Public ReadOnly Property Item(ByVal index As Integer) As IAnalogValue
             Get
-                Return DirectCast(MyBase._Item(index), IAnalogValue)
+                Return DirectCast(_Item(index), IAnalogValue)
             End Get
         End Property
 
@@ -160,13 +196,13 @@ Namespace EE.Phasor
 
         Public Sub Add(ByVal value As IDigitalValue)
 
-            MyBase._Add(value)
+            _Add(value)
 
         End Sub
 
         Default Public ReadOnly Property Item(ByVal index As Integer) As IDigitalValue
             Get
-                Return DirectCast(MyBase._Item(index), IDigitalValue)
+                Return DirectCast(_Item(index), IDigitalValue)
             End Get
         End Property
 
@@ -178,13 +214,13 @@ Namespace EE.Phasor
 
         Public Sub Add(ByVal value As IFrequencyValue)
 
-            MyBase._Add(value)
+            _Add(value)
 
         End Sub
 
         Default Public ReadOnly Property Item(ByVal index As Integer) As IFrequencyValue
             Get
-                Return DirectCast(MyBase._Item(index), IFrequencyValue)
+                Return DirectCast(_Item(index), IFrequencyValue)
             End Get
         End Property
 
@@ -196,13 +232,13 @@ Namespace EE.Phasor
 
         Public Sub Add(ByVal value As IPhasorValue)
 
-            MyBase._Add(value)
+            _Add(value)
 
         End Sub
 
         Default Public ReadOnly Property Item(ByVal index As Integer) As IPhasorValue
             Get
-                Return DirectCast(MyBase._Item(index), IPhasorValue)
+                Return DirectCast(_Item(index), IPhasorValue)
             End Get
         End Property
 
@@ -214,13 +250,13 @@ Namespace EE.Phasor
 
         Public Sub Add(ByVal value As IAnalogDefinition)
 
-            MyBase._Add(value)
+            _Add(value)
 
         End Sub
 
         Default Public ReadOnly Property Item(ByVal index As Integer) As IAnalogDefinition
             Get
-                Return DirectCast(MyBase._Item(index), IAnalogDefinition)
+                Return DirectCast(_Item(index), IAnalogDefinition)
             End Get
         End Property
 
@@ -232,13 +268,13 @@ Namespace EE.Phasor
 
         Public Sub Add(ByVal value As IDigitalDefinition)
 
-            MyBase._Add(value)
+            _Add(value)
 
         End Sub
 
         Default Public ReadOnly Property Item(ByVal index As Integer) As IDigitalDefinition
             Get
-                Return DirectCast(MyBase._Item(index), IDigitalDefinition)
+                Return DirectCast(_Item(index), IDigitalDefinition)
             End Get
         End Property
 
@@ -250,13 +286,13 @@ Namespace EE.Phasor
 
         Public Sub Add(ByVal value As IFrequencyDefinition)
 
-            MyBase._Add(value)
+            _Add(value)
 
         End Sub
 
         Default Public ReadOnly Property Item(ByVal index As Integer) As IFrequencyDefinition
             Get
-                Return DirectCast(MyBase._Item(index), IFrequencyDefinition)
+                Return DirectCast(_Item(index), IFrequencyDefinition)
             End Get
         End Property
 
@@ -268,13 +304,13 @@ Namespace EE.Phasor
 
         Public Sub Add(ByVal value As IPhasorDefinition)
 
-            MyBase._Add(value)
+            _Add(value)
 
         End Sub
 
         Default Public ReadOnly Property Item(ByVal index As Integer) As IPhasorDefinition
             Get
-                Return DirectCast(MyBase._Item(index), IPhasorDefinition)
+                Return DirectCast(_Item(index), IPhasorDefinition)
             End Get
         End Property
 

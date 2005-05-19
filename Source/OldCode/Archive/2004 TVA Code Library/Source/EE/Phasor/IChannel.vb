@@ -1,5 +1,5 @@
 '***********************************************************************
-'  IChannel.vb - Channel interface
+'  IChannel.vb - Channel interface - this is the root interface
 '  Copyright © 2005 - TVA, all rights reserved
 '
 '  Build Environment: VB.NET, Visual Studio 2003

@@ -22,9 +22,11 @@ Namespace EE.Phasor
 
         Inherits IChannelValue
 
-        Property Definition() As IPhasorDefinition
+        Shadows Property Definition() As IPhasorDefinition
 
-        Property PhasorFormat() As PhasorFormat
+        ReadOnly Property Format() As PhasorFormat
+
+        ReadOnly Property [Type]() As PhasorType
 
         Property Angle() As Double
 
