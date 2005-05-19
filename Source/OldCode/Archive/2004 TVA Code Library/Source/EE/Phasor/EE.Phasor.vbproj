@@ -136,6 +136,21 @@
                     BuildAction = "Compile"
                 />
                 <File
+                    RelPath = "DataCellBase.vb"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "DataFrameBase.vb"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "DataSample.vb"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
                     RelPath = "DigitalDefinitionBase.vb"
                     SubType = "Code"
                     BuildAction = "Compile"
@@ -186,6 +201,21 @@
                     BuildAction = "Compile"
                 />
                 <File
+                    RelPath = "IConfigurationFrame.vb"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "IDataCell.vb"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "IDataFrame.vb"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
                     RelPath = "IDigitalDefinition.vb"
                     SubType = "Code"
                     BuildAction = "Compile"
@@ -206,37 +236,12 @@
                     BuildAction = "Compile"
                 />
                 <File
-                    RelPath = "IPhasorDataCell.vb"
-                    SubType = "Code"
-                    BuildAction = "Compile"
-                />
-                <File
-                    RelPath = "IPhasorDataFrame.vb"
-                    SubType = "Code"
-                    BuildAction = "Compile"
-                />
-                <File
                     RelPath = "IPhasorDefinition.vb"
                     SubType = "Code"
                     BuildAction = "Compile"
                 />
                 <File
                     RelPath = "IPhasorValue.vb"
-                    SubType = "Code"
-                    BuildAction = "Compile"
-                />
-                <File
-                    RelPath = "PhasorDataCellBase.vb"
-                    SubType = "Code"
-                    BuildAction = "Compile"
-                />
-                <File
-                    RelPath = "PhasorDataFrameBase.vb"
-                    SubType = "Code"
-                    BuildAction = "Compile"
-                />
-                <File
-                    RelPath = "PhasorDataSample.vb"
                     SubType = "Code"
                     BuildAction = "Compile"
                 />

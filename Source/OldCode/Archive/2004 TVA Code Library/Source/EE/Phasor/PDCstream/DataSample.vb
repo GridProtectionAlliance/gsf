@@ -26,14 +26,14 @@ Namespace EE.Phasor.PDCstream
     ' the PDC stream specification to help make things easier to understand.
     Public Class DataSample
 
-        Inherits Phasor.PhasorDataSample
+        Inherits Phasor.DataSample
 
         Public Sub New(ByVal sampleRate As Integer, ByVal timeStamp As DateTime)
 
             MyBase.New(sampleRate, timeStamp)
 
             For x As Integer = 0 To sampleRate - 1
-                'PhasorDataFrames.Add(   'Rows(x) = New DataPacket(m_configFile, timeStamp, x)
+                'DataFrames.Add(   'Rows(x) = New DataPacket(m_configFile, timeStamp, x)
             Next
 
         End Sub

@@ -1,5 +1,5 @@
 '***********************************************************************
-'  PhasorDataCellBase.vb - Phasor data cell base class
+'  DataCellBase.vb - Data cell base class
 '  Copyright © 2004 - TVA, all rights reserved
 '
 '  Build Environment: VB.NET, Visual Studio 2003
@@ -19,10 +19,10 @@ Imports TVA.Interop
 
 Namespace EE.Phasor
 
-    ' This class represents the protocol independent common implementation of a set of phasor values that can be sent or received from a PMU.
-    Public MustInherit Class PhasorDataCellBase
+    ' This class represents the protocol independent common implementation of a set of phasor related data values that can be sent or received from a PMU.
+    Public MustInherit Class DataCellBase
 
-        Implements IPhasorDataCell
+        Implements IDataCell
 
         Private m_statusFlags As Int16
         Private m_phasorValues As PhasorValueCollection
@@ -90,8 +90,8 @@ Namespace EE.Phasor
 
         End Sub
 
-        ' Dervied classes are expected to expose a Public Sub New(ByVal phasorDataCell As IPhasorDataCell)
-        Protected Sub New(ByVal phasorDataCell As IPhasorDataCell)
+        ' Dervied classes are expected to expose a Public Sub New(ByVal phasorDataCell As IDataCell)
+        Protected Sub New(ByVal phasorDataCell As IDataCell)
 
             Me.New(phasorDataCell.StatusFlags, phasorDataCell.PhasorValues, phasorDataCell.FrequencyValue, phasorDataCell.AnalogValues, phasorDataCell.DigitalValues)
 
@@ -105,7 +105,7 @@ Namespace EE.Phasor
             End Get
         End Property
 
-        Public Overridable Property StatusFlags() As Int16 Implements IPhasorDataCell.StatusFlags
+        Public Overridable Property StatusFlags() As Int16 Implements IDataCell.StatusFlags
             Get
                 Return m_statusFlags
             End Get
@@ -114,13 +114,13 @@ Namespace EE.Phasor
             End Set
         End Property
 
-        Public Overridable ReadOnly Property PhasorValues() As PhasorValueCollection Implements IPhasorDataCell.PhasorValues
+        Public Overridable ReadOnly Property PhasorValues() As PhasorValueCollection Implements IDataCell.PhasorValues
             Get
                 Return m_phasorValues
             End Get
         End Property
 
-        Public Property FrequencyValue() As IFrequencyValue Implements IPhasorDataCell.FrequencyValue
+        Public Property FrequencyValue() As IFrequencyValue Implements IDataCell.FrequencyValue
             Get
                 Return m_frequencyValue
             End Get
@@ -129,13 +129,13 @@ Namespace EE.Phasor
             End Set
         End Property
 
-        Public Overridable ReadOnly Property AnalogValues() As AnalogValueCollection Implements IPhasorDataCell.AnalogValues
+        Public Overridable ReadOnly Property AnalogValues() As AnalogValueCollection Implements IDataCell.AnalogValues
             Get
                 Return m_analogValues
             End Get
         End Property
 
-        Public Overridable ReadOnly Property DigitalValues() As DigitalValueCollection Implements IPhasorDataCell.DigitalValues
+        Public Overridable ReadOnly Property DigitalValues() As DigitalValueCollection Implements IDataCell.DigitalValues
             Get
                 Return m_digitalValues
             End Get

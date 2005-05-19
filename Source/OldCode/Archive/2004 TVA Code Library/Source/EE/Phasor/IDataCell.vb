@@ -1,5 +1,5 @@
 '***********************************************************************
-'  IPhasorDataFrame.vb - Phasor data frame interface
+'  IDataCell.vb - Data cell interface
 '  Copyright © 2004 - TVA, all rights reserved
 '
 '  Build Environment: VB.NET, Visual Studio 2003
@@ -10,19 +10,27 @@
 '
 '  Code Modification History:
 '  ---------------------------------------------------------------------
-'  01/14/2005 - James R Carroll
+'  04/16/2005 - James R Carroll
 '       Initial version of source generated
 '
 '***********************************************************************
 
 Namespace EE.Phasor
 
-    ' This interface represents the protocol independent representation of any frame of phasor data.
-    Public Interface IPhasorDataFrame
+    ' This interface represents the protocol independent representation of a set of phasor values.
+    Public Interface IDataCell
 
-        Inherits IChannelFrame
+        Inherits IChannel
 
-        ReadOnly Property PhasorDataCells() As PhasorDataCellCollection
+        Property StatusFlags() As Int16
+
+        ReadOnly Property PhasorValues() As PhasorValueCollection
+
+        Property FrequencyValue() As IFrequencyValue
+
+        ReadOnly Property AnalogValues() As AnalogValueCollection
+
+        ReadOnly Property DigitalValues() As DigitalValueCollection
 
     End Interface
 

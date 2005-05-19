@@ -100,37 +100,37 @@ Namespace EE.Phasor
 
     End Class
 
-    Public Class PhasorDataCellCollection
+    Public Class DataCellCollection
 
         Inherits ChannelCollection
 
-        Public Sub Add(ByVal value As IPhasorDataCell)
+        Public Sub Add(ByVal value As IDataCell)
 
             MyBase._Add(value)
 
         End Sub
 
-        Default Public ReadOnly Property Item(ByVal index As Integer) As IPhasorDataCell
+        Default Public ReadOnly Property Item(ByVal index As Integer) As IDataCell
             Get
-                Return DirectCast(MyBase._Item(index), IPhasorDataCell)
+                Return DirectCast(MyBase._Item(index), IDataCell)
             End Get
         End Property
 
     End Class
 
-    Public Class PhasorDataFrameCollection
+    Public Class DataFrameCollection
 
         Inherits ChannelCollection
 
-        Public Sub Add(ByVal value As IPhasorDataFrame)
+        Public Sub Add(ByVal value As IDataFrame)
 
             MyBase._Add(value)
 
         End Sub
 
-        Default Public ReadOnly Property Item(ByVal index As Integer) As IPhasorDataFrame
+        Default Public ReadOnly Property Item(ByVal index As Integer) As IDataFrame
             Get
-                Return DirectCast(MyBase._Item(index), IPhasorDataFrame)
+                Return DirectCast(MyBase._Item(index), IDataFrame)
             End Get
         End Property
 

@@ -3,7 +3,7 @@
 '  Copyright © 2004 - TVA, all rights reserved
 '
 '  Build Environment: VB.NET, Visual Studio 2003
-'  Primary Developer: James R Carroll, System Analyst [WESTAFF]
+'  Primary Developer: James R Carroll, System Analyst [TVA]
 '      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
 '       Phone: 423/751-2827
 '       Email: jrcarrol@tva.gov
@@ -16,91 +16,82 @@
 '***********************************************************************
 
 Imports TVA.Interop
-Imports TVA.Shared.Bit
-Imports TVA.Shared.DateTime
-Imports TVA.Compression.Common
 
 Namespace EE.Phasor
 
-    ' This class represents the protocol independent common implementation of all data frames that can be sent or received from a PMU.
+    ' This class represents the protocol independent common implementation of a phasor data frame that can be sent or received from a PMU.
     Public MustInherit Class DataFrameBase
 
+        Inherits ChannelFrameBase
         Implements IDataFrame
 
-        Protected m_timeTag As NtpTimeTag
+        Private m_dataCells As DataCellCollection
 
         Protected Sub New()
 
-            m_timeTag = New NtpTimeTag(DateTime.Now)
+            MyBase.New()
+
+            m_dataCells = New DataCellCollection
 
         End Sub
 
-        Protected Overridable Sub Clone(ByVal source As DataFrameBase)
+        Protected Sub New(ByVal timeTag As Unix.TimeTag, ByVal milliseconds As Double, ByVal synchronizationIsValid As Boolean, ByVal dataIsValid As Boolean, ByVal dataImage As Byte(), ByVal dataCells As DataCellCollection)
 
-            With source
-                m_timeTag = .m_timeTag
-            End With
+            MyBase.New(timeTag, milliseconds, synchronizationIsValid, dataIsValid, dataImage)
+
+            m_dataCells = dataCells
 
         End Sub
 
-        Public Overridable Property TimeTag() As NtpTimeTag Implements IDataFrame.TimeTag
-            Get
-                Return m_timeTag
-            End Get
-            Set(ByVal Value As NtpTimeTag)
-                m_timeTag = Value
-            End Set
-        End Property
+        ' Dervied classes are expected to expose a Public Sub New(ByVal phasorDataFrame As IDataFrame)
+        Protected Sub New(ByVal phasorDataFrame As IDataFrame)
 
-        Public MustOverride Property Milliseconds() As Double Implements IDataFrame.Milliseconds
+            Me.New(phasorDataFrame.TimeTag, phasorDataFrame.Milliseconds, phasorDataFrame.SynchronizationIsValid, phasorDataFrame.DataIsValid, _
+                    phasorDataFrame.DataImage, phasorDataFrame.DataCells)
 
-        Public Overridable ReadOnly Property Timestamp() As DateTime Implements IDataFrame.Timestamp
+        End Sub
+
+        Public ReadOnly Property DataCells() As DataCellCollection Implements IDataFrame.DataCells
             Get
-                Return TimeTag.ToDateTime.AddMilliseconds(Milliseconds)
+                Return m_dataCells
             End Get
         End Property
 
-        Public Overridable ReadOnly Property This() As IDataFrame Implements IDataFrame.This
-            Get
-                Return Me
-            End Get
-        End Property
-
-        Public MustOverride Property SynchronizationIsValid() As Boolean Implements IDataFrame.SynchronizationIsValid
-
-        Public MustOverride Property DataIsValid() As Boolean Implements IDataFrame.DataIsValid
-
-        Public Overridable ReadOnly Property Name() As String Implements IDataFrame.Name
+        Public Overrides ReadOnly Property Name() As String
             Get
                 Return "TVA.EE.Phasor.DataFrameBase"
             End Get
         End Property
 
-        Public MustOverride Property DataLength() As Int16 Implements IDataFrame.DataLength
+        Public Overrides ReadOnly Property DataLength() As Int16
+            Get
+                Dim length As Int16
 
-        Public MustOverride Property DataImage() As Byte() Implements IDataFrame.DataImage
+                For x As Integer = 0 To m_dataCells.Count - 1
+                    length += m_dataCells(x).BinaryLength
+                Next
 
-        Public MustOverride Property BinaryLength() As Int16 Implements IDataFrame.BinaryLength
+                Return length
+            End Get
+        End Property
 
-        Public MustOverride ReadOnly Property BinaryImage() As Byte() Implements IDataFrame.BinaryImage
+        Public Overrides Property DataImage() As Byte()
+            Get
+                Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), DataLength)
+                Dim index As Integer
 
-        Protected Overridable Function ChecksumIsValid(ByVal buffer As Byte(), ByVal startIndex As Integer) As Boolean
+                For x As Integer = 0 To m_dataCells.Count - 1
+                    Array.Copy(m_dataCells(x).BinaryImage, 0, buffer, index, m_dataCells(x).BinaryLength)
+                    index += m_dataCells(x).BinaryLength
+                Next
 
-            Return EndianOrder.ReverseToInt16(buffer, startIndex + DataLength - 2) = CalculateChecksum(buffer, startIndex, DataLength - 2)
-
-        End Function
-
-        Protected Overridable Sub AppendChecksum(ByVal buffer As Byte(), ByVal startIndex As Integer)
-
-            EndianOrder.SwapCopyBytes(CalculateChecksum(buffer, 0, startIndex), buffer, startIndex)
-
-        End Sub
-
-        Protected Overridable Function CalculateChecksum(ByVal buffer As Byte(), ByVal offset As Integer, ByVal length As Integer) As Int16
-
-            Return CRC_CCITT(-1, buffer, offset, length)
-
-        End Function
+                Return buffer
+            End Get
+            Set(ByVal Value() As Byte)
+                ' TODO: may be possible provide a generic cell creation implementation - especially if configuration frame is available...
+                Throw New NotImplementedException
+            End Set
+        End Property
 
     End Class
 

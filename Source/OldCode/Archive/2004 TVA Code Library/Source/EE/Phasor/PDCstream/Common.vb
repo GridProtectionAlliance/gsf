@@ -40,7 +40,7 @@ Namespace EE.Phasor.PDCstream
         DataSortedByTimestamp = Bit3    ' Sorted by timestamp if not set (yes = 0)        
         PDCExchangeFormat = Bit2        ' PDC format if set (yes = 1)        
         MacrodyneFormat = Bit1          ' Macrodyne or IEEE format (Macrodyne = 1)        
-        <ObsoleteAttribute("This bit definition is for obsolete uses that is no longer needed.", False)> _
+        <Obsolete("This bit definition is for obsolete uses that is no longer needed.", False)> _
         TimestampIncluded = Bit0        ' Timestamp included if not set (yes = 0)
     End Enum
 

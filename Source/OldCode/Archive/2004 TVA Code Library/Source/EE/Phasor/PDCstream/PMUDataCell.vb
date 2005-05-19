@@ -22,13 +22,13 @@ Namespace EE.Phasor.PDCstream
     ' This data cell represents what most might call a "field" in table of rows - it is a single unit of data for a specific PMU
     Public Class PMUDataCell
 
-        Inherits PhasorDataCellBase
+        Inherits DataCellBase
 
         Private m_pmuDefinition As PMUDefinition
         Private m_sampleNumber As Integer
         Private m_flags As ChannelFlags
 
-        Public Shared Shadows Function CreateFrom(ByVal phasorDataCell As IPhasorDataCell) As PMUDataCell
+        Public Shared Shadows Function CreateFrom(ByVal phasorDataCell As IDataCell) As PMUDataCell
 
             Return CType(Activator.CreateInstance(GetType(PMUDataCell), New Object() {phasorDataCell}), PMUDataCell)
 
@@ -52,7 +52,7 @@ Namespace EE.Phasor.PDCstream
 
         End Sub
 
-        Public Sub New(ByVal phasorDataCell As IPhasorDataCell)
+        Public Sub New(ByVal phasorDataCell As IDataCell)
 
             MyBase.New(phasorDataCell)
 
