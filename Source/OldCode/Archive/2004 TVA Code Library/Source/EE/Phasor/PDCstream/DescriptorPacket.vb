@@ -3,7 +3,7 @@
 '  Copyright © 2004 - TVA, all rights reserved
 '
 '  Build Environment: VB.NET, Visual Studio 2003
-'  Primary Developer: James R Carroll, System Analyst [TVA]
+'  Primary Developer: James R Carroll, System Analyst [WESTAFF]
 '      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
 '       Phone: 423/751-2827
 '       Email: jrcarrol@tva.gov
@@ -51,7 +51,7 @@ Namespace EE.Phasor.PDCstream
                 For x As Integer = 0 To m_configFile.PMUCount - 1
                     With m_configFile.PMU(x)
                         .Offset = length
-                        length += 12 + FrequencyValue.CalculateBinaryLength(.Frequency) + PhasorValue.BinaryLength * .Phasors.Length
+                        length += 12 + FrequencyValue.BinaryLength + PhasorValue.BinaryLength * .Phasors.Length
                     End With
                 Next
 

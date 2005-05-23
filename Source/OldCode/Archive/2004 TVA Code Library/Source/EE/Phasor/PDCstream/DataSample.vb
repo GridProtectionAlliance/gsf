@@ -3,7 +3,7 @@
 '  Copyright © 2004 - TVA, all rights reserved
 '
 '  Build Environment: VB.NET, Visual Studio 2003
-'  Primary Developer: James R Carroll, System Analyst [TVA]
+'  Primary Developer: James R Carroll, System Analyst [WESTAFF]
 '      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
 '       Phone: 423/751-2827
 '       Email: jrcarrol@tva.gov
@@ -26,17 +26,65 @@ Namespace EE.Phasor.PDCstream
     ' the PDC stream specification to help make things easier to understand.
     Public Class DataSample
 
-        Inherits Phasor.DataSample
+        Implements IComparable
 
-        Public Sub New(ByVal sampleRate As Integer, ByVal timeStamp As DateTime)
+        Private m_configFile As ConfigFile
+        Private m_timeStamp As DateTime
+        Private m_published As Boolean
 
-            MyBase.New(sampleRate, timeStamp)
+        Public Rows As DataPacket()
 
-            For x As Integer = 0 To sampleRate - 1
-                'DataFrames.Add(   'Rows(x) = New DataPacket(m_configFile, timeStamp, x)
+        Public Sub New(ByVal configFile As ConfigFile, ByVal timeStamp As DateTime)
+
+            m_configFile = configFile
+            m_timeStamp = BaselinedTimestamp(timeStamp)
+            Rows = Array.CreateInstance(GetType(DataPacket), m_configFile.SampleRate)
+
+            For x As Integer = 0 To Rows.Length - 1
+                Rows(x) = New DataPacket(m_configFile, timeStamp, x)
             Next
 
         End Sub
+
+        Public ReadOnly Property Timestamp() As DateTime
+            Get
+                Return m_timeStamp
+            End Get
+        End Property
+
+        Public ReadOnly Property Published() As Boolean
+            Get
+                If Not m_published Then
+                    Dim allPublished As Boolean = True
+
+                    ' The sample has been completely processed once all data packets have been published - once all
+                    ' the packets have been published, the data can be collated and sent to the permanent archive or
+                    ' whatever else...
+                    For x As Integer = 0 To Rows.Length - 1
+                        If Not Rows(x).Published Then
+                            allPublished = False
+                            Exit For
+                        End If
+                    Next
+
+                    If allPublished Then m_published = True
+                    Return allPublished
+                Else
+                    Return True
+                End If
+            End Get
+        End Property
+
+        ' Data samples are sorted in timestamp order
+        Public Function CompareTo(ByVal obj As Object) As Integer Implements System.IComparable.CompareTo
+
+            If TypeOf obj Is DataSample Then
+                Return m_timeStamp.CompareTo(DirectCast(obj, DataSample).Timestamp)
+            Else
+                Throw New ArgumentException("DataSample can only be compared with other DataSamples...")
+            End If
+
+        End Function
 
     End Class
 

@@ -136,6 +136,11 @@
                     BuildAction = "Compile"
                 />
                 <File
+                    RelPath = "ConfigurationFrameBase.vb"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
                     RelPath = "DataCellBase.vb"
                     SubType = "Code"
                     BuildAction = "Compile"
