@@ -160,19 +160,19 @@ Public Class Concentrator
 
     Public ReadOnly Property RunTime() As Double
         Get
-            Dim ProcessingTime As Long
+            Dim processingTime As Long
 
             If m_startTime > 0 Then
                 If m_stopTime > 0 Then
-                    ProcessingTime = m_stopTime - m_startTime
+                    processingTime = m_stopTime - m_startTime
                 Else
-                    ProcessingTime = DateTime.Now.Ticks - m_startTime
+                    processingTime = DateTime.Now.Ticks - m_startTime
                 End If
             End If
 
-            If ProcessingTime < 0 Then ProcessingTime = 0
+            If processingTime < 0 Then processingTime = 0
 
-            Return ProcessingTime / 10000000L
+            Return processingTime / 10000000L
         End Get
     End Property
 
@@ -195,10 +195,7 @@ Public Class Concentrator
         Try
             ' Since a typical process rate is 30 samples per second do everything you can to make sure code
             ' here is optimized to execute as quickly as possible...
-            Dim currentTime As DateTime = DateTime.Now
-            Dim binaryLength As Integer
-            Dim x, y, z As Integer
-            Dim exitLoop As Boolean
+            Dim currentTime As DateTime = DateTime.Now            
 
             ' Send a descriptor packet at the top of each minute...
             With currentTime
@@ -207,15 +204,14 @@ Public Class Concentrator
                         m_sentDescriptor = True
                         Try
                             With m_descriptor
-                                binaryLength = .BinaryLength
+                                Dim binaryLength As Integer = .BinaryLength
 
                                 ' Send binary descriptor image over UDP broadcast channels
-                                For x = 0 To m_broadcastIPs.Length - 1
+                                For x As Integer = 0 To m_broadcastIPs.Length - 1
                                     m_udpClient.Send(.BinaryImage, binaryLength, m_broadcastIPs(x))
+                                    m_bytesBroadcasted += binaryLength
                                 Next
                             End With
-
-                            m_bytesBroadcasted += binaryLength
                         Catch ex As Exception
                             UpdateStatus("Error publishing descriptor packet: " & ex.Message)
                         End Try
@@ -226,7 +222,7 @@ Public Class Concentrator
             End With
 
             ' Check to see if it's time to broadcast...
-            If currentTime.Ticks > m_publishTime.Ticks Or m_dataQueue.SampleCount > m_lagTime + 1 Then
+            If currentTime.Ticks > m_publishTime.Ticks OrElse m_dataQueue.SampleCount > m_lagTime + 1 Then
                 ' Access proper data packet out of current sample
                 Dim currentSample As DataSample = m_dataQueue(0)
 
@@ -243,14 +239,14 @@ Public Class Concentrator
                             ' Even an attempt at publishing counts - we don't have time to go back and try again...
                             .Published = True
 
-                            binaryLength = .BinaryLength
+                            Dim binaryLength As Integer = .BinaryLength
 
                             ' Send binary data packet image over UDP broadcast channels
-                            For z = 0 To m_broadcastIPs.Length - 1
-                                m_udpClient.Send(.BinaryImage, binaryLength, m_broadcastIPs(z))
+                            For x As Integer = 0 To m_broadcastIPs.Length - 1
+                                m_udpClient.Send(.BinaryImage, binaryLength, m_broadcastIPs(x))
+                                m_bytesBroadcasted += binaryLength
                             Next
 
-                            m_bytesBroadcasted += binaryLength
                             m_packetsPublished += 1
                         Catch ex As Exception
                             UpdateStatus("Error publishing data packet: " & ex.Message)
