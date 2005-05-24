@@ -122,14 +122,6 @@
                     HintPath = "\\opdat\opdat\CtrlSys\CodeLibrary\Builds\Release\Current\TVA.DatAWare.dll"
                 />
                 <Reference
-                    Name = "DWApi"
-                    Guid = "{8629DF62-FC28-4576-AAF3-CAB4C010FF34}"
-                    VersionMajor = "21"
-                    VersionMinor = "1"
-                    Lcid = "0"
-                    WrapperTool = "tlbimp"
-                />
-                <Reference
                     Name = "TVA.EE.Phasor"
                     AssemblyName = "TVA.EE.Phasor"
                     HintPath = "\\opdat\opdat\CtrlSys\CodeLibrary\Builds\Beta\TVA.EE.Phasor.dll"

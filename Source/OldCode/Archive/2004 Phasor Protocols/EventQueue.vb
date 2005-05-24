@@ -88,35 +88,7 @@ Public Class EventQueue
 
     ' After a listener has been created, we will have a connection to the source DatAWare server - we use this
     ' connection to create a cross-reference list between DatAWare points and PMU data...
-    Public Sub DefinePointList(ByVal listener As PDCListener)
-
-        With listener
-            ' We'll try three times to connect to DatAWare and load points before giving up...
-            For x As Integer = 1 To 3
-                ' Load all the point definitions from the associated DatAWare server (this takes a second)
-                Try
-                    Dim serverPoints As New PMUServerPoints(m_parent.Concentrator, .Connection, .UserName, .Password)
-
-                    SyncLock m_serverPoints.SyncRoot
-                        m_serverPoints.Add(.Connection.PlantCode, serverPoints)
-                    End SyncLock
-
-                    ' If load was successful, we'll exit retry loop
-                    Exit For
-                Catch ex As Exception
-                    If x = 3 Then
-                        ' Log this exception to the event log, the local status log and any remote clients
-                        UpdateStatus("Failed to load point list from DatAWare server """ & .Connection.Server & " (" & _
-                            .Connection.PlantCode & ")"" due to exception: " & ex.Message, True, EventLogEntryType.Error)
-                        Throw ex
-                    End If
-                End Try
-            Next
-        End With
-
-    End Sub
-
-    ' Attempt to reload server point list - you should do this any time new points are added...
+    ' Server point list should be reloaded any time new points are added...
     Public Sub RefreshPointList(ByVal listener As PDCListener)
 
         With listener
@@ -127,7 +99,11 @@ Public Class EventQueue
                     Dim serverPoints As New PMUServerPoints(m_parent.Concentrator, .Connection, .UserName, .Password)
 
                     SyncLock m_serverPoints.SyncRoot
-                        m_serverPoints(.Connection.PlantCode) = serverPoints
+                        If m_serverPoints(.Connection.PlantCode) Is Nothing Then
+                            m_serverPoints.Add(.Connection.PlantCode, serverPoints)
+                        Else
+                            m_serverPoints(.Connection.PlantCode) = serverPoints
+                        End If
                     End SyncLock
 
                     ' If load was successful, we'll exit retry loop
@@ -231,7 +207,25 @@ Public Class EventQueue
 
     Private Sub m_dataQueue_DataSortingError(ByVal message As String) Handles m_dataQueue.DataSortingError
 
-        m_parent.UpdateStatus(message)
+        ' When errors happen with data being processed at 30 samples per second - you can get a hefty volume of errors very quickly,
+        ' so to keep from flooding the message queue - we'll only send a handful of messages every couple of seconds
+        Static lastMessageTicks As Long
+        Static sentMessageCount As Long
+        Const messageTimespan As Integer = 2    ' Timespan, in seconds, over which to monitor message volume
+        Const maximumMessages As Integer = 6    ' Maximum number of messages to be tolerated during timespan
+        Dim sendMessage As Boolean
+
+        If (DateTime.Now.Ticks - lastMessageTicks) / 10000000L < messageTimespan Then
+            sendMessage = (sentMessageCount < maximumMessages)
+            sentMessageCount += 1
+        Else
+            If sentMessageCount > maximumMessages Then m_parent.UpdateStatus("WARNING: " & (sentMessageCount - maximumMessages) & " error messages discarded to avoid flooding message queue...")
+            sendMessage = True
+            sentMessageCount = 0
+            lastMessageTicks = DateTime.Now.Ticks
+        End If
+
+        If sendMessage Then m_parent.UpdateStatus(message)
 
     End Sub
 
