@@ -22,6 +22,7 @@ Namespace EE.Phasor
     ' This class represents the common implementation of the protocol independent definition of any kind of data.
     Public MustInherit Class ChannelDefinitionBase
 
+        Inherits ChannelBase
         Implements IChannelDefinition
 
         Private m_dataFormat As DataFormat
@@ -40,13 +41,11 @@ Namespace EE.Phasor
 
         Protected Sub New(ByVal dataFormat As DataFormat, ByVal index As Integer, ByVal label As String, ByVal scale As Integer, ByVal offset As Double)
 
-            With Me
-                .DataFormat = dataFormat
-                .Index = index
-                .Label = label
-                .ScalingFactor = scale
-                .Offset = offset
-            End With
+            m_dataFormat = dataFormat
+            m_index = index
+            Me.Label = label
+            m_scale = scale
+            m_offset = offset
 
         End Sub
 
@@ -56,14 +55,6 @@ Namespace EE.Phasor
             Me.New(channelDefinition.DataFormat, channelDefinition.Index, channelDefinition.Label, channelDefinition.ScalingFactor, channelDefinition.Offset)
 
         End Sub
-
-        Public MustOverride ReadOnly Property InheritedType() As Type Implements IChannelDefinition.InheritedType
-
-        Public Overridable ReadOnly Property This() As IChannel Implements IChannelDefinition.This
-            Get
-                Return Me
-            End Get
-        End Property
 
         Public Overridable Property DataFormat() As DataFormat Implements IChannelDefinition.DataFormat
             Get
@@ -134,10 +125,6 @@ Namespace EE.Phasor
                 Return 16
             End Get
         End Property
-
-        Public MustOverride ReadOnly Property BinaryLength() As Int16 Implements IChannelDefinition.BinaryLength
-
-        Public MustOverride ReadOnly Property BinaryImage() As Byte() Implements IChannelDefinition.BinaryImage
 
         Public Overridable Function CompareTo(ByVal obj As Object) As Integer Implements IComparable.CompareTo
 

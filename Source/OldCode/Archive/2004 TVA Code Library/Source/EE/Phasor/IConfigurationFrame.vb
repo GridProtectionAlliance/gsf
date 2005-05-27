@@ -24,7 +24,7 @@ Namespace EE.Phasor
 
         Property IDCode() As Int16
 
-        ReadOnly Property ConfigurationCells() As ConfigurationCellCollection
+        Shadows ReadOnly Property Cells() As ConfigurationCellCollection
 
     End Interface
 

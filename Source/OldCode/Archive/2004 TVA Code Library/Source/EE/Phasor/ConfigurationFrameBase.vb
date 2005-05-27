@@ -23,86 +23,52 @@ Namespace EE.Phasor
     Public MustInherit Class ConfigurationFrameBase
 
         Inherits ChannelFrameBase
-        'Implements IDataFrame
+        Implements IConfigurationFrame
 
-        'Private m_idCode() As Int16
-        'Private m_configurationCells As ConfigurationCellCollection
+        Private m_idCode As Int16
 
-        'Protected Sub New()
+        Protected Sub New()
 
-        '    MyBase.New()
+            MyBase.New()
 
-        '    m_configurationCells = New ConfigurationCellCollection
+        End Sub
 
-        'End Sub
+        Protected Sub New(ByVal cells As ChannelCellCollection, ByVal timeTag As Unix.TimeTag, ByVal milliseconds As Double, ByVal synchronizationIsValid As Boolean, ByVal dataIsValid As Boolean, ByVal idCode As Int16)
 
-        'Protected Sub New(ByVal timeTag As Unix.TimeTag, ByVal milliseconds As Double, ByVal synchronizationIsValid As Boolean, ByVal dataIsValid As Boolean, ByVal dataImage As Byte(), ByVal configurationFrame As IConfigurationFrame, ByVal configurationCells As ConfigurationCellCollection)
+            MyBase.New(cells, timeTag, milliseconds, synchronizationIsValid, dataIsValid)
 
-        '    MyBase.New(timeTag, milliseconds, synchronizationIsValid, dataIsValid, dataImage)
+            m_idCode = idCode
 
-        '    m_configurationFrame = configurationFrame
-        '    m_configurationCells = configurationCells
+        End Sub
 
-        'End Sub
+        ' Dervied classes are expected to expose a Public Sub New(ByVal configurationFrame As IDataFrame)
+        Protected Sub New(ByVal configurationFrame As IConfigurationFrame)
 
-        '' Dervied classes are expected to expose a Public Sub New(ByVal phasorDataFrame As IDataFrame)
-        'Protected Sub New(ByVal phasorDataFrame As IDataFrame)
+            Me.New(configurationFrame.Cells, configurationFrame.TimeTag, configurationFrame.Milliseconds, _
+                configurationFrame.SynchronizationIsValid, configurationFrame.DataIsValid, configurationFrame.IDCode)
 
-        '    Me.New(phasorDataFrame.TimeTag, phasorDataFrame.Milliseconds, phasorDataFrame.SynchronizationIsValid, phasorDataFrame.DataIsValid, _
-        '            phasorDataFrame.DataImage, phasorDataFrame.ConfigurationFrame, phasorDataFrame.ConfigurationCells)
+        End Sub
 
-        'End Sub
+        Public Overridable Property IDCode() As Int16 Implements IConfigurationFrame.IDCode
+            Get
+                Return m_idCode
+            End Get
+            Set(ByVal Value As Int16)
+                m_idCode = Value
+            End Set
+        End Property
 
-        'Public Overridable Property ConfigurationFrame() As IConfigurationFrame Implements IDataFrame.ConfigurationFrame
-        '    Get
-        '        Return m_configurationFrame
-        '    End Get
-        '    Set(ByVal Value As IConfigurationFrame)
-        '        m_configurationFrame = Value
-        '    End Set
-        'End Property
+        Public Overridable Shadows ReadOnly Property Cells() As ConfigurationCellCollection Implements IConfigurationFrame.Cells
+            Get
+                Return MyBase.Cells
+            End Get
+        End Property
 
-        'Public ReadOnly Property ConfigurationCells() As ConfigurationCellCollection Implements IConfigurationFrame.ConfigurationCells
-        '    Get
-        '        Return m_configurationCells
-        '    End Get
-        'End Property
-
-        'Public Overrides ReadOnly Property Name() As String
-        '    Get
-        '        Return "TVA.EE.Phasor.DataFrameBase"
-        '    End Get
-        'End Property
-
-        'Public Overrides ReadOnly Property DataLength() As Int16
-        '    Get
-        '        Dim length As Int16
-
-        '        For x As Integer = 0 To m_dataCells.Count - 1
-        '            length += m_dataCells(x).BinaryLength
-        '        Next
-
-        '        Return length
-        '    End Get
-        'End Property
-
-        'Public Overrides Property DataImage() As Byte()
-        '    Get
-        '        Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), DataLength)
-        '        Dim index As Integer
-
-        '        For x As Integer = 0 To m_dataCells.Count - 1
-        '            Array.Copy(m_dataCells(x).BinaryImage, 0, buffer, index, m_dataCells(x).BinaryLength)
-        '            index += m_dataCells(x).BinaryLength
-        '        Next
-
-        '        Return buffer
-        '    End Get
-        '    Set(ByVal Value() As Byte)
-        '        ' TODO: may be possible provide a generic cell creation implementation - especially if configuration frame is available...
-        '        Throw New NotImplementedException
-        '    End Set
-        'End Property
+        Public Overrides ReadOnly Property Name() As String
+            Get
+                Return "TVA.EE.Phasor.ConfigurationFrameBase"
+            End Get
+        End Property
 
     End Class
 

@@ -1,5 +1,5 @@
 '***********************************************************************
-'  ChannelValueBase.vb - Channel data base class
+'  ChannelValueBase.vb - Channel data value base class
 '  Copyright © 2004 - TVA, all rights reserved
 '
 '  Build Environment: VB.NET, Visual Studio 2003
@@ -17,9 +17,10 @@
 
 Namespace EE.Phasor
 
-    ' This class represents the common implementation of the protocol independent representation of any kind of data.
+    ' This class represents the common implementation of the protocol independent representation of any kind of data value.
     Public MustInherit Class ChannelValueBase
 
+        Inherits ChannelBase
         Implements IChannelValue
 
         Private m_definition As IChannelDefinition
@@ -41,14 +42,6 @@ Namespace EE.Phasor
 
         End Sub
 
-        Public MustOverride ReadOnly Property InheritedType() As System.Type Implements IChannelValue.InheritedType
-
-        Public Overridable ReadOnly Property This() As IChannel Implements IChannelValue.This
-            Get
-                Return Me
-            End Get
-        End Property
-
         Public Property Definition() As IChannelDefinition Implements IChannelValue.Definition
             Get
                 Return m_definition
@@ -67,10 +60,6 @@ Namespace EE.Phasor
         Public MustOverride ReadOnly Property IsEmpty() As Boolean Implements IChannelValue.IsEmpty
 
         Public MustOverride ReadOnly Property Values() As Double() Implements IChannelValue.Values
-
-        Public MustOverride ReadOnly Property BinaryLength() As Int16 Implements IChannelValue.BinaryLength
-
-        Public MustOverride ReadOnly Property BinaryImage() As Byte() Implements IChannelValue.BinaryImage
 
     End Class
 

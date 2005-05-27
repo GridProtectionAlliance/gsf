@@ -3,7 +3,7 @@
 '  Copyright © 2004 - TVA, all rights reserved
 '
 '  Build Environment: VB.NET, Visual Studio 2003
-'  Primary Developer: James R Carroll, System Analyst [WESTAFF]
+'  Primary Developer: James R Carroll, System Analyst [TVA]
 '      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
 '       Phone: 423/751-2827
 '       Email: jrcarrol@tva.gov
@@ -15,6 +15,7 @@
 '
 '***********************************************************************
 
+Imports System.Buffer
 Imports TVA.Interop
 Imports TVA.Shared.Math
 
@@ -122,12 +123,12 @@ Namespace EE.Phasor.PDCstream
                 index = 12
 
                 For x As Integer = 0 To Cells.Length - 1
-                    Array.Copy(Cells(x).BinaryImage, 0, buffer, index, Cells(x).BinaryLength)
+                    BlockCopy(Cells(x).BinaryImage, 0, buffer, index, Cells(x).BinaryLength)
                     index += Cells(x).BinaryLength
                 Next
 
                 ' Add check sum
-                Array.Copy(BitConverter.GetBytes(XorCheckSum(buffer, 0, index)), 0, buffer, index, 2)
+                BlockCopy(BitConverter.GetBytes(XorCheckSum(buffer, 0, index)), 0, buffer, index, 2)
 
                 Return buffer
             End Get

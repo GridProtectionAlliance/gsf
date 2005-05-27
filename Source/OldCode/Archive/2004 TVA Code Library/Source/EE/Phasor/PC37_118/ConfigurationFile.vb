@@ -15,6 +15,7 @@
 '
 '***********************************************************************
 
+Imports System.Buffer
 Imports System.IO
 Imports System.Text
 Imports TVA.Interop
@@ -199,7 +200,7 @@ Namespace EE.Phasor.PC37_118
                 Dim image As Byte() = Array.CreateInstance(GetType(Byte), DataLength)
                 Dim x, index, phasorCount, digitalCount As Integer
 
-                Array.Copy(Encoding.ASCII.GetBytes(m_stationName.PadRight(MaximumStationNameLength)), 0, image, 0, MaximumStationNameLength)
+                BlockCopy(Encoding.ASCII.GetBytes(m_stationName.PadRight(MaximumStationNameLength)), 0, image, 0, MaximumStationNameLength)
 
                 index = MaximumStationNameLength
                 EndianOrder.SwapCopyBytes(m_pmuIDCode, image, index)
@@ -211,25 +212,25 @@ Namespace EE.Phasor.PC37_118
                 digitalCount = m_digitalDefinitions.Count
 
                 For x = 0 To phasorCount - 1
-                    Array.Copy(m_phasorDefinitions(x).LabelImage, 0, image, index + x * PhasorDefinition.MaximumLabelLength, PhasorDefinition.MaximumLabelLength)
+                    BlockCopy(m_phasorDefinitions(x).LabelImage, 0, image, index + x * PhasorDefinition.MaximumLabelLength, PhasorDefinition.MaximumLabelLength)
                 Next
 
                 index += phasorCount * PhasorDefinition.MaximumLabelLength
 
                 For x = 0 To digitalCount - 1
-                    Array.Copy(m_digitalDefinitions(x).LabelImage, 0, image, index + x * DigitalDefinition.MaximumLabelLength, DigitalDefinition.MaximumLabelLength)
+                    BlockCopy(m_digitalDefinitions(x).LabelImage, 0, image, index + x * DigitalDefinition.MaximumLabelLength, DigitalDefinition.MaximumLabelLength)
                 Next
 
                 index += digitalCount * DigitalDefinition.MaximumLabelLength
 
                 For x = 0 To phasorCount - 1
-                    Array.Copy(m_phasorDefinitions(x).BinaryImage, 0, image, index + x * PhasorDefinition.BinaryLength, PhasorDefinition.BinaryLength)
+                    BlockCopy(m_phasorDefinitions(x).BinaryImage, 0, image, index + x * PhasorDefinition.BinaryLength, PhasorDefinition.BinaryLength)
                 Next
 
                 index += phasorCount * PhasorDefinition.BinaryLength
 
                 For x = 0 To digitalCount - 1
-                    Array.Copy(m_digitalDefinitions(x).BinaryImage, 0, image, index + x * DigitalDefinition.BinaryLength, DigitalDefinition.BinaryLength)
+                    BlockCopy(m_digitalDefinitions(x).BinaryImage, 0, image, index + x * DigitalDefinition.BinaryLength, DigitalDefinition.BinaryLength)
                 Next
 
                 index += digitalCount * DigitalDefinition.BinaryLength
@@ -324,7 +325,7 @@ Namespace EE.Phasor.PC37_118
 
                 For x As Integer = 0 To Frames.Length - 1
                     With Frames(x)
-                        Array.Copy(.BinaryImage, 0, buffer, index, .FrameLength)
+                        BlockCopy(.BinaryImage, 0, buffer, index, .FrameLength)
                         index += .FrameLength
                     End With
                 Next

@@ -15,6 +15,7 @@
 '
 '***********************************************************************
 
+Imports System.Buffer
 Imports System.IO
 Imports System.Text
 
@@ -134,7 +135,7 @@ Namespace EE.Phasor.IEEE1344
 
                 For x As Integer = 0 To Frames.Length - 1
                     With Frames(x)
-                        Array.Copy(.BinaryImage, 0, buffer, index, .FrameLength)
+                        BlockCopy(.BinaryImage, 0, buffer, index, .FrameLength)
                         index += .FrameLength
                     End With
                 Next

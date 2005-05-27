@@ -134,7 +134,7 @@ Namespace EE.Phasor.PC37_118
 
                 For x As Integer = 0 To Frames.Length - 1
                     With Frames(x)
-                        Array.Copy(.BinaryImage, 0, buffer, index, .FrameLength)
+                        System.Buffer.BlockCopy(.BinaryImage, 0, buffer, index, .FrameLength)
                         index += .FrameLength
                     End With
                 Next

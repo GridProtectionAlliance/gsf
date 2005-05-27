@@ -1,5 +1,5 @@
 '***********************************************************************
-'  IChannel.vb - Channel interface - this is the root interface
+'  IChannelCell.vb - Channel data cell interface
 '  Copyright © 2005 - TVA, all rights reserved
 '
 '  Build Environment: VB.NET, Visual Studio 2003
@@ -17,18 +17,10 @@
 
 Namespace EE.Phasor
 
-    ' This interface represents a protocol independent representation of any data type.
-    Public Interface IChannel
+    ' This interface represents a protocol independent representation of any kind of data cell.
+    Public Interface IChannelCell
 
-        ReadOnly Property InheritedType() As Type
-
-        ReadOnly Property This() As IChannel
-
-        ReadOnly Property BinaryLength() As Int16
-
-        ReadOnly Property BinaryImage() As Byte()
-
-        Sub CopyImage(ByVal channel As IChannel, ByVal buffer As Byte(), ByRef index As Integer)
+        Inherits IChannel
 
     End Interface
 

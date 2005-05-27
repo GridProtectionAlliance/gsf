@@ -172,7 +172,7 @@ Namespace EE.Phasor.PC37_118
                 Dim x, index As Integer
 
                 For x = 0 To m_phasorValues.Count - 1
-                    Array.Copy(m_phasorValues(x).BinaryImage(m_phasorFormat), 0, image, x * PhasorValue.BinaryLength, PhasorValue.BinaryLength)
+                    System.Buffer.BlockCopy(m_phasorValues(x).BinaryImage(m_phasorFormat), 0, image, x * PhasorValue.BinaryLength, PhasorValue.BinaryLength)
                 Next
 
                 index = m_phasorValues.Count * PhasorValue.BinaryLength

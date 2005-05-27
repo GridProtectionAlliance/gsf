@@ -3,7 +3,7 @@
 '  Copyright © 2004 - TVA, all rights reserved
 '
 '  Build Environment: VB.NET, Visual Studio 2003
-'  Primary Developer: James R Carroll, System Analyst [WESTAFF]
+'  Primary Developer: James R Carroll, System Analyst [TVA]
 '      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
 '       Phone: 423/751-2827
 '       Email: jrcarrol@tva.gov
@@ -22,31 +22,47 @@ Namespace EE.Phasor.PDCstream
     ' This data cell represents what most might call a "field" in table of rows - it is a single unit of data for a specific PMU
     Public Class PMUDataCell
 
+        Inherits DataCellBase
+
         Private m_pmuDefinition As PMUDefinition
         Private m_sampleNumber As Integer
         Private m_flags As ChannelFlags
 
-        Public StatusFlags As Int16
-        Public PhasorValues As PhasorValue()
-        Public FrequencyValue As FrequencyValue
-        Public Digital0 As Int16
-        Public Digital1 As Int16
+        Public Shared Shadows Function CreateFrom(ByVal phasorDataCell As IDataCell) As PMUDataCell
+
+            Return CType(Activator.CreateInstance(GetType(PMUDataCell), New Object() {phasorDataCell}), PMUDataCell)
+
+        End Function
 
         Public Sub New(ByVal pmuDefinition As PMUDefinition, ByVal sampleNumber As Integer)
+
+            MyBase.New()
 
             m_pmuDefinition = pmuDefinition
             m_sampleNumber = sampleNumber
 
-            PhasorValues = Array.CreateInstance(GetType(PhasorValue), m_pmuDefinition.Phasors.Length)
+            'PhasorValues = Array.CreateInstance(GetType(PhasorValue), m_pmuDefinition.Phasors.Length)
 
             ' Initialize phasor values and frequency value with an "empty" value
-            For x As Integer = 0 To PhasorValues.Length - 1
-                PhasorValues(x) = PhasorValue.Empty(m_pmuDefinition.Phasors(x))
+            For x As Integer = 0 To m_pmuDefinition.Phasors.Length - 1
+                'Me.PhasorValues.Add(    '                PhasorValues(x) = PhasorValue.Empty(m_pmuDefinition.Phasors(x))
             Next
 
-            FrequencyValue = FrequencyValue.Empty(m_pmuDefinition.Frequency)
+            FrequencyValue = New FrequencyValue(m_pmuDefinition.Frequency, 0, 0)
 
         End Sub
+
+        Public Sub New(ByVal phasorDataCell As IDataCell)
+
+            MyBase.New(phasorDataCell)
+
+        End Sub
+
+        Public Overrides ReadOnly Property InheritedType() As System.Type
+            Get
+                Return Me.GetType
+            End Get
+        End Property
 
         Public ReadOnly Property PMUDefinition() As PMUDefinition
             Get
@@ -64,7 +80,7 @@ Namespace EE.Phasor.PDCstream
             Get
                 Dim empty As Boolean
 
-                For x As Integer = 0 To PhasorValues.Length - 1
+                For x As Integer = 0 To PhasorValues.Count - 1
                     If PhasorValues(x).IsEmpty Then
                         empty = True
                         Exit For
@@ -136,18 +152,18 @@ Namespace EE.Phasor.PDCstream
             End Set
         End Property
 
-        Public Property DataIsSortedByTimestamp() As Boolean
-            Get
-                Return ((m_flags And ChannelFlags.DataSortedByTimestamp) = 0)
-            End Get
-            Set(ByVal Value As Boolean)
-                If Value Then
-                    m_flags = m_flags And Not ChannelFlags.DataSortedByTimestamp
-                Else
-                    m_flags = m_flags Or ChannelFlags.DataSortedByTimestamp
-                End If
-            End Set
-        End Property
+        'Public Property DataIsSortedByTimestamp() As Boolean
+        '    Get
+        '        Return ((m_flags And ChannelFlags.DataSortedByTimestamp) = 0)
+        '    End Get
+        '    Set(ByVal Value As Boolean)
+        '        If Value Then
+        '            m_flags = m_flags And Not ChannelFlags.DataSortedByTimestamp
+        '        Else
+        '            m_flags = m_flags Or ChannelFlags.DataSortedByTimestamp
+        '        End If
+        '    End Set
+        'End Property
 
         Public Property UsingPDCExchangeFormat() As Boolean
             Get
@@ -188,52 +204,52 @@ Namespace EE.Phasor.PDCstream
             End Set
         End Property
 
-        Public Property TimestampIsIncluded() As Boolean
-            Get
-                Return ((m_flags And ChannelFlags.TimestampIncluded) = 0)
-            End Get
-            Set(ByVal Value As Boolean)
-                If Value Then
-                    m_flags = m_flags And Not ChannelFlags.TimestampIncluded
-                Else
-                    m_flags = m_flags Or ChannelFlags.TimestampIncluded
-                End If
-            End Set
-        End Property
+        'Public Property TimestampIsIncluded() As Boolean
+        '    Get
+        '        Return ((m_flags And ChannelFlags.TimestampIncluded) = 0)
+        '    End Get
+        '    Set(ByVal Value As Boolean)
+        '        If Value Then
+        '            m_flags = m_flags And Not ChannelFlags.TimestampIncluded
+        '        Else
+        '            m_flags = m_flags Or ChannelFlags.TimestampIncluded
+        '        End If
+        '    End Set
+        'End Property
 
-        Public ReadOnly Property BinaryLength() As Integer
-            Get
-                Return 12 + FrequencyValue.BinaryLength + PhasorValue.BinaryLength * PhasorValues.Length
-            End Get
-        End Property
+        'Public ReadOnly Property BinaryLength() As Integer
+        '    Get
+        '        Return 12 + FrequencyValue.BinaryLength + PhasorValue.BinaryLength * PhasorValues.Length
+        '    End Get
+        'End Property
 
-        Public ReadOnly Property BinaryImage() As Byte()
-            Get
-                Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BinaryLength)
-                Dim index As Integer
+        'Public ReadOnly Property BinaryImage() As Byte()
+        '    Get
+        '        Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BinaryLength)
+        '        Dim index As Integer
 
-                buffer(0) = m_flags
-                buffer(1) = Convert.ToByte(m_pmuDefinition.SampleRate)
-                buffer(2) = Convert.ToByte(2)
-                buffer(3) = Convert.ToByte(PhasorValues.Length)
-                EndianOrder.SwapCopyBytes(Convert.ToInt16(m_sampleNumber), buffer, 4)
-                EndianOrder.SwapCopyBytes(StatusFlags, buffer, 6)
-                index = 8
+        '        buffer(0) = m_flags
+        '        buffer(1) = Convert.ToByte(m_pmuDefinition.SampleRate)
+        '        buffer(2) = Convert.ToByte(2)
+        '        buffer(3) = Convert.ToByte(PhasorValues.Length)
+        '        EndianOrder.SwapCopyBytes(Convert.ToInt16(m_sampleNumber), buffer, 4)
+        '        EndianOrder.SwapCopyBytes(StatusFlags, buffer, 6)
+        '        index = 8
 
-                For x As Integer = 0 To PhasorValues.Length - 1
-                    Array.Copy(PhasorValues(x).BinaryImage, 0, buffer, index, PhasorValue.BinaryLength)
-                    index += PhasorValue.BinaryLength
-                Next
+        '        For x As Integer = 0 To PhasorValues.Length - 1
+        '            BlockCopy(PhasorValues(x).BinaryImage, 0, buffer, index, PhasorValue.BinaryLength)
+        '            index += PhasorValue.BinaryLength
+        '        Next
 
-                Array.Copy(FrequencyValue.BinaryImage, 0, buffer, index, FrequencyValue.BinaryLength)
-                index += FrequencyValue.BinaryLength
+        '        BlockCopy(FrequencyValue.BinaryImage, 0, buffer, index, FrequencyValue.BinaryLength)
+        '        index += FrequencyValue.BinaryLength
 
-                EndianOrder.SwapCopyBytes(Digital0, buffer, index)
-                EndianOrder.SwapCopyBytes(Digital1, buffer, index + 2)
+        '        EndianOrder.SwapCopyBytes(Digital0, buffer, index)
+        '        EndianOrder.SwapCopyBytes(Digital1, buffer, index + 2)
 
-                Return buffer
-            End Get
-        End Property
+        '        Return buffer
+        '    End Get
+        'End Property
 
     End Class
 

@@ -1,5 +1,5 @@
 '***********************************************************************
-'  IChannelValue.vb - Channel data interface
+'  IChannelValue.vb - Channel data value interface
 '  Copyright © 2005 - TVA, all rights reserved
 '
 '  Build Environment: VB.NET, Visual Studio 2003
@@ -17,7 +17,7 @@
 
 Namespace EE.Phasor
 
-    ' This interface represents a protocol independent representation of any kind of data.
+    ' This interface represents a protocol independent representation of any kind of data value.
     Public Interface IChannelValue
 
         Inherits IChannel

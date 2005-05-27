@@ -26,30 +26,42 @@ Namespace EE.Phasor
         Implements IDataFrame
 
         Private m_configurationFrame As IConfigurationFrame
-        Private m_dataCells As DataCellCollection
 
         Protected Sub New()
 
             MyBase.New()
 
-            m_dataCells = New DataCellCollection
-
         End Sub
 
-        Protected Sub New(ByVal timeTag As Unix.TimeTag, ByVal milliseconds As Double, ByVal synchronizationIsValid As Boolean, ByVal dataIsValid As Boolean, ByVal dataImage As Byte(), ByVal configurationFrame As IConfigurationFrame, ByVal dataCells As DataCellCollection)
+        Protected Sub New(ByVal cells As ChannelCellCollection, ByVal timeTag As Unix.TimeTag, ByVal milliseconds As Double, ByVal synchronizationIsValid As Boolean, ByVal dataIsValid As Boolean, ByVal configurationFrame As IConfigurationFrame)
 
-            MyBase.New(timeTag, milliseconds, synchronizationIsValid, dataIsValid, dataImage)
+            MyBase.New(cells, timeTag, milliseconds, synchronizationIsValid, dataIsValid)
 
             m_configurationFrame = configurationFrame
-            m_dataCells = DataCells
 
         End Sub
 
-        ' Dervied classes are expected to expose a Public Sub New(ByVal phasorDataFrame As IDataFrame)
-        Protected Sub New(ByVal phasorDataFrame As IDataFrame)
+        ' Dervied classes are expected to expose a Public Sub New(ByVal configurationFrame As IConfigurationFrame, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+        ' and automatically pass in type parameter
+        Protected Sub New(ByVal configurationFrame As IConfigurationFrame, ByVal binaryImage As Byte(), ByVal startIndex As Integer, ByVal dataCellType As Type)
 
-            Me.New(phasorDataFrame.TimeTag, phasorDataFrame.Milliseconds, phasorDataFrame.SynchronizationIsValid, phasorDataFrame.DataIsValid, _
-                    phasorDataFrame.DataImage, phasorDataFrame.ConfigurationFrame, phasorDataFrame.DataCells)
+            Me.New()
+
+            m_configurationFrame = configurationFrame
+
+            With m_configurationFrame
+                For x As Integer = 0 To .Cells.Count - 1
+                    Cells.Add(Activator.CreateInstance(dataCellType, New Object() {.Cells(x), binaryImage, startIndex}))
+                    startIndex += Cells(x).BinaryLength
+                Next
+            End With
+
+        End Sub
+
+        ' Dervied classes are expected to expose a Public Sub New(ByVal dataFrame As IDataFrame)
+        Protected Sub New(ByVal dataFrame As IDataFrame)
+
+            Me.New(dataFrame.Cells, dataFrame.TimeTag, dataFrame.Milliseconds, dataFrame.SynchronizationIsValid, dataFrame.DataIsValid, dataFrame.ConfigurationFrame)
 
         End Sub
 
@@ -62,9 +74,9 @@ Namespace EE.Phasor
             End Set
         End Property
 
-        Public ReadOnly Property DataCells() As DataCellCollection Implements IDataFrame.DataCells
+        Public Overridable Shadows ReadOnly Property Cells() As DataCellCollection Implements IDataFrame.Cells
             Get
-                Return m_dataCells
+                Return MyBase.Cells
             End Get
         End Property
 
@@ -72,36 +84,6 @@ Namespace EE.Phasor
             Get
                 Return "TVA.EE.Phasor.DataFrameBase"
             End Get
-        End Property
-
-        Public Overrides ReadOnly Property DataLength() As Int16
-            Get
-                Dim length As Int16
-
-                For x As Integer = 0 To m_dataCells.Count - 1
-                    length += m_dataCells(x).BinaryLength
-                Next
-
-                Return length
-            End Get
-        End Property
-
-        Public Overrides Property DataImage() As Byte()
-            Get
-                Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), DataLength)
-                Dim index As Integer
-
-                For x As Integer = 0 To m_dataCells.Count - 1
-                    Array.Copy(m_dataCells(x).BinaryImage, 0, buffer, index, m_dataCells(x).BinaryLength)
-                    index += m_dataCells(x).BinaryLength
-                Next
-
-                Return buffer
-            End Get
-            Set(ByVal Value() As Byte)
-                ' TODO: may be possible provide a generic cell creation implementation - especially if configuration frame is available...
-                Throw New NotImplementedException
-            End Set
         End Property
 
     End Class

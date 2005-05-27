@@ -47,6 +47,7 @@ Namespace EE.Phasor
 
         End Sub
 
+        ' Dervied classes are expected expose a Public Sub New(ByVal analogDefinition As IAnalogDefinition, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
         Protected Sub New(ByVal analogDefinition As IAnalogDefinition, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
 
             MyBase.New(analogDefinition)

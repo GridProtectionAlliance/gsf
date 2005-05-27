@@ -17,10 +17,10 @@
 
 Namespace EE.Phasor
 
-    ' This interface represents the protocol independent representation of a set of phasor related data definitions.
+    ' This interface represents the protocol independent representation of a set of configuration related data settings.
     Public Interface IConfigurationCell
 
-        Inherits IChannel
+        Inherits IChannelCell
 
         Property StationName() As String
 

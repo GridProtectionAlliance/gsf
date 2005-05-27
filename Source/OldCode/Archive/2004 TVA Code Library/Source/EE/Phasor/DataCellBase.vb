@@ -22,8 +22,10 @@ Namespace EE.Phasor
     ' This class represents the protocol independent common implementation of a set of phasor related data values that can be sent or received from a PMU.
     Public MustInherit Class DataCellBase
 
+        Inherits ChannelBase
         Implements IDataCell
 
+        Private m_configurationCell As IConfigurationCell
         Private m_statusFlags As Int16
         Private m_phasorValues As PhasorValueCollection
         Private m_frequencyValue As IFrequencyValue
@@ -40,15 +42,9 @@ Namespace EE.Phasor
 
         End Sub
 
-        Protected Sub New(ByVal frequencyValue As IFrequencyValue)
+        Protected Sub New(ByVal configurationCell As IConfigurationCell, ByVal statusFlags As Int16, ByVal phasorValues As PhasorValueCollection, ByVal frequencyValue As IFrequencyValue, ByVal analogValues As AnalogValueCollection, ByVal digitalValues As DigitalValueCollection)
 
-            Me.New()
-            m_frequencyValue = frequencyValue
-
-        End Sub
-
-        Protected Sub New(ByVal statusFlags As Int16, ByVal phasorValues As PhasorValueCollection, ByVal frequencyValue As IFrequencyValue, ByVal analogValues As AnalogValueCollection, ByVal digitalValues As DigitalValueCollection)
-
+            m_configurationCell = configurationCell
             m_statusFlags = statusFlags
             m_phasorValues = phasorValues
             m_frequencyValue = frequencyValue
@@ -57,52 +53,54 @@ Namespace EE.Phasor
 
         End Sub
 
-        Protected Sub New(ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+        ' Dervied classes are expected to expose a Public Sub New(ByVal configurationCell As IConfigurationCell, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+        ' and automatically pass in type parameters
+        Protected Sub New(ByVal configurationCell As IConfigurationCell, ByVal binaryImage As Byte(), ByVal startIndex As Integer, ByVal phasorValueType As Type, ByVal frequencyValueType As Type, ByVal analogValueType As Type, ByVal digitalValueType As Type)
 
             Me.New()
 
-            ' TODO: In order to generically parse a binary image, you will need some basic information:
-            '       phasor count / phasor type / phasor data format - PhasorDefinitionCollection?
-            '       frequency data type - IFrequencyDefinition?
-            '       analog count / analog data format = AnalogDefinitionCollection?
-            '       digital count - DigitalDefinitionCollection?
-            ' Maybe this can be provided via a general "PhasorConfigurationFrame" class
-            ' Note that all value classes already define binaryImage constructors...
+            Dim x As Integer
 
-            'Dim x As Integer
+            m_configurationCell = configurationCell
+            m_statusFlags = EndianOrder.ReverseToInt16(binaryImage, startIndex)
+            startIndex += 2
 
-            'For x = 0 To m_configFile.PhasorDefinitions.Count - 1
-            '    m_phasorValues.Add(New PhasorValue(m_configFile.PhasorDefinitions(x), binaryImage, startIndex + x * PhasorValue.BinaryLength, PhasorFormat))
-            'Next
+            With m_configurationCell
+                For x = 0 To .PhasorDefinitions.Count - 1
+                    m_phasorValues.Add(Activator.CreateInstance(phasorValueType, New Object() {.PhasorDefinitions(x), binaryImage, startIndex}))
+                    startIndex += m_phasorValues(x).BinaryLength
+                Next
 
-            'index = startIndex + m_configFile.PhasorDefinitions.Count * PhasorValue.BinaryLength
+                m_frequencyValue = Activator.CreateInstance(frequencyValueType, New Object() {.FrequencyDefinition, binaryImage, startIndex})
+                startIndex += m_frequencyValue.BinaryLength
 
-            'm_frequency = EndianOrder.ReverseToInt16(binaryImage, index)
-            'm_dfdt = EndianOrder.ReverseToInt16(binaryImage, index + 2)
+                For x = 0 To .AnalogDefinitions.Count - 1
+                    m_analogValues.Add(Activator.CreateInstance(analogValueType, New Object() {.AnalogDefinitions(x), binaryImage, startIndex}))
+                    startIndex += m_analogValues(x).BinaryLength
+                Next
 
-            'index += 4
-
-            'm_digitalValues.Clear()
-
-            'For x = 0 To m_digitalValues.Count - 1
-            '    m_digitalValues.Add(EndianOrder.ReverseToInt16(binaryImage, index + x * 2))
-            'Next
-
-        End Sub
-
-        ' Dervied classes are expected to expose a Public Sub New(ByVal phasorDataCell As IDataCell)
-        Protected Sub New(ByVal phasorDataCell As IDataCell)
-
-            Me.New(phasorDataCell.StatusFlags, phasorDataCell.PhasorValues, phasorDataCell.FrequencyValue, phasorDataCell.AnalogValues, phasorDataCell.DigitalValues)
+                For x = 0 To .DigitalDefinitions.Count - 1
+                    m_digitalValues.Add(Activator.CreateInstance(digitalValueType, New Object() {.DigitalDefinitions(x), binaryImage, startIndex}))
+                    startIndex += m_digitalValues(x).BinaryLength
+                Next
+            End With
 
         End Sub
 
-        Public MustOverride ReadOnly Property InheritedType() As System.Type Implements IChannel.InheritedType
+        ' Dervied classes are expected to expose a Public Sub New(ByVal dataCell As IDataCell)
+        Protected Sub New(ByVal dataCell As IDataCell)
 
-        Public Overridable ReadOnly Property This() As IChannel Implements IChannel.This
+            Me.New(dataCell.ConfigurationCell, dataCell.StatusFlags, dataCell.PhasorValues, dataCell.FrequencyValue, dataCell.AnalogValues, dataCell.DigitalValues)
+
+        End Sub
+
+        Public Overridable Property ConfigurationCell() As IConfigurationCell Implements IDataCell.ConfigurationCell
             Get
-                Return Me
+                Return m_configurationCell
             End Get
+            Set(ByVal Value As IConfigurationCell)
+                m_configurationCell = Value
+            End Set
         End Property
 
         Public Overridable Property StatusFlags() As Int16 Implements IDataCell.StatusFlags
@@ -120,7 +118,7 @@ Namespace EE.Phasor
             End Get
         End Property
 
-        Public Property FrequencyValue() As IFrequencyValue Implements IDataCell.FrequencyValue
+        Public Overridable Property FrequencyValue() As IFrequencyValue Implements IDataCell.FrequencyValue
             Get
                 Return m_frequencyValue
             End Get
@@ -141,36 +139,32 @@ Namespace EE.Phasor
             End Get
         End Property
 
-        Public Overridable ReadOnly Property BinaryLength() As Short Implements IChannel.BinaryLength
+        Public Overrides ReadOnly Property BinaryLength() As Short
             Get
                 Return 2 + m_frequencyValue.BinaryLength + m_phasorValues.BinaryLength + m_analogValues.BinaryLength + m_digitalValues.BinaryLength
             End Get
         End Property
 
-        Public Overridable ReadOnly Property BinaryImage() As Byte() Implements IChannel.BinaryImage
+        Public Overrides ReadOnly Property BinaryImage() As Byte()
             Get
                 Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BinaryLength)
-                Dim index As Integer
+                Dim x, index As Integer
 
                 EndianOrder.SwapCopyBytes(m_statusFlags, buffer, 0)
                 index = 2
 
-                For x As Integer = 0 To m_phasorValues.Count - 1
-                    Array.Copy(m_phasorValues(x).BinaryImage, 0, buffer, index, m_phasorValues(x).BinaryLength)
-                    index += m_phasorValues(x).BinaryLength
+                For x = 0 To m_phasorValues.Count - 1
+                    CopyImage(m_phasorValues(x), buffer, index)
                 Next
 
-                Array.Copy(m_frequencyValue.BinaryImage, 0, buffer, index, m_frequencyValue.BinaryLength)
-                index += m_frequencyValue.BinaryLength
+                CopyImage(m_frequencyValue, buffer, index)
 
-                For x As Integer = 0 To m_analogValues.Count - 1
-                    Array.Copy(m_analogValues(x).BinaryImage, 0, buffer, index, m_analogValues(x).BinaryLength)
-                    index += m_analogValues(x).BinaryLength
+                For x = 0 To m_analogValues.Count - 1
+                    CopyImage(m_analogValues(x), buffer, index)
                 Next
 
-                For x As Integer = 0 To m_digitalValues.Count - 1
-                    Array.Copy(m_digitalValues(x).BinaryImage, 0, buffer, index, m_digitalValues(x).BinaryLength)
-                    index += m_digitalValues(x).BinaryLength
+                For x = 0 To m_digitalValues.Count - 1
+                    CopyImage(m_digitalValues(x), buffer, index)
                 Next
 
                 Return buffer

@@ -1,5 +1,5 @@
 '***********************************************************************
-'  ChannelFrameBase.vb - Data frame base class
+'  ChannelFrameBase.vb - Channel data frame base class
 '  Copyright © 2004 - TVA, all rights reserved
 '
 '  Build Environment: VB.NET, Visual Studio 2003
@@ -21,45 +21,48 @@ Imports TVA.Compression.Common
 
 Namespace EE.Phasor
 
-    ' This class represents the protocol independent common implementation of any frame that can be sent or received from a PMU.
+    ' This class represents the protocol independent common implementation of any frame of data that can be sent or received from a PMU.
     Public MustInherit Class ChannelFrameBase
 
+        Inherits ChannelBase
         Implements IChannelFrame
 
+        Private m_cells As ChannelCellCollection
         Private m_timeTag As Unix.TimeTag
+        Private m_milliseconds As Double
+        Private m_synchronizationIsValid As Boolean
+        Private m_dataIsValid As Boolean
         Private m_published As Boolean
 
         Protected Sub New()
 
+            m_cells = New ChannelCellCollection
             m_timeTag = New Unix.TimeTag(DateTime.Now)
+            m_synchronizationIsValid = True
+            m_dataIsValid = True
 
         End Sub
 
-        Protected Sub New(ByVal timeTag As Unix.TimeTag, ByVal milliseconds As Double, ByVal synchronizationIsValid As Boolean, ByVal dataIsValid As Boolean, ByVal dataImage As Byte())
+        Protected Sub New(ByVal cells As ChannelCellCollection, ByVal timeTag As Unix.TimeTag, ByVal milliseconds As Double, ByVal synchronizationIsValid As Boolean, ByVal dataIsValid As Boolean)
 
-            With Me
-                .TimeTag = timeTag
-                .Milliseconds = milliseconds
-                .SynchronizationIsValid = synchronizationIsValid
-                .DataIsValid = dataIsValid
-                .DataImage = dataImage
-            End With
+            m_cells = cells
+            m_timeTag = timeTag
+            m_milliseconds = milliseconds
+            m_synchronizationIsValid = synchronizationIsValid
+            m_dataIsValid = dataIsValid
 
         End Sub
 
         ' Dervied classes are expected to expose a Protected Sub New(ByVal channelFrame As IChannelFrame)
         Protected Sub New(ByVal channelFrame As IChannelFrame)
 
-            Me.New(channelFrame.TimeTag, channelFrame.Milliseconds, channelFrame.SynchronizationIsValid, _
-                channelFrame.DataIsValid, channelFrame.DataImage)
+            Me.New(channelFrame.Cells, channelFrame.TimeTag, channelFrame.Milliseconds, channelFrame.SynchronizationIsValid, channelFrame.DataIsValid)
 
         End Sub
 
-        Public MustOverride ReadOnly Property InheritedType() As System.Type Implements IChannelFrame.InheritedType
-
-        Public Overridable ReadOnly Property This() As IChannel Implements IChannelFrame.This
+        Public Overridable ReadOnly Property Cells() As ChannelCellCollection Implements IChannelFrame.Cells
             Get
-                Return Me
+                Return m_cells
             End Get
         End Property
 
@@ -72,7 +75,7 @@ Namespace EE.Phasor
             End Set
         End Property
 
-        Public Overridable Property NtpTimeTag() As NtpTimeTag
+        Public Overridable Property NtpTimeTag() As NtpTimeTag Implements IChannelFrame.NtpTimeTag
             Get
                 Return New NtpTimeTag(m_timeTag.ToDateTime)
             End Get
@@ -81,7 +84,14 @@ Namespace EE.Phasor
             End Set
         End Property
 
-        Public MustOverride Property Milliseconds() As Double Implements IChannelFrame.Milliseconds
+        Public Overridable Property Milliseconds() As Double Implements IChannelFrame.Milliseconds
+            Get
+                Return m_milliseconds
+            End Get
+            Set(ByVal Value As Double)
+                m_milliseconds = Value
+            End Set
+        End Property
 
         Public Overridable ReadOnly Property Timestamp() As DateTime Implements IChannelFrame.Timestamp
             Get
@@ -89,9 +99,23 @@ Namespace EE.Phasor
             End Get
         End Property
 
-        Public MustOverride Property SynchronizationIsValid() As Boolean Implements IChannelFrame.SynchronizationIsValid
+        Public Overridable Property SynchronizationIsValid() As Boolean Implements IChannelFrame.SynchronizationIsValid
+            Get
+                Return m_synchronizationIsValid
+            End Get
+            Set(ByVal Value As Boolean)
+                m_synchronizationIsValid = Value
+            End Set
+        End Property
 
-        Public MustOverride Property DataIsValid() As Boolean Implements IChannelFrame.DataIsValid
+        Public Overridable Property DataIsValid() As Boolean Implements IChannelFrame.DataIsValid
+            Get
+                Return m_dataIsValid
+            End Get
+            Set(ByVal Value As Boolean)
+                m_dataIsValid = Value
+            End Set
+        End Property
 
         Public Overridable Property Published() As Boolean Implements IChannelFrame.Published
             Get
@@ -108,13 +132,30 @@ Namespace EE.Phasor
             End Get
         End Property
 
-        Public MustOverride ReadOnly Property DataLength() As Int16 Implements IChannelFrame.DataLength
+        Public Overridable ReadOnly Property DataLength() As Int16 Implements IChannelFrame.DataLength
+            Get
+                Dim length As Int16
 
-        Public MustOverride Property DataImage() As Byte() Implements IChannelFrame.DataImage
+                For x As Integer = 0 To m_cells.Count - 1
+                    length += m_cells(x).BinaryLength
+                Next
 
-        Public MustOverride ReadOnly Property BinaryLength() As Int16 Implements IChannelFrame.BinaryLength
+                Return length
+            End Get
+        End Property
 
-        Public MustOverride ReadOnly Property BinaryImage() As Byte() Implements IChannelFrame.BinaryImage
+        Public Overridable ReadOnly Property DataImage() As Byte() Implements IChannelFrame.DataImage
+            Get
+                Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), DataLength)
+                Dim index As Integer
+
+                For x As Integer = 0 To m_cells.Count - 1
+                    CopyImage(m_cells(x), buffer, index)
+                Next
+
+                Return buffer
+            End Get
+        End Property
 
         Protected Overridable Function ChecksumIsValid(ByVal buffer As Byte(), ByVal startIndex As Integer) As Boolean
 

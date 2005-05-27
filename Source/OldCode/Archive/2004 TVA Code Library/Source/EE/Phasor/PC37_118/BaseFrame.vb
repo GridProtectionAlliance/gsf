@@ -15,6 +15,7 @@
 '
 '***********************************************************************
 
+Imports System.Buffer
 Imports TVA.Interop
 Imports TVA.Shared.Bit
 Imports TVA.Shared.DateTime
@@ -182,7 +183,7 @@ Namespace EE.Phasor.PC37_118
                 EndianOrder.SwapCopyBytes(Convert.ToUInt32(m_timeTag.Value), buffer, 0)
                 EndianOrder.SwapCopyBytes(m_sampleCount, buffer, 4)
                 EndianOrder.SwapCopyBytes(m_status, buffer, 6)
-                Array.Copy(image, 0, buffer, 8, image.Length)
+                BlockCopy(image, 0, buffer, 8, image.Length)
                 AppendCRC16(buffer, 8 + image.Length)
 
                 Return buffer

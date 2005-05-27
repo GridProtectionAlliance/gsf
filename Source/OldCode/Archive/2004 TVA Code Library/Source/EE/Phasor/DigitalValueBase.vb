@@ -42,6 +42,7 @@ Namespace EE.Phasor
 
         End Sub
 
+        ' Dervied classes are expected expose a Public Sub New(ByVal digitalDefinition As IDigitalDefinition, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
         Protected Sub New(ByVal digitalDefinition As IDigitalDefinition, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
 
             MyBase.New(digitalDefinition)

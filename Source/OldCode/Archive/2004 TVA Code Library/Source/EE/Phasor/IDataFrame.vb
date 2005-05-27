@@ -24,7 +24,7 @@ Namespace EE.Phasor
 
         Property ConfigurationFrame() As IConfigurationFrame
 
-        ReadOnly Property DataCells() As DataCellCollection
+        Shadows ReadOnly Property Cells() As DataCellCollection
 
     End Interface
 

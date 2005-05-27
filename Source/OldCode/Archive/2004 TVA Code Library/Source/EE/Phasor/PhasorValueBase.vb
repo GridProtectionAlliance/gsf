@@ -105,6 +105,7 @@ Namespace EE.Phasor
 
         End Sub
 
+        ' Dervied classes are expected expose a Public Sub New(ByVal phasorDefinition As IPhasorDefinition, ByVal real As Double, ByVal imaginary As Double)
         Protected Sub New(ByVal phasorDefinition As IPhasorDefinition, ByVal real As Double, ByVal imaginary As Double)
 
             MyBase.New(phasorDefinition)
@@ -115,12 +116,14 @@ Namespace EE.Phasor
 
         End Sub
 
+        ' Dervied classes are expected expose a Public Sub New(ByVal phasorDefinition As IPhasorDefinition, ByVal unscaledReal As Int16, ByVal unscaledImaginary As Int16)
         Protected Sub New(ByVal phasorDefinition As IPhasorDefinition, ByVal unscaledReal As Int16, ByVal unscaledImaginary As Int16)
 
             Me.New(phasorDefinition, unscaledReal / phasorDefinition.ScalingFactor, unscaledImaginary / phasorDefinition.ScalingFactor)
 
         End Sub
 
+        ' Dervied classes are expected expose a Public Sub New(ByVal phasorDefinition As IPhasorDefinition, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
         Protected Sub New(ByVal phasorDefinition As IPhasorDefinition, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
 
             MyBase.New(phasorDefinition)
@@ -183,7 +186,11 @@ Namespace EE.Phasor
 
         Public Overridable Property Angle() As Double Implements IPhasorValue.Angle
             Get
-                Return Math.Atan2(m_imaginary, m_real) * 180 / Math.PI
+                Try
+                    Return Math.Atan2(m_imaginary, m_real) * 180 / Math.PI
+                Catch
+                    Return 0
+                End Try
             End Get
             Set(ByVal Value As Double)
                 ' We store angle as one of our required composite values
@@ -194,9 +201,19 @@ Namespace EE.Phasor
             End Set
         End Property
 
+        Public ReadOnly Property AngleReceived() As Boolean
+            Get
+                Return m_compositeValues.Received(CompositeValue.Angle)
+            End Get
+        End Property
+
         Public Overridable Property Magnitude() As Double Implements IPhasorValue.Magnitude
             Get
-                Return Math.Sqrt(m_real * m_real + m_imaginary * m_imaginary)
+                Try
+                    Return Math.Sqrt(m_real * m_real + m_imaginary * m_imaginary)
+                Catch
+                    Return 0
+                End Try
             End Get
             Set(ByVal Value As Double)
                 ' We store magnitude as one of our required composite values
@@ -205,6 +222,12 @@ Namespace EE.Phasor
                 ' If all composite values have been received, we can calculate phasor's real and imaginary values
                 CalculatePhasorValueFromComposites()
             End Set
+        End Property
+
+        Public ReadOnly Property MagnitudeReceived() As Boolean
+            Get
+                Return m_compositeValues.Received(CompositeValue.Magnitude)
+            End Get
         End Property
 
         Private Sub CalculatePhasorValueFromComposites()
@@ -242,7 +265,11 @@ Namespace EE.Phasor
 
         Public Overridable Property UnscaledReal() As Int16 Implements IPhasorValue.UnscaledReal
             Get
-                Return Convert.ToInt16(m_real * Definition.ScalingFactor)
+                Try
+                    Return Convert.ToInt16(m_real * Definition.ScalingFactor)
+                Catch
+                    Return 0
+                End Try
             End Get
             Set(ByVal Value As Int16)
                 m_real = Value / Definition.ScalingFactor
@@ -251,7 +278,11 @@ Namespace EE.Phasor
 
         Public Overridable Property UnscaledImaginary() As Int16 Implements IPhasorValue.UnscaledImaginary
             Get
-                Return Convert.ToInt16(m_imaginary * Definition.ScalingFactor)
+                Try
+                    Return Convert.ToInt16(m_imaginary * Definition.ScalingFactor)
+                Catch
+                    Return 0
+                End Try
             End Get
             Set(ByVal Value As Int16)
                 m_imaginary = Value / Definition.ScalingFactor

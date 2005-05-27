@@ -92,6 +92,16 @@ Namespace EE.Phasor
 
         Inherits ChannelCollection
 
+        Public ReadOnly Property BinaryLength() As Integer
+            Get
+                If List.Count > 0 Then
+                    Return _Item(0).BinaryLength * List.Count
+                Else
+                    Return 0
+                End If
+            End Get
+        End Property
+
         Public Sub Sort()
 
             Array.Sort(List)
@@ -100,19 +110,55 @@ Namespace EE.Phasor
 
     End Class
 
-    Public Class ConfigurationCellCollection
+    Public Class ChannelCellCollection
 
         Inherits ChannelCollection
 
-        Public Sub Add(ByVal value As IConfigurationCell)
+        Public Sub Add(ByVal value As IChannelCell)
 
             _Add(value)
 
         End Sub
 
-        Default Public ReadOnly Property Item(ByVal index As Integer) As IConfigurationCell
+        Default Public ReadOnly Property Item(ByVal index As Integer) As IChannelCell
             Get
-                Return DirectCast(_Item(index), IConfigurationCell)
+                Return DirectCast(_Item(index), IChannelCell)
+            End Get
+        End Property
+
+    End Class
+
+    Public Class ChannelFrameCollection
+
+        Inherits ChannelCollection
+
+        Public Sub Add(ByVal value As IChannelFrame)
+
+            _Add(value)
+
+        End Sub
+
+        Default Public ReadOnly Property Item(ByVal index As Integer) As IChannelFrame
+            Get
+                Return DirectCast(_Item(index), IChannelFrame)
+            End Get
+        End Property
+
+    End Class
+
+    Public Class ConfigurationCellCollection
+
+        Inherits ChannelCellCollection
+
+        Public Shadows Sub Add(ByVal value As IConfigurationCell)
+
+            MyBase.Add(value)
+
+        End Sub
+
+        Default Public Shadows ReadOnly Property Item(ByVal index As Integer) As IConfigurationCell
+            Get
+                Return DirectCast(MyBase.Item(index), IConfigurationCell)
             End Get
         End Property
 
@@ -120,17 +166,17 @@ Namespace EE.Phasor
 
     Public Class DataCellCollection
 
-        Inherits ChannelCollection
+        Inherits ChannelCellCollection
 
-        Public Sub Add(ByVal value As IDataCell)
+        Public Shadows Sub Add(ByVal value As IDataCell)
 
-            _Add(value)
+            MyBase.Add(value)
 
         End Sub
 
-        Default Public ReadOnly Property Item(ByVal index As Integer) As IDataCell
+        Default Public Shadows ReadOnly Property Item(ByVal index As Integer) As IDataCell
             Get
-                Return DirectCast(_Item(index), IDataCell)
+                Return DirectCast(MyBase.Item(index), IDataCell)
             End Get
         End Property
 
@@ -138,17 +184,17 @@ Namespace EE.Phasor
 
     Public Class ConfigurationFrameCollection
 
-        Inherits ChannelCollection
+        Inherits ChannelFrameCollection
 
-        Public Sub Add(ByVal value As IConfigurationFrame)
+        Public Shadows Sub Add(ByVal value As IConfigurationFrame)
 
-            _Add(value)
+            MyBase.Add(value)
 
         End Sub
 
-        Default Public ReadOnly Property Item(ByVal index As Integer) As IConfigurationFrame
+        Default Public Shadows ReadOnly Property Item(ByVal index As Integer) As IConfigurationFrame
             Get
-                Return DirectCast(_Item(index), IConfigurationFrame)
+                Return DirectCast(MyBase.Item(index), IConfigurationFrame)
             End Get
         End Property
 
@@ -156,17 +202,17 @@ Namespace EE.Phasor
 
     Public Class DataFrameCollection
 
-        Inherits ChannelCollection
+        Inherits ChannelFrameCollection
 
-        Public Sub Add(ByVal value As IDataFrame)
+        Public Shadows Sub Add(ByVal value As IDataFrame)
 
-            _Add(value)
+            MyBase.Add(value)
 
         End Sub
 
-        Default Public ReadOnly Property Item(ByVal index As Integer) As IDataFrame
+        Default Public Shadows ReadOnly Property Item(ByVal index As Integer) As IDataFrame
             Get
-                Return DirectCast(_Item(index), IDataFrame)
+                Return DirectCast(MyBase.Item(index), IDataFrame)
             End Get
         End Property
 

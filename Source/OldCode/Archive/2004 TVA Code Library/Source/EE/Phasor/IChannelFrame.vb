@@ -1,5 +1,5 @@
 '***********************************************************************
-'  IChannelFrame.vb - Channel frame interface
+'  IChannelFrame.vb - Channel data frame interface
 '  Copyright © 2004 - TVA, all rights reserved
 '
 '  Build Environment: VB.NET, Visual Studio 2003
@@ -16,19 +16,24 @@
 '***********************************************************************
 
 Imports TVA.Interop
+Imports TVA.Shared.DateTime
 
 Namespace EE.Phasor
 
-    ' This interface represents the protocol independent representation of any phasor frame.
+    ' This interface represents the protocol independent representation of any frame of data.
     Public Interface IChannelFrame
 
         Inherits IChannel
 
-        Property TimeTag() As Unix.TimeTag
+        ReadOnly Property Cells() As ChannelCellCollection
 
-        Property Milliseconds() As Double
+        Property TimeTag() As Unix.TimeTag          ' UNIX based time of this frame (accurate to seconds)
 
-        ReadOnly Property Timestamp() As DateTime
+        Property NtpTimeTag() As NtpTimeTag         ' Network Time Protocol time of this frame (accurate to seconds)
+
+        Property Milliseconds() As Double           ' Millisecond offset of this frame
+
+        ReadOnly Property Timestamp() As DateTime   ' .NET timestamp of this frame (accurate to milliseconds)
 
         Property SynchronizationIsValid() As Boolean
 
@@ -40,7 +45,7 @@ Namespace EE.Phasor
 
         ReadOnly Property DataLength() As Int16
 
-        Property DataImage() As Byte()
+        ReadOnly Property DataImage() As Byte()
 
     End Interface
 

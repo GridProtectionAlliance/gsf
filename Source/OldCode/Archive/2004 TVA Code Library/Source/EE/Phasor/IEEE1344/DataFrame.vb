@@ -15,6 +15,7 @@
 '
 '***********************************************************************
 
+Imports System.Buffer
 Imports TVA.Interop
 Imports TVA.Shared.Bit
 Imports TVA.Shared.DateTime
@@ -172,7 +173,7 @@ Namespace EE.Phasor.IEEE1344
                 Dim x, index As Integer
 
                 For x = 0 To m_phasorValues.Count - 1
-                    Array.Copy(m_phasorValues(x).BinaryImage(m_phasorFormat), 0, image, x * PhasorValue.BinaryLength, PhasorValue.BinaryLength)
+                    BlockCopy(m_phasorValues(x).BinaryImage(m_phasorFormat), 0, image, x * PhasorValue.BinaryLength, PhasorValue.BinaryLength)
                 Next
 
                 index = m_phasorValues.Count * PhasorValue.BinaryLength

@@ -50,6 +50,7 @@ Namespace EE.Phasor
 
         End Sub
 
+        ' Dervied classes are expected expose a Public Sub New(ByVal frequencyDefinition As IFrequencyDefinition, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
         Protected Sub New(ByVal frequencyDefinition As IFrequencyDefinition, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
 
             MyBase.New(frequencyDefinition)
@@ -102,9 +103,13 @@ Namespace EE.Phasor
 
         Public Overridable Property UnscaledFrequency() As Int16 Implements IFrequencyValue.UnscaledFrequency
             Get
-                With Definition
-                    Return Convert.ToInt16((m_frequency - .Offset) * .ScalingFactor)
-                End With
+                Try
+                    With Definition
+                        Return Convert.ToInt16((m_frequency - .Offset) * .ScalingFactor)
+                    End With
+                Catch
+                    Return 0
+                End Try
             End Get
             Set(ByVal Value As Int16)
                 With Definition
@@ -115,9 +120,13 @@ Namespace EE.Phasor
 
         Public Overridable Property UnscaledDfDt() As Int16 Implements IFrequencyValue.UnscaledDfDt
             Get
-                With Definition
-                    Return Convert.ToInt16((m_dfdt - .DfDtOffset) * .DfDtScalingFactor)
-                End With
+                Try
+                    With Definition
+                        Return Convert.ToInt16((m_dfdt - .DfDtOffset) * .DfDtScalingFactor)
+                    End With
+                Catch
+                    Return 0
+                End Try
             End Get
             Set(ByVal Value As Int16)
                 With Definition

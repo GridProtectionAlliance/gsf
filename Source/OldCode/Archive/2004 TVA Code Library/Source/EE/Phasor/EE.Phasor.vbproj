@@ -111,6 +111,11 @@
                     BuildAction = "Compile"
                 />
                 <File
+                    RelPath = "ChannelBase.vb"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
                     RelPath = "ChannelDefinitionBase.vb"
                     SubType = "Code"
                     BuildAction = "Compile"
@@ -132,6 +137,11 @@
                 />
                 <File
                     RelPath = "Common.vb"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "ConfigurationCellBase.vb"
                     SubType = "Code"
                     BuildAction = "Compile"
                 />
@@ -187,6 +197,11 @@
                 />
                 <File
                     RelPath = "IChannel.vb"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "IChannelCell.vb"
                     SubType = "Code"
                     BuildAction = "Compile"
                 />
