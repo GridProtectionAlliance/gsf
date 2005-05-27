@@ -27,9 +27,13 @@ Namespace EE.Phasor
 
         Protected Sub New()            
 
+            MyBase.New()
+
         End Sub
 
         Protected Sub New(ByVal channelDefinition As IChannelDefinition)
+
+            MyBase.New()
 
             m_definition = channelDefinition
 

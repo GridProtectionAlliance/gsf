@@ -33,6 +33,8 @@ Namespace EE.Phasor
 
         Protected Sub New()
 
+            MyBase.New()
+
             m_dataFormat = DataFormat.FixedInteger
             m_label = "undefined"
             m_scale = 1
@@ -40,6 +42,8 @@ Namespace EE.Phasor
         End Sub
 
         Protected Sub New(ByVal dataFormat As DataFormat, ByVal index As Integer, ByVal label As String, ByVal scale As Integer, ByVal offset As Double)
+
+            MyBase.New()
 
             m_dataFormat = dataFormat
             m_index = index

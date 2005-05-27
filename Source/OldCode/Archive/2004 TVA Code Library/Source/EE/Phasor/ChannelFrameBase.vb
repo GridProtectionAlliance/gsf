@@ -36,6 +36,8 @@ Namespace EE.Phasor
 
         Protected Sub New()
 
+            MyBase.New()
+
             m_cells = New ChannelCellCollection
             m_timeTag = New Unix.TimeTag(DateTime.Now)
             m_synchronizationIsValid = True
@@ -44,6 +46,8 @@ Namespace EE.Phasor
         End Sub
 
         Protected Sub New(ByVal cells As ChannelCellCollection, ByVal timeTag As Unix.TimeTag, ByVal milliseconds As Double, ByVal synchronizationIsValid As Boolean, ByVal dataIsValid As Boolean)
+
+            MyBase.New()
 
             m_cells = cells
             m_timeTag = timeTag

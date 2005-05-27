@@ -36,7 +36,7 @@ Namespace EE.Phasor
 
         Public MustOverride ReadOnly Property BinaryImage() As Byte() Implements IChannel.BinaryImage
 
-        ' This is a common optmized block copy function for any kind of data
+        ' This is a common optimized block copy function for any kind of data
         Public Sub CopyImage(ByVal channel As IChannel, ByVal buffer As Byte(), ByRef index As Integer) Implements IChannel.CopyImage
 
             With channel

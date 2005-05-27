@@ -33,7 +33,7 @@ Namespace EE.Phasor
 
         End Sub
 
-        Protected Sub New(ByVal cells As ChannelCellCollection, ByVal timeTag As Unix.TimeTag, ByVal milliseconds As Double, ByVal synchronizationIsValid As Boolean, ByVal dataIsValid As Boolean, ByVal idCode As Int16)
+        Protected Sub New(ByVal cells As ConfigurationCellCollection, ByVal timeTag As Unix.TimeTag, ByVal milliseconds As Double, ByVal synchronizationIsValid As Boolean, ByVal dataIsValid As Boolean, ByVal idCode As Int16)
 
             MyBase.New(cells, timeTag, milliseconds, synchronizationIsValid, dataIsValid)
 

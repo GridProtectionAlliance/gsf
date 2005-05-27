@@ -116,6 +116,11 @@
                     BuildAction = "Compile"
                 />
                 <File
+                    RelPath = "ChannelCellBase.vb"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
                     RelPath = "ChannelDefinitionBase.vb"
                     SubType = "Code"
                     BuildAction = "Compile"

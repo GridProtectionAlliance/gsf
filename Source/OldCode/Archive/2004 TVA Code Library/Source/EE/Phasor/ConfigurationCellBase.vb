@@ -23,7 +23,7 @@ Namespace EE.Phasor
     ' This class represents the protocol independent common implementation of a set of configuration related data settings that can be sent or received from a PMU.
     Public MustInherit Class ConfigurationCellBase
 
-        Inherits ChannelBase
+        Inherits ChannelCellBase
         Implements IConfigurationCell
 
         Private m_stationName As String
@@ -44,6 +44,8 @@ Namespace EE.Phasor
         End Sub
 
         Protected Sub New(ByVal stationName As String, ByVal idCode As Int16, ByVal phasorDefinitions As PhasorDefinitionCollection, ByVal frequencyDefinition As IFrequencyDefinition, ByVal analogDefinitions As AnalogDefinitionCollection, ByVal digitalDefinitions As DigitalDefinitionCollection)
+
+            MyBase.New()
 
             Me.StationName = stationName
             m_idCode = idCode
