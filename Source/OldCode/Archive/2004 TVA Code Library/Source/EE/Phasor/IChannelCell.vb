@@ -22,6 +22,8 @@ Namespace EE.Phasor
 
         Inherits IChannel
 
+        ReadOnly Property Parent() As IChannelFrame
+
     End Interface
 
 End Namespace

@@ -28,24 +28,25 @@ Namespace EE.Phasor
 
         Private m_value As Int16
 
-        Protected Sub New()
+        Protected Sub New(ByVal parent As IDataCell)
 
-            MyBase.New()
+            MyBase.New(parent)
 
         End Sub
 
-        Protected Sub New(ByVal digitalDefinition As IDigitalDefinition, ByVal value As Int16)
+        ' Dervied classes are expected expose a Public Sub New(ByVal parent As IDataCell, ByVal digitalDefinition As IDigitalDefinition, ByVal value As Int16)
+        Protected Sub New(ByVal parent As IDataCell, ByVal digitalDefinition As IDigitalDefinition, ByVal value As Int16)
 
-            MyBase.New(digitalDefinition)
+            MyBase.New(parent, digitalDefinition)
 
             m_value = value
 
         End Sub
 
-        ' Dervied classes are expected expose a Public Sub New(ByVal digitalDefinition As IDigitalDefinition, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
-        Protected Sub New(ByVal digitalDefinition As IDigitalDefinition, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+        ' Dervied classes are expected expose a Public Sub New(ByVal parent As IDataCell, ByVal digitalDefinition As IDigitalDefinition, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+        Protected Sub New(ByVal parent As IDataCell, ByVal digitalDefinition As IDigitalDefinition, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
 
-            MyBase.New(digitalDefinition)
+            MyBase.New(parent, digitalDefinition)
 
             m_value = EndianOrder.ReverseToInt16(binaryImage, startIndex)
 
@@ -54,7 +55,7 @@ Namespace EE.Phasor
         ' Dervied classes are expected to expose a Public Sub New(ByVal digitalValue As IDigitalValue)
         Protected Sub New(ByVal digitalValue As IDigitalValue)
 
-            Me.New(digitalValue.Definition, digitalValue.Value)
+            Me.New(digitalValue.Parent, digitalValue.Definition, digitalValue.Value)
 
         End Sub
 

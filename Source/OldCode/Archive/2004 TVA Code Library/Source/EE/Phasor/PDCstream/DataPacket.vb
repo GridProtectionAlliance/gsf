@@ -26,17 +26,17 @@ Namespace EE.Phasor.PDCstream
 
         Implements IComparable
 
-        Private m_configFile As ConfigFile
+        Private m_configFile As ConfigurationFrame
         Private m_timeTag As Unix.TimeTag
         Private m_timeStamp As DateTime
         Private m_index As Integer
 
-        Public Cells As PMUDataCell()
+        Public Cells As DataCell()
         Public Published As Boolean
 
         Public Const SyncByte As Byte = &HAA
 
-        Public Sub New(ByVal configFile As ConfigFile, ByVal timeStamp As DateTime, ByVal index As Integer)
+        Public Sub New(ByVal configFile As ConfigurationFrame, ByVal timeStamp As DateTime, ByVal index As Integer)
 
             m_configFile = configFile
             m_timeTag = New Unix.TimeTag(timeStamp)
@@ -46,10 +46,10 @@ Namespace EE.Phasor.PDCstream
             m_timeStamp = timeStamp.AddMilliseconds((m_index + 0.5@) * (1000@ / m_configFile.SampleRate))
 
             With m_configFile
-                Cells = Array.CreateInstance(GetType(PMUDataCell), .PMUCount)
+                Cells = Array.CreateInstance(GetType(DataCell), .PMUCount)
 
                 For x As Integer = 0 To Cells.Length - 1
-                    Cells(x) = New PMUDataCell(.PMU(x), index)
+                    'Cells(x) = New DataCell(.PMU(x), index)
                 Next
             End With
 

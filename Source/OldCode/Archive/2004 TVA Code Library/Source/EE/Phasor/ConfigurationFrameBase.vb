@@ -26,26 +26,32 @@ Namespace EE.Phasor
         Implements IConfigurationFrame
 
         Private m_idCode As Int16
+        Private m_sampleRate As Int16
+        Private m_nominalFrequency As LineFrequency
 
         Protected Sub New()
 
             MyBase.New()
 
+            m_nominalFrequency = LineFrequency.Hz60
+
         End Sub
 
-        Protected Sub New(ByVal cells As ConfigurationCellCollection, ByVal timeTag As Unix.TimeTag, ByVal milliseconds As Double, ByVal synchronizationIsValid As Boolean, ByVal dataIsValid As Boolean, ByVal idCode As Int16)
+        Protected Sub New(ByVal cells As ConfigurationCellCollection, ByVal timeTag As Unix.TimeTag, ByVal milliseconds As Double, ByVal synchronizationIsValid As Boolean, ByVal dataIsValid As Boolean, ByVal idCode As Int16, ByVal sampleRate As Int16, ByVal nominalFrequency As LineFrequency)
 
             MyBase.New(cells, timeTag, milliseconds, synchronizationIsValid, dataIsValid)
 
             m_idCode = idCode
+            m_sampleRate = sampleRate
+            m_nominalFrequency = nominalFrequency
 
         End Sub
 
         ' Dervied classes are expected to expose a Public Sub New(ByVal configurationFrame As IDataFrame)
         Protected Sub New(ByVal configurationFrame As IConfigurationFrame)
 
-            Me.New(configurationFrame.Cells, configurationFrame.TimeTag, configurationFrame.Milliseconds, _
-                configurationFrame.SynchronizationIsValid, configurationFrame.DataIsValid, configurationFrame.IDCode)
+            Me.New(configurationFrame.Cells, configurationFrame.TimeTag, configurationFrame.Milliseconds, configurationFrame.SynchronizationIsValid, _
+                configurationFrame.DataIsValid, configurationFrame.IDCode, configurationFrame.SampleRate, configurationFrame.NominalFrequency)
 
         End Sub
 
@@ -62,6 +68,24 @@ Namespace EE.Phasor
             Get
                 Return MyBase.Cells
             End Get
+        End Property
+
+        Public Overridable Property SampleRate() As Int16 Implements IConfigurationFrame.SampleRate
+            Get
+                Return m_sampleRate
+            End Get
+            Set(ByVal Value As Int16)
+                m_sampleRate = Value
+            End Set
+        End Property
+
+        Public Overridable Property NominalFrequency() As LineFrequency Implements IConfigurationFrame.NominalFrequency
+            Get
+                Return m_nominalFrequency
+            End Get
+            Set(ByVal Value As LineFrequency)
+                m_nominalFrequency = Value
+            End Set
         End Property
 
         Public Overrides ReadOnly Property Name() As String

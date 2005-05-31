@@ -22,7 +22,7 @@ Namespace EE.Phasor
 
         Inherits IChannelDefinition
 
-        Property NominalFrequency() As LineFrequency
+        ReadOnly Property NominalFrequency() As LineFrequency
 
         Property DfDtOffset() As Double
 

@@ -28,14 +28,16 @@ Namespace EE.Phasor
 
         Private m_stationName As String
         Private m_idCode As Int16
+        Private m_idLabel As String
         Private m_phasorDefinitions As PhasorDefinitionCollection
         Private m_frequencyDefinition As IFrequencyDefinition
         Private m_analogDefinitions As AnalogDefinitionCollection
         Private m_digitalDefinitions As DigitalDefinitionCollection
+        Private m_sampleRate As Int16
 
-        Protected Sub New()
+        Protected Sub New(ByVal parent As IConfigurationFrame)
 
-            MyBase.New()
+            MyBase.New(parent)
 
             m_phasorDefinitions = New PhasorDefinitionCollection
             m_analogDefinitions = New AnalogDefinitionCollection
@@ -43,25 +45,35 @@ Namespace EE.Phasor
 
         End Sub
 
-        Protected Sub New(ByVal stationName As String, ByVal idCode As Int16, ByVal phasorDefinitions As PhasorDefinitionCollection, ByVal frequencyDefinition As IFrequencyDefinition, ByVal analogDefinitions As AnalogDefinitionCollection, ByVal digitalDefinitions As DigitalDefinitionCollection)
+        Protected Sub New(ByVal parent As IConfigurationFrame, ByVal stationName As String, ByVal idCode As Int16, ByVal idLabel As String, ByVal phasorDefinitions As PhasorDefinitionCollection, ByVal frequencyDefinition As IFrequencyDefinition, ByVal analogDefinitions As AnalogDefinitionCollection, ByVal digitalDefinitions As DigitalDefinitionCollection, ByVal sampleRate As Int16)
 
-            MyBase.New()
+            MyBase.New(parent)
 
             Me.StationName = stationName
             m_idCode = idCode
+            Me.IDLabel = idLabel
             m_phasorDefinitions = phasorDefinitions
             m_frequencyDefinition = frequencyDefinition
             m_analogDefinitions = analogDefinitions
             m_digitalDefinitions = digitalDefinitions
+            m_sampleRate = sampleRate
 
         End Sub
 
         ' Dervied classes are expected to expose a Public Sub New(ByVal configurationCell As IConfigurationCell)
         Protected Sub New(ByVal configurationCell As IConfigurationCell)
 
-            Me.New(configurationCell.StationName, configurationCell.IDCode, configurationCell.PhasorDefinitions, configurationCell.FrequencyDefinition, configurationCell.AnalogDefinitions, configurationCell.DigitalDefinitions)
+            Me.New(configurationCell.Parent, configurationCell.StationName, configurationCell.IDCode, configurationCell.IDLabel, _
+                configurationCell.PhasorDefinitions, configurationCell.FrequencyDefinition, configurationCell.AnalogDefinitions, _
+                configurationCell.DigitalDefinitions, configurationCell.SampleRate)
 
         End Sub
+
+        Public Overridable Shadows ReadOnly Property Parent() As IConfigurationFrame Implements IConfigurationCell.Parent
+            Get
+                Return MyBase.Parent
+            End Get
+        End Property
 
         Public Overridable Property StationName() As String Implements IConfigurationCell.StationName
             Get
@@ -98,6 +110,33 @@ Namespace EE.Phasor
             End Set
         End Property
 
+        Public Overridable Property IDLabel() As String Implements IConfigurationCell.IDLabel
+            Get
+                Return m_idLabel
+            End Get
+            Set(ByVal Value As String)
+                Dim length As Integer = Len(Trim(Value))
+                If length > IDLabelLength Or length < IDLabelLength Then
+                    Throw New OverflowException("ID label must be exactly " & IDLabelLength & " characters in length")
+                Else
+                    m_idLabel = Value
+                End If
+            End Set
+        End Property
+
+        Public Overridable ReadOnly Property IDLabelImage() As Byte() Implements IConfigurationCell.IDLabelImage
+            Get
+                Return Encoding.ASCII.GetBytes(m_idLabel)
+            End Get
+        End Property
+
+        Public Overridable ReadOnly Property IDLabelLength() As Integer Implements IConfigurationCell.IDLabelLength
+            Get
+                ' ID label length is 4 characters
+                Return 4
+            End Get
+        End Property
+
         Public Overridable ReadOnly Property PhasorDefinitions() As PhasorDefinitionCollection Implements IConfigurationCell.PhasorDefinitions
             Get
                 Return m_phasorDefinitions
@@ -122,6 +161,12 @@ Namespace EE.Phasor
         Public Overridable ReadOnly Property DigitalDefinitions() As DigitalDefinitionCollection Implements IConfigurationCell.DigitalDefinitions
             Get
                 Return m_digitalDefinitions
+            End Get
+        End Property
+
+        Public Overridable ReadOnly Property SampleRate() As Int16 Implements IConfigurationCell.SampleRate
+            Get
+                Return Parent.SampleRate
             End Get
         End Property
 

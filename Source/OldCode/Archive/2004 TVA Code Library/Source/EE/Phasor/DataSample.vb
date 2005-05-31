@@ -25,7 +25,7 @@ Namespace EE.Phasor
         Implements IComparable
 
         Private m_dataFrames As DataFrameCollection
-        Private m_sampleRate As Integer
+        Private m_sampleRate As Int16
         Private m_timestamp As DateTime
         Private m_published As Boolean
 
@@ -35,7 +35,7 @@ Namespace EE.Phasor
 
         End Sub
 
-        Public Sub New(ByVal sampleRate As Integer, ByVal timestamp As DateTime)
+        Public Sub New(ByVal sampleRate As Int16, ByVal timestamp As DateTime)
 
             Me.New()
             m_sampleRate = sampleRate
@@ -49,11 +49,11 @@ Namespace EE.Phasor
             End Get
         End Property
 
-        Public Overridable Property SampleRate() As Integer
+        Public Overridable Property SampleRate() As Int16
             Get
                 Return m_sampleRate
             End Get
-            Set(ByVal Value As Integer)
+            Set(ByVal Value As Int16)
                 m_sampleRate = Value
             End Set
         End Property

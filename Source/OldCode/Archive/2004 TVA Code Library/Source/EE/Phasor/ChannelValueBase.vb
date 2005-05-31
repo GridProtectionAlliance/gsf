@@ -23,18 +23,22 @@ Namespace EE.Phasor
         Inherits ChannelBase
         Implements IChannelValue
 
+        Private m_parent As IDataCell
         Private m_definition As IChannelDefinition
 
-        Protected Sub New()            
+        Protected Sub New(ByVal parent As IDataCell)
 
             MyBase.New()
+
+            m_parent = parent
 
         End Sub
 
-        Protected Sub New(ByVal channelDefinition As IChannelDefinition)
+        Protected Sub New(ByVal parent As IDataCell, ByVal channelDefinition As IChannelDefinition)
 
             MyBase.New()
 
+            m_parent = parent
             m_definition = channelDefinition
 
         End Sub
@@ -42,9 +46,15 @@ Namespace EE.Phasor
         ' Dervied classes are expected to expose a Protected Sub New(ByVal channelValue As IChannelValue)
         Protected Sub New(ByVal channelValue As IChannelValue)
 
-            Me.New(channelValue.Definition)
+            Me.New(channelValue.Parent, channelValue.Definition)
 
         End Sub
+
+        Public ReadOnly Property Parent() As IDataCell Implements IChannelValue.Parent
+            Get
+                Return m_parent
+            End Get
+        End Property
 
         Public Property Definition() As IChannelDefinition Implements IChannelValue.Definition
             Get

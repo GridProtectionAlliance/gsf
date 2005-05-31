@@ -23,35 +23,27 @@ Namespace EE.Phasor.PDCstream
 
         Inherits FrequencyValueBase
 
-        'Public Shared ReadOnly Property Empty(ByVal frequencyDefinition As FrequencyDefinition) As FrequencyValue
-        '    Get
-        '        Return New FrequencyValue(frequencyDefinition, 0, 0)
-        '    End Get
-        'End Property
+        Public Sub New(ByVal parent As IDataCell, ByVal frequencyDefinition As IFrequencyDefinition, ByVal frequency As Double, ByVal dfdt As Double)
 
-        'Public Shared Function CreateFromScaledValues(ByVal frequencyDefinition As FrequencyDefinition, ByVal frequency As Double, ByVal dfdt As Double) As FrequencyValue
+            MyBase.New(parent, frequencyDefinition, frequency, dfdt)
 
-        '    With frequencyDefinition
-        '        Return CreateFromUnscaledValues(frequencyDefinition, (frequency - .Offset) * .Scale, (dfdt - .DfDtOffset) * .DfDtScale)
-        '    End With
+        End Sub
 
-        'End Function
+        Public Sub New(ByVal parent As IDataCell, ByVal frequencyDefinition As IFrequencyDefinition, ByVal unscaledFrequency As Int16, ByVal unscaledDfDt As Int16)
 
-        'Public Shared Function CreateFromUnscaledValues(ByVal frequencyDefinition As FrequencyDefinition, ByVal frequency As Int16, ByVal dfdt As Int16) As FrequencyValue
+            MyBase.New(parent, frequencyDefinition, unscaledFrequency, unscaledDfDt)
 
-        '    Return New FrequencyValue(frequencyDefinition, frequency, dfdt)
+        End Sub
 
-        'End Function
+        Public Sub New(ByVal parent As IDataCell, ByVal frequencyDefinition As IFrequencyDefinition, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
 
-        Public Shared Function CalculateBinaryLength(ByVal frequencyDefinition As FrequencyDefinition) As Integer
+            MyBase.New(parent, frequencyDefinition, binaryImage, startIndex)
 
-            Return (New FrequencyValue(frequencyDefinition, 0, 0)).BinaryLength
+        End Sub
 
-        End Function
+        Public Sub New(ByVal frequencyValue As IFrequencyValue)
 
-        Public Sub New(ByVal frequencyDefinition As FrequencyDefinition, ByVal frequency As Double, ByVal dfdt As Double)
-
-            'MyBase.New(, frequencyDefinition, frequency, dfdt)
+            MyBase.New(frequencyValue)
 
         End Sub
 

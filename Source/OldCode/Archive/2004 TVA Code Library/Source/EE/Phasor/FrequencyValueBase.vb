@@ -28,32 +28,34 @@ Namespace EE.Phasor
         Private m_frequency As Double
         Private m_dfdt As Double
 
-        Protected Sub New()
+        Protected Sub New(ByVal parent As IDataCell)
 
-            MyBase.New()
+            MyBase.New(parent)
 
         End Sub
 
-        Protected Sub New(ByVal frequencyDefinition As IFrequencyDefinition, ByVal frequency As Double, ByVal dfdt As Double)
+        ' Dervied classes are expected expose a Public Sub New(ByVal parent As IDataCell, ByVal frequencyDefinition As IFrequencyDefinition, ByVal frequency As Double, ByVal dfdt As Double)
+        Protected Sub New(ByVal parent As IDataCell, ByVal frequencyDefinition As IFrequencyDefinition, ByVal frequency As Double, ByVal dfdt As Double)
 
-            MyBase.New(frequencyDefinition)
+            MyBase.New(parent, frequencyDefinition)
 
             m_frequency = frequency
             m_dfdt = dfdt
 
         End Sub
 
-        Protected Sub New(ByVal frequencyDefinition As IFrequencyDefinition, ByVal unscaledFrequency As Int16, ByVal unscaledDfDt As Int16)
+        ' Dervied classes are expected expose a Public Sub New(ByVal parent As IDataCell, ByVal frequencyDefinition As IFrequencyDefinition, ByVal unscaledFrequency As Int16, ByVal unscaledDfDt As Int16)
+        Protected Sub New(ByVal parent As IDataCell, ByVal frequencyDefinition As IFrequencyDefinition, ByVal unscaledFrequency As Int16, ByVal unscaledDfDt As Int16)
 
-            Me.New(frequencyDefinition, unscaledFrequency / frequencyDefinition.ScalingFactor + frequencyDefinition.Offset, _
+            Me.New(parent, frequencyDefinition, unscaledFrequency / frequencyDefinition.ScalingFactor + frequencyDefinition.Offset, _
                 unscaledDfDt / frequencyDefinition.DfDtScalingFactor + frequencyDefinition.DfDtOffset)
 
         End Sub
 
-        ' Dervied classes are expected expose a Public Sub New(ByVal frequencyDefinition As IFrequencyDefinition, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
-        Protected Sub New(ByVal frequencyDefinition As IFrequencyDefinition, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+        ' Dervied classes are expected expose a Public Sub New(ByVal parent As IDataCell, ByVal frequencyDefinition As IFrequencyDefinition, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+        Protected Sub New(ByVal parent As IDataCell, ByVal frequencyDefinition As IFrequencyDefinition, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
 
-            MyBase.New(frequencyDefinition)
+            MyBase.New(parent, frequencyDefinition)
 
             If DataFormat = DataFormat.FixedInteger Then
                 UnscaledFrequency = EndianOrder.ReverseToInt16(binaryImage, startIndex)
@@ -70,7 +72,7 @@ Namespace EE.Phasor
         ' Dervied classes are expected to expose a Public Sub New(ByVal frequencyValue As IFrequencyValue)
         Protected Sub New(ByVal frequencyValue As IFrequencyValue)
 
-            Me.New(frequencyValue.Definition, frequencyValue.Frequency, frequencyValue.DfDt)
+            Me.New(frequencyValue.Parent, frequencyValue.Definition, frequencyValue.Frequency, frequencyValue.DfDt)
 
         End Sub
 

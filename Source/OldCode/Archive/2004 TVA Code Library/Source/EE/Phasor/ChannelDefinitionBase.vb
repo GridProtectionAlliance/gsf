@@ -25,26 +25,29 @@ Namespace EE.Phasor
         Inherits ChannelBase
         Implements IChannelDefinition
 
+        Private m_parent As IConfigurationCell
         Private m_dataFormat As DataFormat
         Private m_index As Integer
         Private m_label As String
         Private m_scale As Integer
         Private m_offset As Double
 
-        Protected Sub New()
+        Protected Sub New(ByVal parent As IConfigurationCell)
 
             MyBase.New()
 
+            m_parent = parent
             m_dataFormat = DataFormat.FixedInteger
             m_label = "undefined"
             m_scale = 1
 
         End Sub
 
-        Protected Sub New(ByVal dataFormat As DataFormat, ByVal index As Integer, ByVal label As String, ByVal scale As Integer, ByVal offset As Double)
+        Protected Sub New(ByVal parent As IConfigurationCell, ByVal dataFormat As DataFormat, ByVal index As Integer, ByVal label As String, ByVal scale As Integer, ByVal offset As Double)
 
             MyBase.New()
 
+            m_parent = parent
             m_dataFormat = dataFormat
             m_index = index
             Me.Label = label
@@ -56,9 +59,16 @@ Namespace EE.Phasor
         ' Dervied classes are expected to expose a Protected Sub New(ByVal channelDefinition As IChannelDefinition)
         Protected Sub New(ByVal channelDefinition As IChannelDefinition)
 
-            Me.New(channelDefinition.DataFormat, channelDefinition.Index, channelDefinition.Label, channelDefinition.ScalingFactor, channelDefinition.Offset)
+            Me.New(channelDefinition.Parent, channelDefinition.DataFormat, channelDefinition.Index, channelDefinition.Label, _
+                channelDefinition.ScalingFactor, channelDefinition.Offset)
 
         End Sub
+
+        Public Overridable ReadOnly Property Parent() As IConfigurationCell Implements IChannelDefinition.Parent
+            Get
+                Return m_parent
+            End Get
+        End Property
 
         Public Overridable Property DataFormat() As DataFormat Implements IChannelDefinition.DataFormat
             Get

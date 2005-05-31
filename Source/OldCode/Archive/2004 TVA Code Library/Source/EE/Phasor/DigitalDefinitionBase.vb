@@ -25,22 +25,22 @@ Namespace EE.Phasor
         Inherits ChannelDefinitionBase
         Implements IDigitalDefinition
 
-        Protected Sub New()
+        Protected Sub New(ByVal parent As IConfigurationCell)
 
-            MyBase.New()
+            MyBase.New(parent)
 
         End Sub
 
-        Protected Sub New(ByVal index As Integer, ByVal label As String)
+        Protected Sub New(ByVal parent As IConfigurationCell, ByVal index As Integer, ByVal label As String)
 
-            MyBase.New(EE.Phasor.DataFormat.FixedInteger, index, label, 1, 0)
+            MyBase.New(parent, EE.Phasor.DataFormat.FixedInteger, index, label, 1, 0)
 
         End Sub
 
         ' Dervied classes are expected to expose a Public Sub New(ByVal digitalDefinition As IDigitalDefinition)
         Protected Sub New(ByVal digitalDefinition As IDigitalDefinition)
 
-            Me.New(digitalDefinition.Index, digitalDefinition.Label)
+            Me.New(digitalDefinition.Parent, digitalDefinition.Index, digitalDefinition.Label)
 
         End Sub
 

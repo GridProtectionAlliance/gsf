@@ -25,64 +25,36 @@ Namespace EE.Phasor
 
         Private m_dfdtScale As Integer
         Private m_dfdtOffset As Double
-        Private m_nominalFrequency As LineFrequency
 
-        Protected Sub New()
+        Protected Sub New(ByVal parent As IConfigurationCell)
 
-            MyBase.New()
+            MyBase.New(parent)
 
             m_dfdtScale = 1
-            m_nominalFrequency = LineFrequency.Hz60
 
         End Sub
 
-        Protected Sub New(ByVal dataFormat As DataFormat, ByVal index As Integer, ByVal label As String, ByVal scale As Integer, ByVal offset As Double, ByVal dfdtScale As Double, ByVal dfdtOffset As Double, ByVal nominalLineFrequency As LineFrequency)
+        Protected Sub New(ByVal parent As IConfigurationCell, ByVal dataFormat As DataFormat, ByVal index As Integer, ByVal label As String, ByVal scale As Integer, ByVal offset As Double, ByVal dfdtScale As Double, ByVal dfdtOffset As Double)
 
-            MyBase.New(dataFormat, index, label, scale, offset)
-
-            m_dfdtOffset = dfdtOffset
-            m_nominalFrequency = nominalLineFrequency
+            MyBase.New(parent, dataFormat, index, label, scale, offset)
 
             Me.DfDtScalingFactor = dfdtScale
+            m_dfdtOffset = dfdtOffset
 
         End Sub
 
         ' Dervied classes are expected to expose a Public Sub New(ByVal frequencyDefinition As IFrequencyDefinition)
         Protected Sub New(ByVal frequencyDefinition As IFrequencyDefinition)
 
-            Me.New(frequencyDefinition.DataFormat, frequencyDefinition.Index, frequencyDefinition.Label, frequencyDefinition.ScalingFactor, _
-                frequencyDefinition.Offset, frequencyDefinition.DfDtScalingFactor, frequencyDefinition.DfDtOffset, frequencyDefinition.NominalFrequency)
+            Me.New(frequencyDefinition.Parent, frequencyDefinition.DataFormat, frequencyDefinition.Index, frequencyDefinition.Label, frequencyDefinition.ScalingFactor, _
+                frequencyDefinition.Offset, frequencyDefinition.DfDtScalingFactor, frequencyDefinition.DfDtOffset)
 
         End Sub
 
-        Public Overrides Property Offset() As Double
+        Public ReadOnly Property NominalFrequency() As LineFrequency Implements IFrequencyDefinition.NominalFrequency
             Get
-                If m_nominalFrequency = LineFrequency.Hz60 Then
-                    Return 60.0
-                Else
-                    Return 50.0
-                End If
+                Return Parent.Parent.NominalFrequency
             End Get
-            Set(ByVal Value As Double)
-                Select Case Value
-                    Case 50.0
-                        m_nominalFrequency = LineFrequency.Hz50
-                    Case 60.0
-                        m_nominalFrequency = LineFrequency.Hz60
-                    Case Else
-                        m_nominalFrequency = LineFrequency.Hz60
-                        Debug.Assert(False, "Unexpected line frequency offset specified: " & Value & " - defaulting to 60", "The only frequency definition offsets supported by this protocol are 50 and 60 - you will typically set this value using the NominalFrequency property")
-                End Select
-            End Set
-        End Property
-
-        Public Overridable Property NominalFrequency() As LineFrequency Implements IFrequencyDefinition.NominalFrequency
-            Get
-                Return m_nominalFrequency
-            End Get
-            Set(ByVal Value As LineFrequency)
-                m_nominalFrequency = Value
-            End Set
         End Property
 
         Public Overridable Property DfDtOffset() As Double Implements IFrequencyDefinition.DfDtOffset

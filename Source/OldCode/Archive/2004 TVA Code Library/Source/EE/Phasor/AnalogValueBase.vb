@@ -27,30 +27,32 @@ Namespace EE.Phasor
 
         Private m_value As Double
 
-        Protected Sub New()
+        Protected Sub New(ByVal parent As IDataCell)
 
-            MyBase.New()
+            MyBase.New(parent)
 
         End Sub
 
-        Protected Sub New(ByVal analogDefinition As IAnalogDefinition, ByVal value As Double)
+        ' Dervied classes are expected expose a Public Sub New(ByVal parent As IDataCell, ByVal analogDefinition As IAnalogDefinition, ByVal value As Double)
+        Protected Sub New(ByVal parent As IDataCell, ByVal analogDefinition As IAnalogDefinition, ByVal value As Double)
 
-            MyBase.New(analogDefinition)
+            MyBase.New(parent, analogDefinition)
 
             m_value = value
 
         End Sub
 
-        Protected Sub New(ByVal analogDefinition As IAnalogDefinition, ByVal unscaledValue As Int16)
+        ' Dervied classes are expected expose a Public Sub New(ByVal parent As IDataCell, ByVal analogDefinition As IAnalogDefinition, ByVal unscaledValue As Int16)
+        Protected Sub New(ByVal parent As IDataCell, ByVal analogDefinition As IAnalogDefinition, ByVal unscaledValue As Int16)
 
-            Me.New(analogDefinition, unscaledValue / analogDefinition.ScalingFactor)
+            Me.New(parent, analogDefinition, unscaledValue / analogDefinition.ScalingFactor)
 
         End Sub
 
-        ' Dervied classes are expected expose a Public Sub New(ByVal analogDefinition As IAnalogDefinition, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
-        Protected Sub New(ByVal analogDefinition As IAnalogDefinition, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+        ' Dervied classes are expected expose a Public Sub New(ByVal parent As IDataCell, ByVal analogDefinition As IAnalogDefinition, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+        Protected Sub New(ByVal parent As IDataCell, ByVal analogDefinition As IAnalogDefinition, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
 
-            MyBase.New(analogDefinition)
+            MyBase.New(parent, analogDefinition)
 
             If DataFormat = DataFormat.FixedInteger Then
                 UnscaledValue = EndianOrder.ReverseToInt16(binaryImage, startIndex)
@@ -63,7 +65,7 @@ Namespace EE.Phasor
         ' Dervied classes are expected expose a Public Sub New(ByVal analogValue As IAnalogValue)
         Protected Sub New(ByVal analogValue As IAnalogValue)
 
-            Me.New(analogValue.Definition, analogValue.Value)
+            Me.New(analogValue.Parent, analogValue.Definition, analogValue.Value)
 
         End Sub
 

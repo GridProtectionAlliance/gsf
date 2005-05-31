@@ -23,22 +23,23 @@ Namespace EE.Phasor
         Inherits ChannelDefinitionBase
         Implements IAnalogDefinition
 
-        Protected Sub New()
+        Protected Sub New(ByVal parent As IConfigurationCell)
 
-            MyBase.New()
+            MyBase.New(parent)
 
         End Sub
 
-        Protected Sub New(ByVal dataFormat As DataFormat, ByVal index As Integer, ByVal label As String, ByVal scale As Integer, ByVal offset As Double)
+        Protected Sub New(ByVal parent As IConfigurationCell, ByVal dataFormat As DataFormat, ByVal index As Integer, ByVal label As String, ByVal scale As Integer, ByVal offset As Double)
 
-            MyBase.New(dataFormat, index, label, scale, offset)
+            MyBase.New(parent, dataFormat, index, label, scale, offset)
 
         End Sub
 
         ' Dervied classes are expected to expose a Public Sub New(ByVal analogDefinition As IAnalogDefinition)
         Protected Sub New(ByVal analogDefinition As IAnalogDefinition)
 
-            Me.New(analogDefinition.DataFormat, analogDefinition.Index, analogDefinition.Label, analogDefinition.ScalingFactor, analogDefinition.Offset)
+            Me.New(analogDefinition.Parent, analogDefinition.DataFormat, analogDefinition.Index, analogDefinition.Label, _
+                analogDefinition.ScalingFactor, analogDefinition.Offset)
 
         End Sub
 

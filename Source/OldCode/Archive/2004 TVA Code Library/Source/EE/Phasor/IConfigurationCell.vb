@@ -17,10 +17,12 @@
 
 Namespace EE.Phasor
 
-    ' This interface represents the protocol independent representation of a set of configuration related data settings.
+    ' This interface represents the protocol independent representation of a set of configuration related data settings (typically related to a PMU).
     Public Interface IConfigurationCell
 
         Inherits IChannelCell
+
+        Shadows ReadOnly Property Parent() As IConfigurationFrame
 
         Property StationName() As String
 
@@ -30,6 +32,12 @@ Namespace EE.Phasor
 
         Property IDCode() As Int16
 
+        Property IDLabel() As String
+
+        ReadOnly Property IDLabelImage() As Byte()
+
+        ReadOnly Property IDLabelLength() As Integer
+
         ReadOnly Property PhasorDefinitions() As PhasorDefinitionCollection
 
         Property FrequencyDefinition() As IFrequencyDefinition
@@ -37,6 +45,8 @@ Namespace EE.Phasor
         ReadOnly Property AnalogDefinitions() As AnalogDefinitionCollection
 
         ReadOnly Property DigitalDefinitions() As DigitalDefinitionCollection
+
+        ReadOnly Property SampleRate() As Int16
 
     End Interface
 

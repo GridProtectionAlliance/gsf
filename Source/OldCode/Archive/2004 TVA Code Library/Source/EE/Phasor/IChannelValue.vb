@@ -22,6 +22,8 @@ Namespace EE.Phasor
 
         Inherits IChannel
 
+        ReadOnly Property Parent() As IDataCell
+
         Property Definition() As IChannelDefinition
 
         ReadOnly Property DataFormat() As DataFormat

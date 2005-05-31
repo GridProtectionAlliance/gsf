@@ -32,9 +32,9 @@ Namespace EE.Phasor
         Private m_analogValues As AnalogValueCollection
         Private m_digitalValues As DigitalValueCollection
 
-        Protected Sub New()
+        Protected Sub New(ByVal parent As IDataFrame)
 
-            MyBase.New()
+            MyBase.New(parent)
 
             m_phasorValues = New PhasorValueCollection
             m_analogValues = New AnalogValueCollection
@@ -42,9 +42,9 @@ Namespace EE.Phasor
 
         End Sub
 
-        Protected Sub New(ByVal configurationCell As IConfigurationCell, ByVal statusFlags As Int16, ByVal phasorValues As PhasorValueCollection, ByVal frequencyValue As IFrequencyValue, ByVal analogValues As AnalogValueCollection, ByVal digitalValues As DigitalValueCollection)
+        Protected Sub New(ByVal parent As IDataFrame, ByVal configurationCell As IConfigurationCell, ByVal statusFlags As Int16, ByVal phasorValues As PhasorValueCollection, ByVal frequencyValue As IFrequencyValue, ByVal analogValues As AnalogValueCollection, ByVal digitalValues As DigitalValueCollection)
 
-            MyBase.New()
+            MyBase.New(parent)
 
             m_configurationCell = configurationCell
             m_statusFlags = statusFlags
@@ -55,11 +55,11 @@ Namespace EE.Phasor
 
         End Sub
 
-        ' Dervied classes are expected to expose a Public Sub New(ByVal configurationCell As IConfigurationCell, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+        ' Dervied classes are expected to expose a Public Sub New(ByVal parent As IDataFrame, ByVal configurationCell As IConfigurationCell, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
         ' and automatically pass in type parameters
-        Protected Sub New(ByVal configurationCell As IConfigurationCell, ByVal binaryImage As Byte(), ByVal startIndex As Integer, ByVal phasorValueType As Type, ByVal frequencyValueType As Type, ByVal analogValueType As Type, ByVal digitalValueType As Type)
+        Protected Sub New(ByVal parent As IDataFrame, ByVal configurationCell As IConfigurationCell, ByVal binaryImage As Byte(), ByVal startIndex As Integer, ByVal phasorValueType As Type, ByVal frequencyValueType As Type, ByVal analogValueType As Type, ByVal digitalValueType As Type)
 
-            Me.New()
+            Me.New(parent)
 
             Dim x As Integer
 
@@ -69,20 +69,20 @@ Namespace EE.Phasor
 
             With m_configurationCell
                 For x = 0 To .PhasorDefinitions.Count - 1
-                    m_phasorValues.Add(Activator.CreateInstance(phasorValueType, New Object() {.PhasorDefinitions(x), binaryImage, startIndex}))
+                    m_phasorValues.Add(Activator.CreateInstance(phasorValueType, New Object() {Me, .PhasorDefinitions(x), binaryImage, startIndex}))
                     startIndex += m_phasorValues(x).BinaryLength
                 Next
 
-                m_frequencyValue = Activator.CreateInstance(frequencyValueType, New Object() {.FrequencyDefinition, binaryImage, startIndex})
+                m_frequencyValue = Activator.CreateInstance(frequencyValueType, New Object() {Me, .FrequencyDefinition, binaryImage, startIndex})
                 startIndex += m_frequencyValue.BinaryLength
 
                 For x = 0 To .AnalogDefinitions.Count - 1
-                    m_analogValues.Add(Activator.CreateInstance(analogValueType, New Object() {.AnalogDefinitions(x), binaryImage, startIndex}))
+                    m_analogValues.Add(Activator.CreateInstance(analogValueType, New Object() {Me, .AnalogDefinitions(x), binaryImage, startIndex}))
                     startIndex += m_analogValues(x).BinaryLength
                 Next
 
                 For x = 0 To .DigitalDefinitions.Count - 1
-                    m_digitalValues.Add(Activator.CreateInstance(digitalValueType, New Object() {.DigitalDefinitions(x), binaryImage, startIndex}))
+                    m_digitalValues.Add(Activator.CreateInstance(digitalValueType, New Object() {Me, .DigitalDefinitions(x), binaryImage, startIndex}))
                     startIndex += m_digitalValues(x).BinaryLength
                 Next
             End With
@@ -92,9 +92,16 @@ Namespace EE.Phasor
         ' Dervied classes are expected to expose a Public Sub New(ByVal dataCell As IDataCell)
         Protected Sub New(ByVal dataCell As IDataCell)
 
-            Me.New(dataCell.ConfigurationCell, dataCell.StatusFlags, dataCell.PhasorValues, dataCell.FrequencyValue, dataCell.AnalogValues, dataCell.DigitalValues)
+            Me.New(dataCell.Parent, dataCell.ConfigurationCell, dataCell.StatusFlags, dataCell.PhasorValues, _
+                dataCell.FrequencyValue, dataCell.AnalogValues, dataCell.DigitalValues)
 
         End Sub
+
+        Public Overridable Shadows ReadOnly Property Parent() As IDataFrame Implements IDataCell.Parent
+            Get
+                Return MyBase.Parent
+            End Get
+        End Property
 
         Public Overridable Property ConfigurationCell() As IConfigurationCell Implements IDataCell.ConfigurationCell
             Get
@@ -112,6 +119,12 @@ Namespace EE.Phasor
             Set(ByVal Value As Short)
                 m_statusFlags = Value
             End Set
+        End Property
+
+        Public ReadOnly Property IsEmpty() As Boolean Implements IDataCell.IsEmpty
+            Get
+                Return (PhasorValues.IsEmpty And FrequencyValue.IsEmpty And AnalogValues.IsEmpty And DigitalValues.IsEmpty)
+            End Get
         End Property
 
         Public Overridable ReadOnly Property PhasorValues() As PhasorValueCollection Implements IDataCell.PhasorValues

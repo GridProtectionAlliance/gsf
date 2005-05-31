@@ -1,5 +1,5 @@
 '***********************************************************************
-'  PMUDataCell.vb - PMU Data Cell
+'  DataCell.vb - PMU Data Cell
 '  Copyright © 2004 - TVA, all rights reserved
 '
 '  Build Environment: VB.NET, Visual Studio 2003
@@ -20,41 +20,38 @@ Imports TVA.Interop
 Namespace EE.Phasor.PDCstream
 
     ' This data cell represents what most might call a "field" in table of rows - it is a single unit of data for a specific PMU
-    Public Class PMUDataCell
+    Public Class DataCell
 
         Inherits DataCellBase
 
-        Private m_pmuDefinition As PMUDefinition
         Private m_sampleNumber As Integer
         Private m_flags As ChannelFlags
 
-        Public Shared Shadows Function CreateFrom(ByVal phasorDataCell As IDataCell) As PMUDataCell
+        Public Sub New(ByVal parent As IDataFrame, ByVal configurationCell As IConfigurationCell, ByVal sampleNumber As Integer)
 
-            Return CType(Activator.CreateInstance(GetType(PMUDataCell), New Object() {phasorDataCell}), PMUDataCell)
+            MyBase.New(parent)
 
-        End Function
-
-        Public Sub New(ByVal pmuDefinition As PMUDefinition, ByVal sampleNumber As Integer)
-
-            MyBase.New()
-
-            m_pmuDefinition = pmuDefinition
+            Me.ConfigurationCell = configurationCell
             m_sampleNumber = sampleNumber
 
-            'PhasorValues = Array.CreateInstance(GetType(PhasorValue), m_pmuDefinition.Phasors.Length)
-
-            ' Initialize phasor values and frequency value with an "empty" value
-            For x As Integer = 0 To m_pmuDefinition.Phasors.Length - 1
-                'Me.PhasorValues.Add(    '                PhasorValues(x) = PhasorValue.Empty(m_pmuDefinition.Phasors(x))
+            ' Initialize phasor values and frequency value with an empty value
+            For x As Integer = 0 To configurationCell.PhasorDefinitions.Count - 1
+                'PhasorValues.Add(New PhasorValue)
             Next
 
-            FrequencyValue = New FrequencyValue(m_pmuDefinition.Frequency, 0, 0)
+            FrequencyValue = New FrequencyValue(Me, configurationCell.FrequencyDefinition, 0, 0)
 
         End Sub
 
-        Public Sub New(ByVal phasorDataCell As IDataCell)
+        Public Sub New(ByVal dataCell As IDataCell)
 
-            MyBase.New(phasorDataCell)
+            MyBase.New(dataCell)
+
+        End Sub
+
+        Public Sub New(ByVal parent As IDataFrame, ByVal configurationCell As IConfigurationCell, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+
+            MyBase.New(parent, configurationCell, binaryImage, startIndex, GetType(PhasorValue), GetType(FrequencyValue), Nothing, Nothing)
 
         End Sub
 
@@ -64,32 +61,9 @@ Namespace EE.Phasor.PDCstream
             End Get
         End Property
 
-        Public ReadOnly Property PMUDefinition() As PMUDefinition
-            Get
-                Return m_pmuDefinition
-            End Get
-        End Property
-
         Public ReadOnly Property SampleNumber() As Integer
             Get
                 Return m_sampleNumber
-            End Get
-        End Property
-
-        Public ReadOnly Property IsEmpty() As Boolean
-            Get
-                Dim empty As Boolean
-
-                For x As Integer = 0 To PhasorValues.Count - 1
-                    If PhasorValues(x).IsEmpty Then
-                        empty = True
-                        Exit For
-                    End If
-                Next
-
-                If Not empty Then empty = FrequencyValue.IsEmpty
-
-                Return empty
             End Get
         End Property
 

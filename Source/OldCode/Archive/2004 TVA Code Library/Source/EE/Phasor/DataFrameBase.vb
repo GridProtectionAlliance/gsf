@@ -51,7 +51,7 @@ Namespace EE.Phasor
 
             With m_configurationFrame
                 For x As Integer = 0 To .Cells.Count - 1
-                    Cells.Add(Activator.CreateInstance(dataCellType, New Object() {.Cells(x), binaryImage, startIndex}))
+                    Cells.Add(Activator.CreateInstance(dataCellType, New Object() {Me, .Cells(x), binaryImage, startIndex}))
                     startIndex += Cells(x).BinaryLength
                 Next
             End With

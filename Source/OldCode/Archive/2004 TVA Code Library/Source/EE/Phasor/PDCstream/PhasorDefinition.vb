@@ -21,22 +21,35 @@ Namespace EE.Phasor.PDCstream
 
     Public Class PhasorDefinition
 
-        Implements IComparable
+        Inherits PhasorDefinitionBase
 
-        Public [Type] As PhasorType
-        Public Index As Integer
-        Public Ratio As Double
-        Public CalFactor As Double
-        Public Offset As Double
-        Public Shunt As Double
-        Public VoltageRef As Integer
-        Public Label As String
+        Private m_ratio As Double
+        Private m_calFactor As Double
+        Private m_shunt As Double
+        Private m_voltageReferenceIndex As Integer
 
-        Public Sub New(ByVal configFile As ConfigFile, ByVal index As Integer, ByVal entryValue As String)
+        Public Sub New(ByVal parent As ConfigurationCell)
+
+            MyBase.New(parent)
+
+        End Sub
+
+        Public Sub New(ByVal phasorDefinition As IPhasorDefinition)
+
+            MyBase.New(phasorDefinition)
+
+        End Sub
+
+        Public Sub New(ByVal parent As ConfigurationCell, ByVal index As Integer, ByVal entryValue As String)
+
+            MyBase.New(parent)
 
             Dim entry As String() = entryValue.Split(","c)
             Dim entryType As String = UCase(Left(Trim(entry(0)), 1))
             Dim defaultPhasor As PhasorDefinition
+            Dim configFile As ConfigurationFrame = Me.Parent.Parent
+
+            Me.Index = index
 
             If entryType = "V" Then
                 [Type] = PhasorType.Voltage
@@ -53,14 +66,65 @@ Namespace EE.Phasor.PDCstream
             If entry.Length > 2 Then CalFactor = CDbl(Trim(entry(2))) Else CalFactor = defaultPhasor.CalFactor
             If entry.Length > 3 Then Offset = CDbl(Trim(entry(3))) Else Offset = defaultPhasor.Offset
             If entry.Length > 4 Then Shunt = CDbl(Trim(entry(4))) Else Shunt = defaultPhasor.Shunt
-            If entry.Length > 5 Then VoltageRef = CInt(Trim(entry(5))) Else VoltageRef = defaultPhasor.VoltageRef
+            If entry.Length > 5 Then VoltageReferenceIndex = CInt(Trim(entry(5))) Else VoltageReferenceIndex = defaultPhasor.VoltageReferenceIndex
             If entry.Length > 6 Then Label = Trim(entry(6)) Else Label = defaultPhasor.Label
 
             Me.Index = index
 
         End Sub
 
-        Public Shared ReadOnly Property ScalingFactor(ByVal phasor As PhasorDefinition) As Double
+        Public Overrides ReadOnly Property InheritedType() As System.Type
+            Get
+                Return Me.GetType
+            End Get
+        End Property
+
+        Public Property Ratio() As Double
+            Get
+                Return m_ratio
+            End Get
+            Set(ByVal Value As Double)
+                m_ratio = Value
+            End Set
+        End Property
+
+        Public Property CalFactor() As Double
+            Get
+                Return m_calFactor
+            End Get
+            Set(ByVal Value As Double)
+                m_calFactor = Value
+            End Set
+        End Property
+
+        Public Property Shunt() As Double
+            Get
+                Return m_shunt
+            End Get
+            Set(ByVal Value As Double)
+                m_shunt = Value
+            End Set
+        End Property
+
+        Public Property VoltageReferenceIndex() As Integer
+            Get
+                Return m_voltageReferenceIndex
+            End Get
+            Set(ByVal Value As Integer)
+                m_voltageReferenceIndex = Value
+            End Set
+        End Property
+
+        Public Overrides Property VoltageReference() As IPhasorDefinition
+            Get
+
+            End Get
+            Set(ByVal Value As IPhasorDefinition)
+
+            End Set
+        End Property
+
+        Public Overloads Shared ReadOnly Property ScalingFactor(ByVal phasor As PhasorDefinition) As Double
             Get
                 With phasor
                     If .Type = PhasorType.Voltage Then
@@ -87,7 +151,7 @@ Namespace EE.Phasor.PDCstream
                         phasor.CalFactor & "," & _
                         phasor.Offset & "," & _
                         phasor.Shunt & "," & _
-                        phasor.VoltageRef & "," & _
+                        phasor.VoltageReferenceIndex & "," & _
                         phasor.Label)
 
                     Return .ToString()
@@ -95,16 +159,17 @@ Namespace EE.Phasor.PDCstream
             End Get
         End Property
 
-        Public Function CompareTo(ByVal obj As Object) As Integer Implements System.IComparable.CompareTo
+        Public Overrides ReadOnly Property BinaryImage() As Byte()
+            Get
+                Throw New NotImplementedException("PDCstream does not include phasor definition in descriptor packet - must be defined in external INI file")
+            End Get
+        End Property
 
-            ' We sort phasors by index
-            If TypeOf obj Is PhasorDefinition Then
-                Return Index.CompareTo(DirectCast(obj, PhasorDefinition).Index)
-            Else
-                Throw New ArgumentException("PhasorDefinition can only be compared to other PhasorDefinitions")
-            End If
-
-        End Function
+        Public Overrides ReadOnly Property BinaryLength() As Short
+            Get
+                Throw New NotImplementedException("PDCstream does not include phasor definition in descriptor packet - must be defined in external INI file")
+            End Get
+        End Property
 
     End Class
 

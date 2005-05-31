@@ -39,27 +39,27 @@ Namespace EE.Phasor
 
         ' Create phasor from polar coordinates (angle expected in Degrees)
         ' Note: This method is expected to be implemented as a public shared method in derived class automatically passing in phasorValueType
-        Protected Shared Function CreateFromPolarValues(ByVal phasorValueType As Type, ByVal phasorDefinition As IPhasorDefinition, ByVal angle As Double, ByVal magnitude As Double) As IPhasorValue
+        Protected Shared Function CreateFromPolarValues(ByVal phasorValueType As Type, ByVal parent As IDataCell, ByVal phasorDefinition As IPhasorDefinition, ByVal angle As Double, ByVal magnitude As Double) As IPhasorValue
 
-            Return CreateFromRectangularValues(phasorValueType, phasorDefinition, CalculateRealComponent(angle, magnitude), CalculateImaginaryComponent(angle, magnitude))
+            Return CreateFromRectangularValues(phasorValueType, parent, phasorDefinition, CalculateRealComponent(angle, magnitude), CalculateImaginaryComponent(angle, magnitude))
 
         End Function
 
         ' Create phasor from rectangular coordinates
         ' Note: This method is expected to be implemented as a public shared method in derived class automatically passing in phasorValueType
-        Protected Shared Function CreateFromRectangularValues(ByVal phasorValueType As Type, ByVal phasorDefinition As IPhasorDefinition, ByVal real As Double, ByVal imaginary As Double) As IPhasorValue
+        Protected Shared Function CreateFromRectangularValues(ByVal phasorValueType As Type, ByVal parent As IDataCell, ByVal phasorDefinition As IPhasorDefinition, ByVal real As Double, ByVal imaginary As Double) As IPhasorValue
 
             If phasorDefinition Is Nothing Then Throw New ArgumentNullException("No phasor definition specified")
-            Return CType(Activator.CreateInstance(phasorValueType, New Object() {phasorDefinition, real, imaginary}), IPhasorValue)
+            Return CType(Activator.CreateInstance(phasorValueType, New Object() {parent, phasorDefinition, real, imaginary}), IPhasorValue)
 
         End Function
 
         ' Create phasor from unscaled rectangular coordinates
         ' Note: This method is expected to be implemented as a public shared method in derived class automatically passing in phasorValueType
-        Protected Shared Function CreateFromUnscaledRectangularValues(ByVal phasorValueType As Type, ByVal phasorDefinition As IPhasorDefinition, ByVal real As Int16, ByVal imaginary As Int16) As IPhasorValue
+        Protected Shared Function CreateFromUnscaledRectangularValues(ByVal phasorValueType As Type, ByVal parent As IDataCell, ByVal phasorDefinition As IPhasorDefinition, ByVal real As Int16, ByVal imaginary As Int16) As IPhasorValue
 
             Dim scale As Integer = phasorDefinition.ScalingFactor
-            Return CreateFromRectangularValues(phasorValueType, phasorDefinition, real / scale, imaginary / scale)
+            Return CreateFromRectangularValues(phasorValueType, parent, phasorDefinition, real / scale, imaginary / scale)
 
         End Function
 
@@ -97,18 +97,18 @@ Namespace EE.Phasor
 
         End Function
 
-        Protected Sub New()
+        Protected Sub New(ByVal parent As IDataCell)
 
-            MyBase.New()
+            MyBase.New(parent)
 
             m_compositeValues = New CompositeValues(2)
 
         End Sub
 
-        ' Dervied classes are expected expose a Public Sub New(ByVal phasorDefinition As IPhasorDefinition, ByVal real As Double, ByVal imaginary As Double)
-        Protected Sub New(ByVal phasorDefinition As IPhasorDefinition, ByVal real As Double, ByVal imaginary As Double)
+        ' Dervied classes are expected expose a Public Sub New(ByVal parent As IDataCell, ByVal phasorDefinition As IPhasorDefinition, ByVal real As Double, ByVal imaginary As Double)
+        Protected Sub New(ByVal parent As IDataCell, ByVal phasorDefinition As IPhasorDefinition, ByVal real As Double, ByVal imaginary As Double)
 
-            MyBase.New(phasorDefinition)
+            MyBase.New(parent, phasorDefinition)
 
             m_real = real
             m_imaginary = imaginary
@@ -116,17 +116,17 @@ Namespace EE.Phasor
 
         End Sub
 
-        ' Dervied classes are expected expose a Public Sub New(ByVal phasorDefinition As IPhasorDefinition, ByVal unscaledReal As Int16, ByVal unscaledImaginary As Int16)
-        Protected Sub New(ByVal phasorDefinition As IPhasorDefinition, ByVal unscaledReal As Int16, ByVal unscaledImaginary As Int16)
+        ' Dervied classes are expected expose a Public Sub New(ByVal parent As IDataCell, ByVal phasorDefinition As IPhasorDefinition, ByVal unscaledReal As Int16, ByVal unscaledImaginary As Int16)
+        Protected Sub New(ByVal parent As IDataCell, ByVal phasorDefinition As IPhasorDefinition, ByVal unscaledReal As Int16, ByVal unscaledImaginary As Int16)
 
-            Me.New(phasorDefinition, unscaledReal / phasorDefinition.ScalingFactor, unscaledImaginary / phasorDefinition.ScalingFactor)
+            Me.New(parent, phasorDefinition, unscaledReal / phasorDefinition.ScalingFactor, unscaledImaginary / phasorDefinition.ScalingFactor)
 
         End Sub
 
-        ' Dervied classes are expected expose a Public Sub New(ByVal phasorDefinition As IPhasorDefinition, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
-        Protected Sub New(ByVal phasorDefinition As IPhasorDefinition, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+        ' Dervied classes are expected expose a Public Sub New(ByVal parent As IDataCell, ByVal phasorDefinition As IPhasorDefinition, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+        Protected Sub New(ByVal parent As IDataCell, ByVal phasorDefinition As IPhasorDefinition, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
 
-            MyBase.New(phasorDefinition)
+            MyBase.New(parent, phasorDefinition)
 
             If Format = PhasorFormat.Rectangular Then
                 If DataFormat = DataFormat.FixedInteger Then
@@ -159,7 +159,7 @@ Namespace EE.Phasor
         ' Dervied classes are expected to expose a Public Sub New(ByVal phasorValue As IPhasorValue)
         Protected Sub New(ByVal phasorValue As IPhasorValue)
 
-            Me.New(phasorValue.Definition, phasorValue.Real, phasorValue.Imaginary)
+            Me.New(phasorValue.Parent, phasorValue.Definition, phasorValue.Real, phasorValue.Imaginary)
 
         End Sub
 

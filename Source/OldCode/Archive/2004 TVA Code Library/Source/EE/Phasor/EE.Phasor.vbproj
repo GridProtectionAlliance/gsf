@@ -421,7 +421,17 @@
                     BuildAction = "Compile"
                 />
                 <File
-                    RelPath = "PDCstream\ConfigFile.vb"
+                    RelPath = "PDCstream\ConfigurationCell.vb"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "PDCstream\ConfigurationFrame.vb"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "PDCstream\DataCell.vb"
                     SubType = "Code"
                     BuildAction = "Compile"
                 />
@@ -436,7 +446,7 @@
                     BuildAction = "Compile"
                 />
                 <File
-                    RelPath = "PDCstream\DescriptorPacket.vb"
+                    RelPath = "PDCstream\DigitalDefinition.vb"
                     SubType = "Code"
                     BuildAction = "Compile"
                 />
@@ -457,16 +467,6 @@
                 />
                 <File
                     RelPath = "PDCstream\PhasorValue.vb"
-                    SubType = "Code"
-                    BuildAction = "Compile"
-                />
-                <File
-                    RelPath = "PDCstream\PMUDataCell.vb"
-                    SubType = "Code"
-                    BuildAction = "Compile"
-                />
-                <File
-                    RelPath = "PDCstream\PMUDefinition.vb"
                     SubType = "Code"
                     BuildAction = "Compile"
                 />

@@ -26,6 +26,10 @@ Namespace EE.Phasor
 
         Shadows ReadOnly Property Cells() As ConfigurationCellCollection
 
+        Property SampleRate() As Int16
+
+        Property NominalFrequency() As LineFrequency
+
     End Interface
 
 End Namespace

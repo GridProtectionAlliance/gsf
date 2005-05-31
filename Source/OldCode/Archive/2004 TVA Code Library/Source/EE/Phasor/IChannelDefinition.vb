@@ -22,6 +22,8 @@ Namespace EE.Phasor
 
         Inherits IChannel, IComparable
 
+        ReadOnly Property Parent() As IConfigurationCell
+
         Property DataFormat() As DataFormat
 
         Property Index() As Integer

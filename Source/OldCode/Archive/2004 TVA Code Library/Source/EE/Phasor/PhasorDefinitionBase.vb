@@ -27,9 +27,9 @@ Namespace EE.Phasor
         Private m_type As PhasorType
         Private m_voltageReference As IPhasorDefinition
 
-        Protected Sub New()
+        Protected Sub New(ByVal parent As IConfigurationCell)
 
-            MyBase.New()
+            MyBase.New(parent)
 
             m_format = PhasorFormat.Rectangular
             m_type = PhasorType.Voltage
@@ -37,9 +37,9 @@ Namespace EE.Phasor
 
         End Sub
 
-        Protected Sub New(ByVal dataFormat As DataFormat, ByVal index As Integer, ByVal label As String, ByVal scale As Integer, ByVal offset As Double, ByVal format As PhasorFormat, ByVal type As PhasorType, ByVal voltageReference As IPhasorDefinition)
+        Protected Sub New(ByVal parent As IConfigurationCell, ByVal dataFormat As DataFormat, ByVal index As Integer, ByVal label As String, ByVal scale As Integer, ByVal offset As Double, ByVal format As PhasorFormat, ByVal type As PhasorType, ByVal voltageReference As IPhasorDefinition)
 
-            MyBase.New(dataFormat, index, label, scale, offset)
+            MyBase.New(parent, dataFormat, index, label, scale, offset)
 
             m_format = format
             m_type = type
@@ -55,8 +55,9 @@ Namespace EE.Phasor
         ' Dervied classes are expected to expose a Public Sub New(ByVal phasorDefinition As IPhasorDefinition)
         Protected Sub New(ByVal phasorDefinition As IPhasorDefinition)
 
-            Me.New(phasorDefinition.DataFormat, phasorDefinition.Index, phasorDefinition.Label, phasorDefinition.ScalingFactor, _
-                phasorDefinition.Offset, phasorDefinition.Format, phasorDefinition.Type, phasorDefinition.VoltageReference)
+            Me.New(phasorDefinition.Parent, phasorDefinition.DataFormat, phasorDefinition.Index, phasorDefinition.Label, _
+                phasorDefinition.ScalingFactor, phasorDefinition.Offset, phasorDefinition.Format, phasorDefinition.Type, _
+                phasorDefinition.VoltageReference)
 
         End Sub
 

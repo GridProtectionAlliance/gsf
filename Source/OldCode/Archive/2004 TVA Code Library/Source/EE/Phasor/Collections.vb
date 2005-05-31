@@ -57,6 +57,12 @@ Namespace EE.Phasor
 
         End Sub
 
+        Protected Shadows ReadOnly Property _Item(ByVal index As Integer) As IChannelValue
+            Get
+                Return DirectCast(MyBase._Item(index), IChannelValue)
+            End Get
+        End Property
+
         Public ReadOnly Property BinaryLength() As Integer
             Get
                 If List.Count > 0 Then
@@ -76,6 +82,21 @@ Namespace EE.Phasor
                 Else
                     Return 0
                 End If
+            End Get
+        End Property
+
+        Public ReadOnly Property IsEmpty() As Boolean
+            Get
+                Dim empty As Boolean = True
+
+                For x As Integer = 0 To List.Count - 1
+                    If Not _Item(x).IsEmpty Then
+                        empty = False
+                        Exit For
+                    End If
+                Next
+
+                Return empty
             End Get
         End Property
 

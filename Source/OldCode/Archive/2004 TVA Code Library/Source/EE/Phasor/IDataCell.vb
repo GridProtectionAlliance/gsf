@@ -22,9 +22,13 @@ Namespace EE.Phasor
 
         Inherits IChannelCell
 
+        Shadows ReadOnly Property Parent() As IDataFrame
+
         Property ConfigurationCell() As IConfigurationCell
 
         Property StatusFlags() As Int16
+
+        ReadOnly Property IsEmpty() As Boolean
 
         ReadOnly Property PhasorValues() As PhasorValueCollection
 
