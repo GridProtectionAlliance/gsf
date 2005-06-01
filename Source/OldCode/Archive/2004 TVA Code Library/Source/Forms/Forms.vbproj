@@ -100,10 +100,21 @@
                 <Import Namespace = "System.Collections" />
                 <Import Namespace = "System.Data" />
                 <Import Namespace = "System.Diagnostics" />
+                <Import Namespace = "System.Windows.Forms" />
             </Imports>
         </Build>
         <Files>
             <Include>
+                <File
+                    RelPath = "About.vb"
+                    SubType = "Form"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "About.resx"
+                    DependentUpon = "About.vb"
+                    BuildAction = "EmbeddedResource"
+                />
                 <File
                     RelPath = "AssemblyInfo.vb"
                     SubType = "Code"
