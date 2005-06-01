@@ -12,6 +12,8 @@ Imports System.Data.OleDb
 Imports System.Data.SqlClient
 Imports System.Data.OracleClient
 Imports System.ComponentModel
+Imports System.Text
+Imports System.Text.RegularExpressions
 Imports TVA.Shared.String
 Imports TVA.Shared.DateTime
 Imports TVA.Shared.Common
@@ -854,29 +856,110 @@ Namespace Database
         End Function
 
         'Pinal Patel 04/06/05 - Updates the underlying data source of the specified data table.
-        Public Shared Function UpdateData(ByVal SourceTable As DataTable, ByVal SourceSql As String, ByVal Connection As SqlConnection) As Integer
+        Public Shared Function UpdateData(ByVal SourceData As DataTable, ByVal SourceSql As String, ByVal Connection As SqlConnection) As Integer
 
             Dim da As SqlDataAdapter = New SqlDataAdapter(SourceSql, Connection)
             Dim cb As SqlCommandBuilder = New SqlCommandBuilder(da)
-            Return da.Update(SourceTable)
+            Return da.Update(SourceData)
 
         End Function
 
         'Pinal Patel 04/06/05 - Updates the underlying data source of the specified data table.
-        Public Shared Function UpdateData(ByVal SourceTable As DataTable, ByVal SourceSql As String, ByVal Connection As OleDbConnection) As Integer
+        Public Shared Function UpdateData(ByVal SourceData As DataTable, ByVal SourceSql As String, ByVal Connection As OleDbConnection) As Integer
 
             Dim da As OleDbDataAdapter = New OleDbDataAdapter(SourceSql, Connection)
             Dim cb As OleDbCommandBuilder = New OleDbCommandBuilder(da)
-            Return da.Update(SourceTable)
+            Return da.Update(SourceData)
 
         End Function
 
         'Pinal Patel 04/06/05 - Updates the underlying data source of the specified data table.
-        Public Shared Function UpdateData(ByVal SourceTable As DataTable, ByVal SourceSql As String, ByVal Connection As OracleConnection) As Integer
+        Public Shared Function UpdateData(ByVal SourceData As DataTable, ByVal SourceSql As String, ByVal Connection As OracleConnection) As Integer
 
             Dim da As OracleDataAdapter = New OracleDataAdapter(SourceSql, Connection)
             Dim cb As OracleCommandBuilder = New OracleCommandBuilder(da)
-            Return da.Update(SourceTable)
+            Return da.Update(SourceData)
+
+        End Function
+
+        'Pinal Patel 05/27/05 - Converts delimited data to data table.
+        Public Shared Function DelimitedDataToDataTable(ByVal DelimitedData As String, Optional ByVal Delimiter As String = ",", Optional ByVal Header As Boolean = True) As DataTable
+
+            Dim dtResult As DataTable = New DataTable
+            Dim strPattern As String = Regex.Escape(Delimiter) & "(?=(?:[^""]*""[^""]*"")*(?![^""]*""))" 'Regex pattern that will be used to split the delimited data.
+
+
+            DelimitedData = DelimitedData.Trim(New Char() {" "c, vbCr, vbLf}).Replace(vbLf, "") 'Remove any leading and trailing whitespaces, carriage returns or line feeds.
+            Dim strLines() As String = DelimitedData.Split(vbCr)  'Split delimited data into lines.
+
+
+            Dim intCursor As Integer = 0
+            'Assume that the first line has header information.
+            Dim strHeaders() As String = Regex.Split(strLines(intCursor), strPattern)
+            'Create columns.
+            If Header Then
+                'Use the first row as header row.
+                For i As Integer = 0 To strHeaders.Length() - 1
+                    dtResult.Columns.Add(New DataColumn(strHeaders(i).Trim(New Char() {""""c}))) 'Remove any leading and trailing quotes from the column name.
+                Next
+                intCursor += 1
+            Else
+                For i As Integer = 0 To strHeaders.Length() - 1
+                    dtResult.Columns.Add(New DataColumn)
+                Next
+            End If
+
+
+            'Populate the data table with csv data.
+            For intCursor = intCursor To strLines.Length() - 1
+                Dim drResult As DataRow = dtResult.NewRow() 'Create new row.
+
+                'Populate the new row.
+                Dim strFields() As String = Regex.Split(strLines(intCursor), strPattern)
+                For i As Integer = 0 To strFields.Length() - 1
+                    drResult(i) = strFields(i).Trim(New Char() {""""c})    'Remove any leading and trailing quotes from the data.
+                Next
+
+                dtResult.Rows.Add(drResult) 'Add the new row.
+            Next
+
+
+            'Return the data table.
+            Return dtResult
+
+        End Function
+
+        'Pinal Patel 05/27/05 - Converts a data table to delimited data.
+        Public Shared Function DataTableToDelimitedData(ByVal Table As DataTable, Optional ByVal Delimiter As String = ",", Optional ByVal Quoted As Boolean = True, Optional ByVal Header As Boolean = True) As String
+
+            With New StringBuilder
+                'Use the column names as the headers if headers are requested.
+                If Header Then
+                    For i As Integer = 0 To Table.Columns().Count() - 1
+                        .Append(IIf(Quoted, """", "") & Table.Columns(i).ColumnName() & IIf(Quoted, """", ""))
+
+                        If i < Table.Columns().Count() - 1 Then
+                            .Append(Delimiter)
+                        End If
+                    Next
+                    .Append(vbCrLf)
+                End If
+
+                For i As Integer = 0 To Table.Rows().Count() - 1
+                    'Convert data table's data to delimited data.
+                    For j As Integer = 0 To Table.Columns().Count() - 1
+                        .Append(IIf(Quoted, """", "") & Table.Rows(i)(j) & IIf(Quoted, """", ""))
+
+                        If j < Table.Columns().Count() - 1 Then
+                            .Append(Delimiter)
+                        End If
+                    Next
+                    .Append(vbCrLf)
+                Next
+
+                'Return the delimited data.
+                Return .ToString()
+            End With
 
         End Function
 
