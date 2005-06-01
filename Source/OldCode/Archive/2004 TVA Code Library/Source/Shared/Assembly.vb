@@ -5,6 +5,9 @@
 
 
 
+'Namespaces used.
+Imports System.Text.RegularExpressions
+
 Namespace [Shared]
 
     Public Class [Assembly]
@@ -14,7 +17,7 @@ Namespace [Shared]
         Shared Sub New()
 
             'Get a reference to the assembly.
-            m_Assembly = Reflection.Assembly.GetEntryAssembly
+            m_Assembly = System.Reflection.Assembly.GetEntryAssembly
 
         End Sub
 
@@ -25,149 +28,260 @@ Namespace [Shared]
 
         End Sub
 
-        Public Shared ReadOnly Property Company() As String
-
+        Public Shared ReadOnly Property Title() As String
             Get
-                'Return the Company attribute.
-                Return DirectCast(m_Assembly.GetCustomAttributes(GetType(Reflection.AssemblyCompanyAttribute), False)(0), Reflection.AssemblyCompanyAttribute).Company.ToString()
+                'Returns the Title attribute.
+                Return DirectCast(GetCustomAttribute(GetType(System.Reflection.AssemblyTitleAttribute)), System.Reflection.AssemblyTitleAttribute).Title.ToString()
             End Get
-
-        End Property
-
-        Public Shared ReadOnly Property Copyright() As String
-
-            Get
-                'Return the Copyright attribute.
-                Return DirectCast(m_Assembly.GetCustomAttributes(GetType(Reflection.AssemblyCopyrightAttribute), False)(0), Reflection.AssemblyCopyrightAttribute).Copyright.ToString()
-            End Get
-
         End Property
 
         Public Shared ReadOnly Property Description() As String
-
             Get
-                'Return the Description attribute.
-                Return DirectCast(m_Assembly.GetCustomAttributes(GetType(Reflection.AssemblyDescriptionAttribute), False)(0), Reflection.AssemblyDescriptionAttribute).Description.ToString()
+                'Returns the Description attribute.
+                Return DirectCast(GetCustomAttribute(GetType(System.Reflection.AssemblyDescriptionAttribute)), System.Reflection.AssemblyDescriptionAttribute).Description.ToString()
             End Get
+        End Property
 
+        Public Shared ReadOnly Property Company() As String
+            Get
+                'Returns the Company attribute.
+                Return DirectCast(GetCustomAttribute(GetType(System.Reflection.AssemblyCompanyAttribute)), System.Reflection.AssemblyCompanyAttribute).Company.ToString()
+            End Get
         End Property
 
         Public Shared ReadOnly Property Product() As String
-
             Get
-                'Return the Product attribute.
-                Return DirectCast(m_Assembly.GetCustomAttributes(GetType(Reflection.AssemblyProductAttribute), False)(0), Reflection.AssemblyProductAttribute).Product.ToString()
+                'Returns the Product attribute.
+                Return DirectCast(GetCustomAttribute(GetType(System.Reflection.AssemblyProductAttribute)), System.Reflection.AssemblyProductAttribute).Product.ToString()
             End Get
-
         End Property
 
-        Public Shared ReadOnly Property Title() As String
-
+        Public Shared ReadOnly Property Copyright() As String
             Get
-                'Return the Title attribute.
-                Return DirectCast(m_Assembly.GetCustomAttributes(GetType(Reflection.AssemblyTitleAttribute), False)(0), Reflection.AssemblyTitleAttribute).Title.ToString()
+                'Returns the Copyright attribute.
+                Return DirectCast(GetCustomAttribute(GetType(System.Reflection.AssemblyCopyrightAttribute)), System.Reflection.AssemblyCopyrightAttribute).Copyright.ToString()
             End Get
-
         End Property
 
         Public Shared ReadOnly Property Trademark() As String
-
             Get
-                'Return the Trademark attribute.
-                Return DirectCast(m_Assembly.GetCustomAttributes(GetType(Reflection.AssemblyTrademarkAttribute), False)(0), Reflection.AssemblyTrademarkAttribute).Trademark.ToString()
+                'Returns the Trademark attribute.
+                Return DirectCast(GetCustomAttribute(GetType(System.Reflection.AssemblyTrademarkAttribute)), System.Reflection.AssemblyTrademarkAttribute).Trademark.ToString()
             End Get
+        End Property
 
+        Public Shared ReadOnly Property Configuration() As String
+            Get
+                'Returns the Configuration attribute.
+                Return DirectCast(GetCustomAttribute(GetType(System.Reflection.AssemblyConfigurationAttribute)), System.Reflection.AssemblyConfigurationAttribute).Configuration()
+            End Get
+        End Property
+
+        Public Shared ReadOnly Property DelaySign() As Boolean
+            Get
+                'Returns the DelaySign attribute.
+                Return DirectCast(GetCustomAttribute(GetType(System.Reflection.AssemblyDelaySignAttribute)), System.Reflection.AssemblyDelaySignAttribute).DelaySign()
+            End Get
+        End Property
+
+        Public Shared ReadOnly Property InformationalVersion() As String
+            Get
+                'Returns the InformationalVersion attribute.
+                Return DirectCast(GetCustomAttribute(GetType(System.Reflection.AssemblyInformationalVersionAttribute)), System.Reflection.AssemblyInformationalVersionAttribute).InformationalVersion()
+            End Get
+        End Property
+
+        Public Shared ReadOnly Property KeyFile() As String
+            Get
+                'Returns the KeyFile attribute.
+                Return DirectCast(GetCustomAttribute(GetType(System.Reflection.AssemblyKeyFileAttribute)), System.Reflection.AssemblyKeyFileAttribute).KeyFile()
+            End Get
+        End Property
+
+        Public Shared ReadOnly Property NeutralResourcesLanguage() As String
+            Get
+                'Returns the NeutralResourcesLanguage attribute.
+                Return DirectCast(GetCustomAttribute(GetType(System.Resources.NeutralResourcesLanguageAttribute)), System.Resources.NeutralResourcesLanguageAttribute).CultureName()
+            End Get
+        End Property
+
+        Public Shared ReadOnly Property SatelliteContractVersion() As String
+            Get
+                'Returns the SatelliteContractVersionAttribute attribute.
+                Return DirectCast(GetCustomAttribute(GetType(System.Resources.SatelliteContractVersionAttribute)), System.Resources.SatelliteContractVersionAttribute).Version()
+            End Get
+        End Property
+
+        Public Shared ReadOnly Property ComCompatibleVersion() As String
+            Get
+                'Returns the ComCompatibleVersion attribute.
+                Dim oComCompatibleVersionAttribute As System.Runtime.InteropServices.ComCompatibleVersionAttribute = DirectCast(GetCustomAttribute(GetType(System.Runtime.InteropServices.ComCompatibleVersionAttribute)), System.Runtime.InteropServices.ComCompatibleVersionAttribute)
+                Return oComCompatibleVersionAttribute.MajorVersion().ToString() & "." & oComCompatibleVersionAttribute.MinorVersion().ToString() & "." & oComCompatibleVersionAttribute.RevisionNumber().ToString() & "." & oComCompatibleVersionAttribute.BuildNumber().ToString()
+            End Get
+        End Property
+
+        Public Shared ReadOnly Property ComVisible() As Boolean
+            Get
+                'Returns the ComVisible attribute.
+                Return DirectCast(GetCustomAttribute(GetType(System.Runtime.InteropServices.ComVisibleAttribute)), System.Runtime.InteropServices.ComVisibleAttribute).Value()
+            End Get
+        End Property
+
+        Public Shared ReadOnly Property Guid() As String
+            Get
+                'Returns the Guid attribute.
+                Return DirectCast(GetCustomAttribute(GetType(System.Runtime.InteropServices.GuidAttribute)), System.Runtime.InteropServices.GuidAttribute).Value()
+            End Get
+        End Property
+
+        Public Shared ReadOnly Property TypeLibVersion() As String
+            Get
+                'Returns the TypeLibVersion attribute.
+                Dim oTypeLibVersionAttribute As System.Runtime.InteropServices.TypeLibVersionAttribute = DirectCast(GetCustomAttribute(GetType(System.Runtime.InteropServices.TypeLibVersionAttribute)), System.Runtime.InteropServices.TypeLibVersionAttribute)
+                Return oTypeLibVersionAttribute.MajorVersion().ToString() & "." & oTypeLibVersionAttribute.MinorVersion().ToString()
+            End Get
         End Property
 
         Public Shared ReadOnly Property CLSCompliant() As Boolean
-
             Get
-                'Return the CLSCompliant attribute.
-                Return DirectCast(m_Assembly.GetCustomAttributes(GetType(CLSCompliantAttribute), False)(0), CLSCompliantAttribute).IsCompliant()
+                'Returns the CLSCompliant attribute.
+                Return DirectCast(GetCustomAttribute(GetType(System.CLSCompliantAttribute)), System.CLSCompliantAttribute).IsCompliant()
             End Get
-
         End Property
 
         Public Shared ReadOnly Property Debuggable() As Boolean
-
             Get
-                'Return the Debuggable attribute.
-                Return DirectCast(m_Assembly.GetCustomAttributes(GetType(Diagnostics.DebuggableAttribute), False)(0), Diagnostics.DebuggableAttribute).IsJITTrackingEnabled()
+                'Returns the Debuggable attribute.
+                Return DirectCast(GetCustomAttribute(GetType(System.Diagnostics.DebuggableAttribute)), System.Diagnostics.DebuggableAttribute).IsJITTrackingEnabled()
             End Get
-
         End Property
 
         Public Shared ReadOnly Property Location() As String
-
             Get
-                'Return the location of the assembly.
+                'Returns the location of the assembly.
                 Return m_Assembly.Location().ToLower()
             End Get
-
         End Property
 
         Public Shared ReadOnly Property CodeBase() As String
-
             Get
-                'Return the location of the assembly in codebase format.
+                'Returns the location of the assembly in codebase format.
                 Return m_Assembly.CodeBase().Replace("file:///", "").ToLower()
             End Get
-
         End Property
 
         Public Shared ReadOnly Property FullName() As String
-
             Get
-                'Return the full name of the assembly.
+                'Returns the full name of the assembly.
                 Return m_Assembly.FullName()
             End Get
-
         End Property
 
         Public Shared ReadOnly Property Name() As String
-
             Get
-                'Return the name of the assembly.
+                'Returns the name of the assembly.
                 Return m_Assembly.GetName().Name()
             End Get
-
         End Property
 
         Public Shared ReadOnly Property Version() As Version
-
             Get
-                'Return the Version attribute.
+                'Returns the Version attribute.
                 Return m_Assembly.GetName().Version()
             End Get
-
         End Property
 
         Public Shared ReadOnly Property ImageRuntimeVersion() As String
-
             Get
-                'Return the version of Common Language Runtime.
+                'Returns the version of Common Language Runtime.
                 Return m_Assembly.ImageRuntimeVersion()
             End Get
-
         End Property
 
         Public Shared ReadOnly Property GACLoaded() As Boolean
-
             Get
-                'Return whether the assembly was loaded from the GAC.
+                'Returns whether the assembly was loaded from the GAC.
                 Return m_Assembly.GlobalAssemblyCache()
             End Get
-
         End Property
 
         Public Shared ReadOnly Property BuildDate() As Date
-
             Get
-                'Return the date and time when the assembly was last built.
+                'Returns the date and time when the assembly was last built.
                 Return IO.File.GetLastWriteTime(m_Assembly.Location())
             End Get
-
         End Property
+
+        Public Shared Function GetAttributes() As Specialized.NameValueCollection
+
+            Dim nvc As New Specialized.NameValueCollection
+
+            With nvc
+                'Add some values that are not in AssemblyInfo.
+                .Add("Full Name", FullName())
+                .Add("Name", Name())
+                .Add("Version", Version().ToString())
+                .Add("Image Runtime Version", ImageRuntimeVersion())
+                .Add("Build Date", BuildDate().ToString())
+                .Add("Location", Location())
+                .Add("Code Base", CodeBase())
+                .Add("GAC Loaded", GACLoaded().ToString())
+
+
+                'Add all attributes available from AssemblyInfo.
+                For Each oAttribute As Object In m_Assembly.GetCustomAttributes(False)
+                    'Dim strName As String = Regex.Match(oAttribute.GetType().ToString(), "(\.Assembly|\.)(?<Name>[^.]*)Attribute$", RegexOptions.IgnoreCase).Groups("Name").Value()
+
+                    If TypeOf oAttribute Is System.Reflection.AssemblyTitleAttribute Then
+                        .Add("Title", Title())
+                    ElseIf TypeOf oAttribute Is System.Reflection.AssemblyDescriptionAttribute Then
+                        .Add("Description", Description())
+                    ElseIf TypeOf oAttribute Is System.Reflection.AssemblyCompanyAttribute Then
+                        .Add("Company", Company())
+                    ElseIf TypeOf oAttribute Is System.Reflection.AssemblyProductAttribute Then
+                        .Add("Product", Product())
+                    ElseIf TypeOf oAttribute Is System.Reflection.AssemblyCopyrightAttribute Then
+                        .Add("Copyright", Copyright())
+                    ElseIf TypeOf oAttribute Is System.Reflection.AssemblyTrademarkAttribute Then
+                        .Add("Trademark", Trademark())
+                    ElseIf TypeOf oAttribute Is System.Reflection.AssemblyConfigurationAttribute Then
+                        .Add("Configuration", Configuration())
+                    ElseIf TypeOf oAttribute Is System.Reflection.AssemblyDelaySignAttribute Then
+                        .Add("Delay Sign", DelaySign().ToString())
+                    ElseIf TypeOf oAttribute Is System.Reflection.AssemblyInformationalVersionAttribute Then
+                        .Add("Informational Version", InformationalVersion())
+                    ElseIf TypeOf oAttribute Is System.Reflection.AssemblyKeyFileAttribute Then
+                        .Add("Key File", KeyFile())
+                    ElseIf TypeOf oAttribute Is System.Resources.NeutralResourcesLanguageAttribute Then
+                        nvc.Add("Neutral Resources Language", NeutralResourcesLanguage())
+                    ElseIf TypeOf oAttribute Is System.Resources.SatelliteContractVersionAttribute Then
+                        .Add("Satellite Contract Version", SatelliteContractVersion())
+                    ElseIf TypeOf oAttribute Is System.Runtime.InteropServices.ComCompatibleVersionAttribute Then
+                        .Add("Com Compatible Version", ComCompatibleVersion())
+                    ElseIf TypeOf oAttribute Is System.Runtime.InteropServices.ComVisibleAttribute Then
+                        .Add("Com Visible", ComVisible().ToString())
+                    ElseIf TypeOf oAttribute Is System.Runtime.InteropServices.GuidAttribute Then
+                        nvc.Add("Guid", Guid())
+                    ElseIf TypeOf oAttribute Is System.Runtime.InteropServices.TypeLibVersionAttribute Then
+                        .Add("Type Lib Version", TypeLibVersion())
+                    ElseIf TypeOf oAttribute Is System.CLSCompliantAttribute Then
+                        .Add("CLS Compliant", CLSCompliant().ToString())
+                    ElseIf TypeOf oAttribute Is System.Diagnostics.DebuggableAttribute Then
+                        .Add("Debuggable", Debuggable().ToString())
+                    End If
+                Next
+            End With
+
+
+            Return nvc
+
+        End Function
+
+        Public Shared Function GetCustomAttribute(ByVal AttributeType As Type) As Object
+
+            Return m_Assembly.GetCustomAttributes(AttributeType, False)(0)
+
+        End Function
 
     End Class
 
