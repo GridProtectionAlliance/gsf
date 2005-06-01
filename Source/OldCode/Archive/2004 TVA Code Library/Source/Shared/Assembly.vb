@@ -279,7 +279,12 @@ Namespace [Shared]
 
         Public Shared Function GetCustomAttribute(ByVal AttributeType As Type) As Object
 
-            Return m_Assembly.GetCustomAttributes(AttributeType, False)(0)
+            Dim obj As Object() = m_Assembly.GetCustomAttributes(AttributeType, False)
+            If obj.Length() >= 1 Then
+                Return m_Assembly.GetCustomAttributes(AttributeType, False)(0)
+            Else
+                Return Nothing
+            End If
 
         End Function
 
