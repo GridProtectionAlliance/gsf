@@ -5,6 +5,9 @@
 
 
 
+'Namespaces used.
+Imports TVA.Shared.Assembly
+
 Namespace Forms
 
     Public Class About
@@ -262,22 +265,22 @@ Namespace Forms
                     .Font = .Owner.Font
                 End If
 
-                .Text = "About " & TVA.Shared.Assembly.Title()  'Set the form's caption.
+                .Text = "About " & EntryAssembly.Title()  'Set the form's caption.
 
 
                 'Populate application information.
                 .lvApplication.Items.Clear()
                 .AddListViewItem(Me.lvApplication, "Friendly Name", New String() {AppDomain.CurrentDomain().FriendlyName()})
-                .AddListViewItem(Me.lvApplication, "Name", New String() {TVA.Shared.Assembly.Name()})
-                .AddListViewItem(Me.lvApplication, "Version", New String() {TVA.Shared.Assembly.Version().ToString()})
-                .AddListViewItem(Me.lvApplication, "Build Date", New String() {TVA.Shared.Assembly.BuildDate().ToString()})
-                .AddListViewItem(Me.lvApplication, "Location", New String() {TVA.Shared.Assembly.Location()})
-                .AddListViewItem(Me.lvApplication, "Title", New String() {TVA.Shared.Assembly.Title()})
-                .AddListViewItem(Me.lvApplication, "Description", New String() {TVA.Shared.Assembly.Description()})
-                .AddListViewItem(Me.lvApplication, "Company", New String() {TVA.Shared.Assembly.Company()})
-                .AddListViewItem(Me.lvApplication, "Product", New String() {TVA.Shared.Assembly.Product()})
-                .AddListViewItem(Me.lvApplication, "Copyright", New String() {TVA.Shared.Assembly.Copyright()})
-                .AddListViewItem(Me.lvApplication, "Trademark", New String() {TVA.Shared.Assembly.Trademark()})
+                .AddListViewItem(Me.lvApplication, "Name", New String() {EntryAssembly.Name()})
+                .AddListViewItem(Me.lvApplication, "Version", New String() {EntryAssembly.Version().ToString()})
+                .AddListViewItem(Me.lvApplication, "Build Date", New String() {EntryAssembly.BuildDate().ToString()})
+                .AddListViewItem(Me.lvApplication, "Location", New String() {EntryAssembly.Location()})
+                .AddListViewItem(Me.lvApplication, "Title", New String() {EntryAssembly.Title()})
+                .AddListViewItem(Me.lvApplication, "Description", New String() {EntryAssembly.Description()})
+                .AddListViewItem(Me.lvApplication, "Company", New String() {EntryAssembly.Company()})
+                .AddListViewItem(Me.lvApplication, "Product", New String() {EntryAssembly.Product()})
+                .AddListViewItem(Me.lvApplication, "Copyright", New String() {EntryAssembly.Copyright()})
+                .AddListViewItem(Me.lvApplication, "Trademark", New String() {EntryAssembly.Trademark()})
 
 
 
@@ -306,8 +309,9 @@ Namespace Forms
             Me.lvAssemblies.Items.Clear()   'Remove all previous entries from the ListView.
 
 
+            Dim oAsmInfo As TVA.Shared.Assembly
             Try
-                Dim oAsmInfo As New TVA.Shared.Assembly(Me.GetAssembly(Me.cboAssemblies.SelectedItem()))
+                oAsmInfo = New TVA.Shared.Assembly(Me.GetAssembly(Me.cboAssemblies.SelectedItem()))
 
                 'Display all the attributes exposed by the selected assembly.
                 Dim nvcAssemblyAttributes As Specialized.NameValueCollection = oAsmInfo.GetAttributes()
