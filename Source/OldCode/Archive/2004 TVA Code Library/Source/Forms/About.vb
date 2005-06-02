@@ -6,6 +6,10 @@
 
 
 'Namespaces used.
+Imports System.Text
+Imports System.Drawing
+Imports System.IO
+Imports System.Reflection.Assembly
 Imports TVA.Shared.Assembly
 
 Namespace Forms
@@ -22,6 +26,10 @@ Namespace Forms
             InitializeComponent()
 
             'Add any initialization after the InitializeComponent() call
+            'Perform default initialization.
+            Me.m_Url = "http://opweb.cha.tva.gov/"
+            Me.LoadBanner(GetExecutingAssembly(), "EsoLogo.bmp")
+            Me.LoadDisclaimer(GetExecutingAssembly(), "EsoDisclaimer.txt")
 
         End Sub
 
@@ -46,8 +54,6 @@ Namespace Forms
         Friend WithEvents Panel3 As System.Windows.Forms.Panel
         Friend WithEvents btnOK As System.Windows.Forms.Button
         Friend WithEvents TabControl1 As System.Windows.Forms.TabControl
-        Friend WithEvents TabPage1 As System.Windows.Forms.TabPage
-        Friend WithEvents TabPage2 As System.Windows.Forms.TabPage
         Friend WithEvents lvApplication As System.Windows.Forms.ListView
         Friend WithEvents lvchApplication1 As System.Windows.Forms.ColumnHeader
         Friend WithEvents lvchApplication2 As System.Windows.Forms.ColumnHeader
@@ -57,30 +63,36 @@ Namespace Forms
         Friend WithEvents cboAssemblies As System.Windows.Forms.ComboBox
         Friend WithEvents llHomePage As System.Windows.Forms.LinkLabel
         Friend WithEvents picLogo As System.Windows.Forms.PictureBox
+        Friend WithEvents TabPage2 As System.Windows.Forms.TabPage
+        Friend WithEvents TabPage3 As System.Windows.Forms.TabPage
+        Friend WithEvents TabPage1 As System.Windows.Forms.TabPage
+        Friend WithEvents rtbDisclaimer As System.Windows.Forms.RichTextBox
         <System.Diagnostics.DebuggerStepThrough()> Private Sub InitializeComponent()
-            Dim resources As System.Resources.ResourceManager = New System.Resources.ResourceManager(GetType(About))
             Me.Panel1 = New System.Windows.Forms.Panel
             Me.btnOK = New System.Windows.Forms.Button
             Me.Panel2 = New System.Windows.Forms.Panel
+            Me.picLogo = New System.Windows.Forms.PictureBox
+            Me.llHomePage = New System.Windows.Forms.LinkLabel
             Me.Panel3 = New System.Windows.Forms.Panel
             Me.TabControl1 = New System.Windows.Forms.TabControl
             Me.TabPage1 = New System.Windows.Forms.TabPage
+            Me.rtbDisclaimer = New System.Windows.Forms.RichTextBox
+            Me.TabPage2 = New System.Windows.Forms.TabPage
             Me.lvApplication = New System.Windows.Forms.ListView
             Me.lvchApplication1 = New System.Windows.Forms.ColumnHeader
             Me.lvchApplication2 = New System.Windows.Forms.ColumnHeader
-            Me.TabPage2 = New System.Windows.Forms.TabPage
+            Me.TabPage3 = New System.Windows.Forms.TabPage
             Me.lvAssemblies = New System.Windows.Forms.ListView
             Me.lvchAssemblies1 = New System.Windows.Forms.ColumnHeader
             Me.lvchAssemblies2 = New System.Windows.Forms.ColumnHeader
             Me.cboAssemblies = New System.Windows.Forms.ComboBox
-            Me.llHomePage = New System.Windows.Forms.LinkLabel
-            Me.picLogo = New System.Windows.Forms.PictureBox
             Me.Panel1.SuspendLayout()
             Me.Panel2.SuspendLayout()
             Me.Panel3.SuspendLayout()
             Me.TabControl1.SuspendLayout()
             Me.TabPage1.SuspendLayout()
             Me.TabPage2.SuspendLayout()
+            Me.TabPage3.SuspendLayout()
             Me.SuspendLayout()
             '
             'Panel1
@@ -113,6 +125,26 @@ Namespace Forms
             Me.Panel2.Size = New System.Drawing.Size(444, 70)
             Me.Panel2.TabIndex = 1
             '
+            'picLogo
+            '
+            Me.picLogo.Dock = System.Windows.Forms.DockStyle.Fill
+            Me.picLogo.Location = New System.Drawing.Point(10, 26)
+            Me.picLogo.Name = "picLogo"
+            Me.picLogo.Size = New System.Drawing.Size(424, 44)
+            Me.picLogo.TabIndex = 1
+            Me.picLogo.TabStop = False
+            '
+            'llHomePage
+            '
+            Me.llHomePage.Dock = System.Windows.Forms.DockStyle.Top
+            Me.llHomePage.Location = New System.Drawing.Point(10, 10)
+            Me.llHomePage.Name = "llHomePage"
+            Me.llHomePage.Size = New System.Drawing.Size(424, 16)
+            Me.llHomePage.TabIndex = 0
+            Me.llHomePage.TabStop = True
+            Me.llHomePage.Text = "Home Page"
+            Me.llHomePage.TextAlign = System.Drawing.ContentAlignment.TopRight
+            '
             'Panel3
             '
             Me.Panel3.Controls.Add(Me.TabControl1)
@@ -129,6 +161,7 @@ Namespace Forms
             '
             Me.TabControl1.Controls.Add(Me.TabPage1)
             Me.TabControl1.Controls.Add(Me.TabPage2)
+            Me.TabControl1.Controls.Add(Me.TabPage3)
             Me.TabControl1.Dock = System.Windows.Forms.DockStyle.Fill
             Me.TabControl1.Location = New System.Drawing.Point(10, 10)
             Me.TabControl1.Name = "TabControl1"
@@ -138,12 +171,32 @@ Namespace Forms
             '
             'TabPage1
             '
-            Me.TabPage1.Controls.Add(Me.lvApplication)
+            Me.TabPage1.Controls.Add(Me.rtbDisclaimer)
             Me.TabPage1.Location = New System.Drawing.Point(4, 22)
             Me.TabPage1.Name = "TabPage1"
             Me.TabPage1.Size = New System.Drawing.Size(416, 217)
-            Me.TabPage1.TabIndex = 0
-            Me.TabPage1.Text = "Application"
+            Me.TabPage1.TabIndex = 2
+            Me.TabPage1.Text = "Disclaimer"
+            '
+            'rtbDisclaimer
+            '
+            Me.rtbDisclaimer.BackColor = System.Drawing.SystemColors.Control
+            Me.rtbDisclaimer.Dock = System.Windows.Forms.DockStyle.Fill
+            Me.rtbDisclaimer.Location = New System.Drawing.Point(0, 0)
+            Me.rtbDisclaimer.Name = "rtbDisclaimer"
+            Me.rtbDisclaimer.ReadOnly = True
+            Me.rtbDisclaimer.Size = New System.Drawing.Size(416, 217)
+            Me.rtbDisclaimer.TabIndex = 0
+            Me.rtbDisclaimer.Text = ""
+            '
+            'TabPage2
+            '
+            Me.TabPage2.Controls.Add(Me.lvApplication)
+            Me.TabPage2.Location = New System.Drawing.Point(4, 22)
+            Me.TabPage2.Name = "TabPage2"
+            Me.TabPage2.Size = New System.Drawing.Size(416, 217)
+            Me.TabPage2.TabIndex = 0
+            Me.TabPage2.Text = "Application"
             '
             'lvApplication
             '
@@ -167,15 +220,15 @@ Namespace Forms
             Me.lvchApplication2.Text = "Value"
             Me.lvchApplication2.Width = 300
             '
-            'TabPage2
+            'TabPage3
             '
-            Me.TabPage2.Controls.Add(Me.lvAssemblies)
-            Me.TabPage2.Controls.Add(Me.cboAssemblies)
-            Me.TabPage2.Location = New System.Drawing.Point(4, 22)
-            Me.TabPage2.Name = "TabPage2"
-            Me.TabPage2.Size = New System.Drawing.Size(416, 231)
-            Me.TabPage2.TabIndex = 1
-            Me.TabPage2.Text = "Assemblies"
+            Me.TabPage3.Controls.Add(Me.lvAssemblies)
+            Me.TabPage3.Controls.Add(Me.cboAssemblies)
+            Me.TabPage3.Location = New System.Drawing.Point(4, 22)
+            Me.TabPage3.Name = "TabPage3"
+            Me.TabPage3.Size = New System.Drawing.Size(416, 217)
+            Me.TabPage3.TabIndex = 1
+            Me.TabPage3.Text = "Assemblies"
             '
             'lvAssemblies
             '
@@ -185,7 +238,7 @@ Namespace Forms
             Me.lvAssemblies.Location = New System.Drawing.Point(0, 20)
             Me.lvAssemblies.MultiSelect = False
             Me.lvAssemblies.Name = "lvAssemblies"
-            Me.lvAssemblies.Size = New System.Drawing.Size(416, 211)
+            Me.lvAssemblies.Size = New System.Drawing.Size(416, 197)
             Me.lvAssemblies.TabIndex = 2
             Me.lvAssemblies.View = System.Windows.Forms.View.Details
             '
@@ -208,28 +261,6 @@ Namespace Forms
             Me.cboAssemblies.Size = New System.Drawing.Size(416, 20)
             Me.cboAssemblies.TabIndex = 0
             '
-            'llHomePage
-            '
-            Me.llHomePage.Dock = System.Windows.Forms.DockStyle.Top
-            Me.llHomePage.Location = New System.Drawing.Point(10, 10)
-            Me.llHomePage.Name = "llHomePage"
-            Me.llHomePage.Size = New System.Drawing.Size(424, 16)
-            Me.llHomePage.TabIndex = 0
-            Me.llHomePage.TabStop = True
-            Me.llHomePage.Text = "Home Page"
-            Me.llHomePage.TextAlign = System.Drawing.ContentAlignment.TopRight
-            '
-            'picLogo
-            '
-            Me.picLogo.Dock = System.Windows.Forms.DockStyle.Fill
-            Me.picLogo.Image = CType(resources.GetObject("picLogo.Image"), System.Drawing.Image)
-            Me.picLogo.Location = New System.Drawing.Point(10, 26)
-            Me.picLogo.Name = "picLogo"
-            Me.picLogo.Size = New System.Drawing.Size(424, 44)
-            Me.picLogo.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage
-            Me.picLogo.TabIndex = 1
-            Me.picLogo.TabStop = False
-            '
             'About
             '
             Me.AcceptButton = Me.btnOK
@@ -251,11 +282,14 @@ Namespace Forms
             Me.TabControl1.ResumeLayout(False)
             Me.TabPage1.ResumeLayout(False)
             Me.TabPage2.ResumeLayout(False)
+            Me.TabPage3.ResumeLayout(False)
             Me.ResumeLayout(False)
 
         End Sub
 
 #End Region
+
+        Private m_Url As String
 
         Private Sub About_Load(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles MyBase.Load
 
@@ -300,7 +334,7 @@ Namespace Forms
         Private Sub llHomePage_LinkClicked(ByVal sender As System.Object, ByVal e As System.Windows.Forms.LinkLabelLinkClickedEventArgs) Handles llHomePage.LinkClicked
 
             'Launch ESO web site in the default browser.
-            Process.Start("http://opweb.cha.tva.gov")
+            Process.Start(Me.m_Url)
 
         End Sub
 
@@ -354,6 +388,121 @@ Namespace Forms
             oListView.Items.Add(lvi)
 
         End Sub
+
+        Public Property Url() As String
+            Get
+                Return Me.m_Url
+            End Get
+            Set(ByVal Value As String)
+                Me.m_Url = Value
+            End Set
+        End Property
+
+        Public Sub LoadDisclaimer(ByVal DisclaimerText As String, ByVal DetectUrls As Boolean)
+
+            If DisclaimerText <> "" Then
+                'Load disclaimer text.
+                With Me.rtbDisclaimer
+                    If DetectUrls Then
+                        .DetectUrls = True
+                    Else
+                        .DetectUrls = False
+                    End If
+
+                    .Text = DisclaimerText
+                End With
+            Else
+                MsgBox("DisclaimerText parameter cannot be empty.", MsgBoxStyle.Exclamation, GetExecutingAssembly().GetName().Name())
+            End If
+
+        End Sub
+
+        Public Sub LoadDisclaimer(ByVal DisclaimerStream As Stream)
+
+            'Load the disclaimer from a stream.
+            If Not DisclaimerStream Is Nothing Then
+                Dim oStreamReader As New StreamReader(DisclaimerStream)
+                Me.LoadDisclaimer(oStreamReader.ReadToEnd(), True)
+            Else
+                MsgBox("DisclaimerStream must be initialized.", MsgBoxStyle.Exclamation, GetExecutingAssembly().GetName().Name())
+            End If
+
+        End Sub
+
+        Public Sub LoadDisclaimer(ByVal DisclaimerFile As String)
+
+            Try
+                'Load the disclaimer from a file.
+                If DisclaimerFile <> "" Then
+                    Dim oStreamreader As New StreamReader(DisclaimerFile)
+                    Me.LoadDisclaimer(oStreamreader.ReadToEnd(), True)
+                Else
+                    MsgBox("DisclaimerFile parameter cannot be empty.", MsgBoxStyle.Exclamation, GetExecutingAssembly().GetName().Name())
+                End If
+            Catch ex As Exception
+                MsgBox("Cannot load disclaimer from file.", MsgBoxStyle.Exclamation, GetExecutingAssembly().GetName().Name())
+            End Try
+
+        End Sub
+
+        Public Sub LoadDisclaimer(ByVal ExecutingAssembly As System.Reflection.Assembly, ByVal ResourceName As String)
+
+            'Load the disclaimer from embedded resource.
+            Dim oStream As Stream = Me.LoadManifestResource(ExecutingAssembly, ResourceName)
+            If Not oStream Is Nothing Then
+                Me.LoadDisclaimer(oStream)
+            Else
+                MsgBox("Cannot load disclaimer from embedded resource.", MsgBoxStyle.Exclamation, GetExecutingAssembly().GetName().Name())
+            End If
+
+        End Sub
+
+        Public Sub LoadBanner(ByVal BannerStream As Stream)
+
+            'Load the banner from a stream.
+            If Not BannerStream Is Nothing Then
+                Me.picLogo.Image = New Bitmap(BannerStream)
+            Else
+                MsgBox("BannerStream must be initialized.", MsgBoxStyle.Exclamation, GetExecutingAssembly().GetName().Name())
+            End If
+
+        End Sub
+
+        Public Sub LoadBanner(ByVal BannerFile As String)
+
+            Try
+                'Load the banner from a file.
+                If BannerFile <> "" Then
+                    Dim oStreamreader As New StreamReader(BannerFile)
+                    Me.LoadBanner(oStreamreader.BaseStream())
+                Else
+                    MsgBox("BannerFile parameter cannot be empty.", MsgBoxStyle.Exclamation, GetExecutingAssembly().GetName().Name())
+                End If
+            Catch ex As Exception
+                MsgBox("Cannot load banner from file.", MsgBoxStyle.Exclamation, GetExecutingAssembly().GetName().Name())
+            End Try
+
+        End Sub
+
+        Public Sub LoadBanner(ByVal ExecutingAssembly As System.Reflection.Assembly, ByVal ResourceName As String)
+
+            'Load the banner from embedded resource.
+            Dim oStream As Stream = Me.LoadManifestResource(ExecutingAssembly, ResourceName)
+            If Not oStream Is Nothing Then
+                Me.LoadBanner(oStream)
+            Else
+                MsgBox("Cannot load banner from embedded resource.", MsgBoxStyle.Exclamation, GetExecutingAssembly().GetName().Name())
+            End If
+
+        End Sub
+
+        Private Function LoadManifestResource(ByVal ExecutingAssembly As System.Reflection.Assembly, ByVal ResourceName As String) As Stream
+
+            'Extract and return the requested embedded resource.
+            Return ExecutingAssembly.GetManifestResourceStream(ExecutingAssembly.GetName().Name() & "." & ResourceName)
+
+        End Function
+
     End Class
 
 End Namespace
