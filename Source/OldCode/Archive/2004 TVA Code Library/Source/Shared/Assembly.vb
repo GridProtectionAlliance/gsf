@@ -287,6 +287,60 @@ Namespace [Shared]
 
         End Function
 
+        'Public Shared Sub LoadAssemblyFromResource(ByVal assemblyName As String)
+
+        '    Static addedResolver As Boolean
+
+        '    ' Hook into assembly resolve event for current domain so we can load assembly from embedded resource
+        '    If Not addedResolver Then
+        '        AddHandler AppDomain.CurrentDomain.AssemblyResolve, AddressOf ResolveAssemblyFromResource
+        '        addedResolver = True
+        '    End If
+
+        '    ' Load the assembly (this will invoke event that will resolve assembly from resource)
+        '    AppDomain.CurrentDomain.Load(assemblyName)
+
+        'End Sub
+
+        'Private Shared Function ResolveAssemblyFromResource(ByVal sender As Object, ByVal args As ResolveEventArgs) As System.Reflection.Assembly
+
+        '    Static assemblyCache As New Hashtable
+        '    Static rootNameSpace As String
+        '    Dim resourceAssembly As System.Reflection.Assembly
+        '    Dim shortName As String = args.Name.Split(","c)(0)
+
+        '    resourceAssembly = assemblyCache(shortName)
+
+        '    If resourceAssembly Is Nothing Then
+        '        ' Get root namespace of executing assembly since all embedded resources will be prefixed with this
+        '        If rootNameSpace Is Nothing Then
+        '            rootNameSpace = Me.GetType.AssemblyQualifiedName
+        '            rootNameSpace = rootNameSpace.Substring(0, rootNameSpace.IndexOf("."c))
+        '        End If
+
+        '        ' Loop through all of the resources in the executing assembly
+        '        For Each name As String In System.Reflection.Assembly.GetExecutingAssembly.GetManifestResourceNames()
+        '            ' See if the embedded resource name matches assembly we are trying to load
+        '            If String.Compare(Path.GetFileNameWithoutExtension(name), rootNameSpace & "." & shortName, True) = 0 Then
+        '                ' If so, load embedded resource assembly into a binary buffer
+        '                With [Assembly].GetExecutingAssembly.GetManifestResourceStream(name)
+        '                    Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), .Length)
+        '                    .Read(buffer, 0, .Length)
+        '                    .Close()
+
+        '                    ' Load assembly from binary buffer
+        '                    resourceAssembly = System.Reflection.Assembly.Load(buffer)
+        '                    assemblyCache.Add(shortName, resourceAssembly)
+        '                    Exit For
+        '                End With
+        '            End If
+        '        Next
+        '    End If
+
+        '    Return resourceAssembly
+
+        'End Function
+
     End Class
 
 End Namespace
