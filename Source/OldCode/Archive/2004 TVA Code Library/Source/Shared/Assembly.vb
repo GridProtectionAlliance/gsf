@@ -13,17 +13,33 @@ Namespace [Shared]
     Public Class [Assembly]
 
         Private m_Assembly As System.Reflection.Assembly
+        Private Shared m_CallingAssembly As [Assembly]
         Private Shared m_EntryAssembly As [Assembly]
+        Private Shared m_ExecutingAssembly As [Assembly]
 
         Public Sub New(ByVal Asm As Reflection.Assembly)
             'Set the assembly.
             m_Assembly = Asm
         End Sub
 
+        Public Shared ReadOnly Property CallingAssembly() As [Assembly]
+            Get
+                If m_CallingAssembly Is Nothing Then m_CallingAssembly = New [Assembly](System.Reflection.Assembly.GetCallingAssembly())
+                Return m_CallingAssembly
+            End Get
+        End Property
+
         Public Shared ReadOnly Property EntryAssembly() As [Assembly]
             Get
                 If m_EntryAssembly Is Nothing Then m_EntryAssembly = New [Assembly](System.Reflection.Assembly.GetEntryAssembly())
                 Return m_EntryAssembly
+            End Get
+        End Property
+
+        Public Shared ReadOnly Property ExecutingAssembly() As [Assembly]
+            Get
+                If m_ExecutingAssembly Is Nothing Then m_ExecutingAssembly = New [Assembly](System.Reflection.Assembly.GetExecutingAssembly())
+                Return m_ExecutingAssembly
             End Get
         End Property
 
