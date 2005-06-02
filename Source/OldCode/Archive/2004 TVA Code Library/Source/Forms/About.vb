@@ -27,9 +27,9 @@ Namespace Forms
 
             'Add any initialization after the InitializeComponent() call
             'Perform default initialization.
-            Me.m_Url = "http://opweb.cha.tva.gov/"
-            Me.LoadBanner(GetExecutingAssembly(), "EsoLogo.bmp")
-            Me.LoadDisclaimer(GetExecutingAssembly(), "EsoDisclaimer.txt")
+            Me.m_Url = "http://opweb.cha.tva.gov/"                          'Set the default home page Url.
+            Me.LoadBanner(GetExecutingAssembly(), "EsoLogo.bmp")            'Set the default banner.
+            Me.LoadDisclaimer(GetExecutingAssembly(), "EsoDisclaimer.txt")  'Set the default disclaimer.
 
         End Sub
 
@@ -235,10 +235,10 @@ Namespace Forms
             Me.lvAssemblies.Columns.AddRange(New System.Windows.Forms.ColumnHeader() {Me.lvchAssemblies1, Me.lvchAssemblies2})
             Me.lvAssemblies.Dock = System.Windows.Forms.DockStyle.Fill
             Me.lvAssemblies.FullRowSelect = True
-            Me.lvAssemblies.Location = New System.Drawing.Point(0, 20)
+            Me.lvAssemblies.Location = New System.Drawing.Point(0, 21)
             Me.lvAssemblies.MultiSelect = False
             Me.lvAssemblies.Name = "lvAssemblies"
-            Me.lvAssemblies.Size = New System.Drawing.Size(416, 197)
+            Me.lvAssemblies.Size = New System.Drawing.Size(416, 196)
             Me.lvAssemblies.TabIndex = 2
             Me.lvAssemblies.View = System.Windows.Forms.View.Details
             '
@@ -258,7 +258,7 @@ Namespace Forms
             Me.cboAssemblies.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
             Me.cboAssemblies.Location = New System.Drawing.Point(0, 0)
             Me.cboAssemblies.Name = "cboAssemblies"
-            Me.cboAssemblies.Size = New System.Drawing.Size(416, 20)
+            Me.cboAssemblies.Size = New System.Drawing.Size(416, 21)
             Me.cboAssemblies.TabIndex = 0
             '
             'About
@@ -299,7 +299,9 @@ Namespace Forms
                     .Font = .Owner.Font
                 End If
 
-                .Text = "About " & EntryAssembly.Title()  'Set the form's caption.
+
+                .Text = "About " & EntryAssembly.Title()    'Set the form's caption.
+                .rtbDisclaimer.Text = .rtbDisclaimer.Text() 'Causes any Urls in the text to be detected.
 
 
                 'Populate application information.
@@ -335,6 +337,13 @@ Namespace Forms
 
             'Launch ESO web site in the default browser.
             Process.Start(Me.m_Url)
+
+        End Sub
+
+        Private Sub rtbDisclaimer_LinkClicked(ByVal sender As Object, ByVal e As System.Windows.Forms.LinkClickedEventArgs) Handles rtbDisclaimer.LinkClicked
+
+            'Launch the link in default browser.
+            Process.Start(e.LinkText())
 
         End Sub
 
@@ -403,12 +412,7 @@ Namespace Forms
             If DisclaimerText <> "" Then
                 'Load disclaimer text.
                 With Me.rtbDisclaimer
-                    If DetectUrls Then
-                        .DetectUrls = True
-                    Else
-                        .DetectUrls = False
-                    End If
-
+                    .DetectUrls = DetectUrls
                     .Text = DisclaimerText
                 End With
             Else
