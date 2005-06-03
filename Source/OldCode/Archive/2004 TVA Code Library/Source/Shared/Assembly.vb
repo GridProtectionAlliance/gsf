@@ -19,7 +19,7 @@ Namespace [Shared]
         Private Shared m_EntryAssembly As [Assembly]
         Private Shared m_ExecutingAssembly As [Assembly]
 
-        Public Sub New(ByVal Asm As Reflection.Assembly)
+        Public Sub New(ByVal Asm As System.Reflection.Assembly)
             'Set the assembly.
             m_Assembly = Asm
         End Sub
@@ -302,11 +302,12 @@ Namespace [Shared]
 
         End Function
 
-        Public Function GetCustomAttribute(ByVal AttributeType As Type) As Object
+        Public Function GetCustomAttribute(ByVal AttributeType As System.Type) As Object
 
-            Dim objAttributes As Object() = m_Assembly.GetCustomAttributes(AttributeType, False)
-            If objAttributes.Length() >= 1 Then
-                Return objAttributes(0)
+            'Returns the requested assembly attribute.
+            Dim objAttribute As Object() = m_Assembly.GetCustomAttributes(AttributeType, False)
+            If objAttribute.Length() >= 1 Then
+                Return objAttribute(0)
             Else
                 Throw New ApplicationException("Assembly does not expose this attribute")
             End If

@@ -28,8 +28,8 @@ Namespace Forms
             'Add any initialization after the InitializeComponent() call
             'Perform default initialization.
             Me.m_Url = "http://opweb.cha.tva.gov/"                          'Set the default home page Url.
-            Me.LoadBanner(GetExecutingAssembly(), "EsoLogo.bmp")            'Set the default banner.
-            Me.LoadDisclaimer(GetExecutingAssembly(), "EsoDisclaimer.txt")  'Set the default disclaimer.
+            Me.LoadBanner(GetExecutingAssembly(), "Forms.EsoLogo.bmp")            'Set the default banner.
+            Me.LoadDisclaimer(GetExecutingAssembly(), "Forms.EsoDisclaimer.txt")  'Set the default disclaimer.
 
         End Sub
 
@@ -300,29 +300,29 @@ Namespace Forms
                 End If
 
 
-                .Text = "About " & EntryAssembly.Title()    'Set the form's caption.
+                .Text = "About " & EntryAssembly().Title()    'Set the form's caption.
                 .rtbDisclaimer.Text = .rtbDisclaimer.Text() 'Causes any Urls in the text to be detected.
 
 
                 'Populate application information.
                 .lvApplication.Items.Clear()
-                .AddListViewItem(Me.lvApplication, "Friendly Name", New String() {AppDomain.CurrentDomain().FriendlyName()})
-                .AddListViewItem(Me.lvApplication, "Name", New String() {EntryAssembly.Name()})
-                .AddListViewItem(Me.lvApplication, "Version", New String() {EntryAssembly.Version().ToString()})
-                .AddListViewItem(Me.lvApplication, "Build Date", New String() {EntryAssembly.BuildDate().ToString()})
-                .AddListViewItem(Me.lvApplication, "Location", New String() {EntryAssembly.Location()})
-                .AddListViewItem(Me.lvApplication, "Title", New String() {EntryAssembly.Title()})
-                .AddListViewItem(Me.lvApplication, "Description", New String() {EntryAssembly.Description()})
-                .AddListViewItem(Me.lvApplication, "Company", New String() {EntryAssembly.Company()})
-                .AddListViewItem(Me.lvApplication, "Product", New String() {EntryAssembly.Product()})
-                .AddListViewItem(Me.lvApplication, "Copyright", New String() {EntryAssembly.Copyright()})
-                .AddListViewItem(Me.lvApplication, "Trademark", New String() {EntryAssembly.Trademark()})
+                .AddListViewItem(.lvApplication, "Friendly Name", New String() {AppDomain.CurrentDomain().FriendlyName()})
+                .AddListViewItem(.lvApplication, "Name", New String() {EntryAssembly().Name()})
+                .AddListViewItem(.lvApplication, "Version", New String() {EntryAssembly().Version().ToString()})
+                .AddListViewItem(.lvApplication, "Build Date", New String() {EntryAssembly().BuildDate().ToString()})
+                .AddListViewItem(.lvApplication, "Location", New String() {EntryAssembly().Location()})
+                .AddListViewItem(.lvApplication, "Title", New String() {EntryAssembly().Title()})
+                .AddListViewItem(.lvApplication, "Description", New String() {EntryAssembly().Description()})
+                .AddListViewItem(.lvApplication, "Company", New String() {EntryAssembly().Company()})
+                .AddListViewItem(.lvApplication, "Product", New String() {EntryAssembly().Product()})
+                .AddListViewItem(.lvApplication, "Copyright", New String() {EntryAssembly().Copyright()})
+                .AddListViewItem(.lvApplication, "Trademark", New String() {EntryAssembly().Trademark()})
 
 
 
                 'Populate the assembly ComboBox with the names of all the application assemblies.
                 .cboAssemblies.Items.Clear()
-                For Each oAssembly As Reflection.Assembly In AppDomain.CurrentDomain().GetAssemblies()
+                For Each oAssembly As System.Reflection.Assembly In AppDomain.CurrentDomain().GetAssemblies()
                     .cboAssemblies.Items.Add(oAssembly.GetName().Name())
                 Next
 
@@ -352,17 +352,16 @@ Namespace Forms
             Me.lvAssemblies.Items.Clear()   'Remove all previous entries from the ListView.
 
 
-            Dim oAsmInfo As TVA.Shared.Assembly
             Try
-                oAsmInfo = New TVA.Shared.Assembly(Me.GetAssembly(Me.cboAssemblies.SelectedItem()))
-
-                'Display all the attributes exposed by the selected assembly.
-                Dim nvcAssemblyAttributes As Specialized.NameValueCollection = oAsmInfo.GetAttributes()
-                For Each strKey As String In nvcAssemblyAttributes
-                    AddListViewItem(Me.lvAssemblies, strKey, New String() {nvcAssemblyAttributes(strKey)})
-                Next
+                With New TVA.Shared.Assembly(Me.GetAssembly(Me.cboAssemblies.SelectedItem()))
+                    'Display all the attributes exposed by the selected assembly.
+                    Dim nvcAssemblyAttributes As Specialized.NameValueCollection = .GetAttributes()
+                    For Each strKey As String In nvcAssemblyAttributes
+                        AddListViewItem(Me.lvAssemblies, strKey, New String() {nvcAssemblyAttributes(strKey)})
+                    Next
+                End With
             Catch ex As Exception
-                MsgBox("Cannot load assembly information.", MsgBoxStyle.Exclamation, "TVA.Forms.About")
+                MsgBox("Cannot load assembly information.", MsgBoxStyle.Exclamation, ExecutingAssembly().Name())
             End Try
 
         End Sub
@@ -374,10 +373,10 @@ Namespace Forms
 
         End Sub
 
-        Private Function GetAssembly(ByVal AssemblyName As String) As Reflection.Assembly
+        Private Function GetAssembly(ByVal AssemblyName As String) As System.Reflection.Assembly
 
             'Retrieve the assembly from the assembly name.
-            For Each oAssembly As Reflection.Assembly In AppDomain.CurrentDomain().GetAssemblies()
+            For Each oAssembly As System.Reflection.Assembly In AppDomain.CurrentDomain().GetAssemblies()
                 If oAssembly.GetName().Name().ToLower() = AssemblyName.ToLower() Then
                     Return oAssembly
                 End If
@@ -416,7 +415,7 @@ Namespace Forms
                     .Text = DisclaimerText
                 End With
             Else
-                MsgBox("DisclaimerText parameter cannot be empty.", MsgBoxStyle.Exclamation, GetExecutingAssembly().GetName().Name())
+                MsgBox("DisclaimerText parameter cannot be empty.", MsgBoxStyle.Exclamation, ExecutingAssembly().Name())
             End If
 
         End Sub
@@ -428,7 +427,7 @@ Namespace Forms
                 Dim oStreamReader As New StreamReader(DisclaimerStream)
                 Me.LoadDisclaimer(oStreamReader.ReadToEnd(), True)
             Else
-                MsgBox("DisclaimerStream must be initialized.", MsgBoxStyle.Exclamation, GetExecutingAssembly().GetName().Name())
+                MsgBox("DisclaimerStream must be initialized.", MsgBoxStyle.Exclamation, ExecutingAssembly().Name())
             End If
 
         End Sub
@@ -441,22 +440,22 @@ Namespace Forms
                     Dim oStreamreader As New StreamReader(DisclaimerFile)
                     Me.LoadDisclaimer(oStreamreader.ReadToEnd(), True)
                 Else
-                    MsgBox("DisclaimerFile parameter cannot be empty.", MsgBoxStyle.Exclamation, GetExecutingAssembly().GetName().Name())
+                    MsgBox("DisclaimerFile parameter cannot be empty.", MsgBoxStyle.Exclamation, ExecutingAssembly().Name())
                 End If
             Catch ex As Exception
-                MsgBox("Cannot load disclaimer from file.", MsgBoxStyle.Exclamation, GetExecutingAssembly().GetName().Name())
+                MsgBox("Cannot load disclaimer from file.", MsgBoxStyle.Exclamation, ExecutingAssembly().Name())
             End Try
 
         End Sub
 
-        Public Sub LoadDisclaimer(ByVal ExecutingAssembly As System.Reflection.Assembly, ByVal ResourceName As String)
+        Public Sub LoadDisclaimer(ByVal ResourceAssembly As System.Reflection.Assembly, ByVal ResourceName As String)
 
             'Load the disclaimer from embedded resource.
-            Dim oStream As Stream = Me.LoadManifestResource(ExecutingAssembly, ResourceName)
+            Dim oStream As Stream = New TVA.Shared.Assembly(ResourceAssembly).GetEmbeddedResource(ResourceName)
             If Not oStream Is Nothing Then
                 Me.LoadDisclaimer(oStream)
             Else
-                MsgBox("Cannot load disclaimer from embedded resource.", MsgBoxStyle.Exclamation, GetExecutingAssembly().GetName().Name())
+                MsgBox("Cannot load disclaimer from embedded resource.", MsgBoxStyle.Exclamation, ExecutingAssembly().Name())
             End If
 
         End Sub
@@ -467,7 +466,7 @@ Namespace Forms
             If Not BannerStream Is Nothing Then
                 Me.picLogo.Image = New Bitmap(BannerStream)
             Else
-                MsgBox("BannerStream must be initialized.", MsgBoxStyle.Exclamation, GetExecutingAssembly().GetName().Name())
+                MsgBox("BannerStream must be initialized.", MsgBoxStyle.Exclamation, ExecutingAssembly().Name())
             End If
 
         End Sub
@@ -480,32 +479,25 @@ Namespace Forms
                     Dim oStreamreader As New StreamReader(BannerFile)
                     Me.LoadBanner(oStreamreader.BaseStream())
                 Else
-                    MsgBox("BannerFile parameter cannot be empty.", MsgBoxStyle.Exclamation, GetExecutingAssembly().GetName().Name())
+                    MsgBox("BannerFile parameter cannot be empty.", MsgBoxStyle.Exclamation, ExecutingAssembly().Name())
                 End If
             Catch ex As Exception
-                MsgBox("Cannot load banner from file.", MsgBoxStyle.Exclamation, GetExecutingAssembly().GetName().Name())
+                MsgBox("Cannot load banner from file.", MsgBoxStyle.Exclamation, ExecutingAssembly().Name())
             End Try
 
         End Sub
 
-        Public Sub LoadBanner(ByVal ExecutingAssembly As System.Reflection.Assembly, ByVal ResourceName As String)
+        Public Sub LoadBanner(ByVal ResourceAssembly As System.Reflection.Assembly, ByVal ResourceName As String)
 
             'Load the banner from embedded resource.
-            Dim oStream As Stream = Me.LoadManifestResource(ExecutingAssembly, ResourceName)
+            Dim oStream As Stream = New TVA.Shared.Assembly(ResourceAssembly).GetEmbeddedResource(ResourceName) ' Me.LoadManifestResource(ExecutingAssembly, ResourceName)
             If Not oStream Is Nothing Then
                 Me.LoadBanner(oStream)
             Else
-                MsgBox("Cannot load banner from embedded resource.", MsgBoxStyle.Exclamation, GetExecutingAssembly().GetName().Name())
+                MsgBox("Cannot load banner from embedded resource.", MsgBoxStyle.Exclamation, ExecutingAssembly().Name())
             End If
 
         End Sub
-
-        Private Function LoadManifestResource(ByVal ExecutingAssembly As System.Reflection.Assembly, ByVal ResourceName As String) As Stream
-
-            'Extract and return the requested embedded resource.
-            Return ExecutingAssembly.GetManifestResourceStream(ExecutingAssembly.GetName().Name() & "." & ResourceName)
-
-        End Function
 
     End Class
 
