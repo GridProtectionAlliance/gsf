@@ -1,12 +1,14 @@
 'Author: Pinal Patel
 'Created: 04/29/05
-'Modified: 06/01/05
+'Modified: 06/03/05
 'Description: This class reads the assembly attributes from an AssemblyInfo.vb file.
 
 
 
 'Namespaces used.
+Imports System.Reflection.Assembly
 Imports System.Text.RegularExpressions
+Imports System.IO
 
 Namespace [Shared]
 
@@ -24,21 +26,21 @@ Namespace [Shared]
 
         Public Shared ReadOnly Property CallingAssembly() As [Assembly]
             Get
-                If m_CallingAssembly Is Nothing Then m_CallingAssembly = New [Assembly](System.Reflection.Assembly.GetCallingAssembly())
+                If m_CallingAssembly Is Nothing Then m_CallingAssembly = New [Assembly](GetCallingAssembly())
                 Return m_CallingAssembly
             End Get
         End Property
 
         Public Shared ReadOnly Property EntryAssembly() As [Assembly]
             Get
-                If m_EntryAssembly Is Nothing Then m_EntryAssembly = New [Assembly](System.Reflection.Assembly.GetEntryAssembly())
+                If m_EntryAssembly Is Nothing Then m_EntryAssembly = New [Assembly](GetEntryAssembly())
                 Return m_EntryAssembly
             End Get
         End Property
 
         Public Shared ReadOnly Property ExecutingAssembly() As [Assembly]
             Get
-                If m_ExecutingAssembly Is Nothing Then m_ExecutingAssembly = New [Assembly](System.Reflection.Assembly.GetExecutingAssembly())
+                If m_ExecutingAssembly Is Nothing Then m_ExecutingAssembly = New [Assembly](GetExecutingAssembly())
                 Return m_ExecutingAssembly
             End Get
         End Property
@@ -227,6 +229,14 @@ Namespace [Shared]
             End Get
         End Property
 
+        Public ReadOnly Property RootNamespace() As String
+            Get
+                'Returns the root namespace of the assembly.
+                Dim strRootNamespace As String = m_Assembly.GetExportedTypes(0).AssemblyQualifiedName()
+                Return strRootNamespace.Substring(0, strRootNamespace.IndexOf("."c))
+            End Get
+        End Property
+
         Public Function GetAttributes() As Specialized.NameValueCollection
 
             Dim nvc As New Specialized.NameValueCollection
@@ -303,59 +313,66 @@ Namespace [Shared]
 
         End Function
 
-        'Public Shared Sub LoadAssemblyFromResource(ByVal assemblyName As String)
+        Public Function GetEmbeddedResource(ByVal ResourceName As String) As Stream
 
-        '    Static addedResolver As Boolean
+            'Extract and return the requested embedded resource.
+            Return m_Assembly.GetManifestResourceStream(RootNamespace() & "." & ResourceName)
 
-        '    ' Hook into assembly resolve event for current domain so we can load assembly from embedded resource
-        '    If Not addedResolver Then
-        '        AddHandler AppDomain.CurrentDomain.AssemblyResolve, AddressOf ResolveAssemblyFromResource
-        '        addedResolver = True
-        '    End If
+        End Function
 
-        '    ' Load the assembly (this will invoke event that will resolve assembly from resource)
-        '    AppDomain.CurrentDomain.Load(assemblyName)
+        Public Shared Sub LoadAssemblyFromResource(ByVal assemblyName As String)
 
-        'End Sub
+            Static addedResolver As Boolean
 
-        'Private Shared Function ResolveAssemblyFromResource(ByVal sender As Object, ByVal args As ResolveEventArgs) As System.Reflection.Assembly
+            ' Hook into assembly resolve event for current domain so we can load assembly from embedded resource
+            If Not addedResolver Then
+                AddHandler AppDomain.CurrentDomain.AssemblyResolve, AddressOf ResolveAssemblyFromResource
+                addedResolver = True
+            End If
 
-        '    Static assemblyCache As New Hashtable
-        '    Static rootNameSpace As String
-        '    Dim resourceAssembly As System.Reflection.Assembly
-        '    Dim shortName As String = args.Name.Split(","c)(0)
+            ' Load the assembly (this will invoke event that will resolve assembly from resource)
+            AppDomain.CurrentDomain.Load(assemblyName)
 
-        '    resourceAssembly = assemblyCache(shortName)
+        End Sub
 
-        '    If resourceAssembly Is Nothing Then
-        '        ' Get root namespace of executing assembly since all embedded resources will be prefixed with this
-        '        If rootNameSpace Is Nothing Then
-        '            rootNameSpace = Me.GetType.AssemblyQualifiedName
-        '            rootNameSpace = rootNameSpace.Substring(0, rootNameSpace.IndexOf("."c))
-        '        End If
+        Private Shared Function ResolveAssemblyFromResource(ByVal sender As Object, ByVal args As ResolveEventArgs) As System.Reflection.Assembly
 
-        '        ' Loop through all of the resources in the executing assembly
-        '        For Each name As String In System.Reflection.Assembly.GetExecutingAssembly.GetManifestResourceNames()
-        '            ' See if the embedded resource name matches assembly we are trying to load
-        '            If String.Compare(Path.GetFileNameWithoutExtension(name), rootNameSpace & "." & shortName, True) = 0 Then
-        '                ' If so, load embedded resource assembly into a binary buffer
-        '                With [Assembly].GetExecutingAssembly.GetManifestResourceStream(name)
-        '                    Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), .Length)
-        '                    .Read(buffer, 0, .Length)
-        '                    .Close()
+            Static assemblyCache As New Hashtable
+            Static rootNameSpace As String
+            Dim resourceAssembly As System.Reflection.Assembly
+            Dim shortName As String = args.Name.Split(","c)(0)
 
-        '                    ' Load assembly from binary buffer
-        '                    resourceAssembly = System.Reflection.Assembly.Load(buffer)
-        '                    assemblyCache.Add(shortName, resourceAssembly)
-        '                    Exit For
-        '                End With
-        '            End If
-        '        Next
-        '    End If
+            resourceAssembly = assemblyCache(shortName)
 
-        '    Return resourceAssembly
+            If resourceAssembly Is Nothing Then
+                ' Get root namespace of executing assembly since all embedded resources will be prefixed with this
+                If rootNameSpace Is Nothing Then
+                    rootNameSpace = GetEntryAssembly().GetExportedTypes(0).AssemblyQualifiedName()
+                    rootNameSpace = rootNameSpace.Substring(0, rootNameSpace.IndexOf("."c))
+                End If
 
-        'End Function
+                ' Loop through all of the resources in the executing assembly
+                For Each name As String In GetEntryAssembly.GetManifestResourceNames()
+                    ' See if the embedded resource name matches assembly we are trying to load
+                    If String.Compare(Path.GetFileNameWithoutExtension(name), rootNameSpace & "." & shortName, True) = 0 Then
+                        ' If so, load embedded resource assembly into a binary buffer
+                        With GetEntryAssembly.GetManifestResourceStream(name)
+                            Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), .Length)
+                            .Read(buffer, 0, .Length)
+                            .Close()
+
+                            ' Load assembly from binary buffer
+                            resourceAssembly = Load(buffer)
+                            assemblyCache.Add(shortName, resourceAssembly)
+                            Exit For
+                        End With
+                    End If
+                Next
+            End If
+
+            Return resourceAssembly
+
+        End Function
 
     End Class
 
