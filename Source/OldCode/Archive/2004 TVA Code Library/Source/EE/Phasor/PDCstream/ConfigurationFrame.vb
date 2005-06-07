@@ -1,5 +1,5 @@
 '***********************************************************************
-'  Config.vb - PDCstream Configuration File Reader
+'  ConfigurationFrame.vb - PDCstream Configuration Frame / File
 '  Copyright © 2004 - TVA, all rights reserved
 '
 '  Build Environment: VB.NET, Visual Studio 2003
@@ -45,15 +45,17 @@ Namespace EE.Phasor.PDCstream
         Private m_orderedIDList As ArrayList
         Private m_orderedPMUList As ArrayList
         Private m_packetsPerSample As Integer
+        Private m_streamType As StreamType
+        Private m_revisionNumber As RevisionNumber
 
         Public Event ConfigFileReloaded()
 
         Public Const SyncByte As Byte = &HAA
         Public Const PacketFlag As Byte = &H0
-        Public Const VersionFlag As Byte = 1    ' Using full data stream with PMU ID's and offsets removed from data packet
-        Public Const RevisionNumber As Byte = 1 ' July 2002 revision for std. 37.118 using UNIX timetag (start count 1970)
 
         Public Sub New(ByVal configFileName As String)
+
+            MyBase.New()
 
             m_iniFile = New IniFile(configFileName)
             m_readWriteLock = New ReaderWriterLock
@@ -62,10 +64,34 @@ Namespace EE.Phasor.PDCstream
 
         End Sub
 
+        Public Sub New(ByVal configurationFrame As IDataFrame)
+
+            MyBase.New(configurationFrame)
+
+        End Sub
+
         Public Overrides ReadOnly Property InheritedType() As System.Type
             Get
                 Return Me.GetType
             End Get
+        End Property
+
+        Public Property StreamType() As StreamType
+            Get
+                Return m_streamType
+            End Get
+            Set(ByVal Value As StreamType)
+                m_streamType = Value
+            End Set
+        End Property
+
+        Public Property RevisionNumber() As RevisionNumber
+            Get
+                Return m_revisionNumber
+            End Get
+            Set(ByVal Value As RevisionNumber)
+                m_revisionNumber = Value
+            End Set
         End Property
 
         Public Sub Refresh()
@@ -259,7 +285,7 @@ Namespace EE.Phasor.PDCstream
             End Get
         End Property
 
-        Public ReadOnly Property FileImage() As String
+        Public ReadOnly Property IniFileImage() As String
             Get
                 m_readWriteLock.AcquireReaderLock(-1)
 
@@ -371,7 +397,7 @@ Namespace EE.Phasor.PDCstream
                 buffer(0) = SyncByte
                 buffer(1) = PacketFlag
                 EndianOrder.SwapCopyBytes(Convert.ToInt16(buffer.Length \ 2), buffer, 2)
-                buffer(4) = VersionFlag
+                buffer(4) = StreamType
                 buffer(5) = RevisionNumber
                 EndianOrder.SwapCopyBytes(Convert.ToInt16(SampleRate), buffer, 6)
                 EndianOrder.SwapCopyBytes(Convert.ToUInt32(RowLength), buffer, 8)

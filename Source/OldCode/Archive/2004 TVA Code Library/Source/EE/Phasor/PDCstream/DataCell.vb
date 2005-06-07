@@ -29,9 +29,8 @@ Namespace EE.Phasor.PDCstream
 
         Public Sub New(ByVal parent As IDataFrame, ByVal configurationCell As IConfigurationCell, ByVal sampleNumber As Integer)
 
-            MyBase.New(parent)
+            MyBase.New(parent, configurationCell)
 
-            Me.ConfigurationCell = configurationCell
             m_sampleNumber = sampleNumber
 
             ' Initialize phasor values and frequency value with an empty value

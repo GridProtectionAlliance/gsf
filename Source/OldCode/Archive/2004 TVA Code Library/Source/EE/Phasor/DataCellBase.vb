@@ -32,10 +32,11 @@ Namespace EE.Phasor
         Private m_analogValues As AnalogValueCollection
         Private m_digitalValues As DigitalValueCollection
 
-        Protected Sub New(ByVal parent As IDataFrame)
+        Protected Sub New(ByVal parent As IDataFrame, ByVal configurationCell As IConfigurationCell)
 
             MyBase.New(parent)
 
+            m_configurationCell = configurationCell
             m_phasorValues = New PhasorValueCollection
             m_analogValues = New AnalogValueCollection
             m_digitalValues = New DigitalValueCollection
@@ -59,7 +60,7 @@ Namespace EE.Phasor
         ' and automatically pass in type parameters
         Protected Sub New(ByVal parent As IDataFrame, ByVal configurationCell As IConfigurationCell, ByVal binaryImage As Byte(), ByVal startIndex As Integer, ByVal phasorValueType As Type, ByVal frequencyValueType As Type, ByVal analogValueType As Type, ByVal digitalValueType As Type)
 
-            Me.New(parent)
+            Me.New(parent, configurationCell)
 
             Dim x As Integer
 
