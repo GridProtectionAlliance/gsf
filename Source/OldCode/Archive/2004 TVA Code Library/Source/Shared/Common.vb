@@ -8,10 +8,10 @@ Imports System.Xml
 Imports VB = Microsoft.VisualBasic
 
 Namespace [Shared]
+
     ''' <summary>
     ''' <para> Global Functions</para>
     ''' </summary>
-
     Public Class Common
 
         Private Sub New()
@@ -19,17 +19,18 @@ Namespace [Shared]
             ' This class contains only global functions and is not meant to be instantiated
 
         End Sub
+
         ''' <summary>
         ''' <para> Returns True if specified item is in parameter list</para>
         ''' </summary>
         ''' <param name="Item"> Required. Specific Item to find in the Parameter Array. </param>
         ''' <param name="ItemList()"> Required. Parameter list.</param> 
-
         Public Shared Function InList(ByVal Item As System.Object, ByVal ParamArray ItemList() As System.Object) As Boolean
 
             Return ArrayContains(Item, ItemList)
 
         End Function
+
         ''' <summary>
         ''' <para> Performs case-insensitive text comparisons to find a specified item in an array</para>
         ''' </summary>
@@ -43,32 +44,31 @@ Namespace [Shared]
             Return ArrayContains(Item, ItemList, CaseInsensitiveComparer.Default)
 
         End Function
+
         ''' <summary>
         ''' <para> Returns smallest item from list of parameters</para>
         ''' </summary>
         ''' <param name="Item"> Required. parameter list . </param>
-
         Public Shared Function Minimum(ByVal ParamArray ItemList() As System.Object) As Object
 
             Return ArrayMinimum(ItemList)
 
         End Function
+
         ''' <summary>
         ''' <para> Returns largest item from list of parameters</para>
         ''' </summary>
         ''' <param name="Item"> Required. parameter list . </param>
-
         Public Shared Function Maximum(ByVal ParamArray ItemList() As System.Object) As Object
 
             Return ArrayMaximum(ItemList)
 
         End Function
+
         ''' <summary>
         ''' <para> Returns True if specified item exists in given array</para>
         ''' </summary>
         ''' <param name="Item"> Required. Array of items . </param>
-
-
         Public Shared Function ArrayContains(ByVal Item As System.Object, ByVal ArrayItems As IEnumerable, Optional ByVal Comparer As IComparer = Nothing) As Boolean
 
             With ArrayItems.GetEnumerator()
@@ -80,12 +80,12 @@ Namespace [Shared]
             Return False
 
         End Function
+
         ''' <summary>
         ''' <para> Returns smallest item from the specified array given a comparer.</para>
         ''' </summary>
         ''' <param name="ArrayItems"> Required. Array of items . </param>
         ''' <param name="Comparer"> Optional. Comparer . </param>
-
         Public Shared Function ArrayMinimum(ByVal ArrayItems As IEnumerable, Optional ByVal Comparer As IComparer = Nothing) As Object
 
             Dim objMin As Object
@@ -102,12 +102,12 @@ Namespace [Shared]
             Return objMin
 
         End Function
+
         ''' <summary>
         ''' <para> Returns largest item from the specified array given a comparer.</para>
         ''' </summary>
         ''' <param name="ArrayItems"> Required. Array of items . </param>
         ''' <param name="Comparer"> Optional. Comparer . </param>
-
         Public Shared Function ArrayMaximum(ByVal ArrayItems As IEnumerable, Optional ByVal Comparer As IComparer = Nothing) As Object
 
             Dim objMax As Object
@@ -124,6 +124,7 @@ Namespace [Shared]
             Return objMax
 
         End Function
+
         ''' <summary>
         ''' <para> Compares two elements of any type.</para>
         ''' </summary>
@@ -144,10 +145,10 @@ Namespace [Shared]
                         ElseIf x.Equals(y) Then
                             Return 0
                         Else
-                            Return Collections.Comparer.Default.Compare(x, y)
+                            Return System.Collections.Comparer.Default.Compare(x, y)
                         End If
                     Else
-                        Return Collections.Comparer.Default.Compare(x, y)
+                        Return System.Collections.Comparer.Default.Compare(x, y)
                     End If
                 Else
                     ' Otherwise compare using VB rules (ms-help://MS.VSCC/MS.MSDNVS/vblr7/html/vagrpComparison.htm)
@@ -159,13 +160,13 @@ Namespace [Shared]
             End If
 
         End Function
+
         ''' <summary>
         ''' <para> Compares two arrays.</para>
         ''' </summary>
         ''' <param name="ArrA"> Required. Array to compare. </param>
         ''' <param name="ArrB"> Required. Array to compare . </param>
         ''' <param name="Comparer"> Optional. Comparer . </param>
-
         Public Shared Function CompareArrays(ByVal ArrA As Array, ByVal ArrB As Array, Optional ByVal Comparer As IComparer = Nothing) As Integer
 
             If ArrA Is Nothing And ArrB Is Nothing Then
@@ -195,13 +196,13 @@ Namespace [Shared]
             End If
 
         End Function
+
         ''' <summary>
         ''' <para> Changes the type of all the elements in source list and copies the conversion result to destination list.</para>
         ''' </summary>
         ''' <param name="Source"> Required. Source List. </param>
         ''' <param name="Destination"> Required. Destination List . </param>
         ''' <param name="ToType"> Required. specified type to change the source elements. </param>
-
         Public Shared Sub ConvertList(ByVal Source As IList, ByVal Destination As IList, ByVal ToType As System.Type)
 
             If Source Is Nothing Then Throw New ArgumentNullException("Source list is null")
@@ -218,13 +219,13 @@ Namespace [Shared]
             End If
 
         End Sub
+
         ''' <summary>
         ''' <para> Changes the type of all the elements in source enumeration and adds the conversion result to destination list.</para>
         ''' </summary>
         ''' <param name="Source"> Required. Source Enumeration. </param>
         ''' <param name="Destination"> Required. Destination Enumeration . </param>
         ''' <param name="ToType"> Required. specified type to change the source elements. </param>
-
         Public Shared Sub ConvertEnumeration(ByVal Source As IEnumerable, ByVal Destination As IList, ByVal ToType As System.Type)
 
             If Source Is Nothing Then Throw New ArgumentNullException("Source list is null")
@@ -237,24 +238,24 @@ Namespace [Shared]
             Next
 
         End Sub
+
         ''' <summary>
         ''' <para>  Converts an array and all of its elements to the specified type.</para>
         ''' </summary>
         ''' <param name="Source"> Required. Source Array. </param>
         ''' <param name="ToType"> Required. specified type to change the elements of source array. </param>
-
         Public Shared Function ConvertArray(ByVal Source As Array, ByVal ToType As System.Type) As Array
 
             ' This function is just a semantic reference - Array class implements IList
             Return ListToArray(Source, ToType)
 
         End Function
+
         ''' <summary>
         ''' <para>Converts a list to an array.</para>
         ''' </summary>
         ''' <param name="Source"> Required.List. </param>
         ''' <param name="ElementType"> Required. Type . </param>
-
         Public Shared Function ListToArray(ByVal Source As IList, ByVal ElementType As System.Type) As Array
 
             If Source Is Nothing Then Throw New ArgumentNullException("Source list is null")
@@ -266,22 +267,22 @@ Namespace [Shared]
             Return Destination
 
         End Function
+
         ''' <summary>
         ''' <para>Converts an array to a string.</para>
         ''' </summary>
         ''' <param name="Source"> Required.Array. </param>
-
         Public Shared Function ArrayToString(ByVal Source As Array) As String
 
             ' This function is just a semantic reference - Array class implements IEnumerable
             Return ListToString(Source)
 
         End Function
+
         ''' <summary>
         ''' <para>Converts an enumeration to a string.</para>
         ''' </summary>
         ''' <param name="Source"> Required.Enumeration. </param>
-
         Public Shared Function ListToString(ByVal Source As IEnumerable) As String
 
             If Source Is Nothing Then Throw New ArgumentNullException("Source list is null")
@@ -296,6 +297,7 @@ Namespace [Shared]
             Return strArray.ToString()
 
         End Function
+
         ''' <summary>
         ''' <para> Converts a string (created with ArrayToString) back into an array.</para>
         ''' </summary>
@@ -310,12 +312,12 @@ Namespace [Shared]
             Return ListToArray(lstItems, ElementType)
 
         End Function
+
         ''' <summary>
         ''' <para>Converts a string (created with ArrayToString or ListToString) into the given list.</para>
         ''' </summary>
         ''' <param name="Source"> Required.String. </param>
         ''' <param name="Destination"> Required.List. </param>
-
         Public Shared Sub StringToList(ByVal Source As System.String, ByVal Destination As IList)
 
             If Source Is Nothing Then Exit Sub
@@ -329,22 +331,22 @@ Namespace [Shared]
             Next
 
         End Sub
+
         ''' <summary>
         ''' <para>Rearranges all the elements in the array into a random order.</para>
         ''' </summary>
         ''' <param name="Source"> Required.Array. </param>
-
         Public Shared Sub ScrambleArray(ByVal Source As Array)
 
             ' This function is just a semantic reference - Array class implements IList
             ScrambleList(Source)
 
         End Sub
+
         ''' <summary>
         ''' <para>Rearranges all the elements in the list into a random order.</para>
         ''' </summary>
         ''' <param name="Source"> Required.List. </param>
-
         Public Shared Sub ScrambleList(ByVal Source As IList)
 
             If Source Is Nothing Then Throw New ArgumentNullException("Source list is null")
@@ -366,21 +368,21 @@ Namespace [Shared]
             Next
 
         End Sub
+
         ''' <summary>
         ''' <para>Determines if given item is an object (i.e., a reference type but not a string).</para>
         ''' </summary>
         ''' <param name="Source"> Required.Item. </param>
-
         Public Shared Function IsObject(ByVal Item As System.Object) As Boolean
 
             Return (IsReference(Item) And Not TypeOf Item Is String)
 
         End Function
+
         ''' <summary>
         ''' <para>Pauses execution for specified number of seconds.</para>
         ''' </summary>
         ''' <param name="DelaySeconds"> Required.Specific number of seconds. </param>
-
         Public Shared Sub Delay(ByVal DelaySeconds As System.Single)
 
             Dim sngStart As Single
@@ -393,11 +395,11 @@ Namespace [Shared]
             Loop
 
         End Sub
+
         ''' <summary>
         ''' <para>Returns only assembly name and version from full assembly name.</para>
         ''' </summary>
         ''' <param name="AssemblyInstance"> Required.Assembly Instance. </param>
-
         Public Shared Function GetShortAssemblyName(ByVal AssemblyInstance As System.Reflection.Assembly) As String
 
             Dim strFullName As String = AssemblyInstance.FullName
@@ -410,12 +412,12 @@ Namespace [Shared]
             End If
 
         End Function
+
         ''' <summary>
         ''' <para> Performs a standard format, but returns blank string if no value is specified.</para>
         ''' </summary>
         ''' <param name="Expression"> Required.Expression. </param>
         ''' <param name="Style"> Optional.Format. </param>
-
         Public Shared Function FormatValue(ByVal Expression As Object, Optional ByVal Style As System.String = "MM/dd/yyyy") As String
 
             If IsDBNull(Expression) Then
@@ -431,13 +433,12 @@ Namespace [Shared]
             End If
 
         End Function
+
         ''' <summary>
         ''' <para> Convert a string to a byte array.</para>
         ''' </summary>
         ''' <param name="Str"> Required.String. </param>
         ''' <param name="OutputAsUnicode"> Optional.True. </param>
-
-
         Public Shared Function GetByteArrayFromString(ByVal Str As System.String, Optional ByVal OutputAsUnicode As Boolean = True) As Byte()
 
             If OutputAsUnicode Then
@@ -447,12 +448,12 @@ Namespace [Shared]
             End If
 
         End Function
+
         ''' <summary>
         ''' <para>  Convert a byte array to a string.</para>
         ''' </summary>
         ''' <param name="Bytes"> Required.String. </param>
         ''' <param name="InputIsUnicode"> Optional.True. </param>
-
         Public Shared Function GetStringFromByteArray(ByVal Bytes As Byte(), Optional ByVal InputIsUnicode As Boolean = True) As String
 
             If InputIsUnicode Then
@@ -462,12 +463,12 @@ Namespace [Shared]
             End If
 
         End Function
+
         ''' <summary>
         ''' <para>Returns a buffer of the specified length.</para>
         ''' </summary>
         ''' <param name="Buffer"> Required.Buffer. </param>
         ''' <param name="Length">Length of buffer </param>
-
         Public Shared Function TruncateBuffer(ByVal Buffer As Byte(), ByVal Length As Integer) As Byte()
 
             If Buffer.Length = Length Then
@@ -479,23 +480,23 @@ Namespace [Shared]
             End If
 
         End Function
+
         ''' <summary>
         ''' <para>Return the Unicode number for a character in proper Regular Expression format.</para>
         ''' </summary>
         ''' <param name="Item"> Required.Character. </param>
-
         Public Shared Function GetRegexUnicodeChar(ByVal Item As Char) As String
 
             Return "\u" & AscW(Item).ToString("x"c).PadLeft(4, "0"c)
 
         End Function
+
         ''' <summary>
         ''' <para>Gets an Xml node from given path, creating the entire path it if it doesn't exist.</para>
         ''' </summary>
         ''' <param name="parentNode"> Required.Node. </param>
         ''' <param name="xpath"> Required.Path. </param>
         ''' <param name="IsDirty"> Optional.Boolean value. </param>
-
         Public Shared Function GetXmlNode(ByVal parentNode As XmlNode, ByVal xpath As System.String, Optional ByRef IsDirty As Boolean = False) As XmlNode
 
             Dim node As XmlNode
@@ -529,24 +530,24 @@ Namespace [Shared]
             Return node
 
         End Function
+
         ''' <summary>
         ''' <para>This overload just allows start given xml document by using its root element.</para>
         ''' </summary>
         ''' <param name="xmlDoc"> Required.xml document. </param>
         ''' <param name="xpath"> Required.Path. </param>
         ''' <param name="IsDirty"> Optional.Boolean value. </param>
-
         Public Shared Function GetXmlNode(ByVal xmlDoc As XmlDocument, ByVal xpath As System.String, Optional ByRef IsDirty As Boolean = False) As XmlNode
 
             Return GetXmlNode(xmlDoc.DocumentElement, xpath, IsDirty)
 
         End Function
+
         ''' <summary>
         ''' <para>Safely gets or sets an XML node's attribute, creating it if needed.</para>
         ''' </summary>
         ''' <param name="node"> Required.xml node. </param>
         ''' <param name="name"> Required.String. </param>
-
         Public Shared Property Attribute(ByVal node As XmlNode, ByVal name As System.String) As String
             Get
                 Dim attr As XmlAttribute = node.Attributes(name)
