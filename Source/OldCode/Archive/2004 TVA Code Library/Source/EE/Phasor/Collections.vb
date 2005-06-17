@@ -15,31 +15,65 @@
 '
 '***********************************************************************
 
+Imports TVA.EE.Phasor.Common
+
 Namespace EE.Phasor
+
+    Public Interface IChannelCollection
+
+        Inherits IChannel
+
+        Sub Add(ByVal value As IChannel)
+
+        ReadOnly Property Item(ByVal index As Integer) As IChannel
+
+    End Interface
 
     Public MustInherit Class ChannelCollection
 
         Inherits CollectionBase
+        Implements IChannelCollection
 
-        Public Sub Add(ByVal value As IChannel)
+        Public Sub Add(ByVal value As IChannel) Implements IChannelCollection.Add
 
             List.Add(value)
 
         End Sub
 
-        Default Public ReadOnly Property Item(ByVal index As Integer) As IChannel
+        Default Public ReadOnly Property Item(ByVal index As Integer) As IChannel Implements IChannelCollection.Item
             Get
                 Return List.Item(index)
             End Get
         End Property
 
-        Public Overridable ReadOnly Property BinaryLength() As Integer
+        Public MustOverride ReadOnly Property InheritedType() As Type Implements IChannelCollection.InheritedType
+
+        Public ReadOnly Property This() As IChannel Implements IChannel.This
+            Get
+                Return Me
+            End Get
+        End Property
+
+        Public Overridable ReadOnly Property BinaryLength() As Int16 Implements IChannelCollection.BinaryLength
             Get
                 If List.Count > 0 Then
                     Return Item(0).BinaryLength * List.Count
                 Else
                     Return 0
                 End If
+            End Get
+        End Property
+
+        Public Overridable ReadOnly Property BinaryImage() As Byte() Implements IChannelCollection.BinaryImage
+            Get
+                Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BinaryLength)
+                Dim index As Integer
+
+                For x As Integer = 0 To List.Count - 1
+                    CopyImage(Item(x), buffer, index)
+                Next
+
+                Return buffer
             End Get
         End Property
 
@@ -73,7 +107,7 @@ Namespace EE.Phasor
             End Get
         End Property
 
-        Public Overrides ReadOnly Property BinaryLength() As Integer
+        Public Overrides ReadOnly Property BinaryLength() As Int16
             Get
                 If List.Count > 0 Then
                     If m_fixedCount = 0 Or m_floatCount = 0 Then
@@ -84,7 +118,7 @@ Namespace EE.Phasor
                         Dim length As Integer
 
                         For x As Integer = 0 To List.Count - 1
-                            length += Item(0).BinaryLength
+                            length += Item(x).BinaryLength
                         Next
 
                         Return length
@@ -153,6 +187,19 @@ Namespace EE.Phasor
             End Get
         End Property
 
+        Public Overrides ReadOnly Property BinaryLength() As Int16
+            Get
+                ' Cells will be different lengths, so we must manually sum lengths
+                Dim length As Integer
+
+                For x As Integer = 0 To List.Count - 1
+                    length += Item(x).BinaryLength
+                Next
+
+                Return length
+            End Get
+        End Property
+
     End Class
 
     Public MustInherit Class ChannelFrameCollection
@@ -168,6 +215,20 @@ Namespace EE.Phasor
         Default Public Shadows ReadOnly Property Item(ByVal index As Integer) As IChannelFrame
             Get
                 Return MyBase.Item(index)
+            End Get
+        End Property
+
+
+        Public Overrides ReadOnly Property BinaryLength() As Int16
+            Get
+                ' Frames will be different lengths, so we must manually sum lengths
+                Dim length As Integer
+
+                For x As Integer = 0 To List.Count - 1
+                    length += Item(x).BinaryLength
+                Next
+
+                Return length
             End Get
         End Property
 
@@ -189,6 +250,12 @@ Namespace EE.Phasor
             End Get
         End Property
 
+        Public Overrides ReadOnly Property InheritedType() As Type
+            Get
+                Return Me.GetType()
+            End Get
+        End Property
+
     End Class
 
     Public Class DataCellCollection
@@ -204,6 +271,12 @@ Namespace EE.Phasor
         Default Public Shadows ReadOnly Property Item(ByVal index As Integer) As IDataCell
             Get
                 Return MyBase.Item(index)
+            End Get
+        End Property
+
+        Public Overrides ReadOnly Property InheritedType() As Type
+            Get
+                Return Me.GetType()
             End Get
         End Property
 
@@ -225,6 +298,12 @@ Namespace EE.Phasor
             End Get
         End Property
 
+        Public Overrides ReadOnly Property InheritedType() As Type
+            Get
+                Return Me.GetType()
+            End Get
+        End Property
+
     End Class
 
     Public Class DataFrameCollection
@@ -240,6 +319,12 @@ Namespace EE.Phasor
         Default Public Shadows ReadOnly Property Item(ByVal index As Integer) As IDataFrame
             Get
                 Return MyBase.Item(index)
+            End Get
+        End Property
+
+        Public Overrides ReadOnly Property InheritedType() As Type
+            Get
+                Return Me.GetType()
             End Get
         End Property
 
@@ -261,6 +346,12 @@ Namespace EE.Phasor
             End Get
         End Property
 
+        Public Overrides ReadOnly Property InheritedType() As Type
+            Get
+                Return Me.GetType()
+            End Get
+        End Property
+
     End Class
 
     Public Class DigitalValueCollection
@@ -276,6 +367,12 @@ Namespace EE.Phasor
         Default Public Shadows ReadOnly Property Item(ByVal index As Integer) As IDigitalValue
             Get
                 Return MyBase.Item(index)
+            End Get
+        End Property
+
+        Public Overrides ReadOnly Property InheritedType() As Type
+            Get
+                Return Me.GetType()
             End Get
         End Property
 
@@ -297,6 +394,12 @@ Namespace EE.Phasor
             End Get
         End Property
 
+        Public Overrides ReadOnly Property InheritedType() As Type
+            Get
+                Return Me.GetType()
+            End Get
+        End Property
+
     End Class
 
     Public Class PhasorValueCollection
@@ -312,6 +415,12 @@ Namespace EE.Phasor
         Default Public Shadows ReadOnly Property Item(ByVal index As Integer) As IPhasorValue
             Get
                 Return MyBase.Item(index)
+            End Get
+        End Property
+
+        Public Overrides ReadOnly Property InheritedType() As Type
+            Get
+                Return Me.GetType()
             End Get
         End Property
 
@@ -333,6 +442,12 @@ Namespace EE.Phasor
             End Get
         End Property
 
+        Public Overrides ReadOnly Property InheritedType() As Type
+            Get
+                Return Me.GetType()
+            End Get
+        End Property
+
     End Class
 
     Public Class DigitalDefinitionCollection
@@ -348,6 +463,12 @@ Namespace EE.Phasor
         Default Public Shadows ReadOnly Property Item(ByVal index As Integer) As IDigitalDefinition
             Get
                 Return MyBase.Item(index)
+            End Get
+        End Property
+
+        Public Overrides ReadOnly Property InheritedType() As Type
+            Get
+                Return Me.GetType()
             End Get
         End Property
 
@@ -369,6 +490,12 @@ Namespace EE.Phasor
             End Get
         End Property
 
+        Public Overrides ReadOnly Property InheritedType() As Type
+            Get
+                Return Me.GetType()
+            End Get
+        End Property
+
     End Class
 
     Public Class PhasorDefinitionCollection
@@ -384,6 +511,12 @@ Namespace EE.Phasor
         Default Public Shadows ReadOnly Property Item(ByVal index As Integer) As IPhasorDefinition
             Get
                 Return MyBase.Item(index)
+            End Get
+        End Property
+
+        Public Overrides ReadOnly Property InheritedType() As Type
+            Get
+                Return Me.GetType()
             End Get
         End Property
 

@@ -15,7 +15,9 @@
 '
 '***********************************************************************
 
+Imports System.Buffer
 Imports TVA.Interop
+Imports TVA.EE.Phasor.Common
 
 Namespace EE.Phasor
 
@@ -63,6 +65,9 @@ Namespace EE.Phasor
             Me.New(parent, configurationCell)
 
             Dim x As Integer
+
+            ' Bypass protocol specific data
+            startIndex += ProtocolSpecificDataLength
 
             m_configurationCell = configurationCell
             m_statusFlags = EndianOrder.ReverseToInt16(binaryImage, startIndex)
@@ -157,31 +162,26 @@ Namespace EE.Phasor
 
         Public Overrides ReadOnly Property BinaryLength() As Int16
             Get
-                Return 2 + m_frequencyValue.BinaryLength + m_phasorValues.BinaryLength + m_analogValues.BinaryLength + m_digitalValues.BinaryLength
+                Return 2 + ProtocolSpecificDataLength + m_frequencyValue.BinaryLength + m_phasorValues.BinaryLength + m_analogValues.BinaryLength + m_digitalValues.BinaryLength
             End Get
         End Property
 
         Public Overrides ReadOnly Property BinaryImage() As Byte()
             Get
                 Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BinaryLength)
-                Dim x, index As Integer
+                Dim index As Integer = ProtocolSpecificDataLength
 
-                EndianOrder.SwapCopyBytes(m_statusFlags, buffer, 0)
-                index = 2
+                ' Copy in protocol specific data image
+                If index > 0 Then BlockCopy(ProtocolSpecificDataImage, 0, buffer, 0, ProtocolSpecificDataLength)
 
-                For x = 0 To m_phasorValues.Count - 1
-                    CopyImage(m_phasorValues(x), buffer, index)
-                Next
+                ' Copy in common cell image
+                EndianOrder.SwapCopyBytes(m_statusFlags, buffer, index)
+                index += 2
 
+                CopyImage(m_phasorValues, buffer, index)
                 CopyImage(m_frequencyValue, buffer, index)
-
-                For x = 0 To m_analogValues.Count - 1
-                    CopyImage(m_analogValues(x), buffer, index)
-                Next
-
-                For x = 0 To m_digitalValues.Count - 1
-                    CopyImage(m_digitalValues(x), buffer, index)
-                Next
+                CopyImage(m_analogValues, buffer, index)
+                CopyImage(m_digitalValues, buffer, index)
 
                 Return buffer
             End Get

@@ -28,8 +28,6 @@ Namespace EE.Phasor
 
         ReadOnly Property BinaryImage() As Byte()
 
-        Sub CopyImage(ByVal channel As IChannel, ByVal buffer As Byte(), ByRef index As Integer)
-
     End Interface
 
 End Namespace

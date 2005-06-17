@@ -56,6 +56,18 @@ Namespace EE.Phasor.PDCstream
             End Set
         End Property
 
+        Public Overrides ReadOnly Property ProtocolSpecificDataLength() As Short
+            Get
+
+            End Get
+        End Property
+
+        Public Overrides ReadOnly Property ProtocolSpecificDataImage() As Byte()
+            Get
+
+            End Get
+        End Property
+
     End Class
 
 End Namespace

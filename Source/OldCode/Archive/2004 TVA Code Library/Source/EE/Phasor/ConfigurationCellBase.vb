@@ -15,8 +15,10 @@
 '
 '***********************************************************************
 
+Imports System.Buffer
 Imports System.Text
 Imports TVA.Interop
+Imports TVA.EE.Phasor.Common
 
 Namespace EE.Phasor
 
@@ -183,28 +185,23 @@ Namespace EE.Phasor
 
         Public Overrides ReadOnly Property BinaryLength() As Int16
             Get
-                Return m_frequencyDefinition.BinaryLength + m_phasorDefinitions.BinaryLength + m_analogDefinitions.BinaryLength + m_digitalDefinitions.BinaryLength
+                Return ProtocolSpecificDataLength + m_frequencyDefinition.BinaryLength + m_phasorDefinitions.BinaryLength + m_analogDefinitions.BinaryLength + m_digitalDefinitions.BinaryLength
             End Get
         End Property
 
         Public Overrides ReadOnly Property BinaryImage() As Byte()
             Get
                 Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BinaryLength)
-                Dim x, index As Integer
+                Dim index As Integer = ProtocolSpecificDataLength
 
-                For x = 0 To m_phasorDefinitions.Count - 1
-                    CopyImage(m_phasorDefinitions(x), buffer, index)
-                Next
+                ' Copy in protocol specific data image
+                If index > 0 Then BlockCopy(ProtocolSpecificDataImage, 0, buffer, 0, ProtocolSpecificDataLength)
 
+                ' Copy in common cell image
+                CopyImage(m_phasorDefinitions, buffer, index)
                 CopyImage(m_frequencyDefinition, buffer, index)
-
-                For x = 0 To m_analogDefinitions.Count - 1
-                    CopyImage(m_analogDefinitions(x), buffer, index)
-                Next
-
-                For x = 0 To m_digitalDefinitions.Count - 1
-                    CopyImage(m_digitalDefinitions(x), buffer, index)
-                Next
+                CopyImage(m_analogDefinitions, buffer, index)
+                CopyImage(m_digitalDefinitions, buffer, index)
 
                 Return buffer
             End Get

@@ -15,9 +15,11 @@
 '
 '***********************************************************************
 
+Imports System.Buffer
 Imports TVA.Interop
 Imports TVA.Shared.DateTime
 Imports TVA.Compression.Common
+Imports TVA.EE.Phasor.Common
 
 Namespace EE.Phasor
 
@@ -136,26 +138,29 @@ Namespace EE.Phasor
             End Get
         End Property
 
-        Public Overridable ReadOnly Property DataLength() As Int16 Implements IChannelFrame.DataLength
+        Public MustOverride ReadOnly Property ProtocolSpecificDataLength() As Int16 Implements IChannelFrame.ProtocolSpecificDataLength
+
+        Public MustOverride ReadOnly Property ProtocolSpecificDataImage() As Byte() Implements IChannelFrame.ProtocolSpecificDataImage
+
+        Public Overrides ReadOnly Property BinaryLength() As Short
             Get
-                Dim length As Int16
-
-                For x As Integer = 0 To m_cells.Count - 1
-                    length += m_cells(x).BinaryLength
-                Next
-
-                Return length
+                Return 2 + ProtocolSpecificDataLength + Cells.BinaryLength
             End Get
         End Property
 
-        Public Overridable ReadOnly Property DataImage() As Byte() Implements IChannelFrame.DataImage
+        Public Overrides ReadOnly Property BinaryImage() As Byte()
             Get
-                Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), DataLength)
-                Dim index As Integer
+                Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BinaryLength)
+                Dim index As Integer = ProtocolSpecificDataLength
 
-                For x As Integer = 0 To m_cells.Count - 1
-                    CopyImage(m_cells(x), buffer, index)
-                Next
+                ' Copy in protocol specific data image
+                If index > 0 Then BlockCopy(ProtocolSpecificDataImage, 0, buffer, 0, ProtocolSpecificDataLength)
+
+                ' Copy in common cell image
+                CopyImage(Cells, buffer, index)
+
+                ' Add check sum
+                AppendChecksum(buffer, index)
 
                 Return buffer
             End Get
@@ -163,7 +168,14 @@ Namespace EE.Phasor
 
         Protected Overridable Function ChecksumIsValid(ByVal buffer As Byte(), ByVal startIndex As Integer) As Boolean
 
-            Return EndianOrder.ReverseToInt16(buffer, startIndex + DataLength - 2) = CalculateChecksum(buffer, startIndex, DataLength - 2)
+            Dim length As Int16 = BinaryLength
+
+            ' TODO: Remove this debug code..
+            Dim bufferSum As Int16 = EndianOrder.ReverseToInt16(buffer, startIndex + length - 2)
+            Dim calculatedSum As Int16 = CalculateChecksum(buffer, startIndex, length - 2)
+            Debug.WriteLine("Buffer Sum = " & bufferSum & ", Calculated Sum = " & calculatedSum)
+            Return (bufferSum = calculatedSum)
+            'Return EndianOrder.ReverseToInt16(buffer, startIndex + length - 2) = CalculateChecksum(buffer, startIndex, length - 2)
 
         End Function
 

@@ -26,6 +26,7 @@ Imports TVA.Shared.Common
 Imports TVA.Shared.Math
 Imports TVA.Interop
 Imports TVA.Interop.Windows
+Imports TVA.EE.Phasor.PDCstream.Common
 
 Namespace EE.Phasor.PDCstream
 
@@ -47,12 +48,9 @@ Namespace EE.Phasor.PDCstream
 
         Public Event ConfigFileReloaded()
 
-        Public Const SyncByte As Byte = &HAA
-        Public Const PacketFlag As Byte = &H0
-
         Public Sub New(ByVal configFileName As String)
 
-            MyBase.New()
+            MyBase.New(New ConfigurationCellCollection)
 
             m_iniFile = New IniFile(configFileName)
             m_readWriteLock = New ReaderWriterLock
@@ -61,7 +59,7 @@ Namespace EE.Phasor.PDCstream
 
         End Sub
 
-        Public Sub New(ByVal configurationFrame As IDataFrame)
+        Public Sub New(ByVal configurationFrame As IConfigurationFrame)
 
             MyBase.New(configurationFrame)
 
@@ -315,21 +313,19 @@ Namespace EE.Phasor.PDCstream
             End Get
         End Property
 
-        Public Overrides ReadOnly Property BinaryLength() As Int16
+        Public Overrides ReadOnly Property ProtocolSpecificDataLength() As Short
             Get
-                ' TODO: double check this length...
-                Return 18 + 8 * Cells.Count
+                Return 16
             End Get
         End Property
 
-        Public Overrides ReadOnly Property BinaryImage() As Byte()
+        Public Overrides ReadOnly Property ProtocolSpecificDataImage() As Byte()
             Get
                 Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BinaryLength)
-                Dim pmuID As Byte()
                 Dim index As Integer
 
                 buffer(0) = SyncByte
-                buffer(1) = PacketFlag
+                buffer(1) = DescriptorPacketFlag
                 EndianOrder.SwapCopyBytes(Convert.ToInt16(buffer.Length \ 2), buffer, 2)
                 buffer(4) = StreamType
                 buffer(5) = RevisionNumber
@@ -337,20 +333,6 @@ Namespace EE.Phasor.PDCstream
                 EndianOrder.SwapCopyBytes(Convert.ToUInt32(RowLength), buffer, 8)
                 EndianOrder.SwapCopyBytes(Convert.ToInt16(m_packetsPerSample), buffer, 12)
                 EndianOrder.SwapCopyBytes(Convert.ToInt16(Cells.Count), buffer, 14)
-                index = 16
-
-                For x As Integer = 0 To Cells.Count - 1
-                    With Cells(x)
-                        ' PMU ID bytes are encoded left-to-right...
-                        BlockCopy(.IDLabelImage, 0, buffer, index, 4)
-                        EndianOrder.SwapCopyBytes(Convert.ToInt16(0), buffer, index + 4)
-                        EndianOrder.SwapCopyBytes(Convert.ToInt16(.Offset), buffer, index + 6)
-                    End With
-                    index += 8
-                Next
-
-                ' Add check sum
-                BlockCopy(BitConverter.GetBytes(XorCheckSum(buffer, 0, index)), 0, buffer, index, 2)
 
                 Return buffer
             End Get

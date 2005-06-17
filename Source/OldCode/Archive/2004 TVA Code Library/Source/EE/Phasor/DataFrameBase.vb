@@ -27,9 +27,9 @@ Namespace EE.Phasor
 
         Private m_configurationFrame As IConfigurationFrame
 
-        Protected Sub New()
+        Protected Sub New(ByVal cells As DataCellCollection)
 
-            MyBase.New(New DataCellCollection)
+            MyBase.New(cells)
 
         End Sub
 
@@ -43,9 +43,12 @@ Namespace EE.Phasor
 
         ' Dervied classes are expected to expose a Public Sub New(ByVal configurationFrame As IConfigurationFrame, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
         ' and automatically pass in type parameter
-        Protected Sub New(ByVal configurationFrame As IConfigurationFrame, ByVal binaryImage As Byte(), ByVal startIndex As Integer, ByVal dataCellType As Type)
+        Protected Sub New(ByVal cells As DataCellCollection, ByVal configurationFrame As IConfigurationFrame, ByVal binaryImage As Byte(), ByVal startIndex As Integer, ByVal dataCellType As Type)
 
-            Me.New()
+            Me.New(cells)
+
+            ' Bypass protocol specific data
+            startIndex += ProtocolSpecificDataLength
 
             m_configurationFrame = configurationFrame
 

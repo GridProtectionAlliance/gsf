@@ -15,8 +15,6 @@
 '
 '***********************************************************************
 
-Imports System.Buffer
-
 Namespace EE.Phasor
 
     ' This class represents the common implementation of the protocol independent definition of any kind of data.
@@ -35,17 +33,6 @@ Namespace EE.Phasor
         Public MustOverride ReadOnly Property BinaryLength() As Int16 Implements IChannel.BinaryLength
 
         Public MustOverride ReadOnly Property BinaryImage() As Byte() Implements IChannel.BinaryImage
-
-        ' This is a common optimized block copy function for any kind of data
-        Public Sub CopyImage(ByVal channel As IChannel, ByVal buffer As Byte(), ByRef index As Integer) Implements IChannel.CopyImage
-
-            With channel
-                Dim length As Int16 = .BinaryLength
-                BlockCopy(.BinaryImage, 0, buffer, index, length)
-                index += length
-            End With
-
-        End Sub
 
     End Class
 

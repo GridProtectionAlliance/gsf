@@ -29,9 +29,9 @@ Namespace EE.Phasor
         Private m_sampleRate As Int16
         Private m_nominalFrequency As LineFrequency
 
-        Protected Sub New()
+        Protected Sub New(ByVal cells As ConfigurationCellCollection)
 
-            MyBase.New(New ConfigurationCellCollection)
+            MyBase.New(cells)
 
             m_nominalFrequency = LineFrequency.Hz60
 
@@ -47,7 +47,7 @@ Namespace EE.Phasor
 
         End Sub
 
-        ' Dervied classes are expected to expose a Public Sub New(ByVal configurationFrame As IDataFrame)
+        ' Dervied classes are expected to expose a Public Sub New(ByVal configurationFrame As IConfigurationFrame)
         Protected Sub New(ByVal configurationFrame As IConfigurationFrame)
 
             Me.New(configurationFrame.Cells, configurationFrame.TimeTag, configurationFrame.Milliseconds, configurationFrame.SynchronizationIsValid, _

@@ -15,6 +15,8 @@
 '
 '***********************************************************************
 
+Imports System.Buffer
+
 Namespace EE.Phasor
 
     Public Enum PhasorFormat As Byte
@@ -36,5 +38,26 @@ Namespace EE.Phasor
         Hz50
         Hz60
     End Enum
+
+    Public Class Common
+
+        Private Sub New()
+
+            ' This class contains only global functions and is not meant to be instantiated
+
+        End Sub
+
+        ' This is a common optimized block copy function for any kind of data
+        Public Shared Sub CopyImage(ByVal channel As IChannel, ByVal buffer As Byte(), ByRef index As Integer)
+
+            With channel
+                Dim length As Int16 = .BinaryLength
+                BlockCopy(.BinaryImage, 0, buffer, index, length)
+                index += length
+            End With
+
+        End Sub
+
+    End Class
 
 End Namespace

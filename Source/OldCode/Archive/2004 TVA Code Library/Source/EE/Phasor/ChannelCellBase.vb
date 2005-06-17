@@ -46,6 +46,10 @@ Namespace EE.Phasor
             End Get
         End Property
 
+        Public MustOverride ReadOnly Property ProtocolSpecificDataLength() As Int16 Implements IChannelFrame.ProtocolSpecificDataLength
+
+        Public MustOverride ReadOnly Property ProtocolSpecificDataImage() As Byte() Implements IChannelFrame.ProtocolSpecificDataImage
+
     End Class
 
 End Namespace

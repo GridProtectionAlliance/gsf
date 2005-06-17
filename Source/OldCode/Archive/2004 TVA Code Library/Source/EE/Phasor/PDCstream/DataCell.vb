@@ -29,7 +29,7 @@ Namespace EE.Phasor.PDCstream
         Private m_phasorValueCount As Byte
         Private m_sampleNumber As Int32     ' TODO: Verify sample number is a 4 byte integer
 
-        Private Const CommonDataOffset As Integer = 6
+        'Private Const CommonDataOffset As Integer = 6
 
         Public Sub New(ByVal parent As IDataFrame, ByVal configurationCell As IConfigurationCell, ByVal sampleNumber As Integer)
 

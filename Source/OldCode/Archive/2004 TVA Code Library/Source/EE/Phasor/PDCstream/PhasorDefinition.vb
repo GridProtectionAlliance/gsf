@@ -168,13 +168,13 @@ Namespace EE.Phasor.PDCstream
             End Get
         End Property
 
-        Public Overrides ReadOnly Property BinaryImage() As Byte()
+        Public Overrides ReadOnly Property BinaryLength() As Int16
             Get
-                Throw New NotImplementedException("PDCstream does not include phasor definition in descriptor packet - must be defined in external INI file")
+                Return 0
             End Get
         End Property
 
-        Public Overrides ReadOnly Property BinaryLength() As Int16
+        Public Overrides ReadOnly Property BinaryImage() As Byte()
             Get
                 Throw New NotImplementedException("PDCstream does not include phasor definition in descriptor packet - must be defined in external INI file")
             End Get

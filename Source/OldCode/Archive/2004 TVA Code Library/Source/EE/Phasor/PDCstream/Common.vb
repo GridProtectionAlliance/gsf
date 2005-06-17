@@ -19,6 +19,13 @@ Imports TVA.Shared.Bit
 
 Namespace EE.Phasor.PDCstream
 
+    Public Class Common
+
+        Public Const SyncByte As Byte = &HAA
+        Public Const DescriptorPacketFlag As Byte = &H0
+
+    End Class
+
     Public Enum StreamType As Byte
         Legacy = 0                      ' Standard full data stream
         Compact = 1                     ' Full data stream with PMU ID's and offsets removed from data packet

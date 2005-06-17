@@ -30,27 +30,24 @@ Namespace EE.Phasor.PDCstream
         Private m_dataCellCount As Int16
         Private m_frameLength As Int16
 
-        Private Const CommonDataOffset As Integer = 12
-
-        Public Const SyncByte As Byte = &HAA
-
         Public Sub New()
 
-            MyBase.New()
+            MyBase.New(New DataCellCollection)
 
         End Sub
 
         Public Sub New(ByVal index As Int16)
 
+            Me.New()
             m_index = index
 
         End Sub
 
         Public Sub New(ByVal configurationFrame As IConfigurationFrame, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
 
-            MyBase.New(configurationFrame, binaryImage, startIndex + CommonDataOffset, GetType(DataCell))
+            MyBase.New(New DataCellCollection, configurationFrame, binaryImage, startIndex, GetType(DataCell))
 
-            If binaryImage(startIndex) <> SyncByte Then
+            If binaryImage(startIndex) <> Common.SyncByte Then
                 Throw New InvalidOperationException("Bad Data Stream: Expected sync byte &HAA as first byte in data frame, got " & binaryImage(startIndex).ToString("x"c).PadLeft(2, "0"c))
             End If
 
@@ -68,8 +65,8 @@ Namespace EE.Phasor.PDCstream
                 Throw New InvalidOperationException("Stream/Config File Mismatch: PMU count (" & m_dataCellCount & ") in stream does not match defined count in configuration file (" & Cells.Count & ")")
             End If
 
-            If Not ChecksumIsValid(binaryImage, CommonDataOffset) Then
-                Throw New ArgumentException("Bad Data Stream: Invalid buffer image detected - check sum of " & Name & " did not match")
+            If Not ChecksumIsValid(binaryImage, startIndex) Then
+                Throw New InvalidOperationException("Bad Data Stream: Invalid buffer image detected - check sum of " & Name & " did not match")
             End If
 
         End Sub
@@ -123,32 +120,22 @@ Namespace EE.Phasor.PDCstream
 
         End Function
 
-        Public Overrides ReadOnly Property BinaryLength() As Short
+        Public Overrides ReadOnly Property ProtocolSpecificDataLength() As Short
             Get
-                Return 14 + Cells.BinaryLength
+                Return 12
             End Get
         End Property
 
-        Public Overrides ReadOnly Property BinaryImage() As Byte()
+        Public Overrides ReadOnly Property ProtocolSpecificDataImage() As Byte()
             Get
-                Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BinaryLength)
-                Dim pmuID As Byte()
-                Dim index As Integer
+                Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), ProtocolSpecificDataLength)
 
-                buffer(0) = SyncByte
+                buffer(0) = Common.SyncByte
                 buffer(1) = Convert.ToByte(1)
                 EndianOrder.SwapCopyBytes(Convert.ToInt16(buffer.Length \ 2), buffer, 2)
                 EndianOrder.SwapCopyBytes(Convert.ToUInt32(TimeTag.Value), buffer, 4)
                 EndianOrder.SwapCopyBytes(Convert.ToInt16(m_index), buffer, 8)
                 EndianOrder.SwapCopyBytes(Convert.ToInt16(Cells.Count), buffer, 10)
-                index = 12
-
-                For x As Integer = 0 To Cells.Count - 1
-                    CopyImage(Cells(x), buffer, index)
-                Next
-
-                ' Add check sum
-                AppendChecksum(buffer, index)
 
                 Return buffer
             End Get

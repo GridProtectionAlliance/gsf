@@ -43,9 +43,9 @@ Namespace EE.Phasor
 
         ReadOnly Property Name() As String
 
-        ReadOnly Property DataLength() As Int16
+        ReadOnly Property ProtocolSpecificDataLength() As Int16
 
-        ReadOnly Property DataImage() As Byte()
+        ReadOnly Property ProtocolSpecificDataImage() As Byte()
 
     End Interface
 
