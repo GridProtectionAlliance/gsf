@@ -31,7 +31,7 @@ Namespace EE.Phasor
 
         Protected Sub New()
 
-            MyBase.New()
+            MyBase.New(New ConfigurationCellCollection)
 
             m_nominalFrequency = LineFrequency.Hz60
 

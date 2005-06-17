@@ -34,12 +34,6 @@ Namespace EE.Phasor.PDCstream
 
         End Sub
 
-        Public Sub New(ByVal phasorDefinition As IPhasorDefinition)
-
-            MyBase.New(phasorDefinition)
-
-        End Sub
-
         Public Sub New(ByVal parent As ConfigurationCell, ByVal index As Integer, ByVal entryValue As String)
 
             MyBase.New(parent)
@@ -47,19 +41,22 @@ Namespace EE.Phasor.PDCstream
             Dim entry As String() = entryValue.Split(","c)
             Dim entryType As String = UCase(Left(Trim(entry(0)), 1))
             Dim defaultPhasor As PhasorDefinition
-            Dim configFile As ConfigurationFrame = Me.Parent.Parent
 
-            Me.Index = index
+            If Not parent Is Nothing Then
+                Dim configFile As ConfigurationFrame = Me.Parent.Parent
 
-            If entryType = "V" Then
-                [Type] = PhasorType.Voltage
-                defaultPhasor = configFile.DefaultPhasorV
-            ElseIf entryType = "I" Then
-                [Type] = PhasorType.Current
-                defaultPhasor = configFile.DefaultPhasorI
+                If entryType = "V" Then
+                    [Type] = PhasorType.Voltage
+                    defaultPhasor = configFile.DefaultPhasorV
+                ElseIf entryType = "I" Then
+                    [Type] = PhasorType.Current
+                    defaultPhasor = configFile.DefaultPhasorI
+                Else
+                    [Type] = PhasorType.Voltage
+                    defaultPhasor = configFile.DefaultPhasorV
+                End If
             Else
-                [Type] = PhasorType.Voltage
-                defaultPhasor = configFile.DefaultPhasorV
+                defaultPhasor = New PhasorDefinition(DirectCast(Nothing, ConfigurationCell))
             End If
 
             If entry.Length > 1 Then Ratio = CDbl(Trim(entry(1))) Else Ratio = defaultPhasor.Ratio
@@ -70,6 +67,12 @@ Namespace EE.Phasor.PDCstream
             If entry.Length > 6 Then Label = Trim(entry(6)) Else Label = defaultPhasor.Label
 
             Me.Index = index
+
+        End Sub
+
+        Public Sub New(ByVal phasorDefinition As IPhasorDefinition)
+
+            MyBase.New(phasorDefinition)
 
         End Sub
 
@@ -159,13 +162,19 @@ Namespace EE.Phasor.PDCstream
             End Get
         End Property
 
+        Public Overrides ReadOnly Property MaximumLabelLength() As Integer
+            Get
+                Return Integer.MaxValue
+            End Get
+        End Property
+
         Public Overrides ReadOnly Property BinaryImage() As Byte()
             Get
                 Throw New NotImplementedException("PDCstream does not include phasor definition in descriptor packet - must be defined in external INI file")
             End Get
         End Property
 
-        Public Overrides ReadOnly Property BinaryLength() As Short
+        Public Overrides ReadOnly Property BinaryLength() As Int16
             Get
                 Throw New NotImplementedException("PDCstream does not include phasor definition in descriptor packet - must be defined in external INI file")
             End Get

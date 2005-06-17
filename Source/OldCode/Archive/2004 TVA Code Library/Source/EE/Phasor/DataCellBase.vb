@@ -117,7 +117,7 @@ Namespace EE.Phasor
             Get
                 Return m_statusFlags
             End Get
-            Set(ByVal Value As Short)
+            Set(ByVal Value As Int16)
                 m_statusFlags = Value
             End Set
         End Property
@@ -155,7 +155,7 @@ Namespace EE.Phasor
             End Get
         End Property
 
-        Public Overrides ReadOnly Property BinaryLength() As Short
+        Public Overrides ReadOnly Property BinaryLength() As Int16
             Get
                 Return 2 + m_frequencyValue.BinaryLength + m_phasorValues.BinaryLength + m_analogValues.BinaryLength + m_digitalValues.BinaryLength
             End Get

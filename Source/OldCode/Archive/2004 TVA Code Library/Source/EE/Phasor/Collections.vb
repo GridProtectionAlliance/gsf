@@ -21,15 +21,25 @@ Namespace EE.Phasor
 
         Inherits CollectionBase
 
-        Protected Sub _Add(ByVal value As IChannel)
+        Public Sub Add(ByVal value As IChannel)
 
             List.Add(value)
 
         End Sub
 
-        Protected ReadOnly Property _Item(ByVal index As Integer) As IChannel
+        Default Public ReadOnly Property Item(ByVal index As Integer) As IChannel
             Get
-                Return DirectCast(List.Item(index), IChannel)
+                Return List.Item(index)
+            End Get
+        End Property
+
+        Public Overridable ReadOnly Property BinaryLength() As Integer
+            Get
+                If List.Count > 0 Then
+                    Return Item(0).BinaryLength * List.Count
+                Else
+                    Return 0
+                End If
             End Get
         End Property
 
@@ -42,7 +52,7 @@ Namespace EE.Phasor
         Private m_fixedCount As Integer
         Private m_floatCount As Integer
 
-        Protected Shadows Sub _Add(ByVal value As IChannelValue)
+        Public Shadows Sub Add(ByVal value As IChannelValue)
 
             ' In typical usage, all channel values will be of the same data type - but we can't anticipate all
             ' possible uses of collection, so we track totals of each data type so we can quickly ascertain if
@@ -53,28 +63,28 @@ Namespace EE.Phasor
                 m_floatCount += 1
             End If
 
-            MyBase._Add(value)
+            MyBase.Add(value)
 
         End Sub
 
-        Protected Shadows ReadOnly Property _Item(ByVal index As Integer) As IChannelValue
+        Default Public Shadows ReadOnly Property Item(ByVal index As Integer) As IChannelValue
             Get
-                Return DirectCast(MyBase._Item(index), IChannelValue)
+                Return MyBase.Item(index)
             End Get
         End Property
 
-        Public ReadOnly Property BinaryLength() As Integer
+        Public Overrides ReadOnly Property BinaryLength() As Integer
             Get
                 If List.Count > 0 Then
                     If m_fixedCount = 0 Or m_floatCount = 0 Then
                         ' Data types in list are consistent, a simple calculation will derive total binary length
-                        Return _Item(0).BinaryLength * List.Count
+                        Return Item(0).BinaryLength * List.Count
                     Else
                         ' List has items of different data types, will have to traverse list to calculate total binary length
                         Dim length As Integer
 
                         For x As Integer = 0 To List.Count - 1
-                            length += _Item(0).BinaryLength
+                            length += Item(0).BinaryLength
                         Next
 
                         Return length
@@ -90,7 +100,7 @@ Namespace EE.Phasor
                 Dim empty As Boolean = True
 
                 For x As Integer = 0 To List.Count - 1
-                    If Not _Item(x).IsEmpty Then
+                    If Not Item(x).IsEmpty Then
                         empty = False
                         Exit For
                     End If
@@ -113,55 +123,51 @@ Namespace EE.Phasor
 
         Inherits ChannelCollection
 
-        Public ReadOnly Property BinaryLength() As Integer
-            Get
-                If List.Count > 0 Then
-                    Return _Item(0).BinaryLength * List.Count
-                Else
-                    Return 0
-                End If
-            End Get
-        End Property
+        Public Shadows Sub Add(ByVal value As IChannelDefinition)
 
-        Public Sub Sort()
-
-            Array.Sort(List)
+            MyBase.Add(value)
 
         End Sub
 
-    End Class
-
-    Public Class ChannelCellCollection
-
-        Inherits ChannelCollection
-
-        Public Sub Add(ByVal value As IChannelCell)
-
-            _Add(value)
-
-        End Sub
-
-        Default Public ReadOnly Property Item(ByVal index As Integer) As IChannelCell
+        Default Public Shadows ReadOnly Property Item(ByVal index As Integer) As IChannelDefinition
             Get
-                Return DirectCast(_Item(index), IChannelCell)
+                Return MyBase.Item(index)
             End Get
         End Property
 
     End Class
 
-    Public Class ChannelFrameCollection
+    Public MustInherit Class ChannelCellCollection
 
         Inherits ChannelCollection
 
-        Public Sub Add(ByVal value As IChannelFrame)
+        Public Shadows Sub Add(ByVal value As IChannelCell)
 
-            _Add(value)
+            MyBase.Add(value)
 
         End Sub
 
-        Default Public ReadOnly Property Item(ByVal index As Integer) As IChannelFrame
+        Default Public Shadows ReadOnly Property Item(ByVal index As Integer) As IChannelCell
             Get
-                Return DirectCast(_Item(index), IChannelFrame)
+                Return MyBase.Item(index)
+            End Get
+        End Property
+
+    End Class
+
+    Public MustInherit Class ChannelFrameCollection
+
+        Inherits ChannelCollection
+
+        Public Shadows Sub Add(ByVal value As IChannelFrame)
+
+            MyBase.Add(value)
+
+        End Sub
+
+        Default Public Shadows ReadOnly Property Item(ByVal index As Integer) As IChannelFrame
+            Get
+                Return MyBase.Item(index)
             End Get
         End Property
 
@@ -179,7 +185,7 @@ Namespace EE.Phasor
 
         Default Public Shadows ReadOnly Property Item(ByVal index As Integer) As IConfigurationCell
             Get
-                Return DirectCast(MyBase.Item(index), IConfigurationCell)
+                Return MyBase.Item(index)
             End Get
         End Property
 
@@ -197,7 +203,7 @@ Namespace EE.Phasor
 
         Default Public Shadows ReadOnly Property Item(ByVal index As Integer) As IDataCell
             Get
-                Return DirectCast(MyBase.Item(index), IDataCell)
+                Return MyBase.Item(index)
             End Get
         End Property
 
@@ -215,7 +221,7 @@ Namespace EE.Phasor
 
         Default Public Shadows ReadOnly Property Item(ByVal index As Integer) As IConfigurationFrame
             Get
-                Return DirectCast(MyBase.Item(index), IConfigurationFrame)
+                Return MyBase.Item(index)
             End Get
         End Property
 
@@ -233,7 +239,7 @@ Namespace EE.Phasor
 
         Default Public Shadows ReadOnly Property Item(ByVal index As Integer) As IDataFrame
             Get
-                Return DirectCast(MyBase.Item(index), IDataFrame)
+                Return MyBase.Item(index)
             End Get
         End Property
 
@@ -243,15 +249,15 @@ Namespace EE.Phasor
 
         Inherits ChannelValueCollection
 
-        Public Sub Add(ByVal value As IAnalogValue)
+        Public Shadows Sub Add(ByVal value As IAnalogValue)
 
-            _Add(value)
+            MyBase.Add(value)
 
         End Sub
 
-        Default Public ReadOnly Property Item(ByVal index As Integer) As IAnalogValue
+        Default Public Shadows ReadOnly Property Item(ByVal index As Integer) As IAnalogValue
             Get
-                Return DirectCast(_Item(index), IAnalogValue)
+                Return MyBase.Item(index)
             End Get
         End Property
 
@@ -261,15 +267,15 @@ Namespace EE.Phasor
 
         Inherits ChannelValueCollection
 
-        Public Sub Add(ByVal value As IDigitalValue)
+        Public Shadows Sub Add(ByVal value As IDigitalValue)
 
-            _Add(value)
+            MyBase.Add(value)
 
         End Sub
 
-        Default Public ReadOnly Property Item(ByVal index As Integer) As IDigitalValue
+        Default Public Shadows ReadOnly Property Item(ByVal index As Integer) As IDigitalValue
             Get
-                Return DirectCast(_Item(index), IDigitalValue)
+                Return MyBase.Item(index)
             End Get
         End Property
 
@@ -279,15 +285,15 @@ Namespace EE.Phasor
 
         Inherits ChannelValueCollection
 
-        Public Sub Add(ByVal value As IFrequencyValue)
+        Public Shadows Sub Add(ByVal value As IFrequencyValue)
 
-            _Add(value)
+            MyBase.Add(value)
 
         End Sub
 
-        Default Public ReadOnly Property Item(ByVal index As Integer) As IFrequencyValue
+        Default Public Shadows ReadOnly Property Item(ByVal index As Integer) As IFrequencyValue
             Get
-                Return DirectCast(_Item(index), IFrequencyValue)
+                Return MyBase.Item(index)
             End Get
         End Property
 
@@ -297,15 +303,15 @@ Namespace EE.Phasor
 
         Inherits ChannelValueCollection
 
-        Public Sub Add(ByVal value As IPhasorValue)
+        Public Shadows Sub Add(ByVal value As IPhasorValue)
 
-            _Add(value)
+            MyBase.Add(value)
 
         End Sub
 
-        Default Public ReadOnly Property Item(ByVal index As Integer) As IPhasorValue
+        Default Public Shadows ReadOnly Property Item(ByVal index As Integer) As IPhasorValue
             Get
-                Return DirectCast(_Item(index), IPhasorValue)
+                Return MyBase.Item(index)
             End Get
         End Property
 
@@ -315,15 +321,15 @@ Namespace EE.Phasor
 
         Inherits ChannelDefinitionCollection
 
-        Public Sub Add(ByVal value As IAnalogDefinition)
+        Public Shadows Sub Add(ByVal value As IAnalogDefinition)
 
-            _Add(value)
+            MyBase.Add(value)
 
         End Sub
 
-        Default Public ReadOnly Property Item(ByVal index As Integer) As IAnalogDefinition
+        Default Public Shadows ReadOnly Property Item(ByVal index As Integer) As IAnalogDefinition
             Get
-                Return DirectCast(_Item(index), IAnalogDefinition)
+                Return MyBase.Item(index)
             End Get
         End Property
 
@@ -333,15 +339,15 @@ Namespace EE.Phasor
 
         Inherits ChannelDefinitionCollection
 
-        Public Sub Add(ByVal value As IDigitalDefinition)
+        Public Shadows Sub Add(ByVal value As IDigitalDefinition)
 
-            _Add(value)
+            MyBase.Add(value)
 
         End Sub
 
-        Default Public ReadOnly Property Item(ByVal index As Integer) As IDigitalDefinition
+        Default Public Shadows ReadOnly Property Item(ByVal index As Integer) As IDigitalDefinition
             Get
-                Return DirectCast(_Item(index), IDigitalDefinition)
+                Return MyBase.Item(index)
             End Get
         End Property
 
@@ -351,15 +357,15 @@ Namespace EE.Phasor
 
         Inherits ChannelDefinitionCollection
 
-        Public Sub Add(ByVal value As IFrequencyDefinition)
+        Public Shadows Sub Add(ByVal value As IFrequencyDefinition)
 
-            _Add(value)
+            MyBase.Add(value)
 
         End Sub
 
-        Default Public ReadOnly Property Item(ByVal index As Integer) As IFrequencyDefinition
+        Default Public Shadows ReadOnly Property Item(ByVal index As Integer) As IFrequencyDefinition
             Get
-                Return DirectCast(_Item(index), IFrequencyDefinition)
+                Return MyBase.Item(index)
             End Get
         End Property
 
@@ -369,15 +375,15 @@ Namespace EE.Phasor
 
         Inherits ChannelDefinitionCollection
 
-        Public Sub Add(ByVal value As IPhasorDefinition)
+        Public Shadows Sub Add(ByVal value As IPhasorDefinition)
 
-            _Add(value)
+            MyBase.Add(value)
 
         End Sub
 
-        Default Public ReadOnly Property Item(ByVal index As Integer) As IPhasorDefinition
+        Default Public Shadows ReadOnly Property Item(ByVal index As Integer) As IPhasorDefinition
             Get
-                Return DirectCast(_Item(index), IPhasorDefinition)
+                Return MyBase.Item(index)
             End Get
         End Property
 

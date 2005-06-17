@@ -416,6 +416,11 @@
                     BuildAction = "Compile"
                 />
                 <File
+                    RelPath = "PDCstream\Collections.vb"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
                     RelPath = "PDCstream\Common.vb"
                     SubType = "Code"
                     BuildAction = "Compile"
@@ -436,7 +441,7 @@
                     BuildAction = "Compile"
                 />
                 <File
-                    RelPath = "PDCstream\DataPacket.vb"
+                    RelPath = "PDCstream\DataFrame.vb"
                     SubType = "Code"
                     BuildAction = "Compile"
                 />
@@ -447,6 +452,11 @@
                 />
                 <File
                     RelPath = "PDCstream\DigitalDefinition.vb"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "PDCstream\DigitalValue.vb"
                     SubType = "Code"
                     BuildAction = "Compile"
                 />

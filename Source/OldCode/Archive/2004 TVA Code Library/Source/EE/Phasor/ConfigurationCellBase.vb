@@ -170,7 +170,18 @@ Namespace EE.Phasor
             End Get
         End Property
 
-        Public Overrides ReadOnly Property BinaryLength() As Short
+        Public Overridable Function CompareTo(ByVal obj As Object) As Integer Implements IComparable.CompareTo
+
+            ' We sort configuration cells by ID code...
+            If TypeOf obj Is IConfigurationCell Then
+                Return IDCode.CompareTo(DirectCast(obj, IConfigurationCell).IDCode)
+            Else
+                Throw New ArgumentException("ConfigurationCell can only be compared to other ConfigurationCells")
+            End If
+
+        End Function
+
+        Public Overrides ReadOnly Property BinaryLength() As Int16
             Get
                 Return m_frequencyDefinition.BinaryLength + m_phasorDefinitions.BinaryLength + m_analogDefinitions.BinaryLength + m_digitalDefinitions.BinaryLength
             End Get

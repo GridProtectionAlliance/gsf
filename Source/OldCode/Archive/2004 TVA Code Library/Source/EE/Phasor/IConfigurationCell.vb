@@ -20,7 +20,7 @@ Namespace EE.Phasor
     ' This interface represents the protocol independent representation of a set of configuration related data settings (typically related to a PMU).
     Public Interface IConfigurationCell
 
-        Inherits IChannelCell
+        Inherits IChannelCell, IComparable
 
         Shadows ReadOnly Property Parent() As IConfigurationFrame
 

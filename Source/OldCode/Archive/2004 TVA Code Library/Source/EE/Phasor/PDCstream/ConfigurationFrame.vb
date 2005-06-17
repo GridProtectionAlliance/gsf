@@ -41,9 +41,6 @@ Namespace EE.Phasor.PDCstream
         Private m_defaultPhasorV As PhasorDefinition
         Private m_defaultPhasorI As PhasorDefinition
         Private m_defaultFrequency As FrequencyDefinition
-        Private m_pmuTable As Hashtable
-        Private m_orderedIDList As ArrayList
-        Private m_orderedPMUList As ArrayList
         Private m_packetsPerSample As Integer
         Private m_streamType As StreamType
         Private m_revisionNumber As RevisionNumber
@@ -76,6 +73,12 @@ Namespace EE.Phasor.PDCstream
             End Get
         End Property
 
+        Public Shadows ReadOnly Property Cells() As ConfigurationCellCollection
+            Get
+                Return MyBase.Cells
+            End Get
+        End Property
+
         Public Property StreamType() As StreamType
             Get
                 Return m_streamType
@@ -102,14 +105,15 @@ Namespace EE.Phasor.PDCstream
             Try
                 With m_iniFile
                     If File.Exists(.IniFileName) Then
-                        Dim newPMU As ConfigurationCell
+                        Dim pmuCell As ConfigurationCell
                         Dim x, phasorCount As Integer
 
-                        m_pmuTable = New Hashtable(CaseInsensitiveHashCodeProvider.Default, CaseInsensitiveComparer.Default)
                         m_defaultPhasorV = New PhasorDefinition(Nothing, 0, .KeyValue("DEFAULT", "PhasorV", "V,4500.0,0.0060573,0,0,500,Default 500kV"))
                         m_defaultPhasorI = New PhasorDefinition(Nothing, 0, .KeyValue("DEFAULT", "PhasorI", "I,600.00,0.000040382,0,1,1.0,Default Current"))
                         m_defaultFrequency = New FrequencyDefinition(Nothing, .KeyValue("DEFAULT", "Frequency", "F,1000,60,1000,0,0,Frequency"))
                         SampleRate = CInt(.KeyValue("CONFIG", "SampleRate", "30"))
+
+                        Cells.Clear()
 
                         ' Load phasor data for each section in config file...
                         For Each section As String In .SectionNames()
@@ -119,44 +123,28 @@ Namespace EE.Phasor.PDCstream
                                     ' Create new PMU entry structure from config file settings...
                                     phasorCount = CInt(.KeyValue(section, "NumberPhasors", "0"))
 
-                                    newPMU = New ConfigurationCell(Me)
+                                    pmuCell = New ConfigurationCell(Me)
 
-                                    newPMU.IDLabel = section
-                                    newPMU.StationName = .KeyValue(section, "Name", section)
-                                    newPMU.IDCode = CInt(.KeyValue(section, "PMU", m_pmuTable.Count))
+                                    pmuCell.IDLabel = section
+                                    pmuCell.StationName = .KeyValue(section, "Name", section)
+                                    pmuCell.IDCode = CInt(.KeyValue(section, "PMU", Cells.Count))
 
                                     For x = 0 To phasorCount - 1
-                                        newPMU.PhasorDefinitions.Add(New PhasorDefinition(newPMU, x + 1, .KeyValue(section, "Phasor" & (x + 1))))
+                                        pmuCell.PhasorDefinitions.Add(New PhasorDefinition(pmuCell, x + 1, .KeyValue(section, "Phasor" & (x + 1))))
                                     Next
 
-                                    newPMU.FrequencyDefinition = New FrequencyDefinition(newPMU, .KeyValue(section, "Frequency"))
+                                    pmuCell.FrequencyDefinition = New FrequencyDefinition(pmuCell, .KeyValue(section, "Frequency"))
 
-                                    m_pmuTable.Add(section, newPMU)
+                                    Cells.Add(pmuCell)
                                 End If
                             End If
                         Next
-
-                        ' Now that all the PMU definitions have been loaded, we reassign their index values to match their physical position
-                        ' in the ordered PMU list - end users setting up the config file may accidentally use the same PMU index (ID) twice,
-                        ' or not define one at all, so this makes the index values unique and usable (a good index here makes PMU data cells
-                        ' directly accesible from their rows by using this index alone)
-                        m_orderedIDList = New ArrayList(m_pmuTable.Keys)
-                        m_orderedIDList.Sort()
-
-                        m_orderedPMUList = New ArrayList(m_pmuTable.Values)
-                        m_orderedPMUList.Sort()
-
-                        For x = 0 To PMUCount - 1
-                            PMU(x).IDCode = x
-                        Next
-
-                        m_orderedPMUList.Sort()
                     Else
                         Throw New InvalidOperationException("PDC config file """ & .IniFileName & """ does not exist.")
                     End If
                 End With
-            Catch
-                Throw
+            Catch ex As Exception
+                Throw ex
             Finally
                 m_readWriteLock.ReleaseWriterLock()
             End Try
@@ -229,62 +217,6 @@ Namespace EE.Phasor.PDCstream
             End Get
         End Property
 
-        Default Public ReadOnly Property PMU(ByVal ID As String) As ConfigurationCell
-            Get
-                m_readWriteLock.AcquireReaderLock(-1)
-
-                Try
-                    Return m_pmuTable(ID)
-                Catch
-                    Throw
-                Finally
-                    m_readWriteLock.ReleaseReaderLock()
-                End Try
-            End Get
-        End Property
-
-        Default Public ReadOnly Property PMU(ByVal index As Integer) As ConfigurationCell
-            Get
-                m_readWriteLock.AcquireReaderLock(-1)
-
-                Try
-                    Return DirectCast(m_orderedPMUList(index), ConfigurationCell)
-                Catch
-                    Throw
-                Finally
-                    m_readWriteLock.ReleaseReaderLock()
-                End Try
-            End Get
-        End Property
-
-        Public ReadOnly Property IDList() As ArrayList
-            Get
-                m_readWriteLock.AcquireReaderLock(-1)
-
-                Try
-                    Return m_orderedIDList
-                Catch
-                    Throw
-                Finally
-                    m_readWriteLock.ReleaseReaderLock()
-                End Try
-            End Get
-        End Property
-
-        Public ReadOnly Property PMUCount() As Integer
-            Get
-                m_readWriteLock.AcquireReaderLock(-1)
-
-                Try
-                    Return m_pmuTable.Count
-                Catch
-                    Throw
-                Finally
-                    m_readWriteLock.ReleaseReaderLock()
-                End Try
-            End Get
-        End Property
-
         Public ReadOnly Property IniFileImage() As String
             Get
                 m_readWriteLock.AcquireReaderLock(-1)
@@ -342,18 +274,18 @@ Namespace EE.Phasor.PDCstream
 
                         .Append("[CONFIG]" & vbCrLf)
                         .Append("SampleRate=" & SampleRate & vbCrLf)
-                        .Append("NumberOfPMUs=" & PMUCount & vbCrLf)
+                        .Append("NumberOfPMUs=" & Cells.Count & vbCrLf)
                         .Append(vbCrLf)
 
-                        For x As Integer = 0 To PMUCount - 1
-                            .Append("[" & Me(x).IDLabel & "]" & vbCrLf)
-                            .Append("Name=" & Me(x).StationName & vbCrLf)
+                        For x As Integer = 0 To Cells.Count - 1
+                            .Append("[" & Cells(x).IDLabel & "]" & vbCrLf)
+                            .Append("Name=" & Cells(x).StationName & vbCrLf)
                             .Append("PMU=" & x & vbCrLf)
-                            .Append("NumberPhasors=" & Me(x).PhasorDefinitions.Count & vbCrLf)
-                            For y As Integer = 0 To Me(x).PhasorDefinitions.Count - 1
-                                .Append("Phasor" & (y + 1) & "=" & PhasorDefinition.ConfigFileFormat(Me(x).PhasorDefinitions(y)) & vbCrLf)
+                            .Append("NumberPhasors=" & Cells(x).PhasorDefinitions.Count & vbCrLf)
+                            For y As Integer = 0 To Cells(x).PhasorDefinitions.Count - 1
+                                .Append("Phasor" & (y + 1) & "=" & PhasorDefinition.ConfigFileFormat(Cells(x).PhasorDefinitions(y)) & vbCrLf)
                             Next
-                            .Append("Frequency=" & FrequencyDefinition.ConfigFileFormat(Me(x).FrequencyDefinition) & vbCrLf)
+                            .Append("Frequency=" & FrequencyDefinition.ConfigFileFormat(Cells(x).FrequencyDefinition) & vbCrLf)
                             .Append(vbCrLf)
                         Next
 
@@ -371,9 +303,10 @@ Namespace EE.Phasor.PDCstream
             Get
                 Dim length As Integer
 
-                For x As Integer = 0 To PMUCount - 1
-                    With PMU(x)
+                For x As Integer = 0 To Cells.Count - 1
+                    With Cells(x)
                         .Offset = length
+                        ' TODO: calculate correct row length...
                         'length += 12 + FrequencyValue.CalculateBinaryLength(.FrequencyDefinition) + PhasorValue.BinaryLength * .PhasorDefinitions.Count
                     End With
                 Next
@@ -384,7 +317,8 @@ Namespace EE.Phasor.PDCstream
 
         Public Overrides ReadOnly Property BinaryLength() As Int16
             Get
-                Return 18 + 8 * PMUCount
+                ' TODO: double check this length...
+                Return 18 + 8 * Cells.Count
             End Get
         End Property
 
@@ -402,11 +336,11 @@ Namespace EE.Phasor.PDCstream
                 EndianOrder.SwapCopyBytes(Convert.ToInt16(SampleRate), buffer, 6)
                 EndianOrder.SwapCopyBytes(Convert.ToUInt32(RowLength), buffer, 8)
                 EndianOrder.SwapCopyBytes(Convert.ToInt16(m_packetsPerSample), buffer, 12)
-                EndianOrder.SwapCopyBytes(Convert.ToInt16(PMUCount), buffer, 14)
+                EndianOrder.SwapCopyBytes(Convert.ToInt16(Cells.Count), buffer, 14)
                 index = 16
 
-                For x As Integer = 0 To PMUCount - 1
-                    With PMU(x)
+                For x As Integer = 0 To Cells.Count - 1
+                    With Cells(x)
                         ' PMU ID bytes are encoded left-to-right...
                         BlockCopy(.IDLabelImage, 0, buffer, index, 4)
                         EndianOrder.SwapCopyBytes(Convert.ToInt16(0), buffer, index + 4)

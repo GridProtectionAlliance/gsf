@@ -34,11 +34,11 @@ Namespace EE.Phasor
         Private m_dataIsValid As Boolean
         Private m_published As Boolean
 
-        Protected Sub New()
+        Protected Sub New(ByVal cells As ChannelCellCollection)
 
             MyBase.New()
 
-            m_cells = New ChannelCellCollection
+            m_cells = cells
             m_timeTag = New Unix.TimeTag(DateTime.Now)
             m_synchronizationIsValid = True
             m_dataIsValid = True

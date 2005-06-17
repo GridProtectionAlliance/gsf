@@ -1,5 +1,5 @@
 '***********************************************************************
-'  ConfigurationCell.vb - PMU configuration cell
+'  DigitalValue.vb - Digital value
 '  Copyright © 2004 - TVA, all rights reserved
 '
 '  Build Environment: VB.NET, Visual Studio 2003
@@ -15,23 +15,29 @@
 '
 '***********************************************************************
 
+Imports TVA.Interop
+
 Namespace EE.Phasor.PDCstream
 
-    Public Class ConfigurationCell
+    Public Class DigitalValue
 
-        Inherits ConfigurationCellBase
+        Inherits DigitalValueBase
 
-        Private m_offset As Int16
+        Public Sub New(ByVal parent As IDataCell, ByVal DigitalDefinition As IDigitalDefinition, ByVal value As Int16)
 
-        Public Sub New(ByVal parent As IConfigurationFrame)
-
-            MyBase.New(parent)
+            MyBase.New(parent, DigitalDefinition, value)
 
         End Sub
 
-        Public Sub New(ByVal configurationCell As IConfigurationCell)
+        Public Sub New(ByVal parent As IDataCell, ByVal DigitalDefinition As IDigitalDefinition, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
 
-            MyBase.New(configurationCell)
+            MyBase.New(parent, DigitalDefinition, binaryImage, startIndex)
+
+        End Sub
+
+        Public Sub New(ByVal DigitalValue As IDigitalValue)
+
+            MyBase.New(DigitalValue)
 
         End Sub
 
@@ -39,21 +45,6 @@ Namespace EE.Phasor.PDCstream
             Get
                 Return Me.GetType
             End Get
-        End Property
-
-        Public Overrides ReadOnly Property MaximumStationNameLength() As Integer
-            Get
-                Return Integer.MaxValue
-            End Get
-        End Property
-
-        Public Property Offset() As Int16
-            Get
-                Return m_offset
-            End Get
-            Set(ByVal Value As Int16)
-                m_offset = Value
-            End Set
         End Property
 
     End Class

@@ -25,20 +25,32 @@ Namespace EE.Phasor.PDCstream
 
         Public Dummy As Integer
 
+        Public Sub New(ByVal parent As ConfigurationCell)
+
+            MyBase.New(parent)
+
+        End Sub
+
         Public Sub New(ByVal parent As ConfigurationCell, ByVal entryValue As String)
 
             MyBase.New(parent)
 
             Dim entry As String() = entryValue.Split(","c)
-            Dim configFile As ConfigurationFrame = Me.Parent.Parent
+            Dim defaultFrequency As FrequencyDefinition
+
+            If Not parent Is Nothing Then
+                defaultFrequency = DirectCast(parent.Parent, ConfigurationFrame).DefaultFrequency
+            Else
+                defaultFrequency = New FrequencyDefinition(DirectCast(Nothing, ConfigurationCell))
+            End If
 
             ' First entry is an F - we just ignore this
-            If entry.Length > 1 Then ScalingFactor = CDbl(Trim(entry(1))) Else ScalingFactor = configFile.DefaultFrequency.ScalingFactor
-            If entry.Length > 2 Then Offset = CDbl(Trim(entry(2))) Else Offset = configFile.DefaultFrequency.Offset
-            If entry.Length > 3 Then DfDtScalingFactor = CDbl(Trim(entry(3))) Else DfDtScalingFactor = configFile.DefaultFrequency.DfDtScalingFactor
-            If entry.Length > 4 Then DfDtOffset = CDbl(Trim(entry(4))) Else DfDtOffset = configFile.DefaultFrequency.DfDtOffset
-            If entry.Length > 5 Then Dummy = CInt(Trim(entry(5))) Else Dummy = configFile.DefaultFrequency.Dummy
-            If entry.Length > 6 Then Label = Trim(entry(6)) Else Label = configFile.DefaultFrequency.Label
+            If entry.Length > 1 Then ScalingFactor = CDbl(Trim(entry(1))) Else ScalingFactor = defaultFrequency.ScalingFactor
+            If entry.Length > 2 Then Offset = CDbl(Trim(entry(2))) Else Offset = defaultFrequency.Offset
+            If entry.Length > 3 Then DfDtScalingFactor = CDbl(Trim(entry(3))) Else DfDtScalingFactor = defaultFrequency.DfDtScalingFactor
+            If entry.Length > 4 Then DfDtOffset = CDbl(Trim(entry(4))) Else DfDtOffset = defaultFrequency.DfDtOffset
+            If entry.Length > 5 Then Dummy = CInt(Trim(entry(5))) Else Dummy = defaultFrequency.Dummy
+            If entry.Length > 6 Then Label = Trim(entry(6)) Else Label = defaultFrequency.Label
 
         End Sub
 
@@ -70,7 +82,13 @@ Namespace EE.Phasor.PDCstream
             End Get
         End Property
 
-        Public Overrides ReadOnly Property BinaryLength() As Short
+        Public Overrides ReadOnly Property MaximumLabelLength() As Integer
+            Get
+                Return Integer.MaxValue
+            End Get
+        End Property
+
+        Public Overrides ReadOnly Property BinaryLength() As Int16
             Get
                 Throw New NotImplementedException("PDCstream does not include frequency definition in descriptor packet - must be defined in external INI file")
             End Get

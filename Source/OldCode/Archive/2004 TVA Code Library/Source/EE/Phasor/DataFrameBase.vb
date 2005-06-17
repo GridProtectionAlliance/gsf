@@ -29,7 +29,7 @@ Namespace EE.Phasor
 
         Protected Sub New()
 
-            MyBase.New()
+            MyBase.New(New DataCellCollection)
 
         End Sub
 
@@ -51,6 +51,7 @@ Namespace EE.Phasor
 
             With m_configurationFrame
                 For x As Integer = 0 To .Cells.Count - 1
+                    ' TODO: Validate that startIndex doesn't exceed binaryImage length - check all binaryImage code loops for this...
                     Cells.Add(Activator.CreateInstance(dataCellType, New Object() {Me, .Cells(x), binaryImage, startIndex}))
                     startIndex += Cells(x).BinaryLength
                 Next

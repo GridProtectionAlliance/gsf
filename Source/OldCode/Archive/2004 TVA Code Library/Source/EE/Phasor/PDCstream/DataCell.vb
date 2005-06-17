@@ -24,21 +24,41 @@ Namespace EE.Phasor.PDCstream
 
         Inherits DataCellBase
 
-        Private m_sampleNumber As Integer
         Private m_flags As ChannelFlags
+        Private m_sampleRate As Byte
+        Private m_phasorValueCount As Byte
+        Private m_sampleNumber As Int32     ' TODO: Verify sample number is a 4 byte integer
+
+        Private Const CommonDataOffset As Integer = 6
 
         Public Sub New(ByVal parent As IDataFrame, ByVal configurationCell As IConfigurationCell, ByVal sampleNumber As Integer)
 
             MyBase.New(parent, configurationCell)
 
-            m_sampleNumber = sampleNumber
+            Dim x As Integer
 
-            ' Initialize phasor values and frequency value with an empty value
-            For x As Integer = 0 To configurationCell.PhasorDefinitions.Count - 1
-                'PhasorValues.Add(New PhasorValue)
-            Next
+            With configurationCell
+                m_sampleRate = Convert.ToByte(.SampleRate)
+                ' TODO: define some default value for version??
+                m_phasorValueCount = Convert.ToByte(.PhasorDefinitions.Count)
+                m_sampleNumber = sampleNumber
 
-            FrequencyValue = New FrequencyValue(Me, configurationCell.FrequencyDefinition, 0, 0)
+                If m_phasorValueCount <> .PhasorDefinitions.Count Then
+                    Throw New InvalidOperationException("Stream/Config File Mismatch: Phasor value count in stream (" & m_phasorValueCount & ") does not match defined count in configuration file (" & .PhasorDefinitions.Count & ")")
+                End If
+
+                ' Initialize phasor values and frequency value with an empty value
+                For x = 0 To .PhasorDefinitions.Count - 1
+                    PhasorValues.Add(New PhasorValue(Me, .PhasorDefinitions(x), 0, 0))
+                Next
+
+                FrequencyValue = New FrequencyValue(Me, .FrequencyDefinition, 0, 0)
+
+                ' Initialize any digital values
+                For x = 0 To .DigitalDefinitions.Count - 1
+                    DigitalValues.Add(New DigitalValue(Me, .DigitalDefinitions(x), 0))
+                Next
+            End With
 
         End Sub
 
@@ -50,7 +70,16 @@ Namespace EE.Phasor.PDCstream
 
         Public Sub New(ByVal parent As IDataFrame, ByVal configurationCell As IConfigurationCell, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
 
-            MyBase.New(parent, configurationCell, binaryImage, startIndex, GetType(PhasorValue), GetType(FrequencyValue), Nothing, Nothing)
+            ' Parse binary common data to all data cells
+            MyBase.New(parent, configurationCell, binaryImage, startIndex + CommonDataOffset, GetType(PhasorValue), GetType(FrequencyValue), Nothing, GetType(DigitalValue))
+
+            ' Parse PDCstream specific image
+            m_flags = binaryImage(startIndex)
+            m_sampleRate = binaryImage(startIndex + 1)
+            ' TODO: Determine what this flag is - version??
+            'm_version = binaryImage(startIndex + 2)
+            m_phasorValueCount = binaryImage(startIndex + 3)
+            m_sampleNumber = EndianOrder.ReverseToInt32(binaryImage, startIndex + 4)
 
         End Sub
 
@@ -60,16 +89,34 @@ Namespace EE.Phasor.PDCstream
             End Get
         End Property
 
-        Public ReadOnly Property SampleNumber() As Integer
-            Get
-                Return m_sampleNumber
-            End Get
-        End Property
-
         ' Note: this is only the first byte of the channel flag word
         Public ReadOnly Property ChannelFlags() As ChannelFlags
             Get
                 Return m_flags
+            End Get
+        End Property
+
+        Public Property SampleRate() As Byte
+            Get
+                Return m_sampleRate
+            End Get
+            Set(ByVal Value As Byte)
+                m_sampleRate = Value
+            End Set
+        End Property
+
+        Public Property PhasorValueCount() As Byte
+            Get
+                Return m_phasorValueCount
+            End Get
+            Set(ByVal Value As Byte)
+                m_phasorValueCount = Value
+            End Set
+        End Property
+
+        Public ReadOnly Property SampleNumber() As Int32
+            Get
+                Return m_sampleNumber
             End Get
         End Property
 
@@ -125,18 +172,19 @@ Namespace EE.Phasor.PDCstream
             End Set
         End Property
 
-        'Public Property DataIsSortedByTimestamp() As Boolean
-        '    Get
-        '        Return ((m_flags And ChannelFlags.DataSortedByTimestamp) = 0)
-        '    End Get
-        '    Set(ByVal Value As Boolean)
-        '        If Value Then
-        '            m_flags = m_flags And Not ChannelFlags.DataSortedByTimestamp
-        '        Else
-        '            m_flags = m_flags Or ChannelFlags.DataSortedByTimestamp
-        '        End If
-        '    End Set
-        'End Property
+        <Obsolete("This bit definition is for obsolete uses that is no longer needed.", False)> _
+        Public Property DataIsSortedByTimestamp() As Boolean
+            Get
+                Return ((m_flags And ChannelFlags.DataSortedByTimestamp) = 0)
+            End Get
+            Set(ByVal Value As Boolean)
+                If Value Then
+                    m_flags = m_flags And Not ChannelFlags.DataSortedByTimestamp
+                Else
+                    m_flags = m_flags Or ChannelFlags.DataSortedByTimestamp
+                End If
+            End Set
+        End Property
 
         Public Property UsingPDCExchangeFormat() As Boolean
             Get
@@ -177,52 +225,46 @@ Namespace EE.Phasor.PDCstream
             End Set
         End Property
 
-        'Public Property TimestampIsIncluded() As Boolean
-        '    Get
-        '        Return ((m_flags And ChannelFlags.TimestampIncluded) = 0)
-        '    End Get
-        '    Set(ByVal Value As Boolean)
-        '        If Value Then
-        '            m_flags = m_flags And Not ChannelFlags.TimestampIncluded
-        '        Else
-        '            m_flags = m_flags Or ChannelFlags.TimestampIncluded
-        '        End If
-        '    End Set
-        'End Property
+        <Obsolete("This bit definition is for obsolete uses that is no longer needed.", False)> _
+        Public Property TimestampIsIncluded() As Boolean
+            Get
+                Return ((m_flags And ChannelFlags.TimestampIncluded) = 0)
+            End Get
+            Set(ByVal Value As Boolean)
+                If Value Then
+                    m_flags = m_flags And Not ChannelFlags.TimestampIncluded
+                Else
+                    m_flags = m_flags Or ChannelFlags.TimestampIncluded
+                End If
+            End Set
+        End Property
 
-        'Public ReadOnly Property BinaryLength() As Integer
-        '    Get
-        '        Return 12 + FrequencyValue.BinaryLength + PhasorValue.BinaryLength * PhasorValues.Length
-        '    End Get
-        'End Property
+        Public Overrides ReadOnly Property BinaryLength() As Int16
+            Get
+                Return 10 + MyBase.BinaryLength
+            End Get
+        End Property
 
-        'Public ReadOnly Property BinaryImage() As Byte()
-        '    Get
-        '        Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BinaryLength)
-        '        Dim index As Integer
+        Public Overrides ReadOnly Property BinaryImage() As Byte()
+            Get
+                Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BinaryLength)
+                Dim x, index As Integer
 
-        '        buffer(0) = m_flags
-        '        buffer(1) = Convert.ToByte(m_pmuDefinition.SampleRate)
-        '        buffer(2) = Convert.ToByte(2)
-        '        buffer(3) = Convert.ToByte(PhasorValues.Length)
-        '        EndianOrder.SwapCopyBytes(Convert.ToInt16(m_sampleNumber), buffer, 4)
-        '        EndianOrder.SwapCopyBytes(StatusFlags, buffer, 6)
-        '        index = 8
+                ' Add PDCstream specific image
+                buffer(0) = m_flags
+                buffer(1) = m_sampleRate
+                ' TODO: check this value - could be version flag??
+                buffer(2) = Convert.ToByte(2)
+                buffer(3) = m_phasorValueCount
+                EndianOrder.SwapCopyBytes(Convert.ToInt32(m_sampleNumber), buffer, 4)
+                index = CommonDataOffset
 
-        '        For x As Integer = 0 To PhasorValues.Length - 1
-        '            BlockCopy(PhasorValues(x).BinaryImage, 0, buffer, index, PhasorValue.BinaryLength)
-        '            index += PhasorValue.BinaryLength
-        '        Next
+                ' Add binary image common to all data cells...
+                CopyImage(MyBase.This, buffer, index)
 
-        '        BlockCopy(FrequencyValue.BinaryImage, 0, buffer, index, FrequencyValue.BinaryLength)
-        '        index += FrequencyValue.BinaryLength
-
-        '        EndianOrder.SwapCopyBytes(Digital0, buffer, index)
-        '        EndianOrder.SwapCopyBytes(Digital1, buffer, index + 2)
-
-        '        Return buffer
-        '    End Get
-        'End Property
+                Return buffer
+            End Get
+        End Property
 
     End Class
 
