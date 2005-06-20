@@ -104,7 +104,7 @@
                     BuildAction = "Compile"
                 />
                 <File
-                    RelPath = "Collection.vb"
+                    RelPath = "Collections.vb"
                     SubType = "Code"
                     BuildAction = "Compile"
                 />
