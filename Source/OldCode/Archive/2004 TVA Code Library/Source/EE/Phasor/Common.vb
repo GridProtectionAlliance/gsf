@@ -51,10 +51,18 @@ Namespace EE.Phasor
         Public Shared Sub CopyImage(ByVal channel As IChannel, ByVal buffer As Byte(), ByRef index As Integer)
 
             With channel
-                Dim length As Int16 = .BinaryLength
-                BlockCopy(.BinaryImage, 0, buffer, index, length)
-                index += length
+                CopyImage(.BinaryImage, buffer, index, .BinaryLength)
             End With
+
+        End Sub
+
+        ' This is a common optimized block copy function for any kind of data
+        Public Shared Sub CopyImage(ByVal source As Byte(), ByVal buffer As Byte(), ByRef index As Integer, ByVal length As Int16)
+
+            If length > 0 Then
+                BlockCopy(source, 0, buffer, index, length)
+                index += length
+            End If
 
         End Sub
 

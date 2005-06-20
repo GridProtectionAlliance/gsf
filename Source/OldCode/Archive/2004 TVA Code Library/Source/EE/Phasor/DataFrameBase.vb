@@ -48,7 +48,7 @@ Namespace EE.Phasor
             Me.New(cells)
 
             ' Bypass protocol specific data
-            startIndex += ProtocolSpecificDataLength
+            startIndex += 0 'ProtocolSpecificDataLength
 
             m_configurationFrame = configurationFrame
 
@@ -81,12 +81,6 @@ Namespace EE.Phasor
         Public Overridable Shadows ReadOnly Property Cells() As DataCellCollection Implements IDataFrame.Cells
             Get
                 Return MyBase.Cells
-            End Get
-        End Property
-
-        Public Overrides ReadOnly Property Name() As String
-            Get
-                Return "TVA.EE.Phasor.DataFrameBase"
             End Get
         End Property
 

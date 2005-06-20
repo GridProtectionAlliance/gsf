@@ -28,6 +28,20 @@ Namespace EE.Phasor
 
         ReadOnly Property BinaryImage() As Byte()
 
+        ' These are typically implemented as protected properties that collectively feed the public binary properties
+        ReadOnly Property HeaderLength() As Int16
+
+        ReadOnly Property HeaderImage() As Byte()
+
+        ' The body properties are typically implemented by the base classes defining the "common" data image set
+        ReadOnly Property BodyLength() As Int16
+
+        ReadOnly Property BodyImage() As Byte()
+
+        ReadOnly Property FooterLength() As Int16
+
+        ReadOnly Property FooterImage() As Byte()
+
     End Interface
 
 End Namespace

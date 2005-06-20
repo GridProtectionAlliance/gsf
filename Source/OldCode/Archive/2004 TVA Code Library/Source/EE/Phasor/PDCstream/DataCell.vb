@@ -29,7 +29,7 @@ Namespace EE.Phasor.PDCstream
         Private m_phasorValueCount As Byte
         Private m_sampleNumber As Int32     ' TODO: Verify sample number is a 4 byte integer
 
-        'Private Const CommonDataOffset As Integer = 6
+        Private Const CommonDataOffset As Integer = 6
 
         Public Sub New(ByVal parent As IDataFrame, ByVal configurationCell As IConfigurationCell, ByVal sampleNumber As Integer)
 
@@ -74,6 +74,7 @@ Namespace EE.Phasor.PDCstream
             MyBase.New(parent, configurationCell, binaryImage, startIndex + CommonDataOffset, GetType(PhasorValue), GetType(FrequencyValue), Nothing, GetType(DigitalValue))
 
             ' Parse PDCstream specific image
+            ' TODO: See if adding a "ParserHeaderImage" would be appropriate here...
             m_flags = binaryImage(startIndex)
             m_sampleRate = binaryImage(startIndex + 1)
             ' TODO: Determine what this flag is - version??
@@ -239,15 +240,15 @@ Namespace EE.Phasor.PDCstream
             End Set
         End Property
 
-        Public Overrides ReadOnly Property BinaryLength() As Int16
+        Protected Overrides ReadOnly Property HeaderLength() As Int16
             Get
-                Return 10 + MyBase.BinaryLength
+                Return 10
             End Get
         End Property
 
-        Public Overrides ReadOnly Property BinaryImage() As Byte()
+        Protected Overrides ReadOnly Property HeaderImage() As Byte()
             Get
-                Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BinaryLength)
+                Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), HeaderLength)
                 Dim x, index As Integer
 
                 ' Add PDCstream specific image
@@ -257,10 +258,6 @@ Namespace EE.Phasor.PDCstream
                 buffer(2) = Convert.ToByte(2)
                 buffer(3) = m_phasorValueCount
                 EndianOrder.SwapCopyBytes(Convert.ToInt32(m_sampleNumber), buffer, 4)
-                index = CommonDataOffset
-
-                ' Add binary image common to all data cells...
-                CopyImage(MyBase.This, buffer, index)
 
                 Return buffer
             End Get

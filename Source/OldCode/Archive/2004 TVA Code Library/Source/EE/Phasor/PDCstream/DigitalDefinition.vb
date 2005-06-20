@@ -51,13 +51,13 @@ Namespace EE.Phasor.PDCstream
             End Get
         End Property
 
-        Public Overrides ReadOnly Property BinaryImage() As Byte()
+        Protected Overrides ReadOnly Property BodyLength() As Int16
             Get
-                Throw New NotImplementedException("PDCstream does not include digital definition in descriptor packet - must be defined in external INI file")
+                Return 0
             End Get
         End Property
 
-        Public Overrides ReadOnly Property BinaryLength() As Int16
+        Protected Overrides ReadOnly Property BodyImage() As Byte()
             Get
                 Throw New NotImplementedException("PDCstream does not include digital definition in descriptor packet - must be defined in external INI file")
             End Get

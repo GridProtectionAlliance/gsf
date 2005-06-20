@@ -41,12 +41,6 @@ Namespace EE.Phasor
 
         Property Published() As Boolean
 
-        ReadOnly Property Name() As String
-
-        ReadOnly Property ProtocolSpecificDataLength() As Int16
-
-        ReadOnly Property ProtocolSpecificDataImage() As Byte()
-
     End Interface
 
 End Namespace

@@ -88,12 +88,6 @@ Namespace EE.Phasor
             End Set
         End Property
 
-        Public Overrides ReadOnly Property Name() As String
-            Get
-                Return "TVA.EE.Phasor.ConfigurationFrameBase"
-            End Get
-        End Property
-
     End Class
 
 End Namespace

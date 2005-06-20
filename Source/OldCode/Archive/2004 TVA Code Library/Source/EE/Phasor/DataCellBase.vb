@@ -67,7 +67,7 @@ Namespace EE.Phasor
             Dim x As Integer
 
             ' Bypass protocol specific data
-            startIndex += ProtocolSpecificDataLength
+            startIndex += 0 'ProtocolSpecificDataLength
 
             m_configurationCell = configurationCell
             m_statusFlags = EndianOrder.ReverseToInt16(binaryImage, startIndex)
@@ -160,19 +160,20 @@ Namespace EE.Phasor
             End Get
         End Property
 
-        Public Overrides ReadOnly Property BinaryLength() As Int16
+        Protected Overrides ReadOnly Property BodyLength() As Int16
             Get
-                Return 2 + ProtocolSpecificDataLength + m_frequencyValue.BinaryLength + m_phasorValues.BinaryLength + m_analogValues.BinaryLength + m_digitalValues.BinaryLength
+                ' TODO FIX THIS!!!
+                'Return 2 + ProtocolSpecificDataLength + m_frequencyValue.BinaryLength + m_phasorValues.BinaryLength + m_analogValues.BinaryLength + m_digitalValues.BinaryLength
             End Get
         End Property
 
-        Public Overrides ReadOnly Property BinaryImage() As Byte()
+        Protected Overrides ReadOnly Property BodyImage() As Byte()
             Get
-                Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BinaryLength)
-                Dim index As Integer = ProtocolSpecificDataLength
+                Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BodyLength)
+                Dim index As Integer = 0 'ProtocolSpecificDataLength
 
                 ' Copy in protocol specific data image
-                If index > 0 Then BlockCopy(ProtocolSpecificDataImage, 0, buffer, 0, ProtocolSpecificDataLength)
+                'If index > 0 Then BlockCopy(ProtocolSpecificDataImage, 0, buffer, 0, ProtocolSpecificDataLength)
 
                 ' Copy in common cell image
                 EndianOrder.SwapCopyBytes(m_statusFlags, buffer, index)

@@ -66,7 +66,7 @@ Namespace EE.Phasor.PDCstream
             End If
 
             If Not ChecksumIsValid(binaryImage, startIndex) Then
-                Throw New InvalidOperationException("Bad Data Stream: Invalid buffer image detected - check sum of " & Name & " did not match")
+                Throw New InvalidOperationException("Bad Data Stream: Invalid buffer image detected - check sum of " & InheritedType.FullName & " did not match")
             End If
 
         End Sub
@@ -107,12 +107,6 @@ Namespace EE.Phasor.PDCstream
             End Set
         End Property
 
-        Public Overrides ReadOnly Property Name() As String
-            Get
-                Return "TVA.EE.Phasor.PDCstream.DataFrame"
-            End Get
-        End Property
-
         Protected Overrides Function CalculateChecksum(ByVal buffer() As Byte, ByVal offset As Integer, ByVal length As Integer) As Int16
 
             ' PDCstream uses simple XOR checksum
@@ -120,26 +114,27 @@ Namespace EE.Phasor.PDCstream
 
         End Function
 
-        Public Overrides ReadOnly Property ProtocolSpecificDataLength() As Short
-            Get
-                Return 12
-            End Get
-        End Property
+        ' TODO: place this in proper override...
+        'Public Overrides ReadOnly Property ProtocolSpecificDataLength() As Short
+        '    Get
+        '        Return 12
+        '    End Get
+        'End Property
 
-        Public Overrides ReadOnly Property ProtocolSpecificDataImage() As Byte()
-            Get
-                Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), ProtocolSpecificDataLength)
+        'Public Overrides ReadOnly Property ProtocolSpecificDataImage() As Byte()
+        '    Get
+        '        Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), ProtocolSpecificDataLength)
 
-                buffer(0) = Common.SyncByte
-                buffer(1) = Convert.ToByte(1)
-                EndianOrder.SwapCopyBytes(Convert.ToInt16(buffer.Length \ 2), buffer, 2)
-                EndianOrder.SwapCopyBytes(Convert.ToUInt32(TimeTag.Value), buffer, 4)
-                EndianOrder.SwapCopyBytes(Convert.ToInt16(m_index), buffer, 8)
-                EndianOrder.SwapCopyBytes(Convert.ToInt16(Cells.Count), buffer, 10)
+        '        buffer(0) = Common.SyncByte
+        '        buffer(1) = Convert.ToByte(1)
+        '        EndianOrder.SwapCopyBytes(Convert.ToInt16(buffer.Length \ 2), buffer, 2)
+        '        EndianOrder.SwapCopyBytes(Convert.ToUInt32(TimeTag.Value), buffer, 4)
+        '        EndianOrder.SwapCopyBytes(Convert.ToInt16(m_index), buffer, 8)
+        '        EndianOrder.SwapCopyBytes(Convert.ToInt16(Cells.Count), buffer, 10)
 
-                Return buffer
-            End Get
-        End Property
+        '        Return buffer
+        '    End Get
+        'End Property
 
         'Private m_configFile As ConfigurationFrame
         'Private m_timeTag As Unix.TimeTag

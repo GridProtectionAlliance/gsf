@@ -313,30 +313,31 @@ Namespace EE.Phasor.PDCstream
             End Get
         End Property
 
-        Public Overrides ReadOnly Property ProtocolSpecificDataLength() As Short
-            Get
-                Return 16
-            End Get
-        End Property
+        ' TODO: place this in proper override!!
+        'Public Overrides ReadOnly Property ProtocolSpecificDataLength() As Short
+        '    Get
+        '        Return 16
+        '    End Get
+        'End Property
 
-        Public Overrides ReadOnly Property ProtocolSpecificDataImage() As Byte()
-            Get
-                Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BinaryLength)
-                Dim index As Integer
+        'Public Overrides ReadOnly Property ProtocolSpecificDataImage() As Byte()
+        '    Get
+        '        Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BinaryLength)
+        '        Dim index As Integer
 
-                buffer(0) = SyncByte
-                buffer(1) = DescriptorPacketFlag
-                EndianOrder.SwapCopyBytes(Convert.ToInt16(buffer.Length \ 2), buffer, 2)
-                buffer(4) = StreamType
-                buffer(5) = RevisionNumber
-                EndianOrder.SwapCopyBytes(Convert.ToInt16(SampleRate), buffer, 6)
-                EndianOrder.SwapCopyBytes(Convert.ToUInt32(RowLength), buffer, 8)
-                EndianOrder.SwapCopyBytes(Convert.ToInt16(m_packetsPerSample), buffer, 12)
-                EndianOrder.SwapCopyBytes(Convert.ToInt16(Cells.Count), buffer, 14)
+        '        buffer(0) = SyncByte
+        '        buffer(1) = DescriptorPacketFlag
+        '        EndianOrder.SwapCopyBytes(Convert.ToInt16(buffer.Length \ 2), buffer, 2)
+        '        buffer(4) = StreamType
+        '        buffer(5) = RevisionNumber
+        '        EndianOrder.SwapCopyBytes(Convert.ToInt16(SampleRate), buffer, 6)
+        '        EndianOrder.SwapCopyBytes(Convert.ToUInt32(RowLength), buffer, 8)
+        '        EndianOrder.SwapCopyBytes(Convert.ToInt16(m_packetsPerSample), buffer, 12)
+        '        EndianOrder.SwapCopyBytes(Convert.ToInt16(Cells.Count), buffer, 14)
 
-                Return buffer
-            End Get
-        End Property
+        '        Return buffer
+        '    End Get
+        'End Property
 
     End Class
 

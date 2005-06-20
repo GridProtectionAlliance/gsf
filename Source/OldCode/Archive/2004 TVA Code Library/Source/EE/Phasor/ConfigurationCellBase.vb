@@ -183,19 +183,20 @@ Namespace EE.Phasor
 
         End Function
 
-        Public Overrides ReadOnly Property BinaryLength() As Int16
+        Protected Overrides ReadOnly Property BodyLength() As Int16
             Get
-                Return ProtocolSpecificDataLength + m_frequencyDefinition.BinaryLength + m_phasorDefinitions.BinaryLength + m_analogDefinitions.BinaryLength + m_digitalDefinitions.BinaryLength
+                ' TODO: FIX THIS!!!
+                'Return ProtocolSpecificDataLength + m_frequencyDefinition.BinaryLength + m_phasorDefinitions.BinaryLength + m_analogDefinitions.BinaryLength + m_digitalDefinitions.BinaryLength
             End Get
         End Property
 
-        Public Overrides ReadOnly Property BinaryImage() As Byte()
+        Protected Overrides ReadOnly Property BodyImage() As Byte()
             Get
-                Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BinaryLength)
-                Dim index As Integer = ProtocolSpecificDataLength
+                Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BodyLength)
+                Dim index As Integer = 0 'ProtocolSpecificDataLength
 
                 ' Copy in protocol specific data image
-                If index > 0 Then BlockCopy(ProtocolSpecificDataImage, 0, buffer, 0, ProtocolSpecificDataLength)
+                'If index > 0 Then BlockCopy(ProtocolSpecificDataImage, 0, buffer, 0, ProtocolSpecificDataLength)
 
                 ' Copy in common cell image
                 CopyImage(m_phasorDefinitions, buffer, index)

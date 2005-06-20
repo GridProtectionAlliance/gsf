@@ -21,7 +21,7 @@ Namespace EE.Phasor
 
     Public Interface IChannelCollection
 
-        Inherits IChannel
+        Inherits IChannel, IEnumerable
 
         Sub Add(ByVal value As IChannel)
 
@@ -76,6 +76,46 @@ Namespace EE.Phasor
                 Return buffer
             End Get
         End Property
+
+#Region " Common IChannel Implementation "
+
+        Private ReadOnly Property HeaderLength() As Int16 Implements IChannel.HeaderLength
+            Get
+                Return 0
+            End Get
+        End Property
+
+        Private ReadOnly Property HeaderImage() As Byte() Implements IChannel.HeaderImage
+            Get
+                Return Nothing
+            End Get
+        End Property
+
+        Private ReadOnly Property BodyLength() As Int16 Implements IChannel.BodyLength
+            Get
+                Return 0
+            End Get
+        End Property
+
+        Private ReadOnly Property BodyImage() As Byte() Implements IChannel.BodyImage
+            Get
+                Return Nothing
+            End Get
+        End Property
+
+        Private ReadOnly Property FooterLength() As Int16 Implements IChannel.FooterLength
+            Get
+                Return 0
+            End Get
+        End Property
+
+        Private ReadOnly Property FooterImage() As Byte() Implements IChannel.FooterImage
+            Get
+                Return Nothing
+            End Get
+        End Property
+
+#End Region
 
     End Class
 

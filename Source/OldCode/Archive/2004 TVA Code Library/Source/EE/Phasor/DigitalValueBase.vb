@@ -96,15 +96,15 @@ Namespace EE.Phasor
             End Get
         End Property
 
-        Public Overrides ReadOnly Property BinaryLength() As Int16
+        Protected Overrides ReadOnly Property BodyLength() As Int16
             Get
                 Return 2
             End Get
         End Property
 
-        Public Overrides ReadOnly Property BinaryImage() As Byte()
+        Protected Overrides ReadOnly Property BodyImage() As Byte()
             Get
-                Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BinaryLength)
+                Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BodyLength)
 
                 EndianOrder.SwapCopyBytes(m_value, buffer, 0)
 

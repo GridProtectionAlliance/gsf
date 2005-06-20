@@ -305,7 +305,7 @@ Namespace EE.Phasor
             End Get
         End Property
 
-        Public Overrides ReadOnly Property BinaryLength() As Int16
+        Protected Overrides ReadOnly Property BodyLength() As Int16
             Get
                 If DataFormat = DataFormat.FixedInteger Then
                     Return 4
@@ -315,9 +315,9 @@ Namespace EE.Phasor
             End Get
         End Property
 
-        Public Overrides ReadOnly Property BinaryImage() As Byte()
+        Protected Overrides ReadOnly Property BodyImage() As Byte()
             Get
-                Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BinaryLength)
+                Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BodyLength)
 
                 If Format = PhasorFormat.Rectangular Then
                     If DataFormat = DataFormat.FixedInteger Then

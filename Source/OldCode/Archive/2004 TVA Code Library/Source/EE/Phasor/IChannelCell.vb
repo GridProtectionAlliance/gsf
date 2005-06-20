@@ -24,10 +24,6 @@ Namespace EE.Phasor
 
         ReadOnly Property Parent() As IChannelFrame
 
-        ReadOnly Property ProtocolSpecificDataLength() As Int16
-
-        ReadOnly Property ProtocolSpecificDataImage() As Byte()
-
     End Interface
 
 End Namespace

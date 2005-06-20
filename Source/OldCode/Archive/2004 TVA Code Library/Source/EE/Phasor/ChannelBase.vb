@@ -15,6 +15,8 @@
 '
 '***********************************************************************
 
+Imports TVA.EE.Phasor.Common
+
 Namespace EE.Phasor
 
     ' This class represents the common implementation of the protocol independent definition of any kind of data.
@@ -30,9 +32,61 @@ Namespace EE.Phasor
             End Get
         End Property
 
-        Public MustOverride ReadOnly Property BinaryLength() As Int16 Implements IChannel.BinaryLength
+        Public Overridable ReadOnly Property BinaryLength() As Int16 Implements IChannel.BinaryLength
+            Get
+                Return HeaderLength + BodyLength + FooterLength
+            End Get
+        End Property
 
-        Public MustOverride ReadOnly Property BinaryImage() As Byte() Implements IChannel.BinaryImage
+        Public Overridable ReadOnly Property BinaryImage() As Byte() Implements IChannel.BinaryImage
+            Get
+                Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BinaryLength)
+                Dim index As Integer = 0
+
+                ' Copy in header, body and footer images
+                CopyImage(HeaderImage, buffer, index, HeaderLength)
+                CopyImage(BodyImage, buffer, index, BodyLength)
+                CopyImage(FooterImage, buffer, index, FooterLength)
+
+                Return buffer
+            End Get
+        End Property
+
+        Protected Overridable ReadOnly Property HeaderLength() As Int16 Implements IChannel.HeaderLength
+            Get
+                Return 0
+            End Get
+        End Property
+
+        Protected Overridable ReadOnly Property HeaderImage() As Byte() Implements IChannel.HeaderImage
+            Get
+                Throw New NotImplementedException("No header image specified for " & InheritedType.FullName)
+            End Get
+        End Property
+
+        Protected Overridable ReadOnly Property BodyLength() As Int16 Implements IChannel.BodyLength
+            Get
+                Return 0
+            End Get
+        End Property
+
+        Protected Overridable ReadOnly Property BodyImage() As Byte() Implements IChannel.BodyImage
+            Get
+                Throw New NotImplementedException("No body image specified for " & InheritedType.FullName)
+            End Get
+        End Property
+
+        Protected Overridable ReadOnly Property FooterLength() As Int16 Implements IChannel.FooterLength
+            Get
+                Return 0
+            End Get
+        End Property
+
+        Protected Overridable ReadOnly Property FooterImage() As Byte() Implements IChannel.FooterImage
+            Get
+                Throw New NotImplementedException("No footer image specified for " & InheritedType.FullName)
+            End Get
+        End Property
 
     End Class
 

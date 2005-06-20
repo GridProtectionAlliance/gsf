@@ -132,37 +132,36 @@ Namespace EE.Phasor
             End Set
         End Property
 
-        Public Overridable ReadOnly Property Name() As String Implements IChannelFrame.Name
+        Public Overrides ReadOnly Property BinaryLength() As Int16
             Get
-                Return "TVA.EE.Phasor.ChannelFrameBase"
-            End Get
-        End Property
-
-        Public MustOverride ReadOnly Property ProtocolSpecificDataLength() As Int16 Implements IChannelFrame.ProtocolSpecificDataLength
-
-        Public MustOverride ReadOnly Property ProtocolSpecificDataImage() As Byte() Implements IChannelFrame.ProtocolSpecificDataImage
-
-        Public Overrides ReadOnly Property BinaryLength() As Short
-            Get
-                Return 2 + ProtocolSpecificDataLength + Cells.BinaryLength
+                Return 2 + MyBase.BinaryLength
             End Get
         End Property
 
         Public Overrides ReadOnly Property BinaryImage() As Byte()
             Get
                 Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BinaryLength)
-                Dim index As Integer = ProtocolSpecificDataLength
+                Dim index As Integer
 
-                ' Copy in protocol specific data image
-                If index > 0 Then BlockCopy(ProtocolSpecificDataImage, 0, buffer, 0, ProtocolSpecificDataLength)
-
-                ' Copy in common cell image
-                CopyImage(Cells, buffer, index)
+                ' Copy in base image
+                CopyImage(MyBase.BinaryImage, buffer, index, MyBase.BinaryLength)
 
                 ' Add check sum
                 AppendChecksum(buffer, index)
 
                 Return buffer
+            End Get
+        End Property
+
+        Protected Overrides ReadOnly Property BodyLength() As Int16
+            Get
+                Return Cells.BinaryLength
+            End Get
+        End Property
+
+        Protected Overrides ReadOnly Property BodyImage() As Byte()
+            Get
+                Return Cells.BinaryImage
             End Get
         End Property
 
