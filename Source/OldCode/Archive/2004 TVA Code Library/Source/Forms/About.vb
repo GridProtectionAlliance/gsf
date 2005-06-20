@@ -1,7 +1,7 @@
 'Author: Pinal Patel
 'Created: 06-01-05
-'Modified: 06-01-05
-'Description: This is ESO's standard "About" windows form.
+'Modified: 06-03-05
+'Description: This is ESO's standard "About" windows dialog.
 
 
 
@@ -296,12 +296,12 @@ Namespace Forms
             With Me
                 'Set the form's font to its owner's font, if it has a owner.
                 If Not .Owner Is Nothing Then
-                    .Font = .Owner.Font
+                    .Font = .Owner().Font()
                 End If
 
 
-                .Text = "About " & EntryAssembly().Title()    'Set the form's caption.
-                .rtbDisclaimer.Text = .rtbDisclaimer.Text() 'Causes any Urls in the text to be detected.
+                .Text = "About " & EntryAssembly().Title()      'Set the form's caption.
+                .rtbDisclaimer.Text = .rtbDisclaimer.Text()     'Causes any Urls in the text to be detected.
 
 
                 'Populate application information.
@@ -335,7 +335,7 @@ Namespace Forms
 
         Private Sub llHomePage_LinkClicked(ByVal sender As System.Object, ByVal e As System.Windows.Forms.LinkLabelLinkClickedEventArgs) Handles llHomePage.LinkClicked
 
-            'Launch ESO web site in the default browser.
+            'Launch home page in the default browser.
             Process.Start(Me.m_Url)
 
         End Sub
@@ -361,14 +361,14 @@ Namespace Forms
                     Next
                 End With
             Catch ex As Exception
-                MsgBox("Cannot load assembly information.", MsgBoxStyle.Exclamation, ExecutingAssembly().Name())
+                MsgBox("Cannot load assembly information.", MsgBoxStyle.Exclamation, CallingAssembly().Name())
             End Try
 
         End Sub
 
         Private Sub btnOK_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles btnOK.Click
 
-            'Close the form.
+            'Close the dialog.
             Me.Close()
 
         End Sub
@@ -415,7 +415,7 @@ Namespace Forms
                     .Text = DisclaimerText
                 End With
             Else
-                MsgBox("DisclaimerText parameter cannot be empty.", MsgBoxStyle.Exclamation, ExecutingAssembly().Name())
+                MsgBox("DisclaimerText parameter cannot be empty.", MsgBoxStyle.Exclamation, CallingAssembly().Name())
             End If
 
         End Sub
@@ -427,7 +427,7 @@ Namespace Forms
                 Dim oStreamReader As New StreamReader(DisclaimerStream)
                 Me.LoadDisclaimer(oStreamReader.ReadToEnd(), True)
             Else
-                MsgBox("DisclaimerStream must be initialized.", MsgBoxStyle.Exclamation, ExecutingAssembly().Name())
+                MsgBox("DisclaimerStream must be initialized.", MsgBoxStyle.Exclamation, CallingAssembly().Name())
             End If
 
         End Sub
@@ -437,13 +437,13 @@ Namespace Forms
             Try
                 'Load the disclaimer from a file.
                 If DisclaimerFile <> "" Then
-                    Dim oStreamreader As New StreamReader(DisclaimerFile)
-                    Me.LoadDisclaimer(oStreamreader.ReadToEnd(), True)
+                    Dim oStreamReader As New StreamReader(DisclaimerFile)
+                    Me.LoadDisclaimer(oStreamReader.ReadToEnd(), True)
                 Else
-                    MsgBox("DisclaimerFile parameter cannot be empty.", MsgBoxStyle.Exclamation, ExecutingAssembly().Name())
+                    MsgBox("DisclaimerFile parameter cannot be empty.", MsgBoxStyle.Exclamation, CallingAssembly().Name())
                 End If
             Catch ex As Exception
-                MsgBox("Cannot load disclaimer from file.", MsgBoxStyle.Exclamation, ExecutingAssembly().Name())
+                MsgBox("Cannot load disclaimer from file.", MsgBoxStyle.Exclamation, CallingAssembly().Name())
             End Try
 
         End Sub
@@ -455,7 +455,7 @@ Namespace Forms
             If Not oStream Is Nothing Then
                 Me.LoadDisclaimer(oStream)
             Else
-                MsgBox("Cannot load disclaimer from embedded resource.", MsgBoxStyle.Exclamation, ExecutingAssembly().Name())
+                MsgBox("Cannot load disclaimer from embedded resource.", MsgBoxStyle.Exclamation, CallingAssembly().Name())
             End If
 
         End Sub
@@ -466,7 +466,7 @@ Namespace Forms
             If Not BannerStream Is Nothing Then
                 Me.picLogo.Image = New Bitmap(BannerStream)
             Else
-                MsgBox("BannerStream must be initialized.", MsgBoxStyle.Exclamation, ExecutingAssembly().Name())
+                MsgBox("BannerStream must be initialized.", MsgBoxStyle.Exclamation, CallingAssembly().Name())
             End If
 
         End Sub
@@ -476,13 +476,13 @@ Namespace Forms
             Try
                 'Load the banner from a file.
                 If BannerFile <> "" Then
-                    Dim oStreamreader As New StreamReader(BannerFile)
-                    Me.LoadBanner(oStreamreader.BaseStream())
+                    Dim oStreamReader As New StreamReader(BannerFile)
+                    Me.LoadBanner(oStreamReader.BaseStream())
                 Else
-                    MsgBox("BannerFile parameter cannot be empty.", MsgBoxStyle.Exclamation, ExecutingAssembly().Name())
+                    MsgBox("BannerFile parameter cannot be empty.", MsgBoxStyle.Exclamation, CallingAssembly().Name())
                 End If
             Catch ex As Exception
-                MsgBox("Cannot load banner from file.", MsgBoxStyle.Exclamation, ExecutingAssembly().Name())
+                MsgBox("Cannot load banner from file.", MsgBoxStyle.Exclamation, CallingAssembly().Name())
             End Try
 
         End Sub
@@ -490,11 +490,11 @@ Namespace Forms
         Public Sub LoadBanner(ByVal ResourceAssembly As System.Reflection.Assembly, ByVal ResourceName As String)
 
             'Load the banner from embedded resource.
-            Dim oStream As Stream = New TVA.Shared.Assembly(ResourceAssembly).GetEmbeddedResource(ResourceName) ' Me.LoadManifestResource(ExecutingAssembly, ResourceName)
+            Dim oStream As Stream = New TVA.Shared.Assembly(ResourceAssembly).GetEmbeddedResource(ResourceName)
             If Not oStream Is Nothing Then
                 Me.LoadBanner(oStream)
             Else
-                MsgBox("Cannot load banner from embedded resource.", MsgBoxStyle.Exclamation, ExecutingAssembly().Name())
+                MsgBox("Cannot load banner from embedded resource.", MsgBoxStyle.Exclamation, CallingAssembly().Name())
             End If
 
         End Sub
