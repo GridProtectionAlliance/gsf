@@ -28,8 +28,8 @@ Namespace Forms
             'Add any initialization after the InitializeComponent() call
             'Perform default initialization.
             Me.m_Url = "http://opweb.cha.tva.gov/"                          'Set the default home page Url.
-            Me.LoadBanner(GetExecutingAssembly(), "Forms.EsoLogo.bmp")            'Set the default banner.
-            Me.LoadDisclaimer(GetExecutingAssembly(), "Forms.EsoDisclaimer.txt")  'Set the default disclaimer.
+            Me.LoadBanner(GetExecutingAssembly(), "Forms.EsoBanner.bmp")            'Set the default banner.
+            Me.LoadDisclaimer(GetExecutingAssembly(), "Forms.EsoDisclaimer.txt")    'Set the default disclaimer.
 
         End Sub
 

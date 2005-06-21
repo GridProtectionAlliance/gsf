@@ -126,11 +126,11 @@
                     BuildAction = "Compile"
                 />
                 <File
-                    RelPath = "Forms.EsoDisclaimer.txt"
+                    RelPath = "Forms.EsoBanner.bmp"
                     BuildAction = "EmbeddedResource"
                 />
                 <File
-                    RelPath = "Forms.EsoLogo.bmp"
+                    RelPath = "Forms.EsoDisclaimer.txt"
                     BuildAction = "EmbeddedResource"
                 />
             </Include>
