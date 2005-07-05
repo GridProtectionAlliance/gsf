@@ -1,6 +1,6 @@
-'***********************************************************************
+'*******************************************************************************************************
 '  DataFrameBase.vb - Data frame base class
-'  Copyright © 2004 - TVA, all rights reserved
+'  Copyright © 2004 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2003
 '  Primary Developer: James R Carroll, System Analyst [TVA]
@@ -9,11 +9,11 @@
 '       Email: jrcarrol@tva.gov
 '
 '  Code Modification History:
-'  ---------------------------------------------------------------------
+'  -----------------------------------------------------------------------------------------------------
 '  01/14/2005 - James R Carroll
 '       Initial version of source generated
 '
-'***********************************************************************
+'*******************************************************************************************************
 
 Imports TVA.Interop
 
@@ -41,7 +41,7 @@ Namespace EE.Phasor
 
         End Sub
 
-        ' Dervied classes are expected to expose a Public Sub New(ByVal configurationFrame As IConfigurationFrame, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+        ' Derived classes are expected to expose a Public Sub New(ByVal configurationFrame As IConfigurationFrame, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
         ' and automatically pass in type parameter
         Protected Sub New(ByVal cells As DataCellCollection, ByVal configurationFrame As IConfigurationFrame, ByVal binaryImage As Byte(), ByVal startIndex As Integer, ByVal dataCellType As Type)
 
@@ -62,7 +62,7 @@ Namespace EE.Phasor
 
         End Sub
 
-        ' Dervied classes are expected to expose a Public Sub New(ByVal dataFrame As IDataFrame)
+        ' Derived classes are expected to expose a Public Sub New(ByVal dataFrame As IDataFrame)
         Protected Sub New(ByVal dataFrame As IDataFrame)
 
             Me.New(dataFrame.Cells, dataFrame.TimeTag, dataFrame.Milliseconds, dataFrame.SynchronizationIsValid, dataFrame.DataIsValid, dataFrame.ConfigurationFrame)

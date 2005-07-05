@@ -1,6 +1,6 @@
-'***********************************************************************
+'*******************************************************************************************************
 '  BaseFrame.vb - Basic IEEE1344 Frame
-'  Copyright © 2004 - TVA, all rights reserved
+'  Copyright © 2004 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2003
 '  Primary Developer: James R Carroll, System Analyst [TVA]
@@ -9,11 +9,11 @@
 '       Email: jrcarrol@tva.gov
 '
 '  Code Modification History:
-'  ---------------------------------------------------------------------
+'  -----------------------------------------------------------------------------------------------------
 '  01/14/2005 - James R Carroll
 '       Initial version of source generated
 '
-'***********************************************************************
+'*******************************************************************************************************
 
 Imports System.Buffer
 Imports TVA.Interop

@@ -1,6 +1,6 @@
-'***********************************************************************
+'*******************************************************************************************************
 '  DataCellBase.vb - Data cell base class
-'  Copyright © 2004 - TVA, all rights reserved
+'  Copyright © 2004 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2003
 '  Primary Developer: James R Carroll, System Analyst [TVA]
@@ -9,11 +9,11 @@
 '       Email: jrcarrol@tva.gov
 '
 '  Code Modification History:
-'  ---------------------------------------------------------------------
+'  -----------------------------------------------------------------------------------------------------
 '  01/14/2005 - James R Carroll
 '       Initial version of source generated
 '
-'***********************************************************************
+'*******************************************************************************************************
 
 Imports System.Buffer
 Imports TVA.Interop
@@ -58,7 +58,7 @@ Namespace EE.Phasor
 
         End Sub
 
-        ' Dervied classes are expected to expose a Public Sub New(ByVal parent As IDataFrame, ByVal configurationCell As IConfigurationCell, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+        ' Derived classes are expected to expose a Public Sub New(ByVal parent As IDataFrame, ByVal configurationCell As IConfigurationCell, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
         ' and automatically pass in type parameters
         Protected Sub New(ByVal parent As IDataFrame, ByVal configurationCell As IConfigurationCell, ByVal binaryImage As Byte(), ByVal startIndex As Integer, ByVal phasorValueType As Type, ByVal frequencyValueType As Type, ByVal analogValueType As Type, ByVal digitalValueType As Type)
 
@@ -95,7 +95,7 @@ Namespace EE.Phasor
 
         End Sub
 
-        ' Dervied classes are expected to expose a Public Sub New(ByVal dataCell As IDataCell)
+        ' Derived classes are expected to expose a Public Sub New(ByVal dataCell As IDataCell)
         Protected Sub New(ByVal dataCell As IDataCell)
 
             Me.New(dataCell.Parent, dataCell.ConfigurationCell, dataCell.StatusFlags, dataCell.PhasorValues, _

@@ -1,6 +1,6 @@
-'***********************************************************************
+'*******************************************************************************************************
 '  ConfigurationCellBase.vb - Configuration cell base class
-'  Copyright © 2004 - TVA, all rights reserved
+'  Copyright © 2004 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2003
 '  Primary Developer: James R Carroll, System Analyst [TVA]
@@ -9,11 +9,11 @@
 '       Email: jrcarrol@tva.gov
 '
 '  Code Modification History:
-'  ---------------------------------------------------------------------
+'  -----------------------------------------------------------------------------------------------------
 '  01/14/2005 - James R Carroll
 '       Initial version of source generated
 '
-'***********************************************************************
+'*******************************************************************************************************
 
 Imports System.Buffer
 Imports System.Text
@@ -62,7 +62,7 @@ Namespace EE.Phasor
 
         End Sub
 
-        ' Dervied classes are expected to expose a Public Sub New(ByVal configurationCell As IConfigurationCell)
+        ' Derived classes are expected to expose a Public Sub New(ByVal configurationCell As IConfigurationCell)
         Protected Sub New(ByVal configurationCell As IConfigurationCell)
 
             Me.New(configurationCell.Parent, configurationCell.StationName, configurationCell.IDCode, configurationCell.IDLabel, _

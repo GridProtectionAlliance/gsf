@@ -101,7 +101,17 @@
                     BuildAction = "Compile"
                 />
                 <File
+                    RelPath = "AnalogDefinitionCollection.vb"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
                     RelPath = "AnalogValueBase.vb"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "AnalogValueCollection.vb"
                     SubType = "Code"
                     BuildAction = "Compile"
                 />
@@ -121,7 +131,22 @@
                     BuildAction = "Compile"
                 />
                 <File
+                    RelPath = "ChannelCellCollectionBase.vb"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "ChannelCollectionBase.vb"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
                     RelPath = "ChannelDefinitionBase.vb"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "ChannelDefinitionCollectionBase.vb"
                     SubType = "Code"
                     BuildAction = "Compile"
                 />
@@ -131,12 +156,17 @@
                     BuildAction = "Compile"
                 />
                 <File
+                    RelPath = "ChannelFrameCollectionBase.vb"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
                     RelPath = "ChannelValueBase.vb"
                     SubType = "Code"
                     BuildAction = "Compile"
                 />
                 <File
-                    RelPath = "Collections.vb"
+                    RelPath = "ChannelValueCollectionBase.vb"
                     SubType = "Code"
                     BuildAction = "Compile"
                 />
@@ -151,7 +181,17 @@
                     BuildAction = "Compile"
                 />
                 <File
+                    RelPath = "ConfigurationCellCollection.vb"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
                     RelPath = "ConfigurationFrameBase.vb"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "ConfigurationFrameCollection.vb"
                     SubType = "Code"
                     BuildAction = "Compile"
                 />
@@ -161,7 +201,17 @@
                     BuildAction = "Compile"
                 />
                 <File
+                    RelPath = "DataCellCollection.vb"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
                     RelPath = "DataFrameBase.vb"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "DataFrameCollection.vb"
                     SubType = "Code"
                     BuildAction = "Compile"
                 />
@@ -176,7 +226,17 @@
                     BuildAction = "Compile"
                 />
                 <File
+                    RelPath = "DigitalDefinitionCollection.vb"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
                     RelPath = "DigitalValueBase.vb"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "DigitalValueCollection.vb"
                     SubType = "Code"
                     BuildAction = "Compile"
                 />
@@ -186,7 +246,17 @@
                     BuildAction = "Compile"
                 />
                 <File
+                    RelPath = "FrequencyDefinitionCollection.vb"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
                     RelPath = "FrequencyValueBase.vb"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "FrequencyValueCollection.vb"
                     SubType = "Code"
                     BuildAction = "Compile"
                 />
@@ -207,6 +277,11 @@
                 />
                 <File
                     RelPath = "IChannelCell.vb"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "IChannelCollection.vb"
                     SubType = "Code"
                     BuildAction = "Compile"
                 />
@@ -281,7 +356,17 @@
                     BuildAction = "Compile"
                 />
                 <File
+                    RelPath = "PhasorDefinitionCollection.vb"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
                     RelPath = "PhasorValueBase.vb"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "PhasorValueCollection.vb"
                     SubType = "Code"
                     BuildAction = "Compile"
                 />

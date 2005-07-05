@@ -1,6 +1,6 @@
-'***********************************************************************
+'*******************************************************************************************************
 '  DigitalDefinition.vb - Digital definition
-'  Copyright © 2004 - TVA, all rights reserved
+'  Copyright © 2004 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2003
 '  Primary Developer: James R Carroll, System Analyst [TVA]
@@ -9,11 +9,11 @@
 '       Email: jrcarrol@tva.gov
 '
 '  Code Modification History:
-'  ---------------------------------------------------------------------
+'  -----------------------------------------------------------------------------------------------------
 '  11/12/2004 - James R Carroll
 '       Initial version of source generated
 '
-'***********************************************************************
+'*******************************************************************************************************
 
 Namespace EE.Phasor.PDCstream
 

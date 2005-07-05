@@ -1,6 +1,6 @@
-'***********************************************************************
+'*******************************************************************************************************
 '  ConfigurationFrameBase.vb - Configuration frame base class
-'  Copyright © 2004 - TVA, all rights reserved
+'  Copyright © 2004 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2003
 '  Primary Developer: James R Carroll, System Analyst [TVA]
@@ -9,11 +9,11 @@
 '       Email: jrcarrol@tva.gov
 '
 '  Code Modification History:
-'  ---------------------------------------------------------------------
+'  -----------------------------------------------------------------------------------------------------
 '  01/14/2005 - James R Carroll
 '       Initial version of source generated
 '
-'***********************************************************************
+'*******************************************************************************************************
 
 Imports TVA.Interop
 
@@ -47,7 +47,7 @@ Namespace EE.Phasor
 
         End Sub
 
-        ' Dervied classes are expected to expose a Public Sub New(ByVal configurationFrame As IConfigurationFrame)
+        ' Derived classes are expected to expose a Public Sub New(ByVal configurationFrame As IConfigurationFrame)
         Protected Sub New(ByVal configurationFrame As IConfigurationFrame)
 
             Me.New(configurationFrame.Cells, configurationFrame.TimeTag, configurationFrame.Milliseconds, configurationFrame.SynchronizationIsValid, _

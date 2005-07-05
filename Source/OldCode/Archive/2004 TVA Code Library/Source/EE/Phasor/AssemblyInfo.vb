@@ -12,7 +12,7 @@ Imports System.Runtime.InteropServices
 <Assembly: AssemblyDescription("Shared .NET Electrical Engineering Phasor Protocol Code Library ")> 
 <Assembly: AssemblyCompany("TVA")> 
 <Assembly: AssemblyProduct("Shared .NET Code Library for TVA")> 
-<Assembly: AssemblyCopyright("Copyright © 2005, TVA - All rights reserved")> 
+<Assembly: AssemblyCopyright("Copyright © 2005, TVA - All rights reserved - Gbtc")> 
 <Assembly: AssemblyTrademark("Author: James Ritchie Carroll")> 
 <Assembly: CLSCompliant(True)> 
 

@@ -1,6 +1,6 @@
-'***********************************************************************
+'*******************************************************************************************************
 '  AnalogValueBase.vb - Analog value base class
-'  Copyright © 2005 - TVA, all rights reserved
+'  Copyright © 2005 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2003
 '  Primary Developer: James R Carroll, System Analyst [TVA]
@@ -9,11 +9,11 @@
 '       Email: jrcarrol@tva.gov
 '
 '  Code Modification History:
-'  ---------------------------------------------------------------------
+'  -----------------------------------------------------------------------------------------------------
 '  02/18/2005 - James R Carroll
 '       Initial version of source generated
 '
-'***********************************************************************
+'*******************************************************************************************************
 
 Imports TVA.Interop
 
@@ -33,7 +33,7 @@ Namespace EE.Phasor
 
         End Sub
 
-        ' Dervied classes are expected expose a Public Sub New(ByVal parent As IDataCell, ByVal analogDefinition As IAnalogDefinition, ByVal value As Double)
+        ' Derived classes are expected expose a Public Sub New(ByVal parent As IDataCell, ByVal analogDefinition As IAnalogDefinition, ByVal value As Double)
         Protected Sub New(ByVal parent As IDataCell, ByVal analogDefinition As IAnalogDefinition, ByVal value As Double)
 
             MyBase.New(parent, analogDefinition)
@@ -42,14 +42,14 @@ Namespace EE.Phasor
 
         End Sub
 
-        ' Dervied classes are expected expose a Public Sub New(ByVal parent As IDataCell, ByVal analogDefinition As IAnalogDefinition, ByVal unscaledValue As Int16)
+        ' Derived classes are expected expose a Public Sub New(ByVal parent As IDataCell, ByVal analogDefinition As IAnalogDefinition, ByVal unscaledValue As Int16)
         Protected Sub New(ByVal parent As IDataCell, ByVal analogDefinition As IAnalogDefinition, ByVal unscaledValue As Int16)
 
             Me.New(parent, analogDefinition, unscaledValue / analogDefinition.ScalingFactor)
 
         End Sub
 
-        ' Dervied classes are expected expose a Public Sub New(ByVal parent As IDataCell, ByVal analogDefinition As IAnalogDefinition, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+        ' Derived classes are expected expose a Public Sub New(ByVal parent As IDataCell, ByVal analogDefinition As IAnalogDefinition, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
         Protected Sub New(ByVal parent As IDataCell, ByVal analogDefinition As IAnalogDefinition, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
 
             MyBase.New(parent, analogDefinition)
@@ -62,7 +62,7 @@ Namespace EE.Phasor
 
         End Sub
 
-        ' Dervied classes are expected expose a Public Sub New(ByVal analogValue As IAnalogValue)
+        ' Derived classes are expected expose a Public Sub New(ByVal analogValue As IAnalogValue)
         Protected Sub New(ByVal analogValue As IAnalogValue)
 
             Me.New(analogValue.Parent, analogValue.Definition, analogValue.Value)

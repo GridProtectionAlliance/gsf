@@ -1,6 +1,6 @@
-'***********************************************************************
+'*******************************************************************************************************
 '  PhasorValueBase.vb - Phasor value base class
-'  Copyright © 2004 - TVA, all rights reserved
+'  Copyright © 2004 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2003
 '  Primary Developer: James R Carroll, System Analyst [TVA]
@@ -11,18 +11,18 @@
 '  Note: Phasors are stored rectangular format internally
 '
 '  Code Modification History:
-'  ---------------------------------------------------------------------
+'  -----------------------------------------------------------------------------------------------------
 '  11/12/2004 - James R Carroll
 '       Initial version of source generated
 '
-'***********************************************************************
+'*******************************************************************************************************
 
 Imports TVA.Interop
 Imports TVA.Shared.Math
 
 Namespace EE.Phasor
 
-    ' This class represents the protocol independent definition of a phasor value.
+    ' This class represents the protocol independent representation of a phasor value.
     Public MustInherit Class PhasorValueBase
 
         Inherits ChannelValueBase
@@ -105,7 +105,7 @@ Namespace EE.Phasor
 
         End Sub
 
-        ' Dervied classes are expected expose a Public Sub New(ByVal parent As IDataCell, ByVal phasorDefinition As IPhasorDefinition, ByVal real As Double, ByVal imaginary As Double)
+        ' Derived classes are expected expose a Public Sub New(ByVal parent As IDataCell, ByVal phasorDefinition As IPhasorDefinition, ByVal real As Double, ByVal imaginary As Double)
         Protected Sub New(ByVal parent As IDataCell, ByVal phasorDefinition As IPhasorDefinition, ByVal real As Double, ByVal imaginary As Double)
 
             MyBase.New(parent, phasorDefinition)
@@ -116,14 +116,14 @@ Namespace EE.Phasor
 
         End Sub
 
-        ' Dervied classes are expected expose a Public Sub New(ByVal parent As IDataCell, ByVal phasorDefinition As IPhasorDefinition, ByVal unscaledReal As Int16, ByVal unscaledImaginary As Int16)
+        ' Derived classes are expected expose a Public Sub New(ByVal parent As IDataCell, ByVal phasorDefinition As IPhasorDefinition, ByVal unscaledReal As Int16, ByVal unscaledImaginary As Int16)
         Protected Sub New(ByVal parent As IDataCell, ByVal phasorDefinition As IPhasorDefinition, ByVal unscaledReal As Int16, ByVal unscaledImaginary As Int16)
 
             Me.New(parent, phasorDefinition, unscaledReal / phasorDefinition.ScalingFactor, unscaledImaginary / phasorDefinition.ScalingFactor)
 
         End Sub
 
-        ' Dervied classes are expected expose a Public Sub New(ByVal parent As IDataCell, ByVal phasorDefinition As IPhasorDefinition, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+        ' Derived classes are expected expose a Public Sub New(ByVal parent As IDataCell, ByVal phasorDefinition As IPhasorDefinition, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
         Protected Sub New(ByVal parent As IDataCell, ByVal phasorDefinition As IPhasorDefinition, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
 
             MyBase.New(parent, phasorDefinition)
@@ -156,7 +156,7 @@ Namespace EE.Phasor
 
         End Sub
 
-        ' Dervied classes are expected to expose a Public Sub New(ByVal phasorValue As IPhasorValue)
+        ' Derived classes are expected to expose a Public Sub New(ByVal phasorValue As IPhasorValue)
         Protected Sub New(ByVal phasorValue As IPhasorValue)
 
             Me.New(phasorValue.Parent, phasorValue.Definition, phasorValue.Real, phasorValue.Imaginary)

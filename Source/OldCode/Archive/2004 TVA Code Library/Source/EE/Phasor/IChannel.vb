@@ -1,6 +1,6 @@
-'***********************************************************************
+'*******************************************************************************************************
 '  IChannel.vb - Channel interface - this is the root interface
-'  Copyright © 2005 - TVA, all rights reserved
+'  Copyright © 2005 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2003
 '  Primary Developer: James R Carroll, System Analyst [TVA]
@@ -9,11 +9,11 @@
 '       Email: jrcarrol@tva.gov
 '
 '  Code Modification History:
-'  ---------------------------------------------------------------------
+'  -----------------------------------------------------------------------------------------------------
 '  02/18/2005 - James R Carroll
 '       Initial version of source generated
 '
-'***********************************************************************
+'*******************************************************************************************************
 
 Namespace EE.Phasor
 
@@ -27,20 +27,6 @@ Namespace EE.Phasor
         ReadOnly Property BinaryLength() As Int16
 
         ReadOnly Property BinaryImage() As Byte()
-
-        ' These are typically implemented as protected properties that collectively feed the public binary properties
-        ReadOnly Property HeaderLength() As Int16
-
-        ReadOnly Property HeaderImage() As Byte()
-
-        ' The body properties are typically implemented by the base classes defining the "common" data image set
-        ReadOnly Property BodyLength() As Int16
-
-        ReadOnly Property BodyImage() As Byte()
-
-        ReadOnly Property FooterLength() As Int16
-
-        ReadOnly Property FooterImage() As Byte()
 
     End Interface
 

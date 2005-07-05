@@ -1,6 +1,6 @@
-'***********************************************************************
+'*******************************************************************************************************
 '  ChannelDefinitionBase.vb - Channel data definition base class
-'  Copyright © 2004 - TVA, all rights reserved
+'  Copyright © 2004 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2003
 '  Primary Developer: James R Carroll, System Analyst [TVA]
@@ -9,11 +9,11 @@
 '       Email: jrcarrol@tva.gov
 '
 '  Code Modification History:
-'  ---------------------------------------------------------------------
+'  -----------------------------------------------------------------------------------------------------
 '  3/7/2005 - James R Carroll
 '       Initial version of source generated
 '
-'***********************************************************************
+'*******************************************************************************************************
 
 Imports System.Text
 
@@ -56,7 +56,7 @@ Namespace EE.Phasor
 
         End Sub
 
-        ' Dervied classes are expected to expose a Protected Sub New(ByVal channelDefinition As IChannelDefinition)
+        ' Derived classes are expected to expose a Protected Sub New(ByVal channelDefinition As IChannelDefinition)
         Protected Sub New(ByVal channelDefinition As IChannelDefinition)
 
             Me.New(channelDefinition.Parent, channelDefinition.DataFormat, channelDefinition.Index, channelDefinition.Label, _

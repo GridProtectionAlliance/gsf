@@ -1,6 +1,6 @@
-'***********************************************************************
+'*******************************************************************************************************
 '  ChannelBase.vb - Channel data base class
-'  Copyright © 2004 - TVA, all rights reserved
+'  Copyright © 2004 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2003
 '  Primary Developer: James R Carroll, System Analyst [TVA]
@@ -9,11 +9,11 @@
 '       Email: jrcarrol@tva.gov
 '
 '  Code Modification History:
-'  ---------------------------------------------------------------------
+'  -----------------------------------------------------------------------------------------------------
 '  3/7/2005 - James R Carroll
 '       Initial version of source generated
 '
-'***********************************************************************
+'*******************************************************************************************************
 
 Imports TVA.EE.Phasor.Common
 
@@ -52,37 +52,37 @@ Namespace EE.Phasor
             End Get
         End Property
 
-        Protected Overridable ReadOnly Property HeaderLength() As Int16 Implements IChannel.HeaderLength
+        Protected Overridable ReadOnly Property HeaderLength() As Int16
             Get
                 Return 0
             End Get
         End Property
 
-        Protected Overridable ReadOnly Property HeaderImage() As Byte() Implements IChannel.HeaderImage
+        Protected Overridable ReadOnly Property HeaderImage() As Byte()
             Get
                 Throw New NotImplementedException("No header image specified for " & InheritedType.FullName)
             End Get
         End Property
 
-        Protected Overridable ReadOnly Property BodyLength() As Int16 Implements IChannel.BodyLength
+        Protected Overridable ReadOnly Property BodyLength() As Int16
             Get
                 Return 0
             End Get
         End Property
 
-        Protected Overridable ReadOnly Property BodyImage() As Byte() Implements IChannel.BodyImage
+        Protected Overridable ReadOnly Property BodyImage() As Byte()
             Get
                 Throw New NotImplementedException("No body image specified for " & InheritedType.FullName)
             End Get
         End Property
 
-        Protected Overridable ReadOnly Property FooterLength() As Int16 Implements IChannel.FooterLength
+        Protected Overridable ReadOnly Property FooterLength() As Int16
             Get
                 Return 0
             End Get
         End Property
 
-        Protected Overridable ReadOnly Property FooterImage() As Byte() Implements IChannel.FooterImage
+        Protected Overridable ReadOnly Property FooterImage() As Byte()
             Get
                 Throw New NotImplementedException("No footer image specified for " & InheritedType.FullName)
             End Get
