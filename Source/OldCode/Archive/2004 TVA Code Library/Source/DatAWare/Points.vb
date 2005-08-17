@@ -69,6 +69,34 @@ Namespace DatAWare
             End Get
         End Property
 
+        Public Sub ArchiveValue(ByVal databaseIndex As Integer, ByVal utcTimestamp As DateTime, ByVal value As Single, Optional ByVal qual As Quality = Quality.Good)
+
+            VerifyOpenConnection()
+
+            Dim status As ReturnStatus
+
+            With m_connection
+                .DWAPI.Archive_PutValue(.PlantCode, databaseIndex, value, TimeTag.StringFormat(utcTimestamp.ToLocalTime()), qual, status)
+            End With
+
+            If status <> ReturnStatus.Normal Then Throw New InvalidOperationException("Failed to archive DatAWare value due to exception: Archive_PutValue " & [Enum].GetName(GetType(ReturnStatus), status) & " error")
+
+        End Sub
+
+        Public Sub ArchiveValues(ByVal values As DataBlock)
+
+            VerifyOpenConnection()
+
+            Dim status As ReturnStatus
+
+            With m_connection
+                .DWAPI.Archive_Put(.PlantCode, values.Channels, values.Values, values.TTags, values.Quals, values.Channels.Length, status)
+            End With
+
+            If status <> ReturnStatus.Normal Then Throw New InvalidOperationException("Failed to archive DatAWare values due to exception: Archive_Put " & [Enum].GetName(GetType(ReturnStatus), status) & " error")
+
+        End Sub
+
         Default Public ReadOnly Property Value(ByVal databaseIndex As Integer, Optional ByVal timeRequest As String = "*", Optional ByVal timeInterval As Single = 0) As StandardEvent
             Get
                 VerifyOpenConnection()
@@ -146,7 +174,7 @@ Namespace DatAWare
                         events = Array.CreateInstance(GetType(StandardEvent), eventCount)
 
                         For x As Integer = 0 To eventCount - 1
-                            element = returnValues(x).Split(","c)
+                            element = returnValues(x).Split("|"c)
                             events(x) = New StandardEvent(CInt(element(0)), element(2), CSng(element(1)), CType(CInt(element(3)), DatAWare.Quality))
                         Next
                     End If

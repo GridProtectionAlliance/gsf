@@ -78,6 +78,40 @@ Namespace DatAWare
         [Structure]
     End Enum
 
+    Public Class DataBlock
+
+        Public Channels As Integer()
+        Public Values As Single()
+        Public TTags As Double()
+        Public Quals As Quality()
+        Public Processed As Boolean
+
+        Public Sub New(ByVal blockSize As Integer)
+
+            Channels = Array.CreateInstance(GetType(Integer), blockSize)
+            Values = Array.CreateInstance(GetType(Single), blockSize)
+            TTags = Array.CreateInstance(GetType(Double), blockSize)
+            Quals = Array.CreateInstance(GetType(Quality), blockSize)
+
+        End Sub
+
+        Public Sub SetRow(ByVal rowIndex As Integer, ByVal databaseIndex As Integer, ByVal value As Single, ByVal utcTimestamp As DateTime, Optional ByVal qual As Quality = Quality.Good)
+
+            SetRow(rowIndex, databaseIndex, value, (New TimeTag(utcTimestamp)).Value, qual)
+
+        End Sub
+
+        Public Sub SetRow(ByVal rowIndex As Integer, ByVal databaseIndex As Integer, ByVal value As Single, ByVal ttag As Double, Optional ByVal qual As Quality = Quality.Good)
+
+            Channels(rowIndex) = databaseIndex
+            Values(rowIndex) = value
+            TTags(rowIndex) = ttag
+            Quals(rowIndex) = qual
+
+        End Sub
+
+    End Class
+
     ' Standard database structure element
     Public Class DatabaseStructure
 

@@ -23,22 +23,11 @@ Namespace DatAWare
     ' Note: This class expects a timestamp in UTC
     Public Class ArchiveUnit
 
-        ' For the sake of efficiency in posting to DatAWare, we break down the points for this data unit into blocks...
-        Public Class UnitBlock
-
-            Public Channels As Integer()
-            Public Values As Single()
-            Public TTags As Double()
-            Public Quals As Quality()
-            Public Processed As Boolean
-
-        End Class
-
         Public Connection As Connection
         Public TTag As TimeTag
         Public PlantCode As String
         Public PointCount As Integer
-        Public Blocks As UnitBlock()
+        Public Blocks As DataBlock()
         Public PostAttempts As Integer
 
         Public Const BlockSize As Integer = 50
@@ -61,20 +50,14 @@ Namespace DatAWare
             blocks = Math.DivRem(pointCount, BlockSize, remainder)
             If remainder > 0 Then blocks += 1
 
-            Me.Blocks = Array.CreateInstance(GetType(UnitBlock), blocks)
+            ' For the sake of efficiency in posting to DatAWare, we break down the points for this data unit into blocks...
+            Me.Blocks = Array.CreateInstance(GetType(DataBlock), blocks)
 
             For x = 0 To blocks - 1
-                Me.Blocks(x) = New UnitBlock
                 If x = blocks - 1 And remainder > 0 Then
-                    Me.Blocks(x).Channels = Array.CreateInstance(GetType(Integer), remainder)
-                    Me.Blocks(x).Values = Array.CreateInstance(GetType(Single), remainder)
-                    Me.Blocks(x).TTags = Array.CreateInstance(GetType(Double), remainder)
-                    Me.Blocks(x).Quals = Array.CreateInstance(GetType(Quality), remainder)
+                    Me.Blocks(x) = New DataBlock(remainder)
                 Else
-                    Me.Blocks(x).Channels = Array.CreateInstance(GetType(Integer), BlockSize)
-                    Me.Blocks(x).Values = Array.CreateInstance(GetType(Single), BlockSize)
-                    Me.Blocks(x).TTags = Array.CreateInstance(GetType(Double), BlockSize)
-                    Me.Blocks(x).Quals = Array.CreateInstance(GetType(Quality), BlockSize)
+                    Me.Blocks(x) = New DataBlock(BlockSize)
                 End If
             Next
 
@@ -88,16 +71,16 @@ Namespace DatAWare
 
         End Sub
 
-        Public Sub SetRow(ByVal index As Integer, ByVal channel As Integer, ByVal value As Single, Optional ByVal qual As Quality = Quality.Good)
+        Public Sub SetRow(ByVal rowIndex As Integer, ByVal databaseIndex As Integer, ByVal value As Single, Optional ByVal qual As Quality = Quality.Good)
 
             Dim block As Integer
             Dim offset As Integer
 
-            block = index \ BlockSize
-            offset = index - (block * BlockSize)
+            block = rowIndex \ BlockSize
+            offset = rowIndex - (block * BlockSize)
 
             With Blocks(block)
-                .Channels(offset) = channel
+                .Channels(offset) = databaseIndex
                 .Values(offset) = value
                 If qual <> .Quals(offset) Then .Quals(offset) = qual
             End With

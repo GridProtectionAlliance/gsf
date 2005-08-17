@@ -108,7 +108,7 @@ Namespace DatAWare
             Dim errorMessage As String
 
             ' Open using specific username and password
-            m_dwAPI.ConnectTo(m_server, m_plantCode, m_access, errorMessage, userName & "/" & password)
+            m_dwAPI.ConnectTo(m_server, m_plantCode, m_access, errorMessage, userName & IIf(Len(password) > 0, "/" & password, ""))
 
             If Len(errorMessage) > 0 Then
                 Throw New InvalidOperationException("Failed to connect to DatAWare server """ & m_server & """ due to exception: " & errorMessage)

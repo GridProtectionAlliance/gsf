@@ -83,6 +83,13 @@ Namespace DatAWare
 
         End Function
 
+        ' You can use this property to properly format a datetime in DatAWare timetag string format
+        Public Shared ReadOnly Property StringFormat(ByVal timestamp As DateTime) As String
+            Get
+                Return (New TimeTag(timestamp)).ToString()
+            End Get
+        End Property
+
     End Class
 
 End Namespace
