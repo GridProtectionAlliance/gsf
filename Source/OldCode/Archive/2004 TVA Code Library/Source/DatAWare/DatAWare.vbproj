@@ -94,11 +94,6 @@
         <Files>
             <Include>
                 <File
-                    RelPath = "ArchiveUnit.vb"
-                    SubType = "Code"
-                    BuildAction = "Compile"
-                />
-                <File
                     RelPath = "AssemblyInfo.vb"
                     SubType = "Code"
                     BuildAction = "Compile"
@@ -110,6 +105,11 @@
                 />
                 <File
                     RelPath = "Connection.vb"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "DataBlock.vb"
                     SubType = "Code"
                     BuildAction = "Compile"
                 />

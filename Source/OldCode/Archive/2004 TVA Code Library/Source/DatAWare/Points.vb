@@ -87,11 +87,7 @@ Namespace DatAWare
 
             VerifyOpenConnection()
 
-            Dim status As ReturnStatus
-
-            With m_connection
-                .DWAPI.Archive_Put(.PlantCode, values.Channels, values.Values, values.TTags, values.Quals, values.Channels.Length, status)
-            End With
+            Dim status As ReturnStatus = values.Archive(m_connection)
 
             If status <> ReturnStatus.Normal Then Throw New InvalidOperationException("Failed to archive DatAWare values due to exception: Archive_Put " & [Enum].GetName(GetType(ReturnStatus), status) & " error")
 
