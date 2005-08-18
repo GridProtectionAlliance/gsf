@@ -323,7 +323,9 @@ Namespace Forms
                 'Populate the assembly ComboBox with the names of all the application assemblies.
                 .cboAssemblies.Items.Clear()
                 For Each oAssembly As System.Reflection.Assembly In AppDomain.CurrentDomain().GetAssemblies()
-                    .cboAssemblies.Items.Add(oAssembly.GetName().Name())
+                    If File.Exists(oAssembly.GetName().Name()) Then
+                        .cboAssemblies.Items.Add(oAssembly.GetName().Name())
+                    End If
                 Next
 
                 If .cboAssemblies.Items().Count() > 0 Then
