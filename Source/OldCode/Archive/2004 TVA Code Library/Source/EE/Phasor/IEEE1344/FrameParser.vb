@@ -19,6 +19,7 @@ Imports System.Net
 Imports System.Net.Sockets
 Imports System.Threading
 Imports System.ComponentModel
+Imports System.IO
 Imports TVA.Interop
 Imports TVA.Shared.Bit
 Imports TVA.Shared.DateTime
@@ -36,7 +37,7 @@ Namespace EE.Phasor.IEEE1344
         Private m_ipPort As Integer
         Private m_tcpSocket As Socket
         Private m_parseThread As Thread
-        Private m_phasorFormat As PhasorFormat
+        Private m_phasorFormat As CoordinateFormat
         Private m_totalFrames As Long
         Private m_configuration As ConfigurationFile
         Private m_headerFile As HeaderFile
@@ -58,11 +59,11 @@ Namespace EE.Phasor.IEEE1344
             m_eventInstance = Me
             m_tcpSocket = New Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp)
             m_ipAddress = Dns.Resolve("127.0.0.1").AddressList(0)
-            m_phasorFormat = PhasorFormat.Rectangular
+            m_phasorFormat = CoordinateFormat.Rectangular
 
         End Sub
 
-        Public Sub New(ByVal pmuID As Int64, ByVal pmuIPAddress As String, ByVal pmuIPPort As Integer, ByVal phasorFormat As PhasorFormat)
+        Public Sub New(ByVal pmuID As Int64, ByVal pmuIPAddress As String, ByVal pmuIPPort As Integer, ByVal phasorFormat As CoordinateFormat)
 
             Me.New()
             m_pmuID = pmuID
@@ -85,6 +86,23 @@ Namespace EE.Phasor.IEEE1344
             If Not m_tcpSocket.Connected Then
                 Throw New InvalidOperationException("Failed to connect to PMU: " & Convert.ToString(System.Runtime.InteropServices.Marshal.GetLastWin32Error()))
             End If
+
+
+        End Sub
+
+        Public Sub ReadStream()
+
+            If Not m_parseThread Is Nothing Then Throw New InvalidOperationException("Real-time data stream is already enabled")
+
+            m_parseThread = New Thread(AddressOf ReadDataStream)
+            m_parseThread.Start()
+
+        End Sub
+
+        Public Sub CloseStream()
+
+            If Not m_parseThread Is Nothing Then m_parseThread.Abort()
+            m_parseThread = Nothing
 
         End Sub
 
@@ -127,11 +145,11 @@ Namespace EE.Phasor.IEEE1344
             End Get
         End Property
 
-        Public Property PhasorFormat() As PhasorFormat
+        Public Property CoordinateFormat() As CoordinateFormat
             Get
                 Return m_phasorFormat
             End Get
-            Set(ByVal Value As PhasorFormat)
+            Set(ByVal Value As CoordinateFormat)
                 m_phasorFormat = Value
             End Set
         End Property
@@ -212,7 +230,7 @@ Namespace EE.Phasor.IEEE1344
 
         End Sub
 
-        Private Sub SendCommand(ByVal command As PMUCommand)
+        Public Sub SendCommand(ByVal command As PMUCommand)
 
             Dim cmdFrame As New CommandFrame(PmuID, command)
 
@@ -222,84 +240,98 @@ Namespace EE.Phasor.IEEE1344
 
         End Sub
 
+        Public FileName As String
+
+
         Private Sub ReadDataStream()
 
             Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), 4096)
             Dim received, startIndex As Integer
             Dim parsedImage As FrameParser
 
-            Do While True
-                Try
+            Dim dataStream As FileStream
+
+            Try
+
+                dataStream = File.OpenWrite(FileName)
+
+                Do While True
                     ' Blocks until a message returns on this socket from a remote host
                     received = TcpSocket.Receive(buffer)
+
+                    dataStream.Write(BitConverter.GetBytes(received), 0, 4)
+                    dataStream.Write(buffer, 0, received)
+
                     m_totalFrames += 1
+                Loop
 
-                    startIndex = 0
+                'startIndex = 0
 
-                    Do Until startIndex >= received
-                        parsedImage = New FrameParser(buffer, startIndex)
+                'Do Until startIndex >= received
+                '    parsedImage = New FrameParser(buffer, startIndex)
 
-                        Select Case parsedImage.FrameType
-                            Case PMUFrameType.DataFrame
-                                With New DataFrame(parsedImage, m_configuration, buffer, startIndex + CommonBinaryLength, m_phasorFormat)
-                                    ' We can only start parsing data frames once we have successfully received configuration file 2...
-                                    If Not m_configuration Is Nothing Then
-                                        RaiseEvent ReceivedDataFrame(.This)
-                                    End If
+                '    Select Case parsedImage.FrameType
+                '        Case PMUFrameType.DataFrame
+                '            With New DataFrame(parsedImage, m_configuration, buffer, startIndex + CommonBinaryLength, m_phasorFormat)
+                '                ' We can only start parsing data frames once we have successfully received configuration file 2...
+                '                If Not m_configuration Is Nothing Then
+                '                    RaiseEvent ReceivedDataFrame(.This)
+                '                End If
 
-                                    startIndex += .FrameLength
-                                End With
-                            Case PMUFrameType.HeaderFrame
-                                With New HeaderFrame(parsedImage, buffer, startIndex + CommonBinaryLength)
-                                    If .IsFirstFrame Then m_headerFile = New HeaderFile
+                '                startIndex += .FrameLength
+                '            End With
+                '        Case PMUFrameType.HeaderFrame
+                '            With New HeaderFrame(parsedImage, buffer, startIndex + CommonBinaryLength)
+                '                If .IsFirstFrame Then m_headerFile = New HeaderFile
 
-                                    m_headerFile.AppendNextFrame(.This)
+                '                m_headerFile.AppendNextFrame(.This)
 
-                                    If .IsLastFrame Then
-                                        RaiseEvent ReceivedHeaderFile(m_headerFile)
-                                        m_headerFile = Nothing
-                                    End If
+                '                If .IsLastFrame Then
+                '                    RaiseEvent ReceivedHeaderFile(m_headerFile)
+                '                    m_headerFile = Nothing
+                '                End If
 
-                                    startIndex += .FrameLength
-                                End With
-                            Case PMUFrameType.ConfigurationFrame
-                                With New ConfigurationFrame(parsedImage, buffer, startIndex + CommonBinaryLength)
-                                    If m_awaitingConfigFile1 Then
-                                        If .IsFirstFrame Then m_configFile1 = New ConfigurationFile
+                '                startIndex += .FrameLength
+                '            End With
+                '        Case PMUFrameType.ConfigurationFrame
+                '            With New ConfigurationFrame(parsedImage, buffer, startIndex + CommonBinaryLength)
+                '                If m_awaitingConfigFile1 Then
+                '                    If .IsFirstFrame Then m_configFile1 = New ConfigurationFile
 
-                                        m_configFile1.AppendNextFrame(.This)
+                '                    m_configFile1.AppendNextFrame(.This)
 
-                                        If .IsLastFrame Then
-                                            m_awaitingConfigFile1 = False
-                                            RaiseEvent ReceivedConfigFile1(m_configFile1)
-                                            m_configFile1 = Nothing
-                                        End If
-                                    ElseIf m_awaitingConfigFile2 Then
-                                        If .IsFirstFrame Then m_configFile2 = New ConfigurationFile
+                '                    If .IsLastFrame Then
+                '                        m_awaitingConfigFile1 = False
+                '                        RaiseEvent ReceivedConfigFile1(m_configFile1)
+                '                        m_configFile1 = Nothing
+                '                    End If
+                '                ElseIf m_awaitingConfigFile2 Then
+                '                    If .IsFirstFrame Then m_configFile2 = New ConfigurationFile
 
-                                        m_configFile2.AppendNextFrame(.This)
+                '                    m_configFile2.AppendNextFrame(.This)
 
-                                        If .IsLastFrame Then
-                                            m_awaitingConfigFile2 = False
-                                            RaiseEvent ReceivedConfigFile2(m_configFile2)
-                                            m_configFile2 = Nothing
-                                        End If
-                                    Else
-                                        RaiseEvent ReceivedUnknownFrame(.This)
-                                    End If
+                '                    If .IsLastFrame Then
+                '                        m_awaitingConfigFile2 = False
+                '                        RaiseEvent ReceivedConfigFile2(m_configFile2)
+                '                        m_configFile2 = Nothing
+                '                    End If
+                '                Else
+                '                    RaiseEvent ReceivedUnknownFrame(.This)
+                '                End If
 
-                                    startIndex += .FrameLength
-                                End With
-                            Case Else
-                                RaiseEvent ReceivedUnknownFrame(parsedImage)
-                        End Select
-                    Loop
-                Catch ex As ThreadAbortException
-                    Exit Do
-                Catch ex As Exception
-                    RaiseEvent DataStreamException(ex)
-                End Try
-            Loop
+                '                startIndex += .FrameLength
+                '            End With
+                '        Case Else
+                '            RaiseEvent ReceivedUnknownFrame(parsedImage)
+                '    End Select
+                'Loop
+            Catch ex As ThreadAbortException
+                Exit Sub
+            Catch ex As Exception
+                RaiseEvent DataStreamException(ex)
+            Finally
+                dataStream.Close()
+            End Try
 
         End Sub
 

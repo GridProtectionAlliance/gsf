@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  DigitalValue.vb - PDCstream Digital value
+'  AnalogValue.vb - PDCstream Analog value
 '  Copyright © 2004 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2003
@@ -17,25 +17,31 @@
 
 Namespace EE.Phasor.PDCstream
 
-    Public Class DigitalValue
+    Public Class AnalogValue
 
-        Inherits DigitalValueBase
+        Inherits AnalogValueBase
 
-        Public Sub New(ByVal parent As IDataCell, ByVal DigitalDefinition As IDigitalDefinition, ByVal value As Int16)
+        Public Sub New(ByVal parent As IDataCell, ByVal analogDefinition As IAnalogDefinition, ByVal value As Double)
 
-            MyBase.New(parent, DigitalDefinition, value)
-
-        End Sub
-
-        Public Sub New(ByVal parent As IDataCell, ByVal DigitalDefinition As IDigitalDefinition, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
-
-            MyBase.New(parent, DigitalDefinition, binaryImage, startIndex)
+            MyBase.New(parent, analogDefinition, value)
 
         End Sub
 
-        Public Sub New(ByVal DigitalValue As IDigitalValue)
+        Public Sub New(ByVal parent As IDataCell, ByVal analogDefinition As IAnalogDefinition, ByVal unscaledValue As Int16)
 
-            MyBase.New(DigitalValue)
+            MyBase.New(parent, analogDefinition, unscaledValue)
+
+        End Sub
+
+        Public Sub New(ByVal parent As IDataCell, ByVal analogDefinition As IAnalogDefinition, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+
+            MyBase.New(parent, analogDefinition, binaryImage, startIndex)
+
+        End Sub
+
+        Public Sub New(ByVal analogValue As IAnalogValue)
+
+            MyBase.New(analogValue)
 
         End Sub
 

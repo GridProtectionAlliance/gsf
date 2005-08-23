@@ -34,14 +34,14 @@ Namespace EE.Phasor
         Private m_analogValues As AnalogValueCollection
         Private m_digitalValues As DigitalValueCollection
 
-        Protected Sub New(ByVal parent As IDataFrame, ByVal configurationCell As IConfigurationCell)
+        Protected Sub New(ByVal parent As IDataFrame, ByVal configurationCell As IConfigurationCell, ByVal maximumPhasors As Integer, ByVal maximumAnalogs As Integer, ByVal maximumDigitals As Integer)
 
             MyBase.New(parent)
 
             m_configurationCell = configurationCell
-            m_phasorValues = New PhasorValueCollection
-            m_analogValues = New AnalogValueCollection
-            m_digitalValues = New DigitalValueCollection
+            m_phasorValues = New PhasorValueCollection(maximumPhasors)
+            m_analogValues = New AnalogValueCollection(maximumAnalogs)
+            m_digitalValues = New DigitalValueCollection(maximumDigitals)
 
         End Sub
 
@@ -59,17 +59,12 @@ Namespace EE.Phasor
         End Sub
 
         ' Derived classes are expected to expose a Public Sub New(ByVal parent As IDataFrame, ByVal configurationCell As IConfigurationCell, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
-        ' and automatically pass in type parameters
-        Protected Sub New(ByVal parent As IDataFrame, ByVal configurationCell As IConfigurationCell, ByVal binaryImage As Byte(), ByVal startIndex As Integer, ByVal phasorValueType As Type, ByVal frequencyValueType As Type, ByVal analogValueType As Type, ByVal digitalValueType As Type)
-
-            Me.New(parent, configurationCell)
+        ' automatically pass in type parameters and use this function to parse cell contents after header has been parsed
+        ' This function is used to parse binary data cell contents for any data cell
+        Protected Sub ParseDataCell(ByVal binaryImage As Byte(), ByVal startIndex As Integer, ByVal phasorValueType As Type, ByVal frequencyValueType As Type, ByVal analogValueType As Type, ByVal digitalValueType As Type)
 
             Dim x As Integer
 
-            ' Bypass protocol specific data
-            startIndex += 0 'ProtocolSpecificDataLength
-
-            m_configurationCell = configurationCell
             m_statusFlags = EndianOrder.ReverseToInt16(binaryImage, startIndex)
             startIndex += 2
 
@@ -162,18 +157,14 @@ Namespace EE.Phasor
 
         Protected Overrides ReadOnly Property BodyLength() As Int16
             Get
-                ' TODO FIX THIS!!!
-                'Return 2 + ProtocolSpecificDataLength + m_frequencyValue.BinaryLength + m_phasorValues.BinaryLength + m_analogValues.BinaryLength + m_digitalValues.BinaryLength
+                Return 2 + m_phasorValues.BinaryLength + m_frequencyValue.BinaryLength + m_analogValues.BinaryLength + m_digitalValues.BinaryLength
             End Get
         End Property
 
         Protected Overrides ReadOnly Property BodyImage() As Byte()
             Get
                 Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BodyLength)
-                Dim index As Integer = 0 'ProtocolSpecificDataLength
-
-                ' Copy in protocol specific data image
-                'If index > 0 Then BlockCopy(ProtocolSpecificDataImage, 0, buffer, 0, ProtocolSpecificDataLength)
+                Dim index As Integer
 
                 ' Copy in common cell image
                 EndianOrder.SwapCopyBytes(m_statusFlags, buffer, index)

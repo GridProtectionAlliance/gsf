@@ -22,7 +22,7 @@ Namespace EE.Phasor
 
         Inherits IChannelDefinition
 
-        Property Format() As PhasorFormat
+        Property CoordinateFormat() As CoordinateFormat
 
         Property [Type]() As PhasorType
 

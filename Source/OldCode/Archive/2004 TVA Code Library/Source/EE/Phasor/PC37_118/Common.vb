@@ -19,7 +19,7 @@ Imports TVA.Shared.Bit
 
 Namespace EE.Phasor.PC37_118
 
-    Public Enum PhasorFormat
+    Public Enum CoordinateFormat
         Rectangular
         Polar
     End Enum

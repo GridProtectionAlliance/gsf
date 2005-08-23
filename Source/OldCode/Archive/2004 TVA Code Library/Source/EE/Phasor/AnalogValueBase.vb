@@ -54,7 +54,7 @@ Namespace EE.Phasor
 
             MyBase.New(parent, analogDefinition)
 
-            If DataFormat = DataFormat.FixedInteger Then
+            If DataFormat = Phasor.DataFormat.FixedInteger Then
                 UnscaledValue = EndianOrder.ReverseToInt16(binaryImage, startIndex)
             Else
                 m_value = EndianOrder.ReverseToSingle(binaryImage, startIndex)
@@ -110,7 +110,7 @@ Namespace EE.Phasor
 
         Protected Overrides ReadOnly Property BodyLength() As Int16
             Get
-                If DataFormat = DataFormat.FixedInteger Then
+                If DataFormat = Phasor.DataFormat.FixedInteger Then
                     Return 2
                 Else
                     Return 4
@@ -122,7 +122,7 @@ Namespace EE.Phasor
             Get
                 Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BodyLength)
 
-                If DataFormat = DataFormat.FixedInteger Then
+                If DataFormat = Phasor.DataFormat.FixedInteger Then
                     EndianOrder.SwapCopyBytes(UnscaledValue, buffer, 0)
                 Else
                     EndianOrder.SwapCopyBytes(Convert.ToSingle(m_value), buffer, 0)

@@ -21,14 +21,25 @@ Namespace EE.Phasor
     Public MustInherit Class ChannelCellCollectionBase
 
         Inherits ChannelCollectionBase
+        Implements IChannelCellCollection
 
-        Public Shadows Sub Add(ByVal value As IChannelCell)
+        Private m_constantCellLength As Boolean
+
+        Protected Sub New(ByVal maximumCount As Integer, ByVal constantCellLength As Boolean)
+
+            MyBase.New(maximumCount)
+
+            m_constantCellLength = constantCellLength
+
+        End Sub
+
+        Public Shadows Sub Add(ByVal value As IChannelCell) Implements IChannelCellCollection.Add
 
             MyBase.Add(value)
 
         End Sub
 
-        Default Public Shadows ReadOnly Property Item(ByVal index As Integer) As IChannelCell
+        Default Public Shadows ReadOnly Property Item(ByVal index As Integer) As IChannelCell Implements IChannelCellCollection.Item
             Get
                 Return MyBase.Item(index)
             End Get
@@ -36,14 +47,19 @@ Namespace EE.Phasor
 
         Public Overrides ReadOnly Property BinaryLength() As Int16
             Get
-                ' Cells will be different lengths, so we must manually sum lengths
-                Dim length As Integer
+                If m_constantCellLength Then
+                    ' Cells will be constant length, so we can quickly calculate lengths
+                    Return MyBase.BinaryLength
+                Else
+                    ' Cells will be different lengths, so we must manually sum lengths
+                    Dim length As Int16
 
-                For x As Integer = 0 To List.Count - 1
-                    length += Item(x).BinaryLength
-                Next
+                    For x As Integer = 0 To List.Count - 1
+                        length += Item(x).BinaryLength
+                    Next
 
-                Return length
+                    Return length
+                End If
             End Get
         End Property
 

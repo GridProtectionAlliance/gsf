@@ -42,7 +42,7 @@ Namespace EE.Phasor.PDCstream
         Private m_defaultPhasorV As PhasorDefinition
         Private m_defaultPhasorI As PhasorDefinition
         Private m_defaultFrequency As FrequencyDefinition
-        Private m_packetsPerSample As Integer
+        Private m_packetsPerSample As Int16
         Private m_streamType As StreamType
         Private m_revisionNumber As RevisionNumber
 
@@ -62,6 +62,12 @@ Namespace EE.Phasor.PDCstream
         Public Sub New(ByVal configurationFrame As IConfigurationFrame)
 
             MyBase.New(configurationFrame)
+
+        End Sub
+
+        Public Sub ParseDescriptor(ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+
+            ' TODO: Parse binary configuration image
 
         End Sub
 
@@ -153,7 +159,7 @@ Namespace EE.Phasor.PDCstream
 
         End Sub
 
-        Public ReadOnly Property PacketsPerSample() As Integer
+        Public ReadOnly Property PacketsPerSample() As Int16
             Get
                 Return m_packetsPerSample
             End Get
@@ -297,6 +303,9 @@ Namespace EE.Phasor.PDCstream
             End Get
         End Property
 
+        ' RowLength property calculates cell offsets - so it must be called before
+        ' accessing cell offsets - this happens automatically since HeaderImage is
+        ' called before base class BodyImage which just gets Cells.BinaryImage
         Public ReadOnly Property RowLength() As Integer
             Get
                 Dim length As Integer
@@ -305,7 +314,7 @@ Namespace EE.Phasor.PDCstream
                     With Cells(x)
                         .Offset = length
                         ' TODO: calculate correct row length...
-                        'length += 12 + FrequencyValue.CalculateBinaryLength(.FrequencyDefinition) + PhasorValue.BinaryLength * .PhasorDefinitions.Count
+                        length += 12 + FrequencyValue.CalculateBinaryLength(.FrequencyDefinition) ' + PhasorValue.BinaryLength * .PhasorDefinitions.Count
                     End With
                 Next
 
@@ -313,31 +322,37 @@ Namespace EE.Phasor.PDCstream
             End Get
         End Property
 
-        ' TODO: place this in proper override!!
-        'Public Overrides ReadOnly Property ProtocolSpecificDataLength() As Short
-        '    Get
-        '        Return 16
-        '    End Get
-        'End Property
+        Protected Overrides ReadOnly Property HeaderLength() As Short
+            Get
+                Return 16
+            End Get
+        End Property
 
-        'Public Overrides ReadOnly Property ProtocolSpecificDataImage() As Byte()
-        '    Get
-        '        Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BinaryLength)
-        '        Dim index As Integer
+        Protected Overrides ReadOnly Property HeaderImage() As Byte()
+            Get
+                Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), HeaderLength)
+                Dim index As Integer
 
-        '        buffer(0) = SyncByte
-        '        buffer(1) = DescriptorPacketFlag
-        '        EndianOrder.SwapCopyBytes(Convert.ToInt16(buffer.Length \ 2), buffer, 2)
-        '        buffer(4) = StreamType
-        '        buffer(5) = RevisionNumber
-        '        EndianOrder.SwapCopyBytes(Convert.ToInt16(SampleRate), buffer, 6)
-        '        EndianOrder.SwapCopyBytes(Convert.ToUInt32(RowLength), buffer, 8)
-        '        EndianOrder.SwapCopyBytes(Convert.ToInt16(m_packetsPerSample), buffer, 12)
-        '        EndianOrder.SwapCopyBytes(Convert.ToInt16(Cells.Count), buffer, 14)
+                buffer(0) = SyncByte
+                buffer(1) = DescriptorPacketFlag
+                EndianOrder.SwapCopyBytes(Convert.ToInt16(BinaryLength \ 2), buffer, 2)
+                buffer(4) = StreamType
+                buffer(5) = RevisionNumber
+                EndianOrder.SwapCopyBytes(SampleRate, buffer, 6)
+                EndianOrder.SwapCopyBytes(RowLength, buffer, 8)
+                EndianOrder.SwapCopyBytes(PacketsPerSample, buffer, 12)
+                EndianOrder.SwapCopyBytes(Convert.ToInt16(Cells.Count), buffer, 14)
 
-        '        Return buffer
-        '    End Get
-        'End Property
+                Return buffer
+            End Get
+        End Property
+
+        ' PDCstream uses an XOR check sum
+        Protected Overrides Function CalculateChecksum(ByVal buffer() As Byte, ByVal offset As Integer, ByVal length As Integer) As Int16
+
+            Return XorCheckSum(buffer, offset, length)
+
+        End Function
 
     End Class
 

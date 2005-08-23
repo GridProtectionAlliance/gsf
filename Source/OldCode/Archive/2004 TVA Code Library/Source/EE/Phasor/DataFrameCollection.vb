@@ -24,6 +24,12 @@ Namespace EE.Phasor
 
         Inherits ChannelFrameCollectionBase
 
+        Public Sub New(ByVal maximumCount As Integer)
+
+            MyBase.New(maximumCount)
+
+        End Sub
+
         Public Shadows Sub Add(ByVal value As IDataFrame)
 
             MyBase.Add(value)

@@ -57,7 +57,7 @@ Namespace EE.Phasor
 
             MyBase.New(parent, frequencyDefinition)
 
-            If DataFormat = DataFormat.FixedInteger Then
+            If DataFormat = Phasor.DataFormat.FixedInteger Then
                 UnscaledFrequency = EndianOrder.ReverseToInt16(binaryImage, startIndex)
                 UnscaledDfDt = EndianOrder.ReverseToInt16(binaryImage, startIndex + 2)
             Else
@@ -151,7 +151,7 @@ Namespace EE.Phasor
 
         Protected Overrides ReadOnly Property BodyLength() As Int16
             Get
-                If DataFormat = DataFormat.FixedInteger Then
+                If DataFormat = Phasor.DataFormat.FixedInteger Then
                     Return 4
                 Else
                     Return 8
@@ -163,7 +163,7 @@ Namespace EE.Phasor
             Get
                 Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BodyLength)
 
-                If DataFormat = DataFormat.FixedInteger Then
+                If DataFormat = Phasor.DataFormat.FixedInteger Then
                     EndianOrder.SwapCopyBytes(UnscaledFrequency, buffer, 0)
                     EndianOrder.SwapCopyBytes(UnscaledDfDt, buffer, 2)
                 Else

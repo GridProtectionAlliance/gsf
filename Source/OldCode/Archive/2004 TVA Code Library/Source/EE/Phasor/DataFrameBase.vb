@@ -47,8 +47,8 @@ Namespace EE.Phasor
 
             Me.New(cells)
 
-            ' Bypass protocol specific data
-            startIndex += 0 'ProtocolSpecificDataLength
+            ' Bypass header data
+            startIndex += HeaderLength
 
             m_configurationFrame = configurationFrame
 

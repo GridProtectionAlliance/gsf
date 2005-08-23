@@ -19,7 +19,7 @@ Imports System.Buffer
 
 Namespace EE.Phasor
 
-    Public Enum PhasorFormat As Byte
+    Public Enum CoordinateFormat As Byte
         Rectangular
         Polar
     End Enum

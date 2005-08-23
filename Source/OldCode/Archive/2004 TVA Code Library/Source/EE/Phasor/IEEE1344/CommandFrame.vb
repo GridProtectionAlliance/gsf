@@ -26,9 +26,9 @@ Namespace EE.Phasor.IEEE1344
     ' a data broadcast until a command has been sent to "turn on" the real-time stream.
     Public Class CommandFrame
 
-        Public Const FrameLength As Integer = 16
+        Public Const FrameLength As Integer = 18
 
-        Private m_timetag As NtpTimeTag
+        Private m_timetag As Unix.TimeTag
         Private m_pmuIDCode As Int64
         Private m_command As PMUCommand
 
@@ -37,7 +37,7 @@ Namespace EE.Phasor.IEEE1344
 
             m_pmuIDCode = pmuIDCode
             m_command = command
-            m_timetag = New NtpTimeTag(DateTime.Now)
+            m_timetag = New Unix.TimeTag(DateTime.Now)
 
         End Sub
 
@@ -49,7 +49,7 @@ Namespace EE.Phasor.IEEE1344
             ElseIf binaryImage.Length - startIndex < FrameLength Then
                 Throw New ArgumentException("BinaryImage size from startIndex is too small - could not create command frame")
             Else
-                m_timetag = New NtpTimeTag(Convert.ToDouble(EndianOrder.ReverseToInt32(binaryImage, startIndex)))
+                m_timetag = New Unix.TimeTag(Convert.ToDouble(EndianOrder.ReverseToInt32(binaryImage, startIndex)))
                 m_pmuIDCode = EndianOrder.ReverseToInt64(binaryImage, startIndex + 4)
                 m_command = EndianOrder.ReverseToInt16(binaryImage, startIndex + 12)
 
@@ -60,11 +60,11 @@ Namespace EE.Phasor.IEEE1344
 
         End Sub
 
-        Public Property TimeTag() As NtpTimeTag
+        Public Property TimeTag() As Unix.TimeTag
             Get
                 Return m_timetag
             End Get
-            Set(ByVal Value As NtpTimeTag)
+            Set(ByVal Value As Unix.TimeTag)
                 m_timetag = Value
             End Set
         End Property
@@ -91,10 +91,15 @@ Namespace EE.Phasor.IEEE1344
             Get
                 Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), FrameLength)
 
-                EndianOrder.SwapCopyBytes(Convert.ToUInt32(m_timetag.Value), buffer, 0)
-                EndianOrder.SwapCopyBytes(m_pmuIDCode, buffer, 4)
-                EndianOrder.SwapCopyBytes(Convert.ToInt16(m_command), buffer, 12)
-                EndianOrder.SwapCopyBytes(CRC16(-1, buffer, 0, 14), buffer, 14)
+                ' TODO: MODIFIED FOR PC37.118 TEST - RESTORE FOR REAL IEEE1344 CODE...
+                buffer(0) = &HAA
+                buffer(1) = Bit0 Or Bit6
+                EndianOrder.SwapCopyBytes(Convert.ToUInt16(FrameLength), buffer, 2)
+                EndianOrder.SwapCopyBytes(Convert.ToUInt16(235), buffer, 4)
+                EndianOrder.SwapCopyBytes(Convert.ToUInt32(m_timetag.Value), buffer, 6)
+                EndianOrder.SwapCopyBytes(Convert.ToUInt32(0), buffer, 10)
+                EndianOrder.SwapCopyBytes(Convert.ToInt16(m_command), buffer, 14)
+                EndianOrder.SwapCopyBytes(CRC_CCITT(-1, buffer, 0, 16), buffer, 16)
 
                 Return buffer
             End Get

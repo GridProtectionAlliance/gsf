@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  FrequencyValue.vb - Frequency value
+'  FrequencyValue.vb - PDCstream Frequency value
 '  Copyright © 2004 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2003
@@ -52,6 +52,13 @@ Namespace EE.Phasor.PDCstream
                 Return Me.GetType
             End Get
         End Property
+
+        Public Shared Function CalculateBinaryLength(ByVal definition As FrequencyDefinition) As Int16
+
+            ' The frequency definition will determine the binary length based on data format
+            Return (New FrequencyValue(Nothing, definition, 0, 0)).BinaryLength
+
+        End Function
 
     End Class
 

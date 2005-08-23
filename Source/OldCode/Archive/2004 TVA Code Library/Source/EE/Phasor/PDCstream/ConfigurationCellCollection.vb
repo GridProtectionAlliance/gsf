@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  FrequencyValueCollection.vb - Frequency and DfDt value collection class
+'  ConfigurationCellCollection.vb - PDCstream specific configuration cell collection
 '  Copyright © 2004 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2003
@@ -15,36 +15,31 @@
 '
 '*******************************************************************************************************
 
-Imports TVA.Interop
+Namespace EE.Phasor.PDCstream
 
-Namespace EE.Phasor
+    Public Class ConfigurationCellCollection
 
-    ' This class represents the protocol independent collection of frequency and dfdt values.
-    Public Class FrequencyValueCollection
+        Inherits Phasor.ConfigurationCellCollection
 
-        Inherits ChannelValueCollectionBase
+        Public Sub New()
 
-        Public Sub New(ByVal maximumCount As Integer)
-
-            MyBase.New(maximumCount)
+            ' Although the number of configuration cells are not restricted in the
+            ' INI file, the data stream limits the maximum number of associated
+            ' data cells to 32767, so we limit the configurations cells to the same.
+            ' Also, in PDCstream configuration cells are constant length
+            MyBase.New(Int16.MaxValue, True)
 
         End Sub
 
-        Public Shadows Sub Add(ByVal value As IFrequencyValue)
+        Public Shadows Sub Add(ByVal value As ConfigurationCell)
 
             MyBase.Add(value)
 
         End Sub
 
-        Default Public Shadows ReadOnly Property Item(ByVal index As Integer) As IFrequencyValue
+        Default Public Shadows ReadOnly Property Item(ByVal index As Integer) As ConfigurationCell
             Get
                 Return MyBase.Item(index)
-            End Get
-        End Property
-
-        Public Overrides ReadOnly Property InheritedType() As Type
-            Get
-                Return Me.GetType()
             End Get
         End Property
 

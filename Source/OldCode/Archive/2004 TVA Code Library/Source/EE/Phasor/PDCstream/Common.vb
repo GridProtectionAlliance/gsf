@@ -19,13 +19,6 @@ Imports TVA.Shared.Bit
 
 Namespace EE.Phasor.PDCstream
 
-    Public Class Common
-
-        Public Const SyncByte As Byte = &HAA
-        Public Const DescriptorPacketFlag As Byte = &H0
-
-    End Class
-
     Public Enum StreamType As Byte
         Legacy = 0                      ' Standard full data stream
         Compact = 1                     ' Full data stream with PMU ID's and offsets removed from data packet
@@ -72,5 +65,18 @@ Namespace EE.Phasor.PDCstream
         SyncInvalid = Bit0
         DataInvalid = Bit1
     End Enum
+
+    Public Class Common
+
+        Private Sub New()
+
+            ' This class contains only global functions and is not meant to be instantiated
+
+        End Sub
+
+        Public Const SyncByte As Byte = &HAA
+        Public Const DescriptorPacketFlag As Byte = &H0
+
+    End Class
 
 End Namespace

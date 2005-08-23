@@ -29,7 +29,7 @@ Namespace EE.Phasor.IEEE1344
         Inherits BaseFrame
 
         Protected m_configFile As ConfigurationFile
-        Protected m_phasorFormat As PhasorFormat
+        Protected m_phasorFormat As CoordinateFormat
         Protected m_sampleRate As Integer
         Protected m_sampleStep As Integer
         Protected m_phasorValues As PhasorValues
@@ -41,7 +41,7 @@ Namespace EE.Phasor.IEEE1344
 
         Public Const MaximumSampleCount As Int16 = SampleCountMask
 
-        Public Sub New(ByVal configFile2 As ConfigurationFile, ByVal phasorFormat As PhasorFormat)
+        Public Sub New(ByVal configFile2 As ConfigurationFile, ByVal phasorFormat As CoordinateFormat)
 
             MyBase.New()
             SetFrameType(PMUFrameType.DataFrame)
@@ -55,7 +55,7 @@ Namespace EE.Phasor.IEEE1344
 
         End Sub
 
-        Protected Friend Sub New(ByVal parsedImage As BaseFrame, ByVal configFile2 As ConfigurationFile, ByVal binaryImage As Byte(), ByVal startIndex As Integer, ByVal phasorFormat As PhasorFormat)
+        Protected Friend Sub New(ByVal parsedImage As BaseFrame, ByVal configFile2 As ConfigurationFile, ByVal binaryImage As Byte(), ByVal startIndex As Integer, ByVal phasorFormat As CoordinateFormat)
 
             Me.New(configFile2, phasorFormat)
 
@@ -108,11 +108,11 @@ Namespace EE.Phasor.IEEE1344
             End Set
         End Property
 
-        Public Property PhasorFormat() As PhasorFormat
+        Public Property CoordinateFormat() As CoordinateFormat
             Get
                 Return m_phasorFormat
             End Get
-            Set(ByVal Value As PhasorFormat)
+            Set(ByVal Value As CoordinateFormat)
                 m_phasorFormat = Value
             End Set
         End Property
@@ -201,7 +201,7 @@ Namespace EE.Phasor.IEEE1344
             m_phasorValues.Clear()
 
             For x = 0 To m_configFile.PhasorDefinitions.Count - 1
-                m_phasorValues.Add(New PhasorValue(m_configFile.PhasorDefinitions(x), binaryImage, startIndex + x * PhasorValue.BinaryLength, PhasorFormat))
+                m_phasorValues.Add(New PhasorValue(m_configFile.PhasorDefinitions(x), binaryImage, startIndex + x * PhasorValue.BinaryLength, CoordinateFormat))
             Next
 
             index = startIndex + m_configFile.PhasorDefinitions.Count * PhasorValue.BinaryLength

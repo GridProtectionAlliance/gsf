@@ -29,14 +29,14 @@ Namespace EE.Phasor
         Inherits ChannelBase
         Implements IChannelFrame
 
-        Private m_cells As ChannelCellCollection
+        Private m_cells As IChannelCellCollection
         Private m_timeTag As Unix.TimeTag
         Private m_milliseconds As Double
         Private m_synchronizationIsValid As Boolean
         Private m_dataIsValid As Boolean
         Private m_published As Boolean
 
-        Protected Sub New(ByVal cells As ChannelCellCollection)
+        Protected Sub New(ByVal cells As IChannelCellCollection)
 
             MyBase.New()
 
@@ -47,7 +47,7 @@ Namespace EE.Phasor
 
         End Sub
 
-        Protected Sub New(ByVal cells As ChannelCellCollection, ByVal timeTag As Unix.TimeTag, ByVal milliseconds As Double, ByVal synchronizationIsValid As Boolean, ByVal dataIsValid As Boolean)
+        Protected Sub New(ByVal cells As IChannelCellCollection, ByVal timeTag As Unix.TimeTag, ByVal milliseconds As Double, ByVal synchronizationIsValid As Boolean, ByVal dataIsValid As Boolean)
 
             MyBase.New()
 
@@ -66,7 +66,7 @@ Namespace EE.Phasor
 
         End Sub
 
-        Public Overridable ReadOnly Property Cells() As ChannelCellCollection Implements IChannelFrame.Cells
+        Public Overridable ReadOnly Property Cells() As IChannelCellCollection Implements IChannelFrame.Cells
             Get
                 Return m_cells
             End Get

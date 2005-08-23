@@ -26,6 +26,12 @@ Namespace EE.Phasor
 
         Inherits ChannelCellCollectionBase
 
+        Public Sub New(ByVal maximumCount As Integer, ByVal constantCellLength As Boolean)
+
+            MyBase.New(maximumCount, constantCellLength)
+
+        End Sub
+
         Public Shadows Sub Add(ByVal value As IDataCell)
 
             MyBase.Add(value)

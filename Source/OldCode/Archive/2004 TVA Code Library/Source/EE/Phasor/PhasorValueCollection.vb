@@ -27,6 +27,12 @@ Namespace EE.Phasor
 
         Inherits ChannelValueCollectionBase
 
+        Public Sub New(ByVal maximumCount As Integer)
+
+            MyBase.New(maximumCount)
+
+        End Sub
+
         Public Shadows Sub Add(ByVal value As IPhasorValue)
 
             MyBase.Add(value)

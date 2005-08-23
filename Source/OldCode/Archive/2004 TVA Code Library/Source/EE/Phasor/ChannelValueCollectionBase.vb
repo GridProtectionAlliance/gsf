@@ -25,12 +25,18 @@ Namespace EE.Phasor
         Private m_fixedCount As Integer
         Private m_floatCount As Integer
 
+        Protected Sub New(ByVal maximumCount As Integer)
+
+            MyBase.New(maximumCount)
+
+        End Sub
+
         Public Shadows Sub Add(ByVal value As IChannelValue)
 
             ' In typical usage, all channel values will be of the same data type - but we can't anticipate all
             ' possible uses of collection, so we track totals of each data type so we can quickly ascertain if
             ' all the items in the collection are of the same data type
-            If value.DataFormat = DataFormat.FixedInteger Then
+            If value.DataFormat = Phasor.DataFormat.FixedInteger Then
                 m_fixedCount += 1
             Else
                 m_floatCount += 1

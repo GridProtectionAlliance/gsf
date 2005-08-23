@@ -37,13 +37,13 @@ Namespace EE.Phasor
         Private m_digitalDefinitions As DigitalDefinitionCollection
         Private m_sampleRate As Int16
 
-        Protected Sub New(ByVal parent As IConfigurationFrame)
+        Protected Sub New(ByVal parent As IConfigurationFrame, ByVal maximumPhasors As Integer, ByVal maximumAnalogs As Integer, ByVal maximumDigitals As Integer)
 
             MyBase.New(parent)
 
-            m_phasorDefinitions = New PhasorDefinitionCollection
-            m_analogDefinitions = New AnalogDefinitionCollection
-            m_digitalDefinitions = New DigitalDefinitionCollection
+            m_phasorDefinitions = New PhasorDefinitionCollection(maximumPhasors)
+            m_analogDefinitions = New AnalogDefinitionCollection(maximumAnalogs)
+            m_digitalDefinitions = New DigitalDefinitionCollection(maximumDigitals)
 
         End Sub
 
@@ -185,18 +185,14 @@ Namespace EE.Phasor
 
         Protected Overrides ReadOnly Property BodyLength() As Int16
             Get
-                ' TODO: FIX THIS!!!
-                'Return ProtocolSpecificDataLength + m_frequencyDefinition.BinaryLength + m_phasorDefinitions.BinaryLength + m_analogDefinitions.BinaryLength + m_digitalDefinitions.BinaryLength
+                Return m_phasorDefinitions.BinaryLength + m_frequencyDefinition.BinaryLength + m_analogDefinitions.BinaryLength + m_digitalDefinitions.BinaryLength
             End Get
         End Property
 
         Protected Overrides ReadOnly Property BodyImage() As Byte()
             Get
                 Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BodyLength)
-                Dim index As Integer = 0 'ProtocolSpecificDataLength
-
-                ' Copy in protocol specific data image
-                'If index > 0 Then BlockCopy(ProtocolSpecificDataImage, 0, buffer, 0, ProtocolSpecificDataLength)
+                Dim index As Integer
 
                 ' Copy in common cell image
                 CopyImage(m_phasorDefinitions, buffer, index)

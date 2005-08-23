@@ -281,6 +281,11 @@
                     BuildAction = "Compile"
                 />
                 <File
+                    RelPath = "IChannelCellCollection.vb"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
                     RelPath = "IChannelCollection.vb"
                     SubType = "Code"
                     BuildAction = "Compile"
@@ -501,7 +506,12 @@
                     BuildAction = "Compile"
                 />
                 <File
-                    RelPath = "PDCstream\Collections.vb"
+                    RelPath = "PDCstream\AnalogDefinition.vb"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "PDCstream\AnalogValue.vb"
                     SubType = "Code"
                     BuildAction = "Compile"
                 />
@@ -516,12 +526,22 @@
                     BuildAction = "Compile"
                 />
                 <File
+                    RelPath = "PDCstream\ConfigurationCellCollection.vb"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
                     RelPath = "PDCstream\ConfigurationFrame.vb"
                     SubType = "Code"
                     BuildAction = "Compile"
                 />
                 <File
                     RelPath = "PDCstream\DataCell.vb"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "PDCstream\DataCellCollection.vb"
                     SubType = "Code"
                     BuildAction = "Compile"
                 />
@@ -562,6 +582,16 @@
                 />
                 <File
                     RelPath = "PDCstream\PhasorValue.vb"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "PDCstream\PMUCell.vb"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "PDCstream\PMUCellCollection.vb"
                     SubType = "Code"
                     BuildAction = "Compile"
                 />

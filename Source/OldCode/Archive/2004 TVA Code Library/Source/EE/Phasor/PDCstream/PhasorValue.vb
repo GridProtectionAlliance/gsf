@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  PhasorValue.vb - Phasor value
+'  PhasorValue.vb - PDCstream Phasor value
 '  Copyright © 2004 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2003

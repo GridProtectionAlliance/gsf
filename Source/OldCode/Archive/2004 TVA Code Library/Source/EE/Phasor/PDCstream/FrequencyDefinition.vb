@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  FrequencyDefinition.vb - Frequency definition
+'  FrequencyDefinition.vb - PDCstream Frequency definition
 '  Copyright © 2004 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2003

@@ -92,7 +92,7 @@ Namespace EE.Phasor.IEEE1344
 
         End Function
 
-        Public Sub New(ByVal phasorDefinition As PhasorDefinition, ByVal binaryImage As Byte(), ByVal startIndex As Integer, ByVal phasorFormat As PhasorFormat)
+        Public Sub New(ByVal phasorDefinition As PhasorDefinition, ByVal binaryImage As Byte(), ByVal startIndex As Integer, ByVal phasorFormat As CoordinateFormat)
 
             m_phasorDefinition = phasorDefinition
 
@@ -206,7 +206,7 @@ Namespace EE.Phasor.IEEE1344
 
         End Sub
 
-        Public ReadOnly Property BinaryImage(ByVal phasorFormat As PhasorFormat) As Byte()
+        Public ReadOnly Property BinaryImage(ByVal phasorFormat As CoordinateFormat) As Byte()
             Get
                 Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BinaryLength)
 

@@ -19,6 +19,8 @@ Imports System.Text
 
 Namespace EE.Phasor
 
+    ' TODO: Change scaling factor to be floating point (can't figure why this is integer)
+
     ' This class represents the common implementation of the protocol independent definition of any kind of data.
     Public MustInherit Class ChannelDefinitionBase
 

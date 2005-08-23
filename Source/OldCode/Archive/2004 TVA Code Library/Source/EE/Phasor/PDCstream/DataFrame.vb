@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  DataPacket.vb - PDC stream data packet
+'  DataPacket.vb - PDCstream data packet
 '  Copyright © 2004 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2003

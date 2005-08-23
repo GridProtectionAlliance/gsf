@@ -31,7 +31,9 @@ Namespace EE.Phasor
 
         Public Sub New()
 
-            m_dataFrames = New DataFrameCollection
+            ' It's not likely that the maximum number of samples per second will ever exceed 240,
+            ' but we can't anticipate all uses of these protocols so we set no fixed maximum
+            m_dataFrames = New DataFrameCollection(Int32.MaxValue)
 
         End Sub
 

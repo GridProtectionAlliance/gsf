@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  IPhasorValue.vb - Phasor value interface
+'  IChannelCellCollection.vb - Channel cell collection interface
 '  Copyright © 2005 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2003
@@ -17,28 +17,15 @@
 
 Namespace EE.Phasor
 
-    ' This class represents the protocol independent interface of a phasor value.
-    Public Interface IPhasorValue
+    ' This interface represents a protocol independent representation of a collection of any kind of data cell.
 
-        Inherits IChannelValue
+    Public Interface IChannelCellCollection
 
-        Shadows Property Definition() As IPhasorDefinition
+        Inherits IChannelCollection
 
-        ReadOnly Property CoordinateFormat() As CoordinateFormat
+        Shadows Sub Add(ByVal value As IChannelCell)
 
-        ReadOnly Property [Type]() As PhasorType
-
-        Property Angle() As Double
-
-        Property Magnitude() As Double
-
-        Property Real() As Double
-
-        Property Imaginary() As Double
-
-        Property UnscaledReal() As Int16
-
-        Property UnscaledImaginary() As Int16
+        Default Shadows ReadOnly Property Item(ByVal index As Integer) As IChannelCell
 
     End Interface
 

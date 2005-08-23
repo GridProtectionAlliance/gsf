@@ -25,7 +25,7 @@ Namespace EE.Phasor
 
         Inherits IChannel
 
-        ReadOnly Property Cells() As ChannelCellCollection
+        ReadOnly Property Cells() As IChannelCellCollection
 
         Property TimeTag() As Unix.TimeTag          ' UNIX based time of this frame (accurate to seconds)
 

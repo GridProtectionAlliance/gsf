@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  DataCell.vb - PMU Data Cell
+'  DataCell.vb - PDCstream PMU Data Cell
 '  Copyright © 2004 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2003
@@ -25,34 +25,35 @@ Namespace EE.Phasor.PDCstream
         Inherits DataCellBase
 
         Private m_flags As ChannelFlags
-        Private m_sampleRate As Byte
-        Private m_phasorValueCount As Byte
-        Private m_sampleNumber As Int32     ' TODO: Verify sample number is a 4 byte integer
+        Private m_reservedFlags As ReservedFlags
+        Private m_iEEEFormatFlags As IEEEFormatFlags
+        Private m_sampleNumber As Int16
 
-        Private Const CommonDataOffset As Integer = 6
+        Private Const MaximumPhasorValues As Integer = Byte.MaxValue + 1
+        Private Const MaximumAnalogValues As Integer = PDCstream.ReservedFlags.AnalogWordsMask + 1
+        Private Const MaximumDigitalValues As Integer = PDCstream.IEEEFormatFlags.DigitalWordsMask + 1
 
-        Public Sub New(ByVal parent As IDataFrame, ByVal configurationCell As IConfigurationCell, ByVal sampleNumber As Integer)
+        Public Sub New(ByVal parent As IDataFrame, ByVal configurationCell As IConfigurationCell, ByVal sampleNumber As Int16)
 
-            MyBase.New(parent, configurationCell)
+            MyBase.New(parent, configurationCell, MaximumPhasorValues, MaximumAnalogValues, MaximumDigitalValues)
 
             Dim x As Integer
 
             With configurationCell
-                m_sampleRate = Convert.ToByte(.SampleRate)
-                ' TODO: define some default value for version??
-                m_phasorValueCount = Convert.ToByte(.PhasorDefinitions.Count)
                 m_sampleNumber = sampleNumber
-
-                If m_phasorValueCount <> .PhasorDefinitions.Count Then
-                    Throw New InvalidOperationException("Stream/Config File Mismatch: Phasor value count in stream (" & m_phasorValueCount & ") does not match defined count in configuration file (" & .PhasorDefinitions.Count & ")")
-                End If
 
                 ' Initialize phasor values and frequency value with an empty value
                 For x = 0 To .PhasorDefinitions.Count - 1
                     PhasorValues.Add(New PhasorValue(Me, .PhasorDefinitions(x), 0, 0))
                 Next
 
+                ' Initialize frequency and df/dt
                 FrequencyValue = New FrequencyValue(Me, .FrequencyDefinition, 0, 0)
+
+                ' Initialize analog values
+                For x = 0 To .AnalogDefinitions.Count - 1
+                    AnalogValues.Add(New AnalogValue(Me, .AnalogDefinitions(x), 0))
+                Next
 
                 ' Initialize any digital values
                 For x = 0 To .DigitalDefinitions.Count - 1
@@ -70,23 +71,58 @@ Namespace EE.Phasor.PDCstream
 
         Public Sub New(ByVal parent As IDataFrame, ByVal configurationCell As IConfigurationCell, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
 
-            ' Parse binary common data to all data cells
-            MyBase.New(parent, configurationCell, binaryImage, startIndex + CommonDataOffset, GetType(PhasorValue), GetType(FrequencyValue), Nothing, GetType(DigitalValue))
+            MyBase.New(parent, configurationCell, MaximumPhasorValues, MaximumAnalogValues, MaximumDigitalValues)
 
             ' Parse PDCstream specific image
-            ' TODO: See if adding a "ParserHeaderImage" would be appropriate here...
             m_flags = binaryImage(startIndex)
-            m_sampleRate = binaryImage(startIndex + 1)
-            ' TODO: Determine what this flag is - version??
-            'm_version = binaryImage(startIndex + 2)
-            m_phasorValueCount = binaryImage(startIndex + 3)
-            m_sampleNumber = EndianOrder.ReverseToInt32(binaryImage, startIndex + 4)
+
+            Dim analogWords As Byte = binaryImage(startIndex + 1)
+            Dim digitalWords As Byte = binaryImage(startIndex + 2)
+            Dim phasorWords As Byte = binaryImage(startIndex + 3)
+
+            ' Strip off IEEE flags
+            m_reservedFlags = (analogWords And Not ReservedFlags.AnalogWordsMask)
+            m_iEEEFormatFlags = (digitalWords And Not IEEEFormatFlags.DigitalWordsMask)
+
+            ' Leave word counts
+            analogWords = (analogWords And ReservedFlags.AnalogWordsMask)
+            digitalWords = (digitalWords And IEEEFormatFlags.DigitalWordsMask)
+
+            ' If analog words are fixed integer (16-bit) they must be aligned on a 32-bit boundry
+            If AnalogDataFormat = DataFormat.FixedInteger AndAlso analogWords Mod 2 <> 0 Then analogWords += 1
+
+            ' Algorithm Case: Determine best course of action when stream counts don't match
+            ' configuration file.  Think about what *will* happen when new data appears in
+            ' the stream that's not in the config file - you could raise an event notifying
+            ' consumer about the mismatch instead of raising an exception - could even make
+            ' a boolean property that would allow either case.  The important thing to consider
+            ' is that to parse the cell images you have to have a defined definition (see base
+            ' class "Phasor.DataCellBase.ParseDataCell" - more in stream than in config file
+            ' and you won't get the new value, too few and you don't have enough definitions -
+            ' that would be bad - either way the definitions won't line up with the appropriate
+            ' data value and you won't know which one is missing or added.  I can't change the
+            ' protocol so this is enough argument to just raise an error for config file/stream
+            ' mismatch.  So for now we'll just throw an exception and deal with consequences :)
+            ' Note that this only applies 
+
+            If phasorWords <> configurationCell.PhasorDefinitions.Count Then
+                Throw New InvalidOperationException("Stream/Config File Mismatch: Phasor value count in stream (" & phasorWords & ") does not match defined count in configuration file (" & configurationCell.PhasorDefinitions.Count & ")")
+            End If
+
+            'If analogWords <> configurationCell.AnalogDefinitions.Count Then
+            '    Throw New InvalidOperationException("Stream/Config File Mismatch: Analog value count in stream (" analogWords & ") does not match defined count in configuration file (" & configurationCell.
+            'End If
+
+            m_sampleNumber = EndianOrder.ReverseToInt16(binaryImage, startIndex + 4)
+
+            ' Parse binary data common to all data cells
+            ParseDataCell(binaryImage, startIndex + 6, GetType(PhasorValue), GetType(FrequencyValue), GetType(AnalogValue), GetType(DigitalValue))
 
         End Sub
 
         Public Overrides ReadOnly Property InheritedType() As System.Type
             Get
-                Return Me.GetType
+                Return Me.GetType()
             End Get
         End Property
 
@@ -97,28 +133,101 @@ Namespace EE.Phasor.PDCstream
             End Get
         End Property
 
-        Public Property SampleRate() As Byte
+        Public ReadOnly Property ReservedFlags() As ReservedFlags
             Get
-                Return m_sampleRate
+                Return m_reservedFlags
             End Get
-            Set(ByVal Value As Byte)
-                m_sampleRate = Value
-            End Set
         End Property
 
-        Public Property PhasorValueCount() As Byte
+        Public ReadOnly Property IEEEFormatFlags() As IEEEFormatFlags
             Get
-                Return m_phasorValueCount
+                Return m_iEEEFormatFlags
             End Get
-            Set(ByVal Value As Byte)
-                m_phasorValueCount = Value
-            End Set
         End Property
 
-        Public ReadOnly Property SampleNumber() As Int32
+        Public ReadOnly Property SampleNumber() As Int16
             Get
                 Return m_sampleNumber
             End Get
+        End Property
+
+        ' These properties make it easier to manage channel flags
+        Public Property ReservedFlag0IsSet() As Boolean
+            Get
+                Return ((m_reservedFlags And ReservedFlags.Reserved0) > 0)
+            End Get
+            Set(ByVal Value As Boolean)
+                If Value Then
+                    m_reservedFlags = m_reservedFlags Or ReservedFlags.Reserved0
+                Else
+                    m_reservedFlags = m_reservedFlags And Not ReservedFlags.Reserved0
+                End If
+            End Set
+        End Property
+
+        Public Property ReservedFlag1IsSet() As Boolean
+            Get
+                Return ((m_reservedFlags And ReservedFlags.Reserved1) > 0)
+            End Get
+            Set(ByVal Value As Boolean)
+                If Value Then
+                    m_reservedFlags = m_reservedFlags Or ReservedFlags.Reserved1
+                Else
+                    m_reservedFlags = m_reservedFlags And Not ReservedFlags.Reserved1
+                End If
+            End Set
+        End Property
+
+        Public Property FrequencyDataFormat() As DataFormat
+            Get
+                Return IIf((m_iEEEFormatFlags And IEEEFormatFlags.Frequency) > 0, DataFormat.FloatingPoint, DataFormat.FixedInteger)
+            End Get
+            Set(ByVal Value As DataFormat)
+                If Value = DataFormat.FloatingPoint Then
+                    m_iEEEFormatFlags = m_iEEEFormatFlags Or IEEEFormatFlags.Frequency
+                Else
+                    m_iEEEFormatFlags = m_iEEEFormatFlags And Not IEEEFormatFlags.Frequency
+                End If
+            End Set
+        End Property
+
+        Public Property AnalogDataFormat() As DataFormat
+            Get
+                Return IIf((m_iEEEFormatFlags And IEEEFormatFlags.Analog) > 0, DataFormat.FloatingPoint, DataFormat.FixedInteger)
+            End Get
+            Set(ByVal Value As DataFormat)
+                If Value = DataFormat.FloatingPoint Then
+                    m_iEEEFormatFlags = m_iEEEFormatFlags Or IEEEFormatFlags.Analog
+                Else
+                    m_iEEEFormatFlags = m_iEEEFormatFlags And Not IEEEFormatFlags.Analog
+                End If
+            End Set
+        End Property
+
+        Public Property PhasorDataFormat() As DataFormat
+            Get
+                Return IIf((m_iEEEFormatFlags And IEEEFormatFlags.Phasors) > 0, DataFormat.FloatingPoint, DataFormat.FixedInteger)
+            End Get
+            Set(ByVal Value As DataFormat)
+                If Value = DataFormat.FloatingPoint Then
+                    m_iEEEFormatFlags = m_iEEEFormatFlags Or IEEEFormatFlags.Phasors
+                Else
+                    m_iEEEFormatFlags = m_iEEEFormatFlags And Not IEEEFormatFlags.Phasors
+                End If
+            End Set
+        End Property
+
+        Public Property PhasorCoordinateFormat() As CoordinateFormat
+            Get
+                Return IIf((m_iEEEFormatFlags And IEEEFormatFlags.Coordinates) > 0, CoordinateFormat.Polar, CoordinateFormat.Rectangular)
+            End Get
+            Set(ByVal Value As CoordinateFormat)
+                If Value = CoordinateFormat.Polar Then
+                    m_iEEEFormatFlags = m_iEEEFormatFlags Or IEEEFormatFlags.Coordinates
+                Else
+                    m_iEEEFormatFlags = m_iEEEFormatFlags And Not IEEEFormatFlags.Coordinates
+                End If
+            End Set
         End Property
 
         Public Property DataIsValid() As Boolean
@@ -242,22 +351,20 @@ Namespace EE.Phasor.PDCstream
 
         Protected Overrides ReadOnly Property HeaderLength() As Int16
             Get
-                Return 10
+                Return 6
             End Get
         End Property
 
         Protected Overrides ReadOnly Property HeaderImage() As Byte()
             Get
                 Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), HeaderLength)
-                Dim x, index As Integer
 
                 ' Add PDCstream specific image
                 buffer(0) = m_flags
-                buffer(1) = m_sampleRate
-                ' TODO: check this value - could be version flag??
-                buffer(2) = Convert.ToByte(2)
-                buffer(3) = m_phasorValueCount
-                EndianOrder.SwapCopyBytes(Convert.ToInt32(m_sampleNumber), buffer, 4)
+                buffer(1) = (Convert.ToByte(AnalogValues.Count) Or m_reservedFlags)
+                buffer(2) = (Convert.ToByte(DigitalValues.Count) Or m_iEEEFormatFlags)
+                buffer(3) = Convert.ToByte(PhasorValues.Count)
+                EndianOrder.SwapCopyBytes(m_sampleNumber, buffer, 4)
 
                 Return buffer
             End Get

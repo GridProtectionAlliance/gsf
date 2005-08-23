@@ -25,8 +25,17 @@ Namespace EE.Phasor
         Inherits CollectionBase
         Implements IChannelCollection
 
+        Private m_maximumCount As Integer
+
+        Protected Sub New(ByVal maximumCount As Integer)
+
+            m_maximumCount = maximumCount
+
+        End Sub
+
         Public Sub Add(ByVal value As IChannel) Implements IChannelCollection.Add
 
+            If List.Count >= m_maximumCount Then Throw New OverflowException("Maximum " & InheritedType.Name & " item limit reached")
             List.Add(value)
 
         End Sub

@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  DataSample.vb - PDC stream data sample
+'  DataSample.vb - PDCstream data sample
 '  Copyright © 2004 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2003

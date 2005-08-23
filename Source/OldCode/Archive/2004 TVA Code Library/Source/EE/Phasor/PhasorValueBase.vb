@@ -128,8 +128,8 @@ Namespace EE.Phasor
 
             MyBase.New(parent, phasorDefinition)
 
-            If Format = PhasorFormat.Rectangular Then
-                If DataFormat = DataFormat.FixedInteger Then
+            If CoordinateFormat = Phasor.CoordinateFormat.Rectangular Then
+                If DataFormat = Phasor.DataFormat.FixedInteger Then
                     UnscaledReal = EndianOrder.ReverseToInt16(binaryImage, startIndex)
                     UnscaledImaginary = EndianOrder.ReverseToInt16(binaryImage, startIndex + 2)
                 Else
@@ -140,7 +140,7 @@ Namespace EE.Phasor
                 Dim magnitude As Double
                 Dim angle As Double
 
-                If DataFormat = DataFormat.FixedInteger Then
+                If DataFormat = Phasor.DataFormat.FixedInteger Then
                     magnitude = Convert.ToDouble(EndianOrder.ReverseToUInt16(binaryImage, startIndex))
                     angle = EndianOrder.ReverseToInt16(binaryImage, startIndex + 2) * 180 / Math.PI / 10000
                 Else
@@ -172,9 +172,9 @@ Namespace EE.Phasor
             End Set
         End Property
 
-        Public ReadOnly Property Format() As PhasorFormat Implements IPhasorValue.Format
+        Public ReadOnly Property CoordinateFormat() As CoordinateFormat Implements IPhasorValue.CoordinateFormat
             Get
-                Return Definition.Format
+                Return Definition.CoordinateFormat
             End Get
         End Property
 
@@ -291,7 +291,7 @@ Namespace EE.Phasor
 
         Public Overrides ReadOnly Property Values() As Double()
             Get
-                If Format = PhasorFormat.Rectangular Then
+                If CoordinateFormat = Phasor.CoordinateFormat.Rectangular Then
                     Return New Double() {m_real, m_imaginary}
                 Else
                     Return New Double() {Angle, Magnitude}
@@ -307,7 +307,7 @@ Namespace EE.Phasor
 
         Protected Overrides ReadOnly Property BodyLength() As Int16
             Get
-                If DataFormat = DataFormat.FixedInteger Then
+                If DataFormat = Phasor.DataFormat.FixedInteger Then
                     Return 4
                 Else
                     Return 8
@@ -319,8 +319,8 @@ Namespace EE.Phasor
             Get
                 Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BodyLength)
 
-                If Format = PhasorFormat.Rectangular Then
-                    If DataFormat = DataFormat.FixedInteger Then
+                If CoordinateFormat = Phasor.CoordinateFormat.Rectangular Then
+                    If DataFormat = Phasor.DataFormat.FixedInteger Then
                         EndianOrder.SwapCopyBytes(UnscaledReal, buffer, 0)
                         EndianOrder.SwapCopyBytes(UnscaledImaginary, buffer, 2)
                     Else
@@ -328,7 +328,7 @@ Namespace EE.Phasor
                         EndianOrder.SwapCopyBytes(Convert.ToSingle(m_imaginary), buffer, 4)
                     End If
                 Else
-                    If DataFormat = DataFormat.FixedInteger Then
+                    If DataFormat = Phasor.DataFormat.FixedInteger Then
                         EndianOrder.SwapCopyBytes(Convert.ToUInt16(Magnitude), buffer, 0)
                         EndianOrder.SwapCopyBytes(Convert.ToInt16(Angle * Math.PI / 180 * 10000), buffer, 2)
                     Else

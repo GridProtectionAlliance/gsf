@@ -36,7 +36,7 @@ Namespace EE.Phasor.PC37_118
         Private m_ipPort As Integer
         Private m_tcpSocket As Socket
         Private m_parseThread As Thread
-        Private m_phasorFormat As PhasorFormat
+        Private m_phasorFormat As CoordinateFormat
         Private m_totalFrames As Long
         Private m_configuration As ConfigurationFile
         Private m_headerFile As HeaderFile
@@ -58,11 +58,11 @@ Namespace EE.Phasor.PC37_118
             m_eventInstance = Me
             m_tcpSocket = New Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp)
             m_ipAddress = Dns.Resolve("127.0.0.1").AddressList(0)
-            m_phasorFormat = PhasorFormat.Rectangular
+            m_phasorFormat = CoordinateFormat.Rectangular
 
         End Sub
 
-        Public Sub New(ByVal pmuID As Int64, ByVal pmuIPAddress As String, ByVal pmuIPPort As Integer, ByVal phasorFormat As PhasorFormat)
+        Public Sub New(ByVal pmuID As Int64, ByVal pmuIPAddress As String, ByVal pmuIPPort As Integer, ByVal phasorFormat As CoordinateFormat)
 
             Me.New()
             m_pmuID = pmuID
@@ -127,11 +127,11 @@ Namespace EE.Phasor.PC37_118
             End Get
         End Property
 
-        Public Property PhasorFormat() As PhasorFormat
+        Public Property CoordinateFormat() As CoordinateFormat
             Get
                 Return m_phasorFormat
             End Get
-            Set(ByVal Value As PhasorFormat)
+            Set(ByVal Value As CoordinateFormat)
                 m_phasorFormat = Value
             End Set
         End Property

@@ -34,7 +34,16 @@ Namespace EE.Phasor
 
         Public Overridable ReadOnly Property BinaryLength() As Int16 Implements IChannel.BinaryLength
             Get
-                Return HeaderLength + BodyLength + FooterLength
+                Dim length As Int16 = HeaderLength + BodyLength + FooterLength
+
+                ' TODO: Make sure all channels need to be 32-bit aligned!!!
+
+                ' Align channel data on 32-bit word boundries
+                Do Until length Mod 4 = 0
+                    length += 1
+                Loop
+
+                Return length
             End Get
         End Property
 

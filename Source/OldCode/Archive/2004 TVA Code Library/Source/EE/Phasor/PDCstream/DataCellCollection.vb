@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  FrequencyValueCollection.vb - Frequency and DfDt value collection class
+'  DataCellCollection.vb - PDCstream specific data cell collection
 '  Copyright © 2004 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2003
@@ -15,36 +15,28 @@
 '
 '*******************************************************************************************************
 
-Imports TVA.Interop
+Namespace EE.Phasor.PDCstream
 
-Namespace EE.Phasor
+    Public Class DataCellCollection
 
-    ' This class represents the protocol independent collection of frequency and dfdt values.
-    Public Class FrequencyValueCollection
+        Inherits Phasor.DataCellCollection
 
-        Inherits ChannelValueCollectionBase
+        Public Sub New()
 
-        Public Sub New(ByVal maximumCount As Integer)
-
-            MyBase.New(maximumCount)
+            ' PDCstream data cells are variable length
+            MyBase.New(Int16.MaxValue, False)
 
         End Sub
 
-        Public Shadows Sub Add(ByVal value As IFrequencyValue)
+        Public Shadows Sub Add(ByVal value As DataCell)
 
             MyBase.Add(value)
 
         End Sub
 
-        Default Public Shadows ReadOnly Property Item(ByVal index As Integer) As IFrequencyValue
+        Default Public Shadows ReadOnly Property Item(ByVal index As Integer) As DataCell
             Get
                 Return MyBase.Item(index)
-            End Get
-        End Property
-
-        Public Overrides ReadOnly Property InheritedType() As Type
-            Get
-                Return Me.GetType()
             End Get
         End Property
 
