@@ -1,6 +1,7 @@
 ' James Ritchie Carroll - 2003
 Option Explicit On 
 
+Imports System.IO
 Imports System.ComponentModel
 Imports System.Threading
 Imports System.Text
@@ -17,6 +18,26 @@ Namespace [Shared]
         Private Sub New()
 
             ' This class contains only global functions and is not meant to be instantiated
+
+        End Sub
+
+        ''' <summary>
+        ''' <para>Copies input stream onto output stream</para>
+        ''' </summary>
+        ''' <param name="inStream"> Required. Input stream. </param>
+        ''' <param name="outStream"> Required. Output stream. </param> 
+        Public Shared Sub CopyStream(ByVal inStream As Stream, ByVal outStream As Stream)
+
+            Const BufferSize As Integer = 4096
+            Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BufferSize)
+            Dim bytesRead As Integer
+
+            bytesRead = inStream.Read(buffer, 0, BufferSize)
+
+            While bytesRead > 0
+                outStream.Write(buffer, 0, bytesRead)
+                bytesRead = inStream.Read(buffer, 0, BufferSize)
+            End While
 
         End Sub
 
