@@ -54,10 +54,10 @@ Namespace EE.Phasor.PDCstream
             ' TODO: check byte 1 - is version??
             'Buffer(1) = Convert.ToByte(1)
 
-            m_frameLength = EndianOrder.ReverseToInt16(binaryImage, startIndex + 2)
-            TimeTag = New Unix.TimeTag(EndianOrder.ReverseToInt32(binaryImage, startIndex + 4))
-            m_index = EndianOrder.ReverseToInt16(binaryImage, startIndex + 8)
-            m_dataCellCount = EndianOrder.ReverseToInt16(binaryImage, startIndex + 10)
+            m_frameLength = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 2)
+            TimeTag = New Unix.TimeTag(EndianOrder.BigEndian.ToInt32(binaryImage, startIndex + 4))
+            m_index = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 8)
+            m_dataCellCount = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 10)
 
             ' TODO: validate frame length??
 
@@ -127,10 +127,10 @@ Namespace EE.Phasor.PDCstream
 
         '        buffer(0) = Common.SyncByte
         '        buffer(1) = Convert.ToByte(1)
-        '        EndianOrder.SwapCopyBytes(Convert.ToInt16(buffer.Length \ 2), buffer, 2)
-        '        EndianOrder.SwapCopyBytes(Convert.ToUInt32(TimeTag.Value), buffer, 4)
-        '        EndianOrder.SwapCopyBytes(Convert.ToInt16(m_index), buffer, 8)
-        '        EndianOrder.SwapCopyBytes(Convert.ToInt16(Cells.Count), buffer, 10)
+        '        EndianOrder.BigEndian.CopyBytes(Convert.ToInt16(buffer.Length \ 2), buffer, 2)
+        '        EndianOrder.BigEndian.CopyBytes(Convert.ToUInt32(TimeTag.Value), buffer, 4)
+        '        EndianOrder.BigEndian.CopyBytes(Convert.ToInt16(m_index), buffer, 8)
+        '        EndianOrder.BigEndian.CopyBytes(Convert.ToInt16(Cells.Count), buffer, 10)
 
         '        Return buffer
         '    End Get
@@ -226,10 +226,10 @@ Namespace EE.Phasor.PDCstream
 
         '        buffer(0) = SyncByte
         '        buffer(1) = Convert.ToByte(1)
-        '        EndianOrder.SwapCopyBytes(Convert.ToInt16(buffer.Length \ 2), buffer, 2)
-        '        EndianOrder.SwapCopyBytes(Convert.ToUInt32(m_timeTag.Value), buffer, 4)
-        '        EndianOrder.SwapCopyBytes(Convert.ToInt16(m_index), buffer, 8)
-        '        EndianOrder.SwapCopyBytes(Convert.ToInt16(Cells.Length), buffer, 10)
+        '        EndianOrder.BigEndian.CopyBytes(Convert.ToInt16(buffer.Length \ 2), buffer, 2)
+        '        EndianOrder.BigEndian.CopyBytes(Convert.ToUInt32(m_timeTag.Value), buffer, 4)
+        '        EndianOrder.BigEndian.CopyBytes(Convert.ToInt16(m_index), buffer, 8)
+        '        EndianOrder.BigEndian.CopyBytes(Convert.ToInt16(Cells.Length), buffer, 10)
         '        index = 12
 
         '        For x As Integer = 0 To Cells.Length - 1

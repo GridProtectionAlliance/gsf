@@ -40,23 +40,23 @@ Namespace EE.Phasor.PC37_118
             End Get
         End Property
 
-        ' Create phasor from polar coordinates (angle expected in Degrees)
-        Public Shared Function CreateFromPolarValues(ByVal phasorDefinition As PhasorDefinition, ByVal angle As Double, ByVal magnitude As Double) As PhasorValue
+        'Create phasor from polar coordinates (angle expected in Degrees)
+        Public Shared Function CreateFromPolarValues(ByVal phasorDefinition As PhasorDefinition, ByVal angle As Double, ByVal magnitude As Double) As EE.Phasor.PC37_118.PhasorValue
 
             Return CreateFromScaledRectangularValues(phasorDefinition, CalculateRealComponent(angle, magnitude), CalculateImaginaryComponent(angle, magnitude))
 
         End Function
 
-        ' Create phasor from scaled rectangular coordinates
-        Public Shared Function CreateFromScaledRectangularValues(ByVal phasorDefinition As PhasorDefinition, ByVal real As Double, ByVal imaginary As Double) As PhasorValue
+        'Create phasor from scaled rectangular coordinates
+        Public Shared Function CreateFromScaledRectangularValues(ByVal phasorDefinition As PhasorDefinition, ByVal real As Double, ByVal imaginary As Double) As EE.Phasor.PC37_118.PhasorValue
 
             Dim scale As Double = phasorDefinition.CalFactor
             Return CreateFromUnscaledRectangularValues(phasorDefinition, real / scale, imaginary / scale)
 
         End Function
 
-        ' Create phasor from unscaled rectangular coordinates
-        Public Shared Function CreateFromUnscaledRectangularValues(ByVal phasorDefinition As PhasorDefinition, ByVal real As Int16, ByVal imaginary As Int16) As PhasorValue
+        'Create phasor from unscaled rectangular coordinates
+        Public Shared Function CreateFromUnscaledRectangularValues(ByVal phasorDefinition As PhasorDefinition, ByVal real As Int16, ByVal imaginary As Int16) As EE.Phasor.PC37_118.PhasorValue
 
             Return New PhasorValue(phasorDefinition, real, imaginary)
 
@@ -97,11 +97,11 @@ Namespace EE.Phasor.PC37_118
             m_phasorDefinition = phasorDefinition
 
             If phasorFormat = phasorFormat.Rectangular Then
-                m_real = EndianOrder.ReverseToInt16(binaryImage, startIndex)
-                m_imaginary = EndianOrder.ReverseToInt16(binaryImage, startIndex + 2)
+                m_real = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex)
+                m_imaginary = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 2)
             Else
-                Dim magnitude As Double = EndianOrder.ReverseToInt16(binaryImage, startIndex)
-                Dim angle As Double = EndianOrder.ReverseToInt16(binaryImage, startIndex + 2) * 180 / Math.PI / 10000
+                Dim magnitude As Double = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex)
+                Dim angle As Double = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 2) * 180 / Math.PI / 10000
 
                 With CreateFromPolarValues(phasorDefinition, angle, magnitude)
                     m_real = .Real
@@ -211,11 +211,11 @@ Namespace EE.Phasor.PC37_118
                 Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BinaryLength)
 
                 If phasorFormat = phasorFormat.Rectangular Then
-                    EndianOrder.SwapCopyBytes(m_real, buffer, 0)
-                    EndianOrder.SwapCopyBytes(m_imaginary, buffer, 2)
+                    EndianOrder.BigEndian.CopyBytes(m_real, buffer, 0)
+                    EndianOrder.BigEndian.CopyBytes(m_imaginary, buffer, 2)
                 Else
-                    EndianOrder.SwapCopyBytes(Convert.ToInt16(Magnitude), buffer, 0)
-                    EndianOrder.SwapCopyBytes(Convert.ToInt16(Angle * Math.PI / 180 * 10000), buffer, 2)
+                    EndianOrder.BigEndian.CopyBytes(Convert.ToInt16(Magnitude), buffer, 0)
+                    EndianOrder.BigEndian.CopyBytes(Convert.ToInt16(Angle * Math.PI / 180 * 10000), buffer, 2)
                 End If
 
                 Return buffer

@@ -335,13 +335,13 @@ Namespace EE.Phasor.PDCstream
 
                 buffer(0) = SyncByte
                 buffer(1) = DescriptorPacketFlag
-                EndianOrder.SwapCopyBytes(Convert.ToInt16(BinaryLength \ 2), buffer, 2)
+                EndianOrder.BigEndian.CopyBytes(Convert.ToInt16(BinaryLength \ 2), buffer, 2)
                 buffer(4) = StreamType
                 buffer(5) = RevisionNumber
-                EndianOrder.SwapCopyBytes(SampleRate, buffer, 6)
-                EndianOrder.SwapCopyBytes(RowLength, buffer, 8)
-                EndianOrder.SwapCopyBytes(PacketsPerSample, buffer, 12)
-                EndianOrder.SwapCopyBytes(Convert.ToInt16(Cells.Count), buffer, 14)
+                EndianOrder.BigEndian.CopyBytes(SampleRate, buffer, 6)
+                EndianOrder.BigEndian.CopyBytes(RowLength, buffer, 8)
+                EndianOrder.BigEndian.CopyBytes(PacketsPerSample, buffer, 12)
+                EndianOrder.BigEndian.CopyBytes(Convert.ToInt16(Cells.Count), buffer, 14)
 
                 Return buffer
             End Get

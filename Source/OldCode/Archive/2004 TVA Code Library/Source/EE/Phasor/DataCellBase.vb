@@ -34,9 +34,9 @@ Namespace EE.Phasor
         Private m_analogValues As AnalogValueCollection
         Private m_digitalValues As DigitalValueCollection
 
-        Protected Sub New(ByVal parent As IDataFrame, ByVal configurationCell As IConfigurationCell, ByVal maximumPhasors As Integer, ByVal maximumAnalogs As Integer, ByVal maximumDigitals As Integer)
+        Protected Sub New(ByVal parent As IDataFrame, ByVal alignOnWordBoundry As Boolean, ByVal configurationCell As IConfigurationCell, ByVal maximumPhasors As Integer, ByVal maximumAnalogs As Integer, ByVal maximumDigitals As Integer)
 
-            MyBase.New(parent)
+            MyBase.New(parent, alignOnWordBoundry)
 
             m_configurationCell = configurationCell
             m_phasorValues = New PhasorValueCollection(maximumPhasors)
@@ -45,9 +45,9 @@ Namespace EE.Phasor
 
         End Sub
 
-        Protected Sub New(ByVal parent As IDataFrame, ByVal configurationCell As IConfigurationCell, ByVal statusFlags As Int16, ByVal phasorValues As PhasorValueCollection, ByVal frequencyValue As IFrequencyValue, ByVal analogValues As AnalogValueCollection, ByVal digitalValues As DigitalValueCollection)
+        Protected Sub New(ByVal parent As IDataFrame, ByVal alignOnWordBoundry As Boolean, ByVal configurationCell As IConfigurationCell, ByVal statusFlags As Int16, ByVal phasorValues As PhasorValueCollection, ByVal frequencyValue As IFrequencyValue, ByVal analogValues As AnalogValueCollection, ByVal digitalValues As DigitalValueCollection)
 
-            MyBase.New(parent)
+            MyBase.New(parent, alignOnWordBoundry)
 
             m_configurationCell = configurationCell
             m_statusFlags = statusFlags
@@ -65,7 +65,7 @@ Namespace EE.Phasor
 
             Dim x As Integer
 
-            m_statusFlags = EndianOrder.ReverseToInt16(binaryImage, startIndex)
+            m_statusFlags = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex)
             startIndex += 2
 
             With m_configurationCell
@@ -93,7 +93,7 @@ Namespace EE.Phasor
         ' Derived classes are expected to expose a Public Sub New(ByVal dataCell As IDataCell)
         Protected Sub New(ByVal dataCell As IDataCell)
 
-            Me.New(dataCell.Parent, dataCell.ConfigurationCell, dataCell.StatusFlags, dataCell.PhasorValues, _
+            Me.New(dataCell.Parent, dataCell.AlignOnWordBoundry, dataCell.ConfigurationCell, dataCell.StatusFlags, dataCell.PhasorValues, _
                 dataCell.FrequencyValue, dataCell.AnalogValues, dataCell.DigitalValues)
 
         End Sub
@@ -167,7 +167,7 @@ Namespace EE.Phasor
                 Dim index As Integer
 
                 ' Copy in common cell image
-                EndianOrder.SwapCopyBytes(m_statusFlags, buffer, index)
+                EndianOrder.BigEndian.CopyBytes(m_statusFlags, buffer, index)
                 index += 2
 
                 CopyImage(m_phasorValues, buffer, index)

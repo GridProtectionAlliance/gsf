@@ -37,26 +37,26 @@ Namespace EE.Phasor
             Magnitude
         End Enum
 
-        ' Create phasor from polar coordinates (angle expected in Degrees)
+        'Create phasor from polar coordinates (angle expected in Degrees)
         ' Note: This method is expected to be implemented as a public shared method in derived class automatically passing in phasorValueType
-        Protected Shared Function CreateFromPolarValues(ByVal phasorValueType As Type, ByVal parent As IDataCell, ByVal phasorDefinition As IPhasorDefinition, ByVal angle As Double, ByVal magnitude As Double) As IPhasorValue
+        Protected Shared Function CreateFromPolarValues(ByVal phasorValueType As Type, ByVal parent As IDataCell, ByVal phasorDefinition As IPhasorDefinition, ByVal angle As Double, ByVal magnitude As Double) As EE.Phasor.IPhasorValue
 
             Return CreateFromRectangularValues(phasorValueType, parent, phasorDefinition, CalculateRealComponent(angle, magnitude), CalculateImaginaryComponent(angle, magnitude))
 
         End Function
 
-        ' Create phasor from rectangular coordinates
+        'Create phasor from rectangular coordinates
         ' Note: This method is expected to be implemented as a public shared method in derived class automatically passing in phasorValueType
-        Protected Shared Function CreateFromRectangularValues(ByVal phasorValueType As Type, ByVal parent As IDataCell, ByVal phasorDefinition As IPhasorDefinition, ByVal real As Double, ByVal imaginary As Double) As IPhasorValue
+        Protected Shared Function CreateFromRectangularValues(ByVal phasorValueType As Type, ByVal parent As IDataCell, ByVal phasorDefinition As IPhasorDefinition, ByVal real As Double, ByVal imaginary As Double) As EE.Phasor.IPhasorValue
 
             If phasorDefinition Is Nothing Then Throw New ArgumentNullException("No phasor definition specified")
             Return CType(Activator.CreateInstance(phasorValueType, New Object() {parent, phasorDefinition, real, imaginary}), IPhasorValue)
 
         End Function
 
-        ' Create phasor from unscaled rectangular coordinates
+        'Create phasor from unscaled rectangular coordinates
         ' Note: This method is expected to be implemented as a public shared method in derived class automatically passing in phasorValueType
-        Protected Shared Function CreateFromUnscaledRectangularValues(ByVal phasorValueType As Type, ByVal parent As IDataCell, ByVal phasorDefinition As IPhasorDefinition, ByVal real As Int16, ByVal imaginary As Int16) As IPhasorValue
+        Protected Shared Function CreateFromUnscaledRectangularValues(ByVal phasorValueType As Type, ByVal parent As IDataCell, ByVal phasorDefinition As IPhasorDefinition, ByVal real As Int16, ByVal imaginary As Int16) As EE.Phasor.IPhasorValue
 
             Dim scale As Integer = phasorDefinition.ScalingFactor
             Return CreateFromRectangularValues(phasorValueType, parent, phasorDefinition, real / scale, imaginary / scale)
@@ -82,6 +82,7 @@ Namespace EE.Phasor
 
             If voltage Is Nothing Then Throw New ArgumentNullException("No voltage specified")
             If current Is Nothing Then Throw New ArgumentNullException("No current specified")
+
             Return 3 * (voltage.Real * current.Real + voltage.Imaginary * current.Imaginary)
             'Return 3 * voltage.Magnitude * current.Magnitude * Math.Cos((voltage.Angle - current.Angle) * Math.PI / 180)
 
@@ -92,6 +93,7 @@ Namespace EE.Phasor
 
             If voltage Is Nothing Then Throw New ArgumentNullException("No voltage specified")
             If current Is Nothing Then Throw New ArgumentNullException("No current specified")
+
             Return 3 * (voltage.Imaginary * current.Real - voltage.Real * current.Imaginary)
             'Return 3 * voltage.Magnitude * current.Magnitude * Math.Sin((voltage.Angle - current.Angle) * Math.PI / 180)
 
@@ -130,22 +132,22 @@ Namespace EE.Phasor
 
             If CoordinateFormat = Phasor.CoordinateFormat.Rectangular Then
                 If DataFormat = Phasor.DataFormat.FixedInteger Then
-                    UnscaledReal = EndianOrder.ReverseToInt16(binaryImage, startIndex)
-                    UnscaledImaginary = EndianOrder.ReverseToInt16(binaryImage, startIndex + 2)
+                    UnscaledReal = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex)
+                    UnscaledImaginary = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 2)
                 Else
-                    m_real = EndianOrder.ReverseToSingle(binaryImage, startIndex)
-                    m_imaginary = EndianOrder.ReverseToSingle(binaryImage, startIndex + 4)
+                    m_real = EndianOrder.BigEndian.ToSingle(binaryImage, startIndex)
+                    m_imaginary = EndianOrder.BigEndian.ToSingle(binaryImage, startIndex + 4)
                 End If
             Else
                 Dim magnitude As Double
                 Dim angle As Double
 
                 If DataFormat = Phasor.DataFormat.FixedInteger Then
-                    magnitude = Convert.ToDouble(EndianOrder.ReverseToUInt16(binaryImage, startIndex))
-                    angle = EndianOrder.ReverseToInt16(binaryImage, startIndex + 2) * 180 / Math.PI / 10000
+                    magnitude = Convert.ToDouble(EndianOrder.BigEndian.ToUInt16(binaryImage, startIndex))
+                    angle = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 2) * 180 / Math.PI / 10000
                 Else
-                    magnitude = EndianOrder.ReverseToSingle(binaryImage, startIndex)
-                    angle = EndianOrder.ReverseToSingle(binaryImage, startIndex + 4) * 180 / Math.PI
+                    magnitude = EndianOrder.BigEndian.ToSingle(binaryImage, startIndex)
+                    angle = EndianOrder.BigEndian.ToSingle(binaryImage, startIndex + 4) * 180 / Math.PI
                 End If
 
                 m_real = CalculateRealComponent(angle, magnitude)
@@ -321,19 +323,19 @@ Namespace EE.Phasor
 
                 If CoordinateFormat = Phasor.CoordinateFormat.Rectangular Then
                     If DataFormat = Phasor.DataFormat.FixedInteger Then
-                        EndianOrder.SwapCopyBytes(UnscaledReal, buffer, 0)
-                        EndianOrder.SwapCopyBytes(UnscaledImaginary, buffer, 2)
+                        EndianOrder.BigEndian.CopyBytes(UnscaledReal, buffer, 0)
+                        EndianOrder.BigEndian.CopyBytes(UnscaledImaginary, buffer, 2)
                     Else
-                        EndianOrder.SwapCopyBytes(Convert.ToSingle(m_real), buffer, 0)
-                        EndianOrder.SwapCopyBytes(Convert.ToSingle(m_imaginary), buffer, 4)
+                        EndianOrder.BigEndian.CopyBytes(Convert.ToSingle(m_real), buffer, 0)
+                        EndianOrder.BigEndian.CopyBytes(Convert.ToSingle(m_imaginary), buffer, 4)
                     End If
                 Else
                     If DataFormat = Phasor.DataFormat.FixedInteger Then
-                        EndianOrder.SwapCopyBytes(Convert.ToUInt16(Magnitude), buffer, 0)
-                        EndianOrder.SwapCopyBytes(Convert.ToInt16(Angle * Math.PI / 180 * 10000), buffer, 2)
+                        EndianOrder.BigEndian.CopyBytes(Convert.ToUInt16(Magnitude), buffer, 0)
+                        EndianOrder.BigEndian.CopyBytes(Convert.ToInt16(Angle * Math.PI / 180 * 10000), buffer, 2)
                     Else
-                        EndianOrder.SwapCopyBytes(Convert.ToSingle(Magnitude), buffer, 0)
-                        EndianOrder.SwapCopyBytes(Convert.ToSingle(Angle * Math.PI / 180), buffer, 4)
+                        EndianOrder.BigEndian.CopyBytes(Convert.ToSingle(Magnitude), buffer, 0)
+                        EndianOrder.BigEndian.CopyBytes(Convert.ToSingle(Angle * Math.PI / 180), buffer, 4)
                     End If
                 End If
 

@@ -89,11 +89,11 @@ Namespace EE.Phasor.PDCstream
                 CopyImage(IDLabelImage, buffer, index, IDLabelLength)
 
                 ' Reserved
-                EndianOrder.SwapCopyBytes(Reserved, buffer, index)
+                EndianOrder.BigEndian.CopyBytes(Reserved, buffer, index)
                 index += 2
 
                 ' Offset
-                EndianOrder.SwapCopyBytes(Offset, buffer, index)
+                EndianOrder.BigEndian.CopyBytes(Offset, buffer, index)
 
                 Return buffer
             End Get

@@ -49,12 +49,12 @@ Namespace EE.Phasor.PC37_118
             ElseIf binaryImage.Length - startIndex < FrameLength Then
                 Throw New ArgumentException("BinaryImage size from startIndex is too small - could not create command frame")
             Else
-                m_timetag = New NtpTimeTag(Convert.ToDouble(EndianOrder.ReverseToInt32(binaryImage, startIndex)))
-                m_pmuIDCode = EndianOrder.ReverseToInt64(binaryImage, startIndex + 4)
-                m_command = EndianOrder.ReverseToInt16(binaryImage, startIndex + 12)
+                m_timetag = New NtpTimeTag(Convert.ToDouble(EndianOrder.BigEndian.ToInt32(binaryImage, startIndex)))
+                m_pmuIDCode = EndianOrder.BigEndian.ToInt64(binaryImage, startIndex + 4)
+                m_command = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 12)
 
                 ' Validate buffer check sum
-                If EndianOrder.ReverseToInt16(binaryImage, startIndex + FrameLength - 2) <> CRC16(-1, binaryImage, startIndex, FrameLength - 2) Then _
+                If EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + FrameLength - 2) <> CRC16(-1, binaryImage, startIndex, FrameLength - 2) Then _
                     Throw New ArgumentException("Invalid buffer image detected - CRC16 of command frame did not match")
             End If
 
@@ -91,10 +91,10 @@ Namespace EE.Phasor.PC37_118
             Get
                 Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), FrameLength)
 
-                EndianOrder.SwapCopyBytes(Convert.ToUInt32(m_timetag.Value), buffer, 0)
-                EndianOrder.SwapCopyBytes(m_pmuIDCode, buffer, 4)
-                EndianOrder.SwapCopyBytes(Convert.ToInt16(m_command), buffer, 12)
-                EndianOrder.SwapCopyBytes(CRC16(-1, buffer, 0, 14), buffer, 14)
+                EndianOrder.BigEndian.CopyBytes(Convert.ToUInt32(m_timetag.Value), buffer, 0)
+                EndianOrder.BigEndian.CopyBytes(m_pmuIDCode, buffer, 4)
+                EndianOrder.BigEndian.CopyBytes(Convert.ToInt16(m_command), buffer, 12)
+                EndianOrder.BigEndian.CopyBytes(CRC16(-1, buffer, 0, 14), buffer, 14)
 
                 Return buffer
             End Get

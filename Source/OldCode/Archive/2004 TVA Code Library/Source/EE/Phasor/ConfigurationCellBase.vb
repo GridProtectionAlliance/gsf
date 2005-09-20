@@ -37,9 +37,9 @@ Namespace EE.Phasor
         Private m_digitalDefinitions As DigitalDefinitionCollection
         Private m_sampleRate As Int16
 
-        Protected Sub New(ByVal parent As IConfigurationFrame, ByVal maximumPhasors As Integer, ByVal maximumAnalogs As Integer, ByVal maximumDigitals As Integer)
+        Protected Sub New(ByVal parent As IConfigurationFrame, ByVal alignOnWordBoundry As Boolean, ByVal maximumPhasors As Integer, ByVal maximumAnalogs As Integer, ByVal maximumDigitals As Integer)
 
-            MyBase.New(parent)
+            MyBase.New(parent, alignOnWordBoundry)
 
             m_phasorDefinitions = New PhasorDefinitionCollection(maximumPhasors)
             m_analogDefinitions = New AnalogDefinitionCollection(maximumAnalogs)
@@ -47,9 +47,9 @@ Namespace EE.Phasor
 
         End Sub
 
-        Protected Sub New(ByVal parent As IConfigurationFrame, ByVal stationName As String, ByVal idCode As Int16, ByVal idLabel As String, ByVal phasorDefinitions As PhasorDefinitionCollection, ByVal frequencyDefinition As IFrequencyDefinition, ByVal analogDefinitions As AnalogDefinitionCollection, ByVal digitalDefinitions As DigitalDefinitionCollection, ByVal sampleRate As Int16)
+        Protected Sub New(ByVal parent As IConfigurationFrame, ByVal alignOnWordBoundry As Boolean, ByVal stationName As String, ByVal idCode As Int16, ByVal idLabel As String, ByVal phasorDefinitions As PhasorDefinitionCollection, ByVal frequencyDefinition As IFrequencyDefinition, ByVal analogDefinitions As AnalogDefinitionCollection, ByVal digitalDefinitions As DigitalDefinitionCollection, ByVal sampleRate As Int16)
 
-            MyBase.New(parent)
+            MyBase.New(parent, alignOnWordBoundry)
 
             Me.StationName = stationName
             m_idCode = idCode
@@ -65,9 +65,9 @@ Namespace EE.Phasor
         ' Derived classes are expected to expose a Public Sub New(ByVal configurationCell As IConfigurationCell)
         Protected Sub New(ByVal configurationCell As IConfigurationCell)
 
-            Me.New(configurationCell.Parent, configurationCell.StationName, configurationCell.IDCode, configurationCell.IDLabel, _
-                configurationCell.PhasorDefinitions, configurationCell.FrequencyDefinition, configurationCell.AnalogDefinitions, _
-                configurationCell.DigitalDefinitions, configurationCell.SampleRate)
+            Me.New(configurationCell.Parent, configurationCell.AlignOnWordBoundry, configurationCell.StationName, configurationCell.IDCode, _
+                configurationCell.IDLabel, configurationCell.PhasorDefinitions, configurationCell.FrequencyDefinition, _
+                configurationCell.AnalogDefinitions, configurationCell.DigitalDefinitions, configurationCell.SampleRate)
 
         End Sub
 

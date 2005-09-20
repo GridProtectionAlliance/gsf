@@ -203,9 +203,9 @@ Namespace EE.Phasor.PC37_118
                 BlockCopy(Encoding.ASCII.GetBytes(m_stationName.PadRight(MaximumStationNameLength)), 0, image, 0, MaximumStationNameLength)
 
                 index = MaximumStationNameLength
-                EndianOrder.SwapCopyBytes(m_pmuIDCode, image, index)
-                EndianOrder.SwapCopyBytes(Convert.ToInt16(m_phasorDefinitions.Count), image, index + 8)
-                EndianOrder.SwapCopyBytes(Convert.ToInt16(m_digitalDefinitions.Count), image, index + 10)
+                EndianOrder.BigEndian.CopyBytes(m_pmuIDCode, image, index)
+                EndianOrder.BigEndian.CopyBytes(Convert.ToInt16(m_phasorDefinitions.Count), image, index + 8)
+                EndianOrder.BigEndian.CopyBytes(Convert.ToInt16(m_digitalDefinitions.Count), image, index + 10)
 
                 index = 28
                 phasorCount = m_phasorDefinitions.Count
@@ -235,8 +235,8 @@ Namespace EE.Phasor.PC37_118
 
                 index += digitalCount * DigitalDefinition.BinaryLength
 
-                EndianOrder.SwapCopyBytes(m_freqFlags, image, index)
-                EndianOrder.SwapCopyBytes(m_period, image, index + 2)
+                EndianOrder.BigEndian.CopyBytes(m_freqFlags, image, index)
+                EndianOrder.BigEndian.CopyBytes(m_period, image, index + 2)
 
                 Return image
             End Get
@@ -260,9 +260,9 @@ Namespace EE.Phasor.PC37_118
                 m_stationName = Trim(Encoding.ASCII.GetString(Value, 0, MaximumStationNameLength))
 
                 index = MaximumStationNameLength
-                m_pmuIDCode = EndianOrder.ReverseToInt64(Value, index)
-                phasorCount = EndianOrder.ReverseToInt16(Value, index + 8)
-                digitalCount = EndianOrder.ReverseToInt16(Value, index + 10)
+                m_pmuIDCode = EndianOrder.BigEndian.ToInt64(Value, index)
+                phasorCount = EndianOrder.BigEndian.ToInt16(Value, index + 8)
+                digitalCount = EndianOrder.BigEndian.ToInt16(Value, index + 10)
 
                 index = 28
                 phasorOffset = index + phasorCount * PhasorDefinition.MaximumLabelLength + digitalCount * DigitalDefinition.MaximumLabelLength
@@ -289,8 +289,8 @@ Namespace EE.Phasor.PC37_118
                             DigitalDefinition.MaximumLabelLength), Value, digitalOffset + x * DigitalDefinition.BinaryLength))
                 Next
 
-                m_freqFlags = EndianOrder.ReverseToInt16(Value, freqOffset)
-                m_period = EndianOrder.ReverseToInt16(Value, freqOffset + 2)
+                m_freqFlags = EndianOrder.BigEndian.ToInt16(Value, freqOffset)
+                m_period = EndianOrder.BigEndian.ToInt16(Value, freqOffset + 2)
             End Set
         End Property
 

@@ -51,12 +51,12 @@ Namespace EE.Phasor.IEEE1344
             ElseIf binaryImage.Length - startIndex <= CommonBinaryLength Then
                 Throw New ArgumentException("BinaryImage size from startIndex is too small - could not create " & Name)
             Else
-                m_timeTag = New NtpTimeTag(Convert.ToDouble(EndianOrder.ReverseToUInt32(binaryImage, startIndex)))
-                m_sampleCount = EndianOrder.ReverseToInt16(binaryImage, startIndex + 4)
-                m_status = EndianOrder.ReverseToInt16(binaryImage, startIndex + 6)
+                m_timeTag = New NtpTimeTag(Convert.ToDouble(EndianOrder.BigEndian.ToUInt32(binaryImage, startIndex)))
+                m_sampleCount = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 4)
+                m_status = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 6)
 
                 ' Validate buffer check sum
-                If EndianOrder.ReverseToInt16(binaryImage, startIndex + FrameLength - 2) <> CRC16(-1, binaryImage, startIndex, FrameLength - 2) Then _
+                If EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + FrameLength - 2) <> CRC16(-1, binaryImage, startIndex, FrameLength - 2) Then _
                     Throw New ArgumentException("Invalid buffer image detected - CRC16 of " & Name & " did not match")
             End If
 
@@ -136,7 +136,7 @@ Namespace EE.Phasor.IEEE1344
 
         Protected Sub AppendCRC16(ByVal buffer As Byte(), ByVal startIndex As Integer)
 
-            EndianOrder.SwapCopyBytes(CRC16(-1, buffer, 0, startIndex), buffer, startIndex)
+            EndianOrder.BigEndian.CopyBytes(CRC16(-1, buffer, 0, startIndex), buffer, startIndex)
 
         End Sub
 
@@ -180,9 +180,9 @@ Namespace EE.Phasor.IEEE1344
                 Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), FrameLength)
                 Dim image As Byte() = DataImage()
 
-                EndianOrder.SwapCopyBytes(Convert.ToUInt32(m_timeTag.Value), buffer, 0)
-                EndianOrder.SwapCopyBytes(m_sampleCount, buffer, 4)
-                EndianOrder.SwapCopyBytes(m_status, buffer, 6)
+                EndianOrder.BigEndian.CopyBytes(Convert.ToUInt32(m_timeTag.Value), buffer, 0)
+                EndianOrder.BigEndian.CopyBytes(m_sampleCount, buffer, 4)
+                EndianOrder.BigEndian.CopyBytes(m_status, buffer, 6)
                 BlockCopy(image, 0, buffer, 8, image.Length)
                 AppendCRC16(buffer, 8 + image.Length)
 

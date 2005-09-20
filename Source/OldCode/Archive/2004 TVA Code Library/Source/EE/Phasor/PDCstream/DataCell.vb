@@ -103,7 +103,7 @@ Namespace EE.Phasor.PDCstream
             ' data value and you won't know which one is missing or added.  I can't change the
             ' protocol so this is enough argument to just raise an error for config file/stream
             ' mismatch.  So for now we'll just throw an exception and deal with consequences :)
-            ' Note that this only applies 
+            ' Note that this only applies to PDCstream protocol
 
             If phasorWords <> configurationCell.PhasorDefinitions.Count Then
                 Throw New InvalidOperationException("Stream/Config File Mismatch: Phasor value count in stream (" & phasorWords & ") does not match defined count in configuration file (" & configurationCell.PhasorDefinitions.Count & ")")
@@ -113,7 +113,7 @@ Namespace EE.Phasor.PDCstream
             '    Throw New InvalidOperationException("Stream/Config File Mismatch: Analog value count in stream (" analogWords & ") does not match defined count in configuration file (" & configurationCell.
             'End If
 
-            m_sampleNumber = EndianOrder.ReverseToInt16(binaryImage, startIndex + 4)
+            m_sampleNumber = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 4)
 
             ' Parse binary data common to all data cells
             ParseDataCell(binaryImage, startIndex + 6, GetType(PhasorValue), GetType(FrequencyValue), GetType(AnalogValue), GetType(DigitalValue))
@@ -364,7 +364,7 @@ Namespace EE.Phasor.PDCstream
                 buffer(1) = (Convert.ToByte(AnalogValues.Count) Or m_reservedFlags)
                 buffer(2) = (Convert.ToByte(DigitalValues.Count) Or m_iEEEFormatFlags)
                 buffer(3) = Convert.ToByte(PhasorValues.Count)
-                EndianOrder.SwapCopyBytes(m_sampleNumber, buffer, 4)
+                EndianOrder.BigEndian.CopyBytes(m_sampleNumber, buffer, 4)
 
                 Return buffer
             End Get

@@ -24,6 +24,8 @@ Namespace EE.Phasor
 
         ReadOnly Property Parent() As IChannelFrame
 
+        ReadOnly Property AlignOnWordBoundry() As Boolean
+
     End Interface
 
 End Namespace

@@ -13,9 +13,8 @@
 '  11/12/2004 - James R Carroll
 '       Initial version of source generated
 '
-'   Note: I am assuming that the PMU cell within a PDC block only supports
-'   rectangular phasor values - this was either an oversight by Ken or 
-'   he felt this feature was not used much and need not be changed
+'   Note: The PMU cell within a PDC block only supports rectangular values - Ken felt
+'   that this feature was not used much and need not be changed
 '
 '*******************************************************************************************************
 

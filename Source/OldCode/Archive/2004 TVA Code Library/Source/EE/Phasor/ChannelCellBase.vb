@@ -24,25 +24,49 @@ Namespace EE.Phasor
         Implements IChannelCell
 
         Private m_parent As IChannelFrame
+        Private m_alignOnWordBoundry As Boolean
 
-        Protected Sub New(ByVal parent As IChannelFrame)
+        Protected Sub New(ByVal parent As IChannelFrame, ByVal alignOnWordBoundry As Boolean)
 
             MyBase.New()
 
             m_parent = parent
+            m_alignOnWordBoundry = alignOnWordBoundry
 
         End Sub
 
         ' Derived classes are expected to expose a Protected Sub New(ByVal channelCell As IChannelCell)
         Protected Sub New(ByVal channelCell As IChannelCell)
 
-            Me.New(channelCell.Parent)
+            Me.New(channelCell.Parent, channelCell.AlignOnWordBoundry)
 
         End Sub
 
         Public ReadOnly Property Parent() As IChannelFrame Implements IChannelCell.Parent
             Get
                 Return m_parent
+            End Get
+        End Property
+
+        Public ReadOnly Property AlignOnWordBoundry() As Boolean Implements IChannelCell.AlignOnWordBoundry
+            Get
+                Return m_alignOnWordBoundry
+            End Get
+        End Property
+
+        Public Overrides ReadOnly Property BinaryLength() As Int16
+            Get
+                Dim length As Int16 = MyBase.BinaryLength
+
+                If m_alignOnWordBoundry Then
+                    ' If requested, we align frame cells on 32-bit word boundries
+                    Do Until length Mod 4 = 0
+                        length += 1
+                    Loop
+                End If
+
+                Return length
+
             End Get
         End Property
 

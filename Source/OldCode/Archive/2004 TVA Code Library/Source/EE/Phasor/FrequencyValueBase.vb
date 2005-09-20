@@ -58,12 +58,12 @@ Namespace EE.Phasor
             MyBase.New(parent, frequencyDefinition)
 
             If DataFormat = Phasor.DataFormat.FixedInteger Then
-                UnscaledFrequency = EndianOrder.ReverseToInt16(binaryImage, startIndex)
-                UnscaledDfDt = EndianOrder.ReverseToInt16(binaryImage, startIndex + 2)
+                UnscaledFrequency = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex)
+                UnscaledDfDt = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 2)
             Else
                 With frequencyDefinition
-                    m_frequency = EndianOrder.ReverseToSingle(binaryImage, startIndex) + .Offset
-                    m_dfdt = EndianOrder.ReverseToSingle(binaryImage, startIndex + 4) + .DfDtOffset
+                    m_frequency = EndianOrder.BigEndian.ToSingle(binaryImage, startIndex) + .Offset
+                    m_dfdt = EndianOrder.BigEndian.ToSingle(binaryImage, startIndex + 4) + .DfDtOffset
                 End With
             End If
 
@@ -164,12 +164,12 @@ Namespace EE.Phasor
                 Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BodyLength)
 
                 If DataFormat = Phasor.DataFormat.FixedInteger Then
-                    EndianOrder.SwapCopyBytes(UnscaledFrequency, buffer, 0)
-                    EndianOrder.SwapCopyBytes(UnscaledDfDt, buffer, 2)
+                    EndianOrder.BigEndian.CopyBytes(UnscaledFrequency, buffer, 0)
+                    EndianOrder.BigEndian.CopyBytes(UnscaledDfDt, buffer, 2)
                 Else
                     With Definition
-                        EndianOrder.SwapCopyBytes(Convert.ToSingle(m_frequency - .Offset), buffer, 0)
-                        EndianOrder.SwapCopyBytes(Convert.ToSingle(m_dfdt - .DfDtOffset), buffer, 4)
+                        EndianOrder.BigEndian.CopyBytes(Convert.ToSingle(m_frequency - .Offset), buffer, 0)
+                        EndianOrder.BigEndian.CopyBytes(Convert.ToSingle(m_dfdt - .DfDtOffset), buffer, 4)
                     End With
                 End If
 

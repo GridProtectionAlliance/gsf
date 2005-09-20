@@ -72,6 +72,13 @@ Namespace EE.Phasor.PDCstream
             End Get
         End Property
 
+        Public Shared Function CalculateBinaryLength(ByVal definition As PhasorDefinition) As Int16
+
+            ' The phasor definition will determine the binary length based on data format
+            Return (New PhasorValue(Nothing, definition, 0, 0)).BinaryLength
+
+        End Function
+
     End Class
 
 End Namespace

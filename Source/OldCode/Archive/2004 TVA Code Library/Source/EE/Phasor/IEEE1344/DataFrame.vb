@@ -178,13 +178,13 @@ Namespace EE.Phasor.IEEE1344
 
                 index = m_phasorValues.Count * PhasorValue.BinaryLength
 
-                EndianOrder.SwapCopyBytes(m_frequency, image, index)
-                EndianOrder.SwapCopyBytes(m_dfdt, image, index + 2)
+                EndianOrder.BigEndian.CopyBytes(m_frequency, image, index)
+                EndianOrder.BigEndian.CopyBytes(m_dfdt, image, index + 2)
 
                 index += 4
 
                 For x = 0 To m_digitalValues.Count - 1
-                    EndianOrder.SwapCopyBytes(m_digitalValues(x), image, index + x * 2)
+                    EndianOrder.BigEndian.CopyBytes(m_digitalValues(x), image, index + x * 2)
                 Next
 
                 Return image
@@ -206,15 +206,15 @@ Namespace EE.Phasor.IEEE1344
 
             index = startIndex + m_configFile.PhasorDefinitions.Count * PhasorValue.BinaryLength
 
-            m_frequency = EndianOrder.ReverseToInt16(binaryImage, index)
-            m_dfdt = EndianOrder.ReverseToInt16(binaryImage, index + 2)
+            m_frequency = EndianOrder.BigEndian.ToInt16(binaryImage, index)
+            m_dfdt = EndianOrder.BigEndian.ToInt16(binaryImage, index + 2)
 
             index += 4
 
             m_digitalValues.Clear()
 
             For x = 0 To m_digitalValues.Count - 1
-                m_digitalValues.Add(EndianOrder.ReverseToInt16(binaryImage, index + x * 2))
+                m_digitalValues.Add(EndianOrder.BigEndian.ToInt16(binaryImage, index + x * 2))
             Next
 
         End Sub

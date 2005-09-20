@@ -55,9 +55,9 @@ Namespace EE.Phasor
             MyBase.New(parent, analogDefinition)
 
             If DataFormat = Phasor.DataFormat.FixedInteger Then
-                UnscaledValue = EndianOrder.ReverseToInt16(binaryImage, startIndex)
+                UnscaledValue = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex)
             Else
-                m_value = EndianOrder.ReverseToSingle(binaryImage, startIndex)
+                m_value = EndianOrder.BigEndian.ToSingle(binaryImage, startIndex)
             End If
 
         End Sub
@@ -123,9 +123,9 @@ Namespace EE.Phasor
                 Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BodyLength)
 
                 If DataFormat = Phasor.DataFormat.FixedInteger Then
-                    EndianOrder.SwapCopyBytes(UnscaledValue, buffer, 0)
+                    EndianOrder.BigEndian.CopyBytes(UnscaledValue, buffer, 0)
                 Else
-                    EndianOrder.SwapCopyBytes(Convert.ToSingle(m_value), buffer, 0)
+                    EndianOrder.BigEndian.CopyBytes(Convert.ToSingle(m_value), buffer, 0)
                 End If
 
                 Return buffer

@@ -170,17 +170,17 @@ Namespace EE.Phasor
             Dim length As Int16 = BinaryLength
 
             ' TODO: Remove this debug code..
-            Dim bufferSum As Int16 = EndianOrder.ReverseToInt16(buffer, startIndex + length - 2)
+            Dim bufferSum As Int16 = EndianOrder.BigEndian.ToInt16(buffer, startIndex + length - 2)
             Dim calculatedSum As Int16 = CalculateChecksum(buffer, startIndex, length - 2)
             Debug.WriteLine("Buffer Sum = " & bufferSum & ", Calculated Sum = " & calculatedSum)
             Return (bufferSum = calculatedSum)
-            'Return EndianOrder.ReverseToInt16(buffer, startIndex + length - 2) = CalculateChecksum(buffer, startIndex, length - 2)
+            'Return EndianOrder.BigEndian.ToInt16(buffer, startIndex + length - 2) = CalculateChecksum(buffer, startIndex, length - 2)
 
         End Function
 
         Protected Overridable Sub AppendChecksum(ByVal buffer As Byte(), ByVal startIndex As Integer)
 
-            EndianOrder.SwapCopyBytes(CalculateChecksum(buffer, 0, startIndex), buffer, startIndex)
+            EndianOrder.BigEndian.CopyBytes(CalculateChecksum(buffer, 0, startIndex), buffer, startIndex)
 
         End Sub
 

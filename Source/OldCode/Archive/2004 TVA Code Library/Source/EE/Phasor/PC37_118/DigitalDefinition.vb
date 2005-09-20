@@ -46,7 +46,7 @@ Namespace EE.Phasor.PC37_118
             m_label = label
 
             ' Get digital flags
-            m_flags = EndianOrder.ReverseToInt16(binaryImage, startIndex)
+            m_flags = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex)
 
         End Sub
 
@@ -99,7 +99,7 @@ Namespace EE.Phasor.PC37_118
             Get
                 Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BinaryLength)
 
-                EndianOrder.SwapCopyBytes(m_flags, buffer, 0)
+                EndianOrder.BigEndian.CopyBytes(m_flags, buffer, 0)
 
                 Return buffer
             End Get

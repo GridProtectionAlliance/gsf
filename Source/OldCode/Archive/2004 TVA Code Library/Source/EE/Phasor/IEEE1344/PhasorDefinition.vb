@@ -46,7 +46,7 @@ Namespace EE.Phasor.IEEE1344
             m_type = binaryImage(startIndex)
 
             ' Last three bytes represent scaling factor
-            EndianOrder.SwapCopy(binaryImage, startIndex + 1, buffer, 0, BinaryLength - 1)
+            EndianOrder.BigEndian.Copy(binaryImage, startIndex + 1, buffer, 0, BinaryLength - 1)
 
             m_calFactor = BitConverter.ToInt32(buffer, 0)
 
@@ -105,7 +105,7 @@ Namespace EE.Phasor.IEEE1344
                 buffer(0) = m_type
 
                 ' Include calfactor
-                EndianOrder.SwapCopy(BitConverter.GetBytes(m_calFactor), 0, buffer, 1, 3)
+                EndianOrder.BigEndian.Copy(BitConverter.GetBytes(m_calFactor), 0, buffer, 1, 3)
 
                 Return buffer
             End Get

@@ -2,6 +2,10 @@
 '  DataSample.vb - Phasor data sample class
 '  Copyright © 2004 - TVA, all rights reserved - Gbtc
 '
+'  This class represents the protocol independent common implementation of a
+'  full one second sample of phasor data frames that can be sent or received
+'  from a PMU.
+'
 '  Build Environment: VB.NET, Visual Studio 2003
 '  Primary Developer: James R Carroll, System Analyst [TVA]
 '      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C

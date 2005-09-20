@@ -48,7 +48,7 @@ Namespace EE.Phasor
 
             MyBase.New(parent, digitalDefinition)
 
-            m_value = EndianOrder.ReverseToInt16(binaryImage, startIndex)
+            m_value = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex)
 
         End Sub
 
@@ -106,7 +106,7 @@ Namespace EE.Phasor
             Get
                 Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BodyLength)
 
-                EndianOrder.SwapCopyBytes(m_value, buffer, 0)
+                EndianOrder.BigEndian.CopyBytes(m_value, buffer, 0)
 
                 Return buffer
             End Get
