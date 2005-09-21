@@ -29,7 +29,7 @@ Namespace EE.Phasor.PDCstream
 
         Public Sub New(ByVal parent As DataCell)
 
-            ' Total possible number of PMU cells in a PDC block is 255
+            ' Total possible number of PMU cells in a PDC block is 256
             MyBase.New(Byte.MaxValue, True)
 
             m_parent = parent

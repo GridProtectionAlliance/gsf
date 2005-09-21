@@ -32,7 +32,7 @@ Namespace EE.Phasor.PDCstream
 
         Public Sub New(ByVal parent As PMUCellCollection)
 
-            MyBase.New(parent)
+            MyBase.New(parent, True)
 
         End Sub
 

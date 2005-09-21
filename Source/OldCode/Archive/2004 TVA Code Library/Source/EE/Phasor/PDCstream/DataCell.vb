@@ -16,6 +16,7 @@
 '*******************************************************************************************************
 
 Imports TVA.Interop
+Imports TVA.EE.Phasor.PDCstream.Common
 
 Namespace EE.Phasor.PDCstream
 
@@ -29,13 +30,9 @@ Namespace EE.Phasor.PDCstream
         Private m_iEEEFormatFlags As IEEEFormatFlags
         Private m_sampleNumber As Int16
 
-        Private Const MaximumPhasorValues As Integer = Byte.MaxValue + 1
-        Private Const MaximumAnalogValues As Integer = PDCstream.ReservedFlags.AnalogWordsMask + 1
-        Private Const MaximumDigitalValues As Integer = PDCstream.IEEEFormatFlags.DigitalWordsMask + 1
-
         Public Sub New(ByVal parent As IDataFrame, ByVal configurationCell As IConfigurationCell, ByVal sampleNumber As Int16)
 
-            MyBase.New(parent, configurationCell, MaximumPhasorValues, MaximumAnalogValues, MaximumDigitalValues)
+            MyBase.New(parent, True, configurationCell, MaximumPhasorValues, MaximumAnalogValues, MaximumDigitalValues)
 
             Dim x As Integer
 
@@ -71,7 +68,7 @@ Namespace EE.Phasor.PDCstream
 
         Public Sub New(ByVal parent As IDataFrame, ByVal configurationCell As IConfigurationCell, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
 
-            MyBase.New(parent, configurationCell, MaximumPhasorValues, MaximumAnalogValues, MaximumDigitalValues)
+            MyBase.New(parent, True, configurationCell, MaximumPhasorValues, MaximumAnalogValues, MaximumDigitalValues)
 
             ' Parse PDCstream specific image
             m_flags = binaryImage(startIndex)

@@ -35,7 +35,9 @@ Namespace EE.Phasor
 
         Public Sub Add(ByVal value As IChannel) Implements IChannelCollection.Add
 
-            If List.Count >= m_maximumCount Then Throw New OverflowException("Maximum " & InheritedType.Name & " item limit reached")
+            ' Note: Maximum count is often easier to specify using MaxValue which runs from 0 to MaxValue - so we allow
+            ' one extra item in the following check to keep from having to add 1 to all maximum count specifications
+            If List.Count > m_maximumCount Then Throw New OverflowException("Maximum " & InheritedType.Name & " item limit reached")
             List.Add(value)
 
         End Sub

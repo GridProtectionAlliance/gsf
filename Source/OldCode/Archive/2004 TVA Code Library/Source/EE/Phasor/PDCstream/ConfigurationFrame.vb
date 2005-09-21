@@ -30,9 +30,10 @@ Imports TVA.EE.Phasor.PDCstream.Common
 
 Namespace EE.Phasor.PDCstream
 
-    ' Note that there is typically only one instance of this class created used by any number of different threads and a request
-    ' can be made at anytime to "reload" the config file, so make sure all publically accessible methods in the class make proper
-    ' use of the internal reader-writer lock
+    ' Note that it is expected that the end user will typically create only one instance of this class per INI file for use by any
+    ' number of different threads and a request can be made at anytime to "reload" the config file, so we make sure all publically
+    ' accessible methods in the class make proper use of the internal reader-writer lock.  This also allows end user to place a
+    ' file-watcher on the INI file so class can "reload" config file when it's updated...
     Public Class ConfigurationFrame
 
         Inherits ConfigurationFrameBase
@@ -313,8 +314,10 @@ Namespace EE.Phasor.PDCstream
                 For x As Integer = 0 To Cells.Count - 1
                     With Cells(x)
                         .Offset = length
-                        ' TODO: calculate correct row length...
-                        length += 12 + FrequencyValue.CalculateBinaryLength(.FrequencyDefinition) ' + PhasorValue.BinaryLength * .PhasorDefinitions.Count
+                        length += 12 + FrequencyValue.CalculateBinaryLength(.FrequencyDefinition)
+                        For y As Integer = 0 To .PhasorDefinitions.Count - 1
+                            length += PhasorValue.CalculateBinaryLength(.PhasorDefinitions(y))
+                        Next
                     End With
                 Next
 
@@ -339,7 +342,7 @@ Namespace EE.Phasor.PDCstream
                 buffer(4) = StreamType
                 buffer(5) = RevisionNumber
                 EndianOrder.BigEndian.CopyBytes(SampleRate, buffer, 6)
-                EndianOrder.BigEndian.CopyBytes(RowLength, buffer, 8)
+                EndianOrder.BigEndian.CopyBytes(RowLength, buffer, 8) ' <-- Important: This step calculates all PMU row offsets!
                 EndianOrder.BigEndian.CopyBytes(PacketsPerSample, buffer, 12)
                 EndianOrder.BigEndian.CopyBytes(Convert.ToInt16(Cells.Count), buffer, 14)
 

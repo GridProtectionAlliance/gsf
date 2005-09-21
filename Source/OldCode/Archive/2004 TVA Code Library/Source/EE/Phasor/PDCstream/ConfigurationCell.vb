@@ -17,6 +17,7 @@
 
 Imports TVA.Interop
 Imports TVA.EE.Phasor.Common
+Imports TVA.EE.Phasor.PDCstream.Common
 
 Namespace EE.Phasor.PDCstream
 
@@ -29,7 +30,7 @@ Namespace EE.Phasor.PDCstream
 
         Public Sub New(ByVal parent As IConfigurationFrame)
 
-            MyBase.New(parent)
+            MyBase.New(parent, True, MaximumPhasorValues, MaximumAnalogValues, MaximumDigitalValues)
 
         End Sub
 
@@ -47,8 +48,7 @@ Namespace EE.Phasor.PDCstream
 
         Public Overrides ReadOnly Property MaximumStationNameLength() As Integer
             Get
-                ' The station name in the PDCstream is read from an INI file, so
-                ' there is no set limit
+                ' The station name in the PDCstream is read from an INI file, so there is no set limit
                 Return Integer.MaxValue
             End Get
         End Property

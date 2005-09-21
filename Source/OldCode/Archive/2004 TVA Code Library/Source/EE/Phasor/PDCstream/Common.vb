@@ -77,6 +77,10 @@ Namespace EE.Phasor.PDCstream
         Public Const SyncByte As Byte = &HAA
         Public Const DescriptorPacketFlag As Byte = &H0
 
+        Public Const MaximumPhasorValues As Integer = Byte.MaxValue
+        Public Const MaximumAnalogValues As Integer = ReservedFlags.AnalogWordsMask
+        Public Const MaximumDigitalValues As Integer = IEEEFormatFlags.DigitalWordsMask
+
     End Class
 
 End Namespace
