@@ -66,11 +66,26 @@ Namespace EE.Phasor.PDCstream
 
         End Sub
 
-        Public Sub New(ByVal parent As IDataFrame, ByVal configurationCell As IConfigurationCell, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+        ' This constructor satisfies ChannelCellBase class requirement:
+        '   Final dervived classes must expose Public Sub New(ByVal parent As IChannelFrame, ByVal state As ChannelFrameParsingState, ByVal index As Integer, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+        Public Sub New(ByVal parent As IDataFrame, ByVal state As DataFrame.DataFrameParsingState, ByVal index As Integer, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
 
-            MyBase.New(parent, True, configurationCell, MaximumPhasorValues, MaximumAnalogValues, MaximumDigitalValues)
+            MyBase.New( _
+                    parent, True, New DataCellParsingState(state.ConfigurationFrame.Cells(index), _
+                    GetType(PhasorValue), GetType(FrequencyValue), GetType(AnalogValue), GetType(DigitalValue), _
+                    MaximumPhasorValues, MaximumAnalogValues, MaximumDigitalValues), _
+                    binaryImage, startIndex)
 
-            ' Parse PDCstream specific image
+        End Sub
+
+        Protected Overrides Sub ParseHeader(ByVal state As Object, ByVal binaryImage() As Byte, ByVal startIndex As Integer)
+
+            ' We call base class parse header first so that all the necessary members get initialized properly...
+            MyBase.ParseHeader(state, binaryImage, startIndex)
+
+            Dim configurationCell As IConfigurationCell = CType(state, DataCellParsingState).ConfigurationCell
+
+            ' Parse PDCstream specific header image
             m_flags = binaryImage(startIndex)
 
             Dim analogWords As Byte = binaryImage(startIndex + 1)
@@ -84,9 +99,6 @@ Namespace EE.Phasor.PDCstream
             ' Leave word counts
             analogWords = (analogWords And ReservedFlags.AnalogWordsMask)
             digitalWords = (digitalWords And IEEEFormatFlags.DigitalWordsMask)
-
-            ' If analog words are fixed integer (16-bit) they must be aligned on a 32-bit boundry
-            If AnalogDataFormat = DataFormat.FixedInteger AndAlso analogWords Mod 2 <> 0 Then analogWords += 1
 
             ' Algorithm Case: Determine best course of action when stream counts don't match
             ' configuration file.  Think about what *will* happen when new data appears in
@@ -106,14 +118,12 @@ Namespace EE.Phasor.PDCstream
                 Throw New InvalidOperationException("Stream/Config File Mismatch: Phasor value count in stream (" & phasorWords & ") does not match defined count in configuration file (" & configurationCell.PhasorDefinitions.Count & ")")
             End If
 
+            ' TODO: If analog values get a clear definition in INI file at some point, we validate the number in the stream to the number in the config file...
             'If analogWords <> configurationCell.AnalogDefinitions.Count Then
             '    Throw New InvalidOperationException("Stream/Config File Mismatch: Analog value count in stream (" analogWords & ") does not match defined count in configuration file (" & configurationCell.
             'End If
 
             m_sampleNumber = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 4)
-
-            ' Parse binary data common to all data cells
-            ParseDataCell(binaryImage, startIndex + 6, GetType(PhasorValue), GetType(FrequencyValue), GetType(AnalogValue), GetType(DigitalValue))
 
         End Sub
 
@@ -142,10 +152,13 @@ Namespace EE.Phasor.PDCstream
             End Get
         End Property
 
-        Public ReadOnly Property SampleNumber() As Int16
+        Public Property SampleNumber() As Int16
             Get
                 Return m_sampleNumber
             End Get
+            Set(ByVal Value As Int16)
+                m_sampleNumber = Value
+            End Set
         End Property
 
         ' These properties make it easier to manage channel flags

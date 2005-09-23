@@ -37,9 +37,9 @@ Namespace EE.Phasor
         Private m_digitalDefinitions As DigitalDefinitionCollection
         Private m_sampleRate As Int16
 
-        Protected Sub New(ByVal parent As IConfigurationFrame, ByVal alignOnWordBoundry As Boolean, ByVal maximumPhasors As Integer, ByVal maximumAnalogs As Integer, ByVal maximumDigitals As Integer)
+        Protected Sub New(ByVal parent As IConfigurationFrame, ByVal alignOnDWordBoundry As Boolean, ByVal maximumPhasors As Integer, ByVal maximumAnalogs As Integer, ByVal maximumDigitals As Integer)
 
-            MyBase.New(parent, alignOnWordBoundry)
+            MyBase.New(parent, alignOnDWordBoundry)
 
             m_phasorDefinitions = New PhasorDefinitionCollection(maximumPhasors)
             m_analogDefinitions = New AnalogDefinitionCollection(maximumAnalogs)
@@ -47,9 +47,47 @@ Namespace EE.Phasor
 
         End Sub
 
-        Protected Sub New(ByVal parent As IConfigurationFrame, ByVal alignOnWordBoundry As Boolean, ByVal stationName As String, ByVal idCode As Int16, ByVal idLabel As String, ByVal phasorDefinitions As PhasorDefinitionCollection, ByVal frequencyDefinition As IFrequencyDefinition, ByVal analogDefinitions As AnalogDefinitionCollection, ByVal digitalDefinitions As DigitalDefinitionCollection, ByVal sampleRate As Int16)
+        Protected Sub New(ByVal parent As IConfigurationFrame, ByVal alignOnDWordBoundry As Boolean, ByVal state As Object, ByVal maximumPhasors As Integer, ByVal maximumAnalogs As Integer, ByVal maximumDigitals As Integer, ByVal phasorValueType As Type, ByVal frequencyValueType As Type, ByVal analogValueType As Type, ByVal digitalValueType As Type, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
 
-            MyBase.New(parent, alignOnWordBoundry)
+            Me.New(parent, AlignOnDWordBoundry, maximumPhasors, maximumAnalogs, maximumDigitals)
+
+            ParseHeader(state, binaryImage, startIndex)
+            startIndex += HeaderLength
+
+            Dim x As Integer
+
+            m_statusFlags = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex)
+            startIndex += 2
+
+            ' By very nature of the three protocols supporting the same order of phasors, frequency, dfreq, analog and digitals - we are
+            ' able to "automatically" parse this data out in the data cell base class - BEAUTIFUL!!!  This ability to parse the cell
+            ' contents is unique to the data cell - this same functionality can't be provided for the configuration cell since the
+            ' format of these cells varies greatly between protocols.
+            With m_configurationCell
+                For x = 0 To .PhasorDefinitions.Count - 1
+                    m_phasorValues.Add(Activator.CreateInstance(phasorValueType, New Object() {Me, .PhasorDefinitions(x), binaryImage, startIndex}))
+                    startIndex += m_phasorValues(x).BinaryLength
+                Next
+
+                m_frequencyValue = Activator.CreateInstance(frequencyValueType, New Object() {Me, .FrequencyDefinition, binaryImage, startIndex})
+                startIndex += m_frequencyValue.BinaryLength
+
+                For x = 0 To .AnalogDefinitions.Count - 1
+                    m_analogValues.Add(Activator.CreateInstance(analogValueType, New Object() {Me, .AnalogDefinitions(x), binaryImage, startIndex}))
+                    startIndex += m_analogValues(x).BinaryLength
+                Next
+
+                For x = 0 To .DigitalDefinitions.Count - 1
+                    m_digitalValues.Add(Activator.CreateInstance(digitalValueType, New Object() {Me, .DigitalDefinitions(x), binaryImage, startIndex}))
+                    startIndex += m_digitalValues(x).BinaryLength
+                Next
+            End With
+
+        End Sub
+
+        Protected Sub New(ByVal parent As IConfigurationFrame, ByVal alignOnDWordBoundry As Boolean, ByVal stationName As String, ByVal idCode As Int16, ByVal idLabel As String, ByVal phasorDefinitions As PhasorDefinitionCollection, ByVal frequencyDefinition As IFrequencyDefinition, ByVal analogDefinitions As AnalogDefinitionCollection, ByVal digitalDefinitions As DigitalDefinitionCollection, ByVal sampleRate As Int16)
+
+            MyBase.New(parent, AlignOnDWordBoundry)
 
             Me.StationName = stationName
             m_idCode = idCode
@@ -62,10 +100,12 @@ Namespace EE.Phasor
 
         End Sub
 
+        ' Final dervived classes must expose Public Sub New(ByVal parent As IChannelFrame, ByVal state As ChannelFrameParsingState, ByVal index As Integer, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+
         ' Derived classes are expected to expose a Public Sub New(ByVal configurationCell As IConfigurationCell)
         Protected Sub New(ByVal configurationCell As IConfigurationCell)
 
-            Me.New(configurationCell.Parent, configurationCell.AlignOnWordBoundry, configurationCell.StationName, configurationCell.IDCode, _
+            Me.New(configurationCell.Parent, configurationCell.AlignOnDWordBoundry, configurationCell.StationName, configurationCell.IDCode, _
                 configurationCell.IDLabel, configurationCell.PhasorDefinitions, configurationCell.FrequencyDefinition, _
                 configurationCell.AnalogDefinitions, configurationCell.DigitalDefinitions, configurationCell.SampleRate)
 

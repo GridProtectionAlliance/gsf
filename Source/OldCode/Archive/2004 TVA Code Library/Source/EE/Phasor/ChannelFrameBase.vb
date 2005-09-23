@@ -23,6 +23,23 @@ Imports TVA.EE.Phasor.Common
 
 Namespace EE.Phasor
 
+    ' TODO: Move class into its own file...
+    Public Class ChannelFrameParsingState
+
+        Public Cells As IChannelCellCollection
+        Public CellCount As Integer
+        Public CellType As Type
+
+        Public Sub New(ByVal cells As IChannelCellCollection, ByVal cellCount As Integer, ByVal cellType As Type)
+
+            Me.Cells = cells
+            Me.CellCount = cellCount
+            Me.CellType = cellType
+
+        End Sub
+
+    End Class
+
     ' This class represents the protocol independent common implementation of any frame of data that can be sent or received from a PMU.
     Public MustInherit Class ChannelFrameBase
 
@@ -59,10 +76,36 @@ Namespace EE.Phasor
 
         End Sub
 
+        ' Derived classes are expected to expose a Protected Sub New(ByVal state As ChannelFrameParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+        ' or equivalent and automatically pass in type parameter
+        Protected Sub New(ByVal state As ChannelFrameParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+
+            Me.New(state.Cells)
+
+            ' Parse protocol specific frame header and return cell count...
+            ParseHeader(state, binaryImage, startIndex)
+            startIndex += HeaderLength
+            ParseBody(state, binaryImage, startIndex)
+
+        End Sub
+
         ' Derived classes are expected to expose a Protected Sub New(ByVal channelFrame As IChannelFrame)
         Protected Sub New(ByVal channelFrame As IChannelFrame)
 
             Me.New(channelFrame.Cells, channelFrame.TimeTag, channelFrame.Milliseconds, channelFrame.SynchronizationIsValid, channelFrame.DataIsValid)
+
+        End Sub
+
+        Protected MustOverride Sub ParseHeader(ByVal state As ChannelFrameParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+
+        Protected Overridable Sub ParseBody(ByVal state As ChannelFrameParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+
+            ' Parse all frame cells
+            ' Note: Final derived frame cell classes must expose Public Sub New(ByVal parent As IChannelFrame, ByVal state As ChannelFrameParsingState, ByVal index As Integer, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+            For x As Integer = 0 To state.CellCount
+                Cells.Add(Activator.CreateInstance(state.CellType, New Object() {Me, state, x, binaryImage, startIndex}))
+                startIndex += Cells(x).BinaryLength
+            Next
 
         End Sub
 

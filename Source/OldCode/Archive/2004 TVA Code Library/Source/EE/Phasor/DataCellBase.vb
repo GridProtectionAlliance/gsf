@@ -21,6 +21,34 @@ Imports TVA.EE.Phasor.Common
 
 Namespace EE.Phasor
 
+    ' TODO: Make a base class associated with ChannelCellBase to derive from...
+    ' TODO: Move class into its own file...
+    Public Class DataCellParsingState
+
+        Public ConfigurationCell As IConfigurationCell
+        Public PhasorValueType As Type
+        Public FrequencyValueType As Type
+        Public AnalogValueType As Type
+        Public DigitalValueType As Type
+        Public MaximumPhasors As Integer
+        Public MaximumAnalogs As Integer
+        Public MaximumDigitals As Integer
+
+        Public Sub New(ByVal configurationCell As IConfigurationCell, ByVal phasorValueType As Type, ByVal frequencyValueType As Type, ByVal analogValueType As Type, ByVal digitalValueType As Type, ByVal maximumPhasors As Integer, ByVal maximumAnalogs As Integer, ByVal maximumDigitals As Integer)
+
+            Me.ConfigurationCell = configurationCell
+            Me.PhasorValueType = phasorValueType
+            Me.FrequencyValueType = frequencyValueType
+            Me.AnalogValueType = analogValueType
+            Me.DigitalValueType = digitalValueType
+            Me.MaximumPhasors = maximumPhasors
+            Me.MaximumAnalogs = maximumAnalogs
+            Me.MaximumDigitals = maximumDigitals
+
+        End Sub
+
+    End Class
+
     ' This class represents the protocol independent common implementation of a set of phasor related data values that can be sent or received from a PMU.
     Public MustInherit Class DataCellBase
 
@@ -34,9 +62,9 @@ Namespace EE.Phasor
         Private m_analogValues As AnalogValueCollection
         Private m_digitalValues As DigitalValueCollection
 
-        Protected Sub New(ByVal parent As IDataFrame, ByVal alignOnWordBoundry As Boolean, ByVal configurationCell As IConfigurationCell, ByVal maximumPhasors As Integer, ByVal maximumAnalogs As Integer, ByVal maximumDigitals As Integer)
+        Protected Sub New(ByVal parent As IDataFrame, ByVal alignOnDWordBoundry As Boolean, ByVal configurationCell As IConfigurationCell, ByVal maximumPhasors As Integer, ByVal maximumAnalogs As Integer, ByVal maximumDigitals As Integer)
 
-            MyBase.New(parent, alignOnWordBoundry)
+            MyBase.New(parent, alignOnDWordBoundry)
 
             m_configurationCell = configurationCell
             m_phasorValues = New PhasorValueCollection(maximumPhasors)
@@ -45,9 +73,59 @@ Namespace EE.Phasor
 
         End Sub
 
-        Protected Sub New(ByVal parent As IDataFrame, ByVal alignOnWordBoundry As Boolean, ByVal configurationCell As IConfigurationCell, ByVal statusFlags As Int16, ByVal phasorValues As PhasorValueCollection, ByVal frequencyValue As IFrequencyValue, ByVal analogValues As AnalogValueCollection, ByVal digitalValues As DigitalValueCollection)
+        Protected Sub New(ByVal parent As IDataFrame, ByVal alignOnDWordBoundry As Boolean, ByVal state As DataCellParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
 
-            MyBase.New(parent, alignOnWordBoundry)
+            MyBase.New(parent, alignOnDWordBoundry, state, binaryImage, startIndex)
+
+        End Sub
+
+        Protected Overrides Sub ParseHeader(ByVal state As Object, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+
+            ' We need to make sure the basic members are initialized before doing anything else...
+            With CType(state, DataCellParsingState)
+                m_configurationCell = .ConfigurationCell
+                m_phasorValues = New PhasorValueCollection(.MaximumPhasors)
+                m_analogValues = New AnalogValueCollection(.MaximumAnalogs)
+                m_digitalValues = New DigitalValueCollection(.MaximumDigitals)
+            End With
+
+        End Sub
+
+        Protected Overrides Sub ParseBody(ByVal state As Object, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+
+            Dim parsingState As DataCellParsingState = state
+            Dim x As Integer
+
+            m_statusFlags = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex)
+            startIndex += 2
+
+            ' By the very nature of the three protocols supporting the same order of phasors, frequency, dfreq, analog and digitals
+            ' we are able to "automatically" parse this data out in the data cell base class - BEAUTIFUL!!!
+            With m_configurationCell
+                For x = 0 To .PhasorDefinitions.Count - 1
+                    m_phasorValues.Add(Activator.CreateInstance(parsingState.PhasorValueType, New Object() {Me, .PhasorDefinitions(x), binaryImage, startIndex}))
+                    startIndex += m_phasorValues(x).BinaryLength
+                Next
+
+                m_frequencyValue = Activator.CreateInstance(parsingState.FrequencyValueType, New Object() {Me, .FrequencyDefinition, binaryImage, startIndex})
+                startIndex += m_frequencyValue.BinaryLength
+
+                For x = 0 To .AnalogDefinitions.Count - 1
+                    m_analogValues.Add(Activator.CreateInstance(parsingState.AnalogValueType, New Object() {Me, .AnalogDefinitions(x), binaryImage, startIndex}))
+                    startIndex += m_analogValues(x).BinaryLength
+                Next
+
+                For x = 0 To .DigitalDefinitions.Count - 1
+                    m_digitalValues.Add(Activator.CreateInstance(parsingState.DigitalValueType, New Object() {Me, .DigitalDefinitions(x), binaryImage, startIndex}))
+                    startIndex += m_digitalValues(x).BinaryLength
+                Next
+            End With
+
+        End Sub
+
+        Protected Sub New(ByVal parent As IDataFrame, ByVal alignOnDWordBoundry As Boolean, ByVal configurationCell As IConfigurationCell, ByVal statusFlags As Int16, ByVal phasorValues As PhasorValueCollection, ByVal frequencyValue As IFrequencyValue, ByVal analogValues As AnalogValueCollection, ByVal digitalValues As DigitalValueCollection)
+
+            MyBase.New(parent, alignOnDWordBoundry)
 
             m_configurationCell = configurationCell
             m_statusFlags = statusFlags
@@ -58,42 +136,12 @@ Namespace EE.Phasor
 
         End Sub
 
-        ' Derived classes are expected to expose a Public Sub New(ByVal parent As IDataFrame, ByVal configurationCell As IConfigurationCell, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
-        ' automatically pass in type parameters and use this function to parse cell contents after header has been parsed
-        ' This function is used to parse binary data cell contents for any data cell
-        Protected Sub ParseDataCell(ByVal binaryImage As Byte(), ByVal startIndex As Integer, ByVal phasorValueType As Type, ByVal frequencyValueType As Type, ByVal analogValueType As Type, ByVal digitalValueType As Type)
-
-            Dim x As Integer
-
-            m_statusFlags = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex)
-            startIndex += 2
-
-            With m_configurationCell
-                For x = 0 To .PhasorDefinitions.Count - 1
-                    m_phasorValues.Add(Activator.CreateInstance(phasorValueType, New Object() {Me, .PhasorDefinitions(x), binaryImage, startIndex}))
-                    startIndex += m_phasorValues(x).BinaryLength
-                Next
-
-                m_frequencyValue = Activator.CreateInstance(frequencyValueType, New Object() {Me, .FrequencyDefinition, binaryImage, startIndex})
-                startIndex += m_frequencyValue.BinaryLength
-
-                For x = 0 To .AnalogDefinitions.Count - 1
-                    m_analogValues.Add(Activator.CreateInstance(analogValueType, New Object() {Me, .AnalogDefinitions(x), binaryImage, startIndex}))
-                    startIndex += m_analogValues(x).BinaryLength
-                Next
-
-                For x = 0 To .DigitalDefinitions.Count - 1
-                    m_digitalValues.Add(Activator.CreateInstance(digitalValueType, New Object() {Me, .DigitalDefinitions(x), binaryImage, startIndex}))
-                    startIndex += m_digitalValues(x).BinaryLength
-                Next
-            End With
-
-        End Sub
+        ' Final dervived classes must expose Public Sub New(ByVal parent As IChannelFrame, ByVal state As ChannelFrameParsingState, ByVal index As Integer, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
 
         ' Derived classes are expected to expose a Public Sub New(ByVal dataCell As IDataCell)
         Protected Sub New(ByVal dataCell As IDataCell)
 
-            Me.New(dataCell.Parent, dataCell.AlignOnWordBoundry, dataCell.ConfigurationCell, dataCell.StatusFlags, dataCell.PhasorValues, _
+            Me.New(dataCell.Parent, dataCell.AlignOnDWordBoundry, dataCell.ConfigurationCell, dataCell.StatusFlags, dataCell.PhasorValues, _
                 dataCell.FrequencyValue, dataCell.AnalogValues, dataCell.DigitalValues)
 
         End Sub

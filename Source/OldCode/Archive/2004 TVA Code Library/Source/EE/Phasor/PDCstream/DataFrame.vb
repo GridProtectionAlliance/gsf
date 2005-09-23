@@ -18,6 +18,7 @@
 Imports System.Buffer
 Imports TVA.Interop
 Imports TVA.Shared.Math
+Imports TVA.EE.Phasor.PDCstream.Common
 
 Namespace EE.Phasor.PDCstream
 
@@ -27,8 +28,6 @@ Namespace EE.Phasor.PDCstream
         Inherits DataFrameBase
 
         Private m_index As Int16
-        Private m_dataCellCount As Int16
-        Private m_frameLength As Int16
 
         Public Sub New()
 
@@ -45,7 +44,22 @@ Namespace EE.Phasor.PDCstream
 
         Public Sub New(ByVal configurationFrame As IConfigurationFrame, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
 
-            MyBase.New(New DataCellCollection, configurationFrame, binaryImage, startIndex, GetType(DataCell))
+            MyBase.New(New DataFrameParsingState(New DataCellCollection, GetType(DataCell), configurationFrame), binaryImage, startIndex)
+
+        End Sub
+
+        Public Sub New(ByVal dataFrame As IDataFrame)
+
+            MyBase.New(dataFrame)
+
+        End Sub
+
+        Protected Overrides Sub ParseHeader(ByVal state As ChannelFrameParsingState, ByVal binaryImage() As Byte, ByVal startIndex As Integer)
+
+            Dim configurationFrame As IConfigurationFrame = CType(state, DataFrameParsingState).ConfigurationFrame
+
+            Dim dataCellCount As Int16
+            Dim frameLength As Int16
 
             If binaryImage(startIndex) <> Common.SyncByte Then
                 Throw New InvalidOperationException("Bad Data Stream: Expected sync byte &HAA as first byte in data frame, got " & binaryImage(startIndex).ToString("x"c).PadLeft(2, "0"c))
@@ -54,26 +68,20 @@ Namespace EE.Phasor.PDCstream
             ' TODO: check byte 1 - is version??
             'Buffer(1) = Convert.ToByte(1)
 
-            m_frameLength = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 2)
+            frameLength = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 2)
             TimeTag = New Unix.TimeTag(EndianOrder.BigEndian.ToInt32(binaryImage, startIndex + 4))
             m_index = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 8)
-            m_dataCellCount = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 10)
+            dataCellCount = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 10)
 
             ' TODO: validate frame length??
 
-            If m_dataCellCount <> Cells.Count Then
-                Throw New InvalidOperationException("Stream/Config File Mismatch: PMU count (" & m_dataCellCount & ") in stream does not match defined count in configuration file (" & Cells.Count & ")")
+            If dataCellCount <> configurationFrame.Cells.Count Then
+                Throw New InvalidOperationException("Stream/Config File Mismatch: PMU count (" & dataCellCount & ") in stream does not match defined count in configuration file (" & configurationFrame.Cells.Count & ")")
             End If
 
             If Not ChecksumIsValid(binaryImage, startIndex) Then
                 Throw New InvalidOperationException("Bad Data Stream: Invalid buffer image detected - check sum of " & InheritedType.FullName & " did not match")
             End If
-
-        End Sub
-
-        Public Sub New(ByVal dataFrame As IDataFrame)
-
-            MyBase.New(dataFrame)
 
         End Sub
 
@@ -98,13 +106,34 @@ Namespace EE.Phasor.PDCstream
             End Set
         End Property
 
-        Public Property DataCellCount() As Int16
+        'Public Property DataCellCount() As Int16
+        '    Get
+        '        Return m_dataCellCount
+        '    End Get
+        '    Set(ByVal Value As Int16)
+        '        m_dataCellCount = Value
+        '    End Set
+        'End Property
+
+        Protected Overrides ReadOnly Property HeaderLength() As Int16
             Get
-                Return m_dataCellCount
+                Return 12
             End Get
-            Set(ByVal Value As Int16)
-                m_dataCellCount = Value
-            End Set
+        End Property
+
+        Protected Overrides ReadOnly Property HeaderImage() As Byte()
+            Get
+                Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), HeaderLength)
+
+                buffer(0) = SyncByte
+                buffer(1) = Convert.ToByte(1)
+                EndianOrder.BigEndian.CopyBytes(Convert.ToInt16(buffer.Length \ 2), buffer, 2)
+                EndianOrder.BigEndian.CopyBytes(Convert.ToUInt32(TimeTag.Value), buffer, 4)
+                EndianOrder.BigEndian.CopyBytes(Convert.ToInt16(m_index), buffer, 8)
+                EndianOrder.BigEndian.CopyBytes(Convert.ToInt16(Cells.Count), buffer, 10)
+
+                Return buffer
+            End Get
         End Property
 
         Protected Overrides Function CalculateChecksum(ByVal buffer() As Byte, ByVal offset As Integer, ByVal length As Integer) As Int16

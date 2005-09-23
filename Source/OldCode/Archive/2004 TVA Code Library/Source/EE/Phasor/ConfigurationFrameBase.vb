@@ -47,6 +47,14 @@ Namespace EE.Phasor
 
         End Sub
 
+        ' Derived classes are expected to expose a Public Sub New(ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+        ' and automatically pass in type parameter
+        Protected Sub New(ByVal cells As IChannelCellCollection, ByVal cellType As Type, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+
+            MyBase.New(cells, cellType, Nothing, binaryImage, startIndex)
+
+        End Sub
+
         ' Derived classes are expected to expose a Public Sub New(ByVal configurationFrame As IConfigurationFrame)
         Protected Sub New(ByVal configurationFrame As IConfigurationFrame)
 

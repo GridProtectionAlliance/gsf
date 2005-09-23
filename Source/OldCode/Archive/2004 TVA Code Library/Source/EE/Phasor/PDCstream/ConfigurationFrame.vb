@@ -325,6 +325,10 @@ Namespace EE.Phasor.PDCstream
             End Get
         End Property
 
+        Protected Overrides Function ParseHeader(ByVal state As Object, ByVal binaryImage() As Byte, ByVal startIndex As Integer) As Integer
+
+        End Function
+
         Protected Overrides ReadOnly Property HeaderLength() As Short
             Get
                 Return 16

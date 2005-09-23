@@ -19,6 +19,23 @@ Imports TVA.Interop
 
 Namespace EE.Phasor
 
+    ' TODO: Move class into its own file...
+    Public Class DataFrameParsingState
+
+        Inherits ChannelFrameParsingState
+
+        Public ConfigurationFrame As IConfigurationFrame
+
+        Public Sub New(ByVal cells As DataCellCollection, ByVal cellType As Type, ByVal configurationFrame As IConfigurationFrame)
+
+            MyBase.New(cells, configurationFrame.Cells.Count, cellType)
+
+            Me.ConfigurationFrame = configurationFrame
+
+        End Sub
+
+    End Class
+
     ' This class represents the protocol independent common implementation of a data frame that can be sent or received from a PMU.
     Public MustInherit Class DataFrameBase
 
@@ -42,23 +59,12 @@ Namespace EE.Phasor
         End Sub
 
         ' Derived classes are expected to expose a Public Sub New(ByVal configurationFrame As IConfigurationFrame, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
-        ' and automatically pass in type parameter
-        Protected Sub New(ByVal cells As DataCellCollection, ByVal configurationFrame As IConfigurationFrame, ByVal binaryImage As Byte(), ByVal startIndex As Integer, ByVal dataCellType As Type)
+        ' and automatically pass in cells collection and type parameter
+        Protected Sub New(ByVal state As DataFrameParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
 
-            Me.New(cells)
+            MyBase.New(state, binaryImage, startIndex)
 
-            ' Bypass header data
-            startIndex += HeaderLength
-
-            m_configurationFrame = configurationFrame
-
-            With m_configurationFrame
-                For x As Integer = 0 To .Cells.Count - 1
-                    ' TODO: Validate that startIndex doesn't exceed binaryImage length - check all binaryImage code loops for this...
-                    Cells.Add(Activator.CreateInstance(dataCellType, New Object() {Me, .Cells(x), binaryImage, startIndex}))
-                    startIndex += Cells(x).BinaryLength
-                Next
-            End With
+            m_configurationFrame = ConfigurationFrame
 
         End Sub
 
