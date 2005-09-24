@@ -70,9 +70,9 @@ Namespace EE.Phasor.PDCstream
         '   ' Final dervived classes must expose Public Sub New(ByVal parent As IChannelFrame, ByVal state As IChannelFrameParsingState, ByVal index As Integer, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
         Public Sub New(ByVal parent As IDataFrame, ByVal state As DataFrameParsingState, ByVal index As Integer, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
 
-            MyBase.New(parent, True, state.ConfigurationFrame.Cells(index), MaximumPhasorValues, MaximumAnalogValues, MaximumDigitalValues, _
-                    New DataCellParsingState(GetType(PhasorValue), GetType(FrequencyValue), GetType(AnalogValue), GetType(DigitalValue)), _
-                    binaryImage, startIndex)
+            MyBase.New(parent, True, MaximumPhasorValues, MaximumAnalogValues, MaximumDigitalValues, New DataCellParsingState( _
+                GetType(PhasorValue), GetType(FrequencyValue), GetType(AnalogValue), GetType(DigitalValue), state.ConfigurationFrame.Cells(index)), _
+                binaryImage, startIndex)
 
         End Sub
 

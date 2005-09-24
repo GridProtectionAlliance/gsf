@@ -24,13 +24,12 @@ Namespace EE.Phasor
         Implements IChannelFrameParsingState
 
         Private m_cells As IChannelCellCollection
-        Private m_cellCount As Integer
         Private m_cellType As Type
+        Private m_cellCount As Integer
 
-        Public Sub New(ByVal cells As IChannelCellCollection, ByVal cellCount As Integer, ByVal cellType As Type)
+        Public Sub New(ByVal cells As IChannelCellCollection, ByVal cellType As Type)
 
             m_cells = cells
-            m_cellCount = cellCount
             m_cellType = cellType
 
         End Sub
@@ -41,16 +40,19 @@ Namespace EE.Phasor
             End Get
         End Property
 
-        Public ReadOnly Property CellCount() As Integer Implements IChannelFrameParsingState.CellCount
-            Get
-                Return m_cellCount
-            End Get
-        End Property
-
         Public ReadOnly Property CellType() As Type Implements IChannelFrameParsingState.CellType
             Get
                 Return m_cellType
             End Get
+        End Property
+
+        Public Property CellCount() As Integer Implements IChannelFrameParsingState.CellCount
+            Get
+                Return m_cellCount
+            End Get
+            Set(ByVal Value As Integer)
+                m_cellCount = Value
+            End Set
         End Property
 
     End Class

@@ -27,8 +27,9 @@ Namespace EE.Phasor
 
         Public Sub New(ByVal cells As DataCellCollection, ByVal cellType As Type, ByVal configurationFrame As IConfigurationFrame)
 
-            MyBase.New(cells, configurationFrame.Cells.Count, cellType)
+            MyBase.New(cells, cellType)
 
+            CellCount = configurationFrame.Cells.Count
             m_configurationFrame = configurationFrame
 
         End Sub

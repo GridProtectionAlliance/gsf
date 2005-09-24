@@ -23,9 +23,9 @@ Namespace EE.Phasor
         Inherits ChannelFrameParsingStateBase
         Implements IConfigurationFrameParsingState
 
-        Public Sub New(ByVal cells As ConfigurationCellCollection, ByVal cellCount As Integer, ByVal cellType As Type)
+        Public Sub New(ByVal cells As ConfigurationCellCollection, ByVal cellType As Type)
 
-            MyBase.New(cells, cellCount, cellType)
+            MyBase.New(cells, cellType)
 
         End Sub
 

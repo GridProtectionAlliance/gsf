@@ -23,19 +23,35 @@ Namespace EE.Phasor
         Inherits ChannelParsingStateBase
         Implements IChannelCellParsingState
 
-        Private m_parent As IChannelFrame
+        Private m_phasorCount As Integer
+        Private m_analogCount As Integer
+        Private m_digitalCount As Integer
 
-        Protected Sub New(ByVal parent As IChannelFrame)
-
-            MyBase.New()
-            m_parent = parent
-
-        End Sub
-
-        Public ReadOnly Property Parent() As IChannelFrame Implements IChannelCellParsingState.Parent
+        Public Property PhasorCount() As Integer Implements IChannelCellParsingState.PhasorCount
             Get
-                Return m_parent
+                Return m_phasorCount
             End Get
+            Set(ByVal Value As Integer)
+                m_phasorCount = Value
+            End Set
+        End Property
+
+        Public Property AnalogCount() As Integer Implements IChannelCellParsingState.AnalogCount
+            Get
+                Return m_analogCount
+            End Get
+            Set(ByVal Value As Integer)
+                m_analogCount = Value
+            End Set
+        End Property
+
+        Public Property DigitalCount() As Integer Implements IChannelCellParsingState.DigitalCount
+            Get
+                Return m_digitalCount
+            End Get
+            Set(ByVal Value As Integer)
+                m_digitalCount = Value
+            End Set
         End Property
 
     End Class

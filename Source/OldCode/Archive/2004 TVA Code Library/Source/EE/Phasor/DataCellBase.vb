@@ -21,26 +21,6 @@ Imports TVA.EE.Phasor.Common
 
 Namespace EE.Phasor
 
-    ' TODO: Make a base class associated with ChannelCellBase to derive from...
-    ' TODO: Move class into its own file...
-    Public Class DataCellParsingState
-
-        Public PhasorValueType As Type
-        Public FrequencyValueType As Type
-        Public AnalogValueType As Type
-        Public DigitalValueType As Type
-
-        Public Sub New(ByVal phasorValueType As Type, ByVal frequencyValueType As Type, ByVal analogValueType As Type, ByVal digitalValueType As Type)
-
-            Me.PhasorValueType = phasorValueType
-            Me.FrequencyValueType = frequencyValueType
-            Me.AnalogValueType = analogValueType
-            Me.DigitalValueType = digitalValueType
-
-        End Sub
-
-    End Class
-
     ' This class represents the protocol independent common implementation of a set of phasor related data values that can be sent or received from a PMU.
     Public MustInherit Class DataCellBase
 
@@ -65,9 +45,9 @@ Namespace EE.Phasor
 
         End Sub
 
-        Protected Sub New(ByVal parent As IDataFrame, ByVal alignOnDWordBoundry As Boolean, ByVal configurationCell As IConfigurationCell, ByVal maximumPhasors As Integer, ByVal maximumAnalogs As Integer, ByVal maximumDigitals As Integer, ByVal state As DataCellParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+        Protected Sub New(ByVal parent As IDataFrame, ByVal alignOnDWordBoundry As Boolean, ByVal maximumPhasors As Integer, ByVal maximumAnalogs As Integer, ByVal maximumDigitals As Integer, ByVal state As IDataCellParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
 
-            Me.New(parent, alignOnDWordBoundry, configurationCell, maximumPhasors, maximumAnalogs, maximumDigitals)
+            Me.New(parent, alignOnDWordBoundry, state.ConfigurationCell, maximumPhasors, maximumAnalogs, maximumDigitals)
             ParseBinaryImage(state, binaryImage, startIndex)
 
         End Sub
@@ -178,7 +158,7 @@ Namespace EE.Phasor
 
         Protected Overrides Sub ParseBodyImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByRef startIndex As Integer)
 
-            Dim parsingState As DataCellParsingState = state
+            Dim parsingState As IDataCellParsingState = state
             Dim x As Integer
 
             m_statusFlags = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex)

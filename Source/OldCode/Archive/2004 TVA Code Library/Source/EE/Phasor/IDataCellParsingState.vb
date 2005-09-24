@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  IChannelFrameParsingState.vb - Channel data frame parsing state interface
+'  IDataCellParsingState.vb - Data cell parsing state interface
 '  Copyright © 2005 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2003
@@ -10,23 +10,27 @@
 '
 '  Code Modification History:
 '  -----------------------------------------------------------------------------------------------------
-'  01/14/2005 - James R Carroll
+'  04/16/2005 - James R Carroll
 '       Initial version of source generated
 '
 '*******************************************************************************************************
 
 Namespace EE.Phasor
 
-    ' This interface represents the protocol independent parsing state of any frame of data.
-    Public Interface IChannelFrameParsingState
+    ' This interface represents the protocol independent parsing state of a set of phasor related data values.
+    Public Interface IDataCellParsingState
 
-        Inherits IChannelParsingState
+        Inherits IChannelCellParsingState
 
-        ReadOnly Property Cells() As IChannelCellCollection
+        ReadOnly Property ConfigurationCell() As IConfigurationCell
 
-        ReadOnly Property CellType() As Type
+        ReadOnly Property PhasorValueType() As Type
 
-        Property CellCount() As Integer
+        ReadOnly Property FrequencyValueType() As Type
+
+        ReadOnly Property AnalogValueType() As Type
+
+        ReadOnly Property DigitalValueType() As Type
 
     End Interface
 

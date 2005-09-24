@@ -201,6 +201,11 @@
                     BuildAction = "Compile"
                 />
                 <File
+                    RelPath = "ConfigurationCellParsingState.vb"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
                     RelPath = "ConfigurationFrameBase.vb"
                     SubType = "Code"
                     BuildAction = "Compile"
@@ -222,6 +227,11 @@
                 />
                 <File
                     RelPath = "DataCellCollection.vb"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "DataCellParsingState.vb"
                     SubType = "Code"
                     BuildAction = "Compile"
                 />
@@ -351,6 +361,11 @@
                     BuildAction = "Compile"
                 />
                 <File
+                    RelPath = "IConfigurationCellParsingState.vb"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
                     RelPath = "IConfigurationFrame.vb"
                     SubType = "Code"
                     BuildAction = "Compile"
@@ -362,6 +377,11 @@
                 />
                 <File
                     RelPath = "IDataCell.vb"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "IDataCellParsingState.vb"
                     SubType = "Code"
                     BuildAction = "Compile"
                 />

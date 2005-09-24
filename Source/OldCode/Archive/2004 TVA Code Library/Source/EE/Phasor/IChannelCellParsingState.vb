@@ -22,7 +22,11 @@ Namespace EE.Phasor
 
         Inherits IChannelParsingState
 
-        ReadOnly Property Parent() As IChannelFrame
+        Property PhasorCount() As Integer
+
+        Property AnalogCount() As Integer
+
+        Property DigitalCount() As Integer
 
     End Interface
 
