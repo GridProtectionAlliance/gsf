@@ -1,6 +1,6 @@
 '*******************************************************************************************************
 '  ChannelDefinitionBase.vb - Channel data definition base class
-'  Copyright © 2004 - TVA, all rights reserved - Gbtc
+'  Copyright © 2005 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2003
 '  Primary Developer: James R Carroll, System Analyst [TVA]
@@ -18,8 +18,6 @@
 Imports System.Text
 
 Namespace EE.Phasor
-
-    ' TODO: Change scaling factor to be floating point (can't figure why this is integer)
 
     ' This class represents the common implementation of the protocol independent definition of any kind of data.
     Public MustInherit Class ChannelDefinitionBase

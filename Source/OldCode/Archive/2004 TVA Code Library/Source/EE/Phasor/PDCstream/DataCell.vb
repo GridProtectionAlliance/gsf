@@ -1,6 +1,6 @@
 '*******************************************************************************************************
 '  DataCell.vb - PDCstream PMU Data Cell
-'  Copyright © 2004 - TVA, all rights reserved - Gbtc
+'  Copyright © 2005 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2003
 '  Primary Developer: James R Carroll, System Analyst [TVA]
@@ -67,63 +67,12 @@ Namespace EE.Phasor.PDCstream
         End Sub
 
         ' This constructor satisfies ChannelCellBase class requirement:
-        '   Final dervived classes must expose Public Sub New(ByVal parent As IChannelFrame, ByVal state As ChannelFrameParsingState, ByVal index As Integer, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
-        Public Sub New(ByVal parent As IDataFrame, ByVal state As DataFrame.DataFrameParsingState, ByVal index As Integer, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+        '   ' Final dervived classes must expose Public Sub New(ByVal parent As IChannelFrame, ByVal state As IChannelFrameParsingState, ByVal index As Integer, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+        Public Sub New(ByVal parent As IDataFrame, ByVal state As DataFrameParsingState, ByVal index As Integer, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
 
-            MyBase.New( _
-                    parent, True, New DataCellParsingState(state.ConfigurationFrame.Cells(index), _
-                    GetType(PhasorValue), GetType(FrequencyValue), GetType(AnalogValue), GetType(DigitalValue), _
-                    MaximumPhasorValues, MaximumAnalogValues, MaximumDigitalValues), _
+            MyBase.New(parent, True, state.ConfigurationFrame.Cells(index), MaximumPhasorValues, MaximumAnalogValues, MaximumDigitalValues, _
+                    New DataCellParsingState(GetType(PhasorValue), GetType(FrequencyValue), GetType(AnalogValue), GetType(DigitalValue)), _
                     binaryImage, startIndex)
-
-        End Sub
-
-        Protected Overrides Sub ParseHeader(ByVal state As Object, ByVal binaryImage() As Byte, ByVal startIndex As Integer)
-
-            ' We call base class parse header first so that all the necessary members get initialized properly...
-            MyBase.ParseHeader(state, binaryImage, startIndex)
-
-            Dim configurationCell As IConfigurationCell = CType(state, DataCellParsingState).ConfigurationCell
-
-            ' Parse PDCstream specific header image
-            m_flags = binaryImage(startIndex)
-
-            Dim analogWords As Byte = binaryImage(startIndex + 1)
-            Dim digitalWords As Byte = binaryImage(startIndex + 2)
-            Dim phasorWords As Byte = binaryImage(startIndex + 3)
-
-            ' Strip off IEEE flags
-            m_reservedFlags = (analogWords And Not ReservedFlags.AnalogWordsMask)
-            m_iEEEFormatFlags = (digitalWords And Not IEEEFormatFlags.DigitalWordsMask)
-
-            ' Leave word counts
-            analogWords = (analogWords And ReservedFlags.AnalogWordsMask)
-            digitalWords = (digitalWords And IEEEFormatFlags.DigitalWordsMask)
-
-            ' Algorithm Case: Determine best course of action when stream counts don't match
-            ' configuration file.  Think about what *will* happen when new data appears in
-            ' the stream that's not in the config file - you could raise an event notifying
-            ' consumer about the mismatch instead of raising an exception - could even make
-            ' a boolean property that would allow either case.  The important thing to consider
-            ' is that to parse the cell images you have to have a defined definition (see base
-            ' class "Phasor.DataCellBase.ParseDataCell" - more in stream than in config file
-            ' and you won't get the new value, too few and you don't have enough definitions -
-            ' that would be bad - either way the definitions won't line up with the appropriate
-            ' data value and you won't know which one is missing or added.  I can't change the
-            ' protocol so this is enough argument to just raise an error for config file/stream
-            ' mismatch.  So for now we'll just throw an exception and deal with consequences :)
-            ' Note that this only applies to PDCstream protocol
-
-            If phasorWords <> configurationCell.PhasorDefinitions.Count Then
-                Throw New InvalidOperationException("Stream/Config File Mismatch: Phasor value count in stream (" & phasorWords & ") does not match defined count in configuration file (" & configurationCell.PhasorDefinitions.Count & ")")
-            End If
-
-            ' TODO: If analog values get a clear definition in INI file at some point, we validate the number in the stream to the number in the config file...
-            'If analogWords <> configurationCell.AnalogDefinitions.Count Then
-            '    Throw New InvalidOperationException("Stream/Config File Mismatch: Analog value count in stream (" analogWords & ") does not match defined count in configuration file (" & configurationCell.
-            'End If
-
-            m_sampleNumber = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 4)
 
         End Sub
 
@@ -198,6 +147,8 @@ Namespace EE.Phasor.PDCstream
                 Else
                     m_iEEEFormatFlags = m_iEEEFormatFlags And Not IEEEFormatFlags.Frequency
                 End If
+
+                ConfigurationCell.FrequencyDefinition.DataFormat = Value
             End Set
         End Property
 
@@ -211,6 +162,8 @@ Namespace EE.Phasor.PDCstream
                 Else
                     m_iEEEFormatFlags = m_iEEEFormatFlags And Not IEEEFormatFlags.Analog
                 End If
+
+                ConfigurationCell.AnalogDefinitions.DataFormat = Value
             End Set
         End Property
 
@@ -224,6 +177,8 @@ Namespace EE.Phasor.PDCstream
                 Else
                     m_iEEEFormatFlags = m_iEEEFormatFlags And Not IEEEFormatFlags.Phasors
                 End If
+
+                ConfigurationCell.PhasorDefinitions.DataFormat = Value
             End Set
         End Property
 
@@ -237,6 +192,8 @@ Namespace EE.Phasor.PDCstream
                 Else
                     m_iEEEFormatFlags = m_iEEEFormatFlags And Not IEEEFormatFlags.Coordinates
                 End If
+
+                ConfigurationCell.PhasorDefinitions.CoordinateFormat = Value
             End Set
         End Property
 
@@ -379,6 +336,55 @@ Namespace EE.Phasor.PDCstream
                 Return buffer
             End Get
         End Property
+
+        Protected Overrides Sub ParseHeaderImage(ByVal state As IChannelParsingState, ByVal binaryImage() As Byte, ByRef startIndex As Integer)
+
+            ' Parse PDCstream specific header image
+            m_flags = binaryImage(startIndex)
+
+            Dim analogWords As Byte = binaryImage(startIndex + 1)
+            Dim digitalWords As Byte = binaryImage(startIndex + 2)
+            Dim phasorWords As Byte = binaryImage(startIndex + 3)
+
+            ' Strip off IEEE flags
+            m_reservedFlags = (analogWords And Not ReservedFlags.AnalogWordsMask)
+            m_iEEEFormatFlags = (digitalWords And Not IEEEFormatFlags.DigitalWordsMask)
+
+            ' Leave word counts
+            analogWords = (analogWords And ReservedFlags.AnalogWordsMask)
+            digitalWords = (digitalWords And IEEEFormatFlags.DigitalWordsMask)
+
+            ' Algorithm Case: Determine best course of action when stream counts don't match
+            ' configuration file.  Think about what *will* happen when new data appears in
+            ' the stream that's not in the config file - you could raise an event notifying
+            ' consumer about the mismatch instead of raising an exception - could even make
+            ' a boolean property that would allow either case.  The important thing to consider
+            ' is that to parse the cell images you have to have a defined definition (see base
+            ' class "Phasor.DataCellBase.ParseDataCell" - more in stream than in config file
+            ' and you won't get the new value, too few and you don't have enough definitions -
+            ' that would be bad - either way the definitions won't line up with the appropriate
+            ' data value and you won't know which one is missing or added.  I can't change the
+            ' protocol so this is enough argument to just raise an error for config file/stream
+            ' mismatch.  So for now we'll just throw an exception and deal with consequences :)
+            ' Note that this only applies to PDCstream protocol
+
+            If phasorWords <> ConfigurationCell.PhasorDefinitions.Count Then
+                Throw New InvalidOperationException("Stream/Config File Mismatch: Phasor value count in stream (" & phasorWords & ") does not match defined count in configuration file (" & ConfigurationCell.PhasorDefinitions.Count & ")")
+            End If
+
+            ' TODO: If analog values get a clear definition in INI file at some point, we can validate the number in the stream to the number in the config file...
+            'If analogWords <> ConfigurationCell.AnalogDefinitions.Count Then
+            '    Throw New InvalidOperationException("Stream/Config File Mismatch: Analog value count in stream (" analogWords & ") does not match defined count in configuration file (" & ConfigurationCell.AnalogDefinitions.Count & ")")
+            'End If
+
+            ' TODO: If digital values get a clear definition in INI file at some point, we can validate the number in the stream to the number in the config file...
+            'If digitalWords <> ConfigurationCell.DigitalDefinitions.Count Then
+            '    Throw New InvalidOperationException("Stream/Config File Mismatch: Digital value count in stream (" digitalWords & ") does not match defined count in configuration file (" & ConfigurationCell.DigitalDefinitions.Count & ")")
+            'End If
+
+            m_sampleNumber = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 4)
+
+        End Sub
 
     End Class
 

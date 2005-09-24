@@ -1,6 +1,6 @@
 '*******************************************************************************************************
 '  ChannelCollectionBase.vb - Channel data collection base class
-'  Copyright © 2004 - TVA, all rights reserved - Gbtc
+'  Copyright © 2005 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2003
 '  Primary Developer: James R Carroll, System Analyst [TVA]
@@ -15,11 +15,14 @@
 '
 '*******************************************************************************************************
 
+Imports System.ComponentModel
 Imports TVA.EE.Phasor.Common
 
 Namespace EE.Phasor
 
     ' This class represents the common implementation of the protocol independent representation of a collection of any kind of data.
+    ' By having our collections implement IChannel (inherited via IChannelCollection), we have the benefit of providing a binary image
+    ' of the entire collection
     Public MustInherit Class ChannelCollectionBase
 
         Inherits CollectionBase
@@ -35,8 +38,8 @@ Namespace EE.Phasor
 
         Public Sub Add(ByVal value As IChannel) Implements IChannelCollection.Add
 
-            ' Note: Maximum count is often easier to specify using MaxValue which runs from 0 to MaxValue - so we allow
-            ' one extra item in the following check to keep from having to add 1 to all maximum count specifications
+            ' Note: Maximum count is much easier to specify by using <value>.MaxValue which runs from 0 to MaxValue (i.e., MaxValue + 1)
+            ' so we allow one extra item in the following check to keep from having to add 1 to all maximum count specifications
             If List.Count > m_maximumCount Then Throw New OverflowException("Maximum " & InheritedType.Name & " item limit reached")
             List.Add(value)
 
@@ -55,6 +58,13 @@ Namespace EE.Phasor
                 Return Me
             End Get
         End Property
+
+        <EditorBrowsable(EditorBrowsableState.Never)> _
+        Public Overridable Sub ParseBinaryImage(ByVal state As IChannelParsingState, ByVal binaryImage() As Byte, ByVal startIndex As Integer) Implements IChannelCollection.ParseBinaryImage
+
+            Throw New NotImplementedException("Binary images are not intended to be parsed at a collection level")
+
+        End Sub
 
         Public Overridable ReadOnly Property BinaryLength() As Int16 Implements IChannelCollection.BinaryLength
             Get

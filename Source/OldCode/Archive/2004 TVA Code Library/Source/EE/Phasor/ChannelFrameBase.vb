@@ -1,6 +1,6 @@
 '*******************************************************************************************************
 '  ChannelFrameBase.vb - Channel data frame base class
-'  Copyright © 2004 - TVA, all rights reserved - Gbtc
+'  Copyright © 2005 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2003
 '  Primary Developer: James R Carroll, System Analyst [TVA]
@@ -23,28 +23,11 @@ Imports TVA.EE.Phasor.Common
 
 Namespace EE.Phasor
 
-    ' TODO: Move class into its own file...
-    Public Class ChannelFrameParsingState
-
-        Public Cells As IChannelCellCollection
-        Public CellCount As Integer
-        Public CellType As Type
-
-        Public Sub New(ByVal cells As IChannelCellCollection, ByVal cellCount As Integer, ByVal cellType As Type)
-
-            Me.Cells = cells
-            Me.CellCount = cellCount
-            Me.CellType = cellType
-
-        End Sub
-
-    End Class
-
     ' This class represents the protocol independent common implementation of any frame of data that can be sent or received from a PMU.
     Public MustInherit Class ChannelFrameBase
 
         Inherits ChannelBase
-        Implements IChannelFrame
+        Implements IChannelFrame, IComparable
 
         Private m_cells As IChannelCellCollection
         Private m_timeTag As Unix.TimeTag
@@ -76,16 +59,11 @@ Namespace EE.Phasor
 
         End Sub
 
-        ' Derived classes are expected to expose a Protected Sub New(ByVal state As ChannelFrameParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
-        ' or equivalent and automatically pass in type parameter
-        Protected Sub New(ByVal state As ChannelFrameParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+        ' Derived classes are expected to expose a Protected Sub New(ByVal state As IChannelFrameParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+        Protected Sub New(ByVal state As IChannelFrameParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
 
             Me.New(state.Cells)
-
-            ' Parse protocol specific frame header and return cell count...
-            ParseHeader(state, binaryImage, startIndex)
-            startIndex += HeaderLength
-            ParseBody(state, binaryImage, startIndex)
+            ParseBinaryImage(state, binaryImage, startIndex)
 
         End Sub
 
@@ -96,16 +74,16 @@ Namespace EE.Phasor
 
         End Sub
 
-        Protected MustOverride Sub ParseHeader(ByVal state As ChannelFrameParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
-
-        Protected Overridable Sub ParseBody(ByVal state As ChannelFrameParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+        Protected Overrides Sub ParseBodyImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByRef startIndex As Integer)
 
             ' Parse all frame cells
-            ' Note: Final derived frame cell classes must expose Public Sub New(ByVal parent As IChannelFrame, ByVal state As ChannelFrameParsingState, ByVal index As Integer, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
-            For x As Integer = 0 To state.CellCount
-                Cells.Add(Activator.CreateInstance(state.CellType, New Object() {Me, state, x, binaryImage, startIndex}))
-                startIndex += Cells(x).BinaryLength
-            Next
+            ' Note: Final derived frame cell classes *must* expose Public Sub New(ByVal parent As IChannelFrame, ByVal state As IChannelFrameParsingState, ByVal index As Integer, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+            With DirectCast(state, IChannelFrameParsingState)
+                For x As Integer = 0 To .CellCount
+                    Cells.Add(Activator.CreateInstance(.CellType, New Object() {Me, state, x, binaryImage, startIndex}))
+                    startIndex += Cells(x).BinaryLength
+                Next
+            End With
 
         End Sub
 
@@ -212,12 +190,14 @@ Namespace EE.Phasor
 
             Dim length As Int16 = BinaryLength
 
-            ' TODO: Remove this debug code..
+#If DEBUG Then
             Dim bufferSum As Int16 = EndianOrder.BigEndian.ToInt16(buffer, startIndex + length - 2)
             Dim calculatedSum As Int16 = CalculateChecksum(buffer, startIndex, length - 2)
             Debug.WriteLine("Buffer Sum = " & bufferSum & ", Calculated Sum = " & calculatedSum)
             Return (bufferSum = calculatedSum)
-            'Return EndianOrder.BigEndian.ToInt16(buffer, startIndex + length - 2) = CalculateChecksum(buffer, startIndex, length - 2)
+#Else
+            Return EndianOrder.BigEndian.ToInt16(buffer, startIndex + length - 2) = CalculateChecksum(buffer, startIndex, length - 2)
+#End If
 
         End Function
 
@@ -230,6 +210,17 @@ Namespace EE.Phasor
         Protected Overridable Function CalculateChecksum(ByVal buffer As Byte(), ByVal offset As Integer, ByVal length As Integer) As Int16
 
             Return CRC_CCITT(-1, buffer, offset, length)
+
+        End Function
+
+        ' We sort frames by timetag
+        Public Function CompareTo(ByVal obj As Object) As Integer Implements IComparable.CompareTo
+
+            If TypeOf obj Is IChannelFrame Then
+                Return m_timeTag.CompareTo(DirectCast(obj, IChannelFrame).TimeTag)
+            Else
+                Throw New ArgumentException(InheritedType.Name & " can only be compared with other IChannelFrames...")
+            End If
 
         End Function
 

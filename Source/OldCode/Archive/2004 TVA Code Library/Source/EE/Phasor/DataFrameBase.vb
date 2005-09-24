@@ -1,6 +1,6 @@
 '*******************************************************************************************************
 '  DataFrameBase.vb - Data frame base class
-'  Copyright © 2004 - TVA, all rights reserved - Gbtc
+'  Copyright © 2005 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2003
 '  Primary Developer: James R Carroll, System Analyst [TVA]
@@ -18,23 +18,6 @@
 Imports TVA.Interop
 
 Namespace EE.Phasor
-
-    ' TODO: Move class into its own file...
-    Public Class DataFrameParsingState
-
-        Inherits ChannelFrameParsingState
-
-        Public ConfigurationFrame As IConfigurationFrame
-
-        Public Sub New(ByVal cells As DataCellCollection, ByVal cellType As Type, ByVal configurationFrame As IConfigurationFrame)
-
-            MyBase.New(cells, configurationFrame.Cells.Count, cellType)
-
-            Me.ConfigurationFrame = configurationFrame
-
-        End Sub
-
-    End Class
 
     ' This class represents the protocol independent common implementation of a data frame that can be sent or received from a PMU.
     Public MustInherit Class DataFrameBase
@@ -59,12 +42,12 @@ Namespace EE.Phasor
         End Sub
 
         ' Derived classes are expected to expose a Public Sub New(ByVal configurationFrame As IConfigurationFrame, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
-        ' and automatically pass in cells collection and type parameter
-        Protected Sub New(ByVal state As DataFrameParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+        ' and automatically pass in parsing state
+        Protected Sub New(ByVal state As IDataFrameParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
 
             MyBase.New(state, binaryImage, startIndex)
 
-            m_configurationFrame = ConfigurationFrame
+            m_configurationFrame = state.ConfigurationFrame
 
         End Sub
 

@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  DataCellCollection.vb - PDCstream specific data cell collection
+'  ChannelCellParsingStateBase.vb - Channel frame cell parsing state base class
 '  Copyright © 2005 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2003
@@ -10,33 +10,31 @@
 '
 '  Code Modification History:
 '  -----------------------------------------------------------------------------------------------------
-'  11/12/2004 - James R Carroll
+'  3/7/2005 - James R Carroll
 '       Initial version of source generated
 '
 '*******************************************************************************************************
 
-Namespace EE.Phasor.PDCstream
+Namespace EE.Phasor
 
-    Public Class DataCellCollection
+    ' This class represents the common implementation of the protocol independent parsing state of any kind of data cell.
+    Public MustInherit Class ChannelCellParsingStateBase
 
-        Inherits Phasor.DataCellCollection
+        Inherits ChannelParsingStateBase
+        Implements IChannelCellParsingState
 
-        Public Sub New()
+        Private m_parent As IChannelFrame
 
-            ' PDCstream data cells are variable length
-            MyBase.New(Int16.MaxValue, False)
+        Protected Sub New(ByVal parent As IChannelFrame)
 
-        End Sub
-
-        Public Shadows Sub Add(ByVal value As DataCell)
-
-            MyBase.Add(value)
+            MyBase.New()
+            m_parent = parent
 
         End Sub
 
-        Default Public Shadows ReadOnly Property Item(ByVal index As Integer) As DataCell
+        Public ReadOnly Property Parent() As IChannelFrame Implements IChannelCellParsingState.Parent
             Get
-                Return MyBase.Item(index)
+                Return m_parent
             End Get
         End Property
 

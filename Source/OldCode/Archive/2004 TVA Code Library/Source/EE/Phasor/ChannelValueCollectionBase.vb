@@ -1,6 +1,6 @@
 '*******************************************************************************************************
 '  ChannelValueCollectionBase.vb - Channel data value collection base class
-'  Copyright © 2004 - TVA, all rights reserved - Gbtc
+'  Copyright © 2005 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2003
 '  Primary Developer: James R Carroll, System Analyst [TVA]

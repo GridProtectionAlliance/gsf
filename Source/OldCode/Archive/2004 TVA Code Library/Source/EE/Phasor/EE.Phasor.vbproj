@@ -136,6 +136,11 @@
                     BuildAction = "Compile"
                 />
                 <File
+                    RelPath = "ChannelCellParsingStateBase.vb"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
                     RelPath = "ChannelCollectionBase.vb"
                     SubType = "Code"
                     BuildAction = "Compile"
@@ -157,6 +162,16 @@
                 />
                 <File
                     RelPath = "ChannelFrameCollectionBase.vb"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "ChannelFrameParsingStateBase.vb"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "ChannelParsingStateBase.vb"
                     SubType = "Code"
                     BuildAction = "Compile"
                 />
@@ -196,6 +211,11 @@
                     BuildAction = "Compile"
                 />
                 <File
+                    RelPath = "ConfigurationFrameParsingState.vb"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
                     RelPath = "DataCellBase.vb"
                     SubType = "Code"
                     BuildAction = "Compile"
@@ -212,6 +232,11 @@
                 />
                 <File
                     RelPath = "DataFrameCollection.vb"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "DataFrameParsingState.vb"
                     SubType = "Code"
                     BuildAction = "Compile"
                 />
@@ -286,6 +311,11 @@
                     BuildAction = "Compile"
                 />
                 <File
+                    RelPath = "IChannelCellParsingState.vb"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
                     RelPath = "IChannelCollection.vb"
                     SubType = "Code"
                     BuildAction = "Compile"
@@ -297,6 +327,16 @@
                 />
                 <File
                     RelPath = "IChannelFrame.vb"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "IChannelFrameParsingState.vb"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "IChannelParsingState.vb"
                     SubType = "Code"
                     BuildAction = "Compile"
                 />
@@ -316,12 +356,22 @@
                     BuildAction = "Compile"
                 />
                 <File
+                    RelPath = "IConfigurationFrameParsingState.vb"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
                     RelPath = "IDataCell.vb"
                     SubType = "Code"
                     BuildAction = "Compile"
                 />
                 <File
                     RelPath = "IDataFrame.vb"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "IDataFrameParsingState.vb"
                     SubType = "Code"
                     BuildAction = "Compile"
                 />

@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  DigitalValue.vb - PDCstream Digital value
+'  ConfigurationFrameParsingState.vb - Configuration frame parsing state class
 '  Copyright © 2005 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2003
@@ -10,38 +10,34 @@
 '
 '  Code Modification History:
 '  -----------------------------------------------------------------------------------------------------
-'  11/12/2004 - James R Carroll
+'  01/14/2005 - James R Carroll
 '       Initial version of source generated
 '
 '*******************************************************************************************************
 
-Namespace EE.Phasor.PDCstream
+Namespace EE.Phasor
 
-    Public Class DigitalValue
+    ' This class represents the protocol independent common implementation the parsing state of a data frame that can be sent or received from a PMU.
+    Public Class ConfigurationFrameParsingState
 
-        Inherits DigitalValueBase
+        Inherits ChannelFrameParsingStateBase
+        Implements IConfigurationFrameParsingState
 
-        Public Sub New(ByVal parent As IDataCell, ByVal DigitalDefinition As IDigitalDefinition, ByVal value As Int16)
+        Public Sub New(ByVal cells As ConfigurationCellCollection, ByVal cellCount As Integer, ByVal cellType As Type)
 
-            MyBase.New(parent, DigitalDefinition, value)
-
-        End Sub
-
-        Public Sub New(ByVal parent As IDataCell, ByVal DigitalDefinition As IDigitalDefinition, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
-
-            MyBase.New(parent, DigitalDefinition, binaryImage, startIndex)
-
-        End Sub
-
-        Public Sub New(ByVal DigitalValue As IDigitalValue)
-
-            MyBase.New(DigitalValue)
+            MyBase.New(cells, cellCount, cellType)
 
         End Sub
 
         Public Overrides ReadOnly Property InheritedType() As System.Type
             Get
-                Return Me.GetType
+                Return Me.GetType()
+            End Get
+        End Property
+
+        Public Shadows ReadOnly Property Cells() As ConfigurationCellCollection Implements IConfigurationFrameParsingState.Cells
+            Get
+                Return MyBase.Cells
             End Get
         End Property
 

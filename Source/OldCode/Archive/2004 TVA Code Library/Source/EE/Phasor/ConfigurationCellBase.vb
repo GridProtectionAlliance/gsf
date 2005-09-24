@@ -1,6 +1,6 @@
 '*******************************************************************************************************
 '  ConfigurationCellBase.vb - Configuration cell base class
-'  Copyright © 2004 - TVA, all rights reserved - Gbtc
+'  Copyright © 2005 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2003
 '  Primary Developer: James R Carroll, System Analyst [TVA]
@@ -51,37 +51,37 @@ Namespace EE.Phasor
 
             Me.New(parent, AlignOnDWordBoundry, maximumPhasors, maximumAnalogs, maximumDigitals)
 
-            ParseHeader(state, binaryImage, startIndex)
-            startIndex += HeaderLength
+            'ParseHeader(state, binaryImage, startIndex)
+            'startIndex += HeaderLength
 
-            Dim x As Integer
+            'Dim x As Integer
 
-            m_statusFlags = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex)
-            startIndex += 2
+            'm_statusFlags = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex)
+            'startIndex += 2
 
-            ' By very nature of the three protocols supporting the same order of phasors, frequency, dfreq, analog and digitals - we are
-            ' able to "automatically" parse this data out in the data cell base class - BEAUTIFUL!!!  This ability to parse the cell
-            ' contents is unique to the data cell - this same functionality can't be provided for the configuration cell since the
-            ' format of these cells varies greatly between protocols.
-            With m_configurationCell
-                For x = 0 To .PhasorDefinitions.Count - 1
-                    m_phasorValues.Add(Activator.CreateInstance(phasorValueType, New Object() {Me, .PhasorDefinitions(x), binaryImage, startIndex}))
-                    startIndex += m_phasorValues(x).BinaryLength
-                Next
+            '' By very nature of the three protocols supporting the same order of phasors, frequency, dfreq, analog and digitals - we are
+            '' able to "automatically" parse this data out in the data cell base class - BEAUTIFUL!!!  This ability to parse the cell
+            '' contents is unique to the data cell - this same functionality can't be provided for the configuration cell since the
+            '' format of these cells varies greatly between protocols.
+            'With m_configurationCell
+            '    For x = 0 To .PhasorDefinitions.Count - 1
+            '        m_phasorValues.Add(Activator.CreateInstance(phasorValueType, New Object() {Me, .PhasorDefinitions(x), binaryImage, startIndex}))
+            '        startIndex += m_phasorValues(x).BinaryLength
+            '    Next
 
-                m_frequencyValue = Activator.CreateInstance(frequencyValueType, New Object() {Me, .FrequencyDefinition, binaryImage, startIndex})
-                startIndex += m_frequencyValue.BinaryLength
+            '    m_frequencyValue = Activator.CreateInstance(frequencyValueType, New Object() {Me, .FrequencyDefinition, binaryImage, startIndex})
+            '    startIndex += m_frequencyValue.BinaryLength
 
-                For x = 0 To .AnalogDefinitions.Count - 1
-                    m_analogValues.Add(Activator.CreateInstance(analogValueType, New Object() {Me, .AnalogDefinitions(x), binaryImage, startIndex}))
-                    startIndex += m_analogValues(x).BinaryLength
-                Next
+            '    For x = 0 To .AnalogDefinitions.Count - 1
+            '        m_analogValues.Add(Activator.CreateInstance(analogValueType, New Object() {Me, .AnalogDefinitions(x), binaryImage, startIndex}))
+            '        startIndex += m_analogValues(x).BinaryLength
+            '    Next
 
-                For x = 0 To .DigitalDefinitions.Count - 1
-                    m_digitalValues.Add(Activator.CreateInstance(digitalValueType, New Object() {Me, .DigitalDefinitions(x), binaryImage, startIndex}))
-                    startIndex += m_digitalValues(x).BinaryLength
-                Next
-            End With
+            '    For x = 0 To .DigitalDefinitions.Count - 1
+            '        m_digitalValues.Add(Activator.CreateInstance(digitalValueType, New Object() {Me, .DigitalDefinitions(x), binaryImage, startIndex}))
+            '        startIndex += m_digitalValues(x).BinaryLength
+            '    Next
+            'End With
 
         End Sub
 
@@ -100,7 +100,7 @@ Namespace EE.Phasor
 
         End Sub
 
-        ' Final dervived classes must expose Public Sub New(ByVal parent As IChannelFrame, ByVal state As ChannelFrameParsingState, ByVal index As Integer, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+        ' Final dervived classes must expose Public Sub New(ByVal parent As IChannelFrame, ByVal state As IChannelFrameParsingState, ByVal index As Integer, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
 
         ' Derived classes are expected to expose a Public Sub New(ByVal configurationCell As IConfigurationCell)
         Protected Sub New(ByVal configurationCell As IConfigurationCell)

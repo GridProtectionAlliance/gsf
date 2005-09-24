@@ -1,6 +1,6 @@
 '*******************************************************************************************************
 '  DataPacket.vb - PDCstream data packet
-'  Copyright © 2004 - TVA, all rights reserved - Gbtc
+'  Copyright © 2005 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2003
 '  Primary Developer: James R Carroll, System Analyst [TVA]
@@ -54,37 +54,6 @@ Namespace EE.Phasor.PDCstream
 
         End Sub
 
-        Protected Overrides Sub ParseHeader(ByVal state As ChannelFrameParsingState, ByVal binaryImage() As Byte, ByVal startIndex As Integer)
-
-            Dim configurationFrame As IConfigurationFrame = CType(state, DataFrameParsingState).ConfigurationFrame
-
-            Dim dataCellCount As Int16
-            Dim frameLength As Int16
-
-            If binaryImage(startIndex) <> Common.SyncByte Then
-                Throw New InvalidOperationException("Bad Data Stream: Expected sync byte &HAA as first byte in data frame, got " & binaryImage(startIndex).ToString("x"c).PadLeft(2, "0"c))
-            End If
-
-            ' TODO: check byte 1 - is version??
-            'Buffer(1) = Convert.ToByte(1)
-
-            frameLength = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 2)
-            TimeTag = New Unix.TimeTag(EndianOrder.BigEndian.ToInt32(binaryImage, startIndex + 4))
-            m_index = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 8)
-            dataCellCount = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 10)
-
-            ' TODO: validate frame length??
-
-            If dataCellCount <> configurationFrame.Cells.Count Then
-                Throw New InvalidOperationException("Stream/Config File Mismatch: PMU count (" & dataCellCount & ") in stream does not match defined count in configuration file (" & configurationFrame.Cells.Count & ")")
-            End If
-
-            If Not ChecksumIsValid(binaryImage, startIndex) Then
-                Throw New InvalidOperationException("Bad Data Stream: Invalid buffer image detected - check sum of " & InheritedType.FullName & " did not match")
-            End If
-
-        End Sub
-
         Public Overrides ReadOnly Property InheritedType() As System.Type
             Get
                 Return Me.GetType()
@@ -115,6 +84,13 @@ Namespace EE.Phasor.PDCstream
         '    End Set
         'End Property
 
+        Protected Overrides Function CalculateChecksum(ByVal buffer() As Byte, ByVal offset As Integer, ByVal length As Integer) As Int16
+
+            ' PDCstream uses simple XOR checksum
+            Return XorCheckSum(buffer, offset, length)
+
+        End Function
+
         Protected Overrides ReadOnly Property HeaderLength() As Int16
             Get
                 Return 12
@@ -136,12 +112,36 @@ Namespace EE.Phasor.PDCstream
             End Get
         End Property
 
-        Protected Overrides Function CalculateChecksum(ByVal buffer() As Byte, ByVal offset As Integer, ByVal length As Integer) As Int16
+        Protected Overrides Sub ParseHeaderImage(ByVal state As IChannelParsingState, ByVal binaryImage() As Byte, ByRef startIndex As Integer)
 
-            ' PDCstream uses simple XOR checksum
-            Return XorCheckSum(buffer, offset, length)
+            Dim configurationFrame As IConfigurationFrame = DirectCast(state, DataFrameParsingState).ConfigurationFrame
 
-        End Function
+            Dim dataCellCount As Int16
+            Dim frameLength As Int16
+
+            If binaryImage(startIndex) <> Common.SyncByte Then
+                Throw New InvalidOperationException("Bad Data Stream: Expected sync byte &HAA as first byte in data frame, got " & binaryImage(startIndex).ToString("x"c).PadLeft(2, "0"c))
+            End If
+
+            ' TODO: check byte 1 - is version??
+            'Buffer(1) = Convert.ToByte(1)
+
+            frameLength = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 2)
+            TimeTag = New Unix.TimeTag(EndianOrder.BigEndian.ToInt32(binaryImage, startIndex + 4))
+            m_index = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 8)
+            dataCellCount = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 10)
+
+            ' TODO: validate frame length??
+
+            If dataCellCount <> configurationFrame.Cells.Count Then
+                Throw New InvalidOperationException("Stream/Config File Mismatch: PMU count (" & dataCellCount & ") in stream does not match defined count in configuration file (" & configurationFrame.Cells.Count & ")")
+            End If
+
+            If Not ChecksumIsValid(binaryImage, startIndex) Then
+                Throw New InvalidOperationException("Bad Data Stream: Invalid buffer image detected - check sum of " & InheritedType.FullName & " did not match")
+            End If
+
+        End Sub
 
         ' TODO: place this in proper override...
         'Public Overrides ReadOnly Property ProtocolSpecificDataLength() As Short
@@ -272,23 +272,6 @@ Namespace EE.Phasor.PDCstream
         '        Return buffer
         '    End Get
         'End Property
-
-        '' We sort data packets by timetag and index
-        'Public Function CompareTo(ByVal obj As Object) As Integer Implements System.IComparable.CompareTo
-
-        '    If TypeOf obj Is DataPacket Then
-        '        Dim comparison As Integer = m_timeTag.CompareTo(DirectCast(obj, DataPacket).TimeTag)
-
-        '        If comparison = 0 Then
-        '            Return m_index.CompareTo(DirectCast(obj, DataPacket).Index)
-        '        Else
-        '            Return comparison
-        '        End If
-        '    Else
-        '        Throw New ArgumentException("DataPacket can only be compared with other DataPackets...")
-        '    End If
-
-        'End Function
 
     End Class
 

@@ -1,6 +1,6 @@
 '*******************************************************************************************************
 '  ConfigurationFrame.vb - PDCstream Configuration Frame / File
-'  Copyright © 2004 - TVA, all rights reserved - Gbtc
+'  Copyright © 2005 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2003
 '  Primary Developer: James R Carroll, System Analyst [TVA]
@@ -63,12 +63,6 @@ Namespace EE.Phasor.PDCstream
         Public Sub New(ByVal configurationFrame As IConfigurationFrame)
 
             MyBase.New(configurationFrame)
-
-        End Sub
-
-        Public Sub ParseDescriptor(ByVal binaryImage As Byte(), ByVal startIndex As Integer)
-
-            ' TODO: Parse binary configuration image
 
         End Sub
 
@@ -325,7 +319,10 @@ Namespace EE.Phasor.PDCstream
             End Get
         End Property
 
-        Protected Overrides Function ParseHeader(ByVal state As Object, ByVal binaryImage() As Byte, ByVal startIndex As Integer) As Integer
+        Protected Overrides Function CalculateChecksum(ByVal buffer() As Byte, ByVal offset As Integer, ByVal length As Integer) As Int16
+
+            ' PDCstream uses an XOR based check sum
+            Return XorCheckSum(buffer, offset, length)
 
         End Function
 
@@ -354,12 +351,11 @@ Namespace EE.Phasor.PDCstream
             End Get
         End Property
 
-        ' PDCstream uses an XOR check sum
-        Protected Overrides Function CalculateChecksum(ByVal buffer() As Byte, ByVal offset As Integer, ByVal length As Integer) As Int16
+        Protected Overrides Sub ParseHeaderImage(ByVal state As IChannelParsingState, ByVal binaryImage() As Byte, ByRef startIndex As Integer)
 
-            Return XorCheckSum(buffer, offset, length)
+            ' TODO: Parse PDC stream specific header image here...
 
-        End Function
+        End Sub
 
     End Class
 

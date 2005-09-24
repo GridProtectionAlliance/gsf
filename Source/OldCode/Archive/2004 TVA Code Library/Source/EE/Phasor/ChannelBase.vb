@@ -1,6 +1,6 @@
 '*******************************************************************************************************
 '  ChannelBase.vb - Channel data base class
-'  Copyright © 2004 - TVA, all rights reserved - Gbtc
+'  Copyright © 2005 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2003
 '  Primary Developer: James R Carroll, System Analyst [TVA]
@@ -24,6 +24,7 @@ Namespace EE.Phasor
 
         Implements IChannel
 
+        ' This is expected to be overriden by the final derived class
         Public MustOverride ReadOnly Property InheritedType() As Type Implements IChannel.InheritedType
 
         Public Overridable ReadOnly Property This() As IChannel Implements IChannel.This
@@ -51,6 +52,25 @@ Namespace EE.Phasor
                 Return buffer
             End Get
         End Property
+
+        Protected Overridable Sub ParseBinaryImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Integer) Implements IChannel.ParseBinaryImage
+
+            ' Parse out header, body and footer images
+            ParseHeaderImage(state, binaryImage, startIndex)
+            ParseBodyImage(state, binaryImage, startIndex)
+            ParseFooterImage(state, binaryImage, startIndex)
+
+        End Sub
+
+        ' Consumer required to advance startIndex as parsing progresses...
+        Protected Overridable Sub ParseHeaderImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByRef startIndex As Integer)
+        End Sub
+
+        Protected Overridable Sub ParseBodyImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByRef startIndex As Integer)
+        End Sub
+
+        Protected Overridable Sub ParseFooterImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByRef startIndex As Integer)
+        End Sub
 
         Protected Overridable ReadOnly Property HeaderLength() As Int16
             Get

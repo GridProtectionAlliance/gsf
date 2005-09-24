@@ -1,6 +1,6 @@
 '*******************************************************************************************************
 '  ConfigurationCell.vb - PDCstream PMU configuration cell
-'  Copyright © 2004 - TVA, all rights reserved - Gbtc
+'  Copyright © 2005 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2003
 '  Primary Developer: James R Carroll, System Analyst [TVA]
@@ -41,16 +41,10 @@ Namespace EE.Phasor.PDCstream
         End Sub
 
         ' This constructor satisfies ChannelCellBase class requirement:
-        '   Final dervived classes must expose Public Sub New(ByVal parent As IChannelFrame, ByVal state As Object, ByVal index As Integer, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
-        Public Sub New(ByVal parent As IConfigurationFrame, ByVal state As Object, ByVal index As Integer, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+        '   Final dervived classes must expose Public Sub New(ByVal parent As IChannelFrame, ByVal state As IChannelFrameParsingState, ByVal index As Integer, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+        Public Sub New(ByVal parent As IConfigurationFrame, ByVal state As IChannelFrameParsingState, ByVal index As Integer, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
 
             MyBase.New(parent, True, MaximumPhasorValues, MaximumAnalogValues, MaximumDigitalValues)
-
-        End Sub
-
-        Protected Overrides Sub ParseHeader(ByVal state As Object, ByVal binaryImage() As Byte, ByVal startIndex As Integer)
-
-            ' PDCStream descriptor cells have no header...
 
         End Sub
 
@@ -112,6 +106,12 @@ Namespace EE.Phasor.PDCstream
                 Return buffer
             End Get
         End Property
+
+        Protected Overrides Sub ParseBodyImage(ByVal state As IChannelParsingState, ByVal binaryImage() As Byte, ByRef startIndex As Integer)
+
+            ' TODO: parse body image...
+
+        End Sub
 
     End Class
 

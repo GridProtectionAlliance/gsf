@@ -1,6 +1,6 @@
 '*******************************************************************************************************
 '  ChannelCellBase.vb - Channel frame cell base class
-'  Copyright © 2004 - TVA, all rights reserved - Gbtc
+'  Copyright © 2005 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2003
 '  Primary Developer: James R Carroll, System Analyst [TVA]
@@ -35,17 +35,7 @@ Namespace EE.Phasor
 
         End Sub
 
-        Protected Sub New(ByVal parent As IChannelFrame, ByVal alignOnDWordBoundry As Boolean, ByVal state As Object, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
-
-            Me.New(parent, alignOnDWordBoundry)
-
-            ParseHeader(state, binaryImage, startIndex)
-            startIndex += HeaderLength
-            ParseBody(state, binaryImage, startIndex)
-
-        End Sub
-
-        ' Final dervived classes must expose Public Sub New(ByVal parent As IChannelFrame, ByVal state As ChannelFrameParsingState, ByVal index As Integer, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+        ' Final dervived classes must expose Public Sub New(ByVal parent As IChannelFrame, ByVal state As IChannelFrameParsingState, ByVal index As Integer, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
 
         ' Derived classes are expected to expose a Protected Sub New(ByVal channelCell As IChannelCell)
         Protected Sub New(ByVal channelCell As IChannelCell)
@@ -53,10 +43,6 @@ Namespace EE.Phasor
             Me.New(channelCell.Parent, channelCell.AlignOnDWordBoundry)
 
         End Sub
-
-        Protected MustOverride Sub ParseHeader(ByVal state As Object, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
-
-        Protected MustOverride Sub ParseBody(ByVal state As Object, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
 
         Public ReadOnly Property Parent() As IChannelFrame Implements IChannelCell.Parent
             Get

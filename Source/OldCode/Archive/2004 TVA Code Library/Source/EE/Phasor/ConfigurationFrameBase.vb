@@ -1,6 +1,6 @@
 '*******************************************************************************************************
 '  ConfigurationFrameBase.vb - Configuration frame base class
-'  Copyright © 2004 - TVA, all rights reserved - Gbtc
+'  Copyright © 2005 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2003
 '  Primary Developer: James R Carroll, System Analyst [TVA]
@@ -48,10 +48,10 @@ Namespace EE.Phasor
         End Sub
 
         ' Derived classes are expected to expose a Public Sub New(ByVal binaryImage As Byte(), ByVal startIndex As Integer)
-        ' and automatically pass in type parameter
-        Protected Sub New(ByVal cells As IChannelCellCollection, ByVal cellType As Type, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+        ' and automatically pass in state parameter
+        Protected Sub New(ByVal state As IConfigurationFrameParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
 
-            MyBase.New(cells, cellType, Nothing, binaryImage, startIndex)
+            MyBase.New(state, binaryImage, startIndex)
 
         End Sub
 

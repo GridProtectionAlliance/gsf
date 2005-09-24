@@ -46,6 +46,14 @@ Namespace EE.Phasor
             End Get
         End Property
 
+        Public WriteOnly Property CoordinateFormat() As CoordinateFormat
+            Set(ByVal Value As CoordinateFormat)
+                For Each definition As IPhasorDefinition In MyBase.List
+                    definition.CoordinateFormat = Value
+                Next
+            End Set
+        End Property
+
     End Class
 
 End Namespace

@@ -1,6 +1,6 @@
 '*******************************************************************************************************
 '  DataSample.vb - Phasor data sample class
-'  Copyright © 2004 - TVA, all rights reserved - Gbtc
+'  Copyright © 2005 - TVA, all rights reserved - Gbtc
 '
 '  This class represents the protocol independent common implementation of a
 '  full one second sample of phasor data frames that can be sent or received

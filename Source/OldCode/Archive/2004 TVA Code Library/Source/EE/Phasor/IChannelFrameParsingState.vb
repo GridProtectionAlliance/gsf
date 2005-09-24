@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  IChannel.vb - Channel interface - this is the root interface
+'  IChannelFrameParsingState.vb - Channel data frame parsing state interface
 '  Copyright © 2005 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2003
@@ -10,28 +10,23 @@
 '
 '  Code Modification History:
 '  -----------------------------------------------------------------------------------------------------
-'  02/18/2005 - James R Carroll
+'  01/14/2005 - James R Carroll
 '       Initial version of source generated
 '
 '*******************************************************************************************************
 
 Namespace EE.Phasor
 
-    ' This interface represents a protocol independent representation of any data type.
-    Public Interface IChannel
+    ' This interface represents the protocol independent parsing state of any frame of data.
+    Public Interface IChannelFrameParsingState
 
-        ReadOnly Property InheritedType() As Type
+        Inherits IChannelParsingState
 
-        ReadOnly Property This() As IChannel
+        ReadOnly Property Cells() As IChannelCellCollection
 
-        ' At its most basic level - all data represented by the protocols can either be "parsed" or "generated"
-        ' hence the following methods common to all elements
+        ReadOnly Property CellCount() As Integer
 
-        Sub ParseBinaryImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
-
-        ReadOnly Property BinaryLength() As Int16
-
-        ReadOnly Property BinaryImage() As Byte()
+        ReadOnly Property CellType() As Type
 
     End Interface
 
