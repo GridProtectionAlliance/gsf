@@ -74,19 +74,6 @@ Namespace EE.Phasor
 
         End Sub
 
-        Protected Overrides Sub ParseBodyImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByRef startIndex As Integer)
-
-            ' Parse all frame cells
-            ' Note: Final derived frame cell classes *must* expose Public Sub New(ByVal parent As IChannelFrame, ByVal state As IChannelFrameParsingState, ByVal index As Integer, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
-            With DirectCast(state, IChannelFrameParsingState)
-                For x As Integer = 0 To .CellCount
-                    Cells.Add(Activator.CreateInstance(.CellType, New Object() {Me, state, x, binaryImage, startIndex}))
-                    startIndex += Cells(x).BinaryLength
-                Next
-            End With
-
-        End Sub
-
         Public Overridable ReadOnly Property Cells() As IChannelCellCollection Implements IChannelFrame.Cells
             Get
                 Return m_cells
@@ -153,12 +140,14 @@ Namespace EE.Phasor
             End Set
         End Property
 
+        ' We override normal binary length so we can extend length to include check-sum
         Public Overrides ReadOnly Property BinaryLength() As Int16
             Get
                 Return 2 + MyBase.BinaryLength
             End Get
         End Property
 
+        ' We override normal binary image to include check-sum
         Public Overrides ReadOnly Property BinaryImage() As Byte()
             Get
                 Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BinaryLength)
@@ -174,6 +163,17 @@ Namespace EE.Phasor
             End Get
         End Property
 
+        ' We override normal binary image parser to validate check-sum
+        Protected Overrides Sub ParseBinaryImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+
+            ' Validate checksum
+            If Not ChecksumIsValid(binaryImage, startIndex) Then Throw New InvalidOperationException("Invalid binary image detected - check sum of " & InheritedType.FullName & " did not match")
+
+            ' Perform regular data parse
+            MyBase.ParseBinaryImage(state, binaryImage, startIndex)
+
+        End Sub
+
         Protected Overrides ReadOnly Property BodyLength() As Int16
             Get
                 Return Cells.BinaryLength
@@ -185,6 +185,19 @@ Namespace EE.Phasor
                 Return Cells.BinaryImage
             End Get
         End Property
+
+        Protected Overrides Sub ParseBodyImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByRef startIndex As Integer)
+
+            ' Parse all frame cells
+            With DirectCast(state, IChannelFrameParsingState)
+                For x As Integer = 0 To .CellCount
+                    ' Note: Final derived frame cell classes *must* expose Public Sub New(ByVal parent As IChannelFrame, ByVal state As IChannelFrameParsingState, ByVal index As Integer, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+                    Cells.Add(Activator.CreateInstance(.CellType, New Object() {Me, state, x, binaryImage, startIndex}))
+                    startIndex += Cells(x).BinaryLength
+                Next
+            End With
+
+        End Sub
 
         Protected Overridable Function ChecksumIsValid(ByVal buffer As Byte(), ByVal startIndex As Integer) As Boolean
 

@@ -17,7 +17,7 @@
 
 Namespace EE.Phasor
 
-    ' This class represents the protocol independent common implementation the parsing state of a data frame that can be sent or received from a PMU.
+    ' This class represents the protocol independent common implementation of the parsing state of a data frame cell that can be sent or received from a PMU.
     Public Class DataCellParsingState
 
         Inherits ChannelCellParsingStateBase

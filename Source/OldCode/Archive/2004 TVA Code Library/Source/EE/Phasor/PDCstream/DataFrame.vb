@@ -137,10 +137,6 @@ Namespace EE.Phasor.PDCstream
                 Throw New InvalidOperationException("Stream/Config File Mismatch: PMU count (" & dataCellCount & ") in stream does not match defined count in configuration file (" & configurationFrame.Cells.Count & ")")
             End If
 
-            If Not ChecksumIsValid(binaryImage, startIndex) Then
-                Throw New InvalidOperationException("Bad Data Stream: Invalid buffer image detected - check sum of " & InheritedType.FullName & " did not match")
-            End If
-
         End Sub
 
         ' TODO: place this in proper override...
