@@ -489,11 +489,11 @@ Namespace [Shared]
 
             Public Sub New( _
               ByVal standardOffset As TimeSpan, _
-              ByVal standardName As String, _
-              ByVal standardAbbreviation As String, _
+              ByVal standardName As System.String, _
+              ByVal standardAbbreviation As System.String, _
               ByVal daylightDelta As TimeSpan, _
-              ByVal daylightName As String, _
-              ByVal daylightAbbreviation As String, _
+              ByVal daylightName As System.String, _
+              ByVal daylightAbbreviation As System.String, _
               ByVal daylightTimeChangeStart As DaylightTimeChange, _
               ByVal daylightTimeChangeEnd As DaylightTimeChange _
             )
@@ -545,7 +545,15 @@ Namespace [Shared]
                 _daylightTimeChangeEnd = daylightTimeChangeEnd
 
             End Sub
-
+            ''' <summary>
+            ''' Gets the Standard Name
+            ''' </summary>
+            ''' <value>
+            ''' Standard Name
+            ''' </value>
+            ''' <remarks>
+            ''' Value must be string
+            ''' </remarks>
 
             Public Overrides ReadOnly Property StandardName() As String
                 Get
@@ -553,13 +561,29 @@ Namespace [Shared]
                 End Get
             End Property
 
-
+            ''' <summary>
+            ''' Gets the Standard Abbreviation
+            ''' </summary>
+            ''' <value>
+            ''' Standard Abbreviation
+            ''' </value>
+            ''' <remarks>
+            ''' Value must be string
+            ''' </remarks>
             Public Overridable ReadOnly Property StandardAbbreviation() As String
                 Get
                     Return _standardAbbreviation
                 End Get
             End Property
-
+            ''' <summary>
+            ''' Gets the daylight name
+            ''' </summary>
+            ''' <value>
+            ''' daylight name
+            ''' </value>
+            ''' <remarks>
+            ''' Value must be string
+            ''' </remarks>
 
             Public Overrides ReadOnly Property DaylightName() As String
                 Get
@@ -567,7 +591,15 @@ Namespace [Shared]
                 End Get
             End Property
 
-
+            ''' <summary>
+            ''' Gets the daylight abbreviation
+            ''' </summary>
+            ''' <value>
+            ''' daylight abbreviation
+            ''' </value>
+            ''' <remarks>
+            ''' Value must be string
+            ''' </remarks>
             Public Overridable ReadOnly Property DaylightAbbreviation() As String
                 Get
                     Return _daylightAbbreviation
@@ -730,7 +762,16 @@ Namespace [Shared]
                 Return IsDaylightSavingTime(time, daylightTimes, fromUtcTime)
 
             End Function
-
+            '''<summary>
+            ''' <para>
+            ''' Return a boolean value if the time is within daylighttime
+            ''' </para>
+            ''' </summary>
+            ''' <param name="time"> Required.Time</param>
+            ''' <param name="daylightTimes"> Required.DayLightTime</param>
+            ''' <value>
+            ''' Must be boolean
+            ''' </value>
 
             Public Overloads Shared Function IsDaylightSavingTime( _
                ByVal time As System.DateTime, _
@@ -741,11 +782,7 @@ Namespace [Shared]
 
             End Function
 
-            '''<summary>
-            ''' <para>
-            '''  Mirrors .NET Framework TimeZone functionality, which does not throw an exception.
-            ''' </para>
-            ''' </summary>
+           
             Private Overloads Shared Function IsDaylightSavingTime( _
               ByVal time As System.DateTime, _
               ByVal daylightTimes As DaylightTime, _
@@ -923,7 +960,16 @@ Namespace [Shared]
                 End If
 
             End Function
-
+            '''<summary>
+            ''' <para>
+            ''' Return whether the time is within the ambiguous time for this year
+            ''' </para>
+            ''' </summary>
+            ''' <param name="time"> Required.Time</param>
+            ''' <param name="daylightTimes"> Required.DayLightTime</param>
+            ''' <value>
+            ''' Must be boolean
+            ''' </value>
             Public Overridable Function IsAmbiguous( _
                ByVal time As System.DateTime _
              ) As Boolean
@@ -944,6 +990,17 @@ Namespace [Shared]
                 Return IsAmbiguous(time, daylightTimes)
 
             End Function
+
+            '''<summary>
+            ''' <para>
+            ''' Returns a boolean value if it is the ambiguous time at the start and end of daylight savings or not.        
+            ''' </para>
+            ''' </summary>
+            ''' <param name="time"> Required.Time</param>
+            ''' <param name="daylightTimes"> Required.DayLightTime</param>
+            ''' <value>
+            ''' Must be boolean
+            ''' </value>
 
 
             Public Shared Function IsAmbiguous( _
@@ -991,7 +1048,12 @@ Namespace [Shared]
                 Return False
 
             End Function
-
+            '''<summary>
+            ''' <para>
+            ''' Returns standard offset if the timezone is never in daylight savings         
+            ''' </para>
+            ''' </summary>
+            ''' <param name="time"> Required.Time</param>
 
             Public Overrides Function GetUtcOffset( _
               ByVal time As System.DateTime _
@@ -1013,6 +1075,12 @@ Namespace [Shared]
                 End If
 
             End Function
+            '''<summary>
+            ''' <para>
+            ''' Returns time with daylight savings          
+            ''' </para>
+            ''' </summary>
+            ''' <param name="time"> Required.Time to add daylight savings to</param>
 
 
             Public Overrides Function ToLocalTime( _
@@ -1128,7 +1196,10 @@ Namespace [Shared]
                 Public DaylightBias As Int32
                 Public StandardDate As SYSTEMTIMEReader
                 Public DaylightDate As SYSTEMTIMEReader
-
+                ''' <summary>
+                '''Initializes a new instance of the TZREGReader class . 
+                ''' </summary>
+                '''<param name="bytes"> Required.</param>
 
                 Public Sub New(ByVal bytes As Byte())
 
@@ -1166,7 +1237,11 @@ Namespace [Shared]
                 Public Minute As Int16
                 Public Second As Int16
                 Public Milliseconds As Int16
-
+                ''' <summary>
+                '''Initializes a new instance of the SYSTEMTIMEReader class . 
+                ''' </summary>
+                '''<param name="bytes"> Required.</param>
+                ''' <param name="index"> Required.</param>
 
                 Public Sub New(ByVal bytes As Byte(), ByVal index As Int32)
 
@@ -1197,8 +1272,10 @@ Namespace [Shared]
 
 
             End Class
-
-
+            ''' <summary>
+            '''Initializes a new instance of the SYSTEMTIMEReader class . 
+            ''' </summary>
+         
             Shared Sub New()
 
                 With Registry.LocalMachine
@@ -1216,10 +1293,13 @@ Namespace [Shared]
                 End With
 
             End Sub
-
+            '''<summary>
+            '''   <para>Returns an abbreviation for a name.</para>
+            '''</summary>
+            ''' <param name="name"> Required.  Name </param>
 
             Private Shared Function GetAbbreviation( _
-              ByVal name As String _
+              ByVal name As System.String _
               ) As String
 
                 Dim abbreviation As String = ""
@@ -1237,8 +1317,10 @@ Namespace [Shared]
                 Return abbreviation
 
             End Function
-
-
+            '''<summary>
+            '''   <para>Returns Win32TimeZone for a registrykey timezone.</para>
+            '''</summary>
+            ''' <param name="regKeyTimeZone"> Required. Timezone </param>
             Private Shared Function LoadTimeZone( _
               ByVal regKeyTimeZone As RegistryKey _
               ) As Win32TimeZone
@@ -1331,6 +1413,10 @@ Namespace [Shared]
                   )
 
             End Function
+            '''<summary>
+            '''   <para>Returns Timezone for a particular index.</para>
+            '''</summary>
+            ''' <param name="index"> Required. An integer index. </param>
             Public Shared Function GetTimeZone(ByVal index As Int32) As Win32TimeZone
 
                 If (nameRegKeyTimeZones Is Nothing) Then
@@ -1392,7 +1478,9 @@ Namespace [Shared]
                 Return result
 
             End Function
-
+            '''<summary>
+            '''   <para>Returns an array of Timezones.</para>
+            '''</summary>
 
             Public Shared Function GetTimeZones() As Win32TimeZone()
 
@@ -1483,16 +1571,20 @@ Namespace [Shared]
                 _displayName = displayName
 
             End Sub
+            ''' <summary>
+            ''' Summary:
+            '''Initializes a new instance of the Win32TimeZoneClass. 
+            ''' </summary>
 
             Public Sub New( _
               ByVal index As Int32, _
-              ByVal displayName As String, _
+              ByVal displayName As System.String, _
               ByVal standardOffset As TimeSpan, _
-              ByVal standardName As String, _
-              ByVal standardAbbreviation As String, _
+              ByVal standardName As System.String, _
+              ByVal standardAbbreviation As System.String, _
               ByVal daylightDelta As TimeSpan, _
-              ByVal daylightName As String, _
-              ByVal daylightAbbreviation As String, _
+              ByVal daylightName As System.String, _
+              ByVal daylightAbbreviation As System.String, _
               ByVal daylightTimeChangeStart As DaylightTimeChange, _
               ByVal daylightTimeChangeEnd As DaylightTimeChange _
             )
@@ -1512,14 +1604,30 @@ Namespace [Shared]
                 _displayName = displayName
 
             End Sub
-
+            ''' <summary>
+            ''' Gets the Index
+            ''' </summary>
+            ''' <value>
+            ''' Index 
+            ''' </value>
+            ''' <remarks>
+            ''' Value must be integer
+            ''' </remarks>
 
             Public ReadOnly Property Index() As Int32
                 Get
                     Return _index
                 End Get
             End Property
-
+            ''' <summary>
+            ''' Gets the Display name
+            ''' </summary>
+            ''' <value>
+            ''' Display name
+            ''' </value>
+            ''' <remarks>
+            ''' Value must be String
+            ''' </remarks>
 
             Public ReadOnly Property DisplayName() As String
                 Get
@@ -1527,15 +1635,20 @@ Namespace [Shared]
                 End Get
             End Property
 
-
+            ''' <summary>
+            ''' Returns the Display name
+            ''' </summary>
             Public Overrides Function ToString() As String
                 Return _displayName
             End Function
 
         End Class
-
+        '''<summary>
+        ''' Returns the CurrentTimeZone
+        ''' </summary>
+        ''''''<param name="StandardName">Standardname for CurrentTimezone</param>
         ' JRC - These functions added to make TimeZone management classes easier to use...
-        Public Shared Function GetWin32TimeZone(ByVal StandardName As String) As Win32TimeZone
+        Public Shared Function GetWin32TimeZone(ByVal StandardName As System.String) As Win32TimeZone
 
             For Each currentTimeZone As Win32TimeZone In TimeZones.GetTimeZones
                 If String.Compare(currentTimeZone.StandardName, StandardName, True) = 0 Then
@@ -1553,14 +1666,24 @@ Namespace [Shared]
         Private Shared tzCST As Win32TimeZone
         Private Shared tzMST As Win32TimeZone
         Private Shared tzPST As Win32TimeZone
-
+        '''<summary>
+        '''Readonly Property
+        ''' </summary>
+        ''' <value>
+        ''' Gets the Greenwich Meridian Time
+        ''' </value>
         Public Shared ReadOnly Property GMT() As Win32TimeZone
             Get
                 If tzGMT Is Nothing Then tzGMT = GetWin32TimeZone("GMT Standard Time")
                 Return tzGMT
             End Get
         End Property
-
+        '''<summary>
+        '''Readonly Property
+        ''' </summary>
+        ''' <value>
+        ''' Gets the Eastern Standard Time
+        ''' </value>
         Public Shared ReadOnly Property EST() As Win32TimeZone
             Get
                 If tzEST Is Nothing Then tzEST = GetWin32TimeZone("Eastern Standard Time")
@@ -1607,7 +1730,7 @@ Namespace [Shared]
         '''<summary>
         '''Converts the local time to GMT
         ''' </summary>
-       '''<returns>
+        '''<returns>
         ''' <para>GMT(UniversalTime)</para>
         ''' </returns>
         Public Shared Function LocalTimeToGMT(ByVal localTime As System.DateTime) As System.DateTime
