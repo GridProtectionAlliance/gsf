@@ -554,4 +554,31 @@ Namespace DatAWare
 
     End Class
 
+    Public Class EventProcessor
+
+        Public Delegate Sub ProcessEventSignature(ByVal [event] As StandardEvent)
+
+        Private m_processEvent As ProcessEventSignature
+
+        Public Sub New(ByVal processEventFunction As ProcessEventSignature)
+
+            m_processEvent = processEventFunction
+
+        End Sub
+
+        Public Sub ProcessEventBuffer(ByVal eventBuffer As Byte(), ByVal offset As Integer, ByVal length As Integer)
+
+            If eventBuffer Is Nothing Then Throw New ArgumentNullException("No event buffer was provided for processing")
+
+            ' Parse standard DatAWare events out of network data packet
+            For packetIndex As Integer = offset To length - 1 Step StandardEvent.BinaryLength
+                If packetIndex + StandardEvent.BinaryLength < eventBuffer.Length Then
+                    m_processEvent(New StandardEvent(eventBuffer, packetIndex))
+                End If
+            Next
+
+        End Sub
+
+    End Class
+
 End Namespace
