@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  FrameParser.vb - PC37_118 Frame Parser
+'  FrameParser.vb - IEEE1344 Frame Parser
 '  Copyright © 2005 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2003
@@ -19,50 +19,48 @@ Imports System.Net
 Imports System.Net.Sockets
 Imports System.Threading
 Imports System.ComponentModel
+Imports System.IO
 Imports TVA.Interop
 Imports TVA.Shared.Bit
 Imports TVA.Shared.DateTime
 Imports TVA.Compression.Common
 
-Namespace EE.Phasor.PC37_118
+Namespace EE.Phasor.IEEEC37_118
 
     ' This class parses frames and returns the appropriate data via events
     Public Class FrameParser
 
-        Inherits BaseFrame
+        'Inherits BaseFrame
 
-        Private m_pmuID As Int64
+        Private m_pmuID As Int16
         Private m_ipAddress As IPAddress
         Private m_ipPort As Integer
         Private m_tcpSocket As Socket
         Private m_parseThread As Thread
         Private m_phasorFormat As CoordinateFormat
         Private m_totalFrames As Long
-        Private m_configuration As ConfigurationFile
-        Private m_headerFile As HeaderFile
-        Private m_configFile1 As ConfigurationFile
-        Private m_configFile2 As ConfigurationFile
-        Private m_awaitingConfigFile1 As Boolean
-        Private m_awaitingConfigFile2 As Boolean
-        Private WithEvents m_eventInstance As FrameParser
+        'Private m_headerFile As HeaderFile
+        Private m_configFile1 As ConfigurationFrame
+        Private m_configFile2 As ConfigurationFrame
 
-        Public Event ReceivedHeaderFile(ByVal headerFile As HeaderFile)
-        Public Event ReceivedConfigFile1(ByVal configFile As ConfigurationFile)
-        Public Event ReceivedConfigFile2(ByVal configFile As ConfigurationFile)
+        'Public Event ReceivedHeaderFile(ByVal headerFile As HeaderFile)
+        Public Event ReceivedConfigFile1(ByVal frame As ConfigurationFrame)
+        Public Event ReceivedConfigFile2(ByVal frame As ConfigurationFrame)
         Public Event ReceivedDataFrame(ByVal frame As DataFrame)
-        Public Event ReceivedUnknownFrame(ByVal frame As BaseFrame)
+        Public Event ReceivedUnknownFrame(ByVal frame As IChannelFrame)
         Public Event DataStreamException(ByVal ex As Exception)
+
+        Private Const BufferSize As Integer = 4096   ' 4Kb buffer
 
         Public Sub New()
 
-            m_eventInstance = Me
             m_tcpSocket = New Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp)
             m_ipAddress = Dns.Resolve("127.0.0.1").AddressList(0)
             m_phasorFormat = CoordinateFormat.Rectangular
 
         End Sub
 
-        Public Sub New(ByVal pmuID As Int64, ByVal pmuIPAddress As String, ByVal pmuIPPort As Integer, ByVal phasorFormat As CoordinateFormat)
+        Public Sub New(ByVal pmuID As Int16, ByVal pmuIPAddress As String, ByVal pmuIPPort As Integer, ByVal phasorFormat As CoordinateFormat)
 
             Me.New()
             m_pmuID = pmuID
@@ -72,11 +70,11 @@ Namespace EE.Phasor.PC37_118
 
         End Sub
 
-        Private Sub New(ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+        'Private Sub New(ByVal binaryImage As Byte(), ByVal startIndex As Integer)
 
-            MyBase.New(binaryImage, startIndex)
+        '    MyBase.New(binaryImage, startIndex)
 
-        End Sub
+        'End Sub
 
         Public Sub Connect()
 
@@ -86,6 +84,23 @@ Namespace EE.Phasor.PC37_118
                 Throw New InvalidOperationException("Failed to connect to PMU: " & Convert.ToString(System.Runtime.InteropServices.Marshal.GetLastWin32Error()))
             End If
 
+
+        End Sub
+
+        Public Sub ReadStream()
+
+            If Not m_parseThread Is Nothing Then Throw New InvalidOperationException("Real-time data stream is already enabled")
+
+            m_parseThread = New Thread(AddressOf ReadDataStream)
+            m_parseThread.Start()
+
+        End Sub
+
+        Public Sub CloseStream()
+
+            If Not m_parseThread Is Nothing Then m_parseThread.Abort()
+            m_parseThread = Nothing
+
         End Sub
 
         Public Sub Disconnect()
@@ -94,11 +109,11 @@ Namespace EE.Phasor.PC37_118
 
         End Sub
 
-        Public Property PmuID() As Int64
+        Public Property PmuID() As Int16
             Get
                 Return m_pmuID
             End Get
-            Set(ByVal Value As Int64)
+            Set(ByVal Value As Int16)
                 m_pmuID = Value
             End Set
         End Property
@@ -146,12 +161,20 @@ Namespace EE.Phasor.PC37_118
 
             If Not m_parseThread Is Nothing Then Throw New InvalidOperationException("Real-time data stream is already enabled")
 
-            If m_configuration Is Nothing Then RetrieveConfigFile2()
+            ' TODO: Just doing this so we can manually watch for config file 2...
+            'SendCommand(Command.DisableRealTimeData)
 
-            m_parseThread = New Thread(AddressOf ReadDataStream)
-            m_parseThread.Start()
+            'm_parseThread = New Thread(AddressOf ReadDataStream)
+            'm_parseThread.Start()
 
-            SendCommand(PMUCommand.EnableRealTimeData)
+            'If m_configFile2 Is Nothing Then RetrieveConfigFile2()
+
+            'SendCommand(Command.DisableRealTimeData)
+            SendCommand(Command.SendConfigFile2)
+            ReadDataStream()
+
+            'SendCommand(Command.EnableRealTimeData)
+            'ReadDataStream()
 
         End Sub
 
@@ -162,57 +185,29 @@ Namespace EE.Phasor.PC37_118
                 m_parseThread = Nothing
             End If
 
-            SendCommand(PMUCommand.DisableRealTimeData)
+            SendCommand(Command.DisableRealTimeData)
 
         End Sub
 
         Public Sub RetrieveHeaderFile()
 
-            SendCommand(PMUCommand.SendHeaderFile)
+            SendCommand(Command.SendHeaderFile)
 
         End Sub
 
         Public Sub RetrieveConfigFile1()
 
-            If m_awaitingConfigFile2 Then Throw New InvalidOperationException("Cannot receive config file 1 while we are awaiting config file 2")
-
-            m_awaitingConfigFile1 = True
-            SendCommand(PMUCommand.SendConfigFile1)
+            SendCommand(Command.SendConfigFile1)
 
         End Sub
 
         Public Sub RetrieveConfigFile2()
 
-            If m_awaitingConfigFile1 Then Throw New InvalidOperationException("Cannot receive config file 2 while we are awaiting config file 1")
-
-            m_awaitingConfigFile2 = True
-            SendCommand(PMUCommand.SendConfigFile2)
+            SendCommand(Command.SendConfigFile2)
 
         End Sub
 
-        Public Sub AbortRetrieveConfigFile1()
-
-            m_awaitingConfigFile1 = False
-
-        End Sub
-
-        Public Sub AbortRetrieveConfigFile2()
-
-            m_awaitingConfigFile2 = False
-
-        End Sub
-
-        Public Sub SendReferencePhasor(ByVal referencePhasor As DataFrame)
-
-            SendCommand(PMUCommand.ReceiveReferencePhasor)
-
-            If m_tcpSocket.Send(referencePhasor.BinaryImage) <> referencePhasor.FrameLength Then
-                Throw New InvalidOperationException("Failed to send proper number of bytes for reference phasor")
-            End If
-
-        End Sub
-
-        Private Sub SendCommand(ByVal command As PMUCommand)
+        Public Sub SendCommand(ByVal command As Command)
 
             Dim cmdFrame As New CommandFrame(PmuID, command)
 
@@ -226,99 +221,90 @@ Namespace EE.Phasor.PC37_118
 
             Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), 4096)
             Dim received, startIndex As Integer
-            Dim parsedImage As FrameParser
+            Dim parsedFrameHeader As FrameHeader
+            Dim dataStream As MemoryStream
 
+            'Try
             Do While True
-                Try
-                    ' Blocks until a message returns on this socket from a remote host
-                    received = TcpSocket.Receive(buffer)
-                    m_totalFrames += 1
+                ' Blocks until a message returns on this socket from a remote host
+                received = m_tcpSocket.Receive(buffer)
+                m_totalFrames += 1
+                startIndex = 0
 
-                    startIndex = 0
+                If Not dataStream Is Nothing Then
+                    dataStream.Write(buffer, 0, received)
+                    buffer = dataStream.ToArray()
+                    dataStream = Nothing
+                End If
 
-                    Do Until startIndex >= received
-                        parsedImage = New FrameParser(buffer, startIndex)
+                Do Until startIndex >= received
+                    If buffer(startIndex) <> Common.SyncByte Then
+                        Throw New InvalidOperationException("Bad Data Stream: Expected sync byte &HAA as first byte in received frame, got " & buffer(startIndex).ToString("x"c).PadLeft(2, "0"c))
+                    End If
 
-                        Select Case parsedImage.FrameType
-                            Case PMUFrameType.DataFrame
-                                With New DataFrame(parsedImage, m_configuration, buffer, startIndex + CommonBinaryLength, m_phasorFormat)
-                                    ' We can only start parsing data frames once we have successfully received configuration file 2...
-                                    If Not m_configuration Is Nothing Then
-                                        RaiseEvent ReceivedDataFrame(.This)
-                                    End If
+                    If startIndex + FrameHeader.BinaryLength > received Then
+                        ' Save off remaining buffer to prepend onto next read
+                        dataStream = New MemoryStream
+                        dataStream.Write(buffer, startIndex, received - startIndex + 1)
+                        Exit Do
+                    End If
 
-                                    startIndex += .FrameLength
+                    parsedFrameHeader = New FrameHeader(buffer, startIndex)
+
+                    If startIndex + parsedFrameHeader.FrameLength > received Then
+                        ' Save off remaining buffer to prepend onto next read
+                        dataStream = New MemoryStream
+                        dataStream.Write(buffer, startIndex, received - startIndex + 1)
+                        Exit Do
+                    End If
+
+                    Select Case parsedFrameHeader.FrameType
+                        Case FrameType.DataFrame
+                            ' We can only start parsing data frames once we have successfully received configuration file 2...
+                            If Not m_configFile2 Is Nothing Then
+                                With New DataFrame(parsedFrameHeader, m_configFile2, buffer, startIndex)
+                                    RaiseEvent ReceivedDataFrame(.This)
                                 End With
-                            Case PMUFrameType.HeaderFrame
-                                With New HeaderFrame(parsedImage, buffer, startIndex + CommonBinaryLength)
-                                    If .IsFirstFrame Then m_headerFile = New HeaderFile
+                            End If
+                            'Case FrameType.HeaderFrame
+                            '    With New HeaderFrame(parsedImage, buffer, startIndex + CommonBinaryLength)
+                            '        If .IsFirstFrame Then m_headerFile = New HeaderFile
 
-                                    m_headerFile.AppendNextFrame(.This)
+                            '        m_headerFile.AppendNextFrame(.This)
 
-                                    If .IsLastFrame Then
-                                        RaiseEvent ReceivedHeaderFile(m_headerFile)
-                                        m_headerFile = Nothing
-                                    End If
+                            '        If .IsLastFrame Then
+                            '            RaiseEvent ReceivedHeaderFile(m_headerFile)
+                            '            m_headerFile = Nothing
+                            '        End If
 
-                                    startIndex += .FrameLength
-                                End With
-                            Case PMUFrameType.ConfigurationFrame
-                                With New ConfigurationFrame(parsedImage, buffer, startIndex + CommonBinaryLength)
-                                    If m_awaitingConfigFile1 Then
-                                        If .IsFirstFrame Then m_configFile1 = New ConfigurationFile
+                            '        startIndex += .FrameLength
+                            '    End With
+                        Case FrameType.ConfigurationFrame1
+                            With New ConfigurationFrame(parsedFrameHeader, buffer, startIndex)
+                                m_configFile1 = .This
+                                RaiseEvent ReceivedConfigFile1(.This)
+                            End With
+                        Case FrameType.ConfigurationFrame2
+                            With New ConfigurationFrame(parsedFrameHeader, buffer, startIndex)
+                                m_configFile2 = .This
+                                RaiseEvent ReceivedConfigFile2(.This)
+                            End With
+                        Case Else
+                            'RaiseEvent ReceivedUnknownFrame(parsedImage)
+                    End Select
 
-                                        m_configFile1.AppendNextFrame(.This)
-
-                                        If .IsLastFrame Then
-                                            m_awaitingConfigFile1 = False
-                                            RaiseEvent ReceivedConfigFile1(m_configFile1)
-                                            m_configFile1 = Nothing
-                                        End If
-                                    ElseIf m_awaitingConfigFile2 Then
-                                        If .IsFirstFrame Then m_configFile2 = New ConfigurationFile
-
-                                        m_configFile2.AppendNextFrame(.This)
-
-                                        If .IsLastFrame Then
-                                            m_awaitingConfigFile2 = False
-                                            RaiseEvent ReceivedConfigFile2(m_configFile2)
-                                            m_configFile2 = Nothing
-                                        End If
-                                    Else
-                                        RaiseEvent ReceivedUnknownFrame(.This)
-                                    End If
-
-                                    startIndex += .FrameLength
-                                End With
-                            Case Else
-                                RaiseEvent ReceivedUnknownFrame(parsedImage)
-                        End Select
-                    Loop
-                Catch ex As ThreadAbortException
-                    Exit Do
-                Catch ex As Exception
-                    RaiseEvent DataStreamException(ex)
-                End Try
+                    startIndex += parsedFrameHeader.FrameLength
+                Loop
             Loop
+            'Catch ex As ThreadAbortException
+            '    Exit Sub
+            'Catch ex As Exception
+            '    RaiseEvent DataStreamException(ex)
+            'Finally
+            '    'dataStream.Close()
+            'End Try
 
         End Sub
-
-        ' We pick up our config file 2 when we enable the real time stream...
-        Private Sub m_eventInstance_ReceivedConfigFile2(ByVal configFile As ConfigurationFile) Handles m_eventInstance.ReceivedConfigFile2
-
-            If m_configuration Is Nothing Then m_configuration = configFile
-
-        End Sub
-
-        <EditorBrowsable(EditorBrowsableState.Never)> _
-        Public Overrides Property DataImage() As Byte()
-            Get
-                Throw New NotImplementedException
-            End Get
-            Set(ByVal Value As Byte())
-                Throw New NotImplementedException
-            End Set
-        End Property
 
     End Class
 

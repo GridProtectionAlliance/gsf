@@ -511,12 +511,12 @@
                     BuildAction = "Compile"
                 />
                 <File
-                    RelPath = "PC37_118\BaseFrame.vb"
+                    RelPath = "PC37_118\AnalogDefinition.vb"
                     SubType = "Code"
                     BuildAction = "Compile"
                 />
                 <File
-                    RelPath = "PC37_118\Collections.vb"
+                    RelPath = "PC37_118\AnalogValue.vb"
                     SubType = "Code"
                     BuildAction = "Compile"
                 />
@@ -531,7 +531,12 @@
                     BuildAction = "Compile"
                 />
                 <File
-                    RelPath = "PC37_118\ConfigurationFile.vb"
+                    RelPath = "PC37_118\ConfigurationCell.vb"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "PC37_118\ConfigurationCellCollection.vb"
                     SubType = "Code"
                     BuildAction = "Compile"
                 />
@@ -541,7 +546,22 @@
                     BuildAction = "Compile"
                 />
                 <File
+                    RelPath = "PC37_118\DataCell.vb"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "PC37_118\DataCellCollection.vb"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
                     RelPath = "PC37_118\DataFrame.vb"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "PC37_118\DataSample.vb"
                     SubType = "Code"
                     BuildAction = "Compile"
                 />
@@ -551,17 +571,22 @@
                     BuildAction = "Compile"
                 />
                 <File
+                    RelPath = "PC37_118\DigitalValue.vb"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
                     RelPath = "PC37_118\FrameParser.vb"
                     SubType = "Code"
                     BuildAction = "Compile"
                 />
                 <File
-                    RelPath = "PC37_118\HeaderFile.vb"
+                    RelPath = "PC37_118\FrequencyDefinition.vb"
                     SubType = "Code"
                     BuildAction = "Compile"
                 />
                 <File
-                    RelPath = "PC37_118\HeaderFrame.vb"
+                    RelPath = "PC37_118\FrequencyValue.vb"
                     SubType = "Code"
                     BuildAction = "Compile"
                 />

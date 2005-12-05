@@ -33,11 +33,40 @@ Namespace Interop
         ' Create shared little-endian class
         Public Shared LittleEndian As New EndianOrder(Endianness.LittleEndian)
 
+        Public Delegate Sub CopyFunction(ByVal sourceArray As Array, ByVal sourceIndex As Integer, ByVal destinationArray As Array, ByVal destinationIndex As Integer, ByVal length As Integer)
+        Public Delegate Function CoerceByteOrderFunction(ByVal buffer As Byte()) As Byte()
+
         Private m_targetEndianness As Endianness
+        Private m_copy As CopyFunction
+        Private m_coerceByteOrder As CoerceByteOrderFunction
 
         Private Sub New(ByVal targetEndianness As Endianness)
 
             m_targetEndianness = targetEndianness
+
+            ' We perform this logic only once for speed in conversions - we can do this because neither
+            ' the target nor the OS endian order will change during the lifecycle of this class...
+            If targetEndianness = Endianness.BigEndian Then
+                If BitConverter.IsLittleEndian Then
+                    ' If OS is little endian and we want big endian, we swap the bytes
+                    m_copy = AddressOf SwapCopy
+                    m_coerceByteOrder = AddressOf ReverseBuffer
+                Else
+                    ' If OS is big endian and we want big endian, we just copy the bytes
+                    m_copy = AddressOf Buffer.BlockCopy
+                    m_coerceByteOrder = AddressOf PassThroughBuffer
+                End If
+            Else
+                If BitConverter.IsLittleEndian Then
+                    ' If OS is little endian and we want little endian, we just copy the bytes
+                    m_copy = AddressOf Buffer.BlockCopy
+                    m_coerceByteOrder = AddressOf PassThroughBuffer
+                Else
+                    ' If OS is big endian and we want little endian, we swap the bytes
+                    m_copy = AddressOf SwapCopy
+                    m_coerceByteOrder = AddressOf ReverseBuffer
+                End If
+            End If
 
         End Sub
 
@@ -45,45 +74,22 @@ Namespace Interop
         ' or if the source array is big-endian it will copy it in little-endian order
         Private Sub SwapCopy(ByVal sourceArray As Array, ByVal sourceIndex As Integer, ByVal destinationArray As Array, ByVal destinationIndex As Integer, ByVal length As Integer)
 
+            Dim offset As Integer = destinationIndex + length - 1
+
             For x As Integer = sourceIndex To sourceIndex + length - 1
-                destinationArray.SetValue(sourceArray.GetValue(x), destinationIndex + length - 1 - (x - sourceIndex))
+                destinationArray.SetValue(sourceArray.GetValue(x), offset - (x - sourceIndex))
             Next
 
         End Sub
 
-        ' This function behaves just like Array.Copy but makes sure data is copied in desired endian order - regardless of native endian-order of OS
-        Public Sub Copy(ByVal sourceArray As Array, ByVal sourceIndex As Integer, ByVal destinationArray As Array, ByVal destinationIndex As Integer, ByVal length As Integer)
+        Private Function ReverseBuffer(ByVal buffer As Byte()) As Byte()
 
-            If m_targetEndianness = Endianness.BigEndian Then
-                If BitConverter.IsLittleEndian Then
-                    ' If OS is little endian and we want big endian, we swap the bytes
-                    SwapCopy(sourceArray, sourceIndex, destinationArray, destinationIndex, length)
-                Else
-                    ' If OS is big endian and we want big endian, we just copy the bytes
-                    Buffer.BlockCopy(sourceArray, sourceIndex, destinationArray, destinationIndex, length)
-                End If
-            Else
-                If BitConverter.IsLittleEndian Then
-                    ' If OS is little endian and we want little endian, we just copy the bytes
-                    Buffer.BlockCopy(sourceArray, sourceIndex, destinationArray, destinationIndex, length)
-                Else
-                    ' If OS is big endian and we want little endian, we swap the bytes
-                    SwapCopy(sourceArray, sourceIndex, destinationArray, destinationIndex, length)
-                End If
-            End If
+            Array.Reverse(buffer)
+            Return buffer
 
-        End Sub
+        End Function
 
-        ' This function adjusts buffer into desired endian order
-        Public Function CoerceByteOrder(ByVal buffer As Byte()) As Byte()
-
-            If m_targetEndianness = Endianness.BigEndian Then
-                ' If OS is little endian and we want big endian, we reverse the bytes
-                If BitConverter.IsLittleEndian Then Array.Reverse(buffer)
-            Else
-                ' If OS is big endian and we want little endian, we reverse the bytes
-                If Not BitConverter.IsLittleEndian Then Array.Reverse(buffer)
-            End If
+        Private Function PassThroughBuffer(ByVal buffer As Byte()) As Byte()
 
             Return buffer
 
@@ -95,11 +101,24 @@ Namespace Interop
             End Get
         End Property
 
+        ' For non-standard length byte manipulations, we expose copy function that will copy OS-ordered source buffer into proper target endian-order
+        Public Sub Copy(ByVal sourceArray As Array, ByVal sourceIndex As Integer, ByVal destinationArray As Array, ByVal destinationIndex As Integer, ByVal length As Integer)
+
+            m_copy(sourceArray, sourceIndex, destinationArray, destinationIndex, length)
+
+        End Sub
+
+        Public Function CoerceByteOrder(ByVal buffer As Byte()) As Byte()
+
+            Return m_coerceByteOrder(buffer)
+
+        End Function
+
         Public Function ToBoolean(ByVal value As Byte(), ByVal startIndex As Integer) As Boolean
 
             Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), 1)
 
-            Copy(value, startIndex, buffer, 0, 1)
+            m_copy(value, startIndex, buffer, 0, 1)
 
             Return BitConverter.ToBoolean(buffer, 0)
 
@@ -109,7 +128,7 @@ Namespace Interop
 
             Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), 2)
 
-            Copy(value, startIndex, buffer, 0, 2)
+            m_copy(value, startIndex, buffer, 0, 2)
 
             Return BitConverter.ToChar(buffer, 0)
 
@@ -119,7 +138,7 @@ Namespace Interop
 
             Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), 8)
 
-            Copy(value, startIndex, buffer, 0, 8)
+            m_copy(value, startIndex, buffer, 0, 8)
 
             Return BitConverter.ToDouble(buffer, 0)
 
@@ -129,7 +148,7 @@ Namespace Interop
 
             Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), 2)
 
-            Copy(value, startIndex, buffer, 0, 2)
+            m_copy(value, startIndex, buffer, 0, 2)
 
             Return BitConverter.ToInt16(buffer, 0)
 
@@ -139,7 +158,7 @@ Namespace Interop
 
             Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), 4)
 
-            Copy(value, startIndex, buffer, 0, 4)
+            m_copy(value, startIndex, buffer, 0, 4)
 
             Return BitConverter.ToInt32(buffer, 0)
 
@@ -149,7 +168,7 @@ Namespace Interop
 
             Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), 8)
 
-            Copy(value, startIndex, buffer, 0, 8)
+            m_copy(value, startIndex, buffer, 0, 8)
 
             Return BitConverter.ToInt64(buffer, 0)
 
@@ -159,7 +178,7 @@ Namespace Interop
 
             Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), 4)
 
-            Copy(value, startIndex, buffer, 0, 4)
+            m_copy(value, startIndex, buffer, 0, 4)
 
             Return BitConverter.ToSingle(buffer, 0)
 
@@ -169,7 +188,7 @@ Namespace Interop
 
             Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), 2)
 
-            Copy(value, startIndex, buffer, 0, 2)
+            m_copy(value, startIndex, buffer, 0, 2)
 
             Return BitConverter.ToUInt16(buffer, 0)
 
@@ -179,7 +198,7 @@ Namespace Interop
 
             Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), 4)
 
-            Copy(value, startIndex, buffer, 0, 4)
+            m_copy(value, startIndex, buffer, 0, 4)
 
             Return BitConverter.ToUInt32(buffer, 0)
 
@@ -189,7 +208,7 @@ Namespace Interop
 
             Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), 8)
 
-            Copy(value, startIndex, buffer, 0, 8)
+            m_copy(value, startIndex, buffer, 0, 8)
 
             Return BitConverter.ToUInt64(buffer, 0)
 
@@ -197,121 +216,121 @@ Namespace Interop
 
         Public Function GetBytes(ByVal value As Boolean) As Byte()
 
-            Return CoerceByteOrder(BitConverter.GetBytes(value))
+            Return m_coerceByteOrder(BitConverter.GetBytes(value))
 
         End Function
 
         Public Function GetBytes(ByVal value As Char) As Byte()
 
-            Return CoerceByteOrder(BitConverter.GetBytes(value))
+            Return m_coerceByteOrder(BitConverter.GetBytes(value))
 
         End Function
 
         Public Function GetBytes(ByVal value As Double) As Byte()
 
-            Return CoerceByteOrder(BitConverter.GetBytes(value))
+            Return m_coerceByteOrder(BitConverter.GetBytes(value))
 
         End Function
 
         Public Function GetBytes(ByVal value As Int16) As Byte()
 
-            Return CoerceByteOrder(BitConverter.GetBytes(value))
+            Return m_coerceByteOrder(BitConverter.GetBytes(value))
 
         End Function
 
         Public Function GetBytes(ByVal value As Int32) As Byte()
 
-            Return CoerceByteOrder(BitConverter.GetBytes(value))
+            Return m_coerceByteOrder(BitConverter.GetBytes(value))
 
         End Function
 
         Public Function GetBytes(ByVal value As Int64) As Byte()
 
-            Return CoerceByteOrder(BitConverter.GetBytes(value))
+            Return m_coerceByteOrder(BitConverter.GetBytes(value))
 
         End Function
 
         Public Function GetBytes(ByVal value As Single) As Byte()
 
-            Return CoerceByteOrder(BitConverter.GetBytes(value))
+            Return m_coerceByteOrder(BitConverter.GetBytes(value))
 
         End Function
 
         Public Function GetBytes(ByVal value As UInt16) As Byte()
 
-            Return CoerceByteOrder(BitConverter.GetBytes(value))
+            Return m_coerceByteOrder(BitConverter.GetBytes(value))
 
         End Function
 
         Public Function GetBytes(ByVal value As UInt32) As Byte()
 
-            Return CoerceByteOrder(BitConverter.GetBytes(value))
+            Return m_coerceByteOrder(BitConverter.GetBytes(value))
 
         End Function
 
         Public Function GetBytes(ByVal value As UInt64) As Byte()
 
-            Return CoerceByteOrder(BitConverter.GetBytes(value))
+            Return m_coerceByteOrder(BitConverter.GetBytes(value))
 
         End Function
 
         Public Sub CopyBytes(ByVal value As Boolean, ByVal destinationArray As Array, ByVal destinationIndex As Integer)
 
-            Copy(BitConverter.GetBytes(value), 0, destinationArray, destinationIndex, 1)
+            m_copy(BitConverter.GetBytes(value), 0, destinationArray, destinationIndex, 1)
 
         End Sub
 
         Public Sub CopyBytes(ByVal value As Char, ByVal destinationArray As Array, ByVal destinationIndex As Integer)
 
-            Copy(BitConverter.GetBytes(value), 0, destinationArray, destinationIndex, 2)
+            m_copy(BitConverter.GetBytes(value), 0, destinationArray, destinationIndex, 2)
 
         End Sub
 
         Public Sub CopyBytes(ByVal value As Double, ByVal destinationArray As Array, ByVal destinationIndex As Integer)
 
-            Copy(BitConverter.GetBytes(value), 0, destinationArray, destinationIndex, 8)
+            m_copy(BitConverter.GetBytes(value), 0, destinationArray, destinationIndex, 8)
 
         End Sub
 
         Public Sub CopyBytes(ByVal value As Int16, ByVal destinationArray As Array, ByVal destinationIndex As Integer)
 
-            Copy(BitConverter.GetBytes(value), 0, destinationArray, destinationIndex, 2)
+            m_copy(BitConverter.GetBytes(value), 0, destinationArray, destinationIndex, 2)
 
         End Sub
 
         Public Sub CopyBytes(ByVal value As Int32, ByVal destinationArray As Array, ByVal destinationIndex As Integer)
 
-            Copy(BitConverter.GetBytes(value), 0, destinationArray, destinationIndex, 4)
+            m_copy(BitConverter.GetBytes(value), 0, destinationArray, destinationIndex, 4)
 
         End Sub
 
         Public Sub CopyBytes(ByVal value As Int64, ByVal destinationArray As Array, ByVal destinationIndex As Integer)
 
-            Copy(BitConverter.GetBytes(value), 0, destinationArray, destinationIndex, 8)
+            m_copy(BitConverter.GetBytes(value), 0, destinationArray, destinationIndex, 8)
 
         End Sub
 
         Public Sub CopyBytes(ByVal value As Single, ByVal destinationArray As Array, ByVal destinationIndex As Integer)
 
-            Copy(BitConverter.GetBytes(value), 0, destinationArray, destinationIndex, 4)
+            m_copy(BitConverter.GetBytes(value), 0, destinationArray, destinationIndex, 4)
 
         End Sub
 
         Public Sub CopyBytes(ByVal value As UInt16, ByVal destinationArray As Array, ByVal destinationIndex As Integer)
 
-            Copy(BitConverter.GetBytes(value), 0, destinationArray, destinationIndex, 2)
+            m_copy(BitConverter.GetBytes(value), 0, destinationArray, destinationIndex, 2)
 
         End Sub
 
         Public Sub CopyBytes(ByVal value As UInt32, ByVal destinationArray As Array, ByVal destinationIndex As Integer)
 
-            Copy(BitConverter.GetBytes(value), 0, destinationArray, destinationIndex, 4)
+            m_copy(BitConverter.GetBytes(value), 0, destinationArray, destinationIndex, 4)
 
         End Sub
 
         Public Sub CopyBytes(ByVal value As UInt64, ByVal destinationArray As Array, ByVal destinationIndex As Integer)
 
-            Copy(BitConverter.GetBytes(value), 0, destinationArray, destinationIndex, 8)
+            m_copy(BitConverter.GetBytes(value), 0, destinationArray, destinationIndex, 8)
 
         End Sub
 

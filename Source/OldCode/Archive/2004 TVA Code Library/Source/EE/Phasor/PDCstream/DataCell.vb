@@ -83,22 +83,31 @@ Namespace EE.Phasor.PDCstream
         End Property
 
         ' Note: this is only the first byte of the channel flag word
-        Public ReadOnly Property ChannelFlags() As ChannelFlags
+        Public Property ChannelFlags() As ChannelFlags
             Get
                 Return m_flags
             End Get
+            Set(ByVal Value As ChannelFlags)
+                m_flags = Value
+            End Set
         End Property
 
-        Public ReadOnly Property ReservedFlags() As ReservedFlags
+        Public Property ReservedFlags() As ReservedFlags
             Get
                 Return m_reservedFlags
             End Get
+            Set(ByVal Value As ReservedFlags)
+                m_reservedFlags = Value
+            End Set
         End Property
 
-        Public ReadOnly Property IEEEFormatFlags() As IEEEFormatFlags
+        Public Property IEEEFormatFlags() As IEEEFormatFlags
             Get
                 Return m_iEEEFormatFlags
             End Get
+            Set(ByVal Value As IEEEFormatFlags)
+                m_iEEEFormatFlags = Value
+            End Set
         End Property
 
         Public Property SampleNumber() As Int16
@@ -337,7 +346,7 @@ Namespace EE.Phasor.PDCstream
             End Get
         End Property
 
-        Protected Overrides Sub ParseHeaderImage(ByVal state As IChannelParsingState, ByVal binaryImage() As Byte, ByRef startIndex As Integer)
+        Protected Overrides Sub ParseHeaderImage(ByVal state As IChannelParsingState, ByVal binaryImage() As Byte, ByVal startIndex As Integer)
 
             ' Parse PDCstream specific header image
             m_flags = binaryImage(startIndex)

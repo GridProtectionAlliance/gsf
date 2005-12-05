@@ -47,7 +47,7 @@ Namespace EE.Phasor
 
         End Sub
 
-        Protected Sub New(ByVal parent As IDataFrame, ByVal alignOnDWordBoundry As Boolean, ByVal maximumPhasors As Integer, ByVal maximumAnalogs As Integer, ByVal maximumDigitals As Integer, ByVal state As IConfigurationCellParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+        Protected Sub New(ByVal parent As IConfigurationFrame, ByVal alignOnDWordBoundry As Boolean, ByVal maximumPhasors As Integer, ByVal maximumAnalogs As Integer, ByVal maximumDigitals As Integer, ByVal state As IConfigurationCellParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
 
             Me.New(parent, alignOnDWordBoundry, maximumPhasors, maximumAnalogs, maximumDigitals)
             ParseBinaryImage(state, binaryImage, startIndex)
@@ -127,10 +127,10 @@ Namespace EE.Phasor
             End Get
             Set(ByVal Value As String)
                 Dim length As Integer = Len(Trim(Value))
-                If length > IDLabelLength Or length < IDLabelLength Then
-                    Throw New OverflowException("ID label must be exactly " & IDLabelLength & " characters in length")
+                If length > IDLabelLength Then
+                    Throw New OverflowException("ID label must be less than " & IDLabelLength & " characters in length")
                 Else
-                    m_idLabel = Value
+                    m_idLabel = Value.PadRight(IDLabelLength)
                 End If
             End Set
         End Property
@@ -194,7 +194,8 @@ Namespace EE.Phasor
 
         Protected Overrides ReadOnly Property BodyLength() As Int16
             Get
-                Return m_phasorDefinitions.BinaryLength + m_frequencyDefinition.BinaryLength + m_analogDefinitions.BinaryLength + m_digitalDefinitions.BinaryLength
+                ' TODO: Make this body length specific
+                Return m_phasorDefinitions.BinaryLength + m_analogDefinitions.BinaryLength + m_digitalDefinitions.BinaryLength
             End Get
         End Property
 
@@ -203,9 +204,9 @@ Namespace EE.Phasor
                 Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BodyLength)
                 Dim index As Integer
 
-                ' Copy in common cell image
+                ' Copy in common cell images
+                ' TODO: copy in only for cell body
                 CopyImage(m_phasorDefinitions, buffer, index)
-                CopyImage(m_frequencyDefinition, buffer, index)
                 CopyImage(m_analogDefinitions, buffer, index)
                 CopyImage(m_digitalDefinitions, buffer, index)
 
@@ -213,32 +214,60 @@ Namespace EE.Phasor
             End Get
         End Property
 
-        Protected Overrides Sub ParseBodyImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByRef startIndex As Integer)
+        Protected Overrides ReadOnly Property FooterLength() As Short
+            Get
+                Return 2 + 4 * (m_phasorDefinitions.Count + m_analogDefinitions.Count + m_digitalDefinitions.Count)
+            End Get
+        End Property
+
+        Protected Overrides ReadOnly Property FooterImage() As Byte()
+            Get
+                Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BodyLength)
+                Dim index As Integer
+
+                ' Copy in common cell images
+                ' TODO: copy in only for cell footer
+                CopyImage(m_phasorDefinitions, buffer, index)
+                CopyImage(m_analogDefinitions, buffer, index)
+                CopyImage(m_digitalDefinitions, buffer, index)
+
+                Return buffer
+            End Get
+        End Property
+
+        Protected Overrides Sub ParseBodyImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
 
             Dim parsingState As IConfigurationCellParsingState = state
             Dim x As Integer
 
-            ' TODO: define the common nature of configuration parsing order here...
-            '' we are able to "automatically" parse this data out in the data cell base class - BEAUTIFUL!!!
-            'With m_configurationCell
-            '    For x = 0 To .PhasorDefinitions.Count - 1
-            '        m_phasorValues.Add(Activator.CreateInstance(parsingState.PhasorValueType, New Object() {Me, .PhasorDefinitions(x), binaryImage, startIndex}))
-            '        startIndex += m_phasorValues(x).BinaryLength
-            '    Next
+            With parsingState
+                For x = 0 To .PhasorCount - 1
+                    m_phasorDefinitions.Add(Activator.CreateInstance(.PhasorDefinitionType, New Object() {Me, binaryImage, startIndex}))
+                    'startIndex += m_phasorDefinitions(x).BodyLength
+                    startIndex += m_phasorDefinitions(x).MaximumLabelLength
+                Next
 
-            '    m_frequencyValue = Activator.CreateInstance(parsingState.FrequencyValueType, New Object() {Me, .FrequencyDefinition, binaryImage, startIndex})
-            '    startIndex += m_frequencyValue.BinaryLength
+                For x = 0 To .AnalogCount - 1
+                    m_analogDefinitions.Add(Activator.CreateInstance(.AnalogDefinitionType, New Object() {Me, binaryImage, startIndex}))
+                    'startIndex += m_analogDefinitions(x).BodyLength
+                    startIndex += m_analogDefinitions(x).MaximumLabelLength
+                Next
 
-            '    For x = 0 To .AnalogDefinitions.Count - 1
-            '        m_analogValues.Add(Activator.CreateInstance(parsingState.AnalogValueType, New Object() {Me, .AnalogDefinitions(x), binaryImage, startIndex}))
-            '        startIndex += m_analogValues(x).BinaryLength
-            '    Next
+                For x = 0 To .DigitalCount - 1
+                    m_digitalDefinitions.Add(Activator.CreateInstance(.DigitalDefinitionType, New Object() {Me, binaryImage, startIndex}))
+                    'startIndex += m_digitalDefinitions(x).BodyLength
+                    startIndex += 16 * m_digitalDefinitions(x).MaximumLabelLength
+                Next
+            End With
 
-            '    For x = 0 To .DigitalDefinitions.Count - 1
-            '        m_digitalValues.Add(Activator.CreateInstance(parsingState.DigitalValueType, New Object() {Me, .DigitalDefinitions(x), binaryImage, startIndex}))
-            '        startIndex += m_digitalValues(x).BinaryLength
-            '    Next
-            'End With
+        End Sub
+
+        Protected Overrides Sub ParseFooterImage(ByVal state As IChannelParsingState, ByVal binaryImage() As Byte, ByVal startIndex As Integer)
+
+            Dim parsingState As IConfigurationCellParsingState = state
+
+            ' TODO: Parse out conversion factors and digital status words
+            m_frequencyDefinition = Activator.CreateInstance(parsingState.FrequencyDefinitionType, New Object() {Me, binaryImage, startIndex + 4 * (m_phasorDefinitions.Count + m_analogDefinitions.Count + m_digitalDefinitions.Count)})
 
         End Sub
 

@@ -43,6 +43,7 @@ Namespace EE.Phasor.PDCstream
         Private m_defaultPhasorV As PhasorDefinition
         Private m_defaultPhasorI As PhasorDefinition
         Private m_defaultFrequency As FrequencyDefinition
+        Private m_rowLength As Int32
         Private m_packetsPerSample As Int16
         Private m_streamType As StreamType
         Private m_revisionNumber As RevisionNumber
@@ -56,7 +57,24 @@ Namespace EE.Phasor.PDCstream
             m_iniFile = New IniFile(configFileName)
             m_readWriteLock = New ReaderWriterLock
             m_packetsPerSample = 1
-            Refresh()
+            Refresh(True)
+
+        End Sub
+
+        ' If you are going to create multiple data packets, you can use this constructor
+        ' Note that this only starts becoming necessary if you start hitting data size
+        ' limits imposed by the nature of the protocol...
+        Public Sub New(ByVal configFileName As String, ByVal packetsPerSample As Int16)
+
+            Me.New(configFileName)
+            m_packetsPerSample = packetsPerSample
+
+        End Sub
+
+        Public Sub New(ByVal configFileName As String, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+
+            MyBase.New(New ConfigurationFrameParsingState(New ConfigurationCellCollection, GetType(ConfigurationCell), 0), binaryImage, startIndex)
+            Refresh(False)
 
         End Sub
 
@@ -96,7 +114,7 @@ Namespace EE.Phasor.PDCstream
             End Set
         End Property
 
-        Public Sub Refresh()
+        Public Sub Refresh(ByVal clearExistingPMUList As Boolean)
 
             ' The only time we need a write lock is when we reload the config file...
             m_readWriteLock.AcquireWriterLock(-1)
@@ -154,10 +172,13 @@ Namespace EE.Phasor.PDCstream
 
         End Sub
 
-        Public ReadOnly Property PacketsPerSample() As Int16
+        Public Property PacketsPerSample() As Int16
             Get
                 Return m_packetsPerSample
             End Get
+            Set(ByVal Value As Int16)
+                m_packetsPerSample = Value
+            End Set
         End Property
 
         Public ReadOnly Property ConfigFileName() As String
@@ -298,24 +319,31 @@ Namespace EE.Phasor.PDCstream
             End Get
         End Property
 
+        Public ReadOnly Property RowLength() As Int32
+            Get
+                Return RowLength(False)
+            End Get
+        End Property
+
         ' RowLength property calculates cell offsets - so it must be called before
         ' accessing cell offsets - this happens automatically since HeaderImage is
         ' called before base class BodyImage which just gets Cells.BinaryImage
-        Public ReadOnly Property RowLength() As Integer
+        Public ReadOnly Property RowLength(ByVal recalculate As Boolean) As Int32
             Get
-                Dim length As Integer
+                If m_rowLength = 0 OrElse recalculate Then
+                    m_rowLength = 0
+                    For x As Integer = 0 To Cells.Count - 1
+                        With Cells(x)
+                            .Offset = m_rowLength
+                            m_rowLength += 12 + FrequencyValue.CalculateBinaryLength(.FrequencyDefinition)
+                            For y As Integer = 0 To .PhasorDefinitions.Count - 1
+                                m_rowLength += PhasorValue.CalculateBinaryLength(.PhasorDefinitions(y))
+                            Next
+                        End With
+                    Next
+                End If
 
-                For x As Integer = 0 To Cells.Count - 1
-                    With Cells(x)
-                        .Offset = length
-                        length += 12 + FrequencyValue.CalculateBinaryLength(.FrequencyDefinition)
-                        For y As Integer = 0 To .PhasorDefinitions.Count - 1
-                            length += PhasorValue.CalculateBinaryLength(.PhasorDefinitions(y))
-                        Next
-                    End With
-                Next
-
-                Return length
+                Return m_rowLength
             End Get
         End Property
 
@@ -343,7 +371,7 @@ Namespace EE.Phasor.PDCstream
                 buffer(4) = StreamType
                 buffer(5) = RevisionNumber
                 EndianOrder.BigEndian.CopyBytes(SampleRate, buffer, 6)
-                EndianOrder.BigEndian.CopyBytes(RowLength, buffer, 8) ' <-- Important: This step calculates all PMU row offsets!
+                EndianOrder.BigEndian.CopyBytes(RowLength(True), buffer, 8) ' <-- Important: This step calculates all PMU row offsets!
                 EndianOrder.BigEndian.CopyBytes(PacketsPerSample, buffer, 12)
                 EndianOrder.BigEndian.CopyBytes(Convert.ToInt16(Cells.Count), buffer, 14)
 
@@ -351,9 +379,33 @@ Namespace EE.Phasor.PDCstream
             End Get
         End Property
 
-        Protected Overrides Sub ParseHeaderImage(ByVal state As IChannelParsingState, ByVal binaryImage() As Byte, ByRef startIndex As Integer)
+        Protected Overrides Sub ParseHeaderImage(ByVal state As IChannelParsingState, ByVal binaryImage() As Byte, ByVal startIndex As Integer)
 
-            ' TODO: Parse PDC stream specific header image here...
+            ' We parse the PDC stream specific header image here...
+            Dim parsingState As IConfigurationFrameParsingState = DirectCast(state, IConfigurationFrameParsingState)
+            Dim wordCount As Int16
+
+            If binaryImage(startIndex) <> Common.SyncByte Then
+                Throw New InvalidOperationException("Bad Data Stream: Expected sync byte &HAA as first byte in PDCstream configuration frame, got " & binaryImage(startIndex).ToString("x"c).PadLeft(2, "0"c))
+            End If
+
+            If binaryImage(startIndex + 1) <> DescriptorPacketFlag Then
+                Throw New InvalidOperationException("Bad Data Stream: This is not a PDCstream configuration frame - looks like a data frame.")
+            End If
+
+            wordCount = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 2)
+            StreamType = binaryImage(startIndex + 4)
+            RevisionNumber = binaryImage(startIndex + 5)
+            SampleRate = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 6)
+            m_rowLength = EndianOrder.BigEndian.ToInt32(binaryImage, startIndex + 8)
+            PacketsPerSample = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 12)
+
+            parsingState.CellCount = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 14)
+
+            ' The data that's in the data stream will take precedence over what's in the
+            ' in the configuration file.  The configuration file may define more PMU's than
+            ' are in the stream - in my opinon that's OK - it's when you have PMU's in the
+            ' stream that aren't defined in the INI file that you'll have trouble..
 
         End Sub
 

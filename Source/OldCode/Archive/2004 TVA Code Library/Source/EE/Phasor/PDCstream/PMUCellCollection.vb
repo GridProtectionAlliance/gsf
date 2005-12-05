@@ -91,6 +91,15 @@ Namespace EE.Phasor.PDCstream
             End Get
         End Property
 
+        Public Property IDCode() As Short Implements IChannelFrame.IDCode
+            Get
+                Return m_parent.Parent.IDCode
+            End Get
+            Set(ByVal Value As Short)
+                Throw New NotImplementedException("This property is readonly in this implementation")
+            End Set
+        End Property
+
         Public Property DataIsValid() As Boolean Implements IChannelFrame.DataIsValid
             Get
                 Return m_parent.Parent.DataIsValid

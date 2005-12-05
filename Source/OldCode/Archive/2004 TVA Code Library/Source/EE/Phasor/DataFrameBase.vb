@@ -33,9 +33,9 @@ Namespace EE.Phasor
 
         End Sub
 
-        Protected Sub New(ByVal cells As DataCellCollection, ByVal timeTag As Unix.TimeTag, ByVal milliseconds As Double, ByVal synchronizationIsValid As Boolean, ByVal dataIsValid As Boolean, ByVal configurationFrame As IConfigurationFrame)
+        Protected Sub New(ByVal cells As DataCellCollection, ByVal timeTag As Unix.TimeTag, ByVal milliseconds As Double, ByVal synchronizationIsValid As Boolean, ByVal dataIsValid As Boolean, ByVal idCode As Int16, ByVal configurationFrame As IConfigurationFrame)
 
-            MyBase.New(cells, timeTag, milliseconds, synchronizationIsValid, dataIsValid)
+            MyBase.New(cells, timeTag, milliseconds, synchronizationIsValid, dataIsValid, idCode)
 
             m_configurationFrame = configurationFrame
 
@@ -54,7 +54,7 @@ Namespace EE.Phasor
         ' Derived classes are expected to expose a Public Sub New(ByVal dataFrame As IDataFrame)
         Protected Sub New(ByVal dataFrame As IDataFrame)
 
-            Me.New(dataFrame.Cells, dataFrame.TimeTag, dataFrame.Milliseconds, dataFrame.SynchronizationIsValid, dataFrame.DataIsValid, dataFrame.ConfigurationFrame)
+            Me.New(dataFrame.Cells, dataFrame.TimeTag, dataFrame.Milliseconds, dataFrame.SynchronizationIsValid, dataFrame.DataIsValid, dataFrame.IDCode, dataFrame.ConfigurationFrame)
 
         End Sub
 

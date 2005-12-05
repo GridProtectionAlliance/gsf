@@ -15,12 +15,6 @@ Namespace Threading
 
         Protected WorkerThread As Thread
 
-        Public Sub New()
-
-            WorkerThread = New Thread(AddressOf ThreadExec)
-
-        End Sub
-
         Protected Overrides Sub Finalize()
 
             Abort()
@@ -29,11 +23,14 @@ Namespace Threading
 
         Public Overridable Sub Start()
 
+            WorkerThread = New Thread(AddressOf ThreadExec)
             WorkerThread.Start()
 
         End Sub
 
         Public Sub Abort() Implements IDisposable.Dispose
+
+            GC.SuppressFinalize(Me)
 
             If Not WorkerThread Is Nothing Then
                 Try
@@ -45,7 +42,6 @@ Namespace Threading
                 End Try
                 WorkerThread = Nothing
             End If
-            GC.SuppressFinalize(Me)
 
         End Sub
 

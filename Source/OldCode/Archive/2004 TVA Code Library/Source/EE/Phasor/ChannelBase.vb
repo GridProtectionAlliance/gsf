@@ -42,7 +42,7 @@ Namespace EE.Phasor
         Public Overridable ReadOnly Property BinaryImage() As Byte() Implements IChannel.BinaryImage
             Get
                 Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BinaryLength)
-                Dim index As Integer = 0
+                Dim index As Integer
 
                 ' Copy in header, body and footer images
                 CopyImage(HeaderImage, buffer, index, HeaderLength)
@@ -57,19 +57,22 @@ Namespace EE.Phasor
 
             ' Parse out header, body and footer images
             ParseHeaderImage(state, binaryImage, startIndex)
+            startIndex += HeaderLength
+
             ParseBodyImage(state, binaryImage, startIndex)
+            startIndex += BodyLength
+
             ParseFooterImage(state, binaryImage, startIndex)
 
         End Sub
 
-        ' Consumer required to advance startIndex as parsing progresses...
-        Protected Overridable Sub ParseHeaderImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByRef startIndex As Integer)
+        Protected Overridable Sub ParseHeaderImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
         End Sub
 
-        Protected Overridable Sub ParseBodyImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByRef startIndex As Integer)
+        Protected Overridable Sub ParseBodyImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
         End Sub
 
-        Protected Overridable Sub ParseFooterImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByRef startIndex As Integer)
+        Protected Overridable Sub ParseFooterImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
         End Sub
 
         Protected Overridable ReadOnly Property HeaderLength() As Int16

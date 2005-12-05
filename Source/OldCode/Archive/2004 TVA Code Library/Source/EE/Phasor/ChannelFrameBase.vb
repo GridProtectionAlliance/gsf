@@ -29,12 +29,14 @@ Namespace EE.Phasor
         Inherits ChannelBase
         Implements IChannelFrame, IComparable
 
+        Private m_idCode As Int16
         Private m_cells As IChannelCellCollection
         Private m_timeTag As Unix.TimeTag
         Private m_milliseconds As Double
         Private m_synchronizationIsValid As Boolean
         Private m_dataIsValid As Boolean
         Private m_published As Boolean
+        Private m_frameLength As Int16
 
         Protected Sub New(ByVal cells As IChannelCellCollection)
 
@@ -47,7 +49,7 @@ Namespace EE.Phasor
 
         End Sub
 
-        Protected Sub New(ByVal cells As IChannelCellCollection, ByVal timeTag As Unix.TimeTag, ByVal milliseconds As Double, ByVal synchronizationIsValid As Boolean, ByVal dataIsValid As Boolean)
+        Protected Sub New(ByVal cells As IChannelCellCollection, ByVal timeTag As Unix.TimeTag, ByVal milliseconds As Double, ByVal synchronizationIsValid As Boolean, ByVal dataIsValid As Boolean, ByVal idCode As Int16)
 
             MyBase.New()
 
@@ -56,6 +58,7 @@ Namespace EE.Phasor
             m_milliseconds = milliseconds
             m_synchronizationIsValid = synchronizationIsValid
             m_dataIsValid = dataIsValid
+            m_idCode = idCode
 
         End Sub
 
@@ -63,6 +66,7 @@ Namespace EE.Phasor
         Protected Sub New(ByVal state As IChannelFrameParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
 
             Me.New(state.Cells)
+            ParsedFrameLength = state.FrameLength
             ParseBinaryImage(state, binaryImage, startIndex)
 
         End Sub
@@ -70,7 +74,7 @@ Namespace EE.Phasor
         ' Derived classes are expected to expose a Protected Sub New(ByVal channelFrame As IChannelFrame)
         Protected Sub New(ByVal channelFrame As IChannelFrame)
 
-            Me.New(channelFrame.Cells, channelFrame.TimeTag, channelFrame.Milliseconds, channelFrame.SynchronizationIsValid, channelFrame.DataIsValid)
+            Me.New(channelFrame.Cells, channelFrame.TimeTag, channelFrame.Milliseconds, channelFrame.SynchronizationIsValid, channelFrame.DataIsValid, channelFrame.IDCode)
 
         End Sub
 
@@ -78,6 +82,15 @@ Namespace EE.Phasor
             Get
                 Return m_cells
             End Get
+        End Property
+
+        Public Overridable Property IDCode() As Int16 Implements IChannelFrame.IDCode
+            Get
+                Return m_idCode
+            End Get
+            Set(ByVal Value As Int16)
+                m_idCode = Value
+            End Set
         End Property
 
         Public Overridable Property TimeTag() As Unix.TimeTag Implements IChannelFrame.TimeTag
@@ -140,10 +153,22 @@ Namespace EE.Phasor
             End Set
         End Property
 
+        Protected WriteOnly Property ParsedFrameLength() As Int16
+            Set(ByVal Value As Int16)
+                m_frameLength = Value
+            End Set
+        End Property
+
         ' We override normal binary length so we can extend length to include check-sum
+        ' Also - if frame length was parsed from stream header - we use that length
+        ' instead of the calculated length...
         Public Overrides ReadOnly Property BinaryLength() As Int16
             Get
-                Return 2 + MyBase.BinaryLength
+                If m_frameLength > 0 Then
+                    Return m_frameLength
+                Else
+                    Return 2 + MyBase.BinaryLength
+                End If
             End Get
         End Property
 
@@ -186,13 +211,16 @@ Namespace EE.Phasor
             End Get
         End Property
 
-        Protected Overrides Sub ParseBodyImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByRef startIndex As Integer)
+        Protected Overrides Sub ParseBodyImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
 
             ' Parse all frame cells
             With DirectCast(state, IChannelFrameParsingState)
-                For x As Integer = 0 To .CellCount
+                For x As Integer = 0 To .CellCount - 1
                     ' Note: Final derived frame cell classes *must* expose Public Sub New(ByVal parent As IChannelFrame, ByVal state As IChannelFrameParsingState, ByVal index As Integer, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+                    '       ' TODO: Remove manual cell constructor....
+                    '       Cells.Add(New IEEEC37_118.ConfigurationCell(Me, state, x, binaryImage, startIndex))
                     Cells.Add(Activator.CreateInstance(.CellType, New Object() {Me, state, x, binaryImage, startIndex}))
+
                     startIndex += Cells(x).BinaryLength
                 Next
             End With
@@ -201,6 +229,7 @@ Namespace EE.Phasor
 
         Protected Overridable Function ChecksumIsValid(ByVal buffer As Byte(), ByVal startIndex As Integer) As Boolean
 
+            ' TODO: We need read FrameLength here - not calculated binary length
             Dim length As Int16 = BinaryLength
 
 #If DEBUG Then
@@ -223,6 +252,7 @@ Namespace EE.Phasor
         Protected Overridable Function CalculateChecksum(ByVal buffer As Byte(), ByVal offset As Integer, ByVal length As Integer) As Int16
 
             Return CRC_CCITT(-1, buffer, offset, length)
+            'Return CRC16(-1, buffer, offset, length)
 
         End Function
 

@@ -27,24 +27,36 @@ Namespace EE.Phasor.PDCstream
 
         Inherits DataFrameBase
 
-        Private m_index As Int16
+        Private m_packetNumber As Byte
+        Private m_sampleNumber As Int16
 
         Public Sub New()
 
             MyBase.New(New DataCellCollection)
+            m_packetNumber = 1
 
         End Sub
 
-        Public Sub New(ByVal index As Int16)
+        Public Sub New(ByVal sampleNumber As Int16)
 
             Me.New()
-            m_index = index
+            m_sampleNumber = sampleNumber
+
+        End Sub
+
+        ' If you are going to create multiple data packets, you can use this constructor
+        ' Note that this only starts becoming necessary if you start hitting data size
+        ' limits imposed by the nature of the protocol...
+        Public Sub New(ByVal packetNumber As Byte, ByVal sampleNumber As Int16)
+
+            Me.New(sampleNumber)
+            Me.PacketNumber = packetNumber
 
         End Sub
 
         Public Sub New(ByVal configurationFrame As IConfigurationFrame, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
 
-            MyBase.New(New DataFrameParsingState(New DataCellCollection, GetType(DataCell), configurationFrame), binaryImage, startIndex)
+            MyBase.New(New DataFrameParsingState(New DataCellCollection, GetType(DataCell), 0, configurationFrame), binaryImage, startIndex)
 
         End Sub
 
@@ -66,12 +78,22 @@ Namespace EE.Phasor.PDCstream
             End Get
         End Property
 
-        Public Property Index() As Int16
+        Public Property PacketNumber() As Byte
             Get
-                Return m_index
+                Return m_packetNumber
+            End Get
+            Set(ByVal Value As Byte)
+                If Value < 1 Then Throw New ArgumentOutOfRangeException("Data packets must be numbered from 1 to 255")
+                m_packetNumber = Value
+            End Set
+        End Property
+
+        Public Property SampleNumber() As Int16
+            Get
+                Return m_sampleNumber
             End Get
             Set(ByVal Value As Int16)
-                m_index = Value
+                m_sampleNumber = Value
             End Set
         End Property
 
@@ -105,36 +127,45 @@ Namespace EE.Phasor.PDCstream
                 buffer(1) = Convert.ToByte(1)
                 EndianOrder.BigEndian.CopyBytes(Convert.ToInt16(buffer.Length \ 2), buffer, 2)
                 EndianOrder.BigEndian.CopyBytes(Convert.ToUInt32(TimeTag.Value), buffer, 4)
-                EndianOrder.BigEndian.CopyBytes(Convert.ToInt16(m_index), buffer, 8)
+                EndianOrder.BigEndian.CopyBytes(Convert.ToInt16(m_sampleNumber), buffer, 8)
                 EndianOrder.BigEndian.CopyBytes(Convert.ToInt16(Cells.Count), buffer, 10)
 
                 Return buffer
             End Get
         End Property
 
-        Protected Overrides Sub ParseHeaderImage(ByVal state As IChannelParsingState, ByVal binaryImage() As Byte, ByRef startIndex As Integer)
+        Protected Overrides Sub ParseHeaderImage(ByVal state As IChannelParsingState, ByVal binaryImage() As Byte, ByVal startIndex As Integer)
 
-            Dim configurationFrame As IConfigurationFrame = DirectCast(state, DataFrameParsingState).ConfigurationFrame
+            Dim configurationFrame As PDCStream.ConfigurationFrame = DirectCast(state, IDataFrameParsingState).ConfigurationFrame
 
             Dim dataCellCount As Int16
             Dim frameLength As Int16
 
             If binaryImage(startIndex) <> Common.SyncByte Then
-                Throw New InvalidOperationException("Bad Data Stream: Expected sync byte &HAA as first byte in data frame, got " & binaryImage(startIndex).ToString("x"c).PadLeft(2, "0"c))
+                Throw New InvalidOperationException("Bad Data Stream: Expected sync byte &HAA as first byte in PDCstream data frame, got " & binaryImage(startIndex).ToString("x"c).PadLeft(2, "0"c))
             End If
 
-            ' TODO: check byte 1 - is version??
-            'Buffer(1) = Convert.ToByte(1)
+            m_packetNumber = binaryImage(startIndex + 1)
+
+            If m_packetNumber = DescriptorPacketFlag Then
+                Throw New InvalidOperationException("Bad Data Stream: This is not a PDCstream data frame - looks like a configuration frame.")
+            End If
 
             frameLength = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 2)
             TimeTag = New Unix.TimeTag(EndianOrder.BigEndian.ToInt32(binaryImage, startIndex + 4))
-            m_index = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 8)
+            m_sampleNumber = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 8)
             dataCellCount = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 10)
 
             ' TODO: validate frame length??
 
             If dataCellCount <> configurationFrame.Cells.Count Then
-                Throw New InvalidOperationException("Stream/Config File Mismatch: PMU count (" & dataCellCount & ") in stream does not match defined count in configuration file (" & configurationFrame.Cells.Count & ")")
+                Throw New InvalidOperationException("Stream/Config File Mismatch: PMU count (" & dataCellCount & ") in stream does not match defined count in configuration file:" & configurationFrame.Cells.Count)
+            End If
+
+            ' Skip through redundant header information for legacy streams...
+            If configurationFrame.StreamType = StreamType.Legacy Then
+                ' We are not validating this data or looking for changes since this information
+                ' was already transmitted via the descriptor....
             End If
 
         End Sub
@@ -154,7 +185,7 @@ Namespace EE.Phasor.PDCstream
         '        buffer(1) = Convert.ToByte(1)
         '        EndianOrder.BigEndian.CopyBytes(Convert.ToInt16(buffer.Length \ 2), buffer, 2)
         '        EndianOrder.BigEndian.CopyBytes(Convert.ToUInt32(TimeTag.Value), buffer, 4)
-        '        EndianOrder.BigEndian.CopyBytes(Convert.ToInt16(m_index), buffer, 8)
+        '        EndianOrder.BigEndian.CopyBytes(Convert.ToInt16(m_sampleNumber), buffer, 8)
         '        EndianOrder.BigEndian.CopyBytes(Convert.ToInt16(Cells.Count), buffer, 10)
 
         '        Return buffer
@@ -164,7 +195,7 @@ Namespace EE.Phasor.PDCstream
         'Private m_configFile As ConfigurationFrame
         'Private m_timeTag As Unix.TimeTag
         'Private m_timeStamp As DateTime
-        'Private m_index As Integer
+        'Private m_sampleNumber As Integer
 
         'Public Cells As DataCell()
         'Public Published As Boolean
@@ -175,10 +206,10 @@ Namespace EE.Phasor.PDCstream
 
         '    m_configFile = configFile
         '    m_timeTag = New Unix.TimeTag(timeStamp)
-        '    m_index = index
+        '    m_sampleNumber = index
 
         '    ' We precalculate a regular .NET timestamp with milliseconds sitting in the middle of the sample index
-        '    m_timeStamp = timeStamp.AddMilliseconds((m_index + 0.5@) * (1000@ / m_configFile.SampleRate))
+        '    m_timeStamp = timeStamp.AddMilliseconds((m_sampleNumber + 0.5@) * (1000@ / m_configFile.SampleRate))
 
         '    With m_configFile
         '        Cells = Array.CreateInstance(GetType(DataCell), .PMUCount)
@@ -198,7 +229,7 @@ Namespace EE.Phasor.PDCstream
 
         'Public ReadOnly Property Index() As Integer
         '    Get
-        '        Return m_index
+        '        Return m_sampleNumber
         '    End Get
         'End Property
 
@@ -253,7 +284,7 @@ Namespace EE.Phasor.PDCstream
         '        buffer(1) = Convert.ToByte(1)
         '        EndianOrder.BigEndian.CopyBytes(Convert.ToInt16(buffer.Length \ 2), buffer, 2)
         '        EndianOrder.BigEndian.CopyBytes(Convert.ToUInt32(m_timeTag.Value), buffer, 4)
-        '        EndianOrder.BigEndian.CopyBytes(Convert.ToInt16(m_index), buffer, 8)
+        '        EndianOrder.BigEndian.CopyBytes(Convert.ToInt16(m_sampleNumber), buffer, 8)
         '        EndianOrder.BigEndian.CopyBytes(Convert.ToInt16(Cells.Length), buffer, 10)
         '        index = 12
 

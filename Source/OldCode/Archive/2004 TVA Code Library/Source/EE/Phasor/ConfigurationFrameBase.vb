@@ -25,7 +25,6 @@ Namespace EE.Phasor
         Inherits ChannelFrameBase
         Implements IConfigurationFrame
 
-        Private m_idCode As Int16
         Private m_sampleRate As Int16
         Private m_nominalFrequency As LineFrequency
 
@@ -39,9 +38,8 @@ Namespace EE.Phasor
 
         Protected Sub New(ByVal cells As ConfigurationCellCollection, ByVal timeTag As Unix.TimeTag, ByVal milliseconds As Double, ByVal synchronizationIsValid As Boolean, ByVal dataIsValid As Boolean, ByVal idCode As Int16, ByVal sampleRate As Int16, ByVal nominalFrequency As LineFrequency)
 
-            MyBase.New(cells, timeTag, milliseconds, synchronizationIsValid, dataIsValid)
+            MyBase.New(cells, timeTag, milliseconds, synchronizationIsValid, dataIsValid, idCode)
 
-            m_idCode = idCode
             m_sampleRate = sampleRate
             m_nominalFrequency = nominalFrequency
 
@@ -62,15 +60,6 @@ Namespace EE.Phasor
                 configurationFrame.DataIsValid, configurationFrame.IDCode, configurationFrame.SampleRate, configurationFrame.NominalFrequency)
 
         End Sub
-
-        Public Overridable Property IDCode() As Int16 Implements IConfigurationFrame.IDCode
-            Get
-                Return m_idCode
-            End Get
-            Set(ByVal Value As Int16)
-                m_idCode = Value
-            End Set
-        End Property
 
         Public Overridable Shadows ReadOnly Property Cells() As ConfigurationCellCollection Implements IConfigurationFrame.Cells
             Get

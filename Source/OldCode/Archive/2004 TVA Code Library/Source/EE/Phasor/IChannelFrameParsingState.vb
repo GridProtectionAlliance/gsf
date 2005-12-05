@@ -28,6 +28,8 @@ Namespace EE.Phasor
 
         Property CellCount() As Integer
 
+        Property FrameLength() As Int16
+
     End Interface
 
 End Namespace

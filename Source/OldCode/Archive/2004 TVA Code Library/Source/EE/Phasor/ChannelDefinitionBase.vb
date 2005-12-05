@@ -16,6 +16,7 @@
 '*******************************************************************************************************
 
 Imports System.Text
+Imports TVA.EE.Phasor.Common
 
 Namespace EE.Phasor
 
@@ -150,6 +151,22 @@ Namespace EE.Phasor
             End If
 
         End Function
+
+        Protected Overrides ReadOnly Property BodyLength() As Int16
+            Get
+                Return MaximumLabelLength
+            End Get
+        End Property
+
+        Protected Overrides ReadOnly Property BodyImage() As Byte()
+            Get
+                Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BodyLength)
+
+                CopyImage(LabelImage, buffer, Index, MaximumLabelLength)
+
+                Return buffer
+            End Get
+        End Property
 
     End Class
 

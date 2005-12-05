@@ -144,6 +144,7 @@ Namespace EE.Phasor
 
                 If DataFormat = Phasor.DataFormat.FixedInteger Then
                     magnitude = Convert.ToDouble(EndianOrder.BigEndian.ToUInt16(binaryImage, startIndex))
+                    ' TODO: Check that scaling factor applies to phase angle is steady at 10000 for all protocols
                     angle = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 2) * 180 / Math.PI / 10000
                 Else
                     magnitude = EndianOrder.BigEndian.ToSingle(binaryImage, startIndex)
@@ -332,6 +333,7 @@ Namespace EE.Phasor
                 Else
                     If DataFormat = Phasor.DataFormat.FixedInteger Then
                         EndianOrder.BigEndian.CopyBytes(Convert.ToUInt16(Magnitude), buffer, 0)
+                        ' TODO: Check that scaling factor applies to phase angle is steady at 10000
                         EndianOrder.BigEndian.CopyBytes(Convert.ToInt16(Angle * Math.PI / 180 * 10000), buffer, 2)
                     Else
                         EndianOrder.BigEndian.CopyBytes(Convert.ToSingle(Magnitude), buffer, 0)

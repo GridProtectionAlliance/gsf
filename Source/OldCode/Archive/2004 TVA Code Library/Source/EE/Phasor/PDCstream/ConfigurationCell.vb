@@ -15,6 +15,7 @@
 '
 '*******************************************************************************************************
 
+Imports System.Text
 Imports TVA.Interop
 Imports TVA.EE.Phasor.Common
 Imports TVA.EE.Phasor.PDCstream.Common
@@ -42,9 +43,10 @@ Namespace EE.Phasor.PDCstream
 
         ' This constructor satisfies ChannelCellBase class requirement:
         '   Final dervived classes must expose Public Sub New(ByVal parent As IChannelFrame, ByVal state As IChannelFrameParsingState, ByVal index As Integer, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
-        Public Sub New(ByVal parent As IConfigurationFrame, ByVal state As IChannelFrameParsingState, ByVal index As Integer, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+        Public Sub New(ByVal parent As IConfigurationFrame, ByVal state As IConfigurationFrameParsingState, ByVal index As Integer, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
 
-            MyBase.New(parent, True, MaximumPhasorValues, MaximumAnalogValues, MaximumDigitalValues)
+            ' We don't pass in a ConfigurationCellParsingState here because it is not needed for PDCstream (see ParseBodyImage below)
+            MyBase.New(parent, True, MaximumPhasorValues, MaximumAnalogValues, MaximumDigitalValues, Nothing, binaryImage, startIndex)
 
         End Sub
 
@@ -81,7 +83,9 @@ Namespace EE.Phasor.PDCstream
         End Property
 
         ' The descriptor cell broadcasted by PDCstream only includes PMUID and offset, all
-        ' other metadata is maintained in external INI file
+        ' other metadata is defined in an external INI based configuration file - so we
+        ' override the base class image implementations which attempt to generate and
+        ' parse data based on a common nature of configuration frames
         Protected Overrides ReadOnly Property BodyLength() As Short
             Get
                 Return 8
@@ -93,23 +97,19 @@ Namespace EE.Phasor.PDCstream
                 Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BodyLength)
                 Dim index As Integer
 
-                ' PMUID
-                CopyImage(IDLabelImage, buffer, index, IDLabelLength)
-
-                ' Reserved
-                EndianOrder.BigEndian.CopyBytes(Reserved, buffer, index)
-                index += 2
-
-                ' Offset
-                EndianOrder.BigEndian.CopyBytes(Offset, buffer, index)
+                CopyImage(IDLabelImage, buffer, index, IDLabelLength)       ' PMUID
+                EndianOrder.BigEndian.CopyBytes(Reserved, buffer, index)    ' Reserved
+                EndianOrder.BigEndian.CopyBytes(Offset, buffer, index + 2)  ' Offset
 
                 Return buffer
             End Get
         End Property
 
-        Protected Overrides Sub ParseBodyImage(ByVal state As IChannelParsingState, ByVal binaryImage() As Byte, ByRef startIndex As Integer)
+        Protected Overrides Sub ParseBodyImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
 
-            ' TODO: parse body image...
+            IDLabel = Encoding.ASCII.GetString(binaryImage, startIndex, 4)
+            Reserved = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 4)
+            Offset = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 6)
 
         End Sub
 

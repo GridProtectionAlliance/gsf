@@ -26,11 +26,13 @@ Namespace EE.Phasor
         Private m_cells As IChannelCellCollection
         Private m_cellType As Type
         Private m_cellCount As Integer
+        Private m_frameLength As Int16
 
-        Public Sub New(ByVal cells As IChannelCellCollection, ByVal cellType As Type)
+        Public Sub New(ByVal cells As IChannelCellCollection, ByVal cellType As Type, ByVal frameLength As Int16)
 
             m_cells = cells
             m_cellType = cellType
+            m_frameLength = frameLength
 
         End Sub
 
@@ -52,6 +54,15 @@ Namespace EE.Phasor
             End Get
             Set(ByVal Value As Integer)
                 m_cellCount = Value
+            End Set
+        End Property
+
+        Public Property FrameLength() As Int16 Implements IChannelFrameParsingState.FrameLength
+            Get
+                Return m_frameLength
+            End Get
+            Set(ByVal Value As Int16)
+                m_frameLength = Value
             End Set
         End Property
 

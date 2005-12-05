@@ -22,12 +22,11 @@ Namespace EE.Phasor
 
         Inherits IChannelFrame
 
-        Property IDCode() As Int16
-
         Shadows ReadOnly Property Cells() As ConfigurationCellCollection
 
         Property SampleRate() As Int16
 
+        ' TODO: Move nominal frequency down into config cell definition
         Property NominalFrequency() As LineFrequency
 
     End Interface

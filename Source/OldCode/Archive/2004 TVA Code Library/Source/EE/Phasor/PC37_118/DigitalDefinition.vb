@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  PhasorDefinition.vb - Phasor definition
+'  DigitalDefinition.vb - IEEE C37.118 Digital definition
 '  Copyright © 2005 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2003
@@ -13,95 +13,59 @@
 '  11/12/2004 - James R Carroll
 '       Initial version of source generated
 '
-' TODO: Make sure these properties are defined for PC37.118
-'        Property NormalStatus() As Int16
-'        Property CurrentInputs() As Int16
-'
 '*******************************************************************************************************
 
 Imports System.Text
-Imports TVA.Interop
-Imports TVA.Shared.Bit
 
-Namespace EE.Phasor.PC37_118
+Namespace EE.Phasor.IEEEC37_118
 
     Public Class DigitalDefinition
 
-        Public Const BinaryLength As Integer = 2
-        Public Const MaximumLabelLength As Integer = 16
+        Inherits DigitalDefinitionBase
 
-        Private m_label As String
-        Private m_flags As Int16
+        Public Labels As String() = Array.CreateInstance(GetType(String), 16)
 
-        Public Sub New()
+        Public Sub New(ByVal parent As ConfigurationCell)
 
-            m_label = ""
+            MyBase.New(parent)
 
         End Sub
 
-        Public Sub New(ByVal label As String, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+        Public Sub New(ByVal parent As ConfigurationCell, ByVal index As Integer, ByVal label As String)
 
-            Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BinaryLength)
-
-            m_label = label
-
-            ' Get digital flags
-            m_flags = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex)
+            MyBase.New(parent, index, label)
 
         End Sub
 
-        Public Property NormalState() As Byte
-            Get
-                Return m_flags And Bit4
-            End Get
-            Set(ByVal Value As Byte)
-                If Value > 0 Then
-                    m_flags = m_flags Or Bit4
-                Else
-                    m_flags = m_flags And Not Bit4
-                End If
-            End Set
-        End Property
+        Public Sub New(ByVal parent As ConfigurationCell, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
 
-        Public Property InputNormalState() As Byte
-            Get
-                Return m_flags And Bit0
-            End Get
-            Set(ByVal Value As Byte)
-                If Value > 0 Then
-                    m_flags = m_flags Or Bit0
-                Else
-                    m_flags = m_flags And Not Bit0
-                End If
-            End Set
-        End Property
+            MyBase.New(parent)
 
-        Public Property Label() As String
-            Get
-                Return m_label
-            End Get
-            Set(ByVal Value As String)
-                If Len(Value) > MaximumLabelLength Then
-                    Throw New OverflowException("Label length cannot exceed " & MaximumLabelLength)
-                Else
-                    m_label = Value
-                End If
-            End Set
-        End Property
+            If parent.Parent.RevisionNumber = RevisionNumber.RevisionV1 Then
+                ' We only parse digital labels in draft 7
+                For x As Integer = 0 To 15
+                    Labels(x) = Encoding.ASCII.GetString(binaryImage, startIndex + x * MaximumLabelLength, MaximumLabelLength)
+                Next
+            End If
 
-        Public ReadOnly Property LabelImage() As Byte()
+        End Sub
+
+        Public Sub New(ByVal digitalDefinition As IDigitalDefinition)
+
+            MyBase.New(digitalDefinition)
+
+        End Sub
+
+        Public Overrides ReadOnly Property InheritedType() As System.Type
             Get
-                Return Encoding.ASCII.GetBytes(m_label.PadRight(MaximumLabelLength))
+                Return Me.GetType
             End Get
         End Property
 
-        Public ReadOnly Property BinaryImage() As Byte()
+        ' TODO: May want to shadow all parents in final derived classes...
+        Public Shadows ReadOnly Property Parent() As ConfigurationCell
             Get
-                Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BinaryLength)
-
-                EndianOrder.BigEndian.CopyBytes(m_flags, buffer, 0)
-
-                Return buffer
+                Return MyBase.Parent
             End Get
         End Property
 

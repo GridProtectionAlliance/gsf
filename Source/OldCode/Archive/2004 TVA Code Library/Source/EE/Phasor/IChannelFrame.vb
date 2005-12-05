@@ -27,6 +27,8 @@ Namespace EE.Phasor
 
         ReadOnly Property Cells() As IChannelCellCollection
 
+        Property IDCode() As Int16
+
         Property TimeTag() As Unix.TimeTag          ' UNIX based time of this frame (accurate to seconds)
 
         Property NtpTimeTag() As NtpTimeTag         ' Network Time Protocol time of this frame (accurate to seconds)

@@ -161,9 +161,13 @@ Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "ESO.Sdx", "Eso\Sdx\ESO.Sdx.
 	ProjectSection(ProjectDependencies) = postProject
 	EndProjectSection
 EndProject
+Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "Sockets", "Sockets\Sockets.vbproj", "{B50431CA-968F-43B1-9DBF-F962F3D7F2B4}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SourceCodeControl) = preSolution
-		SccNumberOfProjects = 26
+		SccNumberOfProjects = 27
 		SccLocalPath0 = .
 		CanCheckoutShared = false
 		SolutionUniqueID = {BA434792-5D37-40FD-848C-659B0D8E723E}
@@ -267,6 +271,10 @@ Global
 		SccLocalPath25 = .
 		CanCheckoutShared = false
 		SccProjectFilePathRelativizedFromConnection25 = Eso\\Sdx\\
+		SccProjectUniqueName26 = Sockets\\Sockets.vbproj
+		SccLocalPath26 = .
+		CanCheckoutShared = false
+		SccProjectFilePathRelativizedFromConnection26 = Sockets\\
 	EndGlobalSection
 	GlobalSection(SolutionConfiguration) = preSolution
 		Debug = Debug
@@ -526,6 +534,16 @@ Global
 		{2BE4865B-A11A-455F-8961-3E26FF27193C}.ReleaseWithoutAsm.Build.0 = Release|.NET
 		{2BE4865B-A11A-455F-8961-3E26FF27193C}.ReleaseWithoutCrtdll.ActiveCfg = Release|.NET
 		{2BE4865B-A11A-455F-8961-3E26FF27193C}.ReleaseWithoutCrtdll.Build.0 = Release|.NET
+		{B50431CA-968F-43B1-9DBF-F962F3D7F2B4}.Debug.ActiveCfg = Debug|.NET
+		{B50431CA-968F-43B1-9DBF-F962F3D7F2B4}.Debug.Build.0 = Debug|.NET
+		{B50431CA-968F-43B1-9DBF-F962F3D7F2B4}.Release.ActiveCfg = Release|.NET
+		{B50431CA-968F-43B1-9DBF-F962F3D7F2B4}.Release.Build.0 = Release|.NET
+		{B50431CA-968F-43B1-9DBF-F962F3D7F2B4}.ReleaseAxp.ActiveCfg = Release|.NET
+		{B50431CA-968F-43B1-9DBF-F962F3D7F2B4}.ReleaseAxp.Build.0 = Release|.NET
+		{B50431CA-968F-43B1-9DBF-F962F3D7F2B4}.ReleaseWithoutAsm.ActiveCfg = Release|.NET
+		{B50431CA-968F-43B1-9DBF-F962F3D7F2B4}.ReleaseWithoutAsm.Build.0 = Release|.NET
+		{B50431CA-968F-43B1-9DBF-F962F3D7F2B4}.ReleaseWithoutCrtdll.ActiveCfg = Release|.NET
+		{B50431CA-968F-43B1-9DBF-F962F3D7F2B4}.ReleaseWithoutCrtdll.Build.0 = Release|.NET
 	EndGlobalSection
 	GlobalSection(SolutionItems) = postSolution
 		Build.ts = Build.ts
