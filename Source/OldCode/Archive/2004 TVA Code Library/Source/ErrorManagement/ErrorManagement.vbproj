@@ -178,9 +178,19 @@
                     BuildAction = "Compile"
                 />
                 <File
+                    RelPath = "SsamErrorListener.resx"
+                    DependentUpon = "SsamErrorListener.vb"
+                    BuildAction = "EmbeddedResource"
+                />
+                <File
                     RelPath = "TextErrorListener.vb"
                     SubType = "Component"
                     BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "TextErrorListener.resx"
+                    DependentUpon = "TextErrorListener.vb"
+                    BuildAction = "EmbeddedResource"
                 />
             </Include>
         </Files>

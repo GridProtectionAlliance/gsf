@@ -14,9 +14,11 @@ Namespace Asp
             ' This class contains only global functions and is not meant to be instantiated
 
         End Sub
-
+        ''' <summary>
+        ''' <para>Performs JavaScript encoding on given string.</para>
+        ''' </summary>
         ' Performs JavaScript encoding on given string
-        Public Shared Function JavaScriptEncode(ByVal Str As String) As String
+        Public Shared Function JavaScriptEncode(ByVal Str As System.String) As String
 
             Str = Replace(Str, "\", "\\")
             Str = Replace(Str, "'", "\'")
@@ -30,9 +32,11 @@ Namespace Asp
             Return Str
 
         End Function
-
+        ''' <summary>
+        ''' <para>Decodes JavaScript characters from given string.</para>
+        ''' </summary>
         ' Decodes JavaScript characters from given string
-        Public Shared Function JavaScriptDecode(ByVal Str As String) As String
+        Public Shared Function JavaScriptDecode(ByVal Str As System.String) As String
 
             Str = Replace(Str, "\\", "\")
             Str = Replace(Str, "\'", "'")
@@ -46,9 +50,11 @@ Namespace Asp
             Return Str
 
         End Function
-
+        ''' <summary>
+        ''' <paraEnsures a string is compliant with cookie name requirements.</para>
+        ''' </summary>
         ' Ensures a string is compliant with cookie name requirements
-        Public Shared Function ValidCookieName(ByVal Str As String) As String
+        Public Shared Function ValidCookieName(ByVal Str As System.String) As String
 
             Str = Replace(Str, "=", "")
             Str = Replace(Str, ";", "")
@@ -60,9 +66,11 @@ Namespace Asp
             Return Str
 
         End Function
-
+        ''' <summary>
+        ''' <para>Ensures a string is compliant with cookie name requirements.</para>
+        ''' </summary>
         ' Ensures a string is compliant with cookie value requirements
-        Public Shared Function ValidCookieValue(ByVal Str As String) As String
+        Public Shared Function ValidCookieValue(ByVal Str As System.String) As String
 
             Str = Replace(Str, ";", "")
             Str = Replace(Str, ",", "")
@@ -88,6 +96,9 @@ Namespace Asp
             RunClientExe
 
         End Enum
+        ''' <summary>
+        ''' <para>Function to create Client-Side script.</para>
+        ''' </summary>
 
         Private Shared Function CreateClientSideScript(ByVal Code As ScriptCode) As String
 
@@ -294,6 +305,9 @@ Namespace Asp
         End Function
 
 #End Region
+        ''' <summary>
+        ''' <para>Common fuction to hookup client-side script to a control.</para>
+        ''' </summary>
 
 #Region "Common fuction to hookup client-side script to a control."
 
@@ -318,7 +332,9 @@ Namespace Asp
 #End Region
 
 #Region "Code for Focus"
-
+        ''' <summary>
+        ''' <para>Sets the focus to a web control.</para>
+        ''' </summary>
         'Pinal Patel 03/04/05: Sets the focus to a web control.
         Public Shared Sub Focus(ByVal Control As System.Web.UI.Control)
 
@@ -339,7 +355,9 @@ Namespace Asp
 #End Region
 
 #Region "Code for DefaultButton"
-
+        ''' <summary>
+        ''' <para>Assigns a default button (regular/link/image) for a textbox to be clicked when enter key is pressed in the textbox...</para>
+        ''' </summary>
         'Pinal Patel 03/04/05:  Assigns a default button (regular/link/image) for a textbox to be clicked 
         '                       when enter key is pressed in the textbox..
         Public Shared Sub DefaultButton(ByVal Textbox As System.Web.UI.WebControls.TextBox, ByVal Control As System.Web.UI.Control)
@@ -355,9 +373,11 @@ Namespace Asp
 #End Region
 
 #Region "Code for SmartText"
-
+        ''' <summary>
+        ''' <para>Show text inside a textbox that can be used to provide a hint.</para>
+        ''' </summary>
         'Pinal Patel 03/04/05: Show text inside a textbox that can be used to provide a hint.
-        Public Shared Sub SmartText(ByVal Textbox As System.Web.UI.WebControls.TextBox, ByVal Text As String)
+        Public Shared Sub SmartText(ByVal Textbox As System.Web.UI.WebControls.TextBox, ByVal Text As System.String)
 
             With Textbox
                 .Attributes.Add("Value", Text)
@@ -370,9 +390,11 @@ Namespace Asp
 #End Region
 
 #Region "Code for Show"
-
+        ''' <summary>
+        ''' <para>Shows web page as modeless dialog. Not tied to a web control.</para>
+        ''' </summary>
         'Pinal Patel 03/04/05: Shows web page as modeless dialog. Not tied to a web control.
-        Public Shared Sub Show(ByVal Page As System.Web.UI.Page, ByVal Url As String, Optional ByVal Height As Integer = 400, Optional ByVal Width As Integer = 600, Optional ByVal Left As Integer = 0, Optional ByVal Top As Integer = 0, Optional ByVal Center As Boolean = True, Optional ByVal Help As Boolean = True, Optional ByVal Resizable As Boolean = False, Optional ByVal Status As Boolean = False)
+        Public Shared Sub Show(ByVal Page As System.Web.UI.Page, ByVal Url As System.String, Optional ByVal Height As Integer = 400, Optional ByVal Width As Integer = 600, Optional ByVal Left As Integer = 0, Optional ByVal Top As Integer = 0, Optional ByVal Center As Boolean = True, Optional ByVal Help As Boolean = True, Optional ByVal Resizable As Boolean = False, Optional ByVal Status As Boolean = False)
 
             If Not Page.IsClientScriptBlockRegistered("Show") Then
                 Page.RegisterClientScriptBlock("Show", CreateClientSideScript(ScriptCode.Show))
@@ -387,9 +409,11 @@ Namespace Asp
             End With
 
         End Sub
-
+        ''' <summary>
+        ''' <para>Shows a web page as modeless dialog. Tied to a web control.</para>
+        ''' </summary>
         'Pinal Patel 03/04/05: Shows a web page as modeless dialog. Tied to a web control.
-        Public Shared Sub Show(ByVal Control As System.Web.UI.Control, ByVal Url As String, Optional ByVal Height As Integer = 400, Optional ByVal Width As Integer = 600, Optional ByVal Left As Integer = 0, Optional ByVal Top As Integer = 0, Optional ByVal Center As Boolean = True, Optional ByVal Help As Boolean = True, Optional ByVal Resizable As Boolean = False, Optional ByVal Status As Boolean = False)
+        Public Shared Sub Show(ByVal Control As System.Web.UI.Control, ByVal Url As System.String, Optional ByVal Height As Integer = 400, Optional ByVal Width As Integer = 600, Optional ByVal Left As Integer = 0, Optional ByVal Top As Integer = 0, Optional ByVal Center As Boolean = True, Optional ByVal Help As Boolean = True, Optional ByVal Resizable As Boolean = False, Optional ByVal Status As Boolean = False)
 
             If Not Control.Page.IsClientScriptBlockRegistered("Show") Then
                 Control.Page.RegisterClientScriptBlock("Show", CreateClientSideScript(ScriptCode.Show))
@@ -402,11 +426,13 @@ Namespace Asp
 #End Region
 
 #Region "Code for ShowDialog"
-
+        ''' <summary>
+        ''' <para>Shows a web page as modal dialog. Not tied to a web control. Postback occurs only if a value is returned by the child window (displayed as dialog) and DialogResultHolder is not specified.</para>
+        ''' </summary>
         'Pinal Patel 03/04/05:  Shows a web page as modal dialog. Not tied to a web control. Postback occurs 
         '                       only if a value is returned by the child window (displayed as dialog) and 
         '                       DialogResultHolder is not specified.
-        Public Shared Sub ShowDialog(ByVal Page As System.Web.UI.Page, ByVal Url As String, Optional ByVal DialogResultHolder As System.Web.UI.Control = Nothing, Optional ByVal Height As Integer = 400, Optional ByVal Width As Integer = 600, Optional ByVal Left As Integer = 0, Optional ByVal Top As Integer = 0, Optional ByVal Center As Boolean = True, Optional ByVal Help As Boolean = True, Optional ByVal Resizable As Boolean = False, Optional ByVal Status As Boolean = False)
+        Public Shared Sub ShowDialog(ByVal Page As System.Web.UI.Page, ByVal Url As System.String, Optional ByVal DialogResultHolder As System.Web.UI.Control = Nothing, Optional ByVal Height As Integer = 400, Optional ByVal Width As Integer = 600, Optional ByVal Left As Integer = 0, Optional ByVal Top As Integer = 0, Optional ByVal Center As Boolean = True, Optional ByVal Help As Boolean = True, Optional ByVal Resizable As Boolean = False, Optional ByVal Status As Boolean = False)
 
             If Not Page.IsClientScriptBlockRegistered("ShowDialog") Then
                 Page.RegisterClientScriptBlock("ShowDialog", CreateClientSideScript(ScriptCode.ShowDialog))
@@ -438,11 +464,13 @@ Namespace Asp
             End With
 
         End Sub
-
+        ''' <summary>
+        ''' <para>Shows a web page as modal dialog. Tied to a web control. Postback occurs only if a value is returned by the child window (displayed as dialog) and DialogResultHolder is not specified.</para>
+        ''' </summary>
         'Pinal Patel 03/04/05:  Shows a web page as modal dialog. Tied to a web control. Postback occurs only if 
         '                       a value is returned by the child window (displayed as dialog) and DialogResultHolder 
         '                       is not specified.
-        Public Shared Sub ShowDialog(ByVal Control As System.Web.UI.Control, ByVal Url As String, Optional ByVal DialogResultHolder As System.Web.UI.Control = Nothing, Optional ByVal Height As Integer = 400, Optional ByVal Width As Integer = 600, Optional ByVal Left As Integer = 0, Optional ByVal Top As Integer = 0, Optional ByVal Center As Boolean = True, Optional ByVal Help As Boolean = True, Optional ByVal Resizable As Boolean = False, Optional ByVal Status As Boolean = False)
+        Public Shared Sub ShowDialog(ByVal Control As System.Web.UI.Control, ByVal Url As System.String, Optional ByVal DialogResultHolder As System.Web.UI.Control = Nothing, Optional ByVal Height As Integer = 400, Optional ByVal Width As Integer = 600, Optional ByVal Left As Integer = 0, Optional ByVal Top As Integer = 0, Optional ByVal Center As Boolean = True, Optional ByVal Help As Boolean = True, Optional ByVal Resizable As Boolean = False, Optional ByVal Status As Boolean = False)
 
             If Not Control.Page.IsClientScriptBlockRegistered("ShowDialog") Then
                 Control.Page.RegisterClientScriptBlock("ShowDialog", CreateClientSideScript(ScriptCode.ShowDialog))
@@ -459,9 +487,11 @@ Namespace Asp
 #End Region
 
 #Region "Code for ShowPopup"
-
+        ''' <summary>
+        ''' <para>Shows web page as old fashion popup window. Not tied to a web control.</para>
+        ''' </summary>
         'Pinal Patel 03/04/05: Shows web page as old fashion popup window. Not tied to a web control.
-        Public Shared Sub ShowPopup(ByVal Page As System.Web.UI.Page, ByVal Url As String, Optional ByVal Height As Integer = 400, Optional ByVal Width As Integer = 600, Optional ByVal Left As Integer = 0, Optional ByVal Top As Integer = 0, Optional ByVal Center As Boolean = True, Optional ByVal Resizable As Boolean = False, Optional ByVal Scrollbars As Boolean = False, Optional ByVal Toolbar As Boolean = False, Optional ByVal Menubar As Boolean = False, Optional ByVal Location As Boolean = False, Optional ByVal Status As Boolean = False, Optional ByVal Directories As Boolean = False)
+        Public Shared Sub ShowPopup(ByVal Page As System.Web.UI.Page, ByVal Url As System.String, Optional ByVal Height As Integer = 400, Optional ByVal Width As Integer = 600, Optional ByVal Left As Integer = 0, Optional ByVal Top As Integer = 0, Optional ByVal Center As Boolean = True, Optional ByVal Resizable As Boolean = False, Optional ByVal Scrollbars As Boolean = False, Optional ByVal Toolbar As Boolean = False, Optional ByVal Menubar As Boolean = False, Optional ByVal Location As Boolean = False, Optional ByVal Status As Boolean = False, Optional ByVal Directories As Boolean = False)
 
             If Not Page.IsClientScriptBlockRegistered("ShowPopup") Then
                 Page.RegisterClientScriptBlock("ShowPopup", CreateClientSideScript(ScriptCode.ShowPopup))
@@ -476,9 +506,11 @@ Namespace Asp
             End With
 
         End Sub
-
+        ''' <summary>
+        ''' <para>Shows web page as old fashion popup window. Tied to a web control.</para>
+        ''' </summary>
         'Pinal Patel 03/04/05: Shows web page as old fashion popup. Tied to a web control.
-        Public Shared Sub ShowPopup(ByVal Control As System.Web.UI.Control, ByVal Url As String, Optional ByVal Height As Integer = 400, Optional ByVal Width As Integer = 600, Optional ByVal Left As Integer = 0, Optional ByVal Top As Integer = 0, Optional ByVal Center As Boolean = True, Optional ByVal Resizable As Boolean = False, Optional ByVal Scrollbars As Boolean = False, Optional ByVal Toolbar As Boolean = False, Optional ByVal Menubar As Boolean = False, Optional ByVal Location As Boolean = False, Optional ByVal Status As Boolean = False, Optional ByVal Directories As Boolean = False)
+        Public Shared Sub ShowPopup(ByVal Control As System.Web.UI.Control, ByVal Url As System.String, Optional ByVal Height As Integer = 400, Optional ByVal Width As Integer = 600, Optional ByVal Left As Integer = 0, Optional ByVal Top As Integer = 0, Optional ByVal Center As Boolean = True, Optional ByVal Resizable As Boolean = False, Optional ByVal Scrollbars As Boolean = False, Optional ByVal Toolbar As Boolean = False, Optional ByVal Menubar As Boolean = False, Optional ByVal Location As Boolean = False, Optional ByVal Status As Boolean = False, Optional ByVal Directories As Boolean = False)
 
             If Not Control.Page.IsClientScriptBlockRegistered("ShowPopup") Then
                 Control.Page.RegisterClientScriptBlock("ShowPopup", CreateClientSideScript(ScriptCode.ShowPopup))
@@ -491,10 +523,12 @@ Namespace Asp
 #End Region
 
 #Region "Code for Close"
-
+        ''' <summary>
+        ''' <para>Closes a web page. Not tied to a web control. Returns a value to the parent window if any (used in conjunction to ShowDialog)..</para>
+        ''' </summary>
         'Pinal Patel 03/04/05:  Closes a web page. Not tied to a web control. Returns a value to the parent 
         '                       window if any (used in conjunction to ShowDialog).
-        Public Shared Sub Close(ByVal Page As System.Web.UI.Page, Optional ByVal ReturnValue As String = Nothing)
+        Public Shared Sub Close(ByVal Page As System.Web.UI.Page, Optional ByVal ReturnValue As System.String = Nothing)
 
             If Not Page.IsClientScriptBlockRegistered("Close") Then
                 Page.RegisterClientScriptBlock("Close", CreateClientSideScript(ScriptCode.Close))
@@ -509,10 +543,12 @@ Namespace Asp
             End With
 
         End Sub
-
+        ''' <summary>
+        ''' <para>Closes a web pages. Tied to a web control. Return a value to the parent window if any (used in conjunction with ShowDialog).</para>
+        ''' </summary>
         'Pinal Patel 03/04/05:  Closes a web pages. Tied to a web control. Return a value to the parent 
         '                       window if any (used in conjunction with ShowDialog)
-        Public Shared Sub Close(ByVal Control As System.Web.UI.Control, Optional ByVal ReturnValue As String = Nothing)
+        Public Shared Sub Close(ByVal Control As System.Web.UI.Control, Optional ByVal ReturnValue As System.String = Nothing)
 
             If Not Control.Page.IsClientScriptBlockRegistered("Close") Then
                 Control.Page.RegisterClientScriptBlock("Close", CreateClientSideScript(ScriptCode.Close))
@@ -525,7 +561,9 @@ Namespace Asp
 #End Region
 
 #Region "Code for MsgBox"
-
+        ''' <summary>
+        ''' <para>Enumeration to specify message box style.</para>
+        ''' </summary>
         'Pinal Patel 03/04/05: Enumeration to specify message box style.
         Public Enum MsgBoxStyle As Integer
             OKOnly = 0
@@ -548,10 +586,12 @@ Namespace Asp
             ApplicationModal = 0
             SystemModal = 4096
         End Enum
-
+        ''' <summary>
+        ''' <para>Show a message box similar to the one available in windows apps.Not tied to a web control. Postbacks when ok/retry/yes is clicked.</para>
+        ''' </summary>
         'Pinal Patel 03/04/05:  Show a message box similar to the one available in windows apps. 
         '                       Not tied to a web control. Postbacks when ok/retry/yes is clicked.
-        Public Shared Sub MsgBox(ByVal Page As System.Web.UI.Page, ByVal Prompt As String, Optional ByVal Title As String = "Message Box", Optional ByVal Buttons As MsgBoxStyle = MsgBoxStyle.OKOnly, Optional ByVal DoPostBack As Boolean = True)
+        Public Shared Sub MsgBox(ByVal Page As System.Web.UI.Page, ByVal Prompt As System.String, Optional ByVal Title As System.String = "Message Box", Optional ByVal Buttons As MsgBoxStyle = MsgBoxStyle.OKOnly, Optional ByVal DoPostBack As Boolean = True)
 
             If Not Page.IsClientScriptBlockRegistered("ShowMsgBox") Then
                 Page.RegisterClientScriptBlock("ShowMsgBox", CreateClientSideScript(ScriptCode.MsgBox))
@@ -579,10 +619,12 @@ Namespace Asp
             End With
 
         End Sub
-
+        ''' <summary>
+        ''' <para> Show a message box similar to the one available in windows apps.Tied to a web control. Postbacks when ok/retry/yes is clicked.</para>
+        ''' </summary>
         'Pinal Patel 03/04/05:  Show a message box similar to the one available in windows apps. 
         '                       Tied to a web control. Postbacks when ok/retry/yes is clicked.
-        Public Shared Sub MsgBox(ByVal Control As System.Web.UI.Control, ByVal Prompt As String, Optional ByVal Title As String = "Message Box", Optional ByVal Buttons As MsgBoxStyle = MsgBoxStyle.OKOnly, Optional ByVal DoPostBack As Boolean = True)
+        Public Shared Sub MsgBox(ByVal Control As System.Web.UI.Control, ByVal Prompt As System.String, Optional ByVal Title As System.String = "Message Box", Optional ByVal Buttons As MsgBoxStyle = MsgBoxStyle.OKOnly, Optional ByVal DoPostBack As Boolean = True)
 
             If Not Control.Page.IsClientScriptBlockRegistered("ShowMsgBox") Then
                 Control.Page.RegisterClientScriptBlock("ShowMsgBox", CreateClientSideScript(ScriptCode.MsgBox))
@@ -595,7 +637,9 @@ Namespace Asp
 #End Region
 
 #Region "Code for Refresh"
-
+        ''' <summary>
+        ''' <para> Causes the web page to refresh. Not tied to a web control.</para>
+        ''' </summary>
         'Pinal Patel 03/08/05: Causes the web page to refresh. Not tied to a web control.
         Public Shared Sub Refresh(ByVal Page As System.Web.UI.Page, Optional ByVal PostRefresh As Boolean = False)
 
@@ -626,7 +670,9 @@ Namespace Asp
             End If
 
         End Sub
-
+        ''' <summary>
+        ''' <para>Causes the web page to refresh. Tied to a web control.</para>
+        ''' </summary>
         'Pinal Patel 03/08/05: Causes the web page to refresh. Tied to a web control.
         Public Shared Sub Refresh(ByVal Control As System.Web.UI.Control)
 
@@ -641,7 +687,9 @@ Namespace Asp
 #End Region
 
 #Region "Code for Maximize"
-
+        ''' <summary>
+        ''' <para>Causes the web page to refresh. Tied to a web control.</para>
+        ''' </summary>
         'Pinal Patel 03/09/05: Maximizes the web page to available screen size. Not tied to a web control.
         Public Shared Sub Maximize(ByVal Page As System.Web.UI.Page)
 
@@ -658,7 +706,9 @@ Namespace Asp
             End With
 
         End Sub
-
+        ''' <summary>
+        ''' <para> Maximizes the web page to available screen size. Tied to a web control.</para>
+        ''' </summary>
         'Pinal Patel 03/09/05: Maximizes the web page to available screen size. Tied to a web control.
         Public Shared Sub Maximize(ByVal Control As System.Web.UI.Control)
 
@@ -673,7 +723,9 @@ Namespace Asp
 #End Region
 
 #Region "Code for Minimize"
-
+        ''' <summary>
+        ''' <para>   Performs a fake minimize by pushing the web page into the background.Not tied to a web control.</para>
+        ''' </summary>
         'Pinal Patel 03/09/05:  Performs a fake minimize by pushing the web page into the background.
         '                       Not tied to a web control.
         Public Shared Sub Minimize(ByVal Page As System.Web.UI.Page)
@@ -691,7 +743,9 @@ Namespace Asp
             End With
 
         End Sub
-
+        ''' <summary>
+        ''' <para>Performs a fake minimize by pushing the web page into the background.Tied to a web control.</para>
+        ''' </summary>
         'Pinal Patel 03/09/05:  Performs a fake minimize by pushing the web page into the background.
         '                       Tied to a web control.
         Public Shared Sub Minimize(ByVal Control As System.Web.UI.Control)
@@ -707,7 +761,9 @@ Namespace Asp
 #End Region
 
 #Region "Code for BringToFront"
-
+        ''' <summary>
+        ''' <para>Brings the web page to the front. Not tied to a web control.</para>
+        ''' </summary>
         'Pinal Patel 03/14/05:  Brings the web page to the front. Not tied to a web control.
         Public Shared Sub BringToFront(ByVal Page As System.Web.UI.Page)
 
@@ -726,7 +782,9 @@ Namespace Asp
 #End Region
 
 #Region "Code for PushToBack"
-
+        ''' <summary>
+        ''' <para>Push the web page back (like minimize). Not tied to a web control.</para>
+        ''' </summary>
         'Pinal Patel 03/14/05:  Push the web page back (like minimize). Not tied to a web control.
         Public Shared Sub PushToBack(ByVal Page As System.Web.UI.Page)
 
@@ -745,9 +803,11 @@ Namespace Asp
 #End Region
 
 #Region "Code for PlayBackgroundSound"
-
+        ''' <summary>
+        ''' <para>Plays sound in the background. Not tied to a web control.</para>
+        ''' </summary>
         'Pinal Patel 03/15/05:  Plays sound in the background. Not tied to a web control.
-        Public Shared Sub PlayBackgroundSound(ByVal Page As System.Web.UI.Page, ByVal SoundFilename As String, Optional ByVal LoopCount As Integer = 0)
+        Public Shared Sub PlayBackgroundSound(ByVal Page As System.Web.UI.Page, ByVal SoundFilename As System.String, Optional ByVal LoopCount As Integer = 0)
 
             If Not Page.IsStartupScriptRegistered("PlayBackgroundSound") Then
                 With New StringBuilder
@@ -764,7 +824,7 @@ Namespace Asp
 #Region "Code for RunClientExe"
 
         '03/22/05 Pinal Patel
-        Public Shared Sub RunClientExe(ByVal Page As System.Web.UI.Page, ByVal Executable As String)
+        Public Shared Sub RunClientExe(ByVal Page As System.Web.UI.Page, ByVal Executable As System.String)
 
             If Not Page.IsClientScriptBlockRegistered("RunClientExe") Then
                 Page.RegisterClientScriptBlock("RunClientExe", CreateClientSideScript(ScriptCode.RunClientExe))

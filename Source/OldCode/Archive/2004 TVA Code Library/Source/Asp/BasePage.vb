@@ -10,8 +10,10 @@ Namespace Asp
 
     ' Base page for Asp.NET pages
     Public Class BasePage : Inherits Page
+        ''' <summary>
+        ''' <para>Overridden page load - adds common notation to pages written using this utility.</para>
+        ''' </summary>
 
-        ' Overridden page load - adds common notation to pages written using this utility
         Public Overridable Sub Page_Load(ByVal s As Object, ByVal e As EventArgs)
 
             Response.Write("<!--" & vbCrLf & vbCrLf)
@@ -20,58 +22,74 @@ Namespace Asp
             Response.Write("-->" & vbCrLf)
 
         End Sub
-
+        ''' <summary>
+        ''' <para>Argument shortcut function - equivalent to Request(Name).</para>
+        ''' </summary>
         ' Argument shortcut function - equivalent to Request(Name)
-        Public Function Arg(ByVal Name As String) As String
+        Public Function Arg(ByVal Name As System.String) As String
 
             Return Request(Name)
 
         End Function
-
+        ''' <summary>
+        ''' <para>Argument shortcut function - equivalent to Request.Form(Name).</para>
+        ''' </summary>
         ' Argument shortcut function - equivalent to Request.Form(Name)
-        Public Function PostArg(ByVal Name As String) As String
+        Public Function PostArg(ByVal Name As System.String) As String
 
             Return Request.Form(Name)
 
         End Function
-
+        ''' <summary>
+        ''' <para>Argument shortcut function - equivalent to Request.QueryString(Name).</para>
+        ''' </summary>
         ' Argument shortcut function - equivalent to Request.QueryString(Name)
-        Public Function SearchArg(ByVal Name As String) As String
+        Public Function SearchArg(ByVal Name As System.String) As String
 
             Return Request.QueryString(Name)
 
         End Function
-
+        ''' <summary>
+        ''' <para>Argument shortcut function - equivalent to Request.Form.GetValues(Name)(Index).</para>
+        ''' </summary>
         ' Argument shortcut function - equivalent to Request.Form.GetValues(Name)(Index)
-        Public Function PostArgItem(ByVal Name As String, ByVal Index As Integer) As String
+        Public Function PostArgItem(ByVal Name As System.String, ByVal Index As Integer) As String
 
             Return Request.Form.GetValues(Name)(Index)
 
         End Function
-
+        ''' <summary>
+        ''' <para>Argument shortcut function - equivalent to Request.QueryString.GetValues(Name)(Index).</para>
+        ''' </summary>
         ' Argument shortcut function - equivalent to Request.QueryString.GetValues(Name)(Index)
-        Public Function SearchArgItem(ByVal Name As String, ByVal Index As Integer) As String
+        Public Function SearchArgItem(ByVal Name As System.String, ByVal Index As Integer) As String
 
             Return Request.QueryString.GetValues(Name)(Index)
 
         End Function
-
+        ''' <summary>
+        ''' <para>Argument shortcut function - equivalent to Request.Form.GetValues(Name).Length.</para>
+        ''' </summary>
         ' Argument shortcut function - equivalent to Request.Form.GetValues(Name).Length
-        Public Function PostArgItemCount(ByVal Name As String) As Integer
+        Public Function PostArgItemCount(ByVal Name As System.String) As Integer
 
             Return Request.Form.GetValues(Name).Length
 
         End Function
-
+        ''' <summary>
+        ''' <para>Argument shortcut function - equivalent to Request.QueryString.GetValues(Name).Length.</para>
+        ''' </summary>
         ' Argument shortcut function - equivalent to Request.QueryString.GetValues(Name).Length
-        Public Function SearchArgItemCount(ByVal Name As String) As Integer
+        Public Function SearchArgItemCount(ByVal Name As System.String) As Integer
 
             Return Request.QueryString.GetValues(Name).Length
 
         End Function
-
+        ''' <summary>
+        ''' <para> Required argument shortcut function, response ends if argument not provided - equivalent to Request(Name).</para>
+        ''' </summary>
         ' Required argument shortcut function, response ends if argument not provided - equivalent to Request(Name)
-        Public Function RequiredArg(ByVal Name As String) As String
+        Public Function RequiredArg(ByVal Name As System.String) As String
 
             Dim strValue As String
 
@@ -85,9 +103,11 @@ Namespace Asp
             End If
 
         End Function
-
+        ''' <summary>
+        ''' <para>Required argument shortcut function, response ends if argument not provided - equivalent to Request.Form(Name).</para>
+        ''' </summary>
         ' Required argument shortcut function, response ends if argument not provided - equivalent to Request.Form(Name)
-        Public Function RequiredPostArg(ByVal Name As String) As String
+        Public Function RequiredPostArg(ByVal Name As System.String) As String
 
             Dim strValue As String
 
@@ -101,9 +121,11 @@ Namespace Asp
             End If
 
         End Function
-
+        ''' <summary>
+        ''' <para>Required argument shortcut function, response ends if argument not provided - equivalent to Request.QueryString(Name).</para>
+        ''' </summary>
         ' Required argument shortcut function, response ends if argument not provided - equivalent to Request.QueryString(Name)
-        Public Function RequiredSearchArg(ByVal Name As String) As String
+        Public Function RequiredSearchArg(ByVal Name As System.String) As String
 
             Dim strValue As String
 
@@ -117,9 +139,11 @@ Namespace Asp
             End If
 
         End Function
-
+        ''' <summary>
+        ''' <para>Required argument shortcut function, response ends if argument not provided - equivalent to Request.Form.GetValues(Name)(Index).</para>
+        ''' </summary>
         ' Required argument shortcut function, response ends if argument not provided - equivalent to Request.Form.GetValues(Name)(Index)
-        Public Function RequiredPostArgItem(ByVal Name As String, ByVal Index As Integer) As String
+        Public Function RequiredPostArgItem(ByVal Name As System.String, ByVal Index As Integer) As String
 
             Dim strValue As String
 
@@ -133,9 +157,11 @@ Namespace Asp
             End If
 
         End Function
-
+        ''' <summary>
+        ''' <para>Required argument shortcut function, response ends if argument not provided - equivalent to Request.QueryString.GetValues(Name)(Index).</para>
+        ''' </summary>
         ' Required argument shortcut function, response ends if argument not provided - equivalent to Request.QueryString.GetValues(Name)(Index)
-        Public Function RequiredSearchArgItem(ByVal Name As String, ByVal Index As Integer) As String
+        Public Function RequiredSearchArgItem(ByVal Name As System.String, ByVal Index As Integer) As String
 
             Dim strValue As String
 
@@ -149,79 +175,101 @@ Namespace Asp
             End If
 
         End Function
-
+        ''' <summary>
+        ''' <para>Argument shortcut function - returns True if argument is equal to specified value (uses case insensitive comparsion equivalent to Request(Name) = Value).</para>
+        ''' </summary>
         ' Argument shortcut function - returns True if argument is equal to specified value (uses case insensitive comparsion equivalent to Request(Name) = Value)
-        Public Function ArgIs(ByVal Name As String, ByVal Value As String) As Boolean
+        Public Function ArgIs(ByVal Name As System.String, ByVal Value As System.String) As Boolean
 
             Return (StrComp(Request(Name), Value, CompareMethod.Text) = 0)
 
         End Function
-
+        ''' <summary>
+        ''' <para>Argument shortcut function - returns True if argument is equal to specified value (uses case insensitive comparsion equivalent to Request.QueryString(Name) = Value).</para>
+        ''' </summary>
         ' Argument shortcut function - returns True if argument is equal to specified value (uses case insensitive comparsion equivalent to Request.QueryString(Name) = Value)
-        Public Function SearchArgIs(ByVal Name As String, ByVal Value As String) As Boolean
+        Public Function SearchArgIs(ByVal Name As System.String, ByVal Value As System.String) As Boolean
 
             Return (StrComp(Request.QueryString(Name), Value, CompareMethod.Text) = 0)
 
         End Function
-
+        ''' <summary>
+        ''' <para>Argument shortcut function - returns True if argument is equal to specified value (uses case insensitive comparsion equivalent to Request.QueryString.GetValues(Name)(Index) = Value).</para>
+        ''' </summary>
         ' Argument shortcut function - returns True if argument is equal to specified value (uses case insensitive comparsion equivalent to Request.QueryString.GetValues(Name)(Index) = Value)
-        Public Function SearchArgItemIs(ByVal Name As String, ByVal Value As String, ByVal Index As Integer) As Boolean
+        Public Function SearchArgItemIs(ByVal Name As System.String, ByVal Value As System.String, ByVal Index As Integer) As Boolean
 
             Return (StrComp(Request.QueryString.GetValues(Name)(Index), Value, CompareMethod.Text) = 0)
 
         End Function
-
+        ''' <summary>
+        ''' <para>Argument shortcut function - returns True if argument is equal to specified value (uses case insensitive comparsion equivalent to Request.Form(Name) = Value).</para>
+        ''' </summary>
         ' Argument shortcut function - returns True if argument is equal to specified value (uses case insensitive comparsion equivalent to Request.Form(Name) = Value)
-        Public Function PostArgIs(ByVal Name As String, ByVal Value As String) As Boolean
+        Public Function PostArgIs(ByVal Name As System.String, ByVal Value As System.String) As Boolean
 
             Return (StrComp(Request.Form(Name), Value, CompareMethod.Text) = 0)
 
         End Function
-
+        ''' <summary>
+        ''' <para>Argument shortcut function - returns True if argument is equal to specified value (uses case insensitive comparsion equivalent to Request.Form.GetValues(Name)(Index) = Value).</para>
+        ''' </summary>
         ' Argument shortcut function - returns True if argument is equal to specified value (uses case insensitive comparsion equivalent to Request.Form.GetValues(Name)(Index) = Value)
-        Public Function PostArgItemIs(ByVal Name As String, ByVal Value As String, ByVal Index As Integer) As Boolean
+        Public Function PostArgItemIs(ByVal Name As System.String, ByVal Value As System.String, ByVal Index As Integer) As Boolean
 
             Return (StrComp(Request.Form.GetValues(Name)(Index), Value, CompareMethod.Text) = 0)
 
         End Function
-
+        ''' <summary>
+        ''' <para> Argument shortcut function - returns True if argument is empty (equivalent to Len(Request(Name)) = 0).</para>
+        ''' </summary>
         ' Argument shortcut function - returns True if argument is empty (equivalent to Len(Request(Name)) = 0)
-        Public Function ArgIsEmpty(ByVal Name As String) As Boolean
+        Public Function ArgIsEmpty(ByVal Name As System.String) As Boolean
 
             Return (Len(Request(Name)) = 0)
 
         End Function
-
+        ''' <summary>
+        ''' <para>  Argument shortcut function - returns True if argument is empty (equivalent to Len(Request.QueryString(Name)) = 0).</para>
+        ''' </summary>
         ' Argument shortcut function - returns True if argument is empty (equivalent to Len(Request.QueryString(Name)) = 0)
-        Public Function SearchArgIsEmpty(ByVal Name As String) As Boolean
+        Public Function SearchArgIsEmpty(ByVal Name As System.String) As Boolean
 
             Return (Len(Request.QueryString(Name)) = 0)
 
         End Function
-
+        ''' <summary>
+        ''' <para>Argument shortcut function - returns True if argument is empty (equivalent to Len(Request.QueryString.GetValues(Name)(Index)) = 0).</para>
+        ''' </summary>
         ' Argument shortcut function - returns True if argument is empty (equivalent to Len(Request.QueryString.GetValues(Name)(Index)) = 0)
-        Public Function SearchArgItemIsEmpty(ByVal Name As String, ByVal Index As Integer) As Boolean
+        Public Function SearchArgItemIsEmpty(ByVal Name As System.String, ByVal Index As Integer) As Boolean
 
             Return (Len(Request.QueryString.GetValues(Name)(Index)) = 0)
 
         End Function
-
+        ''' <summary>
+        ''' <para>Argument shortcut function - returns True if argument is empty (equivalent to Len(Request.Form(Name)) = 0).</para>
+        ''' </summary>
         ' Argument shortcut function - returns True if argument is empty (equivalent to Len(Request.Form(Name)) = 0)
-        Public Function PostArgIsEmpty(ByVal Name As String) As Boolean
+        Public Function PostArgIsEmpty(ByVal Name As System.String) As Boolean
 
             Return (Len(Request.Form(Name)) = 0)
 
         End Function
-
+        ''' <summary>
+        ''' <para>Argument shortcut function - returns True if argument is empty (equivalent to Len(Request.Form.GetValues(Name)(Index)) = 0).</para>
+        ''' </summary>
         ' Argument shortcut function - returns True if argument is empty (equivalent to Len(Request.Form.GetValues(Name)(Index)) = 0)
-        Public Function PostArgItemIsEmpty(ByVal Name As String, ByVal Index As Integer) As Boolean
+        Public Function PostArgItemIsEmpty(ByVal Name As System.String, ByVal Index As Integer) As Boolean
 
             Return (Len(Request.Form.GetValues(Name)(Index)) = 0)
 
         End Function
-
+        ''' <summary>
+        ''' <para>Argument shortcut function - insures returned blank numeric arguments come back with a "0" instead of blank.</para>
+        ''' </summary>
         ' Argument shortcut function - insures returned blank numeric arguments come back with a "0" instead of blank
-        Public Function NumericArg(ByVal Name As String, Optional ByVal WithDecimal As Boolean = False) As String
+        Public Function NumericArg(ByVal Name As System.String, Optional ByVal WithDecimal As Boolean = False) As String
 
             Dim strValue As String
 
@@ -238,9 +286,11 @@ Namespace Asp
             Return strValue
 
         End Function
-
+        ''' <summary>
+        ''' <para> Argument shortcut function for checkbox field - returns a True or False boolean value for checked/unchecked.</para>
+        ''' </summary>
         ' Argument shortcut function for checkbox field - returns a True or False boolean value for checked/unchecked
-        Public Function BoolArg(ByVal Name As String) As Boolean
+        Public Function BoolArg(ByVal Name As System.String) As Boolean
 
             ' This function is used for checkbox fields
             If Len(Request.Form(Name)) > 0 Then
@@ -250,9 +300,11 @@ Namespace Asp
             End If
 
         End Function
-
+        ''' <summary>
+        ''' <para> Argument shortcut function for checkbox field - returns a 1 or 0 integer value for checked/unchecked.</para>
+        ''' </summary>
         ' Argument shortcut function for checkbox field - returns a 1 or 0 integer value for checked/unchecked
-        Public Function DBBoolArg(ByVal Name As String) As Integer
+        Public Function DBBoolArg(ByVal Name As System.String) As Integer
 
             ' This function is used for checkbox fields
             If Len(Request.Form(Name)) > 0 Then
@@ -262,9 +314,11 @@ Namespace Asp
             End If
 
         End Function
-
+        ''' <summary>
+        ''' <para> Argument shortcut function for checkbox field - returns a "Yes" or "No" string value for checked/unchecked.</para>
+        ''' </summary>
         ' Argument shortcut function for checkbox field - returns a "Yes" or "No" string value for checked/unchecked
-        Public Function YesNoArg(ByVal Name As String) As String
+        Public Function YesNoArg(ByVal Name As System.String) As String
 
             ' This function is used for checkbox fields
             If Len(Request.Form(Name)) > 0 Then
@@ -274,9 +328,11 @@ Namespace Asp
             End If
 
         End Function
-
+        ''' <summary>
+        ''' <para>Argument shortcut function for checkbox field - returns a "Y" or "N" string value for checked/unchecked.</para>
+        ''' </summary>
         ' Argument shortcut function for checkbox field - returns a "Y" or "N" string value for checked/unchecked
-        Public Function YNArg(ByVal Name As String) As String
+        Public Function YNArg(ByVal Name As System.String) As String
 
             ' This function is used for checkbox fields
             If Len(Request.Form(Name)) > 0 Then
