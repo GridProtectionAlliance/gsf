@@ -1,0 +1,9 @@
+﻿<?xml version="1.0" encoding="utf-8" ?> 
+<client>
+	<id>1</id>
+	<name>John Doe</name>
+	<address>125 Cedars Drive</address>
+	<city>Knoxville</city>
+	<state>TN</state>
+	<zip>37902</zip>
+</client>

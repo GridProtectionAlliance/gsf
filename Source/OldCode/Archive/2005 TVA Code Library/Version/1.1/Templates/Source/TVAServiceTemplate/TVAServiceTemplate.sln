@@ -1,0 +1,21 @@
+Microsoft Visual Studio Solution File, Format Version 8.00
+Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "TVAProjectTemplates", "TVAServiceTemplate.vdproj", "{5ACCDC72-F086-4061-BC68-F3524451F835}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfiguration) = preSolution
+		Debug = Debug
+		Release = Release
+	EndGlobalSection
+	GlobalSection(ProjectConfiguration) = postSolution
+		{5ACCDC72-F086-4061-BC68-F3524451F835}.Debug.ActiveCfg = Debug
+		{5ACCDC72-F086-4061-BC68-F3524451F835}.Debug.Build.0 = Debug
+		{5ACCDC72-F086-4061-BC68-F3524451F835}.Release.ActiveCfg = Release
+		{5ACCDC72-F086-4061-BC68-F3524451F835}.Release.Build.0 = Release
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+	EndGlobalSection
+	GlobalSection(ExtensibilityAddIns) = postSolution
+	EndGlobalSection
+EndGlobal

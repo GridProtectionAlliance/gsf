@@ -1,0 +1,51 @@
+<VisualStudioProject>
+    <VisualBasic>
+        <Build>
+            <Settings
+                ApplicationIcon = "TVARemoteMonitor.ico"
+                OutputType = "WinExe"
+                OptionExplicit = "On"
+                StartupObject = ""
+            >
+                <Config
+                    Name = "Debug"
+                    DebugSymbols = "true"
+                    DefineDebug = "true"
+                    DefineTrace = "true"
+                    IncrementalBuild = "true"
+                    OutputPath = "bin"
+                />
+                <Config
+                    Name = "Release"
+                    DebugSymbols = "false"
+                    DefineDebug = "false"
+                    DefineTrace = "true"
+                    IncrementalBuild = "false"
+                    Optimize = "true"
+                    OutputPath = "bin"
+                />
+            </Settings>
+            <References>
+                <Reference Name = "System" />
+                <Reference Name = "System.Data" />
+                <Reference Name = "System.Drawing" />
+                <Reference Name = "System.Windows.Forms" />
+                <Reference Name = "System.XML" />
+                <Reference Name = "System.Runtime.Remoting" />
+            </References>
+            <Imports>
+                <Import Namespace = "Microsoft.VisualBasic" />
+                <Import Namespace = "System" />
+                <Import Namespace = "System.Collections" />
+                <Import Namespace = "System.Data" />
+                <Import Namespace = "System.Drawing" />
+                <Import Namespace = "System.Diagnostics" />
+                <Import Namespace = "System.Windows.Forms" />
+            </Imports>
+        </Build>
+        <Files>
+            <Include />
+        </Files>
+    </VisualBasic>
+</VisualStudioProject>
+
