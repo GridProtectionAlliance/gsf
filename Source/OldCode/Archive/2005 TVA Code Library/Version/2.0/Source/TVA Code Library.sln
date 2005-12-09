@@ -1,0 +1,88 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 9.00
+# Visual Studio 2005
+Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "Tva.Core", "Tva.Core\Tva.Core.vbproj", "{29A7B606-D1BC-4A4B-96D0-258D5A72C3EC}"
+EndProject
+Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "Tva.Web", "Tva.Web\Tva.Web.vbproj", "{1A51E8F7-BE43-4353-A6E6-E7189911BA53}"
+EndProject
+Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "Tva.Windows", "Tva.Windows\Tva.Windows.vbproj", "{20CBC100-D1D7-4DD2-A181-970359E92951}"
+EndProject
+Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "Tva.Remoting", "Tva.Remoting\Tva.Remoting.vbproj", "{81963CD0-0A0E-4765-8F0A-719C942301DA}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build Scripts", "Build Scripts", "{CDC349A8-4D7D-4D2F-8D15-8CE2359FBF3D}"
+	ProjectSection(SolutionItems) = preProject
+		..\Build Scripts\RebuildAll.bat = ..\Build Scripts\RebuildAll.bat
+		..\Build Scripts\RebuildAllDebug.bat = ..\Build Scripts\RebuildAllDebug.bat
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Source Code", "Source Code", "{4F631798-355B-4607-AEEB-742B670AD834}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Documentation", "Documentation", "{6CBBC083-2AFB-48F2-97FB-F7BA12F4AFFE}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Version Definition Files", "Version Definition Files", "{F5BBE863-1035-4392-9108-EB21E3310742}"
+	ProjectSection(SolutionItems) = preProject
+		Build.ts = Build.ts
+		Build.ver = Build.ver
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SourceCodeControl) = preSolution
+		SccNumberOfProjects = 5
+		SccProjectName0 = \u0022$/TVA\u0020Code\u0020Library/Version/2.0\u0022,\u0020HBAAAAAA
+		SccLocalPath0 = ..
+		SccProvider0 = MSSCCI:Microsoft\u0020Visual\u0020SourceSafe
+		CanCheckoutShared = false
+		SccProjectFilePathRelativizedFromConnection0 = Source\\
+		SccProjectUniqueName1 = Tva.Core\\Tva.Core.vbproj
+		SccProjectTopLevelParentUniqueName1 = TVA\u0020Code\u0020Library.sln
+		SccLocalPath1 = ..
+		CanCheckoutShared = false
+		SccProjectFilePathRelativizedFromConnection1 = Source\\Tva.Core\\
+		SccProjectUniqueName2 = Tva.Remoting\\Tva.Remoting.vbproj
+		SccProjectTopLevelParentUniqueName2 = TVA\u0020Code\u0020Library.sln
+		SccLocalPath2 = ..
+		CanCheckoutShared = false
+		SccProjectFilePathRelativizedFromConnection2 = Source\\Tva.Remoting\\
+		SccProjectUniqueName3 = Tva.Web\\Tva.Web.vbproj
+		SccProjectTopLevelParentUniqueName3 = TVA\u0020Code\u0020Library.sln
+		SccLocalPath3 = ..
+		CanCheckoutShared = false
+		SccProjectFilePathRelativizedFromConnection3 = Source\\Tva.Web\\
+		SccProjectUniqueName4 = Tva.Windows\\Tva.Windows.vbproj
+		SccProjectTopLevelParentUniqueName4 = TVA\u0020Code\u0020Library.sln
+		SccLocalPath4 = ..
+		CanCheckoutShared = false
+		SccProjectFilePathRelativizedFromConnection4 = Source\\Tva.Windows\\
+	EndGlobalSection
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{29A7B606-D1BC-4A4B-96D0-258D5A72C3EC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{29A7B606-D1BC-4A4B-96D0-258D5A72C3EC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{29A7B606-D1BC-4A4B-96D0-258D5A72C3EC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{29A7B606-D1BC-4A4B-96D0-258D5A72C3EC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1A51E8F7-BE43-4353-A6E6-E7189911BA53}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1A51E8F7-BE43-4353-A6E6-E7189911BA53}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1A51E8F7-BE43-4353-A6E6-E7189911BA53}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1A51E8F7-BE43-4353-A6E6-E7189911BA53}.Release|Any CPU.Build.0 = Release|Any CPU
+		{20CBC100-D1D7-4DD2-A181-970359E92951}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{20CBC100-D1D7-4DD2-A181-970359E92951}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{20CBC100-D1D7-4DD2-A181-970359E92951}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{20CBC100-D1D7-4DD2-A181-970359E92951}.Release|Any CPU.Build.0 = Release|Any CPU
+		{81963CD0-0A0E-4765-8F0A-719C942301DA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{81963CD0-0A0E-4765-8F0A-719C942301DA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{81963CD0-0A0E-4765-8F0A-719C942301DA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{81963CD0-0A0E-4765-8F0A-719C942301DA}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{29A7B606-D1BC-4A4B-96D0-258D5A72C3EC} = {4F631798-355B-4607-AEEB-742B670AD834}
+		{81963CD0-0A0E-4765-8F0A-719C942301DA} = {4F631798-355B-4607-AEEB-742B670AD834}
+		{1A51E8F7-BE43-4353-A6E6-E7189911BA53} = {4F631798-355B-4607-AEEB-742B670AD834}
+		{20CBC100-D1D7-4DD2-A181-970359E92951} = {4F631798-355B-4607-AEEB-742B670AD834}
+	EndGlobalSection
+EndGlobal
