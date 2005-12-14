@@ -9,7 +9,7 @@ Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "Tva.Windows", "Tva.Windows\
 EndProject
 Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "Tva.Remoting", "Tva.Remoting\Tva.Remoting.vbproj", "{81963CD0-0A0E-4765-8F0A-719C942301DA}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build Scripts", "Build Scripts", "{CDC349A8-4D7D-4D2F-8D15-8CE2359FBF3D}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build and Deploy Scripts", "Build and Deploy Scripts", "{CDC349A8-4D7D-4D2F-8D15-8CE2359FBF3D}"
 	ProjectSection(SolutionItems) = preProject
 		..\Build Scripts\RebuildAll.bat = ..\Build Scripts\RebuildAll.bat
 		..\Build Scripts\RebuildAllDebug.bat = ..\Build Scripts\RebuildAllDebug.bat
@@ -20,15 +20,12 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Documentation", "Documentation", "{6CBBC083-2AFB-48F2-97FB-F7BA12F4AFFE}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Version Definition Files", "Version Definition Files", "{F5BBE863-1035-4392-9108-EB21E3310742}"
-	ProjectSection(SolutionItems) = preProject
-		\\opgfs\opdat\CtrlSys\CodeLibrary 2.0\Builds\Build.log = \\opgfs\opdat\CtrlSys\CodeLibrary 2.0\Builds\Build.log
-		\\opgfs\opdat\CtrlSys\CodeLibrary 2.0\Builds\Build.ts = \\opgfs\opdat\CtrlSys\CodeLibrary 2.0\Builds\Build.ts
-		\\opgfs\opdat\CtrlSys\CodeLibrary 2.0\Builds\Build.ver = \\opgfs\opdat\CtrlSys\CodeLibrary 2.0\Builds\Build.ver
-	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Tva.IO.Compression", "Tva.IO.Compression\Tva.IO.Compression.vcproj", "{F611B9BA-C69D-449B-B596-FABFB746EA2A}"
 EndProject
 Global
 	GlobalSection(SourceCodeControl) = preSolution
-		SccNumberOfProjects = 5
+		SccNumberOfProjects = 6
 		SccProjectName0 = \u0022$/TVA\u0020Code\u0020Library/Version/2.0\u0022,\u0020HBAAAAAA
 		SccLocalPath0 = ..
 		SccProvider0 = MSSCCI:Microsoft\u0020Visual\u0020SourceSafe
@@ -54,28 +51,71 @@ Global
 		SccLocalPath4 = ..
 		CanCheckoutShared = false
 		SccProjectFilePathRelativizedFromConnection4 = Source\\Tva.Windows\\
+		SccProjectUniqueName5 = Tva.IO.Compression\\Tva.IO.Compression.vcproj
+		SccProjectTopLevelParentUniqueName5 = TVA\u0020Code\u0020Library.sln
+		SccLocalPath5 = ..
+		CanCheckoutShared = false
+		SccProjectFilePathRelativizedFromConnection5 = Source\\Tva.IO.Compression\\
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
+		Debug|Mixed Platforms = Debug|Mixed Platforms
+		Debug|Win32 = Debug|Win32
 		Release|Any CPU = Release|Any CPU
+		Release|Mixed Platforms = Release|Mixed Platforms
+		Release|Win32 = Release|Win32
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{29A7B606-D1BC-4A4B-96D0-258D5A72C3EC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{29A7B606-D1BC-4A4B-96D0-258D5A72C3EC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{29A7B606-D1BC-4A4B-96D0-258D5A72C3EC}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{29A7B606-D1BC-4A4B-96D0-258D5A72C3EC}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{29A7B606-D1BC-4A4B-96D0-258D5A72C3EC}.Debug|Win32.ActiveCfg = Debug|Any CPU
 		{29A7B606-D1BC-4A4B-96D0-258D5A72C3EC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{29A7B606-D1BC-4A4B-96D0-258D5A72C3EC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{29A7B606-D1BC-4A4B-96D0-258D5A72C3EC}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{29A7B606-D1BC-4A4B-96D0-258D5A72C3EC}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{29A7B606-D1BC-4A4B-96D0-258D5A72C3EC}.Release|Win32.ActiveCfg = Release|Any CPU
 		{1A51E8F7-BE43-4353-A6E6-E7189911BA53}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{1A51E8F7-BE43-4353-A6E6-E7189911BA53}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1A51E8F7-BE43-4353-A6E6-E7189911BA53}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{1A51E8F7-BE43-4353-A6E6-E7189911BA53}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{1A51E8F7-BE43-4353-A6E6-E7189911BA53}.Debug|Win32.ActiveCfg = Debug|Any CPU
 		{1A51E8F7-BE43-4353-A6E6-E7189911BA53}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1A51E8F7-BE43-4353-A6E6-E7189911BA53}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1A51E8F7-BE43-4353-A6E6-E7189911BA53}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{1A51E8F7-BE43-4353-A6E6-E7189911BA53}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{1A51E8F7-BE43-4353-A6E6-E7189911BA53}.Release|Win32.ActiveCfg = Release|Any CPU
 		{20CBC100-D1D7-4DD2-A181-970359E92951}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{20CBC100-D1D7-4DD2-A181-970359E92951}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{20CBC100-D1D7-4DD2-A181-970359E92951}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{20CBC100-D1D7-4DD2-A181-970359E92951}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{20CBC100-D1D7-4DD2-A181-970359E92951}.Debug|Win32.ActiveCfg = Debug|Any CPU
 		{20CBC100-D1D7-4DD2-A181-970359E92951}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{20CBC100-D1D7-4DD2-A181-970359E92951}.Release|Any CPU.Build.0 = Release|Any CPU
+		{20CBC100-D1D7-4DD2-A181-970359E92951}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{20CBC100-D1D7-4DD2-A181-970359E92951}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{20CBC100-D1D7-4DD2-A181-970359E92951}.Release|Win32.ActiveCfg = Release|Any CPU
 		{81963CD0-0A0E-4765-8F0A-719C942301DA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{81963CD0-0A0E-4765-8F0A-719C942301DA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{81963CD0-0A0E-4765-8F0A-719C942301DA}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{81963CD0-0A0E-4765-8F0A-719C942301DA}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{81963CD0-0A0E-4765-8F0A-719C942301DA}.Debug|Win32.ActiveCfg = Debug|Any CPU
 		{81963CD0-0A0E-4765-8F0A-719C942301DA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{81963CD0-0A0E-4765-8F0A-719C942301DA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{81963CD0-0A0E-4765-8F0A-719C942301DA}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{81963CD0-0A0E-4765-8F0A-719C942301DA}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{81963CD0-0A0E-4765-8F0A-719C942301DA}.Release|Win32.ActiveCfg = Release|Any CPU
+		{F611B9BA-C69D-449B-B596-FABFB746EA2A}.Debug|Any CPU.ActiveCfg = Debug|Win32
+		{F611B9BA-C69D-449B-B596-FABFB746EA2A}.Debug|Mixed Platforms.ActiveCfg = Debug|Win32
+		{F611B9BA-C69D-449B-B596-FABFB746EA2A}.Debug|Mixed Platforms.Build.0 = Debug|Win32
+		{F611B9BA-C69D-449B-B596-FABFB746EA2A}.Debug|Win32.ActiveCfg = Debug|Win32
+		{F611B9BA-C69D-449B-B596-FABFB746EA2A}.Debug|Win32.Build.0 = Debug|Win32
+		{F611B9BA-C69D-449B-B596-FABFB746EA2A}.Release|Any CPU.ActiveCfg = Release|Win32
+		{F611B9BA-C69D-449B-B596-FABFB746EA2A}.Release|Mixed Platforms.ActiveCfg = Release|Win32
+		{F611B9BA-C69D-449B-B596-FABFB746EA2A}.Release|Mixed Platforms.Build.0 = Release|Win32
+		{F611B9BA-C69D-449B-B596-FABFB746EA2A}.Release|Win32.ActiveCfg = Release|Win32
+		{F611B9BA-C69D-449B-B596-FABFB746EA2A}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -85,5 +125,6 @@ Global
 		{20CBC100-D1D7-4DD2-A181-970359E92951} = {4F631798-355B-4607-AEEB-742B670AD834}
 		{81963CD0-0A0E-4765-8F0A-719C942301DA} = {4F631798-355B-4607-AEEB-742B670AD834}
 		{29A7B606-D1BC-4A4B-96D0-258D5A72C3EC} = {4F631798-355B-4607-AEEB-742B670AD834}
+		{F611B9BA-C69D-449B-B596-FABFB746EA2A} = {4F631798-355B-4607-AEEB-742B670AD834}
 	EndGlobalSection
 EndGlobal

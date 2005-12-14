@@ -164,10 +164,10 @@ local int unzlocal_getByte OF((
     voidpf filestream,
     int *pi));
 
-local int unzlocal_getByte(pzlib_filefunc_def,filestream,pi)
-    const zlib_filefunc_def* pzlib_filefunc_def;
-    voidpf filestream;
-    int *pi;
+local int unzlocal_getByte(
+    const zlib_filefunc_def* pzlib_filefunc_def,
+    voidpf filestream,
+    int *pi)
 {
     unsigned char c;
     int err = (int)ZREAD(*pzlib_filefunc_def,filestream,&c,1);
@@ -194,10 +194,10 @@ local int unzlocal_getShort OF((
     voidpf filestream,
     uLong *pX));
 
-local int unzlocal_getShort (pzlib_filefunc_def,filestream,pX)
-    const zlib_filefunc_def* pzlib_filefunc_def;
-    voidpf filestream;
-    uLong *pX;
+local int unzlocal_getShort (
+    const zlib_filefunc_def* pzlib_filefunc_def,
+    voidpf filestream,
+    uLong *pX)
 {
     uLong x ;
     int i;
@@ -222,10 +222,10 @@ local int unzlocal_getLong OF((
     voidpf filestream,
     uLong *pX));
 
-local int unzlocal_getLong (pzlib_filefunc_def,filestream,pX)
-    const zlib_filefunc_def* pzlib_filefunc_def;
-    voidpf filestream;
-    uLong *pX;
+local int unzlocal_getLong (
+    const zlib_filefunc_def* pzlib_filefunc_def,
+    voidpf filestream,
+    uLong *pX)
 {
     uLong x ;
     int i;
@@ -319,9 +319,9 @@ local uLong unzlocal_SearchCentralDir OF((
     const zlib_filefunc_def* pzlib_filefunc_def,
     voidpf filestream));
 
-local uLong unzlocal_SearchCentralDir(pzlib_filefunc_def,filestream)
-    const zlib_filefunc_def* pzlib_filefunc_def;
-    voidpf filestream;
+local uLong unzlocal_SearchCentralDir(
+    const zlib_filefunc_def* pzlib_filefunc_def,
+    voidpf filestream)
 {
     unsigned char* buf;
     uLong uSizeFile;
@@ -1077,7 +1077,7 @@ extern int ZEXPORT unzOpenCurrentFile3 (unzFile file, int* method, int* level, i
       pfile_in_zip_read_info->stream.zalloc = (alloc_func)0;
       pfile_in_zip_read_info->stream.zfree = (free_func)0;
       pfile_in_zip_read_info->stream.opaque = (voidpf)0;
-      pfile_in_zip_read_info->stream.next_in = (voidpf)0;
+      pfile_in_zip_read_info->stream.next_in = (Bytef*)0;
       pfile_in_zip_read_info->stream.avail_in = 0;
 
       err=inflateInit2(&pfile_in_zip_read_info->stream, -MAX_WBITS);

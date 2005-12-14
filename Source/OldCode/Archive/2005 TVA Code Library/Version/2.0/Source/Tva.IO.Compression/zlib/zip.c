@@ -251,11 +251,7 @@ local int add_data_in_datablock(linkedlist_data* ll,const void* buf,uLong len)
 
 local int ziplocal_putValue OF((const zlib_filefunc_def* pzlib_filefunc_def,
                                 voidpf filestream, uLong x, int nbByte));
-local int ziplocal_putValue (pzlib_filefunc_def, filestream, x, nbByte)
-    const zlib_filefunc_def* pzlib_filefunc_def;
-    voidpf filestream;
-    uLong x;
-    int nbByte;
+local int ziplocal_putValue (const zlib_filefunc_def* pzlib_filefunc_def, voidpf filestream, uLong x, int nbByte)
 {
     unsigned char buf[4];
     int n;
@@ -270,10 +266,7 @@ local int ziplocal_putValue (pzlib_filefunc_def, filestream, x, nbByte)
 }
 
 local void ziplocal_putValue_inmemory OF((void* dest, uLong x, int nbByte));
-local void ziplocal_putValue_inmemory (dest, x, nbByte)
-    void* dest;
-    uLong x;
-    int nbByte;
+local void ziplocal_putValue_inmemory (void* dest, uLong x, int nbByte)
 {
     unsigned char* buf=(unsigned char*)dest;
     int n;
@@ -305,10 +298,10 @@ local int ziplocal_getByte OF((
     voidpf filestream,
     int *pi));
 
-local int ziplocal_getByte(pzlib_filefunc_def,filestream,pi)
-    const zlib_filefunc_def* pzlib_filefunc_def;
-    voidpf filestream;
-    int *pi;
+local int ziplocal_getByte(
+    const zlib_filefunc_def* pzlib_filefunc_def,
+    voidpf filestream,
+    int *pi)
 {
     unsigned char c;
     int err = (int)ZREAD(*pzlib_filefunc_def,filestream,&c,1);
@@ -335,10 +328,10 @@ local int ziplocal_getShort OF((
     voidpf filestream,
     uLong *pX));
 
-local int ziplocal_getShort (pzlib_filefunc_def,filestream,pX)
-    const zlib_filefunc_def* pzlib_filefunc_def;
-    voidpf filestream;
-    uLong *pX;
+local int ziplocal_getShort (
+    const zlib_filefunc_def* pzlib_filefunc_def,
+    voidpf filestream,
+    uLong *pX)
 {
     uLong x ;
     int i;
@@ -363,10 +356,10 @@ local int ziplocal_getLong OF((
     voidpf filestream,
     uLong *pX));
 
-local int ziplocal_getLong (pzlib_filefunc_def,filestream,pX)
-    const zlib_filefunc_def* pzlib_filefunc_def;
-    voidpf filestream;
-    uLong *pX;
+local int ziplocal_getLong (
+    const zlib_filefunc_def* pzlib_filefunc_def,
+    voidpf filestream,
+    uLong *pX)
 {
     uLong x ;
     int i;
@@ -405,9 +398,9 @@ local uLong ziplocal_SearchCentralDir OF((
     const zlib_filefunc_def* pzlib_filefunc_def,
     voidpf filestream));
 
-local uLong ziplocal_SearchCentralDir(pzlib_filefunc_def,filestream)
-    const zlib_filefunc_def* pzlib_filefunc_def;
-    voidpf filestream;
+local uLong ziplocal_SearchCentralDir(
+    const zlib_filefunc_def* pzlib_filefunc_def,
+    voidpf filestream)
 {
     unsigned char* buf;
     uLong uSizeFile;
@@ -464,11 +457,11 @@ local uLong ziplocal_SearchCentralDir(pzlib_filefunc_def,filestream)
 #endif /* !NO_ADDFILEINEXISTINGZIP*/
 
 /************************************************************/
-extern zipFile ZEXPORT zipOpen2 (pathname, append, globalcomment, pzlib_filefunc_def)
-    const char *pathname;
-    int append;
-    zipcharpc* globalcomment;
-    zlib_filefunc_def* pzlib_filefunc_def;
+extern zipFile ZEXPORT zipOpen2 (
+    const char *pathname,
+    int append,
+    zipcharpc* globalcomment,
+    zlib_filefunc_def* pzlib_filefunc_def)
 {
     zip_internal ziinit;
     zip_internal* zi;
@@ -630,9 +623,9 @@ extern zipFile ZEXPORT zipOpen2 (pathname, append, globalcomment, pzlib_filefunc
     }
 }
 
-extern zipFile ZEXPORT zipOpen (pathname, append)
-    const char *pathname;
-    int append;
+extern zipFile ZEXPORT zipOpen (
+    const char *pathname,
+    int append)
 {
     return zipOpen2(pathname,append,NULL,NULL);
 }
@@ -887,9 +880,9 @@ extern int ZEXPORT zipWriteInFileInZip (zipFile file, const void* buf, unsigned 
     if (zi->in_opened_file_inzip == 0)
         return ZIP_PARAMERROR;
 
-    zi->ci.stream.next_in = (void*)buf;
+    zi->ci.stream.next_in = (Bytef*)buf;
     zi->ci.stream.avail_in = len;
-    zi->ci.crc32 = crc32(zi->ci.crc32,buf,len);
+    zi->ci.crc32 = crc32(zi->ci.crc32,(Bytef*)buf,len);
 
     while ((err==ZIP_OK) && (zi->ci.stream.avail_in>0))
     {

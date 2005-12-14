@@ -144,7 +144,7 @@
 				RuntimeLibrary="2"
 				BufferSecurityCheck="true"
 				WarningLevel="3"
-				CompileAs="1"
+				CompileAs="2"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
