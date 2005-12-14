@@ -5,7 +5,7 @@
 #include "zlib\\zip.h"
 #include "zlib\\unzip.h"
 
-using namespace TVA::Compression;
+using namespace Tva::IO::Compression;
 
 static unsigned short crc16tab[256] =
 {

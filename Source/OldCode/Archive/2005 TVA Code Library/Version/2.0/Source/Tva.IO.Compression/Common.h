@@ -26,73 +26,76 @@ using namespace System::Runtime::InteropServices;
 String* CharBufferToString(const char* str);
 char* StringToCharBuffer(String* gcStr);
 
-namespace TVA
+namespace Tva
 {
-	namespace Compression
+	namespace IO
 	{
-		public __value enum CompressLevel : int
+		namespace Compression
 		{
-			DefaultCompression = Z_DEFAULT_COMPRESSION,
-			NoCompression = Z_NO_COMPRESSION,
-			BestSpeed = Z_BEST_SPEED,
-			BestCompression = Z_BEST_COMPRESSION,
-			MultiPass = 10
-		};
+			public __value enum CompressLevel : int
+			{
+				DefaultCompression = Z_DEFAULT_COMPRESSION,
+				NoCompression = Z_NO_COMPRESSION,
+				BestSpeed = Z_BEST_SPEED,
+				BestCompression = Z_BEST_COMPRESSION,
+				MultiPass = 10
+			};
 
-		public __delegate void ProgressEventHandler(__int64 BytesCompleted, __int64 BytesTotal);
+			public __delegate void ProgressEventHandler(__int64 BytesCompleted, __int64 BytesTotal);
 
-		// Common compression functions
-		public __gc class Common
-		{
-			public: 
-				static System::Byte Compress(System::Byte Data[]) [];
-				static System::Byte Compress(System::Byte Data[], CompressLevel Strength) [];			
-				static Stream* Compress(Stream* InStream);
-				static Stream* Compress(Stream* InStream, CompressLevel Strength);
-				static void Compress(Stream* InStream, Stream* OutStream, CompressLevel Strength, ProgressEventHandler* ProgressHandler);
-				
-				static System::Byte Uncompress(System::Byte Data[], int UncompressedSize) [];
-				static Stream* Uncompress(System::IO::Stream* InStream);
-				static void Uncompress(Stream* InStream, Stream* OutStream, ProgressEventHandler* ProgressHandler);
-				
-				static void CompressFile(String* SourceFileName, String* DestFileName);
-				static void CompressFile(String* SourceFileName, String* DestFileName, CompressLevel Strength);
-				static void CompressFile(String* SourceFileName, String* DestFileName, CompressLevel Strength, ProgressEventHandler* ProgressHandler);
-				
-				static void UncompressFile(String* SourceFileName, String* DestFileName);
-				static void UncompressFile(String* SourceFileName, String* DestFileName, ProgressEventHandler* ProgressHandler);
-				
-				static Int32 CRC32(Int32 CRC, System::Byte Data[], int Offset, int Count);
-				static Int32 CRC32(System::Byte Data[]);
-				static Int32 CRC32(Stream* InStream);
-				static Int32 CRC32(String* FileName);
-				
-				static Int16 CRC16(Int16 CRC, System::Byte Data[], int Offset, int Count);
-				static Int16 CRC16(System::Byte Data[]);
-				static Int16 CRC16(Stream* InStream);
-				static Int16 CRC16(String* FileName);
-				
-				static Int16 CRC_CCITT(Int16 CRC, System::Byte Data[], int Offset, int Count);
-				static Int16 CRC_CCITT(System::Byte Data[]);
-				static Int16 CRC_CCITT(Stream* InStream);
-				static Int16 CRC_CCITT(String* FileName);
-				
-				static String* ZLibVersion();
-			private:
-				Common(){}
-				static System::Byte Compress(System::Byte Data[], CompressLevel Strength, int CompressionDepth) [];
-		};
+			// Common compression functions
+			public __gc class Common
+			{
+				public: 
+					static System::Byte Compress(System::Byte Data[]) [];
+					static System::Byte Compress(System::Byte Data[], CompressLevel Strength) [];			
+					static Stream* Compress(Stream* InStream);
+					static Stream* Compress(Stream* InStream, CompressLevel Strength);
+					static void Compress(Stream* InStream, Stream* OutStream, CompressLevel Strength, ProgressEventHandler* ProgressHandler);
+					
+					static System::Byte Uncompress(System::Byte Data[], int UncompressedSize) [];
+					static Stream* Uncompress(System::IO::Stream* InStream);
+					static void Uncompress(Stream* InStream, Stream* OutStream, ProgressEventHandler* ProgressHandler);
+					
+					static void CompressFile(String* SourceFileName, String* DestFileName);
+					static void CompressFile(String* SourceFileName, String* DestFileName, CompressLevel Strength);
+					static void CompressFile(String* SourceFileName, String* DestFileName, CompressLevel Strength, ProgressEventHandler* ProgressHandler);
+					
+					static void UncompressFile(String* SourceFileName, String* DestFileName);
+					static void UncompressFile(String* SourceFileName, String* DestFileName, ProgressEventHandler* ProgressHandler);
+					
+					static Int32 CRC32(Int32 CRC, System::Byte Data[], int Offset, int Count);
+					static Int32 CRC32(System::Byte Data[]);
+					static Int32 CRC32(Stream* InStream);
+					static Int32 CRC32(String* FileName);
+					
+					static Int16 CRC16(Int16 CRC, System::Byte Data[], int Offset, int Count);
+					static Int16 CRC16(System::Byte Data[]);
+					static Int16 CRC16(Stream* InStream);
+					static Int16 CRC16(String* FileName);
+					
+					static Int16 CRC_CCITT(Int16 CRC, System::Byte Data[], int Offset, int Count);
+					static Int16 CRC_CCITT(System::Byte Data[]);
+					static Int16 CRC_CCITT(Stream* InStream);
+					static Int16 CRC_CCITT(String* FileName);
+					
+					static String* ZLibVersion();
+				private:
+					Common(){}
+					static System::Byte Compress(System::Byte Data[], CompressLevel Strength, int CompressionDepth) [];
+			};
 
-		// Custom compression exception class derived from System::Exception
-		__gc class CompressionException : public Exception
-		{
-			public: 
-				CompressionException(String* message) : Exception(message), error(Int32::MaxValue){}
-				CompressionException(String* source, int err) : Exception(GetErrorMessage(source, err)), error(err){}
-				__property int get_ZLibError();
-			private:
-				static String* GetErrorMessage(String* source, int err);
-				int error;
-		};			
+			// Custom compression exception class derived from System::Exception
+			__gc class CompressionException : public Exception
+			{
+				public: 
+					CompressionException(String* message) : Exception(message), error(Int32::MaxValue){}
+					CompressionException(String* source, int err) : Exception(GetErrorMessage(source, err)), error(err){}
+					__property int get_ZLibError();
+				private:
+					static String* GetErrorMessage(String* source, int err);
+					int error;
+			};			
+		}
 	}
 }

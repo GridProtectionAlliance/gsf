@@ -2,7 +2,7 @@
 #include "stdafx.h"
 #include "ZipFile.h"
 
-using namespace TVA::Compression;
+using namespace Tva::IO::Compression;
 
 //
 // Compressed file implementation
