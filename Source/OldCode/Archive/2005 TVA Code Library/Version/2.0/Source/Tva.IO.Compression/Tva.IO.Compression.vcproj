@@ -198,7 +198,7 @@
 	</References>
 	<Files>
 		<Filter
-			Name="Tva Source"
+			Name=".NET Wrapper Source"
 			>
 			<Filter
 				Name="Source Files"
