@@ -45,6 +45,25 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="My Project\AssemblyInfo.vb" />
+    <Compile Include="Tva.DateTime\Tva.DateTime.Common.vb" />
+    <Compile Include="Tva.DateTime\Tva.DateTime.NtpTimeTag.vb" />
+    <Compile Include="Tva.DateTime\Tva.DateTime.Win32TimeZone.vb" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Tva.Configuration\" />
+    <Folder Include="Tva.Console\" />
+    <Folder Include="Tva.Data\" />
+    <Folder Include="Tva.ErrorManagement\" />
+    <Folder Include="Tva.Exception\" />
+    <Folder Include="Tva.Interop\" />
+    <Folder Include="Tva.IO\" />
+    <Folder Include="Tva.Net.Sockets\" />
+    <Folder Include="Tva.Remoting\" />
+    <Folder Include="Tva.Services\" />
+    <Folder Include="Tva.Text\" />
+    <Folder Include="Tva.Threading\" />
+    <Folder Include="Tva.Web\" />
+    <Folder Include="Tva.Windows\" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.VisualBasic.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

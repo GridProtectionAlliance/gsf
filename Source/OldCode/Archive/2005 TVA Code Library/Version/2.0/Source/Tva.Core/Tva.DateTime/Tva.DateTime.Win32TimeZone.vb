@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  Tva.DateTime.Win32TimeZone.vb - Win32 Time Zone Classes
+'  Tva.Date.Win32TimeZone.vb - Win32 Time Zone Classes
 '  Copyright © 2005 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005
@@ -11,9 +11,10 @@
 '  Code Modification History:
 '  -----------------------------------------------------------------------------------------------------
 '  06/10/2004 - James R Carroll
-'       Integrated external source for Michael R. Brumm's TimeZone management into TVA.Shared.DateTime
+'       Integrated external source for Michael R. Brumm's TimeZone management into TVA.Shared.Date
 '  12/21/2005 - James R Carroll
-'       2.0 version of source code imorted from 1.1 source (TVA.Shared.DateTime)
+'       2.0 version of source code migrated from 1.1 source (TVA.Shared.Date)
+'
 '*******************************************************************************************************
 
 Imports System.Globalization
@@ -31,11 +32,25 @@ Namespace DateTime
     ' 
     ' *************************************************************************************************************
 
+    ' SimpleTimeZone
+    ' by Michael R. Brumm
+    '
+    ' For updates and more information, visit:
+    ' http://www.michaelbrumm.com/simpletimezone.html
+    '
+    ' or contact me@michaelbrumm.com
+    '
+    ' Please do not modify this code and re-release it. If you
+    ' require changes to this class, please derive your own class
+    ' from SimpleTimeZone, and add (or override) the methods and
+    ' properties on your own derived class. You never know when 
+    ' your code might need to be version compatible with another
+    ' class that uses SimpleTimeZone.
+
     ' IMPORTANT:
     ' This class is immutable, and any derived classes
     ' should also be immutable.
-    <Serializable()> _
-    Public Class DaylightTimeChange
+    <Serializable()> Public Class DaylightTimeChange
 
 
         Private Const NUM_DAYS_IN_WEEK As Int32 = 7
@@ -44,6 +59,8 @@ Namespace DateTime
         Private _dayOfWeek As DayOfWeek
         Private _dayOfWeekIndex As Int32
         Private _timeOfDay As TimeSpan
+
+
         ' Constructor without parameters is not allowed.
         Private Sub New()
         End Sub
@@ -111,24 +128,22 @@ Namespace DateTime
             _timeOfDay = timeOfDay
 
         End Sub
-        '''<summary>
-        ''' <para>
-        '''  Returns the time and date of the daylight saving change for a particular year. For example:"the 1st Sunday of April at 2:00am" for the year "2000"  is "2000/04/02 02:00"
-        ''' </para>
-        ''' </summary>
-        ''' <param name="year">Year</param>
 
 
+        ' Returns the time and date of the daylight saving change
+        ' for a particular year. For example:
+        '   "the 1st Sunday of April at 2:00am" for the year "2000"
+        '   is "2000/04/02 02:00"
         Public Overridable Function GetDate( _
           ByVal year As Int32 _
-        ) As System.DateTime
+        ) As Date
 
-            If ((year < 1) OrElse (year > System.DateTime.MaxValue.Year)) Then
+            If ((year < 1) OrElse (year > Date.MaxValue.Year)) Then
                 Throw New ArgumentOutOfRangeException("year")
             End If
 
             ' Get the first day of the change month for the specified year.
-            Dim resultDate As New System.DateTime(year, _month, 1)
+            Dim resultDate As New Date(year, _month, 1)
 
             ' Get the first day of the month that falls on the
             ' day of the week for this change.
@@ -158,9 +173,8 @@ Namespace DateTime
 
     End Class
 
-    <Serializable()> _
-    Public Class SimpleTimeZone
 
+    <Serializable()> Public Class SimpleTimeZone
         Inherits TimeZone
 
 
@@ -183,12 +197,8 @@ Namespace DateTime
         ' Constructor without parameters is not allowed.
         Private Sub New()
         End Sub
-        '''<summary>
-        ''' <para>
-        '''  Constructor for time zone without daylight saving time.
-        ''' </para>
-        ''' </summary>
 
+        ' Constructor for time zone without daylight saving time.
         Public Sub New( _
           ByVal standardOffset As TimeSpan, _
           ByVal standardName As String, _
@@ -203,12 +213,8 @@ Namespace DateTime
             _standardAbbreviation = standardAbbreviation
 
         End Sub
-        '''<summary>
-        ''' <para>
-        '''  Constructor for time zone with or without daylight saving time.
-        ''' </para>
-        ''' </summary>
 
+        ' Constructor for time zone with or without daylight saving time.
         Public Sub New( _
           ByVal standardOffset As TimeSpan, _
           ByVal standardName As String, _
@@ -267,15 +273,7 @@ Namespace DateTime
             _daylightTimeChangeEnd = daylightTimeChangeEnd
 
         End Sub
-        ''' <summary>
-        ''' Gets the Standard Name
-        ''' </summary>
-        ''' <value>
-        ''' Standard Name
-        ''' </value>
-        ''' <remarks>
-        ''' Value must be string
-        ''' </remarks>
+
 
         Public Overrides ReadOnly Property StandardName() As String
             Get
@@ -283,29 +281,13 @@ Namespace DateTime
             End Get
         End Property
 
-        ''' <summary>
-        ''' Gets the Standard Abbreviation
-        ''' </summary>
-        ''' <value>
-        ''' Standard Abbreviation
-        ''' </value>
-        ''' <remarks>
-        ''' Value must be string
-        ''' </remarks>
+
         Public Overridable ReadOnly Property StandardAbbreviation() As String
             Get
                 Return _standardAbbreviation
             End Get
         End Property
-        ''' <summary>
-        ''' Gets the daylight name
-        ''' </summary>
-        ''' <value>
-        ''' daylight name
-        ''' </value>
-        ''' <remarks>
-        ''' Value must be string
-        ''' </remarks>
+
 
         Public Overrides ReadOnly Property DaylightName() As String
             Get
@@ -313,30 +295,19 @@ Namespace DateTime
             End Get
         End Property
 
-        ''' <summary>
-        ''' Gets the daylight abbreviation
-        ''' </summary>
-        ''' <value>
-        ''' daylight abbreviation
-        ''' </value>
-        ''' <remarks>
-        ''' Value must be string
-        ''' </remarks>
+
         Public Overridable ReadOnly Property DaylightAbbreviation() As String
             Get
                 Return _daylightAbbreviation
             End Get
         End Property
-        '''<summary>
-        ''' <para>
-        ''' The name is dependent on whether the time zone is in daylight
-        ''' saving time or not. This method can be ambiguous during
-        ''' daylight changes.
-        ''' </para>
-        ''' </summary>
 
+
+        ' The name is dependant on whether the time zone is in daylight
+        ' saving time or not. This method can be ambiguous during
+        ' daylight changes.
         Public Overridable Function GetNameLocalTime( _
-          ByVal time As System.DateTime _
+          ByVal time As Date _
         ) As String
 
             If (_standardAlways) Then
@@ -348,14 +319,10 @@ Namespace DateTime
             End If
 
         End Function
-        '''<summary>
-        ''' <para>
-        ''' This function is unambiguous during daylight changes.
-        ''' </para>
-        ''' </summary>
 
+        ' This method is unambiguous during daylight changes.
         Public Overridable Function GetNameUniversalTime( _
-          ByVal time As System.DateTime _
+          ByVal time As Date _
         ) As String
 
             If (IsDaylightSavingTimeUniversalTime(time)) Then
@@ -366,16 +333,12 @@ Namespace DateTime
 
         End Function
 
-        '''<summary>
-        ''' <para>
-        ''' The abbreviation is dependant on whether the time zone is in
-        ''' daylight saving time or not. This function can be ambiguous during
-        ''' daylight changes.
-        ''' </para>
-        ''' </summary>
 
+        ' The abbreviation is dependant on whether the time zone is in
+        ' daylight saving time or not. This method can be ambiguous during
+        ' daylight changes.
         Public Overridable Function GetAbbreviationLocalTime( _
-          ByVal time As System.DateTime _
+          ByVal time As Date _
         ) As String
 
             If (_standardAlways) Then
@@ -387,14 +350,10 @@ Namespace DateTime
             End If
 
         End Function
-        '''<summary>
-        ''' <para>
-        ''' This function is unambiguous during daylight changes.
-        ''' </para>
-        ''' </summary>
 
+        ' This method is unambiguous during daylight changes.
         Public Overridable Function GetAbbreviationUniversalTime( _
-          ByVal time As System.DateTime _
+          ByVal time As Date _
         ) As String
 
             If (IsDaylightSavingTimeUniversalTime(time)) Then
@@ -404,18 +363,13 @@ Namespace DateTime
             End If
 
         End Function
-        '''<summary>
-        ''' <para>
-        ''' Returns daylight changes 
-        ''' </para>
-        ''' </summary>
-        ''' <param name="year">Year to get the daylight changes</param>
+
 
         Public Overrides Function GetDaylightChanges( _
-          ByVal year As System.Int32 _
+          ByVal year As Int32 _
         ) As DaylightTime
 
-            If ((year < 1) OrElse (year > System.DateTime.MaxValue.Year)) Then
+            If ((year < 1) OrElse (year > Date.MaxValue.Year)) Then
                 Throw New ArgumentOutOfRangeException("year")
             End If
 
@@ -431,41 +385,31 @@ Namespace DateTime
             End If
 
         End Function
-        '''<summary>
-        ''' <para>
-        '''  This method can be ambiguous during daylight changes.
-        ''' </para>
-        ''' </summary>
 
+
+        ' This method can be ambiguous during daylight changes.
         Public Overloads Overrides Function IsDaylightSavingTime( _
-          ByVal time As System.DateTime _
+          ByVal time As Date _
         ) As Boolean
 
             Return IsDaylightSavingTime(time, False)
 
         End Function
-        '''<summary>
-        ''' <para>
-        '''  This method is unambiguous during daylight changes.
-        ''' </para>
-        ''' </summary>
 
+
+        ' This method is unambiguous during daylight changes.
         Public Overridable Function IsDaylightSavingTimeUniversalTime( _
-          ByVal time As System.DateTime _
+          ByVal time As Date _
         ) As Boolean
 
             time = time.Add(_standardOffset)
             Return IsDaylightSavingTime(time, True)
 
         End Function
-        '''<summary>
-        ''' <para>
-        ''' Return whether the time is within the daylight saving time for this year.
-        ''' </para>
-        ''' </summary>
+
 
         Private Overloads Function IsDaylightSavingTime( _
-          ByVal time As System.DateTime, _
+          ByVal time As Date, _
           ByVal fromUtcTime As Boolean _
         ) As Boolean
 
@@ -479,24 +423,16 @@ Namespace DateTime
             ' time's year.
             Dim daylightTimes As DaylightTime
             daylightTimes = GetDaylightChanges(time.Year)
-            'Return whether the time is within the daylight saving time for this year.
 
+            ' Return whether the time is within the daylight saving
+            ' time for this year.
             Return IsDaylightSavingTime(time, daylightTimes, fromUtcTime)
 
         End Function
-        '''<summary>
-        ''' <para>
-        ''' Return a boolean value if the time is within daylighttime
-        ''' </para>
-        ''' </summary>
-        ''' <param name="time"> Required.Time</param>
-        ''' <param name="daylightTimes"> Required.DayLightTime</param>
-        ''' <value>
-        ''' Must be boolean
-        ''' </value>
+
 
         Public Overloads Shared Function IsDaylightSavingTime( _
-           ByVal time As System.DateTime, _
+           ByVal time As Date, _
            ByVal daylightTimes As DaylightTime _
         ) As Boolean
 
@@ -506,18 +442,19 @@ Namespace DateTime
 
 
         Private Overloads Shared Function IsDaylightSavingTime( _
-          ByVal time As System.DateTime, _
+          ByVal time As Date, _
           ByVal daylightTimes As DaylightTime, _
           ByVal fromUtcTime As Boolean _
         ) As Boolean
 
-
+            ' Mirrors .NET Framework TimeZone functionality, which 
+            ' does not throw an exception.
             If (daylightTimes Is Nothing) Then
                 Return False
             End If
 
-            Dim daylightStart As System.DateTime
-            Dim daylightEnd As System.DateTime
+            Dim daylightStart As Date
+            Dim daylightEnd As Date
             Dim daylightDelta As TimeSpan
             daylightStart = daylightTimes.Start
             daylightEnd = daylightTimes.End
@@ -682,19 +619,11 @@ Namespace DateTime
             End If
 
         End Function
-        '''<summary>
-        ''' <para>
-        ''' Return whether the time is within the ambiguous time for this year
-        ''' </para>
-        ''' </summary>
-        ''' <param name="time"> Required.Time</param>
-        ''' <param name="daylightTimes"> Required.DayLightTime</param>
-        ''' <value>
-        ''' Must be boolean
-        ''' </value>
+
+
         Public Overridable Function IsAmbiguous( _
-           ByVal time As System.DateTime _
-         ) As Boolean
+          ByVal time As Date _
+        ) As Boolean
 
             ' If this time zone is never in daylight saving, then
             ' return false.
@@ -713,20 +642,9 @@ Namespace DateTime
 
         End Function
 
-        '''<summary>
-        ''' <para>
-        ''' Returns a boolean value if it is the ambiguous time at the start and end of daylight savings or not.        
-        ''' </para>
-        ''' </summary>
-        ''' <param name="time"> Required.Time</param>
-        ''' <param name="daylightTimes"> Required.DayLightTime</param>
-        ''' <value>
-        ''' Must be boolean
-        ''' </value>
-
 
         Public Shared Function IsAmbiguous( _
-          ByVal time As System.DateTime, _
+          ByVal time As Date, _
           ByVal daylightTimes As DaylightTime _
         ) As Boolean
 
@@ -736,8 +654,8 @@ Namespace DateTime
                 Return False
             End If
 
-            Dim daylightStart As System.DateTime
-            Dim daylightEnd As System.DateTime
+            Dim daylightStart As Date
+            Dim daylightEnd As Date
             Dim daylightDelta As TimeSpan
             daylightStart = daylightTimes.Start
             daylightEnd = daylightTimes.End
@@ -770,15 +688,10 @@ Namespace DateTime
             Return False
 
         End Function
-        '''<summary>
-        ''' <para>
-        ''' Returns standard offset if the timezone is never in daylight savings         
-        ''' </para>
-        ''' </summary>
-        ''' <param name="time"> Required.Time</param>
+
 
         Public Overrides Function GetUtcOffset( _
-          ByVal time As System.DateTime _
+          ByVal time As Date _
         ) As TimeSpan
 
             ' If this time zone is never in daylight saving, then
@@ -797,17 +710,11 @@ Namespace DateTime
             End If
 
         End Function
-        '''<summary>
-        ''' <para>
-        ''' Returns time with daylight savings          
-        ''' </para>
-        ''' </summary>
-        ''' <param name="time"> Required.Time to add daylight savings to</param>
 
 
         Public Overrides Function ToLocalTime( _
-          ByVal time As System.DateTime _
-        ) As System.DateTime
+          ByVal time As Date _
+        ) As Date
 
             time = time.Add(_standardOffset)
 
@@ -821,25 +728,22 @@ Namespace DateTime
 
         End Function
 
-        '''<summary>
-        ''' <para>
-        ''' This can return an incorrect time during the time change between standard and daylight saving time, because
-        ''' times near the daylight saving switch can be ambiguous.
-        ''' </para>
-        ''' </summary>
-        ''' <remarks>
-        ''' <para>
-        '''  For example, if daylight saving ends at: "2000/10/29 02:00", and fall back an hour, then is:
-        ''' "2000/10/29 01:30", during daylight saving, or not?
-        ''' </para>
-        ''' <para>
-        ''' Consequently, this function is provided for backwards compatiblity only, and should be deprecated and replaced
-        ''' with the overload that allows daylight saving to be specified.
-        ''' </para>
-        ''' </remarks>
+
+        ' This can return an incorrect time during the time change
+        ' between standard and daylight saving time, because
+        ' times near the daylight saving switch can be ambiguous.
+        '
+        ' For example, if daylight saving ends at:
+        ' "2000/10/29 02:00", and fall back an hour, then is:
+        ' "2000/10/29 01:30", during daylight saving, or not?
+        '
+        ' Consequently, this function is provided for backwards
+        ' compatiblity only, and should be deprecated and replaced
+        ' with the overload that allows daylight saving to be
+        ' specified.
         Public Overloads Overrides Function ToUniversalTime( _
-          ByVal time As System.DateTime _
-        ) As System.DateTime
+          ByVal time As Date _
+        ) As Date
 
             If (_standardAlways) Then
                 Return time.Subtract(_standardOffset)
@@ -856,18 +760,15 @@ Namespace DateTime
 
 
         End Function
-        '''<summary>
-        ''' <para>
-        '''' This overload allows the status of daylight saving to be specified along with the time. This conversion
-        ''' is unambiguous and always correct.
-        ''' </para>
-        ''' </summary>
 
 
+        ' This overload allows the status of daylight saving
+        ' to be specified along with the time. This conversion
+        ' is unambiguous and always correct.
         Public Overloads Function ToUniversalTime( _
-          ByVal time As System.DateTime, _
+          ByVal time As Date, _
           ByVal daylightSaving As Boolean _
-        ) As System.DateTime
+        ) As Date
 
             If (_standardAlways) Then
                 Return time.Subtract(_standardOffset)
@@ -885,8 +786,25 @@ Namespace DateTime
         End Function
 
     End Class
+    ' Win32 TimeZones
+    ' by Michael R. Brumm
+    '
+    ' For updates and more information, visit:
+    ' http://www.michaelbrumm.com/simpletimezone.html
+    '
+    ' or contact me@michaelbrumm.com
+    '
+    ' Please do not modify this code and re-release it. If you
+    ' require changes to this class, please derive your own class
+    ' from SimpleTimeZone, and add (or override) the methods and
+    ' properties on your own derived class. You never know when 
+    ' your code might need to be version compatible with another
+    ' class that uses Win32 TimeZones.
 
+    ' This should have been part of Microsoft.Win32, so that is
+    ' where I located it.
     Public NotInheritable Class TimeZones
+
 
         Private Const VALUE_INDEX As String = "Index"
         Private Const VALUE_DISPLAY_NAME As String = "Display"
@@ -918,10 +836,7 @@ Namespace DateTime
             Public DaylightBias As Int32
             Public StandardDate As SYSTEMTIMEReader
             Public DaylightDate As SYSTEMTIMEReader
-            ''' <summary>
-            '''Initializes a new instance of the TZREGReader class . 
-            ''' </summary>
-            '''<param name="bytes"> Required.</param>
+
 
             Public Sub New(ByVal bytes As Byte())
 
@@ -959,11 +874,7 @@ Namespace DateTime
             Public Minute As Int16
             Public Second As Int16
             Public Milliseconds As Int16
-            ''' <summary>
-            '''Initializes a new instance of the SYSTEMTIMEReader class . 
-            ''' </summary>
-            '''<param name="bytes"> Required.</param>
-            ''' <param name="index"> Required.</param>
+
 
             Public Sub New(ByVal bytes As Byte(), ByVal index As Int32)
 
@@ -994,9 +905,7 @@ Namespace DateTime
 
 
         End Class
-        ''' <summary>
-        '''Initializes a new instance of the SYSTEMTIMEReader class . 
-        ''' </summary>
+
 
         Shared Sub New()
 
@@ -1015,13 +924,10 @@ Namespace DateTime
             End With
 
         End Sub
-        '''<summary>
-        '''   <para>Returns an abbreviation for a name.</para>
-        '''</summary>
-        ''' <param name="name"> Required.  Name </param>
+
 
         Private Shared Function GetAbbreviation( _
-          ByVal name As String() _
+          ByVal name As String _
           ) As String
 
             Dim abbreviation As String = ""
@@ -1039,10 +945,8 @@ Namespace DateTime
             Return abbreviation
 
         End Function
-        '''<summary>
-        '''   <para>Returns Win32TimeZone for a registrykey timezone.</para>
-        '''</summary>
-        ''' <param name="regKeyTimeZone"> Required. Timezone </param>
+
+
         Private Shared Function LoadTimeZone( _
           ByVal regKeyTimeZone As RegistryKey _
           ) As Win32TimeZone
@@ -1135,17 +1039,16 @@ Namespace DateTime
               )
 
         End Function
-        '''<summary>
-        '''   <para>Returns Timezone for a particular index.</para>
-        '''</summary>
-        ''' <param name="index"> Required. An integer index. </param>
+
+
         Public Shared Function GetTimeZone(ByVal index As Int32) As Win32TimeZone
 
             If (nameRegKeyTimeZones Is Nothing) Then
                 Return Nothing
             End If
 
-            Dim regKeyTimeZones As RegistryKey
+            Dim regKeyTimeZones As RegistryKey = Nothing
+
             Try
                 regKeyTimeZones = Registry.LocalMachine.OpenSubKey(nameRegKeyTimeZones)
             Catch
@@ -1155,7 +1058,7 @@ Namespace DateTime
                 Return Nothing
             End If
 
-            Dim result As Win32TimeZone
+            Dim result As Win32TimeZone = Nothing
 
             Dim currentNameSubKey As String
             Dim namesSubKeys As String()
@@ -1163,7 +1066,7 @@ Namespace DateTime
 
             Dim currentSubKey As RegistryKey
 
-            Dim currentTimeZone As Win32TimeZone
+            'Dim currentTimeZone As Win32TimeZone
             Dim timeZoneIndex As Int32
 
             For Each currentNameSubKey In namesSubKeys
@@ -1200,9 +1103,7 @@ Namespace DateTime
             Return result
 
         End Function
-        '''<summary>
-        '''   <para>Returns an array of Timezones.</para>
-        '''</summary>
+
 
         Public Shared Function GetTimeZones() As Win32TimeZone()
 
@@ -1210,7 +1111,7 @@ Namespace DateTime
                 Return New Win32TimeZone() {}
             End If
 
-            Dim regKeyTimeZones As RegistryKey
+            Dim regKeyTimeZones As RegistryKey = Nothing
             Try
                 regKeyTimeZones = Registry.LocalMachine.OpenSubKey(nameRegKeyTimeZones)
             Catch
@@ -1220,7 +1121,7 @@ Namespace DateTime
                 Return New Win32TimeZone() {}
             End If
 
-            Dim results As New ArrayList
+            Dim results As New ArrayList()
 
             Dim currentNameSubKey As String
             Dim namesSubKeys As String()
@@ -1263,11 +1164,27 @@ Namespace DateTime
 
         End Function
 
+
     End Class
 
-    <Serializable()> _
-    Public Class Win32TimeZone
+    ' Win32TimeZone
+    ' by Michael R. Brumm
+    '
+    ' For updates and more information, visit:
+    ' http://www.michaelbrumm.com/simpletimezone.html
+    '
+    ' or contact me@michaelbrumm.com
+    '
+    ' Please do not modify this code and re-release it. If you
+    ' require changes to this class, please derive your own class
+    ' from SimpleTimeZone, and add (or override) the methods and
+    ' properties on your own derived class. You never know when 
+    ' your code might need to be version compatible with another
+    ' class that uses Win32TimeZone.
 
+    ' This should have been part of Microsoft.Win32, so that is
+    ' where I located it.
+    <Serializable()> Public Class Win32TimeZone
         Inherits SimpleTimeZone
 
 
@@ -1293,10 +1210,6 @@ Namespace DateTime
             _displayName = displayName
 
         End Sub
-        ''' <summary>
-        ''' Summary:
-        '''Initializes a new instance of the Win32TimeZoneClass. 
-        ''' </summary>
 
         Public Sub New( _
           ByVal index As Int32, _
@@ -1326,30 +1239,14 @@ Namespace DateTime
             _displayName = displayName
 
         End Sub
-        ''' <summary>
-        ''' Gets the Index
-        ''' </summary>
-        ''' <value>
-        ''' Index 
-        ''' </value>
-        ''' <remarks>
-        ''' Value must be integer
-        ''' </remarks>
+
 
         Public ReadOnly Property Index() As Int32
             Get
                 Return _index
             End Get
         End Property
-        ''' <summary>
-        ''' Gets the Display name
-        ''' </summary>
-        ''' <value>
-        ''' Display name
-        ''' </value>
-        ''' <remarks>
-        ''' Value must be String
-        ''' </remarks>
+
 
         Public ReadOnly Property DisplayName() As String
             Get
@@ -1357,12 +1254,11 @@ Namespace DateTime
             End Get
         End Property
 
-        ''' <summary>
-        ''' Returns the Display name
-        ''' </summary>
+
         Public Overrides Function ToString() As String
             Return _displayName
         End Function
+
 
     End Class
 

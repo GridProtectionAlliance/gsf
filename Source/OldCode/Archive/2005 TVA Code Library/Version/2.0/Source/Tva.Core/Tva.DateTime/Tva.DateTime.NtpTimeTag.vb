@@ -13,7 +13,8 @@
 '  01/14/2005 - James R Carroll
 '       Original version of source code generated
 '  12/21/2005 - James R Carroll
-'       2.0 version of source code imorted from 1.1 source (TVA.Shared.DateTime)
+'       2.0 version of source code migrated from 1.1 source (TVA.Shared.DateTime)
+'
 '*******************************************************************************************************
 
 Namespace DateTime

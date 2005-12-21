@@ -17,10 +17,11 @@
 '  01/05/2005 - James R Carroll
 '       Added BaselinedTimestamp function
 '  12/21/2005 - James R Carroll
-'       2.0 version of source code imorted from 1.1 source (TVA.Shared.DateTime)
+'       2.0 version of source code migrated from 1.1 source (TVA.Shared.DateTime)
+'
 '*******************************************************************************************************
 
-Imports System.text
+Imports System.Text
 
 Namespace DateTime
 
@@ -132,8 +133,8 @@ Namespace DateTime
         ''' <para>Example timeNames array: "Year", "Years", "Day", "Days", "Hour", "Hours", "Minute", "Minutes", "Second", "Seconds", "Less Than 60 Seconds", "0 Seconds"</para>
         ''' </remarks>
         ''' <param name="seconds">Seconds to be converted</param>
-        ''' <param name="timeNames">Time names array to use during textal conversion</param>
         ''' <param name="secondPrecision">Number of fractional digits to display for seconds</param>
+        ''' <param name="timeNames">Time names array to use during textal conversion</param>
         Public Shared Function SecondsToText(ByVal seconds As Single, ByVal secondPrecision As Integer, ByVal timeNames As String()) As String
 
             With New StringBuilder
@@ -506,6 +507,20 @@ Namespace DateTime
         ''' <para>Converts given local time to time in specified time zone</para>
         ''' </summary>
         ''' <param name="localTimestamp">Timestamp in local time to be converted to time in specified time zone</param>
+        ''' <param name="destinationTimeZoneStandardName">Standard name of desired end time zone for given timestamp</param>
+        ''' <returns>
+        ''' <para>Timestamp in specified time zone</para>
+        ''' </returns>
+        Public Shared Function LocalTimeTo(ByVal localTimestamp As System.DateTime, ByVal destinationTimeZoneStandardName As String) As System.DateTime
+
+            Return LocalTimeTo(localTimestamp, GetWin32TimeZone(destinationTimeZoneStandardName))
+
+        End Function
+
+        ''' <summary>
+        ''' <para>Converts given local time to time in specified time zone</para>
+        ''' </summary>
+        ''' <param name="localTimestamp">Timestamp in local time to be converted to time in specified time zone</param>
         ''' <param name="destinationTimeZone">Desired end time zone for given timestamp</param>
         ''' <returns>
         ''' <para>Timestamp in specified time zone</para>
@@ -520,6 +535,21 @@ Namespace DateTime
             End With
 
             Return localTimestamp.ToUniversalTime().AddHours(destOffset)
+
+        End Function
+
+        ''' <summary>
+        ''' <para>Converts given timestamp from one time zone to another using standard names for time zones</para>
+        ''' </summary>
+        ''' <param name="timestamp">Timestamp in source time zone to be converted to time in destination time zone</param>
+        ''' <param name="sourceTimeZoneStandardName">Standard name of time zone for given source timestamp</param>
+        ''' <param name="destinationTimeZoneStandardName">Standard name of desired end time zone for given source timestamp</param>
+        ''' <returns>
+        ''' <para>Timestamp in destination time zone</para>
+        ''' </returns>
+        Public Shared Function TimeZoneToTimeZone(ByVal timestamp As System.DateTime, ByVal sourceTimeZoneStandardName As String, ByVal destinationTimeZoneStandardName As String) As System.DateTime
+
+            Return TimeZoneToTimeZone(timestamp, GetWin32TimeZone(sourceTimeZoneStandardName), GetWin32TimeZone(destinationTimeZoneStandardName))
 
         End Function
 
