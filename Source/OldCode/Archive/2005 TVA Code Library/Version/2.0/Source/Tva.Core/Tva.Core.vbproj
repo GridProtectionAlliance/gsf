@@ -45,9 +45,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="My Project\AssemblyInfo.vb" />
-    <Compile Include="Tva.DateTime\Tva.DateTime.Common.vb" />
-    <Compile Include="Tva.DateTime\Tva.DateTime.NtpTimeTag.vb" />
-    <Compile Include="Tva.DateTime\Tva.DateTime.Win32TimeZone.vb" />
+    <Compile Include="Tva.DateTime\Common.vb" />
+    <Compile Include="Tva.DateTime\NtpTimeTag.vb" />
+    <Compile Include="Tva.DateTime\Win32TimeZone.vb" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Tva.Configuration\" />

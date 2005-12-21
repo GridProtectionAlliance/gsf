@@ -1184,6 +1184,10 @@ Namespace DateTime
 
     ' This should have been part of Microsoft.Win32, so that is
     ' where I located it.
+
+    ''' <summary>
+    ''' <para>Win32 time zone class</para>
+    ''' </summary>
     <Serializable()> Public Class Win32TimeZone
         Inherits SimpleTimeZone
 
