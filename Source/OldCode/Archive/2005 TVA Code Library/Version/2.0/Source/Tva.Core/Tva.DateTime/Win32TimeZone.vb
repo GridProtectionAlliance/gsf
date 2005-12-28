@@ -14,10 +14,17 @@
 '       Integrated external source for Michael R. Brumm's TimeZone management into TVA.Shared.Date
 '  12/21/2005 - James R Carroll
 '       2.0 version of source code migrated from 1.1 source (TVA.Shared.Date)
+'       Because this code is typically not used directly, but rather through helper functions
+'       defined in Common, no code comments were added to these classes...
+'  12/28/2005 - James R Carroll
+'       Made modifications to original source (e.g., merged SimpleTimeZone into Win32TimeZone) to
+'       help with FxCop compatibility.
 '
 '*******************************************************************************************************
 
 Imports System.Globalization
+Imports System.ComponentModel
+Imports System.Text
 Imports Microsoft.Win32
 
 Namespace DateTime
@@ -28,8 +35,8 @@ Namespace DateTime
     ' For updates and more information, visit: http://www.michaelbrumm.com/simpletimezone.html
     ' or contact me@michaelbrumm.com
     '
-    ' Integrated into TVA code library on June 10th, 2004
-    ' 
+    ' Integrated into TVA code library on June 10th, 2004.  Some minor modifications made for integration reasons.
+    '
     ' *************************************************************************************************************
 
     ' SimpleTimeZone
@@ -50,7 +57,8 @@ Namespace DateTime
     ' IMPORTANT:
     ' This class is immutable, and any derived classes
     ' should also be immutable.
-    <Serializable()> Public Class DaylightTimeChange
+    <EditorBrowsable(EditorBrowsableState.Never), Serializable()> _
+    Public Class DaylightTimeChange
 
 
         Private Const NUM_DAYS_IN_WEEK As Int32 = 7
@@ -174,13 +182,414 @@ Namespace DateTime
     End Class
 
 
-    <Serializable()> Public Class SimpleTimeZone
+    ' Win32 TimeZones
+    ' by Michael R. Brumm
+    '
+    ' For updates and more information, visit:
+    ' http://www.michaelbrumm.com/simpletimezone.html
+    '
+    ' or contact me@michaelbrumm.com
+    '
+    ' Please do not modify this code and re-release it. If you
+    ' require changes to this class, please derive your own class
+    ' from SimpleTimeZone, and add (or override) the methods and
+    ' properties on your own derived class. You never know when 
+    ' your code might need to be version compatible with another
+    ' class that uses Win32 TimeZones.
+
+    ' This should have been part of Microsoft.Win32, so that is
+    ' where I located it.
+    <EditorBrowsable(EditorBrowsableState.Never)> _
+    Public NotInheritable Class TimeZones
+
+
+        Private Const VALUE_INDEX As String = "Index"
+        Private Const VALUE_DISPLAY_NAME As String = "Display"
+        Private Const VALUE_STANDARD_NAME As String = "Std"
+        Private Const VALUE_DAYLIGHT_NAME As String = "Dlt"
+        Private Const VALUE_ZONE_INFO As String = "TZI"
+
+        Private Const LENGTH_ZONE_INFO As Int32 = 44
+        Private Const LENGTH_DWORD As Int32 = 4
+        Private Const LENGTH_WORD As Int32 = 2
+        Private Const LENGTH_SYSTEMTIME As Int32 = 16
+
+
+
+        Private Shared REG_KEYS_TIME_ZONES As String() = { _
+          "SOFTWARE\Microsoft\Windows\CurrentVersion\Time Zones", _
+          "SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones" _
+        }
+
+
+        Private Shared nameRegKeyTimeZones As String
+
+        Private Sub New()
+
+        End Sub
+
+        Shared Sub New()
+
+            With Registry.LocalMachine
+
+                Dim currentNameRegKey As String
+                For Each currentNameRegKey In REG_KEYS_TIME_ZONES
+
+                    If (Not (.OpenSubKey(currentNameRegKey) Is Nothing)) Then
+                        nameRegKeyTimeZones = currentNameRegKey
+                        Exit Sub
+                    End If
+
+                Next
+
+            End With
+
+        End Sub
+
+        Private Class TZREGReader
+
+
+            Public Bias As Int32
+            Public StandardBias As Int32
+            Public DaylightBias As Int32
+            Public StandardDate As SYSTEMTIMEReader
+            Public DaylightDate As SYSTEMTIMEReader
+
+
+            Public Sub New(ByVal bytes As Byte())
+
+                Dim index As Int32
+                index = 0
+
+                Bias = BitConverter.ToInt32(bytes, index)
+                index = index + LENGTH_DWORD
+
+                StandardBias = BitConverter.ToInt32(bytes, index)
+                index = index + LENGTH_DWORD
+
+                DaylightBias = BitConverter.ToInt32(bytes, index)
+                index = index + LENGTH_DWORD
+
+                StandardDate = New SYSTEMTIMEReader(bytes, index)
+                index = index + LENGTH_SYSTEMTIME
+
+                DaylightDate = New SYSTEMTIMEReader(bytes, index)
+
+            End Sub
+
+
+        End Class
+
+
+        Private Class SYSTEMTIMEReader
+
+
+            Public Year As Int16
+            Public Month As Int16
+            Public DayOfWeek As Int16
+            Public Day As Int16
+            Public Hour As Int16
+            Public Minute As Int16
+            Public Second As Int16
+            Public Milliseconds As Int16
+
+
+            Public Sub New(ByVal bytes As Byte(), ByVal index As Int32)
+
+                Year = BitConverter.ToInt16(bytes, index)
+                index = index + LENGTH_WORD
+
+                Month = BitConverter.ToInt16(bytes, index)
+                index = index + LENGTH_WORD
+
+                DayOfWeek = BitConverter.ToInt16(bytes, index)
+                index = index + LENGTH_WORD
+
+                Day = BitConverter.ToInt16(bytes, index)
+                index = index + LENGTH_WORD
+
+                Hour = BitConverter.ToInt16(bytes, index)
+                index = index + LENGTH_WORD
+
+                Minute = BitConverter.ToInt16(bytes, index)
+                index = index + LENGTH_WORD
+
+                Second = BitConverter.ToInt16(bytes, index)
+                index = index + LENGTH_WORD
+
+                Milliseconds = BitConverter.ToInt16(bytes, index)
+
+            End Sub
+
+
+        End Class
+
+
+        ' JRC: This function modified for performance
+        Private Shared Function GetAbbreviation(ByVal name As String) As String
+
+            With New StringBuilder
+                For Each currentChar As Char In name.ToCharArray
+                    If Char.IsUpper(currentChar) Then .Append(currentChar)
+                Next
+
+                Return .ToString
+            End With
+
+        End Function
+
+
+        Private Shared Function LoadTimeZone( _
+          ByVal regKeyTimeZone As RegistryKey _
+          ) As Win32TimeZone
+
+            Dim timeZoneIndex As Int32
+            Dim displayName As String
+            Dim standardName As String
+            Dim daylightName As String
+            Dim timeZoneData As Byte()
+
+            With regKeyTimeZone
+                timeZoneIndex = DirectCast(.GetValue(VALUE_INDEX), Int32)
+                displayName = DirectCast(.GetValue(VALUE_DISPLAY_NAME), String)
+                standardName = DirectCast(.GetValue(VALUE_STANDARD_NAME), String)
+                daylightName = DirectCast(.GetValue(VALUE_DAYLIGHT_NAME), String)
+                timeZoneData = DirectCast(.GetValue(VALUE_ZONE_INFO), Byte())
+            End With
+
+            If (timeZoneData.Length <> LENGTH_ZONE_INFO) Then
+                Return Nothing
+            End If
+
+            Dim timeZoneInfo As New TZREGReader(timeZoneData)
+
+            Dim standardOffset As New TimeSpan( _
+              0, _
+              -(timeZoneInfo.Bias + timeZoneInfo.StandardBias), _
+              0 _
+              )
+
+            Dim daylightDelta As New TimeSpan( _
+              0, _
+              -(timeZoneInfo.DaylightBias), _
+              0 _
+              )
+
+            If ( _
+              (daylightDelta.Ticks = 0) Or _
+              (timeZoneInfo.StandardDate.Month = 0) Or _
+              (timeZoneInfo.DaylightDate.Month = 0) _
+              ) Then
+                Return New Win32TimeZone( _
+                  timeZoneIndex, _
+                  displayName, _
+                  standardOffset, _
+                  standardName, _
+                  GetAbbreviation(standardName) _
+                  )
+            End If
+
+            If ( _
+              (timeZoneInfo.StandardDate.Year <> 0) Or _
+              (timeZoneInfo.DaylightDate.Year <> 0) _
+              ) Then
+                Return Nothing
+            End If
+
+            Dim daylightSavingsStart As DaylightTimeChange
+            Dim daylightSavingsEnd As DaylightTimeChange
+
+            With timeZoneInfo.DaylightDate
+                daylightSavingsStart = New DaylightTimeChange( _
+                  .Month, _
+                  CType(.DayOfWeek, DayOfWeek), _
+                  (.Day - 1), _
+                  New TimeSpan(0, .Hour, .Minute, .Second, .Milliseconds) _
+                )
+            End With
+
+            With timeZoneInfo.StandardDate
+                daylightSavingsEnd = New DaylightTimeChange( _
+                  .Month, _
+                  CType(.DayOfWeek, DayOfWeek), _
+                  (.Day - 1), _
+                  New TimeSpan(0, .Hour, .Minute, .Second, .Milliseconds) _
+                )
+            End With
+
+            Return New Win32TimeZone( _
+              timeZoneIndex, _
+              displayName, _
+              standardOffset, _
+              standardName, _
+              GetAbbreviation(standardName), _
+              daylightDelta, _
+              daylightName, _
+              GetAbbreviation(daylightName), _
+              daylightSavingsStart, _
+              daylightSavingsEnd _
+              )
+
+        End Function
+
+
+        Public Shared Function GetTimeZone(ByVal index As Int32) As Win32TimeZone
+
+            If (nameRegKeyTimeZones Is Nothing) Then
+                Return Nothing
+            End If
+
+            Dim regKeyTimeZones As RegistryKey = Nothing
+
+            Try
+                regKeyTimeZones = Registry.LocalMachine.OpenSubKey(nameRegKeyTimeZones)
+            Catch
+            End Try
+
+            If (regKeyTimeZones Is Nothing) Then
+                Return Nothing
+            End If
+
+            Dim result As Win32TimeZone = Nothing
+
+            Dim currentNameSubKey As String
+            Dim namesSubKeys As String()
+            namesSubKeys = regKeyTimeZones.GetSubKeyNames()
+
+            Dim currentSubKey As RegistryKey
+
+            'Dim currentTimeZone As Win32TimeZone
+            Dim timeZoneIndex As Int32
+
+            For Each currentNameSubKey In namesSubKeys
+
+                Try
+                    currentSubKey = regKeyTimeZones.OpenSubKey(currentNameSubKey)
+                Catch
+                    currentSubKey = Nothing
+                End Try
+
+                If (Not (currentSubKey Is Nothing)) Then
+
+                    Try
+
+                        timeZoneIndex = DirectCast(currentSubKey.GetValue(VALUE_INDEX), Int32)
+
+                        If (timeZoneIndex = index) Then
+                            result = LoadTimeZone(currentSubKey)
+                            currentSubKey.Close()
+                            Exit For
+                        End If
+
+                    Catch
+                    End Try
+
+                    currentSubKey.Close()
+
+                End If
+
+            Next
+
+            regKeyTimeZones.Close()
+
+            Return result
+
+        End Function
+
+
+        Public Shared Function GetTimeZones() As Win32TimeZone()
+
+            If (nameRegKeyTimeZones Is Nothing) Then
+                Return New Win32TimeZone() {}
+            End If
+
+            Dim regKeyTimeZones As RegistryKey = Nothing
+            Try
+                regKeyTimeZones = Registry.LocalMachine.OpenSubKey(nameRegKeyTimeZones)
+            Catch
+            End Try
+
+            If (regKeyTimeZones Is Nothing) Then
+                Return New Win32TimeZone() {}
+            End If
+
+            Dim results As New ArrayList()
+
+            Dim currentNameSubKey As String
+            Dim namesSubKeys As String()
+            namesSubKeys = regKeyTimeZones.GetSubKeyNames()
+
+            Dim currentSubKey As RegistryKey
+
+            Dim currentTimeZone As Win32TimeZone
+
+            For Each currentNameSubKey In namesSubKeys
+
+                Try
+                    currentSubKey = regKeyTimeZones.OpenSubKey(currentNameSubKey)
+                Catch
+                    currentSubKey = Nothing
+                End Try
+
+                If (Not (currentSubKey Is Nothing)) Then
+
+                    Try
+
+                        currentTimeZone = LoadTimeZone(currentSubKey)
+
+                        If (Not (currentTimeZone Is Nothing)) Then
+                            results.Add(currentTimeZone)
+                        End If
+
+                    Catch
+                    End Try
+
+                    currentSubKey.Close()
+
+                End If
+
+            Next
+
+            regKeyTimeZones.Close()
+
+            Return DirectCast(results.ToArray(GetType(Win32TimeZone)), Win32TimeZone())
+
+        End Function
+
+
+    End Class
+
+    ' Win32TimeZone
+    ' by Michael R. Brumm
+    '
+    ' For updates and more information, visit:
+    ' http://www.michaelbrumm.com/simpletimezone.html
+    '
+    ' or contact me@michaelbrumm.com
+    '
+    ' Please do not modify this code and re-release it. If you
+    ' require changes to this class, please derive your own class
+    ' from SimpleTimeZone, and add (or override) the methods and
+    ' properties on your own derived class. You never know when 
+    ' your code might need to be version compatible with another
+    ' class that uses Win32TimeZone.
+
+    ' JRC: Merged SimpleTimeZone (original base class) directly
+    ' into Win32TimeZone since Win32TimeZone was the only class
+    ' being consumed by code library.  This was done for
+    ' simplification and to make FxCop happier.
+
+    ''' <summary>
+    ''' <para>Win32 time zone class</para>
+    ''' </summary>
+    <Serializable()> _
+    Public Class Win32TimeZone
+
         Inherits TimeZone
 
-
         Private _standardAlways As Boolean
-        Private _daylightAlwaysWithinStandard As Boolean
-        Private _standardAlwaysWithinDaylight As Boolean
+        'Private _daylightAlwaysWithinStandard As Boolean
+        'Private _standardAlwaysWithinDaylight As Boolean
 
         Private _standardOffset As TimeSpan
         Private _standardName As String
@@ -192,6 +601,58 @@ Namespace DateTime
         Private _daylightAbbreviation As String
         Private _daylightTimeChangeStart As DaylightTimeChange
         Private _daylightTimeChangeEnd As DaylightTimeChange
+
+        Private _index As Int32
+        Private _displayName As String
+
+
+        Public Sub New( _
+          ByVal index As Int32, _
+          ByVal displayName As String, _
+          ByVal standardOffset As TimeSpan, _
+          ByVal standardName As String, _
+          ByVal standardAbbreviation As String _
+        )
+
+            Me.New( _
+              standardOffset, _
+              standardName, _
+              standardAbbreviation _
+              )
+
+            _index = index
+            _displayName = displayName
+
+        End Sub
+
+        Public Sub New( _
+          ByVal index As Int32, _
+          ByVal displayName As String, _
+          ByVal standardOffset As TimeSpan, _
+          ByVal standardName As String, _
+          ByVal standardAbbreviation As String, _
+          ByVal daylightDelta As TimeSpan, _
+          ByVal daylightName As String, _
+          ByVal daylightAbbreviation As String, _
+          ByVal daylightTimeChangeStart As DaylightTimeChange, _
+          ByVal daylightTimeChangeEnd As DaylightTimeChange _
+        )
+
+            Me.New( _
+              standardOffset, _
+              standardName, _
+              standardAbbreviation, _
+              daylightDelta, _
+              daylightName, _
+              daylightAbbreviation, _
+              daylightTimeChangeStart, _
+              daylightTimeChangeEnd _
+              )
+
+            _index = index
+            _displayName = displayName
+
+        End Sub
 
 
         ' Constructor without parameters is not allowed.
@@ -206,8 +667,7 @@ Namespace DateTime
         )
 
             ' Initialize private storage
-            _standardAlways = True
-
+            '_standardAlways = True
             _standardOffset = standardOffset
             _standardName = standardName
             _standardAbbreviation = standardAbbreviation
@@ -234,8 +694,7 @@ Namespace DateTime
               ) Then
 
                 ' Initialize private storage
-                _standardAlways = True
-
+                '_standardAlways = True
                 _standardOffset = standardOffset
                 _standardName = standardName
                 _standardAbbreviation = standardAbbreviation
@@ -255,8 +714,7 @@ Namespace DateTime
             End If
 
             ' Initialize private storage
-            _standardAlways = False
-
+            '_standardAlways = False
             _standardOffset = standardOffset
             _standardName = standardName
             _standardAbbreviation = standardAbbreviation
@@ -784,465 +1242,6 @@ Namespace DateTime
             End If
 
         End Function
-
-    End Class
-    ' Win32 TimeZones
-    ' by Michael R. Brumm
-    '
-    ' For updates and more information, visit:
-    ' http://www.michaelbrumm.com/simpletimezone.html
-    '
-    ' or contact me@michaelbrumm.com
-    '
-    ' Please do not modify this code and re-release it. If you
-    ' require changes to this class, please derive your own class
-    ' from SimpleTimeZone, and add (or override) the methods and
-    ' properties on your own derived class. You never know when 
-    ' your code might need to be version compatible with another
-    ' class that uses Win32 TimeZones.
-
-    ' This should have been part of Microsoft.Win32, so that is
-    ' where I located it.
-    Public NotInheritable Class TimeZones
-
-
-        Private Const VALUE_INDEX As String = "Index"
-        Private Const VALUE_DISPLAY_NAME As String = "Display"
-        Private Const VALUE_STANDARD_NAME As String = "Std"
-        Private Const VALUE_DAYLIGHT_NAME As String = "Dlt"
-        Private Const VALUE_ZONE_INFO As String = "TZI"
-
-        Private Const LENGTH_ZONE_INFO As Int32 = 44
-        Private Const LENGTH_DWORD As Int32 = 4
-        Private Const LENGTH_WORD As Int32 = 2
-        Private Const LENGTH_SYSTEMTIME As Int32 = 16
-
-
-
-        Private Shared REG_KEYS_TIME_ZONES As String() = { _
-          "SOFTWARE\Microsoft\Windows\CurrentVersion\Time Zones", _
-          "SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones" _
-        }
-
-
-        Private Shared nameRegKeyTimeZones As String
-
-
-        Private Class TZREGReader
-
-
-            Public Bias As Int32
-            Public StandardBias As Int32
-            Public DaylightBias As Int32
-            Public StandardDate As SYSTEMTIMEReader
-            Public DaylightDate As SYSTEMTIMEReader
-
-
-            Public Sub New(ByVal bytes As Byte())
-
-                Dim index As Int32
-                index = 0
-
-                Bias = BitConverter.ToInt32(bytes, index)
-                index = index + LENGTH_DWORD
-
-                StandardBias = BitConverter.ToInt32(bytes, index)
-                index = index + LENGTH_DWORD
-
-                DaylightBias = BitConverter.ToInt32(bytes, index)
-                index = index + LENGTH_DWORD
-
-                StandardDate = New SYSTEMTIMEReader(bytes, index)
-                index = index + LENGTH_SYSTEMTIME
-
-                DaylightDate = New SYSTEMTIMEReader(bytes, index)
-
-            End Sub
-
-
-        End Class
-
-
-        Private Class SYSTEMTIMEReader
-
-
-            Public Year As Int16
-            Public Month As Int16
-            Public DayOfWeek As Int16
-            Public Day As Int16
-            Public Hour As Int16
-            Public Minute As Int16
-            Public Second As Int16
-            Public Milliseconds As Int16
-
-
-            Public Sub New(ByVal bytes As Byte(), ByVal index As Int32)
-
-                Year = BitConverter.ToInt16(bytes, index)
-                index = index + LENGTH_WORD
-
-                Month = BitConverter.ToInt16(bytes, index)
-                index = index + LENGTH_WORD
-
-                DayOfWeek = BitConverter.ToInt16(bytes, index)
-                index = index + LENGTH_WORD
-
-                Day = BitConverter.ToInt16(bytes, index)
-                index = index + LENGTH_WORD
-
-                Hour = BitConverter.ToInt16(bytes, index)
-                index = index + LENGTH_WORD
-
-                Minute = BitConverter.ToInt16(bytes, index)
-                index = index + LENGTH_WORD
-
-                Second = BitConverter.ToInt16(bytes, index)
-                index = index + LENGTH_WORD
-
-                Milliseconds = BitConverter.ToInt16(bytes, index)
-
-            End Sub
-
-
-        End Class
-
-
-        Shared Sub New()
-
-            With Registry.LocalMachine
-
-                Dim currentNameRegKey As String
-                For Each currentNameRegKey In REG_KEYS_TIME_ZONES
-
-                    If (Not (.OpenSubKey(currentNameRegKey) Is Nothing)) Then
-                        nameRegKeyTimeZones = currentNameRegKey
-                        Exit Sub
-                    End If
-
-                Next
-
-            End With
-
-        End Sub
-
-
-        Private Shared Function GetAbbreviation( _
-          ByVal name As String _
-          ) As String
-
-            Dim abbreviation As String = ""
-
-            Dim nameChars As Char()
-            nameChars = name.ToCharArray
-
-            Dim currentChar As Char
-            For Each currentChar In nameChars
-                If (Char.IsUpper(currentChar)) Then
-                    abbreviation = abbreviation & currentChar
-                End If
-            Next
-
-            Return abbreviation
-
-        End Function
-
-
-        Private Shared Function LoadTimeZone( _
-          ByVal regKeyTimeZone As RegistryKey _
-          ) As Win32TimeZone
-
-            Dim timeZoneIndex As Int32
-            Dim displayName As String
-            Dim standardName As String
-            Dim daylightName As String
-            Dim timeZoneData As Byte()
-
-            With regKeyTimeZone
-                timeZoneIndex = DirectCast(.GetValue(VALUE_INDEX), Int32)
-                displayName = DirectCast(.GetValue(VALUE_DISPLAY_NAME), String)
-                standardName = DirectCast(.GetValue(VALUE_STANDARD_NAME), String)
-                daylightName = DirectCast(.GetValue(VALUE_DAYLIGHT_NAME), String)
-                timeZoneData = DirectCast(.GetValue(VALUE_ZONE_INFO), Byte())
-            End With
-
-            If (timeZoneData.Length <> LENGTH_ZONE_INFO) Then
-                Return Nothing
-            End If
-
-            Dim timeZoneInfo As New TZREGReader(timeZoneData)
-
-            Dim standardOffset As New TimeSpan( _
-              0, _
-              -(timeZoneInfo.Bias + timeZoneInfo.StandardBias), _
-              0 _
-              )
-
-            Dim daylightDelta As New TimeSpan( _
-              0, _
-              -(timeZoneInfo.DaylightBias), _
-              0 _
-              )
-
-            If ( _
-              (daylightDelta.Ticks = 0) Or _
-              (timeZoneInfo.StandardDate.Month = 0) Or _
-              (timeZoneInfo.DaylightDate.Month = 0) _
-              ) Then
-                Return New Win32TimeZone( _
-                  timeZoneIndex, _
-                  displayName, _
-                  standardOffset, _
-                  standardName, _
-                  GetAbbreviation(standardName) _
-                  )
-            End If
-
-            If ( _
-              (timeZoneInfo.StandardDate.Year <> 0) Or _
-              (timeZoneInfo.DaylightDate.Year <> 0) _
-              ) Then
-                Return Nothing
-            End If
-
-            Dim daylightSavingsStart As DaylightTimeChange
-            Dim daylightSavingsEnd As DaylightTimeChange
-
-            With timeZoneInfo.DaylightDate
-                daylightSavingsStart = New DaylightTimeChange( _
-                  .Month, _
-                  CType(.DayOfWeek, DayOfWeek), _
-                  (.Day - 1), _
-                  New TimeSpan(0, .Hour, .Minute, .Second, .Milliseconds) _
-                )
-            End With
-
-            With timeZoneInfo.StandardDate
-                daylightSavingsEnd = New DaylightTimeChange( _
-                  .Month, _
-                  CType(.DayOfWeek, DayOfWeek), _
-                  (.Day - 1), _
-                  New TimeSpan(0, .Hour, .Minute, .Second, .Milliseconds) _
-                )
-            End With
-
-            Return New Win32TimeZone( _
-              timeZoneIndex, _
-              displayName, _
-              standardOffset, _
-              standardName, _
-              GetAbbreviation(standardName), _
-              daylightDelta, _
-              daylightName, _
-              GetAbbreviation(daylightName), _
-              daylightSavingsStart, _
-              daylightSavingsEnd _
-              )
-
-        End Function
-
-
-        Public Shared Function GetTimeZone(ByVal index As Int32) As Win32TimeZone
-
-            If (nameRegKeyTimeZones Is Nothing) Then
-                Return Nothing
-            End If
-
-            Dim regKeyTimeZones As RegistryKey = Nothing
-
-            Try
-                regKeyTimeZones = Registry.LocalMachine.OpenSubKey(nameRegKeyTimeZones)
-            Catch
-            End Try
-
-            If (regKeyTimeZones Is Nothing) Then
-                Return Nothing
-            End If
-
-            Dim result As Win32TimeZone = Nothing
-
-            Dim currentNameSubKey As String
-            Dim namesSubKeys As String()
-            namesSubKeys = regKeyTimeZones.GetSubKeyNames()
-
-            Dim currentSubKey As RegistryKey
-
-            'Dim currentTimeZone As Win32TimeZone
-            Dim timeZoneIndex As Int32
-
-            For Each currentNameSubKey In namesSubKeys
-
-                Try
-                    currentSubKey = regKeyTimeZones.OpenSubKey(currentNameSubKey)
-                Catch
-                    currentSubKey = Nothing
-                End Try
-
-                If (Not (currentSubKey Is Nothing)) Then
-
-                    Try
-
-                        timeZoneIndex = DirectCast(currentSubKey.GetValue(VALUE_INDEX), Int32)
-
-                        If (timeZoneIndex = index) Then
-                            result = LoadTimeZone(currentSubKey)
-                            currentSubKey.Close()
-                            Exit For
-                        End If
-
-                    Catch
-                    End Try
-
-                    currentSubKey.Close()
-
-                End If
-
-            Next
-
-            regKeyTimeZones.Close()
-
-            Return result
-
-        End Function
-
-
-        Public Shared Function GetTimeZones() As Win32TimeZone()
-
-            If (nameRegKeyTimeZones Is Nothing) Then
-                Return New Win32TimeZone() {}
-            End If
-
-            Dim regKeyTimeZones As RegistryKey = Nothing
-            Try
-                regKeyTimeZones = Registry.LocalMachine.OpenSubKey(nameRegKeyTimeZones)
-            Catch
-            End Try
-
-            If (regKeyTimeZones Is Nothing) Then
-                Return New Win32TimeZone() {}
-            End If
-
-            Dim results As New ArrayList()
-
-            Dim currentNameSubKey As String
-            Dim namesSubKeys As String()
-            namesSubKeys = regKeyTimeZones.GetSubKeyNames()
-
-            Dim currentSubKey As RegistryKey
-
-            Dim currentTimeZone As Win32TimeZone
-
-            For Each currentNameSubKey In namesSubKeys
-
-                Try
-                    currentSubKey = regKeyTimeZones.OpenSubKey(currentNameSubKey)
-                Catch
-                    currentSubKey = Nothing
-                End Try
-
-                If (Not (currentSubKey Is Nothing)) Then
-
-                    Try
-
-                        currentTimeZone = LoadTimeZone(currentSubKey)
-
-                        If (Not (currentTimeZone Is Nothing)) Then
-                            results.Add(currentTimeZone)
-                        End If
-
-                    Catch
-                    End Try
-
-                    currentSubKey.Close()
-
-                End If
-
-            Next
-
-            regKeyTimeZones.Close()
-
-            Return DirectCast(results.ToArray(GetType(Win32TimeZone)), Win32TimeZone())
-
-        End Function
-
-
-    End Class
-
-    ' Win32TimeZone
-    ' by Michael R. Brumm
-    '
-    ' For updates and more information, visit:
-    ' http://www.michaelbrumm.com/simpletimezone.html
-    '
-    ' or contact me@michaelbrumm.com
-    '
-    ' Please do not modify this code and re-release it. If you
-    ' require changes to this class, please derive your own class
-    ' from SimpleTimeZone, and add (or override) the methods and
-    ' properties on your own derived class. You never know when 
-    ' your code might need to be version compatible with another
-    ' class that uses Win32TimeZone.
-
-    ' This should have been part of Microsoft.Win32, so that is
-    ' where I located it.
-
-    ''' <summary>
-    ''' <para>Win32 time zone class</para>
-    ''' </summary>
-    <Serializable()> Public Class Win32TimeZone
-        Inherits SimpleTimeZone
-
-
-        Private _index As Int32
-        Private _displayName As String
-
-
-        Public Sub New( _
-          ByVal index As Int32, _
-          ByVal displayName As String, _
-          ByVal standardOffset As TimeSpan, _
-          ByVal standardName As String, _
-          ByVal standardAbbreviation As String _
-        )
-
-            MyBase.New( _
-              standardOffset, _
-              standardName, _
-              standardAbbreviation _
-              )
-
-            _index = index
-            _displayName = displayName
-
-        End Sub
-
-        Public Sub New( _
-          ByVal index As Int32, _
-          ByVal displayName As String, _
-          ByVal standardOffset As TimeSpan, _
-          ByVal standardName As String, _
-          ByVal standardAbbreviation As String, _
-          ByVal daylightDelta As TimeSpan, _
-          ByVal daylightName As String, _
-          ByVal daylightAbbreviation As String, _
-          ByVal daylightTimeChangeStart As DaylightTimeChange, _
-          ByVal daylightTimeChangeEnd As DaylightTimeChange _
-        )
-
-            MyBase.New( _
-              standardOffset, _
-              standardName, _
-              standardAbbreviation, _
-              daylightDelta, _
-              daylightName, _
-              daylightAbbreviation, _
-              daylightTimeChangeStart, _
-              daylightTimeChangeEnd _
-              )
-
-            _index = index
-            _displayName = displayName
-
-        End Sub
 
 
         Public ReadOnly Property Index() As Int32

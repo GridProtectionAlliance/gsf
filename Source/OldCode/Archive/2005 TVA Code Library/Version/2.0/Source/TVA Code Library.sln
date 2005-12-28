@@ -23,6 +23,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Version Definition Files", 
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Tva.IO.Compression", "Tva.IO.Compression\Tva.IO.Compression.vcproj", "{F611B9BA-C69D-449B-B596-FABFB746EA2A}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "FxCop Standards Check", "FxCop Standards Check", "{67F119AD-B89F-4F89-8420-1B2E1F969871}"
+	ProjectSection(SolutionItems) = preProject
+		TVA Code Library.FxCop = TVA Code Library.FxCop
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SourceCodeControl) = preSolution
 		SccNumberOfProjects = 6

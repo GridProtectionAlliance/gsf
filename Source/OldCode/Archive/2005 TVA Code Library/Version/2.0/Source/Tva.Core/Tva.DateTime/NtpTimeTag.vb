@@ -60,8 +60,8 @@ Namespace DateTime
             Get
                 Return m_seconds
             End Get
-            Set(ByVal val As Double)
-                m_seconds = val
+            Set(ByVal seconds As Double)
+                m_seconds = seconds
                 If m_seconds < 0 Then m_seconds = 0
             End Set
         End Property
@@ -97,6 +97,18 @@ Namespace DateTime
             Else
                 Throw New ArgumentException("NtpTimeTag can only be compared with other NtpTimeTags...")
             End If
+
+        End Function
+
+        Public Overrides Function Equals(ByVal obj As Object) As Boolean
+
+            Return (CompareTo(obj) = 0)
+
+        End Function
+
+        Public Overrides Function GetHashCode() As Integer
+
+            Return Convert.ToInt32(m_seconds * 1000)
 
         End Function
 

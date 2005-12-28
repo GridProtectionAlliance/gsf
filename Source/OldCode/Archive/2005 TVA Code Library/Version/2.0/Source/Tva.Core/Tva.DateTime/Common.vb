@@ -28,7 +28,7 @@ Namespace DateTime
     ''' <summary>
     ''' Defines common global functions related to Date/Time manipulation
     ''' </summary>
-    Public Class Common
+    Public NotInheritable Class Common
 
         ''' <summary>
         ''' <para>Time names enumeration used by SecondsToText function</para>
@@ -51,17 +51,17 @@ Namespace DateTime
         ''' <summary>
         ''' <para>Standard time names used by SecondsToText function</para>
         ''' </summary>
-        Public Shared StandardTimeNames As String() = New String() {"Year", "Years", "Day", "Days", "Hour", "Hours", "Minute", "Minutes", "Second", "Seconds", "Less Than 60 Seconds", "0 Seconds"}
+        Private Shared m_standardTimeNames As String() = New String() {"Year", "Years", "Day", "Days", "Hour", "Hours", "Minute", "Minutes", "Second", "Seconds", "Less Than 60 Seconds", "0 Seconds"}
 
         ''' <summary>
         ''' <para>Standard time names without seconds used by SecondsToText function</para>
         ''' </summary>
-        Public Shared StandardTimeNamesWithoutSeconds As String() = New String() {"Year", "Years", "Day", "Days", "Hour", "Hours", "Minute", "Minutes", "Second", "Seconds", "Less Than 1 Minute", "0 Minutes"}
+        Private Shared m_standardTimeNamesWithoutSeconds As String() = New String() {"Year", "Years", "Day", "Days", "Hour", "Hours", "Minute", "Minutes", "Second", "Seconds", "Less Than 1 Minute", "0 Minutes"}
 
         ''' <summary>
         ''' <para>Time zone names enumeration used to look up desired time zone in GetWin32TimeZone function</para>
         ''' </summary>
-        Public Enum TimeZoneNames
+        Public Enum TimeZoneName
             DaylightName
             DaylightAbbreviation
             DisplayName
@@ -117,9 +117,9 @@ Namespace DateTime
         Public Shared Function SecondsToText(ByVal seconds As Single, ByVal secondPrecision As Integer) As String
 
             If secondPrecision < 0 Then
-                Return SecondsToText(seconds, secondPrecision, StandardTimeNamesWithoutSeconds)
+                Return SecondsToText(seconds, secondPrecision, m_standardTimeNamesWithoutSeconds)
             Else
-                Return SecondsToText(seconds, secondPrecision, StandardTimeNames)
+                Return SecondsToText(seconds, secondPrecision, m_standardTimeNames)
             End If
 
         End Function
@@ -343,7 +343,7 @@ Namespace DateTime
         '''<param name="standardName">Standard name for desired Win32 time zone</param>
         Public Shared Function GetWin32TimeZone(ByVal standardName As String) As Win32TimeZone
 
-            Return GetWin32TimeZone(TimeZoneNames.StandardName, standardName)
+            Return GetWin32TimeZone(TimeZoneName.StandardName, standardName)
 
         End Function
 
@@ -352,28 +352,28 @@ Namespace DateTime
         ''' </summary>
         ''' <param name="lookupBy">Type of name used for time zone lookup</param>
         ''' <param name="name">Value of name used for time zone lookup</param>
-        Public Shared Function GetWin32TimeZone(ByVal lookupBy As TimeZoneNames, ByVal name As String) As Win32TimeZone
+        Public Shared Function GetWin32TimeZone(ByVal lookupBy As TimeZoneName, ByVal name As String) As Win32TimeZone
 
             For Each timeZone As Win32TimeZone In TimeZones.GetTimeZones
                 With timeZone
                     Select Case lookupBy
-                        Case TimeZoneNames.DaylightAbbreviation
+                        Case TimeZoneName.DaylightAbbreviation
                             If String.Compare(.DaylightAbbreviation, name, True) = 0 Then
                                 Return timeZone
                             End If
-                        Case TimeZoneNames.DaylightName
+                        Case TimeZoneName.DaylightName
                             If String.Compare(.DaylightName, name, True) = 0 Then
                                 Return timeZone
                             End If
-                        Case TimeZoneNames.DisplayName
+                        Case TimeZoneName.DisplayName
                             If String.Compare(.DisplayName, name, True) = 0 Then
                                 Return timeZone
                             End If
-                        Case TimeZoneNames.StandardAbbreviation
+                        Case TimeZoneName.StandardAbbreviation
                             If String.Compare(.StandardAbbreviation, name, True) = 0 Then
                                 Return timeZone
                             End If
-                        Case TimeZoneNames.StandardName
+                        Case TimeZoneName.StandardName
                             If String.Compare(.StandardName, name, True) = 0 Then
                                 Return timeZone
                             End If
@@ -381,14 +381,14 @@ Namespace DateTime
                 End With
             Next
 
-            Throw New ArgumentException("Windows time zone with " & [Enum].GetName(GetType(TimeZoneNames), lookupBy) & " of """ & name & """ was not found!")
+            Throw New ArgumentException("Windows time zone with " & [Enum].GetName(GetType(TimeZoneName), lookupBy) & " of """ & name & """ was not found!")
 
         End Function
 
         ''' <summary>
         ''' <para>Universally Coordinated Time Zone (a.k.a., Greenwich Meridian Time Zone)</para>
         ''' </summary>
-        Public Shared ReadOnly Property UniveralTimeZone() As Win32TimeZone
+        Public Shared ReadOnly Property UniversalTimeZone() As Win32TimeZone
             Get
                 If m_universalTimeZone Is Nothing Then m_universalTimeZone = GetWin32TimeZone("GMT Standard Time")
                 Return m_universalTimeZone
