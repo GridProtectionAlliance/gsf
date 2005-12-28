@@ -9,7 +9,7 @@ Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "Tva.Windows", "Tva.Windows\
 EndProject
 Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "Tva.Remoting", "Tva.Remoting\Tva.Remoting.vbproj", "{81963CD0-0A0E-4765-8F0A-719C942301DA}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build Files", "Build Files", "{CDC349A8-4D7D-4D2F-8D15-8CE2359FBF3D}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build Related", "Build Related", "{CDC349A8-4D7D-4D2F-8D15-8CE2359FBF3D}"
 	ProjectSection(SolutionItems) = preProject
 		\\opgfs\opdat\CtrlSys\CodeLibrary 2.0\Builds\Build.log = \\opgfs\opdat\CtrlSys\CodeLibrary 2.0\Builds\Build.log
 	EndProjectSection
@@ -29,7 +29,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Version Setup Files", "Vers
 		\\opgfs\opdat\CtrlSys\CodeLibrary 2.0\Builds\Build.ver = \\opgfs\opdat\CtrlSys\CodeLibrary 2.0\Builds\Build.ver
 	EndProjectSection
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Scripts", "Scripts", "{1BFB8969-4479-4EAB-8CCB-1CF0C3DE2DEE}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build and Deploy Scripts", "Build and Deploy Scripts", "{1BFB8969-4479-4EAB-8CCB-1CF0C3DE2DEE}"
 	ProjectSection(SolutionItems) = preProject
 		..\Build Scripts\RebuildAll.bat = ..\Build Scripts\RebuildAll.bat
 		..\Build Scripts\RebuildAllDebug.bat = ..\Build Scripts\RebuildAllDebug.bat
