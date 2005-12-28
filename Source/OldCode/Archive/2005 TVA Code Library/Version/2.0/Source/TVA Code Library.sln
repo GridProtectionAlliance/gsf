@@ -9,28 +9,30 @@ Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "Tva.Windows", "Tva.Windows\
 EndProject
 Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "Tva.Remoting", "Tva.Remoting\Tva.Remoting.vbproj", "{81963CD0-0A0E-4765-8F0A-719C942301DA}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build and Deploy Scripts", "Build and Deploy Scripts", "{CDC349A8-4D7D-4D2F-8D15-8CE2359FBF3D}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build Files", "Build Files", "{CDC349A8-4D7D-4D2F-8D15-8CE2359FBF3D}"
 	ProjectSection(SolutionItems) = preProject
-		..\Build Scripts\RebuildAll.bat = ..\Build Scripts\RebuildAll.bat
-		..\Build Scripts\RebuildAllDebug.bat = ..\Build Scripts\RebuildAllDebug.bat
+		\\opgfs\opdat\CtrlSys\CodeLibrary 2.0\Builds\Build.log = \\opgfs\opdat\CtrlSys\CodeLibrary 2.0\Builds\Build.log
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Source Code", "Source Code", "{4F631798-355B-4607-AEEB-742B670AD834}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Documentation", "Documentation", "{6CBBC083-2AFB-48F2-97FB-F7BA12F4AFFE}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Version Definition Files", "Version Definition Files", "{F5BBE863-1035-4392-9108-EB21E3310742}"
 	ProjectSection(SolutionItems) = preProject
-		\\opgfs\opdat\CtrlSys\CodeLibrary 2.0\Builds\Build.log = \\opgfs\opdat\CtrlSys\CodeLibrary 2.0\Builds\Build.log
-		\\opgfs\opdat\CtrlSys\CodeLibrary 2.0\Builds\Build.ts = \\opgfs\opdat\CtrlSys\CodeLibrary 2.0\Builds\Build.ts
-		\\opgfs\opdat\CtrlSys\CodeLibrary 2.0\Builds\Build.ver = \\opgfs\opdat\CtrlSys\CodeLibrary 2.0\Builds\Build.ver
+		TVA Code Library.FxCop = TVA Code Library.FxCop
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Tva.IO.Compression", "Tva.IO.Compression\Tva.IO.Compression.vcproj", "{F611B9BA-C69D-449B-B596-FABFB746EA2A}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "FxCop Standards Check", "FxCop Standards Check", "{67F119AD-B89F-4F89-8420-1B2E1F969871}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Version Setup Files", "Version Setup Files", "{2E2A8AA0-A387-4245-A419-496B50CB7939}"
 	ProjectSection(SolutionItems) = preProject
-		TVA Code Library.FxCop = TVA Code Library.FxCop
+		\\opgfs\opdat\CtrlSys\CodeLibrary 2.0\Builds\Build.ts = \\opgfs\opdat\CtrlSys\CodeLibrary 2.0\Builds\Build.ts
+		\\opgfs\opdat\CtrlSys\CodeLibrary 2.0\Builds\Build.ver = \\opgfs\opdat\CtrlSys\CodeLibrary 2.0\Builds\Build.ver
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Scripts", "Scripts", "{1BFB8969-4479-4EAB-8CCB-1CF0C3DE2DEE}"
+	ProjectSection(SolutionItems) = preProject
+		..\Build Scripts\RebuildAll.bat = ..\Build Scripts\RebuildAll.bat
+		..\Build Scripts\RebuildAllDebug.bat = ..\Build Scripts\RebuildAllDebug.bat
 	EndProjectSection
 EndProject
 Global
@@ -136,5 +138,7 @@ Global
 		{81963CD0-0A0E-4765-8F0A-719C942301DA} = {4F631798-355B-4607-AEEB-742B670AD834}
 		{29A7B606-D1BC-4A4B-96D0-258D5A72C3EC} = {4F631798-355B-4607-AEEB-742B670AD834}
 		{F611B9BA-C69D-449B-B596-FABFB746EA2A} = {4F631798-355B-4607-AEEB-742B670AD834}
+		{2E2A8AA0-A387-4245-A419-496B50CB7939} = {CDC349A8-4D7D-4D2F-8D15-8CE2359FBF3D}
+		{1BFB8969-4479-4EAB-8CCB-1CF0C3DE2DEE} = {CDC349A8-4D7D-4D2F-8D15-8CE2359FBF3D}
 	EndGlobalSection
 EndGlobal
