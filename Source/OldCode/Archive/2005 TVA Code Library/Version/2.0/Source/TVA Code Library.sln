@@ -21,8 +21,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Documentation", "Documentat
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Version Definition Files", "Version Definition Files", "{F5BBE863-1035-4392-9108-EB21E3310742}"
 	ProjectSection(SolutionItems) = preProject
-		Build.ts = Build.ts
-		Build.ver = Build.ver
+		\\opgfs\opdat\CtrlSys\CodeLibrary 2.0\Builds\Build.log = \\opgfs\opdat\CtrlSys\CodeLibrary 2.0\Builds\Build.log
+		\\opgfs\opdat\CtrlSys\CodeLibrary 2.0\Builds\Build.ts = \\opgfs\opdat\CtrlSys\CodeLibrary 2.0\Builds\Build.ts
+		\\opgfs\opdat\CtrlSys\CodeLibrary 2.0\Builds\Build.ver = \\opgfs\opdat\CtrlSys\CodeLibrary 2.0\Builds\Build.ver
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Tva.IO.Compression", "Tva.IO.Compression\Tva.IO.Compression.vcproj", "{F611B9BA-C69D-449B-B596-FABFB746EA2A}"
