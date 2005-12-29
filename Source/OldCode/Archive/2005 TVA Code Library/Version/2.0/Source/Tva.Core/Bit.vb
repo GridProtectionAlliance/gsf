@@ -23,7 +23,7 @@
 '
 '*******************************************************************************************************
 
-Public Class Bit
+Public NotInheritable Class Bit
 
     Private Sub New()
         ' This class contains only global functions and is not meant to be instantiated
@@ -102,6 +102,12 @@ Public Class Bit
     '' Returns the low byte (Int8) from a word (Int16).  On Intel platforms this should return the low-order byte
     '' of a 16-bit integer value, i.e., the byte value whose in-memory representation is the same as the right-most,
     '' least-significant-byte of the integer value.
+    ''' <summary>
+    ''' 
+    ''' </summary>
+    ''' <param name="word"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
     Public Shared Function LoByte(ByVal word As Int16) As Byte
 
         Return BitConverter.GetBytes(word)(1)
@@ -111,100 +117,78 @@ Public Class Bit
     '' Returns the low word (Int16) from a double word (Int32).  On Intel platforms this should return the low-order word
     '' of a 32-bit integer value, i.e., the word value whose in-memory representation is the same as the right-most,
     '' least-significant-word of the integer value.
-    Public Shared Function LoWord(ByVal dw As Int32) As Int16
+    ''' <summary>
+    ''' 
+    ''' </summary>
+    ''' <param name="doubleWord"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Shared Function LoWord(ByVal doubleWord As Int32) As Int16
 
-        Return BitConverter.ToInt16(BitConverter.GetBytes(dw), 2)
-        'If dw And &H8000 Then
-        '    Return &H8000 Or (dw And &H7FFF)
-        'Else
-        '    Return dw And &HFFFF
-        'End If
+        Return BitConverter.ToInt16(BitConverter.GetBytes(doubleWord), 2)
 
     End Function
-
-    '''' <summary>
-    '''' <para>Bits shifts word (Int16) value to the left "n" times.</para>
-    '''' </summary>
-    '''' <param name="w">Word</param>
-    '''' <param name="n">Number of times to shift value to left</param>
 
     '' Bits shifts word (Int16) value to the left "n" times
+    ''' <summary>
+    ''' 
+    ''' </summary>
+    ''' <param name="word"></param>
+    ''' <param name="shiftCount"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
     <Obsolete("This function has been deprecated, just use new << operator.  Note that this function may be removed from future versions.")> _
-    Public Shared Function LShiftWord(ByVal w As Int16, ByVal n As Int16) As Int16
+    Public Shared Function LShiftWord(ByVal word As Int16, ByVal shiftCount As Int16) As Int16
 
-        Return w << n
-        'Dim dw As Int32
-
-        'dw = w * (2 ^ n)
-
-        'If dw And &H8000 Then
-        '    Return Convert.ToInt16(dw And &H7FFF) Or &H8000
-        'Else
-        '    Return dw And &HFFFF
-        'End If
+        Return word << shiftCount
 
     End Function
-
-    '''' <summary>
-    '''' <para>Bits shifts word (Int16) value to the right "n" times.</para>
-    '''' </summary>
-    '''' <param name="w">Word</param>
-    '''' <param name="n">Number of times to shift value to right</param>
 
     '' Bits shifts word (Int16) value to the right "n" times
+    ''' <summary>
+    ''' 
+    ''' </summary>
+    ''' <param name="word"></param>
+    ''' <param name="shiftCount"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
     <Obsolete("This function has been deprecated, just use new >> operator.  Note that this function may be removed from future versions.")> _
-    Public Shared Function RShiftWord(ByVal w As Int16, ByVal n As Int16) As Int16
+    Public Shared Function RShiftWord(ByVal word As Int16, ByVal shiftCount As Int16) As Int16
 
-        Return w >> n
-        'Dim dw As Int32
-
-        'If n = 0 Then
-        '    Return w
-        'Else
-        '    dw = w And &HFFFF
-        '    dw = dw \ (2 ^ n)
-        '    Return dw And &HFFFF
-        'End If
+        Return word >> shiftCount
 
     End Function
-
-    '''' <summary>
-    '''' <para>Makes a word (Int16) from two bytes (Int8)</para>
-    '''' </summary>
-    '''' <param name="bHi">Byte</param>
-    '''' <param name="bLo">Byte</param>
 
     '' Makes a word (Int16) from two bytes (Int8)
-    Public Shared Function MakeWord(ByVal bHi As Byte, ByVal bLo As Byte) As Int16
+    ''' <summary>
+    ''' 
+    ''' </summary>
+    ''' <param name="high"></param>
+    ''' <param name="low"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Shared Function MakeWord(ByVal high As Byte, ByVal low As Byte) As Int16
 
-        Return BitConverter.ToInt16(New Byte() {bHi, bLo}, 0)
-        'If bHi And &H80 Then
-        '    Return (((bHi And &H7F) * 256) + bLo) Or &H8000
-        'Else
-        '    Return (bHi * 256) + bLo
-        'End If
+        Return BitConverter.ToInt16(New Byte() {high, low}, 0)
 
     End Function
 
-    '''' <summary>
-    '''' <para> Makes a double word (Int32) from two words (Int16)</para>
-    '''' </summary>
-    '''' <param name="wHi">Word</param>
-    '''' <param name="wLo">Word</param>
     '' Makes a double word (Int32) from two words (Int16)
-    Public Shared Function MakeDWord(ByVal wHi As Int16, ByVal wLo As Int16) As Int32
+    ''' <summary>
+    ''' 
+    ''' </summary>
+    ''' <param name="high"></param>
+    ''' <param name="low"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Shared Function MakeDWord(ByVal high As Int16, ByVal low As Int16) As Int32
 
         Dim bytes As Byte() = Array.CreateInstance(GetType(Byte), 4)
 
-        Array.Copy(BitConverter.GetBytes(wHi), 0, bytes, 0, 2)
-        Array.Copy(BitConverter.GetBytes(wLo), 0, bytes, 2, 2)
+        Array.Copy(BitConverter.GetBytes(high), 0, bytes, 0, 2)
+        Array.Copy(BitConverter.GetBytes(low), 0, bytes, 2, 2)
 
         Return BitConverter.ToInt32(bytes, 0)
-        'If wHi And &H8000 Then
-        '    Return (((wHi And &H7FFF) * 65536) Or (wLo And &HFFFF)) Or &H80000000
-        'Else
-        '    Return (wHi * 65536) + (wLo And &HFFFF)
-        'End If
 
     End Function
 
