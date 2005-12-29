@@ -44,6 +44,8 @@
     <Import Include="System.Diagnostics" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Assembly.vb" />
+    <Compile Include="Bit.vb" />
     <Compile Include="My Project\AssemblyInfo.vb" />
     <Compile Include="Tva.DateTime\Common.vb" />
     <Compile Include="Tva.DateTime\NtpTimeTag.vb" />
