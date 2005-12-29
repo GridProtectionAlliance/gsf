@@ -60,7 +60,7 @@
     <Folder Include="Tva.Exception\" />
     <Folder Include="Tva.Interop\" />
     <Folder Include="Tva.IO\" />
-    <Folder Include="Tva.Net.Sockets\" />
+    <Folder Include="Tva.Net\Sockets\" />
     <Folder Include="Tva.Remoting\" />
     <Folder Include="Tva.Services\" />
     <Folder Include="Tva.Text\" />
