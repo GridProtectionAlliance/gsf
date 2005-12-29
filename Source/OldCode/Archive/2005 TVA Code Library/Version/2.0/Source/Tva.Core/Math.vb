@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  Tva.Math.vb - Common math functions / classes
+'  Tva.Math.vb - Math Functions
 '  Copyright © 2005 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005

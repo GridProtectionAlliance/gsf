@@ -74,8 +74,8 @@ Namespace IO
         ''''<param name="FileSpec"> Required. File spec . </param>
         Public Shared Function GetFilePatternRegularExpression(ByVal FileSpec As String) As String
 
-            Static FileNameCharPattern As System.String
-            Dim FilePattern As System.String
+            Static FileNameCharPattern As String
+            Dim FilePattern As String
 
             If Len(FileNameCharPattern) = 0 Then
                 With New StringBuilder
@@ -105,15 +105,17 @@ Namespace IO
 
         End Function
 
-        ''''<summary>
-        ''''  <para>Get the length of the specified file in bytes</para>
-        ''''</summary>
-        ''''<param name="FileSpec"> Required. File Name . </param>
-        Public Shared Function GetFileLength(ByVal FileName As System.String) As Long
+        ''' <summary>
+        ''' Get the size of the specified file.
+        ''' </summary>
+        ''' <param name="fileName">Name of file whose size is to be returned.</param>
+        ''' <returns>The size of the specified file.</returns>
+        ''' <remarks></remarks>
+        Public Shared Function GetFileLength(ByVal fileName As System.String) As Long
 
             Try
                 With New FileInfo(FileName)
-                    Return .Length
+                    Return .Length()
                 End With
             Catch
                 Return -1
@@ -184,28 +186,6 @@ Namespace IO
         '''' <param name="FilePath">File Path</param>
         Public Shared Function JustDrive(ByVal FilePath As System.String) As String
 
-            'Dim lngParamPos As Long
-
-            'If Len(FilePath) > 0 Then
-            '    lngParamPos = InStr(FilePath, "\\")
-            '    If lngParamPos > 0 Then
-            '        lngParamPos = InStr(lngParamPos + 2, FilePath, "\", 0)
-            '        If lngParamPos > 0 Then
-            '            lngParamPos = InStr(lngParamPos + 1, FilePath, "\", 0)
-            '            If lngParamPos > 0 Then FilePath = Left$(FilePath, lngParamPos - 1)
-            '        End If
-            '    Else
-            '        lngParamPos = InStr(FilePath, ":")
-            '        If lngParamPos > 0 Then
-            '            FilePath = Left(FilePath, lngParamPos)
-            '        Else
-            '            FilePath = ""
-            '        End If
-            '    End If
-            'End If
-
-            'Return FilePath
-
             If Len(FilePath) > 0 Then
                 Return AddPathSuffix(Path.GetPathRoot(FilePath))
             Else
@@ -219,13 +199,6 @@ Namespace IO
         ''''</summary>
         '''' <param name="FilePath"> File Path</param>
         Public Shared Function JustFileName(ByVal FilePath As System.String) As String
-
-            '' Remove path from FilePath
-            'Do While InStr(FilePath, "\") <> 0 Or InStr(FilePath, "/") <> 0 Or InStr(FilePath, ":") <> 0
-            '    FilePath = Right(FilePath, Len(FilePath) - 1)
-            'Loop
-
-            'Return FilePath
 
             If Len(FilePath) > 0 Then
                 Return Path.GetFileName(FilePath)
@@ -264,13 +237,6 @@ Namespace IO
         '''' <param name="FilePath"> File Path</param>
         Public Shared Function JustPath(ByVal FilePath As System.String) As String
 
-            '' Find the file portion of the path and return what's left
-            'If Len(FilePath) > 0 Then
-            '    Return Left(FilePath, Len(FilePath) - Len(JustFilePath(FilePath)))
-            'Else
-            '    Return ""
-            'End If
-
             If Len(FilePath) > 0 Then
                 Return Path.GetDirectoryName(FilePath) & Path.DirectorySeparatorChar
             Else
@@ -284,19 +250,6 @@ Namespace IO
         ''''</summary>
         '''' <param name="FilePath"> File Path</param>
         Public Shared Function JustFileExtension(ByVal FilePath As System.String) As String
-
-            'Dim intDotPos As Long
-
-            '' Remove any path from filename
-            'FilePath = JustFilePath(FilePath)
-
-            'intDotPos = InStrRev(FilePath, ".")
-
-            'If intDotPos > 0 Then
-            '    Return Mid(FilePath, intDotPos)
-            'Else
-            '    Return ""
-            'End If
 
             If Len(FilePath) > 0 Then
                 Return Path.GetExtension(FilePath)
@@ -312,19 +265,6 @@ Namespace IO
         '''' <param name="FilePath"> File Path</param>
         Public Shared Function NoFileExtension(ByVal FilePath As System.String) As String
 
-            'Dim intDotPos As Long
-
-            '' Remove any path from filename
-            'FilePath = JustFilePath(FilePath)
-
-            'intDotPos = InStrRev(FilePath, ".")
-
-            'If intDotPos > 0 Then
-            '    Return Left(FilePath, intDotPos - 1)
-            'Else
-            '    Return FilePath
-            'End If
-
             If Len(FilePath) > 0 Then
                 Return Path.GetFileNameWithoutExtension(FilePath)
             Else
@@ -338,20 +278,6 @@ Namespace IO
         ''''</summary>
         '''' <param name="FilePath"> File Path</param>
         Public Shared Function PathExists(ByVal FilePath As System.String) As Boolean
-
-            'Dim flgExists As Boolean
-
-            'If Len(FilePath) > 0 Then
-            '    Try
-            '        flgExists = (Len(Dir(FilePath, vbDirectory)) > 0)
-            '    Catch ex As Exception
-            '        flgExists = False
-            '    End Try
-            'Else
-            '    flgExists = False
-            'End If
-
-            'Return flgExists
 
             Return Directory.Exists(FilePath)
 
@@ -448,18 +374,6 @@ Namespace IO
         ''''</summary>
         '''' <param name="Selection"> Files </param>
         Public Shared Function GetFileList(ByVal Selection As System.String) As String()
-
-            'Dim colFiles As New ArrayList()
-            'Dim strFile As String
-
-            'strFile = Dir(Selection, vbNormal)
-
-            'Do Until Len(strFile) = 0
-            '    colFiles.Add(strFile)
-            '    strFile = Dir()
-            'Loop
-
-            'Return colFiles
 
             Return Directory.GetFiles(JustPath(Selection), JustFileName(Selection))
 
