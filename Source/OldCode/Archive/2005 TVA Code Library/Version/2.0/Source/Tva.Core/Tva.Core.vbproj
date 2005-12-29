@@ -51,6 +51,7 @@
     <Compile Include="Tva.DateTime\Common.vb" />
     <Compile Include="Tva.DateTime\NtpTimeTag.vb" />
     <Compile Include="Tva.DateTime\Win32TimeZone.vb" />
+    <Compile Include="Tva.IO\FilePath.vb" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Tva.Configuration\" />
@@ -59,7 +60,6 @@
     <Folder Include="Tva.ErrorManagement\" />
     <Folder Include="Tva.Exception\" />
     <Folder Include="Tva.Interop\" />
-    <Folder Include="Tva.IO\" />
     <Folder Include="Tva.Net\Sockets\" />
     <Folder Include="Tva.Remoting\" />
     <Folder Include="Tva.Services\" />
