@@ -18,7 +18,7 @@
 '*******************************************************************************************************
 
 ''' <summary>
-''' Defines global Math functions.
+''' Defines static math functions.
 ''' </summary>
 ''' <remarks></remarks>
 Public Class Math
@@ -30,7 +30,7 @@ Public Class Math
     ''' <summary>
     ''' Calculates word length XOR check-sum on specified portion of a buffer.
     ''' </summary>
-    ''' <param name="data">A parameter value of Byte datatype.</param>
+    ''' <param name="data">To be provided.</param>
     ''' <param name="startIndex">To be provided.</param>
     ''' <param name="length">To be provided.</param>
     ''' <returns>To be provided.</returns>
@@ -63,8 +63,6 @@ Public Class Math
 
     End Function
 
-
-
     ''''</summary>
     ''' <summary>
     ''' Class to temporarily cache composite values until all values been received so that a compound value can be created.
@@ -72,6 +70,10 @@ Public Class Math
     ''' <remarks></remarks>
     Public Class CompositeValues
 
+        ''' <summary>
+        ''' To be provided.
+        ''' </summary>
+        ''' <remarks></remarks>
         Private Structure CompositeValue
 
             Public Value As Double
@@ -82,21 +84,24 @@ Public Class Math
         Private m_compositeValues As CompositeValue()
         Private m_allReceived As Boolean
 
-        ''''<summary> 
-        '''' This Constructor creates an instance of an array to store all the composite values.
-        ''''</summary>
+        ''' <summary>
+        ''' This Constructor creates an instance of an array to store all the composite values.
+        ''' </summary>
+        ''' <param name="count">To be provided.</param>
+        ''' <remarks></remarks>
         Public Sub New(ByVal count As Integer)
 
             m_compositeValues = Array.CreateInstance(GetType(CompositeValue), count)
 
         End Sub
 
-        ''''<summary> 
-        ''''Gets or sets the Composite Values to create a Compound value 
-        ''''</summary>
-        '''' <value>Composite Value</value>
-        '''' <remarks> The value must be double.
-        '''' </remarks>
+        ''' <summary>
+        ''' Gets or sets the composite values to create a compound value.
+        ''' </summary>
+        ''' <param name="index">To be provided.</param>
+        ''' <value></value>
+        ''' <returns>To be provided.</returns>
+        ''' <remarks></remarks>
         Default Public Property Value(ByVal index As Integer) As Double
             Get
                 Return m_compositeValues(index).Value
@@ -109,26 +114,37 @@ Public Class Math
             End Set
         End Property
 
-        ''''<summary> 
-        ''''Checks to see if Composite Value is received 
-        ''''</summary>
-        '''' <value>Readonly value</value>
+        ''' <summary>
+        ''' Gets a boolean value indicating if composite value is received.
+        ''' </summary>
+        ''' <param name="index"></param>
+        ''' <value></value>
+        ''' <returns>To be provided.</returns>
+        ''' <remarks></remarks>
         Public ReadOnly Property Received(ByVal index As Integer) As Boolean
             Get
                 Return m_compositeValues(index).Received
             End Get
         End Property
 
+        ''' <summary>
+        ''' To be provided.
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns>To be provided.</returns>
+        ''' <remarks></remarks>
         Public ReadOnly Property Count() As Integer
             Get
                 Return m_compositeValues.Length
             End Get
         End Property
 
-        ''''<summary> 
-        ''''Checks to see if all Composite values are received 
-        ''''</summary>
-        '''' <value>Readonly value</value>
+        ''' <summary>
+        ''' Gets a boolean value indicating if all composite values are received.
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks></remarks>
         Public ReadOnly Property AllReceived() As Boolean
             Get
                 If m_allReceived Then
