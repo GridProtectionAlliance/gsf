@@ -12,7 +12,7 @@
 '  -----------------------------------------------------------------------------------------------------
 '  ??/??/200? - James R Carroll
 '       Original version of source code generated
-'  01/14/2005 JRC -
+'  01/14/2005 - James R Carroll
 '       Moved bit constants into Bit class - made sense to me :p
 '       Deprecated LShiftWord and RShiftWord since VB now supports << and >> operators
 '       Converted other functions to use standard .NET bit conversion operations, this will

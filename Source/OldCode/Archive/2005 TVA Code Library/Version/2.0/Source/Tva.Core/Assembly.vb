@@ -540,7 +540,7 @@ Public Class Assembly
     ''' </summary>
     ''' <param name="assemblyName">Name of the assembly to load.</param>
     ''' <remarks></remarks>
-    Public Shared Sub LoadAssemblyFromResource(ByVal assemblyName As System.String)
+    Public Shared Sub LoadAssemblyFromResource(ByVal assemblyName As String)
 
         Static addedResolver As Boolean
 
