@@ -39,6 +39,17 @@
   <Settings />
  </Rules>
  <FxCopReport Version="1.35">
+  <Namespaces>
+   <Namespace Name="Tva">
+    <Messages>
+     <Message TypeName="AvoidNamespacesWithFewTypes" Category="Microsoft.Design" CheckId="CA1020" Created="2005-12-29 18:09:32Z">
+      <Issue>
+       <Item>Tva</Item>
+      </Issue>
+     </Message>
+    </Messages>
+   </Namespace>
+  </Namespaces>
   <Targets>
    <Target Name="$(ProjectDir)/bin/Tva.Core.dll">
     <Modules>
@@ -56,26 +67,227 @@
        </Message>
       </Messages>
       <Namespaces>
+       <Namespace Name="Tva">
+        <Types>
+         <Type Name="Assembly">
+          <Members>
+           <Member Name="CLSCompliant">
+            <Messages>
+             <Message Id="Member" TypeName="LongAcronymsShouldBePascalCased" Category="Microsoft.Naming" CheckId="CA1705" Created="2005-12-29 18:09:32Z">
+              <Issue Name="Member">
+               <Item>Assembly.CLSCompliant:Boolean</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="CodeBase">
+            <Accessors>
+             <Accessor Name="get_CodeBase():System.String">
+              <Messages>
+               <Message Id="System.String.ToLower" TypeName="SpecifyCultureInfo" Category="Microsoft.Globalization" CheckId="CA1304" Created="2005-12-29 18:09:32Z">
+                <Issue>
+                 <Item>Assembly.get_CodeBase():String</Item>
+                 <Item>System.String.ToLower</Item>
+                 <Item>System.String.ToLower(System.Globalization.CultureInfo)</Item>
+                </Issue>
+               </Message>
+              </Messages>
+             </Accessor>
+            </Accessors>
+           </Member>
+           <Member Name="ComCompatibleVersion">
+            <Accessors>
+             <Accessor Name="get_ComCompatibleVersion():System.String">
+              <Messages>
+               <Message Id="System.Int32.ToString" TypeName="SpecifyIFormatProvider" Category="Microsoft.Globalization" CheckId="CA1305" Created="2005-12-29 18:09:32Z">
+                <Issue>
+                 <Item>Assembly.get_ComCompatibleVersion():String</Item>
+                 <Item>System.Int32.ToString</Item>
+                 <Item>System.Int32.ToString(System.IFormatProvider)</Item>
+                </Issue>
+                <Issue>
+                 <Item>Assembly.get_ComCompatibleVersion():String</Item>
+                 <Item>System.Int32.ToString</Item>
+                 <Item>System.Int32.ToString(System.IFormatProvider)</Item>
+                </Issue>
+                <Issue>
+                 <Item>Assembly.get_ComCompatibleVersion():String</Item>
+                 <Item>System.Int32.ToString</Item>
+                 <Item>System.Int32.ToString(System.IFormatProvider)</Item>
+                </Issue>
+                <Issue>
+                 <Item>Assembly.get_ComCompatibleVersion():String</Item>
+                 <Item>System.Int32.ToString</Item>
+                 <Item>System.Int32.ToString(System.IFormatProvider)</Item>
+                </Issue>
+               </Message>
+              </Messages>
+             </Accessor>
+            </Accessors>
+           </Member>
+           <Member Name="GACLoaded">
+            <Messages>
+             <Message Id="Member" TypeName="LongAcronymsShouldBePascalCased" Category="Microsoft.Naming" CheckId="CA1705" Created="2005-12-29 18:09:32Z">
+              <Issue Name="Member">
+               <Item>Assembly.GACLoaded:Boolean</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="GetAttributes():System.Collections.Specialized.NameValueCollection">
+            <Messages>
+             <Message Id="System.DateTime.ToString" TypeName="SpecifyIFormatProvider" Category="Microsoft.Globalization" CheckId="CA1305" Created="2005-12-29 18:09:32Z">
+              <Issue>
+               <Item>Assembly.GetAttributes():NameValueCollection</Item>
+               <Item>System.DateTime.ToString</Item>
+               <Item>System.DateTime.ToString(System.IFormatProvider)</Item>
+              </Issue>
+             </Message>
+             <Message TypeName="UsePropertiesWhereAppropriate" Category="Microsoft.Design" CheckId="CA1024" Created="2005-12-29 18:09:32Z">
+              <Issue Certainty="50">
+               <Item>GetAttributes</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="GetCustomAttribute(System.Type):System.Object">
+            <Messages>
+             <Message Id="System.ApplicationException.#ctor(System.String)" TypeName="DoNotPassLiteralsAsLocalizedParameters" Category="Microsoft.Globalization" CheckId="CA1303" Created="2005-12-29 18:09:32Z">
+              <Issue>
+               <Item>Assembly.GetCustomAttribute(Type):Object</Item>
+               <Item>1</Item>
+               <Item>ApplicationException.ApplicationException(String)</Item>
+               <Item>Assembly does not expose this attribute</Item>
+              </Issue>
+             </Message>
+             <Message TypeName="DoNotRaiseReservedExceptionTypes" Category="Microsoft.Usage" CheckId="CA2201" Created="2005-12-29 18:09:32Z">
+              <Issue Name="TooGeneric">
+               <Item>Assembly.GetCustomAttribute(Type):Object</Item>
+               <Item>System.ApplicationException</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="LoadAssemblyFromResource(System.String):System.Void">
+            <Messages>
+             <Message TypeName="DoNotIndirectlyExposeMethodsWithLinkDemands" Category="Microsoft.Security" CheckId="CA2122" Created="2005-12-29 18:09:32Z">
+              <Issue>
+               <Item>Assembly.LoadAssemblyFromResource(String):Void</Item>
+               <Item>AppDomain.add_AssemblyResolve(ResolveEventHandler):Void</Item>
+               <Item>&#xD;&#xA;-&gt;System.AppDomain.add_AssemblyResolve(System.ResolveEventHandler) : Void&#xD;&#xA;-&gt;Tva.Assembly.LoadAssemblyFromResource(System.String) : Void</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="Location">
+            <Accessors>
+             <Accessor Name="get_Location():System.String">
+              <Messages>
+               <Message Id="System.String.ToLower" TypeName="SpecifyCultureInfo" Category="Microsoft.Globalization" CheckId="CA1304" Created="2005-12-29 18:09:32Z">
+                <Issue>
+                 <Item>Assembly.get_Location():String</Item>
+                 <Item>System.String.ToLower</Item>
+                 <Item>System.String.ToLower(System.Globalization.CultureInfo)</Item>
+                </Issue>
+               </Message>
+              </Messages>
+             </Accessor>
+            </Accessors>
+           </Member>
+           <Member Name="ResolveAssemblyFromResource(System.Object,System.ResolveEventArgs):System.Reflection.Assembly">
+            <Messages>
+             <Message Id="System.String.Compare(System.String,System.String,System.Boolean)" TypeName="SpecifyCultureInfo" Category="Microsoft.Globalization" CheckId="CA1304" Created="2005-12-29 18:09:32Z">
+              <Issue>
+               <Item>Assembly.ResolveAssemblyFromResource(Object, ResolveEventArgs):Assembly</Item>
+               <Item>System.String.Compare(System.String,System.String,System.Boolean)</Item>
+               <Item>System.String.Compare(System.String,System.String,System.Boolean,System.Globalization.CultureInfo)</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="TypeLibVersion">
+            <Accessors>
+             <Accessor Name="get_TypeLibVersion():System.String">
+              <Messages>
+               <Message Id="System.Int32.ToString" TypeName="SpecifyIFormatProvider" Category="Microsoft.Globalization" CheckId="CA1305" Created="2005-12-29 18:09:32Z">
+                <Issue>
+                 <Item>Assembly.get_TypeLibVersion():String</Item>
+                 <Item>System.Int32.ToString</Item>
+                 <Item>System.Int32.ToString(System.IFormatProvider)</Item>
+                </Issue>
+                <Issue>
+                 <Item>Assembly.get_TypeLibVersion():String</Item>
+                 <Item>System.Int32.ToString</Item>
+                 <Item>System.Int32.ToString(System.IFormatProvider)</Item>
+                </Issue>
+               </Message>
+              </Messages>
+             </Accessor>
+            </Accessors>
+           </Member>
+          </Members>
+         </Type>
+         <Type Name="Bit">
+          <Members>
+           <Member Name="HiByte(System.Int16):System.Byte">
+            <Messages>
+             <Message Id="Member" TypeName="ShortAcronymsShouldBeUppercase" Category="Microsoft.Naming" CheckId="CA1706" Created="2005-12-29 18:09:32Z">
+              <Issue Name="Member">
+               <Item>Hi</Item>
+               <Item>Bit.HiByte(Int16):Byte</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="HiWord(System.Int32):System.Int16">
+            <Messages>
+             <Message Id="Member" TypeName="ShortAcronymsShouldBeUppercase" Category="Microsoft.Naming" CheckId="CA1706" Created="2005-12-29 18:09:32Z">
+              <Issue Name="Member">
+               <Item>Hi</Item>
+               <Item>Bit.HiWord(Int32):Int16</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="LoByte(System.Int16):System.Byte">
+            <Messages>
+             <Message Id="Member" TypeName="ShortAcronymsShouldBeUppercase" Category="Microsoft.Naming" CheckId="CA1706" Created="2005-12-29 18:09:32Z">
+              <Issue Name="Member">
+               <Item>Lo</Item>
+               <Item>Bit.LoByte(Int16):Byte</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="LoWord(System.Int32):System.Int16">
+            <Messages>
+             <Message Id="Member" TypeName="ShortAcronymsShouldBeUppercase" Category="Microsoft.Naming" CheckId="CA1706" Created="2005-12-29 18:09:32Z">
+              <Issue Name="Member">
+               <Item>Lo</Item>
+               <Item>Bit.LoWord(Int32):Int16</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+          </Members>
+         </Type>
+        </Types>
+       </Namespace>
        <Namespace Name="Tva.DateTime">
         <Types>
          <Type Name="Common">
           <Messages>
-           <Message TypeName="TypeNamesShouldNotMatchNamespaces" Category="Microsoft.Naming" CheckId="CA1724" Status="Excluded" Created="2005-12-28 18:46:58Z">
+           <Message TypeName="TypeNamesShouldNotMatchNamespaces" Category="Microsoft.Naming" CheckId="CA1724" Created="2005-12-29 18:09:32Z">
             <Issue>
              <Item>Common</Item>
              <Item>System.Data.Common</Item>
             </Issue>
-            <Notes>
-             <User Name="jrcarrol">
-              <Note Id="4" />
-             </User>
-            </Notes>
            </Message>
           </Messages>
           <Members>
            <Member Name="BaselinedTimestamp(System.DateTime):System.DateTime">
             <Messages>
-             <Message Id="Baselined" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Created="2005-12-28 18:46:58Z">
+             <Message Id="Baselined" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Created="2005-12-29 18:09:32Z">
               <Issue Name="Member">
                <Item>Baselined</Item>
                <Item>Common.BaselinedTimestamp(DateTime):DateTime</Item>
@@ -85,7 +297,7 @@
            </Member>
            <Member Name="GetWin32TimeZone(Tva.DateTime.Common+TimeZoneName,System.String):Tva.DateTime.Win32TimeZone">
             <Messages>
-             <Message Id="System.ArgumentException.#ctor(System.String)" TypeName="DoNotPassLiteralsAsLocalizedParameters" Category="Microsoft.Globalization" CheckId="CA1303" Created="2005-12-28 18:46:58Z">
+             <Message Id="System.ArgumentException.#ctor(System.String)" TypeName="DoNotPassLiteralsAsLocalizedParameters" Category="Microsoft.Globalization" CheckId="CA1303" Created="2005-12-29 18:09:32Z">
               <Issue>
                <Item>Common.GetWin32TimeZone(TimeZoneName, String):Win32TimeZone</Item>
                <Item>1</Item>
@@ -93,7 +305,7 @@
                <Item>Windows time zone with ____ of "____" was not found!</Item>
               </Issue>
              </Message>
-             <Message Id="System.String.Compare(System.String,System.String,System.Boolean)" TypeName="SpecifyCultureInfo" Category="Microsoft.Globalization" CheckId="CA1304" Created="2005-12-28 18:46:58Z">
+             <Message Id="System.String.Compare(System.String,System.String,System.Boolean)" TypeName="SpecifyCultureInfo" Category="Microsoft.Globalization" CheckId="CA1304" Created="2005-12-29 18:09:32Z">
               <Issue>
                <Item>Common.GetWin32TimeZone(TimeZoneName, String):Win32TimeZone</Item>
                <Item>System.String.Compare(System.String,System.String,System.Boolean)</Item>
@@ -124,7 +336,7 @@
            </Member>
            <Member Name="LocalTimeTo(System.DateTime,Tva.DateTime.Win32TimeZone):System.DateTime">
             <Messages>
-             <Message TypeName="ValidateArgumentsOfPublicMethods" Category="Microsoft.Design" CheckId="CA1062" Created="2005-12-28 18:46:58Z">
+             <Message TypeName="ValidateArgumentsOfPublicMethods" Category="Microsoft.Design" CheckId="CA1062" Created="2005-12-29 18:09:32Z">
               <Issue>
                <Item>'destinationTimeZone'</Item>
                <Item>Common.LocalTimeTo(DateTime, Win32TimeZone):DateTime</Item>
@@ -134,69 +346,49 @@
            </Member>
            <Member Name="LocalTimeToCentralTime(System.DateTime):System.DateTime">
             <Messages>
-             <Message Id="TimeStamp" TypeName="CompoundWordsShouldBeCasedCorrectly" Category="Microsoft.Naming" CheckId="CA1702" Status="Excluded" Created="2005-12-28 18:46:58Z">
+             <Message Id="TimeStamp" TypeName="CompoundWordsShouldBeCasedCorrectly" Category="Microsoft.Naming" CheckId="CA1702" Created="2005-12-29 18:09:32Z">
               <Issue Name="ShouldBeDiscreteTerm">
                <Item>TimeStamp</Item>
                <Item>parameter</Item>
                <Item>localTimeStamp</Item>
                <Item>Timestamp</Item>
               </Issue>
-              <Notes>
-               <User Name="jrcarrol">
-                <Note Id="5" />
-               </User>
-              </Notes>
              </Message>
             </Messages>
            </Member>
            <Member Name="LocalTimeToEasternTime(System.DateTime):System.DateTime">
             <Messages>
-             <Message Id="TimeStamp" TypeName="CompoundWordsShouldBeCasedCorrectly" Category="Microsoft.Naming" CheckId="CA1702" Status="Excluded" Created="2005-12-28 18:46:58Z">
+             <Message Id="TimeStamp" TypeName="CompoundWordsShouldBeCasedCorrectly" Category="Microsoft.Naming" CheckId="CA1702" Created="2005-12-29 18:09:32Z">
               <Issue Name="ShouldBeDiscreteTerm">
                <Item>TimeStamp</Item>
                <Item>parameter</Item>
                <Item>localTimeStamp</Item>
                <Item>Timestamp</Item>
               </Issue>
-              <Notes>
-               <User Name="jrcarrol">
-                <Note Id="5" />
-               </User>
-              </Notes>
              </Message>
             </Messages>
            </Member>
            <Member Name="LocalTimeToMountainTime(System.DateTime):System.DateTime">
             <Messages>
-             <Message Id="TimeStamp" TypeName="CompoundWordsShouldBeCasedCorrectly" Category="Microsoft.Naming" CheckId="CA1702" Status="Excluded" Created="2005-12-28 18:46:58Z">
+             <Message Id="TimeStamp" TypeName="CompoundWordsShouldBeCasedCorrectly" Category="Microsoft.Naming" CheckId="CA1702" Created="2005-12-29 18:09:32Z">
               <Issue Name="ShouldBeDiscreteTerm">
                <Item>TimeStamp</Item>
                <Item>parameter</Item>
                <Item>localTimeStamp</Item>
                <Item>Timestamp</Item>
               </Issue>
-              <Notes>
-               <User Name="jrcarrol">
-                <Note Id="5" />
-               </User>
-              </Notes>
              </Message>
             </Messages>
            </Member>
            <Member Name="LocalTimeToPacificTime(System.DateTime):System.DateTime">
             <Messages>
-             <Message Id="TimeStamp" TypeName="CompoundWordsShouldBeCasedCorrectly" Category="Microsoft.Naming" CheckId="CA1702" Status="Excluded" Created="2005-12-28 18:46:58Z">
+             <Message Id="TimeStamp" TypeName="CompoundWordsShouldBeCasedCorrectly" Category="Microsoft.Naming" CheckId="CA1702" Created="2005-12-29 18:09:32Z">
               <Issue Name="ShouldBeDiscreteTerm">
                <Item>TimeStamp</Item>
                <Item>parameter</Item>
                <Item>localTimeStamp</Item>
                <Item>Timestamp</Item>
               </Issue>
-              <Notes>
-               <User Name="jrcarrol">
-                <Note Id="5" />
-               </User>
-              </Notes>
              </Message>
             </Messages>
            </Member>
@@ -204,7 +396,7 @@
             <Accessors>
              <Accessor Name="get_LongMonthName(System.Int16):System.String">
               <Messages>
-               <Message Id="monthNumber-1" TypeName="OperationsShouldNotOverflow" Category="Microsoft.Usage" CheckId="CA2233" Created="2005-12-28 18:46:58Z">
+               <Message Id="monthNumber-1" TypeName="OperationsShouldNotOverflow" Category="Microsoft.Usage" CheckId="CA2233" Created="2005-12-29 18:09:32Z">
                 <Issue>
                  <Item>monthNumber-1</Item>
                  <Item>Common.get_LongMonthName(Int16):String</Item>
@@ -216,14 +408,14 @@
            </Member>
            <Member Name="SecondsToText(System.Single,System.Int32,System.String[]):System.String">
             <Messages>
-             <Message Id="System.Single.ToString(System.String)" TypeName="SpecifyIFormatProvider" Category="Microsoft.Globalization" CheckId="CA1305" Created="2005-12-28 18:46:58Z">
+             <Message Id="System.Single.ToString(System.String)" TypeName="SpecifyIFormatProvider" Category="Microsoft.Globalization" CheckId="CA1305" Created="2005-12-29 18:09:32Z">
               <Issue>
                <Item>Common.SecondsToText(Single, Int32, String[]):String</Item>
                <Item>System.Single.ToString(System.String)</Item>
                <Item>System.Single.ToString(System.String,System.IFormatProvider)</Item>
               </Issue>
              </Message>
-             <Message TypeName="ValidateArgumentsOfPublicMethods" Category="Microsoft.Design" CheckId="CA1062" Created="2005-12-28 18:46:58Z">
+             <Message TypeName="ValidateArgumentsOfPublicMethods" Category="Microsoft.Design" CheckId="CA1062" Created="2005-12-29 18:09:32Z">
               <Issue>
                <Item>'timeNames'</Item>
                <Item>Common.SecondsToText(Single, Int32, String[]):String</Item>
@@ -287,7 +479,7 @@
             <Accessors>
              <Accessor Name="get_ShortMonthName(System.Int16):System.String">
               <Messages>
-               <Message Id="monthNumber-1" TypeName="OperationsShouldNotOverflow" Category="Microsoft.Usage" CheckId="CA2233" Created="2005-12-28 18:46:58Z">
+               <Message Id="monthNumber-1" TypeName="OperationsShouldNotOverflow" Category="Microsoft.Usage" CheckId="CA2233" Created="2005-12-29 18:09:32Z">
                 <Issue>
                  <Item>monthNumber-1</Item>
                  <Item>Common.get_ShortMonthName(Int16):String</Item>
@@ -299,7 +491,7 @@
            </Member>
            <Member Name="TimeZoneToTimeZone(System.DateTime,Tva.DateTime.Win32TimeZone,Tva.DateTime.Win32TimeZone):System.DateTime">
             <Messages>
-             <Message TypeName="ValidateArgumentsOfPublicMethods" Category="Microsoft.Design" CheckId="CA1062" Created="2005-12-28 18:46:58Z">
+             <Message TypeName="ValidateArgumentsOfPublicMethods" Category="Microsoft.Design" CheckId="CA1062" Created="2005-12-29 18:09:32Z">
               <Issue>
                <Item>'destinationTimeZone'</Item>
                <Item>Common.TimeZoneToTimeZone(DateTime, Win32TimeZone, Win32TimeZone):DateTime</Item>
@@ -317,7 +509,7 @@
           <Members>
            <Member Name=".ctor(System.Int32,System.DayOfWeek,System.Int32,System.TimeSpan)">
             <Messages>
-             <Message Id="System.ArgumentOutOfRangeException.#ctor(System.String,System.Object,System.String)" TypeName="DoNotPassLiteralsAsLocalizedParameters" Category="Microsoft.Globalization" CheckId="CA1303" Created="2005-12-28 18:46:58Z">
+             <Message Id="System.ArgumentOutOfRangeException.#ctor(System.String,System.Object,System.String)" TypeName="DoNotPassLiteralsAsLocalizedParameters" Category="Microsoft.Globalization" CheckId="CA1303" Created="2005-12-29 18:09:32Z">
               <Issue>
                <Item>DaylightTimeChange.New(Int32, DayOfWeek, Int32, TimeSpan)</Item>
                <Item>3</Item>
@@ -349,13 +541,13 @@
          </Type>
          <Type Name="NtpTimeTag">
           <Messages>
-           <Message Id="Ntp" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Created="2005-12-28 18:46:58Z">
+           <Message Id="Ntp" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Created="2005-12-29 18:09:32Z">
             <Issue Name="Type">
              <Item>Ntp</Item>
              <Item>Tva.DateTime.NtpTimeTag</Item>
             </Issue>
            </Message>
-           <Message TypeName="OverrideMethodsOnComparableTypes" Category="Microsoft.Design" CheckId="CA1036" Created="2005-12-28 18:46:58Z">
+           <Message TypeName="OverrideMethodsOnComparableTypes" Category="Microsoft.Design" CheckId="CA1036" Created="2005-12-29 18:09:32Z">
             <Issue Name="Operator">
              <Item>NtpTimeTag</Item>
              <Item>!=</Item>
@@ -377,7 +569,7 @@
           <Members>
            <Member Name="CompareTo(System.Object):System.Int32">
             <Messages>
-             <Message TypeName="DoNotCastUnnecessarily" Category="Microsoft.Performance" CheckId="CA1800" Created="2005-12-28 18:46:58Z">
+             <Message TypeName="DoNotCastUnnecessarily" Category="Microsoft.Performance" CheckId="CA1800" Created="2005-12-29 18:09:32Z">
               <Issue Name="Parameter">
                <Item>obj</Item>
                <Item>Tva.DateTime.NtpTimeTag</Item>
@@ -385,7 +577,7 @@
                <Item>castclass</Item>
               </Issue>
              </Message>
-             <Message Id="System.ArgumentException.#ctor(System.String)" TypeName="DoNotPassLiteralsAsLocalizedParameters" Category="Microsoft.Globalization" CheckId="CA1303" Created="2005-12-28 18:46:58Z">
+             <Message Id="System.ArgumentException.#ctor(System.String)" TypeName="DoNotPassLiteralsAsLocalizedParameters" Category="Microsoft.Globalization" CheckId="CA1303" Created="2005-12-29 18:09:32Z">
               <Issue>
                <Item>NtpTimeTag.CompareTo(Object):Int32</Item>
                <Item>1</Item>
@@ -393,7 +585,7 @@
                <Item>NtpTimeTag can only be compared with other NtpTimeTags...</Item>
               </Issue>
              </Message>
-             <Message Id="Ntp" TypeName="LiteralsShouldBeSpelledCorrectly" Category="Microsoft.Usage" CheckId="CA2204" Created="2005-12-28 18:46:58Z">
+             <Message Id="Ntp" TypeName="LiteralsShouldBeSpelledCorrectly" Category="Microsoft.Usage" CheckId="CA2204" Created="2005-12-29 18:09:32Z">
               <Issue>
                <Item>Ntp</Item>
                <Item>NtpTimeTag</Item>
@@ -403,7 +595,7 @@
                <Item>NtpTimeTags</Item>
               </Issue>
              </Message>
-             <Message TypeName="ValidateArgumentsOfPublicMethods" Category="Microsoft.Design" CheckId="CA1062" Created="2005-12-28 18:46:58Z">
+             <Message TypeName="ValidateArgumentsOfPublicMethods" Category="Microsoft.Design" CheckId="CA1062" Created="2005-12-29 18:09:32Z">
               <Issue>
                <Item>'obj'</Item>
                <Item>NtpTimeTag.CompareTo(Object):Int32</Item>
@@ -413,7 +605,7 @@
            </Member>
            <Member Name="ToString():System.String">
             <Messages>
-             <Message Id="System.DateTime.ToString(System.String)" TypeName="SpecifyIFormatProvider" Category="Microsoft.Globalization" CheckId="CA1305" Created="2005-12-28 18:46:58Z">
+             <Message Id="System.DateTime.ToString(System.String)" TypeName="SpecifyIFormatProvider" Category="Microsoft.Globalization" CheckId="CA1305" Created="2005-12-29 18:09:32Z">
               <Issue>
                <Item>NtpTimeTag.ToString():String</Item>
                <Item>System.DateTime.ToString(System.String)</Item>
@@ -428,21 +620,16 @@
           <Members>
            <Member Name=".cctor()">
             <Messages>
-             <Message TypeName="InitializeReferenceTypeStaticFieldsInline" Category="Microsoft.Performance" CheckId="CA1810" Created="2005-12-28 18:46:58Z">
+             <Message TypeName="InitializeReferenceTypeStaticFieldsInline" Category="Microsoft.Performance" CheckId="CA1810" Created="2005-12-29 18:09:32Z">
               <Issue>
                <Item>Tva.DateTime.TimeZones</Item>
               </Issue>
-              <Notes>
-               <User Name="jrcarrol">
-                <Note Id="0" />
-               </User>
-              </Notes>
              </Message>
             </Messages>
            </Member>
            <Member Name="GetTimeZone(System.Int32):Tva.DateTime.Win32TimeZone">
             <Messages>
-             <Message TypeName="DoNotCatchGeneralExceptionTypes" Category="Microsoft.Design" CheckId="CA1031" Status="Excluded" Created="2005-12-28 18:46:58Z">
+             <Message TypeName="DoNotCatchGeneralExceptionTypes" Category="Microsoft.Design" CheckId="CA1031" Created="2005-12-29 18:09:32Z">
               <Issue>
                <Item>TimeZones.GetTimeZone(Int32):Win32TimeZone</Item>
                <Item>System.Exception</Item>
@@ -455,17 +642,12 @@
                <Item>TimeZones.GetTimeZone(Int32):Win32TimeZone</Item>
                <Item>System.Exception</Item>
               </Issue>
-              <Notes>
-               <User Name="jrcarrol">
-                <Note Id="2" />
-               </User>
-              </Notes>
              </Message>
             </Messages>
            </Member>
            <Member Name="GetTimeZones():Tva.DateTime.Win32TimeZone[]">
             <Messages>
-             <Message TypeName="DoNotCatchGeneralExceptionTypes" Category="Microsoft.Design" CheckId="CA1031" Status="Excluded" Created="2005-12-28 18:46:58Z">
+             <Message TypeName="DoNotCatchGeneralExceptionTypes" Category="Microsoft.Design" CheckId="CA1031" Created="2005-12-29 18:09:32Z">
               <Issue>
                <Item>TimeZones.GetTimeZones():Win32TimeZone[]</Item>
                <Item>System.Exception</Item>
@@ -478,11 +660,6 @@
                <Item>TimeZones.GetTimeZones():Win32TimeZone[]</Item>
                <Item>System.Exception</Item>
               </Issue>
-              <Notes>
-               <User Name="jrcarrol">
-                <Note Id="3" />
-               </User>
-              </Notes>
              </Message>
             </Messages>
            </Member>
@@ -497,17 +674,15 @@
   </Targets>
   <Notes>
    <User Name="jrcarrol">
-    <Note Id="0" Modified="2005-12-28 19:51:15Z">Non statics are initialized in this method - static method used to load time zones from registry</Note>
     <Note Id="1" Modified="2005-12-28 19:52:33Z">The code library is not intended to used from the GAC...</Note>
-    <Note Id="2" Modified="2005-12-28 19:53:24Z">There are valid exceptions to this rule</Note>
-    <Note Id="3" Modified="2005-12-28 19:53:46Z">There are valid exceptions to this rule - this function should never throw an error</Note>
-    <Note Id="4" Modified="2005-12-28 20:04:48Z">This is a valid exception with code library</Note>
-    <Note Id="5" Modified="2005-12-28 20:05:50Z">These are all valid...</Note>
    </User>
   </Notes>
   <Rules>
    <Rule TypeName="AssembliesShouldHaveValidStrongNames" Category="Microsoft.Design" CheckId="CA2210">
     <Resolution Name="NoStrongName">Sign '{0}' with a strong name key.</Resolution>
+   </Rule>
+   <Rule TypeName="AvoidNamespacesWithFewTypes" Category="Microsoft.Design" CheckId="CA1020">
+    <Resolution Name="Default">Consider merging the types defined in '{0}' with another namespace.</Resolution>
    </Rule>
    <Rule TypeName="CompoundWordsShouldBeCasedCorrectly" Category="Microsoft.Naming" CheckId="CA1702">
     <Resolution Name="ShouldBeDiscreteTerm">The compound word '{0}' in {1} '{2}' exists as a discrete term. If your usage is intended to be single word, case it as '{3}'.</Resolution>
@@ -518,8 +693,14 @@
    <Rule TypeName="DoNotCatchGeneralExceptionTypes" Category="Microsoft.Design" CheckId="CA1031">
     <Resolution Name="Default">Modify '{0}' to catch a more specific exception than '{1}' or rethrow the exception.</Resolution>
    </Rule>
+   <Rule TypeName="DoNotIndirectlyExposeMethodsWithLinkDemands" Category="Microsoft.Security" CheckId="CA2122">
+    <Resolution Name="Default">{0} calls into {1} which has a LinkDemand. By making this call, {1} is indirectly exposed to user code. Review the following call stack that might expose a way to circumvent security protection: {2}</Resolution>
+   </Rule>
    <Rule TypeName="DoNotPassLiteralsAsLocalizedParameters" Category="Microsoft.Globalization" CheckId="CA1303">
     <Resolution Name="Default">{0} passes a literal as parameter {1} of a call to {2}. Retrieve the following string argument from a resource table instead: '{3}'</Resolution>
+   </Rule>
+   <Rule TypeName="DoNotRaiseReservedExceptionTypes" Category="Microsoft.Usage" CheckId="CA2201">
+    <Resolution Name="TooGeneric">{0} creates an exception of type '{1}', an exception type that is not sufficiently specific and should never be raised by user code. If this exception instance might be thrown, use a different exception type.</Resolution>
    </Rule>
    <Rule TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704">
     <Resolution Name="Member">Correct the spelling of the unrecognized token '{0}' in member name '{1}'.</Resolution>
@@ -531,11 +712,17 @@
    <Rule TypeName="LiteralsShouldBeSpelledCorrectly" Category="Microsoft.Usage" CheckId="CA2204">
     <Resolution Name="Default">Correct the spelling of the unrecognized token '{0}' in the literal '{1}'.</Resolution>
    </Rule>
+   <Rule TypeName="LongAcronymsShouldBePascalCased" Category="Microsoft.Naming" CheckId="CA1705">
+    <Resolution Name="Member">Correct the capitalization of member name '{0}'.</Resolution>
+   </Rule>
    <Rule TypeName="OperationsShouldNotOverflow" Category="Microsoft.Usage" CheckId="CA2233">
     <Resolution Name="Default">Correct the potential overflow in the operation '{0}' in '{1}'.</Resolution>
    </Rule>
    <Rule TypeName="OverrideMethodsOnComparableTypes" Category="Microsoft.Design" CheckId="CA1036">
     <Resolution Name="Operator">{0} should define operator '{1}' since it implements IComparable.</Resolution>
+   </Rule>
+   <Rule TypeName="ShortAcronymsShouldBeUppercase" Category="Microsoft.Naming" CheckId="CA1706">
+    <Resolution Name="Member">Correct the capitalization of '{0}' in member name '{1}'.</Resolution>
    </Rule>
    <Rule TypeName="SpecifyCultureInfo" Category="Microsoft.Globalization" CheckId="CA1304">
     <Resolution Name="Default">{0} makes a call to {1} that does not explicitly provide a CultureInfo. This should be replaced with a call to {2}.</Resolution>
@@ -545,6 +732,9 @@
    </Rule>
    <Rule TypeName="TypeNamesShouldNotMatchNamespaces" Category="Microsoft.Naming" CheckId="CA1724">
     <Resolution Name="Default">The type name '{0}' conflicts in whole or in part with the namespace name '{1}'. Change either name to eliminate the conflict.</Resolution>
+   </Rule>
+   <Rule TypeName="UsePropertiesWhereAppropriate" Category="Microsoft.Design" CheckId="CA1024">
+    <Resolution Name="Default">Change '{0}' to a property if appropriate.</Resolution>
    </Rule>
    <Rule TypeName="ValidateArgumentsOfPublicMethods" Category="Microsoft.Design" CheckId="CA1062">
     <Resolution Name="Default">Validate parameter {0} passed to externally visible method {1}.</Resolution>
