@@ -96,11 +96,11 @@ Public Class Math
         End Sub
 
         ''' <summary>
-        ''' Gets or sets the composite values to create a compound value.
+        ''' Gets or sets the composite value at the specified index in composite value collection.
         ''' </summary>
-        ''' <param name="index">To be provided.</param>
+        ''' <param name="index">The zero-based index of the composite value to get.</param>
         ''' <value></value>
-        ''' <returns>To be provided.</returns>
+        ''' <returns>The composite value at the specified index in composite value collection.</returns>
         ''' <remarks></remarks>
         Default Public Property Value(ByVal index As Integer) As Double
             Get
@@ -115,11 +115,11 @@ Public Class Math
         End Property
 
         ''' <summary>
-        ''' Gets a boolean value indicating if composite value is received.
+        ''' Gets a boolean value indicating if composite value at the specified index is received.
         ''' </summary>
-        ''' <param name="index"></param>
+        ''' <param name="index">The zero-based index of the composite value.</param>
         ''' <value></value>
-        ''' <returns>To be provided.</returns>
+        ''' <returns>True if composite value at the specified index is received; otherwise, False.</returns>
         ''' <remarks></remarks>
         Public ReadOnly Property Received(ByVal index As Integer) As Boolean
             Get
@@ -128,7 +128,7 @@ Public Class Math
         End Property
 
         ''' <summary>
-        ''' To be provided.
+        ''' Gets the number of compisite values in the composite value collection.
         ''' </summary>
         ''' <value></value>
         ''' <returns>To be provided.</returns>
@@ -143,7 +143,7 @@ Public Class Math
         ''' Gets a boolean value indicating if all composite values are received.
         ''' </summary>
         ''' <value></value>
-        ''' <returns></returns>
+        ''' <returns>True if all composite values are received; otherwise, False.</returns>
         ''' <remarks></remarks>
         Public ReadOnly Property AllReceived() As Boolean
             Get
