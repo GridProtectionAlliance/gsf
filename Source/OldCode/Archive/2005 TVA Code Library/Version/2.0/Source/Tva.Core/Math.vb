@@ -106,9 +106,9 @@ Public Class Math
             Get
                 Return m_compositeValues(index).Value
             End Get
-            Set(ByVal Value As Double)
+            Set(ByVal value As Double)
                 With m_compositeValues(index)
-                    .Value = Value
+                    .Value = value
                     .Received = True
                 End With
             End Set

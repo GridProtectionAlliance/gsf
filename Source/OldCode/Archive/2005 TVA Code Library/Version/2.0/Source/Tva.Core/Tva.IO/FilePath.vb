@@ -320,36 +320,38 @@ Namespace IO
 
         End Function
 
-        ''''<summary>
-        ''''  <para> Returns a file name for display purposes of the specified length using "..." to indicate larger name</para>
-        ''''</summary>
-        '''' <param name="FileName"> File </param>
-        '''' <param name="Length"> Filelength </param>
-        Public Shared Function TrimFileName(ByVal FileName As System.String, ByVal Length As Integer) As String
+        ''' <summary>
+        ''' Returns a file name for display purposes of the specified length using "..." to indicate larger name.
+        ''' </summary>
+        ''' <param name="fileName">To be provided.</param>
+        ''' <param name="length">To be provided.</param>
+        ''' <returns>To be provided.</returns>
+        ''' <remarks></remarks>
+        Public Shared Function TrimFileName(ByVal fileName As String, ByVal length As Integer) As String
 
-            FileName = Trim(FileName)
+            fileName = Trim(fileName)
 
-            If Length < 12 Then
+            If length < 12 Then
                 Throw New InvalidOperationException("Cannot trim file names to less than 12 characters...")
-            ElseIf Len(FileName) > Length Then
-                Dim strJustFileName As String = JustFileName(FileName)
+            ElseIf Len(fileName) > length Then
+                Dim strJustFileName As String = JustFileName(fileName)
 
-                If Len(strJustFileName) = Len(FileName) Then
+                If Len(strJustFileName) = Len(fileName) Then
                     ' This is just a file name, make sure extension shows...
-                    Dim strJustExt As String = JustFileExtension(FileName)
-                    Dim strTrimName As String = NoFileExtension(FileName)
+                    Dim strJustExt As String = JustFileExtension(fileName)
+                    Dim strTrimName As String = NoFileExtension(fileName)
 
                     If Len(strTrimName) > 8 Then
-                        If Len(strJustExt) > Length - 8 Then strJustExt = Left(strJustExt, Length - 8)
-                        Dim sngOffset As Single = (Length - Len(strJustExt) - 3) / 2
+                        If Len(strJustExt) > length - 8 Then strJustExt = Left(strJustExt, length - 8)
+                        Dim sngOffset As Single = (length - Len(strJustExt) - 3) / 2
                         Return Left(strTrimName, CInt(Ceiling(sngOffset))) & "..." & Mid(strTrimName, Len(strTrimName) - CInt(Floor(sngOffset)) + 1) & strJustExt
                     Else
                         ' We can't trim file names less than 8 with a "...", so we truncate long extension
-                        Return strTrimName & Left(strJustExt, Length - Len(strTrimName))
+                        Return strTrimName & Left(strJustExt, length - Len(strTrimName))
                     End If
-                ElseIf Len(strJustFileName) > Length Then
+                ElseIf Len(strJustFileName) > length Then
                     ' Just file name part exeeds length, recurse into function without path
-                    Return TrimFileName(strJustFileName, Length)
+                    Return TrimFileName(strJustFileName, length)
                 Else
                     ' File name contains path, trim path before file name...
                     Dim strJustPath As String = JustPath(FileName)
@@ -369,52 +371,66 @@ Namespace IO
 
         End Function
 
-        ''''<summary>
-        ''''  <para>  Gets a list of files for the given path and wildcard pattern (e.g., "c:\*.*")</para>
-        ''''</summary>
-        '''' <param name="Selection"> Files </param>
-        Public Shared Function GetFileList(ByVal Selection As System.String) As String()
+        ''' <summary>
+        ''' Gets a list of files for the given path and wildcard pattern (e.g., "c:\*.*").
+        ''' </summary>
+        ''' <param name="selectionPath">To be provided.</param>
+        ''' <returns></returns>
+        ''' <remarks></remarks>
+        Public Shared Function GetFileList(ByVal selectionPath As String) As String()
 
-            Return Directory.GetFiles(JustPath(Selection), JustFileName(Selection))
+            Return Directory.GetFiles(JustPath(selectionPath), JustFileName(selectionPath))
 
         End Function
 
-        ''''<summary>
-        ''''  <para>  Waits specified number of seconds for read access on a file, set SecondsToWait to zero to wait infinitely.</para>
-        ''''</summary>
-        '''' <param name="FileName"> File </param>
-        '''' <param name="SecondsToWait">Optional. Waiting time </param>
-        Public Shared Sub WaitForReadLock(ByVal FileName As System.String, Optional ByVal SecondsToWait As Integer = 5)
+        ''' <summary>
+        ''' Waits for the default duration (5 seconds) for read access on a file.
+        ''' </summary>
+        ''' <param name="fileName">The name of the file to wait for to obtain read access.</param>
+        ''' <remarks></remarks>
+        Public Shared Sub WaitForReadLock(ByVal fileName As String)
 
-            If Not File.Exists(FileName) Then
-                Throw New FileNotFoundException("Could not test file lock for """ & FileName & """, file does not exist", FileName)
+            WaitForReadLock(fileName, 5)
+
+        End Sub
+
+        ''' <summary>
+        ''' Waits for read access on a file for the specified number of seconds.
+        ''' </summary>
+        ''' <param name="fileName">The name of the file to wait for to obtain read access.</param>
+        ''' <param name="secondsToWait">The time to wait for in seconds to obtain read access on a file.</param>
+        ''' <remarks>Set secondsToWait to zero to wait infinitely.</remarks>
+        Public Shared Sub WaitForReadLock(ByVal fileName As String, ByVal secondsToWait As Integer)
+
+            If Not File.Exists(fileName) Then
+                Throw New FileNotFoundException("Could not test file lock for """ & fileName & """, file does not exist", fileName)
                 Exit Sub
             End If
 
             ' We use this function to keep trying for a file lock...
-            Dim fs As FileStream = Nothing
-            Dim dblStart As Double = VB.Timer
+            Dim targetFile As FileStream = Nothing
+            Dim startTime As Double = VB.Timer
 
             While True
                 Try
-                    fs = File.OpenRead(FileName)
-                    fs.Close()
+                    targetFile = File.OpenRead(fileName)
+                    targetFile.Close()
                     Exit While
                 Catch
                     ' We'll keep trying till we can open the file...
                 End Try
 
-                If Not fs Is Nothing Then
+                If Not targetFile Is Nothing Then
                     Try
-                        fs.Close()
+                        targetFile.Close()
                     Catch
                     End Try
-                    fs = Nothing
+                    targetFile = Nothing
                 End If
 
-                If SecondsToWait > 0 Then
-                    If VB.Timer > dblStart + CDbl(SecondsToWait) Then
-                        Throw New IOException("Could not open """ & FileName & """ for read access, tried for " & SecondsToWait & " seconds")
+                If secondsToWait > 0 Then
+                    If VB.Timer > startTime + CDbl(secondsToWait) Then
+                        Throw New IOException("Could not open """ & fileName & """ for read access, tried for " & secondsToWait & " seconds")
                         Exit While
                     End If
                 End If
@@ -425,42 +441,54 @@ Namespace IO
 
         End Sub
 
-        ''''<summary>
-        ''''  <para> Waits specified number of seconds for write access on a file, set SecondsToWait to zero to wait infinitely.</para>
-        ''''</summary>
-        '''' <param name="FileName"> File </param>
-        '''' <param name="SecondsToWait">Optional. Waiting time </param>
-        Public Shared Sub WaitForWriteLock(ByVal FileName As System.String, Optional ByVal SecondsToWait As Integer = 5)
+        ''' <summary>
+        ''' Waits for the default duration (5 seconds) for write access on a file.
+        ''' </summary>
+        ''' <param name="fileName">The name of the file to wait for to obtain write access.</param>
+        ''' <remarks></remarks>
+        Public Shared Sub WaitForWriteLock(ByVal fileName As String)
 
-            If Not File.Exists(FileName) Then
-                Throw New FileNotFoundException("Could not test file lock for """ & FileName & """, file does not exist", FileName)
+            WaitForWriteLock(fileName, 5)
+
+        End Sub
+
+        ''' <summary>
+        ''' Waits for write access on a file for the specified number of seconds.
+        ''' </summary>
+        ''' <param name="fileName">The name of the file to wait for to obtain write access.</param>
+        ''' <param name="secondsToWait">The time to wait for in seconds to obtain write access on a file.</param>
+        ''' <remarks>Set secondsToWait to zero to wait infinitely.</remarks>
+        Public Shared Sub WaitForWriteLock(ByVal fileName As String, ByVal secondsToWait As Integer)
+
+            If Not File.Exists(fileName) Then
+                Throw New FileNotFoundException("Could not test file lock for """ & fileName & """, file does not exist", fileName)
                 Exit Sub
             End If
 
             ' We use this function to keep trying for a file lock...
-            Dim fs As FileStream = Nothing
-            Dim dblStart As Double = VB.Timer
+            Dim targetFile As FileStream = Nothing
+            Dim startTime As Double = VB.Timer
 
             While True
                 Try
-                    fs = File.OpenWrite(FileName)
-                    fs.Close()
+                    targetFile = File.OpenWrite(fileName)
+                    targetFile.Close()
                     Exit While
                 Catch
                     ' We'll keep trying till we can open the file...
                 End Try
 
-                If Not fs Is Nothing Then
+                If Not targetFile Is Nothing Then
                     Try
-                        fs.Close()
+                        targetFile.Close()
                     Catch
                     End Try
-                    fs = Nothing
+                    targetFile = Nothing
                 End If
 
-                If SecondsToWait > 0 Then
-                    If VB.Timer > dblStart + CDbl(SecondsToWait) Then
-                        Throw New IOException("Could not open """ & FileName & """ for write access, tried for " & SecondsToWait & " seconds")
+                If secondsToWait > 0 Then
+                    If VB.Timer > startTime + CDbl(secondsToWait) Then
+                        Throw New IOException("Could not open """ & fileName & """ for write access, tried for " & secondsToWait & " seconds")
                         Exit While
                     End If
                 End If
@@ -471,20 +499,32 @@ Namespace IO
 
         End Sub
 
-        ''''<summary>
-        ''''  <para>  Waits specified number of seconds for a file to exist, set SecondsToWait to zero to wait infinitely.</para>
-        ''''</summary>
-        '''' <param name="FileName"> File </param>
-        '''' <param name="SecondsToWait">Optional. Waiting time </param>
-        Public Shared Sub WaitTillExists(ByVal FileName As System.String, Optional ByVal SecondsToWait As Integer = 5)
+        ''' <summary>
+        ''' Waits for the default duration (5 seconds) for a file to exist.
+        ''' </summary>
+        ''' <param name="fileName">The name of the file to wait for until it is created.</param>
+        ''' <remarks></remarks>
+        Public Shared Sub WaitTillExists(ByVal fileName As String)
+
+            WaitTillExists(fileName, 5)
+
+        End Sub
+
+        ''' <summary>
+        ''' Waits for a file to exist for the specified number of seconds.
+        ''' </summary>
+        ''' <param name="fileName">The name of the file to wait for until it is created.</param>
+        ''' <param name="secondsToWait">The time to wait for in seconds for the file to be created.</param>
+        ''' <remarks>Set secondsToWait to zero to wait infinitely.</remarks>
+        Public Shared Sub WaitTillExists(ByVal fileName As String, ByVal secondsToWait As Integer)
 
             ' We use this function to keep waiting for a file to be created...
-            Dim dblStart As Double = VB.Timer
+            Dim startTime As Double = VB.Timer
 
-            While Not File.Exists(FileName)
-                If SecondsToWait > 0 Then
-                    If VB.Timer > dblStart + CDbl(SecondsToWait) Then
-                        Throw New IOException("Waited for """ & FileName & """ to exist for " & SecondsToWait & " seconds, but it was never created")
+            While Not File.Exists(fileName)
+                If secondsToWait > 0 Then
+                    If VB.Timer > startTime + CDbl(secondsToWait) Then
+                        Throw New IOException("Waited for """ & fileName & """ to exist for " & secondsToWait & " seconds, but it was never created")
                         Exit While
                     End If
                 End If

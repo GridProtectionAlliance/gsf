@@ -258,7 +258,6 @@ Public Class Assembly
     ''' <remarks></remarks>
     Public ReadOnly Property ComVisible() As Boolean
         Get
-            'Returns the ComVisible attribute.
             Return DirectCast(GetCustomAttribute(GetType(ComVisibleAttribute)), ComVisibleAttribute).Value()
         End Get
     End Property
@@ -271,7 +270,6 @@ Public Class Assembly
     ''' <remarks></remarks>
     Public ReadOnly Property Guid() As String
         Get
-            'Returns the Guid attribute.
             Return DirectCast(GetCustomAttribute(GetType(GuidAttribute)), GuidAttribute).Value()
         End Get
     End Property
@@ -284,7 +282,6 @@ Public Class Assembly
     ''' <remarks></remarks>
     Public ReadOnly Property TypeLibVersion() As String
         Get
-            'Returns the TypeLibVersion attribute.
             With DirectCast(GetCustomAttribute(GetType(TypeLibVersionAttribute)), TypeLibVersionAttribute)
                 Return .MajorVersion().ToString() & "." & .MinorVersion().ToString()
             End With
@@ -299,7 +296,6 @@ Public Class Assembly
     ''' <remarks></remarks>
     Public ReadOnly Property CLSCompliant() As Boolean
         Get
-            'Returns the CLSCompliant attribute.
             Return DirectCast(GetCustomAttribute(GetType(CLSCompliantAttribute)), _
                 CLSCompliantAttribute).IsCompliant()
         End Get
@@ -313,7 +309,6 @@ Public Class Assembly
     ''' <remarks></remarks>
     Public ReadOnly Property Debuggable() As Boolean
         Get
-            'Returns the Debuggable attribute.
             Return DirectCast(GetCustomAttribute(GetType(DebuggableAttribute)), _
                 DebuggableAttribute).IsJITTrackingEnabled()
         End Get
@@ -327,7 +322,6 @@ Public Class Assembly
     ''' <remarks></remarks>
     Public ReadOnly Property Location() As String
         Get
-            'Returns the location of the assembly.
             Return m_assembly.Location().ToLower()
         End Get
     End Property
@@ -340,7 +334,6 @@ Public Class Assembly
     ''' <remarks></remarks>
     Public ReadOnly Property CodeBase() As String
         Get
-            'Returns the location of the assembly in codebase format.
             Return m_assembly.CodeBase().Replace("file:///", "").ToLower()
         End Get
     End Property
@@ -353,7 +346,6 @@ Public Class Assembly
     ''' <remarks></remarks>
     Public ReadOnly Property FullName() As String
         Get
-            'Returns the full name of the assembly.
             Return m_assembly.FullName()
         End Get
     End Property
@@ -366,7 +358,6 @@ Public Class Assembly
     ''' <remarks></remarks>
     Public ReadOnly Property Name() As String
         Get
-            'Returns the name of the assembly.
             Return m_assembly.GetName().Name()
         End Get
     End Property
@@ -379,7 +370,6 @@ Public Class Assembly
     ''' <remarks></remarks>
     Public ReadOnly Property Version() As Version
         Get
-            'Returns the Version attribute.
             Return m_assembly.GetName().Version()
         End Get
     End Property
@@ -392,7 +382,6 @@ Public Class Assembly
     ''' <remarks></remarks>
     Public ReadOnly Property ImageRuntimeVersion() As String
         Get
-            'Returns the version of Common Language Runtime.
             Return m_assembly.ImageRuntimeVersion()
         End Get
     End Property
@@ -405,7 +394,6 @@ Public Class Assembly
     ''' <remarks></remarks>
     Public ReadOnly Property GACLoaded() As Boolean
         Get
-            'Returns whether the assembly was loaded from the GAC.
             Return m_assembly.GlobalAssemblyCache()
         End Get
     End Property
@@ -418,7 +406,6 @@ Public Class Assembly
     ''' <remarks></remarks>
     Public ReadOnly Property BuildDate() As Date
         Get
-            'Returns the date and time when the assembly was last built.
             Return File.GetLastWriteTime(m_assembly.Location())
         End Get
     End Property
@@ -431,7 +418,6 @@ Public Class Assembly
     ''' <remarks></remarks>
     Public ReadOnly Property RootNamespace() As String
         Get
-            'Returns the root namespace of the assembly.
             Return m_assembly.GetExportedTypes(0).Namespace()
         End Get
     End Property
