@@ -83,18 +83,19 @@ Namespace IO
                     ' Define a regular expression pattern for a valid file name character, we do this by
                     ' allowing any characters except those that would not be valid as part of a filename,
                     ' this essentially builds the "?" wildcard pattern match
-                    .Append("[^")
-                    .Append(GetRegexUnicodeChar(Path.DirectorySeparatorChar))
-                    .Append(GetRegexUnicodeChar(Path.AltDirectorySeparatorChar))
-                    .Append(GetRegexUnicodeChar(Path.PathSeparator))
-                    .Append(GetRegexUnicodeChar(Path.VolumeSeparatorChar))
+                    ' TODO: Fix this
+                    '.Append("[^")
+                    '.Append(GetRegexUnicodeChar(Path.DirectorySeparatorChar))
+                    '.Append(GetRegexUnicodeChar(Path.AltDirectorySeparatorChar))
+                    '.Append(GetRegexUnicodeChar(Path.PathSeparator))
+                    '.Append(GetRegexUnicodeChar(Path.VolumeSeparatorChar))
 
-                    For Each c As Char In Path.GetInvalidPathChars()
-                        .Append(GetRegexUnicodeChar(c))
-                    Next
+                    'For Each c As Char In Path.GetInvalidPathChars()
+                    '    .Append(GetRegexUnicodeChar(c))
+                    'Next
 
-                    .Append("]")
-                    m_fileNameCharPattern = .ToString()
+                    '.Append("]")
+                    'm_fileNameCharPattern = .ToString()
                 End With
             End If
 

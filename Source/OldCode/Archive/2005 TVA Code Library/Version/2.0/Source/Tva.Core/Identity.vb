@@ -230,7 +230,7 @@ Public NotInheritable Class Identity
         Const FORMAT_MESSAGE_FROM_SYSTEM As Integer = &H1000
 
         Dim messageSize As Integer = 255
-        Dim lpMsgBuf As String
+        Dim lpMsgBuf As String = ""
         Dim dwFlags As Integer = FORMAT_MESSAGE_ALLOCATE_BUFFER Or FORMAT_MESSAGE_FROM_SYSTEM Or FORMAT_MESSAGE_IGNORE_INSERTS
         Dim ptrlpSource As IntPtr = IntPtr.Zero
         Dim prtArguments As IntPtr = IntPtr.Zero
