@@ -283,12 +283,12 @@ Public NotInheritable Class Identity
             End Get
         End Property
 
-        '''' <summary>
-        '''' Gets the UserDirectoryEntry
-        '''' </summary>
-        '''' <value>
-        '''' domain,username,entry
-        '''' </value>
+        ''' <summary>
+        ''' Gets the System.DirectoryServices.DirectoryEntry of the user.
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns>To be provided.</returns>
+        ''' <remarks></remarks>
         Public ReadOnly Property UserEntry() As DirectoryEntry
             Get
                 If m_userDirectoryEntry Is Nothing Then
@@ -310,16 +310,14 @@ Public NotInheritable Class Identity
             End Get
         End Property
 
-        '''' <summary>
-        '''' Gets the UserProperty
-        '''' </summary>
-        '''' <value>
-        '''' User Property
-        '''' </value>
-        '''' <remarks>
-        '''' Value must be string
-        '''' </remarks>
-        Public ReadOnly Property UserProperty(ByVal PropertyName As System.String) As String
+        ''' <summary>
+        ''' To be provided.
+        ''' </summary>
+        ''' <param name="propertyName">To be provided.</param>
+        ''' <value></value>
+        ''' <returns>To be provided.</returns>
+        ''' <remarks></remarks>
+        Public ReadOnly Property UserProperty(ByVal propertyName As System.String) As String
             Get
                 Try
                     Return UserEntry.Properties(PropertyName)(0).ToString().Replace("  ", " ").Trim()
@@ -329,15 +327,12 @@ Public NotInheritable Class Identity
             End Get
         End Property
 
-        '''' <summary>
-        '''' Gets the FullName of the User
-        '''' </summary>
-        '''' <value>
-        '''' FullName
-        '''' </value>
-        '''' <remarks>
-        '''' Value must be string
-        '''' </remarks>
+        ''' <summary>
+        ''' Gets the full name of the user.
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns>The full name of the user.</returns>
+        ''' <remarks></remarks>
         Public ReadOnly Property FullName() As String
             Get
                 Dim displayName As String = UserProperty("displayName")
@@ -357,120 +352,96 @@ Public NotInheritable Class Identity
             End Get
         End Property
 
-        '''' <summary>
-        '''' Gets the Email
-        '''' </summary>
-        '''' <value>
-        '''' Email
-        '''' </value>
-        '''' <remarks>
-        '''' Value must be string
-        '''' </remarks>
+        ''' <summary>
+        ''' Gets the e-mail address of the user.
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns>The e-mail address of the user.</returns>
+        ''' <remarks></remarks>
         Public ReadOnly Property Email() As String
             Get
                 Return UserProperty("mail")
             End Get
         End Property
 
-        '''' <summary>
-        '''' Gets the TelephoneNumber
-        '''' </summary>
-        '''' <value>
-        '''' TelephoneNumber
-        '''' </value>
-        '''' <remarks>
-        '''' Value must be string
-        '''' </remarks>
+        ''' <summary>
+        ''' Gets the telephone number of the user.
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns>The telephone number of the user.</returns>
+        ''' <remarks></remarks>
         Public ReadOnly Property Telephone() As String
             Get
                 Return UserProperty("telephoneNumber")
             End Get
         End Property
 
-        '''' <summary>
-        '''' Gets the Title
-        '''' </summary>
-        '''' <value>
-        '''' Title
-        '''' </value>
-        '''' <remarks>
-        '''' Value must be string
-        '''' </remarks>
+        ''' <summary>
+        ''' Gets the title of the user.
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns>The title of the user.</returns>
+        ''' <remarks></remarks>
         Public ReadOnly Property Title() As String
             Get
                 Return UserProperty("title")
             End Get
         End Property
 
-        '''' <summary>
-        '''' Gets the Company
-        '''' </summary>
-        '''' <value>
-        '''' Company
-        '''' </value>
-        '''' <remarks>
-        '''' Value must be string
-        '''' </remarks>
+        ''' <summary>
+        ''' Gets the company of the user.
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns>The company of the user.</returns>
+        ''' <remarks></remarks>
         Public ReadOnly Property Company() As String
             Get
                 Return UserProperty("company")
             End Get
         End Property
 
-        '''' <summary>
-        '''' Gets the Office
-        '''' </summary>
-        '''' <value>
-        '''' Office
-        '''' </value>
-        '''' <remarks>
-        '''' Value must be string
-        '''' </remarks>
+        ''' <summary>
+        ''' To be provided.
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns>To be provided.</returns>
+        ''' <remarks></remarks>
         Public ReadOnly Property Office() As String
             Get
                 Return UserProperty("physicalDeliveryOfficeName")
             End Get
         End Property
 
-        '''' <summary>
-        '''' Gets the department
-        '''' </summary>
-        '''' <value>
-        '''' Department
-        '''' </value>
-        '''' <remarks>
-        '''' Value must be string
-        '''' </remarks>
+        ''' <summary>
+        ''' Gets the department name the user works in.
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns>The department name the user works in.</returns>
+        ''' <remarks></remarks>
         Public ReadOnly Property Department() As String
             Get
                 Return UserProperty("department")
             End Get
         End Property
 
-        '''' <summary>
-        '''' Gets the City
-        '''' </summary>
-        '''' <value>
-        '''' City
-        '''' </value>
-        '''' <remarks>
-        '''' Value must be string
-        '''' </remarks>
+        ''' <summary>
+        ''' Gets the city where the user works.
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns>The city where the user works.</returns>
+        ''' <remarks></remarks>
         Public ReadOnly Property City() As String
             Get
                 Return UserProperty("l")
             End Get
         End Property
 
-        '''' <summary>
-        '''' Gets the StreetAddress
-        '''' </summary>
-        '''' <value>
-        '''' Street Address
-        '''' </value>
-        '''' <remarks>
-        '''' Value must be string
-        '''' </remarks>
+        ''' <summary>
+        ''' To be provided.
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns>To be provided.</returns>
+        ''' <remarks></remarks>
         Public ReadOnly Property Mailbox() As String
             Get
                 Return UserProperty("streetAddress")
