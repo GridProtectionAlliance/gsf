@@ -46,6 +46,7 @@
   <ItemGroup>
     <Compile Include="Assembly.vb" />
     <Compile Include="Bit.vb" />
+    <Compile Include="Identity.vb" />
     <Compile Include="Math.vb" />
     <Compile Include="My Project\AssemblyInfo.vb" />
     <Compile Include="Tva.DateTime\Common.vb" />

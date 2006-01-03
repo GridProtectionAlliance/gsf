@@ -26,7 +26,7 @@ Imports VB = Microsoft.VisualBasic
 
 Namespace IO
 
-    Public Class FilePath
+    Public NotInheritable Class FilePath
 
         Private Shared m_fileNameCharPattern As String
 
@@ -35,31 +35,17 @@ Namespace IO
         End Sub
 
         ''' <summary>
-        ''' Returns True if specified file name matches given file spec (wildcards are defined as '*' or '?' characters).
-        ''' </summary>
-        ''' <param name="matchPattern">To be provided.</param>
-        ''' <param name="fileName">To be provided.</param>
-        ''' <param name="ignoreCase">To be provided.</param>
-        ''' <returns>To be provided.</returns>
-        ''' <remarks></remarks>
-        Public Shared Function IsFilePatternMatch(ByVal matchPattern As String, ByVal fileName As String, ByVal ignoreCase As Boolean) As Boolean
-
-            Return (New Regex(GetFilePatternRegularExpression(matchPattern), IIf(ignoreCase, RegexOptions.IgnoreCase, RegexOptions.None))).IsMatch(fileName)
-
-        End Function
-
-        ''' <summary>
         ''' Returns True if specified file name matches any of the given file specs (wildcards are defined as '*' or '?' characters).
         ''' </summary>
-        ''' <param name="matchPatterns">To be provided.</param>
+        ''' <param name="fileSpecs">To be provided.</param>
         ''' <param name="fileName">To be provided.</param>
         ''' <returns>To be provided.</returns>
         ''' <remarks></remarks>
-        Public Shared Function IsFilePatternMatch(ByVal matchPatterns As String(), ByVal fileName As String) As Boolean
+        Public Shared Function IsFilePatternMatch(ByVal fileSpecs As String(), ByVal fileName As String) As Boolean
 
             Dim found As Boolean
 
-            For Each fileSpec As String In matchPatterns
+            For Each fileSpec As String In fileSpecs
                 If IsFilePatternMatch(fileSpec, fileName, True) Then
                     found = True
                     Exit For
@@ -67,6 +53,20 @@ Namespace IO
             Next
 
             Return found
+
+        End Function
+
+        ''' <summary>
+        ''' Returns True if specified file name matches given file spec (wildcards are defined as '*' or '?' characters).
+        ''' </summary>
+        ''' <param name="fileSpec">To be provided.</param>
+        ''' <param name="fileName">To be provided.</param>
+        ''' <param name="ignoreCase">To be provided.</param>
+        ''' <returns>To be provided.</returns>
+        ''' <remarks></remarks>
+        Public Shared Function IsFilePatternMatch(ByVal fileSpec As String, ByVal fileName As String, ByVal ignoreCase As Boolean) As Boolean
+
+            Return (New Regex(GetFilePatternRegularExpression(fileSpec), IIf(ignoreCase, RegexOptions.IgnoreCase, RegexOptions.None))).IsMatch(fileName)
 
         End Function
 
@@ -112,7 +112,7 @@ Namespace IO
         ''' <param name="fileName">Name of file whose size is to be returned.</param>
         ''' <returns>The size of the specified file.</returns>
         ''' <remarks></remarks>
-        Public Shared Function GetFileLength(ByVal fileName As System.String) As Long
+        Public Shared Function GetFileLength(ByVal fileName As String) As Long
 
             Try
                 With New FileInfo(fileName)
