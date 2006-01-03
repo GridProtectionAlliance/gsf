@@ -500,7 +500,7 @@ Public Class Assembly
 
         'Returns the requested assembly attribute.
         Dim assemblyAttributes As Object() = m_assembly.GetCustomAttributes(attributeType, False)
-        If assemblyAttributes.Length() >= 1 Then
+        If assemblyAttributes.Length >= 1 Then
             Return assemblyAttributes(0)
         Else
             Throw New ApplicationException("Assembly does not expose this attribute")

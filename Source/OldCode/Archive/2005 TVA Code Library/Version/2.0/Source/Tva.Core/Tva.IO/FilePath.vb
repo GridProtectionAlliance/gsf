@@ -28,6 +28,8 @@ Namespace IO
 
     Public Class FilePath
 
+        Private Shared m_fileNameCharPattern As String
+
         Private Sub New()
             ' This class contains only global functions and is not meant to be instantiated
         End Sub
@@ -55,16 +57,16 @@ Namespace IO
         ''' <remarks></remarks>
         Public Shared Function IsFilePatternMatch(ByVal matchPatterns As String(), ByVal fileName As String) As Boolean
 
-            Dim Found As Boolean
+            Dim found As Boolean
 
-            For Each FileSpec As String In matchPatterns
-                If IsFilePatternMatch(FileSpec, fileName, True) Then
-                    Found = True
+            For Each fileSpec As String In matchPatterns
+                If IsFilePatternMatch(fileSpec, fileName, True) Then
+                    found = True
                     Exit For
                 End If
             Next
 
-            Return Found
+            Return found
 
         End Function
 
@@ -72,12 +74,11 @@ Namespace IO
         ''''  <para>Returns a regular expression that simulates wildcard matching for filenames (wildcards are defined as '*' or '?' characters)</para>
         ''''</summary>
         ''''<param name="FileSpec"> Required. File spec . </param>
-        Public Shared Function GetFilePatternRegularExpression(ByVal FileSpec As String) As String
+        Public Shared Function GetFilePatternRegularExpression(ByVal fileSpec As String) As String
 
-            Static FileNameCharPattern As String
-            Dim FilePattern As String
+            Dim filePattern As String
 
-            If Len(FileNameCharPattern) = 0 Then
+            If m_fileNameCharPattern Is Nothing Then
                 With New StringBuilder
                     ' Define a regular expression pattern for a valid file name character, we do this by
                     ' allowing any characters except those that would not be valid as part of a filename,
@@ -93,15 +94,15 @@ Namespace IO
                     Next
 
                     .Append("]")
-                    FileNameCharPattern = .ToString()
+                    m_fileNameCharPattern = .ToString()
                 End With
             End If
 
-            FilePattern = Replace(FileSpec, "\", "\u005C")      ' Backslash in Regex means special sequence, here we really want a backslash
-            FilePattern = Replace(FilePattern, ".", "\u002E")   ' Dot in Regex means any character, here we really want a dot
-            FilePattern = Replace(FilePattern, "?", FileNameCharPattern)
+            filePattern = Replace(fileSpec, "\", "\u005C")      ' Backslash in Regex means special sequence, here we really want a backslash
+            filePattern = Replace(filePattern, ".", "\u002E")   ' Dot in Regex means any character, here we really want a dot
+            filePattern = Replace(filePattern, "?", m_fileNameCharPattern)
 
-            Return "^" & Replace(FilePattern, "*", "(" & FileNameCharPattern & ")*") & "$"
+            Return "^" & Replace(filePattern, "*", "(" & m_fileNameCharPattern & ")*") & "$"
 
         End Function
 
@@ -114,8 +115,8 @@ Namespace IO
         Public Shared Function GetFileLength(ByVal fileName As System.String) As Long
 
             Try
-                With New FileInfo(FileName)
-                    Return .Length()
+                With New FileInfo(fileName)
+                    Return .Length
                 End With
             Catch
                 Return -1
@@ -123,200 +124,252 @@ Namespace IO
 
         End Function
 
-        ''''<summary>
-        ''''  <para> Gets a unique temporary file name with path - if UseTempPath is False, application path is used for temp file</para>
-        ''''</summary>
-        ''''<param name="UseTempPath"> Optional.default boolean value set to true</param>
-        '''' <param name="CreateZeroLengthFile"> Optional.default boolean value set to true</param>
-        '''' <param name="FileExtension"> Optional.File Extension, default value set to tmp</param>
-        Public Shared Function GetTempFile(Optional ByVal UseTempPath As Boolean = True, Optional ByVal CreateZeroLengthFile As Boolean = True, Optional ByVal FileExtension As System.String = "tmp") As String
+        ''' <summary>
+        ''' Gets a unique temporary file name with path.
+        ''' </summary>
+        ''' <returns></returns>
+        ''' <remarks></remarks>
+        Public Shared Function GetTempFile() As String
 
-            If UseTempPath And CreateZeroLengthFile Then
-                Dim strTempFile As String = GetTempFilePath() & GetTempFileName(FileExtension)
-                With File.Create(strTempFile)
+            Return GetTempFile(True, True, "tmp")
+
+        End Function
+
+        ''' <summary>
+        ''' Gets a unique temporary file name with path - if UseTempPath is False, application path is used for temp file.
+        ''' </summary>
+        ''' <param name="useTempPath">To be provided.</param>
+        ''' <param name="createZeroLengthFile">To be provided.</param>
+        ''' <param name="fileExtension">To be provided.</param>
+        ''' <returns>To be provided.</returns>
+        ''' <remarks></remarks>
+        Public Shared Function GetTempFile(ByVal useTempPath As Boolean, ByVal createZeroLengthFile As Boolean, ByVal fileExtension As String) As String
+
+            If useTempPath And createZeroLengthFile Then
+                Dim tempFile As String = GetTempFilePath() & GetTempFileName(fileExtension)
+                With File.Create(tempFile)
                     .Close()
                 End With
-                Return strTempFile
-            ElseIf UseTempPath Then
-                Return GetTempFilePath() & GetTempFileName(FileExtension)
-            ElseIf CreateZeroLengthFile Then
-                Dim strTempFile As String = GetApplicationPath() & GetTempFileName(FileExtension)
-                With File.Create(strTempFile)
+                Return tempFile
+            ElseIf useTempPath Then
+                Return GetTempFilePath() & GetTempFileName(fileExtension)
+            ElseIf createZeroLengthFile Then
+                Dim tempFile As String = GetApplicationPath() & GetTempFileName(fileExtension)
+                With File.Create(tempFile)
                     .Close()
                 End With
-                Return strTempFile
+                Return tempFile
             Else
-                Return GetApplicationPath() & GetTempFileName(FileExtension)
+                Return GetApplicationPath() & GetTempFileName(fileExtension)
             End If
 
         End Function
 
-        ''''<summary>
-        ''''  <para>Gets a file name guaranteed to be unique with no path - use GetTempFile to return unique file name with path</para>
-        ''''</summary>
-        '''' <param name="FileExtension"> Optional.File Extension, default value set to tmp</param>
-        Public Shared Function GetTempFileName(Optional ByVal FileExtension As System.String = "tmp") As String
+        ''' <summary>
+        ''' Gets a file name (with .tmp extension) guaranteed to be unique with no path.
+        ''' </summary>
+        ''' <returns></returns>
+        ''' <remarks></remarks>
+        Public Shared Function GetTempFileName() As String
 
-            If Left(FileExtension, 1) = "." Then FileExtension = FileExtension.Substring(1)
-            Return Guid.NewGuid.ToString() & "." & FileExtension
+            Return GetTempFileName("tmp")
 
         End Function
 
-        ''''<summary>
-        ''''  <para>Gets the temporary file path - path will be suffixed with standard directory separator</para>
-        ''''</summary>
+        ''' <summary>
+        ''' Gets a file name guaranteed to be unique with no path.
+        ''' </summary>
+        ''' <param name="fileExtension">The extension of the temporary file.</param>
+        ''' <returns>The file name guaranteed to be unique with no path.</returns>
+        ''' <remarks>Use GetTempFile to return unique file name with path.</remarks>
+        Public Shared Function GetTempFileName(ByVal fileExtension As String) As String
+
+            If fileExtension.Substring(0, 1) = "." Then fileExtension = fileExtension.Substring(1)
+            Return Guid.NewGuid.ToString() & "." & fileExtension
+
+        End Function
+
+        ' TODO: Note for Pinal - I am OK with these being functions instead of readonly properties
+        ' and using the "Get" prefix, see .NET example below that uses "GetTempPath" for the .NET
+        ' "Path" class.
+
+        ''' <summary>
+        ''' Gets the temporary file path - path will be suffixed with standard directory separator.
+        ''' </summary>
+        ''' <returns>The temporary file path.</returns>
+        ''' <remarks></remarks>
         Public Shared Function GetTempFilePath() As String
 
             Return AddPathSuffix(Path.GetTempPath())
 
         End Function
 
-        ''''<summary>
-        ''''  <para> Gets the path of the executing assembly - path will be suffixed with standard directory separator</para>
-        ''''</summary>
+        ''' <summary>
+        ''' Gets the path of the executing assembly - path will be suffixed with standard directory separator.
+        ''' </summary>
+        ''' <returns>The path of the executing assembly.</returns>
+        ''' <remarks></remarks>
         Public Shared Function GetApplicationPath() As String
 
-            Return JustPath(Trim(System.Reflection.Assembly.GetExecutingAssembly.Location))
+            Return JustPath(Trim(System.Reflection.Assembly.GetEntryAssembly.Location()))
 
         End Function
 
-        ''''<summary>
-        ''''  <para>  Returns just the drive letter (or UNC \\server\share\) from a path") - path will be suffixed with standard directory separator</para>
-        ''''</summary>
-        '''' <param name="FilePath">File Path</param>
-        Public Shared Function JustDrive(ByVal FilePath As System.String) As String
+        ''' <summary>
+        ''' Returns just the drive letter (or UNC \\server\share\) from a path") - path will be suffixed with standard directory separator.
+        ''' </summary>
+        ''' <param name="filePath">To be provided.</param>
+        ''' <returns>To be provided.</returns>
+        ''' <remarks></remarks>
+        Public Shared Function JustDrive(ByVal filePath As String) As String
 
-            If Len(FilePath) > 0 Then
-                Return AddPathSuffix(Path.GetPathRoot(FilePath))
+            If filePath IsNot Nothing AndAlso filePath.Length > 0 Then
+                Return AddPathSuffix(Path.GetPathRoot(filePath))
             Else
                 Return Path.DirectorySeparatorChar
             End If
 
         End Function
 
-        ''''<summary>
-        ''''  <para> Returns just the file name from a path</para>
-        ''''</summary>
-        '''' <param name="FilePath"> File Path</param>
-        Public Shared Function JustFileName(ByVal FilePath As System.String) As String
+        ''' <summary>
+        ''' Returns just the file name from a path.
+        ''' </summary>
+        ''' <param name="filePath">To be provided.</param>
+        ''' <returns>To be provided.</returns>
+        ''' <remarks></remarks>
+        Public Shared Function JustFileName(ByVal filePath As String) As String
 
-            If Len(FilePath) > 0 Then
-                Return Path.GetFileName(FilePath)
+            If filePath IsNot Nothing AndAlso filePath.Length > 0 Then
+                Return Path.GetFileName(filePath)
             Else
                 Return ""
             End If
 
         End Function
 
-        ''''<summary>
-        ''''  <para> Returns last directory name from a path (e.g., would return sub2 from c:\windows\sub2\filename.ext)</para>
-        ''''</summary>
-        '''' <param name="FilePath"> File Path</param>
-        Public Shared Function LastDirectoryName(ByVal FilePath As System.String) As String
+        ''' <summary>
+        ''' Returns last directory name from a path (e.g., would return sub2 from c:\windows\sub2\filename.ext).
+        ''' </summary>
+        ''' <param name="filePath">To be provided.</param>
+        ''' <returns>To be provided.</returns>
+        ''' <remarks></remarks>
+        Public Shared Function LastDirectoryName(ByVal filePath As String) As String
 
-            Dim DirChars As Char() = {Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar}
-            Dim DirVolChars As Char() = {Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar, Path.VolumeSeparatorChar}
+            Dim dirChars As Char() = {Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar}
+            Dim dirVolChars As Char() = {Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar, Path.VolumeSeparatorChar}
 
-            FilePath = JustPath(FilePath)
+            filePath = JustPath(filePath)
 
-            Do While Right(FilePath, 1).IndexOfAny(DirChars) > -1
-                FilePath = Left(FilePath, Len(FilePath) - 1)
+            Do While Right(filePath, 1).IndexOfAny(dirChars) > -1
+                filePath = Left(filePath, Len(filePath) - 1)
             Loop
 
-            Do While FilePath.IndexOfAny(DirVolChars) > -1
-                FilePath = Right(FilePath, Len(FilePath) - 1)
+            Do While filePath.IndexOfAny(dirVolChars) > -1
+                filePath = Right(filePath, Len(filePath) - 1)
             Loop
 
-            Return FilePath
+            Return filePath
 
         End Function
 
-        ''''<summary>
-        ''''  <para> Returns just the path without a filename from a path - path will be suffixed with standard directory separator</para>
-        ''''</summary>
-        '''' <param name="FilePath"> File Path</param>
-        Public Shared Function JustPath(ByVal FilePath As System.String) As String
+        ''' <summary>
+        ''' Returns just the path without a filename from a path - path will be suffixed with standard directory separator.
+        ''' </summary>
+        ''' <param name="filePath">To be provided.</param>
+        ''' <returns>To be provided.</returns>
+        ''' <remarks></remarks>
+        Public Shared Function JustPath(ByVal filePath As String) As String
 
-            If Len(FilePath) > 0 Then
-                Return Path.GetDirectoryName(FilePath) & Path.DirectorySeparatorChar
+            If filePath IsNot Nothing AndAlso filePath.Length > 0 Then
+                Return Path.GetDirectoryName(filePath) & Path.DirectorySeparatorChar
             Else
                 Return Path.DirectorySeparatorChar
             End If
 
         End Function
 
-        ''''<summary>
-        ''''  <para> Returns just the file extension from a path - keeps extension "dot"</para>
-        ''''</summary>
-        '''' <param name="FilePath"> File Path</param>
-        Public Shared Function JustFileExtension(ByVal FilePath As System.String) As String
+        ''' <summary>
+        ''' Returns just the file extension from a path - keeps extension "dot".
+        ''' </summary>
+        ''' <param name="filePath">To be provided.</param>
+        ''' <returns>To be provided.</returns>
+        ''' <remarks></remarks>
+        Public Shared Function JustFileExtension(ByVal filePath As String) As String
 
-            If Len(FilePath) > 0 Then
-                Return Path.GetExtension(FilePath)
+            If filePath IsNot Nothing AndAlso filePath.Length > 0 Then
+                Return Path.GetExtension(filePath)
             Else
                 Return ""
             End If
 
         End Function
 
-        ''''<summary>
-        ''''  <para>  Returns just the file name with no extension from a path</para>
-        ''''</summary>
-        '''' <param name="FilePath"> File Path</param>
-        Public Shared Function NoFileExtension(ByVal FilePath As System.String) As String
+        ''' <summary>
+        ''' Returns just the file name with no extension from a path.
+        ''' </summary>
+        ''' <param name="filePath">To be provided.</param>
+        ''' <returns>To be provided.</returns>
+        ''' <remarks></remarks>
+        Public Shared Function NoFileExtension(ByVal filePath As String) As String
 
-            If Len(FilePath) > 0 Then
-                Return Path.GetFileNameWithoutExtension(FilePath)
+            If filePath IsNot Nothing AndAlso filePath.Length > 0 Then
+                Return Path.GetFileNameWithoutExtension(filePath)
             Else
                 Return ""
             End If
 
         End Function
 
-        ''''<summary>
-        ''''  <para>  Returns True if given path exists</para>
-        ''''</summary>
-        '''' <param name="FilePath"> File Path</param>
-        Public Shared Function PathExists(ByVal FilePath As System.String) As Boolean
+        ''' <summary>
+        ''' Returns True if given path exists.
+        ''' </summary>
+        ''' <param name="filePath">To be provided.</param>
+        ''' <returns>To be provided.</returns>
+        ''' <remarks></remarks>
+        Public Shared Function PathExists(ByVal filePath As String) As Boolean
 
-            Return Directory.Exists(FilePath)
+            Return Directory.Exists(filePath)
 
         End Function
 
-        ''''<summary>
-        ''''  <para>  Makes sure path is suffixed with standard directory separator</para>
-        ''''</summary>
-        '''' <param name="FilePath"> File Path</param>
-        Public Shared Function AddPathSuffix(ByVal FilePath As System.String) As String
+        ''' <summary>
+        ''' Makes sure path is suffixed with standard directory separator.
+        ''' </summary>
+        ''' <param name="filePath">To be provided.</param>
+        ''' <returns>To be provided.</returns>
+        ''' <remarks></remarks>
+        Public Shared Function AddPathSuffix(ByVal filePath As String) As String
 
-            If Len(FilePath) > 0 Then
-                Dim SuffixChar As Char = FilePath.Chars(FilePath.Length - 1)
-                If SuffixChar <> Path.DirectorySeparatorChar And SuffixChar <> Path.AltDirectorySeparatorChar Then
-                    FilePath &= Path.DirectorySeparatorChar
+            If filePath IsNot Nothing AndAlso filePath.Length > 0 Then
+                Dim suffixChar As Char = filePath.Chars(filePath.Length - 1)
+                If suffixChar <> Path.DirectorySeparatorChar And suffixChar <> Path.AltDirectorySeparatorChar Then
+                    filePath &= Path.DirectorySeparatorChar
                 End If
             Else
-                FilePath = Path.DirectorySeparatorChar
+                filePath = Path.DirectorySeparatorChar
             End If
 
-            Return FilePath
+            Return filePath
 
         End Function
 
-        ''''<summary>
-        ''''  <para>  Makes sure path is not suffixed with any directory separator</para>
-        ''''</summary>
-        '''' <param name="FilePath"> File Path</param>
-        Public Shared Function RemovePathSuffix(ByVal FilePath As System.String) As String
+        ''' <summary>
+        ''' Makes sure path is not suffixed with any directory separator.
+        ''' </summary>
+        ''' <param name="filePath">To be provided.</param>
+        ''' <returns>To be provided.</returns>
+        ''' <remarks></remarks>
+        Public Shared Function RemovePathSuffix(ByVal filePath As String) As String
 
-            If Len(FilePath) > 0 Then
-                Dim SuffixChar As Char = FilePath.Chars(FilePath.Length - 1)
-                While (SuffixChar = Path.DirectorySeparatorChar Or SuffixChar = Path.AltDirectorySeparatorChar) And FilePath.Length > 0
-                    FilePath = FilePath.Substring(0, FilePath.Length - 1)
-                    If FilePath.Length > 0 Then SuffixChar = FilePath.Chars(FilePath.Length - 1)
+            If filePath IsNot Nothing AndAlso filePath.Length > 0 Then
+                Dim suffixChar As Char = filePath.Chars(filePath.Length - 1)
+                While (suffixChar = Path.DirectorySeparatorChar Or suffixChar = Path.AltDirectorySeparatorChar) And filePath.Length > 0
+                    filePath = filePath.Substring(0, filePath.Length - 1)
+                    If filePath.Length > 0 Then suffixChar = filePath.Chars(filePath.Length - 1)
                 End While
             End If
 
-            Return FilePath
+            Return filePath
 
         End Function
 
@@ -333,40 +386,40 @@ Namespace IO
 
             If length < 12 Then
                 Throw New InvalidOperationException("Cannot trim file names to less than 12 characters...")
-            ElseIf Len(fileName) > length Then
-                Dim strJustFileName As String = JustFileName(fileName)
+            ElseIf fileName.Length > length Then
+                Dim justName As String = JustFileName(fileName)
 
-                If Len(strJustFileName) = Len(fileName) Then
+                If justName.Length = fileName.Length Then
                     ' This is just a file name, make sure extension shows...
-                    Dim strJustExt As String = JustFileExtension(fileName)
-                    Dim strTrimName As String = NoFileExtension(fileName)
+                    Dim justExtension As String = JustFileExtension(fileName)
+                    Dim trimName As String = NoFileExtension(fileName)
 
-                    If Len(strTrimName) > 8 Then
-                        If Len(strJustExt) > length - 8 Then strJustExt = Left(strJustExt, length - 8)
-                        Dim sngOffset As Single = (length - Len(strJustExt) - 3) / 2
-                        Return Left(strTrimName, CInt(Ceiling(sngOffset))) & "..." & Mid(strTrimName, Len(strTrimName) - CInt(Floor(sngOffset)) + 1) & strJustExt
+                    If trimName.Length > 8 Then
+                        If justExtension.Length > length - 8 Then justExtension = justExtension.Substring(0, length - 8)
+                        Dim offset As Single = (length - justExtension.Length() - 3) / 2
+                        Return trimName.Substring(0, CInt(Ceiling(offset))) & "..." & trimName.Substring(Len(trimName) - CInt(Floor(offset)) + 1) & justExtension
                     Else
                         ' We can't trim file names less than 8 with a "...", so we truncate long extension
-                        Return strTrimName & Left(strJustExt, length - Len(strTrimName))
+                        Return trimName & justExtension.Substring(0, length - trimName.Length)
                     End If
-                ElseIf Len(strJustFileName) > length Then
+                ElseIf justName.Length > length Then
                     ' Just file name part exeeds length, recurse into function without path
-                    Return TrimFileName(strJustFileName, length)
+                    Return TrimFileName(justName, length)
                 Else
                     ' File name contains path, trim path before file name...
-                    Dim strJustPath As String = JustPath(FileName)
-                    Dim intOffset As Integer = Length - Len(strJustFileName) - 4
+                    Dim justFilePath As String = JustPath(fileName)
+                    Dim offset As Integer = length - justName.Length - 4
 
-                    If Len(strJustPath) > intOffset And intOffset > 0 Then
-                        Return Left(strJustPath, intOffset) & "...\" & strJustFileName
+                    If Len(justFilePath) > offset And offset > 0 Then
+                        Return justFilePath.Substring(0, offset) & "...\" & justName
                     Else
                         ' Can't fit path, just trim file name
-                        Return TrimFileName(strJustFileName, Length)
+                        Return TrimFileName(justName, length)
                     End If
                 End If
             Else
                 ' Full file name fits within requested length...
-                Return FileName
+                Return fileName
             End If
 
         End Function
@@ -374,12 +427,12 @@ Namespace IO
         ''' <summary>
         ''' Gets a list of files for the given path and wildcard pattern (e.g., "c:\*.*").
         ''' </summary>
-        ''' <param name="selectionPath">To be provided.</param>
-        ''' <returns></returns>
+        ''' <param name="path">The path for which a list of files is to be returned.</param>
+        ''' <returns>A list of files for the given path.</returns>
         ''' <remarks></remarks>
-        Public Shared Function GetFileList(ByVal selectionPath As String) As String()
+        Public Shared Function GetFileList(ByVal path As String) As String()
 
-            Return Directory.GetFiles(JustPath(selectionPath), JustFileName(selectionPath))
+            Return Directory.GetFiles(JustPath(path), JustFileName(path))
 
         End Function
 
