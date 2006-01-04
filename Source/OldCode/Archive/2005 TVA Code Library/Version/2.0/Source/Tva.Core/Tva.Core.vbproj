@@ -50,6 +50,7 @@
     <Compile Include="Identity.vb" />
     <Compile Include="Math.vb" />
     <Compile Include="My Project\AssemblyInfo.vb" />
+    <Compile Include="Tva.Collections\ProcessQueue.vb" />
     <Compile Include="Tva.DateTime\Common.vb" />
     <Compile Include="Tva.DateTime\NtpTimeTag.vb" />
     <Compile Include="Tva.DateTime\Win32TimeZone.vb" />
