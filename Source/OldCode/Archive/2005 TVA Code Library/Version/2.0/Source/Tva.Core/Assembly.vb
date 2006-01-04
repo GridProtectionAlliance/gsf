@@ -32,7 +32,7 @@ Public Class Assembly
     Private Shared m_executingAssembly As Assembly
 
     ''' <summary>
-    ''' Initializes a new instance of Tva.Assembly for the specified System.Reflection.Assembly.  
+    ''' Initializes a instance of Tva.Assembly for the specified System.Reflection.Assembly.  
     ''' </summary>
     ''' <param name="asm">An instance of System.Reflection.Assembly for which a Tva.Assembly instance is to be created.</param>
     ''' <remarks></remarks>
