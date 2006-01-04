@@ -41,48 +41,48 @@ namespace Tva
 				MultiPass = 10
 			};
 
-			public __delegate void ProgressEventHandler(__int64 BytesCompleted, __int64 BytesTotal);
+			public __delegate void ProgressEventHandler(__int64 bytesCompleted, __int64 bytesTotal);
 
 			// Common compression functions
 			public __gc class Common
 			{
 				public: 
-					static System::Byte Compress(System::Byte Data[]) [];
-					static System::Byte Compress(System::Byte Data[], CompressLevel Strength) [];			
-					static Stream* Compress(Stream* InStream);
-					static Stream* Compress(Stream* InStream, CompressLevel Strength);
-					static void Compress(Stream* InStream, Stream* OutStream, CompressLevel Strength, ProgressEventHandler* ProgressHandler);
+					static System::Byte Compress(System::Byte data[]) [];
+					static System::Byte Compress(System::Byte data[], CompressLevel strength) [];			
+					static Stream* Compress(Stream* inStream);
+					static Stream* Compress(Stream* inStream, CompressLevel strength);
+					static void Compress(Stream* inStream, Stream* outStream, CompressLevel strength, ProgressEventHandler* progressHandler);
 					
-					static System::Byte Uncompress(System::Byte Data[], int UncompressedSize) [];
-					static Stream* Uncompress(System::IO::Stream* InStream);
-					static void Uncompress(Stream* InStream, Stream* OutStream, ProgressEventHandler* ProgressHandler);
+					static System::Byte Uncompress(System::Byte data[], int uncompressedSize) [];
+					static Stream* Uncompress(System::IO::Stream* inStream);
+					static void Uncompress(Stream* inStream, Stream* outStream, ProgressEventHandler* progressHandler);
 					
-					static void CompressFile(String* SourceFileName, String* DestFileName);
-					static void CompressFile(String* SourceFileName, String* DestFileName, CompressLevel Strength);
-					static void CompressFile(String* SourceFileName, String* DestFileName, CompressLevel Strength, ProgressEventHandler* ProgressHandler);
+					static void CompressFile(String* sourceFileName, String* destFileName);
+					static void CompressFile(String* sourceFileName, String* destFileName, CompressLevel strength);
+					static void CompressFile(String* sourceFileName, String* destFileName, CompressLevel strength, ProgressEventHandler* progressHandler);
 					
-					static void UncompressFile(String* SourceFileName, String* DestFileName);
-					static void UncompressFile(String* SourceFileName, String* DestFileName, ProgressEventHandler* ProgressHandler);
+					static void UncompressFile(String* sourceFileName, String* destFileName);
+					static void UncompressFile(String* sourceFileName, String* destFileName, ProgressEventHandler* progressHandler);
 					
-					static Int32 CRC32(Int32 CRC, System::Byte Data[], int Offset, int Count);
-					static Int32 CRC32(System::Byte Data[]);
-					static Int32 CRC32(Stream* InStream);
-					static Int32 CRC32(String* FileName);
+					static UInt32 CRC32(UInt32 crc, System::Byte data[], int offset, int count);
+					static UInt32 CRC32(System::Byte data[]);
+					static UInt32 CRC32(Stream* inStream);
+					static UInt32 CRC32(String* fileName);
 					
-					static Int16 CRC16(Int16 CRC, System::Byte Data[], int Offset, int Count);
-					static Int16 CRC16(System::Byte Data[]);
-					static Int16 CRC16(Stream* InStream);
-					static Int16 CRC16(String* FileName);
+					static UInt16 CRC16(UInt16 crc, System::Byte data[], int offset, int count);
+					static UInt16 CRC16(System::Byte data[]);
+					static UInt16 CRC16(Stream* inStream);
+					static UInt16 CRC16(String* fileName);
 					
-					static Int16 CRC_CCITT(Int16 CRC, System::Byte Data[], int Offset, int Count);
-					static Int16 CRC_CCITT(System::Byte Data[]);
-					static Int16 CRC_CCITT(Stream* InStream);
-					static Int16 CRC_CCITT(String* FileName);
+					static UInt16 CRC_CCITT(UInt16 crc, System::Byte data[], int offset, int count);
+					static UInt16 CRC_CCITT(System::Byte data[]);
+					static UInt16 CRC_CCITT(Stream* inStream);
+					static UInt16 CRC_CCITT(String* fileName);
 					
 					static String* ZLibVersion();
 				private:
 					Common(){}
-					static System::Byte Compress(System::Byte Data[], CompressLevel Strength, int CompressionDepth) [];
+					static System::Byte Compress(System::Byte data[], CompressLevel strength, int compressionDepth) [];
 			};
 
 			// Custom compression exception class derived from System::Exception

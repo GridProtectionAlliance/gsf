@@ -32,7 +32,7 @@ namespace Tva
 				DiskFileIsNewer
 			};
 
-			public __delegate void CurrentFileEventHandler(String* FullFileName, String* RelativeFileName);
+			public __delegate void CurrentFileEventHandler(String* fullFileName, String* relativeFileName);
 
 			[ToolboxBitmap(__typeof(System::Object), S"Tva.IO.Compression.ZipFile.bmp"), DefaultProperty(S"FileName"), DefaultMember(S"Files")]
 			public __gc class ZipFile :  public Component
@@ -70,21 +70,21 @@ namespace Tva
 					__gc class CompressedFiles : public IEnumerable
 					{
 						public:
-							__property CompressedFile* get_Item(int Index);
-							__property CompressedFile* get_Item(String* FileSpec);
-							__property CompressedFile* get_Item(String* FileSpec, Boolean RecurseSubdirectories);
+							__property CompressedFile* get_Item(int index);
+							__property CompressedFile* get_Item(String* fileSpec);
+							__property CompressedFile* get_Item(String* fileSpec, Boolean recurseSubdirectories);
 							__property int get_Count();
-							Boolean Find(String* FileSpec);
-							Boolean Find(String* FileSpec, Boolean RecurseSubdirectories);
-							Boolean Find(String* FileSpec, Boolean RecurseSubdirectories, Int32* FirstMatchedIndex);
-							Boolean Find(String* FileSpec, Boolean RecurseSubdirectories, IList* MatchedIndices);
+							Boolean Find(String* fileSpec);
+							Boolean Find(String* fileSpec, Boolean recurseSubdirectories);
+							Boolean Find(String* fileSpec, Boolean recurseSubdirectories, Int32* firstMatchedIndex);
+							Boolean Find(String* fileSpec, Boolean recurseSubdirectories, IList* matchedIndices);
 							IEnumerator* GetEnumerator();
 
 						public private:	// essentially friend access: internally public, externally private
 							CompressedFiles(ZipFile* parent);
 							void Add(CompressedFile* compressedFile);
 							void Clear();
-							void FindMatchingFiles(String* FileSpec, Boolean RecurseSubdirectories, IList* MatchedIndices, Boolean StopAtFirstMatch);
+							void FindMatchingFiles(String* fileSpec, Boolean recurseSubdirectories, IList* matchedIndices, Boolean stopAtFirstMatch);
 							
 							ZipFile* parent;
 							ArrayList* colFiles;
@@ -98,8 +98,8 @@ namespace Tva
 					void Refresh();
 					void Close();
 
-					static ZipFile* Open(String* FileName);
-					static ZipFile* Open(String* FileName, String* Password);
+					static ZipFile* Open(String* fileName);
+					static ZipFile* Open(String* fileName, String* password);
 
 					[Browsable(true), Category(S"Zip File Settings"), Description(S"Compressed zip file name."), DefaultValue(S"")]
 					__property String* get_FileName();
@@ -134,21 +134,21 @@ namespace Tva
 					[Browsable(false)]
 					__property CompressedFiles* get_Files();
 
-					void Add(String* FileSpec);
-					void Add(String* FileSpec, Boolean RecurseSubdirectories);
-					void Add(String* FileSpec, Boolean RecurseSubdirectories, PathInclusion AddPathMethod);
+					void Add(String* fileSpec);
+					void Add(String* fileSpec, Boolean recurseSubdirectories);
+					void Add(String* fileSpec, Boolean recurseSubdirectories, PathInclusion addPathMethod);
 
-					void Extract(String* FileSpec, String* DestPath, UpdateOption OverwriteWhen);
-					void Extract(String* FileSpec, String* DestPath, UpdateOption OverwriteWhen, Boolean RecurseSubdirectories);
-					void Extract(String* FileSpec, String* DestPath, UpdateOption OverwriteWhen, Boolean RecurseSubdirectories, PathInclusion CreatePathMethod);
+					void Extract(String* fileSpec, String* destPath, UpdateOption overwriteWhen);
+					void Extract(String* fileSpec, String* destPath, UpdateOption overwriteWhen, Boolean recurseSubdirectories);
+					void Extract(String* fileSpec, String* destPath, UpdateOption overwriteWhen, Boolean recurseSubdirectories, PathInclusion createPathMethod);
 
-					void Update(String* FileSpec, UpdateOption UpdateWhen);
-					void Update(String* FileSpec, UpdateOption UpdateWhen, Boolean AddNewFiles);
-					void Update(String* FileSpec, UpdateOption UpdateWhen, Boolean AddNewFiles, Boolean RecurseSubdirectories);
-					void Update(String* FileSpec, UpdateOption UpdateWhen, Boolean AddNewFiles, Boolean RecurseSubdirectories, PathInclusion AddPathMethod);
+					void Update(String* fileSpec, UpdateOption updateWhen);
+					void Update(String* fileSpec, UpdateOption updateWhen, Boolean addNewFiles);
+					void Update(String* fileSpec, UpdateOption updateWhen, Boolean addNewFiles, Boolean recurseSubdirectories);
+					void Update(String* fileSpec, UpdateOption updateWhen, Boolean addNewFiles, Boolean recurseSubdirectories, PathInclusion addPathMethod);
 
-					void Remove(String* FileSpec);
-					void Remove(String* FileSpec, Boolean RecurseSubdirectories);
+					void Remove(String* fileSpec);
+					void Remove(String* fileSpec, Boolean recurseSubdirectories);
 
 				protected:
 					~ZipFile();
@@ -157,21 +157,21 @@ namespace Tva
 					void OpenFileForZip();
 					void OpenFileForUnzip();
 					void CloseFile();
-					void AddFilesToZip(String* FileSpec, String* CurrDirectory, int RootPathLength, Boolean RecurseSubdirectories, PathInclusion AddPathMethod, char* Password);
-					void UpdateFilesInZip(ZipFile* TempZipFile, String* FileSpec, String* CurrDirectory, int RootPathLength, UpdateOption UpdateWhen, Boolean AddNewFiles, Boolean RecurseSubdirectories, PathInclusion AddPathMethod, char* Password);
-					String* GetAdjustedFileName(String* FullFileName, int RootPathLength, PathInclusion AddPathMethod);
-					String* GetSearchFileName(String* FileSpec, String* AdjustedFileName, Boolean RecurseSubdirectories);
+					void AddFilesToZip(String* fileSpec, String* currDirectory, int rootPathLength, Boolean recurseSubdirectories, PathInclusion addPathMethod, char* password);
+					void UpdateFilesInZip(ZipFile* tempZipFile, String* fileSpec, String* currDirectory, int rootPathLength, UpdateOption updateWhen, Boolean addNewFiles, Boolean recurseSubdirectories, PathInclusion addPathMethod, char* password);
+					String* GetAdjustedFileName(String* fullFileName, int rootPathLength, PathInclusion addPathMethod);
+					String* GetSearchFileName(String* fileSpec, String* adjustedFileName, Boolean recurseSubdirectories);
 					ZipFile* CreateTempZipFile();
-					void DeleteTempZipFile(ZipFile* TempZipFile);
+					void DeleteTempZipFile(ZipFile* tempZipFile);
 
-					static void AddFileToZip(ZipFile* DestZip, ZipFile* EventSource, String* FullFileName, String* AdjustedFileName, char* Password, String* FunctionTitle);
-					static void CopyFileInZip(CompressedFile* SourceFile, ZipFile* SourceZip, ZipFile* DestZip, String* FunctionTitle);
+					static void AddFileToZip(ZipFile* destZip, ZipFile* eventSource, String* fullFileName, String* adjustedFileName, char* password, String* functionTitle);
+					static void CopyFileInZip(CompressedFile* sourceFile, ZipFile* sourceZip, ZipFile* destZip, String* functionTitle);
 					static String* JustPath(String* path);
 					static String* JustPath(String* path, String* justFileName);
 					static String* AddPathSuffix(String* path);
 					static String* FileNameCharPattern;
-					static Regex* GetFilePatternRegularExpression(String* FileSpec, Boolean CaseSensitive);
-					static String* GetRegexUnicodeChar(__wchar_t Item);
+					static Regex* GetFilePatternRegularExpression(String* fileSpec, Boolean caseSensitive);
+					static String* GetRegexUnicodeChar(__wchar_t item);
 
 					String* fileName;
 					String* password;
