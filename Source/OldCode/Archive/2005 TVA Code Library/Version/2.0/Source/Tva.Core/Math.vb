@@ -21,10 +21,14 @@
 ''' Defines static math functions.
 ''' </summary>
 ''' <remarks></remarks>
-Public Class Math
+Public NotInheritable Class Math
+
+    Private Shared m_randomNumberGenerator As New Security.Cryptography.RNGCryptoServiceProvider
 
     Private Sub New()
+
         ' This class contains only global functions and is not meant to be instantiated
+
     End Sub
 
     ''' <summary>
@@ -48,20 +52,108 @@ Public Class Math
     End Function
 
     ''' <summary>
-    ''' Converts a double value and properly convert it back into a signed 16-bit integer.
+    ''' <para>Generates a cryptographically strong random number between zero and one</para>
     ''' </summary>
-    ''' <param name="source">The double value to be converted.</param>
-    ''' <returns>A 16-bit signed integer.</returns>
-    ''' <remarks></remarks>
-    Public Shared Function ParseInt16(ByVal source As Double) As Int16
+    Public Shared ReadOnly Property RandomNumber() As Double
+        Get
+            Return Bit.ToUInt64(RandomInt64) / UInt64.MaxValue
+        End Get
+    End Property
 
-        Try
-            Return BitConverter.ToInt16(BitConverter.GetBytes(Convert.ToUInt16(source)), 0)
-        Catch
-            Return 0
-        End Try
+    ''' <summary>
+    ''' <para>Generates a cryptographically strong random boolean (e.g., coin toss)</para>
+    ''' </summary>
+    Public Shared ReadOnly Property RandomBoolean() As Boolean
+        Get
+            Dim value As Byte() = Array.CreateInstance(GetType(Byte), 1)
 
-    End Function
+            m_randomNumberGenerator.GetBytes(value)
+
+            Return IIf(value(0) Mod 2 = 0, True, False)
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' <para>Generates a cryptographically strong 8-bit random number</para>
+    ''' </summary>
+    Public Shared ReadOnly Property RandomByte() As Byte
+        Get
+            Dim value As Byte() = Array.CreateInstance(GetType(Byte), 1)
+
+            m_randomNumberGenerator.GetBytes(value)
+
+            Return value(0)
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' <para>Generates a cryptographically strong 8-bit random number between specified values</para>
+    ''' </summary>
+    Public Shared ReadOnly Property RandomByteBetween(ByVal startNumber As Byte, ByVal stopNumber As Byte) As Byte
+        Get
+            If stopNumber < startNumber Then Throw New ArgumentException("stopNumber must be greater than startNumber")
+            Return Convert.ToByte(RandomNumber * (stopNumber - startNumber) + startNumber)
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' <para>Generates a cryptographically strong 16-bit random number</para>
+    ''' </summary>
+    Public Shared ReadOnly Property RandomInt16() As Int16
+        Get
+            Dim value As Byte() = Array.CreateInstance(GetType(Byte), 2)
+
+            m_randomNumberGenerator.GetBytes(value)
+
+            Return BitConverter.ToInt16(value, 0)
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' <para>Generates a cryptographically strong 16-bit random number between specified values</para>
+    ''' </summary>
+    Public Shared ReadOnly Property RandomInt16Between(ByVal startNumber As Int16, ByVal stopNumber As Int16) As Int16
+        Get
+            If stopNumber < startNumber Then Throw New ArgumentException("stopNumber must be greater than startNumber")
+            Return Convert.ToInt16(RandomNumber * (stopNumber - startNumber) + startNumber)
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' <para>Generates a cryptographically strong 32-bit random number</para>
+    ''' </summary>
+    Public Shared ReadOnly Property RandomInt32() As Int32
+        Get
+            Dim value As Byte() = Array.CreateInstance(GetType(Byte), 4)
+
+            m_randomNumberGenerator.GetBytes(value)
+
+            Return BitConverter.ToInt32(value, 0)
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' <para>Generates a cryptographically strong 32-bit random number between specified values</para>
+    ''' </summary>
+    Public Shared ReadOnly Property RandomInt32Between(ByVal startNumber As Int32, ByVal stopNumber As Int32) As Int32
+        Get
+            If stopNumber < startNumber Then Throw New ArgumentException("stopNumber must be greater than startNumber")
+            Return Convert.ToInt32(RandomNumber * (stopNumber - startNumber) + startNumber)
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' <para>Generates a cryptographically strong 64-bit random number</para>
+    ''' </summary>
+    Public Shared ReadOnly Property RandomInt64() As Int64
+        Get
+            Dim value As Byte() = Array.CreateInstance(GetType(Byte), 8)
+
+            m_randomNumberGenerator.GetBytes(value)
+
+            Return BitConverter.ToInt64(value, 0)
+        End Get
+    End Property
 
     ''''</summary>
     ''' <summary>

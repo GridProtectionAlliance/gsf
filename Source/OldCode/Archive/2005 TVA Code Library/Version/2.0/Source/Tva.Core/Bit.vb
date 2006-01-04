@@ -26,17 +26,27 @@
 Public NotInheritable Class Bit
 
     Private Sub New()
+
         ' This class contains only global functions and is not meant to be instantiated
+
     End Sub
 
     ' Byte 0
+    ''' <summary>Bit 0 (0x00000001)</summary>
     Public Const Bit0 As Byte = &H1             ' &H00000001    00000001 = 1
+    ''' <summary>Bit 1 (0x00000002)</summary>
     Public Const Bit1 As Byte = &H2             ' &H00000002    00000010 = 2
+    ''' <summary>Bit 2 (0x00000004)</summary>
     Public Const Bit2 As Byte = &H4             ' &H00000004    00000100 = 4
+    ''' <summary>Bit 3 (0x00000008)</summary>
     Public Const Bit3 As Byte = &H8             ' &H00000008    00001000 = 8
+    ''' <summary>Bit 4 (0x00000010)</summary>
     Public Const Bit4 As Byte = &H10            ' &H00000010    00010000 = 16
+    ''' <summary>Bit 6 (0x00000020)</summary>
     Public Const Bit5 As Byte = &H20            ' &H00000020    00100000 = 32
+    ''' <summary>Bit 6 (0x00000040)</summary>
     Public Const Bit6 As Byte = &H40            ' &H00000040    01000000 = 64
+    ''' <summary>Bit 7 (0x00000080)</summary>
     Public Const Bit7 As Byte = &H80            ' &H00000080    10000000 = 128
 
     ' Byte 1
@@ -69,11 +79,54 @@ Public NotInheritable Class Bit
     Public Const Bit30 As Int32 = 1073741824    ' &H40000000
     Public Const Bit31 As Int32 = -2147483648   ' &H80000000
 
-    ' Returns the high byte (Int8) from a word (Int16).  On Intel platforms this should return the high-order byte 
-    ' of a 16-bit integer value, i.e., the byte value whose in-memory representation is the same as the left-most, 
-    ' most-significant-byte of the integer value.
     ''' <summary>
-    ''' 
+    ''' <para>Performs proper bitwise conversion between signed and unsigned value</para>
+    ''' </summary>
+    ''' <remarks>
+    ''' <para>This function is useful because Convert.ToUInt16 will throw an OverflowException for values less than zero.</para>
+    ''' <para>For example, converts signed 16-bit integer -32768 (i.e., Int16.MinValue) to unsigned 16-bit integer 0 (i.e., UInt16.MinValue).</para>
+    ''' </remarks>
+    <CLSCompliant(False)> _
+    Public Shared ReadOnly Property ToUInt16(ByVal signedInt As Int16) As UInt16
+        Get
+            Return BitConverter.ToUInt16(BitConverter.GetBytes(signedInt), 0)
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' <para>Performs proper bitwise conversion between signed and unsigned value</para>
+    ''' </summary>
+    ''' <remarks>
+    ''' <para>This function is useful because Convert.ToUInt32 will throw an OverflowException for values less than zero.</para>
+    ''' <para>For example, converts signed 32-bit integer -2147483648 (i.e., Int32.MinValue) to unsigned 32-bit integer 0 (i.e., UInt32.MinValue).</para>
+    ''' </remarks>
+    <CLSCompliant(False)> _
+    Public Shared ReadOnly Property ToUInt32(ByVal signedInt As Int32) As UInt32
+        Get
+            Return BitConverter.ToUInt32(BitConverter.GetBytes(signedInt), 0)
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' <para>Performs proper bitwise conversion between signed and unsigned value</para>
+    ''' </summary>
+    ''' <remarks>
+    ''' <para>This function is useful because Convert.ToUInt64 will throw an OverflowException for values less than zero.</para>
+    ''' <para>For example, converts signed 64-bit integer -9223372036854775808 (i.e., Int64.MinValue) to unsigned 64-bit integer 0 (i.e., UInt64.MinValue).</para>
+    ''' </remarks>
+    <CLSCompliant(False)> _
+    Public Shared ReadOnly Property ToUInt64(ByVal signedInt As Int64) As UInt64
+        Get
+            Return BitConverter.ToUInt64(BitConverter.GetBytes(signedInt), 0)
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' <para>
+    ''' Returns the high byte (Int8) from a word (Int16).  On Intel platforms this should return the high-order byte 
+    ''' of a 16-bit integer value, i.e., the byte value whose in-memory representation is the same as the left-most, 
+    ''' most-significant-byte of the integer value.
+    ''' </para>
     ''' </summary>
     ''' <param name="word"></param>
     ''' <returns></returns>
@@ -84,11 +137,12 @@ Public NotInheritable Class Bit
 
     End Function
 
-    '' Returns the high word (Int16) from a double word (Int32).  On Intel platforms this should return the high-order word
-    '' of a 32-bit integer value, i.e., the word value whose in-memory representation is the same as the left-most,
-    '' most-significant-word of the integer value.
     ''' <summary>
-    ''' 
+    ''' <para>
+    ''' Returns the high word (Int16) from a double word (Int32).  On Intel platforms this should return the high-order word
+    ''' of a 32-bit integer value, i.e., the word value whose in-memory representation is the same as the left-most,
+    ''' most-significant-word of the integer value.
+    ''' </para>
     ''' </summary>
     ''' <param name="doubleWord"></param>
     ''' <returns></returns>
@@ -99,11 +153,12 @@ Public NotInheritable Class Bit
 
     End Function
 
-    '' Returns the low byte (Int8) from a word (Int16).  On Intel platforms this should return the low-order byte
-    '' of a 16-bit integer value, i.e., the byte value whose in-memory representation is the same as the right-most,
-    '' least-significant-byte of the integer value.
     ''' <summary>
-    ''' 
+    ''' <para>
+    ''' Returns the low byte (Int8) from a word (Int16).  On Intel platforms this should return the low-order byte
+    ''' of a 16-bit integer value, i.e., the byte value whose in-memory representation is the same as the right-most,
+    ''' least-significant-byte of the integer value.
+    ''' </para>
     ''' </summary>
     ''' <param name="word"></param>
     ''' <returns></returns>
@@ -114,11 +169,12 @@ Public NotInheritable Class Bit
 
     End Function
 
-    '' Returns the low word (Int16) from a double word (Int32).  On Intel platforms this should return the low-order word
-    '' of a 32-bit integer value, i.e., the word value whose in-memory representation is the same as the right-most,
-    '' least-significant-word of the integer value.
     ''' <summary>
-    ''' 
+    ''' <para>
+    ''' Returns the low word (Int16) from a double word (Int32).  On Intel platforms this should return the low-order word
+    ''' of a 32-bit integer value, i.e., the word value whose in-memory representation is the same as the right-most,
+    ''' least-significant-word of the integer value.
+    ''' </para>
     ''' </summary>
     ''' <param name="doubleWord"></param>
     ''' <returns></returns>
@@ -129,9 +185,8 @@ Public NotInheritable Class Bit
 
     End Function
 
-    '' Bits shifts word (Int16) value to the left "n" times
     ''' <summary>
-    ''' 
+    ''' <para>Bits shifts word (Int16) value to the left "n" times</para>
     ''' </summary>
     ''' <param name="word"></param>
     ''' <param name="shiftCount"></param>
@@ -144,9 +199,8 @@ Public NotInheritable Class Bit
 
     End Function
 
-    '' Bits shifts word (Int16) value to the right "n" times
     ''' <summary>
-    ''' 
+    ''' <para>Bits shifts word (Int16) value to the right "n" times</para>
     ''' </summary>
     ''' <param name="word"></param>
     ''' <param name="shiftCount"></param>
@@ -159,9 +213,8 @@ Public NotInheritable Class Bit
 
     End Function
 
-    '' Makes a word (Int16) from two bytes (Int8)
     ''' <summary>
-    ''' 
+    ''' <para>Makes a word (Int16) from two bytes (Int8)</para>
     ''' </summary>
     ''' <param name="high"></param>
     ''' <param name="low"></param>
@@ -173,9 +226,8 @@ Public NotInheritable Class Bit
 
     End Function
 
-    '' Makes a double word (Int32) from two words (Int16)
     ''' <summary>
-    ''' 
+    ''' <para>Makes a double word (Int32) from two words (Int16)</para>
     ''' </summary>
     ''' <param name="high"></param>
     ''' <param name="low"></param>
