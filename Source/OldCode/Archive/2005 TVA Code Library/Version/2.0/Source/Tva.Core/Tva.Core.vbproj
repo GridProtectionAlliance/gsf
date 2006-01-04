@@ -56,6 +56,7 @@
     <Compile Include="Tva.DateTime\Win32TimeZone.vb" />
     <Compile Include="Tva.IO\FilePath.vb" />
     <Compile Include="Tva.Net\SmtpMail.vb" />
+    <Compile Include="Tva.Net\SmtpTraceListener.vb" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Tva.Configuration\" />
