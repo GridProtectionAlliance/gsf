@@ -19,6 +19,7 @@
 Imports System.IO
 Imports System.Text
 Imports System.Security.Cryptography
+Imports Tva.Math.Common
 Imports Tva.Bit
 
 ''' <summary>
@@ -87,7 +88,7 @@ Public NotInheritable Class Cryptography
         Dim rgbKey As Byte() = Encoding.ASCII.GetBytes(encryptionKey)
         Dim rgbIV As Byte() = Encoding.ASCII.GetBytes(encryptionKey)
 
-        Return Base64Encode(Encrypt(Encoding.Unicode.GetBytes(str), rgbKey, rgbIV, strength))
+        Return Convert.ToBase64String(Encrypt(Encoding.Unicode.GetBytes(str), rgbKey, rgbIV, strength))
 
     End Function
 
@@ -286,7 +287,7 @@ Public NotInheritable Class Cryptography
         Dim rgbKey As Byte() = Encoding.ASCII.GetBytes(encryptionKey)
         Dim rgbIV As Byte() = Encoding.ASCII.GetBytes(encryptionKey)
 
-        Return Encoding.Unicode.GetString(Decrypt(Base64Decode(str), rgbKey, rgbIV, strength))
+        Return Encoding.Unicode.GetString(Decrypt(Convert.FromBase64String(str), rgbKey, rgbIV, strength))
 
     End Function
 
@@ -420,6 +421,15 @@ Public NotInheritable Class Cryptography
         End While
 
         decodeStream.FlushFinalBlock()
+
+    End Sub
+
+    ''' <summary>
+    ''' <para>Creates a decrypted file from source file data</para>
+    ''' </summary>
+    Public Shared Sub DecryptFile(ByVal sourceFileName As String, ByVal destFileName As String, ByVal strength As EncryptLevel)
+
+        DecryptFile(sourceFileName, destFileName, Nothing, strength, Nothing)
 
     End Sub
 
@@ -580,118 +590,112 @@ Public NotInheritable Class Cryptography
     ''' </summary>
     Public Shared Function GenerateKey() As String
 
-        Dim key As String
-        Dim keyChar As String
-        Dim keyLen As Integer
+        Dim keyChars As Char()
+        Dim keyChar As Char
         Dim y As Integer
 
-        With RNGCryptoServiceProvider.Create()
-            .
+        ' Generate a character array of unique values
+        With New StringBuilder
+            .Append(StandardKey)
+            .Append(Guid.NewGuid.ToString.ToLower)
+            .Append(System.DateTime.UtcNow.Ticks)
+            .Append(Environment.MachineName)
+            .Append(GetSeedFromKey(Microsoft.VisualBasic.Timer))
+            .Append(Environment.UserDomainName)
+            .Append(Environment.UserName)
+            .Append(Microsoft.VisualBasic.Timer)
+            .Append(System.DateTime.Now.ToString)
+            .Append(Guid.NewGuid.ToString.ToUpper)
+            keyChars = Replace(Replace(Replace(.ToString, " ", "©"), "-", "~"), "/", "%").ToCharArray
         End With
 
-        key = StandardKey & Replace(Replace(Replace( _
-            Guid.NewGuid.ToString() & _
-            System.DateTime.UtcNow.Ticks.ToString & _
-            System.Environment.MachineName & _
-            System.Environment.UserDomainName & _
-            System.Environment.UserName & _
-            Microsoft.VisualBasic.Timer.ToString & _
-            System.DateTime.Now.ToString & _
-            Guid.NewGuid.ToString(), _
-            " ", "©"), "-", "~"), "/", "%")
-
-        keyLen = key.Length
-
-        For x As Integer = 1 To keyLen
-            y = CInt(Int(Rnd() * keyLen) + 1)
+        ' Swap values around in array at random
+        For x As Integer = 0 To keyChars.Length - 1
+            y = RandomInt32Between(1, keyChars.Length) - 1
             If x <> y Then
-                keyChar = Mid(key, x, 1)
-                Mid(key, x, 1) = Mid(key, y, 1)
-                Mid(key, y, 1) = keyChar
+                keyChar = keyChars(x)
+                keyChars(x) = keyChars(y)
+                keyChars(y) = keyChar
             End If
         Next
 
-        Return key
+        Return New String(keyChars)
 
     End Function
-    ''' <summary>
-    ''' <para>Returns a coded string representing a number which can later be decoded with GetSeedFromKey() - function designed for system Timer values.</para>
-    ''' </summary>
-    ' Returns a coded string representing a number which can later be decoded with GetSeedFromKey() - function designed for system Timer values
-    Public Shared Function GetKeyFromSeed(ByVal Seed As Integer) As String
 
-        ' This is a handy algorithm for encoding a secret number
+    ''' <summary>
+    ''' <para>Returns a coded string representing a number which can later be decoded with <see cref="GetSeedFromKey" />.</para>
+    ''' </summary>
+    ''' <remarks>
+    ''' <para>This function was designed for Microsoft.VisualBasic.Timer values.</para>
+    ''' </remarks>
+    Public Shared Function GetKeyFromSeed(ByVal seed As Integer) As String
+
+        ' This is a handy algorithm for encoding a timer value
         ' Use GetSeedFromKey to decode
 
-        Dim intAlpha As Short
-        Dim bytSeed(3) As Byte
-        Dim strKey As String
-        Dim x As Short
+        Dim alphaIndex As Integer
+        Dim seedBytes(3) As Byte
 
-        If Seed < 0 Then
-            Throw New InvalidOperationException("Cannot calculate key from negative seed")
-        End If
-
-        If LoByte(LoWord(Seed)) > 0 Then
-            Throw New InvalidOperationException("Seed is too large (function was designed for timer values)")
-        End If
+        If seed < 0 Then Throw New ArgumentException("Cannot calculate key from negative seed")
+        If LoByte(LoWord(seed)) > 0 Then Throw New ArgumentException("Seed is too large (function was designed for Microsoft.VisualBasic.Timer values)")
 
         ' Break seed into its component bytes
-        bytSeed(0) = HiByte(HiWord(Seed))
-        bytSeed(1) = LoByte(HiWord(Seed))
-        bytSeed(2) = HiByte(LoWord(Seed))
+        seedBytes(0) = HiByte(HiWord(seed))
+        seedBytes(1) = LoByte(HiWord(seed))
+        seedBytes(2) = HiByte(LoWord(seed))
 
         ' Create alpha-numeric key string
-        Randomize()
-        strKey = ""
+        With New StringBuilder
+            For x As Integer = 0 To 2
+                alphaIndex = RandomInt32Between(0, 25)
+                If x > 0 Then .Append("-"c)
+                .Append(Chr(Asc("A"c) + (25 - alphaIndex)))
+                .Append(seedBytes(x) + alphaIndex)
+            Next
 
-        For x = 0 To 2
-            intAlpha = Int(Rnd() * 26)
-            strKey = strKey & IIf(x > 0, "-", "") & Chr(Asc("A") + (25 - intAlpha)) & (bytSeed(x) + intAlpha)
-        Next
-
-        Return strKey
+            Return .ToString
+        End With
 
     End Function
-    ''' <summary>
-    ''' <para>Returns the number from a string coded with GetKeyFromSeed().</para>
-    ''' </summary>
-    ' Returns the number from a string coded with GetKeyFromSeed()
-    Public Shared Function GetSeedFromKey(ByVal Key As String) As Integer
 
-        Dim bytSeed(3) As Byte
-        Dim intPos1 As Integer
-        Dim intPos2 As Integer
-        Dim strCode As String
-        Dim intCalc As Short
-        Dim x As Integer
+    ''' <summary>
+    ''' <para>Returns the number from a string coded with <see cref="GetKeyFromSeed" />.</para>
+    ''' </summary>
+    Public Shared Function GetSeedFromKey(ByVal key As String) As Integer
+
+        Dim seedBytes(3) As Byte
+        Dim delimeter1 As Integer
+        Dim delimeter2 As Integer
+        Dim code As String = ""
+        Dim value As Integer
 
         ' Remove all white space from specified parameter
-        Key = UCase(RemoveWhiteSpace(Key))
+        key = key.Trim.ToUpper
 
-        If Len(Key) > 5 And Len(Key) < 15 Then
+        If Len(key) > 5 And Len(key) < 15 Then
             ' Get Delimiter positions
-            intPos1 = InStr(Key, "-")
-            intPos2 = InStr(intPos1 + 1, Key, "-", 0)
+            delimeter1 = InStr(key, "-")
+            delimeter2 = InStr(delimeter1 + 1, key, "-", 0)
 
-            If intPos1 > 0 And intPos2 > 0 Then
-                For x = 0 To 2
+            If delimeter1 > 0 And delimeter2 > 0 Then
+                For x As Integer = 0 To 2
                     ' Extract encoded byte
                     Select Case x
                         Case 0
-                            strCode = Left(Key, intPos1 - 1)
+                            code = Left(key, delimeter1 - 1)
                         Case 1
-                            strCode = Mid(Key, intPos1 + 1, intPos2 - intPos1 - 1)
+                            code = Mid(key, delimeter1 + 1, delimeter2 - delimeter1 - 1)
                         Case 2
-                            strCode = Right(Key, Len(Key) - intPos2)
+                            code = Right(key, Len(key) - delimeter2)
                     End Select
 
                     ' Calculate byte
-                    intCalc = Val(Right(strCode, Len(strCode) - 1)) - (25 - (Asc(Left(strCode, 1)) - Asc("A")))
+                    value = Val(Right(code, Len(code) - 1)) - (25 - (Asc(Left(code, 1)) - Asc("A")))
 
                     ' Validate calculation
-                    If intCalc >= 0 And intCalc <= 255 Then
-                        bytSeed(x) = CByte(intCalc)
+                    If value >= 0 And value <= 255 Then
+                        seedBytes(x) = CByte(value)
                     Else
                         ' Invalid key, exit with -1
                         Return -1
@@ -699,7 +703,7 @@ Public NotInheritable Class Cryptography
                 Next
 
                 ' Create seed from its component bytes
-                Return MakeDWord(MakeWord(bytSeed(0), bytSeed(1)), MakeWord(bytSeed(2), 0))
+                Return MakeDWord(MakeWord(seedBytes(0), seedBytes(1)), MakeWord(seedBytes(2), 0))
             End If
         End If
 
