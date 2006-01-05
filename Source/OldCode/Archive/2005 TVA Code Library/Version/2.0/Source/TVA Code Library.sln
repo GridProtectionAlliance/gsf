@@ -35,9 +35,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build and Deploy Scripts", 
 		..\Build Scripts\RebuildAllDebug.bat = ..\Build Scripts\RebuildAllDebug.bat
 	EndProjectSection
 EndProject
+Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "Tva.Security", "Tva.Security\Tva.Security.vbproj", "{A02EDB9D-4A62-41E0-BB60-5B942E2C7490}"
+EndProject
 Global
 	GlobalSection(SourceCodeControl) = preSolution
-		SccNumberOfProjects = 6
+		SccNumberOfProjects = 7
 		SccProjectName0 = \u0022$/TVA\u0020Code\u0020Library/Version/2.0\u0022,\u0020HBAAAAAA
 		SccLocalPath0 = ..
 		SccProvider0 = MSSCCI:Microsoft\u0020Visual\u0020SourceSafe
@@ -68,6 +70,11 @@ Global
 		SccLocalPath5 = ..
 		CanCheckoutShared = false
 		SccProjectFilePathRelativizedFromConnection5 = Source\\Tva.IO.Compression\\
+		SccProjectUniqueName6 = Tva.Security\\Tva.Security.vbproj
+		SccProjectTopLevelParentUniqueName6 = TVA\u0020Code\u0020Library.sln
+		SccLocalPath6 = ..
+		CanCheckoutShared = false
+		SccProjectFilePathRelativizedFromConnection6 = Source\\Tva.Security\\
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -128,6 +135,16 @@ Global
 		{F611B9BA-C69D-449B-B596-FABFB746EA2A}.Release|Mixed Platforms.Build.0 = Release|Win32
 		{F611B9BA-C69D-449B-B596-FABFB746EA2A}.Release|Win32.ActiveCfg = Release|Win32
 		{F611B9BA-C69D-449B-B596-FABFB746EA2A}.Release|Win32.Build.0 = Release|Win32
+		{A02EDB9D-4A62-41E0-BB60-5B942E2C7490}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A02EDB9D-4A62-41E0-BB60-5B942E2C7490}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A02EDB9D-4A62-41E0-BB60-5B942E2C7490}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{A02EDB9D-4A62-41E0-BB60-5B942E2C7490}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{A02EDB9D-4A62-41E0-BB60-5B942E2C7490}.Debug|Win32.ActiveCfg = Debug|Any CPU
+		{A02EDB9D-4A62-41E0-BB60-5B942E2C7490}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A02EDB9D-4A62-41E0-BB60-5B942E2C7490}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A02EDB9D-4A62-41E0-BB60-5B942E2C7490}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{A02EDB9D-4A62-41E0-BB60-5B942E2C7490}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{A02EDB9D-4A62-41E0-BB60-5B942E2C7490}.Release|Win32.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -138,6 +155,7 @@ Global
 		{81963CD0-0A0E-4765-8F0A-719C942301DA} = {4F631798-355B-4607-AEEB-742B670AD834}
 		{29A7B606-D1BC-4A4B-96D0-258D5A72C3EC} = {4F631798-355B-4607-AEEB-742B670AD834}
 		{F611B9BA-C69D-449B-B596-FABFB746EA2A} = {4F631798-355B-4607-AEEB-742B670AD834}
+		{A02EDB9D-4A62-41E0-BB60-5B942E2C7490} = {4F631798-355B-4607-AEEB-742B670AD834}
 		{2E2A8AA0-A387-4245-A419-496B50CB7939} = {CDC349A8-4D7D-4D2F-8D15-8CE2359FBF3D}
 		{1BFB8969-4479-4EAB-8CCB-1CF0C3DE2DEE} = {CDC349A8-4D7D-4D2F-8D15-8CE2359FBF3D}
 	EndGlobalSection

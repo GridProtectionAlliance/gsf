@@ -14,6 +14,8 @@
 '       Original version of source code generated
 '  12/29/2005 - Pinal C Patel
 '       2.0 version of source code migrated from 1.1 source (TVA.Shared.Math)
+'  01/04/2006 - James R Carroll
+'       Added crytographically strong random number generation functions
 '
 '*******************************************************************************************************
 
@@ -152,6 +154,16 @@ Public NotInheritable Class Math
             m_randomNumberGenerator.GetBytes(value)
 
             Return BitConverter.ToInt64(value, 0)
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' <para>Generates a cryptographically strong 64-bit random number between specified values</para>
+    ''' </summary>
+    Public Shared ReadOnly Property RandomInt32Between(ByVal startNumber As Int64, ByVal stopNumber As Int64) As Int64
+        Get
+            If stopNumber < startNumber Then Throw New ArgumentException("stopNumber must be greater than startNumber")
+            Return Convert.ToInt64(RandomNumber * (stopNumber - startNumber) + startNumber)
         End Get
     End Property
 

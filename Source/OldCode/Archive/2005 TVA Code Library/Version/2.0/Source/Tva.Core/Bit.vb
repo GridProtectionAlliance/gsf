@@ -20,6 +20,8 @@
 '           as the older code was doing...
 '  12/29/2005 - Pinal C Patel
 '       2.0 version of source code migrated from 1.1 source (TVA.Shared.Bit)
+'  01/04/2006 - James R Carroll
+'       Added bitwise signed to unsigned integer conversion functions
 '
 '*******************************************************************************************************
 
