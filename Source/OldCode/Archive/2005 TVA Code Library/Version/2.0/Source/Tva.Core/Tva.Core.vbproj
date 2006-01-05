@@ -47,16 +47,18 @@
   <ItemGroup>
     <Compile Include="Assembly.vb" />
     <Compile Include="Bit.vb" />
+    <Compile Include="Tva.Interop\Convert.vb" />
     <Compile Include="Identity.vb" />
-    <Compile Include="Math.vb" />
     <Compile Include="My Project\AssemblyInfo.vb" />
     <Compile Include="Tva.Collections\ProcessQueue.vb" />
     <Compile Include="Tva.DateTime\Common.vb" />
     <Compile Include="Tva.DateTime\NtpTimeTag.vb" />
     <Compile Include="Tva.DateTime\Win32TimeZone.vb" />
     <Compile Include="Tva.IO\FilePath.vb" />
-    <Compile Include="Tva.Net\SmtpMail.vb" />
-    <Compile Include="Tva.Net\SmtpTraceListener.vb" />
+    <Compile Include="Tva.Math\Common.vb" />
+    <Compile Include="Tva.Math\CompositeValues.vb" />
+    <Compile Include="Tva.Net\Mail\Common.vb" />
+    <Compile Include="Tva.Net\Mail\SmtpTraceListener.vb" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Tva.Configuration\" />
@@ -64,7 +66,6 @@
     <Folder Include="Tva.Data\" />
     <Folder Include="Tva.ErrorManagement\" />
     <Folder Include="Tva.Exception\" />
-    <Folder Include="Tva.Interop\" />
     <Folder Include="Tva.Net\Sockets\" />
     <Folder Include="Tva.Remoting\" />
     <Folder Include="Tva.Services\" />
