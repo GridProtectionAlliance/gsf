@@ -21,6 +21,9 @@
 
 Namespace Interop
 
+    ''' <summary>
+    ''' <para>Endian Byte Order Enumeration</para>
+    ''' </summary>
     Public Enum Endianness
         BigEndian
         LittleEndian
@@ -29,6 +32,13 @@ Namespace Interop
     ''' <summary>
     ''' <para>Endian byte order interoperability class</para>
     ''' </summary>
+    ''' <remarks>
+    ''' <para>
+    ''' Intel systems use little-endian byte order, other systems, such as Unix, use big-endian byte ordering.
+    ''' Little-endian ordering means bits are ordered such that the bit whose in-memory representation is left-most is the most-significant-bit in a byte.
+    ''' Big-endian ordering means bits are ordered such that the bit whose in-memory representation is right-most is the most-significant-bit in a byte.
+    ''' </para>
+    ''' </remarks>
     Public Class EndianOrder
 
         ' Create shared big-endian class
@@ -37,8 +47,8 @@ Namespace Interop
         ' Create shared little-endian class
         Public Shared LittleEndian As New EndianOrder(Endianness.LittleEndian)
 
-        Public Delegate Sub CopyFunction(ByVal sourceArray As Array, ByVal sourceIndex As Integer, ByVal destinationArray As Array, ByVal destinationIndex As Integer, ByVal length As Integer)
-        Public Delegate Function CoerceByteOrderFunction(ByVal buffer As Byte()) As Byte()
+        Private Delegate Sub CopyFunction(ByVal sourceArray As Array, ByVal sourceIndex As Integer, ByVal destinationArray As Array, ByVal destinationIndex As Integer, ByVal length As Integer)
+        Private Delegate Function CoerceByteOrderFunction(ByVal buffer As Byte()) As Byte()
 
         Private m_targetEndianness As Endianness
         Private m_copy As CopyFunction
