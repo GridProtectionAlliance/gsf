@@ -18,7 +18,7 @@
 Namespace Interop
 
     ''' <summary>
-    ''' Defines specialized data type conversion functions
+    ''' <para>Defines specialized data type conversion functions</para>
     ''' </summary>
     Public NotInheritable Class Convert
 

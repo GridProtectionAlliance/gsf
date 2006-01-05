@@ -54,6 +54,9 @@
     <Compile Include="Tva.DateTime\Common.vb" />
     <Compile Include="Tva.DateTime\NtpTimeTag.vb" />
     <Compile Include="Tva.DateTime\Win32TimeZone.vb" />
+    <Compile Include="Tva.Interop\EndianOrder.vb" />
+    <Compile Include="Tva.Interop\Unix\TimeTag.vb" />
+    <Compile Include="Tva.Interop\Windows\IniFile.vb" />
     <Compile Include="Tva.IO\FilePath.vb" />
     <Compile Include="Tva.Math\Common.vb" />
     <Compile Include="Tva.Math\CompositeValues.vb" />
