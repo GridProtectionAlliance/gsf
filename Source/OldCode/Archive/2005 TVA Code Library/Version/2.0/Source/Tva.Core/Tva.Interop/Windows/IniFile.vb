@@ -42,7 +42,7 @@ Namespace Interop.Windows
             ByVal lpFileName As String) _
         As Integer
 
-        Private Declare Ansi Function GetPrivateProfileSectionNames Lib "kernel32.DLL" Alias "GetPrivateProfileSectionNamesA" ( _
+        Private Declare Ansi Function GetPrivateProfileSectionNames Lib "kernel32" Alias "GetPrivateProfileSectionNamesA" ( _
             ByVal lpszReturnBuffer As Byte(), _
             ByVal nSize As Integer, _
             ByVal lpFileName As String) _
