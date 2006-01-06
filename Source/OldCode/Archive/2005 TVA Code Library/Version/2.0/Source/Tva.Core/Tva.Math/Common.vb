@@ -19,6 +19,8 @@
 '
 '*******************************************************************************************************
 
+Imports Tva.Interop
+
 Namespace Math
 
     ''' <summary>
@@ -58,7 +60,7 @@ Namespace Math
         ''' </summary>
         Public Shared ReadOnly Property RandomNumber() As Double
             Get
-                Return Convert.ToUInt64(RandomInt64) / UInt64.MaxValue
+                Return BitwiseCast.ToUInt64(RandomInt64) / UInt64.MaxValue
             End Get
         End Property
 
@@ -160,7 +162,7 @@ Namespace Math
         ''' <summary>
         ''' <para>Generates a cryptographically strong 64-bit random integer between specified values</para>
         ''' </summary>
-        Public Shared ReadOnly Property RandomInt32Between(ByVal startNumber As Int64, ByVal stopNumber As Int64) As Int64
+        Public Shared ReadOnly Property RandomInt64Between(ByVal startNumber As Int64, ByVal stopNumber As Int64) As Int64
             Get
                 If stopNumber < startNumber Then Throw New ArgumentException("stopNumber must be greater than startNumber")
                 Return Convert.ToInt64(RandomNumber * (stopNumber - startNumber) + startNumber)
