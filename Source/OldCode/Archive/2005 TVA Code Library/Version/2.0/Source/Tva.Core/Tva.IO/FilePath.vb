@@ -70,10 +70,10 @@ Namespace IO
 
         End Function
 
-        ''''<summary>
-        ''''  <para>Returns a regular expression that simulates wildcard matching for filenames (wildcards are defined as '*' or '?' characters)</para>
-        ''''</summary>
-        ''''<param name="FileSpec"> Required. File spec . </param>
+        ''' <summary>
+        ''' <para>Returns a regular expression that simulates wildcard matching for filenames (wildcards are defined as '*' or '?' characters)</para>
+        ''' </summary>
+        ''' <param name="FileSpec"> Required. File spec . </param>
         Public Shared Function GetFilePatternRegularExpression(ByVal fileSpec As String) As String
 
             Dim filePattern As String

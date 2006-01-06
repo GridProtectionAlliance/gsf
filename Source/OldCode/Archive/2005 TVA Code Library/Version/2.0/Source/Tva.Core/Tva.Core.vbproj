@@ -47,7 +47,7 @@
   <ItemGroup>
     <Compile Include="Assembly.vb" />
     <Compile Include="Bit.vb" />
-    <Compile Include="Tva.Interop\Convert.vb" />
+    <Compile Include="Tva.Interop\BitwiseCast.vb" />
     <Compile Include="Identity.vb" />
     <Compile Include="My Project\AssemblyInfo.vb" />
     <Compile Include="Tva.Collections\ProcessQueue.vb" />
