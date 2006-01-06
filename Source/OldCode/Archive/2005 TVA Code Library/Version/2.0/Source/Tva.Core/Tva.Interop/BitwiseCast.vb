@@ -15,8 +15,6 @@
 '
 '*******************************************************************************************************
 
-' TODO: Rename this class name to BitwiseCast.vb once checked in
-
 Namespace Interop
 
     ''' <summary>
