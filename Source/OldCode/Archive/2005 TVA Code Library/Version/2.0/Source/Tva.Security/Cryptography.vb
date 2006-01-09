@@ -39,12 +39,14 @@ Public NotInheritable Class Cryptography
     ''' </remarks>
     Public Enum EncryptLevel
         ''' <summary>Adds simple multi-alogorithm XOR based encryption</summary>
+        ''' <remarks>This is the fastest and weakest level of encyption</remarks>
         [Level1]
         ''' <summary>Adds TripleDES based encryption</summary>
         [Level2]
         ''' <summary>Adds RC2 based encryption</summary>
         [Level3]
         ''' <summary>Adds RijndaelManaged based enryption</summary>
+        ''' <remarks>This is the slowest and strongest level of encyption</remarks>
         [Level4]
     End Enum
 
