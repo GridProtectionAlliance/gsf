@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  Tva.Collections.ProcessQueue.vb - Multi-threaded Processing Queue Class
+'  Tva.Collections.AsynchronousProcessQueue.vb - Multi-threaded Processing Queue Class
 '  Copyright © 2005 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005
@@ -14,6 +14,8 @@
 '       Original version of source code generated
 '  01/05/2006 - James R Carroll
 '       Made process queue a generic collection
+'  01/07/2006 - James R Carroll
+'       Reworked threading architecture
 '
 '*******************************************************************************************************
 
@@ -26,11 +28,12 @@ Namespace Collections
     ''' </summary>
     ''' <typeparam name="T">Type of object to process</typeparam>
     ''' <remarks>
-    ''' <para>This class acts as a strongly typed collection of objects to be processed</para>
+    ''' <para>This class acts as a strongly typed collection of objects to be processed.</para>
+    ''' <para>Note that the queue will not start processing until the Start method is called.</para>
     ''' </remarks>
-    Public Class ProcessQueue(Of T)
+    Public Class AsynchronousProcessQueue(Of T)
 
-        Implements IList(Of T)
+        Inherits ProcessQueueBase(Of T)
 
         Private Class ProcessThread
 
@@ -47,9 +50,9 @@ Namespace Collections
 
             End Sub
 
-            Public Sub Join(ByVal timeout As Integer)
+            Public Sub WaitUntil(ByVal timeout As Integer)
 
-                m_thread.Join(timeout)
+                If Not m_thread.Join(timeout) Then m_thread.Abort()
 
             End Sub
 
@@ -61,19 +64,13 @@ Namespace Collections
 
         End Class
 
-        Public Delegate Sub ProcessItemFunctionSignature(ByVal item As T)
-        Public Event ProcessException(ByVal ex As Exception)
-
         Public Const DefaultProcessInterval As Integer = 100
         Public Const DefaultMaximumThreads As Integer = 5
         Public Const DefaultProcessTimeout As Integer = Timeout.Infinite
 
-        Private m_processItemFunction As ProcessItemFunctionSignature
         Private WithEvents m_processTimer As System.Timers.Timer
-        Private m_threadCount As Int32
-        Private m_maximumThreads As Int32
-        Private m_timeoutDuration As Int32
-        Private m_processQueue As List(Of T)    ' TODO: Synchronize process queue throughout this class...
+        Private m_maximumThreads As Integer
+        Private m_processTimeout As Integer
 
         ''' <summary>
         ''' Create a process queue with the default settings: ProcessInterval = 100, MaximumThreads = 5, ProcessTimeout = Infinite
@@ -98,28 +95,18 @@ Namespace Collections
         ''' </summary>
         Public Sub New(ByVal processItemFunction As ProcessItemFunctionSignature, ByVal processInterval As Integer, ByVal maximumThreads As Integer, ByVal processTimeout As Integer)
 
-            m_processItemFunction = processItemFunction
-            m_processTimer = New System.Timers.Timer
+            MyBase.New(processItemFunction)
             m_maximumThreads = maximumThreads
-            m_timeoutDuration = processTimeout
-            m_processQueue = New List(Of T)
+            m_processTimeout = processTimeout
+            m_processTimer = New System.Timers.Timer
 
             With m_processTimer
-                .AutoReset = False
                 .Interval = processInterval
-                .Enabled = True
+                .AutoReset = True
+                .Enabled = False
             End With
 
         End Sub
-
-        Public Property ProcessItemFunction() As ProcessItemFunctionSignature
-            Get
-                Return m_processItemFunction
-            End Get
-            Set(ByVal value As ProcessItemFunctionSignature)
-                m_processItemFunction = value
-            End Set
-        End Property
 
         Public Property ProcessInterval() As Integer
             Get
@@ -129,6 +116,18 @@ Namespace Collections
                 m_processTimer.Interval = value
             End Set
         End Property
+
+        Public Overrides Sub Start()
+
+            m_processTimer.Enabled = True
+
+        End Sub
+
+        Public Overrides Sub [Stop]()
+
+            m_processTimer.Enabled = False
+
+        End Sub
 
         Public Property MaximumThreads() As Integer
             Get
@@ -141,186 +140,60 @@ Namespace Collections
 
         Public Property ProcessTimeout() As Integer
             Get
-                Return m_timeoutDuration
+                Return m_processTimeout
             End Get
             Set(ByVal value As Integer)
-                m_timeoutDuration = value
+                m_processTimeout = value
             End Set
-        End Property
-
-        Public ReadOnly Property ThreadCount() As Integer
-            Get
-                Return m_threadCount
-            End Get
-        End Property
-
-        Public Sub Add(ByVal item As T) Implements System.Collections.Generic.IList(Of T).Add
-
-            SyncLock m_processQueue
-                m_processQueue.Add(item)
-            End SyncLock
-
-        End Sub
-
-        Public Sub Push(ByVal item As T)
-
-            SyncLock m_processQueue
-                m_processQueue.Insert(0, item)
-            End SyncLock
-
-        End Sub
-
-        Public Sub Insert(ByVal index As Integer, ByVal item As T) Implements IList(Of T).Insert
-
-            SyncLock m_processQueue
-                m_processQueue.Insert(index, item)
-            End SyncLock
-
-        End Sub
-
-        Public Sub CopyTo(ByVal array() As T, ByVal arrayIndex As Integer) Implements System.Collections.Generic.IList(Of T).CopyTo
-
-            SyncLock m_processQueue
-                m_processQueue.CopyTo(array, arrayIndex)
-            End SyncLock
-
-        End Sub
-
-        Private Function GetIEnumerator() As System.Collections.IEnumerator Implements System.Collections.IEnumerable.GetEnumerator
-
-            Return m_processQueue.GetEnumerator()
-
-        End Function
-
-        Public Function GetEnumerator() As System.Collections.Generic.IEnumerator(Of T) Implements System.Collections.Generic.IEnumerable(Of T).GetEnumerator
-
-            Return m_processQueue.GetEnumerator()
-
-        End Function
-
-        Public Function Pop() As T
-
-            SyncLock m_processQueue
-                Dim poppedItem As T = m_processQueue(0)
-                m_processQueue.RemoveAt(0)
-                Return poppedItem
-            End SyncLock
-
-        End Function
-
-        Public Function Poop() As T
-
-            SyncLock m_processQueue
-                Dim lastIndex As Integer = m_processQueue.Count() - 1
-                Dim poopedItem As T = m_processQueue(lastIndex)
-                m_processQueue.RemoveAt(lastIndex)
-                Return poopedItem
-            End SyncLock
-
-        End Function
-
-        Default Public Property Item(ByVal index As Integer) As T Implements IList(Of T).Item
-            Get
-                SyncLock m_processQueue
-                    Return m_processQueue(index)
-                End SyncLock
-            End Get
-            Set(ByVal value As T)
-                SyncLock m_processQueue
-                    m_processQueue(index) = value
-                End SyncLock
-            End Set
-        End Property
-
-        Public Function IndexOf(ByVal item As T) As Integer Implements System.Collections.Generic.IList(Of T).IndexOf
-
-            SyncLock m_processQueue
-                Return m_processQueue.IndexOf(item)
-            End SyncLock
-
-        End Function
-
-        Public ReadOnly Property Count() As Integer Implements System.Collections.Generic.IList(Of T).Count
-            Get
-                SyncLock m_processQueue
-                    Return m_processQueue.Count()
-                End SyncLock
-            End Get
-        End Property
-
-        Public Sub Clear() Implements System.Collections.Generic.IList(Of T).Clear
-
-            SyncLock m_processQueue
-                m_processQueue.Clear()
-            End SyncLock
-
-        End Sub
-
-        Public Function Contains(ByVal item As T) As Boolean Implements System.Collections.Generic.IList(Of T).Contains
-
-            SyncLock m_processQueue
-                Return m_processQueue.Contains(item)
-            End SyncLock
-
-        End Function
-
-        Public Function Remove(ByVal item As T) As Boolean Implements System.Collections.Generic.IList(Of T).Remove
-
-            SyncLock m_processQueue
-                m_processQueue.Remove(item)
-            End SyncLock
-
-        End Function
-
-        Public Sub RemoveAt(ByVal index As Integer) Implements IList(Of T).RemoveAt
-
-            SyncLock m_processQueue
-                m_processQueue.RemoveAt(index)
-            End SyncLock
-
-        End Sub
-
-        Public ReadOnly Property SyncRoot() As Object
-            Get
-                Return m_processQueue
-            End Get
-        End Property
-
-        Public Sub AddRange(ByVal collection As IEnumerable(Of T))
-
-            SyncLock m_processQueue
-                m_processQueue.AddRange(collection)
-            End SyncLock
-
-        End Sub
-
-        Public ReadOnly Property IsReadOnly() As Boolean Implements System.Collections.Generic.IList(Of T).IsReadOnly
-            Get
-                Return False
-            End Get
         End Property
 
         Private Sub m_processTimer_Elapsed(ByVal sender As Object, ByVal e As System.Timers.ElapsedEventArgs) Handles m_processTimer.Elapsed
+
+            Dim nextItem As T
+
             Try
-                ' Spawn a new process thread to process event to be processed if the number of current 
-                ' process threads is less than the maximum allowable process threads.
-                If Count > 0 AndAlso m_threadCount < m_maximumThreads Then
-                    With New ProcessThread(m_processItemFunction, Pop())
-                        Try
-                            m_threadCount += 1
-                            .Join(m_timeoutDuration)
-                        Catch ex As Exception
-                            RaiseEvent ProcessException(ex)
-                        Finally
-                            m_threadCount -= 1
-                        End Try
-                    End With
+                ' Handle all queue operations for getting next item in a single synchronous operation.
+                ' We keep work to be done here down to a mimimum amount of time
+                SyncLock m_processQueue
+                    ' We get next item to be processed if the number of current process threads is less
+                    ' than the maximum allowable number of process threads.
+                    If m_processQueue.Count > 0 AndAlso m_threadCount < m_maximumThreads Then
+                        ' Retrieve first item to be processed
+                        nextItem = m_processQueue(0)
+
+                        ' We increment the thread counter using a thread safe operation
+                        Interlocked.Increment(m_threadCount)
+
+                        ' Remove the item about to be processed from the queue
+                        m_processQueue.RemoveAt(0)
+                    End If
+                End SyncLock
+
+                If nextItem IsNot Nothing Then
+                    If m_processTimeout = Timeout.Infinite Then
+                        ' If we have an item to process and the process queue wasn't setup with a process timeout, we just use
+                        ' the current timer thread to process the next item taking as long as we need for it to complete.  The
+                        ' next item in the queue will begin processing even if this item isn't completed - but no more than
+                        ' the specified number of maximum threads will be spawned at once.
+                        m_processItemFunction(nextItem)
+                    Else
+                        ' If we have an item to process and specified a process timeout we create a new thread to handle the
+                        ' processing.  The timer event is already running on a new thread so the only reason we create a another
+                        ' thread is so that we can implement the process timeout if the process takes to long to run.  We do this
+                        ' by joining the timer thread (which will block it) until the specified interval has passed or the process
+                        ' thread completes, whichever comes first.  This is a safe operation since the timer event was already
+                        ' an independent thread and won't block any other processing, including the next timer event.
+                        With New ProcessThread(m_processItemFunction, nextItem)
+                            .WaitUntil(m_processTimeout)
+                        End With
+                    End If
                 End If
             Catch ex As Exception
-                RaiseEvent ProcessException(ex)
+                ' No exceptions are generally expected here, but if any occur we will report them
+                RaiseProcessException(ex)
             Finally
-                ' Keep process timer running...
-                m_processTimer.Enabled = True
+                ' Decrement thread count if item was processed
+                If nextItem IsNot Nothing Then Interlocked.Decrement(m_threadCount)
             End Try
 
         End Sub
