@@ -64,8 +64,8 @@
     <Compile Include="Tva.IO\FilePath.vb" />
     <Compile Include="Tva.Math\Common.vb" />
     <Compile Include="Tva.Math\CompositeValues.vb" />
-    <Compile Include="Tva.Net\Mail\Common.vb" />
-    <Compile Include="Tva.Net\Mail\SmtpTraceListener.vb" />
+    <Compile Include="Tva.Net\Smtp\Common.vb" />
+    <Compile Include="Tva.Net\Smtp\TraceListener.vb" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Tva.Configuration\" />
@@ -73,6 +73,8 @@
     <Folder Include="Tva.Data\" />
     <Folder Include="Tva.ErrorManagement\" />
     <Folder Include="Tva.Exception\" />
+    <Folder Include="Tva.Net\Ftp\" />
+    <Folder Include="Tva.Net\Http\" />
     <Folder Include="Tva.Net\Sockets\" />
     <Folder Include="Tva.Remoting\" />
     <Folder Include="Tva.Services\" />
