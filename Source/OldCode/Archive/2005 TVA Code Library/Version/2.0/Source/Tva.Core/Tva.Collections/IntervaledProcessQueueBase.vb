@@ -33,7 +33,7 @@ Namespace Collections
     ''' </remarks>
     Public MustInherit Class IntervaledProcessQueueBase(Of T)
 
-        Inherits ProcessQueueBase(Of T)
+        Inherits ProcessListBase(Of T)
 
         Private Class ProcessThread
 
@@ -81,7 +81,7 @@ Namespace Collections
 
         Public Sub New(ByVal processItemFunction As ProcessItemFunctionSignature, ByVal processInterval As Integer, ByVal maximumThreads As Integer, ByVal processTimeout As Integer, ByVal requeueOnTimeout As Boolean)
 
-            MyBase.New(processItemFunction)
+            MyBase.New(processItemFunction, New List(Of T))
             m_maximumThreads = maximumThreads
             m_processTimeout = processTimeout
             m_requeueOnTimeout = requeueOnTimeout
@@ -151,7 +151,7 @@ Namespace Collections
                 ' Handle all queue operations for getting next item in a single synchronous operation.
                 ' We keep work to be done here down to a mimimum amount of time
                 SyncLock SyncRoot
-                    With InternalQueue
+                    With InternalList
                         ' We get next item to be processed if the number of current process threads is less
                         ' than the maximum allowable number of process threads.
                         If .Count > 0 AndAlso ThreadCount < m_maximumThreads Then
