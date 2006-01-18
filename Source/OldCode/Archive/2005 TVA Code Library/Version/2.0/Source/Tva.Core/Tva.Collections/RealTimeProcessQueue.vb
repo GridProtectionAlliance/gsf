@@ -3,19 +3,15 @@
 '  Copyright © 2005 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005
-'  Primary Developer: Pinal C Patel, Operations Data Architecture [TVA]
+'  Primary Developer: James R Carroll, Operations Data Architecture [TVA]
 '      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
 '       Phone: 423/751-2250
-'       Email: pcpatel@tva.gov
+'       Email: jrcarrol@tva.gov
 '
 '  Code Modification History:
 '  -----------------------------------------------------------------------------------------------------
-'  01/04/2006 - Pinal C Patel
-'       Original version of source code generated
-'  01/05/2006 - James R Carroll
-'       Made process queue a generic collection
 '  01/07/2006 - James R Carroll
-'       Reworked threading architecture
+'       Original version of source code generated
 '
 '*******************************************************************************************************
 
@@ -33,43 +29,16 @@ Namespace Collections
     ''' </remarks>
     Public Class RealTimeProcessQueue(Of T)
 
-        Inherits ProcessQueueBase(Of T)
+        Inherits ProcessListBase(Of T)
 
-        '''' <summary>
-        '''' Create a process queue with the default settings: ProcessInterval = 100, MaximumThreads = 5, ProcessTimeout = Infinite
-        '''' </summary>
-        'Public Sub New(ByVal processItemFunction As ProcessItemFunctionSignature)
+        ''' <summary>
+        ''' Create a process queue using the specified settings
+        ''' </summary>
+        Public Sub New(ByVal processItemFunction As ProcessItemFunctionSignature)
 
-        '    Me.New(processItemFunction, DefaultProcessInterval, DefaultMaximumThreads, DefaultProcessTimeout)
+            MyBase.New(processItemFunction, New List(Of T))
 
-        'End Sub
-
-        '''' <summary>
-        '''' Create a process queue with the default settings: ProcessInterval = 100, ProcessTimeout = Infinite
-        '''' </summary>
-        'Public Sub New(ByVal processItemFunction As ProcessItemFunctionSignature, ByVal maximumThreads As Integer)
-
-        '    Me.New(processItemFunction, DefaultProcessInterval, maximumThreads, DefaultProcessTimeout)
-
-        'End Sub
-
-        '''' <summary>
-        '''' Create a process queue using the specified settings
-        '''' </summary>
-        'Public Sub New(ByVal processItemFunction As ProcessItemFunctionSignature, ByVal processInterval As Integer, ByVal maximumThreads As Integer, ByVal processTimeout As Integer)
-
-        '    MyBase.New(processItemFunction)
-        '    m_maximumThreads = maximumThreads
-        '    m_processTimeout = processTimeout
-        '    m_processTimer = New System.Timers.Timer
-
-        '    With m_processTimer
-        '        .Interval = processInterval
-        '        .AutoReset = True
-        '        .Enabled = False
-        '    End With
-
-        'End Sub
+        End Sub
 
         Public Overrides Sub Start()
 
