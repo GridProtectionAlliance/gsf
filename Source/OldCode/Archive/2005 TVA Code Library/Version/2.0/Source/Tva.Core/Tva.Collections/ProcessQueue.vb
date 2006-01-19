@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  Tva.Collections.ProcessQueue.vb - Multi-threaded Intervaled Processing Queue Class
+'  Tva.Collections.ProcessList.vb - Multi-threaded Intervaled Processing List Class
 '  Copyright © 2005 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005
@@ -24,14 +24,14 @@ Imports System.Threading
 Namespace Collections
 
     ''' <summary>
-    ''' <para>This class will process a collection of items on independent threads</para>
+    ''' <para>This class will process a list of items on independent threads</para>
     ''' </summary>
     ''' <typeparam name="T">Type of object to process</typeparam>
     ''' <remarks>
     ''' <para>This class acts as a strongly typed collection of objects to be processed.</para>
     ''' <para>Note that the queue will not start processing until the Start method is called.</para>
     ''' </remarks>
-    Public Class ProcessQueue(Of T)
+    Public Class ProcessList(Of T)
 
         Inherits ProcessListBase(Of T)
 
@@ -87,7 +87,7 @@ Namespace Collections
         ''' <summary>
         ''' Create a new asynchronous process queue with the default settings: ProcessInterval = 100, MaximumThreads = 5, ProcessTimeout = Infinite, RequeueOnTimeout = False
         ''' </summary>
-        Public Shared Function CreateAsynchronousProcessQueue(ByVal processItemFunction As ProcessItemFunctionSignature) As ProcessQueue(Of T)
+        Public Shared Function CreateAsynchronousProcessQueue(ByVal processItemFunction As ProcessItemFunctionSignature) As ProcessList(Of T)
 
             Return CreateAsynchronousProcessQueue(processItemFunction, DefaultProcessInterval, DefaultMaximumThreads, DefaultProcessTimeout, DefaultRequeueOnTimeout)
 
@@ -96,7 +96,7 @@ Namespace Collections
         ''' <summary>
         ''' Create a new asynchronous process queue with the default settings: ProcessInterval = 100, ProcessTimeout = Infinite, RequeueOnTimeout = False
         ''' </summary>
-        Public Shared Function CreateAsynchronousProcessQueue(ByVal processItemFunction As ProcessItemFunctionSignature, ByVal maximumThreads As Integer) As ProcessQueue(Of T)
+        Public Shared Function CreateAsynchronousProcessQueue(ByVal processItemFunction As ProcessItemFunctionSignature, ByVal maximumThreads As Integer) As ProcessList(Of T)
 
             Return CreateAsynchronousProcessQueue(processItemFunction, DefaultProcessInterval, maximumThreads, DefaultProcessTimeout, DefaultRequeueOnTimeout)
 
@@ -105,27 +105,27 @@ Namespace Collections
         ''' <summary>
         ''' Create a new asynchronous process queue using the specified settings
         ''' </summary>
-        Public Shared Function CreateAsynchronousProcessQueue(ByVal processItemFunction As ProcessItemFunctionSignature, ByVal processInterval As Integer, ByVal maximumThreads As Integer, ByVal processTimeout As Integer, ByVal requeueOnTimeout As Boolean) As ProcessQueue(Of T)
+        Public Shared Function CreateAsynchronousProcessQueue(ByVal processItemFunction As ProcessItemFunctionSignature, ByVal processInterval As Integer, ByVal maximumThreads As Integer, ByVal processTimeout As Integer, ByVal requeueOnTimeout As Boolean) As ProcessList(Of T)
 
-            Return New ProcessQueue(Of T)(processItemFunction, processInterval, maximumThreads, processTimeout, requeueOnTimeout)
+            Return New ProcessList(Of T)(processItemFunction, processInterval, maximumThreads, processTimeout, requeueOnTimeout)
 
         End Function
 
         ''' <summary>
-        ''' Create a new synchronous process queue with the default settings: ProcessInterval = 100, ProcessTimeout = Infinite, RequeueOnTimeout = False
+        ''' Create a new synchronous process queue (i.e., single process thread) with the default settings: ProcessInterval = 100, ProcessTimeout = Infinite, RequeueOnTimeout = False
         ''' </summary>
-        Public Shared Function CreateSynchronousProcessQueue(ByVal processItemFunction As ProcessItemFunctionSignature) As ProcessQueue(Of T)
+        Public Shared Function CreateSynchronousProcessQueue(ByVal processItemFunction As ProcessItemFunctionSignature) As ProcessList(Of T)
 
             Return CreateSynchronousProcessQueue(processItemFunction, DefaultProcessInterval, DefaultProcessTimeout, DefaultRequeueOnTimeout)
 
         End Function
 
         ''' <summary>
-        ''' Create a new synchronous process queue using the specified settings
+        ''' Create a new synchronous process queue (i.e., single process thread) using the specified settings
         ''' </summary>
-        Public Shared Function CreateSynchronousProcessQueue(ByVal processItemFunction As ProcessItemFunctionSignature, ByVal processInterval As Integer, ByVal processTimeout As Integer, ByVal requeueOnTimeout As Boolean) As ProcessQueue(Of T)
+        Public Shared Function CreateSynchronousProcessQueue(ByVal processItemFunction As ProcessItemFunctionSignature, ByVal processInterval As Integer, ByVal processTimeout As Integer, ByVal requeueOnTimeout As Boolean) As ProcessList(Of T)
 
-            Return New ProcessQueue(Of T)(processItemFunction, processInterval, 1, processTimeout, requeueOnTimeout)
+            Return New ProcessList(Of T)(processItemFunction, processInterval, 1, processTimeout, requeueOnTimeout)
 
         End Function
 
@@ -134,7 +134,14 @@ Namespace Collections
         ''' </summary>
         Public Sub New(ByVal processItemFunction As ProcessItemFunctionSignature, ByVal processInterval As Integer, ByVal maximumThreads As Integer, ByVal processTimeout As Integer, ByVal requeueOnTimeout As Boolean)
 
-            MyBase.New(processItemFunction, New List(Of T))
+            Me.New(processItemFunction, processInterval, maximumThreads, processTimeout, requeueOnTimeout, New List(Of T))
+
+        End Sub
+
+        Protected Sub New(ByVal processItemFunction As ProcessItemFunctionSignature, ByVal processInterval As Integer, ByVal maximumThreads As Integer, ByVal processTimeout As Integer, ByVal requeueOnTimeout As Boolean, ByVal processList As IList(Of T))
+
+            MyBase.New(processItemFunction, processList)
+
             m_maximumThreads = maximumThreads
             m_processTimeout = processTimeout
             m_requeueOnTimeout = requeueOnTimeout
@@ -159,12 +166,14 @@ Namespace Collections
 
         Public Overrides Sub Start()
 
+            MyBase.Start()
             m_processTimer.Enabled = True
 
         End Sub
 
         Public Overrides Sub [Stop]()
 
+            MyBase.Stop()
             m_processTimer.Enabled = False
 
         End Sub
@@ -174,7 +183,7 @@ Namespace Collections
         ''' </summary>
         ''' <value>Maximum number of processing threads</value>
         ''' <returns>Maximum number of processing threads</returns>
-        ''' <remarks>If you set maximum threads to one, item processing will be serialized</remarks>
+        ''' <remarks>If you set maximum threads to one, item processing will be synchronous</remarks>
         Public Property MaximumThreads() As Integer
             Get
                 Return m_maximumThreads
