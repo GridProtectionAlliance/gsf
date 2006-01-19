@@ -26,6 +26,7 @@ Namespace Collections
     ''' <typeparam name="TValue">Type of values to process</typeparam>
     ''' <remarks>
     ''' <para>This class acts as a strongly typed dictionary of objects to be processed.</para>
+    ''' <para>Consumers are expected to create new instances of this class through the static construction functions (e.g., CreateAsynchronousQueue, CreateSynchronousQueue, etc.)</para>
     ''' <para>Note that the queue will not start processing until the Start method is called.</para>
     ''' </remarks>
     Public Class ProcessDictionary(Of TKey, TValue)
@@ -33,6 +34,12 @@ Namespace Collections
         Inherits ProcessList(Of KeyValuePair(Of TKey, TValue))
 
         Implements IDictionary(Of TKey, TValue), IDictionary
+
+        ' **************************************
+        '
+        '        Construction Functions
+        '
+        ' **************************************
 
         ''' <summary>
         ''' Create a new keyed asynchronous process queue with the default settings: ProcessInterval = 100, MaximumThreads = 5, ProcessTimeout = Infinite, RequeueOnTimeout = False
@@ -55,7 +62,7 @@ Namespace Collections
         ''' <summary>
         ''' Create a new keyed asynchronous process queue using the specified settings
         ''' </summary>
-        Public Shared Shadows Function CreateAsynchronousQueue(ByVal processItemFunction As ProcessItemFunctionSignature, ByVal processInterval As Integer, ByVal maximumThreads As Integer, ByVal processTimeout As Integer, ByVal requeueOnTimeout As Boolean) As ProcessDictionary(Of TKey, TValue)
+        Public Shared Shadows Function CreateAsynchronousQueue(ByVal processItemFunction As ProcessItemFunctionSignature, ByVal processInterval As Double, ByVal maximumThreads As Integer, ByVal processTimeout As Integer, ByVal requeueOnTimeout As Boolean) As ProcessDictionary(Of TKey, TValue)
 
             Return New ProcessDictionary(Of TKey, TValue)(processItemFunction, processInterval, maximumThreads, processTimeout, requeueOnTimeout)
 
@@ -73,20 +80,53 @@ Namespace Collections
         ''' <summary>
         ''' Create a new keyed synchronous process queue (i.e., single process thread) using the specified settings
         ''' </summary>
-        Public Shared Shadows Function CreateSynchronousQueue(ByVal processItemFunction As ProcessItemFunctionSignature, ByVal processInterval As Integer, ByVal processTimeout As Integer, ByVal requeueOnTimeout As Boolean) As ProcessDictionary(Of TKey, TValue)
+        Public Shared Shadows Function CreateSynchronousQueue(ByVal processItemFunction As ProcessItemFunctionSignature, ByVal processInterval As Double, ByVal processTimeout As Integer, ByVal requeueOnTimeout As Boolean) As ProcessDictionary(Of TKey, TValue)
 
             Return New ProcessDictionary(Of TKey, TValue)(processItemFunction, processInterval, 1, processTimeout, requeueOnTimeout)
 
         End Function
 
         ''' <summary>
-        ''' Create a new keyed process list using the specified settings
+        ''' Create a new keyed real-time process queue with the default settings: ProcessTimeout = Infinite, RequeueOnTimeout = False
         ''' </summary>
-        Public Sub New(ByVal processItemFunction As ProcessItemFunctionSignature, ByVal processInterval As Integer, ByVal maximumThreads As Integer, ByVal processTimeout As Integer, ByVal requeueOnTimeout As Boolean)
+        Public Shared Shadows Function CreateRealTimeQueue(ByVal processItemFunction As ProcessItemFunctionSignature) As ProcessDictionary(Of TKey, TValue)
 
-            MyBase.New(processItemFunction, processInterval, maximumThreads, processTimeout, requeueOnTimeout, New SortedDictionary(Of TKey, TValue))
+            Return CreateRealTimeQueue(processItemFunction, DefaultProcessTimeout, DefaultRequeueOnTimeout)
+
+        End Function
+
+        ''' <summary>
+        ''' Create a new keyed real-time process queue using the specified settings
+        ''' </summary>
+        Public Shared Shadows Function CreateRealTimeQueue(ByVal processItemFunction As ProcessItemFunctionSignature, ByVal processTimeout As Integer, ByVal requeueOnTimeout As Boolean) As ProcessDictionary(Of TKey, TValue)
+
+            Return New ProcessDictionary(Of TKey, TValue)(processItemFunction, RealTimeProcessInterval, 1, processTimeout, requeueOnTimeout)
+
+        End Function
+
+        Protected Sub New(ByVal processItemFunction As ProcessItemFunctionSignature, ByVal processInterval As Double, ByVal maximumThreads As Integer, ByVal processTimeout As Integer, ByVal requeueOnTimeout As Boolean)
+
+            MyBase.New(processItemFunction, New SortedDictionary(Of TKey, TValue), processInterval, maximumThreads, processTimeout, requeueOnTimeout)
 
         End Sub
+
+        ' **************************************
+        '
+        '      Public Member Implementation
+        '
+        ' **************************************
+
+        Public Overrides ReadOnly Property Name() As String
+            Get
+                Return Me.GetType.Name
+            End Get
+        End Property
+
+        ' **************************************
+        '
+        '   Generic IDictionary Implementation
+        '
+        ' **************************************
 
         Protected ReadOnly Property InternalDictionary() As SortedDictionary(Of TKey, TValue)
             Get
@@ -96,34 +136,46 @@ Namespace Collections
 
         Public Overloads Sub Add(ByVal key As TKey, ByVal value As TValue) Implements System.Collections.Generic.IDictionary(Of TKey, TValue).Add
 
-            InternalDictionary.Add(key, value)
+            SyncLock SyncRoot
+                InternalDictionary.Add(key, value)
+            End SyncLock
 
         End Sub
 
         Public Function ContainsKey(ByVal key As TKey) As Boolean Implements System.Collections.Generic.IDictionary(Of TKey, TValue).ContainsKey
 
-            Return InternalDictionary.ContainsKey(key)
+            SyncLock SyncRoot
+                Return InternalDictionary.ContainsKey(key)
+            End SyncLock
 
         End Function
 
         Default Public Overloads Property Item(ByVal key As TKey) As TValue Implements System.Collections.Generic.IDictionary(Of TKey, TValue).Item
             Get
-                Return InternalDictionary(key)
+                SyncLock SyncRoot
+                    Return InternalDictionary(key)
+                End SyncLock
             End Get
             Set(ByVal value As TValue)
-                InternalDictionary(key) = value
+                SyncLock SyncRoot
+                    InternalDictionary(key) = value
+                End SyncLock
             End Set
         End Property
 
         Public Overloads Function Remove(ByVal key As TKey) As Boolean Implements System.Collections.Generic.IDictionary(Of TKey, TValue).Remove
 
-            InternalDictionary.Remove(key)
+            SyncLock SyncRoot
+                InternalDictionary.Remove(key)
+            End SyncLock
 
         End Function
 
         Public Function TryGetValue(ByVal key As TKey, ByRef value As TValue) As Boolean Implements System.Collections.Generic.IDictionary(Of TKey, TValue).TryGetValue
 
-            Return InternalDictionary.TryGetValue(key, value)
+            SyncLock SyncRoot
+                Return InternalDictionary.TryGetValue(key, value)
+            End SyncLock
 
         End Function
 
@@ -153,22 +205,30 @@ Namespace Collections
 
         Private Sub IDictionaryAdd(ByVal key As Object, ByVal value As Object) Implements System.Collections.IDictionary.Add
 
-            IDictionary.Add(key, value)
+            SyncLock SyncRoot
+                IDictionary.Add(key, value)
+            End SyncLock
 
         End Sub
 
         Private Function IDictionaryContains(ByVal key As Object) As Boolean Implements System.Collections.IDictionary.Contains
 
-            Return IDictionary.Contains(key)
+            SyncLock SyncRoot
+                Return IDictionary.Contains(key)
+            End SyncLock
 
         End Function
 
         Private Property IDictionaryItem(ByVal key As Object) As Object Implements System.Collections.IDictionary.Item
             Get
-                Return IDictionary(key)
+                SyncLock SyncRoot
+                    Return IDictionary(key)
+                End SyncLock
             End Get
             Set(ByVal value As Object)
-                IDictionary(key) = value
+                SyncLock SyncRoot
+                    IDictionary(key) = value
+                End SyncLock
             End Set
         End Property
 
@@ -186,7 +246,9 @@ Namespace Collections
 
         Private Sub IDictionaryRemove(ByVal key As Object) Implements System.Collections.IDictionary.Remove
 
-            IDictionary.Remove(key)
+            SyncLock SyncRoot
+                IDictionary.Remove(key)
+            End SyncLock
 
         End Sub
 
@@ -204,7 +266,9 @@ Namespace Collections
 
         Private Sub IDictionaryClear() Implements System.Collections.IDictionary.Clear
 
-            IDictionary.Clear()
+            SyncLock SyncRoot
+                IDictionary.Clear()
+            End SyncLock
 
         End Sub
 

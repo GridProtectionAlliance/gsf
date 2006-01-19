@@ -77,7 +77,9 @@ Namespace DateTime
         Private Shared m_pacificTimeZone As Win32TimeZone
 
         Private Sub New()
+
             ' This class contains only global functions and is not meant to be instantiated
+
         End Sub
 
         ''' <summary>
@@ -100,7 +102,7 @@ Namespace DateTime
         ''' <para>Turns given number of seconds into textual representation of years, days, hours, minutes and whole integer seconds</para>
         ''' </summary>
         ''' <param name="seconds">Seconds to be converted </param>
-        Public Shared Function SecondsToText(ByVal seconds As Single) As String
+        Public Shared Function SecondsToText(ByVal seconds As Double) As String
 
             Return SecondsToText(seconds, 0)
 
@@ -114,7 +116,7 @@ Namespace DateTime
         ''' </remarks>
         ''' <param name="seconds">Seconds to be converted </param>
         ''' <param name="secondPrecision">Number of fractional digits to display for seconds</param>
-        Public Shared Function SecondsToText(ByVal seconds As Single, ByVal secondPrecision As Integer) As String
+        Public Shared Function SecondsToText(ByVal seconds As Double, ByVal secondPrecision As Integer) As String
 
             If secondPrecision < 0 Then
                 Return SecondsToText(seconds, secondPrecision, m_standardTimeNamesWithoutSeconds)
@@ -135,7 +137,7 @@ Namespace DateTime
         ''' <param name="seconds">Seconds to be converted</param>
         ''' <param name="secondPrecision">Number of fractional digits to display for seconds</param>
         ''' <param name="timeNames">Time names array to use during textal conversion</param>
-        Public Shared Function SecondsToText(ByVal seconds As Single, ByVal secondPrecision As Integer, ByVal timeNames As String()) As String
+        Public Shared Function SecondsToText(ByVal seconds As Double, ByVal secondPrecision As Integer, ByVal timeNames As String()) As String
 
             With New StringBuilder
                 Dim years As Integer    ' 1 year   = 365.2425 days or 31556952 seconds
@@ -262,7 +264,7 @@ Namespace DateTime
         ''' <para>Month abbreviations are English only.</para>
         ''' </remarks>
         ''' <param name="monthNumber">Numeric month number (1-12)</param>
-        Public Shared ReadOnly Property ShortMonthName(ByVal monthNumber As Short) As String
+        Public Shared ReadOnly Property ShortMonthName(ByVal monthNumber As Integer) As String
             Get
                 Select Case monthNumber
                     Case 1
@@ -302,7 +304,7 @@ Namespace DateTime
         ''' <para>Month names are English only.</para>
         ''' </remarks>
         ''' <param name="monthNumber">Numeric month number (1-12)</param>
-        Public Shared ReadOnly Property LongMonthName(ByVal monthNumber As Short) As String
+        Public Shared ReadOnly Property LongMonthName(ByVal monthNumber As Integer) As String
             Get
                 Select Case monthNumber
                     Case 1

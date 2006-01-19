@@ -47,14 +47,12 @@
   <ItemGroup>
     <Compile Include="Assembly.vb" />
     <Compile Include="Bit.vb" />
-    <Compile Include="Tva.Collections\IntervaledProcessQueueBase.vb" />
-    <Compile Include="Tva.Collections\SynchronousProcessQueue.vb" />
-    <Compile Include="Tva.Collections\RealTimeProcessQueue.vb" />
-    <Compile Include="Tva.Collections\ProcessQueueBase.vb" />
+    <Compile Include="Tva.Collections\ProcessDictionary.vb">
+    </Compile>
+    <Compile Include="Tva.Collections\ProcessList.vb" />
     <Compile Include="Tva.Interop\BitwiseCast.vb" />
     <Compile Include="Identity.vb" />
     <Compile Include="My Project\AssemblyInfo.vb" />
-    <Compile Include="Tva.Collections\AsynchronousProcessQueue.vb" />
     <Compile Include="Tva.DateTime\Common.vb" />
     <Compile Include="Tva.DateTime\NtpTimeTag.vb" />
     <Compile Include="Tva.DateTime\Win32TimeZone.vb" />
