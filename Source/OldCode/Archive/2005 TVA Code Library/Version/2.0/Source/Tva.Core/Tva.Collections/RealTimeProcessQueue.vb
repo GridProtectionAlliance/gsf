@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  Tva.Collections.RealTimeProcessQueue.vb - Real-time Processing Queue Class
+'  Tva.Collections.RealTimeProcessList.vb - Real-time Processing List Class
 '  Copyright © 2005 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005
@@ -20,14 +20,14 @@ Imports System.Threading
 Namespace Collections
 
     ''' <summary>
-    ''' <para>Processes a collection of items as fast as possible</para>
+    ''' <para>Processes a list of items as fast as possible</para>
     ''' </summary>
     ''' <typeparam name="T">Type of object to process</typeparam>
     ''' <remarks>
     ''' <para>This class acts as a strongly typed collection of objects to be processed.</para>
     ''' <para>Note that the queue will not start processing until the Start method is called.</para>
     ''' </remarks>
-    Public Class RealTimeProcessQueue(Of T)
+    Public Class RealTimeProcessList(Of T)
 
         Inherits ProcessListBase(Of T)
 
@@ -42,9 +42,13 @@ Namespace Collections
 
         Public Overrides Sub Start()
 
+            MyBase.Start()
+
         End Sub
 
         Public Overrides Sub [Stop]()
+
+            MyBase.Stop()
 
         End Sub
 
