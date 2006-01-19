@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  Tva.Collections.ProcessDictionaryBase.vb - Strongly Typed Processing Dictionary Base Class
+'  Tva.Collections.ProcessDictionary.vb - Multi-threaded Intervaled Keyed Item Processing Class
 '  Copyright © 2005 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005
@@ -20,27 +20,71 @@ Imports System.Threading
 Namespace Collections
 
     ''' <summary>
-    ''' <para>This is the base class used for processing a collection of items</para>
+    ''' <para>This class will process a keyed list of items on independent threads</para>
     ''' </summary>
     ''' <typeparam name="TKey">Type of keys used to references process items</typeparam>
     ''' <typeparam name="TValue">Type of values to process</typeparam>
     ''' <remarks>
-    ''' <para>This class acts as a strongly typed collection of objects to be processed.</para>
-    ''' <para>Note to implementors: no derived queue should start processing until the Start method is called.</para>
+    ''' <para>This class acts as a strongly typed dictionary of objects to be processed.</para>
+    ''' <para>Note that the queue will not start processing until the Start method is called.</para>
     ''' </remarks>
-    Public MustInherit Class ProcessDictionaryBase(Of TKey, TValue)
+    Public Class ProcessDictionary(Of TKey, TValue)
 
-        Inherits ProcessListBase(Of KeyValuePair(Of TKey, TValue))
+        Inherits ProcessList(Of KeyValuePair(Of TKey, TValue))
 
-        Implements IDictionary(Of TKey, TValue), ICollection(Of KeyValuePair(Of TKey, TValue)), _
-            IEnumerable(Of KeyValuePair(Of TKey, TValue)), IDictionary
+        Implements IDictionary(Of TKey, TValue), IDictionary
 
         ''' <summary>
-        ''' Create a process queue using the specified settings
+        ''' Create a new keyed asynchronous process queue with the default settings: ProcessInterval = 100, MaximumThreads = 5, ProcessTimeout = Infinite, RequeueOnTimeout = False
         ''' </summary>
-        Public Sub New(ByVal processItemFunction As ProcessItemFunctionSignature)
+        Public Shared Shadows Function CreateAsynchronousQueue(ByVal processItemFunction As ProcessItemFunctionSignature) As ProcessDictionary(Of TKey, TValue)
 
-            MyBase.New(processItemFunction, New SortedDictionary(Of TKey, TValue))
+            Return CreateAsynchronousQueue(processItemFunction, DefaultProcessInterval, DefaultMaximumThreads, DefaultProcessTimeout, DefaultRequeueOnTimeout)
+
+        End Function
+
+        ''' <summary>
+        ''' Create a new keyed asynchronous process queue with the default settings: ProcessInterval = 100, ProcessTimeout = Infinite, RequeueOnTimeout = False
+        ''' </summary>
+        Public Shared Shadows Function CreateAsynchronousQueue(ByVal processItemFunction As ProcessItemFunctionSignature, ByVal maximumThreads As Integer) As ProcessDictionary(Of TKey, TValue)
+
+            Return CreateAsynchronousQueue(processItemFunction, DefaultProcessInterval, maximumThreads, DefaultProcessTimeout, DefaultRequeueOnTimeout)
+
+        End Function
+
+        ''' <summary>
+        ''' Create a new keyed asynchronous process queue using the specified settings
+        ''' </summary>
+        Public Shared Shadows Function CreateAsynchronousQueue(ByVal processItemFunction As ProcessItemFunctionSignature, ByVal processInterval As Integer, ByVal maximumThreads As Integer, ByVal processTimeout As Integer, ByVal requeueOnTimeout As Boolean) As ProcessDictionary(Of TKey, TValue)
+
+            Return New ProcessDictionary(Of TKey, TValue)(processItemFunction, processInterval, maximumThreads, processTimeout, requeueOnTimeout)
+
+        End Function
+
+        ''' <summary>
+        ''' Create a new keyed synchronous process queue (i.e., single process thread) with the default settings: ProcessInterval = 100, ProcessTimeout = Infinite, RequeueOnTimeout = False
+        ''' </summary>
+        Public Shared Shadows Function CreateSynchronousQueue(ByVal processItemFunction As ProcessItemFunctionSignature) As ProcessDictionary(Of TKey, TValue)
+
+            Return CreateSynchronousQueue(processItemFunction, DefaultProcessInterval, DefaultProcessTimeout, DefaultRequeueOnTimeout)
+
+        End Function
+
+        ''' <summary>
+        ''' Create a new keyed synchronous process queue (i.e., single process thread) using the specified settings
+        ''' </summary>
+        Public Shared Shadows Function CreateSynchronousQueue(ByVal processItemFunction As ProcessItemFunctionSignature, ByVal processInterval As Integer, ByVal processTimeout As Integer, ByVal requeueOnTimeout As Boolean) As ProcessDictionary(Of TKey, TValue)
+
+            Return New ProcessDictionary(Of TKey, TValue)(processItemFunction, processInterval, 1, processTimeout, requeueOnTimeout)
+
+        End Function
+
+        ''' <summary>
+        ''' Create a new keyed process list using the specified settings
+        ''' </summary>
+        Public Sub New(ByVal processItemFunction As ProcessItemFunctionSignature, ByVal processInterval As Integer, ByVal maximumThreads As Integer, ByVal processTimeout As Integer, ByVal requeueOnTimeout As Boolean)
+
+            MyBase.New(processItemFunction, processInterval, maximumThreads, processTimeout, requeueOnTimeout, New SortedDictionary(Of TKey, TValue))
 
         End Sub
 
@@ -71,12 +115,6 @@ Namespace Collections
             End Set
         End Property
 
-        Public ReadOnly Property Keys() As System.Collections.Generic.ICollection(Of TKey) Implements System.Collections.Generic.IDictionary(Of TKey, TValue).Keys
-            Get
-                Return InternalDictionary.Keys
-            End Get
-        End Property
-
         Public Overloads Function Remove(ByVal key As TKey) As Boolean Implements System.Collections.Generic.IDictionary(Of TKey, TValue).Remove
 
             InternalDictionary.Remove(key)
@@ -88,6 +126,12 @@ Namespace Collections
             Return InternalDictionary.TryGetValue(key, value)
 
         End Function
+
+        Public ReadOnly Property Keys() As System.Collections.Generic.ICollection(Of TKey) Implements System.Collections.Generic.IDictionary(Of TKey, TValue).Keys
+            Get
+                Return InternalDictionary.Keys
+            End Get
+        End Property
 
         Public ReadOnly Property Values() As System.Collections.Generic.ICollection(Of TValue) Implements System.Collections.Generic.IDictionary(Of TKey, TValue).Values
             Get
