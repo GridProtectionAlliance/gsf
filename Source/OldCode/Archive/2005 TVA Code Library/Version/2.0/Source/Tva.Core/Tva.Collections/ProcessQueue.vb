@@ -38,6 +38,8 @@ Namespace Collections
 
         Implements IList(Of T), ICollection
 
+#Region " Internal Thread Processing Class "
+
         ' This internal class is used to limit item processing time if requested
         Private Class ProcessThread
 
@@ -84,11 +86,9 @@ Namespace Collections
 
         End Class
 
-        ' **************************************
-        '
-        '       Public Member Declarations
-        '
-        ' **************************************
+#End Region
+
+#Region " Public Member Declarations "
 
         ''' <summary>
         ''' This is the function signature used for defining a method to process items
@@ -141,11 +141,9 @@ Namespace Collections
         Public Const DefaultRequeueOnTimeout As Boolean = False
         Public Const RealTimeProcessInterval As Double = 0
 
-        ' **************************************
-        '
-        '      Private Member Declarations
-        '
-        ' **************************************
+#End Region
+
+#Region " Private Member Declarations "
 
         Private m_processItemFunction As ProcessItemFunctionSignature
         Private m_canProcessItemFunction As CanProcessItemFunctionSignature
@@ -162,11 +160,9 @@ Namespace Collections
         Private m_realTimeProcessThread As Thread
         Private WithEvents m_processTimer As System.Timers.Timer
 
-        ' **************************************
-        '
-        '        Construction Functions
-        '
-        ' **************************************
+#End Region
+
+#Region " Construction Functions "
 
         ''' <summary>
         ''' Create a new asynchronous process queue with the default settings: ProcessInterval = 100, MaximumThreads = 5, ProcessTimeout = Infinite, RequeueOnTimeout = False
@@ -332,11 +328,9 @@ Namespace Collections
 
         End Sub
 
-        ' **************************************
-        '
-        '      Public Member Implementation
-        '
-        ' **************************************
+#End Region
+
+#Region " Public Methods Implementation "
 
         ''' <summary>
         ''' This property defines the user function used to process items in the list
@@ -570,36 +564,53 @@ Namespace Collections
             End Get
         End Property
 
-        ' **************************************
-        '
-        '     Protected Member Implementation
-        '
-        ' **************************************
+#End Region
 
+#Region " Protected Methods Implementation "
+
+        ' This property allows derived classes to access the internal process queue directly
         Protected ReadOnly Property InternalList() As IList(Of T)
             Get
                 Return m_processQueue
             End Get
         End Property
 
+        ' Perform thread-safe atomic increment on active thread count
         Protected Sub IncrementThreadCount()
 
             Interlocked.Increment(m_threadCount)
 
         End Sub
 
+        ' Perform thread-safe atomic decrement on active thread count
         Protected Sub DecrementThreadCount()
 
             Interlocked.Decrement(m_threadCount)
 
         End Sub
 
+        ' Perform thread-safe atomic increment on total processed items count
         Protected Sub IncrementItemsProcessed()
 
             Interlocked.Increment(m_itemsProcessed)
 
         End Sub
 
+        ' You should use this function instead of invoking the m_canProcessItemFunction pointer
+        ' directly since implementation of this delegate is optional
+        Protected Function CanProcessItem(ByVal item As T) As Boolean
+
+            If m_canProcessItemFunction Is Nothing Then
+                ' If user provided no implementation for this function, we assume item can be processed
+                Return True
+            Else
+                ' Otherwise we call user function to determine if item should be processed at this time
+                Return m_canProcessItemFunction(item)
+            End If
+
+        End Function
+
+        ' Derived classes can't raise event of their base classes so we expose these wrapper methods to accomodate as needed
         Protected Sub RaiseItemProcessed(ByVal item As T)
 
             RaiseEvent ItemProcessed(item)
@@ -618,23 +629,9 @@ Namespace Collections
 
         End Sub
 
-        Protected Function CanProcessItem(ByVal item As T) As Boolean
+#End Region
 
-            If m_canProcessItemFunction Is Nothing Then
-                ' If user provided no implementation for this function, we assume item can be processed
-                Return True
-            Else
-                ' Otherwise we call user function to determine if item should be processed at this time
-                Return m_canProcessItemFunction(item)
-            End If
-
-        End Function
-
-        ' **************************************
-        '
-        '      Item Processing Thread Procs
-        '
-        ' **************************************
+#Region " Item Processing Thread Procs "
 
         Private Sub RealTimeThreadProc()
 
@@ -735,11 +732,11 @@ Namespace Collections
 
         End Sub
 
-        ' **************************************
-        '
-        '      Generic IList Implementation
-        '
-        ' **************************************
+#End Region
+
+#Region " Generic IList(Of T) Implementation "
+
+        ' Note: all IList(Of T) implementations should be synchronized as necessary
 
         ''' <summary>
         '''  Adds a new item to the list to be processed
@@ -896,17 +893,19 @@ Namespace Collections
             End Get
         End Property
 
-        ' **************************************
-        '
-        '       ICollection Implementation
-        '
-        ' **************************************
+#End Region
 
-        Private ReadOnly Property ICollection() As ICollection
-            Get
-                Return DirectCast(m_processQueue, ICollection)
-            End Get
-        End Property
+#Region " IEnumerable Implementation "
+
+        Private Function IEnumerableGetEnumerator() As System.Collections.IEnumerator Implements System.Collections.IEnumerable.GetEnumerator
+
+            Return DirectCast(m_processQueue, IEnumerable).GetEnumerator()
+
+        End Function
+
+#End Region
+
+#Region " ICollection Implementation "
 
         Public ReadOnly Property SyncRoot() As Object Implements System.Collections.ICollection.SyncRoot
             Get
@@ -923,25 +922,17 @@ Namespace Collections
 
         Private Sub ICollectionCopyTo(ByVal array As System.Array, ByVal index As Integer) Implements System.Collections.ICollection.CopyTo
 
-            SyncLock m_processQueue
-                ICollection.CopyTo(array, index)
-            End SyncLock
+            CopyTo(array, index)
 
         End Sub
 
-        Private Function ICollectionGetEnumerator() As System.Collections.IEnumerator Implements System.Collections.IEnumerable.GetEnumerator
-
-            Return ICollection.GetEnumerator()
-
-        End Function
-
         Private ReadOnly Property ICollectionCount() As Integer Implements System.Collections.ICollection.Count
             Get
-                SyncLock m_processQueue
-                    Return ICollection.Count
-                End SyncLock
+                Return Count
             End Get
         End Property
+
+#End Region
 
     End Class
 

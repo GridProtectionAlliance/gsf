@@ -47,9 +47,9 @@
   <ItemGroup>
     <Compile Include="Assembly.vb" />
     <Compile Include="Bit.vb" />
-    <Compile Include="Tva.Collections\ProcessDictionary.vb">
+    <Compile Include="Tva.Collections\KeyedProcessQueue.vb">
     </Compile>
-    <Compile Include="Tva.Collections\ProcessList.vb" />
+    <Compile Include="Tva.Collections\ProcessQueue.vb" />
     <Compile Include="Tva.Interop\BitwiseCast.vb" />
     <Compile Include="Identity.vb" />
     <Compile Include="My Project\AssemblyInfo.vb" />
@@ -64,6 +64,9 @@
     <Compile Include="Tva.Math\CompositeValues.vb" />
     <Compile Include="Tva.Net\Smtp\Common.vb" />
     <Compile Include="Tva.Net\Smtp\TraceListener.vb" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Tva.Collections\Tva.Collections.cd" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Tva.Configuration\" />

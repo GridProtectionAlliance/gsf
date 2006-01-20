@@ -224,7 +224,7 @@ Namespace IO
         ''' <remarks></remarks>
         Public Shared Function JustDrive(ByVal filePath As String) As String
 
-            If filePath IsNot Nothing AndAlso filePath.Length > 0 Then
+            If Not String.IsNullOrEmpty(filePath) Then
                 Return AddPathSuffix(Path.GetPathRoot(filePath))
             Else
                 Return Path.DirectorySeparatorChar
@@ -240,7 +240,7 @@ Namespace IO
         ''' <remarks></remarks>
         Public Shared Function JustFileName(ByVal filePath As String) As String
 
-            If filePath IsNot Nothing AndAlso filePath.Length > 0 Then
+            If Not String.IsNullOrEmpty(filePath) Then
                 Return Path.GetFileName(filePath)
             Else
                 Return ""
@@ -281,7 +281,7 @@ Namespace IO
         ''' <remarks></remarks>
         Public Shared Function JustPath(ByVal filePath As String) As String
 
-            If filePath IsNot Nothing AndAlso filePath.Length > 0 Then
+            If Not String.IsNullOrEmpty(filePath) Then
                 Return Path.GetDirectoryName(filePath) & Path.DirectorySeparatorChar
             Else
                 Return Path.DirectorySeparatorChar
@@ -297,7 +297,7 @@ Namespace IO
         ''' <remarks></remarks>
         Public Shared Function JustFileExtension(ByVal filePath As String) As String
 
-            If filePath IsNot Nothing AndAlso filePath.Length > 0 Then
+            If Not String.IsNullOrEmpty(filePath) Then
                 Return Path.GetExtension(filePath)
             Else
                 Return ""
@@ -313,7 +313,7 @@ Namespace IO
         ''' <remarks></remarks>
         Public Shared Function NoFileExtension(ByVal filePath As String) As String
 
-            If filePath IsNot Nothing AndAlso filePath.Length > 0 Then
+            If Not String.IsNullOrEmpty(filePath) Then
                 Return Path.GetFileNameWithoutExtension(filePath)
             Else
                 Return ""
@@ -341,7 +341,7 @@ Namespace IO
         ''' <remarks></remarks>
         Public Shared Function AddPathSuffix(ByVal filePath As String) As String
 
-            If filePath IsNot Nothing AndAlso filePath.Length > 0 Then
+            If Not String.IsNullOrEmpty(filePath) Then
                 Dim suffixChar As Char = filePath.Chars(filePath.Length - 1)
                 If suffixChar <> Path.DirectorySeparatorChar And suffixChar <> Path.AltDirectorySeparatorChar Then
                     filePath &= Path.DirectorySeparatorChar
@@ -362,7 +362,7 @@ Namespace IO
         ''' <remarks></remarks>
         Public Shared Function RemovePathSuffix(ByVal filePath As String) As String
 
-            If filePath IsNot Nothing AndAlso filePath.Length > 0 Then
+            If Not String.IsNullOrEmpty(filePath) Then
                 Dim suffixChar As Char = filePath.Chars(filePath.Length - 1)
                 While (suffixChar = Path.DirectorySeparatorChar Or suffixChar = Path.AltDirectorySeparatorChar) And filePath.Length > 0
                     filePath = filePath.Substring(0, filePath.Length - 1)

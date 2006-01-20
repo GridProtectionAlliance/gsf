@@ -15,8 +15,6 @@
 '
 '*******************************************************************************************************
 
-Imports System.Threading
-
 Namespace Collections
 
     ''' <summary>
@@ -25,7 +23,7 @@ Namespace Collections
     ''' <typeparam name="TKey">Type of keys used to references process items</typeparam>
     ''' <typeparam name="TValue">Type of values to process</typeparam>
     ''' <remarks>
-    ''' <para>This class acts as a strongly typed dictionary of objects to be processed.</para>
+    ''' <para>This class acts as a strongly typed sorted dictionary of objects to be processed.</para>
     ''' <para>Consumers are expected to create new instances of this class through the static construction functions (e.g., CreateAsynchronousQueue, CreateSynchronousQueue, etc.)</para>
     ''' <para>Note that the queue will not start processing until the Start method is called.</para>
     ''' </remarks>
@@ -33,13 +31,9 @@ Namespace Collections
 
         Inherits ProcessQueue(Of KeyValuePair(Of TKey, TValue))
 
-        Implements IDictionary(Of TKey, TValue), IDictionary
+        Implements IDictionary(Of TKey, TValue)
 
-        ' **************************************
-        '
-        '        Construction Functions
-        '
-        ' **************************************
+#Region " Construction Functions "
 
         ''' <summary>
         ''' Create a new keyed asynchronous process queue with the default settings: ProcessInterval = 100, MaximumThreads = 5, ProcessTimeout = Infinite, RequeueOnTimeout = False
@@ -176,11 +170,9 @@ Namespace Collections
 
         End Sub
 
-        ' **************************************
-        '
-        '      Public Member Implementation
-        '
-        ' **************************************
+#End Region
+
+#Region " Public Methods Implementation "
 
         Public Overrides ReadOnly Property Name() As String
             Get
@@ -188,11 +180,9 @@ Namespace Collections
             End Get
         End Property
 
-        ' **************************************
-        '
-        '   Generic IDictionary Implementation
-        '
-        ' **************************************
+#End Region
+
+#Region " Generic IDictionary(Of TKey, TValue) Implementation "
 
         Protected ReadOnly Property InternalDictionary() As SortedDictionary(Of TKey, TValue)
             Get
@@ -257,92 +247,7 @@ Namespace Collections
             End Get
         End Property
 
-        ' **************************************
-        '
-        '       IDictionary Implementation
-        '
-        ' **************************************
-
-        Private ReadOnly Property IDictionary() As IDictionary
-            Get
-                Return DirectCast(InternalDictionary, IDictionary)
-            End Get
-        End Property
-
-        Private Sub IDictionaryAdd(ByVal key As Object, ByVal value As Object) Implements System.Collections.IDictionary.Add
-
-            SyncLock SyncRoot
-                IDictionary.Add(key, value)
-            End SyncLock
-
-        End Sub
-
-        Private Function IDictionaryContains(ByVal key As Object) As Boolean Implements System.Collections.IDictionary.Contains
-
-            SyncLock SyncRoot
-                Return IDictionary.Contains(key)
-            End SyncLock
-
-        End Function
-
-        Private Property IDictionaryItem(ByVal key As Object) As Object Implements System.Collections.IDictionary.Item
-            Get
-                SyncLock SyncRoot
-                    Return IDictionary(key)
-                End SyncLock
-            End Get
-            Set(ByVal value As Object)
-                SyncLock SyncRoot
-                    IDictionary(key) = value
-                End SyncLock
-            End Set
-        End Property
-
-        Private ReadOnly Property IDictionaryKeys() As System.Collections.ICollection Implements System.Collections.IDictionary.Keys
-            Get
-                Return IDictionary.Keys
-            End Get
-        End Property
-
-        Private ReadOnly Property IDictionaryValues() As System.Collections.ICollection Implements System.Collections.IDictionary.Values
-            Get
-                Return IDictionary.Values
-            End Get
-        End Property
-
-        Private Sub IDictionaryRemove(ByVal key As Object) Implements System.Collections.IDictionary.Remove
-
-            SyncLock SyncRoot
-                IDictionary.Remove(key)
-            End SyncLock
-
-        End Sub
-
-        Private ReadOnly Property IDictionaryIsFixedSize() As Boolean Implements System.Collections.IDictionary.IsFixedSize
-            Get
-                Return IDictionary.IsFixedSize
-            End Get
-        End Property
-
-        Private ReadOnly Property IDictionaryIsReadOnly() As Boolean Implements System.Collections.IDictionary.IsReadOnly
-            Get
-                Return IDictionary.IsReadOnly
-            End Get
-        End Property
-
-        Private Sub IDictionaryClear() Implements System.Collections.IDictionary.Clear
-
-            SyncLock SyncRoot
-                IDictionary.Clear()
-            End SyncLock
-
-        End Sub
-
-        Private Function IDictionaryGetEnumerator() As System.Collections.IDictionaryEnumerator Implements System.Collections.IDictionary.GetEnumerator
-
-            Return IDictionary.GetEnumerator
-
-        End Function
+#End Region
 
     End Class
 
