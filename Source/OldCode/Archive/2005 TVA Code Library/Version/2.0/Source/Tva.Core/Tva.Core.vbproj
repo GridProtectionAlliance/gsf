@@ -36,6 +36,7 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.DirectoryServices" />
+    <Reference Include="System.XML" />
   </ItemGroup>
   <ItemGroup>
     <Import Include="Microsoft.VisualBasic" />
@@ -47,6 +48,7 @@
   <ItemGroup>
     <Compile Include="Assembly.vb" />
     <Compile Include="Bit.vb" />
+    <Compile Include="Tva.Collections\Common.vb" />
     <Compile Include="Tva.Collections\KeyedProcessQueue.vb">
     </Compile>
     <Compile Include="Tva.Collections\ProcessQueue.vb" />
@@ -64,6 +66,7 @@
     <Compile Include="Tva.Math\CompositeValues.vb" />
     <Compile Include="Tva.Net\Smtp\Common.vb" />
     <Compile Include="Tva.Net\Smtp\TraceListener.vb" />
+    <Compile Include="Tva.Xml\Common.vb" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Tva.Collections\Tva.Collections.cd" />

@@ -41,6 +41,23 @@ Public Class Assembly
     End Sub
 
     ''' <summary>
+    ''' <para>Returns only assembly name and version from full assembly name.</para>
+    ''' </summary>
+    ''' <param name="AssemblyInstance"> Required.Assembly Instance. </param>
+    Public Shared Function GetShortAssemblyName(ByVal AssemblyInstance As System.Reflection.Assembly) As String
+
+        Dim strFullName As String = AssemblyInstance.FullName
+        Dim intCulPos As Integer = InStr(strFullName, ", Culture=", CompareMethod.Text)
+
+        If intCulPos > 0 Then
+            Return Left(strFullName, intCulPos - 1)
+        Else
+            Return strFullName
+        End If
+
+    End Function
+
+    ''' <summary>
     ''' Get the Tva.Assembly instance of the assembly that invoked the currently executing method.
     ''' </summary>
     ''' <value></value>

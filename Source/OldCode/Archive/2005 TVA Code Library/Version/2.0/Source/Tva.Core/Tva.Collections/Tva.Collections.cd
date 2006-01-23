@@ -14,7 +14,7 @@
       <Compartment Name="Nested Types" Collapsed="false" />
     </Compartments>
     <NestedTypes>
-      <Class Name="Tva.Collections.ProcessQueue(Of T).ProcessThread" Collapsed="true">
+      <Class Name="Tva.Collections.ProcessQueue(Of T).ProcessThread">
         <TypeIdentifier>
           <NewMemberFileName>Tva.Collections\ProcessQueue.vb</NewMemberFileName>
         </TypeIdentifier>
