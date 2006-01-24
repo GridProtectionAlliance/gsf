@@ -20,36 +20,18 @@
 Imports System.Runtime.InteropServices
 Imports System.Security.Principal
 Imports System.DirectoryServices
+Imports Tva.Interop.Windows.Common
 
 Public NotInheritable Class Identity
-
-    <StructLayout(LayoutKind.Sequential, CharSet:=CharSet.Unicode)> _
-    Private Structure NETRESOURCE
-        Public dwScope As Integer
-        Public dwType As Integer
-        Public dwDisplayType As Integer
-        Public dwUsage As Integer
-        Public lpLocalName As String
-        Public lpRemoteName As String
-        Public lpComment As String
-        Public lpProvider As String
-    End Structure
 
     Private Declare Auto Function LogonUser Lib "advapi32.dll" (ByVal lpszUsername As String, ByVal lpszDomain As String, ByVal lpszPassword As String, ByVal dwLogonType As Integer, ByVal dwLogonProvider As Integer, ByRef phToken As IntPtr) As Boolean
     Private Declare Auto Function CloseHandle Lib "kernel32.dll" (ByVal handle As IntPtr) As Boolean
     Private Declare Auto Function DuplicateToken Lib "advapi32.dll" (ByVal ExistingTokenHandle As IntPtr, ByVal SecurityImpersonationLevel As Integer, ByRef DuplicateTokenHandle As IntPtr) As Boolean
-    Private Declare Auto Function WNetAddConnection2 Lib "mpr.dll" Alias "WNetAddConnection2W" (ByRef lpNetResource As NETRESOURCE, ByVal lpPassword As String, ByVal lpUsername As String, ByVal dwFlags As Integer) As Integer
-    Private Declare Auto Function WNetCancelConnection2 Lib "mpr.dll" Alias "WNetCancelConnection2W" (ByVal lpName As String, ByVal dwFlags As Integer, ByVal fForce As Boolean) As Integer
-
-    <DllImport("kernel32.dll")> _
-    Private Shared Function FormatMessage(ByVal dwFlags As Integer, ByRef lpSource As IntPtr, ByVal dwMessageId As Integer, ByVal dwLanguageId As Integer, ByRef lpBuffer As String, ByVal nSize As Integer, ByRef Arguments As IntPtr) As Integer
-    End Function
 
     Private Const LOGON32_PROVIDER_DEFAULT As Integer = 0
     Private Const LOGON32_LOGON_INTERACTIVE As Integer = 2
     Private Const LOGON32_LOGON_NETWORK As Integer = 3
     Private Const SECURITY_IMPERSONATION As Integer = 2
-    Private Const RESOURCETYPE_DISK As Integer = &H1
 
     Private Shared m_currentUserInfo As UserInfo
 
@@ -161,87 +143,6 @@ Public NotInheritable Class Identity
         impersonatedUser = Nothing
 
     End Sub
-
-    ''' <summary>
-    ''' Connects to a network share with the specified user's credentials.
-    ''' </summary>
-    ''' <param name="sharename">To be provided.</param>
-    ''' <param name="username">To be provided.</param>
-    ''' <param name="password">To be provided.</param>
-    ''' <param name="domain">To be provided.</param>
-    ''' <remarks></remarks>
-    Public Shared Sub ConnectToNetworkShare(ByVal sharename As String, ByVal username As String, ByVal password As String, ByVal domain As String)
-
-        Dim resource As NETRESOURCE = Nothing
-        Dim result As Integer
-
-        With resource
-            .dwType = RESOURCETYPE_DISK
-            .lpRemoteName = sharename
-        End With
-
-        If Len(domain) > 0 Then username = domain & "\" & username
-
-        result = WNetAddConnection2(resource, password, username, 0)
-
-        If result <> 0 Then
-            Throw New InvalidOperationException("Failed to connect to network share """ & sharename & """ as user " & username & ".  " & GetErrorMessage(result))
-        End If
-
-    End Sub
-
-    ''' <summary>
-    ''' Disconnects the specified network share.
-    ''' </summary>
-    ''' <param name="sharename">To be provided.</param>
-    ''' <remarks></remarks>
-    Public Shared Sub DisconnectFromNetworkShare(ByVal sharename As String)
-
-        DisconnectFromNetworkShare(sharename, True)
-
-    End Sub
-
-    ''' <summary>
-    ''' Disconnects the specified network share.
-    ''' </summary>
-    ''' <param name="sharename">To be provided.</param>
-    ''' <param name="force">To be provided.</param>
-    ''' <remarks></remarks>
-    Public Shared Sub DisconnectFromNetworkShare(ByVal sharename As String, ByVal force As Boolean)
-
-        Dim result As Integer = WNetCancelConnection2(sharename, 0, force)
-
-        If result <> 0 Then
-            Throw New InvalidOperationException("Failed to disconnect from network share """ & sharename & """.  " & GetErrorMessage(result))
-        End If
-
-    End Sub
-
-    ''' <summary>
-    ''' Formats and returns an error message corresponding to the specified error code.
-    ''' </summary>
-    ''' <param name="errorCode">To be provided.</param>
-    ''' <returns>To be provided.</returns>
-    ''' <remarks></remarks>
-    Private Shared Function GetErrorMessage(ByVal errorCode As Integer) As String
-
-        Const FORMAT_MESSAGE_ALLOCATE_BUFFER As Integer = &H100
-        Const FORMAT_MESSAGE_IGNORE_INSERTS As Integer = &H200
-        Const FORMAT_MESSAGE_FROM_SYSTEM As Integer = &H1000
-
-        Dim messageSize As Integer = 255
-        Dim lpMsgBuf As String = ""
-        Dim dwFlags As Integer = FORMAT_MESSAGE_ALLOCATE_BUFFER Or FORMAT_MESSAGE_FROM_SYSTEM Or FORMAT_MESSAGE_IGNORE_INSERTS
-        Dim ptrlpSource As IntPtr = IntPtr.Zero
-        Dim prtArguments As IntPtr = IntPtr.Zero
-
-        If FormatMessage(dwFlags, ptrlpSource, errorCode, 0, lpMsgBuf, messageSize, prtArguments) = 0 Then
-            Throw New InvalidOperationException("Failed to format message for error code " & errorCode)
-        End If
-
-        Return lpMsgBuf
-
-    End Function
 
     Public Class UserInfo
 
