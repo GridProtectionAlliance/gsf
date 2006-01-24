@@ -21,6 +21,8 @@ Imports System.Text
 
 Namespace Collections
 
+    ' TODO: Fix-up this class to meet new naming convention guidelines and replace use of native VB functions with standard .NET methods
+
     ''' <summary>
     ''' Defines common global functions related to manipulation of collections
     ''' </summary>

@@ -61,9 +61,11 @@
     <Compile Include="Tva.Interop\EndianOrder.vb" />
     <Compile Include="Tva.Interop\Unix\TimeTag.vb" />
     <Compile Include="Tva.Interop\Windows\IniFile.vb" />
+    <Compile Include="Tva.IO\Stream\Common.vb" />
     <Compile Include="Tva.IO\FilePath.vb" />
     <Compile Include="Tva.Math\Common.vb" />
     <Compile Include="Tva.Math\CompositeValues.vb" />
+    <Compile Include="Tva.Math\RealTimeSlope.vb" />
     <Compile Include="Tva.Net\Smtp\Common.vb" />
     <Compile Include="Tva.Net\Smtp\TraceListener.vb" />
     <Compile Include="Tva.Xml\Common.vb" />

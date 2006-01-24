@@ -169,6 +169,120 @@ Namespace Math
             End Get
         End Property
 
+        ''' <summary>
+        ''' <para>Linear regression algorithm</para>
+        ''' </summary>
+        Public Shared Function CurveFit(ByVal polynomialOrder As Integer, ByVal pointCount As Integer, ByVal xValues As Double(), ByVal yValues As Double()) As Double()
+
+            Dim coeffs(7) As Double
+            Dim sum(21) As Double
+            Dim v(11) As Double
+            Dim b(11, 12) As Double
+            Dim p As Double
+            Dim divB As Double
+            Dim fMultB As Double
+            Dim sigma As Double
+            Dim ls As Integer
+            Dim lb As Integer
+            Dim lv As Integer
+            Dim i1 As Integer
+            Dim i As Integer
+            Dim j As Integer
+            Dim k As Integer
+            Dim l As Integer
+
+            If Not (pointCount >= polynomialOrder + 1) Then Throw New ArgumentException("Point count must be greater than requested polynomial order")
+            If Not (polynomialOrder >= 1) And (polynomialOrder <= 7) Then Throw New ArgumentOutOfRangeException("polynomialOrder", "Polynomial order must be between 1 and 7")
+
+            ls = polynomialOrder * 2
+            lb = polynomialOrder + 1
+            lv = polynomialOrder
+            sum(0) = pointCount
+
+            For i = 0 To pointCount - 1
+                p = 1.0#
+                v(0) = v(0) + yValues(i)
+                For j = 1 To lv
+                    p = xValues(i) * p
+                    sum(j) = sum(j) + p
+                    v(j) = v(j) + yValues(i) * p
+                Next
+                For j = lb To ls
+                    p = xValues(i) * p
+                    sum(j) = sum(j) + p
+                Next
+            Next
+
+            For i = 0 To lv
+                For k = 0 To lv
+                    b(k, i) = sum(k + i)
+                Next
+            Next
+
+            For k = 0 To lv
+                b(k, lb) = v(k)
+            Next
+
+            For l = 0 To lv
+                divB = b(0, 0)
+                For j = l To lb
+                    If divB = 0 Then divB = 1
+                    b(l, j) = b(l, j) / divB
+                Next
+
+                i1 = l + 1
+
+                If i1 - lb < 0 Then
+                    For i = i1 To lv
+                        fMultB = b(i, l)
+                        For j = l To lb
+                            b(i, j) = b(i, j) - b(l, j) * fMultB
+                        Next
+                    Next
+                Else
+                    Exit For
+                End If
+            Next
+
+            coeffs(lv) = b(lv, lb)
+            i = lv
+
+            Do
+                sigma = 0
+                For j = i To lv
+                    sigma = sigma + b(i - 1, j) * coeffs(j)
+                Next j
+                i = i - 1
+                coeffs(i) = b(i, lb) - sigma
+            Loop While i - 1 > 0
+
+            '    For i = 1 To 7
+            '        Debug.Print "Coeffs(" & i & ") = " & Coeffs(i)
+            '    Next i
+
+            'For i = 1 To 60
+            '    '        CalcY(i).TTag = xValues(1) + ((i - 1) / (xValues(pointCount) - xValues(1)))
+
+            '    CalcY(i).TTag = ((i - 1) / 59) * xValues(pointCount) - xValues(1)
+            '    CalcY(i).Value = Coeffs(1)
+
+            '    For j = 1 To polynomialOrder
+            '        CalcY(i).Value = CalcY(i).Value + Coeffs(j + 1) * CalcY(i).TTag ^ j
+            '    Next
+            'Next
+
+            '    SSERROR = 0
+            '    For i = 1 To pointCount
+            '        SSERROR = SSERROR + (yValues(i) - CalcY(i).Value) * (yValues(i) - CalcY(i).Value)
+            '    Next i
+            '    SSERROR = SSERROR / (pointCount - polynomialOrder)
+            '    sError = SSERROR
+
+            ' Return slopes...
+            Return coeffs
+
+        End Function
+
     End Class
 
 End Namespace

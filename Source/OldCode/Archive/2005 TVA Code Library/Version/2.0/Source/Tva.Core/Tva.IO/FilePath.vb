@@ -22,7 +22,7 @@ Imports System.Threading
 Imports System.Math
 Imports System.Text
 Imports System.Text.RegularExpressions
-Imports VB = Microsoft.VisualBasic
+Imports VB = Microsoft.VisualBasic ' TODO: Remove this import
 
 Namespace IO
 
@@ -189,10 +189,6 @@ Namespace IO
             Return Guid.NewGuid.ToString() & "." & fileExtension
 
         End Function
-
-        ' TODO: Note for Pinal - I am OK with these being functions instead of readonly properties
-        ' and using the "Get" prefix, see .NET example below that uses "GetTempPath" for the .NET
-        ' "Path" class.
 
         ''' <summary>
         ''' Gets the temporary file path - path will be suffixed with standard directory separator.
