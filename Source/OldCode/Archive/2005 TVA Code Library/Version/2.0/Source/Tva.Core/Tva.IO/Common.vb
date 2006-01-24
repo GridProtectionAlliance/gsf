@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  Tva.IO.Stream.vb - Common Stream Manipulation Functions
+'  Tva.IO.Common.vb - Common IO Related Functions
 '  Copyright © 2005 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005
@@ -15,10 +15,10 @@
 '
 '*******************************************************************************************************
 
-Namespace IO.Stream
+Namespace IO
 
     ''' <summary>
-    ''' <para>Defines common stream related manipulation functions</para>
+    ''' <para>Defines common IO related functions (e.g., common stream and buffer functions)</para>
     ''' </summary>
     Public NotInheritable Class Common
 
@@ -58,6 +58,24 @@ Namespace IO.Stream
             CopyStream(inStream, outStream)
 
             Return outStream.ToArray()
+
+        End Function
+
+        ''' <summary>
+        ''' <para>Returns a buffer of the specified length</para>
+        ''' </summary>
+        ''' <remarks>
+        ''' <para>This function will grow or shrink a buffer as needed to make it the desired length</para>
+        ''' </remarks>
+        Public Shared Function TruncateBuffer(ByVal dataBuffer As Byte(), ByVal length As Integer) As Byte()
+
+            If dataBuffer.Length = length Then
+                Return dataBuffer
+            Else
+                Dim newBuffer As Byte() = Array.CreateInstance(GetType(Byte), length)
+                Buffer.BlockCopy(dataBuffer, 0, newBuffer, 0, length)
+                Return newBuffer
+            End If
 
         End Function
 

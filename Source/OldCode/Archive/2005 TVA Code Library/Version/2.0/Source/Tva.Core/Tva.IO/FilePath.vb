@@ -22,31 +22,97 @@ Imports System.Threading
 Imports System.Math
 Imports System.Text
 Imports System.Text.RegularExpressions
-Imports VB = Microsoft.VisualBasic ' TODO: Remove this import
+Imports System.Runtime.InteropServices
+Imports System.Reflection.Assembly
+Imports Tva.DateTime.Common
+Imports Tva.Text.Common
+Imports Tva.Interop.WindowsApi
 
 Namespace IO
 
     Public NotInheritable Class FilePath
 
+        <StructLayout(LayoutKind.Sequential, CharSet:=CharSet.Unicode)> _
+        Private Structure NETRESOURCE
+            Public dwScope As Integer
+            Public dwType As Integer
+            Public dwDisplayType As Integer
+            Public dwUsage As Integer
+            Public lpLocalName As String
+            Public lpRemoteName As String
+            Public lpComment As String
+            Public lpProvider As String
+        End Structure
+
+        Private Declare Auto Function WNetAddConnection2 Lib "mpr.dll" Alias "WNetAddConnection2W" (ByRef lpNetResource As NETRESOURCE, ByVal lpPassword As String, ByVal lpUsername As String, ByVal dwFlags As Integer) As Integer
+        Private Declare Auto Function WNetCancelConnection2 Lib "mpr.dll" Alias "WNetCancelConnection2W" (ByVal lpName As String, ByVal dwFlags As Integer, ByVal fForce As Boolean) As Integer
+
+        Private Const RESOURCETYPE_DISK As Integer = &H1
+
         Private Shared m_fileNameCharPattern As String
 
         Private Sub New()
+
             ' This class contains only global functions and is not meant to be instantiated
+
+        End Sub
+
+        ''' <summary>
+        ''' Connects to a network share with the specified user's credentials.
+        ''' </summary>
+        ''' <param name="sharename">UNC share name to connect to</param>
+        ''' <param name="username">Username to use for connection</param>
+        ''' <param name="password">Password to use for connection</param>
+        ''' <param name="domain">Domain name to use for connetion - specify computer name for local system accounts</param>
+        ''' <remarks></remarks>
+        Public Shared Sub ConnectToNetworkShare(ByVal sharename As String, ByVal username As String, ByVal password As String, ByVal domain As String)
+
+            Dim resource As NETRESOURCE = Nothing
+            Dim result As Integer
+
+            With resource
+                .dwType = RESOURCETYPE_DISK
+                .lpRemoteName = sharename
+            End With
+
+            If Len(domain) > 0 Then username = domain & "\" & username
+
+            result = WNetAddConnection2(resource, password, username, 0)
+            If result <> 0 Then Throw New InvalidOperationException("Failed to connect to network share """ & sharename & """ as user " & username & ".  " & GetErrorMessage(result))
+
+        End Sub
+
+        ''' <summary>
+        ''' Disconnects the specified network share.
+        ''' </summary>
+        ''' <param name="sharename">UNC share name to disconnect from</param>
+        Public Shared Sub DisconnectFromNetworkShare(ByVal sharename As String)
+
+            DisconnectFromNetworkShare(sharename, True)
+
+        End Sub
+
+        ''' <summary>
+        ''' Disconnects the specified network share.
+        ''' </summary>
+        ''' <param name="sharename">UNC share name to disconnect from</param>
+        ''' <param name="force">Set to True force disconnect</param>
+        Public Shared Sub DisconnectFromNetworkShare(ByVal sharename As String, ByVal force As Boolean)
+
+            Dim result As Integer = WNetCancelConnection2(sharename, 0, force)
+            If result <> 0 Then Throw New InvalidOperationException("Failed to disconnect from network share """ & sharename & """.  " & GetErrorMessage(result))
+
         End Sub
 
         ''' <summary>
         ''' Returns True if specified file name matches any of the given file specs (wildcards are defined as '*' or '?' characters).
         ''' </summary>
-        ''' <param name="fileSpecs">To be provided.</param>
-        ''' <param name="fileName">To be provided.</param>
-        ''' <returns>To be provided.</returns>
-        ''' <remarks></remarks>
-        Public Shared Function IsFilePatternMatch(ByVal fileSpecs As String(), ByVal fileName As String) As Boolean
+        Public Shared Function IsFilePatternMatch(ByVal fileSpecs As String(), ByVal fileName As String, ByVal ignoreCase As Boolean) As Boolean
 
             Dim found As Boolean
 
             For Each fileSpec As String In fileSpecs
-                If IsFilePatternMatch(fileSpec, fileName, True) Then
+                If IsFilePatternMatch(fileSpec, fileName, ignoreCase) Then
                     found = True
                     Exit For
                 End If
@@ -59,11 +125,6 @@ Namespace IO
         ''' <summary>
         ''' Returns True if specified file name matches given file spec (wildcards are defined as '*' or '?' characters).
         ''' </summary>
-        ''' <param name="fileSpec">To be provided.</param>
-        ''' <param name="fileName">To be provided.</param>
-        ''' <param name="ignoreCase">To be provided.</param>
-        ''' <returns>To be provided.</returns>
-        ''' <remarks></remarks>
         Public Shared Function IsFilePatternMatch(ByVal fileSpec As String, ByVal fileName As String, ByVal ignoreCase As Boolean) As Boolean
 
             Return (New Regex(GetFilePatternRegularExpression(fileSpec), IIf(ignoreCase, RegexOptions.IgnoreCase, RegexOptions.None))).IsMatch(fileName)
@@ -73,37 +134,35 @@ Namespace IO
         ''' <summary>
         ''' <para>Returns a regular expression that simulates wildcard matching for filenames (wildcards are defined as '*' or '?' characters)</para>
         ''' </summary>
-        ''' <param name="FileSpec"> Required. File spec . </param>
         Public Shared Function GetFilePatternRegularExpression(ByVal fileSpec As String) As String
-
-            Dim filePattern As String
 
             If m_fileNameCharPattern Is Nothing Then
                 With New StringBuilder
                     ' Define a regular expression pattern for a valid file name character, we do this by
                     ' allowing any characters except those that would not be valid as part of a filename,
                     ' this essentially builds the "?" wildcard pattern match
-                    ' TODO: Fix this
-                    '.Append("[^")
-                    '.Append(GetRegexUnicodeChar(Path.DirectorySeparatorChar))
-                    '.Append(GetRegexUnicodeChar(Path.AltDirectorySeparatorChar))
-                    '.Append(GetRegexUnicodeChar(Path.PathSeparator))
-                    '.Append(GetRegexUnicodeChar(Path.VolumeSeparatorChar))
+                    .Append("[^")
+                    .Append(EncodeRegexChar(Path.DirectorySeparatorChar))
+                    .Append(EncodeRegexChar(Path.AltDirectorySeparatorChar))
+                    .Append(EncodeRegexChar(Path.PathSeparator))
+                    .Append(EncodeRegexChar(Path.VolumeSeparatorChar))
 
-                    'For Each c As Char In Path.GetInvalidPathChars()
-                    '    .Append(GetRegexUnicodeChar(c))
-                    'Next
+                    For Each c As Char In Path.GetInvalidPathChars()
+                        .Append(EncodeRegexChar(c))
+                    Next
 
-                    '.Append("]")
-                    'm_fileNameCharPattern = .ToString()
+                    .Append("]")
+                    m_fileNameCharPattern = .ToString()
                 End With
             End If
 
-            filePattern = Replace(fileSpec, "\", "\u005C")      ' Backslash in Regex means special sequence, here we really want a backslash
-            filePattern = Replace(filePattern, ".", "\u002E")   ' Dot in Regex means any character, here we really want a dot
-            filePattern = Replace(filePattern, "?", m_fileNameCharPattern)
+            ' Replace wildcard file patterns with their equivalent regular expression
+            fileSpec = fileSpec.Replace("\", "\u005C")  ' Backslash in Regex means special sequence, here we really want a backslash
+            fileSpec = fileSpec.Replace(".", "\u002E")  ' Dot in Regex means any character, here we really want a dot
+            fileSpec = fileSpec.Replace("?", m_fileNameCharPattern)
+            fileSpec = fileSpec.Replace("*", "(" & m_fileNameCharPattern & ")*")
 
-            Return "^" & Replace(filePattern, "*", "(" & m_fileNameCharPattern & ")*") & "$"
+            Return "^" & fileSpec & "$"
 
         End Function
 
@@ -112,7 +171,6 @@ Namespace IO
         ''' </summary>
         ''' <param name="fileName">Name of file whose size is to be returned.</param>
         ''' <returns>The size of the specified file.</returns>
-        ''' <remarks></remarks>
         Public Shared Function GetFileLength(ByVal fileName As String) As Long
 
             Try
@@ -128,8 +186,6 @@ Namespace IO
         ''' <summary>
         ''' Gets a unique temporary file name with path.
         ''' </summary>
-        ''' <returns></returns>
-        ''' <remarks></remarks>
         Public Shared Function GetTempFile() As String
 
             Return GetTempFile(True, True, "tmp")
@@ -139,26 +195,25 @@ Namespace IO
         ''' <summary>
         ''' Gets a unique temporary file name with path - if UseTempPath is False, application path is used for temp file.
         ''' </summary>
-        ''' <param name="useTempPath">To be provided.</param>
-        ''' <param name="createZeroLengthFile">To be provided.</param>
-        ''' <param name="fileExtension">To be provided.</param>
-        ''' <returns>To be provided.</returns>
-        ''' <remarks></remarks>
         Public Shared Function GetTempFile(ByVal useTempPath As Boolean, ByVal createZeroLengthFile As Boolean, ByVal fileExtension As String) As String
 
-            If useTempPath And createZeroLengthFile Then
+            If useTempPath AndAlso createZeroLengthFile Then
                 Dim tempFile As String = GetTempFilePath() & GetTempFileName(fileExtension)
+
                 With File.Create(tempFile)
                     .Close()
                 End With
+
                 Return tempFile
             ElseIf useTempPath Then
                 Return GetTempFilePath() & GetTempFileName(fileExtension)
             ElseIf createZeroLengthFile Then
                 Dim tempFile As String = GetApplicationPath() & GetTempFileName(fileExtension)
+
                 With File.Create(tempFile)
                     .Close()
                 End With
+
                 Return tempFile
             Else
                 Return GetApplicationPath() & GetTempFileName(fileExtension)
@@ -169,8 +224,6 @@ Namespace IO
         ''' <summary>
         ''' Gets a file name (with .tmp extension) guaranteed to be unique with no path.
         ''' </summary>
-        ''' <returns></returns>
-        ''' <remarks></remarks>
         Public Shared Function GetTempFileName() As String
 
             Return GetTempFileName("tmp")
@@ -194,7 +247,6 @@ Namespace IO
         ''' Gets the temporary file path - path will be suffixed with standard directory separator.
         ''' </summary>
         ''' <returns>The temporary file path.</returns>
-        ''' <remarks></remarks>
         Public Shared Function GetTempFilePath() As String
 
             Return AddPathSuffix(Path.GetTempPath())
@@ -205,25 +257,21 @@ Namespace IO
         ''' Gets the path of the executing assembly - path will be suffixed with standard directory separator.
         ''' </summary>
         ''' <returns>The path of the executing assembly.</returns>
-        ''' <remarks></remarks>
         Public Shared Function GetApplicationPath() As String
 
-            Return JustPath(Trim(System.Reflection.Assembly.GetEntryAssembly.Location()))
+            Return JustPath(Trim(GetEntryAssembly.Location()))
 
         End Function
 
         ''' <summary>
         ''' Returns just the drive letter (or UNC \\server\share\) from a path") - path will be suffixed with standard directory separator.
         ''' </summary>
-        ''' <param name="filePath">To be provided.</param>
-        ''' <returns>To be provided.</returns>
-        ''' <remarks></remarks>
         Public Shared Function JustDrive(ByVal filePath As String) As String
 
-            If Not String.IsNullOrEmpty(filePath) Then
-                Return AddPathSuffix(Path.GetPathRoot(filePath))
-            Else
+            If String.IsNullOrEmpty(filePath) Then
                 Return Path.DirectorySeparatorChar
+            Else
+                Return AddPathSuffix(Path.GetPathRoot(filePath))
             End If
 
         End Function
@@ -231,15 +279,12 @@ Namespace IO
         ''' <summary>
         ''' Returns just the file name from a path.
         ''' </summary>
-        ''' <param name="filePath">To be provided.</param>
-        ''' <returns>To be provided.</returns>
-        ''' <remarks></remarks>
         Public Shared Function JustFileName(ByVal filePath As String) As String
 
-            If Not String.IsNullOrEmpty(filePath) Then
-                Return Path.GetFileName(filePath)
-            Else
+            If String.IsNullOrEmpty(filePath) Then
                 Return ""
+            Else
+                Return Path.GetFileName(filePath)
             End If
 
         End Function
@@ -247,9 +292,6 @@ Namespace IO
         ''' <summary>
         ''' Returns last directory name from a path (e.g., would return sub2 from c:\windows\sub2\filename.ext).
         ''' </summary>
-        ''' <param name="filePath">To be provided.</param>
-        ''' <returns>To be provided.</returns>
-        ''' <remarks></remarks>
         Public Shared Function LastDirectoryName(ByVal filePath As String) As String
 
             Dim dirChars As Char() = {Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar}
@@ -272,15 +314,12 @@ Namespace IO
         ''' <summary>
         ''' Returns just the path without a filename from a path - path will be suffixed with standard directory separator.
         ''' </summary>
-        ''' <param name="filePath">To be provided.</param>
-        ''' <returns>To be provided.</returns>
-        ''' <remarks></remarks>
         Public Shared Function JustPath(ByVal filePath As String) As String
 
-            If Not String.IsNullOrEmpty(filePath) Then
-                Return Path.GetDirectoryName(filePath) & Path.DirectorySeparatorChar
-            Else
+            If String.IsNullOrEmpty(filePath) Then
                 Return Path.DirectorySeparatorChar
+            Else
+                Return Path.GetDirectoryName(filePath) & Path.DirectorySeparatorChar
             End If
 
         End Function
@@ -288,15 +327,12 @@ Namespace IO
         ''' <summary>
         ''' Returns just the file extension from a path - keeps extension "dot".
         ''' </summary>
-        ''' <param name="filePath">To be provided.</param>
-        ''' <returns>To be provided.</returns>
-        ''' <remarks></remarks>
         Public Shared Function JustFileExtension(ByVal filePath As String) As String
 
-            If Not String.IsNullOrEmpty(filePath) Then
-                Return Path.GetExtension(filePath)
-            Else
+            If String.IsNullOrEmpty(filePath) Then
                 Return ""
+            Else
+                Return Path.GetExtension(filePath)
             End If
 
         End Function
@@ -304,46 +340,28 @@ Namespace IO
         ''' <summary>
         ''' Returns just the file name with no extension from a path.
         ''' </summary>
-        ''' <param name="filePath">To be provided.</param>
-        ''' <returns>To be provided.</returns>
-        ''' <remarks></remarks>
         Public Shared Function NoFileExtension(ByVal filePath As String) As String
 
-            If Not String.IsNullOrEmpty(filePath) Then
-                Return Path.GetFileNameWithoutExtension(filePath)
-            Else
+            If String.IsNullOrEmpty(filePath) Then
                 Return ""
+            Else
+                Return Path.GetFileNameWithoutExtension(filePath)
             End If
-
-        End Function
-
-        ''' <summary>
-        ''' Returns True if given path exists.
-        ''' </summary>
-        ''' <param name="filePath">To be provided.</param>
-        ''' <returns>To be provided.</returns>
-        ''' <remarks></remarks>
-        Public Shared Function PathExists(ByVal filePath As String) As Boolean
-
-            Return Directory.Exists(filePath)
 
         End Function
 
         ''' <summary>
         ''' Makes sure path is suffixed with standard directory separator.
         ''' </summary>
-        ''' <param name="filePath">To be provided.</param>
-        ''' <returns>To be provided.</returns>
-        ''' <remarks></remarks>
         Public Shared Function AddPathSuffix(ByVal filePath As String) As String
 
-            If Not String.IsNullOrEmpty(filePath) Then
+            If String.IsNullOrEmpty(filePath) Then
+                filePath = Path.DirectorySeparatorChar
+            Else
                 Dim suffixChar As Char = filePath.Chars(filePath.Length - 1)
-                If suffixChar <> Path.DirectorySeparatorChar And suffixChar <> Path.AltDirectorySeparatorChar Then
+                If suffixChar <> Path.DirectorySeparatorChar AndAlso suffixChar <> Path.AltDirectorySeparatorChar Then
                     filePath &= Path.DirectorySeparatorChar
                 End If
-            Else
-                filePath = Path.DirectorySeparatorChar
             End If
 
             Return filePath
@@ -353,14 +371,13 @@ Namespace IO
         ''' <summary>
         ''' Makes sure path is not suffixed with any directory separator.
         ''' </summary>
-        ''' <param name="filePath">To be provided.</param>
-        ''' <returns>To be provided.</returns>
-        ''' <remarks></remarks>
         Public Shared Function RemovePathSuffix(ByVal filePath As String) As String
 
-            If Not String.IsNullOrEmpty(filePath) Then
+            If String.IsNullOrEmpty(filePath) Then
+                filePath = ""
+            Else
                 Dim suffixChar As Char = filePath.Chars(filePath.Length - 1)
-                While (suffixChar = Path.DirectorySeparatorChar Or suffixChar = Path.AltDirectorySeparatorChar) And filePath.Length > 0
+                While (suffixChar = Path.DirectorySeparatorChar OrElse suffixChar = Path.AltDirectorySeparatorChar) AndAlso filePath.Length > 0
                     filePath = filePath.Substring(0, filePath.Length - 1)
                     If filePath.Length > 0 Then suffixChar = filePath.Chars(filePath.Length - 1)
                 End While
@@ -371,19 +388,23 @@ Namespace IO
         End Function
 
         ''' <summary>
-        ''' Returns a file name for display purposes of the specified length using "..." to indicate larger name.
+        ''' Returns a file name for display purposes of the specified length using "..." to indicate a longer name
         ''' </summary>
-        ''' <param name="fileName">To be provided.</param>
-        ''' <param name="length">To be provided.</param>
-        ''' <returns>To be provided.</returns>
-        ''' <remarks></remarks>
+        ''' <remarks>
+        ''' <para>Minimum value for the <paramref name="length" /> parameter is 12.</para>
+        ''' <para>12 will be used for any value specified less than 12.</para>
+        ''' </remarks>
         Public Shared Function TrimFileName(ByVal fileName As String, ByVal length As Integer) As String
 
-            fileName = Trim(fileName)
+            If String.IsNullOrEmpty(fileName) Then
+                fileName = ""
+            Else
+                fileName = fileName.Trim()
+            End If
 
-            If length < 12 Then
-                Throw New InvalidOperationException("Cannot trim file names to less than 12 characters...")
-            ElseIf fileName.Length > length Then
+            If length < 12 Then length = 12
+
+            If fileName.Length > length Then
                 Dim justName As String = JustFileName(fileName)
 
                 If justName.Length = fileName.Length Then
@@ -394,7 +415,7 @@ Namespace IO
                     If trimName.Length > 8 Then
                         If justExtension.Length > length - 8 Then justExtension = justExtension.Substring(0, length - 8)
                         Dim offset As Single = (length - justExtension.Length() - 3) / 2
-                        Return trimName.Substring(0, CInt(Ceiling(offset))) & "..." & trimName.Substring(Len(trimName) - CInt(Floor(offset)) + 1) & justExtension
+                        Return trimName.Substring(0, Ceiling(offset)) & "..." & trimName.Substring(Len(trimName) - Floor(offset) + 1) & justExtension
                     Else
                         ' We can't trim file names less than 8 with a "...", so we truncate long extension
                         Return trimName & justExtension.Substring(0, length - trimName.Length)
@@ -426,7 +447,6 @@ Namespace IO
         ''' </summary>
         ''' <param name="path">The path for which a list of files is to be returned.</param>
         ''' <returns>A list of files for the given path.</returns>
-        ''' <remarks></remarks>
         Public Shared Function GetFileList(ByVal path As String) As String()
 
             Return Directory.GetFiles(JustPath(path), JustFileName(path))
@@ -437,7 +457,6 @@ Namespace IO
         ''' Waits for the default duration (5 seconds) for read access on a file.
         ''' </summary>
         ''' <param name="fileName">The name of the file to wait for to obtain read access.</param>
-        ''' <remarks></remarks>
         Public Shared Sub WaitForReadLock(ByVal fileName As String)
 
             WaitForReadLock(fileName, 5)
@@ -450,7 +469,7 @@ Namespace IO
         ''' <param name="fileName">The name of the file to wait for to obtain read access.</param>
         ''' <param name="secondsToWait">The time to wait for in seconds to obtain read access on a file.</param>
         ''' <remarks>Set secondsToWait to zero to wait infinitely.</remarks>
-        Public Shared Sub WaitForReadLock(ByVal fileName As String, ByVal secondsToWait As Integer)
+        Public Shared Sub WaitForReadLock(ByVal fileName As String, ByVal secondsToWait As Double)
 
             If Not File.Exists(fileName) Then
                 Throw New FileNotFoundException("Could not test file lock for """ & fileName & """, file does not exist", fileName)
@@ -459,7 +478,7 @@ Namespace IO
 
             ' We use this function to keep trying for a file lock...
             Dim targetFile As FileStream = Nothing
-            Dim startTime As Double = VB.Timer
+            Dim startTime As Double = SystemTimer
 
             While True
                 Try
@@ -470,7 +489,7 @@ Namespace IO
                     ' We'll keep trying till we can open the file...
                 End Try
 
-                If Not targetFile Is Nothing Then
+                If targetFile IsNot Nothing Then
                     Try
                         targetFile.Close()
                     Catch
@@ -479,14 +498,14 @@ Namespace IO
                 End If
 
                 If secondsToWait > 0 Then
-                    If VB.Timer > startTime + CDbl(secondsToWait) Then
+                    If SystemTimer > startTime + secondsToWait Then
                         Throw New IOException("Could not open """ & fileName & """ for read access, tried for " & secondsToWait & " seconds")
                         Exit While
                     End If
                 End If
 
                 ' Yield to all other system threads...
-                Thread.Sleep(0)
+                Thread.Sleep(1)
             End While
 
         End Sub
@@ -508,7 +527,7 @@ Namespace IO
         ''' <param name="fileName">The name of the file to wait for to obtain write access.</param>
         ''' <param name="secondsToWait">The time to wait for in seconds to obtain write access on a file.</param>
         ''' <remarks>Set secondsToWait to zero to wait infinitely.</remarks>
-        Public Shared Sub WaitForWriteLock(ByVal fileName As String, ByVal secondsToWait As Integer)
+        Public Shared Sub WaitForWriteLock(ByVal fileName As String, ByVal secondsToWait As Double)
 
             If Not File.Exists(fileName) Then
                 Throw New FileNotFoundException("Could not test file lock for """ & fileName & """, file does not exist", fileName)
@@ -517,7 +536,7 @@ Namespace IO
 
             ' We use this function to keep trying for a file lock...
             Dim targetFile As FileStream = Nothing
-            Dim startTime As Double = VB.Timer
+            Dim startTime As Double = SystemTimer
 
             While True
                 Try
@@ -528,7 +547,7 @@ Namespace IO
                     ' We'll keep trying till we can open the file...
                 End Try
 
-                If Not targetFile Is Nothing Then
+                If targetFile IsNot Nothing Then
                     Try
                         targetFile.Close()
                     Catch
@@ -537,14 +556,14 @@ Namespace IO
                 End If
 
                 If secondsToWait > 0 Then
-                    If VB.Timer > startTime + CDbl(secondsToWait) Then
+                    If SystemTimer > startTime + secondsToWait Then
                         Throw New IOException("Could not open """ & fileName & """ for write access, tried for " & secondsToWait & " seconds")
                         Exit While
                     End If
                 End If
 
                 ' Yield to all other system threads...
-                Thread.Sleep(0)
+                Thread.Sleep(1)
             End While
 
         End Sub
@@ -566,21 +585,21 @@ Namespace IO
         ''' <param name="fileName">The name of the file to wait for until it is created.</param>
         ''' <param name="secondsToWait">The time to wait for in seconds for the file to be created.</param>
         ''' <remarks>Set secondsToWait to zero to wait infinitely.</remarks>
-        Public Shared Sub WaitTillExists(ByVal fileName As String, ByVal secondsToWait As Integer)
+        Public Shared Sub WaitTillExists(ByVal fileName As String, ByVal secondsToWait As Double)
 
             ' We use this function to keep waiting for a file to be created...
-            Dim startTime As Double = VB.Timer
+            Dim startTime As Double = SystemTimer
 
             While Not File.Exists(fileName)
                 If secondsToWait > 0 Then
-                    If VB.Timer > startTime + CDbl(secondsToWait) Then
+                    If SystemTimer > startTime + secondsToWait Then
                         Throw New IOException("Waited for """ & fileName & """ to exist for " & secondsToWait & " seconds, but it was never created")
                         Exit While
                     End If
                 End If
 
                 ' Yield to all other system threads...
-                Thread.Sleep(0)
+                Thread.Sleep(1)
             End While
 
         End Sub

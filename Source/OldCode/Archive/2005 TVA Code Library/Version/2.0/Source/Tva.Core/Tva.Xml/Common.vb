@@ -49,6 +49,7 @@ Namespace Xml
         ''' </summary>
         ''' <remarks>
         ''' <para>This overload just allows start given xml document by using its root element.</para>
+        ''' <para>Note that the <paramref name="isDirty" /> parameter will be set to True is any items were added to the tree</para>
         ''' </remarks>
         Public Shared Function GetXmlNode(ByVal xmlDoc As XmlDocument, ByVal xpath As String, ByRef isDirty As Boolean) As XmlNode
 
@@ -68,16 +69,19 @@ Namespace Xml
         ''' <summary>
         ''' <para>Gets an Xml node from given path, creating the entire path it if it doesn't exist.</para>
         ''' </summary>
+        ''' <remarks>
+        ''' <para>Note that the <paramref name="isDirty" /> parameter will be set to True is any items were added to the tree</para>
+        ''' </remarks>
         Public Shared Function GetXmlNode(ByVal parentNode As XmlNode, ByVal xpath As String, ByRef isDirty As Boolean) As XmlNode
 
-            Dim node As XmlNode
+            Dim node As XmlNode = Nothing
             Dim element As String
             Dim elements As String()
 
             ' Remove any slash prefixes
-            While Left(xpath, 1) = "/"
-                xpath = Mid(xpath, 2)
-            End While
+            Do While xpath.Chars(0) = "/"c
+                xpath = xpath.Substring(1)
+            Loop
 
             elements = xpath.Split("/"c)
 
@@ -103,10 +107,11 @@ Namespace Xml
         End Function
 
         ''' <summary>
-        ''' <para>Safely gets or sets an XML node's attribute, creating it if needed.</para>
+        ''' <para>Safely gets or sets an XML node's attribute.</para>
         ''' </summary>
-        ''' <param name="node"> Required.xml node. </param>
-        ''' <param name="name"> Required.String. </param>
+        ''' <remarks>
+        ''' <para>If you assign a value to an attribute that doesn't exist, it will be created</para>
+        ''' </remarks>
         Public Shared Property Attribute(ByVal node As XmlNode, ByVal name As String) As String
             Get
                 Dim attr As XmlAttribute = node.Attributes(name)
@@ -116,7 +121,7 @@ Namespace Xml
                     Return attr.Value
                 End If
             End Get
-            Set(ByVal Value As String)
+            Set(ByVal value As String)
                 Dim attr As XmlAttribute = node.Attributes(name)
 
                 If attr Is Nothing Then
@@ -125,7 +130,7 @@ Namespace Xml
                 End If
 
                 If Not attr Is Nothing Then
-                    attr.Value = Value
+                    attr.Value = value
                     node.Attributes.SetNamedItem(attr)
                 End If
             End Set

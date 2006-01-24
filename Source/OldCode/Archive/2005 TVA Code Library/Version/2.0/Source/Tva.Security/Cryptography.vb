@@ -16,11 +16,13 @@
 '       2.0 version of source code migrated from 1.1 source (TVA.Shared.Crypto)
 '
 '*******************************************************************************************************
+
 Imports System.IO
 Imports System.Text
 Imports System.Security.Cryptography
 Imports Tva.Math.Common
-Imports Tva.Bit
+Imports Tva.IO.Common
+Imports Tva.Interop.Bit
 
 ''' <summary>
 ''' <para>Common Cryptographic Functions</para>
@@ -608,7 +610,7 @@ Public NotInheritable Class Cryptography
             .Append(Microsoft.VisualBasic.Timer)
             .Append(System.DateTime.Now.ToString)
             .Append(Guid.NewGuid.ToString.ToUpper)
-            keyChars = Replace(Replace(Replace(.ToString, " ", "©"), "-", "~"), "/", "%").ToCharArray
+            keyChars = .ToString.Replace(" "c, "©"c).Replace("-"c, "~"c).Replace("/"c, "%"c).ToCharArray
         End With
 
         ' Swap values around in array at random

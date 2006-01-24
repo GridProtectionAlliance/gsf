@@ -83,16 +83,52 @@ Namespace DateTime
         End Sub
 
         ''' <summary>
+        ''' Converts ticks to seconds
+        ''' </summary>
+        Public Shared ReadOnly Property TicksToSeconds(ByVal ticks As Long) As Double
+            Get
+                Return ticks / 10000000L
+            End Get
+        End Property
+
+        ''' <summary>
+        ''' Converts seconds to ticks
+        ''' </summary>
+        Public Shared ReadOnly Property SecondsToTicks(ByVal seconds As Double) As Long
+            Get
+                Return seconds * 10000000L
+            End Get
+        End Property
+
+        ''' <summary>
+        ''' Returns the number of seconds in the local timezone, including fractional seconds, since that have elapsed since 12:00:00 midnight, January 1, 0001
+        ''' </summary>
+        Public Shared ReadOnly Property SystemTimer() As Double
+            Get
+                Return TicksToSeconds(Date.Now.Ticks)
+            End Get
+        End Property
+
+        ''' <summary>
+        ''' Returns the number of seconds in the Universally coordinated timezone, including fractional seconds, since that have elapsed since 12:00:00 midnight, January 1, 0001
+        ''' </summary>
+        Public Shared ReadOnly Property UtcSystemTimer() As Double
+            Get
+                Return TicksToSeconds(Date.UtcNow.Ticks)
+            End Get
+        End Property
+
+        ''' <summary>
         ''' <para>Removes any milliseconds from a timestamp value to baseline the time at the bottom of the second</para>
         ''' </summary>
         ''' <param name="timestamp">Timestamp to baseline</param>
-        Public Shared Function BaselinedTimestamp(ByVal timestamp As System.DateTime) As System.DateTime
+        Public Shared Function BaselinedTimestamp(ByVal timestamp As Date) As Date
 
             With timestamp
                 If .Millisecond = 0 Then
                     Return timestamp
                 Else
-                    Return New System.DateTime(.Year, .Month, .Day, .Hour, .Minute, .Second, 0)
+                    Return New Date(.Year, .Month, .Day, .Hour, .Minute, .Second, 0)
                 End If
             End With
 
@@ -292,7 +328,7 @@ Namespace DateTime
                     Case 12
                         Return "Dec"
                     Case Else
-                        Return "???"
+                        Throw New ArgumentOutOfRangeException("monthNumber", "Invalid month number """ & monthNumber & """ specified - expected a value between 1 and 12")
                 End Select
             End Get
         End Property
@@ -332,7 +368,7 @@ Namespace DateTime
                     Case 12
                         Return "December"
                     Case Else
-                        Return "???"
+                        Throw New ArgumentOutOfRangeException("monthNumber", "Invalid month number """ & monthNumber & """ specified - expected a value between 1 and 12")
                 End Select
             End Get
         End Property
@@ -444,7 +480,7 @@ Namespace DateTime
         ''' <returns>
         ''' <para>Timestamp in Eastern time</para>
         ''' </returns>
-        Public Shared Function LocalTimeToEasternTime(ByVal localTimeStamp As System.DateTime) As System.DateTime
+        Public Shared Function LocalTimeToEasternTime(ByVal localTimeStamp As Date) As Date
 
             Return LocalTimeTo(localTimeStamp, EasternTimeZone)
 
@@ -457,7 +493,7 @@ Namespace DateTime
         ''' <returns>
         ''' <para>Timestamp in Central time</para>
         ''' </returns>
-        Public Shared Function LocalTimeToCentralTime(ByVal localTimeStamp As System.DateTime) As System.DateTime
+        Public Shared Function LocalTimeToCentralTime(ByVal localTimeStamp As Date) As Date
 
             Return LocalTimeTo(localTimeStamp, CentralTimeZone)
 
@@ -470,7 +506,7 @@ Namespace DateTime
         ''' <returns>
         ''' <para>Timestamp in Mountain time</para>
         ''' </returns>
-        Public Shared Function LocalTimeToMountainTime(ByVal localTimeStamp As System.DateTime) As System.DateTime
+        Public Shared Function LocalTimeToMountainTime(ByVal localTimeStamp As Date) As Date
 
             Return LocalTimeTo(localTimeStamp, MountainTimeZone)
 
@@ -483,7 +519,7 @@ Namespace DateTime
         ''' <returns>
         ''' <para>Timestamp in Pacific time</para>
         ''' </returns>
-        Public Shared Function LocalTimeToPacificTime(ByVal localTimeStamp As System.DateTime) As System.DateTime
+        Public Shared Function LocalTimeToPacificTime(ByVal localTimeStamp As Date) As Date
 
             Return LocalTimeTo(localTimeStamp, PacificTimeZone)
 
@@ -499,7 +535,7 @@ Namespace DateTime
         ''' <returns>
         ''' <para>Timestamp in UniversalTime (a.k.a., GMT)</para>
         ''' </returns>
-        Public Shared Function LocalTimeToUniversalTime(ByVal localTimestamp As System.DateTime) As System.DateTime
+        Public Shared Function LocalTimeToUniversalTime(ByVal localTimestamp As Date) As Date
 
             Return localTimestamp.ToUniversalTime()
 
@@ -513,7 +549,7 @@ Namespace DateTime
         ''' <returns>
         ''' <para>Timestamp in specified time zone</para>
         ''' </returns>
-        Public Shared Function LocalTimeTo(ByVal localTimestamp As System.DateTime, ByVal destinationTimeZoneStandardName As String) As System.DateTime
+        Public Shared Function LocalTimeTo(ByVal localTimestamp As Date, ByVal destinationTimeZoneStandardName As String) As Date
 
             Return LocalTimeTo(localTimestamp, GetWin32TimeZone(destinationTimeZoneStandardName))
 
@@ -527,7 +563,7 @@ Namespace DateTime
         ''' <returns>
         ''' <para>Timestamp in specified time zone</para>
         ''' </returns>
-        Public Shared Function LocalTimeTo(ByVal localTimestamp As System.DateTime, ByVal destinationTimeZone As Win32TimeZone) As System.DateTime
+        Public Shared Function LocalTimeTo(ByVal localTimestamp As Date, ByVal destinationTimeZone As Win32TimeZone) As Date
 
             Dim destOffset As Double
 
@@ -549,7 +585,7 @@ Namespace DateTime
         ''' <returns>
         ''' <para>Timestamp in destination time zone</para>
         ''' </returns>
-        Public Shared Function TimeZoneToTimeZone(ByVal timestamp As System.DateTime, ByVal sourceTimeZoneStandardName As String, ByVal destinationTimeZoneStandardName As String) As System.DateTime
+        Public Shared Function TimeZoneToTimeZone(ByVal timestamp As Date, ByVal sourceTimeZoneStandardName As String, ByVal destinationTimeZoneStandardName As String) As Date
 
             Return TimeZoneToTimeZone(timestamp, GetWin32TimeZone(sourceTimeZoneStandardName), GetWin32TimeZone(destinationTimeZoneStandardName))
 
@@ -564,7 +600,7 @@ Namespace DateTime
         ''' <returns>
         ''' <para>Timestamp in destination time zone</para>
         ''' </returns>
-        Public Shared Function TimeZoneToTimeZone(ByVal timestamp As System.DateTime, ByVal sourceTimeZone As Win32TimeZone, ByVal destinationTimeZone As Win32TimeZone) As System.DateTime
+        Public Shared Function TimeZoneToTimeZone(ByVal timestamp As Date, ByVal sourceTimeZone As Win32TimeZone, ByVal destinationTimeZone As Win32TimeZone) As Date
 
             Dim destOffset As Double
 

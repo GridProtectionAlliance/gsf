@@ -20,7 +20,7 @@
 Imports System.Runtime.InteropServices
 Imports System.Security.Principal
 Imports System.DirectoryServices
-Imports Tva.Interop.Windows.Common
+Imports Tva.Interop.WindowsApi
 
 Namespace Identity
 

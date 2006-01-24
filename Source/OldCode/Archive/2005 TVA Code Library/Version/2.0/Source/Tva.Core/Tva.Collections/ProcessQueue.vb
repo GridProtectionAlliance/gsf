@@ -518,7 +518,7 @@ Namespace Collections
 
                 If processingTime < 0 Then processingTime = 0
 
-                Return processingTime / 10000000L
+                Return TicksToSeconds(processingTime)
             End Get
         End Property
 

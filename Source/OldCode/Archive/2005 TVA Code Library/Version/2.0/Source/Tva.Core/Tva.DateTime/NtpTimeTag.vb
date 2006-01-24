@@ -17,6 +17,8 @@
 '
 '*******************************************************************************************************
 
+Imports Tva.DateTime.Common
+
 Namespace DateTime
 
     ''' <summary>
@@ -28,7 +30,7 @@ Namespace DateTime
 
         ' NTP dates are measured as the number of seconds since 1/1/1900, so we calculate this
         ' date to get offset in ticks for later conversion...
-        Private Shared m_ntpDateOffsetTicks As Long = (New System.DateTime(1900, 1, 1, 0, 0, 0)).Ticks
+        Private Shared m_ntpDateOffsetTicks As Long = (New Date(1900, 1, 1, 0, 0, 0)).Ticks
 
         Private m_seconds As Double
 
@@ -46,10 +48,10 @@ Namespace DateTime
         ''' <para>Creates new NTP timetag given standard .NET DateTime</para>
         ''' </summary>
         ''' <param name="timestamp">.NET timestamp to create NTP timetag from (minimum valid date is 1/1/1900)</param>
-        Public Sub New(ByVal timestamp As System.DateTime)
+        Public Sub New(ByVal timestamp As Date)
 
             ' Zero base 100-nanosecond ticks from 1/1/1900 and convert to seconds
-            Value = (timestamp.Ticks - m_ntpDateOffsetTicks) / 10000000L
+            Value = TicksToSeconds(timestamp.Ticks - m_ntpDateOffsetTicks)
 
         End Sub
 
@@ -69,10 +71,10 @@ Namespace DateTime
         ''' <summary>
         ''' <para>Returns standard .NET DateTime representation for timetag</para>
         ''' </summary>
-        Public Function ToDateTime() As System.DateTime
+        Public Function ToDateTime() As Date
 
             '  Convert m_seconds to 100-nanosecond ticks and add the 1/1/1900 offset
-            Return New System.DateTime(m_seconds * 10000000L + m_ntpDateOffsetTicks)
+            Return New Date(SecondsToTicks(m_seconds) + m_ntpDateOffsetTicks)
 
         End Function
 

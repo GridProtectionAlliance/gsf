@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  Tva.DateTime.UnixTimeTag.vb - Unix timetag class
+'  Tva.DateTime.UnixTimeTag.vb - Standard Unix Timetag Class
 '  Copyright © 2006 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005
@@ -10,17 +10,21 @@
 '
 '  Code Modification History:
 '  -----------------------------------------------------------------------------------------------------
-'  11/12/2004 - James R Carroll
-'       Initial version of source generated
+'  10/12/2005 - James R Carroll
+'       Original version of source generated
 '  01/05/2006 - James R Carroll
 '       2.0 version of source code migrated from 1.1 source (TVA.Interop.Unix.TimeTag)
+'  01/24/2006 - James R Carroll
+'       Moved into DateTime namespace and renamed to UnixTimeTag
 '
 '*******************************************************************************************************
+
+Imports Tva.DateTime.Common
 
 Namespace DateTime
 
     ''' <summary>
-    ''' <para>Unix timetag class</para>
+    ''' <para>Standard Unix Timetag</para>
     ''' </summary>
     Public Class UnixTimeTag
 
@@ -28,23 +32,34 @@ Namespace DateTime
 
         ' Unix dates are measured as the number of seconds since 1/1/1970, so we calculate this
         ' date to get offset in ticks for later conversion...
-        Private Shared unixDateOffsetTicks As Long = (New System.DateTime(1970, 1, 1, 0, 0, 0)).Ticks
+        Private Shared m_unixDateOffsetTicks As Long = (New Date(1970, 1, 1, 0, 0, 0)).Ticks
 
         Private m_seconds As Double
 
+        ''' <summary>
+        ''' <para>Creates new Unix timetag given number of seconds since 1/1/1900</para>
+        ''' </summary>
+        ''' <param name="seconds">Number of seconds since 1/1/1970</param>
         Public Sub New(ByVal seconds As Double)
 
             Value = seconds
 
         End Sub
 
-        Public Sub New(ByVal dtm As System.DateTime)
+        ''' <summary>
+        ''' <para>Creates new Unix timetag given standard .NET DateTime</para>
+        ''' </summary>
+        ''' <param name="timestamp">.NET timestamp to create Unix timetag from (minimum valid date is 1/1/1970)</param>
+        Public Sub New(ByVal timestamp As Date)
 
             ' Zero base 100-nanosecond ticks from 1/1/1970 and convert to seconds
-            Value = (dtm.Ticks - unixDateOffsetTicks) / 10000000L
+            Value = TicksToSeconds(timestamp.Ticks - m_unixDateOffsetTicks)
 
         End Sub
 
+        ''' <summary>
+        ''' <para>Value represents number of seconds since 1/1/1970</para>
+        ''' </summary>
         Public Property Value() As Double
             Get
                 Return m_seconds
@@ -55,20 +70,28 @@ Namespace DateTime
             End Set
         End Property
 
-        Public Function ToDateTime() As System.DateTime
+        ''' <summary>
+        ''' <para>Returns standard .NET DateTime representation for timetag</para>
+        ''' </summary>
+        Public Function ToDateTime() As Date
 
             ' Convert m_seconds to 100-nanosecond ticks and add the 1/1/1970 offset
-            Return New System.DateTime(m_seconds * 10000000L + unixDateOffsetTicks)
+            Return New Date(SecondsToTicks(m_seconds) + m_unixDateOffsetTicks)
 
         End Function
 
+        ''' <summary>
+        ''' <para>Returns basic textual representation for timetag</para>
+        ''' </summary>
         Public Overrides Function ToString() As String
 
             Return ToDateTime.ToString("dd-MMM-yyyy HH:mm:ss.fff")
 
         End Function
 
-        ' TimeTags are sorted in value order
+        ''' <summary>
+        ''' <para>Compares this Unix timetag to another one</para>
+        ''' </summary>
         Public Function CompareTo(ByVal obj As Object) As Integer Implements System.IComparable.CompareTo
 
             If TypeOf obj Is UnixTimeTag Then
@@ -78,6 +101,18 @@ Namespace DateTime
             Else
                 Throw New ArgumentException("UnixTimeTag can only be compared with other UnixTimeTags...")
             End If
+
+        End Function
+
+        Public Overrides Function Equals(ByVal obj As Object) As Boolean
+
+            Return (CompareTo(obj) = 0)
+
+        End Function
+
+        Public Overrides Function GetHashCode() As Integer
+
+            Return Convert.ToInt32(m_seconds * 1000)
 
         End Function
 

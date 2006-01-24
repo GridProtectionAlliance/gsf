@@ -20,6 +20,7 @@
 Imports System.Threading
 Imports System.Math
 Imports Tva.Math.Common
+Imports Tva.DateTime.Common
 
 Namespace Math
 
@@ -128,7 +129,7 @@ Namespace Math
         ''' </summary>
         Public ReadOnly Property RunTime() As Double
             Get
-                Return (m_regressionInterval + (Date.Now.Ticks - m_slopeRun.Ticks) / 10000000L)
+                Return (m_regressionInterval + TicksToSeconds(Date.Now.Ticks - m_slopeRun.Ticks))
             End Get
         End Property
 

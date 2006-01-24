@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  Tva.Interop.Windows.IniFile.vb - Old style Windows INI file manipulation class
+'  Tva.Interop.IniFile.vb - Old style Windows INI file manipulation class
 '  Copyright © 2006 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005
@@ -19,7 +19,7 @@
 
 Imports System.Text
 
-Namespace Interop.Windows
+Namespace Interop
 
     ''' <summary>
     ''' <para>Old style Windows INI file manipulation class</para>

@@ -46,28 +46,31 @@
     <Import Include="System.Diagnostics" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Assembly.vb" />
-    <Compile Include="Bit.vb" />
+    <Compile Include="Tva.Interop\Assembly.vb" />
+    <Compile Include="Tva.Interop\Bit.vb" />
     <Compile Include="Tva.Collections\Common.vb" />
     <Compile Include="Tva.Collections\KeyedProcessQueue.vb">
     </Compile>
     <Compile Include="Tva.Collections\ProcessQueue.vb" />
+    <Compile Include="Tva.Identity\UserInfo.vb" />
     <Compile Include="Tva.Interop\BitwiseCast.vb" />
-    <Compile Include="Identity.vb" />
+    <Compile Include="Tva.Identity\Common.vb" />
     <Compile Include="My Project\AssemblyInfo.vb" />
     <Compile Include="Tva.DateTime\Common.vb" />
     <Compile Include="Tva.DateTime\NtpTimeTag.vb" />
     <Compile Include="Tva.DateTime\Win32TimeZone.vb" />
     <Compile Include="Tva.Interop\EndianOrder.vb" />
-    <Compile Include="Tva.Interop\Unix\TimeTag.vb" />
-    <Compile Include="Tva.Interop\Windows\IniFile.vb" />
-    <Compile Include="Tva.IO\Stream\Common.vb" />
+    <Compile Include="Tva.DateTime\UnixTimeTag.vb" />
+    <Compile Include="Tva.Interop\WindowsApi.vb" />
+    <Compile Include="Tva.Interop\IniFile.vb" />
+    <Compile Include="Tva.IO\Common.vb" />
     <Compile Include="Tva.IO\FilePath.vb" />
     <Compile Include="Tva.Math\Common.vb" />
     <Compile Include="Tva.Math\CompositeValues.vb" />
     <Compile Include="Tva.Math\RealTimeSlope.vb" />
     <Compile Include="Tva.Net\Smtp\Common.vb" />
     <Compile Include="Tva.Net\Smtp\TraceListener.vb" />
+    <Compile Include="Tva.Text\Common.vb" />
     <Compile Include="Tva.Xml\Common.vb" />
   </ItemGroup>
   <ItemGroup>
@@ -84,7 +87,6 @@
     <Folder Include="Tva.Net\Sockets\" />
     <Folder Include="Tva.Remoting\" />
     <Folder Include="Tva.Services\" />
-    <Folder Include="Tva.Text\" />
     <Folder Include="Tva.Threading\" />
     <Folder Include="Tva.Web\" />
     <Folder Include="Tva.Windows\" />
