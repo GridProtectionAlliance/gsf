@@ -18,10 +18,9 @@
 '*******************************************************************************************************
 
 Imports System.Text
+Imports Tva.Math.Common
 
 Namespace Collections
-
-    ' TODO: Fix-up this class to meet new naming convention guidelines and replace use of native VB functions with standard .NET methods
 
     ''' <summary>
     ''' Defines common global functions related to manipulation of collections
@@ -35,76 +34,35 @@ Namespace Collections
         End Sub
 
         ''' <summary>
-        ''' <para> Returns True if specified item is in parameter list</para>
+        ''' <para>Returns smallest item from list of parameters</para>
         ''' </summary>
-        ''' <param name="Item"> Required. Specific Item to find in the Parameter Array. </param>
-        Public Shared Function InList(ByVal item As Object, ByVal ParamArray itemList() As Object) As Boolean
+        Public Shared Function Minimum(ByVal ParamArray itemList() As Object) As Object
 
-            Return ArrayContains(item, itemList)
+            Return Minimum(ItemList)
 
         End Function
 
         ''' <summary>
-        ''' <para> Performs case-insensitive text comparisons to find a specified item in an array</para>
+        ''' <para>Returns largest item from list of parameters</para>
         ''' </summary>
-        ''' <param name="Item"> Required. Specific string . </param>
-        ''' <returns>
-        ''' <para>True if the String exists in the parameter array</para>
-        '''</returns>
-        Public Shared Function StrInList(ByVal Item As System.String, ByVal ParamArray ItemList() As System.String) As Boolean
+        Public Shared Function Maximum(ByVal ParamArray itemList() As Object) As Object
 
-            Return ArrayContains(Item, ItemList, CaseInsensitiveComparer.Default)
+            Return Maximum(ItemList)
 
         End Function
 
         ''' <summary>
-        ''' <para> Returns smallest item from list of parameters</para>
+        ''' <para>Returns smallest item from the specified enumeration</para>
         ''' </summary>
-        Public Shared Function Minimum(ByVal ParamArray ItemList() As Object) As Object
+        Public Shared Function Minimum(ByVal items As IEnumerable) As Object
 
-            Return ArrayMinimum(ItemList)
+            Dim objMin As Object = Nothing
 
-        End Function
-
-        ''' <summary>
-        ''' <para> Returns largest item from list of parameters</para>
-        ''' </summary>
-        Public Shared Function Maximum(ByVal ParamArray ItemList() As Object) As Object
-
-            Return ArrayMaximum(ItemList)
-
-        End Function
-
-        ''' <summary>
-        ''' <para> Returns True if specified item exists in given array</para>
-        ''' </summary>
-        ''' <param name="Item"> Required. Array of items . </param>
-        Public Shared Function ArrayContains(ByVal Item As Object, ByVal ArrayItems As IEnumerable, Optional ByVal Comparer As IComparer = Nothing) As Boolean
-
-            With ArrayItems.GetEnumerator()
-                While .MoveNext()
-                    If Compare(Item, .Current, Comparer) = 0 Then Return True
-                End While
-            End With
-
-            Return False
-
-        End Function
-
-        ''' <summary>
-        ''' <para> Returns smallest item from the specified array given a comparer.</para>
-        ''' </summary>
-        ''' <param name="ArrayItems"> Required. Array of items . </param>
-        ''' <param name="Comparer"> Optional. Comparer . </param>
-        Public Shared Function ArrayMinimum(ByVal ArrayItems As IEnumerable, Optional ByVal Comparer As IComparer = Nothing) As Object
-
-            Dim objMin As Object
-
-            With ArrayItems.GetEnumerator()
+            With items.GetEnumerator()
                 If .MoveNext() Then
                     objMin = .Current
                     While .MoveNext()
-                        If Compare(.Current, objMin, Comparer) < 0 Then objMin = .Current
+                        If Compare(.Current, objMin) < 0 Then objMin = .Current
                     End While
                 End If
             End With
@@ -114,19 +72,17 @@ Namespace Collections
         End Function
 
         ''' <summary>
-        ''' <para> Returns largest item from the specified array given a comparer.</para>
+        ''' <para>Returns largest item from the specified enumeration</para>
         ''' </summary>
-        ''' <param name="ArrayItems"> Required. Array of items . </param>
-        ''' <param name="Comparer"> Optional. Comparer . </param>
-        Public Shared Function ArrayMaximum(ByVal ArrayItems As IEnumerable, Optional ByVal Comparer As IComparer = Nothing) As Object
+        Public Shared Function Maximum(ByVal items As IEnumerable) As Object
 
-            Dim objMax As Object
+            Dim objMax As Object = Nothing
 
-            With ArrayItems.GetEnumerator()
+            With items.GetEnumerator()
                 If .MoveNext() Then
                     objMax = .Current
                     While .MoveNext()
-                        If Compare(.Current, objMax, Comparer) > 0 Then objMax = .Current
+                        If Compare(.Current, objMax) > 0 Then objMax = .Current
                     End While
                 End If
             End With
@@ -138,67 +94,72 @@ Namespace Collections
         ''' <summary>
         ''' <para> Compares two elements of any type.</para>
         ''' </summary>
-        ''' <param name="x"> Required. Element to compare. </param>
-        ''' <param name="y"> Required. Element to compare . </param>
-        ''' <param name="Comparer"> Optional. Comparer . </param>
-        Public Shared Function Compare(ByVal x As Object, ByVal y As Object, Optional ByVal Comparer As IComparer = Nothing) As Integer
+        Public Shared Function Compare(ByVal x As Object, ByVal y As Object) As Integer
 
-            If Comparer Is Nothing Then
-                If IsNonStringReference(x) And IsNonStringReference(y) Then
-                    ' If both items are non-string reference objects then test object equality by reference,
-                    ' then if not equal by overriable Object.Equals function use default Comparer
-                    If x Is y Then
+            If IsReference(x) And IsReference(y) Then
+                ' If both items are string reference objects then test object equality by reference,
+                ' then if not equal by overriable Object.Equals function use default Comparer
+                If x Is y Then
+                    Return 0
+                ElseIf x.GetType().Equals(y.GetType()) Then
+                    ' Comparing two items that ar ethe same type, see if type supports IComparable interface
+                    If TypeOf x Is IComparable Then
+                        Return DirectCast(x, IComparable).CompareTo(y)
+                    ElseIf x.Equals(y) Then
                         Return 0
-                    ElseIf x.GetType().Equals(y.GetType()) Then
-                        If TypeOf x Is IComparable Then
-                            Return DirectCast(x, IComparable).CompareTo(y)
-                        ElseIf x.Equals(y) Then
-                            Return 0
-                        Else
-                            Return System.Collections.Comparer.Default.Compare(x, y)
-                        End If
                     Else
-                        Return System.Collections.Comparer.Default.Compare(x, y)
+                        Return Comparer.Default.Compare(x, y)
                     End If
                 Else
-                    ' Otherwise compare using VB rules (ms-help://MS.VSCC/MS.MSDNVS/vblr7/html/vagrpComparison.htm)
-                    Return IIf(x < y, -1, IIf(x > y, 1, 0))
+                    Return Comparer.Default.Compare(x, y)
                 End If
             Else
-                ' Use given comparer to compare objects
-                Return Comparer.Compare(x, y)
+                ' Compare non-reference (i.e., value) types using VB rules
+                ' ms-help://MS.VSCC.v80/MS.MSDN.v80/MS.VisualStudio.v80.en/dv_vbalr/html/d6cb12a8-e52e-46a7-8aaf-f804d634a825.htm
+                Return IIf(x < y, -1, IIf(x > y, 1, 0))
             End If
 
         End Function
 
         ''' <summary>
-        ''' <para> Compares two arrays.</para>
+        ''' <para>Compares two arrays</para>
         ''' </summary>
-        ''' <param name="ArrA"> Required. Array to compare. </param>
-        ''' <param name="ArrB"> Required. Array to compare . </param>
-        ''' <param name="Comparer"> Optional. Comparer . </param>
-        Public Shared Function CompareArrays(ByVal ArrA As Array, ByVal ArrB As Array, Optional ByVal Comparer As IComparer = Nothing) As Integer
+        Public Shared Function CompareArrays(ByVal arrayA As Array, ByVal arrayB As Array) As Integer
 
-            If ArrA Is Nothing And ArrB Is Nothing Then
+            Return CompareArrays(arrayA, arrayB, Nothing)
+
+        End Function
+
+        ''' <summary>
+        ''' <para>Compares two arrays</para>
+        ''' </summary>
+        Public Shared Function CompareArrays(ByVal arrayA As Array, ByVal arrayB As Array, ByVal comparer As IComparer) As Integer
+
+            If arrayA Is Nothing And arrayB Is Nothing Then
                 Return 0
-            ElseIf ArrA Is Nothing Then
+            ElseIf arrayA Is Nothing Then
                 Return -1
-            ElseIf ArrB Is Nothing Then
+            ElseIf arrayB Is Nothing Then
                 Return 1
             Else
-                If ArrA.Rank = 1 And ArrB.Rank = 1 Then
-                    If ArrA.GetUpperBound(0) = ArrB.GetUpperBound(0) Then
-                        Dim intComparison As Integer
+                If arrayA.Rank = 1 And arrayB.Rank = 1 Then
+                    If arrayA.GetUpperBound(0) = arrayB.GetUpperBound(0) Then
+                        Dim comparison As Integer
 
-                        For x As Integer = 0 To ArrA.Length - 1
-                            intComparison = Compare(ArrA.GetValue(x), ArrB.GetValue(x), Comparer)
-                            If intComparison <> 0 Then Exit For
+                        For x As Integer = 0 To arrayA.Length - 1
+                            If comparer Is Nothing Then
+                                comparison = Compare(arrayA.GetValue(x), arrayB.GetValue(x))
+                            Else
+                                comparison = comparer.Compare(arrayA.GetValue(x), arrayB.GetValue(x))
+                            End If
+
+                            If comparison <> 0 Then Exit For
                         Next
 
-                        Return intComparison
+                        Return comparison
                     Else
                         ' For arrays that don't have the same number of elements, array with most elements is assumed larger
-                        Return Compare(ArrA.GetUpperBound(0), ArrB.GetUpperBound(0))
+                        Return Compare(arrayA.GetUpperBound(0), arrayB.GetUpperBound(0))
                     End If
                 Else
                     Throw New ArgumentException("Cannot compare multidimensional arrays")
@@ -208,181 +169,201 @@ Namespace Collections
         End Function
 
         ''' <summary>
-        ''' <para> Changes the type of all the elements in source list and copies the conversion result to destination list.</para>
+        ''' <para>Changes the type of all the elements in source enumeration and adds the conversion result to destination list</para>
         ''' </summary>
-        ''' <param name="Source"> Required. Source List. </param>
-        ''' <param name="Destination"> Required. Destination List . </param>
-        ''' <param name="ToType"> Required. specified type to change the source elements. </param>
-        Public Shared Sub ConvertList(ByVal Source As IList, ByVal Destination As IList, ByVal ToType As System.Type)
+        ''' <remarks>
+        ''' <para>Converted items in source enumeration are added to destination list - destination list is not cleared in advance</para>
+        ''' </remarks>
+        Public Shared Sub ConvertList(ByVal source As IEnumerable, ByVal destination As IList, ByVal toType As System.Type)
 
-            If Source Is Nothing Then Throw New ArgumentNullException("Source list is null")
-            If Destination Is Nothing Then Throw New ArgumentNullException("Destination list is null")
-            If Destination.IsReadOnly Then Throw New ArgumentException("Cannot copy items to a read only list")
+            If source Is Nothing Then Throw New ArgumentNullException("Source list is null")
+            If destination Is Nothing Then Throw New ArgumentNullException("Destination list is null")
+            If destination.IsReadOnly Then Throw New ArgumentException("Cannot add items to a read only list")
+            If destination.IsFixedSize Then Throw New ArgumentException("Cannot add items to a fixed size list")
 
-            If Source.Count = Destination.Count Then
-                For x As Integer = 0 To Source.Count - 1
-                    Destination(x) = Convert.ChangeType(Source(x), ToType)
+            For Each Item As Object In source
+                destination.Add(Convert.ChangeType(Item, toType))
+            Next
+
+        End Sub
+
+        ''' <summary>
+        ''' <para>Converts a list (i.e., any collection implementing IList) to an array</para>
+        ''' </summary>
+        Public Shared Function ListToArray(ByVal sourceList As IList, ByVal toType As System.Type) As Array
+
+            Dim destination As Array = Array.CreateInstance(toType, sourceList.Count)
+
+            ConvertList(sourceList, destination, toType)
+
+            Return destination
+
+        End Function
+
+        ''' <summary>
+        ''' <para>Converts an array to a string using the default delimeter, "|", that can later be converted back to array using StringToArray</para>
+        ''' </summary>
+        ''' <remarks>
+        ''' <para>
+        ''' This function is just a semantic reference to the ListToString function (the Array class implements IEnumerable)
+        ''' and is only provided for the sake of completeness
+        ''' </para>
+        ''' </remarks>
+        Public Shared Function ArrayToString(ByVal source As Array) As String
+
+            Return ListToString(source)
+
+        End Function
+
+        ''' <summary>
+        ''' <para>Converts an array to a string that can later be converted back to array using StringToArray</para>
+        ''' </summary>
+        ''' <remarks>
+        ''' <para>
+        ''' This function is just a semantic reference to the ListToString function (the Array class implements IEnumerable)
+        ''' and is only provided for the sake of completeness
+        ''' </para>
+        ''' </remarks>
+        Public Shared Function ArrayToString(ByVal source As Array, ByVal delimeter As Char) As String
+
+            Return ListToString(source, delimeter)
+
+        End Function
+
+        ''' <summary>
+        ''' <para>Converts an enumeration to a string using the default delimeter, "|", that can later be converted back to array using StringToList</para>
+        ''' </summary>
+        Public Shared Function ListToString(ByVal source As IEnumerable) As String
+
+            Return ListToString(source, "|"c)
+
+        End Function
+
+        ''' <summary>
+        ''' <para>Converts an enumeration to a string that can later be converted back to array using StringToList</para>
+        ''' </summary>
+        Public Shared Function ListToString(ByVal source As IEnumerable, ByVal delimeter As Char) As String
+
+            If source Is Nothing Then Throw New ArgumentNullException("Source list is null")
+
+            With New StringBuilder
+                For Each item As Object In source
+                    If .Length > 0 Then .Append(delimeter)
+                    .Append(item.ToString())
                 Next
-            Else
-                ' The source and destination don't contain the same number of elements, so we'll add items to destination
-                ConvertEnumeration(Source, Destination, ToType)
-            End If
+
+                Return .ToString()
+            End With
+
+        End Function
+
+        ''' <summary>
+        ''' <para>Converts a string, created with ArrayToString, using the default delimeter, "|", back into an array</para>
+        ''' </summary>
+        Public Shared Function StringToArray(ByVal source As String, ByVal toType As System.Type) As Array
+
+            Return StringToArray(source, toType, "|"c)
+
+        End Function
+
+        ''' <summary>
+        ''' <para>Converts a string, created with ArrayToString, back into an array</para>
+        ''' </summary>
+        Public Shared Function StringToArray(ByVal source As String, ByVal toType As System.Type, ByVal delimeter As Char) As Array
+
+            Dim items As New ArrayList
+
+            StringToList(source, items, delimeter)
+
+            Return ListToArray(items, toType)
+
+        End Function
+
+        ''' <summary>
+        ''' <para>Appends items parsed from delimited string, created with ArrayToString or ListToString, using the default delimeter, "|",  into the given list</para>
+        ''' </summary>
+        ''' <remarks>
+        ''' <para>Converted items are added to destination list - destination list is not cleared in advance</para>
+        ''' </remarks>
+        Public Shared Sub StringToList(ByVal source As String, ByVal destination As IList)
+
+            StringToList(source, destination, "|"c)
 
         End Sub
 
         ''' <summary>
-        ''' <para> Changes the type of all the elements in source enumeration and adds the conversion result to destination list.</para>
+        ''' <para>Appends items parsed from delimited string, created with ArrayToString or ListToString, into the given list</para>
         ''' </summary>
-        ''' <param name="Source"> Required. Source Enumeration. </param>
-        ''' <param name="Destination"> Required. Destination Enumeration . </param>
-        ''' <param name="ToType"> Required. specified type to change the source elements. </param>
-        Public Shared Sub ConvertEnumeration(ByVal Source As IEnumerable, ByVal Destination As IList, ByVal ToType As System.Type)
+        ''' <remarks>
+        ''' <para>Converted items are added to destination list - destination list is not cleared in advance</para>
+        ''' </remarks>
+        Public Shared Sub StringToList(ByVal source As String, ByVal destination As IList, ByVal delimeter As Char)
 
-            If Source Is Nothing Then Throw New ArgumentNullException("Source list is null")
-            If Destination Is Nothing Then Throw New ArgumentNullException("Destination list is null")
-            If Destination.IsReadOnly Then Throw New ArgumentException("Cannot add items to a read only list")
-            If Destination.IsFixedSize Then Throw New ArgumentException("Cannot add items to a fixed size list")
+            If source Is Nothing Then Exit Sub
+            If destination Is Nothing Then Throw New ArgumentNullException("Destination list is null")
+            If destination.IsFixedSize Then Throw New ArgumentException("Cannot add items to a fixed size list")
+            If destination.IsReadOnly Then Throw New ArgumentException("Cannot add items to a read only list")
 
-            For Each Item As Object In Source
-                Destination.Add(Convert.ChangeType(Item, ToType))
-            Next
-
-        End Sub
-
-        ''' <summary>
-        ''' <para>  Converts an array and all of its elements to the specified type.</para>
-        ''' </summary>
-        ''' <param name="Source"> Required. Source Array. </param>
-        ''' <param name="ToType"> Required. specified type to change the elements of source array. </param>
-        Public Shared Function ConvertArray(ByVal Source As Array, ByVal ToType As System.Type) As Array
-
-            ' This function is just a semantic reference - Array class implements IList
-            Return ListToArray(Source, ToType)
-
-        End Function
-
-        ''' <summary>
-        ''' <para>Converts a list to an array.</para>
-        ''' </summary>
-        ''' <param name="Source"> Required.List. </param>
-        ''' <param name="ElementType"> Required. Type . </param>
-        Public Shared Function ListToArray(ByVal Source As IList, ByVal ElementType As System.Type) As Array
-
-            If Source Is Nothing Then Throw New ArgumentNullException("Source list is null")
-
-            Dim Destination As Array = Array.CreateInstance(ElementType, Source.Count)
-
-            ConvertList(Source, Destination, ElementType)
-
-            Return Destination
-
-        End Function
-
-        ''' <summary>
-        ''' <para>Converts an array to a string.</para>
-        ''' </summary>
-        ''' <param name="Source"> Required.Array. </param>
-        Public Shared Function ArrayToString(ByVal Source As Array) As String
-
-            ' This function is just a semantic reference - Array class implements IEnumerable
-            Return ListToString(Source)
-
-        End Function
-
-        ''' <summary>
-        ''' <para>Converts an enumeration to a string.</para>
-        ''' </summary>
-        ''' <param name="Source"> Required.Enumeration. </param>
-        Public Shared Function ListToString(ByVal Source As IEnumerable) As String
-
-            If Source Is Nothing Then Throw New ArgumentNullException("Source list is null")
-
-            Dim strArray As New StringBuilder
-
-            For Each Item As Object In Source
-                If strArray.Length > 0 Then strArray.Append(","c)
-                strArray.Append(Item.ToString())
-            Next
-
-            Return strArray.ToString()
-
-        End Function
-
-        ''' <summary>
-        ''' <para> Converts a string (created with ArrayToString) back into an array.</para>
-        ''' </summary>
-        Public Shared Function StringToArray(ByVal Source As System.String, ByVal ElementType As System.Type) As Array
-
-            Dim lstItems As New ArrayList
-
-            StringToList(Source, lstItems)
-
-            Return ListToArray(lstItems, ElementType)
-
-        End Function
-
-        ''' <summary>
-        ''' <para>Converts a string (created with ArrayToString or ListToString) into the given list.</para>
-        ''' </summary>
-        ''' <param name="Source"> Required.String. </param>
-        ''' <param name="Destination"> Required.List. </param>
-        Public Shared Sub StringToList(ByVal Source As System.String, ByVal Destination As IList)
-
-            If Source Is Nothing Then Exit Sub
-            If Destination Is Nothing Then Throw New ArgumentNullException("Destination list is null")
-            If Destination.IsFixedSize Then Throw New ArgumentException("Cannot add items to a fixed size list")
-            If Destination.IsReadOnly Then Throw New ArgumentException("Cannot add items to a read only list")
-
-            For Each strItem As String In Source.Split(","c)
-                strItem = Trim(strItem)
-                If Len(strItem) > 0 Then Destination.Add(strItem)
-            Next
-
-        End Sub
-
-        ''' <summary>
-        ''' <para>Rearranges all the elements in the array into a random order.</para>
-        ''' </summary>
-        ''' <param name="Source"> Required.Array. </param>
-        Public Shared Sub ScrambleArray(ByVal Source As Array)
-
-            ' This function is just a semantic reference - Array class implements IList
-            ScrambleList(Source)
-
-        End Sub
-
-        ''' <summary>
-        ''' <para>Rearranges all the elements in the list into a random order.</para>
-        ''' </summary>
-        ''' <param name="Source"> Required.List. </param>
-        Public Shared Sub ScrambleList(ByVal Source As IList)
-
-            If Source Is Nothing Then Throw New ArgumentNullException("Source list is null")
-            If Source.IsReadOnly Then Throw New ArgumentException("Cannot modify items in a read only list")
-
-            Dim x, y As Integer
-            Dim currItem As Object
-
-            ' Mix up the data in random order
-            For x = 0 To Source.Count - 1
-                y = CInt(Int(Rnd() * Source.Count))
-
-                If x <> y Then
-                    ' Swap items
-                    currItem = Source(x)
-                    Source(x) = Source(y)
-                    Source(y) = currItem
+            For Each item As String In source.Split(delimeter)
+                If Not String.IsNullOrEmpty(item) Then
+                    item = item.Trim
+                    If item.Length > 0 Then destination.Add(item)
                 End If
             Next
 
         End Sub
 
         ''' <summary>
-        ''' <para>Determines if given item is an object (i.e., a reference type but not a string).</para>
+        ''' <para>Rearranges all the elements in the array into a random order</para>
         ''' </summary>
-        Public Shared Function IsNonStringReference(ByVal Item As Object) As Boolean
+        ''' <remarks>
+        ''' <para>
+        ''' This function is just a semantic reference to the ScrambleList function (the Array class implements IList)
+        ''' and is only provided for the sake of completeness
+        ''' </para>
+        ''' <para>This function uses a cryptographically strong random number generator to perform the scramble</para>
+        ''' </remarks>
+        Public Shared Sub ScrambleArray(ByVal source As Array)
 
-            Return (IsReference(Item) And Not TypeOf Item Is String)
+            ScrambleList(source)
+
+        End Sub
+
+        ''' <summary>
+        ''' <para>Rearranges all the elements in the list (i.e., any collection implementing IList) into a random order</para>
+        ''' </summary>
+        ''' <remarks>
+        ''' <para>This function uses a cryptographically strong random number generator to perform the scramble</para>
+        ''' </remarks>
+        Public Shared Sub ScrambleList(ByVal source As IList)
+
+            If source Is Nothing Then Throw New ArgumentNullException("Source list is null")
+            If source.IsReadOnly Then Throw New ArgumentException("Cannot modify items in a read only list")
+
+            Dim x, y As Integer
+            Dim currentItem As Object
+
+            ' Mix up the data in random order
+            For x = 0 To source.Count - 1
+                ' Call random function in Math namespace
+                y = RandomInt32Between(0, source.Count - 1)
+
+                If x <> y Then
+                    ' Swap items
+                    currentItem = source(x)
+                    source(x) = source(y)
+                    source(y) = currentItem
+                End If
+            Next
+
+        End Sub
+
+        ''' <summary>
+        ''' <para>Determines if given item is an object (i.e., a reference type) but not a string</para>
+        ''' </summary>
+        Public Shared Function IsNonStringReference(ByVal item As Object) As Boolean
+
+            Return (IsReference(item) And Not TypeOf item Is String)
 
         End Function
 

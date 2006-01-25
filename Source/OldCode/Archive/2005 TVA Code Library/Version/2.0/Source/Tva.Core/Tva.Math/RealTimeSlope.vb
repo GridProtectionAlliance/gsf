@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  Tva.Math.RelTimeSlope.vb - Calculates slope over time using linear regression
+'  Tva.Math.RelTimeSlope.vb - Calculates slope of real-time data stream using linear regression
 '  Copyright © 2005 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005
@@ -94,6 +94,8 @@ Namespace Math
                 Dim xValues As Double()
                 Dim yValues As Double()
 
+                ' Calculations are made against a copy of the current data set to keep lock time on
+                ' data values down to a minimum - this allows data to be added with minimal delay
                 SyncLock m_xValues.SyncRoot
                     xValues = m_xValues.ToArray(GetType(Double))
                     yValues = m_yValues.ToArray(GetType(Double))

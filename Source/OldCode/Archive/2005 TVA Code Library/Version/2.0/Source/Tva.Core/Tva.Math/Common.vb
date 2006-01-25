@@ -16,6 +16,8 @@
 '       2.0 version of source code migrated from 1.1 source (TVA.Shared.Math)
 '  01/04/2006 - James R Carroll
 '       Added crytographically strong random number generation functions
+'  01/24/2006 - James R Carroll
+'       Added curve fit function (courtesy of Brian Fox from DatAWare client code)
 '
 '*******************************************************************************************************
 
@@ -37,18 +39,75 @@ Namespace Math
         End Sub
 
         ''' <summary>
-        ''' <para>Calculates word length XOR check-sum on specified portion of a buffer.</para>
+        ''' <para>Calculates byte length (8-bit) XOR based check-sum on specified portion of a buffer.</para>
+        ''' </summary>
+        ''' <param name="data">Data buffer to perform XOR check-sum on</param>
+        ''' <param name="startIndex">Start index in data buffer to begin XOR check-sum</param>
+        ''' <param name="length">Total number of bytes from <paramref name="startIndex">startIndex</paramref> to perform XOR check-sum over</param>
+        ''' <returns>Byte length XOR check-sum</returns>
+        Public Shared Function Xor8BitCheckSum(ByVal data As Byte(), ByVal startIndex As Integer, ByVal length As Integer) As Byte
+
+            Dim sum As Byte
+
+            For x As Integer = 0 To length - 1
+                sum = sum Xor data(startIndex + x)
+            Next
+
+            Return sum
+
+        End Function
+
+        ''' <summary>
+        ''' <para>Calculates word length (16-bit) XOR based check-sum on specified portion of a buffer.</para>
         ''' </summary>
         ''' <param name="data">Data buffer to perform XOR check-sum on</param>
         ''' <param name="startIndex">Start index in data buffer to begin XOR check-sum</param>
         ''' <param name="length">Total number of bytes from <paramref name="startIndex">startIndex</paramref> to perform XOR check-sum over</param>
         ''' <returns>Word length XOR check-sum</returns>
-        Public Shared Function XorCheckSum(ByVal data As Byte(), ByVal startIndex As Integer, ByVal length As Integer) As Int16
+        Public Shared Function Xor16BitCheckSum(ByVal data As Byte(), ByVal startIndex As Integer, ByVal length As Integer) As Int16
 
             Dim sum As Int16
 
             For x As Integer = 0 To length - 1 Step 2
                 sum = sum Xor BitConverter.ToInt16(data, startIndex + x)
+            Next
+
+            Return sum
+
+        End Function
+
+        ''' <summary>
+        ''' <para>Calculates double-word length (32-bit) XOR based check-sum on specified portion of a buffer.</para>
+        ''' </summary>
+        ''' <param name="data">Data buffer to perform XOR check-sum on</param>
+        ''' <param name="startIndex">Start index in data buffer to begin XOR check-sum</param>
+        ''' <param name="length">Total number of bytes from <paramref name="startIndex">startIndex</paramref> to perform XOR check-sum over</param>
+        ''' <returns>Double-word length XOR check-sum</returns>
+        Public Shared Function Xor32BitCheckSum(ByVal data As Byte(), ByVal startIndex As Integer, ByVal length As Integer) As Int32
+
+            Dim sum As Int32
+
+            For x As Integer = 0 To length - 1 Step 4
+                sum = sum Xor BitConverter.ToInt32(data, startIndex + x)
+            Next
+
+            Return sum
+
+        End Function
+
+        ''' <summary>
+        ''' <para>Calculates quad-word length (64-bit) XOR based check-sum on specified portion of a buffer.</para>
+        ''' </summary>
+        ''' <param name="data">Data buffer to perform XOR check-sum on</param>
+        ''' <param name="startIndex">Start index in data buffer to begin XOR check-sum</param>
+        ''' <param name="length">Total number of bytes from <paramref name="startIndex">startIndex</paramref> to perform XOR check-sum over</param>
+        ''' <returns>Quad-word length XOR check-sum</returns>
+        Public Shared Function Xor64BitCheckSum(ByVal data As Byte(), ByVal startIndex As Integer, ByVal length As Integer) As Int64
+
+            Dim sum As Int64
+
+            For x As Integer = 0 To length - 1 Step 8
+                sum = sum Xor BitConverter.ToInt64(data, startIndex + x)
             Next
 
             Return sum
@@ -65,7 +124,7 @@ Namespace Math
         End Property
 
         ''' <summary>
-        ''' <para>Generates a cryptographically strong random boolean (i.e., coin toss)</para>
+        ''' <para>Generates a cryptographically strong random boolean (i.e., a coin toss)</para>
         ''' </summary>
         Public Shared ReadOnly Property RandomBoolean() As Boolean
             Get
