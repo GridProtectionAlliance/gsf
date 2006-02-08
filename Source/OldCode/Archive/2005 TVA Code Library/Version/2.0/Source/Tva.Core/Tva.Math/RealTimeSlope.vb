@@ -1,6 +1,6 @@
 '*******************************************************************************************************
-'  Tva.Math.RelTimeSlope.vb - Calculates slope of real-time data stream using linear regression
-'  Copyright © 2005 - TVA, all rights reserved - Gbtc
+'  Tva.Math.RealTimeSlope.vb - Calculates slope of real-time data stream using linear regression
+'  Copyright © 2006 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005
 '  Primary Developer: James R Carroll, Operations Data Architecture [TVA]
@@ -12,7 +12,7 @@
 '  -----------------------------------------------------------------------------------------------------
 '  12/8/2004 - James R Carroll
 '       Initial version of source generated for Real-Time Frequency Monitor
-'  01/24/2005 - james R Carroll
+'  01/24/2006 - james R Carroll
 '       Integrated into code library
 '
 '*******************************************************************************************************
@@ -118,7 +118,7 @@ Namespace Math
         End Sub
 
         ''' <summary>
-        ''' Current calcualted slope for data set
+        ''' Current calculated slope for data set
         ''' </summary>
         Public ReadOnly Property Slope() As Double
             Get

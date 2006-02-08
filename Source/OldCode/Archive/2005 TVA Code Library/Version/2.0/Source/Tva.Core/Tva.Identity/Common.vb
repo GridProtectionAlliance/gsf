@@ -1,6 +1,6 @@
 '*******************************************************************************************************
 '  Tva.Identity.Common.vb - Common User Identity Functions
-'  Copyright © 2005 - TVA, all rights reserved - Gbtc
+'  Copyright © 2006 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005
 '  Primary Developer: James R Carroll, Operations Data Architecture [TVA]

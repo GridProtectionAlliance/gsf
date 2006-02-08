@@ -1,6 +1,6 @@
 '*******************************************************************************************************
 '  Tva.Collections.KeyedProcessQueue.vb - Multi-threaded Keyed Item Processing Queue
-'  Copyright © 2005 - TVA, all rights reserved - Gbtc
+'  Copyright © 2006 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005
 '  Primary Developer: James R Carroll, Operations Data Architecture [TVA]
@@ -172,6 +172,17 @@ Namespace Collections
 
 #End Region
 
+#Region " Protected Methods Implementation "
+
+        ' This property allows derived classes to access the internal sorted dictionary directly
+        Protected ReadOnly Property InternalDictionary() As SortedDictionary(Of TKey, TValue)
+            Get
+                Return DirectCast(InternalList, SortedDictionary(Of TKey, TValue))
+            End Get
+        End Property
+
+#End Region
+
 #Region " Public Methods Implementation "
 
         Public Overrides ReadOnly Property Name() As String
@@ -183,12 +194,6 @@ Namespace Collections
 #End Region
 
 #Region " Generic IDictionary(Of TKey, TValue) Implementation "
-
-        Protected ReadOnly Property InternalDictionary() As SortedDictionary(Of TKey, TValue)
-            Get
-                Return DirectCast(InternalList, SortedDictionary(Of TKey, TValue))
-            End Get
-        End Property
 
         Public Overloads Sub Add(ByVal key As TKey, ByVal value As TValue) Implements System.Collections.Generic.IDictionary(Of TKey, TValue).Add
 

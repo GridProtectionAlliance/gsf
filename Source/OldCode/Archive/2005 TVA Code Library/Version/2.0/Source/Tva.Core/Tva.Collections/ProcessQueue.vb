@@ -1,6 +1,6 @@
 '*******************************************************************************************************
 '  Tva.Collections.ProcessQueue.vb - Multi-threaded Item Processing Queue
-'  Copyright © 2005 - TVA, all rights reserved - Gbtc
+'  Copyright © 2006 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005
 '  Primary Developer: Pinal C Patel, Operations Data Architecture [TVA]
@@ -24,6 +24,9 @@ Imports System.Text
 Imports Tva.DateTime.Common
 
 Namespace Collections
+
+    ' TODO: Add bulk processing functionality that would process all currently queued items (Array of T) at each pass
+    ' once added - import LogFile from C37.118 Proxy Service and implement based on this class
 
     ''' <summary>
     ''' <para>This class will process a collection of items on independent threads</para>
@@ -94,10 +97,21 @@ Namespace Collections
         ''' This is the function signature used for defining a method to process items
         ''' </summary>
         ''' <remarks>
-        ''' Implementation of this function is required
+        ''' <para>Implementation of this function is required unless ProcessItemsFunction is implemented</para>
+        ''' <para>This function is used when creating a queue to process one item at a time</para>
         ''' </remarks>
         ''' <param name="item">Item to be processed</param>
         Public Delegate Sub ProcessItemFunctionSignature(ByVal item As T)
+
+        ''' <summary>
+        ''' This is the function signature used for defining a method to process multiple items
+        ''' </summary>
+        ''' <remarks>
+        ''' <para>Implementation of this function is required unless ProcessItemFunction is implemented</para>
+        ''' <para>This function is used when creating a queue to process multiple items at once</para>
+        ''' </remarks>
+        ''' <param name="item">Item to be processed</param>
+        Public Delegate Sub ProcessItemsFunctionSignature(ByVal item As T())
 
         ''' <summary>
         ''' This is the function signature used for determining if an item can be currently processed
@@ -568,7 +582,7 @@ Namespace Collections
 
 #Region " Protected Methods Implementation "
 
-        ' This property allows derived classes to access the internal process queue directly
+        ' This property allows derived classes to access the interfaced internal process queue directly
         Protected ReadOnly Property InternalList() As IList(Of T)
             Get
                 Return m_processQueue
@@ -734,6 +748,28 @@ Namespace Collections
 
 #End Region
 
+#Region " Handy List(Of T) Functions Implementation "
+
+        ' TODO: Implement all methods exposed by List(Of T) that aren't in IList(Of T) interface
+        Public Overridable Sub InsertRange(ByVal index As Integer, ByVal collection As IEnumerable(Of T))
+
+            SyncLock m_processQueue
+                If TypeOf m_processQueue Is List(Of T) Then
+                    ' We'll call native implementation if avaialble
+                    DirectCast(m_processQueue, List(Of T)).InsertRange(index, collection)
+                Else
+                    ' Otherwise, we manually implement this feature...
+                    For Each item As T In collection
+                        m_processQueue.Insert(index, item)
+                        index += 1
+                    Next
+                End If
+            End SyncLock
+
+        End Sub
+
+#End Region
+
 #Region " Generic IList(Of T) Implementation "
 
         ' Note: all IList(Of T) implementations should be synchronized as necessary
@@ -741,7 +777,7 @@ Namespace Collections
         ''' <summary>
         '''  Adds a new item to the list to be processed
         ''' </summary>
-        Public Sub Add(ByVal item As T) Implements System.Collections.Generic.IList(Of T).Add
+        Public Overridable Sub Add(ByVal item As T) Implements System.Collections.Generic.IList(Of T).Add
 
             SyncLock m_processQueue
                 m_processQueue.Add(item)
@@ -752,7 +788,7 @@ Namespace Collections
         ''' <summary>
         ''' Inserts a new item to be processed at the top of the list
         ''' </summary>
-        Public Sub Push(ByVal item As T)
+        Public Overridable Sub Push(ByVal item As T)
 
             SyncLock m_processQueue
                 m_processQueue.Insert(0, item)
@@ -763,7 +799,7 @@ Namespace Collections
         ''' <summary>
         ''' Inserts a new item to be processed at the specified location
         ''' </summary>
-        Public Sub Insert(ByVal index As Integer, ByVal item As T) Implements IList(Of T).Insert
+        Public Overridable Sub Insert(ByVal index As Integer, ByVal item As T) Implements IList(Of T).Insert
 
             SyncLock m_processQueue
                 m_processQueue.Insert(index, item)
@@ -771,7 +807,7 @@ Namespace Collections
 
         End Sub
 
-        Public Sub CopyTo(ByVal array() As T, ByVal arrayIndex As Integer) Implements System.Collections.Generic.IList(Of T).CopyTo
+        Public Overridable Sub CopyTo(ByVal array() As T, ByVal arrayIndex As Integer) Implements System.Collections.Generic.IList(Of T).CopyTo
 
             SyncLock m_processQueue
                 m_processQueue.CopyTo(array, arrayIndex)
@@ -779,7 +815,7 @@ Namespace Collections
 
         End Sub
 
-        Public Function GetEnumerator() As System.Collections.Generic.IEnumerator(Of T) Implements System.Collections.Generic.IEnumerable(Of T).GetEnumerator
+        Public Overridable Function GetEnumerator() As System.Collections.Generic.IEnumerator(Of T) Implements System.Collections.Generic.IEnumerable(Of T).GetEnumerator
 
             Return m_processQueue.GetEnumerator()
 
@@ -791,7 +827,7 @@ Namespace Collections
         ''' <exception cref="IndexOutOfRangeException">
         ''' If there are no items in the list, this function will throw an IndexOutOfRangeException
         ''' </exception>
-        Public Function Pop() As T
+        Public Overridable Function Pop() As T
 
             SyncLock m_processQueue
                 If m_processQueue.Count > 0 Then
@@ -811,7 +847,7 @@ Namespace Collections
         ''' <exception cref="IndexOutOfRangeException">
         ''' If there are no items in the list, this function will throw an IndexOutOfRangeException
         ''' </exception>
-        Public Function Poop() As T
+        Public Overridable Function Poop() As T
 
             SyncLock m_processQueue
                 If m_processQueue.Count > 0 Then
@@ -826,7 +862,7 @@ Namespace Collections
 
         End Function
 
-        Default Public Property Item(ByVal index As Integer) As T Implements IList(Of T).Item
+        Default Public Overridable Property Item(ByVal index As Integer) As T Implements IList(Of T).Item
             Get
                 SyncLock m_processQueue
                     Return m_processQueue(index)
@@ -839,7 +875,7 @@ Namespace Collections
             End Set
         End Property
 
-        Public Function IndexOf(ByVal item As T) As Integer Implements System.Collections.Generic.IList(Of T).IndexOf
+        Public Overridable Function IndexOf(ByVal item As T) As Integer Implements System.Collections.Generic.IList(Of T).IndexOf
 
             SyncLock m_processQueue
                 Return m_processQueue.IndexOf(item)
@@ -847,7 +883,7 @@ Namespace Collections
 
         End Function
 
-        Public ReadOnly Property Count() As Integer Implements System.Collections.Generic.IList(Of T).Count
+        Public Overridable ReadOnly Property Count() As Integer Implements System.Collections.Generic.IList(Of T).Count
             Get
                 SyncLock m_processQueue
                     Return m_processQueue.Count
@@ -855,7 +891,7 @@ Namespace Collections
             End Get
         End Property
 
-        Public Sub Clear() Implements System.Collections.Generic.IList(Of T).Clear
+        Public Overridable Sub Clear() Implements System.Collections.Generic.IList(Of T).Clear
 
             SyncLock m_processQueue
                 m_processQueue.Clear()
@@ -863,7 +899,7 @@ Namespace Collections
 
         End Sub
 
-        Public Function Contains(ByVal item As T) As Boolean Implements System.Collections.Generic.IList(Of T).Contains
+        Public Overridable Function Contains(ByVal item As T) As Boolean Implements System.Collections.Generic.IList(Of T).Contains
 
             SyncLock m_processQueue
                 Return m_processQueue.Contains(item)
@@ -871,7 +907,7 @@ Namespace Collections
 
         End Function
 
-        Public Function Remove(ByVal item As T) As Boolean Implements System.Collections.Generic.IList(Of T).Remove
+        Public Overridable Function Remove(ByVal item As T) As Boolean Implements System.Collections.Generic.IList(Of T).Remove
 
             SyncLock m_processQueue
                 m_processQueue.Remove(item)
@@ -879,7 +915,7 @@ Namespace Collections
 
         End Function
 
-        Public Sub RemoveAt(ByVal index As Integer) Implements IList(Of T).RemoveAt
+        Public Overridable Sub RemoveAt(ByVal index As Integer) Implements IList(Of T).RemoveAt
 
             SyncLock m_processQueue
                 m_processQueue.RemoveAt(index)
@@ -887,7 +923,7 @@ Namespace Collections
 
         End Sub
 
-        Public ReadOnly Property IsReadOnly() As Boolean Implements System.Collections.Generic.IList(Of T).IsReadOnly
+        Public Overridable ReadOnly Property IsReadOnly() As Boolean Implements System.Collections.Generic.IList(Of T).IsReadOnly
             Get
                 Return m_processQueue.IsReadOnly
             End Get
@@ -907,14 +943,14 @@ Namespace Collections
 
 #Region " ICollection Implementation "
 
-        Public ReadOnly Property SyncRoot() As Object Implements System.Collections.ICollection.SyncRoot
+        Public Overridable ReadOnly Property SyncRoot() As Object Implements System.Collections.ICollection.SyncRoot
             Get
                 Return m_processQueue
             End Get
         End Property
 
         ' This collection is effectively "synchronized" since all functions synclock operations internally
-        Public ReadOnly Property IsSynchronized() As Boolean Implements System.Collections.ICollection.IsSynchronized
+        Public Overridable ReadOnly Property IsSynchronized() As Boolean Implements System.Collections.ICollection.IsSynchronized
             Get
                 Return True
             End Get
