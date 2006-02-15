@@ -308,7 +308,7 @@ Public Class MeasurementConcentrator
 
             With New StringBuilder
                 For x As Integer = 0 To m_sampleQueue.Count - 1
-                    .Append(vbCrLf & "     Sample " & x & " @ " & m_sampleQueue(x).BaseTime.ToString("dd-MMM-yyyy HH:mm:ss") & ": ")
+                    .Append(Environment.NewLine & "     Sample " & x & " @ " & m_sampleQueue(x).BaseTime.ToString("dd-MMM-yyyy HH:mm:ss") & ": ")
 
                     If x = 0 Then
                         .Append("publishing...")
@@ -317,26 +317,26 @@ Public Class MeasurementConcentrator
                         .Append("concentrating...")
                     End If
 
-                    .Append(vbCrLf)
+                    .Append(Environment.NewLine)
                 Next
 
                 sampleDetail = .ToString
             End With
 
             With New StringBuilder
-                .Append("  Concentration process is: " & IIf(Enabled, "Enabled", "Disabled") & vbCrLf)
-                .Append("  Current processing state: " & IIf(Processing, "Executing", "Idle") & vbCrLf)
-                .Append("    Total process run time: " & SecondsToText(RunTime) & vbCrLf)
-                .Append("          Discarded points: " & m_sampleQueue.DiscardedPoints & vbCrLf)
-                .Append("          Defined lag time: " & m_lagTime & " seconds" & vbCrLf)
-                .Append("            Queued samples: " & m_sampleQueue.Count & vbCrLf)
-                .Append("         Current base time: " & m_sampleQueue.BaseTime.ToString("dd-MMM-yyyy HH:mm:ss") & vbCrLf)
-                .Append("       Current server time: " & currentTime.ToString("dd-MMM-yyyy HH:mm:ss") & vbCrLf)
-                .Append("        Most recent sample: " & m_sampleQueue.BaseTime.ToString("dd-MMM-yyyy HH:mm:ss") & ", " & m_sampleQueue.DistanceFromBaseTime(currentTime) & " second deviation" & vbCrLf)
-                .Append("         Publishing sample: " & publishingSample.ToString("dd-MMM-yyyy HH:mm:ss") & ", " & (currentTime.Ticks - publishingSample.Ticks) / 10000000L & " second deviation" & vbCrLf)
-                .Append("    Data packets published: " & m_packetsPublished & vbCrLf)
-                .Append("         Mean publish rate: " & (m_packetsPublished / RunTime).ToString("0.00") & " samples/sec" & vbCrLf)
-                .Append(vbCrLf & "Current sample detail:" & vbCrLf & sampleDetail)
+                .Append("  Concentration process is: " & IIf(Enabled, "Enabled", "Disabled") & Environment.NewLine)
+                .Append("  Current processing state: " & IIf(Processing, "Executing", "Idle") & Environment.NewLine)
+                .Append("    Total process run time: " & SecondsToText(RunTime) & Environment.NewLine)
+                .Append("          Discarded points: " & m_sampleQueue.DiscardedPoints & Environment.NewLine)
+                .Append("          Defined lag time: " & m_lagTime & " seconds" & Environment.NewLine)
+                .Append("            Queued samples: " & m_sampleQueue.Count & Environment.NewLine)
+                .Append("         Current base time: " & m_sampleQueue.BaseTime.ToString("dd-MMM-yyyy HH:mm:ss") & Environment.NewLine)
+                .Append("       Current server time: " & currentTime.ToString("dd-MMM-yyyy HH:mm:ss") & Environment.NewLine)
+                .Append("        Most recent sample: " & m_sampleQueue.BaseTime.ToString("dd-MMM-yyyy HH:mm:ss") & ", " & m_sampleQueue.DistanceFromBaseTime(currentTime) & " second deviation" & Environment.NewLine)
+                .Append("         Publishing sample: " & publishingSample.ToString("dd-MMM-yyyy HH:mm:ss") & ", " & (currentTime.Ticks - publishingSample.Ticks) / 10000000L & " second deviation" & Environment.NewLine)
+                .Append("    Data packets published: " & m_packetsPublished & Environment.NewLine)
+                .Append("         Mean publish rate: " & (m_packetsPublished / RunTime).ToString("0.00") & " samples/sec" & Environment.NewLine)
+                .Append(Environment.NewLine & "Current sample detail:" & Environment.NewLine & sampleDetail)
 
                 Return .ToString()
             End With

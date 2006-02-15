@@ -35,140 +35,287 @@ Namespace Collections
 
 #Region " Construction Functions "
 
+#Region " Single-Item Processing Constructors "
+
         ''' <summary>
-        ''' Create a new keyed asynchronous process queue with the default settings: ProcessInterval = 100, MaximumThreads = 5, ProcessTimeout = Infinite, RequeueOnTimeout = False
+        ''' Create a new keyed asynchronous process queue with the default settings: ProcessInterval = 100, MaximumThreads = 5, ProcessTimeout = Infinite, RequeueOnTimeout = False, RequeueOnException = False
         ''' </summary>
         Public Shared Shadows Function CreateAsynchronousQueue(ByVal processItemFunction As ProcessItemFunctionSignature) As KeyedProcessQueue(Of TKey, TValue)
 
-            Return CreateAsynchronousQueue(processItemFunction, Nothing, DefaultProcessInterval, DefaultMaximumThreads, DefaultProcessTimeout, DefaultRequeueOnTimeout)
+            Return CreateAsynchronousQueue(processItemFunction, Nothing, DefaultProcessInterval, DefaultMaximumThreads, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException)
 
         End Function
 
         ''' <summary>
-        ''' Create a new keyed asynchronous process queue with the default settings: ProcessInterval = 100, MaximumThreads = 5, ProcessTimeout = Infinite, RequeueOnTimeout = False
+        ''' Create a new keyed asynchronous process queue with the default settings: ProcessInterval = 100, MaximumThreads = 5, ProcessTimeout = Infinite, RequeueOnTimeout = False, RequeueOnException = False
         ''' </summary>
         Public Shared Shadows Function CreateAsynchronousQueue(ByVal processItemFunction As ProcessItemFunctionSignature, ByVal canProcessItemFunction As CanProcessItemFunctionSignature) As KeyedProcessQueue(Of TKey, TValue)
 
-            Return CreateAsynchronousQueue(processItemFunction, canProcessItemFunction, DefaultProcessInterval, DefaultMaximumThreads, DefaultProcessTimeout, DefaultRequeueOnTimeout)
+            Return CreateAsynchronousQueue(processItemFunction, canProcessItemFunction, DefaultProcessInterval, DefaultMaximumThreads, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException)
 
         End Function
 
         ''' <summary>
-        ''' Create a new keyed asynchronous process queue with the default settings: ProcessInterval = 100, ProcessTimeout = Infinite, RequeueOnTimeout = False
+        ''' Create a new keyed asynchronous process queue with the default settings: ProcessInterval = 100, ProcessTimeout = Infinite, RequeueOnTimeout = False, RequeueOnException = False
         ''' </summary>
         Public Shared Shadows Function CreateAsynchronousQueue(ByVal processItemFunction As ProcessItemFunctionSignature, ByVal maximumThreads As Integer) As KeyedProcessQueue(Of TKey, TValue)
 
-            Return CreateAsynchronousQueue(processItemFunction, Nothing, DefaultProcessInterval, maximumThreads, DefaultProcessTimeout, DefaultRequeueOnTimeout)
+            Return CreateAsynchronousQueue(processItemFunction, Nothing, DefaultProcessInterval, maximumThreads, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException)
 
         End Function
 
         ''' <summary>
-        ''' Create a new keyed asynchronous process queue with the default settings: ProcessInterval = 100, ProcessTimeout = Infinite, RequeueOnTimeout = False
+        ''' Create a new keyed asynchronous process queue with the default settings: ProcessInterval = 100, ProcessTimeout = Infinite, RequeueOnTimeout = False, RequeueOnException = False
         ''' </summary>
         Public Shared Shadows Function CreateAsynchronousQueue(ByVal processItemFunction As ProcessItemFunctionSignature, ByVal canProcessItemFunction As CanProcessItemFunctionSignature, ByVal maximumThreads As Integer) As KeyedProcessQueue(Of TKey, TValue)
 
-            Return CreateAsynchronousQueue(processItemFunction, canProcessItemFunction, DefaultProcessInterval, maximumThreads, DefaultProcessTimeout, DefaultRequeueOnTimeout)
+            Return CreateAsynchronousQueue(processItemFunction, canProcessItemFunction, DefaultProcessInterval, maximumThreads, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException)
 
         End Function
 
         ''' <summary>
         ''' Create a new keyed asynchronous process queue using the specified settings
         ''' </summary>
-        Public Shared Shadows Function CreateAsynchronousQueue(ByVal processItemFunction As ProcessItemFunctionSignature, ByVal processInterval As Double, ByVal maximumThreads As Integer, ByVal processTimeout As Integer, ByVal requeueOnTimeout As Boolean) As KeyedProcessQueue(Of TKey, TValue)
+        Public Shared Shadows Function CreateAsynchronousQueue(ByVal processItemFunction As ProcessItemFunctionSignature, ByVal processInterval As Double, ByVal maximumThreads As Integer, ByVal processTimeout As Integer, ByVal requeueOnTimeout As Boolean, ByVal requeueOnException As Boolean) As KeyedProcessQueue(Of TKey, TValue)
 
-            Return CreateAsynchronousQueue(processItemFunction, Nothing, processInterval, maximumThreads, processTimeout, requeueOnTimeout)
+            Return CreateAsynchronousQueue(processItemFunction, Nothing, processInterval, maximumThreads, processTimeout, requeueOnTimeout, requeueOnException)
 
         End Function
 
         ''' <summary>
         ''' Create a new keyed asynchronous process queue using the specified settings
         ''' </summary>
-        Public Shared Shadows Function CreateAsynchronousQueue(ByVal processItemFunction As ProcessItemFunctionSignature, ByVal canProcessItemFunction As CanProcessItemFunctionSignature, ByVal processInterval As Double, ByVal maximumThreads As Integer, ByVal processTimeout As Integer, ByVal requeueOnTimeout As Boolean) As KeyedProcessQueue(Of TKey, TValue)
+        Public Shared Shadows Function CreateAsynchronousQueue(ByVal processItemFunction As ProcessItemFunctionSignature, ByVal canProcessItemFunction As CanProcessItemFunctionSignature, ByVal processInterval As Double, ByVal maximumThreads As Integer, ByVal processTimeout As Integer, ByVal requeueOnTimeout As Boolean, ByVal requeueOnException As Boolean) As KeyedProcessQueue(Of TKey, TValue)
 
-            Return New KeyedProcessQueue(Of TKey, TValue)(processItemFunction, canProcessItemFunction, processInterval, maximumThreads, processTimeout, requeueOnTimeout)
+            Return New KeyedProcessQueue(Of TKey, TValue)(processItemFunction, canProcessItemFunction, processInterval, maximumThreads, processTimeout, requeueOnTimeout, requeueOnException)
 
         End Function
 
         ''' <summary>
-        ''' Create a new keyed synchronous process queue (i.e., single process thread) with the default settings: ProcessInterval = 100, ProcessTimeout = Infinite, RequeueOnTimeout = False
+        ''' Create a new keyed synchronous process queue (i.e., single process thread) with the default settings: ProcessInterval = 100, ProcessTimeout = Infinite, RequeueOnTimeout = False, RequeueOnException = False
         ''' </summary>
         Public Shared Shadows Function CreateSynchronousQueue(ByVal processItemFunction As ProcessItemFunctionSignature) As KeyedProcessQueue(Of TKey, TValue)
 
-            Return CreateSynchronousQueue(processItemFunction, Nothing, DefaultProcessInterval, DefaultProcessTimeout, DefaultRequeueOnTimeout)
+            Return CreateSynchronousQueue(processItemFunction, Nothing, DefaultProcessInterval, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException)
 
         End Function
 
         ''' <summary>
-        ''' Create a new keyed synchronous process queue (i.e., single process thread) with the default settings: ProcessInterval = 100, ProcessTimeout = Infinite, RequeueOnTimeout = False
+        ''' Create a new keyed synchronous process queue (i.e., single process thread) with the default settings: ProcessInterval = 100, ProcessTimeout = Infinite, RequeueOnTimeout = False, RequeueOnException = False
         ''' </summary>
         Public Shared Shadows Function CreateSynchronousQueue(ByVal processItemFunction As ProcessItemFunctionSignature, ByVal canProcessItemFunction As CanProcessItemFunctionSignature) As KeyedProcessQueue(Of TKey, TValue)
 
-            Return CreateSynchronousQueue(processItemFunction, canProcessItemFunction, DefaultProcessInterval, DefaultProcessTimeout, DefaultRequeueOnTimeout)
+            Return CreateSynchronousQueue(processItemFunction, canProcessItemFunction, DefaultProcessInterval, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException)
 
         End Function
 
         ''' <summary>
         ''' Create a new keyed synchronous process queue (i.e., single process thread) using the specified settings
         ''' </summary>
-        Public Shared Shadows Function CreateSynchronousQueue(ByVal processItemFunction As ProcessItemFunctionSignature, ByVal processInterval As Double, ByVal processTimeout As Integer, ByVal requeueOnTimeout As Boolean) As KeyedProcessQueue(Of TKey, TValue)
+        Public Shared Shadows Function CreateSynchronousQueue(ByVal processItemFunction As ProcessItemFunctionSignature, ByVal processInterval As Double, ByVal processTimeout As Integer, ByVal requeueOnTimeout As Boolean, ByVal requeueOnException As Boolean) As KeyedProcessQueue(Of TKey, TValue)
 
-            Return CreateSynchronousQueue(processItemFunction, Nothing, processInterval, processTimeout, requeueOnTimeout)
+            Return CreateSynchronousQueue(processItemFunction, Nothing, processInterval, processTimeout, requeueOnTimeout, requeueOnException)
 
         End Function
 
         ''' <summary>
         ''' Create a new keyed synchronous process queue (i.e., single process thread) using the specified settings
         ''' </summary>
-        Public Shared Shadows Function CreateSynchronousQueue(ByVal processItemFunction As ProcessItemFunctionSignature, ByVal canProcessItemFunction As CanProcessItemFunctionSignature, ByVal processInterval As Double, ByVal processTimeout As Integer, ByVal requeueOnTimeout As Boolean) As KeyedProcessQueue(Of TKey, TValue)
+        Public Shared Shadows Function CreateSynchronousQueue(ByVal processItemFunction As ProcessItemFunctionSignature, ByVal canProcessItemFunction As CanProcessItemFunctionSignature, ByVal processInterval As Double, ByVal processTimeout As Integer, ByVal requeueOnTimeout As Boolean, ByVal requeueOnException As Boolean) As KeyedProcessQueue(Of TKey, TValue)
 
-            Return New KeyedProcessQueue(Of TKey, TValue)(processItemFunction, canProcessItemFunction, processInterval, 1, processTimeout, requeueOnTimeout)
+            Return New KeyedProcessQueue(Of TKey, TValue)(processItemFunction, canProcessItemFunction, processInterval, 1, processTimeout, requeueOnTimeout, requeueOnException)
 
         End Function
 
         ''' <summary>
-        ''' Create a new keyed real-time process queue with the default settings: ProcessTimeout = Infinite, RequeueOnTimeout = False
+        ''' Create a new keyed real-time process queue with the default settings: ProcessTimeout = Infinite, RequeueOnTimeout = False, RequeueOnException = False
         ''' </summary>
         Public Shared Shadows Function CreateRealTimeQueue(ByVal processItemFunction As ProcessItemFunctionSignature) As KeyedProcessQueue(Of TKey, TValue)
 
-            Return CreateRealTimeQueue(processItemFunction, Nothing, DefaultProcessTimeout, DefaultRequeueOnTimeout)
+            Return CreateRealTimeQueue(processItemFunction, Nothing, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException)
 
         End Function
 
         ''' <summary>
-        ''' Create a new keyed real-time process queue with the default settings: ProcessTimeout = Infinite, RequeueOnTimeout = False
+        ''' Create a new keyed real-time process queue with the default settings: ProcessTimeout = Infinite, RequeueOnTimeout = False, RequeueOnException = False
         ''' </summary>
         Public Shared Shadows Function CreateRealTimeQueue(ByVal processItemFunction As ProcessItemFunctionSignature, ByVal canProcessItemFunction As CanProcessItemFunctionSignature) As KeyedProcessQueue(Of TKey, TValue)
 
-            Return CreateRealTimeQueue(processItemFunction, canProcessItemFunction, DefaultProcessTimeout, DefaultRequeueOnTimeout)
+            Return CreateRealTimeQueue(processItemFunction, canProcessItemFunction, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException)
 
         End Function
 
         ''' <summary>
         ''' Create a new keyed real-time process queue using the specified settings
         ''' </summary>
-        Public Shared Shadows Function CreateRealTimeQueue(ByVal processItemFunction As ProcessItemFunctionSignature, ByVal processTimeout As Integer, ByVal requeueOnTimeout As Boolean) As KeyedProcessQueue(Of TKey, TValue)
+        Public Shared Shadows Function CreateRealTimeQueue(ByVal processItemFunction As ProcessItemFunctionSignature, ByVal processTimeout As Integer, ByVal requeueOnTimeout As Boolean, ByVal requeueOnException As Boolean) As KeyedProcessQueue(Of TKey, TValue)
 
-            Return CreateRealTimeQueue(processItemFunction, Nothing, processTimeout, requeueOnTimeout)
+            Return CreateRealTimeQueue(processItemFunction, Nothing, processTimeout, requeueOnTimeout, requeueOnException)
 
         End Function
 
         ''' <summary>
         ''' Create a new keyed real-time process queue using the specified settings
         ''' </summary>
-        Public Shared Shadows Function CreateRealTimeQueue(ByVal processItemFunction As ProcessItemFunctionSignature, ByVal canProcessItemFunction As CanProcessItemFunctionSignature, ByVal processTimeout As Integer, ByVal requeueOnTimeout As Boolean) As KeyedProcessQueue(Of TKey, TValue)
+        Public Shared Shadows Function CreateRealTimeQueue(ByVal processItemFunction As ProcessItemFunctionSignature, ByVal canProcessItemFunction As CanProcessItemFunctionSignature, ByVal processTimeout As Integer, ByVal requeueOnTimeout As Boolean, ByVal requeueOnException As Boolean) As KeyedProcessQueue(Of TKey, TValue)
 
-            Return New KeyedProcessQueue(Of TKey, TValue)(processItemFunction, canProcessItemFunction, RealTimeProcessInterval, 1, processTimeout, requeueOnTimeout)
+            Return New KeyedProcessQueue(Of TKey, TValue)(processItemFunction, canProcessItemFunction, RealTimeProcessInterval, 1, processTimeout, requeueOnTimeout, requeueOnException)
 
         End Function
+
+#End Region
+
+#Region " Multi-Item Processing Constructors "
+
+        ''' <summary>
+        ''' Create a new asynchronous bulk-item process queue with the default settings: ProcessInterval = 100, MaximumThreads = 5, ProcessTimeout = Infinite, RequeueOnTimeout = False, RequeueOnException = False
+        ''' </summary>
+        Public Shared Shadows Function CreateAsynchronousQueue(ByVal processItemsFunction As ProcessItemsFunctionSignature) As KeyedProcessQueue(Of TKey, TValue)
+
+            Return CreateAsynchronousQueue(processItemsFunction, Nothing, DefaultProcessInterval, DefaultMaximumThreads, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException)
+
+        End Function
+
+        ''' <summary>
+        ''' Create a new asynchronous bulk-item process queue with the default settings: ProcessInterval = 100, MaximumThreads = 5, ProcessTimeout = Infinite, RequeueOnTimeout = False, RequeueOnException = False
+        ''' </summary>
+        Public Shared Shadows Function CreateAsynchronousQueue(ByVal processItemsFunction As ProcessItemsFunctionSignature, ByVal canProcessItemFunction As CanProcessItemFunctionSignature) As KeyedProcessQueue(Of TKey, TValue)
+
+            Return CreateAsynchronousQueue(processItemsFunction, canProcessItemFunction, DefaultProcessInterval, DefaultMaximumThreads, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException)
+
+        End Function
+
+        ''' <summary>
+        ''' Create a new asynchronous bulk-item process queue with the default settings: ProcessInterval = 100, ProcessTimeout = Infinite, RequeueOnTimeout = False, RequeueOnException = False
+        ''' </summary>
+        Public Shared Shadows Function CreateAsynchronousQueue(ByVal processItemsFunction As ProcessItemsFunctionSignature, ByVal maximumThreads As Integer) As KeyedProcessQueue(Of TKey, TValue)
+
+            Return CreateAsynchronousQueue(processItemsFunction, Nothing, DefaultProcessInterval, maximumThreads, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException)
+
+        End Function
+
+        ''' <summary>
+        ''' Create a new asynchronous bulk-item process queue with the default settings: ProcessInterval = 100, ProcessTimeout = Infinite, RequeueOnTimeout = False, RequeueOnException = False
+        ''' </summary>
+        Public Shared Shadows Function CreateAsynchronousQueue(ByVal processItemsFunction As ProcessItemsFunctionSignature, ByVal canProcessItemFunction As CanProcessItemFunctionSignature, ByVal maximumThreads As Integer) As KeyedProcessQueue(Of TKey, TValue)
+
+            Return CreateAsynchronousQueue(processItemsFunction, canProcessItemFunction, DefaultProcessInterval, maximumThreads, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException)
+
+        End Function
+
+        ''' <summary>
+        ''' Create a new asynchronous bulk-item process queue using the specified settings
+        ''' </summary>
+        Public Shared Shadows Function CreateAsynchronousQueue(ByVal processItemsFunction As ProcessItemsFunctionSignature, ByVal processInterval As Double, ByVal maximumThreads As Integer, ByVal processTimeout As Integer, ByVal requeueOnTimeout As Boolean, ByVal requeueOnException As Boolean) As KeyedProcessQueue(Of TKey, TValue)
+
+            Return CreateAsynchronousQueue(processItemsFunction, Nothing, processInterval, maximumThreads, processTimeout, requeueOnTimeout, requeueOnException)
+
+        End Function
+
+        ''' <summary>
+        ''' Create a new asynchronous bulk-item process queue using the specified settings
+        ''' </summary>
+        Public Shared Shadows Function CreateAsynchronousQueue(ByVal processItemsFunction As ProcessItemsFunctionSignature, ByVal canProcessItemFunction As CanProcessItemFunctionSignature, ByVal processInterval As Double, ByVal maximumThreads As Integer, ByVal processTimeout As Integer, ByVal requeueOnTimeout As Boolean, ByVal requeueOnException As Boolean) As KeyedProcessQueue(Of TKey, TValue)
+
+            Return New KeyedProcessQueue(Of TKey, TValue)(processItemsFunction, canProcessItemFunction, processInterval, maximumThreads, processTimeout, requeueOnTimeout, requeueOnException)
+
+        End Function
+
+        ''' <summary>
+        ''' Create a new synchronous bulk-item process queue (i.e., single process thread) with the default settings: ProcessInterval = 100, ProcessTimeout = Infinite, RequeueOnTimeout = False, RequeueOnException = False
+        ''' </summary>
+        Public Shared Shadows Function CreateSynchronousQueue(ByVal processItemsFunction As ProcessItemsFunctionSignature) As KeyedProcessQueue(Of TKey, TValue)
+
+            Return CreateSynchronousQueue(processItemsFunction, Nothing, DefaultProcessInterval, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException)
+
+        End Function
+
+        ''' <summary>
+        ''' Create a new synchronous bulk-item process queue (i.e., single process thread) with the default settings: ProcessInterval = 100, ProcessTimeout = Infinite, RequeueOnTimeout = False, RequeueOnException = False
+        ''' </summary>
+        Public Shared Shadows Function CreateSynchronousQueue(ByVal processItemsFunction As ProcessItemsFunctionSignature, ByVal canProcessItemFunction As CanProcessItemFunctionSignature) As KeyedProcessQueue(Of TKey, TValue)
+
+            Return CreateSynchronousQueue(processItemsFunction, canProcessItemFunction, DefaultProcessInterval, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException)
+
+        End Function
+
+        ''' <summary>
+        ''' Create a new synchronous bulk-item process queue (i.e., single process thread) using the specified settings
+        ''' </summary>
+        Public Shared Shadows Function CreateSynchronousQueue(ByVal processItemsFunction As ProcessItemsFunctionSignature, ByVal processInterval As Double, ByVal processTimeout As Integer, ByVal requeueOnTimeout As Boolean, ByVal requeueOnException As Boolean) As KeyedProcessQueue(Of TKey, TValue)
+
+            Return CreateSynchronousQueue(processItemsFunction, Nothing, processInterval, processTimeout, requeueOnTimeout, requeueOnException)
+
+        End Function
+
+        ''' <summary>
+        ''' Create a new synchronous bulk-item process queue (i.e., single process thread) using the specified settings
+        ''' </summary>
+        Public Shared Shadows Function CreateSynchronousQueue(ByVal processItemsFunction As ProcessItemsFunctionSignature, ByVal canProcessItemFunction As CanProcessItemFunctionSignature, ByVal processInterval As Double, ByVal processTimeout As Integer, ByVal requeueOnTimeout As Boolean, ByVal requeueOnException As Boolean) As KeyedProcessQueue(Of TKey, TValue)
+
+            Return New KeyedProcessQueue(Of TKey, TValue)(processItemsFunction, canProcessItemFunction, processInterval, 1, processTimeout, requeueOnTimeout, requeueOnException)
+
+        End Function
+
+        ''' <summary>
+        ''' Create a new real-time bulk-item process queue with the default settings: ProcessTimeout = Infinite, RequeueOnTimeout = False, RequeueOnException = False
+        ''' </summary>
+        Public Shared Shadows Function CreateRealTimeQueue(ByVal processItemsFunction As ProcessItemsFunctionSignature) As KeyedProcessQueue(Of TKey, TValue)
+
+            Return CreateRealTimeQueue(processItemsFunction, Nothing, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException)
+
+        End Function
+
+        ''' <summary>
+        ''' Create a new real-time bulk-item process queue with the default settings: ProcessTimeout = Infinite, RequeueOnTimeout = False, RequeueOnException = False
+        ''' </summary>
+        Public Shared Shadows Function CreateRealTimeQueue(ByVal processItemsFunction As ProcessItemsFunctionSignature, ByVal canProcessItemFunction As CanProcessItemFunctionSignature) As KeyedProcessQueue(Of TKey, TValue)
+
+            Return CreateRealTimeQueue(processItemsFunction, canProcessItemFunction, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException)
+
+        End Function
+
+        ''' <summary>
+        ''' Create a new real-time bulk-item process queue using the specified settings
+        ''' </summary>
+        Public Shared Shadows Function CreateRealTimeQueue(ByVal processItemsFunction As ProcessItemsFunctionSignature, ByVal processTimeout As Integer, ByVal requeueOnTimeout As Boolean, ByVal requeueOnException As Boolean) As KeyedProcessQueue(Of TKey, TValue)
+
+            Return CreateRealTimeQueue(processItemsFunction, Nothing, processTimeout, requeueOnTimeout, requeueOnException)
+
+        End Function
+
+        ''' <summary>
+        ''' Create a new real-time bulk-item process queue using the specified settings
+        ''' </summary>
+        Public Shared Shadows Function CreateRealTimeQueue(ByVal processItemsFunction As ProcessItemsFunctionSignature, ByVal canProcessItemFunction As CanProcessItemFunctionSignature, ByVal processTimeout As Integer, ByVal requeueOnTimeout As Boolean, ByVal requeueOnException As Boolean) As KeyedProcessQueue(Of TKey, TValue)
+
+            Return New KeyedProcessQueue(Of TKey, TValue)(processItemsFunction, canProcessItemFunction, RealTimeProcessInterval, 1, processTimeout, requeueOnTimeout, requeueOnException)
+
+        End Function
+
+#End Region
+
+#Region " Protected Constructors "
 
         ''' <summary>
         ''' This constructor creates a ProcessList based on the generic SortedDictionary class
         ''' </summary>
-        Protected Sub New(ByVal processItemFunction As ProcessItemFunctionSignature, ByVal canProcessItemFunction As CanProcessItemFunctionSignature, ByVal processInterval As Double, ByVal maximumThreads As Integer, ByVal processTimeout As Integer, ByVal requeueOnTimeout As Boolean)
+        Protected Sub New(ByVal processItemFunction As ProcessItemFunctionSignature, ByVal canProcessItemFunction As CanProcessItemFunctionSignature, ByVal processInterval As Double, ByVal maximumThreads As Integer, ByVal processTimeout As Integer, ByVal requeueOnTimeout As Boolean, ByVal requeueOnException As Boolean)
 
-            MyBase.New(processItemFunction, canProcessItemFunction, New SortedDictionary(Of TKey, TValue), processInterval, maximumThreads, processTimeout, requeueOnTimeout)
+            MyBase.New(processItemFunction, Nothing, canProcessItemFunction, New SortedDictionary(Of TKey, TValue), processInterval, maximumThreads, processTimeout, requeueOnTimeout, requeueOnException)
 
         End Sub
+
+        ''' <summary>
+        ''' This constructor creates a bulk-item ProcessList based on the generic SortedDictionary class
+        ''' </summary>
+        Protected Sub New(ByVal processItemsFunction As ProcessItemsFunctionSignature, ByVal canProcessItemFunction As CanProcessItemFunctionSignature, ByVal processInterval As Double, ByVal maximumThreads As Integer, ByVal processTimeout As Integer, ByVal requeueOnTimeout As Boolean, ByVal requeueOnException As Boolean)
+
+            MyBase.New(Nothing, processItemsFunction, canProcessItemFunction, New SortedDictionary(Of TKey, TValue), processInterval, maximumThreads, processTimeout, requeueOnTimeout, requeueOnException)
+
+        End Sub
+
+#End Region
 
 #End Region
 
@@ -199,6 +346,7 @@ Namespace Collections
 
             SyncLock SyncRoot
                 InternalDictionary.Add(key, value)
+                DataAdded()
             End SyncLock
 
         End Sub
@@ -220,6 +368,7 @@ Namespace Collections
             Set(ByVal value As TValue)
                 SyncLock SyncRoot
                     InternalDictionary(key) = value
+                    DataAdded()
                 End SyncLock
             End Set
         End Property

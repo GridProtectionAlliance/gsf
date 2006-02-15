@@ -65,6 +65,7 @@
     <Compile Include="Tva.Interop\IniFile.vb" />
     <Compile Include="Tva.IO\Common.vb" />
     <Compile Include="Tva.IO\FilePath.vb" />
+    <Compile Include="Tva.IO\LogFile.vb" />
     <Compile Include="Tva.Math\Common.vb" />
     <Compile Include="Tva.Math\CompositeValues.vb" />
     <Compile Include="Tva.Math\RealTimeSlope.vb" />

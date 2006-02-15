@@ -3,19 +3,17 @@
 '  Copyright © 2006 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005
-'  Primary Developer: Pinal C Patel, Operations Data Architecture [TVA]
+'  Primary Developer: James R Carroll, Operations Data Architecture [TVA]
 '      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
 '       Phone: 423/751-2250
-'       Email: pcpatel@tva.gov
+'       Email: jrcarrol@tva.gov
 '
 '  Code Modification History:
 '  -----------------------------------------------------------------------------------------------------
-'  01/04/2006 - Pinal C Patel
-'       Original version of source code generated
-'  01/05/2006 - James R Carroll
-'       Made process queue a generic collection
 '  01/07/2006 - James R Carroll
-'       Reworked threading architecture
+'       Original version of source code generated
+'  02/12/2006 - James R Carroll
+'       Added multi-item bulk processing functionality
 '
 '*******************************************************************************************************
 
@@ -27,6 +25,26 @@ Namespace Collections
 
     ' TODO: Add bulk processing functionality that would process all currently queued items (Array of T) at each pass
     ' once added - import LogFile from C37.118 Proxy Service and implement based on this class
+
+#Region " Process Queue Enumerations "
+
+    ''' <summary>
+    ''' Enumeration of possible queue threading modes
+    ''' </summary>
+    Public Enum QueueThreadingMode
+        Asynchronous
+        Synchronous
+    End Enum
+
+    ''' <summary>
+    ''' Enumeration of possible queue processing styles
+    ''' </summary>
+    Public Enum QueueProcessingStyle
+        OneAtATime
+        ManyAtOnce
+    End Enum
+
+#End Region
 
     ''' <summary>
     ''' <para>This class will process a collection of items on independent threads</para>
@@ -41,74 +59,26 @@ Namespace Collections
 
         Implements IList(Of T), ICollection
 
-#Region " Internal Thread Processing Class "
-
-        ' This internal class is used to limit item processing time if requested
-        Private Class ProcessThread
-
-            Private m_parent As ProcessQueue(Of T)
-            Private m_thread As Thread
-            Private m_item As T
-
-            Public Sub New(ByVal parent As ProcessQueue(Of T), ByVal item As T)
-
-                m_parent = parent
-                m_item = item
-                m_thread = New Thread(AddressOf ProcessItem)
-                m_thread.Start()
-
-            End Sub
-
-            ' Block calling thread until specified time has expired
-            Public Function WaitUntil(ByVal timeout As Integer) As Boolean
-
-                Dim threadComplete As Boolean = m_thread.Join(timeout)
-                If Not threadComplete Then m_thread.Abort()
-                Return threadComplete
-
-            End Function
-
-            Private Sub ProcessItem()
-
-                With m_parent
-                    Try
-                        ' Invoke user function to process item
-                        .ProcessItemFunction.Invoke(m_item)
-                        .IncrementItemsProcessed()
-                        .RaiseItemProcessed(m_item)
-                    Catch ex As ThreadAbortException
-                        ' We egress gracefully if the thread's being aborted
-                        Exit Sub
-                    Catch ex As Exception
-                        ' Processing won't stop for any errors thrown by the user function, but we will report them...
-                        .RaiseProcessException(ex)
-                    End Try
-                End With
-
-            End Sub
-
-        End Class
-
-#End Region
-
 #Region " Public Member Declarations "
 
         ''' <summary>
-        ''' This is the function signature used for defining a method to process items
+        ''' This is the function signature used for defining a method to process items one at a time
         ''' </summary>
         ''' <remarks>
         ''' <para>Implementation of this function is required unless ProcessItemsFunction is implemented</para>
         ''' <para>This function is used when creating a queue to process one item at a time</para>
+        ''' <para>Asynchronous queues will process individual items on multiple threads</para>
         ''' </remarks>
         ''' <param name="item">Item to be processed</param>
         Public Delegate Sub ProcessItemFunctionSignature(ByVal item As T)
 
         ''' <summary>
-        ''' This is the function signature used for defining a method to process multiple items
+        ''' This is the function signature used for defining a method to process multiple items at once
         ''' </summary>
         ''' <remarks>
         ''' <para>Implementation of this function is required unless ProcessItemFunction is implemented</para>
         ''' <para>This function is used when creating a queue to process multiple items at once</para>
+        ''' <para>Asynchronous queues will process groups of items on multiple threads</para>
         ''' </remarks>
         ''' <param name="item">Item to be processed</param>
         Public Delegate Sub ProcessItemsFunctionSignature(ByVal item As T())
@@ -117,7 +87,12 @@ Namespace Collections
         ''' This is the function signature used for determining if an item can be currently processed
         ''' </summary>
         ''' <remarks>
-        ''' Implementation of this function is optional; it will be assumed that an item can be processed if this function is not defined
+        ''' <para>Implementation of this function is optional; it will be assumed that an item can be processed if this function is not defined</para>
+        ''' <para>Items must eventually get to a state where they can be processed or they will remain in the queue forever</para>
+        ''' <para>
+        ''' Note that when this function is implemented and ProcessingStyle = ManyAtOnce (i.e., ProcessItemsFunction is defined)
+        ''' then each item presented for processing must evaluate as "CanProcessItem = True" before any items are processed
+        ''' </para>
         ''' </remarks>
         ''' <returns>Function should return True if item can be processed</returns>
         Public Delegate Function CanProcessItemFunctionSignature(ByVal item As T) As Boolean
@@ -129,17 +104,40 @@ Namespace Collections
         ''' <remarks>
         ''' <para>This event allows custom handling of successfully processed items</para>
         ''' <para>When a process timeout is specified, this event allows you to know when the item completed processing in the allowed amount of time</para>
+        ''' <para>This function will only be raised when ProcessingStyle = OneAtATime (i.e., ProcessItemFunction is defined)</para>
         ''' </remarks>
         Public Event ItemProcessed(ByVal item As T)
+
+        ''' <summary>
+        ''' This event will be raised after an array of items have been successfully processed
+        ''' </summary>
+        ''' <param name="items">Reference to items that have been successfully processed</param>
+        ''' <remarks>
+        ''' <para>This event allows custom handling of successfully processed items</para>
+        ''' <para>When a process timeout is specified, this event allows you to know when the item completed processing in the allowed amount of time</para>
+        ''' <para>This function will only be raised when ProcessingStyle = ManyAtOnce (i.e., ProcessItemsFunction is defined)</para>
+        ''' </remarks>
+        Public Event ItemsProcessed(ByVal items As T())
 
         ''' <summary>
         ''' This event will be raised if an item's processing time exceeds the specified process timeout
         ''' </summary>
         ''' <remarks>
-        ''' This event allows custom handling of items that took too long to process
+        ''' <para>This event allows custom handling of items that took too long to process</para>
+        ''' <para>This function will only be raised when ProcessingStyle = OneAtATime (i.e., ProcessItemFunction is defined)</para>
         ''' </remarks>
         ''' <param name="item">Reference to item that took too long to process</param>
-        Public Event ItemProcessingTimedOut(ByVal item As T)
+        Public Event ItemTimedOut(ByVal item As T)
+
+        ''' <summary>
+        ''' This event will be raised if processing time for an array of items exceeds the specified process timeout
+        ''' </summary>
+        ''' <remarks>
+        ''' <para>This event allows custom handling of items that took too long to process</para>
+        ''' <para>This function will only be raised when ProcessingStyle = ManyAtOnce (i.e., ProcessItemsFunction is defined)</para>
+        ''' </remarks>
+        ''' <param name="items">Reference to items that took too long to process</param>
+        Public Event ItemsTimedOut(ByVal items As T())
 
         ''' <summary>
         ''' This event will be raised if there is an exception encountered while attempting to processing an item in the list
@@ -153,18 +151,21 @@ Namespace Collections
         Public Const DefaultMaximumThreads As Integer = 5
         Public Const DefaultProcessTimeout As Integer = Timeout.Infinite
         Public Const DefaultRequeueOnTimeout As Boolean = False
-        Public Const RealTimeProcessInterval As Double = 0
+        Public Const DefaultRequeueOnException As Boolean = False
+        Public Const RealTimeProcessInterval As Double = 0.0#
 
 #End Region
 
 #Region " Private Member Declarations "
 
         Private m_processItemFunction As ProcessItemFunctionSignature
+        Private m_processItemsFunction As ProcessItemsFunctionSignature
         Private m_canProcessItemFunction As CanProcessItemFunctionSignature
         Private m_processQueue As IList(Of T)
         Private m_maximumThreads As Integer
         Private m_processTimeout As Integer
         Private m_requeueOnTimeout As Boolean
+        Private m_requeueOnException As Boolean
         Private m_processingIsRealTime As Boolean
         Private m_threadCount As Integer
         Private m_processing As Boolean
@@ -178,159 +179,315 @@ Namespace Collections
 
 #Region " Construction Functions "
 
+#Region " Single-Item Processing Constructors "
+
         ''' <summary>
-        ''' Create a new asynchronous process queue with the default settings: ProcessInterval = 100, MaximumThreads = 5, ProcessTimeout = Infinite, RequeueOnTimeout = False
+        ''' Create a new asynchronous process queue with the default settings: ProcessInterval = 100, MaximumThreads = 5, ProcessTimeout = Infinite, RequeueOnTimeout = False, RequeueOnException = False
         ''' </summary>
         Public Shared Function CreateAsynchronousQueue(ByVal processItemFunction As ProcessItemFunctionSignature) As ProcessQueue(Of T)
 
-            Return CreateAsynchronousQueue(processItemFunction, Nothing, DefaultProcessInterval, DefaultMaximumThreads, DefaultProcessTimeout, DefaultRequeueOnTimeout)
+            Return CreateAsynchronousQueue(processItemFunction, Nothing, DefaultProcessInterval, DefaultMaximumThreads, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException)
 
         End Function
 
         ''' <summary>
-        ''' Create a new asynchronous process queue with the default settings: ProcessInterval = 100, MaximumThreads = 5, ProcessTimeout = Infinite, RequeueOnTimeout = False
+        ''' Create a new asynchronous process queue with the default settings: ProcessInterval = 100, MaximumThreads = 5, ProcessTimeout = Infinite, RequeueOnTimeout = False, RequeueOnException = False
         ''' </summary>
         Public Shared Function CreateAsynchronousQueue(ByVal processItemFunction As ProcessItemFunctionSignature, ByVal canProcessItemFunction As CanProcessItemFunctionSignature) As ProcessQueue(Of T)
 
-            Return CreateAsynchronousQueue(processItemFunction, canProcessItemFunction, DefaultProcessInterval, DefaultMaximumThreads, DefaultProcessTimeout, DefaultRequeueOnTimeout)
+            Return CreateAsynchronousQueue(processItemFunction, canProcessItemFunction, DefaultProcessInterval, DefaultMaximumThreads, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException)
 
         End Function
 
         ''' <summary>
-        ''' Create a new asynchronous process queue with the default settings: ProcessInterval = 100, ProcessTimeout = Infinite, RequeueOnTimeout = False
+        ''' Create a new asynchronous process queue with the default settings: ProcessInterval = 100, ProcessTimeout = Infinite, RequeueOnTimeout = False, RequeueOnException = False
         ''' </summary>
         Public Shared Function CreateAsynchronousQueue(ByVal processItemFunction As ProcessItemFunctionSignature, ByVal maximumThreads As Integer) As ProcessQueue(Of T)
 
-            Return CreateAsynchronousQueue(processItemFunction, Nothing, DefaultProcessInterval, maximumThreads, DefaultProcessTimeout, DefaultRequeueOnTimeout)
+            Return CreateAsynchronousQueue(processItemFunction, Nothing, DefaultProcessInterval, maximumThreads, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException)
 
         End Function
 
         ''' <summary>
-        ''' Create a new asynchronous process queue with the default settings: ProcessInterval = 100, ProcessTimeout = Infinite, RequeueOnTimeout = False
+        ''' Create a new asynchronous process queue with the default settings: ProcessInterval = 100, ProcessTimeout = Infinite, RequeueOnTimeout = False, RequeueOnException = False
         ''' </summary>
         Public Shared Function CreateAsynchronousQueue(ByVal processItemFunction As ProcessItemFunctionSignature, ByVal canProcessItemFunction As CanProcessItemFunctionSignature, ByVal maximumThreads As Integer) As ProcessQueue(Of T)
 
-            Return CreateAsynchronousQueue(processItemFunction, canProcessItemFunction, DefaultProcessInterval, maximumThreads, DefaultProcessTimeout, DefaultRequeueOnTimeout)
+            Return CreateAsynchronousQueue(processItemFunction, canProcessItemFunction, DefaultProcessInterval, maximumThreads, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException)
 
         End Function
 
         ''' <summary>
         ''' Create a new asynchronous process queue using the specified settings
         ''' </summary>
-        Public Shared Function CreateAsynchronousQueue(ByVal processItemFunction As ProcessItemFunctionSignature, ByVal processInterval As Double, ByVal maximumThreads As Integer, ByVal processTimeout As Integer, ByVal requeueOnTimeout As Boolean) As ProcessQueue(Of T)
+        Public Shared Function CreateAsynchronousQueue(ByVal processItemFunction As ProcessItemFunctionSignature, ByVal processInterval As Double, ByVal maximumThreads As Integer, ByVal processTimeout As Integer, ByVal requeueOnTimeout As Boolean, ByVal requeueOnException As Boolean) As ProcessQueue(Of T)
 
-            Return CreateAsynchronousQueue(processItemFunction, Nothing, processInterval, maximumThreads, processTimeout, requeueOnTimeout)
+            Return CreateAsynchronousQueue(processItemFunction, Nothing, processInterval, maximumThreads, processTimeout, requeueOnTimeout, requeueOnException)
 
         End Function
 
         ''' <summary>
         ''' Create a new asynchronous process queue using the specified settings
         ''' </summary>
-        Public Shared Function CreateAsynchronousQueue(ByVal processItemFunction As ProcessItemFunctionSignature, ByVal canProcessItemFunction As CanProcessItemFunctionSignature, ByVal processInterval As Double, ByVal maximumThreads As Integer, ByVal processTimeout As Integer, ByVal requeueOnTimeout As Boolean) As ProcessQueue(Of T)
+        Public Shared Function CreateAsynchronousQueue(ByVal processItemFunction As ProcessItemFunctionSignature, ByVal canProcessItemFunction As CanProcessItemFunctionSignature, ByVal processInterval As Double, ByVal maximumThreads As Integer, ByVal processTimeout As Integer, ByVal requeueOnTimeout As Boolean, ByVal requeueOnException As Boolean) As ProcessQueue(Of T)
 
-            Return New ProcessQueue(Of T)(processItemFunction, canProcessItemFunction, processInterval, maximumThreads, processTimeout, requeueOnTimeout)
+            Return New ProcessQueue(Of T)(processItemFunction, canProcessItemFunction, processInterval, maximumThreads, processTimeout, requeueOnTimeout, requeueOnException)
 
         End Function
 
         ''' <summary>
-        ''' Create a new synchronous process queue (i.e., single process thread) with the default settings: ProcessInterval = 100, ProcessTimeout = Infinite, RequeueOnTimeout = False
+        ''' Create a new synchronous process queue (i.e., single process thread) with the default settings: ProcessInterval = 100, ProcessTimeout = Infinite, RequeueOnTimeout = False, RequeueOnException = False
         ''' </summary>
         Public Shared Function CreateSynchronousQueue(ByVal processItemFunction As ProcessItemFunctionSignature) As ProcessQueue(Of T)
 
-            Return CreateSynchronousQueue(processItemFunction, Nothing, DefaultProcessInterval, DefaultProcessTimeout, DefaultRequeueOnTimeout)
+            Return CreateSynchronousQueue(processItemFunction, Nothing, DefaultProcessInterval, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException)
 
         End Function
 
         ''' <summary>
-        ''' Create a new synchronous process queue (i.e., single process thread) with the default settings: ProcessInterval = 100, ProcessTimeout = Infinite, RequeueOnTimeout = False
+        ''' Create a new synchronous process queue (i.e., single process thread) with the default settings: ProcessInterval = 100, ProcessTimeout = Infinite, RequeueOnTimeout = False, RequeueOnException = False
         ''' </summary>
         Public Shared Function CreateSynchronousQueue(ByVal processItemFunction As ProcessItemFunctionSignature, ByVal canProcessItemFunction As CanProcessItemFunctionSignature) As ProcessQueue(Of T)
 
-            Return CreateSynchronousQueue(processItemFunction, canProcessItemFunction, DefaultProcessInterval, DefaultProcessTimeout, DefaultRequeueOnTimeout)
+            Return CreateSynchronousQueue(processItemFunction, canProcessItemFunction, DefaultProcessInterval, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException)
 
         End Function
 
         ''' <summary>
         ''' Create a new synchronous process queue (i.e., single process thread) using the specified settings
         ''' </summary>
-        Public Shared Function CreateSynchronousQueue(ByVal processItemFunction As ProcessItemFunctionSignature, ByVal processInterval As Double, ByVal processTimeout As Integer, ByVal requeueOnTimeout As Boolean) As ProcessQueue(Of T)
+        Public Shared Function CreateSynchronousQueue(ByVal processItemFunction As ProcessItemFunctionSignature, ByVal processInterval As Double, ByVal processTimeout As Integer, ByVal requeueOnTimeout As Boolean, ByVal requeueOnException As Boolean) As ProcessQueue(Of T)
 
-            Return CreateSynchronousQueue(processItemFunction, Nothing, processInterval, processTimeout, requeueOnTimeout)
+            Return CreateSynchronousQueue(processItemFunction, Nothing, processInterval, processTimeout, requeueOnTimeout, requeueOnException)
 
         End Function
 
         ''' <summary>
         ''' Create a new synchronous process queue (i.e., single process thread) using the specified settings
         ''' </summary>
-        Public Shared Function CreateSynchronousQueue(ByVal processItemFunction As ProcessItemFunctionSignature, ByVal canProcessItemFunction As CanProcessItemFunctionSignature, ByVal processInterval As Double, ByVal processTimeout As Integer, ByVal requeueOnTimeout As Boolean) As ProcessQueue(Of T)
+        Public Shared Function CreateSynchronousQueue(ByVal processItemFunction As ProcessItemFunctionSignature, ByVal canProcessItemFunction As CanProcessItemFunctionSignature, ByVal processInterval As Double, ByVal processTimeout As Integer, ByVal requeueOnTimeout As Boolean, ByVal requeueOnException As Boolean) As ProcessQueue(Of T)
 
-            Return New ProcessQueue(Of T)(processItemFunction, canProcessItemFunction, processInterval, 1, processTimeout, requeueOnTimeout)
+            Return New ProcessQueue(Of T)(processItemFunction, canProcessItemFunction, processInterval, 1, processTimeout, requeueOnTimeout, requeueOnException)
 
         End Function
 
         ''' <summary>
-        ''' Create a new real-time process queue with the default settings: ProcessTimeout = Infinite, RequeueOnTimeout = False
+        ''' Create a new real-time process queue with the default settings: ProcessTimeout = Infinite, RequeueOnTimeout = False, RequeueOnException = False
         ''' </summary>
         Public Shared Function CreateRealTimeQueue(ByVal processItemFunction As ProcessItemFunctionSignature) As ProcessQueue(Of T)
 
-            Return CreateRealTimeQueue(processItemFunction, Nothing, DefaultProcessTimeout, DefaultRequeueOnTimeout)
+            Return CreateRealTimeQueue(processItemFunction, Nothing, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException)
 
         End Function
 
         ''' <summary>
-        ''' Create a new real-time process queue with the default settings: ProcessTimeout = Infinite, RequeueOnTimeout = False
+        ''' Create a new real-time process queue with the default settings: ProcessTimeout = Infinite, RequeueOnTimeout = False, RequeueOnException = False
         ''' </summary>
         Public Shared Function CreateRealTimeQueue(ByVal processItemFunction As ProcessItemFunctionSignature, ByVal canProcessItemFunction As CanProcessItemFunctionSignature) As ProcessQueue(Of T)
 
-            Return CreateRealTimeQueue(processItemFunction, canProcessItemFunction, DefaultProcessTimeout, DefaultRequeueOnTimeout)
+            Return CreateRealTimeQueue(processItemFunction, canProcessItemFunction, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException)
 
         End Function
 
         ''' <summary>
         ''' Create a new real-time process queue using the specified settings
         ''' </summary>
-        Public Shared Function CreateRealTimeQueue(ByVal processItemFunction As ProcessItemFunctionSignature, ByVal processTimeout As Integer, ByVal requeueOnTimeout As Boolean) As ProcessQueue(Of T)
+        Public Shared Function CreateRealTimeQueue(ByVal processItemFunction As ProcessItemFunctionSignature, ByVal processTimeout As Integer, ByVal requeueOnTimeout As Boolean, ByVal requeueOnException As Boolean) As ProcessQueue(Of T)
 
-            Return CreateRealTimeQueue(processItemFunction, Nothing, processTimeout, requeueOnTimeout)
+            Return CreateRealTimeQueue(processItemFunction, Nothing, processTimeout, requeueOnTimeout, requeueOnException)
 
         End Function
 
         ''' <summary>
         ''' Create a new real-time process queue using the specified settings
         ''' </summary>
-        Public Shared Function CreateRealTimeQueue(ByVal processItemFunction As ProcessItemFunctionSignature, ByVal canProcessItemFunction As CanProcessItemFunctionSignature, ByVal processTimeout As Integer, ByVal requeueOnTimeout As Boolean) As ProcessQueue(Of T)
+        Public Shared Function CreateRealTimeQueue(ByVal processItemFunction As ProcessItemFunctionSignature, ByVal canProcessItemFunction As CanProcessItemFunctionSignature, ByVal processTimeout As Integer, ByVal requeueOnTimeout As Boolean, ByVal requeueOnException As Boolean) As ProcessQueue(Of T)
 
-            Return New ProcessQueue(Of T)(processItemFunction, canProcessItemFunction, RealTimeProcessInterval, 1, processTimeout, requeueOnTimeout)
+            Return New ProcessQueue(Of T)(processItemFunction, canProcessItemFunction, RealTimeProcessInterval, 1, processTimeout, requeueOnTimeout, requeueOnException)
 
         End Function
+
+#End Region
+
+#Region " Multi-Item Processing Constructors "
+
+        ''' <summary>
+        ''' Create a new asynchronous bulk-item process queue with the default settings: ProcessInterval = 100, MaximumThreads = 5, ProcessTimeout = Infinite, RequeueOnTimeout = False, RequeueOnException = False
+        ''' </summary>
+        Public Shared Function CreateAsynchronousQueue(ByVal processItemsFunction As ProcessItemsFunctionSignature) As ProcessQueue(Of T)
+
+            Return CreateAsynchronousQueue(processItemsFunction, Nothing, DefaultProcessInterval, DefaultMaximumThreads, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException)
+
+        End Function
+
+        ''' <summary>
+        ''' Create a new asynchronous bulk-item process queue with the default settings: ProcessInterval = 100, MaximumThreads = 5, ProcessTimeout = Infinite, RequeueOnTimeout = False, RequeueOnException = False
+        ''' </summary>
+        Public Shared Function CreateAsynchronousQueue(ByVal processItemsFunction As ProcessItemsFunctionSignature, ByVal canProcessItemFunction As CanProcessItemFunctionSignature) As ProcessQueue(Of T)
+
+            Return CreateAsynchronousQueue(processItemsFunction, canProcessItemFunction, DefaultProcessInterval, DefaultMaximumThreads, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException)
+
+        End Function
+
+        ''' <summary>
+        ''' Create a new asynchronous bulk-item process queue with the default settings: ProcessInterval = 100, ProcessTimeout = Infinite, RequeueOnTimeout = False, RequeueOnException = False
+        ''' </summary>
+        Public Shared Function CreateAsynchronousQueue(ByVal processItemsFunction As ProcessItemsFunctionSignature, ByVal maximumThreads As Integer) As ProcessQueue(Of T)
+
+            Return CreateAsynchronousQueue(processItemsFunction, Nothing, DefaultProcessInterval, maximumThreads, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException)
+
+        End Function
+
+        ''' <summary>
+        ''' Create a new asynchronous bulk-item process queue with the default settings: ProcessInterval = 100, ProcessTimeout = Infinite, RequeueOnTimeout = False, RequeueOnException = False
+        ''' </summary>
+        Public Shared Function CreateAsynchronousQueue(ByVal processItemsFunction As ProcessItemsFunctionSignature, ByVal canProcessItemFunction As CanProcessItemFunctionSignature, ByVal maximumThreads As Integer) As ProcessQueue(Of T)
+
+            Return CreateAsynchronousQueue(processItemsFunction, canProcessItemFunction, DefaultProcessInterval, maximumThreads, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException)
+
+        End Function
+
+        ''' <summary>
+        ''' Create a new asynchronous bulk-item process queue using the specified settings
+        ''' </summary>
+        Public Shared Function CreateAsynchronousQueue(ByVal processItemsFunction As ProcessItemsFunctionSignature, ByVal processInterval As Double, ByVal maximumThreads As Integer, ByVal processTimeout As Integer, ByVal requeueOnTimeout As Boolean, ByVal requeueOnException As Boolean) As ProcessQueue(Of T)
+
+            Return CreateAsynchronousQueue(processItemsFunction, Nothing, processInterval, maximumThreads, processTimeout, requeueOnTimeout, requeueOnException)
+
+        End Function
+
+        ''' <summary>
+        ''' Create a new asynchronous bulk-item process queue using the specified settings
+        ''' </summary>
+        Public Shared Function CreateAsynchronousQueue(ByVal processItemsFunction As ProcessItemsFunctionSignature, ByVal canProcessItemFunction As CanProcessItemFunctionSignature, ByVal processInterval As Double, ByVal maximumThreads As Integer, ByVal processTimeout As Integer, ByVal requeueOnTimeout As Boolean, ByVal requeueOnException As Boolean) As ProcessQueue(Of T)
+
+            Return New ProcessQueue(Of T)(processItemsFunction, canProcessItemFunction, processInterval, maximumThreads, processTimeout, requeueOnTimeout, requeueOnException)
+
+        End Function
+
+        ''' <summary>
+        ''' Create a new synchronous bulk-item process queue (i.e., single process thread) with the default settings: ProcessInterval = 100, ProcessTimeout = Infinite, RequeueOnTimeout = False, RequeueOnException = False
+        ''' </summary>
+        Public Shared Function CreateSynchronousQueue(ByVal processItemsFunction As ProcessItemsFunctionSignature) As ProcessQueue(Of T)
+
+            Return CreateSynchronousQueue(processItemsFunction, Nothing, DefaultProcessInterval, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException)
+
+        End Function
+
+        ''' <summary>
+        ''' Create a new synchronous bulk-item process queue (i.e., single process thread) with the default settings: ProcessInterval = 100, ProcessTimeout = Infinite, RequeueOnTimeout = False, RequeueOnException = False
+        ''' </summary>
+        Public Shared Function CreateSynchronousQueue(ByVal processItemsFunction As ProcessItemsFunctionSignature, ByVal canProcessItemFunction As CanProcessItemFunctionSignature) As ProcessQueue(Of T)
+
+            Return CreateSynchronousQueue(processItemsFunction, canProcessItemFunction, DefaultProcessInterval, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException)
+
+        End Function
+
+        ''' <summary>
+        ''' Create a new synchronous bulk-item process queue (i.e., single process thread) using the specified settings
+        ''' </summary>
+        Public Shared Function CreateSynchronousQueue(ByVal processItemsFunction As ProcessItemsFunctionSignature, ByVal processInterval As Double, ByVal processTimeout As Integer, ByVal requeueOnTimeout As Boolean, ByVal requeueOnException As Boolean) As ProcessQueue(Of T)
+
+            Return CreateSynchronousQueue(processItemsFunction, Nothing, processInterval, processTimeout, requeueOnTimeout, requeueOnException)
+
+        End Function
+
+        ''' <summary>
+        ''' Create a new synchronous bulk-item process queue (i.e., single process thread) using the specified settings
+        ''' </summary>
+        Public Shared Function CreateSynchronousQueue(ByVal processItemsFunction As ProcessItemsFunctionSignature, ByVal canProcessItemFunction As CanProcessItemFunctionSignature, ByVal processInterval As Double, ByVal processTimeout As Integer, ByVal requeueOnTimeout As Boolean, ByVal requeueOnException As Boolean) As ProcessQueue(Of T)
+
+            Return New ProcessQueue(Of T)(processItemsFunction, canProcessItemFunction, processInterval, 1, processTimeout, requeueOnTimeout, requeueOnException)
+
+        End Function
+
+        ''' <summary>
+        ''' Create a new real-time bulk-item process queue with the default settings: ProcessTimeout = Infinite, RequeueOnTimeout = False, RequeueOnException = False
+        ''' </summary>
+        Public Shared Function CreateRealTimeQueue(ByVal processItemsFunction As ProcessItemsFunctionSignature) As ProcessQueue(Of T)
+
+            Return CreateRealTimeQueue(processItemsFunction, Nothing, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException)
+
+        End Function
+
+        ''' <summary>
+        ''' Create a new real-time bulk-item process queue with the default settings: ProcessTimeout = Infinite, RequeueOnTimeout = False, RequeueOnException = False
+        ''' </summary>
+        Public Shared Function CreateRealTimeQueue(ByVal processItemsFunction As ProcessItemsFunctionSignature, ByVal canProcessItemFunction As CanProcessItemFunctionSignature) As ProcessQueue(Of T)
+
+            Return CreateRealTimeQueue(processItemsFunction, canProcessItemFunction, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException)
+
+        End Function
+
+        ''' <summary>
+        ''' Create a new real-time bulk-item process queue using the specified settings
+        ''' </summary>
+        Public Shared Function CreateRealTimeQueue(ByVal processItemsFunction As ProcessItemsFunctionSignature, ByVal processTimeout As Integer, ByVal requeueOnTimeout As Boolean, ByVal requeueOnException As Boolean) As ProcessQueue(Of T)
+
+            Return CreateRealTimeQueue(processItemsFunction, Nothing, processTimeout, requeueOnTimeout, requeueOnException)
+
+        End Function
+
+        ''' <summary>
+        ''' Create a new real-time bulk-item process queue using the specified settings
+        ''' </summary>
+        Public Shared Function CreateRealTimeQueue(ByVal processItemsFunction As ProcessItemsFunctionSignature, ByVal canProcessItemFunction As CanProcessItemFunctionSignature, ByVal processTimeout As Integer, ByVal requeueOnTimeout As Boolean, ByVal requeueOnException As Boolean) As ProcessQueue(Of T)
+
+            Return New ProcessQueue(Of T)(processItemsFunction, canProcessItemFunction, RealTimeProcessInterval, 1, processTimeout, requeueOnTimeout, requeueOnException)
+
+        End Function
+
+#End Region
+
+#Region " Protected Constructors "
 
         ''' <summary>
         ''' This constructor creates a ProcessQueue based on the generic List class
         ''' </summary>
-        Protected Sub New(ByVal processItemFunction As ProcessItemFunctionSignature, ByVal canProcessItemFunction As CanProcessItemFunctionSignature, ByVal processInterval As Double, ByVal maximumThreads As Integer, ByVal processTimeout As Integer, ByVal requeueOnTimeout As Boolean)
+        Protected Sub New(ByVal processItemFunction As ProcessItemFunctionSignature, ByVal canProcessItemFunction As CanProcessItemFunctionSignature, ByVal processInterval As Double, ByVal maximumThreads As Integer, ByVal processTimeout As Integer, ByVal requeueOnTimeout As Boolean, ByVal requeueOnException As Boolean)
 
-            Me.New(processItemFunction, canProcessItemFunction, New List(Of T), processInterval, maximumThreads, processTimeout, requeueOnTimeout)
+            Me.New(processItemFunction, Nothing, canProcessItemFunction, New List(Of T), processInterval, maximumThreads, processTimeout, requeueOnTimeout, requeueOnException)
+
+        End Sub
+
+        ''' <summary>
+        ''' This constructor creates a bulk-item ProcessQueue based on the generic List class
+        ''' </summary>
+        Protected Sub New(ByVal processItemsFunction As ProcessItemsFunctionSignature, ByVal canProcessItemFunction As CanProcessItemFunctionSignature, ByVal processInterval As Double, ByVal maximumThreads As Integer, ByVal processTimeout As Integer, ByVal requeueOnTimeout As Boolean, ByVal requeueOnException As Boolean)
+
+            Me.New(Nothing, processItemsFunction, canProcessItemFunction, New List(Of T), processInterval, maximumThreads, processTimeout, requeueOnTimeout, requeueOnException)
 
         End Sub
 
         ''' <summary>
         ''' This constructor allows derived classes to define their own IList instance if desired
         ''' </summary>
-        Protected Sub New(ByVal processItemFunction As ProcessItemFunctionSignature, ByVal canProcessItemFunction As CanProcessItemFunctionSignature, ByVal processQueue As IList(Of T), ByVal processInterval As Double, ByVal maximumThreads As Integer, ByVal processTimeout As Integer, ByVal requeueOnTimeout As Boolean)
+        Protected Sub New( _
+                ByVal processItemFunction As ProcessItemFunctionSignature, _
+                ByVal processItemsFunction As ProcessItemsFunctionSignature, _
+                ByVal canProcessItemFunction As CanProcessItemFunctionSignature, _
+                ByVal processQueue As IList(Of T), _
+                ByVal processInterval As Double, _
+                ByVal maximumThreads As Integer, _
+                ByVal processTimeout As Integer, _
+                ByVal requeueOnTimeout As Boolean, _
+                ByVal requeueOnException As Boolean)
 
             m_processItemFunction = processItemFunction
+            m_processItemsFunction = processItemsFunction
             m_canProcessItemFunction = canProcessItemFunction
             m_processQueue = processQueue
             m_maximumThreads = maximumThreads
             m_processTimeout = processTimeout
             m_requeueOnTimeout = requeueOnTimeout
+            m_requeueOnException = requeueOnException
 
             If processInterval = RealTimeProcessInterval Then
-                ' Instantiate process list for real-time item processing
+                ' Instantiate process queue for real-time item processing
                 m_processingIsRealTime = True
                 m_maximumThreads = 1
             Else
-                ' Instantiate process list for intervaled item processing
+                ' Instantiate process queue for intervaled item processing
                 m_processTimer = New System.Timers.Timer
 
                 With m_processTimer
@@ -344,20 +501,53 @@ Namespace Collections
 
 #End Region
 
+#End Region
+
 #Region " Public Methods Implementation "
 
         ''' <summary>
-        ''' This property defines the user function used to process items in the list
+        ''' This property defines the user function used to process items in the list one at a time
         ''' </summary>
+        ''' <remarks>
+        ''' <para>This function and ProcessItemsFunction cannot be defined at the same time</para>
+        ''' <para>A queue must be defined to process a single item at a time or many items at once</para>
+        ''' <para>Implementation of this function makes ProcessingStyle = OneAtATime</para>
+        ''' </remarks>
         Public Overridable Property ProcessItemFunction() As ProcessItemFunctionSignature
             Get
                 Return m_processItemFunction
             End Get
             Set(ByVal value As ProcessItemFunctionSignature)
-                m_processItemFunction = value
+                If value IsNot Nothing Then
+                    m_processItemFunction = value
+                    m_processItemsFunction = Nothing
+                End If
             End Set
         End Property
 
+        ''' <summary>
+        ''' This property defines the user function used to process multiple items in the list at once
+        ''' </summary>
+        ''' <remarks>
+        ''' <para>This function and ProcessItemFunction cannot be defined at the same time</para>
+        ''' <para>A queue must be defined to process a single item at a time or many items at once</para>
+        ''' <para>Implementation of this function makes ProcessingStyle = ManyAtOnce</para>
+        ''' </remarks>
+        Public Overridable Property ProcessItemsFunction() As ProcessItemsFunctionSignature
+            Get
+                Return m_processItemsFunction
+            End Get
+            Set(ByVal value As ProcessItemsFunctionSignature)
+                If value IsNot Nothing Then
+                    m_processItemsFunction = value
+                    m_processItemFunction = Nothing
+                End If
+            End Set
+        End Property
+
+        ''' <summary>
+        ''' This property defines the user function used to determine if an item is ready to be processed
+        ''' </summary>
         Public Overridable Property CanProcessItemFunction() As CanProcessItemFunctionSignature
             Get
                 Return m_canProcessItemFunction
@@ -373,6 +563,53 @@ Namespace Collections
         Public Overridable ReadOnly Property ProcessingIsRealTime() As Boolean
             Get
                 Return m_processingIsRealTime
+            End Get
+        End Property
+
+        ''' <summary>
+        ''' This property determines the threading mode for the process queue (i.e., synchronous or asynchronous)
+        ''' </summary>
+        ''' <remarks>
+        ''' <para>The maximum number of processing threads determines the threading mode</para>
+        ''' <para>If the maximum threads are set to one, item processing will be synchronous (i.e., ThreadingMode = Synchronous)</para>
+        ''' <para>If the maximum threads are more than one, item processing will be asynchronous (i.e., ThreadingMode = Asynchronous)</para>
+        ''' <para>
+        ''' Note that for asynchronous queues the processing interval will control how many threads are spawned
+        ''' at once.  If items are processed faster than the specified processing interval, only one process thread
+        ''' will ever be spawned at a time.  To ensure multiple threads are utilized to process queue items, lower
+        ''' the process interval (minimum process interval is 1 millisecond).
+        ''' </para>
+        ''' </remarks>
+        Public Overridable ReadOnly Property ThreadingMode() As QueueThreadingMode
+            Get
+                If m_maximumThreads > 1 Then
+                    Return QueueThreadingMode.Asynchronous
+                Else
+                    Return QueueThreadingMode.Synchronous
+                End If
+            End Get
+        End Property
+
+        ''' <summary>
+        ''' This property determines the item processing style for the process queue (i.e., one at a time or many at once)
+        ''' </summary>
+        ''' <remarks>
+        ''' <para>The implemented item processing function determines the processing style</para>
+        ''' <para>If the ProcessItemFunction is implemented, the processing style will be one at a time (i.e., ProcessingStyle = OneAtATime)</para>
+        ''' <para>If the ProcessItemsFunction is implemented, the processing style will be many at once (i.e., ProcessingStyle = ManyAtOnce)</para>
+        ''' <para>
+        ''' Note that if the processing style is many at once, all items in the queue are presented for processing at
+        ''' each processing interval.  If you expect items to be processed in the order in which they were received,
+        ''' make sure you use a synchrnous queue.  Real-time queues are inheriently synchronous.
+        ''' </para>
+        ''' </remarks>
+        Public Overridable ReadOnly Property ProcessingStyle() As QueueProcessingStyle
+            Get
+                If m_processItemFunction Is Nothing Then
+                    Return QueueProcessingStyle.ManyAtOnce
+                Else
+                    Return QueueProcessingStyle.OneAtATime
+                End If
             End Get
         End Property
 
@@ -401,7 +638,7 @@ Namespace Collections
         ''' </summary>
         ''' <value>Sets the maximum number of processing threads</value>
         ''' <returns>Maximum number of processing threads</returns>
-        ''' <remarks>If you set maximum threads to one, item processing will be synchronous</remarks>
+        ''' <remarks>If you set maximum threads to one, item processing will be synchronous (i.e., ThreadingMode = Synchronous)</remarks>
         Public Overridable Property MaximumThreads() As Integer
             Get
                 Return m_maximumThreads
@@ -444,6 +681,18 @@ Namespace Collections
         End Property
 
         ''' <summary>
+        ''' This property determines whether or not to automatically place an item back into the list if an exception occurs while processing
+        ''' </summary>
+        Public Overridable Property RequeueOnException() As Boolean
+            Get
+                Return m_requeueOnException
+            End Get
+            Set(ByVal value As Boolean)
+                m_requeueOnException = value
+            End Set
+        End Property
+
+        ''' <summary>
         ''' Starts item processing
         ''' </summary>
         Public Overridable Sub Start()
@@ -459,6 +708,7 @@ Namespace Collections
                 m_realTimeProcessThread = New Thread(AddressOf RealTimeThreadProc)
                 m_realTimeProcessThread.Priority = ThreadPriority.Highest
                 m_realTimeProcessThread.Start()
+                IncrementThreadCount()
             Else
                 ' Start intervaled process timer
                 m_processTimer.Enabled = True
@@ -473,7 +723,10 @@ Namespace Collections
 
             If m_processingIsRealTime Then
                 ' Stop real-time processing thread
-                If m_realTimeProcessThread IsNot Nothing Then m_realTimeProcessThread.Abort()
+                If m_realTimeProcessThread IsNot Nothing Then
+                    m_realTimeProcessThread.Abort()
+                    DecrementThreadCount()
+                End If
                 m_realTimeProcessThread = Nothing
             Else
                 ' Stop intervaled process timer
@@ -500,7 +753,7 @@ Namespace Collections
         ''' <summary>
         ''' Returns the total number of items processed so far
         ''' </summary>
-        Public Overridable ReadOnly Property ItemsProcessed() As Long
+        Public Overridable ReadOnly Property TotalProcessedItems() As Long
             Get
                 Return m_itemsProcessed
             End Get
@@ -551,27 +804,51 @@ Namespace Collections
                     Else
                         .Append("Idle")
                     End If
-                    .Append(vbCrLf)
+                    .Append(Environment.NewLine)
                     .Append("       Processing interval: ")
                     If m_processingIsRealTime Then
-                        .Append("real-time")
+                        .Append("Real-time")
                     Else
                         .Append(ProcessInterval)
                         .Append(" milliseconds")
                     End If
-                    .Append(vbCrLf)
+                    .Append(Environment.NewLine)
+                    .Append("        Processing timeout: ")
+                    If m_processTimeout = Timeout.Infinite Then
+                        .Append("Infinite")
+                    Else
+                        .Append(m_processTimeout)
+                        .Append(" milliseconds")
+                    End If
+                    .Append(Environment.NewLine)
+                    .Append("      Queue threading mode: ")
+                    If ThreadingMode = QueueThreadingMode.Asynchronous Then
+                        .Append("Asynchronous - ")
+                        .Append(m_maximumThreads)
+                        .Append(" maximum threads")
+                    Else
+                        .Append("Synchronous")
+                    End If
+                    .Append(Environment.NewLine)
+                    .Append("    Queue processing style: ")
+                    If ProcessingStyle = QueueProcessingStyle.OneAtATime Then
+                        .Append("One at a time")
+                    Else
+                        .Append("Many at once")
+                    End If
+                    .Append(Environment.NewLine)
                     .Append("    Total process run time: ")
                     .Append(SecondsToText(RunTime))
-                    .Append(vbCrLf)
+                    .Append(Environment.NewLine)
                     .Append("   Queued items to process: ")
                     .Append(Count)
-                    .Append(vbCrLf)
+                    .Append(Environment.NewLine)
                     .Append("      Total active threads: ")
                     .Append(m_threadCount)
-                    .Append(vbCrLf)
+                    .Append(Environment.NewLine)
                     .Append("     Total items processed: ")
                     .Append(m_itemsProcessed)
-                    .Append(vbCrLf)
+                    .Append(Environment.NewLine)
 
                     Return .ToString()
                 End With
@@ -588,6 +865,21 @@ Namespace Collections
                 Return m_processQueue
             End Get
         End Property
+
+        ''' <summary>
+        ''' This method is used to let the class know that data was added so it can begin processing data
+        ''' </summary>
+        ''' <remarks>
+        ''' Note: Dervied classes *must* make sure to call this method after data gets added so that
+        ''' process timer can be enabled and data processing can begin
+        ''' </remarks>
+        Protected Sub DataAdded()
+
+            ' For queues that are not processing in real-time, we start the intervaled process timer
+            ' when data is added, if it's not running already
+            If Not m_processingIsRealTime AndAlso Not m_processTimer.Enabled Then m_processTimer.Enabled = True
+
+        End Sub
 
         ' Perform thread-safe atomic increment on active thread count
         Protected Sub IncrementThreadCount()
@@ -610,6 +902,13 @@ Namespace Collections
 
         End Sub
 
+        ' Perform thread-safe atomic addition on total processed items count
+        Protected Sub IncrementItemsProcessed(ByVal totalProcessed As Integer)
+
+            Interlocked.Add(m_itemsProcessed, totalProcessed)
+
+        End Sub
+
         ' You should use this function instead of invoking the m_canProcessItemFunction pointer
         ' directly since implementation of this delegate is optional
         Protected Function CanProcessItem(ByVal item As T) As Boolean
@@ -624,16 +923,49 @@ Namespace Collections
 
         End Function
 
-        ' Derived classes can't raise event of their base classes so we expose these wrapper methods to accomodate as needed
+        Protected Function CanProcessItems(ByVal items As T()) As Boolean
+
+            If m_canProcessItemFunction Is Nothing Then
+                ' If user provided no implementation for this function, we assume all items can be processed
+                Return True
+            Else
+                ' Otherwise we call user function for each item to determine if all items are ready for processing
+                Dim allItemsCanBeProcessed As Boolean = True
+
+                For Each item As T In items
+                    If Not m_canProcessItemFunction(item) Then
+                        allItemsCanBeProcessed = False
+                        Exit For
+                    End If
+                Next
+
+                Return allItemsCanBeProcessed
+            End If
+
+        End Function
+
+        ' Derived classes can't raise events of their base classes so we expose these wrapper methods to accomodate as needed
         Protected Sub RaiseItemProcessed(ByVal item As T)
 
             RaiseEvent ItemProcessed(item)
 
         End Sub
 
-        Protected Sub RaiseItemProcessingTimedOut(ByVal item As T)
+        Protected Sub RaiseItemsProcessed(ByVal items As T())
 
-            RaiseEvent ItemProcessingTimedOut(item)
+            RaiseEvent ItemsProcessed(items)
+
+        End Sub
+
+        Protected Sub RaiseItemTimedOut(ByVal item As T)
+
+            RaiseEvent ItemTimedOut(item)
+
+        End Sub
+
+        Protected Sub RaiseItemsTimedOut(ByVal items As T())
+
+            RaiseEvent ItemsTimedOut(items)
 
         End Sub
 
@@ -645,14 +977,116 @@ Namespace Collections
 
 #End Region
 
+#Region " Internal Thread Processing Class "
+
+        ' This internal class is used to limit item processing time if requested
+        Private Class ProcessThread
+
+            Private m_parent As ProcessQueue(Of T)
+            Private m_thread As Thread
+            Private m_item As T
+            Private m_items As T()
+
+            Public Sub New(ByVal parent As ProcessQueue(Of T), ByVal item As T)
+
+                m_parent = parent
+                m_item = item
+                m_thread = New Thread(AddressOf ProcessItem)
+                m_thread.Start()
+
+            End Sub
+
+            Public Sub New(ByVal parent As ProcessQueue(Of T), ByVal items As T())
+
+                m_parent = parent
+                m_items = items
+                m_thread = New Thread(AddressOf ProcessItems)
+                m_thread.Start()
+
+            End Sub
+
+            ' Block calling thread until specified time has expired
+            Public Function WaitUntil(ByVal timeout As Integer) As Boolean
+
+                Dim threadComplete As Boolean = m_thread.Join(timeout)
+                If Not threadComplete Then m_thread.Abort()
+                Return threadComplete
+
+            End Function
+
+            Private Sub ProcessItem()
+
+                m_parent.ProcessItem(m_item)
+
+            End Sub
+
+            Private Sub ProcessItems()
+
+                m_parent.ProcessItems(m_items)
+
+            End Sub
+
+        End Class
+
+#End Region
+
 #Region " Item Processing Thread Procs "
 
+        ' This function handles standard processing of a single item
+        Private Sub ProcessItem(ByVal item As T)
+
+            Try
+                ' Invoke user function to process item
+                m_processItemFunction(item)
+                IncrementItemsProcessed()
+                RaiseEvent ItemProcessed(item)
+            Catch ex As ThreadAbortException
+                ' Rethrow thread abort so calling method can respond appropriately
+                Throw ex
+            Catch ex As Exception
+                ' We requeue item on processing exception if requested
+                If m_requeueOnException Then Insert(0, item)
+
+                ' Processing won't stop for any errors thrown by the user function, but we will report them...
+                RaiseEvent ProcessException(ex)
+            End Try
+
+        End Sub
+
+        ' This function handles standard processing of multiple items
+        Private Sub ProcessItems(ByVal items As T())
+
+            Try
+                ' Invoke user function to process items
+                m_processItemsFunction(items)
+                IncrementItemsProcessed(items.Length)
+                RaiseEvent ItemsProcessed(items)
+            Catch ex As ThreadAbortException
+                ' Rethrow thread abort so calling method can respond appropriately
+                Throw ex
+            Catch ex As Exception
+                ' We requeue items on processing exception if requested
+                If m_requeueOnException Then InsertRange(0, items)
+
+                ' Processing won't stop for any errors thrown by the user function, but we will report them...
+                RaiseEvent ProcessException(ex)
+            End Try
+
+        End Sub
+
+        ' This method creates a real-time thread for processing items
         Private Sub RealTimeThreadProc()
 
             ' Create a real-time processing loop which will process items as fast as possible
             Do While True
                 Try
-                    ProcessNextItem()
+                    If m_processItemsFunction Is Nothing Then
+                        ' Process one item at a time
+                        ProcessNextItem()
+                    Else
+                        ' Process multiple items at once
+                        ProcessNextItems()
+                    End If
 
                     ' We sleep the thread between each loop to help minimize CPU loading...
                     Thread.Sleep(1)
@@ -661,19 +1095,27 @@ Namespace Collections
                     Exit Do
                 Catch ex As Exception
                     ' We won't stop for any errors thrown by the user function, but we will report them...
-                    RaiseProcessException(ex)
+                    RaiseEvent ProcessException(ex)
                 End Try
             Loop
 
         End Sub
 
+        ' This method is invoked on an interval for processing items
         Private Sub m_processTimer_Elapsed(ByVal sender As Object, ByVal e As System.Timers.ElapsedEventArgs) Handles m_processTimer.Elapsed
 
             ' The system timer creates an intervaled processing loop which will distribute processing of items across multiple threads if needed
-            ProcessNextItem()
+            If m_processItemsFunction Is Nothing Then
+                ' Process one item at a time
+                ProcessNextItem()
+            Else
+                ' Process multiple items at once
+                ProcessNextItems()
+            End If
 
         End Sub
 
+        ' Process next item - handles processing of items one at a time (i.e., ProcessingStyle = OneAtATime)
         Private Sub ProcessNextItem()
 
             Dim nextItem As T
@@ -711,9 +1153,7 @@ Namespace Collections
                         ' as we need for it to complete.  For timer events, the next item in the queue will begin processing even
                         ' if this item isn't completed - but no more than the specified number of maximum threads will ever be
                         ' spawned at once.
-                        m_processItemFunction(nextItem)
-                        IncrementItemsProcessed()
-                        RaiseEvent ItemProcessed(nextItem)
+                        ProcessItem(nextItem)
                     Else
                         ' If we have an item to process and specified a process timeout we create a new thread to handle the
                         ' processing.  The timer event or real-time thread that invoked this method is already a new thread so
@@ -725,7 +1165,7 @@ Namespace Collections
                         With New ProcessThread(Me, nextItem)
                             If Not .WaitUntil(m_processTimeout) Then
                                 ' We notify user of process timeout in case they want to do anything special
-                                RaiseEvent ItemProcessingTimedOut(nextItem)
+                                RaiseEvent ItemTimedOut(nextItem)
 
                                 ' We requeue item on processing timeout if requested
                                 If m_requeueOnTimeout Then Insert(0, nextItem)
@@ -737,11 +1177,82 @@ Namespace Collections
                 ' Rethrow thread abort so calling method can respond appropriately
                 Throw ex
             Catch ex As Exception
-                ' Processing won't stop for any errors thrown by the user function, but we will report them...
-                RaiseProcessException(ex)
+                ' Processing won't stop for any errors encountered here, but we will report them...
+                RaiseEvent ProcessException(ex)
             Finally
                 ' Decrement thread count if item was retrieved for processing
                 If nextItem IsNot Nothing Then DecrementThreadCount()
+            End Try
+
+        End Sub
+
+        ' Process next items - handles processing of an array of items at once (i.e., ProcessingStyle = ManyAtOnce)
+        Private Sub ProcessNextItems()
+
+            Dim nextItems As T()
+
+            Try
+                ' Handle all queue operations for getting next items in a single synchronous operation.
+                ' We keep work to be done here down to a mimimum amount of time
+                SyncLock m_processQueue
+                    With m_processQueue
+                        ' We get next items to be processed if the number of current process threads is less
+                        ' than the maximum allowable number of process threads.
+                        If .Count > 0 AndAlso ThreadCount < m_maximumThreads Then
+                            ' Retrieve items to be processed
+                            nextItems = ToArray()
+
+                            ' Call optional user function to see if we should process these items
+                            If CanProcessItems(nextItems) Then
+                                ' We increment the thread counter using a thread safe operation
+                                IncrementThreadCount()
+
+                                ' Clear all items from the queue
+                                .Clear()
+                            Else
+                                ' User opted not to process items at this time - we'll try again later
+                                nextItems = Nothing
+                            End If
+                        End If
+                    End With
+                End SyncLock
+
+                If nextItems IsNot Nothing Then
+                    If m_processTimeout = Timeout.Infinite Then
+                        ' If we have items to process and the process queue wasn't setup with a process timeout, we just use the
+                        ' current thread (i.e., the timer event or real-time thread) to process the next items taking as long as
+                        ' we need for them to complete.  For timer events, any new items available in the queue will be processed
+                        ' even if the current items haven't completed - but no more than the specified number of maximum threads
+                        ' will ever be spawned at once.
+                        ProcessItems(nextItems)
+                    Else
+                        ' If we have items to process and specified a process timeout we create a new thread to handle the
+                        ' processing.  The timer event or real-time thread that invoked this method is already a new thread so
+                        ' the only reason we create another thread is so that we can implement the process timeout if the
+                        ' process takes to long to run.  We do this by joining the current thread (which will block it) until
+                        ' the specified interval has passed or the process thread completes, whichever comes first.  This is a
+                        ' safe operation since the current thread (i.e., the timer event or real-time thread) was already an
+                        ' independent thread and won't block any other processing, including another timer event.
+                        With New ProcessThread(Me, nextItems)
+                            If Not .WaitUntil(m_processTimeout) Then
+                                ' We notify user of process timeout in case they want to do anything special
+                                RaiseEvent ItemsTimedOut(nextItems)
+
+                                ' We requeue items on processing timeout if requested
+                                If m_requeueOnTimeout Then InsertRange(0, nextItems)
+                            End If
+                        End With
+                    End If
+                End If
+            Catch ex As ThreadAbortException
+                ' Rethrow thread abort so calling method can respond appropriately
+                Throw ex
+            Catch ex As Exception
+                ' Processing won't stop for any errors encountered here, but we will report them...
+                RaiseEvent ProcessException(ex)
+            Finally
+                ' Decrement thread count if items were retrieved for processing
+                If nextItems IsNot Nothing Then DecrementThreadCount()
             End Try
 
         End Sub
@@ -751,22 +1262,173 @@ Namespace Collections
 #Region " Handy List(Of T) Functions Implementation "
 
         ' TODO: Implement all methods exposed by List(Of T) that aren't in IList(Of T) interface
+        'DirectCast(m_processQueue, List(Of T)).BinarySearch(
+        'DirectCast(m_processQueue, List(Of T)).ConvertAll(
+        'DirectCast(m_processQueue, List(Of T)).Exists(
+        'DirectCast(m_processQueue, List(Of T)).Find(
+        'DirectCast(m_processQueue, List(Of T)).FindAll(
+        'DirectCast(m_processQueue, List(Of T)).FindIndex(
+        'DirectCast(m_processQueue, List(Of T)).FindLast(
+        'DirectCast(m_processQueue, List(Of T)).FindLastIndex(
+        'DirectCast(m_processQueue, List(Of T)).ForEach(New Action(Of T)(
+        'DirectCast(m_processQueue, List(Of T)).GetRange(
+        'DirectCast(m_processQueue, List(Of T)).LastIndexOf(
+        'DirectCast(m_processQueue, List(Of T)).RemoveAll(
+        'DirectCast(m_processQueue, List(Of T)).RemoveRange(
+        'DirectCast(m_processQueue, List(Of T)).Reverse(
+        'DirectCast(m_processQueue, List(Of T)).TrueForAll(
+
+        Public Overridable Sub AddRange(ByVal collection As IEnumerable(Of T))
+
+            SyncLock m_processQueue
+                If TypeOf m_processQueue Is List(Of T) Then
+                    ' We'll call native implementation if available
+                    DirectCast(m_processQueue, List(Of T)).AddRange(collection)
+                Else
+                    ' Otherwise, we manually implement this feature...
+                    With m_processQueue
+                        For Each item As T In collection
+                            .Add(item)
+                        Next
+                    End With
+                End If
+
+                DataAdded()
+            End SyncLock
+
+        End Sub
+
+        Public Overridable Function BinarySearch(ByVal item As T) As Integer
+
+            Return BinarySearch(item, Generic.Comparer(Of T).Default)
+
+        End Function
+
+        Public Overridable Function BinarySearch(ByVal item As T, ByVal comparer As IComparer(Of T)) As Integer
+
+            Return BinarySearch(0, Count, item, comparer)
+
+        End Function
+
+        Public Overridable Function BinarySearch(ByVal index As Integer, ByVal count As Integer, ByVal item As T, ByVal comparer As IComparer(Of T)) As Integer
+
+            SyncLock m_processQueue
+                If TypeOf m_processQueue Is List(Of T) Then
+                    ' We'll call native implementation if available
+                    Return DirectCast(m_processQueue, List(Of T)).BinarySearch(index, count, item, comparer)
+                Else
+                    ' Otherwise, we manually implement this feature...
+                    Dim foundIndex As Integer = -1
+                    Dim startIndex As Integer = index
+                    Dim stopIndex As Integer = index + count - 1
+                    Dim currentIndex As Integer = index + count \ 2
+                    Dim result As Integer
+
+                    ' Validate start and stop index...
+                    If startIndex < 0 OrElse stopIndex > m_processQueue.Count - 1 Then Throw New IndexOutOfRangeException()
+
+                    With m_processQueue
+                        Do While True
+
+                            If currentIndex < startIndex OrElse currentIndex > stopIndex Then
+                                foundIndex = currentIndex Xor -1
+                                Exit Do
+                            Else
+                                result = comparer.Compare(item, m_processQueue(currentIndex)
+
+                                If result = 0 Then
+                                    ' Found item, return located index
+                                    foundIndex = currentIndex
+                                    Exit Do
+                                ElseIf result > 0 Then
+                                    startIndex = currentIndex + 1
+
+                                Else
+                                End If
+                            End If
+
+                            If startIndex <= stopIndex Then
+                                result = comparer.Compare(item, m_processQueue(startIndex))
+                            Else
+                                foundIndex = startIndex Xor -1
+                                Exit Do
+                            End If
+
+                            If result = 0 Then
+                                foundIndex = startIndex
+                                Exit Do
+                            ElseIf result > 0 Then
+                                foundIndex = startIndex Xor -1
+                                Exit Do
+                            Else
+                                startIndex += 1
+                            End If
+
+                            result = comparer.Compare(item, m_processQueue(stopIndex))
+
+                            If result = 0 Then
+                                foundIndex = stopIndex
+                                Exit Do
+                            ElseIf result > 0 Then
+                                foundIndex = stopIndex Xor -1
+                            Else
+                                stopIndex -= 1
+                            End If
+                        Loop
+
+                        For x As Integer = index To count - 1
+
+                        Next
+                    End With
+
+                    Return foundIndex
+                End If
+            End SyncLock
+
+        End Function
+
         Public Overridable Sub InsertRange(ByVal index As Integer, ByVal collection As IEnumerable(Of T))
 
             SyncLock m_processQueue
                 If TypeOf m_processQueue Is List(Of T) Then
-                    ' We'll call native implementation if avaialble
+                    ' We'll call native implementation if available
                     DirectCast(m_processQueue, List(Of T)).InsertRange(index, collection)
                 Else
                     ' Otherwise, we manually implement this feature...
-                    For Each item As T In collection
-                        m_processQueue.Insert(index, item)
-                        index += 1
-                    Next
+                    With m_processQueue
+                        For Each item As T In collection
+                            .Insert(index, item)
+                            index += 1
+                        Next
+                    End With
                 End If
+
+                DataAdded()
             End SyncLock
 
         End Sub
+
+        Public Overridable Function ToArray() As T()
+
+            SyncLock m_processQueue
+                If TypeOf m_processQueue Is List(Of T) Then
+                    ' We'll call native implementation if available
+                    Return DirectCast(m_processQueue, List(Of T)).ToArray()
+                Else
+                    ' Otherwise, we manually implement this feature...
+                    With m_processQueue
+                        Dim items As T() = Array.CreateInstance(GetType(T), .Count)
+
+                        For x As Integer = 0 To .Count - 1
+                            items(x) = .Item(x)
+                        Next
+
+                        Return items
+                    End With
+                End If
+            End SyncLock
+
+        End Function
 
 #End Region
 
@@ -781,6 +1443,7 @@ Namespace Collections
 
             SyncLock m_processQueue
                 m_processQueue.Add(item)
+                DataAdded()
             End SyncLock
 
         End Sub
@@ -792,6 +1455,7 @@ Namespace Collections
 
             SyncLock m_processQueue
                 m_processQueue.Insert(0, item)
+                DataAdded()
             End SyncLock
 
         End Sub
@@ -803,6 +1467,7 @@ Namespace Collections
 
             SyncLock m_processQueue
                 m_processQueue.Insert(index, item)
+                DataAdded()
             End SyncLock
 
         End Sub
@@ -871,6 +1536,7 @@ Namespace Collections
             Set(ByVal value As T)
                 SyncLock m_processQueue
                     m_processQueue(index) = value
+                    DataAdded()
                 End SyncLock
             End Set
         End Property
