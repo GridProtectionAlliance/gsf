@@ -31,7 +31,6 @@ Namespace IO
         Private m_logFileName As String
         Private m_logFileLock As ReaderWriterLock
         Private WithEvents m_logFileDataQueue As ProcessQueue(Of String)
-        Private WithEvents m_flushTimer As Timers.Timer
 
         ' We don't stop for exceptions in this class, but will expose them if the end user wishes
         ' to know about any issues incurred while trying to log data
@@ -42,16 +41,9 @@ Namespace IO
             m_logFileName = logFileName
             m_logFileLock = New ReaderWriterLock
             m_logFileDataQueue = ProcessQueue(Of String).CreateSynchronousQueue(AddressOf ProcessLogQueue)
-            m_flushTimer = New Timers.Timer
 
             ' We'll requeue data if we fail to aquire writer lock or fail to write data into file...
             m_logFileDataQueue.RequeueOnException = True
-
-            With m_flushTimer
-                .AutoReset = False
-                .Interval = 100
-                .Enabled = False
-            End With
 
         End Sub
 
@@ -66,15 +58,7 @@ Namespace IO
 
         Public Sub Append(ByVal status As String)
 
-            ' We only start queue processing when there is data in the queue...
-            ' We add synclock here to ensure stops and starts happen exclusively
-            ' (i.e., just making sure any added data always gets processed)
-            With m_logFileDataQueue
-                SyncLock .SyncRoot
-                    .Add(status)
-                    .Start()
-                End SyncLock
-            End With
+            m_logFileDataQueue.Add(status)
 
         End Sub
 
@@ -118,6 +102,7 @@ Namespace IO
 
         End Function
 
+        ' We process all available items in the queue...
         Private Sub ProcessLogQueue(ByVal items As String())
 
             ' Attempt to aquire a writer lock
@@ -140,14 +125,6 @@ Namespace IO
                 ' Make sure writer lock gets released
                 m_logFileLock.ReleaseWriterLock()
             End Try
-
-            ' We stop queue processing when there is no more data in the queue...
-            ' We add synclock here to ensure stops and starts happen exclusively
-            With m_logFileDataQueue
-                SyncLock .SyncRoot
-                    If .Count = 0 Then .Stop()
-                End SyncLock
-            End With
 
         End Sub
 
