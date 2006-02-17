@@ -40,10 +40,15 @@ Namespace IO
 
             m_logFileName = logFileName
             m_logFileLock = New ReaderWriterLock
-            m_logFileDataQueue = ProcessQueue(Of String).CreateSynchronousQueue(AddressOf ProcessLogQueue)
+
+            ' We implement a synchronized process queue for log entries such that all entries will
+            ' be processed in order.  Additionally, we use a "many-at-once" function signature so
+            ' that we will get all current items to be processed at each processing interval
+            m_logFileDataQueue = ProcessQueue(Of String).CreateSynchronousQueue(AddressOf ProcessLogEntries)
 
             ' We'll requeue data if we fail to aquire writer lock or fail to write data into file...
             m_logFileDataQueue.RequeueOnException = True
+            m_logFileDataQueue.Start()
 
         End Sub
 
@@ -58,6 +63,11 @@ Namespace IO
 
         Public Sub Append(ByVal status As String)
 
+            ' Add new log entry to the queue.  Note that as soon as the item is added to the queue
+            ' the function will return so that no time is wasted on the calling thread.  The process
+            ' queue will automatically enable its processing threads when it sees there is new data
+            ' in the queue to be processed.  Processing occurs on a set interval (the default is 100
+            ' milliseconds) - so any more log entires added in this time will be processed as well.
             m_logFileDataQueue.Add(status)
 
         End Sub
@@ -78,8 +88,10 @@ Namespace IO
 
             Dim logData As String = ""
 
-            ' Attempt to aquire a reader lock
-            m_logFileLock.AcquireReaderLock(500)
+            ' Attempt to aquire a reader lock - we're only competing with writer locks as items are added
+            ' to the log file which should happen rather quickly, but to be safe we'll wait for up to one
+            ' second to allow plenty of time for logging
+            m_logFileLock.AcquireReaderLock(1000)
 
             Try
                 ' Read log contents into a string
@@ -102,11 +114,15 @@ Namespace IO
 
         End Function
 
-        ' We process all available items in the queue...
-        Private Sub ProcessLogQueue(ByVal items As String())
+        ' We process all available items in the queue - note that this function processes as "array" of
+        ' items which creates a "many-at-once" processing queue
+        Private Sub ProcessLogEntries(ByVal items As String())
 
-            ' Attempt to aquire a writer lock
-            m_logFileLock.AcquireWriterLock(500)
+            ' Attempt to aquire a writer lock - the only thing we will be competing with is the ToString
+            ' method which reads the contents of the log file.  Since data will automatically be requeued
+            ' if we can't aquire a reader lock (i.e., writer lock aquisition will time out and throw an
+            ' exception and the process queue is setup to requeue data on exception), we don't wait long
+            m_logFileLock.AcquireWriterLock(100)
 
             Try
                 ' Append queued data to log file
@@ -119,7 +135,10 @@ Namespace IO
                 End With
             Catch
                 ' Rethrow any exceptions to calling procedure - just catching here so
-                ' we can make sure lock gets released in finally clause
+                ' we can make sure lock gets released in finally clause.  Remember
+                ' exceptions thrown by this function cause queue items to be requeued
+                ' in their original location because RequeueOnException = True.  So
+                ' failure to process items here means they'll get another chance.
                 Throw
             Finally
                 ' Make sure writer lock gets released

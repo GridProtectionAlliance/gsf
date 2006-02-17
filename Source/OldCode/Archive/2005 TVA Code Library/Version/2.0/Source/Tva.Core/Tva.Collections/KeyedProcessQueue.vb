@@ -36,7 +36,7 @@ Namespace Collections
 #Region " Public Member Declarations "
 
         ''' <summary>
-        ''' This is the function signature used for defining a method to process items one at a time
+        ''' This is the function signature used for defining a method to process a key and value one at a time
         ''' </summary>
         ''' <remarks>
         ''' <para>Implementation of this function is required unless ProcessItemsFunction is implemented</para>
@@ -48,7 +48,7 @@ Namespace Collections
         Public Shadows Delegate Sub ProcessItemFunctionSignature(ByVal key As TKey, ByVal value As TValue)
 
         ''' <summary>
-        ''' This is the function signature used for defining a method to process multiple items at once
+        ''' This is the function signature used for defining a method to process multiple keys and values at once
         ''' </summary>
         ''' <remarks>
         ''' <para>Implementation of this function is required unless ProcessItemFunction is implemented</para>
