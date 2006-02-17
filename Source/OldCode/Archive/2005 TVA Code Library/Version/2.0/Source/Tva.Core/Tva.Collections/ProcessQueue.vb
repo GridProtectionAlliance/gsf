@@ -45,7 +45,7 @@ Namespace Collections
 
     ''' <summary>
     ''' <para>This class will process a collection of items on independent threads</para>
-    ''' <para>Consumer must provide a function to process items</para>
+    ''' <para>Consumer must implement a function to process items</para>
     ''' </summary>
     ''' <typeparam name="T">Type of object to process</typeparam>
     ''' <remarks>
@@ -92,6 +92,7 @@ Namespace Collections
         ''' then each item presented for processing must evaluate as "CanProcessItem = True" before any items are processed
         ''' </para>
         ''' </remarks>
+        ''' <param name="item">Item to be checked for processing availablity</param>
         ''' <returns>Function should return True if item can be processed</returns>
         Public Delegate Function CanProcessItemFunctionSignature(ByVal item As T) As Boolean
 
@@ -145,11 +146,22 @@ Namespace Collections
         ''' </remarks>
         Public Event ProcessException(ByVal ex As Exception)
 
+        ''' <summary>Default processing interval (in milliseconds)</summary>
         Public Const DefaultProcessInterval As Integer = 100
+
+        ''' <summary>Default maximum number of processing threads</summary>
         Public Const DefaultMaximumThreads As Integer = 5
+
+        ''' <summary>Default processing timeout (in milliseconds)</summary>
         Public Const DefaultProcessTimeout As Integer = Timeout.Infinite
+
+        ''' <summary>Default setting for requeuing items on processing timeout</summary>
         Public Const DefaultRequeueOnTimeout As Boolean = False
+
+        ''' <summary>Default setting for requeuing items on processing exceptions</summary>
         Public Const DefaultRequeueOnException As Boolean = False
+
+        ''' <summary>Default real-time processing interval (in milliseconds)</summary>
         Public Const RealTimeProcessInterval As Double = 0.0#
 
 #End Region
@@ -564,7 +576,9 @@ Namespace Collections
             End Get
         End Property
 
-        ''' <summary>This property determines the threading mode for the process queue (i.e., synchronous or asynchronous)</summary>
+        ''' <summary>
+        ''' This property determines the threading mode for the process queue (i.e., synchronous or asynchronous)
+        ''' </summary>
         ''' <remarks>
         ''' <para>The maximum number of processing threads determines the threading mode</para>
         ''' <para>If the maximum threads are set to one, item processing will be synchronous (i.e., ThreadingMode = Synchronous)</para>
@@ -1054,6 +1068,8 @@ Namespace Collections
 
 #End Region
 
+#Region " Private Methods Implementation "
+
 #Region " Internal Thread Processing Class "
 
         ' This internal class is used to limit item processing time if requested
@@ -1341,6 +1357,8 @@ Namespace Collections
 
 #End Region
 
+#End Region
+
 #Region " Handy List(Of T) Functions Implementation "
 
         ' The internal list is declared as an IList(Of T) - this way derived classes (e.g., KeyedProcessQueue) can
@@ -1348,15 +1366,6 @@ Namespace Collections
         ' many handy functions not required to be exposed by the IList(Of T) interface.  So if the implemented list
         ' happens to be a List(Of T), we'll expose this native functionality and otherwise we implement it for you.
         ' Now, wasn't that nice of me!?  You'll thank me later. :)
-
-        'DirectCast(m_processQueue, List(Of T)).ForEach(New Action(Of T)(
-        'DirectCast(m_processQueue, List(Of T)).GetRange(
-        'DirectCast(m_processQueue, List(Of T)).LastIndexOf(
-        'DirectCast(m_processQueue, List(Of T)).RemoveAll(
-        'DirectCast(m_processQueue, List(Of T)).RemoveRange(
-        'DirectCast(m_processQueue, List(Of T)).Reverse(
-        'DirectCast(m_processQueue, List(Of T)).Sort(
-        'DirectCast(m_processQueue, List(Of T)).TrueForAll(
 
         ' Note: all List(Of T) implementations should be synchronized as necessary
 
@@ -1459,57 +1468,59 @@ Namespace Collections
                     Return DirectCast(m_processQueue, List(Of T)).BinarySearch(index, count, item, comparer)
                 Else
                     ' Otherwise, we manually implement this feature...
-                    Dim foundIndex As Integer = -1
-                    Dim startIndex As Integer = index
-                    Dim stopIndex As Integer = index + count - 1
-                    Dim currentIndex As Integer
-                    Dim result As Integer
+                    Return Array.BinarySearch(Of T)(m_processQueue, index, count, item, comparer)
 
-                    ' Validate start and stop index...
-                    If startIndex < 0 OrElse count < 0 OrElse stopIndex > m_processQueue.Count - 1 Then Throw New IndexOutOfRangeException("startIndex and/or count is outside the range of valid indexes for the queue")
-                    If comparer Is Nothing Then comparer = Generic.Comparer(Of T).Default
+                    'Dim foundIndex As Integer = -1
+                    'Dim startIndex As Integer = index
+                    'Dim stopIndex As Integer = index + count - 1
+                    'Dim currentIndex As Integer
+                    'Dim result As Integer
 
-                    If count > 0 Then
-                        Do While True
-                            ' Find next mid point
-                            currentIndex = startIndex + (stopIndex - startIndex) \ 2
+                    '' Validate start and stop index...
+                    'If startIndex < 0 OrElse count < 0 OrElse stopIndex > m_processQueue.Count - 1 Then Throw New ArgumentOutOfRangeException("startIndex", "startIndex and/or count is outside the range of valid indexes for the queue")
+                    'If comparer Is Nothing Then comparer = Generic.Comparer(Of T).Default
 
-                            ' Compare item at mid-point
-                            result = comparer.Compare(item, m_processQueue(currentIndex))
+                    'If count > 0 Then
+                    '    Do While True
+                    '        ' Find next mid point
+                    '        currentIndex = startIndex + (stopIndex - startIndex) \ 2
 
-                            If result = 0 Then
-                                ' Found item, return located index
-                                foundIndex = currentIndex
-                                Exit Do
-                            ElseIf startIndex = stopIndex Then
-                                ' Met in the middle and didn't find match - so we're finished
-                                foundIndex = startIndex Xor -1
-                                Exit Do
-                            ElseIf result > 0 Then
-                                If currentIndex < count - 1 Then
-                                    ' Item is beyond current item, so we start search at next item
-                                    startIndex = currentIndex + 1
-                                Else
-                                    ' Looked to the end and didn't find match - so we're finished
-                                    foundIndex = (count - 1) Xor -1
-                                    Exit Do
-                                End If
-                            Else
-                                If currentIndex > 0 Then
-                                    ' Item is before current item, so we will stop search at current item
-                                    ' Note that because of the way the math works, you don't stop at the
-                                    ' prior item as you might guess - it can cause you to skip an item
-                                    stopIndex = currentIndex
-                                Else
-                                    ' Looked to the top and didn't find match - so we're finished
-                                    foundIndex = 0 Xor -1
-                                    Exit Do
-                                End If
-                            End If
-                        Loop
-                    End If
+                    '        ' Compare item at mid-point
+                    '        result = comparer.Compare(item, m_processQueue(currentIndex))
 
-                    Return foundIndex
+                    '        If result = 0 Then
+                    '            ' Found item, return located index
+                    '            foundIndex = currentIndex
+                    '            Exit Do
+                    '        ElseIf startIndex = stopIndex Then
+                    '            ' Met in the middle and didn't find match - so we're finished
+                    '            foundIndex = startIndex Xor -1
+                    '            Exit Do
+                    '        ElseIf result > 0 Then
+                    '            If currentIndex < count - 1 Then
+                    '                ' Item is beyond current item, so we start search at next item
+                    '                startIndex = currentIndex + 1
+                    '            Else
+                    '                ' Looked to the end and didn't find match - so we're finished
+                    '                foundIndex = (count - 1) Xor -1
+                    '                Exit Do
+                    '            End If
+                    '        Else
+                    '            If currentIndex > 0 Then
+                    '                ' Item is before current item, so we will stop search at current item
+                    '                ' Note that because of the way the math works, you don't stop at the
+                    '                ' prior item as you might guess - it can cause you to skip an item
+                    '                stopIndex = currentIndex
+                    '            Else
+                    '                ' Looked to the top and didn't find match - so we're finished
+                    '                foundIndex = 0 Xor -1
+                    '                Exit Do
+                    '            End If
+                    '        End If
+                    '    Loop
+                    'End If
+
+                    'Return foundIndex
                 End If
             End SyncLock
 
@@ -1553,21 +1564,23 @@ Namespace Collections
                     Return DirectCast(m_processQueue, List(Of T)).Exists(match)
                 Else
                     ' Otherwise, we manually implement this feature...
-                    If match Is Nothing Then Throw New ArgumentNullException("match", "match is null")
+                    Return Array.Exists(Of T)(m_processQueue, match)
 
-                    ' Otherwise, we manually implement this feature...
-                    Dim found As Boolean
+                    'If match Is Nothing Then Throw New ArgumentNullException("match", "match is null")
 
-                    With m_processQueue
-                        For x As Integer = 0 To .Count - 1
-                            If match(.Item(x)) Then
-                                found = True
-                                Exit For
-                            End If
-                        Next
-                    End With
+                    '' Otherwise, we manually implement this feature...
+                    'Dim found As Boolean
 
-                    Return found
+                    'With m_processQueue
+                    '    For x As Integer = 0 To .Count - 1
+                    '        If match(.Item(x)) Then
+                    '            found = True
+                    '            Exit For
+                    '        End If
+                    '    Next
+                    'End With
+
+                    'Return found
                 End If
             End SyncLock
 
@@ -1585,14 +1598,16 @@ Namespace Collections
                     Return DirectCast(m_processQueue, List(Of T)).Find(match)
                 Else
                     ' Otherwise, we manually implement this feature...
-                    If match Is Nothing Then Throw New ArgumentNullException("match", "match is null")
+                    Return Array.Find(Of T)(m_processQueue, match)
 
-                    Dim foundItem As T
-                    Dim foundIndex As Integer = FindIndex(match)
+                    'If match Is Nothing Then Throw New ArgumentNullException("match", "match is null")
 
-                    If foundIndex >= 0 Then foundItem = m_processQueue(foundIndex)
+                    'Dim foundItem As T
+                    'Dim foundIndex As Integer = FindIndex(match)
 
-                    Return foundItem
+                    'If foundIndex >= 0 Then foundItem = m_processQueue(foundIndex)
+
+                    'Return foundItem
                 End If
             End SyncLock
 
@@ -1610,21 +1625,23 @@ Namespace Collections
                     Return DirectCast(m_processQueue, List(Of T)).FindAll(match)
                 Else
                     ' Otherwise, we manually implement this feature...
-                    If match Is Nothing Then Throw New ArgumentNullException("match", "match is null")
+                    Return New List(Of T)(Array.FindAll(Of T)(m_processQueue, match))
 
-                    Dim foundItems As New List(Of T)
+                    'If match Is Nothing Then Throw New ArgumentNullException("match", "match is null")
 
-                    For Each item As T In m_processQueue
-                        If match(item) Then foundItems.Add(item)
-                    Next
+                    'Dim foundItems As New List(Of T)
 
-                    Return foundItems
+                    'For Each item As T In m_processQueue
+                    '    If match(item) Then foundItems.Add(item)
+                    'Next
+
+                    'Return foundItems
                 End If
             End SyncLock
 
         End Function
 
-        ''' <summary>Searches for an element that matches the conditions defined by the specified predicate, and returns the zero-based index of the first occurrence within the range of elements in the <see cref="T:System.Collections.Generic.List`1"></see> that extends from the specified index to the last element.</summary>
+        ''' <summary>Searches for an element that matches the conditions defined by the specified predicate, and returns the zero-based index of the first occurrence within the range of elements in the queue that extends from the specified index to the last element.</summary>
         ''' <returns>The zero-based index of the first occurrence of an element that matches the conditions defined by match, if found; otherwise, –1.</returns>
         ''' <param name="match">The Predicate delegate that defines the conditions of the element to search for.</param>
         ''' <exception cref="ArgumentNullException">match is null.</exception>
@@ -1636,7 +1653,7 @@ Namespace Collections
 
         End Function
 
-        ''' <summary>Searches for an element that matches the conditions defined by the specified predicate, and returns the zero-based index of the first occurrence within the range of elements in the <see cref="T:System.Collections.Generic.List`1"></see> that extends from the specified index to the last element.</summary>
+        ''' <summary>Searches for an element that matches the conditions defined by the specified predicate, and returns the zero-based index of the first occurrence within the range of elements in the queue that extends from the specified index to the last element.</summary>
         ''' <returns>The zero-based index of the first occurrence of an element that matches the conditions defined by match, if found; otherwise, –1.</returns>
         ''' <param name="startIndex">The zero-based starting index of the search.</param>
         ''' <param name="match">The Predicate delegate that defines the conditions of the element to search for.</param>
@@ -1650,7 +1667,7 @@ Namespace Collections
 
         End Function
 
-        ''' <summary>Searches for an element that matches the conditions defined by the specified predicate, and returns the zero-based index of the first occurrence within the range of elements in the <see cref="T:System.Collections.Generic.List`1"></see> that extends from the specified index to the last element.</summary>
+        ''' <summary>Searches for an element that matches the conditions defined by the specified predicate, and returns the zero-based index of the first occurrence within the range of elements in the queue that extends from the specified index to the last element.</summary>
         ''' <returns>The zero-based index of the first occurrence of an element that matches the conditions defined by match, if found; otherwise, –1.</returns>
         ''' <param name="startIndex">The zero-based starting index of the search.</param>
         ''' <param name="count">The number of elements in the section to search.</param>
@@ -1665,21 +1682,23 @@ Namespace Collections
                     Return DirectCast(m_processQueue, List(Of T)).FindIndex(startIndex, count, match)
                 Else
                     ' Otherwise, we manually implement this feature...
-                    If startIndex < 0 OrElse count < 0 OrElse startIndex + count > m_processQueue.Count Then Throw New IndexOutOfRangeException("startIndex and/or count is outside the range of valid indexes for the queue")
-                    If match Is Nothing Then Throw New ArgumentNullException("match", "match is null")
+                    Return Array.FindIndex(Of T)(m_processQueue, startIndex, count, match)
 
-                    Dim foundindex As Integer = -1
+                    'If startIndex < 0 OrElse count < 0 OrElse startIndex + count > m_processQueue.Count Then Throw New ArgumentOutOfRangeException("startIndex", "startIndex and/or count is outside the range of valid indexes for the queue")
+                    'If match Is Nothing Then Throw New ArgumentNullException("match", "match is null")
 
-                    With m_processQueue
-                        For x As Integer = startIndex To startIndex + count - 1
-                            If match(.Item(x)) Then
-                                foundindex = x
-                                Exit For
-                            End If
-                        Next
-                    End With
+                    'Dim foundindex As Integer = -1
 
-                    Return foundindex
+                    'With m_processQueue
+                    '    For x As Integer = startIndex To startIndex + count - 1
+                    '        If match(.Item(x)) Then
+                    '            foundindex = x
+                    '            Exit For
+                    '        End If
+                    '    Next
+                    'End With
+
+                    'Return foundindex
                 End If
             End SyncLock
 
@@ -1697,14 +1716,16 @@ Namespace Collections
                     Return DirectCast(m_processQueue, List(Of T)).FindLast(match)
                 Else
                     ' Otherwise, we manually implement this feature...
-                    If match Is Nothing Then Throw New ArgumentNullException("match", "match is null")
+                    Return Array.FindLast(Of T)(m_processQueue, match)
 
-                    Dim foundItem As T
-                    Dim foundIndex As Integer = FindLastIndex(match)
+                    'If match Is Nothing Then Throw New ArgumentNullException("match", "match is null")
 
-                    If foundIndex >= 0 Then foundItem = m_processQueue(foundIndex)
+                    'Dim foundItem As T
+                    'Dim foundIndex As Integer = FindLastIndex(match)
 
-                    Return foundItem
+                    'If foundIndex >= 0 Then foundItem = m_processQueue(foundIndex)
+
+                    'Return foundItem
                 End If
             End SyncLock
 
@@ -1751,26 +1772,134 @@ Namespace Collections
                     Return DirectCast(m_processQueue, List(Of T)).FindLastIndex(startIndex, count, match)
                 Else
                     ' Otherwise, we manually implement this feature...
-                    If startIndex < 0 OrElse count < 0 OrElse startIndex + count > m_processQueue.Count Then Throw New IndexOutOfRangeException("startIndex and/or count is outside the range of valid indexes for the queue")
-                    If match Is Nothing Then Throw New ArgumentNullException("match", "match is null")
+                    Return Array.FindLastIndex(Of T)(m_processQueue, startIndex, count, match)
 
-                    Dim foundindex As Integer = -1
+                    'If startIndex < 0 OrElse count < 0 OrElse startIndex + count > m_processQueue.Count Then Throw New ArgumentOutOfRangeException("startIndex", "startIndex and/or count is outside the range of valid indexes for the queue")
+                    'If match Is Nothing Then Throw New ArgumentNullException("match", "match is null")
 
-                    With m_processQueue
-                        For x As Integer = startIndex + count - 1 To startIndex Step -1
-                            If match(.Item(x)) Then
-                                foundindex = x
-                                Exit For
-                            End If
-                        Next
-                    End With
+                    'Dim foundindex As Integer = -1
 
-                    Return foundindex
+                    'With m_processQueue
+                    '    For x As Integer = startIndex + count - 1 To startIndex Step -1
+                    '        If match(.Item(x)) Then
+                    '            foundindex = x
+                    '            Exit For
+                    '        End If
+                    '    Next
+                    'End With
+
+                    'Return foundindex
                 End If
             End SyncLock
 
         End Function
 
+        ''' <summary>Performs the specified action on each element of the queue.</summary>
+        ''' <param name="action">The Action delegate to perform on each element of the queue.</param>
+        ''' <exception cref="ArgumentNullException">action is null.</exception>
+        Public Overridable Sub ForEach(ByVal action As Action(Of T))
+
+            SyncLock m_processQueue
+                If TypeOf m_processQueue Is List(Of T) Then
+                    ' We'll call native implementation if available
+                    DirectCast(m_processQueue, List(Of T)).ForEach(action)
+                Else
+                    ' Otherwise, we manually implement this feature...
+                    Array.ForEach(Of T)(m_processQueue, action)
+
+                    'If action Is Nothing Then Throw New ArgumentNullException("action", "action is null")
+
+                    'For Each item As T In m_processQueue
+                    '    action(item)
+                    'Next
+                End If
+            End SyncLock
+
+        End Sub
+
+        ''' <summary>Creates a shallow copy of a range of elements in the source queue.</summary>
+        ''' <returns>A shallow copy of a range of elements in the source queue.</returns>
+        ''' <param name="count">The number of elements in the range.</param>
+        ''' <param name="index">The zero-based queue index at which the range starts.</param>
+        ''' <exception cref="ArgumentOutOfRangeException">index is less than 0 -or- count is less than 0.</exception>
+        ''' <exception cref="ArgumentException">index and count do not denote a valid range of elements in the queue.</exception>
+        Public Overridable Function GetRange(ByVal index As Integer, ByVal count As Integer) As List(Of T)
+
+            SyncLock m_processQueue
+                If TypeOf m_processQueue Is List(Of T) Then
+                    ' We'll call native implementation if available
+                    Return DirectCast(m_processQueue, List(Of T)).GetRange(index, count)
+                Else
+                    ' Otherwise, we manually implement this feature...
+                    If index + count > m_processQueue.Count Then Throw New ArgumentException("Index and count do not denote a valid range of elements in the queue")
+                    If index < 0 OrElse count < 0 Then Throw New ArgumentOutOfRangeException("index", "Index and/or count is outside the range of valid indexes for the queue")
+
+                    Dim items As New List(Of T)
+
+                    For x As Integer = index To index + count - 1
+                        items.Add(m_processQueue(x))
+                    Next
+
+                    Return items
+                End If
+            End SyncLock
+
+        End Function
+
+        ''' <summary>Searches for the specified object and returns the zero-based index of the first occurrence within the range of elements in the queue that extends from the specified index to the last element.</summary>
+        ''' <returns>The zero-based index of the first occurrence of item within the range of elements in the queue that extends from index to the last element, if found; otherwise, –1.</returns>
+        ''' <param name="item">The object to locate in the queue. The value can be null for reference types.</param>
+        ''' <param name="index">The zero-based starting index of the search.</param>
+        ''' <exception cref="ArgumentOutOfRangeException">index is outside the range of valid indexes for the queue.</exception>
+        Public Overridable Function IndexOf(ByVal item As T, ByVal index As Integer) As Integer
+
+            SyncLock m_processQueue
+                Return IndexOf(item, index, m_processQueue.Count)
+            End SyncLock
+
+        End Function
+
+        ''' <summary>Searches for the specified object and returns the zero-based index of the first occurrence within the range of elements in the queue that starts at the specified index and contains the specified number of elements.</summary>
+        ''' <returns>The zero-based index of the first occurrence of item within the range of elements in the queue that starts at index and contains count number of elements, if found; otherwise, –1.</returns>
+        ''' <param name="count">The number of elements in the section to search.</param>
+        ''' <param name="item">The object to locate in the queue. The value can be null for reference types.</param>
+        ''' <param name="index">The zero-based starting index of the search.</param>
+        ''' <exception cref="ArgumentOutOfRangeException">index is outside the range of valid indexes for the queue -or- count is less than 0 -or- index and count do not specify a valid section in the queue.</exception>
+        Public Overridable Function IndexOf(ByVal item As T, ByVal index As Integer, ByVal count As Integer) As Integer
+
+            SyncLock m_processQueue
+                If TypeOf m_processQueue Is List(Of T) Then
+                    ' We'll call native implementation if available
+                    Return DirectCast(m_processQueue, List(Of T)).IndexOf(item, index, count)
+                Else
+                    ' Otherwise, we manually implement this feature...
+                    Return Array.IndexOf(Of T)(m_processQueue, item, index, count)
+
+                    'If index < 0 OrElse count < 0 OrElse index + count > m_processQueue.Count Then Throw New ArgumentOutOfRangeException("index", "Index and/or count is outside the range of valid indexes for the queue")
+
+                    'Dim foundindex As Integer = -1
+                    'Dim comparer As Generic.Comparer(Of T) = Generic.Comparer(Of T).Default
+
+                    'With m_processQueue
+                    '    For x As Integer = index To index + count - 1
+                    '        If comparer.Compare(item, .Item(x)) = 0 Then
+                    '            foundindex = x
+                    '            Exit For
+                    '        End If
+                    '    Next
+                    'End With
+
+                    'Return foundindex
+                End If
+            End SyncLock
+
+        End Function
+
+        ''' <summary>Inserts the elements of a collection into the queue at the specified index.</summary>
+        ''' <param name="collection">The collection whose elements should be inserted into the queue. The collection itself cannot be null, but it can contain elements that are null, if type T is a reference type.</param>
+        ''' <param name="index">The zero-based index at which the new elements should be inserted.</param>
+        ''' <exception cref="ArgumentOutOfRangeException">index is less than 0 -or- index is greater than queue length.</exception>
+        ''' <exception cref="ArgumentNullException">collection is null.</exception>
         Public Overridable Sub InsertRange(ByVal index As Integer, ByVal collection As IEnumerable(Of T))
 
             SyncLock m_processQueue
@@ -1779,6 +1908,9 @@ Namespace Collections
                     DirectCast(m_processQueue, List(Of T)).InsertRange(index, collection)
                 Else
                     ' Otherwise, we manually implement this feature...
+                    If index < 0 OrElse index > m_processQueue.Count - 1 Then Throw New ArgumentOutOfRangeException("index", "index is outside the range of valid indexes for the queue")
+                    If collection Is Nothing Then Throw New ArgumentNullException("collection", "collection is null")
+
                     For Each item As T In collection
                         m_processQueue.Insert(index, item)
                         index += 1
@@ -1790,6 +1922,227 @@ Namespace Collections
 
         End Sub
 
+        ''' <summary>Searches for the specified object and returns the zero-based index of the last occurrence within the entire queue.</summary>
+        ''' <returns>The zero-based index of the last occurrence of item within the entire the queue, if found; otherwise, –1.</returns>
+        ''' <param name="item">The object to locate in the queue. The value can be null for reference types.</param>
+        Public Overridable Function LastIndexOf(ByVal item As T) As Integer
+
+            SyncLock m_processQueue
+                Return LastIndexOf(item, 0, m_processQueue.Count)
+            End SyncLock
+
+        End Function
+
+        ''' <summary>Searches for the specified object and returns the zero-based index of the last occurrence within the range of elements in the queue that extends from the first element to the specified index.</summary>
+        ''' <returns>The zero-based index of the last occurrence of item within the range of elements in the queue that extends from the first element to index, if found; otherwise, –1.</returns>
+        ''' <param name="item">The object to locate in the queue. The value can be null for reference types.</param>
+        ''' <param name="index">The zero-based starting index of the backward search.</param>
+        ''' <exception cref="ArgumentOutOfRangeException">index is outside the range of valid indexes for the queue. </exception>
+        Public Overridable Function LastIndexOf(ByVal item As T, ByVal index As Integer) As Integer
+
+            SyncLock m_processQueue
+                Return LastIndexOf(item, index, m_processQueue.Count)
+            End SyncLock
+
+        End Function
+
+        ''' <summary>Searches for the specified object and returns the zero-based index of the last occurrence within the range of elements in the queue that contains the specified number of elements and ends at the specified index.</summary>
+        ''' <returns>The zero-based index of the last occurrence of item within the range of elements in the queue that contains count number of elements and ends at index, if found; otherwise, –1.</returns>
+        ''' <param name="item">The object to locate in the queue. The value can be null for reference types.</param>
+        ''' <param name="index">The zero-based starting index of the backward search.</param>
+        ''' <param name="count">The number of elements in the section to search.</param>
+        ''' <exception cref="ArgumentOutOfRangeException">index is outside the range of valid indexes for the queue -or- count is less than 0 -or- index and count do not specify a valid section in the queue.</exception>
+        Public Overridable Function LastIndexOf(ByVal item As T, ByVal index As Integer, ByVal count As Integer) As Integer
+
+            SyncLock m_processQueue
+                If TypeOf m_processQueue Is List(Of T) Then
+                    ' We'll call native implementation if available
+                    Return DirectCast(m_processQueue, List(Of T)).LastIndexOf(item, index, count)
+                Else
+                    ' Otherwise, we manually implement this feature...
+                    Return Array.LastIndexOf(Of T)(m_processQueue, item, index, count)
+
+                    'If index < 0 OrElse count < 0 OrElse index + count > m_processQueue.Count Then Throw New ArgumentOutOfRangeException("index", "Index and/or count is outside the range of valid indexes for the queue")
+
+                    'Dim foundindex As Integer = -1
+                    'Dim comparer As Generic.Comparer(Of T) = Generic.Comparer(Of T).Default
+
+                    'With m_processQueue
+                    '    For x As Integer = index + count - 1 To index Step -1
+                    '        If comparer.Compare(item, .Item(x)) = 0 Then
+                    '            foundindex = x
+                    '            Exit For
+                    '        End If
+                    '    Next
+                    'End With
+
+                    'Return foundindex
+                End If
+            End SyncLock
+
+        End Function
+
+        ''' <summary>Removes the all the elements that match the conditions defined by the specified predicate.</summary>
+        ''' <returns>The number of elements removed from the queue .</returns>
+        ''' <param name="match">The Predicate delegate that defines the conditions of the elements to remove.</param>
+        ''' <exception cref="ArgumentNullException">match is null.</exception>
+        Public Overridable Function RemoveAll(ByVal match As Predicate(Of T)) As Integer
+
+            SyncLock m_processQueue
+                If TypeOf m_processQueue Is List(Of T) Then
+                    ' We'll call native implementation if available
+                    Return DirectCast(m_processQueue, List(Of T)).RemoveAll(match)
+                Else
+                    ' Otherwise, we manually implement this feature...
+                    If match Is Nothing Then Throw New ArgumentNullException("match", "match is null")
+
+                    Dim removedItems As Integer
+
+                    With m_processQueue
+                        For x As Integer = .Count - 1 To 0 Step -1
+                            If match(.Item(x)) Then
+                                .RemoveAt(x)
+                                removedItems += 1
+                            End If
+                        Next
+                    End With
+
+                    Return removedItems
+                End If
+            End SyncLock
+
+        End Function
+
+        ''' <summary>Removes a range of elements from the queue.</summary>
+        ''' <param name="count">The number of elements to remove.</param>
+        ''' <param name="index">The zero-based starting index of the range of elements to remove.</param>
+        ''' <exception cref="ArgumentOutOfRangeException">index is less than 0 -or- count is less than 0.</exception>
+        ''' <exception cref="ArgumentException">index and count do not denote a valid range of elements in the queue.</exception>
+        Public Overridable Sub RemoveRange(ByVal index As Integer, ByVal count As Integer)
+
+            SyncLock m_processQueue
+                If TypeOf m_processQueue Is List(Of T) Then
+                    ' We'll call native implementation if available
+                    DirectCast(m_processQueue, List(Of T)).RemoveRange(index, count)
+                Else
+                    ' Otherwise, we manually implement this feature...
+                    If index < 0 OrElse count < 0 OrElse index + count > m_processQueue.Count Then Throw New ArgumentOutOfRangeException("index", "Index and/or count is outside the range of valid indexes for the queue")
+
+                    For x As Integer = index + count - 1 To index Step -1
+                        m_processQueue.RemoveAt(x)
+                    Next
+                End If
+            End SyncLock
+
+        End Sub
+
+        ''' <summary>Reverses the order of the elements in the entire queue.</summary>
+        Public Overridable Sub Reverse()
+
+            SyncLock m_processQueue
+                Reverse(0, m_processQueue.Count)
+            End SyncLock
+
+        End Sub
+
+        ''' <summary>Reverses the order of the elements in the specified range.</summary>
+        ''' <param name="count">The number of elements in the range to reverse.</param>
+        ''' <param name="index">The zero-based starting index of the range to reverse.</param>
+        ''' <exception cref="ArgumentException">index and count do not denote a valid range of elements in the queue. </exception>
+        ''' <exception cref="ArgumentOutOfRangeException">index is less than 0 -or- count is less than 0.</exception>
+        Public Overridable Sub Reverse(ByVal index As Integer, ByVal count As Integer)
+
+            SyncLock m_processQueue
+                If TypeOf m_processQueue Is List(Of T) Then
+                    ' We'll call native implementation if available
+                    DirectCast(m_processQueue, List(Of T)).Reverse(index, count)                    
+                Else
+                    ' Otherwise, we manually implement this feature...
+                    If index + count > m_processQueue.Count Then Throw New ArgumentException("Index and count do not denote a valid range of elements in the queue")
+                    If index < 0 OrElse count < 0 Then Throw New ArgumentOutOfRangeException("index", "Index and/or count is outside the range of valid indexes for the queue")
+
+                    Dim item As T
+                    Dim stopIndex As Integer = index + count - 1
+
+                    With m_processQueue
+                        For x As Integer = index To (index + count - 1) \ 2
+                            If x < stopIndex Then
+                                ' Swap items top to bottom to reverse order
+                                item = .Item(x)
+                                .Item(x) = .Item(stopIndex)
+                                .Item(stopIndex) = item
+                                stopIndex -= 1
+                            End If
+                        Next
+                    End With
+                End If
+            End SyncLock
+
+        End Sub
+
+        ''' <summary>Sorts the elements in the entire queue using the default comparer.</summary>
+        '''	<exception cref="InvalidOperationException">The default comparer, Generic.Comparer.Default, cannot find an implementation of the IComparable generic interface or the IComparable interface for type T.</exception>
+        Public Overridable Sub Sort()
+
+            SyncLock m_processQueue
+                Sort(0, m_processQueue.Count, Nothing)
+            End SyncLock
+
+        End Sub
+
+        ''' <summary>Sorts the elements in the entire queue using the specified comparer.</summary>
+        ''' <param name="comparer">The Generic.IComparer implementation to use when comparing elements, or null to use the default comparer: Generic.Comparer.Default.</param>
+        ''' <exception cref="ArgumentException">The implementation of comparer caused an error during the sort. For example, comparer might not return 0 when comparing an item with itself.</exception>
+        '''	<exception cref="InvalidOperationException">the comparer is null and the default comparer, Generic.Comparer.Default, cannot find an implementation of the IComparable generic interface or the IComparable interface for type T.</exception>
+        Public Overridable Sub Sort(ByVal comparer As IComparer(Of T))
+
+            SyncLock m_processQueue
+                Sort(0, m_processQueue.Count, comparer)
+            End SyncLock
+
+        End Sub
+
+        ''' <summary>Sorts the elements in a range of elements in the queue using the specified comparer.</summary>
+        ''' <param name="count">The length of the range to sort.</param>
+        ''' <param name="index">The zero-based starting index of the range to sort.</param>
+        ''' <param name="comparer">The Generic.IComparer implementation to use when comparing elements, or null to use the default comparer: Generic.Comparer.Default.</param>
+        ''' <exception cref="ArgumentException">The implementation of comparer caused an error during the sort. For example, comparer might not return 0 when comparing an item with itself.</exception>
+        '''	<exception cref="InvalidOperationException">the comparer is null and the default comparer, Generic.Comparer.Default, cannot find an implementation of the IComparable generic interface or the IComparable interface for type T.</exception>
+        ''' <exception cref="ArgumentOutOfRangeException">index is less than 0 -or- count is less than 0.</exception>
+        Public Overridable Sub Sort(ByVal index As Integer, ByVal count As Integer, ByVal comparer As IComparer(Of T))
+
+            SyncLock m_processQueue
+                If TypeOf m_processQueue Is List(Of T) Then
+                    ' We'll call native implementation if available
+                    DirectCast(m_processQueue, List(Of T)).Sort(index, count, comparer)
+                Else
+                    ' Otherwise, we manually implement this feature...
+                    Array.Sort(Of T)(m_processQueue, index, count, comparer)
+                End If
+            End SyncLock
+
+        End Sub
+
+        ''' <summary>Sorts the elements in the entire queue using the specified Comparison.</summary>
+        ''' <param name="comparison">The Comparison to use when comparing elements.</param>
+        ''' <exception cref="ArgumentException">The implementation of comparison caused an error during the sort. For example, comparison might not return 0 when comparing an item with itself.</exception>
+        ''' <exception cref="ArgumentNullException">comparison is null.</exception>
+        Public Overridable Sub Sort(ByVal comparison As Comparison(Of T))
+
+            SyncLock m_processQueue
+                If TypeOf m_processQueue Is List(Of T) Then
+                    ' We'll call native implementation if available
+                    DirectCast(m_processQueue, List(Of T)).Sort(comparison)
+                Else
+                    ' Otherwise, we manually implement this feature...                    
+                    Array.Sort(Of T)(DirectCast(m_processQueue, T()), comparison)
+                End If
+            End SyncLock
+
+        End Sub
+
+        ''' <summary>Copies the elements of the queue to a new array.</summary>
+        ''' <returns>An array containing copies of the elements of the queue.</returns>
         Public Overridable Function ToArray() As T()
 
             SyncLock m_processQueue
@@ -1812,27 +2165,32 @@ Namespace Collections
 
         End Function
 
-#End Region
-
-#Region " Generic IList(Of T) Implementation "
-
-        ' Note: all IList(Of T) implementations should be synchronized as necessary
-
-        ''' <summary>
-        '''  Adds a new item to the list to be processed
-        ''' </summary>
-        Public Overridable Sub Add(ByVal item As T) Implements IList(Of T).Add
+        ''' <summary>Determines whether every element in the queue matches the conditions defined by the specified predicate.</summary>
+        ''' <returns>true if every element in the queue matches the conditions defined by the specified predicate; otherwise, false. If the list has no elements, the return value is true.</returns>
+        ''' <param name="match">The Predicate delegate that defines the conditions to check against the elements.</param>
+        ''' <exception cref="ArgumentNullException">match is null.</exception>
+        Public Overridable Function TrueForAll(ByVal match As Predicate(Of T)) As Boolean
 
             SyncLock m_processQueue
-                m_processQueue.Add(item)
-                DataAdded()
+                If TypeOf m_processQueue Is List(Of T) Then
+                    ' We'll call native implementation if available
+                    Return DirectCast(m_processQueue, List(Of T)).TrueForAll(match)
+                Else
+                    ' Otherwise, we manually implement this feature...                    
+                    Return Array.TrueForAll(Of T)(m_processQueue, match)
+                End If
             End SyncLock
 
-        End Sub
+        End Function
 
-        ''' <summary>
-        ''' Inserts a new item to be processed at the top of the list
-        ''' </summary>
+#End Region
+
+#Region " Handy Queue Functions Implementation "
+
+        ' Note: all queue function implementations should be synchronized as necessary
+
+        ''' <summary>Inserts an item onto the top of the queue</summary>
+        ''' <param name="item">The item to push onto the queue.</param>
         Public Overridable Sub Push(ByVal item As T)
 
             SyncLock m_processQueue
@@ -1842,9 +2200,60 @@ Namespace Collections
 
         End Sub
 
-        ''' <summary>
-        ''' Inserts a new item to be processed at the specified location
-        ''' </summary>
+        ''' <summary>Removes the first item from the queue and returns its value</summary>
+        ''' <exception cref="IndexOutOfRangeException">there are no items in the queue</exception>
+        Public Overridable Function Pop() As T
+
+            SyncLock m_processQueue
+                If m_processQueue.Count > 0 Then
+                    Dim poppedItem As T = m_processQueue(0)
+                    m_processQueue.RemoveAt(0)
+                    Return poppedItem
+                Else
+                    Throw New IndexOutOfRangeException("The " & Name & " is empty")
+                End If
+            End SyncLock
+
+        End Function
+
+        ''' <summary>Removes the last item from the queue and returns its value</summary>
+        ''' <exception cref="IndexOutOfRangeException">there are no items in the queue</exception>
+        Public Overridable Function Poop() As T
+
+            SyncLock m_processQueue
+                If m_processQueue.Count > 0 Then
+                    Dim lastIndex As Integer = m_processQueue.Count - 1
+                    Dim poopedItem As T = m_processQueue(lastIndex)
+                    m_processQueue.RemoveAt(lastIndex)
+                    Return poopedItem
+                Else
+                    Throw New IndexOutOfRangeException("The " & Name & " is empty")
+                End If
+            End SyncLock
+
+        End Function
+
+#End Region
+
+#Region " Generic IList(Of T) Implementation "
+
+        ' Note: all IList(Of T) implementations should be synchronized as necessary
+
+        ''' <summary>Adds an item to the queue.</summary>
+        ''' <param name="item">The item to add to the queue.</param>
+        Public Overridable Sub Add(ByVal item As T) Implements IList(Of T).Add
+
+            SyncLock m_processQueue
+                m_processQueue.Add(item)
+                DataAdded()
+            End SyncLock
+
+        End Sub
+
+        ''' <summary>Inserts an element into the queue at the specified index.</summary>
+        ''' <param name="item">The object to insert. The value can be null for reference types.</param>
+        ''' <param name="index">The zero-based index at which item should be inserted.</param>
+        ''' <exception cref="ArgumentOutOfRangeException">index is less than 0 -or- index is greater than queue length.</exception>
         Public Overridable Sub Insert(ByVal index As Integer, ByVal item As T) Implements IList(Of T).Insert
 
             SyncLock m_processQueue
@@ -1876,39 +2285,10 @@ Namespace Collections
 
         End Function
 
-        ''' <summary>Removes the first item from the list and returns its value</summary>
-        ''' <exception cref="IndexOutOfRangeException">If there are no items in the list, this function will throw an IndexOutOfRangeException</exception>
-        Public Overridable Function Pop() As T
-
-            SyncLock m_processQueue
-                If m_processQueue.Count > 0 Then
-                    Dim poppedItem As T = m_processQueue(0)
-                    m_processQueue.RemoveAt(0)
-                    Return poppedItem
-                Else
-                    Throw New IndexOutOfRangeException("The " & Name & " is empty")
-                End If
-            End SyncLock
-
-        End Function
-
-        ''' <summary>Removes the last item from the list and returns its value</summary>
-        ''' <exception cref="IndexOutOfRangeException">If there are no items in the list, this function will throw an IndexOutOfRangeException</exception>
-        Public Overridable Function Poop() As T
-
-            SyncLock m_processQueue
-                If m_processQueue.Count > 0 Then
-                    Dim lastIndex As Integer = m_processQueue.Count - 1
-                    Dim poopedItem As T = m_processQueue(lastIndex)
-                    m_processQueue.RemoveAt(lastIndex)
-                    Return poopedItem
-                Else
-                    Throw New IndexOutOfRangeException("The " & Name & " is empty")
-                End If
-            End SyncLock
-
-        End Function
-
+        ''' <summary>Gets or sets the element at the specified index.</summary>
+        ''' <returns>The element at the specified index.</returns>
+        ''' <param name="index">The zero-based index of the element to get or set.</param>
+        ''' <exception cref="ArgumentOutOfRangeException">index is less than 0 -or- index is equal to or greater than queue length. </exception>
         Default Public Overridable Property Item(ByVal index As Integer) As T Implements IList(Of T).Item
             Get
                 SyncLock m_processQueue
@@ -1923,6 +2303,9 @@ Namespace Collections
             End Set
         End Property
 
+        ''' <summary>Searches for the specified object and returns the zero-based index of the first occurrence within the entire queue.</summary>
+        ''' <returns>The zero-based index of the first occurrence of item within the entire queue, if found; otherwise, –1.</returns>
+        ''' <param name="item">The object to locate in the queue. The value can be null for reference types.</param>
         Public Overridable Function IndexOf(ByVal item As T) As Integer Implements IList(Of T).IndexOf
 
             SyncLock m_processQueue
@@ -1931,6 +2314,8 @@ Namespace Collections
 
         End Function
 
+        ''' <summary>Gets the number of elements actually contained in the queue.</summary>
+        ''' <returns>The number of elements actually contained in the queue.</returns>
         Public Overridable ReadOnly Property Count() As Integer Implements IList(Of T).Count
             Get
                 SyncLock m_processQueue
@@ -1959,6 +2344,9 @@ Namespace Collections
 
         End Function
 
+        ''' <summary>Removes the first occurrence of a specific object from the queue.</summary>
+        ''' <returns>true if item is successfully removed; otherwise, false.  This method also returns false if item was not found in the queue.</returns>
+        ''' <param name="item">The object to remove from the queue. The value can be null for reference types.</param>
         Public Overridable Function Remove(ByVal item As T) As Boolean Implements IList(Of T).Remove
 
             SyncLock m_processQueue
@@ -1967,6 +2355,9 @@ Namespace Collections
 
         End Function
 
+        ''' <summary>Removes the element at the specified index of the queue.</summary>
+        ''' <param name="index">The zero-based index of the element to remove.</param>
+        ''' <exception cref="ArgumentOutOfRangeException">index is less than 0 -or- index is equal to or greater than queue length.</exception>
         Public Overridable Sub RemoveAt(ByVal index As Integer) Implements IList(Of T).RemoveAt
 
             SyncLock m_processQueue
@@ -1975,6 +2366,8 @@ Namespace Collections
 
         End Sub
 
+        ''' <summary>Gets a value indicating whether the queue is read-only.</summary>
+        ''' <returns>true if the queue is read-only; otherwise, false.  In the default implementation, this property always returns false.</returns>
         Public Overridable ReadOnly Property IsReadOnly() As Boolean Implements IList(Of T).IsReadOnly
             Get
                 Return m_processQueue.IsReadOnly
@@ -1995,13 +2388,22 @@ Namespace Collections
 
 #Region " ICollection Implementation "
 
+        ''' <summary>Gets an object that can be used to synchronize access to the queue.</summary>
+        ''' <returns>An object that can be used to synchronize access to the queue.  In the default implementation, this property always returns the current instance.</returns>
+        ''' <remarks>
+        ''' Note that all the methods of this class are already individually synchronized, however to safely enumerate through each queue element 
+        ''' (i.e., to make sure list elements don't change during enumeration), derived classes and end users should perform their own
+        ''' synchronization by implementing a SyncLock using this SyncRoot property
+        ''' </remarks>
         Public Overridable ReadOnly Property SyncRoot() As Object Implements ICollection.SyncRoot
             Get
                 Return m_processQueue
             End Get
         End Property
 
-        ' This collection is effectively "synchronized" since all functions synclock operations internally
+        ''' <summary>Gets a value indicating whether access to the queue is synchronized (thread safe).</summary>
+        ''' <returns>true if access to the queue is synchronized (thread safe); otherwise, false.  In the default implementation, this property always returns true.</returns>
+        ''' <remarks>This queue is effectively "synchronized" since all functions synclock operations internally</remarks>
         Public Overridable ReadOnly Property IsSynchronized() As Boolean Implements ICollection.IsSynchronized
             Get
                 Return True
