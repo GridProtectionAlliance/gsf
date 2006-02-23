@@ -16,181 +16,156 @@
 '***********************************************************************
 
 Imports System.Threading
-Imports TVA.Shared.DateTime
+Imports Tva.DateTime.Common
+Imports Tva.Collections
 
-' This class creates a queue of synchronized measurement samples
-Public Class MeasurementSampleQueue
+Namespace Measurements
 
-    Private m_parent As MeasurementConcentrator
-    Private m_dataSamples As SortedList
-    Private m_baseTime As Date      ' This represents the most recent encountered timestamp baselined at the bottom of the second
-    Private m_discardedPoints As Long
-    Private m_criticalSection As Object
+    ' This class creates a queue of synchronized measurement samples
+    Public Class SampleQueue
 
-    Public Sub New(ByVal parent As MeasurementConcentrator)
+        Inherits KeyedProcessQueue(Of Long, ISample)
 
-        m_parent = parent
-        m_dataSamples = New SortedList
-        m_baseTime = BaselinedTimestamp(Date.UtcNow)
-        m_criticalSection = New Object
+        Public Delegate Function CreateNewSampleSignature(ByVal sampleQueue As SampleQueue) As ISample
 
-    End Sub
+        Private m_baseTime As Date      ' This represents the most recent encountered timestamp baselined at the bottom of the second
+        Private m_discardedPoints As Long
+        Private m_measurementsPerSecond As Integer
+        Private m_measurementRate As Decimal     ' We use a 64-bit floating point here to avoid round-off errors in calculations dealing with the sample rate
+        Private m_timeDeviationTolerance As Integer
+        Private m_createNewSampleFunction As CreateNewSampleSignature
 
-    Public ReadOnly Property BaseTime() As Date
-        Get
-            Dim currentTime As Date = BaselinedTimestamp(Date.UtcNow)
+        Public Sub New(ByVal createNewSampleFunction As CreateNewSampleSignature, ByVal processItemFunction As ProcessItemFunctionSignature, ByVal canProcessItemFunction As CanProcessItemFunctionSignature, ByVal measurementsPerSecond As Integer, ByVal timeDeviationTolerance As Integer)
 
-            ' If base time gets old, we fall back on local system time
-            If Math.Abs(DistanceFromBaseTime(currentTime)) > m_parent.TimeDeviationTolerance Then
-                m_baseTime = currentTime
-            End If
+            MyBase.New(processItemFunction, canProcessItemFunction, RealTimeProcessInterval, 1, Timeout.Infinite, False, False)
 
-            Return m_baseTime
-        End Get
-    End Property
+            m_createNewSampleFunction = createNewSampleFunction
+            m_measurementsPerSecond = measurementsPerSecond
+            m_measurementRate = 1000@ / measurementsPerSecond
+            m_timeDeviationTolerance = timeDeviationTolerance
+            m_baseTime = BaselinedTimestamp(Date.UtcNow)
 
-    Public ReadOnly Property DiscardedPoints() As Long
-        Get
-            Return m_discardedPoints
-        End Get
-    End Property
+        End Sub
 
-    Default Public ReadOnly Property Sample(ByVal index As Integer) As MeasurementSample
-        Get
-            SyncLock m_dataSamples.SyncRoot
-                Return DirectCast(m_dataSamples.GetByIndex(index), MeasurementSample)
-            End SyncLock
-        End Get
-    End Property
+        Public ReadOnly Property BaseTime() As Date
+            Get
+                Dim currentTime As Date = BaselinedTimestamp(Date.UtcNow)
 
-    Default Public ReadOnly Property Sample(ByVal baseTime As Date) As MeasurementSample
-        Get
-            SyncLock m_dataSamples.SyncRoot
-                Return DirectCast(m_dataSamples(baseTime.Ticks), MeasurementSample)
-            End SyncLock
-        End Get
-    End Property
+                ' If base time gets old, we fall back on local system time
+                If System.Math.Abs(DistanceFromBaseTime(currentTime)) > m_timeDeviationTolerance Then
+                    m_baseTime = currentTime
+                End If
 
-    Public Function GetSampleIndex(ByVal baseTime As Date) As Integer
+                Return m_baseTime
+            End Get
+        End Property
 
-        SyncLock m_dataSamples.SyncRoot
-            Return m_dataSamples.IndexOfKey(baseTime.Ticks)
-        End SyncLock
+        Public ReadOnly Property DiscardedPoints() As Long
+            Get
+                Return m_discardedPoints
+            End Get
+        End Property
 
-    End Function
+        Default Public Overloads ReadOnly Property Item(ByVal baseTime As Date) As ISample
+            Get
+                Return Item(baseTime.Ticks)
+            End Get
+        End Property
 
-    Public ReadOnly Property Count() As Integer
-        Get
-            SyncLock m_dataSamples.SyncRoot
-                Return m_dataSamples.Count
-            End SyncLock
-        End Get
-    End Property
+        ' Data comes in one-point at a time, so we use this function to place the point in its proper sample and row/cell position
+        Public Sub SortMeasurement(ByVal measurement As IMeasurement)
 
-    Public Sub RemovePublishedSample()
+            With measurement
+                ' Find sample for this timestamp
+                Dim sample As ISample = GetSample(.Timestamp)
 
-        SyncLock m_dataSamples.SyncRoot
-            m_dataSamples.RemoveAt(0)
-        End SyncLock
+                If sample Is Nothing Then
+                    ' No samples exist for this timestamp - data must be old
+                    m_discardedPoints += 1
+                Else
+                    ' We've found the right sample for this data, so lets access the proper data cell by first calculating the
+                    ' proper sample index (i.e., the row) - we can then directly access the correct cell using the PMU index
+                    sample.Frames(System.Math.Floor((.Timestamp.Millisecond + 1@) / m_measurementRate)).Measurements(.Index).Value = .Value
+                End If
+            End With
 
-    End Sub
+        End Sub
 
-    ' Data comes in one-point at a time, so we use this function to place the point in its proper sample and row/cell position
-    Public Sub SortMeasurement(ByVal measurement As IMeasurement)
+        Public Sub ThreadSortMeasurement(ByVal measurement As IMeasurement)
 
-        With measurement
-            ' Find sample for this timestamp
-            Dim sample As MeasurementSample = GetSample(.Timestamp)
+            ThreadPool.QueueUserWorkItem(AddressOf SortMeasurement, measurement)
 
-            If sample Is Nothing Then
-                ' No samples exist for this timestamp - data must be old
-                m_discardedPoints += 1
-            Else
-                ' We've found the right sample for this data, so lets access the proper data cell by first calculating the
-                ' proper sample index (i.e., the row) - we can then directly access the correct cell using the PMU index
-                sample.Rows(Math.Floor((.Timestamp.Millisecond + 1@) / m_parent.SampleRate)).Value(.Index) = .Value
-            End If
-        End With
+        End Sub
 
-    End Sub
+        Private Sub SortMeasurement(ByVal state As Object)
 
-    Public Sub ThreadSortMeasurement(ByVal measurement As IMeasurement)
+            SortMeasurement(DirectCast(state, IMeasurement))
 
-        ThreadPool.QueueUserWorkItem(AddressOf SortMeasurement, measurement)
+        End Sub
 
-    End Sub
+        Private Function GetSample(ByVal timestamp As Date) As ISample
 
-    Private Sub SortMeasurement(ByVal state As Object)
+            ' Baseline timestamp at bottom of the second
+            Dim baseTime As Date = BaselinedTimestamp(timestamp)
+            Dim sample As MeasurementSample = Me(baseTime)
 
-        SortMeasurement(DirectCast(state, IMeasurement))
+            ' Wait until the sample exists or we can enter critical section to create it ourselves
+            Do Until sample IsNot Nothing
+                ' We don't want to step on our own toes when creating new samples - so we create a critical section for
+                ' this code - if another thread is busy creating samples, we'll just try again
+                If Monitor.TryEnter(SyncRoot) Then
+                    Try
+                        ' Check difference between basetime and last basetime in seconds and fill any gaps
+                        Dim difference As Double = DistanceFromBaseTime(baseTime)
 
-    End Sub
+                        If System.Math.Abs(difference) > m_timeDeviationTolerance Then
+                            ' This data has come in late or has a future timestamp.  For old timestamps, we're not
+                            ' going to create a sample for data that will never be processed.  For future dates we
+                            ' must assume that the clock from source device must be advanced and out-of-sync with
+                            ' real-time - either way this data will be discarded.
+                            Exit Do
+                        ElseIf difference > 1 Then
+                            ' Add intermediate samples as needed...
+                            For x As Integer = 1 To System.Math.Floor(difference) - 1
+                                CreateDataSample(m_baseTime.AddSeconds(x))
+                            Next
+                        End If
 
-    Private Function GetSample(ByVal timestamp As Date) As MeasurementSample
+                        ' Set this time as the new base time
+                        m_baseTime = baseTime
+                        CreateDataSample(m_baseTime)
+                    Catch
+                        ' Rethrow any exceptions - we are just catching any exceptions so we can
+                        ' make sure to release thread lock in finally
+                        Throw
+                    Finally
+                        Monitor.Exit(SyncRoot)
+                    End Try
+                Else
+                    ' We sleep the thread between loops to help reduce CPU loading...
+                    Thread.Sleep(1)
+                End If
 
-        ' Baseline timestamp at bottom of the second
-        Dim baseTime As Date = BaselinedTimestamp(timestamp)
-        Dim sample As MeasurementSample = Me(baseTime)
+                sample = Me(baseTime)
+            Loop
 
-        ' Wait until the sample exists or we can enter critical section to create it ourselves
-        Do Until Not sample Is Nothing
-            ' We don't want to step on our own toes when creating new samples - so we create a critical section for
-            ' this code - if another thread is busy creating samples, we'll just try again
-            If Monitor.TryEnter(m_criticalSection) Then
-                Try
-                    ' Check difference between basetime and last basetime in seconds and fill any gaps
-                    Dim difference As Double = DistanceFromBaseTime(baseTime)
+            ' Return sample for this timestamp
+            Return sample
 
-                    If Math.Abs(difference) > m_parent.TimeDeviationTolerance Then
-                        ' This data has come in late or has a future timestamp.  For old timestamps, we're not
-                        ' going to create a sample for data that will never be processed.  For future dates we
-                        ' must assume that the clock from source device must be advanced and out-of-sync with
-                        ' real-time - either way this data will be discarded.
-                        Exit Do
-                    ElseIf difference > 1 Then
-                        ' Add intermediate samples as needed...
-                        For x As Integer = 1 To Math.Floor(difference) - 1
-                            CreateDataSample(m_baseTime.AddSeconds(x))
-                        Next
-                    End If
+        End Function
 
-                    ' Set this time as the new base time
-                    m_baseTime = baseTime
-                    CreateDataSample(m_baseTime)
-                Catch
-                    ' Rethrow any exceptions - we are just catching any exceptions so we can
-                    ' make sure to release thread lock in finally
-                    Throw
-                Finally
-                    Monitor.Exit(m_criticalSection)
-                End Try
-            Else
-                ' We sleep the thread between loops to help reduce CPU loading...
-                Thread.Sleep(1)
-            End If
+        Private Sub CreateDataSample(ByVal baseTime As Date)
 
-            sample = Me(baseTime)
-        Loop
+            If Not ContainsKey(baseTime.Ticks) Then Add(baseTime.Ticks, m_createNewSampleFunction(Me))
 
-        ' Return sample for this timestamp
-        Return sample
+        End Sub
 
-    End Function
+        Public Function DistanceFromBaseTime(ByVal timeStamp As Date) As Double
 
-    Private Function CreateDataSample(ByVal baseTime As Date) As MeasurementSample
+            Return (timeStamp.Ticks - m_baseTime.Ticks) / 10000000L
 
-        SyncLock m_dataSamples.SyncRoot
-            If Not m_dataSamples.ContainsKey(baseTime.Ticks) Then
-                m_dataSamples.Add(baseTime.Ticks, New MeasurementSample(m_parent, baseTime))
-            End If
-        End SyncLock
+        End Function
 
-    End Function
+    End Class
 
-    Public Function DistanceFromBaseTime(ByVal timeStamp As Date) As Double
-
-        Return (timeStamp.Ticks - m_baseTime.Ticks) / 10000000L
-
-    End Function
-
-End Class
+End Namespace
