@@ -35,6 +35,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
+    <Reference Include="System.Data" />
     <Reference Include="System.DirectoryServices" />
     <Reference Include="System.XML" />
   </ItemGroup>
@@ -43,6 +44,7 @@
     <Import Include="System" />
     <Import Include="System.Collections" />
     <Import Include="System.Collections.Generic" />
+    <Import Include="System.Data" />
     <Import Include="System.Diagnostics" />
   </ItemGroup>
   <ItemGroup>
@@ -69,12 +71,14 @@
     <Compile Include="Tva.Math\Common.vb" />
     <Compile Include="Tva.Math\CompositeValues.vb" />
     <Compile Include="Tva.Math\RealTimeSlope.vb" />
+    <Compile Include="Tva.Measurements\IFrame.vb" />
     <Compile Include="Tva.Measurements\IMeasurement.vb" />
     <Compile Include="Tva.Measurements\ImmediateMeasurements.vb" />
+    <Compile Include="Tva.Measurements\ISample.vb" />
     <Compile Include="Tva.Measurements\Measurement.vb" />
     <Compile Include="Tva.Measurements\MeasurementConcentrator.vb" />
     <Compile Include="Tva.Measurements\MeasurementSample.vb" />
-    <Compile Include="Tva.Measurements\MeasurementSampleQueue.vb" />
+    <Compile Include="Tva.Measurements\SampleQueue.vb" />
     <Compile Include="Tva.Measurements\MeasurementValues.vb" />
     <Compile Include="Tva.Measurements\TemporalMeasurement.vb" />
     <Compile Include="Tva.Net\Smtp\Common.vb" />

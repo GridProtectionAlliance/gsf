@@ -1,19 +1,21 @@
-'***********************************************************************
-'  MeasurementSampleQueue.vb - Queue of sync'd measurement samples
-'  Copyright © 2004 - TVA, all rights reserved
+'*******************************************************************************************************
+'  Tva.Measurements.SampleQueue.vb - Collection of data samples
+'  Copyright © 2006 - TVA, all rights reserved - Gbtc
 '
-'  Build Environment: VB.NET, Visual Studio 2003
-'  Primary Developer: James R Carroll, System Analyst [WESTAFF]
+'  Build Environment: VB.NET, Visual Studio 2005
+'  Primary Developer: James R Carroll, Operations Data Architecture [TVA]
 '      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
 '       Phone: 423/751-2827
 '       Email: jrcarrol@tva.gov
 '
+'  This class represents a collection of data samples
+'
 '  Code Modification History:
-'  ---------------------------------------------------------------------
-'  11/12/2004 - James R Carroll
+'  -----------------------------------------------------------------------------------------------------
+'  12/8/2005 - James R Carroll
 '       Initial version of source generated
 '
-'***********************************************************************
+'*******************************************************************************************************
 
 Imports System.Threading
 Imports Tva.DateTime.Common
@@ -26,26 +28,44 @@ Namespace Measurements
 
         Inherits KeyedProcessQueue(Of Long, ISample)
 
+        ''' <summary>You must implement this function to create a new ISample</summary>
         Public Delegate Function CreateNewSampleSignature(ByVal sampleQueue As SampleQueue) As ISample
 
-        Private m_baseTime As Date      ' This represents the most recent encountered timestamp baselined at the bottom of the second
-        Private m_discardedPoints As Long
-        Private m_measurementsPerSecond As Integer
-        Private m_measurementRate As Decimal     ' We use a 64-bit floating point here to avoid round-off errors in calculations dealing with the sample rate
-        Private m_timeDeviationTolerance As Integer
+        Private m_baseTime As Date                      ' This represents the most recent encountered timestamp baselined at the bottom of the second
+        Private m_interval As Double                    ' Sample time interval in seconds
+        Private m_framesPerInterval As Integer          ' Frames per interval
+        Private m_measurementRate As Decimal            ' We use a 64-bit floating point here to avoid round-off errors in calculations dealing with the sample rate
+        Private m_timeDeviationTolerance As Double      ' Allowed time deviation tolerance
+        Private m_discardedPoints As Long               ' Total number of discarded points
         Private m_createNewSampleFunction As CreateNewSampleSignature
 
-        Public Sub New(ByVal createNewSampleFunction As CreateNewSampleSignature, ByVal processItemFunction As ProcessItemFunctionSignature, ByVal canProcessItemFunction As CanProcessItemFunctionSignature, ByVal measurementsPerSecond As Integer, ByVal timeDeviationTolerance As Integer)
+        Public Sub New(ByVal createNewSampleFunction As CreateNewSampleSignature, ByVal processItemFunction As ProcessItemFunctionSignature, ByVal canProcessItemFunction As CanProcessItemFunctionSignature, ByVal interval As Double, ByVal framesPerInterval As Integer, ByVal timeDeviationTolerance As Double)
 
             MyBase.New(processItemFunction, canProcessItemFunction, RealTimeProcessInterval, 1, Timeout.Infinite, False, False)
 
+            If timeDeviationTolerance < interval Then Throw New ArgumentOutOfRangeException("timeDeviationTolerance", "timeDeviationTolerance cannot be less than specified sample interval")
+            If framesPerInterval < 1 Then Throw New ArgumentException("framesPerInterval must be greater than zero")
+
             m_createNewSampleFunction = createNewSampleFunction
-            m_measurementsPerSecond = measurementsPerSecond
-            m_measurementRate = 1000@ / measurementsPerSecond
+            m_interval = interval
+            m_framesPerInterval = framesPerInterval
+            m_measurementRate = Convert.ToDecimal(SecondsToTicks(interval)) / Convert.ToDecimal(framesPerInterval)
             m_timeDeviationTolerance = timeDeviationTolerance
             m_baseTime = BaselinedTimestamp(Date.UtcNow)
 
         End Sub
+
+        Public ReadOnly Property Interval() As Double
+            Get
+                Return m_interval
+            End Get
+        End Property
+
+        Public ReadOnly Property FramesPerInterval() As Integer
+            Get
+                Return m_framesPerInterval
+            End Get
+        End Property
 
         Public ReadOnly Property BaseTime() As Date
             Get
@@ -60,6 +80,12 @@ Namespace Measurements
             End Get
         End Property
 
+        Public Function DistanceFromBaseTime(ByVal timeStamp As Date) As Double
+
+            Return TicksToSeconds(timeStamp.Ticks - m_baseTime.Ticks)
+
+        End Function
+
         Public ReadOnly Property DiscardedPoints() As Long
             Get
                 Return m_discardedPoints
@@ -72,7 +98,7 @@ Namespace Measurements
             End Get
         End Property
 
-        ' Data comes in one-point at a time, so we use this function to place the point in its proper sample and row/cell position
+        ''' <summary>Data comes in one-point at a time, so we use this function to place the point in its proper sample and row/cell position</summary>
         Public Sub SortMeasurement(ByVal measurement As IMeasurement)
 
             With measurement
@@ -84,8 +110,8 @@ Namespace Measurements
                     m_discardedPoints += 1
                 Else
                     ' We've found the right sample for this data, so lets access the proper data cell by first calculating the
-                    ' proper sample index (i.e., the row) - we can then directly access the correct cell using the PMU index
-                    sample.Frames(System.Math.Floor((.Timestamp.Millisecond + 1@) / m_measurementRate)).Measurements(.Index).Value = .Value
+                    ' proper frame index (i.e., the row) - we can then directly access the correct measurement using the index
+                    sample.Frames(System.Math.Floor((.Ticks + 1@) / m_measurementRate)).Measurements(.Index).Value = .Value
                 End If
             End With
 
@@ -107,7 +133,7 @@ Namespace Measurements
 
             ' Baseline timestamp at bottom of the second
             Dim baseTime As Date = BaselinedTimestamp(timestamp)
-            Dim sample As MeasurementSample = Me(baseTime)
+            Dim sample As ISample = Item(baseTime)
 
             ' Wait until the sample exists or we can enter critical section to create it ourselves
             Do Until sample IsNot Nothing
@@ -124,10 +150,10 @@ Namespace Measurements
                             ' must assume that the clock from source device must be advanced and out-of-sync with
                             ' real-time - either way this data will be discarded.
                             Exit Do
-                        ElseIf difference > 1 Then
+                        ElseIf difference > m_interval Then
                             ' Add intermediate samples as needed...
-                            For x As Integer = 1 To System.Math.Floor(difference) - 1
-                                CreateDataSample(m_baseTime.AddSeconds(x))
+                            For x As Double = m_interval To System.Math.Floor(difference / m_interval) Step m_interval
+                                CreateDataSample(m_baseTime.AddSeconds(x * m_interval))
                             Next
                         End If
 
@@ -146,7 +172,7 @@ Namespace Measurements
                     Thread.Sleep(1)
                 End If
 
-                sample = Me(baseTime)
+                sample = Item(baseTime)
             Loop
 
             ' Return sample for this timestamp
@@ -159,12 +185,6 @@ Namespace Measurements
             If Not ContainsKey(baseTime.Ticks) Then Add(baseTime.Ticks, m_createNewSampleFunction(Me))
 
         End Sub
-
-        Public Function DistanceFromBaseTime(ByVal timeStamp As Date) As Double
-
-            Return (timeStamp.Ticks - m_baseTime.Ticks) / 10000000L
-
-        End Function
 
     End Class
 

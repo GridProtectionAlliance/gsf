@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  Tva.Measurements.IMeasurement.vb - Abstract measurement interface
+'  Tva.Measurements.IFrame.vb - Abstract frame interface
 '  Copyright © 2006 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005
@@ -8,7 +8,7 @@
 '       Phone: 423/751-2827
 '       Email: jrcarrol@tva.gov
 '
-'  This intercace represents a value measured at an exact time interval
+'  This class represents a keyed collection of measurements for a given timestamp
 '
 '  Code Modification History:
 '  -----------------------------------------------------------------------------------------------------
@@ -19,22 +19,21 @@
 
 Namespace Measurements
 
-    Public Interface IMeasurement
+    Public Interface IFrame
+
+        Inherits IComparable
 
         ''' <summary>Handy instance reference to self</summary>
-        ReadOnly Property This() As IMeasurement
+        ReadOnly Property This() As IFrame
 
-        ''' <summary>Index or ID of this measurement</summary>
-        Property Index() As Integer
+        ''' <summary>Keyed measurements in this frame</summary>
+        ReadOnly Property Measurements() As IDictionary(Of Integer, IMeasurement)
 
-        ''' <summary>Numeric value of this measurement</summary>
-        Property Value() As Double
-
-        ''' <summary>Exact timestamp of the data represented by this measurement</summary>
+        ''' <summary>Exact timestamp of the data represented in this frame</summary>
         ''' <remarks>The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001</remarks>
         Property Ticks() As Long
 
-        ''' <summary>Closest date representation of ticks of this measurement</summary>
+        ''' <summary>Closest date representation of ticks of this frame</summary>
         ReadOnly Property Timestamp() As Date
 
     End Interface

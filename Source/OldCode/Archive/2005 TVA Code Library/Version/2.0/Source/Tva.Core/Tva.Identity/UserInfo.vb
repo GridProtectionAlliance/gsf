@@ -43,7 +43,7 @@ Namespace Identity
         ''' </summary>
         Public Sub New(ByVal username As String, ByVal domain As String)
 
-            Me.New(domain & "\" & username)
+            MyClass.New(domain & "\" & username)
 
         End Sub
 

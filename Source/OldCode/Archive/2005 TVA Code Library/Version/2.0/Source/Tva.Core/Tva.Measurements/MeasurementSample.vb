@@ -15,67 +15,71 @@
 '
 '***********************************************************************
 
-Imports TVA.Shared.DateTime
+Imports Tva.DateTime.Common
 
-' This class represents a complete sample of data for a given second - a time indexed sub-second set of synchronized measurement rows.
-Public Class MeasurementSample
+Namespace Measurements
 
-    Implements IComparable
+    ' This class represents a complete sample of data for a given second - a time indexed sub-second set of synchronized measurement rows.
+    Public Class MeasurementSample
 
-    Private m_parent As MeasurementConcentrator
-    Private m_baseTime As Date
-    Private m_published As Boolean
+        Implements IComparable
 
-    Public Rows As MeasurementValues()
+        Private m_measurementsPerSecond As Integer
+        Private m_baseTime As Date
+        Private m_published As Boolean
 
-    Public Sub New(ByVal parent As MeasurementConcentrator, ByVal timestamp As Date)
+        Public Rows As MeasurementValues()
 
-        m_parent = parent
-        m_baseTime = BaselinedTimestamp(timestamp)
-        Rows = Array.CreateInstance(GetType(MeasurementValues), m_parent.SamplesPerSecond)
+        Public Sub New(ByVal measurementsPerSecond As Integer, ByVal timestamp As Date)
 
-        For x As Integer = 0 To Rows.Length - 1
-            Rows(x) = New MeasurementValues(m_parent, m_baseTime, x)
-        Next
+            m_measurementsPerSecond = measurementsPerSecond
+            m_baseTime = BaselinedTimestamp(timestamp)
+            Rows = Array.CreateInstance(GetType(MeasurementValues), m_measurementsPerSecond)
 
-    End Sub
+            For x As Integer = 0 To Rows.Length - 1
+                Rows(x) = New MeasurementValues(m_parent, m_baseTime, x)
+            Next
 
-    Public ReadOnly Property BaseTime() As Date
-        Get
-            Return m_baseTime
-        End Get
-    End Property
+        End Sub
 
-    Public ReadOnly Property Published() As Boolean
-        Get
-            If Not m_published Then
-                Dim allPublished As Boolean = True
+        Public ReadOnly Property BaseTime() As Date
+            Get
+                Return m_baseTime
+            End Get
+        End Property
 
-                ' The sample has been completely processed once all data packets have been published
-                For x As Integer = 0 To Rows.Length - 1
-                    If Not Rows(x).Published Then
-                        allPublished = False
-                        Exit For
-                    End If
-                Next
+        Public ReadOnly Property Published() As Boolean
+            Get
+                If Not m_published Then
+                    Dim allPublished As Boolean = True
 
-                If allPublished Then m_published = True
-                Return allPublished
+                    ' The sample has been completely processed once all data packets have been published
+                    For x As Integer = 0 To Rows.Length - 1
+                        If Not Rows(x).Published Then
+                            allPublished = False
+                            Exit For
+                        End If
+                    Next
+
+                    If allPublished Then m_published = True
+                    Return allPublished
+                Else
+                    Return True
+                End If
+            End Get
+        End Property
+
+        ' Data samples are sorted in timestamp order
+        Public Function CompareTo(ByVal obj As Object) As Integer Implements System.IComparable.CompareTo
+
+            If TypeOf obj Is MeasurementSample Then
+                Return m_baseTime.CompareTo(DirectCast(obj, MeasurementSample).BaseTime)
             Else
-                Return True
+                Throw New ArgumentException("MeasurementSample can only be compared with other SynchronizedMeasurementSamples...")
             End If
-        End Get
-    End Property
 
-    ' Data samples are sorted in timestamp order
-    Public Function CompareTo(ByVal obj As Object) As Integer Implements System.IComparable.CompareTo
+        End Function
 
-        If TypeOf obj Is MeasurementSample Then
-            Return m_baseTime.CompareTo(DirectCast(obj, MeasurementSample).BaseTime)
-        Else
-            Throw New ArgumentException("MeasurementSample can only be compared with other SynchronizedMeasurementSamples...")
-        End If
+    End Class
 
-    End Function
-
-End Class
+End Namespace

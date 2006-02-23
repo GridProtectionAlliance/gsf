@@ -614,7 +614,7 @@ Namespace DateTime
           ByVal standardAbbreviation As String _
         )
 
-            Me.New( _
+            MyClass.New( _
               standardOffset, _
               standardName, _
               standardAbbreviation _
@@ -638,7 +638,7 @@ Namespace DateTime
           ByVal daylightTimeChangeEnd As DaylightTimeChange _
         )
 
-            Me.New( _
+            MyClass.New( _
               standardOffset, _
               standardName, _
               standardAbbreviation, _

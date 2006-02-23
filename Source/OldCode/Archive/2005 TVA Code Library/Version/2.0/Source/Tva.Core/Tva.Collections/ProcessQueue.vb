@@ -456,7 +456,7 @@ Namespace Collections
         ''' </summary>
         Protected Sub New(ByVal processItemFunction As ProcessItemFunctionSignature, ByVal canProcessItemFunction As CanProcessItemFunctionSignature, ByVal processInterval As Double, ByVal maximumThreads As Integer, ByVal processTimeout As Integer, ByVal requeueOnTimeout As Boolean, ByVal requeueOnException As Boolean)
 
-            Me.New(processItemFunction, Nothing, canProcessItemFunction, New List(Of T), processInterval, maximumThreads, processTimeout, requeueOnTimeout, requeueOnException)
+            MyClass.New(processItemFunction, Nothing, canProcessItemFunction, New List(Of T), processInterval, maximumThreads, processTimeout, requeueOnTimeout, requeueOnException)
 
         End Sub
 
@@ -465,7 +465,7 @@ Namespace Collections
         ''' </summary>
         Protected Sub New(ByVal processItemsFunction As ProcessItemsFunctionSignature, ByVal canProcessItemFunction As CanProcessItemFunctionSignature, ByVal processInterval As Double, ByVal maximumThreads As Integer, ByVal processTimeout As Integer, ByVal requeueOnTimeout As Boolean, ByVal requeueOnException As Boolean)
 
-            Me.New(Nothing, processItemsFunction, canProcessItemFunction, New List(Of T), processInterval, maximumThreads, processTimeout, requeueOnTimeout, requeueOnException)
+            MyClass.New(Nothing, processItemsFunction, canProcessItemFunction, New List(Of T), processInterval, maximumThreads, processTimeout, requeueOnTimeout, requeueOnException)
 
         End Sub
 
