@@ -31,7 +31,7 @@ Imports Tva.DateTime.Common
 
 Namespace Measurements
 
-    Public Class MeasurementConcentrator
+    Public Class Concentrator
 
         Implements IDisposable
 
