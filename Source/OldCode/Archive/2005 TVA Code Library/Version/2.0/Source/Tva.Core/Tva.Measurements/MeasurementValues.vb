@@ -1,5 +1,5 @@
 '***********************************************************************
-'  MeasurementValues.vb - Time synchronized measurement values
+'  Frame.vb - Time synchronized measurement values
 '  Copyright © 2004 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2003
@@ -18,11 +18,11 @@
 Namespace Measurements
 
     ' This is essentially a collection of measurements at a given timestamp
-    Public Class MeasurementValues
+    Public Class Frame
 
         Implements IComparable
 
-        Private m_parent As MeasurementConcentrator
+        Private m_parent As Concentrator
         Private m_timestamp As Date
         Private m_index As Integer
         Private m_measurements As Hashtable
@@ -30,7 +30,7 @@ Namespace Measurements
         Private m_taggedTotalReporting As Hashtable
         Private m_published As Boolean
 
-        Public Sub New(ByVal parent As MeasurementConcentrator, ByVal baseTime As Date, ByVal index As Integer)
+        Public Sub New(ByVal parent As Concentrator, ByVal baseTime As Date, ByVal index As Integer)
 
             m_parent = parent
             m_index = index
@@ -41,7 +41,7 @@ Namespace Measurements
             m_timestamp = baseTime.AddMilliseconds((m_index + 0.5@) * m_parent.SampleRate)
 
             ' As new measurement values are created, we track absolute latest timestamp
-            m_parent.LatestMeasurements.CurrentTimeStamp = m_timestamp
+            m_parent.LatestMeasurements.Ticks = m_timestamp.Ticks
 
             For Each id As Integer In m_parent.LatestMeasurements.MeasurementIDs
                 m_measurements.Add(id, Double.NaN)
@@ -53,7 +53,7 @@ Namespace Measurements
 
         End Sub
 
-        Public ReadOnly Property This() As MeasurementValues
+        Public ReadOnly Property This() As Frame
             Get
                 Return Me
             End Get
@@ -281,16 +281,16 @@ Namespace Measurements
         ' We sort syncrhonized measurement packets by timetag and index
         Public Function CompareTo(ByVal obj As Object) As Integer Implements System.IComparable.CompareTo
 
-            If TypeOf obj Is MeasurementValues Then
-                Dim comparison As Integer = m_timestamp.CompareTo(DirectCast(obj, MeasurementValues).TimeStamp)
+            If TypeOf obj Is Frame Then
+                Dim comparison As Integer = m_timestamp.CompareTo(DirectCast(obj, Frame).TimeStamp)
 
                 If comparison = 0 Then
-                    Return m_index.CompareTo(DirectCast(obj, MeasurementValues).Index)
+                    Return m_index.CompareTo(DirectCast(obj, Frame).Index)
                 Else
                     Return comparison
                 End If
             Else
-                Throw New ArgumentException("MeasurementValues can only be compared with other MeasurementValues...")
+                Throw New ArgumentException("Frame can only be compared with other IFrames...")
             End If
 
         End Function
