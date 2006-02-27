@@ -125,11 +125,7 @@ Namespace DateTime
         Public Shared Function BaselinedTimestamp(ByVal timestamp As Date) As Date
 
             With timestamp
-                If .Millisecond = 0 Then
-                    Return timestamp
-                Else
-                    Return New Date(.Year, .Month, .Day, .Hour, .Minute, .Second, 0)
-                End If
+                Return New Date(.Year, .Month, .Day, .Hour, .Minute, .Second, 0)
             End With
 
         End Function

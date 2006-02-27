@@ -25,30 +25,23 @@ Namespace Measurements
         Private m_parent As Concentrator
         Private m_timestamp As Date
         Private m_index As Integer
-        Private m_measurements As Hashtable
-        Private m_totalReporting As Integer
-        Private m_taggedTotalReporting As Hashtable
+        Private m_measurements As Dictionary(Of Integer, Double)
         Private m_published As Boolean
 
         Public Sub New(ByVal parent As Concentrator, ByVal baseTime As Date, ByVal index As Integer)
 
             m_parent = parent
             m_index = index
-            m_measurements = New Hashtable
-            m_taggedTotalReporting = New Hashtable
+            m_measurements = New Dictionary(Of Integer, Double)
 
             ' We precalculate a regular .NET timestamp with milliseconds sitting in the middle of the sample index
-            m_timestamp = baseTime.AddMilliseconds((m_index + 0.5@) * m_parent.SampleRate)
+            m_timestamp = baseTime.AddMilliseconds((m_index + 0.5@) * m_parent.FrameRate)
 
             ' As new measurement values are created, we track absolute latest timestamp
             m_parent.LatestMeasurements.Ticks = m_timestamp.Ticks
 
             For Each id As Integer In m_parent.LatestMeasurements.MeasurementIDs
                 m_measurements.Add(id, Double.NaN)
-            Next
-
-            For Each tag As String In m_parent.LatestMeasurements.Tags
-                m_taggedTotalReporting.Add(tag, Double.NaN)
             Next
 
         End Sub
@@ -65,7 +58,7 @@ Namespace Measurements
             End Get
         End Property
 
-        Public ReadOnly Property TimeStamp() As Date
+        Public ReadOnly Property Timestamp() As Date
             Get
                 Return m_timestamp
             End Get
@@ -82,12 +75,12 @@ Namespace Measurements
 
         Default Public Property Value(ByVal measurementID As Integer) As Double
             Get
-                SyncLock m_measurements.SyncRoot
+                SyncLock m_measurements
                     Return m_measurements(measurementID)
                 End SyncLock
             End Get
             Set(ByVal value As Double)
-                SyncLock m_measurements.SyncRoot
+                SyncLock m_measurements
                     m_measurements(measurementID) = value
                 End SyncLock
 
@@ -120,8 +113,8 @@ Namespace Measurements
                 Dim total As Double
                 Dim count As Integer
 
-                SyncLock m_measurements.SyncRoot
-                    For Each entry As DictionaryEntry In m_measurements
+                SyncLock m_measurements
+                    For Each entry As KeyValuePair(Of Integer, Double) In m_measurements
                         measurement = Value(entry.Key)
                         If Not Double.IsNaN(measurement) Then
                             total += measurement
@@ -130,7 +123,7 @@ Namespace Measurements
                     Next
                 End SyncLock
 
-                m_totalReporting = count
+                'm_totalReporting = count
                 Return total / count
             End Get
         End Property
@@ -141,8 +134,8 @@ Namespace Measurements
                 Dim total As Double
                 Dim count As Integer
 
-                SyncLock m_measurements.SyncRoot
-                    For Each entry As DictionaryEntry In m_measurements
+                SyncLock m_measurements
+                    For Each entry As KeyValuePair(Of Integer, Double) In m_measurements
                         measurement = BestValue(entry.Key)
                         If Not Double.IsNaN(measurement) Then
                             total += measurement
@@ -151,7 +144,7 @@ Namespace Measurements
                     Next
                 End SyncLock
 
-                m_totalReporting = count
+                'm_totalReporting = count
                 Return total / count
             End Get
         End Property
@@ -161,8 +154,8 @@ Namespace Measurements
                 Dim minValue As Double = Double.MaxValue
                 Dim measurement As Double
 
-                SyncLock m_measurements.SyncRoot
-                    For Each entry As DictionaryEntry In m_measurements
+                SyncLock m_measurements
+                    For Each entry As KeyValuePair(Of Integer, Double) In m_measurements
                         measurement = Value(entry.Key)
                         If Not Double.IsNaN(measurement) Then
                             If measurement < minValue Then minValue = measurement
@@ -179,8 +172,8 @@ Namespace Measurements
                 Dim minValue As Double = Double.MaxValue
                 Dim measurement As Double
 
-                SyncLock m_measurements.SyncRoot
-                    For Each entry As DictionaryEntry In m_measurements
+                SyncLock m_measurements
+                    For Each entry As KeyValuePair(Of Integer, Double) In m_measurements
                         measurement = BestValue(entry.Key)
                         If Not Double.IsNaN(measurement) Then
                             If measurement < minValue Then minValue = measurement
@@ -197,8 +190,8 @@ Namespace Measurements
                 Dim maxValue As Double = Double.MinValue
                 Dim measurement As Double
 
-                SyncLock m_measurements.SyncRoot
-                    For Each entry As DictionaryEntry In m_measurements
+                SyncLock m_measurements
+                    For Each entry As KeyValuePair(Of Integer, Double) In m_measurements
                         measurement = Value(entry.Key)
                         If Not Double.IsNaN(measurement) Then
                             If measurement > maxValue Then maxValue = measurement
@@ -215,8 +208,8 @@ Namespace Measurements
                 Dim maxValue As Double = Double.MinValue
                 Dim measurement As Double
 
-                SyncLock m_measurements.SyncRoot
-                    For Each entry As DictionaryEntry In m_measurements
+                SyncLock m_measurements
+                    For Each entry As KeyValuePair(Of Integer, Double) In m_measurements
                         measurement = BestValue(entry.Key)
                         If Not Double.IsNaN(measurement) Then
                             If measurement > maxValue Then maxValue = measurement
@@ -242,7 +235,7 @@ Namespace Measurements
                     End If
                 Next
 
-                m_taggedTotalReporting(tag) = count
+                'm_taggedTotalReporting(tag) = count
                 Return total / count
             End Get
         End Property
@@ -261,20 +254,8 @@ Namespace Measurements
                     End If
                 Next
 
-                m_taggedTotalReporting(tag) = count
+                'm_taggedTotalReporting(tag) = count
                 Return total / count
-            End Get
-        End Property
-
-        Public ReadOnly Property TotalReporting() As Integer
-            Get
-                Return m_totalReporting
-            End Get
-        End Property
-
-        Public ReadOnly Property TotalTagReporting(ByVal tag As String) As Integer
-            Get
-                Return m_taggedTotalReporting(tag)
             End Get
         End Property
 

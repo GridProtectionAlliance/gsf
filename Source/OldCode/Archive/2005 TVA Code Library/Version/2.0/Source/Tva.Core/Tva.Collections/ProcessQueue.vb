@@ -178,7 +178,7 @@ Namespace Collections
         Private m_requeueOnException As Boolean
         Private m_processingIsRealTime As Boolean
         Private m_threadCount As Integer
-        Private m_processing As Boolean
+        Private m_enabled As Boolean
         Private m_itemsProcessed As Long
         Private m_startTime As Long
         Private m_stopTime As Long
@@ -707,7 +707,7 @@ Namespace Collections
         ''' </summary>
         Public Overridable Sub Start()
 
-            m_processing = True
+            m_enabled = True
             m_threadCount = 0
             m_itemsProcessed = 0
             m_stopTime = 0
@@ -721,6 +721,9 @@ Namespace Collections
                 m_realTimeProcessThread.Priority = ThreadPriority.Highest
                 m_realTimeProcessThread.Start()
                 IncrementThreadCount()
+            Else
+                ' Start intervaled processing, if there items in the queue
+                m_processTimer.Enabled = (Count > 0)
             End If
 
         End Sub
@@ -730,7 +733,7 @@ Namespace Collections
         ''' </summary>
         Public Overridable Sub [Stop]()
 
-            m_processing = False
+            m_enabled = False
 
             If m_processingIsRealTime Then
                 ' Stop real-time processing thread
@@ -750,15 +753,28 @@ Namespace Collections
         End Sub
 
         ''' <summary>
-        ''' Determines if the list is currently processing
+        ''' Determines if the list is currently enabled
         ''' </summary>
-        Public Overridable Property Processing() As Boolean
+        Public Overridable Property Enabled() As Boolean
             Get
-                Return m_processing
+                Return m_enabled
             End Get
             Protected Set(ByVal value As Boolean)
-                m_processing = value
+                m_enabled = value
             End Set
+        End Property
+
+        ''' <summary>
+        ''' Determines if the list is actively processing items
+        ''' </summary>
+        Public Overridable ReadOnly Property Processing() As Boolean
+            Get
+                If m_processingIsRealTime Then
+                    Return (m_realTimeProcessThread IsNot Nothing)
+                Else
+                    Return m_processTimer.Enabled
+                End If
+            End Get
         End Property
 
         ''' <summary>
@@ -822,8 +838,15 @@ Namespace Collections
         Public Overridable ReadOnly Property Status() As String
             Get
                 With New StringBuilder
+                    .Append("       Queue processing is: ")
+                    If m_enabled Then
+                        .Append("Enabled")
+                    Else
+                        .Append("Disabled")
+                    End If
+                    .Append(Environment.NewLine)
                     .Append("  Current processing state: ")
-                    If m_processing Then
+                    If Processing Then
                         .Append("Executing")
                     Else
                         .Append("Idle")
@@ -909,7 +932,7 @@ Namespace Collections
 
             ' For queues that are not processing in real-time, we start the intervaled process timer
             ' when data is added, if it's not running already
-            If Not m_processingIsRealTime AndAlso Not m_processTimer.Enabled Then m_processTimer.Enabled = m_processing
+            If Not m_processingIsRealTime AndAlso Not m_processTimer.Enabled Then m_processTimer.Enabled = m_enabled
 
         End Sub
 

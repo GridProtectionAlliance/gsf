@@ -8,7 +8,7 @@
 '       Phone: 423/751-2827
 '       Email: jrcarrol@tva.gov
 '
-'  This class represents a keyed collection of measurements for a given timestamp
+'  This interface represents a keyed collection of measurements for a given timestamp
 '
 '  Code Modification History:
 '  -----------------------------------------------------------------------------------------------------
@@ -28,6 +28,9 @@ Namespace Measurements
 
         ''' <summary>Keyed measurements in this frame</summary>
         ReadOnly Property Measurements() As IDictionary(Of Integer, IMeasurement)
+
+        ''' <summary>Gets or sets published state of this frame</summary>
+        Property Published() As Boolean
 
         ''' <summary>Exact timestamp of the data represented in this frame</summary>
         ''' <remarks>The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001</remarks>

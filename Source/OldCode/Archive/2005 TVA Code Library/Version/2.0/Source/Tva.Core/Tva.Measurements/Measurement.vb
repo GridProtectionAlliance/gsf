@@ -54,7 +54,7 @@ Namespace Measurements
             End Get
         End Property
 
-        ''' <summary>Index or ID of this measurement</summary>
+        ''' <summary>Gets or sets index or ID of this measurement</summary>
         Public Overridable Property Index() As Integer Implements IMeasurement.Index
             Get
                 Return m_index
@@ -64,7 +64,7 @@ Namespace Measurements
             End Set
         End Property
 
-        ''' <summary>Numeric value of this measurement</summary>
+        ''' <summary>Gets or sets numeric value of this measurement</summary>
         Public Overridable Property Value() As Double Implements IMeasurement.Value
             Get
                 Return m_value
@@ -74,7 +74,7 @@ Namespace Measurements
             End Set
         End Property
 
-        ''' <summary>Exact timestamp of the data represented by this measurement</summary>
+        ''' <summary>Gets or sets exact timestamp of the data represented by this measurement</summary>
         ''' <remarks>The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001</remarks>
         Public Overridable Property Ticks() As Long Implements IMeasurement.Ticks
             Get

@@ -8,7 +8,7 @@
 '       Phone: 423/751-2827
 '       Email: jrcarrol@tva.gov
 '
-'  This intercace represents a value measured at an exact time interval
+'  This interface represents a value measured at an exact time interval
 '
 '  Code Modification History:
 '  -----------------------------------------------------------------------------------------------------
@@ -24,13 +24,13 @@ Namespace Measurements
         ''' <summary>Handy instance reference to self</summary>
         ReadOnly Property This() As IMeasurement
 
-        ''' <summary>Index or ID of this measurement</summary>
+        ''' <summary>Gets or sets index or ID of this measurement</summary>
         Property Index() As Integer
 
-        ''' <summary>Numeric value of this measurement</summary>
+        ''' <summary>Gets or sets numeric value of this measurement</summary>
         Property Value() As Double
 
-        ''' <summary>Exact timestamp of the data represented by this measurement</summary>
+        ''' <summary>Gets or sets exact timestamp of the data represented by this measurement</summary>
         ''' <remarks>The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001</remarks>
         Property Ticks() As Long
 

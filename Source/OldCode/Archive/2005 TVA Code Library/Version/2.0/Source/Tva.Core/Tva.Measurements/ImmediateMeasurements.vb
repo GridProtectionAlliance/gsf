@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  Tva.Measurements.ImmediateMeasurements.vb - Represents the absolute latest received measurements
+'  Tva.Measurements.ImmediateMeasurements.vb - Collection of latest received measurements
 '  Copyright © 2006 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005
@@ -8,12 +8,12 @@
 '       Phone: 423/751-2827
 '       Email: jrcarrol@tva.gov
 '
+'  This class represents the absolute latest received measurements
+'
 '  Code Modification History:
 '  -----------------------------------------------------------------------------------------------------
 '  12/8/2005 - James R Carroll
-'       Initial version of source generated for Real-Time Frequency Monitor
-'  02/02/2006 - James R Carroll
-'       Integrated into code library
+'       Initial version of source generated
 '
 '*******************************************************************************************************
 
@@ -22,21 +22,22 @@ Namespace Measurements
     ' This is essentially a collection of measurements at a given timestamp
     Public Class ImmediateMeasurements
 
-        Private m_measurements As Hashtable
-        Private m_taggedMeasurements As Hashtable
-        Private m_totalReporting As Integer
-        Private m_taggedTotalReporting As Hashtable
-        Private m_currentTimestamp As Date
+        Private m_measurements As Dictionary(Of Integer, TemporalMeasurement)
+        Private m_taggedMeasurements As Dictionary(Of String, List(Of Integer))
+        Private m_timeDeviationTolerance As Double
+        Private m_ticks As Long
 
-        Public Sub New()
+        Public Sub New(ByVal timeDeviationTolerance As Double)
 
-            m_taggedMeasurements = New Hashtable
-            m_measurements = New Hashtable
-            m_taggedTotalReporting = New Hashtable
+            m_timeDeviationTolerance = timeDeviationTolerance
+            m_measurements = New Dictionary(Of Integer, TemporalMeasurement)
+            m_taggedMeasurements = New Dictionary(Of String, List(Of Integer))
 
         End Sub
 
-        Public Sub DefineMeasurements(ByVal measurements As DataTable, ByVal timeDeviationTolerance As Double)
+        ''' <summary>Defines tagged measurements from a data table</summary>
+        ''' <remarks>Expects tag to be aliased as "Tag" and measurement ID to be aliased as "ID"</remarks>
+        Public Sub DefineTaggedMeasurements(ByVal measurements As DataTable)
 
             Dim tag As String
             Dim id As Integer
@@ -48,15 +49,11 @@ Namespace Measurements
 
                 ' Check for new tag
                 If Not m_taggedMeasurements.ContainsKey(tag) Then
-                    m_taggedMeasurements.Add(tag, New ArrayList)
-                    m_taggedTotalReporting.Add(tag, Double.NaN)
+                    m_taggedMeasurements.Add(tag, New List(Of Integer))
                 End If
 
                 ' Add measurement to tag's measurement list
-                DirectCast(m_taggedMeasurements(tag), ArrayList).Add(id)
-
-                ' Add measurement to overall frequency measurement list
-                m_measurements.Add(id, New TemporalMeasurement(timeDeviationTolerance))
+                m_taggedMeasurements(tag).Add(id)
             Next
 
         End Sub
@@ -67,29 +64,47 @@ Namespace Measurements
             End Get
         End Property
 
-        Public Property CurrentTimeStamp() As Date
+        Public Sub AddTaggedMeasurement(ByVal tag As String, ByVal measurementID As Integer)
+
+            ' Check for new tag
+            If Not m_taggedMeasurements.ContainsKey(tag) Then
+                m_taggedMeasurements.Add(tag, New List(Of Integer))
+            End If
+
+            ' Add measurement to tag's measurement list
+            m_taggedMeasurements(tag).Add(measurementID)
+
+        End Sub
+
+        Public Property Ticks() As Long
             Get
-                Return m_currentTimestamp
+                Return m_ticks
             End Get
-            ' TODO: Make this Set property have friend access when migrating to 2.0 framework...
-            Set(ByVal value As Date)
-                If value.Ticks > m_currentTimestamp.Ticks Then m_currentTimestamp = value
+            Friend Set(ByVal value As Long)
+                ' TODO: this must be equalized with SampleQueue base time - better to just reference that instead.
+                m_ticks = value
             End Set
         End Property
 
-        Public ReadOnly Property MeasurementIDs() As ICollection
+        Public ReadOnly Property Timestamp() As Date
+            Get
+                Return New Date(m_ticks)
+            End Get
+        End Property
+
+        Public ReadOnly Property MeasurementIDs() As Dictionary(Of Integer, TemporalMeasurement).KeyCollection
             Get
                 Return m_measurements.Keys
             End Get
         End Property
 
-        Public ReadOnly Property Tags() As ICollection
+        Public ReadOnly Property Tags() As Dictionary(Of String, List(Of Integer)).KeyCollection
             Get
                 Return m_taggedMeasurements.Keys
             End Get
         End Property
 
-        Public ReadOnly Property TagMeasurementIDs(ByVal tag As String) As ICollection
+        Public ReadOnly Property TagMeasurementIDs(ByVal tag As String) As List(Of Integer)
             Get
                 Return m_taggedMeasurements(tag)
             End Get
@@ -97,58 +112,69 @@ Namespace Measurements
 
         Default Public ReadOnly Property Value(ByVal measurementID As Integer) As Double
             Get
-                Return Measurement(measurementID)(m_currentTimestamp)
+                Return Measurement(measurementID)(m_ticks)
             End Get
         End Property
 
         Public ReadOnly Property Measurement(ByVal measurementID As Integer) As TemporalMeasurement
             Get
-                SyncLock m_measurements.SyncRoot
-                    Return m_measurements(measurementID)
+                SyncLock m_measurements
+                    Dim value As TemporalMeasurement
+
+                    If Not m_measurements.TryGetValue(measurementID, value) Then
+                        ' Create new temporal measurement if it doesn't exist
+                        value = New TemporalMeasurement(measurementID, Double.NaN, m_ticks, m_timeDeviationTolerance)
+                        m_measurements.Add(measurementID, value)
+                    End If
+
+                    Return value
                 End SyncLock
             End Get
         End Property
 
-        Public ReadOnly Property TotalReporting() As Integer
-            Get
-                Return m_totalReporting
-            End Get
-        End Property
+        Public Function CalculateAverage(ByRef count As Integer) As Double
 
-        Public ReadOnly Property TotalTagReporting(ByVal tag As String) As Integer
-            Get
-                Return m_taggedTotalReporting(tag)
-            End Get
-        End Property
+            Dim measurement As Double
+            Dim total As Double
 
-        Public ReadOnly Property Average() As Double
-            Get
-                Dim measurement As Double
-                Dim total As Double
-                Dim count As Integer
+            SyncLock m_measurements
+                For Each entry As KeyValuePair(Of Integer, TemporalMeasurement) In m_measurements
+                    measurement = Value(entry.Key)
+                    If Not Double.IsNaN(measurement) Then
+                        total += measurement
+                        count += 1
+                    End If
+                Next
+            End SyncLock
 
-                SyncLock m_measurements.SyncRoot
-                    For Each entry As DictionaryEntry In m_measurements
-                        measurement = Value(entry.Key)
-                        If Not Double.IsNaN(measurement) Then
-                            total += measurement
-                            count += 1
-                        End If
-                    Next
-                End SyncLock
+            Return total / count
 
-                m_totalReporting = count
-                Return total / count
-            End Get
-        End Property
+        End Function
+
+        Public Function CalculateTagAverage(ByVal tag As String, ByRef count As Integer) As Double
+
+            Dim measurement As Double
+            Dim total As Double
+
+            For Each measurementID As Integer In m_taggedMeasurements(tag)
+                measurement = Value(measurementID)
+                If Not Double.IsNaN(measurement) Then
+                    total += measurement
+                    count += 1
+                End If
+            Next
+
+            Return total / count
+
+        End Function
 
         Public ReadOnly Property Minimum() As Double
             Get
                 Dim minValue As Double = Double.MaxValue
                 Dim measurement As Double
 
-                SyncLock m_measurements.SyncRoot
-                    For Each entry As DictionaryEntry In m_measurements
+                SyncLock m_measurements
+                    For Each entry As KeyValuePair(Of Integer, TemporalMeasurement) In m_measurements
                         measurement = Value(entry.Key)
                         If Not Double.IsNaN(measurement) Then
                             If measurement < minValue Then minValue = measurement
@@ -165,8 +191,8 @@ Namespace Measurements
                 Dim maxValue As Double = Double.MinValue
                 Dim measurement As Double
 
-                SyncLock m_measurements.SyncRoot
-                    For Each entry As DictionaryEntry In m_measurements
+                SyncLock m_measurements
+                    For Each entry As KeyValuePair(Of Integer, TemporalMeasurement) In m_measurements
                         measurement = Value(entry.Key)
                         If Not Double.IsNaN(measurement) Then
                             If measurement > maxValue Then maxValue = measurement
@@ -178,22 +204,35 @@ Namespace Measurements
             End Get
         End Property
 
-        Public ReadOnly Property TagAverage(ByVal tag As String) As Double
+        Public ReadOnly Property TagMinimum(ByVal tag As String) As Double
             Get
+                Dim minValue As Double = Double.MaxValue
                 Dim measurement As Double
-                Dim total As Double
-                Dim count As Integer
 
                 For Each measurementID As Integer In m_taggedMeasurements(tag)
                     measurement = Value(measurementID)
                     If Not Double.IsNaN(measurement) Then
-                        total += measurement
-                        count += 1
+                        If measurement < minValue Then minValue = measurement
                     End If
                 Next
 
-                m_taggedTotalReporting(tag) = count
-                Return total / count
+                Return minValue
+            End Get
+        End Property
+
+        Public ReadOnly Property TagMaximum(ByVal tag As String) As Double
+            Get
+                Dim maxValue As Double = Double.MinValue
+                Dim measurement As Double
+
+                For Each measurementID As Integer In m_taggedMeasurements(tag)
+                    measurement = Value(measurementID)
+                    If Not Double.IsNaN(measurement) Then
+                        If measurement > maxValue Then maxValue = measurement
+                    End If
+                Next
+
+                Return maxValue
             End Get
         End Property
 

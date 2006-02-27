@@ -74,12 +74,9 @@
     <Compile Include="Tva.Measurements\IFrame.vb" />
     <Compile Include="Tva.Measurements\IMeasurement.vb" />
     <Compile Include="Tva.Measurements\ImmediateMeasurements.vb" />
-    <Compile Include="Tva.Measurements\ISample.vb" />
     <Compile Include="Tva.Measurements\Measurement.vb" />
-    <Compile Include="Tva.Measurements\MeasurementConcentrator.vb" />
-    <Compile Include="Tva.Measurements\MeasurementSample.vb" />
-    <Compile Include="Tva.Measurements\SampleQueue.vb" />
-    <Compile Include="Tva.Measurements\MeasurementValues.vb" />
+    <Compile Include="Tva.Measurements\Concentrator.vb" />
+    <Compile Include="Tva.Measurements\Frame.vb" />
     <Compile Include="Tva.Measurements\TemporalMeasurement.vb" />
     <Compile Include="Tva.Net\Smtp\Common.vb" />
     <Compile Include="Tva.Net\Smtp\TraceListener.vb" />
