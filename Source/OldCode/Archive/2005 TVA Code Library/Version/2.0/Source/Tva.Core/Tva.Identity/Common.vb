@@ -43,9 +43,7 @@ Namespace Identity
 
         End Sub
 
-        ''' <summary>
-        ''' Gets the current user's information
-        ''' </summary>
+        ''' <summary>Gets the current user's information</summary>
         Public Shared ReadOnly Property CurrentUser() As UserInfo
             Get
                 If m_currentUserInfo Is Nothing Then m_currentUserInfo = New UserInfo(CurrentUserID)
@@ -53,18 +51,14 @@ Namespace Identity
             End Get
         End Property
 
-        ''' <summary>
-        ''' Gets the current user's NT ID
-        ''' </summary>
+        ''' <summary>Gets the current user's NT ID.</summary>
         Public Shared ReadOnly Property CurrentUserID() As String
             Get
                 Return WindowsIdentity.GetCurrent.Name
             End Get
         End Property
 
-        ''' <summary>
-        ''' Validates NT authentication given the specified credentials
-        ''' </summary>
+        ''' <summary>Validates NT authentication given the specified credentials</summary>
         Public Shared Function AuthenticateUser(ByVal username As String, ByVal password As String, ByVal domain As String) As Boolean
 
             Dim tokenHandle As IntPtr = IntPtr.Zero
@@ -85,9 +79,7 @@ Namespace Identity
 
         End Function
 
-        ''' <summary>
-        ''' Impersonates the specified user
-        ''' </summary>
+        ''' <summary>Impersonates the specified user</summary>
         ''' <param name="username">To be provided.</param>
         Public Shared Function ImpersonateUser(ByVal username As String, ByVal password As String, ByVal domain As String) As WindowsImpersonationContext
 
@@ -121,9 +113,7 @@ Namespace Identity
 
         End Function
 
-        ''' <summary>
-        ''' Ends impersonation of the specified user
-        ''' </summary>
+        ''' <summary>Ends impersonation of the specified user</summary>
         Public Shared Sub EndImpersonation(ByVal impersonatedUser As WindowsImpersonationContext)
 
             If Not impersonatedUser Is Nothing Then impersonatedUser.Undo()

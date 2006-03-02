@@ -140,11 +140,9 @@ Namespace Interop
         Public Const Bit31 As Int32 = -2147483648   ' &H80000000
 
         ''' <summary>
-        ''' <para>
         ''' Returns the high byte (Int8) from a word (Int16).  On Intel platforms this should return the high-order byte 
         ''' of a 16-bit integer value, i.e., the byte value whose in-memory representation is the same as the left-most, 
         ''' most-significant-byte of the integer value.
-        ''' </para>
         ''' </summary>
         Public Shared Function HiByte(ByVal word As Int16) As Byte
 
@@ -153,11 +151,9 @@ Namespace Interop
         End Function
 
         ''' <summary>
-        ''' <para>
         ''' Returns the high word (Int16) from a double word (Int32).  On Intel platforms this should return the high-order word
         ''' of a 32-bit integer value, i.e., the word value whose in-memory representation is the same as the left-most,
         ''' most-significant-word of the integer value.
-        ''' </para>
         ''' </summary>
         Public Shared Function HiWord(ByVal doubleWord As Int32) As Int16
 
@@ -166,11 +162,9 @@ Namespace Interop
         End Function
 
         ''' <summary>
-        ''' <para>
         ''' Returns the low byte (Int8) from a word (Int16).  On Intel platforms this should return the low-order byte
         ''' of a 16-bit integer value, i.e., the byte value whose in-memory representation is the same as the right-most,
         ''' least-significant-byte of the integer value.
-        ''' </para>
         ''' </summary>
         Public Shared Function LoByte(ByVal word As Int16) As Byte
 
@@ -179,11 +173,9 @@ Namespace Interop
         End Function
 
         ''' <summary>
-        ''' <para>
         ''' Returns the low word (Int16) from a double word (Int32).  On Intel platforms this should return the low-order word
         ''' of a 32-bit integer value, i.e., the word value whose in-memory representation is the same as the right-most,
         ''' least-significant-word of the integer value.
-        ''' </para>
         ''' </summary>
         Public Shared Function LoWord(ByVal doubleWord As Int32) As Int16
 
@@ -191,9 +183,7 @@ Namespace Interop
 
         End Function
 
-        ''' <summary>
-        ''' <para>Bits shifts word (Int16) value to the left "n" times</para>
-        ''' </summary>
+        ''' <summary>Bits shifts word (Int16) value to the left "n" times</summary>
         <Obsolete("This function has been deprecated, just use new << operator.  Note that this function may be removed from future versions.")> _
         Public Shared Function LShiftWord(ByVal word As Int16, ByVal shiftCount As Int16) As Int16
 
@@ -201,9 +191,7 @@ Namespace Interop
 
         End Function
 
-        ''' <summary>
-        ''' <para>Bits shifts word (Int16) value to the right "n" times</para>
-        ''' </summary>
+        ''' <summary>Bits shifts word (Int16) value to the right "n" times</summary>
         <Obsolete("This function has been deprecated, just use new >> operator.  Note that this function may be removed from future versions.")> _
         Public Shared Function RShiftWord(ByVal word As Int16, ByVal shiftCount As Int16) As Int16
 
@@ -211,18 +199,14 @@ Namespace Interop
 
         End Function
 
-        ''' <summary>
-        ''' <para>Makes a word (Int16) from two bytes (Int8)</para>
-        ''' </summary>
+        ''' <summary>Makes a word (Int16) from two bytes (Int8).</summary>
         Public Shared Function MakeWord(ByVal high As Byte, ByVal low As Byte) As Int16
 
             Return BitConverter.ToInt16(New Byte() {high, low}, 0)
 
         End Function
 
-        ''' <summary>
-        ''' <para>Makes a double word (Int32) from two words (Int16)</para>
-        ''' </summary>
+        ''' <summary>Makes a double word (Int32) from two words (Int16).</summary>
         Public Shared Function MakeDWord(ByVal high As Int16, ByVal low As Int16) As Int32
 
             Dim bytes As Byte() = Array.CreateInstance(GetType(Byte), 4)

@@ -579,9 +579,7 @@ Namespace DateTime
     ' being consumed by code library.  This was done for
     ' simplification and to make FxCop happier.
 
-    ''' <summary>
-    ''' <para>Win32 time zone class</para>
-    ''' </summary>
+    ''' <summary>Win32 time zone class</summary>
     <Serializable()> _
     Public Class Win32TimeZone
 

@@ -24,6 +24,8 @@ Imports Tva.Math.Common
 Imports Tva.IO.Common
 Imports Tva.Interop.Bit
 
+' TODO: Rename class to "Common" and move class into Cryptography namespace (and move file in Cryptography folder)
+
 ''' <summary>
 ''' <para>Common Cryptographic Functions</para>
 ''' </summary>

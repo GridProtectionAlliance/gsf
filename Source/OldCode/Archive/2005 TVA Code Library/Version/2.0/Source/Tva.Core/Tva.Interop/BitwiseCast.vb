@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  Tva.Interop.BitwiseCast.vb - Bitwise Data Type Conversion Functions
+'  Tva.Interop.BitwiseCast.vb - Bitwise Integer Data Type Conversion Functions
 '  Copyright © 2006 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005
@@ -17,9 +17,7 @@
 
 Namespace Interop
 
-    ''' <summary>
-    ''' <para>Defines specialized bitwise data type conversion functions</para>
-    ''' </summary>
+    ''' <summary>Defines specialized bitwise integer data type conversion functions</summary>
     Public NotInheritable Class BitwiseCast
 
         Private Sub New()
@@ -28,9 +26,7 @@ Namespace Interop
 
         End Sub
 
-        ''' <summary>
-        ''' <para>Performs proper bitwise conversion between unsigned and signed value</para>
-        ''' </summary>
+        ''' <summary>Performs proper bitwise conversion between unsigned and signed value</summary>
         ''' <remarks>
         ''' <para>This function is useful because Convert.ToInt16 will throw an OverflowException for values greater than Int16.MaxValue.</para>
         ''' <para>For example, this function correctly converts unsigned 16-bit integer 65535 (i.e., UInt16.MaxValue) to signed 16-bit integer 32767 (i.e., Int16.MaxValue).</para>
@@ -42,9 +38,7 @@ Namespace Interop
             End Get
         End Property
 
-        ''' <summary>
-        ''' <para>Performs proper bitwise conversion between unsigned and signed value</para>
-        ''' </summary>
+        ''' <summary>Performs proper bitwise conversion between unsigned and signed value</summary>
         ''' <remarks>
         ''' <para>This function is useful because Convert.ToInt32 will throw an OverflowException for values greater than Int32.MaxValue.</para>
         ''' <para>For example, this function correctly converts unsigned 32-bit integer 4294967295 (i.e., UInt16.MaxValue) to signed 32-bit integer 2147483647 (i.e., Int32.MaxValue).</para>
@@ -56,9 +50,7 @@ Namespace Interop
             End Get
         End Property
 
-        ''' <summary>
-        ''' <para>Performs proper bitwise conversion between unsigned and signed value</para>
-        ''' </summary>
+        ''' <summary>Performs proper bitwise conversion between unsigned and signed value</summary>
         ''' <remarks>
         ''' <para>This function is useful because Convert.ToInt64 will throw an OverflowException for values greater than Int64.MaxValue.</para>
         ''' <para>For example, this function correctly converts unsigned 64-bit integer 18446744073709551615 (i.e., UInt64.MaxValue) to signed 64-bit integer 9223372036854775807 (i.e., Int64.MaxValue).</para>
@@ -70,9 +62,7 @@ Namespace Interop
             End Get
         End Property
 
-        ''' <summary>
-        ''' <para>Performs proper bitwise conversion between signed and unsigned value</para>
-        ''' </summary>
+        ''' <summary>Performs proper bitwise conversion between signed and unsigned value</summary>
         ''' <remarks>
         ''' <para>This function is useful because Convert.ToUInt16 will throw an OverflowException for values less than zero.</para>
         ''' <para>For example, this function correctly converts signed 16-bit integer -32768 (i.e., Int16.MinValue) to unsigned 16-bit integer 0 (i.e., UInt16.MinValue).</para>
@@ -84,9 +74,7 @@ Namespace Interop
             End Get
         End Property
 
-        ''' <summary>
-        ''' <para>Performs proper bitwise conversion between signed and unsigned value</para>
-        ''' </summary>
+        ''' <summary>Performs proper bitwise conversion between signed and unsigned value</summary>
         ''' <remarks>
         ''' <para>This function is useful because Convert.ToUInt32 will throw an OverflowException for values less than zero.</para>
         ''' <para>For example, this function correctly converts signed 32-bit integer -2147483648 (i.e., Int32.MinValue) to unsigned 32-bit integer 0 (i.e., UInt32.MinValue).</para>
@@ -98,9 +86,7 @@ Namespace Interop
             End Get
         End Property
 
-        ''' <summary>
-        ''' <para>Performs proper bitwise conversion between signed and unsigned value</para>
-        ''' </summary>
+        ''' <summary>Performs proper bitwise conversion between signed and unsigned value</summary>
         ''' <remarks>
         ''' <para>This function is useful because Convert.ToUInt64 will throw an OverflowException for values less than zero.</para>
         ''' <para>For example, this function correctly converts signed 64-bit integer -9223372036854775808 (i.e., Int64.MinValue) to unsigned 64-bit integer 0 (i.e., UInt64.MinValue).</para>

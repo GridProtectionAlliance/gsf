@@ -21,9 +21,7 @@ Imports Tva.DateTime.Common
 
 Namespace DateTime
 
-    ''' <summary>
-    ''' <para>Standard Network Time Protocol Timetag</para>
-    ''' </summary>
+    ''' <summary>Standard Network Time Protocol Timetag</summary>
     Public Class NtpTimeTag
 
         Implements IComparable
@@ -34,9 +32,7 @@ Namespace DateTime
 
         Private m_seconds As Double
 
-        ''' <summary>
-        ''' <para>Creates new NTP timetag given number of seconds since 1/1/1900</para>
-        ''' </summary>
+        ''' <summary>Creates new NTP timetag given number of seconds since 1/1/1900</summary>
         ''' <param name="seconds">Number of seconds since 1/1/1900</param>
         Public Sub New(ByVal seconds As Double)
 
@@ -44,9 +40,7 @@ Namespace DateTime
 
         End Sub
 
-        ''' <summary>
-        ''' <para>Creates new NTP timetag given standard .NET DateTime</para>
-        ''' </summary>
+        ''' <summary>Creates new NTP timetag given standard .NET DateTime</summary>
         ''' <param name="timestamp">.NET timestamp to create NTP timetag from (minimum valid date is 1/1/1900)</param>
         Public Sub New(ByVal timestamp As Date)
 
@@ -55,9 +49,7 @@ Namespace DateTime
 
         End Sub
 
-        ''' <summary>
-        ''' <para>Value represents number of seconds since 1/1/1900</para>
-        ''' </summary>
+        ''' <summary>Value represents number of seconds since 1/1/1900</summary>
         Public Property Value() As Double
             Get
                 Return m_seconds
@@ -68,9 +60,7 @@ Namespace DateTime
             End Set
         End Property
 
-        ''' <summary>
-        ''' <para>Returns standard .NET DateTime representation for timetag</para>
-        ''' </summary>
+        ''' <summary>Returns standard .NET DateTime representation for timetag</summary>
         Public Function ToDateTime() As Date
 
             '  Convert m_seconds to 100-nanosecond ticks and add the 1/1/1900 offset
@@ -78,18 +68,14 @@ Namespace DateTime
 
         End Function
 
-        ''' <summary>
-        ''' <para>Returns basic textual representation for timetag</para>
-        ''' </summary>
+        ''' <summary>Returns basic textual representation for timetag</summary>
         Public Overrides Function ToString() As String
 
             Return ToDateTime.ToString("dd-MMM-yyyy HH:mm:ss.fff")
 
         End Function
 
-        ''' <summary>
-        ''' <para>Compares this NTP timetag to another one</para>
-        ''' </summary>
+        ''' <summary>Compares this NTP timetag to another one</summary>
         Public Function CompareTo(ByVal obj As Object) As Integer Implements System.IComparable.CompareTo
 
             If TypeOf obj Is NtpTimeTag Then

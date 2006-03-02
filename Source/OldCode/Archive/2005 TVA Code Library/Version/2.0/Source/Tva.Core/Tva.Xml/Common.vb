@@ -21,9 +21,7 @@ Imports System.Xml
 
 Namespace Xml
 
-    ''' <summary>
-    ''' Defines common global functions related to XML data
-    ''' </summary>
+    ''' <summary>Defines common global functions related to XML data.</summary>
     Public NotInheritable Class Common
 
         Private Sub New()
@@ -32,21 +30,15 @@ Namespace Xml
 
         End Sub
 
-        ''' <summary>
-        ''' <para>Gets an Xml node from given path, creating the entire path it if it doesn't exist.</para>
-        ''' </summary>
-        ''' <remarks>
-        ''' <para>This overload just allows start given xml document by using its root element.</para>
-        ''' </remarks>
+        ''' <summary>Gets an Xml node from given path, creating the entire path it if it doesn't exist.</summary>
+        ''' <remarks>This overload just allows start given xml document by using its root element.</remarks>
         Public Shared Function GetXmlNode(ByVal xmlDoc As XmlDocument, ByVal xpath As String) As XmlNode
 
             Return GetXmlNode(xmlDoc.DocumentElement, xpath, False)
 
         End Function
 
-        ''' <summary>
-        ''' <para>Gets an Xml node from given path, creating the entire path it if it doesn't exist.</para>
-        ''' </summary>
+        ''' <summary>Gets an Xml node from given path, creating the entire path it if it doesn't exist.</summary>
         ''' <remarks>
         ''' <para>This overload just allows start given xml document by using its root element.</para>
         ''' <para>Note that the <paramref name="isDirty" /> parameter will be set to True is any items were added to the tree</para>
@@ -57,21 +49,15 @@ Namespace Xml
 
         End Function
 
-        ''' <summary>
-        ''' <para>Gets an Xml node from given path, creating the entire path it if it doesn't exist.</para>
-        ''' </summary>
+        ''' <summary>Gets an Xml node from given path, creating the entire path it if it doesn't exist.</summary>
         Public Shared Function GetXmlNode(ByVal parentNode As XmlNode, ByVal xpath As String) As XmlNode
 
             Return GetXmlNode(parentNode, xpath, False)
 
         End Function
 
-        ''' <summary>
-        ''' <para>Gets an Xml node from given path, creating the entire path it if it doesn't exist.</para>
-        ''' </summary>
-        ''' <remarks>
-        ''' <para>Note that the <paramref name="isDirty" /> parameter will be set to True is any items were added to the tree</para>
-        ''' </remarks>
+        ''' <summary>Gets an Xml node from given path, creating the entire path it if it doesn't exist.</summary>
+        ''' <remarks>Note that the <paramref name="isDirty" /> parameter will be set to True is any items were added to the tree</remarks>
         Public Shared Function GetXmlNode(ByVal parentNode As XmlNode, ByVal xpath As String, ByRef isDirty As Boolean) As XmlNode
 
             Dim node As XmlNode = Nothing
@@ -106,12 +92,8 @@ Namespace Xml
 
         End Function
 
-        ''' <summary>
-        ''' <para>Safely gets or sets an XML node's attribute.</para>
-        ''' </summary>
-        ''' <remarks>
-        ''' <para>If you assign a value to an attribute that doesn't exist, it will be created</para>
-        ''' </remarks>
+        ''' <summary>Safely gets or sets an XML node's attribute.</summary>
+        ''' <remarks>If you assign a value to an attribute that doesn't exist, it will be created</remarks>
         Public Shared Property Attribute(ByVal node As XmlNode, ByVal name As String) As String
             Get
                 Dim attr As XmlAttribute = node.Attributes(name)

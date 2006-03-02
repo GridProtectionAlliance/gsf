@@ -36,7 +36,7 @@ Namespace Measurements
         ''' <remarks>The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001</remarks>
         Property Ticks() As Long
 
-        ''' <summary>Closest date representation of ticks of this frame</summary>
+        ''' <summary>Date representation of ticks of this frame</summary>
         ReadOnly Property Timestamp() As Date
 
     End Interface

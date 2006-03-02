@@ -57,14 +57,11 @@ Namespace IO
 
         End Sub
 
-        ''' <summary>
-        ''' Connects to a network share with the specified user's credentials.
-        ''' </summary>
+        ''' <summary>Connects to a network share with the specified user's credentials.</summary>
         ''' <param name="sharename">UNC share name to connect to</param>
         ''' <param name="username">Username to use for connection</param>
         ''' <param name="password">Password to use for connection</param>
         ''' <param name="domain">Domain name to use for connetion - specify computer name for local system accounts</param>
-        ''' <remarks></remarks>
         Public Shared Sub ConnectToNetworkShare(ByVal sharename As String, ByVal username As String, ByVal password As String, ByVal domain As String)
 
             Dim resource As NETRESOURCE = Nothing
@@ -82,9 +79,7 @@ Namespace IO
 
         End Sub
 
-        ''' <summary>
-        ''' Disconnects the specified network share.
-        ''' </summary>
+        ''' <summary>Disconnects the specified network share.</summary>
         ''' <param name="sharename">UNC share name to disconnect from</param>
         Public Shared Sub DisconnectFromNetworkShare(ByVal sharename As String)
 
@@ -92,9 +87,7 @@ Namespace IO
 
         End Sub
 
-        ''' <summary>
-        ''' Disconnects the specified network share.
-        ''' </summary>
+        ''' <summary>Disconnects the specified network share.</summary>
         ''' <param name="sharename">UNC share name to disconnect from</param>
         ''' <param name="force">Set to True force disconnect</param>
         Public Shared Sub DisconnectFromNetworkShare(ByVal sharename As String, ByVal force As Boolean)
@@ -104,9 +97,7 @@ Namespace IO
 
         End Sub
 
-        ''' <summary>
-        ''' Returns True if specified file name matches any of the given file specs (wildcards are defined as '*' or '?' characters).
-        ''' </summary>
+        ''' <summary>Returns True if specified file name matches any of the given file specs (wildcards are defined as '*' or '?' characters).</summary>
         Public Shared Function IsFilePatternMatch(ByVal fileSpecs As String(), ByVal fileName As String, ByVal ignoreCase As Boolean) As Boolean
 
             Dim found As Boolean
@@ -122,18 +113,14 @@ Namespace IO
 
         End Function
 
-        ''' <summary>
-        ''' Returns True if specified file name matches given file spec (wildcards are defined as '*' or '?' characters).
-        ''' </summary>
+        ''' <summary>Returns True if specified file name matches given file spec (wildcards are defined as '*' or '?' characters).</summary>
         Public Shared Function IsFilePatternMatch(ByVal fileSpec As String, ByVal fileName As String, ByVal ignoreCase As Boolean) As Boolean
 
             Return (New Regex(GetFilePatternRegularExpression(fileSpec), IIf(ignoreCase, RegexOptions.IgnoreCase, RegexOptions.None))).IsMatch(fileName)
 
         End Function
 
-        ''' <summary>
-        ''' <para>Returns a regular expression that simulates wildcard matching for filenames (wildcards are defined as '*' or '?' characters)</para>
-        ''' </summary>
+        ''' <summary>Returns a regular expression that simulates wildcard matching for filenames (wildcards are defined as '*' or '?' characters)</summary>
         Public Shared Function GetFilePatternRegularExpression(ByVal fileSpec As String) As String
 
             If m_fileNameCharPattern Is Nothing Then
@@ -166,9 +153,7 @@ Namespace IO
 
         End Function
 
-        ''' <summary>
-        ''' Get the size of the specified file.
-        ''' </summary>
+        ''' <summary>Get the size of the specified file.</summary>
         ''' <param name="fileName">Name of file whose size is to be returned.</param>
         ''' <returns>The size of the specified file.</returns>
         Public Shared Function GetFileLength(ByVal fileName As String) As Long
@@ -183,18 +168,14 @@ Namespace IO
 
         End Function
 
-        ''' <summary>
-        ''' Gets a unique temporary file name with path.
-        ''' </summary>
+        ''' <summary>Gets a unique temporary file name with path.</summary>
         Public Shared Function GetTempFile() As String
 
             Return GetTempFile(True, True, "tmp")
 
         End Function
 
-        ''' <summary>
-        ''' Gets a unique temporary file name with path - if UseTempPath is False, application path is used for temp file.
-        ''' </summary>
+        ''' <summary>Gets a unique temporary file name with path - if UseTempPath is False, application path is used for temp file.</summary>
         Public Shared Function GetTempFile(ByVal useTempPath As Boolean, ByVal createZeroLengthFile As Boolean, ByVal fileExtension As String) As String
 
             If useTempPath AndAlso createZeroLengthFile Then
@@ -221,18 +202,14 @@ Namespace IO
 
         End Function
 
-        ''' <summary>
-        ''' Gets a file name (with .tmp extension) guaranteed to be unique with no path.
-        ''' </summary>
+        ''' <summary>Gets a file name (with .tmp extension) guaranteed to be unique with no path.</summary>
         Public Shared Function GetTempFileName() As String
 
             Return GetTempFileName("tmp")
 
         End Function
 
-        ''' <summary>
-        ''' Gets a file name guaranteed to be unique with no path.
-        ''' </summary>
+        ''' <summary>Gets a file name guaranteed to be unique with no path.</summary>
         ''' <param name="fileExtension">The extension of the temporary file.</param>
         ''' <returns>The file name guaranteed to be unique with no path.</returns>
         ''' <remarks>Use GetTempFile to return unique file name with path.</remarks>
@@ -243,9 +220,7 @@ Namespace IO
 
         End Function
 
-        ''' <summary>
-        ''' Gets the temporary file path - path will be suffixed with standard directory separator.
-        ''' </summary>
+        ''' <summary>Gets the temporary file path - path will be suffixed with standard directory separator.</summary>
         ''' <returns>The temporary file path.</returns>
         Public Shared Function GetTempFilePath() As String
 
@@ -253,9 +228,7 @@ Namespace IO
 
         End Function
 
-        ''' <summary>
-        ''' Gets the path of the executing assembly - path will be suffixed with standard directory separator.
-        ''' </summary>
+        ''' <summary>Gets the path of the executing assembly - path will be suffixed with standard directory separator.</summary>
         ''' <returns>The path of the executing assembly.</returns>
         Public Shared Function GetApplicationPath() As String
 
@@ -263,9 +236,7 @@ Namespace IO
 
         End Function
 
-        ''' <summary>
-        ''' Returns just the drive letter (or UNC \\server\share\) from a path") - path will be suffixed with standard directory separator.
-        ''' </summary>
+        ''' <summary>Returns just the drive letter (or UNC \\server\share\) from a path") - path will be suffixed with standard directory separator.</summary>
         Public Shared Function JustDrive(ByVal filePath As String) As String
 
             If String.IsNullOrEmpty(filePath) Then
@@ -276,9 +247,7 @@ Namespace IO
 
         End Function
 
-        ''' <summary>
-        ''' Returns just the file name from a path.
-        ''' </summary>
+        ''' <summary>Returns just the file name from a path.</summary>
         Public Shared Function JustFileName(ByVal filePath As String) As String
 
             If String.IsNullOrEmpty(filePath) Then
@@ -289,9 +258,7 @@ Namespace IO
 
         End Function
 
-        ''' <summary>
-        ''' Returns last directory name from a path (e.g., would return sub2 from c:\windows\sub2\filename.ext).
-        ''' </summary>
+        ''' <summary>Returns last directory name from a path (e.g., would return sub2 from c:\windows\sub2\filename.ext).</summary>
         Public Shared Function LastDirectoryName(ByVal filePath As String) As String
 
             Dim dirChars As Char() = {Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar}
@@ -311,9 +278,7 @@ Namespace IO
 
         End Function
 
-        ''' <summary>
-        ''' Returns just the path without a filename from a path - path will be suffixed with standard directory separator.
-        ''' </summary>
+        ''' <summary>Returns just the path without a filename from a path - path will be suffixed with standard directory separator.</summary>
         Public Shared Function JustPath(ByVal filePath As String) As String
 
             If String.IsNullOrEmpty(filePath) Then
@@ -324,9 +289,7 @@ Namespace IO
 
         End Function
 
-        ''' <summary>
-        ''' Returns just the file extension from a path - keeps extension "dot".
-        ''' </summary>
+        ''' <summary>Returns just the file extension from a path - keeps extension "dot".</summary>
         Public Shared Function JustFileExtension(ByVal filePath As String) As String
 
             If String.IsNullOrEmpty(filePath) Then
@@ -337,9 +300,7 @@ Namespace IO
 
         End Function
 
-        ''' <summary>
-        ''' Returns just the file name with no extension from a path.
-        ''' </summary>
+        ''' <summary>Returns just the file name with no extension from a path.</summary>
         Public Shared Function NoFileExtension(ByVal filePath As String) As String
 
             If String.IsNullOrEmpty(filePath) Then
@@ -350,9 +311,7 @@ Namespace IO
 
         End Function
 
-        ''' <summary>
-        ''' Makes sure path is suffixed with standard directory separator.
-        ''' </summary>
+        ''' <summary>Makes sure path is suffixed with standard directory separator.</summary>
         Public Shared Function AddPathSuffix(ByVal filePath As String) As String
 
             If String.IsNullOrEmpty(filePath) Then
@@ -368,9 +327,7 @@ Namespace IO
 
         End Function
 
-        ''' <summary>
-        ''' Makes sure path is not suffixed with any directory separator.
-        ''' </summary>
+        ''' <summary>Makes sure path is not suffixed with any directory separator.</summary>
         Public Shared Function RemovePathSuffix(ByVal filePath As String) As String
 
             If String.IsNullOrEmpty(filePath) Then
@@ -387,9 +344,7 @@ Namespace IO
 
         End Function
 
-        ''' <summary>
-        ''' Returns a file name for display purposes of the specified length using "..." to indicate a longer name
-        ''' </summary>
+        ''' <summary>Returns a file name for display purposes of the specified length using "..." to indicate a longer name</summary>
         ''' <remarks>
         ''' <para>Minimum value for the <paramref name="length" /> parameter is 12.</para>
         ''' <para>12 will be used for any value specified less than 12.</para>
@@ -442,9 +397,7 @@ Namespace IO
 
         End Function
 
-        ''' <summary>
-        ''' Gets a list of files for the given path and wildcard pattern (e.g., "c:\*.*").
-        ''' </summary>
+        ''' <summary>Gets a list of files for the given path and wildcard pattern (e.g., "c:\*.*").</summary>
         ''' <param name="path">The path for which a list of files is to be returned.</param>
         ''' <returns>A list of files for the given path.</returns>
         Public Shared Function GetFileList(ByVal path As String) As String()
@@ -453,9 +406,7 @@ Namespace IO
 
         End Function
 
-        ''' <summary>
-        ''' Waits for the default duration (5 seconds) for read access on a file.
-        ''' </summary>
+        ''' <summary>Waits for the default duration (5 seconds) for read access on a file.</summary>
         ''' <param name="fileName">The name of the file to wait for to obtain read access.</param>
         Public Shared Sub WaitForReadLock(ByVal fileName As String)
 
@@ -463,9 +414,7 @@ Namespace IO
 
         End Sub
 
-        ''' <summary>
-        ''' Waits for read access on a file for the specified number of seconds.
-        ''' </summary>
+        ''' <summary>Waits for read access on a file for the specified number of seconds.</summary>
         ''' <param name="fileName">The name of the file to wait for to obtain read access.</param>
         ''' <param name="secondsToWait">The time to wait for in seconds to obtain read access on a file.</param>
         ''' <remarks>Set secondsToWait to zero to wait infinitely.</remarks>
@@ -510,20 +459,15 @@ Namespace IO
 
         End Sub
 
-        ''' <summary>
-        ''' Waits for the default duration (5 seconds) for write access on a file.
-        ''' </summary>
+        ''' <summary>Waits for the default duration (5 seconds) for write access on a file.</summary>
         ''' <param name="fileName">The name of the file to wait for to obtain write access.</param>
-        ''' <remarks></remarks>
         Public Shared Sub WaitForWriteLock(ByVal fileName As String)
 
             WaitForWriteLock(fileName, 5)
 
         End Sub
 
-        ''' <summary>
-        ''' Waits for write access on a file for the specified number of seconds.
-        ''' </summary>
+        ''' <summary>Waits for write access on a file for the specified number of seconds.</summary>
         ''' <param name="fileName">The name of the file to wait for to obtain write access.</param>
         ''' <param name="secondsToWait">The time to wait for in seconds to obtain write access on a file.</param>
         ''' <remarks>Set secondsToWait to zero to wait infinitely.</remarks>
@@ -568,20 +512,15 @@ Namespace IO
 
         End Sub
 
-        ''' <summary>
-        ''' Waits for the default duration (5 seconds) for a file to exist.
-        ''' </summary>
+        ''' <summary>Waits for the default duration (5 seconds) for a file to exist.</summary>
         ''' <param name="fileName">The name of the file to wait for until it is created.</param>
-        ''' <remarks></remarks>
         Public Shared Sub WaitTillExists(ByVal fileName As String)
 
             WaitTillExists(fileName, 5)
 
         End Sub
 
-        ''' <summary>
-        ''' Waits for a file to exist for the specified number of seconds.
-        ''' </summary>
+        ''' <summary>Waits for a file to exist for the specified number of seconds.</summary>
         ''' <param name="fileName">The name of the file to wait for until it is created.</param>
         ''' <param name="secondsToWait">The time to wait for in seconds for the file to be created.</param>
         ''' <remarks>Set secondsToWait to zero to wait infinitely.</remarks>

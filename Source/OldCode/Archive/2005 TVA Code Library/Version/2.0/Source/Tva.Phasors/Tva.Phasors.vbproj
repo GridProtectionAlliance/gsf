@@ -1,0 +1,136 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>8.0.50727</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{54CA98CC-2F0A-41F2-879D-0E42B17E8544}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <RootNamespace>Tva.Phasors</RootNamespace>
+    <AssemblyName>Tva.Phasors</AssemblyName>
+    <MyType>Windows</MyType>
+    <SccProjectName>SAK</SccProjectName>
+    <SccLocalPath>SAK</SccLocalPath>
+    <SccAuxPath>SAK</SccAuxPath>
+    <SccProvider>SAK</SccProvider>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <DefineDebug>true</DefineDebug>
+    <DefineTrace>true</DefineTrace>
+    <OutputPath>..\bin\</OutputPath>
+    <DocumentationFile>Tva.Phasors.Core.xml</DocumentationFile>
+    <NoWarn>42016,41999,42017,42018,42019,42032,42036,42020,42021,42022</NoWarn>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <DefineDebug>false</DefineDebug>
+    <DefineTrace>true</DefineTrace>
+    <Optimize>true</Optimize>
+    <OutputPath>..\bin\</OutputPath>
+    <DocumentationFile>Tva.Phasors.Core.xml</DocumentationFile>
+    <NoWarn>42016,41999,42017,42018,42019,42032,42036,42020,42021,42022</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+  </ItemGroup>
+  <ItemGroup>
+    <Import Include="Microsoft.VisualBasic" />
+    <Import Include="System" />
+    <Import Include="System.Collections" />
+    <Import Include="System.Collections.Generic" />
+    <Import Include="System.Diagnostics" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="AnalogDefinitionBase.vb" />
+    <Compile Include="AnalogDefinitionCollection.vb" />
+    <Compile Include="AnalogValueBase.vb" />
+    <Compile Include="AnalogValueCollection.vb" />
+    <Compile Include="ChannelBase.vb" />
+    <Compile Include="ChannelCellBase.vb" />
+    <Compile Include="ChannelCellCollectionBase.vb" />
+    <Compile Include="ChannelCellParsingStateBase.vb" />
+    <Compile Include="ChannelCollectionBase.vb" />
+    <Compile Include="ChannelDefinitionBase.vb" />
+    <Compile Include="ChannelDefinitionCollectionBase.vb" />
+    <Compile Include="ChannelFrameBase.vb" />
+    <Compile Include="ChannelFrameCollectionBase.vb" />
+    <Compile Include="ChannelFrameParsingStateBase.vb" />
+    <Compile Include="ChannelParsingStateBase.vb" />
+    <Compile Include="ChannelValueBase.vb" />
+    <Compile Include="ChannelValueCollectionBase.vb" />
+    <Compile Include="Common.vb" />
+    <Compile Include="ConfigurationCellBase.vb" />
+    <Compile Include="ConfigurationCellCollection.vb" />
+    <Compile Include="ConfigurationCellParsingState.vb" />
+    <Compile Include="ConfigurationFrameBase.vb" />
+    <Compile Include="ConfigurationFrameCollection.vb" />
+    <Compile Include="ConfigurationFrameParsingState.vb" />
+    <Compile Include="DataCellBase.vb" />
+    <Compile Include="DataCellCollection.vb" />
+    <Compile Include="DataCellParsingState.vb" />
+    <Compile Include="DataFrameBase.vb" />
+    <Compile Include="DataFrameCollection.vb" />
+    <Compile Include="DataFrameParsingState.vb" />
+    <Compile Include="DataSample.vb" />
+    <Compile Include="DigitalDefinitionBase.vb" />
+    <Compile Include="DigitalDefinitionCollection.vb" />
+    <Compile Include="DigitalValueBase.vb" />
+    <Compile Include="DigitalValueCollection.vb" />
+    <Compile Include="FrequencyDefinitionBase.vb" />
+    <Compile Include="FrequencyDefinitionCollection.vb" />
+    <Compile Include="FrequencyValueBase.vb" />
+    <Compile Include="FrequencyValueCollection.vb" />
+    <Compile Include="IAnalogDefintion.vb" />
+    <Compile Include="IAnalogValue.vb" />
+    <Compile Include="IChannel.vb" />
+    <Compile Include="IChannelCell.vb" />
+    <Compile Include="IChannelCellCollection.vb" />
+    <Compile Include="IChannelCellParsingState.vb" />
+    <Compile Include="IChannelCollection.vb" />
+    <Compile Include="IChannelDefinition.vb" />
+    <Compile Include="IChannelFrame.vb" />
+    <Compile Include="IChannelFrameParsingState.vb" />
+    <Compile Include="IChannelParsingState.vb" />
+    <Compile Include="IChannelValue.vb" />
+    <Compile Include="IConfigurationCell.vb" />
+    <Compile Include="IConfigurationCellParsingState.vb" />
+    <Compile Include="IConfigurationFrame.vb" />
+    <Compile Include="IConfigurationFrameParsingState.vb" />
+    <Compile Include="IDataCell.vb" />
+    <Compile Include="IDataCellParsingState.vb" />
+    <Compile Include="IDataFrame.vb" />
+    <Compile Include="IDataFrameParsingState.vb" />
+    <Compile Include="IDigitalDefinition.vb" />
+    <Compile Include="IDigitalValue.vb" />
+    <Compile Include="IFrequencyDefinition.vb" />
+    <Compile Include="IFrequencyValue.vb" />
+    <Compile Include="IPhasorDefinition.vb" />
+    <Compile Include="IPhasorValue.vb" />
+    <Compile Include="My Project\AssemblyInfo.vb" />
+    <Compile Include="PhasorDefinitionBase.vb" />
+    <Compile Include="PhasorDefinitionCollection.vb" />
+    <Compile Include="PhasorValueBase.vb" />
+    <Compile Include="PhasorValueCollection.vb" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Tva.Core\Tva.Core.vbproj">
+      <Project>{29A7B606-D1BC-4A4B-96D0-258D5A72C3EC}</Project>
+      <Name>Tva.Core</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Tva.IO.Compression\Tva.IO.Compression.vcproj">
+      <Project>{F611B9BA-C69D-449B-B596-FABFB746EA2A}</Project>
+      <Name>Tva.IO.Compression</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.VisualBasic.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

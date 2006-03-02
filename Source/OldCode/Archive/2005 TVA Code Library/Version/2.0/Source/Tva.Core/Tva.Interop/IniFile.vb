@@ -21,9 +21,7 @@ Imports System.Text
 
 Namespace Interop
 
-    ''' <summary>
-    ''' <para>Old style Windows INI file manipulation class</para>
-    ''' </summary>
+    ''' <summary>Old style Windows INI file manipulation class</summary>
     Public Class IniFile
 
         Private Declare Ansi Function GetPrivateProfileString Lib "kernel32" Alias "GetPrivateProfileStringA" ( _
@@ -73,9 +71,7 @@ Namespace Interop
             End Set
         End Property
 
-        ''' <summary>
-        ''' Gets the value of the specified key
-        ''' </summary>
+        ''' <summary>Gets the value of the specified key</summary>
         ''' <param name="section">Section key exists in</param>
         ''' <param name="entry">Name of key</param>
         ''' <param name="defaultValue">Default value of key</param>
@@ -99,9 +95,7 @@ Namespace Interop
             End Get
         End Property
 
-        ''' <summary>
-        ''' Sets the value of the specified key
-        ''' </summary>
+        ''' <summary>Sets the value of the specified key</summary>
         ''' <param name="section">Section key exists in</param>
         ''' <param name="entry">Name of key</param>
         ''' <value>The new key value to store in the INI file</value>
@@ -112,9 +106,7 @@ Namespace Interop
             End Set
         End Property
 
-        ''' <summary>
-        ''' Returns a string array of section names in the INI file
-        ''' </summary>
+        ''' <summary>Returns a string array of section names in the INI file</summary>
         Public ReadOnly Property SectionNames() As String()
             Get
                 Const BufferSize As Integer = 32768

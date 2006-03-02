@@ -25,14 +25,10 @@ Imports System.Text
 
 Namespace DateTime
 
-    ''' <summary>
-    ''' Defines common global functions related to Date/Time manipulation
-    ''' </summary>
+    ''' <summary>Defines common global functions related to Date/Time manipulation</summary>
     Public NotInheritable Class Common
 
-        ''' <summary>
-        ''' <para>Time names enumeration used by SecondsToText function</para>
-        ''' </summary>
+        ''' <summary>Time names enumeration used by SecondsToText function</summary>
         Public Enum TimeName
             Year
             Years
@@ -48,19 +44,13 @@ Namespace DateTime
             NoSeconds
         End Enum
 
-        ''' <summary>
-        ''' <para>Standard time names used by SecondsToText function</para>
-        ''' </summary>
+        ''' <summary>Standard time names used by SecondsToText function</summary>
         Private Shared m_standardTimeNames As String() = New String() {"Year", "Years", "Day", "Days", "Hour", "Hours", "Minute", "Minutes", "Second", "Seconds", "Less Than 60 Seconds", "0 Seconds"}
 
-        ''' <summary>
-        ''' <para>Standard time names without seconds used by SecondsToText function</para>
-        ''' </summary>
+        ''' <summary>Standard time names without seconds used by SecondsToText function</summary>
         Private Shared m_standardTimeNamesWithoutSeconds As String() = New String() {"Year", "Years", "Day", "Days", "Hour", "Hours", "Minute", "Minutes", "Second", "Seconds", "Less Than 1 Minute", "0 Minutes"}
 
-        ''' <summary>
-        ''' <para>Time zone names enumeration used to look up desired time zone in GetWin32TimeZone function</para>
-        ''' </summary>
+        ''' <summary>Time zone names enumeration used to look up desired time zone in GetWin32TimeZone function</summary>
         Public Enum TimeZoneName
             DaylightName
             DaylightAbbreviation
@@ -82,45 +72,35 @@ Namespace DateTime
 
         End Sub
 
-        ''' <summary>
-        ''' Converts ticks to seconds
-        ''' </summary>
+        ''' <summary>Converts 100-nanosecond tick intervals to seconds</summary>
         Public Shared ReadOnly Property TicksToSeconds(ByVal ticks As Long) As Double
             Get
                 Return ticks / 10000000L
             End Get
         End Property
 
-        ''' <summary>
-        ''' Converts seconds to ticks
-        ''' </summary>
+        ''' <summary>Converts seconds to 100-nanosecond tick intervals</summary>
         Public Shared ReadOnly Property SecondsToTicks(ByVal seconds As Double) As Long
             Get
                 Return seconds * 10000000L
             End Get
         End Property
 
-        ''' <summary>
-        ''' Returns the number of seconds in the local timezone, including fractional seconds, since that have elapsed since 12:00:00 midnight, January 1, 0001
-        ''' </summary>
+        ''' <summary>Returns the number of seconds in the local timezone, including fractional seconds, since that have elapsed since 12:00:00 midnight, January 1, 0001</summary>
         Public Shared ReadOnly Property SystemTimer() As Double
             Get
                 Return TicksToSeconds(Date.Now.Ticks)
             End Get
         End Property
 
-        ''' <summary>
-        ''' Returns the number of seconds in the Universally coordinated timezone, including fractional seconds, since that have elapsed since 12:00:00 midnight, January 1, 0001
-        ''' </summary>
+        ''' <summary>Returns the number of seconds in the Universally coordinated timezone, including fractional seconds, since that have elapsed since 12:00:00 midnight, January 1, 0001</summary>
         Public Shared ReadOnly Property UtcSystemTimer() As Double
             Get
                 Return TicksToSeconds(Date.UtcNow.Ticks)
             End Get
         End Property
 
-        ''' <summary>
-        ''' <para>Removes any milliseconds from a timestamp value to baseline the time at the bottom of the second</para>
-        ''' </summary>
+        ''' <summary>Removes any milliseconds from a timestamp value to baseline the time at the bottom of the second</summary>
         ''' <param name="timestamp">Timestamp to baseline</param>
         Public Shared Function BaselinedTimestamp(ByVal timestamp As Date) As Date
 
@@ -130,9 +110,7 @@ Namespace DateTime
 
         End Function
 
-        ''' <summary>
-        ''' <para>Turns given number of seconds into textual representation of years, days, hours, minutes and whole integer seconds</para>
-        ''' </summary>
+        ''' <summary>Turns given number of seconds into textual representation of years, days, hours, minutes and whole integer seconds</summary>
         ''' <param name="seconds">Seconds to be converted </param>
         Public Shared Function SecondsToText(ByVal seconds As Double) As String
 
@@ -140,12 +118,8 @@ Namespace DateTime
 
         End Function
 
-        ''' <summary>
-        ''' <para>Turns number of given seconds into textual representation of years, days, hours, minutes and seconds</para>
-        ''' </summary>
-        ''' <remarks>
-        ''' <para>Set second precision to -1 to suppress seconds display</para>
-        ''' </remarks>
+        ''' <summary>Turns number of given seconds into textual representation of years, days, hours, minutes and seconds</summary>
+        ''' <remarks>Set second precision to -1 to suppress seconds display</remarks>
         ''' <param name="seconds">Seconds to be converted </param>
         ''' <param name="secondPrecision">Number of fractional digits to display for seconds</param>
         Public Shared Function SecondsToText(ByVal seconds As Double, ByVal secondPrecision As Integer) As String
@@ -158,9 +132,7 @@ Namespace DateTime
 
         End Function
 
-        ''' <summary>
-        ''' <para>Turns number of given seconds into textual representation of years, days, hours, minutes and seconds given string array of time names - need one for each TimeName enum item</para>
-        ''' </summary>
+        ''' <summary>Turns number of given seconds into textual representation of years, days, hours, minutes and seconds given string array of time names - need one for each TimeName enum item</summary>
         ''' <remarks>
         ''' <para>Set second precision to -1 to suppress seconds display</para>
         ''' <para>Time names array needs one string entry per element in <see cref="TimeName">TimeName</see> enumeration.</para>
@@ -289,12 +261,8 @@ Namespace DateTime
 
         End Function
 
-        ''' <summary>
-        ''' <para>Returns 3 letter month abbreviation for given month number (1-12)</para>
-        ''' </summary>
-        ''' <remarks>
-        ''' <para>Month abbreviations are English only.</para>
-        ''' </remarks>
+        ''' <summary>Returns 3 letter month abbreviation for given month number (1-12).</summary>
+        ''' <remarks>Month abbreviations are English only.</remarks>
         ''' <param name="monthNumber">Numeric month number (1-12)</param>
         Public Shared ReadOnly Property ShortMonthName(ByVal monthNumber As Integer) As String
             Get
@@ -329,12 +297,8 @@ Namespace DateTime
             End Get
         End Property
 
-        ''' <summary>
-        ''' <para>Returns full month name for given month number (1-12)</para>
-        ''' </summary>
-        ''' <remarks>
-        ''' <para>Month names are English only.</para>
-        ''' </remarks>
+        ''' <summary>Returns full month name for given month number (1-12).</summary>
+        ''' <remarks>Month names are English only.</remarks>
         ''' <param name="monthNumber">Numeric month number (1-12)</param>
         Public Shared ReadOnly Property LongMonthName(ByVal monthNumber As Integer) As String
             Get
@@ -371,19 +335,15 @@ Namespace DateTime
 
         ' JRC - These functions added to make time zone management classes easier to use...
 
-        '''<summary>
-        ''' Returns the specified Win32 time zone using its standard name
-        '''</summary>
-        '''<param name="standardName">Standard name for desired Win32 time zone</param>
+        ''' <summary>Returns the specified Win32 time zone using its standard name</summary>
+        ''' <param name="standardName">Standard name for desired Win32 time zone</param>
         Public Shared Function GetWin32TimeZone(ByVal standardName As String) As Win32TimeZone
 
             Return GetWin32TimeZone(TimeZoneName.StandardName, standardName)
 
         End Function
 
-        ''' <summary>
-        ''' <para>Returns the specified Win32 time zone using specified name</para>
-        ''' </summary>
+        ''' <summary>Returns the specified Win32 time zone using specified name</summary>
         ''' <param name="lookupBy">Type of name used for time zone lookup</param>
         ''' <param name="name">Value of name used for time zone lookup</param>
         Public Shared Function GetWin32TimeZone(ByVal lookupBy As TimeZoneName, ByVal name As String) As Win32TimeZone
@@ -419,9 +379,7 @@ Namespace DateTime
 
         End Function
 
-        ''' <summary>
-        ''' <para>Universally Coordinated Time Zone (a.k.a., Greenwich Meridian Time Zone)</para>
-        ''' </summary>
+        ''' <summary>Universally Coordinated Time Zone (a.k.a., Greenwich Meridian Time Zone).</summary>
         Public Shared ReadOnly Property UniversalTimeZone() As Win32TimeZone
             Get
                 If m_universalTimeZone Is Nothing Then m_universalTimeZone = GetWin32TimeZone("GMT Standard Time")
@@ -429,9 +387,7 @@ Namespace DateTime
             End Get
         End Property
 
-        ''' <summary>
-        ''' <para>Eastern Time Zone</para>
-        ''' </summary>
+        ''' <summary>Eastern Time Zone</summary>
         Public Shared ReadOnly Property EasternTimeZone() As Win32TimeZone
             Get
                 If m_easternTimeZone Is Nothing Then m_easternTimeZone = GetWin32TimeZone("Eastern Standard Time")
@@ -439,9 +395,7 @@ Namespace DateTime
             End Get
         End Property
 
-        ''' <summary>
-        ''' <para>Central Time Zone</para>
-        ''' </summary>
+        ''' <summary>Central Time Zone</summary>
         Public Shared ReadOnly Property CentralTimeZone() As Win32TimeZone
             Get
                 If m_centralTimeZone Is Nothing Then m_centralTimeZone = GetWin32TimeZone("Central Standard Time")
@@ -449,9 +403,7 @@ Namespace DateTime
             End Get
         End Property
 
-        ''' <summary>
-        ''' <para>Mountain Time Zone</para>
-        ''' </summary>
+        ''' <summary>Mountain Time Zone</summary>
         Public Shared ReadOnly Property MountainTimeZone() As Win32TimeZone
             Get
                 If m_mountainTimeZone Is Nothing Then m_mountainTimeZone = GetWin32TimeZone("Mountain Standard Time")
@@ -459,9 +411,7 @@ Namespace DateTime
             End Get
         End Property
 
-        ''' <summary>
-        ''' <para>Pacific Standard Time Zone</para>
-        ''' </summary>
+        ''' <summary>Pacific Standard Time Zone</summary>
         Public Shared ReadOnly Property PacificTimeZone() As Win32TimeZone
             Get
                 If m_pacificTimeZone Is Nothing Then m_pacificTimeZone = GetWin32TimeZone("Pacific Standard Time")
@@ -469,9 +419,7 @@ Namespace DateTime
             End Get
         End Property
 
-        ''' <summary>
-        ''' <para>Converts given local time to Eastern time</para>
-        ''' </summary>
+        ''' <summary>Converts given local time to Eastern time</summary>
         ''' <param name="localTimestamp">Timestamp in local time to be converted to Eastern time</param>
         ''' <returns>
         ''' <para>Timestamp in Eastern time</para>
@@ -482,9 +430,7 @@ Namespace DateTime
 
         End Function
 
-        ''' <summary>
-        ''' <para>Converts given local time to Central time</para>
-        ''' </summary>
+        ''' <summary>Converts given local time to Central time</summary>
         ''' <param name="localTimestamp">Timestamp in local time to be converted to Central time</param>
         ''' <returns>
         ''' <para>Timestamp in Central time</para>
@@ -495,9 +441,7 @@ Namespace DateTime
 
         End Function
 
-        ''' <summary>
-        ''' <para>Converts given local time to Mountain time</para>
-        ''' </summary>
+        ''' <summary>Converts given local time to Mountain time</summary>
         ''' <param name="localTimestamp">Timestamp in local time to be converted to Mountain time</param>
         ''' <returns>
         ''' <para>Timestamp in Mountain time</para>
@@ -508,9 +452,7 @@ Namespace DateTime
 
         End Function
 
-        ''' <summary>
-        ''' <para>Converts given local time to Pacific time</para>
-        ''' </summary>
+        ''' <summary>Converts given local time to Pacific time</summary>
         ''' <param name="localTimestamp">Timestamp in local time to be converted to Pacific time</param>
         ''' <returns>
         ''' <para>Timestamp in Pacific time</para>
@@ -521,12 +463,8 @@ Namespace DateTime
 
         End Function
 
-        ''' <summary>
-        ''' <para>Converts given local time to Universally Coordinated Time (a.k.a., Greenwich Meridian Time)</para>
-        ''' </summary>
-        ''' <remarks>
-        ''' <para>This function is only provided for the sake of completeness - all it does is call the "ToUniversalTime" property on the given timestamp.</para>
-        ''' </remarks>
+        ''' <summary>Converts given local time to Universally Coordinated Time (a.k.a., Greenwich Meridian Time).</summary>
+        ''' <remarks>This function is only provided for the sake of completeness - all it does is call the "ToUniversalTime" property on the given timestamp.</remarks>
         ''' <param name="localTimestamp">Timestamp in local time to be converted to Universal time</param>
         ''' <returns>
         ''' <para>Timestamp in UniversalTime (a.k.a., GMT)</para>
@@ -537,9 +475,7 @@ Namespace DateTime
 
         End Function
 
-        ''' <summary>
-        ''' <para>Converts given local time to time in specified time zone</para>
-        ''' </summary>
+        ''' <summary>Converts given local time to time in specified time zone</summary>
         ''' <param name="localTimestamp">Timestamp in local time to be converted to time in specified time zone</param>
         ''' <param name="destinationTimeZoneStandardName">Standard name of desired end time zone for given timestamp</param>
         ''' <returns>
@@ -551,9 +487,7 @@ Namespace DateTime
 
         End Function
 
-        ''' <summary>
-        ''' <para>Converts given local time to time in specified time zone</para>
-        ''' </summary>
+        ''' <summary>Converts given local time to time in specified time zone</summary>
         ''' <param name="localTimestamp">Timestamp in local time to be converted to time in specified time zone</param>
         ''' <param name="destinationTimeZone">Desired end time zone for given timestamp</param>
         ''' <returns>
@@ -572,9 +506,7 @@ Namespace DateTime
 
         End Function
 
-        ''' <summary>
-        ''' <para>Converts given timestamp from one time zone to another using standard names for time zones</para>
-        ''' </summary>
+        ''' <summary>Converts given timestamp from one time zone to another using standard names for time zones</summary>
         ''' <param name="timestamp">Timestamp in source time zone to be converted to time in destination time zone</param>
         ''' <param name="sourceTimeZoneStandardName">Standard name of time zone for given source timestamp</param>
         ''' <param name="destinationTimeZoneStandardName">Standard name of desired end time zone for given source timestamp</param>
@@ -587,9 +519,7 @@ Namespace DateTime
 
         End Function
 
-        ''' <summary>
-        ''' <para>Converts given timestamp from one time zone to another</para>
-        ''' </summary>
+        ''' <summary>Converts given timestamp from one time zone to another</summary>
         ''' <param name="timestamp">Timestamp in source time zone to be converted to time in destination time zone</param>
         ''' <param name="sourceTimeZone">Time zone for given source timestamp</param>
         ''' <param name="destinationTimeZone">Desired end time zone for given source timestamp</param>

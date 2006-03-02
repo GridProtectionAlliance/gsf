@@ -25,9 +25,7 @@ Imports Tva.Interop
 
 Namespace Math
 
-    ''' <summary>
-    ''' Defines common math functions
-    ''' </summary>
+    ''' <summary>Defines common math functions</summary>
     Public NotInheritable Class Common
 
         Private Shared m_randomNumberGenerator As New Security.Cryptography.RNGCryptoServiceProvider
@@ -38,9 +36,7 @@ Namespace Math
 
         End Sub
 
-        ''' <summary>
-        ''' <para>Calculates byte length (8-bit) XOR based check-sum on specified portion of a buffer.</para>
-        ''' </summary>
+        ''' <summary>Calculates byte length (8-bit) XOR based check-sum on specified portion of a buffer.</summary>
         ''' <param name="data">Data buffer to perform XOR check-sum on</param>
         ''' <param name="startIndex">Start index in data buffer to begin XOR check-sum</param>
         ''' <param name="length">Total number of bytes from <paramref name="startIndex">startIndex</paramref> to perform XOR check-sum over</param>
@@ -57,9 +53,7 @@ Namespace Math
 
         End Function
 
-        ''' <summary>
-        ''' <para>Calculates word length (16-bit) XOR based check-sum on specified portion of a buffer.</para>
-        ''' </summary>
+        ''' <summary>Calculates word length (16-bit) XOR based check-sum on specified portion of a buffer.</summary>
         ''' <param name="data">Data buffer to perform XOR check-sum on</param>
         ''' <param name="startIndex">Start index in data buffer to begin XOR check-sum</param>
         ''' <param name="length">Total number of bytes from <paramref name="startIndex">startIndex</paramref> to perform XOR check-sum over</param>
@@ -76,9 +70,7 @@ Namespace Math
 
         End Function
 
-        ''' <summary>
-        ''' <para>Calculates double-word length (32-bit) XOR based check-sum on specified portion of a buffer.</para>
-        ''' </summary>
+        ''' <summary>Calculates double-word length (32-bit) XOR based check-sum on specified portion of a buffer.</summary>
         ''' <param name="data">Data buffer to perform XOR check-sum on</param>
         ''' <param name="startIndex">Start index in data buffer to begin XOR check-sum</param>
         ''' <param name="length">Total number of bytes from <paramref name="startIndex">startIndex</paramref> to perform XOR check-sum over</param>
@@ -95,9 +87,7 @@ Namespace Math
 
         End Function
 
-        ''' <summary>
-        ''' <para>Calculates quad-word length (64-bit) XOR based check-sum on specified portion of a buffer.</para>
-        ''' </summary>
+        ''' <summary>Calculates quad-word length (64-bit) XOR based check-sum on specified portion of a buffer.</summary>
         ''' <param name="data">Data buffer to perform XOR check-sum on</param>
         ''' <param name="startIndex">Start index in data buffer to begin XOR check-sum</param>
         ''' <param name="length">Total number of bytes from <paramref name="startIndex">startIndex</paramref> to perform XOR check-sum over</param>
@@ -114,18 +104,14 @@ Namespace Math
 
         End Function
 
-        ''' <summary>
-        ''' <para>Generates a cryptographically strong floating-point random number between zero and one</para>
-        ''' </summary>
+        ''' <summary>Generates a cryptographically strong floating-point random number between zero and one</summary>
         Public Shared ReadOnly Property RandomNumber() As Double
             Get
                 Return BitwiseCast.ToUInt64(RandomInt64) / UInt64.MaxValue
             End Get
         End Property
 
-        ''' <summary>
-        ''' <para>Generates a cryptographically strong random boolean (i.e., a coin toss)</para>
-        ''' </summary>
+        ''' <summary>Generates a cryptographically strong random boolean (i.e., a coin toss).</summary>
         Public Shared ReadOnly Property RandomBoolean() As Boolean
             Get
                 Dim value As Byte() = Array.CreateInstance(GetType(Byte), 1)
@@ -136,9 +122,7 @@ Namespace Math
             End Get
         End Property
 
-        ''' <summary>
-        ''' <para>Generates a cryptographically strong 8-bit random integer</para>
-        ''' </summary>
+        ''' <summary>Generates a cryptographically strong 8-bit random integer</summary>
         Public Shared ReadOnly Property RandomByte() As Byte
             Get
                 Dim value As Byte() = Array.CreateInstance(GetType(Byte), 1)
@@ -149,9 +133,7 @@ Namespace Math
             End Get
         End Property
 
-        ''' <summary>
-        ''' <para>Generates a cryptographically strong 8-bit random integer between specified values</para>
-        ''' </summary>
+        ''' <summary>Generates a cryptographically strong 8-bit random integer between specified values</summary>
         Public Shared ReadOnly Property RandomByteBetween(ByVal startNumber As Byte, ByVal stopNumber As Byte) As Byte
             Get
                 If stopNumber < startNumber Then Throw New ArgumentException("stopNumber must be greater than startNumber")
@@ -159,9 +141,7 @@ Namespace Math
             End Get
         End Property
 
-        ''' <summary>
-        ''' <para>Generates a cryptographically strong 16-bit random integer</para>
-        ''' </summary>
+        ''' <summary>Generates a cryptographically strong 16-bit random integer</summary>
         Public Shared ReadOnly Property RandomInt16() As Int16
             Get
                 Dim value As Byte() = Array.CreateInstance(GetType(Byte), 2)
@@ -172,9 +152,7 @@ Namespace Math
             End Get
         End Property
 
-        ''' <summary>
-        ''' <para>Generates a cryptographically strong 16-bit random integer between specified values</para>
-        ''' </summary>
+        ''' <summary>Generates a cryptographically strong 16-bit random integer between specified values</summary>
         Public Shared ReadOnly Property RandomInt16Between(ByVal startNumber As Int16, ByVal stopNumber As Int16) As Int16
             Get
                 If stopNumber < startNumber Then Throw New ArgumentException("stopNumber must be greater than startNumber")
@@ -182,9 +160,7 @@ Namespace Math
             End Get
         End Property
 
-        ''' <summary>
-        ''' <para>Generates a cryptographically strong 32-bit random integer</para>
-        ''' </summary>
+        ''' <summary>Generates a cryptographically strong 32-bit random integer</summary>
         Public Shared ReadOnly Property RandomInt32() As Int32
             Get
                 Dim value As Byte() = Array.CreateInstance(GetType(Byte), 4)
@@ -195,9 +171,7 @@ Namespace Math
             End Get
         End Property
 
-        ''' <summary>
-        ''' <para>Generates a cryptographically strong 32-bit random integer between specified values</para>
-        ''' </summary>
+        ''' <summary>Generates a cryptographically strong 32-bit random integer between specified values</summary>
         Public Shared ReadOnly Property RandomInt32Between(ByVal startNumber As Int32, ByVal stopNumber As Int32) As Int32
             Get
                 If stopNumber < startNumber Then Throw New ArgumentException("stopNumber must be greater than startNumber")
@@ -205,9 +179,7 @@ Namespace Math
             End Get
         End Property
 
-        ''' <summary>
-        ''' <para>Generates a cryptographically strong 64-bit random integer</para>
-        ''' </summary>
+        ''' <summary>Generates a cryptographically strong 64-bit random integer</summary>
         Public Shared ReadOnly Property RandomInt64() As Int64
             Get
                 Dim value As Byte() = Array.CreateInstance(GetType(Byte), 8)
@@ -218,9 +190,7 @@ Namespace Math
             End Get
         End Property
 
-        ''' <summary>
-        ''' <para>Generates a cryptographically strong 64-bit random integer between specified values</para>
-        ''' </summary>
+        ''' <summary>Generates a cryptographically strong 64-bit random integer between specified values</summary>
         Public Shared ReadOnly Property RandomInt64Between(ByVal startNumber As Int64, ByVal stopNumber As Int64) As Int64
             Get
                 If stopNumber < startNumber Then Throw New ArgumentException("stopNumber must be greater than startNumber")
@@ -228,9 +198,7 @@ Namespace Math
             End Get
         End Property
 
-        ''' <summary>
-        ''' <para>Linear regression algorithm</para>
-        ''' </summary>
+        ''' <summary>Linear regression algorithm</summary>
         Public Shared Function CurveFit(ByVal polynomialOrder As Integer, ByVal pointCount As Integer, ByVal xValues As Double(), ByVal yValues As Double()) As Double()
 
             Dim coeffs(7) As Double

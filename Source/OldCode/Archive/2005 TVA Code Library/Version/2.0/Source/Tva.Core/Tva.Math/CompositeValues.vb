@@ -19,9 +19,7 @@
 
 Namespace Math
 
-    ''' <summary>
-    ''' <para>Class to temporarily cache composite values until all values been received so that a compound value can be created.</para>
-    ''' </summary>
+    ''' <summary>Class to temporarily cache composite values until all values been received so that a compound value can be created.</summary>
     Public Class CompositeValues
 
         Private Structure CompositeValue
@@ -34,9 +32,7 @@ Namespace Math
         Private m_compositeValues As CompositeValue()
         Private m_allReceived As Boolean
 
-        ''' <summary>
-        ''' <para>This constructor creates a new instance of the CompositeValues class specifing the total number of composite values to track.</para>
-        ''' </summary>
+        ''' <summary>This constructor creates a new instance of the CompositeValues class specifing the total number of composite values to track.</summary>
         ''' <param name="count">Total number of composite values to track</param>
         Public Sub New(ByVal count As Integer)
 
@@ -44,9 +40,7 @@ Namespace Math
 
         End Sub
 
-        ''' <summary>
-        ''' <para>Gets or sets the composite value at the specified index in composite value collection.</para>
-        ''' </summary>
+        ''' <summary>Gets or sets the composite value at the specified index in composite value collection.</summary>
         ''' <param name="index">The zero-based index of the composite value to get or set</param>
         ''' <returns>The composite value at the specified index in composite value collection</returns>
         Default Public Property Value(ByVal index As Integer) As Double
@@ -61,9 +55,7 @@ Namespace Math
             End Set
         End Property
 
-        ''' <summary>
-        ''' <para>Gets a boolean value indicating if composite value at the specified index is received.</para>
-        ''' </summary>
+        ''' <summary>Gets a boolean value indicating if composite value at the specified index is received.</summary>
         ''' <param name="index">The zero-based index of the composite value.</param>
         ''' <returns>True if composite value at the specified index is received; otherwise, False.</returns>
         Public ReadOnly Property Received(ByVal index As Integer) As Boolean
@@ -72,9 +64,7 @@ Namespace Math
             End Get
         End Property
 
-        ''' <summary>
-        ''' <para>Gets the number of compisite values in the composite value collection.</para>
-        ''' </summary>
+        ''' <summary>Gets the number of compisite values in the composite value collection.</summary>
         ''' <returns>To be provided.</returns>
         Public ReadOnly Property Count() As Integer
             Get
@@ -82,9 +72,7 @@ Namespace Math
             End Get
         End Property
 
-        ''' <summary>
-        ''' <para>Gets a boolean value indicating if all composite values are received.</para>
-        ''' </summary>
+        ''' <summary>Gets a boolean value indicating if all composite values are received.</summary>
         ''' <returns>True if all composite values are received; otherwise, False.</returns>
         Public ReadOnly Property AllReceived() As Boolean
             Get

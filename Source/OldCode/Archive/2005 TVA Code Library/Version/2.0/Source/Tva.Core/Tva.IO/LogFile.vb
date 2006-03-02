@@ -23,9 +23,7 @@ Imports Tva.IO.FilePath
 
 Namespace IO
 
-    ''' <summary>
-    ''' This implements a simple multi-thread-happy log file class
-    ''' </summary>
+    ''' <summary>This implements a simple multi-thread-happy log file class</summary>
     Public Class LogFile
 
         Private m_logFileName As String

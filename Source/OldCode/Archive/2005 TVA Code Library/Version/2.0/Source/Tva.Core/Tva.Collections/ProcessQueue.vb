@@ -44,8 +44,8 @@ Namespace Collections
 #End Region
 
     ''' <summary>
-    ''' <para>This class will process a collection of items on independent threads</para>
-    ''' <para>Consumer must implement a function to process items</para>
+    ''' <para>This class will process a collection of items on independent threads.</para>
+    ''' <para>Consumer must implement a function to process items.</para>
     ''' </summary>
     ''' <typeparam name="T">Type of object to process</typeparam>
     ''' <remarks>
@@ -78,8 +78,8 @@ Namespace Collections
         ''' <para>This function is used when creating a queue to process multiple items at once</para>
         ''' <para>Asynchronous queues will process groups of items on multiple threads</para>
         ''' </remarks>
-        ''' <param name="item">Item to be processed</param>
-        Public Delegate Sub ProcessItemsFunctionSignature(ByVal item As T())
+        ''' <param name="items">Item to be processed</param>
+        Public Delegate Sub ProcessItemsFunctionSignature(ByVal items As T())
 
         ''' <summary>
         ''' This is the function signature used for determining if an item can be currently processed

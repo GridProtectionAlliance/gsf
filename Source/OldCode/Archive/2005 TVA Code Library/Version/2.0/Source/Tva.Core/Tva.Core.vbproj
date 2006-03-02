@@ -22,7 +22,7 @@
     <DefineTrace>true</DefineTrace>
     <OutputPath>..\bin\</OutputPath>
     <DocumentationFile>Tva.Core.xml</DocumentationFile>
-    <NoWarn>42016,41999,42017,42018,42019,42032,42036,42020,42021,42022</NoWarn>
+    <NoWarn>41999,42016,42017,42018,42019,42020,42021,42022,42030,42032,42036,42104,42108,42109</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -31,7 +31,7 @@
     <Optimize>true</Optimize>
     <OutputPath>..\bin\</OutputPath>
     <DocumentationFile>Tva.Core.xml</DocumentationFile>
-    <NoWarn>42016,41999,42017,42018,42019,42032,42036,42020,42021,42022</NoWarn>
+    <NoWarn>41999,42016,42017,42018,42019,42020,42021,42022,42030,42032,42036,42104,42108,42109</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -73,10 +73,8 @@
     <Compile Include="Tva.Math\RealTimeSlope.vb" />
     <Compile Include="Tva.Measurements\IFrame.vb" />
     <Compile Include="Tva.Measurements\IMeasurement.vb" />
-    <Compile Include="Tva.Measurements\ImmediateMeasurements.vb" />
     <Compile Include="Tva.Measurements\Measurement.vb" />
     <Compile Include="Tva.Measurements\Concentrator.vb" />
-    <Compile Include="Tva.Measurements\Frame.vb" />
     <Compile Include="Tva.Measurements\TemporalMeasurement.vb" />
     <Compile Include="Tva.Net\Smtp\Common.vb" />
     <Compile Include="Tva.Net\Smtp\TraceListener.vb" />

@@ -21,9 +21,7 @@ Imports System.Text
 
 Namespace Text
 
-    ''' <summary>
-    ''' Defines common global functions related to string manipulation
-    ''' </summary>
+    ''' <summary>Defines common global functions related to string manipulation</summary>
     Public NotInheritable Class Common
 
         Private Sub New()
@@ -32,9 +30,7 @@ Namespace Text
 
         End Sub
 
-        ''' <summary>
-        ''' <para>Return the Unicode number for a character in proper Regular Expression format</para>
-        ''' </summary>
+        ''' <summary>Return the Unicode number for a character in proper Regular Expression format</summary>
         Public Shared Function EncodeRegexChar(ByVal item As Char) As String
 
             Return "\u" & Convert.ToInt32(item).ToString("x"c).PadLeft(4, "0"c)

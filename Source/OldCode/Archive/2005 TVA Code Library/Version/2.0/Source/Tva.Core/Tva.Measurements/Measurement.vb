@@ -19,6 +19,7 @@
 
 Namespace Measurements
 
+    ''' <summary>Implementation of a basic measured value</summary>
     Public Class Measurement
 
         Implements IMeasurement
@@ -26,6 +27,8 @@ Namespace Measurements
         Private m_index As Integer
         Private m_value As Double
         Private m_ticks As Long
+        Private m_valueQualityIsGood As Boolean
+        Private m_timestampQualityIsGood As Boolean
 
         Public Sub New()
 
@@ -44,6 +47,8 @@ Namespace Measurements
             m_index = index
             m_value = value
             m_ticks = ticks
+            m_valueQualityIsGood = True
+            m_timestampQualityIsGood = True
 
         End Sub
 
@@ -85,12 +90,43 @@ Namespace Measurements
             End Set
         End Property
 
-        ''' <summary>Closest date representation of ticks of this measurement</summary>
+        ''' <summary>Date representation of ticks of this measurement</summary>
         Public Overridable ReadOnly Property Timestamp() As Date Implements IMeasurement.Timestamp
             Get
                 Return New Date(m_ticks)
             End Get
         End Property
+
+        ''' <summary>Determines if the quality of the numeric value of this measurement is good</summary>
+        Public Overridable Property ValueQualityIsGood() As Boolean Implements IMeasurement.ValueQualityIsGood
+            Get
+                Return m_valueQualityIsGood
+            End Get
+            Set(ByVal value As Boolean)
+                m_valueQualityIsGood = value
+            End Set
+        End Property
+
+        ''' <summary>Determines if the quality of the timestamp of this measurement is good</summary>
+        Public Overridable Property TimestampQualityIsGood() As Boolean Implements IMeasurement.TimestampQualityIsGood
+            Get
+                Return m_timestampQualityIsGood
+            End Get
+            Set(ByVal value As Boolean)
+                m_timestampQualityIsGood = value
+            End Set
+        End Property
+
+        ''' <summary>This implementation of a basic measurement compares itself by value</summary>
+        Public Function CompareTo(ByVal obj As Object) As Integer Implements System.IComparable.CompareTo
+
+            If TypeOf obj Is IMeasurement Then
+                Return m_value.CompareTo(DirectCast(obj, IMeasurement).Value)
+            Else
+                Throw New ArgumentException("Measurement can only be compared with other IMeasurements...")
+            End If
+
+        End Function
 
     End Class
 

@@ -26,39 +26,29 @@ Namespace Identity
         Private m_userDirectoryEntry As DirectoryEntry
         Private m_userLoginID As String
 
-        ''' <summary>
-        ''' Initializes a new instance of the user information class
-        ''' </summary>
-        ''' <remarks>
-        ''' Specify login information as domain\username
-        ''' </remarks>
+        ''' <summary>Initializes a new instance of the user information class.</summary>
+        ''' <remarks>Specify login information as domain\username.</remarks>
         Public Sub New(ByVal loginID As String)
 
             m_userLoginID = loginID
 
         End Sub
 
-        ''' <summary>
-        ''' Initializes a new instance of the user information class
-        ''' </summary>
+        ''' <summary>Initializes a new instance of the user information class.</summary>
         Public Sub New(ByVal username As String, ByVal domain As String)
 
             MyClass.New(domain & "\" & username)
 
         End Sub
 
-        ''' <summary>
-        ''' Gets the login ID of the user.
-        ''' </summary>
+        ''' <summary>Gets the login ID of the user.</summary>
         Public ReadOnly Property LoginID() As String
             Get
                 Return m_userLoginID
             End Get
         End Property
 
-        ''' <summary>
-        ''' Gets the System.DirectoryServices.DirectoryEntry of the user
-        ''' </summary>
+        ''' <summary>Gets the System.DirectoryServices.DirectoryEntry of the user</summary>
         Public ReadOnly Property UserEntry() As DirectoryEntry
             Get
                 If m_userDirectoryEntry Is Nothing Then
@@ -80,9 +70,7 @@ Namespace Identity
             End Get
         End Property
 
-        ''' <summary>
-        ''' Returns adctive directory value for specified property
-        ''' </summary>
+        ''' <summary>Returns adctive directory value for specified property</summary>
         Public ReadOnly Property UserProperty(ByVal propertyName As System.String) As String
             Get
                 Try
@@ -93,9 +81,7 @@ Namespace Identity
             End Get
         End Property
 
-        ''' <summary>
-        ''' Gets the full name of the user
-        ''' </summary>
+        ''' <summary>Gets the full name of the user</summary>
         Public ReadOnly Property FullName() As String
             Get
                 Dim displayName As String = UserProperty("displayName")
@@ -115,72 +101,56 @@ Namespace Identity
             End Get
         End Property
 
-        ''' <summary>
-        ''' Gets the e-mail address of the user
-        ''' </summary>
+        ''' <summary>Gets the e-mail address of the user</summary>
         Public ReadOnly Property Email() As String
             Get
                 Return UserProperty("mail")
             End Get
         End Property
 
-        ''' <summary>
-        ''' Gets the telephone number of the user
-        ''' </summary>
+        ''' <summary>Gets the telephone number of the user</summary>
         Public ReadOnly Property Telephone() As String
             Get
                 Return UserProperty("telephoneNumber")
             End Get
         End Property
 
-        ''' <summary>
-        ''' Gets the title of the user
-        ''' </summary>
+        ''' <summary>Gets the title of the user</summary>
         Public ReadOnly Property Title() As String
             Get
                 Return UserProperty("title")
             End Get
         End Property
 
-        ''' <summary>
-        ''' Gets the company of the user
-        ''' </summary>
+        ''' <summary>Gets the company of the user</summary>
         Public ReadOnly Property Company() As String
             Get
                 Return UserProperty("company")
             End Get
         End Property
 
-        ''' <summary>
-        ''' Returns the office location of the user
-        ''' </summary>
+        ''' <summary>Returns the office location of the user</summary>
         Public ReadOnly Property Office() As String
             Get
                 Return UserProperty("physicalDeliveryOfficeName")
             End Get
         End Property
 
-        ''' <summary>
-        ''' Gets the department name where the user works
-        ''' </summary>
+        ''' <summary>Gets the department name where the user works</summary>
         Public ReadOnly Property Department() As String
             Get
                 Return UserProperty("department")
             End Get
         End Property
 
-        ''' <summary>
-        ''' Gets the city where the user works
-        ''' </summary>
+        ''' <summary>Gets the city where the user works</summary>
         Public ReadOnly Property City() As String
             Get
                 Return UserProperty("l")
             End Get
         End Property
 
-        ''' <summary>
-        ''' Returns the mailbox of where the user works
-        ''' </summary>
+        ''' <summary>Returns the mailbox of where the user works</summary>
         Public ReadOnly Property Mailbox() As String
             Get
                 Return UserProperty("streetAddress")

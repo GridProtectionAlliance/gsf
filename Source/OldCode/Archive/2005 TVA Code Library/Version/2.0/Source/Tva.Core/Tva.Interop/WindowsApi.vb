@@ -19,18 +19,14 @@ Imports System.Runtime.InteropServices
 
 Namespace Interop
 
-    ''' <summary>
-    ''' <para>Defines common Windows API functions</para>
-    ''' </summary>
+    ''' <summary>Defines common Windows API functions</summary>
     Public NotInheritable Class WindowsApi
 
         <DllImport("kernel32.dll")> _
         Private Shared Function FormatMessage(ByVal dwFlags As Integer, ByRef lpSource As IntPtr, ByVal dwMessageId As Integer, ByVal dwLanguageId As Integer, ByRef lpBuffer As String, ByVal nSize As Integer, ByRef Arguments As IntPtr) As Integer
         End Function
 
-        ''' <summary>
-        ''' Formats and returns a .NET string containing the Windows API level error message corresponding to the specified error code
-        ''' </summary>
+        ''' <summary>Formats and returns a .NET string containing the Windows API level error message corresponding to the specified error code</summary>
         Public Shared Function GetErrorMessage(ByVal errorCode As Integer) As String
 
             Const FORMAT_MESSAGE_ALLOCATE_BUFFER As Integer = &H100

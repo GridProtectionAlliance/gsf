@@ -21,23 +21,17 @@
 
 Namespace Interop
 
-    ''' <summary>
-    ''' <para>Endian Byte Order Enumeration</para>
-    ''' </summary>
+    ''' <summary>Endian Byte Order Enumeration</summary>
     Public Enum Endianness
         BigEndian
         LittleEndian
     End Enum
     
-    ''' <summary>
-    ''' <para>Endian byte order interoperability class</para>
-    ''' </summary>
+    ''' <summary>Endian byte order interoperability class</summary>
     ''' <remarks>
-    ''' <para>
     ''' Intel systems use little-endian byte order, other systems, such as Unix, use big-endian byte ordering.
     ''' Little-endian ordering means bits are ordered such that the bit whose in-memory representation is left-most is the most-significant-bit in a byte.
     ''' Big-endian ordering means bits are ordered such that the bit whose in-memory representation is right-most is the most-significant-bit in a byte.
-    ''' </para>
     ''' </remarks>
     Public Class EndianOrder
 

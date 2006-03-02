@@ -22,9 +22,7 @@ Imports Tva.Math.Common
 
 Namespace Collections
 
-    ''' <summary>
-    ''' Defines common global functions related to manipulation of collections
-    ''' </summary>
+    ''' <summary>Defines common global functions related to manipulation of collections</summary>
     Public NotInheritable Class Common
 
         Private Sub New()
@@ -33,27 +31,21 @@ Namespace Collections
 
         End Sub
 
-        ''' <summary>
-        ''' <para>Returns smallest item from list of parameters</para>
-        ''' </summary>
+        ''' <summary>Returns smallest item from list of parameters</summary>
         Public Shared Function Minimum(ByVal ParamArray itemList() As Object) As Object
 
             Return Minimum(ItemList)
 
         End Function
 
-        ''' <summary>
-        ''' <para>Returns largest item from list of parameters</para>
-        ''' </summary>
+        ''' <summary>Returns largest item from list of parameters</summary>
         Public Shared Function Maximum(ByVal ParamArray itemList() As Object) As Object
 
             Return Maximum(ItemList)
 
         End Function
 
-        ''' <summary>
-        ''' <para>Returns smallest item from the specified enumeration</para>
-        ''' </summary>
+        ''' <summary>Returns smallest item from the specified enumeration</summary>
         Public Shared Function Minimum(ByVal items As IEnumerable) As Object
 
             Dim objMin As Object = Nothing
@@ -71,9 +63,7 @@ Namespace Collections
 
         End Function
 
-        ''' <summary>
-        ''' <para>Returns largest item from the specified enumeration</para>
-        ''' </summary>
+        ''' <summary>Returns largest item from the specified enumeration</summary>
         Public Shared Function Maximum(ByVal items As IEnumerable) As Object
 
             Dim objMax As Object = Nothing
@@ -91,9 +81,7 @@ Namespace Collections
 
         End Function
 
-        ''' <summary>
-        ''' <para> Compares two elements of any type.</para>
-        ''' </summary>
+        ''' <summary> Compares two elements of any type.</summary>
         Public Shared Function Compare(ByVal x As Object, ByVal y As Object) As Integer
 
             If IsReference(x) And IsReference(y) Then
@@ -121,18 +109,14 @@ Namespace Collections
 
         End Function
 
-        ''' <summary>
-        ''' <para>Compares two arrays</para>
-        ''' </summary>
+        ''' <summary>Compares two arrays</summary>
         Public Shared Function CompareArrays(ByVal arrayA As Array, ByVal arrayB As Array) As Integer
 
             Return CompareArrays(arrayA, arrayB, Nothing)
 
         End Function
 
-        ''' <summary>
-        ''' <para>Compares two arrays</para>
-        ''' </summary>
+        ''' <summary>Compares two arrays</summary>
         Public Shared Function CompareArrays(ByVal arrayA As Array, ByVal arrayB As Array, ByVal comparer As IComparer) As Integer
 
             If arrayA Is Nothing And arrayB Is Nothing Then
@@ -168,12 +152,8 @@ Namespace Collections
 
         End Function
 
-        ''' <summary>
-        ''' <para>Changes the type of all the elements in source enumeration and adds the conversion result to destination list</para>
-        ''' </summary>
-        ''' <remarks>
-        ''' <para>Converted items in source enumeration are added to destination list - destination list is not cleared in advance</para>
-        ''' </remarks>
+        ''' <summary>Changes the type of all the elements in source enumeration and adds the conversion result to destination list</summary>
+        ''' <remarks>Converted items in source enumeration are added to destination list - destination list is not cleared in advance</remarks>
         Public Shared Sub ConvertList(ByVal source As IEnumerable, ByVal destination As IList, ByVal toType As System.Type)
 
             If source Is Nothing Then Throw New ArgumentNullException("Source list is null")
@@ -187,9 +167,7 @@ Namespace Collections
 
         End Sub
 
-        ''' <summary>
-        ''' <para>Converts a list (i.e., any collection implementing IList) to an array</para>
-        ''' </summary>
+        ''' <summary>Converts a list (i.e., any collection implementing IList) to an array</summary>
         Public Shared Function ListToArray(ByVal sourceList As IList, ByVal toType As System.Type) As Array
 
             Dim destination As Array = Array.CreateInstance(toType, sourceList.Count)
@@ -200,14 +178,10 @@ Namespace Collections
 
         End Function
 
-        ''' <summary>
-        ''' <para>Converts an array to a string using the default delimeter, "|", that can later be converted back to array using StringToArray</para>
-        ''' </summary>
+        ''' <summary>Converts an array to a string using the default delimeter, "|", that can later be converted back to array using StringToArray</summary>
         ''' <remarks>
-        ''' <para>
         ''' This function is just a semantic reference to the ListToString function (the Array class implements IEnumerable)
         ''' and is only provided for the sake of completeness
-        ''' </para>
         ''' </remarks>
         Public Shared Function ArrayToString(ByVal source As Array) As String
 
@@ -215,14 +189,10 @@ Namespace Collections
 
         End Function
 
-        ''' <summary>
-        ''' <para>Converts an array to a string that can later be converted back to array using StringToArray</para>
-        ''' </summary>
+        ''' <summary>Converts an array to a string that can later be converted back to array using StringToArray</summary>
         ''' <remarks>
-        ''' <para>
         ''' This function is just a semantic reference to the ListToString function (the Array class implements IEnumerable)
         ''' and is only provided for the sake of completeness
-        ''' </para>
         ''' </remarks>
         Public Shared Function ArrayToString(ByVal source As Array, ByVal delimeter As Char) As String
 
@@ -230,18 +200,14 @@ Namespace Collections
 
         End Function
 
-        ''' <summary>
-        ''' <para>Converts an enumeration to a string using the default delimeter, "|", that can later be converted back to array using StringToList</para>
-        ''' </summary>
+        ''' <summary>Converts an enumeration to a string using the default delimeter, "|", that can later be converted back to array using StringToList</summary>
         Public Shared Function ListToString(ByVal source As IEnumerable) As String
 
             Return ListToString(source, "|"c)
 
         End Function
 
-        ''' <summary>
-        ''' <para>Converts an enumeration to a string that can later be converted back to array using StringToList</para>
-        ''' </summary>
+        ''' <summary>Converts an enumeration to a string that can later be converted back to array using StringToList</summary>
         Public Shared Function ListToString(ByVal source As IEnumerable, ByVal delimeter As Char) As String
 
             If source Is Nothing Then Throw New ArgumentNullException("Source list is null")
@@ -257,18 +223,14 @@ Namespace Collections
 
         End Function
 
-        ''' <summary>
-        ''' <para>Converts a string, created with ArrayToString, using the default delimeter, "|", back into an array</para>
-        ''' </summary>
+        ''' <summary>Converts a string, created with ArrayToString, using the default delimeter, "|", back into an array</summary>
         Public Shared Function StringToArray(ByVal source As String, ByVal toType As System.Type) As Array
 
             Return StringToArray(source, toType, "|"c)
 
         End Function
 
-        ''' <summary>
-        ''' <para>Converts a string, created with ArrayToString, back into an array</para>
-        ''' </summary>
+        ''' <summary>Converts a string, created with ArrayToString, back into an array</summary>
         Public Shared Function StringToArray(ByVal source As String, ByVal toType As System.Type, ByVal delimeter As Char) As Array
 
             Dim items As New ArrayList
@@ -279,24 +241,16 @@ Namespace Collections
 
         End Function
 
-        ''' <summary>
-        ''' <para>Appends items parsed from delimited string, created with ArrayToString or ListToString, using the default delimeter, "|",  into the given list</para>
-        ''' </summary>
-        ''' <remarks>
-        ''' <para>Converted items are added to destination list - destination list is not cleared in advance</para>
-        ''' </remarks>
+        ''' <summary>Appends items parsed from delimited string, created with ArrayToString or ListToString, using the default delimeter, "|",  into the given list</summary>
+        ''' <remarks>Converted items are added to destination list - destination list is not cleared in advance</remarks>
         Public Shared Sub StringToList(ByVal source As String, ByVal destination As IList)
 
             StringToList(source, destination, "|"c)
 
         End Sub
 
-        ''' <summary>
-        ''' <para>Appends items parsed from delimited string, created with ArrayToString or ListToString, into the given list</para>
-        ''' </summary>
-        ''' <remarks>
-        ''' <para>Converted items are added to destination list - destination list is not cleared in advance</para>
-        ''' </remarks>
+        ''' <summary>Appends items parsed from delimited string, created with ArrayToString or ListToString, into the given list</summary>
+        ''' <remarks>Converted items are added to destination list - destination list is not cleared in advance</remarks>
         Public Shared Sub StringToList(ByVal source As String, ByVal destination As IList, ByVal delimeter As Char)
 
             If source Is Nothing Then Exit Sub
@@ -313,9 +267,7 @@ Namespace Collections
 
         End Sub
 
-        ''' <summary>
-        ''' <para>Rearranges all the elements in the array into a random order</para>
-        ''' </summary>
+        ''' <summary>Rearranges all the elements in the array into a random order</summary>
         ''' <remarks>
         ''' <para>
         ''' This function is just a semantic reference to the ScrambleList function (the Array class implements IList)
@@ -329,12 +281,8 @@ Namespace Collections
 
         End Sub
 
-        ''' <summary>
-        ''' <para>Rearranges all the elements in the list (i.e., any collection implementing IList) into a random order</para>
-        ''' </summary>
-        ''' <remarks>
-        ''' <para>This function uses a cryptographically strong random number generator to perform the scramble</para>
-        ''' </remarks>
+        ''' <summary>Rearranges all the elements in the list (i.e., any collection implementing IList) into a random order</summary>
+        ''' <remarks>This function uses a cryptographically strong random number generator to perform the scramble</remarks>
         Public Shared Sub ScrambleList(ByVal source As IList)
 
             If source Is Nothing Then Throw New ArgumentNullException("Source list is null")
@@ -358,9 +306,7 @@ Namespace Collections
 
         End Sub
 
-        ''' <summary>
-        ''' <para>Determines if given item is an object (i.e., a reference type) but not a string</para>
-        ''' </summary>
+        ''' <summary>Determines if given item is an object (i.e., a reference type) but not a string</summary>
         Public Shared Function IsNonStringReference(ByVal item As Object) As Boolean
 
             Return (IsReference(item) And Not TypeOf item Is String)

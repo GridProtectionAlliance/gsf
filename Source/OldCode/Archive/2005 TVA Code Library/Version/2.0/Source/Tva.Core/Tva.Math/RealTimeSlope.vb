@@ -24,9 +24,7 @@ Imports Tva.DateTime.Common
 
 Namespace Math
 
-    ''' <summary>
-    ''' <para>Calculates slope for a real-time continuous data stream</para>
-    ''' </summary>
+    ''' <summary>Calculates slope for a real-time continuous data stream</summary>
     Public Class RealTimeSlope
 
         Private m_regressionInterval As Integer
@@ -41,9 +39,7 @@ Namespace Math
         Public Event Status(ByVal message As String)
         Public Event Recalculated()
 
-        ''' <summary>
-        ''' Creates a new instance of the real-time slope calculation class
-        ''' </summary>
+        ''' <summary>Creates a new instance of the real-time slope calculation class</summary>
         ''' <param name="regressionInterval">Time span over which to calculate slope</param>
         ''' <param name="estimatedRefreshInterval">Estimated data points per second</param>
         Public Sub New(ByVal regressionInterval As Integer, ByVal estimatedRefreshInterval As Double)
@@ -56,12 +52,9 @@ Namespace Math
 
         End Sub
 
-        ''' <summary>
-        ''' Adds a new x, y data pair to continuous data set
-        ''' </summary>
+        ''' <summary>Adds a new x, y data pair to continuous data set</summary>
         ''' <param name="x">New x-axis value</param>
         ''' <param name="y">New y-axis value</param>
-        ''' <remarks></remarks>
         Public Sub Calculate(ByVal x As Double, ByVal y As Double)
 
             SyncLock m_xValues.SyncRoot
@@ -117,18 +110,14 @@ Namespace Math
 
         End Sub
 
-        ''' <summary>
-        ''' Current calculated slope for data set
-        ''' </summary>
+        ''' <summary>Current calculated slope for data set</summary>
         Public ReadOnly Property Slope() As Double
             Get
                 Return m_slope
             End Get
         End Property
 
-        ''' <summary>
-        ''' Run-time, in seconds, for which slope has maintained a continuous positive or negative trend
-        ''' </summary>
+        ''' <summary>Run-time, in seconds, for which slope has maintained a continuous positive or negative trend</summary>
         Public ReadOnly Property RunTime() As Double
             Get
                 Return (m_regressionInterval + TicksToSeconds(Date.Now.Ticks - m_slopeRun.Ticks))

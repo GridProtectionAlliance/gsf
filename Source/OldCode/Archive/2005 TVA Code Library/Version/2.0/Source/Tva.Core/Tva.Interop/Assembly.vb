@@ -37,9 +37,7 @@ Namespace Interop
 
         Private m_assemblyInstance As System.Reflection.Assembly
 
-        ''' <summary>
-        ''' Initializes a instance of Tva.Interop.Assembly for the specified System.Reflection.Assembly.  
-        ''' </summary>
+        ''' <summary>Initializes a instance of Tva.Interop.Assembly for the specified System.Reflection.Assembly.</summary>
         ''' <param name="assemblyInstance">An instance of System.Reflection.Assembly for which a Tva.Interop.Assembly instance is to be created.</param>
         Public Sub New(ByVal assemblyInstance As System.Reflection.Assembly)
 
@@ -47,9 +45,7 @@ Namespace Interop
 
         End Sub
 
-        ''' <summary>
-        ''' <para>Returns only assembly name and version from full assembly name.</para>
-        ''' </summary>
+        ''' <summary>Returns only assembly name and version from full assembly name.</summary>
         Public Shared Function GetShortAssemblyName(ByVal assemblyInstance As System.Reflection.Assembly) As String
 
             Dim fullName As String = assemblyInstance.FullName
@@ -63,9 +59,7 @@ Namespace Interop
 
         End Function
 
-        ''' <summary>
-        ''' Get the Tva.Interop.Assembly instance of the assembly that invoked the currently executing method.
-        ''' </summary>
+        ''' <summary>Get the Tva.Interop.Assembly instance of the assembly that invoked the currently executing method.</summary>
         ''' <returns>The Tva.Interop.Assembly instance of the assembly that invoked the currently executing method.</returns>
         Public Shared ReadOnly Property CallingAssembly() As Assembly
             Get
@@ -74,12 +68,8 @@ Namespace Interop
             End Get
         End Property
 
-        ''' <summary>
-        ''' Gets the Tva.Interop.Assembly instance of the process executable in the default application domain.
-        ''' </summary>
-        ''' <value></value>
+        ''' <summary>Gets the Tva.Interop.Assembly instance of the process executable in the default application domain.</summary>
         ''' <returns>The Tva.Interop.Assembly instance of the process executable in the default application domain.</returns>
-        ''' <remarks></remarks>
         Public Shared ReadOnly Property EntryAssembly() As Assembly
             Get
                 If m_entryAssembly Is Nothing Then m_entryAssembly = New Assembly(GetEntryAssembly())
@@ -87,12 +77,8 @@ Namespace Interop
             End Get
         End Property
 
-        ''' <summary>
-        ''' Gets the Tva.Interop.Assembly instance of the assembly that contains the code that is currently executing.
-        ''' </summary>
-        ''' <value></value>
+        ''' <summary>Gets the Tva.Interop.Assembly instance of the assembly that contains the code that is currently executing.</summary>
         ''' <returns>the Tva.Interop.Assembly instance of the assembly that contains the code that is currently executing.</returns>
-        ''' <remarks></remarks>
         Public Shared ReadOnly Property ExecutingAssembly() As Assembly
             Get
                 If m_executingAssembly Is Nothing Then m_executingAssembly = New Assembly(GetExecutingAssembly())
@@ -100,156 +86,103 @@ Namespace Interop
             End Get
         End Property
 
-        ''' <summary>
-        ''' Gets the title information of the assembly.
-        ''' </summary>
-        ''' <value></value>
+        ''' <summary>Gets the title information of the assembly.</summary>
         ''' <returns>The title information of the assembly.</returns>
-        ''' <remarks></remarks>
         Public ReadOnly Property Title() As String
             Get
                 Return DirectCast(GetCustomAttribute(GetType(AssemblyTitleAttribute)), AssemblyTitleAttribute).Title()
             End Get
         End Property
 
-        ''' <summary>
-        ''' Gets the description information of the assembly.
-        ''' </summary>
-        ''' <value></value>
+        ''' <summary>Gets the description information of the assembly.</summary>
         ''' <returns>The description information of the assembly.</returns>
-        ''' <remarks></remarks>
         Public ReadOnly Property Description() As String
             Get
                 Return DirectCast(GetCustomAttribute(GetType(AssemblyDescriptionAttribute)), AssemblyDescriptionAttribute).Description()
             End Get
         End Property
 
-        ''' <summary>
-        ''' Gets the company name information of the assembly.
-        ''' </summary>
-        ''' <value></value>
+        ''' <summary>Gets the company name information of the assembly.</summary>
         ''' <returns>The company name information of the assembly.</returns>
-        ''' <remarks></remarks>
         Public ReadOnly Property Company() As String
             Get
                 Return DirectCast(GetCustomAttribute(GetType(AssemblyCompanyAttribute)), AssemblyCompanyAttribute).Company()
             End Get
         End Property
 
-        ''' <summary>
-        ''' Gets the product name information of the assembly.
-        ''' </summary>
-        ''' <value></value>
+        ''' <summary>Gets the product name information of the assembly.</summary>
         ''' <returns>The product name information of the assembly.</returns>
-        ''' <remarks></remarks>
         Public ReadOnly Property Product() As String
             Get
                 Return DirectCast(GetCustomAttribute(GetType(AssemblyProductAttribute)), AssemblyProductAttribute).Product()
             End Get
         End Property
 
-        ''' <summary>
-        ''' Gets the copyright information of the assembly.
-        ''' </summary>
-        ''' <value></value>
+        ''' <summary>Gets the copyright information of the assembly.</summary>
         ''' <returns>The copyright information of the assembly.</returns>
-        ''' <remarks></remarks>
         Public ReadOnly Property Copyright() As String
             Get
                 Return DirectCast(GetCustomAttribute(GetType(AssemblyCopyrightAttribute)), AssemblyCopyrightAttribute).Copyright()
             End Get
         End Property
 
-        ''' <summary>
-        ''' Gets the trademark information of the assembly.
-        ''' </summary>
-        ''' <value></value>
+        ''' <summary>Gets the trademark information of the assembly.</summary>
         ''' <returns>The trademark information of the assembly.</returns>
-        ''' <remarks></remarks>
         Public ReadOnly Property Trademark() As String
             Get
                 Return DirectCast(GetCustomAttribute(GetType(AssemblyTrademarkAttribute)), AssemblyTrademarkAttribute).Trademark()
             End Get
         End Property
 
-        ''' <summary>
-        ''' Gets the configuration information of the assembly.
-        ''' </summary>
-        ''' <value></value>
+        ''' <summary>Gets the configuration information of the assembly.</summary>
         ''' <returns>The configuration information of the assembly.</returns>
-        ''' <remarks></remarks>
         Public ReadOnly Property Configuration() As String
             Get
                 Return DirectCast(GetCustomAttribute(GetType(AssemblyConfigurationAttribute)), AssemblyConfigurationAttribute).Configuration()
             End Get
         End Property
 
-        ''' <summary>
-        ''' Gets a boolean value indicating if the assembly has been built as delay-signed.
-        ''' </summary>
-        ''' <value></value>
+        ''' <summary>Gets a boolean value indicating if the assembly has been built as delay-signed.</summary>
         ''' <returns>True if the assembly has been built as delay-signed; otherwise, False.</returns>
-        ''' <remarks></remarks>
         Public ReadOnly Property DelaySign() As Boolean
             Get
                 Return DirectCast(GetCustomAttribute(GetType(AssemblyDelaySignAttribute)), AssemblyDelaySignAttribute).DelaySign()
             End Get
         End Property
 
-        ''' <summary>
-        ''' Gets the version information of the assembly.
-        ''' </summary>
-        ''' <value></value>
+        ''' <summary>Gets the version information of the assembly.</summary>
         ''' <returns>The version information of the assembly</returns>
-        ''' <remarks></remarks>
         Public ReadOnly Property InformationalVersion() As String
             Get
                 Return DirectCast(GetCustomAttribute(GetType(AssemblyInformationalVersionAttribute)), AssemblyInformationalVersionAttribute).InformationalVersion()
             End Get
         End Property
 
-        ''' <summary>
-        ''' Gets the name of the file containing the key pair used to generate a strong name for the attributed assembly.
-        ''' </summary>
-        ''' <value></value>
+        ''' <summary>Gets the name of the file containing the key pair used to generate a strong name for the attributed assembly.</summary>
         ''' <returns>A string containing the name of the file that contains the key pair.</returns>
-        ''' <remarks></remarks>
         Public ReadOnly Property KeyFile() As String
             Get
                 Return DirectCast(GetCustomAttribute(GetType(AssemblyKeyFileAttribute)), AssemblyKeyFileAttribute).KeyFile()
             End Get
         End Property
 
-        ''' <summary>
-        ''' Gets the culture name of the assembly.
-        ''' </summary>
-        ''' <value></value>
+        ''' <summary>Gets the culture name of the assembly.</summary>
         ''' <returns>The culture name of the assembly.</returns>
-        ''' <remarks></remarks>
         Public ReadOnly Property CultureName() As String
             Get
                 Return DirectCast(GetCustomAttribute(GetType(NeutralResourcesLanguageAttribute)), NeutralResourcesLanguageAttribute).CultureName()
             End Get
         End Property
 
-        ''' <summary>
-        ''' Gets the assembly version used to instruct the System.Resources.ResourceManager to ask for a particular version of a satellite assembly to simplify updates of the main assembly of an application.
-        ''' </summary>
-        ''' <value></value>
-        ''' <returns></returns>
-        ''' <remarks></remarks>
+        ''' <summary>Gets the assembly version used to instruct the System.Resources.ResourceManager to ask for a particular version of a satellite assembly to simplify updates of the main assembly of an application.</summary>
         Public ReadOnly Property SatelliteContractVersion() As String
             Get
                 Return DirectCast(GetCustomAttribute(GetType(SatelliteContractVersionAttribute)), SatelliteContractVersionAttribute).Version()
             End Get
         End Property
 
-        ''' <summary>
-        ''' Gets the string representing the assembly version used to indicates to a COM client that all classes in the current version of the assembly are compatible with classes in an earlier version of the assembly.
-        ''' </summary>
-        ''' <value></value>
+        ''' <summary>Gets the string representing the assembly version used to indicates to a COM client that all classes in the current version of the assembly are compatible with classes in an earlier version of the assembly.</summary>
         ''' <returns>The string representing the assembly version in MajorVersion.MinorVersion.RevisionNumber.BuildNumber format.</returns>
-        ''' <remarks></remarks>
         Public ReadOnly Property ComCompatibleVersion() As String
             Get
                 With DirectCast(GetCustomAttribute(GetType(ComCompatibleVersionAttribute)), ComCompatibleVersionAttribute)
@@ -258,36 +191,24 @@ Namespace Interop
             End Get
         End Property
 
-        ''' <summary>
-        '''  Gets a boolean value indicating if the assembly is exposed to COM.
-        ''' </summary>
-        ''' <value></value>
+        ''' <summary>Gets a boolean value indicating if the assembly is exposed to COM.</summary>
         ''' <returns>True if the assembly is exposed to COM; otherwise, False.</returns>
-        ''' <remarks></remarks>
         Public ReadOnly Property ComVisible() As Boolean
             Get
                 Return DirectCast(GetCustomAttribute(GetType(ComVisibleAttribute)), ComVisibleAttribute).Value()
             End Get
         End Property
 
-        ''' <summary>
-        ''' Get the assembly GUID that is used as an ID if the assembly is exposed to COM.
-        ''' </summary>
-        ''' <value></value>
+        ''' <summary>Get the assembly GUID that is used as an ID if the assembly is exposed to COM.</summary>
         ''' <returns>The assembly GUID that is used as an ID if the assembly is exposed to COM.</returns>
-        ''' <remarks></remarks>
         Public ReadOnly Property Guid() As String
             Get
                 Return DirectCast(GetCustomAttribute(GetType(GuidAttribute)), GuidAttribute).Value()
             End Get
         End Property
 
-        ''' <summary>
-        ''' Gets the string representing the assembly version number in MajorVersion.MinorVersion format.
-        ''' </summary>
-        ''' <value></value>
+        ''' <summary>Gets the string representing the assembly version number in MajorVersion.MinorVersion format.</summary>
         ''' <returns>The string representing the assembly version number in MajorVersion.MinorVersion format.</returns>
-        ''' <remarks></remarks>
         Public ReadOnly Property TypeLibVersion() As String
             Get
                 With DirectCast(GetCustomAttribute(GetType(TypeLibVersionAttribute)), TypeLibVersionAttribute)
@@ -296,143 +217,96 @@ Namespace Interop
             End Get
         End Property
 
-        ''' <summary>
-        ''' Gets a boolean value indicating whether the indicated program element is CLS-compliant.
-        ''' </summary>
-        ''' <value></value>
+        ''' <summary>Gets a boolean value indicating whether the indicated program element is CLS-compliant.</summary>
         ''' <returns>True if the program element is CLS-compliant; otherwise, False.</returns>
-        ''' <remarks></remarks>
         Public ReadOnly Property CLSCompliant() As Boolean
             Get
                 Return DirectCast(GetCustomAttribute(GetType(CLSCompliantAttribute)), CLSCompliantAttribute).IsCompliant()
             End Get
         End Property
 
-        ''' <summary>
-        ''' Gets a value that indicates whether the runtime will track information during code generation for the debugger.
-        ''' </summary>
-        ''' <value></value>
+        ''' <summary>Gets a value that indicates whether the runtime will track information during code generation for the debugger.</summary>
         ''' <returns>True if the runtime will track information during code generation for the debugger; otherwise, False.</returns>
-        ''' <remarks></remarks>
         Public ReadOnly Property Debuggable() As Boolean
             Get
                 Return DirectCast(GetCustomAttribute(GetType(DebuggableAttribute)), DebuggableAttribute).IsJITTrackingEnabled()
             End Get
         End Property
 
-        ''' <summary>
-        ''' Gets the path or UNC location of the loaded file that contains the manifest.
-        ''' </summary>
-        ''' <value></value>
+        ''' <summary>Gets the path or UNC location of the loaded file that contains the manifest.</summary>
         ''' <returns>The location of the loaded file that contains the manifest.</returns>
-        ''' <remarks></remarks>
         Public ReadOnly Property Location() As String
             Get
                 Return m_assemblyInstance.Location().ToLower()
             End Get
         End Property
 
-        ''' <summary>
-        ''' Gets the location of the assembly as specified originally, for example, in an System.Reflection.AssemblyName object.
-        ''' </summary>
-        ''' <value></value>
+        ''' <summary>Gets the location of the assembly as specified originally, for example, in an System.Reflection.AssemblyName object.</summary>
         ''' <returns>The location of the assembly as specified originally.</returns>
-        ''' <remarks></remarks>
         Public ReadOnly Property CodeBase() As String
             Get
                 Return m_assemblyInstance.CodeBase().Replace("file:///", "").ToLower()
             End Get
         End Property
 
-        ''' <summary>
-        ''' Gets the display name of the assembly.
-        ''' </summary>
-        ''' <value></value>
+        ''' <summary>Gets the display name of the assembly.</summary>
         ''' <returns>The display name of the assembly.</returns>
-        ''' <remarks></remarks>
         Public ReadOnly Property FullName() As String
             Get
                 Return m_assemblyInstance.FullName()
             End Get
         End Property
 
-        ''' <summary>
-        ''' Gets the simple, unencrypted name of the assembly.
-        ''' </summary>
-        ''' <value></value>
+        ''' <summary>Gets the simple, unencrypted name of the assembly.</summary>
         ''' <returns>A string that is the simple, unencrypted name of the assembly.</returns>
-        ''' <remarks></remarks>
         Public ReadOnly Property Name() As String
             Get
                 Return m_assemblyInstance.GetName().Name()
             End Get
         End Property
 
-        ''' <summary>
-        ''' Gets the major, minor, revision, and build numbers of the assembly.
-        ''' </summary>
-        ''' <value></value>
+        ''' <summary>Gets the major, minor, revision, and build numbers of the assembly.</summary>
         ''' <returns>A System.Version object representing the major, minor, revision, and build numbers of the assembly.</returns>
-        ''' <remarks></remarks>
         Public ReadOnly Property Version() As Version
             Get
                 Return m_assemblyInstance.GetName().Version()
             End Get
         End Property
 
-        ''' <summary>
-        ''' Gets the string representing the version of the common language runtime (CLR) saved in the file containing the manifest.
-        ''' </summary>
-        ''' <value></value>
+        ''' <summary>Gets the string representing the version of the common language runtime (CLR) saved in the file containing the manifest.</summary>
         ''' <returns>The string representing the CLR version folder name. This is not a full path.</returns>
-        ''' <remarks></remarks>
         Public ReadOnly Property ImageRuntimeVersion() As String
             Get
                 Return m_assemblyInstance.ImageRuntimeVersion()
             End Get
         End Property
 
-        ''' <summary>
-        ''' Gets a boolean value indicating whether the assembly was loaded from the global assembly cache.
-        ''' </summary>
-        ''' <value></value>
+        ''' <summary>Gets a boolean value indicating whether the assembly was loaded from the global assembly cache.</summary>
         ''' <returns>True if the assembly was loaded from the global assembly cache; otherwise, False.</returns>
-        ''' <remarks></remarks>
         Public ReadOnly Property GACLoaded() As Boolean
             Get
                 Return m_assemblyInstance.GlobalAssemblyCache()
             End Get
         End Property
 
-        ''' <summary>
-        ''' Gets the date and time when the assembly was last built.
-        ''' </summary>
-        ''' <value></value>
+        ''' <summary>Gets the date and time when the assembly was last built.</summary>
         ''' <returns>The date and time when the assembly was last built.</returns>
-        ''' <remarks></remarks>
         Public ReadOnly Property BuildDate() As Date
             Get
                 Return File.GetLastWriteTime(m_assemblyInstance.Location())
             End Get
         End Property
 
-        ''' <summary>
-        ''' Gets the root namespace of the assembly.
-        ''' </summary>
-        ''' <value></value>
+        ''' <summary>Gets the root namespace of the assembly.</summary>
         ''' <returns>The root namespace of the assembly.</returns>
-        ''' <remarks></remarks>
         Public ReadOnly Property RootNamespace() As String
             Get
                 Return m_assemblyInstance.GetExportedTypes(0).Namespace()
             End Get
         End Property
 
-        ''' <summary>
-        ''' Get a collection of assembly attributes exposed by the assembly.
-        ''' </summary>
+        ''' <summary>Get a collection of assembly attributes exposed by the assembly.</summary>
         ''' <returns>A System.Specialized.KeyValueCollection of assembly attributes.</returns>
-        ''' <remarks></remarks>
         Public Function GetAttributes() As Specialized.NameValueCollection
 
             Dim assemblyAttributes As New Specialized.NameValueCollection()
@@ -496,12 +370,9 @@ Namespace Interop
 
         End Function
 
-        ''' <summary>
-        ''' Gets the specified assembly attribute if it is exposed by the assembly.
-        ''' </summary>
+        ''' <summary>Gets the specified assembly attribute if it is exposed by the assembly.</summary>
         ''' <param name="attributeType">Type of the attribute to get.</param>
         ''' <returns>The assembly attribute.</returns>
-        ''' <remarks></remarks>
         Public Function GetCustomAttribute(ByVal attributeType As Type) As Object
 
             'Returns the requested assembly attribute.
@@ -514,12 +385,9 @@ Namespace Interop
 
         End Function
 
-        ''' <summary>
-        ''' Get the specified embedded resource from the assembly.
-        ''' </summary>
+        ''' <summary>Get the specified embedded resource from the assembly.</summary>
         ''' <param name="resourceName">Name of the embedded resource to get.</param>
         ''' <returns>The embedded resource.</returns>
-        ''' <remarks></remarks>
         Public Function GetEmbeddedResource(ByVal resourceName As String) As Stream
 
             'Extract and return the requested embedded resource.
@@ -527,11 +395,8 @@ Namespace Interop
 
         End Function
 
-        ''' <summary>
-        ''' Load the specified assembly that is embedded as a resource in the assembly.
-        ''' </summary>
+        ''' <summary>Load the specified assembly that is embedded as a resource in the assembly.</summary>
         ''' <param name="assemblyName">Name of the assembly to load.</param>
-        ''' <remarks></remarks>
         Public Shared Sub LoadAssemblyFromResource(ByVal assemblyName As String)
 
             Static addedResolver As Boolean

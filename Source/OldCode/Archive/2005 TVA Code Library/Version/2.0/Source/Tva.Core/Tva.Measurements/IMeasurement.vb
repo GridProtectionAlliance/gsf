@@ -21,6 +21,8 @@ Namespace Measurements
 
     Public Interface IMeasurement
 
+        Inherits IComparable
+
         ''' <summary>Handy instance reference to self</summary>
         ReadOnly Property This() As IMeasurement
 
@@ -34,8 +36,14 @@ Namespace Measurements
         ''' <remarks>The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001</remarks>
         Property Ticks() As Long
 
-        ''' <summary>Closest date representation of ticks of this measurement</summary>
+        ''' <summary>Date representation of ticks of this measurement</summary>
         ReadOnly Property Timestamp() As Date
+
+        ''' <summary>Determines if the quality of the numeric value of this measurement is good</summary>
+        Property ValueQualityIsGood() As Boolean
+
+        ''' <summary>Determines if the quality of the timestamp of this measurement is good</summary>
+        Property TimestampQualityIsGood() As Boolean
 
     End Interface
 

@@ -17,9 +17,7 @@
 
 Namespace IO
 
-    ''' <summary>
-    ''' <para>Defines common IO related functions (e.g., common stream and buffer functions)</para>
-    ''' </summary>
+    ''' <summary>Defines common IO related functions (e.g., common stream and buffer functions)</summary>
     Public NotInheritable Class Common
 
         Private Const BufferSize As Integer = 8192
@@ -30,9 +28,7 @@ Namespace IO
 
         End Sub
 
-        ''' <summary>
-        ''' <para>Copies input stream onto output stream</para>
-        ''' </summary>
+        ''' <summary>Copies input stream onto output stream</summary>
         Public Shared Sub CopyStream(ByVal inStream As System.IO.Stream, ByVal outStream As System.IO.Stream)
 
             Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BufferSize)
@@ -45,12 +41,8 @@ Namespace IO
 
         End Sub
 
-        ''' <summary>
-        ''' <para>Reads entire stream contents and returns byte array of data</para>
-        ''' </summary>
-        ''' <remarks>
-        ''' <para>Note: you should only use this on streams where you know the data size to be small</para>
-        ''' </remarks>
+        ''' <summary>Reads entire stream contents and returns byte array of data</summary>
+        ''' <remarks>Note: you should only use this on streams where you know the data size to be small</remarks>
         Public Shared Function ReadStream(ByVal inStream As System.IO.Stream) As Byte()
 
             Dim outStream As New System.IO.MemoryStream
@@ -61,12 +53,8 @@ Namespace IO
 
         End Function
 
-        ''' <summary>
-        ''' <para>Returns a buffer of the specified length</para>
-        ''' </summary>
-        ''' <remarks>
-        ''' <para>This function will grow or shrink a buffer as needed to make it the desired length</para>
-        ''' </remarks>
+        ''' <summary>Returns a buffer of the specified length</summary>
+        ''' <remarks>This function will grow or shrink a buffer as needed to make it the desired length</remarks>
         Public Shared Function TruncateBuffer(ByVal dataBuffer As Byte(), ByVal length As Integer) As Byte()
 
             If dataBuffer.Length = length Then

@@ -14,7 +14,7 @@ Imports System.Security.Permissions
 <Assembly: AssemblyCompany("TVA")> 
 <Assembly: AssemblyProduct("Shared .NET Code Library for TVA")> 
 <Assembly: AssemblyCopyright("Copyright © 2006, TVA - All rights reserved")> 
-<Assembly: AssemblyTrademark("Authors: J. Ritchie Carroll, Pinal C. Patel")> 
+<Assembly: AssemblyTrademark("Author: J. Ritchie Carroll")> 
 
 <Assembly: ComVisible(False)> 
 <Assembly: CLSCompliant(True)> 

@@ -18,7 +18,8 @@
 Namespace Collections
 
     ''' <summary>
-    ''' <para>This class will process a keyed collection of items on independent threads</para>
+    ''' <para>This class will process a keyed collection of items on independent threads.</para>
+    ''' <para>Consumer must implement a function to process items.</para>
     ''' </summary>
     ''' <typeparam name="TKey">Type of keys used to references process items</typeparam>
     ''' <typeparam name="TValue">Type of values to process</typeparam>
