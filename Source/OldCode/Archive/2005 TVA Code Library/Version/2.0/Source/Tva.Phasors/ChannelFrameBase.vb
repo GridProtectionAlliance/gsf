@@ -209,8 +209,6 @@ Public MustInherit Class ChannelFrameBase(Of T As IChannelCell)
         With DirectCast(state, IChannelFrameParsingState(Of T))
             For x As Integer = 0 To .CellCount - 1
                 ' Note: Final derived frame cell classes *must* expose Public Sub New(ByVal parent As IChannelFrame, ByVal state As IChannelFrameParsingState(Of T), ByVal index As Integer, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
-                '       ' TODO: Remove manual cell constructor....
-                '       Cells.Add(New IEEEC37_118.ConfigurationCell(Me, state, x, binaryImage, startIndex))
                 Cells.Add(Activator.CreateInstance(.CellType, New Object() {Me, state, x, binaryImage, startIndex}))
 
                 startIndex += Cells(x).BinaryLength
@@ -245,7 +243,7 @@ Public MustInherit Class ChannelFrameBase(Of T As IChannelCell)
     Protected Overridable Function CalculateChecksum(ByVal buffer As Byte(), ByVal offset As Integer, ByVal length As Integer) As UInt16
 
         Return CRC_CCITT(UInt16.MaxValue, buffer, offset, length)
-        'Return CRC16(-1, buffer, offset, length)
+        'Return CRC16(UInt16.MaxValue, buffer, offset, length)
 
     End Function
 

@@ -48,6 +48,25 @@
     <Compile Include="AnalogDefinitionCollection.vb" />
     <Compile Include="AnalogValueBase.vb" />
     <Compile Include="AnalogValueCollection.vb" />
+    <Compile Include="BpaPdcStream\AnalogDefinition.vb" />
+    <Compile Include="BpaPdcStream\AnalogValue.vb" />
+    <Compile Include="BpaPdcStream\Common.vb" />
+    <Compile Include="BpaPdcStream\ConfigurationCell.vb" />
+    <Compile Include="BpaPdcStream\ConfigurationCellCollection.vb" />
+    <Compile Include="BpaPdcStream\ConfigurationFrame.vb" />
+    <Compile Include="BpaPdcStream\DataCell.vb" />
+    <Compile Include="BpaPdcStream\DataCellCollection.vb" />
+    <Compile Include="BpaPdcStream\DataFrame.vb" />
+    <Compile Include="BpaPdcStream\DataPacket.vb" />
+    <Compile Include="BpaPdcStream\DataSample.vb" />
+    <Compile Include="BpaPdcStream\DigitalDefinition.vb" />
+    <Compile Include="BpaPdcStream\DigitalValue.vb" />
+    <Compile Include="BpaPdcStream\FrequencyDefinition.vb" />
+    <Compile Include="BpaPdcStream\FrequencyValue.vb" />
+    <Compile Include="BpaPdcStream\PhasorDefinition.vb" />
+    <Compile Include="BpaPdcStream\PhasorValue.vb" />
+    <Compile Include="BpaPdcStream\PMUCell.vb" />
+    <Compile Include="BpaPdcStream\PMUCellCollection.vb" />
     <Compile Include="ChannelBase.vb" />
     <Compile Include="ChannelCellBase.vb" />
     <Compile Include="ChannelCellCollectionBase.vb" />
@@ -105,6 +124,42 @@
     <Compile Include="IDataFrameParsingState.vb" />
     <Compile Include="IDigitalDefinition.vb" />
     <Compile Include="IDigitalValue.vb" />
+    <Compile Include="Ieee1344\BaseFrame.vb" />
+    <Compile Include="Ieee1344\Collections.vb" />
+    <Compile Include="Ieee1344\CommandFrame.vb" />
+    <Compile Include="Ieee1344\Common.vb" />
+    <Compile Include="Ieee1344\ConfigurationFile.vb" />
+    <Compile Include="Ieee1344\ConfigurationFrame.vb" />
+    <Compile Include="Ieee1344\DataFrame.vb" />
+    <Compile Include="Ieee1344\DigitalDefinition.vb" />
+    <Compile Include="Ieee1344\FrameParser.vb" />
+    <Compile Include="Ieee1344\HeaderFile.vb" />
+    <Compile Include="Ieee1344\HeaderFrame.vb" />
+    <Compile Include="Ieee1344\PhasorDefinition.vb" />
+    <Compile Include="Ieee1344\PhasorValue.vb" />
+    <Compile Include="IeeeC37_118\AnalogDefinition.vb" />
+    <Compile Include="IeeeC37_118\AnalogValue.vb" />
+    <Compile Include="IeeeC37_118\BaseFrame.vb" />
+    <Compile Include="IeeeC37_118\Collections.vb" />
+    <Compile Include="IeeeC37_118\CommandFrame.vb" />
+    <Compile Include="IeeeC37_118\Common.vb" />
+    <Compile Include="IeeeC37_118\ConfigurationCell.vb" />
+    <Compile Include="IeeeC37_118\ConfigurationCellCollection.vb" />
+    <Compile Include="IeeeC37_118\ConfigurationFile.vb" />
+    <Compile Include="IeeeC37_118\ConfigurationFrame.vb" />
+    <Compile Include="IeeeC37_118\DataCell.vb" />
+    <Compile Include="IeeeC37_118\DataCellCollection.vb" />
+    <Compile Include="IeeeC37_118\DataFrame.vb" />
+    <Compile Include="IeeeC37_118\DataSample.vb" />
+    <Compile Include="IeeeC37_118\DigitalDefinition.vb" />
+    <Compile Include="IeeeC37_118\DigitalValue.vb" />
+    <Compile Include="IeeeC37_118\FrameParser.vb" />
+    <Compile Include="IeeeC37_118\FrequencyDefinition.vb" />
+    <Compile Include="IeeeC37_118\FrequencyValue.vb" />
+    <Compile Include="IeeeC37_118\HeaderFile.vb" />
+    <Compile Include="IeeeC37_118\HeaderFrame.vb" />
+    <Compile Include="IeeeC37_118\PhasorDefinition.vb" />
+    <Compile Include="IeeeC37_118\PhasorValue.vb" />
     <Compile Include="IFrequencyDefinition.vb" />
     <Compile Include="IFrequencyValue.vb" />
     <Compile Include="IPhasorDefinition.vb" />
@@ -124,11 +179,6 @@
       <Project>{F611B9BA-C69D-449B-B596-FABFB746EA2A}</Project>
       <Name>Tva.IO.Compression</Name>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="BpaPdcStream\" />
-    <Folder Include="Ieee1344\" />
-    <Folder Include="IeeeC37.118\" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.VisualBasic.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
