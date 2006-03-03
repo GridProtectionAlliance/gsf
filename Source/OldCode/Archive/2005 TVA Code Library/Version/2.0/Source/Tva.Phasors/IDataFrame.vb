@@ -18,7 +18,7 @@
 ' This interface represents the protocol independent representation of any frame of data.
 Public Interface IDataFrame
 
-    Inherits IChannelFrame(Of IDataCell)
+    Inherits IChannelFrame
 
     Property ConfigurationFrame() As IConfigurationFrame
 

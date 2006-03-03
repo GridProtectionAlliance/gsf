@@ -26,7 +26,7 @@
 			ConfigurationType="2"
 			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
 			CharacterSet="2"
-			ManagedExtensions="1"
+			ManagedExtensions="4"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -48,7 +48,7 @@
 				Optimization="0"
 				AdditionalUsingDirectories="..\bin"
 				PreprocessorDefinitions="WIN32;_DEBUG"
-				MinimalRebuild="true"
+				MinimalRebuild="false"
 				BasicRuntimeChecks="0"
 				RuntimeLibrary="3"
 				WarningLevel="3"
@@ -72,10 +72,10 @@
 				LinkIncremental="1"
 				IgnoreAllDefaultLibraries="false"
 				IgnoreDefaultLibraryNames=""
-				EmbedManagedResourceFile="TVA.Compression.ZipFile.bmp"
+				EmbedManagedResourceFile="Tva.IO.Compression.ZipFile.bmp"
 				GenerateDebugInformation="true"
 				AssemblyDebug="1"
-				ProgramDatabaseFile="$(OutDir)/TVA.$(ProjectName).pdb"
+				ProgramDatabaseFile="$(OutDir)/$(ProjectName).pdb"
 				ResourceOnlyDLL="true"
 			/>
 			<Tool

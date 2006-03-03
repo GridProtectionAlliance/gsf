@@ -72,9 +72,9 @@ Global
 		SccProjectFilePathRelativizedFromConnection6 = Source\\Tva.Security\\
 		SccProjectUniqueName7 = Tva.Phasors\\Tva.Phasors.vbproj
 		SccProjectTopLevelParentUniqueName7 = TVA\u0020Code\u0020Library.sln
-		SccLocalPath7 = ..
+		SccProjectName7 = \u0022$/TVA\u0020Code\u0020Library/Version/2.0/Source/Tva.Phasors\u0022,\u0020IBGAAAAA
+		SccLocalPath7 = Tva.Phasors
 		CanCheckoutShared = false
-		SccProjectFilePathRelativizedFromConnection7 = Source\\Tva.Phasors\\
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

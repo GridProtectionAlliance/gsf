@@ -16,11 +16,11 @@
 '*******************************************************************************************************
 
 ' This interface represents the protocol independent parsing state of any frame of data.
-Public Interface IChannelFrameParsingState(Of T As IChannelCell)
+Public Interface IChannelFrameParsingState
 
     Inherits IChannelParsingState
 
-    ReadOnly Property Cells() As IChannelCellCollection(Of T)
+    ReadOnly Property Cells() As IChannelCellCollection(Of IChannel)
 
     ReadOnly Property CellType() As Type
 

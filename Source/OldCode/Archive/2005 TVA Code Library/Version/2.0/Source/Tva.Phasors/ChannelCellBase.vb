@@ -16,15 +16,15 @@
 '*******************************************************************************************************
 
 ' This class represents the common implementation of the protocol independent representation of any kind of data cell.
-Public MustInherit Class ChannelCellBase(Of T As IChannelCell)
+Public MustInherit Class ChannelCellBase
 
     Inherits ChannelBase
     Implements IChannelCell
 
-    Private m_parent As IChannelFrame(Of T)
+    Private m_parent As IChannelFrame
     Private m_alignOnDWordBoundry As Boolean
 
-    Protected Sub New(ByVal parent As IChannelFrame(Of T), ByVal alignOnDWordBoundry As Boolean)
+    Protected Sub New(ByVal parent As IChannelFrame, ByVal alignOnDWordBoundry As Boolean)
 
         MyBase.New()
 
@@ -33,16 +33,16 @@ Public MustInherit Class ChannelCellBase(Of T As IChannelCell)
 
     End Sub
 
-    ' Final dervived classes must expose Public Sub New(ByVal parent As IChannelFrame(Of T), ByVal state As IChannelFrameParsingState, ByVal index As Integer, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+    ' Final dervived classes must expose Public Sub New(ByVal parent As IChannelFrame, ByVal state As IChannelFrameParsingState, ByVal index As Integer, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
 
     ' Derived classes are expected to expose a Protected Sub New(ByVal channelCell As IChannelCell)
-    Protected Sub New(ByVal channelCell As T)
+    Protected Sub New(ByVal channelCell As IChannelCell)
 
         MyClass.New(channelCell.Parent, channelCell.AlignOnDWordBoundry)
 
     End Sub
 
-    Public ReadOnly Property Parent() As IChannelFrame(Of T) Implements IChannelCell.Parent
+    Public ReadOnly Property Parent() As IChannelFrame Implements IChannelCell.Parent
         Get
             Return m_parent
         End Get

@@ -17,52 +17,57 @@
 
 Imports System.Buffer
 Imports Tva.DateTime
+Imports Tva.DateTime.Common
 Imports Tva.IO.Compression.Common
 Imports Tva.Phasors.Common
 Imports Tva.Interop
 Imports Tva.Measurements
 
 ' This class represents the protocol independent common implementation of any frame of data that can be sent or received from a PMU.
-Public MustInherit Class ChannelFrameBase(Of T As IChannelCell)
+Public MustInherit Class ChannelFrameBase
 
     Inherits ChannelBase
-    Implements IChannelFrame(Of T), IFrame, IComparable
+    Implements IChannelFrame, IFrame, IComparable
 
     Private m_idCode As Int16
-    Private m_cells As IChannelCellCollection(Of T)
-    Private m_timeTag As UnixTimeTag
-    Private m_milliseconds As Double
+    Private m_cells As IChannelCellCollection(Of IChannel)
+    Private m_ticks As Long
     Private m_synchronizationIsValid As Boolean
     Private m_dataIsValid As Boolean
     Private m_published As Boolean
     Private m_frameLength As Int16
 
-    Protected Sub New(ByVal cells As IChannelCellCollection(Of T))
+    Protected Sub New(ByVal cells As IChannelCellCollection(Of IChannel))
 
         MyBase.New()
 
         m_cells = cells
-        m_timeTag = New UnixTimeTag(Date.Now)
+        m_ticks = Date.UtcNow.Ticks
         m_synchronizationIsValid = True
         m_dataIsValid = True
 
     End Sub
 
-    Protected Sub New(ByVal cells As IChannelCellCollection(Of T), ByVal timeTag As UnixTimeTag, ByVal milliseconds As Double, ByVal synchronizationIsValid As Boolean, ByVal dataIsValid As Boolean, ByVal idCode As Int16)
+    Protected Sub New(ByVal cells As IChannelCellCollection(Of IChannel), ByVal ticks As Long, ByVal synchronizationIsValid As Boolean, ByVal dataIsValid As Boolean, ByVal idCode As Int16)
 
         MyBase.New()
 
         m_cells = cells
-        m_timeTag = timeTag
-        m_milliseconds = milliseconds
+        m_ticks = ticks
         m_synchronizationIsValid = synchronizationIsValid
         m_dataIsValid = dataIsValid
         m_idCode = idCode
 
     End Sub
 
+    Protected Sub New(ByVal cells As IChannelCellCollection(Of IChannel), ByVal timeTag As UnixTimeTag, ByVal synchronizationIsValid As Boolean, ByVal dataIsValid As Boolean, ByVal idCode As Int16)
+
+        MyClass.New(cells, timeTag.ToDateTime.Ticks, synchronizationIsValid, dataIsValid, idCode)
+
+    End Sub
+
     ' Derived classes are expected to expose a Protected Sub New(ByVal state As IChannelFrameParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
-    Protected Sub New(ByVal state As IChannelFrameParsingState(Of T), ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+    Protected Sub New(ByVal state As IChannelFrameParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
 
         MyClass.New(state.Cells)
         ParsedFrameLength = state.FrameLength
@@ -71,19 +76,19 @@ Public MustInherit Class ChannelFrameBase(Of T As IChannelCell)
     End Sub
 
     ' Derived classes are expected to expose a Protected Sub New(ByVal channelFrame As IChannelFrame)
-    Protected Sub New(ByVal channelFrame As IChannelFrame(Of T))
+    Protected Sub New(ByVal channelFrame As IChannelFrame)
 
-        MyClass.New(channelFrame.Cells, channelFrame.TimeTag, channelFrame.Milliseconds, channelFrame.SynchronizationIsValid, channelFrame.DataIsValid, channelFrame.IDCode)
+        MyClass.New(channelFrame.Cells, channelFrame.Ticks, channelFrame.SynchronizationIsValid, channelFrame.DataIsValid, channelFrame.IDCode)
 
     End Sub
 
-    Public Overridable ReadOnly Property Cells() As IChannelCellCollection(Of T) Implements IChannelFrame(Of T).Cells
+    Public Overridable ReadOnly Property Cells() As IChannelCellCollection(Of IChannel) Implements IChannelFrame.Cells
         Get
             Return m_cells
         End Get
     End Property
 
-    Public Overridable Property IDCode() As Int16 Implements IChannelFrame(Of T).IDCode
+    Public Overridable Property IDCode() As Int16 Implements IChannelFrame.IDCode
         Get
             Return m_idCode
         End Get
@@ -92,49 +97,28 @@ Public MustInherit Class ChannelFrameBase(Of T As IChannelCell)
         End Set
     End Property
 
-    Public Property Ticks() As Long Implements IFrame.Ticks
+    Public Property Ticks() As Long Implements IChannelFrame.Ticks, IFrame.Ticks
         Get
-            Return m_timeTag.ToDateTime.Ticks
+            Return m_ticks
         End Get
         Set(ByVal value As Long)
-            m_timeTag = New UnixTimeTag(New Date(value))
+            m_ticks = value
         End Set
     End Property
 
-    Public Overridable Property TimeTag() As UnixTimeTag Implements IChannelFrame(Of T).TimeTag
+    Public Overridable ReadOnly Property TimeTag() As UnixTimeTag Implements IChannelFrame.TimeTag
         Get
-            Return m_timeTag
-        End Get
-        Set(ByVal value As UnixTimeTag)
-            m_timeTag = value
-        End Set
-    End Property
-
-    Public Overridable Property NtpTimeTag() As NtpTimeTag Implements IChannelFrame(Of T).NtpTimeTag
-        Get
-            Return New NtpTimeTag(m_timeTag.ToDateTime)
-        End Get
-        Set(ByVal value As NtpTimeTag)
-            m_timeTag = New UnixTimeTag(value.ToDateTime)
-        End Set
-    End Property
-
-    Public Overridable Property Milliseconds() As Double Implements IChannelFrame(Of T).Milliseconds
-        Get
-            Return m_milliseconds
-        End Get
-        Set(ByVal value As Double)
-            m_milliseconds = value
-        End Set
-    End Property
-
-    Public Overridable ReadOnly Property Timestamp() As Date Implements IChannelFrame(Of T).Timestamp, IFrame.Timestamp
-        Get
-            Return TimeTag.ToDateTime.AddMilliseconds(Milliseconds)
+            Return New UnixTimeTag(TicksToSeconds(m_ticks))
         End Get
     End Property
 
-    Public Overridable Property SynchronizationIsValid() As Boolean Implements IChannelFrame(Of T).SynchronizationIsValid
+    Public Overridable ReadOnly Property Timestamp() As Date Implements IChannelFrame.Timestamp, IFrame.Timestamp
+        Get
+            Return New Date(m_ticks)
+        End Get
+    End Property
+
+    Public Overridable Property SynchronizationIsValid() As Boolean Implements IChannelFrame.SynchronizationIsValid
         Get
             Return m_synchronizationIsValid
         End Get
@@ -143,7 +127,7 @@ Public MustInherit Class ChannelFrameBase(Of T As IChannelCell)
         End Set
     End Property
 
-    Public Overridable Property DataIsValid() As Boolean Implements IChannelFrame(Of T).DataIsValid
+    Public Overridable Property DataIsValid() As Boolean Implements IChannelFrame.DataIsValid
         Get
             Return m_dataIsValid
         End Get
@@ -152,7 +136,7 @@ Public MustInherit Class ChannelFrameBase(Of T As IChannelCell)
         End Set
     End Property
 
-    Public Overridable Property Published() As Boolean Implements IChannelFrame(Of T).Published, IFrame.Published
+    Public Overridable Property Published() As Boolean Implements IChannelFrame.Published, IFrame.Published
         Get
             Return m_published
         End Get
@@ -241,10 +225,10 @@ Public MustInherit Class ChannelFrameBase(Of T As IChannelCell)
         Dim length As Int16 = BinaryLength
 
 #If DEBUG Then
-            Dim bufferSum As UInt16 = EndianOrder.BigEndian.ToInt16(buffer, startIndex + length - 2)
-            Dim calculatedSum As UInt16 = CalculateChecksum(buffer, startIndex, length - 2)
-            Debug.WriteLine("Buffer Sum = " & bufferSum & ", Calculated Sum = " & calculatedSum)
-            Return (bufferSum = calculatedSum)
+        Dim bufferSum As UInt16 = EndianOrder.BigEndian.ToInt16(buffer, startIndex + length - 2)
+        Dim calculatedSum As UInt16 = CalculateChecksum(buffer, startIndex, length - 2)
+        Debug.WriteLine("Buffer Sum = " & bufferSum & ", Calculated Sum = " & calculatedSum)
+        Return (bufferSum = calculatedSum)
 #Else
         Return EndianOrder.BigEndian.ToUInt16(buffer, startIndex + length - 2) = CalculateChecksum(buffer, startIndex, length - 2)
 #End If
@@ -265,20 +249,20 @@ Public MustInherit Class ChannelFrameBase(Of T As IChannelCell)
 
     End Function
 
-    ' We sort frames by timetag
+    ' We sort frames by timestamp
     Public Function CompareTo(ByVal obj As Object) As Integer Implements IComparable.CompareTo
 
-        If TypeOf obj Is IChannelFrame(Of T) Then
-            Return m_timeTag.CompareTo(DirectCast(obj, IChannelFrame(Of T)).TimeTag)
+        If TypeOf obj Is IChannelFrame Then
+            Return m_ticks.CompareTo(DirectCast(obj, IChannelFrame).Ticks)
         Else
             Throw New ArgumentException(InheritedType.Name & " can only be compared with other IChannelFrames...")
         End If
 
     End Function
 
-    Public ReadOnly Property Measurements() As System.Collections.Generic.IDictionary(Of Integer, IMeasurement) Implements IFrame.Measurements
+    Public Overridable ReadOnly Property Measurements() As System.Collections.Generic.IDictionary(Of Integer, IMeasurement) Implements IFrame.Measurements
         Get
-            Throw New NotImplementedException("Not implemented for now...")
+            Throw New NotImplementedException("Measurements dictionary from IFrame interface is not implemented in channel frame base class")
         End Get
     End Property
 

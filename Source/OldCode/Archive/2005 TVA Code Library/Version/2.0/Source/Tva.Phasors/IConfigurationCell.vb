@@ -36,13 +36,13 @@ Public Interface IConfigurationCell
 
     ReadOnly Property IDLabelLength() As Integer
 
-    ReadOnly Property PhasorDefinitions() As PhasorDefinitionCollection
+    'ReadOnly Property PhasorDefinitions() As PhasorDefinitionCollection
 
     Property FrequencyDefinition() As IFrequencyDefinition
 
-    ReadOnly Property AnalogDefinitions() As AnalogDefinitionCollection
+    'ReadOnly Property AnalogDefinitions() As AnalogDefinitionCollection
 
-    ReadOnly Property DigitalDefinitions() As DigitalDefinitionCollection
+    'ReadOnly Property DigitalDefinitions() As DigitalDefinitionCollection
 
     ReadOnly Property SampleRate() As Int16
 

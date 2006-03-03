@@ -16,9 +16,9 @@
 '*******************************************************************************************************
 
 ' This class represents the common implementation of the protocol independent representation of a collection of any kind of data value.
-Public MustInherit Class ChannelValueCollectionBase(Of T As IChannelValue)
+Public MustInherit Class ChannelValueCollectionBase(Of TDefinition As IChannelDefinition, TValue As IChannelValue(Of TDefinition))
 
-    Inherits ChannelCollectionBase(Of T)
+    Inherits ChannelCollectionBase(Of TValue)
 
     Private m_fixedCount As Integer
     Private m_floatCount As Integer
@@ -29,7 +29,7 @@ Public MustInherit Class ChannelValueCollectionBase(Of T As IChannelValue)
 
     End Sub
 
-    Public Shadows Sub Add(ByVal value As T)
+    Public Shadows Sub Add(ByVal value As TValue)
 
         ' In typical usage, all channel values will be of the same data type - but we can't anticipate all
         ' possible uses of collection, so we track totals of each data type so we can quickly ascertain if

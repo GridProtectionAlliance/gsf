@@ -16,13 +16,13 @@
 '*******************************************************************************************************
 
 ' This class represents the common implementation of the protocol independent representation of any kind of data value.
-Public MustInherit Class ChannelValueBase
+Public MustInherit Class ChannelValueBase(Of T As IChannelDefinition)
 
     Inherits ChannelBase
-    Implements IChannelValue
+    Implements IChannelValue(Of T)
 
     Private m_parent As IDataCell
-    Private m_definition As IChannelDefinition
+    Private m_definition As T
 
     Protected Sub New(ByVal parent As IDataCell)
 
@@ -32,7 +32,7 @@ Public MustInherit Class ChannelValueBase
 
     End Sub
 
-    Protected Sub New(ByVal parent As IDataCell, ByVal channelDefinition As IChannelDefinition)
+    Protected Sub New(ByVal parent As IDataCell, ByVal channelDefinition As T)
 
         MyBase.New()
 
@@ -41,37 +41,37 @@ Public MustInherit Class ChannelValueBase
 
     End Sub
 
-    ' Derived classes are expected to expose a Protected Sub New(ByVal channelValue As IChannelValue)
-    Protected Sub New(ByVal channelValue As IChannelValue)
+    ' Derived classes are expected to expose a Protected Sub New(ByVal channelValue As IChannelValue(Of T))
+    Protected Sub New(ByVal channelValue As IChannelValue(Of T))
 
         MyClass.New(channelValue.Parent, channelValue.Definition)
 
     End Sub
 
-    Public ReadOnly Property Parent() As IDataCell Implements IChannelValue.Parent
+    Public ReadOnly Property Parent() As IDataCell Implements IChannelValue(Of T).Parent
         Get
             Return m_parent
         End Get
     End Property
 
-    Public Property Definition() As IChannelDefinition Implements IChannelValue.Definition
+    Public Property Definition() As T Implements IChannelValue(Of T).Definition
         Get
             Return m_definition
         End Get
-        Set(ByVal value As IChannelDefinition)
+        Set(ByVal value As T)
             m_definition = Value
         End Set
     End Property
 
-    Public Overridable ReadOnly Property DataFormat() As DataFormat Implements IChannelValue.DataFormat
+    Public Overridable ReadOnly Property DataFormat() As DataFormat Implements IChannelValue(Of T).DataFormat
         Get
             Return m_definition.DataFormat
         End Get
     End Property
 
-    Public MustOverride ReadOnly Property IsEmpty() As Boolean Implements IChannelValue.IsEmpty
+    Public MustOverride ReadOnly Property IsEmpty() As Boolean Implements IChannelValue(Of T).IsEmpty
 
-    Public MustOverride ReadOnly Property Values() As Double() Implements IChannelValue.Values
+    Public MustOverride ReadOnly Property Values() As Double() Implements IChannelValue(Of T).Values
 
 End Class
 

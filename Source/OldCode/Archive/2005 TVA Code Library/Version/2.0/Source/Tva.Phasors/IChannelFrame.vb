@@ -18,21 +18,19 @@
 Imports Tva.DateTime
 
 ' This interface represents the protocol independent representation of any frame of data.
-Public Interface IChannelFrame(Of T As IChannelCell)
+Public Interface IChannelFrame
 
     Inherits IChannel
 
-    ReadOnly Property Cells() As IChannelCellCollection(Of T)
+    ReadOnly Property Cells() As IChannelCellCollection(Of IChannel)
 
     Property IDCode() As Int16
 
-    Property TimeTag() As UnixTimeTag          ' UNIX based time of this frame (accurate to seconds)
+    Property Ticks() As Long                    ' Ticks of this frame
 
-    Property NtpTimeTag() As NtpTimeTag         ' Network Time Protocol time of this frame (accurate to seconds)
+    ReadOnly Property TimeTag() As UnixTimeTag  ' UNIX based time of this frame
 
-    Property Milliseconds() As Double           ' Millisecond offset of this frame
-
-    ReadOnly Property Timestamp() As Date       ' .NET timestamp of this frame (accurate to milliseconds)
+    ReadOnly Property Timestamp() As Date       ' .NET timestamp of this frame
 
     Property SynchronizationIsValid() As Boolean
 

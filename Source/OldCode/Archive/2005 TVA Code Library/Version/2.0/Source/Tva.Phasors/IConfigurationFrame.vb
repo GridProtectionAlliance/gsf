@@ -18,7 +18,7 @@
 ' This interface represents the protocol independent representation of any configuration frame.
 Public Interface IConfigurationFrame
 
-    Inherits IChannelFrame(Of IConfigurationCell)
+    Inherits IChannelFrame
 
     'Shadows ReadOnly Property Cells() As ConfigurationCellCollection
 
