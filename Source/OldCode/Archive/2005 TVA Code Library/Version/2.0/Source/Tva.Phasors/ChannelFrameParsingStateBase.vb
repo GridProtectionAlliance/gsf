@@ -19,14 +19,14 @@
 Public MustInherit Class ChannelFrameParsingStateBase(Of T As IChannelCell)
 
     Inherits ChannelParsingStateBase
-    Implements IChannelFrameParsingState
+    Implements IChannelFrameParsingState(Of T)
 
-    Private m_cells As IChannelCellCollection
+    Private m_cells As IChannelCellCollection(Of IChannelCell)
     Private m_cellType As Type
     Private m_cellCount As Integer
     Private m_frameLength As Int16
 
-    Public Sub New(ByVal cells As IChannelCellCollection, ByVal cellType As Type, ByVal frameLength As Int16)
+    Public Sub New(ByVal cells As IChannelCellCollection(Of T), ByVal cellType As Type, ByVal frameLength As Int16)
 
         m_cells = cells
         m_cellType = cellType
@@ -34,19 +34,19 @@ Public MustInherit Class ChannelFrameParsingStateBase(Of T As IChannelCell)
 
     End Sub
 
-    Public ReadOnly Property Cells() As IChannelCellCollection Implements IChannelFrameParsingState.Cells
+    Public ReadOnly Property Cells() As IChannelCellCollection(Of T) Implements IChannelFrameParsingState(Of T).Cells
         Get
             Return m_cells
         End Get
     End Property
 
-    Public ReadOnly Property CellType() As Type Implements IChannelFrameParsingState.CellType
+    Public ReadOnly Property CellType() As Type Implements IChannelFrameParsingState(Of T).CellType
         Get
             Return m_cellType
         End Get
     End Property
 
-    Public Property CellCount() As Integer Implements IChannelFrameParsingState.CellCount
+    Public Property CellCount() As Integer Implements IChannelFrameParsingState(Of T).CellCount
         Get
             Return m_cellCount
         End Get
@@ -55,7 +55,7 @@ Public MustInherit Class ChannelFrameParsingStateBase(Of T As IChannelCell)
         End Set
     End Property
 
-    Public Property FrameLength() As Int16 Implements IChannelFrameParsingState.FrameLength
+    Public Property FrameLength() As Int16 Implements IChannelFrameParsingState(Of T).FrameLength
         Get
             Return m_frameLength
         End Get

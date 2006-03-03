@@ -20,7 +20,7 @@ Imports Tva.DateTime
 ' This class represents the protocol independent common implementation of a data frame that can be sent or received from a PMU.
 Public MustInherit Class DataFrameBase
 
-    Inherits ChannelFrameBase
+    Inherits ChannelFrameBase(Of IDataCell)
     Implements IDataFrame
 
     Private m_configurationFrame As IConfigurationFrame

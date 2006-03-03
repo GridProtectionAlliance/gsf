@@ -18,7 +18,7 @@
 ' This interface represents the protocol independent parsing state of any frame of data.
 Public Interface IDataFrameParsingState
 
-    Inherits IChannelFrameParsingState
+    Inherits IChannelFrameParsingState(Of IDataCell)
 
     ReadOnly Property ConfigurationFrame() As IConfigurationFrame
 

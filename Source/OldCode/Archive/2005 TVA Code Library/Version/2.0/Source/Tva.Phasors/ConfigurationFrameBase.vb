@@ -20,7 +20,7 @@ Imports Tva.DateTime
 ' This class represents the protocol independent common implementation of a configuration frame that can be sent or received from a PMU.
 Public MustInherit Class ConfigurationFrameBase
 
-    Inherits ChannelFrameBase
+    Inherits ChannelFrameBase(Of IConfigurationCell)
     Implements IConfigurationFrame
 
     Private m_sampleRate As Int16

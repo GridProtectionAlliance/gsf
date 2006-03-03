@@ -24,20 +24,20 @@ Imports Tva.Interop
 Imports Tva.Measurements
 
 ' This class represents the protocol independent common implementation of any frame of data that can be sent or received from a PMU.
-Public MustInherit Class ChannelFrameBase
+Public MustInherit Class ChannelFrameBase(Of T As IChannelCell)
 
     Inherits ChannelBase
     Implements IChannelFrame, IFrame, IComparable
 
     Private m_idCode As Int16
-    Private m_cells As IChannelCellCollection
+    Private m_cells As IChannelCellCollection(Of T)
     Private m_ticks As Long
     Private m_synchronizationIsValid As Boolean
     Private m_dataIsValid As Boolean
     Private m_published As Boolean
     Private m_frameLength As Int16
 
-    Protected Sub New(ByVal cells As IChannelCellCollection)
+    Protected Sub New(ByVal cells As IChannelCellCollection(Of T))
 
         MyBase.New()
 
@@ -48,7 +48,7 @@ Public MustInherit Class ChannelFrameBase
 
     End Sub
 
-    Protected Sub New(ByVal cells As IChannelCellCollection, ByVal ticks As Long, ByVal synchronizationIsValid As Boolean, ByVal dataIsValid As Boolean, ByVal idCode As Int16)
+    Protected Sub New(ByVal cells As IChannelCellCollection(Of T), ByVal ticks As Long, ByVal synchronizationIsValid As Boolean, ByVal dataIsValid As Boolean, ByVal idCode As Int16)
 
         MyBase.New()
 
@@ -60,14 +60,14 @@ Public MustInherit Class ChannelFrameBase
 
     End Sub
 
-    Protected Sub New(ByVal cells As IChannelCellCollection, ByVal timeTag As UnixTimeTag, ByVal synchronizationIsValid As Boolean, ByVal dataIsValid As Boolean, ByVal idCode As Int16)
+    Protected Sub New(ByVal cells As IChannelCellCollection(Of T), ByVal timeTag As UnixTimeTag, ByVal synchronizationIsValid As Boolean, ByVal dataIsValid As Boolean, ByVal idCode As Int16)
 
         MyClass.New(cells, timeTag.ToDateTime.Ticks, synchronizationIsValid, dataIsValid, idCode)
 
     End Sub
 
-    ' Derived classes are expected to expose a Protected Sub New(ByVal state As IChannelFrameParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
-    Protected Sub New(ByVal state As IChannelFrameParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+    ' Derived classes are expected to expose a Protected Sub New(ByVal state As IChannelFrameParsingState(Of T), ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+    Protected Sub New(ByVal state As IChannelFrameParsingState(Of T), ByVal binaryImage As Byte(), ByVal startIndex As Integer)
 
         MyClass.New(state.Cells)
         ParsedFrameLength = state.FrameLength
@@ -82,7 +82,7 @@ Public MustInherit Class ChannelFrameBase
 
     End Sub
 
-    Public Overridable ReadOnly Property Cells() As IChannelCellCollection Implements IChannelFrame.Cells
+    Public Overridable ReadOnly Property Cells() As IChannelCellCollection(Of IChannelCell) Implements IChannelFrame.Cells
         Get
             Return m_cells
         End Get
@@ -206,9 +206,9 @@ Public MustInherit Class ChannelFrameBase
     Protected Overrides Sub ParseBodyImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
 
         ' Parse all frame cells
-        With DirectCast(state, IChannelFrameParsingState)
+        With DirectCast(state, IChannelFrameParsingState(Of T))
             For x As Integer = 0 To .CellCount - 1
-                ' Note: Final derived frame cell classes *must* expose Public Sub New(ByVal parent As IChannelFrame, ByVal state As IChannelFrameParsingState, ByVal index As Integer, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+                ' Note: Final derived frame cell classes *must* expose Public Sub New(ByVal parent As IChannelFrame, ByVal state As IChannelFrameParsingState(Of T), ByVal index As Integer, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
                 '       ' TODO: Remove manual cell constructor....
                 '       Cells.Add(New IEEEC37_118.ConfigurationCell(Me, state, x, binaryImage, startIndex))
                 Cells.Add(Activator.CreateInstance(.CellType, New Object() {Me, state, x, binaryImage, startIndex}))
@@ -260,11 +260,7 @@ Public MustInherit Class ChannelFrameBase
 
     End Function
 
-    Public Overridable ReadOnly Property Measurements() As System.Collections.Generic.IDictionary(Of Integer, IMeasurement) Implements IFrame.Measurements
-        Get
-            Throw New NotImplementedException("Measurements dictionary from IFrame interface is not implemented in channel frame base class")
-        End Get
-    End Property
+    Public MustOverride ReadOnly Property Measurements() As System.Collections.Generic.IDictionary(Of Integer, IMeasurement) Implements IFrame.Measurements
 
     Private ReadOnly Property IFrameThis() As IFrame Implements IFrame.This
         Get

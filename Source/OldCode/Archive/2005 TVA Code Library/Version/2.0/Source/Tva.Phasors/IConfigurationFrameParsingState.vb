@@ -18,7 +18,7 @@
 ' This interface represents the protocol independent parsing state of any configuration frame.
 Public Interface IConfigurationFrameParsingState
 
-    Inherits IChannelFrameParsingState
+    Inherits IChannelFrameParsingState(Of IConfigurationCell)
 
     Shadows ReadOnly Property Cells() As ConfigurationCellCollection
 

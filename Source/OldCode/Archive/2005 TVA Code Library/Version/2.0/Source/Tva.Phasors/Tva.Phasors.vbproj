@@ -125,6 +125,11 @@
       <Name>Tva.IO.Compression</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include="BpaPdcStream\" />
+    <Folder Include="Ieee1344\" />
+    <Folder Include="IeeeC37.118\" />
+  </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.VisualBasic.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
