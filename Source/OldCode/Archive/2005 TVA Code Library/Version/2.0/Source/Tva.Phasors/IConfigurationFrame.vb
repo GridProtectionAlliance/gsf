@@ -20,11 +20,10 @@ Public Interface IConfigurationFrame
 
     Inherits IChannelFrame
 
-    'Shadows ReadOnly Property Cells() As ConfigurationCellCollection
+    Shadows ReadOnly Property Cells() As ConfigurationCellCollection
 
     Property SampleRate() As Int16
 
-    ' TODO: Move nominal frequency property down into config cell definition
     Sub SetNominalFrequency(ByVal value As LineFrequency)
 
 End Interface

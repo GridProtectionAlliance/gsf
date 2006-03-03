@@ -22,7 +22,7 @@ Imports Tva.Phasors.Common
 ' This class represents the protocol independent common implementation of a set of phasor related data values that can be sent or received from a PMU.
 Public MustInherit Class DataCellBase
 
-    Inherits ChannelCellBase(Of IDataCell)
+    Inherits ChannelCellBase
     Implements IDataCell
 
     Private m_configurationCell As IConfigurationCell
@@ -97,9 +97,9 @@ Public MustInherit Class DataCellBase
         End Set
     End Property
 
-    Public ReadOnly Property IsEmpty() As Boolean Implements IDataCell.IsEmpty
+    Public ReadOnly Property AllValuesAreEmpty() As Boolean Implements IDataCell.AllValuesAreEmpty
         Get
-            Return (PhasorValues.IsEmpty And FrequencyValue.IsEmpty And AnalogValues.IsEmpty And DigitalValues.IsEmpty)
+            Return (PhasorValues.AllValuesAreEmpty And FrequencyValue.IsEmpty And AnalogValues.AllValuesAreEmpty And DigitalValues.AllValuesAreEmpty)
         End Get
     End Property
 

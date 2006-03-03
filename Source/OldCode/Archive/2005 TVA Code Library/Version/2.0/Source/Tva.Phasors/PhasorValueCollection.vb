@@ -20,7 +20,7 @@
 ' This class represents the protocol independent collection of phasor values.
 Public Class PhasorValueCollection
 
-    Inherits ChannelValueCollectionBase(Of IPhasorValue)
+    Inherits ChannelValueCollectionBase(Of IPhasorDefinition, IPhasorValue)
 
     Public Sub New(ByVal maximumCount As Integer)
 

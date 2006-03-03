@@ -18,7 +18,7 @@
 ' This class represents the common implementation collection of the protocol independent representation of digital values.
 Public Class DigitalValueCollection
 
-    Inherits ChannelValueCollectionBase(Of IDigitalValue)
+    Inherits ChannelValueCollectionBase(Of IDigitalDefinition, IDigitalValue)
 
     Public Sub New(ByVal maximumCount As Integer)
 

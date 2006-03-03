@@ -23,7 +23,7 @@ Imports Tva.Phasors.Common
 ' This class represents the protocol independent common implementation of a set of configuration related data settings that can be sent or received from a PMU.
 Public MustInherit Class ConfigurationCellBase
 
-    Inherits ChannelCellBase(Of IConfigurationCell)
+    Inherits ChannelCellBase
     Implements IConfigurationCell
 
     Private m_stationName As String
@@ -33,21 +33,23 @@ Public MustInherit Class ConfigurationCellBase
     Private m_frequencyDefinition As IFrequencyDefinition
     Private m_analogDefinitions As AnalogDefinitionCollection
     Private m_digitalDefinitions As DigitalDefinitionCollection
+    Private m_nominalFrequency As LineFrequency
     Private m_sampleRate As Int16
 
-    Protected Sub New(ByVal parent As IConfigurationFrame, ByVal alignOnDWordBoundry As Boolean, ByVal maximumPhasors As Integer, ByVal maximumAnalogs As Integer, ByVal maximumDigitals As Integer)
+    Protected Sub New(ByVal parent As IConfigurationFrame, ByVal alignOnDWordBoundry As Boolean, ByVal maximumPhasors As Integer, ByVal maximumAnalogs As Integer, ByVal maximumDigitals As Integer, ByVal nominalFrequency As LineFrequency)
 
         MyBase.New(parent, alignOnDWordBoundry)
 
         m_phasorDefinitions = New PhasorDefinitionCollection(maximumPhasors)
         m_analogDefinitions = New AnalogDefinitionCollection(maximumAnalogs)
         m_digitalDefinitions = New DigitalDefinitionCollection(maximumDigitals)
+        m_nominalFrequency = nominalFrequency
 
     End Sub
 
-    Protected Sub New(ByVal parent As IConfigurationFrame, ByVal alignOnDWordBoundry As Boolean, ByVal maximumPhasors As Integer, ByVal maximumAnalogs As Integer, ByVal maximumDigitals As Integer, ByVal state As IConfigurationCellParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+    Protected Sub New(ByVal parent As IConfigurationFrame, ByVal alignOnDWordBoundry As Boolean, ByVal maximumPhasors As Integer, ByVal maximumAnalogs As Integer, ByVal maximumDigitals As Integer, ByVal nominalFrequency As LineFrequency, ByVal state As IConfigurationCellParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
 
-        MyClass.New(parent, alignOnDWordBoundry, maximumPhasors, maximumAnalogs, maximumDigitals)
+        MyClass.New(parent, alignOnDWordBoundry, maximumPhasors, maximumAnalogs, maximumDigitals, nominalFrequency)
         ParseBinaryImage(state, binaryImage, startIndex)
 
     End Sub
@@ -89,10 +91,10 @@ Public MustInherit Class ConfigurationCellBase
             Return m_stationName
         End Get
         Set(ByVal value As String)
-            If Len(Trim(Value)) > MaximumStationNameLength Then
+            If Len(Trim(value)) > MaximumStationNameLength Then
                 Throw New OverflowException("Station name length cannot exceed " & MaximumStationNameLength)
             Else
-                m_stationName = Trim(Replace(Value, Chr(20), " "))
+                m_stationName = Trim(Replace(value, Chr(20), " "))
             End If
         End Set
     End Property
@@ -115,7 +117,7 @@ Public MustInherit Class ConfigurationCellBase
             Return m_idCode
         End Get
         Set(ByVal value As Int16)
-            m_idCode = Value
+            m_idCode = value
         End Set
     End Property
 
@@ -124,11 +126,11 @@ Public MustInherit Class ConfigurationCellBase
             Return m_idLabel
         End Get
         Set(ByVal value As String)
-            Dim length As Integer = Len(Trim(Value))
+            Dim length As Integer = Len(Trim(value))
             If length > IDLabelLength Then
                 Throw New OverflowException("ID label must be less than " & IDLabelLength & " characters in length")
             Else
-                m_idLabel = Value.PadRight(IDLabelLength)
+                m_idLabel = value.PadRight(IDLabelLength)
             End If
         End Set
     End Property
@@ -157,7 +159,7 @@ Public MustInherit Class ConfigurationCellBase
             Return m_frequencyDefinition
         End Get
         Set(ByVal value As IFrequencyDefinition)
-            m_frequencyDefinition = Value
+            m_frequencyDefinition = value
         End Set
     End Property
 
@@ -171,6 +173,15 @@ Public MustInherit Class ConfigurationCellBase
         Get
             Return m_digitalDefinitions
         End Get
+    End Property
+
+    Public Property NominalFrequency() As LineFrequency Implements IConfigurationCell.NominalFrequency
+        Get
+            Return m_nominalFrequency
+        End Get
+        Set(ByVal value As LineFrequency)
+            m_nominalFrequency = value
+        End Set
     End Property
 
     Public Overridable ReadOnly Property SampleRate() As Int16 Implements IConfigurationCell.SampleRate

@@ -44,6 +44,10 @@
     <Import Include="System.Diagnostics" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AnalogDefinitionBase.vb" />
+    <Compile Include="AnalogDefinitionCollection.vb" />
+    <Compile Include="AnalogValueBase.vb" />
+    <Compile Include="AnalogValueCollection.vb" />
     <Compile Include="ChannelBase.vb" />
     <Compile Include="ChannelCellBase.vb" />
     <Compile Include="ChannelCellCollectionBase.vb" />
@@ -52,10 +56,33 @@
     <Compile Include="ChannelDefinitionBase.vb" />
     <Compile Include="ChannelDefinitionCollectionBase.vb" />
     <Compile Include="ChannelFrameBase.vb" />
+    <Compile Include="ChannelFrameCollectionBase.vb" />
+    <Compile Include="ChannelFrameParsingStateBase.vb" />
     <Compile Include="ChannelParsingStateBase.vb" />
     <Compile Include="ChannelValueBase.vb" />
     <Compile Include="ChannelValueCollectionBase.vb" />
     <Compile Include="Common.vb" />
+    <Compile Include="ConfigurationCellBase.vb" />
+    <Compile Include="ConfigurationCellCollection.vb" />
+    <Compile Include="ConfigurationCellParsingState.vb" />
+    <Compile Include="ConfigurationFrameBase.vb" />
+    <Compile Include="ConfigurationFrameCollection.vb" />
+    <Compile Include="ConfigurationFrameParsingState.vb" />
+    <Compile Include="DataCellBase.vb" />
+    <Compile Include="DataCellCollection.vb" />
+    <Compile Include="DataCellParsingState.vb" />
+    <Compile Include="DataFrameBase.vb" />
+    <Compile Include="DataFrameCollection.vb" />
+    <Compile Include="DataFrameParsingState.vb" />
+    <Compile Include="DataSample.vb" />
+    <Compile Include="DigitalDefinitionBase.vb" />
+    <Compile Include="DigitalDefinitionCollection.vb" />
+    <Compile Include="DigitalValueBase.vb" />
+    <Compile Include="DigitalValueCollection.vb" />
+    <Compile Include="FrequencyDefinitionBase.vb" />
+    <Compile Include="FrequencyDefinitionCollection.vb" />
+    <Compile Include="FrequencyValueBase.vb" />
+    <Compile Include="FrequencyValueCollection.vb" />
     <Compile Include="IAnalogDefintion.vb" />
     <Compile Include="IAnalogValue.vb" />
     <Compile Include="IChannel.vb" />
@@ -83,6 +110,10 @@
     <Compile Include="IPhasorDefinition.vb" />
     <Compile Include="IPhasorValue.vb" />
     <Compile Include="My Project\AssemblyInfo.vb" />
+    <Compile Include="PhasorDefinitionBase.vb" />
+    <Compile Include="PhasorDefinitionCollection.vb" />
+    <Compile Include="PhasorValueBase.vb" />
+    <Compile Include="PhasorValueCollection.vb" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Tva.Core\Tva.Core.vbproj">

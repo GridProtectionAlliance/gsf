@@ -20,6 +20,6 @@ Public Interface IConfigurationFrameParsingState
 
     Inherits IChannelFrameParsingState
 
-    'Shadows ReadOnly Property Cells() As ConfigurationCellCollection
+    Shadows ReadOnly Property Cells() As ConfigurationCellCollection
 
 End Interface

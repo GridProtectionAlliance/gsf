@@ -18,7 +18,7 @@
 ' This class represents the common implementation collection of the protocol independent representation of analog values.
 Public Class AnalogValueCollection
 
-    Inherits ChannelValueCollectionBase(Of IAnalogValue)
+    Inherits ChannelValueCollectionBase(Of IAnalogDefinition, IAnalogValue)
 
     Public Sub New(ByVal maximumCount As Integer)
 

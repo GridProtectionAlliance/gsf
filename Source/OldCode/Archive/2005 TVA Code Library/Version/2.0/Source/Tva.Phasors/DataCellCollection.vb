@@ -18,7 +18,7 @@
 ' This class represents the protocol independent collection of the common implementation of a set of phasor related data values that can be sent or received from a PMU.
 Public Class DataCellCollection
 
-    Inherits ChannelCellCollectionBase(Of IDataCell)
+    Inherits ChannelCellCollectionBase
 
     Public Sub New(ByVal maximumCount As Integer, ByVal constantCellLength As Boolean)
 

@@ -20,7 +20,7 @@ Public Interface IChannelFrameParsingState
 
     Inherits IChannelParsingState
 
-    ReadOnly Property Cells() As IChannelCellCollection(Of IChannel)
+    ReadOnly Property Cells() As IChannelCellCollection
 
     ReadOnly Property CellType() As Type
 

@@ -18,7 +18,7 @@
 ' This class represents the protocol independent collection of the common implementation of a set of configuration related data settings that can be sent or received from a PMU.
 Public Class ConfigurationCellCollection
 
-    Inherits ChannelCellCollectionBase(Of IConfigurationCell)
+    Inherits ChannelCellCollectionBase
 
     Public Sub New(ByVal maximumCount As Integer, ByVal constantCellLength As Boolean)
 

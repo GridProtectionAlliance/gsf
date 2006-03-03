@@ -30,14 +30,14 @@ Public MustInherit Class ChannelFrameBase
     Implements IChannelFrame, IFrame, IComparable
 
     Private m_idCode As Int16
-    Private m_cells As IChannelCellCollection(Of IChannel)
+    Private m_cells As IChannelCellCollection
     Private m_ticks As Long
     Private m_synchronizationIsValid As Boolean
     Private m_dataIsValid As Boolean
     Private m_published As Boolean
     Private m_frameLength As Int16
 
-    Protected Sub New(ByVal cells As IChannelCellCollection(Of IChannel))
+    Protected Sub New(ByVal cells As IChannelCellCollection)
 
         MyBase.New()
 
@@ -48,7 +48,7 @@ Public MustInherit Class ChannelFrameBase
 
     End Sub
 
-    Protected Sub New(ByVal cells As IChannelCellCollection(Of IChannel), ByVal ticks As Long, ByVal synchronizationIsValid As Boolean, ByVal dataIsValid As Boolean, ByVal idCode As Int16)
+    Protected Sub New(ByVal cells As IChannelCellCollection, ByVal ticks As Long, ByVal synchronizationIsValid As Boolean, ByVal dataIsValid As Boolean, ByVal idCode As Int16)
 
         MyBase.New()
 
@@ -60,7 +60,7 @@ Public MustInherit Class ChannelFrameBase
 
     End Sub
 
-    Protected Sub New(ByVal cells As IChannelCellCollection(Of IChannel), ByVal timeTag As UnixTimeTag, ByVal synchronizationIsValid As Boolean, ByVal dataIsValid As Boolean, ByVal idCode As Int16)
+    Protected Sub New(ByVal cells As IChannelCellCollection, ByVal timeTag As UnixTimeTag, ByVal synchronizationIsValid As Boolean, ByVal dataIsValid As Boolean, ByVal idCode As Int16)
 
         MyClass.New(cells, timeTag.ToDateTime.Ticks, synchronizationIsValid, dataIsValid, idCode)
 
@@ -82,7 +82,7 @@ Public MustInherit Class ChannelFrameBase
 
     End Sub
 
-    Public Overridable ReadOnly Property Cells() As IChannelCellCollection(Of IChannel) Implements IChannelFrame.Cells
+    Public Overridable ReadOnly Property Cells() As IChannelCellCollection Implements IChannelFrame.Cells
         Get
             Return m_cells
         End Get

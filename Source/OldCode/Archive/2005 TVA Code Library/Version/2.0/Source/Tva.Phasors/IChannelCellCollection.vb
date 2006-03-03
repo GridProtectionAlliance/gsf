@@ -16,9 +16,9 @@
 '*******************************************************************************************************
 
 ' This interface represents a protocol independent representation of a collection of any kind of data cell.
-Public Interface IChannelCellCollection(Of T As IChannel)
+Public Interface IChannelCellCollection
 
-    Inherits IChannelCollection(Of T)
+    Inherits IChannelCollection(Of IChannelCell)
 
 End Interface
 

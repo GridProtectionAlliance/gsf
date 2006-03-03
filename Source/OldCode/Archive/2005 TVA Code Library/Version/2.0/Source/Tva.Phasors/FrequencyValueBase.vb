@@ -20,7 +20,7 @@ Imports Tva.Interop
 ' This class represents the protocol independent a frequency and dfdt value.
 Public MustInherit Class FrequencyValueBase
 
-    Inherits ChannelValueBase
+    Inherits ChannelValueBase(Of IFrequencyDefinition)
     Implements IFrequencyValue
 
     Private m_frequency As Double
@@ -73,15 +73,6 @@ Public MustInherit Class FrequencyValueBase
         MyClass.New(frequencyValue.Parent, frequencyValue.Definition, frequencyValue.Frequency, frequencyValue.DfDt)
 
     End Sub
-
-    Public Overridable Shadows Property Definition() As IFrequencyDefinition Implements IFrequencyValue.Definition
-        Get
-            Return MyBase.Definition
-        End Get
-        Set(ByVal value As IFrequencyDefinition)
-            MyBase.Definition = Value
-        End Set
-    End Property
 
     Public Overridable Property Frequency() As Double Implements IFrequencyValue.Frequency
         Get

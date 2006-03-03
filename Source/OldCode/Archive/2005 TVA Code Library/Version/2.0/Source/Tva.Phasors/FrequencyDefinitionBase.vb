@@ -51,7 +51,7 @@ Public MustInherit Class FrequencyDefinitionBase
 
     Public ReadOnly Property NominalFrequency() As LineFrequency Implements IFrequencyDefinition.NominalFrequency
         Get
-            Return Parent.Parent.NominalFrequency
+            Return Parent.NominalFrequency
         End Get
     End Property
 

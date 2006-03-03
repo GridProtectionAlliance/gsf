@@ -18,7 +18,7 @@
 ' This class represents the protocol independent collection of frequency and dfdt values.
 Public Class FrequencyValueCollection
 
-    Inherits ChannelValueCollectionBase(Of IFrequencyValue)
+    Inherits ChannelValueCollectionBase(Of IFrequencyDefinition, IFrequencyValue)
 
     Public Sub New(ByVal maximumCount As Integer)
 

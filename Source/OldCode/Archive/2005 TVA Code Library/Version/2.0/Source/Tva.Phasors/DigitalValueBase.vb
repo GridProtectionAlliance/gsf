@@ -21,7 +21,7 @@ Imports Tva.Interop
 ' This class represents the common implementation of the protocol independent representation of a digital value.
 Public MustInherit Class DigitalValueBase
 
-    Inherits ChannelValueBase
+    Inherits ChannelValueBase(Of IDigitalDefinition)
     Implements IDigitalValue
 
     Private m_value As Int16
@@ -56,15 +56,6 @@ Public MustInherit Class DigitalValueBase
         MyClass.New(digitalValue.Parent, digitalValue.Definition, digitalValue.Value)
 
     End Sub
-
-    Public Overridable Shadows Property Definition() As IDigitalDefinition Implements IDigitalValue.Definition
-        Get
-            Return MyBase.Definition
-        End Get
-        Set(ByVal value As IDigitalDefinition)
-            MyBase.Definition = Value
-        End Set
-    End Property
 
     <EditorBrowsable(EditorBrowsableState.Never)> _
     Public NotOverridable Overrides ReadOnly Property DataFormat() As DataFormat

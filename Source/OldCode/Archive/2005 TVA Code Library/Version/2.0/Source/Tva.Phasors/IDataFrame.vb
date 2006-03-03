@@ -22,6 +22,6 @@ Public Interface IDataFrame
 
     Property ConfigurationFrame() As IConfigurationFrame
 
-    'Shadows ReadOnly Property Cells() As DataCellCollection
+    Shadows ReadOnly Property Cells() As DataCellCollection
 
 End Interface

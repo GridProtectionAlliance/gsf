@@ -23,7 +23,7 @@ Imports Tva.Math
 ' This class represents the protocol independent representation of a phasor value.
 Public MustInherit Class PhasorValueBase
 
-    Inherits ChannelValueBase
+    Inherits ChannelValueBase(Of IPhasorDefinition)
     Implements IPhasorValue
 
     Private m_real As Double
@@ -163,15 +163,6 @@ Public MustInherit Class PhasorValueBase
         MyClass.New(phasorValue.Parent, phasorValue.Definition, phasorValue.Real, phasorValue.Imaginary)
 
     End Sub
-
-    Public Overridable Shadows Property Definition() As IPhasorDefinition Implements IPhasorValue.Definition
-        Get
-            Return MyBase.Definition
-        End Get
-        Set(ByVal value As IPhasorDefinition)
-            MyBase.Definition = Value
-        End Set
-    End Property
 
     Public ReadOnly Property CoordinateFormat() As CoordinateFormat Implements IPhasorValue.CoordinateFormat
         Get

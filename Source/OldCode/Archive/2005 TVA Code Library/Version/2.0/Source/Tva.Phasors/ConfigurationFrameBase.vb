@@ -24,22 +24,18 @@ Public MustInherit Class ConfigurationFrameBase
     Implements IConfigurationFrame
 
     Private m_sampleRate As Int16
-    Private m_nominalFrequency As LineFrequency
 
     Protected Sub New(ByVal cells As ConfigurationCellCollection)
 
         MyBase.New(cells)
 
-        m_nominalFrequency = LineFrequency.Hz60
-
     End Sub
 
-    Protected Sub New(ByVal cells As ConfigurationCellCollection, ByVal timeTag As UnixTimeTag, ByVal milliseconds As Double, ByVal synchronizationIsValid As Boolean, ByVal dataIsValid As Boolean, ByVal idCode As Int16, ByVal sampleRate As Int16, ByVal nominalFrequency As LineFrequency)
+    Protected Sub New(ByVal cells As ConfigurationCellCollection, ByVal ticks As Long, ByVal synchronizationIsValid As Boolean, ByVal dataIsValid As Boolean, ByVal idCode As Int16, ByVal sampleRate As Int16)
 
-        MyBase.New(cells, timeTag, milliseconds, synchronizationIsValid, dataIsValid, idCode)
+        MyBase.New(cells, ticks, synchronizationIsValid, dataIsValid, idCode)
 
         m_sampleRate = sampleRate
-        m_nominalFrequency = nominalFrequency
 
     End Sub
 
@@ -54,8 +50,8 @@ Public MustInherit Class ConfigurationFrameBase
     ' Derived classes are expected to expose a Public Sub New(ByVal configurationFrame As IConfigurationFrame)
     Protected Sub New(ByVal configurationFrame As IConfigurationFrame)
 
-        MyClass.New(configurationFrame.Cells, configurationFrame.TimeTag, configurationFrame.Milliseconds, configurationFrame.SynchronizationIsValid, _
-            configurationFrame.DataIsValid, configurationFrame.IDCode, configurationFrame.SampleRate, configurationFrame.NominalFrequency)
+        MyClass.New(configurationFrame.Cells, configurationFrame.Ticks, configurationFrame.SynchronizationIsValid, _
+            configurationFrame.DataIsValid, configurationFrame.IDCode, configurationFrame.SampleRate)
 
     End Sub
 
@@ -74,13 +70,18 @@ Public MustInherit Class ConfigurationFrameBase
         End Set
     End Property
 
-    Public Overridable Property NominalFrequency() As LineFrequency Implements IConfigurationFrame.NominalFrequency
-        Get
-            Return m_nominalFrequency
-        End Get
-        Set(ByVal value As LineFrequency)
-            m_nominalFrequency = value
-        End Set
-    End Property
+    Public Sub SetNominalFrequency(ByVal value As LineFrequency) Implements IConfigurationFrame.SetNominalFrequency
+
+    End Sub
+
+    'Public Overridable Property NominalFrequency() As LineFrequency Implements IConfigurationFrame.SetNominalFrequency
+    '    Get
+    '        Return m_nominalFrequency
+    '    End Get
+    '    Set(ByVal value As LineFrequency)
+    '        m_nominalFrequency = value
+    '    End Set
+    'End Property
+
 
 End Class

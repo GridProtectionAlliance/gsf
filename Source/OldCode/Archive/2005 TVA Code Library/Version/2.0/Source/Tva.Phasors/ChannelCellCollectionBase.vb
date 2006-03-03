@@ -16,10 +16,10 @@
 '*******************************************************************************************************
 
 ' This class represents the common implementation of the protocol independent representation of a collection of any kind of data cell.
-Public MustInherit Class ChannelCellCollectionBase(Of T As IChannelCell)
+Public MustInherit Class ChannelCellCollectionBase
 
-    Inherits ChannelCollectionBase(Of T)
-    Implements IChannelCellCollection(Of T)
+    Inherits ChannelCollectionBase(Of IChannelCell)
+    Implements IChannelCellCollection
 
     Private m_constantCellLength As Boolean
 

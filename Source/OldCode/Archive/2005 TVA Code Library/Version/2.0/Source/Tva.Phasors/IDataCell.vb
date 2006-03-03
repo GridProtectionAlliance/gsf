@@ -26,14 +26,14 @@ Public Interface IDataCell
 
     Property StatusFlags() As Int16
 
-    ReadOnly Property IsEmpty() As Boolean
+    ReadOnly Property AllValuesAreEmpty() As Boolean
 
-    'ReadOnly Property PhasorValues() As PhasorValueCollection
+    ReadOnly Property PhasorValues() As PhasorValueCollection
 
     Property FrequencyValue() As IFrequencyValue
 
-    'ReadOnly Property AnalogValues() As AnalogValueCollection
+    ReadOnly Property AnalogValues() As AnalogValueCollection
 
-    'ReadOnly Property DigitalValues() As DigitalValueCollection
+    ReadOnly Property DigitalValues() As DigitalValueCollection
 
 End Interface

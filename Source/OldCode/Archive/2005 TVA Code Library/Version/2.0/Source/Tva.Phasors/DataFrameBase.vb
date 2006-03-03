@@ -31,9 +31,9 @@ Public MustInherit Class DataFrameBase
 
     End Sub
 
-    Protected Sub New(ByVal cells As DataCellCollection, ByVal timeTag As UnixTimeTag, ByVal milliseconds As Double, ByVal synchronizationIsValid As Boolean, ByVal dataIsValid As Boolean, ByVal idCode As Int16, ByVal configurationFrame As IConfigurationFrame)
+    Protected Sub New(ByVal cells As DataCellCollection, ByVal ticks As Long, ByVal synchronizationIsValid As Boolean, ByVal dataIsValid As Boolean, ByVal idCode As Int16, ByVal configurationFrame As IConfigurationFrame)
 
-        MyBase.New(cells, timeTag, milliseconds, synchronizationIsValid, dataIsValid, idCode)
+        MyBase.New(cells, ticks, synchronizationIsValid, dataIsValid, idCode)
 
         m_configurationFrame = configurationFrame
 
@@ -52,7 +52,7 @@ Public MustInherit Class DataFrameBase
     ' Derived classes are expected to expose a Public Sub New(ByVal dataFrame As IDataFrame)
     Protected Sub New(ByVal dataFrame As IDataFrame)
 
-        MyClass.New(dataFrame.Cells, dataFrame.TimeTag, dataFrame.Milliseconds, dataFrame.SynchronizationIsValid, dataFrame.DataIsValid, dataFrame.IDCode, dataFrame.ConfigurationFrame)
+        MyClass.New(dataFrame.Cells, dataFrame.Ticks, dataFrame.SynchronizationIsValid, dataFrame.DataIsValid, dataFrame.IDCode, dataFrame.ConfigurationFrame)
 
     End Sub
 

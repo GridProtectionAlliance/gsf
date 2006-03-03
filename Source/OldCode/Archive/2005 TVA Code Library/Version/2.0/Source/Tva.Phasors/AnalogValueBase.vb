@@ -20,7 +20,7 @@ Imports Tva.Interop
 ' This class represents the common implementation of the protocol independent representation of an analog value.
 Public MustInherit Class AnalogValueBase
 
-    Inherits ChannelValueBase
+    Inherits ChannelValueBase(Of IAnalogDefinition)
     Implements IAnalogValue
 
     Private m_value As Double
@@ -67,14 +67,14 @@ Public MustInherit Class AnalogValueBase
 
     End Sub
 
-    Public Overridable Shadows Property Definition() As IAnalogDefinition Implements IAnalogValue.Definition
-        Get
-            Return MyBase.Definition
-        End Get
-        Set(ByVal value As IAnalogDefinition)
-            MyBase.Definition = Value
-        End Set
-    End Property
+    'Public Overridable Shadows Property Definition() As IAnalogDefinition Implements IAnalogValue.Definition
+    '    Get
+    '        Return MyBase.Definition
+    '    End Get
+    '    Set(ByVal value As IAnalogDefinition)
+    '        MyBase.Definition = Value
+    '    End Set
+    'End Property
 
     Public Overridable Property Value() As Double Implements IAnalogValue.Value
         Get
