@@ -58,12 +58,13 @@ Namespace Math
         ''' <param name="startIndex">Start index in data buffer to begin XOR check-sum</param>
         ''' <param name="length">Total number of bytes from <paramref name="startIndex">startIndex</paramref> to perform XOR check-sum over</param>
         ''' <returns>Word length XOR check-sum</returns>
-        Public Shared Function Xor16BitCheckSum(ByVal data As Byte(), ByVal startIndex As Integer, ByVal length As Integer) As Int16
+        <CLSCompliant(False)> _
+        Public Shared Function Xor16BitCheckSum(ByVal data As Byte(), ByVal startIndex As Integer, ByVal length As Integer) As UInt16
 
-            Dim sum As Int16
+            Dim sum As UInt16
 
             For x As Integer = 0 To length - 1 Step 2
-                sum = sum Xor BitConverter.ToInt16(data, startIndex + x)
+                sum = sum Xor BitConverter.ToUInt16(data, startIndex + x)
             Next
 
             Return sum
@@ -75,12 +76,13 @@ Namespace Math
         ''' <param name="startIndex">Start index in data buffer to begin XOR check-sum</param>
         ''' <param name="length">Total number of bytes from <paramref name="startIndex">startIndex</paramref> to perform XOR check-sum over</param>
         ''' <returns>Double-word length XOR check-sum</returns>
-        Public Shared Function Xor32BitCheckSum(ByVal data As Byte(), ByVal startIndex As Integer, ByVal length As Integer) As Int32
+        <CLSCompliant(False)> _
+        Public Shared Function Xor32BitCheckSum(ByVal data As Byte(), ByVal startIndex As Integer, ByVal length As Integer) As UInt32
 
-            Dim sum As Int32
+            Dim sum As UInt32
 
             For x As Integer = 0 To length - 1 Step 4
-                sum = sum Xor BitConverter.ToInt32(data, startIndex + x)
+                sum = sum Xor BitConverter.ToUInt32(data, startIndex + x)
             Next
 
             Return sum
@@ -92,12 +94,13 @@ Namespace Math
         ''' <param name="startIndex">Start index in data buffer to begin XOR check-sum</param>
         ''' <param name="length">Total number of bytes from <paramref name="startIndex">startIndex</paramref> to perform XOR check-sum over</param>
         ''' <returns>Quad-word length XOR check-sum</returns>
-        Public Shared Function Xor64BitCheckSum(ByVal data As Byte(), ByVal startIndex As Integer, ByVal length As Integer) As Int64
+        <CLSCompliant(False)> _
+        Public Shared Function Xor64BitCheckSum(ByVal data As Byte(), ByVal startIndex As Integer, ByVal length As Integer) As UInt64
 
-            Dim sum As Int64
+            Dim sum As UInt64
 
             For x As Integer = 0 To length - 1 Step 8
-                sum = sum Xor BitConverter.ToInt64(data, startIndex + x)
+                sum = sum Xor BitConverter.ToUInt64(data, startIndex + x)
             Next
 
             Return sum
