@@ -96,7 +96,7 @@ Namespace Ieee1344
 
             m_phasorDefinition = phasorDefinition
 
-            If phasorFormat = phasorFormat.Rectangular Then
+            If phasorFormat = CoordinateFormat.Rectangular Then
                 m_real = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex)
                 m_imaginary = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 2)
             Else
@@ -210,7 +210,7 @@ Namespace Ieee1344
             Get
                 Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BinaryLength)
 
-                If phasorFormat = phasorFormat.Rectangular Then
+                If phasorFormat = CoordinateFormat.Rectangular Then
                     EndianOrder.BigEndian.CopyBytes(m_real, buffer, 0)
                     EndianOrder.BigEndian.CopyBytes(m_imaginary, buffer, 2)
                 Else

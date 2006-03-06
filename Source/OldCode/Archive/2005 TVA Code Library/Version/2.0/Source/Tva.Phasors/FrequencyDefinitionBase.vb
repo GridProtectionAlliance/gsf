@@ -16,6 +16,7 @@
 '*******************************************************************************************************
 
 ' This class represents the common implementation of the protocol independent definition of a frequency and df/dt value.
+<CLSCompliant(False)> _
 Public MustInherit Class FrequencyDefinitionBase
 
     Inherits ChannelDefinitionBase
@@ -60,7 +61,7 @@ Public MustInherit Class FrequencyDefinitionBase
             Return m_dfdtOffset
         End Get
         Set(ByVal value As Double)
-            m_dfdtOffset = Value
+            m_dfdtOffset = value
         End Set
     End Property
 
@@ -69,8 +70,8 @@ Public MustInherit Class FrequencyDefinitionBase
             Return m_dfdtScale
         End Get
         Set(ByVal value As Integer)
-            If Value > MaximumDfDtScalingFactor Then Throw New OverflowException("DfDt scaling factor value cannot exceed " & MaximumDfDtScalingFactor)
-            m_dfdtScale = Value
+            If value > MaximumDfDtScalingFactor Then Throw New OverflowException("DfDt scaling factor value cannot exceed " & MaximumDfDtScalingFactor)
+            m_dfdtScale = value
         End Set
     End Property
 

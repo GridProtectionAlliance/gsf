@@ -16,13 +16,16 @@
 '*******************************************************************************************************
 
 ' This interface represents the protocol independent parsing state of any frame of data.
+<CLSCompliant(False)> _
 Public Interface IChannelFrameParsingState(Of T As IChannelCell)
 
     Inherits IChannelParsingState
 
-    ReadOnly Property Cells() As IChannelCellCollection(Of T)
+    Delegate Function CreateNewCellFunctionSignature(ByVal parent As IChannelFrame, ByVal state As IChannelFrameParsingState(Of T), ByVal index As Integer, ByVal binaryImage As Byte(), ByVal startIndex As Integer) As T
 
-    ReadOnly Property CellType() As Type
+    ReadOnly Property CreateNewCellFunction() As CreateNewCellFunctionSignature
+
+    ReadOnly Property Cells() As IChannelCellCollection(Of T)
 
     Property CellCount() As Integer
 

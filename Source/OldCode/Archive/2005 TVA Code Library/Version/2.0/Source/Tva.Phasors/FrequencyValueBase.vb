@@ -18,6 +18,7 @@
 Imports Tva.Interop
 
 ' This class represents the protocol independent a frequency and dfdt value.
+<CLSCompliant(False)> _
 Public MustInherit Class FrequencyValueBase
 
     Inherits ChannelValueBase(Of IFrequencyDefinition)
@@ -79,7 +80,7 @@ Public MustInherit Class FrequencyValueBase
             Return m_frequency
         End Get
         Set(ByVal value As Double)
-            m_frequency = Value
+            m_frequency = value
         End Set
     End Property
 
@@ -88,7 +89,7 @@ Public MustInherit Class FrequencyValueBase
             Return m_dfdt
         End Get
         Set(ByVal value As Double)
-            m_dfdt = Value
+            m_dfdt = value
         End Set
     End Property
 
@@ -104,7 +105,7 @@ Public MustInherit Class FrequencyValueBase
         End Get
         Set(ByVal value As Int16)
             With Definition
-                m_frequency = Value / .ScalingFactor + .Offset
+                m_frequency = value / .ScalingFactor + .Offset
             End With
         End Set
     End Property
@@ -121,7 +122,7 @@ Public MustInherit Class FrequencyValueBase
         End Get
         Set(ByVal value As Int16)
             With Definition
-                m_dfdt = Value / .DfDtScalingFactor + .DfDtOffset
+                m_dfdt = value / .DfDtScalingFactor + .DfDtOffset
             End With
         End Set
     End Property

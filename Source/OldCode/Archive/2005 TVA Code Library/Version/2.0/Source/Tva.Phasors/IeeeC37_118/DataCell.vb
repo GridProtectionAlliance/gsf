@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  DataCell.vb - IEEE C37.118  PMU Data Cell
+'  DataCell.vb - IEEE C37.118 PMU Data Cell
 '  Copyright © 2005 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2003
@@ -20,21 +20,18 @@ Imports Tva.Phasors.IeeeC37_118.Common
 Namespace IeeeC37_118
 
     ' This data cell represents what most might call a "field" in table of rows - it is a single unit of data for a specific PMU
+    <CLSCompliant(False)> _
     Public Class DataCell
 
         Inherits DataCellBase
 
-        Private m_sampleNumber As Int16
-
-        Public Sub New(ByVal parent As IDataFrame, ByVal configurationCell As IConfigurationCell, ByVal sampleNumber As Int16)
+        Public Sub New(ByVal parent As IDataFrame, ByVal configurationCell As IConfigurationCell)
 
             MyBase.New(parent, False, configurationCell, MaximumPhasorValues, MaximumAnalogValues, MaximumDigitalValues)
 
             Dim x As Integer
 
             With configurationCell
-                m_sampleNumber = sampleNumber
-
                 ' Initialize phasor values and frequency value with an empty value
                 For x = 0 To .PhasorDefinitions.Count - 1
                     PhasorValues.Add(New PhasorValue(Me, .PhasorDefinitions(x), 0, 0))
@@ -62,15 +59,23 @@ Namespace IeeeC37_118
 
         End Sub
 
-        ' This constructor satisfies ChannelCellBase class requirement:
-        '   ' Final dervived classes must expose Public Sub New(ByVal parent As IChannelFrame, ByVal state As IChannelFrameParsingState, ByVal index As Integer, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
         Public Sub New(ByVal parent As IDataFrame, ByVal state As DataFrameParsingState, ByVal index As Integer, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
 
-            MyBase.New(parent, False, MaximumPhasorValues, MaximumAnalogValues, MaximumDigitalValues, New DataCellParsingState( _
-                GetType(PhasorValue), GetType(FrequencyValue), GetType(AnalogValue), GetType(DigitalValue), state.ConfigurationFrame.Cells(index)), _
+            MyBase.New(parent, False, MaximumPhasorValues, MaximumAnalogValues, MaximumDigitalValues, _
+                New DataCellParsingState(state.ConfigurationFrame.Cells(index), _
+                    AddressOf IeeeC37_118.PhasorValue.CreateNewPhasorValue, _
+                    AddressOf IeeeC37_118.FrequencyValue.CreateNewFrequencyValue, _
+                    AddressOf IeeeC37_118.AnalogValue.CreateNewAnalogValue, _
+                    AddressOf IeeeC37_118.DigitalValue.CreateNewDigitalValue), _
                 binaryImage, startIndex)
 
         End Sub
+
+        Friend Shared Function CreateNewDataCell(ByVal parent As IChannelFrame, ByVal state As IChannelFrameParsingState(Of IDataCell), ByVal index As Integer, ByVal binaryImage As Byte(), ByVal startIndex As Integer) As IDataCell
+
+            Return New DataCell(parent, state, index, binaryImage, startIndex)
+
+        End Function
 
         Public Overrides ReadOnly Property InheritedType() As System.Type
             Get
@@ -78,79 +83,112 @@ Namespace IeeeC37_118
             End Get
         End Property
 
-        Public Property SampleNumber() As Int16
+        Public Shadows Property StatusFlags() As StatusFlags
             Get
-                Return m_sampleNumber
+                Return MyBase.StatusFlags And Not (StatusFlags.UnlockedTimeMask Or StatusFlags.TriggerReasonMask)
             End Get
-            Set(ByVal Value As Int16)
-                m_sampleNumber = Value
+            Set(ByVal value As StatusFlags)
+                MyBase.StatusFlags = (MyBase.StatusFlags And (StatusFlags.UnlockedTimeMask Or StatusFlags.TriggerReasonMask)) Or value
             End Set
         End Property
 
-        Protected Overrides ReadOnly Property HeaderImage() As Byte()
+        Public Property UnlockedTime() As UnlockedTime
             Get
-                'Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), HeaderLength)
-
-                '' Add PDCstream specific image
-                'buffer(0) = m_flags
-                'buffer(1) = (Convert.ToByte(AnalogValues.Count) Or m_reservedFlags)
-                'buffer(2) = (Convert.ToByte(DigitalValues.Count) Or m_iEEEFormatFlags)
-                'buffer(3) = Convert.ToByte(PhasorValues.Count)
-                'EndianOrder.BigEndian.CopyBytes(m_sampleNumber, buffer, 4)
-
-                'Return buffer
+                Return MyBase.StatusFlags And StatusFlags.UnlockedTimeMask
             End Get
+            Set(ByVal value As UnlockedTime)
+                MyBase.StatusFlags = (MyBase.StatusFlags And Not StatusFlags.UnlockedTimeMask) Or value
+                SynchronizationIsValid = (value = IeeeC37_118.UnlockedTime.SyncLocked)
+            End Set
         End Property
 
-        Protected Overrides Sub ParseHeaderImage(ByVal state As IChannelParsingState, ByVal binaryImage() As Byte, ByVal startIndex As Integer)
+        Public Property TriggerReason() As TriggerReason
+            Get
+                Return MyBase.StatusFlags And StatusFlags.TriggerReasonMask
+            End Get
+            Set(ByVal value As TriggerReason)
+                MyBase.StatusFlags = (MyBase.StatusFlags And Not StatusFlags.TriggerReasonMask) Or value
+                PmuTriggerDetected = (value <> IeeeC37_118.TriggerReason.Manual)
+            End Set
+        End Property
 
+        Public Overrides Property DataIsValid() As Boolean
+            Get
+                Return (StatusFlags And IeeeC37_118.StatusFlags.DataIsValid) = 0
+            End Get
+            Set(ByVal value As Boolean)
+                If value Then
+                    StatusFlags = StatusFlags And Not IeeeC37_118.StatusFlags.DataIsValid
+                Else
+                    StatusFlags = StatusFlags Or IeeeC37_118.StatusFlags.DataIsValid
+                End If
+            End Set
+        End Property
 
-            ' Parse PDCstream specific header image
-            'm_flags = binaryImage(startIndex)
+        Public Property PmuErrorDetected() As Boolean
+            Get
+                Return (StatusFlags And IeeeC37_118.StatusFlags.PmuError) > 0
+            End Get
+            Set(ByVal value As Boolean)
+                If value Then
+                    StatusFlags = StatusFlags Or IeeeC37_118.StatusFlags.PmuError
+                Else
+                    StatusFlags = StatusFlags And Not IeeeC37_118.StatusFlags.PmuError
+                End If
+            End Set
+        End Property
 
-            'Dim analogWords As Byte = binaryImage(startIndex + 1)
-            'Dim digitalWords As Byte = binaryImage(startIndex + 2)
-            'Dim phasorWords As Byte = binaryImage(startIndex + 3)
+        Public Overrides Property SynchronizationIsValid() As Boolean
+            Get
+                Return (StatusFlags And IeeeC37_118.StatusFlags.PmuSynchronizationError) = 0
+            End Get
+            Set(ByVal value As Boolean)
+                If value Then
+                    StatusFlags = StatusFlags And Not IeeeC37_118.StatusFlags.PmuSynchronizationError
+                Else
+                    StatusFlags = StatusFlags Or IeeeC37_118.StatusFlags.PmuSynchronizationError
+                End If
+            End Set
+        End Property
 
-            '' Strip off IEEE flags
-            'm_reservedFlags = (analogWords And Not ReservedFlags.AnalogWordsMask)
-            'm_iEEEFormatFlags = (digitalWords And Not IEEEFormatFlags.DigitalWordsMask)
+        Public Property DataIsSortedByTimestamp() As Boolean
+            Get
+                Return (StatusFlags And IeeeC37_118.StatusFlags.DataSortingType) = 0
+            End Get
+            Set(ByVal value As Boolean)
+                If value Then
+                    StatusFlags = StatusFlags And Not IeeeC37_118.StatusFlags.DataSortingType
+                Else
+                    StatusFlags = StatusFlags Or IeeeC37_118.StatusFlags.DataSortingType
+                End If
+            End Set
+        End Property
 
-            '' Leave word counts
-            'analogWords = (analogWords And ReservedFlags.AnalogWordsMask)
-            'digitalWords = (digitalWords And IEEEFormatFlags.DigitalWordsMask)
+        Public Property PmuTriggerDetected() As Boolean
+            Get
+                Return (StatusFlags And IeeeC37_118.StatusFlags.PmuTriggerDetected) > 0
+            End Get
+            Set(ByVal value As Boolean)
+                If value Then
+                    StatusFlags = StatusFlags Or IeeeC37_118.StatusFlags.PmuTriggerDetected
+                Else
+                    StatusFlags = StatusFlags And Not IeeeC37_118.StatusFlags.PmuTriggerDetected
+                End If
+            End Set
+        End Property
 
-            '' Algorithm Case: Determine best course of action when stream counts don't match
-            '' configuration file.  Think about what *will* happen when new data appears in
-            '' the stream that's not in the config file - you could raise an event notifying
-            '' consumer about the mismatch instead of raising an exception - could even make
-            '' a boolean property that would allow either case.  The important thing to consider
-            '' is that to parse the cell images you have to have a defined definition (see base
-            '' class "Phasor.DataCellBase.ParseDataCell" - more in stream than in config file
-            '' and you won't get the new value, too few and you don't have enough definitions -
-            '' that would be bad - either way the definitions won't line up with the appropriate
-            '' data value and you won't know which one is missing or added.  I can't change the
-            '' protocol so this is enough argument to just raise an error for config file/stream
-            '' mismatch.  So for now we'll just throw an exception and deal with consequences :)
-            '' Note that this only applies to PDCstream protocol
-
-            'If phasorWords <> ConfigurationCell.PhasorDefinitions.Count Then
-            '    Throw New InvalidOperationException("Stream/Config File Mismatch: Phasor value count in stream (" & phasorWords & ") does not match defined count in configuration file (" & ConfigurationCell.PhasorDefinitions.Count & ")")
-            'End If
-
-            '' TODO: If analog values get a clear definition in INI file at some point, we can validate the number in the stream to the number in the config file...
-            ''If analogWords <> ConfigurationCell.AnalogDefinitions.Count Then
-            ''    Throw New InvalidOperationException("Stream/Config File Mismatch: Analog value count in stream (" analogWords & ") does not match defined count in configuration file (" & ConfigurationCell.AnalogDefinitions.Count & ")")
-            ''End If
-
-            '' TODO: If digital values get a clear definition in INI file at some point, we can validate the number in the stream to the number in the config file...
-            ''If digitalWords <> ConfigurationCell.DigitalDefinitions.Count Then
-            ''    Throw New InvalidOperationException("Stream/Config File Mismatch: Digital value count in stream (" digitalWords & ") does not match defined count in configuration file (" & ConfigurationCell.DigitalDefinitions.Count & ")")
-            ''End If
-
-            'm_sampleNumber = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 4)
-
-        End Sub
+        Public Property ConfigurationChangeDetected() As Boolean
+            Get
+                Return (StatusFlags And IeeeC37_118.StatusFlags.ConfigurationChanged) > 0
+            End Get
+            Set(ByVal value As Boolean)
+                If value Then
+                    StatusFlags = StatusFlags Or IeeeC37_118.StatusFlags.ConfigurationChanged
+                Else
+                    StatusFlags = StatusFlags And Not IeeeC37_118.StatusFlags.ConfigurationChanged
+                End If
+            End Set
+        End Property
 
     End Class
 

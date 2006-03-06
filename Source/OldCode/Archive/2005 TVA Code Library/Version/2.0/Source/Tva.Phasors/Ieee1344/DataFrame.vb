@@ -30,7 +30,7 @@ Namespace Ieee1344
 
         Protected m_configFile As ConfigurationFile
         Protected m_phasorFormat As CoordinateFormat
-        Protected m_sampleRate As Integer
+        Protected m_frameRate As Integer
         Protected m_sampleStep As Integer
         Protected m_phasorValues As PhasorValues
         Protected m_digitalValues As DigitalValues
@@ -48,7 +48,7 @@ Namespace Ieee1344
             If configFile2 Is Nothing Then Throw New ArgumentNullException("Cannot parse " & Name & " without receiving configuration file 2 first")
             m_configFile = configFile2
             m_phasorFormat = phasorFormat
-            m_sampleRate = 30
+            m_frameRate = 30
             m_sampleStep = 40
             m_phasorValues = New PhasorValues
             m_digitalValues = New DigitalValues
@@ -57,10 +57,7 @@ Namespace Ieee1344
 
         Protected Friend Sub New(ByVal parsedImage As BaseFrame, ByVal configFile2 As ConfigurationFile, ByVal binaryImage As Byte(), ByVal startIndex As Integer, ByVal phasorFormat As CoordinateFormat)
 
-            Me.New(configFile2, phasorFormat)
-
-            Dim x, index As Integer
-            Dim value As PhasorValue
+            MyClass.New(configFile2, phasorFormat)
 
             ' No need to reparse data, so we pickup what's already been parsed...
             Clone(parsedImage)
@@ -73,7 +70,7 @@ Namespace Ieee1344
         ' Combine time tag and sample count to create usable timestamp valid at a millisecond level
         Public Overridable ReadOnly Property Timestamp() As Date
             Get
-                Return TimeTag.ToDateTime.AddMilliseconds(1000 * (SampleCount / m_sampleStep / m_sampleRate))
+                Return TimeTag.ToDateTime.AddMilliseconds(1000 * (SampleCount / m_sampleStep / m_frameRate))
             End Get
         End Property
 
@@ -90,12 +87,12 @@ Namespace Ieee1344
             End Set
         End Property
 
-        Public Property SampleRate() As Integer
+        Public Property FrameRate() As Integer
             Get
-                Return m_sampleRate
+                Return m_frameRate
             End Get
             Set(ByVal Value As Integer)
-                m_sampleRate = Value
+                m_frameRate = Value
             End Set
         End Property
 

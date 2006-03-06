@@ -19,6 +19,7 @@ Imports System.Text
 
 Namespace BpaPdcStream
 
+    <CLSCompliant(False)> _
     Public Class FrequencyDefinition
 
         Inherits FrequencyDefinitionBase

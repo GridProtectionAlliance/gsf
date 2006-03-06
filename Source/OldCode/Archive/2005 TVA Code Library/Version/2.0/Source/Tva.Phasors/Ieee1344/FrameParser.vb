@@ -58,16 +58,16 @@ Namespace Ieee1344
 
             m_eventInstance = Me
             m_tcpSocket = New Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp)
-            m_ipAddress = Dns.Resolve("127.0.0.1").AddressList(0)
+            m_ipAddress = Dns.GetHostEntry("127.0.0.1").AddressList(0)
             m_phasorFormat = CoordinateFormat.Rectangular
 
         End Sub
 
         Public Sub New(ByVal pmuID As Int64, ByVal pmuIPAddress As String, ByVal pmuIPPort As Integer, ByVal phasorFormat As CoordinateFormat)
 
-            Me.New()
+            MyClass.New()
             m_pmuID = pmuID
-            m_ipAddress = Dns.Resolve(pmuIPAddress).AddressList(0)
+            m_ipAddress = Dns.GetHostEntry(pmuIPAddress).AddressList(0)
             m_ipPort = pmuIPPort
             m_phasorFormat = phasorFormat
 
@@ -234,7 +234,7 @@ Namespace Ieee1344
 
             Dim cmdFrame As New CommandFrame(PmuID, command)
 
-            If m_tcpSocket.Send(cmdFrame.BinaryImage) <> cmdFrame.FrameLength Then
+            If m_tcpSocket.Send(cmdFrame.BinaryImage) <> CommandFrame.FrameLength Then
                 Throw New InvalidOperationException("Failed to send proper number of bytes for command frame")
             End If
 

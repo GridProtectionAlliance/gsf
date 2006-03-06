@@ -26,14 +26,10 @@ Imports Tva.Interop.Bit
 
 Namespace Cryptography
 
-    ''' <summary>
-    ''' <para>Common Cryptographic Functions</para>
-    ''' </summary>
+    ''' <summary>Common Cryptographic Functions</summary>
     Public NotInheritable Class Common
 
-        ''' <summary>
-        ''' <para>Cryptographic Strength Enumeration</para>
-        ''' </summary>
+        ''' <summary>Cryptographic Strength Enumeration</summary>
         ''' <remarks>
         ''' <para>
         ''' Encryption algorithms are cumulative, the levels represent tradeoffs on speed vs. cipher strength - level 1
@@ -66,27 +62,21 @@ Namespace Cryptography
 
         End Sub
 
-        ''' <summary>
-        ''' <para>Returns a Base64 encoded string of the returned binary array of the encrypted data generated with the given parameter using the standard encryption key and encryption level 1</para>
-        ''' </summary>
+        ''' <summary>Returns a Base64 encoded string of the returned binary array of the encrypted data generated with the given parameter using the standard encryption key and encryption level 1</summary>
         Public Shared Function Encrypt(ByVal str As String) As String
 
             Return Encrypt(str, Nothing, EncryptLevel.Level1)
 
         End Function
 
-        ''' <summary>
-        ''' <para>Returns a Base64 encoded string of the returned binary array of the encrypted data generated with the given parameters using standard encryption</para>
-        ''' </summary>
+        ''' <summary>Returns a Base64 encoded string of the returned binary array of the encrypted data generated with the given parameters using standard encryption</summary>
         Public Shared Function Encrypt(ByVal str As String, ByVal strength As EncryptLevel) As String
 
             Return Encrypt(str, Nothing, strength)
 
         End Function
 
-        ''' <summary>
-        ''' <para>Returns a Base64 encoded string of the returned binary array of the encrypted data generated with the given parameters</para>
-        ''' </summary>
+        ''' <summary>Returns a Base64 encoded string of the returned binary array of the encrypted data generated with the given parameters</summary>
         Public Shared Function Encrypt(ByVal str As String, ByVal encryptionKey As String, ByVal strength As EncryptLevel) As String
 
             If encryptionKey Is Nothing OrElse encryptionKey.Length = 0 Then encryptionKey = StandardKey
@@ -98,9 +88,7 @@ Namespace Cryptography
 
         End Function
 
-        ''' <summary>
-        ''' <para>Returns a binary array of encrypted data for the given parameters</para>
-        ''' </summary>
+        ''' <summary>Returns a binary array of encrypted data for the given parameters</summary>
         Public Shared Function Encrypt(ByVal data As Byte(), ByVal key As Byte(), ByVal IV As Byte(), ByVal strength As EncryptLevel) As Byte()
 
             ' Perform requested levels of encryption
@@ -119,18 +107,14 @@ Namespace Cryptography
 
         End Function
 
-        ''' <summary>
-        ''' <para>Returns a binary array of encrypted data for the given parameters</para>
-        ''' </summary>
+        ''' <summary>Returns a binary array of encrypted data for the given parameters</summary>
         Public Shared Function Encrypt(ByVal algorithm As SymmetricAlgorithm, ByVal data As Byte(), ByVal key As Byte(), ByVal IV As Byte()) As Byte()
 
             Return DirectCast(Encrypt(algorithm, New MemoryStream(data), key, IV), MemoryStream).ToArray()
 
         End Function
 
-        ''' <summary>
-        ''' <para>Returns a stream of encrypted data for the given parameters</para>
-        ''' </summary>
+        ''' <summary>Returns a stream of encrypted data for the given parameters</summary>
         Public Shared Function Encrypt(ByVal inStream As Stream, ByVal key As Byte(), ByVal IV As Byte(), ByVal strength As EncryptLevel) As Stream
 
             ' Perform requested levels of encryption
@@ -149,9 +133,7 @@ Namespace Cryptography
 
         End Function
 
-        ''' <summary>
-        ''' <para>Returns a stream of encrypted data for the given parameters</para>
-        ''' </summary>
+        ''' <summary>Returns a stream of encrypted data for the given parameters</summary>
         Public Shared Function Encrypt(ByVal algorithm As SymmetricAlgorithm, ByVal inStream As Stream, ByVal key As Byte(), ByVal IV As Byte()) As Stream
 
             Dim outStream As New MemoryStream
@@ -163,9 +145,7 @@ Namespace Cryptography
 
         End Function
 
-        ''' <summary>
-        ''' <para>Encrypts input stream onto output stream for the given parameters</para>
-        ''' </summary>
+        ''' <summary>Encrypts input stream onto output stream for the given parameters</summary>
         Public Shared Sub Encrypt(ByVal inStream As Stream, ByVal outStream As Stream, ByVal key As Byte(), ByVal IV As Byte(), ByVal strength As EncryptLevel, ByVal progressHandler As ProgressEventHandler)
 
             Dim inBuffer As Byte() = Array.CreateInstance(GetType(Byte), BufferSize)
@@ -212,9 +192,7 @@ Namespace Cryptography
 
         End Sub
 
-        ''' <summary>
-        ''' <para>Encrypts input stream onto output stream for the given parameters</para>
-        ''' </summary>
+        ''' <summary>Encrypts input stream onto output stream for the given parameters</summary>
         Public Shared Sub Encrypt(ByVal algorithm As SymmetricAlgorithm, ByVal inStream As Stream, ByVal outStream As Stream, ByVal key As Byte(), ByVal IV As Byte())
 
             ' This is the root encryption function - eventually, all the encryption functions perform their actual encryption here...
@@ -236,18 +214,14 @@ Namespace Cryptography
 
         End Sub
 
-        ''' <summary>
-        ''' <para>Creates an encrypted file from source file data</para>
-        ''' </summary>
+        ''' <summary>Creates an encrypted file from source file data</summary>
         Public Shared Sub EncryptFile(ByVal sourceFileName As String, ByVal destFileName As String, ByVal strength As EncryptLevel)
 
             EncryptFile(sourceFileName, destFileName, Nothing, strength, Nothing)
 
         End Sub
 
-        ''' <summary>
-        ''' <para>Creates an encrypted file from source file data</para>
-        ''' </summary>
+        ''' <summary>Creates an encrypted file from source file data</summary>
         Public Shared Sub EncryptFile(ByVal sourceFileName As String, ByVal destFileName As String, ByVal encryptionKey As String, ByVal strength As EncryptLevel, ByVal progressHandler As ProgressEventHandler)
 
             If encryptionKey Is Nothing OrElse encryptionKey.Length = 0 Then encryptionKey = StandardKey
@@ -265,27 +239,21 @@ Namespace Cryptography
 
         End Sub
 
-        ''' <summary>
-        ''' <para>Returns a decrypted string from a Base64 encoded string of binary encrypted data from the given parameter using the standard encryption key and encryption level 1</para>
-        ''' </summary>
+        ''' <summary>Returns a decrypted string from a Base64 encoded string of binary encrypted data from the given parameter using the standard encryption key and encryption level 1</summary>
         Public Shared Function Decrypt(ByVal str As String) As String
 
             Return Decrypt(str, Nothing, EncryptLevel.Level1)
 
         End Function
 
-        ''' <summary>
-        ''' <para>Returns a decrypted string from a Base64 encoded string of binary encrypted data from the given parameters using the standard encryption key</para>
-        ''' </summary>
+        ''' <summary>Returns a decrypted string from a Base64 encoded string of binary encrypted data from the given parameters using the standard encryption key</summary>
         Public Shared Function Decrypt(ByVal str As String, ByVal strength As EncryptLevel) As String
 
             Return Decrypt(str, Nothing, strength)
 
         End Function
 
-        ''' <summary>
-        ''' <para>Returns a decrypted string from a Base64 encoded string of binary encrypted data from the given parameters</para>
-        ''' </summary>
+        ''' <summary>Returns a decrypted string from a Base64 encoded string of binary encrypted data from the given parameters</summary>
         Public Shared Function Decrypt(ByVal str As String, ByVal encryptionKey As String, ByVal strength As EncryptLevel) As String
 
             If encryptionKey Is Nothing OrElse encryptionKey.Length = 0 Then encryptionKey = StandardKey
@@ -297,9 +265,7 @@ Namespace Cryptography
 
         End Function
 
-        ''' <summary>
-        ''' <para>Returns a binary array of decrypted data for the given parameters</para>
-        ''' </summary>
+        ''' <summary>Returns a binary array of decrypted data for the given parameters</summary>
         Public Shared Function Decrypt(ByVal data As Byte(), ByVal key As Byte(), ByVal IV As Byte(), ByVal strength As EncryptLevel) As Byte()
 
             ' Perform requested levels of decryption
@@ -311,18 +277,14 @@ Namespace Cryptography
 
         End Function
 
-        ''' <summary>
-        ''' <para>Returns a binary array of decrypted data for the given parameters</para>
-        ''' </summary>
+        ''' <summary>Returns a binary array of decrypted data for the given parameters</summary>
         Public Shared Function Decrypt(ByVal algorithm As SymmetricAlgorithm, ByVal data As Byte(), ByVal key As Byte(), ByVal IV As Byte()) As Byte()
 
             Return DirectCast(Decrypt(algorithm, New MemoryStream(data), key, IV), MemoryStream).ToArray()
 
         End Function
 
-        ''' <summary>
-        ''' <para>Returns a stream of decrypted data for the given parameters</para>
-        ''' </summary>
+        ''' <summary>Returns a stream of decrypted data for the given parameters</summary>
         Public Shared Function Decrypt(ByVal inStream As Stream, ByVal key As Byte(), ByVal IV As Byte(), ByVal strength As EncryptLevel) As Stream
 
             If strength >= EncryptLevel.Level4 Then inStream = Decrypt(New RijndaelManaged, inStream, key, IV)
@@ -333,9 +295,7 @@ Namespace Cryptography
 
         End Function
 
-        ''' <summary>
-        ''' <para>Returns a stream of decrypted data for the given parameters</para>
-        ''' </summary>
+        ''' <summary>Returns a stream of decrypted data for the given parameters</summary>
         Public Shared Function Decrypt(ByVal algorithm As SymmetricAlgorithm, ByVal inStream As Stream, ByVal key As Byte(), ByVal IV As Byte()) As Stream
 
             Dim outStream As New MemoryStream
@@ -347,9 +307,7 @@ Namespace Cryptography
 
         End Function
 
-        ''' <summary>
-        ''' <para>Decrypts input stream onto output stream for the given parameters</para>
-        ''' </summary>
+        ''' <summary>Decrypts input stream onto output stream for the given parameters</summary>
         Public Shared Sub Decrypt(ByVal inStream As Stream, ByVal outStream As Stream, ByVal key As Byte(), ByVal IV As Byte(), ByVal strength As EncryptLevel, ByVal progressHandler As ProgressEventHandler)
 
             Dim inBuffer As Byte()
@@ -406,9 +364,7 @@ Namespace Cryptography
 
         End Sub
 
-        ''' <summary>
-        ''' <para>Decrypts input stream onto output stream for the given parameters</para>
-        ''' </summary>
+        ''' <summary>Decrypts input stream onto output stream for the given parameters</summary>
         Public Shared Sub Decrypt(ByVal algorithm As SymmetricAlgorithm, ByVal inStream As Stream, ByVal outStream As Stream, ByVal key As Byte(), ByVal IV As Byte())
 
             ' This is the root decryption function - eventually, all the decryption functions perform their actual decryption here...
@@ -430,18 +386,14 @@ Namespace Cryptography
 
         End Sub
 
-        ''' <summary>
-        ''' <para>Creates a decrypted file from source file data</para>
-        ''' </summary>
+        ''' <summary>Creates a decrypted file from source file data</summary>
         Public Shared Sub DecryptFile(ByVal sourceFileName As String, ByVal destFileName As String, ByVal strength As EncryptLevel)
 
             DecryptFile(sourceFileName, destFileName, Nothing, strength, Nothing)
 
         End Sub
 
-        ''' <summary>
-        ''' <para>Creates a decrypted file from source file data</para>
-        ''' </summary>
+        ''' <summary>Creates a decrypted file from source file data</summary>
         Public Shared Sub DecryptFile(ByVal sourceFileName As String, ByVal destFileName As String, ByVal encryptionKey As String, ByVal strength As EncryptLevel, ByVal progressHandler As ProgressEventHandler)
 
             If encryptionKey Is Nothing OrElse encryptionKey.Length = 0 Then encryptionKey = StandardKey
@@ -459,9 +411,7 @@ Namespace Cryptography
 
         End Sub
 
-        ''' <summary>
-        ''' <para>Coerces key to maximum legal bit length for given encryption algorithm</para>
-        ''' </summary>
+        ''' <summary>Coerces key to maximum legal bit length for given encryption algorithm</summary>
         Public Shared Function GetLegalKey(ByVal algorithm As SymmetricAlgorithm, ByVal key() As Byte) As Byte()
 
             Dim rgbKey As Byte() = Array.CreateInstance(GetType(Byte), Convert.ToInt32(algorithm.LegalKeySizes(0).MaxSize / 8 - 1))
@@ -478,9 +428,7 @@ Namespace Cryptography
 
         End Function
 
-        ''' <summary>
-        ''' <para>Coerces initialization vector to legal block size for given encryption algorithm</para>
-        ''' </summary>
+        ''' <summary>Coerces initialization vector to legal block size for given encryption algorithm</summary>
         Public Shared Function GetLegalIV(ByVal algorithm As SymmetricAlgorithm, ByVal IV() As Byte) As Byte()
 
             Dim rgbIV As Byte() = Array.CreateInstance(GetType(Byte), Convert.ToInt32(algorithm.LegalBlockSizes(0).MinSize / 8 - 1))
@@ -497,9 +445,7 @@ Namespace Cryptography
 
         End Function
 
-        ''' <summary>
-        ''' <para>Encrypts or decrypts input stream onto output stream using XOR based algorithms.  Call once to encrypt, call again with same key to decrypt.</para>
-        ''' </summary>
+        ''' <summary>Encrypts or decrypts input stream onto output stream using XOR based algorithms.  Call once to encrypt, call again with same key to decrypt.</summary>
         Public Shared Function Crypt(ByVal inStream As Stream, ByVal encryptionKey As Byte()) As Stream
 
             If inStream.CanSeek Then
@@ -531,18 +477,14 @@ Namespace Cryptography
 
         End Function
 
-        ''' <summary>
-        ''' <para>Encrypts or decrypts a string using XOR based algorithms.  Call once to encrypt, call again with same key to decrypt.</para>
-        ''' </summary>
+        ''' <summary>Encrypts or decrypts a string using XOR based algorithms.  Call once to encrypt, call again with same key to decrypt.</summary>
         Public Shared Function Crypt(ByVal str As String, ByVal encryptionKey As String) As String
 
             Return Encoding.Unicode.GetString(Crypt(Encoding.Unicode.GetBytes(str), Encoding.Unicode.GetBytes(encryptionKey)))
 
         End Function
 
-        ''' <summary>
-        ''' <para>Encrypts or decrypts data using XOR based algorithms.  Call once to encrypt, call again with same key to decrypt.</para>
-        ''' </summary>
+        ''' <summary>Encrypts or decrypts data using XOR based algorithms.  Call once to encrypt, call again with same key to decrypt.</summary>
         Public Shared Function Crypt(ByVal data As Byte(), ByVal encryptionKey As Byte()) As Byte()
 
             ' The longer the encryption key the better the encryption
@@ -591,9 +533,7 @@ Namespace Cryptography
 
         End Function
 
-        ''' <summary>
-        ''' <para>Generates a random key useful for cryptographic functions</para>
-        ''' </summary>
+        ''' <summary>Generates a random key useful for cryptographic functions</summary>
         Public Shared Function GenerateKey() As String
 
             Dim keyChars As Char()
@@ -629,9 +569,7 @@ Namespace Cryptography
 
         End Function
 
-        ''' <summary>
-        ''' <para>Returns a coded string representing a number which can later be decoded with <see cref="GetSeedFromKey" />.</para>
-        ''' </summary>
+        ''' <summary>Returns a coded string representing a number which can later be decoded with <see cref="GetSeedFromKey" />.</summary>
         ''' <remarks>
         ''' <para>This function was designed for Microsoft.VisualBasic.Timer values.</para>
         ''' </remarks>
@@ -665,9 +603,7 @@ Namespace Cryptography
 
         End Function
 
-        ''' <summary>
-        ''' <para>Returns the number from a string coded with <see cref="GetKeyFromSeed" />.</para>
-        ''' </summary>
+        ''' <summary>Returns the number from a string coded with <see cref="GetKeyFromSeed" />.</summary>
         Public Shared Function GetSeedFromKey(ByVal key As String) As Integer
 
             Dim seedBytes(3) As Byte

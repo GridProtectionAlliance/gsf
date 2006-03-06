@@ -18,12 +18,13 @@
 Imports Tva.DateTime
 
 ' This class represents the protocol independent common implementation of a configuration frame that can be sent or received from a PMU.
+<CLSCompliant(False)> _
 Public MustInherit Class ConfigurationFrameBase
 
     Inherits ChannelFrameBase(Of IConfigurationCell)
     Implements IConfigurationFrame
 
-    Private m_sampleRate As Int16
+    Private m_frameRate As Int16
 
     Protected Sub New(ByVal cells As ConfigurationCellCollection)
 
@@ -31,11 +32,11 @@ Public MustInherit Class ConfigurationFrameBase
 
     End Sub
 
-    Protected Sub New(ByVal cells As ConfigurationCellCollection, ByVal ticks As Long, ByVal synchronizationIsValid As Boolean, ByVal dataIsValid As Boolean, ByVal idCode As Int16, ByVal sampleRate As Int16)
+    Protected Sub New(ByVal idCode As UInt16, ByVal cells As ConfigurationCellCollection, ByVal ticks As Long, ByVal frameRate As Int16)
 
-        MyBase.New(cells, ticks, synchronizationIsValid, dataIsValid, idCode)
+        MyBase.New(idCode, cells, ticks)
 
-        m_sampleRate = sampleRate
+        m_frameRate = frameRate
 
     End Sub
 
@@ -50,8 +51,7 @@ Public MustInherit Class ConfigurationFrameBase
     ' Derived classes are expected to expose a Public Sub New(ByVal configurationFrame As IConfigurationFrame)
     Protected Sub New(ByVal configurationFrame As IConfigurationFrame)
 
-        MyClass.New(configurationFrame.Cells, configurationFrame.Ticks, configurationFrame.SynchronizationIsValid, _
-            configurationFrame.DataIsValid, configurationFrame.IDCode, configurationFrame.SampleRate)
+        MyClass.New(configurationFrame.IDCode, configurationFrame.Cells, configurationFrame.Ticks, configurationFrame.FrameRate)
 
     End Sub
 
@@ -61,27 +61,21 @@ Public MustInherit Class ConfigurationFrameBase
         End Get
     End Property
 
-    Public Overridable Property SampleRate() As Int16 Implements IConfigurationFrame.SampleRate
+    Public Overridable Property FrameRate() As Int16 Implements IConfigurationFrame.FrameRate
         Get
-            Return m_sampleRate
+            Return m_frameRate
         End Get
         Set(ByVal value As Int16)
-            m_sampleRate = value
+            m_frameRate = value
         End Set
     End Property
 
-    Public Sub SetNominalFrequency(ByVal value As LineFrequency) Implements IConfigurationFrame.SetNominalFrequency
+    Public Overridable Sub SetNominalFrequency(ByVal value As LineFrequency) Implements IConfigurationFrame.SetNominalFrequency
+
+        For Each cell As IConfigurationCell In Cells
+            cell.NominalFrequency = value
+        Next
 
     End Sub
-
-    'Public Overridable Property NominalFrequency() As LineFrequency Implements IConfigurationFrame.SetNominalFrequency
-    '    Get
-    '        Return m_nominalFrequency
-    '    End Get
-    '    Set(ByVal value As LineFrequency)
-    '        m_nominalFrequency = value
-    '    End Set
-    'End Property
-
 
 End Class

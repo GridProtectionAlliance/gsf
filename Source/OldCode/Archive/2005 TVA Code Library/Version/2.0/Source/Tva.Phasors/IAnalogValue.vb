@@ -16,6 +16,7 @@
 '*******************************************************************************************************
 
 ' This interface represents a protocol independent analog value.
+<CLSCompliant(False)> _
 Public Interface IAnalogValue
 
     Inherits IChannelValue(Of IAnalogDefinition)

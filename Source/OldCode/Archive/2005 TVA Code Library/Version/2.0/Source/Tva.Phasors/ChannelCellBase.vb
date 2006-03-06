@@ -16,19 +16,20 @@
 '*******************************************************************************************************
 
 ' This class represents the common implementation of the protocol independent representation of any kind of data cell.
+<CLSCompliant(False)> _
 Public MustInherit Class ChannelCellBase
 
     Inherits ChannelBase
     Implements IChannelCell
 
     Private m_parent As IChannelFrame
+    Private m_idCode As UInt16
     Private m_alignOnDWordBoundry As Boolean
 
-    Protected Sub New(ByVal parent As IChannelFrame, ByVal alignOnDWordBoundry As Boolean)
-
-        MyBase.New()
+    Protected Sub New(ByVal parent As IChannelFrame, ByVal idCode As UInt16, ByVal alignOnDWordBoundry As Boolean)
 
         m_parent = parent
+        m_idCode = idCode
         m_alignOnDWordBoundry = alignOnDWordBoundry
 
     End Sub
@@ -38,17 +39,26 @@ Public MustInherit Class ChannelCellBase
     ' Derived classes are expected to expose a Protected Sub New(ByVal channelCell As IChannelCell)
     Protected Sub New(ByVal channelCell As IChannelCell)
 
-        MyClass.New(channelCell.Parent, channelCell.AlignOnDWordBoundry)
+        MyClass.New(channelCell.Parent, channelCell.IDCode, channelCell.AlignOnDWordBoundry)
 
     End Sub
 
-    Public ReadOnly Property Parent() As IChannelFrame Implements IChannelCell.Parent
+    Public Overridable ReadOnly Property Parent() As IChannelFrame Implements IChannelCell.Parent
         Get
             Return m_parent
         End Get
     End Property
 
-    Public ReadOnly Property AlignOnDWordBoundry() As Boolean Implements IChannelCell.AlignOnDWordBoundry
+    Public Overridable Property IDCode() As UInt16 Implements IChannelCell.IDCode
+        Get
+            Return m_idCode
+        End Get
+        Set(ByVal value As UInt16)
+            m_idCode = value
+        End Set
+    End Property
+
+    Public Overridable ReadOnly Property AlignOnDWordBoundry() As Boolean Implements IChannelCell.AlignOnDWordBoundry
         Get
             Return m_alignOnDWordBoundry
         End Get

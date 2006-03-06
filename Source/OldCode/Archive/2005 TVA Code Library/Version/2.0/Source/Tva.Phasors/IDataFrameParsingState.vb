@@ -16,6 +16,7 @@
 '*******************************************************************************************************
 
 ' This interface represents the protocol independent parsing state of any frame of data.
+<CLSCompliant(False)> _
 Public Interface IDataFrameParsingState
 
     Inherits IChannelFrameParsingState(Of IDataCell)

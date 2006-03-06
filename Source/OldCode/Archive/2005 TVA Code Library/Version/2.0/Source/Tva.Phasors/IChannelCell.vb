@@ -16,11 +16,14 @@
 '*******************************************************************************************************
 
 ' This interface represents a protocol independent representation of any kind of data cell.
+<CLSCompliant(False)> _
 Public Interface IChannelCell
 
     Inherits IChannel
 
     ReadOnly Property Parent() As IChannelFrame
+
+    Property IDCode() As UInt16
 
     ReadOnly Property AlignOnDWordBoundry() As Boolean
 

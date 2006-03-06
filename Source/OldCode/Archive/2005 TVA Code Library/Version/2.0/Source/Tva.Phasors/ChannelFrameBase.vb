@@ -24,16 +24,15 @@ Imports Tva.Interop
 Imports Tva.Measurements
 
 ' This class represents the protocol independent common implementation of any frame of data that can be sent or received from a PMU.
+<CLSCompliant(False)> _
 Public MustInherit Class ChannelFrameBase(Of T As IChannelCell)
 
     Inherits ChannelBase
     Implements IChannelFrame, IFrame, IComparable
 
-    Private m_idCode As Int16
+    Private m_idCode As UInt16
     Private m_cells As IChannelCellCollection(Of T)
     Private m_ticks As Long
-    Private m_synchronizationIsValid As Boolean
-    Private m_dataIsValid As Boolean
     Private m_published As Boolean
     Private m_frameLength As Int16
 
@@ -43,26 +42,22 @@ Public MustInherit Class ChannelFrameBase(Of T As IChannelCell)
 
         m_cells = cells
         m_ticks = Date.UtcNow.Ticks
-        m_synchronizationIsValid = True
-        m_dataIsValid = True
 
     End Sub
 
-    Protected Sub New(ByVal cells As IChannelCellCollection(Of T), ByVal ticks As Long, ByVal synchronizationIsValid As Boolean, ByVal dataIsValid As Boolean, ByVal idCode As Int16)
+    Protected Sub New(ByVal idCode As UInt16, ByVal cells As IChannelCellCollection(Of T), ByVal ticks As Long)
 
         MyBase.New()
 
+        m_idCode = idCode
         m_cells = cells
         m_ticks = ticks
-        m_synchronizationIsValid = synchronizationIsValid
-        m_dataIsValid = dataIsValid
-        m_idCode = idCode
 
     End Sub
 
-    Protected Sub New(ByVal cells As IChannelCellCollection(Of T), ByVal timeTag As UnixTimeTag, ByVal synchronizationIsValid As Boolean, ByVal dataIsValid As Boolean, ByVal idCode As Int16)
+    Protected Sub New(ByVal idCode As UInt16, ByVal cells As IChannelCellCollection(Of T), ByVal timeTag As UnixTimeTag)
 
-        MyClass.New(cells, timeTag.ToDateTime.Ticks, synchronizationIsValid, dataIsValid, idCode)
+        MyClass.New(idCode, cells, timeTag.ToDateTime.Ticks)
 
     End Sub
 
@@ -78,7 +73,7 @@ Public MustInherit Class ChannelFrameBase(Of T As IChannelCell)
     ' Derived classes are expected to expose a Protected Sub New(ByVal channelFrame As IChannelFrame)
     Protected Sub New(ByVal channelFrame As IChannelFrame)
 
-        MyClass.New(channelFrame.Cells, channelFrame.Ticks, channelFrame.SynchronizationIsValid, channelFrame.DataIsValid, channelFrame.IDCode)
+        MyClass.New(channelFrame.IDCode, channelFrame.Cells, channelFrame.Ticks)
 
     End Sub
 
@@ -88,11 +83,11 @@ Public MustInherit Class ChannelFrameBase(Of T As IChannelCell)
         End Get
     End Property
 
-    Public Overridable Property IDCode() As Int16 Implements IChannelFrame.IDCode
+    Public Overridable Property IDCode() As UInt16 Implements IChannelFrame.IDCode
         Get
             Return m_idCode
         End Get
-        Set(ByVal value As Int16)
+        Set(ByVal value As UInt16)
             m_idCode = value
         End Set
     End Property
@@ -116,24 +111,6 @@ Public MustInherit Class ChannelFrameBase(Of T As IChannelCell)
         Get
             Return New Date(m_ticks)
         End Get
-    End Property
-
-    Public Overridable Property SynchronizationIsValid() As Boolean Implements IChannelFrame.SynchronizationIsValid
-        Get
-            Return m_synchronizationIsValid
-        End Get
-        Set(ByVal value As Boolean)
-            m_synchronizationIsValid = value
-        End Set
-    End Property
-
-    Public Overridable Property DataIsValid() As Boolean Implements IChannelFrame.DataIsValid
-        Get
-            Return m_dataIsValid
-        End Get
-        Set(ByVal value As Boolean)
-            m_dataIsValid = value
-        End Set
     End Property
 
     Public Overridable Property Published() As Boolean Implements IChannelFrame.Published, IFrame.Published
@@ -208,9 +185,7 @@ Public MustInherit Class ChannelFrameBase(Of T As IChannelCell)
         ' Parse all frame cells
         With DirectCast(state, IChannelFrameParsingState(Of T))
             For x As Integer = 0 To .CellCount - 1
-                ' Note: Final derived frame cell classes *must* expose Public Sub New(ByVal parent As IChannelFrame, ByVal state As IChannelFrameParsingState(Of T), ByVal index As Integer, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
-                Cells.Add(Activator.CreateInstance(.CellType, New Object() {Me, state, x, binaryImage, startIndex}))
-
+                .CreateNewCellFunction.Invoke(Me, state, x, binaryImage, startIndex)
                 startIndex += Cells(x).BinaryLength
             Next
         End With
@@ -219,16 +194,13 @@ Public MustInherit Class ChannelFrameBase(Of T As IChannelCell)
 
     Protected Overridable Function ChecksumIsValid(ByVal buffer As Byte(), ByVal startIndex As Integer) As Boolean
 
-        ' TODO: We need read FrameLength here - not calculated binary length
-        Dim length As Int16 = BinaryLength
-
 #If DEBUG Then
-        Dim bufferSum As UInt16 = EndianOrder.BigEndian.ToInt16(buffer, startIndex + length - 2)
-        Dim calculatedSum As UInt16 = CalculateChecksum(buffer, startIndex, length - 2)
+        Dim bufferSum As UInt16 = EndianOrder.BigEndian.ToInt16(buffer, startIndex + m_frameLength - 2)
+        Dim calculatedSum As UInt16 = CalculateChecksum(buffer, startIndex, m_frameLength - 2)
         Debug.WriteLine("Buffer Sum = " & bufferSum & ", Calculated Sum = " & calculatedSum)
         Return (bufferSum = calculatedSum)
 #Else
-        Return EndianOrder.BigEndian.ToUInt16(buffer, startIndex + length - 2) = CalculateChecksum(buffer, startIndex, length - 2)
+        Return EndianOrder.BigEndian.ToUInt16(buffer, startIndex + m_frameLength - 2) = CalculateChecksum(buffer, startIndex, m_frameLength - 2)
 #End If
 
     End Function
@@ -239,11 +211,10 @@ Public MustInherit Class ChannelFrameBase(Of T As IChannelCell)
 
     End Sub
 
-    <CLSCompliant(False)> _
     Protected Overridable Function CalculateChecksum(ByVal buffer As Byte(), ByVal offset As Integer, ByVal length As Integer) As UInt16
 
+        ' We implement CRC CCITT check sum as the default, but each protocol can override as necessary
         Return CRC_CCITT(UInt16.MaxValue, buffer, offset, length)
-        'Return CRC16(UInt16.MaxValue, buffer, offset, length)
 
     End Function
 

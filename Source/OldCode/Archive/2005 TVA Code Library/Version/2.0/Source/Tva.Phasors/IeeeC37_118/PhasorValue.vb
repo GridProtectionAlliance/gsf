@@ -15,30 +15,34 @@
 '
 '*******************************************************************************************************
 
-Imports Tva.Interop
-Imports TVA.Shared.Math
-
 Namespace IeeeC37_118
 
+    <CLSCompliant(False)> _
     Public Class PhasorValue
 
         Inherits PhasorValueBase
 
         Public Overloads Shared Function CreateFromPolarValues(ByVal parent As IDataCell, ByVal phasorDefinition As IPhasorDefinition, ByVal angle As Double, ByVal magnitude As Double) As PhasorValue
 
-            Return PhasorValueBase.CreateFromPolarValues(GetType(PhasorValue), parent, phasorDefinition, angle, magnitude)
+            Return PhasorValueBase.CreateFromPolarValues(AddressOf CreateNewPhasorValue, parent, phasorDefinition, angle, magnitude)
 
         End Function
 
         Public Overloads Shared Function CreateFromRectangularValues(ByVal parent As IDataCell, ByVal phasorDefinition As IPhasorDefinition, ByVal real As Double, ByVal imaginary As Double) As PhasorValue
 
-            Return PhasorValueBase.CreateFromRectangularValues(GetType(PhasorValue), parent, phasorDefinition, real, imaginary)
+            Return PhasorValueBase.CreateFromRectangularValues(AddressOf CreateNewPhasorValue, parent, phasorDefinition, real, imaginary)
 
         End Function
 
         Public Overloads Shared Function CreateFromUnscaledRectangularValues(ByVal parent As IDataCell, ByVal phasorDefinition As IPhasorDefinition, ByVal real As Int16, ByVal imaginary As Int16) As PhasorValue
 
-            Return PhasorValueBase.CreateFromUnscaledRectangularValues(GetType(PhasorValue), parent, phasorDefinition, real, imaginary)
+            Return PhasorValueBase.CreateFromUnscaledRectangularValues(AddressOf CreateNewPhasorValue, parent, phasorDefinition, real, imaginary)
+
+        End Function
+
+        Private Shared Function CreateNewPhasorValue(ByVal parent As IDataCell, ByVal phasorDefinition As IPhasorDefinition, ByVal real As Double, ByVal imaginary As Double) As IPhasorValue
+
+            Return New PhasorValue(parent, phasorDefinition, real, imaginary)
 
         End Function
 
@@ -66,18 +70,17 @@ Namespace IeeeC37_118
 
         End Sub
 
+        Friend Shared Function CreateNewPhasorValue(ByVal parent As IDataCell, ByVal definition As IPhasorDefinition, ByVal binaryImage As Byte(), ByVal startIndex As Integer) As IPhasorValue
+
+            Return New PhasorValue(parent, definition, binaryImage, startIndex)
+
+        End Function
+
         Public Overrides ReadOnly Property InheritedType() As System.Type
             Get
                 Return Me.GetType()
             End Get
         End Property
-
-        Public Shared Function CalculateBinaryLength(ByVal definition As PhasorDefinition) As Int16
-
-            ' The phasor definition will determine the binary length based on data format
-            Return (New PhasorValue(Nothing, definition, 0, 0)).BinaryLength
-
-        End Function
 
     End Class
 

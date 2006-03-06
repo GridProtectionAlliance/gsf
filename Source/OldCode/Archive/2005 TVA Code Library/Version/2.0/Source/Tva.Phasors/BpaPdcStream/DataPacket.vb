@@ -23,6 +23,7 @@ Imports Tva.Math.Common
 Namespace BpaPdcStream
 
     ' This is essentially a "row" of PMU data at a given timestamp
+    <CLSCompliant(False)> _
     Public Class DataPacket
 
         Implements IComparable
@@ -44,7 +45,7 @@ Namespace BpaPdcStream
             m_index = index
 
             ' We precalculate a regular .NET timestamp with milliseconds sitting in the middle of the sample index
-            m_timeStamp = timeStamp.AddMilliseconds((m_index + 0.5@) * (1000@ / m_configFile.SampleRate))
+            m_timeStamp = timeStamp.AddMilliseconds((m_index + 0.5@) * (1000@ / m_configFile.FrameRate))
 
             With m_configFile
                 Cells = Array.CreateInstance(GetType(DataCell), .Cells.Count)

@@ -16,33 +16,34 @@
 '*******************************************************************************************************
 
 ' This class represents the protocol independent common implementation the parsing state used by any frame of data that can be sent or received from a PMU.
+<CLSCompliant(False)> _
 Public MustInherit Class ChannelFrameParsingStateBase(Of T As IChannelCell)
 
     Inherits ChannelParsingStateBase
     Implements IChannelFrameParsingState(Of T)
 
     Private m_cells As IChannelCellCollection(Of IChannelCell)
-    Private m_cellType As Type
     Private m_cellCount As Integer
     Private m_frameLength As Int16
+    Private m_createNewCellFunction As IChannelFrameParsingState(Of T).CreateNewCellFunctionSignature
 
-    Public Sub New(ByVal cells As IChannelCellCollection(Of T), ByVal cellType As Type, ByVal frameLength As Int16)
+    Public Sub New(ByVal cells As IChannelCellCollection(Of T), ByVal frameLength As Int16, ByVal createNewCellFunction As IChannelFrameParsingState(Of T).CreateNewCellFunctionSignature)
 
         m_cells = cells
-        m_cellType = cellType
         m_frameLength = frameLength
+        m_createNewCellFunction = createNewCellFunction
 
     End Sub
+
+    Public ReadOnly Property CreateNewCellFunction() As IChannelFrameParsingState(Of T).CreateNewCellFunctionSignature Implements IChannelFrameParsingState(Of T).CreateNewCellFunction
+        Get
+            Return m_createNewCellFunction
+        End Get
+    End Property
 
     Public ReadOnly Property Cells() As IChannelCellCollection(Of T) Implements IChannelFrameParsingState(Of T).Cells
         Get
             Return m_cells
-        End Get
-    End Property
-
-    Public ReadOnly Property CellType() As Type Implements IChannelFrameParsingState(Of T).CellType
-        Get
-            Return m_cellType
         End Get
     End Property
 

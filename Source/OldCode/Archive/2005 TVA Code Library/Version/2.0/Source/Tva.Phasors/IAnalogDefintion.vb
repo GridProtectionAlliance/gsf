@@ -16,6 +16,7 @@
 '*******************************************************************************************************
 
 ' This interface represents a protocol independent analog value definition.
+<CLSCompliant(False)> _
 Public Interface IAnalogDefinition
 
     Inherits IChannelDefinition

@@ -16,6 +16,7 @@
 '*******************************************************************************************************
 
 ' This interface represents a protocol independent digital value.
+<CLSCompliant(False)> _
 Public Interface IDigitalValue
 
     Inherits IChannelValue(Of IDigitalDefinition)

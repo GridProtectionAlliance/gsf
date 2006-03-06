@@ -17,6 +17,7 @@
 
 Namespace IeeeC37_118
 
+    <CLSCompliant(False)> _
     Public Class ConfigurationCellCollection
 
         Inherits Phasors.ConfigurationCellCollection

@@ -16,6 +16,7 @@
 '*******************************************************************************************************
 
 ' This class represents the common implementation of the protocol independent representation of a collection of any kind of data value.
+<CLSCompliant(False)> _
 Public MustInherit Class ChannelValueCollectionBase(Of TDefinition As IChannelDefinition, TValue As IChannelValue(Of TDefinition))
 
     Inherits ChannelCollectionBase(Of TValue)

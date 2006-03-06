@@ -31,61 +31,129 @@ Namespace Collections
 
         End Sub
 
-        ''' <summary>Returns smallest item from list of parameters</summary>
-        Public Shared Function Minimum(ByVal ParamArray itemList() As Object) As Object
+        ''' <summary>Strongly typed immediate (a.k.a. inline) if.  Returns one of two objects, depending on the evaluation of an expression.</summary>
+        ''' <param name="expression">The expression you want to evaluate.</param>
+        ''' <param name="truePart">Returned if expression evaluates to True.</param>
+        ''' <param name="falsePart">Returned if expression evaluates to False.</param>
+        ''' <typeparam name="T">Type used for immediate expression</typeparam>
+        Public Shared Function IIf(Of T)(ByVal expression As Boolean, ByVal truePart As T, ByVal falsePart As T) As T
 
-            Return Minimum(ItemList)
+            If expression Then Return truePart Else Return falsePart
 
         End Function
 
-        ''' <summary>Returns largest item from list of parameters</summary>
-        Public Shared Function Maximum(ByVal ParamArray itemList() As Object) As Object
+        ''' <summary>Returns smallest item from list of parameters</summary>
+        Public Shared Function Minimum(ByVal ParamArray itemList As Object()) As Object
 
-            Return Maximum(ItemList)
+            Return Minimum(DirectCast(itemList, IEnumerable))
+
+        End Function
+
+        ''' <summary>Returns smallest item from list of parameters</summary>
+        Public Shared Function Minimum(Of T)(ByVal ParamArray itemList As T()) As T
+
+            Return Minimum(Of T)(DirectCast(itemList, IEnumerable(Of T)))
+
+        End Function
+
+        ''' <summary>Returns smallest item from the specified enumeration</summary>
+        Public Shared Function Minimum(Of T)(ByVal items As IEnumerable(Of T)) As T
+
+            Dim minItem As T
+
+            With items.GetEnumerator()
+                If .MoveNext() Then
+                    minItem = .Current
+                    While .MoveNext()
+                        If Compare(Of T)(.Current, minItem) < 0 Then minItem = .Current
+                    End While
+                End If
+            End With
+
+            Return minItem
 
         End Function
 
         ''' <summary>Returns smallest item from the specified enumeration</summary>
         Public Shared Function Minimum(ByVal items As IEnumerable) As Object
 
-            Dim objMin As Object = Nothing
+            Dim minItem As Object
 
             With items.GetEnumerator()
                 If .MoveNext() Then
-                    objMin = .Current
+                    minItem = .Current
                     While .MoveNext()
-                        If Compare(.Current, objMin) < 0 Then objMin = .Current
+                        If Compare(.Current, minItem) < 0 Then minItem = .Current
                     End While
                 End If
             End With
 
-            Return objMin
+            Return minItem
+
+        End Function
+
+        ''' <summary>Returns largest item from list of parameters</summary>
+        Public Shared Function Maximum(ByVal ParamArray itemList As Object()) As Object
+
+            Return Maximum(DirectCast(itemList, IEnumerable))
+
+        End Function
+
+        ''' <summary>Returns largest item from list of parameters</summary>
+        Public Shared Function Maximum(Of T)(ByVal ParamArray itemList As T()) As T
+
+            Return Maximum(Of T)(DirectCast(itemList, IEnumerable(Of T)))
+
+        End Function
+
+        ''' <summary>Returns largest item from the specified enumeration</summary>
+        Public Shared Function Maximum(Of T)(ByVal items As IEnumerable(Of T)) As T
+
+            Dim maxItem As T
+
+            With items.GetEnumerator()
+                If .MoveNext() Then
+                    maxItem = .Current
+                    While .MoveNext()
+                        If Compare(Of T)(.Current, maxItem) > 0 Then maxItem = .Current
+                    End While
+                End If
+            End With
+
+            Return maxItem
 
         End Function
 
         ''' <summary>Returns largest item from the specified enumeration</summary>
         Public Shared Function Maximum(ByVal items As IEnumerable) As Object
 
-            Dim objMax As Object = Nothing
+            Dim maxItem As Object
 
             With items.GetEnumerator()
                 If .MoveNext() Then
-                    objMax = .Current
+                    maxItem = .Current
                     While .MoveNext()
-                        If Compare(.Current, objMax) > 0 Then objMax = .Current
+                        If Compare(.Current, maxItem) > 0 Then maxItem = .Current
                     End While
                 End If
             End With
 
-            Return objMax
+            Return maxItem
 
         End Function
 
-        ''' <summary> Compares two elements of any type.</summary>
+        ''' <summary>Compares two elements of the specified type.</summary>
+        Public Shared Function Compare(Of T)(ByVal x As T, ByVal y As T) As Integer
+
+            Return System.Collections.Generic.Comparer(Of T).Default.Compare(x, y)
+
+        End Function
+
+        ''' <summary>Compares two elements of any type.</summary>
         Public Shared Function Compare(ByVal x As Object, ByVal y As Object) As Integer
 
             If IsReference(x) And IsReference(y) Then
-                ' If both items are string reference objects then test object equality by reference,
+                ' If both items are reference objects then test object equality by reference,
                 ' then if not equal by overriable Object.Equals function use default Comparer
                 If x Is y Then
                     Return 0

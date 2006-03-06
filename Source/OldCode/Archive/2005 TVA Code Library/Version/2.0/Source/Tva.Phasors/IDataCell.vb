@@ -16,6 +16,7 @@
 '*******************************************************************************************************
 
 ' This interface represents the protocol independent representation of a set of phasor related data values.
+<CLSCompliant(False)> _
 Public Interface IDataCell
 
     Inherits IChannelCell
@@ -35,5 +36,9 @@ Public Interface IDataCell
     ReadOnly Property AnalogValues() As AnalogValueCollection
 
     ReadOnly Property DigitalValues() As DigitalValueCollection
+
+    Property SynchronizationIsValid() As Boolean
+
+    Property DataIsValid() As Boolean
 
 End Interface

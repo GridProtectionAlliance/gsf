@@ -22,6 +22,7 @@ Imports Tva.Phasors.BpaPdcStream.Common
 
 Namespace BpaPdcStream
 
+    <CLSCompliant(False)> _
     Public Class ConfigurationCell
 
         Inherits ConfigurationCellBase
@@ -29,9 +30,9 @@ Namespace BpaPdcStream
         Private m_offset As Int16
         Private m_reserved As Int16
 
-        Public Sub New(ByVal parent As IConfigurationFrame, ByVal nominalFrequency As LineFrequency)
+        Public Sub New(ByVal parent As IConfigurationFrame, ByVal idCode As UInt16, ByVal nominalFrequency As LineFrequency)
 
-            MyBase.New(parent, True, MaximumPhasorValues, MaximumAnalogValues, MaximumDigitalValues, nominalFrequency)
+            MyBase.New(parent, idCode, True, MaximumPhasorValues, MaximumAnalogValues, MaximumDigitalValues, nominalFrequency)
 
         End Sub
 
@@ -43,10 +44,10 @@ Namespace BpaPdcStream
 
         ' This constructor satisfies ChannelCellBase class requirement:
         '   Final dervived classes must expose Public Sub New(ByVal parent As IChannelFrame, ByVal state As IChannelFrameParsingState, ByVal index As Integer, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
-        Public Sub New(ByVal parent As IConfigurationFrame, ByVal nominalFrequency As LineFrequency, ByVal state As IConfigurationFrameParsingState, ByVal index As Integer, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+        Public Sub New(ByVal parent As IConfigurationFrame, ByVal idCode As UInt16, ByVal nominalFrequency As LineFrequency, ByVal state As IConfigurationFrameParsingState, ByVal index As Integer, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
 
             ' We don't pass in a ConfigurationCellParsingState here because it is not needed for PDCstream (see ParseBodyImage below)
-            MyBase.New(parent, True, MaximumPhasorValues, MaximumAnalogValues, MaximumDigitalValues, nominalFrequency, Nothing, binaryImage, startIndex)
+            MyBase.New(parent, idCode, True, MaximumPhasorValues, MaximumAnalogValues, MaximumDigitalValues, nominalFrequency, Nothing, binaryImage, startIndex)
 
         End Sub
 

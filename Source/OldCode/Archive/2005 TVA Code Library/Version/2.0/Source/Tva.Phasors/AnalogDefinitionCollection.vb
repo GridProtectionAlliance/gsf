@@ -16,6 +16,7 @@
 '*******************************************************************************************************
 
 ' This class represents the common implementation collection of protocol independent definitions of analog values.
+<CLSCompliant(False)> _
 Public Class AnalogDefinitionCollection
 
     Inherits ChannelDefinitionCollectionBase(Of IAnalogDefinition)

@@ -21,6 +21,7 @@ Imports Tva.Interop.Bit
 
 Namespace IeeeC37_118
 
+    <CLSCompliant(False)> _
     Public Class FrequencyDefinition
 
         Inherits FrequencyDefinitionBase

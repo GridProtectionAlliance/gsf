@@ -16,6 +16,7 @@
 '*******************************************************************************************************
 
 ' This interface represents a protocol independent representation of a collection of any kind of data cell.
+<CLSCompliant(False)> _
 Public Interface IChannelCellCollection(Of T As IChannelCell)
 
     Inherits IChannelCollection(Of T)

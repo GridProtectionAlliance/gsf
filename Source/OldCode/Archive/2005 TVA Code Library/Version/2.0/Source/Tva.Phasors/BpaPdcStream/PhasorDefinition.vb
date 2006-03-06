@@ -19,6 +19,7 @@ Imports System.Text
 
 Namespace BpaPdcStream
 
+    <CLSCompliant(False)> _
     Public Class PhasorDefinition
 
         Inherits PhasorDefinitionBase
@@ -115,15 +116,6 @@ Namespace BpaPdcStream
             End Get
             Set(ByVal Value As Integer)
                 m_voltageReferenceIndex = Value
-            End Set
-        End Property
-
-        Public Overrides Property VoltageReference() As IPhasorDefinition
-            Get
-
-            End Get
-            Set(ByVal Value As IPhasorDefinition)
-
             End Set
         End Property
 

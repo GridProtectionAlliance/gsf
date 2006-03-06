@@ -20,6 +20,7 @@ Imports Tva.Interop
 Imports Tva.Phasors.Common
 
 ' This class represents the protocol independent common implementation of a set of phasor related data values that can be sent or received from a PMU.
+<CLSCompliant(False)> _
 Public MustInherit Class DataCellBase
 
     Inherits ChannelCellBase
@@ -34,7 +35,7 @@ Public MustInherit Class DataCellBase
 
     Protected Sub New(ByVal parent As IDataFrame, ByVal alignOnDWordBoundry As Boolean, ByVal configurationCell As IConfigurationCell, ByVal maximumPhasors As Integer, ByVal maximumAnalogs As Integer, ByVal maximumDigitals As Integer)
 
-        MyBase.New(parent, alignOnDWordBoundry)
+        MyBase.New(parent, 0, alignOnDWordBoundry)
 
         m_configurationCell = configurationCell
         m_phasorValues = New PhasorValueCollection(maximumPhasors)
@@ -52,7 +53,7 @@ Public MustInherit Class DataCellBase
 
     Protected Sub New(ByVal parent As IDataFrame, ByVal alignOnDWordBoundry As Boolean, ByVal configurationCell As IConfigurationCell, ByVal statusFlags As Int16, ByVal phasorValues As PhasorValueCollection, ByVal frequencyValue As IFrequencyValue, ByVal analogValues As AnalogValueCollection, ByVal digitalValues As DigitalValueCollection)
 
-        MyBase.New(parent, alignOnDWordBoundry)
+        MyBase.New(parent, 0, alignOnDWordBoundry)
 
         m_configurationCell = configurationCell
         m_statusFlags = statusFlags
@@ -84,7 +85,7 @@ Public MustInherit Class DataCellBase
             Return m_configurationCell
         End Get
         Set(ByVal value As IConfigurationCell)
-            m_configurationCell = Value
+            m_configurationCell = value
         End Set
     End Property
 
@@ -93,9 +94,13 @@ Public MustInherit Class DataCellBase
             Return m_statusFlags
         End Get
         Set(ByVal value As Int16)
-            m_statusFlags = Value
+            m_statusFlags = value
         End Set
     End Property
+
+    Public MustOverride Property DataIsValid() As Boolean Implements IDataCell.DataIsValid
+
+    Public MustOverride Property SynchronizationIsValid() As Boolean Implements IDataCell.SynchronizationIsValid
 
     Public ReadOnly Property AllValuesAreEmpty() As Boolean Implements IDataCell.AllValuesAreEmpty
         Get
@@ -114,7 +119,7 @@ Public MustInherit Class DataCellBase
             Return m_frequencyValue
         End Get
         Set(ByVal value As IFrequencyValue)
-            m_frequencyValue = Value
+            m_frequencyValue = value
         End Set
     End Property
 
@@ -128,6 +133,15 @@ Public MustInherit Class DataCellBase
         Get
             Return m_digitalValues
         End Get
+    End Property
+
+    Public Overrides Property IDCode() As UInt16
+        Get
+            Return m_configurationCell.IDCode
+        End Get
+        Set(ByVal value As UInt16)
+            Throw New NotSupportedException("Cannot change IDCode of a data cell, change IDCode is associated configuration cell instead")
+        End Set
     End Property
 
     Protected Overrides ReadOnly Property BodyLength() As Int16
@@ -159,27 +173,31 @@ Public MustInherit Class DataCellBase
         Dim parsingState As IDataCellParsingState = state
         Dim x As Integer
 
-        m_statusFlags = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex)
+        StatusFlags = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex)
         startIndex += 2
 
         ' By the very nature of the three protocols supporting the same order of phasors, frequency, dfreq, analog and digitals
         ' we are able to "automatically" parse this data out in the data cell base class - BEAUTIFUL!!!
         With m_configurationCell
+            ' Parse out phasor values
             For x = 0 To .PhasorDefinitions.Count - 1
-                m_phasorValues.Add(Activator.CreateInstance(parsingState.PhasorValueType, New Object() {Me, .PhasorDefinitions(x), binaryImage, startIndex}))
+                m_phasorValues.Add(parsingState.CreateNewPhasorValueFunction.Invoke(Me, .PhasorDefinitions(x), binaryImage, startIndex))
                 startIndex += m_phasorValues(x).BinaryLength
             Next
 
-            m_frequencyValue = Activator.CreateInstance(parsingState.FrequencyValueType, New Object() {Me, .FrequencyDefinition, binaryImage, startIndex})
+            ' Parse out frequency and df/dt values
+            m_frequencyValue = parsingState.CreateNewFrequencyValueFunction.Invoke(Me, .FrequencyDefinition, binaryImage, startIndex)
             startIndex += m_frequencyValue.BinaryLength
 
+            ' Parse out analog values
             For x = 0 To .AnalogDefinitions.Count - 1
-                m_analogValues.Add(Activator.CreateInstance(parsingState.AnalogValueType, New Object() {Me, .AnalogDefinitions(x), binaryImage, startIndex}))
+                m_analogValues.Add(parsingState.CreateNewAnalogValueFunction.Invoke(Me, .AnalogDefinitions(x), binaryImage, startIndex))
                 startIndex += m_analogValues(x).BinaryLength
             Next
 
+            ' Parse out digital values
             For x = 0 To .DigitalDefinitions.Count - 1
-                m_digitalValues.Add(Activator.CreateInstance(parsingState.DigitalValueType, New Object() {Me, .DigitalDefinitions(x), binaryImage, startIndex}))
+                m_digitalValues.Add(parsingState.CreateNewDigitalValueFunction.Invoke(Me, .DigitalDefinitions(x), binaryImage, startIndex))
                 startIndex += m_digitalValues(x).BinaryLength
             Next
         End With

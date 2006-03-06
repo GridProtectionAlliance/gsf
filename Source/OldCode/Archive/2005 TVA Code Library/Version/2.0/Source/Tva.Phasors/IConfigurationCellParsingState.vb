@@ -16,16 +16,19 @@
 '*******************************************************************************************************
 
 ' This interface represents the protocol independent parsing state of a set of configuration related data settings (typically related to a PMU).
+<CLSCompliant(False)> _
 Public Interface IConfigurationCellParsingState
 
     Inherits IChannelCellParsingState
 
-    ReadOnly Property PhasorDefinitionType() As Type
+    Delegate Function CreateNewDefinitionFunctionSignature(Of T As IChannelDefinition)(ByVal parent As IConfigurationCell, ByVal binaryImage As Byte(), ByVal startIndex As Integer) As T
 
-    ReadOnly Property FrequencyDefinitionType() As Type
+    ReadOnly Property CreateNewPhasorDefintionFunction() As CreateNewDefinitionFunctionSignature(Of IPhasorDefinition)
 
-    ReadOnly Property AnalogDefinitionType() As Type
+    ReadOnly Property CreateNewFrequencyDefintionFunction() As CreateNewDefinitionFunctionSignature(Of IFrequencyDefinition)
 
-    ReadOnly Property DigitalDefinitionType() As Type
+    ReadOnly Property CreateNewAnalogDefintionFunction() As CreateNewDefinitionFunctionSignature(Of IAnalogDefinition)
+
+    ReadOnly Property CreateNewDigitalDefintionFunction() As CreateNewDefinitionFunctionSignature(Of IDigitalDefinition)
 
 End Interface

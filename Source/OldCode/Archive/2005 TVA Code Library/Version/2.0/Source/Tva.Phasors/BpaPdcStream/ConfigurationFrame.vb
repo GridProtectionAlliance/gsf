@@ -32,6 +32,7 @@ Namespace BpaPdcStream
     ' number of different threads and a request can be made at anytime to "reload" the config file, so we make sure all publically
     ' accessible methods in the class make proper use of the internal reader-writer lock.  This also allows end user to place a
     ' file-watcher on the INI file so class can "reload" config file when it's updated...
+    <CLSCompliant(False)> _
     Public Class ConfigurationFrame
 
         Inherits ConfigurationFrameBase
@@ -68,14 +69,15 @@ Namespace BpaPdcStream
         ' limits imposed by the nature of the protocol...
         Public Sub New(ByVal configFileName As String, ByVal packetsPerSample As Int16)
 
-            Me.New(configFileName)
+            MyClass.New(configFileName)
             m_packetsPerSample = packetsPerSample
 
         End Sub
 
         Public Sub New(ByVal configFileName As String, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
 
-            MyBase.New(New ConfigurationFrameParsingState(New ConfigurationCellCollection, GetType(ConfigurationCell), 0), binaryImage, startIndex)
+            ' TODO: provide static configuration cell creation function
+            MyBase.New(New ConfigurationFrameParsingState(New ConfigurationCellCollection, 0, Nothing), binaryImage, startIndex)
             Refresh(False)
 
         End Sub
@@ -130,7 +132,7 @@ Namespace BpaPdcStream
                         m_defaultPhasorV = New PhasorDefinition(Nothing, 0, .KeyValue("DEFAULT", "PhasorV", DefaultVoltagePhasorEntry))
                         m_defaultPhasorI = New PhasorDefinition(Nothing, 0, .KeyValue("DEFAULT", "PhasorI", DefaultCurrentPhasorEntry))
                         m_defaultFrequency = New FrequencyDefinition(Nothing, .KeyValue("DEFAULT", "Frequency", DefaultFrequencyEntry))
-                        SampleRate = CInt(.KeyValue("CONFIG", "SampleRate", "30"))
+                        FrameRate = CInt(.KeyValue("CONFIG", "SampleRate", "30"))
 
                         Cells.Clear()
 
@@ -295,7 +297,7 @@ Namespace BpaPdcStream
                         .Append(vbCrLf)
 
                         .Append("[CONFIG]" & vbCrLf)
-                        .Append("SampleRate=" & SampleRate & vbCrLf)
+                        .Append("SampleRate=" & FrameRate & vbCrLf)
                         .Append("NumberOfPMUs=" & Cells.Count & vbCrLf)
                         .Append(vbCrLf)
 
@@ -366,14 +368,13 @@ Namespace BpaPdcStream
         Protected Overrides ReadOnly Property HeaderImage() As Byte()
             Get
                 Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), HeaderLength)
-                Dim index As Integer
 
                 buffer(0) = SyncByte
                 buffer(1) = DescriptorPacketFlag
                 EndianOrder.BigEndian.CopyBytes(Convert.ToInt16(BinaryLength \ 2), buffer, 2)
                 buffer(4) = StreamType
                 buffer(5) = RevisionNumber
-                EndianOrder.BigEndian.CopyBytes(SampleRate, buffer, 6)
+                EndianOrder.BigEndian.CopyBytes(FrameRate, buffer, 6)
                 EndianOrder.BigEndian.CopyBytes(RowLength(True), buffer, 8) ' <-- Important: This step calculates all PMU row offsets!
                 EndianOrder.BigEndian.CopyBytes(PacketsPerSample, buffer, 12)
                 EndianOrder.BigEndian.CopyBytes(Convert.ToInt16(Cells.Count), buffer, 14)
@@ -382,7 +383,7 @@ Namespace BpaPdcStream
             End Get
         End Property
 
-        Protected Overrides Sub ParseHeaderImage(ByVal state As IChannelParsingState, ByVal binaryImage() As Byte, ByVal startIndex As Integer)
+        Protected Overrides Sub ParseHeaderImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
 
             ' We parse the PDC stream specific header image here...
             Dim parsingState As IConfigurationFrameParsingState = DirectCast(state, IConfigurationFrameParsingState)
@@ -399,7 +400,7 @@ Namespace BpaPdcStream
             wordCount = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 2)
             StreamType = binaryImage(startIndex + 4)
             RevisionNumber = binaryImage(startIndex + 5)
-            SampleRate = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 6)
+            FrameRate = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 6)
             m_rowLength = EndianOrder.BigEndian.ToInt32(binaryImage, startIndex + 8)
             PacketsPerSample = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 12)
 

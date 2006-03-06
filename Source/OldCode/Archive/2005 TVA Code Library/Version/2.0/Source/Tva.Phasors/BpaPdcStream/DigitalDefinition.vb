@@ -17,6 +17,7 @@
 
 Namespace BpaPdcStream
 
+    <CLSCompliant(False)> _
     Public Class DigitalDefinition
 
         Inherits DigitalDefinitionBase

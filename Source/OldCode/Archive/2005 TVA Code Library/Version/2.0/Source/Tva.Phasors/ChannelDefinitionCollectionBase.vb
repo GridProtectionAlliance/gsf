@@ -16,6 +16,7 @@
 '*******************************************************************************************************
 
 ' This class represents the common implementation of the protocol independent collection of definitions of any kind of data.
+<CLSCompliant(False)> _
 Public MustInherit Class ChannelDefinitionCollectionBase(Of T As IChannelDefinition)
 
     Inherits ChannelCollectionBase(Of T)

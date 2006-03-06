@@ -67,7 +67,7 @@ Public MustInherit Class ChannelCollectionBase(Of T As IChannel)
     End Property
 
     <EditorBrowsable(EditorBrowsableState.Never)> _
-    Public Overridable Sub ParseBinaryImage(ByVal state As IChannelParsingState, ByVal binaryImage() As Byte, ByVal startIndex As Integer) Implements IChannelCollection(Of T).ParseBinaryImage
+    Public Overridable Sub ParseBinaryImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Integer) Implements IChannelCollection(Of T).ParseBinaryImage
 
         Throw New NotImplementedException("Binary images are not intended to be parsed at a collection level")
 

@@ -16,6 +16,7 @@
 '*******************************************************************************************************
 
 ' This class represents the common implementation of the protocol independent representation of any kind of data value.
+<CLSCompliant(False)> _
 Public MustInherit Class ChannelValueBase(Of T As IChannelDefinition)
 
     Inherits ChannelBase
@@ -59,7 +60,7 @@ Public MustInherit Class ChannelValueBase(Of T As IChannelDefinition)
             Return m_definition
         End Get
         Set(ByVal value As T)
-            m_definition = Value
+            m_definition = value
         End Set
     End Property
 

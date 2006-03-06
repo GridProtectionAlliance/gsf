@@ -16,6 +16,7 @@
 '*******************************************************************************************************
 
 ' This interface represents a protocol independent frequency and df/dt value definition.
+<CLSCompliant(False)> _
 Public Interface IFrequencyDefinition
 
     Inherits IChannelDefinition

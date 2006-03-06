@@ -16,6 +16,7 @@
 '*******************************************************************************************************
 
 ' This class represents the common implementation collection of the protocol independent representation of digital values.
+<CLSCompliant(False)> _
 Public Class DigitalValueCollection
 
     Inherits ChannelValueCollectionBase(Of IDigitalDefinition, IDigitalValue)

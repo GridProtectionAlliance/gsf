@@ -21,6 +21,7 @@ Imports Tva.Phasors.BpaPdcStream.Common
 Namespace BpaPdcStream
 
     ' This data cell represents what most might call a "field" in table of rows - it is a single unit of data for a specific PMU
+    <CLSCompliant(False)> _
     Public Class DataCell
 
         Inherits DataCellBase
@@ -70,8 +71,9 @@ Namespace BpaPdcStream
         '   ' Final dervived classes must expose Public Sub New(ByVal parent As IChannelFrame, ByVal state As IChannelFrameParsingState, ByVal index As Integer, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
         Public Sub New(ByVal parent As IDataFrame, ByVal state As DataFrameParsingState, ByVal index As Integer, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
 
+            ' TODO: Define static creation functions for data cell value types
             MyBase.New(parent, True, MaximumPhasorValues, MaximumAnalogValues, MaximumDigitalValues, New DataCellParsingState( _
-                GetType(PhasorValue), GetType(FrequencyValue), GetType(AnalogValue), GetType(DigitalValue), state.ConfigurationFrame.Cells(index)), _
+                state.ConfigurationFrame.Cells(index), Nothing, Nothing, Nothing, Nothing), _
                 binaryImage, startIndex)
 
         End Sub
@@ -206,7 +208,7 @@ Namespace BpaPdcStream
             End Set
         End Property
 
-        Public Property DataIsValid() As Boolean
+        Public Overrides Property DataIsValid() As Boolean
             Get
                 Return ((m_flags And ChannelFlags.DataIsValid) = 0)
             End Get
@@ -232,7 +234,7 @@ Namespace BpaPdcStream
             End Set
         End Property
 
-        Public Property PMUSynchronized() As Boolean
+        Public Overrides Property SynchronizationIsValid() As Boolean
             Get
                 Return ((m_flags And ChannelFlags.PMUSynchronized) = 0)
             End Get
@@ -346,7 +348,7 @@ Namespace BpaPdcStream
             End Get
         End Property
 
-        Protected Overrides Sub ParseHeaderImage(ByVal state As IChannelParsingState, ByVal binaryImage() As Byte, ByVal startIndex As Integer)
+        Protected Overrides Sub ParseHeaderImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
 
             ' Parse PDCstream specific header image
             m_flags = binaryImage(startIndex)

@@ -18,6 +18,7 @@
 Imports System.ComponentModel
 
 ' This class represents the common implementation of the protocol independent definition of a digital value.
+<CLSCompliant(False)> _
 Public MustInherit Class DigitalDefinitionBase
 
     Inherits ChannelDefinitionBase
@@ -48,8 +49,8 @@ Public MustInherit Class DigitalDefinitionBase
             Return MyBase.DataFormat
         End Get
         Set(ByVal value As DataFormat)
-            If Value = DataFormat.FixedInteger Then
-                MyBase.DataFormat = Value
+            If value = DataFormat.FixedInteger Then
+                MyBase.DataFormat = value
             Else
                 Throw New NotImplementedException("Digital values represent bit flags and thus can only be fixed integers")
             End If
@@ -62,8 +63,8 @@ Public MustInherit Class DigitalDefinitionBase
             Return MyBase.Offset
         End Get
         Set(ByVal value As Double)
-            If Value = 0 Then
-                MyBase.Offset = Value
+            If value = 0 Then
+                MyBase.Offset = value
             Else
                 Throw New NotImplementedException("Digital values represent bit flags and thus do not support an offset")
             End If
@@ -76,8 +77,8 @@ Public MustInherit Class DigitalDefinitionBase
             Return MyBase.ScalingFactor
         End Get
         Set(ByVal value As Integer)
-            If Value = 1 Then
-                MyBase.ScalingFactor = Value
+            If value = 1 Then
+                MyBase.ScalingFactor = value
             Else
                 Throw New NotImplementedException("Digital values represent bit flags and thus are not scaled")
             End If

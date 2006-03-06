@@ -17,6 +17,7 @@
 
 Namespace IeeeC37_118
 
+    <CLSCompliant(False)> _
     Public Class AnalogValue
 
         Inherits AnalogValueBase
@@ -44,6 +45,12 @@ Namespace IeeeC37_118
             MyBase.New(analogValue)
 
         End Sub
+
+        Friend Shared Function CreateNewAnalogValue(ByVal parent As IDataCell, ByVal definition As IAnalogDefinition, ByVal binaryImage As Byte(), ByVal startIndex As Integer) As IAnalogValue
+
+            Return New AnalogValue(parent, definition, binaryImage, startIndex)
+
+        End Function
 
         Public Overrides ReadOnly Property InheritedType() As System.Type
             Get

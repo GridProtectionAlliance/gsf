@@ -16,6 +16,7 @@
 '*******************************************************************************************************
 
 ' This class represents the common implementation collection of the protocol independent definitions of frequency and df/dt values.
+<CLSCompliant(False)> _
 Public Class FrequencyDefinitionCollection
 
     Inherits ChannelDefinitionCollectionBase(Of IFrequencyDefinition)

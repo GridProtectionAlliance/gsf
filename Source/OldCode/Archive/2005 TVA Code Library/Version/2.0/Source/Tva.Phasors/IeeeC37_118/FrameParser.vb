@@ -28,6 +28,7 @@ Imports Tva.IO.Compression.Common
 Namespace IeeeC37_118
 
     ' This class parses frames and returns the appropriate data via events
+    <CLSCompliant(False)> _
     Public Class FrameParser
 
         'Inherits BaseFrame
@@ -57,16 +58,16 @@ Namespace IeeeC37_118
         Public Sub New()
 
             m_tcpSocket = New Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp)
-            m_ipAddress = Dns.Resolve("127.0.0.1").AddressList(0)
+            m_ipAddress = Dns.GetHostEntry("127.0.0.1").AddressList(0)
             m_phasorFormat = CoordinateFormat.Rectangular
 
         End Sub
 
         Public Sub New(ByVal pmuID As Int16, ByVal pmuIPAddress As String, ByVal pmuIPPort As Integer, ByVal phasorFormat As CoordinateFormat)
 
-            Me.New()
+            MyClass.New()
             m_pmuID = pmuID
-            m_ipAddress = Dns.Resolve(pmuIPAddress).AddressList(0)
+            m_ipAddress = Dns.GetHostEntry(pmuIPAddress).AddressList(0)
             m_ipPort = pmuIPPort
             m_phasorFormat = phasorFormat
 
@@ -213,7 +214,7 @@ Namespace IeeeC37_118
 
             Dim cmdFrame As New CommandFrame(PmuID, command)
 
-            If m_tcpSocket.Send(cmdFrame.BinaryImage) <> cmdFrame.FrameLength Then
+            If m_tcpSocket.Send(cmdFrame.BinaryImage) <> CommandFrame.FrameLength Then
                 Throw New InvalidOperationException("Failed to send proper number of bytes for command frame")
             End If
 
@@ -270,19 +271,19 @@ Namespace IeeeC37_118
                                     RaiseEvent ReceivedDataFrame(.This)
                                 End With
                             End If
-                            'Case FrameType.HeaderFrame
-                            '    With New HeaderFrame(parsedImage, buffer, startIndex + CommonBinaryLength)
-                            '        If .IsFirstFrame Then m_headerFile = New HeaderFile
+                        Case FrameType.HeaderFrame
+                            'With New HeaderFrame(parsedFrameHeader, buffer, startIndex)
+                            '    If .IsFirstFrame Then m_headerFile = New HeaderFile
 
-                            '        m_headerFile.AppendNextFrame(.This)
+                            '    m_headerFile.AppendNextFrame(.This)
 
-                            '        If .IsLastFrame Then
-                            '            RaiseEvent ReceivedHeaderFile(m_headerFile)
-                            '            m_headerFile = Nothing
-                            '        End If
+                            '    If .IsLastFrame Then
+                            '        RaiseEvent ReceivedHeaderFile(m_headerFile)
+                            '        m_headerFile = Nothing
+                            '    End If
 
-                            '        startIndex += .FrameLength
-                            '    End With
+                            '    startIndex += .FrameLength
+                            'End With
                         Case FrameType.ConfigurationFrame1
                             With New ConfigurationFrame(parsedFrameHeader, buffer, startIndex)
                                 m_configFile1 = .This

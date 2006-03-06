@@ -16,6 +16,7 @@
 '*******************************************************************************************************
 
 ' This class represents the protocol independent collection of the common implementation of a configuration frame that can be sent or received from a PMU.
+<CLSCompliant(False)> _
 Public Class ConfigurationFrameCollection
 
     Inherits ChannelFrameCollectionBase(Of IConfigurationFrame)

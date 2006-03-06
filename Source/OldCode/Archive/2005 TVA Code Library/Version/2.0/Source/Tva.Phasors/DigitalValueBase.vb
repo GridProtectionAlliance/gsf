@@ -19,6 +19,7 @@ Imports System.ComponentModel
 Imports Tva.Interop
 
 ' This class represents the common implementation of the protocol independent representation of a digital value.
+<CLSCompliant(False)> _
 Public MustInherit Class DigitalValueBase
 
     Inherits ChannelValueBase(Of IDigitalDefinition)
@@ -69,7 +70,7 @@ Public MustInherit Class DigitalValueBase
             Return m_value
         End Get
         Set(ByVal value As Int16)
-            m_value = Value
+            m_value = value
         End Set
     End Property
 

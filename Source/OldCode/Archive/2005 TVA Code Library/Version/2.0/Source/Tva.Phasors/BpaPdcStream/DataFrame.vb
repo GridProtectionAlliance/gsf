@@ -24,6 +24,7 @@ Imports Tva.Phasors.BpaPdcStream.Common
 Namespace BpaPdcStream
 
     ' This is essentially a "row" of PMU data at a given timestamp
+    <CLSCompliant(False)> _
     Public Class DataFrame
 
         Inherits DataFrameBase
@@ -40,7 +41,7 @@ Namespace BpaPdcStream
 
         Public Sub New(ByVal sampleNumber As Int16)
 
-            Me.New()
+            MyClass.New()
             m_sampleNumber = sampleNumber
 
         End Sub
@@ -50,14 +51,15 @@ Namespace BpaPdcStream
         ' limits imposed by the nature of the protocol...
         Public Sub New(ByVal packetNumber As Byte, ByVal sampleNumber As Int16)
 
-            Me.New(sampleNumber)
+            MyClass.New(sampleNumber)
             Me.PacketNumber = packetNumber
 
         End Sub
 
         Public Sub New(ByVal configurationFrame As IConfigurationFrame, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
 
-            MyBase.New(New DataFrameParsingState(New DataCellCollection, GetType(DataCell), 0, configurationFrame), binaryImage, startIndex)
+            ' TODO: Provide static data cell creation function
+            MyBase.New(New DataFrameParsingState(New DataCellCollection, 0, configurationFrame, Nothing), binaryImage, startIndex)
 
         End Sub
 
@@ -136,7 +138,7 @@ Namespace BpaPdcStream
             End Get
         End Property
 
-        Protected Overrides Sub ParseHeaderImage(ByVal state As IChannelParsingState, ByVal binaryImage() As Byte, ByVal startIndex As Integer)
+        Protected Overrides Sub ParseHeaderImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
 
             Dim configurationFrame As BpaPdcStream.ConfigurationFrame = DirectCast(state, IDataFrameParsingState).ConfigurationFrame
 
@@ -211,7 +213,7 @@ Namespace BpaPdcStream
         '    m_sampleNumber = index
 
         '    ' We precalculate a regular .NET timestamp with milliseconds sitting in the middle of the sample index
-        '    m_timeStamp = timeStamp.AddMilliseconds((m_sampleNumber + 0.5@) * (1000@ / m_configFile.SampleRate))
+        '    m_timeStamp = timeStamp.AddMilliseconds((m_sampleNumber + 0.5@) * (1000@ / m_configFile.FrameRate))
 
         '    With m_configFile
         '        Cells = Array.CreateInstance(GetType(DataCell), .PMUCount)

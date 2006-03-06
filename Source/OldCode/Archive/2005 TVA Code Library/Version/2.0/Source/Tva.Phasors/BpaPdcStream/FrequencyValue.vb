@@ -19,6 +19,7 @@ Imports Tva.Interop
 
 Namespace BpaPdcStream
 
+    <CLSCompliant(False)> _
     Public Class FrequencyValue
 
         Inherits FrequencyValueBase

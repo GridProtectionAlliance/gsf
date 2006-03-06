@@ -18,23 +18,20 @@
 Imports Tva.DateTime
 
 ' This interface represents the protocol independent representation of any frame of data.
+<CLSCompliant(False)> _
 Public Interface IChannelFrame
 
     Inherits IChannel
 
     ReadOnly Property Cells() As IChannelCellCollection(Of IChannelCell)
 
-    Property IDCode() As Int16
+    Property IDCode() As UInt16
 
     Property Ticks() As Long                    ' Ticks of this frame
 
     ReadOnly Property TimeTag() As UnixTimeTag  ' UNIX based time of this frame
 
     ReadOnly Property Timestamp() As Date       ' .NET timestamp of this frame
-
-    Property SynchronizationIsValid() As Boolean
-
-    Property DataIsValid() As Boolean
 
     Property Published() As Boolean
 

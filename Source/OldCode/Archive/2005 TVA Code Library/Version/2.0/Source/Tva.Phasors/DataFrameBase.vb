@@ -18,6 +18,7 @@
 Imports Tva.DateTime
 
 ' This class represents the protocol independent common implementation of a data frame that can be sent or received from a PMU.
+<CLSCompliant(False)> _
 Public MustInherit Class DataFrameBase
 
     Inherits ChannelFrameBase(Of IDataCell)
@@ -31,9 +32,9 @@ Public MustInherit Class DataFrameBase
 
     End Sub
 
-    Protected Sub New(ByVal cells As DataCellCollection, ByVal ticks As Long, ByVal synchronizationIsValid As Boolean, ByVal dataIsValid As Boolean, ByVal idCode As Int16, ByVal configurationFrame As IConfigurationFrame)
+    Protected Sub New(ByVal cells As DataCellCollection, ByVal ticks As Long, ByVal configurationFrame As IConfigurationFrame)
 
-        MyBase.New(cells, ticks, synchronizationIsValid, dataIsValid, idCode)
+        MyBase.New(0, cells, ticks)
 
         m_configurationFrame = configurationFrame
 
@@ -52,7 +53,7 @@ Public MustInherit Class DataFrameBase
     ' Derived classes are expected to expose a Public Sub New(ByVal dataFrame As IDataFrame)
     Protected Sub New(ByVal dataFrame As IDataFrame)
 
-        MyClass.New(dataFrame.Cells, dataFrame.Ticks, dataFrame.SynchronizationIsValid, dataFrame.DataIsValid, dataFrame.IDCode, dataFrame.ConfigurationFrame)
+        MyClass.New(dataFrame.Cells, dataFrame.Ticks, dataFrame.ConfigurationFrame)
 
     End Sub
 
@@ -61,7 +62,16 @@ Public MustInherit Class DataFrameBase
             Return m_configurationFrame
         End Get
         Set(ByVal value As IConfigurationFrame)
-            m_configurationFrame = Value
+            m_configurationFrame = value
+        End Set
+    End Property
+
+    Public Overrides Property IDCode() As UInt16
+        Get
+            Return m_configurationFrame.IDCode
+        End Get
+        Set(ByVal value As UInt16)
+            Throw New NotSupportedException("Cannot change IDCode of a data frame, change IDCode is associated configuration frame instead")
         End Set
     End Property
 

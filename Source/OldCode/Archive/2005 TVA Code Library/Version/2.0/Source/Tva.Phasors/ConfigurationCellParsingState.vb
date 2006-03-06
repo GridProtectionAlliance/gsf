@@ -16,22 +16,27 @@
 '*******************************************************************************************************
 
 ' This class represents the protocol independent common implementation of a parsing state for a set of configuration related data settings that can be sent or received from a PMU.
+<CLSCompliant(False)> _
 Public Class ConfigurationCellParsingState
 
     Inherits ChannelCellParsingStateBase
     Implements IConfigurationCellParsingState
 
-    Private m_phasorDefinitionType As Type
-    Private m_frequencyDefinitionType As Type
-    Private m_analogDefinitionType As Type
-    Private m_digitalDefinitionType As Type
+    Private m_createNewPhasorDefintionFunction As IConfigurationCellParsingState.CreateNewDefinitionFunctionSignature(Of IPhasorDefinition)
+    Private m_createNewFrequencyDefintionFunction As IConfigurationCellParsingState.CreateNewDefinitionFunctionSignature(Of IFrequencyDefinition)
+    Private m_createNewAnalogDefintionFunction As IConfigurationCellParsingState.CreateNewDefinitionFunctionSignature(Of IAnalogDefinition)
+    Private m_createNewDigitalDefintionFunction As IConfigurationCellParsingState.CreateNewDefinitionFunctionSignature(Of IDigitalDefinition)
 
-    Public Sub New(ByVal phasorDefinitionType As Type, ByVal frequencyDefinitionType As Type, ByVal analogDefinitionType As Type, ByVal digitalDefinitionType As Type)
+    Public Sub New( _
+    ByVal createNewPhasorDefintionFunction As IConfigurationCellParsingState.CreateNewDefinitionFunctionSignature(Of IPhasorDefinition), _
+    ByVal createNewFrequencyDefintionFunction As IConfigurationCellParsingState.CreateNewDefinitionFunctionSignature(Of IFrequencyDefinition), _
+    ByVal createNewAnalogDefintionFunction As IConfigurationCellParsingState.CreateNewDefinitionFunctionSignature(Of IAnalogDefinition), _
+    ByVal createNewDigitalDefintionFunction As IConfigurationCellParsingState.CreateNewDefinitionFunctionSignature(Of IDigitalDefinition))
 
-        m_phasorDefinitionType = phasorDefinitionType
-        m_frequencyDefinitionType = frequencyDefinitionType
-        m_analogDefinitionType = analogDefinitionType
-        m_digitalDefinitionType = digitalDefinitionType
+        m_createNewPhasorDefintionFunction = createNewPhasorDefintionFunction
+        m_createNewFrequencyDefintionFunction = createNewFrequencyDefintionFunction
+        m_createNewAnalogDefintionFunction = createNewAnalogDefintionFunction
+        m_createNewDigitalDefintionFunction = createNewDigitalDefintionFunction
 
     End Sub
 
@@ -41,27 +46,27 @@ Public Class ConfigurationCellParsingState
         End Get
     End Property
 
-    Public ReadOnly Property PhasorDefinitionType() As Type Implements IConfigurationCellParsingState.PhasorDefinitionType
+    Public ReadOnly Property CreateNewPhasorDefintionFunction() As IConfigurationCellParsingState.CreateNewDefinitionFunctionSignature(Of IPhasorDefinition) Implements IConfigurationCellParsingState.CreateNewPhasorDefintionFunction
         Get
-            Return m_phasorDefinitionType
+            Return m_createNewPhasorDefintionFunction
         End Get
     End Property
 
-    Public ReadOnly Property FrequencyDefinitionType() As Type Implements IConfigurationCellParsingState.FrequencyDefinitionType
+    Public ReadOnly Property CreateNewFrequencyDefintionFunction() As IConfigurationCellParsingState.CreateNewDefinitionFunctionSignature(Of IFrequencyDefinition) Implements IConfigurationCellParsingState.CreateNewFrequencyDefintionFunction
         Get
-            Return m_frequencyDefinitionType
+            Return m_createNewFrequencyDefintionFunction
         End Get
     End Property
 
-    Public ReadOnly Property AnalogDefinitionType() As Type Implements IConfigurationCellParsingState.AnalogDefinitionType
+    Public ReadOnly Property CreateNewAnalogDefintionFunction() As IConfigurationCellParsingState.CreateNewDefinitionFunctionSignature(Of IAnalogDefinition) Implements IConfigurationCellParsingState.CreateNewAnalogDefintionFunction
         Get
-            Return m_analogDefinitionType
+            Return m_createNewAnalogDefintionFunction
         End Get
     End Property
 
-    Public ReadOnly Property DigitalDefinitionType() As Type Implements IConfigurationCellParsingState.DigitalDefinitionType
+    Public ReadOnly Property CreateNewDigitalDefintionFunction() As IConfigurationCellParsingState.CreateNewDefinitionFunctionSignature(Of IDigitalDefinition) Implements IConfigurationCellParsingState.CreateNewDigitalDefintionFunction
         Get
-            Return m_digitalDefinitionType
+            Return m_createNewDigitalDefintionFunction
         End Get
     End Property
 

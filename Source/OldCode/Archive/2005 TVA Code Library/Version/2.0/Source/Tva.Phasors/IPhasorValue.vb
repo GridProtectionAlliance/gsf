@@ -16,6 +16,7 @@
 '*******************************************************************************************************
 
 ' This class represents the protocol independent interface of a phasor value.
+<CLSCompliant(False)> _
 Public Interface IPhasorValue
 
     Inherits IChannelValue(Of IPhasorDefinition)

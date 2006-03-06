@@ -16,6 +16,7 @@
 '*******************************************************************************************************
 
 ' This class represents the common implementation collection of protocol independent definitions of phasor values.
+<CLSCompliant(False)> _
 Public Class PhasorDefinitionCollection
 
     Inherits ChannelDefinitionCollectionBase(Of IPhasorDefinition)

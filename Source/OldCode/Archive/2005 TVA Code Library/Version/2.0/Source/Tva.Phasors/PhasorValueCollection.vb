@@ -18,6 +18,7 @@
 '*******************************************************************************************************
 
 ' This class represents the protocol independent collection of phasor values.
+<CLSCompliant(False)> _
 Public Class PhasorValueCollection
 
     Inherits ChannelValueCollectionBase(Of IPhasorDefinition, IPhasorValue)

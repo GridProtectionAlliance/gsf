@@ -44,7 +44,7 @@ Namespace Ieee1344
 
         Protected Friend Sub New(ByVal parsedImage As BaseFrame, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
 
-            Me.New()
+            MyClass.New()
 
             ' No need to reparse data, so we pickup what's already been parsed...
             Clone(parsedImage)

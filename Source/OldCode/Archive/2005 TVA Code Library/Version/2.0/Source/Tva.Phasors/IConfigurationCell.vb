@@ -16,6 +16,7 @@
 '*******************************************************************************************************
 
 ' This interface represents the protocol independent representation of a set of configuration related data settings (typically related to a PMU).
+<CLSCompliant(False)> _
 Public Interface IConfigurationCell
 
     Inherits IChannelCell, IComparable
@@ -27,8 +28,6 @@ Public Interface IConfigurationCell
     ReadOnly Property StationNameImage() As Byte()
 
     ReadOnly Property MaximumStationNameLength() As Integer
-
-    Property IDCode() As Int16
 
     Property IDLabel() As String
 
@@ -46,6 +45,6 @@ Public Interface IConfigurationCell
 
     ReadOnly Property DigitalDefinitions() As DigitalDefinitionCollection
 
-    ReadOnly Property SampleRate() As Int16
+    ReadOnly Property FrameRate() As Int16
 
 End Interface

@@ -21,24 +21,23 @@ Imports Tva.Interop
 Imports Tva.Phasors.Common
 
 ' This class represents the protocol independent common implementation of a set of configuration related data settings that can be sent or received from a PMU.
+<CLSCompliant(False)> _
 Public MustInherit Class ConfigurationCellBase
 
     Inherits ChannelCellBase
     Implements IConfigurationCell
 
     Private m_stationName As String
-    Private m_idCode As Int16
     Private m_idLabel As String
     Private m_phasorDefinitions As PhasorDefinitionCollection
     Private m_frequencyDefinition As IFrequencyDefinition
     Private m_analogDefinitions As AnalogDefinitionCollection
     Private m_digitalDefinitions As DigitalDefinitionCollection
     Private m_nominalFrequency As LineFrequency
-    Private m_sampleRate As Int16
 
-    Protected Sub New(ByVal parent As IConfigurationFrame, ByVal alignOnDWordBoundry As Boolean, ByVal maximumPhasors As Integer, ByVal maximumAnalogs As Integer, ByVal maximumDigitals As Integer, ByVal nominalFrequency As LineFrequency)
+    Protected Sub New(ByVal parent As IConfigurationFrame, ByVal idCode As UInt16, ByVal alignOnDWordBoundry As Boolean, ByVal maximumPhasors As Integer, ByVal maximumAnalogs As Integer, ByVal maximumDigitals As Integer, ByVal nominalFrequency As LineFrequency)
 
-        MyBase.New(parent, alignOnDWordBoundry)
+        MyBase.New(parent, idCode, alignOnDWordBoundry)
 
         m_phasorDefinitions = New PhasorDefinitionCollection(maximumPhasors)
         m_analogDefinitions = New AnalogDefinitionCollection(maximumAnalogs)
@@ -47,25 +46,23 @@ Public MustInherit Class ConfigurationCellBase
 
     End Sub
 
-    Protected Sub New(ByVal parent As IConfigurationFrame, ByVal alignOnDWordBoundry As Boolean, ByVal maximumPhasors As Integer, ByVal maximumAnalogs As Integer, ByVal maximumDigitals As Integer, ByVal nominalFrequency As LineFrequency, ByVal state As IConfigurationCellParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+    Protected Sub New(ByVal parent As IConfigurationFrame, ByVal idCode As UInt16, ByVal alignOnDWordBoundry As Boolean, ByVal maximumPhasors As Integer, ByVal maximumAnalogs As Integer, ByVal maximumDigitals As Integer, ByVal nominalFrequency As LineFrequency, ByVal state As IConfigurationCellParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
 
-        MyClass.New(parent, alignOnDWordBoundry, maximumPhasors, maximumAnalogs, maximumDigitals, nominalFrequency)
+        MyClass.New(parent, idCode, alignOnDWordBoundry, maximumPhasors, maximumAnalogs, maximumDigitals, nominalFrequency)
         ParseBinaryImage(state, binaryImage, startIndex)
 
     End Sub
 
-    Protected Sub New(ByVal parent As IConfigurationFrame, ByVal alignOnDWordBoundry As Boolean, ByVal stationName As String, ByVal idCode As Int16, ByVal idLabel As String, ByVal phasorDefinitions As PhasorDefinitionCollection, ByVal frequencyDefinition As IFrequencyDefinition, ByVal analogDefinitions As AnalogDefinitionCollection, ByVal digitalDefinitions As DigitalDefinitionCollection, ByVal sampleRate As Int16)
+    Protected Sub New(ByVal parent As IConfigurationFrame, ByVal idCode As UInt16, ByVal alignOnDWordBoundry As Boolean, ByVal stationName As String, ByVal idLabel As String, ByVal phasorDefinitions As PhasorDefinitionCollection, ByVal frequencyDefinition As IFrequencyDefinition, ByVal analogDefinitions As AnalogDefinitionCollection, ByVal digitalDefinitions As DigitalDefinitionCollection)
 
-        MyBase.New(parent, alignOnDWordBoundry)
+        MyBase.New(parent, idCode, alignOnDWordBoundry)
 
         Me.StationName = stationName
-        m_idCode = idCode
         Me.IDLabel = idLabel
         m_phasorDefinitions = phasorDefinitions
         m_frequencyDefinition = frequencyDefinition
         m_analogDefinitions = analogDefinitions
         m_digitalDefinitions = digitalDefinitions
-        m_sampleRate = sampleRate
 
     End Sub
 
@@ -74,9 +71,9 @@ Public MustInherit Class ConfigurationCellBase
     ' Derived classes are expected to expose a Public Sub New(ByVal configurationCell As IConfigurationCell)
     Protected Sub New(ByVal configurationCell As IConfigurationCell)
 
-        MyClass.New(configurationCell.Parent, configurationCell.AlignOnDWordBoundry, configurationCell.StationName, configurationCell.IDCode, _
+        MyClass.New(configurationCell.Parent, configurationCell.IDCode, configurationCell.AlignOnDWordBoundry, configurationCell.StationName, _
             configurationCell.IDLabel, configurationCell.PhasorDefinitions, configurationCell.FrequencyDefinition, _
-            configurationCell.AnalogDefinitions, configurationCell.DigitalDefinitions, configurationCell.SampleRate)
+            configurationCell.AnalogDefinitions, configurationCell.DigitalDefinitions)
 
     End Sub
 
@@ -110,15 +107,6 @@ Public MustInherit Class ConfigurationCellBase
             ' Typical station name length is 16 characters
             Return 16
         End Get
-    End Property
-
-    Public Overridable Property IDCode() As Int16 Implements IConfigurationCell.IDCode
-        Get
-            Return m_idCode
-        End Get
-        Set(ByVal value As Int16)
-            m_idCode = value
-        End Set
     End Property
 
     Public Overridable Property IDLabel() As String Implements IConfigurationCell.IDLabel
@@ -175,7 +163,7 @@ Public MustInherit Class ConfigurationCellBase
         End Get
     End Property
 
-    Public Property NominalFrequency() As LineFrequency Implements IConfigurationCell.NominalFrequency
+    Public Overridable Property NominalFrequency() As LineFrequency Implements IConfigurationCell.NominalFrequency
         Get
             Return m_nominalFrequency
         End Get
@@ -184,9 +172,9 @@ Public MustInherit Class ConfigurationCellBase
         End Set
     End Property
 
-    Public Overridable ReadOnly Property SampleRate() As Int16 Implements IConfigurationCell.SampleRate
+    Public Overridable ReadOnly Property FrameRate() As Int16 Implements IConfigurationCell.FrameRate
         Get
-            Return Parent.SampleRate
+            Return Parent.FrameRate
         End Get
     End Property
 
@@ -201,9 +189,28 @@ Public MustInherit Class ConfigurationCellBase
 
     End Function
 
+    ' Only the station name is common to configuration frame headers in IEEE protocols
+    Protected Overrides ReadOnly Property HeaderLength() As Short
+        Get
+            Return MaximumStationNameLength
+        End Get
+    End Property
+
+    Protected Overrides ReadOnly Property HeaderImage() As Byte()
+        Get
+            Return StationNameImage
+        End Get
+    End Property
+
+    Protected Overrides Sub ParseHeaderImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+
+        StationName = Encoding.ASCII.GetString(binaryImage, startIndex, MaximumStationNameLength)
+
+    End Sub
+
+    ' Channel names of IEEE C37.118 and IEEE 1344 configuration frames are common in order and type - so they are defined in the base class
     Protected Overrides ReadOnly Property BodyLength() As Int16
         Get
-            ' TODO: Make this body length specific
             Return m_phasorDefinitions.BinaryLength + m_analogDefinitions.BinaryLength + m_digitalDefinitions.BinaryLength
         End Get
     End Property
@@ -213,29 +220,7 @@ Public MustInherit Class ConfigurationCellBase
             Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BodyLength)
             Dim index As Integer
 
-            ' Copy in common cell images
-            ' TODO: copy in only for cell body
-            CopyImage(m_phasorDefinitions, buffer, index)
-            CopyImage(m_analogDefinitions, buffer, index)
-            CopyImage(m_digitalDefinitions, buffer, index)
-
-            Return buffer
-        End Get
-    End Property
-
-    Protected Overrides ReadOnly Property FooterLength() As Short
-        Get
-            Return 2 + 4 * (m_phasorDefinitions.Count + m_analogDefinitions.Count + m_digitalDefinitions.Count)
-        End Get
-    End Property
-
-    Protected Overrides ReadOnly Property FooterImage() As Byte()
-        Get
-            Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BodyLength)
-            Dim index As Integer
-
-            ' Copy in common cell images
-            ' TODO: copy in only for cell footer
+            ' Copy in common cell images (channel names)
             CopyImage(m_phasorDefinitions, buffer, index)
             CopyImage(m_analogDefinitions, buffer, index)
             CopyImage(m_digitalDefinitions, buffer, index)
@@ -249,34 +234,42 @@ Public MustInherit Class ConfigurationCellBase
         Dim parsingState As IConfigurationCellParsingState = state
         Dim x As Integer
 
+        ' Parse out phasors, analogs and digitals - protocol natures define these in the following order
         With parsingState
             For x = 0 To .PhasorCount - 1
-                m_phasorDefinitions.Add(Activator.CreateInstance(.PhasorDefinitionType, New Object() {Me, binaryImage, startIndex}))
-                'startIndex += m_phasorDefinitions(x).BodyLength
+                m_phasorDefinitions.Add(.CreateNewPhasorDefintionFunction.Invoke(Me, binaryImage, startIndex))
                 startIndex += m_phasorDefinitions(x).MaximumLabelLength
             Next
 
             For x = 0 To .AnalogCount - 1
-                m_analogDefinitions.Add(Activator.CreateInstance(.AnalogDefinitionType, New Object() {Me, binaryImage, startIndex}))
-                'startIndex += m_analogDefinitions(x).BodyLength
+                m_analogDefinitions.Add(.CreateNewAnalogDefintionFunction.Invoke(Me, binaryImage, startIndex))
                 startIndex += m_analogDefinitions(x).MaximumLabelLength
             Next
 
             For x = 0 To .DigitalCount - 1
-                m_digitalDefinitions.Add(Activator.CreateInstance(.DigitalDefinitionType, New Object() {Me, binaryImage, startIndex}))
-                'startIndex += m_digitalDefinitions(x).BodyLength
-                startIndex += 16 * m_digitalDefinitions(x).MaximumLabelLength
+                m_digitalDefinitions.Add(.CreateNewDigitalDefintionFunction.Invoke(Me, binaryImage, startIndex))
+                startIndex += m_digitalDefinitions(x).MaximumLabelLength
             Next
         End With
 
     End Sub
 
-    Protected Overrides Sub ParseFooterImage(ByVal state As IChannelParsingState, ByVal binaryImage() As Byte, ByVal startIndex As Integer)
+    ' Footer for IEEE protocols contains nominal frequency definition, so we use this to initialize frequency definition
+    Protected Overrides ReadOnly Property FooterLength() As Short
+        Get
+            Return 2
+        End Get
+    End Property
 
-        Dim parsingState As IConfigurationCellParsingState = state
+    Protected Overrides ReadOnly Property FooterImage() As Byte()
+        Get
+            Return m_frequencyDefinition.BinaryImage
+        End Get
+    End Property
 
-        ' TODO: Parse out conversion factors and digital status words
-        m_frequencyDefinition = Activator.CreateInstance(parsingState.FrequencyDefinitionType, New Object() {Me, binaryImage, startIndex + 4 * (m_phasorDefinitions.Count + m_analogDefinitions.Count + m_digitalDefinitions.Count)})
+    Protected Overrides Sub ParseFooterImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+
+        m_frequencyDefinition = DirectCast(state, IConfigurationCellParsingState).CreateNewFrequencyDefintionFunction.Invoke(Me, binaryImage, startIndex)
 
     End Sub
 

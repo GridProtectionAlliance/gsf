@@ -16,6 +16,7 @@
 '*******************************************************************************************************
 
 ' This interface represents the protocol independent representation of any frame of data.
+<CLSCompliant(False)> _
 Public Interface IDataFrame
 
     Inherits IChannelFrame

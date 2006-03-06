@@ -48,7 +48,7 @@ Namespace Ieee1344
 
         Public Sub New(ByVal fileName As String)
 
-            Me.New()
+            MyClass.New()
 
             Const BufferSize As Integer = 4096
             Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BufferSize)

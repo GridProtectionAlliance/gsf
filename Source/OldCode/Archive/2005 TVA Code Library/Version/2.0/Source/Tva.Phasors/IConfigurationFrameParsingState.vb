@@ -16,6 +16,7 @@
 '*******************************************************************************************************
 
 ' This interface represents the protocol independent parsing state of any configuration frame.
+<CLSCompliant(False)> _
 Public Interface IConfigurationFrameParsingState
 
     Inherits IChannelFrameParsingState(Of IConfigurationCell)

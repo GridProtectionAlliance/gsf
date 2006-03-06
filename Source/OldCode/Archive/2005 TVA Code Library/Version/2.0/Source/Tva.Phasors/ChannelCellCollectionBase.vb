@@ -16,6 +16,7 @@
 '*******************************************************************************************************
 
 ' This class represents the common implementation of the protocol independent representation of a collection of any kind of data cell.
+<CLSCompliant(False)> _
 Public MustInherit Class ChannelCellCollectionBase(Of T As IChannelCell)
 
     Inherits ChannelCollectionBase(Of T)

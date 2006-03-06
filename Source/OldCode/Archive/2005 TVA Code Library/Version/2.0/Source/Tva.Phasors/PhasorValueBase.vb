@@ -21,10 +21,13 @@ Imports Tva.Interop
 Imports Tva.Math
 
 ' This class represents the protocol independent representation of a phasor value.
+<CLSCompliant(False)> _
 Public MustInherit Class PhasorValueBase
 
     Inherits ChannelValueBase(Of IPhasorDefinition)
     Implements IPhasorValue
+
+    Protected Delegate Function CreateNewPhasorValueFunctionSignature(ByVal parent As IDataCell, ByVal phasorDefintion As IPhasorDefinition, ByVal real As Double, ByVal imaginary As Double) As IPhasorValue
 
     Private m_real As Double
     Private m_imaginary As Double
@@ -36,28 +39,28 @@ Public MustInherit Class PhasorValueBase
     End Enum
 
     'Create phasor from polar coordinates (angle expected in Degrees)
-    ' Note: This method is expected to be implemented as a public shared method in derived class automatically passing in phasorValueType
-    Protected Shared Function CreateFromPolarValues(ByVal phasorValueType As Type, ByVal parent As IDataCell, ByVal phasorDefinition As IPhasorDefinition, ByVal angle As Double, ByVal magnitude As Double) As IPhasorValue
+    ' Note: This method is expected to be implemented as a public shared method in derived class automatically passing in createNewPhasorValueFunction
+    Protected Shared Function CreateFromPolarValues(ByVal createNewPhasorValueFunction As CreateNewPhasorValueFunctionSignature, ByVal parent As IDataCell, ByVal phasorDefinition As IPhasorDefinition, ByVal angle As Double, ByVal magnitude As Double) As IPhasorValue
 
-        Return CreateFromRectangularValues(phasorValueType, parent, phasorDefinition, CalculateRealComponent(angle, magnitude), CalculateImaginaryComponent(angle, magnitude))
+        Return CreateFromRectangularValues(createNewPhasorValueFunction, parent, phasorDefinition, CalculateRealComponent(angle, magnitude), CalculateImaginaryComponent(angle, magnitude))
 
     End Function
 
     'Create phasor from rectangular coordinates
-    ' Note: This method is expected to be implemented as a public shared method in derived class automatically passing in phasorValueType
-    Protected Shared Function CreateFromRectangularValues(ByVal phasorValueType As Type, ByVal parent As IDataCell, ByVal phasorDefinition As IPhasorDefinition, ByVal real As Double, ByVal imaginary As Double) As IPhasorValue
+    ' Note: This method is expected to be implemented as a public shared method in derived class automatically passing in createNewPhasorValueFunction
+    Protected Shared Function CreateFromRectangularValues(ByVal createNewPhasorValueFunction As CreateNewPhasorValueFunctionSignature, ByVal parent As IDataCell, ByVal phasorDefinition As IPhasorDefinition, ByVal real As Double, ByVal imaginary As Double) As IPhasorValue
 
         If phasorDefinition Is Nothing Then Throw New ArgumentNullException("No phasor definition specified")
-        Return CType(Activator.CreateInstance(phasorValueType, New Object() {parent, phasorDefinition, real, imaginary}), IPhasorValue)
+        Return createNewPhasorValueFunction.Invoke(parent, phasorDefinition, real, imaginary)
 
     End Function
 
     'Create phasor from unscaled rectangular coordinates
-    ' Note: This method is expected to be implemented as a public shared method in derived class automatically passing in phasorValueType
-    Protected Shared Function CreateFromUnscaledRectangularValues(ByVal phasorValueType As Type, ByVal parent As IDataCell, ByVal phasorDefinition As IPhasorDefinition, ByVal real As Int16, ByVal imaginary As Int16) As IPhasorValue
+    ' Note: This method is expected to be implemented as a public shared method in derived class automatically passing in createNewPhasorValueFunction
+    Protected Shared Function CreateFromUnscaledRectangularValues(ByVal createNewPhasorValueFunction As CreateNewPhasorValueFunctionSignature, ByVal parent As IDataCell, ByVal phasorDefinition As IPhasorDefinition, ByVal real As Int16, ByVal imaginary As Int16) As IPhasorValue
 
         Dim scale As Integer = phasorDefinition.ScalingFactor
-        Return CreateFromRectangularValues(phasorValueType, parent, phasorDefinition, real / scale, imaginary / scale)
+        Return CreateFromRectangularValues(createNewPhasorValueFunction, parent, phasorDefinition, real / scale, imaginary / scale)
 
     End Function
 
@@ -186,7 +189,7 @@ Public MustInherit Class PhasorValueBase
         End Get
         Set(ByVal value As Double)
             ' We store angle as one of our required composite values
-            m_compositeValues(CompositeValue.Angle) = Value
+            m_compositeValues(CompositeValue.Angle) = value
 
             ' If all composite values have been received, we can calculate phasor's real and imaginary values
             CalculatePhasorValueFromComposites()
@@ -209,7 +212,7 @@ Public MustInherit Class PhasorValueBase
         End Get
         Set(ByVal value As Double)
             ' We store magnitude as one of our required composite values
-            m_compositeValues(CompositeValue.Magnitude) = Value
+            m_compositeValues(CompositeValue.Magnitude) = value
 
             ' If all composite values have been received, we can calculate phasor's real and imaginary values
             CalculatePhasorValueFromComposites()
@@ -242,7 +245,7 @@ Public MustInherit Class PhasorValueBase
             Return m_real
         End Get
         Set(ByVal value As Double)
-            m_real = Value
+            m_real = value
         End Set
     End Property
 
@@ -251,7 +254,7 @@ Public MustInherit Class PhasorValueBase
             Return m_imaginary
         End Get
         Set(ByVal value As Double)
-            m_imaginary = Value
+            m_imaginary = value
         End Set
     End Property
 
@@ -264,7 +267,7 @@ Public MustInherit Class PhasorValueBase
             End Try
         End Get
         Set(ByVal value As Int16)
-            m_real = Value / Definition.ScalingFactor
+            m_real = value / Definition.ScalingFactor
         End Set
     End Property
 
@@ -277,7 +280,7 @@ Public MustInherit Class PhasorValueBase
             End Try
         End Get
         Set(ByVal value As Int16)
-            m_imaginary = Value / Definition.ScalingFactor
+            m_imaginary = value / Definition.ScalingFactor
         End Set
     End Property
 

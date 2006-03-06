@@ -16,6 +16,7 @@
 '*******************************************************************************************************
 
 ' This class represents the protocol independent collection of frequency and dfdt values.
+<CLSCompliant(False)> _
 Public Class FrequencyValueCollection
 
     Inherits ChannelValueCollectionBase(Of IFrequencyDefinition, IFrequencyValue)

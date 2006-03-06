@@ -19,6 +19,7 @@ Imports Tva.DateTime
 
 Namespace BpaPdcStream
 
+    <CLSCompliant(False)> _
     Public Class PMUCellCollection
 
         Inherits ChannelCellCollectionBase(Of PMUCell)
@@ -91,20 +92,12 @@ Namespace BpaPdcStream
             End Get
         End Property
 
-        Public Property IDCode() As Short Implements IChannelFrame.IDCode
+        <CLSCompliant(False)> _
+        Public Property IDCode() As UInt16 Implements IChannelFrame.IDCode
             Get
                 Return m_parent.Parent.IDCode
             End Get
-            Set(ByVal Value As Short)
-                Throw New NotImplementedException("This property is readonly in this implementation")
-            End Set
-        End Property
-
-        Public Property DataIsValid() As Boolean Implements IChannelFrame.DataIsValid
-            Get
-                Return m_parent.Parent.DataIsValid
-            End Get
-            Set(ByVal Value As Boolean)
+            Set(ByVal value As UInt16)
                 Throw New NotImplementedException("This property is readonly in this implementation")
             End Set
         End Property
@@ -127,15 +120,6 @@ Namespace BpaPdcStream
         Public Property Published() As Boolean Implements IChannelFrame.Published
             Get
                 Return m_parent.Parent.Published
-            End Get
-            Set(ByVal Value As Boolean)
-                Throw New NotImplementedException("This property is readonly in this implementation")
-            End Set
-        End Property
-
-        Public Property SynchronizationIsValid() As Boolean Implements IChannelFrame.SynchronizationIsValid
-            Get
-                Return m_parent.Parent.SynchronizationIsValid
             End Get
             Set(ByVal Value As Boolean)
                 Throw New NotImplementedException("This property is readonly in this implementation")

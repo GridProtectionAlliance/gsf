@@ -19,6 +19,7 @@ Imports System.Text
 Imports Tva.Phasors.Common
 
 ' This class represents the common implementation of the protocol independent definition of any kind of data.
+<CLSCompliant(False)> _
 Public MustInherit Class ChannelDefinitionBase
 
     Inherits ChannelBase
@@ -74,7 +75,7 @@ Public MustInherit Class ChannelDefinitionBase
             Return m_dataFormat
         End Get
         Set(ByVal value As DataFormat)
-            m_dataFormat = Value
+            m_dataFormat = value
         End Set
     End Property
 
@@ -83,7 +84,7 @@ Public MustInherit Class ChannelDefinitionBase
             Return m_index
         End Get
         Set(ByVal value As Integer)
-            m_index = Value
+            m_index = value
         End Set
     End Property
 
@@ -92,7 +93,7 @@ Public MustInherit Class ChannelDefinitionBase
             Return m_offset
         End Get
         Set(ByVal value As Double)
-            m_offset = Value
+            m_offset = value
         End Set
     End Property
 
@@ -101,8 +102,8 @@ Public MustInherit Class ChannelDefinitionBase
             Return m_scale
         End Get
         Set(ByVal value As Integer)
-            If Value > MaximumScalingFactor Then Throw New OverflowException("Scaling factor value cannot exceed " & MaximumScalingFactor)
-            m_scale = Value
+            If value > MaximumScalingFactor Then Throw New OverflowException("Scaling factor value cannot exceed " & MaximumScalingFactor)
+            m_scale = value
         End Set
     End Property
 
@@ -118,10 +119,10 @@ Public MustInherit Class ChannelDefinitionBase
             Return m_label
         End Get
         Set(ByVal value As String)
-            If Len(Trim(Value)) > MaximumLabelLength Then
+            If Len(Trim(value)) > MaximumLabelLength Then
                 Throw New OverflowException("Label length cannot exceed " & MaximumLabelLength)
             Else
-                m_label = Trim(Replace(Value, Chr(20), " "))
+                m_label = Trim(Replace(value, Chr(20), " "))
             End If
         End Set
     End Property

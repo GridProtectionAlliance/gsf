@@ -19,6 +19,7 @@ Imports System.Text
 
 Namespace IeeeC37_118
 
+    <CLSCompliant(False)> _
     Public Class DigitalDefinition
 
         Inherits DigitalDefinitionBase
@@ -66,6 +67,17 @@ Namespace IeeeC37_118
         Public Shadows ReadOnly Property Parent() As ConfigurationCell
             Get
                 Return MyBase.Parent
+            End Get
+        End Property
+
+        Public Overrides ReadOnly Property MaximumLabelLength() As Integer
+            Get
+                If Parent.Parent.RevisionNumber = RevisionNumber.RevisionD6 Then
+                    Return MyBase.MaximumLabelLength
+                Else
+                    ' In the final version, each digital bit can be labeled - 
+                    Return 16 * MyBase.MaximumLabelLength
+                End If
             End Get
         End Property
 

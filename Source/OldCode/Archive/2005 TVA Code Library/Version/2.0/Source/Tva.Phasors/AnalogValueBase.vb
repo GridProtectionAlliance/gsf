@@ -18,6 +18,7 @@
 Imports Tva.Interop
 
 ' This class represents the common implementation of the protocol independent representation of an analog value.
+<CLSCompliant(False)> _
 Public MustInherit Class AnalogValueBase
 
     Inherits ChannelValueBase(Of IAnalogDefinition)
@@ -81,7 +82,7 @@ Public MustInherit Class AnalogValueBase
             Return m_value
         End Get
         Set(ByVal value As Double)
-            m_value = Value
+            m_value = value
         End Set
     End Property
 
@@ -90,7 +91,7 @@ Public MustInherit Class AnalogValueBase
             Return Convert.ToInt16(m_value * Definition.ScalingFactor)
         End Get
         Set(ByVal value As Int16)
-            m_value = Value / Definition.ScalingFactor
+            m_value = value / Definition.ScalingFactor
         End Set
     End Property
 

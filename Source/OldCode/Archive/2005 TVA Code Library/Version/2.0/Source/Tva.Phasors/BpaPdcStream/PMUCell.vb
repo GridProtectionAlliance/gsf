@@ -22,17 +22,18 @@ Imports Tva.Interop
 
 Namespace BpaPdcStream
 
+    <CLSCompliant(False)> _
     Public Class PMUCell
 
         Inherits ChannelCellBase
 
         Private m_flags As ChannelFlags
-        Private m_sampleRate As Byte
+        Private m_frameRate As Byte
         Private m_statusFlags As Int16
 
         Public Sub New(ByVal parent As PMUCellCollection)
 
-            MyBase.New(parent, True)
+            MyBase.New(parent, parent.IDCode, True)
 
         End Sub
 
@@ -51,12 +52,12 @@ Namespace BpaPdcStream
             End Set
         End Property
 
-        Public Property SampleRate() As Byte
+        Public Property FrameRate() As Byte
             Get
-                Return m_sampleRate
+                Return m_frameRate
             End Get
             Set(ByVal Value As Byte)
-                m_sampleRate = Value
+                m_frameRate = Value
             End Set
         End Property
 

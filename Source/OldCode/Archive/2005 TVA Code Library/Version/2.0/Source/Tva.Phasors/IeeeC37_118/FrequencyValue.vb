@@ -19,6 +19,7 @@ Imports Tva.Interop
 
 Namespace IeeeC37_118
 
+    <CLSCompliant(False)> _
     Public Class FrequencyValue
 
         Inherits FrequencyValueBase
@@ -47,18 +48,17 @@ Namespace IeeeC37_118
 
         End Sub
 
+        Friend Shared Function CreateNewFrequencyValue(ByVal parent As IDataCell, ByVal definition As IFrequencyDefinition, ByVal binaryImage As Byte(), ByVal startIndex As Integer) As IFrequencyValue
+
+            Return New FrequencyValue(parent, definition, binaryImage, startIndex)
+
+        End Function
+
         Public Overrides ReadOnly Property InheritedType() As System.Type
             Get
                 Return Me.GetType
             End Get
         End Property
-
-        Public Shared Function CalculateBinaryLength(ByVal definition As FrequencyDefinition) As Int16
-
-            ' The frequency definition will determine the binary length based on data format
-            Return (New FrequencyValue(Nothing, definition, 0, 0)).BinaryLength
-
-        End Function
 
     End Class
 

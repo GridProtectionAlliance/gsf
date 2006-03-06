@@ -18,6 +18,7 @@
 Imports Tva.Interop
 
 ' This class represents the protocol independent collection of the common implementation of a data frame that can be sent or received from a PMU.
+<CLSCompliant(False)> _
 Public Class DataFrameCollection
 
     Inherits ChannelFrameCollectionBase(Of IDataFrame)

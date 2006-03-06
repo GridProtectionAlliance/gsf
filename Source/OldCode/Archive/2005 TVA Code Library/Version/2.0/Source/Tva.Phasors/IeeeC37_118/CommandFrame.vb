@@ -25,17 +25,18 @@ Namespace IeeeC37_118
     ' TODO: Create a base class for the command frame that will suffice for both C37.118 and 1344...
     ' This class represents a command frame that can be sent to a PMU to elicit a desired response.
     ' Most PMU's won't begin a data broadcast until a command has been sent to "turn on" the real-time stream.
+    <CLSCompliant(False)> _
     Public Class CommandFrame
 
         ' TODO: Extended frames will have variable length
         Public Const FrameLength As Integer = 18
 
         Private m_timetag As UnixTimeTag
-        Private m_idCode As Int16
+        Private m_idCode As UInt16
         Private m_command As Command
 
         ' Use this contructor to send a command to a PMU
-        Public Sub New(ByVal idCode As Int16, ByVal command As Command)
+        Public Sub New(ByVal idCode As UInt16, ByVal command As Command)
 
             m_idCode = idCode
             m_command = command
@@ -71,11 +72,11 @@ Namespace IeeeC37_118
             End Set
         End Property
 
-        Public Property IDCode() As Int16
+        Public Property IDCode() As UInt16
             Get
                 Return m_idCode
             End Get
-            Set(ByVal Value As Int16)
+            Set(ByVal Value As UInt16)
                 m_idCode = Value
             End Set
         End Property
@@ -93,7 +94,6 @@ Namespace IeeeC37_118
             Get
                 Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), FrameLength)
 
-                ' TODO: MODIFIED FOR PC37.118 TEST - RESTORE LATER...
                 buffer(0) = &HAA
                 buffer(1) = Bit0 Or FrameType.CommandFrame
                 EndianOrder.BigEndian.CopyBytes(Convert.ToUInt16(FrameLength), buffer, 2)

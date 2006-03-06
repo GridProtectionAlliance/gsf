@@ -22,6 +22,7 @@ Imports Tva.Phasors.IeeeC37_118.Common
 
 Namespace IeeeC37_118
 
+    <CLSCompliant(False)> _
     Public Class ConfigurationFrame
 
         Inherits ConfigurationFrameBase
@@ -33,7 +34,8 @@ Namespace IeeeC37_118
 
         Public Sub New(ByVal parsedFrameHeader As FrameHeader, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
 
-            MyBase.New(New ConfigurationFrameParsingState(New ConfigurationCellCollection, GetType(ConfigurationCell), parsedFrameHeader.FrameLength), binaryImage, startIndex)
+            ' TODO: Define new static configuration cell creation function
+            MyBase.New(New ConfigurationFrameParsingState(New ConfigurationCellCollection, parsedFrameHeader.FrameLength, Nothing), binaryImage, startIndex)
 
         End Sub
 
@@ -80,7 +82,7 @@ Namespace IeeeC37_118
                 'EndianOrder.BigEndian.CopyBytes(Convert.ToInt16(BinaryLength \ 2), buffer, 2)
                 'buffer(4) = StreamType
                 'buffer(5) = RevisionNumber
-                'EndianOrder.BigEndian.CopyBytes(SampleRate, buffer, 6)
+                'EndianOrder.BigEndian.CopyBytes(FrameRate, buffer, 6)
                 'EndianOrder.BigEndian.CopyBytes(RowLength(True), buffer, 8) ' <-- Important: This step calculates all PMU row offsets!
                 'EndianOrder.BigEndian.CopyBytes(PacketsPerSample, buffer, 12)
                 'EndianOrder.BigEndian.CopyBytes(Convert.ToInt16(Cells.Count), buffer, 14)
@@ -89,7 +91,7 @@ Namespace IeeeC37_118
             End Get
         End Property
 
-        Protected Overrides Sub ParseHeaderImage(ByVal state As IChannelParsingState, ByVal binaryImage() As Byte, ByVal startIndex As Integer)
+        Protected Overrides Sub ParseHeaderImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
 
             ' We parse the C37.18 stream specific header image here...
             'Dim configurationFrame As ConfigurationFrame = DirectCast(state, IDataFrameParsingState).ConfigurationFrame
@@ -132,7 +134,7 @@ Namespace IeeeC37_118
         '    End Get
         'End Property
 
-        'Protected Overrides Sub ParseHeaderImage(ByVal state As IChannelParsingState, ByVal binaryImage() As Byte, ByVal startIndex As Integer)
+        'Protected Overrides Sub ParseHeaderImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
 
         '    Dim configurationFrame As PDCStream.ConfigurationFrame = DirectCast(state, IDataFrameParsingState).ConfigurationFrame
 

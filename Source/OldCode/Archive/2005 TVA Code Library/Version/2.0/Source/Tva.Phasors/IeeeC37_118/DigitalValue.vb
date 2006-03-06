@@ -17,6 +17,7 @@
 
 Namespace IeeeC37_118
 
+    <CLSCompliant(False)> _
     Public Class DigitalValue
 
         Inherits DigitalValueBase
@@ -38,6 +39,12 @@ Namespace IeeeC37_118
             MyBase.New(DigitalValue)
 
         End Sub
+
+        Friend Shared Function CreateNewDigitalValue(ByVal parent As IDataCell, ByVal definition As IDigitalDefinition, ByVal binaryImage As Byte(), ByVal startIndex As Integer) As IDigitalValue
+
+            Return New DigitalValue(parent, definition, binaryImage, startIndex)
+
+        End Function
 
         Public Overrides ReadOnly Property InheritedType() As System.Type
             Get

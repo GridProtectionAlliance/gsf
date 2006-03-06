@@ -16,18 +16,21 @@
 '*******************************************************************************************************
 
 ' This interface represents the protocol independent parsing state of a set of phasor related data values.
+<CLSCompliant(False)> _
 Public Interface IDataCellParsingState
 
     Inherits IChannelCellParsingState
 
+    Delegate Function CreateNewValueFunctionSignature(Of TDefinition As IChannelDefinition, TValue As IChannelValue(Of TDefinition))(ByVal parent As IDataCell, ByVal definition As TDefinition, ByVal binaryImage As Byte(), ByVal startIndex As Integer) As TValue
+
     ReadOnly Property ConfigurationCell() As IConfigurationCell
 
-    ReadOnly Property PhasorValueType() As Type
+    ReadOnly Property CreateNewPhasorValueFunction() As CreateNewValueFunctionSignature(Of IPhasorDefinition, IPhasorValue)
 
-    ReadOnly Property FrequencyValueType() As Type
+    ReadOnly Property CreateNewFrequencyValueFunction() As CreateNewValueFunctionSignature(Of IFrequencyDefinition, IFrequencyValue)
 
-    ReadOnly Property AnalogValueType() As Type
+    ReadOnly Property CreateNewAnalogValueFunction() As CreateNewValueFunctionSignature(Of IAnalogDefinition, IAnalogValue)
 
-    ReadOnly Property DigitalValueType() As Type
+    ReadOnly Property CreateNewDigitalValueFunction() As CreateNewValueFunctionSignature(Of IDigitalDefinition, IDigitalValue)
 
 End Interface

@@ -16,14 +16,15 @@
 '*******************************************************************************************************
 
 ' This class represents the protocol independent common implementation the parsing state of a data frame that can be sent or received from a PMU.
+<CLSCompliant(False)> _
 Public Class ConfigurationFrameParsingState
 
     Inherits ChannelFrameParsingStateBase(Of IConfigurationCell)
     Implements IConfigurationFrameParsingState
 
-    Public Sub New(ByVal cells As ConfigurationCellCollection, ByVal cellType As Type, ByVal frameLength As Int16)
+    Public Sub New(ByVal cells As ConfigurationCellCollection, ByVal frameLength As Int16, ByVal createNewCellFunction As IChannelFrameParsingState(Of IConfigurationCell).CreateNewCellFunctionSignature)
 
-        MyBase.New(cells, cellType, frameLength)
+        MyBase.New(cells, frameLength, createNewCellFunction)
 
     End Sub
 

@@ -19,6 +19,7 @@ Imports System.Text
 
 Namespace IeeeC37_118
 
+    <CLSCompliant(False)> _
     Public Class AnalogDefinition
 
         Inherits AnalogDefinitionBase

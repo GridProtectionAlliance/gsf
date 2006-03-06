@@ -16,6 +16,7 @@
 '*******************************************************************************************************
 
 ' This class represents the common implementation of the protocol independent definition of a phasor value.
+<CLSCompliant(False)> _
 Public MustInherit Class PhasorDefinitionBase
 
     Inherits ChannelDefinitionBase
@@ -64,7 +65,7 @@ Public MustInherit Class PhasorDefinitionBase
             Return m_format
         End Get
         Set(ByVal value As CoordinateFormat)
-            m_format = Value
+            m_format = value
         End Set
     End Property
 
@@ -73,7 +74,7 @@ Public MustInherit Class PhasorDefinitionBase
             Return m_type
         End Get
         Set(ByVal value As PhasorType)
-            m_type = Value
+            m_type = value
         End Set
     End Property
 
@@ -83,11 +84,11 @@ Public MustInherit Class PhasorDefinitionBase
         End Get
         Set(ByVal value As IPhasorDefinition)
             If m_type = PhasorType.Voltage Then
-                If Not Value Is Me Then
+                If Not value Is Me Then
                     Throw New NotImplementedException("Voltage phasors do not have a voltage reference")
                 End If
             Else
-                m_voltageReference = Value
+                m_voltageReference = value
             End If
         End Set
     End Property

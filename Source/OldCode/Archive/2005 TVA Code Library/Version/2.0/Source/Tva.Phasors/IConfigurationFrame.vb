@@ -16,13 +16,14 @@
 '*******************************************************************************************************
 
 ' This interface represents the protocol independent representation of any configuration frame.
+<CLSCompliant(False)> _
 Public Interface IConfigurationFrame
 
     Inherits IChannelFrame
 
     Shadows ReadOnly Property Cells() As ConfigurationCellCollection
 
-    Property SampleRate() As Int16
+    Property FrameRate() As Int16
 
     Sub SetNominalFrequency(ByVal value As LineFrequency)
 

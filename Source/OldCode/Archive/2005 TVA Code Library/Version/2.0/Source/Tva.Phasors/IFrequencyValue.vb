@@ -16,6 +16,7 @@
 '*******************************************************************************************************
 
 ' This class represents the protocol independent interface of a frequency value.
+<CLSCompliant(False)> _
 Public Interface IFrequencyValue
 
     Inherits IChannelValue(Of IFrequencyDefinition)

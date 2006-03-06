@@ -16,6 +16,7 @@
 '*******************************************************************************************************
 
 ' This class represents the common implementation of the protocol independent definition of an analog value.
+<CLSCompliant(False)> _
 Public MustInherit Class AnalogDefinitionBase
 
     Inherits ChannelDefinitionBase
