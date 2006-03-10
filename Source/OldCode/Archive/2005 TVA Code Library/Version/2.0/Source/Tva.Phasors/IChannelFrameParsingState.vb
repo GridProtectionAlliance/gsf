@@ -29,7 +29,7 @@ Public Interface IChannelFrameParsingState(Of T As IChannelCell)
 
     Property CellCount() As Integer
 
-    Property FrameLength() As Int16
+    Property ParsedBinaryLength() As Int16
 
 End Interface
 

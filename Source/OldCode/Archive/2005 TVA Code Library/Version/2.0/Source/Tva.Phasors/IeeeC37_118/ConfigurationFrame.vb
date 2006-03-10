@@ -26,16 +26,20 @@ Namespace IeeeC37_118
     Public Class ConfigurationFrame
 
         Inherits ConfigurationFrameBase
+        Implements IFrameHeader
 
+        Private m_frameType As FrameType = IeeeC37_118.FrameType.ConfigurationFrame2
+        Private m_version As Byte = 1
+        Private m_frameLength As Int16
+        Private m_timeBase As Int32 = 10000
+        Private m_timeQualityFlags As Int32
         Private m_revisionNumber As RevisionNumber
 
-        Public TimeBase As Int32 = 1000000
-        Public FractionSec As Int32
-
-        Public Sub New(ByVal parsedFrameHeader As FrameHeader, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+        Public Sub New(ByVal parsedFrameHeader As IFrameHeader, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
 
             ' TODO: Define new static configuration cell creation function
             MyBase.New(New ConfigurationFrameParsingState(New ConfigurationCellCollection, parsedFrameHeader.FrameLength, Nothing), binaryImage, startIndex)
+            FrameHeader.Clone(parsedFrameHeader, Me)
 
         End Sub
 
@@ -57,6 +61,103 @@ Namespace IeeeC37_118
             End Get
         End Property
 
+        Public Property FrameType() As FrameType Implements IFrameHeader.FrameType
+            Get
+                Return m_frameType
+            End Get
+            Set(ByVal value As FrameType)
+                If value = IeeeC37_118.FrameType.ConfigurationFrame1 Or value = IeeeC37_118.FrameType.ConfigurationFrame2 Then
+                    m_frameType = value
+                Else
+                    Throw New InvalidCastException("Invalid frame type specified for configuration frame.  Can only be ConfigurationFrame1 or ConfigurationFrame2")
+                End If
+            End Set
+        End Property
+
+        Public Property Version() As Byte Implements IFrameHeader.Version
+            Get
+                Return m_version
+            End Get
+            Set(ByVal value As Byte)
+                FrameHeader.Version(Me) = value
+            End Set
+        End Property
+
+        Public Property FrameLength() As Int16 Implements IFrameHeader.FrameLength
+            Get
+                Return MyBase.BinaryLength
+            End Get
+            Set(ByVal value As Int16)
+                MyBase.ParsedBinaryLength = value
+            End Set
+        End Property
+
+        Public Overrides Property IDCode() As UInt16 Implements IFrameHeader.IDCode
+            Get
+                Return MyBase.IDCode
+            End Get
+            Set(ByVal value As UShort)
+                MyBase.IDCode = value
+            End Set
+        End Property
+
+        Public Overrides Property Ticks() As Long Implements IFrameHeader.Ticks
+            Get
+                Return MyBase.Ticks
+            End Get
+            Set(ByVal value As Long)
+                MyBase.Ticks = value
+            End Set
+        End Property
+
+        Public Property TimeBase() As Int32 Implements IFrameHeader.TimeBase
+            Get
+                Return m_timeBase
+            End Get
+            Set(ByVal value As Int32)
+                m_timeBase = value
+            End Set
+        End Property
+
+        Private Property InternalTimeQualityFlags() As Int32 Implements IFrameHeader.InternalTimeQualityFlags
+            Get
+                Return m_timeQualityFlags
+            End Get
+            Set(ByVal value As Int32)
+                m_timeQualityFlags = value
+            End Set
+        End Property
+
+        Public ReadOnly Property SecondOfCentury() As UInt32 Implements IFrameHeader.SecondOfCentury
+            Get
+                Return FrameHeader.SecondOfCentury(Me)
+            End Get
+        End Property
+
+        Public ReadOnly Property FractionOfSecond() As Int32 Implements IFrameHeader.FractionOfSecond
+            Get
+                Return FrameHeader.FractionOfSecond(Me)
+            End Get
+        End Property
+
+        Public Property TimeQualityFlags() As TimeQualityFlags Implements IFrameHeader.TimeQualityFlags
+            Get
+                Return FrameHeader.TimeQualityFlags(Me)
+            End Get
+            Set(ByVal value As TimeQualityFlags)
+                FrameHeader.TimeQualityFlags(Me) = value
+            End Set
+        End Property
+
+        Public Property TimeQualityIndicatorCode() As TimeQualityIndicatorCode Implements IFrameHeader.TimeQualityIndicatorCode
+            Get
+                Return FrameHeader.TimeQualityIndicatorCode(Me)
+            End Get
+            Set(ByVal value As TimeQualityIndicatorCode)
+                FrameHeader.TimeQualityIndicatorCode(Me) = value
+            End Set
+        End Property
+
         Public Property RevisionNumber() As RevisionNumber
             Get
                 Return m_revisionNumber
@@ -66,28 +167,15 @@ Namespace IeeeC37_118
             End Set
         End Property
 
-        Protected Overrides ReadOnly Property HeaderLength() As Short
+        Protected Overrides ReadOnly Property HeaderLength() As Int16
             Get
-                Return 20
+                Return FrameHeader.BinaryLength
             End Get
         End Property
 
         Protected Overrides ReadOnly Property HeaderImage() As Byte()
             Get
-                'Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), HeaderLength)
-                'Dim index As Integer
-
-                'buffer(0) = SyncByte
-                'buffer(1) = DescriptorPacketFlag
-                'EndianOrder.BigEndian.CopyBytes(Convert.ToInt16(BinaryLength \ 2), buffer, 2)
-                'buffer(4) = StreamType
-                'buffer(5) = RevisionNumber
-                'EndianOrder.BigEndian.CopyBytes(FrameRate, buffer, 6)
-                'EndianOrder.BigEndian.CopyBytes(RowLength(True), buffer, 8) ' <-- Important: This step calculates all PMU row offsets!
-                'EndianOrder.BigEndian.CopyBytes(PacketsPerSample, buffer, 12)
-                'EndianOrder.BigEndian.CopyBytes(Convert.ToInt16(Cells.Count), buffer, 14)
-
-                'Return buffer
+                Return FrameHeader.BinaryImage(Me)
             End Get
         End Property
 
@@ -103,73 +191,14 @@ Namespace IeeeC37_118
 
             ' versionFrameType = binaryImage(startIndex + 1)
 
-            ParsedFrameLength = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 2)
-            IDCode = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 4)
-            Ticks = (New UnixTimeTag(EndianOrder.BigEndian.ToInt32(binaryImage, startIndex + 6))).ToDateTime.Ticks
-            FractionSec = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 10)
-            TimeBase = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 14)
+            'ParsedFrameLength = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 2)
+            'IDCode = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 4)
+            'Ticks = (New UnixTimeTag(EndianOrder.BigEndian.ToInt32(binaryImage, startIndex + 6))).ToDateTime.Ticks
+            'FractionSec = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 10)
+            'TimeBase = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 14)
             parsingState.CellCount = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 18)
 
         End Sub
-
-
-        'Protected Overrides ReadOnly Property HeaderLength() As Int16
-        '    Get
-        '        Return 12
-        '    End Get
-        'End Property
-
-        'Protected Overrides ReadOnly Property HeaderImage() As Byte()
-        '    Get
-        '        Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), HeaderLength)
-
-        '        buffer(0) = SyncByte
-        '        buffer(1) = Convert.ToByte(1)
-        '        EndianOrder.BigEndian.CopyBytes(Convert.ToInt16(buffer.Length \ 2), buffer, 2)
-        '        EndianOrder.BigEndian.CopyBytes(Convert.ToUInt32(TimeTag.Value), buffer, 4)
-        '        EndianOrder.BigEndian.CopyBytes(Convert.ToInt16(m_sampleNumber), buffer, 8)
-        '        EndianOrder.BigEndian.CopyBytes(Convert.ToInt16(Cells.Count), buffer, 10)
-
-        '        Return buffer
-        '    End Get
-        'End Property
-
-        'Protected Overrides Sub ParseHeaderImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
-
-        '    Dim configurationFrame As PDCStream.ConfigurationFrame = DirectCast(state, IDataFrameParsingState).ConfigurationFrame
-
-        '    Dim dataCellCount As Int16
-        '    Dim frameLength As Int16
-
-        '    If binaryImage(startIndex) <> Common.SyncByte Then
-        '        Throw New InvalidOperationException("Bad Data Stream: Expected sync byte &HAA as first byte in PDCstream data frame, got " & binaryImage(startIndex).ToString("x"c).PadLeft(2, "0"c))
-        '    End If
-
-        '    m_packetNumber = binaryImage(startIndex + 1)
-
-        '    If m_packetNumber = DescriptorPacketFlag Then
-        '        Throw New InvalidOperationException("Bad Data Stream: This is not a PDCstream data frame - looks like a configuration frame.")
-        '    End If
-
-        '    frameLength = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 2)
-        '    TimeTag = New UnixTimeTag(EndianOrder.BigEndian.ToInt32(binaryImage, startIndex + 4))
-        '    m_sampleNumber = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 8)
-        '    dataCellCount = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 10)
-
-        '    ' TODO: validate frame length??
-
-        '    If dataCellCount <> configurationFrame.Cells.Count Then
-        '        Throw New InvalidOperationException("Stream/Config File Mismatch: PMU count (" & dataCellCount & ") in stream does not match defined count in configuration file:" & configurationFrame.Cells.Count)
-        '    End If
-
-        '    ' Skip through redundant header information for legacy streams...
-        '    If configurationFrame.StreamType = StreamType.Legacy Then
-        '        ' We are not validating this data or looking for changes since this information
-        '        ' was already transmitted via the descriptor....
-        '    End If
-
-        'End Sub
-
 
         Public Overrides ReadOnly Property Measurements() As System.Collections.Generic.IDictionary(Of Integer, Measurements.IMeasurement)
             Get

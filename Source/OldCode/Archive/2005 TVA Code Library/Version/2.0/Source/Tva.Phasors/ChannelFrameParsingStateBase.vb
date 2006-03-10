@@ -56,7 +56,7 @@ Public MustInherit Class ChannelFrameParsingStateBase(Of T As IChannelCell)
         End Set
     End Property
 
-    Public Property FrameLength() As Int16 Implements IChannelFrameParsingState(Of T).FrameLength
+    Public Property FrameLength() As Int16 Implements IChannelFrameParsingState(Of T).ParsedBinaryLength
         Get
             Return m_frameLength
         End Get

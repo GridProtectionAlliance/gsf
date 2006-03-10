@@ -15,8 +15,6 @@
 '
 '*******************************************************************************************************
 
-Imports Tva.DateTime
-Imports Tva.Interop
 Imports Tva.Interop.Bit
 
 Namespace IeeeC37_118
@@ -196,6 +194,7 @@ Namespace IeeeC37_118
         Manual = 0
     End Enum
 
+    <CLSCompliant(False)> _
     Public NotInheritable Class Common
 
         Private Sub New()
@@ -209,178 +208,6 @@ Namespace IeeeC37_118
         Public Const MaximumPhasorValues As Integer = Int16.MaxValue
         Public Const MaximumAnalogValues As Integer = Int16.MaxValue
         Public Const MaximumDigitalValues As Integer = Int16.MaxValue
-
-        Public Const TimeQualityFlagsMask As Integer = Bit31 Or Bit30 Or Bit29 Or Bit28 Or Bit27 Or Bit26 Or Bit25 Or Bit24
-
-    End Class
-
-    ' This class generates and parses a frame header specfic to C37.118
-    <CLSCompliant(False)> _
-    Public Class FrameHeader
-
-        Implements IChannel
-
-        Private m_frameType As FrameType
-        Private m_version As Byte
-        Private m_frameLength As Int16
-        Private m_idCode As UInt16
-        Private m_secondOfCentury As UInt32
-        Private m_fractionOfSecond As Int32
-        Private m_timeQualityFlags As TimeQualityFlags
-        Private m_timeBase As Int32 = 10000
-
-        Public Const BinaryLength As Int16 = 14
-
-        Public Sub New(ByVal binaryImage As Byte(), ByVal startIndex As Integer)
-
-            ParseBinaryImage(Nothing, binaryImage, startIndex)
-
-        End Sub
-
-        Public Sub ParseBinaryImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Integer) Implements IChannel.ParseBinaryImage
-
-            Dim fractionOfSecond As Int32
-
-            If binaryImage(startIndex) <> Common.SyncByte Then Throw New InvalidOperationException("Bad Data Stream: Expected sync byte &HAA as first byte in C37.118 frame, got " & binaryImage(startIndex).ToString("x"c).PadLeft(2, "0"c))
-
-            ' Strip out frame type and version information...
-            m_frameType = (binaryImage(startIndex + 1) And Not FrameType.VersionNumberMask)
-            m_version = (binaryImage(startIndex + 1) And FrameType.VersionNumberMask)
-
-            m_frameLength = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 2)
-            m_idCode = EndianOrder.BigEndian.ToUInt16(binaryImage, startIndex + 4)
-            m_secondOfCentury = EndianOrder.BigEndian.ToUInt32(binaryImage, startIndex + 6)
-
-            ' Extract fraction of second and time quality flags
-            fractionOfSecond = EndianOrder.BigEndian.ToInt32(binaryImage, startIndex + 10)
-            m_fractionOfSecond = fractionOfSecond And Not Common.TimeQualityFlagsMask
-            m_timeQualityFlags = fractionOfSecond And Common.TimeQualityFlagsMask
-
-        End Sub
-
-        Public ReadOnly Property BinaryImage() As Byte() Implements IChannel.BinaryImage
-            Get
-                Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BinaryLength)
-
-                buffer(0) = Common.SyncByte
-                buffer(1) = m_frameType Or m_version
-                EndianOrder.BigEndian.CopyBytes(m_frameLength, buffer, 2)
-                EndianOrder.BigEndian.CopyBytes(m_idCode, buffer, 4)
-                EndianOrder.BigEndian.CopyBytes(m_secondOfCentury, buffer, 6)
-                EndianOrder.BigEndian.CopyBytes(m_fractionOfSecond Or m_timeQualityFlags, buffer, 10)
-
-                Return buffer
-            End Get
-        End Property
-
-        Public ReadOnly Property InheritedType() As System.Type Implements IChannel.InheritedType
-            Get
-                Return Me.GetType
-            End Get
-        End Property
-
-        Public Overridable ReadOnly Property This() As IChannel Implements IChannel.This
-            Get
-                Return Me
-            End Get
-        End Property
-
-        Public Property FrameType() As FrameType
-            Get
-                Return m_frameType
-            End Get
-            Set(ByVal value As FrameType)
-                m_frameType = value
-            End Set
-        End Property
-
-        Public Property Version() As Byte
-            Get
-                Return m_version
-            End Get
-            Set(ByVal value As Byte)
-                m_version = value And FrameType.VersionNumberMask
-            End Set
-        End Property
-
-        Public Property FrameLength() As Int16
-            Get
-                Return m_frameLength
-            End Get
-            Set(ByVal value As Int16)
-                m_frameLength = value
-            End Set
-        End Property
-
-        Public Property IDCode() As UInt16
-            Get
-                Return m_idCode
-            End Get
-            Set(ByVal value As UInt16)
-                m_idCode = value
-            End Set
-        End Property
-
-        Public Property TimeTag() As UnixTimeTag
-            Get
-                Return New UnixTimeTag(m_secondOfCentury + m_fractionOfSecond / m_timeBase)
-            End Get
-            Set(ByVal value As UnixTimeTag)
-                m_secondOfCentury = System.Math.Floor(value.Value)
-                m_fractionOfSecond = (value.Value - m_secondOfCentury) * m_timeBase
-            End Set
-        End Property
-
-        Public Property SecondOfCentury() As UInt32
-            Get
-                Return m_secondOfCentury
-            End Get
-            Set(ByVal value As UInt32)
-                m_secondOfCentury = value
-            End Set
-        End Property
-
-        Public Property FractionOfSecond() As Int32
-            Get
-                Return m_fractionOfSecond
-            End Get
-            Set(ByVal value As Int32)
-                m_fractionOfSecond = value
-            End Set
-        End Property
-
-        Public Property TimeBase() As Int32
-            Get
-                Return m_timeBase
-            End Get
-            Set(ByVal value As Int32)
-                m_timeBase = value
-            End Set
-        End Property
-
-        Public Property TimeQualityFlags() As TimeQualityFlags
-            Get
-                Return m_timeQualityFlags And Not TimeQualityFlags.TimeQualityIndicatorMask
-            End Get
-            Set(ByVal value As TimeQualityFlags)
-                m_timeQualityFlags = (m_timeQualityFlags And TimeQualityFlags.TimeQualityIndicatorMask) Or value
-            End Set
-        End Property
-
-        Public Property TimeQualityIndicatorCode() As TimeQualityIndicatorCode
-            Get
-                Return m_timeQualityFlags And TimeQualityFlags.TimeQualityIndicatorMask
-            End Get
-            Set(ByVal value As TimeQualityIndicatorCode)
-                m_timeQualityFlags = (m_timeQualityFlags And Not TimeQualityFlags.TimeQualityIndicatorMask) Or value
-            End Set
-        End Property
-
-        Private ReadOnly Property IChannelBinaryLength() As Short Implements IChannel.BinaryLength
-            Get
-                Return BinaryLength
-            End Get
-        End Property
 
     End Class
 

@@ -147,9 +147,11 @@
     <Compile Include="IeeeC37_118\DataFrame.vb" />
     <Compile Include="IeeeC37_118\DigitalDefinition.vb" />
     <Compile Include="IeeeC37_118\DigitalValue.vb" />
+    <Compile Include="IeeeC37_118\FrameHeader.vb" />
     <Compile Include="IeeeC37_118\FrameParser.vb" />
     <Compile Include="IeeeC37_118\FrequencyDefinition.vb" />
     <Compile Include="IeeeC37_118\FrequencyValue.vb" />
+    <Compile Include="IeeeC37_118\IFrameHeader.vb" />
     <Compile Include="IeeeC37_118\PhasorDefinition.vb" />
     <Compile Include="IeeeC37_118\PhasorValue.vb" />
     <Compile Include="IFrequencyDefinition.vb" />
