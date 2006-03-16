@@ -32,9 +32,11 @@ Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "Tva.Security", "Tva.Securit
 EndProject
 Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "Tva.Phasors", "Tva.Phasors\Tva.Phasors.vbproj", "{54CA98CC-2F0A-41F2-879D-0E42B17E8544}"
 EndProject
+Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "TVA PMU Connection Tester", "Tva.Phasors\PMU Connection Tester\TVA PMU Connection Tester.vbproj", "{AB9A5D8C-38C2-4393-93D9-BC548ED0AB38}"
+EndProject
 Global
 	GlobalSection(SourceCodeControl) = preSolution
-		SccNumberOfProjects = 8
+		SccNumberOfProjects = 9
 		SccProjectName0 = \u0022$/TVA\u0020Code\u0020Library/Version/2.0\u0022,\u0020HBAAAAAA
 		SccLocalPath0 = ..
 		SccProvider0 = MSSCCI:Microsoft\u0020Visual\u0020SourceSafe
@@ -75,6 +77,11 @@ Global
 		SccProjectName7 = \u0022$/TVA\u0020Code\u0020Library/Version/2.0/Source/Tva.Phasors\u0022,\u0020IBGAAAAA
 		SccLocalPath7 = Tva.Phasors
 		CanCheckoutShared = false
+		SccProjectUniqueName8 = Tva.Phasors\\PMU\u0020Connection\u0020Tester\\TVA\u0020PMU\u0020Connection\u0020Tester.vbproj
+		SccProjectTopLevelParentUniqueName8 = TVA\u0020Code\u0020Library.sln
+		SccLocalPath8 = ..
+		CanCheckoutShared = false
+		SccProjectFilePathRelativizedFromConnection8 = Source\\Tva.Phasors\\PMU\u0020Connection\u0020Tester\\
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -155,6 +162,16 @@ Global
 		{54CA98CC-2F0A-41F2-879D-0E42B17E8544}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{54CA98CC-2F0A-41F2-879D-0E42B17E8544}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{54CA98CC-2F0A-41F2-879D-0E42B17E8544}.Release|Win32.ActiveCfg = Release|Any CPU
+		{AB9A5D8C-38C2-4393-93D9-BC548ED0AB38}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AB9A5D8C-38C2-4393-93D9-BC548ED0AB38}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AB9A5D8C-38C2-4393-93D9-BC548ED0AB38}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{AB9A5D8C-38C2-4393-93D9-BC548ED0AB38}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{AB9A5D8C-38C2-4393-93D9-BC548ED0AB38}.Debug|Win32.ActiveCfg = Debug|Any CPU
+		{AB9A5D8C-38C2-4393-93D9-BC548ED0AB38}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AB9A5D8C-38C2-4393-93D9-BC548ED0AB38}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AB9A5D8C-38C2-4393-93D9-BC548ED0AB38}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{AB9A5D8C-38C2-4393-93D9-BC548ED0AB38}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{AB9A5D8C-38C2-4393-93D9-BC548ED0AB38}.Release|Win32.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -167,6 +184,7 @@ Global
 		{F611B9BA-C69D-449B-B596-FABFB746EA2A} = {4F631798-355B-4607-AEEB-742B670AD834}
 		{A02EDB9D-4A62-41E0-BB60-5B942E2C7490} = {4F631798-355B-4607-AEEB-742B670AD834}
 		{54CA98CC-2F0A-41F2-879D-0E42B17E8544} = {4F631798-355B-4607-AEEB-742B670AD834}
+		{AB9A5D8C-38C2-4393-93D9-BC548ED0AB38} = {4F631798-355B-4607-AEEB-742B670AD834}
 		{2E2A8AA0-A387-4245-A419-496B50CB7939} = {CDC349A8-4D7D-4D2F-8D15-8CE2359FBF3D}
 		{1BFB8969-4479-4EAB-8CCB-1CF0C3DE2DEE} = {CDC349A8-4D7D-4D2F-8D15-8CE2359FBF3D}
 	EndGlobalSection

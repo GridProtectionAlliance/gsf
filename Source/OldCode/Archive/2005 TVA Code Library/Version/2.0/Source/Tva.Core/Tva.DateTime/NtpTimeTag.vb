@@ -40,12 +40,20 @@ Namespace DateTime
 
         End Sub
 
-        ''' <summary>Creates new NTP timetag given standard .NET DateTime</summary>
-        ''' <param name="timestamp">.NET timestamp to create NTP timetag from (minimum valid date is 1/1/1900)</param>
-        Public Sub New(ByVal timestamp As Date)
+        ''' <summary>Creates new NTP timetag given standard .NET DateTime ticks</summary>
+        ''' <param name="ticks">.NET DateTime ticks to create Unix timetag from (minimum valid date is 1/1/1900)</param>
+        Public Sub New(ByVal ticks As Long)
 
             ' Zero base 100-nanosecond ticks from 1/1/1900 and convert to seconds
-            Value = TicksToSeconds(timestamp.Ticks - m_ntpDateOffsetTicks)
+            Value = TicksToSeconds(ticks - m_ntpDateOffsetTicks)
+
+        End Sub
+
+        ''' <summary>Creates new NTP timetag given standard .NET DateTime</summary>
+        ''' <param name="timestamp">.NET DateTime to create Unix timetag from (minimum valid date is 1/1/1900)</param>
+        Public Sub New(ByVal timestamp As Date)
+
+            MyClass.New(timestamp.Ticks)
 
         End Sub
 

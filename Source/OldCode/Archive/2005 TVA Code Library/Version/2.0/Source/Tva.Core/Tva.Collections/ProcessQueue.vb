@@ -720,7 +720,6 @@ Namespace Collections
                 m_realTimeProcessThread = New Thread(AddressOf RealTimeThreadProc)
                 m_realTimeProcessThread.Priority = ThreadPriority.Highest
                 m_realTimeProcessThread.Start()
-                IncrementThreadCount()
             Else
                 ' Start intervaled processing, if there items in the queue
                 m_processTimer.Enabled = (Count > 0)
@@ -737,11 +736,7 @@ Namespace Collections
 
             If m_processingIsRealTime Then
                 ' Stop real-time processing thread
-                If m_realTimeProcessThread IsNot Nothing Then
-                    m_realTimeProcessThread.Abort()
-                    DecrementThreadCount()
-                End If
-
+                If m_realTimeProcessThread IsNot Nothing Then m_realTimeProcessThread.Abort()
                 m_realTimeProcessThread = Nothing
             Else
                 ' Stop intervaled processing, if active

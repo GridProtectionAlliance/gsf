@@ -42,12 +42,20 @@ Namespace DateTime
 
         End Sub
 
-        ''' <summary>Creates new Unix timetag given standard .NET DateTime</summary>
-        ''' <param name="timestamp">.NET timestamp to create Unix timetag from (minimum valid date is 1/1/1970)</param>
-        Public Sub New(ByVal timestamp As Date)
+        ''' <summary>Creates new Unix timetag given standard .NET DateTime ticks</summary>
+        ''' <param name="ticks">.NET DateTime ticks to create Unix timetag from (minimum valid date is 1/1/1970)</param>
+        Public Sub New(ByVal ticks As Long)
 
             ' Zero base 100-nanosecond ticks from 1/1/1970 and convert to seconds
-            Value = TicksToSeconds(timestamp.Ticks - m_unixDateOffsetTicks)
+            Value = TicksToSeconds(ticks - m_unixDateOffsetTicks)
+
+        End Sub
+
+        ''' <summary>Creates new Unix timetag given standard .NET DateTime</summary>
+        ''' <param name="timestamp">.NET DateTime to create Unix timetag from (minimum valid date is 1/1/1970)</param>
+        Public Sub New(ByVal timestamp As Date)
+
+            MyClass.New(timestamp.Ticks)
 
         End Sub
 
