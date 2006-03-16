@@ -53,16 +53,16 @@ Namespace IO
 
         End Function
 
-        ''' <summary>Returns a buffer of the specified length</summary>
+        ''' <summary>Returns the specified portion of the source buffer</summary>
         ''' <remarks>This function will grow or shrink a buffer as needed to make it the desired length</remarks>
-        Public Shared Function TruncateBuffer(ByVal dataBuffer As Byte(), ByVal length As Integer) As Byte()
+        Public Shared Function CopyBuffer(ByVal buffer As Byte(), ByVal startIndex As Integer, ByVal length As Integer) As Byte()
 
-            If dataBuffer.Length = length Then
-                Return dataBuffer
+            If startIndex = 0 AndAlso Buffer.Length = length Then
+                Return buffer
             Else
-                Dim newBuffer As Byte() = Array.CreateInstance(GetType(Byte), length)
-                Buffer.BlockCopy(dataBuffer, 0, newBuffer, 0, length)
-                Return newBuffer
+                Dim copiedBytes As Byte() = Array.CreateInstance(GetType(Byte), length)
+                System.Buffer.BlockCopy(buffer, 0, copiedBytes, 0, length)
+                Return copiedBytes
             End If
 
         End Function

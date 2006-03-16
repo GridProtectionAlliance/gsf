@@ -171,7 +171,7 @@ Namespace Cryptography
 
             While read > 0
                 ' Encrypt buffer
-                outBuffer = Encrypt(TruncateBuffer(inBuffer, read), key, IV, strength)
+                outBuffer = Encrypt(CopyBuffer(inBuffer, 0, read), key, IV, strength)
 
                 ' The destination encryption stream length doesn't have to be same as the input stream length, so we
                 ' prepend the final size of each encrypted buffer onto the destination ouput stream so that we can

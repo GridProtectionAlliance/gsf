@@ -21,15 +21,25 @@ Namespace IeeeC37_118
     Public Interface IFrameHeader
 
         Property FrameType() As FrameType
+
         Property Version() As Byte
+
         Property FrameLength() As Int16
+
         Property IDCode() As UInt16
+
         Property Ticks() As Long
+
         Property TimeBase() As Int32
+
         Property InternalTimeQualityFlags() As Int32
+
         ReadOnly Property SecondOfCentury() As UInt32
+
         ReadOnly Property FractionOfSecond() As Int32
+
         Property TimeQualityFlags() As TimeQualityFlags
+
         Property TimeQualityIndicatorCode() As TimeQualityIndicatorCode
 
     End Interface

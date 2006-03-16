@@ -26,6 +26,123 @@ Namespace IeeeC37_118
     <CLSCompliant(False)> _
     Public NotInheritable Class FrameHeader
 
+#Region " Internal Frame Header Instance Class "
+
+        ' This class is used to temporarily hold parsed frame header
+        Private Class FrameHeaderInstance
+
+            Implements IFrameHeader
+
+            Private m_frameType As FrameType
+            Private m_version As Byte
+            Private m_frameLength As Int16
+            Private m_idCode As UInt16
+            Private m_ticks As Long
+            Private m_timeQualityFlags As Int32
+
+            Public ReadOnly Property This() As IFrameHeader
+                Get
+                    Return Me
+                End Get
+            End Property
+
+            Public Property FrameType() As FrameType Implements IFrameHeader.FrameType
+                Get
+                    Return m_frameType
+                End Get
+                Set(ByVal value As FrameType)
+                    m_frameType = value
+                End Set
+            End Property
+
+            Public Property Version() As Byte Implements IFrameHeader.Version
+                Get
+                    Return m_version
+                End Get
+                Set(ByVal value As Byte)
+                    m_version = value
+                End Set
+            End Property
+
+            Public Property FrameLength() As Short Implements IFrameHeader.FrameLength
+                Get
+                    Return m_frameLength
+                End Get
+                Set(ByVal value As Short)
+                    m_frameLength = value
+                End Set
+            End Property
+
+            Public Property IDCode() As UInt16 Implements IFrameHeader.IDCode
+                Get
+                    Return m_idCode
+                End Get
+                Set(ByVal value As UInt16)
+                    m_idCode = value
+                End Set
+            End Property
+
+            Public Property Ticks() As Long Implements IFrameHeader.Ticks
+                Get
+                    Return m_ticks
+                End Get
+                Set(ByVal value As Long)
+                    m_ticks = value
+                End Set
+            End Property
+
+            Private Property InternalTimeQualityFlags() As Int32 Implements IFrameHeader.InternalTimeQualityFlags
+                Get
+                    Return m_timeQualityFlags
+                End Get
+                Set(ByVal value As Int32)
+                    m_timeQualityFlags = value
+                End Set
+            End Property
+
+            Public ReadOnly Property SecondOfCentury() As UInt32 Implements IFrameHeader.SecondOfCentury
+                Get
+                    Return FrameHeader.SecondOfCentury(Me)
+                End Get
+            End Property
+
+            Public ReadOnly Property FractionOfSecond() As Int32 Implements IFrameHeader.FractionOfSecond
+                Get
+                    Return FrameHeader.FractionOfSecond(Me)
+                End Get
+            End Property
+
+            Public Property TimeQualityFlags() As TimeQualityFlags Implements IFrameHeader.TimeQualityFlags
+                Get
+                    Return FrameHeader.TimeQualityFlags(Me)
+                End Get
+                Set(ByVal value As TimeQualityFlags)
+                    FrameHeader.TimeQualityFlags(Me) = value
+                End Set
+            End Property
+
+            Public Property TimeQualityIndicatorCode() As TimeQualityIndicatorCode Implements IFrameHeader.TimeQualityIndicatorCode
+                Get
+                    Return FrameHeader.TimeQualityIndicatorCode(Me)
+                End Get
+                Set(ByVal value As TimeQualityIndicatorCode)
+                    FrameHeader.TimeQualityIndicatorCode(Me) = value
+                End Set
+            End Property
+
+            Public Property TimeBase() As Int32 Implements IFrameHeader.TimeBase
+                Get
+                    Return -1
+                End Get
+                Set(ByVal value As Int32)
+                    ' Nothing to do...
+                End Set
+            End Property
+
+        End Class
+
+#End Region
+
         Public Const BinaryLength As Int16 = 14
         Public Const TimeQualityFlagsMask As Integer = Bit31 Or Bit30 Or Bit29 Or Bit28 Or Bit27 Or Bit26 Or Bit25 Or Bit24
 
@@ -35,11 +152,11 @@ Namespace IeeeC37_118
 
         End Sub
 
-        Public Shared Sub ParseBinaryImage(ByVal frameHeader As IFrameHeader, ByVal configurationFrame As ConfigurationFrame, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+        Public Shared Function ParseBinaryImage(ByVal configurationFrame As ConfigurationFrame, ByVal binaryImage As Byte(), ByVal startIndex As Integer) As IFrameHeader
 
             If binaryImage(startIndex) <> Common.SyncByte Then Throw New InvalidOperationException("Bad Data Stream: Expected sync byte &HAA as first byte in C37.118 frame, got " & binaryImage(startIndex).ToString("x"c).PadLeft(2, "0"c))
 
-            With frameHeader
+            With New FrameHeaderInstance
                 ' Strip out frame type and version information...
                 .FrameType = (binaryImage(startIndex + 1) And Not FrameType.VersionNumberMask)
                 .Version = (binaryImage(startIndex + 1) And FrameType.VersionNumberMask)
@@ -47,7 +164,7 @@ Namespace IeeeC37_118
                 .FrameLength = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 2)
                 .IDCode = EndianOrder.BigEndian.ToUInt16(binaryImage, startIndex + 4)
 
-                Dim secondOfCentury As UInt32 = EndianOrder.BigEndian.ToUInt32(binaryImage, startIndex + 6)
+                Dim secondOfCentury As Double = EndianOrder.BigEndian.ToUInt32(binaryImage, startIndex + 6)
                 Dim fractionOfSecond As Int32 = EndianOrder.BigEndian.ToInt32(binaryImage, startIndex + 10)
 
                 If configurationFrame Is Nothing OrElse .FrameType = FrameType.ConfigurationFrame1 OrElse .FrameType = FrameType.ConfigurationFrame2 Then
@@ -58,9 +175,11 @@ Namespace IeeeC37_118
                 End If
 
                 .TimeQualityFlags = fractionOfSecond And TimeQualityFlagsMask
+
+                Return .This
             End With
 
-        End Sub
+        End Function
 
         Public Shared Function BinaryImage(ByVal frameHeader As IFrameHeader) As Byte()
 
@@ -114,7 +233,7 @@ Namespace IeeeC37_118
 
         Public Shared ReadOnly Property TimeTag(ByVal frameHeader As IFrameHeader) As UnixTimeTag
             Get
-                Return New UnixTimeTag(TicksToSeconds(frameHeader.Ticks))
+                Return New UnixTimeTag(frameHeader.Ticks)
             End Get
         End Property
 

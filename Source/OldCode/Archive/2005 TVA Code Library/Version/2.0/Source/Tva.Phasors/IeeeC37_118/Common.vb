@@ -84,7 +84,7 @@ Namespace IeeeC37_118
         ''' <summary>0001	1	Clock unlocked, time within 10^-9 s</summary>
         UnlockedWithinPoint000000001Seconds = Bit24
         ''' <summary>0000	0	Normal operation, clock locked</summary>
-        Normal = 0
+        Locked = 0
     End Enum
 
     ''' <summary>Frame type</summary>
