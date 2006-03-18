@@ -194,6 +194,17 @@ Namespace IeeeC37_118
         Manual = 0
     End Enum
 
+    ''' <summary>Analog types</summary>
+    Public Enum AnalogType As Byte
+        ''' <summary>Single point-on-wave</summary>
+        SinglePointOnWave = 0
+        ''' <summary>RMS of analog input</summary>
+        RmsOfAnalogInput = 1
+        ''' <summary>Peak of analog input</summary>
+        PeakOfAnalogInput = 2
+    End Enum
+
+
     <CLSCompliant(False)> _
     Public NotInheritable Class Common
 

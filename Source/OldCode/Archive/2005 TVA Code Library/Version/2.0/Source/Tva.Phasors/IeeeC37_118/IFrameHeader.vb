@@ -20,6 +20,8 @@ Namespace IeeeC37_118
     <CLSCompliant(False)> _
     Public Interface IFrameHeader
 
+        Property RevisionNumber() As RevisionNumber
+
         Property FrameType() As FrameType
 
         Property Version() As Byte

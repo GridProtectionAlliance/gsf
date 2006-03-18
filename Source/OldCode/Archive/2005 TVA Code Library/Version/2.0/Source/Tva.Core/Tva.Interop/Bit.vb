@@ -35,6 +35,15 @@ Namespace Interop
 
         End Sub
 
+        ''' <summary>No bits set (8-bit)</summary>
+        Public Const Nill As Byte = 0
+
+        ''' <summary>No bits set (16-bit)</summary>
+        Public Const Nill16 As Int16 = 0
+
+        ''' <summary>No bits set (32-bit)</summary>
+        Public Const Nill32 As Int32 = 0
+
         ' Byte 0, Bits 0-7
 
         ''' <summary>Bit 0 (0x00000001)</summary>

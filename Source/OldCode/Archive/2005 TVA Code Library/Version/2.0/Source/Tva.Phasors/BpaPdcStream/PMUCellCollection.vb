@@ -86,7 +86,7 @@ Namespace BpaPdcStream
         ' In order for PMU cells to be channel cells, they expect a parent frame so
         ' we make this parent cell collection act as a frame just providing readonly
         ' data from the real parent frame
-        Public ReadOnly Property Cells() As IChannelCellCollection(Of IChannelCell) Implements IChannelFrame.Cells
+        Public ReadOnly Property Cells() As Object Implements IChannelFrame.Cells
             Get
                 Return Me
             End Get

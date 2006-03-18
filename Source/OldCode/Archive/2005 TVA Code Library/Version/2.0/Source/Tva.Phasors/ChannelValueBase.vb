@@ -27,15 +27,11 @@ Public MustInherit Class ChannelValueBase(Of T As IChannelDefinition)
 
     Protected Sub New(ByVal parent As IDataCell)
 
-        MyBase.New()
-
         m_parent = parent
 
     End Sub
 
     Protected Sub New(ByVal parent As IDataCell, ByVal channelDefinition As T)
-
-        MyBase.New()
 
         m_parent = parent
         m_definition = channelDefinition

@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  FrameParser.vb - IEEE1344 Frame Parser
+'  FrameParser.vb - IEEE C37.118 Frame Parser
 '  Copyright © 2005 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2003
@@ -19,10 +19,12 @@ Imports System.IO
 Imports System.ComponentModel
 Imports Tva.Collections
 Imports Tva.IO.Common
+Imports Tva.Phasors.IeeeC37_118.Common
 
 Namespace IeeeC37_118
 
-    ' This class parses frames and returns the appropriate data via events
+    ''' <summary>This class parses an IEEE C37.118 binary data stream and returns parsed data via events</summary>
+    ''' <remarks>Frame parser is implemented as a write-only stream - this way data can come from any source</remarks>
     <CLSCompliant(False)> _
     Public Class FrameParser
 
@@ -41,13 +43,14 @@ Namespace IeeeC37_118
 
 #Region " Private Member Declarations "
 
-        Private m_bufferQueue As ProcessQueue(Of Byte())
+        Private m_revisionNumber As RevisionNumber
+        Private WithEvents m_bufferQueue As ProcessQueue(Of Byte())
         Private m_dataStream As MemoryStream
-        Private m_phasorFormat As CoordinateFormat
         Private m_totalFramesReceived As Long
         'Private m_headerFile As HeaderFile
         Private m_configFrame1 As ConfigurationFrame
         Private m_configFrame2 As ConfigurationFrame
+        Private m_initialized As Boolean
 
         Private Const BufferSize As Integer = 4096   ' 4Kb buffer
 
@@ -55,18 +58,10 @@ Namespace IeeeC37_118
 
 #Region " Construction Functions "
 
-        Public Sub New()
+        Public Sub New(ByVal revisionNumber As RevisionNumber)
 
+            m_revisionNumber = revisionNumber
             m_bufferQueue = ProcessQueue(Of Byte()).CreateRealTimeQueue(AddressOf ProcessBuffer)
-            m_bufferQueue.Start()
-            m_phasorFormat = CoordinateFormat.Rectangular
-
-        End Sub
-
-        Public Sub New(ByVal phasorFormat As CoordinateFormat)
-
-            MyClass.New()
-            m_phasorFormat = phasorFormat
 
         End Sub
 
@@ -74,39 +69,59 @@ Namespace IeeeC37_118
 
 #Region " Public Methods Implementation "
 
-        Public Property CoordinateFormat() As CoordinateFormat
+        Public Property RevisionNumber() As RevisionNumber
             Get
-                Return m_phasorFormat
+                Return m_revisionNumber
             End Get
-            Set(ByVal Value As CoordinateFormat)
-                m_phasorFormat = Value
+            Set(ByVal Value As RevisionNumber)
+                m_revisionNumber = Value
             End Set
         End Property
 
-        Public ReadOnly Property TotalFramesReceived() As Long
-            Get
-                Return m_totalFramesReceived
-            End Get
-        End Property
+        Public Sub Start()
 
-        Public Property Enabled() As Boolean
+            m_bufferQueue.Start()
+
+        End Sub
+
+        Public Sub [Stop]()
+
+            m_bufferQueue.Stop()
+
+        End Sub
+
+        Public ReadOnly Property Enabled() As Boolean
             Get
                 Return m_bufferQueue.Enabled
             End Get
-            Set(ByVal value As Boolean)
-                If value Then
-                    m_bufferQueue.Start()
+        End Property
+
+        Public ReadOnly Property TimeBase() As Integer
+            Get
+                If m_configFrame2 Is Nothing Then
+                    Return 0
                 Else
-                    m_bufferQueue.Stop()
+                    Return m_configFrame2.TimeBase
                 End If
-            End Set
+            End Get
         End Property
 
         ' Stream implementation overrides
         Public Overrides Sub Write(ByVal buffer As Byte(), ByVal offset As Integer, ByVal count As Integer)
 
-            ' Queue up received data buffer for real-time parsing and return to data collection as quickly as possible...
-            m_bufferQueue.Add(CopyBuffer(buffer, offset, count))
+            If m_initialized Then
+                ' Queue up received data buffer for real-time parsing and return to data collection as quickly as possible...
+                m_bufferQueue.Add(CopyBuffer(buffer, offset, count))
+            Else
+                ' Initial stream may be any where in the middle of a frame, so we attempt to locate sync byte to "line-up" data stream
+                Dim syncBytePosition As Integer = Array.IndexOf(buffer, SyncByte, offset, count)
+
+                If syncBytePosition > -1 Then
+                    ' Initialize data stream starting at located sync byte
+                    m_bufferQueue.Add(CopyBuffer(buffer, syncBytePosition, count - syncBytePosition))
+                    m_initialized = True
+                End If
+            End If
 
         End Sub
 
@@ -194,26 +209,27 @@ Namespace IeeeC37_118
             End If
 
             Do Until index >= buffer.Length
-                ' See if there is enough data in the buffer to compose a frame header
+                ' See if there is enough data in the buffer to parse a frame header
                 If index + FrameHeader.BinaryLength > buffer.Length Then
                     ' If not, save off remaining buffer to prepend onto next read
                     m_dataStream = New MemoryStream
-                    m_dataStream.Write(buffer, index, buffer.Length - index + 1)
+                    m_dataStream.Write(buffer, index, buffer.Length - index)
                     Exit Do
                 End If
 
                 ' Parse frame header
-                parsedFrameHeader = FrameHeader.ParseBinaryImage(m_configFrame2, buffer, index)
-                m_totalFramesReceived += 1
-                RaiseEvent ReceivedFrame(parsedFrameHeader, buffer, index)
+                parsedFrameHeader = FrameHeader.ParseBinaryImage(m_revisionNumber, m_configFrame2, buffer, index)
 
-                ' See if there is enough data in the buffer to compose the entire frame
+                ' See if there is enough data in the buffer to parse the entire frame
                 If index + parsedFrameHeader.FrameLength > buffer.Length Then
                     ' If not, save off remaining buffer to prepend onto next read
                     m_dataStream = New MemoryStream
-                    m_dataStream.Write(buffer, index, buffer.Length - index + 1)
+                    m_dataStream.Write(buffer, index, buffer.Length - index)
                     Exit Do
                 End If
+
+                ' Entire frame is availble, so we go ahead and parse it
+                RaiseEvent ReceivedFrame(parsedFrameHeader, buffer, index)
 
                 Select Case parsedFrameHeader.FrameType
                     Case FrameType.DataFrame
@@ -250,6 +266,12 @@ Namespace IeeeC37_118
 
                 index += parsedFrameHeader.FrameLength
             Loop
+
+        End Sub
+
+        Private Sub m_bufferQueue_ProcessException(ByVal ex As System.Exception) Handles m_bufferQueue.ProcessException
+
+            RaiseEvent DataStreamException(ex)
 
         End Sub
 

@@ -35,7 +35,7 @@ Public MustInherit Class DataCellBase
 
     Protected Sub New(ByVal parent As IDataFrame, ByVal alignOnDWordBoundry As Boolean, ByVal configurationCell As IConfigurationCell, ByVal maximumPhasors As Integer, ByVal maximumAnalogs As Integer, ByVal maximumDigitals As Integer)
 
-        MyBase.New(parent, 0, alignOnDWordBoundry)
+        MyBase.New(parent, alignOnDWordBoundry)
 
         m_configurationCell = configurationCell
         m_phasorValues = New PhasorValueCollection(maximumPhasors)
@@ -53,7 +53,7 @@ Public MustInherit Class DataCellBase
 
     Protected Sub New(ByVal parent As IDataFrame, ByVal alignOnDWordBoundry As Boolean, ByVal configurationCell As IConfigurationCell, ByVal statusFlags As Int16, ByVal phasorValues As PhasorValueCollection, ByVal frequencyValue As IFrequencyValue, ByVal analogValues As AnalogValueCollection, ByVal digitalValues As DigitalValueCollection)
 
-        MyBase.New(parent, 0, alignOnDWordBoundry)
+        MyBase.New(parent, alignOnDWordBoundry)
 
         m_configurationCell = configurationCell
         m_statusFlags = statusFlags
@@ -170,7 +170,7 @@ Public MustInherit Class DataCellBase
 
     Protected Overrides Sub ParseBodyImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
 
-        Dim parsingState As IDataCellParsingState = state
+        Dim parsingState As IDataCellParsingState = DirectCast(state, IDataCellParsingState)
         Dim x As Integer
 
         StatusFlags = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex)

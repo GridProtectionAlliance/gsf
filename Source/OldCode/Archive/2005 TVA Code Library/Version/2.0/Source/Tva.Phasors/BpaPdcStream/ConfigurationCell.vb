@@ -32,7 +32,7 @@ Namespace BpaPdcStream
 
         Public Sub New(ByVal parent As IConfigurationFrame, ByVal idCode As UInt16, ByVal nominalFrequency As LineFrequency)
 
-            MyBase.New(parent, idCode, True, MaximumPhasorValues, MaximumAnalogValues, MaximumDigitalValues, nominalFrequency)
+            MyBase.New(parent, True, idCode, nominalFrequency, MaximumPhasorValues, MaximumAnalogValues, MaximumDigitalValues)
 
         End Sub
 
@@ -44,10 +44,10 @@ Namespace BpaPdcStream
 
         ' This constructor satisfies ChannelCellBase class requirement:
         '   Final dervived classes must expose Public Sub New(ByVal parent As IChannelFrame, ByVal state As IChannelFrameParsingState, ByVal index As Integer, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
-        Public Sub New(ByVal parent As IConfigurationFrame, ByVal idCode As UInt16, ByVal nominalFrequency As LineFrequency, ByVal state As IConfigurationFrameParsingState, ByVal index As Integer, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+        Public Sub New(ByVal parent As IConfigurationFrame, ByVal state As IConfigurationFrameParsingState, ByVal index As Integer, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
 
             ' We don't pass in a ConfigurationCellParsingState here because it is not needed for PDCstream (see ParseBodyImage below)
-            MyBase.New(parent, idCode, True, MaximumPhasorValues, MaximumAnalogValues, MaximumDigitalValues, nominalFrequency, Nothing, binaryImage, startIndex)
+            MyBase.New(parent, True, MaximumPhasorValues, MaximumAnalogValues, MaximumDigitalValues, Nothing, binaryImage, startIndex)
 
         End Sub
 
@@ -87,7 +87,7 @@ Namespace BpaPdcStream
         ' other metadata is defined in an external INI based configuration file - so we
         ' override the base class image implementations which attempt to generate and
         ' parse data based on a common nature of configuration frames
-        Protected Overrides ReadOnly Property BodyLength() As Short
+        Protected Overrides ReadOnly Property BodyLength() As Int16
             Get
                 Return 8
             End Get

@@ -73,8 +73,8 @@ Namespace Ieee1344
 
         Public ReadOnly Property MaximumCalFactor() As Int32
             Get
-                ' CalFactor should fit within 3 bytes (i.e., 24 bits) of space
-                Return 2 ^ 24
+                ' Typical scaling/conversion factors should fit within 3 bytes (i.e., 24 bits) of space
+                Return &H1FFFFFF
             End Get
         End Property
 

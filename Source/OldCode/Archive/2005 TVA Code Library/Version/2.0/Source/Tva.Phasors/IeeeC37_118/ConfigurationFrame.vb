@@ -18,6 +18,8 @@
 Imports System.Text
 Imports Tva.Interop
 Imports Tva.DateTime
+Imports Tva.Collections.Common
+Imports Tva.Phasors.Common
 Imports Tva.Phasors.IeeeC37_118.Common
 
 Namespace IeeeC37_118
@@ -28,17 +30,28 @@ Namespace IeeeC37_118
         Inherits ConfigurationFrameBase
         Implements IFrameHeader
 
-        Private m_frameType As FrameType = IeeeC37_118.FrameType.ConfigurationFrame2
-        Private m_version As Byte = 1
-        Private m_frameLength As Int16
-        Private m_timeBase As Int32 = 10000
-        Private m_timeQualityFlags As Int32
         Private m_revisionNumber As RevisionNumber
+        Private m_frameType As FrameType
+        Private m_version As Byte
+        Private m_timeBase As Int32
+        Private m_timeQualityFlags As Int32
+        Private m_configurationRevision As UInt16
+
+        Public Sub New(ByVal revisionNumber As RevisionNumber, ByVal frameType As FrameType, ByVal timeBase As Int32, ByVal idCode As Int16, ByVal ticks As Long, ByVal frameRate As Int16)
+
+            MyBase.New(idCode, New ConfigurationCellCollection, ticks, frameRate)
+            m_revisionNumber = revisionNumber
+            Me.FrameType = frameType
+            m_timeBase = timeBase
+            m_version = IIf(Of Byte)(m_revisionNumber <= IeeeC37_118.RevisionNumber.RevisionV1, 1, 2)
+
+        End Sub
 
         Public Sub New(ByVal parsedFrameHeader As IFrameHeader, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
 
-            ' TODO: Define new static configuration cell creation function
-            MyBase.New(New ConfigurationFrameParsingState(New ConfigurationCellCollection, parsedFrameHeader.FrameLength, Nothing), binaryImage, startIndex)
+            MyBase.New(New ConfigurationFrameParsingState(New ConfigurationCellCollection, parsedFrameHeader.FrameLength, _
+                    AddressOf IeeeC37_118.ConfigurationCell.CreateNewConfigurationCell), binaryImage, startIndex)
+
             FrameHeader.Clone(parsedFrameHeader, Me)
 
         End Sub
@@ -61,12 +74,21 @@ Namespace IeeeC37_118
             End Get
         End Property
 
+        Public Property RevisionNumber() As RevisionNumber Implements IFrameHeader.RevisionNumber
+            Get
+                Return m_revisionNumber
+            End Get
+            Set(ByVal Value As RevisionNumber)
+                m_revisionNumber = Value
+            End Set
+        End Property
+
         Public Property FrameType() As FrameType Implements IFrameHeader.FrameType
             Get
                 Return m_frameType
             End Get
             Set(ByVal value As FrameType)
-                If value = IeeeC37_118.FrameType.ConfigurationFrame1 Or value = IeeeC37_118.FrameType.ConfigurationFrame2 Then
+                If value = IeeeC37_118.FrameType.ConfigurationFrame2 OrElse value = IeeeC37_118.FrameType.ConfigurationFrame1 Then
                     m_frameType = value
                 Else
                     Throw New InvalidCastException("Invalid frame type specified for configuration frame.  Can only be ConfigurationFrame1 or ConfigurationFrame2")
@@ -79,7 +101,7 @@ Namespace IeeeC37_118
                 Return m_version
             End Get
             Set(ByVal value As Byte)
-                FrameHeader.Version(Me) = value
+                m_version = FrameHeader.Version(Me, value)
             End Set
         End Property
 
@@ -115,7 +137,11 @@ Namespace IeeeC37_118
                 Return m_timeBase
             End Get
             Set(ByVal value As Int32)
-                m_timeBase = value
+                If value = 0 Then
+                    m_timeBase = 1
+                Else
+                    m_timeBase = value
+                End If
             End Set
         End Property
 
@@ -158,45 +184,78 @@ Namespace IeeeC37_118
             End Set
         End Property
 
-        Public Property RevisionNumber() As RevisionNumber
+        Public Property ConfigurationRevision() As UInt16
             Get
-                Return m_revisionNumber
+                Return m_configurationRevision
             End Get
-            Set(ByVal Value As RevisionNumber)
-                m_revisionNumber = Value
+            Set(ByVal value As UInt16)
+                m_configurationRevision = value
             End Set
         End Property
 
         Protected Overrides ReadOnly Property HeaderLength() As Int16
             Get
-                Return FrameHeader.BinaryLength
+                Return FrameHeader.BinaryLength + 6
             End Get
         End Property
 
         Protected Overrides ReadOnly Property HeaderImage() As Byte()
             Get
-                Return FrameHeader.BinaryImage(Me)
+                Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), HeaderLength)
+                Dim index As Integer
+
+                CopyImage(FrameHeader.BinaryImage(Me), buffer, index, FrameHeader.BinaryLength)
+                EndianOrder.BigEndian.CopyBytes(m_timeBase, buffer, index)
+                EndianOrder.BigEndian.CopyBytes(Convert.ToInt16(Cells.Count), buffer, index + 4)
+
+                Return buffer
             End Get
         End Property
 
         Protected Overrides Sub ParseHeaderImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
 
             ' We parse the C37.18 stream specific header image here...
-            'Dim configurationFrame As ConfigurationFrame = DirectCast(state, IDataFrameParsingState).ConfigurationFrame
             Dim parsingState As IConfigurationFrameParsingState = DirectCast(state, IConfigurationFrameParsingState)
 
-            If binaryImage(startIndex) <> Common.SyncByte Then
-                Throw New InvalidOperationException("Bad Data Stream: Expected sync byte &HAA as first byte in PDCstream configuration frame, got " & binaryImage(startIndex).ToString("x"c).PadLeft(2, "0"c))
-            End If
-
-            ' versionFrameType = binaryImage(startIndex + 1)
-
-            'ParsedFrameLength = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 2)
-            'IDCode = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 4)
-            'Ticks = (New UnixTimeTag(EndianOrder.BigEndian.ToInt32(binaryImage, startIndex + 6))).ToDateTime.Ticks
-            'FractionSec = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 10)
-            'TimeBase = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 14)
+            m_timeBase = EndianOrder.BigEndian.ToInt32(binaryImage, startIndex + 14)
             parsingState.CellCount = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 18)
+
+        End Sub
+
+        Protected Overrides ReadOnly Property FooterLength() As Int16
+            Get
+                If m_revisionNumber = RevisionNumber.RevisionD6 Then
+                    Return 2
+                Else
+                    Return 4
+                End If
+            End Get
+        End Property
+
+        Protected Overrides ReadOnly Property FooterImage() As Byte()
+            Get
+                Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), FooterLength)
+
+                EndianOrder.BigEndian.CopyBytes(FrameRate, buffer, 0)
+
+                If m_revisionNumber > RevisionNumber.RevisionD6 Then
+                    ' Add configuration revision count for version 7 and beyond
+                    EndianOrder.BigEndian.CopyBytes(m_configurationRevision, buffer, 2)
+                End If
+
+                Return buffer
+            End Get
+        End Property
+
+        Protected Overrides Sub ParseFooterImage(ByVal state As IChannelParsingState, ByVal binaryImage() As Byte, ByVal startIndex As Integer)
+
+            FrameRate = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex)
+
+            ' Parse out configuration revision count for version 7 and beyond
+            If m_revisionNumber > RevisionNumber.RevisionD6 Then
+                startIndex += 2
+                m_configurationRevision = EndianOrder.BigEndian.ToUInt16(binaryImage, startIndex)
+            End If
 
         End Sub
 

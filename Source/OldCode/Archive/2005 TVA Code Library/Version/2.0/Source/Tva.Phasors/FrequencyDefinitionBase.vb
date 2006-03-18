@@ -22,7 +22,7 @@ Public MustInherit Class FrequencyDefinitionBase
     Inherits ChannelDefinitionBase
     Implements IFrequencyDefinition
 
-    Private m_dfdtScale As Integer
+    Private m_dfdtScale As Int32
     Private m_dfdtOffset As Double
 
     Protected Sub New(ByVal parent As IConfigurationCell)
@@ -39,6 +39,12 @@ Public MustInherit Class FrequencyDefinitionBase
 
         Me.DfDtScalingFactor = dfdtScale
         m_dfdtOffset = dfdtOffset
+
+    End Sub
+
+    Protected Sub New(ByVal parent As IConfigurationCell, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+
+        MyBase.New(parent, binaryImage, startIndex)
 
     End Sub
 
@@ -65,20 +71,36 @@ Public MustInherit Class FrequencyDefinitionBase
         End Set
     End Property
 
-    Public Overridable Property DfDtScalingFactor() As Integer Implements IFrequencyDefinition.DfDtScalingFactor
+    Public Overridable Property DfDtScalingFactor() As Int32 Implements IFrequencyDefinition.DfDtScalingFactor
         Get
             Return m_dfdtScale
         End Get
-        Set(ByVal value As Integer)
+        Set(ByVal value As Int32)
             If value > MaximumDfDtScalingFactor Then Throw New OverflowException("DfDt scaling factor value cannot exceed " & MaximumDfDtScalingFactor)
             m_dfdtScale = value
         End Set
     End Property
 
+    Public Overridable Property DfDtConversionFactor() As Double
+        Get
+            Return DfDtScalingFactor * DfDtScalePerBit
+        End Get
+        Set(ByVal value As Double)
+            DfDtScalingFactor = Convert.ToInt32(value / DfDtScalePerBit)
+        End Set
+    End Property
+
+    Public Overridable ReadOnly Property DfDtScalePerBit() As Double
+        Get
+            ' Typical scale/bit is 10^-5
+            Return 0.00001
+        End Get
+    End Property
+
     Public Overridable ReadOnly Property MaximumDfDtScalingFactor() As Integer Implements IFrequencyDefinition.MaximumDfDtScalingFactor
         Get
             ' Typical scaling/conversion factors should fit within 3 bytes (i.e., 24 bits) of space
-            Return 2 ^ 24
+            Return &H1FFFFFF
         End Get
     End Property
 

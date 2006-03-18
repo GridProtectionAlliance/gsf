@@ -29,12 +29,11 @@ Namespace IeeeC37_118
 
         Inherits ConfigurationCellBase
 
-        Private m_configurationRevision As UInt16
         Private m_formatFlags As FormatFlags
 
-        Public Sub New(ByVal parent As IConfigurationFrame, ByVal idCode As UInt16, ByVal nominalFrequency As LineFrequency)
+        Public Sub New(ByVal parent As ConfigurationFrame, ByVal idCode As UInt16, ByVal nominalFrequency As LineFrequency)
 
-            MyBase.New(parent, idCode, False, MaximumPhasorValues, MaximumAnalogValues, MaximumDigitalValues, nominalFrequency)
+            MyBase.New(parent, False, idCode, nominalFrequency, MaximumPhasorValues, MaximumAnalogValues, MaximumDigitalValues)
 
         End Sub
 
@@ -46,12 +45,24 @@ Namespace IeeeC37_118
 
         ' This constructor satisfies ChannelCellBase class requirement:
         '   Final dervived classes must expose Public Sub New(ByVal parent As IChannelFrame, ByVal state As IChannelFrameParsingState, ByVal index As Integer, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
-        Public Sub New(ByVal parent As IConfigurationFrame, ByVal idCode As UInt16, ByVal nominalFrequency As LineFrequency, ByVal state As IConfigurationFrameParsingState, ByVal index As Integer, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+        Public Sub New(ByVal parent As IConfigurationFrame, ByVal state As IConfigurationFrameParsingState, ByVal index As Integer, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
 
-            ' Define static creation functions for all configuration cell definition types
-            MyBase.New(parent, idCode, False, MaximumPhasorValues, MaximumAnalogValues, MaximumDigitalValues, nominalFrequency, New ConfigurationCellParsingState(Nothing, Nothing, Nothing, Nothing), binaryImage, startIndex)
+            ' We pass in defaults for id code and nominal frequency since these will be parsed out later
+            MyBase.New(parent, False, MaximumPhasorValues, MaximumAnalogValues, MaximumDigitalValues, _
+                New ConfigurationCellParsingState( _
+                    AddressOf IeeeC37_118.PhasorDefinition.CreateNewPhasorDefintion, _
+                    AddressOf IeeeC37_118.FrequencyDefinition.CreateNewFrequencyDefintion, _
+                    AddressOf IeeeC37_118.AnalogDefinition.CreateNewAnalogDefintion, _
+                    AddressOf IeeeC37_118.DigitalDefinition.CreateNewDigitalDefintion), _
+                binaryImage, startIndex)
 
         End Sub
+
+        Friend Shared Function CreateNewConfigurationCell(ByVal parent As IChannelFrame, ByVal state As IChannelFrameParsingState(Of IConfigurationCell), ByVal index As Integer, ByVal binaryImage As Byte(), ByVal startIndex As Integer) As IConfigurationCell
+
+            Return New ConfigurationCell(parent, state, index, binaryImage, startIndex)
+
+        End Function
 
         ' TODO: May want to shadow all parents in final derived classes - also go through code and make sure all MustInherit class properties are overridable
         Public Shadows ReadOnly Property Parent() As ConfigurationFrame
@@ -66,15 +77,6 @@ Namespace IeeeC37_118
             End Get
         End Property
 
-        Public Property ConfigurationRevision() As UInt16
-            Get
-                Return m_configurationRevision
-            End Get
-            Set(ByVal value As UInt16)
-                m_configurationRevision = value
-            End Set
-        End Property
-
         Public Property FormatFlags() As FormatFlags
             Get
                 Return m_formatFlags
@@ -84,19 +86,19 @@ Namespace IeeeC37_118
 
                 ' Propogate new settings to all configuration definitions...
                 For Each phasorDefinition As IPhasorDefinition In PhasorDefinitions
-                    phasorDefinition.DataFormat = IIf(Of DataFormat)(value And IeeeC37_118.FormatFlags.Phasors > 0, DataFormat.FloatingPoint, DataFormat.FixedInteger)
-                    phasorDefinition.CoordinateFormat = IIf(Of CoordinateFormat)(value And IeeeC37_118.FormatFlags.Coordinates > 0, CoordinateFormat.Polar, CoordinateFormat.Rectangular)
+                    phasorDefinition.DataFormat = IIf(value And IeeeC37_118.FormatFlags.Phasors > 0, DataFormat.FloatingPoint, DataFormat.FixedInteger)
+                    phasorDefinition.CoordinateFormat = IIf(value And IeeeC37_118.FormatFlags.Coordinates > 0, CoordinateFormat.Polar, CoordinateFormat.Rectangular)
                 Next
 
-                FrequencyDefinition.DataFormat = IIf(Of DataFormat)(value And IeeeC37_118.FormatFlags.Frequency > 0, DataFormat.FloatingPoint, DataFormat.FixedInteger)
+                FrequencyDefinition.DataFormat = IIf(value And IeeeC37_118.FormatFlags.Frequency > 0, DataFormat.FloatingPoint, DataFormat.FixedInteger)
 
                 For Each analogDefinition As IAnalogDefinition In AnalogDefinitions
-                    analogDefinition.DataFormat = IIf(Of DataFormat)(value And IeeeC37_118.FormatFlags.Analog > 0, DataFormat.FloatingPoint, DataFormat.FixedInteger)
+                    analogDefinition.DataFormat = IIf(value And IeeeC37_118.FormatFlags.Analog > 0, DataFormat.FloatingPoint, DataFormat.FixedInteger)
                 Next
             End Set
         End Property
 
-        Protected Overrides ReadOnly Property HeaderLength() As Short
+        Protected Overrides ReadOnly Property HeaderLength() As Int16
             Get
                 Return MyBase.HeaderLength + 10
             End Get
@@ -122,6 +124,7 @@ Namespace IeeeC37_118
 
             Dim parsingState As IConfigurationCellParsingState = DirectCast(state, IConfigurationCellParsingState)
 
+            ' Parse out station name
             MyBase.ParseHeaderImage(state, binaryImage, startIndex)
             startIndex += MyBase.HeaderLength
 
@@ -136,27 +139,41 @@ Namespace IeeeC37_118
 
         End Sub
 
-        Protected Overrides ReadOnly Property FooterLength() As Short
+        Protected Overrides ReadOnly Property FooterLength() As Int16
             Get
-                If Parent.RevisionNumber = RevisionNumber.RevisionD6 Then
-                    Return MyBase.FooterLength
-                Else
-                    Return 2 + MyBase.FooterLength
-                End If
+                Return MyBase.FooterLength + _
+                    PhasorDefinitions.Count * PhasorDefinition.ConversionFactorLength + _
+                    AnalogDefinitions.Count * AnalogDefinition.ConversionFactorLength + _
+                    DigitalDefinitions.Count * DigitalDefinition.ConversionFactorLength
             End Get
         End Property
 
         Protected Overrides ReadOnly Property FooterImage() As Byte()
             Get
                 Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), FooterLength)
-                Dim index As Integer
+                Dim x, index As Integer
 
+                ' Include conversion factors in configuration cell footer
+                With PhasorDefinitions
+                    For x = 0 To .Count - 1
+                        CopyImage(DirectCast(.Item(x), PhasorDefinition).ConversionFactorImage, buffer, index, PhasorDefinition.ConversionFactorLength)
+                    Next
+                End With
+
+                With AnalogDefinitions
+                    For x = 0 To .Count - 1
+                        CopyImage(DirectCast(.Item(x), AnalogDefinition).ConversionFactorImage, buffer, index, AnalogDefinition.ConversionFactorLength)
+                    Next
+                End With
+
+                With DigitalDefinitions
+                    For x = 0 To .Count - 1
+                        CopyImage(DirectCast(.Item(x), DigitalDefinition).ConversionFactorImage, buffer, index, DigitalDefinition.ConversionFactorLength)
+                    Next
+                End With
+
+                ' Include nominal frequency
                 CopyImage(MyBase.FooterImage, buffer, index, MyBase.FooterLength)
-
-                If Parent.RevisionNumber > RevisionNumber.RevisionD6 Then
-                    ' Add configuration revision count for version 7 and beyond
-                    EndianOrder.BigEndian.CopyBytes(m_configurationRevision, buffer, index)
-                End If
 
                 Return buffer
             End Get
@@ -164,20 +181,32 @@ Namespace IeeeC37_118
 
         Protected Overrides Sub ParseFooterImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
 
-            'Dim parsingState As IConfigurationCellParsingState = state
+            Dim x As Integer
 
-            ' Parse PHUNIT
-            ' Parse ANUNIT
-            ' Parse DIGUNIT
+            ' Parse conversion factors from configuration cell footer
+            With PhasorDefinitions
+                For x = 0 To .Count - 1
+                    DirectCast(.Item(x), PhasorDefinition).ParseConversionFactor(binaryImage, startIndex)
+                    startIndex += PhasorDefinition.ConversionFactorLength
+                Next
+            End With
+
+            With AnalogDefinitions
+                For x = 0 To .Count - 1
+                    DirectCast(.Item(x), AnalogDefinition).ParseConversionFactor(binaryImage, startIndex)
+                    startIndex += AnalogDefinition.ConversionFactorLength
+                Next
+            End With
+
+            With DigitalDefinitions
+                For x = 0 To .Count - 1
+                    DirectCast(.Item(x), DigitalDefinition).ParseConversionFactor(binaryImage, startIndex)
+                    startIndex += DigitalDefinition.ConversionFactorLength
+                Next
+            End With
 
             ' Parse nominal frequency
             MyBase.ParseFooterImage(state, binaryImage, startIndex)
-
-            If Parent.RevisionNumber > RevisionNumber.RevisionD6 Then
-                ' Parse out configuration revision count for version 7 and beyond
-                startIndex += 2
-                m_configurationRevision = EndianOrder.BigEndian.ToUInt16(binaryImage, startIndex)
-            End If
 
         End Sub
 

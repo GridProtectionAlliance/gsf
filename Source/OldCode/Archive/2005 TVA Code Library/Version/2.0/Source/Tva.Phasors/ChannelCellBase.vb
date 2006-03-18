@@ -26,11 +26,17 @@ Public MustInherit Class ChannelCellBase
     Private m_idCode As UInt16
     Private m_alignOnDWordBoundry As Boolean
 
-    Protected Sub New(ByVal parent As IChannelFrame, ByVal idCode As UInt16, ByVal alignOnDWordBoundry As Boolean)
+    Protected Sub New(ByVal parent As IChannelFrame, ByVal alignOnDWordBoundry As Boolean)
 
         m_parent = parent
-        m_idCode = idCode
         m_alignOnDWordBoundry = alignOnDWordBoundry
+
+    End Sub
+
+    Protected Sub New(ByVal parent As IChannelFrame, ByVal alignOnDWordBoundry As Boolean, ByVal idCode As UInt16)
+
+        MyClass.New(parent, alignOnDWordBoundry)
+        m_idCode = idCode
 
     End Sub
 
@@ -39,7 +45,7 @@ Public MustInherit Class ChannelCellBase
     ' Derived classes are expected to expose a Protected Sub New(ByVal channelCell As IChannelCell)
     Protected Sub New(ByVal channelCell As IChannelCell)
 
-        MyClass.New(channelCell.Parent, channelCell.IDCode, channelCell.AlignOnDWordBoundry)
+        MyClass.New(channelCell.Parent, channelCell.AlignOnDWordBoundry, channelCell.IDCode)
 
     End Sub
 

@@ -359,7 +359,7 @@ Namespace BpaPdcStream
 
         End Function
 
-        Protected Overrides ReadOnly Property HeaderLength() As Short
+        Protected Overrides ReadOnly Property HeaderLength() As Int16
             Get
                 Return 16
             End Get

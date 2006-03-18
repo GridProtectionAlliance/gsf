@@ -31,12 +31,14 @@ Public MustInherit Class ChannelBase
         End Get
     End Property
 
+    ' This property is not typically overriden
     Public Overridable ReadOnly Property BinaryLength() As Int16 Implements IChannel.BinaryLength
         Get
             Return HeaderLength + BodyLength + FooterLength
         End Get
     End Property
 
+    ' This property is not typically overriden
     Public Overridable ReadOnly Property BinaryImage() As Byte() Implements IChannel.BinaryImage
         Get
             Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BinaryLength)
@@ -51,6 +53,7 @@ Public MustInherit Class ChannelBase
         End Get
     End Property
 
+    ' This property is not typically overriden
     Protected Overridable Sub ParseBinaryImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Integer) Implements IChannel.ParseBinaryImage
 
         ' Parse out header, body and footer images

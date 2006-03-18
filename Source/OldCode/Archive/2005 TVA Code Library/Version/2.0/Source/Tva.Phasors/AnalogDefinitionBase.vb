@@ -34,6 +34,12 @@ Public MustInherit Class AnalogDefinitionBase
 
     End Sub
 
+    Protected Sub New(ByVal parent As IConfigurationCell, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+
+        MyBase.New(parent, binaryImage, startIndex)
+
+    End Sub
+
     ' Derived classes are expected to expose a Public Sub New(ByVal analogDefinition As IAnalogDefinition)
     Protected Sub New(ByVal analogDefinition As IAnalogDefinition)
 

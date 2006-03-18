@@ -18,6 +18,7 @@
 Imports System.Text
 Imports Tva.Interop
 Imports Tva.Interop.Bit
+Imports Tva.Collections.Common
 
 Namespace IeeeC37_118
 
@@ -34,11 +35,13 @@ Namespace IeeeC37_118
 
         Public Sub New(ByVal parent As ConfigurationCell, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
 
-            MyBase.New(parent)
+            MyBase.New(parent, binaryImage, startIndex)
 
-            Dim nominalFrequencyFlags As Int16 = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex)
+        End Sub
 
-            parent.NominalFrequency = IIf(nominalFrequencyFlags And Bit0 > 0, LineFrequency.Hz50, LineFrequency.Hz60)
+        Public Sub New(ByVal parent As ConfigurationCell, ByVal dataFormat As DataFormat, ByVal index As Integer, ByVal label As String, ByVal scale As Integer, ByVal offset As Double, ByVal dfdtScale As Double, ByVal dfdtOffset As Double)
+
+            MyBase.New(parent, dataFormat, index, label, scale, offset, dfdtScale, dfdtOffset)
 
         End Sub
 
@@ -48,11 +51,35 @@ Namespace IeeeC37_118
 
         End Sub
 
+        Friend Shared Function CreateNewFrequencyDefintion(ByVal parent As IConfigurationCell, ByVal binaryImage As Byte(), ByVal startIndex As Integer) As IFrequencyDefinition
+
+            Return New FrequencyDefinition(parent, binaryImage, startIndex)
+
+        End Function
+
         Public Overrides ReadOnly Property InheritedType() As System.Type
             Get
                 Return Me.GetType
             End Get
         End Property
+
+        Protected Overrides ReadOnly Property BodyLength() As Short
+            Get
+                Return 2
+            End Get
+        End Property
+
+        Protected Overrides ReadOnly Property BodyImage() As Byte()
+            Get
+                Return EndianOrder.BigEndian.GetBytes(Convert.ToInt16(IIf(Parent.NominalFrequency = LineFrequency.Hz50, Bit0, Nill)))
+            End Get
+        End Property
+
+        Protected Overrides Sub ParseBodyImage(ByVal state As IChannelParsingState, ByVal binaryImage() As Byte, ByVal startIndex As Integer)
+
+            Parent.NominalFrequency = IIf(EndianOrder.BigEndian.ToInt16(binaryImage, startIndex) And Bit0 > 0, LineFrequency.Hz50, LineFrequency.Hz60)
+
+        End Sub
 
     End Class
 

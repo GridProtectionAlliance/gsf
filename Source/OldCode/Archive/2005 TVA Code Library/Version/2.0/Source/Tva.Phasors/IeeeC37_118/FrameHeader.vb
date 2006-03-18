@@ -33,17 +33,34 @@ Namespace IeeeC37_118
 
             Implements IFrameHeader
 
+            Private m_revisionNumber As RevisionNumber
             Private m_frameType As FrameType
             Private m_version As Byte
             Private m_frameLength As Int16
             Private m_idCode As UInt16
             Private m_ticks As Long
             Private m_timeQualityFlags As Int32
+            Private m_timeBase As Int32
+
+            Public Sub New(ByVal revisionNumber As RevisionNumber)
+
+                m_revisionNumber = revisionNumber
+
+            End Sub
 
             Public ReadOnly Property This() As IFrameHeader
                 Get
                     Return Me
                 End Get
+            End Property
+
+            Public Property RevisionNumber() As RevisionNumber Implements IFrameHeader.RevisionNumber
+                Get
+                    Return m_revisionNumber
+                End Get
+                Set(ByVal Value As RevisionNumber)
+                    m_revisionNumber = Value
+                End Set
             End Property
 
             Public Property FrameType() As FrameType Implements IFrameHeader.FrameType
@@ -132,10 +149,10 @@ Namespace IeeeC37_118
 
             Public Property TimeBase() As Int32 Implements IFrameHeader.TimeBase
                 Get
-                    Return -1
+                    Return m_timeBase
                 End Get
                 Set(ByVal value As Int32)
-                    ' Nothing to do...
+                    m_timeBase = value
                 End Set
             End Property
 
@@ -152,11 +169,11 @@ Namespace IeeeC37_118
 
         End Sub
 
-        Public Shared Function ParseBinaryImage(ByVal configurationFrame As ConfigurationFrame, ByVal binaryImage As Byte(), ByVal startIndex As Integer) As IFrameHeader
+        Public Shared Function ParseBinaryImage(ByVal revisionNumber As RevisionNumber, ByVal configurationFrame As ConfigurationFrame, ByVal binaryImage As Byte(), ByVal startIndex As Integer) As IFrameHeader
 
             If binaryImage(startIndex) <> Common.SyncByte Then Throw New InvalidOperationException("Bad Data Stream: Expected sync byte &HAA as first byte in C37.118 frame, got " & binaryImage(startIndex).ToString("x"c).PadLeft(2, "0"c))
 
-            With New FrameHeaderInstance
+            With New FrameHeaderInstance(revisionNumber)
                 ' Strip out frame type and version information...
                 .FrameType = (binaryImage(startIndex + 1) And Not FrameType.VersionNumberMask)
                 .Version = (binaryImage(startIndex + 1) And FrameType.VersionNumberMask)
@@ -201,6 +218,7 @@ Namespace IeeeC37_118
         Public Shared Sub Clone(ByVal sourceFrameHeader As IFrameHeader, ByVal destinationFrameHeader As IFrameHeader)
 
             With destinationFrameHeader
+                .RevisionNumber = sourceFrameHeader.RevisionNumber
                 .FrameType = sourceFrameHeader.FrameType
                 .Version = sourceFrameHeader.Version
                 .FrameLength = sourceFrameHeader.FrameLength
@@ -212,37 +230,37 @@ Namespace IeeeC37_118
 
         End Sub
 
-        Public Shared WriteOnly Property Version(ByVal frameHeader As IFrameHeader) As Byte
-            Set(ByVal value As Byte)
-                frameHeader.Version = value And FrameType.VersionNumberMask
-            End Set
+        Public Shared ReadOnly Property Version(ByVal frameHeader As IFrameHeader, ByVal newVersion As Byte) As Byte
+            Get
+                Return newVersion And FrameType.VersionNumberMask
+            End Get
         End Property
 
         Public Shared ReadOnly Property SecondOfCentury(ByVal frameHeader As IFrameHeader) As UInt32
             Get
-                Return System.Math.Floor(TimeTag(frameHeader).Value)
+                Return System.Math.Floor(TimeTag(FrameHeader).Value)
             End Get
         End Property
 
         Public Shared ReadOnly Property FractionOfSecond(ByVal frameHeader As IFrameHeader) As Int32
             Get
-                Dim seconds As Double = TimeTag(frameHeader).Value
-                Return (seconds - System.Math.Floor(seconds)) * frameHeader.TimeBase
+                Dim seconds As Double = TimeTag(FrameHeader).Value
+                Return (seconds - System.Math.Floor(seconds)) * FrameHeader.TimeBase
             End Get
         End Property
 
         Public Shared ReadOnly Property TimeTag(ByVal frameHeader As IFrameHeader) As UnixTimeTag
             Get
-                Return New UnixTimeTag(frameHeader.Ticks)
+                Return New UnixTimeTag(FrameHeader.Ticks)
             End Get
         End Property
 
         Public Shared Property TimeQualityFlags(ByVal frameHeader As IFrameHeader) As IeeeC37_118.TimeQualityFlags
             Get
-                Return frameHeader.InternalTimeQualityFlags And Not TimeQualityFlags.TimeQualityIndicatorMask
+                Return FrameHeader.InternalTimeQualityFlags And Not TimeQualityFlags.TimeQualityIndicatorMask
             End Get
             Set(ByVal value As IeeeC37_118.TimeQualityFlags)
-                With frameHeader
+                With FrameHeader
                     .InternalTimeQualityFlags = (.InternalTimeQualityFlags And IeeeC37_118.TimeQualityFlags.TimeQualityIndicatorMask) Or value
                 End With
             End Set
@@ -250,10 +268,10 @@ Namespace IeeeC37_118
 
         Public Shared Property TimeQualityIndicatorCode(ByVal frameHeader As IFrameHeader) As IeeeC37_118.TimeQualityIndicatorCode
             Get
-                Return frameHeader.InternalTimeQualityFlags And IeeeC37_118.TimeQualityFlags.TimeQualityIndicatorMask
+                Return FrameHeader.InternalTimeQualityFlags And IeeeC37_118.TimeQualityFlags.TimeQualityIndicatorMask
             End Get
             Set(ByVal value As IeeeC37_118.TimeQualityIndicatorCode)
-                With frameHeader
+                With FrameHeader
                     .InternalTimeQualityFlags = (.InternalTimeQualityFlags And Not IeeeC37_118.TimeQualityFlags.TimeQualityIndicatorMask) Or value
                 End With
             End Set

@@ -16,6 +16,7 @@
 '*******************************************************************************************************
 
 Imports System.Text
+Imports Tva.Interop.Bit
 Imports Tva.Phasors.Common
 
 ' This class represents the common implementation of the protocol independent definition of any kind of data.
@@ -34,8 +35,6 @@ Public MustInherit Class ChannelDefinitionBase
 
     Protected Sub New(ByVal parent As IConfigurationCell)
 
-        MyBase.New()
-
         m_parent = parent
         m_dataFormat = DataFormat.FixedInteger
         m_label = "undefined"
@@ -45,14 +44,19 @@ Public MustInherit Class ChannelDefinitionBase
 
     Protected Sub New(ByVal parent As IConfigurationCell, ByVal dataFormat As DataFormat, ByVal index As Integer, ByVal label As String, ByVal scale As Integer, ByVal offset As Double)
 
-        MyBase.New()
-
         m_parent = parent
         m_dataFormat = dataFormat
         m_index = index
         Me.Label = label
         m_scale = scale
         m_offset = offset
+
+    End Sub
+
+    Protected Sub New(ByVal parent As IConfigurationCell, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+
+        m_parent = parent
+        ParseBinaryImage(Nothing, binaryImage, startIndex)
 
     End Sub
 
@@ -107,10 +111,26 @@ Public MustInherit Class ChannelDefinitionBase
         End Set
     End Property
 
+    Public Overridable Property ConversionFactor() As Double
+        Get
+            Return ScalingFactor * ScalePerBit
+        End Get
+        Set(ByVal value As Double)
+            ScalingFactor = Convert.ToInt32(value / ScalePerBit)
+        End Set
+    End Property
+
+    Public Overridable ReadOnly Property ScalePerBit() As Double
+        Get
+            ' Typical scale/bit is 10^-5
+            Return 0.00001
+        End Get
+    End Property
+
     Public Overridable ReadOnly Property MaximumScalingFactor() As Integer Implements IChannelDefinition.MaximumScalingFactor
         Get
             ' Typical scaling/conversion factors should fit within 3 bytes (i.e., 24 bits) of space
-            Return 2 ^ 24
+            Return &H1FFFFFF
         End Get
     End Property
 
@@ -119,10 +139,12 @@ Public MustInherit Class ChannelDefinitionBase
             Return m_label
         End Get
         Set(ByVal value As String)
-            If Len(Trim(value)) > MaximumLabelLength Then
+            If String.IsNullOrEmpty(value) Then value = "undefined"
+
+            If value.Trim().Length > MaximumLabelLength Then
                 Throw New OverflowException("Label length cannot exceed " & MaximumLabelLength)
             Else
-                m_label = Trim(Replace(value, Chr(20), " "))
+                m_label = value.Replace(Chr(20), " "c).Trim()
             End If
         End Set
     End Property
@@ -142,16 +164,16 @@ Public MustInherit Class ChannelDefinitionBase
 
     Public Overridable Function CompareTo(ByVal obj As Object) As Integer Implements IComparable.CompareTo
 
-        ' We sort phasor defintions by index
+        ' We sort channel defintions by index
         If TypeOf obj Is IChannelDefinition Then
             Return Index.CompareTo(DirectCast(obj, IChannelDefinition).Index)
         Else
-            Throw New ArgumentException("PhasorDefinition can only be compared to other PhasorDefinitions")
+            Throw New ArgumentException("ChannelDefinition can only be compared to other IChannelDefinitions")
         End If
 
     End Function
 
-    Protected Overrides ReadOnly Property BodyLength() As Int16
+    Protected Overrides ReadOnly Property BodyLength() As Short
         Get
             Return MaximumLabelLength
         End Get
@@ -159,12 +181,14 @@ Public MustInherit Class ChannelDefinitionBase
 
     Protected Overrides ReadOnly Property BodyImage() As Byte()
         Get
-            Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BodyLength)
-
-            CopyImage(LabelImage, buffer, Index, MaximumLabelLength)
-
-            Return buffer
+            Return LabelImage
         End Get
     End Property
+
+    Protected Overrides Sub ParseBodyImage(ByVal state As IChannelParsingState, ByVal binaryImage() As Byte, ByVal startIndex As Integer)
+
+        Label = Encoding.ASCII.GetString(binaryImage, startIndex, MaximumLabelLength)
+
+    End Sub
 
 End Class

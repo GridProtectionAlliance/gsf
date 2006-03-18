@@ -23,7 +23,7 @@ Public Interface IChannelFrame
 
     Inherits IChannel
 
-    ReadOnly Property Cells() As IChannelCellCollection(Of IChannelCell)
+    ReadOnly Property Cells() As Object
 
     Property IDCode() As UInt16
 

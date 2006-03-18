@@ -71,7 +71,7 @@ Public MustInherit Class DataFrameBase
             Return m_configurationFrame.IDCode
         End Get
         Set(ByVal value As UInt16)
-            Throw New NotSupportedException("Cannot change IDCode of a data frame, change IDCode is associated configuration frame instead")
+            Throw New NotSupportedException("IDCode of a data frame is read-only, change IDCode of associated configuration frame instead")
         End Set
     End Property
 

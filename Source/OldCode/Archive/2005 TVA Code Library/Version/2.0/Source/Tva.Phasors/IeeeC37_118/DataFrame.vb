@@ -24,21 +24,19 @@ Namespace IeeeC37_118
         Inherits DataFrameBase
         Implements IFrameHeader
 
-        Private m_frameType As FrameType = IeeeC37_118.FrameType.DataFrame
-        Private m_version As Byte = 1
-        Private m_frameLength As Int16
-        Private m_timeBase As Int32 = 10000
         Private m_timeQualityFlags As Int32
 
-        Public Sub New()
+        Public Sub New(ByVal ticks As Long, ByVal configurationFrame As ConfigurationFrame)
 
-            MyBase.New(New DataCellCollection)
+            MyBase.New(New DataCellCollection, ticks, configurationFrame)
 
         End Sub
 
-        Public Sub New(ByVal parsedFrameHeader As IFrameHeader, ByVal configurationFrame As IConfigurationFrame, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+        Public Sub New(ByVal parsedFrameHeader As IFrameHeader, ByVal configurationFrame As ConfigurationFrame, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
 
-            MyBase.New(New DataFrameParsingState(New DataCellCollection, parsedFrameHeader.FrameLength, configurationFrame, AddressOf IeeeC37_118.DataCell.CreateNewDataCell), binaryImage, startIndex)
+            MyBase.New(New DataFrameParsingState(New DataCellCollection, parsedFrameHeader.FrameLength, configurationFrame, _
+                AddressOf IeeeC37_118.DataCell.CreateNewDataCell), binaryImage, startIndex)
+
             FrameHeader.Clone(parsedFrameHeader, Me)
 
         End Sub
@@ -61,26 +59,36 @@ Namespace IeeeC37_118
             End Get
         End Property
 
+        Public Property RevisionNumber() As RevisionNumber Implements IFrameHeader.RevisionNumber
+            Get
+                Return ConfigurationFrame.RevisionNumber
+            End Get
+            Friend Set(ByVal value As RevisionNumber)
+                ' Revision number is readonly for data frames - we don't throw an exception here if someone attempts to change
+                ' the revision number on a data frame (e.g., the FrameHeader.Clone method will attempt to copy this property)
+                ' but we don't do anything with the value either.
+            End Set
+        End Property
+
         Public Property FrameType() As FrameType Implements IFrameHeader.FrameType
             Get
-                Return m_frameType
+                Return IeeeC37_118.FrameType.DataFrame
             End Get
             Friend Set(ByVal value As FrameType)
-                ' This value should typically not be changed - but FrameHeader.Clone copies the property, so we allow it internally
-                If value = IeeeC37_118.FrameType.DataFrame Then
-                    m_frameType = value
-                Else
-                    Throw New InvalidCastException("Invalid frame type specified for data frame.  Can only be DataFrame.")
-                End If
+                ' Frame type is readonly for data frames - we don't throw an exception here if someone attempts to change
+                ' the frame type on a data frame (e.g., the FrameHeader.Clone method will attempt to copy this property)
+                ' but we don't do anything with the value either.
             End Set
         End Property
 
         Public Property Version() As Byte Implements IFrameHeader.Version
             Get
-                Return m_version
+                Return ConfigurationFrame.Version
             End Get
-            Set(ByVal value As Byte)
-                FrameHeader.Version(Me) = value
+            Friend Set(ByVal value As Byte)
+                ' Version number is readonly for data frames - we don't throw an exception here if someone attempts to change
+                ' the version number on a data frame (e.g., the FrameHeader.Clone method will attempt to copy this property)
+                ' but we don't do anything with the value either.
             End Set
         End Property
 
@@ -98,7 +106,9 @@ Namespace IeeeC37_118
                 Return MyBase.IDCode
             End Get
             Set(ByVal value As UShort)
-                MyBase.IDCode = value
+                ' ID code is readonly for data frames - we don't throw an exception here if someone attempts to change
+                ' the ID code on a data frame (e.g., the FrameHeader.Clone method will attempt to copy this property)
+                ' but we don't do anything with the value either.
             End Set
         End Property
 

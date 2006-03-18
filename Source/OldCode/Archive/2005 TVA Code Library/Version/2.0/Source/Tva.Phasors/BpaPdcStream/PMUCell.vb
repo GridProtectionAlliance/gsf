@@ -33,7 +33,7 @@ Namespace BpaPdcStream
 
         Public Sub New(ByVal parent As PMUCellCollection)
 
-            MyBase.New(parent, parent.IDCode, True)
+            MyBase.New(parent, True, parent.IDCode)
 
         End Sub
 

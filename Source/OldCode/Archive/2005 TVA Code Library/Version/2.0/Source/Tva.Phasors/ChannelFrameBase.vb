@@ -38,16 +38,12 @@ Public MustInherit Class ChannelFrameBase(Of T As IChannelCell)
 
     Protected Sub New(ByVal cells As IChannelCellCollection(Of T))
 
-        MyBase.New()
-
         m_cells = cells
         m_ticks = Date.UtcNow.Ticks
 
     End Sub
 
     Protected Sub New(ByVal idCode As UInt16, ByVal cells As IChannelCellCollection(Of T), ByVal ticks As Long)
-
-        MyBase.New()
 
         m_idCode = idCode
         m_cells = cells
@@ -77,7 +73,7 @@ Public MustInherit Class ChannelFrameBase(Of T As IChannelCell)
 
     End Sub
 
-    Public Overridable ReadOnly Property Cells() As IChannelCellCollection(Of IChannelCell) Implements IChannelFrame.Cells
+    Protected Overridable ReadOnly Property Cells() As Object Implements IChannelFrame.Cells
         Get
             Return m_cells
         End Get
@@ -103,7 +99,7 @@ Public MustInherit Class ChannelFrameBase(Of T As IChannelCell)
 
     Public Overridable ReadOnly Property TimeTag() As UnixTimeTag Implements IChannelFrame.TimeTag
         Get
-            Return New UnixTimeTag(TicksToSeconds(m_ticks))
+            Return New UnixTimeTag(m_ticks)
         End Get
     End Property
 
@@ -170,13 +166,13 @@ Public MustInherit Class ChannelFrameBase(Of T As IChannelCell)
 
     Protected Overrides ReadOnly Property BodyLength() As Int16
         Get
-            Return Cells.BinaryLength
+            Return m_cells.BinaryLength
         End Get
     End Property
 
     Protected Overrides ReadOnly Property BodyImage() As Byte()
         Get
-            Return Cells.BinaryImage
+            Return m_cells.BinaryImage
         End Get
     End Property
 
@@ -185,8 +181,8 @@ Public MustInherit Class ChannelFrameBase(Of T As IChannelCell)
         ' Parse all frame cells
         With DirectCast(state, IChannelFrameParsingState(Of T))
             For x As Integer = 0 To .CellCount - 1
-                .CreateNewCellFunction.Invoke(Me, state, x, binaryImage, startIndex)
-                startIndex += Cells(x).BinaryLength
+                m_cells.Add(.CreateNewCellFunction.Invoke(Me, state, x, binaryImage, startIndex))
+                startIndex += m_cells.Item(x).BinaryLength
             Next
         End With
 
@@ -194,13 +190,15 @@ Public MustInherit Class ChannelFrameBase(Of T As IChannelCell)
 
     Protected Overridable Function ChecksumIsValid(ByVal buffer As Byte(), ByVal startIndex As Integer) As Boolean
 
+        Dim sumLength As Int16 = BinaryLength - 2
+
 #If DEBUG Then
-        Dim bufferSum As UInt16 = EndianOrder.BigEndian.ToInt16(buffer, startIndex + m_parsedBinaryLength - 2)
-        Dim calculatedSum As UInt16 = CalculateChecksum(buffer, startIndex, m_parsedBinaryLength - 2)
+        Dim bufferSum As UInt16 = EndianOrder.BigEndian.ToInt16(buffer, startIndex + sumLength)
+        Dim calculatedSum As UInt16 = CalculateChecksum(buffer, startIndex, sumLength)
         Debug.WriteLine("Buffer Sum = " & bufferSum & ", Calculated Sum = " & calculatedSum)
         Return (bufferSum = calculatedSum)
 #Else
-        Return EndianOrder.BigEndian.ToUInt16(buffer, startIndex + m_frameLength - 2) = CalculateChecksum(buffer, startIndex, m_frameLength - 2)
+        Return EndianOrder.BigEndian.ToUInt16(buffer, startIndex + sumLength) = CalculateChecksum(buffer, startIndex, sumLength)
 #End If
 
     End Function

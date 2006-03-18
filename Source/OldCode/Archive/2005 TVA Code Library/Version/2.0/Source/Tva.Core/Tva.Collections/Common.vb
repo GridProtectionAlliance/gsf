@@ -35,7 +35,7 @@ Namespace Collections
         ''' <param name="expression">The expression you want to evaluate.</param>
         ''' <param name="truePart">Returned if expression evaluates to True.</param>
         ''' <param name="falsePart">Returned if expression evaluates to False.</param>
-        ''' <typeparam name="T">Type used for immediate expression</typeparam>
+        ''' <typeparam name="T">Return type used for immediate expression</typeparam>
         Public Shared Function IIf(Of T)(ByVal expression As Boolean, ByVal truePart As T, ByVal falsePart As T) As T
 
             If expression Then Return truePart Else Return falsePart

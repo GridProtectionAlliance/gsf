@@ -175,7 +175,7 @@ Namespace BpaPdcStream
         End Sub
 
         ' TODO: place this in proper override...
-        'Public Overrides ReadOnly Property ProtocolSpecificDataLength() As Short
+        'Public Overrides ReadOnly Property ProtocolSpecificDataLength() As Int16
         '    Get
         '        Return 12
         '    End Get
