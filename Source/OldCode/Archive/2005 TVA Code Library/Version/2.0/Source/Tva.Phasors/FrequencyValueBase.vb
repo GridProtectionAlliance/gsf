@@ -24,8 +24,8 @@ Public MustInherit Class FrequencyValueBase
     Inherits ChannelValueBase(Of IFrequencyDefinition)
     Implements IFrequencyValue
 
-    Private m_frequency As Double
-    Private m_dfdt As Double
+    Private m_frequency As Single
+    Private m_dfdt As Single
 
     Protected Sub New(ByVal parent As IDataCell)
 
@@ -33,8 +33,8 @@ Public MustInherit Class FrequencyValueBase
 
     End Sub
 
-    ' Derived classes are expected expose a Public Sub New(ByVal parent As IDataCell, ByVal frequencyDefinition As IFrequencyDefinition, ByVal frequency As Double, ByVal dfdt As Double)
-    Protected Sub New(ByVal parent As IDataCell, ByVal frequencyDefinition As IFrequencyDefinition, ByVal frequency As Double, ByVal dfdt As Double)
+    ' Derived classes are expected expose a Public Sub New(ByVal parent As IDataCell, ByVal frequencyDefinition As IFrequencyDefinition, ByVal frequency As Single, ByVal dfdt As Single)
+    Protected Sub New(ByVal parent As IDataCell, ByVal frequencyDefinition As IFrequencyDefinition, ByVal frequency As Single, ByVal dfdt As Single)
 
         MyBase.New(parent, frequencyDefinition)
 
@@ -46,8 +46,9 @@ Public MustInherit Class FrequencyValueBase
     ' Derived classes are expected expose a Public Sub New(ByVal parent As IDataCell, ByVal frequencyDefinition As IFrequencyDefinition, ByVal unscaledFrequency As Int16, ByVal unscaledDfDt As Int16)
     Protected Sub New(ByVal parent As IDataCell, ByVal frequencyDefinition As IFrequencyDefinition, ByVal unscaledFrequency As Int16, ByVal unscaledDfDt As Int16)
 
-        MyClass.New(parent, frequencyDefinition, unscaledFrequency / frequencyDefinition.ScalingFactor + frequencyDefinition.Offset, _
-            unscaledDfDt / frequencyDefinition.DfDtScalingFactor + frequencyDefinition.DfDtOffset)
+        MyClass.New(parent, frequencyDefinition, _
+            Convert.ToSingle(unscaledFrequency / frequencyDefinition.ScalingFactor + frequencyDefinition.Offset), _
+            Convert.ToSingle(unscaledDfDt / frequencyDefinition.DfDtScalingFactor + frequencyDefinition.DfDtOffset))
 
     End Sub
 
@@ -61,8 +62,8 @@ Public MustInherit Class FrequencyValueBase
             UnscaledDfDt = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 2)
         Else
             With frequencyDefinition
-                m_frequency = EndianOrder.BigEndian.ToSingle(binaryImage, startIndex) + .Offset
-                m_dfdt = EndianOrder.BigEndian.ToSingle(binaryImage, startIndex + 4) + .DfDtOffset
+                m_frequency = EndianOrder.BigEndian.ToSingle(binaryImage, startIndex)
+                m_dfdt = EndianOrder.BigEndian.ToSingle(binaryImage, startIndex + 4)
             End With
         End If
 
@@ -75,33 +76,29 @@ Public MustInherit Class FrequencyValueBase
 
     End Sub
 
-    Public Overridable Property Frequency() As Double Implements IFrequencyValue.Frequency
+    Public Overridable Property Frequency() As Single Implements IFrequencyValue.Frequency
         Get
             Return m_frequency
         End Get
-        Set(ByVal value As Double)
+        Set(ByVal value As Single)
             m_frequency = value
         End Set
     End Property
 
-    Public Overridable Property DfDt() As Double Implements IFrequencyValue.DfDt
+    Public Overridable Property DfDt() As Single Implements IFrequencyValue.DfDt
         Get
             Return m_dfdt
         End Get
-        Set(ByVal value As Double)
+        Set(ByVal value As Single)
             m_dfdt = value
         End Set
     End Property
 
     Public Overridable Property UnscaledFrequency() As Int16 Implements IFrequencyValue.UnscaledFrequency
         Get
-            Try
-                With Definition
-                    Return Convert.ToInt16((m_frequency - .Offset) * .ScalingFactor)
-                End With
-            Catch
-                Return 0
-            End Try
+            With Definition
+                Return Convert.ToInt16((m_frequency - .Offset) * .ScalingFactor)
+            End With
         End Get
         Set(ByVal value As Int16)
             With Definition
@@ -112,13 +109,9 @@ Public MustInherit Class FrequencyValueBase
 
     Public Overridable Property UnscaledDfDt() As Int16 Implements IFrequencyValue.UnscaledDfDt
         Get
-            Try
-                With Definition
-                    Return Convert.ToInt16((m_dfdt - .DfDtOffset) * .DfDtScalingFactor)
-                End With
-            Catch
-                Return 0
-            End Try
+            With Definition
+                Return Convert.ToInt16((m_dfdt - .DfDtOffset) * .DfDtScalingFactor)
+            End With
         End Get
         Set(ByVal value As Int16)
             With Definition
@@ -127,9 +120,9 @@ Public MustInherit Class FrequencyValueBase
         End Set
     End Property
 
-    Public Overrides ReadOnly Property Values() As Double()
+    Public Overrides ReadOnly Property Values() As Single()
         Get
-            Return New Double() {m_frequency, m_dfdt}
+            Return New Single() {m_frequency, m_dfdt}
         End Get
     End Property
 
@@ -139,7 +132,7 @@ Public MustInherit Class FrequencyValueBase
         End Get
     End Property
 
-    Protected Overrides ReadOnly Property BodyLength() As Int16
+    Protected Overrides ReadOnly Property BodyLength() As UInt16
         Get
             If DataFormat = Phasors.DataFormat.FixedInteger Then
                 Return 4
@@ -158,8 +151,8 @@ Public MustInherit Class FrequencyValueBase
                 EndianOrder.BigEndian.CopyBytes(UnscaledDfDt, buffer, 2)
             Else
                 With Definition
-                    EndianOrder.BigEndian.CopyBytes(Convert.ToSingle(m_frequency - .Offset), buffer, 0)
-                    EndianOrder.BigEndian.CopyBytes(Convert.ToSingle(m_dfdt - .DfDtOffset), buffer, 4)
+                    EndianOrder.BigEndian.CopyBytes(m_frequency, buffer, 0)
+                    EndianOrder.BigEndian.CopyBytes(m_dfdt, buffer, 4)
                 End With
             End If
 

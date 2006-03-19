@@ -27,10 +27,10 @@ Public MustInherit Class ChannelFrameCollectionBase(Of T As IChannelFrame)
 
     End Sub
 
-    Public Overrides ReadOnly Property BinaryLength() As Int16
+    Public Overrides ReadOnly Property BinaryLength() As UInt16
         Get
             ' Frames will be different lengths, so we must manually sum lengths
-            Dim length As Integer
+            Dim length As UInt16
 
             For x As Integer = 0 To Count - 1
                 length += Item(x).BinaryLength

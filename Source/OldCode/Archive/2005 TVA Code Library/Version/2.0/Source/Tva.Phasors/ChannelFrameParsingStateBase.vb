@@ -24,13 +24,13 @@ Public MustInherit Class ChannelFrameParsingStateBase(Of T As IChannelCell)
 
     Private m_cells As IChannelCellCollection(Of T)
     Private m_cellCount As Integer
-    Private m_parsedBinaryLength As Int16
+    Private m_parsedBinaryLength As UInt16
     Private m_createNewCellFunction As IChannelFrameParsingState(Of T).CreateNewCellFunctionSignature
 
-    Public Sub New(ByVal cells As IChannelCellCollection(Of T), ByVal frameLength As Int16, ByVal createNewCellFunction As IChannelFrameParsingState(Of T).CreateNewCellFunctionSignature)
+    Public Sub New(ByVal cells As IChannelCellCollection(Of T), ByVal parsedBinaryLength As UInt16, ByVal createNewCellFunction As IChannelFrameParsingState(Of T).CreateNewCellFunctionSignature)
 
         m_cells = cells
-        m_parsedBinaryLength = frameLength
+        m_parsedBinaryLength = parsedBinaryLength
         m_createNewCellFunction = createNewCellFunction
 
     End Sub
@@ -56,11 +56,11 @@ Public MustInherit Class ChannelFrameParsingStateBase(Of T As IChannelCell)
         End Set
     End Property
 
-    Public Property ParsedBinaryLength() As Int16 Implements IChannelFrameParsingState(Of T).ParsedBinaryLength
+    Public Property ParsedBinaryLength() As UInt16 Implements IChannelFrameParsingState(Of T).ParsedBinaryLength
         Get
             Return m_parsedBinaryLength
         End Get
-        Set(ByVal value As Int16)
+        Set(ByVal value As UInt16)
             m_parsedBinaryLength = value
         End Set
     End Property

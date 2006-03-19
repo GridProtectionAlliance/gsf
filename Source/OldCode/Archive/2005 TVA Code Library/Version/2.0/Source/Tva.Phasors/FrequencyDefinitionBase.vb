@@ -15,6 +15,8 @@
 '
 '*******************************************************************************************************
 
+Imports Tva.Collections.Common
+
 ' This class represents the common implementation of the protocol independent definition of a frequency and df/dt value.
 <CLSCompliant(False)> _
 Public MustInherit Class FrequencyDefinitionBase
@@ -23,21 +25,19 @@ Public MustInherit Class FrequencyDefinitionBase
     Implements IFrequencyDefinition
 
     Private m_dfdtScale As Int32
-    Private m_dfdtOffset As Double
+    Private m_dfdtOffset As Single
 
     Protected Sub New(ByVal parent As IConfigurationCell)
 
         MyBase.New(parent)
 
-        m_dfdtScale = 1
-
     End Sub
 
-    Protected Sub New(ByVal parent As IConfigurationCell, ByVal dataFormat As DataFormat, ByVal index As Integer, ByVal label As String, ByVal scale As Integer, ByVal offset As Double, ByVal dfdtScale As Double, ByVal dfdtOffset As Double)
+    Protected Sub New(ByVal parent As IConfigurationCell, ByVal dataFormat As DataFormat, ByVal index As Integer, ByVal label As String, ByVal scale As Integer, ByVal offset As Single, ByVal dfdtScale As Integer, ByVal dfdtOffset As Single)
 
         MyBase.New(parent, dataFormat, index, label, scale, offset)
 
-        Me.DfDtScalingFactor = dfdtScale
+        m_dfdtScale = dfdtScale
         m_dfdtOffset = dfdtOffset
 
     End Sub
@@ -62,11 +62,20 @@ Public MustInherit Class FrequencyDefinitionBase
         End Get
     End Property
 
-    Public Overridable Property DfDtOffset() As Double Implements IFrequencyDefinition.DfDtOffset
+    Public Overrides Property Offset() As Single
+        Get
+            Return IIf(Parent.NominalFrequency = LineFrequency.Hz60, 60.0#, 50.0#)
+        End Get
+        Set(ByVal value As Single)
+            Throw New NotSupportedException("Frequency offset is read-only - it is determined by nominal frequency specified in containing condiguration cell")
+        End Set
+    End Property
+
+    Public Overridable Property DfDtOffset() As Single Implements IFrequencyDefinition.DfDtOffset
         Get
             Return m_dfdtOffset
         End Get
-        Set(ByVal value As Double)
+        Set(ByVal value As Single)
             m_dfdtOffset = value
         End Set
     End Property
@@ -76,32 +85,8 @@ Public MustInherit Class FrequencyDefinitionBase
             Return m_dfdtScale
         End Get
         Set(ByVal value As Int32)
-            If value > MaximumDfDtScalingFactor Then Throw New OverflowException("DfDt scaling factor value cannot exceed " & MaximumDfDtScalingFactor)
             m_dfdtScale = value
         End Set
-    End Property
-
-    Public Overridable Property DfDtConversionFactor() As Double
-        Get
-            Return DfDtScalingFactor * DfDtScalePerBit
-        End Get
-        Set(ByVal value As Double)
-            DfDtScalingFactor = Convert.ToInt32(value / DfDtScalePerBit)
-        End Set
-    End Property
-
-    Public Overridable ReadOnly Property DfDtScalePerBit() As Double
-        Get
-            ' Typical scale/bit is 10^-5
-            Return 0.00001
-        End Get
-    End Property
-
-    Public Overridable ReadOnly Property MaximumDfDtScalingFactor() As Integer Implements IFrequencyDefinition.MaximumDfDtScalingFactor
-        Get
-            ' Typical scaling/conversion factors should fit within 3 bytes (i.e., 24 bits) of space
-            Return &H1FFFFFF
-        End Get
     End Property
 
 End Class

@@ -27,7 +27,7 @@ Public Interface IChannelValue(Of T As IChannelDefinition)
 
     ReadOnly Property DataFormat() As DataFormat
 
-    ReadOnly Property Values() As Double()
+    ReadOnly Property Values() As Single()
 
     ReadOnly Property IsEmpty() As Boolean
 

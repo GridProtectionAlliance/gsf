@@ -105,24 +105,6 @@ Namespace IeeeC37_118
         VersionNumberMask = Bit0 Or Bit1 Or Bit2 Or Bit3
     End Enum
 
-    ''' <summary>PMU commands</summary>
-    Public Enum Command As Short
-        ''' <summary>0001  Turn off transmission of data frames</summary>
-        DisableRealTimeData = Bit0
-        ''' <summary>0010  Turn on transmission of data frames</summary>
-        EnableRealTimeData = Bit1
-        ''' <summary>0011  Send header file</summary>
-        SendHeaderFile = Bit0 Or Bit1
-        ''' <summary>0100  Send configuration file 1</summary>
-        SendConfigFile1 = Bit2
-        ''' <summary>0101  Send configuration file 2</summary>
-        SendConfigFile2 = Bit0 Or Bit2
-        ''' <summary>1000  Send extended frame</summary>
-        ExtendedFrame = Bit3
-        ''' <summary>Reserved bits</summary>
-        ReservedBits = Int16.MaxValue And Not (Bit0 Or Bit1 Or Bit2 Or Bit3)
-    End Enum
-
     ''' <summary>Status flags</summary>
     <Flags()> _
     Public Enum StatusFlags As Short
@@ -204,7 +186,6 @@ Namespace IeeeC37_118
         PeakOfAnalogInput = 2
     End Enum
 
-
     <CLSCompliant(False)> _
     Public NotInheritable Class Common
 
@@ -216,9 +197,12 @@ Namespace IeeeC37_118
 
         Public Const SyncByte As Byte = &HAA
 
-        Public Const MaximumPhasorValues As Integer = Int16.MaxValue
-        Public Const MaximumAnalogValues As Integer = Int16.MaxValue
-        Public Const MaximumDigitalValues As Integer = Int16.MaxValue
+        Public Const MaximumPhasorValues As Integer = UInt16.MaxValue \ 4 - CommonFrameHeader.BinaryLength - 8
+        Public Const MaximumAnalogValues As Integer = UInt16.MaxValue \ 2 - CommonFrameHeader.BinaryLength - 8
+        Public Const MaximumDigitalValues As Integer = UInt16.MaxValue \ 2 - CommonFrameHeader.BinaryLength - 8
+
+        Public Const MaximumHeaderDataLength As Integer = UInt16.MaxValue - CommonFrameHeader.BinaryLength - 2
+        Public Const MaximumExtendedDataLength As Integer = UInt16.MaxValue - CommonFrameHeader.BinaryLength - 4
 
     End Class
 

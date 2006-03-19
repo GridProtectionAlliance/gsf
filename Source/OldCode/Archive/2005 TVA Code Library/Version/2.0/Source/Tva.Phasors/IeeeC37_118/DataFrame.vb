@@ -22,7 +22,7 @@ Namespace IeeeC37_118
     Public Class DataFrame
 
         Inherits DataFrameBase
-        Implements IFrameHeader
+        Implements ICommonFrameHeader
 
         Private m_timeQualityFlags As Int32
 
@@ -32,12 +32,12 @@ Namespace IeeeC37_118
 
         End Sub
 
-        Public Sub New(ByVal parsedFrameHeader As IFrameHeader, ByVal configurationFrame As ConfigurationFrame, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+        Public Sub New(ByVal parsedFrameHeader As ICommonFrameHeader, ByVal configurationFrame As ConfigurationFrame, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
 
             MyBase.New(New DataFrameParsingState(New DataCellCollection, parsedFrameHeader.FrameLength, configurationFrame, _
                 AddressOf IeeeC37_118.DataCell.CreateNewDataCell), binaryImage, startIndex)
 
-            FrameHeader.Clone(parsedFrameHeader, Me)
+            CommonFrameHeader.Clone(parsedFrameHeader, Me)
 
         End Sub
 
@@ -59,40 +59,40 @@ Namespace IeeeC37_118
             End Get
         End Property
 
-        Public Property RevisionNumber() As RevisionNumber Implements IFrameHeader.RevisionNumber
+        Public Property RevisionNumber() As RevisionNumber Implements ICommonFrameHeader.RevisionNumber
             Get
                 Return ConfigurationFrame.RevisionNumber
             End Get
             Friend Set(ByVal value As RevisionNumber)
                 ' Revision number is readonly for data frames - we don't throw an exception here if someone attempts to change
-                ' the revision number on a data frame (e.g., the FrameHeader.Clone method will attempt to copy this property)
+                ' the revision number on a data frame (e.g., the CommonFrameHeader.Clone method will attempt to copy this property)
                 ' but we don't do anything with the value either.
             End Set
         End Property
 
-        Public Property FrameType() As FrameType Implements IFrameHeader.FrameType
+        Public Property FrameType() As FrameType Implements ICommonFrameHeader.FrameType
             Get
                 Return IeeeC37_118.FrameType.DataFrame
             End Get
             Friend Set(ByVal value As FrameType)
                 ' Frame type is readonly for data frames - we don't throw an exception here if someone attempts to change
-                ' the frame type on a data frame (e.g., the FrameHeader.Clone method will attempt to copy this property)
+                ' the frame type on a data frame (e.g., the CommonFrameHeader.Clone method will attempt to copy this property)
                 ' but we don't do anything with the value either.
             End Set
         End Property
 
-        Public Property Version() As Byte Implements IFrameHeader.Version
+        Public Property Version() As Byte Implements ICommonFrameHeader.Version
             Get
                 Return ConfigurationFrame.Version
             End Get
             Friend Set(ByVal value As Byte)
                 ' Version number is readonly for data frames - we don't throw an exception here if someone attempts to change
-                ' the version number on a data frame (e.g., the FrameHeader.Clone method will attempt to copy this property)
+                ' the version number on a data frame (e.g., the CommonFrameHeader.Clone method will attempt to copy this property)
                 ' but we don't do anything with the value either.
             End Set
         End Property
 
-        Public Property FrameLength() As Int16 Implements IFrameHeader.FrameLength
+        Public Property FrameLength() As Int16 Implements ICommonFrameHeader.FrameLength
             Get
                 Return MyBase.BinaryLength
             End Get
@@ -101,18 +101,18 @@ Namespace IeeeC37_118
             End Set
         End Property
 
-        Public Overrides Property IDCode() As UInt16 Implements IFrameHeader.IDCode
+        Public Overrides Property IDCode() As UInt16 Implements ICommonFrameHeader.IDCode
             Get
                 Return MyBase.IDCode
             End Get
             Set(ByVal value As UShort)
                 ' ID code is readonly for data frames - we don't throw an exception here if someone attempts to change
-                ' the ID code on a data frame (e.g., the FrameHeader.Clone method will attempt to copy this property)
+                ' the ID code on a data frame (e.g., the CommonFrameHeader.Clone method will attempt to copy this property)
                 ' but we don't do anything with the value either.
             End Set
         End Property
 
-        Public Overrides Property Ticks() As Long Implements IFrameHeader.Ticks
+        Public Overrides Property Ticks() As Long Implements ICommonFrameHeader.Ticks
             Get
                 Return MyBase.Ticks
             End Get
@@ -121,18 +121,18 @@ Namespace IeeeC37_118
             End Set
         End Property
 
-        Public Property TimeBase() As Int32 Implements IFrameHeader.TimeBase
+        Public Property TimeBase() As Int32 Implements ICommonFrameHeader.TimeBase
             Get
                 Return ConfigurationFrame.TimeBase
             End Get
             Friend Set(ByVal value As Int32)
                 ' Time base is readonly for data frames - we don't throw an exception here if someone attempts to change
-                ' the time base on a data frame (e.g., the FrameHeader.Clone method will attempt to copy this property)
+                ' the time base on a data frame (e.g., the CommonFrameHeader.Clone method will attempt to copy this property)
                 ' but we don't do anything with the value either.
             End Set
         End Property
 
-        Private Property InternalTimeQualityFlags() As Int32 Implements IFrameHeader.InternalTimeQualityFlags
+        Private Property InternalTimeQualityFlags() As Int32 Implements ICommonFrameHeader.InternalTimeQualityFlags
             Get
                 Return m_timeQualityFlags
             End Get
@@ -141,33 +141,33 @@ Namespace IeeeC37_118
             End Set
         End Property
 
-        Public ReadOnly Property SecondOfCentury() As UInt32 Implements IFrameHeader.SecondOfCentury
+        Public ReadOnly Property SecondOfCentury() As UInt32 Implements ICommonFrameHeader.SecondOfCentury
             Get
-                Return FrameHeader.SecondOfCentury(Me)
+                Return CommonFrameHeader.SecondOfCentury(Me)
             End Get
         End Property
 
-        Public ReadOnly Property FractionOfSecond() As Int32 Implements IFrameHeader.FractionOfSecond
+        Public ReadOnly Property FractionOfSecond() As Int32 Implements ICommonFrameHeader.FractionOfSecond
             Get
-                Return FrameHeader.FractionOfSecond(Me)
+                Return CommonFrameHeader.FractionOfSecond(Me)
             End Get
         End Property
 
-        Public Property TimeQualityFlags() As TimeQualityFlags Implements IFrameHeader.TimeQualityFlags
+        Public Property TimeQualityFlags() As TimeQualityFlags Implements ICommonFrameHeader.TimeQualityFlags
             Get
-                Return FrameHeader.TimeQualityFlags(Me)
+                Return CommonFrameHeader.TimeQualityFlags(Me)
             End Get
             Set(ByVal value As TimeQualityFlags)
-                FrameHeader.TimeQualityFlags(Me) = value
+                CommonFrameHeader.TimeQualityFlags(Me) = value
             End Set
         End Property
 
-        Public Property TimeQualityIndicatorCode() As TimeQualityIndicatorCode Implements IFrameHeader.TimeQualityIndicatorCode
+        Public Property TimeQualityIndicatorCode() As TimeQualityIndicatorCode Implements ICommonFrameHeader.TimeQualityIndicatorCode
             Get
-                Return FrameHeader.TimeQualityIndicatorCode(Me)
+                Return CommonFrameHeader.TimeQualityIndicatorCode(Me)
             End Get
             Set(ByVal value As TimeQualityIndicatorCode)
-                FrameHeader.TimeQualityIndicatorCode(Me) = value
+                CommonFrameHeader.TimeQualityIndicatorCode(Me) = value
             End Set
         End Property
 
@@ -180,15 +180,15 @@ Namespace IeeeC37_118
             End Set
         End Property
 
-        Protected Overrides ReadOnly Property HeaderLength() As Int16
+        Protected Overrides ReadOnly Property HeaderLength() As UInt16
             Get
-                Return FrameHeader.BinaryLength
+                Return CommonFrameHeader.BinaryLength
             End Get
         End Property
 
         Protected Overrides ReadOnly Property HeaderImage() As Byte()
             Get
-                Return FrameHeader.BinaryImage(Me)
+                Return CommonFrameHeader.BinaryImage(Me)
             End Get
         End Property
 

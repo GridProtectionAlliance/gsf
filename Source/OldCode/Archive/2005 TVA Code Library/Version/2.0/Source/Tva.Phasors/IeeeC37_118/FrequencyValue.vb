@@ -24,7 +24,7 @@ Namespace IeeeC37_118
 
         Inherits FrequencyValueBase
 
-        Public Sub New(ByVal parent As IDataCell, ByVal frequencyDefinition As IFrequencyDefinition, ByVal frequency As Double, ByVal dfdt As Double)
+        Public Sub New(ByVal parent As IDataCell, ByVal frequencyDefinition As IFrequencyDefinition, ByVal frequency As Single, ByVal dfdt As Single)
 
             MyBase.New(parent, frequencyDefinition, frequency, dfdt)
 

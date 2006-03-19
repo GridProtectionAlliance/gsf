@@ -198,7 +198,7 @@ Public MustInherit Class ConfigurationCellBase
     End Function
 
     ' Only the station name is common to configuration frame headers in IEEE protocols
-    Protected Overrides ReadOnly Property HeaderLength() As Int16
+    Protected Overrides ReadOnly Property HeaderLength() As UInt16
         Get
             Return MaximumStationNameLength
         End Get
@@ -217,7 +217,7 @@ Public MustInherit Class ConfigurationCellBase
     End Sub
 
     ' Channel names of IEEE C37.118 and IEEE 1344 configuration frames are common in order and type - so they are defined in the base class
-    Protected Overrides ReadOnly Property BodyLength() As Int16
+    Protected Overrides ReadOnly Property BodyLength() As UInt16
         Get
             Return m_phasorDefinitions.BinaryLength + m_analogDefinitions.BinaryLength + m_digitalDefinitions.BinaryLength
         End Get
@@ -264,7 +264,7 @@ Public MustInherit Class ConfigurationCellBase
     End Sub
 
     ' Footer for IEEE protocols contains nominal frequency definition, so we use this to initialize frequency definition
-    Protected Overrides ReadOnly Property FooterLength() As Int16
+    Protected Overrides ReadOnly Property FooterLength() As UInt16
         Get
             Return 2
         End Get

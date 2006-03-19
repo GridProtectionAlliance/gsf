@@ -16,27 +16,51 @@
 '*******************************************************************************************************
 
 Imports System.Buffer
+Imports Tva.Interop.Bit
 
+''' <summary>Phasor coordinate format</summary>
 Public Enum CoordinateFormat As Byte
     Rectangular
     Polar
 End Enum
 
+''' <summary>Phasor type</summary>
 Public Enum PhasorType As Byte
     Voltage
     Current
 End Enum
 
+''' <summary>Data transmission format</summary>
 Public Enum DataFormat As Byte
     FixedInteger
     FloatingPoint
 End Enum
 
+''' <summary>Nominal line frequency</summary>
 Public Enum LineFrequency As Byte
     Hz50
     Hz60
 End Enum
 
+''' <summary>PMU commands</summary>
+Public Enum Command As Short
+    ''' <summary>0001  Turn off transmission of data frames</summary>
+    DisableRealTimeData = Bit0
+    ''' <summary>0010  Turn on transmission of data frames</summary>
+    EnableRealTimeData = Bit1
+    ''' <summary>0011  Send header file</summary>
+    SendHeaderFile = Bit0 Or Bit1
+    ''' <summary>0100  Send configuration file 1</summary>
+    SendConfigFile1 = Bit2
+    ''' <summary>0101  Send configuration file 2</summary>
+    SendConfigFile2 = Bit0 Or Bit2
+    ''' <summary>1000  Send extended frame for IEEE C37.118 / receive reference phasor for IEEE 1344</summary>
+    ExtendedFrame = Bit3
+    ''' <summary>Reserved bits</summary>
+    ReservedBits = Int16.MaxValue And Not (Bit0 Or Bit1 Or Bit2 Or Bit3)
+End Enum
+
+<CLSCompliant(False)> _
 Public Class Common
 
     Private Sub New()
@@ -54,7 +78,7 @@ Public Class Common
 
     End Sub
 
-    ' This is a common optimized block copy function for any kind of data
+    ' This is a common optimized block copy function for binary data
     Public Shared Sub CopyImage(ByVal source As Byte(), ByVal buffer As Byte(), ByRef index As Integer, ByVal length As Int16)
 
         If length > 0 Then

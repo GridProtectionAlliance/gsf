@@ -25,13 +25,13 @@ Public Interface IPhasorValue
 
     ReadOnly Property [Type]() As PhasorType
 
-    Property Angle() As Double
+    Property Angle() As Single
 
-    Property Magnitude() As Double
+    Property Magnitude() As Single
 
-    Property Real() As Double
+    Property Real() As Single
 
-    Property Imaginary() As Double
+    Property Imaginary() As Single
 
     Property UnscaledReal() As Int16
 

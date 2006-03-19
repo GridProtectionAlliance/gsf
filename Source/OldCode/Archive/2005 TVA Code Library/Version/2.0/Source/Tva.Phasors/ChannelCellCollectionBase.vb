@@ -32,14 +32,14 @@ Public MustInherit Class ChannelCellCollectionBase(Of T As IChannelCell)
 
     End Sub
 
-    Public Overrides ReadOnly Property BinaryLength() As Int16
+    Public Overrides ReadOnly Property BinaryLength() As UInt16
         Get
             If m_constantCellLength Then
                 ' Cells will be constant length, so we can quickly calculate lengths
                 Return MyBase.BinaryLength
             Else
                 ' Cells will be different lengths, so we must manually sum lengths
-                Dim length As Int16
+                Dim length As UInt16
 
                 For x As Integer = 0 To Count - 1
                     length += Item(x).BinaryLength

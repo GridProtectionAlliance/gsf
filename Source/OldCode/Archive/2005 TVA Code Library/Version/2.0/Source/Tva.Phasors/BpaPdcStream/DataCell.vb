@@ -16,6 +16,7 @@
 '*******************************************************************************************************
 
 Imports Tva.Interop
+Imports Tva.Collections.Common
 Imports Tva.Phasors.BpaPdcStream.Common
 
 Namespace BpaPdcStream
@@ -327,7 +328,7 @@ Namespace BpaPdcStream
             End Set
         End Property
 
-        Protected Overrides ReadOnly Property HeaderLength() As Int16
+        Protected Overrides ReadOnly Property HeaderLength() As UInt16
             Get
                 Return 6
             End Get

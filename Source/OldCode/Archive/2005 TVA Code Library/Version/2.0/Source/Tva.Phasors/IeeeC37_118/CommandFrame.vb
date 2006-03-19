@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  CommandFrame.vb - IEEE C37.118 Command Frame
+'  CommandFrame.vb - IEEE C37.118 command frame
 '  Copyright © 2005 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2003
@@ -10,102 +10,183 @@
 '
 '  Code Modification History:
 '  -----------------------------------------------------------------------------------------------------
-'  01/14/2005 - James R Carroll
+'  11/12/2004 - James R Carroll
 '       Initial version of source generated
 '
 '*******************************************************************************************************
 
-Imports Tva.Interop
-Imports Tva.Interop.Bit
-Imports Tva.DateTime
-Imports Tva.IO.Compression.Common
+Imports Tva.Collections.Common
+Imports Tva.Phasors.IeeeC37_118.Common
 
 Namespace IeeeC37_118
 
-    ' TODO: Create a base class for the command frame that will suffice for both C37.118 and 1344...
-    ' This class represents a command frame that can be sent to a PMU to elicit a desired response.
-    ' Most PMU's won't begin a data broadcast until a command has been sent to "turn on" the real-time stream.
     <CLSCompliant(False)> _
     Public Class CommandFrame
 
-        ' TODO: Extended frames will have variable length
-        Public Const FrameLength As Integer = 18
+        Inherits CommandFrameBase
+        Implements ICommonFrameHeader
 
-        Private m_timetag As UnixTimeTag
-        Private m_idCode As UInt16
-        Private m_command As Command
+        Private m_revisionNumber As RevisionNumber
+        Private m_version As Byte
 
-        ' Use this contructor to send a command to a PMU
-        Public Sub New(ByVal idCode As UInt16, ByVal command As Command)
+        Public Sub New(ByVal command As Command)
 
-            m_idCode = idCode
-            m_command = command
-            m_timetag = New UnixTimeTag(Date.UtcNow)
+            MyClass.New(IeeeC37_118.RevisionNumber.RevisionV1, command)
 
         End Sub
 
-        ' Use this constuctor to receive a command (i.e., your code is acting as a PMU)
-        Public Sub New(ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+        Public Sub New(ByVal revisionNumber As RevisionNumber, ByVal command As Command)
 
-            'If binaryImage Is Nothing Then
-            '    Throw New ArgumentNullException("BinaryImage was null - could not create command frame")
-            'ElseIf binaryImage.Length - startIndex < FrameLength Then
-            '    Throw New ArgumentException("BinaryImage size from startIndex is too small - could not create command frame")
-            'Else
-            '    m_timetag = New UnixTimeTag(Convert.ToDouble(EndianOrder.BigEndian.ToInt32(binaryImage, startIndex)))
-            '    m_idCode = EndianOrder.BigEndian.ToInt64(binaryImage, startIndex + 4)
-            '    m_command = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 12)
-
-            '    ' Validate buffer check sum
-            '    If EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + FrameLength - 2) <> CRC16(UInt16.MaxValue, binaryImage, startIndex, FrameLength - 2) Then _
-            '        Throw New ArgumentException("Invalid buffer image detected - CRC16 of command frame did not match")
-            'End If
+            MyBase.New(New CommandCellCollection(MaximumExtendedDataLength), command)
+            m_revisionNumber = revisionNumber
+            m_version = IIf(Of Byte)(m_revisionNumber <= IeeeC37_118.RevisionNumber.RevisionV1, 1, 2)
 
         End Sub
 
-        Public Property TimeTag() As UnixTimeTag
+        Public Sub New(ByVal parsedFrameHeader As ICommonFrameHeader, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+
+            MyBase.New(New CommandFrameParsingState(New CommandCellCollection(MaximumExtendedDataLength), parsedFrameHeader.FrameLength, _
+                parsedFrameHeader.FrameLength - CommonFrameHeader.BinaryLength - 4), binaryImage, startIndex)
+
+            CommonFrameHeader.Clone(parsedFrameHeader, Me)
+
+        End Sub
+
+        Public Sub New(ByVal commandFrame As ICommandFrame)
+
+            MyBase.New(commandFrame)
+
+        End Sub
+
+        Public Overrides ReadOnly Property InheritedType() As System.Type
             Get
-                Return m_timetag
+                Return Me.GetType()
             End Get
-            Set(ByVal Value As UnixTimeTag)
-                m_timetag = Value
+        End Property
+
+        Public Property RevisionNumber() As RevisionNumber Implements ICommonFrameHeader.RevisionNumber
+            Get
+                Return m_revisionNumber
+            End Get
+            Set(ByVal Value As RevisionNumber)
+                m_revisionNumber = Value
             End Set
         End Property
 
-        Public Property IDCode() As UInt16
+        Public Property FrameType() As FrameType Implements ICommonFrameHeader.FrameType
             Get
-                Return m_idCode
+                Return IeeeC37_118.FrameType.HeaderFrame
             End Get
-            Set(ByVal Value As UInt16)
-                m_idCode = Value
+            Friend Set(ByVal value As FrameType)
+                ' Frame type is readonly for header frames - we don't throw an exception here if someone attempts to change
+                ' the frame type on a header frame (e.g., the CommonFrameHeader.Clone method will attempt to copy this property)
+                ' but we don't do anything with the value either.
             End Set
         End Property
 
-        Public Property Command() As Command
+        Public Property Version() As Byte Implements ICommonFrameHeader.Version
             Get
-                Return m_command
+                Return m_version
             End Get
-            Set(ByVal Value As Command)
-                m_command = Value
+            Set(ByVal value As Byte)
+                m_version = CommonFrameHeader.Version(Me, value)
             End Set
         End Property
 
-        Public ReadOnly Property BinaryImage() As Byte()
+        Public Property FrameLength() As Int16 Implements ICommonFrameHeader.FrameLength
             Get
-                Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), FrameLength)
+                Return MyBase.BinaryLength
+            End Get
+            Set(ByVal value As Int16)
+                MyBase.ParsedBinaryLength = value
+            End Set
+        End Property
 
-                buffer(0) = &HAA
-                buffer(1) = Bit0 Or FrameType.CommandFrame
-                EndianOrder.BigEndian.CopyBytes(Convert.ToUInt16(FrameLength), buffer, 2)
-                EndianOrder.BigEndian.CopyBytes(m_idCode, buffer, 4)
-                EndianOrder.BigEndian.CopyBytes(Convert.ToUInt32(m_timetag.Value), buffer, 6)
-                EndianOrder.BigEndian.CopyBytes(Convert.ToUInt32(0), buffer, 10)
-                'System.Buffer.BlockCopy(New Byte() {&HF, &HB, &HBF, &HD0}, 0, buffer, 10, 4)
-                EndianOrder.BigEndian.CopyBytes(m_command, buffer, 14)
-                EndianOrder.BigEndian.CopyBytes(CRC_CCITT(UInt16.MaxValue, buffer, 0, 16), buffer, 16)
-                'EndianOrder.BigEndian.CopyBytes(CRC16(UInt16.MaxValue, buffer, 0, 16), buffer, 16)
+        Public Overrides Property IDCode() As UInt16 Implements ICommonFrameHeader.IDCode
+            Get
+                Return MyBase.IDCode
+            End Get
+            Set(ByVal value As UShort)
+                MyBase.IDCode = value
+            End Set
+        End Property
 
-                Return buffer
+        Public Overrides Property Ticks() As Long Implements ICommonFrameHeader.Ticks
+            Get
+                Return MyBase.Ticks
+            End Get
+            Set(ByVal value As Long)
+                MyBase.Ticks = value
+            End Set
+        End Property
+
+        Public Property TimeBase() As Int32 Implements ICommonFrameHeader.TimeBase
+            Get
+                Return 0
+            End Get
+            Friend Set(ByVal value As Int32)
+                ' Time base is readonly for command frames - we don't throw an exception here if someone attempts to change
+                ' the time base on a command frame (e.g., the CommonFrameHeader.Clone method will attempt to copy this property)
+                ' but we don't do anything with the value either.
+            End Set
+        End Property
+
+        Private Property InternalTimeQualityFlags() As Int32 Implements ICommonFrameHeader.InternalTimeQualityFlags
+            Get
+                Return 0
+            End Get
+            Set(ByVal value As Int32)
+                ' Time quality flags are readonly for command frames - we don't throw an exception here if someone attempts to change
+                ' the time quality on a command frame (e.g., the CommonFrameHeader.Clone method will attempt to copy this property)
+                ' but we don't do anything with the value either.
+            End Set
+        End Property
+
+        Public ReadOnly Property SecondOfCentury() As UInt32 Implements ICommonFrameHeader.SecondOfCentury
+            Get
+                Return CommonFrameHeader.SecondOfCentury(Me)
+            End Get
+        End Property
+
+        Public ReadOnly Property FractionOfSecond() As Int32 Implements ICommonFrameHeader.FractionOfSecond
+            Get
+                Return CommonFrameHeader.FractionOfSecond(Me)
+            End Get
+        End Property
+
+        Public Property TimeQualityFlags() As TimeQualityFlags Implements ICommonFrameHeader.TimeQualityFlags
+            Get
+                Return CommonFrameHeader.TimeQualityFlags(Me)
+            End Get
+            Friend Set(ByVal value As TimeQualityFlags)
+                ' Nothing to do - time quality flags is readonly for command frames
+            End Set
+        End Property
+
+        Public Property TimeQualityIndicatorCode() As TimeQualityIndicatorCode Implements ICommonFrameHeader.TimeQualityIndicatorCode
+            Get
+                Return CommonFrameHeader.TimeQualityIndicatorCode(Me)
+            End Get
+            Friend Set(ByVal value As TimeQualityIndicatorCode)
+                ' Nothing to do - time quality flags is readonly for command frames
+            End Set
+        End Property
+
+        Protected Overrides ReadOnly Property HeaderLength() As UInt16
+            Get
+                Return CommonFrameHeader.BinaryLength
+            End Get
+        End Property
+
+        Protected Overrides ReadOnly Property HeaderImage() As Byte()
+            Get
+                Return CommonFrameHeader.BinaryImage(Me)
+            End Get
+        End Property
+
+        Public Overrides ReadOnly Property Measurements() As System.Collections.Generic.IDictionary(Of Integer, Measurements.IMeasurement)
+            Get
+                ' TODO: Oh my - how to handle this...
             End Get
         End Property
 

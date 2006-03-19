@@ -30,16 +30,20 @@ Namespace IeeeC37_118
         Public Sub New(ByVal parent As ConfigurationCell)
 
             MyBase.New(parent)
+            ScalingFactor = 100
+            DfDtScalingFactor = 10
 
         End Sub
 
         Public Sub New(ByVal parent As ConfigurationCell, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
 
             MyBase.New(parent, binaryImage, startIndex)
+            ScalingFactor = 100
+            DfDtScalingFactor = 10
 
         End Sub
 
-        Public Sub New(ByVal parent As ConfigurationCell, ByVal dataFormat As DataFormat, ByVal index As Integer, ByVal label As String, ByVal scale As Integer, ByVal offset As Double, ByVal dfdtScale As Double, ByVal dfdtOffset As Double)
+        Public Sub New(ByVal parent As ConfigurationCell, ByVal dataFormat As DataFormat, ByVal index As Integer, ByVal label As String, ByVal scale As Integer, ByVal offset As Single, ByVal dfdtScale As Integer, ByVal dfdtOffset As Single)
 
             MyBase.New(parent, dataFormat, index, label, scale, offset, dfdtScale, dfdtOffset)
 
@@ -63,7 +67,7 @@ Namespace IeeeC37_118
             End Get
         End Property
 
-        Protected Overrides ReadOnly Property BodyLength() As Short
+        Protected Overrides ReadOnly Property BodyLength() As UInt16
             Get
                 Return 2
             End Get

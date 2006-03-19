@@ -31,7 +31,7 @@ Public MustInherit Class ChannelDefinitionBase
     Private m_index As Integer
     Private m_label As String
     Private m_scale As Integer
-    Private m_offset As Double
+    Private m_offset As Single
 
     Protected Sub New(ByVal parent As IConfigurationCell)
 
@@ -42,7 +42,7 @@ Public MustInherit Class ChannelDefinitionBase
 
     End Sub
 
-    Protected Sub New(ByVal parent As IConfigurationCell, ByVal dataFormat As DataFormat, ByVal index As Integer, ByVal label As String, ByVal scale As Integer, ByVal offset As Double)
+    Protected Sub New(ByVal parent As IConfigurationCell, ByVal dataFormat As DataFormat, ByVal index As Integer, ByVal label As String, ByVal scale As Integer, ByVal offset As Single)
 
         m_parent = parent
         m_dataFormat = dataFormat
@@ -92,11 +92,11 @@ Public MustInherit Class ChannelDefinitionBase
         End Set
     End Property
 
-    Public Overridable Property Offset() As Double Implements IChannelDefinition.Offset
+    Public Overridable Property Offset() As Single Implements IChannelDefinition.Offset
         Get
             Return m_offset
         End Get
-        Set(ByVal value As Double)
+        Set(ByVal value As Single)
             m_offset = value
         End Set
     End Property
@@ -111,16 +111,16 @@ Public MustInherit Class ChannelDefinitionBase
         End Set
     End Property
 
-    Public Overridable Property ConversionFactor() As Double
+    Public Overridable Property ConversionFactor() As Single Implements IChannelDefinition.ConversionFactor
         Get
-            Return ScalingFactor * ScalePerBit
+            Return m_scale * ScalePerBit
         End Get
-        Set(ByVal value As Double)
+        Set(ByVal value As Single)
             ScalingFactor = Convert.ToInt32(value / ScalePerBit)
         End Set
     End Property
 
-    Public Overridable ReadOnly Property ScalePerBit() As Double
+    Public Overridable ReadOnly Property ScalePerBit() As Single Implements IChannelDefinition.ScalePerBit
         Get
             ' Typical scale/bit is 10^-5
             Return 0.00001
@@ -173,7 +173,7 @@ Public MustInherit Class ChannelDefinitionBase
 
     End Function
 
-    Protected Overrides ReadOnly Property BodyLength() As Short
+    Protected Overrides ReadOnly Property BodyLength() As UInt16
         Get
             Return MaximumLabelLength
         End Get

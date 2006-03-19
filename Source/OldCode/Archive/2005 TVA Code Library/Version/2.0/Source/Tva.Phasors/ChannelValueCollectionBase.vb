@@ -45,7 +45,7 @@ Public MustInherit Class ChannelValueCollectionBase(Of TDefinition As IChannelDe
 
     End Sub
 
-    Public Overrides ReadOnly Property BinaryLength() As Int16
+    Public Overrides ReadOnly Property BinaryLength() As UInt16
         Get
             If Count > 0 Then
                 If m_fixedCount = 0 Or m_floatCount = 0 Then
@@ -53,7 +53,7 @@ Public MustInherit Class ChannelValueCollectionBase(Of TDefinition As IChannelDe
                     Return Item(0).BinaryLength * Count
                 Else
                     ' List has items of different data types, will have to traverse list to calculate total binary length
-                    Dim length As Integer
+                    Dim length As UInt16
 
                     For x As Integer = 0 To Count - 1
                         length += Item(x).BinaryLength

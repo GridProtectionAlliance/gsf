@@ -138,7 +138,7 @@ Namespace BpaPdcStream
             End Get
         End Property
 
-        Public Overrides ReadOnly Property BinaryLength() As Int16
+        Public Overrides ReadOnly Property BinaryLength() As UInt16
             Get
                 Return 4 + MyBase.BinaryLength
             End Get

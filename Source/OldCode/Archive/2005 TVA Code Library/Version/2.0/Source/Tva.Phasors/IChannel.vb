@@ -16,6 +16,7 @@
 '*******************************************************************************************************
 
 ' This interface represents a protocol independent representation of any data type.
+<CLSCompliant(False)> _
 Public Interface IChannel
 
     ReadOnly Property InheritedType() As Type
@@ -27,7 +28,7 @@ Public Interface IChannel
 
     Sub ParseBinaryImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
 
-    ReadOnly Property BinaryLength() As Int16
+    ReadOnly Property BinaryLength() As UInt16
 
     ReadOnly Property BinaryImage() As Byte()
 

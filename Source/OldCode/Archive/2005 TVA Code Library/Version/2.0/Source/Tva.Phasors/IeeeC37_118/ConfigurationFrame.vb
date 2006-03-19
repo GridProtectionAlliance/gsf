@@ -28,7 +28,7 @@ Namespace IeeeC37_118
     Public Class ConfigurationFrame
 
         Inherits ConfigurationFrameBase
-        Implements IFrameHeader
+        Implements ICommonFrameHeader
 
         Private m_revisionNumber As RevisionNumber
         Private m_frameType As FrameType
@@ -47,12 +47,12 @@ Namespace IeeeC37_118
 
         End Sub
 
-        Public Sub New(ByVal parsedFrameHeader As IFrameHeader, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+        Public Sub New(ByVal parsedFrameHeader As ICommonFrameHeader, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
 
             MyBase.New(New ConfigurationFrameParsingState(New ConfigurationCellCollection, parsedFrameHeader.FrameLength, _
                     AddressOf IeeeC37_118.ConfigurationCell.CreateNewConfigurationCell), binaryImage, startIndex)
 
-            FrameHeader.Clone(parsedFrameHeader, Me)
+            CommonFrameHeader.Clone(parsedFrameHeader, Me)
 
         End Sub
 
@@ -74,7 +74,7 @@ Namespace IeeeC37_118
             End Get
         End Property
 
-        Public Property RevisionNumber() As RevisionNumber Implements IFrameHeader.RevisionNumber
+        Public Property RevisionNumber() As RevisionNumber Implements ICommonFrameHeader.RevisionNumber
             Get
                 Return m_revisionNumber
             End Get
@@ -83,7 +83,7 @@ Namespace IeeeC37_118
             End Set
         End Property
 
-        Public Property FrameType() As FrameType Implements IFrameHeader.FrameType
+        Public Property FrameType() As FrameType Implements ICommonFrameHeader.FrameType
             Get
                 Return m_frameType
             End Get
@@ -96,16 +96,16 @@ Namespace IeeeC37_118
             End Set
         End Property
 
-        Public Property Version() As Byte Implements IFrameHeader.Version
+        Public Property Version() As Byte Implements ICommonFrameHeader.Version
             Get
                 Return m_version
             End Get
             Set(ByVal value As Byte)
-                m_version = FrameHeader.Version(Me, value)
+                m_version = CommonFrameHeader.Version(Me, value)
             End Set
         End Property
 
-        Public Property FrameLength() As Int16 Implements IFrameHeader.FrameLength
+        Public Property FrameLength() As Int16 Implements ICommonFrameHeader.FrameLength
             Get
                 Return MyBase.BinaryLength
             End Get
@@ -114,7 +114,7 @@ Namespace IeeeC37_118
             End Set
         End Property
 
-        Public Overrides Property IDCode() As UInt16 Implements IFrameHeader.IDCode
+        Public Overrides Property IDCode() As UInt16 Implements ICommonFrameHeader.IDCode
             Get
                 Return MyBase.IDCode
             End Get
@@ -123,7 +123,7 @@ Namespace IeeeC37_118
             End Set
         End Property
 
-        Public Overrides Property Ticks() As Long Implements IFrameHeader.Ticks
+        Public Overrides Property Ticks() As Long Implements ICommonFrameHeader.Ticks
             Get
                 Return MyBase.Ticks
             End Get
@@ -132,7 +132,7 @@ Namespace IeeeC37_118
             End Set
         End Property
 
-        Public Property TimeBase() As Int32 Implements IFrameHeader.TimeBase
+        Public Property TimeBase() As Int32 Implements ICommonFrameHeader.TimeBase
             Get
                 Return m_timeBase
             End Get
@@ -145,7 +145,7 @@ Namespace IeeeC37_118
             End Set
         End Property
 
-        Private Property InternalTimeQualityFlags() As Int32 Implements IFrameHeader.InternalTimeQualityFlags
+        Private Property InternalTimeQualityFlags() As Int32 Implements ICommonFrameHeader.InternalTimeQualityFlags
             Get
                 Return m_timeQualityFlags
             End Get
@@ -154,33 +154,33 @@ Namespace IeeeC37_118
             End Set
         End Property
 
-        Public ReadOnly Property SecondOfCentury() As UInt32 Implements IFrameHeader.SecondOfCentury
+        Public ReadOnly Property SecondOfCentury() As UInt32 Implements ICommonFrameHeader.SecondOfCentury
             Get
-                Return FrameHeader.SecondOfCentury(Me)
+                Return CommonFrameHeader.SecondOfCentury(Me)
             End Get
         End Property
 
-        Public ReadOnly Property FractionOfSecond() As Int32 Implements IFrameHeader.FractionOfSecond
+        Public ReadOnly Property FractionOfSecond() As Int32 Implements ICommonFrameHeader.FractionOfSecond
             Get
-                Return FrameHeader.FractionOfSecond(Me)
+                Return CommonFrameHeader.FractionOfSecond(Me)
             End Get
         End Property
 
-        Public Property TimeQualityFlags() As TimeQualityFlags Implements IFrameHeader.TimeQualityFlags
+        Public Property TimeQualityFlags() As TimeQualityFlags Implements ICommonFrameHeader.TimeQualityFlags
             Get
-                Return FrameHeader.TimeQualityFlags(Me)
+                Return CommonFrameHeader.TimeQualityFlags(Me)
             End Get
             Set(ByVal value As TimeQualityFlags)
-                FrameHeader.TimeQualityFlags(Me) = value
+                CommonFrameHeader.TimeQualityFlags(Me) = value
             End Set
         End Property
 
-        Public Property TimeQualityIndicatorCode() As TimeQualityIndicatorCode Implements IFrameHeader.TimeQualityIndicatorCode
+        Public Property TimeQualityIndicatorCode() As TimeQualityIndicatorCode Implements ICommonFrameHeader.TimeQualityIndicatorCode
             Get
-                Return FrameHeader.TimeQualityIndicatorCode(Me)
+                Return CommonFrameHeader.TimeQualityIndicatorCode(Me)
             End Get
             Set(ByVal value As TimeQualityIndicatorCode)
-                FrameHeader.TimeQualityIndicatorCode(Me) = value
+                CommonFrameHeader.TimeQualityIndicatorCode(Me) = value
             End Set
         End Property
 
@@ -193,9 +193,9 @@ Namespace IeeeC37_118
             End Set
         End Property
 
-        Protected Overrides ReadOnly Property HeaderLength() As Int16
+        Protected Overrides ReadOnly Property HeaderLength() As UInt16
             Get
-                Return FrameHeader.BinaryLength + 6
+                Return CommonFrameHeader.BinaryLength + 6
             End Get
         End Property
 
@@ -204,7 +204,7 @@ Namespace IeeeC37_118
                 Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), HeaderLength)
                 Dim index As Integer
 
-                CopyImage(FrameHeader.BinaryImage(Me), buffer, index, FrameHeader.BinaryLength)
+                CopyImage(CommonFrameHeader.BinaryImage(Me), buffer, index, CommonFrameHeader.BinaryLength)
                 EndianOrder.BigEndian.CopyBytes(m_timeBase, buffer, index)
                 EndianOrder.BigEndian.CopyBytes(Convert.ToInt16(Cells.Count), buffer, index + 4)
 
@@ -222,7 +222,7 @@ Namespace IeeeC37_118
 
         End Sub
 
-        Protected Overrides ReadOnly Property FooterLength() As Int16
+        Protected Overrides ReadOnly Property FooterLength() As UInt16
             Get
                 If m_revisionNumber = RevisionNumber.RevisionD6 Then
                     Return 2

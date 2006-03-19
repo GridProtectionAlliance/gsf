@@ -68,7 +68,7 @@ Public MustInherit Class ChannelValueBase(Of T As IChannelDefinition)
 
     Public MustOverride ReadOnly Property IsEmpty() As Boolean Implements IChannelValue(Of T).IsEmpty
 
-    Public MustOverride ReadOnly Property Values() As Double() Implements IChannelValue(Of T).Values
+    Public MustOverride ReadOnly Property Values() As Single() Implements IChannelValue(Of T).Values
 
 End Class
 

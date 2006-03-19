@@ -64,11 +64,11 @@ Public MustInherit Class DigitalDefinitionBase
     End Property
 
     <EditorBrowsable(EditorBrowsableState.Never)> _
-    Public NotOverridable Overrides Property Offset() As Double
+    Public NotOverridable Overrides Property Offset() As Single
         Get
             Return MyBase.Offset
         End Get
-        Set(ByVal value As Double)
+        Set(ByVal value As Single)
             If value = 0 Then
                 MyBase.Offset = value
             Else

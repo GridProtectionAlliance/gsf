@@ -41,16 +41,16 @@ Namespace Ieee1344
         End Property
 
         'Create phasor from polar coordinates (angle expected in Degrees)
-        Public Shared Function CreateFromPolarValues(ByVal phasorDefinition As PhasorDefinition, ByVal angle As Double, ByVal magnitude As Double) As Ieee1344.PhasorValue
+        Public Shared Function CreateFromPolarValues(ByVal phasorDefinition As PhasorDefinition, ByVal angle As Single, ByVal magnitude As Single) As Ieee1344.PhasorValue
 
             Return CreateFromScaledRectangularValues(phasorDefinition, CalculateRealComponent(angle, magnitude), CalculateImaginaryComponent(angle, magnitude))
 
         End Function
 
         'Create phasor from scaled rectangular coordinates
-        Public Shared Function CreateFromScaledRectangularValues(ByVal phasorDefinition As PhasorDefinition, ByVal real As Double, ByVal imaginary As Double) As Ieee1344.PhasorValue
+        Public Shared Function CreateFromScaledRectangularValues(ByVal phasorDefinition As PhasorDefinition, ByVal real As Single, ByVal imaginary As Single) As Ieee1344.PhasorValue
 
-            Dim scale As Double = phasorDefinition.CalFactor
+            Dim scale As Single = phasorDefinition.CalFactor
             Return CreateFromUnscaledRectangularValues(phasorDefinition, real / scale, imaginary / scale)
 
         End Function
@@ -63,21 +63,21 @@ Namespace Ieee1344
         End Function
 
         ' Gets real component from angle (in Degrees) and magnitude
-        Public Shared Function CalculateRealComponent(ByVal angle As Double, ByVal magnitude As Double) As Double
+        Public Shared Function CalculateRealComponent(ByVal angle As Single, ByVal magnitude As Single) As Single
 
             Return magnitude * System.Math.Cos(angle * System.Math.PI / 180)
 
         End Function
 
         ' Gets imaginary component from angle (in Degrees) and magnitude
-        Public Shared Function CalculateImaginaryComponent(ByVal angle As Double, ByVal magnitude As Double) As Double
+        Public Shared Function CalculateImaginaryComponent(ByVal angle As Single, ByVal magnitude As Single) As Single
 
             Return magnitude * System.Math.Sin(angle * System.Math.PI / 180)
 
         End Function
 
         ' Calculate watts from imaginary and real components of two phasors
-        Public Shared Function CalculatePower(ByVal voltage As PhasorValue, ByVal current As PhasorValue) As Double
+        Public Shared Function CalculatePower(ByVal voltage As PhasorValue, ByVal current As PhasorValue) As Single
 
             'Return 3 * (voltage.ScaledReal * current.ScaledReal + voltage.ScaledImaginary * current.ScaledImaginary)
             Return System.Math.Sqrt(3) * voltage.Magnitude * current.Magnitude * System.Math.Cos((voltage.Angle - current.Angle) * System.Math.PI / 180)
@@ -85,7 +85,7 @@ Namespace Ieee1344
         End Function
 
         ' Calculate vars from imaginary and real components of two phasors
-        Public Shared Function CalculateVars(ByVal voltage As PhasorValue, ByVal current As PhasorValue) As Double
+        Public Shared Function CalculateVars(ByVal voltage As PhasorValue, ByVal current As PhasorValue) As Single
 
             'Return 3 * (voltage.ScaledImaginary * current.ScaledReal - voltage.ScaledReal * current.ScaledImaginary)
             Return System.Math.Sqrt(3) * voltage.Magnitude * current.Magnitude * System.Math.Sin((voltage.Angle - current.Angle) * System.Math.PI / 180)
@@ -100,8 +100,8 @@ Namespace Ieee1344
                 m_real = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex)
                 m_imaginary = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 2)
             Else
-                Dim magnitude As Double = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex)
-                Dim angle As Double = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 2) * 180 / System.Math.PI / 10000
+                Dim magnitude As Single = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex)
+                Dim angle As Single = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 2) * 180 / System.Math.PI / 10000
 
                 With CreateFromPolarValues(phasorDefinition, angle, magnitude)
                     m_real = .Real
@@ -128,17 +128,17 @@ Namespace Ieee1344
             End Get
         End Property
 
-        Public ReadOnly Property ScalingFactor() As Double
+        Public ReadOnly Property ScalingFactor() As Single
             Get
                 Return m_phasorDefinition.CalFactor
             End Get
         End Property
 
-        Public Property Angle() As Double
+        Public Property Angle() As Single
             Get
                 Return System.Math.Atan2(ScaledImaginary, ScaledReal) * 180 / System.Math.PI
             End Get
-            Set(ByVal Value As Double)
+            Set(ByVal Value As Single)
                 ' We store angle as one of our required composite values
                 m_compositeValues(CompositeValue.Angle) = Value
 
@@ -147,11 +147,11 @@ Namespace Ieee1344
             End Set
         End Property
 
-        Public Property Magnitude() As Double
+        Public Property Magnitude() As Single
             Get
                 Return System.Math.Sqrt(ScaledReal * ScaledReal + ScaledImaginary * ScaledImaginary)
             End Get
-            Set(ByVal Value As Double)
+            Set(ByVal Value As Single)
                 ' We store magnitude as one of our required composite values
                 m_compositeValues(CompositeValue.Magnitude) = Value
 
@@ -172,15 +172,15 @@ Namespace Ieee1344
             End Get
         End Property
 
-        Public ReadOnly Property ScaledReal() As Double
+        Public ReadOnly Property ScaledReal() As Single
             Get
-                Return Convert.ToDouble(m_real) * ScalingFactor
+                Return Convert.ToSingle(m_real) * ScalingFactor
             End Get
         End Property
 
-        Public ReadOnly Property ScaledImaginary() As Double
+        Public ReadOnly Property ScaledImaginary() As Single
             Get
-                Return Convert.ToDouble(m_imaginary) * ScalingFactor
+                Return Convert.ToSingle(m_imaginary) * ScalingFactor
             End Get
         End Property
 
@@ -193,7 +193,7 @@ Namespace Ieee1344
         Private Sub CalculatePhasorValue()
 
             If m_compositeValues.AllReceived Then
-                Dim angle, magnitude, scale As Double
+                Dim angle, magnitude, scale As Single
 
                 ' All values received, create a new phasor value from composite values
                 angle = m_compositeValues(CompositeValue.Angle)

@@ -144,7 +144,7 @@ Public MustInherit Class DataCellBase
         End Set
     End Property
 
-    Protected Overrides ReadOnly Property BodyLength() As Int16
+    Protected Overrides ReadOnly Property BodyLength() As UInt16
         Get
             Return 2 + m_phasorValues.BinaryLength + m_frequencyValue.BinaryLength + m_analogValues.BinaryLength + m_digitalValues.BinaryLength
         End Get

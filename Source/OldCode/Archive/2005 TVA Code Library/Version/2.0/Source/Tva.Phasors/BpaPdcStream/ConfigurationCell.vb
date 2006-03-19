@@ -87,7 +87,7 @@ Namespace BpaPdcStream
         ' other metadata is defined in an external INI based configuration file - so we
         ' override the base class image implementations which attempt to generate and
         ' parse data based on a common nature of configuration frames
-        Protected Overrides ReadOnly Property BodyLength() As Int16
+        Protected Overrides ReadOnly Property BodyLength() As UInt16
             Get
                 Return 8
             End Get

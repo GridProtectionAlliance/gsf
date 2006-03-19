@@ -52,7 +52,7 @@ Namespace BpaPdcStream
             End Get
         End Property
 
-        Protected Overrides ReadOnly Property BodyLength() As Int16
+        Protected Overrides ReadOnly Property BodyLength() As UInt16
             Get
                 Return 0
             End Get

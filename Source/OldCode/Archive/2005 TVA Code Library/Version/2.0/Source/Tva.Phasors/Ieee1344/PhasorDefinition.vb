@@ -61,11 +61,11 @@ Namespace Ieee1344
             End Set
         End Property
 
-        Public Property CalFactor() As Double
+        Public Property CalFactor() As Single
             Get
                 Return m_calFactor / 100000
             End Get
-            Set(ByVal Value As Double)
+            Set(ByVal Value As Single)
                 m_calFactor = Convert.ToInt32(Value * 100000)
                 If m_calFactor > MaximumCalFactor Then Throw New OverflowException("CalFactor value cannot exceed " & MaximumCalFactor)
             End Set

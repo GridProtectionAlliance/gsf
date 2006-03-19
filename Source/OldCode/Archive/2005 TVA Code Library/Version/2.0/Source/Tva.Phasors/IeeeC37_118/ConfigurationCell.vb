@@ -98,7 +98,7 @@ Namespace IeeeC37_118
             End Set
         End Property
 
-        Protected Overrides ReadOnly Property HeaderLength() As Int16
+        Protected Overrides ReadOnly Property HeaderLength() As UInt16
             Get
                 Return MyBase.HeaderLength + 10
             End Get
@@ -128,7 +128,7 @@ Namespace IeeeC37_118
             MyBase.ParseHeaderImage(state, binaryImage, startIndex)
             startIndex += MyBase.HeaderLength
 
-            IDCode = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex)
+            IDCode = EndianOrder.BigEndian.ToUInt16(binaryImage, startIndex)
             m_formatFlags = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 2)
 
             With parsingState
@@ -139,7 +139,7 @@ Namespace IeeeC37_118
 
         End Sub
 
-        Protected Overrides ReadOnly Property FooterLength() As Int16
+        Protected Overrides ReadOnly Property FooterLength() As UInt16
             Get
                 Return MyBase.FooterLength + _
                     PhasorDefinitions.Count * PhasorDefinition.ConversionFactorLength + _

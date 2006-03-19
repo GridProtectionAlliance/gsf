@@ -34,7 +34,7 @@ Public MustInherit Class ChannelFrameBase(Of T As IChannelCell)
     Private m_cells As IChannelCellCollection(Of T)
     Private m_ticks As Long
     Private m_published As Boolean
-    Private m_parsedBinaryLength As Int16
+    Private m_parsedBinaryLength As UInt16
 
     Protected Sub New(ByVal cells As IChannelCellCollection(Of T))
 
@@ -73,7 +73,13 @@ Public MustInherit Class ChannelFrameBase(Of T As IChannelCell)
 
     End Sub
 
-    Protected Overridable ReadOnly Property Cells() As Object Implements IChannelFrame.Cells
+    Protected Overridable ReadOnly Property Cells() As IChannelCellCollection(Of T)
+        Get
+            Return m_cells
+        End Get
+    End Property
+
+    Private ReadOnly Property IChannelFrameCells() As Object Implements IChannelFrame.Cells
         Get
             Return m_cells
         End Get
@@ -118,8 +124,8 @@ Public MustInherit Class ChannelFrameBase(Of T As IChannelCell)
         End Set
     End Property
 
-    Protected WriteOnly Property ParsedBinaryLength() As Int16
-        Set(ByVal value As Int16)
+    Protected WriteOnly Property ParsedBinaryLength() As UInt16
+        Set(ByVal value As UInt16)
             m_parsedBinaryLength = value
         End Set
     End Property
@@ -127,7 +133,7 @@ Public MustInherit Class ChannelFrameBase(Of T As IChannelCell)
     ' We override normal binary length so we can extend length to include check-sum
     ' Also - if frame length was parsed from stream header - we use that length
     ' instead of the calculated length...
-    Public Overrides ReadOnly Property BinaryLength() As Int16
+    Public Overrides ReadOnly Property BinaryLength() As UInt16
         Get
             If m_parsedBinaryLength > 0 Then
                 Return m_parsedBinaryLength
@@ -164,7 +170,7 @@ Public MustInherit Class ChannelFrameBase(Of T As IChannelCell)
 
     End Sub
 
-    Protected Overrides ReadOnly Property BodyLength() As Int16
+    Protected Overrides ReadOnly Property BodyLength() As UInt16
         Get
             Return m_cells.BinaryLength
         End Get
@@ -193,7 +199,7 @@ Public MustInherit Class ChannelFrameBase(Of T As IChannelCell)
         Dim sumLength As Int16 = BinaryLength - 2
 
 #If DEBUG Then
-        Dim bufferSum As UInt16 = EndianOrder.BigEndian.ToInt16(buffer, startIndex + sumLength)
+        Dim bufferSum As UInt16 = EndianOrder.BigEndian.ToUInt16(buffer, startIndex + sumLength)
         Dim calculatedSum As UInt16 = CalculateChecksum(buffer, startIndex, sumLength)
         Debug.WriteLine("Buffer Sum = " & bufferSum & ", Calculated Sum = " & calculatedSum)
         Return (bufferSum = calculatedSum)

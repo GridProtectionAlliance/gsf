@@ -24,9 +24,9 @@ Namespace BpaPdcStream
 
         Inherits PhasorDefinitionBase
 
-        Private m_ratio As Double
-        Private m_calFactor As Double
-        Private m_shunt As Double
+        Private m_ratio As Single
+        Private m_calFactor As Single
+        Private m_shunt As Single
         Private m_voltageReferenceIndex As Integer
 
         Public Sub New(ByVal parent As ConfigurationCell)
@@ -64,7 +64,7 @@ Namespace BpaPdcStream
             If entry.Length > 2 Then CalFactor = CDbl(Trim(entry(2))) Else CalFactor = defaultPhasor.CalFactor
             If entry.Length > 3 Then Offset = CDbl(Trim(entry(3))) Else Offset = defaultPhasor.Offset
             If entry.Length > 4 Then Shunt = CDbl(Trim(entry(4))) Else Shunt = defaultPhasor.Shunt
-            If entry.Length > 5 Then VoltageReferenceIndex = CInt(Trim(entry(5))) Else VoltageReferenceIndex = defaultPhasor.VoltageReferenceIndex
+            If entry.Length > 5 Then VoltageReferenceIndex = Convert.ToInt32(Trim(entry(5))) Else VoltageReferenceIndex = defaultPhasor.VoltageReferenceIndex
             If entry.Length > 6 Then Label = Trim(entry(6)) Else Label = defaultPhasor.Label
 
             Me.Index = index
@@ -83,29 +83,29 @@ Namespace BpaPdcStream
             End Get
         End Property
 
-        Public Property Ratio() As Double
+        Public Property Ratio() As Single
             Get
                 Return m_ratio
             End Get
-            Set(ByVal Value As Double)
+            Set(ByVal Value As Single)
                 m_ratio = Value
             End Set
         End Property
 
-        Public Property CalFactor() As Double
+        Public Property CalFactor() As Single
             Get
                 Return m_calFactor
             End Get
-            Set(ByVal Value As Double)
+            Set(ByVal Value As Single)
                 m_calFactor = Value
             End Set
         End Property
 
-        Public Property Shunt() As Double
+        Public Property Shunt() As Single
             Get
                 Return m_shunt
             End Get
-            Set(ByVal Value As Double)
+            Set(ByVal Value As Single)
                 m_shunt = Value
             End Set
         End Property
@@ -119,7 +119,7 @@ Namespace BpaPdcStream
             End Set
         End Property
 
-        Public Overloads Shared ReadOnly Property ScalingFactor(ByVal phasor As PhasorDefinition) As Double
+        Public Overloads Shared ReadOnly Property ScalingFactor(ByVal phasor As PhasorDefinition) As Single
             Get
                 With phasor
                     If .Type = PhasorType.Voltage Then
@@ -160,7 +160,7 @@ Namespace BpaPdcStream
             End Get
         End Property
 
-        Protected Overrides ReadOnly Property BodyLength() As Int16
+        Protected Overrides ReadOnly Property BodyLength() As UInt16
             Get
                 Return 0
             End Get

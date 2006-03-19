@@ -21,6 +21,7 @@ Imports Tva.Phasors.Common
 ' This class represents the common implementation of the protocol independent representation of a collection of any kind of data.
 ' By having our collections implement IChannel (inherited via IChannelCollection), we have the benefit of providing a binary image
 ' of the entire collection
+<CLSCompliant(False)> _
 Public MustInherit Class ChannelCollectionBase(Of T As IChannel)
 
     Inherits List(Of T)
@@ -42,12 +43,6 @@ Public MustInherit Class ChannelCollectionBase(Of T As IChannel)
         MyBase.Add(value)
 
     End Sub
-
-    Private ReadOnly Property IChannelCollectionItem(ByVal index As Integer) As T
-        Get
-            Return Me(index)
-        End Get
-    End Property
 
     Public MustOverride ReadOnly Property InheritedType() As Type Implements IChannelCollection(Of T).InheritedType
 
@@ -73,7 +68,7 @@ Public MustInherit Class ChannelCollectionBase(Of T As IChannel)
 
     End Sub
 
-    Public Overridable ReadOnly Property BinaryLength() As Int16 Implements IChannelCollection(Of T).BinaryLength
+    Public Overridable ReadOnly Property BinaryLength() As UInt16 Implements IChannelCollection(Of T).BinaryLength
         Get
             If Count > 0 Then
                 Return Item(0).BinaryLength * Count

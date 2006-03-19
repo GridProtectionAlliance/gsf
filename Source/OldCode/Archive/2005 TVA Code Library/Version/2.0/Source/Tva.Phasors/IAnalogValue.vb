@@ -21,8 +21,8 @@ Public Interface IAnalogValue
 
     Inherits IChannelValue(Of IAnalogDefinition)
 
-    Property Value() As Double
+    Property Value() As Single
 
-    Property UnscaledValue() As Int16
+    Property IntegerValue() As Int16
 
 End Interface

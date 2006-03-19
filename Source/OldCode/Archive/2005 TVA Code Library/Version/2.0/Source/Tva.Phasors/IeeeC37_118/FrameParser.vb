@@ -32,7 +32,7 @@ Namespace IeeeC37_118
 
 #Region " Public Member Declarations "
 
-        Public Event ReceivedFrame(ByVal frame As IFrameHeader, ByVal buffer As Byte(), ByVal startIndex As Integer)
+        Public Event ReceivedFrame(ByVal frame As ICommonFrameHeader, ByVal buffer As Byte(), ByVal startIndex As Integer)
         'Public Event ReceivedHeaderFile(ByVal headerFile As HeaderFile)
         Public Event ReceivedConfigFile1(ByVal frame As ConfigurationFrame)
         Public Event ReceivedConfigFile2(ByVal frame As ConfigurationFrame)
@@ -199,7 +199,7 @@ Namespace IeeeC37_118
 
         Private Sub ProcessBuffer(ByVal buffer As Byte())
 
-            Dim parsedFrameHeader As IFrameHeader
+            Dim parsedFrameHeader As ICommonFrameHeader
             Dim index As Integer
 
             If m_dataStream IsNot Nothing Then
@@ -210,7 +210,7 @@ Namespace IeeeC37_118
 
             Do Until index >= buffer.Length
                 ' See if there is enough data in the buffer to parse a frame header
-                If index + FrameHeader.BinaryLength > buffer.Length Then
+                If index + CommonFrameHeader.BinaryLength > buffer.Length Then
                     ' If not, save off remaining buffer to prepend onto next read
                     m_dataStream = New MemoryStream
                     m_dataStream.Write(buffer, index, buffer.Length - index)
@@ -218,7 +218,7 @@ Namespace IeeeC37_118
                 End If
 
                 ' Parse frame header
-                parsedFrameHeader = FrameHeader.ParseBinaryImage(m_revisionNumber, m_configFrame2, buffer, index)
+                parsedFrameHeader = CommonFrameHeader.ParseBinaryImage(m_revisionNumber, m_configFrame2, buffer, index)
 
                 ' See if there is enough data in the buffer to parse the entire frame
                 If index + parsedFrameHeader.FrameLength > buffer.Length Then

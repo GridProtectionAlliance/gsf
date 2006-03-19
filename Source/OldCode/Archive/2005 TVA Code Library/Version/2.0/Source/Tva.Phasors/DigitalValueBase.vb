@@ -74,9 +74,9 @@ Public MustInherit Class DigitalValueBase
         End Set
     End Property
 
-    Public Overrides ReadOnly Property Values() As Double()
+    Public Overrides ReadOnly Property Values() As Single()
         Get
-            Return New Double() {m_value}
+            Return New Single() {m_value}
         End Get
     End Property
 
@@ -86,7 +86,7 @@ Public MustInherit Class DigitalValueBase
         End Get
     End Property
 
-    Protected Overrides ReadOnly Property BodyLength() As Int16
+    Protected Overrides ReadOnly Property BodyLength() As UInt16
         Get
             Return 2
         End Get

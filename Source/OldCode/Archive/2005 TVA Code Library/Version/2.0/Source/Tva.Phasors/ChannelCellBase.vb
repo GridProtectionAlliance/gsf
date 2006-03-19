@@ -70,9 +70,9 @@ Public MustInherit Class ChannelCellBase
         End Get
     End Property
 
-    Public Overrides ReadOnly Property BinaryLength() As Int16
+    Public Overrides ReadOnly Property BinaryLength() As UInt16
         Get
-            Dim length As Int16 = MyBase.BinaryLength
+            Dim length As UInt16 = MyBase.BinaryLength
 
             If m_alignOnDWordBoundry Then
                 ' If requested, we align frame cells on 32-bit word boundries

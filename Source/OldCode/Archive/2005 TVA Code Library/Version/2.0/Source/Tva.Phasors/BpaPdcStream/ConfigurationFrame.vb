@@ -132,7 +132,7 @@ Namespace BpaPdcStream
                         m_defaultPhasorV = New PhasorDefinition(Nothing, 0, .KeyValue("DEFAULT", "PhasorV", DefaultVoltagePhasorEntry))
                         m_defaultPhasorI = New PhasorDefinition(Nothing, 0, .KeyValue("DEFAULT", "PhasorI", DefaultCurrentPhasorEntry))
                         m_defaultFrequency = New FrequencyDefinition(Nothing, .KeyValue("DEFAULT", "Frequency", DefaultFrequencyEntry))
-                        FrameRate = CInt(.KeyValue("CONFIG", "SampleRate", "30"))
+                        FrameRate = Convert.ToInt16(.KeyValue("CONFIG", "SampleRate", "30"))
 
                         Cells.Clear()
 
@@ -142,13 +142,13 @@ Namespace BpaPdcStream
                                 ' Make sure this is not a special section
                                 If String.Compare(section, "DEFAULT", True) <> 0 And String.Compare(section, "CONFIG", True) <> 0 Then
                                     ' Create new PMU entry structure from config file settings...
-                                    phasorCount = CInt(.KeyValue(section, "NumberPhasors", "0"))
+                                    phasorCount = Convert.ToInt32(.KeyValue(section, "NumberPhasors", "0"))
 
-                                    pmuCell = New ConfigurationCell(Me)
+                                    pmuCell = New ConfigurationCell(Me, 0, LineFrequency.Hz60)
 
                                     pmuCell.IDLabel = section
                                     pmuCell.StationName = .KeyValue(section, "Name", section)
-                                    pmuCell.IDCode = CInt(.KeyValue(section, "PMU", Cells.Count))
+                                    pmuCell.IDCode = Convert.ToUInt16(.KeyValue(section, "PMU", Cells.Count))
 
                                     For x = 0 To phasorCount - 1
                                         pmuCell.PhasorDefinitions.Add(New PhasorDefinition(pmuCell, x + 1, .KeyValue(section, "Phasor" & (x + 1), DefaultVoltagePhasorEntry)))
@@ -359,7 +359,7 @@ Namespace BpaPdcStream
 
         End Function
 
-        Protected Overrides ReadOnly Property HeaderLength() As Int16
+        Protected Overrides ReadOnly Property HeaderLength() As UInt16
             Get
                 Return 16
             End Get

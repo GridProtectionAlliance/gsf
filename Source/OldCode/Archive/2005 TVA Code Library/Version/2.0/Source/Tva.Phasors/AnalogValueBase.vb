@@ -24,7 +24,7 @@ Public MustInherit Class AnalogValueBase
     Inherits ChannelValueBase(Of IAnalogDefinition)
     Implements IAnalogValue
 
-    Private m_value As Double
+    Private m_value As Single
 
     Protected Sub New(ByVal parent As IDataCell)
 
@@ -32,8 +32,8 @@ Public MustInherit Class AnalogValueBase
 
     End Sub
 
-    ' Derived classes are expected expose a Public Sub New(ByVal parent As IDataCell, ByVal analogDefinition As IAnalogDefinition, ByVal value As Double)
-    Protected Sub New(ByVal parent As IDataCell, ByVal analogDefinition As IAnalogDefinition, ByVal value As Double)
+    ' Derived classes are expected expose a Public Sub New(ByVal parent As IDataCell, ByVal analogDefinition As IAnalogDefinition, ByVal value As Single)
+    Protected Sub New(ByVal parent As IDataCell, ByVal analogDefinition As IAnalogDefinition, ByVal value As Single)
 
         MyBase.New(parent, analogDefinition)
 
@@ -42,9 +42,9 @@ Public MustInherit Class AnalogValueBase
     End Sub
 
     ' Derived classes are expected expose a Public Sub New(ByVal parent As IDataCell, ByVal analogDefinition As IAnalogDefinition, ByVal unscaledValue As Int16)
-    Protected Sub New(ByVal parent As IDataCell, ByVal analogDefinition As IAnalogDefinition, ByVal unscaledValue As Int16)
+    Protected Sub New(ByVal parent As IDataCell, ByVal analogDefinition As IAnalogDefinition, ByVal integerValue As Int16)
 
-        MyClass.New(parent, analogDefinition, unscaledValue / analogDefinition.ScalingFactor)
+        MyClass.New(parent, analogDefinition, Convert.ToSingle(integerValue))
 
     End Sub
 
@@ -54,7 +54,7 @@ Public MustInherit Class AnalogValueBase
         MyBase.New(parent, analogDefinition)
 
         If DataFormat = Phasors.DataFormat.FixedInteger Then
-            UnscaledValue = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex)
+            IntegerValue = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex)
         Else
             m_value = EndianOrder.BigEndian.ToSingle(binaryImage, startIndex)
         End If
@@ -68,36 +68,27 @@ Public MustInherit Class AnalogValueBase
 
     End Sub
 
-    'Public Overridable Shadows Property Definition() As IAnalogDefinition Implements IAnalogValue.Definition
-    '    Get
-    '        Return MyBase.Definition
-    '    End Get
-    '    Set(ByVal value As IAnalogDefinition)
-    '        MyBase.Definition = Value
-    '    End Set
-    'End Property
-
-    Public Overridable Property Value() As Double Implements IAnalogValue.Value
+    Public Overridable Property Value() As Single Implements IAnalogValue.Value
         Get
             Return m_value
         End Get
-        Set(ByVal value As Double)
+        Set(ByVal value As Single)
             m_value = value
         End Set
     End Property
 
-    Public Overridable Property UnscaledValue() As Int16 Implements IAnalogValue.UnscaledValue
+    Public Overridable Property IntegerValue() As Int16 Implements IAnalogValue.IntegerValue
         Get
-            Return Convert.ToInt16(m_value * Definition.ScalingFactor)
+            Return Convert.ToInt16(m_value)
         End Get
         Set(ByVal value As Int16)
-            m_value = value / Definition.ScalingFactor
+            m_value = Convert.ToSingle(value)
         End Set
     End Property
 
-    Public Overrides ReadOnly Property Values() As Double()
+    Public Overrides ReadOnly Property Values() As Single()
         Get
-            Return New Double() {m_value}
+            Return New Single() {m_value}
         End Get
     End Property
 
@@ -107,7 +98,7 @@ Public MustInherit Class AnalogValueBase
         End Get
     End Property
 
-    Protected Overrides ReadOnly Property BodyLength() As Int16
+    Protected Overrides ReadOnly Property BodyLength() As UInt16
         Get
             If DataFormat = Phasors.DataFormat.FixedInteger Then
                 Return 2
@@ -122,9 +113,9 @@ Public MustInherit Class AnalogValueBase
             Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BodyLength)
 
             If DataFormat = Phasors.DataFormat.FixedInteger Then
-                EndianOrder.BigEndian.CopyBytes(UnscaledValue, buffer, 0)
+                EndianOrder.BigEndian.CopyBytes(IntegerValue, buffer, 0)
             Else
-                EndianOrder.BigEndian.CopyBytes(Convert.ToSingle(m_value), buffer, 0)
+                EndianOrder.BigEndian.CopyBytes(m_value, buffer, 0)
             End If
 
             Return buffer

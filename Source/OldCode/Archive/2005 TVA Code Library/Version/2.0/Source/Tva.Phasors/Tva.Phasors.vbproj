@@ -22,7 +22,7 @@
     <DefineTrace>true</DefineTrace>
     <OutputPath>..\bin\</OutputPath>
     <DocumentationFile>Tva.Phasors.xml</DocumentationFile>
-    <NoWarn>42016,41999,42017,42018,42019,42032,42036,42020,42021,42022</NoWarn>
+    <NoWarn>41999,42016</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -31,7 +31,7 @@
     <Optimize>true</Optimize>
     <OutputPath>..\bin\</OutputPath>
     <DocumentationFile>Tva.Phasors.xml</DocumentationFile>
-    <NoWarn>42016,41999,42017,42018,42019,42032,42036,42020,42021,42022</NoWarn>
+    <NoWarn>41999,42016</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -86,6 +86,21 @@
     <Compile Include="ConfigurationFrameBase.vb" />
     <Compile Include="ConfigurationFrameCollection.vb" />
     <Compile Include="ConfigurationFrameParsingState.vb" />
+    <Compile Include="CommandCellCollection.vb" />
+    <Compile Include="CommandFrameParsingState.vb" />
+    <Compile Include="CommandCell.vb" />
+    <Compile Include="CommandFrameBase.vb" />
+    <Compile Include="ICommandFrameParsingState.vb" />
+    <Compile Include="ICommandFrame.vb" />
+    <Compile Include="HeaderFrameParsingState.vb" />
+    <Compile Include="IeeeC37_118\HeaderFrame.vb" />
+    <Compile Include="IHeaderFrameParsingState.vb" />
+    <Compile Include="HeaderFrameBase.vb" />
+    <Compile Include="HeaderCell.vb" />
+    <Compile Include="HeaderCellCollection.vb" />
+    <Compile Include="IHeaderFrame.vb" />
+    <Compile Include="ICommandCell.vb" />
+    <Compile Include="IHeaderCell.vb" />
     <Compile Include="DataCellBase.vb" />
     <Compile Include="DataCellCollection.vb" />
     <Compile Include="DataCellParsingState.vb" />
@@ -147,11 +162,11 @@
     <Compile Include="IeeeC37_118\DataFrame.vb" />
     <Compile Include="IeeeC37_118\DigitalDefinition.vb" />
     <Compile Include="IeeeC37_118\DigitalValue.vb" />
-    <Compile Include="IeeeC37_118\FrameHeader.vb" />
+    <Compile Include="IeeeC37_118\CommonFrameHeader.vb" />
     <Compile Include="IeeeC37_118\FrameParser.vb" />
     <Compile Include="IeeeC37_118\FrequencyDefinition.vb" />
     <Compile Include="IeeeC37_118\FrequencyValue.vb" />
-    <Compile Include="IeeeC37_118\IFrameHeader.vb" />
+    <Compile Include="IeeeC37_118\ICommonFrameHeader.vb" />
     <Compile Include="IeeeC37_118\PhasorDefinition.vb" />
     <Compile Include="IeeeC37_118\PhasorValue.vb" />
     <Compile Include="IFrequencyDefinition.vb" />

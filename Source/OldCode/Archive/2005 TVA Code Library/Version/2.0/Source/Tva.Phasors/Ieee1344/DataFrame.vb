@@ -126,7 +126,7 @@ Namespace Ieee1344
             End Get
         End Property
 
-        Public ReadOnly Property NominalFrequency() As Double
+        Public ReadOnly Property NominalFrequency() As Single
             Get
                 If m_configFile Is Nothing Then
                     Return 60
@@ -140,20 +140,20 @@ Namespace Ieee1344
             End Get
         End Property
 
-        Public Property Frequency() As Double
+        Public Property Frequency() As Single
             Get
                 Return NominalFrequency + m_frequency / 1000
             End Get
-            Set(ByVal Value As Double)
+            Set(ByVal Value As Single)
                 m_frequency = Convert.ToInt16((Value - NominalFrequency) * 1000)
             End Set
         End Property
 
-        Public Property DfDt() As Double
+        Public Property DfDt() As Single
             Get
                 Return m_dfdt / 100
             End Get
-            Set(ByVal Value As Double)
+            Set(ByVal Value As Single)
                 m_dfdt = Convert.ToInt16(Value * 100)
             End Set
         End Property

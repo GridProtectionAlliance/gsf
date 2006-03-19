@@ -21,9 +21,9 @@ Public Interface IFrequencyValue
 
     Inherits IChannelValue(Of IFrequencyDefinition)
 
-    Property Frequency() As Double
+    Property Frequency() As Single
 
-    Property DfDt() As Double
+    Property DfDt() As Single
 
     Property UnscaledFrequency() As Int16
 

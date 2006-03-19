@@ -18,6 +18,7 @@
 Imports Tva.Phasors.Common
 
 ' This class represents the common implementation of the protocol independent definition of any kind of data.
+<CLSCompliant(False)> _
 Public MustInherit Class ChannelBase
 
     Implements IChannel
@@ -32,7 +33,7 @@ Public MustInherit Class ChannelBase
     End Property
 
     ' This property is not typically overriden
-    Public Overridable ReadOnly Property BinaryLength() As Int16 Implements IChannel.BinaryLength
+    Public Overridable ReadOnly Property BinaryLength() As UInt16 Implements IChannel.BinaryLength
         Get
             Return HeaderLength + BodyLength + FooterLength
         End Get
@@ -76,7 +77,7 @@ Public MustInherit Class ChannelBase
     Protected Overridable Sub ParseFooterImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
     End Sub
 
-    Protected Overridable ReadOnly Property HeaderLength() As Int16
+    Protected Overridable ReadOnly Property HeaderLength() As UInt16
         Get
             Return 0
         End Get
@@ -88,7 +89,7 @@ Public MustInherit Class ChannelBase
         End Get
     End Property
 
-    Protected Overridable ReadOnly Property BodyLength() As Int16
+    Protected Overridable ReadOnly Property BodyLength() As UInt16
         Get
             Return 0
         End Get
@@ -100,7 +101,7 @@ Public MustInherit Class ChannelBase
         End Get
     End Property
 
-    Protected Overridable ReadOnly Property FooterLength() As Int16
+    Protected Overridable ReadOnly Property FooterLength() As UInt16
         Get
             Return 0
         End Get
@@ -113,4 +114,3 @@ Public MustInherit Class ChannelBase
     End Property
 
 End Class
-

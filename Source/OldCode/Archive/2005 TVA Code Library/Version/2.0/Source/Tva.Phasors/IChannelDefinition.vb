@@ -27,11 +27,15 @@ Public Interface IChannelDefinition
 
     Property Index() As Integer
 
-    Property Offset() As Double
+    Property Offset() As Single
 
     Property ScalingFactor() As Integer
 
     ReadOnly Property MaximumScalingFactor() As Integer
+
+    Property ConversionFactor() As Single
+
+    ReadOnly Property ScalePerBit() As Single
 
     Property Label() As String
 

@@ -23,10 +23,8 @@ Public Interface IFrequencyDefinition
 
     ReadOnly Property NominalFrequency() As LineFrequency
 
-    Property DfDtOffset() As Double
+    Property DfDtOffset() As Single
 
     Property DfDtScalingFactor() As Integer
-
-    ReadOnly Property MaximumDfDtScalingFactor() As Integer
 
 End Interface

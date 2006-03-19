@@ -36,11 +36,9 @@ Namespace BpaPdcStream
         TransmissionErrors = Bit6       ' Errors if set (yes = 1)              
         PMUSynchronized = Bit5          ' Not sync'd if set (yes = 0)        
         DataSortedByArrival = Bit4      ' Data out of sync if set (yes = 1)        
-        <Obsolete("This bit definition is for obsolete uses that is no longer needed.", False)> _
         DataSortedByTimestamp = Bit3    ' Sorted by timestamp if not set (yes = 0)        
         PDCExchangeFormat = Bit2        ' PDC format if set (yes = 1)        
         MacrodyneFormat = Bit1          ' Macrodyne or IEEE format (Macrodyne = 1)        
-        <Obsolete("This bit definition is for obsolete uses that is no longer needed.", False)> _
         TimestampIncluded = Bit0        ' Timestamp included if not set (yes = 0)
     End Enum
 

@@ -22,7 +22,7 @@ Namespace IeeeC37_118
 
         Inherits AnalogValueBase
 
-        Public Sub New(ByVal parent As IDataCell, ByVal analogDefinition As IAnalogDefinition, ByVal value As Double)
+        Public Sub New(ByVal parent As IDataCell, ByVal analogDefinition As IAnalogDefinition, ByVal value As Single)
 
             MyBase.New(parent, analogDefinition, value)
 
