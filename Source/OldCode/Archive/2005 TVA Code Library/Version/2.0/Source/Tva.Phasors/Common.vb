@@ -42,20 +42,44 @@ Public Enum LineFrequency As Byte
     Hz60
 End Enum
 
+''' <summary>Fundamental frame types</summary>
+Public Enum FundamentalFrameType
+    ConfigurationFrame
+    DataFrame
+    HeaderFrame
+    CommandFrame
+    Undetermined
+End Enum
+
+''' <summary>Phasor data transport layer</summary>
+Public Enum DataTransportLayer
+    Tcp
+    Udp
+    Com
+End Enum
+
+''' <summary>Phasor data protocol</summary>
+Public Enum PmuProtocol
+    IeeeC37_118V1
+    IeeeC37_118D6
+    Ieee1344
+    BpaPdcStream
+End Enum
+
 ''' <summary>PMU commands</summary>
-Public Enum Command As Short
+Public Enum PmuCommand As Short
     ''' <summary>0001  Turn off transmission of data frames</summary>
     DisableRealTimeData = Bit0
     ''' <summary>0010  Turn on transmission of data frames</summary>
     EnableRealTimeData = Bit1
     ''' <summary>0011  Send header file</summary>
-    SendHeaderFile = Bit0 Or Bit1
+    SendHeaderFrame = Bit0 Or Bit1
     ''' <summary>0100  Send configuration file 1</summary>
-    SendConfigFile1 = Bit2
+    SendConfigurationFrame1 = Bit2
     ''' <summary>0101  Send configuration file 2</summary>
-    SendConfigFile2 = Bit0 Or Bit2
-    ''' <summary>1000  Send extended frame for IEEE C37.118 / receive reference phasor for IEEE 1344</summary>
-    ExtendedFrame = Bit3
+    SendConfigurationFrame2 = Bit0 Or Bit2
+    ''' <summary>1000  Receive extended frame for IEEE C37.118 / receive reference phasor for IEEE 1344</summary>
+    ReceiveExtendedFrame = Bit3
     ''' <summary>Reserved bits</summary>
     ReservedBits = Int16.MaxValue And Not (Bit0 Or Bit1 Or Bit2 Or Bit3)
 End Enum

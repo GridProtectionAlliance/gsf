@@ -73,6 +73,8 @@ Public MustInherit Class ChannelFrameBase(Of T As IChannelCell)
 
     End Sub
 
+    Protected MustOverride ReadOnly Property FundamentalFrameType() As FundamentalFrameType Implements IChannelFrame.FrameType
+
     Protected Overridable ReadOnly Property Cells() As IChannelCellCollection(Of T)
         Get
             Return m_cells
@@ -197,15 +199,7 @@ Public MustInherit Class ChannelFrameBase(Of T As IChannelCell)
     Protected Overridable Function ChecksumIsValid(ByVal buffer As Byte(), ByVal startIndex As Integer) As Boolean
 
         Dim sumLength As Int16 = BinaryLength - 2
-
-#If DEBUG Then
-        Dim bufferSum As UInt16 = EndianOrder.BigEndian.ToUInt16(buffer, startIndex + sumLength)
-        Dim calculatedSum As UInt16 = CalculateChecksum(buffer, startIndex, sumLength)
-        Debug.WriteLine("Buffer Sum = " & bufferSum & ", Calculated Sum = " & calculatedSum)
-        Return (bufferSum = calculatedSum)
-#Else
         Return EndianOrder.BigEndian.ToUInt16(buffer, startIndex + sumLength) = CalculateChecksum(buffer, startIndex, sumLength)
-#End If
 
     End Function
 

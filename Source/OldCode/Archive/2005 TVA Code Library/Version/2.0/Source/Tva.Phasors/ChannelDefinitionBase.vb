@@ -17,6 +17,7 @@
 
 Imports System.Text
 Imports Tva.Interop.Bit
+Imports Tva.Collections.Common
 Imports Tva.Phasors.Common
 
 ' This class represents the common implementation of the protocol independent definition of any kind of data.
@@ -187,7 +188,11 @@ Public MustInherit Class ChannelDefinitionBase
 
     Protected Overrides Sub ParseBodyImage(ByVal state As IChannelParsingState, ByVal binaryImage() As Byte, ByVal startIndex As Integer)
 
-        Label = Encoding.ASCII.GetString(binaryImage, startIndex, MaximumLabelLength)
+        Dim length As Integer = Array.IndexOf(binaryImage, Convert.ToByte(0), startIndex, MaximumLabelLength) - startIndex
+
+        If length < 0 Then length = MaximumLabelLength
+
+        Label = Encoding.ASCII.GetString(binaryImage, startIndex, length)
 
     End Sub
 

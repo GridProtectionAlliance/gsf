@@ -53,8 +53,8 @@ Namespace IO
 
         End Function
 
-        ''' <summary>Returns the specified portion of the source buffer</summary>
-        ''' <remarks>This function will grow or shrink a buffer as needed to make it the desired length</remarks>
+        ''' <summary>Returns a copy of the specified portion of the source buffer</summary>
+        ''' <remarks>This function will grow or shrink returned buffer as needed to make it the desired length</remarks>
         Public Shared Function CopyBuffer(ByVal buffer As Byte(), ByVal startIndex As Integer, ByVal length As Integer) As Byte()
 
             If startIndex = 0 AndAlso Buffer.Length = length Then

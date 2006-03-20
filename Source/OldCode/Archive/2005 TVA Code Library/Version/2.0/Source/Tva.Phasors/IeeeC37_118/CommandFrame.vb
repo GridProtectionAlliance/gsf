@@ -2,8 +2,8 @@
 '  CommandFrame.vb - IEEE C37.118 command frame
 '  Copyright © 2005 - TVA, all rights reserved - Gbtc
 '
-'  Build Environment: VB.NET, Visual Studio 2003
-'  Primary Developer: James R Carroll, System Analyst [TVA]
+'  Build Environment: VB.NET, Visual Studio 2005
+'  Primary Developer: James R Carroll, Operations Data Architecture [TVA]
 '      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
 '       Phone: 423/751-2827
 '       Email: jrcarrol@tva.gov
@@ -29,13 +29,13 @@ Namespace IeeeC37_118
         Private m_revisionNumber As RevisionNumber
         Private m_version As Byte
 
-        Public Sub New(ByVal command As Command)
+        Public Sub New(ByVal command As PmuCommand)
 
             MyClass.New(IeeeC37_118.RevisionNumber.RevisionV1, command)
 
         End Sub
 
-        Public Sub New(ByVal revisionNumber As RevisionNumber, ByVal command As Command)
+        Public Sub New(ByVal revisionNumber As RevisionNumber, ByVal command As PmuCommand)
 
             MyBase.New(New CommandCellCollection(MaximumExtendedDataLength), command)
             m_revisionNumber = revisionNumber
@@ -61,6 +61,12 @@ Namespace IeeeC37_118
         Public Overrides ReadOnly Property InheritedType() As System.Type
             Get
                 Return Me.GetType()
+            End Get
+        End Property
+
+        Protected Overrides ReadOnly Property FundamentalFrameType() As FundamentalFrameType
+            Get
+                Return Phasors.FundamentalFrameType.CommandFrame
             End Get
         End Property
 

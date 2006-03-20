@@ -2,8 +2,8 @@
 '  CommandFrame.vb - IEEE1344 Command Frame
 '  Copyright © 2005 - TVA, all rights reserved - Gbtc
 '
-'  Build Environment: VB.NET, Visual Studio 2003
-'  Primary Developer: James R Carroll, System Analyst [TVA]
+'  Build Environment: VB.NET, Visual Studio 2005
+'  Primary Developer: James R Carroll, Operations Data Architecture [TVA]
 '      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
 '       Phone: 423/751-2827
 '       Email: jrcarrol@tva.gov
@@ -113,6 +113,12 @@ Namespace Ieee1344
                 'EndianOrder.BigEndian.CopyBytes(CRC_CCITT(-1, buffer, 0, 16), buffer, 16)
 
                 'Return buffer
+            End Get
+        End Property
+
+        Public ReadOnly Property BinaryLength() As Integer
+            Get
+                Return FrameLength
             End Get
         End Property
 

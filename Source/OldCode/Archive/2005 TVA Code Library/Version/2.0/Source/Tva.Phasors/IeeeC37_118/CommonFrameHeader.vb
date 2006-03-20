@@ -2,8 +2,8 @@
 '  CommonFrameHeader.vb - IEEE C37.118 Common frame header functions
 '  Copyright © 2005 - TVA, all rights reserved - Gbtc
 '
-'  Build Environment: VB.NET, Visual Studio 2003
-'  Primary Developer: James R Carroll, System Analyst [TVA]
+'  Build Environment: VB.NET, Visual Studio 2005
+'  Primary Developer: James R Carroll, Operations Data Architecture [TVA]
 '      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
 '       Phone: 423/751-2827
 '       Email: jrcarrol@tva.gov
@@ -181,7 +181,7 @@ Namespace IeeeC37_118
                 .FrameLength = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 2)
                 .IDCode = EndianOrder.BigEndian.ToUInt16(binaryImage, startIndex + 4)
 
-                Dim secondOfCentury As Single = EndianOrder.BigEndian.ToUInt32(binaryImage, startIndex + 6)
+                Dim secondOfCentury As UInt32 = EndianOrder.BigEndian.ToUInt32(binaryImage, startIndex + 6)
                 Dim fractionOfSecond As Int32 = EndianOrder.BigEndian.ToInt32(binaryImage, startIndex + 10)
 
                 If configurationFrame Is Nothing OrElse .FrameType = FrameType.ConfigurationFrame1 OrElse .FrameType = FrameType.ConfigurationFrame2 Then

@@ -26,9 +26,9 @@ Public MustInherit Class CommandFrameBase
     Inherits ChannelFrameBase(Of ICommandCell)
     Implements ICommandFrame
 
-    Private m_command As Command
+    Private m_command As PmuCommand
 
-    Protected Sub New(ByVal cells As CommandCellCollection, ByVal command As Command)
+    Protected Sub New(ByVal cells As CommandCellCollection, ByVal command As PmuCommand)
 
         MyBase.New(cells)
         m_command = command
@@ -56,11 +56,11 @@ Public MustInherit Class CommandFrameBase
         End Get
     End Property
 
-    Public Property Command() As Command Implements ICommandFrame.Command
+    Public Property Command() As PmuCommand Implements ICommandFrame.Command
         Get
             Return m_command
         End Get
-        Set(ByVal value As Command)
+        Set(ByVal value As PmuCommand)
             m_command = value
         End Set
     End Property

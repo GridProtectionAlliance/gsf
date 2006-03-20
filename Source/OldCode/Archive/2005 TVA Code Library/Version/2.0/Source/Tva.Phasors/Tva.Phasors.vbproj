@@ -60,6 +60,7 @@
     <Compile Include="BpaPdcStream\DataPacket.vb" />
     <Compile Include="BpaPdcStream\DigitalDefinition.vb" />
     <Compile Include="BpaPdcStream\DigitalValue.vb" />
+    <Compile Include="BpaPdcStream\FrameParser.vb" />
     <Compile Include="BpaPdcStream\FrequencyDefinition.vb" />
     <Compile Include="BpaPdcStream\FrequencyValue.vb" />
     <Compile Include="BpaPdcStream\PhasorDefinition.vb" />
@@ -90,6 +91,7 @@
     <Compile Include="CommandFrameParsingState.vb" />
     <Compile Include="CommandCell.vb" />
     <Compile Include="CommandFrameBase.vb" />
+    <Compile Include="FrameParser.vb" />
     <Compile Include="ICommandFrameParsingState.vb" />
     <Compile Include="ICommandFrame.vb" />
     <Compile Include="HeaderFrameParsingState.vb" />

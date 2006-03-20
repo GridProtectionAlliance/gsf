@@ -2,8 +2,8 @@
 '  ConfigurationFrame.vb - IEEE C37.118 Configuration Frame
 '  Copyright © 2005 - TVA, all rights reserved - Gbtc
 '
-'  Build Environment: VB.NET, Visual Studio 2003
-'  Primary Developer: James R Carroll, System Analyst [TVA]
+'  Build Environment: VB.NET, Visual Studio 2005
+'  Primary Developer: James R Carroll, Operations Data Architecture [TVA]
 '      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
 '       Phone: 423/751-2827
 '       Email: jrcarrol@tva.gov
@@ -65,6 +65,12 @@ Namespace IeeeC37_118
         Public Overrides ReadOnly Property InheritedType() As System.Type
             Get
                 Return Me.GetType
+            End Get
+        End Property
+
+        Protected Overrides ReadOnly Property FundamentalFrameType() As FundamentalFrameType
+            Get
+                Return Phasors.FundamentalFrameType.ConfigurationFrame
             End Get
         End Property
 
@@ -138,7 +144,7 @@ Namespace IeeeC37_118
             End Get
             Set(ByVal value As Int32)
                 If value = 0 Then
-                    m_timeBase = 1
+                    m_timeBase = 1000000
                 Else
                     m_timeBase = value
                 End If

@@ -18,6 +18,7 @@
 Imports System.Buffer
 Imports System.Text
 Imports Tva.Interop
+Imports Tva.Collections.Common
 Imports Tva.Phasors.Common
 
 ' This class represents the protocol independent common implementation of a set of configuration related data settings that can be sent or received from a PMU.
@@ -212,7 +213,11 @@ Public MustInherit Class ConfigurationCellBase
 
     Protected Overrides Sub ParseHeaderImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
 
-        StationName = Encoding.ASCII.GetString(binaryImage, startIndex, MaximumStationNameLength)
+        Dim length As Integer = Array.IndexOf(binaryImage, Convert.ToByte(0), startIndex, MaximumStationNameLength) - startIndex
+
+        If length < 0 Then length = MaximumStationNameLength
+
+        StationName = Encoding.ASCII.GetString(binaryImage, startIndex, length)
 
     End Sub
 
