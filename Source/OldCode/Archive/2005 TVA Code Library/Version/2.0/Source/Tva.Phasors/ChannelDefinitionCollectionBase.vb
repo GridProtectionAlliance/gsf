@@ -21,7 +21,7 @@ Public MustInherit Class ChannelDefinitionCollectionBase(Of T As IChannelDefinit
 
     Inherits ChannelCollectionBase(Of T)
 
-    Protected Sub New(ByVal maximumCount As Integer)
+    Protected Sub New(ByVal maximumCount As Int32)
 
         MyBase.New(maximumCount)
 
@@ -35,7 +35,7 @@ Public MustInherit Class ChannelDefinitionCollectionBase(Of T As IChannelDefinit
 
     End Sub
 
-    Public Sub SetScalingFactor(ByVal value As Integer)
+    Public Sub SetScalingFactor(ByVal value As Int32)
 
         For Each definition As IChannelDefinition In Me
             definition.ScalingFactor = value

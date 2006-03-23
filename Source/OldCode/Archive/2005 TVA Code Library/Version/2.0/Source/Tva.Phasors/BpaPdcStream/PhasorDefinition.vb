@@ -27,7 +27,7 @@ Namespace BpaPdcStream
         Private m_ratio As Single
         Private m_calFactor As Single
         Private m_shunt As Single
-        Private m_voltageReferenceIndex As Integer
+        Private m_voltageReferenceIndex As Int32
 
         Public Sub New(ByVal parent As ConfigurationCell)
 
@@ -35,7 +35,7 @@ Namespace BpaPdcStream
 
         End Sub
 
-        Public Sub New(ByVal parent As ConfigurationCell, ByVal index As Integer, ByVal entryValue As String)
+        Public Sub New(ByVal parent As ConfigurationCell, ByVal index As Int32, ByVal entryValue As String)
 
             MyBase.New(parent)
 
@@ -110,11 +110,11 @@ Namespace BpaPdcStream
             End Set
         End Property
 
-        Public Property VoltageReferenceIndex() As Integer
+        Public Property VoltageReferenceIndex() As Int32
             Get
                 Return m_voltageReferenceIndex
             End Get
-            Set(ByVal Value As Integer)
+            Set(ByVal Value As Int32)
                 m_voltageReferenceIndex = Value
             End Set
         End Property
@@ -154,9 +154,9 @@ Namespace BpaPdcStream
             End Get
         End Property
 
-        Public Overrides ReadOnly Property MaximumLabelLength() As Integer
+        Public Overrides ReadOnly Property MaximumLabelLength() As Int32
             Get
-                Return Integer.MaxValue
+                Return Int32.MaxValue
             End Get
         End Property
 

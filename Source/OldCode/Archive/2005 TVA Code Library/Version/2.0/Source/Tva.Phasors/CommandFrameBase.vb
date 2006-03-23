@@ -35,9 +35,9 @@ Public MustInherit Class CommandFrameBase
 
     End Sub
 
-    ' Derived classes are expected to expose a Public Sub New(ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+    ' Derived classes are expected to expose a Public Sub New(ByVal binaryImage As Byte(), ByVal startIndex As Int32)
     ' and automatically pass in parsing state
-    Protected Sub New(ByVal state As ICommandFrameParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+    Protected Sub New(ByVal state As ICommandFrameParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
         MyBase.New(state, binaryImage, startIndex)
 
@@ -84,7 +84,7 @@ Public MustInherit Class CommandFrameBase
     Protected Overrides ReadOnly Property BodyImage() As Byte()
         Get
             Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BodyLength)
-            Dim index As Integer = 2
+            Dim index As Int32 = 2
 
             EndianOrder.BigEndian.CopyBytes(m_command, buffer, 0)
             CopyImage(MyBase.BodyImage, buffer, index, MyBase.BodyLength)
@@ -93,7 +93,7 @@ Public MustInherit Class CommandFrameBase
         End Get
     End Property
 
-    Protected Overrides Sub ParseBodyImage(ByVal state As IChannelParsingState, ByVal binaryImage() As Byte, ByVal startIndex As Integer)
+    Protected Overrides Sub ParseBodyImage(ByVal state As IChannelParsingState, ByVal binaryImage() As Byte, ByVal startIndex As Int32)
 
         m_command = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex)
         MyBase.ParseBodyImage(state, binaryImage, startIndex + 2)

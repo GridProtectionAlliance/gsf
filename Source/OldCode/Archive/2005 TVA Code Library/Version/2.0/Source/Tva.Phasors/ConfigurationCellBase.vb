@@ -36,7 +36,7 @@ Public MustInherit Class ConfigurationCellBase
     Private m_digitalDefinitions As DigitalDefinitionCollection
     Private m_nominalFrequency As LineFrequency
 
-    Protected Sub New(ByVal parent As IConfigurationFrame, ByVal alignOnDWordBoundry As Boolean, ByVal maximumPhasors As Integer, ByVal maximumAnalogs As Integer, ByVal maximumDigitals As Integer)
+    Protected Sub New(ByVal parent As IConfigurationFrame, ByVal alignOnDWordBoundry As Boolean, ByVal maximumPhasors As Int32, ByVal maximumAnalogs As Int32, ByVal maximumDigitals As Int32)
 
         MyBase.New(parent, alignOnDWordBoundry)
 
@@ -46,7 +46,7 @@ Public MustInherit Class ConfigurationCellBase
 
     End Sub
 
-    Protected Sub New(ByVal parent As IConfigurationFrame, ByVal alignOnDWordBoundry As Boolean, ByVal idCode As UInt16, ByVal nominalFrequency As LineFrequency, ByVal maximumPhasors As Integer, ByVal maximumAnalogs As Integer, ByVal maximumDigitals As Integer)
+    Protected Sub New(ByVal parent As IConfigurationFrame, ByVal alignOnDWordBoundry As Boolean, ByVal idCode As UInt16, ByVal nominalFrequency As LineFrequency, ByVal maximumPhasors As Int32, ByVal maximumAnalogs As Int32, ByVal maximumDigitals As Int32)
 
         MyClass.New(parent, alignOnDWordBoundry, maximumPhasors, maximumAnalogs, maximumDigitals)
         MyClass.IDCode = idCode
@@ -54,7 +54,7 @@ Public MustInherit Class ConfigurationCellBase
 
     End Sub
 
-    Protected Sub New(ByVal parent As IConfigurationFrame, ByVal alignOnDWordBoundry As Boolean, ByVal maximumPhasors As Integer, ByVal maximumAnalogs As Integer, ByVal maximumDigitals As Integer, ByVal state As IConfigurationCellParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+    Protected Sub New(ByVal parent As IConfigurationFrame, ByVal alignOnDWordBoundry As Boolean, ByVal maximumPhasors As Int32, ByVal maximumAnalogs As Int32, ByVal maximumDigitals As Int32, ByVal state As IConfigurationCellParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
         MyClass.New(parent, alignOnDWordBoundry, maximumPhasors, maximumAnalogs, maximumDigitals)
         ParseBinaryImage(state, binaryImage, startIndex)
@@ -75,7 +75,7 @@ Public MustInherit Class ConfigurationCellBase
 
     End Sub
 
-    ' Final dervived classes must expose Public Sub New(ByVal parent As IChannelFrame, ByVal state As IChannelFrameParsingState, ByVal index As Integer, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+    ' Final dervived classes must expose Public Sub New(ByVal parent As IChannelFrame, ByVal state As IChannelFrameParsingState, ByVal index As Int32, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
     ' Derived classes are expected to expose a Public Sub New(ByVal configurationCell As IConfigurationCell)
     Protected Sub New(ByVal configurationCell As IConfigurationCell)
@@ -111,7 +111,7 @@ Public MustInherit Class ConfigurationCellBase
         End Get
     End Property
 
-    Public Overridable ReadOnly Property MaximumStationNameLength() As Integer Implements IConfigurationCell.MaximumStationNameLength
+    Public Overridable ReadOnly Property MaximumStationNameLength() As Int32 Implements IConfigurationCell.MaximumStationNameLength
         Get
             ' Typical station name length is 16 characters
             Return 16
@@ -123,7 +123,7 @@ Public MustInherit Class ConfigurationCellBase
             Return m_idLabel
         End Get
         Set(ByVal value As String)
-            Dim length As Integer = Len(Trim(value))
+            Dim length As Int32 = Len(Trim(value))
             If length > IDLabelLength Then
                 Throw New OverflowException("ID label must not be more than " & IDLabelLength & " characters in length")
             Else
@@ -138,7 +138,7 @@ Public MustInherit Class ConfigurationCellBase
         End Get
     End Property
 
-    Public Overridable ReadOnly Property IDLabelLength() As Integer Implements IConfigurationCell.IDLabelLength
+    Public Overridable ReadOnly Property IDLabelLength() As Int32 Implements IConfigurationCell.IDLabelLength
         Get
             ' ID label length is 4 characters
             Return 4
@@ -187,7 +187,7 @@ Public MustInherit Class ConfigurationCellBase
         End Get
     End Property
 
-    Public Overridable Function CompareTo(ByVal obj As Object) As Integer Implements IComparable.CompareTo
+    Public Overridable Function CompareTo(ByVal obj As Object) As Int32 Implements IComparable.CompareTo
 
         ' We sort configuration cells by ID code...
         If TypeOf obj Is IConfigurationCell Then
@@ -211,9 +211,9 @@ Public MustInherit Class ConfigurationCellBase
         End Get
     End Property
 
-    Protected Overrides Sub ParseHeaderImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+    Protected Overrides Sub ParseHeaderImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
-        Dim length As Integer = Array.IndexOf(binaryImage, Convert.ToByte(0), startIndex, MaximumStationNameLength) - startIndex
+        Dim length As Int32 = Array.IndexOf(binaryImage, Convert.ToByte(0), startIndex, MaximumStationNameLength) - startIndex
 
         If length < 0 Then length = MaximumStationNameLength
 
@@ -231,7 +231,7 @@ Public MustInherit Class ConfigurationCellBase
     Protected Overrides ReadOnly Property BodyImage() As Byte()
         Get
             Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BodyLength)
-            Dim index As Integer
+            Dim index As Int32
 
             ' Copy in common cell images (channel names)
             CopyImage(m_phasorDefinitions, buffer, index)
@@ -242,10 +242,10 @@ Public MustInherit Class ConfigurationCellBase
         End Get
     End Property
 
-    Protected Overrides Sub ParseBodyImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+    Protected Overrides Sub ParseBodyImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
         Dim parsingState As IConfigurationCellParsingState = DirectCast(state, IConfigurationCellParsingState)
-        Dim x As Integer
+        Dim x As Int32
 
         ' By the very nature of the IEEE protocols supporting the same order of phasor, analog and digital labels
         ' we are able to "automatically" parse this data out in the configuration cell base class - BEAUTIFUL!!!
@@ -281,7 +281,7 @@ Public MustInherit Class ConfigurationCellBase
         End Get
     End Property
 
-    Protected Overrides Sub ParseFooterImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+    Protected Overrides Sub ParseFooterImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
         m_frequencyDefinition = DirectCast(state, IConfigurationCellParsingState).CreateNewFrequencyDefintionFunction.Invoke(Me, binaryImage, startIndex)
 

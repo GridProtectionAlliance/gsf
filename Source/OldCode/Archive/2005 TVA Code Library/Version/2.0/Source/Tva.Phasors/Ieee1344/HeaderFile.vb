@@ -36,10 +36,10 @@ Namespace Ieee1344
 
         Public Sub New(ByVal fileName As String)
 
-            Const BufferSize As Integer = 4096
+            Const BufferSize As Int32 = 4096
             Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BufferSize)
             Dim fileText As New StringBuilder
-            Dim read As Integer
+            Dim read As Int32
 
             With File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.Read)
                 read = .Read(buffer, 0, BufferSize)
@@ -77,7 +77,7 @@ Namespace Ieee1344
                 Else
                     Frames = Array.CreateInstance(GetType(HeaderFrame), Value)
 
-                    For x As Integer = 0 To Frames.Length - 1
+                    For x As Int32 = 0 To Frames.Length - 1
                         Frames(x) = New HeaderFrame
                         With Frames(x)
                             .IsFirstFrame = (x = 0)
@@ -92,7 +92,7 @@ Namespace Ieee1344
         Public Property Data() As String
             Get
                 With New StringBuilder
-                    For x As Integer = 0 To Frames.Length - 1
+                    For x As Int32 = 0 To Frames.Length - 1
                         .Append(Frames(x).Data)
                     Next
 
@@ -100,11 +100,11 @@ Namespace Ieee1344
                 End With
             End Get
             Set(ByVal Value As String)
-                Dim index As Integer
+                Dim index As Int32
 
                 TotalFrames = System.Math.Ceiling(Len(Value) / BaseFrame.MaximumDataLength)
 
-                For x As Integer = 0 To Frames.Length - 1
+                For x As Int32 = 0 To Frames.Length - 1
                     If index + BaseFrame.MaximumDataLength > Value.Length Then
                         Frames(x).Data = Value.Substring(index)
                     Else
@@ -116,11 +116,11 @@ Namespace Ieee1344
             End Set
         End Property
 
-        Public ReadOnly Property BinaryLength() As Integer
+        Public ReadOnly Property BinaryLength() As Int32
             Get
-                Dim length As Integer
+                Dim length As Int32
 
-                For x As Integer = 0 To Frames.Length - 1
+                For x As Int32 = 0 To Frames.Length - 1
                     length += Frames(x).FrameLength
                 Next
 
@@ -131,9 +131,9 @@ Namespace Ieee1344
         Public ReadOnly Property BinaryImage() As Byte()
             Get
                 Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BinaryLength)
-                Dim index As Integer
+                Dim index As Int32
 
-                For x As Integer = 0 To Frames.Length - 1
+                For x As Int32 = 0 To Frames.Length - 1
                     With Frames(x)
                         BlockCopy(.BinaryImage, 0, buffer, index, .FrameLength)
                         index += .FrameLength

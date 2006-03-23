@@ -23,7 +23,7 @@ Public Class PhasorValueCollection
 
     Inherits ChannelValueCollectionBase(Of IPhasorDefinition, IPhasorValue)
 
-    Public Sub New(ByVal maximumCount As Integer)
+    Public Sub New(ByVal maximumCount As Int32)
 
         MyBase.New(maximumCount)
 

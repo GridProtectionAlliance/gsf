@@ -21,10 +21,10 @@ Public MustInherit Class ChannelValueCollectionBase(Of TDefinition As IChannelDe
 
     Inherits ChannelCollectionBase(Of TValue)
 
-    Private m_fixedCount As Integer
-    Private m_floatCount As Integer
+    Private m_fixedCount As Int32
+    Private m_floatCount As Int32
 
-    Protected Sub New(ByVal maximumCount As Integer)
+    Protected Sub New(ByVal maximumCount As Int32)
 
         MyBase.New(maximumCount)
 
@@ -55,7 +55,7 @@ Public MustInherit Class ChannelValueCollectionBase(Of TDefinition As IChannelDe
                     ' List has items of different data types, will have to traverse list to calculate total binary length
                     Dim length As UInt16
 
-                    For x As Integer = 0 To Count - 1
+                    For x As Int32 = 0 To Count - 1
                         length += Item(x).BinaryLength
                     Next
 
@@ -71,7 +71,7 @@ Public MustInherit Class ChannelValueCollectionBase(Of TDefinition As IChannelDe
         Get
             Dim allEmpty As Boolean = True
 
-            For x As Integer = 0 To Count - 1
+            For x As Int32 = 0 To Count - 1
                 If Not Item(x).IsEmpty Then
                     allEmpty = False
                     Exit For

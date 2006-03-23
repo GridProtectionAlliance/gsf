@@ -34,7 +34,7 @@ Public Class CommandCell
 
     End Sub
 
-    Public Sub New(ByVal parent As ICommandFrame, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+    Public Sub New(ByVal parent As ICommandFrame, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
         MyClass.New(parent)
         ParseBinaryImage(Nothing, binaryImage, startIndex)
@@ -54,7 +54,7 @@ Public Class CommandCell
 
     End Sub
 
-    Friend Shared Function CreateNewCommandCell(ByVal parent As IChannelFrame, ByVal state As IChannelFrameParsingState(Of ICommandCell), ByVal index As Integer, ByVal binaryImage As Byte(), ByVal startIndex As Integer) As ICommandCell
+    Friend Shared Function CreateNewCommandCell(ByVal parent As IChannelFrame, ByVal state As IChannelFrameParsingState(Of ICommandCell), ByVal index As Int32, ByVal binaryImage As Byte(), ByVal startIndex As Int32) As ICommandCell
 
         Return New CommandCell(parent, binaryImage, startIndex)
 
@@ -93,7 +93,7 @@ Public Class CommandCell
         End Get
     End Property
 
-    Protected Overrides Sub ParseBodyImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+    Protected Overrides Sub ParseBodyImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
         m_extendedDataByte = binaryImage(startIndex)
 

@@ -21,7 +21,7 @@ Public Class HeaderCellCollection
 
     Inherits ChannelCellCollectionBase(Of IHeaderCell)
 
-    Public Sub New(ByVal maximumCount As Integer)
+    Public Sub New(ByVal maximumCount As Int32)
 
         MyBase.New(maximumCount, True)
 

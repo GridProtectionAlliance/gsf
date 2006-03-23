@@ -21,7 +21,7 @@ Public Interface IConfigurationCellParsingState
 
     Inherits IChannelCellParsingState
 
-    Delegate Function CreateNewDefinitionFunctionSignature(Of T As IChannelDefinition)(ByVal parent As IConfigurationCell, ByVal binaryImage As Byte(), ByVal startIndex As Integer) As T
+    Delegate Function CreateNewDefinitionFunctionSignature(Of T As IChannelDefinition)(ByVal parent As IConfigurationCell, ByVal binaryImage As Byte(), ByVal startIndex As Int32) As T
 
     ReadOnly Property CreateNewPhasorDefintionFunction() As CreateNewDefinitionFunctionSignature(Of IPhasorDefinition)
 

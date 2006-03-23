@@ -27,9 +27,9 @@ Public MustInherit Class ChannelCollectionBase(Of T As IChannel)
     Inherits List(Of T)
     Implements IChannelCollection(Of T)
 
-    Private m_maximumCount As Integer
+    Private m_maximumCount As Int32
 
-    Protected Sub New(ByVal maximumCount As Integer)
+    Protected Sub New(ByVal maximumCount As Int32)
 
         m_maximumCount = maximumCount
 
@@ -52,17 +52,17 @@ Public MustInherit Class ChannelCollectionBase(Of T As IChannel)
         End Get
     End Property
 
-    Public Property MaximumCount() As Integer
+    Public Property MaximumCount() As Int32
         Get
             Return m_maximumCount
         End Get
-        Set(ByVal value As Integer)
+        Set(ByVal value As Int32)
             m_maximumCount = value
         End Set
     End Property
 
     <EditorBrowsable(EditorBrowsableState.Never)> _
-    Public Overridable Sub ParseBinaryImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Integer) Implements IChannelCollection(Of T).ParseBinaryImage
+    Public Overridable Sub ParseBinaryImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Int32) Implements IChannelCollection(Of T).ParseBinaryImage
 
         Throw New NotImplementedException("Binary images are not intended to be parsed at a collection level")
 
@@ -81,9 +81,9 @@ Public MustInherit Class ChannelCollectionBase(Of T As IChannel)
     Public Overridable ReadOnly Property BinaryImage() As Byte() Implements IChannelCollection(Of T).BinaryImage
         Get
             Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BinaryLength)
-            Dim index As Integer
+            Dim index As Int32
 
-            For x As Integer = 0 To Count - 1
+            For x As Int32 = 0 To Count - 1
                 CopyImage(Item(x), buffer, index)
             Next
 

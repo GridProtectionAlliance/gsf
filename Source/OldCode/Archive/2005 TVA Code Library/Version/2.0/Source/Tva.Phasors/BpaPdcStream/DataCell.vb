@@ -36,7 +36,7 @@ Namespace BpaPdcStream
 
             MyBase.New(parent, True, configurationCell, MaximumPhasorValues, MaximumAnalogValues, MaximumDigitalValues)
 
-            Dim x As Integer
+            Dim x As Int32
 
             With configurationCell
                 m_sampleNumber = sampleNumber
@@ -69,8 +69,8 @@ Namespace BpaPdcStream
         End Sub
 
         ' This constructor satisfies ChannelCellBase class requirement:
-        '   ' Final dervived classes must expose Public Sub New(ByVal parent As IChannelFrame, ByVal state As IChannelFrameParsingState, ByVal index As Integer, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
-        Public Sub New(ByVal parent As IDataFrame, ByVal state As DataFrameParsingState, ByVal index As Integer, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+        '   ' Final dervived classes must expose Public Sub New(ByVal parent As IChannelFrame, ByVal state As IChannelFrameParsingState, ByVal index As Int32, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
+        Public Sub New(ByVal parent As IDataFrame, ByVal state As DataFrameParsingState, ByVal index As Int32, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
             ' TODO: Define static creation functions for data cell value types
             MyBase.New(parent, True, MaximumPhasorValues, MaximumAnalogValues, MaximumDigitalValues, New DataCellParsingState( _
@@ -349,7 +349,7 @@ Namespace BpaPdcStream
             End Get
         End Property
 
-        Protected Overrides Sub ParseHeaderImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+        Protected Overrides Sub ParseHeaderImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
             ' Parse PDCstream specific header image
             m_flags = binaryImage(startIndex)

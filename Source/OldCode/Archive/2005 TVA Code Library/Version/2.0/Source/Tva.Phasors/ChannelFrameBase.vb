@@ -57,8 +57,8 @@ Public MustInherit Class ChannelFrameBase(Of T As IChannelCell)
 
     End Sub
 
-    ' Derived classes are expected to expose a Protected Sub New(ByVal state As IChannelFrameParsingState(Of T), ByVal binaryImage As Byte(), ByVal startIndex As Integer)
-    Protected Sub New(ByVal state As IChannelFrameParsingState(Of T), ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+    ' Derived classes are expected to expose a Protected Sub New(ByVal state As IChannelFrameParsingState(Of T), ByVal binaryImage As Byte(), ByVal startIndex As Int32)
+    Protected Sub New(ByVal state As IChannelFrameParsingState(Of T), ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
         MyClass.New(state.Cells)
         ParsedBinaryLength = state.ParsedBinaryLength
@@ -107,7 +107,7 @@ Public MustInherit Class ChannelFrameBase(Of T As IChannelCell)
 
     Public Overridable ReadOnly Property TimeTag() As UnixTimeTag Implements IChannelFrame.TimeTag
         Get
-            Return New UnixTimeTag(m_ticks)
+            Return New UnixTimeTag(Timestamp)
         End Get
     End Property
 
@@ -149,7 +149,7 @@ Public MustInherit Class ChannelFrameBase(Of T As IChannelCell)
     Public Overrides ReadOnly Property BinaryImage() As Byte()
         Get
             Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BinaryLength)
-            Dim index As Integer
+            Dim index As Int32
 
             ' Copy in base image
             CopyImage(MyBase.BinaryImage, buffer, index, MyBase.BinaryLength)
@@ -162,7 +162,7 @@ Public MustInherit Class ChannelFrameBase(Of T As IChannelCell)
     End Property
 
     ' We override normal binary image parser to validate check-sum
-    Protected Overrides Sub ParseBinaryImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+    Protected Overrides Sub ParseBinaryImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
         ' Validate checksum
         If Not ChecksumIsValid(binaryImage, startIndex) Then Throw New InvalidOperationException("Invalid binary image detected - check sum of " & InheritedType.FullName & " did not match")
@@ -184,11 +184,11 @@ Public MustInherit Class ChannelFrameBase(Of T As IChannelCell)
         End Get
     End Property
 
-    Protected Overrides Sub ParseBodyImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+    Protected Overrides Sub ParseBodyImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
         ' Parse all frame cells
         With DirectCast(state, IChannelFrameParsingState(Of T))
-            For x As Integer = 0 To .CellCount - 1
+            For x As Int32 = 0 To .CellCount - 1
                 m_cells.Add(.CreateNewCellFunction.Invoke(Me, state, x, binaryImage, startIndex))
                 startIndex += m_cells.Item(x).BinaryLength
             Next
@@ -196,20 +196,20 @@ Public MustInherit Class ChannelFrameBase(Of T As IChannelCell)
 
     End Sub
 
-    Protected Overridable Function ChecksumIsValid(ByVal buffer As Byte(), ByVal startIndex As Integer) As Boolean
+    Protected Overridable Function ChecksumIsValid(ByVal buffer As Byte(), ByVal startIndex As Int32) As Boolean
 
         Dim sumLength As Int16 = BinaryLength - 2
         Return EndianOrder.BigEndian.ToUInt16(buffer, startIndex + sumLength) = CalculateChecksum(buffer, startIndex, sumLength)
 
     End Function
 
-    Protected Overridable Sub AppendChecksum(ByVal buffer As Byte(), ByVal startIndex As Integer)
+    Protected Overridable Sub AppendChecksum(ByVal buffer As Byte(), ByVal startIndex As Int32)
 
         EndianOrder.BigEndian.CopyBytes(CalculateChecksum(buffer, 0, startIndex), buffer, startIndex)
 
     End Sub
 
-    Protected Overridable Function CalculateChecksum(ByVal buffer As Byte(), ByVal offset As Integer, ByVal length As Integer) As UInt16
+    Protected Overridable Function CalculateChecksum(ByVal buffer As Byte(), ByVal offset As Int32, ByVal length As Int32) As UInt16
 
         ' We implement CRC CCITT check sum as the default, but each protocol can override as necessary
         Return CRC_CCITT(UInt16.MaxValue, buffer, offset, length)
@@ -217,7 +217,7 @@ Public MustInherit Class ChannelFrameBase(Of T As IChannelCell)
     End Function
 
     ' We sort frames by timestamp
-    Public Function CompareTo(ByVal obj As Object) As Integer Implements IComparable.CompareTo
+    Public Function CompareTo(ByVal obj As Object) As Int32 Implements IComparable.CompareTo
 
         If TypeOf obj Is IChannelFrame Then
             Return m_ticks.CompareTo(DirectCast(obj, IChannelFrame).Ticks)
@@ -227,7 +227,7 @@ Public MustInherit Class ChannelFrameBase(Of T As IChannelCell)
 
     End Function
 
-    Public MustOverride ReadOnly Property Measurements() As System.Collections.Generic.IDictionary(Of Integer, IMeasurement) Implements IFrame.Measurements
+    Public MustOverride ReadOnly Property Measurements() As System.Collections.Generic.IDictionary(Of Int32, IMeasurement) Implements IFrame.Measurements
 
     Private ReadOnly Property IFrameThis() As IFrame Implements IFrame.This
         Get

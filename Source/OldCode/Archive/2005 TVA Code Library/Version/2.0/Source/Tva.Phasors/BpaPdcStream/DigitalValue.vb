@@ -28,7 +28,7 @@ Namespace BpaPdcStream
 
         End Sub
 
-        Public Sub New(ByVal parent As IDataCell, ByVal DigitalDefinition As IDigitalDefinition, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+        Public Sub New(ByVal parent As IDataCell, ByVal DigitalDefinition As IDigitalDefinition, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
             MyBase.New(parent, DigitalDefinition, binaryImage, startIndex)
 

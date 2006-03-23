@@ -21,34 +21,34 @@ Public MustInherit Class ChannelCellParsingStateBase
     Inherits ChannelParsingStateBase
     Implements IChannelCellParsingState
 
-    Private m_phasorCount As Integer
-    Private m_analogCount As Integer
-    Private m_digitalCount As Integer
+    Private m_phasorCount As Int32
+    Private m_analogCount As Int32
+    Private m_digitalCount As Int32
 
-    Public Property PhasorCount() As Integer Implements IChannelCellParsingState.PhasorCount
+    Public Property PhasorCount() As Int32 Implements IChannelCellParsingState.PhasorCount
         Get
             Return m_phasorCount
         End Get
-        Set(ByVal value As Integer)
+        Set(ByVal value As Int32)
             m_phasorCount = Value
         End Set
     End Property
 
-    Public Property AnalogCount() As Integer Implements IChannelCellParsingState.AnalogCount
+    Public Property AnalogCount() As Int32 Implements IChannelCellParsingState.AnalogCount
         Get
             Return m_analogCount
         End Get
-        Set(ByVal value As Integer)
+        Set(ByVal value As Int32)
             m_analogCount = Value
         End Set
     End Property
 
-    Public Property DigitalCount() As Integer Implements IChannelCellParsingState.DigitalCount
+    Public Property DigitalCount() As Int32 Implements IChannelCellParsingState.DigitalCount
         Get
             Return m_digitalCount
         End Get
-        Set(ByVal value As Integer)
-            m_digitalCount = Value
+        Set(ByVal value As Int32)
+            m_digitalCount = value
         End Set
     End Property
 

@@ -28,13 +28,13 @@ Public MustInherit Class AnalogDefinitionBase
 
     End Sub
 
-    Protected Sub New(ByVal parent As IConfigurationCell, ByVal dataFormat As DataFormat, ByVal index As Integer, ByVal label As String, ByVal scale As Integer, ByVal offset As Single)
+    Protected Sub New(ByVal parent As IConfigurationCell, ByVal dataFormat As DataFormat, ByVal index As Int32, ByVal label As String, ByVal scale As Int32, ByVal offset As Single)
 
         MyBase.New(parent, dataFormat, index, label, scale, offset)
 
     End Sub
 
-    Protected Sub New(ByVal parent As IConfigurationCell, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+    Protected Sub New(ByVal parent As IConfigurationCell, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
         MyBase.New(parent, binaryImage, startIndex)
 

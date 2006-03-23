@@ -32,7 +32,7 @@ Namespace IeeeC37_118
 
         End Sub
 
-        Public Sub New(ByVal parsedFrameHeader As ICommonFrameHeader, ByVal configurationFrame As ConfigurationFrame, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+        Public Sub New(ByVal parsedFrameHeader As ICommonFrameHeader, ByVal configurationFrame As ConfigurationFrame, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
             MyBase.New(New DataFrameParsingState(New DataCellCollection, parsedFrameHeader.FrameLength, configurationFrame, _
                 AddressOf IeeeC37_118.DataCell.CreateNewDataCell), binaryImage, startIndex)
@@ -111,7 +111,7 @@ Namespace IeeeC37_118
             Get
                 Return MyBase.IDCode
             End Get
-            Set(ByVal value As UShort)
+            Set(ByVal value As UInt16)
                 ' ID code is readonly for data frames - we don't throw an exception here if someone attempts to change
                 ' the ID code on a data frame (e.g., the CommonFrameHeader.Clone method will attempt to copy this property)
                 ' but we don't do anything with the value either.
@@ -127,15 +127,10 @@ Namespace IeeeC37_118
             End Set
         End Property
 
-        Public Property TimeBase() As Int32 Implements ICommonFrameHeader.TimeBase
+        Public ReadOnly Property TimeBase() As Int32 Implements ICommonFrameHeader.TimeBase
             Get
                 Return ConfigurationFrame.TimeBase
             End Get
-            Friend Set(ByVal value As Int32)
-                ' Time base is readonly for data frames - we don't throw an exception here if someone attempts to change
-                ' the time base on a data frame (e.g., the CommonFrameHeader.Clone method will attempt to copy this property)
-                ' but we don't do anything with the value either.
-            End Set
         End Property
 
         Private Property InternalTimeQualityFlags() As Int32 Implements ICommonFrameHeader.InternalTimeQualityFlags
@@ -198,7 +193,7 @@ Namespace IeeeC37_118
             End Get
         End Property
 
-        Public Overrides ReadOnly Property Measurements() As System.Collections.Generic.IDictionary(Of Integer, Measurements.IMeasurement)
+        Public Overrides ReadOnly Property Measurements() As System.Collections.Generic.IDictionary(Of Int32, Measurements.IMeasurement)
             Get
                 ' TODO: Oh my - how to handle this...
             End Get

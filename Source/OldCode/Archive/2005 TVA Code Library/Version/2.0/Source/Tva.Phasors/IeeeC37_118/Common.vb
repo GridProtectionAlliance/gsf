@@ -29,7 +29,7 @@ Namespace IeeeC37_118
 
     ''' <summary>Data format flags</summary>
     <Flags()> _
-    Public Enum FormatFlags As Short
+    Public Enum FormatFlags As Int16
         ''' <summary>Frequency value format (Set = float, Clear = integer)</summary>
         Frequency = Bit3
         ''' <summary>Analog value format (Set = float, Clear = integer)</summary>
@@ -44,7 +44,7 @@ Namespace IeeeC37_118
 
     ''' <summary>Time quality flags</summary>
     <Flags()> _
-    Public Enum TimeQualityFlags As Integer
+    Public Enum TimeQualityFlags As Int32
         ''' <summary>Reserved</summary>
         Reserved = Bit31
         ''' <summary>Leap second direction – 0 for add, 1 for delete</summary>
@@ -53,12 +53,12 @@ Namespace IeeeC37_118
         LeapSecondOccurred = Bit29
         ''' <summary>Leap second pending – set before a leap second occurs and cleared in the second after the leap second occurs</summary>
         LeapSecondPending = Bit28
-        ''' <summary>Time quality indicator mask</summary>
-        TimeQualityIndicatorMask = Bit27 Or Bit26 Or Bit25 Or Bit24
+        ''' <summary>Time quality indicator code mask</summary>
+        TimeQualityIndicatorCodeMask = Bit27 Or Bit26 Or Bit25 Or Bit24
     End Enum
 
     ''' <summary>Time quality indicator code</summary>
-    Public Enum TimeQualityIndicatorCode As Integer
+    Public Enum TimeQualityIndicatorCode As Int32
         ''' <summary>1111	F	Fault--clock failure, time not reliable</summary>
         Failure = Bit27 Or Bit26 Or Bit25 Or Bit24
         ''' <summary>1011	B	Clock unlocked, time within 10^1 s</summary>
@@ -88,7 +88,7 @@ Namespace IeeeC37_118
     End Enum
 
     ''' <summary>Frame type</summary>
-    Public Enum FrameType As Short
+    Public Enum FrameType As Int16
         ''' <summary>000   Data frame</summary>
         DataFrame = 0
         ''' <summary>001   Header frame</summary>
@@ -107,7 +107,7 @@ Namespace IeeeC37_118
 
     ''' <summary>Status flags</summary>
     <Flags()> _
-    Public Enum StatusFlags As Short
+    Public Enum StatusFlags As Int16
         ''' <summary>Data is valid (0 when PMU data is valid, 1 when invalid or PMU is in test mode)</summary>
         DataIsValid = Bit15
         ''' <summary>PMU error including configuration error, 0 when no error</summary>
@@ -195,14 +195,26 @@ Namespace IeeeC37_118
 
         End Sub
 
+        ''' <summary>Data stream synchrnonization byte</summary>
         Public Const SyncByte As Byte = &HAA
 
-        Public Const MaximumPhasorValues As Integer = UInt16.MaxValue \ 4 - CommonFrameHeader.BinaryLength - 8
-        Public Const MaximumAnalogValues As Integer = UInt16.MaxValue \ 2 - CommonFrameHeader.BinaryLength - 8
-        Public Const MaximumDigitalValues As Integer = UInt16.MaxValue \ 2 - CommonFrameHeader.BinaryLength - 8
+        ''' <summary>Absolute maximum number of possible phasor values that could fit into a data frame</summary>
+        Public Const MaximumPhasorValues As Int32 = UInt16.MaxValue \ 4 - CommonFrameHeader.BinaryLength - 8
 
-        Public Const MaximumHeaderDataLength As Integer = UInt16.MaxValue - CommonFrameHeader.BinaryLength - 2
-        Public Const MaximumExtendedDataLength As Integer = UInt16.MaxValue - CommonFrameHeader.BinaryLength - 4
+        ''' <summary>Absolute maximum number of possible analog values that could fit into a data frame</summary>
+        Public Const MaximumAnalogValues As Int32 = UInt16.MaxValue \ 2 - CommonFrameHeader.BinaryLength - 8
+
+        ''' <summary>Absolute maximum number of possible digital values that could fit into a data frame</summary>
+        Public Const MaximumDigitalValues As Int32 = UInt16.MaxValue \ 2 - CommonFrameHeader.BinaryLength - 8
+
+        ''' <summary>Absolute maximum number of bytes of data that could fit into a header frame</summary>
+        Public Const MaximumHeaderDataLength As Int32 = UInt16.MaxValue - CommonFrameHeader.BinaryLength - 2
+
+        ''' <summary>Absolute maximum number of bytes of extended data that could fit into a command frame</summary>
+        Public Const MaximumExtendedDataLength As Int32 = UInt16.MaxValue - CommonFrameHeader.BinaryLength - 4
+
+        ''' <summary>Time quality flags mask</summary>
+        Public Const TimeQualityFlagsMask As Int32 = Bit31 Or Bit30 Or Bit29 Or Bit28 Or Bit27 Or Bit26 Or Bit25 Or Bit24
 
     End Class
 

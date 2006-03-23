@@ -21,7 +21,7 @@ Public Class FrequencyDefinitionCollection
 
     Inherits ChannelDefinitionCollectionBase(Of IFrequencyDefinition)
 
-    Public Sub New(ByVal maximumCount As Integer)
+    Public Sub New(ByVal maximumCount As Int32)
 
         MyBase.New(maximumCount)
 

@@ -37,7 +37,7 @@ Namespace Ieee1344
         Protected m_frameList As ArrayList
 
         Public Const MaximumFrameCount As Int16 = ConfigurationFrame.MaximumFrameCount
-        Public Const MaximumStationNameLength As Integer = 16
+        Public Const MaximumStationNameLength As Int32 = 16
 
         Public Sub New()
 
@@ -50,10 +50,10 @@ Namespace Ieee1344
 
             MyClass.New()
 
-            Const BufferSize As Integer = 4096
+            Const BufferSize As Int32 = 4096
             Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BufferSize)
             Dim fileData As New MemoryStream
-            Dim read As Integer
+            Dim read As Int32
 
             With File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.Read)
                 read = .Read(buffer, 0, BufferSize)
@@ -77,7 +77,7 @@ Namespace Ieee1344
                 Dim frame As ConfigurationFrame
 
                 With New MemoryStream
-                    For x As Integer = 0 To m_frameList.Count - 1
+                    For x As Int32 = 0 To m_frameList.Count - 1
                         frame = DirectCast(m_frameList(x), ConfigurationFrame)
                         .Write(frame.DataImage, 0, frame.DataImage.Length)
                     Next
@@ -183,7 +183,7 @@ Namespace Ieee1344
                 Else
                     Frames = Array.CreateInstance(GetType(ConfigurationFrame), Value)
 
-                    For x As Integer = 0 To Frames.Length - 1
+                    For x As Int32 = 0 To Frames.Length - 1
                         Frames(x) = New ConfigurationFrame
                         With Frames(x)
                             .IsFirstFrame = (x = 0)
@@ -198,7 +198,7 @@ Namespace Ieee1344
         Public Property DataImage() As Byte()
             Get
                 Dim image As Byte() = Array.CreateInstance(GetType(Byte), DataLength)
-                Dim x, index, phasorCount, digitalCount As Integer
+                Dim x, index, phasorCount, digitalCount As Int32
 
                 BlockCopy(Encoding.ASCII.GetBytes(m_stationName.PadRight(MaximumStationNameLength)), 0, image, 0, MaximumStationNameLength)
 
@@ -242,7 +242,7 @@ Namespace Ieee1344
             End Get
             Set(ByVal Value As Byte())
                 Dim phasorCount, digitalCount, phasorOffset, digitalOffset, freqOffset As Int16
-                Dim x, index As Integer
+                Dim x, index As Int32
 
                 TotalFrames = System.Math.Ceiling(Value.Length / BaseFrame.MaximumDataLength)
 
@@ -294,11 +294,11 @@ Namespace Ieee1344
             End Set
         End Property
 
-        Public ReadOnly Property DataLength() As Integer
+        Public ReadOnly Property DataLength() As Int32
             Get
-                Dim length As Integer
+                Dim length As Int32
 
-                For x As Integer = 0 To Frames.Length - 1
+                For x As Int32 = 0 To Frames.Length - 1
                     length += Frames(x).DataLength
                 Next
 
@@ -306,11 +306,11 @@ Namespace Ieee1344
             End Get
         End Property
 
-        Public ReadOnly Property BinaryLength() As Integer
+        Public ReadOnly Property BinaryLength() As Int32
             Get
-                Dim length As Integer
+                Dim length As Int32
 
-                For x As Integer = 0 To Frames.Length - 1
+                For x As Int32 = 0 To Frames.Length - 1
                     length += Frames(x).FrameLength
                 Next
 
@@ -321,9 +321,9 @@ Namespace Ieee1344
         Public ReadOnly Property BinaryImage() As Byte()
             Get
                 Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BinaryLength)
-                Dim index As Integer
+                Dim index As Int32
 
-                For x As Integer = 0 To Frames.Length - 1
+                For x As Int32 = 0 To Frames.Length - 1
                     With Frames(x)
                         BlockCopy(.BinaryImage, 0, buffer, index, .FrameLength)
                         index += .FrameLength

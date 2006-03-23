@@ -36,7 +36,7 @@ Public MustInherit Class PhasorDefinitionBase
 
     End Sub
 
-    Protected Sub New(ByVal parent As IConfigurationCell, ByVal dataFormat As DataFormat, ByVal index As Integer, ByVal label As String, ByVal scale As Integer, ByVal offset As Single, ByVal format As CoordinateFormat, ByVal type As PhasorType, ByVal voltageReference As IPhasorDefinition)
+    Protected Sub New(ByVal parent As IConfigurationCell, ByVal dataFormat As DataFormat, ByVal index As Int32, ByVal label As String, ByVal scale As Int32, ByVal offset As Single, ByVal format As CoordinateFormat, ByVal type As PhasorType, ByVal voltageReference As IPhasorDefinition)
 
         MyBase.New(parent, dataFormat, index, label, scale, offset)
 
@@ -51,7 +51,7 @@ Public MustInherit Class PhasorDefinitionBase
 
     End Sub
 
-    Protected Sub New(ByVal parent As IConfigurationCell, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+    Protected Sub New(ByVal parent As IConfigurationCell, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
         MyBase.New(parent, binaryImage, startIndex)
 

@@ -26,7 +26,7 @@ Namespace Ieee1344
     ' a data broadcast until a command has been sent to "turn on" the real-time stream.
     Public Class CommandFrame
 
-        Public Const FrameLength As Integer = 18
+        Public Const FrameLength As Int32 = 18
 
         Private m_timetag As UnixTimeTag
         Private m_pmuIDCode As Int64
@@ -42,7 +42,7 @@ Namespace Ieee1344
         End Sub
 
         ' Use this constuctor to receive a command (i.e., your code is acting as a PMU)
-        Public Sub New(ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+        Public Sub New(ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
             If binaryImage Is Nothing Then
                 Throw New ArgumentNullException("BinaryImage was null - could not create command frame")
@@ -116,7 +116,7 @@ Namespace Ieee1344
             End Get
         End Property
 
-        Public ReadOnly Property BinaryLength() As Integer
+        Public ReadOnly Property BinaryLength() As Int32
             Get
                 Return FrameLength
             End Get

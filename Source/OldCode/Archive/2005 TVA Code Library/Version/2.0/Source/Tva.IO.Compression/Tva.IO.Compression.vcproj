@@ -50,7 +50,7 @@
 				PreprocessorDefinitions="WIN32;_DEBUG"
 				MinimalRebuild="false"
 				BasicRuntimeChecks="0"
-				RuntimeLibrary="3"
+				RuntimeLibrary="2"
 				WarningLevel="3"
 				DebugInformationFormat="3"
 				CompileAs="2"

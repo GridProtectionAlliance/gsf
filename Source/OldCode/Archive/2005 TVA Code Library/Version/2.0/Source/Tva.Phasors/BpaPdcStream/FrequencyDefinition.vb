@@ -24,7 +24,7 @@ Namespace BpaPdcStream
 
         Inherits FrequencyDefinitionBase
 
-        Public Dummy As Integer
+        Public Dummy As Int32
 
         Public Sub New(ByVal parent As ConfigurationCell)
 
@@ -83,9 +83,9 @@ Namespace BpaPdcStream
             End Get
         End Property
 
-        Public Overrides ReadOnly Property MaximumLabelLength() As Integer
+        Public Overrides ReadOnly Property MaximumLabelLength() As Int32
             Get
-                Return Integer.MaxValue
+                Return Int32.MaxValue
             End Get
         End Property
 

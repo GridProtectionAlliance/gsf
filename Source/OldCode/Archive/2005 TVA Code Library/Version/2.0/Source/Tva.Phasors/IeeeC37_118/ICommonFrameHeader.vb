@@ -32,9 +32,9 @@ Namespace IeeeC37_118
 
         Property Ticks() As Long
 
-        Property TimeBase() As Int32
-
         Property InternalTimeQualityFlags() As Int32
+
+        ReadOnly Property TimeBase() As Int32
 
         ReadOnly Property SecondOfCentury() As UInt32
 

@@ -34,7 +34,7 @@ Namespace IeeeC37_118
 
         End Sub
 
-        Default Public Shadows ReadOnly Property Item(ByVal index As Integer) As ConfigurationCell
+        Default Public Shadows ReadOnly Property Item(ByVal index As Int32) As ConfigurationCell
             Get
                 Return MyBase.Item(index)
             End Get

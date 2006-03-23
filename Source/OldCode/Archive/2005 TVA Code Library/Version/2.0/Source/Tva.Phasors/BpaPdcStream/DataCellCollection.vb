@@ -35,7 +35,7 @@ Namespace BpaPdcStream
 
         End Sub
 
-        Default Public Shadows ReadOnly Property Item(ByVal index As Integer) As DataCell
+        Default Public Shadows ReadOnly Property Item(ByVal index As Int32) As DataCell
             Get
                 Return MyBase.Item(index)
             End Get

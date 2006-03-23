@@ -183,6 +183,7 @@ Namespace Collections
         Private m_startTime As Long
         Private m_stopTime As Long
         Private m_realTimeProcessThread As Thread
+        Private m_realTimeProcessThreadPriority As ThreadPriority
         Private WithEvents m_processTimer As System.Timers.Timer
 
 #End Region
@@ -491,6 +492,7 @@ Namespace Collections
             m_processTimeout = processTimeout
             m_requeueOnTimeout = requeueOnTimeout
             m_requeueOnException = requeueOnException
+            m_realTimeProcessThreadPriority = ThreadPriority.Highest
 
             If processInterval = RealTimeProcessInterval Then
                 ' Instantiate process queue for real-time item processing
@@ -718,7 +720,7 @@ Namespace Collections
             If m_processingIsRealTime Then
                 ' Start real-time processing thread
                 m_realTimeProcessThread = New Thread(AddressOf RealTimeThreadProc)
-                m_realTimeProcessThread.Priority = ThreadPriority.Highest
+                m_realTimeProcessThread.Priority = m_realTimeProcessThreadPriority
                 m_realTimeProcessThread.Start()
             Else
                 ' Start intervaled processing, if there items in the queue
@@ -809,6 +811,21 @@ Namespace Collections
 
                 Return TicksToSeconds(processingTime)
             End Get
+        End Property
+
+        ''' <summary>
+        ''' Allows adjustment of real-time process thread priority
+        ''' </summary>
+        ''' <remarks>
+        ''' This only affects real-time queues.  Changes to thread priority will only take effect when set before calling the "Start" method.
+        ''' </remarks>
+        Public Overridable Property RealTimeProcessThreadPriority() As ThreadPriority
+            Get
+                Return m_realTimeProcessThreadPriority
+            End Get
+            Set(ByVal value As ThreadPriority)
+                m_realTimeProcessThreadPriority = value
+            End Set
         End Property
 
         ''' <summary>

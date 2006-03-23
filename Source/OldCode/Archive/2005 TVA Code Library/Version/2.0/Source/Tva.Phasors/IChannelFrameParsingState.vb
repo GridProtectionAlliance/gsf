@@ -21,13 +21,13 @@ Public Interface IChannelFrameParsingState(Of T As IChannelCell)
 
     Inherits IChannelParsingState
 
-    Delegate Function CreateNewCellFunctionSignature(ByVal parent As IChannelFrame, ByVal state As IChannelFrameParsingState(Of T), ByVal index As Integer, ByVal binaryImage As Byte(), ByVal startIndex As Integer) As T
+    Delegate Function CreateNewCellFunctionSignature(ByVal parent As IChannelFrame, ByVal state As IChannelFrameParsingState(Of T), ByVal index As Int32, ByVal binaryImage As Byte(), ByVal startIndex As Int32) As T
 
     ReadOnly Property CreateNewCellFunction() As CreateNewCellFunctionSignature
 
     ReadOnly Property Cells() As IChannelCellCollection(Of T)
 
-    Property CellCount() As Integer
+    Property CellCount() As Int32
 
     Property ParsedBinaryLength() As UInt16
 

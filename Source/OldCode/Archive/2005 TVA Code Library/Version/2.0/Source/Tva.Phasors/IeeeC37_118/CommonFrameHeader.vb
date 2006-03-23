@@ -16,9 +16,8 @@
 '*******************************************************************************************************
 
 Imports Tva.DateTime
-Imports Tva.DateTime.Common
 Imports Tva.Interop
-Imports Tva.Interop.Bit
+Imports Tva.Phasors.IeeeC37_118.Common
 
 Namespace IeeeC37_118
 
@@ -40,7 +39,6 @@ Namespace IeeeC37_118
             Private m_idCode As UInt16
             Private m_ticks As Long
             Private m_timeQualityFlags As Int32
-            Private m_timeBase As Int32
 
             Public Sub New(ByVal revisionNumber As RevisionNumber)
 
@@ -81,11 +79,11 @@ Namespace IeeeC37_118
                 End Set
             End Property
 
-            Public Property FrameLength() As Short Implements ICommonFrameHeader.FrameLength
+            Public Property FrameLength() As Int16 Implements ICommonFrameHeader.FrameLength
                 Get
                     Return m_frameLength
                 End Get
-                Set(ByVal value As Short)
+                Set(ByVal value As Int16)
                     m_frameLength = value
                 End Set
             End Property
@@ -108,7 +106,7 @@ Namespace IeeeC37_118
                 End Set
             End Property
 
-            Private Property InternalTimeQualityFlags() As Int32 Implements ICommonFrameHeader.InternalTimeQualityFlags
+            Public Property InternalTimeQualityFlags() As Int32 Implements ICommonFrameHeader.InternalTimeQualityFlags
                 Get
                     Return m_timeQualityFlags
                 End Get
@@ -147,13 +145,10 @@ Namespace IeeeC37_118
                 End Set
             End Property
 
-            Public Property TimeBase() As Int32 Implements ICommonFrameHeader.TimeBase
+            Public ReadOnly Property TimeBase() As Int32 Implements ICommonFrameHeader.TimeBase
                 Get
-                    Return m_timeBase
+                    Return Int32.MaxValue And Not TimeQualityFlagsMask
                 End Get
-                Set(ByVal value As Int32)
-                    m_timeBase = value
-                End Set
             End Property
 
         End Class
@@ -161,7 +156,6 @@ Namespace IeeeC37_118
 #End Region
 
         Public Const BinaryLength As UInt16 = 14
-        Public Const TimeQualityFlagsMask As Integer = Bit31 Or Bit30 Or Bit29 Or Bit28 Or Bit27 Or Bit26 Or Bit25 Or Bit24
 
         Private Sub New()
 
@@ -169,9 +163,9 @@ Namespace IeeeC37_118
 
         End Sub
 
-        Public Shared Function ParseBinaryImage(ByVal revisionNumber As RevisionNumber, ByVal configurationFrame As ConfigurationFrame, ByVal binaryImage As Byte(), ByVal startIndex As Integer) As ICommonFrameHeader
+        Public Shared Function ParseBinaryImage(ByVal revisionNumber As RevisionNumber, ByVal configurationFrame As ConfigurationFrame, ByVal binaryImage As Byte(), ByVal startIndex As Int32) As ICommonFrameHeader
 
-            If binaryImage(startIndex) <> Common.SyncByte Then Throw New InvalidOperationException("Bad Data Stream: Expected sync byte &HAA as first byte in C37.118 frame, got " & binaryImage(startIndex).ToString("x"c).PadLeft(2, "0"c))
+            If binaryImage(startIndex) <> SyncByte Then Throw New InvalidOperationException("Bad Data Stream: Expected sync byte &HAA as first byte in C37.118 frame, got " & binaryImage(startIndex).ToString("x"c).PadLeft(2, "0"c))
 
             With New CommonFrameHeaderInstance(revisionNumber)
                 ' Strip out frame type and version information...
@@ -191,7 +185,7 @@ Namespace IeeeC37_118
                     .Ticks = (New UnixTimeTag(secondOfCentury + (fractionOfSecond And Not TimeQualityFlagsMask) / configurationFrame.TimeBase)).ToDateTime.Ticks
                 End If
 
-                .TimeQualityFlags = fractionOfSecond And TimeQualityFlagsMask
+                .InternalTimeQualityFlags = fractionOfSecond And TimeQualityFlagsMask
 
                 Return .This
             End With
@@ -224,7 +218,6 @@ Namespace IeeeC37_118
                 .FrameLength = sourceFrameHeader.FrameLength
                 .IDCode = sourceFrameHeader.IDCode
                 .Ticks = sourceFrameHeader.Ticks
-                .TimeBase = sourceFrameHeader.TimeBase
                 .InternalTimeQualityFlags = sourceFrameHeader.InternalTimeQualityFlags
             End With
 
@@ -251,28 +244,28 @@ Namespace IeeeC37_118
 
         Public Shared ReadOnly Property TimeTag(ByVal frameHeader As ICommonFrameHeader) As UnixTimeTag
             Get
-                Return New UnixTimeTag(frameHeader.Ticks)
+                Return New UnixTimeTag(New Date(frameHeader.Ticks))
             End Get
         End Property
 
         Public Shared Property TimeQualityFlags(ByVal frameHeader As ICommonFrameHeader) As IeeeC37_118.TimeQualityFlags
             Get
-                Return frameHeader.InternalTimeQualityFlags And Not TimeQualityFlags.TimeQualityIndicatorMask
+                Return frameHeader.InternalTimeQualityFlags And Not TimeQualityFlags.TimeQualityIndicatorCodeMask
             End Get
             Set(ByVal value As IeeeC37_118.TimeQualityFlags)
                 With frameHeader
-                    .InternalTimeQualityFlags = (.InternalTimeQualityFlags And IeeeC37_118.TimeQualityFlags.TimeQualityIndicatorMask) Or value
+                    .InternalTimeQualityFlags = (.InternalTimeQualityFlags And IeeeC37_118.TimeQualityFlags.TimeQualityIndicatorCodeMask) Or value
                 End With
             End Set
         End Property
 
         Public Shared Property TimeQualityIndicatorCode(ByVal frameHeader As ICommonFrameHeader) As IeeeC37_118.TimeQualityIndicatorCode
             Get
-                Return frameHeader.InternalTimeQualityFlags And IeeeC37_118.TimeQualityFlags.TimeQualityIndicatorMask
+                Return frameHeader.InternalTimeQualityFlags And IeeeC37_118.TimeQualityFlags.TimeQualityIndicatorCodeMask
             End Get
             Set(ByVal value As IeeeC37_118.TimeQualityIndicatorCode)
                 With frameHeader
-                    .InternalTimeQualityFlags = (.InternalTimeQualityFlags And Not IeeeC37_118.TimeQualityFlags.TimeQualityIndicatorMask) Or value
+                    .InternalTimeQualityFlags = (.InternalTimeQualityFlags And Not IeeeC37_118.TimeQualityFlags.TimeQualityIndicatorCodeMask) Or value
                 End With
             End Set
         End Property

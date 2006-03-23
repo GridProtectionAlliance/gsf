@@ -30,7 +30,7 @@ Namespace Ieee1344
 
         End Sub
 
-        Default Public ReadOnly Property Item(ByVal index As Integer) As PhasorValue
+        Default Public ReadOnly Property Item(ByVal index As Int32) As PhasorValue
             Get
                 Return DirectCast(List.Item(index), PhasorValue)
             End Get
@@ -51,7 +51,7 @@ Namespace Ieee1344
 
         End Sub
 
-        Default Public ReadOnly Property Item(ByVal index As Integer) As Int16
+        Default Public ReadOnly Property Item(ByVal index As Int32) As Int16
             Get
                 Return DirectCast(List.Item(index), Int16)
             End Get
@@ -72,7 +72,7 @@ Namespace Ieee1344
 
         End Sub
 
-        Default Public ReadOnly Property Item(ByVal index As Integer) As PhasorDefinition
+        Default Public ReadOnly Property Item(ByVal index As Int32) As PhasorDefinition
             Get
                 Return DirectCast(List.Item(index), PhasorDefinition)
             End Get
@@ -93,7 +93,7 @@ Namespace Ieee1344
 
         End Sub
 
-        Default Public ReadOnly Property Item(ByVal index As Integer) As DigitalDefinition
+        Default Public ReadOnly Property Item(ByVal index As Int32) As DigitalDefinition
             Get
                 Return DirectCast(List.Item(index), DigitalDefinition)
             End Get

@@ -30,8 +30,8 @@ Namespace Ieee1344
 
         Protected m_configFile As ConfigurationFile
         Protected m_phasorFormat As CoordinateFormat
-        Protected m_frameRate As Integer
-        Protected m_sampleStep As Integer
+        Protected m_frameRate As Int32
+        Protected m_sampleStep As Int32
         Protected m_phasorValues As PhasorValues
         Protected m_digitalValues As DigitalValues
         Protected m_frequency As Int16
@@ -55,7 +55,7 @@ Namespace Ieee1344
 
         End Sub
 
-        Protected Friend Sub New(ByVal parsedImage As BaseFrame, ByVal configFile2 As ConfigurationFile, ByVal binaryImage As Byte(), ByVal startIndex As Integer, ByVal phasorFormat As CoordinateFormat)
+        Protected Friend Sub New(ByVal parsedImage As BaseFrame, ByVal configFile2 As ConfigurationFile, ByVal binaryImage As Byte(), ByVal startIndex As Int32, ByVal phasorFormat As CoordinateFormat)
 
             MyClass.New(configFile2, phasorFormat)
 
@@ -87,20 +87,20 @@ Namespace Ieee1344
             End Set
         End Property
 
-        Public Property FrameRate() As Integer
+        Public Property FrameRate() As Int32
             Get
                 Return m_frameRate
             End Get
-            Set(ByVal Value As Integer)
+            Set(ByVal Value As Int32)
                 m_frameRate = Value
             End Set
         End Property
 
-        Public Property SampleStep() As Integer
+        Public Property SampleStep() As Int32
             Get
                 Return m_sampleStep
             End Get
-            Set(ByVal Value As Integer)
+            Set(ByVal Value As Int32)
                 m_sampleStep = Value
             End Set
         End Property
@@ -167,7 +167,7 @@ Namespace Ieee1344
         Public Overrides Property DataImage() As Byte()
             Get
                 Dim image As Byte() = Array.CreateInstance(GetType(Byte), DataLength)
-                Dim x, index As Integer
+                Dim x, index As Int32
 
                 For x = 0 To m_phasorValues.Count - 1
                     BlockCopy(m_phasorValues(x).BinaryImage(m_phasorFormat), 0, image, x * PhasorValue.BinaryLength, PhasorValue.BinaryLength)
@@ -191,9 +191,9 @@ Namespace Ieee1344
             End Set
         End Property
 
-        Private Sub ParseDataImage(ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+        Private Sub ParseDataImage(ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
-            Dim x, index As Integer
+            Dim x, index As Int32
 
             m_phasorValues.Clear()
 

@@ -47,7 +47,7 @@ Namespace IeeeC37_118
 
         End Sub
 
-        Public Sub New(ByVal parsedFrameHeader As ICommonFrameHeader, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+        Public Sub New(ByVal parsedFrameHeader As ICommonFrameHeader, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
             MyBase.New(New ConfigurationFrameParsingState(New ConfigurationCellCollection, parsedFrameHeader.FrameLength, _
                     AddressOf IeeeC37_118.ConfigurationCell.CreateNewConfigurationCell), binaryImage, startIndex)
@@ -124,7 +124,7 @@ Namespace IeeeC37_118
             Get
                 Return MyBase.IDCode
             End Get
-            Set(ByVal value As UShort)
+            Set(ByVal value As UInt16)
                 MyBase.IDCode = value
             End Set
         End Property
@@ -138,7 +138,7 @@ Namespace IeeeC37_118
             End Set
         End Property
 
-        Public Property TimeBase() As Int32 Implements ICommonFrameHeader.TimeBase
+        Public Property TimeBase() As Int32
             Get
                 Return m_timeBase
             End Get
@@ -149,6 +149,12 @@ Namespace IeeeC37_118
                     m_timeBase = value
                 End If
             End Set
+        End Property
+
+        Private ReadOnly Property ICommonFrameHeaderTimeBase() As Int32 Implements ICommonFrameHeader.TimeBase
+            Get
+                Return m_timeBase
+            End Get
         End Property
 
         Private Property InternalTimeQualityFlags() As Int32 Implements ICommonFrameHeader.InternalTimeQualityFlags
@@ -208,7 +214,7 @@ Namespace IeeeC37_118
         Protected Overrides ReadOnly Property HeaderImage() As Byte()
             Get
                 Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), HeaderLength)
-                Dim index As Integer
+                Dim index As Int32
 
                 CopyImage(CommonFrameHeader.BinaryImage(Me), buffer, index, CommonFrameHeader.BinaryLength)
                 EndianOrder.BigEndian.CopyBytes(m_timeBase, buffer, index)
@@ -218,7 +224,7 @@ Namespace IeeeC37_118
             End Get
         End Property
 
-        Protected Overrides Sub ParseHeaderImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+        Protected Overrides Sub ParseHeaderImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
             ' We parse the C37.18 stream specific header image here...
             Dim parsingState As IConfigurationFrameParsingState = DirectCast(state, IConfigurationFrameParsingState)
@@ -253,7 +259,7 @@ Namespace IeeeC37_118
             End Get
         End Property
 
-        Protected Overrides Sub ParseFooterImage(ByVal state As IChannelParsingState, ByVal binaryImage() As Byte, ByVal startIndex As Integer)
+        Protected Overrides Sub ParseFooterImage(ByVal state As IChannelParsingState, ByVal binaryImage() As Byte, ByVal startIndex As Int32)
 
             FrameRate = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex)
 
@@ -265,7 +271,7 @@ Namespace IeeeC37_118
 
         End Sub
 
-        Public Overrides ReadOnly Property Measurements() As System.Collections.Generic.IDictionary(Of Integer, Measurements.IMeasurement)
+        Public Overrides ReadOnly Property Measurements() As System.Collections.Generic.IDictionary(Of Int32, Measurements.IMeasurement)
             Get
                 ' TODO: Determine what to do with this concerning concentration
             End Get

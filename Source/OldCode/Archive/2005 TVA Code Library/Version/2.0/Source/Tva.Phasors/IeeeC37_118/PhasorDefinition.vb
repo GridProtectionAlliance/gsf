@@ -32,13 +32,13 @@ Namespace IeeeC37_118
 
         End Sub
 
-        Public Sub New(ByVal parent As ConfigurationCell, ByVal dataFormat As DataFormat, ByVal index As Integer, ByVal label As String, ByVal scale As Integer, ByVal offset As Single, ByVal format As CoordinateFormat, ByVal type As PhasorType, ByVal voltageReference As PhasorDefinition)
+        Public Sub New(ByVal parent As ConfigurationCell, ByVal dataFormat As DataFormat, ByVal index As Int32, ByVal label As String, ByVal scale As Int32, ByVal offset As Single, ByVal format As CoordinateFormat, ByVal type As PhasorType, ByVal voltageReference As PhasorDefinition)
 
             MyBase.New(parent, dataFormat, index, label, scale, offset, format, type, voltageReference)
 
         End Sub
 
-        Public Sub New(ByVal parent As ConfigurationCell, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+        Public Sub New(ByVal parent As ConfigurationCell, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
             MyBase.New(parent, binaryImage, startIndex)
 
@@ -50,7 +50,7 @@ Namespace IeeeC37_118
 
         End Sub
 
-        Friend Shared Function CreateNewPhasorDefintion(ByVal parent As IConfigurationCell, ByVal binaryImage As Byte(), ByVal startIndex As Integer) As IPhasorDefinition
+        Friend Shared Function CreateNewPhasorDefintion(ByVal parent As IConfigurationCell, ByVal binaryImage As Byte(), ByVal startIndex As Int32) As IPhasorDefinition
 
             Return New PhasorDefinition(parent, binaryImage, startIndex)
 
@@ -62,7 +62,7 @@ Namespace IeeeC37_118
             End Get
         End Property
 
-        Friend Shared ReadOnly Property ConversionFactorLength() As Integer
+        Friend Shared ReadOnly Property ConversionFactorLength() As Int32
             Get
                 Return 4
             End Get
@@ -80,7 +80,7 @@ Namespace IeeeC37_118
             End Get
         End Property
 
-        Friend Sub ParseConversionFactor(ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+        Friend Sub ParseConversionFactor(ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
             Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), 4)
 

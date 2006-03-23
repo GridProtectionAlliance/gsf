@@ -21,7 +21,7 @@ Public Class DigitalValueCollection
 
     Inherits ChannelValueCollectionBase(Of IDigitalDefinition, IDigitalValue)
 
-    Public Sub New(ByVal maximumCount As Integer)
+    Public Sub New(ByVal maximumCount As Int32)
 
         MyBase.New(maximumCount)
 

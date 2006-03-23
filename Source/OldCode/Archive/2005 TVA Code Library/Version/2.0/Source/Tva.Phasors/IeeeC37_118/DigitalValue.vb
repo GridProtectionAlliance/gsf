@@ -28,7 +28,7 @@ Namespace IeeeC37_118
 
         End Sub
 
-        Public Sub New(ByVal parent As IDataCell, ByVal DigitalDefinition As IDigitalDefinition, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+        Public Sub New(ByVal parent As IDataCell, ByVal DigitalDefinition As IDigitalDefinition, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
             MyBase.New(parent, DigitalDefinition, binaryImage, startIndex)
 
@@ -40,7 +40,7 @@ Namespace IeeeC37_118
 
         End Sub
 
-        Friend Shared Function CreateNewDigitalValue(ByVal parent As IDataCell, ByVal definition As IDigitalDefinition, ByVal binaryImage As Byte(), ByVal startIndex As Integer) As IDigitalValue
+        Friend Shared Function CreateNewDigitalValue(ByVal parent As IDataCell, ByVal definition As IDigitalDefinition, ByVal binaryImage As Byte(), ByVal startIndex As Int32) As IDigitalValue
 
             Return New DigitalValue(parent, definition, binaryImage, startIndex)
 

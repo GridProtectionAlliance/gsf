@@ -23,7 +23,7 @@ Public Class DataFrameCollection
 
     Inherits ChannelFrameCollectionBase(Of IDataFrame)
 
-    Public Sub New(ByVal maximumCount As Integer)
+    Public Sub New(ByVal maximumCount As Int32)
 
         MyBase.New(maximumCount)
 

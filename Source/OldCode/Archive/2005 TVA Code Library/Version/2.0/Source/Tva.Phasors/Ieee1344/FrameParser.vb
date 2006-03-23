@@ -49,7 +49,7 @@ Namespace Ieee1344
         Private m_configurationFrame2 As ConfigurationFrame
         Private m_initialized As Boolean
 
-        Private Const BufferSize As Integer = 4096   ' 4Kb buffer
+        Private Const BufferSize As Int32 = 4096   ' 4Kb buffer
 
 #End Region
 
@@ -83,15 +83,21 @@ Namespace Ieee1344
             End Get
         End Property
 
+        Public ReadOnly Property QueuedBuffers() As Int32
+            Get
+                Return m_bufferQueue.Count
+            End Get
+        End Property
+
         ' Stream implementation overrides
-        Public Overrides Sub Write(ByVal buffer As Byte(), ByVal offset As Integer, ByVal count As Integer)
+        Public Overrides Sub Write(ByVal buffer As Byte(), ByVal offset As Int32, ByVal count As Int32)
 
             If m_initialized Then
                 ' Queue up received data buffer for real-time parsing and return to data collection as quickly as possible...
                 m_bufferQueue.Add(CopyBuffer(buffer, offset, count))
             Else
                 ' Initial stream may be any where in the middle of a frame, so we attempt to locate sync byte to "line-up" data stream
-                Dim syncBytePosition As Integer = Array.IndexOf(buffer, SyncByte, offset, count)
+                Dim syncBytePosition As Int32 = Array.IndexOf(buffer, SyncByte, offset, count)
 
                 If syncBytePosition > -1 Then
                     ' Initialize data stream starting at located sync byte
@@ -124,7 +130,7 @@ Namespace Ieee1344
 
         ' This is a write only stream - so the following methods do not apply to this stream
         <EditorBrowsable(EditorBrowsableState.Never)> _
-        Public Overrides Function Read(ByVal buffer() As Byte, ByVal offset As Integer, ByVal count As Integer) As Integer
+        Public Overrides Function Read(ByVal buffer() As Byte, ByVal offset As Int32, ByVal count As Int32) As Int32
 
             Throw New NotImplementedException("Cannnot read from WriteOnly stream")
 
@@ -177,7 +183,7 @@ Namespace Ieee1344
         Private Sub ProcessBuffer(ByVal buffer As Byte())
 
             'Dim parsedFrameHeader As ICommonFrameHeader
-            'Dim index As Integer
+            'Dim index As Int32
 
             'If m_dataStream IsNot Nothing Then
             '    m_dataStream.Write(buffer, 0, buffer.Length)
@@ -265,7 +271,7 @@ End Namespace
 
 '    Private m_pmuID As Int64
 '    Private m_ipAddress As IPAddress
-'    Private m_ipPort As Integer
+'    Private m_ipPort As Int32
 '    Private m_tcpSocket As Socket
 '    Private m_parseThread As Thread
 '    Private m_phasorFormat As CoordinateFormat
@@ -294,7 +300,7 @@ End Namespace
 
 '    End Sub
 
-'    Public Sub New(ByVal pmuID As Int64, ByVal pmuIPAddress As String, ByVal pmuIPPort As Integer, ByVal phasorFormat As CoordinateFormat)
+'    Public Sub New(ByVal pmuID As Int64, ByVal pmuIPAddress As String, ByVal pmuIPPort As Int32, ByVal phasorFormat As CoordinateFormat)
 
 '        MyClass.New()
 '        m_pmuID = pmuID
@@ -304,7 +310,7 @@ End Namespace
 
 '    End Sub
 
-'    Private Sub New(ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+'    Private Sub New(ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
 '        MyBase.New(binaryImage, startIndex)
 
@@ -361,11 +367,11 @@ End Namespace
 '        End Set
 '    End Property
 
-'    Public Property PmuIPPort() As Integer
+'    Public Property PmuIPPort() As Int32
 '        Get
 '            Return m_ipPort
 '        End Get
-'        Set(ByVal Value As Integer)
+'        Set(ByVal Value As Int32)
 '            m_ipPort = Value
 '        End Set
 '    End Property
@@ -477,7 +483,7 @@ End Namespace
 '    Private Sub ReadDataStream()
 
 '        Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), 4096)
-'        Dim received, startIndex As Integer
+'        Dim received, startIndex As Int32
 '        Dim parsedImage As FrameParser
 
 '        'Dim dataStream As FileStream

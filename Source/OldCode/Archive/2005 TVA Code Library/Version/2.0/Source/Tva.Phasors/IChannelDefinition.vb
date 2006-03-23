@@ -25,13 +25,13 @@ Public Interface IChannelDefinition
 
     Property DataFormat() As DataFormat
 
-    Property Index() As Integer
+    Property Index() As Int32
 
     Property Offset() As Single
 
-    Property ScalingFactor() As Integer
+    Property ScalingFactor() As Int32
 
-    ReadOnly Property MaximumScalingFactor() As Integer
+    ReadOnly Property MaximumScalingFactor() As Int32
 
     Property ConversionFactor() As Single
 
@@ -41,7 +41,7 @@ Public Interface IChannelDefinition
 
     ReadOnly Property LabelImage() As Byte()
 
-    ReadOnly Property MaximumLabelLength() As Integer
+    ReadOnly Property MaximumLabelLength() As Int32
 
 End Interface
 

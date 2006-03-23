@@ -21,7 +21,7 @@ Public MustInherit Class ChannelFrameCollectionBase(Of T As IChannelFrame)
 
     Inherits ChannelCollectionBase(Of T)
 
-    Protected Sub New(ByVal maximumCount As Integer)
+    Protected Sub New(ByVal maximumCount As Int32)
 
         MyBase.New(maximumCount)
 
@@ -32,7 +32,7 @@ Public MustInherit Class ChannelFrameCollectionBase(Of T As IChannelFrame)
             ' Frames will be different lengths, so we must manually sum lengths
             Dim length As UInt16
 
-            For x As Integer = 0 To Count - 1
+            For x As Int32 = 0 To Count - 1
                 length += Item(x).BinaryLength
             Next
 

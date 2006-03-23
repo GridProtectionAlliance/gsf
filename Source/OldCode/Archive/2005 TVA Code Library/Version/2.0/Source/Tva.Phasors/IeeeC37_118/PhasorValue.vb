@@ -58,7 +58,7 @@ Namespace IeeeC37_118
 
         End Sub
 
-        Public Sub New(ByVal parent As IDataCell, ByVal phasorDefinition As IPhasorDefinition, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+        Public Sub New(ByVal parent As IDataCell, ByVal phasorDefinition As IPhasorDefinition, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
             MyBase.New(parent, phasorDefinition, binaryImage, startIndex)
 
@@ -70,7 +70,7 @@ Namespace IeeeC37_118
 
         End Sub
 
-        Friend Shared Function CreateNewPhasorValue(ByVal parent As IDataCell, ByVal definition As IPhasorDefinition, ByVal binaryImage As Byte(), ByVal startIndex As Integer) As IPhasorValue
+        Friend Shared Function CreateNewPhasorValue(ByVal parent As IDataCell, ByVal definition As IPhasorDefinition, ByVal binaryImage As Byte(), ByVal startIndex As Int32) As IPhasorValue
 
             Return New PhasorValue(parent, definition, binaryImage, startIndex)
 

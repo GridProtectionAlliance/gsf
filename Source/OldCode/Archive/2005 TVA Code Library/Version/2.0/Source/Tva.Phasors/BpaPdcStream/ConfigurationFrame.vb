@@ -74,7 +74,7 @@ Namespace BpaPdcStream
 
         End Sub
 
-        Public Sub New(ByVal configFileName As String, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+        Public Sub New(ByVal configFileName As String, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
             ' TODO: provide static configuration cell creation function
             MyBase.New(New ConfigurationFrameParsingState(New ConfigurationCellCollection, 0, Nothing), binaryImage, startIndex)
@@ -133,7 +133,7 @@ Namespace BpaPdcStream
                 With m_iniFile
                     If File.Exists(.IniFileName) Then
                         Dim pmuCell As ConfigurationCell
-                        Dim x, phasorCount As Integer
+                        Dim x, phasorCount As Int32
 
                         m_defaultPhasorV = New PhasorDefinition(Nothing, 0, .KeyValue("DEFAULT", "PhasorV", DefaultVoltagePhasorEntry))
                         m_defaultPhasorI = New PhasorDefinition(Nothing, 0, .KeyValue("DEFAULT", "PhasorI", DefaultCurrentPhasorEntry))
@@ -307,12 +307,12 @@ Namespace BpaPdcStream
                         .Append("NumberOfPMUs=" & Cells.Count & vbCrLf)
                         .Append(vbCrLf)
 
-                        For x As Integer = 0 To Cells.Count - 1
+                        For x As Int32 = 0 To Cells.Count - 1
                             .Append("[" & Cells(x).IDLabel & "]" & vbCrLf)
                             .Append("Name=" & Cells(x).StationName & vbCrLf)
                             .Append("PMU=" & x & vbCrLf)
                             .Append("NumberPhasors=" & Cells(x).PhasorDefinitions.Count & vbCrLf)
-                            For y As Integer = 0 To Cells(x).PhasorDefinitions.Count - 1
+                            For y As Int32 = 0 To Cells(x).PhasorDefinitions.Count - 1
                                 .Append("Phasor" & (y + 1) & "=" & PhasorDefinition.ConfigFileFormat(Cells(x).PhasorDefinitions(y)) & vbCrLf)
                             Next
                             .Append("Frequency=" & FrequencyDefinition.ConfigFileFormat(Cells(x).FrequencyDefinition) & vbCrLf)
@@ -342,11 +342,11 @@ Namespace BpaPdcStream
             Get
                 If m_rowLength = 0 OrElse recalculate Then
                     m_rowLength = 0
-                    For x As Integer = 0 To Cells.Count - 1
+                    For x As Int32 = 0 To Cells.Count - 1
                         With Cells(x)
                             .Offset = m_rowLength
                             m_rowLength += 12 + FrequencyValue.CalculateBinaryLength(.FrequencyDefinition)
-                            For y As Integer = 0 To .PhasorDefinitions.Count - 1
+                            For y As Int32 = 0 To .PhasorDefinitions.Count - 1
                                 m_rowLength += PhasorValue.CalculateBinaryLength(.PhasorDefinitions(y))
                             Next
                         End With
@@ -358,7 +358,7 @@ Namespace BpaPdcStream
         End Property
 
         <CLSCompliant(False)> _
-        Protected Overrides Function CalculateChecksum(ByVal buffer() As Byte, ByVal offset As Integer, ByVal length As Integer) As UInt16
+        Protected Overrides Function CalculateChecksum(ByVal buffer() As Byte, ByVal offset As Int32, ByVal length As Int32) As UInt16
 
             ' PDCstream uses an XOR based check sum
             Return Xor16BitCheckSum(buffer, offset, length)
@@ -389,7 +389,7 @@ Namespace BpaPdcStream
             End Get
         End Property
 
-        Protected Overrides Sub ParseHeaderImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+        Protected Overrides Sub ParseHeaderImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
             ' We parse the PDC stream specific header image here...
             Dim parsingState As IConfigurationFrameParsingState = DirectCast(state, IConfigurationFrameParsingState)
@@ -419,7 +419,7 @@ Namespace BpaPdcStream
 
         End Sub
 
-        Public Overrides ReadOnly Property Measurements() As System.Collections.Generic.IDictionary(Of Integer, Measurements.IMeasurement)
+        Public Overrides ReadOnly Property Measurements() As System.Collections.Generic.IDictionary(Of Int32, Measurements.IMeasurement)
             Get
                 ' TODO: What to do??
             End Get

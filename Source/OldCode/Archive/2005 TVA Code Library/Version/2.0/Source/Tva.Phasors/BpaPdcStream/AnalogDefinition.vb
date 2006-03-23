@@ -28,7 +28,7 @@ Namespace BpaPdcStream
 
         End Sub
 
-        Public Sub New(ByVal parent As ConfigurationCell, ByVal dataFormat As DataFormat, ByVal index As Integer, ByVal label As String, ByVal scale As Integer, ByVal offset As Single)
+        Public Sub New(ByVal parent As ConfigurationCell, ByVal dataFormat As DataFormat, ByVal index As Int32, ByVal label As String, ByVal scale As Int32, ByVal offset As Single)
 
             MyBase.New(parent, dataFormat, index, label, 1, 0)
 
@@ -46,9 +46,9 @@ Namespace BpaPdcStream
             End Get
         End Property
 
-        Public Overrides ReadOnly Property MaximumLabelLength() As Integer
+        Public Overrides ReadOnly Property MaximumLabelLength() As Int32
             Get
-                Return Integer.MaxValue
+                Return Int32.MaxValue
             End Get
         End Property
 

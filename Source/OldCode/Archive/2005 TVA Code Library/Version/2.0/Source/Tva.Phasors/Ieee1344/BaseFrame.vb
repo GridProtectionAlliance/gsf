@@ -30,7 +30,7 @@ Namespace Ieee1344
         Protected m_sampleCount As Int16
         Protected m_status As Int16
 
-        Protected Const CommonBinaryLength As Integer = 8
+        Protected Const CommonBinaryLength As Int32 = 8
         Protected Const FrameTypeMask As Int16 = Bit13 Or Bit14 Or Bit15
         Protected Const TriggerMask As Int16 = Bit11 Or Bit12 Or Bit13
         Protected Const FrameLengthMask As Int16 = Not (TriggerMask Or Bit14 Or Bit15)
@@ -44,7 +44,7 @@ Namespace Ieee1344
 
         End Sub
 
-        Protected Sub New(ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+        Protected Sub New(ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
             If binaryImage Is Nothing Then
                 Throw New ArgumentNullException("BinaryImage was null - could not create " & Name)
@@ -134,7 +134,7 @@ Namespace Ieee1344
             End Set
         End Property
 
-        Protected Sub AppendCRC16(ByVal buffer As Byte(), ByVal startIndex As Integer)
+        Protected Sub AppendCRC16(ByVal buffer As Byte(), ByVal startIndex As Int32)
 
             EndianOrder.BigEndian.CopyBytes(CRC16(UInt16.MaxValue, buffer, 0, startIndex), buffer, startIndex)
 

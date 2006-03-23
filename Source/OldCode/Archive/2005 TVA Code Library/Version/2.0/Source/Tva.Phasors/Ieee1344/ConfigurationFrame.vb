@@ -40,7 +40,7 @@ Namespace Ieee1344
 
         End Sub
 
-        Protected Friend Sub New(ByVal parsedImage As BaseFrame, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+        Protected Friend Sub New(ByVal parsedImage As BaseFrame, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
             MyClass.New()
 

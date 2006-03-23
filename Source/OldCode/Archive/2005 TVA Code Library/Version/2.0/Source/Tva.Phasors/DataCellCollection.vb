@@ -21,7 +21,7 @@ Public Class DataCellCollection
 
     Inherits ChannelCellCollectionBase(Of IDataCell)
 
-    Public Sub New(ByVal maximumCount As Integer, ByVal constantCellLength As Boolean)
+    Public Sub New(ByVal maximumCount As Int32, ByVal constantCellLength As Boolean)
 
         MyBase.New(maximumCount, constantCellLength)
 

@@ -29,9 +29,9 @@ Public MustInherit Class ChannelDefinitionBase
 
     Private m_parent As IConfigurationCell
     Private m_dataFormat As DataFormat
-    Private m_index As Integer
+    Private m_index As Int32
     Private m_label As String
-    Private m_scale As Integer
+    Private m_scale As Int32
     Private m_offset As Single
 
     Protected Sub New(ByVal parent As IConfigurationCell)
@@ -43,7 +43,7 @@ Public MustInherit Class ChannelDefinitionBase
 
     End Sub
 
-    Protected Sub New(ByVal parent As IConfigurationCell, ByVal dataFormat As DataFormat, ByVal index As Integer, ByVal label As String, ByVal scale As Integer, ByVal offset As Single)
+    Protected Sub New(ByVal parent As IConfigurationCell, ByVal dataFormat As DataFormat, ByVal index As Int32, ByVal label As String, ByVal scale As Int32, ByVal offset As Single)
 
         m_parent = parent
         m_dataFormat = dataFormat
@@ -54,7 +54,7 @@ Public MustInherit Class ChannelDefinitionBase
 
     End Sub
 
-    Protected Sub New(ByVal parent As IConfigurationCell, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+    Protected Sub New(ByVal parent As IConfigurationCell, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
         m_parent = parent
         ParseBinaryImage(Nothing, binaryImage, startIndex)
@@ -84,11 +84,11 @@ Public MustInherit Class ChannelDefinitionBase
         End Set
     End Property
 
-    Public Overridable Property Index() As Integer Implements IChannelDefinition.Index
+    Public Overridable Property Index() As Int32 Implements IChannelDefinition.Index
         Get
             Return m_index
         End Get
-        Set(ByVal value As Integer)
+        Set(ByVal value As Int32)
             m_index = value
         End Set
     End Property
@@ -102,11 +102,11 @@ Public MustInherit Class ChannelDefinitionBase
         End Set
     End Property
 
-    Public Overridable Property ScalingFactor() As Integer Implements IChannelDefinition.ScalingFactor
+    Public Overridable Property ScalingFactor() As Int32 Implements IChannelDefinition.ScalingFactor
         Get
             Return m_scale
         End Get
-        Set(ByVal value As Integer)
+        Set(ByVal value As Int32)
             If value > MaximumScalingFactor Then Throw New OverflowException("Scaling factor value cannot exceed " & MaximumScalingFactor)
             m_scale = value
         End Set
@@ -128,7 +128,7 @@ Public MustInherit Class ChannelDefinitionBase
         End Get
     End Property
 
-    Public Overridable ReadOnly Property MaximumScalingFactor() As Integer Implements IChannelDefinition.MaximumScalingFactor
+    Public Overridable ReadOnly Property MaximumScalingFactor() As Int32 Implements IChannelDefinition.MaximumScalingFactor
         Get
             ' Typical scaling/conversion factors should fit within 3 bytes (i.e., 24 bits) of space
             Return &H1FFFFFF
@@ -156,14 +156,14 @@ Public MustInherit Class ChannelDefinitionBase
         End Get
     End Property
 
-    Public Overridable ReadOnly Property MaximumLabelLength() As Integer Implements IChannelDefinition.MaximumLabelLength
+    Public Overridable ReadOnly Property MaximumLabelLength() As Int32 Implements IChannelDefinition.MaximumLabelLength
         Get
             ' Typical label length is 16 characters
             Return 16
         End Get
     End Property
 
-    Public Overridable Function CompareTo(ByVal obj As Object) As Integer Implements IComparable.CompareTo
+    Public Overridable Function CompareTo(ByVal obj As Object) As Int32 Implements IComparable.CompareTo
 
         ' We sort channel defintions by index
         If TypeOf obj Is IChannelDefinition Then
@@ -186,9 +186,9 @@ Public MustInherit Class ChannelDefinitionBase
         End Get
     End Property
 
-    Protected Overrides Sub ParseBodyImage(ByVal state As IChannelParsingState, ByVal binaryImage() As Byte, ByVal startIndex As Integer)
+    Protected Overrides Sub ParseBodyImage(ByVal state As IChannelParsingState, ByVal binaryImage() As Byte, ByVal startIndex As Int32)
 
-        Dim length As Integer = Array.IndexOf(binaryImage, Convert.ToByte(0), startIndex, MaximumLabelLength) - startIndex
+        Dim length As Int32 = Array.IndexOf(binaryImage, Convert.ToByte(0), startIndex, MaximumLabelLength) - startIndex
 
         If length < 0 Then length = MaximumLabelLength
 

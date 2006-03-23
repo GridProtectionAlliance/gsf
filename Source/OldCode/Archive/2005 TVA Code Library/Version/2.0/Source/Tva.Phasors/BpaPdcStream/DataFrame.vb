@@ -56,7 +56,7 @@ Namespace BpaPdcStream
 
         End Sub
 
-        Public Sub New(ByVal configurationFrame As IConfigurationFrame, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+        Public Sub New(ByVal configurationFrame As IConfigurationFrame, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
             ' TODO: Provide static data cell creation function
             MyBase.New(New DataFrameParsingState(New DataCellCollection, 0, configurationFrame, Nothing), binaryImage, startIndex)
@@ -116,7 +116,7 @@ Namespace BpaPdcStream
         'End Property
 
         <CLSCompliant(False)> _
-        Protected Overrides Function CalculateChecksum(ByVal buffer() As Byte, ByVal offset As Integer, ByVal length As Integer) As UInt16
+        Protected Overrides Function CalculateChecksum(ByVal buffer() As Byte, ByVal offset As Int32, ByVal length As Int32) As UInt16
 
             ' PDCstream uses simple XOR checksum
             Return Xor16BitCheckSum(buffer, offset, length)
@@ -144,7 +144,7 @@ Namespace BpaPdcStream
             End Get
         End Property
 
-        Protected Overrides Sub ParseHeaderImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+        Protected Overrides Sub ParseHeaderImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
             Dim configurationFrame As BpaPdcStream.ConfigurationFrame = DirectCast(state, IDataFrameParsingState).ConfigurationFrame
 
@@ -205,14 +205,14 @@ Namespace BpaPdcStream
         'Private m_configFile As ConfigurationFrame
         'Private m_timeTag As UnixTimeTag
         'Private m_timeStamp As DateTime
-        'Private m_sampleNumber As Integer
+        'Private m_sampleNumber As Int32
 
         'Public Cells As DataCell()
         'Public Published As Boolean
 
         'Public Const SyncByte As Byte = &HAA
 
-        'Public Sub New(ByVal configFile As ConfigurationFrame, ByVal timeStamp As DateTime, ByVal index As Integer)
+        'Public Sub New(ByVal configFile As ConfigurationFrame, ByVal timeStamp As DateTime, ByVal index As Int32)
 
         '    m_configFile = configFile
         '    m_timeTag = New UnixTimeTag(timeStamp)
@@ -224,7 +224,7 @@ Namespace BpaPdcStream
         '    With m_configFile
         '        Cells = Array.CreateInstance(GetType(DataCell), .PMUCount)
 
-        '        For x As Integer = 0 To Cells.Length - 1
+        '        For x As Int32 = 0 To Cells.Length - 1
         '            'Cells(x) = New DataCell(.PMU(x), index)
         '        Next
         '    End With
@@ -237,7 +237,7 @@ Namespace BpaPdcStream
         '    End Get
         'End Property
 
-        'Public ReadOnly Property Index() As Integer
+        'Public ReadOnly Property Index() As Int32
         '    Get
         '        Return m_sampleNumber
         '    End Get
@@ -257,7 +257,7 @@ Namespace BpaPdcStream
         '            Dim isReady As Boolean = True
 
         '            ' If we have data for each cell in the row, we can go ahead and publish it...
-        '            For x As Integer = 0 To Cells.Length - 1
+        '            For x As Int32 = 0 To Cells.Length - 1
         '                If Cells(x).IsEmpty Then
         '                    isReady = False
         '                    Exit For
@@ -272,11 +272,11 @@ Namespace BpaPdcStream
         '    End Get
         'End Property
 
-        'Public ReadOnly Property BinaryLength() As Integer
+        'Public ReadOnly Property BinaryLength() As Int32
         '    Get
-        '        Dim length As Integer = 14
+        '        Dim length As Int32 = 14
 
-        '        For x As Integer = 0 To Cells.Length - 1
+        '        For x As Int32 = 0 To Cells.Length - 1
         '            length += Cells(x).BinaryLength
         '        Next
 
@@ -288,7 +288,7 @@ Namespace BpaPdcStream
         '    Get
         '        Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BinaryLength)
         '        Dim pmuID As Byte()
-        '        Dim index As Integer
+        '        Dim index As Int32
 
         '        buffer(0) = SyncByte
         '        buffer(1) = Convert.ToByte(1)
@@ -298,7 +298,7 @@ Namespace BpaPdcStream
         '        EndianOrder.BigEndian.CopyBytes(Convert.ToInt16(Cells.Length), buffer, 10)
         '        index = 12
 
-        '        For x As Integer = 0 To Cells.Length - 1
+        '        For x As Int32 = 0 To Cells.Length - 1
         '            BlockCopy(Cells(x).BinaryImage, 0, buffer, index, Cells(x).BinaryLength)
         '            index += Cells(x).BinaryLength
         '        Next
@@ -310,7 +310,7 @@ Namespace BpaPdcStream
         '    End Get
         'End Property
 
-        Public Overrides ReadOnly Property Measurements() As System.Collections.Generic.IDictionary(Of Integer, Measurements.IMeasurement)
+        Public Overrides ReadOnly Property Measurements() As System.Collections.Generic.IDictionary(Of Int32, Measurements.IMeasurement)
             Get
                 ' TODO: Yoo-Hoo!
             End Get

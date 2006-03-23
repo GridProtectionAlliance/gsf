@@ -27,13 +27,13 @@ Public Interface IConfigurationCell
 
     ReadOnly Property StationNameImage() As Byte()
 
-    ReadOnly Property MaximumStationNameLength() As Integer
+    ReadOnly Property MaximumStationNameLength() As Int32
 
     Property IDLabel() As String
 
     ReadOnly Property IDLabelImage() As Byte()
 
-    ReadOnly Property IDLabelLength() As Integer
+    ReadOnly Property IDLabelLength() As Int32
 
     ReadOnly Property PhasorDefinitions() As PhasorDefinitionCollection
 

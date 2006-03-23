@@ -31,14 +31,14 @@ Namespace BpaPdcStream
         Private m_configFile As ConfigurationFrame
         Private m_timeTag As UnixTimeTag
         Private m_timeStamp As Date
-        Private m_index As Integer
+        Private m_index As Int32
 
         Public Cells As DataCell()
         Public Published As Boolean
 
         Public Const SyncByte As Byte = &HAA
 
-        Public Sub New(ByVal configFile As ConfigurationFrame, ByVal timeStamp As Date, ByVal index As Integer)
+        Public Sub New(ByVal configFile As ConfigurationFrame, ByVal timeStamp As Date, ByVal index As Int32)
 
             m_configFile = configFile
             m_timeTag = New UnixTimeTag(timeStamp)
@@ -50,7 +50,7 @@ Namespace BpaPdcStream
             With m_configFile
                 Cells = Array.CreateInstance(GetType(DataCell), .Cells.Count)
 
-                For x As Integer = 0 To Cells.Length - 1
+                For x As Int32 = 0 To Cells.Length - 1
                     'Cells(x) = New DataCell(.PMU(x), index)
                 Next
             End With
@@ -63,7 +63,7 @@ Namespace BpaPdcStream
             End Get
         End Property
 
-        Public ReadOnly Property Index() As Integer
+        Public ReadOnly Property Index() As Int32
             Get
                 Return m_index
             End Get
@@ -83,7 +83,7 @@ Namespace BpaPdcStream
                     Dim isReady As Boolean = True
 
                     ' If we have data for each cell in the row, we can go ahead and publish it...
-                    For x As Integer = 0 To Cells.Length - 1
+                    For x As Int32 = 0 To Cells.Length - 1
                         If Cells(x).AllValuesAreEmpty Then
                             isReady = False
                             Exit For
@@ -98,11 +98,11 @@ Namespace BpaPdcStream
             End Get
         End Property
 
-        Public ReadOnly Property BinaryLength() As Integer
+        Public ReadOnly Property BinaryLength() As Int32
             Get
-                Dim length As Integer = 14
+                Dim length As Int32 = 14
 
-                For x As Integer = 0 To Cells.Length - 1
+                For x As Int32 = 0 To Cells.Length - 1
                     length += Cells(x).BinaryLength
                 Next
 
@@ -114,7 +114,7 @@ Namespace BpaPdcStream
             Get
                 Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BinaryLength)
                 'Dim pmuID As Byte()
-                Dim index As Integer
+                Dim index As Int32
 
                 buffer(0) = SyncByte
                 buffer(1) = Convert.ToByte(1)
@@ -124,7 +124,7 @@ Namespace BpaPdcStream
                 EndianOrder.BigEndian.CopyBytes(Convert.ToInt16(Cells.Length), buffer, 10)
                 index = 12
 
-                For x As Integer = 0 To Cells.Length - 1
+                For x As Int32 = 0 To Cells.Length - 1
                     BlockCopy(Cells(x).BinaryImage, 0, buffer, index, Cells(x).BinaryLength)
                     index += Cells(x).BinaryLength
                 Next
@@ -137,10 +137,10 @@ Namespace BpaPdcStream
         End Property
 
         ' We sort data packets by timetag and index
-        Public Function CompareTo(ByVal obj As Object) As Integer Implements System.IComparable.CompareTo
+        Public Function CompareTo(ByVal obj As Object) As Int32 Implements System.IComparable.CompareTo
 
             If TypeOf obj Is DataPacket Then
-                Dim comparison As Integer = m_timeTag.CompareTo(DirectCast(obj, DataPacket).TimeTag)
+                Dim comparison As Int32 = m_timeTag.CompareTo(DirectCast(obj, DataPacket).TimeTag)
 
                 If comparison = 0 Then
                     Return m_index.CompareTo(DirectCast(obj, DataPacket).Index)

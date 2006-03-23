@@ -34,7 +34,7 @@ Namespace IeeeC37_118
 
         End Sub
 
-        Public Sub New(ByVal parent As IDataCell, ByVal analogDefinition As IAnalogDefinition, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+        Public Sub New(ByVal parent As IDataCell, ByVal analogDefinition As IAnalogDefinition, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
             MyBase.New(parent, analogDefinition, binaryImage, startIndex)
 
@@ -46,7 +46,7 @@ Namespace IeeeC37_118
 
         End Sub
 
-        Friend Shared Function CreateNewAnalogValue(ByVal parent As IDataCell, ByVal definition As IAnalogDefinition, ByVal binaryImage As Byte(), ByVal startIndex As Integer) As IAnalogValue
+        Friend Shared Function CreateNewAnalogValue(ByVal parent As IDataCell, ByVal definition As IAnalogDefinition, ByVal binaryImage As Byte(), ByVal startIndex As Int32) As IAnalogValue
 
             Return New AnalogValue(parent, definition, binaryImage, startIndex)
 

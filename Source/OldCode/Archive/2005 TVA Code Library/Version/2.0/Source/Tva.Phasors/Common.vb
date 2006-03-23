@@ -67,7 +67,7 @@ Public Enum PmuProtocol
 End Enum
 
 ''' <summary>PMU commands</summary>
-Public Enum PmuCommand As Short
+Public Enum PmuCommand As Int16
     ''' <summary>0001  Turn off transmission of data frames</summary>
     DisableRealTimeData = Bit0
     ''' <summary>0010  Turn on transmission of data frames</summary>
@@ -94,7 +94,7 @@ Public Class Common
     End Sub
 
     ' This is a common optimized block copy function for any kind of data
-    Public Shared Sub CopyImage(ByVal channel As IChannel, ByVal buffer As Byte(), ByRef index As Integer)
+    Public Shared Sub CopyImage(ByVal channel As IChannel, ByVal buffer As Byte(), ByRef index As Int32)
 
         With channel
             CopyImage(.BinaryImage, buffer, index, .BinaryLength)
@@ -103,7 +103,7 @@ Public Class Common
     End Sub
 
     ' This is a common optimized block copy function for binary data
-    Public Shared Sub CopyImage(ByVal source As Byte(), ByVal buffer As Byte(), ByRef index As Integer, ByVal length As Int16)
+    Public Shared Sub CopyImage(ByVal source As Byte(), ByVal buffer As Byte(), ByRef index As Int32, ByVal length As Int16)
 
         If length > 0 Then
             BlockCopy(source, 0, buffer, index, length)

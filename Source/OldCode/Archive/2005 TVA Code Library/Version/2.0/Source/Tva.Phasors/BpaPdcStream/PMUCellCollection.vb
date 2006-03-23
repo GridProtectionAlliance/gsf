@@ -37,7 +37,7 @@ Namespace BpaPdcStream
 
         End Sub
 
-        Public Sub New(ByVal parent As DataCell, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+        Public Sub New(ByVal parent As DataCell, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
             MyBase.New(Byte.MaxValue, True)
 
@@ -59,7 +59,7 @@ Namespace BpaPdcStream
 
         End Sub
 
-        Default Public Shadows ReadOnly Property Item(ByVal index As Integer) As PMUCell
+        Default Public Shadows ReadOnly Property Item(ByVal index As Int32) As PMUCell
             Get
                 Return MyBase.Item(index)
             End Get

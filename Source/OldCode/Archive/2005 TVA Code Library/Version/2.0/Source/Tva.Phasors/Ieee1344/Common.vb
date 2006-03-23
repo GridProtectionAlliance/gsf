@@ -29,7 +29,7 @@ Namespace Ieee1344
         Current
     End Enum
 
-    Public Enum PMUFrameType As Short
+    Public Enum PMUFrameType As Int16
         DataFrame = 0
         HeaderFrame = Bit13
         ConfigurationFrame = Bit14
@@ -40,7 +40,7 @@ Namespace Ieee1344
         UserDefined1 = Bit13 Or Bit14 Or Bit15
     End Enum
 
-    Public Enum PMUCommand As Short
+    Public Enum PMUCommand As Int16
         DisableRealTimeData = Bit0
         EnableRealTimeData = Bit1
         SendHeaderFile = Bit0 Or Bit1
@@ -49,7 +49,7 @@ Namespace Ieee1344
         ReceiveReferencePhasor = Bit3
     End Enum
 
-    Public Enum PMUTriggerStatus As Short
+    Public Enum PMUTriggerStatus As Int16
         None = 0
         FrequencyTrigger = Bit11 Or Bit12 Or Bit13
         DfDtTrigger = Bit12 Or Bit13

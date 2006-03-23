@@ -30,13 +30,13 @@ Public MustInherit Class DigitalDefinitionBase
 
     End Sub
 
-    Protected Sub New(ByVal parent As IConfigurationCell, ByVal index As Integer, ByVal label As String)
+    Protected Sub New(ByVal parent As IConfigurationCell, ByVal index As Int32, ByVal label As String)
 
         MyBase.New(parent, Phasors.DataFormat.FixedInteger, index, label, 1, 0)
 
     End Sub
 
-    Protected Sub New(ByVal parent As IConfigurationCell, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+    Protected Sub New(ByVal parent As IConfigurationCell, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
         MyBase.New(parent, binaryImage, startIndex)
 
@@ -78,11 +78,11 @@ Public MustInherit Class DigitalDefinitionBase
     End Property
 
     <EditorBrowsable(EditorBrowsableState.Never)> _
-    Public NotOverridable Overrides Property ScalingFactor() As Integer
+    Public NotOverridable Overrides Property ScalingFactor() As Int32
         Get
             Return MyBase.ScalingFactor
         End Get
-        Set(ByVal value As Integer)
+        Set(ByVal value As Int32)
             If value = 1 Then
                 MyBase.ScalingFactor = value
             Else

@@ -23,7 +23,7 @@ Public MustInherit Class ChannelFrameParsingStateBase(Of T As IChannelCell)
     Implements IChannelFrameParsingState(Of T)
 
     Private m_cells As IChannelCellCollection(Of T)
-    Private m_cellCount As Integer
+    Private m_cellCount As Int32
     Private m_parsedBinaryLength As UInt16
     Private m_createNewCellFunction As IChannelFrameParsingState(Of T).CreateNewCellFunctionSignature
 
@@ -47,11 +47,11 @@ Public MustInherit Class ChannelFrameParsingStateBase(Of T As IChannelCell)
         End Get
     End Property
 
-    Public Property CellCount() As Integer Implements IChannelFrameParsingState(Of T).CellCount
+    Public Property CellCount() As Int32 Implements IChannelFrameParsingState(Of T).CellCount
         Get
             Return m_cellCount
         End Get
-        Set(ByVal value As Integer)
+        Set(ByVal value As Int32)
             m_cellCount = value
         End Set
     End Property

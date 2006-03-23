@@ -44,8 +44,8 @@ Namespace IeeeC37_118
         End Sub
 
         ' This constructor satisfies ChannelCellBase class requirement:
-        '   Final dervived classes must expose Public Sub New(ByVal parent As IChannelFrame, ByVal state As IChannelFrameParsingState, ByVal index As Integer, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
-        Public Sub New(ByVal parent As IConfigurationFrame, ByVal state As IConfigurationFrameParsingState, ByVal index As Integer, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+        '   Final dervived classes must expose Public Sub New(ByVal parent As IChannelFrame, ByVal state As IChannelFrameParsingState, ByVal index As Int32, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
+        Public Sub New(ByVal parent As IConfigurationFrame, ByVal state As IConfigurationFrameParsingState, ByVal index As Int32, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
             ' We pass in defaults for id code and nominal frequency since these will be parsed out later
             MyBase.New(parent, False, MaximumPhasorValues, MaximumAnalogValues, MaximumDigitalValues, _
@@ -58,7 +58,7 @@ Namespace IeeeC37_118
 
         End Sub
 
-        Friend Shared Function CreateNewConfigurationCell(ByVal parent As IChannelFrame, ByVal state As IChannelFrameParsingState(Of IConfigurationCell), ByVal index As Integer, ByVal binaryImage As Byte(), ByVal startIndex As Integer) As IConfigurationCell
+        Friend Shared Function CreateNewConfigurationCell(ByVal parent As IChannelFrame, ByVal state As IChannelFrameParsingState(Of IConfigurationCell), ByVal index As Int32, ByVal binaryImage As Byte(), ByVal startIndex As Int32) As IConfigurationCell
 
             Return New ConfigurationCell(parent, state, index, binaryImage, startIndex)
 
@@ -107,7 +107,7 @@ Namespace IeeeC37_118
         Protected Overrides ReadOnly Property HeaderImage() As Byte()
             Get
                 Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), HeaderLength)
-                Dim index As Integer
+                Dim index As Int32
 
                 CopyImage(MyBase.HeaderImage, buffer, index, MyBase.HeaderLength)
                 EndianOrder.BigEndian.CopyBytes(IDCode, buffer, index)
@@ -120,7 +120,7 @@ Namespace IeeeC37_118
             End Get
         End Property
 
-        Protected Overrides Sub ParseHeaderImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+        Protected Overrides Sub ParseHeaderImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
             Dim parsingState As IConfigurationCellParsingState = DirectCast(state, IConfigurationCellParsingState)
 
@@ -151,7 +151,7 @@ Namespace IeeeC37_118
         Protected Overrides ReadOnly Property FooterImage() As Byte()
             Get
                 Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), FooterLength)
-                Dim x, index As Integer
+                Dim x, index As Int32
 
                 ' Include conversion factors in configuration cell footer
                 With PhasorDefinitions
@@ -179,9 +179,9 @@ Namespace IeeeC37_118
             End Get
         End Property
 
-        Protected Overrides Sub ParseFooterImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+        Protected Overrides Sub ParseFooterImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
-            Dim x As Integer
+            Dim x As Int32
 
             ' Parse conversion factors from configuration cell footer
             With PhasorDefinitions

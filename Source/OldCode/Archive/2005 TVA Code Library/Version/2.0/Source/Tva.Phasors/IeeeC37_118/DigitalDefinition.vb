@@ -34,13 +34,13 @@ Namespace IeeeC37_118
 
         End Sub
 
-        Public Sub New(ByVal parent As ConfigurationCell, ByVal index As Integer, ByVal label As String)
+        Public Sub New(ByVal parent As ConfigurationCell, ByVal index As Int32, ByVal label As String)
 
             MyBase.New(parent, index, label)
 
         End Sub
 
-        Public Sub New(ByVal parent As ConfigurationCell, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+        Public Sub New(ByVal parent As ConfigurationCell, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
             MyBase.New(parent, binaryImage, startIndex)
 
@@ -52,7 +52,7 @@ Namespace IeeeC37_118
 
         End Sub
 
-        Friend Shared Function CreateNewDigitalDefintion(ByVal parent As IConfigurationCell, ByVal binaryImage As Byte(), ByVal startIndex As Integer) As IDigitalDefinition
+        Friend Shared Function CreateNewDigitalDefintion(ByVal parent As IConfigurationCell, ByVal binaryImage As Byte(), ByVal startIndex As Int32) As IDigitalDefinition
 
             Return New DigitalDefinition(parent, binaryImage, startIndex)
 
@@ -71,7 +71,7 @@ Namespace IeeeC37_118
             End Get
         End Property
 
-        Public ReadOnly Property LabelCount() As Integer
+        Public ReadOnly Property LabelCount() As Int32
             Get
                 If Parent.Parent.RevisionNumber = RevisionNumber.RevisionD6 Then
                     Return 1
@@ -84,7 +84,7 @@ Namespace IeeeC37_118
         ''' <summary>Accesses individual labels for each bit in the digital defintion</summary>
         ''' <param name="index">Desired bit label to access</param>
         ''' <remarks>In the final version of the protocol each digital bit can be labeled, but we read them out as one big string in the "Label" property so this property allows individual access to each label</remarks>
-        Public Property Labels(ByVal index As Integer) As String
+        Public Property Labels(ByVal index As Int32) As String
             Get
                 If index < 0 Or index >= LabelCount Then Throw New IndexOutOfRangeException("Invalid label index specified.  Note that there are " & LabelCount & " labels per digital available in " & [Enum].GetName(GetType(RevisionNumber), Parent.Parent.RevisionNumber) & " of the IEEE C37.118 protocol")
 
@@ -108,7 +108,7 @@ Namespace IeeeC37_118
             End Set
         End Property
 
-        Public Overrides ReadOnly Property MaximumLabelLength() As Integer
+        Public Overrides ReadOnly Property MaximumLabelLength() As Int32
             Get
                 Return LabelCount * MyBase.MaximumLabelLength
             End Get
@@ -132,7 +132,7 @@ Namespace IeeeC37_118
             End Set
         End Property
 
-        Friend Shared ReadOnly Property ConversionFactorLength() As Integer
+        Friend Shared ReadOnly Property ConversionFactorLength() As Int32
             Get
                 Return 4
             End Get
@@ -149,7 +149,7 @@ Namespace IeeeC37_118
             End Get
         End Property
 
-        Friend Sub ParseConversionFactor(ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+        Friend Sub ParseConversionFactor(ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
             m_normalStatus = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex)
             m_validInputs = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 2)

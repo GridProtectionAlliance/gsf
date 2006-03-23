@@ -33,7 +33,7 @@ Public MustInherit Class FrequencyDefinitionBase
 
     End Sub
 
-    Protected Sub New(ByVal parent As IConfigurationCell, ByVal dataFormat As DataFormat, ByVal index As Integer, ByVal label As String, ByVal scale As Integer, ByVal offset As Single, ByVal dfdtScale As Integer, ByVal dfdtOffset As Single)
+    Protected Sub New(ByVal parent As IConfigurationCell, ByVal dataFormat As DataFormat, ByVal index As Int32, ByVal label As String, ByVal scale As Int32, ByVal offset As Single, ByVal dfdtScale As Int32, ByVal dfdtOffset As Single)
 
         MyBase.New(parent, dataFormat, index, label, scale, offset)
 
@@ -42,7 +42,7 @@ Public MustInherit Class FrequencyDefinitionBase
 
     End Sub
 
-    Protected Sub New(ByVal parent As IConfigurationCell, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+    Protected Sub New(ByVal parent As IConfigurationCell, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
         MyBase.New(parent, binaryImage, startIndex)
 

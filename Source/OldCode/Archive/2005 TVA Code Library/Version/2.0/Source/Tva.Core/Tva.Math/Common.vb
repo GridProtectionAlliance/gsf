@@ -114,6 +114,14 @@ Namespace Math
             End Get
         End Property
 
+        ''' <summary>Generates a cryptographically strong random integer between specified values</summary>
+        Public Shared ReadOnly Property RandomBetween(ByVal startNumber As Double, ByVal stopNumber As Double) As Double
+            Get
+                If stopNumber < startNumber Then Throw New ArgumentException("stopNumber must be greater than startNumber")
+                Return RandomNumber * (stopNumber - startNumber) + startNumber
+            End Get
+        End Property
+
         ''' <summary>Generates a cryptographically strong random boolean (i.e., a coin toss).</summary>
         Public Shared ReadOnly Property RandomBoolean() As Boolean
             Get

@@ -43,8 +43,8 @@ Namespace BpaPdcStream
         End Sub
 
         ' This constructor satisfies ChannelCellBase class requirement:
-        '   Final dervived classes must expose Public Sub New(ByVal parent As IChannelFrame, ByVal state As IChannelFrameParsingState, ByVal index As Integer, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
-        Public Sub New(ByVal parent As IConfigurationFrame, ByVal state As IConfigurationFrameParsingState, ByVal index As Integer, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+        '   Final dervived classes must expose Public Sub New(ByVal parent As IChannelFrame, ByVal state As IChannelFrameParsingState, ByVal index As Int32, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
+        Public Sub New(ByVal parent As IConfigurationFrame, ByVal state As IConfigurationFrameParsingState, ByVal index As Int32, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
             ' We don't pass in a ConfigurationCellParsingState here because it is not needed for PDCstream (see ParseBodyImage below)
             MyBase.New(parent, True, MaximumPhasorValues, MaximumAnalogValues, MaximumDigitalValues, Nothing, binaryImage, startIndex)
@@ -57,10 +57,10 @@ Namespace BpaPdcStream
             End Get
         End Property
 
-        Public Overrides ReadOnly Property MaximumStationNameLength() As Integer
+        Public Overrides ReadOnly Property MaximumStationNameLength() As Int32
             Get
                 ' The station name in the PDCstream is read from an INI file, so there is no set limit
-                Return Integer.MaxValue
+                Return Int32.MaxValue
             End Get
         End Property
 
@@ -96,7 +96,7 @@ Namespace BpaPdcStream
         Protected Overrides ReadOnly Property BodyImage() As Byte()
             Get
                 Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BodyLength)
-                Dim index As Integer
+                Dim index As Int32
 
                 CopyImage(IDLabelImage, buffer, index, IDLabelLength)       ' PMUID
                 EndianOrder.BigEndian.CopyBytes(Reserved, buffer, index)    ' Reserved
@@ -106,7 +106,7 @@ Namespace BpaPdcStream
             End Get
         End Property
 
-        Protected Overrides Sub ParseBodyImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+        Protected Overrides Sub ParseBodyImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
             IDLabel = Encoding.ASCII.GetString(binaryImage, startIndex, 4)
             Reserved = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 4)

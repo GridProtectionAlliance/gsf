@@ -26,7 +26,7 @@ Public Interface IChannel
     ' At its most basic level - all data represented by the protocols can either be "parsed" or "generated"
     ' hence the following methods common to all elements
 
-    Sub ParseBinaryImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+    Sub ParseBinaryImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
     ReadOnly Property BinaryLength() As UInt16
 

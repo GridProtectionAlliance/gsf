@@ -35,7 +35,7 @@ Namespace IeeeC37_118
 
         End Sub
 
-        Public Sub New(ByVal parent As ConfigurationCell, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+        Public Sub New(ByVal parent As ConfigurationCell, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
             MyBase.New(parent, binaryImage, startIndex)
             ScalingFactor = 100
@@ -43,7 +43,7 @@ Namespace IeeeC37_118
 
         End Sub
 
-        Public Sub New(ByVal parent As ConfigurationCell, ByVal dataFormat As DataFormat, ByVal index As Integer, ByVal label As String, ByVal scale As Integer, ByVal offset As Single, ByVal dfdtScale As Integer, ByVal dfdtOffset As Single)
+        Public Sub New(ByVal parent As ConfigurationCell, ByVal dataFormat As DataFormat, ByVal index As Int32, ByVal label As String, ByVal scale As Int32, ByVal offset As Single, ByVal dfdtScale As Int32, ByVal dfdtOffset As Single)
 
             MyBase.New(parent, dataFormat, index, label, scale, offset, dfdtScale, dfdtOffset)
 
@@ -55,7 +55,7 @@ Namespace IeeeC37_118
 
         End Sub
 
-        Friend Shared Function CreateNewFrequencyDefintion(ByVal parent As IConfigurationCell, ByVal binaryImage As Byte(), ByVal startIndex As Integer) As IFrequencyDefinition
+        Friend Shared Function CreateNewFrequencyDefintion(ByVal parent As IConfigurationCell, ByVal binaryImage As Byte(), ByVal startIndex As Int32) As IFrequencyDefinition
 
             Return New FrequencyDefinition(parent, binaryImage, startIndex)
 
@@ -79,7 +79,7 @@ Namespace IeeeC37_118
             End Get
         End Property
 
-        Protected Overrides Sub ParseBodyImage(ByVal state As IChannelParsingState, ByVal binaryImage() As Byte, ByVal startIndex As Integer)
+        Protected Overrides Sub ParseBodyImage(ByVal state As IChannelParsingState, ByVal binaryImage() As Byte, ByVal startIndex As Int32)
 
             Parent.NominalFrequency = IIf(EndianOrder.BigEndian.ToInt16(binaryImage, startIndex) And Bit0 > 0, LineFrequency.Hz50, LineFrequency.Hz60)
 

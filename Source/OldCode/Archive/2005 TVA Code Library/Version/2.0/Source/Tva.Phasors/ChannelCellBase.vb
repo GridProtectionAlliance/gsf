@@ -40,7 +40,7 @@ Public MustInherit Class ChannelCellBase
 
     End Sub
 
-    ' Final dervived classes must expose Public Sub New(ByVal parent As IChannelFrame, ByVal state As IChannelFrameParsingState, ByVal index As Integer, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+    ' Final dervived classes must expose Public Sub New(ByVal parent As IChannelFrame, ByVal state As IChannelFrameParsingState, ByVal index As Int32, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
     ' Derived classes are expected to expose a Protected Sub New(ByVal channelCell As IChannelCell)
     Protected Sub New(ByVal channelCell As IChannelCell)

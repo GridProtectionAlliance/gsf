@@ -75,9 +75,9 @@ Namespace BpaPdcStream
         Public Const SyncByte As Byte = &HAA
         Public Const DescriptorPacketFlag As Byte = &H0
 
-        Public Const MaximumPhasorValues As Integer = Byte.MaxValue
-        Public Const MaximumAnalogValues As Integer = ReservedFlags.AnalogWordsMask
-        Public Const MaximumDigitalValues As Integer = IEEEFormatFlags.DigitalWordsMask
+        Public Const MaximumPhasorValues As Int32 = Byte.MaxValue
+        Public Const MaximumAnalogValues As Int32 = ReservedFlags.AnalogWordsMask
+        Public Const MaximumDigitalValues As Int32 = IEEEFormatFlags.DigitalWordsMask
 
     End Class
 

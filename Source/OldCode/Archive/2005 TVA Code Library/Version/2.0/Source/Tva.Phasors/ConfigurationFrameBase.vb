@@ -40,9 +40,9 @@ Public MustInherit Class ConfigurationFrameBase
 
     End Sub
 
-    ' Derived classes are expected to expose a Public Sub New(ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+    ' Derived classes are expected to expose a Public Sub New(ByVal binaryImage As Byte(), ByVal startIndex As Int32)
     ' and automatically pass in state parameter
-    Protected Sub New(ByVal state As IConfigurationFrameParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+    Protected Sub New(ByVal state As IConfigurationFrameParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
         MyBase.New(state, binaryImage, startIndex)
 

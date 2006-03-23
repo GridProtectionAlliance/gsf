@@ -36,7 +36,7 @@ Namespace IeeeC37_118
 
         End Sub
 
-        Public Sub New(ByVal parent As IDataCell, ByVal frequencyDefinition As IFrequencyDefinition, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+        Public Sub New(ByVal parent As IDataCell, ByVal frequencyDefinition As IFrequencyDefinition, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
             MyBase.New(parent, frequencyDefinition, binaryImage, startIndex)
 
@@ -48,7 +48,7 @@ Namespace IeeeC37_118
 
         End Sub
 
-        Friend Shared Function CreateNewFrequencyValue(ByVal parent As IDataCell, ByVal definition As IFrequencyDefinition, ByVal binaryImage As Byte(), ByVal startIndex As Integer) As IFrequencyValue
+        Friend Shared Function CreateNewFrequencyValue(ByVal parent As IDataCell, ByVal definition As IFrequencyDefinition, ByVal binaryImage As Byte(), ByVal startIndex As Int32) As IFrequencyValue
 
             Return New FrequencyValue(parent, definition, binaryImage, startIndex)
 

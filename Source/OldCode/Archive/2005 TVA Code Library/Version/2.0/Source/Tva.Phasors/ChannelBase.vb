@@ -43,7 +43,7 @@ Public MustInherit Class ChannelBase
     Public Overridable ReadOnly Property BinaryImage() As Byte() Implements IChannel.BinaryImage
         Get
             Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BinaryLength)
-            Dim index As Integer
+            Dim index As Int32
 
             ' Copy in header, body and footer images
             CopyImage(HeaderImage, buffer, index, HeaderLength)
@@ -55,7 +55,7 @@ Public MustInherit Class ChannelBase
     End Property
 
     ' This property is not typically overriden
-    Protected Overridable Sub ParseBinaryImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Integer) Implements IChannel.ParseBinaryImage
+    Protected Overridable Sub ParseBinaryImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Int32) Implements IChannel.ParseBinaryImage
 
         ' Parse out header, body and footer images
         ParseHeaderImage(state, binaryImage, startIndex)
@@ -68,13 +68,13 @@ Public MustInherit Class ChannelBase
 
     End Sub
 
-    Protected Overridable Sub ParseHeaderImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+    Protected Overridable Sub ParseHeaderImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
     End Sub
 
-    Protected Overridable Sub ParseBodyImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+    Protected Overridable Sub ParseBodyImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
     End Sub
 
-    Protected Overridable Sub ParseFooterImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+    Protected Overridable Sub ParseFooterImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
     End Sub
 
     Protected Overridable ReadOnly Property HeaderLength() As UInt16
@@ -85,7 +85,7 @@ Public MustInherit Class ChannelBase
 
     Protected Overridable ReadOnly Property HeaderImage() As Byte()
         Get
-            Throw New NotImplementedException("No header image specified for " & InheritedType.FullName)
+            Return Nothing
         End Get
     End Property
 
@@ -97,7 +97,7 @@ Public MustInherit Class ChannelBase
 
     Protected Overridable ReadOnly Property BodyImage() As Byte()
         Get
-            Throw New NotImplementedException("No body image specified for " & InheritedType.FullName)
+            Return Nothing
         End Get
     End Property
 
@@ -109,7 +109,7 @@ Public MustInherit Class ChannelBase
 
     Protected Overridable ReadOnly Property FooterImage() As Byte()
         Get
-            Throw New NotImplementedException("No footer image specified for " & InheritedType.FullName)
+            Return Nothing
         End Get
     End Property
 

@@ -32,7 +32,7 @@ Namespace Ieee1344
             Magnitude
         End Enum
 
-        Public Const BinaryLength As Integer = 4
+        Public Const BinaryLength As Int32 = 4
 
         Public Shared ReadOnly Property Empty(ByVal phasorDefinition As PhasorDefinition) As PhasorValue
             Get
@@ -92,7 +92,7 @@ Namespace Ieee1344
 
         End Function
 
-        Public Sub New(ByVal phasorDefinition As PhasorDefinition, ByVal binaryImage As Byte(), ByVal startIndex As Integer, ByVal phasorFormat As CoordinateFormat)
+        Public Sub New(ByVal phasorDefinition As PhasorDefinition, ByVal binaryImage As Byte(), ByVal startIndex As Int32, ByVal phasorFormat As CoordinateFormat)
 
             m_phasorDefinition = phasorDefinition
 

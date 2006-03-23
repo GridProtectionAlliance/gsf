@@ -22,8 +22,8 @@ Namespace Ieee1344
 
     Public Class PhasorDefinition
 
-        Public Const BinaryLength As Integer = 4
-        Public Const MaximumLabelLength As Integer = 16
+        Public Const BinaryLength As Int32 = 4
+        Public Const MaximumLabelLength As Int32 = 16
 
         Private m_label As String
         Private m_type As PhasorType
@@ -35,7 +35,7 @@ Namespace Ieee1344
 
         End Sub
 
-        Public Sub New(ByVal label As String, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+        Public Sub New(ByVal label As String, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
             Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BinaryLength)
 

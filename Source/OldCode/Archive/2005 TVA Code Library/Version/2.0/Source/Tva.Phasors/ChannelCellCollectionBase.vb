@@ -24,7 +24,7 @@ Public MustInherit Class ChannelCellCollectionBase(Of T As IChannelCell)
 
     Private m_constantCellLength As Boolean
 
-    Protected Sub New(ByVal maximumCount As Integer, ByVal constantCellLength As Boolean)
+    Protected Sub New(ByVal maximumCount As Int32, ByVal constantCellLength As Boolean)
 
         MyBase.New(maximumCount)
 
@@ -41,7 +41,7 @@ Public MustInherit Class ChannelCellCollectionBase(Of T As IChannelCell)
                 ' Cells will be different lengths, so we must manually sum lengths
                 Dim length As UInt16
 
-                For x As Integer = 0 To Count - 1
+                For x As Int32 = 0 To Count - 1
                     length += Item(x).BinaryLength
                 Next
 

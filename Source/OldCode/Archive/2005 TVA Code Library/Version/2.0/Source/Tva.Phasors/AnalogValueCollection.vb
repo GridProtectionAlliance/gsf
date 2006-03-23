@@ -21,7 +21,7 @@ Public Class AnalogValueCollection
 
     Inherits ChannelValueCollectionBase(Of IAnalogDefinition, IAnalogValue)
 
-    Public Sub New(ByVal maximumCount As Integer)
+    Public Sub New(ByVal maximumCount As Int32)
 
         MyBase.New(maximumCount)
 

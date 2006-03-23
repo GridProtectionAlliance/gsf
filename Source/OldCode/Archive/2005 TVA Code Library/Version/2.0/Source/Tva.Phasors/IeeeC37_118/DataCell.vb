@@ -29,7 +29,7 @@ Namespace IeeeC37_118
 
             MyBase.New(parent, False, configurationCell, MaximumPhasorValues, MaximumAnalogValues, MaximumDigitalValues)
 
-            Dim x As Integer
+            Dim x As Int32
 
             With configurationCell
                 ' Initialize phasor values and frequency value with an empty value
@@ -59,7 +59,7 @@ Namespace IeeeC37_118
 
         End Sub
 
-        Public Sub New(ByVal parent As IDataFrame, ByVal state As DataFrameParsingState, ByVal index As Integer, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+        Public Sub New(ByVal parent As IDataFrame, ByVal state As DataFrameParsingState, ByVal index As Int32, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
             MyBase.New(parent, False, MaximumPhasorValues, MaximumAnalogValues, MaximumDigitalValues, _
                 New DataCellParsingState(state.ConfigurationFrame.Cells(index), _
@@ -71,7 +71,7 @@ Namespace IeeeC37_118
 
         End Sub
 
-        Friend Shared Function CreateNewDataCell(ByVal parent As IChannelFrame, ByVal state As IChannelFrameParsingState(Of IDataCell), ByVal index As Integer, ByVal binaryImage As Byte(), ByVal startIndex As Integer) As IDataCell
+        Friend Shared Function CreateNewDataCell(ByVal parent As IChannelFrame, ByVal state As IChannelFrameParsingState(Of IDataCell), ByVal index As Int32, ByVal binaryImage As Byte(), ByVal startIndex As Int32) As IDataCell
 
             Return New DataCell(parent, state, index, binaryImage, startIndex)
 

@@ -43,7 +43,7 @@ Namespace IeeeC37_118
 
         End Sub
 
-        Public Sub New(ByVal parsedFrameHeader As ICommonFrameHeader, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+        Public Sub New(ByVal parsedFrameHeader As ICommonFrameHeader, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
             MyBase.New(New CommandFrameParsingState(New CommandCellCollection(MaximumExtendedDataLength), parsedFrameHeader.FrameLength, _
                 parsedFrameHeader.FrameLength - CommonFrameHeader.BinaryLength - 4), binaryImage, startIndex)
@@ -81,11 +81,11 @@ Namespace IeeeC37_118
 
         Public Property FrameType() As FrameType Implements ICommonFrameHeader.FrameType
             Get
-                Return IeeeC37_118.FrameType.HeaderFrame
+                Return IeeeC37_118.FrameType.CommandFrame
             End Get
             Friend Set(ByVal value As FrameType)
-                ' Frame type is readonly for header frames - we don't throw an exception here if someone attempts to change
-                ' the frame type on a header frame (e.g., the CommonFrameHeader.Clone method will attempt to copy this property)
+                ' Frame type is readonly for command frames - we don't throw an exception here if someone attempts to change
+                ' the frame type on a command frame (e.g., the CommonFrameHeader.Clone method will attempt to copy this property)
                 ' but we don't do anything with the value either.
             End Set
         End Property
@@ -112,7 +112,7 @@ Namespace IeeeC37_118
             Get
                 Return MyBase.IDCode
             End Get
-            Set(ByVal value As UShort)
+            Set(ByVal value As UInt16)
                 MyBase.IDCode = value
             End Set
         End Property
@@ -126,15 +126,11 @@ Namespace IeeeC37_118
             End Set
         End Property
 
-        Public Property TimeBase() As Int32 Implements ICommonFrameHeader.TimeBase
+        Private ReadOnly Property TimeBase() As Int32 Implements ICommonFrameHeader.TimeBase
             Get
-                Return 0
+                ' Command frame doesn't need subsecond time resolution - so this factor is just defaulted to max...
+                Return Int32.MaxValue And Not TimeQualityFlagsMask
             End Get
-            Friend Set(ByVal value As Int32)
-                ' Time base is readonly for command frames - we don't throw an exception here if someone attempts to change
-                ' the time base on a command frame (e.g., the CommonFrameHeader.Clone method will attempt to copy this property)
-                ' but we don't do anything with the value either.
-            End Set
         End Property
 
         Private Property InternalTimeQualityFlags() As Int32 Implements ICommonFrameHeader.InternalTimeQualityFlags
@@ -190,7 +186,7 @@ Namespace IeeeC37_118
             End Get
         End Property
 
-        Public Overrides ReadOnly Property Measurements() As System.Collections.Generic.IDictionary(Of Integer, Measurements.IMeasurement)
+        Public Overrides ReadOnly Property Measurements() As System.Collections.Generic.IDictionary(Of Int32, Measurements.IMeasurement)
             Get
                 ' TODO: Oh my - how to handle this...
             End Get

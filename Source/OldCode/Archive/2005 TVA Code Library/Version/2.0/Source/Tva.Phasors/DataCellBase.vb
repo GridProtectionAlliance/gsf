@@ -33,7 +33,7 @@ Public MustInherit Class DataCellBase
     Private m_analogValues As AnalogValueCollection
     Private m_digitalValues As DigitalValueCollection
 
-    Protected Sub New(ByVal parent As IDataFrame, ByVal alignOnDWordBoundry As Boolean, ByVal configurationCell As IConfigurationCell, ByVal maximumPhasors As Integer, ByVal maximumAnalogs As Integer, ByVal maximumDigitals As Integer)
+    Protected Sub New(ByVal parent As IDataFrame, ByVal alignOnDWordBoundry As Boolean, ByVal configurationCell As IConfigurationCell, ByVal maximumPhasors As Int32, ByVal maximumAnalogs As Int32, ByVal maximumDigitals As Int32)
 
         MyBase.New(parent, alignOnDWordBoundry)
 
@@ -44,7 +44,7 @@ Public MustInherit Class DataCellBase
 
     End Sub
 
-    Protected Sub New(ByVal parent As IDataFrame, ByVal alignOnDWordBoundry As Boolean, ByVal maximumPhasors As Integer, ByVal maximumAnalogs As Integer, ByVal maximumDigitals As Integer, ByVal state As IDataCellParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+    Protected Sub New(ByVal parent As IDataFrame, ByVal alignOnDWordBoundry As Boolean, ByVal maximumPhasors As Int32, ByVal maximumAnalogs As Int32, ByVal maximumDigitals As Int32, ByVal state As IDataCellParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
         MyClass.New(parent, alignOnDWordBoundry, state.ConfigurationCell, maximumPhasors, maximumAnalogs, maximumDigitals)
         ParseBinaryImage(state, binaryImage, startIndex)
@@ -64,7 +64,7 @@ Public MustInherit Class DataCellBase
 
     End Sub
 
-    ' Final dervived classes must expose Public Sub New(ByVal parent As IChannelFrame, ByVal state As IChannelFrameParsingState, ByVal index As Integer, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+    ' Final dervived classes must expose Public Sub New(ByVal parent As IChannelFrame, ByVal state As IChannelFrameParsingState, ByVal index As Int32, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
     ' Derived classes are expected to expose a Public Sub New(ByVal dataCell As IDataCell)
     Protected Sub New(ByVal dataCell As IDataCell)
@@ -153,7 +153,7 @@ Public MustInherit Class DataCellBase
     Protected Overrides ReadOnly Property BodyImage() As Byte()
         Get
             Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BodyLength)
-            Dim index As Integer
+            Dim index As Int32
 
             ' Copy in common cell image
             EndianOrder.BigEndian.CopyBytes(m_statusFlags, buffer, index)
@@ -168,10 +168,10 @@ Public MustInherit Class DataCellBase
         End Get
     End Property
 
-    Protected Overrides Sub ParseBodyImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+    Protected Overrides Sub ParseBodyImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
         Dim parsingState As IDataCellParsingState = DirectCast(state, IDataCellParsingState)
-        Dim x As Integer
+        Dim x As Int32
 
         StatusFlags = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex)
         startIndex += 2

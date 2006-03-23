@@ -34,7 +34,7 @@ Public Class HeaderCell
 
     End Sub
 
-    Public Sub New(ByVal parent As IHeaderFrame, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+    Public Sub New(ByVal parent As IHeaderFrame, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
         MyClass.New(parent)
         ParseBinaryImage(Nothing, binaryImage, startIndex)
@@ -54,7 +54,7 @@ Public Class HeaderCell
 
     End Sub
 
-    Friend Shared Function CreateNewHeaderCell(ByVal parent As IChannelFrame, ByVal state As IChannelFrameParsingState(Of IHeaderCell), ByVal index As Integer, ByVal binaryImage As Byte(), ByVal startIndex As Integer) As IHeaderCell
+    Friend Shared Function CreateNewHeaderCell(ByVal parent As IChannelFrame, ByVal state As IChannelFrameParsingState(Of IHeaderCell), ByVal index As Int32, ByVal binaryImage As Byte(), ByVal startIndex As Int32) As IHeaderCell
 
         Return New HeaderCell(parent, binaryImage, startIndex)
 
@@ -93,7 +93,7 @@ Public Class HeaderCell
         End Get
     End Property
 
-    Protected Overrides Sub ParseBodyImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+    Protected Overrides Sub ParseBodyImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
         m_character = binaryImage(startIndex)
 

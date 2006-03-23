@@ -25,6 +25,6 @@ Public Interface IFrequencyDefinition
 
     Property DfDtOffset() As Single
 
-    Property DfDtScalingFactor() As Integer
+    Property DfDtScalingFactor() As Int32
 
 End Interface

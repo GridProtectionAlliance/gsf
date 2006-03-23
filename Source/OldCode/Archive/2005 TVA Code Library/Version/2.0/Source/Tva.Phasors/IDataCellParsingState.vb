@@ -21,7 +21,7 @@ Public Interface IDataCellParsingState
 
     Inherits IChannelCellParsingState
 
-    Delegate Function CreateNewValueFunctionSignature(Of TDefinition As IChannelDefinition, TValue As IChannelValue(Of TDefinition))(ByVal parent As IDataCell, ByVal definition As TDefinition, ByVal binaryImage As Byte(), ByVal startIndex As Integer) As TValue
+    Delegate Function CreateNewValueFunctionSignature(Of TDefinition As IChannelDefinition, TValue As IChannelValue(Of TDefinition))(ByVal parent As IDataCell, ByVal definition As TDefinition, ByVal binaryImage As Byte(), ByVal startIndex As Int32) As TValue
 
     ReadOnly Property ConfigurationCell() As IConfigurationCell
 

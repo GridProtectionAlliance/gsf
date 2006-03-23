@@ -31,9 +31,9 @@ Public MustInherit Class HeaderFrameBase
 
     End Sub
 
-    ' Derived classes are expected to expose a Public Sub New(ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+    ' Derived classes are expected to expose a Public Sub New(ByVal binaryImage As Byte(), ByVal startIndex As Int32)
     ' and automatically pass in parsing state
-    Protected Sub New(ByVal state As IHeaderFrameParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+    Protected Sub New(ByVal state As IHeaderFrameParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
         MyBase.New(state, binaryImage, startIndex)
 

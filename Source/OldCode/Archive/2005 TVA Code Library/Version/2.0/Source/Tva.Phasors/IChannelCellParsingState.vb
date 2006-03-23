@@ -20,11 +20,11 @@ Public Interface IChannelCellParsingState
 
     Inherits IChannelParsingState
 
-    Property PhasorCount() As Integer
+    Property PhasorCount() As Int32
 
-    Property AnalogCount() As Integer
+    Property AnalogCount() As Int32
 
-    Property DigitalCount() As Integer
+    Property DigitalCount() As Int32
 
 End Interface
 

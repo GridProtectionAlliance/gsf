@@ -50,8 +50,6 @@ Namespace IeeeC37_118
         Private m_totalFramesReceived As Long
         Private m_initialized As Boolean
 
-        Private Const BufferSize As Integer = 4096   ' 4Kb buffer
-
 #End Region
 
 #Region " Construction Functions "
@@ -108,7 +106,13 @@ Namespace IeeeC37_118
             End Get
         End Property
 
-        Public ReadOnly Property TimeBase() As Integer
+        Public ReadOnly Property QueuedBuffers() As Int32
+            Get
+                Return m_bufferQueue.Count
+            End Get
+        End Property
+
+        Public ReadOnly Property TimeBase() As Int32
             Get
                 If m_configurationFrame2 Is Nothing Then
                     Return 0
@@ -128,14 +132,14 @@ Namespace IeeeC37_118
         End Property
 
         ' Stream implementation overrides
-        Public Overrides Sub Write(ByVal buffer As Byte(), ByVal offset As Integer, ByVal count As Integer)
+        Public Overrides Sub Write(ByVal buffer As Byte(), ByVal offset As Int32, ByVal count As Int32)
 
             If m_initialized Then
                 ' Queue up received data buffer for real-time parsing and return to data collection as quickly as possible...
                 m_bufferQueue.Add(CopyBuffer(buffer, offset, count))
             Else
                 ' Initial stream may be any where in the middle of a frame, so we attempt to locate sync byte to "line-up" data stream
-                Dim syncBytePosition As Integer = Array.IndexOf(buffer, SyncByte, offset, count)
+                Dim syncBytePosition As Int32 = Array.IndexOf(buffer, SyncByte, offset, count)
 
                 If syncBytePosition > -1 Then
                     ' Initialize data stream starting at located sync byte
@@ -168,7 +172,7 @@ Namespace IeeeC37_118
 
         ' This is a write only stream - so the following methods do not apply to this stream
         <EditorBrowsable(EditorBrowsableState.Never)> _
-        Public Overrides Function Read(ByVal buffer() As Byte, ByVal offset As Integer, ByVal count As Integer) As Integer
+        Public Overrides Function Read(ByVal buffer() As Byte, ByVal offset As Int32, ByVal count As Int32) As Int32
 
             Throw New NotImplementedException("Cannnot read from WriteOnly stream")
 
@@ -221,7 +225,7 @@ Namespace IeeeC37_118
         Private Sub ProcessBuffer(ByVal buffer As Byte())
 
             Dim parsedFrameHeader As ICommonFrameHeader
-            Dim index As Integer
+            Dim index As Int32
 
             If m_dataStream IsNot Nothing Then
                 m_dataStream.Write(buffer, 0, buffer.Length)
