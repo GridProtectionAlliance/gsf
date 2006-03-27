@@ -20,17 +20,15 @@ Namespace IeeeC37_118
     <CLSCompliant(False)> _
     Public Interface ICommonFrameHeader
 
+        Inherits IChannelFrame
+
         Property RevisionNumber() As RevisionNumber
 
-        Property FrameType() As FrameType
+        Shadows Property FrameType() As FrameType
 
         Property Version() As Byte
 
         Property FrameLength() As Int16
-
-        Property IDCode() As UInt16
-
-        Property Ticks() As Long
 
         Property InternalTimeQualityFlags() As Int32
 

@@ -32,6 +32,7 @@ Namespace IeeeC37_118
 
 #Region " Public Member Declarations "
 
+        Public Event ReceivedCommonFrameHeader(ByVal frame As ICommonFrameHeader)
         Public Event ReceivedConfigurationFrame1(ByVal frame As ConfigurationFrame)
         Public Event ReceivedConfigurationFrame2(ByVal frame As ConfigurationFrame)
         Public Event ReceivedDataFrame(ByVal frame As DataFrame)
@@ -222,16 +223,28 @@ Namespace IeeeC37_118
 
 #Region " Private Methods Implementation "
 
-        Private Sub ProcessBuffer(ByVal buffer As Byte())
+        ' We process all queued data buffers that are available at once...
+        Private Sub ProcessBuffer(ByVal buffers As Byte()())
 
             Dim parsedFrameHeader As ICommonFrameHeader
-            Dim index As Int32
+            Dim buffer As Byte()
+            Dim index As Integer
 
-            If m_dataStream IsNot Nothing Then
-                m_dataStream.Write(buffer, 0, buffer.Length)
-                buffer = m_dataStream.ToArray()
-                m_dataStream = Nothing
-            End If
+            With New MemoryStream
+                ' Add any left over buffer data from last processing run
+                If m_dataStream IsNot Nothing Then
+                    .Write(m_dataStream.ToArray(), 0, m_dataStream.Length)
+                    m_dataStream = Nothing
+                End If
+
+                ' Add all currently queued buffers
+                For x As Integer = 0 To buffers.Length - 1
+                    .Write(buffers(x), 0, buffers(x).Length)
+                Next
+
+                ' Pull all queued data together as one big buffer
+                buffer = .ToArray()
+            End With
 
             Do Until index >= buffer.Length
                 ' See if there is enough data in the buffer to parse the common frame header
@@ -245,6 +258,9 @@ Namespace IeeeC37_118
                 ' Parse frame header
                 parsedFrameHeader = CommonFrameHeader.ParseBinaryImage(m_revisionNumber, m_configurationFrame2, buffer, index)
 
+                ' Until we receive configuration frame, we at least expose part of frame we have parsed
+                If m_configurationFrame2 Is Nothing Then RaiseEvent ReceivedCommonFrameHeader(parsedFrameHeader)
+
                 ' See if there is enough data in the buffer to parse the entire frame
                 If index + parsedFrameHeader.FrameLength > buffer.Length Then
                     ' If not, save off remaining buffer to prepend onto next read
@@ -257,7 +273,7 @@ Namespace IeeeC37_118
                 Select Case parsedFrameHeader.FrameType
                     Case FrameType.DataFrame
                         ' We can only start parsing data frames once we have successfully received configuration file 2...
-                        If Not m_configurationFrame2 Is Nothing Then
+                        If m_configurationFrame2 IsNot Nothing Then
                             With New DataFrame(parsedFrameHeader, m_configurationFrame2, buffer, index)
                                 RaiseEvent ReceivedDataFrame(.This)
                             End With

@@ -46,9 +46,15 @@ Namespace IeeeC37_118
 
             End Sub
 
-            Public ReadOnly Property This() As ICommonFrameHeader
+            Public ReadOnly Property This() As IChannel Implements IChannel.This
                 Get
                     Return Me
+                End Get
+            End Property
+
+            Public ReadOnly Property InheritedType() As System.Type Implements IChannel.InheritedType
+                Get
+                    Return Me.GetType()
                 End Get
             End Property
 
@@ -151,6 +157,56 @@ Namespace IeeeC37_118
                 End Get
             End Property
 
+            Public ReadOnly Property BinaryImage() As Byte() Implements IChannel.BinaryImage
+                Get
+                    Throw New NotImplementedException()
+                End Get
+            End Property
+
+            Public ReadOnly Property BinaryLength() As UInt16 Implements IChannel.BinaryLength
+                Get
+                    Return 0
+                End Get
+            End Property
+
+            Public Sub ParseBinaryImage(ByVal state As IChannelParsingState, ByVal binaryImage() As Byte, ByVal startIndex As Integer) Implements IChannel.ParseBinaryImage
+
+                Throw New NotImplementedException()
+
+            End Sub
+
+            Public ReadOnly Property Cells() As Object Implements IChannelFrame.Cells
+                Get
+                    Return Nothing
+                End Get
+            End Property
+
+            Public ReadOnly Property IChannelFrameFrameType() As FundamentalFrameType Implements IChannelFrame.FrameType
+                Get
+                    Return FundamentalFrameType.Undetermined
+                End Get
+            End Property
+
+            Public Property Published() As Boolean Implements IChannelFrame.Published
+                Get
+                    Return False
+                End Get
+                Set(ByVal value As Boolean)
+                    Throw New NotImplementedException()
+                End Set
+            End Property
+
+            Public ReadOnly Property Timestamp() As Date Implements IChannelFrame.Timestamp
+                Get
+                    Return New Date(m_ticks)
+                End Get
+            End Property
+
+            Public ReadOnly Property TimeTag() As DateTime.UnixTimeTag Implements IChannelFrame.TimeTag
+                Get
+                    Return New UnixTimeTag(Timestamp)
+                End Get
+            End Property
         End Class
 
 #End Region

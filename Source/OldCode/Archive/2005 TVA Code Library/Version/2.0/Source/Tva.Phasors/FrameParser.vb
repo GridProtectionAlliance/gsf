@@ -272,6 +272,18 @@ Public Class FrameParser
         End Get
     End Property
 
+    Public ReadOnly Property InternalFrameParser() As Object
+        Get
+            If m_ieeeC37_118FrameParser IsNot Nothing Then
+                Return m_ieeeC37_118FrameParser
+            ElseIf m_ieee1344FrameParser IsNot Nothing Then
+                Return m_ieee1344FrameParser
+            Else
+                Return m_bpaPdcStreamFrameParser
+            End If
+        End Get
+    End Property
+
     Public ReadOnly Property TotalFramesReceived() As Long
         Get
             Return m_totalFramesReceived
@@ -457,6 +469,12 @@ Public Class FrameParser
     End Sub
 
     Private Sub m_ieeeC37_118FrameParser_ReceivedCommandFrame(ByVal frame As Tva.Phasors.IeeeC37_118.CommandFrame) Handles m_ieeeC37_118FrameParser.ReceivedCommandFrame
+
+        ProcessFrame(frame)
+
+    End Sub
+
+    Private Sub m_ieeeC37_118FrameParser_ReceivedCommonFrameHeader(ByVal frame As IeeeC37_118.ICommonFrameHeader) Handles m_ieeeC37_118FrameParser.ReceivedCommonFrameHeader
 
         ProcessFrame(frame)
 
