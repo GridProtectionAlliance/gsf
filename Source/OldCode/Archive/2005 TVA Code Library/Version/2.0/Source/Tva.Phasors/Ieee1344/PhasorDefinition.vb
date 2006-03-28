@@ -15,101 +15,82 @@
 '
 '*******************************************************************************************************
 
-Imports System.Text
 Imports Tva.Interop
+Imports Tva.Collections.Common
 
 Namespace Ieee1344
 
+    <CLSCompliant(False)> _
     Public Class PhasorDefinition
 
-        Public Const BinaryLength As Int32 = 4
-        Public Const MaximumLabelLength As Int32 = 16
+        Inherits PhasorDefinitionBase
 
-        Private m_label As String
-        Private m_type As PhasorType
-        Private m_calFactor As Int32
+        Public Sub New(ByVal parent As ConfigurationCell)
 
-        Public Sub New()
-
-            m_label = ""
+            MyBase.New(parent)
 
         End Sub
 
-        Public Sub New(ByVal label As String, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
+        Public Sub New(ByVal parent As ConfigurationCell, ByVal dataFormat As DataFormat, ByVal index As Int32, ByVal label As String, ByVal scale As Int32, ByVal offset As Single, ByVal format As CoordinateFormat, ByVal type As PhasorType, ByVal voltageReference As PhasorDefinition)
 
-            Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BinaryLength)
-
-            ' Validate and store phasor label
-            Me.Label = label
-
-            ' Get phasor type from first byte
-            m_type = binaryImage(startIndex)
-
-            ' Last three bytes represent scaling factor
-            EndianOrder.BigEndian.Copy(binaryImage, startIndex + 1, buffer, 0, BinaryLength - 1)
-
-            m_calFactor = BitConverter.ToInt32(buffer, 0)
+            MyBase.New(parent, dataFormat, index, label, scale, offset, format, type, voltageReference)
 
         End Sub
 
-        Public Property [Type]() As PhasorType
-            Get
-                Return m_type
-            End Get
-            Set(ByVal Value As PhasorType)
-                m_type = Value
-            End Set
-        End Property
+        Public Sub New(ByVal parent As ConfigurationCell, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
-        Public Property CalFactor() As Single
-            Get
-                Return m_calFactor / 100000
-            End Get
-            Set(ByVal Value As Single)
-                m_calFactor = Convert.ToInt32(Value * 100000)
-                If m_calFactor > MaximumCalFactor Then Throw New OverflowException("CalFactor value cannot exceed " & MaximumCalFactor)
-            End Set
-        End Property
+            MyBase.New(parent, binaryImage, startIndex)
 
-        Public ReadOnly Property MaximumCalFactor() As Int32
+        End Sub
+
+        Public Sub New(ByVal phasorDefinition As IPhasorDefinition)
+
+            MyBase.New(phasorDefinition)
+
+        End Sub
+
+        Friend Shared Function CreateNewPhasorDefintion(ByVal parent As IConfigurationCell, ByVal binaryImage As Byte(), ByVal startIndex As Int32) As IPhasorDefinition
+
+            Return New PhasorDefinition(parent, binaryImage, startIndex)
+
+        End Function
+
+        Public Overrides ReadOnly Property InheritedType() As System.Type
             Get
-                ' Typical scaling/conversion factors should fit within 3 bytes (i.e., 24 bits) of space
-                Return &H1FFFFFF
+                Return Me.GetType
             End Get
         End Property
 
-        Public Property Label() As String
+        Friend Shared ReadOnly Property ConversionFactorLength() As Int32
             Get
-                Return m_label
-            End Get
-            Set(ByVal Value As String)
-                If Len(Value) > MaximumLabelLength Then
-                    Throw New OverflowException("Label length cannot exceed " & MaximumLabelLength)
-                Else
-                    m_label = Trim(Replace(Value, Chr(20), " "))
-                End If
-            End Set
-        End Property
-
-        Public ReadOnly Property LabelImage() As Byte()
-            Get
-                Return Encoding.ASCII.GetBytes(m_label.PadRight(MaximumLabelLength))
+                Return 4
             End Get
         End Property
 
-        Public ReadOnly Property BinaryImage() As Byte()
+        Friend ReadOnly Property ConversionFactorImage() As Byte()
             Get
-                Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BinaryLength)
+                Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), ConversionFactorLength)
 
-                ' Include phasor type
-                buffer(0) = m_type
+                buffer(0) = IIf(Of Byte)(Type = PhasorType.Voltage, 0, 1)
 
-                ' Include calfactor
-                EndianOrder.BigEndian.Copy(BitConverter.GetBytes(m_calFactor), 0, buffer, 1, 3)
+                EndianOrder.BigEndian.Copy(BitConverter.GetBytes(ScalingFactor), 0, buffer, 1, 3)
 
                 Return buffer
             End Get
         End Property
+
+        Friend Sub ParseConversionFactor(ByVal binaryImage As Byte(), ByVal startIndex As Int32)
+
+            Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), 4)
+
+            ' Get phasor type from first byte
+            Type = IIf(binaryImage(startIndex) = 0, PhasorType.Voltage, PhasorType.Current)
+
+            ' Last three bytes represent scaling factor
+            EndianOrder.BigEndian.Copy(binaryImage, startIndex + 1, buffer, 0, 3)
+            ScalingFactor = BitConverter.ToInt32(buffer, 0)
+
+        End Sub
 
     End Class
 

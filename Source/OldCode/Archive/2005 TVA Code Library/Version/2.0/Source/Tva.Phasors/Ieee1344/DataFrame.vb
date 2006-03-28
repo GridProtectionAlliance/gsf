@@ -44,7 +44,7 @@ Namespace Ieee1344
         Public Sub New(ByVal configFile2 As ConfigurationFile, ByVal phasorFormat As CoordinateFormat)
 
             MyBase.New()
-            SetFrameType(PMUFrameType.DataFrame)
+            SetFrameType(FrameType.DataFrame)
             If configFile2 Is Nothing Then Throw New ArgumentNullException("Cannot parse " & Name & " without receiving configuration file 2 first")
             m_configFile = configFile2
             m_phasorFormat = phasorFormat
@@ -131,7 +131,7 @@ Namespace Ieee1344
                 If m_configFile Is Nothing Then
                     Return 60
                 Else
-                    If m_configFile.LineFrequency = PMULineFrequency.Hz50 Then
+                    If m_configFile.LineFrequency = LineFrequency.Hz50 Then
                         Return 50
                     Else
                         Return 60

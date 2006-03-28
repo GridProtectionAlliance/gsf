@@ -55,6 +55,12 @@ Public MustInherit Class ConfigurationFrameBase
 
     End Sub
 
+    Protected Overrides ReadOnly Property FundamentalFrameType() As FundamentalFrameType
+        Get
+            Return Phasors.FundamentalFrameType.ConfigurationFrame
+        End Get
+    End Property
+
     Public Overridable Shadows ReadOnly Property Cells() As ConfigurationCellCollection Implements IConfigurationFrame.Cells
         Get
             Return MyBase.Cells

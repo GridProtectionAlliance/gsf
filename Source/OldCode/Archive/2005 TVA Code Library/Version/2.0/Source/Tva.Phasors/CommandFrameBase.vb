@@ -26,9 +26,9 @@ Public MustInherit Class CommandFrameBase
     Inherits ChannelFrameBase(Of ICommandCell)
     Implements ICommandFrame
 
-    Private m_command As PmuCommand
+    Private m_command As Command
 
-    Protected Sub New(ByVal cells As CommandCellCollection, ByVal command As PmuCommand)
+    Protected Sub New(ByVal cells As CommandCellCollection, ByVal command As Command)
 
         MyBase.New(cells)
         m_command = command
@@ -50,17 +50,23 @@ Public MustInherit Class CommandFrameBase
 
     End Sub
 
+    Protected Overrides ReadOnly Property FundamentalFrameType() As FundamentalFrameType
+        Get
+            Return Phasors.FundamentalFrameType.CommandFrame
+        End Get
+    End Property
+
     Public Overridable Shadows ReadOnly Property Cells() As CommandCellCollection Implements ICommandFrame.Cells
         Get
             Return MyBase.Cells
         End Get
     End Property
 
-    Public Property Command() As PmuCommand Implements ICommandFrame.Command
+    Public Property Command() As Command Implements ICommandFrame.Command
         Get
             Return m_command
         End Get
-        Set(ByVal value As PmuCommand)
+        Set(ByVal value As Command)
             m_command = value
         End Set
     End Property

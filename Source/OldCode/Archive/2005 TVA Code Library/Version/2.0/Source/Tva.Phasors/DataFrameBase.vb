@@ -57,6 +57,12 @@ Public MustInherit Class DataFrameBase
 
     End Sub
 
+    Protected Overrides ReadOnly Property FundamentalFrameType() As FundamentalFrameType
+        Get
+            Return Phasors.FundamentalFrameType.DataFrame
+        End Get
+    End Property
+
     Public Overridable Property ConfigurationFrame() As IConfigurationFrame Implements IDataFrame.ConfigurationFrame
         Get
             Return m_configurationFrame

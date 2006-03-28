@@ -23,7 +23,7 @@ Namespace BpaPdcStream
     Public Class PMUCellCollection
 
         Inherits ChannelCellCollectionBase(Of PMUCell)
-        Implements IChannelFrame ' This collection doubles as a "proxy" frame for PMU cells
+        Implements IChannelFrame    ' This collection doubles as a "proxy" frame for PMU cells
 
         Private m_parent As DataCell
         Private m_flags As ChannelFlags
@@ -130,6 +130,12 @@ Namespace BpaPdcStream
             Set(ByVal Value As Boolean)
                 Throw New NotImplementedException("This property is readonly in this implementation")
             End Set
+        End Property
+
+        Public Overridable ReadOnly Property IsPartial() As Boolean Implements IChannelFrame.IsPartial
+            Get
+                Return False
+            End Get
         End Property
 
         Public ReadOnly Property Timestamp() As Date Implements IChannelFrame.Timestamp

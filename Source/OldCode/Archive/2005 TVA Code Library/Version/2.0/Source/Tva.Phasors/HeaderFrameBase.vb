@@ -46,6 +46,12 @@ Public MustInherit Class HeaderFrameBase
 
     End Sub
 
+    Protected Overrides ReadOnly Property FundamentalFrameType() As FundamentalFrameType
+        Get
+            Return Phasors.FundamentalFrameType.HeaderFrame
+        End Get
+    End Property
+
     Public Overridable Shadows ReadOnly Property Cells() As HeaderCellCollection Implements IHeaderFrame.Cells
         Get
             Return MyBase.Cells

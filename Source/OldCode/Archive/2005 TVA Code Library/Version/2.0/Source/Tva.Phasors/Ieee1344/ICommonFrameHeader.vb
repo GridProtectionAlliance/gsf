@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  IChannelFrame.vb - Channel data frame interface
+'  ICommonFrameHeader.vb - IEEE 1344 Common frame header interface
 '  Copyright © 2005 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005
@@ -17,26 +17,33 @@
 
 Imports Tva.DateTime
 
-' This interface represents the protocol independent representation of any frame of data.
-<CLSCompliant(False)> _
-Public Interface IChannelFrame
+Namespace Ieee1344
 
-    Inherits IChannel
+    <CLSCompliant(False)> _
+    Public Interface ICommonFrameHeader
 
-    ReadOnly Property FrameType() As FundamentalFrameType
+        Inherits IChannelFrame
 
-    ReadOnly Property Cells() As Object
+        Shadows Property IDCode() As UInt64
 
-    Property IDCode() As UInt16
+        Shadows Property FrameType() As FrameType
 
-    Property Ticks() As Long                    ' Ticks of this frame
+        Property FrameLength() As Int16
 
-    ReadOnly Property TimeTag() As UnixTimeTag  ' UNIX based time of this frame
+        Property DataLength() As Int16
 
-    ReadOnly Property Timestamp() As Date       ' .NET timestamp of this frame
+        Shadows ReadOnly Property TimeTag() As NtpTimeTag
 
-    Property Published() As Boolean
+        Property SynchronizationIsValid() As Boolean
 
-    ReadOnly Property IsPartial() As Boolean
+        Property DataIsValid() As Boolean
 
-End Interface
+        Property TriggerStatus() As TriggerStatus
+
+        Property InternalSampleCount() As Int16
+
+        Property InternalStatusFlags() As Int16
+
+    End Interface
+
+End Namespace

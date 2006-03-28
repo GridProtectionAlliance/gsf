@@ -15,110 +15,151 @@
 '
 '*******************************************************************************************************
 
-Imports Tva.Interop
-Imports Tva.Interop.Bit
 Imports Tva.DateTime
-Imports Tva.IO.Compression.Common
-Imports System.Text
+Imports Tva.Collections.Common
+Imports Tva.Phasors.Ieee1344.Common
 
 Namespace Ieee1344
 
-    ' This class represents a header frame that can be sent from a PMU.
+    <CLSCompliant(False)> _
     Public Class HeaderFrame
 
-        Inherits BaseFrame
+        Inherits HeaderFrameBase
+        Implements ICommonFrameHeader
 
-        Protected m_data As String
-
-        Protected Const FrameCountMask As Int16 = Not (FrameTypeMask Or Bit11 Or Bit12)
-
-        Public Const MaximumFrameCount As Int16 = FrameCountMask
+        Private m_idCode As UInt64
+        Private m_sampleCount As Int16
+        Private m_status As Int16
 
         Public Sub New()
 
-            MyBase.New()
-            SetFrameType(PMUFrameType.HeaderFrame)
-            m_data = "<empty header frame>"
+            MyBase.New(New HeaderCellCollection(MaximumHeaderDataLength))
 
         End Sub
 
-        Protected Friend Sub New(ByVal parsedImage As BaseFrame, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
+        Public Sub New(ByVal parsedFrameHeader As ICommonFrameHeader, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
-            MyClass.New()
+            MyBase.New(New HeaderFrameParsingState(New HeaderCellCollection(MaximumHeaderDataLength), parsedFrameHeader.FrameLength, _
+                parsedFrameHeader.FrameLength - CommonFrameHeader.BinaryLength - 2), binaryImage, startIndex)
 
-            ' No need to reparse data, so we pickup what's already been parsed...
-            Clone(parsedImage)
-
-            ' Get header data
-            m_data = Encoding.ASCII.GetString(binaryImage, startIndex, DataLength)
+            CommonFrameHeader.Clone(parsedFrameHeader, Me)
 
         End Sub
 
-        Public Overridable Property IsFirstFrame() As Boolean
+        Public Sub New(ByVal headerFrame As IHeaderFrame)
+
+            MyBase.New(headerFrame)
+
+        End Sub
+
+        Public Overrides ReadOnly Property InheritedType() As System.Type
             Get
-                Return ((m_sampleCount And Bit12) = 0)
+                Return Me.GetType()
             End Get
-            Set(ByVal Value As Boolean)
-                If Value Then
-                    m_sampleCount = m_sampleCount And Not Bit12
-                Else
-                    m_sampleCount = m_sampleCount Or Bit12
-                End If
+        End Property
+
+        Public Shadows Property IDCode() As UInt64 Implements ICommonFrameHeader.IDCode
+            Get
+                Return m_idCode
+            End Get
+            Set(ByVal value As UInt64)
+                m_idCode = value
             End Set
         End Property
 
-        Public Overridable Property IsLastFrame() As Boolean
+        Public Shadows ReadOnly Property TimeTag() As NtpTimeTag Implements ICommonFrameHeader.TimeTag
             Get
-                Return ((m_sampleCount And Bit11) = 0)
+                Return CommonFrameHeader.TimeTag(Me)
             End Get
-            Set(ByVal Value As Boolean)
-                If Value Then
-                    m_sampleCount = m_sampleCount And Not Bit11
-                Else
-                    m_sampleCount = m_sampleCount Or Bit11
-                End If
+        End Property
+
+        Public Property FrameType() As FrameType Implements ICommonFrameHeader.FrameType
+            Get
+                Return CommonFrameHeader.FrameType(Me)
+            End Get
+            Friend Set(ByVal value As FrameType)
+                CommonFrameHeader.FrameType(Me) = value
             End Set
         End Property
 
-        Public Overridable Property FrameCount() As Int16
+        Public Property FrameLength() As Int16 Implements ICommonFrameHeader.FrameLength
             Get
-                Return m_sampleCount And FrameCountMask
+                Return CommonFrameHeader.FrameLength(Me)
             End Get
-            Set(ByVal Value As Int16)
-                If Value > MaximumFrameCount Then
-                    Throw New OverflowException("Frame count value cannot exceed " & MaximumFrameCount)
-                Else
-                    m_sampleCount = (m_sampleCount And Not FrameCountMask) Or Value
-                End If
+            Set(ByVal value As Int16)
+                CommonFrameHeader.FrameLength(Me) = value
             End Set
         End Property
 
-        Public Property Data() As String
+        Public Property DataLength() As Int16 Implements ICommonFrameHeader.DataLength
             Get
-                Return m_data
+                Return CommonFrameHeader.DataLength(Me)
             End Get
-            Set(ByVal Value As String)
-                m_data = Value
+            Set(ByVal value As Int16)
+                CommonFrameHeader.DataLength(Me) = value
             End Set
         End Property
 
-        Public Overrides Property DataImage() As Byte()
+        Public Property SynchronizationIsValid() As Boolean Implements ICommonFrameHeader.SynchronizationIsValid
             Get
-                Return Encoding.ASCII.GetBytes(m_data)
+                Return CommonFrameHeader.SynchronizationIsValid(Me)
             End Get
-            Set(ByVal Value As Byte())
-                If Value.Length > MaximumDataLength Then
-                    Throw New OverflowException("Data length cannot exceed " & MaximumDataLength & " per frame")
-                Else
-                    m_data = Encoding.ASCII.GetString(Value)
-                    DataLength = Len(m_data)
-                End If
+            Set(ByVal value As Boolean)
+                CommonFrameHeader.SynchronizationIsValid(Me) = value
             End Set
         End Property
 
-        Protected Overrides ReadOnly Property Name() As String
+        Public Property DataIsValid() As Boolean Implements ICommonFrameHeader.DataIsValid
             Get
-                Return "IEEE1344.HeaderFrame"
+                Return CommonFrameHeader.DataIsValid(Me)
+            End Get
+            Set(ByVal value As Boolean)
+                CommonFrameHeader.DataIsValid(Me) = value
+            End Set
+        End Property
+
+        Public Property TriggerStatus() As TriggerStatus Implements ICommonFrameHeader.TriggerStatus
+            Get
+                Return CommonFrameHeader.TriggerStatus(Me)
+            End Get
+            Set(ByVal value As TriggerStatus)
+                CommonFrameHeader.TriggerStatus(Me) = value
+            End Set
+        End Property
+
+        Private Property InternalSampleCount() As Int16 Implements ICommonFrameHeader.InternalSampleCount
+            Get
+                Return m_sampleCount
+            End Get
+            Set(ByVal value As Int16)
+                m_sampleCount = value
+            End Set
+        End Property
+
+        Private Property InternalStatusFlags() As Int16 Implements ICommonFrameHeader.InternalStatusFlags
+            Get
+                Return m_status
+            End Get
+            Set(ByVal value As Int16)
+                m_status = value
+            End Set
+        End Property
+
+        Protected Overrides ReadOnly Property HeaderLength() As UInt16
+            Get
+                Return CommonFrameHeader.BinaryLength
+            End Get
+        End Property
+
+        Protected Overrides ReadOnly Property HeaderImage() As Byte()
+            Get
+                Return CommonFrameHeader.BinaryImage(Me)
+            End Get
+        End Property
+
+        Public Overrides ReadOnly Property Measurements() As System.Collections.Generic.IDictionary(Of Int32, Measurements.IMeasurement)
+            Get
+                ' TODO: Oh my - how to handle this...
             End Get
         End Property
 

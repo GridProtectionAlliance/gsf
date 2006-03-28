@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  ICommandFrame.vb - Command frame interface
+'  ConfigurationCellCollection.vb - IEEE 1344 specific configuration cell collection
 '  Copyright © 2005 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005
@@ -10,21 +10,36 @@
 '
 '  Code Modification History:
 '  -----------------------------------------------------------------------------------------------------
-'  01/14/2005 - James R Carroll
+'  11/12/2004 - James R Carroll
 '       Initial version of source generated
 '
 '*******************************************************************************************************
 
-' This interface represents the protocol independent representation of a command frame.
-<CLSCompliant(False)> _
-Public Interface ICommandFrame
+Namespace IeeeC37_118
 
-    Inherits IChannelFrame
+    <CLSCompliant(False)> _
+    Public Class ConfigurationCellCollection
 
-    Shadows ReadOnly Property Cells() As CommandCellCollection
+        Inherits Phasors.ConfigurationCellCollection
 
-    Property Command() As Command
+        Public Sub New()
 
-    Property ExtendedData() As Byte()
+            MyBase.New(Int16.MaxValue, False)
 
-End Interface
+        End Sub
+
+        Public Shadows Sub Add(ByVal value As ConfigurationCell)
+
+            MyBase.Add(value)
+
+        End Sub
+
+        Default Public Shadows ReadOnly Property Item(ByVal index As Int32) As ConfigurationCell
+            Get
+                Return MyBase.Item(index)
+            End Get
+        End Property
+
+    End Class
+
+End Namespace

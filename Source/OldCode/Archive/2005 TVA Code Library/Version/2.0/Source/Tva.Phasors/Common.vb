@@ -58,8 +58,8 @@ Public Enum DataTransportLayer
     Com
 End Enum
 
-''' <summary>Phasor data protocol</summary>
-Public Enum PmuProtocol
+''' <summary>PMU data transport protocol</summary>
+Public Enum Protocol
     IeeeC37_118V1
     IeeeC37_118D6
     Ieee1344
@@ -67,18 +67,18 @@ Public Enum PmuProtocol
 End Enum
 
 ''' <summary>PMU commands</summary>
-Public Enum PmuCommand As Int16
-    ''' <summary>0001  Turn off transmission of data frames</summary>
+Public Enum Command As Int16
+    ''' <summary>0001 Turn off transmission of data frames</summary>
     DisableRealTimeData = Bit0
-    ''' <summary>0010  Turn on transmission of data frames</summary>
+    ''' <summary>0010 Turn on transmission of data frames</summary>
     EnableRealTimeData = Bit1
-    ''' <summary>0011  Send header file</summary>
+    ''' <summary>0011 Send header file</summary>
     SendHeaderFrame = Bit0 Or Bit1
-    ''' <summary>0100  Send configuration file 1</summary>
+    ''' <summary>0100 Send configuration file 1</summary>
     SendConfigurationFrame1 = Bit2
-    ''' <summary>0101  Send configuration file 2</summary>
+    ''' <summary>0101 Send configuration file 2</summary>
     SendConfigurationFrame2 = Bit0 Or Bit2
-    ''' <summary>1000  Receive extended frame for IEEE C37.118 / receive reference phasor for IEEE 1344</summary>
+    ''' <summary>1000 Receive extended frame for IEEE C37.118 / receive reference phasor for IEEE 1344</summary>
     ReceiveExtendedFrame = Bit3
     ''' <summary>Reserved bits</summary>
     ReservedBits = Int16.MaxValue And Not (Bit0 Or Bit1 Or Bit2 Or Bit3)
@@ -93,8 +93,11 @@ Public Class Common
 
     End Sub
 
-    ' This is a common optimized block copy function for any kind of data
-    Public Shared Sub CopyImage(ByVal channel As IChannel, ByVal buffer As Byte(), ByRef index As Int32)
+    ''' <summary>Data stream synchrnonization byte</summary>
+    Public Const SyncByte As Byte = &HAA
+
+    ''' <summary>This is a common optimized block copy function for any kind of data</summary>
+    Public Shared Sub CopyImage(ByVal channel As IChannel, ByVal buffer As Byte(), ByRef index As Integer)
 
         With channel
             CopyImage(.BinaryImage, buffer, index, .BinaryLength)
@@ -102,8 +105,8 @@ Public Class Common
 
     End Sub
 
-    ' This is a common optimized block copy function for binary data
-    Public Shared Sub CopyImage(ByVal source As Byte(), ByVal buffer As Byte(), ByRef index As Int32, ByVal length As Int16)
+    ''' <summary>This is a common optimized block copy function for binary data</summary>
+    Public Shared Sub CopyImage(ByVal source As Byte(), ByVal buffer As Byte(), ByRef index As Integer, ByVal length As Integer)
 
         If length > 0 Then
             BlockCopy(source, 0, buffer, index, length)

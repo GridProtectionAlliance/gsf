@@ -126,6 +126,12 @@ Public MustInherit Class ChannelFrameBase(Of T As IChannelCell)
         End Set
     End Property
 
+    Public Overridable ReadOnly Property IsPartial() As Boolean Implements IChannelFrame.IsPartial
+        Get
+            Return False
+        End Get
+    End Property
+
     Protected WriteOnly Property ParsedBinaryLength() As UInt16
         Set(ByVal value As UInt16)
             m_parsedBinaryLength = value

@@ -19,7 +19,7 @@ Imports System.IO
 Imports System.ComponentModel
 Imports Tva.Collections
 Imports Tva.IO.Common
-Imports Tva.Phasors.IeeeC37_118.Common
+Imports Tva.Phasors.Common
 
 Namespace Ieee1344
 

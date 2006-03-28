@@ -24,16 +24,17 @@ Namespace Ieee1344
 
     ' This class represents a command frame that can be sent to a PMU to elicit a desired response.  ABB PMU's won't begin
     ' a data broadcast until a command has been sent to "turn on" the real-time stream.
+    ' Note: Command frame in IEEE 1344 does not share "common frame header" with other frames
     Public Class CommandFrame
 
         Public Const FrameLength As Int32 = 18
 
         Private m_timetag As UnixTimeTag
         Private m_pmuIDCode As Int64
-        Private m_command As PMUCommand
+        Private m_command As Command
 
         ' Use this contructor to send a command to a PMU
-        Public Sub New(ByVal pmuIDCode As Int64, ByVal command As PMUCommand)
+        Public Sub New(ByVal pmuIDCode As Int64, ByVal command As Command)
 
             m_pmuIDCode = pmuIDCode
             m_command = command
@@ -78,11 +79,11 @@ Namespace Ieee1344
             End Set
         End Property
 
-        Public Property Command() As PMUCommand
+        Public Property Command() As Command
             Get
                 Return m_command
             End Get
-            Set(ByVal Value As PMUCommand)
+            Set(ByVal Value As Command)
                 m_command = Value
             End Set
         End Property

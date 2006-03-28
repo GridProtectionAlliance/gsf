@@ -28,7 +28,7 @@ Public Class FrameParser
 
 #Region " Public Member Declarations "
 
-    Public Event ReceivedDataBuffer(ByVal buffer As Byte(), ByVal received As Int32)
+    Public Event ReceivedFrameBufferImage(ByVal binaryImage As Byte(), ByVal offset As Integer, ByVal length As Integer)
     Public Event ReceivedConfigurationFrame(ByVal frame As IConfigurationFrame)
     Public Event ReceivedDataFrame(ByVal frame As IDataFrame)
     Public Event ReceivedHeaderFrame(ByVal frame As IHeaderFrame)
@@ -43,7 +43,7 @@ Public Class FrameParser
 #Region " Private Member Declarations "
 
     ' Connection properties
-    Private m_protocol As PmuProtocol
+    Private m_protocol As Protocol
     Private m_transportLayer As DataTransportLayer
     Private m_hostIP As String
     Private m_port As Int32
@@ -83,12 +83,12 @@ Public Class FrameParser
             .Enabled = False
         End With
 
-        m_protocol = Phasors.PmuProtocol.IeeeC37_118V1
+        m_protocol = Phasors.Protocol.IeeeC37_118V1
         m_transportLayer = DataTransportLayer.Tcp
 
     End Sub
 
-    Public Sub New(ByVal protocol As PmuProtocol, ByVal transportLayer As DataTransportLayer)
+    Public Sub New(ByVal protocol As Protocol, ByVal transportLayer As DataTransportLayer)
 
         MyClass.New()
         m_protocol = protocol
@@ -100,11 +100,11 @@ Public Class FrameParser
 
 #Region " Public Methods Implementation "
 
-    Public Property Protocol() As PmuProtocol
+    Public Property Protocol() As Protocol
         Get
             Return m_protocol
         End Get
-        Set(ByVal value As PmuProtocol)
+        Set(ByVal value As Protocol)
             m_protocol = value
         End Set
     End Property
@@ -166,16 +166,16 @@ Public Class FrameParser
 
         ' Instantiate protocol specific frame parser
         Select Case m_protocol
-            Case Phasors.PmuProtocol.IeeeC37_118V1
+            Case Phasors.Protocol.IeeeC37_118V1
                 m_ieeeC37_118FrameParser = New IeeeC37_118.FrameParser(IeeeC37_118.RevisionNumber.RevisionV1)
                 m_ieeeC37_118FrameParser.Start()
-            Case Phasors.PmuProtocol.IeeeC37_118D6
+            Case Phasors.Protocol.IeeeC37_118D6
                 m_ieeeC37_118FrameParser = New IeeeC37_118.FrameParser(IeeeC37_118.RevisionNumber.RevisionD6)
                 m_ieeeC37_118FrameParser.Start()
-            Case Phasors.PmuProtocol.Ieee1344
+            Case Phasors.Protocol.Ieee1344
                 m_ieee1344FrameParser = New Ieee1344.FrameParser
                 m_ieee1344FrameParser.Start()
-            Case Phasors.PmuProtocol.BpaPdcStream
+            Case Phasors.Protocol.BpaPdcStream
                 m_bpaPdcStreamFrameParser = New BpaPdcStream.FrameParser
                 m_bpaPdcStreamFrameParser.Start()
         End Select
@@ -198,8 +198,8 @@ Public Class FrameParser
                 m_socketThread.Start()
 
                 ' Request configuration frame and make sure real-time data is enabled
-                SendPmuCommand(PmuCommand.SendConfigurationFrame2)
-                SendPmuCommand(PmuCommand.EnableRealTimeData)
+                SendPmuCommand(Command.SendConfigurationFrame2)
+                SendPmuCommand(Command.EnableRealTimeData)
             Case DataTransportLayer.Udp
                 ' Validate minimal connection parameters required for UDP connection
                 If m_port = 0 Then Throw New InvalidOperationException("Cannot start UDP stream listener without specifing a valid port")
@@ -326,7 +326,7 @@ Public Class FrameParser
         End Get
     End Property
 
-    Public Sub SendPmuCommand(ByVal command As PmuCommand)
+    Public Sub SendPmuCommand(ByVal command As Command)
 
         If m_clientStream IsNot Nothing Then
             Dim binaryImage As Byte()
@@ -334,12 +334,12 @@ Public Class FrameParser
 
             ' Only the IEEE protocols support commands
             Select Case m_protocol
-                Case Phasors.PmuProtocol.IeeeC37_118V1, Phasors.PmuProtocol.IeeeC37_118D6
+                Case Phasors.Protocol.IeeeC37_118V1, Phasors.Protocol.IeeeC37_118D6
                     With New IeeeC37_118.CommandFrame(m_pmuID, command)
                         binaryImage = .BinaryImage
                         binaryLength = .BinaryLength
                     End With
-                Case Phasors.PmuProtocol.Ieee1344
+                Case Phasors.Protocol.Ieee1344
                     With New Ieee1344.CommandFrame(m_pmuID, command)
                         binaryImage = .BinaryImage
                         binaryLength = .BinaryLength
@@ -368,43 +368,59 @@ Public Class FrameParser
 
     End Sub
 
-    ' The is the frame queue processing procedure - it just ferries queued frames back out through their native fundamental interfaces
+    Private Sub ProcessFrame(ByVal frame As IConfigurationFrame)
+
+        m_totalFramesReceived += 1
+        m_frameRateTotal += 1
+        RaiseEvent ReceivedConfigurationFrame(frame)
+
+    End Sub
+
+    Private Sub ProcessFrame(ByVal frame As IDataFrame)
+
+        m_totalFramesReceived += 1
+        m_frameRateTotal += 1
+        RaiseEvent ReceivedDataFrame(frame)
+
+    End Sub
+
+    Private Sub ProcessFrame(ByVal frame As IHeaderFrame)
+
+        m_totalFramesReceived += 1
+        m_frameRateTotal += 1
+        RaiseEvent ReceivedHeaderFrame(frame)
+
+    End Sub
+
+    Private Sub ProcessFrame(ByVal frame As ICommandFrame)
+
+        m_totalFramesReceived += 1
+        m_frameRateTotal += 1
+        RaiseEvent ReceivedCommandFrame(frame)
+
+    End Sub
+
     Private Sub ProcessFrame(ByVal frame As IChannelFrame)
 
         m_totalFramesReceived += 1
         m_frameRateTotal += 1
-
-        ' We expose fundamental frame through is base interface regardless of protocol - this lets end user
-        ' write a single application for any given protocol...
-        Select Case frame.FrameType
-            Case FundamentalFrameType.ConfigurationFrame
-                RaiseEvent ReceivedConfigurationFrame(frame)
-            Case FundamentalFrameType.DataFrame
-                RaiseEvent ReceivedDataFrame(frame)
-            Case FundamentalFrameType.HeaderFrame
-                RaiseEvent ReceivedHeaderFrame(frame)
-            Case FundamentalFrameType.CommandFrame
-                RaiseEvent ReceivedCommandFrame(frame)
-            Case Else
-                RaiseEvent ReceivedUndeterminedFrame(frame)
-        End Select
+        RaiseEvent ReceivedUndeterminedFrame(frame)
 
     End Sub
 
     Private Sub Write(ByVal buffer As Byte(), ByVal received As Int32)
 
-        Select Case m_protocol
-            Case Phasors.PmuProtocol.IeeeC37_118V1, Phasors.PmuProtocol.IeeeC37_118D6
-                m_ieeeC37_118FrameParser.Write(buffer, 0, received)
-            Case Phasors.PmuProtocol.Ieee1344
-                m_ieee1344FrameParser.Write(buffer, 0, received)
-            Case Phasors.PmuProtocol.BpaPdcStream
-                m_bpaPdcStreamFrameParser.Write(buffer, 0, received)
-        End Select
-
         m_totalBytesReceived += received
         m_byteRateTotal += received
-        RaiseEvent ReceivedDataBuffer(buffer, received)
+
+        Select Case m_protocol
+            Case Phasors.Protocol.IeeeC37_118V1, Phasors.Protocol.IeeeC37_118D6
+                m_ieeeC37_118FrameParser.Write(buffer, 0, received)
+            Case Phasors.Protocol.Ieee1344
+                m_ieee1344FrameParser.Write(buffer, 0, received)
+            Case Phasors.Protocol.BpaPdcStream
+                m_bpaPdcStreamFrameParser.Write(buffer, 0, received)
+        End Select
 
     End Sub
 
@@ -495,6 +511,12 @@ Public Class FrameParser
     Private Sub m_ieeeC37_118FrameParser_ReceivedDataFrame(ByVal frame As Tva.Phasors.IeeeC37_118.DataFrame) Handles m_ieeeC37_118FrameParser.ReceivedDataFrame
 
         ProcessFrame(frame)
+
+    End Sub
+
+    Private Sub m_ieeeC37_118FrameParser_ReceivedFrameBufferImage(ByVal binaryImage() As Byte, ByVal offset As Integer, ByVal length As Integer) Handles m_ieeeC37_118FrameParser.ReceivedFrameBufferImage
+
+        RaiseEvent ReceivedFrameBufferImage(binaryImage, offset, length)
 
     End Sub
 
