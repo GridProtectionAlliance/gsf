@@ -147,16 +147,16 @@ Namespace Ieee1344
             End Set
         End Property
 
-        Public Property LineFrequency() As PMULineFrequency
+        Public Property LineFrequency() As LineFrequency
             Get
                 If (m_freqFlags And Bit0) > 0 Then
-                    Return PMULineFrequency.Hz50
+                    Return LineFrequency.Hz50
                 Else
-                    Return PMULineFrequency.Hz60
+                    Return LineFrequency.Hz60
                 End If
             End Get
-            Set(ByVal Value As PMULineFrequency)
-                If Value = PMULineFrequency.Hz50 Then
+            Set(ByVal Value As LineFrequency)
+                If Value = LineFrequency.Hz50 Then
                     m_freqFlags = m_freqFlags Or Bit0
                 Else
                     m_freqFlags = m_freqFlags And Not Bit0
