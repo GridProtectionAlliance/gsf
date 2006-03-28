@@ -53,12 +53,6 @@ Namespace IeeeC37_118
             End Get
         End Property
 
-        Protected Overrides ReadOnly Property FundamentalFrameType() As FundamentalFrameType
-            Get
-                Return Phasors.FundamentalFrameType.DataFrame
-            End Get
-        End Property
-
         Public Shadows ReadOnly Property Cells() As DataCellCollection
             Get
                 Return MyBase.Cells
@@ -69,7 +63,7 @@ Namespace IeeeC37_118
             Get
                 Return ConfigurationFrame.RevisionNumber
             End Get
-            Friend Set(ByVal value As RevisionNumber)
+            Private Set(ByVal value As RevisionNumber)
                 ' Revision number is readonly for data frames - we don't throw an exception here if someone attempts to change
                 ' the revision number on a data frame (e.g., the CommonFrameHeader.Clone method will attempt to copy this property)
                 ' but we don't do anything with the value either.
@@ -80,7 +74,7 @@ Namespace IeeeC37_118
             Get
                 Return IeeeC37_118.FrameType.DataFrame
             End Get
-            Friend Set(ByVal value As FrameType)
+            Private Set(ByVal value As FrameType)
                 ' Frame type is readonly for data frames - we don't throw an exception here if someone attempts to change
                 ' the frame type on a data frame (e.g., the CommonFrameHeader.Clone method will attempt to copy this property)
                 ' but we don't do anything with the value either.
@@ -91,7 +85,7 @@ Namespace IeeeC37_118
             Get
                 Return ConfigurationFrame.Version
             End Get
-            Friend Set(ByVal value As Byte)
+            Private Set(ByVal value As Byte)
                 ' Version number is readonly for data frames - we don't throw an exception here if someone attempts to change
                 ' the version number on a data frame (e.g., the CommonFrameHeader.Clone method will attempt to copy this property)
                 ' but we don't do anything with the value either.
@@ -107,7 +101,7 @@ Namespace IeeeC37_118
             End Set
         End Property
 
-        Public Overrides Property IDCode() As UInt16 Implements ICommonFrameHeader.IDCode
+        Public Overrides Property IDCode() As UInt16
             Get
                 Return MyBase.IDCode
             End Get
@@ -115,15 +109,6 @@ Namespace IeeeC37_118
                 ' ID code is readonly for data frames - we don't throw an exception here if someone attempts to change
                 ' the ID code on a data frame (e.g., the CommonFrameHeader.Clone method will attempt to copy this property)
                 ' but we don't do anything with the value either.
-            End Set
-        End Property
-
-        Public Overrides Property Ticks() As Long Implements ICommonFrameHeader.Ticks
-            Get
-                Return MyBase.Ticks
-            End Get
-            Set(ByVal value As Long)
-                MyBase.Ticks = value
             End Set
         End Property
 

@@ -17,6 +17,7 @@
 
 Imports Tva.DateTime
 Imports Tva.Interop
+Imports Tva.Phasors.Common
 Imports Tva.Phasors.IeeeC37_118.Common
 
 Namespace IeeeC37_118
@@ -94,7 +95,7 @@ Namespace IeeeC37_118
                 End Set
             End Property
 
-            Public Property IDCode() As UInt16 Implements ICommonFrameHeader.IDCode
+            Public Property IDCode() As UInt16 Implements IChannelFrame.IDCode
                 Get
                     Return m_idCode
                 End Get
@@ -103,7 +104,7 @@ Namespace IeeeC37_118
                 End Set
             End Property
 
-            Public Property Ticks() As Long Implements ICommonFrameHeader.Ticks
+            Public Property Ticks() As Long Implements IChannelFrame.Ticks
                 Get
                     Return m_ticks
                 End Get
@@ -181,9 +182,21 @@ Namespace IeeeC37_118
                 End Get
             End Property
 
-            Public ReadOnly Property IChannelFrameFrameType() As FundamentalFrameType Implements IChannelFrame.FrameType
+            Private ReadOnly Property IChannelFrameFrameType() As FundamentalFrameType Implements IChannelFrame.FrameType
                 Get
-                    Return FundamentalFrameType.Undetermined
+                    ' Translate IEEE C37.118 specific frame type to fundamental frame type
+                    Select Case m_frameType
+                        Case IeeeC37_118.FrameType.DataFrame
+                            Return FundamentalFrameType.DataFrame
+                        Case IeeeC37_118.FrameType.ConfigurationFrame1, IeeeC37_118.FrameType.ConfigurationFrame2
+                            Return FundamentalFrameType.ConfigurationFrame
+                        Case IeeeC37_118.FrameType.HeaderFrame
+                            Return FundamentalFrameType.HeaderFrame
+                        Case IeeeC37_118.FrameType.CommandFrame
+                            Return FundamentalFrameType.CommandFrame
+                        Case Else
+                            Return FundamentalFrameType.Undetermined
+                    End Select
                 End Get
             End Property
 
@@ -194,6 +207,13 @@ Namespace IeeeC37_118
                 Set(ByVal value As Boolean)
                     Throw New NotImplementedException()
                 End Set
+            End Property
+
+            ' This frame is not complete - it only represents the parsed common "header" for frames
+            Public ReadOnly Property IsPartial() As Boolean Implements IChannelFrame.IsPartial
+                Get
+                    Return True
+                End Get
             End Property
 
             Public ReadOnly Property Timestamp() As Date Implements IChannelFrame.Timestamp
@@ -207,6 +227,7 @@ Namespace IeeeC37_118
                     Return New UnixTimeTag(Timestamp)
                 End Get
             End Property
+
         End Class
 
 #End Region
@@ -221,7 +242,7 @@ Namespace IeeeC37_118
 
         Public Shared Function ParseBinaryImage(ByVal revisionNumber As RevisionNumber, ByVal configurationFrame As ConfigurationFrame, ByVal binaryImage As Byte(), ByVal startIndex As Int32) As ICommonFrameHeader
 
-            If binaryImage(startIndex) <> SyncByte Then Throw New InvalidOperationException("Bad Data Stream: Expected sync byte &HAA as first byte in C37.118 frame, got " & binaryImage(startIndex).ToString("x"c).PadLeft(2, "0"c))
+            If binaryImage(startIndex) <> SyncByte Then Throw New InvalidOperationException("Bad Data Stream: Expected sync byte &HAA as first byte in IEEE C37.118 frame, got " & binaryImage(startIndex).ToString("x"c).PadLeft(2, "0"c))
 
             With New CommonFrameHeaderInstance(revisionNumber)
                 ' Strip out frame type and version information...
@@ -253,7 +274,7 @@ Namespace IeeeC37_118
             Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BinaryLength)
 
             With frameHeader
-                buffer(0) = Common.SyncByte
+                buffer(0) = SyncByte
                 buffer(1) = .FrameType Or .Version
                 EndianOrder.BigEndian.CopyBytes(.FrameLength, buffer, 2)
                 EndianOrder.BigEndian.CopyBytes(.IDCode, buffer, 4)

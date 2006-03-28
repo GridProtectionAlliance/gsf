@@ -68,12 +68,6 @@ Namespace IeeeC37_118
             End Get
         End Property
 
-        Protected Overrides ReadOnly Property FundamentalFrameType() As FundamentalFrameType
-            Get
-                Return Phasors.FundamentalFrameType.ConfigurationFrame
-            End Get
-        End Property
-
         Public Shadows ReadOnly Property Cells() As ConfigurationCellCollection
             Get
                 Return MyBase.Cells
@@ -117,24 +111,6 @@ Namespace IeeeC37_118
             End Get
             Set(ByVal value As Int16)
                 MyBase.ParsedBinaryLength = value
-            End Set
-        End Property
-
-        Public Overrides Property IDCode() As UInt16 Implements ICommonFrameHeader.IDCode
-            Get
-                Return MyBase.IDCode
-            End Get
-            Set(ByVal value As UInt16)
-                MyBase.IDCode = value
-            End Set
-        End Property
-
-        Public Overrides Property Ticks() As Long Implements ICommonFrameHeader.Ticks
-            Get
-                Return MyBase.Ticks
-            End Get
-            Set(ByVal value As Long)
-                MyBase.Ticks = value
             End Set
         End Property
 

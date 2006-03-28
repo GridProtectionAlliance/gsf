@@ -19,7 +19,7 @@ Imports System.IO
 Imports System.ComponentModel
 Imports Tva.Collections
 Imports Tva.IO.Common
-Imports Tva.Phasors.IeeeC37_118.Common
+Imports Tva.Phasors.Common
 
 Namespace IeeeC37_118
 
@@ -38,6 +38,7 @@ Namespace IeeeC37_118
         Public Event ReceivedDataFrame(ByVal frame As DataFrame)
         Public Event ReceivedHeaderFrame(ByVal frame As HeaderFrame)
         Public Event ReceivedCommandFrame(ByVal frame As CommandFrame)
+        Public Event ReceivedFrameBufferImage(ByVal binaryImage As Byte(), ByVal offset As Integer, ByVal length As Integer)
         Public Event DataStreamException(ByVal ex As Exception)
 
 #End Region
@@ -268,6 +269,8 @@ Namespace IeeeC37_118
                     m_dataStream.Write(buffer, index, buffer.Length - index)
                     Exit Do
                 End If
+
+                RaiseEvent ReceivedFrameBufferImage(buffer, index, parsedFrameHeader.FrameLength)
 
                 ' Entire frame is availble, so we go ahead and parse it
                 Select Case parsedFrameHeader.FrameType

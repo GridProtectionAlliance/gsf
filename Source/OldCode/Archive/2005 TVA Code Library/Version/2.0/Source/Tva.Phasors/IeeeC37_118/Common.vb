@@ -59,45 +59,45 @@ Namespace IeeeC37_118
 
     ''' <summary>Time quality indicator code</summary>
     Public Enum TimeQualityIndicatorCode As Int32
-        ''' <summary>1111	F	Fault--clock failure, time not reliable</summary>
+        ''' <summary>1111 - F:	Fault--clock failure, time not reliable</summary>
         Failure = Bit27 Or Bit26 Or Bit25 Or Bit24
-        ''' <summary>1011	B	Clock unlocked, time within 10^1 s</summary>
+        ''' <summary>1011 - B:	Clock unlocked, time within 10^1 s</summary>
         UnlockedWithin10Seconds = Bit27 Or Bit25 Or Bit24
-        ''' <summary>1010	A	Clock unlocked, time within 10^0 s</summary>
+        ''' <summary>1010 - A:	Clock unlocked, time within 10^0 s</summary>
         UnlockedWithin1Second = Bit27 Or Bit25
-        ''' <summary>1001	9	Clock unlocked, time within 10^-1 s</summary>
+        ''' <summary>1001 - 9: Clock unlocked, time within 10^-1 s</summary>
         UnlockedWithinPoint1Seconds = Bit27 Or Bit24
-        ''' <summary>1000	8	Clock unlocked, time within 10^-2 s</summary>
+        ''' <summary>1000 - 8: Clock unlocked, time within 10^-2 s</summary>
         UnlockedWithinPoint01Seconds = Bit27
-        ''' <summary>0111	7	Clock unlocked, time within 10^-3 s</summary>
+        ''' <summary>0111 - 7: Clock unlocked, time within 10^-3 s</summary>
         UnlockedWithinPoint001Seconds = Bit26 Or Bit25 Or Bit24
-        ''' <summary>0110	6	Clock unlocked, time within 10^-4 s</summary>
+        ''' <summary>0110 - 6: Clock unlocked, time within 10^-4 s</summary>
         UnlockedWithinPoint0001Seconds = Bit26 Or Bit25
-        ''' <summary>0101	5	Clock unlocked, time within 10^-5 s</summary>
+        ''' <summary>0101 - 5: Clock unlocked, time within 10^-5 s</summary>
         UnlockedWithinPoint00001Seconds = Bit26 Or Bit24
-        ''' <summary>0100	4	Clock unlocked, time within 10^-6 s</summary>
+        ''' <summary>0100 - 4: Clock unlocked, time within 10^-6 s</summary>
         UnlockedWithinPoint000001Seconds = Bit26
-        ''' <summary>0011	3	Clock unlocked, time within 10^-7 s</summary>
+        ''' <summary>0011 - 3: Clock unlocked, time within 10^-7 s</summary>
         UnlockedWithinPoint0000001Seconds = Bit25 Or Bit24
-        ''' <summary>0010	2	Clock unlocked, time within 10^-8 s</summary>
+        ''' <summary>0010 - 2: Clock unlocked, time within 10^-8 s</summary>
         UnlockedWithinPoint00000001Seconds = Bit25
-        ''' <summary>0001	1	Clock unlocked, time within 10^-9 s</summary>
+        ''' <summary>0001 - 1: Clock unlocked, time within 10^-9 s</summary>
         UnlockedWithinPoint000000001Seconds = Bit24
-        ''' <summary>0000	0	Normal operation, clock locked</summary>
+        ''' <summary>0000 - 0: Normal operation, clock locked</summary>
         Locked = 0
     End Enum
 
     ''' <summary>Frame type</summary>
     Public Enum FrameType As Int16
-        ''' <summary>000   Data frame</summary>
-        DataFrame = 0
-        ''' <summary>001   Header frame</summary>
+        ''' <summary>000 Data frame</summary>
+        DataFrame = Nill
+        ''' <summary>001 Header frame</summary>
         HeaderFrame = Bit4
-        ''' <summary>010   Configuration frame 1</summary>
+        ''' <summary>010 Configuration frame 1</summary>
         ConfigurationFrame1 = Bit5
-        ''' <summary>011   Configuration frame 2</summary>
+        ''' <summary>011 Configuration frame 2</summary>
         ConfigurationFrame2 = Bit4 Or Bit5
-        ''' <summary>100   Command frame</summary>
+        ''' <summary>100 Command frame</summary>
         CommandFrame = Bit6
         ''' <summary>Reserved bit</summary>
         Reserved = Bit7
@@ -131,7 +131,7 @@ Namespace IeeeC37_118
     ''' <summary>Unlocked time</summary>
     Public Enum UnlockedTime As Byte
         ''' <summary>Sync locked, best quality</summary>
-        SyncLocked = 0
+        SyncLocked = Nill
         ''' <summary>Unlocked for 10 seconds</summary>
         UnlockedFor10Seconds = Bit4
         ''' <summary>Unlocked for 100 seconds</summary>
@@ -173,7 +173,7 @@ Namespace IeeeC37_118
         ''' <summary>0010 Magnitude high</summary>
         MagnitudeHigh = Bit1
         ''' <summary>0000 Manual</summary>
-        Manual = 0
+        Manual = Nill
     End Enum
 
     ''' <summary>Analog types</summary>
@@ -194,9 +194,6 @@ Namespace IeeeC37_118
             ' This class contains only global functions and is not meant to be instantiated
 
         End Sub
-
-        ''' <summary>Data stream synchrnonization byte</summary>
-        Public Const SyncByte As Byte = &HAA
 
         ''' <summary>Absolute maximum number of possible phasor values that could fit into a data frame</summary>
         Public Const MaximumPhasorValues As Int32 = UInt16.MaxValue \ 4 - CommonFrameHeader.BinaryLength - 8

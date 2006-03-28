@@ -64,12 +64,6 @@ Namespace IeeeC37_118
             End Get
         End Property
 
-        Protected Overrides ReadOnly Property FundamentalFrameType() As FundamentalFrameType
-            Get
-                Return Phasors.FundamentalFrameType.HeaderFrame
-            End Get
-        End Property
-
         Public Property RevisionNumber() As RevisionNumber Implements ICommonFrameHeader.RevisionNumber
             Get
                 Return m_revisionNumber
@@ -83,7 +77,7 @@ Namespace IeeeC37_118
             Get
                 Return IeeeC37_118.FrameType.HeaderFrame
             End Get
-            Friend Set(ByVal value As FrameType)
+            Private Set(ByVal value As FrameType)
                 ' Frame type is readonly for header frames - we don't throw an exception here if someone attempts to change
                 ' the frame type on a header frame (e.g., the CommonFrameHeader.Clone method will attempt to copy this property)
                 ' but we don't do anything with the value either.
@@ -105,24 +99,6 @@ Namespace IeeeC37_118
             End Get
             Set(ByVal value As Int16)
                 MyBase.ParsedBinaryLength = value
-            End Set
-        End Property
-
-        Public Overrides Property IDCode() As UInt16 Implements ICommonFrameHeader.IDCode
-            Get
-                Return MyBase.IDCode
-            End Get
-            Set(ByVal value As UInt16)
-                MyBase.IDCode = value
-            End Set
-        End Property
-
-        Public Overrides Property Ticks() As Long Implements ICommonFrameHeader.Ticks
-            Get
-                Return MyBase.Ticks
-            End Get
-            Set(ByVal value As Long)
-                MyBase.Ticks = value
             End Set
         End Property
 
@@ -160,7 +136,7 @@ Namespace IeeeC37_118
             Get
                 Return CommonFrameHeader.TimeQualityFlags(Me)
             End Get
-            Friend Set(ByVal value As TimeQualityFlags)
+            Private Set(ByVal value As TimeQualityFlags)
                 ' Nothing to do - time quality flags is readonly for header frames
             End Set
         End Property
@@ -169,7 +145,7 @@ Namespace IeeeC37_118
             Get
                 Return CommonFrameHeader.TimeQualityIndicatorCode(Me)
             End Get
-            Friend Set(ByVal value As TimeQualityIndicatorCode)
+            Private Set(ByVal value As TimeQualityIndicatorCode)
                 ' Nothing to do - time quality flags is readonly for header frames
             End Set
         End Property

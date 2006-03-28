@@ -29,13 +29,13 @@ Namespace IeeeC37_118
         Private m_revisionNumber As RevisionNumber
         Private m_version As Byte
 
-        Public Sub New(ByVal command As PmuCommand)
+        Public Sub New(ByVal command As Command)
 
             MyClass.New(IeeeC37_118.RevisionNumber.RevisionV1, command)
 
         End Sub
 
-        Public Sub New(ByVal revisionNumber As RevisionNumber, ByVal command As PmuCommand)
+        Public Sub New(ByVal revisionNumber As RevisionNumber, ByVal command As Command)
 
             MyBase.New(New CommandCellCollection(MaximumExtendedDataLength), command)
             m_revisionNumber = revisionNumber
@@ -64,12 +64,6 @@ Namespace IeeeC37_118
             End Get
         End Property
 
-        Protected Overrides ReadOnly Property FundamentalFrameType() As FundamentalFrameType
-            Get
-                Return Phasors.FundamentalFrameType.CommandFrame
-            End Get
-        End Property
-
         Public Property RevisionNumber() As RevisionNumber Implements ICommonFrameHeader.RevisionNumber
             Get
                 Return m_revisionNumber
@@ -83,7 +77,7 @@ Namespace IeeeC37_118
             Get
                 Return IeeeC37_118.FrameType.CommandFrame
             End Get
-            Friend Set(ByVal value As FrameType)
+            Private Set(ByVal value As FrameType)
                 ' Frame type is readonly for command frames - we don't throw an exception here if someone attempts to change
                 ' the frame type on a command frame (e.g., the CommonFrameHeader.Clone method will attempt to copy this property)
                 ' but we don't do anything with the value either.
@@ -105,24 +99,6 @@ Namespace IeeeC37_118
             End Get
             Set(ByVal value As Int16)
                 MyBase.ParsedBinaryLength = value
-            End Set
-        End Property
-
-        Public Overrides Property IDCode() As UInt16 Implements ICommonFrameHeader.IDCode
-            Get
-                Return MyBase.IDCode
-            End Get
-            Set(ByVal value As UInt16)
-                MyBase.IDCode = value
-            End Set
-        End Property
-
-        Public Overrides Property Ticks() As Long Implements ICommonFrameHeader.Ticks
-            Get
-                Return MyBase.Ticks
-            End Get
-            Set(ByVal value As Long)
-                MyBase.Ticks = value
             End Set
         End Property
 

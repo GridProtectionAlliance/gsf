@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  ConfigurationCell.vb - IEEE C37.118 PMU configuration cell
+'  ConfigurationCell.vb - IEEE C37.118 Configuration cell
 '  Copyright © 2005 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005
