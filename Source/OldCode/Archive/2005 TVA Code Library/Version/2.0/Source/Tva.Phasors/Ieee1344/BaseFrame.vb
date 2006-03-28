@@ -81,13 +81,13 @@ Namespace Ieee1344
             End Set
         End Property
 
-        Public ReadOnly Property FrameType() As PMUFrameType
+        Public ReadOnly Property FrameType() As FrameType
             Get
                 Return m_sampleCount And FrameTypeMask
             End Get
         End Property
 
-        Protected Sub SetFrameType(ByVal frameType As PMUFrameType)
+        Protected Sub SetFrameType(ByVal frameType As FrameType)
 
             m_sampleCount = (m_sampleCount And Not FrameTypeMask) Or frameType
 
@@ -125,11 +125,11 @@ Namespace Ieee1344
             End Set
         End Property
 
-        Public Property TriggerStatus() As PMUTriggerStatus
+        Public Property TriggerStatus() As TriggerStatus
             Get
                 Return m_status And TriggerMask
             End Get
-            Set(ByVal Value As PMUTriggerStatus)
+            Set(ByVal Value As TriggerStatus)
                 m_status = (m_status And Not TriggerMask) Or Value
             End Set
         End Property
