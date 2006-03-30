@@ -193,7 +193,7 @@ Namespace Data
 
             Dim command As New OracleCommand(sql, connection)
 
-            FillStoredProcParameters(Command, ConnectionType.OracleClient, parameters)
+            FillStoredProcParameters(command, ConnectionType.OracleClient, parameters)
             Return command.ExecuteNonQuery()
 
         End Function
@@ -380,7 +380,7 @@ Namespace Data
             Dim command As New SqlCommand(sql, connection)
             command.CommandTimeout = timeout
 
-            FillStoredProcParameters(Command, ConnectionType.SqlClient, parameters)
+            FillStoredProcParameters(command, ConnectionType.SqlClient, parameters)
             Return command.ExecuteScalar()
 
         End Function
@@ -415,7 +415,7 @@ Namespace Data
 
             Dim command As New OracleCommand(sql, connection)
 
-            FillStoredProcParameters(Command, ConnectionType.OracleClient, parameters)
+            FillStoredProcParameters(command, ConnectionType.OracleClient, parameters)
             Return command.ExecuteScalar()
 
         End Function
@@ -518,7 +518,7 @@ Namespace Data
         <Obsolete("This function will be removed from future releases. Use the overload that takes a ParamArray of Object for the parameter 'parameters'.")> _
         Public Shared Function RetrieveData(ByVal sql As String, ByVal connection As OleDbConnection, ByVal startRow As Integer, ByVal maxRows As Integer, ByVal timeout As Integer, ByVal ParamArray parameters As OleDbParameter()) As DataTable
 
-            Return RetrieveDataSetWithParameters(sql, connection, startRow, maxRows, timeout, parameters).Tables(0)
+            Return RetrieveDataSet(sql, connection, startRow, maxRows, timeout, parameters).Tables(0)
 
         End Function
 
@@ -526,7 +526,7 @@ Namespace Data
         '                       base DataTable that is linked to the underlying DataSet
         Public Shared Function RetrieveData(ByVal sql As String, ByVal connection As OleDbConnection, ByVal startRow As Integer, ByVal maxRows As Integer, ByVal timeout As Integer, ByVal ParamArray parameters As Object()) As DataTable
 
-            Return RetrieveDataSetWithParameters(sql, connection, startRow, maxRows, timeout, parameters).Tables(0)
+            Return RetrieveDataSet(sql, connection, startRow, maxRows, timeout, parameters).Tables(0)
 
         End Function
 
@@ -576,44 +576,42 @@ Namespace Data
 #End Region
 
 #Region "RetrieveDataSet Overloaded Functions"
-        Public Shared Function RetrieveDataSetWithParameters(ByVal Sql As String, ByVal Connection As OleDbConnection, ByVal StartRow As Integer, ByVal MaxRows As Integer, ByVal Timeout As Integer, ByVal ParamArray Parameters As OleDbParameter()) As DataSet
+        <Obsolete("This function will be removed from future releases. Use the overload that takes a ParamArray of Object for the parameter 'parameters'.")> _
+        Public Shared Function RetrieveDataSet(ByVal sql As String, ByVal connection As OleDbConnection, ByVal startRow As Integer, ByVal maxRows As Integer, ByVal timeout As Integer, ByVal ParamArray parameters As OleDbParameter()) As DataSet
 
-            Dim cmd As New OleDbCommand(Sql, Connection)
+            Dim command As New OleDbCommand(sql, connection)
+            command.CommandTimeout = timeout
 
-            cmd.CommandTimeout = Timeout
-
-            If Not Parameters Is Nothing Then
-                If Parameters.Length > 0 Then
-                    For Each Param As OleDbParameter In Parameters
-                        cmd.Parameters.Add(Param)
+            If Not parameters Is Nothing Then
+                If parameters.Length > 0 Then
+                    For Each param As OleDbParameter In parameters
+                        command.Parameters.Add(param)
                     Next
                 End If
             End If
 
-            Dim da As New OleDbDataAdapter(cmd)
-            Dim ds As New DataSet("Temp")
+            Dim dataAdapter As New OleDbDataAdapter(command)
+            Dim data As New DataSet("Temp")
+            dataAdapter.Fill(data, startRow, maxRows, "Table1")
 
-            da.Fill(ds, StartRow, MaxRows, "Table1")
-
-            Return ds
+            Return data
 
         End Function
 
         ' tmshults 12/10/2004 - Added this method as an easy way to populate a DataSet with a StoredProc call
         '                       This takes the given values and then populates the appropriate Parameters for
         '                       the StoredProc.
-        Public Shared Function RetrieveDataSetWithParameters(ByVal StoredProcName As String, ByVal Connection As OleDbConnection, ByVal StartRow As Integer, ByVal MaxRows As Integer, ByVal Timeout As Integer, ByVal ParamArray Parameters As Object()) As DataSet
+        Public Shared Function RetrieveDataSet(ByVal sql As String, ByVal connection As OleDbConnection, ByVal startRow As Integer, ByVal maxRows As Integer, ByVal timeout As Integer, ByVal ParamArray parameters As Object()) As DataSet
 
-            Dim cmd As New OleDbCommand(StoredProcName, Connection)
+            Dim command As New OleDbCommand(sql, connection)
 
-            FillStoredProcParameters(cmd, ConnectionType.OleDb, Parameters)
+            FillStoredProcParameters(command, ConnectionType.OleDb, parameters)
 
-            Dim da As New OleDbDataAdapter(cmd)
-            Dim ds As New DataSet("Temp")
+            Dim dataAdapter As New OleDbDataAdapter(command)
+            Dim data As New DataSet("Temp")
+            dataAdapter.Fill(data, startRow, maxRows, "Table1")
 
-            da.Fill(ds, StartRow, MaxRows, "Table1")
-
-            Return ds
+            Return data
 
         End Function
 
