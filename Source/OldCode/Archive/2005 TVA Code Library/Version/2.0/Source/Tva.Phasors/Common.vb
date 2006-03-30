@@ -17,6 +17,7 @@
 
 Imports System.Buffer
 Imports Tva.Interop.Bit
+Imports Tva.Collections.Common
 
 ''' <summary>Phasor coordinate format</summary>
 Public Enum CoordinateFormat As Byte
@@ -114,5 +115,11 @@ Public Class Common
         End If
 
     End Sub
+
+    Public Shared ReadOnly Property NominalFrequencyValue(ByVal nominalFrequency As LineFrequency) As Single
+        Get
+            Return IIf(nominalFrequency = LineFrequency.Hz60, 60.0!, 50.0!)
+        End Get
+    End Property
 
 End Class

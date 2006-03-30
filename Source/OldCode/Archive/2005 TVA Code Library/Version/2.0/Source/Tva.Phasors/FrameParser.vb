@@ -532,12 +532,6 @@ Public Class FrameParser
 
     End Sub
 
-    Private Sub m_ieee1344FrameParser_ReceivedCommandFrame(ByVal frame As Tva.Phasors.Ieee1344.CommandFrame) Handles m_ieee1344FrameParser.ReceivedCommandFrame
-
-        ProcessFrame(frame)
-
-    End Sub
-
     Private Sub m_ieee1344FrameParser_ReceivedConfigurationFrame1(ByVal frame As Tva.Phasors.Ieee1344.ConfigurationFrame) Handles m_ieee1344FrameParser.ReceivedConfigurationFrame1
 
         ProcessFrame(frame)

@@ -36,7 +36,6 @@ Namespace Ieee1344
         Public Event ReceivedConfigurationFrame2(ByVal frame As ConfigurationFrame)
         Public Event ReceivedDataFrame(ByVal frame As DataFrame)
         Public Event ReceivedHeaderFrame(ByVal frame As HeaderFrame)
-        Public Event ReceivedCommandFrame(ByVal frame As CommandFrame)
         Public Event DataStreamException(ByVal ex As Exception)
 
 #End Region

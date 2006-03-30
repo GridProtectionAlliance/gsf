@@ -109,31 +109,22 @@ Namespace Ieee1344
                 End Set
             End Property
 
-            Public Property FrameType() As FrameType Implements ICommonFrameHeader.FrameType
+            Public ReadOnly Property FrameType() As FrameType Implements ICommonFrameHeader.FrameType
                 Get
                     Return CommonFrameHeader.FrameType(Me)
                 End Get
-                Set(ByVal value As FrameType)
-                    CommonFrameHeader.FrameType(Me) = value
-                End Set
             End Property
 
-            Public Property FrameLength() As Int16 Implements ICommonFrameHeader.FrameLength
+            Public ReadOnly Property FrameLength() As Int16 Implements ICommonFrameHeader.FrameLength
                 Get
                     Return CommonFrameHeader.FrameLength(Me)
                 End Get
-                Set(ByVal value As Int16)
-                    CommonFrameHeader.FrameLength(Me) = value
-                End Set
             End Property
 
-            Public Property DataLength() As Int16 Implements ICommonFrameHeader.DataLength
+            Public ReadOnly Property DataLength() As Int16 Implements ICommonFrameHeader.DataLength
                 Get
                     Return CommonFrameHeader.DataLength(Me)
                 End Get
-                Set(ByVal value As Int16)
-                    CommonFrameHeader.DataLength(Me) = value
-                End Set
             End Property
 
             Public Property SynchronizationIsValid() As Boolean Implements ICommonFrameHeader.SynchronizationIsValid
@@ -297,8 +288,7 @@ Namespace Ieee1344
 
                 If .FrameType = Ieee1344.FrameType.DataFrame Then
                     ' Data frames have subsecond time information
-                    ' TODO: Add subsecond resolution by dividing by Period in config frame...
-                    .Ticks = (New NtpTimeTag(secondOfCentury)).ToDateTime.Ticks
+                    .Ticks = (New NtpTimeTag(secondOfCentury + SampleCount(.This) / (MaximumSampleCount / configurationFrame.Period) / configurationFrame.FrameRate)).ToDateTime.Ticks
                 Else
                     ' For other frames, the best timestamp you can get is down to the whole second
                     .Ticks = (New NtpTimeTag(secondOfCentury)).ToDateTime.Ticks
@@ -320,6 +310,9 @@ Namespace Ieee1344
 
             Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BinaryLength)
 
+            ' Make sure frame length gets included in status flags for generated binary image
+            FrameLength(frameHeader) = frameHeader.BinaryLength
+
             With frameHeader
                 EndianOrder.BigEndian.CopyBytes(Convert.ToUInt32(.TimeTag.Value), buffer, 0)
                 EndianOrder.BigEndian.CopyBytes(.InternalSampleCount, buffer, 4)
@@ -333,8 +326,6 @@ Namespace Ieee1344
         Public Shared Sub Clone(ByVal sourceFrameHeader As ICommonFrameHeader, ByVal destinationFrameHeader As ICommonFrameHeader)
 
             With destinationFrameHeader
-                .FrameType = sourceFrameHeader.FrameType
-                .FrameLength = sourceFrameHeader.FrameLength
                 .IDCode = sourceFrameHeader.IDCode
                 .Ticks = sourceFrameHeader.Ticks
                 .InternalSampleCount = sourceFrameHeader.InternalSampleCount
@@ -353,7 +344,7 @@ Namespace Ieee1344
             Get
                 Return frameHeader.InternalSampleCount And FrameTypeMask
             End Get
-            Set(ByVal value As FrameType)
+            Friend Set(ByVal value As FrameType)
                 frameHeader.InternalSampleCount = (frameHeader.InternalSampleCount And Not FrameTypeMask) Or value
             End Set
         End Property
@@ -414,7 +405,7 @@ Namespace Ieee1344
             Get
                 Return frameHeader.InternalStatusFlags And FrameLengthMask
             End Get
-            Set(ByVal value As Int16)
+            Private Set(ByVal value As Int16)
                 If value > MaximumFrameLength Then
                     Throw New OverflowException("Frame length value cannot exceed " & MaximumFrameLength)
                 Else
@@ -428,7 +419,7 @@ Namespace Ieee1344
                 ' Data length will be frame length minus common header length minus crc16
                 Return FrameLength(frameHeader) - BinaryLength - 2
             End Get
-            Set(ByVal value As Int16)
+            Private Set(ByVal value As Int16)
                 If value > MaximumDataLength Then
                     Throw New OverflowException("Data length value cannot exceed " & MaximumDataLength)
                 Else

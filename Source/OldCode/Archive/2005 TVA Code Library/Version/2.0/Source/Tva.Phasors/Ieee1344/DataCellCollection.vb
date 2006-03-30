@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  ConfigurationCellCollection.vb - IEEE 1344 specific configuration cell collection
+'  DataCellCollection.vb - IEEE 1344 specific data cell collection
 '  Copyright © 2005 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005
@@ -18,9 +18,9 @@
 Namespace Ieee1344
 
     <CLSCompliant(False)> _
-    Public Class ConfigurationCellCollection
+    Public Class DataCellCollection
 
-        Inherits Phasors.ConfigurationCellCollection
+        Inherits Phasors.DataCellCollection
 
         Public Sub New()
 
@@ -29,13 +29,13 @@ Namespace Ieee1344
 
         End Sub
 
-        Public Shadows Sub Add(ByVal value As ConfigurationCell)
+        Public Shadows Sub Add(ByVal value As DataCell)
 
             MyBase.Add(value)
 
         End Sub
 
-        Default Public Shadows ReadOnly Property Item(ByVal index As Int32) As ConfigurationCell
+        Default Public Shadows ReadOnly Property Item(ByVal index As Int32) As DataCell
             Get
                 Return MyBase.Item(index)
             End Get

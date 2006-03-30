@@ -81,6 +81,23 @@ Namespace Ieee1344
             End Get
         End Property
 
+        Public Shadows Property IDCode() As UInt64
+            Get
+                ' IEEE 1344 only allows one PMU, so we share ID code with parent frame...
+                Return Parent.IDCode
+            End Get
+            Set(ByVal value As UInt64)
+                Parent.IDCode = value
+
+                ' Base classes constrain maximum value to 65535
+                If value > UInt16.MaxValue Then
+                    MyBase.IDCode = UInt16.MaxValue
+                Else
+                    MyBase.IDCode = Convert.ToUInt16(value)
+                End If
+            End Set
+        End Property
+
         Protected Overrides ReadOnly Property HeaderImage() As Byte()
             Get
                 Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), HeaderLength)
@@ -88,8 +105,8 @@ Namespace Ieee1344
 
                 CopyImage(MyBase.HeaderImage, buffer, index, MyBase.HeaderLength)
                 EndianOrder.BigEndian.CopyBytes(IDCode, buffer, index)
-                EndianOrder.BigEndian.CopyBytes(Convert.ToInt16(PhasorDefinitions.Count), buffer, index + 4)
-                EndianOrder.BigEndian.CopyBytes(Convert.ToInt16(DigitalDefinitions.Count), buffer, index + 8)
+                EndianOrder.BigEndian.CopyBytes(Convert.ToInt16(PhasorDefinitions.Count), buffer, index + 8)
+                EndianOrder.BigEndian.CopyBytes(Convert.ToInt16(DigitalDefinitions.Count), buffer, index + 10)
 
                 Return buffer
             End Get
@@ -103,11 +120,11 @@ Namespace Ieee1344
             MyBase.ParseHeaderImage(state, binaryImage, startIndex)
             startIndex += MyBase.HeaderLength
 
-            IDCode = EndianOrder.BigEndian.ToUInt16(binaryImage, startIndex)
+            IDCode = EndianOrder.BigEndian.ToUInt64(binaryImage, startIndex)
 
             With parsingState
-                .PhasorCount = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 4)
-                .DigitalCount = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 8)
+                .PhasorCount = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 8)
+                .DigitalCount = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 10)
             End With
 
         End Sub

@@ -34,6 +34,7 @@ Namespace Ieee1344
         Public Sub New()
 
             MyBase.New(New HeaderCellCollection(MaximumHeaderDataLength))
+            CommonFrameHeader.FrameType(Me) = Ieee1344.FrameType.HeaderFrame
 
         End Sub
 
@@ -42,6 +43,7 @@ Namespace Ieee1344
             MyBase.New(New HeaderFrameParsingState(New HeaderCellCollection(MaximumHeaderDataLength), parsedFrameHeader.FrameLength, _
                 parsedFrameHeader.FrameLength - CommonFrameHeader.BinaryLength - 2), binaryImage, startIndex)
 
+            CommonFrameHeader.FrameType(Me) = Ieee1344.FrameType.HeaderFrame
             CommonFrameHeader.Clone(parsedFrameHeader, Me)
 
         End Sub
@@ -49,6 +51,7 @@ Namespace Ieee1344
         Public Sub New(ByVal headerFrame As IHeaderFrame)
 
             MyBase.New(headerFrame)
+            CommonFrameHeader.FrameType(Me) = Ieee1344.FrameType.HeaderFrame
 
         End Sub
 
@@ -73,31 +76,22 @@ Namespace Ieee1344
             End Get
         End Property
 
-        Public Property FrameType() As FrameType Implements ICommonFrameHeader.FrameType
+        Public ReadOnly Property FrameType() As FrameType Implements ICommonFrameHeader.FrameType
             Get
                 Return CommonFrameHeader.FrameType(Me)
             End Get
-            Friend Set(ByVal value As FrameType)
-                CommonFrameHeader.FrameType(Me) = value
-            End Set
         End Property
 
-        Public Property FrameLength() As Int16 Implements ICommonFrameHeader.FrameLength
+        Public ReadOnly Property FrameLength() As Int16 Implements ICommonFrameHeader.FrameLength
             Get
                 Return CommonFrameHeader.FrameLength(Me)
             End Get
-            Set(ByVal value As Int16)
-                CommonFrameHeader.FrameLength(Me) = value
-            End Set
         End Property
 
-        Public Property DataLength() As Int16 Implements ICommonFrameHeader.DataLength
+        Public ReadOnly Property DataLength() As Int16 Implements ICommonFrameHeader.DataLength
             Get
                 Return CommonFrameHeader.DataLength(Me)
             End Get
-            Set(ByVal value As Int16)
-                CommonFrameHeader.DataLength(Me) = value
-            End Set
         End Property
 
         Public Property SynchronizationIsValid() As Boolean Implements ICommonFrameHeader.SynchronizationIsValid

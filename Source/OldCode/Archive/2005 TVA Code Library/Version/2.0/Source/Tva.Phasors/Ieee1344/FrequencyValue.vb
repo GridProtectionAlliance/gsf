@@ -36,9 +36,18 @@ Namespace Ieee1344
 
         End Sub
 
-        Public Sub New(ByVal parent As IDataCell, ByVal frequencyDefinition As IFrequencyDefinition, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
+        Public Sub New(ByVal parent As IDataCell, ByVal frequencyDefinition As FrequencyDefinition, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
-            MyBase.New(parent, frequencyDefinition, binaryImage, startIndex)
+            ' We bypass default parse procedures since IEEE 1344 can opt to exclude frequency and/or df/dt from data frame...
+            MyBase.New(parent, frequencyDefinition, 0, 0)
+
+            ' Note that IEEE 1344 only supports scaled integers (no need to worry about floating points)
+            If frequencyDefinition.FrequencyAvailable Then
+                UnscaledFrequency = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex)
+                startIndex += 2
+            End If
+
+            If frequencyDefinition.DfDtAvailable Then UnscaledDfDt = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex)
 
         End Sub
 

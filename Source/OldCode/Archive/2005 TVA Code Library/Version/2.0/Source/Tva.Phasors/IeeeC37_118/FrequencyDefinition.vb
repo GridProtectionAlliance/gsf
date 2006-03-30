@@ -30,16 +30,16 @@ Namespace IeeeC37_118
         Public Sub New(ByVal parent As ConfigurationCell)
 
             MyBase.New(parent)
-            ScalingFactor = 100
-            DfDtScalingFactor = 10
+            ScalingFactor = 1000
+            DfDtScalingFactor = 100
 
         End Sub
 
         Public Sub New(ByVal parent As ConfigurationCell, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
             MyBase.New(parent, binaryImage, startIndex)
-            ScalingFactor = 100
-            DfDtScalingFactor = 10
+            ScalingFactor = 1000
+            DfDtScalingFactor = 100
 
         End Sub
 

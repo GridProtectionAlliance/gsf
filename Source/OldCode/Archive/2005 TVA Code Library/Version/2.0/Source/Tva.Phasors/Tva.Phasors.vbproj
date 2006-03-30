@@ -98,6 +98,9 @@
     <Compile Include="Ieee1344\CommonFrameHeader.vb" />
     <Compile Include="Ieee1344\ConfigurationCell.vb" />
     <Compile Include="Ieee1344\ConfigurationCellCollection.vb" />
+    <Compile Include="Ieee1344\DataCell.vb" />
+    <Compile Include="Ieee1344\DataCellCollection.vb" />
+    <Compile Include="Ieee1344\DigitalValue.vb" />
     <Compile Include="Ieee1344\FrequencyDefinition.vb" />
     <Compile Include="Ieee1344\FrequencyValue.vb" />
     <Compile Include="Ieee1344\ICommonFrameHeader.vb" />

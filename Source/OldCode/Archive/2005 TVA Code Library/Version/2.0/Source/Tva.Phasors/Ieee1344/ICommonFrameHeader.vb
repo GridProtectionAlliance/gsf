@@ -26,11 +26,11 @@ Namespace Ieee1344
 
         Shadows Property IDCode() As UInt64
 
-        Shadows Property FrameType() As FrameType
+        Shadows ReadOnly Property FrameType() As FrameType
 
-        Property FrameLength() As Int16
+        ReadOnly Property FrameLength() As Int16
 
-        Property DataLength() As Int16
+        ReadOnly Property DataLength() As Int16
 
         Shadows ReadOnly Property TimeTag() As NtpTimeTag
 

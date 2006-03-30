@@ -15,7 +15,7 @@
 '
 '*******************************************************************************************************
 
-Imports Tva.Collections.Common
+Imports Tva.Phasors.Common
 
 ' This class represents the common implementation of the protocol independent definition of a frequency and df/dt value.
 <CLSCompliant(False)> _
@@ -64,7 +64,7 @@ Public MustInherit Class FrequencyDefinitionBase
 
     Public Overrides Property Offset() As Single
         Get
-            Return IIf(Parent.NominalFrequency = LineFrequency.Hz60, 60.0#, 50.0#)
+            Return NominalFrequencyValue(Parent.NominalFrequency)
         End Get
         Set(ByVal value As Single)
             Throw New NotSupportedException("Frequency offset is read-only - it is determined by nominal frequency specified in containing condiguration cell")

@@ -21,85 +21,99 @@ Imports Tva.Interop.Bit
 
 Namespace Ieee1344
 
+    <CLSCompliant(False)> _
     Public Class DigitalDefinition
 
-        Public Const BinaryLength As Int32 = 2
-        Public Const MaximumLabelLength As Int32 = 16
+        Inherits DigitalDefinitionBase
 
-        Private m_label As String
-        Private m_flags As Int16
+        Private m_statusFlags As Int16
 
-        Public Sub New()
+        Public Sub New(ByVal parent As ConfigurationCell)
 
-            m_label = ""
+            MyBase.New(parent)
 
         End Sub
 
-        Public Sub New(ByVal label As String, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
+        Public Sub New(ByVal parent As ConfigurationCell, ByVal index As Int32, ByVal label As String)
 
-            Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BinaryLength)
-
-            m_label = label
-
-            ' Get digital flags
-            m_flags = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex)
+            MyBase.New(parent, index, label)
 
         End Sub
 
-        Public Property NormalState() As Byte
+        Public Sub New(ByVal parent As ConfigurationCell, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
+
+            MyBase.New(parent, binaryImage, startIndex)
+
+        End Sub
+
+        Public Sub New(ByVal digitalDefinition As IDigitalDefinition)
+
+            MyBase.New(digitalDefinition)
+
+        End Sub
+
+        Friend Shared Function CreateNewDigitalDefintion(ByVal parent As IConfigurationCell, ByVal binaryImage As Byte(), ByVal startIndex As Int32) As IDigitalDefinition
+
+            Return New DigitalDefinition(parent, binaryImage, startIndex)
+
+        End Function
+
+        Public Overrides ReadOnly Property InheritedType() As System.Type
             Get
-                Return m_flags And Bit4
+                Return Me.GetType
             End Get
-            Set(ByVal Value As Byte)
-                If Value > 0 Then
-                    m_flags = m_flags Or Bit4
+        End Property
+
+        ' TODO: May want to shadow all parents in final derived classes...
+        Public Shadows ReadOnly Property Parent() As ConfigurationCell
+            Get
+                Return MyBase.Parent
+            End Get
+        End Property
+
+        Public Property NormalStatus() As Int16
+            Get
+                Return m_statusFlags And Bit4
+            End Get
+            Set(ByVal value As Int16)
+                If value > 0 Then
+                    m_statusFlags = m_statusFlags Or Bit4
                 Else
-                    m_flags = m_flags And Not Bit4
+                    m_statusFlags = m_statusFlags And Not Bit4
                 End If
             End Set
         End Property
 
-        Public Property InputNormalState() As Byte
+        Public Property ValidInput() As Int16
             Get
-                Return m_flags And Bit0
+                Return m_statusFlags And Bit0
             End Get
-            Set(ByVal Value As Byte)
-                If Value > 0 Then
-                    m_flags = m_flags Or Bit0
+            Set(ByVal value As Int16)
+                If value > 0 Then
+                    m_statusFlags = m_statusFlags Or Bit0
                 Else
-                    m_flags = m_flags And Not Bit0
+                    m_statusFlags = m_statusFlags And Not Bit0
                 End If
             End Set
         End Property
 
-        Public Property Label() As String
+        Friend Shared ReadOnly Property ConversionFactorLength() As Int32
             Get
-                Return m_label
-            End Get
-            Set(ByVal Value As String)
-                If Len(Value) > MaximumLabelLength Then
-                    Throw New OverflowException("Label length cannot exceed " & MaximumLabelLength)
-                Else
-                    m_label = Value
-                End If
-            End Set
-        End Property
-
-        Public ReadOnly Property LabelImage() As Byte()
-            Get
-                Return Encoding.ASCII.GetBytes(m_label.PadRight(MaximumLabelLength))
+                Return 2
             End Get
         End Property
 
-        Public ReadOnly Property BinaryImage() As Byte()
+        Friend ReadOnly Property ConversionFactorImage() As Byte()
             Get
-                Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BinaryLength)
-
-                EndianOrder.BigEndian.CopyBytes(m_flags, buffer, 0)
-
-                Return buffer
+                Return EndianOrder.BigEndian.GetBytes(m_statusFlags)
             End Get
         End Property
+
+        Friend Sub ParseConversionFactor(ByVal binaryImage As Byte(), ByVal startIndex As Int32)
+
+            m_statusFlags = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex)
+ 
+        End Sub
 
     End Class
 

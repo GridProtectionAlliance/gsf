@@ -18,7 +18,6 @@
 Imports System.Text
 Imports Tva.Interop
 Imports Tva.Interop.Bit
-Imports Tva.Collections.Common
 
 Namespace Ieee1344
 
@@ -27,19 +26,23 @@ Namespace Ieee1344
 
         Inherits FrequencyDefinitionBase
 
+        Private m_statusFlags As Int16
+
         Public Sub New(ByVal parent As ConfigurationCell)
 
             MyBase.New(parent)
-            ScalingFactor = 100
-            DfDtScalingFactor = 10
+            MyBase.DataFormat = Phasors.DataFormat.FixedInteger
+            ScalingFactor = 1000
+            DfDtScalingFactor = 100
 
         End Sub
 
         Public Sub New(ByVal parent As ConfigurationCell, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
             MyBase.New(parent, binaryImage, startIndex)
-            ScalingFactor = 100
-            DfDtScalingFactor = 10
+            MyBase.DataFormat = Phasors.DataFormat.FixedInteger
+            ScalingFactor = 1000
+            DfDtScalingFactor = 100
 
         End Sub
 
@@ -67,6 +70,46 @@ Namespace Ieee1344
             End Get
         End Property
 
+        Public Property FrequencyAvailable() As Boolean
+            Get
+                Return m_statusFlags And Bit8 > 0
+            End Get
+            Set(ByVal value As Boolean)
+                If value Then
+                    m_statusFlags = m_statusFlags Or Bit8
+                Else
+                    m_statusFlags = m_statusFlags And Not Bit8
+                End If
+            End Set
+        End Property
+
+        Public Property DfDtAvailable() As Boolean
+            Get
+                Return m_statusFlags And Bit9 > 0
+            End Get
+            Set(ByVal value As Boolean)
+                If value Then
+                    m_statusFlags = m_statusFlags Or Bit9
+                Else
+                    m_statusFlags = m_statusFlags And Not Bit9
+                End If
+            End Set
+        End Property
+
+        ' IEEE 1344 only supports scaled data
+        Public Overrides Property DataFormat() As DataFormat
+            Get
+                Return Phasors.DataFormat.FixedInteger
+            End Get
+            Set(ByVal value As DataFormat)
+                If value = Phasors.DataFormat.FixedInteger Then
+                    MyBase.DataFormat = value
+                Else
+                    Throw New InvalidOperationException("IEEE 1344 only supports scaled integers - floating points are not allowed")
+                End If
+            End Set
+        End Property
+
         Protected Overrides ReadOnly Property BodyLength() As UInt16
             Get
                 Return 2
@@ -75,13 +118,20 @@ Namespace Ieee1344
 
         Protected Overrides ReadOnly Property BodyImage() As Byte()
             Get
-                Return EndianOrder.BigEndian.GetBytes(Convert.ToInt16(IIf(Parent.NominalFrequency = LineFrequency.Hz50, Bit0, Nill)))
+                If NominalFrequency = LineFrequency.Hz50 Then
+                    m_statusFlags = m_statusFlags Or Bit0
+                Else
+                    m_statusFlags = m_statusFlags And Not Bit0
+                End If
+
+                Return EndianOrder.BigEndian.GetBytes(m_statusFlags)
             End Get
         End Property
 
         Protected Overrides Sub ParseBodyImage(ByVal state As IChannelParsingState, ByVal binaryImage() As Byte, ByVal startIndex As Int32)
 
-            Parent.NominalFrequency = IIf(EndianOrder.BigEndian.ToInt16(binaryImage, startIndex) And Bit0 > 0, LineFrequency.Hz50, LineFrequency.Hz60)
+            m_statusFlags = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex)
+            Parent.NominalFrequency = IIf(m_statusFlags And Bit0 > 0, LineFrequency.Hz50, LineFrequency.Hz60)
 
         End Sub
 
