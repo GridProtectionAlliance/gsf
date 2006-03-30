@@ -432,7 +432,7 @@ Namespace Data
         <Obsolete("This function will be removed from future releases. Use the overload that takes a ParamArray of Object for the parameter 'parameters'.")> _
         Public Shared Function RetrieveRow(ByVal sql As String, ByVal connection As OleDbConnection, ByVal timeout As Integer, ByVal ParamArray parameters As OleDbParameter()) As DataRow
 
-            With RetrieveData(sql, connection, 0, 1, timeout, parameters)
+            With RetrieveData(sql, connection, 0, 1, timeout, DirectCast(parameters, Object()))
                 If .Rows.Count = 0 Then .Rows.Add(.NewRow())
                 Return .Rows(0)
             End With
@@ -460,7 +460,7 @@ Namespace Data
         <Obsolete("This function will be removed from future releases. Use the overload that takes a ParamArray of Object for the parameter 'parameters'.")> _
         Public Shared Function RetrieveRow(ByVal sql As String, ByVal connection As SqlConnection, ByVal timeout As Integer, ByVal ParamArray parameters As SqlParameter()) As DataRow
 
-            With RetrieveData(sql, connection, 0, 1, timeout, parameters)
+            With RetrieveData(sql, connection, 0, 1, timeout, DirectCast(parameters, Object()))
                 If .Rows.Count = 0 Then .Rows.Add(.NewRow())
                 Return .Rows(0)
             End With
@@ -488,7 +488,7 @@ Namespace Data
         <Obsolete("This function will be removed from future releases. Use the overload that takes a ParamArray of Object for the parameter 'parameters'.")> _
         Public Shared Function RetrieveRow(ByVal sql As String, ByVal connection As OracleConnection, ByVal ParamArray parameters As OracleParameter()) As DataRow
 
-            With RetrieveData(sql, connection, 0, 1, parameters)
+            With RetrieveData(sql, connection, 0, 1, DirectCast(parameters, Object()))
                 If .Rows.Count = 0 Then .Rows.Add(.NewRow())
                 Return .Rows(0)
             End With
@@ -518,7 +518,7 @@ Namespace Data
         <Obsolete("This function will be removed from future releases. Use the overload that takes a ParamArray of Object for the parameter 'parameters'.")> _
         Public Shared Function RetrieveData(ByVal sql As String, ByVal connection As OleDbConnection, ByVal startRow As Integer, ByVal maxRows As Integer, ByVal timeout As Integer, ByVal ParamArray parameters As OleDbParameter()) As DataTable
 
-            Return RetrieveDataSet(sql, connection, startRow, maxRows, timeout, parameters).Tables(0)
+            Return RetrieveDataSet(sql, connection, startRow, maxRows, timeout, DirectCast(parameters, Object())).Tables(0)
 
         End Function
 
@@ -540,7 +540,7 @@ Namespace Data
         <Obsolete("This function will be removed from future releases. Use the overload that takes a ParamArray of Object for the parameter 'parameters'.")> _
         Public Shared Function RetrieveData(ByVal sql As String, ByVal connection As SqlConnection, ByVal startRow As Integer, ByVal maxRows As Integer, ByVal timeout As Integer, ByVal ParamArray parameters As SqlParameter()) As DataTable
 
-            Return RetrieveDataSetWithParameters(sql, connection, startRow, maxRows, timeout, parameters).Tables(0)
+            Return RetrieveDataSet(sql, connection, startRow, maxRows, timeout, parameters).Tables(0)
 
         End Function
 
@@ -548,7 +548,7 @@ Namespace Data
         '                       base DataTable that is linked to the underlying DataSet
         Public Shared Function RetrieveData(ByVal sql As String, ByVal connection As SqlConnection, ByVal startRow As Integer, ByVal maxRows As Integer, ByVal timeout As Integer, ByVal ParamArray parameters As Object()) As DataTable
 
-            Return RetrieveDataSetWithParameters(sql, connection, startRow, maxRows, timeout, parameters).Tables(0)
+            Return RetrieveDataSet(sql, connection, startRow, maxRows, timeout, parameters).Tables(0)
 
         End Function
 
@@ -615,52 +615,48 @@ Namespace Data
 
         End Function
 
-        Public Shared Function RetrieveDataSetWithParameters(ByVal Sql As String, ByVal Connection As SqlConnection, ByVal StartRow As Integer, ByVal MaxRows As Integer, ByVal Timeout As Integer, ByVal ParamArray Parameters As SqlParameter()) As DataSet
+        Public Shared Function RetrieveDataSet(ByVal sql As String, ByVal connection As SqlConnection, ByVal startRow As Integer, ByVal maxRows As Integer, ByVal timeout As Integer, ByVal ParamArray parameters As SqlParameter()) As DataSet
 
-            Dim cmd As New SqlCommand(Sql, Connection)
+            Dim command As New SqlCommand(sql, connection)
+            command.CommandTimeout = timeout
 
-            cmd.CommandTimeout = Timeout
-
-            If Not Parameters Is Nothing Then
-                If Parameters.Length > 0 Then
-                    For Each Param As SqlParameter In Parameters
-                        cmd.Parameters.Add(Param)
+            If Not parameters Is Nothing Then
+                If parameters.Length > 0 Then
+                    For Each param As SqlParameter In parameters
+                        command.Parameters.Add(param)
                     Next
                 End If
             End If
 
-            Dim da As New SqlDataAdapter(cmd)
-            Dim ds As New DataSet("Temp")
+            Dim dataAdapter As New SqlDataAdapter(command)
+            Dim data As New DataSet("Temp")
+            dataAdapter.Fill(data, startRow, maxRows, "Table1")
 
-            da.Fill(ds, StartRow, MaxRows, "Table1")
-
-            Return ds
+            Return data
 
         End Function
 
         ' tmshults 12/10/2004 - Added this method as an easy way to populate a DataSet with a StoredProc call
         '                       This takes the given values and then populates the appropriate Parameters for
         '                       the StoredProc.
-        Public Shared Function RetrieveDataSetWithParameters(ByVal StoredProcName As String, ByVal Connection As SqlConnection, ByVal StartRow As Integer, ByVal MaxRows As Integer, ByVal Timeout As Integer, ByVal ParamArray Parameters As Object()) As DataSet
+        Public Shared Function RetrieveDataSet(ByVal sql As String, ByVal connection As SqlConnection, ByVal startRow As Integer, ByVal maxRows As Integer, ByVal timeout As Integer, ByVal ParamArray parameters As Object()) As DataSet
 
-            Dim cmd As New SqlCommand(StoredProcName, Connection)
+            Dim command As New SqlCommand(sql, connection)
+            command.CommandTimeout = timeout
 
-            cmd.CommandTimeout = Timeout
+            FillStoredProcParameters(command, ConnectionType.SqlClient, parameters)
 
-            FillStoredProcParameters(cmd, ConnectionType.SqlClient, Parameters)
+            Dim dataAdapter As New SqlDataAdapter(command)
+            Dim data As New DataSet("Temp")
+            dataAdapter.Fill(data, startRow, maxRows, "Table1")
 
-            Dim da As New SqlDataAdapter(cmd)
-            Dim ds As New DataSet("Temp")
-
-            da.Fill(ds, StartRow, MaxRows, "Table1")
-
-            Return ds
+            Return data
 
         End Function
 
-        Public Shared Function RetrieveDataSet(ByVal Sql As String, ByVal Connection As OracleConnection, Optional ByVal StartRow As Integer = 0, Optional ByVal MaxRows As Integer = Integer.MaxValue) As DataSet
+        Public Shared Function RetrieveDataSet(ByVal sql As String, ByVal connection As OracleConnection, ByVal startRow As Integer, ByVal maxRows As Integer) As DataSet
 
-            Return RetrieveDataSetWithParameters(Sql, Connection, StartRow, MaxRows, DirectCast(Nothing, OracleParameter()))
+            Return RetrieveDataSetWithParameters(sql, connection, startRow, maxRows, DirectCast(Nothing, OracleParameter()))
 
         End Function
 
