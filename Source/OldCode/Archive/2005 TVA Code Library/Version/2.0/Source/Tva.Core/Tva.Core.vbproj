@@ -49,6 +49,7 @@
     <Import Include="System.Diagnostics" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Tva.Data\Common.vb" />
     <Compile Include="Tva.Interop\Assembly.vb" />
     <Compile Include="Tva.Interop\Bit.vb" />
     <Compile Include="Tva.Collections\Common.vb" />
@@ -88,7 +89,6 @@
   <ItemGroup>
     <Folder Include="Tva.Configuration\" />
     <Folder Include="Tva.Console\" />
-    <Folder Include="Tva.Data\" />
     <Folder Include="Tva.ErrorManagement\" />
     <Folder Include="Tva.Exception\" />
     <Folder Include="Tva.Net\Ftp\" />
