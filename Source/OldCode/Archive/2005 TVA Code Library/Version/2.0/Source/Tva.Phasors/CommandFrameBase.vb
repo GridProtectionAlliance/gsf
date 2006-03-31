@@ -62,7 +62,7 @@ Public MustInherit Class CommandFrameBase
         End Get
     End Property
 
-    Public Property Command() As Command Implements ICommandFrame.Command
+    Public Overridable Property Command() As Command Implements ICommandFrame.Command
         Get
             Return m_command
         End Get
@@ -71,7 +71,7 @@ Public MustInherit Class CommandFrameBase
         End Set
     End Property
 
-    Public Property ExtendedData() As Byte() Implements ICommandFrame.ExtendedData
+    Public Overridable Property ExtendedData() As Byte() Implements ICommandFrame.ExtendedData
         Get
             Return Cells.BinaryImage
         End Get

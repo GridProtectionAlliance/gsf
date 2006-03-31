@@ -21,6 +21,7 @@ Imports Tva.Interop
 Imports Tva.Interop.Bit
 Imports Tva.Phasors.Common
 Imports Tva.Phasors.Ieee1344.Common
+Imports Tva.IO.Compression.Common
 
 Namespace Ieee1344
 
@@ -37,7 +38,7 @@ Namespace Ieee1344
 
             Private m_idCode As UInt64
             Private m_sampleCount As Int16
-            Private m_status As Int16
+            Private m_statusFlags As Int16
             Private m_ticks As Long
             Private m_frameQueue As MemoryStream
 
@@ -77,10 +78,34 @@ Namespace Ieee1344
 
             Public Sub AppendFrameImage(ByVal binaryImage As Byte(), ByVal offset As Integer, ByVal length As Integer)
 
-                If m_frameQueue Is Nothing Then m_frameQueue = New MemoryStream
-                m_frameQueue.Write(binaryImage, offset, length)
+                ' Validate CRC of frame image being appended
+                If Not ChecksumIsValid(binaryImage, offset, length) Then
+                    m_frameQueue = Nothing
+                    Throw New InvalidOperationException("Invalid binary image detected - check sum of individual IEEE 1344 interleaved configuration or header frame did not match")
+                End If
+
+                ' Create new frame queue to hold combined binary image, if it doesn't already exist
+                If m_frameQueue Is Nothing Then
+                    m_frameQueue = New MemoryStream
+
+                    ' Include initial header in new stream...
+                    m_frameQueue.Write(binaryImage, offset, CommonFrameHeader.BinaryLength)
+                End If
+
+                ' Skip past header
+                offset += CommonFrameHeader.BinaryLength
+
+                ' Include frame image
+                m_frameQueue.Write(binaryImage, offset, length - CommonFrameHeader.BinaryLength)
 
             End Sub
+
+            Private Function ChecksumIsValid(ByVal buffer As Byte(), ByVal startIndex As Int32, ByVal length As Int32) As Boolean
+
+                Dim sumLength As Int16 = length - 2
+                Return EndianOrder.BigEndian.ToUInt16(buffer, startIndex + sumLength) = CRC16(UInt16.MaxValue, buffer, startIndex, sumLength)
+
+            End Function
 
             Public Property IsFirstFrame() As Boolean
                 Get
@@ -117,7 +142,12 @@ Namespace Ieee1344
 
             Public ReadOnly Property FrameLength() As Int16 Implements ICommonFrameHeader.FrameLength
                 Get
-                    Return CommonFrameHeader.FrameLength(Me)
+                    If m_frameQueue IsNot Nothing Then
+                        ' If we are cumulating frames, we use this total length instead of length parsed from individual frame
+                        Return BinaryLength
+                    Else
+                        Return CommonFrameHeader.FrameLength(Me)
+                    End If
                 End Get
             End Property
 
@@ -165,10 +195,10 @@ Namespace Ieee1344
 
             Public Property InternalStatusFlags() As Int16 Implements ICommonFrameHeader.InternalStatusFlags
                 Get
-                    Return m_status
+                    Return m_statusFlags
                 End Get
                 Set(ByVal value As Int16)
-                    m_status = value
+                    m_statusFlags = value
                 End Set
             End Property
 
@@ -275,32 +305,23 @@ Namespace Ieee1344
 
         End Sub
 
-        Friend Shared Sub ParseBinaryImage(ByVal frameHeaderIstance As CommonFrameHeaderInstance, ByVal configurationFrame As ConfigurationFrame, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
+        Public Shared Function ParseBinaryImage(ByVal configurationFrame As ConfigurationFrame, ByVal binaryImage As Byte(), ByVal startIndex As Int32) As ICommonFrameHeader
 
-            If binaryImage(startIndex) <> SyncByte Then Throw New InvalidOperationException("Bad Data Stream: Expected sync byte &HAA as first byte in IEEE 1344 frame, got " & binaryImage(startIndex).ToString("x"c).PadLeft(2, "0"c))
-
-            With frameHeaderIstance
+            With New CommonFrameHeaderInstance
                 Dim secondOfCentury As UInt32
 
-                secondOfCentury = EndianOrder.BigEndian.ToUInt32(binaryImage, startIndex + 1)
-                .InternalSampleCount = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 5)
-                .InternalStatusFlags = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 7)
+                secondOfCentury = EndianOrder.BigEndian.ToUInt32(binaryImage, startIndex)
+                .InternalSampleCount = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 4)
+                .InternalStatusFlags = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 6)
 
-                If .FrameType = Ieee1344.FrameType.DataFrame Then
+                If .FrameType = Ieee1344.FrameType.DataFrame AndAlso configurationFrame IsNot Nothing Then
                     ' Data frames have subsecond time information
                     .Ticks = (New NtpTimeTag(secondOfCentury + SampleCount(.This) / (MaximumSampleCount / configurationFrame.Period) / configurationFrame.FrameRate)).ToDateTime.Ticks
                 Else
                     ' For other frames, the best timestamp you can get is down to the whole second
                     .Ticks = (New NtpTimeTag(secondOfCentury)).ToDateTime.Ticks
                 End If
-            End With
 
-        End Sub
-
-        Public Shared Function ParseBinaryImage(ByVal configurationFrame As ConfigurationFrame, ByVal binaryImage As Byte(), ByVal startIndex As Int32) As ICommonFrameHeader
-
-            With New CommonFrameHeaderInstance
-                ParseBinaryImage(.This, configurationFrame, binaryImage, startIndex)
                 Return .This
             End With
 
@@ -364,7 +385,7 @@ Namespace Ieee1344
 
         Public Shared Property IsFirstFrame(ByVal frameHeader As ICommonFrameHeader) As Boolean
             Get
-                Return frameHeader.InternalSampleCount And Bit12 = 0
+                Return (frameHeader.InternalSampleCount And Bit12) = 0
             End Get
             Set(ByVal value As Boolean)
                 If value Then
@@ -377,7 +398,7 @@ Namespace Ieee1344
 
         Public Shared Property IsLastFrame(ByVal frameHeader As ICommonFrameHeader) As Boolean
             Get
-                Return frameHeader.InternalSampleCount And Bit11 = 0
+                Return (frameHeader.InternalSampleCount And Bit11) = 0
             End Get
             Set(ByVal value As Boolean)
                 If value Then
@@ -405,7 +426,7 @@ Namespace Ieee1344
             Get
                 Return frameHeader.InternalStatusFlags And FrameLengthMask
             End Get
-            Private Set(ByVal value As Int16)
+            Set(ByVal value As Int16)
                 If value > MaximumFrameLength Then
                     Throw New OverflowException("Frame length value cannot exceed " & MaximumFrameLength)
                 Else
@@ -419,7 +440,7 @@ Namespace Ieee1344
                 ' Data length will be frame length minus common header length minus crc16
                 Return FrameLength(frameHeader) - BinaryLength - 2
             End Get
-            Private Set(ByVal value As Int16)
+            Set(ByVal value As Int16)
                 If value > MaximumDataLength Then
                     Throw New OverflowException("Data length value cannot exceed " & MaximumDataLength)
                 Else
@@ -430,7 +451,7 @@ Namespace Ieee1344
 
         Public Shared Property SynchronizationIsValid(ByVal frameHeader As ICommonFrameHeader) As Boolean
             Get
-                Return frameHeader.InternalStatusFlags And Bit15 = 0
+                Return (frameHeader.InternalStatusFlags And Bit15) = 0
             End Get
             Set(ByVal value As Boolean)
                 If value Then
@@ -443,7 +464,7 @@ Namespace Ieee1344
 
         Public Shared Property DataIsValid(ByVal frameHeader As ICommonFrameHeader) As Boolean
             Get
-                Return frameHeader.InternalStatusFlags And Bit14 = 0
+                Return (frameHeader.InternalStatusFlags And Bit14) = 0
             End Get
             Set(ByVal value As Boolean)
                 If value Then

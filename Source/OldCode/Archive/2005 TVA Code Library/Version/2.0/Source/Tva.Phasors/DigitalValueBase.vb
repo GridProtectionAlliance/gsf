@@ -46,8 +46,7 @@ Public MustInherit Class DigitalValueBase
     Protected Sub New(ByVal parent As IDataCell, ByVal digitalDefinition As IDigitalDefinition, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
         MyBase.New(parent, digitalDefinition)
-
-        m_value = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex)
+        ParseBinaryImage(Nothing, binaryImage, startIndex)
 
     End Sub
 
@@ -101,5 +100,11 @@ Public MustInherit Class DigitalValueBase
             Return buffer
         End Get
     End Property
+
+    Protected Overrides Sub ParseBodyImage(ByVal state As IChannelParsingState, ByVal binaryImage() As Byte, ByVal startIndex As Integer)
+
+        m_value = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex)
+
+    End Sub
 
 End Class

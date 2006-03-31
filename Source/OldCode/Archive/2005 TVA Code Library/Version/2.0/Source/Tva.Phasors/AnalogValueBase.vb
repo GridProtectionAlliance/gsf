@@ -52,12 +52,7 @@ Public MustInherit Class AnalogValueBase
     Protected Sub New(ByVal parent As IDataCell, ByVal analogDefinition As IAnalogDefinition, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
         MyBase.New(parent, analogDefinition)
-
-        If DataFormat = Phasors.DataFormat.FixedInteger Then
-            IntegerValue = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex)
-        Else
-            m_value = EndianOrder.BigEndian.ToSingle(binaryImage, startIndex)
-        End If
+        ParseBinaryImage(Nothing, binaryImage, startIndex)
 
     End Sub
 
@@ -121,5 +116,15 @@ Public MustInherit Class AnalogValueBase
             Return buffer
         End Get
     End Property
+
+    Protected Overrides Sub ParseBodyImage(ByVal state As IChannelParsingState, ByVal binaryImage() As Byte, ByVal startIndex As Integer)
+
+        If DataFormat = Phasors.DataFormat.FixedInteger Then
+            IntegerValue = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex)
+        Else
+            m_value = EndianOrder.BigEndian.ToSingle(binaryImage, startIndex)
+        End If
+
+    End Sub
 
 End Class

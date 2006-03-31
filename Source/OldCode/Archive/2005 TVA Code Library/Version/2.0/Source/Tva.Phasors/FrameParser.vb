@@ -532,13 +532,13 @@ Public Class FrameParser
 
     End Sub
 
-    Private Sub m_ieee1344FrameParser_ReceivedConfigurationFrame1(ByVal frame As Tva.Phasors.Ieee1344.ConfigurationFrame) Handles m_ieee1344FrameParser.ReceivedConfigurationFrame1
+    Private Sub m_ieee1344FrameParser_ReceivedCommonFrameHeader(ByVal frame As Ieee1344.ICommonFrameHeader) Handles m_ieee1344FrameParser.ReceivedCommonFrameHeader
 
         ProcessFrame(frame)
 
     End Sub
 
-    Private Sub m_ieee1344FrameParser_ReceivedConfigurationFrame2(ByVal frame As Tva.Phasors.Ieee1344.ConfigurationFrame) Handles m_ieee1344FrameParser.ReceivedConfigurationFrame2
+    Private Sub m_ieee1344FrameParser_ReceivedConfigurationFrame(ByVal frame As Tva.Phasors.Ieee1344.ConfigurationFrame) Handles m_ieee1344FrameParser.ReceivedConfigurationFrame
 
         ProcessFrame(frame)
 
@@ -547,6 +547,12 @@ Public Class FrameParser
     Private Sub m_ieee1344FrameParser_ReceivedDataFrame(ByVal frame As Tva.Phasors.Ieee1344.DataFrame) Handles m_ieee1344FrameParser.ReceivedDataFrame
 
         ProcessFrame(frame)
+
+    End Sub
+
+    Private Sub m_ieee1344FrameParser_ReceivedFrameBufferImage(ByVal binaryImage() As Byte, ByVal offset As Integer, ByVal length As Integer) Handles m_ieee1344FrameParser.ReceivedFrameBufferImage
+
+        RaiseEvent ReceivedFrameBufferImage(binaryImage, offset, length)
 
     End Sub
 

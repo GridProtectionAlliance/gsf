@@ -17,7 +17,6 @@
 
 Imports System.Text
 Imports Tva.Interop
-Imports Tva.Interop.Bit
 Imports Tva.Collections.Common
 Imports Tva.Phasors.Common
 Imports Tva.Phasors.IeeeC37_118.Common

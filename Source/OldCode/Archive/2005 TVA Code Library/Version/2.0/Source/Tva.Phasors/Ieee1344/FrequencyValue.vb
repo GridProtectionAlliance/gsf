@@ -38,16 +38,7 @@ Namespace Ieee1344
 
         Public Sub New(ByVal parent As IDataCell, ByVal frequencyDefinition As FrequencyDefinition, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
-            ' We bypass default parse procedures since IEEE 1344 can opt to exclude frequency and/or df/dt from data frame...
-            MyBase.New(parent, frequencyDefinition, 0, 0)
-
-            ' Note that IEEE 1344 only supports scaled integers (no need to worry about floating points)
-            If frequencyDefinition.FrequencyAvailable Then
-                UnscaledFrequency = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex)
-                startIndex += 2
-            End If
-
-            If frequencyDefinition.DfDtAvailable Then UnscaledDfDt = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex)
+            MyBase.New(parent, frequencyDefinition, binaryImage, startIndex)
 
         End Sub
 
@@ -68,6 +59,49 @@ Namespace Ieee1344
                 Return Me.GetType
             End Get
         End Property
+
+        Public Shadows Property Definition() As FrequencyDefinition
+            Get
+                Return MyBase.Definition
+            End Get
+            Set(ByVal value As FrequencyDefinition)
+                MyBase.Definition = value
+            End Set
+        End Property
+
+        Protected Overrides ReadOnly Property BodyLength() As UInt16
+            Get
+                Dim length As UInt16
+
+                If Definition.FrequencyAvailable Then length += 2
+                If Definition.DfDtAvailable Then length += 2
+
+                Return length
+            End Get
+        End Property
+
+        Protected Overrides ReadOnly Property BodyImage() As Byte()
+            Get
+                Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BodyLength)
+
+                If Definition.FrequencyAvailable Then EndianOrder.BigEndian.CopyBytes(UnscaledFrequency, buffer, 0)
+                If Definition.DfDtAvailable Then EndianOrder.BigEndian.CopyBytes(UnscaledDfDt, buffer, 2)
+
+                Return buffer
+            End Get
+        End Property
+
+        Protected Overrides Sub ParseBodyImage(ByVal state As IChannelParsingState, ByVal binaryImage() As Byte, ByVal startIndex As Integer)
+
+            ' Note that IEEE 1344 only supports scaled integers (no need to worry about floating points)
+            If Definition.FrequencyAvailable Then
+                UnscaledFrequency = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex)
+                startIndex += 2
+            End If
+
+            If Definition.DfDtAvailable Then UnscaledDfDt = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex)
+
+        End Sub
 
     End Class
 

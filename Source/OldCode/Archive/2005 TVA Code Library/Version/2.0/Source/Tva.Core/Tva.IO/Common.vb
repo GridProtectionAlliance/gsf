@@ -58,7 +58,7 @@ Namespace IO
         Public Shared Function CopyBuffer(ByVal buffer As Byte(), ByVal startIndex As Integer, ByVal length As Integer) As Byte()
 
             If startIndex = 0 AndAlso Buffer.Length = length Then
-                Return buffer
+                Return buffer.Clone()
             Else
                 Dim copiedBytes As Byte() = Array.CreateInstance(GetType(Byte), length)
                 System.Buffer.BlockCopy(buffer, 0, copiedBytes, 0, length)

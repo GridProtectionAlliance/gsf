@@ -92,6 +92,7 @@ Namespace IeeeC37_118
 
         Public Sub Start()
 
+            m_initialized = False
             m_bufferQueue.Start()
 
         End Sub
@@ -276,28 +277,18 @@ Namespace IeeeC37_118
                 Select Case parsedFrameHeader.FrameType
                     Case FrameType.DataFrame
                         ' We can only start parsing data frames once we have successfully received configuration file 2...
-                        If m_configurationFrame2 IsNot Nothing Then
-                            With New DataFrame(parsedFrameHeader, m_configurationFrame2, buffer, index)
-                                RaiseEvent ReceivedDataFrame(.This)
-                            End With
-                        End If
+                        If m_configurationFrame2 IsNot Nothing Then RaiseEvent ReceivedDataFrame(New DataFrame(parsedFrameHeader, m_configurationFrame2, buffer, index))
                     Case FrameType.ConfigurationFrame2
                         With New ConfigurationFrame(parsedFrameHeader, buffer, index)
                             m_configurationFrame2 = .This
                             RaiseEvent ReceivedConfigurationFrame2(.This)
                         End With
                     Case FrameType.ConfigurationFrame1
-                        With New ConfigurationFrame(parsedFrameHeader, buffer, index)
-                            RaiseEvent ReceivedConfigurationFrame1(.This)
-                        End With
+                        RaiseEvent ReceivedConfigurationFrame1(New ConfigurationFrame(parsedFrameHeader, buffer, index))
                     Case FrameType.HeaderFrame
-                        With New HeaderFrame(parsedFrameHeader, buffer, index)
-                            RaiseEvent ReceivedHeaderFrame(.This)
-                        End With
+                        RaiseEvent ReceivedHeaderFrame(New HeaderFrame(parsedFrameHeader, buffer, index))
                     Case FrameType.CommandFrame
-                        With New CommandFrame(parsedFrameHeader, buffer, index)
-                            RaiseEvent ReceivedCommandFrame(.This)
-                        End With
+                        RaiseEvent ReceivedCommandFrame(New CommandFrame(parsedFrameHeader, buffer, index))
                 End Select
 
                 index += parsedFrameHeader.FrameLength

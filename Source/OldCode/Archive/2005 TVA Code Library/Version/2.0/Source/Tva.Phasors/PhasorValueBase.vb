@@ -8,7 +8,7 @@
 '       Phone: 423/751-2827
 '       Email: jrcarrol@tva.gov
 '
-'  Note: Phasors are stored rectangular format internally
+'  Note: Phasors are stored in rectangular format internally
 '
 '  Code Modification History:
 '  -----------------------------------------------------------------------------------------------------
@@ -130,31 +130,7 @@ Public MustInherit Class PhasorValueBase
     Protected Sub New(ByVal parent As IDataCell, ByVal phasorDefinition As IPhasorDefinition, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
         MyBase.New(parent, phasorDefinition)
-
-        If CoordinateFormat = Phasors.CoordinateFormat.Rectangular Then
-            If DataFormat = Phasors.DataFormat.FixedInteger Then
-                UnscaledReal = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex)
-                UnscaledImaginary = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 2)
-            Else
-                m_real = EndianOrder.BigEndian.ToSingle(binaryImage, startIndex)
-                m_imaginary = EndianOrder.BigEndian.ToSingle(binaryImage, startIndex + 4)
-            End If
-        Else
-            Dim magnitude As Single
-            Dim angle As Single
-
-            If DataFormat = Phasors.DataFormat.FixedInteger Then
-                magnitude = Convert.ToSingle(EndianOrder.BigEndian.ToUInt16(binaryImage, startIndex))
-                angle = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 2) * 180 / System.Math.PI / 10000
-            Else
-                magnitude = EndianOrder.BigEndian.ToSingle(binaryImage, startIndex)
-                angle = EndianOrder.BigEndian.ToSingle(binaryImage, startIndex + 4) * 180 / System.Math.PI
-            End If
-
-            m_real = CalculateRealComponent(angle, magnitude)
-            m_imaginary = CalculateImaginaryComponent(angle, magnitude)
-        End If
-
+        ParseBinaryImage(Nothing, binaryImage, startIndex)
         m_compositeValues = New CompositeValues(2)
 
     End Sub
@@ -318,5 +294,33 @@ Public MustInherit Class PhasorValueBase
             Return buffer
         End Get
     End Property
+
+    Protected Overrides Sub ParseBodyImage(ByVal state As IChannelParsingState, ByVal binaryImage() As Byte, ByVal startIndex As Integer)
+
+        If CoordinateFormat = Phasors.CoordinateFormat.Rectangular Then
+            If DataFormat = Phasors.DataFormat.FixedInteger Then
+                UnscaledReal = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex)
+                UnscaledImaginary = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 2)
+            Else
+                m_real = EndianOrder.BigEndian.ToSingle(binaryImage, startIndex)
+                m_imaginary = EndianOrder.BigEndian.ToSingle(binaryImage, startIndex + 4)
+            End If
+        Else
+            Dim magnitude As Single
+            Dim angle As Single
+
+            If DataFormat = Phasors.DataFormat.FixedInteger Then
+                magnitude = Convert.ToSingle(EndianOrder.BigEndian.ToUInt16(binaryImage, startIndex))
+                angle = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 2) * 180 / System.Math.PI / 10000
+            Else
+                magnitude = EndianOrder.BigEndian.ToSingle(binaryImage, startIndex)
+                angle = EndianOrder.BigEndian.ToSingle(binaryImage, startIndex + 4) * 180 / System.Math.PI
+            End If
+
+            m_real = CalculateRealComponent(angle, magnitude)
+            m_imaginary = CalculateImaginaryComponent(angle, magnitude)
+        End If
+
+    End Sub
 
 End Class

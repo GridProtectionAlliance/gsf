@@ -15,7 +15,7 @@
 '
 '*******************************************************************************************************
 
-Imports System.Text
+Imports Tva.Collections.Common
 Imports Tva.Interop
 Imports Tva.Interop.Bit
 
@@ -72,26 +72,26 @@ Namespace Ieee1344
 
         Public Property FrequencyAvailable() As Boolean
             Get
-                Return m_statusFlags And Bit8 > 0
+                Return (m_statusFlags And Bit8) = 0
             End Get
             Set(ByVal value As Boolean)
                 If value Then
-                    m_statusFlags = m_statusFlags Or Bit8
-                Else
                     m_statusFlags = m_statusFlags And Not Bit8
+                Else
+                    m_statusFlags = m_statusFlags Or Bit8
                 End If
             End Set
         End Property
 
         Public Property DfDtAvailable() As Boolean
             Get
-                Return m_statusFlags And Bit9 > 0
+                Return (m_statusFlags And Bit9) = 0
             End Get
             Set(ByVal value As Boolean)
                 If value Then
-                    m_statusFlags = m_statusFlags Or Bit9
-                Else
                     m_statusFlags = m_statusFlags And Not Bit9
+                Else
+                    m_statusFlags = m_statusFlags Or Bit9
                 End If
             End Set
         End Property
@@ -131,7 +131,7 @@ Namespace Ieee1344
         Protected Overrides Sub ParseBodyImage(ByVal state As IChannelParsingState, ByVal binaryImage() As Byte, ByVal startIndex As Int32)
 
             m_statusFlags = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex)
-            Parent.NominalFrequency = IIf(m_statusFlags And Bit0 > 0, LineFrequency.Hz50, LineFrequency.Hz60)
+            Parent.NominalFrequency = IIf((m_statusFlags And Bit0) > 0, LineFrequency.Hz50, LineFrequency.Hz60)
 
         End Sub
 

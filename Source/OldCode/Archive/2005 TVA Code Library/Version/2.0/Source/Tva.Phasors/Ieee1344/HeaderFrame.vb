@@ -18,6 +18,7 @@
 Imports Tva.DateTime
 Imports Tva.Collections.Common
 Imports Tva.Phasors.Ieee1344.Common
+Imports Tva.IO.Compression.Common
 
 Namespace Ieee1344
 
@@ -29,7 +30,7 @@ Namespace Ieee1344
 
         Private m_idCode As UInt64
         Private m_sampleCount As Int16
-        Private m_status As Int16
+        Private m_statusFlags As Int16
 
         Public Sub New()
 
@@ -132,12 +133,19 @@ Namespace Ieee1344
 
         Private Property InternalStatusFlags() As Int16 Implements ICommonFrameHeader.InternalStatusFlags
             Get
-                Return m_status
+                Return m_statusFlags
             End Get
             Set(ByVal value As Int16)
-                m_status = value
+                m_statusFlags = value
             End Set
         End Property
+
+        Protected Overrides Function CalculateChecksum(ByVal buffer() As Byte, ByVal offset As Int32, ByVal length As Int32) As UInt16
+
+            ' IEEE 1344 uses CRC16 to calculate checksum for frames
+            Return CRC16(UInt16.MaxValue, buffer, offset, length)
+
+        End Function
 
         Protected Overrides ReadOnly Property HeaderLength() As UInt16
             Get

@@ -56,16 +56,7 @@ Public MustInherit Class FrequencyValueBase
     Protected Sub New(ByVal parent As IDataCell, ByVal frequencyDefinition As IFrequencyDefinition, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
         MyBase.New(parent, frequencyDefinition)
-
-        If DataFormat = Phasors.DataFormat.FixedInteger Then
-            UnscaledFrequency = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex)
-            UnscaledDfDt = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 2)
-        Else
-            With frequencyDefinition
-                m_frequency = EndianOrder.BigEndian.ToSingle(binaryImage, startIndex)
-                m_dfdt = EndianOrder.BigEndian.ToSingle(binaryImage, startIndex + 4)
-            End With
-        End If
+        ParseBinaryImage(Nothing, binaryImage, startIndex)
 
     End Sub
 
@@ -150,14 +141,24 @@ Public MustInherit Class FrequencyValueBase
                 EndianOrder.BigEndian.CopyBytes(UnscaledFrequency, buffer, 0)
                 EndianOrder.BigEndian.CopyBytes(UnscaledDfDt, buffer, 2)
             Else
-                With Definition
-                    EndianOrder.BigEndian.CopyBytes(m_frequency, buffer, 0)
-                    EndianOrder.BigEndian.CopyBytes(m_dfdt, buffer, 4)
-                End With
+                EndianOrder.BigEndian.CopyBytes(m_frequency, buffer, 0)
+                EndianOrder.BigEndian.CopyBytes(m_dfdt, buffer, 4)
             End If
 
             Return buffer
         End Get
     End Property
+
+    Protected Overrides Sub ParseBodyImage(ByVal state As IChannelParsingState, ByVal binaryImage() As Byte, ByVal startIndex As Integer)
+
+        If DataFormat = Phasors.DataFormat.FixedInteger Then
+            UnscaledFrequency = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex)
+            UnscaledDfDt = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 2)
+        Else
+            m_frequency = EndianOrder.BigEndian.ToSingle(binaryImage, startIndex)
+            m_dfdt = EndianOrder.BigEndian.ToSingle(binaryImage, startIndex + 4)
+        End If
+
+    End Sub
 
 End Class

@@ -17,8 +17,6 @@
 
 Imports System.Text
 Imports Tva.Interop
-Imports Tva.Interop.Bit
-Imports Tva.Collections.Common
 Imports Tva.Phasors.Common
 Imports Tva.Phasors.Ieee1344.Common
 
@@ -75,12 +73,6 @@ Namespace Ieee1344
             End Get
         End Property
 
-        Protected Overrides ReadOnly Property HeaderLength() As UInt16
-            Get
-                Return MyBase.HeaderLength + 10
-            End Get
-        End Property
-
         Public Shadows Property IDCode() As UInt64
             Get
                 ' IEEE 1344 only allows one PMU, so we share ID code with parent frame...
@@ -96,6 +88,12 @@ Namespace Ieee1344
                     MyBase.IDCode = Convert.ToUInt16(value)
                 End If
             End Set
+        End Property
+
+        Protected Overrides ReadOnly Property HeaderLength() As UInt16
+            Get
+                Return MyBase.HeaderLength + 12
+            End Get
         End Property
 
         Protected Overrides ReadOnly Property HeaderImage() As Byte()

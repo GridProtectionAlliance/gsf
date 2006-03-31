@@ -16,7 +16,6 @@
 '*******************************************************************************************************
 
 Imports System.Text
-Imports Tva.Interop.Bit
 Imports Tva.Collections.Common
 Imports Tva.Phasors.Common
 

@@ -24,8 +24,8 @@ Namespace Ieee1344
 
         Public Sub New()
 
-            ' IEEE 1344 only supports a single PMU - so there should only be one cell
-            MyBase.New(1, False)
+            ' IEEE 1344 only supports a single PMU - so there should only be one cell - since there's only one cell, cell lengths will be constant :)
+            MyBase.New(1, True)
 
         End Sub
 

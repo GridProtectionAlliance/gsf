@@ -15,7 +15,6 @@
 '
 '*******************************************************************************************************
 
-Imports System.Text
 Imports Tva.Interop
 Imports Tva.Interop.Bit
 
