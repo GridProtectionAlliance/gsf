@@ -21,6 +21,7 @@
 '
 '*******************************************************************************************************
 
+Imports Tva.Common
 Imports Tva.Interop
 
 Namespace Math
@@ -35,6 +36,26 @@ Namespace Math
             ' This class contains only global functions and is not meant to be instantiated
 
         End Sub
+
+        ''' <summary>Ensures parameter passed to a function is not zero - returns -1 if <paramref name="testValue">testValue</paramref> is zero</summary>
+        ''' <param name="testValue">Value to test for zero</param>
+        ''' <returns>A non-zero value</returns>
+        Public Shared Function NotZero(ByVal testValue As Double) As Double
+
+            Return NotZero(testValue, -1.0#)
+
+        End Function
+
+        ''' <summary>Ensures parameter passed to a function is not zero</summary>
+        ''' <param name="testValue">Value to test for zero</param>
+        ''' <param name="nonZeroReturnValue">Value to return if <paramref name="testValue">testValue</paramref> is zero</param>
+        ''' <returns>A non-zero value</returns>
+        Public Shared Function NotZero(Of T As Structure)(ByVal testValue As T, ByVal nonZeroReturnValue As T) As T
+
+            If nonZeroReturnValue.Equals(0) Then Throw New ArgumentException("nonZeroReturnValue cannot be zero!")
+            Return IIf(testValue.Equals(0), nonZeroReturnValue, testValue)
+
+        End Function
 
         ''' <summary>Calculates byte length (8-bit) XOR based check-sum on specified portion of a buffer.</summary>
         ''' <param name="data">Data buffer to perform XOR check-sum on</param>
