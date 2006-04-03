@@ -44,7 +44,7 @@ Namespace Text
         ''' <returns>specified Unicode character in proper Regular Expression format</returns>
         Public Shared Function DecodeRegexChar(ByVal value As String) As Char
 
-            Return Convert.ToChar(Convert.ToInt16(value.Replace("\u", "&H")))
+            Return Convert.ToChar(Convert.ToInt16(value.Replace("\u", "0x"), 16))
 
         End Function
 
