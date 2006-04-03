@@ -93,25 +93,7 @@ Namespace Data
         ' Executes given Sql update query for given connection
         Public Shared Function ExecuteNonQuery(ByVal sql As String, ByVal connection As OleDbConnection, ByVal timeout As Integer) As Integer
 
-            Return ExecuteNonQuery(sql, connection, timeout, DirectCast(Nothing, Object()))
-
-        End Function
-
-        <Obsolete("This function will be removed from future releases. Use the overload that takes a ParamArray of Object for the parameter 'parameters'.")> _
-        Public Shared Function ExecuteNonQuery(ByVal sql As String, ByVal connection As OleDbConnection, ByVal timeout As Integer, ByVal ParamArray parameters As OleDbParameter()) As Integer
-
-            Dim command As New OleDbCommand(sql, connection)
-            command.CommandTimeout = timeout
-
-            If Not parameters Is Nothing Then
-                If parameters.Length > 0 Then
-                    For Each param As OleDbParameter In parameters
-                        command.Parameters.Add(param)
-                    Next
-                End If
-            End If
-
-            Return command.ExecuteNonQuery()
+            Return ExecuteNonQuery(sql, connection, timeout, Nothing)
 
         End Function
 
@@ -129,25 +111,7 @@ Namespace Data
 
         Public Shared Function ExecuteNonQuery(ByVal sql As String, ByVal connection As SqlConnection, ByVal timeout As Integer) As Integer
 
-            Return ExecuteNonQuery(sql, connection, timeout, DirectCast(Nothing, Object()))
-
-        End Function
-
-        <Obsolete("This function will be removed from future releases. Use the overload that takes a ParamArray of Object for the parameter 'parameters'.")> _
-        Public Shared Function ExecuteNonQuery(ByVal sql As String, ByVal connection As SqlConnection, ByVal timeout As Integer, ByVal ParamArray parameters As SqlParameter()) As Integer
-
-            Dim command As New SqlCommand(sql, connection)
-            command.CommandTimeout = timeout
-
-            If Not parameters Is Nothing Then
-                If parameters.Length > 0 Then
-                    For Each param As SqlParameter In parameters
-                        command.Parameters.Add(param)
-                    Next
-                End If
-            End If
-
-            Return command.ExecuteNonQuery()
+            Return ExecuteNonQuery(sql, connection, timeout, Nothing)
 
         End Function
 
@@ -166,24 +130,7 @@ Namespace Data
         ' Executes given Sql update query for given connection
         Public Shared Function ExecuteNonQuery(ByVal sql As String, ByVal connection As OracleConnection) As Integer
 
-            Return ExecuteNonQuery(sql, connection, DirectCast(Nothing, Object()))
-
-        End Function
-
-        <Obsolete("This function will be removed from future releases. Use the overload that takes a ParamArray of Object for the parameter 'parameters'.")> _
-        Public Shared Function ExecuteNonQuery(ByVal sql As String, ByVal connection As OracleConnection, ByVal ParamArray parameters As OracleParameter()) As Integer
-
-            Dim command As New OracleCommand(sql, connection)
-
-            If Not parameters Is Nothing Then
-                If parameters.Length > 0 Then
-                    For Each param As OracleParameter In parameters
-                        command.Parameters.Add(param)
-                    Next
-                End If
-            End If
-
-            Return command.ExecuteNonQuery()
+            Return ExecuteNonQuery(sql, connection, Nothing)
 
         End Function
 
@@ -203,25 +150,7 @@ Namespace Data
         ' Executes given Sql data query for given connection
         Public Shared Function ExecuteReader(ByVal sql As String, ByVal connection As OleDbConnection, ByVal behavior As CommandBehavior, ByVal timeout As Integer) As OleDbDataReader
 
-            Return ExecuteReader(sql, connection, behavior, timeout, DirectCast(Nothing, Object()))
-
-        End Function
-
-        <Obsolete("This function will be removed from future releases. Use the overload that takes a ParamArray of Object for the parameter 'parameters'.")> _
-        Public Shared Function ExecuteReader(ByVal sql As String, ByVal connection As OleDbConnection, ByVal behavior As CommandBehavior, ByVal timeout As Integer, ByVal ParamArray parameters As OleDbParameter()) As OleDbDataReader
-
-            Dim command As New OleDbCommand(sql, connection)
-            command.CommandTimeout = timeout
-
-            If Not parameters Is Nothing Then
-                If parameters.Length > 0 Then
-                    For Each param As OleDbParameter In parameters
-                        command.Parameters.Add(param)
-                    Next
-                End If
-            End If
-
-            Return command.ExecuteReader(behavior)
+            Return ExecuteReader(sql, connection, behavior, timeout, Nothing)
 
         End Function
 
@@ -240,25 +169,7 @@ Namespace Data
         ' Executes given Sql data query for given connection
         Public Shared Function ExecuteReader(ByVal sql As String, ByVal connection As SqlConnection, ByVal behavior As CommandBehavior, ByVal timeout As Integer) As SqlDataReader
 
-            Return ExecuteReader(sql, connection, behavior, timeout, DirectCast(Nothing, Object()))
-
-        End Function
-
-        <Obsolete("This function will be removed from future releases. Use the overload that takes a ParamArray of Object for the parameter 'parameters'.")> _
-        Public Shared Function ExecuteReader(ByVal sql As String, ByVal connection As SqlConnection, ByVal behavior As CommandBehavior, ByVal timeout As Integer, ByVal ParamArray parameters As SqlParameter()) As SqlDataReader
-
-            Dim command As New SqlCommand(sql, connection)
-            command.CommandTimeout = timeout
-
-            If Not parameters Is Nothing Then
-                If parameters.Length > 0 Then
-                    For Each param As SqlParameter In parameters
-                        command.Parameters.Add(param)
-                    Next
-                End If
-            End If
-
-            Return command.ExecuteReader(behavior)
+            Return ExecuteReader(sql, connection, behavior, timeout, Nothing)
 
         End Function
 
@@ -277,24 +188,7 @@ Namespace Data
         ' Executes given Sql data query for given connection
         Public Shared Function ExecuteReader(ByVal sql As String, ByVal connection As OracleConnection, ByVal behavior As CommandBehavior) As OracleDataReader
 
-            Return ExecuteReader(sql, connection, behavior, DirectCast(Nothing, Object()))
-
-        End Function
-
-        <Obsolete("This function will be removed from future releases. Use the overload that takes a ParamArray of Object for the parameter 'parameters'.")> _
-        Public Shared Function ExecuteReader(ByVal sql As String, ByVal connection As OracleConnection, ByVal behavior As CommandBehavior, ByVal ParamArray parameters As OracleParameter()) As OracleDataReader
-
-            Dim command As New OracleCommand(sql, Connection)
-
-            If Not parameters Is Nothing Then
-                If parameters.Length > 0 Then
-                    For Each param As OracleParameter In parameters
-                        command.Parameters.Add(param)
-                    Next
-                End If
-            End If
-
-            Return command.ExecuteReader(behavior)
+            Return ExecuteReader(sql, connection, behavior, Nothing)
 
         End Function
 
@@ -314,25 +208,7 @@ Namespace Data
         ' Executes given Sql scalar query for given connection
         Public Shared Function ExecuteScalar(ByVal sql As String, ByVal connection As OleDbConnection, ByVal timeout As Integer) As Object
 
-            Return ExecuteScalar(sql, connection, timeout, DirectCast(Nothing, Object()))
-
-        End Function
-
-        <Obsolete("This function will be removed from future releases. Use the overload that takes a ParamArray of Object for the parameter 'parameters'.")> _
-        Public Shared Function ExecuteScalar(ByVal sql As String, ByVal connection As OleDbConnection, ByVal timeout As Integer, ByVal ParamArray parameters As OleDbParameter()) As Object
-
-            Dim command As New OleDbCommand(sql, connection)
-            command.CommandTimeout = timeout
-
-            If Not parameters Is Nothing Then
-                If Parameters.Length > 0 Then
-                    For Each param As OleDbParameter In parameters
-                        command.Parameters.Add(param)
-                    Next
-                End If
-            End If
-
-            Return command.ExecuteScalar()
+            Return ExecuteScalar(sql, connection, timeout, Nothing)
 
         End Function
 
@@ -351,25 +227,7 @@ Namespace Data
         ' Executes given Sql scalar query for given connection
         Public Shared Function ExecuteScalar(ByVal sql As String, ByVal connection As SqlConnection, ByVal timeout As Integer) As Object
 
-            Return ExecuteScalar(sql, connection, timeout, DirectCast(Nothing, Object()))
-
-        End Function
-
-        <Obsolete("This function will be removed from future releases. Use the overload that takes a ParamArray of Object for the parameter 'parameters'.")> _
-        Public Shared Function ExecuteScalar(ByVal sql As String, ByVal connection As SqlConnection, ByVal timeout As Integer, ByVal ParamArray parameters As SqlParameter()) As Object
-
-            Dim command As New SqlCommand(sql, connection)
-            command.CommandTimeout = timeout
-
-            If Not parameters Is Nothing Then
-                If parameters.Length > 0 Then
-                    For Each param As SqlParameter In parameters
-                        command.Parameters.Add(param)
-                    Next
-                End If
-            End If
-
-            Return command.ExecuteScalar()
+            Return ExecuteScalar(sql, connection, timeout, Nothing)
 
         End Function
 
@@ -388,24 +246,7 @@ Namespace Data
         ' Executes given Sql scalar query for given connection
         Public Shared Function ExecuteScalar(ByVal sql As String, ByVal connection As OracleConnection) As Object
 
-            Return ExecuteScalar(sql, connection, DirectCast(Nothing, Object()))
-
-        End Function
-
-        <Obsolete("This function will be removed from future releases. Use the overload that takes a ParamArray of Object for the parameter 'parameters'.")> _
-        Public Shared Function ExecuteScalar(ByVal sql As String, ByVal connection As OracleConnection, ByVal ParamArray parameters As OracleParameter()) As Object
-
-            Dim command As New OracleCommand(sql, Connection)
-
-            If Not parameters Is Nothing Then
-                If parameters.Length > 0 Then
-                    For Each param As OracleParameter In parameters
-                        command.Parameters.Add(param)
-                    Next
-                End If
-            End If
-
-            Return command.ExecuteScalar()
+            Return ExecuteScalar(sql, connection, Nothing)
 
         End Function
 
@@ -425,17 +266,7 @@ Namespace Data
         ' Return a single row of data given a Sql statement and connection
         Public Shared Function RetrieveRow(ByVal sql As String, ByVal connection As OleDbConnection, ByVal timeout As Integer) As DataRow
 
-            Return RetrieveRow(sql, connection, timeout, DirectCast(Nothing, Object()))
-
-        End Function
-
-        <Obsolete("This function will be removed from future releases. Use the overload that takes a ParamArray of Object for the parameter 'parameters'.")> _
-        Public Shared Function RetrieveRow(ByVal sql As String, ByVal connection As OleDbConnection, ByVal timeout As Integer, ByVal ParamArray parameters As OleDbParameter()) As DataRow
-
-            With RetrieveData(sql, connection, 0, 1, timeout, DirectCast(parameters, Object()))
-                If .Rows.Count = 0 Then .Rows.Add(.NewRow())
-                Return .Rows(0)
-            End With
+            Return RetrieveRow(sql, connection, timeout, Nothing)
 
         End Function
 
@@ -453,17 +284,7 @@ Namespace Data
         ' Return a single row of data given a Sql statement and connection
         Public Shared Function RetrieveRow(ByVal sql As String, ByVal connection As SqlConnection, ByVal timeout As Integer) As DataRow
 
-            Return RetrieveRow(sql, connection, timeout, DirectCast(Nothing, Object()))
-
-        End Function
-
-        <Obsolete("This function will be removed from future releases. Use the overload that takes a ParamArray of Object for the parameter 'parameters'.")> _
-        Public Shared Function RetrieveRow(ByVal sql As String, ByVal connection As SqlConnection, ByVal timeout As Integer, ByVal ParamArray parameters As SqlParameter()) As DataRow
-
-            With RetrieveData(sql, connection, 0, 1, timeout, DirectCast(parameters, Object()))
-                If .Rows.Count = 0 Then .Rows.Add(.NewRow())
-                Return .Rows(0)
-            End With
+            Return RetrieveRow(sql, connection, timeout, Nothing)
 
         End Function
 
@@ -481,17 +302,7 @@ Namespace Data
         ' Return a single row of data given a Sql statement and connection
         Public Shared Function RetrieveRow(ByVal sql As String, ByVal connection As OracleConnection) As DataRow
 
-            Return RetrieveRow(sql, connection, DirectCast(Nothing, Object()))
-
-        End Function
-
-        <Obsolete("This function will be removed from future releases. Use the overload that takes a ParamArray of Object for the parameter 'parameters'.")> _
-        Public Shared Function RetrieveRow(ByVal sql As String, ByVal connection As OracleConnection, ByVal ParamArray parameters As OracleParameter()) As DataRow
-
-            With RetrieveData(sql, connection, 0, 1, DirectCast(parameters, Object()))
-                If .Rows.Count = 0 Then .Rows.Add(.NewRow())
-                Return .Rows(0)
-            End With
+            Return RetrieveRow(sql, connection, Nothing)
 
         End Function
 
@@ -511,14 +322,7 @@ Namespace Data
         ' Return a data table given a Sql statement and connection
         Public Shared Function RetrieveData(ByVal sql As String, ByVal connection As OleDbConnection, ByVal startRow As Integer, ByVal maxRows As Integer, ByVal timeout As Integer) As DataTable
 
-            Return RetrieveData(sql, connection, startRow, maxRows, timeout, DirectCast(Nothing, Object()))
-
-        End Function
-
-        <Obsolete("This function will be removed from future releases. Use the overload that takes a ParamArray of Object for the parameter 'parameters'.")> _
-        Public Shared Function RetrieveData(ByVal sql As String, ByVal connection As OleDbConnection, ByVal startRow As Integer, ByVal maxRows As Integer, ByVal timeout As Integer, ByVal ParamArray parameters As OleDbParameter()) As DataTable
-
-            Return RetrieveDataSet(sql, connection, startRow, maxRows, timeout, DirectCast(parameters, Object())).Tables(0)
+            Return RetrieveData(sql, connection, startRow, maxRows, timeout, Nothing)
 
         End Function
 
@@ -533,14 +337,7 @@ Namespace Data
         ' Return a data table given a Sql statement and connection
         Public Shared Function RetrieveData(ByVal sql As String, ByVal connection As SqlConnection, ByVal startRow As Integer, ByVal maxRows As Integer, ByVal timeout As Integer) As DataTable
 
-            Return RetrieveData(sql, connection, startRow, maxRows, timeout, DirectCast(Nothing, Object()))
-
-        End Function
-
-        <Obsolete("This function will be removed from future releases. Use the overload that takes a ParamArray of Object for the parameter 'parameters'.")> _
-        Public Shared Function RetrieveData(ByVal sql As String, ByVal connection As SqlConnection, ByVal startRow As Integer, ByVal maxRows As Integer, ByVal timeout As Integer, ByVal ParamArray parameters As SqlParameter()) As DataTable
-
-            Return RetrieveDataSet(sql, connection, startRow, maxRows, timeout, parameters).Tables(0)
+            Return RetrieveData(sql, connection, startRow, maxRows, timeout, Nothing)
 
         End Function
 
@@ -555,14 +352,7 @@ Namespace Data
         ' Return a data table given a Sql statement and connection
         Public Shared Function RetrieveData(ByVal sql As String, ByVal connection As OracleConnection, ByVal startRow As Integer, ByVal maxRows As Integer) As DataTable
 
-            Return RetrieveData(sql, connection, startRow, maxRows, DirectCast(Nothing, Object()))
-
-        End Function
-
-        <Obsolete("This function will be removed from future releases. Use the overload that takes a ParamArray of Object for the parameter 'parameters'.")> _
-        Public Shared Function RetrieveData(ByVal sql As String, ByVal connection As OracleConnection, ByVal startRow As Integer, ByVal maxRows As Integer, ByVal ParamArray parameters As OracleParameter()) As DataTable
-
-            Return RetrieveDataSetWithParameters(sql, connection, startRow, maxRows, parameters).Tables(0)
+            Return RetrieveData(sql, connection, startRow, maxRows, Nothing)
 
         End Function
 
@@ -570,34 +360,12 @@ Namespace Data
         '                       base DataTable that is linked to the underlying DataSet
         Public Shared Function RetrieveData(ByVal sql As String, ByVal connection As OracleConnection, ByVal startRow As Integer, ByVal maxRows As Integer, ByVal ParamArray parameters As Object()) As DataTable
 
-            Return RetrieveDataSetWithParameters(sql, connection, startRow, maxRows, parameters).Tables(0)
+            Return RetrieveDataSet(sql, connection, startRow, maxRows, parameters).Tables(0)
 
         End Function
 #End Region
 
 #Region "RetrieveDataSet Overloaded Functions"
-        <Obsolete("This function will be removed from future releases. Use the overload that takes a ParamArray of Object for the parameter 'parameters'.")> _
-        Public Shared Function RetrieveDataSet(ByVal sql As String, ByVal connection As OleDbConnection, ByVal startRow As Integer, ByVal maxRows As Integer, ByVal timeout As Integer, ByVal ParamArray parameters As OleDbParameter()) As DataSet
-
-            Dim command As New OleDbCommand(sql, connection)
-            command.CommandTimeout = timeout
-
-            If Not parameters Is Nothing Then
-                If parameters.Length > 0 Then
-                    For Each param As OleDbParameter In parameters
-                        command.Parameters.Add(param)
-                    Next
-                End If
-            End If
-
-            Dim dataAdapter As New OleDbDataAdapter(command)
-            Dim data As New DataSet("Temp")
-            dataAdapter.Fill(data, startRow, maxRows, "Table1")
-
-            Return data
-
-        End Function
-
         ' tmshults 12/10/2004 - Added this method as an easy way to populate a DataSet with a StoredProc call
         '                       This takes the given values and then populates the appropriate Parameters for
         '                       the StoredProc.
@@ -656,46 +424,23 @@ Namespace Data
 
         Public Shared Function RetrieveDataSet(ByVal sql As String, ByVal connection As OracleConnection, ByVal startRow As Integer, ByVal maxRows As Integer) As DataSet
 
-            Return RetrieveDataSetWithParameters(sql, connection, startRow, maxRows, DirectCast(Nothing, OracleParameter()))
-
-        End Function
-
-        Public Shared Function RetrieveDataSetWithParameters(ByVal Sql As String, ByVal Connection As OracleConnection, ByVal StartRow As Integer, ByVal MaxRows As Integer, ByVal ParamArray Parameters As OracleParameter()) As DataSet
-
-            Dim cmd As New OracleCommand(Sql, Connection)
-
-            If Not Parameters Is Nothing Then
-                If Parameters.Length > 0 Then
-                    For Each Param As OracleParameter In Parameters
-                        cmd.Parameters.Add(Param)
-                    Next
-                End If
-            End If
-
-            Dim da As New OracleDataAdapter(cmd)
-            Dim ds As New DataSet("Temp")
-
-            da.Fill(ds, StartRow, MaxRows, "Table1")
-
-            Return ds
+            Return RetrieveDataSet(sql, connection, startRow, maxRows, Nothing)
 
         End Function
 
         ' tmshults 12/10/2004 - Added this method as an easy way to populate a DataSet with a StoredProc call
         '                       This takes the given values and then populates the appropriate Parameters for
         '                       the StoredProc.
-        Public Shared Function RetrieveDataSetWithParameters(ByVal StoredProcName As String, ByVal Connection As OracleConnection, ByVal StartRow As Integer, ByVal MaxRows As Integer, ByVal ParamArray Parameters As Object()) As DataSet
+        Public Shared Function RetrieveDataSet(ByVal sql As String, ByVal connection As OracleConnection, ByVal startRow As Integer, ByVal maxRows As Integer, ByVal ParamArray parameters As Object()) As DataSet
 
-            Dim cmd As New OracleCommand(StoredProcName, Connection)
+            Dim command As New OracleCommand(sql, connection)
+            FillStoredProcParameters(command, ConnectionType.OracleClient, parameters)
 
-            FillStoredProcParameters(cmd, ConnectionType.OracleClient, Parameters)
+            Dim dataAdapter As New OracleDataAdapter(command)
+            Dim data As New DataSet("Temp")
+            dataAdapter.Fill(data, startRow, maxRows, "Table1")
 
-            Dim da As New OracleDataAdapter(cmd)
-            Dim ds As New DataSet("Temp")
-
-            da.Fill(ds, StartRow, MaxRows, "Table1")
-
-            Return ds
+            Return Data
 
         End Function
 #End Region
@@ -744,42 +489,40 @@ Namespace Data
         End Sub
 
         'Pinal Patel 04/06/05 - Updates the underlying data source of the specified data table.
-        Public Shared Function UpdateData(ByVal SourceData As DataTable, ByVal SourceSql As String, ByVal Connection As SqlConnection) As Integer
+        Public Shared Function UpdateData(ByVal sourceData As DataTable, ByVal sourceSql As String, ByVal connection As SqlConnection) As Integer
 
-            Dim da As SqlDataAdapter = New SqlDataAdapter(SourceSql, Connection)
-            Dim cb As SqlCommandBuilder = New SqlCommandBuilder(da)
-            Return da.Update(SourceData)
-
-        End Function
-
-        'Pinal Patel 04/06/05 - Updates the underlying data source of the specified data table.
-        Public Shared Function UpdateData(ByVal SourceData As DataTable, ByVal SourceSql As String, ByVal Connection As OleDbConnection) As Integer
-
-            Dim da As OleDbDataAdapter = New OleDbDataAdapter(SourceSql, Connection)
-            Dim cb As OleDbCommandBuilder = New OleDbCommandBuilder(da)
-            Return da.Update(SourceData)
+            Dim dataAdapter As SqlDataAdapter = New SqlDataAdapter(sourceSql, Connection)
+            Dim commandBuilder As SqlCommandBuilder = New SqlCommandBuilder(dataAdapter)
+            Return dataAdapter.Update(sourceData)
 
         End Function
 
         'Pinal Patel 04/06/05 - Updates the underlying data source of the specified data table.
-        Public Shared Function UpdateData(ByVal SourceData As DataTable, ByVal SourceSql As String, ByVal Connection As OracleConnection) As Integer
+        Public Shared Function UpdateData(ByVal sourceData As DataTable, ByVal sourceSql As String, ByVal connection As OleDbConnection) As Integer
 
-            Dim da As OracleDataAdapter = New OracleDataAdapter(SourceSql, Connection)
-            Dim cb As OracleCommandBuilder = New OracleCommandBuilder(da)
-            Return da.Update(SourceData)
+            Dim dataAdapter As OleDbDataAdapter = New OleDbDataAdapter(sourceSql, Connection)
+            Dim commandBuilder As OleDbCommandBuilder = New OleDbCommandBuilder(dataAdapter)
+            Return dataAdapter.Update(sourceData)
+
+        End Function
+
+        'Pinal Patel 04/06/05 - Updates the underlying data source of the specified data table.
+        Public Shared Function UpdateData(ByVal sourceData As DataTable, ByVal sourceSql As String, ByVal connection As OracleConnection) As Integer
+
+            Dim dataAdapter As OracleDataAdapter = New OracleDataAdapter(sourceSql, Connection)
+            Dim commandBuilder As OracleCommandBuilder = New OracleCommandBuilder(dataAdapter)
+            Return dataAdapter.Update(sourceData)
 
         End Function
 
         'Pinal Patel 05/27/05 - Converts delimited data to data table.
-        Public Shared Function DelimitedDataToDataTable(ByVal DelimitedData As String, Optional ByVal Delimiter As String = ",", Optional ByVal Header As Boolean = True) As DataTable
+        Public Shared Function DelimitedDataToDataTable(ByVal delimitedData As String, ByVal delimiter As String, ByVal header As Boolean) As DataTable
 
             Dim dtResult As DataTable = New DataTable
-            Dim strPattern As String = Regex.Escape(Delimiter) & "(?=(?:[^""]*""[^""]*"")*(?![^""]*""))" 'Regex pattern that will be used to split the delimited data.
+            Dim strPattern As String = Regex.Escape(delimiter) & "(?=(?:[^""]*""[^""]*"")*(?![^""]*""))" 'Regex pattern that will be used to split the delimited data.
 
-
-            DelimitedData = DelimitedData.Trim(New Char() {" "c, vbCr, vbLf}).Replace(vbLf, "") 'Remove any leading and trailing whitespaces, carriage returns or line feeds.
-            Dim strLines() As String = DelimitedData.Split(vbCr)  'Split delimited data into lines.
-
+            delimitedData = delimitedData.Trim(New Char() {" "c, vbCr, vbLf}).Replace(vbLf, "") 'Remove any leading and trailing whitespaces, carriage returns or line feeds.
+            Dim strLines() As String = delimitedData.Split(vbCr)  'Split delimited data into lines.
 
             Dim intCursor As Integer = 0
             'Assume that the first line has header information.
@@ -797,7 +540,6 @@ Namespace Data
                 Next
             End If
 
-
             'Populate the data table with csv data.
             For intCursor = intCursor To strLines.Length() - 1
                 Dim drResult As DataRow = dtResult.NewRow() 'Create new row.
@@ -811,35 +553,34 @@ Namespace Data
                 dtResult.Rows.Add(drResult) 'Add the new row.
             Next
 
-
             'Return the data table.
             Return dtResult
 
         End Function
 
         'Pinal Patel 05/27/05 - Converts a data table to delimited data.
-        Public Shared Function DataTableToDelimitedData(ByVal Table As DataTable, Optional ByVal Delimiter As String = ",", Optional ByVal Quoted As Boolean = True, Optional ByVal Header As Boolean = True) As String
+        Public Shared Function DataTableToDelimitedData(ByVal table As DataTable, ByVal delimiter As String, ByVal quoted As Boolean, ByVal header As Boolean) As String
 
             With New StringBuilder
                 'Use the column names as the headers if headers are requested.
-                If Header Then
-                    For i As Integer = 0 To Table.Columns().Count() - 1
-                        .Append(IIf(Quoted, """", "") & Table.Columns(i).ColumnName() & IIf(Quoted, """", ""))
+                If header Then
+                    For i As Integer = 0 To table.Columns().Count() - 1
+                        .Append(IIf(quoted, """", "") & table.Columns(i).ColumnName() & IIf(quoted, """", ""))
 
-                        If i < Table.Columns().Count() - 1 Then
-                            .Append(Delimiter)
+                        If i < table.Columns().Count() - 1 Then
+                            .Append(delimiter)
                         End If
                     Next
                     .Append(vbCrLf)
                 End If
 
-                For i As Integer = 0 To Table.Rows().Count() - 1
+                For i As Integer = 0 To table.Rows().Count() - 1
                     'Convert data table's data to delimited data.
-                    For j As Integer = 0 To Table.Columns().Count() - 1
-                        .Append(IIf(Quoted, """", "") & Table.Rows(i)(j) & IIf(Quoted, """", ""))
+                    For j As Integer = 0 To table.Columns().Count() - 1
+                        .Append(IIf(quoted, """", "") & table.Rows(i)(j) & IIf(quoted, """", ""))
 
-                        If j < Table.Columns().Count() - 1 Then
-                            .Append(Delimiter)
+                        If j < table.Columns().Count() - 1 Then
+                            .Append(delimiter)
                         End If
                     Next
                     .Append(vbCrLf)
