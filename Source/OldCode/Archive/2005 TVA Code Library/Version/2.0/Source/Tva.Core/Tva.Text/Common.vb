@@ -92,7 +92,7 @@ Namespace Text
 
         End Function
 
-        ''' <summary>Removes the terminator (Chr(0)) from a null terminated string - useful for strings returned from API</summary>
+        ''' <summary>Removes the terminator (Chr(0)) from a null terminated string - useful for strings returned from Windows API call</summary>
         ''' <param name="value">Input string</param>
         ''' <returns>Returns <paramref name="value" /> with all characters to the left of the terminator</returns>
         Public Shared Function RemoveNull(ByVal value As String) As String
@@ -119,9 +119,9 @@ Namespace Text
 
         End Function
 
-        ''' <summary>Removes all whitespaces (as defined by IsWhiteSpace) from a string</summary>
+        ''' <summary>Removes all white space (as defined by IsWhiteSpace) from a string</summary>
         ''' <param name="value">Input string</param>
-        ''' <returns>Returns <paramref name="value" /> with all white spaces removed</returns>
+        ''' <returns>Returns <paramref name="value" /> with all white space removed</returns>
         Public Shared Function RemoveWhiteSpace(ByVal value As String) As String
 
             If String.IsNullOrEmpty(value) Then Return ""
@@ -143,7 +143,7 @@ Namespace Text
         End Function
 
         ''' <summary>Replaces all repeating white space with a single space</summary>
-        ''' <param name="value">The string to process</param>
+        ''' <param name="value">Input string</param>
         ''' <returns>Returns <paramref name="value" /> with all duplicate white space removed</returns>
         Public Shared Function RemoveDuplicateWhiteSpace(ByVal value As String) As String
 
@@ -152,7 +152,7 @@ Namespace Text
         End Function
 
         ''' <summary>Replaces all repeating white space with specified spacing character</summary>
-        ''' <param name="value">The string to process</param>
+        ''' <param name="value">Input string</param>
         ''' <param name="spacingCharacter">Character value to use to insert as single white space value</param>
         ''' <returns>Returns <paramref name="value" /> with all duplicate white space removed</returns>
         ''' <remarks>This function allows you to specify spacing character (e.g., you may want to use a non-breaking space: Convert.ToChar(160))</remarks>
