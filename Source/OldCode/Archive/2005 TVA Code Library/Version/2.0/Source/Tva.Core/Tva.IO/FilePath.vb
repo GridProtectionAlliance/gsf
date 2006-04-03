@@ -25,7 +25,7 @@ Imports System.Text.RegularExpressions
 Imports System.Runtime.InteropServices
 Imports System.Reflection.Assembly
 Imports Tva.DateTime.Common
-Imports Tva.Text.Common
+Imports Tva.Text.Encoding
 Imports Tva.Interop.WindowsApi
 
 Namespace IO

@@ -30,13 +30,6 @@ Namespace Text
 
         End Sub
 
-        ''' <summary>Return the Unicode number for a character in proper Regular Expression format</summary>
-        Public Shared Function EncodeRegexChar(ByVal item As Char) As String
-
-            Return "\u" & Convert.ToInt32(item).ToString("x"c).PadLeft(4, "0"c)
-
-        End Function
-
         ''' <summary>Performs a fast concatenation of given string array</summary>
         ''' <param name="values">String array to concatenate</param>
         ''' <returns>The concatenated string representation of the values of the elements in <paramref name="values" /> string array.</returns>
@@ -205,105 +198,6 @@ Namespace Text
             Next
 
             Return total
-
-        End Function
-
-        ''' <summary>Encodes string into a hexadecimal string</summary>
-        ''' <param name="value">Input string</param>
-        ''' <remarks>
-        ''' <para>This performs a simple form of string encoding useful for presentation of binary data, data obfuscation or safe XML data string transmission</para>
-        ''' <para>Note that Base64 encoding will be a much more efficient way to safely send encoded binary data</para>
-        ''' </remarks>
-        Public Shared Function HexEncode(ByVal value As String) As String
-
-            If String.IsNullOrEmpty(value) Then Throw New ArgumentNullException("value", "input string ""value"" cannot be null")
-
-            Return HexEncode(Encoding.Unicode.GetBytes(value))
-
-        End Function
-
-        ''' <summary>Encodes a binary data buffer into a hexadecimal string</summary>
-        ''' <param name="data">Input data</param>
-        ''' <remarks>
-        ''' <para>This performs a simple form of data encoding useful for presentation of binary data, data obfuscation or safe XML data transmission</para>
-        ''' <para>Note that Base64 encoding will be a much more efficient way to safely send encoded binary data</para>
-        ''' </remarks>
-        Public Shared Function HexEncode(ByVal data As Byte()) As String
-
-            Return HexEncode(data, 0, data.Length)
-
-        End Function
-
-        ''' <summary>Encodes specified portion of a binary data buffer into a hexadecimal string</summary>
-        ''' <param name="data">Input data</param>
-        ''' <param name="offset">Offset position to begin encoding</param>
-        ''' <param name="length">Total number of data bytes to encode</param>
-        ''' <remarks>
-        ''' <para>This performs a simple form of data encoding useful for presentation of binary data, data obfuscation or safe XML data transmission</para>
-        ''' <para>Note that Base64 encoding will be a much more efficient way to safely send encoded binary data</para>
-        ''' </remarks>
-        Public Shared Function HexEncode(ByVal data As Byte(), ByVal offset As Integer, ByVal length As Integer) As String
-
-            If data Is Nothing Then Throw New ArgumentNullException("data", "input buffer ""data"" cannot be null")
-
-            With New StringBuilder
-                For x As Integer = 0 To length - 1
-                    .Append(data(offset + x).ToString("x"c).PadLeft(2, "0"c))
-                Next
-
-                Return .ToString()
-            End With
-
-        End Function
-
-        ''' <summary>Decodes given hexadecimal string encoded with <see cref="HexEncode" /></summary>
-        ''' <param name="value">Input string</param>
-        Public Shared Function HexDecode(ByVal value As String) As String
-
-            Dim data As Byte()
-
-            HexDecode(value, data)
-
-            Return Encoding.Unicode.GetString(data)
-
-        End Function
-
-        ''' <summary>Decodes given hexadecimal string encoded with <see cref="HexEncode" /></summary>
-        ''' <param name="value">Input string</param>
-        ''' <param name="data">Buffer used hold decoded data - buffer will be created and sized by this method</param>
-        Public Shared Sub HexDecode(ByVal value As String, ByRef data As Byte())
-
-            If String.IsNullOrEmpty(value) Then Throw New ArgumentNullException("value", "encoded hexadecimal input string ""value"" cannot be null")
-
-            Dim index As Integer
-
-            data = Array.CreateInstance(GetType(Byte), value.Length \ 2)
-
-            For x As Integer = 0 To value.Length - 1 Step 2
-                data(index) = Convert.ToByte(value.Substring(x, 2), 16)
-                index += 1
-            Next
-
-        End Sub
-
-        ''' <summary>Encodes a string into a base-64 string</summary>
-        ''' <param name="value">Input string</param>
-        ''' <remarks>
-        ''' <para>This performs a base-64 style of string encoding useful for data obfuscation or safe XML data string transmission</para>
-        ''' <para>Note: this function encodes a "String", use the Convert.ToBase64String function to encode a binary data buffer</para>
-        ''' </remarks>
-        Public Shared Function Base64Encode(ByVal value As String) As String
-
-            Return Convert.ToBase64String(Encoding.Unicode.GetBytes(value))
-
-        End Function
-
-        ''' <summary>Decodes given base-64 encoded string encoded with <see cref="Base64Encode" /></summary>
-        ''' <param name="value">Input string</param>
-        ''' <remarks>Note: this function decodes value back into a "String", use the Convert.FromBase64String function to decode a base-64 encoded string back into a binary data buffer</remarks>
-        Public Shared Function Base64Decode(ByVal value As String) As String
-
-            Return Encoding.Unicode.GetString(Convert.FromBase64String(value))
 
         End Function
 

@@ -50,7 +50,8 @@
     <Import Include="System.Diagnostics" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Root\Common.vb" />
+    <Compile Include="Tva.Text\Encoding.vb" />
+    <Compile Include="Tva\Common.vb" />
     <Compile Include="Tva.Data\Common.vb" />
     <Compile Include="Tva.Interop\Assembly.vb" />
     <Compile Include="Tva.Interop\Bit.vb" />
