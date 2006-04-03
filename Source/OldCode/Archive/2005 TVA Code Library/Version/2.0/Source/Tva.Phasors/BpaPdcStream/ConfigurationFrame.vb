@@ -24,6 +24,7 @@ Imports System.Buffer
 Imports Tva.Interop.Assembly
 Imports Tva.Math.Common
 Imports Tva.Interop
+Imports Tva.Phasors.Common
 Imports Tva.Phasors.BpaPdcStream.Common
 
 Namespace BpaPdcStream
@@ -60,7 +61,7 @@ Namespace BpaPdcStream
             m_iniFile = New IniFile(configFileName)
             m_readWriteLock = New ReaderWriterLock
             m_packetsPerSample = 1
-            Refresh(True)
+            Refresh()
 
         End Sub
 
@@ -78,7 +79,7 @@ Namespace BpaPdcStream
 
             ' TODO: provide static configuration cell creation function
             MyBase.New(New ConfigurationFrameParsingState(New ConfigurationCellCollection, 0, Nothing), binaryImage, startIndex)
-            Refresh(False)
+            Refresh()
 
         End Sub
 
@@ -124,7 +125,7 @@ Namespace BpaPdcStream
             End Set
         End Property
 
-        Public Sub Refresh(ByVal clearExistingPMUList As Boolean)
+        Public Sub Refresh()
 
             ' The only time we need a write lock is when we reload the config file...
             m_readWriteLock.AcquireWriterLock(-1)
@@ -284,9 +285,9 @@ Namespace BpaPdcStream
                         .Append(";    Label:      Phasor quantity label for print label, text" & vbCrLf)
                         .Append(";    Comments:   All text after the semicolon on a line are optional comments not for processing" & vbCrLf)
                         .Append(";" & vbCrLf)
-                        .Append(";   Voltage Magnitude = MAG(Real,Imaginary) * CalFactor  * PTR    (line-neutral)" & vbCrLf)
-                        .Append(";   Current Magnitude = MAG(Real,Imaginary)  * CalFactor * CTR / Shunt   (phase current)" & vbCrLf)
-                        .Append(";   Phase Angle = ATAN(Imaginary/Real) + Phase Offset   (usually degrees)" & vbCrLf)
+                        .Append(";   Voltage Magnitude = MAG(Real,Imaginary) * CalFactor * PTR (line-neutral)" & vbCrLf)
+                        .Append(";   Current Magnitude = MAG(Real,Imaginary) * CalFactor * CTR / Shunt (phase current)" & vbCrLf)
+                        .Append(";   Phase Angle = ATAN(Imaginary/Real) + Phase Offset (usually degrees)" & vbCrLf)
                         .Append(";     Note: Usually phase Offset is 0, but is sometimes required for comparing measurements" & vbCrLf)
                         .Append(";           from different systems or through transformer banks" & vbCrLf)
                         .Append(";" & vbCrLf)
@@ -395,7 +396,7 @@ Namespace BpaPdcStream
             Dim parsingState As IConfigurationFrameParsingState = DirectCast(state, IConfigurationFrameParsingState)
             Dim wordCount As Int16
 
-            If binaryImage(startIndex) <> Common.SyncByte Then
+            If binaryImage(startIndex) <> SyncByte Then
                 Throw New InvalidOperationException("Bad Data Stream: Expected sync byte &HAA as first byte in PDCstream configuration frame, got " & binaryImage(startIndex).ToString("x"c).PadLeft(2, "0"c))
             End If
 

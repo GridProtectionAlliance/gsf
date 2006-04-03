@@ -16,8 +16,8 @@
 '*******************************************************************************************************
 
 Imports System.Text
+Imports Tva.Common
 Imports Tva.Interop
-Imports Tva.Collections.Common
 
 Namespace IeeeC37_118
 

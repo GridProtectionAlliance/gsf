@@ -15,7 +15,7 @@
 '
 '*******************************************************************************************************
 
-Imports Tva.Collections.Common
+Imports Tva.Common
 Imports Tva.Phasors.IeeeC37_118.Common
 
 Namespace IeeeC37_118

@@ -130,7 +130,7 @@ Namespace Text
                 Dim character As Char
 
                 For x As Integer = 0 To value.Length - 1
-                    character = value.Chars(x)
+                    character = value(x)
 
                     If Not Char.IsWhiteSpace(character) Then
                         .Append(character)
@@ -165,7 +165,7 @@ Namespace Text
                 Dim lastCharWasSpace As Boolean
 
                 For x As Integer = 0 To value.Length - 1
-                    character = value.Chars(x)
+                    character = value(x)
 
                     If Char.IsWhiteSpace(character) Then
                         lastCharWasSpace = True
@@ -198,6 +198,144 @@ Namespace Text
             Next
 
             Return total
+
+        End Function
+
+        ''' <summary>Tests to see if a string is all digits</summary>
+        ''' <param name="value">Input string</param>
+        ''' <returns>True if all string's characters are digits, otherwise false</returns>
+        Public Shared Function IsAllDigits(ByVal value As String) As Boolean
+
+            If String.IsNullOrEmpty(value) Then Return False
+
+            value = value.Trim
+            If value.Length = 0 Then Return False
+
+            For x As Integer = 0 To value.Length - 1
+                If Not Char.IsDigit(value(x)) Then Return False
+            Next
+
+            Return True
+
+        End Function
+
+        ''' <summary>Tests to see if a string is all numbers</summary>
+        ''' <param name="value">Input string</param>
+        ''' <returns>True if all string's characters are numbers, otherwise false</returns>
+        Public Shared Function IsAllNumbers(ByVal value As String) As Boolean
+
+            If String.IsNullOrEmpty(value) Then Return False
+
+            value = value.Trim
+            If value.Length = 0 Then Return False
+
+            For x As Integer = 0 To value.Length - 1
+                If Not Char.IsNumber(value(x)) Then Return False
+            Next
+
+            Return True
+
+        End Function
+
+        ''' <summary>Tests to see if a string's letters are all upper case</summary>
+        ''' <param name="value">Input string</param>
+        ''' <returns>True if all string's letter characters are upper case, otherwise false</returns>
+        Public Shared Function IsAllUpper(ByVal value As String) As Boolean
+
+            If String.IsNullOrEmpty(value) Then Return False
+
+            value = value.Trim
+            If value.Length = 0 Then Return False
+
+            For x As Integer = 0 To value.Length - 1
+                If Char.IsLetter(value(x)) AndAlso Not Char.IsUpper(value(x)) Then Return False
+            Next
+
+            Return True
+
+        End Function
+
+        ''' <summary>Tests to see if a string's letters are all lower case</summary>
+        ''' <param name="value">Input string</param>
+        ''' <returns>True if all string's letter characters are lower case, otherwise false</returns>
+        Public Shared Function IsAllLower(ByVal value As String) As Boolean
+
+            If String.IsNullOrEmpty(value) Then Return False
+
+            value = value.Trim
+            If value.Length = 0 Then Return False
+
+            For x As Integer = 0 To value.Length - 1
+                If Char.IsLetter(value(x)) AndAlso Not Char.IsLower(value(x)) Then Return False
+            Next
+
+            Return True
+
+        End Function
+
+        ''' <summary>Tests to see if a string is all letters</summary>
+        ''' <param name="value">Input string</param>
+        ''' <returns>True if all string's characters are letters, otherwise false</returns>
+        ''' <remarks>Any non letter (e.g., punctuation marks) would cause this function to return False - see overload to ignore punctuation marks</remarks>
+        Public Shared Function IsAllLetters(ByVal value As String) As Boolean
+
+            Return IsAllLetters(value, False)
+
+        End Function
+
+        ''' <summary>Tests to see if a string is all letters</summary>
+        ''' <param name="value">Input string</param>
+        ''' <param name="ignorePunctuation">Set to True to ignore punctuation</param>
+        ''' <returns>True if all string's characters are letters, otherwise false</returns>
+        Public Shared Function IsAllLetters(ByVal value As String, ByVal ignorePunctuation As Boolean) As Boolean
+
+            If String.IsNullOrEmpty(value) Then Return False
+
+            value = value.Trim
+            If value.Length = 0 Then Return False
+
+            For x As Integer = 0 To value.Length - 1
+                If ignorePunctuation Then
+                    If Not (Char.IsLetter(value(x)) OrElse Char.IsPunctuation(value(x))) Then Return False
+                Else
+                    If Not Char.IsLetter(value(x)) Then Return False
+                End If
+            Next
+
+            Return True
+
+        End Function
+
+        ''' <summary>Tests to see if a string is all letters or digits</summary>
+        ''' <param name="value">Input string</param>
+        ''' <returns>True if all string's characters are letters or digits, otherwise false</returns>
+        ''' <remarks>Any non letter or digit (e.g., punctuation marks) would cause this function to return False - see overload to ignore punctuation marks</remarks>
+        Public Shared Function IsAllLettersOrDigits(ByVal value As String) As Boolean
+
+            Return IsAllLettersOrDigits(value, False)
+
+        End Function
+
+        ''' <summary>Tests to see if a string is all letters or digits</summary>
+        ''' <param name="value">Input string</param>
+        ''' <param name="ignorePunctuation">Set to True to ignore punctuation</param>
+        ''' <returns>True if all string's characters are letters or digits, otherwise false</returns>
+        Public Shared Function IsAllLettersOrDigits(ByVal value As String, ByVal ignorePunctuation As Boolean) As Boolean
+
+            If String.IsNullOrEmpty(value) Then Return False
+
+            value = value.Trim
+            If value.Length = 0 Then Return False
+
+            For x As Integer = 0 To value.Length - 1
+                If ignorePunctuation Then
+                    If Not (Char.IsLetterOrDigit(value(x)) OrElse Char.IsPunctuation(value(x))) Then Return False
+                Else
+                    If Not Char.IsLetterOrDigit(value(x)) Then Return False
+                End If
+            Next
+
+            Return True
 
         End Function
 

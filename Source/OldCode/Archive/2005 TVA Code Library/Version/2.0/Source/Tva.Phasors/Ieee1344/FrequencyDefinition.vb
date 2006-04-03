@@ -15,7 +15,7 @@
 '
 '*******************************************************************************************************
 
-Imports Tva.Collections.Common
+Imports Tva.Common
 Imports Tva.Interop
 Imports Tva.Interop.Bit
 

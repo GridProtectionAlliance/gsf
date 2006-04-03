@@ -16,7 +16,7 @@
 '*******************************************************************************************************
 
 Imports Tva.Interop
-Imports Tva.Collections.Common
+Imports Tva.Common
 Imports Tva.Phasors.BpaPdcStream.Common
 
 Namespace BpaPdcStream

@@ -16,8 +16,8 @@
 '*******************************************************************************************************
 
 Imports System.Text
+Imports Tva.Common
 Imports Tva.Interop
-Imports Tva.Collections.Common
 Imports Tva.Phasors.Common
 Imports Tva.Phasors.IeeeC37_118.Common
 

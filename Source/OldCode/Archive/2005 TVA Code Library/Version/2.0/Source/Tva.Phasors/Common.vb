@@ -16,8 +16,8 @@
 '*******************************************************************************************************
 
 Imports System.Buffer
+Imports Tva.Common
 Imports Tva.Interop.Bit
-Imports Tva.Collections.Common
 
 ''' <summary>Phasor coordinate format</summary>
 Public Enum CoordinateFormat As Byte

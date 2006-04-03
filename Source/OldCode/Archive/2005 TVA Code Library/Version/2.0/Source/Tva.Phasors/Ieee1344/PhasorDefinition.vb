@@ -15,8 +15,8 @@
 '
 '*******************************************************************************************************
 
+Imports Tva.Common
 Imports Tva.Interop
-Imports Tva.Collections.Common
 
 Namespace Ieee1344
 

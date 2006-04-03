@@ -17,8 +17,8 @@
 
 Imports System.Buffer
 Imports System.Text
+Imports Tva.Common
 Imports Tva.Interop
-Imports Tva.Collections.Common
 Imports Tva.Phasors.Common
 
 ' This class represents the protocol independent common implementation of a set of configuration related data settings that can be sent or received from a PMU.

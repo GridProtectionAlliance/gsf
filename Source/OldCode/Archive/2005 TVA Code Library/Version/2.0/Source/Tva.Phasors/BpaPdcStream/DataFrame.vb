@@ -19,6 +19,7 @@ Imports System.Buffer
 Imports Tva.Interop
 Imports Tva.DateTime
 Imports Tva.Math.Common
+Imports Tva.Phasors.Common
 Imports Tva.Phasors.BpaPdcStream.Common
 
 Namespace BpaPdcStream
@@ -151,7 +152,7 @@ Namespace BpaPdcStream
             Dim dataCellCount As Int16
             Dim frameLength As Int16
 
-            If binaryImage(startIndex) <> Common.SyncByte Then
+            If binaryImage(startIndex) <> SyncByte Then
                 Throw New InvalidOperationException("Bad Data Stream: Expected sync byte &HAA as first byte in PDCstream data frame, got " & binaryImage(startIndex).ToString("x"c).PadLeft(2, "0"c))
             End If
 
