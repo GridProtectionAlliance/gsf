@@ -8,7 +8,7 @@
 '       Phone: 423/751-2827
 '       Email: jrcarrol@tva.gov
 '
-'  This is the location for handy miscellaneous functions that are difficult to categorize anywhere else
+'  This is the location for handy miscellaneous functions that are difficult to categorize elsewhere
 '
 '  Code Modification History:
 '  -----------------------------------------------------------------------------------------------------

@@ -31,17 +31,6 @@ Namespace Collections
 
         End Sub
 
-        ''' <summary>Strongly typed immediate (a.k.a. inline) if.  Returns one of two objects, depending on the evaluation of an expression.</summary>
-        ''' <param name="expression">The expression you want to evaluate.</param>
-        ''' <param name="truePart">Returned if expression evaluates to True.</param>
-        ''' <param name="falsePart">Returned if expression evaluates to False.</param>
-        ''' <typeparam name="T">Return type used for immediate expression</typeparam>
-        Public Shared Function IIf(Of T)(ByVal expression As Boolean, ByVal truePart As T, ByVal falsePart As T) As T
-
-            If expression Then Return truePart Else Return falsePart
-
-        End Function
-
         ''' <summary>Returns smallest item from list of parameters</summary>
         Public Shared Function Minimum(ByVal ParamArray itemList As Object()) As Object
 
