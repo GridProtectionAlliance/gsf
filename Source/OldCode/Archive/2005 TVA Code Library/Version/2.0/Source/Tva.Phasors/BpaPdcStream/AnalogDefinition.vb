@@ -60,7 +60,6 @@ Namespace BpaPdcStream
 
         Protected Overrides ReadOnly Property BodyImage() As Byte()
             Get
-                ' TODO: Ask Ken Martin about defining Analog Definitions in INI file
                 Throw New NotImplementedException("PDCstream does not include analog definition in descriptor packet - must be defined in external INI file")
             End Get
         End Property

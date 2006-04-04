@@ -35,6 +35,7 @@ Public MustInherit Class ChannelFrameBase(Of T As IChannelCell)
     Private m_ticks As Long
     Private m_published As Boolean
     Private m_parsedBinaryLength As UInt16
+    Private m_measurementDictionary As IDictionary(Of Int32, IMeasurement)
 
     Protected Sub New(ByVal cells As IChannelCellCollection(Of T))
 
@@ -84,6 +85,13 @@ Public MustInherit Class ChannelFrameBase(Of T As IChannelCell)
     Private ReadOnly Property IChannelFrameCells() As Object Implements IChannelFrame.Cells
         Get
             Return m_cells
+        End Get
+    End Property
+
+    Public ReadOnly Property MeasurementDictionary() As IDictionary(Of Int32, IMeasurement) Implements IChannelFrame.Measurements
+        Get
+            If m_measurementDictionary Is Nothing Then m_measurementDictionary = New Dictionary(Of Int32, IMeasurement)
+            Return m_measurementDictionary
         End Get
     End Property
 
@@ -232,8 +240,6 @@ Public MustInherit Class ChannelFrameBase(Of T As IChannelCell)
         End If
 
     End Function
-
-    Public MustOverride ReadOnly Property Measurements() As System.Collections.Generic.IDictionary(Of Int32, IMeasurement) Implements IFrame.Measurements
 
     Private ReadOnly Property IFrameThis() As IFrame Implements IFrame.This
         Get

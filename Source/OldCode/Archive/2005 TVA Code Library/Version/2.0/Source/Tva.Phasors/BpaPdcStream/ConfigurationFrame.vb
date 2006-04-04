@@ -420,12 +420,6 @@ Namespace BpaPdcStream
 
         End Sub
 
-        Public Overrides ReadOnly Property Measurements() As System.Collections.Generic.IDictionary(Of Int32, Measurements.IMeasurement)
-            Get
-                ' TODO: What to do??
-            End Get
-        End Property
-
     End Class
 
 End Namespace

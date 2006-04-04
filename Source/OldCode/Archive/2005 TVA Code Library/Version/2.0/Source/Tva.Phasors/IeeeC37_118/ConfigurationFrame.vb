@@ -247,12 +247,6 @@ Namespace IeeeC37_118
 
         End Sub
 
-        Public Overrides ReadOnly Property Measurements() As System.Collections.Generic.IDictionary(Of Int32, Measurements.IMeasurement)
-            Get
-                ' TODO: Determine what to do with this concerning concentration
-            End Get
-        End Property
-
     End Class
 
 End Namespace

@@ -15,6 +15,8 @@
 '
 '*******************************************************************************************************
 
+Imports Tva.Measurements
+
 ' This interface represents a protocol independent representation of any kind of data value.
 <CLSCompliant(False)> _
 Public Interface IChannelValue(Of T As IChannelDefinition)
@@ -30,6 +32,8 @@ Public Interface IChannelValue(Of T As IChannelDefinition)
     ReadOnly Property Values() As Single()
 
     ReadOnly Property IsEmpty() As Boolean
+
+    Function GetMeasurement(ByVal valueIndex As Integer, ByVal assignedID As Integer) As IMeasurement
 
 End Interface
 

@@ -183,12 +183,6 @@ Namespace Ieee1344
             End Get
         End Property
 
-        Public Overrides ReadOnly Property Measurements() As System.Collections.Generic.IDictionary(Of Int32, Measurements.IMeasurement)
-            Get
-                ' TODO: Oh my - how to handle this...
-            End Get
-        End Property
-
     End Class
 
 End Namespace

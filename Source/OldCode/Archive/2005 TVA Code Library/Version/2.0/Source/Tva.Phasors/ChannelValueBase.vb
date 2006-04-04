@@ -15,6 +15,8 @@
 '
 '*******************************************************************************************************
 
+Imports Tva.Measurements
+
 ' This class represents the common implementation of the protocol independent representation of any kind of data value.
 <CLSCompliant(False)> _
 Public MustInherit Class ChannelValueBase(Of T As IChannelDefinition)
@@ -69,6 +71,12 @@ Public MustInherit Class ChannelValueBase(Of T As IChannelDefinition)
     Public MustOverride ReadOnly Property IsEmpty() As Boolean Implements IChannelValue(Of T).IsEmpty
 
     Public MustOverride ReadOnly Property Values() As Single() Implements IChannelValue(Of T).Values
+
+    Public Overridable Function GetMeasurement(ByVal valueIndex As Integer, ByVal assignedID As Integer) As Measurements.IMeasurement Implements IChannelValue(Of T).GetMeasurement
+
+        Return New ChannelValueMeasurement(Of T)(Me, valueIndex, assignedID)
+
+    End Function
 
 End Class
 
