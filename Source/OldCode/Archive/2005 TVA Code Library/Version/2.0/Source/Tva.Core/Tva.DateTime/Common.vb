@@ -220,7 +220,7 @@ Namespace DateTime
                 ' Handle remaining seconds
                 If secondPrecision = 0 Then
                     ' No fractonal seconds requested, round seconds to nearest integer
-                    Dim wholeSeconds As Integer = Convert.ToInt32(System.Math.Round(seconds))
+                    Dim wholeSeconds As Integer = System.Convert.ToInt32(System.Math.Round(seconds))
 
                     If wholeSeconds > 0 Then
                         ' Append textual representation of whole seconds

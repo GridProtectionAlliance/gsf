@@ -169,7 +169,7 @@ Namespace Math
         Public Shared ReadOnly Property RandomByteBetween(ByVal startNumber As Byte, ByVal stopNumber As Byte) As Byte
             Get
                 If stopNumber < startNumber Then Throw New ArgumentException("stopNumber must be greater than startNumber")
-                Return Convert.ToByte(RandomNumber * (stopNumber - startNumber) + startNumber)
+                Return System.Convert.ToByte(RandomNumber * (stopNumber - startNumber) + startNumber)
             End Get
         End Property
 
@@ -188,7 +188,7 @@ Namespace Math
         Public Shared ReadOnly Property RandomInt16Between(ByVal startNumber As Int16, ByVal stopNumber As Int16) As Int16
             Get
                 If stopNumber < startNumber Then Throw New ArgumentException("stopNumber must be greater than startNumber")
-                Return Convert.ToInt16(RandomNumber * (stopNumber - startNumber) + startNumber)
+                Return System.Convert.ToInt16(RandomNumber * (stopNumber - startNumber) + startNumber)
             End Get
         End Property
 
@@ -207,7 +207,7 @@ Namespace Math
         Public Shared ReadOnly Property RandomInt32Between(ByVal startNumber As Int32, ByVal stopNumber As Int32) As Int32
             Get
                 If stopNumber < startNumber Then Throw New ArgumentException("stopNumber must be greater than startNumber")
-                Return Convert.ToInt32(RandomNumber * (stopNumber - startNumber) + startNumber)
+                Return System.Convert.ToInt32(RandomNumber * (stopNumber - startNumber) + startNumber)
             End Get
         End Property
 
@@ -226,7 +226,7 @@ Namespace Math
         Public Shared ReadOnly Property RandomInt64Between(ByVal startNumber As Int64, ByVal stopNumber As Int64) As Int64
             Get
                 If stopNumber < startNumber Then Throw New ArgumentException("stopNumber must be greater than startNumber")
-                Return Convert.ToInt64(RandomNumber * (stopNumber - startNumber) + startNumber)
+                Return System.Convert.ToInt64(RandomNumber * (stopNumber - startNumber) + startNumber)
             End Get
         End Property
 

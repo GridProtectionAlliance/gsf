@@ -35,7 +35,7 @@ Namespace Text
         ''' <returns>specified Unicode character in proper Regular Expression format</returns>
         Public Shared Function EncodeRegexChar(ByVal item As Char) As String
 
-            Return "\u" & Convert.ToInt16(item).ToString("x"c).PadLeft(4, "0"c)
+            Return "\u" & System.Convert.ToInt16(item).ToString("x"c).PadLeft(4, "0"c)
 
         End Function
 
@@ -44,7 +44,7 @@ Namespace Text
         ''' <returns>specified Unicode character in proper Regular Expression format</returns>
         Public Shared Function DecodeRegexChar(ByVal value As String) As Char
 
-            Return Convert.ToChar(Convert.ToInt16(value.Replace("\u", "0x"), 16))
+            Return System.Convert.ToChar(System.Convert.ToInt16(value.Replace("\u", "0x"), 16))
 
         End Function
 
@@ -120,7 +120,7 @@ Namespace Text
             data = Array.CreateInstance(GetType(Byte), value.Length \ 2)
 
             For x As Integer = 0 To value.Length - 1 Step 2
-                data(index) = Convert.ToByte(value.Substring(x, 2), 16)
+                data(index) = System.Convert.ToByte(value.Substring(x, 2), 16)
                 index += 1
             Next
 
@@ -134,7 +134,7 @@ Namespace Text
         ''' </remarks>
         Public Shared Function Base64Encode(ByVal value As String) As String
 
-            Return Convert.ToBase64String(System.Text.Encoding.Unicode.GetBytes(value))
+            Return System.Convert.ToBase64String(System.Text.Encoding.Unicode.GetBytes(value))
 
         End Function
 
@@ -143,7 +143,7 @@ Namespace Text
         ''' <remarks>Note: this function decodes value back into a "String", use the Convert.FromBase64String function to decode a base-64 encoded string back into a binary data buffer</remarks>
         Public Shared Function Base64Decode(ByVal value As String) As String
 
-            Return System.Text.Encoding.Unicode.GetString(Convert.FromBase64String(value))
+            Return System.Text.Encoding.Unicode.GetString(System.Convert.FromBase64String(value))
 
         End Function
 

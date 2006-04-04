@@ -85,6 +85,7 @@
     <Compile Include="Tva.Net\Smtp\TraceListener.vb" />
     <Compile Include="Tva.Text\Common.vb" />
     <Compile Include="Tva.Xml\Common.vb" />
+    <Compile Include="Tva\Convert.vb" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Tva.Collections\Tva.Collections.cd" />

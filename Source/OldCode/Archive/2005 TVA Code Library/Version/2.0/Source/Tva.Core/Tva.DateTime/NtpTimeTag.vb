@@ -96,7 +96,7 @@ Namespace DateTime
 
         Public Overrides Function GetHashCode() As Integer
 
-            Return Convert.ToInt32(m_seconds * 1000)
+            Return System.Convert.ToInt32(m_seconds * 1000)
 
         End Function
 

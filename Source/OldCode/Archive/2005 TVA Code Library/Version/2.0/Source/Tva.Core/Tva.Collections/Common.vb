@@ -219,7 +219,7 @@ Namespace Collections
             If destination.IsFixedSize Then Throw New ArgumentException("Cannot add items to a fixed size list")
 
             For Each Item As Object In source
-                destination.Add(Convert.ChangeType(Item, toType))
+                destination.Add(System.Convert.ChangeType(Item, toType))
             Next
 
         End Sub

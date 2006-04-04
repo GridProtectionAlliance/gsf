@@ -115,7 +115,7 @@ Namespace Text
         Public Shared Function RemoveCrLfs(ByVal value As String) As String
 
             If String.IsNullOrEmpty(value) Then Return ""
-            Return value.Replace(Environment.NewLine, "").Replace(Convert.ToChar(13), "").Replace(Convert.ToChar(10), "")
+            Return value.Replace(Environment.NewLine, "").Replace(System.Convert.ToChar(13), "").Replace(System.Convert.ToChar(10), "")
 
         End Function
 
