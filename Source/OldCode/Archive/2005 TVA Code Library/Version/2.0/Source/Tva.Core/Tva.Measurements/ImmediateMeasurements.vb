@@ -1,121 +1,89 @@
 '*******************************************************************************************************
-'  Tva.Measurements.ImmediateMeasurements.vb - Collection of latest received measurements
+'  Tva.Measurements.ImmediateMeasurements.vb - Lastest received measurements collection
 '  Copyright © 2006 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005
 '  Primary Developer: James R Carroll, Operations Data Architecture [TVA]
 '      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
-'       Phone: 423/751-2827
+'       Phone: 423/751-2250
 '       Email: jrcarrol@tva.gov
-'
-'  This class represents the absolute latest received measurements
 '
 '  Code Modification History:
 '  -----------------------------------------------------------------------------------------------------
-'  12/8/2005 - James R Carroll
-'       Initial version of source generated
+'  11/12/2004 - James R Carroll
+'       Initial version of source generated for Super Phasor Data Concentrator
+'  02/23/2006 - James R Carroll
+'       Classes abstracted for general use and added to TVA code library
 '
 '*******************************************************************************************************
 
 Namespace Measurements
 
-    ' This is essentially a collection of measurements at a given timestamp
+    ''' <summary>This class represents the absolute latest received measurement values</summary>
     Public Class ImmediateMeasurements
 
+        Private m_parent As Concentrator
         Private m_measurements As Dictionary(Of Integer, TemporalMeasurement)
         Private m_taggedMeasurements As Dictionary(Of String, List(Of Integer))
-        Private m_timeDeviationTolerance As Double
-        Private m_ticks As Long
 
-        Public Sub New(ByVal timeDeviationTolerance As Double)
+        Friend Sub New(ByVal parent As Concentrator)
 
-            m_timeDeviationTolerance = timeDeviationTolerance
+            m_parent = parent
             m_measurements = New Dictionary(Of Integer, TemporalMeasurement)
             m_taggedMeasurements = New Dictionary(Of String, List(Of Integer))
 
         End Sub
 
-        ''' <summary>Defines tagged measurements from a data table</summary>
-        ''' <remarks>Expects tag to be aliased as "Tag" and measurement ID to be aliased as "ID"</remarks>
-        Public Sub DefineTaggedMeasurements(ByVal measurements As DataTable)
-
-            Dim tag As String
-            Dim id As Integer
-
-            For Each row As DataRow In measurements.Rows
-                ' Get relevant fields
-                tag = row("Tag")
-                id = row("ID")
-
-                ' Check for new tag
-                If Not m_taggedMeasurements.ContainsKey(tag) Then
-                    m_taggedMeasurements.Add(tag, New List(Of Integer))
-                End If
-
-                ' Add measurement to tag's measurement list
-                m_taggedMeasurements(tag).Add(id)
-            Next
-
-        End Sub
-
+        ''' <summary>Handy instance reference to self</summary>
         Public ReadOnly Property This() As ImmediateMeasurements
             Get
                 Return Me
             End Get
         End Property
 
-        Public Sub AddTaggedMeasurement(ByVal tag As String, ByVal measurementID As Integer)
-
-            ' Check for new tag
-            If Not m_taggedMeasurements.ContainsKey(tag) Then
-                m_taggedMeasurements.Add(tag, New List(Of Integer))
-            End If
-
-            ' Add measurement to tag's measurement list
-            m_taggedMeasurements(tag).Add(measurementID)
-
-        End Sub
-
-        Public Property Ticks() As Long
-            Get
-                Return m_ticks
-            End Get
-            Friend Set(ByVal value As Long)
-                ' TODO: this must be equalized with SampleQueue base time - better to just reference that instead.
-                m_ticks = value
-            End Set
-        End Property
-
-        Public ReadOnly Property Timestamp() As Date
-            Get
-                Return New Date(m_ticks)
-            End Get
-        End Property
-
+        ''' <summary>Returns key collection of measurement ID's</summary>
         Public ReadOnly Property MeasurementIDs() As Dictionary(Of Integer, TemporalMeasurement).KeyCollection
             Get
                 Return m_measurements.Keys
             End Get
         End Property
 
+        ''' <summary>Returns key collection for measurement tags</summary>
         Public ReadOnly Property Tags() As Dictionary(Of String, List(Of Integer)).KeyCollection
             Get
                 Return m_taggedMeasurements.Keys
             End Get
         End Property
 
+        ''' <summary>Returns measurement ID list of specified tag, if it exists</summary>
         Public ReadOnly Property TagMeasurementIDs(ByVal tag As String) As List(Of Integer)
             Get
                 Return m_taggedMeasurements(tag)
             End Get
         End Property
 
+        ''' <summary>We retrieve measurement values within time tolerance of concentrator real-time</summary>
         Default Public ReadOnly Property Value(ByVal measurementID As Integer) As Double
             Get
-                Return Measurement(measurementID)(m_ticks)
+                Return Measurement(measurementID)(m_parent.RealTimeTicks)
             End Get
         End Property
 
+        ''' <summary>We only store a measurement value that is newer than the cached value</summary>
+        Default Friend WriteOnly Property Value(ByVal measurementID As Integer, ByVal timestamp As Date) As Double
+            Set(ByVal value As Double)
+                Measurement(measurementID)(timestamp.Ticks) = value
+            End Set
+        End Property
+
+        ''' <summary>We only store a measurement value that is newer than the cached value</summary>
+        Default Friend WriteOnly Property Value(ByVal measurementID As Integer, ByVal ticks As Long) As Double
+            Set(ByVal value As Double)
+                Measurement(measurementID)(ticks) = value
+            End Set
+        End Property
+
+        ''' <summary>Retrieves the specified immediate temporal measurement, creating it if needed</summary>
         Public ReadOnly Property Measurement(ByVal measurementID As Integer) As TemporalMeasurement
             Get
                 SyncLock m_measurements
@@ -123,8 +91,10 @@ Namespace Measurements
 
                     If Not m_measurements.TryGetValue(measurementID, value) Then
                         ' Create new temporal measurement if it doesn't exist
-                        value = New TemporalMeasurement(measurementID, Double.NaN, m_ticks, m_timeDeviationTolerance)
-                        m_measurements.Add(measurementID, value)
+                        With m_parent
+                            value = New TemporalMeasurement(measurementID, Double.NaN, .RealTimeTicks, .LagTime, .LeadTime)
+                            m_measurements.Add(measurementID, value)
+                        End With
                     End If
 
                     Return value
@@ -132,6 +102,39 @@ Namespace Measurements
             End Get
         End Property
 
+        ''' <summary>Defines tagged measurements from a data table</summary>
+        ''' <remarks>Expects tag field to be aliased as "Tag" and measurement ID field to be aliased as "ID"</remarks>
+        Public Sub DefineTaggedMeasurements(ByVal taggedMeasurements As DataTable)
+
+            For Each row As DataRow In taggedMeasurements.Rows
+                AddTaggedMeasurement(row("Tag"), row("ID"))
+            Next
+
+        End Sub
+
+        ''' <summary>Associates a new measurement ID with a tag, creating the new tag if needed</summary>
+        ''' <remarks>Allows you to define "grouped" points so you can aggregate certain measurements</remarks>
+        Public Sub AddTaggedMeasurement(ByVal tag As String, ByVal measurementID As Integer)
+
+            With m_taggedMeasurements
+                ' Check for new tag
+                If Not .ContainsKey(tag) Then
+                    .Add(tag, New List(Of Integer))
+                End If
+
+                ' Add measurement to tag's measurement list
+                With .Item(tag)
+                    If .BinarySearch(measurementID) < 0 Then
+                        .Add(measurementID)
+                        .Sort()
+                    End If
+                End With
+            End With
+
+        End Sub
+
+        ''' <summary>Calculates an average of all measurements</summary>
+        ''' <remarks>This is only useful if all measurements represent the same type of measurement</remarks>
         Public Function CalculateAverage(ByRef count As Integer) As Double
 
             Dim measurement As Double
@@ -151,6 +154,7 @@ Namespace Measurements
 
         End Function
 
+        ''' <summary>Calculates an average of all measurements associated with the specified tag</summary>
         Public Function CalculateTagAverage(ByVal tag As String, ByRef count As Integer) As Double
 
             Dim measurement As Double
@@ -168,6 +172,8 @@ Namespace Measurements
 
         End Function
 
+        ''' <summary>Returns the minimum value of all measurements</summary>
+        ''' <remarks>This is only useful if all measurements represent the same type of measurement</remarks>
         Public ReadOnly Property Minimum() As Double
             Get
                 Dim minValue As Double = Double.MaxValue
@@ -186,6 +192,8 @@ Namespace Measurements
             End Get
         End Property
 
+        ''' <summary>Returns the maximum value of all measurements</summary>
+        ''' <remarks>This is only useful if all measurements represent the same type of measurement</remarks>
         Public ReadOnly Property Maximum() As Double
             Get
                 Dim maxValue As Double = Double.MinValue
@@ -204,6 +212,7 @@ Namespace Measurements
             End Get
         End Property
 
+        ''' <summary>Returns the minimum value of all measurements associated with the specified tag</summary>
         Public ReadOnly Property TagMinimum(ByVal tag As String) As Double
             Get
                 Dim minValue As Double = Double.MaxValue
@@ -220,6 +229,7 @@ Namespace Measurements
             End Get
         End Property
 
+        ''' <summary>Returns the maximum value of all measurements associated with the specified tag</summary>
         Public ReadOnly Property TagMaximum(ByVal tag As String) As Double
             Get
                 Dim maxValue As Double = Double.MinValue

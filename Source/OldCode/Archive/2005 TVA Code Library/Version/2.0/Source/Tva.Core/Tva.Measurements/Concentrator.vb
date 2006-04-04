@@ -83,8 +83,8 @@ Namespace Measurements
         ''' <param name="leadTime">Allowed future time deviation tolerance, in seconds</param>
         ''' <remarks>
         ''' <para>framesPerSecond must be at least one.</para>
-        ''' <para>lagTime must greater than zero, but can be specified in sub-second intervals (e.g., set to .5 for a half-second lag time).</para>
-        ''' <para>timeDeviationTolerance must be greater than or equal to lagTime - note that this defines time sensitivity to both past and future timestamps.</para>
+        ''' <para>lagTime must be greater than zero but can be specified in sub-second intervals (e.g., set to .25 for a quarter-second lag time) - note that this defines time sensitivity to past timestamps.</para>
+        ''' <para>leadTime must be greater than zero but can be specified in sub-second intervals (e.g., set to .5 for a half-second lead time) - note that this defines time sensitivity to future timestamps.</para>
         ''' <para>Function delegate parameters may be initialized to null, but must be defined before concentrator is enabled.</para>
         ''' <para>Note that concentration will not begin until consumer sets Enabled = True.</para>
         ''' </remarks>

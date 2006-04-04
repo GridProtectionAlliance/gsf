@@ -50,6 +50,8 @@
     <Import Include="System.Diagnostics" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Tva.Measurements\ImmediateMeasurements.vb" />
+    <Compile Include="Tva.Measurements\Sample.vb" />
     <Compile Include="Tva.Text\Encoding.vb" />
     <Compile Include="Tva\Common.vb" />
     <Compile Include="Tva.Data\Common.vb" />

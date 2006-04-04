@@ -1,81 +1,104 @@
-'***********************************************************************
-'  MeasurementSample.vb - One second of time sync'd measurement values
-'  Copyright © 2004 - TVA, all rights reserved - Gbtc
+'*******************************************************************************************************
+'  Tva.Measurements.Sample.vb - Measurement sample class (frame collection over one second)
+'  Copyright © 2006 - TVA, all rights reserved - Gbtc
 '
-'  Build Environment: VB.NET, Visual Studio 2003
-'  Primary Developer: James R Carroll, System Analyst [WESTAFF]
+'  Build Environment: VB.NET, Visual Studio 2005
+'  Primary Developer: James R Carroll, Operations Data Architecture [TVA]
 '      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
-'       Phone: 423/751-2827
+'       Phone: 423/751-2250
 '       Email: jrcarrol@tva.gov
 '
 '  Code Modification History:
-'  ---------------------------------------------------------------------
+'  -----------------------------------------------------------------------------------------------------
 '  11/12/2004 - James R Carroll
-'       Initial version of source generated
+'       Initial version of source generated for Super Phasor Data Concentrator
+'  02/23/2006 - James R Carroll
+'       Classes abstracted for general use and added to TVA code library
 '
-'***********************************************************************
-
-Imports Tva.DateTime.Common
+'*******************************************************************************************************
 
 Namespace Measurements
 
-    ' This class represents a complete sample of data for a given second - a time indexed sub-second set of synchronized measurement rows.
-    Public Class MeasurementSample
+    ''' <summary>This class represents a collection of frames over one second (i.e., a sample of data)</summary>
+    Public Class Sample
 
         Implements IComparable
 
-        Private m_measurementsPerSecond As Integer
-        Private m_baseTime As Date
-        Private m_published As Boolean
+        Private m_parent As Concentrator        ' Parent concentrator
+        Private m_frames As IFrame()            ' Array of frames
+        Private m_ticks As Long                 ' Ticks at the beginning of sample
 
-        Public Rows As MeasurementValues()
+        Friend Sub New(ByVal parent As Concentrator, ByVal ticks As Long)
 
-        Public Sub New(ByVal measurementsPerSecond As Integer, ByVal timestamp As Date)
+            m_parent = m_parent
+            m_ticks = ticks
 
-            m_measurementsPerSecond = measurementsPerSecond
-            m_baseTime = BaselinedTimestamp(timestamp)
-            Rows = Array.CreateInstance(GetType(MeasurementValues), m_measurementsPerSecond)
+            ' Create new array of frames for this sample...
+            m_frames = Array.CreateInstance(GetType(IFrame), m_parent.FramesPerSecond)
 
-            For x As Integer = 0 To Rows.Length - 1
-                Rows(x) = New MeasurementValues(m_parent, m_baseTime, x)
+            For x As Integer = 0 To m_frames.Length - 1
+                ' We precalculate frame ticks sitting in the middle of the frame
+                m_frames(x) = m_parent.CreateNewFrameFunction.Invoke(ticks + ((x + 0.5@) * m_parent.FrameRate))
             Next
 
         End Sub
 
-        Public ReadOnly Property BaseTime() As Date
+        ''' <summary>Handy instance reference to self</summary>
+        Public ReadOnly Property This() As Sample
             Get
-                Return m_baseTime
+                Return Me
             End Get
         End Property
 
+        ''' <summary>Array of frames in this sample</summary>
+        Public ReadOnly Property Frames() As IFrame()
+            Get
+                Return m_frames
+            End Get
+        End Property
+
+        ''' <summary>Gets published state of this sample (i.e., all frames published)</summary>
         Public ReadOnly Property Published() As Boolean
             Get
-                If Not m_published Then
-                    Dim allPublished As Boolean = True
+                Dim allPublished As Boolean = True
 
-                    ' The sample has been completely processed once all data packets have been published
-                    For x As Integer = 0 To Rows.Length - 1
-                        If Not Rows(x).Published Then
-                            allPublished = False
-                            Exit For
-                        End If
-                    Next
+                ' The sample has been completely processed once all frames have been published
+                For x As Integer = 0 To m_frames.Length - 1
+                    If Not m_frames(x).Published Then
+                        allPublished = False
+                        Exit For
+                    End If
+                Next
 
-                    If allPublished Then m_published = True
-                    Return allPublished
-                Else
-                    Return True
-                End If
+                Return allPublished
             End Get
         End Property
 
-        ' Data samples are sorted in timestamp order
+        ''' <summary>Exact timestamp of the beginning of data sample</summary>
+        ''' <remarks>The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001</remarks>
+        Public Property Ticks() As Long
+            Get
+                Return m_ticks
+            End Get
+            Set(ByVal value As Long)
+                m_ticks = value
+            End Set
+        End Property
+
+        ''' <summary>Date representation of ticks of data sample</summary>
+        Public ReadOnly Property Timestamp() As Date
+            Get
+                Return New Date(m_ticks)
+            End Get
+        End Property
+
+        ''' <summary>Samples are sorted by timestamp</summary>
         Public Function CompareTo(ByVal obj As Object) As Integer Implements System.IComparable.CompareTo
 
-            If TypeOf obj Is MeasurementSample Then
-                Return m_baseTime.CompareTo(DirectCast(obj, MeasurementSample).BaseTime)
+            If TypeOf obj Is Sample Then
+                Return m_ticks.CompareTo(DirectCast(obj, Sample).Ticks)
             Else
-                Throw New ArgumentException("MeasurementSample can only be compared with other SynchronizedMeasurementSamples...")
+                Throw New ArgumentException("Sample can only be compared with other Samples...")
             End If
 
         End Function
