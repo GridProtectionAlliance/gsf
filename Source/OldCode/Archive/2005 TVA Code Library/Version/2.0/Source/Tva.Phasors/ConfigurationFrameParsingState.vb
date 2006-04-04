@@ -34,7 +34,7 @@ Public Class ConfigurationFrameParsingState
         End Get
     End Property
 
-    Public Shadows ReadOnly Property Cells() As ConfigurationCellCollection Implements IConfigurationFrameParsingState.Cells
+    Public Overridable Shadows ReadOnly Property Cells() As ConfigurationCellCollection Implements IConfigurationFrameParsingState.Cells
         Get
             Return MyBase.Cells
         End Get

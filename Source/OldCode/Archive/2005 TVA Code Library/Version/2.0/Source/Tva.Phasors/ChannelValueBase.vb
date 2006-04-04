@@ -45,13 +45,13 @@ Public MustInherit Class ChannelValueBase(Of T As IChannelDefinition)
 
     End Sub
 
-    Public ReadOnly Property Parent() As IDataCell Implements IChannelValue(Of T).Parent
+    Public Overridable ReadOnly Property Parent() As IDataCell Implements IChannelValue(Of T).Parent
         Get
             Return m_parent
         End Get
     End Property
 
-    Public Property Definition() As T Implements IChannelValue(Of T).Definition
+    Public Overridable Property Definition() As T Implements IChannelValue(Of T).Definition
         Get
             Return m_definition
         End Get

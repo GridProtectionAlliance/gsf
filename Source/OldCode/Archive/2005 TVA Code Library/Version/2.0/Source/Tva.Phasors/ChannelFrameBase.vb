@@ -28,7 +28,7 @@ Imports Tva.Measurements
 Public MustInherit Class ChannelFrameBase(Of T As IChannelCell)
 
     Inherits ChannelBase
-    Implements IChannelFrame, IFrame, IComparable
+    Implements IChannelFrame
 
     Private m_idCode As UInt16
     Private m_cells As IChannelCellCollection(Of T)
@@ -96,7 +96,7 @@ Public MustInherit Class ChannelFrameBase(Of T As IChannelCell)
         End Set
     End Property
 
-    Public Overridable Property Ticks() As Long Implements IChannelFrame.Ticks, IFrame.Ticks
+    Public Overridable Property Ticks() As Long Implements IChannelFrame.Ticks
         Get
             Return m_ticks
         End Get
@@ -111,13 +111,13 @@ Public MustInherit Class ChannelFrameBase(Of T As IChannelCell)
         End Get
     End Property
 
-    Public Overridable ReadOnly Property Timestamp() As Date Implements IChannelFrame.Timestamp, IFrame.Timestamp
+    Public Overridable ReadOnly Property Timestamp() As Date Implements IChannelFrame.Timestamp
         Get
             Return New Date(m_ticks)
         End Get
     End Property
 
-    Public Overridable Property Published() As Boolean Implements IChannelFrame.Published, IFrame.Published
+    Public Overridable Property Published() As Boolean Implements IChannelFrame.Published
         Get
             Return m_published
         End Get
@@ -132,7 +132,7 @@ Public MustInherit Class ChannelFrameBase(Of T As IChannelCell)
         End Get
     End Property
 
-    Protected WriteOnly Property ParsedBinaryLength() As UInt16
+    Protected Overridable WriteOnly Property ParsedBinaryLength() As UInt16
         Set(ByVal value As UInt16)
             m_parsedBinaryLength = value
         End Set
@@ -223,7 +223,7 @@ Public MustInherit Class ChannelFrameBase(Of T As IChannelCell)
     End Function
 
     ' We sort frames by timestamp
-    Public Function CompareTo(ByVal obj As Object) As Int32 Implements IComparable.CompareTo
+    Public Overridable Function CompareTo(ByVal obj As Object) As Int32 Implements IComparable.CompareTo
 
         If TypeOf obj Is IChannelFrame Then
             Return m_ticks.CompareTo(DirectCast(obj, IChannelFrame).Ticks)

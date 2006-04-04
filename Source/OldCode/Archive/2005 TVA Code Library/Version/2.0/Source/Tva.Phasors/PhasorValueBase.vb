@@ -142,13 +142,13 @@ Public MustInherit Class PhasorValueBase
 
     End Sub
 
-    Public ReadOnly Property CoordinateFormat() As CoordinateFormat Implements IPhasorValue.CoordinateFormat
+    Public Overridable ReadOnly Property CoordinateFormat() As CoordinateFormat Implements IPhasorValue.CoordinateFormat
         Get
             Return Definition.CoordinateFormat
         End Get
     End Property
 
-    Public ReadOnly Property Type() As PhasorType Implements IPhasorValue.Type
+    Public Overridable ReadOnly Property Type() As PhasorType Implements IPhasorValue.Type
         Get
             Return Definition.Type
         End Get
@@ -167,7 +167,7 @@ Public MustInherit Class PhasorValueBase
         End Set
     End Property
 
-    Public ReadOnly Property AngleReceived() As Boolean
+    Public Overridable ReadOnly Property AngleReceived() As Boolean
         Get
             Return m_compositeValues.Received(CompositeValue.Angle)
         End Get
@@ -186,7 +186,7 @@ Public MustInherit Class PhasorValueBase
         End Set
     End Property
 
-    Public ReadOnly Property MagnitudeReceived() As Boolean
+    Public Overridable ReadOnly Property MagnitudeReceived() As Boolean
         Get
             Return m_compositeValues.Received(CompositeValue.Magnitude)
         End Get

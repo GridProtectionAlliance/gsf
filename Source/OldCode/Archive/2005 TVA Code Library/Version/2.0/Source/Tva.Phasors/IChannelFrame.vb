@@ -16,12 +16,13 @@
 '*******************************************************************************************************
 
 Imports Tva.DateTime
+Imports Tva.Measurements
 
 ' This interface represents the protocol independent representation of any frame of data.
 <CLSCompliant(False)> _
 Public Interface IChannelFrame
 
-    Inherits IChannel
+    Inherits IChannel, IFrame, IComparable
 
     ReadOnly Property FrameType() As FundamentalFrameType
 
@@ -29,13 +30,7 @@ Public Interface IChannelFrame
 
     Property IDCode() As UInt16
 
-    Property Ticks() As Long                    ' Ticks of this frame
-
     ReadOnly Property TimeTag() As UnixTimeTag  ' UNIX based time of this frame
-
-    ReadOnly Property Timestamp() As Date       ' .NET timestamp of this frame
-
-    Property Published() As Boolean
 
     ReadOnly Property IsPartial() As Boolean
 

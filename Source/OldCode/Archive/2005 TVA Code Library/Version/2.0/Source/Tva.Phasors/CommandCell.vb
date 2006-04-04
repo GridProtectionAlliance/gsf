@@ -72,7 +72,7 @@ Public Class CommandCell
         End Get
     End Property
 
-    Public Property ExtendedDataByte() As Byte Implements ICommandCell.ExtendedDataByte
+    Public Overridable Property ExtendedDataByte() As Byte Implements ICommandCell.ExtendedDataByte
         Get
             Return m_extendedDataByte
         End Get

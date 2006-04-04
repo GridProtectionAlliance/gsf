@@ -344,6 +344,9 @@ Public Class FrameParser
                         binaryImage = .BinaryImage
                         binaryLength = .BinaryLength
                     End With
+                Case Else
+                    binaryImage = Nothing
+                    binaryLength = 0
             End Select
 
             If binaryLength > 0 Then m_clientStream.Write(binaryImage, 0, binaryLength)

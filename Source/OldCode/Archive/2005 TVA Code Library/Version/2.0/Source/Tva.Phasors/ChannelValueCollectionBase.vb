@@ -30,7 +30,7 @@ Public MustInherit Class ChannelValueCollectionBase(Of TDefinition As IChannelDe
 
     End Sub
 
-    Public Shadows Sub Add(ByVal value As TValue)
+    Public Overridable Shadows Sub Add(ByVal value As TValue)
 
         ' In typical usage, all channel values will be of the same data type - but we can't anticipate all
         ' possible uses of collection, so we track totals of each data type so we can quickly ascertain if
@@ -82,7 +82,7 @@ Public MustInherit Class ChannelValueCollectionBase(Of TDefinition As IChannelDe
         End Get
     End Property
 
-    Public Shadows Sub Clear()
+    Public Overridable Shadows Sub Clear()
 
         MyBase.Clear()
         m_fixedCount = 0

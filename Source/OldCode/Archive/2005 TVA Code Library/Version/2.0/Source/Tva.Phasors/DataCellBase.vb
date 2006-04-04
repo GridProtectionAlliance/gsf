@@ -102,7 +102,7 @@ Public MustInherit Class DataCellBase
 
     Public MustOverride Property SynchronizationIsValid() As Boolean Implements IDataCell.SynchronizationIsValid
 
-    Public ReadOnly Property AllValuesAreEmpty() As Boolean Implements IDataCell.AllValuesAreEmpty
+    Public Overridable ReadOnly Property AllValuesAreEmpty() As Boolean Implements IDataCell.AllValuesAreEmpty
         Get
             Return (PhasorValues.AllValuesAreEmpty And FrequencyValue.IsEmpty And AnalogValues.AllValuesAreEmpty And DigitalValues.AllValuesAreEmpty)
         End Get

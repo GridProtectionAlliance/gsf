@@ -36,7 +36,7 @@ Public Class CommandFrameParsingState
         End Get
     End Property
 
-    Public Shadows ReadOnly Property Cells() As CommandCellCollection Implements ICommandFrameParsingState.Cells
+    Public Overridable Shadows ReadOnly Property Cells() As CommandCellCollection Implements ICommandFrameParsingState.Cells
         Get
             Return MyBase.Cells
         End Get

@@ -35,7 +35,7 @@ Public MustInherit Class ChannelCollectionBase(Of T As IChannel)
 
     End Sub
 
-    Public Shadows Sub Add(ByVal value As T)
+    Public Overridable Shadows Sub Add(ByVal value As T)
 
         ' Note: Maximum count is much easier to specify by using <value>.MaxValue which runs from 0 to MaxValue (i.e., MaxValue + 1)
         ' so we allow one extra item in the following check to keep from having to add 1 to all maximum count specifications
@@ -46,13 +46,13 @@ Public MustInherit Class ChannelCollectionBase(Of T As IChannel)
 
     Public MustOverride ReadOnly Property InheritedType() As Type Implements IChannelCollection(Of T).InheritedType
 
-    Public ReadOnly Property This() As IChannel Implements IChannel.This
+    Public Overridable ReadOnly Property This() As IChannel Implements IChannel.This
         Get
             Return Me
         End Get
     End Property
 
-    Public Property MaximumCount() As Int32
+    Public Overridable Property MaximumCount() As Int32
         Get
             Return m_maximumCount
         End Get

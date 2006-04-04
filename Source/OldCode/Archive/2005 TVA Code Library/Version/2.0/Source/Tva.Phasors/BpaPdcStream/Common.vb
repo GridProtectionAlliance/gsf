@@ -90,7 +90,8 @@ Namespace BpaPdcStream
         DataInvalid = Bit1
     End Enum
 
-    Public Class Common
+    <CLSCompliant(False)> _
+    Public NotInheritable Class Common
 
         Private Sub New()
 

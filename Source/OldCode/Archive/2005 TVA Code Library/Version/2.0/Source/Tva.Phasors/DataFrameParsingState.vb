@@ -39,13 +39,13 @@ Public Class DataFrameParsingState
         End Get
     End Property
 
-    Public ReadOnly Property ConfigurationFrame() As IConfigurationFrame Implements IDataFrameParsingState.ConfigurationFrame
+    Public Overridable ReadOnly Property ConfigurationFrame() As IConfigurationFrame Implements IDataFrameParsingState.ConfigurationFrame
         Get
             Return m_configurationFrame
         End Get
     End Property
 
-    Public Shadows ReadOnly Property Cells() As DataCellCollection Implements IDataFrameParsingState.Cells
+    Public Overridable Shadows ReadOnly Property Cells() As DataCellCollection Implements IDataFrameParsingState.Cells
         Get
             Return MyBase.Cells
         End Get

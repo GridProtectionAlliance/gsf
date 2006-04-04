@@ -35,19 +35,19 @@ Public MustInherit Class ChannelFrameParsingStateBase(Of T As IChannelCell)
 
     End Sub
 
-    Public ReadOnly Property CreateNewCellFunction() As IChannelFrameParsingState(Of T).CreateNewCellFunctionSignature Implements IChannelFrameParsingState(Of T).CreateNewCellFunction
+    Public Overridable ReadOnly Property CreateNewCellFunction() As IChannelFrameParsingState(Of T).CreateNewCellFunctionSignature Implements IChannelFrameParsingState(Of T).CreateNewCellFunction
         Get
             Return m_createNewCellFunction
         End Get
     End Property
 
-    Public ReadOnly Property Cells() As IChannelCellCollection(Of T) Implements IChannelFrameParsingState(Of T).Cells
+    Public Overridable ReadOnly Property Cells() As IChannelCellCollection(Of T) Implements IChannelFrameParsingState(Of T).Cells
         Get
             Return m_cells
         End Get
     End Property
 
-    Public Property CellCount() As Int32 Implements IChannelFrameParsingState(Of T).CellCount
+    Public Overridable Property CellCount() As Int32 Implements IChannelFrameParsingState(Of T).CellCount
         Get
             Return m_cellCount
         End Get
@@ -56,7 +56,7 @@ Public MustInherit Class ChannelFrameParsingStateBase(Of T As IChannelCell)
         End Set
     End Property
 
-    Public Property ParsedBinaryLength() As UInt16 Implements IChannelFrameParsingState(Of T).ParsedBinaryLength
+    Public Overridable Property ParsedBinaryLength() As UInt16 Implements IChannelFrameParsingState(Of T).ParsedBinaryLength
         Get
             Return m_parsedBinaryLength
         End Get

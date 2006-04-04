@@ -36,7 +36,7 @@ Public Class HeaderFrameParsingState
         End Get
     End Property
 
-    Public Shadows ReadOnly Property Cells() As HeaderCellCollection Implements IHeaderFrameParsingState.Cells
+    Public Overridable Shadows ReadOnly Property Cells() As HeaderCellCollection Implements IHeaderFrameParsingState.Cells
         Get
             Return MyBase.Cells
         End Get

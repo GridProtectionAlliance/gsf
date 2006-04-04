@@ -58,7 +58,7 @@ Public MustInherit Class HeaderFrameBase
         End Get
     End Property
 
-    Public Property HeaderData() As String Implements IHeaderFrame.HeaderData
+    Public Overridable Property HeaderData() As String Implements IHeaderFrame.HeaderData
         Get
             Return Encoding.ASCII.GetString(Cells.BinaryImage)
         End Get

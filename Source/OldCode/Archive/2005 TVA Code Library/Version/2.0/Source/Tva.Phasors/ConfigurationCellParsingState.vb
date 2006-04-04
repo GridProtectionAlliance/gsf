@@ -46,25 +46,25 @@ Public Class ConfigurationCellParsingState
         End Get
     End Property
 
-    Public ReadOnly Property CreateNewPhasorDefinitionFunction() As IConfigurationCellParsingState.CreateNewDefinitionFunctionSignature(Of IPhasorDefinition) Implements IConfigurationCellParsingState.CreateNewPhasorDefintionFunction
+    Public Overridable ReadOnly Property CreateNewPhasorDefinitionFunction() As IConfigurationCellParsingState.CreateNewDefinitionFunctionSignature(Of IPhasorDefinition) Implements IConfigurationCellParsingState.CreateNewPhasorDefintionFunction
         Get
             Return m_createNewPhasorDefinitionFunction
         End Get
     End Property
 
-    Public ReadOnly Property CreateNewFrequencyDefinitionFunction() As IConfigurationCellParsingState.CreateNewDefinitionFunctionSignature(Of IFrequencyDefinition) Implements IConfigurationCellParsingState.CreateNewFrequencyDefintionFunction
+    Public Overridable ReadOnly Property CreateNewFrequencyDefinitionFunction() As IConfigurationCellParsingState.CreateNewDefinitionFunctionSignature(Of IFrequencyDefinition) Implements IConfigurationCellParsingState.CreateNewFrequencyDefintionFunction
         Get
             Return m_createNewFrequencyDefinitionFunction
         End Get
     End Property
 
-    Public ReadOnly Property CreateNewAnalogDefinitionFunction() As IConfigurationCellParsingState.CreateNewDefinitionFunctionSignature(Of IAnalogDefinition) Implements IConfigurationCellParsingState.CreateNewAnalogDefintionFunction
+    Public Overridable ReadOnly Property CreateNewAnalogDefinitionFunction() As IConfigurationCellParsingState.CreateNewDefinitionFunctionSignature(Of IAnalogDefinition) Implements IConfigurationCellParsingState.CreateNewAnalogDefintionFunction
         Get
             Return m_createNewAnalogDefinitionFunction
         End Get
     End Property
 
-    Public ReadOnly Property CreateNewDigitalDefinitionFunction() As IConfigurationCellParsingState.CreateNewDefinitionFunctionSignature(Of IDigitalDefinition) Implements IConfigurationCellParsingState.CreateNewDigitalDefintionFunction
+    Public Overridable ReadOnly Property CreateNewDigitalDefinitionFunction() As IConfigurationCellParsingState.CreateNewDefinitionFunctionSignature(Of IDigitalDefinition) Implements IConfigurationCellParsingState.CreateNewDigitalDefintionFunction
         Get
             Return m_createNewDigitalDefinitionFunction
         End Get

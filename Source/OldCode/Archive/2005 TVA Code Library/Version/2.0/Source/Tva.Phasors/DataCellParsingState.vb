@@ -55,31 +55,31 @@ Public Class DataCellParsingState
         End Get
     End Property
 
-    Public ReadOnly Property ConfigurationCell() As IConfigurationCell Implements IDataCellParsingState.ConfigurationCell
+    Public Overridable ReadOnly Property ConfigurationCell() As IConfigurationCell Implements IDataCellParsingState.ConfigurationCell
         Get
             Return m_configurationCell
         End Get
     End Property
 
-    Public ReadOnly Property CreateNewPhasorValueFunction() As IDataCellParsingState.CreateNewValueFunctionSignature(Of IPhasorDefinition, IPhasorValue) Implements IDataCellParsingState.CreateNewPhasorValueFunction
+    Public Overridable ReadOnly Property CreateNewPhasorValueFunction() As IDataCellParsingState.CreateNewValueFunctionSignature(Of IPhasorDefinition, IPhasorValue) Implements IDataCellParsingState.CreateNewPhasorValueFunction
         Get
             Return m_createNewPhasorValueFunction
         End Get
     End Property
 
-    Public ReadOnly Property CreateNewFrequencyValueFunction() As IDataCellParsingState.CreateNewValueFunctionSignature(Of IFrequencyDefinition, IFrequencyValue) Implements IDataCellParsingState.CreateNewFrequencyValueFunction
+    Public Overridable ReadOnly Property CreateNewFrequencyValueFunction() As IDataCellParsingState.CreateNewValueFunctionSignature(Of IFrequencyDefinition, IFrequencyValue) Implements IDataCellParsingState.CreateNewFrequencyValueFunction
         Get
             Return m_createNewFrequencyValueFunction
         End Get
     End Property
 
-    Public ReadOnly Property CreateNewAnalogValueFunction() As IDataCellParsingState.CreateNewValueFunctionSignature(Of IAnalogDefinition, IAnalogValue) Implements IDataCellParsingState.CreateNewAnalogValueFunction
+    Public Overridable ReadOnly Property CreateNewAnalogValueFunction() As IDataCellParsingState.CreateNewValueFunctionSignature(Of IAnalogDefinition, IAnalogValue) Implements IDataCellParsingState.CreateNewAnalogValueFunction
         Get
             Return m_createNewAnalogValueFunction
         End Get
     End Property
 
-    Public ReadOnly Property CreateNewDigitalValueFunction() As IDataCellParsingState.CreateNewValueFunctionSignature(Of IDigitalDefinition, IDigitalValue) Implements IDataCellParsingState.CreateNewDigitalValueFunction
+    Public Overridable ReadOnly Property CreateNewDigitalValueFunction() As IDataCellParsingState.CreateNewValueFunctionSignature(Of IDigitalDefinition, IDigitalValue) Implements IDataCellParsingState.CreateNewDigitalValueFunction
         Get
             Return m_createNewDigitalValueFunction
         End Get

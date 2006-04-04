@@ -86,7 +86,7 @@ Public Enum Command As Int16
 End Enum
 
 <CLSCompliant(False)> _
-Public Class Common
+Public NotInheritable Class Common
 
     Private Sub New()
 

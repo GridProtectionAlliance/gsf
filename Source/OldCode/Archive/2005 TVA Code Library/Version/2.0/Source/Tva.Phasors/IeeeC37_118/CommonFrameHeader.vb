@@ -53,6 +53,12 @@ Namespace IeeeC37_118
                 End Get
             End Property
 
+            Private ReadOnly Property IFrameThis() As Measurements.IFrame Implements Measurements.IFrame.This
+                Get
+                    Return Me
+                End Get
+            End Property
+
             Public ReadOnly Property InheritedType() As System.Type Implements IChannel.InheritedType
                 Get
                     Return Me.GetType()
@@ -225,6 +231,21 @@ Namespace IeeeC37_118
             Public ReadOnly Property TimeTag() As DateTime.UnixTimeTag Implements IChannelFrame.TimeTag
                 Get
                     Return New UnixTimeTag(Timestamp)
+                End Get
+            End Property
+
+            Public Function CompareTo(ByVal obj As Object) As Integer Implements System.IComparable.CompareTo
+
+                If TypeOf obj Is IChannelFrame Then
+                    Return m_ticks.CompareTo(DirectCast(obj, IChannelFrame).Ticks)
+                Else
+                    Throw New ArgumentException(InheritedType.Name & " can only be compared with other IChannelFrames...")
+                End If
+            End Function
+
+            Private ReadOnly Property IFrameMeasurements() As System.Collections.Generic.IDictionary(Of Integer, Measurements.IMeasurement) Implements Measurements.IFrame.Measurements
+                Get
+                    Throw New NotImplementedException()
                 End Get
             End Property
 
