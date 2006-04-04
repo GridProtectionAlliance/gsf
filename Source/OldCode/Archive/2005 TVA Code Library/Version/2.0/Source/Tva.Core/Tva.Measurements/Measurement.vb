@@ -24,7 +24,7 @@ Namespace Measurements
 
         Implements IMeasurement
 
-        Private m_index As Integer
+        Private m_id As Integer
         Private m_value As Double
         Private m_ticks As Long
         Private m_valueQualityIsGood As Boolean
@@ -36,15 +36,15 @@ Namespace Measurements
 
         End Sub
 
-        Public Sub New(ByVal index As Integer, ByVal value As Double, ByVal timestamp As Date)
+        Public Sub New(ByVal id As Integer, ByVal value As Double, ByVal timestamp As Date)
 
-            MyClass.New(index, value, timestamp.Ticks)
+            MyClass.New(id, value, timestamp.Ticks)
 
         End Sub
 
-        Public Sub New(ByVal index As Integer, ByVal value As Double, ByVal ticks As Long)
+        Public Sub New(ByVal id As Integer, ByVal value As Double, ByVal ticks As Long)
 
-            m_index = index
+            m_id = id
             m_value = value
             m_ticks = ticks
             m_valueQualityIsGood = True
@@ -60,12 +60,12 @@ Namespace Measurements
         End Property
 
         ''' <summary>Gets or sets index or ID of this measurement</summary>
-        Public Overridable Property Index() As Integer Implements IMeasurement.Index
+        Public Overridable Property ID() As Integer Implements IMeasurement.ID
             Get
-                Return m_index
+                Return m_id
             End Get
             Set(ByVal value As Integer)
-                m_index = value
+                m_id = value
             End Set
         End Property
 

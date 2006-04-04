@@ -64,7 +64,7 @@ Namespace BpaPdcStream
             If entry.Length > 2 Then CalFactor = CDbl(Trim(entry(2))) Else CalFactor = defaultPhasor.CalFactor
             If entry.Length > 3 Then Offset = CDbl(Trim(entry(3))) Else Offset = defaultPhasor.Offset
             If entry.Length > 4 Then Shunt = CDbl(Trim(entry(4))) Else Shunt = defaultPhasor.Shunt
-            If entry.Length > 5 Then VoltageReferenceIndex = Convert.ToInt32(Trim(entry(5))) Else VoltageReferenceIndex = defaultPhasor.VoltageReferenceIndex
+            If entry.Length > 5 Then VoltageReferenceIndex = System.Convert.ToInt32(Trim(entry(5))) Else VoltageReferenceIndex = defaultPhasor.VoltageReferenceIndex
             If entry.Length > 6 Then Label = Trim(entry(6)) Else Label = defaultPhasor.Label
 
             Me.Index = index

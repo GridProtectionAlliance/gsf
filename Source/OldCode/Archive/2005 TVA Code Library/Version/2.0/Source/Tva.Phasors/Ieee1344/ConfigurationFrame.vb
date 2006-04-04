@@ -80,7 +80,7 @@ Namespace Ieee1344
                 If m_idCode > UInt16.MaxValue Then
                     MyBase.IDCode = UInt16.MaxValue
                 Else
-                    MyBase.IDCode = Convert.ToUInt16(value)
+                    MyBase.IDCode = System.Convert.ToUInt16(value)
                 End If
             End Set
         End Property

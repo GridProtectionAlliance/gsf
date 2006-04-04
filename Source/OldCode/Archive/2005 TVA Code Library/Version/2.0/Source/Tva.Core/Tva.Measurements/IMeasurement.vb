@@ -27,7 +27,7 @@ Namespace Measurements
         ReadOnly Property This() As IMeasurement
 
         ''' <summary>Gets or sets index or ID of this measurement</summary>
-        Property Index() As Integer
+        Property ID() As Integer
 
         ''' <summary>Gets or sets numeric value of this measurement</summary>
         Property Value() As Double

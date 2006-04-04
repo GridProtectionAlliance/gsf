@@ -74,7 +74,7 @@ Namespace Ieee1344
                     If m_idCode > UInt16.MaxValue Then
                         Return UInt16.MaxValue
                     Else
-                        Return Convert.ToUInt16(m_idCode)
+                        Return System.Convert.ToUInt16(m_idCode)
                     End If
                 End Get
                 Set(ByVal value As UInt16)
@@ -356,7 +356,7 @@ Namespace Ieee1344
             FrameLength(frameHeader) = frameHeader.BinaryLength
 
             With frameHeader
-                EndianOrder.BigEndian.CopyBytes(Convert.ToUInt32(.TimeTag.Value), buffer, 0)
+                EndianOrder.BigEndian.CopyBytes(System.Convert.ToUInt32(.TimeTag.Value), buffer, 0)
                 EndianOrder.BigEndian.CopyBytes(.InternalSampleCount, buffer, 4)
                 EndianOrder.BigEndian.CopyBytes(.InternalStatusFlags, buffer, 6)
             End With

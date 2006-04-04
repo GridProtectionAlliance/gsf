@@ -194,7 +194,7 @@ Namespace IeeeC37_118
 
                 CopyImage(CommonFrameHeader.BinaryImage(Me), buffer, index, CommonFrameHeader.BinaryLength)
                 EndianOrder.BigEndian.CopyBytes(m_timeBase, buffer, index)
-                EndianOrder.BigEndian.CopyBytes(Convert.ToInt16(Cells.Count), buffer, index + 4)
+                EndianOrder.BigEndian.CopyBytes(System.Convert.ToInt16(Cells.Count), buffer, index + 4)
 
                 Return buffer
             End Get

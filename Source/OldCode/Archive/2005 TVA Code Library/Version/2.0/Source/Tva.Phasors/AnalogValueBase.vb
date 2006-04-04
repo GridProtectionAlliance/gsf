@@ -44,7 +44,7 @@ Public MustInherit Class AnalogValueBase
     ' Derived classes are expected expose a Public Sub New(ByVal parent As IDataCell, ByVal analogDefinition As IAnalogDefinition, ByVal unscaledValue As Int16)
     Protected Sub New(ByVal parent As IDataCell, ByVal analogDefinition As IAnalogDefinition, ByVal integerValue As Int16)
 
-        MyClass.New(parent, analogDefinition, Convert.ToSingle(integerValue))
+        MyClass.New(parent, analogDefinition, System.Convert.ToSingle(integerValue))
 
     End Sub
 
@@ -74,10 +74,10 @@ Public MustInherit Class AnalogValueBase
 
     Public Overridable Property IntegerValue() As Int16 Implements IAnalogValue.IntegerValue
         Get
-            Return Convert.ToInt16(m_value)
+            Return System.Convert.ToInt16(m_value)
         End Get
         Set(ByVal value As Int16)
-            m_value = Convert.ToSingle(value)
+            m_value = System.Convert.ToSingle(value)
         End Set
     End Property
 

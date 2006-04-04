@@ -340,9 +340,9 @@ Namespace BpaPdcStream
 
                 ' Add PDCstream specific image
                 buffer(0) = m_flags
-                buffer(1) = (Convert.ToByte(AnalogValues.Count) Or m_reservedFlags)
-                buffer(2) = (Convert.ToByte(DigitalValues.Count) Or m_iEEEFormatFlags)
-                buffer(3) = Convert.ToByte(PhasorValues.Count)
+                buffer(1) = (System.Convert.ToByte(AnalogValues.Count) Or m_reservedFlags)
+                buffer(2) = (System.Convert.ToByte(DigitalValues.Count) Or m_iEEEFormatFlags)
+                buffer(3) = System.Convert.ToByte(PhasorValues.Count)
                 EndianOrder.BigEndian.CopyBytes(m_sampleNumber, buffer, 4)
 
                 Return buffer

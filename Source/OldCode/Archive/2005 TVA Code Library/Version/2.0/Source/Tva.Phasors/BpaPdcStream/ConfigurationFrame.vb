@@ -139,7 +139,7 @@ Namespace BpaPdcStream
                         m_defaultPhasorV = New PhasorDefinition(Nothing, 0, .KeyValue("DEFAULT", "PhasorV", DefaultVoltagePhasorEntry))
                         m_defaultPhasorI = New PhasorDefinition(Nothing, 0, .KeyValue("DEFAULT", "PhasorI", DefaultCurrentPhasorEntry))
                         m_defaultFrequency = New FrequencyDefinition(Nothing, .KeyValue("DEFAULT", "Frequency", DefaultFrequencyEntry))
-                        FrameRate = Convert.ToInt16(.KeyValue("CONFIG", "SampleRate", "30"))
+                        FrameRate = System.Convert.ToInt16(.KeyValue("CONFIG", "SampleRate", "30"))
 
                         Cells.Clear()
 
@@ -149,13 +149,13 @@ Namespace BpaPdcStream
                                 ' Make sure this is not a special section
                                 If String.Compare(section, "DEFAULT", True) <> 0 And String.Compare(section, "CONFIG", True) <> 0 Then
                                     ' Create new PMU entry structure from config file settings...
-                                    phasorCount = Convert.ToInt32(.KeyValue(section, "NumberPhasors", "0"))
+                                    phasorCount = System.Convert.ToInt32(.KeyValue(section, "NumberPhasors", "0"))
 
                                     pmuCell = New ConfigurationCell(Me, 0, LineFrequency.Hz60)
 
                                     pmuCell.IDLabel = section
                                     pmuCell.StationName = .KeyValue(section, "Name", section)
-                                    pmuCell.IDCode = Convert.ToUInt16(.KeyValue(section, "PMU", Cells.Count))
+                                    pmuCell.IDCode = System.Convert.ToUInt16(.KeyValue(section, "PMU", Cells.Count))
 
                                     For x = 0 To phasorCount - 1
                                         pmuCell.PhasorDefinitions.Add(New PhasorDefinition(pmuCell, x + 1, .KeyValue(section, "Phasor" & (x + 1), DefaultVoltagePhasorEntry)))
@@ -378,13 +378,13 @@ Namespace BpaPdcStream
 
                 buffer(0) = SyncByte
                 buffer(1) = DescriptorPacketFlag
-                EndianOrder.BigEndian.CopyBytes(Convert.ToInt16(BinaryLength \ 2), buffer, 2)
+                EndianOrder.BigEndian.CopyBytes(System.Convert.ToInt16(BinaryLength \ 2), buffer, 2)
                 buffer(4) = StreamType
                 buffer(5) = RevisionNumber
                 EndianOrder.BigEndian.CopyBytes(FrameRate, buffer, 6)
                 EndianOrder.BigEndian.CopyBytes(RowLength(True), buffer, 8) ' <-- Important: This step calculates all PMU row offsets!
                 EndianOrder.BigEndian.CopyBytes(PacketsPerSample, buffer, 12)
-                EndianOrder.BigEndian.CopyBytes(Convert.ToInt16(Cells.Count), buffer, 14)
+                EndianOrder.BigEndian.CopyBytes(System.Convert.ToInt16(Cells.Count), buffer, 14)
 
                 Return buffer
             End Get

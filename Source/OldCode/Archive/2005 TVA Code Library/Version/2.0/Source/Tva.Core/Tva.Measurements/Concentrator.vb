@@ -432,7 +432,7 @@ Namespace Measurements
             m_framesPerSecond = framesPerSecond
             m_lagTime = lagTime
             m_leadTime = leadTime
-            m_frameRate = Convert.ToDecimal(SecondsToTicks(1)) / Convert.ToDecimal(framesPerSecond)
+            m_frameRate = System.Convert.ToDecimal(SecondsToTicks(1)) / System.Convert.ToDecimal(framesPerSecond)
             m_latestMeasurements = New ImmediateMeasurements(Me)
             m_monitorTimer = New Timers.Timer
 
@@ -633,11 +633,11 @@ Namespace Measurements
                 Else
                     ' We've found the right sample for this data, so we access the proper data cell by first calculating the
                     ' proper frame index (i.e., the row) - we can then directly access the correct measurement using the index
-                    sample.Frames(System.Math.Floor((.Ticks + 1@) / m_frameRate)).Measurements(.Index).Value = .Value
+                    sample.Frames(System.Math.Floor((.Ticks + 1@) / m_frameRate)).Measurements(.ID).Value = .Value
 
                     ' Track absolute lastest timestamp and immediate measurement values...
                     RealTimeTicks = .Ticks
-                    m_latestMeasurements(.Index, .Ticks) = .Value
+                    m_latestMeasurements(.ID, .Ticks) = .Value
                 End If
             End With
 

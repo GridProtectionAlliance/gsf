@@ -19,7 +19,7 @@ Imports Tva.Measurements
 
 ' This class represents the protocol independent representation of any kind of data value as an abstract measurement.
 <CLSCompliant(False)> _
-Public Class ChannelValueMeasurement(Of T As IChannelDefinition)
+Friend Class ChannelValueMeasurement(Of T As IChannelDefinition)
 
     Implements IMeasurement
 
@@ -27,7 +27,7 @@ Public Class ChannelValueMeasurement(Of T As IChannelDefinition)
     Private m_id As Integer
     Private m_valueIndex As Integer
 
-    Friend Sub New(ByVal parent As IChannelValue(Of T), ByVal valueIndex As Integer, ByVal assignedID As Integer)
+    Public Sub New(ByVal parent As IChannelValue(Of T), ByVal valueIndex As Integer, ByVal assignedID As Integer)
 
         m_parent = parent
         m_valueIndex = valueIndex

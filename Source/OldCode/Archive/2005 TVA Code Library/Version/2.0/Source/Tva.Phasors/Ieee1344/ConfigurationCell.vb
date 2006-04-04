@@ -85,7 +85,7 @@ Namespace Ieee1344
                 If value > UInt16.MaxValue Then
                     MyBase.IDCode = UInt16.MaxValue
                 Else
-                    MyBase.IDCode = Convert.ToUInt16(value)
+                    MyBase.IDCode = System.Convert.ToUInt16(value)
                 End If
             End Set
         End Property
@@ -103,8 +103,8 @@ Namespace Ieee1344
 
                 CopyImage(MyBase.HeaderImage, buffer, index, MyBase.HeaderLength)
                 EndianOrder.BigEndian.CopyBytes(IDCode, buffer, index)
-                EndianOrder.BigEndian.CopyBytes(Convert.ToInt16(PhasorDefinitions.Count), buffer, index + 8)
-                EndianOrder.BigEndian.CopyBytes(Convert.ToInt16(DigitalDefinitions.Count), buffer, index + 10)
+                EndianOrder.BigEndian.CopyBytes(System.Convert.ToInt16(PhasorDefinitions.Count), buffer, index + 8)
+                EndianOrder.BigEndian.CopyBytes(System.Convert.ToInt16(DigitalDefinitions.Count), buffer, index + 10)
 
                 Return buffer
             End Get

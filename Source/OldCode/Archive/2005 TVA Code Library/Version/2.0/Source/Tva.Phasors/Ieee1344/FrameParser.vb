@@ -356,7 +356,7 @@ End Namespace
 '        m_tcpSocket.Connect(CType(New IPEndPoint(m_ipAddress, m_ipPort), EndPoint))
 
 '        If Not m_tcpSocket.Connected Then
-'            Throw New InvalidOperationException("Failed to connect to PMU: " & Convert.ToString(System.Runtime.InteropServices.Marshal.GetLastWin32Error()))
+'            Throw New InvalidOperationException("Failed to connect to PMU: " & System.Convert.ToString(System.Runtime.InteropServices.Marshal.GetLastWin32Error()))
 '        End If
 
 
