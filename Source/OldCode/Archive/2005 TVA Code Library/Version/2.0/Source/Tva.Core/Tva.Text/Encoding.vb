@@ -30,24 +30,6 @@ Namespace Text
 
         End Sub
 
-        ''' <summary>Encodes the specified Unicode character in proper Regular Expression format</summary>
-        ''' <param name="item">Unicode character to encode in Regular Expression format</param>
-        ''' <returns>specified Unicode character in proper Regular Expression format</returns>
-        Public Shared Function EncodeRegexChar(ByVal item As Char) As String
-
-            Return "\u" & System.Convert.ToInt16(item).ToString("x"c).PadLeft(4, "0"c)
-
-        End Function
-
-        ''' <summary>Encodes the specified Unicode character in proper Regular Expression format</summary>
-        ''' <param name="value">Unicode character to encode in Regular Expression format</param>
-        ''' <returns>specified Unicode character in proper Regular Expression format</returns>
-        Public Shared Function DecodeRegexChar(ByVal value As String) As Char
-
-            Return System.Convert.ToChar(System.Convert.ToInt16(value.Replace("\u", "0x"), 16))
-
-        End Function
-
         ''' <summary>Encodes string into a hexadecimal string</summary>
         ''' <param name="value">Input string</param>
         ''' <remarks>
@@ -120,32 +102,11 @@ Namespace Text
             data = Array.CreateInstance(GetType(Byte), value.Length \ 2)
 
             For x As Integer = 0 To value.Length - 1 Step 2
-                data(index) = System.Convert.ToByte(value.Substring(x, 2), 16)
+                data(index) = Convert.ToByte(value.Substring(x, 2), 16)
                 index += 1
             Next
 
         End Sub
-
-        ''' <summary>Encodes a string into a base-64 string</summary>
-        ''' <param name="value">Input string</param>
-        ''' <remarks>
-        ''' <para>This performs a base-64 style of string encoding useful for data obfuscation or safe XML data string transmission</para>
-        ''' <para>Note: this function encodes a "String", use the Convert.ToBase64String function to encode a binary data buffer</para>
-        ''' </remarks>
-        Public Shared Function Base64Encode(ByVal value As String) As String
-
-            Return System.Convert.ToBase64String(System.Text.Encoding.Unicode.GetBytes(value))
-
-        End Function
-
-        ''' <summary>Decodes given base-64 encoded string encoded with <see cref="Base64Encode" /></summary>
-        ''' <param name="value">Input string</param>
-        ''' <remarks>Note: this function decodes value back into a "String", use the Convert.FromBase64String function to decode a base-64 encoded string back into a binary data buffer</remarks>
-        Public Shared Function Base64Decode(ByVal value As String) As String
-
-            Return System.Text.Encoding.Unicode.GetString(System.Convert.FromBase64String(value))
-
-        End Function
 
     End Class
 
