@@ -64,7 +64,8 @@ Namespace Data
 
 #Region "ExecuteNonQuery Overloaded Functions"
         ' Executes given Sql update query for given connection string
-        Public Shared Function ExecuteNonQuery(ByVal sql As String, ByVal connectString As String, ByVal connectionType As ConnectionType, ByVal timeout As Integer) As Integer
+        Public Shared Function ExecuteNonQuery(ByVal sql As String, ByVal connectString As String, _
+                ByVal connectionType As ConnectionType, ByVal timeout As Integer) As Integer
 
             Dim executionResult As Integer = -1
             Dim connection As IDbConnection = Nothing
@@ -90,34 +91,64 @@ Namespace Data
 
         End Function
 
+        Public Shared Function ExecuteNonQuery(ByVal sql As String, ByVal connection As OleDbConnection) As Integer
+
+            Return ExecuteNonQuery(sql, connection, 30)
+
+        End Function
+
         ' Executes given Sql update query for given connection
-        Public Shared Function ExecuteNonQuery(ByVal sql As String, ByVal connection As OleDbConnection, ByVal timeout As Integer) As Integer
+        Public Shared Function ExecuteNonQuery(ByVal sql As String, ByVal connection As OleDbConnection, _
+                ByVal timeout As Integer) As Integer
 
             Return ExecuteNonQuery(sql, connection, timeout, Nothing)
 
         End Function
 
+        Public Shared Function ExecuteNonQuery(ByVal sql As String, ByVal connection As OleDbConnection, _
+                ByVal ParamArray parameters As Object()) As Integer
+
+            Return ExecuteNonQuery(sql, connection, 30, parameters)
+
+        End Function
+
         ' tmshults 12/10/2004 - This behaves exactly like the RetrieveDataSetWithParameters method except it uses the
         '                       cmd.ExecuteNonQuery to execute StoredProcedures that don't return data.
-        Public Shared Function ExecuteNonQuery(ByVal sql As String, ByVal connection As OleDbConnection, ByVal timeout As Integer, ByVal ParamArray Parameters As Object()) As Integer
+        Public Shared Function ExecuteNonQuery(ByVal sql As String, ByVal connection As OleDbConnection, _
+                ByVal timeout As Integer, ByVal ParamArray parameters As Object()) As Integer
 
             Dim command As New OleDbCommand(sql, connection)
             command.CommandTimeout = timeout
 
-            FillStoredProcParameters(command, ConnectionType.OleDb, Parameters)
+            FillStoredProcParameters(command, ConnectionType.OleDb, parameters)
             Return command.ExecuteNonQuery()
 
         End Function
 
-        Public Shared Function ExecuteNonQuery(ByVal sql As String, ByVal connection As SqlConnection, ByVal timeout As Integer) As Integer
+        Public Shared Function ExecuteNonQuery(ByVal sql As String, ByVal connection As SqlConnection) As Integer
+
+            Return ExecuteNonQuery(sql, connection, 30)
+
+        End Function
+
+        Public Shared Function ExecuteNonQuery(ByVal sql As String, ByVal connection As SqlConnection, _
+                ByVal timeout As Integer) As Integer
 
             Return ExecuteNonQuery(sql, connection, timeout, Nothing)
 
         End Function
 
+        Public Shared Function ExecuteNonQuery(ByVal sql As String, ByVal connection As SqlConnection, _
+                ByVal ParamArray parameters As Object()) As Integer
+
+            Return ExecuteNonQuery(sql, connection, 30, parameters)
+
+        End Function
+
         ' tmshults 12/10/2004 - This behaves exactly like the RetrieveDataSetWithParameters method except it uses the
         '                       cmd.ExecuteNonQuery to execute StoredProcedures that don't return data.
-        Public Shared Function ExecuteNonQuery(ByVal sql As String, ByVal connection As SqlConnection, ByVal timeout As Integer, ByVal ParamArray parameters As Object()) As Integer
+        Public Shared Function ExecuteNonQuery(ByVal sql As String, ByVal connection As SqlConnection, _
+                ByVal timeout As Integer, ByVal ParamArray parameters As Object()) As Integer
 
             Dim command As New SqlCommand(sql, connection)
             command.CommandTimeout = timeout
@@ -136,7 +167,8 @@ Namespace Data
 
         ' tmshults 12/10/2004 - This behaves exactly like the RetrieveDataSetWithParameters method except it uses the
         '                       cmd.ExecuteNonQuery to execute StoredProcedures that don't return data.
-        Public Shared Function ExecuteNonQuery(ByVal sql As String, ByVal connection As OracleConnection, ByVal ParamArray parameters As Object()) As Integer
+        Public Shared Function ExecuteNonQuery(ByVal sql As String, ByVal connection As OracleConnection, _
+                ByVal ParamArray parameters As Object()) As Integer
 
             Dim command As New OracleCommand(sql, connection)
 
@@ -147,74 +179,134 @@ Namespace Data
 #End Region
 
 #Region "ExecuteReader Overloaded Functions"
+        Public Shared Function ExecuteReader(ByVal sql As String, ByVal connection As OleDbConnection) As OleDbDataReader
+
+            Return ExecuteReader(sql, connection, CommandBehavior.Default, 30)
+
+        End Function
+
         ' Executes given Sql data query for given connection
-        Public Shared Function ExecuteReader(ByVal sql As String, ByVal connection As OleDbConnection, ByVal behavior As CommandBehavior, ByVal timeout As Integer) As OleDbDataReader
+        Public Shared Function ExecuteReader(ByVal sql As String, ByVal connection As OleDbConnection, _
+                ByVal behavior As CommandBehavior, ByVal timeout As Integer) As OleDbDataReader
 
             Return ExecuteReader(sql, connection, behavior, timeout, Nothing)
 
         End Function
 
+        Public Shared Function ExecuteReader(ByVal sql As String, ByVal connection As OleDbConnection, _
+                ByVal ParamArray parameters As Object()) As OleDbDataReader
+
+            Return ExecuteReader(sql, connection, CommandBehavior.Default, 30, parameters)
+
+        End Function
+
         ' tmshults 12/10/2004 - This behaves exactly like the RetrieveDataSetWithParameters method except it uses the
         '                       cmd.ExecuteReader as the data that is returned.
-        Public Shared Function ExecuteReader(ByVal sql As String, ByVal connection As OleDbConnection, ByVal behavior As CommandBehavior, ByVal timeout As Integer, ByVal ParamArray parameters As Object()) As OleDbDataReader
+        Public Shared Function ExecuteReader(ByVal sql As String, ByVal connection As OleDbConnection, _
+                ByVal behavior As CommandBehavior, ByVal timeout As Integer, ByVal ParamArray parameters As Object()) As OleDbDataReader
 
             Dim command As New OleDbCommand(sql, connection)
             command.CommandTimeout = timeout
 
-            FillStoredProcParameters(command, ConnectionType.OleDb, Parameters)
+            FillStoredProcParameters(command, ConnectionType.OleDb, parameters)
             Return command.ExecuteReader(behavior)
 
         End Function
 
+        Public Shared Function ExecuteReader(ByVal sql As String, ByVal connection As SqlConnection) As SqlDataReader
+
+            Return ExecuteReader(sql, connection, CommandBehavior.Default, 30)
+
+        End Function
+
         ' Executes given Sql data query for given connection
-        Public Shared Function ExecuteReader(ByVal sql As String, ByVal connection As SqlConnection, ByVal behavior As CommandBehavior, ByVal timeout As Integer) As SqlDataReader
+        Public Shared Function ExecuteReader(ByVal sql As String, ByVal connection As SqlConnection, _
+                ByVal behavior As CommandBehavior, ByVal timeout As Integer) As SqlDataReader
 
             Return ExecuteReader(sql, connection, behavior, timeout, Nothing)
 
         End Function
 
+        Public Shared Function ExecuteReader(ByVal sql As String, ByVal connection As SqlConnection, _
+                ByVal ParamArray parameters As Object()) As SqlDataReader
+
+            Return ExecuteReader(sql, connection, CommandBehavior.Default, 30, parameters)
+
+        End Function
+
         ' tmshults 12/10/2004 - This behaves exactly like the RetrieveDataSetWithParameters method except it uses the
         '                       cmd.ExecuteReader as the data that is returned.
-        Public Shared Function ExecuteReader(ByVal sql As String, ByVal connection As SqlConnection, ByVal behavior As CommandBehavior, ByVal timeout As Integer, ByVal ParamArray parameters As Object()) As SqlDataReader
+        Public Shared Function ExecuteReader(ByVal sql As String, ByVal connection As SqlConnection, _
+                ByVal behavior As CommandBehavior, ByVal timeout As Integer, ByVal ParamArray parameters As Object()) As SqlDataReader
 
             Dim command As New SqlCommand(sql, connection)
             command.CommandTimeout = timeout
 
-            FillStoredProcParameters(command, ConnectionType.SqlClient, Parameters)
+            FillStoredProcParameters(command, ConnectionType.SqlClient, parameters)
             Return command.ExecuteReader(behavior)
 
         End Function
 
+        Public Shared Function ExecuteReader(ByVal sql As String, ByVal connection As OracleConnection) As OracleDataReader
+
+            Return ExecuteReader(sql, connection, CommandBehavior.Default)
+
+        End Function
+
         ' Executes given Sql data query for given connection
-        Public Shared Function ExecuteReader(ByVal sql As String, ByVal connection As OracleConnection, ByVal behavior As CommandBehavior) As OracleDataReader
+        Public Shared Function ExecuteReader(ByVal sql As String, ByVal connection As OracleConnection, _
+                ByVal behavior As CommandBehavior) As OracleDataReader
 
             Return ExecuteReader(sql, connection, behavior, Nothing)
 
         End Function
 
+        Public Shared Function ExecuteReader(ByVal sql As String, ByVal connection As OracleConnection, _
+                ByVal ParamArray parameters As Object()) As OracleDataReader
+
+            Return ExecuteReader(sql, connection, CommandBehavior.Default, parameters)
+
+        End Function
+
         ' tmshults 12/10/2004 - This behaves exactly like the RetrieveDataSetWithParameters method except it uses the
         '                       cmd.ExecuteReader as the data that is returned.
-        Public Shared Function ExecuteReader(ByVal sql As String, ByVal connection As OracleConnection, ByVal behavior As CommandBehavior, ByVal ParamArray parameters As Object()) As OracleDataReader
+        Public Shared Function ExecuteReader(ByVal sql As String, ByVal connection As OracleConnection, _
+                ByVal behavior As CommandBehavior, ByVal ParamArray parameters As Object()) As OracleDataReader
 
             Dim command As New OracleCommand(sql, connection)
 
-            FillStoredProcParameters(command, ConnectionType.OracleClient, Parameters)
+            FillStoredProcParameters(command, ConnectionType.OracleClient, parameters)
             Return command.ExecuteReader(behavior)
 
         End Function
 #End Region
 
 #Region "ExecuteScalar Overloaded Functions"
+        Public Shared Function ExecuteScalar(ByVal sql As String, ByVal connection As OleDbConnection) As Object
+
+            Return ExecuteScalar(sql, connection, 30)
+
+        End Function
+
         ' Executes given Sql scalar query for given connection
-        Public Shared Function ExecuteScalar(ByVal sql As String, ByVal connection As OleDbConnection, ByVal timeout As Integer) As Object
+        Public Shared Function ExecuteScalar(ByVal sql As String, ByVal connection As OleDbConnection, _
+                ByVal timeout As Integer) As Object
 
             Return ExecuteScalar(sql, connection, timeout, Nothing)
 
         End Function
 
+        Public Shared Function ExecuteScalar(ByVal sql As String, ByVal connection As OleDbConnection, _
+                ByVal ParamArray parameters As Object()) As Object
+
+            Return ExecuteScalar(sql, connection, 30, parameters)
+
+        End Function
+
         ' tmshults 12/10/2004 - This behaves exactly like the RetrieveDataSetWithParameters method except it uses the
         '                       cmd.ExecuteScalar as the data that is returned.
-        Public Shared Function ExecuteScalar(ByVal sql As String, ByVal connection As OleDbConnection, ByVal timeout As Integer, ByVal ParamArray parameters As Object()) As Object
+        Public Shared Function ExecuteScalar(ByVal sql As String, ByVal connection As OleDbConnection, _
+                ByVal timeout As Integer, ByVal ParamArray parameters As Object()) As Object
 
             Dim command As New OleDbCommand(sql, connection)
             command.CommandTimeout = timeout
@@ -224,16 +316,31 @@ Namespace Data
 
         End Function
 
+        Public Shared Function ExecuteScalar(ByVal sql As String, ByVal connection As SqlConnection) As Object
+
+            Return ExecuteScalar(sql, connection, 30)
+
+        End Function
+
         ' Executes given Sql scalar query for given connection
-        Public Shared Function ExecuteScalar(ByVal sql As String, ByVal connection As SqlConnection, ByVal timeout As Integer) As Object
+        Public Shared Function ExecuteScalar(ByVal sql As String, ByVal connection As SqlConnection, _
+                ByVal timeout As Integer) As Object
 
             Return ExecuteScalar(sql, connection, timeout, Nothing)
 
         End Function
 
+        Public Shared Function ExecuteScalar(ByVal sql As String, ByVal connection As SqlConnection, _
+                ByVal ParamArray parameters As Object()) As Object
+
+            Return ExecuteScalar(sql, connection, 30, parameters)
+
+        End Function
+
         ' tmshults 12/10/2004 - This behaves exactly like the RetrieveDataSetWithParameters method except it uses the
         '                       cmd.ExecuteScalar as the data that is returned.
-        Public Shared Function ExecuteScalar(ByVal sql As String, ByVal connection As SqlConnection, ByVal timeout As Integer, ByVal ParamArray parameters As Object()) As Object
+        Public Shared Function ExecuteScalar(ByVal sql As String, ByVal connection As SqlConnection, _
+                ByVal timeout As Integer, ByVal ParamArray parameters As Object()) As Object
 
             Dim command As New SqlCommand(sql, connection)
             command.CommandTimeout = timeout
@@ -252,7 +359,8 @@ Namespace Data
 
         ' tmshults 12/10/2004 - This behaves exactly like the RetrieveDataSetWithParameters method except it uses the
         '                       cmd.ExecuteScalar as the data that is returned.
-        Public Shared Function ExecuteScalar(ByVal sql As String, ByVal connection As OracleConnection, ByVal ParamArray parameters As Object()) As Object
+        Public Shared Function ExecuteScalar(ByVal sql As String, ByVal connection As OracleConnection, _
+                ByVal ParamArray parameters As Object()) As Object
 
             Dim command As New OracleCommand(sql, connection)
 
@@ -263,16 +371,31 @@ Namespace Data
 #End Region
 
 #Region "RetrieveRow Overloaded Functions"
+        Public Shared Function RetrieveRow(ByVal sql As String, ByVal connection As OleDbConnection) As DataRow
+
+            Return RetrieveRow(sql, connection, 30)
+
+        End Function
+
         ' Return a single row of data given a Sql statement and connection
-        Public Shared Function RetrieveRow(ByVal sql As String, ByVal connection As OleDbConnection, ByVal timeout As Integer) As DataRow
+        Public Shared Function RetrieveRow(ByVal sql As String, ByVal connection As OleDbConnection, _
+                ByVal timeout As Integer) As DataRow
 
             Return RetrieveRow(sql, connection, timeout, Nothing)
 
         End Function
 
+        Public Shared Function RetrieveRow(ByVal sql As String, ByVal connection As OleDbConnection, _
+                ByVal ParamArray parameters As Object()) As DataRow
+
+            Return RetrieveRow(sql, connection, 30, parameters)
+
+        End Function
+
         ' tmshults 12/10/2004 - This behaves exactly like the RetrieveDataSetWithParameters method except it returns  
         '                       the first row returned from the base DataTable that is linked to the underlying DataSet
-        Public Shared Function RetrieveRow(ByVal sql As String, ByVal connection As OleDbConnection, ByVal timeout As Integer, ByVal ParamArray parameters As Object()) As DataRow
+        Public Shared Function RetrieveRow(ByVal sql As String, ByVal connection As OleDbConnection, _
+                ByVal timeout As Integer, ByVal ParamArray parameters As Object()) As DataRow
 
             With RetrieveData(sql, connection, 0, 1, timeout, parameters)
                 If .Rows.Count = 0 Then .Rows.Add(.NewRow())
@@ -281,16 +404,31 @@ Namespace Data
 
         End Function
 
+        Public Shared Function RetrieveRow(ByVal sql As String, ByVal connection As SqlConnection) As DataRow
+
+            Return RetrieveRow(sql, connection, 30)
+
+        End Function
+
         ' Return a single row of data given a Sql statement and connection
-        Public Shared Function RetrieveRow(ByVal sql As String, ByVal connection As SqlConnection, ByVal timeout As Integer) As DataRow
+        Public Shared Function RetrieveRow(ByVal sql As String, ByVal connection As SqlConnection, _
+                ByVal timeout As Integer) As DataRow
 
             Return RetrieveRow(sql, connection, timeout, Nothing)
 
         End Function
 
+        Public Shared Function RetrieveRow(ByVal sql As String, ByVal connection As SqlConnection, _
+                ByVal ParamArray parameters As Object()) As DataRow
+
+            Return RetrieveRow(sql, connection, 30, parameters)
+
+        End Function
+
         ' tmshults 12/10/2004 - This behaves exactly like the RetrieveDataSetWithParameters method except it returns  
         '                       the first row returned from the base DataTable that is linked to the underlying DataSet
-        Public Shared Function RetrieveRow(ByVal sql As String, ByVal connection As SqlConnection, ByVal timeout As Integer, ByVal ParamArray parameters As Object()) As DataRow
+        Public Shared Function RetrieveRow(ByVal sql As String, ByVal connection As SqlConnection, _
+                ByVal timeout As Integer, ByVal ParamArray parameters As Object()) As DataRow
 
             With RetrieveData(sql, connection, 0, 1, timeout, parameters)
                 If .Rows.Count = 0 Then .Rows.Add(.NewRow())
@@ -308,7 +446,8 @@ Namespace Data
 
         ' tmshults 12/10/2004 - This behaves exactly like the RetrieveDataSetWithParameters method except it returns  
         '                       the first row returned from the base DataTable that is linked to the underlying DataSet
-        Public Shared Function RetrieveRow(ByVal sql As String, ByVal connection As OracleConnection, ByVal ParamArray parameters As Object()) As DataRow
+        Public Shared Function RetrieveRow(ByVal sql As String, ByVal connection As OracleConnection, _
+                ByVal ParamArray parameters As Object()) As DataRow
 
             With RetrieveData(sql, connection, 0, 1, parameters)
                 If .Rows.Count = 0 Then .Rows.Add(.NewRow())
@@ -319,46 +458,93 @@ Namespace Data
 #End Region
 
 #Region "RetrieveData Overloaded Functions"
+        Public Shared Function RetrieveData(ByVal sql As String, ByVal connection As OleDbConnection) As DataTable
+
+            Return RetrieveData(sql, connection, 0, Integer.MaxValue, 30)
+
+        End Function
+
         ' Return a data table given a Sql statement and connection
-        Public Shared Function RetrieveData(ByVal sql As String, ByVal connection As OleDbConnection, ByVal startRow As Integer, ByVal maxRows As Integer, ByVal timeout As Integer) As DataTable
+        Public Shared Function RetrieveData(ByVal sql As String, ByVal connection As OleDbConnection, _
+                ByVal startRow As Integer, ByVal maxRows As Integer, ByVal timeout As Integer) As DataTable
 
             Return RetrieveData(sql, connection, startRow, maxRows, timeout, Nothing)
 
         End Function
 
+        Public Shared Function RetrieveData(ByVal sql As String, ByVal connection As OleDbConnection, _
+                ByVal ParamArray parameters As Object()) As DataTable
+
+            Return RetrieveData(sql, connection, 0, Integer.MaxValue, 30, parameters)
+
+        End Function
+
         ' tmshults 12/10/2004 - This behaves exactly like the RetrieveDataSetWithParameters method except it returns the 
         '                       base DataTable that is linked to the underlying DataSet
-        Public Shared Function RetrieveData(ByVal sql As String, ByVal connection As OleDbConnection, ByVal startRow As Integer, ByVal maxRows As Integer, ByVal timeout As Integer, ByVal ParamArray parameters As Object()) As DataTable
+        Public Shared Function RetrieveData(ByVal sql As String, ByVal connection As OleDbConnection, _
+                ByVal startRow As Integer, ByVal maxRows As Integer, ByVal timeout As Integer, _
+                ByVal ParamArray parameters As Object()) As DataTable
 
             Return RetrieveDataSet(sql, connection, startRow, maxRows, timeout, parameters).Tables(0)
 
         End Function
 
+        Public Shared Function RetrieveData(ByVal sql As String, ByVal connection As SqlConnection) As DataTable
+
+            Return RetrieveData(sql, connection, 0, Integer.MaxValue, 30)
+
+        End Function
+
         ' Return a data table given a Sql statement and connection
-        Public Shared Function RetrieveData(ByVal sql As String, ByVal connection As SqlConnection, ByVal startRow As Integer, ByVal maxRows As Integer, ByVal timeout As Integer) As DataTable
+        Public Shared Function RetrieveData(ByVal sql As String, ByVal connection As SqlConnection, _
+                ByVal startRow As Integer, ByVal maxRows As Integer, ByVal timeout As Integer) As DataTable
 
             Return RetrieveData(sql, connection, startRow, maxRows, timeout, Nothing)
 
         End Function
 
+        Public Shared Function RetrieveData(ByVal sql As String, ByVal connection As SqlConnection, _
+                ByVal ParamArray parameters As Object()) As DataTable
+
+            Return RetrieveData(sql, connection, 0, Integer.MaxValue, 30, parameters)
+
+        End Function
+
         ' tmshults 12/10/2004 - This behaves exactly like the RetrieveDataSetWithParameters method except it returns the 
         '                       base DataTable that is linked to the underlying DataSet
-        Public Shared Function RetrieveData(ByVal sql As String, ByVal connection As SqlConnection, ByVal startRow As Integer, ByVal maxRows As Integer, ByVal timeout As Integer, ByVal ParamArray parameters As Object()) As DataTable
+        Public Shared Function RetrieveData(ByVal sql As String, ByVal connection As SqlConnection, _
+                ByVal startRow As Integer, ByVal maxRows As Integer, ByVal timeout As Integer, _
+                ByVal ParamArray parameters As Object()) As DataTable
 
             Return RetrieveDataSet(sql, connection, startRow, maxRows, timeout, parameters).Tables(0)
 
         End Function
 
+        Public Shared Function RetrieveData(ByVal sql As String, ByVal connection As OracleConnection) As DataTable
+
+            Return RetrieveData(sql, connection, 0, Integer.MaxValue)
+
+        End Function
+
         ' Return a data table given a Sql statement and connection
-        Public Shared Function RetrieveData(ByVal sql As String, ByVal connection As OracleConnection, ByVal startRow As Integer, ByVal maxRows As Integer) As DataTable
+        Public Shared Function RetrieveData(ByVal sql As String, ByVal connection As OracleConnection, _
+                ByVal startRow As Integer, ByVal maxRows As Integer) As DataTable
 
             Return RetrieveData(sql, connection, startRow, maxRows, Nothing)
 
         End Function
 
+        Public Shared Function RetrieveData(ByVal sql As String, ByVal connection As OracleConnection, _
+                ByVal ParamArray parameters As Object()) As DataTable
+
+            Return RetrieveData(sql, connection, 0, Integer.MaxValue, parameters)
+
+        End Function
+
         ' tmshults 12/10/2004 - This behaves exactly like the RetrieveDataSetWithParameters method except it returns the 
         '                       base DataTable that is linked to the underlying DataSet
-        Public Shared Function RetrieveData(ByVal sql As String, ByVal connection As OracleConnection, ByVal startRow As Integer, ByVal maxRows As Integer, ByVal ParamArray parameters As Object()) As DataTable
+        Public Shared Function RetrieveData(ByVal sql As String, ByVal connection As OracleConnection, _
+                ByVal startRow As Integer, ByVal maxRows As Integer, ByVal ParamArray parameters As Object()) As DataTable
 
             Return RetrieveDataSet(sql, connection, startRow, maxRows, parameters).Tables(0)
 
@@ -366,10 +552,33 @@ Namespace Data
 #End Region
 
 #Region "RetrieveDataSet Overloaded Functions"
+
+        Public Shared Function RetrieveDataSet(ByVal sql As String, ByVal connection As OleDbConnection) As DataSet
+
+            Return RetrieveDataSet(sql, connection, 0, Integer.MaxValue, 30)
+
+        End Function
+
+        Public Shared Function RetrieveDataSet(ByVal sql As String, ByVal connection As OleDbConnection, _
+                ByVal startRow As Integer, ByVal maxRows As Integer, ByVal timeout As Integer) As DataSet
+
+            Return RetrieveDataSet(sql, connection, startRow, maxRows, timeout, Nothing)
+
+        End Function
+
+        Public Shared Function RetrieveDataSet(ByVal sql As String, ByVal connection As OleDbConnection, _
+                ByVal ParamArray parameters As Object()) As DataSet
+
+            Return RetrieveDataSet(sql, connection, 0, Integer.MaxValue, 30, parameters)
+
+        End Function
+
         ' tmshults 12/10/2004 - Added this method as an easy way to populate a DataSet with a StoredProc call
         '                       This takes the given values and then populates the appropriate Parameters for
         '                       the StoredProc.
-        Public Shared Function RetrieveDataSet(ByVal sql As String, ByVal connection As OleDbConnection, ByVal startRow As Integer, ByVal maxRows As Integer, ByVal timeout As Integer, ByVal ParamArray parameters As Object()) As DataSet
+        Public Shared Function RetrieveDataSet(ByVal sql As String, ByVal connection As OleDbConnection, _
+                ByVal startRow As Integer, ByVal maxRows As Integer, ByVal timeout As Integer, _
+                ByVal ParamArray parameters As Object()) As DataSet
 
             Dim command As New OleDbCommand(sql, connection)
 
@@ -383,31 +592,32 @@ Namespace Data
 
         End Function
 
-        Public Shared Function RetrieveDataSet(ByVal sql As String, ByVal connection As SqlConnection, ByVal startRow As Integer, ByVal maxRows As Integer, ByVal timeout As Integer, ByVal ParamArray parameters As SqlParameter()) As DataSet
+        Public Shared Function RetrieveDataSet(ByVal sql As String, ByVal connection As SqlConnection, _
+                ByVal ParamArray parameters As Object()) As DataSet
 
-            Dim command As New SqlCommand(sql, connection)
-            command.CommandTimeout = timeout
+            Return RetrieveDataSet(sql, connection, 0, Integer.MaxValue, 30, parameters)
 
-            If Not parameters Is Nothing Then
-                If parameters.Length > 0 Then
-                    For Each param As SqlParameter In parameters
-                        command.Parameters.Add(param)
-                    Next
-                End If
-            End If
+        End Function
 
-            Dim dataAdapter As New SqlDataAdapter(command)
-            Dim data As New DataSet("Temp")
-            dataAdapter.Fill(data, startRow, maxRows, "Table1")
+        Public Shared Function RetrieveDataSet(ByVal sql As String, ByVal connection As SqlConnection) As DataSet
 
-            Return data
+            Return RetrieveDataSet(sql, connection, 0, Integer.MaxValue, 30)
+
+        End Function
+
+        Public Shared Function RetrieveDataSet(ByVal sql As String, ByVal connection As SqlConnection, _
+                ByVal startRow As Integer, ByVal maxRows As Integer, ByVal timeout As Integer) As DataSet
+
+            Return RetrieveDataSet(sql, connection, startRow, maxRows, timeout, Nothing)
 
         End Function
 
         ' tmshults 12/10/2004 - Added this method as an easy way to populate a DataSet with a StoredProc call
         '                       This takes the given values and then populates the appropriate Parameters for
         '                       the StoredProc.
-        Public Shared Function RetrieveDataSet(ByVal sql As String, ByVal connection As SqlConnection, ByVal startRow As Integer, ByVal maxRows As Integer, ByVal timeout As Integer, ByVal ParamArray parameters As Object()) As DataSet
+        Public Shared Function RetrieveDataSet(ByVal sql As String, ByVal connection As SqlConnection, _
+                ByVal startRow As Integer, ByVal maxRows As Integer, ByVal timeout As Integer, _
+                ByVal ParamArray parameters As Object()) As DataSet
 
             Dim command As New SqlCommand(sql, connection)
             command.CommandTimeout = timeout
@@ -422,16 +632,32 @@ Namespace Data
 
         End Function
 
-        Public Shared Function RetrieveDataSet(ByVal sql As String, ByVal connection As OracleConnection, ByVal startRow As Integer, ByVal maxRows As Integer) As DataSet
+        Public Shared Function RetrieveDataSet(ByVal sql As String, ByVal connection As OracleConnection) As DataSet
+
+            Return RetrieveDataSet(sql, connection, 0, Integer.MaxValue)
+
+        End Function
+
+        Public Shared Function RetrieveDataSet(ByVal sql As String, ByVal connection As OracleConnection, _
+                ByVal startRow As Integer, ByVal maxRows As Integer) As DataSet
 
             Return RetrieveDataSet(sql, connection, startRow, maxRows, Nothing)
+
+        End Function
+
+        Public Shared Function RetrieveDataSet(ByVal sql As String, ByVal connection As OracleConnection, _
+                ByVal ParamArray parameters As Object()) As DataSet
+
+            Return RetrieveDataSet(sql, connection, 0, Integer.MaxValue, parameters)
 
         End Function
 
         ' tmshults 12/10/2004 - Added this method as an easy way to populate a DataSet with a StoredProc call
         '                       This takes the given values and then populates the appropriate Parameters for
         '                       the StoredProc.
-        Public Shared Function RetrieveDataSet(ByVal sql As String, ByVal connection As OracleConnection, ByVal startRow As Integer, ByVal maxRows As Integer, ByVal ParamArray parameters As Object()) As DataSet
+        Public Shared Function RetrieveDataSet(ByVal sql As String, ByVal connection As OracleConnection, _
+                ByVal startRow As Integer, ByVal maxRows As Integer, _
+                ByVal ParamArray parameters As Object()) As DataSet
 
             Dim command As New OracleCommand(sql, connection)
             FillStoredProcParameters(command, ConnectionType.OracleClient, parameters)
@@ -440,58 +666,16 @@ Namespace Data
             Dim data As New DataSet("Temp")
             dataAdapter.Fill(data, startRow, maxRows, "Table1")
 
-            Return Data
+            Return data
 
         End Function
 #End Region
 
-        ' tmshults 12/10/2004 - This is the private method that takes the passed Command Object queries what the 
-        '                       parameters are for the given StoredProcedure and then populates the values of the 
-        '                       command used to populate DataSets, Datatables, DataReaders or just used simply to 
-        '                       execute the required code with no need to return any data.
-        Private Shared Sub FillStoredProcParameters(ByRef command As IDbCommand, ByVal connectionType As ConnectionType, ByVal parameters() As Object)
-
-            If parameters IsNot Nothing Then
-                ' This is required for the SqlCommandBuilder to call Derive Parameters
-                command.CommandType = CommandType.StoredProcedure
-
-                ' Makes quick query to db to find the parameters for the StoredProc 
-                ' and then creates them for the command
-                Select Case connectionType
-                    Case connectionType.SqlClient
-                        SqlClient.SqlCommandBuilder.DeriveParameters(command)
-                    Case connectionType.OracleClient
-                        OracleClient.OracleCommandBuilder.DeriveParameters(command)
-                    Case connectionType.OleDb
-                        OleDb.OleDbCommandBuilder.DeriveParameters(command)
-                End Select
-
-                ' Remove the ReturnValue Parameter
-                command.Parameters.RemoveAt(0)
-
-                ' Check to see if the Parameters found match the Values provide
-                If command.Parameters.Count() <> parameters.Length() Then
-                    ' If there are more values provide than parameters throw an error
-                    If parameters.Length > command.Parameters.Count Then _
-                        Throw New ArgumentException("You have supplied more Values than Parameters listed for the Stored Procedure")
-
-                    ' Otherwise assume that the missing values are for Parameters that have default values
-                    ' and the code is willing to use the default.  To do this fill the extended ParamValue as Nothing/Null
-                    ReDim Preserve parameters(command.Parameters.Count - 1) ' Make the Values array match the Parameters of the Stored Proc
-                End If
-
-                ' Assign the values to the the Parameters.
-                For i As Integer = 0 To command.Parameters.Count() - 1
-                    command.Parameters(i).Value = parameters(i)
-                Next
-            End If
-
-        End Sub
-
+#Region "UpdateData Overloaded Functions"
         'Pinal Patel 04/06/05 - Updates the underlying data source of the specified data table.
         Public Shared Function UpdateData(ByVal sourceData As DataTable, ByVal sourceSql As String, ByVal connection As SqlConnection) As Integer
 
-            Dim dataAdapter As SqlDataAdapter = New SqlDataAdapter(sourceSql, Connection)
+            Dim dataAdapter As SqlDataAdapter = New SqlDataAdapter(sourceSql, connection)
             Dim commandBuilder As SqlCommandBuilder = New SqlCommandBuilder(dataAdapter)
             Return dataAdapter.Update(sourceData)
 
@@ -500,7 +684,7 @@ Namespace Data
         'Pinal Patel 04/06/05 - Updates the underlying data source of the specified data table.
         Public Shared Function UpdateData(ByVal sourceData As DataTable, ByVal sourceSql As String, ByVal connection As OleDbConnection) As Integer
 
-            Dim dataAdapter As OleDbDataAdapter = New OleDbDataAdapter(sourceSql, Connection)
+            Dim dataAdapter As OleDbDataAdapter = New OleDbDataAdapter(sourceSql, connection)
             Dim commandBuilder As OleDbCommandBuilder = New OleDbCommandBuilder(dataAdapter)
             Return dataAdapter.Update(sourceData)
 
@@ -509,26 +693,28 @@ Namespace Data
         'Pinal Patel 04/06/05 - Updates the underlying data source of the specified data table.
         Public Shared Function UpdateData(ByVal sourceData As DataTable, ByVal sourceSql As String, ByVal connection As OracleConnection) As Integer
 
-            Dim dataAdapter As OracleDataAdapter = New OracleDataAdapter(sourceSql, Connection)
+            Dim dataAdapter As OracleDataAdapter = New OracleDataAdapter(sourceSql, connection)
             Dim commandBuilder As OracleCommandBuilder = New OracleCommandBuilder(dataAdapter)
             Return dataAdapter.Update(sourceData)
 
         End Function
+#End Region
 
+#Region "Conversion Functions"
         'Pinal Patel 05/27/05 - Converts delimited data to data table.
         Public Shared Function DelimitedDataToDataTable(ByVal delimitedData As String, ByVal delimiter As String, ByVal header As Boolean) As DataTable
 
             Dim dtResult As DataTable = New DataTable
-            Dim strPattern As String = Regex.Escape(delimiter) & "(?=(?:[^""]*""[^""]*"")*(?![^""]*""))" 'Regex pattern that will be used to split the delimited data.
+            Dim pattern As String = Regex.Escape(delimiter) & "(?=(?:[^""]*""[^""]*"")*(?![^""]*""))" 'Regex pattern that will be used to split the delimited data.
 
             delimitedData = delimitedData.Trim(New Char() {" "c, vbCr, vbLf}).Replace(vbLf, "") 'Remove any leading and trailing whitespaces, carriage returns or line feeds.
             Dim strLines() As String = delimitedData.Split(vbCr)  'Split delimited data into lines.
 
             Dim intCursor As Integer = 0
             'Assume that the first line has header information.
-            Dim strHeaders() As String = Regex.Split(strLines(intCursor), strPattern)
+            Dim strHeaders() As String = Regex.Split(strLines(intCursor), pattern)
             'Create columns.
-            If Header Then
+            If header Then
                 'Use the first row as header row.
                 For i As Integer = 0 To strHeaders.Length() - 1
                     dtResult.Columns.Add(New DataColumn(strHeaders(i).Trim(New Char() {""""c}))) 'Remove any leading and trailing quotes from the column name.
@@ -545,7 +731,7 @@ Namespace Data
                 Dim drResult As DataRow = dtResult.NewRow() 'Create new row.
 
                 'Populate the new row.
-                Dim strFields() As String = Regex.Split(strLines(intCursor), strPattern)
+                Dim strFields() As String = Regex.Split(strLines(intCursor), pattern)
                 For i As Integer = 0 To strFields.Length() - 1
                     drResult(i) = strFields(i).Trim(New Char() {""""c})    'Remove any leading and trailing quotes from the data.
                 Next
@@ -591,6 +777,52 @@ Namespace Data
             End With
 
         End Function
+#End Region
+
+#Region "Helpers"
+        ' tmshults 12/10/2004 - This is the private method that takes the passed Command Object queries what the 
+        '                       parameters are for the given StoredProcedure and then populates the values of the 
+        '                       command used to populate DataSets, Datatables, DataReaders or just used simply to 
+        '                       execute the required code with no need to return any data.
+        Private Shared Sub FillStoredProcParameters(ByRef command As IDbCommand, ByVal connectionType As ConnectionType, ByVal parameters() As Object)
+
+            If parameters IsNot Nothing Then
+                ' This is required for the SqlCommandBuilder to call Derive Parameters
+                command.CommandType = CommandType.StoredProcedure
+
+                ' Makes quick query to db to find the parameters for the StoredProc 
+                ' and then creates them for the command
+                Select Case connectionType
+                    Case connectionType.SqlClient
+                        SqlClient.SqlCommandBuilder.DeriveParameters(command)
+                    Case connectionType.OracleClient
+                        OracleClient.OracleCommandBuilder.DeriveParameters(command)
+                    Case connectionType.OleDb
+                        OleDb.OleDbCommandBuilder.DeriveParameters(command)
+                End Select
+
+                ' Remove the ReturnValue Parameter
+                command.Parameters.RemoveAt(0)
+
+                ' Check to see if the Parameters found match the Values provide
+                If command.Parameters.Count() <> parameters.Length() Then
+                    ' If there are more values provide than parameters throw an error
+                    If parameters.Length > command.Parameters.Count Then _
+                        Throw New ArgumentException("You have supplied more Values than Parameters listed for the Stored Procedure")
+
+                    ' Otherwise assume that the missing values are for Parameters that have default values
+                    ' and the code is willing to use the default.  To do this fill the extended ParamValue as Nothing/Null
+                    ReDim Preserve parameters(command.Parameters.Count - 1) ' Make the Values array match the Parameters of the Stored Proc
+                End If
+
+                ' Assign the values to the the Parameters.
+                For i As Integer = 0 To command.Parameters.Count() - 1
+                    command.Parameters(i).Value = parameters(i)
+                Next
+            End If
+
+        End Sub
+#End Region
 
     End Class
 
