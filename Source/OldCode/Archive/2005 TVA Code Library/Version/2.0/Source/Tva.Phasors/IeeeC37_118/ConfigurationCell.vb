@@ -111,9 +111,9 @@ Namespace IeeeC37_118
                 CopyImage(MyBase.HeaderImage, buffer, index, MyBase.HeaderLength)
                 EndianOrder.BigEndian.CopyBytes(IDCode, buffer, index)
                 EndianOrder.BigEndian.CopyBytes(m_formatFlags, buffer, index + 2)
-                EndianOrder.BigEndian.CopyBytes(System.Convert.ToInt16(PhasorDefinitions.Count), buffer, index + 4)
-                EndianOrder.BigEndian.CopyBytes(System.Convert.ToInt16(AnalogDefinitions.Count), buffer, index + 6)
-                EndianOrder.BigEndian.CopyBytes(System.Convert.ToInt16(DigitalDefinitions.Count), buffer, index + 8)
+                EndianOrder.BigEndian.CopyBytes(Convert.ToInt16(PhasorDefinitions.Count), buffer, index + 4)
+                EndianOrder.BigEndian.CopyBytes(Convert.ToInt16(AnalogDefinitions.Count), buffer, index + 6)
+                EndianOrder.BigEndian.CopyBytes(Convert.ToInt16(DigitalDefinitions.Count), buffer, index + 8)
 
                 Return buffer
             End Get

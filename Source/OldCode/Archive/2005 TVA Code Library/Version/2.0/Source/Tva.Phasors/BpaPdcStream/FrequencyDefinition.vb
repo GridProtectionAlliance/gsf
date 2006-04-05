@@ -46,11 +46,11 @@ Namespace BpaPdcStream
             End If
 
             ' First entry is an F - we just ignore this
-            If entry.Length > 1 Then ScalingFactor = System.Convert.ToInt32(Trim(entry(1))) Else ScalingFactor = defaultFrequency.ScalingFactor
-            If entry.Length > 2 Then Offset = System.Convert.ToSingle(Trim(entry(2))) Else Offset = defaultFrequency.Offset
-            If entry.Length > 3 Then DfDtScalingFactor = System.Convert.ToInt32(Trim(entry(3))) Else DfDtScalingFactor = defaultFrequency.DfDtScalingFactor
-            If entry.Length > 4 Then DfDtOffset = System.Convert.ToSingle(Trim(entry(4))) Else DfDtOffset = defaultFrequency.DfDtOffset
-            If entry.Length > 5 Then Dummy = System.Convert.ToInt32(Trim(entry(5))) Else Dummy = defaultFrequency.Dummy
+            If entry.Length > 1 Then ScalingFactor = Convert.ToInt32(Trim(entry(1))) Else ScalingFactor = defaultFrequency.ScalingFactor
+            If entry.Length > 2 Then Offset = Convert.ToSingle(Trim(entry(2))) Else Offset = defaultFrequency.Offset
+            If entry.Length > 3 Then DfDtScalingFactor = Convert.ToInt32(Trim(entry(3))) Else DfDtScalingFactor = defaultFrequency.DfDtScalingFactor
+            If entry.Length > 4 Then DfDtOffset = Convert.ToSingle(Trim(entry(4))) Else DfDtOffset = defaultFrequency.DfDtOffset
+            If entry.Length > 5 Then Dummy = Convert.ToInt32(Trim(entry(5))) Else Dummy = defaultFrequency.Dummy
             If entry.Length > 6 Then Label = Trim(entry(6)) Else Label = defaultFrequency.Label
 
         End Sub

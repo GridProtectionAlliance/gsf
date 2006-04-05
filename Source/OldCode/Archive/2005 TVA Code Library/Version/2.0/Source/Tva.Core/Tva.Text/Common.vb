@@ -115,7 +115,7 @@ Namespace Text
         Public Shared Function RemoveCrLfs(ByVal value As String) As String
 
             If String.IsNullOrEmpty(value) Then Return ""
-            Return value.Replace(Environment.NewLine, "").Replace(System.Convert.ToChar(13), "").Replace(System.Convert.ToChar(10), "")
+            Return value.Replace(Environment.NewLine, "").Replace(Convert.ToChar(13), "").Replace(Convert.ToChar(10), "")
 
         End Function
 
@@ -336,6 +336,45 @@ Namespace Text
             Next
 
             Return True
+
+        End Function
+
+        ''' <summary>Encodes the specified Unicode character in proper Regular Expression format</summary>
+        ''' <param name="item">Unicode character to encode in Regular Expression format</param>
+        ''' <returns>Specified Unicode character in proper Regular Expression format</returns>
+        Public Shared Function EncodeRegexChar(ByVal item As Char) As String
+
+            Return "\u" & Convert.ToInt16(item).ToString("x"c).PadLeft(4, "0"c)
+
+        End Function
+
+        ''' <summary>Decodes the specified Regular Expression character back into a standard Unicode character</summary>
+        ''' <param name="value">Regular Expression character to decode back into a Unicode character</param>
+        ''' <returns>Standard Unicode character representation of specified Regular Expression character</returns>
+        Public Shared Function DecodeRegexChar(ByVal value As String) As Char
+
+            Return Convert.ToChar(Convert.ToInt16(value.Replace("\u", "0x"), 16))
+
+        End Function
+
+        ''' <summary>Encodes a string into a base-64 string</summary>
+        ''' <param name="value">Input string</param>
+        ''' <remarks>
+        ''' <para>This performs a base-64 style of string encoding useful for data obfuscation or safe XML data string transmission</para>
+        ''' <para>Note: this function encodes a "String", use the Convert.ToBase64String function to encode a binary data buffer</para>
+        ''' </remarks>
+        Public Shared Function Base64Encode(ByVal value As String) As String
+
+            Return Convert.ToBase64String(System.Text.Encoding.Unicode.GetBytes(value))
+
+        End Function
+
+        ''' <summary>Decodes given base-64 encoded string encoded with <see cref="Base64Encode" /></summary>
+        ''' <param name="value">Input string</param>
+        ''' <remarks>Note: this function decodes value back into a "String", use the Convert.FromBase64String function to decode a base-64 encoded string back into a binary data buffer</remarks>
+        Public Shared Function Base64Decode(ByVal value As String) As String
+
+            Return System.Text.Encoding.Unicode.GetString(Convert.FromBase64String(value))
 
         End Function
 

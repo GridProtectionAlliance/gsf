@@ -52,7 +52,6 @@
   <ItemGroup>
     <Compile Include="Tva.Measurements\ImmediateMeasurements.vb" />
     <Compile Include="Tva.Measurements\Sample.vb" />
-    <Compile Include="Tva.Text\Encoding.vb" />
     <Compile Include="Tva\Common.vb" />
     <Compile Include="Tva.Data\Common.vb" />
     <Compile Include="Tva.Interop\Assembly.vb" />
@@ -87,7 +86,7 @@
     <Compile Include="Tva.Net\Smtp\TraceListener.vb" />
     <Compile Include="Tva.Text\Common.vb" />
     <Compile Include="Tva.Xml\Common.vb" />
-    <Compile Include="Tva\Convert.vb" />
+    <Compile Include="Tva\ByteEncoding.vb" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Tva.Collections\Tva.Collections.cd" />

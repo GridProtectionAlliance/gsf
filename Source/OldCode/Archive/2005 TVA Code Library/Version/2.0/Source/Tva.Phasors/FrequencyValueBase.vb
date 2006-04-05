@@ -47,8 +47,8 @@ Public MustInherit Class FrequencyValueBase
     Protected Sub New(ByVal parent As IDataCell, ByVal frequencyDefinition As IFrequencyDefinition, ByVal unscaledFrequency As Int16, ByVal unscaledDfDt As Int16)
 
         MyClass.New(parent, frequencyDefinition, _
-            System.Convert.ToSingle(unscaledFrequency / frequencyDefinition.ScalingFactor + frequencyDefinition.Offset), _
-            System.Convert.ToSingle(unscaledDfDt / frequencyDefinition.DfDtScalingFactor + frequencyDefinition.DfDtOffset))
+            Convert.ToSingle(unscaledFrequency / frequencyDefinition.ScalingFactor + frequencyDefinition.Offset), _
+            Convert.ToSingle(unscaledDfDt / frequencyDefinition.DfDtScalingFactor + frequencyDefinition.DfDtOffset))
 
     End Sub
 
@@ -88,7 +88,7 @@ Public MustInherit Class FrequencyValueBase
     Public Overridable Property UnscaledFrequency() As Int16 Implements IFrequencyValue.UnscaledFrequency
         Get
             With Definition
-                Return System.Convert.ToInt16((m_frequency - .Offset) * .ScalingFactor)
+                Return Convert.ToInt16((m_frequency - .Offset) * .ScalingFactor)
             End With
         End Get
         Set(ByVal value As Int16)
@@ -101,7 +101,7 @@ Public MustInherit Class FrequencyValueBase
     Public Overridable Property UnscaledDfDt() As Int16 Implements IFrequencyValue.UnscaledDfDt
         Get
             With Definition
-                Return System.Convert.ToInt16((m_dfdt - .DfDtOffset) * .DfDtScalingFactor)
+                Return Convert.ToInt16((m_dfdt - .DfDtOffset) * .DfDtScalingFactor)
             End With
         End Get
         Set(ByVal value As Int16)

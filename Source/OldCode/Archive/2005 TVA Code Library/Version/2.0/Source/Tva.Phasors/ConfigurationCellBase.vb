@@ -213,7 +213,7 @@ Public MustInherit Class ConfigurationCellBase
 
     Protected Overrides Sub ParseHeaderImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
-        Dim length As Int32 = Array.IndexOf(binaryImage, System.Convert.ToByte(0), startIndex, MaximumStationNameLength) - startIndex
+        Dim length As Int32 = Array.IndexOf(binaryImage, Convert.ToByte(0), startIndex, MaximumStationNameLength) - startIndex
 
         If length < 0 Then length = MaximumStationNameLength
 

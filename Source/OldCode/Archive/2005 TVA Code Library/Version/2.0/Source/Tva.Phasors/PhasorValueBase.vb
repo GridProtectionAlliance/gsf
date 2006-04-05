@@ -227,7 +227,7 @@ Public MustInherit Class PhasorValueBase
 
     Public Overridable Property UnscaledReal() As Int16 Implements IPhasorValue.UnscaledReal
         Get
-            Return System.Convert.ToInt16(m_real / Definition.ConversionFactor)
+            Return Convert.ToInt16(m_real / Definition.ConversionFactor)
         End Get
         Set(ByVal value As Int16)
             m_real = value * Definition.ConversionFactor
@@ -236,7 +236,7 @@ Public MustInherit Class PhasorValueBase
 
     Public Overridable Property UnscaledImaginary() As Int16 Implements IPhasorValue.UnscaledImaginary
         Get
-            Return System.Convert.ToInt16(m_imaginary / Definition.ConversionFactor)
+            Return Convert.ToInt16(m_imaginary / Definition.ConversionFactor)
         End Get
         Set(ByVal value As Int16)
             m_imaginary = value * Definition.ConversionFactor
@@ -283,11 +283,11 @@ Public MustInherit Class PhasorValueBase
                 End If
             Else
                 If DataFormat = Phasors.DataFormat.FixedInteger Then
-                    EndianOrder.BigEndian.CopyBytes(System.Convert.ToUInt16(Magnitude), buffer, 0)
-                    EndianOrder.BigEndian.CopyBytes(System.Convert.ToInt16(Angle * System.Math.PI / 180 * 10000), buffer, 2)
+                    EndianOrder.BigEndian.CopyBytes(Convert.ToUInt16(Magnitude), buffer, 0)
+                    EndianOrder.BigEndian.CopyBytes(Convert.ToInt16(Angle * System.Math.PI / 180 * 10000), buffer, 2)
                 Else
                     EndianOrder.BigEndian.CopyBytes(Magnitude, buffer, 0)
-                    EndianOrder.BigEndian.CopyBytes(System.Convert.ToSingle(Angle * System.Math.PI / 180), buffer, 4)
+                    EndianOrder.BigEndian.CopyBytes(Convert.ToSingle(Angle * System.Math.PI / 180), buffer, 4)
                 End If
             End If
 
@@ -310,7 +310,7 @@ Public MustInherit Class PhasorValueBase
             Dim angle As Single
 
             If DataFormat = Phasors.DataFormat.FixedInteger Then
-                magnitude = System.Convert.ToSingle(EndianOrder.BigEndian.ToUInt16(binaryImage, startIndex))
+                magnitude = Convert.ToSingle(EndianOrder.BigEndian.ToUInt16(binaryImage, startIndex))
                 angle = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 2) * 180 / System.Math.PI / 10000
             Else
                 magnitude = EndianOrder.BigEndian.ToSingle(binaryImage, startIndex)

@@ -135,11 +135,11 @@ Namespace BpaPdcStream
                 Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), HeaderLength)
 
                 buffer(0) = SyncByte
-                buffer(1) = System.Convert.ToByte(1)
-                EndianOrder.BigEndian.CopyBytes(System.Convert.ToInt16(buffer.Length \ 2), buffer, 2)
-                EndianOrder.BigEndian.CopyBytes(System.Convert.ToUInt32(TimeTag.Value), buffer, 4)
-                EndianOrder.BigEndian.CopyBytes(System.Convert.ToInt16(m_sampleNumber), buffer, 8)
-                EndianOrder.BigEndian.CopyBytes(System.Convert.ToInt16(Cells.Count), buffer, 10)
+                buffer(1) = Convert.ToByte(1)
+                EndianOrder.BigEndian.CopyBytes(Convert.ToInt16(buffer.Length \ 2), buffer, 2)
+                EndianOrder.BigEndian.CopyBytes(Convert.ToUInt32(TimeTag.Value), buffer, 4)
+                EndianOrder.BigEndian.CopyBytes(Convert.ToInt16(m_sampleNumber), buffer, 8)
+                EndianOrder.BigEndian.CopyBytes(Convert.ToInt16(Cells.Count), buffer, 10)
 
                 Return buffer
             End Get
@@ -193,11 +193,11 @@ Namespace BpaPdcStream
         '        Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), ProtocolSpecificDataLength)
 
         '        buffer(0) = Common.SyncByte
-        '        buffer(1) = System.Convert.ToByte(1)
-        '        EndianOrder.BigEndian.CopyBytes(System.Convert.ToInt16(buffer.Length \ 2), buffer, 2)
-        '        EndianOrder.BigEndian.CopyBytes(System.Convert.ToUInt32(TimeTag.Value), buffer, 4)
-        '        EndianOrder.BigEndian.CopyBytes(System.Convert.ToInt16(m_sampleNumber), buffer, 8)
-        '        EndianOrder.BigEndian.CopyBytes(System.Convert.ToInt16(Cells.Count), buffer, 10)
+        '        buffer(1) = Convert.ToByte(1)
+        '        EndianOrder.BigEndian.CopyBytes(Convert.ToInt16(buffer.Length \ 2), buffer, 2)
+        '        EndianOrder.BigEndian.CopyBytes(Convert.ToUInt32(TimeTag.Value), buffer, 4)
+        '        EndianOrder.BigEndian.CopyBytes(Convert.ToInt16(m_sampleNumber), buffer, 8)
+        '        EndianOrder.BigEndian.CopyBytes(Convert.ToInt16(Cells.Count), buffer, 10)
 
         '        Return buffer
         '    End Get
@@ -292,11 +292,11 @@ Namespace BpaPdcStream
         '        Dim index As Int32
 
         '        buffer(0) = SyncByte
-        '        buffer(1) = System.Convert.ToByte(1)
-        '        EndianOrder.BigEndian.CopyBytes(System.Convert.ToInt16(buffer.Length \ 2), buffer, 2)
-        '        EndianOrder.BigEndian.CopyBytes(System.Convert.ToUInt32(m_timeTag.Value), buffer, 4)
-        '        EndianOrder.BigEndian.CopyBytes(System.Convert.ToInt16(m_sampleNumber), buffer, 8)
-        '        EndianOrder.BigEndian.CopyBytes(System.Convert.ToInt16(Cells.Length), buffer, 10)
+        '        buffer(1) = Convert.ToByte(1)
+        '        EndianOrder.BigEndian.CopyBytes(Convert.ToInt16(buffer.Length \ 2), buffer, 2)
+        '        EndianOrder.BigEndian.CopyBytes(Convert.ToUInt32(m_timeTag.Value), buffer, 4)
+        '        EndianOrder.BigEndian.CopyBytes(Convert.ToInt16(m_sampleNumber), buffer, 8)
+        '        EndianOrder.BigEndian.CopyBytes(Convert.ToInt16(Cells.Length), buffer, 10)
         '        index = 12
 
         '        For x As Int32 = 0 To Cells.Length - 1

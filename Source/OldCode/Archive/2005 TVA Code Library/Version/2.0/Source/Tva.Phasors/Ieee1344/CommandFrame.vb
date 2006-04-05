@@ -106,7 +106,7 @@ Namespace Ieee1344
             Get
                 Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), HeaderLength)
 
-                EndianOrder.BigEndian.CopyBytes(System.Convert.ToUInt32(TimeTag.Value), buffer, 0)
+                EndianOrder.BigEndian.CopyBytes(Convert.ToUInt32(TimeTag.Value), buffer, 0)
                 EndianOrder.BigEndian.CopyBytes(m_idCode, buffer, 4)
 
                 Return buffer

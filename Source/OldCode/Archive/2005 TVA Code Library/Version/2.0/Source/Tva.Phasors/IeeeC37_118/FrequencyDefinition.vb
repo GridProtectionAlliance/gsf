@@ -75,7 +75,7 @@ Namespace IeeeC37_118
 
         Protected Overrides ReadOnly Property BodyImage() As Byte()
             Get
-                Return EndianOrder.BigEndian.GetBytes(System.Convert.ToInt16(IIf(Parent.NominalFrequency = LineFrequency.Hz50, Bit0, Nill)))
+                Return EndianOrder.BigEndian.GetBytes(Convert.ToInt16(IIf(Parent.NominalFrequency = LineFrequency.Hz50, Bit0, Nill)))
             End Get
         End Property
 

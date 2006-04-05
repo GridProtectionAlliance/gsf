@@ -84,7 +84,7 @@ Namespace Cryptography
             Dim rgbKey As Byte() = Encoding.ASCII.GetBytes(encryptionKey)
             Dim rgbIV As Byte() = Encoding.ASCII.GetBytes(encryptionKey)
 
-            Return System.Convert.ToBase64String(Encrypt(Encoding.Unicode.GetBytes(str), rgbKey, rgbIV, strength))
+            Return Convert.ToBase64String(Encrypt(Encoding.Unicode.GetBytes(str), rgbKey, rgbIV, strength))
 
         End Function
 
@@ -261,7 +261,7 @@ Namespace Cryptography
             Dim rgbKey As Byte() = Encoding.ASCII.GetBytes(encryptionKey)
             Dim rgbIV As Byte() = Encoding.ASCII.GetBytes(encryptionKey)
 
-            Return Encoding.Unicode.GetString(Decrypt(System.Convert.FromBase64String(str), rgbKey, rgbIV, strength))
+            Return Encoding.Unicode.GetString(Decrypt(Convert.FromBase64String(str), rgbKey, rgbIV, strength))
 
         End Function
 
@@ -414,7 +414,7 @@ Namespace Cryptography
         ''' <summary>Coerces key to maximum legal bit length for given encryption algorithm</summary>
         Public Shared Function GetLegalKey(ByVal algorithm As SymmetricAlgorithm, ByVal key() As Byte) As Byte()
 
-            Dim rgbKey As Byte() = Array.CreateInstance(GetType(Byte), System.Convert.ToInt32(algorithm.LegalKeySizes(0).MaxSize / 8 - 1))
+            Dim rgbKey As Byte() = Array.CreateInstance(GetType(Byte), Convert.ToInt32(algorithm.LegalKeySizes(0).MaxSize / 8 - 1))
 
             For x As Integer = 0 To rgbKey.Length - 1
                 If x < key.Length Then
@@ -431,7 +431,7 @@ Namespace Cryptography
         ''' <summary>Coerces initialization vector to legal block size for given encryption algorithm</summary>
         Public Shared Function GetLegalIV(ByVal algorithm As SymmetricAlgorithm, ByVal IV() As Byte) As Byte()
 
-            Dim rgbIV As Byte() = Array.CreateInstance(GetType(Byte), System.Convert.ToInt32(algorithm.LegalBlockSizes(0).MinSize / 8 - 1))
+            Dim rgbIV As Byte() = Array.CreateInstance(GetType(Byte), Convert.ToInt32(algorithm.LegalBlockSizes(0).MinSize / 8 - 1))
 
             For x As Integer = 0 To rgbIV.Length - 1
                 If x < IV.Length Then

@@ -109,7 +109,7 @@ Namespace Measurements
             m_framesPerSecond = framesPerSecond
             m_lagTime = lagTime
             m_leadTime = leadTime
-            m_frameRate = System.Convert.ToDecimal(SecondsToTicks(1)) / System.Convert.ToDecimal(framesPerSecond)
+            m_frameRate = Convert.ToDecimal(SecondsToTicks(1)) / Convert.ToDecimal(framesPerSecond)
             m_latestMeasurements = New ImmediateMeasurements(Me)
             m_monitorTimer = New Timers.Timer
 

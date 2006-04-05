@@ -118,7 +118,7 @@ Namespace Interop
 
                 If readLength > 0 Then
                     Do While startIndex < readLength
-                        nullIndex = Array.IndexOf(buffer, System.Convert.ToByte(0), startIndex)
+                        nullIndex = Array.IndexOf(buffer, Convert.ToByte(0), startIndex)
 
                         If nullIndex > -1 Then
                             If buffer(startIndex) > 0 Then sections.Add(Encoding.Default.GetString(buffer, startIndex, nullIndex - startIndex).Trim())

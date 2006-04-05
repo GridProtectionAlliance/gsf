@@ -116,7 +116,7 @@ Public MustInherit Class ChannelDefinitionBase
             Return m_scale * ScalePerBit
         End Get
         Set(ByVal value As Single)
-            ScalingFactor = System.Convert.ToInt32(value / ScalePerBit)
+            ScalingFactor = Convert.ToInt32(value / ScalePerBit)
         End Set
     End Property
 
@@ -187,7 +187,7 @@ Public MustInherit Class ChannelDefinitionBase
 
     Protected Overrides Sub ParseBodyImage(ByVal state As IChannelParsingState, ByVal binaryImage() As Byte, ByVal startIndex As Int32)
 
-        Dim length As Int32 = Array.IndexOf(binaryImage, System.Convert.ToByte(0), startIndex, MaximumLabelLength) - startIndex
+        Dim length As Int32 = Array.IndexOf(binaryImage, Convert.ToByte(0), startIndex, MaximumLabelLength) - startIndex
 
         If length < 0 Then length = MaximumLabelLength
 
