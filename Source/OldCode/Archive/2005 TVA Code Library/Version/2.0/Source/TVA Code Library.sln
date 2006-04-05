@@ -20,7 +20,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Documentation", "Documentat
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Tva.IO.Compression", "Tva.IO.Compression\Tva.IO.Compression.vcproj", "{F611B9BA-C69D-449B-B596-FABFB746EA2A}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Version Setup Files", "Version Setup Files", "{2E2A8AA0-A387-4245-A419-496B50CB7939}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build Log and Version Setup Files", "Build Log and Version Setup Files", "{2E2A8AA0-A387-4245-A419-496B50CB7939}"
 	ProjectSection(SolutionItems) = preProject
 		..\Build Scripts\Build.log = ..\Build Scripts\Build.log
 		Build.ts = Build.ts
