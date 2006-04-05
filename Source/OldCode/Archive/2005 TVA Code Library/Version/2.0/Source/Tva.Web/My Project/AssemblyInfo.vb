@@ -32,7 +32,7 @@ Imports System.Security.Permissions
 '
 ' You can specify all the values or you can default the Build and Revision Numbers 
 ' by using the '*' as shown below:
-' <Assembly: AssemblyVersion("2.0.10.63182")> 
+' <Assembly: AssemblyVersion("2.0.11.63446")> 
 
-<Assembly: AssemblyVersion("2.0.10.63182")> 
-<Assembly: AssemblyFileVersion("2.0.10.63182")> 
+<Assembly: AssemblyVersion("2.0.11.63446")> 
+<Assembly: AssemblyFileVersion("2.0.11.63446")> 
