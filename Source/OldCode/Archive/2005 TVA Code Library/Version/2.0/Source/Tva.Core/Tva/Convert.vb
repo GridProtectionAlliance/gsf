@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  Tva.Common.vb - Conversion Functions
+'  Tva.ByteEncoding.vb - Byte encoding functions
 '  Copyright © 2006 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005
@@ -12,54 +12,101 @@
 '  -----------------------------------------------------------------------------------------------------
 '  04/29/2005 - Pinal C Patel
 '       Original version of source code generated
+'  04/05/2006 - J. Ritchie Carroll
+'       Transformed code into System.Text.Encoding styled hierarchy
 '
 '*******************************************************************************************************
 
 Imports System.Text
 Imports System.Text.RegularExpressions
+Imports Tva.Interop.Bit
 
-Public NotInheritable Class Convert
+''' <summary>Handles conversion of a byte buffer to and from a user presentable data format</summary>
+Public MustInherit Class ByteEncoding
 
-    Private Sub New()
+    Public Const NoSpacing As Char = Char.MinValue
 
-        ' This class contains only global functions and is not meant to be instantiated
+    Private Shared m_hexEncoding As HexEncoding
+    Private Shared m_integerEncoding As IntegerEncoding
+    Private Shared m_binaryEncoding As BinaryEncoding
 
-    End Sub
+    ''' <summary>Handles encoding and decoding of a byte buffer into a hexadecimal based presentation format</summary>
+    Public Shared ReadOnly Property Hex() As HexEncoding
+        Get
+            If m_hexEncoding Is Nothing Then m_hexEncoding = New HexEncoding
+            Return m_hexEncoding
+        End Get
+    End Property
 
-    ''' <summary>
-    ''' Converts a string in ascii format to byte array.
-    ''' </summary>
-    ''' <param name="asciiData">Required. Ascii string to be converted to byte array.</param>
-    ''' <returns>Byte representation of the ascii string.</returns>
-    ''' <remarks>Ascii string format example: Hello World!</remarks>
-    Public Shared Function AsciiToBytes(ByVal asciiData As String) As Byte()
+    ''' <summary>Handles encoding and decoding of a byte buffer into an integer based presentation format</summary>
+    Public Shared ReadOnly Property [Integer]() As IntegerEncoding
+        Get
+            If m_integerEncoding Is Nothing Then m_integerEncoding = New IntegerEncoding
+            Return m_integerEncoding
+        End Get
+    End Property
 
-        If asciiData IsNot Nothing Then
-            Dim bytes(System.Convert.ToInt32(asciiData.Length() - 1)) As Byte
+    ''' <summary>Handles encoding and decoding of a byte buffer into a binary (i.e., 0 and 1's) based presentation format</summary>
+    Public Shared ReadOnly Property Binary() As BinaryEncoding
+        Get
+            If m_binaryEncoding Is Nothing Then m_binaryEncoding = New BinaryEncoding
+            Return m_binaryEncoding
+        End Get
+    End Property
 
-            For i As Integer = 0 To asciiData.Length() - 1
-                bytes(i) = System.Convert.ToByte(System.Convert.ToChar(asciiData.Substring(i, 1)))
-            Next
+    ''' <summary>Encodes given buffer into a user presentable representation</summary>
+    ''' <param name="bytes">Bytes to encode</param>
+    ''' <returns>String of encoded bytes</returns>
+    Public Overridable Function GetString(ByVal bytes As Byte()) As String
 
-            Return bytes
-        Else
-            Return Nothing
-        End If
+        Return GetString(bytes, NoSpacing)
 
     End Function
 
-    ''' <summary>
-    ''' Converts a byte array to a ascii string.
-    ''' </summary>
-    ''' <param name="bytes">Required. Byte array to be converted to ascii string.</param>
-    ''' <returns>String in ascii format.</returns>
-    ''' <remarks></remarks>
-    Public Shared Function BytesToAscii(ByVal bytes As Byte()) As String
+    ''' <summary>Encodes given buffer into a user presentable representation</summary>
+    ''' <param name="bytes">Bytes to encode</param>
+    ''' <param name="spacingCharacter">Spacing character to place between encoded bytes</param>
+    ''' <returns>String of encoded bytes</returns>
+    Public Overridable Function GetString(ByVal bytes As Byte(), ByVal spacingCharacter As Char) As String
 
-        With New StringBuilder()
+        If bytes Is Nothing Then Throw New ArgumentNullException("bytes", "Input buffer cannot be null")
+        Return GetString(bytes, 0, bytes.Length, spacingCharacter)
+
+    End Function
+
+    ''' <summary>Encodes given buffer into a user presentable representation</summary>
+    ''' <param name="bytes">Bytes to encode</param>
+    ''' <param name="offset">Offset into buffer to bgeing encoding</param>
+    ''' <param name="length">Length of buffer to encode</param>
+    ''' <param name="spacingCharacter">Spacing character to place between encoded bytes</param>
+    ''' <returns>String of encoded bytes</returns>
+    Public MustOverride Function GetString(ByVal bytes As Byte(), ByVal offset As Integer, ByVal length As Integer, ByVal spacingCharacter As Char) As String
+
+    ''' <summary>Decodes given string back into a byte buffer</summary>
+    ''' <param name="value">Encoded string to decode</param>
+    ''' <returns>Decoded bytes</returns>
+    Public Overridable Function GetBytes(ByVal value As String) As Byte()
+
+        If String.IsNullOrEmpty(value) Then Throw New ArgumentNullException("value", "Input string cannot be null")
+        Return GetBytes(value, NoSpacing)
+
+    End Function
+
+    ''' <summary>Decodes given string back into a byte buffer</summary>
+    ''' <param name="value">Encoded string to decode</param>
+    ''' <param name="spacingCharacter">Original spacing character that was inserted between encoded bytes</param>
+    ''' <returns>Decoded bytes</returns>
+    Public MustOverride Function GetBytes(ByVal value As String, ByVal spacingCharacter As Char) As Byte()
+
+    Protected Function BytesToString(ByVal bytes As Byte(), ByVal offset As Integer, ByVal length As Integer, ByVal spacingCharacter As Char, ByVal format As String) As String
+
+        If bytes Is Nothing Then Throw New ArgumentNullException("bytes", "Input buffer cannot be null")
+
+        With New StringBuilder
             If bytes IsNot Nothing Then
-                For i As Integer = 0 To bytes.Length() - 1
-                    .Append(System.Convert.ToChar(System.Convert.ToInt32(bytes(i).ToString())))
+                For x As Integer = 0 To length - 1
+                    If spacingCharacter <> NoSpacing AndAlso x > 0 Then .Append(spacingCharacter)
+                    .Append(bytes(x + offset).ToString(format))
                 Next
             End If
 
@@ -68,135 +115,179 @@ Public NotInheritable Class Convert
 
     End Function
 
-    ''' <summary>
-    ''' Converts a string in ascii format to its hex equivalent.
-    ''' </summary>
-    ''' <param name="asciiData">Required. Ascii string to be converted to hex string.</param>
-    ''' <returns>String in hex format.</returns>
-    ''' <remarks></remarks>
-    Public Shared Function AsciiToHex(ByVal asciiData As String) As String
+End Class
 
-        Return BytesToHex(AsciiToBytes(asciiData))
+Public Class HexEncoding
 
-    End Function
+    Inherits ByteEncoding
 
-    Public Shared Function AsciiToDec(ByVal asciiData As String) As String
+    ''' <summary>Decodes given string back into a byte buffer</summary>
+    ''' <param name="hexData">Encoded hexadecimal data string to decode</param>
+    ''' <param name="spacingCharacter">Original spacing character that was inserted between encoded bytes</param>
+    ''' <returns>Decoded bytes</returns>
+    Public Overrides Function GetBytes(ByVal hexData As String, ByVal spacingCharacter As Char) As Byte()
 
-        Return BytesToDec(AsciiToBytes(asciiData))
-
-    End Function
-
-    ''' <summary>
-    ''' Convert a string in hex format to byte array.
-    ''' </summary>
-    ''' <param name="hexData">Required. Hex string to be converted to byte array.</param>
-    ''' <returns>Byte representation of the hex string.</returns>
-    ''' <remarks>Hex string format example: 48656c6c6f20576f726c6421 (Ascii equivalent: Hello World!)</remarks>
-    Public Shared Function HexToBytes(ByVal hexData As String) As Byte()
+        ' Remove spacing characters, if needed
+        hexData = hexData.Trim
+        If spacingCharacter <> NoSpacing Then hexData = hexData.Replace(spacingCharacter, "")
 
         ' Process the string only if it has data in hex format (Example: 48656C6C21).
-        If hexData IsNot Nothing AndAlso Regex.Matches(hexData, "[^a-fA-F0-9]").Count() = 0 Then
+        If Not String.IsNullOrEmpty(hexData) AndAlso Regex.Matches(hexData, "[^a-fA-F0-9]").Count = 0 Then
             ' Trim the end of the string to discard any additional characters if present in the string that
-            ' would prevent the string from being a hex string. 
-            hexData = hexData.Substring(0, hexData.Length() - hexData.Length() Mod 2)
+            ' would prevent the string from being a hex encoded string. 
+            ' Note: We require each character is represented by its 2 character hex value.
+            hexData = hexData.Substring(0, hexData.Length - hexData.Length Mod 2)
 
-            Dim bytes(System.Convert.ToInt32(hexData.Length() / 2) - 1) As Byte
-            Dim j As Integer = 0
-            For i As Integer = 0 To hexData.Length() - 1 Step 2
-                bytes(j) = System.Convert.ToByte(hexData.Substring(i, 2), 16)
-                j += 1
+            Dim bytes As Byte() = Array.CreateInstance(GetType(Byte), hexData.Length \ 2)
+            Dim index As Integer
+
+            For x As Integer = 0 To hexData.Length - 1 Step 2
+                bytes(index) = System.Convert.ToByte(hexData.Substring(x, 2), 16)
+                index += 1
             Next
 
             Return bytes
         Else
-            Return Nothing
+            Throw New ArgumentException("Input string is not a valid hex encoded string - invalid characters encountered")
         End If
 
     End Function
 
-    ''' <summary>
-    ''' Converts a byte array to a hex string.
-    ''' </summary>
-    ''' <param name="bytes">Required. Byte array to be converted to hex string.</param>
-    ''' <returns>String in hex format.</returns>
-    ''' <remarks></remarks>
-    Public Shared Function BytesToHex(ByVal bytes As Byte()) As String
+    ''' <summary>Encodes given buffer into a user presentable representation</summary>
+    ''' <param name="bytes">Bytes to encode</param>
+    ''' <param name="offset">Offset into buffer to bgeing encoding</param>
+    ''' <param name="length">Length of buffer to encode</param>
+    ''' <param name="spacingCharacter">Spacing character to place between encoded bytes</param>
+    ''' <returns>String of encoded bytes</returns>
+    Public Overrides Function GetString(ByVal bytes() As Byte, ByVal offset As Integer, ByVal length As Integer, ByVal spacingCharacter As Char) As String
 
-        With New StringBuilder()
-            If bytes IsNot Nothing Then
-                For i As Integer = 0 To bytes.Length() - 1
-                    .Append(bytes(i).ToString("X2"))
-                Next
-            End If
-
-            Return .ToString()
-        End With
+        Return BytesToString(bytes, offset, length, spacingCharacter, "X2")
 
     End Function
 
-    ''' <summary>
-    ''' Converts a string in hex format to its ascii equivalent.
-    ''' </summary>
-    ''' <param name="hexData">Required. Hex string to be converted to ascii string.</param>
-    ''' <returns>String in ascii format.</returns>
-    ''' <remarks></remarks>
-    Public Shared Function HexToAscii(ByVal hexData As String) As String
+End Class
 
-        Return BytesToAscii(HexToBytes(hexData))
+Public Class IntegerEncoding
 
-    End Function
+    Inherits ByteEncoding
 
-    Public Shared Function HexToDec(ByVal hexData As String) As String
+    ''' <summary>Decodes given string back into a byte buffer</summary>
+    ''' <param name="intData">Encoded integer data string to decode</param>
+    ''' <param name="spacingCharacter">Original spacing character that was inserted between encoded bytes</param>
+    ''' <returns>Decoded bytes</returns>
+    Public Overrides Function GetBytes(ByVal intData As String, ByVal spacingCharacter As Char) As Byte()
 
-        Return BytesToDec(HexToBytes(hexData))
-
-    End Function
-
-    Public Shared Function DecToBytes(ByVal decData As String) As Byte()
+        ' Remove spacing characters, if needed
+        intData = intData.Trim
+        If spacingCharacter <> NoSpacing Then intData = intData.Replace(spacingCharacter, "")
 
         ' Process the string only if it has data in decimal format (Example: 072101108108033).
-        If decData IsNot Nothing AndAlso Regex.Matches(decData, "[^0-9]").Count() = 0 Then
+        If Not String.IsNullOrEmpty(intData) AndAlso Regex.Matches(intData, "[^0-9]").Count = 0 Then
             ' Trim the end of the string to discard any additional characters, if present, in the 
-            ' string that would prevent the string from being a decimal string. 
+            ' string that would prevent the string from being a integer encoded string. 
             ' Note: We require each character is represented by its 3 character decimal value.
-            decData = decData.Substring(0, decData.Length() - decData.Length() Mod 3)
+            intData = intData.Substring(0, intData.Length - intData.Length Mod 3)
 
-            Dim bytes(System.Convert.ToInt32(decData.Length() / 3) - 1) As Byte
-            Dim j As Integer = 0
-            For i As Integer = 0 To decData.Length() - 1 Step 3
-                Dim decValue As Int16 = System.Convert.ToInt16(decData.Substring(i, 3))
-                If decValue >= 0 AndAlso decValue <= 255 Then
-                    bytes(j) = System.Convert.ToByte(decData.Substring(i, 3), 10)
-                    j += 1
-                Else
-                    bytes = Nothing
-                    Exit For
-                End If
+            Dim bytes As Byte() = Array.CreateInstance(GetType(Byte), intData.Length \ 3)
+            Dim index As Integer
+
+            For x As Integer = 0 To intData.Length - 1 Step 3
+                bytes(index) = System.Convert.ToByte(intData.Substring(x, 3), 10)
+                index += 1
             Next
+
             Return bytes
         Else
-            Return Nothing
+            Throw New ArgumentException("Input string is not a valid integer encoded string - invalid characters encountered")
         End If
 
     End Function
 
-    Public Shared Function BytesToDec(ByVal bytes As Byte()) As String
+    ''' <summary>Encodes given buffer into a user presentable representation</summary>
+    ''' <param name="bytes">Bytes to encode</param>
+    ''' <param name="offset">Offset into buffer to bgeing encoding</param>
+    ''' <param name="length">Length of buffer to encode</param>
+    ''' <param name="spacingCharacter">Spacing character to place between encoded bytes</param>
+    ''' <returns>String of encoded bytes</returns>
+    Public Overrides Function GetString(ByVal bytes() As Byte, ByVal offset As Integer, ByVal length As Integer, ByVal spacingCharacter As Char) As String
 
-        With New StringBuilder()
+        Return BytesToString(bytes, offset, length, spacingCharacter, "D3")
+
+    End Function
+
+End Class
+
+Public Class BinaryEncoding
+
+    Inherits ByteEncoding
+
+    ''' <summary>Decodes given string back into a byte buffer</summary>
+    ''' <param name="binaryData">Encoded binary data string to decode</param>
+    ''' <param name="spacingCharacter">Original spacing character that was inserted between encoded bytes</param>
+    ''' <returns>Decoded bytes</returns>
+    Public Overloads Overrides Function GetBytes(ByVal binaryData As String, ByVal spacingCharacter As Char) As Byte()
+
+        ' Remove spacing characters, if needed
+        binaryData = binaryData.Trim
+        If spacingCharacter <> NoSpacing Then binaryData = binaryData.Replace(spacingCharacter, "")
+
+        ' Process the string only if it has data in decimal format (Example: 010101101010101).
+        If Not String.IsNullOrEmpty(binaryData) AndAlso Regex.Matches(binaryData, "[^0-1]").Count = 0 Then
+            ' Trim the end of the string to discard any additional characters, if present, in the 
+            ' string that would prevent the string from being a binary encoded string. 
+            ' Note: We require each character is represented by its 8 character binary value.
+            binaryData = binaryData.Substring(0, binaryData.Length - binaryData.Length Mod 8)
+
+            Dim bytes As Byte() = Array.CreateInstance(GetType(Byte), binaryData.Length \ 8)
+            Dim index As Integer
+
+            For x As Integer = 0 To binaryData.Length - 1 Step 8
+                bytes(index) = Nill
+
+                If binaryData(x + 0) = "1"c Then bytes(index) = (bytes(index) Or Bit0)
+                If binaryData(x + 1) = "1"c Then bytes(index) = (bytes(index) Or Bit1)
+                If binaryData(x + 2) = "1"c Then bytes(index) = (bytes(index) Or Bit2)
+                If binaryData(x + 3) = "1"c Then bytes(index) = (bytes(index) Or Bit3)
+                If binaryData(x + 4) = "1"c Then bytes(index) = (bytes(index) Or Bit4)
+                If binaryData(x + 5) = "1"c Then bytes(index) = (bytes(index) Or Bit5)
+                If binaryData(x + 6) = "1"c Then bytes(index) = (bytes(index) Or Bit6)
+                If binaryData(x + 7) = "1"c Then bytes(index) = (bytes(index) Or Bit7)
+
+                index += 1
+            Next
+
+            Return bytes
+        Else
+            Throw New ArgumentException("Input string is not a valid binary encoded string - invalid characters encountered")
+        End If
+
+    End Function
+
+    ''' <summary>Encodes given buffer into a user presentable representation</summary>
+    ''' <param name="bytes">Bytes to encode</param>
+    ''' <param name="offset">Offset into buffer to bgeing encoding</param>
+    ''' <param name="length">Length of buffer to encode</param>
+    ''' <param name="spacingCharacter">Spacing character to place between encoded bytes</param>
+    ''' <returns>String of encoded bytes</returns>
+    Public Overloads Overrides Function GetString(ByVal bytes() As Byte, ByVal offset As Integer, ByVal length As Integer, ByVal spacingCharacter As Char) As String
+
+        With New StringBuilder
             If bytes IsNot Nothing Then
-                For i As Integer = 0 To bytes.Length() - 1
-                    .Append(bytes(i).ToString("D3"))
+                For x As Integer = 0 To length - 1
+                    If spacingCharacter <> NoSpacing AndAlso x > 0 Then .Append(spacingCharacter)
+                    If (bytes(x) And Bit0) > 0 Then .Append("1"c) Else .Append("0"c)
+                    If (bytes(x) And Bit1) > 0 Then .Append("1"c) Else .Append("0"c)
+                    If (bytes(x) And Bit2) > 0 Then .Append("1"c) Else .Append("0"c)
+                    If (bytes(x) And Bit3) > 0 Then .Append("1"c) Else .Append("0"c)
+                    If (bytes(x) And Bit4) > 0 Then .Append("1"c) Else .Append("0"c)
+                    If (bytes(x) And Bit5) > 0 Then .Append("1"c) Else .Append("0"c)
+                    If (bytes(x) And Bit6) > 0 Then .Append("1"c) Else .Append("0"c)
+                    If (bytes(x) And Bit7) > 0 Then .Append("1"c) Else .Append("0"c)
                 Next
             End If
 
             Return .ToString()
         End With
-
-    End Function
-
-    Public Shared Function DecToAscii(ByVal decData As String) As String
-
-        Return BytesToAscii(DecToBytes(decData))
 
     End Function
 
