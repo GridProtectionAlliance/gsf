@@ -155,7 +155,7 @@ Public NotInheritable Class Convert
     Public Shared Function DecToBytes(ByVal decData As String) As Byte()
 
         ' Process the string only if it has data in decimal format (Example: 072101108108033).
-        If decData IsNot Nothing AndAlso Regex.Matches(decData, "[^a-fA-F0-9]").Count() = 0 Then
+        If decData IsNot Nothing AndAlso Regex.Matches(decData, "[^0-9]").Count() = 0 Then
             ' Trim the end of the string to discard any additional characters, if present, in the 
             ' string that would prevent the string from being a decimal string. 
             ' Note: We require each character is represented by its 3 character decimal value.
