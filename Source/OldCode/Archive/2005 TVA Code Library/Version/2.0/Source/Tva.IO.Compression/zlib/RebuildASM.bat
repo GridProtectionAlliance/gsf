@@ -3,7 +3,7 @@ IF "%1"=="" GOTO INITVARS
 IF "%1"=="InitVars" GOTO INITVARS
 GOTO COMPILE
 :INITVARS
-CALL "c:\Program Files\Microsoft Visual Studio .NET\Common7\Tools\vsvars32.bat" >NUL
+CALL "C:\Program Files\Microsoft Visual Studio 8\Common7\Tools\vsvars32.bat" >NUL
 :COMPILE
 ECHO ๚
 ECHO ษออออออออออออออออออออออออออออออออออออออออออออป
