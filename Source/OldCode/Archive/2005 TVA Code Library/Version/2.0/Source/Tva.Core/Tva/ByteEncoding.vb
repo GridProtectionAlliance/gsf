@@ -19,6 +19,7 @@
 
 Imports System.Text
 Imports System.Text.RegularExpressions
+Imports System.ComponentModel
 Imports Tva.Interop.Bit
 
 ''' <summary>Handles conversion of a byte buffers to and from user presentable data formats</summary>
@@ -26,6 +27,7 @@ Public MustInherit Class ByteEncoding
 
 #Region " Hexadecimal Encoding Class "
 
+    <EditorBrowsable(EditorBrowsableState.Never)> _
     Public Class HexadecimalEncoding
 
         Inherits ByteEncoding
@@ -86,6 +88,7 @@ Public MustInherit Class ByteEncoding
 
 #Region " Decimal Encoding Class "
 
+    <EditorBrowsable(EditorBrowsableState.Never)> _
     Public Class DecimalEncoding
 
         Inherits ByteEncoding
@@ -146,6 +149,7 @@ Public MustInherit Class ByteEncoding
 
 #Region " Binary Encoding Class "
 
+    <EditorBrowsable(EditorBrowsableState.Never)> _
     Public Class BinaryEncoding
 
         Inherits ByteEncoding
@@ -232,6 +236,7 @@ Public MustInherit Class ByteEncoding
 
 #Region " Base64 Encoding Class "
 
+    <EditorBrowsable(EditorBrowsableState.Never)> _
     Public Class Base64Encoding
 
         Inherits ByteEncoding
