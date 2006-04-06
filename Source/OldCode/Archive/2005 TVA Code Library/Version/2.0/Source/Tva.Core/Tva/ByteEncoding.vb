@@ -20,6 +20,7 @@
 Imports System.Text
 Imports System.Text.RegularExpressions
 Imports System.ComponentModel
+Imports Tva.Interop
 Imports Tva.Interop.Bit
 
 ''' <summary>Handles conversion of a byte buffers to and from user presentable data formats</summary>
@@ -154,9 +155,28 @@ Public MustInherit Class ByteEncoding
 
         Inherits ByteEncoding
 
-        Friend Sub New()
+        Private m_reverse As Boolean
 
-            ' This class is meant for internal instatiation only
+        ' This class is meant for internal instatiation only
+        Friend Sub New(ByVal targetEndianness As Endianness)
+
+            If targetEndianness = Endianness.BigEndian Then
+                If BitConverter.IsLittleEndian Then
+                    ' If OS is little endian and we want big endian, we reverse bit order
+                    m_reverse = True
+                Else
+                    ' If OS is big endian and we want big endian, we keep OS bit order
+                    m_reverse = False
+                End If
+            Else
+                If BitConverter.IsLittleEndian Then
+                    ' If OS is little endian and we want little endian, we keep OS bit order
+                    m_reverse = False
+                Else
+                    ' If OS is big endian and we want little endian, we reverse bit order
+                    m_reverse = True
+                End If
+            End If
 
         End Sub
 
@@ -183,14 +203,25 @@ Public MustInherit Class ByteEncoding
                 For x As Integer = 0 To binaryData.Length - 1 Step 8
                     bytes(index) = Nill
 
-                    If binaryData(x + 0) = "1"c Then bytes(index) = (bytes(index) Or Bit0)
-                    If binaryData(x + 1) = "1"c Then bytes(index) = (bytes(index) Or Bit1)
-                    If binaryData(x + 2) = "1"c Then bytes(index) = (bytes(index) Or Bit2)
-                    If binaryData(x + 3) = "1"c Then bytes(index) = (bytes(index) Or Bit3)
-                    If binaryData(x + 4) = "1"c Then bytes(index) = (bytes(index) Or Bit4)
-                    If binaryData(x + 5) = "1"c Then bytes(index) = (bytes(index) Or Bit5)
-                    If binaryData(x + 6) = "1"c Then bytes(index) = (bytes(index) Or Bit6)
-                    If binaryData(x + 7) = "1"c Then bytes(index) = (bytes(index) Or Bit7)
+                    If m_reverse Then
+                        If binaryData(x + 7) = "1"c Then bytes(index) = (bytes(index) Or Bit0)
+                        If binaryData(x + 6) = "1"c Then bytes(index) = (bytes(index) Or Bit1)
+                        If binaryData(x + 5) = "1"c Then bytes(index) = (bytes(index) Or Bit2)
+                        If binaryData(x + 4) = "1"c Then bytes(index) = (bytes(index) Or Bit3)
+                        If binaryData(x + 3) = "1"c Then bytes(index) = (bytes(index) Or Bit4)
+                        If binaryData(x + 2) = "1"c Then bytes(index) = (bytes(index) Or Bit5)
+                        If binaryData(x + 1) = "1"c Then bytes(index) = (bytes(index) Or Bit6)
+                        If binaryData(x + 0) = "1"c Then bytes(index) = (bytes(index) Or Bit7)
+                    Else
+                        If binaryData(x + 0) = "1"c Then bytes(index) = (bytes(index) Or Bit0)
+                        If binaryData(x + 1) = "1"c Then bytes(index) = (bytes(index) Or Bit1)
+                        If binaryData(x + 2) = "1"c Then bytes(index) = (bytes(index) Or Bit2)
+                        If binaryData(x + 3) = "1"c Then bytes(index) = (bytes(index) Or Bit3)
+                        If binaryData(x + 4) = "1"c Then bytes(index) = (bytes(index) Or Bit4)
+                        If binaryData(x + 5) = "1"c Then bytes(index) = (bytes(index) Or Bit5)
+                        If binaryData(x + 6) = "1"c Then bytes(index) = (bytes(index) Or Bit6)
+                        If binaryData(x + 7) = "1"c Then bytes(index) = (bytes(index) Or Bit7)
+                    End If
 
                     index += 1
                 Next
@@ -214,14 +245,26 @@ Public MustInherit Class ByteEncoding
                 If bytes IsNot Nothing Then
                     For x As Integer = 0 To length - 1
                         If spacingCharacter <> NoSpacing AndAlso x > 0 Then .Append(spacingCharacter)
-                        If (bytes(x) And Bit0) > 0 Then .Append("1"c) Else .Append("0"c)
-                        If (bytes(x) And Bit1) > 0 Then .Append("1"c) Else .Append("0"c)
-                        If (bytes(x) And Bit2) > 0 Then .Append("1"c) Else .Append("0"c)
-                        If (bytes(x) And Bit3) > 0 Then .Append("1"c) Else .Append("0"c)
-                        If (bytes(x) And Bit4) > 0 Then .Append("1"c) Else .Append("0"c)
-                        If (bytes(x) And Bit5) > 0 Then .Append("1"c) Else .Append("0"c)
-                        If (bytes(x) And Bit6) > 0 Then .Append("1"c) Else .Append("0"c)
-                        If (bytes(x) And Bit7) > 0 Then .Append("1"c) Else .Append("0"c)
+
+                        If m_reverse Then
+                            If (bytes(x) And Bit7) > 0 Then .Append("1"c) Else .Append("0"c)
+                            If (bytes(x) And Bit6) > 0 Then .Append("1"c) Else .Append("0"c)
+                            If (bytes(x) And Bit5) > 0 Then .Append("1"c) Else .Append("0"c)
+                            If (bytes(x) And Bit4) > 0 Then .Append("1"c) Else .Append("0"c)
+                            If (bytes(x) And Bit3) > 0 Then .Append("1"c) Else .Append("0"c)
+                            If (bytes(x) And Bit2) > 0 Then .Append("1"c) Else .Append("0"c)
+                            If (bytes(x) And Bit1) > 0 Then .Append("1"c) Else .Append("0"c)
+                            If (bytes(x) And Bit0) > 0 Then .Append("1"c) Else .Append("0"c)
+                        Else
+                            If (bytes(x) And Bit0) > 0 Then .Append("1"c) Else .Append("0"c)
+                            If (bytes(x) And Bit1) > 0 Then .Append("1"c) Else .Append("0"c)
+                            If (bytes(x) And Bit2) > 0 Then .Append("1"c) Else .Append("0"c)
+                            If (bytes(x) And Bit3) > 0 Then .Append("1"c) Else .Append("0"c)
+                            If (bytes(x) And Bit4) > 0 Then .Append("1"c) Else .Append("0"c)
+                            If (bytes(x) And Bit5) > 0 Then .Append("1"c) Else .Append("0"c)
+                            If (bytes(x) And Bit6) > 0 Then .Append("1"c) Else .Append("0"c)
+                            If (bytes(x) And Bit7) > 0 Then .Append("1"c) Else .Append("0"c)
+                        End If
                     Next
                 End If
 
@@ -296,7 +339,8 @@ Public MustInherit Class ByteEncoding
 
     Private Shared m_hexadecimalEncoding As HexadecimalEncoding
     Private Shared m_decimalEncoding As DecimalEncoding
-    Private Shared m_binaryEncoding As BinaryEncoding
+    Private Shared m_bigEndianBinaryEncoding As BinaryEncoding
+    Private Shared m_littleEndianBinaryEncoding As BinaryEncoding
     Private Shared m_base64Encoding As Base64Encoding
 
     Private Sub New()
@@ -321,11 +365,19 @@ Public MustInherit Class ByteEncoding
         End Get
     End Property
 
-    ''' <summary>Handles encoding and decoding of a byte buffer into a binary (i.e., 0 and 1's) based presentation format</summary>
-    Public Shared ReadOnly Property Binary() As BinaryEncoding
+    ''' <summary>Handles encoding and decoding of a byte buffer into a big-endian binary (i.e., 0 and 1's) based presentation format</summary>
+    Public Shared ReadOnly Property BigEndianBinary() As BinaryEncoding
         Get
-            If m_binaryEncoding Is Nothing Then m_binaryEncoding = New BinaryEncoding
-            Return m_binaryEncoding
+            If m_bigEndianBinaryEncoding Is Nothing Then m_bigEndianBinaryEncoding = New BinaryEncoding(Endianness.BigEndian)
+            Return m_bigEndianBinaryEncoding
+        End Get
+    End Property
+
+    ''' <summary>Handles encoding and decoding of a byte buffer into a little-endian binary (i.e., 0 and 1's) based presentation format</summary>
+    Public Shared ReadOnly Property LittleEndianBinary() As BinaryEncoding
+        Get
+            If m_littleEndianBinaryEncoding Is Nothing Then m_littleEndianBinaryEncoding = New BinaryEncoding(Endianness.LittleEndian)
+            Return m_littleEndianBinaryEncoding
         End Get
     End Property
 
