@@ -53,8 +53,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 2,0,3,37080
- PRODUCTVERSION 2,0,3,37080
+ FILEVERSION 2,0,4,37917
+ PRODUCTVERSION 2,0,4,37917
  FILEFLAGSMASK 0x17L
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -69,17 +69,17 @@ BEGIN
     BEGIN
         BLOCK "040904b0"
         BEGIN
-            VALUE "Assembly Version", "2.0.3.37080"
+            VALUE "Assembly Version", "2.0.4.37917"
             VALUE "Comments", ".NET Compression Functions & Zip File Manipulation Code Library"
             VALUE "CompanyName", "TVA"
             VALUE "FileDescription", "TVA .NET Code Library: Compression"
-            VALUE "FileVersion", "2.0.3.37080"
+            VALUE "FileVersion", "2.0.4.37917"
             VALUE "InternalName", "TVA.Compression.dll"
             VALUE "LegalCopyright", "Copyright © 2003, TVA - All rights reserved.  This .NET library uses ""zlib"" compression code written by Jean-loup Gailly and Mark Adler, Copyright © 1995-2002, and general zip file format manipulation code written by Gilles Vollant, Copyright © 1998-2003"
             VALUE "LegalTrademarks", "Authors: James Ritchie Carroll (.NET wrapper), Jean-loup Gailly and Mark Adler (zlib), Gilles Vollant (zip/unzip)"
             VALUE "OriginalFilename", "TVA.Compression.dll"
             VALUE "ProductName", "Shared .NET Code Library for TVA"
-            VALUE "ProductVersion", "2.0.3.37080"
+            VALUE "ProductVersion", "2.0.4.37917"
         END
     END
     BLOCK "VarFileInfo"
