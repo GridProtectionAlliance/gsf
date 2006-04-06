@@ -118,7 +118,7 @@
 			<Tool
 				Name="VCPreBuildEventTool"
 				Description="Rebuilding assembler based gvmat32.asm code required for zlib..."
-				CommandLine="$(InputDir)zlib\RebuildASM.bat"
+				CommandLine="CD zlib&#x0D;&#x0A;RebuildASM.bat COMPILE&#x0D;&#x0A;CD .."
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
