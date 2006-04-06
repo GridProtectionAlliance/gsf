@@ -267,10 +267,10 @@ Public MustInherit Class ByteEncoding
             If spacingCharacter = NoSpacing Then
                 Return Convert.ToBase64String(bytes, offset, length)
             Else
-                Dim base64String As String = Convert.ToBase64String(bytes, offset, length)
-
                 With New StringBuilder
                     If bytes IsNot Nothing Then
+                        Dim base64String As String = Convert.ToBase64String(bytes, offset, length)
+
                         For x As Integer = 0 To base64String.Length - 1
                             If x > 0 Then .Append(spacingCharacter)
                             .Append(base64String(x))
@@ -324,6 +324,7 @@ Public MustInherit Class ByteEncoding
         End Get
     End Property
 
+    ''' <summary>Handles encoding and decoding of a byte buffer into a base64 presentation format</summary>
     Public Shared ReadOnly Property Base64() As Base64Encoding
         Get
             If m_base64Encoding Is Nothing Then m_base64Encoding = New Base64Encoding
