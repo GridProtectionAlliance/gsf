@@ -30,8 +30,8 @@ Namespace Interop
     ''' <summary>Endian byte order interoperability class</summary>
     ''' <remarks>
     ''' Intel systems use little-endian byte order, other systems, such as Unix, use big-endian byte ordering.
-    ''' Little-endian ordering means bits are ordered such that the bit whose in-memory representation is left-most is the most-significant-bit in a byte.
-    ''' Big-endian ordering means bits are ordered such that the bit whose in-memory representation is right-most is the most-significant-bit in a byte.
+    ''' Little-endian ordering means bits are ordered such that the bit whose in-memory representation is right-most is the most-significant-bit in a byte.
+    ''' Big-endian ordering means bits are ordered such that the bit whose in-memory representation is left-most is the most-significant-bit in a byte.
     ''' </remarks>
     Public Class EndianOrder
 
