@@ -45,28 +45,32 @@ Public MustInherit Class ByteEncoding
         ''' <returns>Decoded bytes</returns>
         Public Overrides Function GetBytes(ByVal hexData As String, ByVal spacingCharacter As Char) As Byte()
 
-            ' Remove spacing characters, if needed
-            hexData = hexData.Trim
-            If spacingCharacter <> NoSpacing Then hexData = hexData.Replace(spacingCharacter, "")
+            If Not String.IsNullOrEmpty(hexData) Then
+                ' Remove spacing characters, if needed
+                hexData = hexData.Trim()
+                If spacingCharacter <> NoSpacing Then hexData = hexData.Replace(spacingCharacter, "")
 
-            ' Process the string only if it has data in hex format (Example: 48656C6C21).
-            If Not String.IsNullOrEmpty(hexData) AndAlso Regex.Matches(hexData, "[^a-fA-F0-9]").Count = 0 Then
-                ' Trim the end of the string to discard any additional characters if present in the string that
-                ' would prevent the string from being a hex encoded string. 
-                ' Note: We require each character is represented by its 2 character hex value.
-                hexData = hexData.Substring(0, hexData.Length - hexData.Length Mod 2)
+                ' Process the string only if it has data in hex format (Example: 48 65 6C 6C 21).
+                If Regex.Matches(hexData, "[^a-fA-F0-9]").Count = 0 Then
+                    ' Trim the end of the string to discard any additional characters if present in the string that
+                    ' would prevent the string from being a hex encoded string. 
+                    ' Note: We require each character is represented by its 2 character hex value.
+                    hexData = hexData.Substring(0, hexData.Length - hexData.Length Mod 2)
 
-                Dim bytes As Byte() = Array.CreateInstance(GetType(Byte), hexData.Length \ 2)
-                Dim index As Integer
+                    Dim bytes As Byte() = Array.CreateInstance(GetType(Byte), hexData.Length \ 2)
+                    Dim index As Integer
 
-                For x As Integer = 0 To hexData.Length - 1 Step 2
-                    bytes(index) = Convert.ToByte(hexData.Substring(x, 2), 16)
-                    index += 1
-                Next
+                    For x As Integer = 0 To hexData.Length - 1 Step 2
+                        bytes(index) = Convert.ToByte(hexData.Substring(x, 2), 16)
+                        index += 1
+                    Next
 
-                Return bytes
+                    Return bytes
+                Else
+                    Throw New ArgumentException("Input string is not a valid hex encoded string - invalid characters encountered", "hexData")
+                End If
             Else
-                Throw New ArgumentException("Input string is not a valid hex encoded string - invalid characters encountered")
+                Throw New ArgumentNullException("hexData", "Input string cannot be null or empty")
             End If
 
         End Function
@@ -101,33 +105,37 @@ Public MustInherit Class ByteEncoding
         End Sub
 
         ''' <summary>Decodes given string back into a byte buffer</summary>
-        ''' <param name="intData">Encoded integer data string to decode</param>
+        ''' <param name="decData">Encoded decimal data string to decode</param>
         ''' <param name="spacingCharacter">Original spacing character that was inserted between encoded bytes</param>
         ''' <returns>Decoded bytes</returns>
-        Public Overrides Function GetBytes(ByVal intData As String, ByVal spacingCharacter As Char) As Byte()
+        Public Overrides Function GetBytes(ByVal decData As String, ByVal spacingCharacter As Char) As Byte()
 
-            ' Remove spacing characters, if needed
-            intData = intData.Trim
-            If spacingCharacter <> NoSpacing Then intData = intData.Replace(spacingCharacter, "")
+            If Not String.IsNullOrEmpty(decData) Then
+                ' Remove spacing characters, if needed
+                decData = decData.Trim()
+                If spacingCharacter <> NoSpacing Then decData = decData.Replace(spacingCharacter, "")
 
-            ' Process the string only if it has data in decimal format (Example: 072101108108033).
-            If Not String.IsNullOrEmpty(intData) AndAlso Regex.Matches(intData, "[^0-9]").Count = 0 Then
-                ' Trim the end of the string to discard any additional characters, if present, in the 
-                ' string that would prevent the string from being a integer encoded string. 
-                ' Note: We require each character is represented by its 3 character decimal value.
-                intData = intData.Substring(0, intData.Length - intData.Length Mod 3)
+                ' Process the string only if it has data in decimal format (Example: 072 101 108 108 033).
+                If Regex.Matches(decData, "[^0-9]").Count = 0 Then
+                    ' Trim the end of the string to discard any additional characters, if present, in the 
+                    ' string that would prevent the string from being a integer encoded string. 
+                    ' Note: We require each character is represented by its 3 character decimal value.
+                    decData = decData.Substring(0, decData.Length - decData.Length Mod 3)
 
-                Dim bytes As Byte() = Array.CreateInstance(GetType(Byte), intData.Length \ 3)
-                Dim index As Integer
+                    Dim bytes As Byte() = Array.CreateInstance(GetType(Byte), decData.Length \ 3)
+                    Dim index As Integer
 
-                For x As Integer = 0 To intData.Length - 1 Step 3
-                    bytes(index) = Convert.ToByte(intData.Substring(x, 3), 10)
-                    index += 1
-                Next
+                    For x As Integer = 0 To decData.Length - 1 Step 3
+                        bytes(index) = Convert.ToByte(decData.Substring(x, 3), 10)
+                        index += 1
+                    Next
 
-                Return bytes
+                    Return bytes
+                Else
+                    Throw New ArgumentException("Input string is not a valid decimal encoded string - invalid characters encountered", "decData")
+                End If
             Else
-                Throw New ArgumentException("Input string is not a valid integer encoded string - invalid characters encountered")
+                Throw New ArgumentNullException("decData", "Input string cannot be null or empty")
             End If
 
         End Function
@@ -186,49 +194,53 @@ Public MustInherit Class ByteEncoding
         ''' <returns>Decoded bytes</returns>
         Public Overrides Function GetBytes(ByVal binaryData As String, ByVal spacingCharacter As Char) As Byte()
 
-            ' Remove spacing characters, if needed
-            binaryData = binaryData.Trim
-            If spacingCharacter <> NoSpacing Then binaryData = binaryData.Replace(spacingCharacter, "")
+            If Not String.IsNullOrEmpty(binaryData) Then
+                ' Remove spacing characters, if needed
+                binaryData = binaryData.Trim
+                If spacingCharacter <> NoSpacing Then binaryData = binaryData.Replace(spacingCharacter, "")
 
-            ' Process the string only if it has data in decimal format (Example: 010101101010101).
-            If Not String.IsNullOrEmpty(binaryData) AndAlso Regex.Matches(binaryData, "[^0-1]").Count = 0 Then
-                ' Trim the end of the string to discard any additional characters, if present, in the 
-                ' string that would prevent the string from being a binary encoded string. 
-                ' Note: We require each character is represented by its 8 character binary value.
-                binaryData = binaryData.Substring(0, binaryData.Length - binaryData.Length Mod 8)
+                ' Process the string only if it has data in decimal format (Example: 01010110 1010101).
+                If Regex.Matches(binaryData, "[^0-1]").Count = 0 Then
+                    ' Trim the end of the string to discard any additional characters, if present, in the 
+                    ' string that would prevent the string from being a binary encoded string. 
+                    ' Note: We require each character is represented by its 8 character binary value.
+                    binaryData = binaryData.Substring(0, binaryData.Length - binaryData.Length Mod 8)
 
-                Dim bytes As Byte() = Array.CreateInstance(GetType(Byte), binaryData.Length \ 8)
-                Dim index As Integer
+                    Dim bytes As Byte() = Array.CreateInstance(GetType(Byte), binaryData.Length \ 8)
+                    Dim index As Integer
 
-                For x As Integer = 0 To binaryData.Length - 1 Step 8
-                    bytes(index) = Nill
+                    For x As Integer = 0 To binaryData.Length - 1 Step 8
+                        bytes(index) = Nill
 
-                    If m_reverse Then
-                        If binaryData(x + 7) = "1"c Then bytes(index) = (bytes(index) Or Bit0)
-                        If binaryData(x + 6) = "1"c Then bytes(index) = (bytes(index) Or Bit1)
-                        If binaryData(x + 5) = "1"c Then bytes(index) = (bytes(index) Or Bit2)
-                        If binaryData(x + 4) = "1"c Then bytes(index) = (bytes(index) Or Bit3)
-                        If binaryData(x + 3) = "1"c Then bytes(index) = (bytes(index) Or Bit4)
-                        If binaryData(x + 2) = "1"c Then bytes(index) = (bytes(index) Or Bit5)
-                        If binaryData(x + 1) = "1"c Then bytes(index) = (bytes(index) Or Bit6)
-                        If binaryData(x + 0) = "1"c Then bytes(index) = (bytes(index) Or Bit7)
-                    Else
-                        If binaryData(x + 0) = "1"c Then bytes(index) = (bytes(index) Or Bit0)
-                        If binaryData(x + 1) = "1"c Then bytes(index) = (bytes(index) Or Bit1)
-                        If binaryData(x + 2) = "1"c Then bytes(index) = (bytes(index) Or Bit2)
-                        If binaryData(x + 3) = "1"c Then bytes(index) = (bytes(index) Or Bit3)
-                        If binaryData(x + 4) = "1"c Then bytes(index) = (bytes(index) Or Bit4)
-                        If binaryData(x + 5) = "1"c Then bytes(index) = (bytes(index) Or Bit5)
-                        If binaryData(x + 6) = "1"c Then bytes(index) = (bytes(index) Or Bit6)
-                        If binaryData(x + 7) = "1"c Then bytes(index) = (bytes(index) Or Bit7)
-                    End If
+                        If m_reverse Then
+                            If binaryData(x + 7) = "1"c Then bytes(index) = (bytes(index) Or Bit0)
+                            If binaryData(x + 6) = "1"c Then bytes(index) = (bytes(index) Or Bit1)
+                            If binaryData(x + 5) = "1"c Then bytes(index) = (bytes(index) Or Bit2)
+                            If binaryData(x + 4) = "1"c Then bytes(index) = (bytes(index) Or Bit3)
+                            If binaryData(x + 3) = "1"c Then bytes(index) = (bytes(index) Or Bit4)
+                            If binaryData(x + 2) = "1"c Then bytes(index) = (bytes(index) Or Bit5)
+                            If binaryData(x + 1) = "1"c Then bytes(index) = (bytes(index) Or Bit6)
+                            If binaryData(x + 0) = "1"c Then bytes(index) = (bytes(index) Or Bit7)
+                        Else
+                            If binaryData(x + 0) = "1"c Then bytes(index) = (bytes(index) Or Bit0)
+                            If binaryData(x + 1) = "1"c Then bytes(index) = (bytes(index) Or Bit1)
+                            If binaryData(x + 2) = "1"c Then bytes(index) = (bytes(index) Or Bit2)
+                            If binaryData(x + 3) = "1"c Then bytes(index) = (bytes(index) Or Bit3)
+                            If binaryData(x + 4) = "1"c Then bytes(index) = (bytes(index) Or Bit4)
+                            If binaryData(x + 5) = "1"c Then bytes(index) = (bytes(index) Or Bit5)
+                            If binaryData(x + 6) = "1"c Then bytes(index) = (bytes(index) Or Bit6)
+                            If binaryData(x + 7) = "1"c Then bytes(index) = (bytes(index) Or Bit7)
+                        End If
 
-                    index += 1
-                Next
+                        index += 1
+                    Next
 
-                Return bytes
+                    Return bytes
+                Else
+                    Throw New ArgumentException("Input string is not a valid binary encoded string - invalid characters encountered", "binaryData")
+                End If
             Else
-                Throw New ArgumentException("Input string is not a valid binary encoded string - invalid characters encountered")
+                Throw New ArgumentNullException("binaryData", "Input string cannot be null or empty")
             End If
 
         End Function
