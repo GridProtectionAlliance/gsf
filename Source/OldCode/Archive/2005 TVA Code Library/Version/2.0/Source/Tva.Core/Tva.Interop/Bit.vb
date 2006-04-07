@@ -155,7 +155,7 @@ Namespace Interop
         ''' </summary>
         Public Shared Function HiByte(ByVal word As Int16) As Byte
 
-            Return BitConverter.GetBytes(word)(0)
+            Return BitConverter.GetBytes(word)(1)
 
         End Function
 
@@ -166,7 +166,7 @@ Namespace Interop
         ''' </summary>
         Public Shared Function HiWord(ByVal doubleWord As Int32) As Int16
 
-            Return BitConverter.ToInt16(BitConverter.GetBytes(doubleWord), 0)
+            Return BitConverter.ToInt16(BitConverter.GetBytes(doubleWord), 2)
 
         End Function
 
@@ -177,7 +177,7 @@ Namespace Interop
         ''' </summary>
         Public Shared Function LoByte(ByVal word As Int16) As Byte
 
-            Return BitConverter.GetBytes(word)(1)
+            Return BitConverter.GetBytes(word)(0)
 
         End Function
 
@@ -188,14 +188,14 @@ Namespace Interop
         ''' </summary>
         Public Shared Function LoWord(ByVal doubleWord As Int32) As Int16
 
-            Return BitConverter.ToInt16(BitConverter.GetBytes(doubleWord), 2)
+            Return BitConverter.ToInt16(BitConverter.GetBytes(doubleWord), 0)
 
         End Function
 
         ''' <summary>Makes a word (Int16) from two bytes (Int8).</summary>
         Public Shared Function MakeWord(ByVal high As Byte, ByVal low As Byte) As Int16
 
-            Return BitConverter.ToInt16(New Byte() {high, low}, 0)
+            Return BitConverter.ToInt16(New Byte() {low, high}, 0)
 
         End Function
 
@@ -204,8 +204,8 @@ Namespace Interop
 
             Dim bytes As Byte() = Array.CreateInstance(GetType(Byte), 4)
 
-            Array.Copy(BitConverter.GetBytes(high), 0, bytes, 0, 2)
-            Array.Copy(BitConverter.GetBytes(low), 0, bytes, 2, 2)
+            Array.Copy(BitConverter.GetBytes(low), 0, bytes, 0, 2)
+            Array.Copy(BitConverter.GetBytes(high), 0, bytes, 2, 2)
 
             Return BitConverter.ToInt32(bytes, 0)
 
