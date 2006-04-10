@@ -198,8 +198,8 @@ Public Class FrameParser
                 m_socketThread.Start()
 
                 ' Request configuration frame and make sure real-time data is enabled
-                SendPmuCommand(Command.SendConfigurationFrame2)
-                SendPmuCommand(Command.EnableRealTimeData)
+                'SendPmuCommand(Command.SendConfigurationFrame2)
+                'SendPmuCommand(Command.EnableRealTimeData)
             Case DataTransportLayer.Udp
                 ' Validate minimal connection parameters required for UDP connection
                 If m_port = 0 Then Throw New InvalidOperationException("Cannot start UDP stream listener without specifing a valid port")
@@ -334,8 +334,13 @@ Public Class FrameParser
 
             ' Only the IEEE protocols support commands
             Select Case m_protocol
-                Case Phasors.Protocol.IeeeC37_118V1, Phasors.Protocol.IeeeC37_118D6
-                    With New IeeeC37_118.CommandFrame(m_pmuID, command)
+                Case Phasors.Protocol.IeeeC37_118V1
+                    With New IeeeC37_118.CommandFrame(IeeeC37_118.RevisionNumber.RevisionV1, m_pmuID, command)
+                        binaryImage = .BinaryImage
+                        binaryLength = .BinaryLength
+                    End With
+                Case Phasors.Protocol.IeeeC37_118D6
+                    With New IeeeC37_118.CommandFrame(IeeeC37_118.RevisionNumber.RevisionD6, m_pmuID, command)
                         binaryImage = .BinaryImage
                         binaryLength = .BinaryLength
                     End With
@@ -348,6 +353,18 @@ Public Class FrameParser
                     binaryImage = Nothing
                     binaryLength = 0
             End Select
+
+            With System.IO.File.CreateText(IO.FilePath.GetApplicationPath & [Enum].GetName(GetType(Command), command) & "Image.txt")
+                .WriteLine([Enum].GetName(GetType(Command), command) & " Binary Image - Created: " & Date.Now.ToString)
+                .WriteLine("Image Length: " & binaryLength & Environment.NewLine)
+                .WriteLine("Hexadecimal Image:")
+                .WriteLine(ByteEncoding.Hexadecimal.GetString(binaryImage, " "c))
+                .WriteLine("Decimal Image:")
+                .WriteLine(ByteEncoding.Decimal.GetString(binaryImage, " "c))
+                .WriteLine("Big-endian Binary Image:")
+                .WriteLine(ByteEncoding.BigEndianBinary.GetString(binaryImage, " "c))
+                .Close()
+            End With
 
             If binaryLength > 0 Then m_clientStream.Write(binaryImage, 0, binaryLength)
         End If

@@ -29,16 +29,11 @@ Namespace IeeeC37_118
         Private m_revisionNumber As RevisionNumber
         Private m_version As Byte
 
-        Public Sub New(ByVal command As Command)
-
-            MyClass.New(IeeeC37_118.RevisionNumber.RevisionV1, command)
-
-        End Sub
-
-        Public Sub New(ByVal revisionNumber As RevisionNumber, ByVal command As Command)
+        Public Sub New(ByVal revisionNumber As RevisionNumber, ByVal idCode As UInt32, ByVal command As Command)
 
             MyBase.New(New CommandCellCollection(MaximumExtendedDataLength), command)
             m_revisionNumber = revisionNumber
+            MyClass.IDCode = idCode
             m_version = IIf(Of Byte)(m_revisionNumber <= IeeeC37_118.RevisionNumber.RevisionV1, 1, 2)
 
         End Sub

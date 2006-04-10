@@ -58,6 +58,10 @@ Namespace Ieee1344
 
             m_bufferQueue = ProcessQueue(Of Byte()).CreateRealTimeQueue(AddressOf ProcessBuffer)
 
+#If DEBUG Then
+            m_bufferQueue.DebugMode = True
+#End If
+
         End Sub
 
         Public Sub New(ByVal configurationFrame As ConfigurationFrame)

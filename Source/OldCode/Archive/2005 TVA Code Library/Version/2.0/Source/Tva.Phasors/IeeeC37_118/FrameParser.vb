@@ -61,6 +61,10 @@ Namespace IeeeC37_118
             m_bufferQueue = ProcessQueue(Of Byte()).CreateRealTimeQueue(AddressOf ProcessBuffer)
             m_revisionNumber = IeeeC37_118.RevisionNumber.RevisionV1
 
+#If DEBUG Then
+            m_bufferQueue.DebugMode = True
+#End If
+
         End Sub
 
         Public Sub New(ByVal revisionNumber As RevisionNumber)
