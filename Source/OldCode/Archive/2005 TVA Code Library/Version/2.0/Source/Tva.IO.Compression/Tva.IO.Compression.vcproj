@@ -30,7 +30,7 @@
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
-				CommandLine="CD zlib&#x0D;&#x0A;RebuildASM.bat COMPILE&#x0D;&#x0A;CD .."
+				CommandLine="CD zlib&#x0D;&#x0A;RebuildASM.bat COMPILE&#x0D;&#x0A;CD ..&#x0D;&#x0A;"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -102,7 +102,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine=""
+				CommandLine="COPY &quot;$(OutDir)\$(TargetFileName)&quot; &quot;..\Tva.Phasors\PMU Connection Tester\$(TargetFileName)&quot;"
 			/>
 		</Configuration>
 		<Configuration
@@ -118,7 +118,7 @@
 			<Tool
 				Name="VCPreBuildEventTool"
 				Description="Rebuilding assembler based gvmat32.asm code required for zlib..."
-				CommandLine="CD zlib&#x0D;&#x0A;RebuildASM.bat COMPILE&#x0D;&#x0A;CD .."
+				CommandLine="CD zlib&#x0D;&#x0A;RebuildASM.bat COMPILE&#x0D;&#x0A;CD ..&#x0D;&#x0A;"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -193,7 +193,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine=""
+				CommandLine="COPY &quot;$(OutDir)\$(TargetFileName)&quot; &quot;..\Tva.Phasors\PMU Connection Tester\$(TargetFileName)&quot;"
 			/>
 		</Configuration>
 	</Configurations>
