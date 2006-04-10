@@ -704,43 +704,43 @@ Namespace Data
         'Pinal Patel 05/27/05 - Converts delimited data to data table.
         Public Shared Function DelimitedDataToDataTable(ByVal delimitedData As String, ByVal delimiter As String, ByVal header As Boolean) As DataTable
 
-            Dim dtResult As DataTable = New DataTable
+            Dim table As DataTable = New DataTable()
             Dim pattern As String = Regex.Escape(delimiter) & "(?=(?:[^""]*""[^""]*"")*(?![^""]*""))" 'Regex pattern that will be used to split the delimited data.
 
             delimitedData = delimitedData.Trim(New Char() {" "c, vbCr, vbLf}).Replace(vbLf, "") 'Remove any leading and trailing whitespaces, carriage returns or line feeds.
-            Dim strLines() As String = delimitedData.Split(vbCr)  'Split delimited data into lines.
+            Dim lines() As String = delimitedData.Split(vbCr)  'Split delimited data into lines.
 
-            Dim intCursor As Integer = 0
+            Dim cursor As Integer = 0
             'Assume that the first line has header information.
-            Dim strHeaders() As String = Regex.Split(strLines(intCursor), pattern)
+            Dim headers() As String = Regex.Split(lines(cursor), pattern)
             'Create columns.
             If header Then
                 'Use the first row as header row.
-                For i As Integer = 0 To strHeaders.Length() - 1
-                    dtResult.Columns.Add(New DataColumn(strHeaders(i).Trim(New Char() {""""c}))) 'Remove any leading and trailing quotes from the column name.
+                For i As Integer = 0 To headers.Length() - 1
+                    table.Columns.Add(New DataColumn(headers(i).Trim(New Char() {""""c}))) 'Remove any leading and trailing quotes from the column name.
                 Next
-                intCursor += 1
+                cursor += 1
             Else
-                For i As Integer = 0 To strHeaders.Length() - 1
-                    dtResult.Columns.Add(New DataColumn)
+                For i As Integer = 0 To headers.Length() - 1
+                    table.Columns.Add(New DataColumn)
                 Next
             End If
 
             'Populate the data table with csv data.
-            For intCursor = intCursor To strLines.Length() - 1
-                Dim drResult As DataRow = dtResult.NewRow() 'Create new row.
+            For cursor = cursor To lines.Length() - 1
+                Dim row As DataRow = table.NewRow() 'Create new row.
 
                 'Populate the new row.
-                Dim strFields() As String = Regex.Split(strLines(intCursor), pattern)
-                For i As Integer = 0 To strFields.Length() - 1
-                    drResult(i) = strFields(i).Trim(New Char() {""""c})    'Remove any leading and trailing quotes from the data.
+                Dim fields() As String = Regex.Split(lines(cursor), pattern)
+                For i As Integer = 0 To fields.Length() - 1
+                    row(i) = fields(i).Trim(New Char() {""""c})    'Remove any leading and trailing quotes from the data.
                 Next
 
-                dtResult.Rows.Add(drResult) 'Add the new row.
+                table.Rows.Add(row) 'Add the new row.
             Next
 
             'Return the data table.
-            Return dtResult
+            Return table
 
         End Function
 
@@ -753,7 +753,7 @@ Namespace Data
                     For i As Integer = 0 To table.Columns().Count() - 1
                         .Append(IIf(quoted, """", "") & table.Columns(i).ColumnName() & IIf(quoted, """", ""))
 
-                        If i < table.Columns().Count() - 1 Then
+                        If i < table.Columns.Count() - 1 Then
                             .Append(delimiter)
                         End If
                     Next
@@ -765,7 +765,7 @@ Namespace Data
                     For j As Integer = 0 To table.Columns().Count() - 1
                         .Append(IIf(quoted, """", "") & table.Rows(i)(j) & IIf(quoted, """", ""))
 
-                        If j < table.Columns().Count() - 1 Then
+                        If j < table.Columns.Count() - 1 Then
                             .Append(delimiter)
                         End If
                     Next
