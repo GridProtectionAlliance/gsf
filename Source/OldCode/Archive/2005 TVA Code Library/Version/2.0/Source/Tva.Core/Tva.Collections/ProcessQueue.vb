@@ -14,6 +14,8 @@
 '       Original version of source code generated
 '  02/12/2006 - James R Carroll
 '       Added multi-item bulk processing functionality
+'  04/10/2006 - James R Carroll
+'       Added Debug property to disable "catch" so exceptions are debugged in originating source
 '
 '*******************************************************************************************************
 
@@ -185,6 +187,7 @@ Namespace Collections
         Private m_realTimeProcessThread As Thread
         Private m_realTimeProcessThreadPriority As ThreadPriority
         Private WithEvents m_processTimer As System.Timers.Timer
+        Private m_debugMode As Boolean
 
 #End Region
 
@@ -705,6 +708,24 @@ Namespace Collections
         End Property
 
         ''' <summary>
+        ''' This property determines whether or not process queue will be in debug mode when handling exceptions
+        ''' </summary>
+        ''' <value>Set to True to enable debug mode</value>
+        ''' <returns>True if debug mode is enabled, False otherwise</returns>
+        ''' <remarks>
+        ''' When debug mode is True, all internal "Catch ex As Exception" statements will be ignored allowing development
+        ''' environment to stop directly on line of code that threw the exception (e.g., in user's process item function)
+        ''' </remarks>
+        Public Overridable Property DebugMode() As Boolean
+            Get
+                Return m_debugMode
+            End Get
+            Set(ByVal value As Boolean)
+                m_debugMode = value
+            End Set
+        End Property
+
+        ''' <summary>
         ''' Starts item processing
         ''' </summary>
         Public Overridable Sub Start()
@@ -1171,7 +1192,7 @@ Namespace Collections
             Catch ex As ThreadAbortException
                 ' Rethrow thread abort so calling method can respond appropriately
                 Throw ex
-            Catch ex As Exception
+            Catch ex As Exception When Not m_debugMode
                 ' We requeue item on processing exception if requested
                 If m_requeueOnException Then Insert(0, item)
 
@@ -1192,7 +1213,7 @@ Namespace Collections
             Catch ex As ThreadAbortException
                 ' Rethrow thread abort so calling method can respond appropriately
                 Throw ex
-            Catch ex As Exception
+            Catch ex As Exception When Not m_debugMode
                 ' We requeue items on processing exception if requested
                 If m_requeueOnException Then InsertRange(0, items)
 
@@ -1221,7 +1242,7 @@ Namespace Collections
                 Catch ex As ThreadAbortException
                     ' We egress gracefully if the thread's being aborted
                     Exit Do
-                Catch ex As Exception
+                Catch ex As Exception When Not m_debugMode
                     ' We won't stop for any errors thrown by the user function, but we will report them...
                     RaiseEvent ProcessException(ex)
                 End Try
@@ -1309,7 +1330,7 @@ Namespace Collections
             Catch ex As ThreadAbortException
                 ' Rethrow thread abort so calling method can respond appropriately
                 Throw ex
-            Catch ex As Exception
+            Catch ex As Exception When Not m_debugMode
                 ' Processing won't stop for any errors encountered here, but we will report them...
                 RaiseEvent ProcessException(ex)
             Finally
@@ -1380,7 +1401,7 @@ Namespace Collections
             Catch ex As ThreadAbortException
                 ' Rethrow thread abort so calling method can respond appropriately
                 Throw ex
-            Catch ex As Exception
+            Catch ex As Exception When Not m_debugMode
                 ' Processing won't stop for any errors encountered here, but we will report them...
                 RaiseEvent ProcessException(ex)
             Finally
