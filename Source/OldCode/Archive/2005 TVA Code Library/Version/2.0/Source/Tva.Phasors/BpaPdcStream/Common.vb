@@ -15,8 +15,6 @@
 '
 '*******************************************************************************************************
 
-Imports Tva.Interop.Bit
-
 Namespace BpaPdcStream
 
     ''' <summary>Stream type</summary>

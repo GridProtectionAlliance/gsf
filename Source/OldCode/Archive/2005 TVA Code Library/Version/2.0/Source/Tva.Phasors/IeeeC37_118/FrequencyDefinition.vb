@@ -16,9 +16,6 @@
 '*******************************************************************************************************
 
 Imports System.Text
-Imports Tva.Common
-Imports Tva.Interop
-Imports Tva.Interop.Bit
 
 Namespace IeeeC37_118
 

@@ -16,7 +16,6 @@
 '*******************************************************************************************************
 
 Imports System.Buffer
-Imports Tva.Interop
 Imports Tva.Phasors.Common
 
 ' This class represents the protocol independent common implementation of an element of extended frame data of a command frame that can be received from a PMU.

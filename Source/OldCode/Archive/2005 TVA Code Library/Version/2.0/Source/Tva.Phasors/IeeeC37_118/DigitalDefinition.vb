@@ -16,7 +16,6 @@
 '*******************************************************************************************************
 
 Imports System.Text
-Imports Tva.Interop
 
 Namespace IeeeC37_118
 
@@ -140,7 +139,7 @@ Namespace IeeeC37_118
 
         Friend ReadOnly Property ConversionFactorImage() As Byte()
             Get
-                Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), ConversionFactorLength)
+                Dim buffer As Byte() = CreateArray(Of Byte)(ConversionFactorLength)
 
                 EndianOrder.BigEndian.CopyBytes(m_normalStatus, buffer, 0)
                 EndianOrder.BigEndian.CopyBytes(m_validInputs, buffer, 2)

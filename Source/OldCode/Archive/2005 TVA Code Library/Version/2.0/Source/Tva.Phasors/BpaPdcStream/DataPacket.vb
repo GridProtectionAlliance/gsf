@@ -16,7 +16,6 @@
 '***********************************************************************
 
 Imports System.Buffer
-Imports Tva.Interop
 Imports Tva.DateTime
 Imports Tva.Math.Common
 
@@ -48,7 +47,7 @@ Namespace BpaPdcStream
             m_timeStamp = timeStamp.AddMilliseconds((m_index + 0.5@) * (1000@ / m_configFile.FrameRate))
 
             With m_configFile
-                Cells = Array.CreateInstance(GetType(DataCell), .Cells.Count)
+                Cells = CreateArray(Of DataCell)(.Cells.Count)
 
                 For x As Int32 = 0 To Cells.Length - 1
                     'Cells(x) = New DataCell(.PMU(x), index)
@@ -112,7 +111,7 @@ Namespace BpaPdcStream
 
         Public ReadOnly Property BinaryImage() As Byte()
             Get
-                Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BinaryLength)
+                Dim buffer As Byte() = CreateArray(Of Byte)(BinaryLength)
                 'Dim pmuID As Byte()
                 Dim index As Int32
 

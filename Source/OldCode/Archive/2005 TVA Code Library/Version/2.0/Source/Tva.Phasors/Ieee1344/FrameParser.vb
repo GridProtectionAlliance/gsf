@@ -521,7 +521,7 @@ End Namespace
 
 '    Private Sub ReadDataStream()
 
-'        Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), 4096)
+'        Dim buffer As Byte() = CreateArray(Of Byte)(4096)
 '        Dim received, startIndex As Int32
 '        Dim parsedImage As FrameParser
 

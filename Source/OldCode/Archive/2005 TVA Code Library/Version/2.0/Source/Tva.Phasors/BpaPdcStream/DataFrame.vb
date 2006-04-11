@@ -16,7 +16,6 @@
 '*******************************************************************************************************
 
 Imports System.Buffer
-Imports Tva.Interop
 Imports Tva.DateTime
 Imports Tva.Math.Common
 Imports Tva.Phasors.Common
@@ -132,7 +131,7 @@ Namespace BpaPdcStream
 
         Protected Overrides ReadOnly Property HeaderImage() As Byte()
             Get
-                Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), HeaderLength)
+                Dim buffer As Byte() = CreateArray(Of Byte)(HeaderLength)
 
                 buffer(0) = SyncByte
                 buffer(1) = Convert.ToByte(1)
@@ -190,7 +189,7 @@ Namespace BpaPdcStream
 
         'Public Overrides ReadOnly Property ProtocolSpecificDataImage() As Byte()
         '    Get
-        '        Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), ProtocolSpecificDataLength)
+        '        Dim buffer As Byte() = CreateArray(Of Byte)(ProtocolSpecificDataLength)
 
         '        buffer(0) = Common.SyncByte
         '        buffer(1) = Convert.ToByte(1)
@@ -223,7 +222,7 @@ Namespace BpaPdcStream
         '    m_timeStamp = timeStamp.AddMilliseconds((m_sampleNumber + 0.5@) * (1000@ / m_configFile.FrameRate))
 
         '    With m_configFile
-        '        Cells = Array.CreateInstance(GetType(DataCell), .PMUCount)
+        '        Cells = CreateArray(Of DataCell)(.PMUCount)
 
         '        For x As Int32 = 0 To Cells.Length - 1
         '            'Cells(x) = New DataCell(.PMU(x), index)
@@ -287,7 +286,7 @@ Namespace BpaPdcStream
 
         'Public ReadOnly Property BinaryImage() As Byte()
         '    Get
-        '        Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BinaryLength)
+        '        Dim buffer As Byte() = CreateArray(Of Byte)(BinaryLength)
         '        Dim pmuID As Byte()
         '        Dim index As Int32
 

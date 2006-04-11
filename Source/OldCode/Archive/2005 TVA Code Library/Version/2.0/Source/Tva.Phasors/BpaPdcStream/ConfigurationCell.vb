@@ -16,7 +16,6 @@
 '*******************************************************************************************************
 
 Imports System.Text
-Imports Tva.Interop
 Imports Tva.Phasors.Common
 Imports Tva.Phasors.BpaPdcStream.Common
 
@@ -27,7 +26,7 @@ Namespace BpaPdcStream
 
         Inherits ConfigurationCellBase
 
-        Private m_offset As Int16
+        Private m_offset As UInt16
         Private m_reserved As Int16
 
         Public Sub New(ByVal parent As IConfigurationFrame, ByVal idCode As UInt16, ByVal nominalFrequency As LineFrequency)
@@ -65,12 +64,12 @@ Namespace BpaPdcStream
         End Property
 
         ' The PDCstream descriptor maintains offsets for cell data in data packet
-        Public Property Offset() As Int16
+        Public Property Offset() As UInt16
             Get
                 Return m_offset
             End Get
-            Set(ByVal Value As Int16)
-                m_offset = Value
+            Set(ByVal value As UInt16)
+                m_offset = value
             End Set
         End Property
 
@@ -78,8 +77,8 @@ Namespace BpaPdcStream
             Get
                 Return m_reserved
             End Get
-            Set(ByVal Value As Int16)
-                m_reserved = Value
+            Set(ByVal value As Int16)
+                m_reserved = value
             End Set
         End Property
 
@@ -95,7 +94,7 @@ Namespace BpaPdcStream
 
         Protected Overrides ReadOnly Property BodyImage() As Byte()
             Get
-                Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BodyLength)
+                Dim buffer As Byte() = CreateArray(Of Byte)(BodyLength)
                 Dim index As Int32
 
                 CopyImage(IDLabelImage, buffer, index, IDLabelLength)       ' PMUID

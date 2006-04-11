@@ -16,7 +16,6 @@
 '*******************************************************************************************************
 
 Imports System.Text
-Imports Tva.Interop
 Imports Tva.Phasors.Common
 Imports Tva.Phasors.Ieee1344.Common
 
@@ -98,7 +97,7 @@ Namespace Ieee1344
 
         Protected Overrides ReadOnly Property HeaderImage() As Byte()
             Get
-                Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), HeaderLength)
+                Dim buffer As Byte() = CreateArray(Of Byte)(HeaderLength)
                 Dim index As Int32
 
                 CopyImage(MyBase.HeaderImage, buffer, index, MyBase.HeaderLength)
@@ -137,7 +136,7 @@ Namespace Ieee1344
 
         Protected Overrides ReadOnly Property FooterImage() As Byte()
             Get
-                Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), FooterLength)
+                Dim buffer As Byte() = CreateArray(Of Byte)(FooterLength)
                 Dim x, index As Int32
 
                 ' Include conversion factors in configuration cell footer

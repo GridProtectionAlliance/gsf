@@ -17,8 +17,6 @@
 
 Imports System.Buffer
 Imports System.Text
-Imports Tva.Common
-Imports Tva.Interop
 Imports Tva.Phasors.Common
 
 ' This class represents the protocol independent common implementation of a set of configuration related data settings that can be sent or received from a PMU.
@@ -230,7 +228,7 @@ Public MustInherit Class ConfigurationCellBase
 
     Protected Overrides ReadOnly Property BodyImage() As Byte()
         Get
-            Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BodyLength)
+            Dim buffer As Byte() = CreateArray(Of Byte)(BodyLength)
             Dim index As Int32
 
             ' Copy in common cell images (channel names)

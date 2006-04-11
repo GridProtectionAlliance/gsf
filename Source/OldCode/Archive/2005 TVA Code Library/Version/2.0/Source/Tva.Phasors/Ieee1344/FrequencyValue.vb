@@ -15,8 +15,6 @@
 '
 '*******************************************************************************************************
 
-Imports Tva.Interop
-
 Namespace Ieee1344
 
     <CLSCompliant(False)> _
@@ -82,7 +80,7 @@ Namespace Ieee1344
 
         Protected Overrides ReadOnly Property BodyImage() As Byte()
             Get
-                Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BodyLength)
+                Dim buffer As Byte() = CreateArray(Of Byte)(BodyLength)
 
                 If Definition.FrequencyAvailable Then EndianOrder.BigEndian.CopyBytes(UnscaledFrequency, buffer, 0)
                 If Definition.DfDtAvailable Then EndianOrder.BigEndian.CopyBytes(UnscaledDfDt, buffer, 2)

@@ -42,7 +42,7 @@ Public MustInherit Class ChannelBase
     ' This property is not typically overriden
     Public Overridable ReadOnly Property BinaryImage() As Byte() Implements IChannel.BinaryImage
         Get
-            Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BinaryLength)
+            Dim buffer As Byte() = CreateArray(Of Byte)(BinaryLength)
             Dim index As Int32
 
             ' Copy in header, body and footer images

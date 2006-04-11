@@ -15,9 +15,6 @@
 '
 '*******************************************************************************************************
 
-Imports Tva.Interop
-Imports Tva.Interop.Bit
-
 Namespace Ieee1344
 
     <CLSCompliant(False)> _
@@ -111,7 +108,7 @@ Namespace Ieee1344
         Friend Sub ParseConversionFactor(ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
             m_statusFlags = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex)
- 
+
         End Sub
 
     End Class

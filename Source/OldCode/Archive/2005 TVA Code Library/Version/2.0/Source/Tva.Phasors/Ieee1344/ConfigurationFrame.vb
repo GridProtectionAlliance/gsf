@@ -16,7 +16,6 @@
 '*******************************************************************************************************
 
 Imports System.Text
-Imports Tva.Interop
 Imports Tva.DateTime
 Imports Tva.Phasors.Common
 Imports Tva.IO.Compression.Common

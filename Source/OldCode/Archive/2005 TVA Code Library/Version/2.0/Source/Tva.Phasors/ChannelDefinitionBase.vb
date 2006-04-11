@@ -16,7 +16,6 @@
 '*******************************************************************************************************
 
 Imports System.Text
-Imports Tva.Common
 Imports Tva.Phasors.Common
 
 ' This class represents the common implementation of the protocol independent definition of any kind of data.

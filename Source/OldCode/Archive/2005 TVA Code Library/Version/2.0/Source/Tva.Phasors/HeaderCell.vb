@@ -16,7 +16,6 @@
 '*******************************************************************************************************
 
 Imports System.Buffer
-Imports Tva.Interop
 Imports Tva.Phasors.Common
 
 ' This class represents the protocol independent common implementation of an element of header frame data that can be received from a PMU.

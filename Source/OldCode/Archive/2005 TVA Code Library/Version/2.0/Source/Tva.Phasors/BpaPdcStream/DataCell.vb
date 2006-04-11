@@ -15,8 +15,6 @@
 '
 '*******************************************************************************************************
 
-Imports Tva.Interop
-Imports Tva.Common
 Imports Tva.Phasors.BpaPdcStream.Common
 
 Namespace BpaPdcStream
@@ -336,7 +334,7 @@ Namespace BpaPdcStream
 
         Protected Overrides ReadOnly Property HeaderImage() As Byte()
             Get
-                Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), HeaderLength)
+                Dim buffer As Byte() = CreateArray(Of Byte)(HeaderLength)
 
                 ' Add PDCstream specific image
                 buffer(0) = m_flags

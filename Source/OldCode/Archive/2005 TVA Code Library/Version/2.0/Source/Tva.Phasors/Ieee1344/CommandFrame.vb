@@ -17,7 +17,6 @@
 
 Imports System.ComponentModel
 Imports Tva.DateTime
-Imports Tva.Interop
 Imports Tva.IO.Compression.Common
 
 Namespace Ieee1344
@@ -104,7 +103,7 @@ Namespace Ieee1344
 
         Protected Overrides ReadOnly Property HeaderImage() As Byte()
             Get
-                Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), HeaderLength)
+                Dim buffer As Byte() = CreateArray(Of Byte)(HeaderLength)
 
                 EndianOrder.BigEndian.CopyBytes(Convert.ToUInt32(TimeTag.Value), buffer, 0)
                 EndianOrder.BigEndian.CopyBytes(m_idCode, buffer, 4)

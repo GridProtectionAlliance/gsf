@@ -16,8 +16,6 @@
 '*******************************************************************************************************
 
 Imports System.Text
-Imports Tva.Common
-Imports Tva.Interop
 
 Namespace IeeeC37_118
 
@@ -81,7 +79,7 @@ Namespace IeeeC37_118
 
         Friend ReadOnly Property ConversionFactorImage() As Byte()
             Get
-                Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), ConversionFactorLength)
+                Dim buffer As Byte() = CreateArray(Of Byte)(ConversionFactorLength)
 
                 buffer(0) = m_type
 
@@ -93,7 +91,7 @@ Namespace IeeeC37_118
 
         Friend Sub ParseConversionFactor(ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
-            Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), 4)
+            Dim buffer As Byte() = CreateArray(Of Byte)(4)
 
             ' Get analog type from first byte
             m_type = binaryImage(startIndex)

@@ -20,7 +20,6 @@ Imports Tva.DateTime
 Imports Tva.DateTime.Common
 Imports Tva.IO.Compression.Common
 Imports Tva.Phasors.Common
-Imports Tva.Interop
 Imports Tva.Measurements
 
 ' This class represents the protocol independent common implementation of any frame of data that can be sent or received from a PMU.
@@ -162,7 +161,7 @@ Public MustInherit Class ChannelFrameBase(Of T As IChannelCell)
     ' We override normal binary image to include check-sum
     Public Overrides ReadOnly Property BinaryImage() As Byte()
         Get
-            Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BinaryLength)
+            Dim buffer As Byte() = CreateArray(Of Byte)(BinaryLength)
             Dim index As Int32
 
             ' Copy in base image

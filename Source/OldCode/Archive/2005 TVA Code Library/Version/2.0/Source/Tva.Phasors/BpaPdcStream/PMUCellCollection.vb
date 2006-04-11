@@ -164,7 +164,7 @@ Namespace BpaPdcStream
 
         Public Overrides ReadOnly Property BinaryImage() As Byte()
             Get
-                Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BinaryLength)
+                Dim buffer As Byte() = CreateArray(Of Byte)(BinaryLength)
 
 
                 Return buffer

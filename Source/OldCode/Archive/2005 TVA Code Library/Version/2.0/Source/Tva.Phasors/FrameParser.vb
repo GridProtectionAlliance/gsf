@@ -446,7 +446,7 @@ Public Class FrameParser
 
     Private Sub ProcessUdpStream()
 
-        Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), m_bufferSize)
+        Dim buffer As Byte() = CreateArray(Of Byte)(m_bufferSize)
         Dim received As Int32
 
         ' Enter the data read loop
@@ -472,7 +472,7 @@ Public Class FrameParser
 
     Private Sub ProcessTcpStream()
 
-        Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), m_bufferSize)
+        Dim buffer As Byte() = CreateArray(Of Byte)(m_bufferSize)
         Dim received As Int32
 
         ' Enter the data read loop

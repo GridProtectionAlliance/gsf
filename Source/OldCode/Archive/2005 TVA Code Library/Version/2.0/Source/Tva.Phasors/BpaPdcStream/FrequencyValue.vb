@@ -15,8 +15,6 @@
 '
 '*******************************************************************************************************
 
-Imports Tva.Interop
-
 Namespace BpaPdcStream
 
     <CLSCompliant(False)> _
@@ -54,7 +52,7 @@ Namespace BpaPdcStream
             End Get
         End Property
 
-        Public Shared Function CalculateBinaryLength(ByVal definition As FrequencyDefinition) As Int16
+        Public Shared Function CalculateBinaryLength(ByVal definition As FrequencyDefinition) As UInt16
 
             ' The frequency definition will determine the binary length based on data format
             Return (New FrequencyValue(Nothing, definition, 0, 0)).BinaryLength

@@ -23,7 +23,6 @@ Imports System.Threading
 Imports System.Buffer
 Imports Tva.Interop.Assembly
 Imports Tva.Math.Common
-Imports Tva.Interop
 Imports Tva.Phasors.Common
 Imports Tva.Phasors.BpaPdcStream.Common
 
@@ -43,7 +42,7 @@ Namespace BpaPdcStream
         Private m_defaultPhasorV As PhasorDefinition
         Private m_defaultPhasorI As PhasorDefinition
         Private m_defaultFrequency As FrequencyDefinition
-        Private m_rowLength As Int32
+        Private m_rowLength As UInt16
         Private m_packetsPerSample As Int16
         Private m_streamType As StreamType
         Private m_revisionNumber As RevisionNumber
@@ -155,7 +154,7 @@ Namespace BpaPdcStream
 
                                     pmuCell.IDLabel = section
                                     pmuCell.StationName = .KeyValue(section, "Name", section)
-                                    pmuCell.IDCode = Convert.ToUInt16(.KeyValue(section, "PMU", Cells.Count))
+                                    pmuCell.IDCode = Convert.ToUInt16(.KeyValue(section, "PMU", Cells.Count.ToString))
 
                                     For x = 0 To phasorCount - 1
                                         pmuCell.PhasorDefinitions.Add(New PhasorDefinition(pmuCell, x + 1, .KeyValue(section, "Phasor" & (x + 1), DefaultVoltagePhasorEntry)))
@@ -339,7 +338,7 @@ Namespace BpaPdcStream
         ' RowLength property calculates cell offsets - so it must be called before
         ' accessing cell offsets - this happens automatically since HeaderImage is
         ' called before base class BodyImage which just gets Cells.BinaryImage
-        Public ReadOnly Property RowLength(ByVal recalculate As Boolean) As Int32
+        Public ReadOnly Property RowLength(ByVal recalculate As Boolean) As UInt16
             Get
                 If m_rowLength = 0 OrElse recalculate Then
                     m_rowLength = 0
@@ -374,7 +373,7 @@ Namespace BpaPdcStream
 
         Protected Overrides ReadOnly Property HeaderImage() As Byte()
             Get
-                Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), HeaderLength)
+                Dim buffer As Byte() = CreateArray(Of Byte)(HeaderLength)
 
                 buffer(0) = SyncByte
                 buffer(1) = DescriptorPacketFlag

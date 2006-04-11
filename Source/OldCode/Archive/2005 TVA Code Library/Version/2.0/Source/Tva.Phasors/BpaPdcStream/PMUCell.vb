@@ -18,8 +18,6 @@
 '
 '*******************************************************************************************************
 
-Imports Tva.Interop
-
 Namespace BpaPdcStream
 
     <CLSCompliant(False)> _

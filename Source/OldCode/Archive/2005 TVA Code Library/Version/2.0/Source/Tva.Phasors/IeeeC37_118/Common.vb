@@ -15,8 +15,6 @@
 '
 '*******************************************************************************************************
 
-Imports Tva.Interop.Bit
-
 Namespace IeeeC37_118
 
     ''' <summary>Protocol revision number</summary>

@@ -16,8 +16,6 @@
 '*******************************************************************************************************
 
 Imports System.Text
-Imports Tva.Common
-Imports Tva.Interop
 Imports Tva.DateTime
 Imports Tva.Phasors.Common
 Imports Tva.Phasors.IeeeC37_118.Common
@@ -189,7 +187,7 @@ Namespace IeeeC37_118
 
         Protected Overrides ReadOnly Property HeaderImage() As Byte()
             Get
-                Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), HeaderLength)
+                Dim buffer As Byte() = CreateArray(Of Byte)(HeaderLength)
                 Dim index As Int32
 
                 CopyImage(CommonFrameHeader.BinaryImage(Me), buffer, index, CommonFrameHeader.BinaryLength)
@@ -222,7 +220,7 @@ Namespace IeeeC37_118
 
         Protected Overrides ReadOnly Property FooterImage() As Byte()
             Get
-                Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), FooterLength)
+                Dim buffer As Byte() = CreateArray(Of Byte)(FooterLength)
 
                 EndianOrder.BigEndian.CopyBytes(FrameRate, buffer, 0)
 

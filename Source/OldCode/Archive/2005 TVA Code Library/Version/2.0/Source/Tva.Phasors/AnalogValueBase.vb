@@ -15,8 +15,6 @@
 '
 '*******************************************************************************************************
 
-Imports Tva.Interop
-
 ' This class represents the common implementation of the protocol independent representation of an analog value.
 <CLSCompliant(False)> _
 Public MustInherit Class AnalogValueBase
@@ -105,7 +103,7 @@ Public MustInherit Class AnalogValueBase
 
     Protected Overrides ReadOnly Property BodyImage() As Byte()
         Get
-            Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BodyLength)
+            Dim buffer As Byte() = CreateArray(Of Byte)(BodyLength)
 
             If DataFormat = Phasors.DataFormat.FixedInteger Then
                 EndianOrder.BigEndian.CopyBytes(IntegerValue, buffer, 0)

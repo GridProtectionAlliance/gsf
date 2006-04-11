@@ -15,8 +15,6 @@
 '
 '*******************************************************************************************************
 
-Imports Tva.Interop
-
 ' This class represents the protocol independent a frequency and dfdt value.
 <CLSCompliant(False)> _
 Public MustInherit Class FrequencyValueBase
@@ -135,7 +133,7 @@ Public MustInherit Class FrequencyValueBase
 
     Protected Overrides ReadOnly Property BodyImage() As Byte()
         Get
-            Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BodyLength)
+            Dim buffer As Byte() = CreateArray(Of Byte)(BodyLength)
 
             If DataFormat = Phasors.DataFormat.FixedInteger Then
                 EndianOrder.BigEndian.CopyBytes(UnscaledFrequency, buffer, 0)

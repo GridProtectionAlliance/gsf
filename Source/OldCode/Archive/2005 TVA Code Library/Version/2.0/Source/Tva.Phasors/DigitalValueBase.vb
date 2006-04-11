@@ -16,7 +16,6 @@
 '*******************************************************************************************************
 
 Imports System.ComponentModel
-Imports Tva.Interop
 
 ' This class represents the common implementation of the protocol independent representation of a digital value.
 <CLSCompliant(False)> _
@@ -93,7 +92,7 @@ Public MustInherit Class DigitalValueBase
 
     Protected Overrides ReadOnly Property BodyImage() As Byte()
         Get
-            Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BodyLength)
+            Dim buffer As Byte() = CreateArray(Of Byte)(BodyLength)
 
             EndianOrder.BigEndian.CopyBytes(m_value, buffer, 0)
 

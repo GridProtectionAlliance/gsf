@@ -17,8 +17,6 @@
 
 Imports System.IO
 Imports Tva.DateTime
-Imports Tva.Interop
-Imports Tva.Interop.Bit
 Imports Tva.Phasors.Common
 Imports Tva.Phasors.Ieee1344.Common
 Imports Tva.IO.Compression.Common
@@ -350,7 +348,7 @@ Namespace Ieee1344
 
         Public Shared Function BinaryImage(ByVal frameHeader As ICommonFrameHeader) As Byte()
 
-            Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BinaryLength)
+            Dim buffer As Byte() = CreateArray(Of Byte)(BinaryLength)
 
             ' Make sure frame length gets included in status flags for generated binary image
             FrameLength(frameHeader) = frameHeader.BinaryLength

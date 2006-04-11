@@ -17,7 +17,6 @@
 '
 '*******************************************************************************************************
 
-Imports Tva.Interop
 Imports Tva.Math
 
 ' This class represents the protocol independent representation of a phasor value.
@@ -271,7 +270,7 @@ Public MustInherit Class PhasorValueBase
 
     Protected Overrides ReadOnly Property BodyImage() As Byte()
         Get
-            Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BodyLength)
+            Dim buffer As Byte() = CreateArray(Of Byte)(BodyLength)
 
             If CoordinateFormat = Phasors.CoordinateFormat.Rectangular Then
                 If DataFormat = Phasors.DataFormat.FixedInteger Then

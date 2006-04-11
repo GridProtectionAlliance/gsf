@@ -15,9 +15,6 @@
 '
 '*******************************************************************************************************
 
-Imports Tva.Common
-Imports Tva.Interop
-
 Namespace IeeeC37_118
 
     <CLSCompliant(False)> _
@@ -69,7 +66,7 @@ Namespace IeeeC37_118
 
         Friend ReadOnly Property ConversionFactorImage() As Byte()
             Get
-                Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), ConversionFactorLength)
+                Dim buffer As Byte() = CreateArray(Of Byte)(ConversionFactorLength)
 
                 buffer(0) = IIf(Of Byte)(Type = PhasorType.Voltage, 0, 1)
 
@@ -81,7 +78,7 @@ Namespace IeeeC37_118
 
         Friend Sub ParseConversionFactor(ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
-            Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), 4)
+            Dim buffer As Byte() = CreateArray(Of Byte)(4)
 
             ' Get phasor type from first byte
             Type = IIf(binaryImage(startIndex) = 0, PhasorType.Voltage, PhasorType.Current)

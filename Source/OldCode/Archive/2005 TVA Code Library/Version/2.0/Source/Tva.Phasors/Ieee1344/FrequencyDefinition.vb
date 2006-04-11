@@ -15,10 +15,6 @@
 '
 '*******************************************************************************************************
 
-Imports Tva.Common
-Imports Tva.Interop
-Imports Tva.Interop.Bit
-
 Namespace Ieee1344
 
     <CLSCompliant(False)> _

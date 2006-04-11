@@ -16,7 +16,6 @@
 '*******************************************************************************************************
 
 Imports System.Text
-Imports Tva.Interop
 Imports Tva.Phasors.Common
 
 ' This class represents the protocol independent common implementation of a command frame that can be sent or received from a PMU.
@@ -89,7 +88,7 @@ Public MustInherit Class CommandFrameBase
 
     Protected Overrides ReadOnly Property BodyImage() As Byte()
         Get
-            Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BodyLength)
+            Dim buffer As Byte() = CreateArray(Of Byte)(BodyLength)
             Dim index As Int32 = 2
 
             EndianOrder.BigEndian.CopyBytes(m_command, buffer, 0)

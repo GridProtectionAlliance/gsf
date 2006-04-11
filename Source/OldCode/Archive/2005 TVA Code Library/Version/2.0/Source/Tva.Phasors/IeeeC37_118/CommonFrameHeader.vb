@@ -16,7 +16,6 @@
 '*******************************************************************************************************
 
 Imports Tva.DateTime
-Imports Tva.Interop
 Imports Tva.Phasors.Common
 Imports Tva.Phasors.IeeeC37_118.Common
 
@@ -292,7 +291,7 @@ Namespace IeeeC37_118
 
         Public Shared Function BinaryImage(ByVal frameHeader As ICommonFrameHeader) As Byte()
 
-            Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BinaryLength)
+            Dim buffer As Byte() = CreateArray(Of Byte)(BinaryLength)
 
             With frameHeader
                 buffer(0) = SyncByte

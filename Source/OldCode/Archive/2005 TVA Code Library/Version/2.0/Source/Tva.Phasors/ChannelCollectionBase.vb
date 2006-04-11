@@ -80,7 +80,7 @@ Public MustInherit Class ChannelCollectionBase(Of T As IChannel)
 
     Public Overridable ReadOnly Property BinaryImage() As Byte() Implements IChannelCollection(Of T).BinaryImage
         Get
-            Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BinaryLength)
+            Dim buffer As Byte() = CreateArray(Of Byte)(BinaryLength)
             Dim index As Int32
 
             For x As Int32 = 0 To Count - 1
