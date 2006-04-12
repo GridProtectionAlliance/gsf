@@ -354,17 +354,17 @@ Public Class FrameParser
                     binaryLength = 0
             End Select
 
-            With System.IO.File.CreateText(IO.FilePath.GetApplicationPath & [Enum].GetName(GetType(Command), command) & "Image.txt")
-                .WriteLine([Enum].GetName(GetType(Command), command) & " Binary Image - Created: " & Date.Now.ToString)
-                .WriteLine("Image Length: " & binaryLength & Environment.NewLine)
-                .WriteLine("Hexadecimal Image:")
-                .WriteLine(ByteEncoding.Hexadecimal.GetString(binaryImage, " "c))
-                .WriteLine("Decimal Image:")
-                .WriteLine(ByteEncoding.Decimal.GetString(binaryImage, " "c))
-                .WriteLine("Big-endian Binary Image:")
-                .WriteLine(ByteEncoding.BigEndianBinary.GetString(binaryImage, " "c))
-                .Close()
-            End With
+            'With System.IO.File.CreateText(IO.FilePath.GetApplicationPath & [Enum].GetName(GetType(Command), command) & "Image.txt")
+            '    .WriteLine([Enum].GetName(GetType(Command), command) & " Binary Image - Created: " & Date.Now.ToString)
+            '    .WriteLine("Image Length: " & binaryLength & Environment.NewLine)
+            '    .WriteLine("Hexadecimal Image:")
+            '    .WriteLine(ByteEncoding.Hexadecimal.GetString(binaryImage, " "c))
+            '    .WriteLine("Decimal Image:")
+            '    .WriteLine(ByteEncoding.Decimal.GetString(binaryImage, " "c))
+            '    .WriteLine("Big-endian Binary Image:")
+            '    .WriteLine(ByteEncoding.BigEndianBinary.GetString(binaryImage, " "c))
+            '    .Close()
+            'End With
 
             If binaryLength > 0 Then m_clientStream.Write(binaryImage, 0, binaryLength)
         End If
