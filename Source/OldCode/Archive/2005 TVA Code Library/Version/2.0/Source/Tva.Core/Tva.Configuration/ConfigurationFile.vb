@@ -4,12 +4,18 @@ Imports System.Xml
 Imports System.Configuration
 Imports System.Web.Configuration
 Imports Tva.Xml.Common
+Imports Tva.IO.FilePath
 
 Namespace Configuration
 
     Public Class ConfigurationFile
 
         Private m_configuration As System.Configuration.Configuration
+
+        Public Enum Environments As Integer
+            Win
+            Web
+        End Enum
 
         Public Sub New()
             Me.New("")
@@ -24,6 +30,14 @@ Namespace Configuration
             End If
             m_configuration = GetConfiguration(filePath)
         End Sub
+
+        Public ReadOnly Property Environment() As Environments
+            Get
+                Dim currentEnvironment As Environments = Environments.Win
+                If System.Web.HttpContext.Current() IsNot Nothing Then currentEnvironment = Environments.Web
+                Return currentEnvironment
+            End Get
+        End Property
 
         Public ReadOnly Property Settings() As SettingsSection
             Get
@@ -65,13 +79,24 @@ Namespace Configuration
 
             Dim configuration As System.Configuration.Configuration = Nothing
 
-            If filePath Is Nothing Then filePath = ""
-            If System.Web.HttpContext.Current() Is Nothing Then
-                ' Environment is Windows.
-                configuration = ConfigurationManager.OpenExeConfiguration(filePath)
+            If filePath IsNot Nothing Then
+                If filePath = "" OrElse JustFileExtension(filePath) = ".config" Then
+                    Select Case Me.Environment()
+                        Case Environments.Win
+                            If filePath = "" OrElse _
+                                    (filePath <> "" AndAlso JustFileExtension(NoFileExtension(filePath)) = ".exe") Then
+                                configuration = ConfigurationManager.OpenExeConfiguration(filePath.TrimEnd(".config".ToCharArray()))
+                            Else
+                                Throw New ArgumentException()
+                            End If
+                        Case Environments.Web
+                            configuration = WebConfigurationManager.OpenWebConfiguration(filePath)
+                    End Select
+                Else
+                    Throw New ArgumentException()
+                End If
             Else
-                ' Environment is Web.
-                configuration = WebConfigurationManager.OpenWebConfiguration(filePath)
+                Throw New ArgumentNullException()
             End If
 
             Return configuration
@@ -125,6 +150,12 @@ Namespace Configuration
             Get
                 If m_defaultConfigFile Is Nothing Then m_defaultConfigFile = New ConfigurationFile()
                 Return m_defaultConfigFile
+            End Get
+        End Property
+
+        Public Shared ReadOnly Property CustomConfigFile(ByVal filePath As String) As ConfigurationFile
+            Get
+                Return New ConfigurationFile(filePath)
             End Get
         End Property
 #End Region
