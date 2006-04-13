@@ -39,21 +39,21 @@ Namespace Configuration
             End Get
         End Property
 
-        Public ReadOnly Property Settings() As SettingsSection
+        Public ReadOnly Property Settings() As SettingsCollection
             Get
-                Return DirectCast(m_configuration.GetSection("settings"), SettingsSection)
+                Return DirectCast(m_configuration.GetSection("settings"), SettingsSection).Settings()
             End Get
         End Property
 
-        Public ReadOnly Property AppSettings() As AppSettingsSection
+        Public ReadOnly Property AppSettings() As KeyValueConfigurationCollection
             Get
-                Return m_configuration.AppSettings()
+                Return m_configuration.AppSettings.Settings()
             End Get
         End Property
 
-        Public ReadOnly Property ConnectionStrings() As ConnectionStringsSection
+        Public ReadOnly Property ConnectionStrings() As ConnectionStringSettingsCollection
             Get
-                Return m_configuration.ConnectionStrings()
+                Return m_configuration.ConnectionStrings.ConnectionStrings()
             End Get
         End Property
 
