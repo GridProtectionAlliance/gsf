@@ -45,6 +45,7 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Data.OracleClient" />
     <Reference Include="System.DirectoryServices" />
+    <Reference Include="System.Web" />
     <Reference Include="System.XML" />
   </ItemGroup>
   <ItemGroup>
@@ -56,6 +57,7 @@
     <Import Include="System.Diagnostics" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Tva.Configuration\ConfigurationFile.vb" />
     <Compile Include="Tva.Configuration\SettingsCollection.vb" />
     <Compile Include="Tva.Configuration\SettingsElement.vb" />
     <Compile Include="Tva.Configuration\SettingsSection.vb" />
