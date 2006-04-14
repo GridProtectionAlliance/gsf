@@ -29,7 +29,7 @@ Namespace Math
     ''' <summary>Defines common math functions</summary>
     Public NotInheritable Class Common
 
-        Private Shared m_randomNumberGenerator As New Security.Cryptography.RNGCryptoServiceProvider
+        Private Shared m_randomNumberGenerator As New System.Security.Cryptography.RNGCryptoServiceProvider
 
         Private Sub New()
 
