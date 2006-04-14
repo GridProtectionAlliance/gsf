@@ -58,9 +58,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Tva.Configuration\ConfigurationFile.vb" />
-    <Compile Include="Tva.Configuration\SettingsCollection.vb" />
-    <Compile Include="Tva.Configuration\SettingsElement.vb" />
-    <Compile Include="Tva.Configuration\SettingsSection.vb" />
+    <Compile Include="Tva.Configuration\CategorizedSettingsCollection.vb" />
+    <Compile Include="Tva.Configuration\CategorizedSettingsElement.vb" />
+    <Compile Include="Tva.Configuration\CategorizedSettingsSection.vb" />
     <Compile Include="Tva.Measurements\ImmediateMeasurements.vb" />
     <Compile Include="Tva.Measurements\Sample.vb" />
     <Compile Include="Tva\Common.vb" />

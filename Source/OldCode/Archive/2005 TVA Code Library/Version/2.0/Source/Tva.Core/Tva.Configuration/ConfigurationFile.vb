@@ -12,6 +12,9 @@ Namespace Configuration
 
         Private m_configuration As System.Configuration.Configuration
 
+        Public Const CustomSectionName As String = "categorizedSettings"
+        Public Const CustomSectionType As String = "Tva.Configuration.CategorizedSettingsSection, Tva.Core"
+
         Public Enum Environments As Integer
             Win
             Web
@@ -39,21 +42,21 @@ Namespace Configuration
             End Get
         End Property
 
-        Public ReadOnly Property Settings() As SettingsCollection
+        Public ReadOnly Property CategorizedSettings() As CategorizedSettingsSection
             Get
-                Return DirectCast(m_configuration.GetSection("settings"), SettingsSection).Settings()
+                Return DirectCast(m_configuration.GetSection(CustomSectionName), CategorizedSettingsSection)
             End Get
         End Property
 
-        Public ReadOnly Property AppSettings() As KeyValueConfigurationCollection
+        Public ReadOnly Property AppSettings() As AppSettingsSection
             Get
-                Return m_configuration.AppSettings.Settings()
+                Return m_configuration.AppSettings()
             End Get
         End Property
 
-        Public ReadOnly Property ConnectionStrings() As ConnectionStringSettingsCollection
+        Public ReadOnly Property ConnectionStrings() As ConnectionStringsSection
             Get
-                Return m_configuration.ConnectionStrings.ConnectionStrings()
+                Return m_configuration.ConnectionStrings()
             End Get
         End Property
 
@@ -105,16 +108,16 @@ Namespace Configuration
 
         Private Sub CreateConfigurationFile(ByVal filePath As String)
 
-            Dim xmlText As New XmlTextWriter(filePath, System.Text.Encoding.UTF8)
-            xmlText.Indentation = 4
-            xmlText.Formatting = Formatting.Indented
+            Dim configFileWriter As New XmlTextWriter(filePath, System.Text.Encoding.UTF8)
+            configFileWriter.Indentation = 4
+            configFileWriter.Formatting = Formatting.Indented
             ' Populate the very basic information required in a config file.
-            xmlText.WriteStartDocument()
-            xmlText.WriteStartElement("configuration")
-            xmlText.WriteEndElement()
-            xmlText.WriteEndDocument()
+            configFileWriter.WriteStartDocument()
+            configFileWriter.WriteStartElement("configuration")
+            configFileWriter.WriteEndElement()
+            configFileWriter.WriteEndDocument()
             ' Close the config file.
-            xmlText.Close()
+            configFileWriter.Close()
 
             ValidateConfigurationFile(filePath)
 
@@ -122,24 +125,24 @@ Namespace Configuration
 
         Private Sub ValidateConfigurationFile(ByVal filePath As String)
 
-            Dim name As String = "settings"
-            Dim type As String = "Tva.Configuration.SettingsSection, Tva.Core"
+            'Dim name As String = "settings"
+            'Dim type As String = "Tva.Configuration.SettingsSection, Tva.Core"
 
-            Dim xmlDoc As New XmlDocument()
-            xmlDoc.Load(filePath)
+            Dim configFile As New XmlDocument()
+            configFile.Load(filePath)
 
-            If xmlDoc.DocumentElement.SelectNodes("configSections").Count() = 0 Then
-                xmlDoc.DocumentElement.InsertBefore(xmlDoc.CreateElement("configSections"), _
-                    xmlDoc.DocumentElement.FirstChild())
+            If configFile.DocumentElement.SelectNodes("configSections").Count() = 0 Then
+                configFile.DocumentElement.InsertBefore(configFile.CreateElement("configSections"), _
+                    configFile.DocumentElement.FirstChild())
             End If
-            Dim configSectionsNode As XmlNode = xmlDoc.DocumentElement.SelectSingleNode("configSections")
-            If configSectionsNode.SelectNodes("section[@name = '" & name & "']").Count() = 0 Then
-                Dim node As XmlNode = xmlDoc.CreateElement("section")
-                Attribute(node, "name") = name
-                Attribute(node, "type") = type
+            Dim configSectionsNode As XmlNode = configFile.DocumentElement.SelectSingleNode("configSections")
+            If configSectionsNode.SelectNodes("section[@name = '" & CustomSectionName & "']").Count() = 0 Then
+                Dim node As XmlNode = configFile.CreateElement("section")
+                Attribute(node, "name") = CustomSectionName
+                Attribute(node, "type") = CustomSectionType
                 configSectionsNode.AppendChild(node)
             End If
-            xmlDoc.Save(filePath)
+            configFile.Save(filePath)
 
         End Sub
 
