@@ -57,6 +57,7 @@
     <Import Include="System.Diagnostics" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Tva.Security\Cryptography\Common.vb" />
     <Compile Include="Tva.Configuration\ConfigurationFile.vb" />
     <Compile Include="Tva.Configuration\CategorizedSettingsCollection.vb" />
     <Compile Include="Tva.Configuration\CategorizedSettingsElement.vb" />
