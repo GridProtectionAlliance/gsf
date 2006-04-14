@@ -33,8 +33,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build and Deploy Scripts", 
 		..\Build Scripts\RebuildAllDebug.bat = ..\Build Scripts\RebuildAllDebug.bat
 	EndProjectSection
 EndProject
-Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "Tva.Security", "Tva.Security\Tva.Security.vbproj", "{A02EDB9D-4A62-41E0-BB60-5B942E2C7490}"
-EndProject
 Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "Tva.Phasors", "Tva.Phasors\Tva.Phasors.vbproj", "{54CA98CC-2F0A-41F2-879D-0E42B17E8544}"
 EndProject
 Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "TVA PMU Connection Tester", "Tva.Phasors\PMU Connection Tester\TVA PMU Connection Tester.vbproj", "{AB9A5D8C-38C2-4393-93D9-BC548ED0AB38}"
@@ -47,7 +45,7 @@ Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "TVA PMU Connection Tester S
 EndProject
 Global
 	GlobalSection(SourceCodeControl) = preSolution
-		SccNumberOfProjects = 10
+		SccNumberOfProjects = 9
 		SccProjectName0 = \u0022$/TVA\u0020Code\u0020Library/Version/2.0\u0022,\u0020HBAAAAAA
 		SccLocalPath0 = ..
 		SccProvider0 = MSSCCI:Microsoft\u0020Visual\u0020SourceSafe
@@ -78,26 +76,21 @@ Global
 		SccLocalPath5 = ..
 		CanCheckoutShared = false
 		SccProjectFilePathRelativizedFromConnection5 = Source\\Tva.IO.Compression\\
-		SccProjectUniqueName6 = Tva.Security\\Tva.Security.vbproj
+		SccProjectUniqueName6 = Tva.Phasors\\Tva.Phasors.vbproj
 		SccProjectTopLevelParentUniqueName6 = TVA\u0020Code\u0020Library.sln
-		SccLocalPath6 = ..
+		SccProjectName6 = \u0022$/TVA\u0020Code\u0020Library/Version/2.0/Source/Tva.Phasors\u0022,\u0020IBGAAAAA
+		SccLocalPath6 = Tva.Phasors
 		CanCheckoutShared = false
-		SccProjectFilePathRelativizedFromConnection6 = Source\\Tva.Security\\
-		SccProjectUniqueName7 = Tva.Phasors\\Tva.Phasors.vbproj
+		SccProjectUniqueName7 = Tva.Phasors\\PMU\u0020Connection\u0020Tester\\TVA\u0020PMU\u0020Connection\u0020Tester.vbproj
 		SccProjectTopLevelParentUniqueName7 = TVA\u0020Code\u0020Library.sln
-		SccProjectName7 = \u0022$/TVA\u0020Code\u0020Library/Version/2.0/Source/Tva.Phasors\u0022,\u0020IBGAAAAA
-		SccLocalPath7 = Tva.Phasors
+		SccLocalPath7 = ..
 		CanCheckoutShared = false
-		SccProjectUniqueName8 = Tva.Phasors\\PMU\u0020Connection\u0020Tester\\TVA\u0020PMU\u0020Connection\u0020Tester.vbproj
+		SccProjectFilePathRelativizedFromConnection7 = Source\\Tva.Phasors\\PMU\u0020Connection\u0020Tester\\
+		SccProjectUniqueName8 = Tva.Phasors\\PMU\u0020Connection\u0020Tester\\Setup\\Setup.vdproj
 		SccProjectTopLevelParentUniqueName8 = TVA\u0020Code\u0020Library.sln
 		SccLocalPath8 = ..
 		CanCheckoutShared = false
-		SccProjectFilePathRelativizedFromConnection8 = Source\\Tva.Phasors\\PMU\u0020Connection\u0020Tester\\
-		SccProjectUniqueName9 = Tva.Phasors\\PMU\u0020Connection\u0020Tester\\Setup\\Setup.vdproj
-		SccProjectTopLevelParentUniqueName9 = TVA\u0020Code\u0020Library.sln
-		SccLocalPath9 = ..
-		CanCheckoutShared = false
-		SccProjectFilePathRelativizedFromConnection9 = Source\\Tva.Phasors\\PMU\u0020Connection\u0020Tester\\Setup\\
+		SccProjectFilePathRelativizedFromConnection8 = Source\\Tva.Phasors\\PMU\u0020Connection\u0020Tester\\Setup\\
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -158,16 +151,6 @@ Global
 		{F611B9BA-C69D-449B-B596-FABFB746EA2A}.Release|Mixed Platforms.Build.0 = Release|Win32
 		{F611B9BA-C69D-449B-B596-FABFB746EA2A}.Release|Win32.ActiveCfg = Release|Win32
 		{F611B9BA-C69D-449B-B596-FABFB746EA2A}.Release|Win32.Build.0 = Release|Win32
-		{A02EDB9D-4A62-41E0-BB60-5B942E2C7490}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{A02EDB9D-4A62-41E0-BB60-5B942E2C7490}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{A02EDB9D-4A62-41E0-BB60-5B942E2C7490}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
-		{A02EDB9D-4A62-41E0-BB60-5B942E2C7490}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
-		{A02EDB9D-4A62-41E0-BB60-5B942E2C7490}.Debug|Win32.ActiveCfg = Debug|Any CPU
-		{A02EDB9D-4A62-41E0-BB60-5B942E2C7490}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{A02EDB9D-4A62-41E0-BB60-5B942E2C7490}.Release|Any CPU.Build.0 = Release|Any CPU
-		{A02EDB9D-4A62-41E0-BB60-5B942E2C7490}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
-		{A02EDB9D-4A62-41E0-BB60-5B942E2C7490}.Release|Mixed Platforms.Build.0 = Release|Any CPU
-		{A02EDB9D-4A62-41E0-BB60-5B942E2C7490}.Release|Win32.ActiveCfg = Release|Any CPU
 		{54CA98CC-2F0A-41F2-879D-0E42B17E8544}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{54CA98CC-2F0A-41F2-879D-0E42B17E8544}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{54CA98CC-2F0A-41F2-879D-0E42B17E8544}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
@@ -204,7 +187,6 @@ Global
 		{81963CD0-0A0E-4765-8F0A-719C942301DA} = {4F631798-355B-4607-AEEB-742B670AD834}
 		{29A7B606-D1BC-4A4B-96D0-258D5A72C3EC} = {4F631798-355B-4607-AEEB-742B670AD834}
 		{F611B9BA-C69D-449B-B596-FABFB746EA2A} = {4F631798-355B-4607-AEEB-742B670AD834}
-		{A02EDB9D-4A62-41E0-BB60-5B942E2C7490} = {4F631798-355B-4607-AEEB-742B670AD834}
 		{54CA98CC-2F0A-41F2-879D-0E42B17E8544} = {4F631798-355B-4607-AEEB-742B670AD834}
 		{0C2CAD57-581F-4C7A-9D59-8A9A1270A28E} = {4F631798-355B-4607-AEEB-742B670AD834}
 		{2E2A8AA0-A387-4245-A419-496B50CB7939} = {CDC349A8-4D7D-4D2F-8D15-8CE2359FBF3D}
