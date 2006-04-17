@@ -33,19 +33,32 @@ Namespace Configuration
 
         Public Sub Add(ByVal name As String, ByVal value As String)
 
-            Me.Add(name, value, "")
+            Me.Add(name, value, False)
+
+        End Sub
+
+        Public Sub Add(ByVal name As String, ByVal value As String, ByVal encryptValue As Boolean)
+
+            Me.Add(name, value, "", encryptValue)
 
         End Sub
 
         Public Sub Add(ByVal name As String, ByVal value As String, ByVal description As String)
 
-            Me.Add(New CategorizedSettingsElement(name, value, description))
+            Me.Add(New CategorizedSettingsElement(name, value, description, False))
+
+        End Sub
+
+        Public Sub Add(ByVal name As String, ByVal value As String, ByVal description As String, ByVal encryptValue As Boolean)
+
+            Me.Add(New CategorizedSettingsElement(name, value, description, encryptValue))
 
         End Sub
 
         Public Sub Add(ByVal setting As CategorizedSettingsElement)
 
             If MyBase.BaseGet(setting.Name()) Is Nothing Then
+                ' Add the element only if it doesn't exist.
                 MyBase.BaseAdd(setting)
             End If
 

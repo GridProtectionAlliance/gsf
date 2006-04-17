@@ -12,8 +12,8 @@ Namespace Configuration
 
         Private m_configuration As System.Configuration.Configuration
 
-        Public Const CustomSectionName As String = "categorizedSettings"
-        Public Const CustomSectionType As String = "Tva.Configuration.CategorizedSettingsSection, Tva.Core"
+        Private Const CustomSectionName As String = "categorizedSettings"
+        Private Const CustomSectionType As String = "Tva.Configuration.CategorizedSettingsSection, Tva.Core"
 
         Public Enum Environments As Integer
             Win
@@ -68,9 +68,16 @@ Namespace Configuration
 
         Public Sub Save()
 
-            m_configuration.Save()
+            Me.Save(ConfigurationSaveMode.Modified)
 
         End Sub
+
+        Public Sub Save(ByVal saveMode As ConfigurationSaveMode)
+
+            m_configuration.Save(saveMode)
+
+        End Sub
+
 
         Public Sub SaveAs(ByVal fileName As String)
 
@@ -125,9 +132,6 @@ Namespace Configuration
 
         Private Sub ValidateConfigurationFile(ByVal filePath As String)
 
-            'Dim name As String = "settings"
-            'Dim type As String = "Tva.Configuration.SettingsSection, Tva.Core"
-
             Dim configFile As New XmlDocument()
             configFile.Load(filePath)
 
@@ -145,23 +149,6 @@ Namespace Configuration
             configFile.Save(filePath)
 
         End Sub
-
-#Region "Shared"
-        Private Shared m_defaultConfigFile As ConfigurationFile
-
-        Public Shared ReadOnly Property DefaultConfigFile() As ConfigurationFile
-            Get
-                If m_defaultConfigFile Is Nothing Then m_defaultConfigFile = New ConfigurationFile()
-                Return m_defaultConfigFile
-            End Get
-        End Property
-
-        Public Shared ReadOnly Property CustomConfigFile(ByVal filePath As String) As ConfigurationFile
-            Get
-                Return New ConfigurationFile(filePath)
-            End Get
-        End Property
-#End Region
 
     End Class
 

@@ -24,6 +24,7 @@ Namespace Configuration
             End Get
         End Property
 
+#Region "Config Shortcuts"
         Public Shared ReadOnly Property Settings() As CategorizedSettingsCollection
             Get
                 Return DefaultConfigFile.CategorizedSettings.General
@@ -35,6 +36,11 @@ Namespace Configuration
                 Return DefaultConfigFile.CategorizedSettings(category)
             End Get
         End Property
+
+        Public Sub SaveSettings()
+            DefaultConfigFile.Save()
+        End Sub
+#End Region
 
     End Class
 
