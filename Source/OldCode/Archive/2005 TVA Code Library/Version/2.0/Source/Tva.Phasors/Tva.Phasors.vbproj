@@ -214,6 +214,6 @@
   </Target>
   -->
   <PropertyGroup>
-    <PostBuildEvent>COPY "$(OutDir)$(TargetFileName)" "..\Tva.Phasors\PMU Connection Tester\Embedded Resources\$(TargetFileName)"</PostBuildEvent>
+    <PostBuildEvent>XCOPY /C /R /Y "$(OutDir)$(TargetFileName)" "..\Tva.Phasors\PMU Connection Tester\Embedded Resources\$(TargetFileName)"</PostBuildEvent>
   </PropertyGroup>
 </Project>
