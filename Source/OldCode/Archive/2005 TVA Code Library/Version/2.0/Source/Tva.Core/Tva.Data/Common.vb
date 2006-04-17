@@ -38,6 +38,16 @@ Namespace Data
 
     Public NotInheritable Class Common
 
+        ''' <summary>
+        ''' The default timeout duration used for executing SQL statements when timeout duration is not specified.
+        ''' </summary>
+        ''' <remarks></remarks>
+        Public Const TimeoutDuration As Integer = 30
+
+        ''' <summary>
+        ''' Types of data providers.
+        ''' </summary>
+        ''' <remarks></remarks>
         Public Enum ConnectionType As Integer
             [OleDb]
             [SqlClient]
@@ -51,10 +61,10 @@ Namespace Data
         End Sub
 
         ''' <summary>
-        ''' Performs Sql encoding on given string.
+        ''' Performs SQL encoding on given T-SQL string.
         ''' </summary>
-        ''' <param name="sql">The string on which Sql encoding is to be performed.</param>
-        ''' <returns>The Sql encoded string.</returns>
+        ''' <param name="sql">The string on which SQL encoding is to be performed.</param>
+        ''' <returns>The SQL encoded string.</returns>
         ''' <remarks></remarks>
         Public Shared Function SqlEncode(ByVal sql As String) As String
 
@@ -63,7 +73,15 @@ Namespace Data
         End Function
 
 #Region "ExecuteNonQuery Overloaded Functions"
-        ' Executes given Sql update query for given connection string
+        ''' <summary>
+        ''' Executes the SQL statement and returns the number of rows affected.
+        ''' </summary>
+        ''' <param name="sql">The SQL statement to be executed.</param>
+        ''' <param name="connectString">The connection string used for connecting to the data source.</param>
+        ''' <param name="connectionType">The type of data provider to use for connecting to the data source and executing the SQL statement.</param>
+        ''' <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
+        ''' <returns>The number of rows affected.</returns>
+        ''' <remarks></remarks>
         Public Shared Function ExecuteNonQuery(ByVal sql As String, ByVal connectString As String, _
                 ByVal connectionType As ConnectionType, ByVal timeout As Integer) As Integer
 
@@ -91,13 +109,27 @@ Namespace Data
 
         End Function
 
+        ''' <summary>
+        ''' Executes the SQL statement using .Net OleDb data provider, and returns the number of rows affected.
+        ''' </summary>
+        ''' <param name="sql">The SQL statement to be executed.</param>
+        ''' <param name="connection">The System.Data.OleDb.OleDbConnection to use for executing the SQL statement.</param>
+        ''' <returns>The number of rows affected.</returns>
+        ''' <remarks></remarks>
         Public Shared Function ExecuteNonQuery(ByVal sql As String, ByVal connection As OleDbConnection) As Integer
 
-            Return ExecuteNonQuery(sql, connection, 30)
+            Return ExecuteNonQuery(sql, connection, TimeoutDuration)
 
         End Function
 
-        ' Executes given Sql update query for given connection
+        ''' <summary>
+        ''' Executes the SQL statement using .Net OleDb data provider, and returns the number of rows affected.
+        ''' </summary>
+        ''' <param name="sql">The SQL statement to be executed.</param>
+        ''' <param name="connection">The System.Data.OleDb.OleDbConnection to use for executing the SQL statement.</param>
+        ''' <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
+        ''' <returns>The number of rows affected.</returns>
+        ''' <remarks></remarks>
         Public Shared Function ExecuteNonQuery(ByVal sql As String, ByVal connection As OleDbConnection, _
                 ByVal timeout As Integer) As Integer
 
@@ -105,15 +137,30 @@ Namespace Data
 
         End Function
 
+        ''' <summary>
+        ''' Executes the SQL statement using .Net OleDb data provider, and returns the number of rows affected.
+        ''' </summary>
+        ''' <param name="sql">The SQL statement to be executed.</param>
+        ''' <param name="connection">The System.Data.OleDb.OleDbConnection to use for executing the SQL statement.</param>
+        ''' <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+        ''' <returns>The number of rows affected.</returns>
+        ''' <remarks></remarks>
         Public Shared Function ExecuteNonQuery(ByVal sql As String, ByVal connection As OleDbConnection, _
                 ByVal ParamArray parameters As Object()) As Integer
 
-            Return ExecuteNonQuery(sql, connection, 30, parameters)
+            Return ExecuteNonQuery(sql, connection, TimeoutDuration, parameters)
 
         End Function
 
-        ' tmshults 12/10/2004 - This behaves exactly like the RetrieveDataSetWithParameters method except it uses the
-        '                       cmd.ExecuteNonQuery to execute StoredProcedures that don't return data.
+        ''' <summary>
+        ''' Executes the SQL statement using .Net OleDb data provider, and returns the number of rows affected.
+        ''' </summary>
+        ''' <param name="sql">The SQL statement to be executed.</param>
+        ''' <param name="connection">The System.Data.OleDb.OleDbConnection to use for executing the SQL statement.</param>
+        ''' <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
+        ''' <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+        ''' <returns>The number of rows affected.</returns>
+        ''' <remarks></remarks>
         Public Shared Function ExecuteNonQuery(ByVal sql As String, ByVal connection As OleDbConnection, _
                 ByVal timeout As Integer, ByVal ParamArray parameters As Object()) As Integer
 
@@ -125,12 +172,27 @@ Namespace Data
 
         End Function
 
+        ''' <summary>
+        ''' Executes the SQL statement using .Net Sql Server data provider, and returns the number of rows affected.
+        ''' </summary>
+        ''' <param name="sql">The SQL statement to be executed.</param>
+        ''' <param name="connection">The System.Data.SqlClient.SqlConnection to use for executing the SQL statement.</param>
+        ''' <returns>The number of rows affected.</returns>
+        ''' <remarks></remarks>
         Public Shared Function ExecuteNonQuery(ByVal sql As String, ByVal connection As SqlConnection) As Integer
 
-            Return ExecuteNonQuery(sql, connection, 30)
+            Return ExecuteNonQuery(sql, connection, TimeoutDuration)
 
         End Function
 
+        ''' <summary>
+        ''' Executes the SQL statement using .Net Sql Server data provider, and returns the number of rows affected.
+        ''' </summary>
+        ''' <param name="sql">The SQL statement to be executed.</param>
+        ''' <param name="connection">The System.Data.SqlClient.SqlConnection to use for executing the SQL statement.</param>
+        ''' <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
+        ''' <returns>The number of rows affected.</returns>
+        ''' <remarks></remarks>
         Public Shared Function ExecuteNonQuery(ByVal sql As String, ByVal connection As SqlConnection, _
                 ByVal timeout As Integer) As Integer
 
@@ -138,15 +200,30 @@ Namespace Data
 
         End Function
 
+        ''' <summary>
+        ''' Executes the SQL statement using .Net Sql Server data provider, and returns the number of rows affected.
+        ''' </summary>
+        ''' <param name="sql">The SQL statement to be executed.</param>
+        ''' <param name="connection">The System.Data.SqlClient.SqlConnection to use for executing the SQL statement.</param>
+        ''' <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+        ''' <returns>The number of rows affected.</returns>
+        ''' <remarks></remarks>
         Public Shared Function ExecuteNonQuery(ByVal sql As String, ByVal connection As SqlConnection, _
                 ByVal ParamArray parameters As Object()) As Integer
 
-            Return ExecuteNonQuery(sql, connection, 30, parameters)
+            Return ExecuteNonQuery(sql, connection, TimeoutDuration, parameters)
 
         End Function
 
-        ' tmshults 12/10/2004 - This behaves exactly like the RetrieveDataSetWithParameters method except it uses the
-        '                       cmd.ExecuteNonQuery to execute StoredProcedures that don't return data.
+        ''' <summary>
+        ''' Executes the SQL statement using .Net Sql Server data provider, and returns the number of rows affected.
+        ''' </summary>
+        ''' <param name="sql">The SQL statement to be executed.</param>
+        ''' <param name="connection">The System.Data.SqlClient.SqlConnection to use for executing the SQL statement.</param>
+        ''' <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
+        ''' <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+        ''' <returns>The number of rows affected.</returns>
+        ''' <remarks></remarks>
         Public Shared Function ExecuteNonQuery(ByVal sql As String, ByVal connection As SqlConnection, _
                 ByVal timeout As Integer, ByVal ParamArray parameters As Object()) As Integer
 
@@ -158,15 +235,27 @@ Namespace Data
 
         End Function
 
-        ' Executes given Sql update query for given connection
+        ''' <summary>
+        ''' Executes the SQL statement using .Net Oracle data provider, and returns the number of rows affected.
+        ''' </summary>
+        ''' <param name="sql">The SQL statement to be executed.</param>
+        ''' <param name="connection">The System.Data.OracleClient.OracleConnection to use for executing the SQL statement.</param>
+        ''' <returns>The number of rows affected.</returns>
+        ''' <remarks></remarks>
         Public Shared Function ExecuteNonQuery(ByVal sql As String, ByVal connection As OracleConnection) As Integer
 
             Return ExecuteNonQuery(sql, connection, Nothing)
 
         End Function
 
-        ' tmshults 12/10/2004 - This behaves exactly like the RetrieveDataSetWithParameters method except it uses the
-        '                       cmd.ExecuteNonQuery to execute StoredProcedures that don't return data.
+        ''' <summary>
+        ''' Executes the SQL statement using .Net Oracle data provider, and returns the number of rows affected.
+        ''' </summary>
+        ''' <param name="sql">The SQL statement to be executed.</param>
+        ''' <param name="connection">The System.Data.OracleClient.OracleConnection to use for executing the SQL statement.</param>
+        ''' <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+        ''' <returns>The number of rows affected.</returns>
+        ''' <remarks></remarks>
         Public Shared Function ExecuteNonQuery(ByVal sql As String, ByVal connection As OracleConnection, _
                 ByVal ParamArray parameters As Object()) As Integer
 
@@ -179,13 +268,28 @@ Namespace Data
 #End Region
 
 #Region "ExecuteReader Overloaded Functions"
+        ''' <summary>
+        ''' Executes the SQL statement using .Net OleDb data provider, and builds a data reader.
+        ''' </summary>
+        ''' <param name="sql">The SQL statement to be executed.</param>
+        ''' <param name="connection">The System.Data.OleDb.OleDbConnection to use for executing the SQL statement.</param>
+        ''' <returns>An System.Data.OleDb.OleDbDataReader object.</returns>
+        ''' <remarks></remarks>
         Public Shared Function ExecuteReader(ByVal sql As String, ByVal connection As OleDbConnection) As OleDbDataReader
 
-            Return ExecuteReader(sql, connection, CommandBehavior.Default, 30)
+            Return ExecuteReader(sql, connection, CommandBehavior.Default, TimeoutDuration)
 
         End Function
 
-        ' Executes given Sql data query for given connection
+        ''' <summary>
+        ''' Executes the SQL statement using .Net OleDb data provider, and builds a data reader.
+        ''' </summary>
+        ''' <param name="sql">The SQL statement to be executed.</param>
+        ''' <param name="connection">The System.Data.OleDb.OleDbConnection to use for executing the SQL statement.</param>
+        ''' <param name="behavior">One of the System.Data.CommandBehavior values.</param>
+        ''' <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
+        ''' <returns>An System.Data.OleDb.OleDbDataReader object.</returns>
+        ''' <remarks></remarks>
         Public Shared Function ExecuteReader(ByVal sql As String, ByVal connection As OleDbConnection, _
                 ByVal behavior As CommandBehavior, ByVal timeout As Integer) As OleDbDataReader
 
@@ -193,15 +297,31 @@ Namespace Data
 
         End Function
 
+        ''' <summary>
+        ''' Executes the SQL statement using .Net OleDb data provider, and builds a data reader.
+        ''' </summary>
+        ''' <param name="sql">The SQL statement to be executed.</param>
+        ''' <param name="connection">The System.Data.OleDb.OleDbConnection to use for executing the SQL statement.</param>
+        ''' <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+        ''' <returns>An System.Data.OleDb.OleDbDataReader object.</returns>
+        ''' <remarks></remarks>
         Public Shared Function ExecuteReader(ByVal sql As String, ByVal connection As OleDbConnection, _
                 ByVal ParamArray parameters As Object()) As OleDbDataReader
 
-            Return ExecuteReader(sql, connection, CommandBehavior.Default, 30, parameters)
+            Return ExecuteReader(sql, connection, CommandBehavior.Default, TimeoutDuration, parameters)
 
         End Function
 
-        ' tmshults 12/10/2004 - This behaves exactly like the RetrieveDataSetWithParameters method except it uses the
-        '                       cmd.ExecuteReader as the data that is returned.
+        ''' <summary>
+        ''' Executes the SQL statement using .Net OleDb data provider, and builds a data reader.
+        ''' </summary>
+        ''' <param name="sql">The SQL statement to be executed.</param>
+        ''' <param name="connection">The System.Data.OleDb.OleDbConnection to use for executing the SQL statement.</param>
+        ''' <param name="behavior">One of the System.Data.CommandBehavior values.</param>
+        ''' <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
+        ''' <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+        ''' <returns>An System.Data.OleDb.OleDbDataReader object.</returns>
+        ''' <remarks></remarks>
         Public Shared Function ExecuteReader(ByVal sql As String, ByVal connection As OleDbConnection, _
                 ByVal behavior As CommandBehavior, ByVal timeout As Integer, ByVal ParamArray parameters As Object()) As OleDbDataReader
 
@@ -213,13 +333,28 @@ Namespace Data
 
         End Function
 
+        ''' <summary>
+        ''' Executes the SQL statement using .Net Sql Server data provider, and builds a data reader.
+        ''' </summary>
+        ''' <param name="sql">The SQL statement to be executed.</param>
+        ''' <param name="connection">The System.Data.SqlClient.SqlConnection to use for executing the SQL statement.</param>
+        ''' <returns>An System.Data.SqlClient.SqlDataReader object.</returns>
+        ''' <remarks></remarks>
         Public Shared Function ExecuteReader(ByVal sql As String, ByVal connection As SqlConnection) As SqlDataReader
 
-            Return ExecuteReader(sql, connection, CommandBehavior.Default, 30)
+            Return ExecuteReader(sql, connection, CommandBehavior.Default, TimeoutDuration)
 
         End Function
 
-        ' Executes given Sql data query for given connection
+        ''' <summary>
+        ''' Executes the SQL statement using .Net Sql Server data provider, and builds a data reader.
+        ''' </summary>
+        ''' <param name="sql">The SQL statement to be executed.</param>
+        ''' <param name="connection">The System.Data.SqlClient.SqlConnection to use for executing the SQL statement.</param>
+        ''' <param name="behavior">One of the System.Data.CommandBehavior values.</param>
+        ''' <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
+        ''' <returns>An System.Data.SqlClient.SqlDataReader object.</returns>
+        ''' <remarks></remarks>
         Public Shared Function ExecuteReader(ByVal sql As String, ByVal connection As SqlConnection, _
                 ByVal behavior As CommandBehavior, ByVal timeout As Integer) As SqlDataReader
 
@@ -227,15 +362,31 @@ Namespace Data
 
         End Function
 
+        ''' <summary>
+        ''' Executes the SQL statement using .Net Sql Server data provider, and builds a data reader.
+        ''' </summary>
+        ''' <param name="sql">The SQL statement to be executed.</param>
+        ''' <param name="connection">The System.Data.SqlClient.SqlConnection to use for executing the SQL statement.</param>
+        ''' <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+        ''' <returns>An System.Data.SqlClient.SqlDataReader object.</returns>
+        ''' <remarks></remarks>
         Public Shared Function ExecuteReader(ByVal sql As String, ByVal connection As SqlConnection, _
                 ByVal ParamArray parameters As Object()) As SqlDataReader
 
-            Return ExecuteReader(sql, connection, CommandBehavior.Default, 30, parameters)
+            Return ExecuteReader(sql, connection, CommandBehavior.Default, TimeoutDuration, parameters)
 
         End Function
 
-        ' tmshults 12/10/2004 - This behaves exactly like the RetrieveDataSetWithParameters method except it uses the
-        '                       cmd.ExecuteReader as the data that is returned.
+        ''' <summary>
+        ''' Executes the SQL statement using .Net Sql Server data provider, and builds a data reader.
+        ''' </summary>
+        ''' <param name="sql">The SQL statement to be executed.</param>
+        ''' <param name="connection">The System.Data.SqlClient.SqlConnection to use for executing the SQL statement.</param>
+        ''' <param name="behavior">One of the System.Data.CommandBehavior values.</param>
+        ''' <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
+        ''' <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+        ''' <returns>An System.Data.SqlClient.SqlDataReader object.</returns>
+        ''' <remarks></remarks>
         Public Shared Function ExecuteReader(ByVal sql As String, ByVal connection As SqlConnection, _
                 ByVal behavior As CommandBehavior, ByVal timeout As Integer, ByVal ParamArray parameters As Object()) As SqlDataReader
 
@@ -247,13 +398,27 @@ Namespace Data
 
         End Function
 
+        ''' <summary>
+        ''' Executes the SQL statement using .Net Oracle data provider, and builds a data reader.
+        ''' </summary>
+        ''' <param name="sql">The SQL statement to be executed.</param>
+        ''' <param name="connection">The System.Data.OracleClient.OracleConnection to use for executing the SQL statement.</param>
+        ''' <returns>An System.Data.OracleClient.OracleDataReader object.</returns>
+        ''' <remarks></remarks>
         Public Shared Function ExecuteReader(ByVal sql As String, ByVal connection As OracleConnection) As OracleDataReader
 
             Return ExecuteReader(sql, connection, CommandBehavior.Default)
 
         End Function
 
-        ' Executes given Sql data query for given connection
+        ''' <summary>
+        ''' Executes the SQL statement using .Net Oracle data provider, and builds a data reader.
+        ''' </summary>
+        ''' <param name="sql">The SQL statement to be executed.</param>
+        ''' <param name="connection">The System.Data.OracleClient.OracleConnection to use for executing the SQL statement.</param>
+        ''' <param name="behavior">One of the System.Data.CommandBehavior values.</param>
+        ''' <returns>An System.Data.OracleClient.OracleDataReader object.</returns>
+        ''' <remarks></remarks>
         Public Shared Function ExecuteReader(ByVal sql As String, ByVal connection As OracleConnection, _
                 ByVal behavior As CommandBehavior) As OracleDataReader
 
@@ -261,6 +426,14 @@ Namespace Data
 
         End Function
 
+        ''' <summary>
+        ''' Executes the SQL statement using .Net Oracle data provider, and builds a data reader.
+        ''' </summary>
+        ''' <param name="sql">The SQL statement to be executed.</param>
+        ''' <param name="connection">The System.Data.OracleClient.OracleConnection to use for executing the SQL statement.</param>
+        ''' <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+        ''' <returns>An System.Data.OracleClient.OracleDataReader object.</returns>
+        ''' <remarks></remarks>
         Public Shared Function ExecuteReader(ByVal sql As String, ByVal connection As OracleConnection, _
                 ByVal ParamArray parameters As Object()) As OracleDataReader
 
@@ -268,8 +441,15 @@ Namespace Data
 
         End Function
 
-        ' tmshults 12/10/2004 - This behaves exactly like the RetrieveDataSetWithParameters method except it uses the
-        '                       cmd.ExecuteReader as the data that is returned.
+        ''' <summary>
+        ''' Executes the SQL statement using .Net Oracle data provider, and builds a data reader.
+        ''' </summary>
+        ''' <param name="sql">The SQL statement to be executed.</param>
+        ''' <param name="connection">The System.Data.OracleClient.OracleConnection to use for executing the SQL statement.</param>
+        ''' <param name="behavior">One of the System.Data.CommandBehavior values.</param>
+        ''' <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+        ''' <returns>An System.Data.OracleClient.OracleDataReader object.</returns>
+        ''' <remarks></remarks>
         Public Shared Function ExecuteReader(ByVal sql As String, ByVal connection As OracleConnection, _
                 ByVal behavior As CommandBehavior, ByVal ParamArray parameters As Object()) As OracleDataReader
 
@@ -282,13 +462,29 @@ Namespace Data
 #End Region
 
 #Region "ExecuteScalar Overloaded Functions"
+        ''' <summary>
+        ''' Executes the SQL statement using .Net OleDb data provider, and returns the first column of the 
+        ''' first row in the resultset.
+        ''' </summary>
+        ''' <param name="sql">The SQL statement to be executed.</param>
+        ''' <param name="connection">The System.Data.OleDb.OleDbConnection to use for executing the SQL statement.</param>
+        ''' <returns>The first column of the first row in the resultset.</returns>
+        ''' <remarks></remarks>
         Public Shared Function ExecuteScalar(ByVal sql As String, ByVal connection As OleDbConnection) As Object
 
-            Return ExecuteScalar(sql, connection, 30)
+            Return ExecuteScalar(sql, connection, TimeoutDuration)
 
         End Function
 
-        ' Executes given Sql scalar query for given connection
+        ''' <summary>
+        ''' Executes the SQL statement using .Net OleDb data provider, and returns the first column of the 
+        ''' first row in the resultset.
+        ''' </summary>
+        ''' <param name="sql">The SQL statement to be executed.</param>
+        ''' <param name="connection">The System.Data.OleDb.OleDbConnection to use for executing the SQL statement.</param>
+        ''' <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
+        ''' <returns>The first column of the first row in the resultset.</returns>
+        ''' <remarks></remarks>
         Public Shared Function ExecuteScalar(ByVal sql As String, ByVal connection As OleDbConnection, _
                 ByVal timeout As Integer) As Object
 
@@ -296,15 +492,32 @@ Namespace Data
 
         End Function
 
+        ''' <summary>
+        ''' Executes the SQL statement using .Net OleDb data provider, and returns the first column of the 
+        ''' first row in the resultset.
+        ''' </summary>
+        ''' <param name="sql">The SQL statement to be executed.</param>
+        ''' <param name="connection">The System.Data.OleDb.OleDbConnection to use for executing the SQL statement.</param>
+        ''' <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+        ''' <returns>The first column of the first row in the resultset.</returns>
+        ''' <remarks></remarks>
         Public Shared Function ExecuteScalar(ByVal sql As String, ByVal connection As OleDbConnection, _
                 ByVal ParamArray parameters As Object()) As Object
 
-            Return ExecuteScalar(sql, connection, 30, parameters)
+            Return ExecuteScalar(sql, connection, TimeoutDuration, parameters)
 
         End Function
 
-        ' tmshults 12/10/2004 - This behaves exactly like the RetrieveDataSetWithParameters method except it uses the
-        '                       cmd.ExecuteScalar as the data that is returned.
+        ''' <summary>
+        ''' Executes the SQL statement using .Net OleDb data provider, and returns the first column of the 
+        ''' first row in the resultset.
+        ''' </summary>
+        ''' <param name="sql">The SQL statement to be executed.</param>
+        ''' <param name="connection">The System.Data.OleDb.OleDbConnection to use for executing the SQL statement.</param>
+        ''' <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
+        ''' <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+        ''' <returns>The first column of the first row in the resultset.</returns>
+        ''' <remarks></remarks>
         Public Shared Function ExecuteScalar(ByVal sql As String, ByVal connection As OleDbConnection, _
                 ByVal timeout As Integer, ByVal ParamArray parameters As Object()) As Object
 
@@ -316,13 +529,29 @@ Namespace Data
 
         End Function
 
+        ''' <summary>
+        ''' Executes the SQL statement using .Net Sql Server data provider, and returns the first column of the 
+        ''' first row in the resultset.
+        ''' </summary>
+        ''' <param name="sql">The SQL statement to be executed.</param>
+        ''' <param name="connection">The System.Data.SqlClient.SqlConnection to use for executing the SQL statement.</param>
+        ''' <returns>The first column of the first row in the resultset.</returns>
+        ''' <remarks></remarks>
         Public Shared Function ExecuteScalar(ByVal sql As String, ByVal connection As SqlConnection) As Object
 
-            Return ExecuteScalar(sql, connection, 30)
+            Return ExecuteScalar(sql, connection, TimeoutDuration)
 
         End Function
 
-        ' Executes given Sql scalar query for given connection
+        ''' <summary>
+        ''' Executes the SQL statement using .Net Sql Server data provider, and returns the first column of the 
+        ''' first row in the resultset.
+        ''' </summary>
+        ''' <param name="sql">The SQL statement to be executed.</param>
+        ''' <param name="connection">The System.Data.SqlClient.SqlConnection to use for executing the SQL statement.</param>
+        ''' <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
+        ''' <returns>The first column of the first row in the resultset.</returns>
+        ''' <remarks></remarks>
         Public Shared Function ExecuteScalar(ByVal sql As String, ByVal connection As SqlConnection, _
                 ByVal timeout As Integer) As Object
 
@@ -330,15 +559,32 @@ Namespace Data
 
         End Function
 
+        ''' <summary>
+        ''' Executes the SQL statement using .Net Sql Server data provider, and returns the first column of the 
+        ''' first row in the resultset.
+        ''' </summary>
+        ''' <param name="sql">The SQL statement to be executed.</param>
+        ''' <param name="connection">The System.Data.SqlClient.SqlConnection to use for executing the SQL statement.</param>
+        ''' <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+        ''' <returns>The first column of the first row in the resultset.</returns>
+        ''' <remarks></remarks>
         Public Shared Function ExecuteScalar(ByVal sql As String, ByVal connection As SqlConnection, _
                 ByVal ParamArray parameters As Object()) As Object
 
-            Return ExecuteScalar(sql, connection, 30, parameters)
+            Return ExecuteScalar(sql, connection, TimeoutDuration, parameters)
 
         End Function
 
-        ' tmshults 12/10/2004 - This behaves exactly like the RetrieveDataSetWithParameters method except it uses the
-        '                       cmd.ExecuteScalar as the data that is returned.
+        ''' <summary>
+        ''' Executes the SQL statement using .Net Sql Server data provider, and returns the first column of the 
+        ''' first row in the resultset.
+        ''' </summary>
+        ''' <param name="sql">The SQL statement to be executed.</param>
+        ''' <param name="connection">The System.Data.SqlClient.SqlConnection to use for executing the SQL statement.</param>
+        ''' <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
+        ''' <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+        ''' <returns>The first column of the first row in the resultset.</returns>
+        ''' <remarks></remarks>
         Public Shared Function ExecuteScalar(ByVal sql As String, ByVal connection As SqlConnection, _
                 ByVal timeout As Integer, ByVal ParamArray parameters As Object()) As Object
 
@@ -350,15 +596,29 @@ Namespace Data
 
         End Function
 
-        ' Executes given Sql scalar query for given connection
+        ''' <summary>
+        ''' Executes the SQL statement using .Net Oracle data provider, and returns the first column of the 
+        ''' first row in the resultset.
+        ''' </summary>
+        ''' <param name="sql">The SQL statement to be executed.</param>
+        ''' <param name="connection">The System.Data.OracleClient.OracleConnection to use for executing the SQL statement.</param>
+        ''' <returns>The first column of the first row in the resultset.</returns>
+        ''' <remarks></remarks>
         Public Shared Function ExecuteScalar(ByVal sql As String, ByVal connection As OracleConnection) As Object
 
             Return ExecuteScalar(sql, connection, Nothing)
 
         End Function
 
-        ' tmshults 12/10/2004 - This behaves exactly like the RetrieveDataSetWithParameters method except it uses the
-        '                       cmd.ExecuteScalar as the data that is returned.
+        ''' <summary>
+        ''' Executes the SQL statement using .Net Oracle data provider, and returns the first column of the 
+        ''' first row in the resultset.
+        ''' </summary>
+        ''' <param name="sql">The SQL statement to be executed.</param>
+        ''' <param name="connection">The System.Data.OracleClient.OracleConnection to use for executing the SQL statement.</param>
+        ''' <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+        ''' <returns>The first column of the first row in the resultset.</returns>
+        ''' <remarks></remarks>
         Public Shared Function ExecuteScalar(ByVal sql As String, ByVal connection As OracleConnection, _
                 ByVal ParamArray parameters As Object()) As Object
 
@@ -371,13 +631,27 @@ Namespace Data
 #End Region
 
 #Region "RetrieveRow Overloaded Functions"
+        ''' <summary>
+        ''' Executes the SQL statement using .Net OleDb data provider, and returns the first row in the resultset.
+        ''' </summary>
+        ''' <param name="sql">The SQL statement to be executed.</param>
+        ''' <param name="connection">The System.Data.OleDb.OleDbConnection to use for executing the SQL statement.</param>
+        ''' <returns>The first System.Data.DataRow in the resultset.</returns>
+        ''' <remarks></remarks>
         Public Shared Function RetrieveRow(ByVal sql As String, ByVal connection As OleDbConnection) As DataRow
 
-            Return RetrieveRow(sql, connection, 30)
+            Return RetrieveRow(sql, connection, TimeoutDuration)
 
         End Function
 
-        ' Return a single row of data given a Sql statement and connection
+        ''' <summary>
+        ''' Executes the SQL statement using .Net OleDb data provider, and returns the first row in the resultset.
+        ''' </summary>
+        ''' <param name="sql">The SQL statement to be executed.</param>
+        ''' <param name="connection">The System.Data.OleDb.OleDbConnection to use for executing the SQL statement.</param>
+        ''' <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
+        ''' <returns>The first System.Data.DataRow in the resultset.</returns>
+        ''' <remarks></remarks>
         Public Shared Function RetrieveRow(ByVal sql As String, ByVal connection As OleDbConnection, _
                 ByVal timeout As Integer) As DataRow
 
@@ -385,15 +659,30 @@ Namespace Data
 
         End Function
 
+        ''' <summary>
+        ''' Executes the SQL statement using .Net OleDb data provider, and returns the first row in the resultset.
+        ''' </summary>
+        ''' <param name="sql">The SQL statement to be executed.</param>
+        ''' <param name="connection">The System.Data.OleDb.OleDbConnection to use for executing the SQL statement.</param>
+        ''' <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+        ''' <returns>The first System.Data.DataRow in the resultset.</returns>
+        ''' <remarks></remarks>
         Public Shared Function RetrieveRow(ByVal sql As String, ByVal connection As OleDbConnection, _
                 ByVal ParamArray parameters As Object()) As DataRow
 
-            Return RetrieveRow(sql, connection, 30, parameters)
+            Return RetrieveRow(sql, connection, TimeoutDuration, parameters)
 
         End Function
 
-        ' tmshults 12/10/2004 - This behaves exactly like the RetrieveDataSetWithParameters method except it returns  
-        '                       the first row returned from the base DataTable that is linked to the underlying DataSet
+        ''' <summary>
+        ''' Executes the SQL statement using .Net OleDb data provider, and returns the first row in the resultset.
+        ''' </summary>
+        ''' <param name="sql">The SQL statement to be executed.</param>
+        ''' <param name="connection">The System.Data.OleDb.OleDbConnection to use for executing the SQL statement.</param>
+        ''' <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
+        ''' <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+        ''' <returns>The first System.Data.DataRow in the resultset.</returns>
+        ''' <remarks></remarks>
         Public Shared Function RetrieveRow(ByVal sql As String, ByVal connection As OleDbConnection, _
                 ByVal timeout As Integer, ByVal ParamArray parameters As Object()) As DataRow
 
@@ -404,13 +693,27 @@ Namespace Data
 
         End Function
 
+        ''' <summary>
+        ''' Executes the SQL statement using .Net Sql Server data provider, and returns the first row in the resultset.
+        ''' </summary>
+        ''' <param name="sql">The SQL statement to be executed.</param>
+        ''' <param name="connection">The System.Data.SqlClient.SqlConnection to use for executing the SQL statement.</param>
+        ''' <returns>The first System.Data.DataRow in the resultset.</returns>
+        ''' <remarks></remarks>
         Public Shared Function RetrieveRow(ByVal sql As String, ByVal connection As SqlConnection) As DataRow
 
-            Return RetrieveRow(sql, connection, 30)
+            Return RetrieveRow(sql, connection, TimeoutDuration)
 
         End Function
 
-        ' Return a single row of data given a Sql statement and connection
+        ''' <summary>
+        ''' Executes the SQL statement using .Net Sql Server data provider, and returns the first row in the resultset.
+        ''' </summary>
+        ''' <param name="sql">The SQL statement to be executed.</param>
+        ''' <param name="connection">The System.Data.SqlClient.SqlConnection to use for executing the SQL statement.</param>
+        ''' <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
+        ''' <returns>The first System.Data.DataRow in the resultset.</returns>
+        ''' <remarks></remarks>
         Public Shared Function RetrieveRow(ByVal sql As String, ByVal connection As SqlConnection, _
                 ByVal timeout As Integer) As DataRow
 
@@ -418,15 +721,30 @@ Namespace Data
 
         End Function
 
+        ''' <summary>
+        ''' Executes the SQL statement using .Net Sql Server data provider, and returns the first row in the resultset.
+        ''' </summary>
+        ''' <param name="sql">The SQL statement to be executed.</param>
+        ''' <param name="connection">The System.Data.SqlClient.SqlConnection to use for executing the SQL statement.</param>
+        ''' <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+        ''' <returns>The first System.Data.DataRow in the resultset.</returns>
+        ''' <remarks></remarks>
         Public Shared Function RetrieveRow(ByVal sql As String, ByVal connection As SqlConnection, _
                 ByVal ParamArray parameters As Object()) As DataRow
 
-            Return RetrieveRow(sql, connection, 30, parameters)
+            Return RetrieveRow(sql, connection, TimeoutDuration, parameters)
 
         End Function
 
-        ' tmshults 12/10/2004 - This behaves exactly like the RetrieveDataSetWithParameters method except it returns  
-        '                       the first row returned from the base DataTable that is linked to the underlying DataSet
+        ''' <summary>
+        ''' Executes the SQL statement using .Net Sql Server data provider, and returns the first row in the resultset.
+        ''' </summary>
+        ''' <param name="sql">The SQL statement to be executed.</param>
+        ''' <param name="connection">The System.Data.SqlClient.SqlConnection to use for executing the SQL statement.</param>
+        ''' <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
+        ''' <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+        ''' <returns>The first System.Data.DataRow in the resultset.</returns>
+        ''' <remarks></remarks>
         Public Shared Function RetrieveRow(ByVal sql As String, ByVal connection As SqlConnection, _
                 ByVal timeout As Integer, ByVal ParamArray parameters As Object()) As DataRow
 
@@ -437,15 +755,27 @@ Namespace Data
 
         End Function
 
-        ' Return a single row of data given a Sql statement and connection
+        ''' <summary>
+        ''' Executes the SQL statement using .Net Oracle data provider, and returns the first row in the resultset.
+        ''' </summary>
+        ''' <param name="sql">The SQL statement to be executed.</param>
+        ''' <param name="connection">The System.Data.OracleClient.OracleConnection to use for executing the SQL statement.</param>
+        ''' <returns>The first System.Data.DataRow in the resultset.</returns>
+        ''' <remarks></remarks>
         Public Shared Function RetrieveRow(ByVal sql As String, ByVal connection As OracleConnection) As DataRow
 
             Return RetrieveRow(sql, connection, Nothing)
 
         End Function
 
-        ' tmshults 12/10/2004 - This behaves exactly like the RetrieveDataSetWithParameters method except it returns  
-        '                       the first row returned from the base DataTable that is linked to the underlying DataSet
+        ''' <summary>
+        ''' Executes the SQL statement using .Net Oracle data provider, and returns the first row in the resultset.
+        ''' </summary>
+        ''' <param name="sql">The SQL statement to be executed.</param>
+        ''' <param name="connection">The System.Data.OracleClient.OracleConnection to use for executing the SQL statement.</param>
+        ''' <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+        ''' <returns>The first System.Data.DataRow in the resultset.</returns>
+        ''' <remarks></remarks>
         Public Shared Function RetrieveRow(ByVal sql As String, ByVal connection As OracleConnection, _
                 ByVal ParamArray parameters As Object()) As DataRow
 
@@ -475,7 +805,7 @@ Namespace Data
         Public Shared Function RetrieveData(ByVal sql As String, ByVal connection As OleDbConnection, _
                 ByVal ParamArray parameters As Object()) As DataTable
 
-            Return RetrieveData(sql, connection, 0, Integer.MaxValue, 30, parameters)
+            Return RetrieveData(sql, connection, 0, Integer.MaxValue, TimeoutDuration, parameters)
 
         End Function
 
@@ -491,7 +821,7 @@ Namespace Data
 
         Public Shared Function RetrieveData(ByVal sql As String, ByVal connection As SqlConnection) As DataTable
 
-            Return RetrieveData(sql, connection, 0, Integer.MaxValue, 30)
+            Return RetrieveData(sql, connection, 0, Integer.MaxValue, TimeoutDuration)
 
         End Function
 
@@ -506,7 +836,7 @@ Namespace Data
         Public Shared Function RetrieveData(ByVal sql As String, ByVal connection As SqlConnection, _
                 ByVal ParamArray parameters As Object()) As DataTable
 
-            Return RetrieveData(sql, connection, 0, Integer.MaxValue, 30, parameters)
+            Return RetrieveData(sql, connection, 0, Integer.MaxValue, TimeoutDuration, parameters)
 
         End Function
 
@@ -555,7 +885,7 @@ Namespace Data
 
         Public Shared Function RetrieveDataSet(ByVal sql As String, ByVal connection As OleDbConnection) As DataSet
 
-            Return RetrieveDataSet(sql, connection, 0, Integer.MaxValue, 30)
+            Return RetrieveDataSet(sql, connection, 0, Integer.MaxValue, TimeoutDuration)
 
         End Function
 
@@ -569,7 +899,7 @@ Namespace Data
         Public Shared Function RetrieveDataSet(ByVal sql As String, ByVal connection As OleDbConnection, _
                 ByVal ParamArray parameters As Object()) As DataSet
 
-            Return RetrieveDataSet(sql, connection, 0, Integer.MaxValue, 30, parameters)
+            Return RetrieveDataSet(sql, connection, 0, Integer.MaxValue, TimeoutDuration, parameters)
 
         End Function
 
@@ -595,13 +925,13 @@ Namespace Data
         Public Shared Function RetrieveDataSet(ByVal sql As String, ByVal connection As SqlConnection, _
                 ByVal ParamArray parameters As Object()) As DataSet
 
-            Return RetrieveDataSet(sql, connection, 0, Integer.MaxValue, 30, parameters)
+            Return RetrieveDataSet(sql, connection, 0, Integer.MaxValue, TimeoutDuration, parameters)
 
         End Function
 
         Public Shared Function RetrieveDataSet(ByVal sql As String, ByVal connection As SqlConnection) As DataSet
 
-            Return RetrieveDataSet(sql, connection, 0, Integer.MaxValue, 30)
+            Return RetrieveDataSet(sql, connection, 0, Integer.MaxValue, TimeoutDuration)
 
         End Function
 
