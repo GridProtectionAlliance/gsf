@@ -12,7 +12,7 @@ Namespace Configuration
     Public Class CategorizedSettingsElement
         Inherits ConfigurationElement
 
-        Private Const CryptoKey As String = "{A910EA83-338E-41fc-9AF9-2752BD5CB0B8}"
+        Private Const CryptoKey As String = "0679d9ae-aca5-4702-a3f5-604415096987"
 
         Public Sub New()
             Me.New("")
@@ -84,7 +84,7 @@ Namespace Configuration
 
             Dim encryptedValue As String = value
             If MyBase.Item("encrypted") IsNot Nothing AndAlso Convert.ToBoolean(MyBase.Item("encrypted")) Then
-                encryptedValue = Encrypt(value, EncryptLevel.Level4)
+                encryptedValue = Encrypt(value, CryptoKey, EncryptLevel.Level4)
             End If
             Return encryptedValue
 
@@ -94,7 +94,7 @@ Namespace Configuration
 
             Dim decryptedValue As String = value
             If MyBase.Item("encrypted") IsNot Nothing AndAlso Convert.ToBoolean(MyBase.Item("encrypted")) Then
-                decryptedValue = Decrypt(value, EncryptLevel.Level4)
+                decryptedValue = Decrypt(value, CryptoKey, EncryptLevel.Level4)
             End If
             Return decryptedValue
 

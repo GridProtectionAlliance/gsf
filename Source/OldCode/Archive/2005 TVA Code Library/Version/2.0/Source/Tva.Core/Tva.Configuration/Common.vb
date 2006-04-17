@@ -37,7 +37,7 @@ Namespace Configuration
             End Get
         End Property
 
-        Public Sub SaveSettings()
+        Public Shared Sub SaveSettings()
             DefaultConfigFile.Save()
         End Sub
 #End Region
