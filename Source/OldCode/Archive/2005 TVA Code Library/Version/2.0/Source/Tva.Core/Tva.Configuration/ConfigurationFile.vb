@@ -24,14 +24,14 @@ Namespace Configuration
             Me.New("")
         End Sub
 
-        Public Sub New(ByVal filePath As String)
-            m_configuration = GetConfiguration(filePath)
+        Public Sub New(ByVal configFilePath As String)
+            m_configuration = GetConfiguration(configFilePath)
             If m_configuration.HasFile() Then
                 ValidateConfigurationFile(m_configuration.FilePath())
             Else
                 CreateConfigurationFile(m_configuration.FilePath())
             End If
-            m_configuration = GetConfiguration(filePath)
+            m_configuration = GetConfiguration(configFilePath)
         End Sub
 
         Public ReadOnly Property Environment() As Environments
@@ -85,68 +85,79 @@ Namespace Configuration
 
         End Sub
 
-        Public Function GetConfiguration(ByVal filePath As String) As System.Configuration.Configuration
+        Public Function GetConfiguration(ByVal configFilePath As String) As System.Configuration.Configuration
 
             Dim configuration As System.Configuration.Configuration = Nothing
 
-            If filePath IsNot Nothing Then
-                If filePath = "" OrElse JustFileExtension(filePath) = ".config" Then
+            If configFilePath IsNot Nothing Then
+                If configFilePath = "" OrElse JustFileExtension(configFilePath) = ".config" Then
                     Select Case Me.Environment()
                         Case Environments.Win
-                            If filePath = "" OrElse _
-                                    (filePath <> "" AndAlso JustFileExtension(NoFileExtension(filePath)) = ".exe") Then
-                                configuration = ConfigurationManager.OpenExeConfiguration(filePath.TrimEnd(".config".ToCharArray()))
+                            If configFilePath = "" OrElse _
+                                    (configFilePath <> "" AndAlso configFilePath.EndsWith(".exe.config")) Then
+                                ' Path to the exe is to be provided in order to open the configuration file
+                                ' associated with the exe.
+                                configuration = ConfigurationManager.OpenExeConfiguration(configFilePath.TrimEnd(".config".ToCharArray()))
                             Else
-                                Throw New ArgumentException()
+                                Throw New ArgumentException("Path of configuration file for windows application must end in '.exe.config'", "configFilePath")
                             End If
                         Case Environments.Web
-                            configuration = WebConfigurationManager.OpenWebConfiguration(filePath)
+                            If configFilePath = "" Then configFilePath = System.Web.HttpContext.Current.Request.ApplicationPath()
+                            configuration = WebConfigurationManager.OpenWebConfiguration(configFilePath.TrimEnd("web.config".ToCharArray()))
                     End Select
                 Else
-                    Throw New ArgumentException()
+                    Throw New ArgumentException("Path of configuration file must be either empty or end in '.config'")
                 End If
             Else
-                Throw New ArgumentNullException()
+                Throw New ArgumentNullException("configFilePath", "Path of configuration file path cannot be null")
             End If
 
             Return configuration
 
         End Function
 
-        Private Sub CreateConfigurationFile(ByVal filePath As String)
+        Private Sub CreateConfigurationFile(ByVal configFilePath As String)
 
-            Dim configFileWriter As New XmlTextWriter(filePath, System.Text.Encoding.UTF8)
-            configFileWriter.Indentation = 4
-            configFileWriter.Formatting = Formatting.Indented
-            ' Populate the very basic information required in a config file.
-            configFileWriter.WriteStartDocument()
-            configFileWriter.WriteStartElement("configuration")
-            configFileWriter.WriteEndElement()
-            configFileWriter.WriteEndDocument()
-            ' Close the config file.
-            configFileWriter.Close()
+            If Not String.IsNullOrEmpty(configFilePath) Then
+                Dim configFileWriter As New XmlTextWriter(configFilePath, System.Text.Encoding.UTF8)
+                configFileWriter.Indentation = 4
+                configFileWriter.Formatting = Formatting.Indented
+                ' Populate the very basic information required in a config file.
+                configFileWriter.WriteStartDocument()
+                configFileWriter.WriteStartElement("configuration")
+                configFileWriter.WriteEndElement()
+                configFileWriter.WriteEndDocument()
+                ' Close the config file.
+                configFileWriter.Close()
 
-            ValidateConfigurationFile(filePath)
+                ValidateConfigurationFile(configFilePath)
+            Else
+                Throw New ArgumentNullException("configFilePath", "Path of configuration file path cannot be null")
+            End If
 
         End Sub
 
-        Private Sub ValidateConfigurationFile(ByVal filePath As String)
+        Private Sub ValidateConfigurationFile(ByVal configFilePath As String)
 
-            Dim configFile As New XmlDocument()
-            configFile.Load(filePath)
+            If Not String.IsNullOrEmpty(configFilePath) Then
+                Dim configFile As New XmlDocument()
+                configFile.Load(configFilePath)
 
-            If configFile.DocumentElement.SelectNodes("configSections").Count() = 0 Then
-                configFile.DocumentElement.InsertBefore(configFile.CreateElement("configSections"), _
-                    configFile.DocumentElement.FirstChild())
+                If configFile.DocumentElement.SelectNodes("configSections").Count() = 0 Then
+                    configFile.DocumentElement.InsertBefore(configFile.CreateElement("configSections"), _
+                        configFile.DocumentElement.FirstChild())
+                End If
+                Dim configSectionsNode As XmlNode = configFile.DocumentElement.SelectSingleNode("configSections")
+                If configSectionsNode.SelectNodes("section[@name = '" & CustomSectionName & "']").Count() = 0 Then
+                    Dim node As XmlNode = configFile.CreateElement("section")
+                    Attribute(node, "name") = CustomSectionName
+                    Attribute(node, "type") = CustomSectionType
+                    configSectionsNode.AppendChild(node)
+                End If
+                configFile.Save(configFilePath)
+            Else
+                Throw New ArgumentNullException("configFilePath", "Path of configuration file path cannot be null")
             End If
-            Dim configSectionsNode As XmlNode = configFile.DocumentElement.SelectSingleNode("configSections")
-            If configSectionsNode.SelectNodes("section[@name = '" & CustomSectionName & "']").Count() = 0 Then
-                Dim node As XmlNode = configFile.CreateElement("section")
-                Attribute(node, "name") = CustomSectionName
-                Attribute(node, "type") = CustomSectionType
-                configSectionsNode.AppendChild(node)
-            End If
-            configFile.Save(filePath)
 
         End Sub
 
