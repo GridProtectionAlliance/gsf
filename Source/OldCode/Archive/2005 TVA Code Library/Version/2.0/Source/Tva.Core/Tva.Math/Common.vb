@@ -146,7 +146,7 @@ Namespace Math
         ''' <summary>Generates a cryptographically strong random boolean (i.e., a coin toss).</summary>
         Public Shared ReadOnly Property RandomBoolean() As Boolean
             Get
-                Dim value As Byte() = Array.CreateInstance(GetType(Byte), 1)
+                Dim value As Byte() = CreateArray(Of Byte)(1)
 
                 m_randomNumberGenerator.GetBytes(value)
 
@@ -157,7 +157,7 @@ Namespace Math
         ''' <summary>Generates a cryptographically strong 8-bit random integer</summary>
         Public Shared ReadOnly Property RandomByte() As Byte
             Get
-                Dim value As Byte() = Array.CreateInstance(GetType(Byte), 1)
+                Dim value As Byte() = CreateArray(Of Byte)(1)
 
                 m_randomNumberGenerator.GetBytes(value)
 
@@ -176,7 +176,7 @@ Namespace Math
         ''' <summary>Generates a cryptographically strong 16-bit random integer</summary>
         Public Shared ReadOnly Property RandomInt16() As Int16
             Get
-                Dim value As Byte() = Array.CreateInstance(GetType(Byte), 2)
+                Dim value As Byte() = CreateArray(Of Byte)(2)
 
                 m_randomNumberGenerator.GetBytes(value)
 
@@ -195,7 +195,7 @@ Namespace Math
         ''' <summary>Generates a cryptographically strong 32-bit random integer</summary>
         Public Shared ReadOnly Property RandomInt32() As Int32
             Get
-                Dim value As Byte() = Array.CreateInstance(GetType(Byte), 4)
+                Dim value As Byte() = CreateArray(Of Byte)(4)
 
                 m_randomNumberGenerator.GetBytes(value)
 
@@ -214,7 +214,7 @@ Namespace Math
         ''' <summary>Generates a cryptographically strong 64-bit random integer</summary>
         Public Shared ReadOnly Property RandomInt64() As Int64
             Get
-                Dim value As Byte() = Array.CreateInstance(GetType(Byte), 8)
+                Dim value As Byte() = CreateArray(Of Byte)(8)
 
                 m_randomNumberGenerator.GetBytes(value)
 

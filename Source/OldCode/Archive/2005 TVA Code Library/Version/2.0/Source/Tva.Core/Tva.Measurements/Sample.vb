@@ -17,6 +17,8 @@
 '
 '*******************************************************************************************************
 
+Imports Tva.Common
+
 Namespace Measurements
 
     ''' <summary>This class represents a collection of frames over one second (i.e., a sample of data)</summary>
@@ -34,7 +36,7 @@ Namespace Measurements
             m_ticks = ticks
 
             ' Create new array of frames for this sample...
-            m_frames = Array.CreateInstance(GetType(IFrame), m_parent.FramesPerSecond)
+            m_frames = CreateArray(Of IFrame)(m_parent.FramesPerSecond)
 
             For x As Integer = 0 To m_frames.Length - 1
                 ' We precalculate frame ticks sitting in the middle of the frame

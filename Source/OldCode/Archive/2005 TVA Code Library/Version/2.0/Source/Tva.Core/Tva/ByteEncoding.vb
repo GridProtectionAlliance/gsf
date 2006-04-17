@@ -20,6 +20,7 @@
 Imports System.Text
 Imports System.Text.RegularExpressions
 Imports System.ComponentModel
+Imports Tva.Common
 Imports Tva.Interop
 Imports Tva.Interop.Bit
 

@@ -17,6 +17,8 @@
 '
 '*******************************************************************************************************
 
+Imports Tva.Common
+
 Namespace Math
 
     ''' <summary>Class to temporarily cache composite values until all values been received so that a compound value can be created.</summary>
@@ -36,7 +38,7 @@ Namespace Math
         ''' <param name="count">Total number of composite values to track</param>
         Public Sub New(ByVal count As Integer)
 
-            m_compositeValues = Array.CreateInstance(GetType(CompositeValue), count)
+            m_compositeValues = CreateArray(Of CompositeValue)(count)
 
         End Sub
 

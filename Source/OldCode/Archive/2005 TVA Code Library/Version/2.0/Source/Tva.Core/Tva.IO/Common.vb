@@ -15,6 +15,8 @@
 '
 '*******************************************************************************************************
 
+Imports Tva.Common
+
 Namespace IO
 
     ''' <summary>Defines common IO related functions (e.g., common stream and buffer functions)</summary>
@@ -31,7 +33,7 @@ Namespace IO
         ''' <summary>Copies input stream onto output stream</summary>
         Public Shared Sub CopyStream(ByVal inStream As System.IO.Stream, ByVal outStream As System.IO.Stream)
 
-            Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BufferSize)
+            Dim buffer As Byte() = CreateArray(Of Byte)(BufferSize)
             Dim bytesRead As Integer = inStream.Read(buffer, 0, BufferSize)
 
             Do While bytesRead > 0
@@ -60,7 +62,7 @@ Namespace IO
             If startIndex = 0 AndAlso Buffer.Length = length Then
                 Return buffer.Clone()
             Else
-                Dim copiedBytes As Byte() = Array.CreateInstance(GetType(Byte), length)
+                Dim copiedBytes As Byte() = CreateArray(Of Byte)(length)
                 System.Buffer.BlockCopy(buffer, 0, copiedBytes, 0, length)
                 Return copiedBytes
             End If

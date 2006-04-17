@@ -25,15 +25,23 @@ Imports System.Reflection
 Imports System.Reflection.Assembly
 Imports System.Runtime.InteropServices
 Imports System.Text.RegularExpressions
+Imports Tva.Common
 
 Public Class Assembly
 
-    Private Shared m_assemblyCache As New Hashtable
     Private Shared m_callingAssembly As Assembly
     Private Shared m_entryAssembly As Assembly
     Private Shared m_executingAssembly As Assembly
+    Private Shared m_assemblyCache As Hashtable
+    Private Shared m_addedResolver As Boolean
 
     Private m_assemblyInstance As System.Reflection.Assembly
+
+    Shared Sub New()
+
+        m_assemblyCache = New Hashtable
+
+    End Sub
 
     ''' <summary>Initializes a instance of Tva.Interop.Assembly for the specified System.Reflection.Assembly.</summary>
     ''' <param name="assemblyInstance">An instance of System.Reflection.Assembly for which a Tva.Interop.Assembly instance is to be created.</param>
@@ -397,12 +405,10 @@ Public Class Assembly
     ''' <param name="assemblyName">Name of the assembly to load.</param>
     Public Shared Sub LoadAssemblyFromResource(ByVal assemblyName As String)
 
-        Static addedResolver As Boolean
-
         ' Hook into assembly resolve event for current domain so we can load assembly from embedded resource
-        If Not addedResolver Then
+        If Not m_addedResolver Then
             AddHandler AppDomain.CurrentDomain.AssemblyResolve, AddressOf ResolveAssemblyFromResource
-            addedResolver = True
+            m_addedResolver = True
         End If
 
         ' Load the assembly (this will invoke event that will resolve assembly from resource)
@@ -424,7 +430,7 @@ Public Class Assembly
                 If String.Compare(Path.GetFileNameWithoutExtension(name), EntryAssembly.RootNamespace() & "." & shortName, True) = 0 Then
                     ' If so, load embedded resource assembly into a binary buffer
                     With GetEntryAssembly.GetManifestResourceStream(name)
-                        Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), .Length)
+                        Dim buffer As Byte() = CreateArray(Of Byte)(.Length)
                         .Read(buffer, 0, .Length)
                         .Close()
 

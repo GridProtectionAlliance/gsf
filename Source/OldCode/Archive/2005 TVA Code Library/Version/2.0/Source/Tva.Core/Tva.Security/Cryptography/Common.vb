@@ -149,7 +149,7 @@ Namespace Security.Cryptography
         ''' <summary>Encrypts input stream onto output stream for the given parameters</summary>
         Public Shared Sub Encrypt(ByVal inStream As Stream, ByVal outStream As Stream, ByVal key As Byte(), ByVal IV As Byte(), ByVal strength As EncryptLevel, ByVal progressHandler As ProgressEventHandler)
 
-            Dim inBuffer As Byte() = Array.CreateInstance(GetType(Byte), BufferSize)
+            Dim inBuffer As Byte() = CreateArray(Of Byte)(BufferSize)
             Dim outBuffer As Byte()
             Dim lengthBuffer As Byte()
             Dim read As Integer
@@ -200,7 +200,7 @@ Namespace Security.Cryptography
             Dim rgbKey As Byte() = GetLegalKey(algorithm, key)
             Dim rgbIV As Byte() = GetLegalIV(algorithm, IV)
             Dim encodeStream As New CryptoStream(outStream, algorithm.CreateEncryptor(rgbKey, rgbIV), CryptoStreamMode.Write)
-            Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BufferSize)
+            Dim buffer As Byte() = CreateArray(Of Byte)(BufferSize)
             Dim read As Integer
 
             ' Encrypt data onto output stream
@@ -343,7 +343,7 @@ Namespace Security.Cryptography
 
                 If size > 0 Then
                     ' Create and read the next buffer
-                    inBuffer = Array.CreateInstance(GetType(Byte), size)
+                    inBuffer = CreateArray(Of Byte)(size)
                     read = inStream.Read(inBuffer, 0, size)
 
                     If read > 0 Then

@@ -21,6 +21,7 @@
 
 Imports System.Threading
 Imports System.Text
+Imports Tva.Common
 Imports Tva.DateTime.Common
 
 Namespace Collections
@@ -2208,7 +2209,7 @@ Namespace Collections
                 Else
                     ' Otherwise, we manually implement this feature...
                     With m_processQueue
-                        Dim items As T() = Array.CreateInstance(GetType(T), .Count)
+                        Dim items As T() = CreateArray(Of T)(.Count)
 
                         For x As Integer = 0 To .Count - 1
                             items(x) = .Item(x)

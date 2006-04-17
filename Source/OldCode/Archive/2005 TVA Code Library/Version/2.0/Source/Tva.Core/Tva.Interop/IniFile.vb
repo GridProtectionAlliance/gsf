@@ -18,6 +18,7 @@
 '*******************************************************************************************************
 
 Imports System.Text
+Imports Tva.Common
 
 Namespace Interop
 
@@ -111,7 +112,7 @@ Namespace Interop
             Get
                 Const BufferSize As Integer = 32768
                 Dim sections As New ArrayList
-                Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), BufferSize)
+                Dim buffer As Byte() = CreateArray(Of Byte)(BufferSize)
                 Dim readLength, nullIndex, startIndex As Integer
 
                 readLength = GetPrivateProfileSectionNames(buffer, BufferSize, m_iniFileName)

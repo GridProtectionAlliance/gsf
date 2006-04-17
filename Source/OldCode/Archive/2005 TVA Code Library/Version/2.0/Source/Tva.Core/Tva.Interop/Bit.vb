@@ -25,6 +25,8 @@
 '
 '*******************************************************************************************************
 
+Imports Tva.Common
+
 Namespace Interop
 
     Public NotInheritable Class Bit
@@ -202,7 +204,7 @@ Namespace Interop
         ''' <summary>Makes a double word (Int32) from two words (Int16).</summary>
         Public Shared Function MakeDWord(ByVal high As Int16, ByVal low As Int16) As Int32
 
-            Dim bytes As Byte() = Array.CreateInstance(GetType(Byte), 4)
+            Dim bytes As Byte() = CreateArray(Of Byte)(4)
 
             Array.Copy(BitConverter.GetBytes(low), 0, bytes, 0, 2)
             Array.Copy(BitConverter.GetBytes(high), 0, bytes, 2, 2)

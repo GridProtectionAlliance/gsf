@@ -19,6 +19,8 @@
 '
 '*******************************************************************************************************
 
+Imports Tva.Common
+
 Namespace Interop
 
     ''' <summary>Endian Byte Order Enumeration</summary>
@@ -124,7 +126,7 @@ Namespace Interop
 
         Public Function ToBoolean(ByVal value As Byte(), ByVal startIndex As Integer) As Boolean
 
-            Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), 1)
+            Dim buffer As Byte() = CreateArray(Of Byte)(1)
 
             m_copy(value, startIndex, buffer, 0, 1)
 
@@ -134,7 +136,7 @@ Namespace Interop
 
         Public Function ToChar(ByVal value As Byte(), ByVal startIndex As Integer) As Char
 
-            Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), 2)
+            Dim buffer As Byte() = CreateArray(Of Byte)(2)
 
             m_copy(value, startIndex, buffer, 0, 2)
 
@@ -144,7 +146,7 @@ Namespace Interop
 
         Public Function ToDouble(ByVal value As Byte(), ByVal startIndex As Integer) As Double
 
-            Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), 8)
+            Dim buffer As Byte() = CreateArray(Of Byte)(8)
 
             m_copy(value, startIndex, buffer, 0, 8)
 
@@ -154,7 +156,7 @@ Namespace Interop
 
         Public Function ToInt16(ByVal value As Byte(), ByVal startIndex As Integer) As Int16
 
-            Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), 2)
+            Dim buffer As Byte() = CreateArray(Of Byte)(2)
 
             m_copy(value, startIndex, buffer, 0, 2)
 
@@ -164,7 +166,7 @@ Namespace Interop
 
         Public Function ToInt32(ByVal value As Byte(), ByVal startIndex As Integer) As Int32
 
-            Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), 4)
+            Dim buffer As Byte() = CreateArray(Of Byte)(4)
 
             m_copy(value, startIndex, buffer, 0, 4)
 
@@ -174,7 +176,7 @@ Namespace Interop
 
         Public Function ToInt64(ByVal value As Byte(), ByVal startIndex As Integer) As Int64
 
-            Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), 8)
+            Dim buffer As Byte() = CreateArray(Of Byte)(8)
 
             m_copy(value, startIndex, buffer, 0, 8)
 
@@ -184,7 +186,7 @@ Namespace Interop
 
         Public Function ToSingle(ByVal value As Byte(), ByVal startIndex As Integer) As Single
 
-            Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), 4)
+            Dim buffer As Byte() = CreateArray(Of Byte)(4)
 
             m_copy(value, startIndex, buffer, 0, 4)
 
@@ -195,7 +197,7 @@ Namespace Interop
         <CLSCompliant(False)> _
         Public Function ToUInt16(ByVal value As Byte(), ByVal startIndex As Integer) As UInt16
 
-            Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), 2)
+            Dim buffer As Byte() = CreateArray(Of Byte)(2)
 
             m_copy(value, startIndex, buffer, 0, 2)
 
@@ -206,7 +208,7 @@ Namespace Interop
         <CLSCompliant(False)> _
         Public Function ToUInt32(ByVal value As Byte(), ByVal startIndex As Integer) As UInt32
 
-            Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), 4)
+            Dim buffer As Byte() = CreateArray(Of Byte)(4)
 
             m_copy(value, startIndex, buffer, 0, 4)
 
@@ -217,7 +219,7 @@ Namespace Interop
         <CLSCompliant(False)> _
         Public Function ToUInt64(ByVal value As Byte(), ByVal startIndex As Integer) As UInt64
 
-            Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), 8)
+            Dim buffer As Byte() = CreateArray(Of Byte)(8)
 
             m_copy(value, startIndex, buffer, 0, 8)
 

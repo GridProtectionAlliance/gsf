@@ -15,6 +15,8 @@
 '
 '*******************************************************************************************************
 
+Imports Tva.Common
+
 Namespace Collections
 
     ''' <summary>
@@ -498,8 +500,8 @@ Namespace Collections
         Private Sub ProcessKeyedItems(ByVal items As KeyValuePair(Of TKey, TValue)())
 
             ' Copy array of KeyValuePairs into an array of keys and values
-            Dim keys As TKey() = Array.CreateInstance(GetType(TKey), items.Length)
-            Dim values As TValue() = Array.CreateInstance(GetType(TValue), items.Length)
+            Dim keys As TKey() = CreateArray(Of TKey)(items.Length)
+            Dim values As TValue() = CreateArray(Of TValue)(items.Length)
 
             For x As Integer = 0 To items.Length - 1
                 With items(x)
