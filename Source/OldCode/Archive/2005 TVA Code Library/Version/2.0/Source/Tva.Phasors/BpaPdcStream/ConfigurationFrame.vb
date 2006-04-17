@@ -21,7 +21,7 @@ Imports System.Reflection.Assembly
 Imports System.Security.Principal
 Imports System.Threading
 Imports System.Buffer
-Imports Tva.Interop.Assembly
+Imports Tva.Assembly
 Imports Tva.Math.Common
 Imports Tva.Phasors.Common
 Imports Tva.Phasors.BpaPdcStream.Common
