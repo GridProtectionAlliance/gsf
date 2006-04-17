@@ -636,7 +636,7 @@ Namespace Data
         ''' </summary>
         ''' <param name="sql">The SQL statement to be executed.</param>
         ''' <param name="connection">The System.Data.OleDb.OleDbConnection to use for executing the SQL statement.</param>
-        ''' <returns>The first System.Data.DataRow in the resultset.</returns>
+        ''' <returns>The first row in the resultset.</returns>
         ''' <remarks></remarks>
         Public Shared Function RetrieveRow(ByVal sql As String, ByVal connection As OleDbConnection) As DataRow
 
@@ -650,7 +650,7 @@ Namespace Data
         ''' <param name="sql">The SQL statement to be executed.</param>
         ''' <param name="connection">The System.Data.OleDb.OleDbConnection to use for executing the SQL statement.</param>
         ''' <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
-        ''' <returns>The first System.Data.DataRow in the resultset.</returns>
+        ''' <returns>The first row in the resultset.</returns>
         ''' <remarks></remarks>
         Public Shared Function RetrieveRow(ByVal sql As String, ByVal connection As OleDbConnection, _
                 ByVal timeout As Integer) As DataRow
@@ -665,7 +665,7 @@ Namespace Data
         ''' <param name="sql">The SQL statement to be executed.</param>
         ''' <param name="connection">The System.Data.OleDb.OleDbConnection to use for executing the SQL statement.</param>
         ''' <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
-        ''' <returns>The first System.Data.DataRow in the resultset.</returns>
+        ''' <returns>The first row in the resultset.</returns>
         ''' <remarks></remarks>
         Public Shared Function RetrieveRow(ByVal sql As String, ByVal connection As OleDbConnection, _
                 ByVal ParamArray parameters As Object()) As DataRow
@@ -681,7 +681,7 @@ Namespace Data
         ''' <param name="connection">The System.Data.OleDb.OleDbConnection to use for executing the SQL statement.</param>
         ''' <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
         ''' <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
-        ''' <returns>The first System.Data.DataRow in the resultset.</returns>
+        ''' <returns>The first row in the resultset.</returns>
         ''' <remarks></remarks>
         Public Shared Function RetrieveRow(ByVal sql As String, ByVal connection As OleDbConnection, _
                 ByVal timeout As Integer, ByVal ParamArray parameters As Object()) As DataRow
@@ -698,7 +698,7 @@ Namespace Data
         ''' </summary>
         ''' <param name="sql">The SQL statement to be executed.</param>
         ''' <param name="connection">The System.Data.SqlClient.SqlConnection to use for executing the SQL statement.</param>
-        ''' <returns>The first System.Data.DataRow in the resultset.</returns>
+        ''' <returns>The first row in the resultset.</returns>
         ''' <remarks></remarks>
         Public Shared Function RetrieveRow(ByVal sql As String, ByVal connection As SqlConnection) As DataRow
 
@@ -712,7 +712,7 @@ Namespace Data
         ''' <param name="sql">The SQL statement to be executed.</param>
         ''' <param name="connection">The System.Data.SqlClient.SqlConnection to use for executing the SQL statement.</param>
         ''' <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
-        ''' <returns>The first System.Data.DataRow in the resultset.</returns>
+        ''' <returns>The first row in the resultset.</returns>
         ''' <remarks></remarks>
         Public Shared Function RetrieveRow(ByVal sql As String, ByVal connection As SqlConnection, _
                 ByVal timeout As Integer) As DataRow
@@ -727,7 +727,7 @@ Namespace Data
         ''' <param name="sql">The SQL statement to be executed.</param>
         ''' <param name="connection">The System.Data.SqlClient.SqlConnection to use for executing the SQL statement.</param>
         ''' <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
-        ''' <returns>The first System.Data.DataRow in the resultset.</returns>
+        ''' <returns>The first row in the resultset.</returns>
         ''' <remarks></remarks>
         Public Shared Function RetrieveRow(ByVal sql As String, ByVal connection As SqlConnection, _
                 ByVal ParamArray parameters As Object()) As DataRow
@@ -743,7 +743,7 @@ Namespace Data
         ''' <param name="connection">The System.Data.SqlClient.SqlConnection to use for executing the SQL statement.</param>
         ''' <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
         ''' <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
-        ''' <returns>The first System.Data.DataRow in the resultset.</returns>
+        ''' <returns>The first row in the resultset.</returns>
         ''' <remarks></remarks>
         Public Shared Function RetrieveRow(ByVal sql As String, ByVal connection As SqlConnection, _
                 ByVal timeout As Integer, ByVal ParamArray parameters As Object()) As DataRow
@@ -760,7 +760,7 @@ Namespace Data
         ''' </summary>
         ''' <param name="sql">The SQL statement to be executed.</param>
         ''' <param name="connection">The System.Data.OracleClient.OracleConnection to use for executing the SQL statement.</param>
-        ''' <returns>The first System.Data.DataRow in the resultset.</returns>
+        ''' <returns>The first row in the resultset.</returns>
         ''' <remarks></remarks>
         Public Shared Function RetrieveRow(ByVal sql As String, ByVal connection As OracleConnection) As DataRow
 
@@ -774,7 +774,7 @@ Namespace Data
         ''' <param name="sql">The SQL statement to be executed.</param>
         ''' <param name="connection">The System.Data.OracleClient.OracleConnection to use for executing the SQL statement.</param>
         ''' <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
-        ''' <returns>The first System.Data.DataRow in the resultset.</returns>
+        ''' <returns>The first row in the resultset.</returns>
         ''' <remarks></remarks>
         Public Shared Function RetrieveRow(ByVal sql As String, ByVal connection As OracleConnection, _
                 ByVal ParamArray parameters As Object()) As DataRow
@@ -788,13 +788,29 @@ Namespace Data
 #End Region
 
 #Region "RetrieveData Overloaded Functions"
+        ''' <summary>
+        ''' Executes the SQL statement using .Net OleDb data provider, and returns a table of the resultset.
+        ''' </summary>
+        ''' <param name="sql">The SQL statement to be executed.</param>
+        ''' <param name="connection">The System.Data.OleDb.OleDbConnection to use for executing the SQL statement.</param>
+        ''' <returns>An System.Data.DataTable object.</returns>
+        ''' <remarks></remarks>
         Public Shared Function RetrieveData(ByVal sql As String, ByVal connection As OleDbConnection) As DataTable
 
             Return RetrieveData(sql, connection, 0, Integer.MaxValue, 30)
 
         End Function
 
-        ' Return a data table given a Sql statement and connection
+        ''' <summary>
+        ''' Executes the SQL statement using .Net OleDb data provider, and returns a table of the resultset.
+        ''' </summary>
+        ''' <param name="sql">The SQL statement to be executed.</param>
+        ''' <param name="connection">The System.Data.OleDb.OleDbConnection to use for executing the SQL statement.</param>
+        ''' <param name="startRow">The zero-based record number to start with.</param>
+        ''' <param name="maxRows">The maximum number of records to retrieve.</param>
+        ''' <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
+        ''' <returns>An System.Data.DataTable object.</returns>
+        ''' <remarks></remarks>
         Public Shared Function RetrieveData(ByVal sql As String, ByVal connection As OleDbConnection, _
                 ByVal startRow As Integer, ByVal maxRows As Integer, ByVal timeout As Integer) As DataTable
 
@@ -802,6 +818,14 @@ Namespace Data
 
         End Function
 
+        ''' <summary>
+        ''' Executes the SQL statement using .Net OleDb data provider, and returns a table of the resultset.
+        ''' </summary>
+        ''' <param name="sql">The SQL statement to be executed.</param>
+        ''' <param name="connection">The System.Data.OleDb.OleDbConnection to use for executing the SQL statement.</param>
+        ''' <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+        ''' <returns>An System.Data.DataTable object.</returns>
+        ''' <remarks></remarks>
         Public Shared Function RetrieveData(ByVal sql As String, ByVal connection As OleDbConnection, _
                 ByVal ParamArray parameters As Object()) As DataTable
 
@@ -809,8 +833,17 @@ Namespace Data
 
         End Function
 
-        ' tmshults 12/10/2004 - This behaves exactly like the RetrieveDataSetWithParameters method except it returns the 
-        '                       base DataTable that is linked to the underlying DataSet
+        ''' <summary>
+        ''' Executes the SQL statement using .Net OleDb data provider, and returns a table of the resultset.
+        ''' </summary>
+        ''' <param name="sql">The SQL statement to be executed.</param>
+        ''' <param name="connection">The System.Data.OleDb.OleDbConnection to use for executing the SQL statement.</param>
+        ''' <param name="startRow">The zero-based record number to start with.</param>
+        ''' <param name="maxRows">The maximum number of records to retrieve.</param>
+        ''' <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
+        ''' <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+        ''' <returns>An System.Data.DataTable object.</returns>
+        ''' <remarks></remarks>
         Public Shared Function RetrieveData(ByVal sql As String, ByVal connection As OleDbConnection, _
                 ByVal startRow As Integer, ByVal maxRows As Integer, ByVal timeout As Integer, _
                 ByVal ParamArray parameters As Object()) As DataTable
