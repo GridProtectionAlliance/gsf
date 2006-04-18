@@ -36,6 +36,10 @@ Imports Tva.DateTime.Common
 
 Namespace Data
 
+    ''' <summary>
+    ''' Defines common database related functions.
+    ''' </summary>
+    ''' <remarks></remarks>
     Public NotInheritable Class Common
 
         ''' <summary>
@@ -789,7 +793,8 @@ Namespace Data
 
 #Region "RetrieveData Overloaded Functions"
         ''' <summary>
-        ''' Executes the SQL statement using .Net OleDb data provider, and returns a table of the resultset.
+        ''' Executes the SQL statement using .Net OleDb data provider, and returns the first table of resultset 
+        ''' if the resultset contains multiple tables.
         ''' </summary>
         ''' <param name="sql">The SQL statement to be executed.</param>
         ''' <param name="connection">The System.Data.OleDb.OleDbConnection to use for executing the SQL statement.</param>
@@ -802,7 +807,8 @@ Namespace Data
         End Function
 
         ''' <summary>
-        ''' Executes the SQL statement using .Net OleDb data provider, and returns a table of the resultset.
+        ''' Executes the SQL statement using .Net OleDb data provider, and returns the first table of resultset 
+        ''' if the resultset contains multiple tables.
         ''' </summary>
         ''' <param name="sql">The SQL statement to be executed.</param>
         ''' <param name="connection">The System.Data.OleDb.OleDbConnection to use for executing the SQL statement.</param>
@@ -819,7 +825,8 @@ Namespace Data
         End Function
 
         ''' <summary>
-        ''' Executes the SQL statement using .Net OleDb data provider, and returns a table of the resultset.
+        ''' Executes the SQL statement using .Net OleDb data provider, and returns the first table of resultset 
+        ''' if the resultset contains multiple tables.
         ''' </summary>
         ''' <param name="sql">The SQL statement to be executed.</param>
         ''' <param name="connection">The System.Data.OleDb.OleDbConnection to use for executing the SQL statement.</param>
@@ -834,7 +841,8 @@ Namespace Data
         End Function
 
         ''' <summary>
-        ''' Executes the SQL statement using .Net OleDb data provider, and returns a table of the resultset.
+        ''' Executes the SQL statement using .Net OleDb data provider, and returns the first table of resultset 
+        ''' if the resultset contains multiple tables.
         ''' </summary>
         ''' <param name="sql">The SQL statement to be executed.</param>
         ''' <param name="connection">The System.Data.OleDb.OleDbConnection to use for executing the SQL statement.</param>
@@ -852,13 +860,31 @@ Namespace Data
 
         End Function
 
+        ''' <summary>
+        ''' Executes the SQL statement using .Net Sql Server data provider, and returns the first table of resultset 
+        ''' if the resultset contains multiple tables.
+        ''' </summary>
+        ''' <param name="sql">The SQL statement to be executed.</param>
+        ''' <param name="connection">The System.Data.SqlClient.SqlConnection to use for executing the SQL statement.</param>
+        ''' <returns>An System.Data.DataTable object.</returns>
+        ''' <remarks></remarks>
         Public Shared Function RetrieveData(ByVal sql As String, ByVal connection As SqlConnection) As DataTable
 
             Return RetrieveData(sql, connection, 0, Integer.MaxValue, TimeoutDuration)
 
         End Function
 
-        ' Return a data table given a Sql statement and connection
+        ''' <summary>
+        ''' Executes the SQL statement using .Net Sql Server data provider, and returns the first table of resultset 
+        ''' if the resultset contains multiple tables.
+        ''' </summary>
+        ''' <param name="sql">The SQL statement to be executed.</param>
+        ''' <param name="connection">The System.Data.SqlClient.SqlConnection to use for executing the SQL statement.</param>
+        ''' <param name="startRow">The zero-based record number to start with.</param>
+        ''' <param name="maxRows">The maximum number of records to retrieve.</param>
+        ''' <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
+        ''' <returns>An System.Data.DataTable object.</returns>
+        ''' <remarks></remarks>
         Public Shared Function RetrieveData(ByVal sql As String, ByVal connection As SqlConnection, _
                 ByVal startRow As Integer, ByVal maxRows As Integer, ByVal timeout As Integer) As DataTable
 
@@ -866,6 +892,15 @@ Namespace Data
 
         End Function
 
+        ''' <summary>
+        ''' Executes the SQL statement using .Net Sql Server data provider, and returns the first table of resultset 
+        ''' if the resultset contains multiple tables.
+        ''' </summary>
+        ''' <param name="sql">The SQL statement to be executed.</param>
+        ''' <param name="connection">The System.Data.SqlClient.SqlConnection to use for executing the SQL statement.</param>
+        ''' <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+        ''' <returns>An System.Data.DataTable object.</returns>
+        ''' <remarks></remarks>
         Public Shared Function RetrieveData(ByVal sql As String, ByVal connection As SqlConnection, _
                 ByVal ParamArray parameters As Object()) As DataTable
 
@@ -873,8 +908,18 @@ Namespace Data
 
         End Function
 
-        ' tmshults 12/10/2004 - This behaves exactly like the RetrieveDataSetWithParameters method except it returns the 
-        '                       base DataTable that is linked to the underlying DataSet
+        ''' <summary>
+        ''' Executes the SQL statement using .Net Sql Server data provider, and returns the first table of resultset 
+        ''' if the resultset contains multiple tables.
+        ''' </summary>
+        ''' <param name="sql">The SQL statement to be executed.</param>
+        ''' <param name="connection">The System.Data.SqlClient.SqlConnection to use for executing the SQL statement.</param>
+        ''' <param name="startRow">The zero-based record number to start with.</param>
+        ''' <param name="maxRows">The maximum number of records to retrieve.</param>
+        ''' <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
+        ''' <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+        ''' <returns>An System.Data.DataTable object.</returns>
+        ''' <remarks></remarks>
         Public Shared Function RetrieveData(ByVal sql As String, ByVal connection As SqlConnection, _
                 ByVal startRow As Integer, ByVal maxRows As Integer, ByVal timeout As Integer, _
                 ByVal ParamArray parameters As Object()) As DataTable
@@ -883,13 +928,30 @@ Namespace Data
 
         End Function
 
+        ''' <summary>
+        ''' Executes the SQL statement using .Net Oracle data provider, and returns the first table of resultset 
+        ''' if the resultset contains multiple tables.
+        ''' </summary>
+        ''' <param name="sql">The SQL statement to be executed.</param>
+        ''' <param name="connection">The System.Data.OracleClient.OracleConnection to use for executing the SQL statement.</param>
+        ''' <returns>An System.Data.DataTable object.</returns>
+        ''' <remarks></remarks>
         Public Shared Function RetrieveData(ByVal sql As String, ByVal connection As OracleConnection) As DataTable
 
             Return RetrieveData(sql, connection, 0, Integer.MaxValue)
 
         End Function
 
-        ' Return a data table given a Sql statement and connection
+        ''' <summary>
+        ''' Executes the SQL statement using .Net Oracle data provider, and returns the first table of resultset 
+        ''' if the resultset contains multiple tables.
+        ''' </summary>
+        ''' <param name="sql">The SQL statement to be executed.</param>
+        ''' <param name="connection">The System.Data.OracleClient.OracleConnection to use for executing the SQL statement.</param>
+        ''' <param name="startRow">The zero-based record number to start with.</param>
+        ''' <param name="maxRows">The maximum number of records to retrieve.</param>
+        ''' <returns>An System.Data.DataTable object.</returns>
+        ''' <remarks></remarks>
         Public Shared Function RetrieveData(ByVal sql As String, ByVal connection As OracleConnection, _
                 ByVal startRow As Integer, ByVal maxRows As Integer) As DataTable
 
@@ -897,6 +959,15 @@ Namespace Data
 
         End Function
 
+        ''' <summary>
+        ''' Executes the SQL statement using .Net Oracle data provider, and returns the first table of resultset 
+        ''' if the resultset contains multiple tables.
+        ''' </summary>
+        ''' <param name="sql">The SQL statement to be executed.</param>
+        ''' <param name="connection">The System.Data.OracleClient.OracleConnection to use for executing the SQL statement.</param>
+        ''' <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+        ''' <returns>An System.Data.DataTable object.</returns>
+        ''' <remarks></remarks>
         Public Shared Function RetrieveData(ByVal sql As String, ByVal connection As OracleConnection, _
                 ByVal ParamArray parameters As Object()) As DataTable
 
@@ -904,8 +975,17 @@ Namespace Data
 
         End Function
 
-        ' tmshults 12/10/2004 - This behaves exactly like the RetrieveDataSetWithParameters method except it returns the 
-        '                       base DataTable that is linked to the underlying DataSet
+        ''' <summary>
+        ''' Executes the SQL statement using .Net Oracle data provider, and returns the first table of resultset 
+        ''' if the resultset contains multiple tables.
+        ''' </summary>
+        ''' <param name="sql">The SQL statement to be executed.</param>
+        ''' <param name="connection">The System.Data.OracleClient.OracleConnection to use for executing the SQL statement.</param>
+        ''' <param name="startRow">The zero-based record number to start with.</param>
+        ''' <param name="maxRows">The maximum number of records to retrieve.</param>
+        ''' <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+        ''' <returns>An System.Data.DataTable object.</returns>
+        ''' <remarks></remarks>
         Public Shared Function RetrieveData(ByVal sql As String, ByVal connection As OracleConnection, _
                 ByVal startRow As Integer, ByVal maxRows As Integer, ByVal ParamArray parameters As Object()) As DataTable
 
@@ -915,13 +995,31 @@ Namespace Data
 #End Region
 
 #Region "RetrieveDataSet Overloaded Functions"
-
+        ''' <summary>
+        ''' Executes the SQL statement using .Net OleDb data provider, and returns the resultset that may contain
+        ''' multiple table depending on the SQL statement.
+        ''' </summary>
+        ''' <param name="sql">The SQL statement to be executed.</param>
+        ''' <param name="connection">The System.Data.OleDb.OleDbConnection to use for executing the SQL statement.</param>
+        ''' <returns>An System.Data.DataSet object.</returns>
+        ''' <remarks></remarks>
         Public Shared Function RetrieveDataSet(ByVal sql As String, ByVal connection As OleDbConnection) As DataSet
 
             Return RetrieveDataSet(sql, connection, 0, Integer.MaxValue, TimeoutDuration)
 
         End Function
 
+        ''' <summary>
+        ''' Executes the SQL statement using .Net OleDb data provider, and returns the resultset that may contain
+        ''' multiple table depending on the SQL statement.
+        ''' </summary>
+        ''' <param name="sql">The SQL statement to be executed.</param>
+        ''' <param name="connection">The System.Data.OleDb.OleDbConnection to use for executing the SQL statement.</param>
+        ''' <param name="startRow">The zero-based record number to start with.</param>
+        ''' <param name="maxRows">The maximum number of records to retrieve.</param>
+        ''' <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
+        ''' <returns>An System.Data.DataSet object.</returns>
+        ''' <remarks></remarks>
         Public Shared Function RetrieveDataSet(ByVal sql As String, ByVal connection As OleDbConnection, _
                 ByVal startRow As Integer, ByVal maxRows As Integer, ByVal timeout As Integer) As DataSet
 
@@ -929,6 +1027,15 @@ Namespace Data
 
         End Function
 
+        ''' <summary>
+        ''' Executes the SQL statement using .Net OleDb data provider, and returns the resultset that may contain
+        ''' multiple table depending on the SQL statement.
+        ''' </summary>
+        ''' <param name="sql">The SQL statement to be executed.</param>
+        ''' <param name="connection">The System.Data.OleDb.OleDbConnection to use for executing the SQL statement.</param>
+        ''' <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+        ''' <returns>An System.Data.DataSet object.</returns>
+        ''' <remarks></remarks>
         Public Shared Function RetrieveDataSet(ByVal sql As String, ByVal connection As OleDbConnection, _
                 ByVal ParamArray parameters As Object()) As DataSet
 
@@ -936,9 +1043,18 @@ Namespace Data
 
         End Function
 
-        ' tmshults 12/10/2004 - Added this method as an easy way to populate a DataSet with a StoredProc call
-        '                       This takes the given values and then populates the appropriate Parameters for
-        '                       the StoredProc.
+        ''' <summary>
+        ''' Executes the SQL statement using .Net OleDb data provider, and returns the resultset that may contain
+        ''' multiple table depending on the SQL statement.
+        ''' </summary>
+        ''' <param name="sql">The SQL statement to be executed.</param>
+        ''' <param name="connection">The System.Data.OleDb.OleDbConnection to use for executing the SQL statement.</param>
+        ''' <param name="startRow">The zero-based record number to start with.</param>
+        ''' <param name="maxRows">The maximum number of records to retrieve.</param>
+        ''' <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
+        ''' <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+        ''' <returns>An System.Data.DataSet object.</returns>
+        ''' <remarks></remarks>
         Public Shared Function RetrieveDataSet(ByVal sql As String, ByVal connection As OleDbConnection, _
                 ByVal startRow As Integer, ByVal maxRows As Integer, ByVal timeout As Integer, _
                 ByVal ParamArray parameters As Object()) As DataSet
@@ -955,19 +1071,31 @@ Namespace Data
 
         End Function
 
-        Public Shared Function RetrieveDataSet(ByVal sql As String, ByVal connection As SqlConnection, _
-                ByVal ParamArray parameters As Object()) As DataSet
-
-            Return RetrieveDataSet(sql, connection, 0, Integer.MaxValue, TimeoutDuration, parameters)
-
-        End Function
-
+        ''' <summary>
+        ''' Executes the SQL statement using .Net Sql Server data provider, and returns the resultset that may 
+        ''' contain multiple table depending on the SQL statement.
+        ''' </summary>
+        ''' <param name="sql">The SQL statement to be executed.</param>
+        ''' <param name="connection">The System.Data.SqlClient.SqlConnection to use for executing the SQL statement.</param>
+        ''' <returns>An System.Data.DataSet object.</returns>
+        ''' <remarks></remarks>
         Public Shared Function RetrieveDataSet(ByVal sql As String, ByVal connection As SqlConnection) As DataSet
 
             Return RetrieveDataSet(sql, connection, 0, Integer.MaxValue, TimeoutDuration)
 
         End Function
 
+        ''' <summary>
+        ''' Executes the SQL statement using .Net Sql Server data provider, and returns the resultset that may 
+        ''' contain multiple table depending on the SQL statement.
+        ''' </summary>
+        ''' <param name="sql">The SQL statement to be executed.</param>
+        ''' <param name="connection">The System.Data.SqlClient.SqlConnection to use for executing the SQL statement.</param>
+        ''' <param name="startRow">The zero-based record number to start with.</param>
+        ''' <param name="maxRows">The maximum number of records to retrieve.</param>
+        ''' <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
+        ''' <returns>An System.Data.DataSet object.</returns>
+        ''' <remarks></remarks>
         Public Shared Function RetrieveDataSet(ByVal sql As String, ByVal connection As SqlConnection, _
                 ByVal startRow As Integer, ByVal maxRows As Integer, ByVal timeout As Integer) As DataSet
 
@@ -975,9 +1103,34 @@ Namespace Data
 
         End Function
 
-        ' tmshults 12/10/2004 - Added this method as an easy way to populate a DataSet with a StoredProc call
-        '                       This takes the given values and then populates the appropriate Parameters for
-        '                       the StoredProc.
+        ''' <summary>
+        ''' Executes the SQL statement using .Net Sql Server data provider, and returns the resultset that may 
+        ''' contain multiple table depending on the SQL statement.
+        ''' </summary>
+        ''' <param name="sql">The SQL statement to be executed.</param>
+        ''' <param name="connection">The System.Data.SqlClient.SqlConnection to use for executing the SQL statement.</param>
+        ''' <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+        ''' <returns>An System.Data.DataSet object.</returns>
+        ''' <remarks></remarks>
+        Public Shared Function RetrieveDataSet(ByVal sql As String, ByVal connection As SqlConnection, _
+                ByVal ParamArray parameters As Object()) As DataSet
+
+            Return RetrieveDataSet(sql, connection, 0, Integer.MaxValue, TimeoutDuration, parameters)
+
+        End Function
+
+        ''' <summary>
+        ''' Executes the SQL statement using .Net Sql Server data provider, and returns the resultset that may 
+        ''' contain multiple table depending on the SQL statement.
+        ''' </summary>
+        ''' <param name="sql">The SQL statement to be executed.</param>
+        ''' <param name="connection">The System.Data.SqlClient.SqlConnection to use for executing the SQL statement.</param>
+        ''' <param name="startRow">The zero-based record number to start with.</param>
+        ''' <param name="maxRows">The maximum number of records to retrieve.</param>
+        ''' <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
+        ''' <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+        ''' <returns>An System.Data.DataSet object.</returns>
+        ''' <remarks></remarks>
         Public Shared Function RetrieveDataSet(ByVal sql As String, ByVal connection As SqlConnection, _
                 ByVal startRow As Integer, ByVal maxRows As Integer, ByVal timeout As Integer, _
                 ByVal ParamArray parameters As Object()) As DataSet
@@ -995,12 +1148,30 @@ Namespace Data
 
         End Function
 
+        ''' <summary>
+        ''' Executes the SQL statement using .Net Oracle data provider, and returns the resultset that may 
+        ''' contain multiple table depending on the SQL statement.
+        ''' </summary>
+        ''' <param name="sql">The SQL statement to be executed.</param>
+        ''' <param name="connection">The System.Data.OracleClient.OracleConnection to use for executing the SQL statement.</param>
+        ''' <returns>An System.Data.DataSet object.</returns>
+        ''' <remarks></remarks>
         Public Shared Function RetrieveDataSet(ByVal sql As String, ByVal connection As OracleConnection) As DataSet
 
             Return RetrieveDataSet(sql, connection, 0, Integer.MaxValue)
 
         End Function
 
+        ''' <summary>
+        ''' Executes the SQL statement using .Net Oracle data provider, and returns the resultset that may 
+        ''' contain multiple table depending on the SQL statement.
+        ''' </summary>
+        ''' <param name="sql">The SQL statement to be executed.</param>
+        ''' <param name="connection">The System.Data.OracleClient.OracleConnection to use for executing the SQL statement.</param>
+        ''' <param name="startRow">The zero-based record number to start with.</param>
+        ''' <param name="maxRows">The maximum number of records to retrieve.</param>
+        ''' <returns>An System.Data.DataSet object.</returns>
+        ''' <remarks></remarks>
         Public Shared Function RetrieveDataSet(ByVal sql As String, ByVal connection As OracleConnection, _
                 ByVal startRow As Integer, ByVal maxRows As Integer) As DataSet
 
@@ -1008,6 +1179,15 @@ Namespace Data
 
         End Function
 
+        ''' <summary>
+        ''' Executes the SQL statement using .Net Oracle data provider, and returns the resultset that may 
+        ''' contain multiple table depending on the SQL statement.
+        ''' </summary>
+        ''' <param name="sql">The SQL statement to be executed.</param>
+        ''' <param name="connection">The System.Data.OracleClient.OracleConnection to use for executing the SQL statement.</param>
+        ''' <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+        ''' <returns>An System.Data.DataSet object.</returns>
+        ''' <remarks></remarks>
         Public Shared Function RetrieveDataSet(ByVal sql As String, ByVal connection As OracleConnection, _
                 ByVal ParamArray parameters As Object()) As DataSet
 
@@ -1015,9 +1195,17 @@ Namespace Data
 
         End Function
 
-        ' tmshults 12/10/2004 - Added this method as an easy way to populate a DataSet with a StoredProc call
-        '                       This takes the given values and then populates the appropriate Parameters for
-        '                       the StoredProc.
+        ''' <summary>
+        ''' Executes the SQL statement using .Net Oracle data provider, and returns the resultset that may 
+        ''' contain multiple table depending on the SQL statement.
+        ''' </summary>
+        ''' <param name="sql">The SQL statement to be executed.</param>
+        ''' <param name="connection">The System.Data.OracleClient.OracleConnection to use for executing the SQL statement.</param>
+        ''' <param name="startRow">The zero-based record number to start with.</param>
+        ''' <param name="maxRows">The maximum number of records to retrieve.</param>
+        ''' <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+        ''' <returns>An System.Data.DataSet object.</returns>
+        ''' <remarks></remarks>
         Public Shared Function RetrieveDataSet(ByVal sql As String, ByVal connection As OracleConnection, _
                 ByVal startRow As Integer, ByVal maxRows As Integer, _
                 ByVal ParamArray parameters As Object()) As DataSet
@@ -1035,17 +1223,17 @@ Namespace Data
 #End Region
 
 #Region "UpdateData Overloaded Functions"
-        'Pinal Patel 04/06/05 - Updates the underlying data source of the specified data table.
-        Public Shared Function UpdateData(ByVal sourceData As DataTable, ByVal sourceSql As String, ByVal connection As SqlConnection) As Integer
-
-            Dim dataAdapter As SqlDataAdapter = New SqlDataAdapter(sourceSql, connection)
-            Dim commandBuilder As SqlCommandBuilder = New SqlCommandBuilder(dataAdapter)
-            Return dataAdapter.Update(sourceData)
-
-        End Function
-
-        'Pinal Patel 04/06/05 - Updates the underlying data source of the specified data table.
-        Public Shared Function UpdateData(ByVal sourceData As DataTable, ByVal sourceSql As String, ByVal connection As OleDbConnection) As Integer
+        ''' <summary>
+        ''' Updates the underlying data of the System.Data.DataTable using .Net OleDb data provider, and 
+        ''' returns the number of rows successfully updated.
+        ''' </summary>
+        ''' <param name="sourceData">The System.Data.DataTable used to update the underlying data source.</param>
+        ''' <param name="sourceSql">The SQL statement used initially to populate the System.Data.DataTable.</param>
+        ''' <param name="connection">The System.Data.OleDb.OleDbConnection to use for updating the underlying data source.</param>
+        ''' <returns>The number of rows successfully updated from the System.Data.DataTable.</returns>
+        ''' <remarks></remarks>
+        Public Shared Function UpdateData(ByVal sourceData As DataTable, ByVal sourceSql As String, _
+                ByVal connection As OleDbConnection) As Integer
 
             Dim dataAdapter As OleDbDataAdapter = New OleDbDataAdapter(sourceSql, connection)
             Dim commandBuilder As OleDbCommandBuilder = New OleDbCommandBuilder(dataAdapter)
@@ -1053,8 +1241,35 @@ Namespace Data
 
         End Function
 
-        'Pinal Patel 04/06/05 - Updates the underlying data source of the specified data table.
-        Public Shared Function UpdateData(ByVal sourceData As DataTable, ByVal sourceSql As String, ByVal connection As OracleConnection) As Integer
+        ''' <summary>
+        ''' Updates the underlying data of the System.Data.DataTable using .Net Sql Server data provider, and 
+        ''' returns the number of rows successfully updated.
+        ''' </summary>
+        ''' <param name="sourceData">The System.Data.DataTable used to update the underlying data source.</param>
+        ''' <param name="sourceSql">The SQL statement used initially to populate the System.Data.DataTable.</param>
+        ''' <param name="connection">The System.Data.SqlClient.SqlConnection to use for updating the underlying data source.</param>
+        ''' <returns>The number of rows successfully updated from the System.Data.DataTable.</returns>
+        ''' <remarks></remarks>
+        Public Shared Function UpdateData(ByVal sourceData As DataTable, ByVal sourceSql As String, _
+                ByVal connection As SqlConnection) As Integer
+
+            Dim dataAdapter As SqlDataAdapter = New SqlDataAdapter(sourceSql, connection)
+            Dim commandBuilder As SqlCommandBuilder = New SqlCommandBuilder(dataAdapter)
+            Return dataAdapter.Update(sourceData)
+
+        End Function
+
+        ''' <summary>
+        ''' Updates the underlying data of the System.Data.DataTable using .Net Oracle data provider, and 
+        ''' returns the number of rows successfully updated.
+        ''' </summary>
+        ''' <param name="sourceData">The System.Data.DataTable used to update the underlying data source.</param>
+        ''' <param name="sourceSql">The SQL statement used initially to populate the System.Data.DataTable.</param>
+        ''' <param name="connection">The System.Data.OracleClient.OracleConnection to use for updating the underlying data source.</param>
+        ''' <returns>The number of rows successfully updated from the System.Data.DataTable.</returns>
+        ''' <remarks></remarks>
+        Public Shared Function UpdateData(ByVal sourceData As DataTable, ByVal sourceSql As String, _
+                ByVal connection As OracleConnection) As Integer
 
             Dim dataAdapter As OracleDataAdapter = New OracleDataAdapter(sourceSql, connection)
             Dim commandBuilder As OracleCommandBuilder = New OracleCommandBuilder(dataAdapter)
@@ -1064,7 +1279,14 @@ Namespace Data
 #End Region
 
 #Region "Conversion Functions"
-        'Pinal Patel 05/27/05 - Converts delimited data to data table.
+        ''' <summary>
+        ''' Converts delimited text to System.Data.DataTable.
+        ''' </summary>
+        ''' <param name="delimitedData">The delimited text to be converted to System.Data.DataTable.</param>
+        ''' <param name="delimiter">The character(es) used for delimiting the text.</param>
+        ''' <param name="header">True if the delimited text contains header information; otherwise False.</param>
+        ''' <returns>An System.Data.DataTable object.</returns>
+        ''' <remarks></remarks>
         Public Shared Function DelimitedDataToDataTable(ByVal delimitedData As String, ByVal delimiter As String, ByVal header As Boolean) As DataTable
 
             Dim table As DataTable = New DataTable()
@@ -1107,7 +1329,15 @@ Namespace Data
 
         End Function
 
-        'Pinal Patel 05/27/05 - Converts a data table to delimited data.
+        ''' <summary>
+        ''' Converts the System.Data.DataTable to delimited text.
+        ''' </summary>
+        ''' <param name="table">The System.Data.DataTable whose data is to be converted to delimited text.</param>
+        ''' <param name="delimiter">The character(es) to be used for delimiting the text.</param>
+        ''' <param name="quoted">True if text is to be surrounded by quotes; otherwise False.</param>
+        ''' <param name="header">True if the delimited text should have header information.</param>
+        ''' <returns>A string of delimited text.</returns>
+        ''' <remarks></remarks>
         Public Shared Function DataTableToDelimitedData(ByVal table As DataTable, ByVal delimiter As String, ByVal quoted As Boolean, ByVal header As Boolean) As String
 
             With New StringBuilder
