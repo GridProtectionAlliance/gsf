@@ -62,6 +62,4 @@ Public NotInheritable Class Common
 
     End Function
 
-
-
 End Class
