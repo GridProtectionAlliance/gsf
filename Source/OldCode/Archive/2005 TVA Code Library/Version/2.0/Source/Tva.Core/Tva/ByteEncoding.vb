@@ -58,7 +58,7 @@ Public MustInherit Class ByteEncoding
                     ' Note: We require each character is represented by its 2 character hex value.
                     hexData = hexData.Substring(0, hexData.Length - hexData.Length Mod 2)
 
-                    Dim bytes As Byte() = Array.CreateInstance(GetType(Byte), hexData.Length \ 2)
+                    Dim bytes As Byte() = CreateArray(Of Byte)(hexData.Length \ 2)
                     Dim index As Integer
 
                     For x As Integer = 0 To hexData.Length - 1 Step 2
@@ -123,7 +123,7 @@ Public MustInherit Class ByteEncoding
                     ' Note: We require each character is represented by its 3 character decimal value.
                     decData = decData.Substring(0, decData.Length - decData.Length Mod 3)
 
-                    Dim bytes As Byte() = Array.CreateInstance(GetType(Byte), decData.Length \ 3)
+                    Dim bytes As Byte() = CreateArray(Of Byte)(decData.Length \ 3)
                     Dim index As Integer
 
                     For x As Integer = 0 To decData.Length - 1 Step 3
@@ -207,7 +207,7 @@ Public MustInherit Class ByteEncoding
                     ' Note: We require each character is represented by its 8 character binary value.
                     binaryData = binaryData.Substring(0, binaryData.Length - binaryData.Length Mod 8)
 
-                    Dim bytes As Byte() = Array.CreateInstance(GetType(Byte), binaryData.Length \ 8)
+                    Dim bytes As Byte() = CreateArray(Of Byte)(binaryData.Length \ 8)
                     Dim index As Integer
 
                     For x As Integer = 0 To binaryData.Length - 1 Step 8
