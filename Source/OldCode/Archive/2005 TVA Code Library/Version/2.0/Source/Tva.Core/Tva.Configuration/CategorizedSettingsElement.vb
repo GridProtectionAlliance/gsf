@@ -2,11 +2,13 @@
 
 Imports System.Configuration
 Imports Tva.Security.Cryptography.Common
+Imports Tva.Common
 
 Namespace Configuration
 
     ''' <summary>
-    ''' Represents a settings element within a configuration file.
+    ''' Represents a configuration element under the categories of categorizedSettings section within 
+    ''' a configuration file.
     ''' </summary>
     ''' <remarks></remarks>
     Public Class CategorizedSettingsElement
@@ -14,22 +16,54 @@ Namespace Configuration
 
         Private Const CryptoKey As String = "0679d9ae-aca5-4702-a3f5-604415096987"
 
-        Public Sub New()
+        ''' <summary>
+        ''' This constructor is required by the configuration API and is for internal use only.
+        ''' </summary>
+        ''' <remarks></remarks>
+        Friend Sub New()
             Me.New("")
         End Sub
 
-        Public Sub New(ByVal name As String)
+        ''' <summary>
+        ''' This constructor is required by the configuration API and is for internal use only.
+        ''' </summary>
+        ''' <remarks></remarks>
+        Friend Sub New(ByVal name As String)
             Me.New(name, "")
         End Sub
 
+        ''' <summary>
+        ''' Initializes a new instance of Tva.Configuration.CategorizedSettingsElement with the specified
+        ''' name and value information.
+        ''' </summary>
+        ''' <param name="name">The identifier string of the element.</param>
+        ''' <param name="value">The value string of the element.</param>
+        ''' <remarks></remarks>
         Public Sub New(ByVal name As String, ByVal value As String)
             Me.New(name, value, "")
         End Sub
 
+        ''' <summary>
+        ''' Initializes a new instance of Tva.Configuration.CategorizedSettingsElement with the specified
+        ''' name and value information.
+        ''' </summary>
+        ''' <param name="name">The identifier string of the element.</param>
+        ''' <param name="value">The value string of the element.</param>
+        ''' <param name="description">The description string of the element.</param>
+        ''' <remarks></remarks>
         Public Sub New(ByVal name As String, ByVal value As String, ByVal description As String)
             Me.New(name, value, description, False)
         End Sub
 
+        ''' <summary>
+        ''' Initializes a new instance of Tva.Configuration.CategorizedSettingsElement with the specified
+        ''' name and value information.
+        ''' </summary>
+        ''' <param name="name">The identifier string of the element.</param>
+        ''' <param name="value">The value string of the element.</param>
+        ''' <param name="description">The description string of the element.</param>
+        ''' <param name="encrypted">True if the value string of the element is to be encrypted; otherwise False.</param>
+        ''' <remarks></remarks>
         Public Sub New(ByVal name As String, ByVal value As String, ByVal description As String, ByVal encrypted As Boolean)
             MyBase.New()
             Me.Name = name
@@ -38,6 +72,12 @@ Namespace Configuration
             Me.Encrypted = encrypted
         End Sub
 
+        ''' <summary>
+        ''' Gets or sets the identifier string of the element.
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns>The identifier string of the element.</returns>
+        ''' <remarks></remarks>
         <ConfigurationProperty("name", IsKey:=True, IsRequired:=True)> _
         Public Property Name() As String
             Get
@@ -48,6 +88,12 @@ Namespace Configuration
             End Set
         End Property
 
+        ''' <summary>
+        ''' Gets or sets the value string of the element.
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns>The value string of the element.</returns>
+        ''' <remarks></remarks>
         <ConfigurationProperty("value", IsRequired:=True)> _
         Public Property Value() As String
             Get
@@ -58,6 +104,32 @@ Namespace Configuration
             End Set
         End Property
 
+        ''' <summary>
+        ''' Gets the element value as the specified type.
+        ''' </summary>
+        ''' <typeparam name="T">Type to which the value string is to be converted.</typeparam>
+        ''' <param name="defaultValue">The default value to return if the value string is empty.</param>
+        ''' <returns></returns>
+        ''' <remarks></remarks>
+        Public Function GetTypedValue(Of T)(ByVal defaultValue As T) As T
+
+            Dim value As String = Me.Value()
+            If Not String.IsNullOrEmpty(value) Then
+                ' Element's value string is present.
+                Return CType(CType(value, Object), T)
+            Else
+                ' Element's value string is present, so use the default.
+                Return defaultValue
+            End If
+
+        End Function
+
+        ''' <summary>
+        ''' Gets or sets the description string of the element.
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns>The description string of the element.</returns>
+        ''' <remarks></remarks>
         <ConfigurationProperty("description", IsRequired:=True)> _
         Public Property Description() As String
             Get
@@ -68,6 +140,12 @@ Namespace Configuration
             End Set
         End Property
 
+        ''' <summary>
+        ''' Gets or sets a boolean indicating whether the value string of the element is to be encrypted.
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns>True if the value string of the element is to be encrypted; otherwise False.</returns>
+        ''' <remarks></remarks>
         <ConfigurationProperty("encrypted", IsRequired:=True)> _
         Public Property Encrypted() As Boolean
             Get
@@ -84,6 +162,7 @@ Namespace Configuration
 
             Dim encryptedValue As String = value
             If MyBase.Item("encrypted") IsNot Nothing AndAlso Convert.ToBoolean(MyBase.Item("encrypted")) Then
+                ' The element's value is to be encrypted, so encrypt it.
                 encryptedValue = Encrypt(value, CryptoKey, EncryptLevel.Level4)
             End If
             Return encryptedValue
@@ -94,6 +173,7 @@ Namespace Configuration
 
             Dim decryptedValue As String = value
             If MyBase.Item("encrypted") IsNot Nothing AndAlso Convert.ToBoolean(MyBase.Item("encrypted")) Then
+                ' The element's value has been encrypted, so decrypt it.
                 decryptedValue = Decrypt(value, CryptoKey, EncryptLevel.Level4)
             End If
             Return decryptedValue

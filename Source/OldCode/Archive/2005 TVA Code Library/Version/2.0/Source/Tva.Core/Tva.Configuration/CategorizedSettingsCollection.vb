@@ -4,12 +4,28 @@ Imports System.Configuration
 
 Namespace Configuration
 
+    ''' <summary>
+    ''' Represents a configuration element containing a collection of Tva.Configuration.CategorizedSettingsElement 
+    ''' within a configuration file.
+    ''' </summary>
+    ''' <remarks></remarks>
     Public Class CategorizedSettingsCollection
         Inherits ConfigurationElementCollection
 
+        ''' <summary>
+        ''' Gets or sets the Tva.Configuration.CategorizedSettingsElement object at the specified index.
+        ''' </summary>
+        ''' <param name="index">The zero-based index of the Tva.Configuration.CategorizedSettingsElement to return.</param>
+        ''' <value></value>
+        ''' <returns>The Tva.Configuration.CategorizedSettingsElement at the specified index; otherwise null.</returns>
+        ''' <remarks></remarks>
         Default Public Shadows Property Item(ByVal index As Integer) As CategorizedSettingsElement
             Get
-                Return DirectCast(MyBase.BaseGet(index), CategorizedSettingsElement)
+                Dim element As CategorizedSettingsElement = Nothing
+                If index <= MyBase.Count() - 1 Then
+                    element = DirectCast(MyBase.BaseGet(index), CategorizedSettingsElement)
+                End If
+                Return element
             End Get
             Set(ByVal value As CategorizedSettingsElement)
                 If MyBase.BaseGet(index) IsNot Nothing Then
@@ -19,42 +35,92 @@ Namespace Configuration
             End Set
         End Property
 
+        ''' <summary>
+        ''' Gets the Tva.Configuration.CategorizedSettingsElement object with the specified name.
+        ''' </summary>
+        ''' <param name="name">The name of the Tva.Configuration.CategorizedSettingsElement to return.</param>
+        ''' <value></value>
+        ''' <returns>The Tva.Configuration.CategorizedSettingsElement with the specified name; otherwise null.</returns>
+        ''' <remarks></remarks>
         Default Public Shadows ReadOnly Property Item(ByVal name As String) As CategorizedSettingsElement
             Get
-                Return DirectCast(MyBase.BaseGet(name), CategorizedSettingsElement)
+                Dim element As CategorizedSettingsElement = Nothing
+                If MyBase.BaseGet(name) IsNot Nothing Then
+                    element = DirectCast(MyBase.BaseGet(name), CategorizedSettingsElement)
+                End If
+                Return element
             End Get
         End Property
 
+        ''' <summary>
+        ''' Gets the index of the specified Tva.Configuration.CategorizedSettingsElement.
+        ''' </summary>
+        ''' <param name="setting">The Tva.Configuration.CategorizedSettingsElement whose index is to be returned.</param>
+        ''' <returns>The index of the specified Tva.Configuration.CategorizedSettingsElement; otherwise -1.</returns>
+        ''' <remarks></remarks>
         Public Function IndexOf(ByVal setting As CategorizedSettingsElement) As Integer
 
             Return MyBase.BaseIndexOf(setting)
 
         End Function
 
+        ''' <summary>
+        ''' Adds a Tva.Configuration.CategorizedSettingsElement with the specified name and value string.
+        ''' </summary>
+        ''' <param name="name">The name string of the element.</param>
+        ''' <param name="value">The value string of the element.</param>
+        ''' <remarks></remarks>
         Public Sub Add(ByVal name As String, ByVal value As String)
 
             Me.Add(name, value, False)
 
         End Sub
 
+        ''' <summary>
+        ''' Adds a Tva.Configuration.CategorizedSettingsElement with the specified name and value string.
+        ''' </summary>
+        ''' <param name="name">The name string of the element.</param>
+        ''' <param name="value">The value string of the element.</param>
+        ''' <param name="encryptValue">True if the value string of the element is to be encrypted; otherwise False.</param>
+        ''' <remarks></remarks>
         Public Sub Add(ByVal name As String, ByVal value As String, ByVal encryptValue As Boolean)
 
             Me.Add(name, value, "", encryptValue)
 
         End Sub
 
+        ''' <summary>
+        ''' Adds a Tva.Configuration.CategorizedSettingsElement with the specified name, value and description string.
+        ''' </summary>
+        ''' <param name="name">The name string of the element.</param>
+        ''' <param name="value">The value string of the element.</param>
+        ''' <param name="description">The description string of the element.</param>
+        ''' <remarks></remarks>
         Public Sub Add(ByVal name As String, ByVal value As String, ByVal description As String)
 
             Me.Add(New CategorizedSettingsElement(name, value, description, False))
 
         End Sub
 
+        ''' <summary>
+        ''' Adds a Tva.Configuration.CategorizedSettingsElement with the specified name, value and description string.
+        ''' </summary>
+        ''' <param name="name">The name string of the element.</param>
+        ''' <param name="value">The value string of the element.</param>
+        ''' <param name="description">The description string of the element.</param>
+        ''' <param name="encryptValue">True if the value string of the element is to be encrypted; otherwise False.</param>
+        ''' <remarks></remarks>
         Public Sub Add(ByVal name As String, ByVal value As String, ByVal description As String, ByVal encryptValue As Boolean)
 
             Me.Add(New CategorizedSettingsElement(name, value, description, encryptValue))
 
         End Sub
 
+        ''' <summary>
+        ''' Adds the specified Tva.Configuration.CategorizedSettingsElement to the Tva.Configuration.CategorizedSettingsCollection.
+        ''' </summary>
+        ''' <param name="setting">The Tva.Configuration.CategorizedSettingsElement to add.</param>
+        ''' <remarks></remarks>
         Public Sub Add(ByVal setting As CategorizedSettingsElement)
 
             If MyBase.BaseGet(setting.Name()) Is Nothing Then
@@ -64,12 +130,22 @@ Namespace Configuration
 
         End Sub
 
+        ''' <summary>
+        ''' Removes a Tva.Configuration.CategorizedSettingsElement with the specified name from the Tva.Configuration.CategorizedSettingsCollection.
+        ''' </summary>
+        ''' <param name="name">The name of the Tva.Configuration.CategorizedSettingsElement to remove.</param>
+        ''' <remarks></remarks>
         Public Sub Remove(ByVal name As String)
 
             MyBase.BaseRemove(name)
 
         End Sub
 
+        ''' <summary>
+        ''' Removes the specified Tva.Configuration.CategorizedSettingsElement from the Tva.Configuration.CategorizedSettingsCollection.
+        ''' </summary>
+        ''' <param name="setting">The Tva.Configuration.CategorizedSettingsElement to remove.</param>
+        ''' <remarks></remarks>
         Public Sub Remove(ByVal setting As CategorizedSettingsElement)
 
             If MyBase.BaseIndexOf(setting) >= 0 Then
@@ -78,18 +154,28 @@ Namespace Configuration
 
         End Sub
 
+        ''' <summary>
+        ''' Remove the Tva.Configuration.CategorizedSettingsElement at the specified location from the Tva.Configuration.CategorizedSettingsCollection.
+        ''' </summary>
+        ''' <param name="index">The index location of the Tva.Configuration.CategorizedSettingsElement to remove.</param>
+        ''' <remarks></remarks>
         Public Sub RemoveAt(ByVal index As Integer)
 
             MyBase.BaseRemoveAt(index)
 
         End Sub
 
+        ''' <summary>
+        ''' Removes all Tva.Configuration.CategorizedSettingsElement from the Tva.Configuration.CategorizedSettingsCollection.
+        ''' </summary>
+        ''' <remarks></remarks>
         Public Sub Clear()
 
             MyBase.BaseClear()
 
         End Sub
 
+#Region "Required ConfigurationElementCollection Overrides"
         Protected Overloads Overrides Function CreateNewElement() As System.Configuration.ConfigurationElement
 
             Return New CategorizedSettingsElement()
@@ -107,6 +193,7 @@ Namespace Configuration
             Return DirectCast(element, CategorizedSettingsElement).Name()
 
         End Function
+#End Region
 
     End Class
 

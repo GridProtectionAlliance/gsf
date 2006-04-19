@@ -37,7 +37,7 @@ Imports Tva.DateTime.Common
 Namespace Data
 
     ''' <summary>
-    ''' Defines common database related functions.
+    ''' Defines common shared database related functions.
     ''' </summary>
     ''' <remarks></remarks>
     Public NotInheritable Class Common

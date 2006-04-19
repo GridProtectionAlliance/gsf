@@ -8,6 +8,10 @@ Imports Tva.IO.FilePath
 
 Namespace Configuration
 
+    ''' <summary>
+    ''' Represents a configuration file of a windows or web application.
+    ''' </summary>
+    ''' <remarks></remarks>
     Public Class ConfigurationFile
 
         Private m_configuration As System.Configuration.Configuration
@@ -15,15 +19,29 @@ Namespace Configuration
         Private Const CustomSectionName As String = "categorizedSettings"
         Private Const CustomSectionType As String = "Tva.Configuration.CategorizedSettingsSection, Tva.Core"
 
+        ''' <summary>
+        ''' Specifies the application environment.
+        ''' </summary>
+        ''' <remarks></remarks>
         Public Enum Environments As Integer
             Win
             Web
         End Enum
 
+        ''' <summary>
+        ''' Initializes a default instance of Tva.Configuration.ConfigurationFile.
+        ''' </summary>
+        ''' <remarks></remarks>
         Public Sub New()
             Me.New("")
         End Sub
 
+        ''' <summary>
+        ''' Initializes a instance of Tva.Configuration.ConfigurationFile for the specified configuration file
+        ''' that belongs to a windows or web application.
+        ''' </summary>
+        ''' <param name="configFilePath">Path of the configuration file that belongs to a windows or web application.</param>
+        ''' <remarks></remarks>
         Public Sub New(ByVal configFilePath As String)
             m_configuration = GetConfiguration(configFilePath)
             If m_configuration.HasFile() Then
@@ -34,6 +52,12 @@ Namespace Configuration
             m_configuration = GetConfiguration(configFilePath)
         End Sub
 
+        ''' <summary>
+        ''' Gets the environment of the application to which the current configuration file belongs.
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns>The environment of the application to which the current configuration file belongs.</returns>
+        ''' <remarks></remarks>
         Public ReadOnly Property Environment() As Environments
             Get
                 Dim currentEnvironment As Environments = Environments.Win
@@ -42,50 +66,90 @@ Namespace Configuration
             End Get
         End Property
 
+        ''' <summary>
+        ''' Gets the Tva.Configuration.CategorizedSettingsSection representing the "categorizedSettings" section of the configuration file.
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns>The Tva.Configuration.CategorizedSettingsSection representing the "categorizedSettings" section of the configuration file.</returns>
+        ''' <remarks></remarks>
         Public ReadOnly Property CategorizedSettings() As CategorizedSettingsSection
             Get
                 Return DirectCast(m_configuration.GetSection(CustomSectionName), CategorizedSettingsSection)
             End Get
         End Property
 
+        ''' <summary>
+        ''' Gets the System.Configuration.AppSettingsSection representing the "appSettings" section of the configuration file.
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns>The System.Configuration.AppSettingsSection representing the "appSettings" section of the configuration file.</returns>
+        ''' <remarks></remarks>
         Public ReadOnly Property AppSettings() As AppSettingsSection
             Get
                 Return m_configuration.AppSettings()
             End Get
         End Property
 
+        ''' <summary>
+        ''' Gets the System.Configuration.ConnectionStringsSection representing the "connectionStrings" section of the configuration file.
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns>The System.Configuration.ConnectionStringsSection representing the "connectionStrings" section of the configuration file.</returns>
+        ''' <remarks></remarks>
         Public ReadOnly Property ConnectionStrings() As ConnectionStringsSection
             Get
                 Return m_configuration.ConnectionStrings()
             End Get
         End Property
 
+        ''' <summary>
+        ''' Gets the physical path to the configuration file represented by this Tva.Configuration.Configuration object.
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns>The physical path to the configuration file represented by this Tva.Configuration.ConfigurationFile object.</returns>
+        ''' <remarks></remarks>
         Public ReadOnly Property FilePath() As String
             Get
                 Return m_configuration.FilePath()
             End Get
         End Property
 
+        ''' <summary>
+        ''' Writes the configuration settings contained within this Tva.Configuration.ConfigurationFile object 
+        ''' to the configuration file that it represents.
+        ''' </summary>
+        ''' <remarks></remarks>
         Public Sub Save()
 
             Me.Save(ConfigurationSaveMode.Modified)
 
         End Sub
 
+        ''' <summary>
+        ''' Writes the configuration settings contained within this Tva.Configuration.ConfigurationFile object 
+        ''' to the configuration file that it represents.
+        ''' </summary>
+        ''' <param name="saveMode">A System.Configuration.ConfigurationSaveMode value that determines which property values to save.</param>
+        ''' <remarks></remarks>
         Public Sub Save(ByVal saveMode As ConfigurationSaveMode)
 
             m_configuration.Save(saveMode)
 
         End Sub
 
-
+        ''' <summary>
+        ''' Writes the configuration settings contained within this Tva.Configuration.ConfigurationFile object 
+        ''' to the specified configuration file.
+        ''' </summary>
+        ''' <param name="fileName">The path and file name to save the configuration file to.</param>
+        ''' <remarks></remarks>
         Public Sub SaveAs(ByVal fileName As String)
 
             m_configuration.SaveAs(fileName)
 
         End Sub
 
-        Public Function GetConfiguration(ByVal configFilePath As String) As System.Configuration.Configuration
+        Private Function GetConfiguration(ByVal configFilePath As String) As System.Configuration.Configuration
 
             Dim configuration As System.Configuration.Configuration = Nothing
 
