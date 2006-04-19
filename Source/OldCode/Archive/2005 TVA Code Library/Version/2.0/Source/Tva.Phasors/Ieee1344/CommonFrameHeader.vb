@@ -366,7 +366,6 @@ Namespace Ieee1344
         Public Shared Sub Clone(ByVal sourceFrameHeader As ICommonFrameHeader, ByVal destinationFrameHeader As ICommonFrameHeader)
 
             With destinationFrameHeader
-                .IDCode = sourceFrameHeader.IDCode
                 .Ticks = sourceFrameHeader.Ticks
                 .InternalSampleCount = sourceFrameHeader.InternalSampleCount
                 .InternalStatusFlags = sourceFrameHeader.InternalStatusFlags

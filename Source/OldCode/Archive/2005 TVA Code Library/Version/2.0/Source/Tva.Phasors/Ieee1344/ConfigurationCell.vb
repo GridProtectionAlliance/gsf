@@ -26,9 +26,9 @@ Namespace Ieee1344
 
         Inherits ConfigurationCellBase
 
-        Public Sub New(ByVal parent As ConfigurationFrame, ByVal idCode As UInt16, ByVal nominalFrequency As LineFrequency)
+        Public Sub New(ByVal parent As ConfigurationFrame, ByVal nominalFrequency As LineFrequency)
 
-            MyBase.New(parent, False, idCode, nominalFrequency, MaximumPhasorValues, MaximumAnalogValues, MaximumDigitalValues)
+            MyBase.New(parent, False, 0, nominalFrequency, MaximumPhasorValues, MaximumAnalogValues, MaximumDigitalValues)
 
         End Sub
 

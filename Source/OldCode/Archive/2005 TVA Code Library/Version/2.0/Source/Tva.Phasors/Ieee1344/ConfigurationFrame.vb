@@ -32,10 +32,11 @@ Namespace Ieee1344
         Private m_sampleCount As Int16
         Private m_statusFlags As Int16
 
-        Public Sub New(ByVal frameType As FrameType, ByVal idCode As Int64, ByVal ticks As Long, ByVal frameRate As Int16)
+        Public Sub New(ByVal frameType As FrameType, ByVal idCode As UInt64, ByVal ticks As Long, ByVal frameRate As Int16)
 
-            MyBase.New(idCode, New ConfigurationCellCollection, ticks, frameRate)
+            MyBase.New(idCode Mod UInt16.MaxValue, New ConfigurationCellCollection, ticks, frameRate)
             CommonFrameHeader.FrameType(Me) = Ieee1344.FrameType.ConfigurationFrame
+            m_idCode = idCode
 
         End Sub
 

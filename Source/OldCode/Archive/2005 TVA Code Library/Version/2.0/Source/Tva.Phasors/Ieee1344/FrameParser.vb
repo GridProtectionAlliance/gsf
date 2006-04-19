@@ -58,10 +58,6 @@ Namespace Ieee1344
 
             m_bufferQueue = ProcessQueue(Of Byte()).CreateRealTimeQueue(AddressOf ProcessBuffer)
 
-#If DEBUG Then
-            m_bufferQueue.DebugMode = True
-#End If
-
         End Sub
 
         Public Sub New(ByVal configurationFrame As ConfigurationFrame)
@@ -258,7 +254,7 @@ Namespace Ieee1344
                                         m_configurationFrameCollection = Nothing
                                     End If
                                 Catch
-                                    ' If CRC check or orther exception occurs, we cancel frame cumulation process
+                                    ' If CRC check or other exception occurs, we cancel frame cumulation process
                                     m_configurationFrameCollection = Nothing
                                     Throw
                                 End Try
@@ -278,7 +274,7 @@ Namespace Ieee1344
                                         m_headerFrameCollection = Nothing
                                     End If
                                 Catch
-                                    ' If CRC check or orther exception occurs, we cancel frame cumulation process
+                                    ' If CRC check or other exception occurs, we cancel frame cumulation process
                                     m_headerFrameCollection = Nothing
                                     Throw
                                 End Try
@@ -308,7 +304,7 @@ End Namespace
 
 '    Inherits BaseFrame
 
-'    Private m_pmuID As Int64
+'    Private m_pmuID As UInt64
 '    Private m_ipAddress As IPAddress
 '    Private m_ipPort As Int32
 '    Private m_tcpSocket As Socket
@@ -339,7 +335,7 @@ End Namespace
 
 '    End Sub
 
-'    Public Sub New(ByVal pmuID As Int64, ByVal pmuIPAddress As String, ByVal pmuIPPort As Int32, ByVal phasorFormat As CoordinateFormat)
+'    Public Sub New(ByVal pmuID As UInt64, ByVal pmuIPAddress As String, ByVal pmuIPPort As Int32, ByVal phasorFormat As CoordinateFormat)
 
 '        MyClass.New()
 '        m_pmuID = pmuID
@@ -388,11 +384,11 @@ End Namespace
 
 '    End Sub
 
-'    Public Property PmuID() As Int64
+'    Public Property PmuID() As UInt64
 '        Get
 '            Return m_pmuID
 '        End Get
-'        Set(ByVal Value As Int64)
+'        Set(ByVal Value As UInt64)
 '            m_pmuID = Value
 '        End Set
 '    End Property
