@@ -72,8 +72,7 @@ Namespace IO
         ''' <remarks>
         ''' <para>
         ''' Note that as soon as the item is added to the queue the function will return so that no
-        ''' time is wasted on the calling thread.  The process queue will automatically enable its
-        ''' processing threads when it sees there is new data in the queue to be processed.
+        ''' time is wasted on the calling thread.
         ''' </para>
         ''' <para>
         ''' Processing occurs on a set interval (the default is 100 milliseconds) - so any more log
@@ -82,11 +81,6 @@ Namespace IO
         ''' </remarks>
         Public Sub Append(ByVal status As String)
 
-            ' Add new log entry to the queue.  Note that as soon as the item is added to the queue
-            ' the function will return so that no time is wasted on the calling thread.  The process
-            ' queue will automatically enable its processing threads when it sees there is new data
-            ' in the queue to be processed.  Processing occurs on a set interval (the default is 100
-            ' milliseconds) - so any more log entires added in this time will be processed as well.
             m_logFileDataQueue.Add(status)
 
         End Sub
@@ -111,6 +105,9 @@ Namespace IO
             Append("[" & Date.Now & "] " & status & Environment.NewLine)
 
         End Sub
+
+        ' UPGRADE: Add some ToString overloads that will take maximum length and relative file position (i.e., top, bottom, middle, etc.)
+        ' as parameters
 
         ''' <summary>Reads entire log file into a string</summary>
         ''' <returns>Log file contents</returns>
