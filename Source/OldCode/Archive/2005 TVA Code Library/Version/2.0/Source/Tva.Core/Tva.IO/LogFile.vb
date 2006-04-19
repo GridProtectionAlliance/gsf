@@ -23,6 +23,10 @@ Imports Tva.IO.FilePath
 
 Namespace IO
 
+    ' UPGRADE: A nice enhancement for this class would be to add a property to "limit" maximum file size with an option
+    ' to either create a "scrolling status list" (i.e., pop old items off the top when adding new items to a file that
+    ' has reached maximum size), or to be able to "roll-over" to a new file once maximum file size has been reached
+
     ''' <summary>This implements a simple multi-thread-happy log file class</summary>
     Public Class LogFile
 
@@ -30,8 +34,12 @@ Namespace IO
         Private m_logFileLock As ReaderWriterLock
         Private WithEvents m_logFileDataQueue As ProcessQueue(Of String)
 
-        ' We don't stop for exceptions in this class, but will expose them if the end user wishes
-        ' to know about any issues incurred while trying to log data
+        ''' <summary>Exception notification event</summary>
+        ''' <param name="ex">Exception thrown during logging attempt</param>
+        ''' <remarks>
+        ''' We don't stop for exceptions in this class, but will expose them if the end user wishes
+        ''' to know about any issues incurred while trying to log data
+        ''' </remarks>
         Public Event LogException(ByVal ex As Exception)
 
         Public Sub New(ByVal logFileName As String)
@@ -59,6 +67,19 @@ Namespace IO
             End Set
         End Property
 
+        ''' <summary>Add new log entry to the queue.</summary>
+        ''' <param name="status">Message to add to the log</param>
+        ''' <remarks>
+        ''' <para>
+        ''' Note that as soon as the item is added to the queue the function will return so that no
+        ''' time is wasted on the calling thread.  The process queue will automatically enable its
+        ''' processing threads when it sees there is new data in the queue to be processed.
+        ''' </para>
+        ''' <para>
+        ''' Processing occurs on a set interval (the default is 100 milliseconds) - so any more log
+        ''' entires added in this time will be processed as well.
+        ''' </para>
+        ''' </remarks>
         Public Sub Append(ByVal status As String)
 
             ' Add new log entry to the queue.  Note that as soon as the item is added to the queue
@@ -70,18 +91,30 @@ Namespace IO
 
         End Sub
 
+        ''' <summary>Add new log entry to the queue.</summary>
+        ''' <param name="status">Message to add to the log</param>
+        ''' <remarks>A "newline" character will automatically be appended to the specified message</remarks>
         Public Sub AppendLine(ByVal status As String)
 
             Append(status & Environment.NewLine)
 
         End Sub
 
+        ''' <summary>Add new log entry to the queue.</summary>
+        ''' <param name="status">Message to add to the log</param>
+        ''' <remarks>
+        ''' <para>A timestamp will automatically be preprended to the specified message</para>
+        ''' <para>A "newline" character will automatically be appended to the specified message</para>
+        ''' </remarks>
         Public Sub AppendTimestampedLine(ByVal status As String)
 
             Append("[" & Date.Now & "] " & status & Environment.NewLine)
 
         End Sub
 
+        ''' <summary>Reads entire log file into a string</summary>
+        ''' <returns>Log file contents</returns>
+        ''' <remarks>NOTE: This should only be called when the log file is known to be of reasonable size</remarks>
         Public Overrides Function ToString() As String
 
             Dim logData As String = ""
