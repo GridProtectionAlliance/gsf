@@ -71,7 +71,8 @@ Namespace Configuration
         ''' sections provided by the .Net framework in addition to the "categorizedSettings" sections.
         ''' </para>
         ''' <para>
-        ''' <example>
+        ''' Example:
+        ''' <code>
         ''' ' Manupulating the configuration file of another windows application.
         ''' With CustomConfigFile("C:\Projects\WindowsApplication1\bin\Debug\WindowsApplication1.exe.config")
         '''     ' Adds setting to the "appSettings" section of the config file.
@@ -105,7 +106,7 @@ Namespace Configuration
         '''     ' Saves modified settings to the config file.
         '''     .Save()
         ''' End With
-        ''' </example>
+        ''' </code>
         ''' </para>
         ''' </remarks>
         Public Shared ReadOnly Property CustomConfigFile(ByVal filePath As String) As ConfigurationFile
@@ -125,16 +126,21 @@ Namespace Configuration
         ''' category of the "categorizedSettings" section.
         ''' </returns>
         ''' <remarks>
+        ''' <para>
         ''' This property is meant to be a shortcut for accessing the settings under the "general" category of 
         ''' "categorizedSettings" section within the configuration file. In order to access the settings under 
         ''' "appSettings" and "connectionStrings" sections, use either DefaultConfigFile() or CustomConfigFile() 
         ''' property.
-        ''' <example>
+        ''' </para>
+        ''' <para>
+        ''' Example:
+        ''' <code>
         ''' Settings.Add("SaveSettingsOnExit", "1") ' Add a new setting to the "general" category.
         ''' SaveSettings() ' Propogate the changes to the config file.
         ''' 
         ''' Settings("SaveSettingsOnExit").Value() ' Read an existing setting from the "general" category.
-        ''' </example>
+        ''' </code>
+        ''' </para>
         ''' </remarks>
         Public Shared ReadOnly Property Settings() As CategorizedSettingsCollection
             Get
@@ -153,16 +159,21 @@ Namespace Configuration
         ''' category of the "categorizedSettings" section.
         ''' </returns>
         ''' <remarks>
+        ''' <para>
         ''' This property is meant to be a shortcut for accessing the settings under the various categories,
         ''' including "general", of "categorizedSettings" section within the configuration file. In order to access 
         ''' the settings under "appSettings" and "connectionStrings" sections, use either DefaultConfigFile() or 
         ''' CustomConfigFile() property.
-        ''' <example>
+        ''' </para>
+        ''' <para>
+        ''' Example:
+        ''' <code>
         ''' CategorizedSettings("Development").Add("DbConnectString", "Server=RGOCSQLD;Database=DB;Trusted_Connection=True", True) ' Add a new setting to the "development" category.
         ''' SaveSettings() ' Propogate the changes to the config file.
         ''' 
         ''' CategorizedSettings("Development")("DbConnectString").Value() ' Read an existing setting from the "development" category.
-        ''' </example>
+        ''' </code>
+        ''' </para>
         ''' </remarks>
         Public Shared ReadOnly Property CategorizedSettings(ByVal category As String) As CategorizedSettingsCollection
             Get
