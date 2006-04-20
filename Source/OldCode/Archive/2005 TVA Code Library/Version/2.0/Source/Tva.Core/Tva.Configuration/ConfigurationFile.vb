@@ -23,7 +23,7 @@ Namespace Configuration
         ''' Specifies the application environment.
         ''' </summary>
         ''' <remarks></remarks>
-        Public Enum Environments As Integer
+        Public Enum ApplicationEnvironment As Integer
             Win
             Web
         End Enum
@@ -58,10 +58,10 @@ Namespace Configuration
         ''' <value></value>
         ''' <returns>The environment of the application to which the current configuration file belongs.</returns>
         ''' <remarks></remarks>
-        Public ReadOnly Property Environment() As Environments
+        Public ReadOnly Property Environment() As ApplicationEnvironment
             Get
-                Dim currentEnvironment As Environments = Environments.Win
-                If System.Web.HttpContext.Current() IsNot Nothing Then currentEnvironment = Environments.Web
+                Dim currentEnvironment As ApplicationEnvironment = ApplicationEnvironment.Win
+                If System.Web.HttpContext.Current() IsNot Nothing Then currentEnvironment = ApplicationEnvironment.Web
                 Return currentEnvironment
             End Get
         End Property
@@ -156,7 +156,7 @@ Namespace Configuration
             If configFilePath IsNot Nothing Then
                 If configFilePath = "" OrElse JustFileExtension(configFilePath) = ".config" Then
                     Select Case Me.Environment()
-                        Case Environments.Win
+                        Case ApplicationEnvironment.Win
                             If configFilePath = "" OrElse _
                                     (configFilePath <> "" AndAlso configFilePath.EndsWith(".exe.config")) Then
                                 ' Path to the exe is to be provided in order to open the configuration file
@@ -165,7 +165,7 @@ Namespace Configuration
                             Else
                                 Throw New ArgumentException("Path of configuration file for windows application must end in '.exe.config'", "configFilePath")
                             End If
-                        Case Environments.Web
+                        Case ApplicationEnvironment.Web
                             If configFilePath = "" Then configFilePath = System.Web.HttpContext.Current.Request.ApplicationPath()
                             configuration = WebConfigurationManager.OpenWebConfiguration(configFilePath.TrimEnd("web.config".ToCharArray()))
                     End Select

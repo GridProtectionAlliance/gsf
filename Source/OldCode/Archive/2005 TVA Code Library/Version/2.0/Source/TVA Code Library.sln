@@ -43,9 +43,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Phasor Testing Tools", "Pha
 EndProject
 Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "TVA PMU Connection Tester Setup", "Tva.Phasors\PMU Connection Tester\Setup\Setup.vdproj", "{DC8859DA-310C-4FB5-BA17-E4EAFD194E0C}"
 EndProject
+Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "Tva.Tro", "Tva.Tro\Tva.Tro.vbproj", "{150FD25F-8563-4F35-92DA-05754508B192}"
+EndProject
 Global
 	GlobalSection(SourceCodeControl) = preSolution
-		SccNumberOfProjects = 9
+		SccNumberOfProjects = 10
 		SccProjectName0 = \u0022$/TVA\u0020Code\u0020Library/Version/2.0\u0022,\u0020HBAAAAAA
 		SccLocalPath0 = ..
 		SccProvider0 = MSSCCI:Microsoft\u0020Visual\u0020SourceSafe
@@ -91,6 +93,10 @@ Global
 		SccLocalPath8 = ..
 		CanCheckoutShared = false
 		SccProjectFilePathRelativizedFromConnection8 = Source\\Tva.Phasors\\PMU\u0020Connection\u0020Tester\\Setup\\
+		SccProjectUniqueName9 = Tva.Tro\\Tva.Tro.vbproj
+		SccLocalPath9 = ..
+		CanCheckoutShared = false
+		SccProjectFilePathRelativizedFromConnection9 = Source\\Tva.Tro\\
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -177,6 +183,16 @@ Global
 		{DC8859DA-310C-4FB5-BA17-E4EAFD194E0C}.Release|Any CPU.ActiveCfg = Release
 		{DC8859DA-310C-4FB5-BA17-E4EAFD194E0C}.Release|Mixed Platforms.ActiveCfg = Release
 		{DC8859DA-310C-4FB5-BA17-E4EAFD194E0C}.Release|Win32.ActiveCfg = Release
+		{150FD25F-8563-4F35-92DA-05754508B192}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{150FD25F-8563-4F35-92DA-05754508B192}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{150FD25F-8563-4F35-92DA-05754508B192}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{150FD25F-8563-4F35-92DA-05754508B192}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{150FD25F-8563-4F35-92DA-05754508B192}.Debug|Win32.ActiveCfg = Debug|Any CPU
+		{150FD25F-8563-4F35-92DA-05754508B192}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{150FD25F-8563-4F35-92DA-05754508B192}.Release|Any CPU.Build.0 = Release|Any CPU
+		{150FD25F-8563-4F35-92DA-05754508B192}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{150FD25F-8563-4F35-92DA-05754508B192}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{150FD25F-8563-4F35-92DA-05754508B192}.Release|Win32.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

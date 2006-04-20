@@ -65,6 +65,7 @@
     <Compile Include="Tva.Configuration\CategorizedSettingsSection.vb" />
     <Compile Include="Tva.Measurements\ImmediateMeasurements.vb" />
     <Compile Include="Tva.Measurements\Sample.vb" />
+    <Compile Include="Tva.Services\IServiceComponent.vb" />
     <Compile Include="Tva\Common.vb" />
     <Compile Include="Tva.Data\Common.vb" />
     <Compile Include="Tva\Assembly.vb" />
@@ -112,7 +113,6 @@
     <Folder Include="Tva.Net\Http\" />
     <Folder Include="Tva.Net\Sockets\" />
     <Folder Include="Tva.Remoting\" />
-    <Folder Include="Tva.Services\" />
     <Folder Include="Tva.Threading\" />
     <Folder Include="Tva.Web\" />
     <Folder Include="Tva.Windows\" />

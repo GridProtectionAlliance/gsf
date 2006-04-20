@@ -115,7 +115,8 @@ Namespace Configuration
             End Get
         End Property
 
-#Region "Config Shortcuts"
+#Region " Config Shortcuts "
+
         ''' <summary>
         ''' Gets the Tva.Configuration.CategorizedSettingsCollection representing the settings under "general"
         ''' category of the "categorizedSettings" section within the default configuration file.
@@ -188,6 +189,7 @@ Namespace Configuration
         Public Shared Sub SaveSettings()
             DefaultConfigFile.Save()
         End Sub
+
 #End Region
 
     End Class

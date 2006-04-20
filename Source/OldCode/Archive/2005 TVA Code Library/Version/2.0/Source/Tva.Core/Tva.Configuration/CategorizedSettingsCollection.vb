@@ -175,7 +175,7 @@ Namespace Configuration
 
         End Sub
 
-#Region "Required ConfigurationElementCollection Overrides"
+#Region " Required ConfigurationElementCollection Overrides "
         Protected Overloads Overrides Function CreateNewElement() As System.Configuration.ConfigurationElement
 
             Return New CategorizedSettingsElement()
