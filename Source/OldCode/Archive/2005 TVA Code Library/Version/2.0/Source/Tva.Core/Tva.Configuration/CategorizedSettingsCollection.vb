@@ -176,6 +176,7 @@ Namespace Configuration
         End Sub
 
 #Region " Required ConfigurationElementCollection Overrides "
+
         Protected Overloads Overrides Function CreateNewElement() As System.Configuration.ConfigurationElement
 
             Return New CategorizedSettingsElement()
@@ -193,6 +194,7 @@ Namespace Configuration
             Return DirectCast(element, CategorizedSettingsElement).Name()
 
         End Function
+
 #End Region
 
     End Class

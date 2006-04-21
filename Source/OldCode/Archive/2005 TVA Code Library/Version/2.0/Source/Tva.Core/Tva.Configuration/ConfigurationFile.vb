@@ -20,11 +20,19 @@ Namespace Configuration
         Private Const CustomSectionType As String = "Tva.Configuration.CategorizedSettingsSection, Tva.Core"
 
         ''' <summary>
-        ''' Specifies the application environment.
+        ''' Specifies the environment of the application to which the configuration file belongs.
         ''' </summary>
         ''' <remarks></remarks>
         Public Enum ApplicationEnvironment As Integer
+            ''' <summary>
+            ''' The configuration file belongs to a windows application.
+            ''' </summary>
+            ''' <remarks></remarks>
             Win
+            ''' <summary>
+            ''' The configuration file belongs to a web application.
+            ''' </summary>
+            ''' <remarks></remarks>
             Web
         End Enum
 
@@ -207,6 +215,9 @@ Namespace Configuration
                 Dim configFile As New XmlDocument()
                 configFile.Load(configFilePath)
 
+                ' Make sure that the config file has the necessary section information under <customSections />
+                ' that is required by the .Net configuration API to process our custom <categorizedSettings />
+                ' section. The configuration API will raise an exception if it doesn't find this section.
                 If configFile.DocumentElement.SelectNodes("configSections").Count() = 0 Then
                     configFile.DocumentElement.InsertBefore(configFile.CreateElement("configSections"), _
                         configFile.DocumentElement.FirstChild())
