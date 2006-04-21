@@ -13,14 +13,13 @@ Namespace Ssam
 
         <System.Diagnostics.DebuggerNonUserCode()> _
         Public Sub New()
-            MyBase.New()
+
+            ' Default constructor required by component model. 
+            ' For backwards compatibility, this will default to the development database.
+            Me.New(SsamDatabase.SsamDevelopment)
 
             'This call is required by the Component Designer.
             InitializeComponent()
-
-            ' Default constructor required by component model - for backwards compatibility, this will default to
-            ' development database
-            m_ssamDb = SsamDatabase.SsamDevelopmentDB
 
         End Sub
 

@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  Tva.Net.Smtp.TraceListener.vb - Defines an e-mail based trace listener
+'  Tva.ErrorManagement.SmtpTraceListener.vb - Defines an e-mail based trace listener
 '  Copyright © 2006 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005
@@ -17,15 +17,16 @@
 '
 '*******************************************************************************************************
 
+Imports System.Text
 Imports System.Diagnostics
 Imports Tva.Net.Smtp.Common
 
 Namespace ErrorManagement
 
-    ''' <summary>Defines an e-mail based trace listener</summary>
+    ''' <summary>Defines an e-mail based trace listener.</summary>
     Public Class SmtpTraceListener
 
-        Inherits Diagnostics.TraceListener
+        Inherits TraceListener
 
         Private m_sender As String
         Private m_recipient As String
@@ -48,7 +49,7 @@ Namespace ErrorManagement
                 Throw New ArgumentException("Insufficient initialization data provided for Smtp.TraceListner. Initialization data must be provided in the following format: 'sender@email.com, recipient@email.com, smtp.email.com'.")
             End If
 
-            'Initialize private variables.
+            ' Initialize private variables.
             m_sender = smtpData(0)
             m_recipient = smtpData(1)
             m_smtpServer = smtpData(2)
@@ -57,14 +58,20 @@ Namespace ErrorManagement
 
         Public Overloads Overrides Sub Write(ByVal message As String)
 
-            'Append standard information to the bottom of the message.
-            message &= Environment.NewLine & Environment.NewLine & "<H5>This trace message was sent from the machine " & System.Net.Dns.GetHostName() & " (" & System.Net.Dns.GetHostEntry(System.Net.Dns.GetHostName()).AddressList(0).ToString() & ") at " & System.DateTime.Now() & ".</H5>"
+            With New StringBuilder()
+                .Append(message)
+                ' Append standard information to the bottom of the message.
+                .Append(Environment.NewLine() & Environment.NewLine())
+                .Append("This trace message was sent from the machine ")
+                .Append(System.Net.Dns.GetHostName())
+                .Append(" (")
+                .Append(System.Net.Dns.GetHostEntry(System.Net.Dns.GetHostName()).AddressList(0).ToString())
+                .Append(") at ")
+                .Append(System.DateTime.Now())
 
-            'Apply proper html formatting to the message.
-            message = System.Text.RegularExpressions.Regex.Replace(message, Environment.NewLine, "<BR />")
-
-            'Email the trace message.
-            SendMail(m_sender, m_recipient, "Trace Message From " & m_sender, message, True, m_smtpServer)
+                'Email the trace message.
+                SendMail(m_sender, m_recipient, "Trace Message From " & m_sender, .ToString(), False, m_smtpServer)
+            End With
 
         End Sub
 

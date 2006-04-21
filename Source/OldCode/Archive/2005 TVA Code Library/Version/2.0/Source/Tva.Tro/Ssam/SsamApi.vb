@@ -14,10 +14,8 @@ Namespace Ssam
 #Region " Enumerations "
 
     Public Enum SsamDatabase        ' Constants for Ssam database connection choices (see arrConnections below)
-        SsamProductionDB = 0        ' Use production database connection
-        SsamDevelopmentDB = 1       ' Use development database connection
-        <Browsable(False), EditorBrowsable(EditorBrowsableState.Never)> _
-        SsamClusterDB = 2           ' Use cluster database connection (deprecated)
+        SsamProduction = 0        ' Use production database connection
+        SsamDevelopment = 1       ' Use development database connection
     End Enum
 
     '
@@ -64,63 +62,61 @@ Namespace Ssam
         Implements ISupportInitialize
         Implements IServiceComponent
 
-        'shared SQL for stored procedure call, with parameters
-        Private Shared sSqlLogEvent As String = "execute sp_LogSsamEvent @EventType, @EntityType, @EntityName, @ErrorCode, @Message, @Description"
-        Private Shared sSqlGetProp As String = "execute sp_getProperty @name"
-        Private Shared sSqlSetProp As String = "execute sp_setProperty @name, @value"
-
         'object state - database connection type, connection object, and command object
         Private m_connection As SqlConnection
-        Private m_logEventCommand As SqlCommand  'main command to log ssam event
-        Private m_getPropertyCommand As SqlCommand   'command to get property
-        Private m_setPropertyCommand As SqlCommand   'command to set property
-        Private m_ssamDb As SsamDatabase             'choice of database to connect to
+        Private m_database As SsamDatabase             'choice of database to connect to
+        Private m_operationSuccessful As Boolean                     'true if last operation was successful
         Private m_errorMessage As String                 'last error message received
-        Private m_success As Boolean                     'true if last operation was successful
         Private m_keepConnectionOpen As Boolean = True   'true if connection should always stay open
-        Private m_lastPropertyTimestamp As String
 
         'call this to init the Ssam API to use something other than the default development database connection
-        Public Sub New(ByVal iConnect As SsamDatabase)
-            init(iConnect)
+        Public Sub New(ByVal database As SsamDatabase)
+            Me.New(database, True)
         End Sub
 
         'call this to init the Ssam API to use something other than the default development database connection
         'and to specify whether the connection is keep open or not (default is to keep connection open)
-        Public Sub New(ByVal iConnect As SsamDatabase, ByVal bKeepOpen As Boolean)
-            KeepConnectionOpen = bKeepOpen
-            init(iConnect)
+        Public Sub New(ByVal database As SsamDatabase, ByVal keepConnectionOpen As Boolean)
+            MyBase.New()
+            Me.Database = database
+            Me.KeepConnectionOpen = keepConnectionOpen
+            Initialize()
         End Sub
 
-        'make sure the database connection is closed before going away
-        Protected Overrides Sub Finalize()
 
-            Dispose(True)
-
-        End Sub
-
-        Public Sub BeginInit() Implements System.ComponentModel.ISupportInitialize.BeginInit
-
-        End Sub
-
-        Public Sub EndInit() Implements System.ComponentModel.ISupportInitialize.EndInit
-
-            If Not DesignMode Then init(m_ssamDb)
-
-        End Sub
-
-        <Browsable(False)> _
-        Public ReadOnly Property Success() As Boolean
+        <Browsable(True), Category("Configuration"), Description("Set this value to select the desired Ssam connection."), DefaultValue(SsamDatabase.SsamDevelopment)> _
+        Public Property Database() As SsamDatabase
             Get
-                Return m_success
+                Return m_database
             End Get
+            Set(ByVal Value As SsamDatabase)
+                m_database = Value
+                Initialize()
+            End Set
         End Property
 
         <Browsable(False)> _
-        Public ReadOnly Property ErrorMessage() As String
+        Public Property OperationSuccessful() As Boolean
+            Get
+                Return m_operationSuccessful
+            End Get
+            Private Set(ByVal value As Boolean)
+                If value Then
+                    m_errorMessage = ""
+                End If
+                m_operationSuccessful = value
+            End Set
+        End Property
+
+        <Browsable(False)> _
+        Public Property ErrorMessage() As String
             Get
                 Return m_errorMessage
             End Get
+            Private Set(ByVal value As String)
+                m_operationSuccessful = False
+                m_errorMessage = value
+            End Set
         End Property
 
         <Browsable(True), Category("Configuration"), Description("Set this value to True to keep the Ssam api connection open."), DefaultValue(True)> _
@@ -136,123 +132,41 @@ Namespace Ssam
             End Set
         End Property
 
-        <Browsable(True), Category("Configuration"), Description("Set this value to select the desired Ssam connection."), DefaultValue(SsamDatabase.SsamDevelopmentDB)> _
-        Public Property Connection() As SsamDatabase
-            Get
-                Return m_ssamDb
-            End Get
-            Set(ByVal Value As SsamDatabase)
-                m_ssamDb = Value
-                If Not DesignMode Then init(m_ssamDb)
-            End Set
-        End Property
-
-        <Browsable(False), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)> _
-        Public Property LastPropertyTimestamp() As String
-            Get
-                Return m_lastPropertyTimestamp
-            End Get
-            Set(ByVal Value As String)
-                m_lastPropertyTimestamp = Value
-            End Set
-        End Property
-
         ' This function has been deprecated, so it is hidden from the editor - it still works as expected,
         ' but the preferred method for initializing a new connection is to use the Connection property
         ' call this to change the database connection and re/open it
         <EditorBrowsable(EditorBrowsableState.Never)> _
-        Public Sub init(ByVal iConnect As SsamDatabase)
-            ClearSuccess()
-            Try
-                If Not m_connection Is Nothing Then
-                    If Not m_connection.State = ConnectionState.Closed Then
-                        CloseConnection()
+        Public Sub Initialize()
+
+            If Not DesignMode Then
+                ClearSuccess()
+                Try
+                    CategorizedSettings("ssam").Add("ConnectString.Production", "Data Source=OPSSAMSQL;Initial Catalog=Ssam;Integrated Security=SSPI;Persist Security Info=False;Packet Size=4096", "Ssam production connect string", True)
+                    CategorizedSettings("ssam").Add("ConnectString.Development", "Data Source=RGOCSQLD;Initial Catalog=Ssam;Integrated Security=SSPI;Persist Security Info=False;Packet Size=4096", "Ssam developement connect string", True)
+                    SaveSettings()
+
+                    If m_connection IsNot Nothing Then
+                        If m_connection.State <> ConnectionState.Closed Then
+                            ' Close the connection if its not closed.
+                            CloseConnection()
+                        End If
+                        'release the current connection object
+                        m_connection = Nothing
                     End If
-                    'release the current connection object
-                    m_connection = Nothing
-                    m_logEventCommand = Nothing
-                    m_getPropertyCommand = Nothing
-                    m_setPropertyCommand = Nothing
-                End If
+                    'construct the connection object
+                    m_connection = New SqlConnection(GetSsamConnectString(m_database))    'persistent connection for writing Ssam events
 
-                'set the connection type
-                m_ssamDb = iConnect
-
-                'construct the connection object
-                m_connection = New SqlConnection()    'persistent connection for writing Ssam events
-                m_logEventCommand = New SqlCommand()    'see ConfigureDbCommands()
-                m_getPropertyCommand = New SqlCommand()    'see ConfigureDbCommands()
-                m_setPropertyCommand = New SqlCommand()    'see ConfigureDbCommands()
-
-                'open the new connection
-                m_connection.ConnectionString = GetSsamConnectString(m_ssamDb)
-                If KeepConnectionOpen Then
-                    OpenConnection()    'only open if it is to be kept open
-                End If
-
-                'reconfigure the sql commands
-                ConfigureDbCommands()
-
-                SetSuccess()
-            Catch ex As Exception
-                SetError(ex.Message())
-            End Try
-        End Sub
-
-        Private Sub ConfigureDbCommands()
-            With m_logEventCommand
-                .Connection = m_connection
-                .CommandText = sSqlLogEvent
-                .Parameters.Clear()
-                .Parameters.Add("@EventType", SqlDbType.Int)
-                .Parameters.Add("@EntityType", SqlDbType.Int)
-                .Parameters.Add("@EntityName", SqlDbType.VarChar)
-                .Parameters.Add("@ErrorCode", SqlDbType.VarChar)
-                .Parameters.Add("@Message", SqlDbType.VarChar)
-                .Parameters.Add("@Description", SqlDbType.Text)
-            End With
-            With m_getPropertyCommand
-                .Connection = m_connection
-                .CommandText = sSqlGetProp
-                .Parameters.Clear()
-                .Parameters.Add("@name", SqlDbType.VarChar)
-            End With
-            With m_setPropertyCommand
-                .Connection = m_connection
-                .CommandText = sSqlSetProp
-                .Parameters.Clear()
-                .Parameters.Add("@name", SqlDbType.VarChar)
-                .Parameters.Add("@value", SqlDbType.VarChar)
-            End With
-        End Sub
-
-        Private Sub SetDbCommandParms(ByVal iEventType As Integer, ByVal iEntityType As Integer, _
-        ByVal sEntityID As String, ByVal sError As String, _
-        ByVal sMsg As String, ByVal sDesc As String)
-
-            With m_logEventCommand
-                .Parameters("@EventType").Value = iEventType
-                .Parameters("@EntityType").Value = iEntityType
-                .Parameters("@EntityName").Value = sEntityID
-                .Parameters("@ErrorCode").Value = DBNull.Value
-                If Not sError Is Nothing Then
-                    If Not Len(sError.Trim()) <= 0 Then
-                        .Parameters("@ErrorCode").Value = sError
+                    'open the new connection
+                    If KeepConnectionOpen Then
+                        OpenConnection()    'only open if it is to be kept open
                     End If
-                End If
-                .Parameters("@Message").Value = DBNull.Value
-                If Not sMsg Is Nothing Then
-                    If Not Len(sMsg.Trim()) <= 0 Then
-                        .Parameters("@Message").Value = sMsg
-                    End If
-                End If
-                .Parameters("@Description").Value = DBNull.Value
-                If Not sDesc Is Nothing Then
-                    If Not Len(sDesc.Trim()) <= 0 Then
-                        .Parameters("@Description").Value = sDesc
-                    End If
-                End If
-            End With
+
+                    Me.OperationSuccessful = True
+                Catch ex As Exception
+                    Me.ErrorMessage = ex.Message()
+                End Try
+            End If
+
         End Sub
 
         'open the database connection
@@ -267,55 +181,30 @@ Namespace Ssam
                 If Not m_connection.State = ConnectionState.Closed Then
                     m_connection.Close()
                 End If
-                SetSuccess()
+                Me.OperationSuccessful = True
             Catch ex As Exception
-                SetError(ex.Message())
+                Me.ErrorMessage = ex.Message()
             End Try
-        End Sub
-
-        <Obsolete("This method will be deprecated. Please use CloseConnection() instead.")> _
-        Public Sub Shutdown()
-
-            CloseConnection()
-
         End Sub
 
         'return Ssam database connect string.
         'note that by default the DEVELOPMENT database connect string is returned.
         'for use by other modules in Testbed utility and external clients.
         'no longer support separate function to get oracle connect string.
-        Public Function GetSsamConnectString(ByVal iConnect As SsamDatabase) As String
+        Public Function GetSsamConnectString() As String
 
             Dim strConnectString As String = ""
 
             ' We make sure the configuration variables exist only when they are used
-            Select Case iConnect
-                Case SsamDatabase.SsamProductionDB
-                    'Variables.Create("Ssam.ConnectString.Production", "Data Source=OPSSAMSQL;Initial Catalog=Ssam;Integrated Security=SSPI;Persist Security Info=False;Packet Size=4096", VariableType.Text, "Ssam production connect string", 1000)
-                    'Variables("Ssam.ConnectString.Production")
-                    CategorizedSettings("ssam").Add("ConnectString.Production", "Data Source=OPSSAMSQL;Initial Catalog=Ssam;Integrated Security=SSPI;Persist Security Info=False;Packet Size=4096", "Ssam production connect string", True)
+            Select Case m_database
+                Case SsamDatabase.SsamProduction
                     strConnectString = CategorizedSettings("ssam")("ConnectString.Production").Value()
-                Case SsamDatabase.SsamDevelopmentDB
-                    'Variables.Create("Ssam.ConnectString.Development", "Data Source=RGOCSQLD;Initial Catalog=Ssam;Integrated Security=SSPI;Persist Security Info=False;Packet Size=4096", VariableType.Text, "Ssam developement connect string", 1001)
-                    'Variables("Ssam.ConnectString.Development")
-                    CategorizedSettings("ssam").Add("ConnectString.Development", "Data Source=RGOCSQLD;Initial Catalog=Ssam;Integrated Security=SSPI;Persist Security Info=False;Packet Size=4096", "Ssam developement connect string", True)
+                Case SsamDatabase.SsamDevelopment
                     strConnectString = CategorizedSettings("ssam")("ConnectString.Development").Value()
-                Case SsamDatabase.SsamClusterDB
-                    'Variables.Create("Ssam.ConnectString.Cluster", "Data Source=OPSSAMSQL;Initial Catalog=Ssam;Integrated Security=SSPI;Persist Security Info=False;Packet Size=4096", VariableType.Text, "Ssam cluster connect string", 1002)
-                    'Variables("Ssam.ConnectString.Cluster")
-                    CategorizedSettings("ssam").Add("ConnectString.Cluster", "Data Source=OPSSAMSQL;Initial Catalog=Ssam;Integrated Security=SSPI;Persist Security Info=False;Packet Size=4096", "Ssam cluster connect string", True)
-                    strConnectString = CategorizedSettings("ssam")("ConnectString.Cluster").Value()
             End Select
-
-            ' Save config file if anything was added...
-            SaveSettings()
 
             Return strConnectString
 
-        End Function
-
-        Public Function isDbOpen() As Boolean
-            Return (m_connection.State = ConnectionState.Open)
         End Function
 
         '
@@ -335,109 +224,58 @@ Namespace Ssam
         '   sMsg        String              short description of event, or error message, if appropriate; max 120 chars; defaults to null
         '   sDesc       String              long description of event or detailed error message, if appropriate; max 2GB; defaults to null
         '
-        Public Function LogSsamEvent( _
-          ByVal iEventType As SsamEventType, _
-          ByVal iEntityType As SsamEntityType, _
-          ByRef sEntityID As String, _
-          Optional ByRef sError As String = Nothing, _
-          Optional ByRef sMsg As String = Nothing, _
-          Optional ByRef sDesc As String = Nothing) As Integer
+        Public Function LogSsamEvent(ByVal eventType As SsamEventType, ByVal entityType As SsamEntityType, _
+                ByVal entityID As String, ByVal errorMessage As String, ByVal shortMesssage As String, _
+                ByVal longMessage As String) As Integer
 
-            Dim iID As Integer = 0
+            Dim eventLogID As Integer = -1
 
-            ClearSuccess()
             Try
-                SetDbCommandParms(iEventType, iEntityType, sEntityID, sError, sMsg, sDesc)
+                ClearSuccess()
 
                 If Not m_connection.State = ConnectionState.Open Then
                     OpenConnection()
                 End If
+
                 'stored procedure returns ID for event row created as elog_ID field in one-row Recordset
-                iID = CInt(m_logEventCommand.ExecuteScalar())
-                If Not KeepConnectionOpen Then
-                    CloseConnection()
-                End If
-                SetSuccess()
+                eventLogID = Convert.ToInt32(ExecuteScalar("sp_LogSsamEvent", m_connection, _
+                    New Object() {eventType, entityType, entityID, errorMessage, shortMesssage, longMessage}))
+
+                Me.OperationSuccessful = True
             Catch ex As Exception
-                SetError(ex.Message())
-            End Try
-
-            Return iID
-        End Function
-
-        'set property; returns ID
-        Public Function SetSsamProperty(ByVal sName As String, ByVal sValue As String) As Integer
-            Dim iID As Integer = 0
-
-            ClearSuccess()
-            Try
-                m_setPropertyCommand.Parameters("@name").Value = sName
-                m_setPropertyCommand.Parameters("@value").Value = sValue
-
-                If Not m_connection.State = ConnectionState.Open Then
-                    OpenConnection()
-                End If
-                'stored procedure returns ID for property row as PropertyId field in one-row Recordset
-                iID = CInt(m_setPropertyCommand.ExecuteScalar())
-                SetSuccess()
-            Catch ex As Exception
-                SetError(ex.Message())
+                Me.ErrorMessage = ex.Message()
             Finally
                 If Not KeepConnectionOpen Then
                     CloseConnection()
                 End If
             End Try
 
-            Return iID
-        End Function
+            Return eventLogID
 
-        'returns value directly, puts timestamp into LastPropertyTimestamp property as string
-        Public Function GetSsamProperty(ByVal sName As String) As String
-            Dim sValue As String = ""
-
-            ClearSuccess()
-            Try
-                m_getPropertyCommand.Parameters("@name").Value = sName
-
-                If Not m_connection.State = ConnectionState.Open Then
-                    OpenConnection()
-                End If
-                'stored procedure returns ID for property row as PropertyId field in one-row Recordset
-                Dim dr As SqlDataReader = m_getPropertyCommand.ExecuteReader(CommandBehavior.SingleRow)
-                If dr.Read() Then
-                    sValue = dr("value").ToString()
-                    LastPropertyTimestamp = dr("Timestamp").ToString()
-                Else    'property not found
-                    sValue = Nothing
-                    LastPropertyTimestamp = Nothing
-                End If
-                dr.Close()
-                SetSuccess()
-            Catch ex As Exception
-                SetError(ex.Message())
-            Finally
-                If Not KeepConnectionOpen Then
-                    CloseConnection()
-                End If
-            End Try
-
-            Return sValue    'may be nothing if property undefined
         End Function
 
         Private Sub ClearSuccess()
-            m_success = False    'assume failure, prove success
+            m_operationSuccessful = False    'assume failure, prove success
             m_errorMessage = ""
         End Sub
 
-        Private Sub SetSuccess()
-            m_success = True
-            m_errorMessage = ""
+#Region " ISupportInitialize Implementation "
+
+        Public Sub BeginInit() Implements System.ComponentModel.ISupportInitialize.BeginInit
+
+            ' We don't need to do anything when the component is being initialized.
+
         End Sub
 
-        Private Sub SetError(ByVal sMsg As String)
-            m_success = False
-            m_errorMessage = sMsg
+        Public Sub EndInit() Implements System.ComponentModel.ISupportInitialize.EndInit
+
+            Initialize()    ' Begin the necessary API initialization after the component has been initialized.
+
         End Sub
+
+#End Region
+
+#Region " IServiceComponent Implementation "
 
         <Browsable(False)> _
         Public ReadOnly Property Name() As String Implements Tva.Services.IServiceComponent.Name
@@ -463,12 +301,19 @@ Namespace Ssam
             Get
                 Dim strStatus As New StringBuilder()
 
-                strStatus.Append("Connection String: " & GetSsamConnectString(m_ssamDb) & vbCrLf)
-                strStatus.Append("    Connection Is: " & IIf(isDbOpen(), "open", "closed").ToString() & ":" & vbCrLf)
+                strStatus.Append("Connection String: " & GetSsamConnectString(m_database) & vbCrLf)
+                strStatus.Append("    Connection Is: " & IIf(m_connection.State() = ConnectionState.Open, "open", "closed").ToString() & ":" & vbCrLf)
 
                 Return strStatus.ToString()
             End Get
         End Property
+
+#End Region
+
+        'make sure the database connection is closed before going away
+        Protected Overrides Sub Finalize()
+            Dispose(True)
+        End Sub
 
     End Class
 
