@@ -50,6 +50,12 @@
     <Compile Include="My Project\AssemblyInfo.vb" />
     <Compile Include="Ssam\SsamApi.vb" />
     <Compile Include="Ssam\SsamEvent.vb" />
+    <Compile Include="Ssam\SsamLogger.Designer.vb">
+      <DependentUpon>SsamLogger.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Ssam\SsamLogger.vb">
+      <SubType>Component</SubType>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Tva.Core\Tva.Core.vbproj">
@@ -58,7 +64,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Ssam\Tro.Ssam.SsamLogger.bmp" />
+    <EmbeddedResource Include="Ssam\Ssam.SsamLogger.bmp" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="DataJunction\" />
