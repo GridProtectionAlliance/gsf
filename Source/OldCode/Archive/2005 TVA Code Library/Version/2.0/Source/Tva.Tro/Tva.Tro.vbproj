@@ -48,12 +48,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="My Project\AssemblyInfo.vb" />
-    <Compile Include="Ssam\SsamApi.Designer.vb">
-      <DependentUpon>SsamApi.vb</DependentUpon>
-    </Compile>
-    <Compile Include="Ssam\SsamApi.vb">
-      <SubType>Component</SubType>
-    </Compile>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Tva.Core\Tva.Core.vbproj">
