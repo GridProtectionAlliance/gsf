@@ -14,12 +14,14 @@ Namespace Ssam
 
         Public Event LogException(ByVal ex As Exception)
 
+        <Category("Settings")> _
         Public ReadOnly Property ApiInstance() As SsamApi
             Get
                 Return m_apiInstance
             End Get
         End Property
 
+        <Browsable(False)> _
         Public ReadOnly Property EventQueue() As ProcessQueue(Of SsamEvent)
             Get
                 Return m_eventQueue

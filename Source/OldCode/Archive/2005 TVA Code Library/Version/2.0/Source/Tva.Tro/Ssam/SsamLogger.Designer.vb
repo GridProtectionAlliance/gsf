@@ -14,6 +14,7 @@ Namespace Ssam
             'Required for Windows.Forms Class Composition Designer support
             Container.Add(Me)
 
+            m_apiInstance = New SsamApi()
             m_eventQueue = ProcessQueue(Of SsamEvent).CreateSynchronousQueue(AddressOf ProcessEvent)
             If Not DesignMode Then m_eventQueue.Start()
 
