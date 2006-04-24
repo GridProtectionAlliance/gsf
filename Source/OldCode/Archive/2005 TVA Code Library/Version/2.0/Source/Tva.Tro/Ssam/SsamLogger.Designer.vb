@@ -1,5 +1,7 @@
 ' 04-24-06
 
+Imports Tva.Collections
+
 Namespace Ssam
 
     Partial Class SsamLogger
@@ -11,6 +13,9 @@ Namespace Ssam
 
             'Required for Windows.Forms Class Composition Designer support
             Container.Add(Me)
+
+            m_eventQueue = ProcessQueue(Of SsamEvent).CreateSynchronousQueue(AddressOf ProcessEvent)
+            If Not DesignMode Then m_eventQueue.Start()
 
         End Sub
 
