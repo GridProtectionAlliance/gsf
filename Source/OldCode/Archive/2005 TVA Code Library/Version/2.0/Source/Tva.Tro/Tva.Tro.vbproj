@@ -48,6 +48,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="My Project\AssemblyInfo.vb" />
+    <Compile Include="Ssam\SsamApi.vb" />
+    <Compile Include="Ssam\SsamEvent.vb" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Tva.Core\Tva.Core.vbproj">
@@ -56,7 +58,6 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Ssam\Tro.Ssam.SsamApi.bmp" />
     <Content Include="Ssam\Tro.Ssam.SsamLogger.bmp" />
   </ItemGroup>
   <ItemGroup>
