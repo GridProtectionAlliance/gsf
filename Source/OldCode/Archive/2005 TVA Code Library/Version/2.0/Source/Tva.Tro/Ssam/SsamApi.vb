@@ -7,13 +7,12 @@ Imports Tva.Configuration.Common
 
 Namespace Ssam
 
-    <TypeConverter(GetType(ExpandableObjectConverter))> _
     Public Class SsamApi
 
         Private m_server As SsamServer
         Private m_keepConnectionOpen As Boolean
         Private m_connection As SqlConnection
-        Private m_connectionState As SsamConnectionStates
+        Private m_connectionState As SsamConnectionState
 
         Public Event InitializationException(ByVal ex As Exception)
 
@@ -24,14 +23,11 @@ Namespace Ssam
             Production
         End Enum
 
-        <Flags()> _
-        Public Enum SsamConnectionStates As Integer
-            Open = 1
-            Closed = 2
-            Active = 4
-            Inactive = 8
-            OpenAndActive = Open And Active
-            OpenAndInactive = Open And Inactive
+        Public Enum SsamConnectionState As Integer
+            Open
+            OpenAndActive
+            OpenAndInactive
+            Closed
         End Enum
 
         Public Sub New()
@@ -45,20 +41,19 @@ Namespace Ssam
         Public Sub New(ByVal server As SsamServer, ByVal keepConnectionOpen As Boolean)
             MyBase.New()
             m_connection = New SqlConnection()
-            m_connectionState = SsamConnectionStates.Closed
+            m_connectionState = SsamConnectionState.Closed
             MyClass.Server = server
             MyClass.KeepConnectionOpen = keepConnectionOpen
-            InitializeApi()
+            Initialize()
         End Sub
 
-        <Description("The SSAM server to which event are to be logged."), DefaultValue(GetType(SsamServer), "Development")> _
         Public Property Server() As SsamServer
             Get
                 Return m_server
             End Get
             Set(ByVal value As SsamServer)
                 ' If connection to a SSAM server is open, disconnect from it and connect to the selected server.
-                If m_connectionState <> SsamConnectionStates.Closed Then
+                If m_connectionState <> SsamConnectionState.Closed Then
                     Disconnect()
                     Connect()
                 End If
@@ -66,7 +61,6 @@ Namespace Ssam
             End Set
         End Property
 
-        <Description("Determines whether the connection with SSAM server is to be kept open after logging an event."), DefaultValue(GetType(Boolean), "True")> _
         Public Property KeepConnectionOpen() As Boolean
             Get
                 Return m_keepConnectionOpen
@@ -76,21 +70,19 @@ Namespace Ssam
                 ' kept open after logging an event. However, if the connection is to be kept open after
                 ' logging an event, but is closed at present, we will only open it when the first event
                 ' is logged and keep if open until it is explicitly closed.
-                If value = False AndAlso m_connectionState <> SsamConnectionStates.Closed Then
+                If value = False AndAlso m_connectionState <> SsamConnectionState.Closed Then
                     Disconnect()
                 End If
                 m_keepConnectionOpen = value
             End Set
         End Property
 
-        <Browsable(False)> _
-        Public ReadOnly Property ConnectionState() As SsamConnectionStates
+        Public ReadOnly Property ConnectionState() As SsamConnectionState
             Get
                 Return m_connectionState
             End Get
         End Property
 
-        <Browsable(False)> _
         Public ReadOnly Property ConnectionString() As String
             Get
                 ' Return the connection string for connecting to the selected SSAM server from the config
@@ -109,16 +101,16 @@ Namespace Ssam
         Public Sub Connect()
 
             If m_connection.State <> System.Data.ConnectionState.Closed Then Disconnect()
-            m_connection.ConnectionString = ConnectionString()
+            m_connection.ConnectionString = MyClass.ConnectionString()
             m_connection.Open()
-            m_connectionState = SsamConnectionStates.OpenAndInactive
+            m_connectionState = SsamConnectionState.OpenAndInactive
 
         End Sub
 
         Public Sub Disconnect()
 
             If m_connection.State <> System.Data.ConnectionState.Closed Then m_connection.Close()
-            m_connectionState = SsamConnectionStates.Closed
+            m_connectionState = SsamConnectionState.Closed
 
         End Sub
 
@@ -126,10 +118,10 @@ Namespace Ssam
 
             Dim logResult As Boolean = False
             Try
-                If m_connectionState = SsamConnectionStates.Closed Then
+                If m_connectionState = SsamConnectionState.Closed Then
                     Connect()
                 End If
-                m_connectionState = SsamConnectionStates.OpenAndActive
+                m_connectionState = SsamConnectionState.OpenAndActive
 
                 ' Log the event to SSAM.
                 ExecuteScalar("sp_LogSsamEvent", m_connection, _
@@ -139,7 +131,7 @@ Namespace Ssam
                 logResult = False
                 Throw
             Finally
-                m_connectionState = SsamConnectionStates.OpenAndInactive
+                m_connectionState = SsamConnectionState.OpenAndInactive
                 If m_keepConnectionOpen = False Then
                     ' Connection with SSAM is not to be kept open after logging an event, so close it.
                     Disconnect()
@@ -149,13 +141,7 @@ Namespace Ssam
 
         End Function
 
-        Public Overrides Function ToString() As String
-
-            Return "Server=" & m_server.ToString() & ";KeepConnectionOpen=" & m_keepConnectionOpen
-
-        End Function
-
-        Private Sub InitializeApi()
+        Private Sub Initialize()
 
             Try
                 ' Make sure all of the SSAM connection strings are present in the config file of the 

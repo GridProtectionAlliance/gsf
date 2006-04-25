@@ -14,7 +14,27 @@ Namespace Ssam
 
         Public Event LogException(ByVal ex As Exception)
 
-        <Category("Settings")> _
+        <Category("Configuration"), Description("The SSAM server to which event are to be logged."), DefaultValue(GetType(SsamApi.SsamServer), "Development")> _
+        Public Property Server() As SsamApi.SsamServer
+            Get
+                Return m_apiInstance.Server()
+            End Get
+            Set(ByVal value As SsamApi.SsamServer)
+                m_apiInstance.Server = value
+            End Set
+        End Property
+
+        <Category("Configuration"), Description("Determines whether the connection with SSAM server is to be kept open after logging an event."), DefaultValue(GetType(Boolean), "True")> _
+        Public Property KeepConnectionOpen() As Boolean
+            Get
+                Return m_apiInstance.KeepConnectionOpen()
+            End Get
+            Set(ByVal value As Boolean)
+                m_apiInstance.KeepConnectionOpen = value
+            End Set
+        End Property
+
+        <Browsable(False)> _
         Public ReadOnly Property ApiInstance() As SsamApi
             Get
                 Return m_apiInstance
