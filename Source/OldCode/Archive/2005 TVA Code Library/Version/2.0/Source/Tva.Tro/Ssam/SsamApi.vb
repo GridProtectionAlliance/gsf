@@ -107,7 +107,7 @@ Namespace Ssam
         Public Sub Connect()
 
             If m_connection.State <> System.Data.ConnectionState.Closed Then Disconnect()
-            m_connection.ConnectionString = Me.ConnectionString()
+            m_connection.ConnectionString = ConnectionString()
             m_connection.Open()
             m_connectionState = SsamConnectionStates.OpenAndInactive
 
@@ -133,12 +133,11 @@ Namespace Ssam
                 ExecuteScalar("sp_LogSsamEvent", m_connection, _
                     New Object() {newEvent.EventType(), newEvent.EntityType(), newEvent.EntityId(), newEvent.ErrorNumber(), newEvent.Message(), newEvent.Description()})
                 logResult = True
-
-                m_connectionState = SsamConnectionStates.OpenAndInactive
             Catch ex As Exception
                 logResult = False
                 Throw
             Finally
+                m_connectionState = SsamConnectionStates.OpenAndInactive
                 If m_keepConnectionOpen = False Then
                     ' Connection with SSAM is not to be kept open after logging an event, so close it.
                     Disconnect()
