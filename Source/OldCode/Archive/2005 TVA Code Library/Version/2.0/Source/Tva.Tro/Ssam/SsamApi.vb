@@ -1,5 +1,6 @@
 ' 04-24-06
 
+Imports System.Data.SqlClient
 Imports System.ComponentModel
 Imports Tva.Data.Common
 Imports Tva.Configuration.Common
@@ -11,10 +12,8 @@ Namespace Ssam
 
         Private m_server As SsamServer
         Private m_keepConnectionOpen As Boolean
-        Private m_connection As System.Data.SqlClient.SqlConnection
+        Private m_connection As SqlConnection
         Private m_connectionState As SsamConnectionStates
-
-        Public Event LogException(ByVal ex As Exception)
 
         Public Enum SsamServer As Integer
             Development
@@ -43,7 +42,7 @@ Namespace Ssam
 
         Public Sub New(ByVal server As SsamServer, ByVal keepConnectionOpen As Boolean)
             MyBase.New()
-            m_connection = New System.Data.SqlClient.SqlConnection()
+            m_connection = New SqlConnection()
             m_connectionState = SsamConnectionStates.Closed
             Me.Server = server
             Me.KeepConnectionOpen = keepConnectionOpen
@@ -123,6 +122,7 @@ Namespace Ssam
 
         Public Function LogEvent(ByVal newEvent As SsamEvent) As Boolean
 
+            Dim logResult As Boolean = False
             Try
                 If m_connectionState = SsamConnectionStates.Closed Then
                     Connect()
@@ -130,17 +130,21 @@ Namespace Ssam
                 m_connectionState = SsamConnectionStates.OpenAndActive
 
                 ' Log the event to SSAM.
-                ExecuteScalar("sp_LogSsamEvent", m_connection, New Object() {newEvent.EventType(), newEvent.EntityType(), newEvent.EntityId()})
+                ExecuteScalar("sp_LogSsamEvent", m_connection, _
+                    New Object() {newEvent.EventType(), newEvent.EntityType(), newEvent.EntityId(), newEvent.ErrorNumber(), newEvent.Message(), newEvent.Description()})
+                logResult = True
 
                 m_connectionState = SsamConnectionStates.OpenAndInactive
             Catch ex As Exception
-                RaiseEvent LogException(ex)
+                logResult = False
+                Throw
             Finally
                 If m_keepConnectionOpen = False Then
                     ' Connection with SSAM is not to be kept open after logging an event, so close it.
                     Disconnect()
                 End If
             End Try
+            Return logResult
 
         End Function
 

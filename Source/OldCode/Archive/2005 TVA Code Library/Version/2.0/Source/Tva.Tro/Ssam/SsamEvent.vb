@@ -5,9 +5,10 @@ Namespace Ssam
     <Serializable()> _
     Public Class SsamEvent
 
-        Private m_eventType As SsamEventType
-        Private m_entityType As SsamEntityType
         Private m_entityID As String
+        Private m_entityType As SsamEntityType
+        Private m_eventType As SsamEventType
+        Private m_errorNumber As String
         Private m_message As String
         Private m_description As String
 
@@ -98,12 +99,27 @@ Namespace Ssam
             Data = 5
         End Enum
 
-        Public Property EventType() As SsamEventType
+        Public Sub New(ByVal entityID As String, ByVal entityType As SsamEntityType, ByVal eventType As SsamEventType)
+            Me.New(entityID, entityType, eventType, "", "", "")
+        End Sub
+
+        Public Sub New(ByVal entityID As String, ByVal entityType As SsamEntityType, ByVal eventType As SsamEventType, _
+                ByVal errorNumber As String, ByVal message As String, ByVal description As String)
+            MyBase.New()
+            m_entityID = entityID
+            m_entityType = entityType
+            m_eventType = eventType
+            m_errorNumber = errorNumber
+            m_message = message
+            m_description = description
+        End Sub
+
+        Public Property EntityId() As String
             Get
-                Return m_eventType
+                Return m_entityID
             End Get
-            Set(ByVal value As SsamEventType)
-                m_eventType = value
+            Set(ByVal value As String)
+                m_entityID = value
             End Set
         End Property
 
@@ -116,12 +132,21 @@ Namespace Ssam
             End Set
         End Property
 
-        Public Property EntityId() As String
+        Public Property EventType() As SsamEventType
             Get
-                Return m_entityID
+                Return m_eventType
+            End Get
+            Set(ByVal value As SsamEventType)
+                m_eventType = value
+            End Set
+        End Property
+
+        Public Property ErrorNumber() As String
+            Get
+                Return m_errorNumber
             End Get
             Set(ByVal value As String)
-                m_entityID = value
+                m_errorNumber = value
             End Set
         End Property
 

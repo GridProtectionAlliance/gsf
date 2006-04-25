@@ -28,7 +28,34 @@ Namespace Ssam
             End Get
         End Property
 
+        Public Sub LogEvent(ByVal entityID As String, ByVal entityType As SsamEvent.SsamEntityType, _
+                ByVal eventType As SsamEvent.SsamEventType)
+
+            LogEvent(entityID, entityType, eventType, "", "", "")
+
+        End Sub
+
+        Public Sub LogEvent(ByVal entityID As String, ByVal entityType As SsamEvent.SsamEntityType, _
+                ByVal eventType As SsamEvent.SsamEventType, ByVal errorNumber As String, ByVal message As String, _
+                ByVal description As String)
+
+            LogEvent(New SsamEvent(entityID, entityType, eventType, errorNumber, message, description))
+
+        End Sub
+
+        Public Sub LogEvent(ByVal newEvent As SsamEvent)
+
+            m_eventQueue.Add(newEvent)
+
+        End Sub
+
         Public Sub ProcessEvent(ByVal item As SsamEvent)
+
+            Try
+                m_apiInstance.LogEvent(item)
+            Catch ex As Exception
+                RaiseEvent LogException(ex)
+            End Try
 
         End Sub
 
