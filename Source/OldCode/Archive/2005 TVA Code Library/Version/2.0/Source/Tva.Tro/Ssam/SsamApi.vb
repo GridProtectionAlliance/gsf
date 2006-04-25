@@ -147,6 +147,12 @@ Namespace Ssam
 
         End Function
 
+        Public Overrides Function ToString() As String
+
+            Return "Server=" & m_server.ToString() & ";KeepConnectionOpen=" & m_keepConnectionOpen
+
+        End Function
+
         Private Sub InitializeApi()
 
             ' Make sure all of the SSAM connection strings are present in the config file of the 

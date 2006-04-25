@@ -49,7 +49,7 @@ Namespace Ssam
 
         End Sub
 
-        Public Sub ProcessEvent(ByVal item As SsamEvent)
+        Private Sub ProcessEvent(ByVal item As SsamEvent)
 
             Try
                 m_apiInstance.LogEvent(item)
