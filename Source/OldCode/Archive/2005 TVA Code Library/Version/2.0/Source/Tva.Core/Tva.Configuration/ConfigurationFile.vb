@@ -41,7 +41,7 @@ Namespace Configuration
         ''' </summary>
         ''' <remarks></remarks>
         Public Sub New()
-            Me.New("")
+            MyClass.New("")
         End Sub
 
         ''' <summary>
@@ -129,7 +129,7 @@ Namespace Configuration
         ''' <remarks></remarks>
         Public Sub Save()
 
-            Me.Save(ConfigurationSaveMode.Modified)
+            MyClass.Save(ConfigurationSaveMode.Modified)
 
         End Sub
 
@@ -163,7 +163,7 @@ Namespace Configuration
 
             If configFilePath IsNot Nothing Then
                 If configFilePath = "" OrElse JustFileExtension(configFilePath) = ".config" Then
-                    Select Case Me.Environment()
+                    Select Case MyClass.Environment()
                         Case ApplicationEnvironment.Win
                             If configFilePath = "" OrElse _
                                     (configFilePath <> "" AndAlso configFilePath.EndsWith(".exe.config")) Then

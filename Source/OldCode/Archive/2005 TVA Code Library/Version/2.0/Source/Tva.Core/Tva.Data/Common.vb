@@ -1287,7 +1287,8 @@ Namespace Data
         ''' <param name="header">True if the delimited text contains header information; otherwise False.</param>
         ''' <returns>An System.Data.DataTable object.</returns>
         ''' <remarks></remarks>
-        Public Shared Function DelimitedDataToDataTable(ByVal delimitedData As String, ByVal delimiter As String, ByVal header As Boolean) As DataTable
+        Public Shared Function DelimitedDataToDataTable(ByVal delimitedData As String, ByVal delimiter As String, _
+                ByVal header As Boolean) As DataTable
 
             Dim table As DataTable = New DataTable()
             Dim pattern As String = Regex.Escape(delimiter) & "(?=(?:[^""]*""[^""]*"")*(?![^""]*""))" 'Regex pattern that will be used to split the delimited data.
@@ -1338,7 +1339,8 @@ Namespace Data
         ''' <param name="header">True if the delimited text should have header information.</param>
         ''' <returns>A string of delimited text.</returns>
         ''' <remarks></remarks>
-        Public Shared Function DataTableToDelimitedData(ByVal table As DataTable, ByVal delimiter As String, ByVal quoted As Boolean, ByVal header As Boolean) As String
+        Public Shared Function DataTableToDelimitedData(ByVal table As DataTable, ByVal delimiter As String, _
+                ByVal quoted As Boolean, ByVal header As Boolean) As String
 
             With New StringBuilder
                 'Use the column names as the headers if headers are requested.

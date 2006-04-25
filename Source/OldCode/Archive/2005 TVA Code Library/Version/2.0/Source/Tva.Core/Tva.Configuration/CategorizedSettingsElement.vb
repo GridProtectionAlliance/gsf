@@ -21,7 +21,7 @@ Namespace Configuration
         ''' </summary>
         ''' <remarks></remarks>
         Friend Sub New()
-            Me.New("")
+            MyClass.New("")
         End Sub
 
         ''' <summary>
@@ -29,7 +29,7 @@ Namespace Configuration
         ''' </summary>
         ''' <remarks></remarks>
         Friend Sub New(ByVal name As String)
-            Me.New(name, "")
+            MyClass.New(name, "")
         End Sub
 
         ''' <summary>
@@ -40,7 +40,7 @@ Namespace Configuration
         ''' <param name="value">The value string of the element.</param>
         ''' <remarks></remarks>
         Public Sub New(ByVal name As String, ByVal value As String)
-            Me.New(name, value, "")
+            MyClass.New(name, value, "")
         End Sub
 
         ''' <summary>
@@ -52,7 +52,7 @@ Namespace Configuration
         ''' <param name="description">The description string of the element.</param>
         ''' <remarks></remarks>
         Public Sub New(ByVal name As String, ByVal value As String, ByVal description As String)
-            Me.New(name, value, description, False)
+            MyClass.New(name, value, description, False)
         End Sub
 
         ''' <summary>
@@ -66,10 +66,10 @@ Namespace Configuration
         ''' <remarks></remarks>
         Public Sub New(ByVal name As String, ByVal value As String, ByVal description As String, ByVal encrypted As Boolean)
             MyBase.New()
-            Me.Name = name
-            Me.Value = value
-            Me.Description = description
-            Me.Encrypted = encrypted
+            MyClass.Name = name
+            MyClass.Value = value
+            MyClass.Description = description
+            MyClass.Encrypted = encrypted
         End Sub
 
         ''' <summary>
@@ -113,7 +113,7 @@ Namespace Configuration
         ''' <remarks></remarks>
         Public Function GetTypedValue(Of T)(ByVal defaultValue As T) As T
 
-            Dim value As String = Me.Value()
+            Dim value As String = MyClass.Value()
             If Not String.IsNullOrEmpty(value) Then
                 ' Element's value string is present.
                 Return CType(CType(value, Object), T)
@@ -152,9 +152,9 @@ Namespace Configuration
                 Return Convert.ToBoolean(MyBase.Item("encrypted"))
             End Get
             Set(ByVal value As Boolean)
-                Dim elementValue As String = Me.Value() ' Get the decrypted value if encrypted.
+                Dim elementValue As String = MyClass.Value() ' Get the decrypted value if encrypted.
                 MyBase.Item("encrypted") = value
-                Me.Value = elementValue ' Setting the value again will cause encryption to be performed if required.
+                MyClass.Value = elementValue ' Setting the value again will cause encryption to be performed if required.
             End Set
         End Property
 
