@@ -100,7 +100,7 @@ Namespace Ssam
         End Enum
 
         Public Sub New(ByVal entityID As String, ByVal entityType As SsamEntityType, ByVal eventType As SsamEventType)
-            Me.New(entityID, entityType, eventType, "", "", "")
+            MyClass.New(entityID, entityType, eventType, "", "", "")
         End Sub
 
         Public Sub New(ByVal entityID As String, ByVal entityType As SsamEntityType, ByVal eventType As SsamEventType, _

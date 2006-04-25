@@ -9,7 +9,7 @@ Namespace Ssam
     <ToolboxBitmap(GetType(SsamLogger))> _
     Public Class SsamLogger
 
-        Private m_apiInstance As SsamApi
+        Private WithEvents m_apiInstance As SsamApi
         Private WithEvents m_eventQueue As ProcessQueue(Of SsamEvent)
 
         Public Event LogException(ByVal ex As Exception)
@@ -56,6 +56,18 @@ Namespace Ssam
             Catch ex As Exception
                 RaiseEvent LogException(ex)
             End Try
+
+        End Sub
+
+        Private Sub m_apiInstance_InitializationException(ByVal ex As Exception) Handles m_apiInstance.InitializationException
+
+            RaiseEvent LogException(ex)
+
+        End Sub
+
+        Private Sub m_eventQueue_ProcessException(ByVal ex As Exception) Handles m_eventQueue.ProcessException
+
+            RaiseEvent LogException(ex)
 
         End Sub
 

@@ -15,6 +15,8 @@ Namespace Ssam
         Private m_connection As SqlConnection
         Private m_connectionState As SsamConnectionStates
 
+        Public Event InitializationException(ByVal ex As Exception)
+
         Public Enum SsamServer As Integer
             Development
             <EditorBrowsable(EditorBrowsableState.Never), Browsable(False)> _
@@ -33,19 +35,19 @@ Namespace Ssam
         End Enum
 
         Public Sub New()
-            Me.New(SsamServer.Development)
+            MyClass.New(SsamServer.Development)
         End Sub
 
         Public Sub New(ByVal server As SsamServer)
-            Me.New(server, True)
+            MyClass.New(server, True)
         End Sub
 
         Public Sub New(ByVal server As SsamServer, ByVal keepConnectionOpen As Boolean)
             MyBase.New()
             m_connection = New SqlConnection()
             m_connectionState = SsamConnectionStates.Closed
-            Me.Server = server
-            Me.KeepConnectionOpen = keepConnectionOpen
+            MyClass.Server = server
+            MyClass.KeepConnectionOpen = keepConnectionOpen
             InitializeApi()
         End Sub
 
@@ -155,15 +157,19 @@ Namespace Ssam
 
         Private Sub InitializeApi()
 
-            ' Make sure all of the SSAM connection strings are present in the config file of the 
-            ' application using the API.
-            CategorizedSettings("ssam").Add("Development", "Server=RGOCSQLD;Database=Ssam;Trusted_Connection=True;", _
-                "Connection string for connecting to development SSAM server.", True)
-            'CategorizedSettings("ssam").Add("Acceptance", "N/A", _
-            '    "Connection string for connecting to acceptance SSAM server.", True)
-            CategorizedSettings("ssam").Add("Production", "Server=OPSSAMSQL;Database=Ssam;Trusted_Connection=True;", _
-                "Connection string for connecting to production SSAM server.", True)
-            SaveSettings()
+            Try
+                ' Make sure all of the SSAM connection strings are present in the config file of the 
+                ' application using the API.
+                CategorizedSettings("ssam").Add("Development", "Server=RGOCSQLD;Database=Ssam;Trusted_Connection=True;", _
+                    "Connection string for connecting to development SSAM server.", True)
+                'CategorizedSettings("ssam").Add("Acceptance", "N/A", _
+                '    "Connection string for connecting to acceptance SSAM server.", True)
+                CategorizedSettings("ssam").Add("Production", "Server=OPSSAMSQL;Database=Ssam;Trusted_Connection=True;", _
+                    "Connection string for connecting to production SSAM server.", True)
+                SaveSettings()
+            Catch ex As Exception
+                RaiseEvent InitializationException(ex)
+            End Try
 
         End Sub
 
