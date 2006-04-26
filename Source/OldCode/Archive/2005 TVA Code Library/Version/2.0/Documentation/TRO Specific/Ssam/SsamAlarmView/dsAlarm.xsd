@@ -1,0 +1,26 @@
+<?xml version="1.0" standalone="yes"?>
+<xs:schema id="dsAlarm" targetNamespace="http://www.tempuri.org/dsAlarm.xsd" xmlns:mstns="http://www.tempuri.org/dsAlarm.xsd" xmlns="http://www.tempuri.org/dsAlarm.xsd" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" attributeFormDefault="qualified" elementFormDefault="qualified">
+  <xs:element name="dsAlarm" msdata:IsDataSet="true">
+    <xs:complexType>
+      <xs:choice maxOccurs="unbounded">
+        <xs:element name="Alarm">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="ID" msdata:ReadOnly="true" msdata:AutoIncrement="true" type="xs:int" />
+              <xs:element name="FlowName" type="xs:string" />
+              <xs:element name="startDT" type="xs:dateTime" />
+              <xs:element name="endDT" type="xs:dateTime" minOccurs="0" />
+              <xs:element name="Descr" msdata:ReadOnly="true" type="xs:string" minOccurs="0" />
+              <xs:element name="Expr1" msdata:ReadOnly="true" msdata:AutoIncrement="true" type="xs:int" />
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+      </xs:choice>
+    </xs:complexType>
+    <xs:unique name="Constraint1" msdata:PrimaryKey="true">
+      <xs:selector xpath=".//mstns:Alarm" />
+      <xs:field xpath="mstns:ID" />
+      <xs:field xpath="mstns:Expr1" />
+    </xs:unique>
+  </xs:element>
+</xs:schema>

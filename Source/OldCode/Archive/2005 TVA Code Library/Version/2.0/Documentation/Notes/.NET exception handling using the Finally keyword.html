@@ -1,0 +1,354 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html xmlns:v="urn:schemas-microsoft-com:vml"
+xmlns:o="urn:schemas-microsoft-com:office:office"
+xmlns:w="urn:schemas-microsoft-com:office:word"
+xmlns:dt="uuid:C2F41010-65B3-11d1-A29F-00AA00C14882"
+xmlns="http://www.w3.org/TR/REC-html40">
+
+<head>
+<meta name="Microsoft Theme 2.00" content="Network 111">
+<meta http-equiv=Content-Type content="text/html; charset=us-ascii">
+<meta name=ProgId content=Word.Document>
+<meta name=Generator content="Microsoft Word 10">
+<meta name=Originator content="Microsoft Word 10">
+<base href="http://www.winzip.com/wzcline.htm">
+<link rel=File-List
+href="file:///\\opgfs\opdat\CtrlSys\CodeLibrary\2.0\Documentation\Notes\.NET%20exception%20handling%20using%20the%20Finally%20keyword_files\filelist.xml">
+<title>Message</title>
+<!--[if gte mso 9]><xml>
+ <o:DocumentProperties>
+  <o:Author>James Ritchie Carroll</o:Author>
+  <o:LastAuthor>James Ritchie Carroll</o:LastAuthor>
+  <o:Revision>3</o:Revision>
+  <o:TotalTime>1</o:TotalTime>
+  <o:Created>2006-04-18T16:26:00Z</o:Created>
+  <o:LastSaved>2006-04-18T16:27:00Z</o:LastSaved>
+  <o:Pages>1</o:Pages>
+  <o:Words>178</o:Words>
+  <o:Characters>1019</o:Characters>
+  <o:Company>tva</o:Company>
+  <o:Lines>8</o:Lines>
+  <o:Paragraphs>2</o:Paragraphs>
+  <o:CharactersWithSpaces>1195</o:CharactersWithSpaces>
+  <o:Version>10.6735</o:Version>
+ </o:DocumentProperties>
+</xml><![endif]--><!--[if gte mso 9]><xml>
+ <w:WordDocument>
+  <w:GrammarState>Clean</w:GrammarState>
+  <w:DefaultTableStyle Number="155">Table Theme</w:DefaultTableStyle>
+  <w:BrowserLevel>MicrosoftInternetExplorer4</w:BrowserLevel>
+ </w:WordDocument>
+</xml><![endif]-->
+<style>
+<!--
+ /* Font Definitions */
+ @font-face
+	{font-family:"Trebuchet MS";
+	panose-1:2 11 6 3 2 2 2 2 2 4;
+	mso-font-charset:0;
+	mso-generic-font-family:swiss;
+	mso-font-pitch:variable;
+	mso-font-signature:647 0 0 0 159 0;}
+ /* Style Definitions */
+ p.MsoNormal, li.MsoNormal, div.MsoNormal
+	{mso-style-parent:"";
+	margin:0in;
+	margin-bottom:.0001pt;
+	mso-pagination:widow-orphan;
+	font-size:12.0pt;
+	font-family:"Trebuchet MS";
+	mso-fareast-font-family:"Times New Roman";
+	mso-bidi-font-family:"Times New Roman";
+	color:black;}
+h1
+	{mso-margin-top-alt:auto;
+	margin-right:0in;
+	mso-margin-bottom-alt:auto;
+	margin-left:0in;
+	mso-pagination:widow-orphan;
+	mso-outline-level:1;
+	font-size:24.0pt;
+	font-family:"Trebuchet MS";
+	color:#669999;
+	font-weight:normal;}
+h2
+	{mso-margin-top-alt:auto;
+	margin-right:0in;
+	mso-margin-bottom-alt:auto;
+	margin-left:0in;
+	mso-pagination:widow-orphan;
+	mso-outline-level:2;
+	font-size:18.0pt;
+	font-family:"Trebuchet MS";
+	color:#669999;
+	font-weight:normal;}
+h3
+	{margin-top:12.0pt;
+	margin-right:0in;
+	margin-bottom:3.0pt;
+	margin-left:0in;
+	mso-pagination:widow-orphan;
+	page-break-after:avoid;
+	mso-outline-level:3;
+	font-size:14.0pt;
+	font-family:"Trebuchet MS";
+	mso-bidi-font-family:Arial;
+	color:#669999;
+	font-weight:normal;}
+h4
+	{margin-top:12.0pt;
+	margin-right:0in;
+	margin-bottom:3.0pt;
+	margin-left:0in;
+	mso-pagination:widow-orphan;
+	page-break-after:avoid;
+	mso-outline-level:4;
+	font-size:12.0pt;
+	font-family:"Trebuchet MS";
+	color:#669999;
+	font-weight:normal;}
+h5
+	{margin-top:12.0pt;
+	margin-right:0in;
+	margin-bottom:3.0pt;
+	margin-left:0in;
+	mso-pagination:widow-orphan;
+	mso-outline-level:5;
+	font-size:10.0pt;
+	font-family:"Trebuchet MS";
+	color:#669999;
+	font-weight:normal;}
+h6
+	{margin-top:12.0pt;
+	margin-right:0in;
+	margin-bottom:3.0pt;
+	margin-left:0in;
+	mso-pagination:widow-orphan;
+	mso-outline-level:6;
+	font-size:8.0pt;
+	font-family:"Trebuchet MS";
+	color:#669999;
+	font-weight:normal;}
+a:link, span.MsoHyperlink
+	{color:#009999;
+	text-decoration:underline;
+	text-underline:single;}
+a:visited, span.MsoHyperlinkFollowed
+	{color:#666699;
+	text-decoration:underline;
+	text-underline:single;}
+p
+	{mso-margin-top-alt:auto;
+	margin-right:0in;
+	mso-margin-bottom-alt:auto;
+	margin-left:0in;
+	mso-pagination:widow-orphan;
+	font-size:12.0pt;
+	font-family:"Trebuchet MS";
+	mso-fareast-font-family:"Times New Roman";
+	mso-bidi-font-family:"Times New Roman";
+	color:black;}
+span.emailstyle18
+	{mso-style-name:emailstyle18;
+	font-family:Arial;
+	mso-ascii-font-family:Arial;
+	mso-hansi-font-family:Arial;
+	mso-bidi-font-family:Arial;
+	color:navy;}
+span.emailstyle19
+	{mso-style-name:emailstyle19;
+	font-family:Arial;
+	mso-ascii-font-family:Arial;
+	mso-hansi-font-family:Arial;
+	mso-bidi-font-family:Arial;
+	color:navy;}
+span.emailstyle20
+	{mso-style-name:emailstyle20;
+	font-family:Arial;
+	mso-ascii-font-family:Arial;
+	mso-hansi-font-family:Arial;
+	mso-bidi-font-family:Arial;
+	color:navy;}
+span.GramE
+	{mso-style-name:"";
+	mso-gram-e:yes;}
+@page Section1
+	{size:8.5in 11.0in;
+	margin:1.0in 1.25in 1.0in 1.25in;
+	mso-header-margin:.5in;
+	mso-footer-margin:.5in;
+	mso-paper-source:0;}
+div.Section1
+	{page:Section1;}
+-->
+</style>
+<!--[if gte mso 10]>
+<style>
+ /* Style Definitions */
+ table.MsoNormalTable
+	{mso-style-name:"Table Normal";
+	mso-tstyle-rowband-size:0;
+	mso-tstyle-colband-size:0;
+	mso-style-noshow:yes;
+	mso-style-parent:"";
+	mso-padding-alt:0in 5.4pt 0in 5.4pt;
+	mso-para-margin:0in;
+	mso-para-margin-bottom:.0001pt;
+	mso-pagination:widow-orphan;
+	font-size:10.0pt;
+	font-family:"Times New Roman";}
+table.MsoTableTheme
+	{mso-style-name:"Table Theme";
+	mso-tstyle-rowband-size:0;
+	mso-tstyle-colband-size:0;
+	border:solid #CCCC00 1.0pt;
+	mso-border-alt:solid #CCCC00 .5pt;
+	mso-padding-alt:0in 5.4pt 0in 5.4pt;
+	mso-border-insideh:.5pt solid #CCCC00;
+	mso-border-insidev:.5pt solid #CCCC00;
+	mso-para-margin:0in;
+	mso-para-margin-bottom:.0001pt;
+	mso-pagination:widow-orphan;
+	font-size:10.0pt;
+	font-family:"Times New Roman";}
+</style>
+<![endif]--><!-- 8/31/98 10:51:36 PM --><!--[if gte mso 9]><xml>
+ <o:shapedefaults v:ext="edit" spidmax="2050"/>
+</xml><![endif]--><!--[if gte mso 9]><xml>
+ <o:shapelayout v:ext="edit">
+  <o:idmap v:ext="edit" data="1"/>
+ </o:shapelayout></xml><![endif]-->
+</head>
+
+<body bgcolor=white
+background="file:///\\opgfs\opdat\CtrlSys\CodeLibrary\2.0\Documentation\Notes\.NET%20exception%20handling%20using%20the%20Finally%20keyword_files\image001.gif"
+lang=EN-US link="#009999" vlink="#666699" style='tab-interval:.5in'>
+<!--[if gte mso 9]><xml>
+ <v:background id="_x0000_s1025" o:bwmode="white" o:targetscreensize="800,600">
+  <v:fill src="file:///\\opgfs\opdat\CtrlSys\CodeLibrary\2.0\Documentation\Notes\.NET%20exception%20handling%20using%20the%20Finally%20keyword_files\image001.gif"
+   o:title="netbkgnd" type="frame"/>
+ </v:background></xml><![endif]-->
+
+<div class=Section1>
+
+<p class=MsoNormal><b><span style='font-family:"Times New Roman";color:windowtext'>From:</span></b><span
+style='font-family:"Times New Roman";color:windowtext'> Carroll, James R<br>
+<b>Sent:</b> Monday, December 29, 2003 10:38 AM<br>
+<b>To:</b> Holmes, John P; Tun, Jon; Bourne, Richard Allan; DeLoach, Clay;
+Kalva, Srinivas R; Kinzer, Jeffrey; Lowe, Steven; Maloney, Timothy M.;
+Mazarick, Mickey; Morgan, Jody A; Shifrin, Victor; Sathyanarayana, Harsha G;
+Becker, Tim; Trachian, Paul B; Carroll, James R<br>
+<b>Subject:</b> Interesting note about .NET exception handling using the
+&quot;Finally&quot; keyword:<br>
+<br>
+</span><span style='color:navy'><span style='mso-spacerun:yes'>&nbsp;</span>In
+the following code you might have expected that <b>Finally</b> clause might not
+run since you requested to exit the function in the <b>Catch</b> clause.&nbsp;
+However, the <span class=GramE><b>Finally</b></span> code does execute &#8211;
+still after the Catch but before the function exits &#8211; very nice!</span></p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:"Courier New";
+color:windowtext'>&nbsp;&nbsp;&nbsp; </span><span style='font-size:10.0pt;
+font-family:"Courier New";color:blue'>Public</span><span style='font-size:10.0pt;
+font-family:"Courier New";color:windowtext'> </span><span style='font-size:
+10.0pt;font-family:"Courier New";color:blue'>Function</span><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext'> <span
+class=GramE>FinallyTest(</span>) </span><span style='font-size:10.0pt;
+font-family:"Courier New";color:blue'>As</span><span style='font-size:10.0pt;
+font-family:"Courier New";color:windowtext'> </span><span style='font-size:
+10.0pt;font-family:"Courier New";color:blue'>Boolean</span></p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:"Courier New";
+color:windowtext'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue'>Try</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:"Courier New";
+color:windowtext'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span><span style='font-size:10.0pt;font-family:"Courier New";color:blue'>Throw</span><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext'> </span><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue'>New</span><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext'> <span
+class=GramE>InvalidOperationException(</span>&quot;Test exception...&quot;)</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:"Courier New";
+color:windowtext'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue'>Catch</span><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext'> ex </span><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue'>As</span><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext'> Exception</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:"Courier New";
+color:windowtext'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<span class=GramE>Debug.WriteLine(</span>&quot;Executing Exception
+handler...&quot;)</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:"Courier New";
+color:windowtext'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span><span style='font-size:10.0pt;font-family:"Courier New";color:blue'>Return</span><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext'> </span><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue'>False</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:"Courier New";
+color:windowtext'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue'>Finally</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:"Courier New";
+color:windowtext'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<span class=GramE>Debug.WriteLine(</span>&quot;Executing Finally
+handler...&quot;)</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:"Courier New";
+color:windowtext'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue'>End</span><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext'> </span><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue'>Try</span></p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:"Courier New";
+color:windowtext'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue'>Return</span><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext'> </span><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue'>True</span></p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:"Courier New";
+color:windowtext'>&nbsp;&nbsp;&nbsp; </span><span style='font-size:10.0pt;
+font-family:"Courier New";color:blue'>End</span><span style='font-size:10.0pt;
+font-family:"Courier New";color:windowtext'> </span><span style='font-size:
+10.0pt;font-family:"Courier New";color:blue'>Function</span></p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:Arial;color:navy'>DEBUG
+OUTPUT:</span></p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:"Courier New";
+color:windowtext'>Executing Exception handler...</span><span style='font-size:
+10.0pt'><o:p></o:p></span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:"Courier New";
+color:windowtext'>Executing <span class=GramE>Finally</span> handler...</span><span
+style='font-size:10.0pt'><o:p></o:p></span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:"Courier New";
+color:windowtext'>False</span><span style='font-size:10.0pt'><o:p></o:p></span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:"Courier New";
+color:windowtext'>The program '[3920] FinallyTest.exe' has exited with code 0
+(0x0).</span><span style='font-size:10.0pt'><o:p></o:p></span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>&nbsp;<o:p></o:p></span></p>
+
+</div>
+
+</body>
+
+</html>

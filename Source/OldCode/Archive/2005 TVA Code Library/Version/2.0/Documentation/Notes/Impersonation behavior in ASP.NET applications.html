@@ -1,0 +1,396 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html xmlns:v="urn:schemas-microsoft-com:vml"
+xmlns:o="urn:schemas-microsoft-com:office:office"
+xmlns:w="urn:schemas-microsoft-com:office:word"
+xmlns:dt="uuid:C2F41010-65B3-11d1-A29F-00AA00C14882"
+xmlns:st1="urn:schemas-microsoft-com:office:smarttags"
+xmlns="http://www.w3.org/TR/REC-html40">
+
+<head>
+<meta name="Microsoft Theme 2.00" content="Network 011">
+<meta http-equiv=Content-Type content="text/html; charset=us-ascii">
+<meta name=ProgId content=Word.Document>
+<meta name=Generator content="Microsoft Word 10">
+<meta name=Originator content="Microsoft Word 10">
+<link rel=File-List
+href="Impersonation%20behavior%20in%20ASP.NET%20applications_files/filelist.xml">
+<title>Message</title>
+<o:SmartTagType namespaceuri="urn:schemas-microsoft-com:office:smarttags"
+ name="time"/>
+<o:SmartTagType namespaceuri="urn:schemas-microsoft-com:office:smarttags"
+ name="date"/>
+<!--[if gte mso 9]><xml>
+ <o:DocumentProperties>
+  <o:Author>James Ritchie Carroll</o:Author>
+  <o:LastAuthor>James Ritchie Carroll</o:LastAuthor>
+  <o:Revision>2</o:Revision>
+  <o:TotalTime>0</o:TotalTime>
+  <o:Created>2006-04-18T16:52:00Z</o:Created>
+  <o:LastSaved>2006-04-18T16:52:00Z</o:LastSaved>
+  <o:Pages>1</o:Pages>
+  <o:Words>349</o:Words>
+  <o:Characters>1995</o:Characters>
+  <o:Company>tva</o:Company>
+  <o:Lines>16</o:Lines>
+  <o:Paragraphs>4</o:Paragraphs>
+  <o:CharactersWithSpaces>2340</o:CharactersWithSpaces>
+  <o:Version>10.6735</o:Version>
+ </o:DocumentProperties>
+</xml><![endif]--><!--[if gte mso 9]><xml>
+ <w:WordDocument>
+  <w:SpellingState>Clean</w:SpellingState>
+  <w:GrammarState>Clean</w:GrammarState>
+  <w:DefaultTableStyle Number="155">Table Theme</w:DefaultTableStyle>
+  <w:BrowserLevel>MicrosoftInternetExplorer4</w:BrowserLevel>
+ </w:WordDocument>
+</xml><![endif]--><!--[if !mso]><object
+ classid="clsid:38481807-CA0E-42D2-BF39-B33AF135CC4D" id=ieooui></object>
+<style>
+st1\:*{behavior:url(#ieooui) }
+</style>
+<![endif]-->
+<style>
+<!--
+ /* Font Definitions */
+ @font-face
+	{font-family:Verdana;
+	panose-1:2 11 6 4 3 5 4 4 2 4;
+	mso-font-charset:0;
+	mso-generic-font-family:swiss;
+	mso-font-pitch:variable;
+	mso-font-signature:536871559 0 0 0 415 0;}
+@font-face
+	{font-family:"Comic Sans MS";
+	panose-1:3 15 7 2 3 3 2 2 2 4;
+	mso-font-charset:0;
+	mso-generic-font-family:script;
+	mso-font-pitch:variable;
+	mso-font-signature:647 0 0 0 159 0;}
+@font-face
+	{font-family:"Trebuchet MS";
+	panose-1:2 11 6 3 2 2 2 2 2 4;
+	mso-font-charset:0;
+	mso-generic-font-family:swiss;
+	mso-font-pitch:variable;
+	mso-font-signature:647 0 0 0 159 0;}
+ /* Style Definitions */
+ p.MsoNormal, li.MsoNormal, div.MsoNormal
+	{mso-style-parent:"";
+	margin:0in;
+	margin-bottom:.0001pt;
+	mso-pagination:widow-orphan;
+	font-size:12.0pt;
+	font-family:"Trebuchet MS";
+	mso-fareast-font-family:"Times New Roman";
+	mso-bidi-font-family:"Times New Roman";
+	color:black;}
+h1
+	{mso-style-next:Normal;
+	margin-top:12.0pt;
+	margin-right:0in;
+	margin-bottom:3.0pt;
+	margin-left:0in;
+	mso-pagination:widow-orphan;
+	page-break-after:avoid;
+	mso-outline-level:1;
+	font-size:24.0pt;
+	font-family:Arial;
+	mso-ascii-font-family:"Trebuchet MS";
+	mso-hansi-font-family:"Trebuchet MS";
+	color:black;
+	mso-font-kerning:16.0pt;
+	font-weight:normal;}
+h2
+	{mso-style-next:Normal;
+	margin-top:12.0pt;
+	margin-right:0in;
+	margin-bottom:3.0pt;
+	margin-left:0in;
+	mso-pagination:widow-orphan;
+	page-break-after:avoid;
+	mso-outline-level:2;
+	font-size:18.0pt;
+	font-family:Arial;
+	mso-ascii-font-family:"Trebuchet MS";
+	mso-hansi-font-family:"Trebuchet MS";
+	color:black;
+	font-weight:normal;}
+h3
+	{mso-style-next:Normal;
+	margin-top:12.0pt;
+	margin-right:0in;
+	margin-bottom:3.0pt;
+	margin-left:0in;
+	mso-pagination:widow-orphan;
+	page-break-after:avoid;
+	mso-outline-level:3;
+	font-size:14.0pt;
+	font-family:Arial;
+	mso-ascii-font-family:"Trebuchet MS";
+	mso-hansi-font-family:"Trebuchet MS";
+	color:black;
+	font-weight:normal;}
+h4
+	{mso-margin-top-alt:auto;
+	margin-right:0in;
+	mso-margin-bottom-alt:auto;
+	margin-left:0in;
+	mso-pagination:widow-orphan;
+	mso-outline-level:4;
+	font-size:12.0pt;
+	font-family:"Trebuchet MS";
+	color:black;
+	font-weight:normal;}
+h5
+	{mso-style-next:Normal;
+	margin-top:12.0pt;
+	margin-right:0in;
+	margin-bottom:3.0pt;
+	margin-left:0in;
+	mso-pagination:widow-orphan;
+	mso-outline-level:5;
+	font-size:10.0pt;
+	font-family:"Trebuchet MS";
+	color:black;
+	font-weight:normal;}
+h6
+	{mso-style-next:Normal;
+	margin-top:12.0pt;
+	margin-right:0in;
+	margin-bottom:3.0pt;
+	margin-left:0in;
+	mso-pagination:widow-orphan;
+	mso-outline-level:6;
+	font-size:8.0pt;
+	font-family:"Trebuchet MS";
+	color:black;
+	font-weight:normal;}
+a:link, span.MsoHyperlink
+	{color:#0066CC;
+	text-decoration:underline;
+	text-underline:single;}
+a:visited, span.MsoHyperlinkFollowed
+	{color:#999999;
+	text-decoration:underline;
+	text-underline:single;}
+p
+	{mso-margin-top-alt:auto;
+	margin-right:0in;
+	mso-margin-bottom-alt:auto;
+	margin-left:0in;
+	mso-pagination:widow-orphan;
+	font-size:12.0pt;
+	font-family:"Trebuchet MS";
+	mso-fareast-font-family:"Times New Roman";
+	mso-bidi-font-family:"Times New Roman";
+	color:black;}
+span.SpellE
+	{mso-style-name:"";
+	mso-spl-e:yes;}
+span.GramE
+	{mso-style-name:"";
+	mso-gram-e:yes;}
+@page Section1
+	{size:8.5in 11.0in;
+	margin:1.0in 1.25in 1.0in 1.25in;
+	mso-header-margin:.5in;
+	mso-footer-margin:.5in;
+	mso-paper-source:0;}
+div.Section1
+	{page:Section1;}
+-->
+</style>
+<!--[if gte mso 10]>
+<style>
+ /* Style Definitions */
+ table.MsoNormalTable
+	{mso-style-name:"Table Normal";
+	mso-tstyle-rowband-size:0;
+	mso-tstyle-colband-size:0;
+	mso-style-noshow:yes;
+	mso-style-parent:"";
+	mso-padding-alt:0in 5.4pt 0in 5.4pt;
+	mso-para-margin:0in;
+	mso-para-margin-bottom:.0001pt;
+	mso-pagination:widow-orphan;
+	font-size:10.0pt;
+	font-family:"Times New Roman";}
+table.MsoTableTheme
+	{mso-style-name:"Table Theme";
+	mso-tstyle-rowband-size:0;
+	mso-tstyle-colband-size:0;
+	border:solid #669999 1.0pt;
+	mso-border-alt:solid #669999 .5pt;
+	mso-padding-alt:0in 5.4pt 0in 5.4pt;
+	mso-border-insideh:.5pt solid #669999;
+	mso-border-insidev:.5pt solid #669999;
+	mso-para-margin:0in;
+	mso-para-margin-bottom:.0001pt;
+	mso-pagination:widow-orphan;
+	font-size:10.0pt;
+	font-family:"Times New Roman";}
+</style>
+<![endif]--><!--[if gte mso 9]><xml>
+ <o:shapedefaults v:ext="edit" spidmax="2050"/>
+</xml><![endif]--><!--[if gte mso 9]><xml>
+ <o:shapelayout v:ext="edit">
+  <o:idmap v:ext="edit" data="1"/>
+ </o:shapelayout></xml><![endif]-->
+</head>
+
+<body bgcolor=white
+background="Impersonation%20behavior%20in%20ASP.NET%20applications_files/image001.gif"
+lang=EN-US link="#0066CC" vlink="#999999" style='tab-interval:.5in'>
+<!--[if gte mso 9]><xml>
+ <v:background id="_x0000_s1025" o:bwmode="white" o:targetscreensize="800,600">
+  <v:fill src="Impersonation%20behavior%20in%20ASP.NET%20applications_files/image001.gif"
+   o:title="netbkgnd" type="frame"/>
+ </v:background></xml><![endif]-->
+
+<div class=Section1>
+
+<p class=MsoNormal><b>From:</b> Morgan, Jody A<br>
+<b>Sent:</b> <st1:date Year="2004" Day="2" Month="12">Thursday, December 02,
+ 2004</st1:date> <st1:time Minute="52" Hour="16">4:52 PM</st1:time><br>
+<b>To:</b> ESO - Control Systems Dev</p>
+
+<h4 align=center style='text-align:center'><b style='mso-bidi-font-weight:normal'><span
+style='font-size:16.0pt;font-family:Verdana'>Impersonation behavior in ASP.NET
+applications<o:p></o:p></span></b></h4>
+
+<p><span style='font-size:10.0pt;font-family:Verdana'>Impersonation allows a
+worker process to run under security credentials that are different from its
+base identity. <span style='mso-spacerun:yes'>&nbsp;</span>However, there are
+times when you might want to configure the ASP.NET Web application to execute
+using the credentials of the authenticated user or a specific user account. You
+can do this by enabling impersonation in the ASP.NET application.<o:p></o:p></span></p>
+
+<p><span style='font-size:10.0pt;font-family:Verdana'>In ASP.NET you need to
+explicitly configure the impersonation behavior for ASP.NET applications. By
+default, impersonation is disabled in ASP.NET. If you enable impersonation,
+ASP.NET receives the security token to impersonate from IIS. You can control
+the impersonation behavior by using the <b>identity</b> element in the <span
+class=SpellE>web.config</span> file. You have the following three options when
+specifying this setting:<o:p></o:p></span></p>
+
+<p style='margin-left:.5in;text-indent:-.25in;tab-stops:list .5in'><span
+style='font-size:10.0pt;font-family:Symbol;mso-fareast-font-family:Symbol;
+mso-bidi-font-family:Symbol'>&middot;</span><span style='font-size:7.0pt;
+mso-fareast-font-family:Symbol'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span><span style='font-size:10.0pt;font-family:Verdana;mso-bidi-font-weight:
+bold'>Impersonation is disabled</span><span style='font-size:10.0pt;font-family:
+Verdana'><o:p></o:p></span></p>
+
+<p style='margin-left:1.0in;text-indent:-.25in;tab-stops:list 1.0in'><span
+class=GramE><span style='font-family:"Courier New";mso-fareast-font-family:
+"Courier New"'>o</span></span><span style='font-size:7.0pt;mso-fareast-font-family:
+"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>This is the default
+setting. In this case, the ASP.NET thread runs using the process token of the
+application worker process regardless of which combination of IIS and ASP.NET
+authentication is used. By default, the process token of the application worker
+process is <span class=SpellE>NetworkService</span>. To disable impersonation,
+set the <b>impersonate</b> attribute of the <b>identity</b> element to <b>false</b>.<span
+style='font-family:"Courier New";mso-bidi-font-family:"Times New Roman"'><o:p></o:p></span></p>
+
+<p style='margin-left:1.0in;text-indent:-.25in;tab-stops:list 1.0in'><span
+style='font-size:10.0pt;font-family:"Courier New";mso-fareast-font-family:"Courier New"'>o</span><span
+style='font-size:7.0pt;mso-fareast-font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>&lt;identity impersonate=&quot;false&quot; /&gt;<span style='font-size:
+10.0pt;font-family:Verdana'><o:p></o:p></span></p>
+
+<p style='margin-left:.5in;text-indent:-.25in;tab-stops:list .5in'><span
+style='font-size:10.0pt;font-family:Symbol;mso-fareast-font-family:Symbol;
+mso-bidi-font-family:Symbol'>&middot;</span><span style='font-size:7.0pt;
+mso-fareast-font-family:Symbol'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span><span style='font-size:10.0pt;font-family:Verdana;mso-bidi-font-weight:
+bold'>Impersonation is enabled</span><span style='font-size:10.0pt;font-family:
+Verdana'><o:p></o:p></span></p>
+
+<p style='margin-left:1.0in;text-indent:-.25in;tab-stops:list 1.0in'><span
+class=GramE><span style='font-family:"Courier New";mso-fareast-font-family:
+"Courier New"'>o</span></span><span style='font-size:7.0pt;mso-fareast-font-family:
+"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>In this instance,
+ASP.NET impersonates the token passed to it by IIS, which is either an
+authenticated user or the anonymous user account (<span class=SpellE>IUSR_machinename</span>).
+For backward compatibility with ASP, you must enable impersonation. To enable
+impersonation, modify the identity element in the <span class=SpellE>web.config</span>
+file to look like the following:<span style='font-family:"Courier New";
+mso-bidi-font-family:"Times New Roman"'><o:p></o:p></span></p>
+
+<p style='margin-left:1.0in;text-indent:-.25in;tab-stops:list 1.0in'><span
+style='font-size:10.0pt;font-family:"Courier New";mso-fareast-font-family:"Courier New"'>o</span><span
+style='font-size:7.0pt;mso-fareast-font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>&lt;identity impersonate=&quot;true&quot; /&gt;<span style='font-size:
+10.0pt;font-family:Verdana'><o:p></o:p></span></p>
+
+<p style='margin-left:.5in;text-indent:-.25in;tab-stops:list .5in'><span
+style='font-size:10.0pt;font-family:Symbol;mso-fareast-font-family:Symbol;
+mso-bidi-font-family:Symbol'>&middot;</span><span style='font-size:7.0pt;
+mso-fareast-font-family:Symbol'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span><span style='font-size:10.0pt;font-family:Verdana;mso-bidi-font-weight:
+bold'>Impersonation is enabled and a specific impersonation identity is
+specified</span><span style='font-size:10.0pt;font-family:Verdana'><o:p></o:p></span></p>
+
+<p style='margin-left:1.0in;text-indent:-.25in;tab-stops:list 1.0in'><span
+class=GramE><span style='font-size:10.0pt;font-family:"Courier New";mso-fareast-font-family:
+"Courier New"'>o</span></span><span style='font-size:7.0pt;mso-fareast-font-family:
+"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><span
+style='font-size:10.0pt;font-family:Verdana'>In this instance, ASP.NET
+impersonates the token that is generated using the configured identity. In this
+case, ASP.NET does not use the token of the authenticated client except when
+performing access checks.<o:p></o:p></span></p>
+
+<p style='margin-left:1.0in;text-indent:-.25in;tab-stops:list 1.0in'><span
+class=GramE><span style='font-family:"Courier New";mso-fareast-font-family:
+"Courier New"'>o</span></span><span style='font-size:7.0pt;mso-fareast-font-family:
+"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>To enable
+impersonation and specify an impersonation identity, modify the <span
+class=SpellE>web.config</span> file to look like the following:<span
+style='font-family:"Times New Roman"'><o:p></o:p></span></p>
+
+<p style='margin-left:1.0in;text-indent:-.25in;tab-stops:list 1.0in'><span
+style='font-family:"Courier New";mso-fareast-font-family:"Courier New"'>o</span><span
+style='font-size:7.0pt;mso-fareast-font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>&lt;identity impersonate=&quot;true&quot; name=&quot;domain\user&quot;
+password=&quot;password&quot;/&gt;</p>
+
+<div>
+
+<p class=MsoNormal>&nbsp;</p>
+
+</div>
+
+<div>
+
+<p class=MsoNormal>&nbsp;</p>
+
+</div>
+
+<p class=MsoNormal><span style='font-size:18.0pt;font-family:"Comic Sans MS";
+mso-bidi-font-family:Arial;color:#000099'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Jody A
+Morgan</span> </p>
+
+<div style='margin-left:.5in'>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:Arial'>TVA IS/ESS
+ESO Support</span></p>
+
+</div>
+
+<div style='margin-left:.5in'>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:Arial'>423-751-2073</span></p>
+
+</div>
+
+<div>
+
+<p class=MsoNormal>&nbsp;</p>
+
+</div>
+
+</div>
+
+</body>
+
+</html>

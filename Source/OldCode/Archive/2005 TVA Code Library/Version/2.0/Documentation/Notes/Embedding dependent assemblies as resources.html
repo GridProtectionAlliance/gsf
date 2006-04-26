@@ -1,0 +1,968 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html xmlns:v="urn:schemas-microsoft-com:vml"
+xmlns:o="urn:schemas-microsoft-com:office:office"
+xmlns:w="urn:schemas-microsoft-com:office:word"
+xmlns:dt="uuid:C2F41010-65B3-11d1-A29F-00AA00C14882"
+xmlns:st1="urn:schemas-microsoft-com:office:smarttags"
+xmlns="http://www.w3.org/TR/REC-html40">
+
+<head>
+<meta name="Microsoft Theme 2.00" content="Network 011">
+<meta http-equiv=Content-Type content="text/html; charset=us-ascii">
+<meta name=ProgId content=Word.Document>
+<meta name=Generator content="Microsoft Word 10">
+<meta name=Originator content="Microsoft Word 10">
+<link rel=File-List
+href="Embedding%20dependent%20assemblies%20as%20resources_files/filelist.xml">
+<o:SmartTagType namespaceuri="urn:schemas-microsoft-com:office:smarttags"
+ name="time"/>
+<o:SmartTagType namespaceuri="urn:schemas-microsoft-com:office:smarttags"
+ name="date"/>
+<!--[if gte mso 9]><xml>
+ <o:DocumentProperties>
+  <o:Author>James Ritchie Carroll</o:Author>
+  <o:LastAuthor>James Ritchie Carroll</o:LastAuthor>
+  <o:Revision>3</o:Revision>
+  <o:TotalTime>4</o:TotalTime>
+  <o:Created>2006-04-18T16:21:00Z</o:Created>
+  <o:LastSaved>2006-04-18T16:25:00Z</o:LastSaved>
+  <o:Pages>1</o:Pages>
+  <o:Words>725</o:Words>
+  <o:Characters>4136</o:Characters>
+  <o:Company>tva</o:Company>
+  <o:Lines>34</o:Lines>
+  <o:Paragraphs>9</o:Paragraphs>
+  <o:CharactersWithSpaces>4852</o:CharactersWithSpaces>
+  <o:Version>10.6735</o:Version>
+ </o:DocumentProperties>
+</xml><![endif]--><!--[if gte mso 9]><xml>
+ <w:WordDocument>
+  <w:SpellingState>Clean</w:SpellingState>
+  <w:GrammarState>Clean</w:GrammarState>
+  <w:DefaultTableStyle Number="155">Table Theme</w:DefaultTableStyle>
+  <w:BrowserLevel>MicrosoftInternetExplorer4</w:BrowserLevel>
+ </w:WordDocument>
+</xml><![endif]--><!--[if !mso]><object
+ classid="clsid:38481807-CA0E-42D2-BF39-B33AF135CC4D" id=ieooui></object>
+<style>
+st1\:*{behavior:url(#ieooui) }
+</style>
+<![endif]-->
+<style>
+<!--
+ /* Font Definitions */
+ @font-face
+	{font-family:Verdana;
+	panose-1:2 11 6 4 3 5 4 4 2 4;
+	mso-font-charset:0;
+	mso-generic-font-family:swiss;
+	mso-font-pitch:variable;
+	mso-font-signature:536871559 0 0 0 415 0;}
+@font-face
+	{font-family:"Trebuchet MS";
+	panose-1:2 11 6 3 2 2 2 2 2 4;
+	mso-font-charset:0;
+	mso-generic-font-family:swiss;
+	mso-font-pitch:variable;
+	mso-font-signature:647 0 0 0 159 0;}
+ /* Style Definitions */
+ p.MsoNormal, li.MsoNormal, div.MsoNormal
+	{mso-style-parent:"";
+	margin:0in;
+	margin-bottom:.0001pt;
+	mso-pagination:widow-orphan;
+	font-size:12.0pt;
+	font-family:"Trebuchet MS";
+	mso-fareast-font-family:"Times New Roman";
+	mso-bidi-font-family:"Times New Roman";
+	color:black;}
+h1
+	{margin-top:12.0pt;
+	margin-right:0in;
+	margin-bottom:3.0pt;
+	margin-left:0in;
+	mso-pagination:widow-orphan;
+	page-break-after:avoid;
+	mso-outline-level:1;
+	font-size:24.0pt;
+	font-family:"Trebuchet MS";
+	mso-bidi-font-family:Arial;
+	color:black;
+	font-weight:normal;}
+h2
+	{margin-top:12.0pt;
+	margin-right:0in;
+	margin-bottom:3.0pt;
+	margin-left:0in;
+	mso-pagination:widow-orphan;
+	page-break-after:avoid;
+	mso-outline-level:2;
+	font-size:18.0pt;
+	font-family:"Trebuchet MS";
+	mso-bidi-font-family:Arial;
+	color:black;
+	font-weight:normal;}
+h3
+	{margin-top:12.0pt;
+	margin-right:0in;
+	margin-bottom:3.0pt;
+	margin-left:0in;
+	mso-pagination:widow-orphan;
+	page-break-after:avoid;
+	mso-outline-level:3;
+	font-size:14.0pt;
+	font-family:"Trebuchet MS";
+	mso-bidi-font-family:Arial;
+	color:black;
+	font-weight:normal;}
+h4
+	{margin-top:12.0pt;
+	margin-right:0in;
+	margin-bottom:3.0pt;
+	margin-left:0in;
+	mso-pagination:widow-orphan;
+	page-break-after:avoid;
+	mso-outline-level:4;
+	font-size:12.0pt;
+	font-family:"Trebuchet MS";
+	color:black;
+	font-weight:normal;}
+h5
+	{margin-top:12.0pt;
+	margin-right:0in;
+	margin-bottom:3.0pt;
+	margin-left:0in;
+	mso-pagination:widow-orphan;
+	mso-outline-level:5;
+	font-size:10.0pt;
+	font-family:"Trebuchet MS";
+	color:black;
+	font-weight:normal;}
+h6
+	{margin-top:12.0pt;
+	margin-right:0in;
+	margin-bottom:3.0pt;
+	margin-left:0in;
+	mso-pagination:widow-orphan;
+	mso-outline-level:6;
+	font-size:8.0pt;
+	font-family:"Trebuchet MS";
+	color:black;
+	font-weight:normal;}
+a:link, span.MsoHyperlink
+	{color:#0066CC;
+	text-decoration:underline;
+	text-underline:single;}
+a:visited, span.MsoHyperlinkFollowed
+	{color:#999999;
+	text-decoration:underline;
+	text-underline:single;}
+span.emailstyle17
+	{mso-style-name:emailstyle17;
+	font-family:Arial;
+	mso-ascii-font-family:Arial;
+	mso-hansi-font-family:Arial;
+	mso-bidi-font-family:Arial;
+	color:windowtext;}
+span.SpellE
+	{mso-style-name:"";
+	mso-spl-e:yes;}
+@page Section1
+	{size:8.5in 11.0in;
+	margin:1.0in 1.25in 1.0in 1.25in;
+	mso-header-margin:.5in;
+	mso-footer-margin:.5in;
+	mso-paper-source:0;}
+div.Section1
+	{page:Section1;}
+-->
+</style>
+<!--[if gte mso 10]>
+<style>
+ /* Style Definitions */
+ table.MsoNormalTable
+	{mso-style-name:"Table Normal";
+	mso-tstyle-rowband-size:0;
+	mso-tstyle-colband-size:0;
+	mso-style-noshow:yes;
+	mso-style-parent:"";
+	mso-padding-alt:0in 5.4pt 0in 5.4pt;
+	mso-para-margin:0in;
+	mso-para-margin-bottom:.0001pt;
+	mso-pagination:widow-orphan;
+	font-size:10.0pt;
+	font-family:"Times New Roman";}
+table.MsoTableTheme
+	{mso-style-name:"Table Theme";
+	mso-tstyle-rowband-size:0;
+	mso-tstyle-colband-size:0;
+	border:solid #669999 1.0pt;
+	mso-border-alt:solid #669999 .5pt;
+	mso-padding-alt:0in 5.4pt 0in 5.4pt;
+	mso-border-insideh:.5pt solid #669999;
+	mso-border-insidev:.5pt solid #669999;
+	mso-para-margin:0in;
+	mso-para-margin-bottom:.0001pt;
+	mso-pagination:widow-orphan;
+	font-size:10.0pt;
+	font-family:"Times New Roman";}
+</style>
+<![endif]--><!--[if gte mso 9]><xml>
+ <o:shapedefaults v:ext="edit" spidmax="2050"/>
+</xml><![endif]--><!--[if gte mso 9]><xml>
+ <o:shapelayout v:ext="edit">
+  <o:idmap v:ext="edit" data="1"/>
+ </o:shapelayout></xml><![endif]-->
+</head>
+
+<body bgcolor=white
+background="Embedding%20dependent%20assemblies%20as%20resources_files/image001.gif"
+lang=EN-US link="#0066CC" vlink="#999999" style='tab-interval:.5in'>
+<!--[if gte mso 9]><xml>
+ <v:background id="_x0000_s1025" o:bwmode="white" o:targetscreensize="800,600">
+  <v:fill src="Embedding%20dependent%20assemblies%20as%20resources_files/image001.gif"
+   o:title="netbkgnd" type="frame"/>
+ </v:background></xml><![endif]-->
+
+<div class=Section1>
+
+<p class=MsoNormal><b><span style='font-family:"Times New Roman";color:windowtext'>From:</span></b><span
+style='font-family:"Times New Roman";color:windowtext'> Carroll, James R<br>
+<b>Sent:</b> </span><st1:date Year="2004" Day="20" Month="10"><span
+ style='font-family:"Times New Roman";color:windowtext'>Wednesday, October 20,
+ 2004</span></st1:date><span style='font-family:"Times New Roman";color:windowtext'>
+</span><st1:time Minute="16" Hour="12"><span style='font-family:"Times New Roman";
+ color:windowtext'>12:16 PM</span></st1:time><span style='font-family:"Times New Roman";
+color:windowtext'><br>
+<b>To:</b> ESO - Control Systems Dev<br>
+<b>Subject:</b> Embedding dependent assemblies as resources...<o:p></o:p></span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:Verdana'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal><b style='mso-bidi-font-weight:normal'><i style='mso-bidi-font-style:
+normal'><span style='font-size:10.0pt;font-family:Verdana'>Note: code example has
+been updated for Visual Studio 2005&#8230;<o:p></o:p></span></i></b></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:Verdana'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:Verdana'>If you
+want single EXE deployment, i.e., no extraneous DLL&#8217;s in your deployment
+folder, you can embed any dependent DLL&#8217;s as resources in your project.</span></p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:Verdana'>To add
+assemblies as resources, right click on your project and say &#8220;Add-&gt;Add
+Existing Item&#8221;</span></p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:Verdana'>On file
+selection dialog, change &#8220;Files of type&#8221; to &#8220;All Files (*.*)&#8221;</span></p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:Verdana'>Find and
+select the assemblies (i.e., DLL&#8217;s) that your project references.</span></p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:Verdana'>Individually
+select each embedded assembly in your project and change the &#8220;Build
+Action&#8221; in the file properties to &#8220;Embedded Resource&#8221;.</span></p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:Verdana'>Under
+&#8220;References&#8221;, individually select the same assemblies and change
+the &#8220;Copy Local&#8221; setting in the reference properties to False.</span></p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:Verdana'>Now, just
+make sure you manually load the assemblies before they are used in your
+code.&nbsp; Use the following code as an example:</span></p>
+
+<p class=MsoNormal><o:p>&nbsp;</o:p></p>
+
+<p class=MsoNormal><i><span style='font-size:10.0pt;font-family:Verdana'>Note:
+this example loads a reference to the Tva.Core.dll assembly and some <span
+class=SpellE>Infragistics</span> components embedded as resources:</span></i></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue;mso-no-proof:yes'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue;mso-no-proof:yes'>Namespace</span><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'> </span><span style='font-size:10.0pt;font-family:"Courier New";
+color:blue;mso-no-proof:yes'>My<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue;mso-no-proof:yes'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'><span style='mso-spacerun:yes'>&nbsp;&nbsp;&nbsp; </span></span><span
+style='font-size:10.0pt;font-family:"Courier New";color:green;mso-no-proof:
+yes'>' The following events are availble for MyApplication:<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'><span style='mso-spacerun:yes'>&nbsp;&nbsp;&nbsp; </span></span><span
+style='font-size:10.0pt;font-family:"Courier New";color:green;mso-no-proof:
+yes'>' <o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'><span style='mso-spacerun:yes'>&nbsp;&nbsp;&nbsp; </span></span><span
+style='font-size:10.0pt;font-family:"Courier New";color:green;mso-no-proof:
+yes'>' Startup: Raised when the application starts, before the startup form is
+created.<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'><span style='mso-spacerun:yes'>&nbsp;&nbsp;&nbsp; </span></span><span
+style='font-size:10.0pt;font-family:"Courier New";color:green;mso-no-proof:
+yes'>' Shutdown: Raised after all application forms are closed.<span
+style='mso-spacerun:yes'>&nbsp; </span>This event is not raised if the
+application terminates abnormally.<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'><span style='mso-spacerun:yes'>&nbsp;&nbsp;&nbsp; </span></span><span
+style='font-size:10.0pt;font-family:"Courier New";color:green;mso-no-proof:
+yes'>' UnhandledException: Raised if the application encounters an unhandled
+exception.<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'><span style='mso-spacerun:yes'>&nbsp;&nbsp;&nbsp; </span></span><span
+style='font-size:10.0pt;font-family:"Courier New";color:green;mso-no-proof:
+yes'>' StartupNextInstance: Raised when launching a single-instance application
+and the application is already active. <o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'><span style='mso-spacerun:yes'>&nbsp;&nbsp;&nbsp; </span></span><span
+style='font-size:10.0pt;font-family:"Courier New";color:green;mso-no-proof:
+yes'>' NetworkAvailabilityChanged: Raised when the network connection is
+connected or disconnected.<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'><span style='mso-spacerun:yes'>&nbsp;&nbsp;&nbsp; </span></span><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue;mso-no-proof:yes'>Partial</span><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'> </span><span style='font-size:10.0pt;font-family:"Courier New";
+color:blue;mso-no-proof:yes'>Friend</span><span style='font-size:10.0pt;
+font-family:"Courier New";color:windowtext;mso-no-proof:yes'> </span><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue;mso-no-proof:yes'>Class</span><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'> MyApplication<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'><span style='mso-spacerun:yes'>&nbsp; </span><span
+style='mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></span><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue;mso-no-proof:yes'>Private</span><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'> m_assemblyCache </span><span style='font-size:10.0pt;font-family:"Courier New";
+color:blue;mso-no-proof:yes'>As</span><span style='font-size:10.0pt;font-family:
+"Courier New";color:windowtext;mso-no-proof:yes'> Dictionary(</span><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue;mso-no-proof:yes'>Of</span><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'> </span><span style='font-size:10.0pt;font-family:"Courier New";
+color:blue;mso-no-proof:yes'>String</span><span style='font-size:10.0pt;
+font-family:"Courier New";color:windowtext;mso-no-proof:yes'>, Assembly)<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'><span style='mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span><span style='font-size:10.0pt;font-family:"Courier New";
+color:blue;mso-no-proof:yes'>Private</span><span style='font-size:10.0pt;
+font-family:"Courier New";color:windowtext;mso-no-proof:yes'> m_rootNameSpace </span><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue;mso-no-proof:yes'>As</span><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'> </span><span style='font-size:10.0pt;font-family:"Courier New";
+color:blue;mso-no-proof:yes'>String<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'><span style='mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span><span style='font-size:10.0pt;font-family:"Courier New";
+color:blue;mso-no-proof:yes'>Private</span><span style='font-size:10.0pt;
+font-family:"Courier New";color:windowtext;mso-no-proof:yes'> m_addedResolver </span><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue;mso-no-proof:yes'>As</span><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'> </span><span style='font-size:10.0pt;font-family:"Courier New";
+color:blue;mso-no-proof:yes'>Boolean<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue;mso-no-proof:yes'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'><span style='mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span><span style='font-size:10.0pt;font-family:"Courier New";
+color:blue;mso-no-proof:yes'>Private</span><span style='font-size:10.0pt;
+font-family:"Courier New";color:windowtext;mso-no-proof:yes'> </span><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue;mso-no-proof:yes'>Sub</span><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'> MyApplication_Startup(</span><span style='font-size:10.0pt;font-family:
+"Courier New";color:blue;mso-no-proof:yes'>ByVal</span><span style='font-size:
+10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:yes'> sender </span><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue;mso-no-proof:yes'>As</span><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'> </span><span style='font-size:10.0pt;font-family:"Courier New";
+color:blue;mso-no-proof:yes'>Object</span><span style='font-size:10.0pt;
+font-family:"Courier New";color:windowtext;mso-no-proof:yes'>, </span><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue;mso-no-proof:yes'>ByVal</span><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'> e </span><span style='font-size:10.0pt;font-family:"Courier New";
+color:blue;mso-no-proof:yes'>As</span><span style='font-size:10.0pt;font-family:
+"Courier New";color:windowtext;mso-no-proof:yes'> Microsoft.VisualBasic.ApplicationServices.StartupEventArgs)
+</span><span style='font-size:10.0pt;font-family:"Courier New";color:blue;
+mso-no-proof:yes'>Handles</span><span style='font-size:10.0pt;font-family:"Courier New";
+color:windowtext;mso-no-proof:yes'> </span><span style='font-size:10.0pt;
+font-family:"Courier New";color:blue;mso-no-proof:yes'>Me</span><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'>.Startup<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'><span
+style='mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>LoadAssembly(</span><span style='font-size:10.0pt;font-family:"Courier New";
+color:maroon;mso-no-proof:yes'>&quot;Tva.Core&quot;</span><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'>)<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'><span
+style='mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>LoadAssembly(</span><span style='font-size:10.0pt;font-family:"Courier New";
+color:maroon;mso-no-proof:yes'>&quot;Infragistics2.Shared.v6.1&quot;</span><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'>)<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'><span
+style='mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>LoadAssembly(</span><span style='font-size:10.0pt;font-family:"Courier New";
+color:maroon;mso-no-proof:yes'>&quot;Infragistics2.Win.v6.1&quot;</span><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'>)<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'><span
+style='mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>LoadAssembly(</span><span style='font-size:10.0pt;font-family:"Courier New";
+color:maroon;mso-no-proof:yes'>&quot;Infragistics2.Win.Misc.v6.1&quot;</span><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'>)<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'><span
+style='mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>LoadAssembly(</span><span style='font-size:10.0pt;font-family:"Courier New";
+color:maroon;mso-no-proof:yes'>&quot;Infragistics2.Win.UltraWinEditors.v6.1&quot;</span><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'>)<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'><span
+style='mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>LoadAssembly(</span><span style='font-size:10.0pt;font-family:"Courier New";
+color:maroon;mso-no-proof:yes'>&quot;Infragistics2.Win.UltraWinMaskedEdit.v6.1&quot;</span><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'>)<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'><span
+style='mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>LoadAssembly(</span><span style='font-size:10.0pt;font-family:"Courier New";
+color:maroon;mso-no-proof:yes'>&quot;Infragistics2.Win.UltraWinStatusBar.v6.1&quot;</span><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'>)<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'><span
+style='mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>LoadAssembly(</span><span style='font-size:10.0pt;font-family:"Courier New";
+color:maroon;mso-no-proof:yes'>&quot;Infragistics2.Win.UltraWinTabControl.v6.1&quot;</span><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'>)<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'><span
+style='mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>LoadAssembly(</span><span style='font-size:10.0pt;font-family:"Courier New";
+color:maroon;mso-no-proof:yes'>&quot;Infragistics2.Win.UltraWinChart.v6.1&quot;</span><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'>)<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'><span style='mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span><span style='font-size:10.0pt;font-family:"Courier New";
+color:blue;mso-no-proof:yes'>End</span><span style='font-size:10.0pt;
+font-family:"Courier New";color:windowtext;mso-no-proof:yes'> </span><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue;mso-no-proof:yes'>Sub<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'><span style='mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span><span style='font-size:10.0pt;font-family:"Courier New";
+color:blue;mso-no-proof:yes'>Private</span><span style='font-size:10.0pt;
+font-family:"Courier New";color:windowtext;mso-no-proof:yes'> </span><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue;mso-no-proof:yes'>Sub</span><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'> LoadAssembly(</span><span style='font-size:10.0pt;font-family:"Courier New";
+color:blue;mso-no-proof:yes'>ByVal</span><span style='font-size:10.0pt;
+font-family:"Courier New";color:windowtext;mso-no-proof:yes'> assemblyName </span><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue;mso-no-proof:yes'>As</span><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'> </span><span style='font-size:10.0pt;font-family:"Courier New";
+color:blue;mso-no-proof:yes'>String</span><span style='font-size:10.0pt;
+font-family:"Courier New";color:windowtext;mso-no-proof:yes'>)<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'><span
+style='mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span><span style='font-size:10.0pt;font-family:"Courier New";
+color:green;mso-no-proof:yes'>' Hook into assembly resolve event for current
+domain so we can load assembly from embedded resource<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'><span
+style='mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span><span style='font-size:10.0pt;font-family:"Courier New";
+color:blue;mso-no-proof:yes'>If</span><span style='font-size:10.0pt;font-family:
+"Courier New";color:windowtext;mso-no-proof:yes'> </span><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue;mso-no-proof:yes'>Not</span><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'> m_addedResolver </span><span style='font-size:10.0pt;font-family:"Courier New";
+color:blue;mso-no-proof:yes'>Then<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'><span
+style='mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span><span style='font-size:10.0pt;font-family:"Courier New";
+color:blue;mso-no-proof:yes'>AddHandler</span><span style='font-size:10.0pt;
+font-family:"Courier New";color:windowtext;mso-no-proof:yes'> AppDomain.CurrentDomain.AssemblyResolve,
+</span><span style='font-size:10.0pt;font-family:"Courier New";color:blue;
+mso-no-proof:yes'>AddressOf</span><span style='font-size:10.0pt;font-family:
+"Courier New";color:windowtext;mso-no-proof:yes'> ResolveAssemblyFromResource<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'><span
+style='mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>m_addedResolver = </span><span style='font-size:10.0pt;font-family:"Courier New";
+color:blue;mso-no-proof:yes'>True<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'><span
+style='mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span><span style='font-size:10.0pt;font-family:"Courier New";
+color:blue;mso-no-proof:yes'>End</span><span style='font-size:10.0pt;
+font-family:"Courier New";color:windowtext;mso-no-proof:yes'> </span><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue;mso-no-proof:yes'>If<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue;mso-no-proof:yes'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'><span
+style='mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span><span style='font-size:10.0pt;font-family:"Courier New";
+color:green;mso-no-proof:yes'>' Load the assembly (this will invoke event that
+will resolve assembly from resource)<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'><span
+style='mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>AppDomain.CurrentDomain.Load(assemblyName)<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'><span style='mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span><span style='font-size:10.0pt;font-family:"Courier New";
+color:blue;mso-no-proof:yes'>End</span><span style='font-size:10.0pt;
+font-family:"Courier New";color:windowtext;mso-no-proof:yes'> </span><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue;mso-no-proof:yes'>Sub<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue;mso-no-proof:yes'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'><span style='mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span><span style='font-size:10.0pt;font-family:"Courier New";
+color:blue;mso-no-proof:yes'>Private</span><span style='font-size:10.0pt;
+font-family:"Courier New";color:windowtext;mso-no-proof:yes'> </span><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue;mso-no-proof:yes'>Function</span><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'> ResolveAssemblyFromResource(</span><span style='font-size:10.0pt;
+font-family:"Courier New";color:blue;mso-no-proof:yes'>ByVal</span><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'> sender </span><span style='font-size:10.0pt;font-family:"Courier New";
+color:blue;mso-no-proof:yes'>As</span><span style='font-size:10.0pt;font-family:
+"Courier New";color:windowtext;mso-no-proof:yes'> </span><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue;mso-no-proof:yes'>Object</span><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'>, </span><span style='font-size:10.0pt;font-family:"Courier New";
+color:blue;mso-no-proof:yes'>ByVal</span><span style='font-size:10.0pt;
+font-family:"Courier New";color:windowtext;mso-no-proof:yes'> e </span><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue;mso-no-proof:yes'>As</span><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'> ResolveEventArgs) </span><span style='font-size:10.0pt;font-family:"Courier New";
+color:blue;mso-no-proof:yes'>As</span><span style='font-size:10.0pt;font-family:
+"Courier New";color:windowtext;mso-no-proof:yes'> Assembly<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'><span
+style='mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span><span style='font-size:10.0pt;font-family:"Courier New";
+color:blue;mso-no-proof:yes'>Dim</span><span style='font-size:10.0pt;
+font-family:"Courier New";color:windowtext;mso-no-proof:yes'> resourceAssembly </span><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue;mso-no-proof:yes'>As</span><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'> Assembly<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'><span
+style='mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span><span style='font-size:10.0pt;font-family:"Courier New";
+color:blue;mso-no-proof:yes'>Dim</span><span style='font-size:10.0pt;
+font-family:"Courier New";color:windowtext;mso-no-proof:yes'> shortName </span><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue;mso-no-proof:yes'>As</span><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'> </span><span style='font-size:10.0pt;font-family:"Courier New";
+color:blue;mso-no-proof:yes'>String</span><span style='font-size:10.0pt;
+font-family:"Courier New";color:windowtext;mso-no-proof:yes'> =
+e.Name.Split(&quot;,&quot;c)(0)<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'><span
+style='mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span><span style='font-size:10.0pt;font-family:"Courier New";
+color:blue;mso-no-proof:yes'>If</span><span style='font-size:10.0pt;font-family:
+"Courier New";color:windowtext;mso-no-proof:yes'> m_rootNameSpace </span><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue;mso-no-proof:yes'>Is</span><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'> </span><span style='font-size:10.0pt;font-family:"Courier New";
+color:blue;mso-no-proof:yes'>Nothing</span><span style='font-size:10.0pt;
+font-family:"Courier New";color:windowtext;mso-no-proof:yes'> </span><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue;mso-no-proof:yes'>Then</span><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'> m_rootNameSpace = </span><span style='font-size:10.0pt;font-family:"Courier New";
+color:blue;mso-no-proof:yes'>Me</span><span style='font-size:10.0pt;font-family:
+"Courier New";color:windowtext;mso-no-proof:yes'>.GetType.Namespace.Split(&quot;.&quot;c)(0)<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'><span
+style='mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span><span style='font-size:10.0pt;font-family:"Courier New";
+color:blue;mso-no-proof:yes'>If</span><span style='font-size:10.0pt;font-family:
+"Courier New";color:windowtext;mso-no-proof:yes'> m_assemblyCache </span><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue;mso-no-proof:yes'>Is</span><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'> </span><span style='font-size:10.0pt;font-family:"Courier New";
+color:blue;mso-no-proof:yes'>Nothing</span><span style='font-size:10.0pt;
+font-family:"Courier New";color:windowtext;mso-no-proof:yes'> </span><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue;mso-no-proof:yes'>Then</span><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'> m_assemblyCache = </span><span style='font-size:10.0pt;font-family:"Courier New";
+color:blue;mso-no-proof:yes'>New</span><span style='font-size:10.0pt;
+font-family:"Courier New";color:windowtext;mso-no-proof:yes'> Dictionary(</span><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue;mso-no-proof:yes'>Of</span><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'> </span><span style='font-size:10.0pt;font-family:"Courier New";
+color:blue;mso-no-proof:yes'>String</span><span style='font-size:10.0pt;
+font-family:"Courier New";color:windowtext;mso-no-proof:yes'>, Assembly)<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'><span
+style='mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span><span style='font-size:10.0pt;font-family:"Courier New";
+color:blue;mso-no-proof:yes'>If</span><span style='font-size:10.0pt;font-family:
+"Courier New";color:windowtext;mso-no-proof:yes'> </span><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue;mso-no-proof:yes'>Not</span><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'> m_assemblyCache.TryGetValue(shortName, resourceAssembly) </span><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue;mso-no-proof:yes'>Then<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'><span
+style='mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span><span style='font-size:10.0pt;font-family:"Courier New";
+color:green;mso-no-proof:yes'>' Loop through all of the resources in the
+executing assembly<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'><span
+style='mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span><span style='font-size:10.0pt;font-family:"Courier New";
+color:blue;mso-no-proof:yes'>For</span><span style='font-size:10.0pt;
+font-family:"Courier New";color:windowtext;mso-no-proof:yes'> </span><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue;mso-no-proof:yes'>Each</span><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'> name </span><span style='font-size:10.0pt;font-family:"Courier New";
+color:blue;mso-no-proof:yes'>As</span><span style='font-size:10.0pt;font-family:
+"Courier New";color:windowtext;mso-no-proof:yes'> </span><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue;mso-no-proof:yes'>String</span><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'> </span><span style='font-size:10.0pt;font-family:"Courier New";
+color:blue;mso-no-proof:yes'>In</span><span style='font-size:10.0pt;font-family:
+"Courier New";color:windowtext;mso-no-proof:yes'>
+GetEntryAssembly.GetManifestResourceNames()<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'><span
+style='mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span><span style='font-size:10.0pt;font-family:"Courier New";
+color:green;mso-no-proof:yes'>' See if the embedded resource name matches
+assembly we are trying to load<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'><span
+style='mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span><span style='font-size:10.0pt;font-family:"Courier New";
+color:blue;mso-no-proof:yes'>If</span><span style='font-size:10.0pt;font-family:
+"Courier New";color:windowtext;mso-no-proof:yes'> </span><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue;mso-no-proof:yes'>String</span><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'>.Compare(Path.GetFileNameWithoutExtension(name), m_rootNameSpace &amp; </span><span
+style='font-size:10.0pt;font-family:"Courier New";color:maroon;mso-no-proof:
+yes'>&quot;.&quot;</span><span style='font-size:10.0pt;font-family:"Courier New";
+color:windowtext;mso-no-proof:yes'> &amp; shortName, </span><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue;mso-no-proof:yes'>True</span><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'>) = 0 </span><span style='font-size:10.0pt;font-family:"Courier New";
+color:blue;mso-no-proof:yes'>Then<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'><span
+style='mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span><span style='font-size:10.0pt;font-family:"Courier New";
+color:green;mso-no-proof:yes'>' If so, load embedded resource assembly into a
+binary buffer<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'><span
+style='mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span><span style='font-size:10.0pt;font-family:"Courier New";
+color:blue;mso-no-proof:yes'>With</span><span style='font-size:10.0pt;
+font-family:"Courier New";color:windowtext;mso-no-proof:yes'>
+GetEntryAssembly.GetManifestResourceStream(name)<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'><span
+style='mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span><span style='font-size:10.0pt;font-family:"Courier New";
+color:blue;mso-no-proof:yes'>Dim</span><span style='font-size:10.0pt;
+font-family:"Courier New";color:windowtext;mso-no-proof:yes'> buffer </span><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue;mso-no-proof:yes'>As</span><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'> </span><span style='font-size:10.0pt;font-family:"Courier New";
+color:blue;mso-no-proof:yes'>Byte</span><span style='font-size:10.0pt;
+font-family:"Courier New";color:windowtext;mso-no-proof:yes'>() = CreateArray(</span><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue;mso-no-proof:yes'>Of</span><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'> </span><span style='font-size:10.0pt;font-family:"Courier New";
+color:blue;mso-no-proof:yes'>Byte</span><span style='font-size:10.0pt;
+font-family:"Courier New";color:windowtext;mso-no-proof:yes'>)(.Length)<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'><span
+style='mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>.Read(buffer, 0, .Length)<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'><span
+style='mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span><span
+style='mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>.Close()<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'><span
+style='mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span><span style='font-size:10.0pt;font-family:"Courier New";
+color:green;mso-no-proof:yes'>' Load assembly from binary buffer<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'><span
+style='mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>resourceAssembly = Load(buffer)<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'><span
+style='mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>m_assemblyCache.Add(shortName, resourceAssembly)<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'><span
+style='mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span><span style='font-size:10.0pt;font-family:"Courier New";
+color:blue;mso-no-proof:yes'>Exit</span><span style='font-size:10.0pt;
+font-family:"Courier New";color:windowtext;mso-no-proof:yes'> </span><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue;mso-no-proof:yes'>For<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'><span
+style='mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span><span style='font-size:10.0pt;font-family:"Courier New";
+color:blue;mso-no-proof:yes'>End</span><span style='font-size:10.0pt;
+font-family:"Courier New";color:windowtext;mso-no-proof:yes'> </span><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue;mso-no-proof:yes'>With<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'><span
+style='mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span><span style='font-size:10.0pt;font-family:"Courier New";
+color:blue;mso-no-proof:yes'>End</span><span style='font-size:10.0pt;
+font-family:"Courier New";color:windowtext;mso-no-proof:yes'> </span><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue;mso-no-proof:yes'>If<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'><span
+style='mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span><span style='font-size:10.0pt;font-family:"Courier New";
+color:blue;mso-no-proof:yes'>Next<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'><span
+style='mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span><span style='font-size:10.0pt;font-family:"Courier New";
+color:blue;mso-no-proof:yes'>End</span><span style='font-size:10.0pt;
+font-family:"Courier New";color:windowtext;mso-no-proof:yes'> </span><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue;mso-no-proof:yes'>If<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue;mso-no-proof:yes'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'><span
+style='mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span><span style='font-size:10.0pt;font-family:"Courier New";
+color:blue;mso-no-proof:yes'>Return</span><span style='font-size:10.0pt;
+font-family:"Courier New";color:windowtext;mso-no-proof:yes'> resourceAssembly<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'><span style='mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span><span style='font-size:10.0pt;font-family:"Courier New";
+color:blue;mso-no-proof:yes'>End</span><span style='font-size:10.0pt;
+font-family:"Courier New";color:windowtext;mso-no-proof:yes'> </span><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue;mso-no-proof:yes'>Function<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue;mso-no-proof:yes'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'><span style='mso-spacerun:yes'>&nbsp;&nbsp;&nbsp; </span></span><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue;mso-no-proof:yes'>End</span><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'> </span><span style='font-size:10.0pt;font-family:"Courier New";
+color:blue;mso-no-proof:yes'>Class<o:p></o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue;mso-no-proof:yes'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue;mso-no-proof:yes'>End</span><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'> </span><span style='font-size:10.0pt;font-family:"Courier New";
+color:blue;mso-no-proof:yes'>Namespace<o:p></o:p></span></p>
+
+<p class=MsoNormal><o:p>&nbsp;</o:p></p>
+
+</div>
+
+</body>
+
+</html>

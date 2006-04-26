@@ -1,0 +1,33 @@
+Microsoft Visual Studio Solution File, Format Version 7.00
+Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "SsamLibrary", "SsamLibrary.vbproj", "{8ACA45D5-8904-4E79-A458-2F66A3CFBC17}"
+EndProject
+Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "TestSsamLibrary", "..\TestSsamLibrary\TestSsamLibrary.vbproj", "{F03F550A-9EB8-4E52-BAE6-FBB8C49CBB66}"
+EndProject
+Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "testSsam", "..\testSsam\testSsam.vbproj", "{658A3222-41A5-45C7-8DBD-811E95F4473A}"
+EndProject
+Global
+	GlobalSection(SolutionConfiguration) = preSolution
+		ConfigName.0 = Debug
+		ConfigName.1 = Release
+	EndGlobalSection
+	GlobalSection(ProjectDependencies) = postSolution
+	EndGlobalSection
+	GlobalSection(ProjectConfiguration) = postSolution
+		{8ACA45D5-8904-4E79-A458-2F66A3CFBC17}.Debug.ActiveCfg = Debug|.NET
+		{8ACA45D5-8904-4E79-A458-2F66A3CFBC17}.Debug.Build.0 = Debug|.NET
+		{8ACA45D5-8904-4E79-A458-2F66A3CFBC17}.Release.ActiveCfg = Release|.NET
+		{8ACA45D5-8904-4E79-A458-2F66A3CFBC17}.Release.Build.0 = Release|.NET
+		{F03F550A-9EB8-4E52-BAE6-FBB8C49CBB66}.Debug.ActiveCfg = Debug|.NET
+		{F03F550A-9EB8-4E52-BAE6-FBB8C49CBB66}.Debug.Build.0 = Debug|.NET
+		{F03F550A-9EB8-4E52-BAE6-FBB8C49CBB66}.Release.ActiveCfg = Release|.NET
+		{F03F550A-9EB8-4E52-BAE6-FBB8C49CBB66}.Release.Build.0 = Release|.NET
+		{658A3222-41A5-45C7-8DBD-811E95F4473A}.Debug.ActiveCfg = Debug|.NET
+		{658A3222-41A5-45C7-8DBD-811E95F4473A}.Debug.Build.0 = Debug|.NET
+		{658A3222-41A5-45C7-8DBD-811E95F4473A}.Release.ActiveCfg = Release|.NET
+		{658A3222-41A5-45C7-8DBD-811E95F4473A}.Release.Build.0 = Release|.NET
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+	EndGlobalSection
+	GlobalSection(ExtensibilityAddIns) = postSolution
+	EndGlobalSection
+EndGlobal

@@ -1,0 +1,226 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML><HEAD>
+<META http-equiv=Content-Type content="text/html; charset=us-ascii">
+<META content="MSHTML 6.00.2900.2802" name=GENERATOR>
+<STYLE>
+<!--
+ /* Style Definitions */
+ p.MsoNormal, li.MsoNormal, div.MsoNormal
+	{margin:0in;
+	margin-bottom:.0001pt;
+	font-size:12.0pt;
+	font-family:"Times New Roman";}
+a:link, span.MsoHyperlink
+	{color:blue;
+	text-decoration:underline;}
+a:visited, span.MsoHyperlinkFollowed
+	{color:#606420;
+	text-decoration:underline;}
+span.emailstyle17
+	{font-family:Arial;
+	color:windowtext;}
+span.EmailStyle18
+	{font-family:Arial;
+	color:navy;}
+@page Section1
+	{size:8.5in 11.0in;
+	margin:1.0in 1.25in 1.0in 1.25in;}
+div.Section1
+	{page:Section1;}
+-->
+</STYLE>
+</HEAD>
+<BODY lang=EN-US vLink=#606420 link=blue><B>From:</B> Carroll, James 
+R<BR><B>Sent:</B> Tuesday, September 21, 2004 2:11 PM<BR><B>To:</B> ESO - 
+Control Systems Dev<BR><B>Subject:</B> Other handy SQL Server functions<BR>
+<DIV class=Section1>
+<P class=MsoNormal><FONT face="Times New Roman" color=navy size=3><SPAN 
+style="FONT-SIZE: 12pt; COLOR: navy">Here are a few other handy SQL server 
+functions &#8211; if you have written any generic SQL server functions that you think 
+might be useful for others &#8211; let me know and we&#8217;ll collate them together and 
+keep them in one spot for easy access.&nbsp; I know John Holmes is working on 
+some SQL server time zone conversion functions&#8230;</SPAN></FONT></P>
+<P class=MsoNormal><FONT face=Arial color=navy size=2><SPAN 
+style="FONT-SIZE: 10pt; COLOR: navy; FONT-FAMILY: Arial"></SPAN></FONT>&nbsp;</P>
+<P class=MsoNormal><FONT face=Arial color=navy size=2><SPAN 
+style="FONT-SIZE: 10pt; COLOR: navy; FONT-FAMILY: Arial">CREATE FUNCTION 
+dbo.LongDate (@Date DATETIME)</SPAN></FONT></P>
+<P class=MsoNormal><FONT face=Arial color=navy size=2><SPAN 
+style="FONT-SIZE: 10pt; COLOR: navy; FONT-FAMILY: Arial">RETURNS VARCHAR(512) 
+AS</SPAN></FONT></P>
+<P class=MsoNormal><FONT face=Arial color=navy size=2><SPAN 
+style="FONT-SIZE: 10pt; COLOR: navy; FONT-FAMILY: Arial">BEGIN</SPAN></FONT></P>
+<P class=MsoNormal><FONT face=Arial color=navy size=2><SPAN 
+style="FONT-SIZE: 10pt; COLOR: navy; FONT-FAMILY: Arial"></SPAN></FONT>&nbsp;</P>
+<P class=MsoNormal><FONT face=Arial color=navy size=2><SPAN 
+style="FONT-SIZE: 10pt; COLOR: navy; FONT-FAMILY: Arial">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+DECLARE @WeekDay INT</SPAN></FONT></P>
+<P class=MsoNormal><FONT face=Arial color=navy size=2><SPAN 
+style="FONT-SIZE: 10pt; COLOR: navy; FONT-FAMILY: Arial">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+DECLARE @WeekDayName VARCHAR(10)</SPAN></FONT></P>
+<P class=MsoNormal><FONT face=Arial color=navy size=2><SPAN 
+style="FONT-SIZE: 10pt; COLOR: navy; FONT-FAMILY: Arial"></SPAN></FONT>&nbsp;</P>
+<P class=MsoNormal><FONT face=Arial color=navy size=2><SPAN 
+style="FONT-SIZE: 10pt; COLOR: navy; FONT-FAMILY: Arial">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+SET @WeekDay = DATEPART(dw, @Date)</SPAN></FONT></P>
+<P class=MsoNormal><FONT face=Arial color=navy size=2><SPAN 
+style="FONT-SIZE: 10pt; COLOR: navy; FONT-FAMILY: Arial"></SPAN></FONT>&nbsp;</P>
+<P class=MsoNormal><FONT face=Arial color=navy size=2><SPAN 
+style="FONT-SIZE: 10pt; COLOR: navy; FONT-FAMILY: Arial">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+SET @WeekDayName = </SPAN></FONT></P>
+<P class=MsoNormal><FONT face=Arial color=navy size=2><SPAN 
+style="FONT-SIZE: 10pt; COLOR: navy; FONT-FAMILY: Arial">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+CASE</SPAN></FONT></P>
+<P class=MsoNormal><FONT face=Arial color=navy size=2><SPAN 
+style="FONT-SIZE: 10pt; COLOR: navy; FONT-FAMILY: Arial">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+WHEN @WeekDay = 1 THEN&nbsp;&nbsp;&nbsp; /* Sunday */</SPAN></FONT></P>
+<P class=MsoNormal><FONT face=Arial color=navy size=2><SPAN 
+style="FONT-SIZE: 10pt; COLOR: navy; FONT-FAMILY: Arial">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+'Sunday'</SPAN></FONT></P>
+<P class=MsoNormal><FONT face=Arial color=navy size=2><SPAN 
+style="FONT-SIZE: 10pt; COLOR: navy; FONT-FAMILY: Arial">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+WHEN @WeekDay = 2 THEN&nbsp;&nbsp;&nbsp; /* Monday */</SPAN></FONT></P>
+<P class=MsoNormal><FONT face=Arial color=navy size=2><SPAN 
+style="FONT-SIZE: 10pt; COLOR: navy; FONT-FAMILY: Arial">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+'Monday'</SPAN></FONT></P>
+<P class=MsoNormal><FONT face=Arial color=navy size=2><SPAN 
+style="FONT-SIZE: 10pt; COLOR: navy; FONT-FAMILY: Arial">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+WHEN @WeekDay = 3 THEN&nbsp;&nbsp;&nbsp; /* Tuesday */</SPAN></FONT></P>
+<P class=MsoNormal><FONT face=Arial color=navy size=2><SPAN 
+style="FONT-SIZE: 10pt; COLOR: navy; FONT-FAMILY: Arial">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+'Tuesday'</SPAN></FONT></P>
+<P class=MsoNormal><FONT face=Arial color=navy size=2><SPAN 
+style="FONT-SIZE: 10pt; COLOR: navy; FONT-FAMILY: Arial">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+WHEN @WeekDay = 4 THEN&nbsp;&nbsp;&nbsp; /* Wednesday */</SPAN></FONT></P>
+<P class=MsoNormal><FONT face=Arial color=navy size=2><SPAN 
+style="FONT-SIZE: 10pt; COLOR: navy; FONT-FAMILY: Arial">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+'Wednesday'</SPAN></FONT></P>
+<P class=MsoNormal><FONT face=Arial color=navy size=2><SPAN 
+style="FONT-SIZE: 10pt; COLOR: navy; FONT-FAMILY: Arial">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+WHEN @WeekDay = 5 THEN&nbsp;&nbsp;&nbsp; /* Thursday */</SPAN></FONT></P>
+<P class=MsoNormal><FONT face=Arial color=navy size=2><SPAN 
+style="FONT-SIZE: 10pt; COLOR: navy; FONT-FAMILY: Arial">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+'Thursday'</SPAN></FONT></P>
+<P class=MsoNormal><FONT face=Arial color=navy size=2><SPAN 
+style="FONT-SIZE: 10pt; COLOR: navy; FONT-FAMILY: Arial">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+WHEN @WeekDay = 6 THEN&nbsp;&nbsp;&nbsp; /* Friday */</SPAN></FONT></P>
+<P class=MsoNormal><FONT face=Arial color=navy size=2><SPAN 
+style="FONT-SIZE: 10pt; COLOR: navy; FONT-FAMILY: Arial">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+'Friday'</SPAN></FONT></P>
+<P class=MsoNormal><FONT face=Arial color=navy size=2><SPAN 
+style="FONT-SIZE: 10pt; COLOR: navy; FONT-FAMILY: Arial">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+ELSE&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+/* Saturday */</SPAN></FONT></P>
+<P class=MsoNormal><FONT face=Arial color=navy size=2><SPAN 
+style="FONT-SIZE: 10pt; COLOR: navy; FONT-FAMILY: Arial">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+'Saturday'</SPAN></FONT></P>
+<P class=MsoNormal><FONT face=Arial color=navy size=2><SPAN 
+style="FONT-SIZE: 10pt; COLOR: navy; FONT-FAMILY: Arial">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+END</SPAN></FONT></P>
+<P class=MsoNormal><FONT face=Arial color=navy size=2><SPAN 
+style="FONT-SIZE: 10pt; COLOR: navy; FONT-FAMILY: Arial"></SPAN></FONT>&nbsp;</P>
+<P class=MsoNormal><FONT face=Arial color=navy size=2><SPAN 
+style="FONT-SIZE: 10pt; COLOR: navy; FONT-FAMILY: Arial"></SPAN></FONT>&nbsp;</P>
+<P class=MsoNormal><FONT face=Arial color=navy size=2><SPAN 
+style="FONT-SIZE: 10pt; COLOR: navy; FONT-FAMILY: Arial">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+RETURN @WeekDayName + ' ' + CAST(@Date AS VARCHAR)</SPAN></FONT></P>
+<P class=MsoNormal><FONT face=Arial color=navy size=2><SPAN 
+style="FONT-SIZE: 10pt; COLOR: navy; FONT-FAMILY: Arial"></SPAN></FONT>&nbsp;</P>
+<P class=MsoNormal><FONT face=Arial color=navy size=2><SPAN 
+style="FONT-SIZE: 10pt; COLOR: navy; FONT-FAMILY: Arial">END</SPAN></FONT></P>
+<P class=MsoNormal><FONT face=Arial color=navy size=2><SPAN 
+style="FONT-SIZE: 10pt; COLOR: navy; FONT-FAMILY: Arial"></SPAN></FONT>&nbsp;</P>
+<P class=MsoNormal><FONT face=Arial color=navy size=2><SPAN 
+style="FONT-SIZE: 10pt; COLOR: navy; FONT-FAMILY: Arial">CREATE FUNCTION 
+dbo.PadLeft (@Str VARCHAR(512), @Char CHAR(1), @Length INT)</SPAN></FONT></P>
+<P class=MsoNormal><FONT face=Arial color=navy size=2><SPAN 
+style="FONT-SIZE: 10pt; COLOR: navy; FONT-FAMILY: Arial">RETURNS VARCHAR(512) 
+AS</SPAN></FONT></P>
+<P class=MsoNormal><FONT face=Arial color=navy size=2><SPAN 
+style="FONT-SIZE: 10pt; COLOR: navy; FONT-FAMILY: Arial">BEGIN</SPAN></FONT></P>
+<P class=MsoNormal><FONT face=Arial color=navy size=2><SPAN 
+style="FONT-SIZE: 10pt; COLOR: navy; FONT-FAMILY: Arial"></SPAN></FONT>&nbsp;</P>
+<P class=MsoNormal><FONT face=Arial color=navy size=2><SPAN 
+style="FONT-SIZE: 10pt; COLOR: navy; FONT-FAMILY: Arial">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+DECLARE @RetStr VARCHAR(512)</SPAN></FONT></P>
+<P class=MsoNormal><FONT face=Arial color=navy size=2><SPAN 
+style="FONT-SIZE: 10pt; COLOR: navy; FONT-FAMILY: Arial">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+DECLARE @StrLen INT</SPAN></FONT></P>
+<P class=MsoNormal><FONT face=Arial color=navy size=2><SPAN 
+style="FONT-SIZE: 10pt; COLOR: navy; FONT-FAMILY: Arial">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+</SPAN></FONT></P>
+<P class=MsoNormal><FONT face=Arial color=navy size=2><SPAN 
+style="FONT-SIZE: 10pt; COLOR: navy; FONT-FAMILY: Arial">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+SET @StrLen = LEN(@Str)</SPAN></FONT></P>
+<P class=MsoNormal><FONT face=Arial color=navy size=2><SPAN 
+style="FONT-SIZE: 10pt; COLOR: navy; FONT-FAMILY: Arial">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+</SPAN></FONT></P>
+<P class=MsoNormal><FONT face=Arial color=navy size=2><SPAN 
+style="FONT-SIZE: 10pt; COLOR: navy; FONT-FAMILY: Arial">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+IF @StrLen &gt;= @Length</SPAN></FONT></P>
+<P class=MsoNormal><FONT face=Arial color=navy size=2><SPAN 
+style="FONT-SIZE: 10pt; COLOR: navy; FONT-FAMILY: Arial">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+SET @RetStr = @Str</SPAN></FONT></P>
+<P class=MsoNormal><FONT face=Arial color=navy size=2><SPAN 
+style="FONT-SIZE: 10pt; COLOR: navy; FONT-FAMILY: Arial">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+ELSE</SPAN></FONT></P>
+<P class=MsoNormal><FONT face=Arial color=navy size=2><SPAN 
+style="FONT-SIZE: 10pt; COLOR: navy; FONT-FAMILY: Arial">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+SET @RetStr = REPLICATE(@Char, @Length - @StrLen) + @Str</SPAN></FONT></P>
+<P class=MsoNormal><FONT face=Arial color=navy size=2><SPAN 
+style="FONT-SIZE: 10pt; COLOR: navy; FONT-FAMILY: Arial"></SPAN></FONT>&nbsp;</P>
+<P class=MsoNormal><FONT face=Arial color=navy size=2><SPAN 
+style="FONT-SIZE: 10pt; COLOR: navy; FONT-FAMILY: Arial">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+RETURN @RetStr</SPAN></FONT></P>
+<P class=MsoNormal><FONT face=Arial color=navy size=2><SPAN 
+style="FONT-SIZE: 10pt; COLOR: navy; FONT-FAMILY: Arial"></SPAN></FONT>&nbsp;</P>
+<P class=MsoNormal><FONT face=Arial color=navy size=2><SPAN 
+style="FONT-SIZE: 10pt; COLOR: navy; FONT-FAMILY: Arial">END</SPAN></FONT></P>
+<P class=MsoNormal><FONT face=Arial color=navy size=2><SPAN 
+style="FONT-SIZE: 10pt; COLOR: navy; FONT-FAMILY: Arial"></SPAN></FONT>&nbsp;</P>
+<P class=MsoNormal><FONT face=Arial color=navy size=2><SPAN 
+style="FONT-SIZE: 10pt; COLOR: navy; FONT-FAMILY: Arial">CREATE FUNCTION 
+dbo.PadRight (@Str VARCHAR(512), @Char CHAR(1), @Length INT)</SPAN></FONT></P>
+<P class=MsoNormal><FONT face=Arial color=navy size=2><SPAN 
+style="FONT-SIZE: 10pt; COLOR: navy; FONT-FAMILY: Arial">RETURNS VARCHAR(512) 
+AS</SPAN></FONT></P>
+<P class=MsoNormal><FONT face=Arial color=navy size=2><SPAN 
+style="FONT-SIZE: 10pt; COLOR: navy; FONT-FAMILY: Arial">BEGIN</SPAN></FONT></P>
+<P class=MsoNormal><FONT face=Arial color=navy size=2><SPAN 
+style="FONT-SIZE: 10pt; COLOR: navy; FONT-FAMILY: Arial"></SPAN></FONT>&nbsp;</P>
+<P class=MsoNormal><FONT face=Arial color=navy size=2><SPAN 
+style="FONT-SIZE: 10pt; COLOR: navy; FONT-FAMILY: Arial">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+DECLARE @RetStr VARCHAR(512)</SPAN></FONT></P>
+<P class=MsoNormal><FONT face=Arial color=navy size=2><SPAN 
+style="FONT-SIZE: 10pt; COLOR: navy; FONT-FAMILY: Arial">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+DECLARE @StrLen INT</SPAN></FONT></P>
+<P class=MsoNormal><FONT face=Arial color=navy size=2><SPAN 
+style="FONT-SIZE: 10pt; COLOR: navy; FONT-FAMILY: Arial">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+</SPAN></FONT></P>
+<P class=MsoNormal><FONT face=Arial color=navy size=2><SPAN 
+style="FONT-SIZE: 10pt; COLOR: navy; FONT-FAMILY: Arial">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+SET @StrLen = LEN(@Str)</SPAN></FONT></P>
+<P class=MsoNormal><FONT face=Arial color=navy size=2><SPAN 
+style="FONT-SIZE: 10pt; COLOR: navy; FONT-FAMILY: Arial">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+</SPAN></FONT></P>
+<P class=MsoNormal><FONT face=Arial color=navy size=2><SPAN 
+style="FONT-SIZE: 10pt; COLOR: navy; FONT-FAMILY: Arial">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+IF @StrLen &gt;= @Length</SPAN></FONT></P>
+<P class=MsoNormal><FONT face=Arial color=navy size=2><SPAN 
+style="FONT-SIZE: 10pt; COLOR: navy; FONT-FAMILY: Arial">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+SET @RetStr = @Str</SPAN></FONT></P>
+<P class=MsoNormal><FONT face=Arial color=navy size=2><SPAN 
+style="FONT-SIZE: 10pt; COLOR: navy; FONT-FAMILY: Arial">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+ELSE</SPAN></FONT></P>
+<P class=MsoNormal><FONT face=Arial color=navy size=2><SPAN 
+style="FONT-SIZE: 10pt; COLOR: navy; FONT-FAMILY: Arial">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+SET @RetStr = @Str + REPLICATE(@Char, @Length - @StrLen)</SPAN></FONT></P>
+<P class=MsoNormal><FONT face=Arial color=navy size=2><SPAN 
+style="FONT-SIZE: 10pt; COLOR: navy; FONT-FAMILY: Arial"></SPAN></FONT>&nbsp;</P>
+<P class=MsoNormal><FONT face=Arial color=navy size=2><SPAN 
+style="FONT-SIZE: 10pt; COLOR: navy; FONT-FAMILY: Arial">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+RETURN @RetStr</SPAN></FONT></P>
+<P class=MsoNormal><FONT face=Arial color=navy size=2><SPAN 
+style="FONT-SIZE: 10pt; COLOR: navy; FONT-FAMILY: Arial"></SPAN></FONT>&nbsp;</P>
+<P class=MsoNormal><FONT face=Arial color=navy size=2><SPAN 
+style="FONT-SIZE: 10pt; COLOR: navy; FONT-FAMILY: Arial">END</SPAN></FONT></P></DIV></BODY></HTML>

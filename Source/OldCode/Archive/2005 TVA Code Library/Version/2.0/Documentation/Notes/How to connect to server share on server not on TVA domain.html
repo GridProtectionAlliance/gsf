@@ -1,0 +1,570 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html xmlns:v="urn:schemas-microsoft-com:vml"
+xmlns:o="urn:schemas-microsoft-com:office:office"
+xmlns:w="urn:schemas-microsoft-com:office:word"
+xmlns:dt="uuid:C2F41010-65B3-11d1-A29F-00AA00C14882"
+xmlns:st1="urn:schemas-microsoft-com:office:smarttags"
+xmlns="http://www.w3.org/TR/REC-html40">
+
+<head>
+<meta name="Microsoft Theme 2.00" content="Network 011">
+<meta http-equiv=Content-Type content="text/html; charset=us-ascii">
+<meta name=ProgId content=Word.Document>
+<meta name=Generator content="Microsoft Word 10">
+<meta name=Originator content="Microsoft Word 10">
+<link rel=File-List
+href="How%20to%20connect%20to%20server%20share%20on%20server%20not%20on%20TVA%20domain_files/filelist.xml">
+<o:SmartTagType namespaceuri="urn:schemas-microsoft-com:office:smarttags"
+ name="time"/>
+<o:SmartTagType namespaceuri="urn:schemas-microsoft-com:office:smarttags"
+ name="date"/>
+<!--[if gte mso 9]><xml>
+ <o:DocumentProperties>
+  <o:Author>James Ritchie Carroll</o:Author>
+  <o:LastAuthor>James Ritchie Carroll</o:LastAuthor>
+  <o:Revision>2</o:Revision>
+  <o:TotalTime>5</o:TotalTime>
+  <o:Created>2006-04-18T17:03:00Z</o:Created>
+  <o:LastSaved>2006-04-18T17:09:00Z</o:LastSaved>
+  <o:Pages>1</o:Pages>
+  <o:Words>437</o:Words>
+  <o:Characters>2491</o:Characters>
+  <o:Company>tva</o:Company>
+  <o:Lines>20</o:Lines>
+  <o:Paragraphs>5</o:Paragraphs>
+  <o:CharactersWithSpaces>2923</o:CharactersWithSpaces>
+  <o:Version>10.6735</o:Version>
+ </o:DocumentProperties>
+</xml><![endif]--><!--[if gte mso 9]><xml>
+ <w:WordDocument>
+  <w:SpellingState>Clean</w:SpellingState>
+  <w:GrammarState>Clean</w:GrammarState>
+  <w:DefaultTableStyle Number="155">Table Theme</w:DefaultTableStyle>
+  <w:BrowserLevel>MicrosoftInternetExplorer4</w:BrowserLevel>
+ </w:WordDocument>
+</xml><![endif]--><!--[if !mso]><object
+ classid="clsid:38481807-CA0E-42D2-BF39-B33AF135CC4D" id=ieooui></object>
+<style>
+st1\:*{behavior:url(#ieooui) }
+</style>
+<![endif]-->
+<style>
+<!--
+ /* Font Definitions */
+ @font-face
+	{font-family:Verdana;
+	panose-1:2 11 6 4 3 5 4 4 2 4;
+	mso-font-charset:0;
+	mso-generic-font-family:swiss;
+	mso-font-pitch:variable;
+	mso-font-signature:536871559 0 0 0 415 0;}
+@font-face
+	{font-family:"Trebuchet MS";
+	panose-1:2 11 6 3 2 2 2 2 2 4;
+	mso-font-charset:0;
+	mso-generic-font-family:swiss;
+	mso-font-pitch:variable;
+	mso-font-signature:647 0 0 0 159 0;}
+ /* Style Definitions */
+ p.MsoNormal, li.MsoNormal, div.MsoNormal
+	{mso-style-parent:"";
+	margin:0in;
+	margin-bottom:.0001pt;
+	mso-pagination:widow-orphan;
+	font-size:12.0pt;
+	font-family:"Trebuchet MS";
+	mso-fareast-font-family:"Times New Roman";
+	mso-bidi-font-family:"Times New Roman";
+	color:black;}
+h1
+	{mso-style-next:Normal;
+	margin-top:12.0pt;
+	margin-right:0in;
+	margin-bottom:3.0pt;
+	margin-left:0in;
+	mso-pagination:widow-orphan;
+	page-break-after:avoid;
+	mso-outline-level:1;
+	font-size:24.0pt;
+	font-family:Arial;
+	mso-ascii-font-family:"Trebuchet MS";
+	mso-hansi-font-family:"Trebuchet MS";
+	color:black;
+	mso-font-kerning:16.0pt;
+	font-weight:normal;}
+h2
+	{mso-style-next:Normal;
+	margin-top:12.0pt;
+	margin-right:0in;
+	margin-bottom:3.0pt;
+	margin-left:0in;
+	mso-pagination:widow-orphan;
+	page-break-after:avoid;
+	mso-outline-level:2;
+	font-size:18.0pt;
+	font-family:Arial;
+	mso-ascii-font-family:"Trebuchet MS";
+	mso-hansi-font-family:"Trebuchet MS";
+	color:black;
+	font-weight:normal;}
+h3
+	{mso-style-next:Normal;
+	margin-top:12.0pt;
+	margin-right:0in;
+	margin-bottom:3.0pt;
+	margin-left:0in;
+	mso-pagination:widow-orphan;
+	page-break-after:avoid;
+	mso-outline-level:3;
+	font-size:14.0pt;
+	font-family:Arial;
+	mso-ascii-font-family:"Trebuchet MS";
+	mso-hansi-font-family:"Trebuchet MS";
+	color:black;
+	font-weight:normal;}
+h4
+	{mso-style-next:Normal;
+	margin-top:12.0pt;
+	margin-right:0in;
+	margin-bottom:3.0pt;
+	margin-left:0in;
+	mso-pagination:widow-orphan;
+	page-break-after:avoid;
+	mso-outline-level:4;
+	font-size:12.0pt;
+	font-family:"Trebuchet MS";
+	color:black;
+	font-weight:normal;}
+h5
+	{mso-style-next:Normal;
+	margin-top:12.0pt;
+	margin-right:0in;
+	margin-bottom:3.0pt;
+	margin-left:0in;
+	mso-pagination:widow-orphan;
+	mso-outline-level:5;
+	font-size:10.0pt;
+	font-family:"Trebuchet MS";
+	color:black;
+	font-weight:normal;}
+h6
+	{mso-style-next:Normal;
+	margin-top:12.0pt;
+	margin-right:0in;
+	margin-bottom:3.0pt;
+	margin-left:0in;
+	mso-pagination:widow-orphan;
+	mso-outline-level:6;
+	font-size:8.0pt;
+	font-family:"Trebuchet MS";
+	color:black;
+	font-weight:normal;}
+a:link, span.MsoHyperlink
+	{color:#0066CC;
+	text-decoration:underline;
+	text-underline:single;}
+a:visited, span.MsoHyperlinkFollowed
+	{color:#999999;
+	text-decoration:underline;
+	text-underline:single;}
+span.emailstyle17
+	{mso-style-name:emailstyle17;
+	font-family:Arial;
+	mso-ascii-font-family:Arial;
+	mso-hansi-font-family:Arial;
+	mso-bidi-font-family:Arial;
+	color:windowtext;}
+span.emailstyle18
+	{mso-style-name:emailstyle18;
+	font-family:Arial;
+	mso-ascii-font-family:Arial;
+	mso-hansi-font-family:Arial;
+	mso-bidi-font-family:Arial;
+	color:navy;}
+span.SpellE
+	{mso-style-name:"";
+	mso-spl-e:yes;}
+span.GramE
+	{mso-style-name:"";
+	mso-gram-e:yes;}
+@page Section1
+	{size:8.5in 11.0in;
+	margin:1.0in 1.25in 1.0in 1.25in;
+	mso-header-margin:.5in;
+	mso-footer-margin:.5in;
+	mso-paper-source:0;}
+div.Section1
+	{page:Section1;}
+ /* List Definitions */
+ @list l0
+	{mso-list-id:1204251640;
+	mso-list-type:hybrid;
+	mso-list-template-ids:2021667964 1176785730 67698713 67698715 67698703 67698713 67698715 67698703 67698713 67698715;}
+@list l0:level1
+	{mso-level-tab-stop:.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;
+	mso-ansi-font-size:10.0pt;
+	font-family:Verdana;
+	mso-ansi-font-weight:bold;}
+@list l1
+	{mso-list-id:1959753760;
+	mso-list-template-ids:-1405207046;}
+@list l1:level1
+	{mso-level-tab-stop:.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;
+	mso-ansi-font-size:10.0pt;
+	mso-bidi-font-size:10.0pt;
+	font-family:Verdana;
+	mso-fareast-font-family:"Times New Roman";
+	mso-bidi-font-family:"Times New Roman";
+	mso-ansi-font-weight:bold;}
+ol
+	{margin-bottom:0in;}
+ul
+	{margin-bottom:0in;}
+-->
+</style>
+<!--[if gte mso 10]>
+<style>
+ /* Style Definitions */
+ table.MsoNormalTable
+	{mso-style-name:"Table Normal";
+	mso-tstyle-rowband-size:0;
+	mso-tstyle-colband-size:0;
+	mso-style-noshow:yes;
+	mso-style-parent:"";
+	mso-padding-alt:0in 5.4pt 0in 5.4pt;
+	mso-para-margin:0in;
+	mso-para-margin-bottom:.0001pt;
+	mso-pagination:widow-orphan;
+	font-size:10.0pt;
+	font-family:"Times New Roman";}
+table.MsoTableTheme
+	{mso-style-name:"Table Theme";
+	mso-tstyle-rowband-size:0;
+	mso-tstyle-colband-size:0;
+	border:solid #669999 1.0pt;
+	mso-border-alt:solid #669999 .5pt;
+	mso-padding-alt:0in 5.4pt 0in 5.4pt;
+	mso-border-insideh:.5pt solid #669999;
+	mso-border-insidev:.5pt solid #669999;
+	mso-para-margin:0in;
+	mso-para-margin-bottom:.0001pt;
+	mso-pagination:widow-orphan;
+	font-size:10.0pt;
+	font-family:"Times New Roman";}
+</style>
+<![endif]--><!--[if gte mso 9]><xml>
+ <o:shapedefaults v:ext="edit" spidmax="2050"/>
+</xml><![endif]--><!--[if gte mso 9]><xml>
+ <o:shapelayout v:ext="edit">
+  <o:idmap v:ext="edit" data="1"/>
+ </o:shapelayout></xml><![endif]-->
+</head>
+
+<body bgcolor=white
+background="How%20to%20connect%20to%20server%20share%20on%20server%20not%20on%20TVA%20domain_files/image001.gif"
+lang=EN-US link="#0066CC" vlink="#999999" style='tab-interval:.5in'>
+<!--[if gte mso 9]><xml>
+ <v:background id="_x0000_s1025" o:bwmode="white" o:targetscreensize="800,600">
+  <v:fill src="How%20to%20connect%20to%20server%20share%20on%20server%20not%20on%20TVA%20domain_files/image001.gif"
+   o:title="netbkgnd" type="frame"/>
+ </v:background></xml><![endif]-->
+
+<div class=Section1>
+
+<p class=MsoNormal><b>From:</b> Carroll, James R<br>
+<b>Sent:</b> <st1:date Year="2005" Day="19" Month="1">Wednesday, January 19,
+ 2005</st1:date> <st1:time Minute="6" Hour="14">2:06 PM</st1:time><br>
+<b>To:</b> ESO - Control Systems Dev<br>
+<b>Subject:</b> How to connect to server share on server not on TVA domain...</p>
+
+<p class=MsoNormal><o:p>&nbsp;</o:p></p>
+
+<p class=MsoNormal><b><span style='font-size:10.0pt;font-family:Verdana;
+color:navy'>Basic Steps:</span></b></p>
+
+<p class=MsoNormal><o:p>&nbsp;</o:p></p>
+
+<p class=MsoNormal><b style='mso-bidi-font-weight:normal'><i style='mso-bidi-font-style:
+normal'>Version 1.1 Steps:&nbsp;<o:p></o:p></i></b></p>
+
+<ol style='margin-top:0in' start=1 type=1>
+ <li class=MsoNormal style='color:navy;mso-list:l1 level1 lfo1;tab-stops:list .5in'><b><span
+     style='font-size:10.0pt;font-family:Verdana'>Add a reference to
+     TVA.Shared.dll</span></b> <o:p></o:p></li>
+ <li class=MsoNormal style='color:navy;mso-list:l1 level1 lfo1;tab-stops:list .5in'><b><span
+     style='font-size:10.0pt;font-family:Verdana'>Add an imports for <span
+     class=SpellE>TVA.Shared.Identity</span></span></b> <o:p></o:p></li>
+ <li class=MsoNormal style='color:navy;mso-list:l1 level1 lfo1;tab-stops:list .5in'><b><span
+     style='font-size:10.0pt;font-family:Verdana'>Call the <span class=SpellE>ConnectToNetworkShare</span></span></b>
+     <o:p></o:p></li>
+</ol>
+
+<p class=MsoNormal>&nbsp;<span style='color:windowtext'><o:p></o:p></span></p>
+
+<p class=MsoNormal><b style='mso-bidi-font-weight:normal'><i style='mso-bidi-font-style:
+normal'>Version 2.0 Steps:&nbsp;<o:p></o:p></i></b></p>
+
+<ol style='margin-top:0in' start=1 type=1>
+ <li class=MsoNormal style='color:navy;mso-list:l0 level1 lfo2;tab-stops:list .5in'><b><span
+     style='font-size:10.0pt;font-family:Verdana'>Add a reference to Tva.Core.dll</span></b>
+     <o:p></o:p></li>
+ <li class=MsoNormal style='color:navy;mso-list:l0 level1 lfo2;tab-stops:list .5in'><b><span
+     style='font-size:10.0pt;font-family:Verdana'>Add an imports for <span
+     class=SpellE>Tva.Identity</span></span></b> <o:p></o:p></li>
+ <li class=MsoNormal style='color:navy;mso-list:l0 level1 lfo2;tab-stops:list .5in'><b><span
+     style='font-size:10.0pt;font-family:Verdana'>Call the <span class=SpellE>ConnectToNetworkShare</span></span></b>
+     <o:p></o:p></li>
+</ol>
+
+<p class=MsoNormal><b><span style='font-size:10.0pt;font-family:Verdana;
+color:navy'><o:p>&nbsp;</o:p></span></b></p>
+
+<p class=MsoNormal><b><span style='font-size:10.0pt;font-family:Verdana;
+color:navy'><o:p>&nbsp;</o:p></span></b></p>
+
+<p class=MsoNormal><b><span style='font-size:10.0pt;font-family:Verdana;
+color:navy'>If a box is not on a domain, its name <i>is</i> the domain:</span></b></p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal><b><span style='font-size:10.0pt;font-family:Verdana;
+color:navy'>For example, the box named SEICCPA is not on the TVA domain and it
+has a share called OAG_FILELINK_IN.&nbsp; Using a local username and password
+on that <span class=GramE>box ,</span> I can access the drive like this:</span></b></p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal><span class=SpellE><span class=GramE><b><span
+style='font-size:10.0pt;font-family:Verdana;color:navy'>ConnectToNetworkShare</span></b></span></span><span
+class=GramE><b><span style='font-size:10.0pt;font-family:Verdana;color:navy'>(</span></b></span><b><span
+style='font-size:10.0pt;font-family:Verdana;color:navy'>&#8220;\\seiccpb\OAG_FILELINK_IN&quot;,
+&#8220;<span class=SpellE>telegyr</span>&#8221;, &#8220;<span class=SpellE>mypassword</span>&#8221;,
+&#8220;SEICCPA&#8221;)</span></b></p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal><b><span style='font-size:10.0pt;font-family:Verdana;
+color:navy'>This acts just like going to the command prompt and doing a
+&#8220;NET USE&#8221; on the remote drive.</span></b></p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal><b><span style='font-size:10.0pt;font-family:Verdana;
+color:navy'>Once connected, I can access files on the share, for example:</span></b></p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal style='text-indent:.5in'><span class=SpellE><span
+class=GramE><b><span style='font-size:10.0pt;font-family:Verdana;color:navy'>myFile</span></b></span></span><b><span
+style='font-size:10.0pt;font-family:Verdana;color:navy'> = <span class=SpellE>File.Open</span>(&#8220;\\seiccpb\OAG_FILELINK_IN\TestFile.txt&quot;)</span></b></p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal><b><span style='font-size:10.0pt;font-family:Verdana;
+color:navy'>One important thing to note, you must call <span class=SpellE>DisconnectFromNetworkShare</span>
+when you&#8217;re finished.&nbsp; This is a &#8220;global&#8221; action, i.e.,
+once connected the logged in user will have access to this share (even though
+they may not know it) until you disconnect.&nbsp; </span></b></p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal><b><span style='font-size:10.0pt;font-family:Arial;
+color:navy'>Production Example:</span></b></p>
+
+<p class=MsoNormal><o:p>&nbsp;</o:p></p>
+
+<p class=MsoNormal>&nbsp;<span style='font-size:10.0pt;font-family:"Courier New";
+color:windowtext;mso-no-proof:yes'>#</span><span style='font-size:10.0pt;
+font-family:"Courier New";color:blue;mso-no-proof:yes'>If</span><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'> VBC_VER = 8.0 </span><span style='font-size:10.0pt;font-family:"Courier New";
+color:blue;mso-no-proof:yes'>Then<o:p></o:p></span></p>
+
+<p class=MsoNormal style='text-indent:.5in'><span style='font-size:10.0pt;
+font-family:"Courier New";color:navy'>Imports <span class=SpellE>Tva.IO.FilePath</span></span></p>
+
+<p class=MsoNormal style='text-indent:.5in'><span style='font-size:10.0pt;
+font-family:"Courier New";color:navy'>Imports <span class=SpellE>Tva.Identity.Common</span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'>#</span><span style='font-size:10.0pt;font-family:"Courier New";
+color:blue;mso-no-proof:yes'>Else<o:p></o:p></span></p>
+
+<p class=MsoNormal style='text-indent:.5in'><span style='font-size:10.0pt;
+font-family:"Courier New";color:navy'>Imports <span class=SpellE>TVA.Shared.FilePath</span></span></p>
+
+<p class=MsoNormal style='text-indent:.5in'><span style='font-size:10.0pt;
+font-family:"Courier New";color:navy'>Imports <span class=SpellE>TVA.Shared.Identity</span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none;text-autospace:none'><span
+style='font-size:10.0pt;font-family:"Courier New";color:windowtext;mso-no-proof:
+yes'>#</span><span style='font-size:10.0pt;font-family:"Courier New";
+color:blue;mso-no-proof:yes'>End</span><span style='font-size:10.0pt;
+font-family:"Courier New";color:windowtext;mso-no-proof:yes'> </span><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue;mso-no-proof:yes'>If<o:p></o:p></span></p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:"Courier New";
+color:navy'>&nbsp;&nbsp;&nbsp; Private Class <span class=SpellE>ProxyRule</span></span></p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:"Courier New";
+color:navy'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Public <span
+class=SpellE>FileSpecs</span> As <span class=GramE>String()</span></span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:"Courier New";
+color:navy'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Public Destination <span
+class=GramE>As</span> String</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:"Courier New";
+color:navy'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Public <span
+class=SpellE>UserName</span> <span class=GramE>As</span> String</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:"Courier New";
+color:navy'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Public Password <span
+class=GramE>As</span> String</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:"Courier New";
+color:navy'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Public Domain <span
+class=GramE>As</span> String</span></p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:"Courier New";
+color:navy'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Private Shared <span
+class=SpellE>impersonationSync</span> As New Object</span></p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:"Courier New";
+color:navy'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Public Function <span
+class=SpellE><span class=GramE>ApplyRule</span></span><span class=GramE>(</span><span
+class=SpellE>ByVal</span> <span class=SpellE>fileName</span> As String, <span
+class=SpellE>ByVal</span> <span class=SpellE>rootFileName</span> As String) As
+Boolean</span></p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:"Courier New";
+color:navy'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span
+class=GramE>' If</span> this file matches the file specs defined for this rule
+we copy it to the specified location</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:"Courier New";
+color:navy'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+If <span class=SpellE><span class=GramE>IsFilePatternMatch</span></span><span
+class=GramE>(</span><span class=SpellE>FileSpecs</span>, <span class=SpellE>rootFileName</span>)
+Then</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:"Courier New";
+color:navy'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<span class=GramE>' Make</span> sure we synchronize this operation, don't want
+to step on our own toes where logins are concerned!</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:"Courier New";
+color:navy'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<span class=SpellE>SyncLock</span> <span class=SpellE>impersonationSync</span></span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:"Courier New";
+color:navy'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Dim <span class=SpellE>destFileName</span> As String = <span class=SpellE><span
+class=GramE>AddPathSuffix</span></span><span class=GramE>(</span>Destination)
+&amp; <span class=SpellE>rootFileName</span></span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:"Courier New";
+color:navy'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:"Courier New";
+color:navy'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<span class=GramE>' Connect</span> to network share, if specified</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:"Courier New";
+color:navy'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+If <span class=GramE>Len(</span><span class=SpellE>UserName</span>) &gt; 0 Then
+<span class=SpellE>ConnectToNetworkShare</span>(Destination, <span
+class=SpellE>UserName</span>, Password, Domain)</span></p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:"Courier New";
+color:navy'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+If <span class=SpellE><span class=GramE>File.Exists</span></span><span
+class=GramE>(</span><span class=SpellE>destFileName</span>) Then</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:"Courier New";
+color:navy'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<span class=SpellE><span class=GramE>WaitForWriteLock</span></span><span
+class=GramE>(</span><span class=SpellE>destFileName</span>, 15)</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:"Courier New";
+color:navy'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<span class=SpellE><span class=GramE>File.Delete</span></span><span
+class=GramE>(</span><span class=SpellE>destFileName</span>)</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:"Courier New";
+color:navy'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+End If</span></p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:"Courier New";
+color:navy'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<span class=SpellE><span class=GramE>File.Copy</span></span><span class=GramE>(</span><span
+class=SpellE>fileName</span>, <span class=SpellE>destFileName</span>)</span></p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:"Courier New";
+color:navy'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<span class=GramE>' Restore</span> original user rights</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:"Courier New";
+color:navy'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+If <span class=GramE>Len(</span><span class=SpellE>UserName</span>) &gt; 0 Then
+<span class=SpellE>DisconnectFromNetworkShare</span>(Destination)</span></p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:"Courier New";
+color:navy'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;Return True</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:"Courier New";
+color:navy'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+End <span class=SpellE>SyncLock</span></span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:"Courier New";
+color:navy'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+End If</span></p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:"Courier New";
+color:navy'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Return False</span></p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:"Courier New";
+color:navy'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; End Function</span></p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:"Courier New";
+color:navy'>&nbsp;&nbsp;&nbsp; End Class</span></p>
+
+</div>
+
+</body>
+
+</html>

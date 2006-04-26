@@ -1,0 +1,446 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html xmlns:v="urn:schemas-microsoft-com:vml"
+xmlns:o="urn:schemas-microsoft-com:office:office"
+xmlns:w="urn:schemas-microsoft-com:office:word"
+xmlns:dt="uuid:C2F41010-65B3-11d1-A29F-00AA00C14882"
+xmlns:st1="urn:schemas-microsoft-com:office:smarttags"
+xmlns="http://www.w3.org/TR/REC-html40">
+
+<head>
+<meta name="Microsoft Theme 2.00" content="Network 011">
+<meta http-equiv=Content-Type content="text/html; charset=us-ascii">
+<meta name=ProgId content=Word.Document>
+<meta name=Generator content="Microsoft Word 10">
+<meta name=Originator content="Microsoft Word 10">
+<link rel=File-List
+href="Reading%20Excel%20spreadsheet%20data%20from%20.NET_files/filelist.xml">
+<o:SmartTagType namespaceuri="urn:schemas-microsoft-com:office:smarttags"
+ name="place"/>
+<o:SmartTagType namespaceuri="urn:schemas-microsoft-com:office:smarttags"
+ name="date"/>
+<!--[if gte mso 9]><xml>
+ <o:DocumentProperties>
+  <o:Author>James Ritchie Carroll</o:Author>
+  <o:LastAuthor>James Ritchie Carroll</o:LastAuthor>
+  <o:Revision>2</o:Revision>
+  <o:TotalTime>2</o:TotalTime>
+  <o:Created>2006-04-18T16:55:00Z</o:Created>
+  <o:LastSaved>2006-04-18T16:57:00Z</o:LastSaved>
+  <o:Pages>1</o:Pages>
+  <o:Words>193</o:Words>
+  <o:Characters>1106</o:Characters>
+  <o:Company>tva</o:Company>
+  <o:Lines>9</o:Lines>
+  <o:Paragraphs>2</o:Paragraphs>
+  <o:CharactersWithSpaces>1297</o:CharactersWithSpaces>
+  <o:Version>10.6735</o:Version>
+ </o:DocumentProperties>
+</xml><![endif]--><!--[if gte mso 9]><xml>
+ <w:WordDocument>
+  <w:SpellingState>Clean</w:SpellingState>
+  <w:GrammarState>Clean</w:GrammarState>
+  <w:DefaultTableStyle Number="155">Table Theme</w:DefaultTableStyle>
+  <w:BrowserLevel>MicrosoftInternetExplorer4</w:BrowserLevel>
+ </w:WordDocument>
+</xml><![endif]--><!--[if !mso]><object
+ classid="clsid:38481807-CA0E-42D2-BF39-B33AF135CC4D" id=ieooui></object>
+<style>
+st1\:*{behavior:url(#ieooui) }
+</style>
+<![endif]-->
+<style>
+<!--
+ /* Font Definitions */
+ @font-face
+	{font-family:Verdana;
+	panose-1:2 11 6 4 3 5 4 4 2 4;
+	mso-font-charset:0;
+	mso-generic-font-family:swiss;
+	mso-font-pitch:variable;
+	mso-font-signature:536871559 0 0 0 415 0;}
+@font-face
+	{font-family:"Trebuchet MS";
+	panose-1:2 11 6 3 2 2 2 2 2 4;
+	mso-font-charset:0;
+	mso-generic-font-family:swiss;
+	mso-font-pitch:variable;
+	mso-font-signature:647 0 0 0 159 0;}
+ /* Style Definitions */
+ p.MsoNormal, li.MsoNormal, div.MsoNormal
+	{mso-style-parent:"";
+	margin:0in;
+	margin-bottom:.0001pt;
+	mso-pagination:widow-orphan;
+	font-size:12.0pt;
+	font-family:"Trebuchet MS";
+	mso-fareast-font-family:"Times New Roman";
+	mso-bidi-font-family:"Times New Roman";
+	color:black;}
+h1
+	{mso-style-next:Normal;
+	margin-top:12.0pt;
+	margin-right:0in;
+	margin-bottom:3.0pt;
+	margin-left:0in;
+	mso-pagination:widow-orphan;
+	page-break-after:avoid;
+	mso-outline-level:1;
+	font-size:24.0pt;
+	font-family:Arial;
+	mso-ascii-font-family:"Trebuchet MS";
+	mso-hansi-font-family:"Trebuchet MS";
+	color:black;
+	mso-font-kerning:16.0pt;
+	font-weight:normal;}
+h2
+	{mso-style-next:Normal;
+	margin-top:12.0pt;
+	margin-right:0in;
+	margin-bottom:3.0pt;
+	margin-left:0in;
+	mso-pagination:widow-orphan;
+	page-break-after:avoid;
+	mso-outline-level:2;
+	font-size:18.0pt;
+	font-family:Arial;
+	mso-ascii-font-family:"Trebuchet MS";
+	mso-hansi-font-family:"Trebuchet MS";
+	color:black;
+	font-weight:normal;}
+h3
+	{mso-style-next:Normal;
+	margin-top:12.0pt;
+	margin-right:0in;
+	margin-bottom:3.0pt;
+	margin-left:0in;
+	mso-pagination:widow-orphan;
+	page-break-after:avoid;
+	mso-outline-level:3;
+	font-size:14.0pt;
+	font-family:Arial;
+	mso-ascii-font-family:"Trebuchet MS";
+	mso-hansi-font-family:"Trebuchet MS";
+	color:black;
+	font-weight:normal;}
+h4
+	{mso-style-next:Normal;
+	margin-top:12.0pt;
+	margin-right:0in;
+	margin-bottom:3.0pt;
+	margin-left:0in;
+	mso-pagination:widow-orphan;
+	page-break-after:avoid;
+	mso-outline-level:4;
+	font-size:12.0pt;
+	font-family:"Trebuchet MS";
+	color:black;
+	font-weight:normal;}
+h5
+	{mso-style-next:Normal;
+	margin-top:12.0pt;
+	margin-right:0in;
+	margin-bottom:3.0pt;
+	margin-left:0in;
+	mso-pagination:widow-orphan;
+	mso-outline-level:5;
+	font-size:10.0pt;
+	font-family:"Trebuchet MS";
+	color:black;
+	font-weight:normal;}
+h6
+	{mso-style-next:Normal;
+	margin-top:12.0pt;
+	margin-right:0in;
+	margin-bottom:3.0pt;
+	margin-left:0in;
+	mso-pagination:widow-orphan;
+	mso-outline-level:6;
+	font-size:8.0pt;
+	font-family:"Trebuchet MS";
+	color:black;
+	font-weight:normal;}
+a:link, span.MsoHyperlink
+	{color:#0066CC;
+	text-decoration:underline;
+	text-underline:single;}
+a:visited, span.MsoHyperlinkFollowed
+	{color:#999999;
+	text-decoration:underline;
+	text-underline:single;}
+span.emailstyle17
+	{mso-style-name:emailstyle17;
+	font-family:Arial;
+	mso-ascii-font-family:Arial;
+	mso-hansi-font-family:Arial;
+	mso-bidi-font-family:Arial;
+	color:windowtext;}
+span.emailstyle18
+	{mso-style-name:emailstyle18;
+	font-family:Arial;
+	mso-ascii-font-family:Arial;
+	mso-hansi-font-family:Arial;
+	mso-bidi-font-family:Arial;
+	color:navy;}
+span.emailstyle19
+	{mso-style-name:emailstyle19;
+	font-family:Arial;
+	mso-ascii-font-family:Arial;
+	mso-hansi-font-family:Arial;
+	mso-bidi-font-family:Arial;
+	color:navy;}
+span.emailstyle20
+	{mso-style-name:emailstyle20;
+	font-family:Arial;
+	mso-ascii-font-family:Arial;
+	mso-hansi-font-family:Arial;
+	mso-bidi-font-family:Arial;
+	color:navy;}
+span.SpellE
+	{mso-style-name:"";
+	mso-spl-e:yes;}
+span.GramE
+	{mso-style-name:"";
+	mso-gram-e:yes;}
+@page Section1
+	{size:8.5in 11.0in;
+	margin:1.0in 1.25in 1.0in 1.25in;
+	mso-header-margin:.5in;
+	mso-footer-margin:.5in;
+	mso-paper-source:0;}
+div.Section1
+	{page:Section1;}
+-->
+</style>
+<!--[if gte mso 10]>
+<style>
+ /* Style Definitions */
+ table.MsoNormalTable
+	{mso-style-name:"Table Normal";
+	mso-tstyle-rowband-size:0;
+	mso-tstyle-colband-size:0;
+	mso-style-noshow:yes;
+	mso-style-parent:"";
+	mso-padding-alt:0in 5.4pt 0in 5.4pt;
+	mso-para-margin:0in;
+	mso-para-margin-bottom:.0001pt;
+	mso-pagination:widow-orphan;
+	font-size:10.0pt;
+	font-family:"Times New Roman";}
+table.MsoTableTheme
+	{mso-style-name:"Table Theme";
+	mso-tstyle-rowband-size:0;
+	mso-tstyle-colband-size:0;
+	border:solid #669999 1.0pt;
+	mso-border-alt:solid #669999 .5pt;
+	mso-padding-alt:0in 5.4pt 0in 5.4pt;
+	mso-border-insideh:.5pt solid #669999;
+	mso-border-insidev:.5pt solid #669999;
+	mso-para-margin:0in;
+	mso-para-margin-bottom:.0001pt;
+	mso-pagination:widow-orphan;
+	font-size:10.0pt;
+	font-family:"Times New Roman";}
+</style>
+<![endif]--><!--[if gte mso 9]><xml>
+ <o:shapedefaults v:ext="edit" spidmax="2050"/>
+</xml><![endif]--><!--[if gte mso 9]><xml>
+ <o:shapelayout v:ext="edit">
+  <o:idmap v:ext="edit" data="1"/>
+ </o:shapelayout></xml><![endif]-->
+</head>
+
+<body bgcolor=white
+background="Reading%20Excel%20spreadsheet%20data%20from%20.NET_files/image001.gif"
+lang=EN-US link="#0066CC" vlink="#999999" style='tab-interval:.5in'>
+<!--[if gte mso 9]><xml>
+ <v:background id="_x0000_s1025" o:bwmode="white" o:targetscreensize="800,600">
+  <v:fill src="Reading%20Excel%20spreadsheet%20data%20from%20.NET_files/image001.gif"
+   o:title="netbkgnd" type="frame"/>
+ </v:background></xml><![endif]-->
+
+<div class=Section1>
+
+<p class=MsoNormal><b>From:</b> Carroll, James R<br>
+<b>Sent:</b> <st1:date Year="2003" Day="2" Month="7">Wednesday, July 02, 2003</st1:date>
+3:34 PM<br>
+<b>Subject:</b> Reading Excel Spreadsheet Data from .NET...</p>
+
+<p class=MsoNormal><o:p>&nbsp;</o:p></p>
+
+<p class=MsoNormal><span class=GramE><span style='font-size:10.0pt;font-family:
+Verdana;mso-bidi-font-family:"Courier New";color:#333399'>Sample connect</span></span><span
+style='font-size:10.0pt;font-family:Verdana;mso-bidi-font-family:"Courier New";
+color:#333399'> string for OLEDB.NET:</span><span style='font-family:Verdana'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='margin-left:.5in'><span style='font-family:Verdana'>&nbsp;<o:p></o:p></span></p>
+
+<p class=MsoNormal style='text-indent:.5in'><span style='font-size:10.0pt;
+font-family:"Courier New";color:#333399'>Provider=Microsoft.Jet.OleDb.4.0<span
+class=GramE>;Data</span> Source=C:\<span class=SpellE>NES.xls;Extended</span> Properties=Excel
+8.0</span><span style='font-family:"Courier New"'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='margin-left:.5in'><span style='font-family:Verdana'>&nbsp;<o:p></o:p></span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:Verdana;
+mso-bidi-font-family:"Courier New";color:navy'>Uses </span><span
+style='font-size:10.0pt;font-family:Verdana;mso-bidi-font-family:"Courier New";
+color:#333399'>named ranges</span><span style='font-size:10.0pt;font-family:
+Verdana;mso-bidi-font-family:"Courier New";color:navy'> for table names or the </span><span
+style='font-size:10.0pt;font-family:Verdana;mso-bidi-font-family:"Courier New";
+color:#333399'>worksheets can be directly referenced</span><span
+style='font-size:10.0pt;font-family:Verdana;mso-bidi-font-family:"Courier New";
+color:navy'> as a Table</span><span style='font-size:10.0pt;font-family:Verdana;
+mso-bidi-font-family:"Courier New";color:#333399'> (for example table name for
+default &#8220;Sheet1&#8221; is &#8220;Sheet1$&#8221;)</span><span
+style='font-family:Verdana'><o:p></o:p></span></p>
+
+<p class=MsoNormal><span style='font-family:Verdana'>&nbsp;<o:p></o:p></span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:Verdana;
+mso-bidi-font-family:Arial;color:navy'>First row in spread sheet defines column
+names&#8230;<span style='mso-spacerun:yes'>&nbsp; </span>Example:</span><span
+style='font-size:10.0pt;font-family:Verdana;mso-bidi-font-family:"Courier New";
+color:blue'><o:p></o:p></span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:Verdana;
+mso-bidi-font-family:"Courier New";color:blue'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:"Courier New";
+color:blue'>Imports</span><span style='font-size:10.0pt;font-family:"Courier New"'>
+<span class=SpellE>System.Data.OleDb</span></span></p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:"Courier New";
+color:blue'>Module</span><span style='font-size:10.0pt;font-family:"Courier New"'>
+Module1</span></p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;
+</span><span style='font-size:10.0pt;font-family:"Courier New";color:blue'>Sub</span><span
+style='font-size:10.0pt;font-family:"Courier New"'> </span><st1:place><span
+ class=GramE><span style='font-size:10.0pt;font-family:"Courier New"'>Main</span></span></st1:place><span
+class=GramE><span style='font-size:10.0pt;font-family:"Courier New"'>()</span></span></p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span><span style='font-size:10.0pt;font-family:"Courier New";color:blue'>Dim</span><span
+style='font-size:10.0pt;font-family:"Courier New"'> <span class=SpellE>cnn</span>
+</span><span style='font-size:10.0pt;font-family:"Courier New";color:blue'>As</span><span
+style='font-size:10.0pt;font-family:"Courier New"'> <span class=SpellE>OleDbConnection</span></span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span><span style='font-size:10.0pt;font-family:"Courier New";color:blue'>Dim</span><span
+style='font-size:10.0pt;font-family:"Courier New"'> <span class=SpellE>cmd</span>
+</span><span style='font-size:10.0pt;font-family:"Courier New";color:blue'>As</span><span
+style='font-size:10.0pt;font-family:"Courier New"'> <span class=SpellE>OleDbCommand</span></span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span><span style='font-size:10.0pt;font-family:"Courier New";color:blue'>Dim</span><span
+style='font-size:10.0pt;font-family:"Courier New"'> <span class=SpellE>rst</span>
+</span><span style='font-size:10.0pt;font-family:"Courier New";color:blue'>As</span><span
+style='font-size:10.0pt;font-family:"Courier New"'> <span class=SpellE>OleDbDataReader</span></span></p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span><span style='font-size:10.0pt;font-family:"Courier New";color:blue'>Try</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<span class=SpellE><span class=GramE>cnn</span></span> = </span><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue'>New</span><span
+style='font-size:10.0pt;font-family:"Courier New"'> <span class=SpellE>OleDbConnection</span>(&quot;Provider=Microsoft.Jet.OleDb.4.0;Data
+Source=C:\NES2.xls;Extended Properties=Excel 8.0&quot;)</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<span class=SpellE><span class=GramE>cnn.Open</span></span><span class=GramE>()</span></span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<span class=SpellE><span class=GramE>cmd</span></span> = </span><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue'>New</span><span
+style='font-size:10.0pt;font-family:"Courier New"'> <span class=SpellE>OleDbCommand</span>(&quot;ANALOG$&quot;,
+<span class=SpellE>cnn</span>)</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<span class=SpellE>cmd.CommandType</span> = <span class=SpellE>CommandType.TableDirect</span></span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<span class=SpellE><span class=GramE>rst</span></span> = <span class=SpellE>cmd.ExecuteReader</span>()</span></p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span><span style='font-size:10.0pt;font-family:"Courier New";color:blue'>Do</span><span
+style='font-size:10.0pt;font-family:"Courier New"'> </span><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue'>While</span><span
+style='font-size:10.0pt;font-family:"Courier New"'> <span class=SpellE><span
+class=GramE>rst.Read</span></span><span class=GramE>()</span></span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<span class=SpellE><span class=GramE>Console.WriteLine</span></span><span
+class=GramE>(</span>&quot;Row: &quot; &amp; <span class=SpellE>rst</span>(&quot;Substation&quot;)
+&amp; <span class=SpellE>rst</span>(&quot;<span class=SpellE>EntityName</span>&quot;))</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span><st1:place><span style='font-size:10.0pt;font-family:"Courier New";
+ color:blue'>Loop</span></st1:place></p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<span class=SpellE><span class=GramE>rst.Close</span></span><span class=GramE>()</span></span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<span class=SpellE><span class=GramE>cnn.Close</span></span><span class=GramE>()</span></span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span><span style='font-size:10.0pt;font-family:"Courier New";color:blue'>Catch</span><span
+style='font-size:10.0pt;font-family:"Courier New"'> ex </span><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue'>As</span><span
+style='font-size:10.0pt;font-family:"Courier New"'> Exception</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<span class=SpellE><span class=GramE>Console.WriteLine</span></span><span
+class=GramE>(</span>&quot;Connect Error: &quot; &amp; <span class=SpellE>ex.Message</span>)</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span><span style='font-size:10.0pt;font-family:"Courier New";color:blue'>End</span><span
+style='font-size:10.0pt;font-family:"Courier New"'> </span><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue'>Try</span></p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span><span style='font-size:10.0pt;font-family:"Courier New";color:blue'>Do</span><span
+style='font-size:10.0pt;font-family:"Courier New"'> </span><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue'>While</span><span
+style='font-size:10.0pt;font-family:"Courier New"'> <span class=SpellE><span
+class=GramE>Console.ReadLine</span></span><span class=GramE>()</span></span></p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span><span style='font-size:10.0pt;font-family:"Courier New";color:blue'>Loop</span></p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;
+</span><span style='font-size:10.0pt;font-family:"Courier New";color:blue'>End</span><span
+style='font-size:10.0pt;font-family:"Courier New"'> </span><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue'>Sub</span></p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:"Courier New";
+color:blue'>End</span><span style='font-size:10.0pt;font-family:"Courier New"'>
+</span><span style='font-size:10.0pt;font-family:"Courier New";color:blue'>Module</span></p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+</div>
+
+</body>
+
+</html>

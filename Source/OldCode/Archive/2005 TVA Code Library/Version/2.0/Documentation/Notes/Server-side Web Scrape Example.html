@@ -1,0 +1,873 @@
+<html xmlns:v="urn:schemas-microsoft-com:vml"
+xmlns:o="urn:schemas-microsoft-com:office:office"
+xmlns:w="urn:schemas-microsoft-com:office:word"
+xmlns:dt="uuid:C2F41010-65B3-11d1-A29F-00AA00C14882"
+xmlns:st1="urn:schemas-microsoft-com:office:smarttags"
+xmlns="http://www.w3.org/TR/REC-html40">
+
+<head>
+<meta name="Microsoft Theme 2.00" content="Network 011">
+<meta http-equiv=Content-Type content="text/html; charset=windows-1252">
+<meta name=ProgId content=Word.Document>
+<meta name=Generator content="Microsoft Word 10">
+<meta name=Originator content="Microsoft Word 10">
+<link rel=File-List
+href="Server-side%20Web%20Scrape%20Example_files/filelist.xml">
+<title>I often get asked about doing web scrapes (picking out pieces of data
+from an HTML page)</title>
+<o:SmartTagType namespaceuri="urn:schemas-microsoft-com:office:smarttags"
+ name="time"/>
+<o:SmartTagType namespaceuri="urn:schemas-microsoft-com:office:smarttags"
+ name="date"/>
+<!--[if gte mso 9]><xml>
+ <w:WordDocument>
+  <w:SpellingState>Clean</w:SpellingState>
+  <w:GrammarState>Clean</w:GrammarState>
+  <w:DefaultTableStyle Number="155">Table Theme</w:DefaultTableStyle>
+  <w:BrowserLevel>MicrosoftInternetExplorer4</w:BrowserLevel>
+ </w:WordDocument>
+</xml><![endif]--><!--[if !mso]><object
+ classid="clsid:38481807-CA0E-42D2-BF39-B33AF135CC4D" id=ieooui></object>
+<style>
+st1\:*{behavior:url(#ieooui) }
+</style>
+<![endif]-->
+<style>
+<!--
+ /* Font Definitions */
+ @font-face
+	{font-family:"Trebuchet MS";
+	panose-1:2 11 6 3 2 2 2 2 2 4;
+	mso-font-charset:0;
+	mso-generic-font-family:swiss;
+	mso-font-pitch:variable;
+	mso-font-signature:647 0 0 0 159 0;}
+ /* Style Definitions */
+ p.MsoNormal, li.MsoNormal, div.MsoNormal
+	{mso-style-parent:"";
+	margin:0in;
+	margin-bottom:.0001pt;
+	mso-pagination:widow-orphan;
+	font-size:12.0pt;
+	font-family:"Trebuchet MS";
+	mso-fareast-font-family:"Times New Roman";
+	mso-bidi-font-family:"Times New Roman";
+	color:black;}
+h1
+	{mso-style-next:Normal;
+	margin-top:12.0pt;
+	margin-right:0in;
+	margin-bottom:3.0pt;
+	margin-left:0in;
+	mso-pagination:widow-orphan;
+	page-break-after:avoid;
+	mso-outline-level:1;
+	font-size:24.0pt;
+	font-family:Arial;
+	mso-ascii-font-family:"Trebuchet MS";
+	mso-hansi-font-family:"Trebuchet MS";
+	color:black;
+	mso-font-kerning:16.0pt;
+	font-weight:normal;}
+h2
+	{mso-style-next:Normal;
+	margin-top:12.0pt;
+	margin-right:0in;
+	margin-bottom:3.0pt;
+	margin-left:0in;
+	mso-pagination:widow-orphan;
+	page-break-after:avoid;
+	mso-outline-level:2;
+	font-size:18.0pt;
+	font-family:Arial;
+	mso-ascii-font-family:"Trebuchet MS";
+	mso-hansi-font-family:"Trebuchet MS";
+	color:black;
+	font-weight:normal;}
+h3
+	{mso-style-next:Normal;
+	margin-top:12.0pt;
+	margin-right:0in;
+	margin-bottom:3.0pt;
+	margin-left:0in;
+	mso-pagination:widow-orphan;
+	page-break-after:avoid;
+	mso-outline-level:3;
+	font-size:14.0pt;
+	font-family:Arial;
+	mso-ascii-font-family:"Trebuchet MS";
+	mso-hansi-font-family:"Trebuchet MS";
+	color:black;
+	font-weight:normal;}
+h4
+	{mso-style-next:Normal;
+	margin-top:12.0pt;
+	margin-right:0in;
+	margin-bottom:3.0pt;
+	margin-left:0in;
+	mso-pagination:widow-orphan;
+	page-break-after:avoid;
+	mso-outline-level:4;
+	font-size:12.0pt;
+	font-family:"Trebuchet MS";
+	color:black;
+	font-weight:normal;}
+h5
+	{mso-style-next:Normal;
+	margin-top:12.0pt;
+	margin-right:0in;
+	margin-bottom:3.0pt;
+	margin-left:0in;
+	mso-pagination:widow-orphan;
+	mso-outline-level:5;
+	font-size:10.0pt;
+	font-family:"Trebuchet MS";
+	color:black;
+	font-weight:normal;}
+h6
+	{mso-style-next:Normal;
+	margin-top:12.0pt;
+	margin-right:0in;
+	margin-bottom:3.0pt;
+	margin-left:0in;
+	mso-pagination:widow-orphan;
+	mso-outline-level:6;
+	font-size:8.0pt;
+	font-family:"Trebuchet MS";
+	color:black;
+	font-weight:normal;}
+a:link, span.MsoHyperlink
+	{color:#0066CC;
+	text-decoration:underline;
+	text-underline:single;}
+a:visited, span.MsoHyperlinkFollowed
+	{color:#999999;
+	text-decoration:underline;
+	text-underline:single;}
+p.MsoDocumentMap, li.MsoDocumentMap, div.MsoDocumentMap
+	{margin:0in;
+	margin-bottom:.0001pt;
+	mso-pagination:widow-orphan;
+	background:navy;
+	font-size:10.0pt;
+	font-family:Arial;
+	mso-fareast-font-family:"Times New Roman";
+	color:black;}
+p.MsoPlainText, li.MsoPlainText, div.MsoPlainText
+	{margin:0in;
+	margin-bottom:.0001pt;
+	mso-pagination:widow-orphan;
+	font-size:10.0pt;
+	font-family:"Courier New";
+	mso-fareast-font-family:"Times New Roman";
+	color:black;}
+p.print-fromtosubjectdate, li.print-fromtosubjectdate, div.print-fromtosubjectdate
+	{mso-style-name:print-fromtosubjectdate;
+	margin-top:0in;
+	margin-right:0in;
+	margin-bottom:0in;
+	margin-left:.75in;
+	margin-bottom:.0001pt;
+	text-indent:-.75in;
+	mso-pagination:widow-orphan;
+	font-size:10.0pt;
+	font-family:Arial;
+	mso-fareast-font-family:"Times New Roman";
+	color:black;}
+p.print-reverseheader, li.print-reverseheader, div.print-reverseheader
+	{mso-style-name:print-reverseheader;
+	margin-top:0in;
+	margin-right:0in;
+	margin-bottom:0in;
+	margin-left:.75in;
+	margin-bottom:.0001pt;
+	text-indent:-.75in;
+	mso-pagination:widow-orphan;
+	background:#DFDFDF;
+	font-size:11.0pt;
+	font-family:Arial;
+	mso-fareast-font-family:"Times New Roman";
+	color:black;
+	font-weight:bold;}
+p.replyforwardheaders, li.replyforwardheaders, div.replyforwardheaders
+	{mso-style-name:replyforwardheaders;
+	margin-top:0in;
+	margin-right:0in;
+	margin-bottom:0in;
+	margin-left:.75in;
+	margin-bottom:.0001pt;
+	text-indent:-.75in;
+	mso-pagination:widow-orphan;
+	background:#E5E5E5;
+	font-size:10.0pt;
+	font-family:Arial;
+	mso-fareast-font-family:"Times New Roman";
+	color:black;
+	font-weight:bold;}
+p.replyforwardtofromdate, li.replyforwardtofromdate, div.replyforwardtofromdate
+	{mso-style-name:replyforwardtofromdate;
+	margin-top:0in;
+	margin-right:0in;
+	margin-bottom:0in;
+	margin-left:.75in;
+	margin-bottom:.0001pt;
+	text-indent:-.75in;
+	mso-pagination:widow-orphan;
+	font-size:10.0pt;
+	font-family:Arial;
+	mso-fareast-font-family:"Times New Roman";
+	color:black;}
+span.emailstyle24
+	{mso-style-name:emailstyle24;
+	font-family:Arial;
+	mso-ascii-font-family:Arial;
+	mso-hansi-font-family:Arial;
+	mso-bidi-font-family:Arial;
+	color:navy;}
+span.emailstyle25
+	{mso-style-name:emailstyle25;
+	font-family:Arial;
+	mso-ascii-font-family:Arial;
+	mso-hansi-font-family:Arial;
+	mso-bidi-font-family:Arial;
+	color:navy;}
+span.emailstyle26
+	{mso-style-name:emailstyle26;
+	font-family:Arial;
+	mso-ascii-font-family:Arial;
+	mso-hansi-font-family:Arial;
+	mso-bidi-font-family:Arial;
+	color:navy;}
+span.emailstyle27
+	{mso-style-name:emailstyle27;
+	font-family:Arial;
+	mso-ascii-font-family:Arial;
+	mso-hansi-font-family:Arial;
+	mso-bidi-font-family:Arial;
+	color:navy;}
+span.SpellE
+	{mso-style-name:"";
+	mso-spl-e:yes;}
+span.GramE
+	{mso-style-name:"";
+	mso-gram-e:yes;}
+@page Section1
+	{size:8.5in 11.0in;
+	margin:1.0in 77.95pt 1.0in 77.95pt;
+	mso-header-margin:.5in;
+	mso-footer-margin:.5in;
+	mso-paper-source:0;}
+div.Section1
+	{page:Section1;}
+-->
+</style>
+<!--[if gte mso 10]>
+<style>
+ /* Style Definitions */
+ table.MsoNormalTable
+	{mso-style-name:"Table Normal";
+	mso-tstyle-rowband-size:0;
+	mso-tstyle-colband-size:0;
+	mso-style-noshow:yes;
+	mso-style-parent:"";
+	mso-padding-alt:0in 5.4pt 0in 5.4pt;
+	mso-para-margin:0in;
+	mso-para-margin-bottom:.0001pt;
+	mso-pagination:widow-orphan;
+	font-size:10.0pt;
+	font-family:"Times New Roman";}
+table.MsoTableTheme
+	{mso-style-name:"Table Theme";
+	mso-tstyle-rowband-size:0;
+	mso-tstyle-colband-size:0;
+	border:solid #669999 1.0pt;
+	mso-border-alt:solid #669999 .5pt;
+	mso-padding-alt:0in 5.4pt 0in 5.4pt;
+	mso-border-insideh:.5pt solid #669999;
+	mso-border-insidev:.5pt solid #669999;
+	mso-para-margin:0in;
+	mso-para-margin-bottom:.0001pt;
+	mso-pagination:widow-orphan;
+	font-size:10.0pt;
+	font-family:"Times New Roman";}
+</style>
+<![endif]--><!--[if gte mso 9]><xml>
+ <o:shapedefaults v:ext="edit" spidmax="2050"/>
+</xml><![endif]--><!--[if gte mso 9]><xml>
+ <o:shapelayout v:ext="edit">
+  <o:idmap v:ext="edit" data="1"/>
+ </o:shapelayout></xml><![endif]-->
+</head>
+
+<body bgcolor=white
+background="Server-side%20Web%20Scrape%20Example_files/image001.gif"
+lang=EN-US link="#0066CC" vlink="#999999" style='tab-interval:.5in'>
+<!--[if gte mso 9]><xml>
+ <v:background id="_x0000_s1025" o:bwmode="white" o:targetscreensize="800,600">
+  <v:fill src="Server-side%20Web%20Scrape%20Example_files/image001.gif"
+   o:title="netbkgnd" type="frame"/>
+ </v:background></xml><![endif]-->
+
+<div class=Section1>
+
+<div style='border:none;border-left:solid windowtext 2.25pt;padding:0in 0in 0in 1.0pt'>
+
+<p class=print-reverseheader>From:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Carroll, James R</p>
+
+<p class=print-fromtosubjectdate style='background:white'><b>Sent:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</b><st1:date Year="2004" Day="26" Month="3">Friday, March 26, 2004</st1:date> <st1:time
+Minute="29" Hour="15">3:29 PM</st1:time></p>
+
+<p class=print-fromtosubjectdate style='background:white'><b>To:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</b>ESO - Control Systems Dev</p>
+
+<p class=print-fromtosubjectdate style='background:white'><b>Subject:&nbsp;&nbsp;&nbsp;&nbsp;
+</b>Server-side Web Scrape Example</p>
+
+</div>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:Arial;color:navy'>I
+often get asked about doing web scrapes (picking out pieces of data from an
+HTML page).&nbsp; The most reliable way to do this (if you can call any
+web-scrape reliable) is to use the Internet Explorer ActiveX control, navigate
+to the desired page and use the “Document” property to access the entire DOM
+hierarchy for the page – this way IE is doing all the HTML parsing for you and
+all you have to do is locate the item you want (which may not be as easy as it
+sounds depending of the format of the source HTML).&nbsp; I have a detailed
+sample of this in .NET if anyone needs to do this…</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:Arial;color:navy'>&nbsp;</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:Arial;color:navy'>Recently
+however, I was asked how you might do something similar server-side (like from
+an ASP.NET page), my sample follows if you are interested.&nbsp; It does not
+use the IE control, but rather a .NET web request…</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:Arial;color:navy'>&nbsp;</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:Arial;color:navy'>Ritchie</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:Arial;color:navy'>&nbsp;</span></p>
+
+<p class=MsoNormal><b><i><span style='font-size:10.0pt;font-family:Arial;
+color:navy'>The <span class=SpellE>aspx</span> page code that follows “steals”
+an image source from another site - maybe image has a dynamically generated
+name (like a weather image) you want to use on another site like so:</span></i></b></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:Arial;color:navy'>&nbsp;</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:Arial;color:navy'>&lt;%</span></p>
+
+<p class=MsoNormal style='text-indent:.5in'><span style='font-size:10.0pt;
+font-family:"Courier New";color:navy'>Dim writer As New <span class=SpellE>StringWriter</span></span></p>
+
+<p class=MsoNormal style='text-indent:.5in'><span class=SpellE><span
+class=GramE><span style='font-size:10.0pt;font-family:"Courier New";color:navy'>Server.Execute</span></span></span><span
+class=GramE><span style='font-size:10.0pt;font-family:"Courier New";color:navy'>(</span></span><span
+style='font-size:10.0pt;font-family:"Courier New"'>&quot;</span><span
+class=SpellE><span style='font-size:10.0pt;font-family:"Courier New";
+color:navy'>GetImage.aspx</span></span><span style='font-size:10.0pt;
+font-family:"Courier New"'>&quot;</span><span style='font-size:10.0pt;
+font-family:"Courier New";color:navy'>, writer)</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:"Courier New";
+color:navy'>%&gt;</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:"Courier New";
+color:navy'>&lt;IMG SRC=</span><span style='font-size:10.0pt;font-family:"Courier New"'>&quot;</span><span
+style='font-size:10.0pt;font-family:"Courier New";color:navy'>&lt;%=<span
+class=SpellE><span class=GramE>writer.ToString</span></span><span class=GramE>(</span>)%&gt;</span><span
+style='font-size:10.0pt;font-family:"Courier New"'>&quot;</span><span
+style='font-size:10.0pt;font-family:"Courier New";color:navy'>&gt;</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:Arial;color:navy'>&nbsp;</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:Arial;color:navy'>&nbsp;</span></p>
+
+<p class=MsoNormal><span class=SpellE><b><i><span style='font-size:10.0pt;
+font-family:Arial;color:navy'>GetImage.aspx</span></i></b></span><b><i><span
+style='font-size:10.0pt;font-family:Arial;color:navy'> Source:</span></i></b></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:Arial;color:navy'>&nbsp;</span></p>
+
+<p class=MsoNormal style='text-autospace:none'><span style='font-size:10.0pt;
+font-family:"Courier New";background:yellow'>&lt;%@ Import Namespace=&quot;<span
+class=SpellE>System.IO</span>&quot; %&gt;</span></p>
+
+<p class=MsoNormal style='text-autospace:none'><span style='font-size:10.0pt;
+font-family:"Courier New";background:yellow'>&lt;%@ Import
+Namespace=&quot;System.Net&quot; %&gt;</span></p>
+
+<p class=MsoNormal style='text-autospace:none'><span style='font-size:10.0pt;
+font-family:"Courier New";background:yellow'>&lt;%@ Import Namespace=&quot;<span
+class=SpellE>System.Text</span>&quot; %&gt;</span></p>
+
+<p class=MsoNormal style='text-autospace:none'><span style='font-size:10.0pt;
+font-family:"Courier New";background:yellow'>&lt;%@ Page Language=&quot;<span
+class=SpellE>vb</span>&quot; %&gt;</span></p>
+
+<p class=MsoNormal style='text-autospace:none'><span style='font-size:10.0pt;
+font-family:"Courier New";color:blue'>&lt;</span><span style='font-size:10.0pt;
+font-family:"Courier New";color:maroon'>SCRIPT</span><span style='font-size:
+10.0pt;font-family:"Courier New";color:fuchsia'> </span><span style='font-size:
+10.0pt;font-family:"Courier New";color:red'>RUNAT</span><span style='font-size:
+10.0pt;font-family:"Courier New";color:blue'>=&quot;server&quot;&gt;</span></p>
+
+<p class=MsoNormal style='text-autospace:none'><span style='font-size:10.0pt;
+font-family:"Courier New";color:blue'>&nbsp;</span></p>
+
+<p class=MsoNormal style='text-autospace:none'><span class=GramE><span
+style='font-size:10.0pt;font-family:"Courier New";color:green'>' Get</span></span><span
+style='font-size:10.0pt;font-family:"Courier New";color:green'> next image
+source after finding specified marker</span></p>
+
+<p class=MsoNormal style='text-autospace:none'><span style='font-size:10.0pt;
+font-family:"Courier New";color:blue'>Protected</span><span style='font-size:
+10.0pt;font-family:"Courier New"'> </span><span style='font-size:10.0pt;
+font-family:"Courier New";color:blue'>Function</span><span style='font-size:
+10.0pt;font-family:"Courier New"'> <span class=SpellE><span class=GramE>GetImageSource</span></span><span
+class=GramE>(</span></span><span class=SpellE><span style='font-size:10.0pt;
+font-family:"Courier New";color:blue'>ByVal</span></span><span
+style='font-size:10.0pt;font-family:"Courier New"'> <span class=SpellE>ForwardMarker</span>
+</span><span style='font-size:10.0pt;font-family:"Courier New";color:blue'>As</span><span
+style='font-size:10.0pt;font-family:"Courier New"'> </span><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue'>String</span><span
+style='font-size:10.0pt;font-family:"Courier New"'>, </span><span class=SpellE><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue'>ByVal</span></span><span
+style='font-size:10.0pt;font-family:"Courier New"'> HTML </span><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue'>As</span><span
+style='font-size:10.0pt;font-family:"Courier New"'> </span><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue'>String</span><span
+style='font-size:10.0pt;font-family:"Courier New"'>) </span><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue'>As</span><span
+style='font-size:10.0pt;font-family:"Courier New"'> </span><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue'>String</span></p>
+
+<p class=MsoNormal style='text-autospace:none'><span style='font-size:10.0pt;
+font-family:"Courier New";color:blue'>&nbsp;</span></p>
+
+<p class=MsoNormal style='text-autospace:none'><span style='font-size:10.0pt;
+font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue'>Dim</span><span
+style='font-size:10.0pt;font-family:"Courier New"'> <span class=SpellE>intForwardMarkerIndex</span>
+</span><span style='font-size:10.0pt;font-family:"Courier New";color:blue'>As</span><span
+style='font-size:10.0pt;font-family:"Courier New"'> </span><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue'>Integer</span></p>
+
+<p class=MsoNormal style='text-autospace:none'><span style='font-size:10.0pt;
+font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue'>Dim</span><span
+style='font-size:10.0pt;font-family:"Courier New"'> <span class=SpellE>intNextIMGIndex</span>
+</span><span style='font-size:10.0pt;font-family:"Courier New";color:blue'>As</span><span
+style='font-size:10.0pt;font-family:"Courier New"'> </span><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue'>Integer</span></p>
+
+<p class=MsoNormal style='text-autospace:none'><span style='font-size:10.0pt;
+font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue'>Dim</span><span
+style='font-size:10.0pt;font-family:"Courier New"'> <span class=SpellE>chrSRCDelimeter</span>
+</span><span style='font-size:10.0pt;font-family:"Courier New";color:blue'>As</span><span
+style='font-size:10.0pt;font-family:"Courier New"'> </span><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue'>Char</span></p>
+
+<p class=MsoNormal style='text-autospace:none'><span style='font-size:10.0pt;
+font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue'>Dim</span><span
+style='font-size:10.0pt;font-family:"Courier New"'> <span class=SpellE>intSRCStart</span>
+</span><span style='font-size:10.0pt;font-family:"Courier New";color:blue'>As</span><span
+style='font-size:10.0pt;font-family:"Courier New"'> </span><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue'>Integer</span></p>
+
+<p class=MsoNormal style='text-autospace:none'><span style='font-size:10.0pt;
+font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue'>Dim</span><span
+style='font-size:10.0pt;font-family:"Courier New"'> <span class=SpellE>intSRCEnd</span>
+</span><span style='font-size:10.0pt;font-family:"Courier New";color:blue'>As</span><span
+style='font-size:10.0pt;font-family:"Courier New"'> </span><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue'>Integer</span></p>
+
+<p class=MsoNormal style='text-autospace:none'><span style='font-size:10.0pt;
+font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue'>Dim</span><span
+style='font-size:10.0pt;font-family:"Courier New"'> <span class=SpellE>intSRCMaxEnd</span>
+</span><span style='font-size:10.0pt;font-family:"Courier New";color:blue'>As</span><span
+style='font-size:10.0pt;font-family:"Courier New"'> </span><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue'>Integer</span></p>
+
+<p class=MsoNormal style='text-autospace:none'><span style='font-size:10.0pt;
+font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue'>Dim</span><span
+style='font-size:10.0pt;font-family:"Courier New"'> <span class=SpellE>strImage</span>
+</span><span style='font-size:10.0pt;font-family:"Courier New";color:blue'>As</span><span
+style='font-size:10.0pt;font-family:"Courier New"'> </span><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue'>String</span></p>
+
+<p class=MsoNormal style='text-autospace:none'><span style='font-size:10.0pt;
+font-family:"Courier New";color:blue'>&nbsp;</span></p>
+
+<p class=MsoNormal style='text-autospace:none'><span style='font-size:10.0pt;
+font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><span
+class=GramE><span style='font-size:10.0pt;font-family:"Courier New";color:green'>'
+Attempt</span></span><span style='font-size:10.0pt;font-family:"Courier New";
+color:green'> to find marker in HTML source</span></p>
+
+<p class=MsoNormal style='text-autospace:none'><span style='font-size:10.0pt;
+font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class=SpellE><span
+class=GramE>intForwardMarkerIndex</span></span> = <span class=SpellE>InStr</span>(HTML,
+<span class=SpellE>ForwardMarker</span>)</span></p>
+
+<p class=MsoNormal style='text-autospace:none'><span style='font-size:10.0pt;
+font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span></p>
+
+<p class=MsoNormal style='text-autospace:none'><span style='font-size:10.0pt;
+font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue'>If</span><span
+style='font-size:10.0pt;font-family:"Courier New"'> <span class=SpellE>intForwardMarkerIndex</span>
+&gt; 0 </span><span style='font-size:10.0pt;font-family:"Courier New";
+color:blue'>Then</span></p>
+
+<p class=MsoNormal style='text-autospace:none'><span style='font-size:10.0pt;
+font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span><span class=GramE><span style='font-size:10.0pt;font-family:"Courier New";
+color:green'>' Find</span></span><span style='font-size:10.0pt;font-family:
+"Courier New";color:green'> next image after marker</span></p>
+
+<p class=MsoNormal style='text-autospace:none'><span style='font-size:10.0pt;
+font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<span class=SpellE><span class=GramE>intNextIMGIndex</span></span> = <span
+class=SpellE>InStr</span>(<span class=SpellE>intForwardMarkerIndex</span> + 1,
+HTML, &quot;&lt;IMG SRC=&quot;, <span class=SpellE>CompareMethod.Text</span>)</span></p>
+
+<p class=MsoNormal style='text-autospace:none'><span style='font-size:10.0pt;
+font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span><span style='font-size:10.0pt;font-family:"Courier New";color:blue'>If</span><span
+style='font-size:10.0pt;font-family:"Courier New"'> <span class=SpellE>intNextIMGIndex</span>
+&gt; 0 </span><span style='font-size:10.0pt;font-family:"Courier New";
+color:blue'>Then</span><span style='font-size:10.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></p>
+
+<p class=MsoNormal style='text-autospace:none'><span style='font-size:10.0pt;
+font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<span class=SpellE><span class=GramE>chrSRCDelimeter</span></span> = </span><span
+style='font-size:10.0pt;font-family:"Courier New";color:navy'>Trim(</span><span
+style='font-size:10.0pt;font-family:"Courier New"'>Mid(HTML, <span
+class=SpellE>intNextIMGIndex</span> + 9)</span><span style='font-size:10.0pt;
+font-family:"Courier New";color:navy'>)</span><span style='font-size:10.0pt;
+font-family:"Courier New"'>.Chars(0)</span></p>
+
+<p class=MsoNormal style='text-autospace:none'><span style='font-size:10.0pt;
+font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span><span style='font-size:10.0pt;font-family:"Courier New";color:blue'>If</span><span
+style='font-size:10.0pt;font-family:"Courier New"'> <span class=SpellE>chrSRCDelimeter</span>
+= &quot;&quot;&quot;&quot;c </span><span style='font-size:10.0pt;font-family:
+"Courier New";color:blue'>Then</span></p>
+
+<p class=MsoNormal style='text-autospace:none'><span style='font-size:10.0pt;
+font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span><span class=GramE><span style='font-size:10.0pt;font-family:"Courier New";
+color:green'>' End</span></span><span style='font-size:10.0pt;font-family:"Courier New";
+color:green'> of image source will be double quote</span></p>
+
+<p class=MsoNormal style='text-autospace:none'><span style='font-size:10.0pt;
+font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<span class=SpellE><span class=GramE>intSRCStart</span></span> = <span
+class=SpellE>intNextIMGIndex</span> + 10</span></p>
+
+<p class=MsoNormal style='text-autospace:none'><span style='font-size:10.0pt;
+font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<span class=SpellE><span class=GramE>intSRCEnd</span></span> = <span
+class=SpellE>InStr</span>(<span class=SpellE>intSRCStart</span>, HTML,
+&quot;&quot;&quot;&quot;)</span></p>
+
+<p class=MsoNormal style='text-autospace:none'><span style='font-size:10.0pt;
+font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><span
+class=SpellE><span style='font-size:10.0pt;font-family:"Courier New";
+color:blue'>ElseIf</span></span><span style='font-size:10.0pt;font-family:"Courier New"'>
+<span class=SpellE>chrSRCDelimeter</span> = &quot;'&quot;c </span><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue'>Then</span></p>
+
+<p class=MsoNormal style='text-autospace:none'><span style='font-size:10.0pt;
+font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span><span class=GramE><span style='font-size:10.0pt;font-family:"Courier New";
+color:green'>' End</span></span><span style='font-size:10.0pt;font-family:"Courier New";
+color:green'> of image source will be single quote</span></p>
+
+<p class=MsoNormal style='text-autospace:none'><span style='font-size:10.0pt;
+font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<span class=SpellE><span class=GramE>intSRCStart</span></span> = <span
+class=SpellE>intNextIMGIndex</span> + 10</span></p>
+
+<p class=MsoNormal style='text-autospace:none'><span style='font-size:10.0pt;
+font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<span class=SpellE><span class=GramE>intSRCEnd</span></span> = <span
+class=SpellE>InStr</span>(<span class=SpellE>intSRCStart</span>, HTML,
+&quot;'&quot;)</span></p>
+
+<p class=MsoNormal style='text-autospace:none'><span style='font-size:10.0pt;
+font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span><span style='font-size:10.0pt;font-family:"Courier New";color:blue'>Else</span></p>
+
+<p class=MsoNormal style='text-autospace:none'><span style='font-size:10.0pt;
+font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span><span class=GramE><span style='font-size:10.0pt;font-family:"Courier New";
+color:green'>' End</span></span><span style='font-size:10.0pt;font-family:"Courier New";
+color:green'> of image source will be space or greater than</span></p>
+
+<p class=MsoNormal style='text-autospace:none'><span style='font-size:10.0pt;
+font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<span class=SpellE><span class=GramE>intSRCStart</span></span> = <span
+class=SpellE>intNextIMGIndex</span> + 9</span></p>
+
+<p class=MsoNormal style='text-autospace:none'><span style='font-size:10.0pt;
+font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<span class=SpellE><span class=GramE>intSRCMaxEnd</span></span> = <span
+class=SpellE>InStr</span>(<span class=SpellE>intSRCStart</span>, HTML,
+&quot;&gt;&quot;)</span></p>
+
+<p class=MsoNormal style='text-autospace:none'><span style='font-size:10.0pt;
+font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<span class=SpellE><span class=GramE>intSRCEnd</span></span> = <span
+class=SpellE>InStr</span>(<span class=SpellE>intSRCStart</span>, HTML, &quot;
+&quot;)</span></p>
+
+<p class=MsoNormal style='text-autospace:none'><span style='font-size:10.0pt;
+font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span><span style='font-size:10.0pt;font-family:"Courier New";color:blue'>If</span><span
+style='font-size:10.0pt;font-family:"Courier New"'> <span class=SpellE>intSRCEnd</span>
+&gt; <span class=SpellE>intSRCMaxEnd</span> </span><span style='font-size:10.0pt;
+font-family:"Courier New";color:blue'>Then</span><span style='font-size:10.0pt;
+font-family:"Courier New"'> <span class=SpellE>intSRCEnd</span> = <span
+class=SpellE>intSRCMaxEnd</span></span></p>
+
+<p class=MsoNormal style='text-autospace:none'><span style='font-size:10.0pt;
+font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span><span style='font-size:10.0pt;font-family:"Courier New";color:blue'>End</span><span
+style='font-size:10.0pt;font-family:"Courier New"'> </span><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue'>If</span></p>
+
+<p class=MsoNormal style='text-autospace:none'><span style='font-size:10.0pt;
+font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></p>
+
+<p class=MsoNormal style='text-autospace:none'><span style='font-size:10.0pt;
+font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span><span style='font-size:10.0pt;font-family:"Courier New";color:blue'>If</span><span
+style='font-size:10.0pt;font-family:"Courier New"'> <span class=SpellE>intSRCEnd</span>
+&gt; 0 </span><span style='font-size:10.0pt;font-family:"Courier New";
+color:blue'>Then</span></p>
+
+<p class=MsoNormal style='text-autospace:none'><span style='font-size:10.0pt;
+font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span><span class=GramE><span style='font-size:10.0pt;font-family:"Courier New";
+color:green'>' Extract</span></span><span style='font-size:10.0pt;font-family:
+"Courier New";color:green'> image source</span></p>
+
+<p class=MsoNormal style='text-autospace:none'><span style='font-size:10.0pt;
+font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<span class=SpellE><span class=GramE>strImage</span></span> = Mid(HTML, <span
+class=SpellE>intSRCStart</span>, <span class=SpellE>intSRCEnd</span> - <span
+class=SpellE>intSRCStart</span> + 1)</span></p>
+
+<p class=MsoNormal style='text-autospace:none'><span style='font-size:10.0pt;
+font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span><span style='font-size:10.0pt;font-family:"Courier New";color:blue'>End</span><span
+style='font-size:10.0pt;font-family:"Courier New"'> </span><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue'>If</span></p>
+
+<p class=MsoNormal style='text-autospace:none'><span style='font-size:10.0pt;
+font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span><span style='font-size:10.0pt;font-family:"Courier New";color:blue'>End</span><span
+style='font-size:10.0pt;font-family:"Courier New"'> </span><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue'>If</span></p>
+
+<p class=MsoNormal style='text-autospace:none'><span style='font-size:10.0pt;
+font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue'>End</span><span
+style='font-size:10.0pt;font-family:"Courier New"'> </span><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue'>If</span></p>
+
+<p class=MsoNormal style='text-autospace:none'><span style='font-size:10.0pt;
+font-family:"Courier New";color:blue'>&nbsp;</span></p>
+
+<p class=MsoNormal style='text-autospace:none'><span style='font-size:10.0pt;
+font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue'>Return</span><span
+style='font-size:10.0pt;font-family:"Courier New"'> <span class=SpellE>strImage</span></span></p>
+
+<p class=MsoNormal style='text-autospace:none'><span style='font-size:10.0pt;
+font-family:"Courier New"'>&nbsp;</span></p>
+
+<p class=MsoNormal style='text-autospace:none'><span style='font-size:10.0pt;
+font-family:"Courier New";color:blue'>End</span><span style='font-size:10.0pt;
+font-family:"Courier New"'> </span><span style='font-size:10.0pt;font-family:
+"Courier New";color:blue'>Function</span></p>
+
+<p class=MsoNormal style='text-autospace:none'><span style='font-size:10.0pt;
+font-family:"Courier New";color:blue'>&nbsp;</span></p>
+
+<p class=MsoNormal style='text-autospace:none'><span style='font-size:10.0pt;
+font-family:"Courier New";color:blue'>&lt;/</span><span style='font-size:10.0pt;
+font-family:"Courier New";color:maroon'>SCRIPT</span><span style='font-size:
+10.0pt;font-family:"Courier New";color:blue'>&gt;</span></p>
+
+<p class=MsoNormal style='text-autospace:none'><span style='font-size:10.0pt;
+font-family:"Courier New";background:yellow'>&lt;%</span></p>
+
+<p class=MsoNormal style='text-autospace:none'><span style='font-size:10.0pt;
+font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue'>Const</span><span
+style='font-size:10.0pt;font-family:"Courier New"'> URL </span><span
+class=GramE><span style='font-size:10.0pt;font-family:"Courier New";color:blue'>As</span></span><span
+style='font-size:10.0pt;font-family:"Courier New"'> </span><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue'>String</span><span
+style='font-size:10.0pt;font-family:"Courier New"'> = &quot;<a
+href="http://www.yahoo.com/">http://www.yahoo.com/</a>&quot;</span></p>
+
+<p class=MsoNormal style='text-autospace:none'><span style='font-size:10.0pt;
+font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue'>Const</span><span
+style='font-size:10.0pt;font-family:"Courier New"'> <span class=SpellE>BufferSize</span>
+</span><span class=GramE><span style='font-size:10.0pt;font-family:"Courier New";
+color:blue'>As</span></span><span style='font-size:10.0pt;font-family:"Courier New"'>
+</span><span style='font-size:10.0pt;font-family:"Courier New";color:blue'>Integer</span><span
+style='font-size:10.0pt;font-family:"Courier New"'> = </span><span
+style='font-size:10.0pt;font-family:"Courier New";color:navy'>4096</span></p>
+
+<p class=MsoNormal style='text-autospace:none'><span style='font-size:10.0pt;
+font-family:"Courier New"'>&nbsp;</span></p>
+
+<p class=MsoNormal style='text-autospace:none'><span style='font-size:10.0pt;
+font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue'>Dim</span><span
+style='font-size:10.0pt;font-family:"Courier New"'> <span class=SpellE>HTMLSource</span>
+</span><span class=GramE><span style='font-size:10.0pt;font-family:"Courier New";
+color:blue'>As</span></span><span style='font-size:10.0pt;font-family:"Courier New"'>
+</span><span style='font-size:10.0pt;font-family:"Courier New";color:blue'>New</span><span
+style='font-size:10.0pt;font-family:"Courier New"'> <span class=SpellE>StringBuilder</span></span></p>
+
+<p class=MsoNormal style='text-autospace:none'><span style='font-size:10.0pt;
+font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue'>Dim</span><span
+style='font-size:10.0pt;font-family:"Courier New"'> <span class=SpellE>ByteBuffer</span>
+</span><span style='font-size:10.0pt;font-family:"Courier New";color:blue'>As</span><span
+style='font-size:10.0pt;font-family:"Courier New"'> </span><span class=GramE><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue'>Byte</span><span
+style='font-size:10.0pt;font-family:"Courier New"'>(</span></span><span
+style='font-size:10.0pt;font-family:"Courier New"'>) = <span class=SpellE>Array.CreateInstance</span>(</span><span
+class=SpellE><span style='font-size:10.0pt;font-family:"Courier New";
+color:blue'>GetType</span></span><span style='font-size:10.0pt;font-family:
+"Courier New"'>(</span><span style='font-size:10.0pt;font-family:"Courier New";
+color:blue'>Byte</span><span style='font-size:10.0pt;font-family:"Courier New"'>),
+<span class=SpellE>BufferSize</span>)</span></p>
+
+<p class=MsoNormal style='text-autospace:none'><span style='font-size:10.0pt;
+font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue'>Dim</span><span
+style='font-size:10.0pt;font-family:"Courier New"'> <span class=SpellE>BytesRead</span>
+</span><span class=GramE><span style='font-size:10.0pt;font-family:"Courier New";
+color:blue'>As</span></span><span style='font-size:10.0pt;font-family:"Courier New"'>
+</span><span style='font-size:10.0pt;font-family:"Courier New";color:blue'>Integer</span></p>
+
+<p class=MsoNormal style='text-autospace:none'><span style='font-size:10.0pt;
+font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></p>
+
+<p class=MsoNormal style='text-autospace:none'><span style='font-size:10.0pt;
+font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue'>With</span><span
+style='font-size:10.0pt;font-family:"Courier New"'> </span><span class=SpellE><span
+class=GramE><span style='font-size:10.0pt;font-family:"Courier New";color:blue'>CType</span></span></span><span
+class=GramE><span style='font-size:10.0pt;font-family:"Courier New"'>(</span></span><span
+class=SpellE><span style='font-size:10.0pt;font-family:"Courier New"'>WebRequest.Create</span></span><span
+style='font-size:10.0pt;font-family:"Courier New"'>(URL), <span class=SpellE>HttpWebRequest</span>)</span></p>
+
+<p class=MsoNormal style='text-autospace:none'><span style='font-size:10.0pt;
+font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+.Credentials = <span class=SpellE>CredentialCache.DefaultCredentials</span></span></p>
+
+<p class=MsoNormal style='text-autospace:none'><span style='font-size:10.0pt;
+font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span><span style='font-size:10.0pt;font-family:"Courier New";color:blue'>With</span><span
+style='font-size:10.0pt;font-family:"Courier New"'> .<span class=SpellE>GetResponse.GetResponseStream</span></span></p>
+
+<p class=MsoNormal style='text-autospace:none'><span style='font-size:10.0pt;
+font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<span class=SpellE>BytesRead</span> = .<span class=GramE>Read(</span><span
+class=SpellE>ByteBuffer</span>, 0, <span class=SpellE>BufferSize</span>)</span></p>
+
+<p class=MsoNormal style='text-autospace:none'><span style='font-size:10.0pt;
+font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span><span style='font-size:10.0pt;font-family:"Courier New";color:blue'>While</span><span
+style='font-size:10.0pt;font-family:"Courier New"'> <span class=SpellE>BytesRead</span>
+&gt; 0</span></p>
+
+<p class=MsoNormal style='text-autospace:none'><span style='font-size:10.0pt;
+font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<span class=SpellE><span class=GramE>HTMLSource.Append</span></span><span
+class=GramE>(</span><span class=SpellE>Encoding.ASCII.GetChars</span>(<span
+class=SpellE>ByteBuffer</span>, 0, <span class=SpellE>BytesRead</span>))</span></p>
+
+<p class=MsoNormal style='text-autospace:none'><span style='font-size:10.0pt;
+font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<span class=SpellE>BytesRead</span> = .<span class=GramE>Read(</span><span
+class=SpellE>ByteBuffer</span>, 0, <span class=SpellE>BufferSize</span>)</span></p>
+
+<p class=MsoNormal style='text-autospace:none'><span style='font-size:10.0pt;
+font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span><span style='font-size:10.0pt;font-family:"Courier New";color:blue'>End</span><span
+style='font-size:10.0pt;font-family:"Courier New"'> </span><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue'>While</span></p>
+
+<p class=MsoNormal style='text-autospace:none'><span style='font-size:10.0pt;
+font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span><span style='font-size:10.0pt;font-family:"Courier New";color:blue'>End</span><span
+style='font-size:10.0pt;font-family:"Courier New"'> </span><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue'>With</span></p>
+
+<p class=MsoNormal style='text-autospace:none'><span style='font-size:10.0pt;
+font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue'>End</span><span
+style='font-size:10.0pt;font-family:"Courier New"'> </span><span
+style='font-size:10.0pt;font-family:"Courier New";color:blue'>With</span></p>
+
+<p class=MsoNormal style='text-autospace:none'><span style='font-size:10.0pt;
+font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span></p>
+
+<p class=MsoNormal style='text-autospace:none'><span style='font-size:10.0pt;
+font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><span
+class=GramE><span style='font-size:10.0pt;font-family:"Courier New";color:green'>'
+Return</span></span><span style='font-size:10.0pt;font-family:"Courier New";
+color:green'> next image source after first &lt;div id=<span class=SpellE>mntl</span>&gt;</span></p>
+
+<p class=MsoNormal style='text-autospace:none'><span style='font-size:10.0pt;
+font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class=SpellE><span
+class=GramE>Response.ClearContent</span></span><span class=GramE>()</span></span></p>
+
+<p class=MsoNormal style='text-autospace:none'><span style='font-size:10.0pt;
+font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class=SpellE><span
+class=GramE>Response.Write</span></span><span class=GramE>(</span><span
+class=SpellE>GetImageSource</span>(&quot;&lt;div id=<span class=SpellE>mntl</span>&gt;&quot;,
+<span class=SpellE>HTMLSource.ToString</span>()))</span></p>
+
+<p class=MsoNormal style='text-autospace:none'><span style='font-size:10.0pt;
+font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class=SpellE><span
+class=GramE>Response.Flush</span></span><span class=GramE>()</span></span></p>
+
+<p class=MsoNormal style='text-autospace:none'><span style='font-size:10.0pt;
+font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class=SpellE><span
+class=GramE>Response.Close</span></span><span class=GramE>()</span></span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:"Courier New";
+background:yellow'>%&gt;</span></p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+</div>
+
+</body>
+
+</html>
