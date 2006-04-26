@@ -87,6 +87,7 @@ Namespace Ssam
 
         Public Sub BeginInit() Implements System.ComponentModel.ISupportInitialize.BeginInit
 
+            ' There is nothing we need to do before the component is initialized.
 
         End Sub
 

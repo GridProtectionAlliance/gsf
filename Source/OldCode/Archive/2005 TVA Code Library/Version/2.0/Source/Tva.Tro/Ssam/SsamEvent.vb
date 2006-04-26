@@ -2,6 +2,10 @@
 
 Namespace Ssam
 
+    ''' <summary>
+    ''' Defines an event that can be logged to the SSAM.
+    ''' </summary>
+    ''' <remarks></remarks>
     <Serializable()> _
     Public Class SsamEvent
 
@@ -12,6 +16,10 @@ Namespace Ssam
         Private m_message As String
         Private m_description As String
 
+        ''' <summary>
+        ''' Specifies the type of SSAM event.
+        ''' </summary>
+        ''' <remarks></remarks>
         Public Enum SsamEventType As Integer
             ''' <summary>
             ''' This event reports a successful action on some entity.
@@ -71,6 +79,10 @@ Namespace Ssam
             CatchUp = 11
         End Enum
 
+        ''' <summary>
+        ''' Specifies the type of entity to which the event belongs.
+        ''' </summary>
+        ''' <remarks></remarks>
         Public Enum SsamEntityType As Integer
             ''' <summary>
             ''' This entity type represents a data-flow.
@@ -99,6 +111,13 @@ Namespace Ssam
             Data = 5
         End Enum
 
+        ''' <summary>
+        ''' Initializes a instance of Tva.Tro.Ssam.SsamEvent with the specified information.
+        ''' </summary>
+        ''' <param name="entityID">The ID of the entity to which this event belongs.</param>
+        ''' <param name="entityType">The type of the entity to which this event belongs.</param>
+        ''' <param name="eventType"></param>
+        ''' <remarks></remarks>
         Public Sub New(ByVal entityID As String, ByVal entityType As SsamEntityType, ByVal eventType As SsamEventType)
             MyClass.New(entityID, entityType, eventType, "", "", "")
         End Sub
