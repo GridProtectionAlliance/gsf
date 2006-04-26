@@ -8,8 +8,9 @@ Namespace Ssam
 
     <ToolboxBitmap(GetType(SsamLogger))> _
     Public Class SsamLogger
+        Implements ISupportInitialize
 
-        Private WithEvents m_apiInstance As SsamApi
+        Private m_apiInstance As SsamApi
         Private WithEvents m_eventQueue As ProcessQueue(Of SsamEvent)
 
         Public Event LogException(ByVal ex As Exception)
@@ -66,22 +67,13 @@ Namespace Ssam
         Public Sub LogEvent(ByVal newEvent As SsamEvent)
 
             m_eventQueue.Add(newEvent)
+            If Not m_eventQueue.Enabled() Then m_eventQueue.Start()
 
         End Sub
 
         Private Sub ProcessEvent(ByVal item As SsamEvent)
 
-            Try
-                m_apiInstance.LogEvent(item)
-            Catch ex As Exception
-                RaiseEvent LogException(ex)
-            End Try
-
-        End Sub
-
-        Private Sub m_apiInstance_InitializationException(ByVal ex As Exception) Handles m_apiInstance.InitializationException
-
-            RaiseEvent LogException(ex)
+            m_apiInstance.LogEvent(item)
 
         End Sub
 
@@ -90,6 +82,21 @@ Namespace Ssam
             RaiseEvent LogException(ex)
 
         End Sub
+
+#Region " ISupportInitialize Implementation "
+
+        Public Sub BeginInit() Implements System.ComponentModel.ISupportInitialize.BeginInit
+
+
+        End Sub
+
+        Public Sub EndInit() Implements System.ComponentModel.ISupportInitialize.EndInit
+
+            If Not DesignMode() Then m_apiInstance.Initialize()
+
+        End Sub
+
+#End Region
 
     End Class
 

@@ -23,9 +23,10 @@ Namespace Ssam
             'This call is required by the Component Designer.
             InitializeComponent()
 
-            m_apiInstance = New SsamApi()
-            m_eventQueue = ProcessQueue(Of SsamEvent).CreateSynchronousQueue(AddressOf ProcessEvent)
-            If Not DesignMode Then m_eventQueue.Start()
+            m_apiInstance = New SsamApi(SsamApi.SsamServer.Development, True, False)
+            m_eventQueue = ProcessQueue(Of SsamEvent).CreateSynchronousQueue(AddressOf ProcessEvent, _
+                ProcessQueue(Of SsamEvent).DefaultProcessInterval, ProcessQueue(Of SsamEvent).DefaultProcessTimeout, _
+                ProcessQueue(Of SsamEvent).DefaultRequeueOnTimeout, True)
 
         End Sub
 
