@@ -6,7 +6,7 @@
     </assemblies>
     <documenters>
         <documenter name="MSDN 2003">
-            <property name="OutputDirectory" value=".\" />
+            <property name="OutputDirectory" value=".\CodeDocs\" />
             <property name="HtmlHelpName" value="TVA Code Library" />
             <property name="Title" value="TVA Code Library" />
             <property name="Version" value="2.0.20.50766" />
