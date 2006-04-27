@@ -20,6 +20,8 @@ Namespace Ssam
         <System.Diagnostics.DebuggerNonUserCode(), EditorBrowsable(EditorBrowsableState.Never)> _
         Public Sub New()
 
+            ' During the this default initialization, we will not initialize the SSAM API implicitly 
+            ' since it is done explicitly after the component has initialized.
             MyClass.New(SsamApi.SsamServer.Development, True, False)
 
             'This call is required by the Component Designer.
@@ -31,6 +33,7 @@ Namespace Ssam
         <System.Diagnostics.DebuggerNonUserCode()> _
         Protected Overrides Sub Dispose(ByVal disposing As Boolean)
             If disposing AndAlso components IsNot Nothing Then
+                m_apiInstance.Dispose()
                 components.Dispose()
             End If
             MyBase.Dispose(disposing)

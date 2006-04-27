@@ -27,6 +27,7 @@ Namespace Ssam
     ''' </summary>
     ''' <remarks></remarks>
     Public Class SsamApi
+        Implements IDisposable
 
         Private m_server As SsamServer
         Private m_keepConnectionOpen As Boolean
@@ -224,6 +225,8 @@ Namespace Ssam
         ''' <remarks></remarks>
         Public Sub Connect()
 
+            CheckDisposed()
+
             If m_connection.State <> System.Data.ConnectionState.Closed Then Disconnect()
             m_connection.ConnectionString = MyClass.ConnectionString()
             m_connection.Open()
@@ -237,6 +240,8 @@ Namespace Ssam
         ''' <remarks></remarks>
         Public Sub Disconnect()
 
+            CheckDisposed()
+
             If m_connection.State <> System.Data.ConnectionState.Closed Then m_connection.Close()
             MyClass.ConnectionState = SsamConnectionState.Closed
 
@@ -249,6 +254,8 @@ Namespace Ssam
         ''' <returns>True if the event is logged successfully; otherwise False.</returns>
         ''' <remarks></remarks>
         Public Function LogEvent(ByVal newEvent As SsamEvent) As Boolean
+
+            CheckDisposed()
 
             Dim logResult As Boolean = False
             Try
@@ -282,6 +289,8 @@ Namespace Ssam
         ''' <remarks>This method is for internal use only and must be called be using the API.</remarks>
         Friend Sub Initialize()
 
+            CheckDisposed()
+
             ' Make sure all of the SSAM connection strings are present in the config file of the 
             ' application using the API.
             CategorizedSettings("ssam").Add("Development", "Server=RGOCSQLD;Database=Ssam;Trusted_Connection=True;", _
@@ -293,6 +302,62 @@ Namespace Ssam
             SaveSettings()
 
         End Sub
+
+        ''' <summary>
+        ''' Attempts to free resources and perform other cleanup operations before the Tva.Tro.Ssam.SsamApi 
+        ''' is reclaimed by garbage collection.
+        ''' </summary>
+        ''' <remarks></remarks>
+        Protected Overrides Sub Finalize()
+
+            Dispose(False)
+
+        End Sub
+
+#Region " IDisposable Implementation "
+
+        Private m_disposed As Boolean = False
+
+        ''' <summary>
+        ''' This is a helper method that check whether the object is disposed and raises a System.ObjectDisposedException if it is.
+        ''' </summary>
+        ''' <remarks></remarks>
+        Protected Sub CheckDisposed()
+
+            If m_disposed Then Throw New ObjectDisposedException(Me.GetType.FullName())
+
+        End Sub
+
+        ''' <summary>
+        ''' Releases the unmanaged resources used by the Tva.Tro.Ssam.SsamApi and and optionally releases the 
+        ''' managed resources.
+        ''' </summary>
+        ''' <param name="disposing">
+        ''' True to release both managed and unmanaged resources; False to release only unmanaged resources. 
+        ''' </param>
+        ''' <remarks></remarks>
+        Protected Overridable Sub Dispose(ByVal disposing As Boolean)
+            If Not m_disposed Then  ' Object jas not been disposed yet.
+                If disposing Then
+                    Disconnect()    ' Close connection with the SSAM server.
+                End If
+            End If
+            m_disposed = True   ' Mark the object as been disposed.
+        End Sub
+
+#Region " IDisposable Support "
+        ''' <summary>
+        ''' Releases all resources used by the Tva.Tro.Ssam.SsamApi.
+        ''' </summary>
+        ''' <remarks></remarks>
+        Public Sub Dispose() Implements IDisposable.Dispose
+            ' Do not change this code.  Put cleanup code in Dispose(ByVal disposing As Boolean) above.
+            Dispose(True)
+            GC.SuppressFinalize(Me)
+        End Sub
+#End Region
+
+#End Region
 
     End Class
 
