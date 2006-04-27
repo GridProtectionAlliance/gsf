@@ -31,6 +31,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build and Deploy Scripts", 
 	ProjectSection(SolutionItems) = preProject
 		..\Build Scripts\RebuildAll.bat = ..\Build Scripts\RebuildAll.bat
 		..\Build Scripts\RebuildAllDebug.bat = ..\Build Scripts\RebuildAllDebug.bat
+		..\Build Scripts\RebuildAllNoDocs.bat = ..\Build Scripts\RebuildAllNoDocs.bat
 	EndProjectSection
 EndProject
 Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "Tva.Phasors", "Tva.Phasors\Tva.Phasors.vbproj", "{54CA98CC-2F0A-41F2-879D-0E42B17E8544}"

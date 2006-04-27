@@ -2,13 +2,14 @@
     <assemblies>
         <assembly location="..\Source\bin\Tva.Core.dll" documentation="..\Source\bin\Tva.Core.xml" />
         <assembly location="..\Source\bin\Tva.Phasors.dll" documentation="..\Source\bin\Tva.Phasors.xml" />
+        <assembly location="..\Source\bin\Tva.Tro.dll" documentation="..\Source\bin\Tva.Tro.xml" />
     </assemblies>
     <documenters>
         <documenter name="MSDN 2003">
-            <property name="OutputDirectory" value=".\" />
+            <property name="OutputDirectory" value="\\opgfs\opdat\CtrlSys\CodeLibrary\2.0\Builds\Beta\Documentation\" />
             <property name="HtmlHelpName" value="TVA Code Library" />
             <property name="Title" value="TVA Code Library" />
-            <property name="Version" value="2.0.27.43740" />
+            <property name="Version" value="2.0.16.49258" />
             <property name="FooterHtml" value="    &lt;table width=&quot;100%&quot;&gt;&#xD;&#xA;        &lt;tr&gt;&#xD;&#xA;            &lt;td align=&quot;center&quot;&gt;&#xD;&#xA;                &lt;img src=&quot;http://opweb.cha.tva.gov/general/CodeLibrary/Documentation/Images/MSGoldPartnerLogo.gif&quot; /&gt;&lt;/td&gt;&#xD;&#xA;        &lt;/tr&gt;&#xD;&#xA;        &lt;tr&gt;&#xD;&#xA;            &lt;td&gt;&#xD;&#xA;                &lt;p align=&quot;center&quot; style=&quot;font-size: 8pt&quot;&gt;&#xD;&#xA;                    &lt;a href=&quot;http://www.tva.gov&quot; target=&quot;_blank&quot;&gt;Copyright © 2006, TVA - All Rights Reserved&lt;/a&gt;&lt;/p&gt;&#xD;&#xA;            &lt;/td&gt;&#xD;&#xA;        &lt;/tr&gt;&#xD;&#xA;    &lt;/table&gt;" />
             <property name="Preliminary" value="True" />
         </documenter>
