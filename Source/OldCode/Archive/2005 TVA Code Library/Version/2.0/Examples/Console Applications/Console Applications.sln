@@ -12,6 +12,24 @@ Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "UpdateTimeStamp", "UpdateTi
 	EndProjectSection
 EndProject
 Global
+	GlobalSection(SourceCodeControl) = preSolution
+		SccNumberOfProjects = 4
+		SccLocalPath0 = .
+		CanCheckoutShared = false
+		SolutionUniqueID = {CC22B7DD-229B-421F-8269-FA48B5EDB8E9}
+		SccProjectUniqueName1 = IncrementBuildNumber\\IncrementBuildNumber.vbproj
+		SccProjectName1 = \u0022$/TVA\u0020Code\u0020Library/Version/2.0/Examples/Console\u0020Applications/IncrementBuildNumber\u0022,\u0020MSGAAAAA
+		SccLocalPath1 = IncrementBuildNumber
+		CanCheckoutShared = false
+		SccProjectUniqueName2 = ReplaceInFiles\\ReplaceInFiles.vbproj
+		SccProjectName2 = \u0022$/TVA\u0020Code\u0020Library/Version/2.0/Examples/Console\u0020Applications/ReplaceInFiles\u0022,\u0020CTGAAAAA
+		SccLocalPath2 = ReplaceInFiles
+		CanCheckoutShared = false
+		SccProjectUniqueName3 = UpdateTimeStamp\\UpdateTimeStamp.vbproj
+		SccProjectName3 = \u0022$/TVA\u0020Code\u0020Library/Version/2.0/Examples/Console\u0020Applications/UpdateTimeStamp\u0022,\u0020STGAAAAA
+		SccLocalPath3 = UpdateTimeStamp
+		CanCheckoutShared = false
+	EndGlobalSection
 	GlobalSection(SolutionConfiguration) = preSolution
 		Debug = Debug
 		Release = Release

@@ -35,6 +35,13 @@ Module ReplaceInFiles
             Dim ValidFilePaths As New ArrayList
             Dim ValidFileSpecs As New ArrayList
 
+#If DEBUG Then
+            For x As Integer = 0 To Args.Count - 1
+                Console.WriteLine("Argument " & x & ": " & Args("OrderedArg" & x))
+            Next
+
+#End If
+
             ' Initialize options
             EncodeFormat = GetEncodeFormat(Args("e"))
             FindString = DecodeQuotes(Args("OrderedArg2"))
