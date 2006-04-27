@@ -9,7 +9,7 @@
             <property name="OutputDirectory" value=".\CodeDocs\" />
             <property name="HtmlHelpName" value="TVA Code Library" />
             <property name="Title" value="TVA Code Library" />
-            <property name="Version" value="2.0.20.50766" />
+            <property name="Version" value="2.0.21.51669" />
             <property name="FooterHtml" value="    &lt;table width=&quot;100%&quot;&gt;&#xD;&#xA;        &lt;tr&gt;&#xD;&#xA;            &lt;td align=&quot;center&quot;&gt;&#xD;&#xA;                &lt;img src=&quot;http://opweb.cha.tva.gov/general/CodeLibrary/Documentation/Images/MSGoldPartnerLogo.gif&quot; /&gt;&lt;/td&gt;&#xD;&#xA;        &lt;/tr&gt;&#xD;&#xA;        &lt;tr&gt;&#xD;&#xA;            &lt;td&gt;&#xD;&#xA;                &lt;p align=&quot;center&quot; style=&quot;font-size: 8pt&quot;&gt;&#xD;&#xA;                    &lt;a href=&quot;http://www.tva.gov&quot; target=&quot;_blank&quot;&gt;Copyright © 2006, TVA - All Rights Reserved&lt;/a&gt;&lt;/p&gt;&#xD;&#xA;            &lt;/td&gt;&#xD;&#xA;        &lt;/tr&gt;&#xD;&#xA;    &lt;/table&gt;" />
             <property name="Preliminary" value="True" />
         </documenter>
