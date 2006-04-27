@@ -1,0 +1,90 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>
+    <title>TVA Code Library</title>
+    <link href="Documentation/Common.css" rel="stylesheet" type="text/css" />
+    <base target="_blank" />
+    <script>
+    <!--    
+        function LoadBuildVersion()
+        {
+            document.all.buildVersion.innerText = buildVersionFrame.document.body.innerText;
+        }   
+    // -->
+    </script>
+</head>
+<body background="Documentation/Images/Background.png">
+	<table>
+		<tr>
+			<td align="center">
+				<img alt="Operations Data Architechture" src="Documentation/Images/ODALogo.gif" align="absmiddle" />
+			</td>
+			<td valign="baseline">
+				<h1>TVA Shared .NET 2.0 Code Library (Home)</h1>
+			</td>
+		</tr>
+	</table>
+	<h2>.NET Shared Code Library Related</h2>
+	<ul>
+		<li><a href="Documentation/FAQ/Freqently Asked Questions.html">Frequently Asked Questions</a></li>
+		<li><a href="Builds/Release/Current/Documentation/Index.html">Latest Release Build Documentation</a></li>
+		<li><a href="Builds/Beta/Documentation/Index.html">Latest Beta Build Documentation&nbsp;(Version <span id="buildVersion"></span>)</a></li>
+		<li><a href="Documentation/Images/Tva Code Library Overview.png">Namespace Hierarchy</a></li>
+		<li><a href="file:///\\opgfs\opdat\CtrlSys\CodeLibrary\2.0\Examples\">Examples</a></li>
+	</ul>
+	<h2>Technical Practices&nbsp;&nbsp;&nbsp;<span class="Marker">»</span>&nbsp;<a class="Small" href="file:///\\opgfs\opdat\CtrlSys\ODA\Documents\Technical Practices\">Browse Folder</a></h2>
+	<ul>
+		<li><a href="Documentation/TechnicalPractices/CS-TP-ODA-6001 - Naming Conventions.doc">Naming Conventions for .NET Code</a></li>
+		<li><a href="Documentation/TechnicalPractices/CS-TP-ODA-6005 - Naming Conventions for TRO Data Sources.doc">Naming Conventions for Data Sources</a></li>
+		<li><a href="Documentation/TechnicalPractices/CS-TP-ODA-6002 - Code Library Usage.doc">Code Library Usage (Draft)</a></li>
+	</ul>
+	<h2>Brown Bag Lunch Presentations&nbsp;&nbsp;&nbsp;<span class="Marker">»</span>&nbsp;<a class="Small" href="file:///\\opgfs\opdat\CtrlSys\CodeLibrary\2.0\Documentation\Presentations\">Browse Folder</a></h2>
+	<ul>
+		<li>3/29/2006: <a href="Documentation/Presentations/2006-03-29 Brown Bag Lunch.ppt">Performing Code Testing with “N-Unit”</a> (<a href="Documentation/Presentations/2006-03-29 Brown Bag Lunch.doc">Handouts</a>)</li>
+		<li>4/19/2006: <a href="Documentation/Presentations/2006-04-19 Brown Bag Lunch.ppt">Multithreaded Processing with the “ProcessQueue”</a></li>
+	</ul>
+	<h2>Technical Notes</h2>
+	<ul>
+		<li><a href="Documentation/Notes/ActiveDirectory properties.html">ActiveDirectory properties</a></li>
+		<li><a href="http://msdn.microsoft.com/library/default.asp?url=/library/en-us/dndotnet/html/vbnstrcatn.asp?_r=1">Improving String handling performance (StringBuilder)></a></li>
+		<li><a href="Documentation/Notes/.NET exception handling using the Finally keyword.html">Finally clause will always execute even if Catch exits Sub</a></li>
+		<li><a href="Documentation/Notes/Embedding dependent assemblies as resources.html">Embedding dependent assemblies as resources within EXE</a></li>
+		<li><a href="Documentation/Notes/Impersonation behavior in ASP.NET applications.html">Impersonation behavior in ASP.NET applications</a></li>
+		<li><a href="Documentation/Notes/File upload posting size limits in ASP.NET applications.html">File upload posting size limits in ASP.NET applications</a></li>
+		<li><a href="Documentation/Notes/Reading Excel spreadsheet data from .NET.html">Reading Excel spreadsheet data from .NET</a></li>
+		<li><a href="Documentation/Notes/Server-side Web Scrape Example.html">Server-side web scrape example</a></li>
+		<li><a href="Documentation/Notes/Making your .NET applications run faster - for free.html">Making your .NET applications run faster - for free</a></li>
+		<li><a href="Documentation/Notes/How to connect to server share on server not on TVA domain.html">How to connect to a share on a server not on the domain</a></li>
+		<li><a href="Documentation/Notes/Avoiding IEEE 32-bit double round off errors.html">Avoiding IEEE 32-bit double round off errors</a></li>
+	</ul>
+	<h2>TRO Specific</h2>
+	<ul>
+		<li><a href="Documentation/TRO Specific/Ssam/index.html">SSAM Information</a></li>
+	</ul>
+	<h2>SQL Server Related</h2>
+	<ul>
+		<li><a href="Documentation/SQL Server Related/Handy SQL Server functions.html">Handy SQL Server functions</a></li>
+		<li><a href="Documentation/SQL Server Related/Reseeding IDENTITY column in SQL server.html">Reseeding IDENTITY column in SQL Server</a></li>
+		<li><a href="Documentation/SQL Server Related/SQL Server Holiday Date Calculation Functions.html">SQL Server holiday date calculation functions</a></li>
+	</ul>
+	<p>&nbsp;</p>
+	<p>&nbsp;</p>
+	<table cellpadding="0" cellspacing="0">
+		<tr>
+			<td style="width: 660px">
+				<img alt="Microsoft Gold Partner" src="Documentation/Images/MSGoldPartnerLogo.gif" />
+			</td>
+		</tr>
+		<tr>
+			<td style="width: 660px; text-align: justify;">
+				<span style="font-size: 9pt; font-family: Verdana">
+					Microsoft identifies Gold Certified Partners as representing “the highest level of competence and expertise with Microsoft technologies, and having the closest working relationship with Microsoft.”
+					As a Gold Certified Partner, Control Systems has access to the top level of technical support for our Microsoft development tools, expanded training opportunities, and additional software.
+					This partnership with Microsoft gives Control Systems additional tools with which to develop and implement even better software applications and systems for TVA Business Units.
+				</span>
+			</td>
+		</tr>
+	</table>
+	<iframe id="buildVersionFrame" onload="LoadBuildVersion()" src="Builds/Build.ver" style="display: none"></iframe>
+</body>
+</html>
