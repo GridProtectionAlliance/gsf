@@ -96,7 +96,7 @@ Namespace Ssam
         ''' </summary>
         ''' <param name="server">One of the Tva.Tro.Ssam.SsamApi.SsamServer values.</param>
         ''' <param name="keepConnectionOpen">
-        ''' True if connection with the SSAM server is to be kept open after the first event is loggged for 
+        ''' True if connection with the SSAM server is to be kept open after the first event is logged for 
         ''' any consecutive events that will follow; otherwise False.
         ''' </param>
         ''' <remarks></remarks>
@@ -109,7 +109,7 @@ Namespace Ssam
         ''' </summary>
         ''' <param name="server">One of the Tva.Tro.Ssam.SsamApi.SsamServer values.</param>
         ''' <param name="keepConnectionOpen">
-        ''' True if connection with the SSAM server is to be kept open after the first event is loggged for 
+        ''' True if connection with the SSAM server is to be kept open after the first event is logged for 
         ''' any consecutive events that will follow; otherwise False.
         ''' </param>
         ''' <param name="initializeApi">
@@ -148,11 +148,11 @@ Namespace Ssam
 
         ''' <summary>
         ''' Gets or sets a boolean value indicating whether connection with the SSAM server is to be kept open after 
-        ''' the first event is loggged for any consecutive events that will follow.
+        ''' the first event is logged for any consecutive events that will follow.
         ''' </summary>
         ''' <value></value>
         ''' <returns>
-        ''' True if connection with the SSAM server is to be kept open after the first event is loggged for any 
+        ''' True if connection with the SSAM server is to be kept open after the first event is logged for any 
         ''' consecutive events that will follow; otherwise False.
         ''' </returns>
         ''' <remarks></remarks>

@@ -1,5 +1,6 @@
 ' 04-24-06
 
+Imports System.ComponentModel
 Imports Tva.Collections
 
 Namespace Ssam
@@ -7,7 +8,7 @@ Namespace Ssam
     Partial Class SsamLogger
         Inherits System.ComponentModel.Component
 
-        <System.Diagnostics.DebuggerNonUserCode()> _
+        <System.Diagnostics.DebuggerNonUserCode(), EditorBrowsable(EditorBrowsableState.Never)> _
         Public Sub New(ByVal Container As System.ComponentModel.IContainer)
             MyClass.New()
 
@@ -16,17 +17,13 @@ Namespace Ssam
 
         End Sub
 
-        <System.Diagnostics.DebuggerNonUserCode()> _
+        <System.Diagnostics.DebuggerNonUserCode(), EditorBrowsable(EditorBrowsableState.Never)> _
         Public Sub New()
-            MyBase.New()
+
+            MyClass.New(SsamApi.SsamServer.Development, True, False)
 
             'This call is required by the Component Designer.
             InitializeComponent()
-
-            m_apiInstance = New SsamApi(SsamApi.SsamServer.Development, True, False)
-            m_eventQueue = ProcessQueue(Of SsamEvent).CreateSynchronousQueue(AddressOf ProcessEvent, _
-                ProcessQueue(Of SsamEvent).DefaultProcessInterval, ProcessQueue(Of SsamEvent).DefaultProcessTimeout, _
-                ProcessQueue(Of SsamEvent).DefaultRequeueOnTimeout, True)
 
         End Sub
 
