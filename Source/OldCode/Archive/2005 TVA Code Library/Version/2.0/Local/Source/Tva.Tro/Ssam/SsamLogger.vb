@@ -17,6 +17,7 @@
 
 Imports System.Drawing
 Imports System.ComponentModel
+Imports Tva.Services
 Imports Tva.Collections
 
 Namespace Ssam
@@ -27,7 +28,7 @@ Namespace Ssam
     ''' <remarks></remarks>
     <ToolboxBitmap(GetType(SsamLogger))> _
     Public Class SsamLogger
-        Implements ISupportInitialize
+        Implements ISupportInitialize, IServiceComponent
 
         Private m_enabled As Boolean
         Private m_apiInstance As SsamApi
@@ -38,6 +39,7 @@ Namespace Ssam
         ''' </summary>
         ''' <param name="ex">The exception that was encountered when logging an event to the SSAM server.</param>
         ''' <remarks></remarks>
+        <Description("Occurs when an exception is encountered when logging an event to the SSAM server.")> _
         Public Event LogException(ByVal ex As Exception)
 
         ''' <summary>
@@ -68,11 +70,11 @@ Namespace Ssam
         ''' <remarks></remarks>
         Friend Sub New(ByVal server As SsamApi.SsamServer, ByVal keepConnectionOpen As Boolean, ByVal initializeApi As Boolean)
             MyBase.New()
-            m_enabled = True
             m_apiInstance = New SsamApi(server, keepConnectionOpen, initializeApi)
             m_eventQueue = ProcessQueue(Of SsamEvent).CreateSynchronousQueue(AddressOf ProcessEvent, _
                 ProcessQueue(Of SsamEvent).DefaultProcessInterval, ProcessQueue(Of SsamEvent).DefaultProcessTimeout, _
                 ProcessQueue(Of SsamEvent).DefaultRequeueOnTimeout, True)
+            MyClass.Enabled = True  ' Enable the SSAM Logger by default.
         End Sub
 
         ''' <summary>
@@ -108,12 +110,23 @@ Namespace Ssam
             End Set
         End Property
 
+        ''' <summary>
+        ''' Gets or sets a boolean value indicating whether the logging of SSAM events is enabled.
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns>True if logging of SSAM events is enabled; otherwise False.</returns>
+        ''' <remarks></remarks>
         <Category("Configuration"), Description("Determines whether the logging of SSAM events is enabled."), DefaultValue(GetType(Boolean), "True")> _
         Public Property Enabled() As Boolean
             Get
                 Return m_enabled
             End Get
             Set(ByVal value As Boolean)
+                If value Then
+                    m_eventQueue.Start()    ' Start processing any queued events when the logger is enabled.
+                Else
+                    m_eventQueue.Stop()     ' Stop processing any queued events when the logger is disabled.
+                End If
                 m_enabled = value
             End Set
         End Property
@@ -187,8 +200,11 @@ Namespace Ssam
         ''' <remarks></remarks>
         Public Sub LogEvent(ByVal newEvent As SsamEvent)
 
-            m_eventQueue.Add(newEvent)
-            If Not m_eventQueue.Enabled() Then m_eventQueue.Start()
+            ' Discard the event if SSAM Logger has been disabled.
+            If MyClass.Enabled() Then
+                ' SSAM Logger is enabled so queue the event for logging.
+                m_eventQueue.Add(newEvent)
+            End If
 
         End Sub
 
@@ -227,6 +243,56 @@ Namespace Ssam
             If Not DesignMode() Then m_apiInstance.Initialize()
 
         End Sub
+
+#End Region
+
+#Region " IServiceComponent Implementation "
+
+        Private Enum SsamLoggerState As Integer
+            Enabled 
+            Disabled 
+        End Enum
+
+        Private m_lastKnownState As SsamLoggerState
+
+        <Browsable(False)> _
+        Public ReadOnly Property Name() As String Implements Services.IServiceComponent.Name
+            Get
+                Return Me.GetType.Name()
+            End Get
+        End Property
+
+        Public Sub ProcessStateChanged(ByVal newState As Services.IServiceComponent.ProcessState) Implements Services.IServiceComponent.ProcessStateChanged
+
+            ' Ssam logger, when used as a service component, doesn't need to respond to changes in process state.
+
+        End Sub
+
+        Public Sub ServiceStateChanged(ByVal newState As Services.IServiceComponent.ServiceState) Implements Services.IServiceComponent.ServiceStateChanged
+
+            Select Case newState
+                Case IServiceComponent.ServiceState.Paused
+                    If MyClass.Enabled() Then
+                        m_lastKnownState = SsamLoggerState.Enabled  ' Logger is enabled when the service is paused.
+                        MyClass.Enabled = False ' Disable the logger only if is enabled.
+                    Else
+                        m_lastKnownState = SsamLoggerState.Disabled ' Logger is disabled when the service is paused.
+                    End If
+                Case IServiceComponent.ServiceState.Resumed
+                    If m_lastKnownState = SsamLoggerState.Enabled Then
+                        ' Enable the logger only if it was enabled when the service was paused.
+                        MyClass.Enabled = True
+                    End If
+            End Select
+
+        End Sub
+
+        <Browsable(False)> _
+        Public ReadOnly Property Status() As String Implements Services.IServiceComponent.Status
+            Get
+                Return m_eventQueue.Status()
+            End Get
+        End Property
 
 #End Region
 
