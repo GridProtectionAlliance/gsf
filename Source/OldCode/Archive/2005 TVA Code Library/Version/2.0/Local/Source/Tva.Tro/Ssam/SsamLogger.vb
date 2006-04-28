@@ -29,6 +29,7 @@ Namespace Ssam
     Public Class SsamLogger
         Implements ISupportInitialize
 
+        Private m_enabled As Boolean
         Private m_apiInstance As SsamApi
         Private WithEvents m_eventQueue As ProcessQueue(Of SsamEvent)
 
@@ -67,6 +68,7 @@ Namespace Ssam
         ''' <remarks></remarks>
         Friend Sub New(ByVal server As SsamApi.SsamServer, ByVal keepConnectionOpen As Boolean, ByVal initializeApi As Boolean)
             MyBase.New()
+            m_enabled = True
             m_apiInstance = New SsamApi(server, keepConnectionOpen, initializeApi)
             m_eventQueue = ProcessQueue(Of SsamEvent).CreateSynchronousQueue(AddressOf ProcessEvent, _
                 ProcessQueue(Of SsamEvent).DefaultProcessInterval, ProcessQueue(Of SsamEvent).DefaultProcessTimeout, _
@@ -103,6 +105,16 @@ Namespace Ssam
             End Get
             Set(ByVal value As Boolean)
                 m_apiInstance.KeepConnectionOpen = value
+            End Set
+        End Property
+
+        <Category("Configuration"), Description("Determines whether the logging of SSAM events is enabled."), DefaultValue(GetType(Boolean), "True")> _
+        Public Property Enabled() As Boolean
+            Get
+                Return m_enabled
+            End Get
+            Set(ByVal value As Boolean)
+                m_enabled = value
             End Set
         End Property
 
