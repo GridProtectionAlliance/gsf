@@ -292,7 +292,7 @@ Namespace Ssam
         Public ReadOnly Property Status() As String Implements Services.IServiceComponent.Status
             Get
                 With New StringBuilder()
-                    .Append("               SSAM Logger: ")
+                    .Append("                    Logger: ")
                     Select Case MyClass.Enabled()
                         Case True
                             .Append("Enabled")
