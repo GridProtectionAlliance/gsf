@@ -15,6 +15,7 @@
 '
 '*******************************************************************************************************
 
+Imports System.Text
 Imports System.Drawing
 Imports System.ComponentModel
 Imports Tva.Services
@@ -290,7 +291,18 @@ Namespace Ssam
         <Browsable(False)> _
         Public ReadOnly Property Status() As String Implements Services.IServiceComponent.Status
             Get
-                Return m_eventQueue.Status()
+                With New StringBuilder()
+                    .Append("               SSAM Logger: ")
+                    Select Case MyClass.Enabled()
+                        Case True
+                            .Append("Enabled")
+                        Case False
+                            .Append("Disabled")
+                    End Select
+                    .Append(Environment.NewLine())
+                    .Append(m_eventQueue.Status())
+                    Return .ToString()
+                End With
             End Get
         End Property
 
