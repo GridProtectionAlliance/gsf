@@ -335,7 +335,7 @@ Namespace Ieee1344
 
                 If .FrameType = Ieee1344.FrameType.DataFrame AndAlso configurationFrame IsNot Nothing Then
                     ' Data frames have subsecond time information
-                    .Ticks = (New NtpTimeTag(secondOfCentury + SampleCount(.This) / (MaximumSampleCount / configurationFrame.Period) / configurationFrame.FrameRate)).ToDateTime.Ticks
+                    .Ticks = (New NtpTimeTag(secondOfCentury + SampleCount(.This) / System.Math.Floor(MaximumSampleCount / configurationFrame.Period) / configurationFrame.FrameRate)).ToDateTime.Ticks
                 Else
                     ' For other frames, the best timestamp you can get is down to the whole second
                     .Ticks = (New NtpTimeTag(secondOfCentury)).ToDateTime.Ticks

@@ -55,6 +55,7 @@ Public Enum DataTransportLayer
     Tcp
     Udp
     Com
+    Other
 End Enum
 
 ''' <summary>PMU data transport protocol</summary>

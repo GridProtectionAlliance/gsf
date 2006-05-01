@@ -28,9 +28,9 @@ Public MustInherit Class AnalogDefinitionBase
 
     End Sub
 
-    Protected Sub New(ByVal parent As IConfigurationCell, ByVal dataFormat As DataFormat, ByVal index As Int32, ByVal label As String, ByVal scale As Int32, ByVal offset As Single)
+    Protected Sub New(ByVal parent As IConfigurationCell, ByVal index As Int32, ByVal label As String, ByVal scale As Int32, ByVal offset As Single)
 
-        MyBase.New(parent, dataFormat, index, label, scale, offset)
+        MyBase.New(parent, index, label, scale, offset)
 
     End Sub
 
@@ -43,9 +43,15 @@ Public MustInherit Class AnalogDefinitionBase
     ' Derived classes are expected to expose a Public Sub New(ByVal analogDefinition As IAnalogDefinition)
     Protected Sub New(ByVal analogDefinition As IAnalogDefinition)
 
-        MyClass.New(analogDefinition.Parent, analogDefinition.DataFormat, analogDefinition.Index, analogDefinition.Label, _
+        MyClass.New(analogDefinition.Parent, analogDefinition.Index, analogDefinition.Label, _
             analogDefinition.ScalingFactor, analogDefinition.Offset)
 
     End Sub
+
+    Public Overrides ReadOnly Property DataFormat() As DataFormat
+        Get
+            Return Parent.AnalogDataFormat
+        End Get
+    End Property
 
 End Class

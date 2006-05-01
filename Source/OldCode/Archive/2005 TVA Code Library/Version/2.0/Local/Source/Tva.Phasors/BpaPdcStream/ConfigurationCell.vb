@@ -26,6 +26,7 @@ Namespace BpaPdcStream
 
         Inherits ConfigurationCellBase
 
+        Private m_iEEEFormatFlags As IEEEFormatFlags
         Private m_offset As UInt16
         Private m_reserved As Int16
 
@@ -79,6 +80,67 @@ Namespace BpaPdcStream
             End Get
             Set(ByVal value As Int16)
                 m_reserved = value
+            End Set
+        End Property
+
+        Public Property IEEEFormatFlags() As IEEEFormatFlags
+            Get
+                Return m_iEEEFormatFlags
+            End Get
+            Set(ByVal Value As IEEEFormatFlags)
+                m_iEEEFormatFlags = Value
+            End Set
+        End Property
+
+        Public Overrides Property PhasorCoordinateFormat() As CoordinateFormat
+            Get
+                Return IIf((m_iEEEFormatFlags And IEEEFormatFlags.Coordinates) > 0, CoordinateFormat.Polar, CoordinateFormat.Rectangular)
+            End Get
+            Set(ByVal Value As CoordinateFormat)
+                If Value = CoordinateFormat.Polar Then
+                    m_iEEEFormatFlags = m_iEEEFormatFlags Or IEEEFormatFlags.Coordinates
+                Else
+                    m_iEEEFormatFlags = m_iEEEFormatFlags And Not IEEEFormatFlags.Coordinates
+                End If
+            End Set
+        End Property
+
+        Public Overrides Property PhasorDataFormat() As DataFormat
+            Get
+                Return IIf((m_iEEEFormatFlags And IEEEFormatFlags.Phasors) > 0, DataFormat.FloatingPoint, DataFormat.FixedInteger)
+            End Get
+            Set(ByVal Value As DataFormat)
+                If Value = DataFormat.FloatingPoint Then
+                    m_iEEEFormatFlags = m_iEEEFormatFlags Or IEEEFormatFlags.Phasors
+                Else
+                    m_iEEEFormatFlags = m_iEEEFormatFlags And Not IEEEFormatFlags.Phasors
+                End If
+            End Set
+        End Property
+
+        Public Overrides Property FrequencyDataFormat() As DataFormat
+            Get
+                Return IIf((m_iEEEFormatFlags And IEEEFormatFlags.Frequency) > 0, DataFormat.FloatingPoint, DataFormat.FixedInteger)
+            End Get
+            Set(ByVal Value As DataFormat)
+                If Value = DataFormat.FloatingPoint Then
+                    m_iEEEFormatFlags = m_iEEEFormatFlags Or IEEEFormatFlags.Frequency
+                Else
+                    m_iEEEFormatFlags = m_iEEEFormatFlags And Not IEEEFormatFlags.Frequency
+                End If
+            End Set
+        End Property
+
+        Public Overrides Property AnalogDataFormat() As DataFormat
+            Get
+                Return IIf((m_iEEEFormatFlags And IEEEFormatFlags.Analog) > 0, DataFormat.FloatingPoint, DataFormat.FixedInteger)
+            End Get
+            Set(ByVal Value As DataFormat)
+                If Value = DataFormat.FloatingPoint Then
+                    m_iEEEFormatFlags = m_iEEEFormatFlags Or IEEEFormatFlags.Analog
+                Else
+                    m_iEEEFormatFlags = m_iEEEFormatFlags And Not IEEEFormatFlags.Analog
+                End If
             End Set
         End Property
 

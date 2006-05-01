@@ -28,9 +28,9 @@ Namespace BpaPdcStream
 
         End Sub
 
-        Public Sub New(ByVal parent As ConfigurationCell, ByVal dataFormat As DataFormat, ByVal index As Int32, ByVal label As String, ByVal scale As Int32, ByVal offset As Single)
+        Public Sub New(ByVal parent As ConfigurationCell, ByVal index As Int32, ByVal label As String, ByVal scale As Int32, ByVal offset As Single)
 
-            MyBase.New(parent, dataFormat, index, label, 1, 0)
+            MyBase.New(parent, index, label, 1, 0)
 
         End Sub
 

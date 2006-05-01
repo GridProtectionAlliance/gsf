@@ -26,6 +26,8 @@ Namespace Ieee1344
 
         Inherits ConfigurationCellBase
 
+        Private m_coordinateFormat As CoordinateFormat
+
         Public Sub New(ByVal parent As ConfigurationFrame, ByVal nominalFrequency As LineFrequency)
 
             MyBase.New(parent, False, 0, nominalFrequency, MaximumPhasorValues, MaximumAnalogValues, MaximumDigitalValues)
@@ -86,6 +88,43 @@ Namespace Ieee1344
                 Else
                     MyBase.IDCode = Convert.ToUInt16(value)
                 End If
+            End Set
+        End Property
+
+        ' IEEE 1344 only supports scaled data
+        Public Overrides Property PhasorDataFormat() As DataFormat
+            Get
+                Return DataFormat.FixedInteger
+            End Get
+            Set(ByVal value As DataFormat)
+                If value <> DataFormat.FixedInteger Then Throw New NotSupportedException("IEEE 1344 only supports scaled data")
+            End Set
+        End Property
+
+        Public Overrides Property PhasorCoordinateFormat() As CoordinateFormat
+            Get
+                Return m_coordinateFormat
+            End Get
+            Set(ByVal value As CoordinateFormat)
+                m_coordinateFormat = value
+            End Set
+        End Property
+
+        Public Overrides Property FrequencyDataFormat() As DataFormat
+            Get
+                Return DataFormat.FixedInteger
+            End Get
+            Set(ByVal value As DataFormat)
+                If value <> DataFormat.FixedInteger Then Throw New NotSupportedException("IEEE 1344 only supports scaled data")
+            End Set
+        End Property
+
+        Public Overrides Property AnalogDataFormat() As DataFormat
+            Get
+                Return DataFormat.FixedInteger
+            End Get
+            Set(ByVal value As DataFormat)
+                If value <> DataFormat.FixedInteger Then Throw New NotSupportedException("IEEE 1344 only supports scaled data")
             End Set
         End Property
 

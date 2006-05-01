@@ -27,7 +27,6 @@ Namespace Ieee1344
         Public Sub New(ByVal parent As ConfigurationCell)
 
             MyBase.New(parent)
-            MyBase.DataFormat = Phasors.DataFormat.FixedInteger
             ScalingFactor = 1000
             DfDtScalingFactor = 100
 
@@ -36,15 +35,14 @@ Namespace Ieee1344
         Public Sub New(ByVal parent As ConfigurationCell, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
             MyBase.New(parent, binaryImage, startIndex)
-            MyBase.DataFormat = Phasors.DataFormat.FixedInteger
             ScalingFactor = 1000
             DfDtScalingFactor = 100
 
         End Sub
 
-        Public Sub New(ByVal parent As ConfigurationCell, ByVal dataFormat As DataFormat, ByVal index As Int32, ByVal label As String, ByVal scale As Int32, ByVal offset As Single, ByVal dfdtScale As Int32, ByVal dfdtOffset As Single)
+        Public Sub New(ByVal parent As ConfigurationCell, ByVal index As Int32, ByVal label As String, ByVal scale As Int32, ByVal offset As Single, ByVal dfdtScale As Int32, ByVal dfdtOffset As Single)
 
-            MyBase.New(parent, dataFormat, index, label, scale, offset, dfdtScale, dfdtOffset)
+            MyBase.New(parent, index, label, scale, offset, dfdtScale, dfdtOffset)
 
         End Sub
 
@@ -88,20 +86,6 @@ Namespace Ieee1344
                     m_statusFlags = m_statusFlags And Not Bit9
                 Else
                     m_statusFlags = m_statusFlags Or Bit9
-                End If
-            End Set
-        End Property
-
-        ' IEEE 1344 only supports scaled data
-        Public Overrides Property DataFormat() As DataFormat
-            Get
-                Return Phasors.DataFormat.FixedInteger
-            End Get
-            Set(ByVal value As DataFormat)
-                If value = Phasors.DataFormat.FixedInteger Then
-                    MyBase.DataFormat = value
-                Else
-                    Throw New InvalidOperationException("IEEE 1344 only supports scaled integers - floating points are not allowed")
                 End If
             End Set
         End Property

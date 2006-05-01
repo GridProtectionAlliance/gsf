@@ -33,13 +33,5 @@ Public Class PhasorDefinitionCollection
         End Get
     End Property
 
-    Public Overridable Sub SetCoordinateFormat(ByVal value As CoordinateFormat)
-
-        For Each definition As IPhasorDefinition In Me
-            definition.CoordinateFormat = value
-        Next
-
-    End Sub
-
 End Class
 

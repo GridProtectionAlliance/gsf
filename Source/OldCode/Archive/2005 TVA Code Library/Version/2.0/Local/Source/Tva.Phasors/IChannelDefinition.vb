@@ -23,7 +23,7 @@ Public Interface IChannelDefinition
 
     ReadOnly Property Parent() As IConfigurationCell
 
-    Property DataFormat() As DataFormat
+    ReadOnly Property DataFormat() As DataFormat
 
     Property Index() As Int32
 

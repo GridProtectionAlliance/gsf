@@ -26,7 +26,6 @@ Public MustInherit Class ChannelDefinitionBase
     Implements IChannelDefinition
 
     Private m_parent As IConfigurationCell
-    Private m_dataFormat As DataFormat
     Private m_index As Int32
     Private m_label As String
     Private m_scale As Int32
@@ -35,16 +34,14 @@ Public MustInherit Class ChannelDefinitionBase
     Protected Sub New(ByVal parent As IConfigurationCell)
 
         m_parent = parent
-        m_dataFormat = DataFormat.FixedInteger
         m_label = "undefined"
         m_scale = 1
 
     End Sub
 
-    Protected Sub New(ByVal parent As IConfigurationCell, ByVal dataFormat As DataFormat, ByVal index As Int32, ByVal label As String, ByVal scale As Int32, ByVal offset As Single)
+    Protected Sub New(ByVal parent As IConfigurationCell, ByVal index As Int32, ByVal label As String, ByVal scale As Int32, ByVal offset As Single)
 
         m_parent = parent
-        m_dataFormat = dataFormat
         m_index = index
         Me.Label = label
         m_scale = scale
@@ -62,7 +59,7 @@ Public MustInherit Class ChannelDefinitionBase
     ' Derived classes are expected to expose a Protected Sub New(ByVal channelDefinition As IChannelDefinition)
     Protected Sub New(ByVal channelDefinition As IChannelDefinition)
 
-        MyClass.New(channelDefinition.Parent, channelDefinition.DataFormat, channelDefinition.Index, channelDefinition.Label, _
+        MyClass.New(channelDefinition.Parent, channelDefinition.Index, channelDefinition.Label, _
             channelDefinition.ScalingFactor, channelDefinition.Offset)
 
     End Sub
@@ -73,14 +70,7 @@ Public MustInherit Class ChannelDefinitionBase
         End Get
     End Property
 
-    Public Overridable Property DataFormat() As DataFormat Implements IChannelDefinition.DataFormat
-        Get
-            Return m_dataFormat
-        End Get
-        Set(ByVal value As DataFormat)
-            m_dataFormat = value
-        End Set
-    End Property
+    Public MustOverride ReadOnly Property DataFormat() As DataFormat Implements IChannelDefinition.DataFormat
 
     Public Overridable Property Index() As Int32 Implements IChannelDefinition.Index
         Get

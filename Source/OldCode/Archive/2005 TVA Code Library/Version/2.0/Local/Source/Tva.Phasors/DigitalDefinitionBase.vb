@@ -32,7 +32,7 @@ Public MustInherit Class DigitalDefinitionBase
 
     Protected Sub New(ByVal parent As IConfigurationCell, ByVal index As Int32, ByVal label As String)
 
-        MyBase.New(parent, Phasors.DataFormat.FixedInteger, index, label, 1, 0)
+        MyBase.New(parent, index, label, 1, 0)
 
     End Sub
 
@@ -50,17 +50,10 @@ Public MustInherit Class DigitalDefinitionBase
     End Sub
 
     <EditorBrowsable(EditorBrowsableState.Never)> _
-    Public NotOverridable Overrides Property DataFormat() As DataFormat
+    Public Overrides ReadOnly Property DataFormat() As DataFormat
         Get
-            Return MyBase.DataFormat
+            Return Phasors.DataFormat.FixedInteger
         End Get
-        Set(ByVal value As DataFormat)
-            If value = DataFormat.FixedInteger Then
-                MyBase.DataFormat = value
-            Else
-                Throw New NotImplementedException("Digital values represent bit flags and thus can only be fixed integers")
-            End If
-        End Set
     End Property
 
     <EditorBrowsable(EditorBrowsableState.Never)> _
@@ -92,4 +85,3 @@ Public MustInherit Class DigitalDefinitionBase
     End Property
 
 End Class
-

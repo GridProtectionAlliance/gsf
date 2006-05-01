@@ -27,7 +27,6 @@ Namespace BpaPdcStream
 
         Private m_flags As ChannelFlags
         Private m_reservedFlags As ReservedFlags
-        Private m_iEEEFormatFlags As IEEEFormatFlags
         Private m_sampleNumber As Int16
 
         Public Sub New(ByVal parent As IDataFrame, ByVal configurationCell As IConfigurationCell, ByVal sampleNumber As Int16)
@@ -83,6 +82,15 @@ Namespace BpaPdcStream
             End Get
         End Property
 
+        Public Shadows Property ConfigurationCell() As ConfigurationCell
+            Get
+                Return MyBase.ConfigurationCell
+            End Get
+            Set(ByVal value As ConfigurationCell)
+                MyBase.ConfigurationCell = value
+            End Set
+        End Property
+
         ' Note: this is only the first byte of the channel flag word
         Public Property ChannelFlags() As ChannelFlags
             Get
@@ -104,10 +112,10 @@ Namespace BpaPdcStream
 
         Public Property IEEEFormatFlags() As IEEEFormatFlags
             Get
-                Return m_iEEEFormatFlags
+                Return ConfigurationCell.IEEEFormatFlags
             End Get
             Set(ByVal Value As IEEEFormatFlags)
-                m_iEEEFormatFlags = Value
+                ConfigurationCell.IEEEFormatFlags = Value
             End Set
         End Property
 
@@ -144,66 +152,6 @@ Namespace BpaPdcStream
                 Else
                     m_reservedFlags = m_reservedFlags And Not ReservedFlags.Reserved1
                 End If
-            End Set
-        End Property
-
-        Public Property FrequencyDataFormat() As DataFormat
-            Get
-                Return IIf((m_iEEEFormatFlags And IEEEFormatFlags.Frequency) > 0, DataFormat.FloatingPoint, DataFormat.FixedInteger)
-            End Get
-            Set(ByVal Value As DataFormat)
-                If Value = DataFormat.FloatingPoint Then
-                    m_iEEEFormatFlags = m_iEEEFormatFlags Or IEEEFormatFlags.Frequency
-                Else
-                    m_iEEEFormatFlags = m_iEEEFormatFlags And Not IEEEFormatFlags.Frequency
-                End If
-
-                ConfigurationCell.FrequencyDefinition.DataFormat = Value
-            End Set
-        End Property
-
-        Public Property AnalogDataFormat() As DataFormat
-            Get
-                Return IIf((m_iEEEFormatFlags And IEEEFormatFlags.Analog) > 0, DataFormat.FloatingPoint, DataFormat.FixedInteger)
-            End Get
-            Set(ByVal Value As DataFormat)
-                If Value = DataFormat.FloatingPoint Then
-                    m_iEEEFormatFlags = m_iEEEFormatFlags Or IEEEFormatFlags.Analog
-                Else
-                    m_iEEEFormatFlags = m_iEEEFormatFlags And Not IEEEFormatFlags.Analog
-                End If
-
-                ConfigurationCell.AnalogDefinitions.SetDataFormat(Value)
-            End Set
-        End Property
-
-        Public Property PhasorDataFormat() As DataFormat
-            Get
-                Return IIf((m_iEEEFormatFlags And IEEEFormatFlags.Phasors) > 0, DataFormat.FloatingPoint, DataFormat.FixedInteger)
-            End Get
-            Set(ByVal Value As DataFormat)
-                If Value = DataFormat.FloatingPoint Then
-                    m_iEEEFormatFlags = m_iEEEFormatFlags Or IEEEFormatFlags.Phasors
-                Else
-                    m_iEEEFormatFlags = m_iEEEFormatFlags And Not IEEEFormatFlags.Phasors
-                End If
-
-                ConfigurationCell.PhasorDefinitions.SetDataFormat(Value)
-            End Set
-        End Property
-
-        Public Property PhasorCoordinateFormat() As CoordinateFormat
-            Get
-                Return IIf((m_iEEEFormatFlags And IEEEFormatFlags.Coordinates) > 0, CoordinateFormat.Polar, CoordinateFormat.Rectangular)
-            End Get
-            Set(ByVal Value As CoordinateFormat)
-                If Value = CoordinateFormat.Polar Then
-                    m_iEEEFormatFlags = m_iEEEFormatFlags Or IEEEFormatFlags.Coordinates
-                Else
-                    m_iEEEFormatFlags = m_iEEEFormatFlags And Not IEEEFormatFlags.Coordinates
-                End If
-
-                ConfigurationCell.PhasorDefinitions.SetCoordinateFormat(Value)
             End Set
         End Property
 
@@ -339,7 +287,7 @@ Namespace BpaPdcStream
                 ' Add PDCstream specific image
                 buffer(0) = m_flags
                 buffer(1) = (Convert.ToByte(AnalogValues.Count) Or m_reservedFlags)
-                buffer(2) = (Convert.ToByte(DigitalValues.Count) Or m_iEEEFormatFlags)
+                buffer(2) = (Convert.ToByte(DigitalValues.Count) Or IEEEFormatFlags)
                 buffer(3) = Convert.ToByte(PhasorValues.Count)
                 EndianOrder.BigEndian.CopyBytes(m_sampleNumber, buffer, 4)
 
@@ -358,7 +306,7 @@ Namespace BpaPdcStream
 
             ' Strip off IEEE flags
             m_reservedFlags = (analogWords And Not ReservedFlags.AnalogWordsMask)
-            m_iEEEFormatFlags = (digitalWords And Not IEEEFormatFlags.DigitalWordsMask)
+            IEEEFormatFlags = (digitalWords And Not IEEEFormatFlags.DigitalWordsMask)
 
             ' Leave word counts
             analogWords = (analogWords And ReservedFlags.AnalogWordsMask)

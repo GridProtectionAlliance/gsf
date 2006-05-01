@@ -149,6 +149,10 @@ Public MustInherit Class ConfigurationCellBase
         End Get
     End Property
 
+    Public MustOverride Property PhasorCoordinateFormat() As CoordinateFormat Implements IConfigurationCell.PhasorCoordinateFormat
+
+    Public MustOverride Property PhasorDataFormat() As DataFormat Implements IConfigurationCell.PhasorDataFormat
+
     Public Overridable Property FrequencyDefinition() As IFrequencyDefinition Implements IConfigurationCell.FrequencyDefinition
         Get
             Return m_frequencyDefinition
@@ -158,11 +162,15 @@ Public MustInherit Class ConfigurationCellBase
         End Set
     End Property
 
+    Public MustOverride Property FrequencyDataFormat() As DataFormat Implements IConfigurationCell.FrequencyDataFormat
+
     Public Overridable ReadOnly Property AnalogDefinitions() As AnalogDefinitionCollection Implements IConfigurationCell.AnalogDefinitions
         Get
             Return m_analogDefinitions
         End Get
     End Property
+
+    Public MustOverride Property AnalogDataFormat() As DataFormat Implements IConfigurationCell.AnalogDataFormat
 
     Public Overridable ReadOnly Property DigitalDefinitions() As DigitalDefinitionCollection Implements IConfigurationCell.DigitalDefinitions
         Get

@@ -22,7 +22,6 @@ Public MustInherit Class PhasorDefinitionBase
     Inherits ChannelDefinitionBase
     Implements IPhasorDefinition
 
-    Private m_format As CoordinateFormat
     Private m_type As PhasorType
     Private m_voltageReference As IPhasorDefinition
 
@@ -30,17 +29,15 @@ Public MustInherit Class PhasorDefinitionBase
 
         MyBase.New(parent)
 
-        m_format = CoordinateFormat.Rectangular
         m_type = PhasorType.Voltage
         m_voltageReference = Me
 
     End Sub
 
-    Protected Sub New(ByVal parent As IConfigurationCell, ByVal dataFormat As DataFormat, ByVal index As Int32, ByVal label As String, ByVal scale As Int32, ByVal offset As Single, ByVal format As CoordinateFormat, ByVal type As PhasorType, ByVal voltageReference As IPhasorDefinition)
+    Protected Sub New(ByVal parent As IConfigurationCell, ByVal index As Int32, ByVal label As String, ByVal scale As Int32, ByVal offset As Single, ByVal format As CoordinateFormat, ByVal type As PhasorType, ByVal voltageReference As IPhasorDefinition)
 
-        MyBase.New(parent, dataFormat, index, label, scale, offset)
+        MyBase.New(parent, index, label, scale, offset)
 
-        m_format = format
         m_type = type
 
         If type = PhasorType.Voltage Then
@@ -60,19 +57,22 @@ Public MustInherit Class PhasorDefinitionBase
     ' Derived classes are expected to expose a Public Sub New(ByVal phasorDefinition As IPhasorDefinition)
     Protected Sub New(ByVal phasorDefinition As IPhasorDefinition)
 
-        MyClass.New(phasorDefinition.Parent, phasorDefinition.DataFormat, phasorDefinition.Index, phasorDefinition.Label, _
-            phasorDefinition.ScalingFactor, phasorDefinition.Offset, phasorDefinition.CoordinateFormat, phasorDefinition.Type, _
-            phasorDefinition.VoltageReference)
+        MyClass.New(phasorDefinition.Parent, phasorDefinition.Index, phasorDefinition.Label, _
+            phasorDefinition.ScalingFactor, phasorDefinition.Offset, phasorDefinition.CoordinateFormat, _
+            phasorDefinition.Type, phasorDefinition.VoltageReference)
 
     End Sub
 
-    Public Overridable Property CoordinateFormat() As CoordinateFormat Implements IPhasorDefinition.CoordinateFormat
+    Public Overrides ReadOnly Property DataFormat() As DataFormat
         Get
-            Return m_format
+            Return Parent.PhasorDataFormat
         End Get
-        Set(ByVal value As CoordinateFormat)
-            m_format = value
-        End Set
+    End Property
+
+    Public Overridable ReadOnly Property CoordinateFormat() As CoordinateFormat Implements IPhasorDefinition.CoordinateFormat
+        Get
+            Return Parent.PhasorCoordinateFormat
+        End Get
     End Property
 
     Public Overridable Property [Type]() As PhasorType Implements IPhasorDefinition.Type

@@ -25,28 +25,24 @@ Namespace Ieee1344
         Public Sub New(ByVal parent As ConfigurationCell)
 
             MyBase.New(parent)
-            MyBase.DataFormat = Phasors.DataFormat.FixedInteger
 
         End Sub
 
-        Public Sub New(ByVal parent As ConfigurationCell, ByVal dataFormat As DataFormat, ByVal index As Int32, ByVal label As String, ByVal scale As Int32, ByVal offset As Single, ByVal format As CoordinateFormat, ByVal type As PhasorType, ByVal voltageReference As PhasorDefinition)
+        Public Sub New(ByVal parent As ConfigurationCell, ByVal index As Int32, ByVal label As String, ByVal scale As Int32, ByVal offset As Single, ByVal format As CoordinateFormat, ByVal type As PhasorType, ByVal voltageReference As PhasorDefinition)
 
-            MyBase.New(parent, dataFormat, index, label, scale, offset, format, type, voltageReference)
-            MyBase.DataFormat = Phasors.DataFormat.FixedInteger
+            MyBase.New(parent, index, label, scale, offset, format, type, voltageReference)
 
         End Sub
 
         Public Sub New(ByVal parent As ConfigurationCell, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
             MyBase.New(parent, binaryImage, startIndex)
-            MyBase.DataFormat = Phasors.DataFormat.FixedInteger
 
         End Sub
 
         Public Sub New(ByVal phasorDefinition As IPhasorDefinition)
 
             MyBase.New(phasorDefinition)
-            MyBase.DataFormat = Phasors.DataFormat.FixedInteger
 
         End Sub
 
@@ -60,20 +56,6 @@ Namespace Ieee1344
             Get
                 Return Me.GetType
             End Get
-        End Property
-
-        ' IEEE 1344 only supports scaled data
-        Public Overrides Property DataFormat() As DataFormat
-            Get
-                Return Phasors.DataFormat.FixedInteger
-            End Get
-            Set(ByVal value As DataFormat)
-                If value = Phasors.DataFormat.FixedInteger Then
-                    MyBase.DataFormat = value
-                Else
-                    Throw New InvalidOperationException("IEEE 1344 only supports scaled integers - floating points are not allowed")
-                End If
-            End Set
         End Property
 
         Friend Shared ReadOnly Property ConversionFactorLength() As Int32

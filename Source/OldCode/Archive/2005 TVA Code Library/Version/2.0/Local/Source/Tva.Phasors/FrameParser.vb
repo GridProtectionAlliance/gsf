@@ -332,6 +332,22 @@ Public Class FrameParser
         End Get
     End Property
 
+    Public Sub Write(ByVal buffer As Byte(), ByVal offset As Integer, ByVal length As Int32)
+
+        m_totalBytesReceived += length
+        m_byteRateTotal += length
+
+        Select Case m_protocol
+            Case Phasors.Protocol.IeeeC37_118V1, Phasors.Protocol.IeeeC37_118D6
+                m_ieeeC37_118FrameParser.Write(buffer, offset, length)
+            Case Phasors.Protocol.Ieee1344
+                m_ieee1344FrameParser.Write(buffer, offset, length)
+            Case Phasors.Protocol.BpaPdcStream
+                m_bpaPdcStreamFrameParser.Write(buffer, offset, length)
+        End Select
+
+    End Sub
+
     Public Sub SendPmuCommand(ByVal command As Command)
 
         If m_clientStream IsNot Nothing Then
@@ -435,22 +451,6 @@ Public Class FrameParser
 
     End Sub
 
-    Private Sub Write(ByVal buffer As Byte(), ByVal received As Int32)
-
-        m_totalBytesReceived += received
-        m_byteRateTotal += received
-
-        Select Case m_protocol
-            Case Phasors.Protocol.IeeeC37_118V1, Phasors.Protocol.IeeeC37_118D6
-                m_ieeeC37_118FrameParser.Write(buffer, 0, received)
-            Case Phasors.Protocol.Ieee1344
-                m_ieee1344FrameParser.Write(buffer, 0, received)
-            Case Phasors.Protocol.BpaPdcStream
-                m_bpaPdcStreamFrameParser.Write(buffer, 0, received)
-        End Select
-
-    End Sub
-
     Private Sub ProcessUdpStream()
 
         Dim buffer As Byte() = CreateArray(Of Byte)(m_bufferSize)
@@ -463,7 +463,7 @@ Public Class FrameParser
                 received = m_udpSocket.ReceiveFrom(buffer, m_receptionPoint)
 
                 ' Provide received buffer to protocol specific frame parser
-                If received > 0 Then Write(buffer, received)
+                If received > 0 Then Write(buffer, 0, received)
             Catch ex As ThreadAbortException
                 ' If we received an abort exception, we'll egress gracefully
                 Exit Do
@@ -515,7 +515,7 @@ Public Class FrameParser
                     received = m_clientStream.Read(buffer, 0, buffer.Length)
 
                     ' Send received data to frame parser
-                    If received > 0 Then Write(buffer, received)
+                    If received > 0 Then Write(buffer, 0, received)
                 Loop
 
                 ' Hang out for a little while so config frame can be parsed
@@ -546,7 +546,7 @@ Public Class FrameParser
                 received = m_clientStream.Read(buffer, 0, buffer.Length)
 
                 ' Provide received buffer to protocol specific frame parser
-                If received > 0 Then Write(buffer, received)
+                If received > 0 Then Write(buffer, 0, received)
             Catch ex As ThreadAbortException
                 ' If we received an abort exception, we'll egress gracefully
                 Exit Do

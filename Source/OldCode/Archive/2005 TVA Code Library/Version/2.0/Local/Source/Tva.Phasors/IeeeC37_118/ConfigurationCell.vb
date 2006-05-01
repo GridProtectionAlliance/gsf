@@ -80,18 +80,58 @@ Namespace IeeeC37_118
             End Get
             Set(ByVal value As FormatFlags)
                 m_formatFlags = value
+            End Set
+        End Property
 
-                ' Propogate new settings to all configuration definitions...
-                For Each phasorDefinition As IPhasorDefinition In PhasorDefinitions
-                    phasorDefinition.DataFormat = IIf(value And IeeeC37_118.FormatFlags.Phasors > 0, DataFormat.FloatingPoint, DataFormat.FixedInteger)
-                    phasorDefinition.CoordinateFormat = IIf(value And IeeeC37_118.FormatFlags.Coordinates > 0, CoordinateFormat.Polar, CoordinateFormat.Rectangular)
-                Next
+        Public Overrides Property PhasorDataFormat() As DataFormat
+            Get
+                Return IIf((m_formatFlags And FormatFlags.Phasors) > 0, DataFormat.FloatingPoint, DataFormat.FixedInteger)
+            End Get
+            Set(ByVal value As DataFormat)
+                If value = DataFormat.FloatingPoint Then
+                    m_formatFlags = m_formatFlags Or FormatFlags.Phasors
+                Else
+                    m_formatFlags = m_formatFlags And Not FormatFlags.Phasors
+                End If
+            End Set
+        End Property
 
-                FrequencyDefinition.DataFormat = IIf(value And IeeeC37_118.FormatFlags.Frequency > 0, DataFormat.FloatingPoint, DataFormat.FixedInteger)
+        Public Overrides Property PhasorCoordinateFormat() As CoordinateFormat
+            Get
+                Return IIf((m_formatFlags And FormatFlags.Coordinates) > 0, CoordinateFormat.Polar, CoordinateFormat.Rectangular)
+            End Get
+            Set(ByVal value As CoordinateFormat)
+                If value = CoordinateFormat.Polar Then
+                    m_formatFlags = m_formatFlags Or FormatFlags.Coordinates
+                Else
+                    m_formatFlags = m_formatFlags And Not FormatFlags.Coordinates
+                End If
+            End Set
+        End Property
 
-                For Each analogDefinition As IAnalogDefinition In AnalogDefinitions
-                    analogDefinition.DataFormat = IIf(value And IeeeC37_118.FormatFlags.Analog > 0, DataFormat.FloatingPoint, DataFormat.FixedInteger)
-                Next
+        Public Overrides Property FrequencyDataFormat() As DataFormat
+            Get
+                Return IIf((m_formatFlags And FormatFlags.Frequency) > 0, DataFormat.FloatingPoint, DataFormat.FixedInteger)
+            End Get
+            Set(ByVal value As DataFormat)
+                If value = DataFormat.FloatingPoint Then
+                    m_formatFlags = m_formatFlags Or FormatFlags.Frequency
+                Else
+                    m_formatFlags = m_formatFlags And Not FormatFlags.Frequency
+                End If
+            End Set
+        End Property
+
+        Public Overrides Property AnalogDataFormat() As DataFormat
+            Get
+                Return IIf((m_formatFlags And FormatFlags.Analog) > 0, DataFormat.FloatingPoint, DataFormat.FixedInteger)
+            End Get
+            Set(ByVal value As DataFormat)
+                If value = DataFormat.FloatingPoint Then
+                    m_formatFlags = m_formatFlags Or FormatFlags.Analog
+                Else
+                    m_formatFlags = m_formatFlags And Not FormatFlags.Analog
+                End If
             End Set
         End Property
 

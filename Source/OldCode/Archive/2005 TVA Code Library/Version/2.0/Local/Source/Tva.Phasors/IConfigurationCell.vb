@@ -37,11 +37,19 @@ Public Interface IConfigurationCell
 
     ReadOnly Property PhasorDefinitions() As PhasorDefinitionCollection
 
+    Property PhasorDataFormat() As DataFormat
+
+    Property PhasorCoordinateFormat() As CoordinateFormat
+
     Property FrequencyDefinition() As IFrequencyDefinition
+
+    Property FrequencyDataFormat() As DataFormat
 
     Property NominalFrequency() As LineFrequency
 
     ReadOnly Property AnalogDefinitions() As AnalogDefinitionCollection
+
+    Property AnalogDataFormat() As DataFormat
 
     ReadOnly Property DigitalDefinitions() As DigitalDefinitionCollection
 

@@ -21,7 +21,7 @@ Public Interface IPhasorDefinition
 
     Inherits IChannelDefinition
 
-    Property CoordinateFormat() As CoordinateFormat
+    ReadOnly Property CoordinateFormat() As CoordinateFormat
 
     Property [Type]() As PhasorType
 

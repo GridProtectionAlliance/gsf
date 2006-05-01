@@ -27,21 +27,5 @@ Public MustInherit Class ChannelDefinitionCollectionBase(Of T As IChannelDefinit
 
     End Sub
 
-    Public Overridable Sub SetDataFormat(ByVal value As DataFormat)
-
-        For Each definition As IChannelDefinition In Me
-            definition.DataFormat = value
-        Next
-
-    End Sub
-
-    Public Overridable Sub SetScalingFactor(ByVal value As Int32)
-
-        For Each definition As IChannelDefinition In Me
-            definition.ScalingFactor = value
-        Next
-
-    End Sub
-
 End Class
 

@@ -40,9 +40,9 @@ Namespace IeeeC37_118
 
         End Sub
 
-        Public Sub New(ByVal parent As ConfigurationCell, ByVal dataFormat As DataFormat, ByVal index As Int32, ByVal label As String, ByVal scale As Int32, ByVal offset As Single, ByVal dfdtScale As Int32, ByVal dfdtOffset As Single)
+        Public Sub New(ByVal parent As ConfigurationCell, ByVal index As Int32, ByVal label As String, ByVal scale As Int32, ByVal offset As Single, ByVal dfdtScale As Int32, ByVal dfdtOffset As Single)
 
-            MyBase.New(parent, dataFormat, index, label, scale, offset, dfdtScale, dfdtOffset)
+            MyBase.New(parent, index, label, scale, offset, dfdtScale, dfdtOffset)
 
         End Sub
 

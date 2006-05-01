@@ -33,9 +33,9 @@ Public MustInherit Class FrequencyDefinitionBase
 
     End Sub
 
-    Protected Sub New(ByVal parent As IConfigurationCell, ByVal dataFormat As DataFormat, ByVal index As Int32, ByVal label As String, ByVal scale As Int32, ByVal offset As Single, ByVal dfdtScale As Int32, ByVal dfdtOffset As Single)
+    Protected Sub New(ByVal parent As IConfigurationCell, ByVal index As Int32, ByVal label As String, ByVal scale As Int32, ByVal offset As Single, ByVal dfdtScale As Int32, ByVal dfdtOffset As Single)
 
-        MyBase.New(parent, dataFormat, index, label, scale, offset)
+        MyBase.New(parent, index, label, scale, offset)
 
         m_dfdtScale = dfdtScale
         m_dfdtOffset = dfdtOffset
@@ -51,10 +51,16 @@ Public MustInherit Class FrequencyDefinitionBase
     ' Derived classes are expected to expose a Public Sub New(ByVal frequencyDefinition As IFrequencyDefinition)
     Protected Sub New(ByVal frequencyDefinition As IFrequencyDefinition)
 
-        MyClass.New(frequencyDefinition.Parent, frequencyDefinition.DataFormat, frequencyDefinition.Index, frequencyDefinition.Label, frequencyDefinition.ScalingFactor, _
+        MyClass.New(frequencyDefinition.Parent, frequencyDefinition.Index, frequencyDefinition.Label, frequencyDefinition.ScalingFactor, _
             frequencyDefinition.Offset, frequencyDefinition.DfDtScalingFactor, frequencyDefinition.DfDtOffset)
 
     End Sub
+
+    Public Overrides ReadOnly Property DataFormat() As DataFormat
+        Get
+            Return Parent.FrequencyDataFormat
+        End Get
+    End Property
 
     Public ReadOnly Property NominalFrequency() As LineFrequency Implements IFrequencyDefinition.NominalFrequency
         Get
