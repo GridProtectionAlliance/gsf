@@ -25,6 +25,8 @@ Namespace Configuration
 
         Private Sub New()
 
+            ' This class contains only global functions and is not meant to be instantiated
+
         End Sub
 
         Private Shared m_defaultConfigFile As ConfigurationFile

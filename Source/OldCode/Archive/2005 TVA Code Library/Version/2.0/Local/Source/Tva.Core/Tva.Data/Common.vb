@@ -76,7 +76,7 @@ Namespace Data
 
         End Function
 
-#Region "ExecuteNonQuery Overloaded Functions"
+#Region " ExecuteNonQuery Overloaded Functions "
         ''' <summary>
         ''' Executes the SQL statement and returns the number of rows affected.
         ''' </summary>
@@ -271,7 +271,7 @@ Namespace Data
         End Function
 #End Region
 
-#Region "ExecuteReader Overloaded Functions"
+#Region " ExecuteReader Overloaded Functions "
         ''' <summary>
         ''' Executes the SQL statement using .Net OleDb data provider, and builds a data reader.
         ''' </summary>
@@ -465,7 +465,7 @@ Namespace Data
         End Function
 #End Region
 
-#Region "ExecuteScalar Overloaded Functions"
+#Region " ExecuteScalar Overloaded Functions "
         ''' <summary>
         ''' Executes the SQL statement using .Net OleDb data provider, and returns the first column of the 
         ''' first row in the resultset.
@@ -634,7 +634,7 @@ Namespace Data
         End Function
 #End Region
 
-#Region "RetrieveRow Overloaded Functions"
+#Region " RetrieveRow Overloaded Functions "
         ''' <summary>
         ''' Executes the SQL statement using .Net OleDb data provider, and returns the first row in the resultset.
         ''' </summary>
@@ -791,7 +791,7 @@ Namespace Data
         End Function
 #End Region
 
-#Region "RetrieveData Overloaded Functions"
+#Region " RetrieveData Overloaded Functions "
         ''' <summary>
         ''' Executes the SQL statement using .Net OleDb data provider, and returns the first table of resultset 
         ''' if the resultset contains multiple tables.
@@ -994,7 +994,7 @@ Namespace Data
         End Function
 #End Region
 
-#Region "RetrieveDataSet Overloaded Functions"
+#Region " RetrieveDataSet Overloaded Functions "
         ''' <summary>
         ''' Executes the SQL statement using .Net OleDb data provider, and returns the resultset that may contain
         ''' multiple table depending on the SQL statement.
@@ -1222,7 +1222,7 @@ Namespace Data
         End Function
 #End Region
 
-#Region "UpdateData Overloaded Functions"
+#Region " UpdateData Overloaded Functions "
         ''' <summary>
         ''' Updates the underlying data of the System.Data.DataTable using .Net OleDb data provider, and 
         ''' returns the number of rows successfully updated.
@@ -1278,7 +1278,7 @@ Namespace Data
         End Function
 #End Region
 
-#Region "Conversion Functions"
+#Region " Conversion Functions "
         ''' <summary>
         ''' Converts delimited text to System.Data.DataTable.
         ''' </summary>
@@ -1374,7 +1374,7 @@ Namespace Data
         End Function
 #End Region
 
-#Region "Helpers"
+#Region " Helpers "
         ' tmshults 12/10/2004 - This is the private method that takes the passed Command Object queries what the 
         '                       parameters are for the given StoredProcedure and then populates the values of the 
         '                       command used to populate DataSets, Datatables, DataReaders or just used simply to 

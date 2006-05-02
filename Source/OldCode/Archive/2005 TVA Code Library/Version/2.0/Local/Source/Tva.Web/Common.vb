@@ -1,6 +1,7 @@
 ' 04-28-06
 
 Imports System.Text
+Imports System.Environment
 
 Public NotInheritable Class Common
 
@@ -16,11 +17,11 @@ Public NotInheritable Class Common
         text = Replace(text, "\", "\\")
         text = Replace(text, "'", "\'")
         text = Replace(text, """", "\""")
-        text = Replace(text, Chr(8), "\b")
-        text = Replace(text, Chr(9), "\t")
-        text = Replace(text, Chr(10), "\r")
-        text = Replace(text, Chr(12), "\f")
-        text = Replace(text, Chr(13), "\n")
+        text = Replace(text, Convert.ToChar(8), "\b")
+        text = Replace(text, Convert.ToChar(9), "\t")
+        text = Replace(text, Convert.ToChar(10), "\r")
+        text = Replace(text, Convert.ToChar(12), "\f")
+        text = Replace(text, Convert.ToChar(13), "\n")
 
         Return text
 
@@ -32,11 +33,11 @@ Public NotInheritable Class Common
         text = Replace(text, "\\", "\")
         text = Replace(text, "\'", "'")
         text = Replace(text, "\""", """")
-        text = Replace(text, "\b", Chr(8))
-        text = Replace(text, "\t", Chr(9))
-        text = Replace(text, "\r", Chr(10))
-        text = Replace(text, "\f", Chr(12))
-        text = Replace(text, "\n", Chr(13))
+        text = Replace(text, "\b", Convert.ToChar(8))
+        text = Replace(text, "\t", Convert.ToChar(9))
+        text = Replace(text, "\r", Convert.ToChar(10))
+        text = Replace(text, "\f", Convert.ToChar(12))
+        text = Replace(text, "\n", Convert.ToChar(13))
 
         Return text
 
@@ -48,9 +49,9 @@ Public NotInheritable Class Common
         text = Replace(text, "=", "")
         text = Replace(text, ";", "")
         text = Replace(text, ",", "")
-        text = Replace(text, Chr(9), "")
-        text = Replace(text, Chr(10), "")
-        text = Replace(text, Chr(13), "")
+        text = Replace(text, Convert.ToChar(9), "")
+        text = Replace(text, Convert.ToChar(10), "")
+        text = Replace(text, Convert.ToChar(13), "")
 
         Return text
 
@@ -77,12 +78,14 @@ Public NotInheritable Class Common
         End If
 
         With New StringBuilder
-            .Append("<script language=""javascript"">" & vbCrLf)
-            .Append("   Focus('" & control.ClientID() & "');" & vbCrLf)
-            .Append("</script>" & vbCrLf)
+            .Append("<script language=""javascript"">" & NewLine())
+            .Append("   Focus('" & control.ClientID() & "');" & NewLine())
+            .Append("</script>" & NewLine())
 
-            control.Page.ClientScript.RegisterStartupScript(Control.Page.GetType(), _
-                "Focus." & Control.ClientID(), .ToString())
+            If Not control.Page.ClientScript.IsStartupScriptRegistered("Focus." & control.ClientID()) Then
+                control.Page.ClientScript.RegisterStartupScript(control.Page.GetType(), _
+                    "Focus." & control.ClientID(), .ToString())
+            End If
         End With
 
     End Sub
@@ -134,11 +137,13 @@ Public NotInheritable Class Common
         End If
 
         With New StringBuilder
-            .Append("<script language=""javascript"">" & vbCrLf)
-            .Append("   Show('" & url & "', " & height & ", " & width & ", " & left & ", " & top & ", " & Math.Abs(CInt(center)) & ", " & Math.Abs(CInt(help)) & ", " & Math.Abs(CInt(resizable)) & ", " & Math.Abs(CInt(status)) & ");" & vbCrLf)
-            .Append("</script>" & vbCrLf)
+            .Append("<script language=""javascript"">" & NewLine())
+            .Append("   Show('" & url & "', " & height & ", " & width & ", " & left & ", " & top & ", " & Math.Abs(CInt(center)) & ", " & Math.Abs(CInt(help)) & ", " & Math.Abs(CInt(resizable)) & ", " & Math.Abs(CInt(status)) & ");" & NewLine())
+            .Append("</script>" & NewLine())
 
-            page.ClientScript.RegisterStartupScript(page.GetType(), "Show:" & Rnd(), .ToString())
+            If Not page.ClientScript.IsStartupScriptRegistered("Show." & url) Then
+                page.ClientScript.RegisterStartupScript(page.GetType(), "Show." & url, .ToString())
+            End If
         End With
 
     End Sub
@@ -298,6 +303,7 @@ Public NotInheritable Class Common
 #Region " MsgBox Overloads "
 
     'Pinal Patel 03/04/05: Enumeration to specify message box style.
+    <Flags()> _
     Public Enum MsgBoxStyle As Integer
         OKOnly = 0
         OKCancel = 1
