@@ -94,33 +94,6 @@ Namespace Ieee1344
             End Get
         End Property
 
-        Public Property SynchronizationIsValid() As Boolean Implements ICommonFrameHeader.SynchronizationIsValid
-            Get
-                Return CommonFrameHeader.SynchronizationIsValid(Me)
-            End Get
-            Set(ByVal value As Boolean)
-                CommonFrameHeader.SynchronizationIsValid(Me) = value
-            End Set
-        End Property
-
-        Public Property DataIsValid() As Boolean Implements ICommonFrameHeader.DataIsValid
-            Get
-                Return CommonFrameHeader.DataIsValid(Me)
-            End Get
-            Set(ByVal value As Boolean)
-                CommonFrameHeader.DataIsValid(Me) = value
-            End Set
-        End Property
-
-        Public Property TriggerStatus() As TriggerStatus Implements ICommonFrameHeader.TriggerStatus
-            Get
-                Return CommonFrameHeader.TriggerStatus(Me)
-            End Get
-            Set(ByVal value As TriggerStatus)
-                CommonFrameHeader.TriggerStatus(Me) = value
-            End Set
-        End Property
-
         Private Property InternalSampleCount() As Int16 Implements ICommonFrameHeader.InternalSampleCount
             Get
                 Return m_sampleCount

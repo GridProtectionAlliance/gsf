@@ -34,12 +34,6 @@ Namespace Ieee1344
 
         Shadows ReadOnly Property TimeTag() As NtpTimeTag
 
-        Property SynchronizationIsValid() As Boolean
-
-        Property DataIsValid() As Boolean
-
-        Property TriggerStatus() As TriggerStatus
-
         Property InternalSampleCount() As Int16
 
         Property InternalStatusFlags() As Int16

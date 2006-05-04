@@ -27,6 +27,7 @@ Namespace Ieee1344
         Inherits ConfigurationCellBase
 
         Private m_coordinateFormat As CoordinateFormat
+        Private m_statusFlags As Int16
 
         Public Sub New(ByVal parent As ConfigurationFrame, ByVal nominalFrequency As LineFrequency)
 
@@ -74,6 +75,15 @@ Namespace Ieee1344
             End Get
         End Property
 
+        Public Property StatusFlags() As Int16
+            Get
+                Return m_statusFlags
+            End Get
+            Set(ByVal value As Int16)
+                m_statusFlags = value
+            End Set
+        End Property
+
         Public Shadows Property IDCode() As UInt64
             Get
                 ' IEEE 1344 only allows one PMU, so we share ID code with parent frame...
@@ -88,6 +98,41 @@ Namespace Ieee1344
                 Else
                     MyBase.IDCode = Convert.ToUInt16(value)
                 End If
+            End Set
+        End Property
+
+        Public Property SynchronizationIsValid() As Boolean
+            Get
+                Return (StatusFlags And Bit15) = 0
+            End Get
+            Set(ByVal value As Boolean)
+                If value Then
+                    StatusFlags = StatusFlags And Not Bit15
+                Else
+                    StatusFlags = StatusFlags Or Bit15
+                End If
+            End Set
+        End Property
+
+        Public Property DataIsValid() As Boolean
+            Get
+                Return (StatusFlags And Bit14) = 0
+            End Get
+            Set(ByVal value As Boolean)
+                If value Then
+                    StatusFlags = StatusFlags And Not Bit14
+                Else
+                    StatusFlags = StatusFlags Or Bit14
+                End If
+            End Set
+        End Property
+
+        Public Property TriggerStatus() As TriggerStatus
+            Get
+                Return StatusFlags And TriggerMask
+            End Get
+            Set(ByVal value As TriggerStatus)
+                StatusFlags = (StatusFlags And Not TriggerMask) Or value
             End Set
         End Property
 
@@ -139,7 +184,12 @@ Namespace Ieee1344
                 Dim buffer As Byte() = CreateArray(Of Byte)(HeaderLength)
                 Dim index As Int32
 
+                EndianOrder.BigEndian.CopyBytes(m_statusFlags, buffer, index)
+
+                ' Copy in station name
+                index += 2
                 CopyImage(MyBase.HeaderImage, buffer, index, MyBase.HeaderLength)
+
                 EndianOrder.BigEndian.CopyBytes(IDCode, buffer, index)
                 EndianOrder.BigEndian.CopyBytes(Convert.ToInt16(PhasorDefinitions.Count), buffer, index + 8)
                 EndianOrder.BigEndian.CopyBytes(Convert.ToInt16(DigitalDefinitions.Count), buffer, index + 10)
@@ -151,6 +201,9 @@ Namespace Ieee1344
         Protected Overrides Sub ParseHeaderImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
             Dim parsingState As IConfigurationCellParsingState = DirectCast(state, IConfigurationCellParsingState)
+
+            m_statusFlags = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex)
+            startIndex += 2
 
             ' Parse out station name
             MyBase.ParseHeaderImage(state, binaryImage, startIndex)

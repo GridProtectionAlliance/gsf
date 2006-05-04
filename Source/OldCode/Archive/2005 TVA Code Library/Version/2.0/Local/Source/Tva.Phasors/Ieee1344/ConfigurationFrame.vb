@@ -30,7 +30,6 @@ Namespace Ieee1344
 
         Private m_idCode As UInt64
         Private m_sampleCount As Int16
-        Private m_statusFlags As Int16
 
         Public Sub New(ByVal frameType As FrameType, ByVal idCode As UInt64, ByVal ticks As Long, ByVal frameRate As Int16)
 
@@ -97,33 +96,6 @@ Namespace Ieee1344
             End Get
         End Property
 
-        Public Property SynchronizationIsValid() As Boolean Implements ICommonFrameHeader.SynchronizationIsValid
-            Get
-                Return CommonFrameHeader.SynchronizationIsValid(Me)
-            End Get
-            Set(ByVal value As Boolean)
-                CommonFrameHeader.SynchronizationIsValid(Me) = value
-            End Set
-        End Property
-
-        Public Property DataIsValid() As Boolean Implements ICommonFrameHeader.DataIsValid
-            Get
-                Return CommonFrameHeader.DataIsValid(Me)
-            End Get
-            Set(ByVal value As Boolean)
-                CommonFrameHeader.DataIsValid(Me) = value
-            End Set
-        End Property
-
-        Public Property TriggerStatus() As TriggerStatus Implements ICommonFrameHeader.TriggerStatus
-            Get
-                Return CommonFrameHeader.TriggerStatus(Me)
-            End Get
-            Set(ByVal value As TriggerStatus)
-                CommonFrameHeader.TriggerStatus(Me) = value
-            End Set
-        End Property
-
         Private Property InternalSampleCount() As Int16 Implements ICommonFrameHeader.InternalSampleCount
             Get
                 Return m_sampleCount
@@ -133,12 +105,14 @@ Namespace Ieee1344
             End Set
         End Property
 
+        ' Since IEEE 1344 only supports a single PMU there will only be one cell, so we just share status flags with our only child
+        ' and expose the value at the parent level for convience in determing frame length at the frame level
         Private Property InternalStatusFlags() As Int16 Implements ICommonFrameHeader.InternalStatusFlags
             Get
-                Return m_statusFlags
+                Return Cells(0).StatusFlags
             End Get
             Set(ByVal value As Int16)
-                m_statusFlags = value
+                Cells(0).StatusFlags = value
             End Set
         End Property
 

@@ -36,7 +36,6 @@ Namespace Ieee1344
 
             Private m_idCode As UInt64
             Private m_sampleCount As Int16
-            Private m_statusFlags As Int16
             Private m_ticks As Long
             Private m_frameQueue As MemoryStream
 
@@ -161,33 +160,6 @@ Namespace Ieee1344
                 End Get
             End Property
 
-            Public Property SynchronizationIsValid() As Boolean Implements ICommonFrameHeader.SynchronizationIsValid
-                Get
-                    Return CommonFrameHeader.SynchronizationIsValid(Me)
-                End Get
-                Set(ByVal value As Boolean)
-                    CommonFrameHeader.SynchronizationIsValid(Me) = value
-                End Set
-            End Property
-
-            Public Property DataIsValid() As Boolean Implements ICommonFrameHeader.DataIsValid
-                Get
-                    Return CommonFrameHeader.DataIsValid(Me)
-                End Get
-                Set(ByVal value As Boolean)
-                    CommonFrameHeader.DataIsValid(Me) = value
-                End Set
-            End Property
-
-            Public Property TriggerStatus() As TriggerStatus Implements ICommonFrameHeader.TriggerStatus
-                Get
-                    Return CommonFrameHeader.TriggerStatus(Me)
-                End Get
-                Set(ByVal value As TriggerStatus)
-                    CommonFrameHeader.TriggerStatus(Me) = value
-                End Set
-            End Property
-
             Public Property InternalSampleCount() As Int16 Implements ICommonFrameHeader.InternalSampleCount
                 Get
                     Return m_sampleCount
@@ -199,10 +171,10 @@ Namespace Ieee1344
 
             Public Property InternalStatusFlags() As Int16 Implements ICommonFrameHeader.InternalStatusFlags
                 Get
-                    Return m_statusFlags
+                    Return 0
                 End Get
                 Set(ByVal value As Int16)
-                    m_statusFlags = value
+                    Throw New NotImplementedException()
                 End Set
             End Property
 
@@ -316,7 +288,7 @@ Namespace Ieee1344
 
 #End Region
 
-        Public Const BinaryLength As UInt16 = 8
+        Public Const BinaryLength As UInt16 = 6
 
         Private Sub New()
 
@@ -331,7 +303,6 @@ Namespace Ieee1344
 
                 secondOfCentury = EndianOrder.BigEndian.ToUInt32(binaryImage, startIndex)
                 .InternalSampleCount = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 4)
-                .InternalStatusFlags = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 6)
 
                 If .FrameType = Ieee1344.FrameType.DataFrame AndAlso configurationFrame IsNot Nothing Then
                     ' Data frames have subsecond time information
@@ -356,7 +327,6 @@ Namespace Ieee1344
             With frameHeader
                 EndianOrder.BigEndian.CopyBytes(Convert.ToUInt32(.TimeTag.Value), buffer, 0)
                 EndianOrder.BigEndian.CopyBytes(.InternalSampleCount, buffer, 4)
-                EndianOrder.BigEndian.CopyBytes(.InternalStatusFlags, buffer, 6)
             End With
 
             Return buffer
@@ -368,7 +338,6 @@ Namespace Ieee1344
             With destinationFrameHeader
                 .Ticks = sourceFrameHeader.Ticks
                 .InternalSampleCount = sourceFrameHeader.InternalSampleCount
-                .InternalStatusFlags = sourceFrameHeader.InternalStatusFlags
             End With
 
         End Sub
@@ -464,41 +433,6 @@ Namespace Ieee1344
                 Else
                     FrameLength(frameHeader) = value + BinaryLength + 2
                 End If
-            End Set
-        End Property
-
-        Public Shared Property SynchronizationIsValid(ByVal frameHeader As ICommonFrameHeader) As Boolean
-            Get
-                Return (frameHeader.InternalStatusFlags And Bit15) = 0
-            End Get
-            Set(ByVal value As Boolean)
-                If value Then
-                    frameHeader.InternalStatusFlags = frameHeader.InternalStatusFlags And Not Bit15
-                Else
-                    frameHeader.InternalStatusFlags = frameHeader.InternalStatusFlags Or Bit15
-                End If
-            End Set
-        End Property
-
-        Public Shared Property DataIsValid(ByVal frameHeader As ICommonFrameHeader) As Boolean
-            Get
-                Return (frameHeader.InternalStatusFlags And Bit14) = 0
-            End Get
-            Set(ByVal value As Boolean)
-                If value Then
-                    frameHeader.InternalStatusFlags = frameHeader.InternalStatusFlags And Not Bit14
-                Else
-                    frameHeader.InternalStatusFlags = frameHeader.InternalStatusFlags Or Bit14
-                End If
-            End Set
-        End Property
-
-        Public Shared Property TriggerStatus(ByVal frameHeader As ICommonFrameHeader) As TriggerStatus
-            Get
-                Return frameHeader.InternalStatusFlags And TriggerMask
-            End Get
-            Set(ByVal value As TriggerStatus)
-                frameHeader.InternalStatusFlags = (frameHeader.InternalStatusFlags And Not TriggerMask) Or value
             End Set
         End Property
 

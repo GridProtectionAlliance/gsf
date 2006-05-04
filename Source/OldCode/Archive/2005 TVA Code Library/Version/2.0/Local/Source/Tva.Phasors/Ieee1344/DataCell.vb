@@ -85,21 +85,38 @@ Namespace Ieee1344
             End Get
         End Property
 
-        Public Overrides Property DataIsValid() As Boolean
+        Public Overrides Property SynchronizationIsValid() As Boolean
             Get
-                Return Parent.DataIsValid
+                Return (StatusFlags And Bit15) = 0
             End Get
             Set(ByVal value As Boolean)
-                Parent.DataIsValid = value
+                If value Then
+                    StatusFlags = StatusFlags And Not Bit15
+                Else
+                    StatusFlags = StatusFlags Or Bit15
+                End If
             End Set
         End Property
 
-        Public Overrides Property SynchronizationIsValid() As Boolean
+        Public Overrides Property DataIsValid() As Boolean
             Get
-                Return Parent.SynchronizationIsValid
+                Return (StatusFlags And Bit14) = 0
             End Get
             Set(ByVal value As Boolean)
-                Parent.SynchronizationIsValid = value
+                If value Then
+                    StatusFlags = StatusFlags And Not Bit14
+                Else
+                    StatusFlags = StatusFlags Or Bit14
+                End If
+            End Set
+        End Property
+
+        Public Property TriggerStatus() As TriggerStatus
+            Get
+                Return StatusFlags And TriggerMask
+            End Get
+            Set(ByVal value As TriggerStatus)
+                StatusFlags = (StatusFlags And Not TriggerMask) Or value
             End Set
         End Property
 
