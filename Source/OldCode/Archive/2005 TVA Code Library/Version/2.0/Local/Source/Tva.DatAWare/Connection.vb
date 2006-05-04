@@ -3,14 +3,14 @@
 '  Copyright © 2005 - TVA, all rights reserved
 '  
 '  Build Environment: VB.NET, Visual Studio 2003
-'  Primary Developer: James R Carroll, System Analyst [WESTAFF]
+'  Primary Developer: J. Ritchie Carroll, System Analyst [WESTAFF]
 '      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
 '       Phone: 423/751-2827
 '       Email: jrcarrol@tva.gov
 '
 '  Code Modification History:
 '  ---------------------------------------------------------------------
-'  10/1/2004 - James R Carroll
+'  10/1/2004 - J. Ritchie Carroll
 '       Initial version of source created
 '
 '***********************************************************************

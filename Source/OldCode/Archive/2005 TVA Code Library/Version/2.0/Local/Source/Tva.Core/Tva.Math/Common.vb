@@ -3,20 +3,20 @@
 '  Copyright © 2006 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005
-'  Primary Developer: James R Carroll, Operations Data Architecture [TVA]
+'  Primary Developer: J. Ritchie Carroll, Operations Data Architecture [TVA]
 '      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
 '       Phone: 423/751-2827
 '       Email: jrcarrol@tva.gov
 '
 '  Code Modification History:
 '  -----------------------------------------------------------------------------------------------------
-'  11/12/2004 - James R Carroll
+'  11/12/2004 - J. Ritchie Carroll
 '       Original version of source code generated
-'  12/29/2005 - Pinal C Patel
+'  12/29/2005 - Pinal C. Patel
 '       2.0 version of source code migrated from 1.1 source (TVA.Shared.Math)
-'  01/04/2006 - James R Carroll
+'  01/04/2006 - J. Ritchie Carroll
 '       Added crytographically strong random number generation functions
-'  01/24/2006 - James R Carroll
+'  01/24/2006 - J. Ritchie Carroll
 '       Added curve fit function (courtesy of Brian Fox from DatAWare client code)
 '
 '*******************************************************************************************************

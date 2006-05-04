@@ -3,25 +3,25 @@
 '  Copyright © 2006 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005
-'  Primary Developer: James R Carroll, Operations Data Architecture [TVA]
+'  Primary Developer: J. Ritchie Carroll, Operations Data Architecture [TVA]
 '      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
 '       Phone: 423/751-2827
 '       Email: jrcarrol@tva.gov
 '
 '  Code Modification History:
 '  -----------------------------------------------------------------------------------------------------
-'  ??/??/???? - James R Carroll
+'  ??/??/???? - J. Ritchie Carroll
 '       Original version of source code generated
-'  05/25/2004 - James R Carroll 
+'  05/25/2004 - J. Ritchie Carroll 
 '       Added "with parameters" overloads to all basic query functions
-'  06/21/2004 - James R Carroll
+'  06/21/2004 - J. Ritchie Carroll
 '       Added support for Oracle native .NET client since ESO systems can now work with this
 '  12/10/2004 - Tim M Shults
 '       Added several new WithParameters overloads that allow a programmer to send just the 
 '       parameter values instead of creating a series of parameter objects and then sending 
 '       them through.  Easy way to cut down on the amount of code.
 '       This code is just for calls to Stored Procedures and will not work for in-line SQL
-'  03/28/2006 - Pinal C Patel
+'  03/28/2006 - Pinal C. Patel
 '       2.0 version of source code migrated from 1.1 source (TVA.Shared.String)
 '
 '*******************************************************************************************************

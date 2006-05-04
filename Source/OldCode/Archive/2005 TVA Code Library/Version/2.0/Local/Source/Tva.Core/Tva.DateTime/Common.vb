@@ -3,20 +3,20 @@
 '  Copyright © 2006 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005
-'  Primary Developer: James R Carroll, Operations Data Architecture [TVA]
+'  Primary Developer: J. Ritchie Carroll, Operations Data Architecture [TVA]
 '      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
 '       Phone: 423/751-2827
 '       Email: jrcarrol@tva.gov
 '
 '  Code Modification History:
 '  -----------------------------------------------------------------------------------------------------
-'  02/23/2003 - James R Carroll
+'  02/23/2003 - J. Ritchie Carroll
 '       Original version of source code generated
-'  06/10/2004 - James R Carroll
+'  06/10/2004 - J. Ritchie Carroll
 '       Added SecondsToText overload to allow custom time names, e.g., 1 Min 2 Secs
-'  01/05/2005 - James R Carroll
+'  01/05/2005 - J. Ritchie Carroll
 '       Added BaselinedTimestamp function
-'  12/21/2005 - James R Carroll
+'  12/21/2005 - J. Ritchie Carroll
 '       2.0 version of source code migrated from 1.1 source (TVA.Shared.DateTime)
 '
 '*******************************************************************************************************

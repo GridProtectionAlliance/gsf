@@ -3,24 +3,24 @@
 '  Copyright © 2006 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005
-'  Primary Developer: James R Carroll, Operations Data Architecture [TVA]
+'  Primary Developer: J. Ritchie Carroll, Operations Data Architecture [TVA]
 '      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
 '       Phone: 423/751-2827
 '       Email: jrcarrol@tva.gov
 '
 '  Code Modification History:
 '  -----------------------------------------------------------------------------------------------------
-'  02/24/2004 - James R Carroll
+'  02/24/2004 - J. Ritchie Carroll
 '       Original version of source code generated
-'  01/14/2005 - James R Carroll
+'  01/14/2005 - J. Ritchie Carroll
 '       Moved bit constants into Bit class - made sense to me :p
 '       Deprecated LShiftWord and RShiftWord since VB now supports << and >> operators
 '       Converted other functions to use standard .NET bit conversion operations, this will
 '           be more reliable and more OS portable than having to deal with the "sign" bit
 '           as the older code was doing...
-'  12/29/2005 - Pinal C Patel
+'  12/29/2005 - Pinal C. Patel
 '       2.0 version of source code migrated from 1.1 source (TVA.Shared.Bit)
-'  01/04/2006 - James R Carroll
+'  01/04/2006 - J. Ritchie Carroll
 '       Added code comments - moved into Interop namespace
 '
 '*******************************************************************************************************

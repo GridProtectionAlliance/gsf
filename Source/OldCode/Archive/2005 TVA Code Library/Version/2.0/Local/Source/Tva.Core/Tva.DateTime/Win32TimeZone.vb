@@ -3,20 +3,20 @@
 '  Copyright © 2006 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005
-'  Primary Developer: James R Carroll, Operations Data Architecture [TVA]
+'  Primary Developer: J. Ritchie Carroll, Operations Data Architecture [TVA]
 '      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
 '       Phone: 423/751-2827
 '       Email: jrcarrol@tva.gov
 '
 '  Code Modification History:
 '  -----------------------------------------------------------------------------------------------------
-'  06/10/2004 - James R Carroll
+'  06/10/2004 - J. Ritchie Carroll
 '       Integrated external source for Michael R. Brumm's TimeZone management into TVA.Shared.Date
-'  12/21/2005 - James R Carroll
+'  12/21/2005 - J. Ritchie Carroll
 '       2.0 version of source code migrated from 1.1 source (TVA.Shared.Date)
 '       Because this code is typically not used directly, but rather through helper functions
 '       defined in Common, no code comments were added to these classes...
-'  12/28/2005 - James R Carroll
+'  12/28/2005 - J. Ritchie Carroll
 '       Made modifications to original source (e.g., merged SimpleTimeZone into Win32TimeZone) to
 '       help with FxCop compatibility.
 '

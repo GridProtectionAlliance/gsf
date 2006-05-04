@@ -3,16 +3,16 @@
 '  Copyright © 2006 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005
-'  Primary Developer: James R Carroll, Operations Data Architecture [TVA]
+'  Primary Developer: J. Ritchie Carroll, Operations Data Architecture [TVA]
 '      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
 '       Phone: 423/751-2250
 '       Email: jrcarrol@tva.gov
 '
 '  Code Modification History:
 '  -----------------------------------------------------------------------------------------------------
-'  11/12/2004 - James R Carroll
+'  11/12/2004 - J. Ritchie Carroll
 '       Initial version of source generated for Super Phasor Data Concentrator
-'  02/23/2006 - James R Carroll
+'  02/23/2006 - J. Ritchie Carroll
 '       Classes abstracted for general use and added to TVA code library
 '
 '*******************************************************************************************************

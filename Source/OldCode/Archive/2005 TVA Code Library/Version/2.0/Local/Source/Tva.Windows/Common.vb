@@ -1,6 +1,6 @@
 '*******************************************************************************************************
-'  IHeaderFrame.vb - Header frame interface
-'  Copyright © 2005 - TVA, all rights reserved - Gbtc
+'  Tva.Windows.Commmon.vb - Common Functions for Windows Applications
+'  Copyright © 2006 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005
 '  Primary Developer: J. Ritchie Carroll, Operations Data Architecture [TVA]
@@ -10,19 +10,13 @@
 '
 '  Code Modification History:
 '  -----------------------------------------------------------------------------------------------------
-'  01/14/2005 - J. Ritchie Carroll
-'       Initial version of source generated
+'  ??/??/2004 - J. Ritchie Carroll
+'       Original version of source code generated
+'  05/04/2006 - Pinal C. Patel
+'       2.0 version of source code migrated from 1.1 source (TVA.Forms.Common)
 '
 '*******************************************************************************************************
 
-' This interface represents the protocol independent representation of any frame of header data.
-<CLSCompliant(False)> _
-Public Interface IHeaderFrame
+Public Class Common
 
-    Inherits IChannelFrame
-
-    Shadows ReadOnly Property Cells() As HeaderCellCollection
-
-    Property HeaderData() As String
-
-End Interface
+End Class

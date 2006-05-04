@@ -3,18 +3,18 @@
 '  Copyright © 2006 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005
-'  Primary Developer: James R Carroll, Operations Data Architecture [TVA]
+'  Primary Developer: J. Ritchie Carroll, Operations Data Architecture [TVA]
 '      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
 '       Phone: 423/751-2827
 '       Email: jrcarrol@tva.gov
 '
 '  Code Modification History:
 '  -----------------------------------------------------------------------------------------------------
-'  10/12/2005 - James R Carroll
+'  10/12/2005 - J. Ritchie Carroll
 '       Original version of source generated
-'  01/05/2006 - James R Carroll
+'  01/05/2006 - J. Ritchie Carroll
 '       2.0 version of source code migrated from 1.1 source (TVA.Interop.Unix.TimeTag)
-'  01/24/2006 - James R Carroll
+'  01/24/2006 - J. Ritchie Carroll
 '       Moved into DateTime namespace and renamed to UnixTimeTag
 '
 '*******************************************************************************************************
