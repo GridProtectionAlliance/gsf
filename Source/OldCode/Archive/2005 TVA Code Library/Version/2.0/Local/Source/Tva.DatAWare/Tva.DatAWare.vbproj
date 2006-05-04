@@ -42,9 +42,26 @@
     <Import Include="System.Collections" />
     <Import Include="System.Collections.Generic" />
     <Import Include="System.Diagnostics" />
+    <Import Include="Tva.Common" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Common.vb" />
+    <Compile Include="Connection.vb" />
+    <Compile Include="DatabaseStructure.vb" />
+    <Compile Include="DataBlock.vb" />
+    <Compile Include="EventProcessor.vb" />
+    <Compile Include="Listener.vb" />
     <Compile Include="My Project\AssemblyInfo.vb" />
+    <Compile Include="Points.vb" />
+    <Compile Include="ProcessEvent.vb" />
+    <Compile Include="StandardEvent.vb" />
+    <Compile Include="TimeTag.vb" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Tva.Core\Tva.Core.vbproj">
+      <Project>{29A7B606-D1BC-4A4B-96D0-258D5A72C3EC}</Project>
+      <Name>Tva.Core</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.VisualBasic.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
