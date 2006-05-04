@@ -18,50 +18,18 @@
 Imports System.IO
 Imports System.Net
 Imports System.Net.Sockets
-Imports System.Text
 Imports System.Threading
-Imports TVA.Threading
-Imports TVA.Shared.DateTime
+Imports System.Text
+Imports Tva.DateTime.Common
+Imports Tva.Threading
+Imports Tva.Services
 
 Namespace DatAWare
 
+    ''' <summary>DatAWare Network Packet Listener / Parser</summary>
     Public Class Listener
 
-        Implements IDisposable
-
-        Public Delegate Sub ProcessEventSignature(ByVal [event] As StandardEvent)
-        Public Delegate Sub ProcessEventBufferSignature(ByVal eventBuffer As Byte(), ByVal offset As Integer, ByVal length As Integer)
-        Public Delegate Sub UpdateStatusSignature(ByVal status As String)
-
-        Public Enum NetworkProtocol
-            TCP
-            UDP
-        End Enum
-
-        Public Class EventProcessor
-
-            Private m_processEvent As ProcessEventSignature
-
-            Public Sub New(ByVal processEventFunction As ProcessEventSignature)
-
-                m_processEvent = processEventFunction
-
-            End Sub
-
-            Public Sub ProcessEventBuffer(ByVal eventBuffer As Byte(), ByVal offset As Integer, ByVal length As Integer)
-
-                If eventBuffer Is Nothing Then Throw New ArgumentNullException("No event buffer was provided for processing")
-
-                ' Parse standard DatAWare events out of network data packet
-                For packetIndex As Integer = offset To length - 1 Step StandardEvent.BinaryLength
-                    If packetIndex + StandardEvent.BinaryLength < eventBuffer.Length Then
-                        m_processEvent(New StandardEvent(eventBuffer, packetIndex))
-                    End If
-                Next
-
-            End Sub
-
-        End Class
+        Implements IServiceComponent
 
         Private m_protocol As NetworkProtocol
         Private m_eventProcessor As EventProcessor
@@ -71,8 +39,8 @@ Namespace DatAWare
         Private m_startTime As Long
         Private m_stopTime As Long
         Private m_serverPort As Integer
-        Private m_listenThread As RunThread
-        Private m_clientThreads As Hashtable
+        Private m_listenThread As Thread
+        Private m_clientThreads As Dictionary(Of Guid, RunThread)
         Private m_packetsAccepted As Long
         Private m_packetsRejected As Long
         Private m_bytesReceived As Long
@@ -93,7 +61,7 @@ Namespace DatAWare
             m_updateStatus = updateStatusFunction
             m_serverPort = serverPort
             m_enabled = True
-            m_clientThreads = New Hashtable
+            m_clientThreads = New Dictionary(Of Guid, RunThread)
             m_udpBufferSize = BufferSize
 
         End Sub
@@ -110,7 +78,7 @@ Namespace DatAWare
             m_updateStatus = updateStatusFunction
             m_serverPort = serverPort
             m_enabled = True
-            m_clientThreads = New Hashtable
+            m_clientThreads = New Dictionary(Of Guid, RunThread)
             m_udpBufferSize = BufferSize
 
         End Sub
@@ -160,7 +128,7 @@ Namespace DatAWare
                     If m_stopTime > 0 Then
                         ProcessingTime = m_stopTime - m_startTime
                     Else
-                        ProcessingTime = DateTime.Now.Ticks - m_startTime
+                        ProcessingTime = Date.Now.Ticks - m_startTime
                     End If
                 End If
 
@@ -192,8 +160,9 @@ Namespace DatAWare
                 Throw New InvalidOperationException("Listener is already started.")
             Else
                 ' Start listening thread
-                m_listenThread = RunThread.ExecuteNonPublicMethod(Me, "ListenForConnections")
-                m_startTime = DateTime.Now.Ticks
+                m_listenThread = New Thread(AddressOf ListenForConnections)
+                m_listenThread.Start()
+                m_startTime = Date.Now.Ticks
                 m_stopTime = 0
             End If
 
@@ -206,12 +175,12 @@ Namespace DatAWare
                 m_listenThread.Abort()
                 m_listenThread = Nothing
             End If
-            m_stopTime = DateTime.Now.Ticks
+            m_stopTime = Date.Now.Ticks
 
             ' Stop any processing threads
-            SyncLock m_clientThreads.SyncRoot
-                For Each de As DictionaryEntry In m_clientThreads
-                    CType(de.Value, RunThread).Abort()
+            SyncLock m_clientThreads
+                For Each item As RunThread In m_clientThreads.Values
+                    item.Abort()
                 Next
 
                 m_clientThreads.Clear()
@@ -224,7 +193,7 @@ Namespace DatAWare
 
             If m_protocol = NetworkProtocol.TCP Then
                 ' When we are in TCP mode, we can accept connections from multiple clients
-                Dim listener As New TcpListener(Dns.Resolve(System.Environment.MachineName).AddressList(0), m_serverPort)
+                Dim listener As New TcpListener(Dns.GetHostEntry(System.Environment.MachineName).AddressList(0), m_serverPort)
 
                 Try
                     Dim client As TcpClient
@@ -240,7 +209,7 @@ Namespace DatAWare
                         client = listener.AcceptTcpClient()
 
                         ' Process client request on an independent thread so we can keep listening for new requests
-                        SyncLock m_clientThreads.SyncRoot
+                        SyncLock m_clientThreads
                             Dim threadID As Guid = Guid.NewGuid
                             m_clientThreads.Add(threadID, RunThread.ExecuteNonPublicMethod(Me, "AcceptTCPClientData", client, threadID))
                         End SyncLock
@@ -262,7 +231,7 @@ Namespace DatAWare
                 m_updateStatus("New UDP client connection established for " & Name & "...")
 
                 ' Enter the data read loop
-                Do While Enabled
+                Do While m_enabled
                     Try
                         With New UdpClientData(m_udpBufferSize)
                             ' Block thread until we've read some data...
@@ -342,7 +311,7 @@ Namespace DatAWare
             clientData = New MemoryStream
 
             ' Enter the data read loop
-            Do While Enabled
+            Do While m_enabled
                 Try
                     Do
                         ' Block thread until we've read some data...
@@ -357,7 +326,7 @@ Namespace DatAWare
                     ' If we get no data we'll just go back to listening...
                     If eventBuffer.Length > 0 Then
                         ' We may not have received an even number of events - so we check for that
-                        events = Math.DivRem(eventBuffer.Length, StandardEvent.BinaryLength, remainder)
+                        events = System.Math.DivRem(eventBuffer.Length, StandardEvent.BinaryLength, remainder)
 
                         If remainder > 0 Then
                             ' We have a little bit of the next event in this packet, so we'll take care of that...
@@ -394,8 +363,8 @@ Namespace DatAWare
                     m_updateStatus("Exception occurred for " & Name & " while accepting client data: " & ex.Message)
 
                     ' We monitor for exceptions that occur in quick succession
-                    If DateTime.Now.Ticks - errorTime > 100000000L Then
-                        errorTime = DateTime.Now.Ticks
+                    If Date.Now.Ticks - errorTime > 100000000L Then
+                        errorTime = Date.Now.Ticks
                         errorCount = 1
                     End If
 
@@ -423,7 +392,7 @@ Namespace DatAWare
             Loop
 
             ' Thread is complete, remove it from the running thread list
-            SyncLock m_clientThreads.SyncRoot
+            SyncLock m_clientThreads
                 m_clientThreads.Remove(threadID)
             End SyncLock
 
@@ -439,20 +408,38 @@ Namespace DatAWare
 
         End Sub
 
-        Public Overridable ReadOnly Property Name() As String
+        Public Sub ProcessStateChanged(ByVal newState As Services.IServiceComponent.ProcessState) Implements Services.IServiceComponent.ProcessStateChanged
+
+            ' DatAWare listener is not affected by changes in process state
+
+        End Sub
+
+        Public Sub ServiceStateChanged(ByVal newState As Services.IServiceComponent.ServiceState) Implements Services.IServiceComponent.ServiceStateChanged
+
+            Select Case newState
+                Case IServiceComponent.ServiceState.Paused
+                    Enabled = False
+                Case IServiceComponent.ServiceState.Resumed
+                    Enabled = True
+            End Select
+
+        End Sub
+
+        Public Overridable ReadOnly Property Name() As String Implements Services.IServiceComponent.Name
             Get
                 Return "DatAWare Listener on port " & m_serverPort
             End Get
         End Property
 
-        Public Overridable ReadOnly Property Status() As String
+        Public Overridable ReadOnly Property Status() As String Implements Services.IServiceComponent.Status
             Get
                 With New StringBuilder
                     .Append("   DatAWare listener state: " & IIf(IsRunning, "Running", "Stopped") & vbCrLf)
+                    .Append("        Active threads are: " & IIf(m_enabled, "Enabled", "Paused") & vbCrLf)
+                    .Append("            Threads in use: " & ThreadsInUse & vbCrLf)
                     .Append("          Network protocol: " & [Enum].GetName(GetType(NetworkProtocol), m_protocol) & vbCrLf)
                     .Append("         Listening on port: " & m_serverPort & vbCrLf)
                     .Append("            Listening time: " & SecondsToText(RunTime) & vbCrLf)
-                    .Append("            Threads in use: " & ThreadsInUse & vbCrLf)
                     .Append("    Event packets accepted: " & m_packetsAccepted & vbCrLf)
                     .Append("    Event packets rejected: " & m_packetsRejected & vbCrLf)
                     .Append("     Packet broadcast rate: " & m_packetsAccepted / RunTime & " packets/sec" & vbCrLf)

@@ -17,6 +17,21 @@
 
 Imports System.Text
 
+''' <summary>Function signature used to process standard events</summary>
+Public Delegate Sub ProcessEventSignature(ByVal [event] As StandardEvent)
+
+''' <summary>Function signature used to process event buffers</summary>
+Public Delegate Sub ProcessEventBufferSignature(ByVal eventBuffer As Byte(), ByVal offset As Integer, ByVal length As Integer)
+
+''' <summary>Function signature used to handle status messages</summary>
+Public Delegate Sub UpdateStatusSignature(ByVal status As String)
+
+''' <summary>Network Protocol</summary>
+Public Enum NetworkProtocol
+    TCP
+    UDP
+End Enum
+
 Public Enum AccessMode
     [ReadOnly] = 1
     [WriteOnly] = 2

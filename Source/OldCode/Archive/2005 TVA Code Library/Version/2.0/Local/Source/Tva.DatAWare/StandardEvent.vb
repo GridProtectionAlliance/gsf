@@ -50,13 +50,7 @@ Public Class StandardEvent
 
     End Sub
 
-    Public Sub New(ByVal databaseIndex As Integer, ByVal timestamp As DateTime, ByVal value As Single, ByVal valueQuality As Quality)
-
-        Me.New(databaseIndex, New TimeTag(timestamp), value, valueQuality)
-
-    End Sub
-
-    Public Sub New(ByVal databaseIndex As Integer, ByVal timestamp As String, ByVal value As Single, ByVal valueQuality As Quality)
+    Public Sub New(ByVal databaseIndex As Integer, ByVal timestamp As Date, ByVal value As Single, ByVal valueQuality As Quality)
 
         Me.New(databaseIndex, New TimeTag(timestamp), value, valueQuality)
 

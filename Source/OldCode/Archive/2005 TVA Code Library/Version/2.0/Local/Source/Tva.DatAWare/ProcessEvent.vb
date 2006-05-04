@@ -55,13 +55,7 @@ Public Class ProcessEvent
 
     End Sub
 
-    Public Sub New(ByVal timestamp As DateTime, ByVal value As Single, ByVal valueQuality As Quality)
-
-        Me.New(New TimeTag(timestamp), value, valueQuality)
-
-    End Sub
-
-    Public Sub New(ByVal timestamp As String, ByVal value As Single, ByVal valueQuality As Quality)
+    Public Sub New(ByVal timestamp As Date, ByVal value As Single, ByVal valueQuality As Quality)
 
         Me.New(New TimeTag(timestamp), value, valueQuality)
 

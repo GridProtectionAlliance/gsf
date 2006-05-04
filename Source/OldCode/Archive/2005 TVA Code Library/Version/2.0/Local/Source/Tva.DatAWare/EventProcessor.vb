@@ -18,8 +18,6 @@
 ' Standard event processor (used to convert eventBuffer (e.g., buffer received over socket stream) into standard events)
 Public Class EventProcessor
 
-    Public Delegate Sub ProcessEventSignature(ByVal [event] As StandardEvent)
-
     Private m_processEvent As ProcessEventSignature
 
     Public Sub New(ByVal processEventFunction As ProcessEventSignature)
