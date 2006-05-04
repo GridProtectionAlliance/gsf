@@ -172,8 +172,9 @@ Public MustInherit Class DataCellBase
         Dim parsingState As IDataCellParsingState = DirectCast(state, IDataCellParsingState)
         Dim x As Int32
 
-        StatusFlags = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex)
-        startIndex += 2
+        ' HACK: Must fix - this corrected offset into data frame for 1344...
+        'StatusFlags = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex)
+        'startIndex += 2
 
         ' By the very nature of the three protocols supporting the same order of phasors, frequency, dfreq, analog and digitals
         ' we are able to "automatically" parse this data out in the data cell base class - BEAUTIFUL!!!
