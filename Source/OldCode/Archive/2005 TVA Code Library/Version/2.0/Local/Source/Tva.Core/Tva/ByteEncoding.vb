@@ -200,7 +200,7 @@ Public MustInherit Class ByteEncoding
                 binaryData = binaryData.Trim
                 If spacingCharacter <> NoSpacing Then binaryData = binaryData.Replace(spacingCharacter, "")
 
-                ' Process the string only if it has data in decimal format (Example: 01010110 1010101).
+                ' Process the string only if it has data in binary format (Example: 01010110 1010101).
                 If Regex.Matches(binaryData, "[^0-1]").Count = 0 Then
                     ' Trim the end of the string to discard any additional characters, if present, in the 
                     ' string that would prevent the string from being a binary encoded string. 

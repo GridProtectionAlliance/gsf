@@ -17,6 +17,12 @@
 '
 '*******************************************************************************************************
 
-Public Class Common
+Public NotInheritable Class Common
+
+    Private Sub New()
+
+        ' This class contains only global functions and is not meant to be instantiated
+
+    End Sub
 
 End Class

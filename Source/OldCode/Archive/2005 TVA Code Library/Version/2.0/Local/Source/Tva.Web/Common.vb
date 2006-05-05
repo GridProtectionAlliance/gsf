@@ -258,8 +258,13 @@ Public NotInheritable Class Common
 
     End Sub
 
-    'Pinal Patel 03/04/05:  Closes a web page. Not tied to a web control. Returns a value to the parent 
-    '                       window if any (used in conjunction to ShowDialog).
+    ''' <summary>
+    ''' Closes the current web page when it has finished loading in the browser and returns the specified value to 
+    ''' the web page that opened it.
+    ''' </summary>
+    ''' <param name="page">The current web page.</param>
+    ''' <param name="returnValue">The value to be returned to the parent web page that open this web page.</param>
+    ''' <remarks></remarks>
     Public Shared Sub Close(ByVal page As System.Web.UI.Page, ByVal returnValue As String)
 
         If Not page.ClientScript.IsClientScriptBlockRegistered("Close") Then
@@ -267,23 +272,24 @@ Public NotInheritable Class Common
                 CreateClientSideScript(ClientSideScript.Close))
         End If
 
-        With New StringBuilder
-            .Append("<script language=""javascript"">" & NewLine())
-            .Append("   Close('" & returnValue & "');" & NewLine())
-            .Append("</script>" & NewLine())
+        If Not page.ClientScript.IsStartupScriptRegistered("Close.Page") Then
+            With New StringBuilder
+                .Append("<script language=""javascript"">" & NewLine())
+                .Append("   Close('" & returnValue & "');" & NewLine())
+                .Append("</script>" & NewLine())
 
-            page.ClientScript.RegisterStartupScript(page.GetType(), "Close:" & Rnd(), .ToString())
-        End With
+                page.ClientScript.RegisterStartupScript(page.GetType(), "Close.Page", .ToString())
+            End With
+        End If
 
     End Sub
 
-    'Pinal Patel 03/04/05:  Closes a web pages. Tied to a web control. Return a value to the parent 
-    '                       window if any (used in conjunction with ShowDialog)
     ''' <summary>
-    ''' 
+    ''' Closes the current web page when the specified web control is clicked and returns the specified value to the 
+    ''' web page that opened it.
     ''' </summary>
-    ''' <param name="control"></param>
-    ''' <param name="returnValue"></param>
+    ''' <param name="control">The web control that, when clicked, will close the current web page.</param>
+    ''' <param name="returnValue">The value to be returned to the parent web page that open this web page.</param>
     ''' <remarks></remarks>
     Public Shared Sub Close(ByVal control As System.Web.UI.Control, ByVal returnValue As String)
 
