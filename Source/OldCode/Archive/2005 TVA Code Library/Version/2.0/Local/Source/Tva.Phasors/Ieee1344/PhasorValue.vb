@@ -22,8 +22,6 @@ Namespace Ieee1344
 
         Inherits PhasorValueBase
 
-        Private Shared m_sqrtOf3 As Single = Convert.ToSingle(System.Math.Sqrt(3))
-
         Public Overloads Shared Function CreateFromPolarValues(ByVal parent As IDataCell, ByVal phasorDefinition As IPhasorDefinition, ByVal angle As Single, ByVal magnitude As Single) As PhasorValue
 
             Return PhasorValueBase.CreateFromPolarValues(AddressOf CreateNewPhasorValue, parent, phasorDefinition, angle, magnitude)
@@ -82,23 +80,6 @@ Namespace Ieee1344
             Get
                 Return Me.GetType()
             End Get
-        End Property
-
-        Public Overrides Property Magnitude() As Single
-            Get
-                If Type = PhasorType.Voltage Then
-                    Return MyBase.Magnitude * m_sqrtOf3
-                Else
-                    Return MyBase.Magnitude
-                End If
-            End Get
-            Set(ByVal value As Single)
-                If Type = PhasorType.Voltage Then
-                    MyBase.Magnitude = value / m_sqrtOf3
-                Else
-                    MyBase.Magnitude = value
-                End If
-            End Set
         End Property
 
     End Class

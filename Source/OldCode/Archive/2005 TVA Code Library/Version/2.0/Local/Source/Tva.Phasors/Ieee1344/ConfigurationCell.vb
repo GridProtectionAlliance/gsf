@@ -175,7 +175,7 @@ Namespace Ieee1344
 
         Protected Overrides ReadOnly Property HeaderLength() As UInt16
             Get
-                Return MyBase.HeaderLength + 12
+                Return MyBase.HeaderLength + 14
             End Get
         End Property
 

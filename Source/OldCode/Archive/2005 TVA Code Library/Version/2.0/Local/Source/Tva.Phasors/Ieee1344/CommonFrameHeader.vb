@@ -38,6 +38,7 @@ Namespace Ieee1344
             Private m_sampleCount As Int16
             Private m_ticks As Long
             Private m_frameQueue As MemoryStream
+            Private m_statusFlags As Int16
 
             Public ReadOnly Property This() As IChannel Implements IChannel.This
                 Get
@@ -171,10 +172,10 @@ Namespace Ieee1344
 
             Public Property InternalStatusFlags() As Int16 Implements ICommonFrameHeader.InternalStatusFlags
                 Get
-                    Return 0
+                    Return m_statusFlags
                 End Get
                 Set(ByVal value As Int16)
-                    Throw New NotImplementedException()
+                    m_statusFlags = value
                 End Set
             End Property
 
@@ -303,6 +304,7 @@ Namespace Ieee1344
 
                 secondOfCentury = EndianOrder.BigEndian.ToUInt32(binaryImage, startIndex)
                 .InternalSampleCount = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 4)
+                .InternalStatusFlags = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 6)
 
                 If .FrameType = Ieee1344.FrameType.DataFrame AndAlso configurationFrame IsNot Nothing Then
                     ' Data frames have subsecond time information
