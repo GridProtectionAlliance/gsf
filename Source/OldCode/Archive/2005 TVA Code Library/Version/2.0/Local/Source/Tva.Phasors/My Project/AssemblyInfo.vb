@@ -17,7 +17,7 @@ Imports System.Security.Permissions
 <Assembly: AssemblyTrademark("Author: J. Ritchie Carroll")> 
 
 <Assembly: ComVisible(False)> 
-<Assembly: CLSCompliant(True)> 
+<Assembly: CLSCompliant(False)> 
 <Assembly: SecurityPermission(SecurityAction.RequestMinimum, Execution:=True)> 
 
 'The following GUID is for the ID of the typelib if this project is exposed to COM
