@@ -180,14 +180,7 @@ Namespace Configuration
                 If configFilePath = "" OrElse JustFileExtension(configFilePath) = ".config" Then
                     Select Case MyClass.Environment()
                         Case ApplicationEnvironment.Win
-                            If configFilePath = "" OrElse _
-                                    (configFilePath <> "" AndAlso configFilePath.EndsWith(".exe.config")) Then
-                                ' Path to the exe is to be provided in order to open the configuration file
-                                ' associated with the exe.
-                                configuration = ConfigurationManager.OpenExeConfiguration(configFilePath.TrimEnd(".config".ToCharArray()))
-                            Else
-                                Throw New ArgumentException("Path of configuration file for windows application must end in '.exe.config'", "configFilePath")
-                            End If
+                            configuration = ConfigurationManager.OpenExeConfiguration(configFilePath.TrimEnd(".config".ToCharArray()))
                         Case ApplicationEnvironment.Web
                             If configFilePath = "" Then configFilePath = System.Web.HttpContext.Current.Request.ApplicationPath()
                             configuration = WebConfigurationManager.OpenWebConfiguration(configFilePath.TrimEnd("web.config".ToCharArray()))
