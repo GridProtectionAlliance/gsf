@@ -58,11 +58,9 @@ Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "ProtectResource", "Tva.Phas
 EndProject
 Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "ProtectedResourceDecoder", "Tva.Phasors\ProtectedResourceDecoder\ProtectedResourceDecoder.vbproj", "{A4F0413C-4CDF-4B41-AA77-4DA7B9C1C18E}"
 EndProject
-Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "DWPhasorDAQ Setup", "Tva.Phasors\DWPhasorDAQ\Setup\Setup.vdproj", "{01D7DA05-64ED-4B12-BCF1-9E898B852E56}"
-EndProject
 Global
 	GlobalSection(SourceCodeControl) = preSolution
-		SccNumberOfProjects = 15
+		SccNumberOfProjects = 14
 		SccProjectName0 = \u0022$/TVA\u0020Code\u0020Library/Version/2.0/Local\u0022,\u0020HWHAAAAA
 		SccLocalPath0 = ..
 		SccProvider0 = MSSCCI:Microsoft\u0020Visual\u0020SourceSafe
@@ -133,11 +131,6 @@ Global
 		SccLocalPath13 = ..
 		CanCheckoutShared = false
 		SccProjectFilePathRelativizedFromConnection13 = Source\\Tva.Phasors\\ProtectedResourceDecoder\\
-		SccProjectUniqueName14 = Tva.Phasors\\DWPhasorDAQ\\Setup\\Setup.vdproj
-		SccProjectTopLevelParentUniqueName14 = TVA\u0020Code\u0020Library.sln
-		SccLocalPath14 = ..
-		CanCheckoutShared = false
-		SccProjectFilePathRelativizedFromConnection14 = Source\\Tva.Phasors\\DWPhasorDAQ\\Setup\\
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -274,12 +267,6 @@ Global
 		{A4F0413C-4CDF-4B41-AA77-4DA7B9C1C18E}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{A4F0413C-4CDF-4B41-AA77-4DA7B9C1C18E}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{A4F0413C-4CDF-4B41-AA77-4DA7B9C1C18E}.Release|Win32.ActiveCfg = Release|Any CPU
-		{01D7DA05-64ED-4B12-BCF1-9E898B852E56}.Debug|Any CPU.ActiveCfg = Debug
-		{01D7DA05-64ED-4B12-BCF1-9E898B852E56}.Debug|Mixed Platforms.ActiveCfg = Debug
-		{01D7DA05-64ED-4B12-BCF1-9E898B852E56}.Debug|Win32.ActiveCfg = Debug
-		{01D7DA05-64ED-4B12-BCF1-9E898B852E56}.Release|Any CPU.ActiveCfg = Release
-		{01D7DA05-64ED-4B12-BCF1-9E898B852E56}.Release|Mixed Platforms.ActiveCfg = Release
-		{01D7DA05-64ED-4B12-BCF1-9E898B852E56}.Release|Win32.ActiveCfg = Release
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -302,6 +289,5 @@ Global
 		{CAC01EDA-DC3D-41FB-9F4A-228035E69012} = {DC7668BE-7A7E-4429-9E1C-02E26EC86922}
 		{36E05B5E-3209-4097-9A6F-CE96749C181E} = {DC7668BE-7A7E-4429-9E1C-02E26EC86922}
 		{A4F0413C-4CDF-4B41-AA77-4DA7B9C1C18E} = {DC7668BE-7A7E-4429-9E1C-02E26EC86922}
-		{01D7DA05-64ED-4B12-BCF1-9E898B852E56} = {DC7668BE-7A7E-4429-9E1C-02E26EC86922}
 	EndGlobalSection
 EndGlobal
