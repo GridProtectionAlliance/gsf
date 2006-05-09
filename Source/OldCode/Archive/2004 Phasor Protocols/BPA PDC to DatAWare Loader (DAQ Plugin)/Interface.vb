@@ -207,18 +207,30 @@ Public Class [Interface]
     Public Sub Poll(ByRef IntIPBuf() As Byte, ByRef nBytes As Integer, ByRef iReturn As Integer, ByRef Status As Integer)
 
         Try
-            Dim queueIsEmpty As Boolean
+            If iReturn = -2 Then
+                ' Intialization request poll event
+                Busy = True
+                m_pollEvents += 1
 
-            Busy = True
-            m_pollEvents += 1
+                nBytes = FillIPBuffer(IntIPBuf, m_converter.GetEventDatabase())
+                iReturn = 1
 
-            nBytes = FillIPBuffer(IntIPBuf, m_converter.GetEventData(queueIsEmpty))
+                UpdateStatus("Local database intialized..." & vbCrLf)
+            Else
+                ' Standard poll event
+                Dim queueIsEmpty As Boolean
 
-            ' Set iReturn to zero to have DatAWare call the poll event again immediately, else set to one
-            ' (i.e., set to zero if you still have more items in the queue to be processed)
-            iReturn = IIf(queueIsEmpty, 1, 0)
+                Busy = True
+                m_pollEvents += 1
 
-            If m_pollEvents Mod 300 = 0 Then UpdateStatus("Poll events processed = " & m_pollEvents & vbCrLf)
+                nBytes = FillIPBuffer(IntIPBuf, m_converter.GetEventData(queueIsEmpty))
+
+                ' Set iReturn to zero to have DatAWare call the poll event again immediately, else set to one
+                ' (i.e., set to zero if you still have more items in the queue to be processed)
+                iReturn = IIf(queueIsEmpty, 1, 0)
+
+                If m_pollEvents Mod 300 = 0 Then UpdateStatus("Poll events processed = " & m_pollEvents & vbCrLf)
+            End If
         Catch ex As Exception
             UpdateStatus("Exception occured during poll event: " & ex.Message)
             nBytes = 0
