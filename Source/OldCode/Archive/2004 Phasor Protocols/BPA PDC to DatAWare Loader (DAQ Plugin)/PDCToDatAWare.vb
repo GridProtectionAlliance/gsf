@@ -88,7 +88,22 @@ Namespace PDCToDatAWare
     <ComVisible(False)> _
     Public Class DataUnit
 
-        Public Events As StandardEvent()
+        Private m_events As ArrayList
+
+        Public Property Events() As StandardEvent()
+            Get
+                Return m_events.ToArray(GetType(StandardEvent))
+            End Get
+            Set(ByVal Value As StandardEvent())
+                m_events = New ArrayList(Value)
+            End Set
+        End Property
+
+        Public ReadOnly Property EventCount() As Integer
+            Get
+                Return m_events.Count
+            End Get
+        End Property
 
         Public Sub New(ByVal timeZone As Win32TimeZone, ByVal analogIndices As Integer(), ByVal analogData As Double(,), ByVal digitalIndices As Integer(), ByVal digitalData As UInt16(,))
 
@@ -98,7 +113,8 @@ Namespace PDCToDatAWare
             Dim eventIndex As Integer
             Dim x, y As Integer
 
-            Events = Array.CreateInstance(GetType(StandardEvent), analogEvents + digitalEvents)
+            'Events = Array.CreateInstance(GetType(StandardEvent), analogEvents + digitalEvents)
+            m_events = New ArrayList
 
             For x = 0 To analogData.GetLength(0) - 1
                 ' Get analog row time from this analog data set
@@ -106,9 +122,10 @@ Namespace PDCToDatAWare
 
                 ' Populate the DatAWare standard event structures for the analog data
                 For y = 1 To analogIndices.Length - 1
-                    ' Create a new DatAWare standard event to hold this analog data
-                    Events(eventIndex) = New StandardEvent(analogIndices(y), rowTime, Convert.ToSingle(analogData(x, y)))
-                    eventIndex += 1
+                    If analogIndices(y) > -1 Then
+                        ' Create a new DatAWare standard event to hold this analog data
+                        m_events.Add(New StandardEvent(analogIndices(y), rowTime, Convert.ToSingle(analogData(x, y))))
+                    End If
                 Next
             Next
 
@@ -118,9 +135,10 @@ Namespace PDCToDatAWare
 
                 ' Populate the DatAWare standard event structures for the digital data
                 For y = 3 To digitalIndices.Length - 1
-                    ' Create a new DatAWare standard event to hold this digital data
-                    Events(eventIndex) = New StandardEvent(digitalIndices(y), rowTime, Convert.ToSingle(digitalData(x, y)))
-                    eventIndex += 1
+                    If digitalIndices(y) > -1 Then
+                        ' Create a new DatAWare standard event to hold this digital data
+                        m_events.Add(New StandardEvent(digitalIndices(y), rowTime, Convert.ToSingle(digitalData(x, y))))
+                    End If
                 Next
             Next
 
@@ -145,6 +163,9 @@ Namespace PDCToDatAWare
         Private stopTime As Long
         Private WithEvents processTimer As Timers.Timer
         Public Instance As Integer
+
+        Private m_validAnalogs As New ArrayList
+        Private m_validDigitals As New ArrayList
 
         Public Sub New(ByVal timeZone As String)
 
@@ -199,6 +220,9 @@ Namespace PDCToDatAWare
                     analogIndices(x) = -1
                 Else
                     analogIndices(x) = point
+
+                    ' Add point to valid analog point list (used to initialize local database)
+                    m_validAnalogs.Add(point)
                 End If
             Next
 
@@ -210,15 +234,16 @@ Namespace PDCToDatAWare
                     digitalIndices(x) = -1
                 Else
                     digitalIndices(x) = point
+
+                    ' Add point to valid digital point list (used to initialize local database)
+                    m_validDigitals.Add(point)
                 End If
             Next
 
             ' Produce an exception list of points not defined in DatAWare
             With IO.File.CreateText([Interface].ApplicationPath & "UndefinedAnalogIndices" & Instance & ".csv")
                 For x As Integer = 0 To analogIndices.Length - 1
-                    If analogIndices(x) = -1 Then
-                        .WriteLine(analogNames(x))
-                    End If
+                    If analogIndices(x) = -1 Then .WriteLine(analogNames(x))
                 Next
                 .Close()
             End With
@@ -226,9 +251,7 @@ Namespace PDCToDatAWare
             ' Produce an exception list of points not defined in DatAWare
             With IO.File.CreateText([Interface].ApplicationPath & "UndefinedDigitalIndices" & Instance & ".csv")
                 For x As Integer = 0 To digitalIndices.Length - 1
-                    If digitalIndices(x) = -1 Then
-                        .WriteLine(digitalNames(x))
-                    End If
+                    If digitalIndices(x) = -1 Then .WriteLine(digitalNames(x))
                 Next
                 .Close()
             End With
@@ -268,6 +291,18 @@ Namespace PDCToDatAWare
 
         End Function
 
+        Public Function GetEventDatabase() As StandardEvent()
+
+            Dim standardEvents As New ArrayList
+
+            For Each de As DictionaryEntry In LoadPointIndexTable(Variables("PDCDataReader.ConfigFile" & Instance))
+                standardEvents.Add(New StandardEvent(de.Value, New TimeTag(Date.Now), 0.0!))
+            Next
+
+            Return standardEvents.ToArray(GetType(StandardEvent))
+
+        End Function
+
         Public Function GetEventData(ByRef queueIsEmpty As Boolean) As StandardEvent()
 
             Dim standardEvents As New ArrayList
@@ -285,9 +320,9 @@ Namespace PDCToDatAWare
                             eventData = .Item(0)
 
                             ' See if all the events in this data unit will fit into the buffer
-                            If eventData.Events.Length + eventCount <= [Interface].MaximumEvents Then
+                            If eventData.EventCount + eventCount <= [Interface].MaximumEvents Then
                                 ' All of the events will fit, so we'll add all of them and check the next one
-                                eventCount += eventData.Events.Length
+                                eventCount += eventData.EventCount
                                 standardEvents.AddRange(eventData.Events)
                                 .RemoveAt(0)
                             Else
@@ -295,7 +330,7 @@ Namespace PDCToDatAWare
                                 Dim available As Integer = [Interface].MaximumEvents - eventCount
 
                                 If available > 0 Then
-                                    Dim remaining As Integer = eventData.Events.Length - available
+                                    Dim remaining As Integer = eventData.EventCount - available
                                     Dim willFit As StandardEvent() = Array.CreateInstance(GetType(StandardEvent), available)
                                     Dim wontFit As StandardEvent() = Array.CreateInstance(GetType(StandardEvent), remaining)
 
