@@ -37,6 +37,7 @@ Public Class FrameParser
     Public Event ReceivedCommandFrame(ByVal frame As ICommandFrame)
     Public Event ReceivedUndeterminedFrame(ByVal frame As IChannelFrame)
     Public Event DataStreamException(ByVal ex As Exception)
+    Public Event ParsingStatus(ByVal message As String)
 
     Public Const DefaultBufferSize As Int32 = 262144    ' 256K
 
@@ -168,6 +169,8 @@ Public Class FrameParser
         m_frameRate = 0.0#
         m_byteRate = 0.0#
 
+        UpdateStatus("Attepting " & [Enum].GetName(GetType(Protocol), m_protocol) & " " & [Enum].GetName(GetType(DataTransportLayer), m_transportLayer) & " based connection to PMU " & PmuID & " (" & HostIP & ":" & Port & ")")
+
         Try
             ' Instantiate protocol specific frame parser
             Select Case m_protocol
@@ -227,6 +230,8 @@ Public Class FrameParser
     End Sub
 
     Public Sub Disconnect()
+
+        If Enabled Then UpdateStatus("Disconnecting from PMU " & PmuID & " (" & HostIP & ":" & Port & ")")
 
         m_rateCalcTimer.Enabled = False
 
@@ -355,6 +360,8 @@ Public Class FrameParser
             Dim binaryImage As Byte()
             Dim binaryLength As Int32
 
+            UpdateStatus("Sending command """ & [Enum].GetName(GetType(Command), command) & """ to PMU " & PmuID & " (" & HostIP & ":" & Port & ")")
+
             ' Only the IEEE protocols support commands
             Select Case m_protocol
                 Case Phasors.Protocol.IeeeC37_118V1
@@ -447,6 +454,12 @@ Public Class FrameParser
 #End Region
 
 #Region " Private Methods Implementation "
+
+    Private Sub UpdateStatus(ByVal message As String)
+
+        RaiseEvent ParsingStatus(message)
+
+    End Sub
 
     Private Sub m_rateCalcTimer_Elapsed(ByVal sender As Object, ByVal e As System.Timers.ElapsedEventArgs) Handles m_rateCalcTimer.Elapsed
 
@@ -554,27 +567,32 @@ Public Class FrameParser
                 If attempts >= 50 Then Exit Do
             Loop
 
-            ' Request configuration frame 2
+            ' Request configuration frame 2 (we'll try a few times)
             attempts = 0
             m_configFrame = Nothing
-            SendPmuCommand(Command.SendConfigurationFrame2)
 
-            Do While m_configFrame Is Nothing
-                ' So long as we are receiving data, we'll push it to the frame parser
-                Do While m_clientStream.DataAvailable
-                    ' Block thread until we've read some data...
-                    received = m_clientStream.Read(buffer, 0, buffer.Length)
+            For x As Integer = 1 To 4
+                SendPmuCommand(Command.SendConfigurationFrame2)
 
-                    ' Send received data to frame parser
-                    If received > 0 Then Write(buffer, 0, received)
+                Do While m_configFrame Is Nothing
+                    ' So long as we are receiving data, we'll push it to the frame parser
+                    Do While m_clientStream.DataAvailable
+                        ' Block thread until we've read some data...
+                        received = m_clientStream.Read(buffer, 0, buffer.Length)
+
+                        ' Send received data to frame parser
+                        If received > 0 Then Write(buffer, 0, received)
+                    Loop
+
+                    ' Hang out for a little while so config frame can be parsed
+                    Thread.Sleep(100)
+
+                    attempts += 1
+                    If attempts >= 50 Then Exit Do
                 Loop
 
-                ' Hang out for a little while so config frame can be parsed
-                Thread.Sleep(100)
-
-                attempts += 1
-                If attempts >= 50 Then Exit Do
-            Loop
+                If m_configFrame IsNot Nothing Then Exit For
+            Next
 
             ' Enable data stream
             SendPmuCommand(Command.EnableRealTimeData)
