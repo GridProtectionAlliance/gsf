@@ -17,13 +17,14 @@
 
 Imports System.Buffer
 Imports Tva.Phasors.Common
+Imports Tva.Measurements
 
 ' This class represents the protocol independent common implementation of a set of phasor related data values that can be sent or received from a PMU.
 <CLSCompliant(False)> _
 Public MustInherit Class DataCellBase
 
     Inherits ChannelCellBase
-    Implements IDataCell
+    Implements IDataCell, IMeasurement
 
     Private m_configurationCell As IConfigurationCell
     Private m_statusFlags As Int16
@@ -31,6 +32,7 @@ Public MustInherit Class DataCellBase
     Private m_frequencyValue As IFrequencyValue
     Private m_analogValues As AnalogValueCollection
     Private m_digitalValues As DigitalValueCollection
+    Private m_id As Integer
 
     Protected Sub New(ByVal parent As IDataFrame, ByVal alignOnDWordBoundry As Boolean, ByVal configurationCell As IConfigurationCell, ByVal maximumPhasors As Int32, ByVal maximumAnalogs As Int32, ByVal maximumDigitals As Int32)
 
@@ -97,9 +99,9 @@ Public MustInherit Class DataCellBase
         End Set
     End Property
 
-    Public MustOverride Property DataIsValid() As Boolean Implements IDataCell.DataIsValid
+    Public MustOverride Property DataIsValid() As Boolean Implements IDataCell.DataIsValid, IMeasurement.ValueQualityIsGood
 
-    Public MustOverride Property SynchronizationIsValid() As Boolean Implements IDataCell.SynchronizationIsValid
+    Public MustOverride Property SynchronizationIsValid() As Boolean Implements IDataCell.SynchronizationIsValid, IMeasurement.TimestampQualityIsGood
 
     Public Overridable ReadOnly Property AllValuesAreEmpty() As Boolean Implements IDataCell.AllValuesAreEmpty
         Get
@@ -142,6 +144,60 @@ Public MustInherit Class DataCellBase
             Throw New NotSupportedException("Cannot change IDCode of a data cell, change IDCode is associated configuration cell instead")
         End Set
     End Property
+
+#Region " IMeasurement Implementation "
+
+    ' The only "measured value" a data cell exposes is its "StatusFlags"
+    Private Property IMeasurementValue() As Double Implements IMeasurement.Value
+        Get
+            Return m_statusFlags
+        End Get
+        Set(ByVal value As Double)
+            m_statusFlags = Convert.ToInt16(value)
+        End Set
+    End Property
+
+    Private Property IMeasurementTicks() As Long Implements Measurements.IMeasurement.Ticks
+        Get
+            Return Parent.Ticks
+        End Get
+        Set(ByVal value As Long)
+            Throw New NotImplementedException("Ticks for " & InheritedType.Name & " are derived from parent frame and are hence read-only for channel cell measurement")
+        End Set
+    End Property
+
+    Private ReadOnly Property IMeasurementTimestamp() As Date Implements IMeasurement.Timestamp
+        Get
+            Return New Date(Parent.Ticks)
+        End Get
+    End Property
+
+    Private Property IMeasurementID() As Integer Implements Measurements.IMeasurement.ID
+        Get
+            Return m_id
+        End Get
+        Set(ByVal value As Integer)
+            m_id = value
+        End Set
+    End Property
+
+    Private ReadOnly Property IMeasurementThis() As IMeasurement Implements IMeasurement.This
+        Get
+            Return Me
+        End Get
+    End Property
+
+    Public Function CompareTo(ByVal obj As Object) As Integer Implements System.IComparable.CompareTo
+
+        If TypeOf obj Is IMeasurement Then
+            Return IMeasurementValue.CompareTo(DirectCast(obj, IMeasurement).Value)
+        Else
+            Throw New ArgumentException(InheritedType.Name & " measurement can only be compared with other IMeasurements...")
+        End If
+
+    End Function
+
+#End Region
 
     Protected Overrides ReadOnly Property BodyLength() As UInt16
         Get

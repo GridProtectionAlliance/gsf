@@ -17,6 +17,9 @@
 
 Imports System.Buffer
 
+''' <summary>Measurement lookup function signature</summary>
+Public Delegate Function MeasurementLookupFunctionSignature(ByVal measurementID As Integer) As Measurements.IMeasurement
+
 ''' <summary>Phasor coordinate format</summary>
 Public Enum CoordinateFormat As Byte
     Rectangular

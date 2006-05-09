@@ -242,7 +242,7 @@ Namespace IeeeC37_118
                 End If
             End Function
 
-            Private ReadOnly Property IFrameMeasurements() As System.Collections.Generic.IDictionary(Of Integer, Measurements.IMeasurement) Implements Measurements.IFrame.Measurements
+            Private ReadOnly Property IFrameMeasurements() As Dictionary(Of Integer, Measurements.IMeasurement) Implements Measurements.IFrame.Measurements
                 Get
                     Throw New NotImplementedException()
                 End Get

@@ -15,10 +15,11 @@
 '
 '*******************************************************************************************************
 
+Imports System.IO
+Imports System.Text
 Imports System.Net
 Imports System.Net.Sockets
 Imports System.Threading
-Imports System.IO
 Imports Tva.Collections
 Imports Tva.DateTime.Common
 Imports Tva.Phasors
@@ -392,6 +393,56 @@ Public Class FrameParser
         End If
 
     End Sub
+
+    Public ReadOnly Property Status() As String
+        Get
+            With New StringBuilder
+                .Append("      Data transport layer: ")
+                .Append([Enum].GetName(GetType(DataTransportLayer), TransportLayer))
+                .Append(Environment.NewLine)
+                .Append("                  Protocol: ")
+                .Append([Enum].GetName(GetType(Protocol), Protocol))
+                .Append(Environment.NewLine)
+                .Append("                   Host IP: ")
+                .Append(HostIP)
+                .Append(Environment.NewLine)
+                .Append("                      Port: ")
+                .Append(Port)
+                .Append(Environment.NewLine)
+                .Append("                    PMU ID: ")
+                .Append(PmuID)
+                .Append(Environment.NewLine)
+                .Append("               Buffer size: ")
+                .Append(BufferSize)
+                .Append(Environment.NewLine)
+                .Append("     Total frames received: ")
+                .Append(TotalFramesReceived)
+                .Append(Environment.NewLine)
+                .Append("      Total bytes received: ")
+                .Append(TotalBytesReceived)
+                .Append(Environment.NewLine)
+                .Append("     Calculated frame rate: ")
+                .Append(FrameRate)
+                .Append(Environment.NewLine)
+                .Append("      Calculated byte rate: ")
+                .Append(ByteRate)
+                .Append(Environment.NewLine)
+                .Append("   Calculated MegaBit rate: ")
+                .Append(MegaBitRate.ToString("0.0000") & " mbps")
+                .Append(Environment.NewLine)
+
+                If m_ieeeC37_118FrameParser IsNot Nothing Then
+                    .Append(m_ieeeC37_118FrameParser.Status)
+                ElseIf m_ieee1344FrameParser IsNot Nothing Then
+                    .Append(m_ieee1344FrameParser.Status)
+                ElseIf m_bpaPdcStreamFrameParser IsNot Nothing Then
+                    .Append(m_bpaPdcStreamFrameParser.Status)
+                End If
+
+                Return .ToString()
+            End With
+        End Get
+    End Property
 
 #End Region
 

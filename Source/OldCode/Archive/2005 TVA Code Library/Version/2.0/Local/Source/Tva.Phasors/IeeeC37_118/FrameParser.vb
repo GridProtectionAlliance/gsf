@@ -16,6 +16,7 @@
 '*******************************************************************************************************
 
 Imports System.IO
+Imports System.Text
 Imports System.ComponentModel
 Imports Tva.Collections
 Imports Tva.IO.Common
@@ -168,6 +169,36 @@ Namespace IeeeC37_118
         Public Overrides ReadOnly Property CanWrite() As Boolean
             Get
                 Return True
+            End Get
+        End Property
+
+        Public ReadOnly Property Status() As String
+            Get
+                With New StringBuilder
+                    .Append("   C37.118 Revision number: ")
+                    .Append([Enum].GetName(GetType(RevisionNumber), m_revisionNumber))
+                    .Append(Environment.NewLine)
+                    .Append("     Received config frame: ")
+                    .Append(IIf(m_configurationFrame2 Is Nothing, "No", "Yes"))
+                    .Append(Environment.NewLine)
+                    .Append("         Current time base: ")
+                    .Append(TimeBase)
+                    .Append(Environment.NewLine)
+                    If m_configurationFrame2 IsNot Nothing Then
+                        .Append("     PMU's in config frame: ")
+                        .Append(m_configurationFrame2.Cells.Count)
+                        .Append(Environment.NewLine)
+                        .Append("           PDC/PMU ID code: ")
+                        .Append(m_configurationFrame2.IDCode)
+                        .Append(Environment.NewLine)
+                        .Append("     Configured frame rate: ")
+                        .Append(m_configurationFrame2.FrameRate)
+                        .Append(Environment.NewLine)
+                    End If
+                    .Append(m_bufferQueue.Status)
+
+                    Return .ToString()
+                End With
             End Get
         End Property
 

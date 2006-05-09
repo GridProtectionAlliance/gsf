@@ -32,11 +32,14 @@ Public MustInherit Class PhasorValueBase
     Private m_imaginary As Single
     Private m_compositeValues As CompositeValues
 
-    Private Shared m_sqrtOf3 As Single = Convert.ToSingle(System.Math.Sqrt(3))
-
-    Private Enum CompositeValue
+    Public Enum PolarCompositeValue
         Angle
         Magnitude
+    End Enum
+
+    Public Enum RectangularCompositeValue
+        Real
+        Imaginary
     End Enum
 
     'Create phasor from polar coordinates (angle expected in Degrees)
@@ -161,7 +164,7 @@ Public MustInherit Class PhasorValueBase
         End Get
         Set(ByVal value As Single)
             ' We store angle as one of our required composite values
-            m_compositeValues(CompositeValue.Angle) = value
+            m_compositeValues(PolarCompositeValue.Angle) = value
 
             ' If all composite values have been received, we can calculate phasor's real and imaginary values
             CalculatePhasorValueFromComposites()
@@ -170,29 +173,16 @@ Public MustInherit Class PhasorValueBase
 
     Public Overridable ReadOnly Property AngleReceived() As Boolean
         Get
-            Return m_compositeValues.Received(CompositeValue.Angle)
+            Return m_compositeValues.Received(PolarCompositeValue.Angle)
         End Get
     End Property
 
     Public Overridable Property Magnitude() As Single Implements IPhasorValue.Magnitude
         Get
-            Dim magnitudeValue As Single = System.Math.Sqrt(m_real * m_real + m_imaginary * m_imaginary)
-
-            If Type = PhasorType.Voltage Then
-                ' Most PMU's are setup such that voltage magnitudes need to multiplied by the SQRT(3)
-                Return magnitudeValue * m_sqrtOf3
-            Else
-                Return magnitudeValue
-            End If
+            Return System.Math.Sqrt(m_real * m_real + m_imaginary * m_imaginary)
         End Get
         Set(ByVal value As Single)
-            ' We store magnitude as one of our required composite values
-            If Type = PhasorType.Voltage Then
-                ' Most PMU's are setup such that voltage magnitudes need to multiplied by the SQRT(3)
-                m_compositeValues(CompositeValue.Magnitude) = value / m_sqrtOf3
-            Else
-                m_compositeValues(CompositeValue.Magnitude) = value
-            End If
+            m_compositeValues(PolarCompositeValue.Magnitude) = value
 
             ' If all composite values have been received, we can calculate phasor's real and imaginary values
             CalculatePhasorValueFromComposites()
@@ -201,7 +191,7 @@ Public MustInherit Class PhasorValueBase
 
     Public Overridable ReadOnly Property MagnitudeReceived() As Boolean
         Get
-            Return m_compositeValues.Received(CompositeValue.Magnitude)
+            Return m_compositeValues.Received(PolarCompositeValue.Magnitude)
         End Get
     End Property
 
@@ -211,8 +201,8 @@ Public MustInherit Class PhasorValueBase
             Dim angle, magnitude As Single
 
             ' All values received, create a new phasor value from composite values
-            angle = m_compositeValues(CompositeValue.Angle)
-            magnitude = m_compositeValues(CompositeValue.Magnitude)
+            angle = m_compositeValues(PolarCompositeValue.Angle)
+            magnitude = m_compositeValues(PolarCompositeValue.Magnitude)
 
             m_real = CalculateRealComponent(angle, magnitude)
             m_imaginary = CalculateImaginaryComponent(angle, magnitude)

@@ -33,7 +33,7 @@ Public Interface IChannelValue(Of T As IChannelDefinition)
 
     ReadOnly Property IsEmpty() As Boolean
 
-    Function GetMeasurement(ByVal valueIndex As Integer, ByVal assignedID As Integer) As IMeasurement
+    ReadOnly Property Measurements() As IMeasurement()
 
 End Interface
 

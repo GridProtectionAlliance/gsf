@@ -23,7 +23,9 @@ Namespace BpaPdcStream
     Public Class PMUCellCollection
 
         Inherits ChannelCellCollectionBase(Of PMUCell)
-        Implements IChannelFrame ' This collection doubles as a "proxy" frame for PMU cells
+        Implements IChannelFrame
+
+        ' This collection doubles as a "proxy" frame for PMU cells
 
         Private m_parent As DataCell
         Private m_flags As ChannelFlags
@@ -68,12 +70,6 @@ Namespace BpaPdcStream
         Public Overrides ReadOnly Property InheritedType() As Type
             Get
                 Return Me.GetType()
-            End Get
-        End Property
-
-        Private ReadOnly Property IChannelFrameThis() As Measurements.IFrame Implements Measurements.IFrame.This
-            Get
-                Return Me
             End Get
         End Property
 
@@ -181,7 +177,13 @@ Namespace BpaPdcStream
 
         End Function
 
-        Private ReadOnly Property IFrameMeasurements() As System.Collections.Generic.IDictionary(Of Integer, Measurements.IMeasurement) Implements Measurements.IFrame.Measurements
+        Private ReadOnly Property IFrameThis() As Measurements.IFrame Implements Measurements.IFrame.This
+            Get
+                Return Me
+            End Get
+        End Property
+
+        Private ReadOnly Property IFrameMeasurements() As Dictionary(Of Integer, Measurements.IMeasurement) Implements Measurements.IFrame.Measurements
             Get
                 Throw New NotImplementedException()
             End Get

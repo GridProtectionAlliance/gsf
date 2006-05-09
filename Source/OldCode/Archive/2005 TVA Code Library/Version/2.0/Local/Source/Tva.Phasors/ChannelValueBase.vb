@@ -26,6 +26,7 @@ Public MustInherit Class ChannelValueBase(Of T As IChannelDefinition)
 
     Private m_parent As IDataCell
     Private m_definition As T
+    Private m_measurements As IMeasurement()
 
     Protected Sub New(ByVal parent As IDataCell)
 
@@ -72,11 +73,20 @@ Public MustInherit Class ChannelValueBase(Of T As IChannelDefinition)
 
     Public MustOverride ReadOnly Property Values() As Single() Implements IChannelValue(Of T).Values
 
-    Public Overridable Function GetMeasurement(ByVal valueIndex As Integer, ByVal assignedID As Integer) As Measurements.IMeasurement Implements IChannelValue(Of T).GetMeasurement
+    Public Overridable ReadOnly Property Measurements() As IMeasurement() Implements IChannelValue(Of T).Measurements
+        Get
+            ' Create a measurement instance for each value the derived channel value exposes
+            If m_measurements Is Nothing Then
+                m_measurements = CreateArray(Of IMeasurement)(Values.Length)
 
-        Return New ChannelValueMeasurement(Of T)(Me, valueIndex, assignedID)
+                For x As Integer = 0 To m_measurements.Length - 1
+                    m_measurements(x) = New ChannelValueMeasurement(Of T)(Me, x)
+                Next
+            End If
 
-    End Function
+            Return m_measurements
+        End Get
+    End Property
 
 End Class
 

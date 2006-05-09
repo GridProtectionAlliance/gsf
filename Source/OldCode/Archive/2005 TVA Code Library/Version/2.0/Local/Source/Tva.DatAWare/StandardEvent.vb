@@ -15,6 +15,8 @@
 '
 '*******************************************************************************************************
 
+Imports Tva.Measurements
+
 ' Standard-format data event (i.e., a ProcessEvent + point ID) - used in DatAWare IP packets and DAQ plug-in's
 Public Class StandardEvent
 
@@ -37,22 +39,29 @@ Public Class StandardEvent
 
     End Sub
 
+    ''' <summary>Create new standard event from an abstract measurement</summary>
+    Public Sub New(ByVal measurement As IMeasurement)
+
+        MyClass.New(measurement.ID, measurement.Timestamp, measurement.Value, IIf(measurement.TimestampQualityIsGood And measurement.ValueQualityIsGood, Tva.DatAWare.Quality.Good, Tva.DatAWare.Quality.SuspectData))
+
+    End Sub
+
     Public Sub New(ByVal databaseIndex As Integer, ByVal [event] As ProcessEvent)
 
-        Me.DatabaseIndex = databaseIndex
-        Me.Event = [event]
+        MyClass.DatabaseIndex = databaseIndex
+        MyClass.Event = [event]
 
     End Sub
 
     Public Sub New(ByVal databaseIndex As Integer, ByVal ttag As TimeTag, ByVal value As Single, ByVal qual As Quality)
 
-        Me.New(databaseIndex, New ProcessEvent(ttag, value, qual))
+        MyClass.New(databaseIndex, New ProcessEvent(ttag, value, qual))
 
     End Sub
 
     Public Sub New(ByVal databaseIndex As Integer, ByVal timestamp As Date, ByVal value As Single, ByVal valueQuality As Quality)
 
-        Me.New(databaseIndex, New TimeTag(timestamp), value, valueQuality)
+        MyClass.New(databaseIndex, New TimeTag(timestamp), value, valueQuality)
 
     End Sub
 

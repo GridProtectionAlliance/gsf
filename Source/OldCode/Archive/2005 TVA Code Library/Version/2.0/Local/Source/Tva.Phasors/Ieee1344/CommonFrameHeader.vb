@@ -279,7 +279,7 @@ Namespace Ieee1344
                 End If
             End Function
 
-            Private ReadOnly Property IFrameMeasurements() As System.Collections.Generic.IDictionary(Of Integer, Measurements.IMeasurement) Implements Measurements.IFrame.Measurements
+            Private ReadOnly Property IFrameMeasurements() As Dictionary(Of Integer, Measurements.IMeasurement) Implements Measurements.IFrame.Measurements
                 Get
                     Throw New NotImplementedException()
                 End Get
@@ -304,6 +304,10 @@ Namespace Ieee1344
 
                 secondOfCentury = EndianOrder.BigEndian.ToUInt32(binaryImage, startIndex)
                 .InternalSampleCount = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 4)
+
+                ' We go ahead and pre-grab cell's status flags so we can determine framelength - we
+                ' leave startindex at 6 so that cell will be able to parse flags as needed - note
+                ' this increases needed common frame header size by 2 (i.e., BinaryLength + 2) 
                 .InternalStatusFlags = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 6)
 
                 If .FrameType = Ieee1344.FrameType.DataFrame AndAlso configurationFrame IsNot Nothing Then

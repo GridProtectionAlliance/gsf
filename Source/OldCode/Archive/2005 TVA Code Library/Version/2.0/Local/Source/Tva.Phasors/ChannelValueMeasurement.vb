@@ -27,11 +27,11 @@ Friend Class ChannelValueMeasurement(Of T As IChannelDefinition)
     Private m_id As Integer
     Private m_valueIndex As Integer
 
-    Public Sub New(ByVal parent As IChannelValue(Of T), ByVal valueIndex As Integer, ByVal assignedID As Integer)
+    Public Sub New(ByVal parent As IChannelValue(Of T), ByVal valueIndex As Integer)
 
         m_parent = parent
         m_valueIndex = valueIndex
-        m_id = assignedID
+        m_id = -1
 
     End Sub
 
@@ -73,7 +73,7 @@ Friend Class ChannelValueMeasurement(Of T As IChannelDefinition)
             Return m_parent.Parent.SynchronizationIsValid
         End Get
         Private Set(ByVal value As Boolean)
-            Throw New NotImplementedException("Timestamp quality is derived from parent data cell and is hence read-only for channel value measurements")
+            Throw New NotImplementedException("Timestamp quality for " & m_parent.InheritedType.Name & " is derived from parent data cell and is hence read-only for channel value measurements")
         End Set
     End Property
 
@@ -82,7 +82,7 @@ Friend Class ChannelValueMeasurement(Of T As IChannelDefinition)
             Return m_parent.Parent.DataIsValid
         End Get
         Set(ByVal value As Boolean)
-            Throw New NotImplementedException("Value quality is derived from parent data cell and is hence read-only for channel value measurements")
+            Throw New NotImplementedException("Value quality for " & m_parent.InheritedType.Name & " is derived from parent data cell and is hence read-only for channel value measurements")
         End Set
     End Property
 
@@ -91,7 +91,7 @@ Friend Class ChannelValueMeasurement(Of T As IChannelDefinition)
             Return m_parent.Parent.Parent.Ticks
         End Get
         Private Set(ByVal value As Long)
-            Throw New NotImplementedException("Ticks are derived from parent frame and are hence read-only for channel value measurements")
+            Throw New NotImplementedException("Ticks for " & m_parent.InheritedType.Name & " are derived from parent frame and are hence read-only for channel value measurements")
         End Set
     End Property
 
@@ -107,7 +107,7 @@ Friend Class ChannelValueMeasurement(Of T As IChannelDefinition)
         If TypeOf obj Is IMeasurement Then
             Return Value.CompareTo(DirectCast(obj, IMeasurement).Value)
         Else
-            Throw New ArgumentException("Measurement can only be compared with other IMeasurements...")
+            Throw New ArgumentException(m_parent.InheritedType.Name & " measurement can only be compared with other IMeasurements...")
         End If
 
     End Function

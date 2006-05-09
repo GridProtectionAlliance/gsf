@@ -16,6 +16,7 @@
 '*******************************************************************************************************
 
 Imports System.IO
+Imports System.Text
 Imports System.ComponentModel
 Imports Tva.Collections
 Imports Tva.IO.Common
@@ -121,6 +122,30 @@ Namespace BpaPdcStream
         Public Overrides ReadOnly Property CanWrite() As Boolean
             Get
                 Return True
+            End Get
+        End Property
+
+        Public ReadOnly Property Status() As String
+            Get
+                With New StringBuilder
+                    .Append("       Config frame loaded: ")
+                    .Append(IIf(m_configurationFrame Is Nothing, "No", "Yes"))
+                    .Append(Environment.NewLine)
+                    If m_configurationFrame IsNot Nothing Then
+                        .Append("     PMU's in config frame: ")
+                        .Append(m_configurationFrame.Cells.Count)
+                        .Append(Environment.NewLine)
+                        .Append("    Configured PMU ID code: ")
+                        .Append(m_configurationFrame.IDCode)
+                        .Append(Environment.NewLine)
+                        .Append("     Configured frame rate: ")
+                        .Append(m_configurationFrame.FrameRate)
+                        .Append(Environment.NewLine)
+                    End If
+                    .Append(m_bufferQueue.Status)
+
+                    Return .ToString()
+                End With
             End Get
         End Property
 

@@ -34,7 +34,7 @@ Public MustInherit Class ChannelFrameBase(Of T As IChannelCell)
     Private m_ticks As Long
     Private m_published As Boolean
     Private m_parsedBinaryLength As UInt16
-    Private m_measurementDictionary As IDictionary(Of Int32, IMeasurement)
+    Private m_measurements As Dictionary(Of Integer, IMeasurement)
 
     Protected Sub New(ByVal cells As IChannelCellCollection(Of T))
 
@@ -87,10 +87,16 @@ Public MustInherit Class ChannelFrameBase(Of T As IChannelCell)
         End Get
     End Property
 
-    Public ReadOnly Property MeasurementDictionary() As IDictionary(Of Int32, IMeasurement) Implements IChannelFrame.Measurements
+    Public ReadOnly Property Measurements() As Dictionary(Of Integer, IMeasurement) Implements Measurements.IFrame.Measurements
         Get
-            If m_measurementDictionary Is Nothing Then m_measurementDictionary = New Dictionary(Of Int32, IMeasurement)
-            Return m_measurementDictionary
+            If m_measurements Is Nothing Then m_measurements = New Dictionary(Of Integer, IMeasurement)
+            Return m_measurements
+        End Get
+    End Property
+
+    Private ReadOnly Property IFrameThis() As IFrame Implements IFrame.This
+        Get
+            Return Me
         End Get
     End Property
 
@@ -178,7 +184,7 @@ Public MustInherit Class ChannelFrameBase(Of T As IChannelCell)
     Protected Overrides Sub ParseBinaryImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
         ' Validate checksum
-        If Not ChecksumIsValid(binaryImage, startIndex) Then Throw New InvalidOperationException("Invalid binary image detected - check sum of " & InheritedType.FullName & " did not match")
+        If Not ChecksumIsValid(binaryImage, startIndex) Then Throw New InvalidOperationException("Invalid binary image detected - check sum of " & InheritedType.Name & " did not match")
 
         ' Perform regular data parse
         MyBase.ParseBinaryImage(state, binaryImage, startIndex)
@@ -239,11 +245,5 @@ Public MustInherit Class ChannelFrameBase(Of T As IChannelCell)
         End If
 
     End Function
-
-    Private ReadOnly Property IFrameThis() As IFrame Implements IFrame.This
-        Get
-            Return Me
-        End Get
-    End Property
 
 End Class

@@ -25,6 +25,11 @@ Public MustInherit Class FrequencyValueBase
     Private m_frequency As Single
     Private m_dfdt As Single
 
+    Public Enum CompositeValue
+        Frequency
+        DfDt
+    End Enum
+
     Protected Sub New(ByVal parent As IDataCell)
 
         MyBase.New(parent)
