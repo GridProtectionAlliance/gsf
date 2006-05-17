@@ -515,15 +515,14 @@ Namespace Measurements
         ''' <param name="ticks">The ticks of the baselined timestamp of the sample to get.</param>
         Protected Function LookupSample(ByVal ticks As Long) As Sample
 
-            Try
-                ' Return sample with specified baselined ticks (this is internally SyncLock'd)
-                Return m_sampleQueue(ticks)
-            Catch ex As KeyNotFoundException
-                ' We'll return null if it's not found
+            Dim foundSample As Sample
+
+            ' Lookup sample with specified baselined ticks (this is internally SyncLock'd)
+            If m_sampleQueue.TryGetValue(ticks, foundSample) Then
+                Return foundSample
+            Else
                 Return Nothing
-            Catch
-                Throw
-            End Try
+            End If
 
         End Function
 

@@ -17,9 +17,6 @@
 
 Imports System.Buffer
 
-''' <summary>Measurement lookup function signature</summary>
-Public Delegate Function MeasurementLookupFunctionSignature(ByVal measurementID As Integer) As Measurements.IMeasurement
-
 ''' <summary>Phasor coordinate format</summary>
 Public Enum CoordinateFormat As Byte
     Rectangular
@@ -61,7 +58,7 @@ Public Enum DataTransportLayer
     Other
 End Enum
 
-''' <summary>PMU data transport protocol</summary>
+''' <summary>Phasor data protocol</summary>
 Public Enum Protocol
     IeeeC37_118V1
     IeeeC37_118D6

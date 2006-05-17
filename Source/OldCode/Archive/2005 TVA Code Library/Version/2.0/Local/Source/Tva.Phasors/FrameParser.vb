@@ -260,6 +260,14 @@ Public Class FrameParser
 
     End Sub
 
+    Public ReadOnly Property IsIEEEProtocol() As Boolean
+        Get
+            Return m_protocol = Phasors.Protocol.Ieee1344 OrElse _
+                m_protocol = Phasors.Protocol.IeeeC37_118D6 OrElse _
+                m_protocol = Phasors.Protocol.IeeeC37_118V1
+        End Get
+    End Property
+
     Public ReadOnly Property Enabled() As Boolean
         Get
             If m_ieeeC37_118FrameParser IsNot Nothing Then

@@ -46,9 +46,9 @@ Public Class Points
 
     Public ReadOnly Property Definition(ByVal databaseIndex As Integer) As DatabaseStructure
         Get
-            'VerifyOpenConnection()
+            VerifyOpenConnection()
 
-            'Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), DatabaseStructure.BinaryLength)
+            Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), DatabaseStructure.BinaryLength)
             'Dim eof As Boolean
             'Dim errorMessage As String
 
@@ -62,7 +62,7 @@ Public Class Points
             '    End If
             'End With
 
-            'Return New DatabaseStructure(databaseIndex, buffer, 0)
+            Return New DatabaseStructure(databaseIndex, buffer, 0)
         End Get
     End Property
 
@@ -92,9 +92,9 @@ Public Class Points
 
     Default Public ReadOnly Property Value(ByVal databaseIndex As Integer, Optional ByVal timeRequest As String = "*", Optional ByVal timeInterval As Single = 0) As StandardEvent
         Get
-            'VerifyOpenConnection()
+            VerifyOpenConnection()
 
-            'Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), ProcessEvent.BinaryLength)
+            Dim buffer As Byte() = Array.CreateInstance(GetType(Byte), ProcessEvent.BinaryLength)
             'Dim errorMessage As String
 
             'With m_connection
@@ -105,15 +105,15 @@ Public Class Points
             '    End If
             'End With
 
-            'Return New StandardEvent(databaseIndex, New ProcessEvent(buffer, 0))
+            Return New StandardEvent(databaseIndex, New ProcessEvent(buffer, 0))
         End Get
     End Property
 
     Public ReadOnly Property ValueRange(ByVal databaseIndex As Integer, ByVal startTimeRequest As String, Optional ByVal endTimeRequest As String = "*", Optional ByVal requestCommand As RequestType = RequestType.Raw, Optional ByVal timeInterval As Single = 0) As StandardEvent()
         Get
-            'VerifyOpenConnection()
+            VerifyOpenConnection()
 
-            'Dim events As StandardEvent()
+            Dim events As StandardEvent() = Nothing
             'Dim buffer As Byte()
             'Dim eventCount As Integer
             'Dim errorMessage As String
@@ -126,25 +126,25 @@ Public Class Points
             '        Throw New InvalidOperationException("Failed to retrieve point value range from DatAWare server """ & .Server & """ due to exception: " & errorMessage)
             '    End If
 
-            '    If eventCount > 0 Then
-            '        events = Array.CreateInstance(GetType(StandardEvent), eventCount)
+            ' If eventCount > 0 Then
+            ' events = Array.CreateInstance(GetType(StandardEvent), eventCount)
 
             '        For x As Integer = 0 To eventCount - 1
             '            events(x) = New StandardEvent(databaseIndex, New ProcessEvent(buffer, index))
             '            index += ProcessEvent.BinaryLength
             '        Next
-            '    End If
+            ' End If
             'End With
 
-            'Return events
+            Return events
         End Get
     End Property
 
     Public ReadOnly Property Values(ByVal databaseIndices As Integer(), Optional ByVal timeRequest As String = "*", Optional ByVal timeInterval As Double = 0) As StandardEvent()
         Get
-            'VerifyOpenConnection()
+            VerifyOpenConnection()
 
-            'Dim events As StandardEvent()
+            Dim events As StandardEvent() = Nothing
             'Dim eventCount As Integer
             'Dim errorMessage As String
             'Dim returnValues As String()
@@ -173,7 +173,7 @@ Public Class Points
             '    End If
             'End With
 
-            'Return events
+            Return events
         End Get
     End Property
 

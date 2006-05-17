@@ -123,6 +123,8 @@ Public Class DatabaseStructure
             .TextEncoding = pointDefinition.TextEncoding
         End With
 
+        Return newPointDefinition
+
     End Function
 
     Public ReadOnly Property Index() As Integer

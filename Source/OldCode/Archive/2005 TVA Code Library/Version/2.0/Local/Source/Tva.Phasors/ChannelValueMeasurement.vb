@@ -81,7 +81,7 @@ Friend Class ChannelValueMeasurement(Of T As IChannelDefinition)
         Get
             Return m_parent.Parent.DataIsValid
         End Get
-        Set(ByVal value As Boolean)
+        Private Set(ByVal value As Boolean)
             Throw New NotImplementedException("Value quality for " & m_parent.InheritedType.Name & " is derived from parent data cell and is hence read-only for channel value measurements")
         End Set
     End Property

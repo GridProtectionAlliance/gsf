@@ -248,11 +248,12 @@ Public MustInherit Class PhasorValueBase
 
     Public Overrides ReadOnly Property Values() As Single()
         Get
-            If CoordinateFormat = Phasors.CoordinateFormat.Rectangular Then
-                Return New Single() {m_real, m_imaginary}
-            Else
-                Return New Single() {Angle, Magnitude}
-            End If
+            ' HACK: fix later!
+            'If CoordinateFormat = Phasors.CoordinateFormat.Rectangular Then
+            'Return New Single() {m_real, m_imaginary}
+            'Else
+            Return New Single() {Angle, Magnitude}
+            'End If
         End Get
     End Property
 
