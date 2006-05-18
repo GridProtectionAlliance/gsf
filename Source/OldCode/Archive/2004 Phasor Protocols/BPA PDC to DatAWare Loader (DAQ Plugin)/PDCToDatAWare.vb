@@ -105,7 +105,7 @@ Namespace PDCToDatAWare
             End Get
         End Property
 
-        Public Sub New(ByVal timeZone As Win32TimeZone, ByVal analogIndices As Integer(), ByVal analogData As Double(,), ByVal digitalIndices As Integer(), ByVal digitalData As UInt16(,))
+        Public Sub New(ByVal analogIndices As Integer(), ByVal analogData As Double(,), ByVal digitalIndices As Integer(), ByVal digitalData As UInt16(,))
 
             Dim rowTime As DateTime
             Dim analogEvents As Integer = analogData.GetLength(0) * (analogIndices.Length - 1)
@@ -118,7 +118,7 @@ Namespace PDCToDatAWare
 
             For x = 0 To analogData.GetLength(0) - 1
                 ' Get analog row time from this analog data set
-                rowTime = timeZone.ToLocalTime((New PMUDate(analogData(x, 0))).ToDateTime)
+                rowTime = (New PMUDate(analogData(x, 0))).ToDateTime
 
                 ' Populate the DatAWare standard event structures for the analog data
                 For y = 1 To analogIndices.Length - 1
@@ -131,7 +131,7 @@ Namespace PDCToDatAWare
 
             For x = 0 To digitalData.GetLength(0) - 1
                 ' Get digital row time from this digital data set
-                rowTime = timeZone.ToLocalTime((New PMUDate(MakeDWord(Convert.ToInt32(digitalData(x, 0)), Convert.ToInt32(digitalData(x, 1))))).ToDateTime)
+                rowTime = (New PMUDate(MakeDWord(Convert.ToInt32(digitalData(x, 0)), Convert.ToInt32(digitalData(x, 1))))).ToDateTime
 
                 ' Populate the DatAWare standard event structures for the digital data
                 For y = 3 To digitalIndices.Length - 1
@@ -153,7 +153,6 @@ Namespace PDCToDatAWare
     <ComVisible(False)> _
     Public Class Converter
 
-        Private timeZone As Win32TimeZone
         Private analogIndices As Integer()
         Private digitalIndices As Integer()
         Private queuedUnits As ArrayList
@@ -162,14 +161,11 @@ Namespace PDCToDatAWare
         Private startTime As Long
         Private stopTime As Long
         Private WithEvents processTimer As Timers.Timer
+
         Public Instance As Integer
 
-        Private m_validAnalogs As New ArrayList
-        Private m_validDigitals As New ArrayList
+        Public Sub New()
 
-        Public Sub New(ByVal timeZone As String)
-
-            Me.timeZone = GetWin32TimeZone(timeZone)
             Me.isProcessing = False
             Me.queuedUnits = New ArrayList
 
@@ -177,7 +173,7 @@ Namespace PDCToDatAWare
 
         Public Sub QueueNewData(ByVal analogData As Double(,), ByVal digitalData As UInt16(,))
 
-            Dim newData As New DataUnit(timeZone, analogIndices, analogData, digitalIndices, digitalData)
+            Dim newData As New DataUnit(analogIndices, analogData, digitalIndices, digitalData)
 
             SyncLock queuedUnits.SyncRoot
                 queuedUnits.Add(newData)
@@ -220,9 +216,6 @@ Namespace PDCToDatAWare
                     analogIndices(x) = -1
                 Else
                     analogIndices(x) = point
-
-                    ' Add point to valid analog point list (used to initialize local database)
-                    m_validAnalogs.Add(point)
                 End If
             Next
 
@@ -234,9 +227,6 @@ Namespace PDCToDatAWare
                     digitalIndices(x) = -1
                 Else
                     digitalIndices(x) = point
-
-                    ' Add point to valid digital point list (used to initialize local database)
-                    m_validDigitals.Add(point)
                 End If
             Next
 
@@ -295,7 +285,7 @@ Namespace PDCToDatAWare
 
             Dim standardEvents As New ArrayList
 
-            For Each de As DictionaryEntry In LoadPointIndexTable(Variables("PDCDataReader.ConfigFile" & Instance))
+            For Each de As DictionaryEntry In LoadPointIndexTable(Variables("PDCDataReader.PointList" & Instance))
                 standardEvents.Add(New StandardEvent(de.Value, New TimeTag(Date.Now), 0.0!))
             Next
 
