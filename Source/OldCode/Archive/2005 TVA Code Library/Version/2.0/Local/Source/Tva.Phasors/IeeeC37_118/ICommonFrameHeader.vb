@@ -22,9 +22,9 @@ Namespace IeeeC37_118
 
         Inherits IChannelFrame
 
-        'Property RevisionNumber() As RevisionNumber
-
         Shadows Property FrameType() As FrameType
+
+        ReadOnly Property FundamentalFrameType() As FundamentalFrameType
 
         Property Version() As Byte
 

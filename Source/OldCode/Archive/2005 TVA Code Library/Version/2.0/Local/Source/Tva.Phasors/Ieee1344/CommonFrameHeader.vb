@@ -144,6 +144,22 @@ Namespace Ieee1344
                 End Get
             End Property
 
+            Public ReadOnly Property IChannelFrameFrameType() As FundamentalFrameType Implements IChannelFrame.FrameType, ICommonFrameHeader.FundamentalFrameType
+                Get
+                    ' Translate IEEE 1344 specific frame type to fundamental frame type
+                    Select Case FrameType
+                        Case Ieee1344.FrameType.DataFrame
+                            Return FundamentalFrameType.DataFrame
+                        Case Ieee1344.FrameType.ConfigurationFrame
+                            Return FundamentalFrameType.ConfigurationFrame
+                        Case Ieee1344.FrameType.HeaderFrame
+                            Return FundamentalFrameType.HeaderFrame
+                        Case Else
+                            Return FundamentalFrameType.Undetermined
+                    End Select
+                End Get
+            End Property
+
             Public ReadOnly Property FrameLength() As Int16 Implements ICommonFrameHeader.FrameLength
                 Get
                     If m_frameQueue IsNot Nothing Then
@@ -229,22 +245,6 @@ Namespace Ieee1344
             Public ReadOnly Property Cells() As Object Implements IChannelFrame.Cells
                 Get
                     Return Nothing
-                End Get
-            End Property
-
-            Private ReadOnly Property IChannelFrameFrameType() As FundamentalFrameType Implements IChannelFrame.FrameType
-                Get
-                    ' Translate IEEE 1344 specific frame type to fundamental frame type
-                    Select Case FrameType
-                        Case Ieee1344.FrameType.DataFrame
-                            Return FundamentalFrameType.DataFrame
-                        Case Ieee1344.FrameType.ConfigurationFrame
-                            Return FundamentalFrameType.ConfigurationFrame
-                        Case Ieee1344.FrameType.HeaderFrame
-                            Return FundamentalFrameType.HeaderFrame
-                        Case Else
-                            Return FundamentalFrameType.Undetermined
-                    End Select
                 End Get
             End Property
 

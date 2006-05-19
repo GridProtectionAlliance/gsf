@@ -30,7 +30,7 @@ Public Class FrameParser
 
 #Region " Public Member Declarations "
 
-    Public Event ReceivedFrameBufferImage(ByVal binaryImage As Byte(), ByVal offset As Integer, ByVal length As Integer)
+    Public Event ReceivedFrameBufferImage(ByVal frameType As FundamentalFrameType, ByVal binaryImage As Byte(), ByVal offset As Integer, ByVal length As Integer)
     Public Event ReceivedConfigurationFrame(ByVal frame As IConfigurationFrame)
     Public Event ReceivedDataFrame(ByVal frame As IDataFrame)
     Public Event ReceivedHeaderFrame(ByVal frame As IHeaderFrame)
@@ -372,13 +372,8 @@ Public Class FrameParser
 
             ' Only the IEEE protocols support commands
             Select Case m_protocol
-                Case Phasors.Protocol.IeeeC37_118V1
-                    With New IeeeC37_118.CommandFrame(IeeeC37_118.ProtocolRevision.Version1, m_pmuID, command)
-                        binaryImage = .BinaryImage
-                        binaryLength = .BinaryLength
-                    End With
-                Case Phasors.Protocol.IeeeC37_118D6
-                    With New IeeeC37_118.CommandFrame(IeeeC37_118.ProtocolRevision.Draft6, m_pmuID, command)
+                Case Phasors.Protocol.IeeeC37_118V1, Phasors.Protocol.IeeeC37_118D6
+                    With New IeeeC37_118.CommandFrame(m_pmuID, command, 1)
                         binaryImage = .BinaryImage
                         binaryLength = .BinaryLength
                     End With
@@ -391,18 +386,6 @@ Public Class FrameParser
                     binaryImage = Nothing
                     binaryLength = 0
             End Select
-
-            'With System.IO.File.CreateText(IO.FilePath.GetApplicationPath & [Enum].GetName(GetType(Command), command) & "Image.txt")
-            '    .WriteLine([Enum].GetName(GetType(Command), command) & " Binary Image - Created: " & Date.Now.ToString)
-            '    .WriteLine("Image Length: " & binaryLength & Environment.NewLine)
-            '    .WriteLine("Hexadecimal Image:")
-            '    .WriteLine(ByteEncoding.Hexadecimal.GetString(binaryImage, " "c))
-            '    .WriteLine("Decimal Image:")
-            '    .WriteLine(ByteEncoding.Decimal.GetString(binaryImage, " "c))
-            '    .WriteLine("Big-endian Binary Image:")
-            '    .WriteLine(ByteEncoding.BigEndianBinary.GetString(binaryImage, " "c))
-            '    .Close()
-            'End With
 
             If binaryLength > 0 Then m_clientStream.Write(binaryImage, 0, binaryLength)
         End If
@@ -677,9 +660,9 @@ Public Class FrameParser
 
     End Sub
 
-    Private Sub m_ieeeC37_118FrameParser_ReceivedFrameBufferImage(ByVal binaryImage() As Byte, ByVal offset As Integer, ByVal length As Integer) Handles m_ieeeC37_118FrameParser.ReceivedFrameBufferImage
+    Private Sub m_ieeeC37_118FrameParser_ReceivedFrameBufferImage(ByVal frameType As FundamentalFrameType, ByVal binaryImage() As Byte, ByVal offset As Integer, ByVal length As Integer) Handles m_ieeeC37_118FrameParser.ReceivedFrameBufferImage
 
-        RaiseEvent ReceivedFrameBufferImage(binaryImage, offset, length)
+        RaiseEvent ReceivedFrameBufferImage(frameType, binaryImage, offset, length)
 
     End Sub
 
@@ -713,9 +696,9 @@ Public Class FrameParser
 
     End Sub
 
-    Private Sub m_ieee1344FrameParser_ReceivedFrameBufferImage(ByVal binaryImage() As Byte, ByVal offset As Integer, ByVal length As Integer) Handles m_ieee1344FrameParser.ReceivedFrameBufferImage
+    Private Sub m_ieee1344FrameParser_ReceivedFrameBufferImage(ByVal frameType As FundamentalFrameType, ByVal binaryImage() As Byte, ByVal offset As Integer, ByVal length As Integer) Handles m_ieee1344FrameParser.ReceivedFrameBufferImage
 
-        RaiseEvent ReceivedFrameBufferImage(binaryImage, offset, length)
+        RaiseEvent ReceivedFrameBufferImage(frameType, binaryImage, offset, length)
 
     End Sub
 

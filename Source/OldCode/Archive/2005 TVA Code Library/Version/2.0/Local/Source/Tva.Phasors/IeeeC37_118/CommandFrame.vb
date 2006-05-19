@@ -67,6 +67,12 @@ Namespace IeeeC37_118
             End Set
         End Property
 
+        Protected Overrides ReadOnly Property FundamentalFrameType() As FundamentalFrameType Implements ICommonFrameHeader.FundamentalFrameType
+            Get
+                Return MyBase.FundamentalFrameType
+            End Get
+        End Property
+
         Public Property Version() As Byte Implements ICommonFrameHeader.Version
             Get
                 Return m_version

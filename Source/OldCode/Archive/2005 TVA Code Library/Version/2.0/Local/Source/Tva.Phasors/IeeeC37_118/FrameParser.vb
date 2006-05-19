@@ -39,7 +39,7 @@ Namespace IeeeC37_118
         Public Event ReceivedDataFrame(ByVal frame As DataFrame)
         Public Event ReceivedHeaderFrame(ByVal frame As HeaderFrame)
         Public Event ReceivedCommandFrame(ByVal frame As CommandFrame)
-        Public Event ReceivedFrameBufferImage(ByVal binaryImage As Byte(), ByVal offset As Integer, ByVal length As Integer)
+        Public Event ReceivedFrameBufferImage(ByVal frameType As FundamentalFrameType, ByVal binaryImage As Byte(), ByVal offset As Integer, ByVal length As Integer)
         Public Event DataStreamException(ByVal ex As Exception)
 
 #End Region
@@ -302,7 +302,7 @@ Namespace IeeeC37_118
                     Exit Do
                 End If
 
-                RaiseEvent ReceivedFrameBufferImage(buffer, index, parsedFrameHeader.FrameLength)
+                RaiseEvent ReceivedFrameBufferImage(parsedFrameHeader.FundamentalFrameType, buffer, index, parsedFrameHeader.FrameLength)
 
                 ' Entire frame is availble, so we go ahead and parse it
                 Select Case parsedFrameHeader.FrameType

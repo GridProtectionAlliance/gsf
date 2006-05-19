@@ -28,6 +28,8 @@ Namespace Ieee1344
 
         Shadows ReadOnly Property FrameType() As FrameType
 
+        ReadOnly Property FundamentalFrameType() As FundamentalFrameType
+
         ReadOnly Property FrameLength() As Int16
 
         ReadOnly Property DataLength() As Int16

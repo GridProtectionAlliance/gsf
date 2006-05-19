@@ -66,6 +66,24 @@ Namespace IeeeC37_118
                 End Set
             End Property
 
+            Public ReadOnly Property FundamentalFrameType() As FundamentalFrameType Implements IChannelFrame.FrameType, ICommonFrameHeader.FundamentalFrameType
+                Get
+                    ' Translate IEEE C37.118 specific frame type to fundamental frame type
+                    Select Case m_frameType
+                        Case IeeeC37_118.FrameType.DataFrame
+                            Return FundamentalFrameType.DataFrame
+                        Case IeeeC37_118.FrameType.ConfigurationFrame1, IeeeC37_118.FrameType.ConfigurationFrame2
+                            Return FundamentalFrameType.ConfigurationFrame
+                        Case IeeeC37_118.FrameType.HeaderFrame
+                            Return FundamentalFrameType.HeaderFrame
+                        Case IeeeC37_118.FrameType.CommandFrame
+                            Return FundamentalFrameType.CommandFrame
+                        Case Else
+                            Return FundamentalFrameType.Undetermined
+                    End Select
+                End Get
+            End Property
+
             Public Property Version() As Byte Implements ICommonFrameHeader.Version
                 Get
                     Return m_version
@@ -168,24 +186,6 @@ Namespace IeeeC37_118
             Public ReadOnly Property Cells() As Object Implements IChannelFrame.Cells
                 Get
                     Return Nothing
-                End Get
-            End Property
-
-            Private ReadOnly Property IChannelFrameFrameType() As FundamentalFrameType Implements IChannelFrame.FrameType
-                Get
-                    ' Translate IEEE C37.118 specific frame type to fundamental frame type
-                    Select Case m_frameType
-                        Case IeeeC37_118.FrameType.DataFrame
-                            Return FundamentalFrameType.DataFrame
-                        Case IeeeC37_118.FrameType.ConfigurationFrame1, IeeeC37_118.FrameType.ConfigurationFrame2
-                            Return FundamentalFrameType.ConfigurationFrame
-                        Case IeeeC37_118.FrameType.HeaderFrame
-                            Return FundamentalFrameType.HeaderFrame
-                        Case IeeeC37_118.FrameType.CommandFrame
-                            Return FundamentalFrameType.CommandFrame
-                        Case Else
-                            Return FundamentalFrameType.Undetermined
-                    End Select
                 End Get
             End Property
 

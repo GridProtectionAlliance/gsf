@@ -148,6 +148,12 @@ Namespace Ieee1344
             End Get
         End Property
 
+        Protected Overrides ReadOnly Property FundamentalFrameType() As FundamentalFrameType Implements ICommonFrameHeader.FundamentalFrameType
+            Get
+                Return MyBase.FundamentalFrameType
+            End Get
+        End Property
+
         Protected Overrides Function CalculateChecksum(ByVal buffer() As Byte, ByVal offset As Int32, ByVal length As Int32) As UInt16
 
             ' IEEE 1344 uses CRC16 to calculate checksum for frames

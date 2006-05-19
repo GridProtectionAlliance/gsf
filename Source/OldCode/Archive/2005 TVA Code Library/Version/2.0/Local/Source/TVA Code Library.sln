@@ -58,9 +58,11 @@ Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "ProtectResource", "Tva.Phas
 EndProject
 Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "ProtectedResourceDecoder", "Tva.Phasors\ProtectedResourceDecoder\ProtectedResourceDecoder.vbproj", "{A4F0413C-4CDF-4B41-AA77-4DA7B9C1C18E}"
 EndProject
+Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "PhasorMeasurementReceiver", "Tva.Phasors\PhasorMeasurementReceiver\PhasorMeasurementReceiver.vbproj", "{0BDCD521-D91F-4E5E-A89A-62A19D2054BE}"
+EndProject
 Global
 	GlobalSection(SourceCodeControl) = preSolution
-		SccNumberOfProjects = 14
+		SccNumberOfProjects = 15
 		SccProjectName0 = \u0022$/TVA\u0020Code\u0020Library/Version/2.0/Local\u0022,\u0020HWHAAAAA
 		SccLocalPath0 = ..
 		SccProvider0 = MSSCCI:Microsoft\u0020Visual\u0020SourceSafe
@@ -131,6 +133,11 @@ Global
 		SccLocalPath13 = ..
 		CanCheckoutShared = false
 		SccProjectFilePathRelativizedFromConnection13 = Source\\Tva.Phasors\\ProtectedResourceDecoder\\
+		SccProjectUniqueName14 = Tva.Phasors\\PhasorMeasurementReceiver\\PhasorMeasurementReceiver.vbproj
+		SccProjectTopLevelParentUniqueName14 = TVA\u0020Code\u0020Library.sln
+		SccLocalPath14 = ..
+		CanCheckoutShared = false
+		SccProjectFilePathRelativizedFromConnection14 = Source\\Tva.Phasors\\PhasorMeasurementReceiver\\
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -267,6 +274,16 @@ Global
 		{A4F0413C-4CDF-4B41-AA77-4DA7B9C1C18E}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{A4F0413C-4CDF-4B41-AA77-4DA7B9C1C18E}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{A4F0413C-4CDF-4B41-AA77-4DA7B9C1C18E}.Release|Win32.ActiveCfg = Release|Any CPU
+		{0BDCD521-D91F-4E5E-A89A-62A19D2054BE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0BDCD521-D91F-4E5E-A89A-62A19D2054BE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0BDCD521-D91F-4E5E-A89A-62A19D2054BE}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{0BDCD521-D91F-4E5E-A89A-62A19D2054BE}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{0BDCD521-D91F-4E5E-A89A-62A19D2054BE}.Debug|Win32.ActiveCfg = Debug|Any CPU
+		{0BDCD521-D91F-4E5E-A89A-62A19D2054BE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0BDCD521-D91F-4E5E-A89A-62A19D2054BE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0BDCD521-D91F-4E5E-A89A-62A19D2054BE}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{0BDCD521-D91F-4E5E-A89A-62A19D2054BE}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{0BDCD521-D91F-4E5E-A89A-62A19D2054BE}.Release|Win32.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -289,5 +306,6 @@ Global
 		{CAC01EDA-DC3D-41FB-9F4A-228035E69012} = {DC7668BE-7A7E-4429-9E1C-02E26EC86922}
 		{36E05B5E-3209-4097-9A6F-CE96749C181E} = {DC7668BE-7A7E-4429-9E1C-02E26EC86922}
 		{A4F0413C-4CDF-4B41-AA77-4DA7B9C1C18E} = {DC7668BE-7A7E-4429-9E1C-02E26EC86922}
+		{0BDCD521-D91F-4E5E-A89A-62A19D2054BE} = {DC7668BE-7A7E-4429-9E1C-02E26EC86922}
 	EndGlobalSection
 EndGlobal

@@ -82,6 +82,12 @@ Namespace Ieee1344
             End Get
         End Property
 
+        Protected Overrides ReadOnly Property FundamentalFrameType() As FundamentalFrameType Implements ICommonFrameHeader.FundamentalFrameType
+            Get
+                Return MyBase.FundamentalFrameType
+            End Get
+        End Property
+
         Public ReadOnly Property FrameLength() As Int16 Implements ICommonFrameHeader.FrameLength
             Get
                 Return CommonFrameHeader.FrameLength(Me)
