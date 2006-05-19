@@ -25,20 +25,18 @@ Namespace IeeeC37_118
         Inherits HeaderFrameBase
         Implements ICommonFrameHeader
 
-        Private m_revisionNumber As RevisionNumber
         Private m_version As Byte
 
         Public Sub New()
 
-            MyClass.New(IeeeC37_118.RevisionNumber.RevisionV1)
+            MyClass.New(IeeeC37_118.ProtocolRevision.Version1)
 
         End Sub
 
-        Public Sub New(ByVal revisionNumber As RevisionNumber)
+        Public Sub New(ByVal version As Byte)
 
             MyBase.New(New HeaderCellCollection(MaximumHeaderDataLength))
-            m_revisionNumber = revisionNumber
-            m_version = IIf(Of Byte)(m_revisionNumber <= IeeeC37_118.RevisionNumber.RevisionV1, 1, 2)
+            m_version = version
 
         End Sub
 
@@ -61,15 +59,6 @@ Namespace IeeeC37_118
             Get
                 Return Me.GetType()
             End Get
-        End Property
-
-        Public Property RevisionNumber() As RevisionNumber Implements ICommonFrameHeader.RevisionNumber
-            Get
-                Return m_revisionNumber
-            End Get
-            Set(ByVal Value As RevisionNumber)
-                m_revisionNumber = Value
-            End Set
         End Property
 
         Public Property FrameType() As FrameType Implements ICommonFrameHeader.FrameType

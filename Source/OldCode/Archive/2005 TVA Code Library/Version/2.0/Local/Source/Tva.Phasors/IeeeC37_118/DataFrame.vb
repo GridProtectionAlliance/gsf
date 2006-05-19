@@ -59,17 +59,6 @@ Namespace IeeeC37_118
             End Get
         End Property
 
-        Public Property RevisionNumber() As RevisionNumber Implements ICommonFrameHeader.RevisionNumber
-            Get
-                Return ConfigurationFrame.RevisionNumber
-            End Get
-            Private Set(ByVal value As RevisionNumber)
-                ' Revision number is readonly for data frames - we don't throw an exception here if someone attempts to change
-                ' the revision number on a data frame (e.g., the CommonFrameHeader.Clone method will attempt to copy this property)
-                ' but we don't do anything with the value either.
-            End Set
-        End Property
-
         Public Property FrameType() As FrameType Implements ICommonFrameHeader.FrameType
             Get
                 Return IeeeC37_118.FrameType.DataFrame

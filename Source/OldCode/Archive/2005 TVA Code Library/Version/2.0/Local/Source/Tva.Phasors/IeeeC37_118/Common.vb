@@ -18,11 +18,11 @@
 Namespace IeeeC37_118
 
     ''' <summary>Protocol revision number</summary>
-    Public Enum RevisionNumber As Byte
+    Public Enum ProtocolRevision As Byte
         ''' <summary>Draft 6</summary>
-        RevisionD6 = 0
+        Draft6 = 0
         ''' <summary>Version 1.0</summary>
-        RevisionV1 = 1
+        Version1 = 1
     End Enum
 
     ''' <summary>Data format flags</summary>

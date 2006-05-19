@@ -113,6 +113,7 @@
     <Compile Include="Ieee1344\FrequencyDefinition.vb" />
     <Compile Include="Ieee1344\FrequencyValue.vb" />
     <Compile Include="Ieee1344\ICommonFrameHeader.vb" />
+    <Compile Include="IeeeC37_118\ConfigurationFrameDraft6.vb" />
     <Compile Include="IeeeC37_118\HeaderFrame.vb" />
     <Compile Include="IHeaderFrameParsingState.vb" />
     <Compile Include="HeaderFrameBase.vb" />

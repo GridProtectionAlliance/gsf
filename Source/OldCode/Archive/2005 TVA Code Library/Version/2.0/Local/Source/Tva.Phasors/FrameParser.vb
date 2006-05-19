@@ -175,10 +175,10 @@ Public Class FrameParser
             ' Instantiate protocol specific frame parser
             Select Case m_protocol
                 Case Phasors.Protocol.IeeeC37_118V1
-                    m_ieeeC37_118FrameParser = New IeeeC37_118.FrameParser(IeeeC37_118.RevisionNumber.RevisionV1)
+                    m_ieeeC37_118FrameParser = New IeeeC37_118.FrameParser(IeeeC37_118.ProtocolRevision.Version1)
                     m_ieeeC37_118FrameParser.Start()
                 Case Phasors.Protocol.IeeeC37_118D6
-                    m_ieeeC37_118FrameParser = New IeeeC37_118.FrameParser(IeeeC37_118.RevisionNumber.RevisionD6)
+                    m_ieeeC37_118FrameParser = New IeeeC37_118.FrameParser(IeeeC37_118.ProtocolRevision.Draft6)
                     m_ieeeC37_118FrameParser.Start()
                 Case Phasors.Protocol.Ieee1344
                     m_ieee1344FrameParser = New Ieee1344.FrameParser
@@ -373,12 +373,12 @@ Public Class FrameParser
             ' Only the IEEE protocols support commands
             Select Case m_protocol
                 Case Phasors.Protocol.IeeeC37_118V1
-                    With New IeeeC37_118.CommandFrame(IeeeC37_118.RevisionNumber.RevisionV1, m_pmuID, command)
+                    With New IeeeC37_118.CommandFrame(IeeeC37_118.ProtocolRevision.Version1, m_pmuID, command)
                         binaryImage = .BinaryImage
                         binaryLength = .BinaryLength
                     End With
                 Case Phasors.Protocol.IeeeC37_118D6
-                    With New IeeeC37_118.CommandFrame(IeeeC37_118.RevisionNumber.RevisionD6, m_pmuID, command)
+                    With New IeeeC37_118.CommandFrame(IeeeC37_118.ProtocolRevision.Draft6, m_pmuID, command)
                         binaryImage = .BinaryImage
                         binaryLength = .BinaryLength
                     End With

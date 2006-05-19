@@ -46,7 +46,7 @@ Namespace IeeeC37_118
 
 #Region " Private Member Declarations "
 
-        Private m_revisionNumber As RevisionNumber
+        Private m_revisionNumber As ProtocolRevision
         Private WithEvents m_bufferQueue As ProcessQueue(Of Byte())
         Private m_dataStream As MemoryStream
         Private m_configurationFrame2 As ConfigurationFrame
@@ -60,18 +60,18 @@ Namespace IeeeC37_118
         Public Sub New()
 
             m_bufferQueue = ProcessQueue(Of Byte()).CreateRealTimeQueue(AddressOf ProcessBuffer)
-            m_revisionNumber = IeeeC37_118.RevisionNumber.RevisionV1
+            m_revisionNumber = IeeeC37_118.ProtocolRevision.Version1
 
         End Sub
 
-        Public Sub New(ByVal revisionNumber As RevisionNumber)
+        Public Sub New(ByVal revisionNumber As ProtocolRevision)
 
             MyClass.New()
             m_revisionNumber = revisionNumber
 
         End Sub
 
-        Public Sub New(ByVal revisionNumber As RevisionNumber, ByVal configurationFrame2 As ConfigurationFrame)
+        Public Sub New(ByVal revisionNumber As ProtocolRevision, ByVal configurationFrame2 As ConfigurationFrame)
 
             MyClass.New(revisionNumber)
             m_configurationFrame2 = configurationFrame2
@@ -82,11 +82,11 @@ Namespace IeeeC37_118
 
 #Region " Public Methods Implementation "
 
-        Public Property RevisionNumber() As RevisionNumber
+        Public Property RevisionNumber() As ProtocolRevision
             Get
                 Return m_revisionNumber
             End Get
-            Set(ByVal Value As RevisionNumber)
+            Set(ByVal Value As ProtocolRevision)
                 m_revisionNumber = Value
             End Set
         End Property
@@ -176,7 +176,7 @@ Namespace IeeeC37_118
             Get
                 With New StringBuilder
                     .Append("   C37.118 Revision number: ")
-                    .Append([Enum].GetName(GetType(RevisionNumber), m_revisionNumber))
+                    .Append([Enum].GetName(GetType(ProtocolRevision), m_revisionNumber))
                     .Append(Environment.NewLine)
                     .Append("     Received config frame: ")
                     .Append(IIf(m_configurationFrame2 Is Nothing, "No", "Yes"))
@@ -289,7 +289,7 @@ Namespace IeeeC37_118
                 End If
 
                 ' Parse frame header
-                parsedFrameHeader = CommonFrameHeader.ParseBinaryImage(m_revisionNumber, m_configurationFrame2, buffer, index)
+                parsedFrameHeader = CommonFrameHeader.ParseBinaryImage(m_configurationFrame2, buffer, index)
 
                 ' Until we receive configuration frame, we at least expose part of frame we have parsed
                 If m_configurationFrame2 Is Nothing Then RaiseEvent ReceivedCommonFrameHeader(parsedFrameHeader)
@@ -310,12 +310,25 @@ Namespace IeeeC37_118
                         ' We can only start parsing data frames once we have successfully received configuration file 2...
                         If m_configurationFrame2 IsNot Nothing Then RaiseEvent ReceivedDataFrame(New DataFrame(parsedFrameHeader, m_configurationFrame2, buffer, index))
                     Case FrameType.ConfigurationFrame2
-                        With New ConfigurationFrame(parsedFrameHeader, buffer, index)
-                            m_configurationFrame2 = .This
-                            RaiseEvent ReceivedConfigurationFrame2(.This)
-                        End With
+                        Select Case m_revisionNumber
+                            Case ProtocolRevision.Draft6
+                                With New ConfigurationFrameDraft6(parsedFrameHeader, buffer, index)
+                                    m_configurationFrame2 = .This
+                                    RaiseEvent ReceivedConfigurationFrame2(.This)
+                                End With
+                            Case ProtocolRevision.Version1
+                                With New ConfigurationFrame(parsedFrameHeader, buffer, index)
+                                    m_configurationFrame2 = .This
+                                    RaiseEvent ReceivedConfigurationFrame2(.This)
+                                End With
+                        End Select
                     Case FrameType.ConfigurationFrame1
-                        RaiseEvent ReceivedConfigurationFrame1(New ConfigurationFrame(parsedFrameHeader, buffer, index))
+                        Select Case m_revisionNumber
+                            Case ProtocolRevision.Draft6
+                                RaiseEvent ReceivedConfigurationFrame1(New ConfigurationFrameDraft6(parsedFrameHeader, buffer, index))
+                            Case ProtocolRevision.Version1
+                                RaiseEvent ReceivedConfigurationFrame1(New ConfigurationFrame(parsedFrameHeader, buffer, index))
+                        End Select
                     Case FrameType.HeaderFrame
                         RaiseEvent ReceivedHeaderFrame(New HeaderFrame(parsedFrameHeader, buffer, index))
                     Case FrameType.CommandFrame

@@ -32,19 +32,12 @@ Namespace IeeeC37_118
 
             Implements ICommonFrameHeader
 
-            Private m_revisionNumber As RevisionNumber
             Private m_frameType As FrameType
             Private m_version As Byte
             Private m_frameLength As Int16
             Private m_idCode As UInt16
             Private m_ticks As Long
             Private m_timeQualityFlags As Int32
-
-            Public Sub New(ByVal revisionNumber As RevisionNumber)
-
-                m_revisionNumber = revisionNumber
-
-            End Sub
 
             Public ReadOnly Property This() As IChannel Implements IChannel.This
                 Get
@@ -62,15 +55,6 @@ Namespace IeeeC37_118
                 Get
                     Return Me.GetType()
                 End Get
-            End Property
-
-            Public Property RevisionNumber() As RevisionNumber Implements ICommonFrameHeader.RevisionNumber
-                Get
-                    Return m_revisionNumber
-                End Get
-                Set(ByVal Value As RevisionNumber)
-                    m_revisionNumber = Value
-                End Set
             End Property
 
             Public Property FrameType() As FrameType Implements ICommonFrameHeader.FrameType
@@ -260,11 +244,11 @@ Namespace IeeeC37_118
 
         End Sub
 
-        Public Shared Function ParseBinaryImage(ByVal revisionNumber As RevisionNumber, ByVal configurationFrame As ConfigurationFrame, ByVal binaryImage As Byte(), ByVal startIndex As Int32) As ICommonFrameHeader
+        Public Shared Function ParseBinaryImage(ByVal configurationFrame As ConfigurationFrame, ByVal binaryImage As Byte(), ByVal startIndex As Int32) As ICommonFrameHeader
 
             If binaryImage(startIndex) <> SyncByte Then Throw New InvalidOperationException("Bad Data Stream: Expected sync byte &HAA as first byte in IEEE C37.118 frame, got " & binaryImage(startIndex).ToString("x"c).PadLeft(2, "0"c))
 
-            With New CommonFrameHeaderInstance(revisionNumber)
+            With New CommonFrameHeaderInstance
                 ' Strip out frame type and version information...
                 .FrameType = (binaryImage(startIndex + 1) And Not FrameType.VersionNumberMask)
                 .Version = (binaryImage(startIndex + 1) And FrameType.VersionNumberMask)
@@ -309,7 +293,6 @@ Namespace IeeeC37_118
         Public Shared Sub Clone(ByVal sourceFrameHeader As ICommonFrameHeader, ByVal destinationFrameHeader As ICommonFrameHeader)
 
             With destinationFrameHeader
-                .RevisionNumber = sourceFrameHeader.RevisionNumber
                 .FrameType = sourceFrameHeader.FrameType
                 .Version = sourceFrameHeader.Version
                 .FrameLength = sourceFrameHeader.FrameLength

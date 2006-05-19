@@ -28,20 +28,18 @@ Namespace IeeeC37_118
         Inherits ConfigurationFrameBase
         Implements ICommonFrameHeader
 
-        Private m_revisionNumber As RevisionNumber
         Private m_frameType As FrameType
         Private m_version As Byte
         Private m_timeBase As Int32
         Private m_timeQualityFlags As Int32
         Private m_configurationRevision As UInt16
 
-        Public Sub New(ByVal revisionNumber As RevisionNumber, ByVal frameType As FrameType, ByVal timeBase As Int32, ByVal idCode As Int16, ByVal ticks As Long, ByVal frameRate As Int16)
+        Public Sub New(ByVal frameType As FrameType, ByVal timeBase As Int32, ByVal idCode As Int16, ByVal ticks As Long, ByVal frameRate As Int16, ByVal version As Byte)
 
             MyBase.New(idCode, New ConfigurationCellCollection, ticks, frameRate)
-            m_revisionNumber = revisionNumber
             Me.FrameType = frameType
             m_timeBase = timeBase
-            m_version = IIf(Of Byte)(m_revisionNumber <= IeeeC37_118.RevisionNumber.RevisionV1, 1, 2)
+            m_version = version
 
         End Sub
 
@@ -72,13 +70,10 @@ Namespace IeeeC37_118
             End Get
         End Property
 
-        Public Property RevisionNumber() As RevisionNumber Implements ICommonFrameHeader.RevisionNumber
+        Public Overridable ReadOnly Property RevisionNumber() As ProtocolRevision
             Get
-                Return m_revisionNumber
+                Return IeeeC37_118.ProtocolRevision.Version1
             End Get
-            Set(ByVal Value As RevisionNumber)
-                m_revisionNumber = Value
-            End Set
         End Property
 
         Public Property FrameType() As FrameType Implements ICommonFrameHeader.FrameType
@@ -210,7 +205,7 @@ Namespace IeeeC37_118
 
         Protected Overrides ReadOnly Property FooterLength() As UInt16
             Get
-                If m_revisionNumber = RevisionNumber.RevisionD6 Then
+                If RevisionNumber = ProtocolRevision.Draft6 Then
                     Return 2
                 Else
                     Return 4
@@ -224,7 +219,7 @@ Namespace IeeeC37_118
 
                 EndianOrder.BigEndian.CopyBytes(FrameRate, buffer, 0)
 
-                If m_revisionNumber > RevisionNumber.RevisionD6 Then
+                If RevisionNumber > ProtocolRevision.Draft6 Then
                     ' Add configuration revision count for version 7 and beyond
                     EndianOrder.BigEndian.CopyBytes(m_configurationRevision, buffer, 2)
                 End If
@@ -238,7 +233,7 @@ Namespace IeeeC37_118
             FrameRate = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex)
 
             ' Parse out configuration revision count for version 7 and beyond
-            If m_revisionNumber > RevisionNumber.RevisionD6 Then
+            If RevisionNumber > ProtocolRevision.Draft6 Then
                 startIndex += 2
                 m_configurationRevision = EndianOrder.BigEndian.ToUInt16(binaryImage, startIndex)
             End If

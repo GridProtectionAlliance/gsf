@@ -72,7 +72,7 @@ Namespace IeeeC37_118
 
         Public ReadOnly Property LabelCount() As Int32
             Get
-                If Parent.Parent.RevisionNumber = RevisionNumber.RevisionD6 Then
+                If Parent.Parent.RevisionNumber = ProtocolRevision.Draft6 Then
                     Return 1
                 Else
                     Return 16
@@ -85,12 +85,12 @@ Namespace IeeeC37_118
         ''' <remarks>In the final version of the protocol each digital bit can be labeled, but we read them out as one big string in the "Label" property so this property allows individual access to each label</remarks>
         Public Property Labels(ByVal index As Int32) As String
             Get
-                If index < 0 Or index >= LabelCount Then Throw New IndexOutOfRangeException("Invalid label index specified.  Note that there are " & LabelCount & " labels per digital available in " & [Enum].GetName(GetType(RevisionNumber), Parent.Parent.RevisionNumber) & " of the IEEE C37.118 protocol")
+                If index < 0 Or index >= LabelCount Then Throw New IndexOutOfRangeException("Invalid label index specified.  Note that there are " & LabelCount & " labels per digital available in " & [Enum].GetName(GetType(ProtocolRevision), Parent.Parent.RevisionNumber) & " of the IEEE C37.118 protocol")
 
                 Return Label.PadRight(MaximumLabelLength).Substring(index * 16, MaximumLabelLength).Trim()
             End Get
             Set(ByVal value As String)
-                If index < 0 Or index >= LabelCount Then Throw New IndexOutOfRangeException("Invalid label index specified.  Note that there are " & LabelCount & " labels per digital available in " & [Enum].GetName(GetType(RevisionNumber), Parent.Parent.RevisionNumber) & " of the IEEE C37.118 protocol")
+                If index < 0 Or index >= LabelCount Then Throw New IndexOutOfRangeException("Invalid label index specified.  Note that there are " & LabelCount & " labels per digital available in " & [Enum].GetName(GetType(ProtocolRevision), Parent.Parent.RevisionNumber) & " of the IEEE C37.118 protocol")
 
                 If value.Trim().Length > MyBase.MaximumLabelLength Then
                     Throw New OverflowException("Label length cannot exceed " & MyBase.MaximumLabelLength)
