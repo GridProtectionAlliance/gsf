@@ -88,7 +88,7 @@ Public Class PhasorMeasurementMapper
 
     Private Sub UpdateStatus(ByVal message As String)
 
-        RaiseEvent ParsingStatus(message & Environment.NewLine)
+        RaiseEvent ParsingStatus(message)
 
     End Sub
 

@@ -41,6 +41,7 @@ Public Class PhasorMeasurementReceiver
     Private m_clientStream As NetworkStream
     Private m_socketThread As Thread
     Private m_maximumEvents As Integer
+    Private m_useTimeout As Boolean
     Private m_bufferSize As Integer
     Private m_pollEvents As Long
     Private m_processedMeasurements As Long
@@ -65,6 +66,7 @@ Public Class PhasorMeasurementReceiver
         With Registry.LocalMachine.OpenSubKey("SOFTWARE\DatAWare\Interface Configuration")
             m_archiverPort = .GetValue("ArchiverPort", 1002)
             m_maximumEvents = .GetValue("MaxPktSize", 50)
+            m_useTimeout = Convert.ToBoolean(Convert.ToInt32(.GetValue("UseTimeout", -1)))
             .Close()
         End With
 
@@ -125,14 +127,13 @@ Public Class PhasorMeasurementReceiver
 
         Dim buffer As Byte() = CreateArray(Of Byte)(m_bufferSize)
         Dim events As StandardEvent()
+        Dim received As Integer
+        Dim response As String
 
         ' Enter the data read loop
         Do While True
             Try
                 If Not m_initializing Then
-                    m_pollEvents += 1
-                    If m_pollEvents Mod 5000 = 0 Then UpdateStatus(m_pollEvents & " data polls have been processed...")
-
                     Do
                         events = LoadEvents()
 
@@ -144,12 +145,23 @@ Public Class PhasorMeasurementReceiver
 
                             ' Post data to TCP stream
                             m_clientStream.Write(buffer, 0, events.Length * StandardEvent.BinaryLength)
+
+                            If m_useTimeout Then
+                                ' Wait for acknowledgement...
+                                received = m_clientStream.Read(buffer, 0, buffer.Length)
+
+                                ' Interpret response as a string
+                                response = Encoding.Default.GetString(buffer, 0, received)
+
+                                ' Verify archiver response
+                                If Not response.StartsWith("ACK", True, Nothing) Then Throw New InvalidOperationException("DatAWare archiver failed to acknowledge packet transmission: " & response)
+                            Else
+                                ' We sleep between data polls to prevent CPU loading
+                                Thread.Sleep(1)
+                            End If
                         End If
                     Loop While m_measurementBuffer.Count > 0
                 End If
-
-                ' We sleep between data polls to prevent CPU loading
-                Thread.Sleep(100)
             Catch ex As ThreadAbortException
                 ' If we received an abort exception, we'll egress gracefully
                 Exit Do
@@ -218,10 +230,11 @@ Public Class PhasorMeasurementReceiver
                         .HostIP = row("IPAddress")
                         .Port = row("IPPort")
                         .PmuID = row("AccessID")
+                        .SourceName = source
                     End With
 
                     If row("IsConcentrator") = 1 Then
-                        UpdateStatus("Loading excepted PMU list for """ & source & """:")
+                        UpdateStatus("Loading expected PMU list for """ & source & """:")
 
                         ' Making a connection to a concentrator - this may support multiple PMU's
                         With RetrieveData("SELECT PMUID FROM IEEEDataConnectionPMUs WHERE PDCID='" & source & "' ORDER BY PMUIndex", connection)
@@ -246,6 +259,12 @@ Public Class PhasorMeasurementReceiver
                             End With
                         Case "AEP"
                             With New AEPPhasorMeasurementMapper(parser, source, pmuIDs, measurementIDs)
+                                AddHandler .ParsingStatus, AddressOf UpdateStatus
+                                m_mappers.Add(source, .This)
+                                .Connect()
+                            End With
+                        Case "ARPN"
+                            With New ATCPhasorMeasurementMapper(parser, source, pmuIDs, measurementIDs)
                                 AddHandler .ParsingStatus, AddressOf UpdateStatus
                                 m_mappers.Add(source, .This)
                                 .Connect()
@@ -338,6 +357,7 @@ Public Class PhasorMeasurementReceiver
 
         If newLine Then
             Console.WriteLine(status)
+            Console.WriteLine()
         Else
             Console.Write(status)
         End If

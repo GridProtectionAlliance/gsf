@@ -102,38 +102,44 @@ Module MainModule
 
     Private Function TryGetMapper(ByVal consoleLine As String, ByRef mapper As PhasorMeasurementMapper) As Boolean
 
-        Dim pmuID As String = RemoveDuplicateWhiteSpace(consoleLine).Split(" "c)(1)
+        Try
+            Dim pmuID As String = RemoveDuplicateWhiteSpace(consoleLine).Split(" "c)(1)
 
-        If m_receiver.Mappers.TryGetValue(pmuID, mapper) Then
-            Return True
-        Else
-            Console.WriteLine("Failed to find a PMU or PDC in the connection list named """ & pmuID & """, type ""List"" to see avaialable list.")
-        End If
+            If m_receiver.Mappers.TryGetValue(pmuID, mapper) Then
+                Return True
+            Else
+                Console.WriteLine("Failed to find a PMU or PDC in the connection list named """ & pmuID & """, type ""List"" to see avaialable list.")
+                Return False
+            End If
+        Catch ex As Exception
+            Console.WriteLine("Failed to lookup specified mapper due to exception: " & ex.Message)
+            Return False
+        End Try
 
     End Function
 
     Private ReadOnly Property MonitorInformation() As String
         Get
             With New StringBuilder
-                .Append(ExecutingAssembly.Title)
+                .Append(EntryAssembly.Title)
                 .Append(Environment.NewLine)
                 .Append("   Assembly: ")
-                .Append(ExecutingAssembly.Name)
+                .Append(EntryAssembly.Name)
                 .Append(Environment.NewLine)
                 .Append("    Version: ")
-                .Append(ExecutingAssembly.Version)
+                .Append(EntryAssembly.Version)
                 .Append(Environment.NewLine)
                 .Append("   Location: ")
-                .Append(ExecutingAssembly.Location)
+                .Append(EntryAssembly.Location)
                 .Append(Environment.NewLine)
                 .Append("    Created: ")
-                .Append(ExecutingAssembly.BuildDate)
+                .Append(EntryAssembly.BuildDate)
                 .Append(Environment.NewLine)
                 .Append("    NT User: ")
                 .Append(WindowsIdentity.GetCurrent.Name)
                 .Append(Environment.NewLine)
                 .Append("    Runtime: ")
-                .Append(ExecutingAssembly.ImageRuntimeVersion)
+                .Append(EntryAssembly.ImageRuntimeVersion)
                 .Append(Environment.NewLine)
                 .Append("    Started: ")
                 .Append(DateTime.Now.ToString())
