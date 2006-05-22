@@ -72,6 +72,7 @@ Public Class FrameParser
     Private m_byteRateTotal As Int32
     Private m_frameRate As Double
     Private m_byteRate As Double
+    Private m_sourceName As String
 
 #End Region
 
@@ -159,6 +160,25 @@ Public Class FrameParser
         End Set
     End Property
 
+    Public Property SourceName() As String
+        Get
+            Return m_sourceName
+        End Get
+        Set(ByVal value As String)
+            m_sourceName = value
+        End Set
+    End Property
+
+    Public ReadOnly Property ConnectionName() As String
+        Get
+            If m_sourceName Is Nothing Then
+                Return PmuID & " (" & HostIP & ":" & Port & ")"
+            Else
+                Return m_sourceName & ", ID " & PmuID & " (" & HostIP & ":" & Port & ")"
+            End If
+        End Get
+    End Property
+
     Public Sub Connect()
 
         Disconnect()
@@ -169,7 +189,7 @@ Public Class FrameParser
         m_frameRate = 0.0#
         m_byteRate = 0.0#
 
-        UpdateStatus("Attepting " & [Enum].GetName(GetType(Protocol), m_protocol) & " " & [Enum].GetName(GetType(DataTransportLayer), m_transportLayer) & " based connection to PMU " & PmuID & " (" & HostIP & ":" & Port & ")")
+        UpdateStatus("Attepting " & [Enum].GetName(GetType(Protocol), m_protocol) & " " & [Enum].GetName(GetType(DataTransportLayer), m_transportLayer) & " based connection to PDC/PMU " & ConnectionName)
 
         Try
             ' Instantiate protocol specific frame parser
@@ -195,7 +215,7 @@ Public Class FrameParser
                     If String.IsNullOrEmpty(m_hostIP) Then Throw New InvalidOperationException("Cannot start TCP stream listener without specifing a host IP")
                     If m_port = 0 Then Throw New InvalidOperationException("Cannot start TCP stream listener without specifing a port")
 
-                    ' Connect to PMU using TCP
+                    ' Connect to PDC/PMU using TCP
                     m_tcpSocket = New TcpClient
                     m_tcpSocket.ReceiveBufferSize = m_bufferSize
                     m_tcpSocket.Connect(m_hostIP, m_port)
@@ -208,7 +228,7 @@ Public Class FrameParser
                     ' Validate minimal connection parameters required for UDP connection
                     If m_port = 0 Then Throw New InvalidOperationException("Cannot start UDP stream listener without specifing a valid port")
 
-                    ' Connect to PMU using UDP (just listening to incoming stream on specified port)
+                    ' Connect to PDC/PMU using UDP (just listening to incoming stream on specified port)
                     m_udpSocket = New Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp)
                     m_receptionPoint = CType(New IPEndPoint(IPAddress.Any, m_port), System.Net.EndPoint)
                     m_udpSocket.ReceiveBufferSize = m_bufferSize
@@ -231,7 +251,7 @@ Public Class FrameParser
 
     Public Sub Disconnect()
 
-        If Enabled Then UpdateStatus("Disconnecting from PMU " & PmuID & " (" & HostIP & ":" & Port & ")")
+        If Enabled Then UpdateStatus("Disconnecting from PDC/PMU " & ConnectionName)
 
         m_rateCalcTimer.Enabled = False
 
@@ -368,7 +388,7 @@ Public Class FrameParser
             Dim binaryImage As Byte()
             Dim binaryLength As Int32
 
-            UpdateStatus("Sending command """ & [Enum].GetName(GetType(Command), command) & """ to PMU " & PmuID & " (" & HostIP & ":" & Port & ")")
+            UpdateStatus("Sending command """ & [Enum].GetName(GetType(Command), command) & """ to PDC/PMU " & ConnectionName)
 
             ' Only the IEEE protocols support commands
             Select Case m_protocol
@@ -395,20 +415,14 @@ Public Class FrameParser
     Public ReadOnly Property Status() As String
         Get
             With New StringBuilder
+                .Append("     PDC/PMU Connection ID: ")
+                .Append(ConnectionName)
+                .Append(Environment.NewLine)
                 .Append("      Data transport layer: ")
                 .Append([Enum].GetName(GetType(DataTransportLayer), TransportLayer))
                 .Append(Environment.NewLine)
                 .Append("                  Protocol: ")
                 .Append([Enum].GetName(GetType(Protocol), Protocol))
-                .Append(Environment.NewLine)
-                .Append("                   Host IP: ")
-                .Append(HostIP)
-                .Append(Environment.NewLine)
-                .Append("                      Port: ")
-                .Append(Port)
-                .Append(Environment.NewLine)
-                .Append("                    PMU ID: ")
-                .Append(PmuID)
                 .Append(Environment.NewLine)
                 .Append("               Buffer size: ")
                 .Append(BufferSize)
