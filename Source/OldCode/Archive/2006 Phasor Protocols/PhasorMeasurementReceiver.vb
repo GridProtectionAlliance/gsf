@@ -33,6 +33,8 @@ Imports Tva.Measurements
 
 Public Class PhasorMeasurementReceiver
 
+    Public Event StatusMessage(ByVal status As String)
+
     Private WithEvents m_connectionTimer As Timers.Timer
     Private m_connectString As String
     Private m_archiverIP As String
@@ -47,7 +49,6 @@ Public Class PhasorMeasurementReceiver
     Private m_processedMeasurements As Long
     Private m_mappers As Dictionary(Of String, PhasorMeasurementMapper)
     Private m_measurementBuffer As List(Of IMeasurement)
-    Private m_initializing As Boolean
 
     Public Sub New(ByVal archiverIP As String, ByVal connectString As String)
 
@@ -58,7 +59,7 @@ Public Class PhasorMeasurementReceiver
 
         With m_connectionTimer
             .AutoReset = False
-            .Interval = 4000
+            .Interval = 1
             .Enabled = False
         End With
 
@@ -75,8 +76,6 @@ Public Class PhasorMeasurementReceiver
 
         m_bufferSize = StandardEvent.BinaryLength * m_maximumEvents
 
-        Connect()
-
     End Sub
 
     Public Sub Connect()
@@ -91,94 +90,41 @@ Public Class PhasorMeasurementReceiver
 
     Public Sub Disconnect()
 
-        If m_socketThread IsNot Nothing Then m_socketThread.Abort()
-        m_socketThread = Nothing
-
-        If m_tcpSocket IsNot Nothing Then m_tcpSocket.Close()
-        m_tcpSocket = Nothing
-
-        m_clientStream = Nothing
-
-    End Sub
-
-    Private Sub m_connectionTimer_Elapsed(ByVal sender As Object, ByVal e As System.Timers.ElapsedEventArgs) Handles m_connectionTimer.Elapsed
-
         Try
-            UpdateStatus("Starting connection attempt to DatAWare Archiver """ & m_archiverIP & ":" & m_archiverPort & """...")
+            If m_socketThread IsNot Nothing AndAlso m_socketThread.IsAlive Then m_socketThread.Abort()
+            m_socketThread = Nothing
 
-            ' Connect to DatAWare archiver using TCP
-            m_tcpSocket = New TcpClient
-            m_tcpSocket.Connect(m_archiverIP, m_archiverPort)
-            m_clientStream = m_tcpSocket.GetStream()
+            If m_tcpSocket IsNot Nothing AndAlso m_tcpSocket.Connected Then m_tcpSocket.Close()
+            m_tcpSocket = Nothing
 
-            ' Start listening to TCP data stream
-            m_socketThread = New Thread(AddressOf ProcessTcpStream)
-            m_socketThread.Start()
-
-            UpdateStatus("Connection to DatAWare Archiver """ & m_archiverIP & ":" & m_archiverPort & """ established.")
+            m_clientStream = Nothing
         Catch ex As Exception
-            UpdateStatus("Connection to DatAWare Archiver """ & m_archiverIP & ":" & m_archiverPort & """ failed: " & ex.Message)
-            Connect()
+            UpdateStatus("Exception occured during disconnect from Archiver: " & ex.Message)
         End Try
 
     End Sub
 
-    Private Sub ProcessTcpStream()
+    Public Sub DisconnectAll()
 
-        Dim buffer As Byte() = CreateArray(Of Byte)(m_bufferSize)
-        Dim events As StandardEvent()
-        Dim received As Integer
-        Dim response As String
+        ' Disconnect from PDC/PMU devices...
+        If m_mappers IsNot Nothing Then
+            For Each mapper As PhasorMeasurementMapper In m_mappers.Values
+                mapper.Disconnect()
+            Next
+        End If
 
-        ' Enter the data read loop
-        Do While True
-            Try
-                If Not m_initializing Then
-                    Do
-                        events = LoadEvents()
-
-                        If events IsNot Nothing Then
-                            ' Load binary standard event images into local buffer
-                            For x As Integer = 0 To events.Length - 1
-                                System.Buffer.BlockCopy(events(x).BinaryImage, 0, buffer, x * StandardEvent.BinaryLength, StandardEvent.BinaryLength)
-                            Next
-
-                            ' Post data to TCP stream
-                            m_clientStream.Write(buffer, 0, events.Length * StandardEvent.BinaryLength)
-
-                            If m_useTimeout Then
-                                ' Wait for acknowledgement...
-                                received = m_clientStream.Read(buffer, 0, buffer.Length)
-
-                                ' Interpret response as a string
-                                response = Encoding.Default.GetString(buffer, 0, received)
-
-                                ' Verify archiver response
-                                If Not response.StartsWith("ACK", True, Nothing) Then Throw New InvalidOperationException("DatAWare archiver failed to acknowledge packet transmission: " & response)
-                            Else
-                                ' We sleep between data polls to prevent CPU loading
-                                Thread.Sleep(1)
-                            End If
-                        End If
-                    Loop While m_measurementBuffer.Count > 0
-                End If
-            Catch ex As ThreadAbortException
-                ' If we received an abort exception, we'll egress gracefully
-                Exit Do
-            Catch ex As IOException
-                ' This will get thrown if the thread is being aborted and we are sitting in a blocked stream read, so
-                ' in this case we'll bow out gracefully as well...
-                Exit Do
-            Catch ex As Exception
-                UpdateStatus("Archiver connection exception: " & ex.Message)
-                Connect()
-                Exit Do
-            End Try
-        Loop
+        m_mappers = Nothing
+        Disconnect()
 
     End Sub
 
     Public Sub Initialize()
+
+        ' Disconnect archiver and all phasor measurement mappers...
+        DisconnectAll()
+
+        ' Restart connect cycle to archiver
+        Connect()
 
         UpdateStatus("[" & Now() & "] Initializing phasor measurement receiver...")
 
@@ -191,9 +137,10 @@ Public Class PhasorMeasurementReceiver
             Dim pmuIDs As List(Of String)
             Dim x, y As Integer
 
-            m_initializing = True
+            SyncLock m_measurementBuffer
+                m_measurementBuffer.Clear()
+            End SyncLock
 
-            m_measurementBuffer.Clear()
             m_mappers = New Dictionary(Of String, PhasorMeasurementMapper)
 
             connection.Open()
@@ -250,32 +197,34 @@ Public Class PhasorMeasurementReceiver
 
                     ' UPDATE: Could compile these "special" case protocol "fixers" into indivdual DLL's
                     ' with an interface that could provide enough info to handle mapping
-                    Select Case source
-                        Case "CONED"
-                            With New ConEdPhasorMeasurementMapper(parser, source, pmuIDs, measurementIDs)
-                                AddHandler .ParsingStatus, AddressOf UpdateStatus
-                                m_mappers.Add(source, .This)
-                                .Connect()
-                            End With
-                        Case "AEP"
-                            With New AEPPhasorMeasurementMapper(parser, source, pmuIDs, measurementIDs)
-                                AddHandler .ParsingStatus, AddressOf UpdateStatus
-                                m_mappers.Add(source, .This)
-                                .Connect()
-                            End With
-                        Case "ARPN"
-                            With New ATCPhasorMeasurementMapper(parser, source, pmuIDs, measurementIDs)
-                                AddHandler .ParsingStatus, AddressOf UpdateStatus
-                                m_mappers.Add(source, .This)
-                                .Connect()
-                            End With
-                        Case Else
-                            With New PhasorMeasurementMapper(parser, source, pmuIDs, measurementIDs)
-                                AddHandler .ParsingStatus, AddressOf UpdateStatus
-                                m_mappers.Add(source, .This)
-                                .Connect()
-                            End With
-                    End Select
+                    SyncLock m_measurementBuffer
+                        Select Case source
+                            Case "CONED"
+                                With New ConEdPhasorMeasurementMapper(parser, source, pmuIDs, measurementIDs)
+                                    AddHandler .ParsingStatus, AddressOf UpdateStatus
+                                    m_mappers.Add(source, .This)
+                                    .Connect()
+                                End With
+                            Case "AEP"
+                                With New AEPPhasorMeasurementMapper(parser, source, pmuIDs, measurementIDs)
+                                    AddHandler .ParsingStatus, AddressOf UpdateStatus
+                                    m_mappers.Add(source, .This)
+                                    .Connect()
+                                End With
+                            Case "ARPN"
+                                With New ATCPhasorMeasurementMapper(parser, source, pmuIDs, measurementIDs)
+                                    AddHandler .ParsingStatus, AddressOf UpdateStatus
+                                    m_mappers.Add(source, .This)
+                                    .Connect()
+                                End With
+                            Case Else
+                                With New PhasorMeasurementMapper(parser, source, pmuIDs, measurementIDs)
+                                    AddHandler .ParsingStatus, AddressOf UpdateStatus
+                                    m_mappers.Add(source, .This)
+                                    .Connect()
+                                End With
+                        End Select
+                    End SyncLock
                 Next
             End With
 
@@ -284,8 +233,6 @@ Public Class PhasorMeasurementReceiver
             UpdateStatus("[" & Now() & "] Phasor measurement receiver initialized successfully.")
         Catch ex As Exception
             UpdateStatus("[" & Now() & "] ERROR: Phasor measurement receiver failed to initialize: " & ex.Message)
-        Finally
-            m_initializing = False
         End Try
 
     End Sub
@@ -309,6 +256,113 @@ Public Class PhasorMeasurementReceiver
         End Get
     End Property
 
+    Private Sub m_connectionTimer_Elapsed(ByVal sender As Object, ByVal e As System.Timers.ElapsedEventArgs) Handles m_connectionTimer.Elapsed
+
+        Try
+            UpdateStatus("Starting connection attempt to DatAWare Archiver """ & m_archiverIP & ":" & m_archiverPort & """...")
+
+            ' Connect to DatAWare archiver using TCP
+            m_tcpSocket = New TcpClient
+            m_tcpSocket.Connect(m_archiverIP, m_archiverPort)
+            m_clientStream = m_tcpSocket.GetStream()
+            m_clientStream.WriteTimeout = 100
+            m_clientStream.ReadTimeout = 10
+
+            ' Start listening to TCP data stream
+            m_socketThread = New Thread(AddressOf ProcessTcpStream)
+            m_socketThread.Start()
+
+            UpdateStatus("Connection to DatAWare Archiver """ & m_archiverIP & ":" & m_archiverPort & """ established.")
+        Catch ex As Exception
+            UpdateStatus(">> WARNING: Connection to DatAWare Archiver """ & m_archiverIP & ":" & m_archiverPort & """ failed: " & ex.Message)
+            Connect()
+        End Try
+
+    End Sub
+
+    Private Sub ProcessTcpStream()
+
+        Const statusInterval As Integer = 1000
+        Const dumpInterval As Integer = 5000
+        Const postDumpCount As Integer = 100
+
+        Dim buffer As Byte() = CreateArray(Of Byte)(m_bufferSize)
+        Dim events As StandardEvent()
+        Dim received As Integer
+        Dim response As String
+        Dim pollEvents As Long
+
+        ' Enter the data read loop
+        Do While True
+            Try
+                pollEvents = 0
+
+                Do
+                    events = LoadEvents()
+
+                    If events IsNot Nothing Then
+                        ' Load binary standard event images into local buffer
+                        For x As Integer = 0 To events.Length - 1
+                            System.Buffer.BlockCopy(events(x).BinaryImage, 0, buffer, x * StandardEvent.BinaryLength, StandardEvent.BinaryLength)
+                        Next
+
+                        ' Post data to TCP stream
+                        m_clientStream.Write(buffer, 0, events.Length * StandardEvent.BinaryLength)
+
+                        If m_useTimeout Then
+                            Try
+                                ' Wait for acknowledgement (limited to readtimeout)...
+                                received = m_clientStream.Read(buffer, 0, buffer.Length)
+
+                                ' Interpret response as a string
+                                response = Encoding.Default.GetString(buffer, 0, received)
+
+                                ' Verify archiver response
+                                If Not response.StartsWith("ACK", True, Nothing) Then Throw New InvalidOperationException("DatAWare archiver failed to acknowledge packet transmission: " & response)
+                            Catch ex As IOException
+                                UpdateStatus(">> WARNING: Timed-out waiting on acknowledgement from archiver...")
+                            Catch
+                                Throw
+                            End Try
+                        Else
+                            ' We sleep between data polls to prevent CPU loading
+                            Thread.Sleep(1)
+                        End If
+                    End If
+
+                    ' We shouldn't stay in this loop forever (this would mean we're falling behind) so we broadcast the status of things...
+                    pollEvents += 1
+                    If pollEvents Mod statusInterval = 0 Then
+                        UpdateStatus(">> WARNING: " & m_measurementBuffer.Count.ToString("#,##0") & " measurements remain in the queue to be sent...")
+                        If m_measurementBuffer.Count > dumpInterval Then Exit Do
+                    End If
+                Loop While m_measurementBuffer.Count > 0
+
+                ' We're getting behind, must dump measurements :(
+                If m_measurementBuffer.Count > dumpInterval Then
+                    SyncLock m_measurementBuffer
+                        ' TODO: When this starts happening - you've overloaded the real-time capacity of your historian
+                        ' and you must do something about it - more hardware, scale out, etc. Make sure to log this
+                        ' error externally (alarm or something) so things can be fixed...
+                        UpdateStatus(">> ERROR: Dumping " & (m_measurementBuffer.Count - postDumpCount).ToString("#,##0") & " measurements because we're falling behind :(")
+                        m_measurementBuffer.RemoveRange(0, m_measurementBuffer.Count - postDumpCount)
+                    End SyncLock
+                ElseIf pollEvents > statusInterval Then
+                    ' Send final status message - warning terminated...
+                    UpdateStatus(">> INFO: Warning state terminated - all queued measurements have been sent")
+                End If
+            Catch ex As ThreadAbortException
+                ' If we received an abort exception, we'll egress gracefully
+                Exit Do
+            Catch ex As Exception
+                UpdateStatus("Archiver connection exception: " & ex.Message)
+                Connect()
+                Exit Do
+            End Try
+        Loop
+
+    End Sub
+
     Private Function LoadEvents() As StandardEvent()
 
         Dim events As StandardEvent() = Nothing
@@ -323,7 +377,7 @@ Public Class PhasorMeasurementReceiver
                         m_measurementBuffer.Add(measurement)
 
                         m_processedMeasurements += 1
-                        If m_processedMeasurements Mod 100000 = 0 Then UpdateStatus(m_processedMeasurements & " measurements have been uploaded so far...")
+                        If m_processedMeasurements Mod 100000 = 0 Then UpdateStatus(m_processedMeasurements.ToString("#,##0") & " measurements have been uploaded so far...")
                     Next
                 Next
             Next
@@ -349,18 +403,7 @@ Public Class PhasorMeasurementReceiver
 
     Private Sub UpdateStatus(ByVal status As String)
 
-        UpdateStatus(status, True)
-
-    End Sub
-
-    Private Sub UpdateStatus(ByVal status As String, ByVal newLine As Boolean)
-
-        If newLine Then
-            Console.WriteLine(status)
-            Console.WriteLine()
-        Else
-            Console.Write(status)
-        End If
+        RaiseEvent StatusMessage(status)
 
     End Sub
 

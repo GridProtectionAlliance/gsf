@@ -37,6 +37,7 @@ Public Class PhasorMeasurementMapper
     Private m_errorCount As Integer
     Private m_errorTime As Long
     Private m_receivedConfigFrame As Boolean
+    Private m_lastReportTime As Long
 
     Public Sub New(ByVal frameParser As FrameParser, ByVal source As String, ByVal pmuIDs As List(Of String), ByVal measurementIDs As Dictionary(Of String, Integer))
 
@@ -51,7 +52,7 @@ Public Class PhasorMeasurementMapper
 
         With m_connectionTimer
             .AutoReset = False
-            .Interval = 4000
+            .Interval = 1000
             .Enabled = False
         End With
 
@@ -86,42 +87,6 @@ Public Class PhasorMeasurementMapper
 
     End Sub
 
-    Private Sub UpdateStatus(ByVal message As String)
-
-        RaiseEvent ParsingStatus(message)
-
-    End Sub
-
-    Private Sub m_connectionTimer_Elapsed(ByVal sender As Object, ByVal e As System.Timers.ElapsedEventArgs) Handles m_connectionTimer.Elapsed
-        Try
-            UpdateStatus("Starting connection attempt for phasor enabled device """ & m_source & """...")
-
-            m_frameParser.Connect()
-
-            ' Enable data stream monitor for non-UDP connections
-            m_dataStreamMonitor.Enabled = (m_frameParser.TransportLayer <> DataTransportLayer.Udp)
-
-            UpdateStatus("Connection to " & m_source & " established.")
-        Catch ex As Exception
-            UpdateStatus(m_source & " connection to """ & m_frameParser.HostIP & ":" & m_frameParser.Port & """ failed: " & ex.Message)
-            Connect()
-        End Try
-
-    End Sub
-
-    Private Sub m_dataStreamMonitor_Elapsed(ByVal sender As Object, ByVal e As System.Timers.ElapsedEventArgs) Handles m_dataStreamMonitor.Elapsed
-
-        ' If we've received no data in the last little timespan, we restart connect cycle...
-        If m_bytesReceived = 0 Then
-            UpdateStatus(Environment.NewLine & "No data on " & m_source & " received in " & m_dataStreamMonitor.Interval / 1000 & " seconds, restarting connect cycle..." & Environment.NewLine)
-            Connect()
-            m_dataStreamMonitor.Enabled = False
-        End If
-
-        m_bytesReceived = 0
-
-    End Sub
-
     Public Function GetQueuedFrames() As IFrame()
 
         Dim frames As IFrame()
@@ -145,10 +110,7 @@ Public Class PhasorMeasurementMapper
         Get
             With New StringBuilder
                 .Append("Phasor Data Parsing Connection for ")
-                For x As Integer = 0 To m_pmuIDs.Count - 1
-                    If x > 0 Then .Append(", ")
-                    .Append(m_pmuIDs(x))
-                Next
+                .Append(Name)
                 .Append(Environment.NewLine)
                 .Append(m_frameParser.Status)
 
@@ -157,12 +119,41 @@ Public Class PhasorMeasurementMapper
         End Get
     End Property
 
+    Public ReadOnly Property LastReportTime() As Long
+        Get
+            Return m_lastReportTime
+        End Get
+    End Property
+
+    Public ReadOnly Property Name() As String
+        Get
+            With New StringBuilder
+                .Append(m_source)
+
+                If m_pmuIDs.Count > 1 OrElse String.Compare(m_source, m_pmuIDs(0)) <> 0 Then
+                    .Append(" [")
+                    For x As Integer = 0 To m_pmuIDs.Count - 1
+                        If x > 0 Then .Append(", ")
+                        .Append(m_pmuIDs(x))
+                    Next
+                    .Append("]")
+                End If
+
+                Return .ToString()
+            End With
+        End Get
+    End Property
+
+    ''' <summary>This key function is the glue that binds a phasor measurement to a historian measurement ID</summary>
     Protected Overridable Sub MapDataFrameMeasurements(ByVal frame As Tva.Phasors.IDataFrame)
 
         ' Map data frame measurement instances to their associated point ID's
         With frame
             Dim pmuID As String
             Dim x, y As Integer
+
+            ' Track lastest reporting time
+            If .Ticks > m_lastReportTime Then m_lastReportTime = .Ticks
 
             ' Loop through each parsed PMU data cell
             For x = 0 To .Cells.Count - 1
@@ -220,6 +211,42 @@ Public Class PhasorMeasurementMapper
             measurement.ID = measurementID
             frame.Measurements.Add(measurementID, measurement)
         End If
+
+    End Sub
+
+    Private Sub UpdateStatus(ByVal message As String)
+
+        RaiseEvent ParsingStatus(message)
+
+    End Sub
+
+    Private Sub m_connectionTimer_Elapsed(ByVal sender As Object, ByVal e As System.Timers.ElapsedEventArgs) Handles m_connectionTimer.Elapsed
+        Try
+            UpdateStatus("Starting connection attempt for phasor enabled device """ & m_source & """...")
+
+            m_frameParser.Connect()
+
+            ' Enable data stream monitor for non-UDP connections
+            m_dataStreamMonitor.Enabled = (m_frameParser.TransportLayer <> DataTransportLayer.Udp)
+
+            UpdateStatus("Connection to " & m_source & " established.")
+        Catch ex As Exception
+            UpdateStatus(m_source & " connection to """ & m_frameParser.HostIP & ":" & m_frameParser.Port & """ failed: " & ex.Message)
+            Connect()
+        End Try
+
+    End Sub
+
+    Private Sub m_dataStreamMonitor_Elapsed(ByVal sender As Object, ByVal e As System.Timers.ElapsedEventArgs) Handles m_dataStreamMonitor.Elapsed
+
+        ' If we've received no data in the last little timespan, we restart connect cycle...
+        If m_bytesReceived = 0 Then
+            UpdateStatus(Environment.NewLine & "No data on " & m_source & " received in " & m_dataStreamMonitor.Interval / 1000 & " seconds, restarting connect cycle..." & Environment.NewLine)
+            Connect()
+            m_dataStreamMonitor.Enabled = False
+        End If
+
+        m_bytesReceived = 0
 
     End Sub
 

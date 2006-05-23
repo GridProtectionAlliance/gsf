@@ -24,7 +24,7 @@ Imports Tva.Text.Common
 
 Module MainModule
 
-    Private m_receiver As PhasorMeasurementReceiver
+    Private WithEvents m_receiver As PhasorMeasurementReceiver
 
     Public Sub Main()
 
@@ -80,22 +80,7 @@ Module MainModule
         Loop
 
         ' Attempt an orderly shutdown...
-        Try
-            ' Disconnect from PMU devices...
-            For Each mapper In m_receiver.Mappers.Values
-                mapper.Disconnect()
-            Next
-
-            ' Disconnect from DatAWare archiver...
-            m_receiver.Disconnect()
-        Catch ex As Exception
-            Console.WriteLine()
-            Console.WriteLine("Exception during shutdown: " & ex.Message)
-            Console.WriteLine()
-            Console.WriteLine("Press any key to continue...")
-            Console.ReadKey()
-        End Try
-
+        m_receiver.DisconnectAll()
         End
 
     End Sub
@@ -155,8 +140,22 @@ Module MainModule
         Console.WriteLine("PMU/PDC Connection List (" & m_receiver.Mappers.Count & " Total)")
         Console.WriteLine()
 
-        For Each pmuID As String In m_receiver.Mappers.Keys
-            Console.WriteLine("    " & pmuID)
+        Console.WriteLine("  Last Data Report Time:   PDC/PMU [PMU list]:")
+        Console.WriteLine("  ------------------------ ----------------------------------------------------")
+        '                    01-JAN-2006 12:12:24.000 SourceName [Pmu0, Pmu1, Pmu2, Pmu3, Pmu4]
+        '                    >> No data ever reported 
+
+        For Each mapper As PhasorMeasurementMapper In m_receiver.Mappers.Values
+            With mapper
+                Console.Write("  ")
+                If .LastReportTime > 0 Then
+                    Console.Write((New DateTime(mapper.LastReportTime)).ToString("dd-MMM-yyyy HH:mm:ss.fff"))
+                    Console.Write(" ")
+                Else
+                    Console.Write(">> No data ever reported ")
+                End If
+                Console.WriteLine(mapper.Name)
+            End With
         Next
 
         Console.WriteLine()
@@ -175,6 +174,14 @@ Module MainModule
         Console.WriteLine("    ""Version""              - Displays service version information")
         Console.WriteLine("    ""Help""                 - Displays this help information")
         Console.WriteLine("    ""Exit""                 - Exits this console monitor")
+        Console.WriteLine()
+
+    End Sub
+
+    ' Display status messages bubbled up from phasor measurement receiver and its internal components
+    Private Sub m_receiver_StatusMessage(ByVal status As String) Handles m_receiver.StatusMessage
+
+        Console.WriteLine(status)
         Console.WriteLine()
 
     End Sub
