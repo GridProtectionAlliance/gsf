@@ -520,7 +520,7 @@ Namespace Security.Cryptography
                 End If
 
                 ' Select next encryption algorithm
-                algorithm = algorithm + 1
+                algorithm += 1
                 If algorithm = 3 Then
                     algorithm = 0
 
