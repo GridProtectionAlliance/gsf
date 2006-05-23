@@ -28,7 +28,12 @@ Public NotInheritable Class Common
 
     End Sub
 
-    ' Performs JavaScript encoding on given string
+    ''' <summary>
+    ''' Performs JavaScript encoding on given string.
+    ''' </summary>
+    ''' <param name="text">The string to be encoded.</param>
+    ''' <returns>The encoded string.</returns>
+    ''' <remarks></remarks>
     Public Shared Function JavaScriptEncode(ByVal text As String) As String
 
         text = Replace(text, "\", "\\")
@@ -44,7 +49,12 @@ Public NotInheritable Class Common
 
     End Function
 
-    ' Decodes JavaScript characters from given string
+    ''' <summary>
+    ''' Decodes JavaScript characters from given string.
+    ''' </summary>
+    ''' <param name="text">The string to be decoded.</param>
+    ''' <returns>The decoded string.</returns>
+    ''' <remarks></remarks>
     Public Shared Function JavaScriptDecode(ByVal text As String) As String
 
         text = Replace(text, "\\", "\")
@@ -60,7 +70,12 @@ Public NotInheritable Class Common
 
     End Function
 
-    ' Ensures a string is compliant with cookie name requirements
+    ''' <summary>
+    ''' Ensures a string is compliant with cookie name requirements.
+    ''' </summary>
+    ''' <param name="text">The string to be validated.</param>
+    ''' <returns>The validated string.</returns>
+    ''' <remarks></remarks>
     Public Shared Function ValidCookieName(ByVal text As String) As String
 
         text = Replace(text, "=", "")
@@ -74,7 +89,12 @@ Public NotInheritable Class Common
 
     End Function
 
-    ' Ensures a string is compliant with cookie value requirements
+    ''' <summary>
+    ''' Ensures a string is compliant with cookie value requirements.
+    ''' </summary>
+    ''' <param name="text">The string to be validated.</param>
+    ''' <returns>The validated string.</returns>
+    ''' <remarks></remarks>
     Public Shared Function ValidCookieValue(ByVal text As String) As String
 
         text = Replace(text, ";", "")
@@ -84,7 +104,11 @@ Public NotInheritable Class Common
 
     End Function
 
-    'Pinal Patel 03/04/05: Sets the focus to a web control.
+    ''' <summary>
+    ''' Sets the focus to the specified web control.
+    ''' </summary>
+    ''' <param name="control">The web control to which the focus is to be set.</param>
+    ''' <remarks></remarks>
     Public Shared Sub Focus(ByVal control As System.Web.UI.Control)
 
         If Not control.Page.ClientScript.IsClientScriptBlockRegistered("Focus") Then
@@ -105,8 +129,12 @@ Public NotInheritable Class Common
 
     End Sub
 
-    'Pinal Patel 03/04/05:  Assigns a default button (regular/link/image) for a textbox to be clicked 
-    '                       when enter key is pressed in the textbox..
+    ''' <summary>
+    ''' Assigns a default action button to be activated when the ENTER key is pressed inside the specified textbox.
+    ''' </summary>
+    ''' <param name="textbox">The textbox for which the default action button is to be registered.</param>
+    ''' <param name="control">The button that will be assigned as the default action handler.</param>
+    ''' <remarks></remarks>
     Public Shared Sub DefaultButton(ByVal textbox As System.Web.UI.WebControls.TextBox, ByVal control As System.Web.UI.Control)
 
         If Not control.Page.ClientScript.IsClientScriptBlockRegistered("DefaultButton") Then
@@ -118,7 +146,12 @@ Public NotInheritable Class Common
 
     End Sub
 
-    'Pinal Patel 03/04/05: Show text inside a textbox that can be used to provide a hint.
+    ''' <summary>
+    ''' Shows the specified text inside the textbox that can be used to provide a hint.
+    ''' </summary>
+    ''' <param name="textbox">The textbox in which the text is to be displayed.</param>
+    ''' <param name="text">The text to be displayed inside the textbox.</param>
+    ''' <remarks></remarks>
     Public Shared Sub SmartText(ByVal textbox As System.Web.UI.WebControls.TextBox, ByVal text As String)
 
         With textbox
@@ -129,7 +162,41 @@ Public NotInheritable Class Common
 
     End Sub
 
-    'Pinal Patel 03/04/05: Shows web page as modeless dialog. Not tied to a web control.
+#Region " Show Overloads "
+
+    Public Shared Sub Show(ByVal page As System.Web.UI.Page, ByVal url As String)
+
+        Show(page, url, 400, 600)
+
+    End Sub
+
+    Public Shared Sub Show(ByVal page As System.Web.UI.Page, ByVal url As String, ByVal height As Integer, _
+                ByVal width As Integer)
+
+        Show(page, url, height, width, 0, 0, True, False, False, False)
+
+    End Sub
+
+    Public Shared Sub Show(ByVal page As System.Web.UI.Page, ByVal url As String, ByVal height As Integer, _
+                ByVal width As Integer, ByVal left As Integer, ByVal top As Integer)
+
+        Show(page, url, height, width, left, top, False, False, False, False)
+
+    End Sub
+
+    ''' <summary>
+    ''' Shows a modeless popup window for the specified web page url when the specified web page has loaded.
+    ''' </summary>
+    ''' <param name="page"></param>
+    ''' <param name="url">The web page url for which the popup windows is to be shown.</param>
+    ''' <param name="height">The height of the popup window.</param>
+    ''' <param name="width">The width of the popup window.</param>
+    ''' <param name="left">Location of the popup window on X-axis.</param>
+    ''' <param name="top">Location of the popup window on Y-axis.</param>
+    ''' <param name="center">True if the popup window is to be centered; otherwise False.</param>
+    ''' <param name="help">True if help button is to be displayed; otherwise False.</param>
+    ''' <param name="resizable">True if the popup window can be resized; otherwise False.</param>
+    ''' <param name="status">True if the status bar is to be displayed; otherwise False.</param>
     Public Shared Sub Show(ByVal page As System.Web.UI.Page, ByVal url As String, ByVal height As Integer, _
             ByVal width As Integer, ByVal left As Integer, ByVal top As Integer, ByVal center As Boolean, _
             ByVal help As Boolean, ByVal resizable As Boolean, ByVal status As Boolean)
@@ -139,19 +206,36 @@ Public NotInheritable Class Common
                 CreateClientSideScript(ClientSideScript.Show))
         End If
 
-        With New StringBuilder
-            .Append("<script language=""javascript"">" & NewLine())
-            .Append("   Show('" & url & "', " & height & ", " & width & ", " & left & ", " & top & ", " & Math.Abs(CInt(center)) & ", " & Math.Abs(CInt(help)) & ", " & Math.Abs(CInt(resizable)) & ", " & Math.Abs(CInt(status)) & ");" & NewLine())
-            .Append("</script>" & NewLine())
+        If Not page.ClientScript.IsStartupScriptRegistered("Show." & url) Then
+            With New StringBuilder
+                .Append("<script language=""javascript"">" & NewLine())
+                .Append("   Show('" & url & "', " & height & ", " & width & ", " & left & ", " & top & ", " & _
+                    Math.Abs(CInt(center)) & ", " & Math.Abs(CInt(help)) & ", " & Math.Abs(CInt(resizable)) & ", " & _
+                    Math.Abs(CInt(status)) & ");" & NewLine())
+                .Append("</script>" & NewLine())
 
-            If Not page.ClientScript.IsStartupScriptRegistered("Show." & url) Then
-                page.ClientScript.RegisterStartupScript(page.GetType(), "Show." & url, .ToString())
-            End If
-        End With
+                If Not page.ClientScript.IsStartupScriptRegistered("Show." & url) Then
+                    page.ClientScript.RegisterStartupScript(page.GetType(), "Show." & url, .ToString())
+                End If
+            End With
+        End If
 
     End Sub
 
-    'Pinal Patel 03/04/05: Shows a web page as modeless dialog. Tied to a web control.
+    ''' <summary>
+    ''' Shows a modeless popup window for the specified web page url when the specified web control is clicked.
+    ''' </summary>
+    ''' <param name="control">The web control that will show the popup window when clicked.</param>
+    ''' <param name="url">The web page url for which the popup windows is to be shown.</param>
+    ''' <param name="height">The height of the popup window.</param>
+    ''' <param name="width">The width of the popup window.</param>
+    ''' <param name="left">Location of the popup window on X-axis.</param>
+    ''' <param name="top">Location of the popup window on Y-axis.</param>
+    ''' <param name="center">True if the popup window is to be centered; otherwise False.</param>
+    ''' <param name="help">True if help button is to be displayed; otherwise False.</param>
+    ''' <param name="resizable">True if the popup window can be resized; otherwise False.</param>
+    ''' <param name="status">True if the status bar is to be displayed; otherwise False.</param>
+    ''' <remarks></remarks>
     Public Shared Sub Show(ByVal control As System.Web.UI.Control, ByVal url As String, ByVal height As Integer, _
             ByVal width As Integer, ByVal left As Integer, ByVal top As Integer, ByVal center As Boolean, _
             ByVal help As Boolean, ByVal resizable As Boolean, ByVal status As Boolean)
@@ -161,13 +245,31 @@ Public NotInheritable Class Common
                 CreateClientSideScript(ClientSideScript.Show))
         End If
 
-        HookupScriptToControl(control, "javascript:return(Show('" & url & "', " & height & ", " & width & ", " & left & ", " & top & ", " & Math.Abs(CInt(center)) & ", " & Math.Abs(CInt(help)) & ", " & Math.Abs(CInt(resizable)) & ", " & Math.Abs(CInt(status)) & "))", "OnClick")
+        HookupScriptToControl(control, "javascript:return(Show('" & url & "', " & height & ", " & width & ", " & _
+            left & ", " & top & ", " & Math.Abs(CInt(center)) & ", " & Math.Abs(CInt(help)) & ", " & _
+            Math.Abs(CInt(resizable)) & ", " & Math.Abs(CInt(status)) & "))", "OnClick")
 
     End Sub
 
-    'Pinal Patel 03/04/05:  Shows a web page as modal dialog. Not tied to a web control. Postback occurs 
-    '                       only if a value is returned by the child window (displayed as dialog) and 
-    '                       DialogResultHolder is not specified.
+#End Region
+
+    ''' <summary>
+    ''' Shows a modal popup window for the specified web page url when the specified web page has loaded.
+    ''' </summary>
+    ''' <param name="page">The web page that will show the popup window when loaded.</param>
+    ''' <param name="url">The web page url for which the popup windows is to be shown.</param>
+    ''' <param name="dialogResultHolder">
+    ''' The web control whose text is to updated with the text returned by the web page displayed in the popup window.
+    ''' </param>
+    ''' <param name="height">The height of the popup window.</param>
+    ''' <param name="width">The width of the popup window.</param>
+    ''' <param name="left">Location of the popup window on X-axis.</param>
+    ''' <param name="top">Location of the popup window on Y-axis.</param>
+    ''' <param name="center">True if the popup window is to be centered; otherwise False.</param>
+    ''' <param name="help">True if help button is to be displayed; otherwise False.</param>
+    ''' <param name="resizable">True if the popup window can be resized; otherwise False.</param>
+    ''' <param name="status">True if the status bar is to be displayed; otherwise False.</param>
+    ''' <remarks></remarks>
     Public Shared Sub ShowDialog(ByVal page As System.Web.UI.Page, ByVal url As String, ByVal dialogResultHolder As System.Web.UI.Control, _
             ByVal height As Integer, ByVal width As Integer, ByVal left As Integer, ByVal Top As Integer, _
             ByVal center As Boolean, ByVal help As Boolean, ByVal resizable As Boolean, ByVal status As Boolean)
@@ -177,37 +279,60 @@ Public NotInheritable Class Common
                 CreateClientSideScript(ClientSideScript.ShowDialog))
         End If
 
-        With New StringBuilder
-            .Append("<input type=""hidden"" name=""TVA_EVENT_TARGET"" value="""" />" & NewLine())
-            .Append("<input type=""hidden"" name=""TVA_EVENT_ARGUMENT"" value="""" />" & NewLine())
-            .Append("<script language=""javascript"">" & NewLine())
-            If Not dialogResultHolder Is Nothing Then
-                .Append("   ShowDialog('" & url & "', '" & dialogResultHolder.ClientID() & "', " & height & ", " & width & ", " & left & ", " & Top & ", " & Math.Abs(CInt(center)) & ", " & Math.Abs(CInt(help)) & ", " & Math.Abs(CInt(resizable)) & ", " & Math.Abs(CInt(status)) & ");" & NewLine())
-            Else
-                .Append("   if (ShowDialog('" & url & "', null, " & height & ", " & width & ", " & left & ", " & Top & ", " & Math.Abs(CInt(center)) & ", " & Math.Abs(CInt(help)) & ", " & Math.Abs(CInt(resizable)) & ", " & Math.Abs(CInt(status)) & "))" & NewLine())
-                .Append("   {" & NewLine())
-                Dim Control As System.Web.UI.Control
-                For Each Control In page.Controls
-                    If TypeOf Control Is System.Web.UI.HtmlControls.HtmlForm Then
-                        .Append("       " & Control.ClientID() & ".TVA_EVENT_TARGET.value = 'ShowDialog';" & NewLine())
-                        .Append("       " & Control.ClientID() & ".TVA_EVENT_ARGUMENT.value = '" & url & "';" & NewLine())
-                        .Append("       document." & Control.ClientID() & ".submit();" & NewLine())
-                        Exit For
-                    End If
-                Next
-                .Append("   }" & NewLine())
-            End If
-            .Append("</script>" & NewLine())
+        If Not page.ClientScript.IsStartupScriptRegistered("ShowDialog." & url) Then
+            With New StringBuilder
+                .Append("<input type=""hidden"" name=""TVA_EVENT_TARGET"" value="""" />" & NewLine())
+                .Append("<input type=""hidden"" name=""TVA_EVENT_ARGUMENT"" value="""" />" & NewLine())
+                .Append("<script language=""javascript"">" & NewLine())
+                If Not dialogResultHolder Is Nothing Then
+                    .Append("   ShowDialog('" & url & "', '" & dialogResultHolder.ClientID() & "', " & height & ", " & _
+                        width & ", " & left & ", " & Top & ", " & Math.Abs(CInt(center)) & ", " & Math.Abs(CInt(help)) & _
+                        ", " & Math.Abs(CInt(resizable)) & ", " & Math.Abs(CInt(status)) & ");" & NewLine())
+                Else
+                    .Append("   if (ShowDialog('" & url & "', null, " & height & ", " & width & ", " & left & ", " & _
+                        Top & ", " & Math.Abs(CInt(center)) & ", " & Math.Abs(CInt(help)) & ", " & _
+                        Math.Abs(CInt(resizable)) & ", " & Math.Abs(CInt(status)) & "))" & NewLine())
+                    .Append("   {" & NewLine())
+                    Dim Control As System.Web.UI.Control
+                    For Each Control In page.Controls
+                        If TypeOf Control Is System.Web.UI.HtmlControls.HtmlForm Then
+                            .Append("       " & Control.ClientID() & ".TVA_EVENT_TARGET.value = 'ShowDialog';" & NewLine())
+                            .Append("       " & Control.ClientID() & ".TVA_EVENT_ARGUMENT.value = '" & url & "';" & NewLine())
+                            .Append("       document." & Control.ClientID() & ".submit();" & NewLine())
+                            Exit For
+                        End If
+                    Next
+                    .Append("   }" & NewLine())
+                End If
+                .Append("</script>" & NewLine())
 
-            page.ClientScript.RegisterStartupScript(page.GetType(), "ShowDialog:" & Rnd(), .ToString())
-        End With
+                page.ClientScript.RegisterStartupScript(page.GetType(), "ShowDialog." & url, .ToString())
+            End With
+        End If
 
     End Sub
 
-    'Pinal Patel 03/04/05:  Shows a web page as modal dialog. Tied to a web control. Postback occurs only if 
-    '                       a value is returned by the child window (displayed as dialog) and DialogResultHolder 
-    '                       is not specified.
-    Public Shared Sub ShowDialog(ByVal control As System.Web.UI.Control, ByVal url As String, Optional ByVal dialogResultHolder As System.Web.UI.Control = Nothing, Optional ByVal height As Integer = 400, Optional ByVal width As Integer = 600, Optional ByVal left As Integer = 0, Optional ByVal top As Integer = 0, Optional ByVal center As Boolean = True, Optional ByVal help As Boolean = True, Optional ByVal resizable As Boolean = False, Optional ByVal status As Boolean = False)
+    ''' <summary>
+    ''' Shows a modal popup window for the specified web page url when the specified web control is clicked.
+    ''' </summary>
+    ''' <param name="control">The web control that will show the popup window when clicked.</param>
+    ''' <param name="url">The web page url for which the popup windows is to be shown.</param>
+    ''' <param name="dialogResultHolder">
+    ''' The web control whose text is to updated with the text returned by the web page displayed in the popup window.
+    ''' </param>
+    ''' <param name="height">The height of the popup window.</param>
+    ''' <param name="width">The width of the popup window.</param>
+    ''' <param name="left">Location of the popup window on X-axis.</param>
+    ''' <param name="top">Location of the popup window on Y-axis.</param>
+    ''' <param name="center">True if the popup window is to be centered; otherwise False.</param>
+    ''' <param name="help">True if help button is to be displayed; otherwise False.</param>
+    ''' <param name="resizable">True if the popup window can be resized; otherwise False.</param>
+    ''' <param name="status">True if the status bar is to be displayed; otherwise False.</param>
+    ''' <remarks></remarks>
+    Public Shared Sub ShowDialog(ByVal control As System.Web.UI.Control, ByVal url As String, _
+            ByVal dialogResultHolder As System.Web.UI.Control, ByVal height As Integer, ByVal width As Integer, _
+            ByVal left As Integer, ByVal top As Integer, ByVal center As Boolean, ByVal help As Boolean, _
+            ByVal resizable As Boolean, ByVal status As Boolean)
 
         If Not control.Page.ClientScript.IsClientScriptBlockRegistered("ShowDialog") Then
             control.Page.ClientScript.RegisterClientScriptBlock(control.Page.GetType(), "ShowDialog", _
@@ -215,14 +340,36 @@ Public NotInheritable Class Common
         End If
 
         If Not dialogResultHolder Is Nothing Then
-            HookupScriptToControl(control, "javascript:return(ShowDialog('" & url & "', '" & dialogResultHolder.ClientID() & "', " & height & ", " & width & ", " & left & ", " & top & ", " & Math.Abs(CInt(center)) & ", " & Math.Abs(CInt(help)) & ", " & Math.Abs(CInt(resizable)) & ", " & Math.Abs(CInt(status)) & "))", "OnClick")
+            HookupScriptToControl(control, "javascript:return(ShowDialog('" & url & "', '" & _
+                dialogResultHolder.ClientID() & "', " & height & ", " & width & ", " & left & ", " & top & ", " & _
+                Math.Abs(CInt(center)) & ", " & Math.Abs(CInt(help)) & ", " & Math.Abs(CInt(resizable)) & ", " & _
+                Math.Abs(CInt(status)) & "))", "OnClick")
         Else
-            HookupScriptToControl(control, "javascript:return(ShowDialog('" & url & "', null, " & height & ", " & width & ", " & left & ", " & top & ", " & Math.Abs(CInt(center)) & ", " & Math.Abs(CInt(help)) & ", " & Math.Abs(CInt(resizable)) & ", " & Math.Abs(CInt(status)) & "))", "OnClick")
+            HookupScriptToControl(control, "javascript:return(ShowDialog('" & url & "', null, " & height & ", " & _
+                width & ", " & left & ", " & top & ", " & Math.Abs(CInt(center)) & ", " & Math.Abs(CInt(help)) & _
+                ", " & Math.Abs(CInt(resizable)) & ", " & Math.Abs(CInt(status)) & "))", "OnClick")
         End If
 
     End Sub
 
-    'Pinal Patel 03/04/05: Shows web page as old fashion popup window. Not tied to a web control.
+    ''' <summary>
+    ''' Shows a popup for the specified web page url when the specified web page has loaded.
+    ''' </summary>
+    ''' <param name="page">The web page that will show the popup when loaded.</param>
+    ''' <param name="url">The web page url for which the popup is to be shown.</param>
+    ''' <param name="height">The height of the popup.</param>
+    ''' <param name="width">The width of the popup.</param>
+    ''' <param name="left">Location of the popup on X-axis.</param>
+    ''' <param name="top">Location of the popup on Y-axis.</param>
+    ''' <param name="center">True if the popup is to be centered; otherwise False.</param>
+    ''' <param name="resizable">True if the popup can be resized; otherwise False.</param>
+    ''' <param name="scrollbars">True is the scrollbars are to be displayed; otherwise False.</param>
+    ''' <param name="toolbar">True if the toolbar is to be displayed; otherwise False.</param>
+    ''' <param name="menubar">True if the menu bar is to be displayed; otherwise False.</param>
+    ''' <param name="location">True if the address bar is to be displayed; otherwise False.</param>
+    ''' <param name="status">True if the status bar is to be displayed; otherwise False.</param>
+    ''' <param name="directories">True if the directories buttons (Netscape only) are to be displayed; otherwise False.</param>
+    ''' <remarks></remarks>
     Public Shared Sub ShowPopup(ByVal page As System.Web.UI.Page, ByVal url As String, ByVal height As Integer, _
             ByVal width As Integer, ByVal left As Integer, ByVal top As Integer, ByVal center As Boolean, _
             ByVal resizable As Boolean, ByVal scrollbars As Boolean, ByVal toolbar As Boolean, _
@@ -233,17 +380,39 @@ Public NotInheritable Class Common
                 CreateClientSideScript(ClientSideScript.ShowPopup))
         End If
 
-        With New StringBuilder
-            .Append("<script language=""javascript"">" & NewLine())
-            .Append("   ShowPopup('" & url & "', " & height & ", " & width & ", " & left & ", " & top & ", " & Math.Abs(CInt(center)) & ", " & Math.Abs(CInt(resizable)) & ", " & Math.Abs(CInt(scrollbars)) & ", " & Math.Abs(CInt(toolbar)) & ", " & Math.Abs(CInt(menubar)) & ", " & Math.Abs(CInt(location)) & ", " & Math.Abs(CInt(status)) & ", " & Math.Abs(CInt(directories)) & ");" & NewLine())
-            .Append("</script>" & NewLine())
+        If Not page.ClientScript.IsStartupScriptRegistered("ShowPopup." & url) Then
+            With New StringBuilder
+                .Append("<script language=""javascript"">" & NewLine())
+                .Append("   ShowPopup('" & url & "', " & height & ", " & width & ", " & left & ", " & top & ", " & _
+                    Math.Abs(CInt(center)) & ", " & Math.Abs(CInt(resizable)) & ", " & Math.Abs(CInt(scrollbars)) & _
+                    ", " & Math.Abs(CInt(toolbar)) & ", " & Math.Abs(CInt(menubar)) & ", " & Math.Abs(CInt(location)) & _
+                    ", " & Math.Abs(CInt(status)) & ", " & Math.Abs(CInt(directories)) & ");" & NewLine())
+                .Append("</script>" & NewLine())
 
-            page.ClientScript.RegisterStartupScript(page.GetType(), "ShowPopup:" & Rnd(), .ToString())
-        End With
+                page.ClientScript.RegisterStartupScript(page.GetType(), "ShowPopup." & url, .ToString())
+            End With
+        End If
 
     End Sub
 
-    'Pinal Patel 03/04/05: Shows web page as old fashion popup. Tied to a web control.
+    ''' <summary>
+    ''' Shows a popup for the specified web page url when the specified web control is clicked.
+    ''' </summary>
+    ''' <param name="control">The web control that will show the popup when clicked.</param>
+    ''' <param name="url">The web page url for which the popup is to be shown.</param>
+    ''' <param name="height">The height of the popup.</param>
+    ''' <param name="width">The width of the popup.</param>
+    ''' <param name="left">Location of the popup on X-axis.</param>
+    ''' <param name="top">Location of the popup on Y-axis.</param>
+    ''' <param name="center">True if the popup is to be centered; otherwise False.</param>
+    ''' <param name="resizable">True if the popup can be resized; otherwise False.</param>
+    ''' <param name="scrollbars">True is the scrollbars are to be displayed; otherwise False.</param>
+    ''' <param name="toolbar">True if the toolbar is to be displayed; otherwise False.</param>
+    ''' <param name="menubar">True if the menu bar is to be displayed; otherwise False.</param>
+    ''' <param name="location">True if the address bar is to be displayed; otherwise False.</param>
+    ''' <param name="status">True if the status bar is to be displayed; otherwise False.</param>
+    ''' <param name="directories">True if the directories buttons (Netscape only) are to be displayed; otherwise False.</param>
+    ''' <remarks></remarks>
     Public Shared Sub ShowPopup(ByVal control As System.Web.UI.Control, ByVal url As String, ByVal height As Integer, _
             ByVal width As Integer, ByVal left As Integer, ByVal top As Integer, ByVal center As Boolean, _
             ByVal resizable As Boolean, ByVal scrollbars As Boolean, ByVal toolbar As Boolean, _
@@ -254,7 +423,10 @@ Public NotInheritable Class Common
                 CreateClientSideScript(ClientSideScript.ShowPopup))
         End If
 
-        HookupScriptToControl(control, "javascript:return(ShowPopup('" & url & "', " & height & ", " & width & ", " & left & ", " & top & ", " & Math.Abs(CInt(center)) & ", " & Math.Abs(CInt(resizable)) & ", " & Math.Abs(CInt(scrollbars)) & ", " & Math.Abs(CInt(toolbar)) & ", " & Math.Abs(CInt(menubar)) & ", " & Math.Abs(CInt(location)) & ", " & Math.Abs(CInt(status)) & ", " & Math.Abs(CInt(directories)) & "))", "OnClick")
+        HookupScriptToControl(control, "javascript:return(ShowPopup('" & url & "', " & height & ", " & width & ", " & _
+            left & ", " & top & ", " & Math.Abs(CInt(center)) & ", " & Math.Abs(CInt(resizable)) & ", " & _
+            Math.Abs(CInt(scrollbars)) & ", " & Math.Abs(CInt(toolbar)) & ", " & Math.Abs(CInt(menubar)) & ", " & _
+            Math.Abs(CInt(location)) & ", " & Math.Abs(CInt(status)) & ", " & Math.Abs(CInt(directories)) & "))", "OnClick")
 
     End Sub
 
@@ -390,7 +562,7 @@ Public NotInheritable Class Common
     End Enum
 
     ''' <summary>
-    ''' Shows a windows application style message box when the specified web page is loaded.
+    ''' Shows a windows application style message box when the specified web page has loaded.
     ''' </summary>
     ''' <param name="page">The web page that will show the message box when loaded.</param>
     ''' <param name="prompt">The text that is to be displayed in the message box.</param>
@@ -459,7 +631,7 @@ Public NotInheritable Class Common
     End Sub
 
     ''' <summary>
-    ''' Refreshes the web page as soon as it is loaded.
+    ''' Refreshes the web page as soon as it has loaded.
     ''' </summary>
     ''' <param name="page">The web page that is to be refreshed.</param>
     ''' <param name="postRefresh">
@@ -514,7 +686,7 @@ Public NotInheritable Class Common
     End Sub
 
     ''' <summary>
-    ''' Maximizes the browser window when the specified web page is loaded.
+    ''' Maximizes the browser window when the specified web page has loaded.
     ''' </summary>
     ''' <param name="page">The web page whose browser window is to be maximized when loaded.</param>
     ''' <remarks></remarks>
@@ -552,14 +724,14 @@ Public NotInheritable Class Common
     End Sub
 
     ''' <summary>
-    ''' Minimizes the browser windows when the specified web page is loaded.
+    ''' Minimizes the browser windows when the specified web page has loaded.
     ''' </summary>
     ''' <param name="page">The web page whose browser window is to be minimized when loaded.</param>
     ''' <remarks></remarks>
     Public Shared Sub Minimize(ByVal page As System.Web.UI.Page)
 
         If Not page.ClientScript.IsClientScriptBlockRegistered("Minimize") Then
-            page.ClientScript.RegisterClientScriptBlock(Page.GetType(), "Minimize", _
+            page.ClientScript.RegisterClientScriptBlock(page.GetType(), "Minimize", _
                 CreateClientSideScript(ClientSideScript.Minimize))
         End If
 
@@ -592,7 +764,7 @@ Public NotInheritable Class Common
     End Sub
 
     ''' <summary>
-    ''' Brings the browser window in which the specified web page is loaded to the foreground.
+    ''' Brings the browser window in which the specified web page has loaded to the foreground.
     ''' </summary>
     ''' <param name="page">The web page whose browser window is to be brought to the foreground.</param>
     ''' <remarks></remarks>
@@ -611,7 +783,7 @@ Public NotInheritable Class Common
     End Sub
 
     ''' <summary>
-    ''' Pushes the browser window in which the specified web page is loaded to the background.
+    ''' Pushes the browser window in which the specified web page has loaded to the background.
     ''' </summary>
     ''' <param name="page">The web page whose browser window is to be pushed to the background.</param>
     ''' <remarks></remarks>
@@ -630,7 +802,7 @@ Public NotInheritable Class Common
     End Sub
 
     ''' <summary>
-    ''' Plays audio in the background when the specified web page is loaded.
+    ''' Plays audio in the background when the specified web page has loaded.
     ''' </summary>
     ''' <param name="page">The web page in which audio is to be played.</param>
     ''' <param name="soundFilename">Name of the audio file.</param>
