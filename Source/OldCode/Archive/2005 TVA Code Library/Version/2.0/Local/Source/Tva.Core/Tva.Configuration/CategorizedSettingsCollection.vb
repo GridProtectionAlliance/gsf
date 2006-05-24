@@ -12,6 +12,8 @@
 '  -----------------------------------------------------------------------------------------------------
 '  04/11/2006 - Pinal C. Patel
 '       Original version of source code generated
+'  05/25/2006 - Pinal C. Patel
+'       Modified the Item(name) property to add a configuration element if it doesn't exist.
 '
 '*******************************************************************************************************
 
@@ -36,11 +38,10 @@ Namespace Configuration
         ''' <remarks></remarks>
         Default Public Shadows Property Item(ByVal index As Integer) As CategorizedSettingsElement
             Get
-                Dim element As CategorizedSettingsElement = Nothing
-                If index <= MyBase.Count() - 1 Then
-                    element = DirectCast(MyBase.BaseGet(index), CategorizedSettingsElement)
+                If index >= MyBase.Count() Then
+                    Throw New IndexOutOfRangeException()
                 End If
-                Return element
+                Return DirectCast(MyBase.BaseGet(index), CategorizedSettingsElement)
             End Get
             Set(ByVal value As CategorizedSettingsElement)
                 If MyBase.BaseGet(index) IsNot Nothing Then
@@ -59,11 +60,11 @@ Namespace Configuration
         ''' <remarks></remarks>
         Default Public Shadows ReadOnly Property Item(ByVal name As String) As CategorizedSettingsElement
             Get
-                Dim element As CategorizedSettingsElement = Nothing
-                If MyBase.BaseGet(name) IsNot Nothing Then
-                    element = DirectCast(MyBase.BaseGet(name), CategorizedSettingsElement)
+                If MyBase.BaseGet(name) Is Nothing Then
+                    ' We'll add a configuration element for the specified name if it doesn't exist.
+                    MyClass.Add(name, "")
                 End If
-                Return element
+                Return DirectCast(MyBase.BaseGet(name), CategorizedSettingsElement)
             End Get
         End Property
 

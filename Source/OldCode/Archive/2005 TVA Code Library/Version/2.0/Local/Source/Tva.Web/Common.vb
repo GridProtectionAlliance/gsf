@@ -162,14 +162,86 @@ Public NotInheritable Class Common
 
     End Sub
 
+    ''' <summary>
+    ''' Brings the browser window in which the specified web page has loaded to the foreground.
+    ''' </summary>
+    ''' <param name="page">The web page whose browser window is to be brought to the foreground.</param>
+    ''' <remarks></remarks>
+    Public Shared Sub BringToFront(ByVal page As System.Web.UI.Page)
+
+        If Not page.ClientScript.IsStartupScriptRegistered("BringToFront") Then
+            With New StringBuilder
+                .Append("<script language=""javascript"">" & NewLine())
+                .Append("   window.focus();" & NewLine())
+                .Append("</script>" & NewLine())
+
+                page.ClientScript.RegisterStartupScript(page.GetType(), "BringToFront", .ToString())
+            End With
+        End If
+
+    End Sub
+
+    ''' <summary>
+    ''' Pushes the browser window in which the specified web page has loaded to the background.
+    ''' </summary>
+    ''' <param name="page">The web page whose browser window is to be pushed to the background.</param>
+    ''' <remarks></remarks>
+    Public Shared Sub PushToBack(ByVal page As System.Web.UI.Page)
+
+        If Not page.ClientScript.IsStartupScriptRegistered("PushToBack") Then
+            With New StringBuilder
+                .Append("<script language=""javascript"">" & NewLine())
+                .Append("   window.blur();" & NewLine())
+                .Append("</script>" & NewLine())
+
+                page.ClientScript.RegisterStartupScript(page.GetType(), "PushToBack", .ToString())
+            End With
+        End If
+
+    End Sub
+
+    ''' <summary>
+    ''' Plays audio in the background when the specified web page has loaded.
+    ''' </summary>
+    ''' <param name="page">The web page in which audio is to be played.</param>
+    ''' <param name="soundFilename">Name of the audio file.</param>
+    ''' <param name="repeatCount">Number of times the audio is to be replayed.</param>
+    ''' <remarks></remarks>
+    Public Shared Sub PlayBackgroundSound(ByVal page As System.Web.UI.Page, ByVal soundFilename As String, _
+            ByVal repeatCount As Integer)
+
+        If Not page.ClientScript.IsStartupScriptRegistered("PlayBackgroundSound") Then
+            With New StringBuilder
+                .Append("<BGSOUND SRC=""" & soundFilename & """ LOOP=""" & repeatCount & """>" & NewLine())
+
+                page.ClientScript.RegisterStartupScript(page.GetType(), "PlayBackgroundSound", .ToString())
+            End With
+        End If
+
+    End Sub
+
 #Region " Show Overloads "
 
+    ''' <summary>
+    ''' Shows a modeless popup window for the specified web page url when the specified web page has loaded.
+    ''' </summary>
+    ''' <param name="page">The web page that will show the popup window when loaded.</param>
+    ''' <param name="url">The web page url for which the popup windows is to be shown.</param>
+    ''' <remarks></remarks>
     Public Shared Sub Show(ByVal page As System.Web.UI.Page, ByVal url As String)
 
         Show(page, url, 400, 600)
 
     End Sub
 
+    ''' <summary>
+    ''' Shows a modeless popup window for the specified web page url when the specified web page has loaded.
+    ''' </summary>
+    ''' <param name="page">The web page that will show the popup window when loaded.</param>
+    ''' <param name="url">The web page url for which the popup windows is to be shown.</param>
+    ''' <param name="height">The height of the popup window.</param>
+    ''' <param name="width">The width of the popup window.</param>
+    ''' <remarks></remarks>
     Public Shared Sub Show(ByVal page As System.Web.UI.Page, ByVal url As String, ByVal height As Integer, _
                 ByVal width As Integer)
 
@@ -177,6 +249,16 @@ Public NotInheritable Class Common
 
     End Sub
 
+    ''' <summary>
+    ''' Shows a modeless popup window for the specified web page url when the specified web page has loaded.
+    ''' </summary>
+    ''' <param name="page">The web page that will show the popup window when loaded.</param>
+    ''' <param name="url">The web page url for which the popup windows is to be shown.</param>
+    ''' <param name="height">The height of the popup window.</param>
+    ''' <param name="width">The width of the popup window.</param>
+    ''' <param name="left">Location of the popup window on X-axis.</param>
+    ''' <param name="top">Location of the popup window on Y-axis.</param>
+    ''' <remarks></remarks>
     Public Shared Sub Show(ByVal page As System.Web.UI.Page, ByVal url As String, ByVal height As Integer, _
                 ByVal width As Integer, ByVal left As Integer, ByVal top As Integer)
 
@@ -187,7 +269,7 @@ Public NotInheritable Class Common
     ''' <summary>
     ''' Shows a modeless popup window for the specified web page url when the specified web page has loaded.
     ''' </summary>
-    ''' <param name="page"></param>
+    ''' <param name="page">The web page that will show the popup window when loaded.</param>
     ''' <param name="url">The web page url for which the popup windows is to be shown.</param>
     ''' <param name="height">The height of the popup window.</param>
     ''' <param name="width">The width of the popup window.</param>
@@ -227,6 +309,50 @@ Public NotInheritable Class Common
     ''' </summary>
     ''' <param name="control">The web control that will show the popup window when clicked.</param>
     ''' <param name="url">The web page url for which the popup windows is to be shown.</param>
+    ''' <remarks></remarks>
+    Public Shared Sub Show(ByVal control As System.Web.UI.Control, ByVal url As String)
+
+        Show(control, url, 400, 600, 0, 0, True, False, False, False)
+
+    End Sub
+
+    ''' <summary>
+    ''' Shows a modeless popup window for the specified web page url when the specified web control is clicked.
+    ''' </summary>
+    ''' <param name="control">The web control that will show the popup window when clicked.</param>
+    ''' <param name="url">The web page url for which the popup windows is to be shown.</param>
+    ''' <param name="height">The height of the popup window.</param>
+    ''' <param name="width">The width of the popup window.</param>
+    ''' <remarks></remarks>
+    Public Shared Sub Show(ByVal control As System.Web.UI.Control, ByVal url As String, ByVal height As Integer, _
+            ByVal width As Integer)
+
+        Show(control, url, height, width, 0, 0, True, False, False, False)
+
+    End Sub
+
+    ''' <summary>
+    ''' Shows a modeless popup window for the specified web page url when the specified web control is clicked.
+    ''' </summary>
+    ''' <param name="control">The web control that will show the popup window when clicked.</param>
+    ''' <param name="url">The web page url for which the popup windows is to be shown.</param>
+    ''' <param name="height">The height of the popup window.</param>
+    ''' <param name="width">The width of the popup window.</param>
+    ''' <param name="left">Location of the popup window on X-axis.</param>
+    ''' <param name="top">Location of the popup window on Y-axis.</param>
+    ''' <remarks></remarks>
+    Public Shared Sub Show(ByVal control As System.Web.UI.Control, ByVal url As String, ByVal height As Integer, _
+            ByVal width As Integer, ByVal left As Integer, ByVal top As Integer)
+
+        Show(control, url, height, width, left, top, False, False, False, False)
+
+    End Sub
+
+    ''' <summary>
+    ''' Shows a modeless popup window for the specified web page url when the specified web control is clicked.
+    ''' </summary>
+    ''' <param name="control">The web control that will show the popup window when clicked.</param>
+    ''' <param name="url">The web page url for which the popup windows is to be shown.</param>
     ''' <param name="height">The height of the popup window.</param>
     ''' <param name="width">The width of the popup window.</param>
     ''' <param name="left">Location of the popup window on X-axis.</param>
@@ -253,6 +379,105 @@ Public NotInheritable Class Common
 
 #End Region
 
+#Region " ShowDialog Overloads "
+
+    ''' <summary>
+    ''' Shows a modal popup window for the specified web page url when the specified web page has loaded.
+    ''' </summary>
+    ''' <param name="page">The web page that will show the popup window when loaded.</param>
+    ''' <param name="url">The web page url for which the popup windows is to be shown.</param>
+    ''' <remarks></remarks>
+    Public Shared Sub ShowDialog(ByVal page As System.Web.UI.Page, ByVal url As String)
+
+        ShowDialog(page, url, 400, 600)
+
+    End Sub
+
+    ''' <summary>
+    ''' Shows a modal popup window for the specified web page url when the specified web page has loaded.
+    ''' </summary>
+    ''' <param name="page">The web page that will show the popup window when loaded.</param>
+    ''' <param name="url">The web page url for which the popup windows is to be shown.</param>
+    ''' <param name="height">The height of the popup window.</param>
+    ''' <param name="width">The width of the popup window.</param>
+    ''' <remarks></remarks>
+    Public Shared Sub ShowDialog(ByVal page As System.Web.UI.Page, ByVal url As String, ByVal height As Integer, _
+            ByVal width As Integer)
+
+        ShowDialog(page, url, Nothing, height, width, 0, 0, True, False, False, False)
+
+    End Sub
+
+    ''' <summary>
+    ''' Shows a modal popup window for the specified web page url when the specified web page has loaded.
+    ''' </summary>
+    ''' <param name="page">The web page that will show the popup window when loaded.</param>
+    ''' <param name="url">The web page url for which the popup windows is to be shown.</param>
+    ''' <param name="height">The height of the popup window.</param>
+    ''' <param name="width">The width of the popup window.</param>
+    ''' <param name="left">Location of the popup window on X-axis.</param>
+    ''' <param name="top">Location of the popup window on Y-axis.</param>
+    ''' <remarks></remarks>
+    Public Shared Sub ShowDialog(ByVal page As System.Web.UI.Page, ByVal url As String, ByVal height As Integer, _
+            ByVal width As Integer, ByVal left As Integer, ByVal top As Integer)
+
+        ShowDialog(page, url, Nothing, height, width, left, top, False, False, False, False)
+
+    End Sub
+
+    ''' <summary>
+    ''' Shows a modal popup window for the specified web page url when the specified web page has loaded.
+    ''' </summary>
+    ''' <param name="page">The web page that will show the popup window when loaded.</param>
+    ''' <param name="url">The web page url for which the popup windows is to be shown.</param>
+    ''' <param name="dialogResultHolder">
+    ''' The web control whose text is to updated with the text returned by the web page displayed in the popup window.
+    ''' </param>
+    ''' <remarks></remarks>
+    Public Shared Sub ShowDialog(ByVal page As System.Web.UI.Page, ByVal url As String, ByVal dialogResultHolder As System.Web.UI.Control)
+
+        ShowDialog(page, url, dialogResultHolder, 400, 600)
+
+    End Sub
+
+    ''' <summary>
+    ''' Shows a modal popup window for the specified web page url when the specified web page has loaded.
+    ''' </summary>
+    ''' <param name="page">The web page that will show the popup window when loaded.</param>
+    ''' <param name="url">The web page url for which the popup windows is to be shown.</param>
+    ''' <param name="dialogResultHolder">
+    ''' The web control whose text is to updated with the text returned by the web page displayed in the popup window.
+    ''' </param>
+    ''' <param name="height">The height of the popup window.</param>
+    ''' <param name="width">The width of the popup window.</param>
+    ''' <remarks></remarks>
+    Public Shared Sub ShowDialog(ByVal page As System.Web.UI.Page, ByVal url As String, ByVal dialogResultHolder As System.Web.UI.Control, _
+            ByVal height As Integer, ByVal width As Integer)
+
+        ShowDialog(page, url, dialogResultHolder, height, width, 0, 0, True, False, False, False)
+
+    End Sub
+
+    ''' <summary>
+    ''' Shows a modal popup window for the specified web page url when the specified web page has loaded.
+    ''' </summary>
+    ''' <param name="page">The web page that will show the popup window when loaded.</param>
+    ''' <param name="url">The web page url for which the popup windows is to be shown.</param>
+    ''' <param name="dialogResultHolder">
+    ''' The web control whose text is to updated with the text returned by the web page displayed in the popup window.
+    ''' </param>
+    ''' <param name="height">The height of the popup window.</param>
+    ''' <param name="width">The width of the popup window.</param>
+    ''' <param name="left">Location of the popup window on X-axis.</param>
+    ''' <param name="top">Location of the popup window on Y-axis.</param>
+    ''' <remarks></remarks>
+    Public Shared Sub ShowDialog(ByVal page As System.Web.UI.Page, ByVal url As String, ByVal dialogResultHolder As System.Web.UI.Control, _
+            ByVal height As Integer, ByVal width As Integer, ByVal left As Integer, ByVal top As Integer)
+
+        ShowDialog(page, url, dialogResultHolder, height, width, left, top, False, False, False, False)
+
+    End Sub
+
     ''' <summary>
     ''' Shows a modal popup window for the specified web page url when the specified web page has loaded.
     ''' </summary>
@@ -271,7 +496,7 @@ Public NotInheritable Class Common
     ''' <param name="status">True if the status bar is to be displayed; otherwise False.</param>
     ''' <remarks></remarks>
     Public Shared Sub ShowDialog(ByVal page As System.Web.UI.Page, ByVal url As String, ByVal dialogResultHolder As System.Web.UI.Control, _
-            ByVal height As Integer, ByVal width As Integer, ByVal left As Integer, ByVal Top As Integer, _
+            ByVal height As Integer, ByVal width As Integer, ByVal left As Integer, ByVal top As Integer, _
             ByVal center As Boolean, ByVal help As Boolean, ByVal resizable As Boolean, ByVal status As Boolean)
 
         If Not page.ClientScript.IsClientScriptBlockRegistered("ShowDialog") Then
@@ -286,11 +511,11 @@ Public NotInheritable Class Common
                 .Append("<script language=""javascript"">" & NewLine())
                 If Not dialogResultHolder Is Nothing Then
                     .Append("   ShowDialog('" & url & "', '" & dialogResultHolder.ClientID() & "', " & height & ", " & _
-                        width & ", " & left & ", " & Top & ", " & Math.Abs(CInt(center)) & ", " & Math.Abs(CInt(help)) & _
+                        width & ", " & left & ", " & top & ", " & Math.Abs(CInt(center)) & ", " & Math.Abs(CInt(help)) & _
                         ", " & Math.Abs(CInt(resizable)) & ", " & Math.Abs(CInt(status)) & ");" & NewLine())
                 Else
                     .Append("   if (ShowDialog('" & url & "', null, " & height & ", " & width & ", " & left & ", " & _
-                        Top & ", " & Math.Abs(CInt(center)) & ", " & Math.Abs(CInt(help)) & ", " & _
+                        top & ", " & Math.Abs(CInt(center)) & ", " & Math.Abs(CInt(help)) & ", " & _
                         Math.Abs(CInt(resizable)) & ", " & Math.Abs(CInt(status)) & "))" & NewLine())
                     .Append("   {" & NewLine())
                     Dim Control As System.Web.UI.Control
@@ -309,6 +534,105 @@ Public NotInheritable Class Common
                 page.ClientScript.RegisterStartupScript(page.GetType(), "ShowDialog." & url, .ToString())
             End With
         End If
+
+    End Sub
+
+    ''' <summary>
+    ''' Shows a modal popup window for the specified web page url when the specified web control is clicked.
+    ''' </summary>
+    ''' <param name="control">The web control that will show the popup window when clicked.</param>
+    ''' <param name="url">The web page url for which the popup windows is to be shown.</param>
+    ''' <remarks></remarks>
+    Public Shared Sub ShowDialog(ByVal control As System.Web.UI.Control, ByVal url As String)
+
+        ShowDialog(control, url, 400, 600)
+
+    End Sub
+
+    ''' <summary>
+    ''' Shows a modal popup window for the specified web page url when the specified web control is clicked.
+    ''' </summary>
+    ''' <param name="control">The web control that will show the popup window when clicked.</param>
+    ''' <param name="url">The web page url for which the popup windows is to be shown.</param>
+    ''' <param name="height">The height of the popup window.</param>
+    ''' <param name="width">The width of the popup window.</param>
+    ''' <remarks></remarks>
+    Public Shared Sub ShowDialog(ByVal control As System.Web.UI.Control, ByVal url As String, _
+            ByVal height As Integer, ByVal width As Integer)
+
+        ShowDialog(control, url, Nothing, height, width, 0, 0, True, False, False, False)
+
+    End Sub
+
+    ''' <summary>
+    ''' Shows a modal popup window for the specified web page url when the specified web control is clicked.
+    ''' </summary>
+    ''' <param name="control">The web control that will show the popup window when clicked.</param>
+    ''' <param name="url">The web page url for which the popup windows is to be shown.</param>
+    ''' <param name="height">The height of the popup window.</param>
+    ''' <param name="width">The width of the popup window.</param>
+    ''' <param name="left">Location of the popup window on X-axis.</param>
+    ''' <param name="top">Location of the popup window on Y-axis.</param>
+    ''' <remarks></remarks>
+    Public Shared Sub ShowDialog(ByVal control As System.Web.UI.Control, ByVal url As String, _
+            ByVal height As Integer, ByVal width As Integer, ByVal left As Integer, ByVal top As Integer)
+
+        ShowDialog(control, url, Nothing, height, width, left, top, False, False, False, False)
+
+    End Sub
+
+    ''' <summary>
+    ''' Shows a modal popup window for the specified web page url when the specified web control is clicked.
+    ''' </summary>
+    ''' <param name="control">The web control that will show the popup window when clicked.</param>
+    ''' <param name="url">The web page url for which the popup windows is to be shown.</param>
+    ''' <param name="dialogResultHolder">
+    ''' The web control whose text is to updated with the text returned by the web page displayed in the popup window.
+    ''' </param>
+    ''' <remarks></remarks>
+    Public Shared Sub ShowDialog(ByVal control As System.Web.UI.Control, ByVal url As String, _
+            ByVal dialogResultHolder As System.Web.UI.Control)
+
+        ShowDialog(control, url, dialogResultHolder, 400, 600)
+
+    End Sub
+
+    ''' <summary>
+    ''' Shows a modal popup window for the specified web page url when the specified web control is clicked.
+    ''' </summary>
+    ''' <param name="control">The web control that will show the popup window when clicked.</param>
+    ''' <param name="url">The web page url for which the popup windows is to be shown.</param>
+    ''' <param name="dialogResultHolder">
+    ''' The web control whose text is to updated with the text returned by the web page displayed in the popup window.
+    ''' </param>
+    ''' <param name="height">The height of the popup window.</param>
+    ''' <param name="width">The width of the popup window.</param>
+    ''' <remarks></remarks>
+    Public Shared Sub ShowDialog(ByVal control As System.Web.UI.Control, ByVal url As String, _
+            ByVal dialogResultHolder As System.Web.UI.Control, ByVal height As Integer, ByVal width As Integer)
+
+        ShowDialog(control, url, dialogResultHolder, height, width, 0, 0, True, False, False, False)
+
+    End Sub
+
+    ''' <summary>
+    ''' Shows a modal popup window for the specified web page url when the specified web control is clicked.
+    ''' </summary>
+    ''' <param name="control">The web control that will show the popup window when clicked.</param>
+    ''' <param name="url">The web page url for which the popup windows is to be shown.</param>
+    ''' <param name="dialogResultHolder">
+    ''' The web control whose text is to updated with the text returned by the web page displayed in the popup window.
+    ''' </param>
+    ''' <param name="height">The height of the popup window.</param>
+    ''' <param name="width">The width of the popup window.</param>
+    ''' <param name="left">Location of the popup window on X-axis.</param>
+    ''' <param name="top">Location of the popup window on Y-axis.</param>
+    ''' <remarks></remarks>
+    Public Shared Sub ShowDialog(ByVal control As System.Web.UI.Control, ByVal url As String, _
+            ByVal dialogResultHolder As System.Web.UI.Control, ByVal height As Integer, ByVal width As Integer, _
+            ByVal left As Integer, ByVal top As Integer)
+
+        ShowDialog(control, url, dialogResultHolder, height, width, left, top, False, False, False, False)
 
     End Sub
 
@@ -349,6 +673,54 @@ Public NotInheritable Class Common
                 width & ", " & left & ", " & top & ", " & Math.Abs(CInt(center)) & ", " & Math.Abs(CInt(help)) & _
                 ", " & Math.Abs(CInt(resizable)) & ", " & Math.Abs(CInt(status)) & "))", "OnClick")
         End If
+
+    End Sub
+
+#End Region
+
+#Region " ShowPopup Overloads "
+
+    ''' <summary>
+    ''' Shows a popup for the specified web page url when the specified web page has loaded.
+    ''' </summary>
+    ''' <param name="page">The web page that will show the popup when loaded.</param>
+    ''' <param name="url">The web page url for which the popup is to be shown.</param>
+    ''' <remarks></remarks>
+    Public Shared Sub ShowPopup(ByVal page As System.Web.UI.Page, ByVal url As String)
+
+        ShowPopup(page, url, 400, 600)
+
+    End Sub
+
+    ''' <summary>
+    ''' Shows a popup for the specified web page url when the specified web page has loaded.
+    ''' </summary>
+    ''' <param name="page">The web page that will show the popup when loaded.</param>
+    ''' <param name="url">The web page url for which the popup is to be shown.</param>
+    ''' <param name="height">The height of the popup.</param>
+    ''' <param name="width">The width of the popup.</param>
+    ''' <remarks></remarks>
+    Public Shared Sub ShowPopup(ByVal page As System.Web.UI.Page, ByVal url As String, ByVal height As Integer, _
+               ByVal width As Integer)
+
+        ShowPopup(page, url, height, width, 0, 0, True, False, False, False, False, False, False, False)
+
+    End Sub
+
+    ''' <summary>
+    ''' Shows a popup for the specified web page url when the specified web page has loaded.
+    ''' </summary>
+    ''' <param name="page">The web page that will show the popup when loaded.</param>
+    ''' <param name="url">The web page url for which the popup is to be shown.</param>
+    ''' <param name="height">The height of the popup.</param>
+    ''' <param name="width">The width of the popup.</param>
+    ''' <param name="left">Location of the popup on X-axis.</param>
+    ''' <param name="top">Location of the popup on Y-axis.</param>
+    ''' <remarks></remarks>
+    Public Shared Sub ShowPopup(ByVal page As System.Web.UI.Page, ByVal url As String, ByVal height As Integer, _
+            ByVal width As Integer, ByVal left As Integer, ByVal top As Integer)
+
+        ShowPopup(page, url, height, width, left, top, False, False, False, False, False, False, False, False)
 
     End Sub
 
@@ -400,6 +772,50 @@ Public NotInheritable Class Common
     ''' </summary>
     ''' <param name="control">The web control that will show the popup when clicked.</param>
     ''' <param name="url">The web page url for which the popup is to be shown.</param>
+    ''' <remarks></remarks>
+    Public Shared Sub ShowPopup(ByVal control As System.Web.UI.Control, ByVal url As String)
+
+        ShowPopup(control, url, 400, 600)
+
+    End Sub
+
+    ''' <summary>
+    ''' Shows a popup for the specified web page url when the specified web control is clicked.
+    ''' </summary>
+    ''' <param name="control">The web control that will show the popup when clicked.</param>
+    ''' <param name="url">The web page url for which the popup is to be shown.</param>
+    ''' <param name="height">The height of the popup.</param>
+    ''' <param name="width">The width of the popup.</param>
+    ''' <remarks></remarks>
+    Public Shared Sub ShowPopup(ByVal control As System.Web.UI.Control, ByVal url As String, ByVal height As Integer, _
+            ByVal width As Integer)
+
+        ShowPopup(control, url, height, width, 0, 0, True, False, False, False, False, False, False, False)
+
+    End Sub
+
+    ''' <summary>
+    ''' Shows a popup for the specified web page url when the specified web control is clicked.
+    ''' </summary>
+    ''' <param name="control">The web control that will show the popup when clicked.</param>
+    ''' <param name="url">The web page url for which the popup is to be shown.</param>
+    ''' <param name="height">The height of the popup.</param>
+    ''' <param name="width">The width of the popup.</param>
+    ''' <param name="left">Location of the popup on X-axis.</param>
+    ''' <param name="top">Location of the popup on Y-axis.</param>
+    ''' <remarks></remarks>
+    Public Shared Sub ShowPopup(ByVal control As System.Web.UI.Control, ByVal url As String, ByVal height As Integer, _
+            ByVal width As Integer, ByVal left As Integer, ByVal top As Integer)
+
+        ShowPopup(control, url, height, width, left, top, False, False, False, False, False, False, False, False)
+
+    End Sub
+
+    ''' <summary>
+    ''' Shows a popup for the specified web page url when the specified web control is clicked.
+    ''' </summary>
+    ''' <param name="control">The web control that will show the popup when clicked.</param>
+    ''' <param name="url">The web page url for which the popup is to be shown.</param>
     ''' <param name="height">The height of the popup.</param>
     ''' <param name="width">The width of the popup.</param>
     ''' <param name="left">Location of the popup on X-axis.</param>
@@ -427,6 +843,22 @@ Public NotInheritable Class Common
             left & ", " & top & ", " & Math.Abs(CInt(center)) & ", " & Math.Abs(CInt(resizable)) & ", " & _
             Math.Abs(CInt(scrollbars)) & ", " & Math.Abs(CInt(toolbar)) & ", " & Math.Abs(CInt(menubar)) & ", " & _
             Math.Abs(CInt(location)) & ", " & Math.Abs(CInt(status)) & ", " & Math.Abs(CInt(directories)) & "))", "OnClick")
+
+    End Sub
+
+#End Region
+
+#Region " Close Overloads "
+
+    ''' <summary>
+    ''' Closes the current web page when it has finished loading in the browser and returns the specified value to 
+    ''' the web page that opened it.
+    ''' </summary>
+    ''' <param name="page">The current web page.</param>
+    ''' <remarks></remarks>
+    Public Shared Sub Close(ByVal page As System.Web.UI.Page)
+
+        Close(page, Nothing)
 
     End Sub
 
@@ -461,6 +893,18 @@ Public NotInheritable Class Common
     ''' web page that opened it.
     ''' </summary>
     ''' <param name="control">The web control that, when clicked, will close the current web page.</param>
+    ''' <remarks></remarks>
+    Public Shared Sub Close(ByVal control As System.Web.UI.Control)
+
+        Close(control, Nothing)
+
+    End Sub
+
+    ''' <summary>
+    ''' Closes the current web page when the specified web control is clicked and returns the specified value to the 
+    ''' web page that opened it.
+    ''' </summary>
+    ''' <param name="control">The web control that, when clicked, will close the current web page.</param>
     ''' <param name="returnValue">The value to be returned to the parent web page that open this web page.</param>
     ''' <remarks></remarks>
     Public Shared Sub Close(ByVal control As System.Web.UI.Control, ByVal returnValue As String)
@@ -472,6 +916,10 @@ Public NotInheritable Class Common
         HookupScriptToControl(control, "javascript:return(Close('" & returnValue & "'))", "OnClick")
 
     End Sub
+
+#End Region
+
+#Region " MsgBox Overloads "
 
     ''' <summary>
     ''' The buttons to be displayed in the message box.
@@ -568,6 +1016,21 @@ Public NotInheritable Class Common
     ''' <param name="prompt">The text that is to be displayed in the message box.</param>
     ''' <param name="title">The title of the message box.</param>
     ''' <param name="buttons">The buttons to be displayed in the message box.</param>
+    ''' <remarks></remarks>
+    Public Shared Sub MsgBox(ByVal page As System.Web.UI.Page, ByVal prompt As String, ByVal title As String, _
+        ByVal buttons As MsgBoxStyle)
+
+        MsgBox(page, prompt, title, buttons, True)
+
+    End Sub
+
+    ''' <summary>
+    ''' Shows a windows application style message box when the specified web page has loaded.
+    ''' </summary>
+    ''' <param name="page">The web page that will show the message box when loaded.</param>
+    ''' <param name="prompt">The text that is to be displayed in the message box.</param>
+    ''' <param name="title">The title of the message box.</param>
+    ''' <param name="buttons">The buttons to be displayed in the message box.</param>
     ''' <param name="doPostBack">
     ''' True if a post-back is to be performed when either OK, Retry, or Yes buttons are clicked in the message box; 
     ''' otherwise False.
@@ -612,6 +1075,21 @@ Public NotInheritable Class Common
     ''' <param name="prompt">The text that is to be displayed in the message box.</param>
     ''' <param name="title">The title of the message box.</param>
     ''' <param name="buttons">The buttons to be displayed in the message box.</param>
+    ''' <remarks></remarks>
+    Public Shared Sub MsgBox(ByVal control As System.Web.UI.Control, ByVal prompt As String, ByVal title As String, _
+            ByVal buttons As MsgBoxStyle)
+
+        MsgBox(control, prompt, title, buttons, True)
+
+    End Sub
+
+    ''' <summary>
+    ''' Shows a windows application style message box when the specified web control is clicked.
+    ''' </summary>
+    ''' <param name="control">The web control that will show the message box when clicked.</param>
+    ''' <param name="prompt">The text that is to be displayed in the message box.</param>
+    ''' <param name="title">The title of the message box.</param>
+    ''' <param name="buttons">The buttons to be displayed in the message box.</param>
     ''' <param name="doPostBack">
     ''' True if a post-back is to be performed when either OK, Retry, or Yes buttons are clicked in the message box; 
     ''' otherwise False.
@@ -627,6 +1105,21 @@ Public NotInheritable Class Common
 
         HookupScriptToControl(control, "javascript:return(ShowMsgBox('" & JavaScriptEncode(prompt) & " ', '" & _
             title & "', " & buttons & ", " & LCase(doPostBack) & "))", "OnClick")
+
+    End Sub
+
+#End Region
+
+#Region " Refresh Overloads "
+
+    ''' <summary>
+    ''' Refreshes the web page as soon as it has loaded.
+    ''' </summary>
+    ''' <param name="page">The web page that is to be refreshed.</param>
+    ''' <remarks></remarks>
+    Public Shared Sub Refresh(ByVal page As System.Web.UI.Page)
+
+        Refresh(page, False)
 
     End Sub
 
@@ -685,6 +1178,10 @@ Public NotInheritable Class Common
 
     End Sub
 
+#End Region
+
+#Region " Maximize Overloads "
+
     ''' <summary>
     ''' Maximizes the browser window when the specified web page has loaded.
     ''' </summary>
@@ -723,6 +1220,10 @@ Public NotInheritable Class Common
 
     End Sub
 
+#End Region
+
+#Region " Minimize Overloads "
+
     ''' <summary>
     ''' Minimizes the browser windows when the specified web page has loaded.
     ''' </summary>
@@ -735,7 +1236,7 @@ Public NotInheritable Class Common
                 CreateClientSideScript(ClientSideScript.Minimize))
         End If
 
-        If page.ClientScript.IsStartupScriptRegistered("Minimize.Page") Then
+        If Not page.ClientScript.IsStartupScriptRegistered("Minimize.Page") Then
             With New StringBuilder
                 .Append("<script language=""javascript"">" & NewLine())
                 .Append("   Minimize();" & NewLine())
@@ -763,63 +1264,9 @@ Public NotInheritable Class Common
 
     End Sub
 
-    ''' <summary>
-    ''' Brings the browser window in which the specified web page has loaded to the foreground.
-    ''' </summary>
-    ''' <param name="page">The web page whose browser window is to be brought to the foreground.</param>
-    ''' <remarks></remarks>
-    Public Shared Sub BringToFront(ByVal page As System.Web.UI.Page)
+#End Region
 
-        If Not page.ClientScript.IsStartupScriptRegistered("BringToFront") Then
-            With New StringBuilder
-                .Append("<script language=""javascript"">" & NewLine())
-                .Append("   window.focus();" & NewLine())
-                .Append("</script>" & NewLine())
-
-                page.ClientScript.RegisterStartupScript(page.GetType(), "BringToFront", .ToString())
-            End With
-        End If
-
-    End Sub
-
-    ''' <summary>
-    ''' Pushes the browser window in which the specified web page has loaded to the background.
-    ''' </summary>
-    ''' <param name="page">The web page whose browser window is to be pushed to the background.</param>
-    ''' <remarks></remarks>
-    Public Shared Sub PushToBack(ByVal page As System.Web.UI.Page)
-
-        If Not page.ClientScript.IsStartupScriptRegistered("PushToBack") Then
-            With New StringBuilder
-                .Append("<script language=""javascript"">" & NewLine())
-                .Append("   window.blur();" & NewLine())
-                .Append("</script>" & NewLine())
-
-                page.ClientScript.RegisterStartupScript(page.GetType(), "PushToBack", .ToString())
-            End With
-        End If
-
-    End Sub
-
-    ''' <summary>
-    ''' Plays audio in the background when the specified web page has loaded.
-    ''' </summary>
-    ''' <param name="page">The web page in which audio is to be played.</param>
-    ''' <param name="soundFilename">Name of the audio file.</param>
-    ''' <param name="repeatCount">Number of times the audio is to be replayed.</param>
-    ''' <remarks></remarks>
-    Public Shared Sub PlayBackgroundSound(ByVal page As System.Web.UI.Page, ByVal soundFilename As String, _
-            ByVal repeatCount As Integer)
-
-        If Not page.ClientScript.IsStartupScriptRegistered("PlayBackgroundSound") Then
-            With New StringBuilder
-                .Append("<BGSOUND SRC=""" & soundFilename & """ LOOP=""" & repeatCount & """>" & NewLine())
-
-                page.ClientScript.RegisterStartupScript(page.GetType(), "PlayBackgroundSound", .ToString())
-            End With
-        End If
-
-    End Sub
+#Region " RunClientExe Overloads "
 
     ''' <summary>
     ''' Runs the specified executable on the client's machine when the specified web page finishes loading in the browser.
@@ -863,6 +1310,8 @@ Public NotInheritable Class Common
             "OnClick")
 
     End Sub
+
+#End Region
 
 #Region " Helpers "
 
