@@ -342,7 +342,7 @@ Public Class PhasorMeasurementReceiver
                 If m_measurementBuffer.Count > dumpInterval Then
                     SyncLock m_measurementBuffer
                         ' TODO: When this starts happening - you've overloaded the real-time capacity of your historian
-                        ' and you must do something about it - more hardware, scale out, etc. Make sure to log this
+                        ' and you must do something about it - bigger hardware, scale out, etc. Make sure to log this
                         ' error externally (alarm or something) so things can be fixed...
                         UpdateStatus(">> ERROR: Dumping " & (m_measurementBuffer.Count - postDumpCount).ToString("#,##0") & " measurements because we're falling behind :(")
                         m_measurementBuffer.RemoveRange(0, m_measurementBuffer.Count - postDumpCount)
