@@ -216,7 +216,21 @@ Namespace Configuration
 #Region " Coerced Native Type Setting Access Shortcuts "
 
         ' TODO: add "Categorized<Type>Setting" native type shortcut functions (ByVal category As String, ByVal name As String)
-        ' also need to add code comments...
+        ' also need to add code comments for all these functions...
+
+        '' TEMPLATE for "categorized" native type settings access functions
+        'Public Shared ReadOnly Property CategorizedBooleanSetting(ByVal category As String, ByVal name As String) As Boolean
+        '    Get
+        '        Return CategorizedBooleanSetting(category, name, False)
+        '    End Get
+        'End Property
+
+        'Public Shared ReadOnly Property CategorizedBooleanSetting(ByVal category As String, ByVal name As String, ByVal defaultValue As Boolean) As Boolean
+        '    Get
+        '        Return CategorizedSettings(category)(name).GetTypedValue(defaultValue)
+        '    End Get
+        'End Property
+
         Public Shared ReadOnly Property BooleanSetting(ByVal name As String) As Boolean
             Get
                 Return BooleanSetting(name, False)
@@ -225,11 +239,7 @@ Namespace Configuration
 
         Public Shared ReadOnly Property BooleanSetting(ByVal name As String, ByVal defaultValue As Boolean) As Boolean
             Get
-                Try
-                    Return Convert.ToBoolean(Settings(name).Value)
-                Catch
-                    Return defaultValue
-                End Try
+                Return Settings(name).GetTypedValue(defaultValue)
             End Get
         End Property
 
@@ -241,11 +251,7 @@ Namespace Configuration
 
         Public Shared ReadOnly Property ByteSetting(ByVal name As String, ByVal defaultValue As Byte) As Byte
             Get
-                Try
-                    Return Convert.ToByte(Settings(name).Value)
-                Catch
-                    Return defaultValue
-                End Try
+                Return Settings(name).GetTypedValue(defaultValue)
             End Get
         End Property
 
@@ -259,11 +265,7 @@ Namespace Configuration
         <CLSCompliant(False)> _
         Public Shared ReadOnly Property SByteSetting(ByVal name As String, ByVal defaultValue As SByte) As SByte
             Get
-                Try
-                    Return Convert.ToSByte(Settings(name).Value)
-                Catch
-                    Return defaultValue
-                End Try
+                Return Settings(name).GetTypedValue(defaultValue)
             End Get
         End Property
 
@@ -275,11 +277,7 @@ Namespace Configuration
 
         Public Shared ReadOnly Property CharSetting(ByVal name As String, ByVal defaultValue As Char) As Char
             Get
-                Try
-                    Return Convert.ToChar(Settings(name).Value)
-                Catch
-                    Return defaultValue
-                End Try
+                Return Settings(name).GetTypedValue(defaultValue)
             End Get
         End Property
 
@@ -291,11 +289,7 @@ Namespace Configuration
 
         Public Shared ReadOnly Property IntegerSetting(ByVal name As String, ByVal defaultValue As Integer) As Integer
             Get
-                Try
-                    Return Convert.ToInt32(Settings(name).Value)
-                Catch
-                    Return defaultValue
-                End Try
+                Return Settings(name).GetTypedValue(defaultValue)
             End Get
         End Property
 
@@ -309,11 +303,7 @@ Namespace Configuration
         <CLSCompliant(False)> _
         Public Shared ReadOnly Property UIntegerSetting(ByVal name As String, ByVal defaultValue As UInteger) As UInteger
             Get
-                Try
-                    Return Convert.ToUInt32(Settings(name).Value)
-                Catch
-                    Return defaultValue
-                End Try
+                Return Settings(name).GetTypedValue(defaultValue)
             End Get
         End Property
 
@@ -325,11 +315,7 @@ Namespace Configuration
 
         Public Shared ReadOnly Property LongSetting(ByVal name As String, ByVal defaultValue As Long) As Long
             Get
-                Try
-                    Return Convert.ToInt64(Settings(name).Value)
-                Catch
-                    Return defaultValue
-                End Try
+                Return Settings(name).GetTypedValue(defaultValue)
             End Get
         End Property
 
@@ -343,11 +329,7 @@ Namespace Configuration
         <CLSCompliant(False)> _
         Public Shared ReadOnly Property ULongSetting(ByVal name As String, ByVal defaultValue As ULong) As ULong
             Get
-                Try
-                    Return Convert.ToUInt64(Settings(name).Value)
-                Catch
-                    Return defaultValue
-                End Try
+                Return Settings(name).GetTypedValue(defaultValue)
             End Get
         End Property
 
@@ -359,11 +341,7 @@ Namespace Configuration
 
         Public Shared ReadOnly Property Int16Setting(ByVal name As String, ByVal defaultValue As Int16) As Int16
             Get
-                Try
-                    Return Convert.ToInt16(Settings(name).Value)
-                Catch
-                    Return defaultValue
-                End Try
+                Return Settings(name).GetTypedValue(defaultValue)
             End Get
         End Property
 
@@ -375,11 +353,7 @@ Namespace Configuration
 
         Public Shared ReadOnly Property Int32Setting(ByVal name As String, ByVal defaultValue As Int32) As Int32
             Get
-                Try
-                    Return Convert.ToInt32(Settings(name).Value)
-                Catch
-                    Return defaultValue
-                End Try
+                Return Settings(name).GetTypedValue(defaultValue)
             End Get
         End Property
 
@@ -391,11 +365,7 @@ Namespace Configuration
 
         Public Shared ReadOnly Property Int64Setting(ByVal name As String, ByVal defaultValue As Int64) As Int64
             Get
-                Try
-                    Return Convert.ToInt64(Settings(name).Value)
-                Catch
-                    Return defaultValue
-                End Try
+                Return Settings(name).GetTypedValue(defaultValue)
             End Get
         End Property
 
@@ -409,11 +379,7 @@ Namespace Configuration
         <CLSCompliant(False)> _
         Public Shared ReadOnly Property UInt16Setting(ByVal name As String, ByVal defaultValue As UInt16) As UInt16
             Get
-                Try
-                    Return Convert.ToUInt16(Settings(name).Value)
-                Catch
-                    Return defaultValue
-                End Try
+                Return Settings(name).GetTypedValue(defaultValue)
             End Get
         End Property
 
@@ -427,11 +393,7 @@ Namespace Configuration
         <CLSCompliant(False)> _
         Public Shared ReadOnly Property UInt32Setting(ByVal name As String, ByVal defaultValue As UInt32) As UInt32
             Get
-                Try
-                    Return Convert.ToUInt32(Settings(name).Value)
-                Catch
-                    Return defaultValue
-                End Try
+                Return Settings(name).GetTypedValue(defaultValue)
             End Get
         End Property
 
@@ -445,11 +407,7 @@ Namespace Configuration
         <CLSCompliant(False)> _
         Public Shared ReadOnly Property UInt64Setting(ByVal name As String, ByVal defaultValue As UInt64) As UInt64
             Get
-                Try
-                    Return Convert.ToUInt64(Settings(name).Value)
-                Catch
-                    Return defaultValue
-                End Try
+                Return Settings(name).GetTypedValue(defaultValue)
             End Get
         End Property
 
@@ -461,11 +419,7 @@ Namespace Configuration
 
         Public Shared ReadOnly Property SingleSetting(ByVal name As String, ByVal defaultValue As Single) As Single
             Get
-                Try
-                    Return Convert.ToSingle(Settings(name).Value)
-                Catch
-                    Return defaultValue
-                End Try
+                Return Settings(name).GetTypedValue(defaultValue)
             End Get
         End Property
 
@@ -477,11 +431,7 @@ Namespace Configuration
 
         Public Shared ReadOnly Property DoubleSetting(ByVal name As String, ByVal defaultValue As Double) As Double
             Get
-                Try
-                    Return Convert.ToDouble(Settings(name).Value)
-                Catch
-                    Return defaultValue
-                End Try
+                Return Settings(name).GetTypedValue(defaultValue)
             End Get
         End Property
 
@@ -493,27 +443,19 @@ Namespace Configuration
 
         Public Shared ReadOnly Property DecimalSetting(ByVal name As String, ByVal defaultValue As Decimal) As Decimal
             Get
-                Try
-                    Return Convert.ToDecimal(Settings(name).Value)
-                Catch
-                    Return defaultValue
-                End Try
+                Return Settings(name).GetTypedValue(defaultValue)
             End Get
         End Property
 
-        Public Shared ReadOnly Property DateTimeSetting(ByVal name As String) As System.DateTime
+        Public Shared ReadOnly Property DateTimeSetting(ByVal name As String) As Date
             Get
-                Return DateTimeSetting(name, System.DateTime.MinValue)
+                Return DateTimeSetting(name, Date.MinValue)
             End Get
         End Property
 
-        Public Shared ReadOnly Property DateTimeSetting(ByVal name As String, ByVal defaultValue As System.DateTime) As System.DateTime
+        Public Shared ReadOnly Property DateTimeSetting(ByVal name As String, ByVal defaultValue As Date) As Date
             Get
-                Try
-                    Return Convert.ToDateTime(Settings(name).Value)
-                Catch
-                    Return defaultValue
-                End Try
+                Return Settings(name).GetTypedValue(defaultValue)
             End Get
         End Property
 

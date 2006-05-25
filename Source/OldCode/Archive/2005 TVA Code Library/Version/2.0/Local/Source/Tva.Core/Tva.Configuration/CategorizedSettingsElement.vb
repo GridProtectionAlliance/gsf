@@ -12,6 +12,8 @@
 '  -----------------------------------------------------------------------------------------------------
 '  04/11/2006 - Pinal C. Patel
 '       Original version of source code generated
+'  05/25/2006 - J. Ritchie Carroll
+'       Added Try/Catch safety wrapper around GetTypedValue implementation
 '
 '*******************************************************************************************************
 
@@ -124,18 +126,23 @@ Namespace Configuration
         ''' </summary>
         ''' <typeparam name="T">Type to which the value string is to be converted.</typeparam>
         ''' <param name="defaultValue">The default value to return if the value string is empty.</param>
-        ''' <returns></returns>
-        ''' <remarks></remarks>
+        ''' <returns>The type-coerced value of the referenced setting</returns>
+        ''' <remarks>If this function fails to properly coerce value to specified type, default value is returned</remarks>
         Public Function GetTypedValue(Of T)(ByVal defaultValue As T) As T
 
-            Dim value As String = MyClass.Value()
-            If Not String.IsNullOrEmpty(value) Then
-                ' Element's value string is present.
-                Return CType(CType(value, Object), T)
-            Else
-                ' Element's value string is present, so use the default.
+            Try
+                Dim value As String = MyClass.Value()
+
+                If Not String.IsNullOrEmpty(value) Then
+                    ' Element's value string is present - convert it to the proper type
+                    Return CType(DirectCast(value, Object), T)
+                Else
+                    ' Element's value string is not present, so use the default
+                    Return defaultValue
+                End If
+            Catch
                 Return defaultValue
-            End If
+            End Try
 
         End Function
 
