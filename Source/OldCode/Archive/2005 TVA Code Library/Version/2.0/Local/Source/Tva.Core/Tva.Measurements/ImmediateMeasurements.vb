@@ -22,7 +22,7 @@ Namespace Measurements
     ''' <summary>This class represents the absolute latest received measurement values</summary>
     Public Class ImmediateMeasurements
 
-        Private m_parent As Concentrator
+        Private WithEvents m_parent As Concentrator
         Private m_measurements As Dictionary(Of Integer, TemporalMeasurement)
         Private m_taggedMeasurements As Dictionary(Of String, List(Of Integer))
 
@@ -141,8 +141,8 @@ Namespace Measurements
             Dim total As Double
 
             SyncLock m_measurements
-                For Each entry As KeyValuePair(Of Integer, TemporalMeasurement) In m_measurements
-                    measurement = Value(entry.Key)
+                For Each measurementID As Integer In m_measurements.Keys
+                    measurement = Value(measurementID)
                     If Not Double.IsNaN(measurement) Then
                         total += measurement
                         count += 1
@@ -180,8 +180,8 @@ Namespace Measurements
                 Dim measurement As Double
 
                 SyncLock m_measurements
-                    For Each entry As KeyValuePair(Of Integer, TemporalMeasurement) In m_measurements
-                        measurement = Value(entry.Key)
+                    For Each measurementID As Integer In m_measurements.Keys
+                        measurement = Value(measurementID)
                         If Not Double.IsNaN(measurement) Then
                             If measurement < minValue Then minValue = measurement
                         End If
@@ -200,8 +200,8 @@ Namespace Measurements
                 Dim measurement As Double
 
                 SyncLock m_measurements
-                    For Each entry As KeyValuePair(Of Integer, TemporalMeasurement) In m_measurements
-                        measurement = Value(entry.Key)
+                    For Each measurementID As Integer In m_measurements.Keys
+                        measurement = Value(measurementID)
                         If Not Double.IsNaN(measurement) Then
                             If measurement > maxValue Then maxValue = measurement
                         End If
@@ -245,6 +245,26 @@ Namespace Measurements
                 Return maxValue
             End Get
         End Property
+
+        Private Sub m_parent_LagTimeUpdated(ByVal lagTime As Double) Handles m_parent.LagTimeUpdated
+
+            SyncLock m_measurements
+                For Each measurementID As Integer In m_measurements.Keys
+                    Measurement(measurementID).LagTime = lagTime
+                Next
+            End SyncLock
+
+        End Sub
+
+        Private Sub m_parent_LeadTimeUpdated(ByVal leadTime As Double) Handles m_parent.LeadTimeUpdated
+
+            SyncLock m_measurements
+                For Each measurementID As Integer In m_measurements.Keys
+                    Measurement(measurementID).LeadTime = leadTime
+                Next
+            End SyncLock
+
+        End Sub
 
     End Class
 

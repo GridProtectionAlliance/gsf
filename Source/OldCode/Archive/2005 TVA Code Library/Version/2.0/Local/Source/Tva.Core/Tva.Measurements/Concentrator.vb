@@ -55,6 +55,9 @@ Namespace Measurements
 
 #Region " Private Member Declarations "
 
+        Friend Event LeadTimeUpdated(ByVal leadTime As Double)              ' Raised, for the benefit of dependent classes, when lead time is updated
+        Friend Event LagTimeUpdated(ByVal lagTime As Double)                ' Raised, for the benefit of dependent classes, when lag time is updated
+
         Private m_realTimeTicks As Long                                     ' Ticks of the most recently received measurement (i.e., real-time)
         Private m_currentSampleTimestamp As Date                            ' Timestamp of current real-time value baselined at the bottom of the second
         Private m_framesPerSecond As Integer                                ' Frames per second
@@ -168,6 +171,7 @@ Namespace Measurements
             Set(ByVal value As Double)
                 If value <= 0 Then Throw New ArgumentOutOfRangeException("value", "LagTime must be greater than zero, but it can be less than one")
                 m_lagTime = value
+                RaiseEvent LagTimeUpdated(m_lagTime)
             End Set
         End Property
 
@@ -184,6 +188,7 @@ Namespace Measurements
             Set(ByVal value As Double)
                 If value <= 0 Then Throw New ArgumentOutOfRangeException("value", "LeadTime must be greater than zero, but it can be less than one")
                 m_leadTime = value
+                RaiseEvent LeadTimeUpdated(m_leadTime)
             End Set
         End Property
 
