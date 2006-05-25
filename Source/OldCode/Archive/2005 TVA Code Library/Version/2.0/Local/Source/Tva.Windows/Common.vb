@@ -32,106 +32,100 @@ Public NotInheritable Class Common
 
     End Sub
 
+    ''' <summary>
+    ''' Saves the size and location information of the specified form to the application configuration file.
+    ''' </summary>
+    ''' <param name="form">The System.Windows.Forms.Form whose size and location information is to be saved.</param>
+    ''' <remarks></remarks>
     Public Shared Sub SaveWindowSettings(ByVal form As System.Windows.Forms.Form)
 
-        SaveWindowSettings(form, Nothing)
+        SaveWindowSize(form)
+        SaveWindowLocation(form)
 
     End Sub
 
-    Public Shared Sub SaveWindowSettings(ByVal form As System.Windows.Forms.Form, ByVal windowName As String)
-
-        SaveWindowSize(form, windowName)
-        SaveWindowLocation(form, windowName)
-
-    End Sub
-
+    ''' <summary>
+    ''' Saves the size information of the specified form to the application configuration file.
+    ''' </summary>
+    ''' <param name="form">The System.Windows.Forms.Form whose size information is to be saved.</param>
+    ''' <remarks></remarks>
     Public Shared Sub SaveWindowSize(ByVal form As System.Windows.Forms.Form)
 
-        SaveWindowSize(form, Nothing)
-
-    End Sub
-
-    Public Shared Sub SaveWindowSize(ByVal form As System.Windows.Forms.Form, ByVal windowName As String)
-
-        If windowName Is Nothing Then windowName = form.Name
-        CategorizedSettings(LastWindowSizeSetting)(windowName).Value = form.Size.ToString()
+        CategorizedSettings(LastWindowSizeSetting)(form.Name()).Value = form.Size.ToString()
         SaveSettings()
 
     End Sub
 
+    ''' <summary>
+    ''' Saves the location information of the specified form to the application configuration file.
+    ''' </summary>
+    ''' <param name="form">The System.Windows.Forms.Form whose location information is to be saved.</param>
+    ''' <remarks></remarks>
     Public Shared Sub SaveWindowLocation(ByVal form As System.Windows.Forms.Form)
 
-        SaveWindowLocation(form, Nothing)
-
-    End Sub
-
-    Public Shared Sub SaveWindowLocation(ByVal form As System.Windows.Forms.Form, ByVal windowName As String)
-
-        If windowName Is Nothing Then windowName = form.Name
-        CategorizedSettings(LastWindowLocationSetting)(windowName).Value = form.Location.ToString()
+        CategorizedSettings(LastWindowLocationSetting)(form.Name()).Value = form.Location.ToString()
         SaveSettings()
 
     End Sub
 
+    ''' <summary>
+    ''' Restores the size and location of the specified form from the size and location information saved in the 
+    ''' application configuration file.
+    ''' </summary>
+    ''' <param name="form">The System.Windows.Forms.Form whose size and location is to be restored.</param>
+    ''' <remarks></remarks>
     Public Shared Sub RestoreWindowSettings(ByVal form As System.Windows.Forms.Form)
 
-        RestoreWindowSettings(form, Nothing)
+        RestoreWindowSize(form)
+        RestoreWindowLocation(form)
 
     End Sub
 
-    Public Shared Sub RestoreWindowSettings(ByVal form As System.Windows.Forms.Form, ByVal windowName As String)
-
-        RestoreWindowSize(form, windowName)
-        RestoreWindowLocation(form, windowName)
-
-    End Sub
-
+    ''' <summary>
+    ''' Restores the size of the specified form from the size information saved in the application configuration file.
+    ''' </summary>
+    ''' <param name="form">The System.Windows.Forms.Form whose size is to be restored.</param>
+    ''' <remarks></remarks>
     Public Shared Sub RestoreWindowSize(ByVal form As System.Windows.Forms.Form)
 
-        RestoreWindowSize(form, Nothing)
+        Dim savedSize As String = CategorizedSettings(LastWindowSizeSetting)(form.Name()).Value()
 
-    End Sub
-
-    Public Shared Sub RestoreWindowSize(ByVal form As System.Windows.Forms.Form, ByVal windowName As String)
-
-        If windowName Is Nothing Then windowName = form.Name
-        Dim sizeData As String = Trim(CategorizedSettings(LastWindowSizeSetting)(windowName).Value())
-
-        ' Restore last window size
-        If Len(sizeData) > 0 Then
-            Dim params As Hashtable = GetWindowParams(sizeData)
-
+        If Not String.IsNullOrEmpty(savedSize) Then
+            ' Restore last saved window size.
+            Dim sizeSetting As New Setting(Of Integer)(savedSize)
             With form
-                .Height = GetWindowParam(params, "Height", .Height, Maximum(.MinimumSize.Height, .Height), -1)
-                .Width = GetWindowParam(params, "Width", .Width, Maximum(.MinimumSize.Width, .Width), -1)
+                .Width = Minimum(sizeSetting.ParamA(), GetTotalScreenWidth())
+                .Height = Minimum(sizeSetting.ParamB(), GetMaximumScreenHeight())
             End With
         End If
 
     End Sub
 
+    ''' <summary>
+    ''' Restores the location of the specified form from the location information saved in the application configuration file.
+    ''' </summary>
+    ''' <param name="form">The System.Windows.Forms.Form whose location is to be restored.</param>
+    ''' <remarks></remarks>
     Public Shared Sub RestoreWindowLocation(ByVal form As System.Windows.Forms.Form)
 
-        RestoreWindowLocation(form, Nothing)
+        Dim savedLocation As String = CategorizedSettings(LastWindowLocationSetting)(form.Name()).Value()
 
-    End Sub
-
-    Public Shared Sub RestoreWindowLocation(ByVal form As System.Windows.Forms.Form, ByVal windowName As String)
-
-        If windowName Is Nothing Then windowName = form.Name
-        Dim locationData As String = Trim(CategorizedSettings(LastWindowLocationSetting)(windowName).Value())
-
-        ' Restore last window location
-        If Len(locationData) > 0 Then
-            Dim params As Hashtable = GetWindowParams(locationData)
-
+        If Not String.IsNullOrEmpty(savedLocation) Then
+            ' Restore last saved window location.
+            Dim locationSetting As New Setting(Of Integer)(savedLocation)
             With form
-                .Left = GetWindowParam(params, "X", .Left, 0, Maximum(GetTotalScreenWidth() - .Width, 0))
-                .Top = GetWindowParam(params, "Y", .Top, 0, Maximum(GetMaximumScreenHeight() - .Height, 0))
+                .Left = Minimum(locationSetting.ParamA(), (GetTotalScreenWidth() - .Width()))
+                .Top = Minimum(locationSetting.ParamB(), (GetMaximumScreenHeight() - .Height()))
             End With
         End If
 
     End Sub
 
+    ''' <summary>
+    ''' Gets the total width of all the screens assuming the screens are side-by-side.
+    ''' </summary>
+    ''' <returns>The total width of all the screens assuming the screens are side-by-side.</returns>
+    ''' <remarks></remarks>
     Public Shared Function GetTotalScreenWidth() As Long
 
         Dim totalWidth As Long
@@ -145,6 +139,11 @@ Public NotInheritable Class Common
 
     End Function
 
+    ''' <summary>
+    ''' Gets the height of the screen with the highest resolution.
+    ''' </summary>
+    ''' <returns>The height of the screen with the highest resolution.</returns>
+    ''' <remarks></remarks>
     Public Shared Function GetMaximumScreenHeight() As Long
 
         Dim maxHeight As Long
@@ -158,6 +157,11 @@ Public NotInheritable Class Common
 
     End Function
 
+    ''' <summary>
+    ''' Gets the height of the screen with the lowest resolution.
+    ''' </summary>
+    ''' <returns>The height of the screen with the lowest resolution.</returns>
+    ''' <remarks></remarks>
     Public Shared Function GetMinimumScreenHeight() As Long
 
         Dim minHeight As Long
@@ -173,6 +177,43 @@ Public NotInheritable Class Common
 
 #Region " Helpers "
 
+    Private Class Setting(Of T)
+
+        Private m_paramA As T
+        Private m_paramB As T
+
+        Public Sub New(ByVal setting As String)
+
+            If Not String.IsNullOrEmpty(setting) Then
+                If setting.Chars(0) = "{"c And setting.Chars(setting.Length() - 1) = "}"c Then
+                    ' Remove surrounding braces
+                    setting = setting.Substring(1, setting.Length() - 2)
+                    If Not String.IsNullOrEmpty(setting) Then
+                        Dim elements As Object() = setting.Split(New Char() {","c})
+                        If elements.Length() = 2 Then
+                            m_paramA = CType(elements(0).Split(New Char() {"="c})(1), T)
+                            m_paramB = CType(elements(1).Split(New Char() {"="c})(1), T)
+                        End If
+                    End If
+                End If
+            End If
+
+        End Sub
+
+        Public ReadOnly Property ParamA() As T
+            Get
+                Return m_paramA
+            End Get
+        End Property
+
+        Public ReadOnly Property ParamB() As T
+            Get
+                Return m_paramB
+            End Get
+        End Property
+
+    End Class
+
     Private Shared Function GetWindowParam(ByVal params As Hashtable, ByVal key As String, _
         ByVal defaultValue As Integer, ByVal minimumValue As Integer, ByVal maximumValue As Integer) As Integer
 
@@ -184,35 +225,6 @@ Public NotInheritable Class Common
         If maximumValue <> -1 Then If param > maximumValue Then param = maximumValue
 
         Return param
-
-    End Function
-
-    Private Shared Function GetWindowParams(ByVal dataSet As String) As Hashtable
-
-        Dim params As New Hashtable
-
-        ' Example data sets:
-        '   Me.Size.ToString() = {Width=1491, Height=1082}
-        '   Me.Location.ToString() = {X=1894,Y=112}
-
-        If Len(dataSet) > 0 Then
-            If dataSet.Chars(0) = "{"c And dataSet.Chars(dataSet.Length - 1) = "}"c Then
-                ' Remove surrounding braces
-                dataSet = dataSet.Substring(1, dataSet.Length - 2)
-                If Len(dataSet) > 0 Then
-                    Dim elements As String()
-
-                    ' Get each key/value pair
-                    For Each pair As String In dataSet.Split(","c)
-                        ' Store key/value pair in hashtable
-                        elements = pair.Split("="c)
-                        If elements.Length >= 2 Then params.Add(Trim(elements(0)), CInt(elements(1)))
-                    Next
-                End If
-            End If
-        End If
-
-        Return params
 
     End Function
 
