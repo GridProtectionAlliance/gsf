@@ -27,6 +27,7 @@ Namespace IeeeC37_118
         Inherits ConfigurationCellBase
 
         Private m_formatFlags As FormatFlags
+        Private m_configurationCount As UInt16
 
         Public Sub New(ByVal parent As ConfigurationFrame, ByVal idCode As UInt16, ByVal nominalFrequency As LineFrequency)
 
@@ -80,6 +81,15 @@ Namespace IeeeC37_118
             End Get
             Set(ByVal value As FormatFlags)
                 m_formatFlags = value
+            End Set
+        End Property
+
+        Public Property ConfigurationCount() As UInt16
+            Get
+                Return m_configurationCount
+            End Get
+            Set(ByVal value As UInt16)
+                m_configurationCount = value
             End Set
         End Property
 
@@ -181,7 +191,8 @@ Namespace IeeeC37_118
                 Return MyBase.FooterLength + _
                     PhasorDefinitions.Count * PhasorDefinition.ConversionFactorLength + _
                     AnalogDefinitions.Count * AnalogDefinition.ConversionFactorLength + _
-                    DigitalDefinitions.Count * DigitalDefinition.ConversionFactorLength
+                    DigitalDefinitions.Count * DigitalDefinition.ConversionFactorLength + _
+                    IIf(Parent.RevisionNumber = ProtocolRevision.Version1, 2, 0)
             End Get
         End Property
 
@@ -211,6 +222,9 @@ Namespace IeeeC37_118
 
                 ' Include nominal frequency
                 CopyImage(MyBase.FooterImage, buffer, index, MyBase.FooterLength)
+
+                ' Include configuration count (new for version 7.0)
+                If Parent.RevisionNumber = ProtocolRevision.Version1 Then EndianOrder.BigEndian.CopyBytes(m_configurationCount, buffer, index)
 
                 Return buffer
             End Get
@@ -244,6 +258,9 @@ Namespace IeeeC37_118
 
             ' Parse nominal frequency
             MyBase.ParseFooterImage(state, binaryImage, startIndex)
+
+            ' Get configuration count (new for version 7.0)
+            If Parent.RevisionNumber = ProtocolRevision.Version1 Then m_configurationCount = EndianOrder.BigEndian.ToUInt16(binaryImage, startIndex)
 
         End Sub
 
