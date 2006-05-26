@@ -64,7 +64,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Ssam\Ssam.SsamLogger.bmp" />
+    <EmbeddedResource Include="EmbeddedResources\Ssam.SsamLogger.bmp" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="DataJunction\" />
