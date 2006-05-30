@@ -1,4 +1,19 @@
-' 05-26-06
+'*******************************************************************************************************
+'  Tva.Windows.UI.AboutDialog.vb - Standard TVA About Dialog
+'  Copyright © 2006 - TVA, all rights reserved - Gbtc
+'
+'  Build Environment: VB.NET, Visual Studio 2005
+'  Primary Developer: Pinal C. Patel, Operations Data Architecture [TVA]
+'      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
+'       Phone: 423/751-2250
+'       Email: pcpatel@tva.gov
+'
+'  Code Modification History:
+'  -----------------------------------------------------------------------------------------------------
+'  05/26/2006 - Pinal C. Patel
+'       Original version of source code generated
+'
+'*******************************************************************************************************
 
 Imports System.IO
 Imports System.Windows.Forms
@@ -29,6 +44,36 @@ Namespace UI
             SetCompanyHomePage("http://www.tva.gov")
             SetCompanyLogo(thisAssembly.GetEmbeddedResource("TVALogo.bmp"))
             SetCompanyDisclaimer(thisAssembly.GetEmbeddedResource("TVADisclaimer.txt"))
+
+        End Sub
+
+        ''' <summary>
+        ''' Conceals the tab where disclaimer text is displayed.
+        ''' </summary>
+        ''' <remarks></remarks>
+        Public Sub HideDisclaimerTab()
+
+            TabControlInformation.TabPages.Remove(TabPageDisclaimer)
+
+        End Sub
+
+        ''' <summary>
+        ''' Conceals the tab where application information is displayed.
+        ''' </summary>
+        ''' <remarks></remarks>
+        Public Sub HideApplicationTab()
+
+            TabControlInformation.TabPages.Remove(TabPageApplication)
+
+        End Sub
+
+        ''' <summary>
+        ''' Conceals the tab where assemblies and their information is displayed.
+        ''' </summary>
+        ''' <remarks></remarks>
+        Public Sub HideAssembliesTab()
+
+            TabControlInformation.TabPages.Remove(TabPageAssemblies)
 
         End Sub
 
