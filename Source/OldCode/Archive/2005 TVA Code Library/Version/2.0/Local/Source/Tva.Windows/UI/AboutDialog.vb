@@ -41,7 +41,7 @@ Namespace UI
             ' Add any initialization after the InitializeComponent() call.
             ' Set the defaults.
             Dim thisAssembly As Assembly = New Assembly(GetExecutingAssembly())
-            SetCompanyHomePage("http://www.tva.gov")
+            SetCompanyUrl("http://www.tva.gov")
             SetCompanyLogo(thisAssembly.GetEmbeddedResource("TVALogo.bmp"))
             SetCompanyDisclaimer(thisAssembly.GetEmbeddedResource("TVADisclaimer.txt"))
 
@@ -78,11 +78,11 @@ Namespace UI
         End Sub
 
         ''' <summary>
-        ''' Sets the URL that will be opened when the Home Page link is clicked.
+        ''' Sets the URL that will be opened when the logo is clicked.
         ''' </summary>
-        ''' <param name="url">URL of the home page.</param>
+        ''' <param name="url">URL of the company's home page.</param>
         ''' <remarks></remarks>
-        Public Sub SetCompanyHomePage(ByVal url As String)
+        Public Sub SetCompanyUrl(ByVal url As String)
 
             m_url = url
 
@@ -214,7 +214,15 @@ Namespace UI
 
         End Sub
 
-        Private Sub LinkLabelHomePage_LinkClicked(ByVal sender As System.Object, ByVal e As System.Windows.Forms.LinkLabelLinkClickedEventArgs) Handles LinkLabelHomePage.LinkClicked
+        Private Sub LinkLabelHomePage_LinkClicked(ByVal sender As System.Object, ByVal e As System.Windows.Forms.LinkLabelLinkClickedEventArgs)
+
+            If Not String.IsNullOrEmpty(m_url) Then
+                Process.Start(m_url)
+            End If
+
+        End Sub
+
+        Private Sub PictureBoxLogo_Click(ByVal sender As System.Object, ByVal e As System.EventArgs)
 
             If Not String.IsNullOrEmpty(m_url) Then
                 Process.Start(m_url)

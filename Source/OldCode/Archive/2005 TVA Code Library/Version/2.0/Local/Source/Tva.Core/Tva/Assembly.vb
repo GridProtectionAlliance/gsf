@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  Tva.Interop.Assembly.vb - Assembly Information Class
+'  Tva.Assembly.vb - Assembly Information Class
 '  Copyright © 2006 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005
@@ -43,8 +43,8 @@ Public Class Assembly
 
     End Sub
 
-    ''' <summary>Initializes a instance of Tva.Interop.Assembly for the specified System.Reflection.Assembly.</summary>
-    ''' <param name="assemblyInstance">An instance of System.Reflection.Assembly for which a Tva.Interop.Assembly instance is to be created.</param>
+    ''' <summary>Initializes a instance of Tva.Assembly for the specified System.Reflection.Assembly.</summary>
+    ''' <param name="assemblyInstance">An instance of System.Reflection.Assembly for which a Tva.Assembly instance is to be created.</param>
     Public Sub New(ByVal assemblyInstance As System.Reflection.Assembly)
 
         m_assemblyInstance = assemblyInstance
@@ -65,8 +65,8 @@ Public Class Assembly
 
     End Function
 
-    ''' <summary>Get the Tva.Interop.Assembly instance of the assembly that invoked the currently executing method.</summary>
-    ''' <returns>The Tva.Interop.Assembly instance of the assembly that invoked the currently executing method.</returns>
+    ''' <summary>Get the Tva.Assembly instance of the assembly that invoked the currently executing method.</summary>
+    ''' <returns>The Tva.Assembly instance of the assembly that invoked the currently executing method.</returns>
     Public Shared ReadOnly Property CallingAssembly() As Assembly
         Get
             If m_callingAssembly Is Nothing Then m_callingAssembly = New Assembly(GetCallingAssembly())
@@ -74,8 +74,8 @@ Public Class Assembly
         End Get
     End Property
 
-    ''' <summary>Gets the Tva.Interop.Assembly instance of the process executable in the default application domain.</summary>
-    ''' <returns>The Tva.Interop.Assembly instance of the process executable in the default application domain.</returns>
+    ''' <summary>Gets the Tva.Assembly instance of the process executable in the default application domain.</summary>
+    ''' <returns>The Tva.Assembly instance of the process executable in the default application domain.</returns>
     Public Shared ReadOnly Property EntryAssembly() As Assembly
         Get
             If m_entryAssembly Is Nothing Then m_entryAssembly = New Assembly(GetEntryAssembly())
@@ -83,8 +83,8 @@ Public Class Assembly
         End Get
     End Property
 
-    ''' <summary>Gets the Tva.Interop.Assembly instance of the assembly that contains the code that is currently executing.</summary>
-    ''' <returns>the Tva.Interop.Assembly instance of the assembly that contains the code that is currently executing.</returns>
+    ''' <summary>Gets the Tva.Assembly instance of the assembly that contains the code that is currently executing.</summary>
+    ''' <returns>The Tva.Assembly instance of the assembly that contains the code that is currently executing.</returns>
     Public Shared ReadOnly Property ExecutingAssembly() As Assembly
         Get
             If m_executingAssembly Is Nothing Then m_executingAssembly = New Assembly(GetExecutingAssembly())

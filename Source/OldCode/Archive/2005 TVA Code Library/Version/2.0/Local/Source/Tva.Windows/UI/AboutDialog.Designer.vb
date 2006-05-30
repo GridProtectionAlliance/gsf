@@ -34,7 +34,6 @@ Namespace UI
             Me.ColumnHeaderAssemblyValue = New System.Windows.Forms.ColumnHeader
             Me.ComboBoxAssemblies = New System.Windows.Forms.ComboBox
             Me.ButtonOK = New System.Windows.Forms.Button
-            Me.LinkLabelHomePage = New System.Windows.Forms.LinkLabel
             Me.PictureBoxLogo = New System.Windows.Forms.PictureBox
             Me.TabControlInformation.SuspendLayout()
             Me.TabPageDisclaimer.SuspendLayout()
@@ -51,10 +50,10 @@ Namespace UI
             Me.TabControlInformation.Controls.Add(Me.TabPageDisclaimer)
             Me.TabControlInformation.Controls.Add(Me.TabPageApplication)
             Me.TabControlInformation.Controls.Add(Me.TabPageAssemblies)
-            Me.TabControlInformation.Location = New System.Drawing.Point(12, 81)
+            Me.TabControlInformation.Location = New System.Drawing.Point(12, 68)
             Me.TabControlInformation.Name = "TabControlInformation"
             Me.TabControlInformation.SelectedIndex = 0
-            Me.TabControlInformation.Size = New System.Drawing.Size(370, 190)
+            Me.TabControlInformation.Size = New System.Drawing.Size(370, 203)
             Me.TabControlInformation.TabIndex = 2
             '
             'TabPageDisclaimer
@@ -63,7 +62,7 @@ Namespace UI
             Me.TabPageDisclaimer.Location = New System.Drawing.Point(4, 22)
             Me.TabPageDisclaimer.Name = "TabPageDisclaimer"
             Me.TabPageDisclaimer.Padding = New System.Windows.Forms.Padding(3)
-            Me.TabPageDisclaimer.Size = New System.Drawing.Size(362, 164)
+            Me.TabPageDisclaimer.Size = New System.Drawing.Size(362, 177)
             Me.TabPageDisclaimer.TabIndex = 0
             Me.TabPageDisclaimer.Text = "Disclaimer"
             Me.TabPageDisclaimer.UseVisualStyleBackColor = True
@@ -74,7 +73,7 @@ Namespace UI
             Me.RichTextBoxDisclaimer.Location = New System.Drawing.Point(3, 3)
             Me.RichTextBoxDisclaimer.Name = "RichTextBoxDisclaimer"
             Me.RichTextBoxDisclaimer.ReadOnly = True
-            Me.RichTextBoxDisclaimer.Size = New System.Drawing.Size(356, 158)
+            Me.RichTextBoxDisclaimer.Size = New System.Drawing.Size(356, 171)
             Me.RichTextBoxDisclaimer.TabIndex = 0
             Me.RichTextBoxDisclaimer.Text = ""
             '
@@ -164,26 +163,17 @@ Namespace UI
             Me.ButtonOK.Text = "OK"
             Me.ButtonOK.UseVisualStyleBackColor = True
             '
-            'LinkLabelHomePage
-            '
-            Me.LinkLabelHomePage.Anchor = CType((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-            Me.LinkLabelHomePage.AutoSize = True
-            Me.LinkLabelHomePage.Location = New System.Drawing.Point(323, 9)
-            Me.LinkLabelHomePage.Name = "LinkLabelHomePage"
-            Me.LinkLabelHomePage.Size = New System.Drawing.Size(63, 13)
-            Me.LinkLabelHomePage.TabIndex = 0
-            Me.LinkLabelHomePage.TabStop = True
-            Me.LinkLabelHomePage.Text = "Home Page"
-            '
             'PictureBoxLogo
             '
             Me.PictureBoxLogo.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
                         Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-            Me.PictureBoxLogo.Location = New System.Drawing.Point(12, 25)
+            Me.PictureBoxLogo.BackColor = System.Drawing.Color.Transparent
+            Me.PictureBoxLogo.Cursor = System.Windows.Forms.Cursors.Hand
+            Me.PictureBoxLogo.Location = New System.Drawing.Point(12, 12)
             Me.PictureBoxLogo.Name = "PictureBoxLogo"
             Me.PictureBoxLogo.Size = New System.Drawing.Size(370, 50)
             Me.PictureBoxLogo.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage
-            Me.PictureBoxLogo.TabIndex = 1
+            Me.PictureBoxLogo.TabIndex = 4
             Me.PictureBoxLogo.TabStop = False
             '
             'AboutDialog
@@ -191,10 +181,9 @@ Namespace UI
             Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
             Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
             Me.ClientSize = New System.Drawing.Size(394, 318)
+            Me.Controls.Add(Me.PictureBoxLogo)
             Me.Controls.Add(Me.ButtonOK)
             Me.Controls.Add(Me.TabControlInformation)
-            Me.Controls.Add(Me.PictureBoxLogo)
-            Me.Controls.Add(Me.LinkLabelHomePage)
             Me.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog
             Me.MaximizeBox = False
             Me.MinimizeBox = False
@@ -208,7 +197,6 @@ Namespace UI
             Me.TabPageAssemblies.ResumeLayout(False)
             CType(Me.PictureBoxLogo, System.ComponentModel.ISupportInitialize).EndInit()
             Me.ResumeLayout(False)
-            Me.PerformLayout()
 
         End Sub
         Friend WithEvents TabControlInformation As System.Windows.Forms.TabControl
@@ -224,7 +212,6 @@ Namespace UI
         Friend WithEvents ColumnHeaderAssemblyKey As System.Windows.Forms.ColumnHeader
         Friend WithEvents ColumnHeaderAssemblyValue As System.Windows.Forms.ColumnHeader
         Friend WithEvents ComboBoxAssemblies As System.Windows.Forms.ComboBox
-        Friend WithEvents LinkLabelHomePage As System.Windows.Forms.LinkLabel
         Friend WithEvents PictureBoxLogo As System.Windows.Forms.PictureBox
     End Class
 
