@@ -50,9 +50,7 @@
     <Import Include="System.Diagnostics" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AEPPhasorMeasurementMapper.vb" />
-    <Compile Include="ConEdPhasorMeasurementMapper.vb" />
-    <Compile Include="ATCPhasorMeasurementMapper.vb" />
+    <Compile Include="MeasurementDefinition.vb" />
     <Compile Include="PhasorMeasurementReceiver.vb" />
     <Compile Include="MainModule.vb" />
     <Compile Include="My Project\AssemblyInfo.vb" />

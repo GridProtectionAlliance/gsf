@@ -16,6 +16,7 @@
 '*******************************************************************************************************
 
 Imports System.Text
+Imports Tva.DateTime
 Imports Tva.Phasors
 Imports Tva.Phasors.PhasorValueBase
 Imports Tva.Phasors.FrequencyValueBase
@@ -31,15 +32,16 @@ Public Class PhasorMeasurementMapper
     Private WithEvents m_frameParser As FrameParser
     Private m_source As String
     Private m_pmuIDs As List(Of String)
-    Private m_measurementIDs As Dictionary(Of String, Integer)
+    Private m_measurementIDs As Dictionary(Of String, MeasurementDefinition)
     Private m_measurementFrames As List(Of IFrame)
     Private m_bytesReceived As Long
     Private m_errorCount As Integer
     Private m_errorTime As Long
     Private m_receivedConfigFrame As Boolean
     Private m_lastReportTime As Long
+    Private m_timezone As Win32TimeZone
 
-    Public Sub New(ByVal frameParser As FrameParser, ByVal source As String, ByVal pmuIDs As List(Of String), ByVal measurementIDs As Dictionary(Of String, Integer))
+    Public Sub New(ByVal frameParser As FrameParser, ByVal source As String, ByVal pmuIDs As List(Of String), ByVal measurementIDs As Dictionary(Of String, MeasurementDefinition))
 
         m_frameParser = frameParser
         m_source = source
@@ -144,6 +146,21 @@ Public Class PhasorMeasurementMapper
         End Get
     End Property
 
+    Public Property TimeZone() As Win32TimeZone
+        Get
+            Return m_timezone
+        End Get
+        Set(ByVal value As Win32TimeZone)
+            m_timezone = value
+        End Set
+    End Property
+
+    Public ReadOnly Property PmuIDs() As List(Of String)
+        Get
+            Return m_pmuIDs
+        End Get
+    End Property
+
     ''' <summary>This key function is the glue that binds a phasor measurement to a historian measurement ID</summary>
     Protected Overridable Sub MapDataFrameMeasurements(ByVal frame As Tva.Phasors.IDataFrame)
 
@@ -151,6 +168,9 @@ Public Class PhasorMeasurementMapper
         With frame
             Dim pmuID As String
             Dim x, y As Integer
+
+            ' Adjust time to UTC based on source PDC/PMU time zone, if provided (typically when not UTC already)
+            If m_timezone IsNot Nothing Then .Ticks = m_timezone.ToUniversalTime(.Timestamp).Ticks
 
             ' Track lastest reporting time
             If .Ticks > m_lastReportTime Then m_lastReportTime = .Ticks
@@ -194,7 +214,6 @@ Public Class PhasorMeasurementMapper
             Next
         End With
 
-
         ' Queue up frame for polled retrieval into DatAWare...
         SyncLock m_measurementFrames
             m_measurementFrames.Add(frame)
@@ -204,12 +223,17 @@ Public Class PhasorMeasurementMapper
 
     Private Sub MapMeasurement(ByVal frame As IDataFrame, ByVal key As String, ByVal measurement As IMeasurement)
 
-        Dim measurementID As Integer
+        Dim definition As MeasurementDefinition = Nothing
 
         ' Lookup synonym value in measurement ID list
-        If m_measurementIDs.TryGetValue(key, measurementID) Then
-            measurement.ID = measurementID
-            frame.Measurements.Add(measurementID, measurement)
+        If m_measurementIDs.TryGetValue(key, definition) Then
+            With measurement
+                .ID = definition.ID
+                .Adder = definition.Adder
+                .Multiplier = definition.Multiplier
+            End With
+
+            frame.Measurements.Add(measurement.ID, measurement)
         End If
 
     End Sub

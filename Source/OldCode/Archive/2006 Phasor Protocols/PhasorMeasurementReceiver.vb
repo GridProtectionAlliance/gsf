@@ -24,7 +24,7 @@ Imports System.Net.Sockets
 Imports Microsoft.Win32
 Imports Tva.Common
 Imports Tva.Collections.Common
-Imports Tva.Configuration.Common
+Imports Tva.DateTime.Common
 Imports Tva.Data.Common
 Imports Tva.DatAWare
 Imports Tva.Phasors
@@ -36,6 +36,7 @@ Public Class PhasorMeasurementReceiver
     Public Event StatusMessage(ByVal status As String)
 
     Private WithEvents m_connectionTimer As Timers.Timer
+    Private WithEvents m_reportingStatus As Timers.Timer
     Private m_connectString As String
     Private m_archiverIP As String
     Private m_archiverPort As Integer
@@ -49,18 +50,28 @@ Public Class PhasorMeasurementReceiver
     Private m_processedMeasurements As Long
     Private m_mappers As Dictionary(Of String, PhasorMeasurementMapper)
     Private m_measurementBuffer As List(Of IMeasurement)
+    Private m_statusInterval As Integer
+    Private m_intializing As Boolean
 
-    Public Sub New(ByVal archiverIP As String, ByVal connectString As String)
+    Public Sub New(ByVal archiverIP As String, ByVal connectString As String, ByVal statusInterval As Integer)
 
         m_archiverIP = archiverIP
         m_connectString = connectString
+        m_statusInterval = statusInterval
         m_measurementBuffer = New List(Of IMeasurement)
         m_connectionTimer = New Timers.Timer
+        m_reportingStatus = New Timers.Timer
 
         With m_connectionTimer
             .AutoReset = False
             .Interval = 1
             .Enabled = False
+        End With
+
+        With m_reportingStatus
+            .AutoReset = True
+            .Interval = 1000
+            .Enabled = True
         End With
 
         ' Archiver Settings Path: HKEY_LOCAL_MACHINE\SOFTWARE\DatAWare\Interface Configuration\
@@ -129,11 +140,14 @@ Public Class PhasorMeasurementReceiver
         UpdateStatus("[" & Now() & "] Initializing phasor measurement receiver...")
 
         Try
+            m_intializing = True
+
             Dim connection As New SqlConnection(m_connectString)
-            Dim measurementIDs As New Dictionary(Of String, Integer)
+            Dim measurementIDs As New Dictionary(Of String, MeasurementDefinition)
             Dim row As DataRow
             Dim parser As FrameParser
             Dim source As String
+            Dim timezone As String
             Dim pmuIDs As List(Of String)
             Dim x, y As Integer
 
@@ -147,12 +161,12 @@ Public Class PhasorMeasurementReceiver
 
             UpdateStatus("Database connection opened...")
 
-            ' Initialize measurement ID list
+            ' Initialize complete measurement ID list
             With RetrieveData("SELECT * FROM IEEEDataConnectionMeasurements", connection)
                 For x = 0 To .Rows.Count - 1
                     ' Get current row
                     With .Rows(x)
-                        measurementIDs.Add(.Item("Synonym"), .Item("ID"))
+                        measurementIDs.Add(.Item("Synonym"), New MeasurementDefinition(.Item("ID"), .Item("Synonym"), .Item("Adder"), .Item("Multiplier")))
                     End With
                 Next
             End With
@@ -166,13 +180,13 @@ Public Class PhasorMeasurementReceiver
                     row = .Rows(x)
 
                     parser = New FrameParser()
-                    source = row("SourceID").ToString.Trim.ToUpper
                     pmuIDs = New List(Of String)
 
+                    source = row("SourceID").ToString.Trim.ToUpper
+                    timezone = row("TimeZone")
+
                     With parser
-                        ' TODO: Change database entries to match Enumeration Names - then do lookup:
-                        '.Protocol = [Enum].Parse(GetType(Protocol), row("DataID<name>"))
-                        .Protocol = Math.Abs(5 - Convert.ToInt32(row("DataID")))
+                        .Protocol = [Enum].Parse(GetType(Protocol), row("DataID"))
                         .TransportLayer = IIf(String.Compare(row("NTP"), "UDP", True) = 0, DataTransportLayer.Udp, DataTransportLayer.Tcp)
                         .HostIP = row("IPAddress")
                         .Port = row("IPPort")
@@ -195,35 +209,26 @@ Public Class PhasorMeasurementReceiver
                         pmuIDs.Add(source)
                     End If
 
-                    ' UPDATE: Could compile these "special" case protocol "fixers" into indivdual DLL's
-                    ' with an interface that could provide enough info to handle mapping
                     SyncLock m_measurementBuffer
-                        Select Case source
-                            Case "CONED"
-                                With New ConEdPhasorMeasurementMapper(parser, source, pmuIDs, measurementIDs)
-                                    AddHandler .ParsingStatus, AddressOf UpdateStatus
-                                    m_mappers.Add(source, .This)
-                                    .Connect()
-                                End With
-                            Case "AEP"
-                                With New AEPPhasorMeasurementMapper(parser, source, pmuIDs, measurementIDs)
-                                    AddHandler .ParsingStatus, AddressOf UpdateStatus
-                                    m_mappers.Add(source, .This)
-                                    .Connect()
-                                End With
-                            Case "ARPN"
-                                With New ATCPhasorMeasurementMapper(parser, source, pmuIDs, measurementIDs)
-                                    AddHandler .ParsingStatus, AddressOf UpdateStatus
-                                    m_mappers.Add(source, .This)
-                                    .Connect()
-                                End With
-                            Case Else
-                                With New PhasorMeasurementMapper(parser, source, pmuIDs, measurementIDs)
-                                    AddHandler .ParsingStatus, AddressOf UpdateStatus
-                                    m_mappers.Add(source, .This)
-                                    .Connect()
-                                End With
-                        End Select
+                        With New PhasorMeasurementMapper(parser, source, pmuIDs, measurementIDs)
+                            ' Add timezone mapping if not UTC...
+                            If String.Compare(timezone, "GMT Standard Time", True) <> 0 Then
+                                Try
+                                    .TimeZone = GetWin32TimeZone(timezone)
+                                Catch ex As Exception
+                                    UpdateStatus("Failed to assign timezone offset """ & timezone & """ to PDC/PMU """ & source & """ due to exception: " & ex.Message)
+                                End Try
+                            End If
+
+                            ' Bubble mapper status messages out to local update status functions
+                            AddHandler .ParsingStatus, AddressOf UpdateStatus
+
+                            ' Add mapper to collection
+                            m_mappers.Add(source, .This)
+
+                            ' Start connection cycle
+                            .Connect()
+                        End With
                     End SyncLock
                 Next
             End With
@@ -233,6 +238,8 @@ Public Class PhasorMeasurementReceiver
             UpdateStatus("[" & Now() & "] Phasor measurement receiver initialized successfully.")
         Catch ex As Exception
             UpdateStatus("[" & Now() & "] ERROR: Phasor measurement receiver failed to initialize: " & ex.Message)
+        Finally
+            m_intializing = False
         End Try
 
     End Sub
@@ -404,6 +411,36 @@ Public Class PhasorMeasurementReceiver
     Private Sub UpdateStatus(ByVal status As String)
 
         RaiseEvent StatusMessage(status)
+
+    End Sub
+
+    Private Sub m_reportingStatus_Elapsed(ByVal sender As Object, ByVal e As System.Timers.ElapsedEventArgs) Handles m_reportingStatus.Elapsed
+
+        If Not m_intializing Then
+            Try
+                Dim connection As New SqlConnection(m_connectString)
+                Dim updateSqlBatch As New StringBuilder
+                Dim isReporting As Integer
+
+                connection.Open()
+
+                ' Check all PMU's for "reporting status"...
+                For Each mapper As PhasorMeasurementMapper In m_mappers.Values
+                    isReporting = IIf(Math.Abs(DateTime.UtcNow.Subtract(New DateTime(mapper.LastReportTime)).Seconds) <= m_statusInterval, 1, 0)
+
+                    For Each pmu As String In mapper.PmuIDs
+                        updateSqlBatch.Append("UPDATE PMUs SET IsReporting=" & isReporting & " WHERE PMUID_Uniq='" & pmu & "';" & Environment.NewLine)
+                    Next
+                Next
+
+                ' Update reporting status for each PMU
+                ExecuteNonQuery(updateSqlBatch.ToString(), connection, 30)
+
+                connection.Close()
+            Catch ex As Exception
+                UpdateStatus("[" & Now() & "] ERROR: Failed to update PMU reporting status due to exception: " & ex.Message)
+            End Try
+        End If
 
     End Sub
 

@@ -37,9 +37,10 @@ Module MainModule
         Settings.Add("ArchiverIP", "127.0.0.1", "DatAWare Archiver IP")
         Settings.Add("InitializeOnStartup", "True", "Set to True to intialize phasor measurement mapper at startup")
         Settings.Add("PMUDatabase", "Data Source=RGOCSQLD;Initial Catalog=PMU_SDS;Integrated Security=False;user ID=ESOPublic;pwd=4all2see", "PMU metaData database connect string", True)
+        Settings.Add("PMUStatusInterval", "5", "Number of seconds of deviation from UTC time (according to local clock) that last PMU reporting time is allowed before considering it offline")
         SaveSettings()
 
-        m_receiver = New PhasorMeasurementReceiver(StringSetting("ArchiverIP"), StringSetting("PMUDatabase"))
+        m_receiver = New PhasorMeasurementReceiver(StringSetting("ArchiverIP"), StringSetting("PMUDatabase"), IntegerSetting("PMUStatusInterval"))
         If BooleanSetting("InitializeOnStartup") Then m_receiver.Initialize()
 
         Do While True
