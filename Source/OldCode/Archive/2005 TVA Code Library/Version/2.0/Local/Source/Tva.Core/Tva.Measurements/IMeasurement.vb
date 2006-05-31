@@ -17,6 +17,8 @@
 '
 '*******************************************************************************************************
 
+Imports System.ComponentModel
+
 Namespace Measurements
 
     Public Interface IMeasurement
@@ -30,7 +32,20 @@ Namespace Measurements
         Property ID() As Integer
 
         ''' <summary>Gets or sets numeric value of this measurement</summary>
+        ''' <remarks>
+        ''' <para>Implementors should account for adder and multiplier in return value, e.g.:</para>
+        ''' <code>Return m_value * m_multiplier + m_adder</code>
+        ''' </remarks>
         Property Value() As Double
+
+        ''' <summary>Returns raw value of this measurement (i.e., value that is not offset by adder and multiplier)</summary>
+        ReadOnly Property RawValue() As Double
+
+        ''' <summary>Defines an offset to add to the measurement value - should default to zero</summary>
+        <DefaultValue(0.0R)> Property Adder() As Double
+
+        ''' <summary>Defines a mulplicative offset to add to the measurement value - should default to one</summary>
+        <DefaultValue(1.0R)> Property Multiplier() As Double
 
         ''' <summary>Gets or sets exact timestamp of the data represented by this measurement</summary>
         ''' <remarks>The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001</remarks>

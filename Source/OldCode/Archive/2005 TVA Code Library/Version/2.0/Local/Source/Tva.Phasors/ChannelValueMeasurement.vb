@@ -26,6 +26,8 @@ Friend Class ChannelValueMeasurement(Of T As IChannelDefinition)
     Private m_parent As IChannelValue(Of T)
     Private m_id As Integer
     Private m_valueIndex As Integer
+    Private m_adder As Double
+    Private m_multiplier As Double
 
     Public Sub New(ByVal parent As IChannelValue(Of T), ByVal valueIndex As Integer)
 
@@ -61,10 +63,34 @@ Friend Class ChannelValueMeasurement(Of T As IChannelDefinition)
 
     Public Property Value() As Double Implements Measurements.IMeasurement.Value
         Get
-            Return m_parent.Values(m_valueIndex)
+            Return m_parent.Values(m_valueIndex) * m_multiplier + m_adder
         End Get
         Set(ByVal value As Double)
             m_parent.Values(m_valueIndex) = value
+        End Set
+    End Property
+
+    Public ReadOnly Property RawValue() As Double Implements IMeasurement.RawValue
+        Get
+            Return m_parent.Values(m_valueIndex)
+        End Get
+    End Property
+
+    Public Property Adder() As Double Implements IMeasurement.Adder
+        Get
+            Return m_adder
+        End Get
+        Set(ByVal value As Double)
+            m_adder = value
+        End Set
+    End Property
+
+    Public Property Multiplier() As Double Implements IMeasurement.Multiplier
+        Get
+            Return m_multiplier
+        End Get
+        Set(ByVal value As Double)
+            m_multiplier = value
         End Set
     End Property
 

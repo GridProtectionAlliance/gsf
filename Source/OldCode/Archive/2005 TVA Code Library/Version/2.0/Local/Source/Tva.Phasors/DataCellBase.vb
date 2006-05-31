@@ -33,6 +33,8 @@ Public MustInherit Class DataCellBase
     Private m_analogValues As AnalogValueCollection
     Private m_digitalValues As DigitalValueCollection
     Private m_id As Integer
+    Private m_adder As Double
+    Private m_multiplier As Double
 
     Protected Sub New(ByVal parent As IDataFrame, ByVal alignOnDWordBoundry As Boolean, ByVal configurationCell As IConfigurationCell, ByVal maximumPhasors As Int32, ByVal maximumAnalogs As Int32, ByVal maximumDigitals As Int32)
 
@@ -150,10 +152,36 @@ Public MustInherit Class DataCellBase
     ' The only "measured value" a data cell exposes is its "StatusFlags"
     Private Property IMeasurementValue() As Double Implements IMeasurement.Value
         Get
-            Return m_statusFlags
+            Return m_statusFlags * m_multiplier + m_adder
         End Get
         Set(ByVal value As Double)
             m_statusFlags = Convert.ToInt16(value)
+        End Set
+    End Property
+
+    Private ReadOnly Property IMeasurementRawValue() As Double Implements Measurements.IMeasurement.RawValue
+        Get
+            Return m_statusFlags
+        End Get
+    End Property
+
+    ' I don't imagine you would want offsets for status flags - but this may yet be handy for
+    ' "forcing" a particular set of quality flags to come through the system (M=0, A=New Flags)
+    Private Property IMeasurementAdder() As Double Implements Measurements.IMeasurement.Adder
+        Get
+            Return m_adder
+        End Get
+        Set(ByVal value As Double)
+            m_adder = value
+        End Set
+    End Property
+
+    Private Property IMeasurementMultiplier() As Double Implements Measurements.IMeasurement.Multiplier
+        Get
+            Return m_multiplier
+        End Get
+        Set(ByVal value As Double)
+            m_multiplier = value
         End Set
     End Property
 

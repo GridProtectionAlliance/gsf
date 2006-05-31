@@ -26,6 +26,8 @@ Namespace Measurements
 
         Private m_id As Integer
         Private m_value As Double
+        Private m_adder As Double
+        Private m_multiplier As Double
         Private m_ticks As Long
         Private m_valueQualityIsGood As Boolean
         Private m_timestampQualityIsGood As Boolean
@@ -44,8 +46,16 @@ Namespace Measurements
 
         Public Sub New(ByVal id As Integer, ByVal value As Double, ByVal ticks As Long)
 
+            MyClass.New(id, value, 0.0R, 1.0R, ticks)
+
+        End Sub
+
+        Public Sub New(ByVal id As Integer, ByVal value As Double, ByVal adder As Double, ByVal multiplier As Double, ByVal ticks As Long)
+
             m_id = id
             m_value = value
+            m_adder = adder
+            m_multiplier = multiplier
             m_ticks = ticks
             m_valueQualityIsGood = True
             m_timestampQualityIsGood = True
@@ -70,12 +80,41 @@ Namespace Measurements
         End Property
 
         ''' <summary>Gets or sets numeric value of this measurement</summary>
+        ''' <returns>Returns value offset by adder and multipler (i.e., RawValue * Multiplier + Adder)</returns>
         Public Overridable Property Value() As Double Implements IMeasurement.Value
             Get
-                Return m_value
+                Return m_value * m_multiplier + m_adder
             End Get
             Set(ByVal value As Double)
                 m_value = value
+            End Set
+        End Property
+
+        ''' <summary>Raw measurement value that is not offset by adder and multiplier</summary>
+        ''' <returns>Raw value of this measurement (i.e., value that is not offset by adder and multiplier)</returns>
+        Public ReadOnly Property RawValue() As Double Implements IMeasurement.RawValue
+            Get
+                Return m_value
+            End Get
+        End Property
+
+        ''' <summary>Defines an offset to add to the measurement value - defaults to zero</summary>
+        Public Property Adder() As Double Implements IMeasurement.Adder
+            Get
+                Return m_adder
+            End Get
+            Set(ByVal value As Double)
+                m_adder = value
+            End Set
+        End Property
+
+        ''' <summary>Defines a mulplicative offset to add to the measurement value - defaults to one</summary>
+        Public Property Multiplier() As Double Implements IMeasurement.Multiplier
+            Get
+                Return m_multiplier
+            End Get
+            Set(ByVal value As Double)
+                m_multiplier = value
             End Set
         End Property
 
