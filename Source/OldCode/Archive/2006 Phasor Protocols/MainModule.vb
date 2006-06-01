@@ -89,7 +89,7 @@ Module MainModule
     Private Function TryGetMapper(ByVal consoleLine As String, ByRef mapper As PhasorMeasurementMapper) As Boolean
 
         Try
-            Dim pmuID As String = RemoveDuplicateWhiteSpace(consoleLine).Split(" "c)(1)
+            Dim pmuID As String = RemoveDuplicateWhiteSpace(consoleLine).Split(" "c)(1).ToUpper()
 
             If m_receiver.Mappers.TryGetValue(pmuID, mapper) Then
                 Return True
