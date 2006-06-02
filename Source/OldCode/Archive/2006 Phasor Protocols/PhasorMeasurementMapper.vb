@@ -18,8 +18,6 @@
 Imports System.Text
 Imports Tva.DateTime
 Imports Tva.Phasors
-Imports Tva.Phasors.PhasorValueBase
-Imports Tva.Phasors.FrequencyValueBase
 Imports Tva.Measurements
 
 <CLSCompliant(False)> _
@@ -188,20 +186,20 @@ Public Class PhasorMeasurementMapper
                         For y = 0 To .Count - 1
                             With .Item(y)
                                 ' Map angle - PA(n)
-                                MapMeasurement(frame, pmuID & "-PA" & (y + 1), .Measurements(PolarCompositeValue.Angle))
+                                MapMeasurement(frame, pmuID & "-PA" & (y + 1), .Measurements(CompositePhasorValue.Angle))
 
                                 ' Map magnitude - PM(m)
-                                MapMeasurement(frame, pmuID & "-PM" & (y + 1), .Measurements(PolarCompositeValue.Magnitude))
+                                MapMeasurement(frame, pmuID & "-PM" & (y + 1), .Measurements(CompositePhasorValue.Magnitude))
                             End With
                         Next
                     End With
 
                     With .FrequencyValue
                         ' Map frequency - FQ
-                        MapMeasurement(frame, pmuID & "-FQ", .Measurements(CompositeValue.Frequency))
+                        MapMeasurement(frame, pmuID & "-FQ", .Measurements(CompositeFrequencyValue.Frequency))
 
                         ' Map df/dt - DF
-                        MapMeasurement(frame, pmuID & "-DF", .Measurements(CompositeValue.DfDt))
+                        MapMeasurement(frame, pmuID & "-DF", .Measurements(CompositeFrequencyValue.DfDt))
                     End With
 
                     With .DigitalValues
