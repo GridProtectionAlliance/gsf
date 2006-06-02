@@ -17,25 +17,37 @@
 
 Imports System.Buffer
 
-''' <summary>Phasor coordinate format</summary>
+''' <summary>Phasor coordinate formats</summary>
 Public Enum CoordinateFormat As Byte
     Rectangular
     Polar
 End Enum
 
-''' <summary>Phasor type</summary>
+''' <summary>Composite polar values</summary>
+Public Enum CompositePhasorValue
+    Angle
+    Magnitude
+End Enum
+
+''' <summary>Composite frequency values</summary>
+Public Enum CompositeFrequencyValue
+    Frequency
+    DfDt
+End Enum
+
+''' <summary>Phasor types</summary>
 Public Enum PhasorType As Byte
     Voltage
     Current
 End Enum
 
-''' <summary>Data transmission format</summary>
+''' <summary>Data transmission formats</summary>
 Public Enum DataFormat As Byte
     FixedInteger
     FloatingPoint
 End Enum
 
-''' <summary>Nominal line frequency</summary>
+''' <summary>Nominal line frequencies</summary>
 Public Enum LineFrequency As Byte
     Hz50
     Hz60
@@ -50,7 +62,7 @@ Public Enum FundamentalFrameType
     Undetermined
 End Enum
 
-''' <summary>Phasor data transport layer</summary>
+''' <summary>Phasor data transport layers</summary>
 Public Enum DataTransportLayer
     Tcp
     Udp
@@ -58,7 +70,7 @@ Public Enum DataTransportLayer
     Other
 End Enum
 
-''' <summary>Phasor data protocol</summary>
+''' <summary>Phasor data protocols</summary>
 Public Enum Protocol
     IeeeC37_118V1
     IeeeC37_118D6

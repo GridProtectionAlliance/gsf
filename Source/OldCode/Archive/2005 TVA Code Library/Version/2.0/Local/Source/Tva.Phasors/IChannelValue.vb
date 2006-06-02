@@ -29,7 +29,14 @@ Public Interface IChannelValue(Of T As IChannelDefinition)
 
     ReadOnly Property DataFormat() As DataFormat
 
-    ReadOnly Property Values() As Single()
+    ''' <summary>Composite measurements of channel value</summary>
+    ''' <remarks>
+    ''' Because derived classes may consist of more than one measured value,
+    ''' we use this property to abstractly expose each value
+    ''' </remarks>
+    Default Property CompositeValue(ByVal index As Integer) As Single
+
+    ReadOnly Property CompositeValueCount() As Integer
 
     ReadOnly Property IsEmpty() As Boolean
 

@@ -32,16 +32,6 @@ Public MustInherit Class PhasorValueBase
     Private m_imaginary As Single
     Private m_compositeValues As CompositeValues
 
-    Public Enum PolarCompositeValue
-        Angle
-        Magnitude
-    End Enum
-
-    Public Enum RectangularCompositeValue
-        Real
-        Imaginary
-    End Enum
-
     'Create phasor from polar coordinates (angle expected in Degrees)
     ' Note: This method is expected to be implemented as a public shared method in derived class automatically passing in createNewPhasorValueFunction
     Protected Shared Function CreateFromPolarValues(ByVal createNewPhasorValueFunction As CreateNewPhasorValueFunctionSignature, ByVal parent As IDataCell, ByVal phasorDefinition As IPhasorDefinition, ByVal angle As Single, ByVal magnitude As Single) As IPhasorValue
@@ -164,7 +154,7 @@ Public MustInherit Class PhasorValueBase
         End Get
         Set(ByVal value As Single)
             ' We store angle as one of our required composite values
-            m_compositeValues(PolarCompositeValue.Angle) = value
+            m_compositeValues(CompositePhasorValue.Angle) = value
 
             ' If all composite values have been received, we can calculate phasor's real and imaginary values
             CalculatePhasorValueFromComposites()
@@ -173,7 +163,7 @@ Public MustInherit Class PhasorValueBase
 
     Public Overridable ReadOnly Property AngleReceived() As Boolean
         Get
-            Return m_compositeValues.Received(PolarCompositeValue.Angle)
+            Return m_compositeValues.Received(CompositePhasorValue.Angle)
         End Get
     End Property
 
@@ -182,7 +172,7 @@ Public MustInherit Class PhasorValueBase
             Return System.Math.Sqrt(m_real * m_real + m_imaginary * m_imaginary)
         End Get
         Set(ByVal value As Single)
-            m_compositeValues(PolarCompositeValue.Magnitude) = value
+            m_compositeValues(CompositePhasorValue.Magnitude) = value
 
             ' If all composite values have been received, we can calculate phasor's real and imaginary values
             CalculatePhasorValueFromComposites()
@@ -191,7 +181,7 @@ Public MustInherit Class PhasorValueBase
 
     Public Overridable ReadOnly Property MagnitudeReceived() As Boolean
         Get
-            Return m_compositeValues.Received(PolarCompositeValue.Magnitude)
+            Return m_compositeValues.Received(CompositePhasorValue.Magnitude)
         End Get
     End Property
 
@@ -201,8 +191,8 @@ Public MustInherit Class PhasorValueBase
             Dim angle, magnitude As Single
 
             ' All values received, create a new phasor value from composite values
-            angle = m_compositeValues(PolarCompositeValue.Angle)
-            magnitude = m_compositeValues(PolarCompositeValue.Magnitude)
+            angle = m_compositeValues(CompositePhasorValue.Angle)
+            magnitude = m_compositeValues(CompositePhasorValue.Magnitude)
 
             m_real = CalculateRealComponent(angle, magnitude)
             m_imaginary = CalculateImaginaryComponent(angle, magnitude)
@@ -246,14 +236,32 @@ Public MustInherit Class PhasorValueBase
         End Set
     End Property
 
-    Public Overrides ReadOnly Property Values() As Single()
+    Default Public Overrides Property CompositeValue(ByVal index As Integer) As Single
         Get
-            ' HACK: fix later!
-            'If CoordinateFormat = Phasors.CoordinateFormat.Rectangular Then
-            'Return New Single() {m_real, m_imaginary}
-            'Else
-            Return New Single() {Angle, Magnitude}
-            'End If
+            Select Case index
+                Case CompositePhasorValue.Angle
+                    Return Angle
+                Case CompositePhasorValue.Magnitude
+                    Return Magnitude
+                Case Else
+                    Throw New IndexOutOfRangeException("Specified phasor value composite index, " & index & ", is out of range - there are only two composite values for a phasor value: angle (0) and magnitude (1)")
+            End Select
+        End Get
+        Set(ByVal value As Single)
+            Select Case index
+                Case CompositePhasorValue.Angle
+                    Angle = value
+                Case CompositePhasorValue.Magnitude
+                    Magnitude = value
+                Case Else
+                    Throw New IndexOutOfRangeException("Specified phasor value composite index, " & index & ", is out of range - there are only two composite values for a phasor value: angle (0) and magnitude (1)")
+            End Select
+        End Set
+    End Property
+
+    Public Overrides ReadOnly Property CompositeValueCount() As Integer
+        Get
+            Return 2
         End Get
     End Property
 

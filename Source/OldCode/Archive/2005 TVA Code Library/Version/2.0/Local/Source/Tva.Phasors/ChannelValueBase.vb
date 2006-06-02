@@ -71,13 +71,15 @@ Public MustInherit Class ChannelValueBase(Of T As IChannelDefinition)
 
     Public MustOverride ReadOnly Property IsEmpty() As Boolean Implements IChannelValue(Of T).IsEmpty
 
-    Public MustOverride ReadOnly Property Values() As Single() Implements IChannelValue(Of T).Values
+    Default Public MustOverride Property CompositeValue(ByVal index As Integer) As Single Implements IChannelValue(Of T).CompositeValue
+
+    Public MustOverride ReadOnly Property CompositeValueCount() As Integer Implements IChannelValue(Of T).CompositeValueCount
 
     Public Overridable ReadOnly Property Measurements() As IMeasurement() Implements IChannelValue(Of T).Measurements
         Get
-            ' Create a measurement instance for each value the derived channel value exposes
+            ' Create a measurement instance for each composite value the derived channel value exposes
             If m_measurements Is Nothing Then
-                m_measurements = CreateArray(Of IMeasurement)(Values.Length)
+                m_measurements = CreateArray(Of IMeasurement)(CompositeValueCount)
 
                 For x As Integer = 0 To m_measurements.Length - 1
                     m_measurements(x) = New ChannelValueMeasurement(Of T)(Me, x)

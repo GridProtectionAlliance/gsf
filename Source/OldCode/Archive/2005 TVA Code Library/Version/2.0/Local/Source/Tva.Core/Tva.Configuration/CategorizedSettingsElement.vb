@@ -14,12 +14,15 @@
 '       Original version of source code generated
 '  05/25/2006 - J. Ritchie Carroll
 '       Added Try/Catch safety wrapper around GetTypedValue implementation
+'  06/01/2006 - J. Ritchie Carroll
+'       Added GetTypedValue overload to handle boolean types as a special case
 '
 '*******************************************************************************************************
 
 Imports System.Configuration
 Imports Tva.Security.Cryptography.Common
 Imports Tva.Common
+Imports Tva.Text.Common
 
 Namespace Configuration
 
@@ -140,6 +143,22 @@ Namespace Configuration
                     ' Element's value string is not present, so use the default
                     Return defaultValue
                 End If
+            Catch
+                Return defaultValue
+            End Try
+
+        End Function
+
+        ''' <summary>
+        ''' Gets the element value as a boolean.
+        ''' </summary>
+        ''' <param name="defaultValue">The default value to return if the value string is empty.</param>
+        ''' <returns>The parsed boolean value of the referenced setting</returns>
+        ''' <remarks>If this function fails to properly coerce value to a boolean, default value is returned</remarks>
+        Public Function GetTypedValue(ByVal defaultValue As Boolean) As Boolean
+
+            Try
+                Return ParseBoolean(MyClass.Value)
             Catch
                 Return defaultValue
             End Try

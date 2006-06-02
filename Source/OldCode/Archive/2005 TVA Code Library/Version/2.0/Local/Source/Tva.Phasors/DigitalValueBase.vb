@@ -72,9 +72,18 @@ Public MustInherit Class DigitalValueBase
         End Set
     End Property
 
-    Public Overrides ReadOnly Property Values() As Single()
+    Default Public Overrides Property CompositeValue(ByVal index As Integer) As Single
         Get
-            Return New Single() {m_value}
+            Return Convert.ToSingle(m_value)
+        End Get
+        Set(ByVal value As Single)
+            m_value = Convert.ToInt16(value)
+        End Set
+    End Property
+
+    Public Overrides ReadOnly Property CompositeValueCount() As Integer
+        Get
+            Return 1
         End Get
     End Property
 

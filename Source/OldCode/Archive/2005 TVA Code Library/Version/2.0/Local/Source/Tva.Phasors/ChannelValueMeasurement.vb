@@ -63,16 +63,16 @@ Friend Class ChannelValueMeasurement(Of T As IChannelDefinition)
 
     Public Property Value() As Double Implements Measurements.IMeasurement.Value
         Get
-            Return m_parent.Values(m_valueIndex) * m_multiplier + m_adder
+            Return m_parent(m_valueIndex) * m_multiplier + m_adder
         End Get
         Set(ByVal value As Double)
-            m_parent.Values(m_valueIndex) = value
+            m_parent(m_valueIndex) = value
         End Set
     End Property
 
     Public ReadOnly Property RawValue() As Double Implements IMeasurement.RawValue
         Get
-            Return m_parent.Values(m_valueIndex)
+            Return m_parent(m_valueIndex)
         End Get
     End Property
 

@@ -25,7 +25,7 @@ Public MustInherit Class FrequencyValueBase
     Private m_frequency As Single
     Private m_dfdt As Single
 
-    Public Enum CompositeValue
+    Public Enum CompositeValueType
         Frequency
         DfDt
     End Enum
@@ -114,9 +114,32 @@ Public MustInherit Class FrequencyValueBase
         End Set
     End Property
 
-    Public Overrides ReadOnly Property Values() As Single()
+    Default Public Overrides Property CompositeValue(ByVal index As Integer) As Single
         Get
-            Return New Single() {m_frequency, m_dfdt}
+            Select Case index
+                Case CompositeValueType.Frequency
+                    Return m_frequency
+                Case CompositeValueType.DfDt
+                    Return m_dfdt
+                Case Else
+                    Throw New IndexOutOfRangeException("Specified frequency value composite index, " & index & ", is out of range - there are only two composite values for a frequency value: frequency (0) and df/dt (1)")
+            End Select
+        End Get
+        Set(ByVal value As Single)
+            Select Case index
+                Case CompositeValueType.Frequency
+                    m_frequency = value
+                Case CompositeValueType.DfDt
+                    m_dfdt = value
+                Case Else
+                    Throw New IndexOutOfRangeException("Specified frequency value composite index, " & index & ", is out of range - there are only two composite values for a frequency value: frequency (0) and df/dt (1)")
+            End Select
+        End Set
+    End Property
+
+    Public Overrides ReadOnly Property CompositeValueCount() As Integer
+        Get
+            Return 2
         End Get
     End Property
 

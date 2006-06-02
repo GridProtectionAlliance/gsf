@@ -80,7 +80,8 @@ Namespace Measurements
         End Property
 
         ''' <summary>Gets or sets numeric value of this measurement</summary>
-        ''' <returns>Returns value offset by adder and multipler (i.e., RawValue * Multiplier + Adder)</returns>
+        ''' <remarks>Note that returned value will be offset by adder and multiplier</remarks>
+        ''' <returns>Value offset by adder and multipler (i.e., RawValue * Multiplier + Adder)</returns>
         Public Overridable Property Value() As Double Implements IMeasurement.Value
             Get
                 Return m_value * m_multiplier + m_adder

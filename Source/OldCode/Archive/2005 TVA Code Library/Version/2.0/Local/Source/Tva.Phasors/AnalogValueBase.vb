@@ -79,9 +79,18 @@ Public MustInherit Class AnalogValueBase
         End Set
     End Property
 
-    Public Overrides ReadOnly Property Values() As Single()
+    Default Public Overrides Property CompositeValue(ByVal index As Integer) As Single
         Get
-            Return New Single() {m_value}
+            Return m_value
+        End Get
+        Set(ByVal value As Single)
+            m_value = value
+        End Set
+    End Property
+
+    Public Overrides ReadOnly Property CompositeValueCount() As Integer
+        Get
+            Return 1
         End Get
     End Property
 

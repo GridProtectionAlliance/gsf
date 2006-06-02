@@ -14,10 +14,13 @@
 '       Original version of source code generated
 '  01/24/2006 - J. Ritchie Carroll
 '       2.0 version of source code migrated from 1.1 source (TVA.Shared.String)
+'  06/01/2006 - J. Ritchie Carroll
+'       Added ParseBoolean function to parse strings representing booleans that may be numeric
 '
 '*******************************************************************************************************
 
 Imports System.Text
+Imports Tva.Common
 
 Namespace Text
 
@@ -49,6 +52,45 @@ Namespace Text
 
                     Return .ToString
                 End With
+            End If
+
+        End Function
+
+        ''' <summary>Parses a string intended to represent a boolean value</summary>
+        ''' <param name="value">String representing a boolean value</param>
+        ''' <returns>Parsed boolean value</returns>
+        ''' <remarks>
+        ''' This function, unlike Boolean.Parse, correctly parses a boolean value even if the string value
+        ''' specified is a number (e.g., 0 or -1).  Boolean.Parse expects a string to be represented as
+        ''' "True" or "False" (i.e., Boolean.TrueString or Boolean.FalseString respectively)
+        ''' </remarks>
+        Public Shared Function ParseBoolean(ByVal value As String) As Boolean
+
+            If String.IsNullOrEmpty(value) Then Return False
+            value = value.Trim()
+
+            If value.Length > 0 Then
+                If Char.IsNumber(value.Chars(0)) Then
+                    ' String contains a number
+                    Dim result As Integer
+
+                    If Integer.TryParse(value, result) Then
+                        Return (result <> 0)
+                    Else
+                        Return False
+                    End If
+                Else
+                    ' String contains text
+                    Dim result As Boolean
+
+                    If Boolean.TryParse(value, result) Then
+                        Return result
+                    Else
+                        Return False
+                    End If
+                End If
+            Else
+                Return False
             End If
 
         End Function
@@ -223,6 +265,8 @@ Namespace Text
         ''' <param name="value">Input string</param>
         ''' <returns>True if all string's characters are numbers, otherwise false</returns>
         Public Shared Function IsAllNumbers(ByVal value As String) As Boolean
+
+            IsNumeric(
 
             If String.IsNullOrEmpty(value) Then Return False
 
