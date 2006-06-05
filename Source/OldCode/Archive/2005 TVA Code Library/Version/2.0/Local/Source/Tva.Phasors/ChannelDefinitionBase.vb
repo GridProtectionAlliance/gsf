@@ -17,6 +17,7 @@
 
 Imports System.Text
 Imports Tva.Phasors.Common
+Imports Tva.Text.Common
 
 ' This class represents the common implementation of the protocol independent definition of any kind of data.
 <CLSCompliant(False)> _
@@ -133,7 +134,7 @@ Public MustInherit Class ChannelDefinitionBase
             If value.Trim().Length > MaximumLabelLength Then
                 Throw New OverflowException("Label length cannot exceed " & MaximumLabelLength)
             Else
-                m_label = value.Replace(Chr(20), " "c).Trim()
+                m_label = RemoveDuplicateWhiteSpace(ReplaceControlCharacters(value)).Trim()
             End If
         End Set
     End Property

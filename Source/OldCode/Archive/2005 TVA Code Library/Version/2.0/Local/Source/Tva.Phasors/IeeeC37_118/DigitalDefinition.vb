@@ -16,6 +16,7 @@
 '*******************************************************************************************************
 
 Imports System.Text
+Imports Tva.Text.Common
 
 Namespace IeeeC37_118
 
@@ -99,10 +100,10 @@ Namespace IeeeC37_118
                     Dim left As String = ""
                     Dim right As String = ""
 
-                    If index > 0 Then left = current.Substring(0, index * MaximumLabelLength)
-                    If index < 15 Then right = current.Substring((index + 1) * 16)
+                    If index > 0 Then left = current.Substring(0, index * MyBase.MaximumLabelLength)
+                    If index < 15 Then right = current.Substring((index + 1) * MyBase.MaximumLabelLength)
 
-                    Label = left & value.Replace(Chr(20), " "c).PadRight(MaximumLabelLength) & right
+                    Label = left & RemoveDuplicateWhiteSpace(ReplaceControlCharacters(value)).PadRight(MyBase.MaximumLabelLength) & right
                 End If
             End Set
         End Property

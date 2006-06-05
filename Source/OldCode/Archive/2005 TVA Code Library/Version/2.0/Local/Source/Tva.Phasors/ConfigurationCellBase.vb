@@ -18,6 +18,7 @@
 Imports System.Buffer
 Imports System.Text
 Imports Tva.Phasors.Common
+Imports Tva.Text.Common
 
 ' This class represents the protocol independent common implementation of a set of configuration related data settings that can be sent or received from a PMU.
 <CLSCompliant(False)> _
@@ -95,10 +96,14 @@ Public MustInherit Class ConfigurationCellBase
             Return m_stationName
         End Get
         Set(ByVal value As String)
-            If Len(Trim(value)) > MaximumStationNameLength Then
+            If String.IsNullOrEmpty(value) Then value = "undefined"
+
+            value = value.Trim()
+
+            If value.Length > MaximumStationNameLength Then
                 Throw New OverflowException("Station name length cannot exceed " & MaximumStationNameLength)
             Else
-                m_stationName = Trim(Replace(value, Chr(20), " "))
+                m_stationName = RemoveDuplicateWhiteSpace(ReplaceControlCharacters(value, " "c)).Trim()
             End If
         End Set
     End Property
