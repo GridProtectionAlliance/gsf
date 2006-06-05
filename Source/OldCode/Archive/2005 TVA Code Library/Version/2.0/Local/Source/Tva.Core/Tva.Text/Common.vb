@@ -27,6 +27,11 @@ Namespace Text
     ''' <summary>Defines common global functions related to string manipulation</summary>
     Public NotInheritable Class Common
 
+        ''' <summary>Function signature used to test a character to see if it fits a certain criteria</summary>
+        ''' <param name="c">Character to test</param>
+        ''' <returns>Returns True if specified character passed test</returns>
+        Public Delegate Function CharacterTestFunctionSignature(ByVal c As Char) As Boolean
+
         Private Sub New()
 
             ' This class contains only global functions and is not meant to be instantiated
@@ -70,7 +75,7 @@ Namespace Text
             value = value.Trim()
 
             If value.Length > 0 Then
-                If Char.IsNumber(value.Chars(0)) Then
+                If IsNumeric(value) Then
                     ' String contains a number
                     Dim result As Integer
 
@@ -115,6 +120,133 @@ Namespace Text
 
         End Function
 
+        ''' <summary>Replaces all characters passing delegate test with specified replacement character</summary>
+        ''' <param name="value">Input string</param>
+        ''' <param name="replacementCharacter">Character used to replace characters passing delegate test</param>
+        ''' <param name="characterTestFunction">Delegate used to determine whether or not character should be replaced</param>
+        ''' <returns>Returns <paramref name="value" /> with all characters passing delegate test replaced</returns>
+        ''' <remarks>This function allows you to specify a replacement character (e.g., you may want to use a non-breaking space: Convert.ToChar(160))</remarks>
+        Public Shared Function ReplaceCharacters(ByVal value As String, ByVal replacementCharacter As Char, ByVal characterTestFunction As CharacterTestFunctionSignature) As String
+
+            If String.IsNullOrEmpty(value) Then Return ""
+
+            With New StringBuilder
+                Dim character As Char
+
+                For x As Integer = 0 To value.Length - 1
+                    character = value(x)
+
+                    If characterTestFunction(character) Then
+                        .Append(replacementCharacter)
+                    Else
+                        .Append(character)
+                    End If
+                Next
+
+                Return .ToString
+            End With
+
+        End Function
+
+        ''' <summary>Removes all characters passing delegate test from a string</summary>
+        ''' <param name="value">Input string</param>
+        ''' <param name="characterTestFunction">Delegate used to determine whether or not character should be removed</param>
+        ''' <returns>Returns <paramref name="value" /> with all characters passing delegate test removed</returns>
+        Public Shared Function RemoveCharacters(ByVal value As String, ByVal characterTestFunction As CharacterTestFunctionSignature) As String
+
+            If String.IsNullOrEmpty(value) Then Return ""
+
+            With New StringBuilder
+                Dim character As Char
+
+                For x As Integer = 0 To value.Length - 1
+                    character = value(x)
+
+                    If Not characterTestFunction(character) Then
+                        .Append(character)
+                    End If
+                Next
+
+                Return .ToString
+            End With
+
+        End Function
+
+        ''' <summary>Removes all white space (as defined by IsWhiteSpace) from a string</summary>
+        ''' <param name="value">Input string</param>
+        ''' <returns>Returns <paramref name="value" /> with all white space removed</returns>
+        Public Shared Function RemoveWhiteSpace(ByVal value As String) As String
+
+            Return RemoveCharacters(value, AddressOf Char.IsWhiteSpace)
+
+        End Function
+
+        ''' <summary>Replaces all white space characters (as defined by IsWhiteSpace) with specified replacement character</summary>
+        ''' <param name="value">Input string</param>
+        ''' <param name="replacementCharacter">Character used to "replace" white space characters</param>
+        ''' <returns>Returns <paramref name="value" /> with all white space characters replaced</returns>
+        ''' <remarks>This function allows you to specify a replacement character (e.g., you may want to use a non-breaking space: Convert.ToChar(160))</remarks>
+        Public Shared Function ReplaceWhiteSpace(ByVal value As String, ByVal replacementCharacter As Char) As String
+
+            Return ReplaceCharacters(value, replacementCharacter, AddressOf Char.IsWhiteSpace)
+
+        End Function
+
+        ''' <summary>Removes all control characters from a string</summary>
+        ''' <param name="value">Input string</param>
+        ''' <returns>Returns <paramref name="value" /> with all control characters removed</returns>
+        Public Shared Function RemoveControlCharacters(ByVal value As String) As String
+
+            Return RemoveCharacters(value, AddressOf Char.IsControl)
+
+        End Function
+
+        ''' <summary>Replaces all control characters with a single space</summary>
+        ''' <param name="value">Input string</param>
+        ''' <returns>Returns <paramref name="value" /> with all control characters replaced as a single space</returns>
+        Public Shared Function ReplaceControlCharacters(ByVal value As String) As String
+
+            Return ReplaceControlCharacters(value, " "c)
+
+        End Function
+
+        ''' <summary>Replaces all control characters with specified replacement character</summary>
+        ''' <param name="value">Input string</param>
+        ''' <param name="replacementCharacter">Character used to "replace" control characters</param>
+        ''' <returns>Returns <paramref name="value" /> with all control characters replaced</returns>
+        ''' <remarks>This function allows you to specify a replacement character (e.g., you may want to use a non-breaking space: Convert.ToChar(160))</remarks>
+        Public Shared Function ReplaceControlCharacters(ByVal value As String, ByVal replacementCharacter As Char) As String
+
+            Return ReplaceCharacters(value, replacementCharacter, AddressOf Char.IsControl)
+
+        End Function
+
+        ''' <summary>Removes all carriage returns and line feeds from a string</summary>
+        ''' <param name="value">Input string</param>
+        ''' <returns>Returns <paramref name="value" /> with all CR and LF characters removed.</returns>
+        Public Shared Function RemoveCrLfs(ByVal value As String) As String
+
+            Return RemoveCharacters(value, AddressOf IsCrOrLf)
+
+        End Function
+
+        ''' <summary>Replaces all carriage return and line feed characters (as well as CR/LF sequences) with specified replacement character</summary>
+        ''' <param name="value">Input string</param>
+        ''' <param name="replacementCharacter">Character used to "replace" CR and LF characters</param>
+        ''' <returns>Returns <paramref name="value" /> with all CR and LF characters replaced</returns>
+        ''' <remarks>This function allows you to specify a replacement character (e.g., you may want to use a non-breaking space: Convert.ToChar(160))</remarks>
+        Public Shared Function ReplaceCrLfs(ByVal value As String, ByVal replacementCharacter As Char) As String
+
+            Return ReplaceCharacters(value.Replace(Convert.ToChar(13) & Convert.ToChar(10), replacementCharacter), replacementCharacter, AddressOf IsCrOrLf)
+
+        End Function
+
+        Private Shared Function IsCrOrLf(ByVal c As Char) As Boolean
+
+            Return (c = Convert.ToChar(13) OrElse c = Convert.ToChar(10))
+
+        End Function
+
         ''' <summary>Removes duplicate character strings (adjoining replication) in a string</summary>
         ''' <param name="value">Input string</param>
         ''' <param name="duplicatedValue">String whose duplicates are to be removed</param>
@@ -134,53 +266,20 @@ Namespace Text
 
         End Function
 
-        ''' <summary>Removes the terminator (Chr(0)) from a null terminated string - useful for strings returned from Windows API call</summary>
+        ''' <summary>Removes the terminator (Convert.ToChar(0)) from a null terminated string - useful for strings returned from Windows API call</summary>
         ''' <param name="value">Input string</param>
         ''' <returns>Returns <paramref name="value" /> with all characters to the left of the terminator</returns>
         Public Shared Function RemoveNull(ByVal value As String) As String
 
             If String.IsNullOrEmpty(value) Then Return ""
 
-            Dim nullPos As Integer = value.IndexOf(Chr(0))
+            Dim nullPos As Integer = value.IndexOf(Convert.ToChar(0))
 
             If nullPos > -1 Then
                 Return value.Substring(0, nullPos)
             Else
                 Return value
             End If
-
-        End Function
-
-        ''' <summary>Removes all carriage returns and line feeds (CrLf, Cr, and Lf's) from a string</summary>
-        ''' <param name="value">Input string</param>
-        ''' <returns>Returns <paramref name="value" /> with all CR and LF characters removed.</returns>
-        Public Shared Function RemoveCrLfs(ByVal value As String) As String
-
-            If String.IsNullOrEmpty(value) Then Return ""
-            Return value.Replace(Environment.NewLine, "").Replace(Convert.ToChar(13), "").Replace(Convert.ToChar(10), "")
-
-        End Function
-
-        ''' <summary>Removes all white space (as defined by IsWhiteSpace) from a string</summary>
-        ''' <param name="value">Input string</param>
-        ''' <returns>Returns <paramref name="value" /> with all white space removed</returns>
-        Public Shared Function RemoveWhiteSpace(ByVal value As String) As String
-
-            If String.IsNullOrEmpty(value) Then Return ""
-
-            With New StringBuilder
-                Dim character As Char
-
-                For x As Integer = 0 To value.Length - 1
-                    character = value(x)
-
-                    If Not Char.IsWhiteSpace(character) Then
-                        .Append(character)
-                    End If
-                Next
-
-                Return .ToString
-            End With
 
         End Function
 
@@ -265,8 +364,6 @@ Namespace Text
         ''' <param name="value">Input string</param>
         ''' <returns>True if all string's characters are numbers, otherwise false</returns>
         Public Shared Function IsAllNumbers(ByVal value As String) As Boolean
-
-            IsNumeric(
 
             If String.IsNullOrEmpty(value) Then Return False
 
