@@ -595,7 +595,7 @@ Namespace Security.Cryptography
                 For x As Integer = 0 To 2
                     alphaIndex = RandomInt32Between(0, 25)
                     If x > 0 Then .Append("-"c)
-                    .Append(Chr(Asc("A"c) + (25 - alphaIndex)))
+                    .Append(Convert.ToChar(Asc("A"c) + (25 - alphaIndex)))
                     .Append(seedBytes(x) + alphaIndex)
                 Next
 
