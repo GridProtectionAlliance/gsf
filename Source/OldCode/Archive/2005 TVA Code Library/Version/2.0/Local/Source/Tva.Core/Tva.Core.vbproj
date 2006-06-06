@@ -58,6 +58,31 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Tva.Configuration\Common.vb" />
+    <Compile Include="Tva.Data\Transport\ClientBase.Designer.vb">
+      <DependentUpon>ClientBase.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Tva.Data\Transport\ClientBase.vb">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Tva.Data\Transport\Common.vb" />
+    <Compile Include="Tva.Data\Transport\ServerBase.Designer.vb">
+      <DependentUpon>ServerBase.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Tva.Data\Transport\ServerBase.vb">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Tva.Data\Transport\TcpClient.Designer.vb">
+      <DependentUpon>TcpClient.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Tva.Data\Transport\TcpClient.vb">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Tva.Data\Transport\TcpServer.Designer.vb">
+      <DependentUpon>TcpServer.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Tva.Data\Transport\TcpServer.vb">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="Tva.Security\Cryptography\Common.vb" />
     <Compile Include="Tva.Configuration\ConfigurationFile.vb" />
     <Compile Include="Tva.Configuration\CategorizedSettingsCollection.vb" />
@@ -113,7 +138,6 @@
     <Folder Include="Tva.Exception\" />
     <Folder Include="Tva.Net\Ftp\" />
     <Folder Include="Tva.Net\Http\" />
-    <Folder Include="Tva.Net\Sockets\" />
     <Folder Include="Tva.Remoting\" />
     <Folder Include="Tva.Web\" />
     <Folder Include="Tva.Windows\" />
