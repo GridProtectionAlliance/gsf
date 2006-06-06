@@ -99,7 +99,7 @@ Namespace Data.Transport
                     Dim tcpClientThread As RunThread = m_tcpClientThreads(clientID)
                     If tcpClientThread IsNot Nothing Then
                         'Dim tcpClient As Socket = TryCast(tcpClientThread.Parameters(1), Socket)
-                        If TcpClient IsNot Nothing Then TcpClient.Send(data)
+                        'If TcpClient IsNot Nothing Then TcpClient.Send(data)
                         DirectCast(tcpClientThread.Parameters(1), Socket).Send(data)
                     Else
                         Throw New ArgumentException("Client ID '" & clientID & "' is invalid.")
