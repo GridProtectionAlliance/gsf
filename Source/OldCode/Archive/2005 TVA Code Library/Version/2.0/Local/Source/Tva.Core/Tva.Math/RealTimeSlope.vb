@@ -29,8 +29,8 @@ Namespace Math
 
         Private m_regressionInterval As Integer
         Private m_pointCount As Integer
-        Private m_xValues As ArrayList
-        Private m_yValues As ArrayList
+        Private m_xValues As List(Of Double)
+        Private m_yValues As List(Of Double)
         Private m_slope As Double
         Private m_lastSlope As Double
         Private m_slopeRun As Date
@@ -46,8 +46,8 @@ Namespace Math
 
             m_regressionInterval = regressionInterval
             m_pointCount = m_regressionInterval * (1 / estimatedRefreshInterval)
-            m_xValues = New ArrayList
-            m_yValues = New ArrayList
+            m_xValues = New List(Of Double)
+            m_yValues = New List(Of Double)
             m_slopeRun = Date.Now
 
         End Sub
@@ -57,7 +57,7 @@ Namespace Math
         ''' <param name="y">New y-axis value</param>
         Public Sub Calculate(ByVal x As Double, ByVal y As Double)
 
-            SyncLock m_xValues.SyncRoot
+            SyncLock m_xValues
                 ' Add latest values to regression data set
                 m_xValues.Add(x)
                 m_yValues.Add(y)
@@ -89,9 +89,9 @@ Namespace Math
 
                 ' Calculations are made against a copy of the current data set to keep lock time on
                 ' data values down to a minimum - this allows data to be added with minimal delay
-                SyncLock m_xValues.SyncRoot
-                    xValues = m_xValues.ToArray(GetType(Double))
-                    yValues = m_yValues.ToArray(GetType(Double))
+                SyncLock m_xValues
+                    xValues = m_xValues.ToArray()
+                    yValues = m_yValues.ToArray()
                 End SyncLock
 
                 ' Take new values and calculate slope (curve fit for 1st order polynomial)
