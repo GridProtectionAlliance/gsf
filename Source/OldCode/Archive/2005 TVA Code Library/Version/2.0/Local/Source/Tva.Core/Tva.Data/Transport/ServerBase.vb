@@ -26,9 +26,11 @@ Namespace Data.Transport
 
         Private m_configurationString As String
         Private m_readBufferSize As Integer
+        Private m_maximumClients As Integer
         Private m_enabled As Boolean
         Private m_textEncoding As Encoding
         Private m_protocol As TransportProtocol
+        Private m_serverID As String
         Private m_clientIDs As List(Of String)
         Private m_startTime As Long
         Private m_stopTime As Long
@@ -118,6 +120,28 @@ Namespace Data.Transport
         End Property
 
         ''' <summary>
+        ''' Gets or sets the maximum number of clients that can connect to the server.
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns>The maximum number of clients that can connect to the server.</returns>
+        ''' <remarks>
+        ''' Set MaximumClients to 0 to allow infinite number clients to be connected to the server.
+        ''' </remarks>
+        <Description("The maximum number of clients that can connect to the server."), Category("Configuration"), DefaultValue(GetType(Integer), "0")> _
+        Public Property MaximumClients() As Integer
+            Get
+                Return m_maximumClients
+            End Get
+            Set(ByVal value As Integer)
+                If value >= 0 Then
+                    m_maximumClients = value
+                Else
+                    Throw New ArgumentOutOfRangeException("value")
+                End If
+            End Set
+        End Property
+
+        ''' <summary>
         ''' Gets or sets a boolean value to indicate whether the server is enabled.
         ''' </summary>
         ''' <value></value>
@@ -137,6 +161,7 @@ Namespace Data.Transport
         ''' </summary>
         ''' <value></value>
         ''' <returns>The encoding to be used for the text sent to the connected clients.</returns>
+        <Browsable(False)> _
         Public Property TextEncoding() As Encoding
             Get
                 Return m_textEncoding
@@ -162,10 +187,23 @@ Namespace Data.Transport
         End Property
 
         ''' <summary>
+        ''' Gets the server's ID.
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns>ID of the server.</returns>
+        <Browsable(False)> _
+        Public ReadOnly Property ServerID() As String
+            Get
+                Return m_serverID
+            End Get
+        End Property
+
+        ''' <summary>
         ''' Gets a collection of client IDs that are connected to the server.
         ''' </summary>
         ''' <value></value>
         ''' <returns>A collection of client IDs that are connected to the server.</returns>
+        <Browsable(False)> _
         Public ReadOnly Property ClientIDs() As List(Of String)
             Get
                 Return m_clientIDs
