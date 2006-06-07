@@ -19,6 +19,8 @@ Imports System.Text
 Imports System.Net
 Imports System.Net.Sockets
 Imports System.ComponentModel
+Imports Tva.Common
+Imports Tva.DateTime.Common
 
 Namespace Data.Transport
 
@@ -32,6 +34,7 @@ Namespace Data.Transport
         Private m_protocol As TransportProtocol
         Private m_serverID As String
         Private m_clientIDs As List(Of String)
+        Private m_isRunning As Boolean
         Private m_startTime As Long
         Private m_stopTime As Long
 
@@ -68,20 +71,6 @@ Namespace Data.Transport
         ''' <param name="data">The data that was received from the client.</param>
         <Description("Occurs when data is received from a client.")> _
         Public Event ReceivedClientData(ByVal clientID As String, ByVal data() As Byte)
-
-        ''' <summary>
-        ''' Occurs when sending data to a client fails.
-        ''' </summary>
-        ''' <param name="ex">The exception that was encountered when sending data.</param>
-        <Description("Occurs when sending data to a client fails.")> _
-        Public Event SendFailed(ByVal ex As Exception)
-
-        ''' <summary>
-        ''' Occurs when broadcasting data to all connected clients fails.
-        ''' </summary>
-        ''' <param name="ex">The exception that was encountered when broadcasting data.</param>
-        <Description("Occurs when broadcasting data to all connected clients fails.")> _
-        Public Event BroadcastFailed(ByVal ex As Exception)
 
         ''' <summary>
         ''' Gets or sets the data that is required by the server to initialize.
@@ -142,21 +131,6 @@ Namespace Data.Transport
         End Property
 
         ''' <summary>
-        ''' Gets or sets a boolean value to indicate whether the server is enabled.
-        ''' </summary>
-        ''' <value></value>
-        ''' <returns>True if the server is enabled; otherwise False.</returns>
-        <Description("Indicates whether the server is enabled."), Category("Configuration"), DefaultValue(GetType(Boolean), "True")> _
-        Public Property Enabled() As Boolean
-            Get
-                Return m_enabled
-            End Get
-            Set(ByVal value As Boolean)
-                m_enabled = value
-            End Set
-        End Property
-
-        ''' <summary>
         ''' Gets or sets the encoding to be used for the text sent to the connected clients.
         ''' </summary>
         ''' <value></value>
@@ -187,6 +161,21 @@ Namespace Data.Transport
         End Property
 
         ''' <summary>
+        ''' Gets or sets a boolean value to indicate whether the server is enabled.
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns>True if the server is enabled; otherwise False.</returns>
+        <Description("Indicates whether the server is enabled."), Category("Configuration"), DefaultValue(GetType(Boolean), "True")> _
+        Public Property Enabled() As Boolean
+            Get
+                Return m_enabled
+            End Get
+            Set(ByVal value As Boolean)
+                m_enabled = value
+            End Set
+        End Property
+
+        ''' <summary>
         ''' Gets the server's ID.
         ''' </summary>
         ''' <value></value>
@@ -207,6 +196,18 @@ Namespace Data.Transport
         Public ReadOnly Property ClientIDs() As List(Of String)
             Get
                 Return m_clientIDs
+            End Get
+        End Property
+
+        ''' <summary>
+        ''' Gets whether the server is currently running.
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns>True if the server is running; otherwise False.</returns>
+        <Browsable(False)> _
+        Public ReadOnly Property IsRunning() As Boolean
+            Get
+                Return m_isRunning
             End Get
         End Property
 
@@ -239,18 +240,26 @@ Namespace Data.Transport
         Public ReadOnly Property Status() As String
             Get
                 With New StringBuilder()
+                    .Append("         Server ID: " & ServerID())
+                    .Append(Environment.NewLine())
+                    .Append("      Server state: " & IIf(IsRunning(), "Running", "Not Running"))
+                    .Append(Environment.NewLine())
+                    .Append("    Server runtime: " & SecondsToText(RunTime()))
+                    .Append(Environment.NewLine())
+                    .Append("    Active clients: " & ClientIDs.Count())
+                    .Append(Environment.NewLine())
+                    .Append("   Maximum clients: " & IIf(MaximumClients() = 0, "Infinite", MaximumClients.ToString()))
+                    .Append(Environment.NewLine())
+                    .Append("  Read buffer size: " & ReadBufferSize.ToString())
+                    .Append(Environment.NewLine())
+                    .Append("Transport protocol: " & Protocol.ToString())
+                    .Append(Environment.NewLine())
+                    .Append("Text encoding used: " & TextEncoding.EncodingName())
+                    .Append(Environment.NewLine())
                     Return .ToString()
                 End With
             End Get
         End Property
-
-        ''' <summary>
-        ''' Gets whether the server is currently running.
-        ''' </summary>
-        ''' <value></value>
-        ''' <returns>True if the server is running; otherwise False.</returns>
-        <Browsable(False)> _
-        Public MustOverride ReadOnly Property IsRunning() As Boolean
 
         ''' <summary>
         ''' Raises the Tva.Data.Transport.ServerBase.ServerStarted event.
@@ -258,6 +267,7 @@ Namespace Data.Transport
         ''' <param name="e">An System.EventArgs that contains the event data.</param>
         Public Overridable Sub OnServerStarted(ByVal e As EventArgs)
 
+            m_isRunning = True
             m_startTime = Date.Now.Ticks()  ' Save the time when server is started.
             m_stopTime = 0
             RaiseEvent ServerStarted(Me, e)
@@ -270,6 +280,7 @@ Namespace Data.Transport
         ''' <param name="e">An System.EventArgs that contains the event data.</param>
         Public Overridable Sub OnServerStopped(ByVal e As EventArgs)
 
+            m_isRunning = False
             m_stopTime = Date.Now.Ticks()   ' Save the time when server is stopped.
             RaiseEvent ServerStopped(Me, e)
 
@@ -305,26 +316,6 @@ Namespace Data.Transport
         Public Overridable Sub OnReceivedClientData(ByVal clientID As String, ByVal data() As Byte)
 
             RaiseEvent ReceivedClientData(clientID, data)
-
-        End Sub
-
-        ''' <summary>
-        ''' Raises the Tva.Data.Transport.ServerBase.SendFailed event.
-        ''' </summary>
-        ''' <param name="ex">The exception that was encountered when sending data.</param>
-        Public Overridable Sub OnSendFailed(ByVal ex As Exception)
-
-            RaiseEvent SendFailed(ex)
-
-        End Sub
-
-        ''' <summary>
-        ''' Raises the Tva.Data.Transport.ServerBase.BroadcastFailed event.
-        ''' </summary>
-        ''' <param name="ex">The exception that was encountered when broadcasting data.</param>
-        Public Overridable Sub OnBroadcastFailed(ByVal ex As Exception)
-
-            RaiseEvent BroadcastFailed(ex)
 
         End Sub
 
@@ -373,13 +364,9 @@ Namespace Data.Transport
         Public Sub Broadcast(ByVal data() As Byte)
 
             If Enabled() AndAlso IsRunning() Then
-                Try
-                    For Each clientID As String In m_clientIDs
-                        SendTo(clientID, data)
-                    Next
-                Catch ex As Exception
-                    OnBroadcastFailed(ex)
-                End Try
+                For Each clientID As String In m_clientIDs
+                    SendTo(clientID, data)
+                Next
             End If
 
         End Sub

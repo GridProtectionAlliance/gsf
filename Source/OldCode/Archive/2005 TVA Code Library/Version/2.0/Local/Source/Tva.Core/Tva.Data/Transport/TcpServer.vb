@@ -18,29 +18,20 @@
 Imports System.Net
 Imports System.Net.Sockets
 Imports System.Text
+Imports System.Drawing
 Imports System.Threading
 Imports Tva.Common
 Imports Tva.Threading
 
 Namespace Data.Transport
 
+    <ToolboxBitmap(GetType(TcpServer))> _
     Public Class TcpServer
 
         Private m_listenerThread As Thread
         Private m_tcpServer As Socket
         Private m_tcpClientThreads As Dictionary(Of String, RunThread)
         Private m_configurationStringData As Hashtable
-
-        ''' <summary>
-        ''' Gets whether the server is currently running.
-        ''' </summary>
-        ''' <value></value>
-        ''' <returns>True if the server is running; otherwise False.</returns>
-        Public Overrides ReadOnly Property IsRunning() As Boolean
-            Get
-                If m_tcpServer IsNot Nothing Then Return True Else Return False
-            End Get
-        End Property
 
         ''' <summary>
         ''' Initializes a instance of Tva.Data.Transport.TcpServer with the specified data.
@@ -71,7 +62,7 @@ Namespace Data.Transport
         Public Overrides Sub [Stop]()
 
             If MyBase.Enabled() AndAlso MyClass.IsRunning() Then
-                ' Note: Closing the socket for server and all of the connected clients will cause a SocketException
+                ' NOTE: Closing the socket for server and all of the connected clients will cause a SocketException
                 ' in the thread that is using the socket and result in the thread to exit gracefully.
 
                 ' ***  Stop accepting incoming connections ***
@@ -102,18 +93,14 @@ Namespace Data.Transport
         Public Overrides Sub SendTo(ByVal clientID As String, ByVal data() As Byte)
 
             If MyBase.Enabled() AndAlso MyClass.IsRunning() Then
-                Try
-                    ' We don't want to synclock 'm_tcpClientThreads' over here because doing so will block all
-                    ' all incoming connections (in ListenForConnections) while sending data to client(s). 
-                    If m_tcpClientThreads.ContainsKey(clientID) Then
-                        Dim tcpClient As Socket = TryCast(m_tcpClientThreads(clientID).Parameters(1), Socket)
-                        If tcpClient IsNot Nothing Then tcpClient.Send(data)
-                    Else
-                        Throw New ArgumentException("Client ID '" & clientID & "' is invalid.")
-                    End If
-                Catch ex As Exception
-                    MyBase.OnSendFailed(ex)
-                End Try
+                ' We don't want to synclock 'm_tcpClientThreads' over here because doing so will block all
+                ' all incoming connections (in ListenForConnections) while sending data to client(s). 
+                If m_tcpClientThreads.ContainsKey(clientID) Then
+                    Dim tcpClient As Socket = TryCast(m_tcpClientThreads(clientID).Parameters(1), Socket)
+                    If tcpClient IsNot Nothing Then tcpClient.Send(data)
+                Else
+                    Throw New ArgumentException("Client ID '" & clientID & "' is invalid.")
+                End If
             End If
 
         End Sub
@@ -125,7 +112,7 @@ Namespace Data.Transport
         ''' <returns>True if the configuration string is valid.</returns>
         Protected Overrides Function ValidConfigurationString(ByVal configurationString As String) As Boolean
 
-            If Not String.IsNullOrEmpty(ConfigurationString) Then
+            If Not String.IsNullOrEmpty(configurationString) Then
                 m_configurationStringData = Common.ParseInitializationString(configurationString)
                 If m_configurationStringData.Contains("PORT") AndAlso _
                         Common.ValidPortNumber(m_configurationStringData("PORT")) Then
@@ -213,7 +200,7 @@ Namespace Data.Transport
                 SyncLock m_tcpClientThreads
                     m_tcpClientThreads.Remove(tcpClientID)
                 End SyncLock
-                MyBase.OnClientDisconnected(tcpClientId)
+                MyBase.OnClientDisconnected(tcpClientID)
             End Try
 
         End Sub
