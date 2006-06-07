@@ -27,7 +27,7 @@ Namespace Data.Transport
     Public MustInherit Class ServerBase
 
         Private m_configurationString As String
-        Private m_readBufferSize As Integer
+        Private m_receiveBufferSize As Integer
         Private m_maximumClients As Integer
         Private m_enabled As Boolean
         Private m_textEncoding As Encoding
@@ -90,18 +90,18 @@ Namespace Data.Transport
         End Property
 
         ''' <summary>
-        ''' Gets or sets the maximum number of bytes that can be read by the server from clients and buffered.
+        ''' Gets or sets the maximum number of bytes that can be received at a time by the server from the clients.
         ''' </summary>
-        ''' <value>The maximum number of bytes that can be read and buffered by the server from clients.</value>
+        ''' <value>The maximum number of bytes that can be received at a time by the server from the clients.</value>
         ''' <returns></returns>
-        <Description("The maximum number of bytes that can be read and buffered by the server from clients."), Category("Configuration"), DefaultValue(GetType(Integer), "4096")> _
-        Public Property ReadBufferSize() As Integer
+        <Description("The maximum number of bytes that can be received at a time by the server from the clients."), Category("Configuration"), DefaultValue(GetType(Integer), "4096")> _
+        Public Property ReceiveBufferSize() As Integer
             Get
-                Return m_readBufferSize
+                Return m_receiveBufferSize
             End Get
             Set(ByVal value As Integer)
                 If value > 0 Then
-                    m_readBufferSize = value
+                    m_receiveBufferSize = value
                 Else
                     Throw New ArgumentOutOfRangeException("value")
                 End If
@@ -114,9 +114,9 @@ Namespace Data.Transport
         ''' <value></value>
         ''' <returns>The maximum number of clients that can connect to the server.</returns>
         ''' <remarks>
-        ''' Set MaximumClients to 0 to allow infinite number clients to be connected to the server.
+        ''' Set MaximumClients = 0 for infinite client connections.
         ''' </remarks>
-        <Description("The maximum number of clients that can connect to the server."), Category("Configuration"), DefaultValue(GetType(Integer), "0")> _
+        <Description("The maximum number of clients that can connect to the server. Set MaximumClients = 0 for infinite client connections."), Category("Configuration"), DefaultValue(GetType(Integer), "0")> _
         Public Property MaximumClients() As Integer
             Get
                 Return m_maximumClients
@@ -146,10 +146,10 @@ Namespace Data.Transport
         End Property
 
         ''' <summary>
-        ''' Gets the protocol used by the server for transferring data to and from the client.
+        ''' Gets the protocol used by the server for transferring data to and from the clients.
         ''' </summary>
         ''' <value></value>
-        ''' <returns>The protocol used by the server for transferring data to and from the client.</returns>
+        ''' <returns>The protocol used by the server for transferring data to and from the clients.</returns>
         <Browsable(False)> _
         Public Property Protocol() As TransportProtocol
             Get
@@ -212,18 +212,18 @@ Namespace Data.Transport
         End Property
 
         ''' <summary>
-        ''' Gets the server run time in seconds.
+        ''' Gets the time in seconds for which the server has been running.
         ''' </summary>
         ''' <value></value>
-        ''' <returns>The server run time in seconds.</returns>
+        ''' <returns>The time in seconds for which the server has been running.</returns>
         <Browsable(False)> _
         Public ReadOnly Property RunTime() As Double
             Get
                 Dim serverRunTime As Double = 0
                 If m_startTime > 0 Then
-                    If IsRunning() Then
+                    If m_isRunning Then ' Server is running.
                         serverRunTime = (Date.Now.Ticks() - m_startTime) / 10000000L
-                    Else
+                    Else    ' Server is not running.
                         serverRunTime = (m_stopTime - m_startTime) / 10000000L
                     End If
                 End If
@@ -250,7 +250,7 @@ Namespace Data.Transport
                     .Append(Environment.NewLine())
                     .Append("   Maximum clients: " & IIf(MaximumClients() = 0, "Infinite", MaximumClients.ToString()))
                     .Append(Environment.NewLine())
-                    .Append("  Read buffer size: " & ReadBufferSize.ToString())
+                    .Append("  Read buffer size: " & ReceiveBufferSize.ToString())
                     .Append(Environment.NewLine())
                     .Append("Transport protocol: " & Protocol.ToString())
                     .Append(Environment.NewLine())
@@ -265,6 +265,7 @@ Namespace Data.Transport
         ''' Raises the Tva.Data.Transport.ServerBase.ServerStarted event.
         ''' </summary>
         ''' <param name="e">An System.EventArgs that contains the event data.</param>
+        ''' <remarks>This method is to be called after the server has been started.</remarks>
         Public Overridable Sub OnServerStarted(ByVal e As EventArgs)
 
             m_isRunning = True
@@ -278,6 +279,7 @@ Namespace Data.Transport
         ''' Raises the Tva.Data.Transport.ServerBase.ServerStopped event.
         ''' </summary>
         ''' <param name="e">An System.EventArgs that contains the event data.</param>
+        ''' <remarks>This method is to be called after the server has been stopped.</remarks>
         Public Overridable Sub OnServerStopped(ByVal e As EventArgs)
 
             m_isRunning = False
@@ -290,6 +292,7 @@ Namespace Data.Transport
         ''' Raises the Tva.Data.Transport.ServerBase.ClientConnected event.
         ''' </summary>
         ''' <param name="clientID">ID of the client that was connected.</param>
+        ''' <remarks>This method is to be called when a client is connected to the server.</remarks>
         Public Overridable Sub OnClientConnected(ByVal clientID As String)
 
             m_clientIDs.Add(clientID)
@@ -301,6 +304,7 @@ Namespace Data.Transport
         ''' Raises the Tva.Data.Transport.ServerBase.ClientDisconnected event.
         ''' </summary>
         ''' <param name="clientID">ID of the client that was disconnected.</param>
+        ''' <remarks>This method is to be called when a client has disconnected from the server.</remarks>
         Public Overridable Sub OnClientDisconnected(ByVal clientID As String)
 
             m_clientIDs.Remove(clientID)
@@ -313,6 +317,7 @@ Namespace Data.Transport
         ''' </summary>
         ''' <param name="clientID">ID of the client from which the data is received.</param>
         ''' <param name="data">The data that was received from the client.</param>
+        ''' <remarks>This method is to be called when the server receives data from a client.</remarks>
         Public Overridable Sub OnReceivedClientData(ByVal clientID As String, ByVal data() As Byte)
 
             RaiseEvent ReceivedClientData(clientID, data)

@@ -20,6 +20,18 @@ Namespace Data.Transport
 
             'This call is required by the Component Designer.
             InitializeComponent()
+            ' Setup the default values.
+            m_connectionString = ""
+            m_receiveBufferSize = 4096
+            m_maximumConnectionAttempts = 0
+            m_textEncoding = System.Text.Encoding.ASCII()
+            m_serverID = ""
+            m_clientID = ""
+            m_isConnected = False
+            m_connectTime = 0
+            m_disconnectTime = 0
+            m_totalBytesSent = 0
+            m_totalBytesReceived = 0
 
         End Sub
 

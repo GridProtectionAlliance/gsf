@@ -184,7 +184,7 @@ Namespace Data.Transport
 
                 Do While True
                     ' Wait for data from the client.
-                    Dim receivedData() As Byte = CreateArray(Of Byte)(MyBase.ReadBufferSize())
+                    Dim receivedData() As Byte = CreateArray(Of Byte)(MyBase.ReceiveBufferSize())
                     tcpClient.Receive(receivedData) ' Block until data is received from client.
                     ' Notify of data received from the client.
                     MyBase.OnReceivedClientData(tcpClientID, receivedData)

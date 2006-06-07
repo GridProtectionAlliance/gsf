@@ -24,10 +24,14 @@ Namespace UI
 
     Public Class AboutDialog
 
+#Region " Private Declarations "
+
         Private m_url As String
         Private m_assemblies As List(Of Assembly)
 
-#Region " Public "
+#End Region
+        
+#Region " Public Methods "
 
         ''' <summary>
         ''' Initializes a default instance of the standard TVA About Dialog.
@@ -154,7 +158,7 @@ Namespace UI
 
 #End Region
 
-#Region " Private "
+#Region " Private Methods "
 
         Private Sub AddListViewItem(ByVal listView As ListView, ByVal text As String, ByVal ParamArray subitems As String())
 

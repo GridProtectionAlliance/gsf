@@ -16,6 +16,10 @@ Namespace Data.Transport
 
         End Sub
 
+        Public Overrides Function ValidConnectionString(ByVal connectionString As String) As Boolean
+
+        End Function
+
     End Class
 
 End Namespace

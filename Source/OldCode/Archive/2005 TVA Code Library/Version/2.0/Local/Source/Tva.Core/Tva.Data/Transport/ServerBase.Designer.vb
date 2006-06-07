@@ -36,11 +36,16 @@ Namespace Data.Transport
             'This call is required by the Component Designer.
             InitializeComponent()
             ' Setup the default values.
+            m_configurationString = ""
+            m_receiveBufferSize = 4096
+            m_maximumClients = 0
             m_enabled = True
-            m_readBufferSize = 4096
-            m_textEncoding = System.Text.Encoding.ASCII
+            m_textEncoding = System.Text.Encoding.ASCII()
             m_serverID = Guid.NewGuid.ToString()    ' Create an ID for the server.
             m_clientIDs = New List(Of String)
+            m_isRunning = False
+            m_startTime = 0
+            m_stopTime = 0
 
         End Sub
 
