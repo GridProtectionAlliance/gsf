@@ -25,6 +25,7 @@ Namespace Data.Transport
             m_receiveBufferSize = 4096
             m_maximumConnectionAttempts = 0
             m_textEncoding = System.Text.Encoding.ASCII()
+            m_enabled = True
             m_serverID = ""
             m_clientID = ""
             m_isConnected = False
@@ -39,6 +40,7 @@ Namespace Data.Transport
         <System.Diagnostics.DebuggerNonUserCode()> _
         Protected Overrides Sub Dispose(ByVal disposing As Boolean)
             If disposing AndAlso components IsNot Nothing Then
+                Disconnect()    ' Disconnect client from the server.
                 components.Dispose()
             End If
             MyBase.Dispose(disposing)

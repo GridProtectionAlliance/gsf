@@ -135,10 +135,10 @@
     <None Include="Tva.Collections\Tva.Collections.cd" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="EmbeddedResources\Data.Transport.TcpServer.bmp" />
+    <EmbeddedResource Include="EmbeddedResources\Data.Transport.ClientBase.bmp" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="EmbeddedResources\Data.Transport.TcpClient.bmp" />
+    <EmbeddedResource Include="EmbeddedResources\Data.Transport.ServerBase.bmp" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Tva.Console\" />

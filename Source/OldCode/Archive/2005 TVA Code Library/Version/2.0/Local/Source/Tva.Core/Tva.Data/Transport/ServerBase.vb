@@ -15,15 +15,19 @@
 '
 '*******************************************************************************************************
 
-Imports System.Text
+Option Strict On
+
 Imports System.Net
 Imports System.Net.Sockets
+Imports System.Text
+Imports System.Drawing
 Imports System.ComponentModel
 Imports Tva.Common
 Imports Tva.DateTime.Common
 
 Namespace Data.Transport
 
+    <ToolboxBitmap(GetType(ServerBase))> _
     Public MustInherit Class ServerBase
 
         Private m_configurationString As String
@@ -246,11 +250,11 @@ Namespace Data.Transport
                     .Append(Environment.NewLine())
                     .Append("    Server runtime: " & SecondsToText(RunTime()))
                     .Append(Environment.NewLine())
-                    .Append("    Active clients: " & ClientIDs.Count())
+                    .Append("Subscribed clients: " & ClientIDs.Count())
                     .Append(Environment.NewLine())
                     .Append("   Maximum clients: " & IIf(MaximumClients() = 0, "Infinite", MaximumClients.ToString()))
                     .Append(Environment.NewLine())
-                    .Append("  Read buffer size: " & ReceiveBufferSize.ToString())
+                    .Append("    Receive buffer: " & ReceiveBufferSize.ToString())
                     .Append(Environment.NewLine())
                     .Append("Transport protocol: " & Protocol.ToString())
                     .Append(Environment.NewLine())

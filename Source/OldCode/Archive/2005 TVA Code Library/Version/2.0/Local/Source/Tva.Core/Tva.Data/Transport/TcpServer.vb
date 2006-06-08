@@ -15,17 +15,18 @@
 '
 '*******************************************************************************************************
 
+Option Strict On
+
 Imports System.Net
 Imports System.Net.Sockets
 Imports System.Text
-Imports System.Drawing
 Imports System.Threading
 Imports Tva.Common
 Imports Tva.Threading
+Imports Tva.Data.Transport.Common
 
 Namespace Data.Transport
 
-    <ToolboxBitmap(GetType(TcpServer))> _
     Public Class TcpServer
 
         Private m_listenerThread As Thread
@@ -47,7 +48,7 @@ Namespace Data.Transport
         ''' </summary>
         Public Overrides Sub Start()
 
-            If MyBase.Enabled() AndAlso Not MyClass.IsRunning() AndAlso _
+            If MyBase.Enabled() AndAlso Not MyBase.IsRunning() AndAlso _
                     MyClass.ValidConfigurationString(MyBase.ConfigurationString()) Then
                 ' Start the thread that will be listening for client connections.
                 m_listenerThread = New Thread(AddressOf ListenForConnections)
@@ -61,7 +62,7 @@ Namespace Data.Transport
         ''' </summary>
         Public Overrides Sub [Stop]()
 
-            If MyBase.Enabled() AndAlso MyClass.IsRunning() Then
+            If MyBase.Enabled() AndAlso MyBase.IsRunning() Then
                 ' NOTE: Closing the socket for server and all of the connected clients will cause a SocketException
                 ' in the thread that is using the socket and result in the thread to exit gracefully.
 
@@ -92,14 +93,18 @@ Namespace Data.Transport
         ''' <param name="data">The data that is to be sent to the client.</param>
         Public Overrides Sub SendTo(ByVal clientID As String, ByVal data() As Byte)
 
-            If MyBase.Enabled() AndAlso MyClass.IsRunning() Then
-                ' We don't want to synclock 'm_tcpClientThreads' over here because doing so will block all
-                ' all incoming connections (in ListenForConnections) while sending data to client(s). 
-                If m_tcpClientThreads.ContainsKey(clientID) Then
-                    Dim tcpClient As Socket = TryCast(m_tcpClientThreads(clientID).Parameters(1), Socket)
-                    If tcpClient IsNot Nothing Then tcpClient.Send(data)
+            If MyBase.Enabled() AndAlso MyBase.IsRunning() Then
+                If data IsNot Nothing Then
+                    ' We don't want to synclock 'm_tcpClientThreads' over here because doing so will block all
+                    ' all incoming connections (in ListenForConnections) while sending data to client(s). 
+                    If m_tcpClientThreads.ContainsKey(clientID) Then
+                        Dim tcpClient As Socket = TryCast(m_tcpClientThreads(clientID).Parameters(1), Socket)
+                        If tcpClient IsNot Nothing Then tcpClient.Send(data)
+                    Else
+                        Throw New ArgumentException("Client ID '" & clientID & "' is invalid.")
+                    End If
                 Else
-                    Throw New ArgumentException("Client ID '" & clientID & "' is invalid.")
+                    Throw New ArgumentNullException("data")
                 End If
             End If
 
@@ -113,16 +118,16 @@ Namespace Data.Transport
         Protected Overrides Function ValidConfigurationString(ByVal configurationString As String) As Boolean
 
             If Not String.IsNullOrEmpty(configurationString) Then
-                m_configurationStringData = Common.ParseInitializationString(configurationString)
+                m_configurationStringData = ParseInitializationString(configurationString)
                 If m_configurationStringData.Contains("PORT") AndAlso _
-                        Common.ValidPortNumber(m_configurationStringData("PORT")) Then
+                        ValidPortNumber(Convert.ToString(m_configurationStringData("PORT"))) Then
                     Return True
                 Else
                     ' Configuration string is not in the expected format.
                     With New StringBuilder()
                         .Append("Configuration string must be in the following format:")
                         .Append(Environment.NewLine())
-                        .Append("   PORT=<Port Number>")
+                        .Append("   Port=<Port Number>")
                         Throw New ArgumentException(.ToString())
                     End With
                 End If
@@ -142,9 +147,9 @@ Namespace Data.Transport
                 ' Create a socket for the server.
                 m_tcpServer = New Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp)
                 ' Tie the server socket to a local endpoint.
-                m_tcpServer.Bind(Common.GetIpEndPoint(Dns.GetHostName(), m_configurationStringData("PORT")))
-                ' Start listening for connections and keep a maximum of 1 pending connection in the queue.
-                m_tcpServer.Listen(1)
+                m_tcpServer.Bind(New IPEndPoint(IPAddress.Any, Convert.ToInt32(m_configurationStringData("PORT"))))
+                ' Start listening for connections and keep a maximum of 0 pending connection in the queue.
+                m_tcpServer.Listen(0)
                 MyBase.OnServerStarted(EventArgs.Empty) ' Notify that the server has started.
 
                 Do While True
@@ -154,8 +159,9 @@ Namespace Data.Transport
                         SyncLock m_tcpClientThreads
                             ' Start the client on a seperate thread so all the connected clients run independently.
                             m_tcpClientThreads.Add(tcpClientId, _
-                                RunThread.ExecuteNonPublicMethod(Me, "AcceptClientData", tcpClientId, tcpClient))
+                                RunThread.ExecuteNonPublicMethod(Me, "ReceiveClientData", tcpClientId, tcpClient))
                         End SyncLock
+                        Thread.Sleep(100)
                     End If
                 Loop
             Catch ex As Exception
@@ -172,12 +178,12 @@ Namespace Data.Transport
         End Sub
 
         ''' <summary>
-        ''' Reads any data sent by a client that is connected to the server.
+        ''' Receives any data sent by a client that is connected to the server.
         ''' </summary>
         ''' <param name="tcpClientID">ID of the connected client.</param>
         ''' <param name="tcpClient">System.Net.Sockets.Socket of the the connected client.</param>
         ''' <remarks>This method is meant to be executed on seperate threads.</remarks>
-        Protected Sub AcceptClientData(ByVal tcpClientID As String, ByVal tcpClient As Socket)
+        Protected Sub ReceiveClientData(ByVal tcpClientID As String, ByVal tcpClient As Socket)
 
             Try
                 MyBase.OnClientConnected(tcpClientID)    ' Notify that the client is connected.

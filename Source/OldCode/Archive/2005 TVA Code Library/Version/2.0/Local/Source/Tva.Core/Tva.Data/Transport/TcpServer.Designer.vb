@@ -38,7 +38,7 @@ Namespace Data.Transport
             'This call is required by the Component Designer.
             InitializeComponent()
             ' Setup the instance defaults.
-            MyBase.ConfigurationString = "PORT=8888"
+            MyBase.ConfigurationString = "Port=8888"
             MyBase.Protocol = TransportProtocol.Tcp
             m_tcpClientThreads = New Dictionary(Of String, RunThread)
 

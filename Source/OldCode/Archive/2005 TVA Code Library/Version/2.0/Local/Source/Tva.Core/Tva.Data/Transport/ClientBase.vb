@@ -1,12 +1,18 @@
 ' 06-01-06
 
-Imports System.Text
+Option Strict On
+
 Imports System.Net
 Imports System.Net.Sockets
+Imports System.Text
+Imports System.Drawing
 Imports System.ComponentModel
+Imports Tva.Common
+Imports Tva.DateTime.Common
 
 Namespace Data.Transport
 
+    <ToolboxBitmap(GetType(ClientBase))> _
     Public MustInherit Class ClientBase
 
         Private m_connectionString As String
@@ -44,16 +50,16 @@ Namespace Data.Transport
         ''' <summary>
         ''' Occurs when the client begins sending data to the server.
         ''' </summary>
-        ''' <param name="byteCount">Number of bytes the client will be sending to the server.</param>
+        ''' <param name="data">The data being sent to the server.</param>
         <Description("Occurs when the client begins sending data to the server.")> _
-        Public Event SendBegin(ByVal byteCount As Integer)
+        Public Event SendBegin(ByVal data() As Byte)
 
         ''' <summary>
         ''' Occurs when the client has successfully send data to the server.
         ''' </summary>
-        ''' <param name="byteCount">Number of bytes the client has sent to the server.</param>
+        ''' <param name="data">The data sent to the server.</param>
         <Description("Occurs when the client has successfully send data to the server.")> _
-        Public Event SendComplete(ByVal byteCount As Integer)
+        Public Event SendComplete(ByVal data() As Byte)
 
         ''' <summary>
         ''' Occurs when the client receives data from the server.
@@ -252,6 +258,24 @@ Namespace Data.Transport
         Public ReadOnly Property Status() As String
             Get
                 With New StringBuilder()
+                    .Append("             Server ID: " & ServerID())
+                    .Append(Environment.NewLine())
+                    .Append("             Client ID: " & ClientID())
+                    .Append(Environment.NewLine())
+                    .Append("          Client state: " & IIf(IsConnected(), "Running", "Not Running"))
+                    .Append(Environment.NewLine())
+                    .Append("       Connection time: " & SecondsToText(ConnectionTime()))
+                    .Append(Environment.NewLine())
+                    .Append("        Receive buffer: " & ReceiveBufferSize.ToString())
+                    .Append(Environment.NewLine())
+                    .Append("    Transport protocol: " & Protocol.ToString())
+                    .Append(Environment.NewLine())
+                    .Append("    Text encoding used: " & TextEncoding.EncodingName())
+                    .Append(Environment.NewLine())
+                    .Append("      Total bytes sent: " & TotalBytesSent())
+                    .Append(Environment.NewLine())
+                    .Append("  Total bytes received: " & TotalBytesReceived())
+                    .Append(Environment.NewLine())
                     Return .ToString()
                 End With
             End Get
@@ -276,9 +300,9 @@ Namespace Data.Transport
         Public Sub OnConnected(ByVal e As EventArgs)
 
             m_isConnected = True
-            m_connectTime = Date.Now.Ticks
+            m_connectTime = Date.Now.Ticks  ' Save the time when the client connected to the server.
             m_disconnectTime = 0
-            m_totalBytesSent = 0
+            m_totalBytesSent = 0    ' Reset the number of bytes sent and received between the client and server.
             m_totalBytesReceived = 0
             RaiseEvent Connected(Me, e)
 
@@ -292,7 +316,7 @@ Namespace Data.Transport
         Public Sub OnDisconnected(ByVal e As EventArgs)
 
             m_isConnected = False
-            m_disconnectTime = Date.Now.Ticks()
+            m_disconnectTime = Date.Now.Ticks() ' Save the time when client was disconnected from the server.
             RaiseEvent Disconnected(Me, e)
 
         End Sub
@@ -300,23 +324,23 @@ Namespace Data.Transport
         ''' <summary>
         ''' Raises the Tva.Data.Transport.ClientBase.SendBegin event.
         ''' </summary>
-        ''' <param name="byteCount">Number of bytes the client will be sending to the server.</param>
+        ''' <param name="data">The data being sent to the server.</param>
         ''' <remarks>This method is to be called when the client begins sending data to the server.</remarks>
-        Public Sub OnSendBegin(ByVal byteCount As Integer)
+        Public Sub OnSendBegin(ByVal data() As Byte)
 
-            RaiseEvent SendBegin(byteCount)
+            RaiseEvent SendBegin(data)
 
         End Sub
 
         ''' <summary>
         ''' Raises the Tva.Data.Transport.ClientBase.SendComplete event.
         ''' </summary>
-        ''' <param name="byteCount">Number of bytes the client has sent to the server.</param>
+        ''' <param name="data">The data sent to the server.</param>
         ''' <remarks>This method is to be called when the client has finished sending data to the server.</remarks>
-        Public Sub OnSendComplete(ByVal byteCount As Integer)
+        Public Sub OnSendComplete(ByVal data() As Byte)
 
-            m_totalBytesSent += byteCount
-            RaiseEvent SendComplete(byteCount)
+            m_totalBytesSent += data.Length()
+            RaiseEvent SendComplete(data)
 
         End Sub
 
@@ -342,6 +366,12 @@ Namespace Data.Transport
         ''' </summary>
         Public MustOverride Sub Disconnect()
 
+        Public Sub Send(ByVal data As String)
+
+            Send(m_textEncoding.GetBytes(data))
+
+        End Sub
+
         ''' <summary>
         ''' Sends data to the server.
         ''' </summary>
@@ -354,7 +384,7 @@ Namespace Data.Transport
         ''' </summary>
         ''' <param name="connectionString">The connection string to be validated.</param>
         ''' <returns>True is the connection string is valid; otherwise False.</returns>
-        Public MustOverride Function ValidConnectionString(ByVal connectionString As String) As Boolean
+        Protected MustOverride Function ValidConnectionString(ByVal connectionString As String) As Boolean
 
     End Class
 
