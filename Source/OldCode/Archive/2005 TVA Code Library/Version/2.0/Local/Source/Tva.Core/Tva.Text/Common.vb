@@ -108,6 +108,7 @@ Namespace Text
         ''' <code>
         ''' IP=localhost; Port=1002; MaxEvents=50; UseTimeout=True
         ''' </code>
+        ''' Note that "keys" will be stored in dictionary as "lower case".
         ''' </remarks>
         Public Shared Function ParseKeyValuePairs(ByVal value As String) As Dictionary(Of String, String)
 
@@ -120,7 +121,10 @@ Namespace Text
         ''' <param name="parameterDelimeter">Character that delimits one key value pair from another (e.g., would be a ";" in a typical connection string)</param>
         ''' <param name="keyValueDelimeter">Character that delimits key from value (e.g., would be an "=" in a typical connection string)</param>
         ''' <returns>Dictionary of key/value pairs</returns>
-        ''' <remarks>This will parse a key value string that contains one or many pairs</remarks>
+        ''' <remarks>
+        ''' This will parse a key value string that contains one or many pairs.
+        ''' Note that "keys" will be stored in dictionary as "lower case".
+        ''' </remarks>
         Public Shared Function ParseKeyValuePairs(ByVal value As String, ByVal parameterDelimeter As Char, ByVal keyValueDelimeter As Char) As Dictionary(Of String, String)
 
             Dim keyValuePairs As New Dictionary(Of String, String)
