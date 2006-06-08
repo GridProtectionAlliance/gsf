@@ -1,4 +1,19 @@
-' 06-01-06
+'*******************************************************************************************************
+'  Tva.Data.Transport.ClientBase.Designer.vb - Base functionality of a client for transporting data
+'  Copyright © 2006 - TVA, all rights reserved - Gbtc
+'
+'  Build Environment: VB.NET, Visual Studio 2005
+'  Primary Developer: Pinal C. Patel, Operations Data Architecture [TVA]
+'      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
+'       Phone: 423/751-2250
+'       Email: pcpatel@tva.gov
+'
+'  Code Modification History:
+'  -----------------------------------------------------------------------------------------------------
+'  06/01/2006 - Pinal C. Patel
+'       Original version of source code generated
+'
+'*******************************************************************************************************
 
 Namespace Data.Transport
 
@@ -23,7 +38,7 @@ Namespace Data.Transport
             ' Setup the default values.
             m_connectionString = ""
             m_receiveBufferSize = 4096
-            m_maximumConnectionAttempts = 0
+            m_maximumConnectionAttempts = -1
             m_textEncoding = System.Text.Encoding.ASCII()
             m_enabled = True
             m_serverID = ""

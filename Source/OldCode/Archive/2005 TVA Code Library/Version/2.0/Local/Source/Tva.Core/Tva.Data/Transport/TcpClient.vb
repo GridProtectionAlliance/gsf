@@ -1,4 +1,19 @@
-' 06-02-06
+'*******************************************************************************************************
+'  Tva.Data.Transport.TcpClient.vb - Client for transporting data using TCP
+'  Copyright © 2006 - TVA, all rights reserved - Gbtc
+'
+'  Build Environment: VB.NET, Visual Studio 2005
+'  Primary Developer: Pinal C. Patel, Operations Data Architecture [TVA]
+'      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
+'       Phone: 423/751-2250
+'       Email: pcpatel@tva.gov
+'
+'  Code Modification History:
+'  -----------------------------------------------------------------------------------------------------
+'  06/02/2006 - Pinal C. Patel
+'       Original version of source code generated
+'
+'*******************************************************************************************************
 
 Option Strict On
 
@@ -15,35 +30,59 @@ Namespace Data.Transport
 
         Private m_connectionStringData As Hashtable
         Private m_tcpClient As Socket
+        Private m_connectivityThread As Thread
 
         Public Sub New(ByVal connectionString As String)
             MyClass.New()
-            MyBase.ConnectionString = connectionString
+            MyBase.ConnectionString = connectionString  ' Override the default connection string.
         End Sub
 
+        ''' <summary>
+        ''' Connects the client to the server asynchronously.
+        ''' </summary>
         Public Overrides Sub Connect()
 
             If MyBase.Enabled() AndAlso Not MyBase.IsConnected() Then
-                Dim connectivityThread As New Thread(AddressOf ConnectToServer)
-                connectivityThread.Start()
+                ' Spawn a new thread on which the client will attempt to connect to the server.
+                m_connectivityThread = New Thread(AddressOf ConnectToServer)
+                m_connectivityThread.Start()
             End If
 
         End Sub
 
+        ''' <summary>
+        ''' Cancels any active attempts of connecting the client to the server.
+        ''' </summary>
+        Public Overrides Sub CancelConnect()
+
+            ' Client has not yet connected to the server so we'll abort the thread on which the client
+            ' is attempting to connect to the server.
+            If m_connectivityThread IsNot Nothing Then m_connectivityThread.Abort()
+
+        End Sub
+
+        ''' <summary>
+        ''' Disconnects the client from the server it is connected to.
+        ''' </summary>
         Public Overrides Sub Disconnect()
 
             If MyBase.Enabled() AndAlso MyBase.IsConnected() Then
+                ' Close the client socket that is connected to the server.
                 If m_tcpClient IsNot Nothing Then m_tcpClient.Close()
             End If
 
         End Sub
 
+        ''' <summary>
+        ''' Sends data to the server.
+        ''' </summary>
+        ''' <param name="data">The data that is to be sent to the server.</param>
         Public Overrides Sub Send(ByVal data() As Byte)
 
             If MyBase.Enabled() AndAlso MyBase.IsConnected() Then
-                If data IsNot Nothing Then
+                If data IsNot Nothing Then  ' There is some data to be sent.
                     MyBase.OnSendBegin(data)
-                    m_tcpClient.Send(data)
+                    m_tcpClient.Send(data)  ' Send data to the server.
                     MyBase.OnSendComplete(data)
                 Else
                     Throw New ArgumentNullException("data")
@@ -52,6 +91,12 @@ Namespace Data.Transport
 
         End Sub
 
+        ''' <summary>
+        ''' Determines whether specified connection string, required for the client to connect to the server, 
+        ''' is valid.
+        ''' </summary>
+        ''' <param name="connectionString">The connection string to be validated.</param>
+        ''' <returns>True is the connection string is valid; otherwise False.</returns>
         Protected Overrides Function ValidConnectionString(ByVal connectionString As String) As Boolean
 
             If Not String.IsNullOrEmpty(connectionString) Then
@@ -76,13 +121,17 @@ Namespace Data.Transport
 
         End Function
 
+        ''' <summary>
+        ''' Connects the client to the server.
+        ''' </summary>
+        ''' <remarks>This method is meant to be executed on a seperate thread.</remarks>
         Private Sub ConnectToServer()
 
             Dim connectionAttempts As Integer = 0
-            Do While (MyBase.MaximumConnectionAttempts() = 0) OrElse _
+            Do While (MyBase.MaximumConnectionAttempts() = -1) OrElse _
                     (connectionAttempts < MyBase.MaximumConnectionAttempts())
                 Try
-                    MyBase.OnConnecting(EventArgs.Empty)    ' Notify that we are trying to connect to the server.
+                    MyBase.OnConnecting(EventArgs.Empty)
 
                     ' Create a socket for the client and bind it to a local endpoint.
                     m_tcpClient = New Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp)
@@ -94,11 +143,18 @@ Namespace Data.Transport
                     Dim receivingThread As New Thread(AddressOf ReceiveServerData)
                     receivingThread.Start()
 
+                    m_connectivityThread = Nothing
                     Exit Do ' Client successfully connected to the server.
+                Catch ex As ThreadAbortException
+                    ' We'll stop trying to connect if a ThreadAbortException exception is encountered. This will
+                    ' be the case when the thread is deliberately aborted in CancelConnect() method in which case 
+                    ' we want to stop attempting to connect to the server.
+                    MyBase.OnConnectingCancelled(EventArgs.Empty)
+                    Exit Do
                 Catch ex As Exception
                     m_tcpClient = Nothing
                     If MyBase.MaximumConnectionAttempts() > 0 AndAlso _
-                            connectionAttempts = MaximumConnectionAttempts() - 1 Then
+                            connectionAttempts = MyBase.MaximumConnectionAttempts() - 1 Then
                         ' This is our last attempt for connecting to the server.
                         MyBase.OnConnectingException(ex)
                     End If
@@ -109,18 +165,23 @@ Namespace Data.Transport
 
         End Sub
 
+        ''' <summary>
+        ''' Receives data sent by the server.
+        ''' </summary>
+        ''' <remarks>This method is meant to be executed on a seperate thread.</remarks>
         Private Sub ReceiveServerData()
 
             Try
                 MyBase.OnConnected(EventArgs.Empty)
 
                 Do While True
+                    ' We'll wait for data from the server until client is dissconnected from the server.
                     Dim receivedData() As Byte = CreateArray(Of Byte)(MyBase.ReceiveBufferSize())
-                    m_tcpClient.Receive(receivedData)
+                    m_tcpClient.Receive(receivedData)   ' Block until data is received from the server.
                     MyBase.OnReceivedData(receivedData)
                 Loop
             Catch ex As Exception
-
+                ' We'll don't need to take any action when an exception is encountered.
             Finally
                 If m_tcpClient IsNot Nothing Then
                     m_tcpClient.Close()

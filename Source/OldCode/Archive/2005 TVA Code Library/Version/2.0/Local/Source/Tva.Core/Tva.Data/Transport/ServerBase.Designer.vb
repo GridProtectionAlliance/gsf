@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  Tva.Data.Transport.ServerBase.vb - Base functionality of a server for transporting data
+'  Tva.Data.Transport.ServerBase.Designer.vb - Base functionality of a server for transporting data
 '  Copyright © 2006 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005
@@ -38,7 +38,7 @@ Namespace Data.Transport
             ' Setup the default values.
             m_configurationString = ""
             m_receiveBufferSize = 4096
-            m_maximumClients = 0
+            m_maximumClients = -1
             m_enabled = True
             m_textEncoding = System.Text.Encoding.ASCII()
             m_serverID = Guid.NewGuid.ToString()    ' Create an ID for the server.

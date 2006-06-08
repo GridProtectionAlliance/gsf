@@ -118,15 +118,15 @@ Namespace Data.Transport
         ''' <value></value>
         ''' <returns>The maximum number of clients that can connect to the server.</returns>
         ''' <remarks>
-        ''' Set MaximumClients = 0 for infinite client connections.
+        ''' Set MaximumClients = -1 for infinite client connections.
         ''' </remarks>
-        <Description("The maximum number of clients that can connect to the server. Set MaximumClients = 0 for infinite client connections."), Category("Configuration"), DefaultValue(GetType(Integer), "0")> _
+        <Description("The maximum number of clients that can connect to the server. Set MaximumClients = -1 for infinite client connections."), Category("Configuration"), DefaultValue(GetType(Integer), "-1")> _
         Public Property MaximumClients() As Integer
             Get
                 Return m_maximumClients
             End Get
             Set(ByVal value As Integer)
-                If value >= 0 Then
+                If value = -1 OrElse value > 0 Then
                     m_maximumClients = value
                 Else
                     Throw New ArgumentOutOfRangeException("value")
@@ -252,7 +252,7 @@ Namespace Data.Transport
                     .Append(Environment.NewLine())
                     .Append("Subscribed clients: " & ClientIDs.Count())
                     .Append(Environment.NewLine())
-                    .Append("   Maximum clients: " & IIf(MaximumClients() = 0, "Infinite", MaximumClients.ToString()))
+                    .Append("   Maximum clients: " & IIf(MaximumClients() = -1, "Infinite", MaximumClients.ToString()))
                     .Append(Environment.NewLine())
                     .Append("    Receive buffer: " & ReceiveBufferSize.ToString())
                     .Append(Environment.NewLine())

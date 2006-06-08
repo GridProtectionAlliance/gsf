@@ -146,7 +146,8 @@ Namespace Data.Transport
                 MyBase.OnServerStarted(EventArgs.Empty) ' Notify that the server has started.
 
                 Do While True
-                    If MyBase.MaximumClients() = 0 OrElse MyBase.ClientIDs.Count() < MyBase.MaximumClients() Then
+                    If MyBase.MaximumClients() = -1 OrElse MyBase.ClientIDs.Count() < MyBase.MaximumClients() Then
+                        ' We can accept incoming client connection requests.
                         Dim tcpClient As Socket = m_tcpServer.Accept()  ' Accept client connection.
                         Dim tcpClientId As String = Guid.NewGuid.ToString() ' Create an ID for the client.
                         ' Start the client on a seperate thread so all the connected clients run independently.

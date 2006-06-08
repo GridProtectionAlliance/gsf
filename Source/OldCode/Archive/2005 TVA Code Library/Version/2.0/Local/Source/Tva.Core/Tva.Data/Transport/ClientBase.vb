@@ -1,4 +1,19 @@
-' 06-01-06
+'*******************************************************************************************************
+'  Tva.Data.Transport.ClientBase.vb - Base functionality of a client for transporting data
+'  Copyright © 2006 - TVA, all rights reserved - Gbtc
+'
+'  Build Environment: VB.NET, Visual Studio 2005
+'  Primary Developer: Pinal C. Patel, Operations Data Architecture [TVA]
+'      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
+'       Phone: 423/751-2250
+'       Email: pcpatel@tva.gov
+'
+'  Code Modification History:
+'  -----------------------------------------------------------------------------------------------------
+'  06/01/2006 - Pinal C. Patel
+'       Original version of source code generated
+'
+'*******************************************************************************************************
 
 Option Strict On
 
@@ -34,6 +49,12 @@ Namespace Data.Transport
         ''' </summary>
         <Description("Occurs when the client is trying to connect to the server.")> _
         Public Event Connecting As EventHandler
+
+        ''' <summary>
+        ''' Occurs when connecting of the client to the server has been cancelled.
+        ''' </summary>
+        <Description("Occurs when connecting of the client to the server has been cancelled.")> _
+        Public Event ConnectingCancelled As EventHandler
 
         ''' <summary>
         ''' Occurs when an exception occurs while connecting to the server.
@@ -116,14 +137,14 @@ Namespace Data.Transport
         ''' </summary>
         ''' <value></value>
         ''' <returns>The maximum number of times the client will attempt to connect to the server.</returns>
-        ''' <remarks>Set MaximumConnectionAttempts = 0 for infinite connection attempts.</remarks>
-        <Description("The maximum number of times the client will attempt to connect to the server. Set MaximumConnectionAttempts = 0 for infinite connection attempts."), Category("Configuration"), DefaultValue(GetType(Integer), "0")> _
+        ''' <remarks>Set MaximumConnectionAttempts = -1 for infinite connection attempts.</remarks>
+        <Description("The maximum number of times the client will attempt to connect to the server. Set MaximumConnectionAttempts = -1 for infinite connection attempts."), Category("Configuration"), DefaultValue(GetType(Integer), "-1")> _
         Public Property MaximumConnectionAttempts() As Integer
             Get
                 Return m_maximumConnectionAttempts
             End Get
             Set(ByVal value As Integer)
-                If value >= 0 Then
+                If value = -1 OrElse value > 0 Then
                     m_maximumConnectionAttempts = value
                 Else
                     Throw New ArgumentOutOfRangeException("value")
@@ -300,7 +321,21 @@ Namespace Data.Transport
         End Sub
 
         ''' <summary>
-        ''' Raises the Tva.Data.Transport.ClientBase.ConnectingExceptionevent.
+        ''' Raises the Tva.Data.Transport.ClientBase.ConnectingCancelled event.
+        ''' </summary>
+        ''' <param name="e">An System.EventArgs that contains the event data.</param>
+        ''' <remarks>
+        ''' This method is to be called when attempts for connecting the client to the server are stopped on user's
+        ''' request (i.e. When CancelConnect() is called before client is connected to the server).
+        ''' </remarks>
+        Public Sub OnConnectingCancelled(ByVal e As EventArgs)
+
+            RaiseEvent ConnectingCancelled(Me, e)
+
+        End Sub
+
+        ''' <summary>
+        ''' Raises the Tva.Data.Transport.ClientBase.ConnectingException event.
         ''' </summary>
         ''' <param name="ex">The exception that was encountered while connecting to the server.</param>
         ''' <remarks>
@@ -383,10 +418,19 @@ Namespace Data.Transport
         Public MustOverride Sub Connect()
 
         ''' <summary>
+        ''' Cancels connecting to the server.
+        ''' </summary>
+        Public MustOverride Sub CancelConnect()
+
+        ''' <summary>
         ''' Disconnects the client from the server it is connected to.
         ''' </summary>
         Public MustOverride Sub Disconnect()
 
+        ''' <summary>
+        ''' Sends data to the server.
+        ''' </summary>
+        ''' <param name="data">The data that is to be sent to the server.</param>
         Public Sub Send(ByVal data As String)
 
             Send(m_textEncoding.GetBytes(data))
