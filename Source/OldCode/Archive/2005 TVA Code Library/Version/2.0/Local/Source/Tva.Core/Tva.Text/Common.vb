@@ -100,6 +100,45 @@ Namespace Text
 
         End Function
 
+        ''' <summary>Parses key value pair parameters from a string which are delimeted by an equals sign and multiple pairs separated by a semi-colon</summary>
+        ''' <param name="value">Key vair string to parse</param>
+        ''' <returns>Dictionary of key/value pairs</returns>
+        ''' <remarks>
+        ''' This will parse a string formated like a typical connection string, e.g.:
+        ''' <code>
+        ''' IP=localhost; Port=1002; MaxEvents=50; UseTimeout=True
+        ''' </code>
+        ''' </remarks>
+        Public Shared Function ParseKeyValuePairs(ByVal value As String) As Dictionary(Of String, String)
+
+            Return ParseKeyValuePairs(value, ";"c, "="c)
+
+        End Function
+
+        ''' <summary>Parses key value pair parameters from a string which are delimeted by an equals sign and multiple pairs separated by a semi-colon</summary>
+        ''' <param name="value">Key vair string to parse</param>
+        ''' <param name="parameterDelimeter">Character that delimits one key value pair from another (e.g., would be a ";" in a typical connection string)</param>
+        ''' <param name="keyValueDelimeter">Character that delimits key from value (e.g., would be an "=" in a typical connection string)</param>
+        ''' <returns>Dictionary of key/value pairs</returns>
+        ''' <remarks>This will parse a key value string that contains one or many pairs</remarks>
+        Public Shared Function ParseKeyValuePairs(ByVal value As String, ByVal parameterDelimeter As Char, ByVal keyValueDelimeter As Char) As Dictionary(Of String, String)
+
+            Dim keyValuePairs As New Dictionary(Of String, String)
+
+            ' Parse out connect string parameters
+            For Each parameter As String In value.Split(parameterDelimeter)
+                ' Parse out parameter's key/value elements
+                With parameter.Split(keyValueDelimeter)
+                    If .Length = 2 Then
+                        keyValuePairs.Add(.GetValue(0).ToString().Trim().ToLower(), .GetValue(1).ToString().Trim())
+                    End If
+                End With
+            Next
+
+            Return keyValuePairs
+
+        End Function
+
         ''' <summary>Ensures parameter is not an empty or null string - returns a single space if test value is empty</summary>
         ''' <param name="testValue">Value to test for null or empty</param>
         ''' <returns>A non-empty string</returns>
