@@ -15,8 +15,6 @@
 '
 '*******************************************************************************************************
 
-Imports Tva.Threading
-
 Namespace Data.Transport
 
     Partial Class TcpServer
@@ -40,7 +38,7 @@ Namespace Data.Transport
             ' Setup the instance defaults.
             MyBase.ConfigurationString = "Port=8888"
             MyBase.Protocol = TransportProtocol.Tcp
-            m_tcpClientThreads = New Dictionary(Of String, RunThread)
+            m_tcpClients = New Dictionary(Of String, System.Net.Sockets.Socket)
 
         End Sub
 

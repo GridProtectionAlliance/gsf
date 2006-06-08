@@ -24,9 +24,8 @@ Namespace Data.Transport
         Public Overrides Sub Connect()
 
             If MyBase.Enabled() AndAlso Not MyBase.IsConnected() Then
-                With New Thread(AddressOf ConnectToServer)
-                    .Start()
-                End With
+                Dim connectivityThread As New Thread(AddressOf ConnectToServer)
+                connectivityThread.Start()
             End If
 
         End Sub
@@ -79,22 +78,30 @@ Namespace Data.Transport
 
         Private Sub ConnectToServer()
 
-            MyBase.OnConnecting(EventArgs.Empty)
             Dim connectionAttempts As Integer = 0
             Do While (MyBase.MaximumConnectionAttempts() = 0) OrElse _
                     (connectionAttempts < MyBase.MaximumConnectionAttempts())
                 Try
+                    MyBase.OnConnecting(EventArgs.Empty)    ' Notify that we are trying to connect to the server.
+
+                    ' Create a socket for the client and bind it to a local endpoint.
                     m_tcpClient = New Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp)
                     m_tcpClient.Bind(New IPEndPoint(IPAddress.Any, 0))
+                    ' Connect the client socket to the remote server endpoint.
                     m_tcpClient.Connect(GetIpEndPoint(Convert.ToString(m_connectionStringData("SERVER")), _
                         Convert.ToInt32(m_connectionStringData("PORT"))))
-                    With New Thread(AddressOf ReceiveServerData)
-                        .Start()
-                    End With
+                    ' Start a seperate thread for the client to receive data from the server.
+                    Dim receivingThread As New Thread(AddressOf ReceiveServerData)
+                    receivingThread.Start()
 
                     Exit Do ' Client successfully connected to the server.
                 Catch ex As Exception
                     m_tcpClient = Nothing
+                    If MyBase.MaximumConnectionAttempts() > 0 AndAlso _
+                            connectionAttempts = MaximumConnectionAttempts() - 1 Then
+                        ' This is our last attempt for connecting to the server.
+                        MyBase.OnConnectingException(ex)
+                    End If
                 Finally
                     connectionAttempts += 1
                 End Try

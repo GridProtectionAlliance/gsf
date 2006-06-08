@@ -36,6 +36,13 @@ Namespace Data.Transport
         Public Event Connecting As EventHandler
 
         ''' <summary>
+        ''' Occurs when an exception occurs while connecting to the server.
+        ''' </summary>
+        ''' <param name="ex">The exception that was encountered while connecting to the server.</param>
+        <Description("Occurs when an exception occurs while connecting to the server.")> _
+        Public Event ConnectingException(ByVal ex As Exception)
+
+        ''' <summary>
         ''' Occurs when the client has successfully connected to the server.
         ''' </summary>
         <Description("Occurs when the client has successfully connected to the server.")> _
@@ -262,7 +269,7 @@ Namespace Data.Transport
                     .Append(Environment.NewLine())
                     .Append("             Client ID: " & ClientID())
                     .Append(Environment.NewLine())
-                    .Append("          Client state: " & IIf(IsConnected(), "Running", "Not Running"))
+                    .Append("          Client state: " & IIf(IsConnected(), "Connected", "Not Connected"))
                     .Append(Environment.NewLine())
                     .Append("       Connection time: " & SecondsToText(ConnectionTime()))
                     .Append(Environment.NewLine())
@@ -289,6 +296,20 @@ Namespace Data.Transport
         Public Sub OnConnecting(ByVal e As EventArgs)
 
             RaiseEvent Connecting(Me, e)
+
+        End Sub
+
+        ''' <summary>
+        ''' Raises the Tva.Data.Transport.ClientBase.ConnectingExceptionevent.
+        ''' </summary>
+        ''' <param name="ex">The exception that was encountered while connecting to the server.</param>
+        ''' <remarks>
+        ''' This method is to be called when all attempts for connecting to the server have been made but failed 
+        ''' due to exceptions.
+        ''' </remarks>
+        Public Sub OnConnectingException(ByVal ex As Exception)
+
+            RaiseEvent ConnectingException(ex)
 
         End Sub
 

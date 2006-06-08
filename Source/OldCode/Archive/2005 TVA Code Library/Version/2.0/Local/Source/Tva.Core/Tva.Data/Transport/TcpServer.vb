@@ -29,9 +29,8 @@ Namespace Data.Transport
 
     Public Class TcpServer
 
-        Private m_listenerThread As Thread
         Private m_tcpServer As Socket
-        Private m_tcpClientThreads As Dictionary(Of String, RunThread)
+        Private m_tcpClients As Dictionary(Of String, Socket)
         Private m_configurationStringData As Hashtable
 
         ''' <summary>
@@ -51,8 +50,8 @@ Namespace Data.Transport
             If MyBase.Enabled() AndAlso Not MyBase.IsRunning() AndAlso _
                     MyClass.ValidConfigurationString(MyBase.ConfigurationString()) Then
                 ' Start the thread that will be listening for client connections.
-                m_listenerThread = New Thread(AddressOf ListenForConnections)
-                m_listenerThread.Start()
+                Dim listenerThread As New Thread(AddressOf ListenForConnections)
+                listenerThread.Start()
             End If
 
         End Sub
@@ -67,17 +66,11 @@ Namespace Data.Transport
                 ' in the thread that is using the socket and result in the thread to exit gracefully.
 
                 ' ***  Stop accepting incoming connections ***
-                ' First we'll try to abort the thread on which the server is listening for new connections. If that 
-                ' is successful, server will be stopped (socket will be closed), and if it fails we'll try to close 
-                ' the server socket as a precautionary step. Aborting the thread will not succeed if the thread is 
-                ' being clocked by the server socket when its listening for incoming connections (Accept() method).
-                If m_listenerThread IsNot Nothing Then m_listenerThread.Abort()
                 If m_tcpServer IsNot Nothing Then m_tcpServer.Close()
                 ' *** Diconnect all of the connected clients ***
-                If m_tcpClientThreads IsNot Nothing Then
-                    SyncLock m_tcpClientThreads
-                        For Each tcpClientThread As RunThread In m_tcpClientThreads.Values()
-                            Dim tcpClient As Socket = TryCast(tcpClientThread.Parameters(1), Socket)
+                If m_tcpClients IsNot Nothing Then
+                    SyncLock m_tcpClients
+                        For Each tcpClient As Socket In m_tcpClients.Values()
                             If tcpClient IsNot Nothing Then tcpClient.Close()
                         Next
                     End SyncLock
@@ -97,8 +90,8 @@ Namespace Data.Transport
                 If data IsNot Nothing Then
                     ' We don't want to synclock 'm_tcpClientThreads' over here because doing so will block all
                     ' all incoming connections (in ListenForConnections) while sending data to client(s). 
-                    If m_tcpClientThreads.ContainsKey(clientID) Then
-                        Dim tcpClient As Socket = TryCast(m_tcpClientThreads(clientID).Parameters(1), Socket)
+                    If m_tcpClients.ContainsKey(clientID) Then
+                        Dim tcpClient As Socket = m_tcpClients(clientID)
                         If tcpClient IsNot Nothing Then tcpClient.Send(data)
                     Else
                         Throw New ArgumentException("Client ID '" & clientID & "' is invalid.")
@@ -156,12 +149,13 @@ Namespace Data.Transport
                     If MyBase.MaximumClients() = 0 OrElse MyBase.ClientIDs.Count() < MyBase.MaximumClients() Then
                         Dim tcpClient As Socket = m_tcpServer.Accept()  ' Accept client connection.
                         Dim tcpClientId As String = Guid.NewGuid.ToString() ' Create an ID for the client.
-                        SyncLock m_tcpClientThreads
-                            ' Start the client on a seperate thread so all the connected clients run independently.
-                            m_tcpClientThreads.Add(tcpClientId, _
-                                RunThread.ExecuteNonPublicMethod(Me, "ReceiveClientData", tcpClientId, tcpClient))
-                        End SyncLock
-                        Thread.Sleep(100)
+                        ' Start the client on a seperate thread so all the connected clients run independently.
+                        RunThread.ExecuteNonPublicMethod(Me, "ReceiveClientData", tcpClientId, tcpClient)
+                        Thread.Sleep(100)   ' Wait enough for the client thread to kick-off.
+                    Else
+                        ' We cannot accept any new connections, but we'll ensure that the server socket is alive
+                        ' while we are waiting.
+                        If m_tcpServer.IsBound() Then Continue Do
                     End If
                 Loop
             Catch ex As Exception
@@ -171,7 +165,6 @@ Namespace Data.Transport
                     m_tcpServer.Close()
                     m_tcpServer = Nothing
                 End If
-                m_listenerThread = Nothing
                 MyBase.OnServerStopped(EventArgs.Empty) ' Notify that the server has stopped.
             End Try
 
@@ -188,6 +181,10 @@ Namespace Data.Transport
             Try
                 MyBase.OnClientConnected(tcpClientID)    ' Notify that the client is connected.
 
+                SyncLock m_tcpClients
+                    m_tcpClients.Add(tcpClientID, tcpClient)
+                End SyncLock
+
                 Do While True
                     ' Wait for data from the client.
                     Dim receivedData() As Byte = CreateArray(Of Byte)(MyBase.ReceiveBufferSize())
@@ -203,8 +200,8 @@ Namespace Data.Transport
                     tcpClient.Close()
                     tcpClient = Nothing
                 End If
-                SyncLock m_tcpClientThreads
-                    m_tcpClientThreads.Remove(tcpClientID)
+                SyncLock m_tcpClients
+                    m_tcpClients.Remove(tcpClientID)
                 End SyncLock
                 MyBase.OnClientDisconnected(tcpClientID)
             End Try
