@@ -59,13 +59,11 @@ Namespace IO
         ''' <remarks>This function will grow or shrink returned buffer as needed to make it the desired length</remarks>
         Public Shared Function CopyBuffer(ByVal buffer As Byte(), ByVal startIndex As Integer, ByVal length As Integer) As Byte()
 
-            If startIndex = 0 AndAlso Buffer.Length = length Then
-                Return buffer.Clone()
-            Else
-                Dim copiedBytes As Byte() = CreateArray(Of Byte)(length)
-                System.Buffer.BlockCopy(buffer, 0, copiedBytes, 0, length)
-                Return copiedBytes
-            End If
+            Dim copiedBytes As Byte() = CreateArray(Of Byte)(length)
+
+            System.Buffer.BlockCopy(buffer, 0, copiedBytes, 0, length)
+
+            Return copiedBytes
 
         End Function
 
