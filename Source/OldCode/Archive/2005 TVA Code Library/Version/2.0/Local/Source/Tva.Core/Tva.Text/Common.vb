@@ -124,15 +124,15 @@ Namespace Text
         Public Shared Function ParseKeyValuePairs(ByVal value As String, ByVal parameterDelimeter As Char, ByVal keyValueDelimeter As Char) As Dictionary(Of String, String)
 
             Dim keyValuePairs As New Dictionary(Of String, String)
+            Dim elements As String()
 
             ' Parse out connect string parameters
             For Each parameter As String In value.Split(parameterDelimeter)
                 ' Parse out parameter's key/value elements
-                With parameter.Split(keyValueDelimeter)
-                    If .Length = 2 Then
-                        keyValuePairs.Add(.GetValue(0).ToString().Trim().ToLower(), .GetValue(1).ToString().Trim())
-                    End If
-                End With
+                elements = parameter.Split(keyValueDelimeter)
+                If elements.Length = 2 Then
+                    keyValuePairs.Add(elements(0).ToString().Trim().ToLower(), elements(1).ToString().Trim())
+                End If
             Next
 
             Return keyValuePairs
