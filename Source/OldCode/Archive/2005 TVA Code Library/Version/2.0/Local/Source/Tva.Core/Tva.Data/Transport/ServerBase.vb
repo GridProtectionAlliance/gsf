@@ -34,11 +34,12 @@ Namespace Data.Transport
         Private m_configurationString As String
         Private m_receiveBufferSize As Integer
         Private m_maximumClients As Integer
+        Private m_handshake As Boolean
         Private m_enabled As Boolean
         Private m_textEncoding As Encoding
         Private m_protocol As TransportProtocol
-        Private m_serverID As String
-        Private m_clientIDs As List(Of String)
+        Private m_serverID As Guid
+        Private m_clientIDs As List(Of Guid)
         Private m_isRunning As Boolean
         Private m_startTime As Long
         Private m_stopTime As Long
@@ -60,14 +61,14 @@ Namespace Data.Transport
         ''' </summary>
         ''' <param name="clientID">ID of the client that was connected.</param>
         <Description("Occurs when a client is connected to the server.")> _
-        Public Event ClientConnected(ByVal clientID As String)
+        Public Event ClientConnected(ByVal clientID As Guid)
 
         ''' <summary>
         ''' Occurs when a client is disconnected from the server.
         ''' </summary>
         ''' <param name="clientID">ID of the client that was disconnected.</param>
         <Description("Occurs when a client is disconnected from the server.")> _
-        Public Event ClientDisconnected(ByVal clientID As String)
+        Public Event ClientDisconnected(ByVal clientID As Guid)
 
         ''' <summary>
         ''' Occurs when data is received from a client.
@@ -75,7 +76,7 @@ Namespace Data.Transport
         ''' <param name="clientID">ID of the client from which the data is received.</param>
         ''' <param name="data">The data that was received from the client.</param>
         <Description("Occurs when data is received from a client.")> _
-        Public Event ReceivedClientData(ByVal clientID As String, ByVal data() As Byte)
+        Public Event ReceivedClientData(ByVal clientID As Guid, ByVal data() As Byte)
 
         ''' <summary>
         ''' Gets or sets the data that is required by the server to initialize.
@@ -136,6 +137,37 @@ Namespace Data.Transport
         End Property
 
         ''' <summary>
+        ''' Gets or sets a boolean value indication whether the server will do a handshake with the client after 
+        ''' accepting its connection.
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns>True is the server will do a handshake with the client; otherwise False.</returns>
+        <Description("Indicates whether the server will do a handshake with the client after accepting its connection."), Category("Configuration"), DefaultValue(GetType(Boolean), "True")> _
+        Public Property Handshake() As Boolean
+            Get
+                Return m_handshake
+            End Get
+            Set(ByVal value As Boolean)
+                m_handshake = value
+            End Set
+        End Property
+
+        ''' <summary>
+        ''' Gets or sets a boolean value indicating whether the server is enabled.
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns>True if the server is enabled; otherwise False.</returns>
+        <Description("Indicates whether the server is enabled."), Category("Configuration"), DefaultValue(GetType(Boolean), "True")> _
+        Public Property Enabled() As Boolean
+            Get
+                Return m_enabled
+            End Get
+            Set(ByVal value As Boolean)
+                m_enabled = value
+            End Set
+        End Property
+
+        ''' <summary>
         ''' Gets or sets the encoding to be used for the text sent to the connected clients.
         ''' </summary>
         ''' <value></value>
@@ -166,27 +198,12 @@ Namespace Data.Transport
         End Property
 
         ''' <summary>
-        ''' Gets or sets a boolean value to indicate whether the server is enabled.
-        ''' </summary>
-        ''' <value></value>
-        ''' <returns>True if the server is enabled; otherwise False.</returns>
-        <Description("Indicates whether the server is enabled."), Category("Configuration"), DefaultValue(GetType(Boolean), "True")> _
-        Public Property Enabled() As Boolean
-            Get
-                Return m_enabled
-            End Get
-            Set(ByVal value As Boolean)
-                m_enabled = value
-            End Set
-        End Property
-
-        ''' <summary>
         ''' Gets the server's ID.
         ''' </summary>
         ''' <value></value>
         ''' <returns>ID of the server.</returns>
         <Browsable(False)> _
-        Public ReadOnly Property ServerID() As String
+        Public ReadOnly Property ServerID() As Guid
             Get
                 Return m_serverID
             End Get
@@ -198,7 +215,7 @@ Namespace Data.Transport
         ''' <value></value>
         ''' <returns>A collection of client IDs that are connected to the server.</returns>
         <Browsable(False)> _
-        Public ReadOnly Property ClientIDs() As List(Of String)
+        Public ReadOnly Property ClientIDs() As List(Of Guid)
             Get
                 Return m_clientIDs
             End Get
@@ -245,7 +262,7 @@ Namespace Data.Transport
         Public ReadOnly Property Status() As String
             Get
                 With New StringBuilder()
-                    .Append("         Server ID: " & ServerID())
+                    .Append("         Server ID: " & ServerID.ToString())
                     .Append(Environment.NewLine())
                     .Append("      Server state: " & IIf(IsRunning(), "Running", "Not Running"))
                     .Append(Environment.NewLine())
@@ -298,7 +315,7 @@ Namespace Data.Transport
         ''' </summary>
         ''' <param name="clientID">ID of the client that was connected.</param>
         ''' <remarks>This method is to be called when a client is connected to the server.</remarks>
-        Public Overridable Sub OnClientConnected(ByVal clientID As String)
+        Public Overridable Sub OnClientConnected(ByVal clientID As Guid)
 
             m_clientIDs.Add(clientID)
             RaiseEvent ClientConnected(clientID)
@@ -310,7 +327,7 @@ Namespace Data.Transport
         ''' </summary>
         ''' <param name="clientID">ID of the client that was disconnected.</param>
         ''' <remarks>This method is to be called when a client has disconnected from the server.</remarks>
-        Public Overridable Sub OnClientDisconnected(ByVal clientID As String)
+        Public Overridable Sub OnClientDisconnected(ByVal clientID As Guid)
 
             m_clientIDs.Remove(clientID)
             RaiseEvent ClientDisconnected(clientID)
@@ -323,7 +340,7 @@ Namespace Data.Transport
         ''' <param name="clientID">ID of the client from which the data is received.</param>
         ''' <param name="data">The data that was received from the client.</param>
         ''' <remarks>This method is to be called when the server receives data from a client.</remarks>
-        Public Overridable Sub OnReceivedClientData(ByVal clientID As String, ByVal data() As Byte)
+        Public Overridable Sub OnReceivedClientData(ByVal clientID As Guid, ByVal data() As Byte)
 
             RaiseEvent ReceivedClientData(clientID, data)
 
@@ -344,7 +361,7 @@ Namespace Data.Transport
         ''' </summary>
         ''' <param name="clientID">ID of the client to which the data is to be sent.</param>
         ''' <param name="data">The data that is to be sent to the client.</param>
-        Public Sub SendTo(ByVal clientID As String, ByVal data As String)
+        Public Sub SendTo(ByVal clientID As Guid, ByVal data As String)
 
             SendTo(clientID, m_textEncoding.GetBytes(data))
 
@@ -355,7 +372,7 @@ Namespace Data.Transport
         ''' </summary>
         ''' <param name="clientID">ID of the client to which the data is to be sent.</param>
         ''' <param name="serializableObject">The serializable object that is to be sent to the client.</param>
-        Public Sub SendTo(ByVal clientID As String, ByVal serializableObject As Object)
+        Public Sub SendTo(ByVal clientID As Guid, ByVal serializableObject As Object)
 
             SendTo(clientID, GetBytes(serializableObject))
 
@@ -366,7 +383,7 @@ Namespace Data.Transport
         ''' </summary>
         ''' <param name="clientID">ID of the client to which the data is to be sent.</param>
         ''' <param name="data">The data that is to be sent to the client.</param>
-        Public MustOverride Sub SendTo(ByVal clientID As String, ByVal data() As Byte)
+        Public MustOverride Sub SendTo(ByVal clientID As Guid, ByVal data() As Byte)
 
         ''' <summary>
         ''' Sends data to all of the clients.
@@ -385,7 +402,7 @@ Namespace Data.Transport
         Public Sub Broadcast(ByVal data() As Byte)
 
             If Enabled() AndAlso IsRunning() Then
-                For Each clientID As String In m_clientIDs
+                For Each clientID As Guid In m_clientIDs
                     SendTo(clientID, data)
                 Next
             End If

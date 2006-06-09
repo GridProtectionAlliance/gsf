@@ -30,7 +30,7 @@ Namespace Data.Transport
 
         Private m_tcpClient As Socket
         Private m_connectivityThread As Thread
-        Private m_connectionStringData As Hashtable
+        Private m_connectionStringData As IDictionary(Of String, String)
 
         Public Sub New(ByVal connectionString As String)
             MyClass.New()
@@ -100,11 +100,11 @@ Namespace Data.Transport
         Protected Overrides Function ValidConnectionString(ByVal connectionString As String) As Boolean
 
             If Not String.IsNullOrEmpty(connectionString) Then
-                m_connectionStringData = ParseInitializationString(connectionString)
-                If m_connectionStringData.Contains("SERVER") AndAlso _
-                        m_connectionStringData.Contains("PORT") AndAlso _
-                        Dns.GetHostEntry(Convert.ToString(m_connectionStringData("SERVER"))) IsNot Nothing AndAlso _
-                        ValidPortNumber(Convert.ToString(m_connectionStringData("PORT"))) Then
+                m_connectionStringData = Tva.Text.Common.ParseKeyValuePairs(connectionString)
+                If m_connectionStringData.ContainsKey("server") AndAlso _
+                        m_connectionStringData.ContainsKey("port") AndAlso _
+                        Dns.GetHostEntry(Convert.ToString(m_connectionStringData("server"))) IsNot Nothing AndAlso _
+                        ValidPortNumber(Convert.ToString(m_connectionStringData("port"))) Then
                     Return True
                 Else
                     ' Connection string is not in the expected format.
@@ -137,8 +137,8 @@ Namespace Data.Transport
                     m_tcpClient = New Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp)
                     m_tcpClient.Bind(New IPEndPoint(IPAddress.Any, 0))
                     ' Connect the client socket to the remote server endpoint.
-                    m_tcpClient.Connect(GetIpEndPoint(Convert.ToString(m_connectionStringData("SERVER")), _
-                        Convert.ToInt32(m_connectionStringData("PORT"))))
+                    m_tcpClient.Connect(GetIpEndPoint(Convert.ToString(m_connectionStringData("server")), _
+                        Convert.ToInt32(m_connectionStringData("port"))))
                     ' Start a seperate thread for the client to receive data from the server.
                     Dim receivingThread As New Thread(AddressOf ReceiveServerData)
                     receivingThread.Start()

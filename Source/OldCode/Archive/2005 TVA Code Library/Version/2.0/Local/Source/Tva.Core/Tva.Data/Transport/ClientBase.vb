@@ -36,9 +36,10 @@ Namespace Data.Transport
         Private m_maximumConnectionAttempts As Integer
         Private m_textEncoding As Encoding
         Private m_protocol As TransportProtocol
+        Private m_handshake As Boolean
         Private m_enabled As Boolean
-        Private m_serverID As String
-        Private m_clientID As String
+        Private m_serverID As Guid
+        Private m_clientID As Guid
         Private m_isConnected As Boolean
         Private m_connectTime As Long
         Private m_disconnectTime As Long
@@ -154,6 +155,37 @@ Namespace Data.Transport
         End Property
 
         ''' <summary>
+        ''' Gets or sets a boolean value indication whether the client will do a handshake with the server after 
+        ''' its connection is accepted by the server.
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns>True is the client will do a handshake with the server; otherwise False.</returns>
+        <Description("Indicates whether the client will do a handshake with the server after its connection is accepted by the server."), Category("Configuration"), DefaultValue(GetType(Boolean), "True")> _
+        Public Property Handshake() As Boolean
+            Get
+                Return m_handshake
+            End Get
+            Set(ByVal value As Boolean)
+                m_handshake = value
+            End Set
+        End Property
+
+        ''' <summary>
+        ''' Gets or sets a boolean value indicating whether the client is enabled.
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns>True if the client is enabled; otherwise False.</returns>
+        <Description("Indicates whether the client is enabled."), Category("Configuration"), DefaultValue(GetType(Boolean), "True")> _
+        Public Property Enabled() As Boolean
+            Get
+                Return m_enabled
+            End Get
+            Set(ByVal value As Boolean)
+                m_enabled = value
+            End Set
+        End Property
+
+        ''' <summary>
         ''' Gets or sets the encoding to be used for the text sent to the server.
         ''' </summary>
         ''' <value></value>
@@ -184,27 +216,12 @@ Namespace Data.Transport
         End Property
 
         ''' <summary>
-        ''' Gets or sets a boolean value to indicate whether the client is enabled.
-        ''' </summary>
-        ''' <value></value>
-        ''' <returns>True if the client is enabled; otherwise False.</returns>
-        <Description("Indicates whether the client is enabled."), Category("Configuration"), DefaultValue(GetType(Boolean), "True")> _
-        Public Property Enabled() As Boolean
-            Get
-                Return m_enabled
-            End Get
-            Set(ByVal value As Boolean)
-                m_enabled = value
-            End Set
-        End Property
-
-        ''' <summary>
         ''' Gets the ID of the server to which the client is connected.
         ''' </summary>
         ''' <value></value>
         ''' <returns>ID of the server to which the client is connected.</returns>
         <Browsable(False)> _
-        Public ReadOnly Property ServerID() As String
+        Public ReadOnly Property ServerID() As Guid
             Get
                 Return m_serverID
             End Get
@@ -216,7 +233,7 @@ Namespace Data.Transport
         ''' <value></value>
         ''' <returns>ID of the client.</returns>
         <Browsable(False)> _
-        Public ReadOnly Property ClientID() As String
+        Public ReadOnly Property ClientID() As Guid
             Get
                 Return m_clientID
             End Get
@@ -287,9 +304,9 @@ Namespace Data.Transport
         Public ReadOnly Property Status() As String
             Get
                 With New StringBuilder()
-                    .Append("             Server ID: " & ServerID())
+                    .Append("             Server ID: " & ServerID.ToString())
                     .Append(Environment.NewLine())
-                    .Append("             Client ID: " & ClientID())
+                    .Append("             Client ID: " & ClientID().ToString())
                     .Append(Environment.NewLine())
                     .Append("          Client state: " & IIf(IsConnected(), "Connected", "Not Connected"))
                     .Append(Environment.NewLine())

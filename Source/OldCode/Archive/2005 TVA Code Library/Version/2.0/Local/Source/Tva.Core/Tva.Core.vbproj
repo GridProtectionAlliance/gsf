@@ -66,6 +66,7 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Tva.Data\Transport\Common.vb" />
+    <Compile Include="Tva.Data\Transport\IdentificationMessage.vb" />
     <Compile Include="Tva.Data\Transport\ServerBase.Designer.vb">
       <DependentUpon>ServerBase.vb</DependentUpon>
     </Compile>

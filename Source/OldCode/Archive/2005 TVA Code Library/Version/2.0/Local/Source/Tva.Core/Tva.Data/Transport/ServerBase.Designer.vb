@@ -39,10 +39,11 @@ Namespace Data.Transport
             m_configurationString = ""
             m_receiveBufferSize = 4096
             m_maximumClients = -1
+            m_handshake = True
             m_enabled = True
             m_textEncoding = System.Text.Encoding.ASCII()
-            m_serverID = Guid.NewGuid.ToString()    ' Create an ID for the server.
-            m_clientIDs = New List(Of String)
+            m_serverID = Guid.NewGuid()    ' Create an ID for the server.
+            m_clientIDs = New List(Of Guid)
             m_isRunning = False
             m_startTime = 0
             m_stopTime = 0

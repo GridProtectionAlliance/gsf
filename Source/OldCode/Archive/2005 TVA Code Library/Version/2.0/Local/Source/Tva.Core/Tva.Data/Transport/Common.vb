@@ -27,25 +27,6 @@ Namespace Data.Transport
         End Function
 
         ''' <summary>
-        ''' Parses the specified initialization string used by servers and clients, and return a hastable 
-        ''' of the parsed data.
-        ''' </summary>
-        ''' <param name="hostingString">The initialization string to be parsed.</param>
-        ''' <returns></returns>
-        Friend Shared Function ParseInitializationString(ByVal hostingString As String) As Hashtable
-
-            Dim parsedData As New Hashtable()
-            For Each segment As String In hostingString.Split(";")
-                Dim segmentData() As String = segment.Split("=")
-                If segmentData.Length() >= 2 Then
-                    parsedData(segmentData(0).ToUpper()) = segmentData(1)
-                End If
-            Next
-            Return parsedData
-
-        End Function
-
-        ''' <summary>
         ''' Determines whether the specified port is valid.
         ''' </summary>
         ''' <param name="port">The port number to be validated.</param>

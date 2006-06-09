@@ -30,8 +30,8 @@ Namespace Data.Transport
     Public Class TcpServer
 
         Private m_tcpServer As Socket
-        Private m_tcpClients As Dictionary(Of String, Socket)
-        Private m_configurationStringData As Hashtable
+        Private m_tcpClients As Dictionary(Of Guid, Socket)
+        Private m_configurationStringData As Dictionary(Of String, String)
 
         ''' <summary>
         ''' Initializes a instance of Tva.Data.Transport.TcpServer with the specified data.
@@ -84,7 +84,7 @@ Namespace Data.Transport
         ''' </summary>
         ''' <param name="clientID">ID of the client to which the data is to be sent.</param>
         ''' <param name="data">The data that is to be sent to the client.</param>
-        Public Overrides Sub SendTo(ByVal clientID As String, ByVal data() As Byte)
+        Public Overrides Sub SendTo(ByVal clientID As Guid, ByVal data() As Byte)
 
             If MyBase.Enabled() AndAlso MyBase.IsRunning() Then
                 If data IsNot Nothing AndAlso data.Length() > 0 Then
@@ -94,7 +94,7 @@ Namespace Data.Transport
                         Dim tcpClient As Socket = m_tcpClients(clientID)
                         If tcpClient IsNot Nothing Then tcpClient.Send(data)
                     Else
-                        Throw New ArgumentException("Client ID '" & clientID & "' is invalid.")
+                        Throw New ArgumentException("Client ID '" & clientID.ToString() & "' is invalid.")
                     End If
                 Else
                     Throw New ArgumentNullException("data")
@@ -111,9 +111,9 @@ Namespace Data.Transport
         Protected Overrides Function ValidConfigurationString(ByVal configurationString As String) As Boolean
 
             If Not String.IsNullOrEmpty(configurationString) Then
-                m_configurationStringData = ParseInitializationString(configurationString)
-                If m_configurationStringData.Contains("PORT") AndAlso _
-                        ValidPortNumber(Convert.ToString(m_configurationStringData("PORT"))) Then
+                m_configurationStringData = Tva.Text.Common.ParseKeyValuePairs(configurationString)
+                If m_configurationStringData.ContainsKey("port") AndAlso _
+                        ValidPortNumber(Convert.ToString(m_configurationStringData("port"))) Then
                     Return True
                 Else
                     ' Configuration string is not in the expected format.
@@ -140,7 +140,7 @@ Namespace Data.Transport
                 ' Create a socket for the server.
                 m_tcpServer = New Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp)
                 ' Tie the server socket to a local endpoint.
-                m_tcpServer.Bind(New IPEndPoint(IPAddress.Any, Convert.ToInt32(m_configurationStringData("PORT"))))
+                m_tcpServer.Bind(New IPEndPoint(IPAddress.Any, Convert.ToInt32(m_configurationStringData("port"))))
                 ' Start listening for connections and keep a maximum of 0 pending connection in the queue.
                 m_tcpServer.Listen(0)
                 MyBase.OnServerStarted(EventArgs.Empty) ' Notify that the server has started.
@@ -149,7 +149,7 @@ Namespace Data.Transport
                     If MyBase.MaximumClients() = -1 OrElse MyBase.ClientIDs.Count() < MyBase.MaximumClients() Then
                         ' We can accept incoming client connection requests.
                         Dim tcpClient As Socket = m_tcpServer.Accept()  ' Accept client connection.
-                        Dim tcpClientId As String = Guid.NewGuid.ToString() ' Create an ID for the client.
+                        Dim tcpClientId As Guid = Guid.NewGuid() ' Create an ID for the client.
                         ' Start the client on a seperate thread so all the connected clients run independently.
                         RunThread.ExecuteNonPublicMethod(Me, "ReceiveClientData", tcpClientId, tcpClient)
                         Thread.Sleep(100)   ' Wait enough for the client thread to kick-off.
@@ -177,7 +177,7 @@ Namespace Data.Transport
         ''' <param name="tcpClientID">ID of the connected client.</param>
         ''' <param name="tcpClient">System.Net.Sockets.Socket of the the connected client.</param>
         ''' <remarks>This method is meant to be executed on seperate threads.</remarks>
-        Protected Sub ReceiveClientData(ByVal tcpClientID As String, ByVal tcpClient As Socket)
+        Protected Sub ReceiveClientData(ByVal tcpClientID As Guid, ByVal tcpClient As Socket)
 
             Try
                 SyncLock m_tcpClients

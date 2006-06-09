@@ -38,7 +38,7 @@ Namespace Data.Transport
             ' Setup the instance defaults.
             MyBase.ConfigurationString = "Port=8888"
             MyBase.Protocol = TransportProtocol.Tcp
-            m_tcpClients = New Dictionary(Of String, System.Net.Sockets.Socket)
+            m_tcpClients = New Dictionary(Of Guid, System.Net.Sockets.Socket)
 
         End Sub
 

@@ -40,9 +40,9 @@ Namespace Data.Transport
             m_receiveBufferSize = 4096
             m_maximumConnectionAttempts = -1
             m_textEncoding = System.Text.Encoding.ASCII()
+            m_handshake = True
             m_enabled = True
-            m_serverID = ""
-            m_clientID = ""
+            m_clientID = Guid.NewGuid()
             m_isConnected = False
             m_connectTime = 0
             m_disconnectTime = 0
