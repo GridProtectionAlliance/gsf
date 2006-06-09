@@ -130,6 +130,7 @@
     <Compile Include="Tva.Text\Common.vb" />
     <Compile Include="Tva.Xml\Common.vb" />
     <Compile Include="Tva\ByteEncoding.vb" />
+    <Compile Include="Tva\Serialization.vb" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Tva.Collections\Tva.Collections.cd" />

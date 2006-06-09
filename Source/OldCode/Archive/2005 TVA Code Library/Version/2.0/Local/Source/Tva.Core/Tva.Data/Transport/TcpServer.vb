@@ -87,7 +87,7 @@ Namespace Data.Transport
         Public Overrides Sub SendTo(ByVal clientID As String, ByVal data() As Byte)
 
             If MyBase.Enabled() AndAlso MyBase.IsRunning() Then
-                If data IsNot Nothing Then
+                If data IsNot Nothing AndAlso data.Length() > 0 Then
                     ' We don't want to synclock 'm_tcpClientThreads' over here because doing so will block all
                     ' all incoming connections (in ListenForConnections) while sending data to client(s). 
                     If m_tcpClients.ContainsKey(clientID) Then
@@ -180,11 +180,11 @@ Namespace Data.Transport
         Protected Sub ReceiveClientData(ByVal tcpClientID As String, ByVal tcpClient As Socket)
 
             Try
-                MyBase.OnClientConnected(tcpClientID)    ' Notify that the client is connected.
-
                 SyncLock m_tcpClients
                     m_tcpClients.Add(tcpClientID, tcpClient)
                 End SyncLock
+
+                MyBase.OnClientConnected(tcpClientID)    ' Notify that the client is connected.
 
                 Do While True
                     ' Wait for data from the client.
@@ -204,7 +204,7 @@ Namespace Data.Transport
                 SyncLock m_tcpClients
                     m_tcpClients.Remove(tcpClientID)
                 End SyncLock
-                MyBase.OnClientDisconnected(tcpClientID)
+                MyBase.OnClientDisconnected(tcpClientID)    ' Notify that the client is disconnected.
             End Try
 
         End Sub

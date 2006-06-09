@@ -28,9 +28,9 @@ Namespace Data.Transport
 
     Public Class TcpClient
 
-        Private m_connectionStringData As Hashtable
         Private m_tcpClient As Socket
         Private m_connectivityThread As Thread
+        Private m_connectionStringData As Hashtable
 
         Public Sub New(ByVal connectionString As String)
             MyClass.New()
@@ -80,7 +80,7 @@ Namespace Data.Transport
         Public Overrides Sub Send(ByVal data() As Byte)
 
             If MyBase.Enabled() AndAlso MyBase.IsConnected() Then
-                If data IsNot Nothing Then  ' There is some data to be sent.
+                If data IsNot Nothing AndAlso data.Length() > 0 Then  ' There is some data to be sent.
                     MyBase.OnSendBegin(data)
                     m_tcpClient.Send(data)  ' Send data to the server.
                     MyBase.OnSendComplete(data)

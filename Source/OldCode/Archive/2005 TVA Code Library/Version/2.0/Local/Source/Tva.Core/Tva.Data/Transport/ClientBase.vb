@@ -23,6 +23,7 @@ Imports System.Text
 Imports System.Drawing
 Imports System.ComponentModel
 Imports Tva.Common
+Imports Tva.Serialization
 Imports Tva.DateTime.Common
 
 Namespace Data.Transport
@@ -436,6 +437,17 @@ Namespace Data.Transport
             Send(m_textEncoding.GetBytes(data))
 
         End Sub
+
+        ''' <summary>
+        ''' Sends data to the server.
+        ''' </summary>
+        ''' <param name="serializableObject">The serializable object that is to be sent to the server.</param>
+        Public Sub SendTo(ByVal serializableObject As Object)
+
+            Send(GetBytes(serializableObject))
+
+        End Sub
+
 
         ''' <summary>
         ''' Sends data to the server.

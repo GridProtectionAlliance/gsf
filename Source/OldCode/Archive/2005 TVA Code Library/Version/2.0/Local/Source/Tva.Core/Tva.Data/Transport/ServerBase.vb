@@ -23,6 +23,7 @@ Imports System.Text
 Imports System.Drawing
 Imports System.ComponentModel
 Imports Tva.Common
+Imports Tva.Serialization
 Imports Tva.DateTime.Common
 
 Namespace Data.Transport
@@ -346,6 +347,17 @@ Namespace Data.Transport
         Public Sub SendTo(ByVal clientID As String, ByVal data As String)
 
             SendTo(clientID, m_textEncoding.GetBytes(data))
+
+        End Sub
+
+        ''' <summary>
+        ''' Sends data to the specified client.
+        ''' </summary>
+        ''' <param name="clientID">ID of the client to which the data is to be sent.</param>
+        ''' <param name="serializableObject">The serializable object that is to be sent to the client.</param>
+        Public Sub SendTo(ByVal clientID As String, ByVal serializableObject As Object)
+
+            SendTo(clientID, GetBytes(serializableObject))
 
         End Sub
 
