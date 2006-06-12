@@ -48,6 +48,19 @@ Namespace Data.Transport
 
         End Function
 
+        Friend Shared Function CreateIdentificationMessage(ByVal id As Guid) As IdentificationMessage
+
+            Dim idMessage As New IdentificationMessage()
+            idMessage.ID = id
+            idMessage.System = My.Computer.Name()
+            idMessage.NTUser = My.User.Name()
+            idMessage.Assembly = Tva.Assembly.EntryAssembly.FullName()
+            idMessage.Location = Tva.Assembly.EntryAssembly.Location()
+            idMessage.Created = Tva.Assembly.EntryAssembly.BuildDate()
+            Return idMessage
+
+        End Function
+
     End Class
 
 End Namespace

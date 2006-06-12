@@ -22,6 +22,7 @@ Imports System.Net.Sockets
 Imports System.Text
 Imports System.Threading
 Imports Tva.Common
+Imports Tva.Serialization
 Imports Tva.Data.Transport.Common
 
 Namespace Data.Transport
@@ -66,10 +67,10 @@ Namespace Data.Transport
         ''' </summary>
         Public Overrides Sub Disconnect()
 
-            If MyBase.Enabled() AndAlso MyBase.IsConnected() Then
-                ' Close the client socket that is connected to the server.
-                If m_tcpClient IsNot Nothing Then m_tcpClient.Close()
-            End If
+            CancelConnect() ' Cancel any pending connection attempts.
+
+            ' Close the client socket that is connected to the server.
+            If m_tcpClient IsNot Nothing Then m_tcpClient.Close()
 
         End Sub
 
@@ -77,7 +78,7 @@ Namespace Data.Transport
         ''' Sends data to the server.
         ''' </summary>
         ''' <param name="data">The data that is to be sent to the server.</param>
-        Public Overrides Sub Send(ByVal data() As Byte)
+        Public Overrides Sub Send(ByVal data As Byte())
 
             If MyBase.Enabled() AndAlso MyBase.IsConnected() Then
                 If data IsNot Nothing AndAlso data.Length() > 0 Then  ' There is some data to be sent.
@@ -139,12 +140,14 @@ Namespace Data.Transport
                     ' Connect the client socket to the remote server endpoint.
                     m_tcpClient.Connect(GetIpEndPoint(Convert.ToString(m_connectionStringData("server")), _
                         Convert.ToInt32(m_connectionStringData("port"))))
-                    ' Start a seperate thread for the client to receive data from the server.
-                    Dim receivingThread As New Thread(AddressOf ReceiveServerData)
-                    receivingThread.Start()
+                    If m_tcpClient.Connected() Then ' Client connected to the server successfully.
+                        ' Start a seperate thread for the client to receive data from the server.
+                        Dim receivingThread As New Thread(AddressOf ReceiveServerData)
+                        receivingThread.Start()
 
-                    m_connectivityThread = Nothing
-                    Exit Do ' Client successfully connected to the server.
+                        m_connectivityThread = Nothing
+                        Exit Do ' Client successfully connected to the server.
+                    End If
                 Catch ex As ThreadAbortException
                     ' We'll stop trying to connect if a ThreadAbortException exception is encountered. This will
                     ' be the case when the thread is deliberately aborted in CancelConnect() method in which case 
@@ -172,13 +175,27 @@ Namespace Data.Transport
         Private Sub ReceiveServerData()
 
             Try
-                MyBase.OnConnected(EventArgs.Empty)
+                If Not MyBase.Handshake() Then
+                    MyBase.OnConnected(EventArgs.Empty)
+                End If
 
                 Do While True
                     ' We'll wait for data from the server until client is dissconnected from the server.
                     Dim receivedData() As Byte = CreateArray(Of Byte)(MyBase.ReceiveBufferSize())
                     m_tcpClient.Receive(receivedData)   ' Block until data is received from the server.
-                    MyBase.OnReceivedData(receivedData)
+
+                    If MyBase.Handshake() AndAlso MyBase.ServerID() = Guid.Empty Then
+                        Dim serverIdentification As IdentificationMessage = DirectCast(GetObject(receivedData), IdentificationMessage)
+                        If serverIdentification IsNot Nothing AndAlso serverIdentification.ID() <> Guid.Empty Then
+                            m_tcpClient.Send(GetBytes(CreateIdentificationMessage(MyBase.ClientID())))
+                            MyBase.ServerID = serverIdentification.ID()
+                            MyBase.OnConnected(EventArgs.Empty)
+                        Else
+                            Exit Do
+                        End If
+                    Else
+                        MyBase.OnReceivedData(receivedData)
+                    End If
                 Loop
             Catch ex As Exception
                 ' We'll don't need to take any action when an exception is encountered.

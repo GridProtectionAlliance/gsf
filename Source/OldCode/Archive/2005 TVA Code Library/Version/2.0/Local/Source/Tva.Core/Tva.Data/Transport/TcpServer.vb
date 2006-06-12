@@ -22,6 +22,7 @@ Imports System.Net.Sockets
 Imports System.Text
 Imports System.Threading
 Imports Tva.Common
+Imports Tva.Serialization
 Imports Tva.Threading
 Imports Tva.Data.Transport.Common
 
@@ -31,6 +32,7 @@ Namespace Data.Transport
 
         Private m_tcpServer As Socket
         Private m_tcpClients As Dictionary(Of Guid, Socket)
+        Private m_pendingTcpClients As List(Of Socket)
         Private m_configurationStringData As Dictionary(Of String, String)
 
         ''' <summary>
@@ -61,20 +63,25 @@ Namespace Data.Transport
         ''' </summary>
         Public Overrides Sub [Stop]()
 
-            If MyBase.Enabled() AndAlso MyBase.IsRunning() Then
-                ' NOTE: Closing the socket for server and all of the connected clients will cause a SocketException
-                ' in the thread that is using the socket and result in the thread to exit gracefully.
+            ' NOTE: Closing the socket for server and all of the connected clients will cause a SocketException
+            ' in the thread that is using the socket and result in the thread to exit gracefully.
 
-                ' ***  Stop accepting incoming connections ***
-                If m_tcpServer IsNot Nothing Then m_tcpServer.Close()
-                ' *** Diconnect all of the connected clients ***
-                If m_tcpClients IsNot Nothing Then
-                    SyncLock m_tcpClients
-                        For Each tcpClient As Socket In m_tcpClients.Values()
-                            If tcpClient IsNot Nothing Then tcpClient.Close()
-                        Next
-                    End SyncLock
-                End If
+            ' ***  Stop accepting incoming connections ***
+            If m_tcpServer IsNot Nothing Then m_tcpServer.Close()
+            ' *** Diconnect all of the connected clients ***
+            If m_tcpClients IsNot Nothing Then
+                SyncLock m_tcpClients
+                    For Each tcpClient As Socket In m_tcpClients.Values()
+                        If tcpClient IsNot Nothing Then tcpClient.Close()
+                    Next
+                End SyncLock
+            End If
+            If m_pendingTcpClients IsNot Nothing Then
+                SyncLock m_pendingTcpClients
+                    For Each pendingTcpClient As Socket In m_pendingTcpClients
+                        If pendingTcpClient IsNot Nothing Then pendingTcpClient.Close()
+                    Next
+                End SyncLock
             End If
 
         End Sub
@@ -84,7 +91,7 @@ Namespace Data.Transport
         ''' </summary>
         ''' <param name="clientID">ID of the client to which the data is to be sent.</param>
         ''' <param name="data">The data that is to be sent to the client.</param>
-        Public Overrides Sub SendTo(ByVal clientID As Guid, ByVal data() As Byte)
+        Public Overrides Sub SendTo(ByVal clientID As Guid, ByVal data As Byte())
 
             If MyBase.Enabled() AndAlso MyBase.IsRunning() Then
                 If data IsNot Nothing AndAlso data.Length() > 0 Then
@@ -149,14 +156,9 @@ Namespace Data.Transport
                     If MyBase.MaximumClients() = -1 OrElse MyBase.ClientIDs.Count() < MyBase.MaximumClients() Then
                         ' We can accept incoming client connection requests.
                         Dim tcpClient As Socket = m_tcpServer.Accept()  ' Accept client connection.
-                        Dim tcpClientId As Guid = Guid.NewGuid() ' Create an ID for the client.
                         ' Start the client on a seperate thread so all the connected clients run independently.
-                        RunThread.ExecuteNonPublicMethod(Me, "ReceiveClientData", tcpClientId, tcpClient)
-                        Thread.Sleep(100)   ' Wait enough for the client thread to kick-off.
-                    Else
-                        ' We cannot accept any new connections, but we'll ensure that the server socket is alive
-                        ' while we are waiting.
-                        If m_tcpServer.IsBound() Then Continue Do
+                        RunThread.ExecuteNonPublicMethod(Me, "ReceiveClientData", tcpClient)
+                        Thread.Sleep(1000)   ' Wait enough for the client thread to kick-off.
                     End If
                 Loop
             Catch ex As Exception
@@ -174,24 +176,53 @@ Namespace Data.Transport
         ''' <summary>
         ''' Receives any data sent by a client that is connected to the server.
         ''' </summary>
-        ''' <param name="tcpClientID">ID of the connected client.</param>
         ''' <param name="tcpClient">System.Net.Sockets.Socket of the the connected client.</param>
         ''' <remarks>This method is meant to be executed on seperate threads.</remarks>
-        Protected Sub ReceiveClientData(ByVal tcpClientID As Guid, ByVal tcpClient As Socket)
+        Protected Sub ReceiveClientData(ByVal tcpClient As Socket)
 
+            Dim tcpClientId As Guid = Nothing
             Try
-                SyncLock m_tcpClients
-                    m_tcpClients.Add(tcpClientID, tcpClient)
-                End SyncLock
+                If Not MyBase.Handshake() Then
+                    ' We are not expecting to get the client's ID from the client so we'll create one.
+                    tcpClientId = Guid.NewGuid()
+                    SyncLock m_tcpClients
+                        m_tcpClients.Add(tcpClientId, tcpClient)
+                    End SyncLock
 
-                MyBase.OnClientConnected(tcpClientID)    ' Notify that the client is connected.
+                    MyBase.OnClientConnected(tcpClientId)    ' Notify that the client is connected.
+                End If
 
                 Do While True
+                    If MyBase.Handshake() AndAlso tcpClientId = Guid.Empty Then
+                        SyncLock m_pendingTcpClients
+                            m_pendingTcpClients.Add(tcpClient)
+                        End SyncLock
+                        tcpClient.Send(GetBytes(CreateIdentificationMessage(MyBase.ServerID())))
+                    End If
+
                     ' Wait for data from the client.
                     Dim receivedData() As Byte = CreateArray(Of Byte)(MyBase.ReceiveBufferSize())
                     tcpClient.Receive(receivedData) ' Block until data is received from client.
-                    ' Notify of data received from the client.
-                    MyBase.OnReceivedClientData(tcpClientID, receivedData)
+
+                    If MyBase.Handshake() AndAlso tcpClientId = Guid.Empty Then
+                        Dim clientIdentification As IdentificationMessage = DirectCast(GetObject(receivedData), IdentificationMessage)
+                        If clientIdentification IsNot Nothing AndAlso clientIdentification.ID() <> Guid.Empty Then
+                            tcpClientId = clientIdentification.ID()
+
+                            SyncLock m_pendingTcpClients
+                                m_pendingTcpClients.Remove(tcpClient)
+                            End SyncLock
+                            SyncLock m_tcpClients
+                                m_tcpClients.Add(tcpClientId, tcpClient)
+                            End SyncLock
+                            MyBase.OnClientConnected(tcpClientId)    ' Notify that the client is connected.
+                        Else
+                            Exit Do
+                        End If
+                    Else
+                        ' Notify of data received from the client.
+                        MyBase.OnReceivedClientData(tcpClientId, receivedData)
+                    End If
                 Loop
             Catch ex As Exception
                 ' We will exit gracefully in case of any exception.
@@ -201,10 +232,15 @@ Namespace Data.Transport
                     tcpClient.Close()
                     tcpClient = Nothing
                 End If
-                SyncLock m_tcpClients
-                    m_tcpClients.Remove(tcpClientID)
+                SyncLock m_pendingTcpClients
+                    m_pendingTcpClients.Remove(tcpClient)
                 End SyncLock
-                MyBase.OnClientDisconnected(tcpClientID)    ' Notify that the client is disconnected.
+                SyncLock m_tcpClients
+                    If m_tcpClients.ContainsKey(tcpClientId) Then
+                        m_tcpClients.Remove(tcpClientId)
+                        MyBase.OnClientDisconnected(tcpClientId)    ' Notify that the client is disconnected.
+                    End If
+                End SyncLock
             End Try
 
         End Sub

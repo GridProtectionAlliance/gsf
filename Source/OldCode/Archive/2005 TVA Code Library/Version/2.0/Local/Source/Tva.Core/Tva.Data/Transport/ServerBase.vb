@@ -76,7 +76,7 @@ Namespace Data.Transport
         ''' <param name="clientID">ID of the client from which the data is received.</param>
         ''' <param name="data">The data that was received from the client.</param>
         <Description("Occurs when data is received from a client.")> _
-        Public Event ReceivedClientData(ByVal clientID As Guid, ByVal data() As Byte)
+        Public Event ReceivedClientData(ByVal clientID As Guid, ByVal data As Byte())
 
         ''' <summary>
         ''' Gets or sets the data that is required by the server to initialize.
@@ -288,7 +288,7 @@ Namespace Data.Transport
         ''' </summary>
         ''' <param name="e">An System.EventArgs that contains the event data.</param>
         ''' <remarks>This method is to be called after the server has been started.</remarks>
-        Public Overridable Sub OnServerStarted(ByVal e As EventArgs)
+        Protected Overridable Sub OnServerStarted(ByVal e As EventArgs)
 
             m_isRunning = True
             m_startTime = Date.Now.Ticks()  ' Save the time when server is started.
@@ -302,7 +302,7 @@ Namespace Data.Transport
         ''' </summary>
         ''' <param name="e">An System.EventArgs that contains the event data.</param>
         ''' <remarks>This method is to be called after the server has been stopped.</remarks>
-        Public Overridable Sub OnServerStopped(ByVal e As EventArgs)
+        Protected Overridable Sub OnServerStopped(ByVal e As EventArgs)
 
             m_isRunning = False
             m_stopTime = Date.Now.Ticks()   ' Save the time when server is stopped.
@@ -315,7 +315,7 @@ Namespace Data.Transport
         ''' </summary>
         ''' <param name="clientID">ID of the client that was connected.</param>
         ''' <remarks>This method is to be called when a client is connected to the server.</remarks>
-        Public Overridable Sub OnClientConnected(ByVal clientID As Guid)
+        Protected Overridable Sub OnClientConnected(ByVal clientID As Guid)
 
             m_clientIDs.Add(clientID)
             RaiseEvent ClientConnected(clientID)
@@ -327,7 +327,7 @@ Namespace Data.Transport
         ''' </summary>
         ''' <param name="clientID">ID of the client that was disconnected.</param>
         ''' <remarks>This method is to be called when a client has disconnected from the server.</remarks>
-        Public Overridable Sub OnClientDisconnected(ByVal clientID As Guid)
+        Protected Overridable Sub OnClientDisconnected(ByVal clientID As Guid)
 
             m_clientIDs.Remove(clientID)
             RaiseEvent ClientDisconnected(clientID)
@@ -340,7 +340,7 @@ Namespace Data.Transport
         ''' <param name="clientID">ID of the client from which the data is received.</param>
         ''' <param name="data">The data that was received from the client.</param>
         ''' <remarks>This method is to be called when the server receives data from a client.</remarks>
-        Public Overridable Sub OnReceivedClientData(ByVal clientID As Guid, ByVal data() As Byte)
+        Protected Overridable Sub OnReceivedClientData(ByVal clientID As Guid, ByVal data As Byte())
 
             RaiseEvent ReceivedClientData(clientID, data)
 
@@ -383,7 +383,7 @@ Namespace Data.Transport
         ''' </summary>
         ''' <param name="clientID">ID of the client to which the data is to be sent.</param>
         ''' <param name="data">The data that is to be sent to the client.</param>
-        Public MustOverride Sub SendTo(ByVal clientID As Guid, ByVal data() As Byte)
+        Public MustOverride Sub SendTo(ByVal clientID As Guid, ByVal data As Byte())
 
         ''' <summary>
         ''' Sends data to all of the clients.
@@ -399,7 +399,7 @@ Namespace Data.Transport
         ''' Sends data to all of the clients.
         ''' </summary>
         ''' <param name="data">The data that is to sent to the clients.</param>
-        Public Sub Broadcast(ByVal data() As Byte)
+        Public Sub Broadcast(ByVal data As Byte())
 
             If Enabled() AndAlso IsRunning() Then
                 For Each clientID As Guid In m_clientIDs

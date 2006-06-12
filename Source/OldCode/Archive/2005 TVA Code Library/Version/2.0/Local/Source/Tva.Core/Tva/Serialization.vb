@@ -43,7 +43,7 @@ Public NotInheritable Class Serialization
     ''' </summary>
     ''' <param name="serializedObject">The bytes of a previously serialized object.</param>
     ''' <returns>A System.Object instance if the specified bytes can be deserialized; otherwise Nothing.</returns>
-    Public Shared Function GetObject(ByVal serializedObject() As Byte) As Object
+    Public Shared Function GetObject(ByVal serializedObject As Byte()) As Object
 
         Dim deserializedObject As Object = Nothing
         Try
@@ -74,7 +74,7 @@ Public NotInheritable Class Serialization
     ''' </summary>
     ''' <param name="serializedObject">The bytes of a previously serialized object.</param>
     ''' <returns>A System.IO.MemoryStream from the bytes of a previously serialized object.</returns>
-    Public Shared Function GetStream(ByVal serializedObject() As Byte) As MemoryStream
+    Public Shared Function GetStream(ByVal serializedObject As Byte()) As MemoryStream
 
         Return New MemoryStream(serializedObject)
 

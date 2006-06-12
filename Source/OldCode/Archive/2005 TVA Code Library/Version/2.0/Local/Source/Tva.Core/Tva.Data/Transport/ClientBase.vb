@@ -82,21 +82,21 @@ Namespace Data.Transport
         ''' </summary>
         ''' <param name="data">The data being sent to the server.</param>
         <Description("Occurs when the client begins sending data to the server.")> _
-        Public Event SendBegin(ByVal data() As Byte)
+        Public Event SendBegin(ByVal data As Byte())
 
         ''' <summary>
         ''' Occurs when the client has successfully send data to the server.
         ''' </summary>
         ''' <param name="data">The data sent to the server.</param>
         <Description("Occurs when the client has successfully send data to the server.")> _
-        Public Event SendComplete(ByVal data() As Byte)
+        Public Event SendComplete(ByVal data As Byte())
 
         ''' <summary>
         ''' Occurs when the client receives data from the server.
         ''' </summary>
         ''' <param name="data">The data that was received from the server.</param>
         <Description("Occurs when the client receives data from the server.")> _
-        Public Event ReceivedData(ByVal data() As Byte)
+        Public Event ReceivedData(ByVal data As Byte())
 
         ''' <summary>
         ''' Gets or sets the data required by the client to connect to the server.
@@ -221,10 +221,13 @@ Namespace Data.Transport
         ''' <value></value>
         ''' <returns>ID of the server to which the client is connected.</returns>
         <Browsable(False)> _
-        Public ReadOnly Property ServerID() As Guid
+        Public Property ServerID() As Guid
             Get
                 Return m_serverID
             End Get
+            Protected Set(ByVal value As Guid)
+                m_serverID = value
+            End Set
         End Property
 
         ''' <summary>
@@ -233,10 +236,13 @@ Namespace Data.Transport
         ''' <value></value>
         ''' <returns>ID of the client.</returns>
         <Browsable(False)> _
-        Public ReadOnly Property ClientID() As Guid
+        Public Property ClientID() As Guid
             Get
                 Return m_clientID
             End Get
+            Protected Set(ByVal value As Guid)
+                m_clientID = value
+            End Set
         End Property
 
         ''' <summary>
@@ -332,7 +338,7 @@ Namespace Data.Transport
         ''' </summary>
         ''' <param name="e">An System.EventArgs that contains the event data.</param>
         ''' <remarks>This method is to be called when the client is attempting connection to the server.</remarks>
-        Public Sub OnConnecting(ByVal e As EventArgs)
+        Protected Sub OnConnecting(ByVal e As EventArgs)
 
             RaiseEvent Connecting(Me, e)
 
@@ -346,7 +352,7 @@ Namespace Data.Transport
         ''' This method is to be called when attempts for connecting the client to the server are stopped on user's
         ''' request (i.e. When CancelConnect() is called before client is connected to the server).
         ''' </remarks>
-        Public Sub OnConnectingCancelled(ByVal e As EventArgs)
+        Protected Sub OnConnectingCancelled(ByVal e As EventArgs)
 
             RaiseEvent ConnectingCancelled(Me, e)
 
@@ -360,7 +366,7 @@ Namespace Data.Transport
         ''' This method is to be called when all attempts for connecting to the server have been made but failed 
         ''' due to exceptions.
         ''' </remarks>
-        Public Sub OnConnectingException(ByVal ex As Exception)
+        Protected Sub OnConnectingException(ByVal ex As Exception)
 
             RaiseEvent ConnectingException(ex)
 
@@ -371,7 +377,7 @@ Namespace Data.Transport
         ''' </summary>
         ''' <param name="e">An System.EventArgs that contains the event data.</param>
         ''' <remarks>This method is to be called when the client has successfully connected to the server.</remarks>
-        Public Sub OnConnected(ByVal e As EventArgs)
+        Protected Sub OnConnected(ByVal e As EventArgs)
 
             m_isConnected = True
             m_connectTime = Date.Now.Ticks  ' Save the time when the client connected to the server.
@@ -387,8 +393,9 @@ Namespace Data.Transport
         ''' </summary>
         ''' <param name="e">An System.EventArgs that contains the event data.</param>
         ''' <remarks>This method is to be called when the client has disconnected from the server.</remarks>
-        Public Sub OnDisconnected(ByVal e As EventArgs)
+        Protected Sub OnDisconnected(ByVal e As EventArgs)
 
+            m_serverID = Guid.Empty
             m_isConnected = False
             m_disconnectTime = Date.Now.Ticks() ' Save the time when client was disconnected from the server.
             RaiseEvent Disconnected(Me, e)
@@ -400,7 +407,7 @@ Namespace Data.Transport
         ''' </summary>
         ''' <param name="data">The data being sent to the server.</param>
         ''' <remarks>This method is to be called when the client begins sending data to the server.</remarks>
-        Public Sub OnSendBegin(ByVal data() As Byte)
+        Protected Sub OnSendBegin(ByVal data As Byte())
 
             RaiseEvent SendBegin(data)
 
@@ -411,7 +418,7 @@ Namespace Data.Transport
         ''' </summary>
         ''' <param name="data">The data sent to the server.</param>
         ''' <remarks>This method is to be called when the client has finished sending data to the server.</remarks>
-        Public Sub OnSendComplete(ByVal data() As Byte)
+        Protected Sub OnSendComplete(ByVal data As Byte())
 
             m_totalBytesSent += data.Length()
             RaiseEvent SendComplete(data)
@@ -423,7 +430,7 @@ Namespace Data.Transport
         ''' </summary>
         ''' <param name="data">The data that was received from the server.</param>
         ''' <remarks>This method is to be called when the client receives data from the server.</remarks>
-        Public Sub OnReceivedData(ByVal data() As Byte)
+        Protected Sub OnReceivedData(ByVal data As Byte())
 
             m_totalBytesReceived += data.Length()
             RaiseEvent ReceivedData(data)
@@ -470,7 +477,7 @@ Namespace Data.Transport
         ''' Sends data to the server.
         ''' </summary>
         ''' <param name="data">The data that is to be sent to the server.</param>
-        Public MustOverride Sub Send(ByVal data() As Byte)
+        Public MustOverride Sub Send(ByVal data As Byte())
 
         ''' <summary>
         ''' Determines whether specified connection string, required for the client to connect to the server, 

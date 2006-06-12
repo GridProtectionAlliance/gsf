@@ -39,6 +39,7 @@ Namespace Data.Transport
             MyBase.ConfigurationString = "Port=8888"
             MyBase.Protocol = TransportProtocol.Tcp
             m_tcpClients = New Dictionary(Of Guid, System.Net.Sockets.Socket)
+            m_pendingTcpClients = New List(Of System.Net.Sockets.Socket)
 
         End Sub
 
