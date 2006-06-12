@@ -66,7 +66,7 @@ Namespace Data.Transport
             ' NOTE: Closing the socket for server and all of the connected clients will cause a SocketException
             ' in the thread that is using the socket and result in the thread to exit gracefully.
 
-            ' ***  Stop accepting incoming connections ***
+            ' *** Stop accepting incoming connections ***
             If m_tcpServer IsNot Nothing Then m_tcpServer.Close()
             ' *** Diconnect all of the connected clients ***
             If m_tcpClients IsNot Nothing Then
@@ -182,8 +182,15 @@ Namespace Data.Transport
 
             Dim tcpClientId As Guid = Nothing
             Try
-                If Not MyBase.Handshake() Then
-                    ' We are not expecting to get the client's ID from the client so we'll create one.
+                If MyBase.Handshake() Then
+                    ' Authentication is to be performed before the client is considered to be connected, so we
+                    ' add it to a list of pending connections until the authentication is performed. This is 
+                    ' done so that pending connections can be closed when the server is stopped.
+                    SyncLock m_pendingTcpClients
+                        m_pendingTcpClients.Add(tcpClient)
+                    End SyncLock
+                Else
+                    ' The client is considered to be connected since authentication is not to be performed.
                     tcpClientId = Guid.NewGuid()
                     SyncLock m_tcpClients
                         m_tcpClients.Add(tcpClientId, tcpClient)
@@ -193,35 +200,43 @@ Namespace Data.Transport
                 End If
 
                 Do While True
-                    If MyBase.Handshake() AndAlso tcpClientId = Guid.Empty Then
-                        SyncLock m_pendingTcpClients
-                            m_pendingTcpClients.Add(tcpClient)
-                        End SyncLock
-                        tcpClient.Send(GetBytes(CreateIdentificationMessage(MyBase.ServerID())))
-                    End If
-
                     ' Wait for data from the client.
                     Dim receivedData() As Byte = CreateArray(Of Byte)(MyBase.ReceiveBufferSize())
                     tcpClient.Receive(receivedData) ' Block until data is received from client.
 
-                    If MyBase.Handshake() AndAlso tcpClientId = Guid.Empty Then
-                        Dim clientIdentification As IdentificationMessage = DirectCast(GetObject(receivedData), IdentificationMessage)
-                        If clientIdentification IsNot Nothing AndAlso clientIdentification.ID() <> Guid.Empty Then
-                            tcpClientId = clientIdentification.ID()
+                    If IsBufferValid(receivedData) Then
+                        ' Data received from the client is valid.
+                        If MyBase.Handshake() AndAlso tcpClientId = Guid.Empty Then
+                            ' Authentication is required, but not performed yet. When authentication is required
+                            ' the first message from the client must be information about itself.
+                            Dim clientIdentification As IdentificationMessage = DirectCast(GetObject(receivedData), IdentificationMessage)
+                            If clientIdentification IsNot Nothing AndAlso _
+                                    clientIdentification.ID() <> Guid.Empty AndAlso _
+                                    clientIdentification.HandshakePassphrase() = MyBase.HandshakePassphrase() Then
+                                ' Information provided by the client is valid, so now the server needs to send
+                                ' information about itself to the client.
+                                tcpClient.Send(GetBytes(CreateIdentificationMessage(MyBase.ServerID(), MyBase.HandshakePassphrase())))
+                                tcpClientId = clientIdentification.ID()
 
-                            SyncLock m_pendingTcpClients
-                                m_pendingTcpClients.Remove(tcpClient)
-                            End SyncLock
-                            SyncLock m_tcpClients
-                                m_tcpClients.Add(tcpClientId, tcpClient)
-                            End SyncLock
-                            MyBase.OnClientConnected(tcpClientId)    ' Notify that the client is connected.
+                                SyncLock m_pendingTcpClients
+                                    m_pendingTcpClients.Remove(tcpClient)
+                                End SyncLock
+                                SyncLock m_tcpClients
+                                    m_tcpClients.Add(tcpClientId, tcpClient)
+                                End SyncLock
+                                MyBase.OnClientConnected(tcpClientId)    ' Notify that the client is connected.
+                            Else
+                                ' The first response from the client is either not information about itself, or
+                                ' the information provided by the client is invalid.
+                                Exit Do
+                            End If
                         Else
-                            Exit Do
+                            ' Notify of data received from the client.
+                            MyBase.OnReceivedClientData(tcpClientId, receivedData)
                         End If
                     Else
-                        ' Notify of data received from the client.
-                        MyBase.OnReceivedClientData(tcpClientId, receivedData)
+                        ' Connection is closed by the client.
+                        Exit Do
                     End If
                 Loop
             Catch ex As Exception

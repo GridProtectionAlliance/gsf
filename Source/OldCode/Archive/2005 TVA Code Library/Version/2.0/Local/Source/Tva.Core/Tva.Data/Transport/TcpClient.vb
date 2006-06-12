@@ -67,7 +67,7 @@ Namespace Data.Transport
         ''' </summary>
         Public Overrides Sub Disconnect()
 
-            CancelConnect() ' Cancel any pending connection attempts.
+            CancelConnect() ' Cancel any active connection attempts.
 
             ' Close the client socket that is connected to the server.
             If m_tcpClient IsNot Nothing Then m_tcpClient.Close()
@@ -175,30 +175,48 @@ Namespace Data.Transport
         Private Sub ReceiveServerData()
 
             Try
-                If Not MyBase.Handshake() Then
+                If MyBase.Handshake() Then
+                    ' We are required to do an handshake with the server, providing information required
+                    ' by the server for authentication.
+                    m_tcpClient.Send(GetBytes(CreateIdentificationMessage(MyBase.ClientID(), MyBase.HandshakePassphrase())))
+                Else
+                    ' Handshake with the server is not required.
                     MyBase.OnConnected(EventArgs.Empty)
                 End If
 
                 Do While True
-                    ' We'll wait for data from the server until client is dissconnected from the server.
+                    ' We'll wait for data from the server until client is disconnected from the server.
                     Dim receivedData() As Byte = CreateArray(Of Byte)(MyBase.ReceiveBufferSize())
                     m_tcpClient.Receive(receivedData)   ' Block until data is received from the server.
 
-                    If MyBase.Handshake() AndAlso MyBase.ServerID() = Guid.Empty Then
-                        Dim serverIdentification As IdentificationMessage = DirectCast(GetObject(receivedData), IdentificationMessage)
-                        If serverIdentification IsNot Nothing AndAlso serverIdentification.ID() <> Guid.Empty Then
-                            m_tcpClient.Send(GetBytes(CreateIdentificationMessage(MyBase.ClientID())))
-                            MyBase.ServerID = serverIdentification.ID()
-                            MyBase.OnConnected(EventArgs.Empty)
+                    If IsBufferValid(receivedData) Then
+                        ' Data received from the server is valid.
+                        If MyBase.Handshake() AndAlso MyBase.ServerID() = Guid.Empty Then
+                            ' Authentication is required, but not performed yet. When authentication is required
+                            ' the first message from the server, upon successful authentication, must be 
+                            ' information about itself.
+                            Dim serverIdentification As IdentificationMessage = _
+                                DirectCast(GetObject(receivedData), IdentificationMessage)
+                            If serverIdentification IsNot Nothing AndAlso _
+                                    serverIdentification.ID() <> Guid.Empty Then
+                                ' Authentication was successful and the server responded with its information.
+                                MyBase.ServerID = serverIdentification.ID()
+                                MyBase.OnConnected(EventArgs.Empty)
+                            Else
+                                ' Authetication was unsuccessful, so we must now disconnect.
+                                Exit Do
+                            End If
                         Else
-                            Exit Do
+                            ' Authentication is either not required or has already been performed.
+                            MyBase.OnReceivedData(receivedData)
                         End If
                     Else
-                        MyBase.OnReceivedData(receivedData)
+                        ' Client connection was forcibly closed by the server.
+                        Exit Do
                     End If
                 Loop
             Catch ex As Exception
-                ' We'll don't need to take any action when an exception is encountered.
+                ' We don't need to take any action when an exception is encountered.
             Finally
                 If m_tcpClient IsNot Nothing Then
                     m_tcpClient.Close()

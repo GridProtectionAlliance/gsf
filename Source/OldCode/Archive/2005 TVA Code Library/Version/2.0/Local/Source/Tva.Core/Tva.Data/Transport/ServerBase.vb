@@ -35,6 +35,7 @@ Namespace Data.Transport
         Private m_receiveBufferSize As Integer
         Private m_maximumClients As Integer
         Private m_handshake As Boolean
+        Private m_handshakePassphrase As String
         Private m_enabled As Boolean
         Private m_textEncoding As Encoding
         Private m_protocol As TransportProtocol
@@ -149,6 +150,29 @@ Namespace Data.Transport
             End Get
             Set(ByVal value As Boolean)
                 m_handshake = value
+                If Not m_handshake Then
+                    ' Hanshake passphrase will have no effect if handshaking is disabled.
+                    m_handshakePassphrase = ""
+                End If
+            End Set
+        End Property
+
+        ''' <summary>
+        ''' Gets or sets the passpharse that the clients must provide for authentication during the handshake process.
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns>The passpharse that the clients must provide for authentication during the handshake process.</returns>
+        <Description("The passpharse that the clients must provide for authentication during the handshake process."), Category("Configuration"), DefaultValue(GetType(Boolean), "True")> _
+        Public Property HandshakePassphrase() As String
+            Get
+                Return m_handshakePassphrase
+            End Get
+            Set(ByVal value As String)
+                m_handshakePassphrase = value
+                If Not String.IsNullOrEmpty(m_handshakePassphrase) Then
+                    ' Handshake password has no effect until handshaking is enabled.
+                    m_handshake = True
+                End If
             End Set
         End Property
 

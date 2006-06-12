@@ -11,6 +11,7 @@ Namespace Data.Transport
         Private m_assembly As String
         Private m_location As String
         Private m_created As Date
+        Private m_handshakePassphrase As String
 
         Public Property ID() As Guid
             Get
@@ -63,6 +64,15 @@ Namespace Data.Transport
             End Get
             Set(ByVal value As Date)
                 m_created = value
+            End Set
+        End Property
+
+        Public Property HandshakePassphrase() As String
+            Get
+                Return m_handshakePassphrase
+            End Get
+            Set(ByVal value As String)
+                m_handshakePassphrase = value
             End Set
         End Property
 

@@ -40,6 +40,7 @@ Namespace Data.Transport
             m_receiveBufferSize = 4096
             m_maximumClients = -1
             m_handshake = True
+            m_handshakePassphrase = Tva.Security.Cryptography.Common.GenerateKey()
             m_enabled = True
             m_textEncoding = System.Text.Encoding.ASCII()
             m_serverID = Guid.NewGuid()    ' Create an ID for the server.
