@@ -45,7 +45,6 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Data.OracleClient" />
     <Reference Include="System.DirectoryServices" />
-    <Reference Include="System.Drawing" />
     <Reference Include="System.Web" />
     <Reference Include="System.XML" />
   </ItemGroup>
@@ -59,32 +58,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Tva.Configuration\Common.vb" />
-    <Compile Include="Tva.Data\Transport\ClientBase.Designer.vb">
-      <DependentUpon>ClientBase.vb</DependentUpon>
-    </Compile>
-    <Compile Include="Tva.Data\Transport\ClientBase.vb">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="Tva.Data\Transport\Common.vb" />
-    <Compile Include="Tva.Data\Transport\IdentificationMessage.vb" />
-    <Compile Include="Tva.Data\Transport\ServerBase.Designer.vb">
-      <DependentUpon>ServerBase.vb</DependentUpon>
-    </Compile>
-    <Compile Include="Tva.Data\Transport\ServerBase.vb">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="Tva.Data\Transport\TcpClient.Designer.vb">
-      <DependentUpon>TcpClient.vb</DependentUpon>
-    </Compile>
-    <Compile Include="Tva.Data\Transport\TcpClient.vb">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="Tva.Data\Transport\TcpServer.Designer.vb">
-      <DependentUpon>TcpServer.vb</DependentUpon>
-    </Compile>
-    <Compile Include="Tva.Data\Transport\TcpServer.vb">
-      <SubType>Component</SubType>
-    </Compile>
     <Compile Include="Tva.Security\Cryptography\Common.vb" />
     <Compile Include="Tva.Configuration\ConfigurationFile.vb" />
     <Compile Include="Tva.Configuration\CategorizedSettingsCollection.vb" />
@@ -135,12 +108,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Tva.Collections\Tva.Collections.cd" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="EmbeddedResources\Data.Transport.ClientBase.bmp" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="EmbeddedResources\Data.Transport.ServerBase.bmp" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Tva.Console\" />
