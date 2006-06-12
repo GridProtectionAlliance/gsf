@@ -39,6 +39,7 @@ Public Class PhasorMeasurementReceiver
     Private WithEvents m_reportingStatus As Timers.Timer
     Private m_connectString As String
     Private m_archiverIP As String
+    Private m_archiverCode As String
     Private m_archiverPort As Integer
     Private m_tcpSocket As TcpClient
     Private m_clientStream As NetworkStream
@@ -53,9 +54,10 @@ Public Class PhasorMeasurementReceiver
     Private m_statusInterval As Integer
     Private m_intializing As Boolean
 
-    Public Sub New(ByVal archiverIP As String, ByVal connectString As String, ByVal statusInterval As Integer)
+    Public Sub New(ByVal archiverIP As String, ByVal archiverCode As String, ByVal connectString As String, ByVal statusInterval As Integer)
 
         m_archiverIP = archiverIP
+        m_archiverCode = archiverCode
         m_connectString = connectString
         m_statusInterval = statusInterval
         m_measurementBuffer = New List(Of IMeasurement)
@@ -162,7 +164,7 @@ Public Class PhasorMeasurementReceiver
             UpdateStatus("Database connection opened...")
 
             ' Initialize complete measurement ID list
-            With RetrieveData("SELECT * FROM IEEEDataConnectionMeasurements", connection)
+            With RetrieveData("SELECT * FROM IEEEDataConnectionMeasurements WHERE PlantCode='" & m_archiverCode & "'", connection)
                 For x = 0 To .Rows.Count - 1
                     ' Get current row
                     With .Rows(x)
@@ -174,7 +176,7 @@ Public Class PhasorMeasurementReceiver
             UpdateStatus("Loaded " & measurementIDs.Count & " measurement ID's...")
 
             ' Initialize each data connection
-            With RetrieveData("SELECT * FROM IEEEDataConnections", connection)
+            With RetrieveData("SELECT * FROM IEEEDataConnections WHERE PlantCode='" & m_archiverCode & "' OR SourceID IN (SELECT PDCID FROM IEEEDataConnectionPDCPMUs WHERE PlantCode='" & m_archiverCode & "')", connection)
                 For x = 0 To .Rows.Count - 1
                     ' Get current row
                     row = .Rows(x)
@@ -198,7 +200,7 @@ Public Class PhasorMeasurementReceiver
                         UpdateStatus("Loading expected PMU list for """ & source & """:")
 
                         ' Making a connection to a concentrator - this may support multiple PMU's
-                        With RetrieveData("SELECT PMUID FROM IEEEDataConnectionPMUs WHERE PDCID='" & source & "' ORDER BY PMUIndex", connection)
+                        With RetrieveData("SELECT PMUID FROM IEEEDataConnectionPMUs WHERE PlantCode='" & m_archiverCode & "' AND PDCID='" & source & "' ORDER BY PMUIndex", connection)
                             For y = 0 To .Rows.Count - 1
                                 pmuIDs.Add(.Rows(y)("PMUID"))
                                 UpdateStatus("   >> " & pmuIDs(y))
@@ -244,6 +246,12 @@ Public Class PhasorMeasurementReceiver
 
     End Sub
 
+    Public ReadOnly Property ArchiverName() As String
+        Get
+            Return m_archiverCode & " (" & m_archiverIP & ":" & m_archiverPort & ")"
+        End Get
+    End Property
+
     Public ReadOnly Property Mappers() As Dictionary(Of String, PhasorMeasurementMapper)
         Get
             Return m_mappers
@@ -253,6 +261,7 @@ Public Class PhasorMeasurementReceiver
     Public ReadOnly Property Status() As String
         Get
             With New StringBuilder
+                .Append("Phasor Measurement Receiver Status for Archiver """ & ArchiverName & """")
                 For Each parser As PhasorMeasurementMapper In m_mappers.Values
                     .Append(parser.Status())
                     .Append(Environment.NewLine)
@@ -266,22 +275,22 @@ Public Class PhasorMeasurementReceiver
     Private Sub m_connectionTimer_Elapsed(ByVal sender As Object, ByVal e As System.Timers.ElapsedEventArgs) Handles m_connectionTimer.Elapsed
 
         Try
-            UpdateStatus("Starting connection attempt to DatAWare Archiver """ & m_archiverIP & ":" & m_archiverPort & """...")
+            UpdateStatus("Starting connection attempt to DatAWare Archiver """ & ArchiverName & """...")
 
             ' Connect to DatAWare archiver using TCP
             m_tcpSocket = New TcpClient
             m_tcpSocket.Connect(m_archiverIP, m_archiverPort)
             m_clientStream = m_tcpSocket.GetStream()
             m_clientStream.WriteTimeout = 100
-            m_clientStream.ReadTimeout = 10
+            m_clientStream.ReadTimeout = 100
 
             ' Start listening to TCP data stream
             m_socketThread = New Thread(AddressOf ProcessTcpStream)
             m_socketThread.Start()
 
-            UpdateStatus("Connection to DatAWare Archiver """ & m_archiverIP & ":" & m_archiverPort & """ established.")
+            UpdateStatus("Connection to DatAWare Archiver """ & ArchiverName & """ established.")
         Catch ex As Exception
-            UpdateStatus(">> WARNING: Connection to DatAWare Archiver """ & m_archiverIP & ":" & m_archiverPort & """ failed: " & ex.Message)
+            UpdateStatus(">> WARNING: Connection to DatAWare Archiver """ & ArchiverName & """ failed: " & ex.Message)
             Connect()
         End Try
 
@@ -410,7 +419,7 @@ Public Class PhasorMeasurementReceiver
 
     Private Sub UpdateStatus(ByVal status As String)
 
-        RaiseEvent StatusMessage(status)
+        RaiseEvent StatusMessage("[" & m_archiverCode & "]: " & status)
 
     End Sub
 

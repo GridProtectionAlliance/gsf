@@ -33,6 +33,7 @@ Public Class PhasorMeasurementMapper
     Private m_measurementIDs As Dictionary(Of String, MeasurementDefinition)
     Private m_measurementFrames As List(Of IFrame)
     Private m_bytesReceived As Long
+    Private m_totalBytesReceived As Long
     Private m_errorCount As Integer
     Private m_errorTime As Long
     Private m_receivedConfigFrame As Boolean
@@ -122,6 +123,12 @@ Public Class PhasorMeasurementMapper
     Public ReadOnly Property LastReportTime() As Long
         Get
             Return m_lastReportTime
+        End Get
+    End Property
+
+    Public ReadOnly Property TotalBytesReceived() As Long
+        Get
+            Return m_totalBytesReceived
         End Get
     End Property
 
@@ -246,6 +253,7 @@ Public Class PhasorMeasurementMapper
         Try
             UpdateStatus("Starting connection attempt for phasor enabled device """ & m_source & """...")
 
+            m_totalBytesReceived = 0
             m_frameParser.Connect()
 
             ' Enable data stream monitor for non-UDP connections
@@ -314,6 +322,7 @@ Public Class PhasorMeasurementMapper
     Private Sub m_frameParser_ReceivedFrameBufferImage(ByVal frameType As FundamentalFrameType, ByVal binaryImage() As Byte, ByVal offset As Integer, ByVal length As Integer) Handles m_frameParser.ReceivedFrameBufferImage
 
         m_bytesReceived += length
+        m_totalBytesReceived += length
 
     End Sub
 

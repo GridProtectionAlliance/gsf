@@ -17,6 +17,7 @@
 
 Imports System.Text
 Imports System.Security.Principal
+Imports Tva.Common
 Imports Tva.Assembly
 Imports Tva.IO.FilePath
 Imports Tva.Configuration.Common
@@ -24,24 +25,43 @@ Imports Tva.Text.Common
 
 Module MainModule
 
-    Private WithEvents m_receiver As PhasorMeasurementReceiver
+    Private m_receivers As PhasorMeasurementReceiver()
 
     Public Sub Main()
 
-        Dim consoleLine As String
+        Dim consoleLine, receiverPrefix As String
         Dim mapper As PhasorMeasurementMapper = Nothing
 
         Console.WriteLine(MonitorInformation)
 
         ' Make sure service settings exist
-        Settings.Add("ArchiverIP", "127.0.0.1", "DatAWare Archiver IP")
-        Settings.Add("InitializeOnStartup", "True", "Set to True to intialize phasor measurement mapper at startup")
+        Settings.Add("TotalProxyReceivers", "2", "Total receiver instances to setup (typically one per archive)")
+        Settings.Add("ProxyReceiver1.ArchiverIP", "127.0.0.1", "DatAWare Archiver IP")
+        Settings.Add("ProxyReceiver1.ArchiverCode", "PM", "DatAWare Archiver Plant Code")
+        Settings.Add("ProxyReceiver1.InitializeOnStartup", "True", "Set to True to intialize phasor measurement mapper at startup")
+        Settings.Add("ProxyReceiver2.ArchiverIP", "152.85.38.12", "DatAWare Archiver IP")
+        Settings.Add("ProxyReceiver2.ArchiverCode", "P0", "DatAWare Archiver Plant Code")
+        Settings.Add("ProxyReceiver2.InitializeOnStartup", "True", "Set to True to intialize phasor measurement mapper at startup")
         Settings.Add("PMUDatabase", "Data Source=RGOCSQLD;Initial Catalog=PMU_SDS;Integrated Security=False;user ID=ESOPublic;pwd=4all2see", "PMU metaData database connect string", True)
         Settings.Add("PMUStatusInterval", "5", "Number of seconds of deviation from UTC time (according to local clock) that last PMU reporting time is allowed before considering it offline")
         SaveSettings()
 
-        m_receiver = New PhasorMeasurementReceiver(StringSetting("ArchiverIP"), StringSetting("PMUDatabase"), IntegerSetting("PMUStatusInterval"))
-        If BooleanSetting("InitializeOnStartup") Then m_receiver.Initialize()
+        m_receivers = CreateArray(Of PhasorMeasurementReceiver)(IntegerSetting("TotalProxyReceivers"))
+
+        For x As Integer = 0 To m_receivers.Length - 1
+            receiverPrefix = "ProxyReceiver" & (x + 1) & "."
+
+            m_receivers(x) = New PhasorMeasurementReceiver( _
+                StringSetting(receiverPrefix & "ArchiverIP"), _
+                StringSetting(receiverPrefix & "ArchiverCode"), _
+                StringSetting("PMUDatabase"), _
+                IntegerSetting("PMUStatusInterval"))
+
+            With m_receivers(x)
+                AddHandler .StatusMessage, AddressOf DisplayStatusMessage
+                If BooleanSetting(receiverPrefix & "InitializeOnStartup") Then .Initialize()
+            End With
+        Next
 
         Do While True
             ' This console window stays open by continually reading in console lines
@@ -58,10 +78,14 @@ Module MainModule
                 End If
             ElseIf consoleLine.StartsWith("reload", True, Nothing) Then
                 Console.WriteLine()
-                m_receiver.Initialize()
+                For x As Integer = 0 To m_receivers.Length - 1
+                    m_receivers(x).Initialize()
+                Next
             ElseIf consoleLine.StartsWith("status", True, Nothing) Then
                 Console.WriteLine()
-                Console.WriteLine(m_receiver.Status)
+                For x As Integer = 0 To m_receivers.Length - 1
+                    Console.WriteLine(m_receivers(x).Status)
+                Next
             ElseIf consoleLine.StartsWith("list", True, Nothing) Then
                 Console.WriteLine()
                 DisplayConnectionList()
@@ -81,7 +105,10 @@ Module MainModule
         Loop
 
         ' Attempt an orderly shutdown...
-        m_receiver.DisconnectAll()
+        For x As Integer = 0 To m_receivers.Length - 1
+            m_receivers(x).DisconnectAll()
+        Next
+
         End
 
     End Sub
@@ -90,13 +117,18 @@ Module MainModule
 
         Try
             Dim pmuID As String = RemoveDuplicateWhiteSpace(consoleLine).Split(" "c)(1).ToUpper()
+            Dim foundMapper As Boolean
 
-            If m_receiver.Mappers.TryGetValue(pmuID, mapper) Then
-                Return True
-            Else
-                Console.WriteLine("Failed to find a PMU or PDC in the connection list named """ & pmuID & """, type ""List"" to see avaialable list.")
-                Return False
-            End If
+            For x As Integer = 0 To m_receivers.Length - 1
+                If m_receivers(x).Mappers.TryGetValue(pmuID, mapper) Then
+                    foundMapper = True
+                    Exit For
+                End If
+            Next
+
+            If Not foundMapper Then Console.WriteLine("Failed to find a PMU or PDC in the connection list named """ & pmuID & """, type ""List"" to see avaialable list.")
+
+            Return foundMapper
         Catch ex As Exception
             Console.WriteLine("Failed to lookup specified mapper due to exception: " & ex.Message)
             Return False
@@ -138,28 +170,31 @@ Module MainModule
 
     Private Sub DisplayConnectionList()
 
-        Console.WriteLine("PMU/PDC Connection List (" & m_receiver.Mappers.Count & " Total)")
-        Console.WriteLine()
+        For x As Integer = 0 To m_receivers.Length - 1
+            Console.WriteLine("Phasor Measurement Retriever for Archive """ & m_receivers(x).ArchiverName & """")
+            Console.WriteLine(">> PMU/PDC Connection List (" & m_receivers(x).Mappers.Count & " Total)")
+            Console.WriteLine()
 
-        Console.WriteLine("  Last Data Report Time:   PDC/PMU [PMU list]:")
-        Console.WriteLine("  ------------------------ ----------------------------------------------------")
-        '                    01-JAN-2006 12:12:24.000 SourceName [Pmu0, Pmu1, Pmu2, Pmu3, Pmu4]
-        '                    >> No data ever reported 
+            Console.WriteLine("  Last Data Report Time:   PDC/PMU [PMU list]:")
+            Console.WriteLine("  ------------------------ ----------------------------------------------------")
+            '                    01-JAN-2006 12:12:24.000 SourceName [Pmu0, Pmu1, Pmu2, Pmu3, Pmu4]
+            '                    >> No data frame has been parsed for SourceName - 00000 bytes received"
 
-        For Each mapper As PhasorMeasurementMapper In m_receiver.Mappers.Values
-            With mapper
-                Console.Write("  ")
-                If .LastReportTime > 0 Then
-                    Console.Write((New DateTime(mapper.LastReportTime)).ToString("dd-MMM-yyyy HH:mm:ss.fff"))
-                    Console.Write(" ")
-                Else
-                    Console.Write(">> No data ever reported ")
-                End If
-                Console.WriteLine(mapper.Name)
-            End With
+            For Each mapper As PhasorMeasurementMapper In m_receivers(x).Mappers.Values
+                With mapper
+                    Console.Write("  ")
+                    If .LastReportTime > 0 Then
+                        Console.Write((New DateTime(mapper.LastReportTime)).ToString("dd-MMM-yyyy HH:mm:ss.fff"))
+                        Console.Write(" "c)
+                        Console.WriteLine(mapper.Name)
+                    Else
+                        Console.WriteLine(">> No data frame has been parsed for " & mapper.Name & " - " & .TotalBytesReceived & " bytes received")
+                    End If
+                End With
+            Next
+
+            Console.WriteLine()
         Next
-
-        Console.WriteLine()
 
     End Sub
 
@@ -180,7 +215,7 @@ Module MainModule
     End Sub
 
     ' Display status messages bubbled up from phasor measurement receiver and its internal components
-    Private Sub m_receiver_StatusMessage(ByVal status As String) Handles m_receiver.StatusMessage
+    Private Sub DisplayStatusMessage(ByVal status As String)
 
         Console.WriteLine(status)
         Console.WriteLine()
