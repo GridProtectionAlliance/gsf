@@ -39,16 +39,18 @@ Namespace Security.Cryptography
         ''' </para>
         ''' </remarks>
         Public Enum EncryptLevel
+            ''' <summary>Use no encryption</summary>
+            None
             ''' <summary>Adds simple multi-alogorithm XOR based encryption</summary>
             ''' <remarks>This is the fastest and weakest level of encyption</remarks>
-            [Level1]
+            Level1
             ''' <summary>Adds TripleDES based encryption</summary>
-            [Level2]
+            Level2
             ''' <summary>Adds RC2 based encryption</summary>
-            [Level3]
+            Level3
             ''' <summary>Adds RijndaelManaged based enryption</summary>
             ''' <remarks>This is the slowest and strongest level of encyption</remarks>
-            [Level4]
+            Level4
         End Enum
 
         Public Delegate Sub ProgressEventHandler(ByVal bytesCompleted As Long, ByVal bytesTotal As Long)
@@ -92,6 +94,8 @@ Namespace Security.Cryptography
         ''' <summary>Returns a binary array of encrypted data for the given parameters</summary>
         Public Shared Function Encrypt(ByVal data As Byte(), ByVal key As Byte(), ByVal IV As Byte(), ByVal strength As EncryptLevel) As Byte()
 
+            If strength = EncryptLevel.None Then Return data
+
             ' Perform requested levels of encryption
             data = Crypt(data, key)
             If strength >= EncryptLevel.Level2 Then
@@ -117,6 +121,8 @@ Namespace Security.Cryptography
 
         ''' <summary>Returns a stream of encrypted data for the given parameters</summary>
         Public Shared Function Encrypt(ByVal inStream As Stream, ByVal key As Byte(), ByVal IV As Byte(), ByVal strength As EncryptLevel) As Stream
+
+            If strength = EncryptLevel.None Then Return inStream
 
             ' Perform requested levels of encryption
             inStream = Crypt(inStream, key)
@@ -269,6 +275,8 @@ Namespace Security.Cryptography
         ''' <summary>Returns a binary array of decrypted data for the given parameters</summary>
         Public Shared Function Decrypt(ByVal data As Byte(), ByVal key As Byte(), ByVal IV As Byte(), ByVal strength As EncryptLevel) As Byte()
 
+            If strength = EncryptLevel.None Then Return data
+
             ' Perform requested levels of decryption
             If strength >= EncryptLevel.Level4 Then data = Decrypt(New RijndaelManaged, data, key, IV)
             If strength >= EncryptLevel.Level3 Then data = Decrypt(New RC2CryptoServiceProvider, data, key, IV)
@@ -287,6 +295,8 @@ Namespace Security.Cryptography
 
         ''' <summary>Returns a stream of decrypted data for the given parameters</summary>
         Public Shared Function Decrypt(ByVal inStream As Stream, ByVal key As Byte(), ByVal IV As Byte(), ByVal strength As EncryptLevel) As Stream
+
+            If strength = EncryptLevel.None Then Return inStream
 
             If strength >= EncryptLevel.Level4 Then inStream = Decrypt(New RijndaelManaged, inStream, key, IV)
             If strength >= EncryptLevel.Level3 Then inStream = Decrypt(New RC2CryptoServiceProvider, inStream, key, IV)
