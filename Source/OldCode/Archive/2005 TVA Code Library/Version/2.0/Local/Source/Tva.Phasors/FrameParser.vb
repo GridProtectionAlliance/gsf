@@ -189,7 +189,7 @@ Public Class FrameParser
         m_frameRate = 0.0#
         m_byteRate = 0.0#
 
-        UpdateStatus("Attepting " & [Enum].GetName(GetType(Protocol), m_protocol) & " " & [Enum].GetName(GetType(DataTransportLayer), m_transportLayer) & " based connection to PDC/PMU " & ConnectionName)
+        UpdateStatus("Attempting " & [Enum].GetName(GetType(Protocol), m_protocol).ToUpper() & " " & [Enum].GetName(GetType(DataTransportLayer), m_transportLayer).ToUpper() & " based connection to PDC/PMU " & ConnectionName)
 
         Try
             ' Instantiate protocol specific frame parser
@@ -419,10 +419,10 @@ Public Class FrameParser
                 .Append(ConnectionName)
                 .Append(Environment.NewLine)
                 .Append("      Data transport layer: ")
-                .Append([Enum].GetName(GetType(DataTransportLayer), TransportLayer))
+                .Append([Enum].GetName(GetType(DataTransportLayer), TransportLayer).ToUpper())
                 .Append(Environment.NewLine)
                 .Append("                  Protocol: ")
-                .Append([Enum].GetName(GetType(Protocol), Protocol))
+                .Append([Enum].GetName(GetType(Protocol), Protocol).ToUpper())
                 .Append(Environment.NewLine)
                 .Append("               Buffer size: ")
                 .Append(BufferSize)
