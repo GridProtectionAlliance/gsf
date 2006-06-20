@@ -73,7 +73,7 @@ Public Class PhasorMeasurementReceiver
         With m_reportingStatus
             .AutoReset = True
             .Interval = 1000
-            .Enabled = True
+            .Enabled = False
         End With
 
         ' Archiver Settings Path: HKEY_LOCAL_MACHINE\SOFTWARE\DatAWare\Interface Configuration\
@@ -118,6 +118,8 @@ Public Class PhasorMeasurementReceiver
     End Sub
 
     Public Sub DisconnectAll()
+
+        m_reportingStatus.Enabled = False
 
         ' Disconnect from PDC/PMU devices...
         If m_mappers IsNot Nothing Then
@@ -262,6 +264,9 @@ Public Class PhasorMeasurementReceiver
         Get
             With New StringBuilder
                 .Append("Phasor Measurement Receiver Status for Archiver """ & ArchiverName & """")
+                .Append(Environment.NewLine)
+                .Append(Environment.NewLine)
+
                 For Each parser As PhasorMeasurementMapper In m_mappers.Values
                     .Append(parser.Status())
                     .Append(Environment.NewLine)
@@ -281,12 +286,13 @@ Public Class PhasorMeasurementReceiver
             m_tcpSocket = New TcpClient
             m_tcpSocket.Connect(m_archiverIP, m_archiverPort)
             m_clientStream = m_tcpSocket.GetStream()
-            m_clientStream.WriteTimeout = 100
-            m_clientStream.ReadTimeout = 100
+            m_clientStream.WriteTimeout = 500
+            m_clientStream.ReadTimeout = 1000
 
             ' Start listening to TCP data stream
             m_socketThread = New Thread(AddressOf ProcessTcpStream)
             m_socketThread.Start()
+            m_reportingStatus.Enabled = True
 
             UpdateStatus("Connection to DatAWare Archiver """ & ArchiverName & """ established.")
         Catch ex As Exception
@@ -438,7 +444,7 @@ Public Class PhasorMeasurementReceiver
                     isReporting = IIf(Math.Abs(DateTime.UtcNow.Subtract(New DateTime(mapper.LastReportTime)).Seconds) <= m_statusInterval, 1, 0)
 
                     For Each pmu As String In mapper.PmuIDs
-                        updateSqlBatch.Append("UPDATE PMUs SET IsReporting=" & isReporting & " WHERE PMUID_Uniq='" & pmu & "';" & Environment.NewLine)
+                        updateSqlBatch.Append("UPDATE PMUs SET IsReporting=" & isReporting & ", ReportTime='" & DateTime.UtcNow.ToString() & "' WHERE PMUID_Uniq='" & pmu & "';" & Environment.NewLine)
                     Next
                 Next
 
