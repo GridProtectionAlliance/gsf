@@ -106,14 +106,18 @@ Public Class PhasorMeasurementReceiver
         Try
             If m_socketThread IsNot Nothing AndAlso m_socketThread.IsAlive Then m_socketThread.Abort()
             m_socketThread = Nothing
+        Catch
+            ' Not going to stop for exceptions thrown when trying to disconnect...
+        End Try
 
+        Try
             If m_tcpSocket IsNot Nothing AndAlso m_tcpSocket.Connected Then m_tcpSocket.Close()
             m_tcpSocket = Nothing
-
-            m_clientStream = Nothing
         Catch ex As Exception
-            UpdateStatus("Exception occured during disconnect from Archiver: " & ex.Message)
+            ' Not going to stop for exceptions thrown when trying to disconnect...
         End Try
+
+        m_clientStream = Nothing
 
     End Sub
 
@@ -286,8 +290,8 @@ Public Class PhasorMeasurementReceiver
             m_tcpSocket = New TcpClient
             m_tcpSocket.Connect(m_archiverIP, m_archiverPort)
             m_clientStream = m_tcpSocket.GetStream()
-            m_clientStream.WriteTimeout = 500
-            m_clientStream.ReadTimeout = 1000
+            m_clientStream.WriteTimeout = 2000
+            m_clientStream.ReadTimeout = 2000
 
             ' Start listening to TCP data stream
             m_socketThread = New Thread(AddressOf ProcessTcpStream)
