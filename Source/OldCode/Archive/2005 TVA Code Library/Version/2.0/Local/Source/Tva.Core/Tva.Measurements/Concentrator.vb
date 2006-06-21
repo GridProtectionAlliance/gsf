@@ -88,7 +88,8 @@ Namespace Measurements
         ''' <para>framesPerSecond must be at least one.</para>
         ''' <para>lagTime must be greater than zero but can be specified in sub-second intervals (e.g., set to .25 for a quarter-second lag time) - note that this defines time sensitivity to past timestamps.</para>
         ''' <para>leadTime must be greater than zero but can be specified in sub-second intervals (e.g., set to .5 for a half-second lead time) - note that this defines time sensitivity to future timestamps.</para>
-        ''' <para>Function delegate parameters may be initialized to null, but must be defined before concentrator is enabled.</para>
+        ''' <para>Publish frame function delegate parameter may be initialized to null, but must be defined before concentrator is enabled.</para>
+        ''' <para>If create new frame function delegate is initialized to null, default frame creation function will be used.</para>
         ''' <para>Note that concentration will not begin until consumer sets Enabled = True.</para>
         ''' </remarks>
         ''' <exception cref="ArgumentOutOfRangeException">Specified argument is outside of allowed value range (see remarks).</exception>
@@ -106,7 +107,13 @@ Namespace Measurements
             ' We create a real-time processing queue so we can process frames as quickly as needed (e.g., 30 frames per second)
             m_sampleQueue = KeyedProcessQueue(Of Long, Sample).CreateRealTimeQueue(AddressOf PublishSample, AddressOf CanPublishSample)
             m_publishFrameFunction = publishFrameFunction
-            m_createNewFrameFunction = createNewFrameFunction
+
+            If createNewFrameFunction Is Nothing Then
+                m_createNewFrameFunction = AddressOf CreateBasicFrame
+            Else
+                m_createNewFrameFunction = createNewFrameFunction
+            End If
+
             m_realTimeTicks = Date.UtcNow.Ticks
             m_currentSampleTimestamp = BaselinedTimestamp(New Date(m_realTimeTicks))
             m_framesPerSecond = framesPerSecond
@@ -123,6 +130,29 @@ Namespace Measurements
                 .AutoReset = True
                 .Enabled = False
             End With
+
+        End Sub
+
+        ''' <summary>Creates a new measurement concentrator using default frame creation function</summary>
+        ''' <param name="publishFrameFunction">User function used to publish a frame</param>
+        ''' <param name="framesPerSecond">Number of frames to publish per second</param>
+        ''' <param name="lagTime">Allowed past time deviation tolerance, in seconds - this becomes the amount of time to wait before publishing begins</param>
+        ''' <param name="leadTime">Allowed future time deviation tolerance, in seconds</param>
+        ''' <remarks>
+        ''' <para>framesPerSecond must be at least one.</para>
+        ''' <para>lagTime must be greater than zero but can be specified in sub-second intervals (e.g., set to .25 for a quarter-second lag time) - note that this defines time sensitivity to past timestamps.</para>
+        ''' <para>leadTime must be greater than zero but can be specified in sub-second intervals (e.g., set to .5 for a half-second lead time) - note that this defines time sensitivity to future timestamps.</para>
+        ''' <para>Publish frame function delegate parameter may be initialized to null, but must be defined before concentrator is enabled.</para>
+        ''' <para>Note that concentration will not begin until consumer sets Enabled = True.</para>
+        ''' </remarks>
+        ''' <exception cref="ArgumentOutOfRangeException">Specified argument is outside of allowed value range (see remarks).</exception>
+        Public Sub New( _
+            ByVal publishFrameFunction As PublishFrameFunctionSignature, _
+            ByVal framesPerSecond As Integer, _
+            ByVal lagTime As Double, _
+            ByVal leadTime As Double)
+
+            MyClass.New(publishFrameFunction, Nothing, framesPerSecond, lagTime, leadTime)
 
         End Sub
 
@@ -148,12 +178,17 @@ Namespace Measurements
         End Property
 
         ''' <summary>User function used to create a new frame</summary>
+        ''' <remarks>If you assign function delegate to null, default frame creation function will be used</remarks>
         Public Property CreateNewFrameFunction() As CreateNewFrameFunctionSignature
             Get
                 Return m_createNewFrameFunction
             End Get
             Set(ByVal value As CreateNewFrameFunctionSignature)
-                m_createNewFrameFunction = value
+                If value Is Nothing Then
+                    m_createNewFrameFunction = AddressOf CreateBasicFrame
+                Else
+                    m_createNewFrameFunction = value
+                End If
             End Set
         End Property
 
@@ -216,7 +251,7 @@ Namespace Measurements
         ''' <summary>Gets or sets current enabled state of concentrator</summary>
         ''' <returns>Current enabled state of concentrator</returns>
         ''' <remarks>Concentrator must be enabled (i.e., Enabled = True) before concentration will begin</remarks>
-        ''' <exception cref="NullReferenceException">This exception will be thrown if either the PublishFrameFunction or CreateNewFrameFunction delegate is null when Enabled is set to True.</exception>
+        ''' <exception cref="NullReferenceException">This exception will be thrown if the PublishFrameFunction is null when Enabled is set to True.</exception>
         Public Property Enabled() As Boolean
             Get
                 Return m_enabled
@@ -224,9 +259,8 @@ Namespace Measurements
             Set(ByVal value As Boolean)
                 If value Then
                     If Not m_enabled Then
-                        ' Make sure consumer has defined needed delegates before starting process queue
+                        ' Make sure consumer has defined the publish frame delegate before starting process queue
                         If m_publishFrameFunction Is Nothing Then Throw New NullReferenceException("PublishFrameFunction delegate must be defined before enabling concentrator")
-                        If m_createNewFrameFunction Is Nothing Then Throw New NullReferenceException("CreateNewFrameFunction delegate must be defined before enabling concentrator")
 
                         ' Start real-time process queue
                         m_frameIndex = 0
@@ -602,6 +636,13 @@ Namespace Measurements
             RaiseEvent UnpublishedSamples(m_sampleQueue.Count - 1)
 
         End Sub
+
+        ' We define a default frame creation function to use when consumer only needs a basic frame to hold synchronized measurements
+        Private Function CreateBasicFrame(ByVal ticks As Long) As IFrame
+
+            Return New Frame(ticks)
+
+        End Function
 
 #End Region
 

@@ -19,6 +19,78 @@
 
 Namespace Measurements
 
+    ' HACK: Move this into its own class file, stuck this here until I can checkout project...
+    ''' <summary>Implementation of a basic frame</summary>
+    Public Class Frame
+
+        Implements IFrame
+
+        Private m_ticks As Long
+        Private m_published As Boolean
+        Private m_measurements As Dictionary(Of Integer, IMeasurement)
+
+        Public Sub New(ByVal ticks As Long)
+
+            m_ticks = ticks
+            m_measurements = New Dictionary(Of Integer, IMeasurement)
+
+        End Sub
+
+        ''' <summary>Keyed measurements in this frame</summary>
+        Public ReadOnly Property Measurements() As Dictionary(Of Integer, IMeasurement) Implements IFrame.Measurements
+            Get
+                Return m_measurements
+            End Get
+        End Property
+
+        ''' <summary>Gets or sets published state of this frame</summary>
+        Public Property Published() As Boolean Implements IFrame.Published
+            Get
+                Return m_published
+            End Get
+            Set(ByVal value As Boolean)
+                m_published = value
+            End Set
+        End Property
+
+        ''' <summary>Handy instance reference to self</summary>
+        Public ReadOnly Property This() As IFrame Implements IFrame.This
+            Get
+                Return Me
+            End Get
+        End Property
+
+        ''' <summary>Exact timestamp of the data represented in this frame</summary>
+        ''' <remarks>The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001</remarks>
+        Public Property Ticks() As Long Implements IFrame.Ticks
+            Get
+                Return m_ticks
+            End Get
+            Set(ByVal value As Long)
+                m_ticks = value
+            End Set
+        End Property
+
+        ''' <summary>Date representation of ticks of this frame</summary>
+        Public ReadOnly Property Timestamp() As Date Implements IFrame.Timestamp
+            Get
+                Return New Date(m_ticks)
+            End Get
+        End Property
+
+        ''' <summary>This implementation of a basic frame compares itself by timestamp</summary>
+        Public Function CompareTo(ByVal obj As Object) As Integer Implements System.IComparable.CompareTo
+
+            If TypeOf obj Is IFrame Then
+                Return m_ticks.CompareTo(DirectCast(obj, IFrame).Ticks)
+            Else
+                Throw New ArgumentException("Frame can only be compared with other IFrames...")
+            End If
+
+        End Function
+
+    End Class
+
     ''' <summary>Implementation of a basic measured value</summary>
     Public Class Measurement
 
