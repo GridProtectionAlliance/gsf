@@ -33,6 +33,7 @@ Imports Tva.Measurements
 
 Public Class PhasorMeasurementReceiver
 
+    Public Event NewMeasurements(ByVal measurements As Dictionary(Of Integer, IMeasurement))
     Public Event StatusMessage(ByVal status As String)
 
     Private WithEvents m_connectionTimer As Timers.Timer
@@ -156,7 +157,7 @@ Public Class PhasorMeasurementReceiver
             Dim parser As FrameParser
             Dim source As String
             Dim timezone As String
-            Dim pmuIDs As List(Of String)
+            Dim pmuIDs As PmuInfoCollection
             Dim x, y As Integer
 
             SyncLock m_measurementBuffer
@@ -188,7 +189,7 @@ Public Class PhasorMeasurementReceiver
                     row = .Rows(x)
 
                     parser = New FrameParser()
-                    pmuIDs = New List(Of String)
+                    pmuIDs = New PmuInfoCollection
 
                     source = row("SourceID").ToString.Trim.ToUpper
                     timezone = row("TimeZone")
@@ -208,13 +209,15 @@ Public Class PhasorMeasurementReceiver
                         ' Making a connection to a concentrator - this may support multiple PMU's
                         With RetrieveData("SELECT PMUID FROM IEEEDataConnectionPMUs WHERE PlantCode='" & m_archiverCode & "' AND PDCID='" & source & "' ORDER BY PMUIndex", connection)
                             For y = 0 To .Rows.Count - 1
-                                pmuIDs.Add(.Rows(y)("PMUID"))
-                                UpdateStatus("   >> " & pmuIDs(y))
+                                With .Rows(y)
+                                    pmuIDs.Add(New PmuInfo(.Item("PMUIndex"), .Item("PMUID")))
+                                End With
+                                UpdateStatus("   >> " & pmuIDs(y).Tag)
                             Next
                         End With
                     Else
                         ' Making a connection to a single device
-                        pmuIDs.Add(source)
+                        pmuIDs.Add(New PmuInfo(0, source))
                     End If
 
                     SyncLock m_measurementBuffer
@@ -230,6 +233,9 @@ Public Class PhasorMeasurementReceiver
 
                             ' Bubble mapper status messages out to local update status functions
                             AddHandler .ParsingStatus, AddressOf UpdateStatus
+
+                            ' Bubble newly parsed measurements out to functions that need the real-time data
+                            AddHandler .ParsedMeasurements, AddressOf ReceivedNewMeasurements
 
                             ' Add mapper to collection
                             m_mappers.Add(source, .This)
@@ -433,6 +439,12 @@ Public Class PhasorMeasurementReceiver
 
     End Sub
 
+    Private Sub ReceivedNewMeasurements(ByVal measurements As Dictionary(Of Integer, IMeasurement))
+
+        RaiseEvent NewMeasurements(measurements)
+
+    End Sub
+
     Private Sub m_reportingStatus_Elapsed(ByVal sender As Object, ByVal e As System.Timers.ElapsedEventArgs) Handles m_reportingStatus.Elapsed
 
         If Not m_intializing Then
@@ -445,10 +457,9 @@ Public Class PhasorMeasurementReceiver
 
                 ' Check all PMU's for "reporting status"...
                 For Each mapper As PhasorMeasurementMapper In m_mappers.Values
-                    isReporting = IIf(Math.Abs(DateTime.UtcNow.Subtract(New DateTime(mapper.LastReportTime)).Seconds) <= m_statusInterval, 1, 0)
-
-                    For Each pmu As String In mapper.PmuIDs
-                        updateSqlBatch.Append("UPDATE PMUs SET IsReporting=" & isReporting & ", ReportTime='" & DateTime.UtcNow.ToString() & "' WHERE PMUID_Uniq='" & pmu & "';" & Environment.NewLine)
+                    For Each pmuID As PmuInfo In mapper.PmuIDs
+                        isReporting = IIf(Math.Abs(DateTime.UtcNow.Subtract(New DateTime(pmuID.LastReportTime)).Seconds) <= m_statusInterval, 1, 0)
+                        updateSqlBatch.Append("UPDATE PMUs SET IsReporting=" & isReporting & ", ReportTime='" & DateTime.UtcNow.ToString() & "' WHERE PMUID_Uniq='" & pmuID.Tag & "';" & Environment.NewLine)
                     Next
                 Next
 

@@ -33,6 +33,9 @@ Public Class ReferenceAngleCalculator
 
         If m_lastFrame IsNot Nothing Then
             ' Calculate reference angle
+            Dim dA1, dA2, dA3 As Double
+
+            'frame.Measurements.TryGetValue(
 
         End If
 

@@ -23,24 +23,25 @@ Imports Tva.Measurements
 <CLSCompliant(False)> _
 Public Class PhasorMeasurementMapper
 
+    Public Event ParsedMeasurements(ByVal measurements As Dictionary(Of Integer, IMeasurement))
     Public Event ParsingStatus(ByVal message As String)
 
     Private WithEvents m_connectionTimer As Timers.Timer
     Private WithEvents m_dataStreamMonitor As Timers.Timer
     Private WithEvents m_frameParser As FrameParser
     Private m_source As String
-    Private m_pmuIDs As List(Of String)
+    Private m_pmuIDs As PmuInfoCollection
     Private m_measurementIDs As Dictionary(Of String, MeasurementDefinition)
     Private m_measurementFrames As List(Of IFrame)
+    Private m_lastReportTime As Long
     Private m_bytesReceived As Long
     Private m_totalBytesReceived As Long
     Private m_errorCount As Integer
     Private m_errorTime As Long
     Private m_receivedConfigFrame As Boolean
-    Private m_lastReportTime As Long
     Private m_timezone As Win32TimeZone
 
-    Public Sub New(ByVal frameParser As FrameParser, ByVal source As String, ByVal pmuIDs As List(Of String), ByVal measurementIDs As Dictionary(Of String, MeasurementDefinition))
+    Public Sub New(ByVal frameParser As FrameParser, ByVal source As String, ByVal pmuIDs As PmuInfoCollection, ByVal measurementIDs As Dictionary(Of String, MeasurementDefinition))
 
         m_frameParser = frameParser
         m_source = source
@@ -137,11 +138,11 @@ Public Class PhasorMeasurementMapper
             With New StringBuilder
                 .Append(m_source)
 
-                If m_pmuIDs.Count > 1 OrElse String.Compare(m_source, m_pmuIDs(0)) <> 0 Then
+                If m_pmuIDs.Count > 1 OrElse String.Compare(m_source, m_pmuIDs(0).Tag) <> 0 Then
                     .Append(" [")
                     For x As Integer = 0 To m_pmuIDs.Count - 1
                         If x > 0 Then .Append(", ")
-                        .Append(m_pmuIDs(x))
+                        .Append(m_pmuIDs(x).Tag)
                     Next
                     .Append("]")
                 End If
@@ -160,7 +161,7 @@ Public Class PhasorMeasurementMapper
         End Set
     End Property
 
-    Public ReadOnly Property PmuIDs() As List(Of String)
+    Public ReadOnly Property PmuIDs() As PmuInfoCollection
         Get
             Return m_pmuIDs
         End Get
@@ -171,50 +172,57 @@ Public Class PhasorMeasurementMapper
 
         ' Map data frame measurement instances to their associated point ID's
         With frame
-            Dim pmuID As String
+            Dim pmuID As PmuInfo = Nothing
             Dim x, y As Integer
+            Dim ticks As Long
 
             ' Adjust time to UTC based on source PDC/PMU time zone, if provided (typically when not UTC already)
             If m_timezone IsNot Nothing Then .Ticks = m_timezone.ToUniversalTime(.Timestamp).Ticks
 
-            ' Track lastest reporting time
-            If .Ticks > m_lastReportTime Then m_lastReportTime = .Ticks
+            ' Get ticks of this frame
+            ticks = .Ticks
 
             ' Loop through each parsed PMU data cell
             For x = 0 To .Cells.Count - 1
-                ' Get current PMU ID
-                pmuID = m_pmuIDs(x)
-
                 With .Cells(x)
-                    ' Map status flags SF from PMU data cell
-                    MapMeasurement(frame, pmuID & "-SF", .This)
+                    ' Lookup PMU information by its ID code
+                    If m_pmuIDs.TryGetValue(.IDCode, pmuID) Then
+                        ' Track lastest reporting time
+                        If ticks > pmuID.LastReportTime Then pmuID.LastReportTime = ticks
+                        If ticks > m_lastReportTime Then m_lastReportTime = ticks
 
-                    With .PhasorValues
-                        For y = 0 To .Count - 1
-                            With .Item(y)
-                                ' Map angle - PA(n)
-                                MapMeasurement(frame, pmuID & "-PA" & (y + 1), .Measurements(CompositePhasorValue.Angle))
+                        ' Map status flags SF from PMU data cell
+                        MapMeasurement(frame, pmuID.Tag & "-SF", .This)
 
-                                ' Map magnitude - PM(m)
-                                MapMeasurement(frame, pmuID & "-PM" & (y + 1), .Measurements(CompositePhasorValue.Magnitude))
-                            End With
-                        Next
-                    End With
+                        With .PhasorValues
+                            For y = 0 To .Count - 1
+                                With .Item(y)
+                                    ' Map angle - PA(n)
+                                    MapMeasurement(frame, pmuID.Tag & "-PA" & (y + 1), .Measurements(CompositePhasorValue.Angle))
 
-                    With .FrequencyValue
-                        ' Map frequency - FQ
-                        MapMeasurement(frame, pmuID & "-FQ", .Measurements(CompositeFrequencyValue.Frequency))
+                                    ' Map magnitude - PM(m)
+                                    MapMeasurement(frame, pmuID.Tag & "-PM" & (y + 1), .Measurements(CompositePhasorValue.Magnitude))
+                                End With
+                            Next
+                        End With
 
-                        ' Map df/dt - DF
-                        MapMeasurement(frame, pmuID & "-DF", .Measurements(CompositeFrequencyValue.DfDt))
-                    End With
+                        With .FrequencyValue
+                            ' Map frequency - FQ
+                            MapMeasurement(frame, pmuID.Tag & "-FQ", .Measurements(CompositeFrequencyValue.Frequency))
 
-                    With .DigitalValues
-                        For y = 0 To .Count - 1
-                            ' Map digital values - DV(n)
-                            MapMeasurement(frame, pmuID & "-DV" & y, .Item(y).Measurements(0))
-                        Next
-                    End With
+                            ' Map df/dt - DF
+                            MapMeasurement(frame, pmuID.Tag & "-DF", .Measurements(CompositeFrequencyValue.DfDt))
+                        End With
+
+                        With .DigitalValues
+                            For y = 0 To .Count - 1
+                                ' Map digital values - DV(n)
+                                MapMeasurement(frame, pmuID.Tag & "-DV" & y, .Item(y).Measurements(0))
+                            Next
+                        End With
+                    Else
+                        ' TODO: Encountered a new PMU - decide best way to report this...
+                    End If
                 End With
             Next
         End With
@@ -223,6 +231,9 @@ Public Class PhasorMeasurementMapper
         SyncLock m_measurementFrames
             m_measurementFrames.Add(frame)
         End SyncLock
+
+        ' Provide real-time measurements where needed
+        RaiseEvent ParsedMeasurements(frame.Measurements)
 
     End Sub
 

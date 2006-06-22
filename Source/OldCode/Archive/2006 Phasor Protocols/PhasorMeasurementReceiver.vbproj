@@ -69,6 +69,8 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
     <Compile Include="PhasorMeasurementMapper.vb" />
+    <Compile Include="PmuInfo.vb" />
+    <Compile Include="PmuInfoCollection.vb" />
     <Compile Include="ReferenceAngleCalculator.vb" />
   </ItemGroup>
   <ItemGroup>
