@@ -58,6 +58,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Tva.Configuration\Common.vb" />
+    <Compile Include="Tva.Measurements\Frame.vb" />
     <Compile Include="Tva.Security\Cryptography\Common.vb" />
     <Compile Include="Tva.Configuration\ConfigurationFile.vb" />
     <Compile Include="Tva.Configuration\CategorizedSettingsCollection.vb" />
