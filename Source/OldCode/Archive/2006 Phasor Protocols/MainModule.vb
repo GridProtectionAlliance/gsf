@@ -29,37 +29,57 @@ Module MainModule
 
     Public Sub Main()
 
-        Dim consoleLine, receiverPrefix As String
+        Dim consoleLine, receiverCategory As String
         Dim mapper As PhasorMeasurementMapper = Nothing
 
         Console.WriteLine(MonitorInformation)
 
         ' Make sure service settings exist
-        Settings.Add("TotalProxyReceivers", "2", "Total receiver instances to setup (typically one per archive)")
-        Settings.Add("ProxyReceiver1.ArchiverIP", "127.0.0.1", "DatAWare Archiver IP")
-        Settings.Add("ProxyReceiver1.ArchiverCode", "PM", "DatAWare Archiver Plant Code")
-        Settings.Add("ProxyReceiver1.InitializeOnStartup", "True", "Set to True to intialize phasor measurement mapper at startup")
-        Settings.Add("ProxyReceiver2.ArchiverIP", "152.85.38.12", "DatAWare Archiver IP")
-        Settings.Add("ProxyReceiver2.ArchiverCode", "P0", "DatAWare Archiver Plant Code")
-        Settings.Add("ProxyReceiver2.InitializeOnStartup", "True", "Set to True to intialize phasor measurement mapper at startup")
-        Settings.Add("PMUDatabase", "Data Source=RGOCSQLD;Initial Catalog=PMU_SDS;Integrated Security=False;user ID=ESOPublic;pwd=4all2see", "PMU metaData database connect string", True)
-        Settings.Add("PMUStatusInterval", "5", "Number of seconds of deviation from UTC time (according to local clock) that last PMU reporting time is allowed before considering it offline")
+        With CategorizedSettings("MeasurementReceiver")
+            .Add("TotalReceivers", "2", "Total receiver instances to setup (typically one per archive)")
+            .Add("PMUDatabase", "Data Source=RGOCSQLD;Initial Catalog=PMU_SDS;Integrated Security=False;user ID=ESOPublic;pwd=4all2see", "PMU metaData database connect string", True)
+            .Add("PMUStatusInterval", "5", "Number of seconds of deviation from UTC time (according to local clock) that last PMU reporting time is allowed before considering it offline")
+        End With
+
+        With CategorizedSettings("Receiver1")
+            .Add("ArchiverIP", "127.0.0.1", "DatAWare Archiver IP")
+            .Add("ArchiverCode", "PM", "DatAWare Archiver Plant Code")
+            .Add("InitializeOnStartup", "True", "Set to True to intialize phasor measurement mapper at startup")
+        End With
+
+        With CategorizedSettings("Receiver2")
+            .Add("ArchiverIP", "152.85.38.12", "DatAWare Archiver IP")
+            .Add("ArchiverCode", "P0", "DatAWare Archiver Plant Code")
+            .Add("InitializeOnStartup", "True", "Set to True to intialize phasor measurement mapper at startup")
+        End With
+
+        With CategorizedSettings("ReferenceAngle")
+            .Add("AngleCount", "3", "Number of phase angles to use to calculate reference phase angle")
+            .Add("FramesPerSecond", "30", "Estimated frames per second for incoming data (used for pre-sorting data for reference angle calculations)")
+            .Add("LagTime", "0.134", "Allowed lag time, in seconds, for incoming data before starting reference angle calculations")
+            .Add("LeadTime", "0.5", "Allowed advanced time, in seconds, to tolerate before assuming incoming measurement time is floating (i.e., not locked)")
+        End With
+
         SaveSettings()
 
-        m_receivers = CreateArray(Of PhasorMeasurementReceiver)(IntegerSetting("TotalProxyReceivers"))
+        m_receivers = CreateArray(Of PhasorMeasurementReceiver)(CategorizedIntegerSetting("MeasurementReceiver", "TotalReceivers"))
 
         For x As Integer = 0 To m_receivers.Length - 1
-            receiverPrefix = "ProxyReceiver" & (x + 1) & "."
+            receiverCategory = "Receiver" & (x + 1)
 
             m_receivers(x) = New PhasorMeasurementReceiver( _
-                StringSetting(receiverPrefix & "ArchiverIP"), _
-                StringSetting(receiverPrefix & "ArchiverCode"), _
-                StringSetting("PMUDatabase"), _
-                IntegerSetting("PMUStatusInterval"))
+                CategorizedStringSetting(receiverCategory, "ArchiverIP"), _
+                CategorizedStringSetting(receiverCategory, "ArchiverCode"), _
+                CategorizedStringSetting("MeasurementReceiver", "PMUDatabase"), _
+                CategorizedIntegerSetting("MeasurementReceiver", "PMUStatusInterval"), _
+                CategorizedIntegerSetting("ReferenceAngle", "AngleCount"), _
+                CategorizedIntegerSetting("ReferenceAngle", "FramesPerSecond"), _
+                CategorizedDoubleSetting("ReferenceAngle", "LagTime"), _
+                CategorizedDoubleSetting("ReferenceAngle", "LeadTime"))
 
             With m_receivers(x)
                 AddHandler .StatusMessage, AddressOf DisplayStatusMessage
-                If BooleanSetting(receiverPrefix & "InitializeOnStartup") Then .Initialize()
+                If CategorizedBooleanSetting(receiverCategory, "InitializeOnStartup") Then .Initialize()
             End With
         Next
 

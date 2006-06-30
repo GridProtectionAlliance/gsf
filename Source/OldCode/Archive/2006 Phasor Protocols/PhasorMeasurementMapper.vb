@@ -222,6 +222,7 @@ Public Class PhasorMeasurementMapper
                         End With
                     Else
                         ' TODO: Encountered a new PMU - decide best way to report this...
+                        ' Don't report it 30 times a second :)
                     End If
                 End With
             Next

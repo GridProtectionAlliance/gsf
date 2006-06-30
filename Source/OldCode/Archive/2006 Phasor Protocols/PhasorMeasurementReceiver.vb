@@ -52,15 +52,24 @@ Public Class PhasorMeasurementReceiver
     Private m_processedMeasurements As Long
     Private m_mappers As Dictionary(Of String, PhasorMeasurementMapper)
     Private m_measurementBuffer As List(Of IMeasurement)
+    Private m_referenceCalculator As ReferenceAngleCalculator
     Private m_statusInterval As Integer
+    Private m_angleCount As Integer
+    Private m_framesPerSecond As Integer
+    Private m_lagTime As Double
+    Private m_leadTime As Double
     Private m_intializing As Boolean
 
-    Public Sub New(ByVal archiverIP As String, ByVal archiverCode As String, ByVal connectString As String, ByVal statusInterval As Integer)
+    Public Sub New(ByVal archiverIP As String, ByVal archiverCode As String, ByVal connectString As String, ByVal statusInterval As Integer, ByVal angleCount As Integer, ByVal framesPerSecond As Integer, ByVal lagTime As Double, ByVal leadTime As Double)
 
         m_archiverIP = archiverIP
         m_archiverCode = archiverCode
         m_connectString = connectString
         m_statusInterval = statusInterval
+        m_angleCount = angleCount
+        m_framesPerSecond = framesPerSecond
+        m_lagTime = lagTime
+        m_leadTime = leadTime
         m_measurementBuffer = New List(Of IMeasurement)
         m_connectionTimer = New Timers.Timer
         m_reportingStatus = New Timers.Timer
@@ -153,6 +162,8 @@ Public Class PhasorMeasurementReceiver
 
             Dim connection As New SqlConnection(m_connectString)
             Dim measurementIDs As New Dictionary(Of String, MeasurementDefinition)
+            Dim angleMeasurementIDs As New List(Of Integer)
+            Dim referenceAngleMeasurementID As Integer
             Dim row As DataRow
             Dim parser As FrameParser
             Dim source As String
@@ -182,13 +193,29 @@ Public Class PhasorMeasurementReceiver
 
             UpdateStatus("Loaded " & measurementIDs.Count & " measurement ID's...")
 
+            ' Load reference angle measurements for this archiver, if any
+            ' TODO: Create view to handle this query
+            With RetrieveData("SELECT MeasurementID FROM ReferenceAngleMeasurements WHERE PlantCode='" & m_archiverCode & "' ORDER BY Priority", connection)
+                For x = 0 To .Rows.Count - 1
+                    ' Get current row
+                    angleMeasurementIDs.Add(Convert.ToInt32(.Rows(x)("MeasurementID")))
+                Next
+            End With
+
+            If angleMeasurementIDs.Count > 0 Then
+                ' Query reference angle measurement ID
+                ' TODO: Create view to handle this query
+                referenceAngleMeasurementID = ExecuteScalar("SELECT ID FROM Measurements WHERE PMUID='EIRA' AND PlantCode='" & m_archiverCode & "'", connection)
+                m_referenceCalculator = New ReferenceAngleCalculator(referenceAngleMeasurementID, angleMeasurementIDs, m_angleCount, m_framesPerSecond, m_lagTime, m_leadTime)
+            End If
+
             ' Initialize each data connection
             With RetrieveData("SELECT * FROM IEEEDataConnections WHERE PlantCode='" & m_archiverCode & "' OR SourceID IN (SELECT PDCID FROM IEEEDataConnectionPDCPMUs WHERE PlantCode='" & m_archiverCode & "')", connection)
                 For x = 0 To .Rows.Count - 1
                     ' Get current row
                     row = .Rows(x)
 
-                    parser = New FrameParser()
+                    parser = New FrameParser
                     pmuIDs = New PmuInfoCollection
 
                     source = row("SourceID").ToString.Trim.ToUpper
@@ -414,6 +441,9 @@ Public Class PhasorMeasurementReceiver
                 Next
             Next
 
+            ' Append calculated reference angle measurements to measurement buffer
+            m_measurementBuffer.AddRange(m_referenceCalculator.GetQueuedReferenceAngles())
+
             Dim totalEvents As Integer = Minimum(m_maximumEvents, m_measurementBuffer.Count)
 
             If totalEvents > 0 Then
@@ -441,6 +471,10 @@ Public Class PhasorMeasurementReceiver
 
     Private Sub ReceivedNewMeasurements(ByVal measurements As Dictionary(Of Integer, IMeasurement))
 
+        ' Provide measurements "directly" to ref angle calculation module
+        If m_referenceCalculator IsNot Nothing Then m_referenceCalculator.SortReferenceMeasurements(measurements)
+
+        ' Provide real-time measurements outside of receiver if it's needed...
         RaiseEvent NewMeasurements(measurements)
 
     End Sub
