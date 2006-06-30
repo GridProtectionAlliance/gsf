@@ -24,7 +24,7 @@ Imports Tva.Measurements
 Public MustInherit Class DataCellBase
 
     Inherits ChannelCellBase
-    Implements IDataCell, IMeasurement
+    Implements IDataCell
 
     Private m_configurationCell As IConfigurationCell
     Private m_statusFlags As Int16
@@ -80,6 +80,13 @@ Public MustInherit Class DataCellBase
     Public Overridable Shadows ReadOnly Property Parent() As IDataFrame Implements IDataCell.Parent
         Get
             Return MyBase.Parent
+        End Get
+    End Property
+
+    ' "This" method exists in two inherited interfaces, so we shadow method to avoid ambiguity
+    Public Shadows ReadOnly Property This() As IDataCell Implements IDataCell.This
+        Get
+            Return Me
         End Get
     End Property
 

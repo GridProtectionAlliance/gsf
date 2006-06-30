@@ -15,13 +15,17 @@
 '
 '*******************************************************************************************************
 
+Imports Tva.Measurements
+
 ' This interface represents the protocol independent representation of a set of phasor related data values.
 <CLSCompliant(False)> _
 Public Interface IDataCell
 
-    Inherits IChannelCell
+    Inherits IChannelCell, IMeasurement
 
     Shadows ReadOnly Property Parent() As IDataFrame
+
+    Shadows ReadOnly Property This() As IDataCell
 
     Property ConfigurationCell() As IConfigurationCell
 
