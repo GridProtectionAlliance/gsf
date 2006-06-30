@@ -23,7 +23,7 @@ Imports Tva.Measurements
 <CLSCompliant(False)> _
 Public Class PhasorMeasurementMapper
 
-    Public Event ParsedMeasurements(ByVal measurements As Dictionary(Of Integer, IMeasurement))
+    Public Event NewParsedMeasurements(ByVal measurements As Dictionary(Of Integer, IMeasurement))
     Public Event ParsingStatus(ByVal message As String)
 
     Private WithEvents m_connectionTimer As Timers.Timer
@@ -234,7 +234,7 @@ Public Class PhasorMeasurementMapper
         End SyncLock
 
         ' Provide real-time measurements where needed
-        RaiseEvent ParsedMeasurements(frame.Measurements)
+        RaiseEvent NewParsedMeasurements(frame.Measurements)
 
     End Sub
 

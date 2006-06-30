@@ -31,6 +31,8 @@ Imports Tva.Phasors
 Imports Tva.Phasors.Common
 Imports Tva.Measurements
 
+' TODO: Abstract "calculated" measurements into an externally implementable interface definition (like archiver)
+
 Public Class PhasorMeasurementReceiver
 
     Public Event NewMeasurements(ByVal measurements As Dictionary(Of Integer, IMeasurement))
@@ -194,7 +196,7 @@ Public Class PhasorMeasurementReceiver
             UpdateStatus("Loaded " & measurementIDs.Count & " measurement ID's...")
 
             ' Load reference angle measurements for this archiver, if any
-            ' TODO: Create view to handle this query
+            ' TODO: Create view to handle this query - or configure a "set of calculated measurements that define required input measurements..."
             With RetrieveData("SELECT MeasurementID FROM ReferenceAngleMeasurements WHERE PlantCode='" & m_archiverCode & "' ORDER BY Priority", connection)
                 For x = 0 To .Rows.Count - 1
                     ' Get current row
@@ -207,6 +209,14 @@ Public Class PhasorMeasurementReceiver
                 ' TODO: Create view to handle this query
                 referenceAngleMeasurementID = ExecuteScalar("SELECT ID FROM Measurements WHERE PMUID='EIRA' AND PlantCode='" & m_archiverCode & "'", connection)
                 m_referenceCalculator = New ReferenceAngleCalculator(referenceAngleMeasurementID, angleMeasurementIDs, m_angleCount, m_framesPerSecond, m_lagTime, m_leadTime)
+
+                With m_referenceCalculator
+                    ' Bubble calculation module status messages out to local update status function
+                    AddHandler .CalculationStatus, AddressOf UpdateStatus
+
+                    ' Bubble newly calculated measurement out to functions that need the real-time data
+                    AddHandler .NewCalculatedMeasurement, AddressOf NewCalculatedMeasurement
+                End With
             End If
 
             ' Initialize each data connection
@@ -258,11 +268,11 @@ Public Class PhasorMeasurementReceiver
                                 End Try
                             End If
 
-                            ' Bubble mapper status messages out to local update status functions
+                            ' Bubble mapper status messages out to local update status function
                             AddHandler .ParsingStatus, AddressOf UpdateStatus
 
                             ' Bubble newly parsed measurements out to functions that need the real-time data
-                            AddHandler .ParsedMeasurements, AddressOf ReceivedNewMeasurements
+                            AddHandler .NewParsedMeasurements, AddressOf NewParsedMeasurements
 
                             ' Add mapper to collection
                             m_mappers.Add(source, .This)
@@ -433,16 +443,10 @@ Public Class PhasorMeasurementReceiver
                 For Each frame As IFrame In mapper.GetQueuedFrames()
                     ' Extract each measurement from the frame and add queue up for processing
                     For Each measurement As IMeasurement In frame.Measurements.Values
-                        m_measurementBuffer.Add(measurement)
-
-                        m_processedMeasurements += 1
-                        If m_processedMeasurements Mod 100000 = 0 Then UpdateStatus(m_processedMeasurements.ToString("#,##0") & " measurements have been uploaded so far...")
+                        QueueMeasurementForArchival(measurement)
                     Next
                 Next
             Next
-
-            ' Append calculated reference angle measurements to measurement buffer
-            m_measurementBuffer.AddRange(m_referenceCalculator.GetQueuedReferenceAngles())
 
             Dim totalEvents As Integer = Minimum(m_maximumEvents, m_measurementBuffer.Count)
 
@@ -463,18 +467,41 @@ Public Class PhasorMeasurementReceiver
 
     End Function
 
+    ' Note: callers should synchronize m_measurementBuffer before calling this function for thread safety
+    Private Sub QueueMeasurementForArchival(ByVal measurement As IMeasurement)
+
+        m_measurementBuffer.Add(measurement)
+        m_processedMeasurements += 1
+        If m_processedMeasurements Mod 100000 = 0 Then UpdateStatus(m_processedMeasurements.ToString("#,##0") & " measurements have been uploaded so far...")
+
+    End Sub
+
     Private Sub UpdateStatus(ByVal status As String)
 
         RaiseEvent StatusMessage("[" & m_archiverCode & "]: " & status)
 
     End Sub
 
-    Private Sub ReceivedNewMeasurements(ByVal measurements As Dictionary(Of Integer, IMeasurement))
+    Private Sub NewParsedMeasurements(ByVal measurements As Dictionary(Of Integer, IMeasurement))
 
-        ' Provide measurements "directly" to ref angle calculation module
-        If m_referenceCalculator IsNot Nothing Then m_referenceCalculator.SortReferenceMeasurements(measurements)
+        ' TODO: Provide parsed measurements "directly" to all calculated measurement modules
+        If m_referenceCalculator IsNot Nothing Then m_referenceCalculator.SortMeasurements(measurements)
 
-        ' Provide real-time measurements outside of receiver if it's needed...
+        ' Provide real-time parsed measurements outside of receiver as needed...
+        RaiseEvent NewMeasurements(measurements)
+
+    End Sub
+
+    Private Sub NewCalculatedMeasurement(ByVal measurement As IMeasurement)
+
+        SyncLock m_measurementBuffer
+            ' Append calculated reference angle measurements to measurement buffer for later archival
+            QueueMeasurementForArchival(measurement)
+        End SyncLock
+
+        ' Provide real-time calculated measurement outside of receiver as needed...
+        Dim measurements As New Dictionary(Of Integer, IMeasurement)
+        measurements.Add(measurement.ID, measurement)
         RaiseEvent NewMeasurements(measurements)
 
     End Sub
