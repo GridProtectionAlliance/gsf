@@ -6,6 +6,7 @@
         <assembly location="..\Source\bin\Tva.DatAWare.dll" documentation="..\Source\bin\Tva.DatAWare.xml" />
         <assembly location="..\Source\bin\Tva.Windows.dll" documentation="..\Source\bin\Tva.Windows.xml" />
         <assembly location="..\Source\bin\Tva.Web.dll" documentation="..\Source\bin\Tva.Web.xml" />
+        <assembly location="..\Source\bin\Tva.Data.dll" documentation="..\Source\bin\Tva.Data.xml" />
     </assemblies>
     <documenters>
         <documenter name="MSDN 2003">
