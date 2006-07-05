@@ -32,7 +32,6 @@ namespace Tva
 	{
 		namespace Compression
 		{
-			[CLSCompliant(false)]
 			public __value enum CompressLevel : int
 			{
 				DefaultCompression = Z_DEFAULT_COMPRESSION,
