@@ -1,0 +1,115 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>8.0.50727</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{99F93056-9EDE-4EB8-BF8B-61E3B8728F9D}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <RootNamespace>Tva.Communication</RootNamespace>
+    <AssemblyName>Tva.Communication</AssemblyName>
+    <MyType>Windows</MyType>
+    <OptionStrict>On</OptionStrict>
+    <SccProjectName>SAK</SccProjectName>
+    <SccLocalPath>SAK</SccLocalPath>
+    <SccAuxPath>SAK</SccAuxPath>
+    <SccProvider>SAK</SccProvider>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <DefineDebug>true</DefineDebug>
+    <DefineTrace>true</DefineTrace>
+    <OutputPath>..\bin\</OutputPath>
+    <DocumentationFile>Tva.Communication.xml</DocumentationFile>
+    <NoWarn>42016,41999,42017,42018,42019,42032,42036,42020,42021,42022</NoWarn>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <DefineDebug>false</DefineDebug>
+    <DefineTrace>true</DefineTrace>
+    <Optimize>true</Optimize>
+    <OutputPath>..\bin\</OutputPath>
+    <DocumentationFile>Tva.Communication.xml</DocumentationFile>
+    <NoWarn>42016,41999,42017,42018,42019,42032,42036,42020,42021,42022</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Drawing" />
+  </ItemGroup>
+  <ItemGroup>
+    <Import Include="Microsoft.VisualBasic" />
+    <Import Include="System" />
+    <Import Include="System.Collections" />
+    <Import Include="System.Collections.Generic" />
+    <Import Include="System.Diagnostics" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="ClientBase.Designer.vb">
+      <DependentUpon>ClientBase.vb</DependentUpon>
+    </Compile>
+    <Compile Include="ClientBase.vb">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Common.vb" />
+    <Compile Include="GoodbyeMessage.vb" />
+    <Compile Include="HandshakeMessage.vb" />
+    <Compile Include="IdentificationMessage.vb" />
+    <Compile Include="My Project\AssemblyInfo.vb" />
+    <Compile Include="ServerBase.designer.vb">
+      <DependentUpon>ServerBase.vb</DependentUpon>
+    </Compile>
+    <Compile Include="ServerBase.vb">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="SocketHelper.vb" />
+    <Compile Include="SocketState.vb" />
+    <Compile Include="TcpClient.Designer.vb">
+      <DependentUpon>TcpClient.vb</DependentUpon>
+    </Compile>
+    <Compile Include="TcpClient.vb">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="TcpServer.Designer.vb">
+      <DependentUpon>TcpServer.vb</DependentUpon>
+    </Compile>
+    <Compile Include="TcpServer.vb">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="UdpClient.Designer.vb">
+      <DependentUpon>UdpClient.vb</DependentUpon>
+    </Compile>
+    <Compile Include="UdpClient.vb">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="UdpServer.Designer.vb">
+      <DependentUpon>UdpServer.vb</DependentUpon>
+    </Compile>
+    <Compile Include="UdpServer.vb">
+      <SubType>Component</SubType>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="EmbeddedResources\ClientBase.bmp" />
+    <EmbeddedResource Include="EmbeddedResources\ServerBase.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Tva.Core\Tva.Core.vbproj">
+      <Project>{29A7B606-D1BC-4A4B-96D0-258D5A72C3EC}</Project>
+      <Name>Tva.Core</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Tva.IO.Compression\Tva.IO.Compression.vcproj">
+      <Project>{F611B9BA-C69D-449B-B596-FABFB746EA2A}</Project>
+      <Name>Tva.IO.Compression</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.VisualBasic.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
