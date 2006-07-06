@@ -35,7 +35,12 @@ Public Class TcpClient
     Private m_packetAware As Boolean
     Private m_tcpClient As SocketState
     Private m_connectionThread As Thread
-    Private m_connectionStringData As IDictionary(Of String, String)
+    Private m_connectionData As IDictionary(Of String, String)
+
+    ''' <summary>
+    ''' Size of the packet that will contain the size of the acutal packet.
+    ''' </summary>
+    Private Const PacketHeaderSize As Integer = 4
 
     Public Sub New(ByVal connectionString As String)
         MyClass.New()
@@ -107,19 +112,15 @@ Public Class TcpClient
     Protected Overrides Sub SendPreparedData(ByVal data As Byte())
 
         If Enabled() AndAlso IsConnected() Then
-            If data IsNot Nothing AndAlso data.Length() > 0 Then  ' There is some data to be sent.
-                OnSendDataBegin(data)
-                If SecureSession() Then data = EncryptData(data, m_tcpClient.Passphrase(), Encryption())
-                ' We'll send data over the wire asynchronously for improved performance.
-                If m_packetAware Then
-                    Dim packetHeader As Byte() = BitConverter.GetBytes(data.Length())
-                    m_tcpClient.Socket.BeginSend(packetHeader, 0, packetHeader.Length(), SocketFlags.None, Nothing, Nothing)
-                End If
-                m_tcpClient.Socket.BeginSend(data, 0, data.Length(), SocketFlags.None, Nothing, Nothing)
-                OnSendDataComplete(data)
-            Else
-                Throw New ArgumentNullException("data")
+            OnSendDataBegin(data)
+            If SecureSession() Then data = EncryptData(data, m_tcpClient.Passphrase(), Encryption())
+            ' We'll send data over the wire asynchronously for improved performance.
+            If m_packetAware Then
+                Dim packetHeader As Byte() = BitConverter.GetBytes(data.Length())
+                m_tcpClient.Socket.BeginSend(packetHeader, 0, packetHeader.Length(), SocketFlags.None, Nothing, Nothing)
             End If
+            m_tcpClient.Socket.BeginSend(data, 0, data.Length(), SocketFlags.None, Nothing, Nothing)
+            OnSendDataComplete(data)
         End If
 
     End Sub
@@ -132,11 +133,11 @@ Public Class TcpClient
     Protected Overrides Function ValidConnectionString(ByVal connectionString As String) As Boolean
 
         If Not String.IsNullOrEmpty(connectionString) Then
-            m_connectionStringData = Tva.Text.Common.ParseKeyValuePairs(connectionString)
-            If m_connectionStringData.ContainsKey("server") AndAlso _
-                    m_connectionStringData.ContainsKey("port") AndAlso _
-                    Dns.GetHostEntry(Convert.ToString(m_connectionStringData("server"))) IsNot Nothing AndAlso _
-                    ValidPortNumber(Convert.ToString(m_connectionStringData("port"))) Then
+            m_connectionData = Tva.Text.Common.ParseKeyValuePairs(connectionString)
+            If m_connectionData.ContainsKey("server") AndAlso _
+                    m_connectionData.ContainsKey("port") AndAlso _
+                    Dns.GetHostEntry(Convert.ToString(m_connectionData("server"))) IsNot Nothing AndAlso _
+                    ValidPortNumber(Convert.ToString(m_connectionData("port"))) Then
                 Return True
             Else
                 ' Connection string is not in the expected format.
@@ -152,11 +153,6 @@ Public Class TcpClient
         End If
 
     End Function
-
-    ''' <summary>
-    ''' Size of the packet that will contain the size of the acutal packet.
-    ''' </summary>
-    Private PacketHeaderSize As Integer = 4
 
     ''' <summary>
     ''' Connects the client to the server.
@@ -178,8 +174,8 @@ Public Class TcpClient
                 If ReceiveTimeout() <> -1 Then m_tcpClient.Socket.ReceiveTimeout = ReceiveTimeout() * 1000
 
                 ' Connect the client socket to the remote server endpoint.
-                m_tcpClient.Socket.Connect(GetIpEndPoint(Convert.ToString(m_connectionStringData("server")), _
-                    Convert.ToInt32(m_connectionStringData("port"))))
+                m_tcpClient.Socket.Connect(GetIpEndPoint(Convert.ToString(m_connectionData("server")), _
+                    Convert.ToInt32(m_connectionData("port"))))
 
                 If m_tcpClient.Socket.Connected() Then ' Client connected to the server successfully.
                     ' Start a seperate thread for the client to receive data from the server.

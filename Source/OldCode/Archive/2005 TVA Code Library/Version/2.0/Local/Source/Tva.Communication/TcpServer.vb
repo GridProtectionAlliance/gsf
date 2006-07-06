@@ -38,7 +38,12 @@ Public Class TcpServer
     Private m_tcpServer As Socket
     Private m_tcpClients As Dictionary(Of Guid, SocketState)
     Private m_pendingTcpClients As List(Of SocketState)
-    Private m_configurationStringData As Dictionary(Of String, String)
+    Private m_configurationData As Dictionary(Of String, String)
+
+    ''' <summary>
+    ''' Size of the packet that will contain the size of the acutal packet.
+    ''' </summary>
+    Private Const PacketHeaderSize As Integer = 4
 
     ''' <summary>
     ''' Initializes a instance of Tva.Data.Transport.TcpServer with the specified data.
@@ -119,23 +124,19 @@ Public Class TcpServer
     Protected Overrides Sub SendPreparedDataTo(ByVal clientID As Guid, ByVal data As Byte())
 
         If Enabled() AndAlso IsRunning() Then
-            If data IsNot Nothing AndAlso data.Length() > 0 Then
-                ' We don't want to synclock 'm_tcpClients' over here because doing so will block all
-                ' all incoming connections (in ListenForConnections) while sending data to client(s). 
-                Dim tcpClient As SocketState = Nothing
-                If m_tcpClients.TryGetValue(clientID, tcpClient) Then
-                    If SecureSession() Then data = EncryptData(data, tcpClient.Passphrase(), Encryption())
-                    ' We'll send data over the wire asynchronously for improved performance.
-                    If m_packetAware Then
-                        Dim packetHeader As Byte() = BitConverter.GetBytes(data.Length())
-                        tcpClient.Socket.BeginSend(packetHeader, 0, packetHeader.Length(), SocketFlags.None, Nothing, Nothing)
-                    End If
-                    tcpClient.Socket.BeginSend(data, 0, data.Length(), SocketFlags.None, Nothing, Nothing)
-                Else
-                    Throw New ArgumentException("Client ID '" & clientID.ToString() & "' is invalid.")
+            ' We don't want to synclock 'm_tcpClients' over here because doing so will block all
+            ' all incoming connections (in ListenForConnections) while sending data to client(s). 
+            Dim tcpClient As SocketState = Nothing
+            If m_tcpClients.TryGetValue(clientID, tcpClient) Then
+                If SecureSession() Then data = EncryptData(data, tcpClient.Passphrase(), Encryption())
+                ' We'll send data over the wire asynchronously for improved performance.
+                If m_packetAware Then
+                    Dim packetHeader As Byte() = BitConverter.GetBytes(data.Length())
+                    tcpClient.Socket.BeginSend(packetHeader, 0, packetHeader.Length(), SocketFlags.None, Nothing, Nothing)
                 End If
+                tcpClient.Socket.BeginSend(data, 0, data.Length(), SocketFlags.None, Nothing, Nothing)
             Else
-                Throw New ArgumentNullException("data")
+                Throw New ArgumentException("Client ID '" & clientID.ToString() & "' is invalid.")
             End If
         End If
 
@@ -149,9 +150,9 @@ Public Class TcpServer
     Protected Overrides Function ValidConfigurationString(ByVal configurationString As String) As Boolean
 
         If Not String.IsNullOrEmpty(configurationString) Then
-            m_configurationStringData = Tva.Text.Common.ParseKeyValuePairs(configurationString)
-            If m_configurationStringData.ContainsKey("port") AndAlso _
-                    ValidPortNumber(Convert.ToString(m_configurationStringData("port"))) Then
+            m_configurationData = Tva.Text.Common.ParseKeyValuePairs(configurationString)
+            If m_configurationData.ContainsKey("port") AndAlso _
+                    ValidPortNumber(Convert.ToString(m_configurationData("port"))) Then
                 Return True
             Else
                 ' Configuration string is not in the expected format.
@@ -169,11 +170,6 @@ Public Class TcpServer
     End Function
 
     ''' <summary>
-    ''' Size of the packet that will contain the size of the acutal packet.
-    ''' </summary>
-    Private PacketHeaderSize As Integer = 4
-
-    ''' <summary>
     ''' Listens for incoming client connections.
     ''' </summary>
     ''' <remarks>This method is meant to be executed on a seperate thread.</remarks>
@@ -183,7 +179,7 @@ Public Class TcpServer
             ' Create a socket for the server.
             m_tcpServer = New Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp)
             ' Bind the server socket to a local endpoint.
-            m_tcpServer.Bind(New IPEndPoint(IPAddress.Any, Convert.ToInt32(m_configurationStringData("port"))))
+            m_tcpServer.Bind(New IPEndPoint(IPAddress.Any, Convert.ToInt32(m_configurationData("port"))))
             ' Start listening for connections and keep a maximum of 0 pending connection in the queue.
             m_tcpServer.Listen(0)
             OnServerStarted(EventArgs.Empty) ' Notify that the server has started.
