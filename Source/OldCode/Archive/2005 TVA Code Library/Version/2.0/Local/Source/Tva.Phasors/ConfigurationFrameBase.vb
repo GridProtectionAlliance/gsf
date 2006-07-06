@@ -16,6 +16,7 @@
 '*******************************************************************************************************
 
 Imports Tva.DateTime
+Imports System.Runtime.Serialization
 
 ' This class represents the protocol independent common implementation of a configuration frame that can be sent or received from a PMU.
 <CLSCompliant(False)> _
@@ -81,6 +82,14 @@ Public MustInherit Class ConfigurationFrameBase
         For Each cell As IConfigurationCell In Cells
             cell.NominalFrequency = value
         Next
+
+    End Sub
+
+    Public Overridable Sub GetObjectData(ByVal info As System.Runtime.Serialization.SerializationInfo, ByVal context As System.Runtime.Serialization.StreamingContext) Implements System.Runtime.Serialization.ISerializable.GetObjectData
+
+        ' TODO: Add key serialization elements...
+        'info.AddValue("AltName", "XXX")
+        'info.AddValue("AltID", 9999)
 
     End Sub
 

@@ -80,6 +80,9 @@ Public Class FrameParser
 
     Public Sub New()
 
+        m_hostIP = "127.0.0.1"
+        m_port = 4712
+        m_pmuID = 1
         m_bufferSize = DefaultBufferSize
         m_rateCalcTimer = New Timers.Timer
 
