@@ -68,10 +68,10 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="EmbeddedResouces\TVADisclaimer.txt" />
+    <EmbeddedResource Include="Embedded Resouces\TVADisclaimer.txt" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="EmbeddedResouces\TVALogo.bmp" />
+    <EmbeddedResource Include="Embedded Resouces\TVALogo.bmp" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.VisualBasic.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
