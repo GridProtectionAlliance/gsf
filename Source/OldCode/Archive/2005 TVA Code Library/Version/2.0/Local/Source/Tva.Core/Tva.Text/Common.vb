@@ -17,8 +17,8 @@
 '  06/01/2006 - J. Ritchie Carroll
 '       Added ParseBoolean function to parse strings representing booleans that may be numeric
 '  07/07/2006 - J. Ritchie Carroll
-'       Added StringChunks function to break a string up into smaller chunks for parsing and/or
-'       display purposes
+'       Added GetStringSegments function to break a string up into smaller chunks for parsing
+'       and/or display purposes
 '
 '*******************************************************************************************************
 
@@ -103,27 +103,27 @@ Namespace Text
 
         End Function
 
-        ''' <summary>Turns a string into an array of strings with a set maximum width for parsing or display purposes</summary>
-        ''' <param name="value">Input string to break up into chunks</param>
-        ''' <param name="chunkSize">Maximum size of returned chunks</param>
-        ''' <returns>Source string broken in chunks (array of strings)</returns>
+        ''' <summary>Turns source string into an array of string segements, each with a set maximum width, for parsing or display purposes</summary>
+        ''' <param name="value">Input string to break up into segements</param>
+        ''' <param name="segmentSize">Maximum size of returned segment</param>
+        ''' <returns>Array of string segments as parsed from source string</returns>
         ''' <remarks>Returns single element array with an empty string if source string is null or empty</remarks>
-        Public Shared Function StringChunks(ByVal value As String, ByVal chunkSize As Integer) As String()
+        Public Shared Function GetStringSegments(ByVal value As String, ByVal segmentSize As Integer) As String()
 
             If String.IsNullOrEmpty(value) Then Return New String() {""}
 
-            Dim totalChunks As Integer = Convert.ToInt32(System.Math.Ceiling(value.Length / chunkSize))
-            Dim chunks As String() = CreateArray(Of String)(totalChunks)
+            Dim totalSegments As Integer = Convert.ToInt32(System.Math.Ceiling(value.Length / segmentSize))
+            Dim segments As String() = CreateArray(Of String)(totalSegments)
 
-            For x As Integer = 0 To chunks.Length - 1
-                If x * chunkSize + chunkSize >= value.Length Then
-                    chunks(x) = value.Substring(x * chunkSize)
+            For x As Integer = 0 To segments.Length - 1
+                If x * segmentSize + segmentSize >= value.Length Then
+                    segments(x) = value.Substring(x * segmentSize)
                 Else
-                    chunks(x) = value.Substring(x * chunkSize, chunkSize)
+                    segments(x) = value.Substring(x * segmentSize, segmentSize)
                 End If
             Next
 
-            Return chunks
+            Return segments
 
         End Function
 
