@@ -53,8 +53,8 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Common.vb" />
-    <Compile Include="GoodbyeMessage.vb" />
-    <Compile Include="HandshakeMessage.vb" />
+    <Compile Include="Internal Code\GoodbyeMessage.vb" />
+    <Compile Include="Internal Code\HandshakeMessage.vb" />
     <Compile Include="My Project\AssemblyInfo.vb" />
     <Compile Include="ServerBase.designer.vb">
       <DependentUpon>ServerBase.vb</DependentUpon>
@@ -62,8 +62,8 @@
     <Compile Include="ServerBase.vb">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="SocketHelper.vb" />
-    <Compile Include="StateKeeper.vb" />
+    <Compile Include="Internal Code\SocketHelper.vb" />
+    <Compile Include="Internal Code\StateKeeper.vb" />
     <Compile Include="TcpClient.Designer.vb">
       <DependentUpon>TcpClient.vb</DependentUpon>
     </Compile>
@@ -90,8 +90,8 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="EmbeddedResources\ClientBase.bmp" />
-    <EmbeddedResource Include="EmbeddedResources\ServerBase.bmp" />
+    <EmbeddedResource Include="Embedded Resources\ClientBase.bmp" />
+    <EmbeddedResource Include="Embedded Resources\ServerBase.bmp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Tva.Core\Tva.Core.vbproj">
