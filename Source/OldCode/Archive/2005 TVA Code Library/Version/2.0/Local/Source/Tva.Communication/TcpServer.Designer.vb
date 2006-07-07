@@ -34,8 +34,8 @@ Partial Class TcpServer
         'This call is required by the Component Designer.
         InitializeComponent()
         ' Setup the instance defaults.
-        m_tcpClients = New Dictionary(Of Guid, SocketState)
-        m_pendingTcpClients = New List(Of SocketState)
+        m_tcpClients = New Dictionary(Of Guid, StateKeeper(Of System.Net.Sockets.Socket))
+        m_pendingTcpClients = New List(Of StateKeeper(Of System.Net.Sockets.Socket))
         MyClass.PacketAware = True
         MyBase.ConfigurationString = "Port=8888"
         MyBase.Protocol = TransportProtocol.Tcp

@@ -55,7 +55,6 @@
     <Compile Include="Common.vb" />
     <Compile Include="GoodbyeMessage.vb" />
     <Compile Include="HandshakeMessage.vb" />
-    <Compile Include="IdentificationMessage.vb" />
     <Compile Include="My Project\AssemblyInfo.vb" />
     <Compile Include="ServerBase.designer.vb">
       <DependentUpon>ServerBase.vb</DependentUpon>
@@ -64,7 +63,7 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="SocketHelper.vb" />
-    <Compile Include="SocketState.vb" />
+    <Compile Include="StateKeeper.vb" />
     <Compile Include="TcpClient.Designer.vb">
       <DependentUpon>TcpClient.vb</DependentUpon>
     </Compile>

@@ -33,7 +33,7 @@ Imports Tva.Communication.SocketHelper
 Public Class TcpClient
 
     Private m_packetAware As Boolean
-    Private m_tcpClient As SocketState
+    Private m_tcpClient As StateKeeper(Of Socket)
     Private m_connectionThread As Thread
     Private m_connectionData As IDictionary(Of String, String)
 
@@ -98,9 +98,9 @@ Public Class TcpClient
         CancelConnect() ' Cancel any active connection attempts.
 
         If Enabled() AndAlso IsConnected() AndAlso m_tcpClient IsNot Nothing AndAlso _
-                m_tcpClient.Socket() IsNot Nothing Then
+                m_tcpClient.Client() IsNot Nothing Then
             ' Close the client socket that is connected to the server.
-            m_tcpClient.Socket.Close()
+            m_tcpClient.Client.Close()
         End If
 
     End Sub
@@ -117,9 +117,9 @@ Public Class TcpClient
             ' We'll send data over the wire asynchronously for improved performance.
             If m_packetAware Then
                 Dim packetHeader As Byte() = BitConverter.GetBytes(data.Length())
-                m_tcpClient.Socket.BeginSend(packetHeader, 0, packetHeader.Length(), SocketFlags.None, Nothing, Nothing)
+                m_tcpClient.Client.BeginSend(packetHeader, 0, packetHeader.Length(), SocketFlags.None, Nothing, Nothing)
             End If
-            m_tcpClient.Socket.BeginSend(data, 0, data.Length(), SocketFlags.None, Nothing, Nothing)
+            m_tcpClient.Client.BeginSend(data, 0, data.Length(), SocketFlags.None, Nothing, Nothing)
             OnSendDataComplete(data)
         End If
 
@@ -167,17 +167,17 @@ Public Class TcpClient
                 OnConnecting(EventArgs.Empty)   ' Notify that the client is connecting to the server.
 
                 ' Create a socket for the client and bind it to a local endpoint.
-                m_tcpClient = New SocketState()
-                m_tcpClient.Socket = New Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp)
-                m_tcpClient.Socket.Bind(New IPEndPoint(IPAddress.Any, 0))
-                m_tcpClient.Socket.LingerState = New LingerOption(True, 10)
-                If ReceiveTimeout() <> -1 Then m_tcpClient.Socket.ReceiveTimeout = ReceiveTimeout() * 1000
+                m_tcpClient = New StateKeeper(Of Socket)
+                m_tcpClient.Client = New Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp)
+                m_tcpClient.Client.Bind(New IPEndPoint(IPAddress.Any, 0))
+                m_tcpClient.Client.LingerState = New LingerOption(True, 10)
+                If ReceiveTimeout() <> -1 Then m_tcpClient.Client.ReceiveTimeout = ReceiveTimeout() * 1000
 
                 ' Connect the client socket to the remote server endpoint.
-                m_tcpClient.Socket.Connect(GetIpEndPoint(Convert.ToString(m_connectionData("server")), _
+                m_tcpClient.Client.Connect(GetIpEndPoint(Convert.ToString(m_connectionData("server")), _
                     Convert.ToInt32(m_connectionData("port"))))
 
-                If m_tcpClient.Socket.Connected() Then ' Client connected to the server successfully.
+                If m_tcpClient.Client.Connected() Then ' Client connected to the server successfully.
                     ' Start a seperate thread for the client to receive data from the server.
                     Dim receiveThread As New Thread(AddressOf ReceiveServerData)
                     receiveThread.Start()
@@ -211,8 +211,8 @@ Public Class TcpClient
                 ' Handshaking is to be performed so we'll send our information to the server.
                 Dim myInfo As Byte() = _
                     GetPreparedData(GetBytes(New HandshakeMessage(ClientID(), HandshakePassphrase())))
-                If m_packetAware Then m_tcpClient.Socket.Send(BitConverter.GetBytes(myInfo.Length()))
-                m_tcpClient.Socket.Send(myInfo)
+                If m_packetAware Then m_tcpClient.Client.Send(BitConverter.GetBytes(myInfo.Length()))
+                m_tcpClient.Client.Send(myInfo)
             Else
                 ' Handshaking is not to be performed.
                 OnConnected(EventArgs.Empty)    ' Notify that the client has been connected to the server.
@@ -228,14 +228,14 @@ Public Class TcpClient
                 Dim dataLength As Integer
                 Try
                     dataLength = _
-                        m_tcpClient.Socket.Receive(m_tcpClient.DataBuffer(), m_tcpClient.BytesReceived(), m_tcpClient.DataBuffer.Length(), SocketFlags.None)
+                        m_tcpClient.Client.Receive(m_tcpClient.DataBuffer(), m_tcpClient.BytesReceived(), m_tcpClient.DataBuffer.Length(), SocketFlags.None)
                     m_tcpClient.BytesReceived += dataLength
                 Catch ex As SocketException
                     If ex.SocketErrorCode() = SocketError.TimedOut Then
                         OnReceiveTimedOut(EventArgs.Empty)  ' Notify that a timeout has been encountered.
                         ' NOTE: The line of code below is a fix to a known bug in .Net Framework 2.0.
                         ' Refer http://forums.microsoft.com/MSDN/ShowPost.aspx?PostID=178213&SiteID=1
-                        m_tcpClient.Socket.Blocking = True  ' <= Temporary bug fix!
+                        m_tcpClient.Client.Blocking = True  ' <= Temporary bug fix!
                         Continue Do
                     Else
                         Throw
@@ -299,9 +299,9 @@ Public Class TcpClient
         Catch ex As Exception
             ' We don't need to take any action when an exception is encountered.
         Finally
-            If m_tcpClient IsNot Nothing AndAlso m_tcpClient.Socket() IsNot Nothing Then
-                m_tcpClient.Socket.Close()
-                m_tcpClient.Socket = Nothing
+            If m_tcpClient IsNot Nothing AndAlso m_tcpClient.Client() IsNot Nothing Then
+                m_tcpClient.Client.Close()
+                m_tcpClient.Client = Nothing
             End If
             OnDisconnected(EventArgs.Empty) ' Notify that the client has been disconnected to the server.
         End Try

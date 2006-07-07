@@ -36,8 +36,8 @@ Public Class TcpServer
 
     Private m_packetAware As Boolean
     Private m_tcpServer As Socket
-    Private m_tcpClients As Dictionary(Of Guid, SocketState)
-    Private m_pendingTcpClients As List(Of SocketState)
+    Private m_tcpClients As Dictionary(Of Guid, StateKeeper(Of Socket))
+    Private m_pendingTcpClients As List(Of StateKeeper(Of Socket))
     Private m_configurationData As Dictionary(Of String, String)
 
     ''' <summary>
@@ -99,16 +99,16 @@ Public Class TcpServer
             If m_tcpServer IsNot Nothing Then m_tcpServer.Close()
             ' *** Diconnect all of the connected clients ***
             SyncLock m_tcpClients
-                For Each tcpClient As SocketState In m_tcpClients.Values()
-                    If tcpClient IsNot Nothing AndAlso tcpClient.Socket() IsNot Nothing Then
-                        tcpClient.Socket.Close()
+                For Each tcpClient As StateKeeper(Of Socket) In m_tcpClients.Values()
+                    If tcpClient IsNot Nothing AndAlso tcpClient.Client() IsNot Nothing Then
+                        tcpClient.Client.Close()
                     End If
                 Next
             End SyncLock
             SyncLock m_pendingTcpClients
-                For Each pendingTcpClient As SocketState In m_pendingTcpClients
-                    If pendingTcpClient IsNot Nothing AndAlso pendingTcpClient.Socket() IsNot Nothing Then
-                        pendingTcpClient.Socket.Close()
+                For Each pendingTcpClient As StateKeeper(Of Socket) In m_pendingTcpClients
+                    If pendingTcpClient IsNot Nothing AndAlso pendingTcpClient.Client() IsNot Nothing Then
+                        pendingTcpClient.Client.Close()
                     End If
                 Next
             End SyncLock
@@ -126,15 +126,15 @@ Public Class TcpServer
         If Enabled() AndAlso IsRunning() Then
             ' We don't want to synclock 'm_tcpClients' over here because doing so will block all
             ' all incoming connections (in ListenForConnections) while sending data to client(s). 
-            Dim tcpClient As SocketState = Nothing
+            Dim tcpClient As StateKeeper(Of Socket) = Nothing
             If m_tcpClients.TryGetValue(clientID, tcpClient) Then
                 If SecureSession() Then data = EncryptData(data, tcpClient.Passphrase(), Encryption())
                 ' We'll send data over the wire asynchronously for improved performance.
                 If m_packetAware Then
                     Dim packetHeader As Byte() = BitConverter.GetBytes(data.Length())
-                    tcpClient.Socket.BeginSend(packetHeader, 0, packetHeader.Length(), SocketFlags.None, Nothing, Nothing)
+                    tcpClient.Client.BeginSend(packetHeader, 0, packetHeader.Length(), SocketFlags.None, Nothing, Nothing)
                 End If
-                tcpClient.Socket.BeginSend(data, 0, data.Length(), SocketFlags.None, Nothing, Nothing)
+                tcpClient.Client.BeginSend(data, 0, data.Length(), SocketFlags.None, Nothing, Nothing)
             Else
                 Throw New ArgumentException("Client ID '" & clientID.ToString() & "' is invalid.")
             End If
@@ -187,9 +187,9 @@ Public Class TcpServer
             Do While True
                 If MaximumClients() = -1 OrElse ClientIDs.Count() < MaximumClients() Then
                     ' We can accept incoming client connection requests.
-                    Dim tcpClient As New SocketState()
-                    tcpClient.Socket = m_tcpServer.Accept()  ' Accept client connection.
-                    tcpClient.Socket.LingerState = New LingerOption(True, 10)
+                    Dim tcpClient As New StateKeeper(Of Socket)
+                    tcpClient.Client = m_tcpServer.Accept()  ' Accept client connection.
+                    tcpClient.Client.LingerState = New LingerOption(True, 10)
 
                     ' Start the client on a seperate thread so all the connected clients run independently.
                     RunThread.ExecuteNonPublicMethod(Me, "ReceiveClientData", tcpClient)
@@ -211,25 +211,25 @@ Public Class TcpServer
     ''' <summary>
     ''' Receives any data sent by a client that is connected to the server.
     ''' </summary>
-    ''' <param name="tcpClient">Tva.Data.Transport.SocketState of the the connected client.</param>
+    ''' <param name="tcpClient">Tva.Data.Transport.State(Of Socket) of the the connected client.</param>
     ''' <remarks>This method is meant to be executed on seperate threads.</remarks>
-    Private Sub ReceiveClientData(ByVal tcpClient As SocketState)
+    Private Sub ReceiveClientData(ByVal tcpClient As StateKeeper(Of Socket))
 
         Try
             If Handshake() Then
                 ' Handshaking is to be performed to authenticate the client.
-                tcpClient.Socket.ReceiveTimeout = 5000
+                tcpClient.Client.ReceiveTimeout = 5000
                 SyncLock m_pendingTcpClients
                     m_pendingTcpClients.Add(tcpClient)
                 End SyncLock
             Else
                 ' No handshaking is to be performed for authenicating the client.
-                tcpClient.SocketID = Guid.NewGuid()
+                tcpClient.ID = Guid.NewGuid()
                 SyncLock m_tcpClients
-                    m_tcpClients.Add(tcpClient.SocketID(), tcpClient)
+                    m_tcpClients.Add(tcpClient.ID(), tcpClient)
                 End SyncLock
 
-                OnClientConnected(tcpClient.SocketID())    ' Notify that the client is connected.
+                OnClientConnected(tcpClient.ID())    ' Notify that the client is connected.
             End If
 
             Do While True   ' Wait for data from the client.
@@ -239,7 +239,7 @@ Public Class TcpServer
                     tcpClient.DataBuffer = CreateArray(Of Byte)(bufferSize)
                 End If
 
-                Dim dataLength As Integer = tcpClient.Socket.Receive(tcpClient.DataBuffer(), _
+                Dim dataLength As Integer = tcpClient.Client.Receive(tcpClient.DataBuffer(), _
                     tcpClient.BytesReceived(), tcpClient.DataBuffer.Length(), SocketFlags.None)
                 tcpClient.BytesReceived += dataLength
 
@@ -265,7 +265,7 @@ Public Class TcpServer
                         tcpClient.DataBuffer = CopyBuffer(tcpClient.DataBuffer(), 0, tcpClient.BytesReceived())
                     End If
 
-                    If tcpClient.SocketID() = Guid.Empty AndAlso Handshake() Then
+                    If tcpClient.ID() = Guid.Empty AndAlso Handshake() Then
                         ' Authentication is required, but not performed yet. When authentication is required
                         ' the first message from the client must be information about itself.
                         Dim clientInfo As HandshakeMessage = _
@@ -274,18 +274,18 @@ Public Class TcpServer
                                 clientInfo.Passphrase() = HandshakePassphrase() Then
                             If SecureSession() Then tcpClient.Passphrase = GenerateKey()
                             Dim myInfo As Byte() = GetPreparedData(GetBytes(New HandshakeMessage(ServerID(), tcpClient.Passphrase())))
-                            If m_packetAware Then tcpClient.Socket.Send(BitConverter.GetBytes(myInfo.Length()))
-                            tcpClient.Socket.ReceiveTimeout = 0
-                            tcpClient.Socket.Send(myInfo)   ' Send server info to the client.
-                            tcpClient.SocketID = clientInfo.ID()
+                            If m_packetAware Then tcpClient.Client.Send(BitConverter.GetBytes(myInfo.Length()))
+                            tcpClient.Client.ReceiveTimeout = 0
+                            tcpClient.Client.Send(myInfo)   ' Send server info to the client.
+                            tcpClient.ID = clientInfo.ID()
 
                             SyncLock m_pendingTcpClients
                                 m_pendingTcpClients.Remove(tcpClient)
                             End SyncLock
                             SyncLock m_tcpClients
-                                m_tcpClients.Add(tcpClient.SocketID(), tcpClient)
+                                m_tcpClients.Add(tcpClient.ID(), tcpClient)
                             End SyncLock
-                            OnClientConnected(tcpClient.SocketID())    ' Notify that the client is connected.
+                            OnClientConnected(tcpClient.ID())    ' Notify that the client is connected.
                         Else
                             ' The first response from the client is either not information about itself, or
                             ' the information provided by the client is invalid.
@@ -296,7 +296,7 @@ Public Class TcpServer
                             tcpClient.DataBuffer = DecryptData(tcpClient.DataBuffer(), tcpClient.Passphrase(), Encryption())
                         End If
                         ' Notify of data received from the client.
-                        OnReceivedClientData(tcpClient.SocketID(), tcpClient.DataBuffer())
+                        OnReceivedClientData(tcpClient.ID(), tcpClient.DataBuffer())
                     End If
                     tcpClient.PacketSize = -1
                     tcpClient.DataBuffer = Nothing
@@ -309,17 +309,17 @@ Public Class TcpServer
             ' We will exit gracefully in case of any exception.
         Finally
             ' We are now done with the client.
-            If tcpClient IsNot Nothing AndAlso tcpClient.Socket() IsNot Nothing Then
-                tcpClient.Socket.Close()
-                tcpClient.Socket = Nothing
+            If tcpClient IsNot Nothing AndAlso tcpClient.Client() IsNot Nothing Then
+                tcpClient.Client.Close()
+                tcpClient.Client = Nothing
             End If
             SyncLock m_pendingTcpClients
                 m_pendingTcpClients.Remove(tcpClient)
             End SyncLock
             SyncLock m_tcpClients
-                If m_tcpClients.ContainsKey(tcpClient.SocketID()) Then
-                    m_tcpClients.Remove(tcpClient.SocketID())
-                    OnClientDisconnected(tcpClient.SocketID())    ' Notify that the client is disconnected.
+                If m_tcpClients.ContainsKey(tcpClient.ID()) Then
+                    m_tcpClients.Remove(tcpClient.ID())
+                    OnClientDisconnected(tcpClient.ID())    ' Notify that the client is disconnected.
                 End If
             End SyncLock
         End Try
