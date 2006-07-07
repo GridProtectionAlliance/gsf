@@ -16,6 +16,9 @@
 '       2.0 version of source code migrated from 1.1 source (TVA.Shared.String)
 '  06/01/2006 - J. Ritchie Carroll
 '       Added ParseBoolean function to parse strings representing booleans that may be numeric
+'  07/07/2006 - J. Ritchie Carroll
+'       Added StringChunks function to break a string up into smaller chunks for parsing and/or
+'       display purposes
 '
 '*******************************************************************************************************
 
@@ -97,6 +100,30 @@ Namespace Text
             Else
                 Return False
             End If
+
+        End Function
+
+        ''' <summary>Turns a string into an array of strings with a set maximum width for parsing or display purposes</summary>
+        ''' <param name="value">Input string to break up into chunks</param>
+        ''' <param name="chunkSize">Maximum size of returned chunks</param>
+        ''' <returns>Source string broken in chunks (array of strings)</returns>
+        ''' <remarks>Returns single element array with an empty string if source string is null or empty</remarks>
+        Public Shared Function StringChunks(ByVal value As String, ByVal chunkSize As Integer) As String()
+
+            If String.IsNullOrEmpty(value) Then Return New String() {""}
+
+            Dim totalChunks As Integer = Convert.ToInt32(System.Math.Ceiling(value.Length / chunkSize))
+            Dim chunks As String() = CreateArray(Of String)(totalChunks)
+
+            For x As Integer = 0 To chunks.Length - 1
+                If x * chunkSize + chunkSize >= value.Length Then
+                    chunks(x) = value.Substring(x * chunkSize)
+                Else
+                    chunks(x) = value.Substring(x * chunkSize, chunkSize)
+                End If
+            Next
+
+            Return chunks
 
         End Function
 
