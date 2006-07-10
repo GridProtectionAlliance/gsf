@@ -18,10 +18,10 @@ Partial Class UdpServer
 
         'This call is required by the Component Designer.
         InitializeComponent()
-        m_udpClients = New Dictionary(Of Guid, System.Net.IPEndPoint)
-        m_pendingUdpClients = New List(Of System.Net.IPEndPoint)
+        m_udpClients = New Dictionary(Of Guid, StateKeeper(Of System.Net.IPEndPoint))
+        m_pendingUdpClients = New List(Of System.Net.IPAddress)
         MyBase.ConfigurationString = "Port=8888; Clients=255.255.255.255"
-        MyBase.Protocol = TransportProtocol.Tcp
+        MyBase.Protocol = TransportProtocol.Udp
 
     End Sub
 

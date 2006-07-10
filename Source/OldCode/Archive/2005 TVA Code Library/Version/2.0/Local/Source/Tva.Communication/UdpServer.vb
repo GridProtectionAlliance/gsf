@@ -3,17 +3,21 @@
 Imports System.Text
 Imports System.Net
 Imports System.Net.Sockets
+Imports System.Threading
+Imports Tva.Common
+Imports Tva.Serialization
 Imports Tva.Communication.SocketHelper
+Imports Tva.Security.Cryptography.Common
 
 Public Class UdpServer
 
     Private m_udpServer As Socket
-    Private m_udpClients As Dictionary(Of Guid, IPEndPoint)
-    Private m_pendingUdpClients As List(Of IPEndPoint)
+    Private m_udpClients As Dictionary(Of Guid, StateKeeper(Of IPEndPoint))
+    Private m_pendingUdpClients As List(Of IPAddress)
     Private m_configurationData As Dictionary(Of String, String)
-    Private m_packetMarker As Byte() = {&HAA, &HBB, &HCC, &HDD}
+    Private m_packetBeginMarker As Byte() = {&HAA, &HBB, &HCC, &HDD}
 
-    Private Const PacketSize As Integer = 65536
+    Private Const MaximumPacketSize As Integer = 32768  ' 32 KB
 
     Public Sub New(ByVal configurationString As String)
         MyClass.New()
@@ -23,22 +27,35 @@ Public Class UdpServer
     Public Overrides Sub Start()
 
         If Enabled() AndAlso Not IsRunning() AndAlso ValidConfigurationString(ConfigurationString()) Then
+            ' Create a UDP server socket and bind it to a local endpoint.
             m_udpServer = New Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp)
             m_udpServer.Bind(New IPEndPoint(IPAddress.Any, Convert.ToInt32(m_configurationData("port"))))
 
-            For Each clientIP As String In m_configurationData("clients").Split(","c)
-                Dim udpClient As IPEndPoint = GetIpEndPoint(clientIP.Trim(), Convert.ToInt32(m_configurationData("port")))
-                If Not Handshake() OrElse udpClient.Address.Equals(IPAddress.Broadcast) Then
-                    Dim udpClientID As Guid = Guid.NewGuid()
-                    m_udpClients.Add(udpClientID, udpClient)
-                    OnClientConnected(udpClientID)
-                Else
-                    m_pendingUdpClients.Add(udpClient)
-                End If
+            ' Process all the clients in the list.
+            For Each clientNameOrAddress As String In m_configurationData("clients").Split(","c)
+                clientNameOrAddress = clientNameOrAddress.Trim()
+
+                Try
+                    If Not Handshake() OrElse String.Compare(clientNameOrAddress, IPAddress.Broadcast.ToString()) = 0 Then
+                        ' Handshaking with clients is not required or the client is a broadcast address.
+                        Dim udpClient As New StateKeeper(Of IPEndPoint)
+                        udpClient.ID = Guid.NewGuid()
+                        udpClient.Client = GetIpEndPoint(clientNameOrAddress, Convert.ToInt32(m_configurationData("port")))
+                        m_udpClients.Add(udpClient.ID(), udpClient)
+                        OnClientConnected(udpClient.ID())
+                    Else
+                        ' Handshaking with the clients is required.
+                        m_pendingUdpClients.Add(Dns.GetHostEntry(clientNameOrAddress).AddressList(0))
+                    End If
+                Catch ex As Exception
+                    ' Ignore invalid client entries.
+                End Try
             Next
 
             If Handshake() AndAlso m_pendingUdpClients.Count() > 0 Then
                 ' Listen for handshake messages from the listed UDP clients.
+                Dim recevingThread As New Thread(AddressOf ReceiveClientData)
+                recevingThread.Start()
             End If
 
             OnServerStarted(EventArgs.Empty)
@@ -65,9 +82,9 @@ Public Class UdpServer
     Protected Overrides Sub SendPreparedDataTo(ByVal clientID As System.Guid, ByVal data() As Byte)
 
         If Enabled() AndAlso IsRunning() Then
-            Dim udpClient As IPEndPoint = Nothing
+            Dim udpClient As StateKeeper(Of IPEndPoint) = Nothing
             If m_udpClients.TryGetValue(clientID, udpClient) Then
-                m_udpServer.BeginSendTo(data, 0, data.Length(), SocketFlags.None, udpClient, Nothing, Nothing)
+                m_udpServer.BeginSendTo(data, 0, data.Length(), SocketFlags.None, udpClient.Client(), Nothing, Nothing)
             Else
                 Throw New ArgumentException("Client ID '" & clientID.ToString() & "' is invalid.")
             End If
@@ -98,5 +115,51 @@ Public Class UdpServer
         End If
 
     End Function
+
+    Private Sub ReceiveClientData()
+
+        Try
+            Do While True
+                Dim buffer As Byte() = CreateArray(Of Byte)(MaximumPacketSize)
+                Dim clientEP As EndPoint = New IPEndPoint(IPAddress.Any, 0) ' Used to capture the client's identity.
+                Dim dataLength As Integer = m_udpServer.ReceiveFrom(buffer, clientEP)
+
+                Dim clientMessage As Object = GetObject(GetActualData(buffer))
+                If clientMessage IsNot Nothing AndAlso TypeOf clientMessage Is HandshakeMessage Then
+                    ' The client sent a handshake message.
+                    Dim clientInfo As HandshakeMessage = DirectCast(clientMessage, HandshakeMessage)
+                    If clientInfo.Passphrase() = HandshakePassphrase() Then ' Authentication successful.
+                        Dim udpClient As New StateKeeper(Of IPEndPoint)
+                        udpClient.Client = CType(clientEP, IPEndPoint)
+                        udpClient.ID = clientInfo.ID()
+                        udpClient.Passphrase = clientInfo.Passphrase()
+                        If SecureSession() Then udpClient.Passphrase = GenerateKey()
+
+                        Dim myInfo As Byte() = GetPreparedData(GetBytes(New HandshakeMessage(ServerID(), udpClient.Passphrase())))
+                        m_udpServer.SendTo(myInfo, udpClient.Client())
+
+                        m_pendingUdpClients.Remove(udpClient.Client.Address())
+                        m_udpClients.Add(udpClient.ID(), udpClient)
+                        OnClientConnected(udpClient.ID())
+                    End If
+                ElseIf clientMessage IsNot Nothing AndAlso TypeOf clientMessage Is GoodbyeMessage Then
+                    ' The client sent a goodbye message.
+                    Dim clientInfo As GoodbyeMessage = DirectCast(clientMessage, GoodbyeMessage)
+                    If m_udpClients.ContainsKey(clientInfo.ID()) Then
+                        m_udpClients.Remove(clientInfo.ID())
+                        OnClientDisconnected(clientInfo.ID())
+                    End If
+                End If
+            Loop
+        Catch ex As Exception
+
+        Finally
+            If m_udpServer IsNot Nothing Then
+                m_udpServer.Close()
+                m_udpServer = Nothing
+            End If
+        End Try
+
+    End Sub
 
 End Class

@@ -144,7 +144,7 @@ Public Class TcpClient
                 With New StringBuilder()
                     .Append("Connection string must be in the following format:")
                     .Append(Environment.NewLine())
-                    .Append("   Server=<Server name or IP>;Port=<Port Number>")
+                    .Append("   Server=<Server name or IP>; Port=<Port Number>")
                     Throw New ArgumentException(.ToString())
                 End With
             End If
