@@ -11,18 +11,28 @@ Imports Tva.Security.Cryptography.Common
 
 Public Class UdpServer
 
+    Private m_packetAware As Boolean
     Private m_udpServer As Socket
     Private m_udpClients As Dictionary(Of Guid, StateKeeper(Of IPEndPoint))
     Private m_pendingUdpClients As List(Of IPAddress)
     Private m_configurationData As Dictionary(Of String, String)
     Private m_packetBeginMarker As Byte() = {&HAA, &HBB, &HCC, &HDD}
 
-    Private Const MaximumPacketSize As Integer = 32768  ' 32 KB
+    Private Const MaximumPacketSize As Integer = 32768
 
     Public Sub New(ByVal configurationString As String)
         MyClass.New()
         MyBase.ConfigurationString = configurationString
     End Sub
+
+    Public Property PacketAware() As Boolean
+        Get
+            Return m_packetAware
+        End Get
+        Set(ByVal value As Boolean)
+            m_packetAware = value
+        End Set
+    End Property
 
     Public Overrides Sub Start()
 
@@ -70,6 +80,11 @@ Public Class UdpServer
             OnServerStopped(EventArgs.Empty)
 
             For Each udpClientID As Guid In m_udpClients.Keys()
+                If Handshake() Then
+                    Dim bye As Byte() = GetPreparedData(GetBytes(New GoodbyeMessage(udpClientID)))
+                    If m_packetAware Then bye = AddPacketHeader(bye)
+                    m_udpServer.SendTo(bye, m_udpClients(udpClientID).Client())
+                End If
                 OnClientDisconnected(udpClientID)
             Next
             m_udpClients.Clear()
@@ -84,7 +99,14 @@ Public Class UdpServer
         If Enabled() AndAlso IsRunning() Then
             Dim udpClient As StateKeeper(Of IPEndPoint) = Nothing
             If m_udpClients.TryGetValue(clientID, udpClient) Then
-                m_udpServer.BeginSendTo(data, 0, data.Length(), SocketFlags.None, udpClient.Client(), Nothing, Nothing)
+                If SecureSession() Then data = EncryptData(data, udpClient.Passphrase(), Encryption())
+                If m_packetAware Then data = AddPacketHeader(data)
+
+                For i As Integer = 0 To IIf(data.Length() > MaximumPacketSize, data.Length() - 1, 0) Step MaximumPacketSize
+                    Dim packetSize As Integer = MaximumPacketSize
+                    If data.Length() - i < MaximumPacketSize Then packetSize = data.Length() - i
+                    m_udpServer.BeginSendTo(data, i, packetSize, SocketFlags.None, udpClient.Client(), Nothing, Nothing)
+                Next
             Else
                 Throw New ArgumentException("Client ID '" & clientID.ToString() & "' is invalid.")
             End If
@@ -136,7 +158,8 @@ Public Class UdpServer
                         If SecureSession() Then udpClient.Passphrase = GenerateKey()
 
                         Dim myInfo As Byte() = GetPreparedData(GetBytes(New HandshakeMessage(ServerID(), udpClient.Passphrase())))
-                        m_udpServer.SendTo(myInfo, udpClient.Client())
+                        If m_packetAware Then myInfo = AddPacketHeader(myInfo)
+                        m_udpServer.SendTo(myinfo, udpClient.Client())
 
                         m_pendingUdpClients.Remove(udpClient.Client.Address())
                         m_udpClients.Add(udpClient.ID(), udpClient)
@@ -161,5 +184,16 @@ Public Class UdpServer
         End Try
 
     End Sub
+
+    Private Function AddPacketHeader(ByVal packet As Byte()) As Byte()
+
+        Dim result As Byte() = CreateArray(Of Byte)(packet.Length() + 8)
+        Buffer.BlockCopy(m_packetBeginMarker, 0, result, 0, 4)
+        Buffer.BlockCopy(BitConverter.GetBytes(packet.Length()), 0, result, 4, 4)
+        Buffer.BlockCopy(packet, 0, result, 8, packet.Length())
+
+        Return result
+
+    End Function
 
 End Class

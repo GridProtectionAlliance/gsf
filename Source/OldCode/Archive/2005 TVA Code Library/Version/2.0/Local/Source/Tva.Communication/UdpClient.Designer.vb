@@ -18,6 +18,7 @@ Partial Class UdpClient
 
         'This call is required by the Component Designer.
         InitializeComponent()
+        m_packetAware = True
         MyBase.ConnectionString = "Server=localhost; Port=8888"
         MyBase.Protocol = TransportProtocol.Udp
 

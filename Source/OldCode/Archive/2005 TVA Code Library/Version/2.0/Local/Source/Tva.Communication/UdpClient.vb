@@ -10,11 +10,21 @@ Imports Tva.Communication.SocketHelper
 
 Public Class UdpClient
 
+    Private m_packetAware As Boolean
     Private m_udpClient As StateKeeper(Of Socket)
     Private m_connectionData As IDictionary(Of String, String)
     Private m_packetBeginMarker As Byte() = {&HAA, &HBB, &HCC, &HDD}
 
-    Private Const MaximumPacketSize As Integer = 32768  ' 32 KB
+    Private Const MaximumPacketSize As Integer = 32768
+
+    Public Property PacketAware() As Boolean
+        Get
+            Return m_packetAware
+        End Get
+        Set(ByVal value As Boolean)
+            m_packetAware = value
+        End Set
+    End Property
 
     Public Overrides Sub Connect()
 
@@ -43,6 +53,8 @@ Public Class UdpClient
     End Sub
 
     Protected Overrides Sub SendPreparedData(ByVal data() As Byte)
+
+        Throw New NotSupportedException("UDP traffic is unidirectional from server to client.")
 
     End Sub
 
@@ -81,7 +93,7 @@ Public Class UdpClient
             End If
             Do While True
                 m_udpClient.DataBuffer = CreateArray(Of Byte)(MaximumPacketSize)
-                m_udpClient.Client.ReceiveFrom(m_udpClient.DataBuffer, CType(serverep, EndPoint))
+                Debug.WriteLine(m_udpClient.Client.ReceiveFrom(m_udpClient.DataBuffer, CType(serverEP, EndPoint)))
             Loop
         Catch ex As Exception
 
