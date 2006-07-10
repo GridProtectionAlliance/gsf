@@ -107,7 +107,7 @@ Namespace Text
         ''' <param name="value">Input string to break up into segements</param>
         ''' <param name="segmentSize">Maximum size of returned segment</param>
         ''' <returns>Array of string segments as parsed from source string</returns>
-        ''' <remarks>Returns single element array with an empty string if source string is null or empty</remarks>
+        ''' <remarks>Function will return a single element array with an empty string if source string is null or empty</remarks>
         Public Shared Function GetStringSegments(ByVal value As String, ByVal segmentSize As Integer) As String()
 
             If String.IsNullOrEmpty(value) Then Return New String() {""}
