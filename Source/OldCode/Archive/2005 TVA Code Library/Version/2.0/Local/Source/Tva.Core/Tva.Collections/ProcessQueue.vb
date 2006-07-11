@@ -26,26 +26,6 @@ Imports Tva.DateTime.Common
 
 Namespace Collections
 
-#Region " Process Queue Enumerations "
-
-    ''' <summary>
-    ''' Enumeration of possible queue threading modes
-    ''' </summary>
-    Public Enum QueueThreadingMode
-        Asynchronous
-        Synchronous
-    End Enum
-
-    ''' <summary>
-    ''' Enumeration of possible queue processing styles
-    ''' </summary>
-    Public Enum QueueProcessingStyle
-        OneAtATime
-        ManyAtOnce
-    End Enum
-
-#End Region
-
     ''' <summary>
     ''' <para>This class will process a collection of items on independent threads.</para>
     ''' <para>Consumer must implement a function to process items.</para>
