@@ -57,6 +57,7 @@
     <Import Include="System.Diagnostics" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Tva.Collections\Enumerations.vb" />
     <Compile Include="Tva.Configuration\Common.vb" />
     <Compile Include="Tva.Measurements\Frame.vb" />
     <Compile Include="Tva.Security\Cryptography\Common.vb" />
@@ -66,6 +67,7 @@
     <Compile Include="Tva.Configuration\CategorizedSettingsSection.vb" />
     <Compile Include="Tva.Measurements\ImmediateMeasurements.vb" />
     <Compile Include="Tva.Measurements\Sample.vb" />
+    <Compile Include="Tva.Security\Cryptography\Enumerations.vb" />
     <Compile Include="Tva.Services\IServiceComponent.vb" />
     <Compile Include="Tva.Threading\QueueThread.vb" />
     <Compile Include="Tva.Threading\RunThread.vb" />
