@@ -30,29 +30,6 @@ Namespace Security.Cryptography
     ''' <summary>Common Cryptographic Functions</summary>
     Public NotInheritable Class Common
 
-        ''' <summary>Cryptographic Strength Enumeration</summary>
-        ''' <remarks>
-        ''' <para>
-        ''' Encryption algorithms are cumulative, the levels represent tradeoffs on speed vs. cipher strength - level 1
-        ''' will have the fastest encryption speed with the simplest encryption strength - level 4 will have the
-        ''' strongest cumulative encryption strength with the slowest encryption speed.
-        ''' </para>
-        ''' </remarks>
-        Public Enum EncryptLevel
-            ''' <summary>Use no encryption</summary>
-            None
-            ''' <summary>Adds simple multi-alogorithm XOR based encryption</summary>
-            ''' <remarks>This is the fastest and weakest level of encyption</remarks>
-            Level1
-            ''' <summary>Adds TripleDES based encryption</summary>
-            Level2
-            ''' <summary>Adds RC2 based encryption</summary>
-            Level3
-            ''' <summary>Adds RijndaelManaged based enryption</summary>
-            ''' <remarks>This is the slowest and strongest level of encyption</remarks>
-            Level4
-        End Enum
-
         Public Delegate Sub ProgressEventHandler(ByVal bytesCompleted As Long, ByVal bytesTotal As Long)
 
         ' IMPORTANT! Never change the following constants or you will break cross-application crypto operability:
