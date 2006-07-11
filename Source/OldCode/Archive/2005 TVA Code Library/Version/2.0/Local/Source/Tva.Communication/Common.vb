@@ -1,7 +1,5 @@
 ' 06-01-06
 
-Option Strict On
-
 Public Enum TransportProtocol As Integer
     Tcp
     Udp
