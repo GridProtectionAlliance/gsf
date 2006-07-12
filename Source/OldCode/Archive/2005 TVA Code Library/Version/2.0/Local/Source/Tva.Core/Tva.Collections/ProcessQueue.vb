@@ -563,7 +563,7 @@ Namespace Collections
         End Property
 
         ''' <summary>
-        ''' This property determines the threading mode for the process queue (i.e., synchronous or asynchronous)
+        ''' This property returns the current threading mode for the process queue (i.e., synchronous or asynchronous)
         ''' </summary>
         ''' <remarks>
         ''' <para>The maximum number of processing threads determines the threading mode</para>
