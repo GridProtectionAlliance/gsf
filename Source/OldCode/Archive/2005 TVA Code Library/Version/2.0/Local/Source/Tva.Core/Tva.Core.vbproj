@@ -60,6 +60,7 @@
     <Compile Include="Tva.Collections\Enumerations.vb" />
     <Compile Include="Tva.Configuration\Common.vb" />
     <Compile Include="Tva.Data\Enumerations.vb" />
+    <Compile Include="Tva.DateTime\TimeTagBase.vb" />
     <Compile Include="Tva.DateTime\Enumerations.vb" />
     <Compile Include="Tva.Measurements\Frame.vb" />
     <Compile Include="Tva.Security\Cryptography\Common.vb" />

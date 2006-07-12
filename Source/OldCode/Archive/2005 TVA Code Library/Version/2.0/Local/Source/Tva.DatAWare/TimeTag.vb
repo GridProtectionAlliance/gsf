@@ -12,27 +12,34 @@
 '  -----------------------------------------------------------------------------------------------------
 '  05/03/2006 - J. Ritchie Carroll
 '       Initial version of source imported from 1.1 code library
+'  07/12/2006 - J. Ritchie Carroll
+'       Modified class to be derived from new "TimeTagBase" class 
 '
 '*******************************************************************************************************
 
-Imports Tva.DateTime.Common
+Imports System.Runtime.Serialization
+Imports Tva.DateTime
 
 ''' <summary>Standard DatAWare Timetag</summary>
 Public Class TimeTag
 
-    Implements IComparable
+    Inherits TimeTagBase
 
     ' DatAWare time tags are measured as the number of seconds since January 1, 1995,
     ' so we calculate this date to get offset in ticks for later conversion...
     Private Shared m_timeTagOffsetTicks As Long = (New Date(1995, 1, 1, 0, 0, 0)).Ticks
 
-    Private m_seconds As Double
+    Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
+
+        MyBase.New(info, context)
+
+    End Sub
 
     ''' <summary>Creates new DatAWare timetag given number of seconds since 1/1/1995</summary>
     ''' <param name="seconds">Number of seconds since 1/1/1995</param>
     Public Sub New(ByVal seconds As Double)
 
-        Value = seconds
+        MyBase.New(m_timeTagOffsetTicks, seconds)
 
     End Sub
 
@@ -40,8 +47,7 @@ Public Class TimeTag
     ''' <param name="timestamp">.NET DateTime to create DatAWare timetag from (minimum valid date is 1/1/1995)</param>
     Public Sub New(ByVal timestamp As Date)
 
-        ' Zero base 100-nanosecond ticks from 1/1/1995 and convert to seconds
-        Value = TicksToSeconds(timestamp.Ticks - m_timeTagOffsetTicks)
+        MyBase.New(m_timeTagOffsetTicks, timestamp)
 
     End Sub
 
@@ -52,54 +58,10 @@ Public Class TimeTag
         End Get
     End Property
 
-    ''' <summary>Value represents number of seconds since 1/1/1995</summary>
-    Public Property Value() As Double
-        Get
-            Return m_seconds
-        End Get
-        Set(ByVal val As Double)
-            m_seconds = val
-            If m_seconds < 0 Then m_seconds = 0
-        End Set
-    End Property
-
-    ''' <summary>Returns standard .NET DateTime representation for timetag</summary>
-    Public Function ToDateTime() As Date
-
-        ' Convert m_seconds to 100-nanosecond ticks and add the 1/1/1995 offset
-        Return New Date(SecondsToTicks(m_seconds) + m_timeTagOffsetTicks)
-
-    End Function
-
-    ''' <summary>Returns basic textual representation for timetag</summary>
+    ''' <summary>Returns standard string representation for a DatAWare timetag</summary>
     Public Overrides Function ToString() As String
 
         Return ToDateTime.ToString("dd-MMM-yyyy HH:mm:ss.fff")
-
-    End Function
-
-    ''' <summary>Compares this DatAWare timetag to another one</summary>
-    Public Function CompareTo(ByVal obj As Object) As Integer Implements System.IComparable.CompareTo
-
-        If TypeOf obj Is TimeTag Then
-            Return m_seconds.CompareTo(DirectCast(obj, TimeTag).Value)
-        ElseIf TypeOf obj Is Double Then
-            Return m_seconds.CompareTo(CDbl(obj))
-        Else
-            Throw New ArgumentException("DatAWare TimeTag can only be compared with other TimeTags...")
-        End If
-
-    End Function
-
-    Public Overrides Function Equals(ByVal obj As Object) As Boolean
-
-        Return (CompareTo(obj) = 0)
-
-    End Function
-
-    Public Overrides Function GetHashCode() As Integer
-
-        Return Convert.ToInt32(m_seconds * 1000)
 
     End Function
 
