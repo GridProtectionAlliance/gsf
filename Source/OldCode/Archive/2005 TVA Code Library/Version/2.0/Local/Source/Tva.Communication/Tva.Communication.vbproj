@@ -52,7 +52,7 @@
     <Compile Include="ClientBase.vb">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="Common.vb" />
+    <Compile Include="Enumerations.vb" />
     <Compile Include="Internal Code\GoodbyeMessage.vb" />
     <Compile Include="Internal Code\HandshakeMessage.vb" />
     <Compile Include="My Project\AssemblyInfo.vb" />

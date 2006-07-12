@@ -50,6 +50,13 @@ Public Class UdpClient
 
     Public Overrides Sub Disconnect()
 
+        If Enabled() AndAlso IsConnected() AndAlso _
+                m_udpClient IsNot Nothing AndAlso m_udpClient.Client() IsNot Nothing Then
+            If Handshake() Then
+
+            End If
+            m_udpClient.Client.Close()
+        End If
     End Sub
 
     Protected Overrides Sub SendPreparedData(ByVal data() As Byte)
@@ -87,18 +94,43 @@ Public Class UdpClient
         Try
             Dim serverEP As IPEndPoint = GetIpEndPoint(m_connectionData("server"), Convert.ToInt32(m_connectionData("port")))
             If Handshake() Then
-                With m_udpClient
-                    .Client.SendTo(GetBytes(New HandshakeMessage(.ID(), .Passphrase())), serverEP)
-                End With
+                Dim myInfo As Byte() = GetBytes(New HandshakeMessage(m_udpClient.ID(), m_udpClient.Passphrase()))
+                m_udpClient.Client.SendTo(myInfo, serverEP)
+            Else
+                OnConnected(EventArgs.Empty)
             End If
+
             Do While True
-                m_udpClient.DataBuffer = CreateArray(Of Byte)(MaximumPacketSize)
-                Debug.WriteLine(m_udpClient.Client.ReceiveFrom(m_udpClient.DataBuffer, CType(serverEP, EndPoint)))
+                If m_udpClient.DataBuffer Is Nothing Then
+                    m_udpClient.DataBuffer = CreateArray(Of Byte)(MaximumPacketSize)
+                End If
+                m_udpClient.BytesReceived += m_udpClient.Client.ReceiveFrom(m_udpClient.DataBuffer, CType(serverEP, EndPoint))
+
+                If m_packetAware Then
+                    If m_udpClient.PacketSize() = -1 AndAlso HasBeginMarker(m_udpClient.DataBuffer) Then
+                        m_udpClient.PacketSize = BitConverter.ToInt32(m_udpClient.DataBuffer(), m_packetBeginMarker.Length())
+                        m_udpClient.DataBuffer = CreateArray(Of Byte)(m_udpClient.PacketSize())
+                    End If
+                End If
             Loop
         Catch ex As Exception
 
+        Finally
+            If m_udpClient IsNot Nothing AndAlso m_udpClient.Client() IsNot Nothing Then
+                m_udpClient.Client.Close()
+                m_udpClient.Client = Nothing
+            End If
         End Try
 
     End Sub
+
+    Private Function HasBeginMarker(ByVal packet As Byte()) As Boolean
+
+        For i As Integer = 0 To m_packetBeginMarker.Length() - 1
+            If packet(i) <> m_packetBeginMarker(i) Then Return False
+        Next
+        Return True
+
+    End Function
 
 End Class

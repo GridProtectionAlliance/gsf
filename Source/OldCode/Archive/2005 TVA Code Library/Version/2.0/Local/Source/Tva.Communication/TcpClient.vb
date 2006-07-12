@@ -97,8 +97,8 @@ Public Class TcpClient
 
         CancelConnect() ' Cancel any active connection attempts.
 
-        If Enabled() AndAlso IsConnected() AndAlso m_tcpClient IsNot Nothing AndAlso _
-                m_tcpClient.Client() IsNot Nothing Then
+        If Enabled() AndAlso IsConnected() AndAlso _
+                m_tcpClient IsNot Nothing AndAlso m_tcpClient.Client() IsNot Nothing Then
             ' Close the client socket that is connected to the server.
             m_tcpClient.Client.Close()
         End If

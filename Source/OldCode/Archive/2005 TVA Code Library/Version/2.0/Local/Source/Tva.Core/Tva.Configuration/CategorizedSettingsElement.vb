@@ -20,9 +20,10 @@
 '*******************************************************************************************************
 
 Imports System.Configuration
-Imports Tva.Security.Cryptography.Common
 Imports Tva.Common
 Imports Tva.Text.Common
+Imports Tva.Security.Cryptography
+Imports Tva.Security.Cryptography.Common
 
 Namespace Configuration
 
