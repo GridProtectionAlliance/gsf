@@ -48,16 +48,6 @@ Namespace Data
         ''' <remarks></remarks>
         Public Const TimeoutDuration As Integer = 30
 
-        ''' <summary>
-        ''' Types of data providers.
-        ''' </summary>
-        ''' <remarks></remarks>
-        Public Enum ConnectionType As Integer
-            [OleDb]
-            [SqlClient]
-            [OracleClient]
-        End Enum
-
         Private Sub New()
 
             ' This class contains only global functions and is not meant to be instantiated

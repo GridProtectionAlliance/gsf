@@ -72,9 +72,8 @@ Namespace Ssam
         Friend Sub New(ByVal server As SsamApi.SsamServer, ByVal keepConnectionOpen As Boolean, ByVal initializeApi As Boolean)
             MyBase.New()
             m_apiInstance = New SsamApi(server, keepConnectionOpen, initializeApi)
-            m_eventQueue = ProcessQueue(Of SsamEvent).CreateSynchronousQueue(AddressOf ProcessEvent, _
-                ProcessQueue(Of SsamEvent).DefaultProcessInterval, ProcessQueue(Of SsamEvent).DefaultProcessTimeout, _
-                ProcessQueue(Of SsamEvent).DefaultRequeueOnTimeout, True)
+            m_eventQueue = ProcessQueue(Of SsamEvent).CreateSynchronousQueue(AddressOf ProcessEvent)
+            m_eventQueue.RequeueOnException = True
             MyClass.Enabled = True  ' Enable the SSAM Logger by default.
         End Sub
 
@@ -263,23 +262,23 @@ Namespace Ssam
             End Get
         End Property
 
-        Public Sub ProcessStateChanged(ByVal newState As Services.IServiceComponent.ProcessState) Implements Services.IServiceComponent.ProcessStateChanged
+        Public Sub ProcessStateChanged(ByVal newState As Services.ProcessState) Implements Services.IServiceComponent.ProcessStateChanged
 
             ' Ssam logger, when used as a service component, doesn't need to respond to changes in process state.
 
         End Sub
 
-        Public Sub ServiceStateChanged(ByVal newState As Services.IServiceComponent.ServiceState) Implements Services.IServiceComponent.ServiceStateChanged
+        Public Sub ServiceStateChanged(ByVal newState As Services.ServiceState) Implements Services.IServiceComponent.ServiceStateChanged
 
             Select Case newState
-                Case IServiceComponent.ServiceState.Paused
+                Case ServiceState.Paused
                     If MyClass.Enabled() Then
                         m_lastKnownState = SsamLoggerState.Enabled  ' Logger is enabled when the service is paused.
                         MyClass.Enabled = False ' Disable the logger only if is enabled.
                     Else
                         m_lastKnownState = SsamLoggerState.Disabled ' Logger is disabled when the service is paused.
                     End If
-                Case IServiceComponent.ServiceState.Resumed
+                Case ServiceState.Resumed
                     If m_lastKnownState = SsamLoggerState.Enabled Then
                         ' Enable the logger only if it was enabled when the service was paused.
                         MyClass.Enabled = True

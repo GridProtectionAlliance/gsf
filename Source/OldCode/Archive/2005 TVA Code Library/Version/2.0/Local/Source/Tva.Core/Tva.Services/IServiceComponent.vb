@@ -25,23 +25,6 @@ Namespace Services
 
         Inherits IDisposable
 
-        ' Define possible service states
-        Enum ServiceState
-            Started
-            Stopped
-            Paused
-            Resumed
-            ShutDown
-        End Enum
-
-        ' Define possible process states for service threads that will execute code
-        Enum ProcessState
-            Unprocessed
-            Processing
-            Processed
-            Aborted
-        End Enum
-
         ReadOnly Property Name() As String
         ReadOnly Property Status() As String
         Sub ServiceStateChanged(ByVal newState As ServiceState)

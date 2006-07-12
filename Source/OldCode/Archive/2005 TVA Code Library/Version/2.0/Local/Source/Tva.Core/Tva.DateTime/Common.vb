@@ -28,36 +28,11 @@ Namespace DateTime
     ''' <summary>Defines common global functions related to Date/Time manipulation</summary>
     Public NotInheritable Class Common
 
-        ''' <summary>Time names enumeration used by SecondsToText function</summary>
-        Public Enum TimeName
-            Year
-            Years
-            Day
-            Days
-            Hour
-            Hours
-            Minute
-            Minutes
-            Second
-            Seconds
-            LessThan60Seconds
-            NoSeconds
-        End Enum
-
         ''' <summary>Standard time names used by SecondsToText function</summary>
         Private Shared m_standardTimeNames As String() = New String() {"Year", "Years", "Day", "Days", "Hour", "Hours", "Minute", "Minutes", "Second", "Seconds", "Less Than 60 Seconds", "0 Seconds"}
 
         ''' <summary>Standard time names without seconds used by SecondsToText function</summary>
         Private Shared m_standardTimeNamesWithoutSeconds As String() = New String() {"Year", "Years", "Day", "Days", "Hour", "Hours", "Minute", "Minutes", "Second", "Seconds", "Less Than 1 Minute", "0 Minutes"}
-
-        ''' <summary>Time zone names enumeration used to look up desired time zone in GetWin32TimeZone function</summary>
-        Public Enum TimeZoneName
-            DaylightName
-            DaylightAbbreviation
-            DisplayName
-            StandardName
-            StandardAbbreviation
-        End Enum
 
         ' We define a few common timezones for convenience
         Private Shared m_universalTimeZone As Win32TimeZone
