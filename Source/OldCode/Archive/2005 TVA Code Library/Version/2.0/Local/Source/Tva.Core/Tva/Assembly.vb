@@ -14,8 +14,6 @@
 '       Original version of source code generated
 '  12/29/2005 - Pinal C. Patel
 '       2.0 version of source code migrated from 1.1 source (TVA.Shared.Assembly)
-'  01/24/2006 - J. Ritchie Carroll
-'       Moved into Interop namespace
 '
 '*******************************************************************************************************
 
