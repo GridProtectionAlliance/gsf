@@ -15,6 +15,7 @@
 '
 '*******************************************************************************************************
 
+Imports System.Runtime.Serialization
 Imports Tva.DateTime
 Imports Tva.Measurements
 
@@ -22,7 +23,7 @@ Imports Tva.Measurements
 <CLSCompliant(False)> _
 Public Interface IChannelFrame
 
-    Inherits IChannel, IFrame, IComparable
+    Inherits IChannel, IFrame, IComparable, ISerializable
 
     ReadOnly Property FrameType() As FundamentalFrameType
 

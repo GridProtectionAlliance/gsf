@@ -16,6 +16,7 @@
 '*******************************************************************************************************
 
 Imports System.Buffer
+Imports System.Runtime.Serialization
 Imports Tva.DateTime
 Imports Tva.DateTime.Common
 Imports Tva.IO.Compression.Common
@@ -35,6 +36,15 @@ Public MustInherit Class ChannelFrameBase(Of T As IChannelCell)
     Private m_published As Boolean
     Private m_parsedBinaryLength As UInt16
     Private m_measurements As Dictionary(Of Integer, IMeasurement)
+
+    Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
+
+        ' Deserialize key frame elements...
+        m_idCode = info.GetUInt16("idCode")
+        m_cells = info.GetValue("cells", GetType(IChannelCellCollection(Of T)))
+        m_ticks = info.GetInt64("ticks")
+
+    End Sub
 
     Protected Sub New(ByVal cells As IChannelCellCollection(Of T))
 
@@ -245,5 +255,14 @@ Public MustInherit Class ChannelFrameBase(Of T As IChannelCell)
         End If
 
     End Function
+
+    Public Overridable Sub GetObjectData(ByVal info As System.Runtime.Serialization.SerializationInfo, ByVal context As System.Runtime.Serialization.StreamingContext) Implements System.Runtime.Serialization.ISerializable.GetObjectData
+
+        ' Add key frame elements for serialization...
+        info.AddValue("idCode", m_idCode)
+        info.AddValue("cells", m_cells, GetType(IChannelCellCollection(Of T)))
+        info.AddValue("ticks", m_ticks)
+
+    End Sub
 
 End Class

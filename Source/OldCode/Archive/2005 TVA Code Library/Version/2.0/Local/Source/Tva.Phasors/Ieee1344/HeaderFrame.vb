@@ -15,6 +15,7 @@
 '
 '*******************************************************************************************************
 
+Imports System.Runtime.Serialization
 Imports Tva.DateTime
 Imports Tva.Phasors.Ieee1344.Common
 Imports Tva.IO.Compression.Common
@@ -35,6 +36,17 @@ Namespace Ieee1344
 
             MyBase.New(New HeaderCellCollection(MaximumHeaderDataLength))
             CommonFrameHeader.FrameType(Me) = Ieee1344.FrameType.HeaderFrame
+
+        End Sub
+
+        Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
+
+            MyBase.New(info, context)
+
+            ' Deserialize header frame
+            m_idCode = info.GetUInt64("idCode64Bit")
+            m_sampleCount = info.GetInt16("sampleCount")
+            m_statusFlags = info.GetInt16("statusFlags")
 
         End Sub
 
@@ -136,6 +148,17 @@ Namespace Ieee1344
                 Return CommonFrameHeader.BinaryImage(Me)
             End Get
         End Property
+
+        Public Overrides Sub GetObjectData(ByVal info As System.Runtime.Serialization.SerializationInfo, ByVal context As System.Runtime.Serialization.StreamingContext)
+
+            MyBase.GetObjectData(info, context)
+
+            ' Serialize header frame
+            info.AddValue("idCode64Bit", m_idCode)
+            info.AddValue("sampleCount", m_sampleCount)
+            info.AddValue("statusFlags", m_statusFlags)
+
+        End Sub
 
     End Class
 

@@ -15,11 +15,19 @@
 '
 '*******************************************************************************************************
 
+Imports System.Runtime.Serialization
+
 ' This class represents the common implementation collection of the protocol independent definitions of frequency and df/dt values.
 <CLSCompliant(False)> _
 Public Class FrequencyDefinitionCollection
 
     Inherits ChannelDefinitionCollectionBase(Of IFrequencyDefinition)
+
+    Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
+
+        MyBase.New(info, context)
+
+    End Sub
 
     Public Sub New(ByVal maximumCount As Int32)
 

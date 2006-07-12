@@ -68,6 +68,7 @@
     <Compile Include="BpaPdcStream\DataPacket.vb" />
     <Compile Include="BpaPdcStream\DigitalDefinition.vb" />
     <Compile Include="BpaPdcStream\DigitalValue.vb" />
+    <Compile Include="BpaPdcStream\Enumerations.vb" />
     <Compile Include="BpaPdcStream\FrameParser.vb" />
     <Compile Include="BpaPdcStream\FrequencyDefinition.vb" />
     <Compile Include="BpaPdcStream\FrequencyValue.vb" />
@@ -100,6 +101,7 @@
     <Compile Include="CommandCell.vb" />
     <Compile Include="CommandFrameBase.vb" />
     <Compile Include="ChannelValueMeasurement.vb" />
+    <Compile Include="Enumerations.vb" />
     <Compile Include="FrameParser.vb" />
     <Compile Include="ICommandFrameParsingState.vb" />
     <Compile Include="ICommandFrame.vb" />
@@ -110,10 +112,12 @@
     <Compile Include="Ieee1344\DataCell.vb" />
     <Compile Include="Ieee1344\DataCellCollection.vb" />
     <Compile Include="Ieee1344\DigitalValue.vb" />
+    <Compile Include="Ieee1344\Enumerations.vb" />
     <Compile Include="Ieee1344\FrequencyDefinition.vb" />
     <Compile Include="Ieee1344\FrequencyValue.vb" />
     <Compile Include="Ieee1344\ICommonFrameHeader.vb" />
     <Compile Include="IeeeC37_118\ConfigurationFrameDraft6.vb" />
+    <Compile Include="IeeeC37_118\Enumerations.vb" />
     <Compile Include="IeeeC37_118\HeaderFrame.vb" />
     <Compile Include="IHeaderFrameParsingState.vb" />
     <Compile Include="HeaderFrameBase.vb" />

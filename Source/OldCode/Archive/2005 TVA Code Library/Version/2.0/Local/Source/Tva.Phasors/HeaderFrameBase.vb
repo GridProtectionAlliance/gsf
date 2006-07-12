@@ -15,6 +15,7 @@
 '
 '*******************************************************************************************************
 
+Imports System.Runtime.Serialization
 Imports System.Text
 Imports Tva.DateTime
 
@@ -24,6 +25,12 @@ Public MustInherit Class HeaderFrameBase
 
     Inherits ChannelFrameBase(Of IHeaderCell)
     Implements IHeaderFrame
+
+    Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
+
+        MyBase.New(info, context)
+
+    End Sub
 
     Protected Sub New(ByVal cells As HeaderCellCollection)
 

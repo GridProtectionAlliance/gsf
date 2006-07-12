@@ -15,6 +15,7 @@
 '
 '*******************************************************************************************************
 
+Imports System.Runtime.Serialization
 Imports System.Text
 Imports Tva.Phasors.Common
 
@@ -26,6 +27,15 @@ Public MustInherit Class CommandFrameBase
     Implements ICommandFrame
 
     Private m_command As Command
+
+    Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
+
+        MyBase.New(info, context)
+
+        ' Deserialize command frame
+        m_command = info.GetValue("command", GetType(Command))
+
+    End Sub
 
     Protected Sub New(ByVal cells As CommandCellCollection, ByVal command As Command)
 
@@ -102,6 +112,15 @@ Public MustInherit Class CommandFrameBase
 
         m_command = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex)
         MyBase.ParseBodyImage(state, binaryImage, startIndex + 2)
+
+    End Sub
+
+    Public Overrides Sub GetObjectData(ByVal info As System.Runtime.Serialization.SerializationInfo, ByVal context As System.Runtime.Serialization.StreamingContext)
+
+        MyBase.GetObjectData(info, context)
+
+        ' Serialize command frame
+        info.AddValue("command", m_command, GetType(Command))
 
     End Sub
 

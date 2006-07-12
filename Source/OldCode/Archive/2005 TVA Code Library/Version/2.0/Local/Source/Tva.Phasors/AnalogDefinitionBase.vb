@@ -15,12 +15,20 @@
 '
 '*******************************************************************************************************
 
+Imports System.Runtime.Serialization
+
 ' This class represents the common implementation of the protocol independent definition of an analog value.
 <CLSCompliant(False)> _
 Public MustInherit Class AnalogDefinitionBase
 
     Inherits ChannelDefinitionBase
     Implements IAnalogDefinition
+
+    Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
+
+        MyBase.New(info, context)
+
+    End Sub
 
     Protected Sub New(ByVal parent As IConfigurationCell)
 

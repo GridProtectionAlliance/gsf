@@ -15,6 +15,7 @@
 '
 '*******************************************************************************************************
 
+Imports System.Runtime.Serialization
 Imports System.Buffer
 Imports System.Text
 Imports Tva.Phasors.Common
@@ -34,6 +35,21 @@ Public MustInherit Class ConfigurationCellBase
     Private m_analogDefinitions As AnalogDefinitionCollection
     Private m_digitalDefinitions As DigitalDefinitionCollection
     Private m_nominalFrequency As LineFrequency
+
+    Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
+
+        MyBase.New(info, context)
+
+        ' Deserialize configuration cell values
+        m_nominalFrequency = info.GetValue("nominalFrequency", GetType(LineFrequency))
+        Me.StationName = info.GetString("stationName")
+        Me.IDLabel = info.GetString("idLabel")
+        m_phasorDefinitions = info.GetValue("phasorDefinitions", GetType(PhasorDefinitionCollection))
+        m_frequencyDefinition = info.GetValue("frequencyDefinition", GetType(IFrequencyDefinition))
+        m_analogDefinitions = info.GetValue("analogDefinitions", GetType(AnalogDefinitionCollection))
+        m_digitalDefinitions = info.GetValue("digitalDefinitions", GetType(DigitalDefinitionCollection))
+
+    End Sub
 
     Protected Sub New(ByVal parent As IConfigurationFrame, ByVal alignOnDWordBoundry As Boolean, ByVal maximumPhasors As Int32, ByVal maximumAnalogs As Int32, ByVal maximumDigitals As Int32)
 
@@ -295,6 +311,21 @@ Public MustInherit Class ConfigurationCellBase
     Protected Overrides Sub ParseFooterImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
         m_frequencyDefinition = DirectCast(state, IConfigurationCellParsingState).CreateNewFrequencyDefintionFunction.Invoke(Me, binaryImage, startIndex)
+
+    End Sub
+
+    Public Overrides Sub GetObjectData(ByVal info As System.Runtime.Serialization.SerializationInfo, ByVal context As System.Runtime.Serialization.StreamingContext)
+
+        MyBase.GetObjectData(info, context)
+
+        ' Serialize configuration cell values
+        info.AddValue("nominalFrequency", m_nominalFrequency, GetType(LineFrequency))
+        info.AddValue("stationName", StationName)
+        info.AddValue("idLabel", IDLabel)
+        info.AddValue("phasorDefinitions", m_phasorDefinitions, GetType(PhasorDefinitionCollection))
+        info.AddValue("frequencyDefinition", m_frequencyDefinition, GetType(IFrequencyDefinition))
+        info.AddValue("analogDefinitions", m_analogDefinitions, GetType(AnalogDefinitionCollection))
+        info.AddValue("digitalDefinitions", m_digitalDefinitions, GetType(DigitalDefinitionCollection))
 
     End Sub
 

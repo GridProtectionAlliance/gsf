@@ -15,6 +15,8 @@
 '
 '*******************************************************************************************************
 
+Imports System.Runtime.Serialization
+
 Namespace BpaPdcStream
 
     <CLSCompliant(False)> _
@@ -29,6 +31,12 @@ Namespace BpaPdcStream
             ' data cells to 32767, so we limit the configurations cells to the same.
             ' Also, in PDCstream configuration cells are constant length
             MyBase.New(Int16.MaxValue, True)
+
+        End Sub
+
+        Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
+
+            MyBase.New(info, context)
 
         End Sub
 

@@ -15,6 +15,7 @@
 '
 '*******************************************************************************************************
 
+Imports System.Runtime.Serialization
 Imports System.Text
 
 Namespace BpaPdcStream
@@ -25,6 +26,12 @@ Namespace BpaPdcStream
         Inherits FrequencyDefinitionBase
 
         Public Dummy As Int32
+
+        Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
+
+            MyBase.New(info, context)
+
+        End Sub
 
         Public Sub New(ByVal parent As ConfigurationCell)
 

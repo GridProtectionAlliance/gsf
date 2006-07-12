@@ -15,6 +15,8 @@
 '
 '*******************************************************************************************************
 
+Imports System.Runtime.Serialization
+
 Namespace IeeeC37_118
 
     ' This is essentially a "row" of PMU data at a given timestamp
@@ -25,6 +27,15 @@ Namespace IeeeC37_118
         Implements ICommonFrameHeader
 
         Private m_timeQualityFlags As Int32
+
+        Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
+
+            MyBase.New(info, context)
+
+            ' Deserialize data frame
+            m_timeQualityFlags = info.GetInt32("timeQualityFlags")
+
+        End Sub
 
         Public Sub New(ByVal ticks As Long, ByVal configurationFrame As ConfigurationFrame)
 
@@ -172,6 +183,15 @@ Namespace IeeeC37_118
                 Return CommonFrameHeader.BinaryImage(Me)
             End Get
         End Property
+
+        Public Overrides Sub GetObjectData(ByVal info As System.Runtime.Serialization.SerializationInfo, ByVal context As System.Runtime.Serialization.StreamingContext)
+
+            MyBase.GetObjectData(info, context)
+
+            ' Serialize data frame
+            info.AddValue("timeQualityFlags", m_timeQualityFlags)
+
+        End Sub
 
     End Class
 

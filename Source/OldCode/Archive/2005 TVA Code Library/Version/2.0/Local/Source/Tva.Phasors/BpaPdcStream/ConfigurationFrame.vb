@@ -15,6 +15,7 @@
 '
 '*******************************************************************************************************
 
+Imports System.Runtime.Serialization
 Imports System.IO
 Imports System.Text
 Imports System.Reflection.Assembly
@@ -52,6 +53,17 @@ Namespace BpaPdcStream
         Public Const DefaultVoltagePhasorEntry As String = "V,4500.0,0.0060573,0,0,500,Default 500kV"
         Public Const DefaultCurrentPhasorEntry As String = "V,4500.0,0.0060573,0,0,500,Default 500kV"
         Public Const DefaultFrequencyEntry As String = "F,1000,60,1000,0,0,Frequency"
+
+        Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
+
+            MyBase.New(info, context)
+
+            ' Deserialize configuration frame
+            m_packetsPerSample = info.GetInt16("packetsPerSample")
+            m_streamType = info.GetValue("streamType", GetType(StreamType))
+            m_revisionNumber = info.GetValue("revisionNumber", GetType(RevisionNumber))
+
+        End Sub
 
         Public Sub New(ByVal configFileName As String)
 
@@ -416,6 +428,17 @@ Namespace BpaPdcStream
             ' in the configuration file.  The configuration file may define more PMU's than
             ' are in the stream - in my opinon that's OK - it's when you have PMU's in the
             ' stream that aren't defined in the INI file that you'll have trouble..
+
+        End Sub
+
+        Public Overrides Sub GetObjectData(ByVal info As System.Runtime.Serialization.SerializationInfo, ByVal context As System.Runtime.Serialization.StreamingContext)
+
+            MyBase.GetObjectData(info, context)
+
+            ' Serialize configuration frame
+            info.AddValue("packetsPerSample", m_packetsPerSample)
+            info.AddValue("streamType", m_streamType, GetType(StreamType))
+            info.AddValue("revisionNumber", m_revisionNumber, GetType(RevisionNumber))
 
         End Sub
 

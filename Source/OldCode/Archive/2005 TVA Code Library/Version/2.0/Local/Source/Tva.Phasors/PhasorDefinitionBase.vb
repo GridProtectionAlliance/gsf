@@ -15,6 +15,8 @@
 '
 '*******************************************************************************************************
 
+Imports System.Runtime.Serialization
+
 ' This class represents the common implementation of the protocol independent definition of a phasor value.
 <CLSCompliant(False)> _
 Public MustInherit Class PhasorDefinitionBase
@@ -24,6 +26,16 @@ Public MustInherit Class PhasorDefinitionBase
 
     Private m_type As PhasorType
     Private m_voltageReference As IPhasorDefinition
+
+    Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
+
+        MyBase.New(info, context)
+
+        ' Deserialize phasor definition
+        m_type = info.GetValue("type", GetType(PhasorType))
+        m_voltageReference = info.GetValue("voltageReference", GetType(IPhasorDefinition))
+
+    End Sub
 
     Protected Sub New(ByVal parent As IConfigurationCell)
 
@@ -98,6 +110,16 @@ Public MustInherit Class PhasorDefinitionBase
             End If
         End Set
     End Property
+
+    Public Overrides Sub GetObjectData(ByVal info As System.Runtime.Serialization.SerializationInfo, ByVal context As System.Runtime.Serialization.StreamingContext)
+
+        MyBase.GetObjectData(info, context)
+
+        ' Serialize phasor definition
+        info.AddValue("type", m_type, GetType(PhasorType))
+        info.AddValue("voltageReference", m_voltageReference, GetType(IPhasorDefinition))
+
+    End Sub
 
 End Class
 

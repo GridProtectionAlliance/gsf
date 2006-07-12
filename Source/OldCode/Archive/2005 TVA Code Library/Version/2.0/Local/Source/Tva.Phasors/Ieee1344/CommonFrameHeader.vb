@@ -15,6 +15,7 @@
 '
 '*******************************************************************************************************
 
+Imports System.Runtime.Serialization
 Imports System.IO
 Imports Tva.DateTime
 Imports Tva.Phasors.Common
@@ -39,6 +40,16 @@ Namespace Ieee1344
             Private m_ticks As Long
             Private m_frameQueue As MemoryStream
             Private m_statusFlags As Int16
+
+            Public Sub New()
+
+            End Sub
+
+            Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
+
+                Throw New NotImplementedException()
+
+            End Sub
 
             Public ReadOnly Property This() As IChannel Implements IChannel.This
                 Get
@@ -284,6 +295,12 @@ Namespace Ieee1344
                     Throw New NotImplementedException()
                 End Get
             End Property
+
+            Public Sub GetObjectData(ByVal info As System.Runtime.Serialization.SerializationInfo, ByVal context As System.Runtime.Serialization.StreamingContext) Implements System.Runtime.Serialization.ISerializable.GetObjectData
+
+                Throw New NotImplementedException()
+
+            End Sub
 
         End Class
 

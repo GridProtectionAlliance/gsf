@@ -15,6 +15,7 @@
 '
 '*******************************************************************************************************
 
+Imports System.Runtime.Serialization
 Imports System.ComponentModel
 Imports Tva.DateTime
 Imports Tva.IO.Compression.Common
@@ -29,6 +30,15 @@ Namespace Ieee1344
         Public Const FrameLength As Int16 = 16
 
         Private m_idCode As UInt64
+
+        Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
+
+            MyBase.New(info, context)
+
+            ' Deserialize command frame
+            m_idCode = info.GetUInt64("idCode64Bit")
+
+        End Sub
 
         Public Sub New(ByVal idCode As UInt64, ByVal command As Command)
 
@@ -116,6 +126,15 @@ Namespace Ieee1344
 
             Ticks = (New NtpTimeTag(EndianOrder.BigEndian.ToUInt32(binaryImage, startIndex))).ToDateTime.Ticks
             m_idCode = EndianOrder.BigEndian.ToUInt64(binaryImage, startIndex + 4)
+
+        End Sub
+
+        Public Overrides Sub GetObjectData(ByVal info As System.Runtime.Serialization.SerializationInfo, ByVal context As System.Runtime.Serialization.StreamingContext)
+
+            MyBase.GetObjectData(info, context)
+
+            ' Serialize command frame
+            info.AddValue("idCode64Bit", m_idCode)
 
         End Sub
 

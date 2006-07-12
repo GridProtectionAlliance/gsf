@@ -15,6 +15,7 @@
 '
 '*******************************************************************************************************
 
+Imports System.Runtime.Serialization
 Imports System.Text
 Imports Tva.Phasors.Common
 Imports Tva.Phasors.IeeeC37_118.Common
@@ -28,6 +29,16 @@ Namespace IeeeC37_118
 
         Private m_formatFlags As FormatFlags
         Private m_configurationCount As UInt16
+
+        Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
+
+            MyBase.New(info, context)
+
+            ' Deserialize configuration cell
+            m_formatFlags = info.GetValue("formatFlags", GetType(FormatFlags))
+            m_configurationCount = info.GetUInt16("configurationCount")
+
+        End Sub
 
         Public Sub New(ByVal parent As ConfigurationFrame, ByVal idCode As UInt16, ByVal nominalFrequency As LineFrequency)
 
@@ -261,6 +272,16 @@ Namespace IeeeC37_118
 
             ' Get configuration count (new for version 7.0)
             If Parent.RevisionNumber = ProtocolRevision.Version1 Then m_configurationCount = EndianOrder.BigEndian.ToUInt16(binaryImage, startIndex)
+
+        End Sub
+
+        Public Overrides Sub GetObjectData(ByVal info As System.Runtime.Serialization.SerializationInfo, ByVal context As System.Runtime.Serialization.StreamingContext)
+
+            MyBase.GetObjectData(info, context)
+
+            ' Serialize configuration cell
+            info.AddValue("formatFlags", m_formatFlags, GetType(FormatFlags))
+            info.AddValue("configurationCount", m_configurationCount)
 
         End Sub
 

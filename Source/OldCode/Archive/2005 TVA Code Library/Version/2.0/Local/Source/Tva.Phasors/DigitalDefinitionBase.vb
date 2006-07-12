@@ -15,6 +15,7 @@
 '
 '*******************************************************************************************************
 
+Imports System.Runtime.Serialization
 Imports System.ComponentModel
 
 ' This class represents the common implementation of the protocol independent definition of a digital value.
@@ -23,6 +24,12 @@ Public MustInherit Class DigitalDefinitionBase
 
     Inherits ChannelDefinitionBase
     Implements IDigitalDefinition
+
+    Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
+
+        MyBase.New(info, context)
+
+    End Sub
 
     Protected Sub New(ByVal parent As IConfigurationCell)
 

@@ -15,6 +15,7 @@
 '
 '*******************************************************************************************************
 
+Imports System.Runtime.Serialization
 Imports System.Text
 Imports Tva.DateTime
 Imports Tva.Phasors.Common
@@ -30,6 +31,16 @@ Namespace Ieee1344
 
         Private m_idCode As UInt64
         Private m_sampleCount As Int16
+
+        Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
+
+            MyBase.New(info, context)
+
+            ' Deserialize configuration frame
+            m_idCode = info.GetUInt64("idCode64Bit")
+            m_sampleCount = info.GetInt16("sampleCount")
+
+        End Sub
 
         Public Sub New(ByVal frameType As FrameType, ByVal idCode As UInt64, ByVal ticks As Long, ByVal frameRate As Int16)
 
@@ -197,6 +208,16 @@ Namespace Ieee1344
         Protected Overrides Sub ParseFooterImage(ByVal state As IChannelParsingState, ByVal binaryImage() As Byte, ByVal startIndex As Int32)
 
             Period = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex)
+
+        End Sub
+
+        Public Overrides Sub GetObjectData(ByVal info As System.Runtime.Serialization.SerializationInfo, ByVal context As System.Runtime.Serialization.StreamingContext)
+
+            MyBase.GetObjectData(info, context)
+
+            ' Serialize configuration frame
+            info.AddValue("idCode64Bit", m_idCode)
+            info.AddValue("sampleCount", m_sampleCount)
 
         End Sub
 

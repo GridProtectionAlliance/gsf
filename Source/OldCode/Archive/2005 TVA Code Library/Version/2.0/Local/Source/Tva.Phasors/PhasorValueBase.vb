@@ -17,6 +17,7 @@
 '
 '*******************************************************************************************************
 
+Imports System.Runtime.Serialization
 Imports Tva.Math
 
 ' This class represents the protocol independent representation of a phasor value.
@@ -32,7 +33,7 @@ Public MustInherit Class PhasorValueBase
     Private m_imaginary As Single
     Private m_compositeValues As CompositeValues
 
-    'Create phasor from polar coordinates (angle expected in Degrees)
+    ' Create phasor from polar coordinates (angle expected in Degrees)
     ' Note: This method is expected to be implemented as a public shared method in derived class automatically passing in createNewPhasorValueFunction
     Protected Shared Function CreateFromPolarValues(ByVal createNewPhasorValueFunction As CreateNewPhasorValueFunctionSignature, ByVal parent As IDataCell, ByVal phasorDefinition As IPhasorDefinition, ByVal angle As Single, ByVal magnitude As Single) As IPhasorValue
 
@@ -40,7 +41,7 @@ Public MustInherit Class PhasorValueBase
 
     End Function
 
-    'Create phasor from rectangular coordinates
+    ' Create phasor from rectangular coordinates
     ' Note: This method is expected to be implemented as a public shared method in derived class automatically passing in createNewPhasorValueFunction
     Protected Shared Function CreateFromRectangularValues(ByVal createNewPhasorValueFunction As CreateNewPhasorValueFunctionSignature, ByVal parent As IDataCell, ByVal phasorDefinition As IPhasorDefinition, ByVal real As Single, ByVal imaginary As Single) As IPhasorValue
 
@@ -49,7 +50,7 @@ Public MustInherit Class PhasorValueBase
 
     End Function
 
-    'Create phasor from unscaled rectangular coordinates
+    ' Create phasor from unscaled rectangular coordinates
     ' Note: This method is expected to be implemented as a public shared method in derived class automatically passing in createNewPhasorValueFunction
     Protected Shared Function CreateFromUnscaledRectangularValues(ByVal createNewPhasorValueFunction As CreateNewPhasorValueFunctionSignature, ByVal parent As IDataCell, ByVal phasorDefinition As IPhasorDefinition, ByVal real As Int16, ByVal imaginary As Int16) As IPhasorValue
 
@@ -93,6 +94,16 @@ Public MustInherit Class PhasorValueBase
         'Return 3 * voltage.Magnitude * current.Magnitude * System.Math.Sin((voltage.Angle - current.Angle) * System.Math.PI / 180)
 
     End Function
+
+    Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
+
+        MyBase.New(info, context)
+
+        ' Deserialize phasor value
+        m_real = info.GetSingle("real")
+        m_imaginary = info.GetSingle("imaginary")
+
+    End Sub
 
     Protected Sub New(ByVal parent As IDataCell)
 
@@ -332,6 +343,16 @@ Public MustInherit Class PhasorValueBase
             m_real = CalculateRealComponent(angle, magnitude)
             m_imaginary = CalculateImaginaryComponent(angle, magnitude)
         End If
+
+    End Sub
+
+    Public Overrides Sub GetObjectData(ByVal info As System.Runtime.Serialization.SerializationInfo, ByVal context As System.Runtime.Serialization.StreamingContext)
+
+        MyBase.GetObjectData(info, context)
+
+        ' Serialize phasor value
+        info.AddValue("real", m_real)
+        info.AddValue("imaginary", m_imaginary)
 
     End Sub
 

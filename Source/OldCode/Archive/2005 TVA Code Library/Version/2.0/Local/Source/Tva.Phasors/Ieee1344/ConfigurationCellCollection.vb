@@ -15,6 +15,8 @@
 '
 '*******************************************************************************************************
 
+Imports System.Runtime.Serialization
+
 Namespace Ieee1344
 
     <CLSCompliant(False)> _
@@ -26,6 +28,12 @@ Namespace Ieee1344
 
             ' IEEE 1344 only supports a single PMU - so there should only be one cell - since there's only one cell, cell lengths will be constant :)
             MyBase.New(1, True)
+
+        End Sub
+
+        Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
+
+            MyBase.New(info, context)
 
         End Sub
 

@@ -15,6 +15,7 @@
 '
 '*******************************************************************************************************
 
+Imports System.Runtime.Serialization
 Imports Tva.Phasors.IeeeC37_118.Common
 
 Namespace IeeeC37_118
@@ -26,6 +27,15 @@ Namespace IeeeC37_118
         Implements ICommonFrameHeader
 
         Private m_version As Byte
+
+        Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
+
+            MyBase.New(info, context)
+
+            ' Deserialize command frame
+            m_version = info.GetByte("version")
+
+        End Sub
 
         Public Sub New(ByVal idCode As UInt32, ByVal command As Command, ByVal version As Byte)
 
@@ -150,6 +160,15 @@ Namespace IeeeC37_118
                 Return CommonFrameHeader.BinaryImage(Me)
             End Get
         End Property
+
+        Public Overrides Sub GetObjectData(ByVal info As System.Runtime.Serialization.SerializationInfo, ByVal context As System.Runtime.Serialization.StreamingContext)
+
+            MyBase.GetObjectData(info, context)
+
+            ' Serialize command frame
+            info.AddValue("version", m_version)
+
+        End Sub
 
     End Class
 

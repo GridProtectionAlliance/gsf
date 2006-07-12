@@ -15,6 +15,7 @@
 '
 '*******************************************************************************************************
 
+Imports System.Runtime.Serialization
 Imports Tva.Phasors.Common
 
 ' This class represents the common implementation of the protocol independent definition of a frequency and df/dt value.
@@ -26,6 +27,16 @@ Public MustInherit Class FrequencyDefinitionBase
 
     Private m_dfdtScale As Int32
     Private m_dfdtOffset As Single
+
+    Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
+
+        MyBase.New(info, context)
+
+        ' Deserialize frequency definition
+        m_dfdtScale = info.GetInt32("dfdtScale")
+        m_dfdtOffset = info.GetSingle("dfdtOffset")
+
+    End Sub
 
     Protected Sub New(ByVal parent As IConfigurationCell)
 
@@ -94,5 +105,15 @@ Public MustInherit Class FrequencyDefinitionBase
             m_dfdtScale = value
         End Set
     End Property
+
+    Public Overrides Sub GetObjectData(ByVal info As System.Runtime.Serialization.SerializationInfo, ByVal context As System.Runtime.Serialization.StreamingContext)
+
+        MyBase.GetObjectData(info, context)
+
+        ' Serialize frequency definition
+        info.AddValue("dfdtScale", m_dfdtScale)
+        info.AddValue("dfdtOffset", m_dfdtOffset)
+
+    End Sub
 
 End Class

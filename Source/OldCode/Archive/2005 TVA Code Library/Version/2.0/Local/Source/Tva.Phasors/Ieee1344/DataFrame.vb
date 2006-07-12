@@ -15,6 +15,7 @@
 '
 '*******************************************************************************************************
 
+Imports System.Runtime.Serialization
 Imports Tva.DateTime
 Imports Tva.IO.Compression.Common
 
@@ -28,6 +29,15 @@ Namespace Ieee1344
         Implements ICommonFrameHeader
 
         Private m_sampleCount As Int16
+
+        Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
+
+            MyBase.New(info, context)
+
+            ' Deserialize data frame
+            m_sampleCount = info.GetInt16("sampleCount")
+
+        End Sub
 
         Public Sub New(ByVal ticks As Long, ByVal configurationFrame As ConfigurationFrame)
 
@@ -162,6 +172,15 @@ Namespace Ieee1344
                 Return CommonFrameHeader.BinaryImage(Me)
             End Get
         End Property
+
+        Public Overrides Sub GetObjectData(ByVal info As System.Runtime.Serialization.SerializationInfo, ByVal context As System.Runtime.Serialization.StreamingContext)
+
+            MyBase.GetObjectData(info, context)
+
+            ' Serialize data frame
+            info.AddValue("sampleCount", m_sampleCount)
+
+        End Sub
 
     End Class
 

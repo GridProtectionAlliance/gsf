@@ -17,11 +17,19 @@
 '
 '*******************************************************************************************************
 
+Imports System.Runtime.Serialization
+
 ' This class represents the protocol independent collection of phasor values.
 <CLSCompliant(False)> _
 Public Class PhasorValueCollection
 
     Inherits ChannelValueCollectionBase(Of IPhasorDefinition, IPhasorValue)
+
+    Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
+
+        MyBase.New(info, context)
+
+    End Sub
 
     Public Sub New(ByVal maximumCount As Int32)
 

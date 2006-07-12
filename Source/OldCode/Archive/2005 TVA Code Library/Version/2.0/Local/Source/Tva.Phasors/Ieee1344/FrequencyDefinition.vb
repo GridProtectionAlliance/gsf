@@ -15,6 +15,8 @@
 '
 '*******************************************************************************************************
 
+Imports System.Runtime.Serialization
+
 Namespace Ieee1344
 
     <CLSCompliant(False)> _
@@ -23,6 +25,15 @@ Namespace Ieee1344
         Inherits FrequencyDefinitionBase
 
         Private m_statusFlags As Int16
+
+        Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
+
+            MyBase.New(info, context)
+
+            ' Deserialize frequency definition
+            m_statusFlags = info.GetInt16("statusFlags")
+
+        End Sub
 
         Public Sub New(ByVal parent As ConfigurationCell)
 
@@ -112,6 +123,15 @@ Namespace Ieee1344
 
             m_statusFlags = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex)
             Parent.NominalFrequency = IIf((m_statusFlags And Bit0) > 0, LineFrequency.Hz50, LineFrequency.Hz60)
+
+        End Sub
+
+        Public Overrides Sub GetObjectData(ByVal info As System.Runtime.Serialization.SerializationInfo, ByVal context As System.Runtime.Serialization.StreamingContext)
+
+            MyBase.GetObjectData(info, context)
+
+            ' Serialize frequency definition
+            info.AddValue("statusFlags", m_statusFlags)
 
         End Sub
 

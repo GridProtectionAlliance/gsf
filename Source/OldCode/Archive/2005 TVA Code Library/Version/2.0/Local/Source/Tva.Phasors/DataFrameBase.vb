@@ -15,6 +15,7 @@
 '
 '*******************************************************************************************************
 
+Imports System.Runtime.Serialization
 Imports Tva.DateTime
 
 ' This class represents the protocol independent common implementation of a data frame that can be sent or received from a PMU.
@@ -25,6 +26,12 @@ Public MustInherit Class DataFrameBase
     Implements IDataFrame
 
     Private m_configurationFrame As IConfigurationFrame
+
+    Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
+
+        MyBase.New(info, context)
+
+    End Sub
 
     Protected Sub New(ByVal cells As DataCellCollection)
 

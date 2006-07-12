@@ -15,6 +15,7 @@
 '
 '*******************************************************************************************************
 
+Imports System.Runtime.Serialization
 Imports System.ComponentModel
 
 ' This class represents the common implementation of the protocol independent representation of a digital value.
@@ -25,6 +26,15 @@ Public MustInherit Class DigitalValueBase
     Implements IDigitalValue
 
     Private m_value As Int16
+
+    Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
+
+        MyBase.New(info, context)
+
+        ' Deserialize digital value
+        m_value = info.GetInt16("value")
+
+    End Sub
 
     Protected Sub New(ByVal parent As IDataCell)
 
@@ -112,6 +122,15 @@ Public MustInherit Class DigitalValueBase
     Protected Overrides Sub ParseBodyImage(ByVal state As IChannelParsingState, ByVal binaryImage() As Byte, ByVal startIndex As Integer)
 
         m_value = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex)
+
+    End Sub
+
+    Public Overrides Sub GetObjectData(ByVal info As System.Runtime.Serialization.SerializationInfo, ByVal context As System.Runtime.Serialization.StreamingContext)
+
+        MyBase.GetObjectData(info, context)
+
+        ' Serialize analog value
+        info.AddValue("value", m_value)
 
     End Sub
 

@@ -15,6 +15,7 @@
 '
 '*******************************************************************************************************
 
+Imports System.Runtime.Serialization
 Imports System.Buffer
 Imports Tva.Phasors.Common
 
@@ -26,6 +27,15 @@ Public Class CommandCell
     Implements ICommandCell
 
     Private m_extendedDataByte As Byte
+
+    Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
+
+        MyBase.New(info, context)
+
+        ' Deserialize command cell value
+        m_extendedDataByte = info.GetByte("extendedDataByte")
+
+    End Sub
 
     Public Sub New(ByVal parent As ICommandFrame)
 
@@ -95,6 +105,15 @@ Public Class CommandCell
     Protected Overrides Sub ParseBodyImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
         m_extendedDataByte = binaryImage(startIndex)
+
+    End Sub
+
+    Public Overrides Sub GetObjectData(ByVal info As System.Runtime.Serialization.SerializationInfo, ByVal context As System.Runtime.Serialization.StreamingContext)
+
+        MyBase.GetObjectData(info, context)
+
+        ' Serialize command cell value
+        info.AddValue("extendedDataByte", m_extendedDataByte)
 
     End Sub
 

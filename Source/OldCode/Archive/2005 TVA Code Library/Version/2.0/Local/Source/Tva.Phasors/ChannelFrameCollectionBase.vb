@@ -15,11 +15,19 @@
 '
 '*******************************************************************************************************
 
+Imports System.Runtime.Serialization
+
 ' This class represents the protocol independent common implementation of a collection of any frame of data that can be sent or received from a PMU.
 <CLSCompliant(False)> _
 Public MustInherit Class ChannelFrameCollectionBase(Of T As IChannelFrame)
 
     Inherits ChannelCollectionBase(Of T)
+
+    Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
+
+        MyBase.New(info, context)
+
+    End Sub
 
     Protected Sub New(ByVal maximumCount As Int32)
 

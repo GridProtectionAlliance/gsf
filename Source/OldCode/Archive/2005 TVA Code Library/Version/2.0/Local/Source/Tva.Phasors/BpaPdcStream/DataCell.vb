@@ -15,6 +15,7 @@
 '
 '*******************************************************************************************************
 
+Imports System.Runtime.Serialization
 Imports Tva.Phasors.BpaPdcStream.Common
 
 Namespace BpaPdcStream
@@ -28,6 +29,17 @@ Namespace BpaPdcStream
         Private m_flags As ChannelFlags
         Private m_reservedFlags As ReservedFlags
         Private m_sampleNumber As Int16
+
+        Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
+
+            MyBase.New(info, context)
+
+            ' Deserialize data cell
+            m_flags = info.GetValue("flags", GetType(ChannelFlags))
+            m_reservedFlags = info.GetValue("reservedFlags", GetType(ReservedFlags))
+            m_sampleNumber = info.GetInt16("sampleNumber")
+
+        End Sub
 
         Public Sub New(ByVal parent As IDataFrame, ByVal configurationCell As IConfigurationCell, ByVal sampleNumber As Int16)
 
@@ -341,6 +353,17 @@ Namespace BpaPdcStream
             'End If
 
             m_sampleNumber = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 4)
+
+        End Sub
+
+        Public Overrides Sub GetObjectData(ByVal info As System.Runtime.Serialization.SerializationInfo, ByVal context As System.Runtime.Serialization.StreamingContext)
+
+            MyBase.GetObjectData(info, context)
+
+            ' Serialize data cell
+            info.AddValue("flags", m_flags, GetType(ChannelFlags))
+            info.AddValue("reservedFlags", m_reservedFlags, GetType(ReservedFlags))
+            info.AddValue("sampleNumber", m_sampleNumber)
 
         End Sub
 

@@ -15,11 +15,13 @@
 '
 '*******************************************************************************************************
 
+Imports System.Runtime.Serialization
+
 ' This interface represents a protocol independent definition of any kind of data.
 <CLSCompliant(False)> _
 Public Interface IChannelDefinition
 
-    Inherits IChannel, IComparable
+    Inherits IChannel, IComparable, ISerializable
 
     ReadOnly Property Parent() As IConfigurationCell
 

@@ -15,6 +15,7 @@
 '
 '***********************************************************************
 
+Imports System.Runtime.Serialization
 Imports System.Buffer
 Imports Tva.DateTime
 Imports Tva.Math.Common
@@ -25,17 +26,30 @@ Namespace BpaPdcStream
     <CLSCompliant(False)> _
     Public Class DataPacket
 
-        Implements IComparable
+        Implements IComparable, ISerializable
 
         Private m_configFile As ConfigurationFrame
         Private m_timeTag As UnixTimeTag
-        Private m_timeStamp As Date
+        Private m_timestamp As Date
         Private m_index As Int32
 
         Public Cells As DataCell()
         Public Published As Boolean
 
         Public Const SyncByte As Byte = &HAA
+
+        Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
+
+            ' Deserialize data packet
+            m_configFile = info.GetValue("configurationFrame", GetType(ConfigurationFrame))
+            m_timeTag = info.GetValue("timeTag", GetType(UnixTimeTag))
+            m_timestamp = info.GetDateTime("timestamp")
+            m_index = info.GetInt32("index")
+
+            ' TODO: deserialize cells if needed...
+            'Dim cellCount As Integer = info.GetInt32("cellCount")
+
+        End Sub
 
         Public Sub New(ByVal configFile As ConfigurationFrame, ByVal timeStamp As Date, ByVal index As Int32)
 
@@ -152,6 +166,15 @@ Namespace BpaPdcStream
 
         End Function
 
+        Public Sub GetObjectData(ByVal info As System.Runtime.Serialization.SerializationInfo, ByVal context As System.Runtime.Serialization.StreamingContext) Implements System.Runtime.Serialization.ISerializable.GetObjectData
+
+            ' TODO: Serialize data packet
+            'm_configFile = info.GetValue("configurationFrame", GetType(ConfigurationFrame))
+            'm_timeTag = info.GetValue("timeTag", GetType(UnixTimeTag))
+            'm_timestamp = info.GetDateTime("timestamp")
+            'm_index = info.GetInt32("index")
+
+        End Sub
     End Class
 
 End Namespace

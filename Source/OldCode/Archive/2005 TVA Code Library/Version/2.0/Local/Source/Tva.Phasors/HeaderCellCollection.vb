@@ -15,11 +15,19 @@
 '
 '*******************************************************************************************************
 
+Imports System.Runtime.Serialization
+
 ' This class represents the protocol independent collection of the common implementation of a set of header data that can be received from a PMU.
 <CLSCompliant(False)> _
 Public Class HeaderCellCollection
 
     Inherits ChannelCellCollectionBase(Of IHeaderCell)
+
+    Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
+
+        MyBase.New(info, context)
+
+    End Sub
 
     Public Sub New(ByVal maximumCount As Int32)
 

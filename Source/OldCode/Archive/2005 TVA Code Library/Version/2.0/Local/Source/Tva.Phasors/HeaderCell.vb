@@ -15,6 +15,7 @@
 '
 '*******************************************************************************************************
 
+Imports System.Runtime.Serialization
 Imports System.Buffer
 Imports Tva.Phasors.Common
 
@@ -26,6 +27,15 @@ Public Class HeaderCell
     Implements IHeaderCell
 
     Private m_character As Byte
+
+    Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
+
+        MyBase.New(info, context)
+
+        ' Deserialize header cell value
+        m_character = info.GetByte("character")
+
+    End Sub
 
     Public Sub New(ByVal parent As IHeaderFrame)
 
@@ -95,6 +105,15 @@ Public Class HeaderCell
     Protected Overrides Sub ParseBodyImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
         m_character = binaryImage(startIndex)
+
+    End Sub
+
+    Public Overrides Sub GetObjectData(ByVal info As System.Runtime.Serialization.SerializationInfo, ByVal context As System.Runtime.Serialization.StreamingContext)
+
+        MyBase.GetObjectData(info, context)
+
+        ' Serialize header cell value
+        info.AddValue("character", m_character)
 
     End Sub
 

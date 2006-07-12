@@ -15,13 +15,14 @@
 '
 '*******************************************************************************************************
 
+Imports System.Runtime.Serialization
 Imports Tva.Measurements
 
 ' This interface represents a protocol independent representation of any kind of data value.
 <CLSCompliant(False)> _
 Public Interface IChannelValue(Of T As IChannelDefinition)
 
-    Inherits IChannel
+    Inherits IChannel, ISerializable
 
     ReadOnly Property Parent() As IDataCell
 

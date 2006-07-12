@@ -15,6 +15,7 @@
 '
 '*******************************************************************************************************
 
+Imports System.Runtime.Serialization
 Imports System.Text
 Imports Tva.Phasors.Common
 Imports Tva.Phasors.Ieee1344.Common
@@ -28,6 +29,16 @@ Namespace Ieee1344
 
         Private m_coordinateFormat As CoordinateFormat
         Private m_statusFlags As Int16
+
+        Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
+
+            MyBase.New(info, context)
+
+            ' Deserialize configuration cell
+            m_coordinateFormat = info.GetValue("coordinateFormat", GetType(CoordinateFormat))
+            m_statusFlags = info.GetInt16("statusFlags")
+
+        End Sub
 
         Public Sub New(ByVal parent As ConfigurationFrame, ByVal nominalFrequency As LineFrequency)
 
@@ -272,6 +283,16 @@ Namespace Ieee1344
 
             ' Parse nominal frequency
             MyBase.ParseFooterImage(state, binaryImage, startIndex)
+
+        End Sub
+
+        Public Overrides Sub GetObjectData(ByVal info As System.Runtime.Serialization.SerializationInfo, ByVal context As System.Runtime.Serialization.StreamingContext)
+
+            MyBase.GetObjectData(info, context)
+
+            ' Serialize configuration cell
+            info.AddValue("coordinateFormat", m_coordinateFormat, GetType(CoordinateFormat))
+            info.AddValue("statusFlags", m_statusFlags)
 
         End Sub
 

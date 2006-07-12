@@ -15,6 +15,8 @@
 '
 '*******************************************************************************************************
 
+Imports System.Runtime.Serialization
+
 ' This class represents the common implementation of the protocol independent representation of a collection of any kind of data cell.
 <CLSCompliant(False)> _
 Public MustInherit Class ChannelCellCollectionBase(Of T As IChannelCell)
@@ -23,6 +25,12 @@ Public MustInherit Class ChannelCellCollectionBase(Of T As IChannelCell)
     Implements IChannelCellCollection(Of T)
 
     Private m_constantCellLength As Boolean
+
+    Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
+
+        MyBase.New(info, context)
+
+    End Sub
 
     Protected Sub New(ByVal maximumCount As Int32, ByVal constantCellLength As Boolean)
 

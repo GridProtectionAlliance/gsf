@@ -15,6 +15,7 @@
 '
 '*******************************************************************************************************
 
+Imports System.Runtime.Serialization
 Imports System.Text
 Imports Tva.Phasors.Common
 Imports Tva.Text.Common
@@ -31,6 +32,17 @@ Public MustInherit Class ChannelDefinitionBase
     Private m_label As String
     Private m_scale As Int32
     Private m_offset As Single
+
+    Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
+
+        ' Deserialize channel definition
+        m_parent = info.GetValue("parent", GetType(IConfigurationCell))
+        m_index = info.GetInt32("index")
+        Me.Label = info.GetString("label")
+        m_scale = info.GetInt32("scale")
+        m_offset = info.GetSingle("offset")
+
+    End Sub
 
     Protected Sub New(ByVal parent As IConfigurationCell)
 
@@ -182,6 +194,17 @@ Public MustInherit Class ChannelDefinitionBase
         If length < 0 Then length = MaximumLabelLength
 
         Label = Encoding.ASCII.GetString(binaryImage, startIndex, length)
+
+    End Sub
+
+    Public Overridable Sub GetObjectData(ByVal info As System.Runtime.Serialization.SerializationInfo, ByVal context As System.Runtime.Serialization.StreamingContext) Implements System.Runtime.Serialization.ISerializable.GetObjectData
+
+        ' Serialize channel definition
+        info.AddValue("parent", m_parent, GetType(IConfigurationCell))
+        info.AddValue("index", m_index)
+        info.AddValue("label", Me.Label)
+        info.AddValue("scale", m_scale)
+        info.AddValue("offset", m_offset)
 
     End Sub
 

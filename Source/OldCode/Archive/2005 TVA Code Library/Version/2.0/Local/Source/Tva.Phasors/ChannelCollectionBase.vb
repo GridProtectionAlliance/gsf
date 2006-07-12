@@ -15,6 +15,7 @@
 '
 '*******************************************************************************************************
 
+Imports System.Runtime.Serialization
 Imports System.ComponentModel
 Imports Tva.Phasors.Common
 
@@ -28,6 +29,17 @@ Public MustInherit Class ChannelCollectionBase(Of T As IChannel)
     Implements IChannelCollection(Of T)
 
     Private m_maximumCount As Int32
+
+    Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
+
+        ' Deserialize collection
+        m_maximumCount = info.GetInt32("maximumCount")
+
+        For x As Integer = 0 To info.GetInt32("count") - 1
+            Add(info.GetValue("item" & x, GetType(T)))
+        Next
+
+    End Sub
 
     Protected Sub New(ByVal maximumCount As Int32)
 
@@ -90,6 +102,18 @@ Public MustInherit Class ChannelCollectionBase(Of T As IChannel)
             Return buffer
         End Get
     End Property
+
+    Public Overridable Sub GetObjectData(ByVal info As System.Runtime.Serialization.SerializationInfo, ByVal context As System.Runtime.Serialization.StreamingContext) Implements System.Runtime.Serialization.ISerializable.GetObjectData
+
+        ' Serialize collection
+        info.AddValue("maximumCount", m_maximumCount)
+        info.AddValue("count", Count)
+
+        For x As Integer = 0 To Count - 1
+            info.AddValue("item" & x, Item(x), GetType(T))
+        Next
+
+    End Sub
 
 End Class
 

@@ -15,6 +15,7 @@
 '
 '*******************************************************************************************************
 
+Imports System.Runtime.Serialization
 Imports System.Text
 Imports Tva.DateTime
 Imports Tva.Phasors.Common
@@ -33,6 +34,19 @@ Namespace IeeeC37_118
         Private m_timeBase As Int32
         Private m_timeQualityFlags As Int32
         Private m_configurationRevision As UInt16
+
+        Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
+
+            MyBase.New(info, context)
+
+            ' Deserialize configuration frame
+            m_frameType = info.GetValue("frameType", GetType(FrameType))
+            m_version = info.GetByte("version")
+            m_timeBase = info.GetInt32("timeBase")
+            m_timeQualityFlags = info.GetInt32("timeQualityFlags")
+            m_configurationRevision = info.GetUInt16("configurationRevision")
+
+        End Sub
 
         Public Sub New(ByVal frameType As FrameType, ByVal timeBase As Int32, ByVal idCode As Int16, ByVal ticks As Long, ByVal frameRate As Int16, ByVal version As Byte)
 
@@ -243,6 +257,19 @@ Namespace IeeeC37_118
                 startIndex += 2
                 m_configurationRevision = EndianOrder.BigEndian.ToUInt16(binaryImage, startIndex)
             End If
+
+        End Sub
+
+        Public Overrides Sub GetObjectData(ByVal info As System.Runtime.Serialization.SerializationInfo, ByVal context As System.Runtime.Serialization.StreamingContext)
+
+            MyBase.GetObjectData(info, context)
+
+            ' Serialize configuration frame
+            info.AddValue("frameType", m_frameType, GetType(FrameType))
+            info.AddValue("version", m_version)
+            info.AddValue("timeBase", m_timeBase)
+            info.AddValue("timeQualityFlags", m_timeQualityFlags)
+            info.AddValue("configurationRevision", m_configurationRevision)
 
         End Sub
 

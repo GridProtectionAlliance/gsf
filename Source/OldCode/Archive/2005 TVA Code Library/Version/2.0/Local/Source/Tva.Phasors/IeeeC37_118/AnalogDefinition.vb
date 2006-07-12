@@ -15,6 +15,7 @@
 '
 '*******************************************************************************************************
 
+Imports System.Runtime.Serialization
 Imports System.Text
 
 Namespace IeeeC37_118
@@ -25,6 +26,15 @@ Namespace IeeeC37_118
         Inherits AnalogDefinitionBase
 
         Private m_type As AnalogType
+
+        Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
+
+            MyBase.New(info, context)
+
+            ' Deserialize analog definition
+            m_type = info.GetValue("type", GetType(AnalogType))
+
+        End Sub
 
         Public Sub New(ByVal parent As ConfigurationCell)
 
@@ -99,6 +109,15 @@ Namespace IeeeC37_118
             ' Last three bytes represent scaling factor
             EndianOrder.BigEndian.Copy(binaryImage, startIndex + 1, buffer, 0, 3)
             ScalingFactor = BitConverter.ToInt32(buffer, 0)
+
+        End Sub
+
+        Public Overrides Sub GetObjectData(ByVal info As System.Runtime.Serialization.SerializationInfo, ByVal context As System.Runtime.Serialization.StreamingContext)
+
+            MyBase.GetObjectData(info, context)
+
+            ' Serialize analog definition
+            info.AddValue("type", m_type, GetType(AnalogType))
 
         End Sub
 

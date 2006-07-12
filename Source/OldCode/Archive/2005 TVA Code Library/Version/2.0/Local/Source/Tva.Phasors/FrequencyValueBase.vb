@@ -15,6 +15,8 @@
 '
 '*******************************************************************************************************
 
+Imports System.Runtime.Serialization
+
 ' This class represents the protocol independent a frequency and dfdt value.
 <CLSCompliant(False)> _
 Public MustInherit Class FrequencyValueBase
@@ -29,6 +31,16 @@ Public MustInherit Class FrequencyValueBase
         Frequency
         DfDt
     End Enum
+
+    Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
+
+        MyBase.New(info, context)
+
+        ' Deserialize frequency value
+        m_frequency = info.GetSingle("frequency")
+        m_dfdt = info.GetSingle("dfdt")
+
+    End Sub
 
     Protected Sub New(ByVal parent As IDataCell)
 
@@ -184,6 +196,16 @@ Public MustInherit Class FrequencyValueBase
             m_frequency = EndianOrder.BigEndian.ToSingle(binaryImage, startIndex)
             m_dfdt = EndianOrder.BigEndian.ToSingle(binaryImage, startIndex + 4)
         End If
+
+    End Sub
+
+    Public Overrides Sub GetObjectData(ByVal info As System.Runtime.Serialization.SerializationInfo, ByVal context As System.Runtime.Serialization.StreamingContext)
+
+        MyBase.GetObjectData(info, context)
+
+        ' Serialize frequency value
+        info.AddValue("frequency", m_frequency)
+        info.AddValue("dfdt", m_dfdt)
 
     End Sub
 

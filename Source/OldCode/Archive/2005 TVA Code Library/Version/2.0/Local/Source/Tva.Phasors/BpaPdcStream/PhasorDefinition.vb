@@ -15,6 +15,7 @@
 '
 '*******************************************************************************************************
 
+Imports System.Runtime.Serialization
 Imports System.Text
 
 Namespace BpaPdcStream
@@ -28,6 +29,18 @@ Namespace BpaPdcStream
         Private m_calFactor As Single
         Private m_shunt As Single
         Private m_voltageReferenceIndex As Int32
+
+        Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
+
+            MyBase.New(info, context)
+
+            ' Deserialize phasor definition
+            m_ratio = info.GetSingle("ratio")
+            m_calFactor = info.GetSingle("calFactor")
+            m_shunt = info.GetSingle("shunt")
+            m_voltageReferenceIndex = info.GetInt32("voltageReferenceIndex")
+
+        End Sub
 
         Public Sub New(ByVal parent As ConfigurationCell)
 
@@ -171,6 +184,18 @@ Namespace BpaPdcStream
                 Throw New NotImplementedException("PDCstream does not include phasor definition in descriptor packet - must be defined in external INI file")
             End Get
         End Property
+
+        Public Overrides Sub GetObjectData(ByVal info As System.Runtime.Serialization.SerializationInfo, ByVal context As System.Runtime.Serialization.StreamingContext)
+
+            MyBase.GetObjectData(info, context)
+
+            ' Serialize phasor definition
+            info.AddValue("ratio", m_ratio)
+            info.AddValue("calFactor", m_calFactor)
+            info.AddValue("shunt", m_shunt)
+            info.AddValue("voltageReferenceIndex", m_voltageReferenceIndex)
+
+        End Sub
 
     End Class
 

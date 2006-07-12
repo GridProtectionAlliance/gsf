@@ -15,11 +15,19 @@
 '
 '*******************************************************************************************************
 
+Imports System.Runtime.Serialization
+
 ' This class represents the protocol independent collection of the common implementation of a set of configuration related data settings that can be sent or received from a PMU.
 <CLSCompliant(False)> _
 Public Class ConfigurationCellCollection
 
     Inherits ChannelCellCollectionBase(Of IConfigurationCell)
+
+    Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
+
+        MyBase.New(info, context)
+
+    End Sub
 
     Public Sub New(ByVal maximumCount As Int32, ByVal constantCellLength As Boolean)
 

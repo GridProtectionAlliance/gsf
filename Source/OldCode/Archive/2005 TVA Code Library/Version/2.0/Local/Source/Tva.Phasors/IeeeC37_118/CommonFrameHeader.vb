@@ -15,6 +15,7 @@
 '
 '*******************************************************************************************************
 
+Imports System.Runtime.Serialization
 Imports Tva.DateTime
 Imports Tva.Phasors.Common
 Imports Tva.Phasors.IeeeC37_118.Common
@@ -38,6 +39,16 @@ Namespace IeeeC37_118
             Private m_idCode As UInt16
             Private m_ticks As Long
             Private m_timeQualityFlags As Int32
+
+            Public Sub New()
+
+            End Sub
+
+            Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
+
+                Throw New NotImplementedException()
+
+            End Sub
 
             Public ReadOnly Property This() As IChannel Implements IChannel.This
                 Get
@@ -231,6 +242,12 @@ Namespace IeeeC37_118
                     Throw New NotImplementedException()
                 End Get
             End Property
+
+            Public Sub GetObjectData(ByVal info As System.Runtime.Serialization.SerializationInfo, ByVal context As System.Runtime.Serialization.StreamingContext) Implements System.Runtime.Serialization.ISerializable.GetObjectData
+
+                Throw New NotImplementedException()
+
+            End Sub
 
         End Class
 

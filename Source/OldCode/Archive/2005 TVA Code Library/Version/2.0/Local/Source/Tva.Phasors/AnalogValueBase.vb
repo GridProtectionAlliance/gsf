@@ -15,6 +15,8 @@
 '
 '*******************************************************************************************************
 
+Imports System.Runtime.Serialization
+
 ' This class represents the common implementation of the protocol independent representation of an analog value.
 <CLSCompliant(False)> _
 Public MustInherit Class AnalogValueBase
@@ -23,6 +25,15 @@ Public MustInherit Class AnalogValueBase
     Implements IAnalogValue
 
     Private m_value As Single
+
+    Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
+
+        MyBase.New(info, context)
+
+        ' Deserialize analog value
+        m_value = info.GetSingle("value")
+
+    End Sub
 
     Protected Sub New(ByVal parent As IDataCell)
 
@@ -131,6 +142,15 @@ Public MustInherit Class AnalogValueBase
         Else
             m_value = EndianOrder.BigEndian.ToSingle(binaryImage, startIndex)
         End If
+
+    End Sub
+
+    Public Overrides Sub GetObjectData(ByVal info As System.Runtime.Serialization.SerializationInfo, ByVal context As System.Runtime.Serialization.StreamingContext)
+
+        MyBase.GetObjectData(info, context)
+
+        ' Serialize analog value
+        info.AddValue("value", m_value)
 
     End Sub
 

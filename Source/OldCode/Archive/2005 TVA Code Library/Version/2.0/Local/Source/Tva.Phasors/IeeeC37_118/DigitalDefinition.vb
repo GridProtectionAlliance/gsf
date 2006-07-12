@@ -15,6 +15,7 @@
 '
 '*******************************************************************************************************
 
+Imports System.Runtime.Serialization
 Imports System.Text
 Imports Tva.Text.Common
 
@@ -27,6 +28,16 @@ Namespace IeeeC37_118
 
         Private m_normalStatus As Int16
         Private m_validInputs As Int16
+
+        Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
+
+            MyBase.New(info, context)
+
+            ' Deserialize digital definition
+            m_normalStatus = info.GetInt16("normalStatus")
+            m_validInputs = info.GetInt16("validInputs")
+
+        End Sub
 
         Public Sub New(ByVal parent As ConfigurationCell)
 
@@ -169,6 +180,16 @@ Namespace IeeeC37_118
 
             m_normalStatus = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex)
             m_validInputs = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 2)
+
+        End Sub
+
+        Public Overrides Sub GetObjectData(ByVal info As System.Runtime.Serialization.SerializationInfo, ByVal context As System.Runtime.Serialization.StreamingContext)
+
+            MyBase.GetObjectData(info, context)
+
+            ' Serialize digital definition
+            info.AddValue("normalStatus", m_normalStatus)
+            info.AddValue("validInputs", m_validInputs)
 
         End Sub
 

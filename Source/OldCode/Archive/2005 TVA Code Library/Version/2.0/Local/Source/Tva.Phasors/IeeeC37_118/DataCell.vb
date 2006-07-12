@@ -15,6 +15,7 @@
 '
 '*******************************************************************************************************
 
+Imports System.Runtime.Serialization
 Imports Tva.Phasors.IeeeC37_118.Common
 
 Namespace IeeeC37_118
@@ -24,6 +25,12 @@ Namespace IeeeC37_118
     Public Class DataCell
 
         Inherits DataCellBase
+
+        Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
+
+            MyBase.New(info, context)
+
+        End Sub
 
         Public Sub New(ByVal parent As IDataFrame, ByVal configurationCell As IConfigurationCell)
 

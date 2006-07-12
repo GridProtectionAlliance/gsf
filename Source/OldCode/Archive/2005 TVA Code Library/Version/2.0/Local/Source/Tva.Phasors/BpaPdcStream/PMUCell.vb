@@ -18,6 +18,8 @@
 '
 '*******************************************************************************************************
 
+Imports System.Runtime.Serialization
+
 Namespace BpaPdcStream
 
     <CLSCompliant(False)> _
@@ -28,6 +30,17 @@ Namespace BpaPdcStream
         Private m_flags As ChannelFlags
         Private m_frameRate As Byte
         Private m_statusFlags As Int16
+
+        Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
+
+            MyBase.New(info, context)
+
+            ' Deserialize pmu cell values
+            m_flags = info.GetValue("flags", GetType(ChannelFlags))
+            m_frameRate = info.GetByte("frameRate")
+            m_statusFlags = info.GetInt16("statusFlags")
+
+        End Sub
 
         Public Sub New(ByVal parent As PMUCellCollection)
 
@@ -67,6 +80,17 @@ Namespace BpaPdcStream
                 m_statusFlags = Value
             End Set
         End Property
+
+        Public Overrides Sub GetObjectData(ByVal info As System.Runtime.Serialization.SerializationInfo, ByVal context As System.Runtime.Serialization.StreamingContext)
+
+            MyBase.GetObjectData(info, context)
+
+            ' Serialize pmu cell values
+            info.AddValue("flags", m_flags, GetType(ChannelFlags))
+            info.AddValue("frameRate", m_frameRate)
+            info.AddValue("statusFlags", m_statusFlags)
+
+        End Sub
 
     End Class
 

@@ -15,12 +15,20 @@
 '
 '*******************************************************************************************************
 
+Imports System.Runtime.Serialization
+
 Namespace BpaPdcStream
 
     <CLSCompliant(False)> _
     Public Class DigitalDefinition
 
         Inherits DigitalDefinitionBase
+
+        Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
+
+            MyBase.New(info, context)
+
+        End Sub
 
         Public Sub New(ByVal parent As ConfigurationCell)
 

@@ -15,6 +15,7 @@
 '
 '*******************************************************************************************************
 
+Imports System.Runtime.Serialization
 Imports System.Buffer
 Imports Tva.DateTime
 Imports Tva.Math.Common
@@ -36,6 +37,16 @@ Namespace BpaPdcStream
 
             MyBase.New(New DataCellCollection)
             m_packetNumber = 1
+
+        End Sub
+
+        Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
+
+            MyBase.New(info, context)
+
+            ' Deserialize data frame
+            m_packetNumber = info.GetByte("packetNumber")
+            m_sampleNumber = info.GetInt16("sampleNumber")
 
         End Sub
 
@@ -177,6 +188,16 @@ Namespace BpaPdcStream
                 ' We are not validating this data or looking for changes since this information
                 ' was already transmitted via the descriptor....
             End If
+
+        End Sub
+
+        Public Overrides Sub GetObjectData(ByVal info As System.Runtime.Serialization.SerializationInfo, ByVal context As System.Runtime.Serialization.StreamingContext)
+
+            MyBase.GetObjectData(info, context)
+
+            ' Serialize data frame
+            info.AddValue("packetNumber", m_packetNumber)
+            info.AddValue("sampleNumber", m_sampleNumber)
 
         End Sub
 

@@ -15,6 +15,8 @@
 '
 '*******************************************************************************************************
 
+Imports System.Runtime.Serialization
+
 ' This class represents the common implementation of the protocol independent representation of any kind of data cell.
 <CLSCompliant(False)> _
 Public MustInherit Class ChannelCellBase
@@ -25,6 +27,14 @@ Public MustInherit Class ChannelCellBase
     Private m_parent As IChannelFrame
     Private m_idCode As UInt16
     Private m_alignOnDWordBoundry As Boolean
+
+    Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
+
+        ' Deserialize basic channel cell values
+        m_idCode = info.GetUInt16("id")
+        m_alignOnDWordBoundry = info.GetBoolean("alignOnDWordBoundry")
+
+    End Sub
 
     Protected Sub New(ByVal parent As IChannelFrame, ByVal alignOnDWordBoundry As Boolean)
 
@@ -85,6 +95,14 @@ Public MustInherit Class ChannelCellBase
 
         End Get
     End Property
+
+    Public Overridable Sub GetObjectData(ByVal info As System.Runtime.Serialization.SerializationInfo, ByVal context As System.Runtime.Serialization.StreamingContext) Implements System.Runtime.Serialization.ISerializable.GetObjectData
+
+        ' Serialize basic channel cell values
+        info.AddValue("id", m_idCode)
+        info.AddValue("alignOnDWordBoundry", m_alignOnDWordBoundry)
+
+    End Sub
 
 End Class
 

@@ -15,6 +15,7 @@
 '
 '*******************************************************************************************************
 
+Imports System.Runtime.Serialization
 Imports Tva.DateTime
 
 Namespace BpaPdcStream
@@ -29,6 +30,15 @@ Namespace BpaPdcStream
 
         Private m_parent As DataCell
         Private m_flags As ChannelFlags
+
+        Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
+
+            MyBase.New(info, context)
+
+            m_parent = info.GetValue("parent", GetType(DataCell))
+            m_flags = info.GetValue("flags", GetType(ChannelFlags))
+
+        End Sub
 
         Public Sub New(ByVal parent As DataCell)
 
@@ -188,6 +198,15 @@ Namespace BpaPdcStream
                 Throw New NotImplementedException()
             End Get
         End Property
+
+        Public Overrides Sub GetObjectData(ByVal info As System.Runtime.Serialization.SerializationInfo, ByVal context As System.Runtime.Serialization.StreamingContext)
+
+            MyBase.GetObjectData(info, context)
+
+            info.AddValue("parent", m_parent, GetType(DataCell))
+            info.AddValue("flags", m_flags, GetType(ChannelFlags))
+
+        End Sub
 
     End Class
 

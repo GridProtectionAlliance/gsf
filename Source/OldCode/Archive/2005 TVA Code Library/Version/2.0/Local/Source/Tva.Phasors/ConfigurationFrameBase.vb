@@ -27,6 +27,13 @@ Public MustInherit Class ConfigurationFrameBase
 
     Private m_frameRate As Int16
 
+    Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
+
+        MyBase.New(info, context)
+        info.GetInt16("frameRate")
+
+    End Sub
+
     Protected Sub New(ByVal cells As ConfigurationCellCollection)
 
         MyBase.New(cells)
@@ -82,14 +89,6 @@ Public MustInherit Class ConfigurationFrameBase
         For Each cell As IConfigurationCell In Cells
             cell.NominalFrequency = value
         Next
-
-    End Sub
-
-    Public Overridable Sub GetObjectData(ByVal info As System.Runtime.Serialization.SerializationInfo, ByVal context As System.Runtime.Serialization.StreamingContext) Implements System.Runtime.Serialization.ISerializable.GetObjectData
-
-        ' TODO: Add key serialization elements...
-        'info.AddValue("AltName", "XXX")
-        'info.AddValue("AltID", 9999)
 
     End Sub
 

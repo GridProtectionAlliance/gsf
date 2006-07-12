@@ -15,6 +15,7 @@
 '
 '*******************************************************************************************************
 
+Imports System.Runtime.Serialization
 Imports Tva.Measurements
 
 ' This class represents the common implementation of the protocol independent representation of any kind of data value.
@@ -27,6 +28,14 @@ Public MustInherit Class ChannelValueBase(Of T As IChannelDefinition)
     Private m_parent As IDataCell
     Private m_definition As T
     Private m_measurements As IMeasurement()
+
+    Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
+
+        ' Deserialize channel value
+        m_parent = info.GetValue("parent", GetType(IDataCell))
+        m_definition = info.GetValue("definition", GetType(T))
+
+    End Sub
 
     Protected Sub New(ByVal parent As IDataCell)
 
@@ -89,6 +98,14 @@ Public MustInherit Class ChannelValueBase(Of T As IChannelDefinition)
             Return m_measurements
         End Get
     End Property
+
+    Public Overridable Sub GetObjectData(ByVal info As System.Runtime.Serialization.SerializationInfo, ByVal context As System.Runtime.Serialization.StreamingContext) Implements System.Runtime.Serialization.ISerializable.GetObjectData
+
+        ' Serialize channel value
+        info.AddValue("parent", m_parent, GetType(IDataCell))
+        info.AddValue("definition", m_definition, GetType(T))
+
+    End Sub
 
 End Class
 

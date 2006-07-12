@@ -15,13 +15,11 @@
 '
 '*******************************************************************************************************
 
-Imports System.Runtime.Serialization
-
 ' This interface represents the protocol independent representation of any configuration frame.
 <CLSCompliant(False)> _
 Public Interface IConfigurationFrame
 
-    Inherits IChannelFrame, ISerializable
+    Inherits IChannelFrame
 
     Shadows ReadOnly Property Cells() As ConfigurationCellCollection
 

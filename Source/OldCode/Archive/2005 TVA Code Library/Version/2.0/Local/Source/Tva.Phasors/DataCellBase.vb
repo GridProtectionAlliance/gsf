@@ -15,6 +15,7 @@
 '
 '*******************************************************************************************************
 
+Imports System.Runtime.Serialization
 Imports System.Buffer
 Imports Tva.Phasors.Common
 Imports Tva.Measurements
@@ -35,6 +36,19 @@ Public MustInherit Class DataCellBase
     Private m_id As Integer
     Private m_adder As Double
     Private m_multiplier As Double
+
+    Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
+
+        MyBase.New(info, context)
+
+        ' Deserialize data cell values
+        m_statusFlags = info.GetInt16("statusFlags")
+        m_phasorValues = info.GetValue("phasorValues", GetType(PhasorValueCollection))
+        m_frequencyValue = info.GetValue("frequencyValue", GetType(IFrequencyValue))
+        m_analogValues = info.GetValue("analogValues", GetType(AnalogValueCollection))
+        m_digitalValues = info.GetValue("digitalValues", GetType(DigitalValueCollection))
+
+    End Sub
 
     Protected Sub New(ByVal parent As IDataFrame, ByVal alignOnDWordBoundry As Boolean, ByVal configurationCell As IConfigurationCell, ByVal maximumPhasors As Int32, ByVal maximumAnalogs As Int32, ByVal maximumDigitals As Int32)
 
@@ -291,6 +305,19 @@ Public MustInherit Class DataCellBase
                 startIndex += m_digitalValues(x).BinaryLength
             Next
         End With
+
+    End Sub
+
+    Public Overrides Sub GetObjectData(ByVal info As System.Runtime.Serialization.SerializationInfo, ByVal context As System.Runtime.Serialization.StreamingContext)
+
+        MyBase.GetObjectData(info, context)
+
+        ' Serialize data cell values
+        info.AddValue("statusFlags", m_statusFlags)
+        info.AddValue("phasorValues", m_phasorValues, GetType(PhasorValueCollection))
+        info.AddValue("frequencyValue", m_frequencyValue, GetType(IFrequencyValue))
+        info.AddValue("analogValues", m_analogValues, GetType(AnalogValueCollection))
+        info.AddValue("digitalValues", m_digitalValues, GetType(DigitalValueCollection))
 
     End Sub
 
