@@ -17,7 +17,7 @@
 
 Imports Tva.Measurements
 
-' This interface represents the protocol independent representation of a set of phasor related data values.
+''' <summary>This interface represents the protocol independent representation of a set of phasor related data values.</summary>
 <CLSCompliant(False)> _
 Public Interface IDataCell
 

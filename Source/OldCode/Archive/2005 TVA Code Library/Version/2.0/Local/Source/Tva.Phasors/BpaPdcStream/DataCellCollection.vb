@@ -19,7 +19,7 @@ Imports System.Runtime.Serialization
 
 Namespace BpaPdcStream
 
-    <CLSCompliant(False)> _
+    <CLSCompliant(False), Serializable()> _
     Public Class DataCellCollection
 
         Inherits Phasors.DataCellCollection

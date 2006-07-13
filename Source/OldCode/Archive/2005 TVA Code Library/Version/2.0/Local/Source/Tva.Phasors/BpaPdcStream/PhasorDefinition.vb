@@ -20,7 +20,7 @@ Imports System.Text
 
 Namespace BpaPdcStream
 
-    <CLSCompliant(False)> _
+    <CLSCompliant(False), Serializable()> _
     Public Class PhasorDefinition
 
         Inherits PhasorDefinitionBase
@@ -29,6 +29,9 @@ Namespace BpaPdcStream
         Private m_calFactor As Single
         Private m_shunt As Single
         Private m_voltageReferenceIndex As Int32
+
+        Protected Sub New()
+        End Sub
 
         Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
 

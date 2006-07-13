@@ -18,6 +18,7 @@
 Namespace IeeeC37_118
 
     ''' <summary>Protocol revision number</summary>
+    <Serializable()> _
     Public Enum ProtocolRevision As Byte
         ''' <summary>Draft 6.0</summary>
         Draft6 = 0
@@ -26,7 +27,7 @@ Namespace IeeeC37_118
     End Enum
 
     ''' <summary>Data format flags</summary>
-    <Flags()> _
+    <Flags(), Serializable()> _
     Public Enum FormatFlags As Int16
         ''' <summary>Frequency value format (Set = float, Clear = integer)</summary>
         Frequency = Bit3
@@ -41,7 +42,7 @@ Namespace IeeeC37_118
     End Enum
 
     ''' <summary>Time quality flags</summary>
-    <Flags()> _
+    <Flags(), Serializable()> _
     Public Enum TimeQualityFlags As Int32
         ''' <summary>Reserved</summary>
         Reserved = Bit31
@@ -56,6 +57,7 @@ Namespace IeeeC37_118
     End Enum
 
     ''' <summary>Time quality indicator code</summary>
+    <Serializable()> _
     Public Enum TimeQualityIndicatorCode As Int32
         ''' <summary>1111 - F:	Fault--clock failure, time not reliable</summary>
         Failure = Bit27 Or Bit26 Or Bit25 Or Bit24
@@ -86,6 +88,7 @@ Namespace IeeeC37_118
     End Enum
 
     ''' <summary>Frame type</summary>
+    <Serializable()> _
     Public Enum FrameType As Int16
         ''' <summary>000 Data frame</summary>
         DataFrame = Nill
@@ -104,7 +107,7 @@ Namespace IeeeC37_118
     End Enum
 
     ''' <summary>Status flags</summary>
-    <Flags()> _
+    <Flags(), Serializable()> _
     Public Enum StatusFlags As Int16
         ''' <summary>Data is valid (0 when PMU data is valid, 1 when invalid or PMU is in test mode)</summary>
         DataIsValid = Bit15
@@ -127,6 +130,7 @@ Namespace IeeeC37_118
     End Enum
 
     ''' <summary>Unlocked time</summary>
+    <Serializable()> _
     Public Enum UnlockedTime As Byte
         ''' <summary>Sync locked, best quality</summary>
         SyncLocked = Nill
@@ -139,6 +143,7 @@ Namespace IeeeC37_118
     End Enum
 
     ''' <summary>Trigger reason</summary>
+    <Serializable()> _
     Public Enum TriggerReason As Byte
         ''' <summary>1111 Vendor defined trigger 7</summary>
         VendorDefinedTrigger8 = Bit3 Or Bit2 Or Bit1 Or Bit0
@@ -175,6 +180,7 @@ Namespace IeeeC37_118
     End Enum
 
     ''' <summary>Analog types</summary>
+    <Serializable()> _
     Public Enum AnalogType As Byte
         ''' <summary>Single point-on-wave</summary>
         SinglePointOnWave = 0

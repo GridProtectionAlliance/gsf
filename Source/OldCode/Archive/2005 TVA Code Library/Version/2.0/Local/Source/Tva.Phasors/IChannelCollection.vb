@@ -17,7 +17,7 @@
 
 Imports System.Runtime.Serialization
 
-' This interface represents a protocol independent representation of a collection of any data type.
+''' <summary>This interface represents a protocol independent representation of a collection of any data type.</summary>
 <CLSCompliant(False)> _
 Public Interface IChannelCollection(Of T As IChannel)
 

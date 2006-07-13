@@ -25,7 +25,7 @@ Imports Tva.Phasors.BpaPdcStream.Common
 Namespace BpaPdcStream
 
     ' This is essentially a "row" of PMU data at a given timestamp
-    <CLSCompliant(False)> _
+    <CLSCompliant(False), Serializable()> _
     Public Class DataFrame
 
         Inherits DataFrameBase

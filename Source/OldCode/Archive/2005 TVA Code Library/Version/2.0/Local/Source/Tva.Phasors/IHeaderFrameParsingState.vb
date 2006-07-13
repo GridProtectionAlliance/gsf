@@ -15,7 +15,7 @@
 '
 '*******************************************************************************************************
 
-' This interface represents the protocol independent parsing state of any header frame.
+''' <summary>This interface represents the protocol independent parsing state of any header frame.</summary>
 <CLSCompliant(False)> _
 Public Interface IHeaderFrameParsingState
 

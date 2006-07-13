@@ -23,7 +23,7 @@ Imports Tva.IO.Compression.Common
 
 Namespace Ieee1344
 
-    <CLSCompliant(False)> _
+    <CLSCompliant(False), Serializable()> _
     Public Class ConfigurationFrame
 
         Inherits ConfigurationFrameBase
@@ -31,6 +31,9 @@ Namespace Ieee1344
 
         Private m_idCode As UInt64
         Private m_sampleCount As Int16
+
+        Protected Sub New()
+        End Sub
 
         Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
 
@@ -146,10 +149,10 @@ Namespace Ieee1344
 
         Public Property Period() As Int16
             Get
-                Return NominalFrequencyValue(NominalFrequency) / FrameRate * 100
+                Return NominalFrequency / FrameRate * 100
             End Get
             Set(ByVal value As Int16)
-                FrameRate = NominalFrequencyValue(NominalFrequency) * 100 / value
+                FrameRate = NominalFrequency * 100 / value
             End Set
         End Property
 

@@ -19,14 +19,17 @@ Imports System.Runtime.Serialization
 Imports System.Text
 Imports Tva.Phasors.Common
 
-' This class represents the protocol independent common implementation of a command frame that can be sent or received from a PMU.
-<CLSCompliant(False)> _
+''' <summary>This class represents the protocol independent common implementation of a command frame that can be sent or received from a PMU.</summary>
+<CLSCompliant(False), Serializable()> _
 Public MustInherit Class CommandFrameBase
 
     Inherits ChannelFrameBase(Of ICommandCell)
     Implements ICommandFrame
 
     Private m_command As Command
+
+    Protected Sub New()
+    End Sub
 
     Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
 

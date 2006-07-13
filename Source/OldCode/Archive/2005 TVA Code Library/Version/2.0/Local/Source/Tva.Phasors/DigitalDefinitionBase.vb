@@ -18,12 +18,15 @@
 Imports System.Runtime.Serialization
 Imports System.ComponentModel
 
-' This class represents the common implementation of the protocol independent definition of a digital value.
-<CLSCompliant(False)> _
+''' <summary>This class represents the common implementation of the protocol independent definition of a digital value.</summary>
+<CLSCompliant(False), Serializable()> _
 Public MustInherit Class DigitalDefinitionBase
 
     Inherits ChannelDefinitionBase
     Implements IDigitalDefinition
+
+    Protected Sub New()
+    End Sub
 
     Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
 

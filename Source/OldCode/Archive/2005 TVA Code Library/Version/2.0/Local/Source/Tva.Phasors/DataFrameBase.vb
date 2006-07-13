@@ -18,8 +18,8 @@
 Imports System.Runtime.Serialization
 Imports Tva.DateTime
 
-' This class represents the protocol independent common implementation of a data frame that can be sent or received from a PMU.
-<CLSCompliant(False)> _
+''' <summary>This class represents the protocol independent common implementation of a data frame that can be sent or received from a PMU.</summary>
+<CLSCompliant(False), Serializable()> _
 Public MustInherit Class DataFrameBase
 
     Inherits ChannelFrameBase(Of IDataCell)
@@ -27,9 +27,15 @@ Public MustInherit Class DataFrameBase
 
     Private m_configurationFrame As IConfigurationFrame
 
+    Protected Sub New()
+    End Sub
+
     Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
 
         MyBase.New(info, context)
+
+        ' Deserialize data frame
+        m_configurationFrame = info.GetValue("configurationFrame", GetType(IConfigurationFrame))
 
     End Sub
 
@@ -93,5 +99,14 @@ Public MustInherit Class DataFrameBase
             Return MyBase.Cells
         End Get
     End Property
+
+    Public Overrides Sub GetObjectData(ByVal info As System.Runtime.Serialization.SerializationInfo, ByVal context As System.Runtime.Serialization.StreamingContext)
+
+        MyBase.GetObjectData(info, context)
+
+        ' Serialize data frame
+        info.AddValue("configurationFrame", m_configurationFrame, GetType(IConfigurationFrame))
+
+    End Sub
 
 End Class

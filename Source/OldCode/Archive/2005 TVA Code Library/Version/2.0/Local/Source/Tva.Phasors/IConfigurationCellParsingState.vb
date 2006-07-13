@@ -15,7 +15,7 @@
 '
 '*******************************************************************************************************
 
-' This interface represents the protocol independent parsing state of a set of configuration related data settings (typically related to a PMU).
+''' <summary>This interface represents the protocol independent parsing state of a set of configuration related data settings (typically related to a PMU).</summary>
 <CLSCompliant(False)> _
 Public Interface IConfigurationCellParsingState
 

@@ -15,7 +15,7 @@
 '
 '*******************************************************************************************************
 
-' This interface represents the protocol independent representation of any frame of header data.
+''' <summary>This interface represents the protocol independent representation of any frame of header data.</summary>
 <CLSCompliant(False)> _
 Public Interface IHeaderFrame
 

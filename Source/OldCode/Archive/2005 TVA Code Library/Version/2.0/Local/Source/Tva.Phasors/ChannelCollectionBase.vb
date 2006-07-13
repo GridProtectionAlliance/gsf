@@ -19,16 +19,18 @@ Imports System.Runtime.Serialization
 Imports System.ComponentModel
 Imports Tva.Phasors.Common
 
-' This class represents the common implementation of the protocol independent representation of a collection of any kind of data.
-' By having our collections implement IChannel (inherited via IChannelCollection), we have the benefit of providing a binary image
-' of the entire collection
-<CLSCompliant(False)> _
+''' <summary>This class represents the common implementation of the protocol independent representation of a collection of any kind of data.</summary>
+''' <remarks>By having our collections implement IChannel (inherited via IChannelCollection), we have the benefit of providing a binary image of the entire collection</remarks>
+<CLSCompliant(False), Serializable()> _
 Public MustInherit Class ChannelCollectionBase(Of T As IChannel)
 
     Inherits List(Of T)
     Implements IChannelCollection(Of T)
 
     Private m_maximumCount As Int32
+
+    Protected Sub New()
+    End Sub
 
     Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
 

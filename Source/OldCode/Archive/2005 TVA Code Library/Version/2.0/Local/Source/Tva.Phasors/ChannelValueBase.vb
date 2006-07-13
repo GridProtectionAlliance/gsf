@@ -18,8 +18,8 @@
 Imports System.Runtime.Serialization
 Imports Tva.Measurements
 
-' This class represents the common implementation of the protocol independent representation of any kind of data value.
-<CLSCompliant(False)> _
+''' <summary>This class represents the common implementation of the protocol independent representation of any kind of data value.</summary>
+<CLSCompliant(False), Serializable()> _
 Public MustInherit Class ChannelValueBase(Of T As IChannelDefinition)
 
     Inherits ChannelBase
@@ -28,6 +28,9 @@ Public MustInherit Class ChannelValueBase(Of T As IChannelDefinition)
     Private m_parent As IDataCell
     Private m_definition As T
     Private m_measurements As IMeasurement()
+
+    Protected Sub New()
+    End Sub
 
     Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
 

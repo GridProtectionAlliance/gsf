@@ -20,7 +20,7 @@ Imports Tva.DateTime
 
 Namespace BpaPdcStream
 
-    <CLSCompliant(False)> _
+    <CLSCompliant(False), Serializable()> _
     Public Class PMUCellCollection
 
         Inherits ChannelCellCollectionBase(Of PMUCell)
@@ -30,6 +30,9 @@ Namespace BpaPdcStream
 
         Private m_parent As DataCell
         Private m_flags As ChannelFlags
+
+        Protected Sub New()
+        End Sub
 
         Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
 

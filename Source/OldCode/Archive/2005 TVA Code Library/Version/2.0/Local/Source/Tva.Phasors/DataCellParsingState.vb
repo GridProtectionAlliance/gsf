@@ -15,7 +15,7 @@
 '
 '*******************************************************************************************************
 
-' This class represents the protocol independent common implementation of the parsing state of a data frame cell that can be sent or received from a PMU.
+''' <summary>This class represents the protocol independent common implementation of the parsing state of a data frame cell that can be sent or received from a PMU.</summary>
 <CLSCompliant(False)> _
 Public Class DataCellParsingState
 

@@ -15,7 +15,7 @@
 '
 '*******************************************************************************************************
 
-' This class represents the protocol independent interface of a frequency value.
+''' <summary>This class represents the protocol independent interface of a frequency value.</summary>
 <CLSCompliant(False)> _
 Public Interface IFrequencyValue
 

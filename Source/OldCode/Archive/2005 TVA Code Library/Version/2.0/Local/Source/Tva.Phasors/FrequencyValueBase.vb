@@ -17,8 +17,8 @@
 
 Imports System.Runtime.Serialization
 
-' This class represents the protocol independent a frequency and dfdt value.
-<CLSCompliant(False)> _
+''' <summary>This class represents the protocol independent a frequency and dfdt value.</summary>
+<CLSCompliant(False), Serializable()> _
 Public MustInherit Class FrequencyValueBase
 
     Inherits ChannelValueBase(Of IFrequencyDefinition)
@@ -27,10 +27,14 @@ Public MustInherit Class FrequencyValueBase
     Private m_frequency As Single
     Private m_dfdt As Single
 
+    <Serializable()> _
     Public Enum CompositeValueType
         Frequency
         DfDt
     End Enum
+
+    Protected Sub New()
+    End Sub
 
     Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
 

@@ -15,7 +15,7 @@
 '
 '*******************************************************************************************************
 
-' This interface represents the protocol independent representation of an element of extended command frame data.
+''' <summary>This interface represents the protocol independent representation of an element of extended command frame data.</summary>
 <CLSCompliant(False)> _
 Public Interface ICommandCell
 

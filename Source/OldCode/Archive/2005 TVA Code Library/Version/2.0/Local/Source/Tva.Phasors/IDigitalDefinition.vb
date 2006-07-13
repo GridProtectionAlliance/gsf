@@ -15,7 +15,7 @@
 '
 '*******************************************************************************************************
 
-' This interface represents a protocol independent digital value definition.
+''' <summary>This interface represents a protocol independent digital value definition.</summary>
 <CLSCompliant(False)> _
 Public Interface IDigitalDefinition
 

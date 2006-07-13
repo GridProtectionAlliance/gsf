@@ -22,7 +22,7 @@ Imports Tva.IO.Compression.Common
 
 Namespace Ieee1344
 
-    <CLSCompliant(False)> _
+    <CLSCompliant(False), Serializable()> _
     Public Class CommandFrame
 
         Inherits CommandFrameBase
@@ -30,6 +30,9 @@ Namespace Ieee1344
         Public Const FrameLength As Int16 = 16
 
         Private m_idCode As UInt64
+
+        Protected Sub New()
+        End Sub
 
         Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
 

@@ -17,11 +17,14 @@
 
 Imports System.Runtime.Serialization
 
-' This class represents the protocol independent collection of frequency and dfdt values.
-<CLSCompliant(False)> _
+''' <summary>This class represents the protocol independent collection of frequency and dfdt values.</summary>
+<CLSCompliant(False), Serializable()> _
 Public Class FrequencyValueCollection
 
     Inherits ChannelValueCollectionBase(Of IFrequencyDefinition, IFrequencyValue)
+
+    Protected Sub New()
+    End Sub
 
     Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
 

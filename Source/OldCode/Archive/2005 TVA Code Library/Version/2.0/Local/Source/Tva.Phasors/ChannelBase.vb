@@ -17,8 +17,8 @@
 
 Imports Tva.Phasors.Common
 
-' This class represents the common implementation of the protocol independent definition of any kind of data.
-<CLSCompliant(False)> _
+''' <summary>This class represents the common implementation of the protocol independent definition of any kind of data.</summary>
+<CLSCompliant(False), Serializable()> _
 Public MustInherit Class ChannelBase
 
     Implements IChannel

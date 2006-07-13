@@ -15,11 +15,11 @@
 '
 '*******************************************************************************************************
 
-Imports Tva.DateTime
 Imports System.Runtime.Serialization
+Imports Tva.DateTime
 
-' This class represents the protocol independent common implementation of a configuration frame that can be sent or received from a PMU.
-<CLSCompliant(False)> _
+''' <summary>This class represents the protocol independent common implementation of a configuration frame that can be sent or received from a PMU.</summary>
+<CLSCompliant(False), Serializable()> _
 Public MustInherit Class ConfigurationFrameBase
 
     Inherits ChannelFrameBase(Of IConfigurationCell)
@@ -27,10 +27,15 @@ Public MustInherit Class ConfigurationFrameBase
 
     Private m_frameRate As Int16
 
+    Protected Sub New()
+    End Sub
+
     Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
 
         MyBase.New(info, context)
-        info.GetInt16("frameRate")
+
+        ' Deserialize configuration frame
+        m_frameRate = info.GetInt16("frameRate")
 
     End Sub
 
@@ -89,6 +94,15 @@ Public MustInherit Class ConfigurationFrameBase
         For Each cell As IConfigurationCell In Cells
             cell.NominalFrequency = value
         Next
+
+    End Sub
+
+    Public Overrides Sub GetObjectData(ByVal info As System.Runtime.Serialization.SerializationInfo, ByVal context As System.Runtime.Serialization.StreamingContext)
+
+        MyBase.GetObjectData(info, context)
+
+        ' Serialize configuration frame
+        info.AddValue("frameRate", m_frameRate)
 
     End Sub
 

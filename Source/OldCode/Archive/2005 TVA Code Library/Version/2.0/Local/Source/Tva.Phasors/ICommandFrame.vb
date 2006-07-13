@@ -15,7 +15,7 @@
 '
 '*******************************************************************************************************
 
-' This interface represents the protocol independent representation of a command frame.
+''' <summary>This interface represents the protocol independent representation of a command frame.</summary>
 <CLSCompliant(False)> _
 Public Interface ICommandFrame
 

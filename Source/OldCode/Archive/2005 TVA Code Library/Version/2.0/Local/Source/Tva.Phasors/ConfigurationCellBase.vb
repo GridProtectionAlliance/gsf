@@ -21,8 +21,8 @@ Imports System.Text
 Imports Tva.Phasors.Common
 Imports Tva.Text.Common
 
-' This class represents the protocol independent common implementation of a set of configuration related data settings that can be sent or received from a PMU.
-<CLSCompliant(False)> _
+''' <summary>This class represents the protocol independent common implementation of a set of configuration related data settings that can be sent or received from a PMU.</summary>
+<CLSCompliant(False), Serializable()> _
 Public MustInherit Class ConfigurationCellBase
 
     Inherits ChannelCellBase
@@ -36,18 +36,21 @@ Public MustInherit Class ConfigurationCellBase
     Private m_digitalDefinitions As DigitalDefinitionCollection
     Private m_nominalFrequency As LineFrequency
 
+    Protected Sub New()
+    End Sub
+
     Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
 
         MyBase.New(info, context)
 
         ' Deserialize configuration cell values
-        m_nominalFrequency = info.GetValue("nominalFrequency", GetType(LineFrequency))
         Me.StationName = info.GetString("stationName")
         Me.IDLabel = info.GetString("idLabel")
         m_phasorDefinitions = info.GetValue("phasorDefinitions", GetType(PhasorDefinitionCollection))
         m_frequencyDefinition = info.GetValue("frequencyDefinition", GetType(IFrequencyDefinition))
         m_analogDefinitions = info.GetValue("analogDefinitions", GetType(AnalogDefinitionCollection))
         m_digitalDefinitions = info.GetValue("digitalDefinitions", GetType(DigitalDefinitionCollection))
+        m_nominalFrequency = info.GetValue("nominalFrequency", GetType(LineFrequency))
 
     End Sub
 
@@ -142,8 +145,9 @@ Public MustInherit Class ConfigurationCellBase
             Return m_idLabel
         End Get
         Set(ByVal value As String)
-            Dim length As Int32 = Len(Trim(value))
-            If length > IDLabelLength Then
+            If value Is Nothing Then value = ""
+
+            If value.Trim.Length > IDLabelLength Then
                 Throw New OverflowException("ID label must not be more than " & IDLabelLength & " characters in length")
             Else
                 m_idLabel = value.PadRight(IDLabelLength)
@@ -319,13 +323,13 @@ Public MustInherit Class ConfigurationCellBase
         MyBase.GetObjectData(info, context)
 
         ' Serialize configuration cell values
-        info.AddValue("nominalFrequency", m_nominalFrequency, GetType(LineFrequency))
         info.AddValue("stationName", StationName)
         info.AddValue("idLabel", IDLabel)
         info.AddValue("phasorDefinitions", m_phasorDefinitions, GetType(PhasorDefinitionCollection))
         info.AddValue("frequencyDefinition", m_frequencyDefinition, GetType(IFrequencyDefinition))
         info.AddValue("analogDefinitions", m_analogDefinitions, GetType(AnalogDefinitionCollection))
         info.AddValue("digitalDefinitions", m_digitalDefinitions, GetType(DigitalDefinitionCollection))
+        info.AddValue("nominalFrequency", m_nominalFrequency, GetType(LineFrequency))
 
     End Sub
 

@@ -22,7 +22,7 @@ Imports Tva.IO.Compression.Common
 
 Namespace Ieee1344
 
-    <CLSCompliant(False)> _
+    <CLSCompliant(False), Serializable()> _
     Public Class HeaderFrame
 
         Inherits HeaderFrameBase

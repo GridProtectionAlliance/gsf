@@ -15,16 +15,16 @@
 '
 '*******************************************************************************************************
 
-Imports System.Buffer
 Imports System.Runtime.Serialization
+Imports System.Buffer
 Imports Tva.DateTime
 Imports Tva.DateTime.Common
 Imports Tva.IO.Compression.Common
 Imports Tva.Phasors.Common
 Imports Tva.Measurements
 
-' This class represents the protocol independent common implementation of any frame of data that can be sent or received from a PMU.
-<CLSCompliant(False)> _
+''' <summary>This class represents the protocol independent common implementation of any frame of data that can be sent or received from a PMU.</summary>
+<CLSCompliant(False), Serializable()> _
 Public MustInherit Class ChannelFrameBase(Of T As IChannelCell)
 
     Inherits ChannelBase
@@ -36,6 +36,9 @@ Public MustInherit Class ChannelFrameBase(Of T As IChannelCell)
     Private m_published As Boolean
     Private m_parsedBinaryLength As UInt16
     Private m_measurements As Dictionary(Of Integer, IMeasurement)
+
+    Protected Sub New()
+    End Sub
 
     Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
 

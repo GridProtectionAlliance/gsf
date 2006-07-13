@@ -17,14 +17,17 @@
 
 Imports System.Runtime.Serialization
 
-' This class represents the common implementation of the protocol independent representation of a collection of any kind of data value.
-<CLSCompliant(False)> _
+''' <summary>This class represents the common implementation of the protocol independent representation of a collection of any kind of data value.</summary>
+<CLSCompliant(False), Serializable()> _
 Public MustInherit Class ChannelValueCollectionBase(Of TDefinition As IChannelDefinition, TValue As IChannelValue(Of TDefinition))
 
     Inherits ChannelCollectionBase(Of TValue)
 
     Private m_fixedCount As Int32
     Private m_floatCount As Int32
+
+    Protected Sub New()
+    End Sub
 
     Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
 

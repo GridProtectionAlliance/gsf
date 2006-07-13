@@ -22,7 +22,7 @@ Imports Tva.Phasors.BpaPdcStream.Common
 
 Namespace BpaPdcStream
 
-    <CLSCompliant(False)> _
+    <CLSCompliant(False), Serializable()> _
     Public Class ConfigurationCell
 
         Inherits ConfigurationCellBase
@@ -30,6 +30,9 @@ Namespace BpaPdcStream
         Private m_ieeeFormatFlags As IEEEFormatFlags
         Private m_offset As UInt16
         Private m_reserved As Int16
+
+        Protected Sub New()
+        End Sub
 
         Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
 

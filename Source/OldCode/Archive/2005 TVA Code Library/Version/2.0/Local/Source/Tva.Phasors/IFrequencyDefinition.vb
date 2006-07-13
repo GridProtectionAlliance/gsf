@@ -15,7 +15,7 @@
 '
 '*******************************************************************************************************
 
-' This interface represents a protocol independent frequency and df/dt value definition.
+''' <summary>This interface represents a protocol independent frequency and df/dt value definition.</summary>
 <CLSCompliant(False)> _
 Public Interface IFrequencyDefinition
 

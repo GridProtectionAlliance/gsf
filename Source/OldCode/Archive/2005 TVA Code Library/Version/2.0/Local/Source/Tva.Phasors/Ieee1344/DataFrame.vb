@@ -22,13 +22,16 @@ Imports Tva.IO.Compression.Common
 Namespace Ieee1344
 
     ' This is essentially a "row" of PMU data at a given timestamp
-    <CLSCompliant(False)> _
+    <CLSCompliant(False), Serializable()> _
     Public Class DataFrame
 
         Inherits DataFrameBase
         Implements ICommonFrameHeader
 
         Private m_sampleCount As Int16
+
+        Protected Sub New()
+        End Sub
 
         Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
 

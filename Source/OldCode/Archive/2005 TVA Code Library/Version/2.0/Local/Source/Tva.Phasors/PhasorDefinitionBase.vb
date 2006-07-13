@@ -17,8 +17,8 @@
 
 Imports System.Runtime.Serialization
 
-' This class represents the common implementation of the protocol independent definition of a phasor value.
-<CLSCompliant(False)> _
+''' <summary>This class represents the common implementation of the protocol independent definition of a phasor value.</summary>
+<CLSCompliant(False), Serializable()> _
 Public MustInherit Class PhasorDefinitionBase
 
     Inherits ChannelDefinitionBase
@@ -26,6 +26,9 @@ Public MustInherit Class PhasorDefinitionBase
 
     Private m_type As PhasorType
     Private m_voltageReference As IPhasorDefinition
+
+    Protected Sub New()
+    End Sub
 
     Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
 
@@ -122,4 +125,3 @@ Public MustInherit Class PhasorDefinitionBase
     End Sub
 
 End Class
-

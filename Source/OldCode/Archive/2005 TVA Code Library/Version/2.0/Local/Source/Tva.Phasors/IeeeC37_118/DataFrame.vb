@@ -20,13 +20,16 @@ Imports System.Runtime.Serialization
 Namespace IeeeC37_118
 
     ' This is essentially a "row" of PMU data at a given timestamp
-    <CLSCompliant(False)> _
+    <CLSCompliant(False), Serializable()> _
     Public Class DataFrame
 
         Inherits DataFrameBase
         Implements ICommonFrameHeader
 
         Private m_timeQualityFlags As Int32
+
+        Protected Sub New()
+        End Sub
 
         Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
 

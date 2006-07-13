@@ -25,7 +25,7 @@ Imports Tva.IO.Compression.Common
 Namespace Ieee1344
 
     ' This class generates and parses a frame header specfic to C37.118
-    <CLSCompliant(False)> _
+    <CLSCompliant(False), Serializable()> _
     Public NotInheritable Class CommonFrameHeader
 
 #Region " Internal Common Frame Header Instance Class "

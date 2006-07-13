@@ -18,6 +18,7 @@
 Namespace BpaPdcStream
 
     ''' <summary>Stream type</summary>
+    <Serializable()> _
     Public Enum StreamType As Byte
         ''' <summary>Standard full data stream</summary>
         Legacy = 0
@@ -26,6 +27,7 @@ Namespace BpaPdcStream
     End Enum
 
     ''' <summary>Stream revision number</summary>
+    <Serializable()> _
     Public Enum RevisionNumber As Byte
         ''' <summary>Original revision for all to June 2002, use NTP timetag (start count 1900)</summary>
         Revision0 = 0
@@ -36,7 +38,7 @@ Namespace BpaPdcStream
     End Enum
 
     ''' <summary>Channel flags</summary>
-    <Flags()> _
+    <Flags(), Serializable()> _
     Public Enum ChannelFlags As Byte
         ''' <summary>Valid if not set (yes = 0)</summary>
         DataIsValid = Bit7
@@ -57,7 +59,7 @@ Namespace BpaPdcStream
     End Enum
 
     ''' <summary>Reserved flags</summary>
-    <Flags()> _
+    <Flags(), Serializable()> _
     Public Enum ReservedFlags As Byte
         Reserved0 = Bit7
         Reserved1 = Bit6
@@ -65,7 +67,7 @@ Namespace BpaPdcStream
     End Enum
 
     ''' <summary>IEEE format flags</summary>
-    <Flags()> _
+    <Flags(), Serializable()> _
     Public Enum IEEEFormatFlags As Byte
         ''' <summary>Frequency data format: Set = float, Clear = integer</summary>
         Frequency = Bit7
@@ -80,7 +82,7 @@ Namespace BpaPdcStream
     End Enum
 
     ''' <summary>PMU status flags</summary>
-    <Flags()> _
+    <Flags(), Serializable()> _
     Public Enum PMUStatusFlags As Byte
         ''' <summary>Synchonization is invalid</summary>
         SyncInvalid = Bit0

@@ -15,7 +15,7 @@
 '
 '*******************************************************************************************************
 
-' This interface represents a protocol independent digital value.
+''' <summary>This interface represents a protocol independent digital value.</summary>
 <CLSCompliant(False)> _
 Public Interface IDigitalValue
 

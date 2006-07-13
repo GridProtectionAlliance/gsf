@@ -20,7 +20,7 @@ Imports Tva.Phasors.IeeeC37_118.Common
 
 Namespace IeeeC37_118
 
-    <CLSCompliant(False)> _
+    <CLSCompliant(False), Serializable()> _
     Public Class HeaderFrame
 
         Inherits HeaderFrameBase

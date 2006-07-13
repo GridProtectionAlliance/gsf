@@ -19,7 +19,7 @@ Imports System.Runtime.Serialization
 
 Namespace Ieee1344
 
-    <CLSCompliant(False)> _
+    <CLSCompliant(False), Serializable()> _
     Public Class PhasorValue
 
         Inherits PhasorValueBase
@@ -47,6 +47,9 @@ Namespace Ieee1344
             Return New PhasorValue(parent, phasorDefinition, real, imaginary)
 
         End Function
+
+        Protected Sub New()
+        End Sub
 
         Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
 

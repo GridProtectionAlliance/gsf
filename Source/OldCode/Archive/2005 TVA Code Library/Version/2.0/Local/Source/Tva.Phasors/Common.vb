@@ -17,6 +17,7 @@
 
 Imports System.Buffer
 
+''' <summary>Common constants and functions for phasor classes</summary>
 <CLSCompliant(False)> _
 Public NotInheritable Class Common
 
@@ -30,6 +31,7 @@ Public NotInheritable Class Common
     Public Const SyncByte As Byte = &HAA
 
     ''' <summary>This is a common optimized block copy function for any kind of data</summary>
+    ''' <remarks>This function automatically advances index for convenience</remarks>
     Public Shared Sub CopyImage(ByVal channel As IChannel, ByVal buffer As Byte(), ByRef index As Integer)
 
         With channel
@@ -39,6 +41,7 @@ Public NotInheritable Class Common
     End Sub
 
     ''' <summary>This is a common optimized block copy function for binary data</summary>
+    ''' <remarks>This function automatically advances index for convenience</remarks>
     Public Shared Sub CopyImage(ByVal source As Byte(), ByVal buffer As Byte(), ByRef index As Integer, ByVal length As Integer)
 
         If length > 0 Then
@@ -47,11 +50,5 @@ Public NotInheritable Class Common
         End If
 
     End Sub
-
-    Public Shared ReadOnly Property NominalFrequencyValue(ByVal nominalFrequency As LineFrequency) As Single
-        Get
-            Return IIf(nominalFrequency = LineFrequency.Hz60, 60.0!, 50.0!)
-        End Get
-    End Property
 
 End Class

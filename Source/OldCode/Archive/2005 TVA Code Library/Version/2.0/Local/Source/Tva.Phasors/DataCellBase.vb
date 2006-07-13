@@ -20,8 +20,8 @@ Imports System.Buffer
 Imports Tva.Phasors.Common
 Imports Tva.Measurements
 
-' This class represents the protocol independent common implementation of a set of phasor related data values that can be sent or received from a PMU.
-<CLSCompliant(False)> _
+''' <summary>This class represents the protocol independent common implementation of a set of phasor related data values that can be sent or received from a PMU.</summary>
+<CLSCompliant(False), Serializable()> _
 Public MustInherit Class DataCellBase
 
     Inherits ChannelCellBase
@@ -37,11 +37,15 @@ Public MustInherit Class DataCellBase
     Private m_adder As Double
     Private m_multiplier As Double
 
+    Protected Sub New()
+    End Sub
+
     Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
 
         MyBase.New(info, context)
 
         ' Deserialize data cell values
+        m_configurationCell = info.GetValue("configurationCell", GetType(IConfigurationCell))
         m_statusFlags = info.GetInt16("statusFlags")
         m_phasorValues = info.GetValue("phasorValues", GetType(PhasorValueCollection))
         m_frequencyValue = info.GetValue("frequencyValue", GetType(IFrequencyValue))
@@ -313,6 +317,7 @@ Public MustInherit Class DataCellBase
         MyBase.GetObjectData(info, context)
 
         ' Serialize data cell values
+        info.AddValue("configurationCell", m_configurationCell, GetType(IConfigurationCell))
         info.AddValue("statusFlags", m_statusFlags)
         info.AddValue("phasorValues", m_phasorValues, GetType(PhasorValueCollection))
         info.AddValue("frequencyValue", m_frequencyValue, GetType(IFrequencyValue))

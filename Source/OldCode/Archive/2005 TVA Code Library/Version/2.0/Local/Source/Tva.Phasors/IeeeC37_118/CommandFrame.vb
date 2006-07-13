@@ -20,13 +20,16 @@ Imports Tva.Phasors.IeeeC37_118.Common
 
 Namespace IeeeC37_118
 
-    <CLSCompliant(False)> _
+    <CLSCompliant(False), Serializable()> _
     Public Class CommandFrame
 
         Inherits CommandFrameBase
         Implements ICommonFrameHeader
 
         Private m_version As Byte
+
+        Protected Sub New()
+        End Sub
 
         Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
 

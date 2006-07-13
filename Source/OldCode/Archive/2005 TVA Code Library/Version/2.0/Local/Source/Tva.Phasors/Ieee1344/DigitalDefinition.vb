@@ -19,12 +19,15 @@ Imports System.Runtime.Serialization
 
 Namespace Ieee1344
 
-    <CLSCompliant(False)> _
+    <CLSCompliant(False), Serializable()> _
     Public Class DigitalDefinition
 
         Inherits DigitalDefinitionBase
 
         Private m_statusFlags As Int16
+
+        Protected Sub New()
+        End Sub
 
         Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
 

@@ -15,7 +15,7 @@
 '
 '*******************************************************************************************************
 
-' This class represents the common implementation of the protocol independent parsing state of any kind of data cell.
+''' <summary>This class represents the common implementation of the protocol independent parsing state of any kind of data cell.</summary>
 Public MustInherit Class ChannelCellParsingStateBase
 
     Inherits ChannelParsingStateBase

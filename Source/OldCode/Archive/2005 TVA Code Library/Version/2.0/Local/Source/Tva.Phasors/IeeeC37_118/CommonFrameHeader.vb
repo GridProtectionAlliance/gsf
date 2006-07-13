@@ -23,7 +23,7 @@ Imports Tva.Phasors.IeeeC37_118.Common
 Namespace IeeeC37_118
 
     ' This class generates and parses a frame header specfic to C37.118
-    <CLSCompliant(False)> _
+    <CLSCompliant(False), Serializable()> _
     Public NotInheritable Class CommonFrameHeader
 
 #Region " Internal Common Frame Header Instance Class "

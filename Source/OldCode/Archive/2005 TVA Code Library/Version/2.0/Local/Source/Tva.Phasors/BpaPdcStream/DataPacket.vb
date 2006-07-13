@@ -23,7 +23,7 @@ Imports Tva.Math.Common
 Namespace BpaPdcStream
 
     ' This is essentially a "row" of PMU data at a given timestamp
-    <CLSCompliant(False)> _
+    <CLSCompliant(False), Serializable()> _
     Public Class DataPacket
 
         Implements IComparable, ISerializable
@@ -37,6 +37,9 @@ Namespace BpaPdcStream
         Public Published As Boolean
 
         Public Const SyncByte As Byte = &HAA
+
+        Protected Sub New()
+        End Sub
 
         Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
 
@@ -58,7 +61,7 @@ Namespace BpaPdcStream
             m_index = index
 
             ' We precalculate a regular .NET timestamp with milliseconds sitting in the middle of the sample index
-            m_timeStamp = timeStamp.AddMilliseconds((m_index + 0.5@) * (1000@ / m_configFile.FrameRate))
+            m_timestamp = timeStamp.AddMilliseconds((m_index + 0.5@) * (1000@ / m_configFile.FrameRate))
 
             With m_configFile
                 Cells = CreateArray(Of DataCell)(.Cells.Count)
@@ -84,7 +87,7 @@ Namespace BpaPdcStream
 
         Public ReadOnly Property Timestamp() As Date
             Get
-                Return m_timeStamp
+                Return m_timestamp
             End Get
         End Property
 

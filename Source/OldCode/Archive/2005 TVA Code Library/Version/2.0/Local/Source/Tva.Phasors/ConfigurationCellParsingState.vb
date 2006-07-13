@@ -15,7 +15,7 @@
 '
 '*******************************************************************************************************
 
-' This class represents the protocol independent common implementation of a parsing state for a set of configuration related data settings that can be sent or received from a PMU.
+''' <summary>This class represents the protocol independent common implementation of a parsing state for a set of configuration related data settings that can be sent or received from a PMU.</summary>
 <CLSCompliant(False)> _
 Public Class ConfigurationCellParsingState
 

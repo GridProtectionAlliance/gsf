@@ -15,8 +15,8 @@
 '
 '*******************************************************************************************************
 
-' This class represents the common implementation of the protocol independent parsing state class used by any kind of data.
-' This class is inherited by subsequent classes to provide parsing state information particular to a data type's needs.
+''' <summary>This class represents the common implementation of the protocol independent parsing state class used by any kind of data.</summary>
+''' <remarks>This class is inherited by subsequent classes to provide parsing state information particular to a data type's needs.</remarks>
 Public MustInherit Class ChannelParsingStateBase
 
     Implements IChannelParsingState

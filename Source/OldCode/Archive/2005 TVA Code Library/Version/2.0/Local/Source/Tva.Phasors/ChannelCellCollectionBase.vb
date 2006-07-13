@@ -17,14 +17,17 @@
 
 Imports System.Runtime.Serialization
 
-' This class represents the common implementation of the protocol independent representation of a collection of any kind of data cell.
-<CLSCompliant(False)> _
+''' <summary>This class represents the common implementation of the protocol independent representation of a collection of any kind of data cell.</summary>
+<CLSCompliant(False), Serializable()> _
 Public MustInherit Class ChannelCellCollectionBase(Of T As IChannelCell)
 
     Inherits ChannelCollectionBase(Of T)
     Implements IChannelCellCollection(Of T)
 
     Private m_constantCellLength As Boolean
+
+    Protected Sub New()
+    End Sub
 
     Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
 

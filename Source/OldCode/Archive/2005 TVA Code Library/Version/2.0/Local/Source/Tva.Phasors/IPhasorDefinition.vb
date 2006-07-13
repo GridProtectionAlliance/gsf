@@ -15,7 +15,7 @@
 '
 '*******************************************************************************************************
 
-' This class represents the protocol independent interface of a phasor value definition.
+''' <summary>This class represents the protocol independent interface of a phasor value definition.</summary>
 <CLSCompliant(False)> _
 Public Interface IPhasorDefinition
 

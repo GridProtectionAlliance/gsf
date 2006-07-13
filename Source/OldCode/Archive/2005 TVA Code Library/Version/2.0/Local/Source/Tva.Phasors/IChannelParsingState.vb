@@ -15,9 +15,8 @@
 '
 '*******************************************************************************************************
 
-' This interface represents a protocol independent parsing state used by any kind of data.
-' Data parsing is very format specific, classes implementing this interface create a
-' common form for parsing state information particular to a data type.
+''' <summary>This interface represents a protocol independent parsing state used by any kind of data.</summary>
+''' <remarks>Data parsing is very format specific, classes implementing this interface create a common form for parsing state information particular to a data type.</remarks>
 Public Interface IChannelParsingState
 
     ReadOnly Property InheritedType() As Type

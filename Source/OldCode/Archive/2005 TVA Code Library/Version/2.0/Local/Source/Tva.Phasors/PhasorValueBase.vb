@@ -20,8 +20,8 @@
 Imports System.Runtime.Serialization
 Imports Tva.Math
 
-' This class represents the protocol independent representation of a phasor value.
-<CLSCompliant(False)> _
+''' <summary>This class represents the protocol independent representation of a phasor value.</summary>
+<CLSCompliant(False), Serializable()> _
 Public MustInherit Class PhasorValueBase
 
     Inherits ChannelValueBase(Of IPhasorDefinition)
@@ -33,16 +33,16 @@ Public MustInherit Class PhasorValueBase
     Private m_imaginary As Single
     Private m_compositeValues As CompositeValues
 
-    ' Create phasor from polar coordinates (angle expected in Degrees)
-    ' Note: This method is expected to be implemented as a public shared method in derived class automatically passing in createNewPhasorValueFunction
+    ''' <summary>Create phasor from polar coordinates (angle expected in Degrees)</summary>
+    ''' <remarks>Note: This method is expected to be implemented as a public shared method in derived class automatically passing in createNewPhasorValueFunction</remarks>
     Protected Shared Function CreateFromPolarValues(ByVal createNewPhasorValueFunction As CreateNewPhasorValueFunctionSignature, ByVal parent As IDataCell, ByVal phasorDefinition As IPhasorDefinition, ByVal angle As Single, ByVal magnitude As Single) As IPhasorValue
 
         Return CreateFromRectangularValues(createNewPhasorValueFunction, parent, phasorDefinition, CalculateRealComponent(angle, magnitude), CalculateImaginaryComponent(angle, magnitude))
 
     End Function
 
-    ' Create phasor from rectangular coordinates
-    ' Note: This method is expected to be implemented as a public shared method in derived class automatically passing in createNewPhasorValueFunction
+    ''' <summary>Create phasor from rectangular coordinates</summary>
+    ''' <remarks>Note: This method is expected to be implemented as a public shared method in derived class automatically passing in createNewPhasorValueFunction</remarks>
     Protected Shared Function CreateFromRectangularValues(ByVal createNewPhasorValueFunction As CreateNewPhasorValueFunctionSignature, ByVal parent As IDataCell, ByVal phasorDefinition As IPhasorDefinition, ByVal real As Single, ByVal imaginary As Single) As IPhasorValue
 
         If phasorDefinition Is Nothing Then Throw New ArgumentNullException("No phasor definition specified")
@@ -50,8 +50,8 @@ Public MustInherit Class PhasorValueBase
 
     End Function
 
-    ' Create phasor from unscaled rectangular coordinates
-    ' Note: This method is expected to be implemented as a public shared method in derived class automatically passing in createNewPhasorValueFunction
+    ''' <summary>Create phasor from unscaled rectangular coordinates</summary>
+    ''' <remarks>Note: This method is expected to be implemented as a public shared method in derived class automatically passing in createNewPhasorValueFunction</remarks>
     Protected Shared Function CreateFromUnscaledRectangularValues(ByVal createNewPhasorValueFunction As CreateNewPhasorValueFunctionSignature, ByVal parent As IDataCell, ByVal phasorDefinition As IPhasorDefinition, ByVal real As Int16, ByVal imaginary As Int16) As IPhasorValue
 
         Dim factor As Single = phasorDefinition.ConversionFactor
@@ -59,21 +59,21 @@ Public MustInherit Class PhasorValueBase
 
     End Function
 
-    ' Gets real component from angle (in Degrees) and magnitude
+    ''' <summary>Gets real component from angle (in Degrees) and magnitude</summary>
     Public Shared Function CalculateRealComponent(ByVal angle As Single, ByVal magnitude As Single) As Single
 
         Return magnitude * System.Math.Cos(angle * System.Math.PI / 180)
 
     End Function
 
-    ' Gets imaginary component from angle (in Degrees) and magnitude
+    ''' <summary>Gets imaginary component from angle (in Degrees) and magnitude</summary>
     Public Shared Function CalculateImaginaryComponent(ByVal angle As Single, ByVal magnitude As Single) As Single
 
         Return magnitude * System.Math.Sin(angle * System.Math.PI / 180)
 
     End Function
 
-    ' Calculate watts from imaginary and real components of two phasors
+    ''' <summary>Calculate watts from imaginary and real components of two phasors</summary>
     Public Shared Function CalculatePower(ByVal voltage As IPhasorValue, ByVal current As IPhasorValue) As Single
 
         If voltage Is Nothing Then Throw New ArgumentNullException("No voltage specified")
@@ -84,7 +84,7 @@ Public MustInherit Class PhasorValueBase
 
     End Function
 
-    ' Calculate vars from imaginary and real components of two phasors
+    ''' <summary>Calculate vars from imaginary and real components of two phasors</summary>
     Public Shared Function CalculateVars(ByVal voltage As IPhasorValue, ByVal current As IPhasorValue) As Single
 
         If voltage Is Nothing Then Throw New ArgumentNullException("No voltage specified")
@@ -94,6 +94,9 @@ Public MustInherit Class PhasorValueBase
         'Return 3 * voltage.Magnitude * current.Magnitude * System.Math.Sin((voltage.Angle - current.Angle) * System.Math.PI / 180)
 
     End Function
+
+    Protected Sub New()
+    End Sub
 
     Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
 

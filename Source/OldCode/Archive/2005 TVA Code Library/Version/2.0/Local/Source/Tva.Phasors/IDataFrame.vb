@@ -15,7 +15,7 @@
 '
 '*******************************************************************************************************
 
-' This interface represents the protocol independent representation of any frame of data.
+''' <summary>This interface represents the protocol independent representation of any frame of data.</summary>
 <CLSCompliant(False)> _
 Public Interface IDataFrame
 

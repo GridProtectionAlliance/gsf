@@ -15,7 +15,7 @@
 '
 '*******************************************************************************************************
 
-' This class represents the protocol independent common implementation the parsing state used by any frame of data that can be sent or received from a PMU.
+''' <summary>This class represents the protocol independent common implementation the parsing state used by any frame of data that can be sent or received from a PMU.</summary>
 <CLSCompliant(False)> _
 Public MustInherit Class ChannelFrameParsingStateBase(Of T As IChannelCell)
 

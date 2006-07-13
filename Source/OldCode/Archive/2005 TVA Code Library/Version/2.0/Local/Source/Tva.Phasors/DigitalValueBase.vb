@@ -18,14 +18,17 @@
 Imports System.Runtime.Serialization
 Imports System.ComponentModel
 
-' This class represents the common implementation of the protocol independent representation of a digital value.
-<CLSCompliant(False)> _
+''' <summary>This class represents the common implementation of the protocol independent representation of a digital value.</summary>
+<CLSCompliant(False), Serializable()> _
 Public MustInherit Class DigitalValueBase
 
     Inherits ChannelValueBase(Of IDigitalDefinition)
     Implements IDigitalValue
 
     Private m_value As Int16
+
+    Protected Sub New()
+    End Sub
 
     Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
 
@@ -129,7 +132,7 @@ Public MustInherit Class DigitalValueBase
 
         MyBase.GetObjectData(info, context)
 
-        ' Serialize analog value
+        ' Serialize digital value
         info.AddValue("value", m_value)
 
     End Sub

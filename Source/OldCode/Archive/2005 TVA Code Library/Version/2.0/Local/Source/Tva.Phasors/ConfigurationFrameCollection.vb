@@ -17,11 +17,14 @@
 
 Imports System.Runtime.Serialization
 
-' This class represents the protocol independent collection of the common implementation of a configuration frame that can be sent or received from a PMU.
-<CLSCompliant(False)> _
+''' <summary>This class represents the protocol independent collection of the common implementation of a configuration frame that can be sent or received from a PMU.</summary>
+<CLSCompliant(False), Serializable()> _
 Public Class ConfigurationFrameCollection
 
     Inherits ChannelFrameCollectionBase(Of IConfigurationFrame)
+
+    Protected Sub New()
+    End Sub
 
     Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
 

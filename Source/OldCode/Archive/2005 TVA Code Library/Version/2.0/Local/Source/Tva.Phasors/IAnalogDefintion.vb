@@ -15,7 +15,7 @@
 '
 '*******************************************************************************************************
 
-' This interface represents a protocol independent analog value definition.
+''' <summary>This interface represents a protocol independent analog value definition.</summary>
 <CLSCompliant(False)> _
 Public Interface IAnalogDefinition
 

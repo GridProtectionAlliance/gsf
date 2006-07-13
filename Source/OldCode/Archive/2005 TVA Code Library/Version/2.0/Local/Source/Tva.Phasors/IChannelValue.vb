@@ -18,7 +18,7 @@
 Imports System.Runtime.Serialization
 Imports Tva.Measurements
 
-' This interface represents a protocol independent representation of any kind of data value.
+''' <summary>This interface represents a protocol independent representation of any kind of data value.</summary>
 <CLSCompliant(False)> _
 Public Interface IChannelValue(Of T As IChannelDefinition)
 
@@ -32,11 +32,16 @@ Public Interface IChannelValue(Of T As IChannelDefinition)
 
     ''' <summary>Composite measurements of channel value</summary>
     ''' <remarks>
-    ''' Because derived classes may consist of more than one measured value,
-    ''' we use this property to abstractly expose each value
+    ''' Because derived value classes may consist of more than one measured value,
+    ''' we use the composite value properties to abstractly expose each value
     ''' </remarks>
     Default Property CompositeValue(ByVal index As Integer) As Single
 
+    ''' <summary>Total number of composite measurements exposed by the channel value</summary>
+    ''' <remarks>
+    ''' Because derived value classes may consist of more than one measured value,
+    ''' we use the composite value properties to abstractly expose each value
+    ''' </remarks>
     ReadOnly Property CompositeValueCount() As Integer
 
     ReadOnly Property IsEmpty() As Boolean

@@ -33,7 +33,7 @@ Namespace BpaPdcStream
     ' number of different threads and a request can be made at anytime to "reload" the config file, so we make sure all publically
     ' accessible methods in the class make proper use of the internal reader-writer lock.  This also allows end user to place a
     ' file-watcher on the INI file so class can "reload" config file when it's updated...
-    <CLSCompliant(False)> _
+    <CLSCompliant(False), Serializable()> _
     Public Class ConfigurationFrame
 
         Inherits ConfigurationFrameBase
@@ -53,6 +53,9 @@ Namespace BpaPdcStream
         Public Const DefaultVoltagePhasorEntry As String = "V,4500.0,0.0060573,0,0,500,Default 500kV"
         Public Const DefaultCurrentPhasorEntry As String = "V,4500.0,0.0060573,0,0,500,Default 500kV"
         Public Const DefaultFrequencyEntry As String = "F,1000,60,1000,0,0,Frequency"
+
+        Protected Sub New()
+        End Sub
 
         Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
 

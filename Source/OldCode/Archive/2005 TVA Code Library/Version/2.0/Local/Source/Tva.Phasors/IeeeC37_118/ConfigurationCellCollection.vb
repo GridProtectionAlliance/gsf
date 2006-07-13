@@ -19,7 +19,7 @@ Imports System.Runtime.Serialization
 
 Namespace IeeeC37_118
 
-    <CLSCompliant(False)> _
+    <CLSCompliant(False), Serializable()> _
     Public Class ConfigurationCellCollection
 
         Inherits Phasors.ConfigurationCellCollection

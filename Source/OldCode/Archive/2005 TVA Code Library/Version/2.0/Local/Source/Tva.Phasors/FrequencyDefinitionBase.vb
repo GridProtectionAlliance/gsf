@@ -18,8 +18,8 @@
 Imports System.Runtime.Serialization
 Imports Tva.Phasors.Common
 
-' This class represents the common implementation of the protocol independent definition of a frequency and df/dt value.
-<CLSCompliant(False)> _
+''' <summary>This class represents the common implementation of the protocol independent definition of a frequency and df/dt value.</summary>
+<CLSCompliant(False), Serializable()> _
 Public MustInherit Class FrequencyDefinitionBase
 
     Inherits ChannelDefinitionBase
@@ -27,6 +27,9 @@ Public MustInherit Class FrequencyDefinitionBase
 
     Private m_dfdtScale As Int32
     Private m_dfdtOffset As Single
+
+    Protected Sub New()
+    End Sub
 
     Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
 
@@ -81,7 +84,7 @@ Public MustInherit Class FrequencyDefinitionBase
 
     Public Overrides Property Offset() As Single
         Get
-            Return NominalFrequencyValue(Parent.NominalFrequency)
+            Return Convert.ToSingle(Parent.NominalFrequency)
         End Get
         Set(ByVal value As Single)
             Throw New NotSupportedException("Frequency offset is read-only - it is determined by nominal frequency specified in containing condiguration cell")

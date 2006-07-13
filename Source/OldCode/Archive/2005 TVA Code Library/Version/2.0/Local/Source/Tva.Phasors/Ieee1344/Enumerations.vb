@@ -18,6 +18,7 @@
 Namespace Ieee1344
 
     ''' <summary>Frame type</summary>
+    <Serializable()> _
     Public Enum FrameType As Int16
         ''' <summary>000 Data frame</summary>
         DataFrame = Nill
@@ -38,6 +39,7 @@ Namespace Ieee1344
     End Enum
 
     ''' <summary>Trigger status</summary>
+    <Serializable()> _
     Public Enum TriggerStatus As Int16
         ''' <summary>111 Frequency trigger</summary>
         FrequencyTrigger = Bit13 Or Bit12 Or Bit11

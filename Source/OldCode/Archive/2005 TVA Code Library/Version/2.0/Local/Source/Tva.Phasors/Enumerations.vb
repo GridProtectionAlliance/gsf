@@ -16,42 +16,49 @@
 '*******************************************************************************************************
 
 ''' <summary>Phasor coordinate formats</summary>
+<Serializable()> _
 Public Enum CoordinateFormat As Byte
     Rectangular
     Polar
 End Enum
 
 ''' <summary>Composite polar values</summary>
+<Serializable()> _
 Public Enum CompositePhasorValue
     Angle
     Magnitude
 End Enum
 
 ''' <summary>Composite frequency values</summary>
+<Serializable()> _
 Public Enum CompositeFrequencyValue
     Frequency
     DfDt
 End Enum
 
 ''' <summary>Phasor types</summary>
+<Serializable()> _
 Public Enum PhasorType As Byte
     Voltage
     Current
 End Enum
 
 ''' <summary>Data transmission formats</summary>
+<Serializable()> _
 Public Enum DataFormat As Byte
     FixedInteger
     FloatingPoint
 End Enum
 
 ''' <summary>Nominal line frequencies</summary>
+<Serializable()> _
 Public Enum LineFrequency As Byte
-    Hz50
-    Hz60
+    Hz50 = 50
+    Hz60 = 60
 End Enum
 
 ''' <summary>Fundamental frame types</summary>
+<Serializable()> _
 Public Enum FundamentalFrameType
     ConfigurationFrame
     DataFrame
@@ -61,6 +68,7 @@ Public Enum FundamentalFrameType
 End Enum
 
 ''' <summary>Phasor data transport layers</summary>
+<Serializable()> _
 Public Enum DataTransportLayer
     Tcp
     Udp
@@ -69,6 +77,7 @@ Public Enum DataTransportLayer
 End Enum
 
 ''' <summary>Phasor data protocols</summary>
+<Serializable()> _
 Public Enum Protocol
     IeeeC37_118V1
     IeeeC37_118D6
@@ -77,6 +86,7 @@ Public Enum Protocol
 End Enum
 
 ''' <summary>PMU commands</summary>
+<Serializable()> _
 Public Enum Command As Int16
     ''' <summary>0001 Turn off transmission of data frames</summary>
     DisableRealTimeData = Bit0

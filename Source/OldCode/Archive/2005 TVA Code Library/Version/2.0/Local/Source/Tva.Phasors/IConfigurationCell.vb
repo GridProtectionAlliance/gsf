@@ -15,7 +15,7 @@
 '
 '*******************************************************************************************************
 
-' This interface represents the protocol independent representation of a set of configuration related data settings (typically related to a PMU).
+''' <summary>This interface represents the protocol independent representation of a set of configuration related data settings (typically related to a PMU).</summary>
 <CLSCompliant(False)> _
 Public Interface IConfigurationCell
 

@@ -21,10 +21,13 @@ Imports Tva.Phasors.Ieee1344.Common
 Namespace Ieee1344
 
     ' This data cell represents what most might call a "field" in table of rows - it is a single unit of data for a specific PMU
-    <CLSCompliant(False)> _
+    <CLSCompliant(False), Serializable()> _
     Public Class DataCell
 
         Inherits DataCellBase
+
+        Protected Sub New()
+        End Sub
 
         Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
 

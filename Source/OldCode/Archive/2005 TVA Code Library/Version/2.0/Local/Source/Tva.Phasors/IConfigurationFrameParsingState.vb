@@ -15,7 +15,7 @@
 '
 '*******************************************************************************************************
 
-' This interface represents the protocol independent parsing state of any configuration frame.
+''' <summary>This interface represents the protocol independent parsing state of any configuration frame.</summary>
 <CLSCompliant(False)> _
 Public Interface IConfigurationFrameParsingState
 

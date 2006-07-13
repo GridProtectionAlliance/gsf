@@ -17,7 +17,7 @@
 
 Imports System.Runtime.Serialization
 
-' This interface represents a protocol independent definition of any kind of data.
+''' <summary>This interface represents a protocol independent definition of any kind of data.</summary>
 <CLSCompliant(False)> _
 Public Interface IChannelDefinition
 

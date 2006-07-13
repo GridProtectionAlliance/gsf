@@ -15,7 +15,7 @@
 '
 '*******************************************************************************************************
 
-' This interface represents a protocol independent parsing state of any kind of data cell.
+''' <summary>This interface represents a protocol independent parsing state of any kind of data cell.</summary>
 Public Interface IChannelCellParsingState
 
     Inherits IChannelParsingState

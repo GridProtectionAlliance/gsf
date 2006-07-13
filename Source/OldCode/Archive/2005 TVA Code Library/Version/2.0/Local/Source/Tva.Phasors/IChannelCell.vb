@@ -17,13 +17,12 @@
 
 Imports System.Runtime.Serialization
 
-' This interface represents a protocol independent representation of any kind of data cell.
+''' <summary>This interface represents a protocol independent representation of any kind of data cell.</summary>
 <CLSCompliant(False)> _
 Public Interface IChannelCell
 
     Inherits IChannel, ISerializable
 
-    ' TODO: you must question validity of read-only state for non-serialized entities (either serialize value or allow value to be set after deserialization...)
     ReadOnly Property Parent() As IChannelFrame
 
     Property IDCode() As UInt16

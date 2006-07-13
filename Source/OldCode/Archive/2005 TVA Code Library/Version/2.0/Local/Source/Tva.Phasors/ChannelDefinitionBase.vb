@@ -20,8 +20,8 @@ Imports System.Text
 Imports Tva.Phasors.Common
 Imports Tva.Text.Common
 
-' This class represents the common implementation of the protocol independent definition of any kind of data.
-<CLSCompliant(False)> _
+''' <summary>This class represents the common implementation of the protocol independent definition of any kind of data.</summary>
+<CLSCompliant(False), Serializable()> _
 Public MustInherit Class ChannelDefinitionBase
 
     Inherits ChannelBase
@@ -32,6 +32,9 @@ Public MustInherit Class ChannelDefinitionBase
     Private m_label As String
     Private m_scale As Int32
     Private m_offset As Single
+
+    Protected Sub New()
+    End Sub
 
     Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
 
@@ -202,7 +205,7 @@ Public MustInherit Class ChannelDefinitionBase
         ' Serialize channel definition
         info.AddValue("parent", m_parent, GetType(IConfigurationCell))
         info.AddValue("index", m_index)
-        info.AddValue("label", Me.Label)
+        info.AddValue("label", m_label)
         info.AddValue("scale", m_scale)
         info.AddValue("offset", m_offset)
 

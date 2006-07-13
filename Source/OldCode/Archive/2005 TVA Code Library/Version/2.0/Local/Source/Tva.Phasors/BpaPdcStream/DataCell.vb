@@ -21,7 +21,7 @@ Imports Tva.Phasors.BpaPdcStream.Common
 Namespace BpaPdcStream
 
     ' This data cell represents what most might call a "field" in table of rows - it is a single unit of data for a specific PMU
-    <CLSCompliant(False)> _
+    <CLSCompliant(False), Serializable()> _
     Public Class DataCell
 
         Inherits DataCellBase
@@ -29,6 +29,9 @@ Namespace BpaPdcStream
         Private m_flags As ChannelFlags
         Private m_reservedFlags As ReservedFlags
         Private m_sampleNumber As Int16
+
+        Protected Sub New()
+        End Sub
 
         Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
 

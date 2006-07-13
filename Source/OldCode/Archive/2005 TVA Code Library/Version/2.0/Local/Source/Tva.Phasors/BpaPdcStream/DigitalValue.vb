@@ -19,10 +19,13 @@ Imports System.Runtime.Serialization
 
 Namespace BpaPdcStream
 
-    <CLSCompliant(False)> _
+    <CLSCompliant(False), Serializable()> _
     Public Class DigitalValue
 
         Inherits DigitalValueBase
+
+        Protected Sub New()
+        End Sub
 
         Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
 

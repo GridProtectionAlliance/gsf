@@ -22,13 +22,16 @@ Imports Tva.Phasors.IeeeC37_118.Common
 
 Namespace IeeeC37_118
 
-    <CLSCompliant(False)> _
+    <CLSCompliant(False), Serializable()> _
     Public Class ConfigurationCell
 
         Inherits ConfigurationCellBase
 
         Private m_formatFlags As FormatFlags
         Private m_configurationCount As UInt16
+
+        Protected Sub New()
+        End Sub
 
         Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
 

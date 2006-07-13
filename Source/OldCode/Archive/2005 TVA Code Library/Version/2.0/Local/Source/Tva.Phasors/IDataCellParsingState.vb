@@ -15,7 +15,7 @@
 '
 '*******************************************************************************************************
 
-' This interface represents the protocol independent parsing state of a set of phasor related data values.
+''' <summary>This interface represents the protocol independent parsing state of a set of phasor related data values.</summary>
 <CLSCompliant(False)> _
 Public Interface IDataCellParsingState
 

@@ -20,12 +20,15 @@ Imports System.Text
 
 Namespace IeeeC37_118
 
-    <CLSCompliant(False)> _
+    <CLSCompliant(False), Serializable()> _
     Public Class AnalogDefinition
 
         Inherits AnalogDefinitionBase
 
         Private m_type As AnalogType
+
+        Protected Sub New()
+        End Sub
 
         Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
 
