@@ -96,6 +96,10 @@
     <Content Include="TVAService.ico" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\Tva.Communication\Tva.Communication.vbproj">
+      <Project>{99F93056-9EDE-4EB8-BF8B-61E3B8728F9D}</Project>
+      <Name>Tva.Communication</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\Tva.Core\Tva.Core.vbproj">
       <Project>{29A7B606-D1BC-4A4B-96D0-258D5A72C3EC}</Project>
       <Name>Tva.Core</Name>

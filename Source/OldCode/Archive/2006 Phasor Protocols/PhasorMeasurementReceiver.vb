@@ -20,6 +20,7 @@ Imports System.Text
 Imports System.Data
 Imports System.Data.SqlClient
 Imports System.Threading
+Imports System.Net
 Imports System.Net.Sockets
 Imports Microsoft.Win32
 Imports Tva.Common
@@ -29,6 +30,7 @@ Imports Tva.Data.Common
 Imports Tva.DatAWare
 Imports Tva.Phasors
 Imports Tva.Phasors.Common
+Imports Tva.Communication
 Imports Tva.Measurements
 
 ' TODO: Abstract "calculated" measurements into an externally implementable interface definition (like archiver)
@@ -44,7 +46,7 @@ Public Class PhasorMeasurementReceiver
     Private m_archiverIP As String
     Private m_archiverCode As String
     Private m_archiverPort As Integer
-    Private m_tcpSocket As TcpClient
+    Private m_tcpSocket As Sockets.TcpClient
     Private m_clientStream As NetworkStream
     Private m_socketThread As Thread
     Private m_maximumEvents As Integer
@@ -232,8 +234,8 @@ Public Class PhasorMeasurementReceiver
                     timezone = row("TimeZone")
 
                     With parser
-                        .Protocol = [Enum].Parse(GetType(Protocol), row("DataID"))
-                        .TransportLayer = IIf(String.Compare(row("NTP"), "UDP", True) = 0, DataTransportLayer.Udp, DataTransportLayer.Tcp)
+                        .Protocol = [Enum].Parse(GetType(PhasorProtocol), row("DataID"))
+                        .TransportLayer = IIf(String.Compare(row("NTP"), "UDP", True) = 0, TransportProtocol.Udp, TransportProtocol.Tcp)
                         .HostIP = row("IPAddress")
                         .Port = row("IPPort")
                         .PmuID = row("AccessID")
@@ -330,7 +332,7 @@ Public Class PhasorMeasurementReceiver
             UpdateStatus("Starting connection attempt to DatAWare Archiver """ & ArchiverName & """...")
 
             ' Connect to DatAWare archiver using TCP
-            m_tcpSocket = New TcpClient
+            m_tcpSocket = New Sockets.TcpClient
             m_tcpSocket.Connect(m_archiverIP, m_archiverPort)
             m_clientStream = m_tcpSocket.GetStream()
             m_clientStream.WriteTimeout = 2000

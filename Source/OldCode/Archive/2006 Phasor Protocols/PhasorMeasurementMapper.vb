@@ -18,6 +18,7 @@
 Imports System.Text
 Imports Tva.DateTime
 Imports Tva.Phasors
+Imports Tva.Communication
 Imports Tva.Measurements
 
 <CLSCompliant(False)> _
@@ -269,7 +270,7 @@ Public Class PhasorMeasurementMapper
             m_frameParser.Connect()
 
             ' Enable data stream monitor for non-UDP connections
-            m_dataStreamMonitor.Enabled = (m_frameParser.TransportLayer <> DataTransportLayer.Udp)
+            m_dataStreamMonitor.Enabled = (m_frameParser.TransportLayer <> TransportProtocol.Udp)
 
             UpdateStatus("Connection to " & m_source & " established.")
         Catch ex As Exception
