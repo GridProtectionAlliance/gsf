@@ -16,8 +16,9 @@
 '*******************************************************************************************************
 
 Imports System.Runtime.Serialization
+Imports System.ComponentModel
 Imports System.Text
-Imports Tva.Text.Common
+Imports Tva.Phasors.Common
 
 Namespace IeeeC37_118
 
@@ -28,6 +29,9 @@ Namespace IeeeC37_118
 
         Private m_normalStatus As Int16
         Private m_validInputs As Int16
+        Private m_label As String
+        Private m_parentAquired As Boolean
+        Private m_revisionNumber As ProtocolRevision
 
         Protected Sub New()
         End Sub
@@ -39,6 +43,7 @@ Namespace IeeeC37_118
             ' Deserialize digital definition
             m_normalStatus = info.GetInt16("normalStatus")
             m_validInputs = info.GetInt16("validInputs")
+            m_label = info.GetString("digitalLabels")
 
         End Sub
 
@@ -87,7 +92,7 @@ Namespace IeeeC37_118
 
         Public ReadOnly Property LabelCount() As Int32
             Get
-                If Parent.Parent.RevisionNumber = ProtocolRevision.Draft6 Then
+                If RevisionNumber = ProtocolRevision.Draft6 Then
                     Return 1
                 Else
                     Return 16
@@ -95,17 +100,41 @@ Namespace IeeeC37_118
             End Get
         End Property
 
-        ''' <summary>Accesses individual labels for each bit in the digital defintion</summary>
-        ''' <param name="index">Desired bit label to access</param>
-        ''' <remarks>In the final version of the protocol each digital bit can be labeled, but we read them out as one big string in the "Label" property so this property allows individual access to each label</remarks>
-        Public Property Labels(ByVal index As Int32) As String
+        ' We hide this from the editor just because this is a large combined string of all digital labels,
+        ' and it will make more sense for consumers to use the "Labels" property
+        <EditorBrowsable(EditorBrowsableState.Never)> _
+        Public Overrides Property Label() As String
             Get
-                If index < 0 Or index >= LabelCount Then Throw New IndexOutOfRangeException("Invalid label index specified.  Note that there are " & LabelCount & " labels per digital available in " & [Enum].GetName(GetType(ProtocolRevision), Parent.Parent.RevisionNumber) & " of the IEEE C37.118 protocol")
-
-                Return Label.PadRight(MaximumLabelLength).Substring(index * 16, MyBase.MaximumLabelLength).Trim()
+                Return m_label
             End Get
             Set(ByVal value As String)
-                If index < 0 Or index >= LabelCount Then Throw New IndexOutOfRangeException("Invalid label index specified.  Note that there are " & LabelCount & " labels per digital available in " & [Enum].GetName(GetType(ProtocolRevision), Parent.Parent.RevisionNumber) & " of the IEEE C37.118 protocol")
+                If String.IsNullOrEmpty(value) Then value = "undefined"
+
+                If value.Trim().Length > MaximumLabelLength Then
+                    Throw New OverflowException("Label length cannot exceed " & MaximumLabelLength)
+                Else
+                    ' We override this function since base class automatically "fixes-up" labels
+                    ' by removing duplicate white space characters - this can throw off the
+                    ' label offsets which would break the "Labels" property (below)
+                    m_label = value.Trim()
+                End If
+            End Set
+        End Property
+
+        ''' <summary>Accesses individual labels for each bit in the digital defintion</summary>
+        ''' <param name="index">Desired bit label to access</param>
+        ''' <remarks>
+        ''' <para>In the final version of the protocol each digital bit can be labeled, but we read them out as one big string in the "Label" property so this property allows individual access to each label</para>
+        ''' <para>Note that the draft 6 implementation of the protocol supports one label for all 16-bits, however draft 7 (i.e., version 1) supports a label for each of the 16 bits</para>
+        ''' </remarks>
+        Public Property Labels(ByVal index As Int32) As String
+            Get
+                If index < 0 Or index >= LabelCount Then Throw New IndexOutOfRangeException("Invalid label index specified.  Note that there are " & LabelCount & " labels per digital available in " & [Enum].GetName(GetType(ProtocolRevision), RevisionNumber) & " of the IEEE C37.118 protocol")
+
+                Return GetValidLabel(Label.PadRight(MaximumLabelLength).Substring(index * 16, MyBase.MaximumLabelLength))
+            End Get
+            Set(ByVal value As String)
+                If index < 0 Or index >= LabelCount Then Throw New IndexOutOfRangeException("Invalid label index specified.  Note that there are " & LabelCount & " labels per digital available in " & [Enum].GetName(GetType(ProtocolRevision), RevisionNumber) & " of the IEEE C37.118 protocol")
 
                 If value.Trim().Length > MyBase.MaximumLabelLength Then
                     Throw New OverflowException("Label length cannot exceed " & MyBase.MaximumLabelLength)
@@ -117,7 +146,7 @@ Namespace IeeeC37_118
                     If index > 0 Then left = current.Substring(0, index * MyBase.MaximumLabelLength)
                     If index < 15 Then right = current.Substring((index + 1) * MyBase.MaximumLabelLength)
 
-                    Label = left & RemoveDuplicateWhiteSpace(ReplaceControlCharacters(value)).PadRight(MyBase.MaximumLabelLength) & right
+                    Label = left & GetValidLabel(value).PadRight(MyBase.MaximumLabelLength) & right
                 End If
             End Set
         End Property
@@ -146,9 +175,31 @@ Namespace IeeeC37_118
             End Set
         End Property
 
+        Public ReadOnly Property RevisionNumber() As ProtocolRevision
+            Get
+                If m_parentAquired Then
+                    Return m_revisionNumber
+                Else
+                    If Parent IsNot Nothing AndAlso Parent.Parent IsNot Nothing Then
+                        m_parentAquired = True
+                        m_revisionNumber = Parent.Parent.RevisionNumber
+                        Return m_revisionNumber
+                    Else
+                        ' We must assume version 1 until a parent reference is available
+                        ' Note: parent class, being higher up in the chain, is not available during early
+                        ' points of deserialization of this class - however, this method gets called
+                        ' to determine proper number of maximum digital labels - hence the need for
+                        ' this function - since we had to do this anyway, we took the opportunity to
+                        ' cache this value locally for speed
+                        Return ProtocolRevision.Version1
+                    End If
+                End If
+            End Get
+        End Property
+
         Protected Overrides Sub ParseBodyImage(ByVal state As IChannelParsingState, ByVal binaryImage() As Byte, ByVal startIndex As Integer)
 
-            If Parent.Parent.RevisionNumber = ProtocolRevision.Draft6 Then
+            If RevisionNumber = ProtocolRevision.Draft6 Then
                 ' Handle single label the standard way (parsing out null value)
                 MyBase.ParseBodyImage(state, binaryImage, startIndex)
             Else
@@ -193,6 +244,7 @@ Namespace IeeeC37_118
             ' Serialize digital definition
             info.AddValue("normalStatus", m_normalStatus)
             info.AddValue("validInputs", m_validInputs)
+            info.AddValue("digitalLabels", m_label)
 
         End Sub
 

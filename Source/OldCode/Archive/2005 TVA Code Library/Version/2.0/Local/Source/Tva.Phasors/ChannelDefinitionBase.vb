@@ -149,7 +149,7 @@ Public MustInherit Class ChannelDefinitionBase
             If value.Trim().Length > MaximumLabelLength Then
                 Throw New OverflowException("Label length cannot exceed " & MaximumLabelLength)
             Else
-                m_label = RemoveDuplicateWhiteSpace(ReplaceControlCharacters(value)).Trim()
+                m_label = GetValidLabel(value).Trim()
             End If
         End Set
     End Property

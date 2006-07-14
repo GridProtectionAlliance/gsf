@@ -40,7 +40,7 @@ Namespace IeeeC37_118
 
         End Sub
 
-        Public Sub New(ByVal idCode As UInt32, ByVal command As Command, ByVal version As Byte)
+        Public Sub New(ByVal idCode As UInt32, ByVal command As PmuCommand, ByVal version As Byte)
 
             MyBase.New(New CommandCellCollection(MaximumExtendedDataLength), command)
             MyBase.IDCode = idCode

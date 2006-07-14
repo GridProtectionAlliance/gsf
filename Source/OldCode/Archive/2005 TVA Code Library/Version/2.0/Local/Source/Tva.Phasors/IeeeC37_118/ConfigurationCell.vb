@@ -27,6 +27,8 @@ Namespace IeeeC37_118
 
         Inherits ConfigurationCellBase
 
+        ' Because the protocol doesn't include a version number that can account draft implementations, we must manually account for this where needed
+        Private m_revisionNumber As ProtocolRevision
         Private m_formatFlags As FormatFlags
         Private m_configurationCount As UInt16
 
@@ -38,6 +40,7 @@ Namespace IeeeC37_118
             MyBase.New(info, context)
 
             ' Deserialize configuration cell
+            m_revisionNumber = info.GetValue("revisionNumber", GetType(ProtocolRevision))
             m_formatFlags = info.GetValue("formatFlags", GetType(FormatFlags))
             m_configurationCount = info.GetUInt16("configurationCount")
 
@@ -283,6 +286,7 @@ Namespace IeeeC37_118
             MyBase.GetObjectData(info, context)
 
             ' Serialize configuration cell
+            info.AddValue("revisionNumber", m_revisionNumber, GetType(ProtocolRevision))
             info.AddValue("formatFlags", m_formatFlags, GetType(FormatFlags))
             info.AddValue("configurationCount", m_configurationCount)
 

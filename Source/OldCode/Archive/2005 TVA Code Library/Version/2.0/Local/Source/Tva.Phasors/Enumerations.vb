@@ -67,18 +67,9 @@ Public Enum FundamentalFrameType
     Undetermined
 End Enum
 
-''' <summary>Phasor data transport layers</summary>
-<Serializable()> _
-Public Enum DataTransportLayer
-    Tcp
-    Udp
-    Com
-    Other
-End Enum
-
 ''' <summary>Phasor data protocols</summary>
 <Serializable()> _
-Public Enum Protocol
+Public Enum PhasorProtocol
     IeeeC37_118V1
     IeeeC37_118D6
     Ieee1344
@@ -87,7 +78,7 @@ End Enum
 
 ''' <summary>PMU commands</summary>
 <Serializable()> _
-Public Enum Command As Int16
+Public Enum PmuCommand As Int16
     ''' <summary>0001 Turn off transmission of data frames</summary>
     DisableRealTimeData = Bit0
     ''' <summary>0010 Turn on transmission of data frames</summary>

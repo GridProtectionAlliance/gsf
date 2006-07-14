@@ -122,7 +122,7 @@ Public MustInherit Class ConfigurationCellBase
             If value.Length > MaximumStationNameLength Then
                 Throw New OverflowException("Station name length cannot exceed " & MaximumStationNameLength)
             Else
-                m_stationName = RemoveDuplicateWhiteSpace(ReplaceControlCharacters(value, " "c)).Trim()
+                m_stationName = GetValidLabel(value)
             End If
         End Set
     End Property
@@ -150,7 +150,7 @@ Public MustInherit Class ConfigurationCellBase
             If value.Trim.Length > IDLabelLength Then
                 Throw New OverflowException("ID label must not be more than " & IDLabelLength & " characters in length")
             Else
-                m_idLabel = value.PadRight(IDLabelLength)
+                m_idLabel = GetValidLabel(value).PadRight(IDLabelLength)
             End If
         End Set
     End Property

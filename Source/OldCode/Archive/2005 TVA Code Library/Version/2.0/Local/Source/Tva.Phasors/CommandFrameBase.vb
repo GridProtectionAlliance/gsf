@@ -26,7 +26,7 @@ Public MustInherit Class CommandFrameBase
     Inherits ChannelFrameBase(Of ICommandCell)
     Implements ICommandFrame
 
-    Private m_command As Command
+    Private m_command As PmuCommand
 
     Protected Sub New()
     End Sub
@@ -36,11 +36,11 @@ Public MustInherit Class CommandFrameBase
         MyBase.New(info, context)
 
         ' Deserialize command frame
-        m_command = info.GetValue("command", GetType(Command))
+        m_command = info.GetValue("command", GetType(PmuCommand))
 
     End Sub
 
-    Protected Sub New(ByVal cells As CommandCellCollection, ByVal command As Command)
+    Protected Sub New(ByVal cells As CommandCellCollection, ByVal command As PmuCommand)
 
         MyBase.New(cells)
         m_command = command
@@ -74,11 +74,11 @@ Public MustInherit Class CommandFrameBase
         End Get
     End Property
 
-    Public Overridable Property Command() As Command Implements ICommandFrame.Command
+    Public Overridable Property Command() As PmuCommand Implements ICommandFrame.Command
         Get
             Return m_command
         End Get
-        Set(ByVal value As Command)
+        Set(ByVal value As PmuCommand)
             m_command = value
         End Set
     End Property
@@ -123,7 +123,7 @@ Public MustInherit Class CommandFrameBase
         MyBase.GetObjectData(info, context)
 
         ' Serialize command frame
-        info.AddValue("command", m_command, GetType(Command))
+        info.AddValue("command", m_command, GetType(PmuCommand))
 
     End Sub
 

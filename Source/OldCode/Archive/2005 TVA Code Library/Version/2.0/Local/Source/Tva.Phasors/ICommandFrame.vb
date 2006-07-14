@@ -23,7 +23,7 @@ Public Interface ICommandFrame
 
     Shadows ReadOnly Property Cells() As CommandCellCollection
 
-    Property Command() As Command
+    Property Command() As PmuCommand
 
     Property ExtendedData() As Byte()
 

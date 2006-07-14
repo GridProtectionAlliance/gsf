@@ -38,5 +38,12 @@ Public MustInherit Class ChannelDefinitionCollectionBase(Of T As IChannelDefinit
 
     End Sub
 
+    Public Overrides Sub Add(ByVal value As T)
+
+        MyBase.Add(value)
+        value.Index = Count - 1
+
+    End Sub
+
 End Class
 

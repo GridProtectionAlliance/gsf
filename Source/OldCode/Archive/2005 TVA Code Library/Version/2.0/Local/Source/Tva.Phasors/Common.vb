@@ -16,6 +16,7 @@
 '*******************************************************************************************************
 
 Imports System.Buffer
+Imports Tva.Text.Common
 
 ''' <summary>Common constants and functions for phasor classes</summary>
 <CLSCompliant(False)> _
@@ -50,5 +51,13 @@ Public NotInheritable Class Common
         End If
 
     End Sub
+
+    ''' <summary>Removes duplicate white space and control characters from a string</summary>
+    ''' <remarks>Strings reported from IED's can be full of inconsistencies, this function "cleans-up" the strings for visualization</remarks>
+    Public Shared Function GetValidLabel(ByVal value As String) As String
+
+        Return RemoveDuplicateWhiteSpace(ReplaceControlCharacters(value, " "c)).Trim()
+
+    End Function
 
 End Class

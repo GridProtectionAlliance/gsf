@@ -88,6 +88,15 @@ Namespace BpaPdcStream
             End Get
         End Property
 
+        Public Property ConfigurationFrame() As ConfigurationFrame
+            Get
+                Return m_configurationFrame
+            End Get
+            Set(ByVal value As ConfigurationFrame)
+                m_configurationFrame = value
+            End Set
+        End Property
+
         ' Stream implementation overrides
         Public Overrides Sub Write(ByVal buffer As Byte(), ByVal offset As Int32, ByVal count As Int32)
 
