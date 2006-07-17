@@ -15,8 +15,6 @@
 '
 '*******************************************************************************************************
 
-Option Strict On
-
 Imports System.Net
 Imports System.Net.Sockets
 Imports System.Text
@@ -62,7 +60,7 @@ Public Class TcpServer
     ''' <returns>
     ''' True if the server will send the size of the packet before sending the actual packet; otherwise False.
     ''' </returns>
-    ''' <remarks>This property must be set to True is wither Encryption or Compression is enabled.</remarks>
+    ''' <remarks>This property must be set to True if either Encryption or Compression is enabled.</remarks>
     <Description("Indicates whether the server will send the size of the packet before sending the actual packet."), Category("Data"), DefaultValue(GetType(Boolean), "True")> _
     Public Property PacketAware() As Boolean
         Get
@@ -239,8 +237,8 @@ Public Class TcpServer
                     tcpClient.DataBuffer = CreateArray(Of Byte)(bufferSize)
                 End If
 
-                Dim dataLength As Integer = tcpClient.Client.Receive(tcpClient.DataBuffer(), _
-                    tcpClient.BytesReceived(), tcpClient.DataBuffer.Length(), SocketFlags.None)
+                Dim dataLength As Integer = _
+                    tcpClient.Client.Receive(tcpClient.DataBuffer(), tcpClient.BytesReceived(), tcpClient.DataBuffer.Length() - tcpClient.BytesReceived(), SocketFlags.None)
                 tcpClient.BytesReceived += dataLength
 
                 If dataLength > 0 Then
@@ -268,8 +266,7 @@ Public Class TcpServer
                     If tcpClient.ID() = Guid.Empty AndAlso Handshake() Then
                         ' Authentication is required, but not performed yet. When authentication is required
                         ' the first message from the client must be information about itself.
-                        Dim clientInfo As HandshakeMessage = _
-                            DirectCast(GetObject(GetActualData(tcpClient.DataBuffer())), HandshakeMessage)
+                        Dim clientInfo As HandshakeMessage = GetObject(Of HandshakeMessage)(GetActualData(tcpClient.DataBuffer()))
                         If clientInfo IsNot Nothing AndAlso clientInfo.ID() <> Guid.Empty AndAlso _
                                 clientInfo.Passphrase() = HandshakePassphrase() Then
                             If SecureSession() Then tcpClient.Passphrase = GenerateKey()

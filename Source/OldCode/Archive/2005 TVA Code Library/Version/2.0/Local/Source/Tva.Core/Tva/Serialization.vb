@@ -29,12 +29,24 @@ Public NotInheritable Class Serialization
     ''' <summary>
     ''' Creates a clone of a serializable object.
     ''' </summary>
-    ''' <typeparam name="T">The type of the serializable object.</typeparam>
+    ''' <typeparam name="T">Return type of the object.</typeparam>
     ''' <param name="sourceObject">The source object that is to be cloned.</param>
     ''' <returns>A clone of the source serializable object.</returns>
     Public Shared Function CloneObject(Of T)(ByVal sourceObject As T) As T
 
         Return DirectCast(GetObject(GetBytes(sourceObject)), T)
+
+    End Function
+
+    ''' <summary>
+    ''' Gets an instance of the specified type from the bytes of a previously serialized object.
+    ''' </summary>
+    ''' <typeparam name="T">Return type of the object.</typeparam>
+    ''' <param name="serializedObject">The bytes of a previously serialized object.</param>
+    ''' <returns>An instance of the specified type if the bytes can be deserialized; otherwise Nothing.</returns>
+    Public Shared Function GetObject(Of T)(ByVal serializedObject As Byte()) As T
+
+        Return DirectCast(GetObject(serializedObject), T)
 
     End Function
 

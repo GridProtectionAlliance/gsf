@@ -76,9 +76,6 @@ Public Class UdpServer
     Public Overrides Sub [Stop]()
 
         If Enabled() AndAlso IsRunning() Then
-            If m_udpServer IsNot Nothing Then m_udpServer.Close()
-            OnServerStopped(EventArgs.Empty)
-
             For Each udpClientID As Guid In m_udpClients.Keys()
                 If Handshake() Then
                     Dim bye As Byte() = GetPreparedData(GetBytes(New GoodbyeMessage(udpClientID)))
@@ -90,6 +87,9 @@ Public Class UdpServer
             m_udpClients.Clear()
 
             m_pendingUdpClients.Clear()
+
+            If m_udpServer IsNot Nothing Then m_udpServer.Close()
+            OnServerStopped(EventArgs.Empty)
         End If
 
     End Sub

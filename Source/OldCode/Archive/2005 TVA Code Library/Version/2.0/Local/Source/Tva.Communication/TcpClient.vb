@@ -15,8 +15,6 @@
 '
 '*******************************************************************************************************
 
-Option Strict On
-
 Imports System.Net
 Imports System.Net.Sockets
 Imports System.Text
@@ -55,7 +53,7 @@ Public Class TcpClient
     ''' <returns>
     ''' True if the server will send the size of the packet before sending the actual packet; otherwise False.
     ''' </returns>
-    ''' <remarks>This property must be set to True is wither Encryption or Compression is enabled.</remarks>
+    ''' <remarks>This property must be set to True if either Encryption or Compression is enabled.</remarks>
     <Description("Indicates whether the server will send the size of the packet before sending the actual packet."), Category("Data"), DefaultValue(GetType(Boolean), "True")> _
     Public Property PacketAware() As Boolean
         Get
@@ -228,7 +226,7 @@ Public Class TcpClient
                 Dim dataLength As Integer
                 Try
                     dataLength = _
-                        m_tcpClient.Client.Receive(m_tcpClient.DataBuffer(), m_tcpClient.BytesReceived(), m_tcpClient.DataBuffer.Length(), SocketFlags.None)
+                        m_tcpClient.Client.Receive(m_tcpClient.DataBuffer(), m_tcpClient.BytesReceived(), m_tcpClient.DataBuffer.Length() - m_tcpClient.BytesReceived(), SocketFlags.None)
                     m_tcpClient.BytesReceived += dataLength
                 Catch ex As SocketException
                     If ex.SocketErrorCode() = SocketError.TimedOut Then
@@ -270,8 +268,7 @@ Public Class TcpClient
                         ' Authentication is required, but not performed yet. When authentication is required
                         ' the first message from the server, upon successful authentication, must be 
                         ' information about itself.
-                        Dim serverInfo As HandshakeMessage = _
-                            DirectCast(GetObject(GetActualData(m_tcpClient.DataBuffer)), HandshakeMessage)
+                        Dim serverInfo As HandshakeMessage = GetObject(Of HandshakeMessage)(GetActualData(m_tcpClient.DataBuffer))
                         If serverInfo IsNot Nothing AndAlso _
                                 serverInfo.ID() <> Guid.Empty Then
                             ' Authentication was successful and the server responded with its information.

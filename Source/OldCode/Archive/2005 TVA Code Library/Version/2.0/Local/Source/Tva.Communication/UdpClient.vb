@@ -53,8 +53,11 @@ Public Class UdpClient
         If Enabled() AndAlso IsConnected() AndAlso _
                 m_udpClient IsNot Nothing AndAlso m_udpClient.Client() IsNot Nothing Then
             If Handshake() Then
-
+                Dim serverEP As IPEndPoint = GetIpEndPoint(m_connectionData("server"), Convert.ToInt32(m_connectionData("port")))
+                Dim bye As Byte() = GetPreparedData(GetBytes(New GoodbyeMessage(m_udpClient.ID())))
+                m_udpClient.Client.SendTo(bye, serverEP)
             End If
+
             m_udpClient.Client.Close()
         End If
     End Sub
@@ -94,7 +97,7 @@ Public Class UdpClient
         Try
             Dim serverEP As IPEndPoint = GetIpEndPoint(m_connectionData("server"), Convert.ToInt32(m_connectionData("port")))
             If Handshake() Then
-                Dim myInfo As Byte() = GetBytes(New HandshakeMessage(m_udpClient.ID(), m_udpClient.Passphrase()))
+                Dim myInfo As Byte() = GetPreparedData(GetBytes(New HandshakeMessage(m_udpClient.ID(), m_udpClient.Passphrase())))
                 m_udpClient.Client.SendTo(myInfo, serverEP)
             Else
                 OnConnected(EventArgs.Empty)
@@ -104,14 +107,49 @@ Public Class UdpClient
                 If m_udpClient.DataBuffer Is Nothing Then
                     m_udpClient.DataBuffer = CreateArray(Of Byte)(MaximumPacketSize)
                 End If
-                m_udpClient.BytesReceived += m_udpClient.Client.ReceiveFrom(m_udpClient.DataBuffer, CType(serverEP, EndPoint))
+                m_udpClient.BytesReceived += m_udpClient.Client.ReceiveFrom(m_udpClient.DataBuffer, m_udpClient.BytesReceived, m_udpClient.DataBuffer.Length - m_udpClient.BytesReceived, SocketFlags.None, CType(serverEP, EndPoint))
 
                 If m_packetAware Then
-                    If m_udpClient.PacketSize() = -1 AndAlso HasBeginMarker(m_udpClient.DataBuffer) Then
-                        m_udpClient.PacketSize = BitConverter.ToInt32(m_udpClient.DataBuffer(), m_packetBeginMarker.Length())
-                        m_udpClient.DataBuffer = CreateArray(Of Byte)(m_udpClient.PacketSize())
+                    If m_udpClient.PacketSize() = -1 Then
+                        If HasBeginMarker(m_udpClient.DataBuffer) Then
+                            m_udpClient.PacketSize = BitConverter.ToInt32(m_udpClient.DataBuffer(), m_packetBeginMarker.Length())
+                            Dim tempBuffer As Byte() = CreateArray(Of Byte)(IIf(m_udpClient.PacketSize < MaximumPacketSize - 8, m_udpClient.PacketSize, MaximumPacketSize - 8))
+                            Buffer.BlockCopy(m_udpClient.DataBuffer, 8, tempBuffer, 0, tempBuffer.Length)
+                            m_udpClient.DataBuffer = CreateArray(Of Byte)(m_udpClient.PacketSize())
+                            Buffer.BlockCopy(tempBuffer, 0, m_udpClient.DataBuffer, 0, tempBuffer.Length)
+                            m_udpClient.BytesReceived = tempBuffer.Length
+                        Else
+                            Continue Do
+                        End If
                     End If
+                    If m_udpClient.BytesReceived < m_udpClient.PacketSize Then
+                        Continue Do
+                    End If
+                Else
+
                 End If
+
+                If ServerID = Guid.Empty AndAlso Handshake Then
+                    Dim hello As HandshakeMessage = GetObject(Of HandshakeMessage)(GetActualData(m_udpClient.DataBuffer))
+                    If hello IsNot Nothing Then
+                        ServerID = hello.ID
+                        m_udpClient.Passphrase = hello.Passphrase
+                        OnConnected(EventArgs.Empty)
+                    End If
+                Else
+                    If Handshake AndAlso _
+                            GetObject(Of GoodbyeMessage)(GetActualData(m_udpClient.DataBuffer)) IsNot Nothing Then
+                        Exit Do
+                    End If
+
+                    If SecureSession Then
+                        m_udpClient.DataBuffer = DecryptData(m_udpClient.DataBuffer, m_udpClient.Passphrase, Encryption)
+                    End If
+                    OnReceivedData(m_udpClient.DataBuffer)
+                End If
+
+                m_udpClient.DataBuffer = Nothing
+                m_udpClient.PacketSize = -1
             Loop
         Catch ex As Exception
 
@@ -119,6 +157,7 @@ Public Class UdpClient
             If m_udpClient IsNot Nothing AndAlso m_udpClient.Client() IsNot Nothing Then
                 m_udpClient.Client.Close()
                 m_udpClient.Client = Nothing
+                OnDisconnected(EventArgs.Empty)
             End If
         End Try
 
