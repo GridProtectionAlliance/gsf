@@ -11,10 +11,14 @@ Imports Tva.Communication.SocketHelper
 Public Class UdpClient
 
     Private m_packetAware As Boolean
+    Private m_udpServer As IPEndPoint
     Private m_udpClient As StateKeeper(Of Socket)
     Private m_connectionData As IDictionary(Of String, String)
     Private m_packetBeginMarker As Byte() = {&HAA, &HBB, &HCC, &HDD}
 
+    ''' <summary>
+    ''' The maximum number of bytes that can be sent from the client to server in a single packet.
+    ''' </summary>
     Private Const MaximumPacketSize As Integer = 32768
 
     Public Property PacketAware() As Boolean
@@ -32,6 +36,8 @@ Public Class UdpClient
             Dim port As Integer = 0
             If Not Handshake() Then port = Convert.ToInt32(m_connectionData("port"))
 
+            m_udpServer = GetIpEndPoint(m_connectionData("server"), Convert.ToInt32(m_connectionData("port")))
+
             m_udpClient = New StateKeeper(Of Socket)
             m_udpClient.ID = ClientID()
             m_udpClient.Passphrase = HandshakePassphrase()
@@ -40,6 +46,7 @@ Public Class UdpClient
 
             Dim receivingThread As New Thread(AddressOf ReceiveServerData)
             receivingThread.Start()
+            OnConnecting(EventArgs.Empty)
         End If
 
     End Sub
@@ -53,9 +60,8 @@ Public Class UdpClient
         If Enabled() AndAlso IsConnected() AndAlso _
                 m_udpClient IsNot Nothing AndAlso m_udpClient.Client() IsNot Nothing Then
             If Handshake() Then
-                Dim serverEP As IPEndPoint = GetIpEndPoint(m_connectionData("server"), Convert.ToInt32(m_connectionData("port")))
                 Dim bye As Byte() = GetPreparedData(GetBytes(New GoodbyeMessage(m_udpClient.ID())))
-                m_udpClient.Client.SendTo(bye, serverEP)
+                m_udpClient.Client.SendTo(bye, m_udpServer)
             End If
 
             m_udpClient.Client.Close()
@@ -95,10 +101,9 @@ Public Class UdpClient
     Private Sub ReceiveServerData()
 
         Try
-            Dim serverEP As IPEndPoint = GetIpEndPoint(m_connectionData("server"), Convert.ToInt32(m_connectionData("port")))
             If Handshake() Then
                 Dim myInfo As Byte() = GetPreparedData(GetBytes(New HandshakeMessage(m_udpClient.ID(), m_udpClient.Passphrase())))
-                m_udpClient.Client.SendTo(myInfo, serverEP)
+                m_udpClient.Client.SendTo(myInfo, m_udpServer)
             Else
                 OnConnected(EventArgs.Empty)
             End If
@@ -107,7 +112,7 @@ Public Class UdpClient
                 If m_udpClient.DataBuffer Is Nothing Then
                     m_udpClient.DataBuffer = CreateArray(Of Byte)(MaximumPacketSize)
                 End If
-                m_udpClient.BytesReceived += m_udpClient.Client.ReceiveFrom(m_udpClient.DataBuffer, m_udpClient.BytesReceived, m_udpClient.DataBuffer.Length - m_udpClient.BytesReceived, SocketFlags.None, CType(serverEP, EndPoint))
+                m_udpClient.BytesReceived += m_udpClient.Client.ReceiveFrom(m_udpClient.DataBuffer, m_udpClient.BytesReceived, m_udpClient.DataBuffer.Length - m_udpClient.BytesReceived, SocketFlags.None, CType(m_udpServer, EndPoint))
 
                 If m_packetAware Then
                     If m_udpClient.PacketSize() = -1 Then

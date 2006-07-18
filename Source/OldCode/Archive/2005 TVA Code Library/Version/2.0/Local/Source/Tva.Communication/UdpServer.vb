@@ -18,6 +18,9 @@ Public Class UdpServer
     Private m_configurationData As Dictionary(Of String, String)
     Private m_packetBeginMarker As Byte() = {&HAA, &HBB, &HCC, &HDD}
 
+    ''' <summary>
+    ''' The maximum number of bytes that can be sent from the server to clients in a single packet.
+    ''' </summary>
     Private Const MaximumPacketSize As Integer = 32768
 
     Public Sub New(ByVal configurationString As String)
