@@ -234,8 +234,8 @@ Public Class PhasorMeasurementReceiver
                     timezone = row("TimeZone")
 
                     With parser
-                        .Protocol = [Enum].Parse(GetType(PhasorProtocol), row("DataID"))
-                        .TransportLayer = IIf(String.Compare(row("NTP"), "UDP", True) = 0, TransportProtocol.Udp, TransportProtocol.Tcp)
+                        .PhasorProtocol = [Enum].Parse(GetType(PhasorProtocol), row("DataID"))
+                        .TransportProtocol = IIf(String.Compare(row("NTP"), "UDP", True) = 0, TransportProtocol.Udp, TransportProtocol.Tcp)
                         .HostIP = row("IPAddress")
                         .Port = row("IPPort")
                         .PmuID = row("AccessID")

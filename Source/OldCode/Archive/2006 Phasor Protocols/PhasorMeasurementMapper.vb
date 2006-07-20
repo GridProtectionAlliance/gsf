@@ -79,7 +79,7 @@ Public Class PhasorMeasurementMapper
 
     Public Sub Disconnect()
 
-        If m_frameParser IsNot Nothing Then m_frameParser.Disconnect()
+        If m_frameParser IsNot Nothing Then m_frameParser.[Stop]()
 
         ' Stop data stream monitor, if running
         If m_dataStreamMonitor IsNot Nothing Then m_dataStreamMonitor.Enabled = False
@@ -267,10 +267,10 @@ Public Class PhasorMeasurementMapper
             UpdateStatus("Starting connection attempt for phasor enabled device """ & m_source & """...")
 
             m_totalBytesReceived = 0
-            m_frameParser.Connect()
+            m_frameParser.Start()
 
             ' Enable data stream monitor for non-UDP connections
-            m_dataStreamMonitor.Enabled = (m_frameParser.TransportLayer <> TransportProtocol.Udp)
+            m_dataStreamMonitor.Enabled = (m_frameParser.TransportProtocol <> TransportProtocol.Udp)
 
             UpdateStatus("Connection to " & m_source & " established.")
         Catch ex As Exception
