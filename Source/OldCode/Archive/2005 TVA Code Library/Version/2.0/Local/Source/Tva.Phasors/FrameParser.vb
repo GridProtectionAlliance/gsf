@@ -27,7 +27,7 @@ Imports Tva.Communication
 
 ''' <summary>Protocol independent frame parser</summary>
 <CLSCompliant(False)> _
-Public Class FrameParser
+Public Class MultiProtocolFrameParser
 
 #Region " Public Member Declarations "
 
