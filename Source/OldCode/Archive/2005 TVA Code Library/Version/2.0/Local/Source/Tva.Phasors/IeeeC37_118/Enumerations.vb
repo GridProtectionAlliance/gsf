@@ -17,13 +17,13 @@
 
 Namespace IeeeC37_118
 
-    ''' <summary>Protocol revision number</summary>
+    ''' <summary>Protocol draft revision number</summary>
     <Serializable()> _
-    Public Enum ProtocolRevision As Byte
+    Public Enum DraftRevision As Byte
         ''' <summary>Draft 6.0</summary>
         Draft6 = 0
-        ''' <summary>Version 1.0 (Draft 7.0)</summary>
-        Version1 = 1
+        ''' <summary>Draft 7.0 (Version 1.0)</summary>
+        Draft7 = 1
     End Enum
 
     ''' <summary>Data format flags</summary>

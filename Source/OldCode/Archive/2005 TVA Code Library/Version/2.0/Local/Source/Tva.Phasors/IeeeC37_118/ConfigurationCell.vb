@@ -28,7 +28,6 @@ Namespace IeeeC37_118
         Inherits ConfigurationCellBase
 
         ' Because the protocol doesn't include a version number that can account draft implementations, we must manually account for this where needed
-        Private m_revisionNumber As ProtocolRevision
         Private m_formatFlags As FormatFlags
         Private m_configurationCount As UInt16
 
@@ -40,7 +39,6 @@ Namespace IeeeC37_118
             MyBase.New(info, context)
 
             ' Deserialize configuration cell
-            m_revisionNumber = info.GetValue("revisionNumber", GetType(ProtocolRevision))
             m_formatFlags = info.GetValue("formatFlags", GetType(FormatFlags))
             m_configurationCount = info.GetUInt16("configurationCount")
 
@@ -209,7 +207,7 @@ Namespace IeeeC37_118
                     PhasorDefinitions.Count * PhasorDefinition.ConversionFactorLength + _
                     AnalogDefinitions.Count * AnalogDefinition.ConversionFactorLength + _
                     DigitalDefinitions.Count * DigitalDefinition.ConversionFactorLength + _
-                    IIf(Parent.RevisionNumber = ProtocolRevision.Version1, 2, 0)
+                    IIf(Parent.DraftRevision = DraftRevision.Draft7, 2, 0)
             End Get
         End Property
 
@@ -241,7 +239,7 @@ Namespace IeeeC37_118
                 CopyImage(MyBase.FooterImage, buffer, index, MyBase.FooterLength)
 
                 ' Include configuration count (new for version 7.0)
-                If Parent.RevisionNumber = ProtocolRevision.Version1 Then EndianOrder.BigEndian.CopyBytes(m_configurationCount, buffer, index)
+                If Parent.DraftRevision = DraftRevision.Draft7 Then EndianOrder.BigEndian.CopyBytes(m_configurationCount, buffer, index)
 
                 Return buffer
             End Get
@@ -277,7 +275,7 @@ Namespace IeeeC37_118
             MyBase.ParseFooterImage(state, binaryImage, startIndex)
 
             ' Get configuration count (new for version 7.0)
-            If Parent.RevisionNumber = ProtocolRevision.Version1 Then m_configurationCount = EndianOrder.BigEndian.ToUInt16(binaryImage, startIndex)
+            If Parent.DraftRevision = DraftRevision.Draft7 Then m_configurationCount = EndianOrder.BigEndian.ToUInt16(binaryImage, startIndex)
 
         End Sub
 
@@ -286,7 +284,6 @@ Namespace IeeeC37_118
             MyBase.GetObjectData(info, context)
 
             ' Serialize configuration cell
-            info.AddValue("revisionNumber", m_revisionNumber, GetType(ProtocolRevision))
             info.AddValue("formatFlags", m_formatFlags, GetType(FormatFlags))
             info.AddValue("configurationCount", m_configurationCount)
 

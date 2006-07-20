@@ -31,7 +31,7 @@ Namespace IeeeC37_118
         Private m_validInputs As Int16
         Private m_label As String
         Private m_parentAquired As Boolean
-        Private m_revisionNumber As ProtocolRevision
+        Private m_draftRevision As DraftRevision
 
         Protected Sub New()
         End Sub
@@ -92,7 +92,7 @@ Namespace IeeeC37_118
 
         Public ReadOnly Property LabelCount() As Int32
             Get
-                If RevisionNumber = ProtocolRevision.Draft6 Then
+                If DraftRevision = DraftRevision.Draft6 Then
                     Return 1
                 Else
                     Return 16
@@ -129,12 +129,12 @@ Namespace IeeeC37_118
         ''' </remarks>
         Public Property Labels(ByVal index As Int32) As String
             Get
-                If index < 0 Or index >= LabelCount Then Throw New IndexOutOfRangeException("Invalid label index specified.  Note that there are " & LabelCount & " labels per digital available in " & [Enum].GetName(GetType(ProtocolRevision), RevisionNumber) & " of the IEEE C37.118 protocol")
+                If index < 0 Or index >= LabelCount Then Throw New IndexOutOfRangeException("Invalid label index specified.  Note that there are " & LabelCount & " labels per digital available in " & [Enum].GetName(GetType(DraftRevision), DraftRevision) & " of the IEEE C37.118 protocol")
 
                 Return GetValidLabel(Label.PadRight(MaximumLabelLength).Substring(index * 16, MyBase.MaximumLabelLength))
             End Get
             Set(ByVal value As String)
-                If index < 0 Or index >= LabelCount Then Throw New IndexOutOfRangeException("Invalid label index specified.  Note that there are " & LabelCount & " labels per digital available in " & [Enum].GetName(GetType(ProtocolRevision), RevisionNumber) & " of the IEEE C37.118 protocol")
+                If index < 0 Or index >= LabelCount Then Throw New IndexOutOfRangeException("Invalid label index specified.  Note that there are " & LabelCount & " labels per digital available in " & [Enum].GetName(GetType(DraftRevision), DraftRevision) & " of the IEEE C37.118 protocol")
 
                 If value.Trim().Length > MyBase.MaximumLabelLength Then
                     Throw New OverflowException("Label length cannot exceed " & MyBase.MaximumLabelLength)
@@ -175,15 +175,15 @@ Namespace IeeeC37_118
             End Set
         End Property
 
-        Public ReadOnly Property RevisionNumber() As ProtocolRevision
+        Public ReadOnly Property DraftRevision() As DraftRevision
             Get
                 If m_parentAquired Then
-                    Return m_revisionNumber
+                    Return m_draftRevision
                 Else
                     If Parent IsNot Nothing AndAlso Parent.Parent IsNot Nothing Then
                         m_parentAquired = True
-                        m_revisionNumber = Parent.Parent.RevisionNumber
-                        Return m_revisionNumber
+                        m_draftRevision = Parent.Parent.DraftRevision
+                        Return m_draftRevision
                     Else
                         ' We must assume version 1 until a parent reference is available
                         ' Note: parent class, being higher up in the chain, is not available during early
@@ -191,7 +191,7 @@ Namespace IeeeC37_118
                         ' to determine proper number of maximum digital labels - hence the need for
                         ' this function - since we had to do this anyway, we took the opportunity to
                         ' cache this value locally for speed
-                        Return ProtocolRevision.Version1
+                        Return DraftRevision.Draft7
                     End If
                 End If
             End Get
@@ -199,7 +199,7 @@ Namespace IeeeC37_118
 
         Protected Overrides Sub ParseBodyImage(ByVal state As IChannelParsingState, ByVal binaryImage() As Byte, ByVal startIndex As Integer)
 
-            If RevisionNumber = ProtocolRevision.Draft6 Then
+            If DraftRevision = DraftRevision.Draft6 Then
                 ' Handle single label the standard way (parsing out null value)
                 MyBase.ParseBodyImage(state, binaryImage, startIndex)
             Else

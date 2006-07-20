@@ -30,6 +30,7 @@ Namespace IeeeC37_118
     Public Class FrameParser
 
         Inherits Stream
+        Implements IFrameParser
 
 #Region " Public Member Declarations "
 
@@ -39,14 +40,19 @@ Namespace IeeeC37_118
         Public Event ReceivedDataFrame(ByVal frame As DataFrame)
         Public Event ReceivedHeaderFrame(ByVal frame As HeaderFrame)
         Public Event ReceivedCommandFrame(ByVal frame As CommandFrame)
-        Public Event ReceivedFrameBufferImage(ByVal frameType As FundamentalFrameType, ByVal binaryImage As Byte(), ByVal offset As Integer, ByVal length As Integer)
-        Public Event DataStreamException(ByVal ex As Exception)
+        Public Event ReceivedFrameBufferImage(ByVal frameType As FundamentalFrameType, ByVal binaryImage As Byte(), ByVal offset As Integer, ByVal length As Integer) Implements IFrameParser.ReceivedFrameBufferImage
+        Public Event DataStreamException(ByVal ex As Exception) Implements IFrameParser.DataStreamException
 
 #End Region
 
 #Region " Private Member Declarations "
 
-        Private m_revisionNumber As ProtocolRevision
+        Private Event IFrameParserReceivedConfigurationFrame(ByVal frame As IConfigurationFrame) Implements IFrameParser.ReceivedConfigurationFrame
+        Private Event IFrameParserReceivedDataFrame(ByVal frame As IDataFrame) Implements IFrameParser.ReceivedDataFrame
+        Private Event IFrameParserReceivedHeaderFrame(ByVal frame As IHeaderFrame) Implements IFrameParser.ReceivedHeaderFrame
+        Private Event IFrameParserReceivedCommandFrame(ByVal frame As ICommandFrame) Implements IFrameParser.ReceivedCommandFrame
+
+        Private m_draftRevision As DraftRevision
         Private WithEvents m_bufferQueue As ProcessQueue(Of Byte())
         Private m_dataStream As MemoryStream
         Private m_configurationFrame2 As ConfigurationFrame
@@ -60,20 +66,20 @@ Namespace IeeeC37_118
         Public Sub New()
 
             m_bufferQueue = ProcessQueue(Of Byte()).CreateRealTimeQueue(AddressOf ProcessBuffer)
-            m_revisionNumber = IeeeC37_118.ProtocolRevision.Version1
+            m_draftRevision = IeeeC37_118.DraftRevision.Draft7
 
         End Sub
 
-        Public Sub New(ByVal revisionNumber As ProtocolRevision)
+        Public Sub New(ByVal draftRevision As DraftRevision)
 
             MyClass.New()
-            m_revisionNumber = revisionNumber
+            m_draftRevision = draftRevision
 
         End Sub
 
-        Public Sub New(ByVal revisionNumber As ProtocolRevision, ByVal configurationFrame2 As ConfigurationFrame)
+        Public Sub New(ByVal draftRevision As DraftRevision, ByVal configurationFrame2 As ConfigurationFrame)
 
-            MyClass.New(revisionNumber)
+            MyClass.New(draftRevision)
             m_configurationFrame2 = configurationFrame2
 
         End Sub
@@ -82,35 +88,35 @@ Namespace IeeeC37_118
 
 #Region " Public Methods Implementation "
 
-        Public Property RevisionNumber() As ProtocolRevision
+        Public Property DraftRevision() As DraftRevision
             Get
-                Return m_revisionNumber
+                Return m_draftRevision
             End Get
-            Set(ByVal Value As ProtocolRevision)
-                m_revisionNumber = Value
+            Set(ByVal Value As DraftRevision)
+                m_draftRevision = Value
             End Set
         End Property
 
-        Public Sub Start()
+        Public Sub Start() Implements IFrameParser.Start
 
             m_initialized = False
             m_bufferQueue.Start()
 
         End Sub
 
-        Public Sub [Stop]()
+        Public Sub [Stop]() Implements IFrameParser.Stop
 
             m_bufferQueue.Stop()
 
         End Sub
 
-        Public ReadOnly Property Enabled() As Boolean
+        Public ReadOnly Property Enabled() As Boolean Implements IFrameParser.Enabled
             Get
                 Return m_bufferQueue.Enabled
             End Get
         End Property
 
-        Public ReadOnly Property QueuedBuffers() As Int32
+        Public ReadOnly Property QueuedBuffers() As Int32 Implements IFrameParser.QueuedBuffers
             Get
                 Return m_bufferQueue.Count
             End Get
@@ -135,8 +141,26 @@ Namespace IeeeC37_118
             End Set
         End Property
 
+        Private Property IFrameParserConfigurationFrame() As IConfigurationFrame Implements IFrameParser.ConfigurationFrame
+            Get
+                Return m_configurationFrame2
+            End Get
+            Set(ByVal value As IConfigurationFrame)
+                ' Assign new config frame, casting if needed...
+                If TypeOf value Is IeeeC37_118.ConfigurationFrame Then
+                    m_configurationFrame2 = value
+                Else
+                    If m_draftRevision = DraftRevision.Draft7 Then
+                        m_configurationFrame2 = New IeeeC37_118.ConfigurationFrame(value)
+                    Else
+                        m_configurationFrame2 = New IeeeC37_118.ConfigurationFrameDraft6(value)
+                    End If
+                End If
+            End Set
+        End Property
+
         ' Stream implementation overrides
-        Public Overrides Sub Write(ByVal buffer As Byte(), ByVal offset As Int32, ByVal count As Int32)
+        Public Overrides Sub Write(ByVal buffer As Byte(), ByVal offset As Int32, ByVal count As Int32) Implements IFrameParser.Write
 
             If m_initialized Then
                 ' Queue up received data buffer for real-time parsing and return to data collection as quickly as possible...
@@ -172,11 +196,11 @@ Namespace IeeeC37_118
             End Get
         End Property
 
-        Public ReadOnly Property Status() As String
+        Public ReadOnly Property Status() As String Implements IFrameParser.Status
             Get
                 With New StringBuilder
-                    .Append("   C37.118 Revision number: ")
-                    .Append([Enum].GetName(GetType(ProtocolRevision), m_revisionNumber))
+                    .Append("IEEEC37.118 draft revision: ")
+                    .Append([Enum].GetName(GetType(DraftRevision), m_draftRevision))
                     .Append(Environment.NewLine)
                     .Append("     Received config frame: ")
                     .Append(IIf(m_configurationFrame2 Is Nothing, "No", "Yes"))
@@ -304,35 +328,35 @@ Namespace IeeeC37_118
 
                 RaiseEvent ReceivedFrameBufferImage(parsedFrameHeader.FundamentalFrameType, buffer, index, parsedFrameHeader.FrameLength)
 
-                ' Entire frame is availble, so we go ahead and parse it
+                ' Entire frame is available, so we go ahead and parse it
                 Select Case parsedFrameHeader.FrameType
                     Case FrameType.DataFrame
                         ' We can only start parsing data frames once we have successfully received configuration file 2...
-                        If m_configurationFrame2 IsNot Nothing Then RaiseEvent ReceivedDataFrame(New DataFrame(parsedFrameHeader, m_configurationFrame2, buffer, index))
+                        If m_configurationFrame2 IsNot Nothing Then RaiseReceivedDataFrame(New DataFrame(parsedFrameHeader, m_configurationFrame2, buffer, index))
                     Case FrameType.ConfigurationFrame2
-                        Select Case m_revisionNumber
-                            Case ProtocolRevision.Draft6
+                        Select Case m_draftRevision
+                            Case DraftRevision.Draft6
                                 With New ConfigurationFrameDraft6(parsedFrameHeader, buffer, index)
                                     m_configurationFrame2 = .This
-                                    RaiseEvent ReceivedConfigurationFrame2(.This)
+                                    RaiseReceivedConfigurationFrame2(.This)
                                 End With
-                            Case ProtocolRevision.Version1
+                            Case DraftRevision.Draft7
                                 With New ConfigurationFrame(parsedFrameHeader, buffer, index)
                                     m_configurationFrame2 = .This
-                                    RaiseEvent ReceivedConfigurationFrame2(.This)
+                                    RaiseReceivedConfigurationFrame2(.This)
                                 End With
                         End Select
                     Case FrameType.ConfigurationFrame1
-                        Select Case m_revisionNumber
-                            Case ProtocolRevision.Draft6
-                                RaiseEvent ReceivedConfigurationFrame1(New ConfigurationFrameDraft6(parsedFrameHeader, buffer, index))
-                            Case ProtocolRevision.Version1
-                                RaiseEvent ReceivedConfigurationFrame1(New ConfigurationFrame(parsedFrameHeader, buffer, index))
+                        Select Case m_draftRevision
+                            Case DraftRevision.Draft6
+                                RaiseReceivedConfigurationFrame1(New ConfigurationFrameDraft6(parsedFrameHeader, buffer, index))
+                            Case DraftRevision.Draft7
+                                RaiseReceivedConfigurationFrame1(New ConfigurationFrame(parsedFrameHeader, buffer, index))
                         End Select
                     Case FrameType.HeaderFrame
-                        RaiseEvent ReceivedHeaderFrame(New HeaderFrame(parsedFrameHeader, buffer, index))
+                        RaiseReceivedHeaderFrame(New HeaderFrame(parsedFrameHeader, buffer, index))
                     Case FrameType.CommandFrame
-                        RaiseEvent ReceivedCommandFrame(New CommandFrame(parsedFrameHeader, buffer, index))
+                        RaiseReceivedCommandFrame(New CommandFrame(parsedFrameHeader, buffer, index))
                 End Select
 
                 index += parsedFrameHeader.FrameLength
@@ -343,6 +367,41 @@ Namespace IeeeC37_118
         Private Sub m_bufferQueue_ProcessException(ByVal ex As System.Exception) Handles m_bufferQueue.ProcessException
 
             RaiseEvent DataStreamException(ex)
+
+        End Sub
+
+        Private Sub RaiseReceivedConfigurationFrame1(ByVal frame As ConfigurationFrame)
+
+            RaiseEvent ReceivedConfigurationFrame1(frame)
+            RaiseEvent IFrameParserReceivedConfigurationFrame(frame)
+
+        End Sub
+
+        Private Sub RaiseReceivedConfigurationFrame2(ByVal frame As ConfigurationFrame)
+
+            RaiseEvent ReceivedConfigurationFrame2(frame)
+            RaiseEvent IFrameParserReceivedConfigurationFrame(frame)
+
+        End Sub
+
+        Private Sub RaiseReceivedDataFrame(ByVal frame As DataFrame)
+
+            RaiseEvent ReceivedDataFrame(frame)
+            RaiseEvent IFrameParserReceivedDataFrame(frame)
+
+        End Sub
+
+        Private Sub RaiseReceivedHeaderFrame(ByVal frame As HeaderFrame)
+
+            RaiseEvent ReceivedHeaderFrame(frame)
+            RaiseEvent IFrameParserReceivedHeaderFrame(frame)
+
+        End Sub
+
+        Private Sub RaiseReceivedCommandFrame(ByVal frame As CommandFrame)
+
+            RaiseEvent ReceivedCommandFrame(frame)
+            RaiseEvent IFrameParserReceivedCommandFrame(frame)
 
         End Sub
 

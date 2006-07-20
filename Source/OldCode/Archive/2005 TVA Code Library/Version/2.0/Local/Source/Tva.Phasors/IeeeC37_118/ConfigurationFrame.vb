@@ -73,6 +73,11 @@ Namespace IeeeC37_118
 
             MyBase.New(configurationFrame)
 
+            ' Assign default values for a 37.118 configuration frame
+            m_frameType = IeeeC37_118.FrameType.ConfigurationFrame2
+            m_version = 1
+            m_timeBase = 100000
+
         End Sub
 
         Public Overrides ReadOnly Property InheritedType() As System.Type
@@ -87,9 +92,9 @@ Namespace IeeeC37_118
             End Get
         End Property
 
-        Public Overridable ReadOnly Property RevisionNumber() As ProtocolRevision
+        Public Overridable ReadOnly Property DraftRevision() As DraftRevision
             Get
-                Return IeeeC37_118.ProtocolRevision.Version1
+                Return IeeeC37_118.DraftRevision.Draft7
             End Get
         End Property
 
@@ -228,7 +233,7 @@ Namespace IeeeC37_118
 
         Protected Overrides ReadOnly Property FooterLength() As UInt16
             Get
-                If RevisionNumber = ProtocolRevision.Draft6 Then
+                If DraftRevision = DraftRevision.Draft6 Then
                     Return 2
                 Else
                     Return 4
@@ -242,7 +247,7 @@ Namespace IeeeC37_118
 
                 EndianOrder.BigEndian.CopyBytes(FrameRate, buffer, 0)
 
-                If RevisionNumber > ProtocolRevision.Draft6 Then
+                If DraftRevision > DraftRevision.Draft6 Then
                     ' Add configuration revision count for version 7 and beyond
                     EndianOrder.BigEndian.CopyBytes(m_configurationRevision, buffer, 2)
                 End If
@@ -256,7 +261,7 @@ Namespace IeeeC37_118
             FrameRate = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex)
 
             ' Parse out configuration revision count for version 7 and beyond
-            If RevisionNumber > ProtocolRevision.Draft6 Then
+            If DraftRevision > DraftRevision.Draft6 Then
                 startIndex += 2
                 m_configurationRevision = EndianOrder.BigEndian.ToUInt16(binaryImage, startIndex)
             End If

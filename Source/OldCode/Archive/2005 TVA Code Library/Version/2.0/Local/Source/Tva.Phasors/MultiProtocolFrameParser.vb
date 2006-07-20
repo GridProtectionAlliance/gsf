@@ -199,10 +199,10 @@ Public Class MultiProtocolFrameParser
             ' Instantiate protocol specific frame parser
             Select Case m_protocol
                 Case Phasors.PhasorProtocol.IeeeC37_118V1
-                    m_ieeeC37_118FrameParser = New IeeeC37_118.FrameParser(IeeeC37_118.ProtocolRevision.Version1)
+                    m_ieeeC37_118FrameParser = New IeeeC37_118.FrameParser(IeeeC37_118.DraftRevision.Draft7)
                     m_ieeeC37_118FrameParser.Start()
                 Case Phasors.PhasorProtocol.IeeeC37_118D6
-                    m_ieeeC37_118FrameParser = New IeeeC37_118.FrameParser(IeeeC37_118.ProtocolRevision.Draft6)
+                    m_ieeeC37_118FrameParser = New IeeeC37_118.FrameParser(IeeeC37_118.DraftRevision.Draft6)
                     m_ieeeC37_118FrameParser.Start()
                 Case Phasors.PhasorProtocol.Ieee1344
                     m_ieee1344FrameParser = New Ieee1344.FrameParser

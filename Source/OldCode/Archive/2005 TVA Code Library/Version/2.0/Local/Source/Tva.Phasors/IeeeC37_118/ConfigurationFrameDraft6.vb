@@ -57,9 +57,9 @@ Namespace IeeeC37_118
             End Get
         End Property
 
-        Public Overrides ReadOnly Property RevisionNumber() As ProtocolRevision
+        Public Overrides ReadOnly Property DraftRevision() As DraftRevision
             Get
-                Return IeeeC37_118.ProtocolRevision.Draft6
+                Return IeeeC37_118.DraftRevision.Draft6
             End Get
         End Property
 

@@ -30,7 +30,7 @@ Namespace IeeeC37_118
 
         Public Sub New()
 
-            MyClass.New(IeeeC37_118.ProtocolRevision.Version1)
+            MyClass.New(IeeeC37_118.DraftRevision.Draft7)
 
         End Sub
 
