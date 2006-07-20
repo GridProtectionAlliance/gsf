@@ -22,7 +22,9 @@ Public Interface IFrameParser
     Event ReceivedDataFrame(ByVal frame As IDataFrame)
     Event ReceivedHeaderFrame(ByVal frame As IHeaderFrame)
     Event ReceivedCommandFrame(ByVal frame As ICommandFrame)
+    Event ReceivedUndeterminedFrame(ByVal frame As IChannelFrame)
     Event ReceivedFrameBufferImage(ByVal frameType As FundamentalFrameType, ByVal binaryImage As Byte(), ByVal offset As Integer, ByVal length As Integer)
+    Event ConfigurationChanged()
     Event DataStreamException(ByVal ex As Exception)
 
     Sub Start()

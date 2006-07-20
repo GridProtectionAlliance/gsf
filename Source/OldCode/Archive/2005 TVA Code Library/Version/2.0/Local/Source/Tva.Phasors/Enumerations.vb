@@ -76,9 +76,9 @@ Public Enum PhasorProtocol
     BpaPdcStream
 End Enum
 
-''' <summary>PMU commands</summary>
+''' <summary>Phasor enabled device commands</summary>
 <Serializable()> _
-Public Enum PmuCommand As Int16
+Public Enum DeviceCommand As Int16
     ''' <summary>0001 Turn off transmission of data frames</summary>
     DisableRealTimeData = Bit0
     ''' <summary>0010 Turn on transmission of data frames</summary>

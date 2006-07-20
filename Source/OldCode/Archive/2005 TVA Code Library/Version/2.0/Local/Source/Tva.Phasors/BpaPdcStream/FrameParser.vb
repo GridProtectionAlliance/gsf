@@ -30,17 +30,25 @@ Namespace BpaPdcStream
     Public Class FrameParser
 
         Inherits Stream
+        Implements IFrameParser
 
 #Region " Public Member Declarations "
 
-        Public Event ReceivedConfigurationFrame1(ByVal frame As ConfigurationFrame)
-        Public Event ReceivedConfigurationFrame2(ByVal frame As ConfigurationFrame)
+        Public Event ReceivedConfigurationFrame(ByVal frame As ConfigurationFrame)
         Public Event ReceivedDataFrame(ByVal frame As DataFrame)
-        Public Event DataStreamException(ByVal ex As Exception)
+        Public Event ReceivedFrameBufferImage(ByVal frameType As FundamentalFrameType, ByVal binaryImage As Byte(), ByVal offset As Integer, ByVal length As Integer) Implements IFrameParser.ReceivedFrameBufferImage
+        Public Event ConfigurationChanged() Implements IFrameParser.ConfigurationChanged
+        Public Event DataStreamException(ByVal ex As Exception) Implements IFrameParser.DataStreamException
 
 #End Region
 
 #Region " Private Member Declarations "
+
+        Private Event IFrameParserReceivedConfigurationFrame(ByVal frame As IConfigurationFrame) Implements IFrameParser.ReceivedConfigurationFrame
+        Private Event IFrameParserReceivedDataFrame(ByVal frame As IDataFrame) Implements IFrameParser.ReceivedDataFrame
+        Private Event IFrameParserReceivedHeaderFrame(ByVal frame As IHeaderFrame) Implements IFrameParser.ReceivedHeaderFrame
+        Private Event IFrameParserReceivedCommandFrame(ByVal frame As ICommandFrame) Implements IFrameParser.ReceivedCommandFrame
+        Private Event IFrameParserReceivedUndeterminedFrame(ByVal frame As IChannelFrame) Implements IFrameParser.ReceivedUndeterminedFrame
 
         Private WithEvents m_bufferQueue As ProcessQueue(Of Byte())
         Private m_dataStream As MemoryStream
@@ -56,7 +64,7 @@ Namespace BpaPdcStream
 
         Public Sub New()
 
-            m_bufferQueue = ProcessQueue(Of Byte()).CreateRealTimeQueue(AddressOf ProcessBuffer)
+            m_bufferQueue = ProcessQueue(Of Byte()).CreateRealTimeQueue(AddressOf ProcessBuffers)
 
         End Sub
 
@@ -64,25 +72,25 @@ Namespace BpaPdcStream
 
 #Region " Public Methods Implementation "
 
-        Public Sub Start()
+        Public Sub Start() Implements IFrameParser.Start
 
             m_bufferQueue.Start()
 
         End Sub
 
-        Public Sub [Stop]()
+        Public Sub [Stop]() Implements IFrameParser.Stop
 
             m_bufferQueue.Stop()
 
         End Sub
 
-        Public ReadOnly Property Enabled() As Boolean
+        Public ReadOnly Property Enabled() As Boolean Implements IFrameParser.Enabled
             Get
                 Return m_bufferQueue.Enabled
             End Get
         End Property
 
-        Public ReadOnly Property QueuedBuffers() As Int32
+        Public ReadOnly Property QueuedBuffers() As Int32 Implements IFrameParser.QueuedBuffers
             Get
                 Return m_bufferQueue.Count
             End Get
@@ -98,7 +106,7 @@ Namespace BpaPdcStream
         End Property
 
         ' Stream implementation overrides
-        Public Overrides Sub Write(ByVal buffer As Byte(), ByVal offset As Int32, ByVal count As Int32)
+        Public Overrides Sub Write(ByVal buffer As Byte(), ByVal offset As Int32, ByVal count As Int32) Implements IFrameParser.Write
 
             If m_initialized Then
                 ' Queue up received data buffer for real-time parsing and return to data collection as quickly as possible...
@@ -134,7 +142,7 @@ Namespace BpaPdcStream
             End Get
         End Property
 
-        Public ReadOnly Property Status() As String
+        Public ReadOnly Property Status() As String Implements IFrameParser.Status
             Get
                 With New StringBuilder
                     .Append("       Config frame loaded: ")
@@ -212,7 +220,7 @@ Namespace BpaPdcStream
 
 #Region " Private Methods Implementation "
 
-        Private Sub ProcessBuffer(ByVal buffer As Byte())
+        Private Sub ProcessBuffers(ByVal buffers As Byte()())
 
             'Dim parsedFrameHeader As ICommonFrameHeader
             'Dim index As Int32
@@ -287,6 +295,34 @@ Namespace BpaPdcStream
         Private Sub m_bufferQueue_ProcessException(ByVal ex As System.Exception) Handles m_bufferQueue.ProcessException
 
             RaiseEvent DataStreamException(ex)
+
+        End Sub
+
+        Private Property IFrameParserConfigurationFrame() As IConfigurationFrame Implements IFrameParser.ConfigurationFrame
+            Get
+                Return m_configurationFrame
+            End Get
+            Set(ByVal value As IConfigurationFrame)
+                ' Assign new config frame, casting if needed...
+                If TypeOf value Is BpaPdcStream.ConfigurationFrame Then
+                    m_configurationFrame = value
+                Else
+                    m_configurationFrame = New BpaPdcStream.ConfigurationFrame(value)
+                End If
+            End Set
+        End Property
+
+        Private Sub RaiseReceivedConfigurationFrame(ByVal frame As ConfigurationFrame)
+
+            RaiseEvent ReceivedConfigurationFrame(frame)
+            RaiseEvent IFrameParserReceivedConfigurationFrame(frame)
+
+        End Sub
+
+        Private Sub RaiseReceivedDataFrame(ByVal frame As DataFrame)
+
+            RaiseEvent ReceivedDataFrame(frame)
+            RaiseEvent IFrameParserReceivedDataFrame(frame)
 
         End Sub
 

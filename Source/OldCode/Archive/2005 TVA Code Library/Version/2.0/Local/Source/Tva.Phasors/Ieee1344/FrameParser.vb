@@ -30,6 +30,7 @@ Namespace Ieee1344
     Public Class FrameParser
 
         Inherits Stream
+        Implements IFrameParser
 
 #Region " Public Member Declarations "
 
@@ -37,12 +38,19 @@ Namespace Ieee1344
         Public Event ReceivedConfigurationFrame(ByVal frame As ConfigurationFrame)
         Public Event ReceivedDataFrame(ByVal frame As DataFrame)
         Public Event ReceivedHeaderFrame(ByVal frame As HeaderFrame)
-        Public Event ReceivedFrameBufferImage(ByVal frameType As FundamentalFrameType, ByVal binaryImage As Byte(), ByVal offset As Integer, ByVal length As Integer)
-        Public Event DataStreamException(ByVal ex As Exception)
+        Public Event ReceivedFrameBufferImage(ByVal frameType As FundamentalFrameType, ByVal binaryImage As Byte(), ByVal offset As Integer, ByVal length As Integer) Implements IFrameParser.ReceivedFrameBufferImage
+        Public Event DataStreamException(ByVal ex As Exception) Implements IFrameParser.DataStreamException
 
 #End Region
 
 #Region " Private Member Declarations "
+
+        Private Event IFrameParserReceivedConfigurationFrame(ByVal frame As IConfigurationFrame) Implements IFrameParser.ReceivedConfigurationFrame
+        Private Event IFrameParserReceivedDataFrame(ByVal frame As IDataFrame) Implements IFrameParser.ReceivedDataFrame
+        Private Event IFrameParserReceivedHeaderFrame(ByVal frame As IHeaderFrame) Implements IFrameParser.ReceivedHeaderFrame
+        Private Event IFrameParserReceivedCommandFrame(ByVal frame As ICommandFrame) Implements IFrameParser.ReceivedCommandFrame
+        Private Event IFrameParserReceivedUndeterminedFrame(ByVal frame As IChannelFrame) Implements IFrameParser.ReceivedUndeterminedFrame
+        Private Event IFrameParserConfigurationChanged() Implements IFrameParser.ConfigurationChanged
 
         Private WithEvents m_bufferQueue As ProcessQueue(Of Byte())
         Private m_dataStream As MemoryStream
@@ -57,7 +65,7 @@ Namespace Ieee1344
 
         Public Sub New()
 
-            m_bufferQueue = ProcessQueue(Of Byte()).CreateRealTimeQueue(AddressOf ProcessBuffer)
+            m_bufferQueue = ProcessQueue(Of Byte()).CreateRealTimeQueue(AddressOf ProcessBuffers)
 
         End Sub
 
@@ -72,25 +80,25 @@ Namespace Ieee1344
 
 #Region " Public Methods Implementation "
 
-        Public Sub Start()
+        Public Sub Start() Implements IFrameParser.Start
 
             m_bufferQueue.Start()
 
         End Sub
 
-        Public Sub [Stop]()
+        Public Sub [Stop]() Implements IFrameParser.Stop
 
             m_bufferQueue.Stop()
 
         End Sub
 
-        Public ReadOnly Property Enabled() As Boolean
+        Public ReadOnly Property Enabled() As Boolean Implements IFrameParser.Enabled
             Get
                 Return m_bufferQueue.Enabled
             End Get
         End Property
 
-        Public ReadOnly Property QueuedBuffers() As Int32
+        Public ReadOnly Property QueuedBuffers() As Int32 Implements IFrameParser.QueuedBuffers
             Get
                 Return m_bufferQueue.Count
             End Get
@@ -106,7 +114,7 @@ Namespace Ieee1344
         End Property
 
         ' Stream implementation overrides
-        Public Overrides Sub Write(ByVal buffer As Byte(), ByVal offset As Int32, ByVal count As Int32)
+        Public Overrides Sub Write(ByVal buffer As Byte(), ByVal offset As Int32, ByVal count As Int32) Implements IFrameParser.Write
 
             ' Queue up received data buffer for real-time parsing and return to data collection as quickly as possible...
             m_bufferQueue.Add(CopyBuffer(buffer, offset, count))
@@ -131,7 +139,7 @@ Namespace Ieee1344
             End Get
         End Property
 
-        Public ReadOnly Property Status() As String
+        Public ReadOnly Property Status() As String Implements IFrameParser.Status
             Get
                 With New StringBuilder
                     .Append("     Received config frame: ")
@@ -210,7 +218,7 @@ Namespace Ieee1344
 #Region " Private Methods Implementation "
 
         ' We process all queued data buffers that are available at once...
-        Private Sub ProcessBuffer(ByVal buffers As Byte()())
+        Private Sub ProcessBuffers(ByVal buffers As Byte()())
 
             Dim parsedFrameHeader As ICommonFrameHeader
             Dim buffer As Byte()
@@ -245,7 +253,7 @@ Namespace Ieee1344
                 parsedFrameHeader = CommonFrameHeader.ParseBinaryImage(m_configurationFrame, buffer, index)
 
                 ' Until we receive configuration frame, we at least expose part of frame we have parsed
-                If m_configurationFrame Is Nothing Then RaiseEvent ReceivedCommonFrameHeader(parsedFrameHeader)
+                If m_configurationFrame Is Nothing Then RaiseReceivedCommonFrameHeader(parsedFrameHeader)
 
                 ' See if there is enough data in the buffer to parse the entire frame
                 If index + parsedFrameHeader.FrameLength > buffer.Length Then
@@ -260,9 +268,9 @@ Namespace Ieee1344
                 ' Entire frame is availble, so we go ahead and parse it
                 Select Case parsedFrameHeader.FrameType
                     Case FrameType.DataFrame
-                        ' We can only start parsing data frames once we have successfully received configuration file 2...
+                        ' We can only start parsing data frames once we have successfully received a configuration file...
                         If m_configurationFrame IsNot Nothing Then
-                            RaiseEvent ReceivedDataFrame(New DataFrame(parsedFrameHeader, m_configurationFrame, buffer, index))
+                            RaiseReceivedDataFrame(New DataFrame(parsedFrameHeader, m_configurationFrame, buffer, index))
                         End If
                     Case FrameType.ConfigurationFrame
                         ' Cumulate all partial frames together as once complete frame
@@ -275,7 +283,7 @@ Namespace Ieee1344
 
                                     If .IsLastFrame Then
                                         m_configurationFrame = New ConfigurationFrame(m_configurationFrameCollection, m_configurationFrameCollection.BinaryImage, 0)
-                                        RaiseEvent ReceivedConfigurationFrame(m_configurationFrame)
+                                        RaiseReceivedConfigurationFrame(m_configurationFrame)
                                         m_configurationFrameCollection = Nothing
                                     End If
                                 Catch
@@ -295,7 +303,7 @@ Namespace Ieee1344
                                     m_headerFrameCollection.AppendFrameImage(buffer, index, .FrameLength)
 
                                     If .IsLastFrame Then
-                                        RaiseEvent ReceivedHeaderFrame(New HeaderFrame(m_headerFrameCollection, m_headerFrameCollection.BinaryImage, 0))
+                                        RaiseReceivedHeaderFrame(New HeaderFrame(m_headerFrameCollection, m_headerFrameCollection.BinaryImage, 0))
                                         m_headerFrameCollection = Nothing
                                     End If
                                 Catch
@@ -315,6 +323,48 @@ Namespace Ieee1344
         Private Sub m_bufferQueue_ProcessException(ByVal ex As System.Exception) Handles m_bufferQueue.ProcessException
 
             RaiseEvent DataStreamException(ex)
+
+        End Sub
+
+        Private Property IFrameParserConfigurationFrame() As IConfigurationFrame Implements IFrameParser.ConfigurationFrame
+            Get
+                Return m_configurationFrame
+            End Get
+            Set(ByVal value As IConfigurationFrame)
+                ' Assign new config frame, casting if needed...
+                If TypeOf value Is Ieee1344.ConfigurationFrame Then
+                    m_configurationFrame = value
+                Else
+                    m_configurationFrame = New Ieee1344.ConfigurationFrame(value)
+                End If
+            End Set
+        End Property
+
+        Private Sub RaiseReceivedCommonFrameHeader(ByVal frame As ICommonFrameHeader)
+
+            RaiseEvent ReceivedCommonFrameHeader(frame)
+            RaiseEvent IFrameParserReceivedUndeterminedFrame(frame)
+
+        End Sub
+
+        Private Sub RaiseReceivedConfigurationFrame(ByVal frame As ConfigurationFrame)
+
+            RaiseEvent ReceivedConfigurationFrame(frame)
+            RaiseEvent IFrameParserReceivedConfigurationFrame(frame)
+
+        End Sub
+
+        Private Sub RaiseReceivedDataFrame(ByVal frame As DataFrame)
+
+            RaiseEvent ReceivedDataFrame(frame)
+            RaiseEvent IFrameParserReceivedDataFrame(frame)
+
+        End Sub
+
+        Private Sub RaiseReceivedHeaderFrame(ByVal frame As HeaderFrame)
+
+            RaiseEvent ReceivedHeaderFrame(frame)
+            RaiseEvent IFrameParserReceivedHeaderFrame(frame)
 
         End Sub
 

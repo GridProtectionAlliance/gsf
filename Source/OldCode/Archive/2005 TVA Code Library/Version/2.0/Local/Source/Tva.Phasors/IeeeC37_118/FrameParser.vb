@@ -41,6 +41,7 @@ Namespace IeeeC37_118
         Public Event ReceivedHeaderFrame(ByVal frame As HeaderFrame)
         Public Event ReceivedCommandFrame(ByVal frame As CommandFrame)
         Public Event ReceivedFrameBufferImage(ByVal frameType As FundamentalFrameType, ByVal binaryImage As Byte(), ByVal offset As Integer, ByVal length As Integer) Implements IFrameParser.ReceivedFrameBufferImage
+        Public Event ConfigurationChanged() Implements IFrameParser.ConfigurationChanged
         Public Event DataStreamException(ByVal ex As Exception) Implements IFrameParser.DataStreamException
 
 #End Region
@@ -51,11 +52,13 @@ Namespace IeeeC37_118
         Private Event IFrameParserReceivedDataFrame(ByVal frame As IDataFrame) Implements IFrameParser.ReceivedDataFrame
         Private Event IFrameParserReceivedHeaderFrame(ByVal frame As IHeaderFrame) Implements IFrameParser.ReceivedHeaderFrame
         Private Event IFrameParserReceivedCommandFrame(ByVal frame As ICommandFrame) Implements IFrameParser.ReceivedCommandFrame
+        Private Event IFrameParserReceivedUndeterminedFrame(ByVal frame As IChannelFrame) Implements IFrameParser.ReceivedUndeterminedFrame
 
         Private m_draftRevision As DraftRevision
         Private WithEvents m_bufferQueue As ProcessQueue(Of Byte())
         Private m_dataStream As MemoryStream
         Private m_configurationFrame2 As ConfigurationFrame
+        Private m_configurationChangeHandled As Boolean
         Private m_totalFramesReceived As Long
         Private m_initialized As Boolean
 
@@ -65,7 +68,7 @@ Namespace IeeeC37_118
 
         Public Sub New()
 
-            m_bufferQueue = ProcessQueue(Of Byte()).CreateRealTimeQueue(AddressOf ProcessBuffer)
+            m_bufferQueue = ProcessQueue(Of Byte()).CreateRealTimeQueue(AddressOf ProcessBuffers)
             m_draftRevision = IeeeC37_118.DraftRevision.Draft7
 
         End Sub
@@ -138,24 +141,6 @@ Namespace IeeeC37_118
             End Get
             Set(ByVal value As ConfigurationFrame)
                 m_configurationFrame2 = value
-            End Set
-        End Property
-
-        Private Property IFrameParserConfigurationFrame() As IConfigurationFrame Implements IFrameParser.ConfigurationFrame
-            Get
-                Return m_configurationFrame2
-            End Get
-            Set(ByVal value As IConfigurationFrame)
-                ' Assign new config frame, casting if needed...
-                If TypeOf value Is IeeeC37_118.ConfigurationFrame Then
-                    m_configurationFrame2 = value
-                Else
-                    If m_draftRevision = DraftRevision.Draft7 Then
-                        m_configurationFrame2 = New IeeeC37_118.ConfigurationFrame(value)
-                    Else
-                        m_configurationFrame2 = New IeeeC37_118.ConfigurationFrameDraft6(value)
-                    End If
-                End If
             End Set
         End Property
 
@@ -281,7 +266,7 @@ Namespace IeeeC37_118
 #Region " Private Methods Implementation "
 
         ' We process all queued data buffers that are available at once...
-        Private Sub ProcessBuffer(ByVal buffers As Byte()())
+        Private Sub ProcessBuffers(ByVal buffers As Byte()())
 
             Dim parsedFrameHeader As ICommonFrameHeader
             Dim buffer As Byte()
@@ -316,7 +301,7 @@ Namespace IeeeC37_118
                 parsedFrameHeader = CommonFrameHeader.ParseBinaryImage(m_configurationFrame2, buffer, index)
 
                 ' Until we receive configuration frame, we at least expose part of frame we have parsed
-                If m_configurationFrame2 Is Nothing Then RaiseEvent ReceivedCommonFrameHeader(parsedFrameHeader)
+                If m_configurationFrame2 Is Nothing Then RaiseReceivedCommonFrameHeader(parsedFrameHeader)
 
                 ' See if there is enough data in the buffer to parse the entire frame
                 If index + parsedFrameHeader.FrameLength > buffer.Length Then
@@ -370,6 +355,31 @@ Namespace IeeeC37_118
 
         End Sub
 
+        Private Property IFrameParserConfigurationFrame() As IConfigurationFrame Implements IFrameParser.ConfigurationFrame
+            Get
+                Return m_configurationFrame2
+            End Get
+            Set(ByVal value As IConfigurationFrame)
+                ' Assign new config frame, casting if needed...
+                If TypeOf value Is IeeeC37_118.ConfigurationFrame Then
+                    m_configurationFrame2 = value
+                Else
+                    If m_draftRevision = DraftRevision.Draft7 Then
+                        m_configurationFrame2 = New IeeeC37_118.ConfigurationFrame(value)
+                    Else
+                        m_configurationFrame2 = New IeeeC37_118.ConfigurationFrameDraft6(value)
+                    End If
+                End If
+            End Set
+        End Property
+
+        Private Sub RaiseReceivedCommonFrameHeader(ByVal frame As ICommonFrameHeader)
+
+            RaiseEvent ReceivedCommonFrameHeader(frame)
+            RaiseEvent IFrameParserReceivedUndeterminedFrame(frame)
+
+        End Sub
+
         Private Sub RaiseReceivedConfigurationFrame1(ByVal frame As ConfigurationFrame)
 
             RaiseEvent ReceivedConfigurationFrame1(frame)
@@ -388,6 +398,19 @@ Namespace IeeeC37_118
 
             RaiseEvent ReceivedDataFrame(frame)
             RaiseEvent IFrameParserReceivedDataFrame(frame)
+
+            ' We only need to look at first PMU data cell to determine if configuration has changed
+            If frame.Cells.Count > 0 Then
+                If frame.Cells(0).ConfigurationChangeDetected Then
+                    ' Notification should terminate after one minute...
+                    If Not m_configurationChangeHandled Then
+                        m_configurationChangeHandled = True
+                        RaiseEvent ConfigurationChanged()
+                    End If
+                Else
+                    m_configurationChangeHandled = False
+                End If
+            End If
 
         End Sub
 

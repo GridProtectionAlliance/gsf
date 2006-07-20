@@ -43,7 +43,7 @@ Namespace Ieee1344
 
         End Sub
 
-        Public Sub New(ByVal idCode As UInt64, ByVal command As PmuCommand)
+        Public Sub New(ByVal idCode As UInt64, ByVal command As DeviceCommand)
 
             MyBase.New(New CommandCellCollection(0), command)
             m_idCode = idCode

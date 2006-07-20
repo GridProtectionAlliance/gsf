@@ -29,15 +29,18 @@ Imports Tva.Communication
 <CLSCompliant(False)> _
 Public Class MultiProtocolFrameParser
 
+    Implements IFrameParser
+
 #Region " Public Member Declarations "
 
-    Public Event ReceivedFrameBufferImage(ByVal frameType As FundamentalFrameType, ByVal binaryImage As Byte(), ByVal offset As Integer, ByVal length As Integer)
-    Public Event ReceivedConfigurationFrame(ByVal frame As IConfigurationFrame)
-    Public Event ReceivedDataFrame(ByVal frame As IDataFrame)
-    Public Event ReceivedHeaderFrame(ByVal frame As IHeaderFrame)
-    Public Event ReceivedCommandFrame(ByVal frame As ICommandFrame)
-    Public Event ReceivedUndeterminedFrame(ByVal frame As IChannelFrame)
-    Public Event DataStreamException(ByVal ex As Exception)
+    Public Event ReceivedConfigurationFrame(ByVal frame As IConfigurationFrame) Implements IFrameParser.ReceivedConfigurationFrame
+    Public Event ReceivedDataFrame(ByVal frame As IDataFrame) Implements IFrameParser.ReceivedDataFrame
+    Public Event ReceivedHeaderFrame(ByVal frame As IHeaderFrame) Implements IFrameParser.ReceivedHeaderFrame
+    Public Event ReceivedCommandFrame(ByVal frame As ICommandFrame) Implements IFrameParser.ReceivedCommandFrame
+    Public Event ReceivedUndeterminedFrame(ByVal frame As IChannelFrame) Implements IFrameParser.ReceivedUndeterminedFrame
+    Public Event ReceivedFrameBufferImage(ByVal frameType As FundamentalFrameType, ByVal binaryImage As Byte(), ByVal offset As Integer, ByVal length As Integer) Implements IFrameParser.ReceivedFrameBufferImage
+    Public Event ConfigurationChanged() Implements IFrameParser.ConfigurationChanged
+    Public Event DataStreamException(ByVal ex As Exception) Implements IFrameParser.DataStreamException
     Public Event ParsingStatus(ByVal message As String)
 
     Public Const DefaultBufferSize As Int32 = 262144    ' 256K
@@ -47,13 +50,14 @@ Public Class MultiProtocolFrameParser
 #Region " Private Member Declarations "
 
     ' Connection properties
-    Private m_protocol As PhasorProtocol
-    Private m_transportLayer As TransportProtocol
+    Private m_phasorProtocol As PhasorProtocol
+    Private m_transportProtocol As TransportProtocol
     Private m_hostIP As String
     Private m_port As Int32
     Private m_pmuID As Int32
     Private m_bufferSize As Int32
 
+    ' TODO: now that IFrameParser exists - change to single m_frameParser As IFrameParser variable...
     ' We internalize protocol specfic processing to simplfy end user consumption
     Private WithEvents m_ieeeC37_118FrameParser As IeeeC37_118.FrameParser
     Private WithEvents m_ieee1344FrameParser As Ieee1344.FrameParser
@@ -93,16 +97,16 @@ Public Class MultiProtocolFrameParser
             .Enabled = False
         End With
 
-        m_protocol = Phasors.PhasorProtocol.IeeeC37_118V1
-        m_transportLayer = TransportProtocol.Tcp
+        m_phasorProtocol = PhasorProtocol.IeeeC37_118V1
+        m_transportProtocol = TransportProtocol.Tcp
 
     End Sub
 
-    Public Sub New(ByVal protocol As PhasorProtocol, ByVal transportLayer As TransportProtocol)
+    Public Sub New(ByVal phasorProtocol As PhasorProtocol, ByVal transportLayer As TransportProtocol)
 
         MyClass.New()
-        m_protocol = protocol
-        m_transportLayer = transportLayer
+        m_phasorProtocol = phasorProtocol
+        m_transportProtocol = transportLayer
 
     End Sub
 
@@ -110,21 +114,21 @@ Public Class MultiProtocolFrameParser
 
 #Region " Public Methods Implementation "
 
-    Public Property Protocol() As PhasorProtocol
+    Public Property PhasorProtocol() As PhasorProtocol
         Get
-            Return m_protocol
+            Return m_phasorProtocol
         End Get
         Set(ByVal value As PhasorProtocol)
-            m_protocol = value
+            m_phasorProtocol = value
         End Set
     End Property
 
-    Property TransportLayer() As TransportProtocol
+    Property TransportProtocol() As TransportProtocol
         Get
-            Return m_transportLayer
+            Return m_transportProtocol
         End Get
         Set(ByVal value As TransportProtocol)
-            m_transportLayer = value
+            m_transportProtocol = value
         End Set
     End Property
 
@@ -183,9 +187,9 @@ Public Class MultiProtocolFrameParser
         End Get
     End Property
 
-    Public Sub Connect()
+    Public Sub Start() Implements IFrameParser.Start
 
-        Disconnect()
+        [Stop]()
         m_totalFramesReceived = 0
         m_totalBytesReceived = 0
         m_frameRateTotal = 0
@@ -193,11 +197,11 @@ Public Class MultiProtocolFrameParser
         m_frameRate = 0.0#
         m_byteRate = 0.0#
 
-        UpdateStatus("Attempting " & [Enum].GetName(GetType(PhasorProtocol), m_protocol).ToUpper() & " " & [Enum].GetName(GetType(TransportProtocol), m_transportLayer).ToUpper() & " based connection to PDC/PMU " & ConnectionName)
+        UpdateStatus("Attempting " & [Enum].GetName(GetType(PhasorProtocol), m_phasorProtocol).ToUpper() & " " & [Enum].GetName(GetType(TransportProtocol), m_transportProtocol).ToUpper() & " based connection to PDC/PMU " & ConnectionName)
 
         Try
             ' Instantiate protocol specific frame parser
-            Select Case m_protocol
+            Select Case m_phasorProtocol
                 Case Phasors.PhasorProtocol.IeeeC37_118V1
                     m_ieeeC37_118FrameParser = New IeeeC37_118.FrameParser(IeeeC37_118.DraftRevision.Draft7)
                     m_ieeeC37_118FrameParser.Start()
@@ -213,7 +217,7 @@ Public Class MultiProtocolFrameParser
             End Select
 
             ' Start reading data from selected transport layer
-            Select Case m_transportLayer
+            Select Case m_transportProtocol
                 Case TransportProtocol.Tcp
                     ' Validate minimal connection parameters required for TCP connection
                     If String.IsNullOrEmpty(m_hostIP) Then Throw New InvalidOperationException("Cannot start TCP stream listener without specifing a host IP")
@@ -247,13 +251,13 @@ Public Class MultiProtocolFrameParser
 
             m_rateCalcTimer.Enabled = True
         Catch
-            Disconnect()
+            [Stop]()
             Throw
         End Try
 
     End Sub
 
-    Public Sub Disconnect()
+    Public Sub [Stop]() Implements IFrameParser.Stop
 
         If Enabled Then UpdateStatus("Disconnecting from PDC/PMU " & ConnectionName)
 
@@ -284,7 +288,7 @@ Public Class MultiProtocolFrameParser
 
     End Sub
 
-    Public Property ConfigurationFrame() As IConfigurationFrame
+    Public Property ConfigurationFrame() As IConfigurationFrame Implements IFrameParser.ConfigurationFrame
         Get
             Return m_configurationFrame
         End Get
@@ -296,7 +300,7 @@ Public Class MultiProtocolFrameParser
                 If TypeOf value Is IeeeC37_118.ConfigurationFrame Then
                     m_ieeeC37_118FrameParser.ConfigurationFrame = value
                 Else
-                    If m_protocol = PhasorProtocol.IeeeC37_118V1 Then
+                    If m_phasorProtocol = PhasorProtocol.IeeeC37_118V1 Then
                         m_ieeeC37_118FrameParser.ConfigurationFrame = New IeeeC37_118.ConfigurationFrame(value)
                     Else
                         m_ieeeC37_118FrameParser.ConfigurationFrame = New IeeeC37_118.ConfigurationFrameDraft6(value)
@@ -320,13 +324,13 @@ Public Class MultiProtocolFrameParser
 
     Public ReadOnly Property IsIEEEProtocol() As Boolean
         Get
-            Return m_protocol = Phasors.PhasorProtocol.Ieee1344 OrElse _
-                m_protocol = Phasors.PhasorProtocol.IeeeC37_118D6 OrElse _
-                m_protocol = Phasors.PhasorProtocol.IeeeC37_118V1
+            Return m_phasorProtocol = Phasors.PhasorProtocol.IeeeC37_118V1 OrElse _
+                m_phasorProtocol = Phasors.PhasorProtocol.IeeeC37_118D6 OrElse _
+                m_phasorProtocol = Phasors.PhasorProtocol.Ieee1344
         End Get
     End Property
 
-    Public ReadOnly Property Enabled() As Boolean
+    Public ReadOnly Property Enabled() As Boolean Implements IFrameParser.Enabled
         Get
             If m_ieeeC37_118FrameParser IsNot Nothing Then
                 Return m_ieeeC37_118FrameParser.Enabled
@@ -338,7 +342,7 @@ Public Class MultiProtocolFrameParser
         End Get
     End Property
 
-    Public ReadOnly Property QueuedBuffers() As Int32
+    Public ReadOnly Property QueuedBuffers() As Int32 Implements IFrameParser.QueuedBuffers
         Get
             If m_ieeeC37_118FrameParser IsNot Nothing Then
                 Return m_ieeeC37_118FrameParser.QueuedBuffers
@@ -350,7 +354,7 @@ Public Class MultiProtocolFrameParser
         End Get
     End Property
 
-    Public ReadOnly Property InternalFrameParser() As Object
+    Public ReadOnly Property InternalFrameParser() As IFrameParser
         Get
             If m_ieeeC37_118FrameParser IsNot Nothing Then
                 Return m_ieeeC37_118FrameParser
@@ -404,12 +408,12 @@ Public Class MultiProtocolFrameParser
         End Get
     End Property
 
-    Public Sub Write(ByVal buffer As Byte(), ByVal offset As Integer, ByVal length As Int32)
+    Public Sub Write(ByVal buffer As Byte(), ByVal offset As Integer, ByVal length As Int32) Implements IFrameParser.Write
 
         m_totalBytesReceived += length
         m_byteRateTotal += length
 
-        Select Case m_protocol
+        Select Case m_phasorProtocol
             Case Phasors.PhasorProtocol.IeeeC37_118V1, Phasors.PhasorProtocol.IeeeC37_118D6
                 m_ieeeC37_118FrameParser.Write(buffer, offset, length)
             Case Phasors.PhasorProtocol.Ieee1344
@@ -420,16 +424,16 @@ Public Class MultiProtocolFrameParser
 
     End Sub
 
-    Public Sub SendPmuCommand(ByVal command As PmuCommand)
+    Public Sub SendPmuCommand(ByVal command As DeviceCommand)
 
         If m_clientStream IsNot Nothing Then
             Dim binaryImage As Byte()
             Dim binaryLength As Int32
 
-            UpdateStatus("Sending command """ & [Enum].GetName(GetType(PmuCommand), command) & """ to PDC/PMU " & ConnectionName)
+            UpdateStatus("Sending command """ & [Enum].GetName(GetType(DeviceCommand), command) & """ to PDC/PMU " & ConnectionName)
 
             ' Only the IEEE protocols support commands
-            Select Case m_protocol
+            Select Case m_phasorProtocol
                 Case Phasors.PhasorProtocol.IeeeC37_118V1, Phasors.PhasorProtocol.IeeeC37_118D6
                     With New IeeeC37_118.CommandFrame(m_pmuID, command, 1)
                         binaryImage = .BinaryImage
@@ -450,17 +454,17 @@ Public Class MultiProtocolFrameParser
 
     End Sub
 
-    Public ReadOnly Property Status() As String
+    Public ReadOnly Property Status() As String Implements IFrameParser.Status
         Get
             With New StringBuilder
                 .Append("     PDC/PMU Connection ID: ")
                 .Append(ConnectionName)
                 .Append(Environment.NewLine)
                 .Append("      Data transport layer: ")
-                .Append([Enum].GetName(GetType(TransportProtocol), TransportLayer).ToUpper())
+                .Append([Enum].GetName(GetType(TransportProtocol), TransportProtocol).ToUpper())
                 .Append(Environment.NewLine)
-                .Append("                  Protocol: ")
-                .Append([Enum].GetName(GetType(PhasorProtocol), Protocol).ToUpper())
+                .Append("           Phasor protocol: ")
+                .Append([Enum].GetName(GetType(PhasorProtocol), PhasorProtocol).ToUpper())
                 .Append(Environment.NewLine)
                 .Append("               Buffer size: ")
                 .Append(BufferSize)
@@ -595,7 +599,7 @@ Public Class MultiProtocolFrameParser
         ' such as the SEL 421, we disable real-time data stream first...
         Try
             ' Make sure data stream is disabled
-            SendPmuCommand(PmuCommand.DisableRealTimeData)
+            SendPmuCommand(DeviceCommand.DisableRealTimeData)
 
             ' Wait for real-time data stream to cease
             Do While m_clientStream.DataAvailable
@@ -615,7 +619,7 @@ Public Class MultiProtocolFrameParser
             m_configurationFrame = Nothing
 
             For x As Integer = 1 To 4
-                SendPmuCommand(PmuCommand.SendConfigurationFrame2)
+                SendPmuCommand(DeviceCommand.SendConfigurationFrame2)
 
                 Do While m_configurationFrame Is Nothing
                     ' So long as we are receiving data, we'll push it to the frame parser
@@ -638,7 +642,7 @@ Public Class MultiProtocolFrameParser
             Next
 
             ' Enable data stream
-            SendPmuCommand(PmuCommand.EnableRealTimeData)
+            SendPmuCommand(DeviceCommand.EnableRealTimeData)
         Catch ex As ThreadAbortException
             ' If we received an abort exception, we'll egress gracefully
             Exit Sub
@@ -766,13 +770,7 @@ Public Class MultiProtocolFrameParser
 
     End Sub
 
-    Private Sub m_bpaPdcStreamFrameParser_ReceivedConfigurationFrame1(ByVal frame As Tva.Phasors.BpaPdcStream.ConfigurationFrame) Handles m_bpaPdcStreamFrameParser.ReceivedConfigurationFrame1
-
-        ProcessFrame(frame)
-
-    End Sub
-
-    Private Sub m_bpaPdcStreamFrameParser_ReceivedConfigurationFrame2(ByVal frame As Tva.Phasors.BpaPdcStream.ConfigurationFrame) Handles m_bpaPdcStreamFrameParser.ReceivedConfigurationFrame2
+    Private Sub m_bpaPdcStreamFrameParser_ReceivedConfigurationFrame(ByVal frame As Tva.Phasors.BpaPdcStream.ConfigurationFrame) Handles m_bpaPdcStreamFrameParser.ReceivedConfigurationFrame
 
         ProcessFrame(frame)
 
