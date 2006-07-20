@@ -29,7 +29,7 @@ Public Class PhasorMeasurementMapper
 
     Private WithEvents m_connectionTimer As Timers.Timer
     Private WithEvents m_dataStreamMonitor As Timers.Timer
-    Private WithEvents m_frameParser As FrameParser
+    Private WithEvents m_frameParser As MultiProtocolFrameParser
     Private m_source As String
     Private m_pmuIDs As PmuInfoCollection
     Private m_measurementIDs As Dictionary(Of String, MeasurementDefinition)
@@ -42,7 +42,7 @@ Public Class PhasorMeasurementMapper
     Private m_receivedConfigFrame As Boolean
     Private m_timezone As Win32TimeZone
 
-    Public Sub New(ByVal frameParser As FrameParser, ByVal source As String, ByVal pmuIDs As PmuInfoCollection, ByVal measurementIDs As Dictionary(Of String, MeasurementDefinition))
+    Public Sub New(ByVal frameParser As MultiProtocolFrameParser, ByVal source As String, ByVal pmuIDs As PmuInfoCollection, ByVal measurementIDs As Dictionary(Of String, MeasurementDefinition))
 
         m_frameParser = frameParser
         m_source = source

@@ -169,7 +169,7 @@ Public Class PhasorMeasurementReceiver
             Dim angleMeasurementIDs As New List(Of Integer)
             Dim referenceAngleMeasurementID As Integer
             Dim row As DataRow
-            Dim parser As FrameParser
+            Dim parser As MultiProtocolFrameParser
             Dim source As String
             Dim timezone As String
             Dim pmuIDs As PmuInfoCollection
@@ -227,7 +227,7 @@ Public Class PhasorMeasurementReceiver
                     ' Get current row
                     row = .Rows(x)
 
-                    parser = New FrameParser
+                    parser = New MultiProtocolFrameParser
                     pmuIDs = New PmuInfoCollection
 
                     source = row("SourceID").ToString.Trim.ToUpper
