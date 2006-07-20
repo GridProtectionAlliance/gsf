@@ -101,8 +101,9 @@
     <Compile Include="CommandCell.vb" />
     <Compile Include="CommandFrameBase.vb" />
     <Compile Include="ChannelValueMeasurement.vb" />
+    <Compile Include="IFrameParser.vb" />
     <Compile Include="Enumerations.vb" />
-    <Compile Include="FrameParser.vb" />
+    <Compile Include="MultiProtocolFrameParser.vb" />
     <Compile Include="ICommandFrameParsingState.vb" />
     <Compile Include="ICommandFrame.vb" />
     <Compile Include="HeaderFrameParsingState.vb" />
