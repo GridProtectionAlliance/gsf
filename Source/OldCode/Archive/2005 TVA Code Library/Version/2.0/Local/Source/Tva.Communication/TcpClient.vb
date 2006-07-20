@@ -40,6 +40,10 @@ Public Class TcpClient
     ''' </summary>
     Private Const PacketHeaderSize As Integer = 4
 
+    ''' <summary>
+    ''' Initializes a instance of Tva.Communication.TcpClient with the specified data.
+    ''' </summary>
+    ''' <param name="connectionString">The data that is required by the client to initialize.</param>
     Public Sub New(ByVal connectionString As String)
         MyClass.New()
         MyBase.ConnectionString = connectionString  ' Override the default connection string.
@@ -54,7 +58,7 @@ Public Class TcpClient
     ''' True if the server will send the size of the packet before sending the actual packet; otherwise False.
     ''' </returns>
     ''' <remarks>This property must be set to True if either Encryption or Compression is enabled.</remarks>
-    <Description("Indicates whether the server will send the size of the packet before sending the actual packet."), Category("Data"), DefaultValue(GetType(Boolean), "True")> _
+    <Description("Indicates whether the server will send the size of the packet before sending the actual packet. Set to True if either Encryption or Compression is enabled."), Category("Data"), DefaultValue(GetType(Boolean), "True")> _
     Public Property PacketAware() As Boolean
         Get
             Return m_packetAware

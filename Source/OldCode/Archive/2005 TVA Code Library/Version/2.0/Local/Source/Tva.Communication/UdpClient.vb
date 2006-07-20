@@ -1,5 +1,18 @@
 ' 07-06-06
 
+' PACKET STRUCTURE
+' ================
+' When the payload to be transmitted between the client and server exceeds the MaximumPacketSize, it is divided
+' into a series of packets, where size of each packet is greater than the MaximumPacketSize.
+' > PacketAware = True
+'   ------------------------------------------------------------
+'   |   4 Byte Marker   |4 Byte Payload Size|   Actual Payload
+'   --------------------------------------------------------------
+' > PacketAware = False
+'   ------------------------------------------------------------
+'   |                        Actual Payload
+'   --------------------------------------------------------------
+
 Imports System.Text
 Imports System.Net
 Imports System.Net.Sockets
@@ -33,17 +46,21 @@ Public Class UdpClient
     Public Overrides Sub Connect()
 
         If Enabled() AndAlso Not IsConnected() AndAlso ValidConnectionString(ConnectionString()) Then
+            ' Initialize the server endpoint that will be used when sending data to the server.
+            m_udpServer = GetIpEndPoint(m_connectionData("server"), Convert.ToInt32(m_connectionData("port")))
+
+            ' Use the specified port only if handshaking is disabled otherwise let the system pick a port for us.
             Dim port As Integer = 0
             If Not Handshake() Then port = Convert.ToInt32(m_connectionData("port"))
 
-            m_udpServer = GetIpEndPoint(m_connectionData("server"), Convert.ToInt32(m_connectionData("port")))
-
+            ' Initialize the client .
             m_udpClient = New StateKeeper(Of Socket)
             m_udpClient.ID = ClientID()
             m_udpClient.Passphrase = HandshakePassphrase()
             m_udpClient.Client = New Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp)
             m_udpClient.Client.Bind(New IPEndPoint(IPAddress.Any, port))
 
+            ' Start listening for data from the server on a seperate thread.
             Dim receivingThread As New Thread(AddressOf ReceiveServerData)
             receivingThread.Start()
             OnConnecting(EventArgs.Empty)
@@ -60,8 +77,11 @@ Public Class UdpClient
         If Enabled() AndAlso IsConnected() AndAlso _
                 m_udpClient IsNot Nothing AndAlso m_udpClient.Client() IsNot Nothing Then
             If Handshake() Then
-                Dim bye As Byte() = GetPreparedData(GetBytes(New GoodbyeMessage(m_udpClient.ID())))
-                m_udpClient.Client.SendTo(bye, m_udpServer)
+                ' Handshaking is enabled (making the session connectionful), so send a goodbye message to 
+                ' the server indicating that the session has ended.
+                Dim goodbye As Byte() = GetPreparedData(GetBytes(New GoodbyeMessage(m_udpClient.ID())))
+                If m_packetAware Then goodbye = AddPacketHeader(goodbye)
+                m_udpClient.Client.SendTo(goodbye, m_udpServer)
             End If
 
             m_udpClient.Client.Close()
@@ -70,7 +90,18 @@ Public Class UdpClient
 
     Protected Overrides Sub SendPreparedData(ByVal data() As Byte)
 
-        Throw New NotSupportedException("UDP traffic is unidirectional from server to client.")
+        If Enabled() AndAlso IsConnected() Then
+            If SecureSession() Then data = EncryptData(data, m_udpClient.Passphrase(), Encryption())
+            If m_packetAware Then data = AddPacketHeader(data)
+
+            ' Since we can only send MaximumPacketSize bytes in a given packet, we may need to break the actual 
+            ' packet into a series of packets if the packet's size exceed the MaximumPacketSize.
+            For i As Integer = 0 To IIf(data.Length() > MaximumPacketSize, data.Length() - 1, 0) Step MaximumPacketSize
+                Dim packetSize As Integer = MaximumPacketSize
+                If data.Length() - i < MaximumPacketSize Then packetSize = data.Length() - i ' Last or the only packet in the series.
+                m_udpClient.Client.BeginSendTo(data, i, packetSize, SocketFlags.None, m_udpServer, Nothing, Nothing)
+            Next
+        End If
 
     End Sub
 
@@ -102,28 +133,37 @@ Public Class UdpClient
 
         Try
             If Handshake() Then
+                ' Handshaking is required, so we'll send our information to the server.
                 Dim myInfo As Byte() = GetPreparedData(GetBytes(New HandshakeMessage(m_udpClient.ID(), m_udpClient.Passphrase())))
+                If m_packetAware Then myInfo = AddPacketHeader(myInfo)
                 m_udpClient.Client.SendTo(myInfo, m_udpServer)
             Else
                 OnConnected(EventArgs.Empty)
             End If
 
             Do While True
-                If m_udpClient.DataBuffer Is Nothing Then
+                If m_udpClient.DataBuffer() Is Nothing Then
+                    ' By default we'll prepare to receive a maximum of MaximumPacketSize from the server.
                     m_udpClient.DataBuffer = CreateArray(Of Byte)(MaximumPacketSize)
                 End If
-                m_udpClient.BytesReceived += m_udpClient.Client.ReceiveFrom(m_udpClient.DataBuffer, m_udpClient.BytesReceived, m_udpClient.DataBuffer.Length - m_udpClient.BytesReceived, SocketFlags.None, CType(m_udpServer, EndPoint))
+                m_udpClient.BytesReceived += _
+                    m_udpClient.Client.ReceiveFrom(m_udpClient.DataBuffer, m_udpClient.BytesReceived, _
+                    m_udpClient.DataBuffer.Length - m_udpClient.BytesReceived, SocketFlags.None, CType(m_udpServer, EndPoint))
 
                 If m_packetAware Then
                     If m_udpClient.PacketSize() = -1 Then
+                        ' We have not yet received the payload size. 
                         If HasBeginMarker(m_udpClient.DataBuffer) Then
+                            ' This packet has the payload size.
                             m_udpClient.PacketSize = BitConverter.ToInt32(m_udpClient.DataBuffer(), m_packetBeginMarker.Length())
+                            ' We'll save the payload received in this packet.
                             Dim tempBuffer As Byte() = CreateArray(Of Byte)(IIf(m_udpClient.PacketSize < MaximumPacketSize - 8, m_udpClient.PacketSize, MaximumPacketSize - 8))
                             Buffer.BlockCopy(m_udpClient.DataBuffer, 8, tempBuffer, 0, tempBuffer.Length)
                             m_udpClient.DataBuffer = CreateArray(Of Byte)(m_udpClient.PacketSize())
                             Buffer.BlockCopy(tempBuffer, 0, m_udpClient.DataBuffer, 0, tempBuffer.Length)
                             m_udpClient.BytesReceived = tempBuffer.Length
                         Else
+                            ' We'll wait for a packet that has payload size.
                             Continue Do
                         End If
                     End If
@@ -135,10 +175,10 @@ Public Class UdpClient
                 End If
 
                 If ServerID = Guid.Empty AndAlso Handshake Then
-                    Dim hello As HandshakeMessage = GetObject(Of HandshakeMessage)(GetActualData(m_udpClient.DataBuffer))
-                    If hello IsNot Nothing Then
-                        ServerID = hello.ID
-                        m_udpClient.Passphrase = hello.Passphrase
+                    Dim serverInfo As HandshakeMessage = GetObject(Of HandshakeMessage)(GetActualData(m_udpClient.DataBuffer))
+                    If serverInfo IsNot Nothing Then
+                        ServerID = serverInfo.ID
+                        m_udpClient.Passphrase = serverInfo.Passphrase
                         OnConnected(EventArgs.Empty)
                     End If
                 Else
@@ -162,11 +202,25 @@ Public Class UdpClient
             If m_udpClient IsNot Nothing AndAlso m_udpClient.Client() IsNot Nothing Then
                 m_udpClient.Client.Close()
                 m_udpClient.Client = Nothing
-                OnDisconnected(EventArgs.Empty)
+                If IsConnected() Then OnDisconnected(EventArgs.Empty)
             End If
         End Try
 
     End Sub
+
+    Private Function AddPacketHeader(ByVal packet As Byte()) As Byte()
+
+        Dim result As Byte() = CreateArray(Of Byte)(packet.Length() + 8)
+        ' Prepend the packet marker.
+        Buffer.BlockCopy(m_packetBeginMarker, 0, result, 0, 4)
+        ' Prepend the packet size after the packet marker.
+        Buffer.BlockCopy(BitConverter.GetBytes(packet.Length()), 0, result, 4, 4)
+        ' Append the payload after the header.
+        Buffer.BlockCopy(packet, 0, result, 8, packet.Length())
+
+        Return result
+
+    End Function
 
     Private Function HasBeginMarker(ByVal packet As Byte()) As Boolean
 

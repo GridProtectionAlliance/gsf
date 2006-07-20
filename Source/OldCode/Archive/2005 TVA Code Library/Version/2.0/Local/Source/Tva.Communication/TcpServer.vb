@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  Tva.Data.Transport.TcpServer.vb - Server for transporting data using TCP
+'  Tva.Communication.TcpServer.vb - Server for transporting data using TCP
 '  Copyright © 2006 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005
@@ -44,7 +44,7 @@ Public Class TcpServer
     Private Const PacketHeaderSize As Integer = 4
 
     ''' <summary>
-    ''' Initializes a instance of Tva.Data.Transport.TcpServer with the specified data.
+    ''' Initializes a instance of Tva.Communication.TcpServer with the specified data.
     ''' </summary>
     ''' <param name="configurationString">The data that is required by the server to initialize.</param>
     Public Sub New(ByVal configurationString As String)
@@ -61,7 +61,7 @@ Public Class TcpServer
     ''' True if the server will send the size of the packet before sending the actual packet; otherwise False.
     ''' </returns>
     ''' <remarks>This property must be set to True if either Encryption or Compression is enabled.</remarks>
-    <Description("Indicates whether the server will send the size of the packet before sending the actual packet."), Category("Data"), DefaultValue(GetType(Boolean), "True")> _
+    <Description("Indicates whether the server will send the size of the packet before sending the actual packet. Set to True if either Encryption or Compression is enabled."), Category("Data"), DefaultValue(GetType(Boolean), "True")> _
     Public Property PacketAware() As Boolean
         Get
             Return m_packetAware
@@ -209,7 +209,7 @@ Public Class TcpServer
     ''' <summary>
     ''' Receives any data sent by a client that is connected to the server.
     ''' </summary>
-    ''' <param name="tcpClient">Tva.Data.Transport.State(Of Socket) of the the connected client.</param>
+    ''' <param name="tcpClient">Tva.Communication.StateKeeper(Of Socket) of the the connected client.</param>
     ''' <remarks>This method is meant to be executed on seperate threads.</remarks>
     Private Sub ReceiveClientData(ByVal tcpClient As StateKeeper(Of Socket))
 
