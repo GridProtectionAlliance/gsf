@@ -59,9 +59,7 @@ Public Class MultiProtocolFrameParser
 
     ' TODO: now that IFrameParser exists - change to single m_frameParser As IFrameParser variable...
     ' We internalize protocol specfic processing to simplfy end user consumption
-    Private WithEvents m_ieeeC37_118FrameParser As IeeeC37_118.FrameParser
-    Private WithEvents m_ieee1344FrameParser As Ieee1344.FrameParser
-    Private WithEvents m_bpaPdcStreamFrameParser As BpaPdcStream.FrameParser
+    Private WithEvents m_frameParser As IFrameParser
     Private WithEvents m_rateCalcTimer As Timers.Timer
 
     Private m_socketThread As Thread
@@ -180,9 +178,9 @@ Public Class MultiProtocolFrameParser
     Public ReadOnly Property ConnectionName() As String
         Get
             If m_sourceName Is Nothing Then
-                Return PmuID & " (" & HostIP & ":" & Port & ")"
+                Return m_pmuID & " (" & m_hostIP & ":" & m_port & ")"
             Else
-                Return m_sourceName & ", ID " & PmuID & " (" & HostIP & ":" & Port & ")"
+                Return m_sourceName & ", ID " & m_pmuID & " (" & m_hostIP & ":" & m_port & ")"
             End If
         End Get
     End Property
@@ -203,18 +201,16 @@ Public Class MultiProtocolFrameParser
             ' Instantiate protocol specific frame parser
             Select Case m_phasorProtocol
                 Case Phasors.PhasorProtocol.IeeeC37_118V1
-                    m_ieeeC37_118FrameParser = New IeeeC37_118.FrameParser(IeeeC37_118.DraftRevision.Draft7)
-                    m_ieeeC37_118FrameParser.Start()
+                    m_frameParser = New IeeeC37_118.FrameParser(IeeeC37_118.DraftRevision.Draft7)
                 Case Phasors.PhasorProtocol.IeeeC37_118D6
-                    m_ieeeC37_118FrameParser = New IeeeC37_118.FrameParser(IeeeC37_118.DraftRevision.Draft6)
-                    m_ieeeC37_118FrameParser.Start()
+                    m_frameParser = New IeeeC37_118.FrameParser(IeeeC37_118.DraftRevision.Draft6)
                 Case Phasors.PhasorProtocol.Ieee1344
-                    m_ieee1344FrameParser = New Ieee1344.FrameParser
-                    m_ieee1344FrameParser.Start()
+                    m_frameParser = New Ieee1344.FrameParser
                 Case Phasors.PhasorProtocol.BpaPdcStream
-                    m_bpaPdcStreamFrameParser = New BpaPdcStream.FrameParser
-                    m_bpaPdcStreamFrameParser.Start()
+                    m_frameParser = New BpaPdcStream.FrameParser
             End Select
+
+            m_frameParser.Start()
 
             ' Start reading data from selected transport layer
             Select Case m_transportProtocol
@@ -275,14 +271,8 @@ Public Class MultiProtocolFrameParser
         m_clientStream = Nothing
         m_receptionPoint = Nothing
 
-        If m_ieeeC37_118FrameParser IsNot Nothing Then m_ieeeC37_118FrameParser.Stop()
-        m_ieeeC37_118FrameParser = Nothing
-
-        If m_ieee1344FrameParser IsNot Nothing Then m_ieee1344FrameParser.Stop()
-        m_ieee1344FrameParser = Nothing
-
-        If m_bpaPdcStreamFrameParser IsNot Nothing Then m_bpaPdcStreamFrameParser.Stop()
-        m_bpaPdcStreamFrameParser = Nothing
+        If m_frameParser IsNot Nothing Then m_frameParser.Stop()
+        m_frameParser = Nothing
 
         m_configurationFrame = Nothing
 
@@ -296,29 +286,7 @@ Public Class MultiProtocolFrameParser
             m_configurationFrame = value
 
             ' Pass new config frame onto appropriate parser, casting into appropriate protocol if needed...
-            If m_ieeeC37_118FrameParser IsNot Nothing Then
-                If TypeOf value Is IeeeC37_118.ConfigurationFrame Then
-                    m_ieeeC37_118FrameParser.ConfigurationFrame = value
-                Else
-                    If m_phasorProtocol = PhasorProtocol.IeeeC37_118V1 Then
-                        m_ieeeC37_118FrameParser.ConfigurationFrame = New IeeeC37_118.ConfigurationFrame(value)
-                    Else
-                        m_ieeeC37_118FrameParser.ConfigurationFrame = New IeeeC37_118.ConfigurationFrameDraft6(value)
-                    End If
-                End If
-            ElseIf m_ieee1344FrameParser IsNot Nothing Then
-                If TypeOf value Is Ieee1344.ConfigurationFrame Then
-                    m_ieee1344FrameParser.ConfigurationFrame = value
-                Else
-                    m_ieee1344FrameParser.ConfigurationFrame = New Ieee1344.ConfigurationFrame(value)
-                End If
-            ElseIf m_bpaPdcStreamFrameParser IsNot Nothing Then
-                If TypeOf value Is BpaPdcStream.ConfigurationFrame Then
-                    m_bpaPdcStreamFrameParser.ConfigurationFrame = value
-                Else
-                    m_bpaPdcStreamFrameParser.ConfigurationFrame = New BpaPdcStream.ConfigurationFrame(value)
-                End If
-            End If
+            If m_frameParser IsNot Nothing Then m_frameParser.ConfigurationFrame = value
         End Set
     End Property
 
@@ -332,37 +300,23 @@ Public Class MultiProtocolFrameParser
 
     Public ReadOnly Property Enabled() As Boolean Implements IFrameParser.Enabled
         Get
-            If m_ieeeC37_118FrameParser IsNot Nothing Then
-                Return m_ieeeC37_118FrameParser.Enabled
-            ElseIf m_ieee1344FrameParser IsNot Nothing Then
-                Return m_ieee1344FrameParser.Enabled
-            ElseIf m_bpaPdcStreamFrameParser IsNot Nothing Then
-                Return m_bpaPdcStreamFrameParser.Enabled
+            If m_frameParser IsNot Nothing Then
+                Return m_frameParser.Enabled
             End If
         End Get
     End Property
 
     Public ReadOnly Property QueuedBuffers() As Int32 Implements IFrameParser.QueuedBuffers
         Get
-            If m_ieeeC37_118FrameParser IsNot Nothing Then
-                Return m_ieeeC37_118FrameParser.QueuedBuffers
-            ElseIf m_ieee1344FrameParser IsNot Nothing Then
-                Return m_ieee1344FrameParser.QueuedBuffers
-            ElseIf m_bpaPdcStreamFrameParser IsNot Nothing Then
-                Return m_bpaPdcStreamFrameParser.QueuedBuffers
+            If m_frameParser IsNot Nothing Then
+                Return m_frameParser.QueuedBuffers
             End If
         End Get
     End Property
 
     Public ReadOnly Property InternalFrameParser() As IFrameParser
         Get
-            If m_ieeeC37_118FrameParser IsNot Nothing Then
-                Return m_ieeeC37_118FrameParser
-            ElseIf m_ieee1344FrameParser IsNot Nothing Then
-                Return m_ieee1344FrameParser
-            Else
-                Return m_bpaPdcStreamFrameParser
-            End If
+            Return m_frameParser
         End Get
     End Property
 
@@ -407,22 +361,6 @@ Public Class MultiProtocolFrameParser
             Return m_byteRate * 8 / 1048576
         End Get
     End Property
-
-    Public Sub Write(ByVal buffer As Byte(), ByVal offset As Integer, ByVal length As Int32) Implements IFrameParser.Write
-
-        m_totalBytesReceived += length
-        m_byteRateTotal += length
-
-        Select Case m_phasorProtocol
-            Case Phasors.PhasorProtocol.IeeeC37_118V1, Phasors.PhasorProtocol.IeeeC37_118D6
-                m_ieeeC37_118FrameParser.Write(buffer, offset, length)
-            Case Phasors.PhasorProtocol.Ieee1344
-                m_ieee1344FrameParser.Write(buffer, offset, length)
-            Case Phasors.PhasorProtocol.BpaPdcStream
-                m_bpaPdcStreamFrameParser.Write(buffer, offset, length)
-        End Select
-
-    End Sub
 
     Public Sub SendPmuCommand(ByVal command As DeviceCommand)
 
@@ -485,14 +423,7 @@ Public Class MultiProtocolFrameParser
                 .Append(MegaBitRate.ToString("0.0000") & " mbps")
                 .Append(Environment.NewLine)
 
-                If m_ieeeC37_118FrameParser IsNot Nothing Then
-                    .Append(m_ieeeC37_118FrameParser.Status)
-                ElseIf m_ieee1344FrameParser IsNot Nothing Then
-                    .Append(m_ieee1344FrameParser.Status)
-                ElseIf m_bpaPdcStreamFrameParser IsNot Nothing Then
-                    .Append(m_bpaPdcStreamFrameParser.Status)
-                End If
-
+                If m_frameParser IsNot Nothing Then .Append(m_frameParser.Status)
                 Return .ToString()
             End With
         End Get
@@ -501,6 +432,14 @@ Public Class MultiProtocolFrameParser
 #End Region
 
 #Region " Private Methods Implementation "
+
+    Private Sub Write(ByVal buffer As Byte(), ByVal offset As Integer, ByVal length As Int32) Implements IFrameParser.Write
+
+        m_frameParser.Write(buffer, offset, length)
+        m_totalBytesReceived += length
+        m_byteRateTotal += length
+
+    End Sub
 
     Private Sub UpdateStatus(ByVal message As String)
 
@@ -678,111 +617,53 @@ Public Class MultiProtocolFrameParser
 
     End Sub
 
-#Region " Protocol Specific Event Handlers "
-
-    Private Sub m_ieeeC37_118FrameParser_DataStreamException(ByVal ex As System.Exception) Handles m_ieeeC37_118FrameParser.DataStreamException
-
-        RaiseEvent DataStreamException(ex)
-
-    End Sub
-
-    Private Sub m_ieeeC37_118FrameParser_ReceivedCommandFrame(ByVal frame As Tva.Phasors.IeeeC37_118.CommandFrame) Handles m_ieeeC37_118FrameParser.ReceivedCommandFrame
+    Private Sub m_frameParser_ReceivedCommandFrame(ByVal frame As ICommandFrame) Handles m_frameParser.ReceivedCommandFrame
 
         ProcessFrame(frame)
 
     End Sub
 
-    Private Sub m_ieeeC37_118FrameParser_ReceivedCommonFrameHeader(ByVal frame As IeeeC37_118.ICommonFrameHeader) Handles m_ieeeC37_118FrameParser.ReceivedCommonFrameHeader
+    Private Sub m_frameParser_ReceivedConfigurationFrame(ByVal frame As IConfigurationFrame) Handles m_frameParser.ReceivedConfigurationFrame
 
         ProcessFrame(frame)
 
     End Sub
 
-    Private Sub m_ieeeC37_118FrameParser_ReceivedConfigurationFrame1(ByVal frame As Tva.Phasors.IeeeC37_118.ConfigurationFrame) Handles m_ieeeC37_118FrameParser.ReceivedConfigurationFrame1
+    Private Sub m_frameParser_ReceivedDataFrame(ByVal frame As IDataFrame) Handles m_frameParser.ReceivedDataFrame
 
         ProcessFrame(frame)
 
     End Sub
 
-    Private Sub m_ieeeC37_118FrameParser_ReceivedConfigurationFrame2(ByVal frame As Tva.Phasors.IeeeC37_118.ConfigurationFrame) Handles m_ieeeC37_118FrameParser.ReceivedConfigurationFrame2
+    Private Sub m_frameParser_ReceivedHeaderFrame(ByVal frame As IHeaderFrame) Handles m_frameParser.ReceivedHeaderFrame
 
         ProcessFrame(frame)
 
     End Sub
 
-    Private Sub m_ieeeC37_118FrameParser_ReceivedDataFrame(ByVal frame As Tva.Phasors.IeeeC37_118.DataFrame) Handles m_ieeeC37_118FrameParser.ReceivedDataFrame
+    Private Sub m_frameParser_ReceivedUndeterminedFrame(ByVal frame As IChannelFrame) Handles m_frameParser.ReceivedUndeterminedFrame
 
         ProcessFrame(frame)
 
     End Sub
 
-    Private Sub m_ieeeC37_118FrameParser_ReceivedFrameBufferImage(ByVal frameType As FundamentalFrameType, ByVal binaryImage() As Byte, ByVal offset As Integer, ByVal length As Integer) Handles m_ieeeC37_118FrameParser.ReceivedFrameBufferImage
+    Private Sub m_frameParser_ReceivedFrameBufferImage(ByVal frameType As FundamentalFrameType, ByVal binaryImage() As Byte, ByVal offset As Integer, ByVal length As Integer) Handles m_frameParser.ReceivedFrameBufferImage
 
         RaiseEvent ReceivedFrameBufferImage(frameType, binaryImage, offset, length)
 
     End Sub
 
-    Private Sub m_ieeeC37_118FrameParser_ReceivedHeaderFrame(ByVal frame As Tva.Phasors.IeeeC37_118.HeaderFrame) Handles m_ieeeC37_118FrameParser.ReceivedHeaderFrame
+    Private Sub m_frameParser_ConfigurationChanged() Handles m_frameParser.ConfigurationChanged
 
-        ProcessFrame(frame)
+        RaiseEvent ConfigurationChanged()
 
     End Sub
 
-    Private Sub m_ieee1344FrameParser_DataStreamException(ByVal ex As System.Exception) Handles m_ieee1344FrameParser.DataStreamException
+    Private Sub m_frameParser_DataStreamException(ByVal ex As System.Exception) Handles m_frameParser.DataStreamException
 
         RaiseEvent DataStreamException(ex)
 
     End Sub
-
-    Private Sub m_ieee1344FrameParser_ReceivedCommonFrameHeader(ByVal frame As Ieee1344.ICommonFrameHeader) Handles m_ieee1344FrameParser.ReceivedCommonFrameHeader
-
-        ProcessFrame(frame)
-
-    End Sub
-
-    Private Sub m_ieee1344FrameParser_ReceivedConfigurationFrame(ByVal frame As Tva.Phasors.Ieee1344.ConfigurationFrame) Handles m_ieee1344FrameParser.ReceivedConfigurationFrame
-
-        ProcessFrame(frame)
-
-    End Sub
-
-    Private Sub m_ieee1344FrameParser_ReceivedDataFrame(ByVal frame As Tva.Phasors.Ieee1344.DataFrame) Handles m_ieee1344FrameParser.ReceivedDataFrame
-
-        ProcessFrame(frame)
-
-    End Sub
-
-    Private Sub m_ieee1344FrameParser_ReceivedFrameBufferImage(ByVal frameType As FundamentalFrameType, ByVal binaryImage() As Byte, ByVal offset As Integer, ByVal length As Integer) Handles m_ieee1344FrameParser.ReceivedFrameBufferImage
-
-        RaiseEvent ReceivedFrameBufferImage(frameType, binaryImage, offset, length)
-
-    End Sub
-
-    Private Sub m_ieee1344FrameParser_ReceivedHeaderFrame(ByVal frame As Tva.Phasors.Ieee1344.HeaderFrame) Handles m_ieee1344FrameParser.ReceivedHeaderFrame
-
-        ProcessFrame(frame)
-
-    End Sub
-
-    Private Sub m_bpaPdcStreamFrameParser_DataStreamException(ByVal ex As System.Exception) Handles m_bpaPdcStreamFrameParser.DataStreamException
-
-        RaiseEvent DataStreamException(ex)
-
-    End Sub
-
-    Private Sub m_bpaPdcStreamFrameParser_ReceivedConfigurationFrame(ByVal frame As Tva.Phasors.BpaPdcStream.ConfigurationFrame) Handles m_bpaPdcStreamFrameParser.ReceivedConfigurationFrame
-
-        ProcessFrame(frame)
-
-    End Sub
-
-    Private Sub m_bpaPdcStreamFrameParser_ReceivedDataFrame(ByVal frame As Tva.Phasors.BpaPdcStream.DataFrame) Handles m_bpaPdcStreamFrameParser.ReceivedDataFrame
-
-        ProcessFrame(frame)
-
-    End Sub
-
-#End Region
 
 #End Region
 
