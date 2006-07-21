@@ -5,6 +5,7 @@ Imports System.Net
 Imports System.Net.Sockets
 Imports System.Threading
 Imports Tva.Common
+Imports Tva.IO.Common
 Imports Tva.Serialization
 Imports Tva.Communication.SocketHelper
 Imports Tva.Security.Cryptography.Common
@@ -176,7 +177,7 @@ Public Class UdpServer
                         Continue Do
                     End If
                 Else
-
+                    m_udpServer.DataBuffer = CopyBuffer(m_udpServer.DataBuffer(), 0, m_udpServer.BytesReceived())
                 End If
 
                 Dim clientMessage As Object = GetObject(GetActualData(m_udpServer.DataBuffer()))
