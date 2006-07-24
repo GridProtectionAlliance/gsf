@@ -4,6 +4,7 @@ Imports System.Text
 Imports System.Net
 Imports System.Net.Sockets
 Imports System.Threading
+Imports System.ComponentModel
 Imports Tva.Common
 Imports Tva.IO.Common
 Imports Tva.Serialization
@@ -29,6 +30,7 @@ Public Class UdpServer
         MyBase.ConfigurationString = configurationString
     End Sub
 
+    <Category("Data"), DefaultValue(GetType(Boolean), "True")> _
     Public Property PacketAware() As Boolean
         Get
             Return m_packetAware

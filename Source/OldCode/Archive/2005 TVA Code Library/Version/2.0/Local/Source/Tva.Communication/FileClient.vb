@@ -3,6 +3,7 @@
 Imports System.IO
 Imports System.Text
 Imports System.Threading
+Imports System.ComponentModel
 Imports Tva.Common
 Imports Tva.IO.Common
 
@@ -19,6 +20,7 @@ Public Class FileClient
         MyBase.ConnectionString = connectionString
     End Sub
 
+    <Category("Data"), DefaultValue(GetType(Boolean), "False")> _
     Public Property ReceiveOnDemand() As Boolean
         Get
             Return m_receiveOnDemand
