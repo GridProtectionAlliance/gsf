@@ -53,6 +53,12 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Enumerations.vb" />
+    <Compile Include="FileClient.Designer.vb">
+      <DependentUpon>FileClient.vb</DependentUpon>
+    </Compile>
+    <Compile Include="FileClient.vb">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="Internal Code\GoodbyeMessage.vb" />
     <Compile Include="Internal Code\HandshakeMessage.vb" />
     <Compile Include="My Project\AssemblyInfo.vb" />
@@ -62,7 +68,7 @@
     <Compile Include="ServerBase.vb">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="Internal Code\SocketHelper.vb" />
+    <Compile Include="Internal Code\CommunicationHelper.vb" />
     <Compile Include="Internal Code\StateKeeper.vb" />
     <Compile Include="TcpClient.Designer.vb">
       <DependentUpon>TcpClient.vb</DependentUpon>

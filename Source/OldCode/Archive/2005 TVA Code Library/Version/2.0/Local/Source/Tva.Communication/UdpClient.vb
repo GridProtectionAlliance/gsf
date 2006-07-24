@@ -3,7 +3,7 @@
 ' PACKET STRUCTURE
 ' ================
 ' When the payload to be transmitted between the client and server exceeds the MaximumPacketSize, it is divided
-' into a series of packets, where size of each packet is greater than the MaximumPacketSize.
+' into a series of packets, where size of each packet is no greater than the MaximumPacketSize.
 ' > PacketAware = True
 '   ------------------------------------------------------------
 '   |   4 Byte Marker   |4 Byte Payload Size|   Actual Payload
@@ -20,14 +20,14 @@ Imports System.Threading
 Imports Tva.Common
 Imports Tva.IO.Common
 Imports Tva.Serialization
-Imports Tva.Communication.SocketHelper
+Imports Tva.Communication.CommunicationHelper
 
 Public Class UdpClient
 
     Private m_packetAware As Boolean
     Private m_udpServer As IPEndPoint
     Private m_udpClient As StateKeeper(Of Socket)
-    Private m_connectionData As IDictionary(Of String, String)
+    Private m_connectionData As Dictionary(Of String, String)
     Private m_receivingThread As Thread
     Private m_packetBeginMarker As Byte() = {&HAA, &HBB, &HCC, &HDD}
 
@@ -100,6 +100,7 @@ Public Class UdpClient
     Protected Overrides Sub SendPreparedData(ByVal data() As Byte)
 
         If Enabled() AndAlso IsConnected() Then
+            OnSendDataBegin(data)
             If SecureSession() Then data = EncryptData(data, m_udpClient.Passphrase(), Encryption())
             If m_packetAware Then data = AddPacketHeader(data)
 
@@ -110,6 +111,7 @@ Public Class UdpClient
                 If data.Length() - i < MaximumPacketSize Then packetSize = data.Length() - i ' Last or the only packet in the series.
                 m_udpClient.Client.BeginSendTo(data, i, packetSize, SocketFlags.None, m_udpServer, Nothing, Nothing)
             Next
+            OnSendDataComplete(data)
         End If
 
     End Sub
@@ -225,10 +227,10 @@ Public Class UdpClient
                             GetObject(Of GoodbyeMessage)(GetActualData(m_udpClient.DataBuffer)) IsNot Nothing Then
                         Exit Do
                     End If
-
                     If SecureSession Then
                         m_udpClient.DataBuffer = DecryptData(m_udpClient.DataBuffer, m_udpClient.Passphrase, Encryption)
                     End If
+
                     OnReceivedData(m_udpClient.DataBuffer)
                 End If
 

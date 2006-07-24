@@ -23,7 +23,7 @@ Imports System.ComponentModel
 Imports Tva.Common
 Imports Tva.IO.Common
 Imports Tva.Serialization
-Imports Tva.Communication.SocketHelper
+Imports Tva.Communication.CommunicationHelper
 
 ''' <summary>
 ''' Represents a client involved in the transportation of data over the network using TCP.
@@ -33,7 +33,7 @@ Public Class TcpClient
     Private m_packetAware As Boolean
     Private m_tcpClient As StateKeeper(Of Socket)
     Private m_connectionThread As Thread
-    Private m_connectionData As IDictionary(Of String, String)
+    Private m_connectionData As Dictionary(Of String, String)
 
     ''' <summary>
     ''' Size of the packet that will contain the size of the acutal packet.
@@ -194,9 +194,8 @@ Public Class TcpClient
                 OnConnectingCancelled(EventArgs.Empty)
                 Exit Do
             Catch ex As Exception
-                OnConnectingException(ex)
-            Finally
                 connectionAttempts += 1
+                OnConnectingException(ex)
             End Try
         Loop
 

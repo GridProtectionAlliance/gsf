@@ -1,21 +1,4 @@
-'*******************************************************************************************************
-'  Tva.Data.Transport.TcpClient.Designer.vb - Client for transporting data using TCP
-'  Copyright © 2006 - TVA, all rights reserved - Gbtc
-'
-'  Build Environment: VB.NET, Visual Studio 2005
-'  Primary Developer: Pinal C. Patel, Operations Data Architecture [TVA]
-'      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
-'       Phone: 423/751-2250
-'       Email: pcpatel@tva.gov
-'
-'  Code Modification History:
-'  -----------------------------------------------------------------------------------------------------
-'  06/02/2006 - Pinal C. Patel
-'       Original version of source code generated
-'
-'*******************************************************************************************************
-
-Partial Class TcpClient
+Partial Class FileClient
     Inherits Tva.Communication.ClientBase
 
     <System.Diagnostics.DebuggerNonUserCode()> _
@@ -33,9 +16,10 @@ Partial Class TcpClient
 
         'This call is required by the Component Designer.
         InitializeComponent()
-        m_packetAware = True
-        MyBase.ConnectionString = "Server=localhost; Port=8888"
-        MyBase.Protocol = TransportProtocol.Tcp
+        m_receiveOnDemand = False
+        m_fileClient = New StateKeeper(Of System.IO.FileStream)
+        MyBase.ConnectionString = "File=DataFile.txt"
+        MyBase.Protocol = TransportProtocol.File
 
     End Sub
 

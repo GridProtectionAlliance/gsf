@@ -24,7 +24,7 @@ Imports Tva.Common
 Imports Tva.IO.Common
 Imports Tva.Serialization
 Imports Tva.Threading
-Imports Tva.Communication.SocketHelper
+Imports Tva.Communication.CommunicationHelper
 Imports Tva.Security.Cryptography.Common
 
 ''' <summary>
