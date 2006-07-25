@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  Tva.Communication.FileClient.vb - File communication client
+'  Tva.Communication.FileClient.vb - File-based communication client
 '  Copyright © 2006 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005
@@ -22,6 +22,9 @@ Imports System.ComponentModel
 Imports Tva.Common
 Imports Tva.IO.Common
 
+''' <summary>
+''' Represents a File-based communication client.
+''' </summary>
 Public Class FileClient
 
     Private m_receiveOnDemand As Boolean

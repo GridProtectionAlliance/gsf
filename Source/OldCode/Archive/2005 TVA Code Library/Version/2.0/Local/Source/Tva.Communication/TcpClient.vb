@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  Tva.Communication.TcpClient.vb - Client for transporting data using TCP
+'  Tva.Communication.TcpClient.vb - TCP-based communication client
 '  Copyright © 2006 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005
@@ -26,7 +26,7 @@ Imports Tva.Serialization
 Imports Tva.Communication.CommunicationHelper
 
 ''' <summary>
-''' Represents a client involved in the transportation of data over the network using TCP.
+''' Represents a TCP-based communication client.
 ''' </summary>
 Public Class TcpClient
 

@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  Tva.Communication.TcpServer.vb - Server for transporting data using TCP
+'  Tva.Communication.TcpServer.vb - TCP-based communication server
 '  Copyright © 2006 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005
@@ -28,7 +28,7 @@ Imports Tva.Communication.CommunicationHelper
 Imports Tva.Security.Cryptography.Common
 
 ''' <summary>
-''' Represents a server involved in the transportation of data over the network using TCP.
+''' Represents a TCP-based communication server.
 ''' </summary>
 Public Class TcpServer
 

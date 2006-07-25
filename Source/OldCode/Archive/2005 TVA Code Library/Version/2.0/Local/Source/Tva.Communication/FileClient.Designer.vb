@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  Tva.Communication.FileClient.Designer.vb - File communication client
+'  Tva.Communication.FileClient.Designer.vb - File-based communication client
 '  Copyright © 2006 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005

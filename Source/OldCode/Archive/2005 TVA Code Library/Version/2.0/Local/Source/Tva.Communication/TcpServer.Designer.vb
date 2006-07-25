@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  Tva.Communication.TcpServer.Designer.vb - Server for transporting data using TCP
+'  Tva.Communication.TcpServer.Designer.vb - TCP-based communication server
 '  Copyright © 2006 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005

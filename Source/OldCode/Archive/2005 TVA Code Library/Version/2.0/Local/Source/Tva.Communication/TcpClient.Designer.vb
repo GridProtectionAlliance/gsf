@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  Tva.Communication.TcpClient.Designer.vb - Client for transporting data using TCP
+'  Tva.Communication.TcpClient.Designer.vb - TCP-based communication client
 '  Copyright © 2006 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005
