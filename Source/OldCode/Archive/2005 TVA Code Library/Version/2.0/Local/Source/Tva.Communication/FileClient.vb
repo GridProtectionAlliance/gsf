@@ -77,7 +77,7 @@ Public Class FileClient
     Public Sub ReceiveData()
 
         If Enabled() AndAlso IsConnected() AndAlso m_receiveOnDemand AndAlso m_receivingThread Is Nothing Then
-            m_receivingThread = New Thread(AddressOf ReadFile)
+            m_receivingThread = New Thread(AddressOf ReceiveFileData)
             m_receivingThread.Start()
         End If
 
@@ -90,6 +90,7 @@ Public Class FileClient
 
         If Enabled() AndAlso m_connectionThread IsNot Nothing Then
             m_connectionThread.Abort()
+            OnConnectingCancelled(EventArgs.Empty)
         End If
 
     End Sub
@@ -101,8 +102,9 @@ Public Class FileClient
 
         If Enabled() AndAlso Not IsConnected() AndAlso ValidConnectionString(ConnectionString()) Then
             If File.Exists(m_connectionData("file")) Then
-                m_connectionThread = New Thread(AddressOf OpenFile)
+                m_connectionThread = New Thread(AddressOf ConnectToFile)
                 m_connectionThread.Start()
+                OnConnecting(EventArgs.Empty)
             Else
                 Throw New FileNotFoundException(m_connectionData("file") & " does not exist.")
             End If
@@ -133,6 +135,11 @@ Public Class FileClient
 
     End Sub
 
+    ''' <summary>
+    ''' Determines whether specified connection string required for connecting to the file is valid.
+    ''' </summary>
+    ''' <param name="connectionString">The connection string to be validated.</param>
+    ''' <returns>True is the connection string is valid; otherwise False.</returns>
     Protected Overrides Function ValidConnectionString(ByVal connectionString As String) As Boolean
 
         If Not String.IsNullOrEmpty(connectionString) Then
@@ -154,62 +161,72 @@ Public Class FileClient
 
     End Function
 
-    Private Sub OpenFile()
+    ''' <summary>
+    ''' Connects to the file.
+    ''' </summary>
+    ''' <remarks>This method is meant to be executed on a seperate thread.</remarks>
+    Private Sub ConnectToFile()
 
         Dim connectionAttempts As Integer = 0
         Do While MaximumConnectionAttempts() = -1 OrElse connectionAttempts < MaximumConnectionAttempts()
             Try
-                OnConnecting(EventArgs.Empty)
                 m_fileClient.Client = New FileStream(m_connectionData("file"), FileMode.Open)
                 OnConnected(EventArgs.Empty)
                 If Not m_receiveOnDemand Then
                     If m_receiveInterval > 0 Then
+                        ' We need to start receivng data at the specified interval.
                         TimerReceiveData.Interval = m_receiveInterval * 1000
                         TimerReceiveData.Start()
                     Else
-                        m_receivingThread = New Thread(AddressOf ReadFile)
+                        ' We need to start receiving data continuously.
+                        m_receivingThread = New Thread(AddressOf ReceiveFileData)
                         m_receivingThread.Start()
                     End If
                 End If
 
-                m_connectionThread = Nothing
-                Exit Do
+                Exit Do ' We've successfully connected to the file.
             Catch ex As ThreadAbortException
-                Exit Do
-                OnConnectingCancelled(EventArgs.Empty)
+                Exit Do ' We must abort connecting to the file.
             Catch ex As Exception
                 connectionAttempts += 1
                 OnConnectingException(ex)
             End Try
         Loop
+        m_connectionThread = Nothing
 
     End Sub
 
-    Private Sub ReadFile()
+    ''' <summary>
+    ''' Receive data from the file.
+    ''' </summary>
+    ''' <remarks>This method is meant to be executed on a seperate thread.</remarks>
+    Private Sub ReceiveFileData()
 
         Try
             With m_fileClient
-                Do While .Client.Position() < .Client.Length()
+                Do While .Client.Position() < .Client.Length()  ' Process the entire file content.
                     .DataBuffer = CreateArray(Of Byte)(ReceiveBufferSize())
                     .BytesReceived = .Client.Read(.DataBuffer(), 0, .DataBuffer.Length())
                     .DataBuffer = CopyBuffer(.DataBuffer(), 0, .BytesReceived())
 
                     OnReceivedData(.DataBuffer())
 
+                    ' We must stop processing the file if user has either opted to receive data on 
+                    ' demand or receive data at a predefined interval.
                     If m_receiveOnDemand OrElse m_receiveInterval > 0 Then Exit Do
                 Loop
             End With
-            m_receivingThread = Nothing
         Catch ex As Exception
-
+            ' Exit gracefully when an exception is encountered while receiving data.
         End Try
+        m_receivingThread = Nothing
 
     End Sub
 
     Private Sub TimerReceiveData_Elapsed(ByVal sender As Object, ByVal e As System.Timers.ElapsedEventArgs) Handles TimerReceiveData.Elapsed
 
         If Enabled() AndAlso IsConnected() AndAlso m_receiveInterval > 0 AndAlso m_receivingThread Is Nothing Then
-            m_receivingThread = New Thread(AddressOf ReadFile)
+            m_receivingThread = New Thread(AddressOf ReceiveFileData)
             m_receivingThread.Start()
         End If
 
