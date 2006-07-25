@@ -141,7 +141,7 @@ Public Class TcpServer
     End Sub
 
     ''' <summary>
-    ''' Determines whether specified configuration string, required for the server to initialize, is valid.
+    ''' Determines whether specified configuration string required for the server to initialize is valid.
     ''' </summary>
     ''' <param name="configurationString">The configuration string to be validated.</param>
     ''' <returns>True if the configuration string is valid.</returns>

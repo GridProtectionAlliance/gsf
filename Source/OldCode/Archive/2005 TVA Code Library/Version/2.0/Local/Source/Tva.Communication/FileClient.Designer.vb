@@ -17,7 +17,9 @@ Partial Class FileClient
         'This call is required by the Component Designer.
         InitializeComponent()
         m_receiveOnDemand = False
+        m_receiveInterval = -1
         m_fileClient = New StateKeeper(Of System.IO.FileStream)
+        TimerReceiveData = New System.Timers.Timer()
         MyBase.ConnectionString = "File=DataFile.txt"
         MyBase.Protocol = TransportProtocol.File
 

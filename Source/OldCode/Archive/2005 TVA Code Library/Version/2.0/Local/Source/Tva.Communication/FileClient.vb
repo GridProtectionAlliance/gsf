@@ -10,26 +10,82 @@ Imports Tva.IO.Common
 Public Class FileClient
 
     Private m_receiveOnDemand As Boolean
+    Private m_receiveInterval As Integer
     Private m_fileClient As StateKeeper(Of FileStream)
     Private m_connectionData As Dictionary(Of String, String)
     Private m_connectionThread As Thread
     Private m_receivingThread As Thread
+    Private WithEvents TimerReceiveData As System.Timers.Timer
 
+    ''' <summary>
+    ''' Initializes a instance of Tva.Communication.FileClient with the specified data.
+    ''' </summary>
+    ''' <param name="connectionString">The data that is required by the client to initialize.</param>
     Public Sub New(ByVal connectionString As String)
         MyClass.New()
         MyBase.ConnectionString = connectionString
     End Sub
 
-    <Category("Data"), DefaultValue(GetType(Boolean), "False")> _
+    ''' <summary>
+    ''' Gets or sets a boolean value indicating whether receiving of data will be initiated manually by calling ReceiveData().
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns>True if receiving of data will be initiated manually; otherwise False.</returns>
+    <Description("Indicates whether receiving of data will be initiated manually by calling ReceiveData()."), Category("Data"), DefaultValue(GetType(Boolean), "False")> _
     Public Property ReceiveOnDemand() As Boolean
         Get
             Return m_receiveOnDemand
         End Get
         Set(ByVal value As Boolean)
             m_receiveOnDemand = value
+            If m_receiveOnDemand Then
+                ' We'll disable receiving data at a set interval if user wants to receive data on demand.
+                m_receiveInterval = -1
+            End If
         End Set
     End Property
 
+    ''' <summary>
+    ''' Gets or sets the time in seconds to pause before receiving the next available set of data.
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns>Time in seconds to pause before receiving the next available set of data.</returns>
+    ''' <remarks>Set ReceiveInterval = -1 to receive data continuously without pausing.</remarks>
+    <Description("Time in seconds to pause before receiving the next available set of data. Set ReceiveInterval = -1 to receive data continuously without pausing."), Category("Data"), DefaultValue(GetType(Integer), "-1")> _
+    Public Property ReceiveInterval() As Integer
+        Get
+            Return m_receiveInterval
+        End Get
+        Set(ByVal value As Integer)
+            If value = -1 OrElse value > 0 Then
+                m_receiveInterval = value
+                If m_receiveInterval > 0 Then
+                    ' We'll disable the ReceiveOnDemand feature if the user specifies an interval for 
+                    ' automatically receiving data.
+                    m_receiveOnDemand = False
+                End If
+            Else
+                Throw New ArgumentOutOfRangeException("value")
+            End If
+        End Set
+    End Property
+
+    ''' <summary>
+    ''' Initiates receiving to data from the file.
+    ''' </summary>
+    ''' <remarks>This method is functional only when ReceiveOnDemand is enabled.</remarks>
+    Public Sub ReceiveData()
+
+        If Enabled() AndAlso IsConnected() AndAlso m_receiveOnDemand AndAlso m_receivingThread Is Nothing Then
+            m_receivingThread = New Thread(AddressOf ReadFile)
+            m_receivingThread.Start()
+        End If
+
+    End Sub
+
+    ''' <summary>
+    ''' Cancels any active attempts of connecting to the file.
+    ''' </summary>
     Public Overrides Sub CancelConnect()
 
         If Enabled() AndAlso m_connectionThread IsNot Nothing Then
@@ -38,6 +94,9 @@ Public Class FileClient
 
     End Sub
 
+    ''' <summary>
+    ''' Connects to the file asynchronously.
+    ''' </summary>
     Public Overrides Sub Connect()
 
         If Enabled() AndAlso Not IsConnected() AndAlso ValidConnectionString(ConnectionString()) Then
@@ -51,6 +110,9 @@ Public Class FileClient
 
     End Sub
 
+    ''' <summary>
+    ''' Disconnects from the file it is connected to.
+    ''' </summary>
     Public Overrides Sub Disconnect()
 
         CancelConnect()
@@ -58,20 +120,13 @@ Public Class FileClient
         If Enabled() AndAlso IsConnected() AndAlso m_receivingThread IsNot Nothing Then
             m_receivingThread.Abort()
             m_fileClient.Client.Close()
+            TimerReceiveData.Stop()
             OnDisconnected(EventArgs.Empty)
         End If
 
     End Sub
 
-    Public Sub ReceiveData()
-
-        If Enabled() AndAlso IsConnected() AndAlso m_receiveOnDemand AndAlso m_receivingThread Is Nothing Then
-            m_receivingThread = New Thread(AddressOf ReadFile)
-            m_receivingThread.Start()
-        End If
-
-    End Sub
-
+    <EditorBrowsable(EditorBrowsableState.Never)> _
     Protected Overrides Sub SendPreparedData(ByVal data() As Byte)
 
         Throw New NotSupportedException()
@@ -108,8 +163,13 @@ Public Class FileClient
                 m_fileClient.Client = New FileStream(m_connectionData("file"), FileMode.Open)
                 OnConnected(EventArgs.Empty)
                 If Not m_receiveOnDemand Then
-                    m_receivingThread = New Thread(AddressOf ReadFile)
-                    m_receivingThread.Start()
+                    If m_receiveInterval > 0 Then
+                        TimerReceiveData.Interval = m_receiveInterval * 1000
+                        TimerReceiveData.Start()
+                    Else
+                        m_receivingThread = New Thread(AddressOf ReadFile)
+                        m_receivingThread.Start()
+                    End If
                 End If
 
                 m_connectionThread = Nothing
@@ -136,13 +196,22 @@ Public Class FileClient
 
                     OnReceivedData(.DataBuffer())
 
-                    If m_receiveOnDemand Then Exit Do
+                    If m_receiveOnDemand OrElse m_receiveInterval > 0 Then Exit Do
                 Loop
             End With
             m_receivingThread = Nothing
         Catch ex As Exception
 
         End Try
+
+    End Sub
+
+    Private Sub TimerReceiveData_Elapsed(ByVal sender As Object, ByVal e As System.Timers.ElapsedEventArgs) Handles TimerReceiveData.Elapsed
+
+        If Enabled() AndAlso IsConnected() AndAlso m_receiveInterval > 0 AndAlso m_receivingThread Is Nothing Then
+            m_receivingThread = New Thread(AddressOf ReadFile)
+            m_receivingThread.Start()
+        End If
 
     End Sub
 

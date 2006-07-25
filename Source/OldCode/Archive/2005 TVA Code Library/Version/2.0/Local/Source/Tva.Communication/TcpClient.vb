@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  Tva.Data.Transport.TcpClient.vb - Client for transporting data using TCP
+'  Tva.Communication.TcpClient.vb - Client for transporting data using TCP
 '  Copyright © 2006 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005
@@ -69,7 +69,19 @@ Public Class TcpClient
     End Property
 
     ''' <summary>
-    ''' Connects the client to the server asynchronously.
+    ''' Cancels any active attempts of connecting to the server.
+    ''' </summary>
+    Public Overrides Sub CancelConnect()
+
+        ' Client has not yet connected to the server so we'll abort the thread on which the client
+        ' is attempting to connect to the server.
+        If Enabled() AndAlso m_connectionThread IsNot Nothing Then m_connectionThread.Abort()
+
+    End Sub
+
+
+    ''' <summary>
+    ''' Connects to the server asynchronously.
     ''' </summary>
     Public Overrides Sub Connect()
 
@@ -82,18 +94,7 @@ Public Class TcpClient
     End Sub
 
     ''' <summary>
-    ''' Cancels any active attempts of connecting the client to the server.
-    ''' </summary>
-    Public Overrides Sub CancelConnect()
-
-        ' Client has not yet connected to the server so we'll abort the thread on which the client
-        ' is attempting to connect to the server.
-        If Enabled() AndAlso m_connectionThread IsNot Nothing Then m_connectionThread.Abort()
-
-    End Sub
-
-    ''' <summary>
-    ''' Disconnects the client from the server it is connected to.
+    ''' Disconnects from the server it is connected to.
     ''' </summary>
     Public Overrides Sub Disconnect()
 
@@ -128,7 +129,7 @@ Public Class TcpClient
     End Sub
 
     ''' <summary>
-    ''' Determines whether specified connection string required for the client to connect to the server is valid.
+    ''' Determines whether specified connection string required for connecting to the server is valid.
     ''' </summary>
     ''' <param name="connectionString">The connection string to be validated.</param>
     ''' <returns>True is the connection string is valid; otherwise False.</returns>
@@ -157,7 +158,7 @@ Public Class TcpClient
     End Function
 
     ''' <summary>
-    ''' Connects the client to the server.
+    ''' Connects to the server.
     ''' </summary>
     ''' <remarks>This method is meant to be executed on a seperate thread.</remarks>
     Private Sub ConnectToServer()

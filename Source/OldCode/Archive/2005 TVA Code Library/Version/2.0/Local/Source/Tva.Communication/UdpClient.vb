@@ -183,12 +183,9 @@ Public Class UdpClient
                             Else
                                 Exit Do
                             End If
-                        Else
-                            Throw
                         End If
-                    Else
-                        Throw
                     End If
+                    Throw
                 Catch ex As Exception
                     Throw
                 End Try
