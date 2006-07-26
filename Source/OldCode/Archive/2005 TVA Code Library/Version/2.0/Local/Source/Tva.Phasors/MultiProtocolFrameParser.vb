@@ -12,7 +12,8 @@
 '  -----------------------------------------------------------------------------------------------------
 '  03/16/2006 - J. Ritchie Carroll
 '       Initial version of source generated
-'
+'  06/26/2006 - Pinal C. Patel
+'       Changed out the socket code with TcpClient and UdpClient components from Tva.Communication
 '*******************************************************************************************************
 
 Imports System.IO
@@ -61,12 +62,13 @@ Public Class MultiProtocolFrameParser
     ' We internalize protocol specfic processing to simplfy end user consumption
     Private WithEvents m_frameParser As IFrameParser
     Private WithEvents m_rateCalcTimer As Timers.Timer
+    Private WithEvents m_communicationClient As ICommunicationClient
 
-    Private m_socketThread As Thread
-    Private m_tcpSocket As Sockets.TcpClient
-    Private m_udpSocket As Socket
-    Private m_receptionPoint As EndPoint
-    Private m_clientStream As NetworkStream
+    'Private m_socketThread As Thread
+    'Private m_tcpSocket As Sockets.TcpClient
+    'Private m_udpSocket As Socket
+    'Private m_receptionPoint As EndPoint
+    'Private m_clientStream As NetworkStream
     Private m_configurationFrame As IConfigurationFrame
     Private m_dataStreamStartTime As Long
     Private m_totalFramesReceived As Long
@@ -89,14 +91,14 @@ Public Class MultiProtocolFrameParser
         m_bufferSize = DefaultBufferSize
         m_rateCalcTimer = New Timers.Timer
 
+        m_phasorProtocol = PhasorProtocol.IeeeC37_118V1
+        m_transportProtocol = TransportProtocol.Tcp
+
         With m_rateCalcTimer
             .Interval = 1000
             .AutoReset = True
             .Enabled = False
         End With
-
-        m_phasorProtocol = PhasorProtocol.IeeeC37_118V1
-        m_transportProtocol = TransportProtocol.Tcp
 
     End Sub
 
@@ -215,35 +217,49 @@ Public Class MultiProtocolFrameParser
             ' Start reading data from selected transport layer
             Select Case m_transportProtocol
                 Case TransportProtocol.Tcp
-                    ' Validate minimal connection parameters required for TCP connection
-                    If String.IsNullOrEmpty(m_hostIP) Then Throw New InvalidOperationException("Cannot start TCP stream listener without specifing a host IP")
-                    If m_port = 0 Then Throw New InvalidOperationException("Cannot start TCP stream listener without specifing a port")
+                    Dim tcpClient As New Tva.Communication.TcpClient()
+                    tcpClient.ConnectionString = "Server=" & m_hostIP & "; Port=" & m_port
+                    tcpClient.PacketAware = False
+                    m_communicationClient = tcpClient
 
-                    ' Connect to PDC/PMU using TCP
-                    m_tcpSocket = New Sockets.TcpClient
-                    m_tcpSocket.ReceiveBufferSize = m_bufferSize
-                    m_tcpSocket.Connect(m_hostIP, m_port)
-                    m_clientStream = m_tcpSocket.GetStream()
+                    '' Validate minimal connection parameters required for TCP connection
+                    'If String.IsNullOrEmpty(m_hostIP) Then Throw New InvalidOperationException("Cannot start TCP stream listener without specifing a host IP")
+                    'If m_port = 0 Then Throw New InvalidOperationException("Cannot start TCP stream listener without specifing a port")
 
-                    ' Start listening to TCP data stream
-                    m_socketThread = New Thread(AddressOf ProcessTcpStream)
-                    m_socketThread.Start()
+                    '' Connect to PDC/PMU using TCP
+                    'm_tcpSocket = New Sockets.TcpClient
+                    'm_tcpSocket.ReceiveBufferSize = m_bufferSize
+                    'm_tcpSocket.Connect(m_hostIP, m_port)
+                    'm_clientStream = m_tcpSocket.GetStream()
+
+                    '' Start listening to TCP data stream
+                    'm_socketThread = New Thread(AddressOf ProcessTcpStream)
+                    'm_socketThread.Start()
                 Case TransportProtocol.Udp
-                    ' Validate minimal connection parameters required for UDP connection
-                    If m_port = 0 Then Throw New InvalidOperationException("Cannot start UDP stream listener without specifing a valid port")
+                    Dim udpClient As New Tva.Communication.UdpClient()
+                    udpClient.ConnectionString = "Server=" & m_hostIP & "; RemotePort=" & m_port & "; LocalPort=" & m_port
+                    udpClient.PacketAware = False
+                    m_communicationClient = udpClient
 
-                    ' Connect to PDC/PMU using UDP (just listening to incoming stream on specified port)
-                    m_udpSocket = New Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp)
-                    m_receptionPoint = CType(New IPEndPoint(IPAddress.Any, m_port), System.Net.EndPoint)
-                    m_udpSocket.ReceiveBufferSize = m_bufferSize
-                    m_udpSocket.Bind(m_receptionPoint)
+                    '' Validate minimal connection parameters required for UDP connection
+                    'If m_port = 0 Then Throw New InvalidOperationException("Cannot start UDP stream listener without specifing a valid port")
 
-                    ' Start listening to UDP data stream
-                    m_socketThread = New Thread(AddressOf ProcessUdpStream)
-                    m_socketThread.Start()
+                    '' Connect to PDC/PMU using UDP (just listening to incoming stream on specified port)
+                    'm_udpSocket = New Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp)
+                    'm_receptionPoint = CType(New IPEndPoint(IPAddress.Any, m_port), System.Net.EndPoint)
+                    'm_udpSocket.ReceiveBufferSize = m_bufferSize
+                    'm_udpSocket.Bind(m_receptionPoint)
+
+                    '' Start listening to UDP data stream
+                    'm_socketThread = New Thread(AddressOf ProcessUdpStream)
+                    'm_socketThread.Start()
                 Case TransportProtocol.Serial
                     ' TODO: Determine minimal needed connection parameters for COM link...
             End Select
+
+            m_communicationClient.Handshake = False
+            m_communicationClient.ReceiveBufferSize = m_bufferSize
+            m_communicationClient.Connect()
 
             m_rateCalcTimer.Enabled = True
         Catch
@@ -259,17 +275,20 @@ Public Class MultiProtocolFrameParser
 
         m_rateCalcTimer.Enabled = False
 
-        If m_socketThread IsNot Nothing Then m_socketThread.Abort()
-        m_socketThread = Nothing
+        If m_communicationClient IsNot Nothing Then m_communicationClient.Disconnect()
+        m_communicationClient = Nothing
 
-        If m_tcpSocket IsNot Nothing Then m_tcpSocket.Close()
-        m_tcpSocket = Nothing
+        'If m_socketThread IsNot Nothing Then m_socketThread.Abort()
+        'm_socketThread = Nothing
 
-        If m_udpSocket IsNot Nothing Then m_udpSocket.Close()
-        m_udpSocket = Nothing
+        'If m_tcpSocket IsNot Nothing Then m_tcpSocket.Close()
+        'm_tcpSocket = Nothing
 
-        m_clientStream = Nothing
-        m_receptionPoint = Nothing
+        'If m_udpSocket IsNot Nothing Then m_udpSocket.Close()
+        'm_udpSocket = Nothing
+
+        'm_clientStream = Nothing
+        'm_receptionPoint = Nothing
 
         If m_frameParser IsNot Nothing Then m_frameParser.Stop()
         m_frameParser = Nothing
@@ -364,7 +383,7 @@ Public Class MultiProtocolFrameParser
 
     Public Sub SendPmuCommand(ByVal command As DeviceCommand)
 
-        If m_clientStream IsNot Nothing Then
+        If m_communicationClient IsNot Nothing Then
             Dim binaryImage As Byte()
             Dim binaryLength As Int32
 
@@ -387,7 +406,7 @@ Public Class MultiProtocolFrameParser
                     binaryLength = 0
             End Select
 
-            If binaryLength > 0 Then m_clientStream.Write(binaryImage, 0, binaryLength)
+            If binaryLength > 0 Then m_communicationClient.Send(binaryImage)
         End If
 
     End Sub
@@ -503,117 +522,117 @@ Public Class MultiProtocolFrameParser
 
     Private Sub ProcessUdpStream()
 
-        Dim buffer As Byte() = CreateArray(Of Byte)(m_bufferSize)
-        Dim received As Int32
+        'Dim buffer As Byte() = CreateArray(Of Byte)(m_bufferSize)
+        'Dim received As Int32
 
-        ' Enter the data read loop
-        Do While True
-            Try
-                ' Block thread until we've received some data...
-                received = m_udpSocket.ReceiveFrom(buffer, m_receptionPoint)
+        '' Enter the data read loop
+        'Do While True
+        '    Try
+        '        ' Block thread until we've received some data...
+        '        received = m_udpSocket.ReceiveFrom(buffer, m_receptionPoint)
 
-                ' Provide received buffer to protocol specific frame parser
-                If received > 0 Then Write(buffer, 0, received)
-            Catch ex As ThreadAbortException
-                ' If we received an abort exception, we'll egress gracefully
-                Exit Do
-            Catch ex As IOException
-                ' This will get thrown if the thread is being aborted and we are sitting in a blocked stream read, so
-                ' in this case we'll bow out gracefully as well...
-                Exit Do
-            Catch ex As Exception
-                RaiseEvent DataStreamException(ex)
-                Exit Do
-            End Try
-        Loop
+        '        ' Provide received buffer to protocol specific frame parser
+        '        If received > 0 Then Write(buffer, 0, received)
+        '    Catch ex As ThreadAbortException
+        '        ' If we received an abort exception, we'll egress gracefully
+        '        Exit Do
+        '    Catch ex As IOException
+        '        ' This will get thrown if the thread is being aborted and we are sitting in a blocked stream read, so
+        '        ' in this case we'll bow out gracefully as well...
+        '        Exit Do
+        '    Catch ex As Exception
+        '        RaiseEvent DataStreamException(ex)
+        '        Exit Do
+        '    End Try
+        'Loop
 
     End Sub
 
     Private Sub ProcessTcpStream()
 
-        Dim buffer As Byte() = CreateArray(Of Byte)(m_bufferSize)
-        Dim received, attempts As Integer
+        'Dim buffer As Byte() = CreateArray(Of Byte)(m_bufferSize)
+        'Dim received, attempts As Integer
 
-        ' Handle reception of configuration frame - in case of device that only responds to commands when not sending real-time data,
-        ' such as the SEL 421, we disable real-time data stream first...
-        Try
-            ' Make sure data stream is disabled
-            SendPmuCommand(DeviceCommand.DisableRealTimeData)
+        '' Handle reception of configuration frame - in case of device that only responds to commands when not sending real-time data,
+        '' such as the SEL 421, we disable real-time data stream first...
+        'Try
+        '    ' Make sure data stream is disabled
+        '    SendPmuCommand(DeviceCommand.DisableRealTimeData)
 
-            ' Wait for real-time data stream to cease
-            Do While m_clientStream.DataAvailable
-                ' Remove all existing data from stream
-                Do While m_clientStream.DataAvailable
-                    received = m_clientStream.Read(buffer, 0, buffer.Length)
-                Loop
+        '    ' Wait for real-time data stream to cease
+        '    Do While m_clientStream.DataAvailable
+        '        ' Remove all existing data from stream
+        '        Do While m_clientStream.DataAvailable
+        '            received = m_clientStream.Read(buffer, 0, buffer.Length)
+        '        Loop
 
-                Thread.Sleep(100)
+        '        Thread.Sleep(100)
 
-                attempts += 1
-                If attempts >= 50 Then Exit Do
-            Loop
+        '        attempts += 1
+        '        If attempts >= 50 Then Exit Do
+        '    Loop
 
-            ' Request configuration frame 2 (we'll try a few times)
-            attempts = 0
-            m_configurationFrame = Nothing
+        '    ' Request configuration frame 2 (we'll try a few times)
+        '    attempts = 0
+        '    m_configurationFrame = Nothing
 
-            For x As Integer = 1 To 4
-                SendPmuCommand(DeviceCommand.SendConfigurationFrame2)
+        '    For x As Integer = 1 To 4
+        '        SendPmuCommand(DeviceCommand.SendConfigurationFrame2)
 
-                Do While m_configurationFrame Is Nothing
-                    ' So long as we are receiving data, we'll push it to the frame parser
-                    Do While m_clientStream.DataAvailable
-                        ' Block thread until we've read some data...
-                        received = m_clientStream.Read(buffer, 0, buffer.Length)
+        '        Do While m_configurationFrame Is Nothing
+        '            ' So long as we are receiving data, we'll push it to the frame parser
+        '            Do While m_clientStream.DataAvailable
+        '                ' Block thread until we've read some data...
+        '                received = m_clientStream.Read(buffer, 0, buffer.Length)
 
-                        ' Send received data to frame parser
-                        If received > 0 Then Write(buffer, 0, received)
-                    Loop
+        '                ' Send received data to frame parser
+        '                If received > 0 Then Write(buffer, 0, received)
+        '            Loop
 
-                    ' Hang out for a little while so config frame can be parsed
-                    Thread.Sleep(100)
+        '            ' Hang out for a little while so config frame can be parsed
+        '            Thread.Sleep(100)
 
-                    attempts += 1
-                    If attempts >= 50 Then Exit Do
-                Loop
+        '            attempts += 1
+        '            If attempts >= 50 Then Exit Do
+        '        Loop
 
-                If m_configurationFrame IsNot Nothing Then Exit For
-            Next
+        '        If m_configurationFrame IsNot Nothing Then Exit For
+        '    Next
 
-            ' Enable data stream
-            SendPmuCommand(DeviceCommand.EnableRealTimeData)
-        Catch ex As ThreadAbortException
-            ' If we received an abort exception, we'll egress gracefully
-            Exit Sub
-        Catch ex As IOException
-            ' This will get thrown if the thread is being aborted and we are sitting in a blocked stream read, so
-            ' in this case we'll bow out gracefully as well...
-            Exit Sub
-        Catch ex As Exception
-            RaiseEvent DataStreamException(ex)
-            Exit Sub
-        End Try
+        '    ' Enable data stream
+        '    SendPmuCommand(DeviceCommand.EnableRealTimeData)
+        'Catch ex As ThreadAbortException
+        '    ' If we received an abort exception, we'll egress gracefully
+        '    Exit Sub
+        'Catch ex As IOException
+        '    ' This will get thrown if the thread is being aborted and we are sitting in a blocked stream read, so
+        '    ' in this case we'll bow out gracefully as well...
+        '    Exit Sub
+        'Catch ex As Exception
+        '    RaiseEvent DataStreamException(ex)
+        '    Exit Sub
+        'End Try
 
-        ' Enter the data read loop
-        Do While True
-            Try
-                ' Block thread until we've received some data...
-                received = m_clientStream.Read(buffer, 0, buffer.Length)
+        '' Enter the data read loop
+        'Do While True
+        '    Try
+        '        ' Block thread until we've received some data...
+        '        received = m_clientStream.Read(buffer, 0, buffer.Length)
 
-                ' Provide received buffer to protocol specific frame parser
-                If received > 0 Then Write(buffer, 0, received)
-            Catch ex As ThreadAbortException
-                ' If we received an abort exception, we'll egress gracefully
-                Exit Do
-            Catch ex As IOException
-                ' This will get thrown if the thread is being aborted and we are sitting in a blocked stream read, so
-                ' in this case we'll bow out gracefully as well...
-                Exit Do
-            Catch ex As Exception
-                RaiseEvent DataStreamException(ex)
-                Exit Do
-            End Try
-        Loop
+        '        ' Provide received buffer to protocol specific frame parser
+        '        If received > 0 Then Write(buffer, 0, received)
+        '    Catch ex As ThreadAbortException
+        '        ' If we received an abort exception, we'll egress gracefully
+        '        Exit Do
+        '    Catch ex As IOException
+        '        ' This will get thrown if the thread is being aborted and we are sitting in a blocked stream read, so
+        '        ' in this case we'll bow out gracefully as well...
+        '        Exit Do
+        '    Catch ex As Exception
+        '        RaiseEvent DataStreamException(ex)
+        '        Exit Do
+        '    End Try
+        'Loop
 
     End Sub
 
@@ -664,6 +683,22 @@ Public Class MultiProtocolFrameParser
         RaiseEvent DataStreamException(ex)
 
     End Sub
+
+    Private Sub m_communicationClient_Connected(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles m_communicationClient.Connected
+
+        If m_transportProtocol = Communication.TransportProtocol.Tcp Then
+            SendPmuCommand(DeviceCommand.SendConfigurationFrame2)
+            SendPmuCommand(DeviceCommand.EnableRealTimeData)
+        End If
+
+    End Sub
+
+    Private Sub m_communicationClient_ReceivedData(ByVal data() As System.Byte) Handles m_communicationClient.ReceivedData
+
+        Write(data, 0, data.Length())
+
+    End Sub
+
 
 #End Region
 
