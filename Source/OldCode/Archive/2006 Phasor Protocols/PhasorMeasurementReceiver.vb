@@ -236,8 +236,7 @@ Public Class PhasorMeasurementReceiver
                     With parser
                         .PhasorProtocol = [Enum].Parse(GetType(PhasorProtocol), row("DataID"))
                         .TransportProtocol = IIf(String.Compare(row("NTP"), "UDP", True) = 0, TransportProtocol.Udp, TransportProtocol.Tcp)
-                        .HostIP = row("IPAddress")
-                        .Port = row("IPPort")
+                        .ConnectionString = "server=" & row("IPAddress") & "; port=" & row("IPPort")
                         .PmuID = row("AccessID")
                         .SourceName = source
                     End With

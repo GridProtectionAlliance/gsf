@@ -274,7 +274,7 @@ Public Class PhasorMeasurementMapper
 
             UpdateStatus("Connection to " & m_source & " established.")
         Catch ex As Exception
-            UpdateStatus(m_source & " connection to """ & m_frameParser.HostIP & ":" & m_frameParser.Port & """ failed: " & ex.Message)
+            UpdateStatus(m_source & " connection to """ & m_frameParser.ConnectionName & """ failed: " & ex.Message)
             Connect()
         End Try
 
