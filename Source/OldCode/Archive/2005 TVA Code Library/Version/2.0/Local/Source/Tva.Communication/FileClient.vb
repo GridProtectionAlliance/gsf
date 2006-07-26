@@ -28,7 +28,7 @@ Imports Tva.IO.Common
 Public Class FileClient
 
     Private m_receiveOnDemand As Boolean
-    Private m_receiveInterval As Integer
+    Private m_receiveInterval As Double
     Private m_fileClient As StateKeeper(Of FileStream)
     Private m_connectionData As Dictionary(Of String, String)
     Private m_connectionThread As Thread
@@ -64,17 +64,17 @@ Public Class FileClient
     End Property
 
     ''' <summary>
-    ''' Gets or sets the time in seconds to pause before receiving the next available set of data.
+    ''' Gets or sets the time in milliseconds to pause before receiving the next available set of data.
     ''' </summary>
     ''' <value></value>
-    ''' <returns>Time in seconds to pause before receiving the next available set of data.</returns>
+    ''' <returns>Time in milliseconds to pause before receiving the next available set of data.</returns>
     ''' <remarks>Set ReceiveInterval = -1 to receive data continuously without pausing.</remarks>
-    <Description("Time in seconds to pause before receiving the next available set of data. Set ReceiveInterval = -1 to receive data continuously without pausing."), Category("Data"), DefaultValue(GetType(Integer), "-1")> _
-    Public Property ReceiveInterval() As Integer
+    <Description("Time in milliseconds to pause before receiving the next available set of data. Set ReceiveInterval = -1 to receive data continuously without pausing."), Category("Data"), DefaultValue(GetType(Integer), "-1")> _
+    Public Property ReceiveInterval() As Double
         Get
             Return m_receiveInterval
         End Get
-        Set(ByVal value As Integer)
+        Set(ByVal value As Double)
             If value = -1 OrElse value > 0 Then
                 m_receiveInterval = value
                 If m_receiveInterval > 0 Then
@@ -193,7 +193,7 @@ Public Class FileClient
                 If Not m_receiveOnDemand Then
                     If m_receiveInterval > 0 Then
                         ' We need to start receivng data at the specified interval.
-                        TimerReceiveData.Interval = m_receiveInterval * 1000
+                        TimerReceiveData.Interval = m_receiveInterval
                         TimerReceiveData.Start()
                     Else
                         ' We need to start receiving data continuously.
