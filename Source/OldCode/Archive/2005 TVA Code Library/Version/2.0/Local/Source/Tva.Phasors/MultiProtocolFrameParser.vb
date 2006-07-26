@@ -255,7 +255,10 @@ Public Class MultiProtocolFrameParser
                 Case TransportProtocol.Serial
                     ' TODO: Determine minimal needed connection parameters for COM link...
                 Case Communication.TransportProtocol.File
-                    ' TODO: Use Tva.Communication.FileClient component
+                    ' TODO: Configure the FileClient component...
+                    Dim fileClient As New FileClient()
+                    fileClient.ConnectionString = "File="
+                    m_communicationClient = fileClient
             End Select
 
             m_communicationClient.Handshake = False
