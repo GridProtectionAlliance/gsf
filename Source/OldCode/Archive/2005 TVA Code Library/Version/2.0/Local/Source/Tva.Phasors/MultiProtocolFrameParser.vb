@@ -255,6 +255,8 @@ Public Class MultiProtocolFrameParser
                     'm_socketThread.Start()
                 Case TransportProtocol.Serial
                     ' TODO: Determine minimal needed connection parameters for COM link...
+                Case Communication.TransportProtocol.File
+                    ' TODO: Use Tva.Communication.FileClient component
             End Select
 
             m_communicationClient.Handshake = False
