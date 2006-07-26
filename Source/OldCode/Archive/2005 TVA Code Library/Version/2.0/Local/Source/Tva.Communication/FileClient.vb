@@ -137,10 +137,9 @@ Public Class FileClient
 
         CancelConnect()
 
-        If Enabled() AndAlso IsConnected() AndAlso m_receivingThread IsNot Nothing Then
-            m_receivingThread.Abort()
-            m_fileClient.Client.Close()
+        If Enabled() AndAlso IsConnected() Then
             TimerReceiveData.Stop()
+            m_fileClient.Client.Close()
             OnDisconnected(EventArgs.Empty)
         End If
 
