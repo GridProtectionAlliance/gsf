@@ -46,10 +46,10 @@
     <Import Include="System.Diagnostics" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ClientBase.Designer.vb">
-      <DependentUpon>ClientBase.vb</DependentUpon>
+    <Compile Include="CommunicationClientBase.Designer.vb">
+      <DependentUpon>CommunicationClientBase.vb</DependentUpon>
     </Compile>
-    <Compile Include="ClientBase.vb">
+    <Compile Include="CommunicationClientBase.vb">
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Enumerations.vb" />
@@ -64,10 +64,10 @@
     <Compile Include="Internal Code\GoodbyeMessage.vb" />
     <Compile Include="Internal Code\HandshakeMessage.vb" />
     <Compile Include="My Project\AssemblyInfo.vb" />
-    <Compile Include="ServerBase.designer.vb">
-      <DependentUpon>ServerBase.vb</DependentUpon>
+    <Compile Include="CommunicationServerBase.designer.vb">
+      <DependentUpon>CommunicationServerBase.vb</DependentUpon>
     </Compile>
-    <Compile Include="ServerBase.vb">
+    <Compile Include="CommunicationServerBase.vb">
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Internal Code\CommunicationHelper.vb" />
@@ -98,8 +98,8 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Embedded Resources\ClientBase.bmp" />
-    <EmbeddedResource Include="Embedded Resources\ServerBase.bmp" />
+    <EmbeddedResource Include="Embedded Resources\CommunicationClientBase.bmp" />
+    <EmbeddedResource Include="Embedded Resources\CommunicationServerBase.bmp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Tva.Core\Tva.Core.vbproj">

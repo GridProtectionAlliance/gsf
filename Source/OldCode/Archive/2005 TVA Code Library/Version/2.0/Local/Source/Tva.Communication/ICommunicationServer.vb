@@ -27,6 +27,7 @@ Public Interface ICommunicationServer
 
     Sub Start()
     Sub [Stop]()
+    Sub SendTo(ByVal clientID As Guid, ByVal data As String)
     Sub SendTo(ByVal clientID As Guid, ByVal serializableObject As Object)
     Sub SendTo(ByVal clientID As Guid, ByVal data As Byte())
     Sub Multicast(ByVal data As String)

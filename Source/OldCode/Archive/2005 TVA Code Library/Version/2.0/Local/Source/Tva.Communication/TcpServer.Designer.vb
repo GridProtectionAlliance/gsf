@@ -16,7 +16,7 @@
 '*******************************************************************************************************
 
 Partial Class TcpServer
-    Inherits Tva.Communication.ServerBase
+    Inherits Tva.Communication.CommunicationServerBase
 
     <System.Diagnostics.DebuggerNonUserCode()> _
     Public Sub New(ByVal Container As System.ComponentModel.IContainer)

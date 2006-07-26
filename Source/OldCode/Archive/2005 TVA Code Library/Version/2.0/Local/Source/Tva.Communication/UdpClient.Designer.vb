@@ -16,7 +16,7 @@
 '*******************************************************************************************************
 
 Partial Class UdpClient
-    Inherits Tva.Communication.ClientBase
+    Inherits Tva.Communication.CommunicationClientBase
 
     <System.Diagnostics.DebuggerNonUserCode()> _
     Public Sub New(ByVal Container As System.ComponentModel.IContainer)

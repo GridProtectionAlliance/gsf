@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  Tva.Communication.TcpClient.Designer.vb - TCP-based communication client
+'  Tva.Communication.ClientBase.Designer.vb - Base functionality of a client for transporting data
 '  Copyright © 2006 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005
@@ -10,13 +10,13 @@
 '
 '  Code Modification History:
 '  -----------------------------------------------------------------------------------------------------
-'  06/02/2006 - Pinal C. Patel
+'  06/01/2006 - Pinal C. Patel
 '       Original version of source code generated
 '
 '*******************************************************************************************************
 
-Partial Class TcpClient
-    Inherits Tva.Communication.CommunicationClientBase
+Partial Class CommunicationClientBase
+    Inherits System.ComponentModel.Component
 
     <System.Diagnostics.DebuggerNonUserCode()> _
     Public Sub New(ByVal Container As System.ComponentModel.IContainer)
@@ -33,9 +33,24 @@ Partial Class TcpClient
 
         'This call is required by the Component Designer.
         InitializeComponent()
-        m_packetAware = True
-        MyBase.ConnectionString = "Server=localhost; Port=8888"
-        MyBase.Protocol = TransportProtocol.Tcp
+        ' Setup the default values.
+        m_connectionString = ""
+        m_receiveBufferSize = 8192
+        m_receiveTimeout = -1
+        m_maximumConnectionAttempts = -1
+        m_textEncoding = System.Text.Encoding.ASCII()
+        m_secureSession = False
+        m_handshake = True
+        m_encryption = Tva.Security.Cryptography.EncryptLevel.None
+        m_compression = Tva.IO.Compression.CompressLevel.NoCompression
+        m_crcCheck = CRCCheckType.None
+        m_enabled = True
+        m_clientID = Guid.NewGuid()
+        m_isConnected = False
+        m_connectTime = 0
+        m_disconnectTime = 0
+        m_totalBytesSent = 0
+        m_totalBytesReceived = 0
 
     End Sub
 
@@ -43,6 +58,7 @@ Partial Class TcpClient
     <System.Diagnostics.DebuggerNonUserCode()> _
     Protected Overrides Sub Dispose(ByVal disposing As Boolean)
         If disposing AndAlso components IsNot Nothing Then
+            Disconnect()    ' Disconnect client from the server.
             components.Dispose()
         End If
         MyBase.Dispose(disposing)
