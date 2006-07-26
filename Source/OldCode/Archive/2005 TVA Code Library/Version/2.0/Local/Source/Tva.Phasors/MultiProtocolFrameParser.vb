@@ -58,7 +58,6 @@ Public Class MultiProtocolFrameParser
     Private m_pmuID As Int32
     Private m_bufferSize As Int32
 
-    ' TODO: now that IFrameParser exists - change to single m_frameParser As IFrameParser variable...
     ' We internalize protocol specfic processing to simplfy end user consumption
     Private WithEvents m_frameParser As IFrameParser
     Private WithEvents m_rateCalcTimer As Timers.Timer
