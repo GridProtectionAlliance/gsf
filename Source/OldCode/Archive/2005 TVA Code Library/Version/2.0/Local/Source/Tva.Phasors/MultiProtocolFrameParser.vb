@@ -43,6 +43,10 @@ Public Class MultiProtocolFrameParser
     Public Event ConfigurationChanged() Implements IFrameParser.ConfigurationChanged
     Public Event DataStreamException(ByVal ex As Exception) Implements IFrameParser.DataStreamException
     Public Event ParsingStatus(ByVal message As String)
+    Public Event Connecting()
+    Public Event Connected()
+    Public Event ConnectionException(ByVal ex As Exception)
+    Public Event Disconnected()
 
     Public Const DefaultBufferSize As Int32 = 262144    ' 256K
     Public Const DefaultFrameRate As Double = 1 / 30
@@ -194,8 +198,6 @@ Public Class MultiProtocolFrameParser
         m_frameRate = 0.0#
         m_byteRate = 0.0#
 
-        UpdateStatus("Attempting " & [Enum].GetName(GetType(PhasorProtocol), m_phasorProtocol).ToUpper() & " " & [Enum].GetName(GetType(TransportProtocol), m_transportProtocol).ToUpper() & " based connection to PDC/PMU " & ConnectionName)
-
         Try
             ' Instantiate protocol specific frame parser
             Select Case m_phasorProtocol
@@ -233,6 +235,7 @@ Public Class MultiProtocolFrameParser
             End Select
 
             With m_communicationClient
+                .MaximumConnectionAttempts = 1
                 .ConnectionString = m_connectionString
                 .Handshake = False
                 .Connect()
@@ -387,7 +390,7 @@ Public Class MultiProtocolFrameParser
         Get
             With New StringBuilder
                 .Append("     PDC/PMU Connection ID: ")
-                .Append(ConnectionName)
+                .Append(m_pmuID)
                 .Append(Environment.NewLine)
                 .Append("         Connection string: ")
                 .Append(m_connectionString)
@@ -502,14 +505,12 @@ Public Class MultiProtocolFrameParser
     Private Sub m_frameParser_ReceivedCommandFrame(ByVal frame As ICommandFrame) Handles m_frameParser.ReceivedCommandFrame
 
         ProcessFrame(frame)
-        m_dataFrameReceived = True
 
     End Sub
 
     Private Sub m_frameParser_ReceivedConfigurationFrame(ByVal frame As IConfigurationFrame) Handles m_frameParser.ReceivedConfigurationFrame
 
         ProcessFrame(frame)
-        m_dataFrameReceived = True
 
     End Sub
 
@@ -517,20 +518,17 @@ Public Class MultiProtocolFrameParser
 
         ProcessFrame(frame)
 
-
     End Sub
 
     Private Sub m_frameParser_ReceivedHeaderFrame(ByVal frame As IHeaderFrame) Handles m_frameParser.ReceivedHeaderFrame
 
         ProcessFrame(frame)
-        m_dataFrameReceived = True
 
     End Sub
 
     Private Sub m_frameParser_ReceivedUndeterminedFrame(ByVal frame As IChannelFrame) Handles m_frameParser.ReceivedUndeterminedFrame
 
         ProcessFrame(frame)
-        m_dataFrameReceived = True
 
     End Sub
 
@@ -554,8 +552,28 @@ Public Class MultiProtocolFrameParser
 
     Private Sub m_communicationClient_Connected(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles m_communicationClient.Connected
 
+        RaiseEvent Connected()
         SendDeviceCommand(DeviceCommand.SendConfigurationFrame2)
         SendDeviceCommand(DeviceCommand.EnableRealTimeData)
+
+    End Sub
+
+    Private Sub m_communicationClient_Connecting(ByVal sender As Object, ByVal e As System.EventArgs) Handles m_communicationClient.Connecting
+
+        RaiseEvent Connecting()
+        UpdateStatus("Attempting " & [Enum].GetName(GetType(PhasorProtocol), m_phasorProtocol).ToUpper() & " " & [Enum].GetName(GetType(TransportProtocol), m_transportProtocol).ToUpper() & " based connection to PDC/PMU " & ConnectionName)
+
+    End Sub
+
+    Private Sub m_communicationClient_ConnectingException(ByVal ex As System.Exception) Handles m_communicationClient.ConnectingException
+
+        RaiseEvent ConnectionException(ex)
+
+    End Sub
+
+    Private Sub m_communicationClient_Disconnected(ByVal sender As Object, ByVal e As System.EventArgs) Handles m_communicationClient.Disconnected
+
+        RaiseEvent Disconnected()
 
     End Sub
 
@@ -568,7 +586,7 @@ Public Class MultiProtocolFrameParser
 
         If m_transportProtocol = Communication.TransportProtocol.File Then
             ' To keep precise timing on "frames per second", we wait for defined frame rate interval
-            Thread.Sleep((m_definedFrameRate - TicksToSeconds(Date.Now.Ticks - m_lastFrameReceivedTime)) * 1000 - 250)
+            Thread.Sleep((m_definedFrameRate - TicksToSeconds(Date.Now.Ticks - m_lastFrameReceivedTime)) * 1000)
         End If
 
     End Sub
