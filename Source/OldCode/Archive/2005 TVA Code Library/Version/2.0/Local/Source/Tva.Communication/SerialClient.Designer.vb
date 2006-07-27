@@ -1,21 +1,6 @@
-'*******************************************************************************************************
-'  Tva.Communication.FileClient.Designer.vb - File-based communication client
-'  Copyright © 2006 - TVA, all rights reserved - Gbtc
-'
-'  Build Environment: VB.NET, Visual Studio 2005
-'  Primary Developer: Pinal C. Patel, Operations Data Architecture [TVA]
-'      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
-'       Phone: 423/751-2250
-'       Email: pcpatel@tva.gov
-'
-'  Code Modification History:
-'  -----------------------------------------------------------------------------------------------------
-'  07/24/2006 - Pinal C. Patel
-'       Original version of source code generated
-'
-'*******************************************************************************************************
+' 07-27-06
 
-Partial Class FileClient
+Partial Class SerialClient
     Inherits Tva.Communication.CommunicationClientBase
 
     <System.Diagnostics.DebuggerNonUserCode()> _
@@ -33,13 +18,9 @@ Partial Class FileClient
 
         'This call is required by the Component Designer.
         InitializeComponent()
-        m_receiveOnDemand = False
-        m_receiveInterval = -1
-        m_startingOffset = 0
-        m_fileClient = New StateKeeper(Of System.IO.FileStream)
-        m_receiveDataTimer = New System.Timers.Timer()
-        MyBase.ConnectionString = "File=DataFile.txt"
-        MyBase.Protocol = TransportProtocol.File
+        m_serialClient = New System.IO.Ports.SerialPort()
+        MyBase.ConnectionString = "Port=COM1; BaudRate=9600; Parity=None; StopBits=One; DataBits=8"
+        MyBase.Protocol = TransportProtocol.Serial
 
     End Sub
 

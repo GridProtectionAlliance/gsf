@@ -34,7 +34,7 @@ Public Class FileClient
     Private m_connectionData As Dictionary(Of String, String)
     Private m_connectionThread As Thread
     Private m_receivingThread As Thread
-    Private WithEvents TimerReceiveData As System.Timers.Timer
+    Private WithEvents m_receiveDataTimer As System.Timers.Timer
 
     ''' <summary>
     ''' Initializes a instance of Tva.Communication.FileClient with the specified data.
@@ -143,7 +143,6 @@ Public Class FileClient
             If File.Exists(m_connectionData("file")) Then
                 m_connectionThread = New Thread(AddressOf ConnectToFile)
                 m_connectionThread.Start()
-                OnConnecting(EventArgs.Empty)
             Else
                 Throw New FileNotFoundException(m_connectionData("file") & " does not exist.")
             End If
@@ -159,7 +158,7 @@ Public Class FileClient
         CancelConnect()
 
         If Enabled() AndAlso IsConnected() Then
-            TimerReceiveData.Stop()
+            m_receiveDataTimer.Stop()
             m_fileClient.Client.Close()
             OnDisconnected(EventArgs.Empty)
         End If
@@ -189,7 +188,7 @@ Public Class FileClient
                 With New StringBuilder()
                     .Append("Connection string must be in the following format:")
                     .Append(Environment.NewLine())
-                    .Append("   File=<Name of the file>")
+                    .Append("   File=[Name of the file]")
                     Throw New ArgumentException(.ToString())
                 End With
             End If
@@ -208,14 +207,15 @@ Public Class FileClient
         Dim connectionAttempts As Integer = 0
         Do While MaximumConnectionAttempts() = -1 OrElse connectionAttempts < MaximumConnectionAttempts()
             Try
+                OnConnecting(EventArgs.Empty)
                 m_fileClient.Client = New FileStream(m_connectionData("file"), FileMode.Open)
                 m_fileClient.Client.Seek(m_startingOffset, SeekOrigin.Begin)   ' Move to the specified offset.
                 OnConnected(EventArgs.Empty)
                 If Not m_receiveOnDemand Then
                     If m_receiveInterval > 0 Then
                         ' We need to start receivng data at the specified interval.
-                        TimerReceiveData.Interval = m_receiveInterval
-                        TimerReceiveData.Start()
+                        m_receiveDataTimer.Interval = m_receiveInterval
+                        m_receiveDataTimer.Start()
                     Else
                         ' We need to start receiving data continuously.
                         m_receivingThread = New Thread(AddressOf ReceiveFileData)
@@ -227,8 +227,9 @@ Public Class FileClient
             Catch ex As ThreadAbortException
                 Exit Do ' We must abort connecting to the file.
             Catch ex As Exception
-                connectionAttempts += 1
                 OnConnectingException(ex)
+            Finally
+                connectionAttempts += 1
             End Try
         Loop
         m_connectionThread = Nothing
@@ -262,7 +263,7 @@ Public Class FileClient
 
     End Sub
 
-    Private Sub TimerReceiveData_Elapsed(ByVal sender As Object, ByVal e As System.Timers.ElapsedEventArgs) Handles TimerReceiveData.Elapsed
+    Private Sub m_receiveDataTimer_Elapsed(ByVal sender As Object, ByVal e As System.Timers.ElapsedEventArgs) Handles m_receiveDataTimer.Elapsed
 
         If Enabled() AndAlso IsConnected() AndAlso m_receiveInterval > 0 AndAlso m_receivingThread Is Nothing Then
             m_receivingThread = New Thread(AddressOf ReceiveFileData)

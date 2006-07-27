@@ -157,7 +157,7 @@ Public Class TcpServer
                 With New StringBuilder()
                     .Append("Configuration string must be in the following format:")
                     .Append(Environment.NewLine())
-                    .Append("   Port=<Port Number>")
+                    .Append("   Port=[Port Number]")
                     Throw New ArgumentException(.ToString())
                 End With
             End If

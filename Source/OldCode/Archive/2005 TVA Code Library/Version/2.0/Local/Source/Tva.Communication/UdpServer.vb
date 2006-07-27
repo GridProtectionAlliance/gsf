@@ -150,7 +150,7 @@ Public Class UdpServer
                 With New StringBuilder()
                     .Append("Configuration string must be in the following format:")
                     .Append(Environment.NewLine())
-                    .Append("   Port=<Port Number>; Clients=<Client name or IP, ..., Client name or IP>")
+                    .Append("   Port=[Port Number]; Clients=[Client name or IP, ..., Client name or IP]")
                     Throw New ArgumentException(.ToString())
                 End With
             End If

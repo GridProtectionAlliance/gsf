@@ -72,6 +72,12 @@
     </Compile>
     <Compile Include="Internal Code\CommunicationHelper.vb" />
     <Compile Include="Internal Code\StateKeeper.vb" />
+    <Compile Include="SerialClient.Designer.vb">
+      <DependentUpon>SerialClient.vb</DependentUpon>
+    </Compile>
+    <Compile Include="SerialClient.vb">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="TcpClient.Designer.vb">
       <DependentUpon>TcpClient.vb</DependentUpon>
     </Compile>

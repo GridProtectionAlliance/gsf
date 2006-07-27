@@ -115,9 +115,9 @@ Public Class TcpClient
     Protected Overrides Sub SendPreparedData(ByVal data As Byte())
 
         If Enabled() AndAlso IsConnected() Then
-            OnSendDataBegin(data)
             If SecureSession() Then data = EncryptData(data, m_tcpClient.Passphrase(), Encryption())
             ' We'll send data over the wire asynchronously for improved performance.
+            OnSendDataBegin(data)
             If m_packetAware Then
                 Dim packetHeader As Byte() = BitConverter.GetBytes(data.Length())
                 m_tcpClient.Client.BeginSend(packetHeader, 0, packetHeader.Length(), SocketFlags.None, Nothing, Nothing)
@@ -147,7 +147,7 @@ Public Class TcpClient
                 With New StringBuilder()
                     .Append("Connection string must be in the following format:")
                     .Append(Environment.NewLine())
-                    .Append("   Server=<Server name or IP>; Port=<Server port number>")
+                    .Append("   Server=[Server name or IP]; Port=[Server port number]")
                     Throw New ArgumentException(.ToString())
                 End With
             End If

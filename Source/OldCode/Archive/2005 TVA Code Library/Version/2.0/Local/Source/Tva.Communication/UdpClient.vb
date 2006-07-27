@@ -117,12 +117,12 @@ Public Class UdpClient
     Protected Overrides Sub SendPreparedData(ByVal data() As Byte)
 
         If Enabled() AndAlso IsConnected() Then
-            OnSendDataBegin(data)
             If SecureSession() Then data = EncryptData(data, m_udpClient.Passphrase(), Encryption())
             If m_packetAware Then data = AddPacketHeader(data)
 
             ' Since we can only send MaximumPacketSize bytes in a given packet, we may need to break the actual 
             ' packet into a series of packets if the packet's size exceed the MaximumPacketSize.
+            OnSendDataBegin(data)
             For i As Integer = 0 To IIf(data.Length() > MaximumPacketSize, data.Length() - 1, 0) Step MaximumPacketSize
                 Dim packetSize As Integer = MaximumPacketSize
                 If data.Length() - i < MaximumPacketSize Then packetSize = data.Length() - i ' Last or the only packet in the series.
@@ -149,7 +149,7 @@ Public Class UdpClient
                 With New StringBuilder()
                     .Append("Connection string must be in the following format:")
                     .Append(Environment.NewLine())
-                    .Append("   Server=<Server name or IP>; RemotePort=<Server port number>; LocalPort=<Local port number>")
+                    .Append("   Server=[Server name or IP]; RemotePort=[Server port number]; LocalPort=[Local port number]")
                     Throw New ArgumentException(.ToString())
                 End With
             End If
