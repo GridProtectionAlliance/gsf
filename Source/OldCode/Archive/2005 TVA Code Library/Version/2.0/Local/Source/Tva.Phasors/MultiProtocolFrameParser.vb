@@ -41,11 +41,10 @@ Public Class MultiProtocolFrameParser
     Public Event ReceivedUndeterminedFrame(ByVal frame As IChannelFrame) Implements IFrameParser.ReceivedUndeterminedFrame
     Public Event ReceivedFrameBufferImage(ByVal frameType As FundamentalFrameType, ByVal binaryImage As Byte(), ByVal offset As Integer, ByVal length As Integer) Implements IFrameParser.ReceivedFrameBufferImage
     Public Event ConfigurationChanged() Implements IFrameParser.ConfigurationChanged
-    Public Event DataStreamException(ByVal ex As Exception) Implements IFrameParser.DataStreamException
     Public Event ParsingStatus(ByVal message As String)
-    Public Event Connecting()
-    Public Event Connected()
+    Public Event DataStreamException(ByVal ex As Exception) Implements IFrameParser.DataStreamException
     Public Event ConnectionException(ByVal ex As Exception)
+    Public Event Connected()
     Public Event Disconnected()
 
     Public Const DefaultBufferSize As Int32 = 262144    ' 256K
@@ -560,7 +559,6 @@ Public Class MultiProtocolFrameParser
 
     Private Sub m_communicationClient_Connecting(ByVal sender As Object, ByVal e As System.EventArgs) Handles m_communicationClient.Connecting
 
-        RaiseEvent Connecting()
         UpdateStatus("Attempting " & [Enum].GetName(GetType(PhasorProtocol), m_phasorProtocol).ToUpper() & " " & [Enum].GetName(GetType(TransportProtocol), m_transportProtocol).ToUpper() & " based connection to PDC/PMU " & ConnectionName)
 
     End Sub
