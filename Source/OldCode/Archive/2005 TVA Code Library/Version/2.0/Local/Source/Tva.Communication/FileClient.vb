@@ -71,7 +71,7 @@ Public Class FileClient
     ''' <value></value>
     ''' <returns>Time in milliseconds to pause before receiving (reading) the next available set of data.</returns>
     ''' <remarks>Set ReceiveInterval = -1 to receive (read) data continuously without pausing.</remarks>
-    <Description("Time in milliseconds to pause before receiving (reading) the next available set of data. Set ReceiveInterval = -1 to receive data continuously without pausing."), Category("Data"), DefaultValue(GetType(Integer), "-1")> _
+    <Description("Time in milliseconds to pause before receiving (reading) the next available set of data. Set ReceiveInterval = -1 to receive data continuously without pausing."), Category("Data"), DefaultValue(GetType(Double), "-1")> _
     Public Property ReceiveInterval() As Double
         Get
             Return m_receiveInterval
@@ -101,7 +101,7 @@ Public Class FileClient
             Return m_startingOffset
         End Get
         Set(ByVal value As Long)
-            If value > 0 Then
+            If value >= 0 Then
                 m_startingOffset = value
             Else
                 Throw New ArgumentOutOfRangeException("value")
