@@ -66,18 +66,18 @@ Public Class UdpClient
 
         If Enabled() AndAlso Not IsConnected() AndAlso ValidConnectionString(ConnectionString()) Then
             ' Initialize the server endpoint that will be used when sending data to the server.
-            m_udpServer = GetIpEndPoint(m_connectionData("server"), Convert.ToInt32(m_connectionData("port")))
+            m_udpServer = GetIpEndPoint(m_connectionData("server"), Convert.ToInt32(m_connectionData("remoteport")))
 
             ' Use the specified port only if handshaking is disabled otherwise let the system pick a port for us.
-            Dim port As Integer = 0
-            If Not Handshake() Then port = Convert.ToInt32(m_connectionData("port"))
+            Dim localPort As Integer = 0
+            If Not Handshake() Then localPort = Convert.ToInt32(m_connectionData("localport"))
 
             ' Initialize the client .
             m_udpClient = New StateKeeper(Of Socket)
             m_udpClient.ID = ClientID()
             m_udpClient.Passphrase = HandshakePassphrase()
             m_udpClient.Client = New Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp)
-            m_udpClient.Client.Bind(New IPEndPoint(IPAddress.Any, port))
+            m_udpClient.Client.Bind(New IPEndPoint(IPAddress.Any, localPort))
             If ReceiveTimeout() <> -1 Then m_udpClient.Client.ReceiveTimeout = ReceiveTimeout() * 1000
 
             ' Start listening for data from the server on a seperate thread.
@@ -138,16 +138,18 @@ Public Class UdpClient
         If Not String.IsNullOrEmpty(connectionString) Then
             m_connectionData = Tva.Text.Common.ParseKeyValuePairs(connectionString)
             If m_connectionData.ContainsKey("server") AndAlso _
-                    m_connectionData.ContainsKey("port") AndAlso _
-                    Dns.GetHostEntry(Convert.ToString(m_connectionData("server"))) IsNot Nothing AndAlso _
-                    ValidPortNumber(Convert.ToString(m_connectionData("port"))) Then
+                    Dns.GetHostEntry(m_connectionData("server")) IsNot Nothing AndAlso _
+                    m_connectionData.ContainsKey("remoteport") AndAlso _
+                    ValidPortNumber(m_connectionData("remoteport")) AndAlso _
+                    m_connectionData.ContainsKey("localport") AndAlso _
+                    ValidPortNumber(m_connectionData("localport")) Then
                 Return True
             Else
                 ' Connection string is not in the expected format.
                 With New StringBuilder()
                     .Append("Connection string must be in the following format:")
                     .Append(Environment.NewLine())
-                    .Append("   Server=<Server name or IP>; Port=<Port Number>")
+                    .Append("   Server=<Server name or IP>; RemotePort=<Server port number>; LocalPort=<Local port number>")
                     Throw New ArgumentException(.ToString())
                 End With
             End If

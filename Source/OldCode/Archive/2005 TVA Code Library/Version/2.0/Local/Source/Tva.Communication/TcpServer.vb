@@ -150,7 +150,7 @@ Public Class TcpServer
         If Not String.IsNullOrEmpty(configurationString) Then
             m_configurationData = Tva.Text.Common.ParseKeyValuePairs(configurationString)
             If m_configurationData.ContainsKey("port") AndAlso _
-                    ValidPortNumber(Convert.ToString(m_configurationData("port"))) Then
+                    ValidPortNumber(m_configurationData("port")) Then
                 Return True
             Else
                 ' Configuration string is not in the expected format.

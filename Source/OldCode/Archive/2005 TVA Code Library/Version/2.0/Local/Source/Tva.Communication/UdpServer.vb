@@ -141,7 +141,7 @@ Public Class UdpServer
         If Not String.IsNullOrEmpty(configurationString) Then
             m_configurationData = Tva.Text.Common.ParseKeyValuePairs(configurationString)
             If m_configurationData.ContainsKey("port") AndAlso _
-                    ValidPortNumber(Convert.ToString(m_configurationData("port"))) AndAlso _
+                    ValidPortNumber(m_configurationData("port")) AndAlso _
                     m_configurationData.ContainsKey("clients") AndAlso _
                     m_configurationData("clients").Split(","c).Length() > 0 Then
                 Return True
@@ -164,14 +164,14 @@ Public Class UdpServer
 
         Try
             Do While True
-                Dim clientEP As EndPoint = New IPEndPoint(IPAddress.Any, 0) ' Used to capture the client's identity.
+                Dim tempEP As EndPoint = New IPEndPoint(IPAddress.Any, 0) ' Used to capture the client's identity.
                 If m_udpServer.DataBuffer() Is Nothing Then
                     ' By default we'll prepare to receive a maximum of MaximumPacketSize from the server.
                     m_udpServer.DataBuffer = CreateArray(Of Byte)(MaximumPacketSize)
                 End If
                 m_udpServer.BytesReceived += _
                     m_udpServer.Client.ReceiveFrom(m_udpServer.DataBuffer, m_udpServer.BytesReceived, _
-                        m_udpServer.DataBuffer.Length - m_udpServer.BytesReceived, SocketFlags.None, clientEP)
+                        m_udpServer.DataBuffer.Length - m_udpServer.BytesReceived, SocketFlags.None, tempEP)
 
                 If m_packetAware Then
                     If m_udpServer.PacketSize() = -1 Then
@@ -203,7 +203,7 @@ Public Class UdpServer
                     Dim clientInfo As HandshakeMessage = DirectCast(clientMessage, HandshakeMessage)
                     If clientInfo.Passphrase() = HandshakePassphrase() Then ' Authentication successful.
                         Dim udpClient As New StateKeeper(Of IPEndPoint)
-                        udpClient.Client = CType(clientEP, IPEndPoint)
+                        udpClient.Client = CType(tempEP, IPEndPoint)
                         udpClient.ID = clientInfo.ID()
                         udpClient.Passphrase = clientInfo.Passphrase()
                         If SecureSession() Then udpClient.Passphrase = GenerateKey()
@@ -224,20 +224,24 @@ Public Class UdpServer
                         OnClientDisconnected(clientInfo.ID())
                     End If
                 Else
-                    Dim clientID As Guid = Guid.Empty
-                    Dim clientIPEP As IPEndPoint = CType(clientEP, IPEndPoint)
-                    For Each id As Guid In m_udpClients.Keys()
-                        If m_udpClients(id).Client.Address.Equals(clientIPEP.Address()) AndAlso _
-                                m_udpClients(id).Client.Port() = clientIPEP.Port() Then
-                            clientID = id
-                            Exit For
-                        End If
-                    Next
+                    Dim remoteEP As IPEndPoint = CType(tempEP, IPEndPoint)
+                    If Not remoteEP.Equals(GetIpEndPoint(Dns.GetHostName(), Convert.ToInt32(m_configurationData("port")))) Then
+                        ' We're interested in data received from clients (other machines) and we'll ignore 
+                        ' all the data broadcasted by the server.
+                        Dim clientID As Guid = Guid.Empty
+                        For Each id As Guid In m_udpClients.Keys()
+                            If m_udpClients(id).Client.Address.Equals(remoteEP.Address()) AndAlso _
+                                    m_udpClients(id).Client.Port() = remoteEP.Port() Then
+                                clientID = id
+                                Exit For
+                            End If
+                        Next
 
-                    If SecureSession() AndAlso clientID <> Guid.Empty Then
-                        m_udpServer.DataBuffer = DecryptData(m_udpServer.DataBuffer(), m_udpClients(clientID).Passphrase(), Encryption())
+                        If SecureSession() AndAlso clientID <> Guid.Empty Then
+                            m_udpServer.DataBuffer = DecryptData(m_udpServer.DataBuffer(), m_udpClients(clientID).Passphrase(), Encryption())
+                        End If
+                        OnReceivedClientData(clientID, m_udpServer.DataBuffer())
                     End If
-                    OnReceivedClientData(clientID, m_udpServer.DataBuffer())
                 End If
 
                 m_udpServer.DataBuffer = Nothing

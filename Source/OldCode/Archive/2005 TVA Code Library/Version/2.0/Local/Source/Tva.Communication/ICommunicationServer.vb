@@ -116,6 +116,13 @@ Public Interface ICommunicationServer
     Property Protocol() As TransportProtocol
 
     ''' <summary>
+    ''' Gets the current instance of communication server.
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns>The current instance communication server.</returns>
+    ReadOnly Property This() As ICommunicationServer
+
+    ''' <summary>
     ''' Gets the server's ID.
     ''' </summary>
     ''' <value></value>

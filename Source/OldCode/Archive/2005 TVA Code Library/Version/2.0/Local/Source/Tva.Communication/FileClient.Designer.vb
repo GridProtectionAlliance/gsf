@@ -35,6 +35,7 @@ Partial Class FileClient
         InitializeComponent()
         m_receiveOnDemand = False
         m_receiveInterval = -1
+        m_startingOffset = 0
         m_fileClient = New StateKeeper(Of System.IO.FileStream)
         TimerReceiveData = New System.Timers.Timer()
         MyBase.ConnectionString = "File=DataFile.txt"

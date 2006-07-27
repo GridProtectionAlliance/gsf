@@ -390,6 +390,18 @@ Public MustInherit Class CommunicationClientBase
     End Property
 
     ''' <summary>
+    ''' Gets the current instance of communication client.
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns>The current instance communication client.</returns>
+    <Browsable(False)> _
+    Public ReadOnly Property This() As ICommunicationClient Implements ICommunicationClient.This
+        Get
+            Return Me
+        End Get
+    End Property
+
+    ''' <summary>
     ''' Gets a boolean value indicating whether the client is currently connected to the server.
     ''' </summary>
     ''' <value></value>

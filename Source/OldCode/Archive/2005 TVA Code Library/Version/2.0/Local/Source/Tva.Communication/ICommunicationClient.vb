@@ -158,6 +158,13 @@ Public Interface ICommunicationClient
     Property ClientID() As Guid
 
     ''' <summary>
+    ''' Gets the current instance of communication client.
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns>The current instance communication client.</returns>
+    ReadOnly Property This() As ICommunicationClient
+
+    ''' <summary>
     ''' Gets a boolean value indicating whether the client is currently connected to the server.
     ''' </summary>
     ''' <value></value>

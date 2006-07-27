@@ -29,6 +29,7 @@ Public Class FileClient
 
     Private m_receiveOnDemand As Boolean
     Private m_receiveInterval As Double
+    Private m_startingOffset As Long
     Private m_fileClient As StateKeeper(Of FileStream)
     Private m_connectionData As Dictionary(Of String, String)
     Private m_connectionThread As Thread
@@ -45,11 +46,12 @@ Public Class FileClient
     End Sub
 
     ''' <summary>
-    ''' Gets or sets a boolean value indicating whether receiving of data will be initiated manually by calling ReceiveData().
+    ''' Gets or sets a boolean value indicating whether receiving (reading) of data will be initiated manually 
+    ''' by calling ReceiveData().
     ''' </summary>
     ''' <value></value>
-    ''' <returns>True if receiving of data will be initiated manually; otherwise False.</returns>
-    <Description("Indicates whether receiving of data will be initiated manually by calling ReceiveData()."), Category("Data"), DefaultValue(GetType(Boolean), "False")> _
+    ''' <returns>True if receiving (reading) of data will be initiated manually; otherwise False.</returns>
+    <Description("Indicates whether receiving (reading) of data will be initiated manually by calling ReceiveData()."), Category("Data"), DefaultValue(GetType(Boolean), "False")> _
     Public Property ReceiveOnDemand() As Boolean
         Get
             Return m_receiveOnDemand
@@ -64,12 +66,12 @@ Public Class FileClient
     End Property
 
     ''' <summary>
-    ''' Gets or sets the time in milliseconds to pause before receiving the next available set of data.
+    ''' Gets or sets the time in milliseconds to pause before receiving (reading) the next available set of data.
     ''' </summary>
     ''' <value></value>
-    ''' <returns>Time in milliseconds to pause before receiving the next available set of data.</returns>
-    ''' <remarks>Set ReceiveInterval = -1 to receive data continuously without pausing.</remarks>
-    <Description("Time in milliseconds to pause before receiving the next available set of data. Set ReceiveInterval = -1 to receive data continuously without pausing."), Category("Data"), DefaultValue(GetType(Integer), "-1")> _
+    ''' <returns>Time in milliseconds to pause before receiving (reading) the next available set of data.</returns>
+    ''' <remarks>Set ReceiveInterval = -1 to receive (read) data continuously without pausing.</remarks>
+    <Description("Time in milliseconds to pause before receiving (reading) the next available set of data. Set ReceiveInterval = -1 to receive data continuously without pausing."), Category("Data"), DefaultValue(GetType(Integer), "-1")> _
     Public Property ReceiveInterval() As Double
         Get
             Return m_receiveInterval
@@ -82,6 +84,25 @@ Public Class FileClient
                     ' automatically receiving data.
                     m_receiveOnDemand = False
                 End If
+            Else
+                Throw New ArgumentOutOfRangeException("value")
+            End If
+        End Set
+    End Property
+
+    ''' <summary>
+    ''' Gets or sets the starting point relative to the beginning of the file from where the data is to be received (read).
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns>The starting point relative to the beginning of the file from where the data is to be received (read).</returns>
+    <Description("The starting point relative to the beginning of the file from where the data is to be received (read)."), Category("Data"), DefaultValue(GetType(Long), "0")> _
+    Public Property StartingOffset() As Long
+        Get
+            Return m_startingOffset
+        End Get
+        Set(ByVal value As Long)
+            If value > 0 Then
+                m_startingOffset = value
             Else
                 Throw New ArgumentOutOfRangeException("value")
             End If
@@ -188,6 +209,7 @@ Public Class FileClient
         Do While MaximumConnectionAttempts() = -1 OrElse connectionAttempts < MaximumConnectionAttempts()
             Try
                 m_fileClient.Client = New FileStream(m_connectionData("file"), FileMode.Open)
+                m_fileClient.Client.Seek(m_startingOffset, SeekOrigin.Begin)   ' Move to the specified offset.
                 OnConnected(EventArgs.Empty)
                 If Not m_receiveOnDemand Then
                     If m_receiveInterval > 0 Then

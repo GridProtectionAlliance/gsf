@@ -312,6 +312,18 @@ Public MustInherit Class CommunicationServerBase
     End Property
 
     ''' <summary>
+    ''' Gets the current instance of communication server.
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns>The current instance communication server.</returns>
+    <Browsable(False)> _
+    Public ReadOnly Property This() As ICommunicationServer Implements ICommunicationServer.This
+        Get
+            Return Me
+        End Get
+    End Property
+
+    ''' <summary>
     ''' Gets the server's ID.
     ''' </summary>
     ''' <value></value>

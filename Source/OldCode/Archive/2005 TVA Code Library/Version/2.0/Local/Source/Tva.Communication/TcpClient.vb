@@ -138,16 +138,16 @@ Public Class TcpClient
         If Not String.IsNullOrEmpty(connectionString) Then
             m_connectionData = Tva.Text.Common.ParseKeyValuePairs(connectionString)
             If m_connectionData.ContainsKey("server") AndAlso _
+                    Dns.GetHostEntry(m_connectionData("server")) IsNot Nothing AndAlso _
                     m_connectionData.ContainsKey("port") AndAlso _
-                    Dns.GetHostEntry(Convert.ToString(m_connectionData("server"))) IsNot Nothing AndAlso _
-                    ValidPortNumber(Convert.ToString(m_connectionData("port"))) Then
+                    ValidPortNumber(m_connectionData("port")) Then
                 Return True
             Else
                 ' Connection string is not in the expected format.
                 With New StringBuilder()
                     .Append("Connection string must be in the following format:")
                     .Append(Environment.NewLine())
-                    .Append("   Server=<Server name or IP>; Port=<Port Number>")
+                    .Append("   Server=<Server name or IP>; Port=<Server port number>")
                     Throw New ArgumentException(.ToString())
                 End With
             End If
