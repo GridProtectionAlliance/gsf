@@ -232,4 +232,12 @@ Public Interface ICommunicationClient
     ''' <param name="data">The binary data that is to be sent to the server.</param>
     Sub Send(ByVal data As Byte())
 
+    ''' <summary>
+    ''' Sends the specified subset of data from the data buffer to the server.
+    ''' </summary>
+    ''' <param name="data">The buffer that contains the binary data to be sent.</param>
+    ''' <param name="offset">The zero-based position in the buffer parameter at which to begin sending data.</param>
+    ''' <param name="size">The number of bytes to be sent.</param>
+    Sub Send(ByVal data As Byte(), ByVal offset As Integer, ByVal size As Integer)
+
 End Interface

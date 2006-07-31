@@ -116,7 +116,7 @@ Public Class UdpServer
 
     End Sub
 
-    Protected Overrides Sub SendPreparedDataTo(ByVal clientID As System.Guid, ByVal data() As Byte)
+    Protected Overrides Sub SendPreparedDataTo(ByVal clientID As System.Guid, ByVal data As Byte())
 
         If Enabled() AndAlso IsRunning() Then
             Dim udpClient As StateKeeper(Of IPEndPoint) = Nothing

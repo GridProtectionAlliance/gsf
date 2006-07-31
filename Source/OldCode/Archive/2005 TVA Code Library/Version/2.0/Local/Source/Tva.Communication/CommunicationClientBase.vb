@@ -530,13 +530,29 @@ Public MustInherit Class CommunicationClientBase
     ''' <param name="data">The binary data that is to be sent to the server.</param>
     Public Overridable Sub Send(ByVal data As Byte()) Implements ICommunicationClient.Send
 
+        If data IsNot Nothing AndAlso data.Length() > 0 Then
+            Send(data, 0, data.Length())
+        Else
+            Throw New ArgumentNullException("data")
+        End If
+
+    End Sub
+
+    ''' <summary>
+    ''' Sends the specified subset of data from the data buffer to the server.
+    ''' </summary>
+    ''' <param name="data">The buffer that contains the binary data to be sent.</param>
+    ''' <param name="offset">The zero-based position in the buffer parameter at which to begin sending data.</param>
+    ''' <param name="size">The number of bytes to be sent.</param>
+    Public Sub Send(ByVal data As Byte(), ByVal offset As Integer, ByVal size As Integer) Implements ICommunicationClient.Send
+
         If m_enabled AndAlso m_isConnected Then
             If data IsNot Nothing AndAlso data.Length() > 0 Then
-                data = GetPreparedData(data)
-                If data.Length() <= MaximumDataSize Then
-                    'SendPreparedData(data)
+                Dim dataToSend As Byte() = GetPreparedData(Tva.IO.Common.CopyBuffer(data, offset, size))
+                If dataToSend.Length() <= MaximumDataSize Then
+                    'SendPreparedData(dataToSend)
                     ' Begin sending data on a seperate thread.
-                    Tva.Threading.RunThread.ExecuteNonPublicMethod(Me, "SendPreparedData", data)
+                    Tva.Threading.RunThread.ExecuteNonPublicMethod(Me, "SendPreparedData", dataToSend)
                 Else
                     ' Prepared data is too large to be sent.
                     Throw New ArgumentException("Size of the data to be sent exceeds the maximum data size of " & MaximumDataSize & " bytes.")
@@ -600,7 +616,7 @@ Public MustInherit Class CommunicationClientBase
     Protected Sub OnConnected(ByVal e As EventArgs)
 
         m_isConnected = True
-        m_connectTime = Date.Now.Ticks  ' Save the time when the client connected to the server.
+        m_connectTime = System.DateTime.Now.Ticks  ' Save the time when the client connected to the server.
         m_disconnectTime = 0
         m_totalBytesSent = 0    ' Reset the number of bytes sent and received between the client and server.
         m_totalBytesReceived = 0
@@ -617,7 +633,7 @@ Public MustInherit Class CommunicationClientBase
 
         m_serverID = Guid.Empty
         m_isConnected = False
-        m_disconnectTime = Date.Now.Ticks() ' Save the time when client was disconnected from the server.
+        m_disconnectTime = System.DateTime.Now.Ticks() ' Save the time when client was disconnected from the server.
         RaiseEvent Disconnected(Me, e)
 
     End Sub

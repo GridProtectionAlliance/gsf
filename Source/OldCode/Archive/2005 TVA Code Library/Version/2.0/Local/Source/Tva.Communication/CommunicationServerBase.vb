@@ -448,13 +448,30 @@ Public MustInherit Class CommunicationServerBase
     ''' <param name="data">The binary data that is to be sent to the client.</param>
     Public Overridable Sub SendTo(ByVal clientID As Guid, ByVal data As Byte()) Implements ICommunicationServer.SendTo
 
+        If data IsNot Nothing AndAlso data.Length() > 0 Then
+            SendTo(clientID, data, 0, data.Length())
+        Else
+            Throw New ArgumentNullException("data")
+        End If
+
+    End Sub
+
+    ''' <summary>
+    ''' Sends the specified subset of data from the data buffer to the specified client.
+    ''' </summary>
+    ''' <param name="clientID">ID of the client to which the data is to be sent.</param>
+    ''' <param name="data">The buffer that contains the binary data to be sent.</param>
+    ''' <param name="offset">The zero-based position in the buffer parameter at which to begin sending data.</param>
+    ''' <param name="size">The number of bytes to be sent.</param>
+    Public Sub SendTo(ByVal clientID As System.Guid, ByVal data As Byte(), ByVal offset As Integer, ByVal size As Integer) Implements ICommunicationServer.SendTo
+
         If m_enabled AndAlso m_isRunning Then
             If data IsNot Nothing AndAlso data.Length() > 0 Then
-                data = GetPreparedData(data)
-                If data.Length() <= MaximumDataSize Then
-                    'SendPreparedDataTo(clientID, data)
+                Dim dataToSend As Byte() = GetPreparedData(Tva.IO.Common.CopyBuffer(data, offset, size))
+                If dataToSend.Length() <= MaximumDataSize Then
+                    'SendPreparedDataTo(clientID, dataToSend)
                     ' Begin sending data on a seperate thread.
-                    Tva.Threading.RunThread.ExecuteNonPublicMethod(Me, "SendPreparedDataTo", clientID, data)
+                    Tva.Threading.RunThread.ExecuteNonPublicMethod(Me, "SendPreparedDataTo", clientID, dataToSend)
                 Else
                     ' Prepared data is too large to be sent.
                     Throw New ArgumentException("Size of the data to be sent exceeds the maximum data size of " & MaximumDataSize & " bytes.")
@@ -492,14 +509,30 @@ Public MustInherit Class CommunicationServerBase
     ''' <param name="data">The binary data that is to sent to the subscribed clients.</param>
     Public Overridable Sub Multicast(ByVal data As Byte()) Implements ICommunicationServer.Multicast
 
+        If data IsNot Nothing AndAlso data.Length() > 0 Then
+            Multicast(data, 0, data.Length())
+        Else
+            Throw New ArgumentNullException("data")
+        End If
+
+    End Sub
+
+    ''' <summary>
+    ''' Sends the specified subset of data from the data buffer to all of the subscribed clients.
+    ''' </summary>
+    ''' <param name="data">The buffer that contains the binary data to be sent.</param>
+    ''' <param name="offset">The zero-based position in the buffer parameter at which to begin sending data.</param>
+    ''' <param name="size">The number of bytes to be sent.</param>
+    Public Sub Multicast(ByVal data As Byte(), ByVal offset As Integer, ByVal size As Integer) Implements ICommunicationServer.Multicast
+
         If m_enabled AndAlso m_isRunning Then
             If data IsNot Nothing AndAlso data.Length() > 0 Then
-                data = GetPreparedData(data)
-                If data.Length() <= MaximumDataSize Then
+                Dim dataToSend As Byte() = GetPreparedData(Tva.IO.Common.CopyBuffer(data, offset, size))
+                If dataToSend.Length() <= MaximumDataSize Then
                     For Each clientID As Guid In m_clientIDs
-                        'SendPreparedDataTo(clientID, data)
+                        'SendPreparedDataTo(clientID, dataToSend)
                         ' Begin sending data on a seperate thread.
-                        Tva.Threading.RunThread.ExecuteNonPublicMethod(Me, "SendPreparedDataTo", clientID, data)
+                        Tva.Threading.RunThread.ExecuteNonPublicMethod(Me, "SendPreparedDataTo", clientID, dataToSend)
                     Next
                 Else
                     ' Prepared data is too large to be sent.
@@ -525,7 +558,7 @@ Public MustInherit Class CommunicationServerBase
     Protected Overridable Sub OnServerStarted(ByVal e As EventArgs)
 
         m_isRunning = True
-        m_startTime = Date.Now.Ticks()  ' Save the time when server is started.
+        m_startTime = System.DateTime.Now.Ticks()  ' Save the time when server is started.
         m_stopTime = 0
         RaiseEvent ServerStarted(Me, e)
 
@@ -539,7 +572,7 @@ Public MustInherit Class CommunicationServerBase
     Protected Overridable Sub OnServerStopped(ByVal e As EventArgs)
 
         m_isRunning = False
-        m_stopTime = Date.Now.Ticks()   ' Save the time when server is stopped.
+        m_stopTime = System.DateTime.Now.Ticks()   ' Save the time when server is stopped.
         RaiseEvent ServerStopped(Me, e)
 
     End Sub

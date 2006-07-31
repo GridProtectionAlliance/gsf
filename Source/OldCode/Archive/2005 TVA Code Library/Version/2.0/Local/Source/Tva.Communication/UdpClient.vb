@@ -114,7 +114,7 @@ Public Class UdpClient
         End If
     End Sub
 
-    Protected Overrides Sub SendPreparedData(ByVal data() As Byte)
+    Protected Overrides Sub SendPreparedData(ByVal data As Byte())
 
         If Enabled() AndAlso IsConnected() Then
             If SecureSession() Then data = EncryptData(data, m_udpClient.Passphrase(), Encryption())

@@ -189,6 +189,15 @@ Public Interface ICommunicationServer
     Sub SendTo(ByVal clientID As Guid, ByVal data As Byte())
 
     ''' <summary>
+    ''' Sends the specified subset of data from the data buffer to the specified client.
+    ''' </summary>
+    ''' <param name="clientID">ID of the client to which the data is to be sent.</param>
+    ''' <param name="data">The buffer that contains the binary data to be sent.</param>
+    ''' <param name="offset">The zero-based position in the buffer parameter at which to begin sending data.</param>
+    ''' <param name="size">The number of bytes to be sent.</param>
+    Sub SendTo(ByVal clientID As Guid, ByVal data As Byte(), ByVal offset As Integer, ByVal size As Integer)
+
+    ''' <summary>
     ''' Sends data to all of the subscribed clients.
     ''' </summary>
     ''' <param name="data">The plain-text data that is to sent to the subscribed clients.</param>
@@ -205,5 +214,13 @@ Public Interface ICommunicationServer
     ''' </summary>
     ''' <param name="data">The binary data that is to sent to the subscribed clients.</param>
     Sub Multicast(ByVal data As Byte())
+
+    ''' <summary>
+    ''' Sends the specified subset of data from the data buffer to all of the subscribed clients.
+    ''' </summary>
+    ''' <param name="data">The buffer that contains the binary data to be sent.</param>
+    ''' <param name="offset">The zero-based position in the buffer parameter at which to begin sending data.</param>
+    ''' <param name="size">The number of bytes to be sent.</param>
+    Sub Multicast(ByVal data As Byte(), ByVal offset As Integer, ByVal size As Integer)
 
 End Interface

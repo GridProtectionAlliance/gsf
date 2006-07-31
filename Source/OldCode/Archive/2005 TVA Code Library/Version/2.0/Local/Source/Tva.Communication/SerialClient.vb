@@ -54,7 +54,7 @@ Public Class SerialClient
 
     End Sub
 
-    Protected Overrides Sub SendPreparedData(ByVal data() As Byte)
+    Protected Overrides Sub SendPreparedData(ByVal data As Byte())
 
         If Enabled() And IsConnected() Then
             OnSendDataBegin(data)

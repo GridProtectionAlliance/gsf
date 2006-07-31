@@ -166,7 +166,7 @@ Public Class FileClient
     End Sub
 
     <EditorBrowsable(EditorBrowsableState.Never)> _
-    Protected Overrides Sub SendPreparedData(ByVal data() As Byte)
+    Protected Overrides Sub SendPreparedData(ByVal data As Byte())
 
         Throw New NotSupportedException()
 
