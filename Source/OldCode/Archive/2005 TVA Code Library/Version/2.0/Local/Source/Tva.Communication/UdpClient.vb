@@ -40,7 +40,7 @@ Imports Tva.Communication.CommunicationHelper
 
 Public Class UdpClient
 
-    Private m_packetAware As Boolean
+    Private m_payloadAware As Boolean
     Private m_udpServer As IPEndPoint
     Private m_udpClient As StateKeeper(Of Socket)
     Private m_connectionData As Dictionary(Of String, String)
@@ -53,12 +53,12 @@ Public Class UdpClient
     Private Const MaximumPacketSize As Integer = 32768
 
     <Category("Data"), DefaultValue(GetType(Boolean), "True")> _
-    Public Property PacketAware() As Boolean
+    Public Property PayloadAware() As Boolean
         Get
-            Return m_packetAware
+            Return m_payloadAware
         End Get
         Set(ByVal value As Boolean)
-            m_packetAware = value
+            m_payloadAware = value
         End Set
     End Property
 
@@ -106,7 +106,7 @@ Public Class UdpClient
                 ' Handshaking is enabled (making the session connectionful), so send a goodbye message to 
                 ' the server indicating that the session has ended.
                 Dim goodbye As Byte() = GetPreparedData(GetBytes(New GoodbyeMessage(m_udpClient.ID())))
-                If m_packetAware Then goodbye = AddPacketHeader(goodbye)
+                If m_payloadAware Then goodbye = AddPacketHeader(goodbye)
                 m_udpClient.Client.SendTo(goodbye, m_udpServer)
             End If
 
@@ -118,7 +118,7 @@ Public Class UdpClient
 
         If Enabled() AndAlso IsConnected() Then
             If SecureSession() Then data = EncryptData(data, m_udpClient.Passphrase(), Encryption())
-            If m_packetAware Then data = AddPacketHeader(data)
+            If m_payloadAware Then data = AddPacketHeader(data)
 
             ' Since we can only send MaximumPacketSize bytes in a given packet, we may need to break the actual 
             ' packet into a series of packets if the packet's size exceed the MaximumPacketSize.
@@ -170,7 +170,7 @@ Public Class UdpClient
                     If Handshake() Then
                         ' Handshaking is required, so we'll send our information to the server.
                         Dim myInfo As Byte() = GetPreparedData(GetBytes(New HandshakeMessage(m_udpClient.ID(), m_udpClient.Passphrase())))
-                        If m_packetAware Then myInfo = AddPacketHeader(myInfo)
+                        If m_payloadAware Then myInfo = AddPacketHeader(myInfo)
                         m_udpClient.Client.SendTo(myInfo, m_udpServer)
                     Else
                         OnConnected(EventArgs.Empty)
@@ -207,7 +207,7 @@ Public Class UdpClient
                     Throw
                 End Try
 
-                If m_packetAware Then
+                If m_payloadAware Then
                     If m_udpClient.PacketSize() = -1 Then
                         ' We have not yet received the payload size. 
                         If HasBeginMarker(m_udpClient.DataBuffer) Then

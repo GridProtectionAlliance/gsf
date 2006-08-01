@@ -30,7 +30,7 @@ Imports Tva.Communication.CommunicationHelper
 ''' </summary>
 Public Class TcpClient
 
-    Private m_packetAware As Boolean
+    Private m_payloadAware As Boolean
     Private m_tcpClient As StateKeeper(Of Socket)
     Private m_connectionThread As Thread
     Private m_connectionData As Dictionary(Of String, String)
@@ -50,21 +50,20 @@ Public Class TcpClient
     End Sub
 
     ''' <summary>
-    ''' Gets or sets a boolean value indicating whether the server will send the size of the packet before 
-    ''' sending the actual packet.
+    ''' Gets or sets a boolean value indicating whether the server will send the payload size before sending the payload.
     ''' </summary>
     ''' <value></value>
     ''' <returns>
-    ''' True if the server will send the size of the packet before sending the actual packet; otherwise False.
+    ''' True if the server will send the payload size before sending the payload; otherwise False.
     ''' </returns>
     ''' <remarks>This property must be set to True if either Encryption or Compression is enabled.</remarks>
-    <Description("Indicates whether the server will send the size of the packet before sending the actual packet. Set to True if either Encryption or Compression is enabled."), Category("Data"), DefaultValue(GetType(Boolean), "True")> _
-    Public Property PacketAware() As Boolean
+    <Description("Indicates whether the server will send the payload size before sending the payload. Set to True if either Encryption or Compression is enabled."), Category("Data"), DefaultValue(GetType(Boolean), "True")> _
+    Public Property PayloadAware() As Boolean
         Get
-            Return m_packetAware
+            Return m_payloadAware
         End Get
         Set(ByVal value As Boolean)
-            m_packetAware = value
+            m_payloadAware = value
         End Set
     End Property
 
@@ -118,7 +117,7 @@ Public Class TcpClient
             If SecureSession() Then data = EncryptData(data, m_tcpClient.Passphrase(), Encryption())
             ' We'll send data over the wire asynchronously for improved performance.
             OnSendDataBegin(data)
-            If m_packetAware Then
+            If m_payloadAware Then
                 Dim packetHeader As Byte() = BitConverter.GetBytes(data.Length())
                 m_tcpClient.Client.BeginSend(packetHeader, 0, packetHeader.Length(), SocketFlags.None, Nothing, Nothing)
             End If
@@ -213,7 +212,7 @@ Public Class TcpClient
                 ' Handshaking is to be performed so we'll send our information to the server.
                 Dim myInfo As Byte() = _
                     GetPreparedData(GetBytes(New HandshakeMessage(ClientID(), HandshakePassphrase())))
-                If m_packetAware Then m_tcpClient.Client.Send(BitConverter.GetBytes(myInfo.Length()))
+                If m_payloadAware Then m_tcpClient.Client.Send(BitConverter.GetBytes(myInfo.Length()))
                 m_tcpClient.Client.Send(myInfo)
             Else
                 ' Handshaking is not to be performed.
@@ -223,7 +222,7 @@ Public Class TcpClient
             Do While True   ' Wait for data from the server
                 If m_tcpClient.DataBuffer() Is Nothing Then
                     Dim bufferSize As Integer = PacketHeaderSize
-                    If Not m_packetAware Then bufferSize = ReceiveBufferSize()
+                    If Not m_payloadAware Then bufferSize = ReceiveBufferSize()
                     m_tcpClient.DataBuffer = CreateArray(Of Byte)(bufferSize)
                 End If
 
@@ -247,7 +246,7 @@ Public Class TcpClient
                 End Try
 
                 If dataLength > 0 Then
-                    If m_packetAware Then
+                    If m_payloadAware Then
                         If m_tcpClient.PacketSize() = -1 AndAlso m_tcpClient.BytesReceived() = PacketHeaderSize Then
                             ' Size of the packet has been received.
                             m_tcpClient.PacketSize = BitConverter.ToInt32(m_tcpClient.DataBuffer(), 0)

@@ -28,7 +28,7 @@ Imports Tva.Security.Cryptography.Common
 
 Public Class UdpServer
 
-    Private m_packetAware As Boolean
+    Private m_payloadAware As Boolean
     Private m_udpServer As StateKeeper(Of Socket)
     Private m_udpClients As Dictionary(Of Guid, StateKeeper(Of IPEndPoint))
     Private m_pendingUdpClients As List(Of IPAddress)
@@ -46,12 +46,12 @@ Public Class UdpServer
     End Sub
 
     <Category("Data"), DefaultValue(GetType(Boolean), "True")> _
-    Public Property PacketAware() As Boolean
+    Public Property PayloadAware() As Boolean
         Get
-            Return m_packetAware
+            Return m_payloadAware
         End Get
         Set(ByVal value As Boolean)
-            m_packetAware = value
+            m_payloadAware = value
         End Set
     End Property
 
@@ -101,7 +101,7 @@ Public Class UdpServer
             For Each udpClientID As Guid In m_udpClients.Keys()
                 If Handshake() Then
                     Dim goodbye As Byte() = GetPreparedData(GetBytes(New GoodbyeMessage(udpClientID)))
-                    If m_packetAware Then goodbye = AddBeginHeader(goodbye)
+                    If m_payloadAware Then goodbye = AddBeginHeader(goodbye)
                     m_udpServer.Client.SendTo(goodbye, m_udpClients(udpClientID).Client())
                 End If
                 OnClientDisconnected(udpClientID)
@@ -122,7 +122,7 @@ Public Class UdpServer
             Dim udpClient As StateKeeper(Of IPEndPoint) = Nothing
             If m_udpClients.TryGetValue(clientID, udpClient) Then
                 If SecureSession() Then data = EncryptData(data, udpClient.Passphrase(), Encryption())
-                If m_packetAware Then data = AddBeginHeader(data)
+                If m_payloadAware Then data = AddBeginHeader(data)
 
                 For i As Integer = 0 To IIf(data.Length() > MaximumPacketSize, data.Length() - 1, 0) Step MaximumPacketSize
                     Dim packetSize As Integer = MaximumPacketSize
@@ -173,7 +173,7 @@ Public Class UdpServer
                     m_udpServer.Client.ReceiveFrom(m_udpServer.DataBuffer, m_udpServer.BytesReceived, _
                         m_udpServer.DataBuffer.Length - m_udpServer.BytesReceived, SocketFlags.None, tempEP)
 
-                If m_packetAware Then
+                If m_payloadAware Then
                     If m_udpServer.PacketSize() = -1 Then
                         ' We have not yet received the payload size. 
                         If HasBeginMarker(m_udpServer.DataBuffer) Then
@@ -209,7 +209,7 @@ Public Class UdpServer
                         If SecureSession() Then udpClient.Passphrase = GenerateKey()
 
                         Dim myInfo As Byte() = GetPreparedData(GetBytes(New HandshakeMessage(m_udpServer.ID(), udpClient.Passphrase())))
-                        If m_packetAware Then myInfo = AddBeginHeader(myInfo)
+                        If m_payloadAware Then myInfo = AddBeginHeader(myInfo)
                         m_udpServer.Client.SendTo(myInfo, udpClient.Client())
 
                         m_pendingUdpClients.Remove(udpClient.Client.Address())

@@ -32,7 +32,7 @@ Imports Tva.Security.Cryptography.Common
 ''' </summary>
 Public Class TcpServer
 
-    Private m_packetAware As Boolean
+    Private m_payloadAware As Boolean
     Private m_tcpServer As Socket
     Private m_tcpClients As Dictionary(Of Guid, StateKeeper(Of Socket))
     Private m_pendingTcpClients As List(Of StateKeeper(Of Socket))
@@ -53,21 +53,20 @@ Public Class TcpServer
     End Sub
 
     ''' <summary>
-    ''' Gets or sets a boolean value indicating whether the server will send the size of the packet before 
-    ''' sending the actual packet.
+    ''' Gets or sets a boolean value indicating whether the server will send the payload size before sending the payload.
     ''' </summary>
     ''' <value></value>
     ''' <returns>
-    ''' True if the server will send the size of the packet before sending the actual packet; otherwise False.
+    ''' True if the server will send the payload size before sending the payload; otherwise False.
     ''' </returns>
     ''' <remarks>This property must be set to True if either Encryption or Compression is enabled.</remarks>
-    <Description("Indicates whether the server will send the size of the packet before sending the actual packet. Set to True if either Encryption or Compression is enabled."), Category("Data"), DefaultValue(GetType(Boolean), "True")> _
-    Public Property PacketAware() As Boolean
+    <Description("Indicates whether the server will send the payload size before sending the payload. Set to True if either Encryption or Compression is enabled."), Category("Data"), DefaultValue(GetType(Boolean), "True")> _
+    Public Property PayloadAware() As Boolean
         Get
-            Return m_packetAware
+            Return m_payloadAware
         End Get
         Set(ByVal value As Boolean)
-            m_packetAware = value
+            m_payloadAware = value
         End Set
     End Property
 
@@ -128,7 +127,7 @@ Public Class TcpServer
             If m_tcpClients.TryGetValue(clientID, tcpClient) Then
                 If SecureSession() Then data = EncryptData(data, tcpClient.Passphrase(), Encryption())
                 ' We'll send data over the wire asynchronously for improved performance.
-                If m_packetAware Then
+                If m_payloadAware Then
                     Dim packetHeader As Byte() = BitConverter.GetBytes(data.Length())
                     tcpClient.Client.BeginSend(packetHeader, 0, packetHeader.Length(), SocketFlags.None, Nothing, Nothing)
                 End If
@@ -233,7 +232,7 @@ Public Class TcpServer
             Do While True   ' Wait for data from the client.
                 If tcpClient.DataBuffer() Is Nothing Then
                     Dim bufferSize As Integer = PacketHeaderSize
-                    If Not m_packetAware Then bufferSize = ReceiveBufferSize()
+                    If Not m_payloadAware Then bufferSize = ReceiveBufferSize()
                     tcpClient.DataBuffer = CreateArray(Of Byte)(bufferSize)
                 End If
 
@@ -242,7 +241,7 @@ Public Class TcpServer
                 tcpClient.BytesReceived += dataLength
 
                 If dataLength > 0 Then
-                    If m_packetAware Then
+                    If m_payloadAware Then
                         If tcpClient.PacketSize() = -1 AndAlso tcpClient.BytesReceived() = PacketHeaderSize Then
                             ' Size of the packet has been received.
                             tcpClient.PacketSize = BitConverter.ToInt32(tcpClient.DataBuffer(), 0)
@@ -271,7 +270,7 @@ Public Class TcpServer
                                 clientInfo.Passphrase() = HandshakePassphrase() Then
                             If SecureSession() Then tcpClient.Passphrase = GenerateKey()
                             Dim myInfo As Byte() = GetPreparedData(GetBytes(New HandshakeMessage(ServerID(), tcpClient.Passphrase())))
-                            If m_packetAware Then tcpClient.Client.Send(BitConverter.GetBytes(myInfo.Length()))
+                            If m_payloadAware Then tcpClient.Client.Send(BitConverter.GetBytes(myInfo.Length()))
                             tcpClient.Client.ReceiveTimeout = 0
                             tcpClient.Client.Send(myInfo)   ' Send server info to the client.
                             tcpClient.ID = clientInfo.ID()
