@@ -216,12 +216,12 @@ Public Class MultiProtocolFrameParser
             Select Case m_transportProtocol
                 Case TransportProtocol.Tcp
                     Dim tcpClient As New TcpClient
-                    tcpClient.PacketAware = False
+                    tcpClient.PayloadAware = False
                     tcpClient.ReceiveBufferSize = m_bufferSize
                     m_communicationClient = tcpClient
                 Case TransportProtocol.Udp
                     Dim udpClient As New UdpClient
-                    udpClient.PacketAware = False
+                    udpClient.PayloadAware = False
                     udpClient.ReceiveBufferSize = m_bufferSize
                     m_communicationClient = udpClient
                 Case Communication.TransportProtocol.File
