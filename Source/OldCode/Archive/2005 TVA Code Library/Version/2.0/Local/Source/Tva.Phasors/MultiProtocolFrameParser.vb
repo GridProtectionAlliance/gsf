@@ -217,23 +217,25 @@ Public Class MultiProtocolFrameParser
                 Case TransportProtocol.Tcp
                     Dim tcpClient As New TcpClient
                     tcpClient.PayloadAware = False
-                    tcpClient.ReceiveBufferSize = m_bufferSize
                     m_communicationClient = tcpClient
                 Case TransportProtocol.Udp
                     Dim udpClient As New UdpClient
                     udpClient.PayloadAware = False
-                    udpClient.ReceiveBufferSize = m_bufferSize
                     m_communicationClient = udpClient
-                Case Communication.TransportProtocol.File
-                    Dim fileClient = New FileClient
-                    fileClient.ReceiveInterval = m_definedFrameRate
-                    fileClient.ReceiveBufferSize = 32
-                    m_communicationClient = fileClient
                 Case TransportProtocol.Serial
-                    ' TODO: Configure COM link...
+                    m_communicationClient = New SerialClient
+                Case Communication.TransportProtocol.File
+                    Dim fileClient As New FileClient
+                    fileClient.ReceiveInterval = m_definedFrameRate
+                    m_communicationClient = fileClient
             End Select
 
             With m_communicationClient
+                If .Protocol = Communication.TransportProtocol.File Then
+                    .ReceiveBufferSize = 32
+                Else
+                    .ReceiveBufferSize = m_bufferSize
+                End If
                 .MaximumConnectionAttempts = 1
                 .ConnectionString = m_connectionString
                 .Handshake = False
