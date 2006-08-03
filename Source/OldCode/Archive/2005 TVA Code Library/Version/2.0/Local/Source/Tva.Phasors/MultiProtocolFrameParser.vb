@@ -554,7 +554,15 @@ Public Class MultiProtocolFrameParser
     Private Sub m_communicationClient_Connected(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles m_communicationClient.Connected
 
         RaiseEvent Connected()
+
+        ' Handle reception of configuration frame - in case of device that only responds to commands when
+        ' not sending real-time data, such as the SEL 421, we disable real-time data stream first...
+        SendDeviceCommand(DeviceCommand.DisableRealTimeData)
+        Thread.Sleep(100)
+
         SendDeviceCommand(DeviceCommand.SendConfigurationFrame2)
+        Thread.Sleep(100)
+
         SendDeviceCommand(DeviceCommand.EnableRealTimeData)
 
     End Sub
