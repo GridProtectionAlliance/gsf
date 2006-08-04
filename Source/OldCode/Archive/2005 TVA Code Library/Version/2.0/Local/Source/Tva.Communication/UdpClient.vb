@@ -52,6 +52,11 @@ Public Class UdpClient
     ''' </summary>
     Private Const MaximumPacketSize As Integer = 32768
 
+    Public Sub New(ByVal connectionString As String)
+        MyClass.New()
+        MyBase.ConnectionString = ConnectionString
+    End Sub
+
     <Category("Data"), DefaultValue(GetType(Boolean), "True")> _
     Public Property PayloadAware() As Boolean
         Get

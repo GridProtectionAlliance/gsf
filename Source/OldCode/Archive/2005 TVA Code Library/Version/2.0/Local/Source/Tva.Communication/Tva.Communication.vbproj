@@ -46,6 +46,7 @@
     <Import Include="System.Diagnostics" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Common.vb" />
     <Compile Include="CommunicationClientBase.Designer.vb">
       <DependentUpon>CommunicationClientBase.vb</DependentUpon>
     </Compile>
