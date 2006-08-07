@@ -33,7 +33,7 @@ Partial Class TcpClient
 
         'This call is required by the Component Designer.
         InitializeComponent()
-        m_payloadAware = True
+        m_payloadAware = False
         MyBase.ConnectionString = "Server=localhost; Port=8888"
         MyBase.Protocol = TransportProtocol.Tcp
 

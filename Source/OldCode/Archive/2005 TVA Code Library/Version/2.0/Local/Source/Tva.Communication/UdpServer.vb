@@ -45,7 +45,7 @@ Public Class UdpServer
         MyBase.ConfigurationString = configurationString
     End Sub
 
-    <Category("Data"), DefaultValue(GetType(Boolean), "True")> _
+    <Category("Data"), DefaultValue(GetType(Boolean), "False")> _
     Public Property PayloadAware() As Boolean
         Get
             Return m_payloadAware

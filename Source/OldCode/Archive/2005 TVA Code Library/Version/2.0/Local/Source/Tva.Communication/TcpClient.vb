@@ -57,7 +57,7 @@ Public Class TcpClient
     ''' True if the server will send the payload size before sending the payload; otherwise False.
     ''' </returns>
     ''' <remarks>This property must be set to True if either Encryption or Compression is enabled.</remarks>
-    <Description("Indicates whether the server will send the payload size before sending the payload. Set to True if either Encryption or Compression is enabled."), Category("Data"), DefaultValue(GetType(Boolean), "True")> _
+    <Description("Indicates whether the server will send the payload size before sending the payload. Set to True if either Encryption or Compression is enabled."), Category("Data"), DefaultValue(GetType(Boolean), "False")> _
     Public Property PayloadAware() As Boolean
         Get
             Return m_payloadAware
