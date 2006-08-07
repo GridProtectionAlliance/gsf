@@ -71,7 +71,11 @@ Public Class UdpClient
 
         If Enabled() AndAlso Not IsConnected() AndAlso ValidConnectionString(ConnectionString()) Then
             ' Initialize the server endpoint that will be used when sending data to the server.
-            m_udpServer = GetIpEndPoint(m_connectionData("server"), Convert.ToInt32(m_connectionData("remoteport")))
+            Dim server As String = "localhost"
+            Dim remotePort As Integer = 0
+            If m_connectionData.ContainsKey("server") Then server = m_connectionData("server")
+            If m_connectionData.ContainsKey("remoteport") Then remotePort = Convert.ToInt32(m_connectionData("remoteport"))
+            m_udpServer = GetIpEndPoint(server, remotePort)
 
             ' Use the specified port only if handshaking is disabled otherwise let the system pick a port for us.
             Dim localPort As Integer = 0
@@ -142,11 +146,7 @@ Public Class UdpClient
 
         If Not String.IsNullOrEmpty(connectionString) Then
             m_connectionData = Tva.Text.Common.ParseKeyValuePairs(connectionString)
-            If m_connectionData.ContainsKey("server") AndAlso _
-                    Dns.GetHostEntry(m_connectionData("server")) IsNot Nothing AndAlso _
-                    m_connectionData.ContainsKey("remoteport") AndAlso _
-                    ValidPortNumber(m_connectionData("remoteport")) AndAlso _
-                    m_connectionData.ContainsKey("localport") AndAlso _
+            If m_connectionData.ContainsKey("localport") AndAlso _
                     ValidPortNumber(m_connectionData("localport")) Then
                 Return True
             Else
