@@ -92,8 +92,8 @@ Public Class Schedule
         Private m_elementType As ElementType
         Private m_valueType As ValueType
         Private m_values As Integer()
-        'Private m_minValue As Integer
-        'Private m_maxValue As Integer
+        Private m_minValue As Integer
+        Private m_maxValue As Integer
 
         Public Enum ElementType As Integer
             Minute
