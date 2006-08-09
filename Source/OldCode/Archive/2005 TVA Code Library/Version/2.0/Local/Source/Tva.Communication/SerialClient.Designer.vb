@@ -19,7 +19,7 @@ Partial Class SerialClient
         'This call is required by the Component Designer.
         InitializeComponent()
         m_serialClient = New System.IO.Ports.SerialPort()
-        MyBase.ConnectionString = "Port=COM1; BaudRate=9600; Parity=None; StopBits=One; DataBits=8"
+        MyBase.ConnectionString = "Port=COM1; BaudRate=9600; Parity=None; StopBits=One; DataBits=8; DtrEnable=False; RtsEnable=False"
         MyBase.Protocol = TransportProtocol.Serial
 
     End Sub

@@ -35,6 +35,8 @@ Public Class SerialClient
                 .DataBits = Convert.ToInt32(m_connectionData("databits"))
                 .Parity = CType(System.Enum.Parse(GetType(Parity), m_connectionData("parity")), Parity)
                 .StopBits = CType(System.Enum.Parse(GetType(StopBits), m_connectionData("stopbits")), StopBits)
+                If m_connectionData.ContainsKey("dtrenable") Then .DtrEnable = Convert.ToBoolean(m_connectionData("dtrenable"))
+                If m_connectionData.ContainsKey("rtsenable") Then .RtsEnable = Convert.ToBoolean(m_connectionData("rtsenable"))
             End With
 
             m_connectionThread = New Thread(AddressOf ConnectToPort)
