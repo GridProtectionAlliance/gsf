@@ -53,7 +53,7 @@ Namespace UI
             Me.TabControlInformation.Location = New System.Drawing.Point(12, 68)
             Me.TabControlInformation.Name = "TabControlInformation"
             Me.TabControlInformation.SelectedIndex = 0
-            Me.TabControlInformation.Size = New System.Drawing.Size(370, 203)
+            Me.TabControlInformation.Size = New System.Drawing.Size(410, 253)
             Me.TabControlInformation.TabIndex = 2
             '
             'TabPageDisclaimer
@@ -62,7 +62,7 @@ Namespace UI
             Me.TabPageDisclaimer.Location = New System.Drawing.Point(4, 22)
             Me.TabPageDisclaimer.Name = "TabPageDisclaimer"
             Me.TabPageDisclaimer.Padding = New System.Windows.Forms.Padding(3)
-            Me.TabPageDisclaimer.Size = New System.Drawing.Size(362, 177)
+            Me.TabPageDisclaimer.Size = New System.Drawing.Size(402, 227)
             Me.TabPageDisclaimer.TabIndex = 0
             Me.TabPageDisclaimer.Text = "Disclaimer"
             Me.TabPageDisclaimer.UseVisualStyleBackColor = True
@@ -70,10 +70,11 @@ Namespace UI
             'RichTextBoxDisclaimer
             '
             Me.RichTextBoxDisclaimer.Dock = System.Windows.Forms.DockStyle.Fill
+            Me.RichTextBoxDisclaimer.Font = New System.Drawing.Font("Trebuchet MS", 9.75!, System.Drawing.FontStyle.Bold)
             Me.RichTextBoxDisclaimer.Location = New System.Drawing.Point(3, 3)
             Me.RichTextBoxDisclaimer.Name = "RichTextBoxDisclaimer"
             Me.RichTextBoxDisclaimer.ReadOnly = True
-            Me.RichTextBoxDisclaimer.Size = New System.Drawing.Size(356, 171)
+            Me.RichTextBoxDisclaimer.Size = New System.Drawing.Size(396, 221)
             Me.RichTextBoxDisclaimer.TabIndex = 0
             Me.RichTextBoxDisclaimer.Text = ""
             '
@@ -83,7 +84,7 @@ Namespace UI
             Me.TabPageApplication.Location = New System.Drawing.Point(4, 22)
             Me.TabPageApplication.Name = "TabPageApplication"
             Me.TabPageApplication.Padding = New System.Windows.Forms.Padding(3)
-            Me.TabPageApplication.Size = New System.Drawing.Size(362, 177)
+            Me.TabPageApplication.Size = New System.Drawing.Size(407, 227)
             Me.TabPageApplication.TabIndex = 1
             Me.TabPageApplication.Text = "Application"
             Me.TabPageApplication.UseVisualStyleBackColor = True
@@ -95,7 +96,7 @@ Namespace UI
             Me.ListViewApplicationInfo.FullRowSelect = True
             Me.ListViewApplicationInfo.Location = New System.Drawing.Point(3, 3)
             Me.ListViewApplicationInfo.Name = "ListViewApplicationInfo"
-            Me.ListViewApplicationInfo.Size = New System.Drawing.Size(356, 171)
+            Me.ListViewApplicationInfo.Size = New System.Drawing.Size(401, 221)
             Me.ListViewApplicationInfo.TabIndex = 0
             Me.ListViewApplicationInfo.UseCompatibleStateImageBehavior = False
             Me.ListViewApplicationInfo.View = System.Windows.Forms.View.Details
@@ -103,12 +104,12 @@ Namespace UI
             'ColumnHeaderApplicationKey
             '
             Me.ColumnHeaderApplicationKey.Text = "Key"
-            Me.ColumnHeaderApplicationKey.Width = 102
+            Me.ColumnHeaderApplicationKey.Width = 110
             '
             'ColumnHeaderApplicationValue
             '
             Me.ColumnHeaderApplicationValue.Text = "Value"
-            Me.ColumnHeaderApplicationValue.Width = 227
+            Me.ColumnHeaderApplicationValue.Width = 260
             '
             'TabPageAssemblies
             '
@@ -116,7 +117,7 @@ Namespace UI
             Me.TabPageAssemblies.Controls.Add(Me.ComboBoxAssemblies)
             Me.TabPageAssemblies.Location = New System.Drawing.Point(4, 22)
             Me.TabPageAssemblies.Name = "TabPageAssemblies"
-            Me.TabPageAssemblies.Size = New System.Drawing.Size(362, 177)
+            Me.TabPageAssemblies.Size = New System.Drawing.Size(407, 227)
             Me.TabPageAssemblies.TabIndex = 2
             Me.TabPageAssemblies.Text = "Assemblies"
             Me.TabPageAssemblies.UseVisualStyleBackColor = True
@@ -128,7 +129,7 @@ Namespace UI
             Me.ListViewAssemblyInfo.FullRowSelect = True
             Me.ListViewAssemblyInfo.Location = New System.Drawing.Point(0, 21)
             Me.ListViewAssemblyInfo.Name = "ListViewAssemblyInfo"
-            Me.ListViewAssemblyInfo.Size = New System.Drawing.Size(362, 156)
+            Me.ListViewAssemblyInfo.Size = New System.Drawing.Size(407, 206)
             Me.ListViewAssemblyInfo.TabIndex = 1
             Me.ListViewAssemblyInfo.UseCompatibleStateImageBehavior = False
             Me.ListViewAssemblyInfo.View = System.Windows.Forms.View.Details
@@ -136,12 +137,12 @@ Namespace UI
             'ColumnHeaderAssemblyKey
             '
             Me.ColumnHeaderAssemblyKey.Text = "Key"
-            Me.ColumnHeaderAssemblyKey.Width = 100
+            Me.ColumnHeaderAssemblyKey.Width = 110
             '
             'ColumnHeaderAssemblyValue
             '
             Me.ColumnHeaderAssemblyValue.Text = "Value"
-            Me.ColumnHeaderAssemblyValue.Width = 226
+            Me.ColumnHeaderAssemblyValue.Width = 260
             '
             'ComboBoxAssemblies
             '
@@ -150,13 +151,13 @@ Namespace UI
             Me.ComboBoxAssemblies.FormattingEnabled = True
             Me.ComboBoxAssemblies.Location = New System.Drawing.Point(0, 0)
             Me.ComboBoxAssemblies.Name = "ComboBoxAssemblies"
-            Me.ComboBoxAssemblies.Size = New System.Drawing.Size(362, 21)
+            Me.ComboBoxAssemblies.Size = New System.Drawing.Size(407, 21)
             Me.ComboBoxAssemblies.TabIndex = 0
             '
             'ButtonOK
             '
             Me.ButtonOK.Anchor = System.Windows.Forms.AnchorStyles.Bottom
-            Me.ButtonOK.Location = New System.Drawing.Point(161, 283)
+            Me.ButtonOK.Location = New System.Drawing.Point(181, 333)
             Me.ButtonOK.Name = "ButtonOK"
             Me.ButtonOK.Size = New System.Drawing.Size(75, 23)
             Me.ButtonOK.TabIndex = 3
@@ -171,7 +172,7 @@ Namespace UI
             Me.PictureBoxLogo.Cursor = System.Windows.Forms.Cursors.Hand
             Me.PictureBoxLogo.Location = New System.Drawing.Point(12, 12)
             Me.PictureBoxLogo.Name = "PictureBoxLogo"
-            Me.PictureBoxLogo.Size = New System.Drawing.Size(370, 50)
+            Me.PictureBoxLogo.Size = New System.Drawing.Size(410, 50)
             Me.PictureBoxLogo.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage
             Me.PictureBoxLogo.TabIndex = 4
             Me.PictureBoxLogo.TabStop = False
@@ -180,7 +181,7 @@ Namespace UI
             '
             Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
             Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-            Me.ClientSize = New System.Drawing.Size(394, 318)
+            Me.ClientSize = New System.Drawing.Size(434, 368)
             Me.Controls.Add(Me.PictureBoxLogo)
             Me.Controls.Add(Me.ButtonOK)
             Me.Controls.Add(Me.TabControlInformation)
