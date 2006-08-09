@@ -218,15 +218,7 @@ Namespace UI
 
         End Sub
 
-        Private Sub LinkLabelHomePage_LinkClicked(ByVal sender As System.Object, ByVal e As System.Windows.Forms.LinkLabelLinkClickedEventArgs)
-
-            If Not String.IsNullOrEmpty(m_url) Then
-                Process.Start(m_url)
-            End If
-
-        End Sub
-
-        Private Sub PictureBoxLogo_Click(ByVal sender As System.Object, ByVal e As System.EventArgs)
+        Private Sub PictureBoxLogo_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles PictureBoxLogo.Click
 
             If Not String.IsNullOrEmpty(m_url) Then
                 Process.Start(m_url)

@@ -83,7 +83,7 @@ Namespace UI
             Me.TabPageApplication.Location = New System.Drawing.Point(4, 22)
             Me.TabPageApplication.Name = "TabPageApplication"
             Me.TabPageApplication.Padding = New System.Windows.Forms.Padding(3)
-            Me.TabPageApplication.Size = New System.Drawing.Size(362, 164)
+            Me.TabPageApplication.Size = New System.Drawing.Size(362, 177)
             Me.TabPageApplication.TabIndex = 1
             Me.TabPageApplication.Text = "Application"
             Me.TabPageApplication.UseVisualStyleBackColor = True
@@ -95,7 +95,7 @@ Namespace UI
             Me.ListViewApplicationInfo.FullRowSelect = True
             Me.ListViewApplicationInfo.Location = New System.Drawing.Point(3, 3)
             Me.ListViewApplicationInfo.Name = "ListViewApplicationInfo"
-            Me.ListViewApplicationInfo.Size = New System.Drawing.Size(356, 158)
+            Me.ListViewApplicationInfo.Size = New System.Drawing.Size(356, 171)
             Me.ListViewApplicationInfo.TabIndex = 0
             Me.ListViewApplicationInfo.UseCompatibleStateImageBehavior = False
             Me.ListViewApplicationInfo.View = System.Windows.Forms.View.Details
@@ -103,12 +103,12 @@ Namespace UI
             'ColumnHeaderApplicationKey
             '
             Me.ColumnHeaderApplicationKey.Text = "Key"
-            Me.ColumnHeaderApplicationKey.Width = 118
+            Me.ColumnHeaderApplicationKey.Width = 102
             '
             'ColumnHeaderApplicationValue
             '
             Me.ColumnHeaderApplicationValue.Text = "Value"
-            Me.ColumnHeaderApplicationValue.Width = 219
+            Me.ColumnHeaderApplicationValue.Width = 227
             '
             'TabPageAssemblies
             '
@@ -116,7 +116,7 @@ Namespace UI
             Me.TabPageAssemblies.Controls.Add(Me.ComboBoxAssemblies)
             Me.TabPageAssemblies.Location = New System.Drawing.Point(4, 22)
             Me.TabPageAssemblies.Name = "TabPageAssemblies"
-            Me.TabPageAssemblies.Size = New System.Drawing.Size(362, 164)
+            Me.TabPageAssemblies.Size = New System.Drawing.Size(362, 177)
             Me.TabPageAssemblies.TabIndex = 2
             Me.TabPageAssemblies.Text = "Assemblies"
             Me.TabPageAssemblies.UseVisualStyleBackColor = True
@@ -128,7 +128,7 @@ Namespace UI
             Me.ListViewAssemblyInfo.FullRowSelect = True
             Me.ListViewAssemblyInfo.Location = New System.Drawing.Point(0, 21)
             Me.ListViewAssemblyInfo.Name = "ListViewAssemblyInfo"
-            Me.ListViewAssemblyInfo.Size = New System.Drawing.Size(362, 143)
+            Me.ListViewAssemblyInfo.Size = New System.Drawing.Size(362, 156)
             Me.ListViewAssemblyInfo.TabIndex = 1
             Me.ListViewAssemblyInfo.UseCompatibleStateImageBehavior = False
             Me.ListViewAssemblyInfo.View = System.Windows.Forms.View.Details
@@ -136,7 +136,7 @@ Namespace UI
             'ColumnHeaderAssemblyKey
             '
             Me.ColumnHeaderAssemblyKey.Text = "Key"
-            Me.ColumnHeaderAssemblyKey.Width = 117
+            Me.ColumnHeaderAssemblyKey.Width = 100
             '
             'ColumnHeaderAssemblyValue
             '
