@@ -196,6 +196,15 @@ Namespace IeeeC37_118
                     If m_configurationFrame2 IsNot Nothing Then
                         .Append("     PMU's in config frame: ")
                         .Append(m_configurationFrame2.Cells.Count)
+                        .Append(" total [")
+                        For x As Integer = 0 To m_configurationFrame2.Cells.Count - 1
+                            .Append(" "c)
+                            .Append(m_configurationFrame2.Cells(x).StationName)
+                            .Append(" (")
+                            .Append(m_configurationFrame2.Cells(x).IDCode)
+                            .Append(")"c)
+                        Next
+                        .Append("]"c)
                         .Append(Environment.NewLine)
                         .Append("           PDC/PMU ID code: ")
                         .Append(m_configurationFrame2.IDCode)

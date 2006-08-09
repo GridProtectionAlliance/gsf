@@ -20,10 +20,12 @@ Imports System.IO
 Imports System.Text
 Imports System.Net
 Imports System.Threading
+Imports System.ComponentModel
 Imports Tva.Collections
 Imports Tva.DateTime.Common
 Imports Tva.Phasors
 Imports Tva.Communication
+Imports Tva.Communication.Common
 Imports Tva.IO.Common
 
 ''' <summary>Protocol independent frame parser</summary>
@@ -69,7 +71,6 @@ Public Class MultiProtocolFrameParser
     Private m_configurationFrame As IConfigurationFrame
     Private m_dataStreamStartTime As Long
     Private m_totalFramesReceived As Long
-    Private m_totalBytesReceived As Long
     Private m_frameRateTotal As Int32
     Private m_byteRateTotal As Int32
     Private m_frameRate As Double
@@ -78,6 +79,7 @@ Public Class MultiProtocolFrameParser
     Private m_definedFrameRate As Double
     Private m_dataFrameReceived As Boolean
     Private m_lastFrameReceivedTime As Long
+    Private m_autoStartDataParsingSequence As Boolean
 
 #End Region
 
@@ -90,6 +92,7 @@ Public Class MultiProtocolFrameParser
         m_bufferSize = DefaultBufferSize
         m_definedFrameRate = DefaultFrameRate
         m_rateCalcTimer = New Timers.Timer
+        m_autoStartDataParsingSequence = True
 
         m_phasorProtocol = PhasorProtocol.IeeeC37_118V1
         m_transportProtocol = TransportProtocol.Tcp
@@ -168,6 +171,15 @@ Public Class MultiProtocolFrameParser
         End Set
     End Property
 
+    Public Property AutoStartDataParsingSequence() As Boolean
+        Get
+            Return m_autoStartDataParsingSequence
+        End Get
+        Set(ByVal value As Boolean)
+            m_autoStartDataParsingSequence = value
+        End Set
+    End Property
+
     Public Property SourceName() As String
         Get
             Return m_sourceName
@@ -191,7 +203,6 @@ Public Class MultiProtocolFrameParser
 
         [Stop]()
         m_totalFramesReceived = 0
-        m_totalBytesReceived = 0
         m_frameRateTotal = 0
         m_byteRateTotal = 0
         m_frameRate = 0.0#
@@ -215,13 +226,9 @@ Public Class MultiProtocolFrameParser
             ' Start reading data from selected transport layer
             Select Case m_transportProtocol
                 Case TransportProtocol.Tcp
-                    Dim tcpClient As New TcpClient
-                    tcpClient.PayloadAware = False
-                    m_communicationClient = tcpClient
+                    m_communicationClient = New TcpClient
                 Case TransportProtocol.Udp
-                    Dim udpClient As New UdpClient
-                    udpClient.PayloadAware = False
-                    m_communicationClient = udpClient
+                    m_communicationClient = New UdpClient
                 Case TransportProtocol.Serial
                     m_communicationClient = New SerialClient
                 Case Communication.TransportProtocol.File
@@ -236,8 +243,8 @@ Public Class MultiProtocolFrameParser
                 Else
                     .ReceiveBufferSize = m_bufferSize
                 End If
-                .MaximumConnectionAttempts = 1
                 .ConnectionString = m_connectionString
+                .MaximumConnectionAttempts = 1
                 .Handshake = False
                 .Connect()
             End With
@@ -303,12 +310,14 @@ Public Class MultiProtocolFrameParser
         End Get
     End Property
 
+    <EditorBrowsable(EditorBrowsableState.Never)> _
     Public ReadOnly Property InternalFrameParser() As IFrameParser
         Get
             Return m_frameParser
         End Get
     End Property
 
+    <EditorBrowsable(EditorBrowsableState.Never)> _
     Public ReadOnly Property InternalCommunicationClient() As ICommunicationClient
         Get
             Return m_communicationClient
@@ -323,7 +332,11 @@ Public Class MultiProtocolFrameParser
 
     Public ReadOnly Property TotalBytesReceived() As Long
         Get
-            Return m_totalBytesReceived
+            If m_communicationClient Is Nothing Then
+                Return 0
+            Else
+                Return m_communicationClient.TotalBytesReceived
+            End If
         End Get
     End Property
 
@@ -396,20 +409,14 @@ Public Class MultiProtocolFrameParser
                 .Append("         Connection string: ")
                 .Append(m_connectionString)
                 .Append(Environment.NewLine)
-                .Append("      Data transport layer: ")
-                .Append([Enum].GetName(GetType(TransportProtocol), TransportProtocol).ToUpper())
-                .Append(Environment.NewLine)
                 .Append("           Phasor protocol: ")
-                .Append([Enum].GetName(GetType(PhasorProtocol), PhasorProtocol).ToUpper())
+                .Append([Enum].GetName(GetType(PhasorProtocol), PhasorProtocol))
                 .Append(Environment.NewLine)
                 .Append("               Buffer size: ")
                 .Append(BufferSize)
                 .Append(Environment.NewLine)
                 .Append("     Total frames received: ")
                 .Append(TotalFramesReceived)
-                .Append(Environment.NewLine)
-                .Append("      Total bytes received: ")
-                .Append(TotalBytesReceived)
                 .Append(Environment.NewLine)
                 .Append("     Calculated frame rate: ")
                 .Append(FrameRate)
@@ -555,15 +562,17 @@ Public Class MultiProtocolFrameParser
 
         RaiseEvent Connected()
 
-        ' Handle reception of configuration frame - in case of device that only responds to commands when
-        ' not sending real-time data, such as the SEL 421, we disable real-time data stream first...
-        SendDeviceCommand(DeviceCommand.DisableRealTimeData)
-        Thread.Sleep(100)
+        If m_autoStartDataParsingSequence Then
+            ' Handle reception of configuration frame - in case of device that only responds to commands when
+            ' not sending real-time data, such as the SEL 421, we disable real-time data stream first...
+            SendDeviceCommand(DeviceCommand.DisableRealTimeData)
+            Thread.Sleep(100)
 
-        SendDeviceCommand(DeviceCommand.SendConfigurationFrame2)
-        Thread.Sleep(100)
+            SendDeviceCommand(DeviceCommand.SendConfigurationFrame2)
+            Thread.Sleep(100)
 
-        SendDeviceCommand(DeviceCommand.EnableRealTimeData)
+            SendDeviceCommand(DeviceCommand.EnableRealTimeData)
+        End If
 
     End Sub
 
@@ -589,7 +598,6 @@ Public Class MultiProtocolFrameParser
 
         Dim length As Integer = data.Length
         m_frameParser.Write(data, 0, length)
-        m_totalBytesReceived += length
         m_byteRateTotal += length
 
         If m_transportProtocol = Communication.TransportProtocol.File Then

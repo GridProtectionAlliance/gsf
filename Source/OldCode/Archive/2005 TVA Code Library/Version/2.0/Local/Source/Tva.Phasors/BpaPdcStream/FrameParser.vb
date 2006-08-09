@@ -151,8 +151,17 @@ Namespace BpaPdcStream
                     If m_configurationFrame IsNot Nothing Then
                         .Append("     PMU's in config frame: ")
                         .Append(m_configurationFrame.Cells.Count)
+                        .Append(" total [")
+                        For x As Integer = 0 To m_configurationFrame.Cells.Count - 1
+                            .Append(" "c)
+                            .Append(m_configurationFrame.Cells(x).StationName)
+                            .Append(" (")
+                            .Append(m_configurationFrame.Cells(x).IDCode)
+                            .Append(")"c)
+                        Next
+                        .Append("]"c)
                         .Append(Environment.NewLine)
-                        .Append("    Configured PMU ID code: ")
+                        .Append("       Defined PDC ID code: ")
                         .Append(m_configurationFrame.IDCode)
                         .Append(Environment.NewLine)
                         .Append("     Configured frame rate: ")
