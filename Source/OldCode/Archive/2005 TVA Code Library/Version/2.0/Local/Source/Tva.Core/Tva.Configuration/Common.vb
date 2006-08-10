@@ -215,9 +215,6 @@ Namespace Configuration
 
 #Region " Coerced Native Type Setting Access Shortcuts "
 
-        ' TODO: add "Categorized<Type>Setting" native type shortcut functions (ByVal category As String, ByVal name As String)
-        ' also need to add code comments for all these functions...
-
         '' TEMPLATE for "categorized" native type settings access functions
         'Public Shared ReadOnly Property CategorizedBooleanSetting(ByVal category As String, ByVal name As String) As Boolean
         '    Get
