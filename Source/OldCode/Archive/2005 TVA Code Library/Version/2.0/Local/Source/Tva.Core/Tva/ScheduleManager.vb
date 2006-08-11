@@ -1,5 +1,6 @@
 ' 08-01-06
 
+Imports System.Threading
 Imports Tva.Configuration
 Imports Tva.Configuration.Common
 
@@ -7,9 +8,14 @@ Public Class ScheduleManager
 
     Private m_autoSaveSchedules As Boolean
     Private m_schedules As Dictionary(Of String, Schedule)
+    Private m_startTimerThread As Thread
     Private WithEvents m_timer As System.Timers.Timer
     Private Const ConfigElement As String = "ScheduleManager"
 
+    Public Event Starting As EventHandler
+    Public Event Started As EventHandler
+    Public Event Stopped As EventHandler
+    Public Event ProcessingSchedules As EventHandler
     Public Event ProcessSchedule(ByVal scheduleName As String, ByVal schedule As Schedule)
 
     Public Sub New()
@@ -36,15 +42,17 @@ Public Class ScheduleManager
 
     Public Sub Start()
 
-        Dim startTimerThread As New System.Threading.Thread(AddressOf StartTimer)
-        startTimerThread.Start()
+        m_startTimerThread = New Thread(AddressOf StartTimer)
+        m_startTimerThread.Start()
 
     End Sub
 
     Public Sub [Stop]()
 
+        If m_startTimerThread IsNot Nothing Then m_startTimerThread.Abort()
         If m_timer.Enabled Then
             m_timer.Stop()
+            RaiseEvent Stopped(Me, EventArgs.Empty)
         End If
 
     End Sub
@@ -90,7 +98,7 @@ Public Class ScheduleManager
 
     Public Sub AddSchedule(ByVal scheduleName As String, ByVal schedule As Schedule)
 
-        m_schedules.Add(scheduleName, schedule)
+        If Not m_schedules.ContainsKey(scheduleName) Then m_schedules.Add(scheduleName, schedule)
         If m_autoSaveSchedules Then
             DefaultConfigFile.CategorizedSettings(ConfigElement).Add(scheduleName, schedule.ToString())
             SaveSettings()
@@ -126,26 +134,44 @@ Public Class ScheduleManager
 
     End Sub
 
+    Private Sub AsynchronousProcessSchedule(ByVal state As Object)
+
+        Dim scheduleName As String = Convert.ToString(state)
+        RaiseEvent ProcessSchedule(scheduleName, m_schedules(scheduleName))
+
+    End Sub
+
+    Private Sub ProcessSchedules()
+
+        For Each scheduleName As String In m_schedules.Keys
+            RaiseEvent ProcessingSchedules(Me, EventArgs.Empty)
+            If m_schedules(scheduleName).IsDue() Then
+                ThreadPool.QueueUserWorkItem(New WaitCallback(AddressOf AsynchronousProcessSchedule), scheduleName)
+            End If
+        Next
+
+    End Sub
+
     Private Sub StartTimer()
 
         If Not m_timer.Enabled Then
             Do While True
+                RaiseEvent Starting(Me, EventArgs.Empty)
                 If System.DateTime.Now.Second = 0 Then
                     m_timer.Start()
+                    RaiseEvent Started(Me, EventArgs.Empty)
+                    ProcessSchedules()
                     Exit Do
                 End If
             Loop
         End If
+        m_startTimerThread = Nothing
 
     End Sub
 
     Private Sub m_timer_Elapsed(ByVal sender As Object, ByVal e As System.Timers.ElapsedEventArgs) Handles m_timer.Elapsed
 
-        For Each scheduleName As String In m_schedules.Keys
-            If m_schedules(scheduleName).IsDue() Then
-                RaiseEvent ProcessSchedule(scheduleName, m_schedules(scheduleName))
-            End If
-        Next
+        ProcessSchedules()
 
     End Sub
 

@@ -101,7 +101,6 @@ Public Class Schedule
 
         Private m_text As String
         Private m_elementType As ElementType
-        Private m_valueType As ValueType
         Private m_values As List(Of Integer)
 
         Public Enum ElementType As Integer
@@ -110,25 +109,6 @@ Public Class Schedule
             Day
             Month
             DayOfWeek
-        End Enum
-
-        Public Enum ValueType As Integer
-            ''' <summary>
-            ''' *
-            ''' </summary>
-            Any
-            ''' <summary>
-            ''' */[any digit]
-            ''' </summary>
-            EveryN
-            ''' <summary>
-            ''' [any digit]-[any digit]
-            ''' </summary>
-            Range
-            ''' <summary>
-            ''' [any digit] AND [any digit], ..., [any digit]
-            ''' </summary>
-            Specific
         End Enum
 
         Public Sub New(ByVal text As String, ByVal type As ElementType)
@@ -191,14 +171,11 @@ Public Class Schedule
             m_values = New List(Of Integer)()
             If Regex.Match(element, "^(\*){1}$").Success Then
                 ' ^(\*){1}$             Matches: *
-                m_valueType = ValueType.Any
                 PopulateValues(minValue, maxvalue, 1)
 
                 Return True
             ElseIf Regex.Match(element, "^(\*/\d+){1}$").Success Then
                 ' ^(\*/\d+){1}$         Matches: */[any digit]
-                m_valueType = ValueType.EveryN
-
                 Dim interval As Integer = Convert.ToInt32(element.Split("/"c)(1))
                 If interval > 0 AndAlso interval >= minValue AndAlso interval <= maxvalue Then
                     PopulateValues(minValue, maxvalue, interval)
@@ -208,8 +185,6 @@ Public Class Schedule
                 Return False
             ElseIf Regex.Match(element, "^(\d+\-\d+){1}$").Success Then
                 ' ^(\d+\-\d+){1}$       Matches: [any digit]-[any digit]
-                m_valueType = ValueType.Range
-
                 Dim range As String() = element.Split("-"c)
                 Dim lowRange As Integer = Convert.ToInt32(range(0))
                 Dim highRange As Integer = Convert.ToInt32(range(1))
@@ -221,8 +196,6 @@ Public Class Schedule
                 Return False
             ElseIf Regex.Match(element, "^((\d+,?)+){1}$").Success Then
                 ' ^((\d+,?)+){1}$       Matches: [any digit] AND [any digit], ..., [any digit]
-                m_valueType = ValueType.Specific
-
                 For Each value As Integer In element.Split(","c)
                     If Not (value >= minValue AndAlso value <= maxvalue) Then
                         Return False
