@@ -55,5 +55,5 @@ using namespace System::Runtime::CompilerServices;
 //       documentation for more information on this.
 //
 [assembly:AssemblyDelaySignAttribute(false)];
-[assembly:AssemblyKeyFileAttribute("")];
+[assembly:AssemblyKeyFileAttribute("..\\TVA.snk")];
 [assembly:AssemblyKeyNameAttribute("")];
