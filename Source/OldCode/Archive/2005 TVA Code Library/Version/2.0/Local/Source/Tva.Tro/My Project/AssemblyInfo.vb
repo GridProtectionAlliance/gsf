@@ -33,3 +33,4 @@ Imports System.Runtime.InteropServices
 
 <Assembly: AssemblyVersion("2.1.10.31737")> 
 <Assembly: AssemblyFileVersion("2.1.10.31737")> 
+<Assembly: AssemblyKeyFile("..\\..\\..\\TVA.snk")> 
