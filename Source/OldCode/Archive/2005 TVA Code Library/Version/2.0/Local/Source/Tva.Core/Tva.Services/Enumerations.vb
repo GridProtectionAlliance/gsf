@@ -17,9 +17,7 @@
 
 Namespace Services
 
-    ''' <summary>
-    ''' Available Windows service states
-    ''' </summary>
+    ''' <summary>Windows service states</summary>
     Public Enum ServiceState
         Started
         Stopped
@@ -28,14 +26,48 @@ Namespace Services
         ShutDown
     End Enum
 
-    ''' <summary>
-    ''' Available Windows service process states
-    ''' </summary>
+    ''' <summary>Windows service process states</summary>
     Public Enum ProcessState
         Unprocessed
         Processing
         Processed
         Aborted
+    End Enum
+
+    ''' <summary>Standard service related notifications that can be sent from a remote client monitor that are to be handled by the service.</summary>
+    ''' <remarks>Note that there is no "Start Service" message defined since service must already be started in order for there to be any clients</remarks>
+    <Serializable()> _
+    Public Enum ServiceCommands
+        PauseService
+        ResumeService
+        StopService
+        RestartService
+        ListProcesses
+        StartProcess
+        AbortProcess
+        UnscheduleProcess
+        RescheduleProcess
+        PingService
+        PingAllClients
+        ListClients
+        GetServiceStatus
+        GetProcessStatus
+        GetCommandHistory
+        GetDirectoryListing
+        ListSettings
+        UpdateSetting
+        SaveSettings
+        Undetermined
+    End Enum
+
+    ''' <summary>Standard notifications that will be sent from the service that can be handled by remote monitoring clients</summary>
+    <Serializable()> _
+    Public Enum ClientNotifications
+        BroadcastMessage
+        ServiceStateChanged
+        ProcessStateChanged
+        ProcessProgressUpdate
+        Undetermined
     End Enum
 
 End Namespace
