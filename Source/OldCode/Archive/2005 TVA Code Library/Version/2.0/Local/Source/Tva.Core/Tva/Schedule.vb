@@ -133,36 +133,60 @@ Public Class Schedule
 
 #End Region
 
+    Private m_name As String
     Private m_minutes As Element
     Private m_hours As Element
     Private m_days As Element
     Private m_months As Element
     Private m_dayOfWeek As Element
+    Private m_lastRunDateTime As System.DateTime
 
-    Public Sub New(ByVal schedule As String)
+    Public Sub New(ByVal name As String, ByVal minutes As String, ByVal hours As String, ByVal days As String, _
+            ByVal months As String, ByVal daysOfWeek As String)
+        MyClass.New(name, minutes & " " & hours & " " & days & " " & months & " " & daysOfWeek)
+    End Sub
+
+    Public Sub New(ByVal name As String, ByVal rule As String)
         MyBase.New()
-        With RemoveDuplicateWhiteSpace(schedule).Split(" "c)
-            If .Length = 5 Then
-                MyClass.Minutes = .GetValue(0).ToString()
-                MyClass.Hours = .GetValue(1).ToString()
-                MyClass.Days = .GetValue(2).ToString()
-                MyClass.Months = .GetValue(3).ToString()
-                MyClass.DaysOfWeek = .GetValue(4).ToString()
+        MyClass.Name = name
+        MyClass.Rule = rule
+    End Sub
+
+    Public Property Name() As String
+        Get
+            Return m_name
+        End Get
+        Set(ByVal value As String)
+            If Not String.IsNullOrEmpty(value) Then
+                m_name = value
             Else
-                Throw New ArgumentException("Schedule must have exactly 5 elements (Example: * * * * *).")
+                Throw New ArgumentNullException("value")
             End If
-        End With
-    End Sub
+        End Set
+    End Property
 
-    Public Sub New(ByVal minutes As String, ByVal hours As String, ByVal days As String, ByVal months As String, _
-            ByVal daysOfWeek As String)
-        MyBase.New()
-        MyClass.Minutes = minutes
-        MyClass.Hours = hours
-        MyClass.Days = days
-        MyClass.Months = months
-        MyClass.DaysOfWeek = daysOfWeek
-    End Sub
+    Public Property Rule() As String
+        Get
+            Return m_minutes.Text & " " & m_hours.Text & " " & m_days.Text & " " & m_months.Text & " " & m_dayOfWeek.Text
+        End Get
+        Set(ByVal value As String)
+            If Not String.IsNullOrEmpty(value) Then
+                With RemoveDuplicateWhiteSpace(value).Split(" "c)
+                    If .Length = 5 Then
+                        MyClass.Minutes = .GetValue(0).ToString()
+                        MyClass.Hours = .GetValue(1).ToString()
+                        MyClass.Days = .GetValue(2).ToString()
+                        MyClass.Months = .GetValue(3).ToString()
+                        MyClass.DaysOfWeek = .GetValue(4).ToString()
+                    Else
+                        Throw New ArgumentException("Schedule rule must have exactly 5 elements (Example: * * * * *).")
+                    End If
+                End With
+            Else
+                Throw New ArgumentNullException("value")
+            End If
+        End Set
+    End Property
 
     Public Property Minutes() As String
         Get
@@ -209,17 +233,42 @@ Public Class Schedule
         End Set
     End Property
 
+    Public ReadOnly Property Status() As String
+        Get
+            With New System.Text.StringBuilder()
+                .Append("             Schedule name:" & m_name)
+                .Append(Environment.NewLine)
+                .Append("             Schedule rule:" & Rule)
+                .Append(Environment.NewLine)
+                .Append("         Schedule last run:" & m_lastRunDateTime)
+                .Append(Environment.NewLine)
+
+                Return .ToString()
+            End With
+        End Get
+    End Property
+
     Public Function IsDue() As Boolean
 
-        Dim currentTime As System.DateTime = System.DateTime.Now
-        Return m_minutes.Matches(currentTime) And m_hours.Matches(currentTime) And m_days.Matches(currentTime) And _
-            m_months.Matches(currentTime) And m_dayOfWeek.Matches(currentTime)
+        Dim currentDateTime As System.DateTime = System.DateTime.Now
+        If m_minutes.Matches(currentDateTime) And m_hours.Matches(currentDateTime) And m_days.Matches(currentDateTime) And _
+                m_months.Matches(currentDateTime) And m_dayOfWeek.Matches(currentDateTime) Then
+            m_lastRunDateTime = currentDateTime
+            Return True
+        Else
+            Return False
+        End If
 
     End Function
 
-    Public Overrides Function ToString() As String
+    Public Overrides Function Equals(ByVal obj As Object) As Boolean
 
-        Return m_minutes.Text & " " & m_hours.Text & " " & m_days.Text & " " & m_months.Text & " " & m_dayOfWeek.Text
+        Dim other As Schedule = TryCast(obj, Schedule)
+        If other IsNot Nothing AndAlso other.Name = Me.Name AndAlso other.Rule = Me.Rule Then
+            Return True
+        Else
+            Return False
+        End If
 
     End Function
 

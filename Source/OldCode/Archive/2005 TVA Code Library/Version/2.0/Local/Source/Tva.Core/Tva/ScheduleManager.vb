@@ -110,15 +110,15 @@ Public Class ScheduleManager
     Public Sub AddSchedule(ByVal scheduleName As String, ByVal minutes As String, ByVal hours As String, _
             ByVal days As String, ByVal months As String, ByVal daysOfWeek As String)
 
-        AddSchedule(scheduleName, New Schedule(minutes, hours, days, months, daysOfWeek))
+        AddSchedule(New Schedule(scheduleName, minutes, hours, days, months, daysOfWeek))
 
     End Sub
 
-    Public Sub AddSchedule(ByVal scheduleName As String, ByVal schedule As Schedule)
+    Public Sub AddSchedule(ByVal schedule As Schedule)
 
-        If Not m_schedules.ContainsKey(scheduleName) Then m_schedules.Add(scheduleName, schedule)
+        If Not m_schedules.ContainsKey(schedule.Name) Then m_schedules.Add(schedule.Name, schedule)
         If m_autoSaveSchedules Then
-            DefaultConfigFile.CategorizedSettings(m_configurationElement).Add(scheduleName, schedule.ToString())
+            DefaultConfigFile.CategorizedSettings(m_configurationElement).Add(schedule.Name, schedule.Rule)
             SaveSettings()
         End If
 
@@ -137,7 +137,7 @@ Public Class ScheduleManager
     Public Sub LoadSchedules()
 
         For Each schedule As CategorizedSettingsElement In DefaultConfigFile.CategorizedSettings(m_configurationElement)
-            m_schedules.Add(schedule.Name, New Schedule(schedule.Value))
+            m_schedules.Add(schedule.Name, New Schedule(schedule.Name, schedule.Value))
         Next
 
     End Sub
@@ -146,7 +146,7 @@ Public Class ScheduleManager
 
         DefaultConfigFile.CategorizedSettings(m_configurationElement).Clear()
         For Each scheduleName As String In m_schedules.Keys
-            DefaultConfigFile.CategorizedSettings(m_configurationElement).Add(scheduleName, m_schedules(scheduleName).ToString())
+            DefaultConfigFile.CategorizedSettings(m_configurationElement).Add(scheduleName, m_schedules(scheduleName).Rule)
         Next
         SaveSettings()
 
