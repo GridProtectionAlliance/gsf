@@ -45,6 +45,7 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Data.OracleClient" />
     <Reference Include="System.DirectoryServices" />
+    <Reference Include="System.Drawing" />
     <Reference Include="System.Web" />
     <Reference Include="System.XML" />
   </ItemGroup>
@@ -57,6 +58,12 @@
     <Import Include="System.Diagnostics" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Tva\ScheduleManager.Designer.vb">
+      <DependentUpon>ScheduleManager.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Tva\ScheduleManager.vb">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="Tva.Collections\Enumerations.vb" />
     <Compile Include="Tva.Configuration\Common.vb" />
     <Compile Include="Tva.Data\Enumerations.vb" />
@@ -113,11 +120,13 @@
     <Compile Include="Tva.Xml\Common.vb" />
     <Compile Include="Tva\ByteEncoding.vb" />
     <Compile Include="Tva\Schedule.vb" />
-    <Compile Include="Tva\ScheduleManager.vb" />
     <Compile Include="Tva\Serialization.vb" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Tva.Collections\Tva.Collections.cd" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Embedded Resources\ScheduleManager.bmp" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Tva.Console\" />

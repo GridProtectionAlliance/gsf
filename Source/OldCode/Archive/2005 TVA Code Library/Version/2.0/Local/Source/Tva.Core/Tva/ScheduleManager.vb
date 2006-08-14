@@ -1,9 +1,12 @@
 ' 08-01-06
 
+Imports System.Drawing
+Imports System.ComponentModel
 Imports System.Threading
 Imports Tva.Configuration
 Imports Tva.Configuration.Common
 
+<ToolboxBitmap(GetType(ScheduleManager)), DefaultEvent("ProcessSchedule")> _
 Public Class ScheduleManager
 
     Private m_configurationElement As String
