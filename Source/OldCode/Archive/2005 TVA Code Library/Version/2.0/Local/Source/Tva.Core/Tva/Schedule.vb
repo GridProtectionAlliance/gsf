@@ -7,95 +7,7 @@ Imports Tva.Text.Common
 
 Public Class Schedule
 
-    Private m_minutes As Element
-    Private m_hours As Element
-    Private m_days As Element
-    Private m_months As Element
-    Private m_dayOfWeek As Element
-
-    Public Sub New(ByVal schedule As String)
-        MyBase.New()
-        With RemoveDuplicateWhiteSpace(schedule).Split(" "c)
-            If .Length = 5 Then
-                MyClass.Minutes = .GetValue(0).ToString()
-                MyClass.Hours = .GetValue(1).ToString()
-                MyClass.Days = .GetValue(2).ToString()
-                MyClass.Months = .GetValue(3).ToString()
-                MyClass.DaysOfWeek = .GetValue(4).ToString()
-            Else
-                Throw New ArgumentException("Schedule must have exactly 5 elements (Example: * * * * *).")
-            End If
-        End With
-    End Sub
-
-    Public Sub New(ByVal minutes As String, ByVal hours As String, ByVal days As String, ByVal months As String, _
-            ByVal daysOfWeek As String)
-        MyBase.New()
-        MyClass.Minutes = minutes
-        MyClass.Hours = hours
-        MyClass.Days = days
-        MyClass.Months = months
-        MyClass.DaysOfWeek = daysOfWeek
-    End Sub
-
-    Public Property Minutes() As String
-        Get
-            Return m_minutes.Text
-        End Get
-        Set(ByVal value As String)
-            m_minutes = New Element(RemoveWhiteSpace(value), Element.ElementType.Minute)
-        End Set
-    End Property
-
-    Public Property Hours() As String
-        Get
-            Return m_hours.Text
-        End Get
-        Set(ByVal value As String)
-            m_hours = New Element(RemoveWhiteSpace(value), Element.ElementType.Hour)
-        End Set
-    End Property
-
-    Public Property Days() As String
-        Get
-            Return m_days.Text
-        End Get
-        Set(ByVal value As String)
-            m_days = New Element(RemoveWhiteSpace(value), Element.ElementType.Day)
-        End Set
-    End Property
-
-    Public Property Months() As String
-        Get
-            Return m_months.Text
-        End Get
-        Set(ByVal value As String)
-            m_months = New Element(RemoveWhiteSpace(value), Element.ElementType.Month)
-        End Set
-    End Property
-
-    Public Property DaysOfWeek() As String
-        Get
-            Return m_dayOfWeek.Text
-        End Get
-        Set(ByVal value As String)
-            m_dayOfWeek = New Element(RemoveWhiteSpace(value), Element.ElementType.DayOfWeek)
-        End Set
-    End Property
-
-    Public Function IsDue() As Boolean
-
-        Dim currentTime As Date = Date.Now
-        Return m_minutes.Matches(currentTime) And m_hours.Matches(currentTime) And m_days.Matches(currentTime) And _
-            m_months.Matches(currentTime) And m_dayOfWeek.Matches(currentTime)
-
-    End Function
-
-    Public Overrides Function ToString() As String
-
-        Return m_minutes.Text & " " & m_hours.Text & " " & m_days.Text & " " & m_months.Text & " " & m_dayOfWeek.Text
-
-    End Function
+#Region "Private Schedule Element Class"
 
     Private Class Element
 
@@ -132,7 +44,7 @@ Public Class Schedule
             End Get
         End Property
 
-        Public Function Matches(ByVal dateAndTime As Date) As Boolean
+        Public Function Matches(ByVal dateAndTime As System.DateTime) As Boolean
 
             Select Case m_elementType
                 Case ElementType.Minute
@@ -218,5 +130,97 @@ Public Class Schedule
         End Sub
 
     End Class
+
+#End Region
+
+    Private m_minutes As Element
+    Private m_hours As Element
+    Private m_days As Element
+    Private m_months As Element
+    Private m_dayOfWeek As Element
+
+    Public Sub New(ByVal schedule As String)
+        MyBase.New()
+        With RemoveDuplicateWhiteSpace(schedule).Split(" "c)
+            If .Length = 5 Then
+                MyClass.Minutes = .GetValue(0).ToString()
+                MyClass.Hours = .GetValue(1).ToString()
+                MyClass.Days = .GetValue(2).ToString()
+                MyClass.Months = .GetValue(3).ToString()
+                MyClass.DaysOfWeek = .GetValue(4).ToString()
+            Else
+                Throw New ArgumentException("Schedule must have exactly 5 elements (Example: * * * * *).")
+            End If
+        End With
+    End Sub
+
+    Public Sub New(ByVal minutes As String, ByVal hours As String, ByVal days As String, ByVal months As String, _
+            ByVal daysOfWeek As String)
+        MyBase.New()
+        MyClass.Minutes = minutes
+        MyClass.Hours = hours
+        MyClass.Days = days
+        MyClass.Months = months
+        MyClass.DaysOfWeek = daysOfWeek
+    End Sub
+
+    Public Property Minutes() As String
+        Get
+            Return m_minutes.Text
+        End Get
+        Set(ByVal value As String)
+            m_minutes = New Element(RemoveWhiteSpace(value), Element.ElementType.Minute)
+        End Set
+    End Property
+
+    Public Property Hours() As String
+        Get
+            Return m_hours.Text
+        End Get
+        Set(ByVal value As String)
+            m_hours = New Element(RemoveWhiteSpace(value), Element.ElementType.Hour)
+        End Set
+    End Property
+
+    Public Property Days() As String
+        Get
+            Return m_days.Text
+        End Get
+        Set(ByVal value As String)
+            m_days = New Element(RemoveWhiteSpace(value), Element.ElementType.Day)
+        End Set
+    End Property
+
+    Public Property Months() As String
+        Get
+            Return m_months.Text
+        End Get
+        Set(ByVal value As String)
+            m_months = New Element(RemoveWhiteSpace(value), Element.ElementType.Month)
+        End Set
+    End Property
+
+    Public Property DaysOfWeek() As String
+        Get
+            Return m_dayOfWeek.Text
+        End Get
+        Set(ByVal value As String)
+            m_dayOfWeek = New Element(RemoveWhiteSpace(value), Element.ElementType.DayOfWeek)
+        End Set
+    End Property
+
+    Public Function IsDue() As Boolean
+
+        Dim currentTime As System.DateTime = System.DateTime.Now
+        Return m_minutes.Matches(currentTime) And m_hours.Matches(currentTime) And m_days.Matches(currentTime) And _
+            m_months.Matches(currentTime) And m_dayOfWeek.Matches(currentTime)
+
+    End Function
+
+    Public Overrides Function ToString() As String
+
+        Return m_minutes.Text & " " & m_hours.Text & " " & m_days.Text & " " & m_months.Text & " " & m_dayOfWeek.Text
+
+    End Function
 
 End Class

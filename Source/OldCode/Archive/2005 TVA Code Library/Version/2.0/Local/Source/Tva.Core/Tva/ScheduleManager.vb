@@ -6,24 +6,39 @@ Imports Tva.Configuration.Common
 
 Public Class ScheduleManager
 
+    Private m_configurationElement As String
     Private m_autoSaveSchedules As Boolean
     Private m_schedules As Dictionary(Of String, Schedule)
     Private m_startTimerThread As Thread
     Private WithEvents m_timer As System.Timers.Timer
-    Private Const ConfigElement As String = "ScheduleManager"
 
     Public Event Starting As EventHandler
     Public Event Started As EventHandler
     Public Event Stopped As EventHandler
-    Public Event ProcessingSchedules As EventHandler
+    Public Event CheckingSchedule(ByVal scheduleName As String)
     Public Event ProcessSchedule(ByVal scheduleName As String, ByVal schedule As Schedule)
 
-    Public Sub New()
-        m_autoSaveSchedules = True
+    Public Sub New(ByVal autoSaveSchedules As Boolean)
+        MyBase.New()
+        MyClass.ConfigurationElement = "ScheduleManager"
+        MyClass.AutoSaveSchedules = autoSaveSchedules
         m_schedules = New Dictionary(Of String, Schedule)()
         m_timer = New System.Timers.Timer(60000)
         LoadSchedules()
     End Sub
+
+    Public Property ConfigurationElement() As String
+        Get
+            Return m_configurationElement
+        End Get
+        Set(ByVal value As String)
+            If Not String.IsNullOrEmpty(value) Then
+                m_configurationElement = value
+            Else
+                Throw New ArgumentNullException("value")
+            End If
+        End Set
+    End Property
 
     Public Property AutoSaveSchedules() As Boolean
         Get
@@ -100,7 +115,7 @@ Public Class ScheduleManager
 
         If Not m_schedules.ContainsKey(scheduleName) Then m_schedules.Add(scheduleName, schedule)
         If m_autoSaveSchedules Then
-            DefaultConfigFile.CategorizedSettings(ConfigElement).Add(scheduleName, schedule.ToString())
+            DefaultConfigFile.CategorizedSettings(m_configurationElement).Add(scheduleName, schedule.ToString())
             SaveSettings()
         End If
 
@@ -110,7 +125,7 @@ Public Class ScheduleManager
 
         m_schedules.Remove(scheduleName)
         If m_autoSaveSchedules Then
-            DefaultConfigFile.CategorizedSettings(ConfigElement).Remove(scheduleName)
+            DefaultConfigFile.CategorizedSettings(m_configurationElement).Remove(scheduleName)
             SaveSettings()
         End If
 
@@ -118,7 +133,7 @@ Public Class ScheduleManager
 
     Public Sub LoadSchedules()
 
-        For Each schedule As CategorizedSettingsElement In DefaultConfigFile.CategorizedSettings(ConfigElement)
+        For Each schedule As CategorizedSettingsElement In DefaultConfigFile.CategorizedSettings(m_configurationElement)
             m_schedules.Add(schedule.Name, New Schedule(schedule.Value))
         Next
 
@@ -126,11 +141,28 @@ Public Class ScheduleManager
 
     Public Sub SaveSchedules()
 
-        DefaultConfigFile.CategorizedSettings(ConfigElement).Clear()
+        DefaultConfigFile.CategorizedSettings(m_configurationElement).Clear()
         For Each scheduleName As String In m_schedules.Keys
-            DefaultConfigFile.CategorizedSettings(ConfigElement).Add(scheduleName, m_schedules(scheduleName).ToString())
+            DefaultConfigFile.CategorizedSettings(m_configurationElement).Add(scheduleName, m_schedules(scheduleName).ToString())
         Next
         SaveSettings()
+
+    End Sub
+
+    Public Sub CheckSchedule(ByVal scheduleName As String)
+
+        RaiseEvent CheckingSchedule(scheduleName)
+        If m_schedules(scheduleName).IsDue() Then
+            ThreadPool.QueueUserWorkItem(AddressOf AsynchronousProcessSchedule, scheduleName)
+        End If
+
+    End Sub
+
+    Public Sub CheckAllSchedules()
+
+        For Each scheduleName As String In m_schedules.Keys
+            CheckSchedule(scheduleName)
+        Next
 
     End Sub
 
@@ -138,17 +170,6 @@ Public Class ScheduleManager
 
         Dim scheduleName As String = Convert.ToString(state)
         RaiseEvent ProcessSchedule(scheduleName, m_schedules(scheduleName))
-
-    End Sub
-
-    Private Sub ProcessSchedules()
-
-        For Each scheduleName As String In m_schedules.Keys
-            RaiseEvent ProcessingSchedules(Me, EventArgs.Empty)
-            If m_schedules(scheduleName).IsDue() Then
-                ThreadPool.QueueUserWorkItem(New WaitCallback(AddressOf AsynchronousProcessSchedule), scheduleName)
-            End If
-        Next
 
     End Sub
 
@@ -160,7 +181,7 @@ Public Class ScheduleManager
                 If System.DateTime.Now.Second = 0 Then
                     m_timer.Start()
                     RaiseEvent Started(Me, EventArgs.Empty)
-                    ProcessSchedules()
+                    CheckAllSchedules()
                     Exit Do
                 End If
             Loop
@@ -171,7 +192,7 @@ Public Class ScheduleManager
 
     Private Sub m_timer_Elapsed(ByVal sender As Object, ByVal e As System.Timers.ElapsedEventArgs) Handles m_timer.Elapsed
 
-        ProcessSchedules()
+        CheckAllSchedules()
 
     End Sub
 
