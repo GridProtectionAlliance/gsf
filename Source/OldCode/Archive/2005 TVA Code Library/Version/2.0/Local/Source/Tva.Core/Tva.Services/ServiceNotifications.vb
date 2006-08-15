@@ -1,10 +1,26 @@
-' James Ritchie Carroll - 2003
-Option Explicit On 
+'*******************************************************************************************************
+'  Tva.Xml.Common.vb - Common XML Functions
+'  Copyright © 2006 - TVA, all rights reserved - Gbtc
+'
+'  Build Environment: VB.NET, Visual Studio 2005
+'  Primary Developer: J. Ritchie Carroll, Operations Data Architecture [TVA]
+'      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
+'       Phone: 423/751-2827
+'       Email: jrcarrol@tva.gov
+'
+'  Code Modification History:
+'  -----------------------------------------------------------------------------------------------------
+'  02/23/2003 - J. Ritchie Carroll
+'       Original version of source code generated
+'  01/23/2006 - J. Ritchie Carroll
+'       2.0 version of source code migrated from 1.1 source (TVA.Shared.Common)
+'
+'*******************************************************************************************************
 
 Imports System.ComponentModel
+Imports Tva.Text.Common
 
 Namespace Services
-
 
     ''' <summary>Event arguments for standard service commands</summary>
     <Serializable()> _
@@ -52,57 +68,60 @@ Namespace Services
         Public Shared Function ParseServiceCommand(ByVal command As String) As ServiceCommandEventArgs
 
             With New ServiceCommandEventArgs
-                If String.IsNullOrEmpty(command) Then .Command = ServiceCommand.Undetermined
+                If String.IsNullOrEmpty(command) Then
+                    .Command = ServiceCommand.Undetermined
+                    .Parameters = New String() {"Undetermined"}
+                Else
+                    .Parameters = RemoveDuplicateWhiteSpace(command).Trim().ToLower().Split(" "c)
 
-                .Parameters = command.Trim().ToLower().Split(" "c)
+                    If .Parameters.Length > 0 Then
+                        command = .Parameters(0)
 
-                If .Parameters.Length > 0 Then
-                    command = .Parameters(0)
-
-                    If command.StartsWith("pause") Then
-                        .Command = ServiceCommand.PauseService
-                    ElseIf command.StartsWith("resume") Then
-                        .Command = ServiceCommand.ResumeService
-                    ElseIf command.StartsWith("stop") Then
-                        .Command = ServiceCommand.StopService
-                    ElseIf command.StartsWith("restart") Then
-                        .Command = ServiceCommand.RestartService
-                    ElseIf command.StartsWith("list") Then
-                        .Command = ServiceCommand.ListProcesses
-                    ElseIf command.StartsWith("exec") Then
-                        .Command = ServiceCommand.StartProcess
-                    ElseIf command.StartsWith("abort") Then
-                        .Command = ServiceCommand.AbortProcess
-                    ElseIf command.StartsWith("unsch") Then
-                        .Command = ServiceCommand.UnscheduleProcess
-                    ElseIf command.StartsWith("resch") Then
-                        .Command = ServiceCommand.RescheduleProcess
-                    ElseIf command.StartsWith("ping") Then
-                        If .Parameters.Length > 1 Then
-                            If .Parameters(1).StartsWith("all") Then
-                                .Command = ServiceCommand.PingAllClients
+                        If command.StartsWith("pause") Then
+                            .Command = ServiceCommand.PauseService
+                        ElseIf command.StartsWith("resume") Then
+                            .Command = ServiceCommand.ResumeService
+                        ElseIf command.StartsWith("stop") Then
+                            .Command = ServiceCommand.StopService
+                        ElseIf command.StartsWith("restart") Then
+                            .Command = ServiceCommand.RestartService
+                        ElseIf command.StartsWith("list") Then
+                            .Command = ServiceCommand.ListProcesses
+                        ElseIf command.StartsWith("exec") Then
+                            .Command = ServiceCommand.StartProcess
+                        ElseIf command.StartsWith("abort") Then
+                            .Command = ServiceCommand.AbortProcess
+                        ElseIf command.StartsWith("unsch") Then
+                            .Command = ServiceCommand.UnscheduleProcess
+                        ElseIf command.StartsWith("resch") Then
+                            .Command = ServiceCommand.RescheduleProcess
+                        ElseIf command.StartsWith("ping") Then
+                            If .Parameters.Length > 1 Then
+                                If .Parameters(1).StartsWith("all") Then
+                                    .Command = ServiceCommand.PingAllClients
+                                Else
+                                    .Command = ServiceCommand.PingService
+                                End If
                             Else
                                 .Command = ServiceCommand.PingService
                             End If
-                        Else
-                            .Command = ServiceCommand.PingService
+                        ElseIf command.StartsWith("pingall") Then
+                            .Command = ServiceCommand.PingAllClients
+                        ElseIf command.StartsWith("clients") Then
+                            .Command = ServiceCommand.ListClients
+                        ElseIf command.StartsWith("status") Then
+                            .Command = ServiceCommand.GetServiceStatus
+                        ElseIf command.StartsWith("history") Then
+                            .Command = ServiceCommand.GetCommandHistory
+                        ElseIf command.StartsWith("dir") Then
+                            .Command = ServiceCommand.GetDirectoryListing
+                        ElseIf command.StartsWith("settings") Then
+                            .Command = ServiceCommand.ListSettings
+                        ElseIf command.StartsWith("update") Then
+                            .Command = ServiceCommand.UpdateSetting
+                        ElseIf command.StartsWith("save") Then
+                            .Command = ServiceCommand.SaveSettings
                         End If
-                    ElseIf command.StartsWith("pingall") Then
-                        .Command = ServiceCommand.PingAllClients
-                    ElseIf command.StartsWith("clients") Then
-                        .Command = ServiceCommand.ListClients
-                    ElseIf command.StartsWith("status") Then
-                        .Command = ServiceCommand.GetServiceStatus
-                    ElseIf command.StartsWith("history") Then
-                        .Command = ServiceCommand.GetCommandHistory
-                    ElseIf command.StartsWith("dir") Then
-                        .Command = ServiceCommand.GetDirectoryListing
-                    ElseIf command.StartsWith("settings") Then
-                        .Command = ServiceCommand.ListSettings
-                    ElseIf command.StartsWith("update") Then
-                        .Command = ServiceCommand.UpdateSetting
-                    ElseIf command.StartsWith("save") Then
-                        .Command = ServiceCommand.SaveSettings
                     End If
                 End If
 
