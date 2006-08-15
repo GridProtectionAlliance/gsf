@@ -28,7 +28,7 @@ Namespace Services
         ReadOnly Property Name() As String
         ReadOnly Property Status() As String
         Sub ServiceStateChanged(ByVal newState As ServiceState)
-        Sub ProcessStateChanged(ByVal newState As ProcessState)
+        Sub ProcessStateChanged(ByVal processName As String, ByVal newState As ProcessState)
 
     End Interface
 
