@@ -11,6 +11,7 @@ Public Class ScheduleManager
 
     Private m_configurationElement As String
     Private m_autoSaveSchedules As Boolean
+    Private m_enabled As Boolean
     Private m_schedules As Dictionary(Of String, Schedule)
     Private m_startTimerThread As Thread
     Private WithEvents m_timer As System.Timers.Timer
@@ -25,6 +26,7 @@ Public Class ScheduleManager
         MyBase.New()
         MyClass.ConfigurationElement = "ScheduleManager"
         MyClass.AutoSaveSchedules = autoSaveSchedules
+        MyClass.Enabled = True
         m_schedules = New Dictionary(Of String, Schedule)()
         m_timer = New System.Timers.Timer(60000)
         LoadSchedules()
@@ -52,6 +54,16 @@ Public Class ScheduleManager
         End Set
     End Property
 
+    Public Property Enabled() As Boolean
+        Get
+            Return m_enabled
+        End Get
+        Set(ByVal value As Boolean)
+            m_enabled = value
+        End Set
+    End Property
+
+    <Browsable(False)> _
     Public ReadOnly Property Schedules() As Dictionary(Of String, Schedule)
         Get
             Return m_schedules
@@ -60,17 +72,22 @@ Public Class ScheduleManager
 
     Public Sub Start()
 
-        m_startTimerThread = New Thread(AddressOf StartTimer)
-        m_startTimerThread.Start()
+        If m_enabled Then
+            m_startTimerThread = New Thread(AddressOf StartTimer)
+            m_startTimerThread.Start()
+        End If
 
     End Sub
 
     Public Sub [Stop]()
 
-        If m_startTimerThread IsNot Nothing Then m_startTimerThread.Abort()
-        If m_timer.Enabled Then
-            m_timer.Stop()
-            RaiseEvent Stopped(Me, EventArgs.Empty)
+        If m_enabled Then
+            If m_startTimerThread IsNot Nothing Then m_startTimerThread.Abort()
+            If m_timer.Enabled Then
+                m_timer.Stop()
+                If m_autoSaveSchedules Then SaveSchedules()
+                RaiseEvent Stopped(Me, EventArgs.Empty)
+            End If
         End If
 
     End Sub
@@ -134,38 +151,52 @@ Public Class ScheduleManager
 
     End Sub
 
+    ''' <summary>
+    ''' Loads previously saved schedules from the application configuration file.
+    ''' </summary>
     Public Sub LoadSchedules()
 
-        For Each schedule As CategorizedSettingsElement In DefaultConfigFile.CategorizedSettings(m_configurationElement)
-            m_schedules.Add(schedule.Name, New Schedule(schedule.Name, schedule.Value))
-        Next
+        If m_enabled Then
+            For Each schedule As CategorizedSettingsElement In DefaultConfigFile.CategorizedSettings(m_configurationElement)
+                m_schedules.Add(schedule.Name, New Schedule(schedule.Name, schedule.Value))
+            Next
+        End If
 
     End Sub
 
+    ''' <summary>
+    ''' Saves all schedules to the application configuration file.
+    ''' </summary>
     Public Sub SaveSchedules()
 
-        DefaultConfigFile.CategorizedSettings(m_configurationElement).Clear()
-        For Each scheduleName As String In m_schedules.Keys
-            DefaultConfigFile.CategorizedSettings(m_configurationElement).Add(scheduleName, m_schedules(scheduleName).Rule)
-        Next
-        SaveSettings()
+        If m_enabled Then
+            DefaultConfigFile.CategorizedSettings(m_configurationElement).Clear()
+            For Each scheduleName As String In m_schedules.Keys
+                DefaultConfigFile.CategorizedSettings(m_configurationElement).Add(scheduleName, m_schedules(scheduleName).Rule)
+            Next
+            SaveSettings()
+        End If
 
     End Sub
 
     Public Sub CheckSchedule(ByVal scheduleName As String)
 
-        RaiseEvent CheckingSchedule(scheduleName)
-        If m_schedules(scheduleName).IsDue() Then
-            ThreadPool.QueueUserWorkItem(AddressOf AsynchronousProcessSchedule, scheduleName)
+        If m_enabled Then
+            RaiseEvent CheckingSchedule(scheduleName)
+            If m_schedules(scheduleName).IsDue() Then
+                ThreadPool.QueueUserWorkItem(AddressOf AsynchronousProcessSchedule, scheduleName)
+            End If
         End If
 
     End Sub
 
     Public Sub CheckAllSchedules()
 
-        For Each scheduleName As String In m_schedules.Keys
-            CheckSchedule(scheduleName)
-        Next
+        If m_enabled Then
+            For Each scheduleName As String In m_schedules.Keys
+                CheckSchedule(scheduleName)
+            Next
+        End If
 
     End Sub
 

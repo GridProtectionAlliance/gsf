@@ -24,6 +24,7 @@ Partial Class ScheduleManager
     Protected Overrides Sub Dispose(ByVal disposing As Boolean)
         If disposing AndAlso components IsNot Nothing Then
             components.Dispose()
+            [Stop]()    ' Stop the schedule manager.
         End If
         MyBase.Dispose(disposing)
     End Sub
