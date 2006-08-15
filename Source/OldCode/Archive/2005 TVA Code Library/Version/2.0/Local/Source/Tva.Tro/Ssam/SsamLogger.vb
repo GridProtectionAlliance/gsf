@@ -262,7 +262,7 @@ Namespace Ssam
             End Get
         End Property
 
-        Public Sub ProcessStateChanged(ByVal newState As Services.ProcessState) Implements Services.IServiceComponent.ProcessStateChanged
+        Public Sub ProcessStateChanged(ByVal processName As String, ByVal newState As Services.ProcessState) Implements Services.IServiceComponent.ProcessStateChanged
 
             ' Ssam logger, when used as a service component, doesn't need to respond to changes in process state.
 
