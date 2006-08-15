@@ -408,7 +408,7 @@ Namespace DatAWare
 
         End Sub
 
-        Public Sub ProcessStateChanged(ByVal newState As Services.ProcessState) Implements Services.IServiceComponent.ProcessStateChanged
+        Public Sub ProcessStateChanged(ByVal processName As String, ByVal newState As Services.ProcessState) Implements Services.IServiceComponent.ProcessStateChanged
 
             ' DatAWare listener is not affected by changes in process state
 
