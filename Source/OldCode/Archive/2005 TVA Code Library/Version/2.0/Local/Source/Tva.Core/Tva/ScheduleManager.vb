@@ -3,11 +3,13 @@
 Imports System.Drawing
 Imports System.ComponentModel
 Imports System.Threading
+Imports Tva.Services
 Imports Tva.Configuration
 Imports Tva.Configuration.Common
 
 <ToolboxBitmap(GetType(ScheduleManager)), DefaultEvent("ProcessSchedule")> _
 Public Class ScheduleManager
+    Implements IServiceComponent
 
     Private m_configurationElement As String
     Private m_autoSaveSchedules As Boolean
@@ -19,8 +21,8 @@ Public Class ScheduleManager
     Public Event Starting As EventHandler
     Public Event Started As EventHandler
     Public Event Stopped As EventHandler
-    Public Event CheckingSchedule(ByVal scheduleName As String)
-    Public Event ProcessSchedule(ByVal scheduleName As String, ByVal schedule As Schedule)
+    Public Event CheckingSchedule(ByVal schedule As Schedule)
+    Public Event ProcessSchedule(ByVal schedule As Schedule)
 
     Public Sub New(ByVal autoSaveSchedules As Boolean)
         MyBase.New()
@@ -32,6 +34,11 @@ Public Class ScheduleManager
         LoadSchedules()
     End Sub
 
+    ''' <summary>
+    ''' Gets or sets the element name of the application configuration file under which the schedules will be saved.
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns>The element name of the application configuration file under which the schedules will be saved.</returns>
     Public Property ConfigurationElement() As String
         Get
             Return m_configurationElement
@@ -45,6 +52,12 @@ Public Class ScheduleManager
         End Set
     End Property
 
+    ''' <summary>
+    ''' Gets or sets a boolean value indicating whether the schedules will be saved automatically to the application
+    ''' configuration file when this instance of Tva.ScheduleManager is stopped or disposed.
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
     Public Property AutoSaveSchedules() As Boolean
         Get
             Return m_autoSaveSchedules
@@ -61,6 +74,13 @@ Public Class ScheduleManager
         Set(ByVal value As Boolean)
             m_enabled = value
         End Set
+    End Property
+
+    <Browsable(False)> _
+    Public ReadOnly Property IsRunning() As Boolean
+        Get
+            Return m_timer.Enabled
+        End Get
     End Property
 
     <Browsable(False)> _
@@ -92,73 +112,16 @@ Public Class ScheduleManager
 
     End Sub
 
-    Public Sub AddSchedule(ByVal scheduleName As String)
-
-        AddSchedule(scheduleName, "*")
-
-    End Sub
-
-    Public Sub AddSchedule(ByVal scheduleName As String, ByVal minutes As String)
-
-        AddSchedule(scheduleName, minutes, "*")
-
-    End Sub
-
-    Public Sub AddSchedule(ByVal scheduleName As String, ByVal minutes As String, ByVal hours As String)
-
-        AddSchedule(scheduleName, minutes, hours, "*")
-
-    End Sub
-
-    Public Sub AddSchedule(ByVal scheduleName As String, ByVal minutes As String, ByVal hours As String, _
-            ByVal days As String)
-
-        AddSchedule(scheduleName, minutes, hours, days, "*")
-
-    End Sub
-
-    Public Sub AddSchedule(ByVal scheduleName As String, ByVal minutes As String, ByVal hours As String, _
-            ByVal days As String, ByVal months As String)
-
-        AddSchedule(scheduleName, minutes, hours, days, months, "*")
-
-    End Sub
-
-    Public Sub AddSchedule(ByVal scheduleName As String, ByVal minutes As String, ByVal hours As String, _
-            ByVal days As String, ByVal months As String, ByVal daysOfWeek As String)
-
-        AddSchedule(New Schedule(scheduleName, minutes, hours, days, months, daysOfWeek))
-
-    End Sub
-
-    Public Sub AddSchedule(ByVal schedule As Schedule)
-
-        If Not m_schedules.ContainsKey(schedule.Name) Then m_schedules.Add(schedule.Name, schedule)
-        If m_autoSaveSchedules Then
-            DefaultConfigFile.CategorizedSettings(m_configurationElement).Add(schedule.Name, schedule.Rule)
-            SaveSettings()
-        End If
-
-    End Sub
-
-    Public Sub RemoveSchedule(ByVal scheduleName As String)
-
-        m_schedules.Remove(scheduleName)
-        If m_autoSaveSchedules Then
-            DefaultConfigFile.CategorizedSettings(m_configurationElement).Remove(scheduleName)
-            SaveSettings()
-        End If
-
-    End Sub
-
     ''' <summary>
     ''' Loads previously saved schedules from the application configuration file.
     ''' </summary>
     Public Sub LoadSchedules()
 
         If m_enabled Then
-            For Each schedule As CategorizedSettingsElement In DefaultConfigFile.CategorizedSettings(m_configurationElement)
-                m_schedules.Add(schedule.Name, New Schedule(schedule.Name, schedule.Value))
+            For Each savedSchedule As CategorizedSettingsElement In DefaultConfigFile.CategorizedSettings(m_configurationElement)
+                Dim schedule As New Schedule(savedSchedule.Name)
+                schedule.Rule = savedSchedule.Value
+                m_schedules(savedSchedule.Name) = schedule
             Next
         End If
 
@@ -182,7 +145,7 @@ Public Class ScheduleManager
     Public Sub CheckSchedule(ByVal scheduleName As String)
 
         If m_enabled Then
-            RaiseEvent CheckingSchedule(scheduleName)
+            RaiseEvent CheckingSchedule(m_schedules(scheduleName))
             If m_schedules(scheduleName).IsDue() Then
                 ThreadPool.QueueUserWorkItem(AddressOf AsynchronousProcessSchedule, scheduleName)
             End If
@@ -203,7 +166,7 @@ Public Class ScheduleManager
     Private Sub AsynchronousProcessSchedule(ByVal state As Object)
 
         Dim scheduleName As String = Convert.ToString(state)
-        RaiseEvent ProcessSchedule(scheduleName, m_schedules(scheduleName))
+        RaiseEvent ProcessSchedule(m_schedules(scheduleName))
 
     End Sub
 
@@ -229,5 +192,49 @@ Public Class ScheduleManager
         CheckAllSchedules()
 
     End Sub
+
+#Region " IServiceComponent Implementation "
+
+    Private m_previouslyEnabled As Boolean = False
+
+    Public ReadOnly Property Name() As String Implements Services.IServiceComponent.Name
+        Get
+            Return Me.GetType.Name
+        End Get
+    End Property
+
+    Public Sub ProcessStateChanged(ByVal processName As String, ByVal newState As Services.ProcessState) Implements Services.IServiceComponent.ProcessStateChanged
+
+    End Sub
+
+    Public Sub ServiceStateChanged(ByVal newState As Services.ServiceState) Implements Services.IServiceComponent.ServiceStateChanged
+
+        Select Case newState
+            Case ServiceState.Paused
+                m_previouslyEnabled = Enabled
+                MyClass.Enabled = False
+            Case ServiceState.Resumed
+                MyClass.Enabled = m_previouslyEnabled
+        End Select
+
+    End Sub
+
+    Public ReadOnly Property Status() As String Implements Services.IServiceComponent.Status
+        Get
+            With New System.Text.StringBuilder()
+                .Append("       Number of schedules:")
+                .Append(m_schedules.Count)
+                .Append(Environment.NewLine)
+                For Each scheduleName As String In m_schedules.Keys
+                    .Append(m_schedules(scheduleName).Status)
+                    .Append(Environment.NewLine)
+                Next
+
+                Return .ToString()
+            End With
+        End Get
+    End Property
+
+#End Region
 
 End Class

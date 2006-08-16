@@ -7,7 +7,7 @@ Imports Tva.Text.Common
 
 Public Class Schedule
 
-#Region "Private Schedule Element Class"
+#Region " Private Schedule Element Class "
 
     Private Class Element
 
@@ -141,15 +141,31 @@ Public Class Schedule
     Private m_dayOfWeek As Element
     Private m_lastRunDateTime As System.DateTime
 
-    Public Sub New(ByVal name As String, ByVal minutes As String, ByVal hours As String, ByVal days As String, _
-            ByVal months As String, ByVal daysOfWeek As String)
-        MyClass.New(name, minutes & " " & hours & " " & days & " " & months & " " & daysOfWeek)
+    Public Sub New(ByVal name As String)
+        MyClass.New(name, "*")
     End Sub
 
-    Public Sub New(ByVal name As String, ByVal rule As String)
+    Public Sub New(ByVal name As String, ByVal minutes As String)
+        MyClass.New(name, minutes, "*")
+    End Sub
+
+    Public Sub New(ByVal name As String, ByVal minutes As String, ByVal hours As String)
+        MyClass.New(name, minutes, hours, "*")
+    End Sub
+
+    Public Sub New(ByVal name As String, ByVal minutes As String, ByVal hours As String, ByVal days As String)
+        MyClass.New(name, minutes, hours, days, "*")
+    End Sub
+
+    Public Sub New(ByVal name As String, ByVal minutes As String, ByVal hours As String, ByVal days As String, _
+                ByVal months As String)
+        MyClass.New(name, minutes, hours, days, months, "*")
+    End Sub
+    Public Sub New(ByVal name As String, ByVal minutes As String, ByVal hours As String, ByVal days As String, _
+            ByVal months As String, ByVal daysOfWeek As String)
         MyBase.New()
         MyClass.Name = name
-        MyClass.Rule = rule
+        MyClass.Rule = minutes & " " & hours & " " & days & " " & months & " " & DaysOfWeek
     End Sub
 
     Public Property Name() As String
@@ -236,11 +252,14 @@ Public Class Schedule
     Public ReadOnly Property Status() As String
         Get
             With New System.Text.StringBuilder()
-                .Append("             Schedule name:" & m_name)
+                .Append("             Schedule name: ")
+                .Append(m_name)
                 .Append(Environment.NewLine)
-                .Append("             Schedule rule:" & Rule)
+                .Append("             Schedule rule: ")
+                .Append(Rule)
                 .Append(Environment.NewLine)
-                .Append("         Schedule last run:" & m_lastRunDateTime)
+                .Append("             Last run time: ")
+                .Append(IIf(m_lastRunDateTime.Equals(System.DateTime.Parse("01/01/0001 12:00:00 AM")), "Never", m_lastRunDateTime))
                 .Append(Environment.NewLine)
 
                 Return .ToString()
