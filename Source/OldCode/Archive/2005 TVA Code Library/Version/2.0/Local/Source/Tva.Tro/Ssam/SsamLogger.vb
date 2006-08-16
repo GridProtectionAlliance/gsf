@@ -248,12 +248,7 @@ Namespace Ssam
 
 #Region " IServiceComponent Implementation "
 
-        Private Enum SsamLoggerState As Integer
-            Enabled 
-            Disabled 
-        End Enum
-
-        Private m_lastKnownState As SsamLoggerState
+        Private m_previouslyEnabled As Boolean = False
 
         <Browsable(False)> _
         Public ReadOnly Property Name() As String Implements Services.IServiceComponent.Name
@@ -272,17 +267,10 @@ Namespace Ssam
 
             Select Case newState
                 Case ServiceState.Paused
-                    If MyClass.Enabled() Then
-                        m_lastKnownState = SsamLoggerState.Enabled  ' Logger is enabled when the service is paused.
-                        MyClass.Enabled = False ' Disable the logger only if is enabled.
-                    Else
-                        m_lastKnownState = SsamLoggerState.Disabled ' Logger is disabled when the service is paused.
-                    End If
+                    m_previouslyEnabled = MyClass.Enabled()
+                    MyClass.Enabled = False
                 Case ServiceState.Resumed
-                    If m_lastKnownState = SsamLoggerState.Enabled Then
-                        ' Enable the logger only if it was enabled when the service was paused.
-                        MyClass.Enabled = True
-                    End If
+                    MyClass.Enabled = m_previouslyEnabled
             End Select
 
         End Sub
