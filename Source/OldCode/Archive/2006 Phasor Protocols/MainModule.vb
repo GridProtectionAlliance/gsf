@@ -55,7 +55,7 @@ Module MainModule
 
         With CategorizedSettings("ReferenceAngle")
             .Add("AngleCount", "3", "Number of phase angles to use to calculate reference phase angle")
-            .Add("FramesPerSecond", "30", "Estimated frames per second for incoming data (used for pre-sorting data for reference angle calculations)")
+            .Add("FramesPerSecond", "30", "Expected frames per second for incoming data (used for pre-sorting data for reference angle calculations)")
             .Add("LagTime", "0.134", "Allowed lag time, in seconds, for incoming data before starting reference angle calculations")
             .Add("LeadTime", "0.5", "Allowed advanced time, in seconds, to tolerate before assuming incoming measurement time is floating (i.e., not locked)")
         End With
