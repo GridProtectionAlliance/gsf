@@ -45,17 +45,17 @@
     <Import Include="Tva.Common" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Common.vb" />
-    <Compile Include="Connection.vb" />
-    <Compile Include="DatabaseStructure.vb" />
-    <Compile Include="DataBlock.vb" />
-    <Compile Include="EventProcessor.vb" />
-    <Compile Include="Listener.vb" />
+    <Compile Include="Legacy Interfaces\Common.vb" />
+    <Compile Include="Legacy Interfaces\Connection.vb" />
+    <Compile Include="Legacy Interfaces\DatabaseStructure.vb" />
+    <Compile Include="Legacy Interfaces\DataBlock.vb" />
+    <Compile Include="Legacy Interfaces\EventProcessor.vb" />
+    <Compile Include="Legacy Interfaces\Listener.vb" />
+    <Compile Include="Legacy Interfaces\Points.vb" />
+    <Compile Include="Legacy Interfaces\ProcessEvent.vb" />
+    <Compile Include="Legacy Interfaces\StandardEvent.vb" />
+    <Compile Include="Legacy Interfaces\TimeTag.vb" />
     <Compile Include="My Project\AssemblyInfo.vb" />
-    <Compile Include="Points.vb" />
-    <Compile Include="ProcessEvent.vb" />
-    <Compile Include="StandardEvent.vb" />
-    <Compile Include="TimeTag.vb" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Tva.Core\Tva.Core.vbproj">
