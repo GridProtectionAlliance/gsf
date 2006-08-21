@@ -29,8 +29,8 @@ Imports System.Runtime.InteropServices
 '
 ' You can specify all the values or you can default the Build and Revision Numbers 
 ' by using the '*' as shown below:
-' <Assembly: AssemblyVersion("2.1.17.53589")> 
+' <Assembly: AssemblyVersion("2.1.11.54102")> 
 
-<Assembly: AssemblyVersion("2.1.17.53589")> 
-<Assembly: AssemblyFileVersion("2.1.17.53589")> 
+<Assembly: AssemblyVersion("2.1.11.54102")> 
+<Assembly: AssemblyFileVersion("2.1.11.54102")> 
 <Assembly: AssemblyKeyFile("..\\..\\..\\TVA.snk")> 
