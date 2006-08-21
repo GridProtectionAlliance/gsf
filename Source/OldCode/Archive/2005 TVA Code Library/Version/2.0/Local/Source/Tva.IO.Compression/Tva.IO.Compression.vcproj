@@ -78,12 +78,14 @@
 				AssemblyDebug="1"
 				ProgramDatabaseFile="$(OutDir)/$(ProjectName).pdb"
 				ResourceOnlyDLL="true"
+				KeyFile="..\TVA.snk"
 			/>
 			<Tool
 				Name="VCALinkTool"
 			/>
 			<Tool
 				Name="VCManifestTool"
+				EmbedManifest="true"
 			/>
 			<Tool
 				Name="VCXDCMakeTool"
@@ -169,6 +171,7 @@
 				GenerateDebugInformation="false"
 				ProgramDatabaseFile=""
 				ResourceOnlyDLL="true"
+				KeyFile="..\TVA.snk"
 			/>
 			<Tool
 				Name="VCALinkTool"

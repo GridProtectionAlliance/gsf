@@ -259,7 +259,7 @@ Public Class Schedule
                 .Append(Rule)
                 .Append(Environment.NewLine)
                 .Append("             Last run time: ")
-                .Append(IIf(m_lastRunDateTime.Equals(System.DateTime.Parse("01/01/0001 12:00:00 AM")), "Never", m_lastRunDateTime))
+                .Append(IIf(m_lastRunDateTime = System.DateTime.MinValue, "Never", m_lastRunDateTime))
                 .Append(Environment.NewLine)
 
                 Return .ToString()
@@ -270,8 +270,9 @@ Public Class Schedule
     Public Function IsDue() As Boolean
 
         Dim currentDateTime As System.DateTime = System.DateTime.Now
-        If m_minutes.Matches(currentDateTime) And m_hours.Matches(currentDateTime) And m_days.Matches(currentDateTime) And _
-                m_months.Matches(currentDateTime) And m_dayOfWeek.Matches(currentDateTime) Then
+        If m_minutes.Matches(currentDateTime) AndAlso m_hours.Matches(currentDateTime) AndAlso _
+                m_days.Matches(currentDateTime) AndAlso m_months.Matches(currentDateTime) AndAlso _
+                m_dayOfWeek.Matches(currentDateTime) Then
             m_lastRunDateTime = currentDateTime
             Return True
         Else
