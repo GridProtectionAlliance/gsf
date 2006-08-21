@@ -15,7 +15,7 @@
             <property name="Title" value="TVA Code Library" />
             <property name="OutputTarget" value="Web" />
             <property name="SdkLinksOnWeb" value="True" />
-            <property name="Version" value="2.1.17.53589" />
+            <property name="Version" value="2.1.11.54102" />
             <property name="FooterHtml" value="    &lt;table width=&quot;100%&quot;&gt;&#xD;&#xA;        &lt;tr&gt;&#xD;&#xA;            &lt;td align=&quot;center&quot;&gt;&#xD;&#xA;                &lt;img src=&quot;http://opweb.cha.tva.gov/general/CodeLibrary/Documentation/Images/MSGoldPartnerLogo.gif&quot; /&gt;&lt;/td&gt;&#xD;&#xA;        &lt;/tr&gt;&#xD;&#xA;        &lt;tr&gt;&#xD;&#xA;            &lt;td&gt;&#xD;&#xA;                &lt;p align=&quot;center&quot; style=&quot;font-size: 8pt&quot;&gt;&#xD;&#xA;                    &lt;a href=&quot;http://www.tva.gov&quot; target=&quot;_blank&quot;&gt;Copyright © 2006, TVA - All Rights Reserved&lt;/a&gt;&lt;/p&gt;&#xD;&#xA;            &lt;/td&gt;&#xD;&#xA;        &lt;/tr&gt;&#xD;&#xA;    &lt;/table&gt;" />
             <property name="AssemblyVersionInfo" value="AssemblyVersion" />
             <property name="Preliminary" value="True" />

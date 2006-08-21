@@ -36,4 +36,4 @@ Imports System.Security.Permissions
 
 <Assembly: AssemblyVersion("2.1.11.54102")> 
 <Assembly: AssemblyFileVersion("2.1.11.54102")> 
-<Assembly: AssemblyKeyFile("..\\..\\..\\TVA.snk")> 
+<Assembly: AssemblyKeyFile("..\TVA.snk")> 
