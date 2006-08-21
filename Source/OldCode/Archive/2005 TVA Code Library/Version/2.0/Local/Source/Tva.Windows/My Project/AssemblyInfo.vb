@@ -32,8 +32,8 @@ Imports System.Security.Permissions
 '
 ' You can specify all the values or you can default the Build and Revision Numbers 
 ' by using the '*' as shown below:
-' <Assembly: AssemblyVersion("2.1.11.54102")> 
+' <Assembly: AssemblyVersion("2.1.12.56361")> 
 
-<Assembly: AssemblyVersion("2.1.11.54102")> 
-<Assembly: AssemblyFileVersion("2.1.11.54102")> 
-<Assembly: AssemblyKeyFile("..\\..\\..\\TVA.snk")> 
+<Assembly: AssemblyVersion("2.1.12.56361")> 
+<Assembly: AssemblyFileVersion("2.1.12.56361")> 
+<Assembly: AssemblyKeyFile("..\TVA.snk")> 

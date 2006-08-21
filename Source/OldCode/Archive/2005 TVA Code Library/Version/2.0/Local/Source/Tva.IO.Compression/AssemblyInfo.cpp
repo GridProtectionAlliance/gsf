@@ -30,7 +30,7 @@ using namespace System::Runtime::CompilerServices;
 // You can specify all the value or you can default the Revision and Build Numbers 
 // by using the '*' as shown below:
 
-[assembly:AssemblyVersion("2.1.11.54102")];
+[assembly:AssemblyVersion("2.1.12.56361")];
 
 //
 // In order to sign your assembly you must specify a key to use. Refer to the 
@@ -55,5 +55,5 @@ using namespace System::Runtime::CompilerServices;
 //       documentation for more information on this.
 //
 [assembly:AssemblyDelaySignAttribute(false)];
-[assembly:AssemblyKeyFileAttribute("..\\TVA.snk")];
+[assembly:AssemblyKeyFileAttribute("..\TVA.snk")];
 [assembly:AssemblyKeyNameAttribute("")];
