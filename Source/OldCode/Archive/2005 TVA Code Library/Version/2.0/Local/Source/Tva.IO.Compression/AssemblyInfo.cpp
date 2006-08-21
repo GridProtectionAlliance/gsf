@@ -14,7 +14,7 @@ using namespace System::Runtime::CompilerServices;
 [assembly:AssemblyConfigurationAttribute("")];
 [assembly:AssemblyCompanyAttribute("TVA")];
 [assembly:AssemblyProductAttribute("Shared .NET Code Library for TVA")];
-[assembly:AssemblyCopyrightAttribute("Copyright © 2003, TVA - All rights reserved.  This .NET library uses \"zlib\" compression code written by Jean-loup Gailly and Mark Adler, Copyright © 1995-2002, and general zip file format manipulation code written by Gilles Vollant, Copyright © 1998-2003")];
+[assembly:AssemblyCopyrightAttribute("Copyright © 2003-2006, TVA - All rights reserved.  This .NET library uses \"zlib\" compression code written by Jean-loup Gailly and Mark Adler, Copyright © 1995-2002, and general zip file format manipulation code written by Gilles Vollant, Copyright © 1998-2003")];
 [assembly:AssemblyTrademarkAttribute("Authors: James Ritchie Carroll (.NET wrapper), Jean-loup Gailly and Mark Adler (zlib), Gilles Vollant (zip/unzip)")];
 [assembly:AssemblyCultureAttribute("")];		
 [assembly:CLSCompliantAttribute(true)];
