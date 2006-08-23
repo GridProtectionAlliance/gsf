@@ -71,9 +71,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Strong Name Signature Publi
 		TVA.snk = TVA.snk
 	EndProjectSection
 EndProject
+Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "Setup", "Setup\Setup.vdproj", "{4DF64992-FEA6-49B3-BACE-1F11A98A1629}"
+EndProject
 Global
 	GlobalSection(SourceCodeControl) = preSolution
-		SccNumberOfProjects = 18
+		SccNumberOfProjects = 19
 		SccProjectName0 = \u0022$/TVA\u0020Code\u0020Library/Version/2.0/Local\u0022,\u0020HWHAAAAA
 		SccLocalPath0 = ..
 		SccProvider0 = MSSCCI:Microsoft\u0020Visual\u0020SourceSafe
@@ -164,6 +166,11 @@ Global
 		SccLocalPath17 = ..
 		CanCheckoutShared = false
 		SccProjectFilePathRelativizedFromConnection17 = Source\\Tva.Communication\\
+		SccProjectUniqueName18 = Setup\\Setup.vdproj
+		SccProjectTopLevelParentUniqueName18 = TVA\u0020Code\u0020Library.sln
+		SccLocalPath18 = ..
+		CanCheckoutShared = false
+		SccProjectFilePathRelativizedFromConnection18 = Source\\Setup\\
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -340,6 +347,12 @@ Global
 		{99F93056-9EDE-4EB8-BF8B-61E3B8728F9D}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{99F93056-9EDE-4EB8-BF8B-61E3B8728F9D}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{99F93056-9EDE-4EB8-BF8B-61E3B8728F9D}.Release|Win32.ActiveCfg = Release|Any CPU
+		{4DF64992-FEA6-49B3-BACE-1F11A98A1629}.Debug|Any CPU.ActiveCfg = Debug
+		{4DF64992-FEA6-49B3-BACE-1F11A98A1629}.Debug|Mixed Platforms.ActiveCfg = Debug
+		{4DF64992-FEA6-49B3-BACE-1F11A98A1629}.Debug|Win32.ActiveCfg = Debug
+		{4DF64992-FEA6-49B3-BACE-1F11A98A1629}.Release|Any CPU.ActiveCfg = Release
+		{4DF64992-FEA6-49B3-BACE-1F11A98A1629}.Release|Mixed Platforms.ActiveCfg = Release
+		{4DF64992-FEA6-49B3-BACE-1F11A98A1629}.Release|Win32.ActiveCfg = Release
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -355,6 +368,7 @@ Global
 		{150FD25F-8563-4F35-92DA-05754508B192} = {4F631798-355B-4607-AEEB-742B670AD834}
 		{86D45927-5D18-4A8D-BC5E-31093A800EB4} = {4F631798-355B-4607-AEEB-742B670AD834}
 		{99F93056-9EDE-4EB8-BF8B-61E3B8728F9D} = {4F631798-355B-4607-AEEB-742B670AD834}
+		{4DF64992-FEA6-49B3-BACE-1F11A98A1629} = {4F631798-355B-4607-AEEB-742B670AD834}
 		{2E2A8AA0-A387-4245-A419-496B50CB7939} = {CDC349A8-4D7D-4D2F-8D15-8CE2359FBF3D}
 		{1BFB8969-4479-4EAB-8CCB-1CF0C3DE2DEE} = {CDC349A8-4D7D-4D2F-8D15-8CE2359FBF3D}
 		{DC7668BE-7A7E-4429-9E1C-02E26EC86922} = {0C2CAD57-581F-4C7A-9D59-8A9A1270A28E}
