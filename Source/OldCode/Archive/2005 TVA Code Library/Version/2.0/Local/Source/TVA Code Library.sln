@@ -349,6 +349,7 @@ Global
 		{99F93056-9EDE-4EB8-BF8B-61E3B8728F9D}.Release|Win32.ActiveCfg = Release|Any CPU
 		{4DF64992-FEA6-49B3-BACE-1F11A98A1629}.Debug|Any CPU.ActiveCfg = Debug
 		{4DF64992-FEA6-49B3-BACE-1F11A98A1629}.Debug|Mixed Platforms.ActiveCfg = Debug
+		{4DF64992-FEA6-49B3-BACE-1F11A98A1629}.Debug|Mixed Platforms.Build.0 = Debug
 		{4DF64992-FEA6-49B3-BACE-1F11A98A1629}.Debug|Win32.ActiveCfg = Debug
 		{4DF64992-FEA6-49B3-BACE-1F11A98A1629}.Release|Any CPU.ActiveCfg = Release
 		{4DF64992-FEA6-49B3-BACE-1F11A98A1629}.Release|Mixed Platforms.ActiveCfg = Release
