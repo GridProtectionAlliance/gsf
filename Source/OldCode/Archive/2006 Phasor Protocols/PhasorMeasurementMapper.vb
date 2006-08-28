@@ -27,7 +27,6 @@ Public Class PhasorMeasurementMapper
     Public Event NewParsedMeasurements(ByVal measurements As Dictionary(Of Integer, IMeasurement))
     Public Event ParsingStatus(ByVal message As String)
 
-    Private WithEvents m_connectionTimer As Timers.Timer
     Private WithEvents m_dataStreamMonitor As Timers.Timer
     Private WithEvents m_frameParser As MultiProtocolFrameParser
     Private m_source As String
@@ -50,14 +49,7 @@ Public Class PhasorMeasurementMapper
         m_measurementIDs = measurementIDs
         m_measurementFrames = New List(Of IFrame)
 
-        m_connectionTimer = New Timers.Timer
         m_dataStreamMonitor = New Timers.Timer
-
-        With m_connectionTimer
-            .AutoReset = False
-            .Interval = 1000
-            .Enabled = False
-        End With
 
         With m_dataStreamMonitor
             .AutoReset = True
@@ -73,7 +65,8 @@ Public Class PhasorMeasurementMapper
         Disconnect()
 
         ' Start the connection cycle
-        m_connectionTimer.Enabled = True
+        m_totalBytesReceived = 0
+        m_frameParser.Start()
 
     End Sub
 
@@ -262,24 +255,6 @@ Public Class PhasorMeasurementMapper
 
     End Sub
 
-    Private Sub m_connectionTimer_Elapsed(ByVal sender As Object, ByVal e As System.Timers.ElapsedEventArgs) Handles m_connectionTimer.Elapsed
-        Try
-            UpdateStatus("Starting connection attempt for phasor enabled device """ & m_source & """...")
-
-            m_totalBytesReceived = 0
-            m_frameParser.Start()
-
-            ' Enable data stream monitor for non-UDP connections
-            m_dataStreamMonitor.Enabled = (m_frameParser.TransportProtocol <> TransportProtocol.Udp)
-
-            UpdateStatus("Connection to " & m_source & " established.")
-        Catch ex As Exception
-            UpdateStatus(m_source & " connection to """ & m_frameParser.ConnectionName & """ failed: " & ex.Message)
-            Connect()
-        End Try
-
-    End Sub
-
     Private Sub m_dataStreamMonitor_Elapsed(ByVal sender As Object, ByVal e As System.Timers.ElapsedEventArgs) Handles m_dataStreamMonitor.Elapsed
 
         ' If we've received no data in the last little timespan, we restart connect cycle...
@@ -290,6 +265,30 @@ Public Class PhasorMeasurementMapper
         End If
 
         m_bytesReceived = 0
+
+    End Sub
+
+    Private Sub m_frameParser_AttemptingConnection() Handles m_frameParser.AttemptingConnection
+
+        With m_frameParser
+            UpdateStatus("Attempting " & [Enum].GetName(GetType(PhasorProtocol), m_frameParser.PhasorProtocol).ToUpper() & " " & [Enum].GetName(GetType(TransportProtocol), .TransportProtocol).ToUpper() & " based connection to " & m_source)
+        End With
+
+    End Sub
+
+    Private Sub m_frameParser_Connected() Handles m_frameParser.Connected
+
+        ' Enable data stream monitor for non-UDP connections
+        m_dataStreamMonitor.Enabled = (m_frameParser.TransportProtocol <> TransportProtocol.Udp)
+
+        UpdateStatus("Connection to " & m_source & " established.")
+
+    End Sub
+
+    Private Sub m_frameParser_ConnectionException(ByVal ex As System.Exception) Handles m_frameParser.ConnectionException
+
+        UpdateStatus(m_source & " connection to """ & m_frameParser.ConnectionName & """ failed: " & ex.Message)
+        Connect()
 
     End Sub
 
@@ -313,9 +312,9 @@ Public Class PhasorMeasurementMapper
 
     End Sub
 
-    Private Sub m_frameParser_ParsingStatus(ByVal message As String) Handles m_frameParser.ParsingStatus
+    Private Sub m_frameParser_Disconnected() Handles m_frameParser.Disconnected
 
-        UpdateStatus(message)
+        UpdateStatus("Disconnected from " & m_source & ".")
 
     End Sub
 

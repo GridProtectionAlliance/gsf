@@ -37,13 +37,6 @@ Public Class ReferenceAngleCalculator
 
     Public Sub New(ByVal referenceAngleMeasurementID As Integer, ByVal angleMeasurements As List(Of Integer), ByVal angleCount As Integer, ByVal framesPerSecond As Integer, ByVal lagTime As Double, ByVal leadTime As Double)
 
-        ' TODO: Implement an option on concentrator to use latest measurement as local time in case local computer
-        ' is not GPS synchronized - note that a PMU reporting advanced clock time and not reporting a bad time
-        ' quality would cause concentrator to throw out valid measurements when using this option - note that
-        ' this may be more difficult than it sounds based on design of concentrator.  May be easier just to increase
-        ' lag time around local clock to account for bad local clock.  Another option would be to synchronize local clock
-        ' to real-time ticks :) But long delays in incoming data would make local time wrong.
-
         ' Because you want absolutue "minimum" possible delay when calculating phase angle, we pre-sort measurements
         ' used in phase angle calculation - this means you should use quick reporting, reliable PMU's to calculate
         ' phase angle and your local clock is required to be GPS synchronized...
@@ -108,7 +101,7 @@ Public Class ReferenceAngleCalculator
 
         ' Slide angle value in range of -179 to +180
         If angleAverage > 180 Then angleAverage -= 360
-        calculatedAngleMeasurement.Value = angleAverage
+        calculatedAngleMeasurement.RawValue = angleAverage
 
         ' Provide calculated measurement for external consumption
         RaiseEvent NewCalculatedMeasurement(calculatedAngleMeasurement)
