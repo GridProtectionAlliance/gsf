@@ -18,6 +18,8 @@
 '       Added BaselinedTimestamp function
 '  12/21/2005 - J. Ritchie Carroll
 '       2.0 version of source code migrated from 1.1 source (TVA.Shared.DateTime)
+'  08/28/2006 - J. Ritchie Carroll
+'       Added "TimeIsValid" functions
 '
 '*******************************************************************************************************
 
@@ -60,6 +62,108 @@ Namespace DateTime
                 Return seconds * 10000000L
             End Get
         End Property
+
+        ''' <summary>Determines if the specified UTC time is valid by comparing it to the system clock</summary>
+        ''' <param name="dateTime">Time to test for validity</param>
+        ''' <param name="lagTime">Allowed lag time, in seconds, before assuming time is too old to be valid</param>
+        ''' <param name="leadTime">Allowed lead time, in seconds, before assuming time is too advanced to be valid</param>
+        ''' <returns>True if time is within the specified range</returns>
+        ''' <remarks>
+        ''' <para>Time is considered valid if it exists within the specified lag time/lead time range of current time</para>
+        ''' <para>Note that lag time and lead time must be greater than zero, but can be set to sub-second intervals</para>
+        ''' </remarks>
+        ''' <exception cref="ArgumentOutOfRangeException">LagTime and LeadTime must be greater than zero, but can be less than one</exception>
+        Public Shared Function UtcTimeIsValid(ByVal dateTime As Date, ByVal lagTime As Double, ByVal leadTime As Double) As Boolean
+
+            Return UtcTimeIsValid(dateTime.Ticks, lagTime, leadTime)
+
+        End Function
+
+        ''' <summary>Determines if the specified UTC time ticks are valid by comparing them to the system clock</summary>
+        ''' <param name="ticks">Ticks of time to test for validity</param>
+        ''' <param name="lagTime">Allowed lag time, in seconds, before assuming time is too old to be valid</param>
+        ''' <param name="leadTime">Allowed lead time, in seconds, before assuming time is too advanced to be valid</param>
+        ''' <returns>True if time is within the specified range</returns>
+        ''' <remarks>
+        ''' <para>Time is considered valid if it exists within the specified lag time/lead time range of current time</para>
+        ''' <para>Note that lag time and lead time must be greater than zero, but can be set to sub-second intervals</para>
+        ''' </remarks>
+        ''' <exception cref="ArgumentOutOfRangeException">LagTime and LeadTime must be greater than zero, but can be less than one</exception>
+        Public Shared Function UtcTimeIsValid(ByVal ticks As Long, ByVal lagTime As Double, ByVal leadTime As Double) As Boolean
+
+            Return TimeIsValid(Date.UtcNow.Ticks, ticks, lagTime, leadTime)
+
+        End Function
+
+        ''' <summary>Determines if the specified local time is valid by comparing it to the system clock</summary>
+        ''' <param name="dateTime">Time to test for validity</param>
+        ''' <param name="lagTime">Allowed lag time, in seconds, before assuming time is too old to be valid</param>
+        ''' <param name="leadTime">Allowed lead time, in seconds, before assuming time is too advanced to be valid</param>
+        ''' <returns>True if time is within the specified range</returns>
+        ''' <remarks>
+        ''' <para>Time is considered valid if it exists within the specified lag time/lead time range of current time</para>
+        ''' <para>Note that lag time and lead time must be greater than zero, but can be set to sub-second intervals</para>
+        ''' </remarks>
+        ''' <exception cref="ArgumentOutOfRangeException">LagTime and LeadTime must be greater than zero, but can be less than one</exception>
+        Public Shared Function LocalTimeIsValid(ByVal dateTime As Date, ByVal lagTime As Double, ByVal leadTime As Double) As Boolean
+
+            Return LocalTimeIsValid(dateTime.Ticks, lagTime, leadTime)
+
+        End Function
+
+        ''' <summary>Determines if the specified local time ticks are valid by comparing them to the system clock</summary>
+        ''' <param name="ticks">Ticks of time to test for validity</param>
+        ''' <param name="lagTime">Allowed lag time, in seconds, before assuming time is too old to be valid</param>
+        ''' <param name="leadTime">Allowed lead time, in seconds, before assuming time is too advanced to be valid</param>
+        ''' <returns>True if time is within the specified range</returns>
+        ''' <remarks>
+        ''' <para>Time is considered valid if it exists within the specified lag time/lead time range of current time</para>
+        ''' <para>Note that lag time and lead time must be greater than zero, but can be set to sub-second intervals</para>
+        ''' </remarks>
+        ''' <exception cref="ArgumentOutOfRangeException">LagTime and LeadTime must be greater than zero, but can be less than one</exception>
+        Public Shared Function LocalTimeIsValid(ByVal ticks As Long, ByVal lagTime As Double, ByVal leadTime As Double) As Boolean
+
+            Return TimeIsValid(Date.Now.Ticks, ticks, lagTime, leadTime)
+
+        End Function
+
+        ''' <summary>Determines if time is valid by comparing it to the specified current time</summary>
+        ''' <param name="currentTime">Specified current time (e.g., could be Date.Now or Date.UtcNow)</param>
+        ''' <param name="dateTime">Time to test for validity</param>
+        ''' <param name="lagTime">Allowed lag time, in seconds, before assuming time is too old to be valid</param>
+        ''' <param name="leadTime">Allowed lead time, in seconds, before assuming time is too advanced to be valid</param>
+        ''' <returns>True if time is within the specified range</returns>
+        ''' <remarks>
+        ''' <para>Time is considered valid if it exists within the specified lag time/lead time range of current time</para>
+        ''' <para>Note that lag time and lead time must be greater than zero, but can be set to sub-second intervals</para>
+        ''' </remarks>
+        ''' <exception cref="ArgumentOutOfRangeException">LagTime and LeadTime must be greater than zero, but can be less than one</exception>
+        Public Shared Function TimeIsValid(ByVal currentTime As Date, ByVal dateTime As Date, ByVal lagTime As Double, ByVal leadTime As Double) As Boolean
+
+            Return TimeIsValid(currentTime.Ticks, dateTime.Ticks, lagTime, leadTime)
+
+        End Function
+
+        ''' <summary>Determines if time is valid by comparing it to the specified current time</summary>
+        ''' <param name="currentTimeTicks">Specified ticks of current time (e.g., could be Date.Now.Ticks or Date.UtcNow.Ticks)</param>
+        ''' <param name="ticks">Ticks of time to test for validity</param>
+        ''' <param name="lagTime">Allowed lag time, in seconds, before assuming time is too old to be valid</param>
+        ''' <param name="leadTime">Allowed lead time, in seconds, before assuming time is too advanced to be valid</param>
+        ''' <returns>True if time is within the specified range</returns>
+        ''' <remarks>
+        ''' <para>Time is considered valid if it exists within the specified lag time/lead time range of current time</para>
+        ''' <para>Note that lag time and lead time must be greater than zero, but can be set to sub-second intervals</para>
+        ''' </remarks>
+        ''' <exception cref="ArgumentOutOfRangeException">LagTime and LeadTime must be greater than zero, but can be less than one</exception>
+        Public Shared Function TimeIsValid(ByVal currentTimeTicks As Long, ByVal ticks As Long, ByVal lagTime As Double, ByVal leadTime As Double) As Boolean
+
+            If lagTime <= 0 Then Throw New ArgumentOutOfRangeException("lagTime", "lagTime must be greater than zero, but it can be less than one")
+            If leadTime <= 0 Then Throw New ArgumentOutOfRangeException("leadTime", "leadTime must be greater than zero, but it can be less than one")
+
+            Dim distance As Double = TicksToSeconds(currentTimeTicks - ticks)
+            Return (distance >= -leadTime AndAlso distance <= lagTime)
+
+        End Function
 
         ''' <summary>Returns the number of seconds in the local timezone, including fractional seconds, since that have elapsed since 12:00:00 midnight, January 1, 0001</summary>
         Public Shared ReadOnly Property SystemTimer() As Double

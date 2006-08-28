@@ -43,9 +43,9 @@ Public Class MultiProtocolFrameParser
     Public Event ReceivedUndeterminedFrame(ByVal frame As IChannelFrame) Implements IFrameParser.ReceivedUndeterminedFrame
     Public Event ReceivedFrameBufferImage(ByVal frameType As FundamentalFrameType, ByVal binaryImage As Byte(), ByVal offset As Integer, ByVal length As Integer) Implements IFrameParser.ReceivedFrameBufferImage
     Public Event ConfigurationChanged() Implements IFrameParser.ConfigurationChanged
-    Public Event ParsingStatus(ByVal message As String)
     Public Event DataStreamException(ByVal ex As Exception) Implements IFrameParser.DataStreamException
     Public Event ConnectionException(ByVal ex As Exception)
+    Public Event AttemptingConnection()
     Public Event Connected()
     Public Event Disconnected()
 
@@ -60,6 +60,7 @@ Public Class MultiProtocolFrameParser
     Private m_phasorProtocol As PhasorProtocol
     Private m_transportProtocol As TransportProtocol
     Private m_connectionString As String
+    Private m_maximumConnectionAttempts As Integer
     Private m_pmuID As Int32
     Private m_bufferSize As Int32
 
@@ -92,6 +93,7 @@ Public Class MultiProtocolFrameParser
         m_bufferSize = DefaultBufferSize
         m_definedFrameRate = DefaultFrameRate
         m_rateCalcTimer = New Timers.Timer
+        m_maximumConnectionAttempts = -1
         m_autoStartDataParsingSequence = True
 
         m_phasorProtocol = PhasorProtocol.IeeeC37_118V1
@@ -171,6 +173,15 @@ Public Class MultiProtocolFrameParser
         End Set
     End Property
 
+    Public Property MaximumConnectionAttempts() As Integer
+        Get
+            Return m_maximumConnectionAttempts
+        End Get
+        Set(ByVal value As Integer)
+            m_maximumConnectionAttempts = value
+        End Set
+    End Property
+
     Public Property AutoStartDataParsingSequence() As Boolean
         Get
             Return m_autoStartDataParsingSequence
@@ -244,7 +255,7 @@ Public Class MultiProtocolFrameParser
                     .ReceiveBufferSize = m_bufferSize
                 End If
                 .ConnectionString = m_connectionString
-                .MaximumConnectionAttempts = 1
+                .MaximumConnectionAttempts = m_maximumConnectionAttempts
                 .Handshake = False
                 .Connect()
             End With
@@ -258,8 +269,6 @@ Public Class MultiProtocolFrameParser
     End Sub
 
     Public Sub [Stop]() Implements IFrameParser.Stop
-
-        If Enabled Then UpdateStatus("Disconnecting from PDC/PMU " & ConnectionName)
 
         m_rateCalcTimer.Enabled = False
 
@@ -376,8 +385,6 @@ Public Class MultiProtocolFrameParser
             Dim binaryImage As Byte()
             Dim binaryLength As Int32
 
-            UpdateStatus("Sending command """ & [Enum].GetName(GetType(DeviceCommand), command) & """ to PDC/PMU " & ConnectionName)
-
             ' Only the IEEE protocols support commands
             Select Case m_phasorProtocol
                 Case Phasors.PhasorProtocol.IeeeC37_118V1, Phasors.PhasorProtocol.IeeeC37_118D6
@@ -439,12 +446,6 @@ Public Class MultiProtocolFrameParser
 #End Region
 
 #Region " Private Methods Implementation "
-
-    Private Sub UpdateStatus(ByVal message As String)
-
-        RaiseEvent ParsingStatus(message)
-
-    End Sub
 
     Private Sub m_rateCalcTimer_Elapsed(ByVal sender As Object, ByVal e As System.Timers.ElapsedEventArgs) Handles m_rateCalcTimer.Elapsed
 
@@ -578,7 +579,7 @@ Public Class MultiProtocolFrameParser
 
     Private Sub m_communicationClient_Connecting(ByVal sender As Object, ByVal e As System.EventArgs) Handles m_communicationClient.Connecting
 
-        UpdateStatus("Attempting " & [Enum].GetName(GetType(PhasorProtocol), m_phasorProtocol).ToUpper() & " " & [Enum].GetName(GetType(TransportProtocol), m_transportProtocol).ToUpper() & " based connection to PDC/PMU " & ConnectionName)
+        RaiseEvent AttemptingConnection()
 
     End Sub
 

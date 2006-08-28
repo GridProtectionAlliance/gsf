@@ -175,19 +175,19 @@ Public MustInherit Class DataCellBase
 #Region " IMeasurement Implementation "
 
     ' The only "measured value" a data cell exposes is its "StatusFlags"
-    Private Property IMeasurementValue() As Double Implements IMeasurement.Value
+    Private ReadOnly Property IMeasurementValue() As Double Implements IMeasurement.Value
         Get
             Return m_statusFlags * m_multiplier + m_adder
+        End Get
+    End Property
+
+    Private Property IMeasurementRawValue() As Double Implements Measurements.IMeasurement.RawValue
+        Get
+            Return m_statusFlags
         End Get
         Set(ByVal value As Double)
             m_statusFlags = Convert.ToInt16(value)
         End Set
-    End Property
-
-    Private ReadOnly Property IMeasurementRawValue() As Double Implements Measurements.IMeasurement.RawValue
-        Get
-            Return m_statusFlags
-        End Get
     End Property
 
     ' I don't imagine you would want offsets for status flags - but this may yet be handy for

@@ -84,26 +84,37 @@ Namespace Measurements
             End Set
         End Property
 
+        ''' <summary>Returns numeric value of this measurement, constrained within specified ticks</summary>
+        ''' <remarks>Operation will return NaN if ticks are outside of time deviation tolerances</remarks>
+        Public Overloads ReadOnly Property Value(ByVal ticks As Long) As Double
+            Get
+                ' We only return a measurement value that is up-to-date...
+                If TimeIsValid(ticks, Me.Ticks, m_lagTime, m_leadTime) Then
+                    Return MyBase.Value
+                Else
+                    Return Double.NaN
+                End If
+            End Get
+        End Property
+
         ''' <summary>Gets or sets numeric value of this measurement, constrained within specified ticks</summary>
         ''' <remarks>
         ''' <para>Get operation will return NaN if ticks are outside of time deviation tolerances</para>
         ''' <para>Set operation will only store a value that is newer than the cached value</para>
         ''' </remarks>
-        Default Public Overloads Property Value(ByVal ticks As Long) As Double
+        Default Public Overloads Property RawValue(ByVal ticks As Long) As Double
             Get
-                Dim distance As Double = TicksToSeconds(ticks - Me.Ticks)
-
                 ' We only return a measurement value that is up-to-date...
-                If distance > m_lagTime OrElse distance < -m_leadTime Then
-                    Return Double.NaN
+                If TimeIsValid(ticks, Me.Ticks, m_lagTime, m_leadTime) Then
+                    Return MyBase.RawValue
                 Else
-                    Return MyBase.Value
+                    Return Double.NaN
                 End If
             End Get
             Set(ByVal value As Double)
                 ' We only store a value that is newer than the current value
                 If ticks > Me.Ticks Then
-                    MyBase.Value = value
+                    MyBase.RawValue = value
                     Me.Ticks = ticks
                 End If
             End Set
@@ -114,7 +125,7 @@ Namespace Measurements
         ''' <para>Get operation will return NaN if timestamp is outside of time deviation tolerances</para>
         ''' <para>Set operation will only store a value that is newer than the cached value</para>
         ''' </remarks>
-        Default Public Overloads Property Value(ByVal timestamp As Date) As Double
+        Default Public Overloads Property RawValue(ByVal timestamp As Date) As Double
             Get
                 Return Me(timestamp.Ticks)
             End Get

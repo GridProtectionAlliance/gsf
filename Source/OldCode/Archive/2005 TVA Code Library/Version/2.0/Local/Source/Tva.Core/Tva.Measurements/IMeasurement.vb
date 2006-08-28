@@ -31,20 +31,22 @@ Namespace Measurements
         ''' <summary>Gets or sets index or ID of this measurement</summary>
         Property ID() As Integer
 
-        ''' <summary>Gets or sets numeric value of this measurement</summary>
+        ''' <summary>Returns the numeric value of this measurement, taking into account the specified adder and multiplier offsets</summary>
         ''' <remarks>
         ''' <para>Implementors should account for adder and multiplier in return value, e.g.:</para>
-        ''' <code>Return m_value * m_multiplier + m_adder</code>
+        ''' <code>Return m_rawValue * m_multiplier + m_adder</code>
         ''' </remarks>
-        Property Value() As Double
+        ReadOnly Property Value() As Double
 
-        ''' <summary>Returns raw value of this measurement (i.e., value that is not offset by adder and multiplier)</summary>
-        ReadOnly Property RawValue() As Double
+        ''' <summary>Gets or sets the raw value of this measurement (i.e., the numeric value that is not offset by adder and multiplier)</summary>
+        Property RawValue() As Double
 
-        ''' <summary>Defines an offset to add to the measurement value - should default to zero</summary>
+        ''' <summary>Defines an offset to add to the measurement value</summary>
+        ''' <remarks>Implementors should make sure this value defaults to zero</remarks>
         <DefaultValue(0.0R)> Property Adder() As Double
 
-        ''' <summary>Defines a mulplicative offset to add to the measurement value - should default to one</summary>
+        ''' <summary>Defines a mulplicative offset to add to the measurement value</summary>
+        ''' <remarks>Implementors should make sure this value defaults to one</remarks>
         <DefaultValue(1.0R)> Property Multiplier() As Double
 
         ''' <summary>Gets or sets exact timestamp of the data represented by this measurement</summary>

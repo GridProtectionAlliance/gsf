@@ -293,11 +293,10 @@ Namespace Measurements
         Public Property RealTimeTicks() As Long
             Get
                 Dim currentTime As Date = Date.UtcNow
-                Dim distance As Double = TicksToSeconds(currentTime.Ticks - m_realTimeTicks)
 
                 ' If the current value for real-time is outside of the time deviation tolerance of the local clock
                 ' then we set real-time to be the current local clock time value
-                If distance > m_lagTime OrElse distance < -m_leadTime Then
+                If Not TimeIsValid(currentTime.Ticks, m_realTimeTicks, m_lagTime, m_leadTime) Then
                     m_realTimeTicks = currentTime.Ticks
                     m_currentSampleTimestamp = BaselinedTimestamp(currentTime)
                 End If
@@ -309,14 +308,13 @@ Namespace Measurements
                 ' deviation tolerance of the local clock time then we set the new date as "real-time"
                 If value > m_realTimeTicks Then
                     Dim currentTime As Date = Date.UtcNow
-                    Dim distance As Double = TicksToSeconds(currentTime.Ticks - value)
 
-                    If distance > m_lagTime OrElse distance < -m_leadTime Then
-                        m_realTimeTicks = currentTime.Ticks
-                        m_currentSampleTimestamp = BaselinedTimestamp(currentTime)
-                    Else
+                    If TimeIsValid(currentTime.Ticks, value, m_lagTime, m_leadTime) Then
                         m_realTimeTicks = value
                         m_currentSampleTimestamp = BaselinedTimestamp(New Date(m_realTimeTicks))
+                    Else
+                        m_realTimeTicks = currentTime.Ticks
+                        m_currentSampleTimestamp = BaselinedTimestamp(currentTime)
                     End If
                 End If
             End Set
@@ -349,7 +347,7 @@ Namespace Measurements
                 Else
                     ' We've found the right sample for this data, so we access the proper data cell by first calculating the
                     ' proper frame index (i.e., the row) - we can then directly access the correct measurement using the index
-                    sample.Frames(System.Math.Floor((.Ticks + 1@) / m_frameRate)).Measurements(.ID).Value = .Value
+                    sample.Frames(System.Math.Floor((.Ticks + 1@) / m_frameRate)).Measurements(.ID).RawValue = .Value
 
                     ' Track absolute lastest timestamp and immediate measurement values...
                     RealTimeTicks = .Ticks
