@@ -12,7 +12,10 @@
 '  -----------------------------------------------------------------------------------------------------
 '  04/24/2006 - Pinal C. Patel
 '       Original version of source code generated
-'
+'  08/25/2006 - Pinal C. Patel
+'       Changed property ApiInstance to SsamApi and made its content serializable in the designer.
+'       Removed properties Server and KeepConnectionOpen that can now be modified through the SsamApi 
+'       property.
 '*******************************************************************************************************
 
 Imports System.Text
@@ -32,7 +35,7 @@ Namespace Ssam
         Implements ISupportInitialize, IServiceComponent
 
         Private m_enabled As Boolean
-        Private m_apiInstance As SsamApi
+        Private m_ssamApi As SsamApi
         Private WithEvents m_eventQueue As ProcessQueue(Of SsamEvent)
 
         ''' <summary>
@@ -52,63 +55,18 @@ Namespace Ssam
         ''' any consecutive events that will follow; otherwise False.
         ''' </param>
         ''' <remarks></remarks>
-        Public Sub New(ByVal server As SsamApi.SsamServer, ByVal keepConnectionOpen As Boolean)
+        Public Sub New(ByVal server As SsamServer, ByVal keepConnectionOpen As Boolean)
             MyClass.New(server, keepConnectionOpen, True)
         End Sub
 
-        ''' <summary>
-        ''' This constructor is for internal use only.
-        ''' </summary>
-        ''' <param name="server">One of the Tva.Tro.Ssam.SsamApi.SsamServer values.</param>
-        ''' <param name="keepConnectionOpen">
-        ''' True if connection with the SSAM server is to be kept open after the first event is logged for 
-        ''' any consecutive events that will follow; otherwise False.
-        ''' </param>
-        ''' <param name="initializeApi">
-        ''' True to update the configuration file of the client application with the connection strings required 
-        ''' for connecting with any of the SSAM servers.
-        ''' </param>
-        ''' <remarks></remarks>
-        Friend Sub New(ByVal server As SsamApi.SsamServer, ByVal keepConnectionOpen As Boolean, ByVal initializeApi As Boolean)
-            MyBase.New()
-            m_apiInstance = New SsamApi(server, keepConnectionOpen, initializeApi)
-            m_eventQueue = ProcessQueue(Of SsamEvent).CreateSynchronousQueue(AddressOf ProcessEvent)
-            m_eventQueue.RequeueOnException = True
-            MyClass.Enabled = True  ' Enable the SSAM Logger by default.
+        Public Sub New(ByVal server As SsamServer, ByVal keepConnectionOpen As Boolean, _
+                ByVal persistConnectionStrings As Boolean)
+            MyClass.New(New SsamApi(server, keepConnectionOpen, persistConnectionStrings))
         End Sub
 
-        ''' <summary>
-        ''' Gets or sets the SSAM server to which event are to be logged.
-        ''' </summary>
-        ''' <value></value>
-        ''' <returns>The SSAM server to which event are to be logged.</returns>
-        ''' <remarks></remarks>
-        <Category("Configuration"), Description("The SSAM server to which event are to be logged."), DefaultValue(GetType(SsamApi.SsamServer), "Development")> _
-        Public Property Server() As SsamApi.SsamServer
-            Get
-                Return m_apiInstance.Server()
-            End Get
-            Set(ByVal value As SsamApi.SsamServer)
-                m_apiInstance.Server = value
-            End Set
-        End Property
-
-        ''' <summary>
-        ''' Gets or sets a boolean value indicating whether the connection with SSAM server is to be kept open after 
-        ''' logging an event.
-        ''' </summary>
-        ''' <value></value>
-        ''' <returns>True if the connection with SSAM server is to be kept open after logging an event; otherwise False.</returns>
-        ''' <remarks></remarks>
-        <Category("Configuration"), Description("Determines whether the connection with SSAM server is to be kept open after logging an event."), DefaultValue(GetType(Boolean), "True")> _
-        Public Property KeepConnectionOpen() As Boolean
-            Get
-                Return m_apiInstance.KeepConnectionOpen()
-            End Get
-            Set(ByVal value As Boolean)
-                m_apiInstance.KeepConnectionOpen = value
-            End Set
-        End Property
+        Public Sub New(ByVal ssamApi As SsamApi)
+            MyClass.New(ssamApi, True)
+        End Sub
 
         ''' <summary>
         ''' Gets or sets a boolean value indicating whether the logging of SSAM events is enabled.
@@ -116,7 +74,7 @@ Namespace Ssam
         ''' <value></value>
         ''' <returns>True if logging of SSAM events is enabled; otherwise False.</returns>
         ''' <remarks></remarks>
-        <Category("Configuration"), Description("Determines whether the logging of SSAM events is enabled."), DefaultValue(GetType(Boolean), "True")> _
+        <Description("Determines whether the logging of SSAM events is enabled."), Category("Configuration"), DefaultValue(GetType(Boolean), "True")> _
         Public Property Enabled() As Boolean
             Get
                 Return m_enabled
@@ -137,10 +95,10 @@ Namespace Ssam
         ''' <value></value>
         ''' <returns>The Tva.Tro.Ssam.SsamApi inistance used for logging events to the SSAM server.</returns>
         ''' <remarks></remarks>
-        <Browsable(False)> _
-        Public ReadOnly Property ApiInstance() As SsamApi
+        <Description("The Tva.Tro.Ssam.SsamApi inistance used for logging events to the SSAM server."), Category("Configuration"), DesignerSerializationVisibility(DesignerSerializationVisibility.Content)> _
+        Public ReadOnly Property SsamApi() As SsamApi
             Get
-                Return m_apiInstance
+                Return m_ssamApi
             End Get
         End Property
 
@@ -168,8 +126,8 @@ Namespace Ssam
         ''' <param name="entityType">One of the Tva.Tro.Ssam.SsamEntityType values.</param>
         ''' <param name="eventType">One of the Tva.Tro.Ssam.SsamEvent.SsamEventType values.</param>
         ''' <remarks></remarks>
-        Public Sub LogEvent(ByVal entityID As String, ByVal entityType As SsamEvent.SsamEntityType, _
-                ByVal eventType As SsamEvent.SsamEventType)
+        Public Sub LogEvent(ByVal entityID As String, ByVal entityType As SsamEntityType, _
+                ByVal eventType As SsamEventType)
 
             LogEvent(entityID, entityType, eventType, "", "", "")
 
@@ -185,8 +143,8 @@ Namespace Ssam
         ''' <param name="message">A brief description of the event (max 120 characters).</param>
         ''' <param name="description">A detailed description of the event (max 2GB).</param>
         ''' <remarks></remarks>
-        Public Sub LogEvent(ByVal entityID As String, ByVal entityType As SsamEvent.SsamEntityType, _
-                ByVal eventType As SsamEvent.SsamEventType, ByVal errorNumber As String, ByVal message As String, _
+        Public Sub LogEvent(ByVal entityID As String, ByVal entityType As SsamEntityType, _
+                ByVal eventType As SsamEventType, ByVal errorNumber As String, ByVal message As String, _
                 ByVal description As String)
 
             LogEvent(New SsamEvent(entityID, entityType, eventType, errorNumber, message, description))
@@ -201,7 +159,7 @@ Namespace Ssam
         Public Sub LogEvent(ByVal newEvent As SsamEvent)
 
             ' Discard the event if SSAM Logger has been disabled.
-            If MyClass.Enabled() Then
+            If Me.Enabled Then
                 ' SSAM Logger is enabled so queue the event for logging.
                 m_eventQueue.Add(newEvent)
             End If
@@ -215,7 +173,7 @@ Namespace Ssam
         ''' <remarks></remarks>
         Private Sub ProcessEvent(ByVal item As SsamEvent)
 
-            m_apiInstance.LogEvent(item)
+            m_ssamApi.LogEvent(item)
 
         End Sub
 
@@ -224,6 +182,28 @@ Namespace Ssam
             RaiseEvent LogException(ex)
 
         End Sub
+
+#Region " Internal Code "
+
+        ''' <summary>
+        ''' This constructor is for internal use only.
+        ''' </summary>
+        ''' <param name="ssamApi"></param>
+        ''' <param name="initializeApi">
+        ''' True to update the configuration file of the client application with the connection strings required 
+        ''' for connecting with any of the SSAM servers.
+        ''' </param>
+        ''' <remarks></remarks>
+        Friend Sub New(ByVal ssamApi As SsamApi, ByVal initializeApi As Boolean)
+            MyBase.New()
+            m_ssamApi = ssamApi
+            m_enabled = True
+            m_eventQueue = ProcessQueue(Of SsamEvent).CreateSynchronousQueue(AddressOf ProcessEvent)
+            m_eventQueue.RequeueOnException = True
+            m_eventQueue.Start()
+        End Sub
+
+#End Region
 
 #Region " ISupportInitialize Implementation "
 
@@ -240,7 +220,7 @@ Namespace Ssam
             ' involves saving connection strings for connecting to the SSAM servers in the configuration
             ' file of the client application.
             ' Note: The DesignMode() property is available only after the component has initialized.
-            If Not DesignMode() Then m_apiInstance.Initialize()
+            If Not DesignMode() Then m_ssamApi.Initialize()
 
         End Sub
 
@@ -267,10 +247,10 @@ Namespace Ssam
 
             Select Case newState
                 Case ServiceState.Paused
-                    m_previouslyEnabled = MyClass.Enabled()
-                    MyClass.Enabled = False
+                    m_previouslyEnabled = Me.Enabled
+                    Me.Enabled = False
                 Case ServiceState.Resumed
-                    MyClass.Enabled = m_previouslyEnabled
+                    Me.Enabled = m_previouslyEnabled
             End Select
 
         End Sub
@@ -280,7 +260,7 @@ Namespace Ssam
             Get
                 With New StringBuilder()
                     .Append("                    Logger: ")
-                    Select Case MyClass.Enabled()
+                    Select Case Me.Enabled()
                         Case True
                             .Append("Enabled")
                         Case False

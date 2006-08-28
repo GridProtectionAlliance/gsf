@@ -14,26 +14,23 @@ Namespace Ssam
 
             'Required for Windows.Forms Class Composition Designer support
             Container.Add(Me)
-
         End Sub
 
         <System.Diagnostics.DebuggerNonUserCode(), EditorBrowsable(EditorBrowsableState.Never)> _
         Public Sub New()
-
             ' During the this default initialization, we will not initialize the SSAM API implicitly 
             ' since it is done explicitly after the component has initialized.
-            MyClass.New(SsamApi.SsamServer.Development, True, False)
+            MyClass.New(New SsamApi(SsamServer.Development, True, True), False)
 
             'This call is required by the Component Designer.
             InitializeComponent()
-
         End Sub
 
         'Component overrides dispose to clean up the component list.
         <System.Diagnostics.DebuggerNonUserCode()> _
         Protected Overrides Sub Dispose(ByVal disposing As Boolean)
             If disposing AndAlso components IsNot Nothing Then
-                m_apiInstance.Dispose()
+                m_ssamApi.Dispose()
                 components.Dispose()
             End If
             MyBase.Dispose(disposing)

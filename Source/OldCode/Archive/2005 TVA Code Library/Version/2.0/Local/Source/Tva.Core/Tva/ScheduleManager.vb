@@ -9,10 +9,10 @@ Imports Tva.Configuration.Common
 
 <ToolboxBitmap(GetType(ScheduleManager)), DefaultEvent("ProcessSchedule")> _
 Public Class ScheduleManager
-    Implements IServiceComponent
+    Implements ISupportInitialize, IServiceComponent
 
     Private m_configurationElement As String
-    Private m_autoSaveSchedules As Boolean
+    Private m_persistSchedules As Boolean
     Private m_enabled As Boolean
     Private m_schedules As Dictionary(Of String, Schedule)
     Private m_startTimerThread As Thread
@@ -24,14 +24,13 @@ Public Class ScheduleManager
     Public Event CheckingSchedule(ByVal schedule As Schedule)
     Public Event ProcessSchedule(ByVal schedule As Schedule)
 
-    Public Sub New(ByVal autoSaveSchedules As Boolean)
+    Public Sub New(ByVal persistSchedules As Boolean)
         MyBase.New()
         MyClass.ConfigurationElement = "ScheduleManager"
-        MyClass.AutoSaveSchedules = autoSaveSchedules
+        MyClass.PersistSchedules = persistSchedules
         MyClass.Enabled = True
         m_schedules = New Dictionary(Of String, Schedule)()
         m_timer = New System.Timers.Timer(60000)
-        LoadSchedules()
     End Sub
 
     ''' <summary>
@@ -53,17 +52,17 @@ Public Class ScheduleManager
     End Property
 
     ''' <summary>
-    ''' Gets or sets a boolean value indicating whether the schedules will be saved automatically to the application
-    ''' configuration file when this instance of Tva.ScheduleManager is stopped or disposed.
+    ''' Gets or sets a boolean value indicating whether the schedules will be saved to the application configuration 
+    ''' file when this instance of Tva.ScheduleManager is stopped or disposed.
     ''' </summary>
     ''' <value></value>
     ''' <returns></returns>
-    Public Property AutoSaveSchedules() As Boolean
+    Public Property PersistSchedules() As Boolean
         Get
-            Return m_autoSaveSchedules
+            Return m_persistSchedules
         End Get
         Set(ByVal value As Boolean)
-            m_autoSaveSchedules = value
+            m_persistSchedules = value
         End Set
     End Property
 
@@ -105,7 +104,7 @@ Public Class ScheduleManager
             If m_startTimerThread IsNot Nothing Then m_startTimerThread.Abort()
             If m_timer.Enabled Then
                 m_timer.Stop()
-                If m_autoSaveSchedules Then SaveSchedules()
+                SaveSchedules()
                 RaiseEvent Stopped(Me, EventArgs.Empty)
             End If
         End If
@@ -117,7 +116,7 @@ Public Class ScheduleManager
     ''' </summary>
     Public Sub LoadSchedules()
 
-        If m_enabled Then
+        If m_enabled AndAlso m_persistSchedules Then
             For Each savedSchedule As CategorizedSettingsElement In DefaultConfigFile.CategorizedSettings(m_configurationElement)
                 Dim schedule As New Schedule(savedSchedule.Name)
                 schedule.Rule = savedSchedule.Value
@@ -132,7 +131,7 @@ Public Class ScheduleManager
     ''' </summary>
     Public Sub SaveSchedules()
 
-        If m_enabled Then
+        If m_enabled AndAlso m_persistSchedules Then
             DefaultConfigFile.CategorizedSettings(m_configurationElement).Clear()
             For Each scheduleName As String In m_schedules.Keys
                 DefaultConfigFile.CategorizedSettings(m_configurationElement).Add(scheduleName, m_schedules(scheduleName).Rule)
@@ -192,6 +191,21 @@ Public Class ScheduleManager
         CheckAllSchedules()
 
     End Sub
+
+#Region " ISupportInitialize Implementation "
+
+    Public Sub BeginInit() Implements System.ComponentModel.ISupportInitialize.BeginInit
+
+    End Sub
+
+    Public Sub EndInit() Implements System.ComponentModel.ISupportInitialize.EndInit
+
+        ' Load the schedules from config file only when the component is not in design mode.
+        If Not DesignMode Then LoadSchedules()
+
+    End Sub
+
+#End Region
 
 #Region " IServiceComponent Implementation "
 

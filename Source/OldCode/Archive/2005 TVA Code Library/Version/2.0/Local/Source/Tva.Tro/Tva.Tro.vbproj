@@ -50,6 +50,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="My Project\AssemblyInfo.vb" />
+    <Compile Include="Ssam\Enumerations.vb" />
     <Compile Include="Ssam\SsamApi.vb" />
     <Compile Include="Ssam\SsamEvent.vb" />
     <Compile Include="Ssam\SsamLogger.Designer.vb">
