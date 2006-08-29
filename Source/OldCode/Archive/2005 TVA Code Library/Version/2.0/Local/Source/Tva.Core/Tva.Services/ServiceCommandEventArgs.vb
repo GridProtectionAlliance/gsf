@@ -28,22 +28,22 @@ Namespace Services
 
         Inherits EventArgs
 
-        Public Command As ServiceCommand
+        Public Command As ServiceRequestType
         Public Parameters As String()
 
         Public Sub New()
 
-            Command = ServiceCommand.Undetermined
+            Command = ServiceRequestType.Undetermined
 
         End Sub
 
-        Public Sub New(ByVal command As ServiceCommand)
+        Public Sub New(ByVal command As ServiceRequestType)
 
             MyClass.Command = command
 
         End Sub
 
-        Public Sub New(ByVal command As ServiceCommand, ByVal ParamArray parameters As String())
+        Public Sub New(ByVal command As ServiceRequestType, ByVal ParamArray parameters As String())
 
             MyClass.Command = command
             MyClass.Parameters = parameters
@@ -69,7 +69,7 @@ Namespace Services
 
             With New ServiceCommandEventArgs
                 If String.IsNullOrEmpty(command) Then
-                    .Command = ServiceCommand.Undetermined
+                    .Command = ServiceRequestType.Undetermined
                     .Parameters = New String() {"Undetermined"}
                 Else
                     .Parameters = RemoveDuplicateWhiteSpace(command).Trim().ToLower().Split(" "c)
@@ -78,49 +78,49 @@ Namespace Services
                         command = .Parameters(0)
 
                         If command.StartsWith("pause") Then
-                            .Command = ServiceCommand.PauseService
+                            .Command = ServiceRequestType.PauseService
                         ElseIf command.StartsWith("resume") Then
-                            .Command = ServiceCommand.ResumeService
+                            .Command = ServiceRequestType.ResumeService
                         ElseIf command.StartsWith("stop") Then
-                            .Command = ServiceCommand.StopService
+                            .Command = ServiceRequestType.StopService
                         ElseIf command.StartsWith("restart") Then
-                            .Command = ServiceCommand.RestartService
+                            .Command = ServiceRequestType.RestartService
                         ElseIf command.StartsWith("list") Then
-                            .Command = ServiceCommand.ListProcesses
+                            .Command = ServiceRequestType.ListProcesses
                         ElseIf command.StartsWith("exec") Then
-                            .Command = ServiceCommand.StartProcess
+                            .Command = ServiceRequestType.StartProcess
                         ElseIf command.StartsWith("abort") Then
-                            .Command = ServiceCommand.AbortProcess
+                            .Command = ServiceRequestType.AbortProcess
                         ElseIf command.StartsWith("unsch") Then
-                            .Command = ServiceCommand.UnscheduleProcess
+                            .Command = ServiceRequestType.UnscheduleProcess
                         ElseIf command.StartsWith("resch") Then
-                            .Command = ServiceCommand.RescheduleProcess
+                            .Command = ServiceRequestType.RescheduleProcess
                         ElseIf command.StartsWith("ping") Then
                             If .Parameters.Length > 1 Then
                                 If .Parameters(1).StartsWith("all") Then
-                                    .Command = ServiceCommand.PingAllClients
+                                    .Command = ServiceRequestType.PingAllClients
                                 Else
-                                    .Command = ServiceCommand.PingService
+                                    .Command = ServiceRequestType.PingService
                                 End If
                             Else
-                                .Command = ServiceCommand.PingService
+                                .Command = ServiceRequestType.PingService
                             End If
                         ElseIf command.StartsWith("pingall") Then
-                            .Command = ServiceCommand.PingAllClients
+                            .Command = ServiceRequestType.PingAllClients
                         ElseIf command.StartsWith("clients") Then
-                            .Command = ServiceCommand.ListClients
+                            .Command = ServiceRequestType.ListClients
                         ElseIf command.StartsWith("status") Then
-                            .Command = ServiceCommand.GetServiceStatus
+                            .Command = ServiceRequestType.GetServiceStatus
                         ElseIf command.StartsWith("history") Then
-                            .Command = ServiceCommand.GetCommandHistory
+                            .Command = ServiceRequestType.GetCommandHistory
                         ElseIf command.StartsWith("dir") Then
-                            .Command = ServiceCommand.GetDirectoryListing
+                            .Command = ServiceRequestType.GetDirectoryListing
                         ElseIf command.StartsWith("settings") Then
-                            .Command = ServiceCommand.ListSettings
+                            .Command = ServiceRequestType.ListSettings
                         ElseIf command.StartsWith("update") Then
-                            .Command = ServiceCommand.UpdateSetting
+                            .Command = ServiceRequestType.UpdateSetting
                         ElseIf command.StartsWith("save") Then
-                            .Command = ServiceCommand.SaveSettings
+                            .Command = ServiceRequestType.SaveSettings
                         End If
                     End If
                 End If
