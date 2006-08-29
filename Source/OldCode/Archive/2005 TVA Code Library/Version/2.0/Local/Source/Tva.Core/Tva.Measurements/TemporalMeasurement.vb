@@ -86,11 +86,11 @@ Namespace Measurements
 
         ''' <summary>Returns numeric value of this measurement, constrained within specified ticks</summary>
         ''' <remarks>Operation will return NaN if ticks are outside of time deviation tolerances</remarks>
-        Public Overloads ReadOnly Property Value(ByVal ticks As Long) As Double
+        Public Overloads ReadOnly Property AdjustedValue(ByVal ticks As Long) As Double
             Get
                 ' We only return a measurement value that is up-to-date...
                 If TimeIsValid(ticks, Me.Ticks, m_lagTime, m_leadTime) Then
-                    Return MyBase.Value
+                    Return MyBase.AdjustedValue
                 Else
                     Return Double.NaN
                 End If
@@ -106,7 +106,7 @@ Namespace Measurements
             Get
                 ' We only return a measurement value that is up-to-date...
                 If TimeIsValid(ticks, Me.Ticks, m_lagTime, m_leadTime) Then
-                    Return MyBase.RawValue
+                    Return MyBase.Value
                 Else
                     Return Double.NaN
                 End If
@@ -114,7 +114,7 @@ Namespace Measurements
             Set(ByVal value As Double)
                 ' We only store a value that is newer than the current value
                 If ticks > Me.Ticks Then
-                    MyBase.RawValue = value
+                    MyBase.Value = value
                     Me.Ticks = ticks
                 End If
             End Set

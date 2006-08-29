@@ -27,6 +27,7 @@ Namespace Measurements
         ReadOnly Property This() As IFrame
 
         ''' <summary>Keyed measurements in this frame</summary>
+        ''' <remarks>Represents a dictionary of measurements, keyed by an integer ID</remarks>
         ReadOnly Property Measurements() As Dictionary(Of Integer, IMeasurement)
 
         ''' <summary>Gets or sets published state of this frame</summary>

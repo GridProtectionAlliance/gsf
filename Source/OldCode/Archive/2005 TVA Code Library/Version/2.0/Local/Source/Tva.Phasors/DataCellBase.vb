@@ -174,20 +174,20 @@ Public MustInherit Class DataCellBase
 
 #Region " IMeasurement Implementation "
 
-    ' The only "measured value" a data cell exposes is its "StatusFlags"
-    Private ReadOnly Property IMeasurementValue() As Double Implements IMeasurement.Value
-        Get
-            Return m_statusFlags * m_multiplier + m_adder
-        End Get
-    End Property
-
-    Private Property IMeasurementRawValue() As Double Implements Measurements.IMeasurement.RawValue
+    Private Property IMeasurementValue() As Double Implements Measurements.IMeasurement.Value
         Get
             Return m_statusFlags
         End Get
         Set(ByVal value As Double)
             m_statusFlags = Convert.ToInt16(value)
         End Set
+    End Property
+
+    ' The only "measured value" a data cell exposes is its "StatusFlags"
+    Private ReadOnly Property IMeasurementAdjustedValue() As Double Implements IMeasurement.AdjustedValue
+        Get
+            Return m_statusFlags * m_multiplier + m_adder
+        End Get
     End Property
 
     ' I don't imagine you would want offsets for status flags - but this may yet be handy for
@@ -215,7 +215,7 @@ Public MustInherit Class DataCellBase
             Return Parent.Ticks
         End Get
         Set(ByVal value As Long)
-            Throw New NotImplementedException("Ticks for " & InheritedType.Name & " are derived from parent frame and are hence read-only for channel cell measurement")
+            Throw New NotImplementedException("Ticks for " & InheritedType.Name & " are derived from parent frame and are hence read-only for channel cell measurements")
         End Set
     End Property
 

@@ -48,9 +48,6 @@ Namespace Measurements
         ''' <summary>This event gets raised every second allowing consumer to track current number of unpublished samlples</summary>
         Public Event UnpublishedSamples(ByVal total As Integer)
 
-        ''' <summary>This event gets raised if concentrator needs to expose any status information that might be useful to the consumer</summary>
-        Public Event StatusMessage(ByVal message As String)
-
 #End Region
 
 #Region " Private Member Declarations "
@@ -347,7 +344,7 @@ Namespace Measurements
                 Else
                     ' We've found the right sample for this data, so we access the proper data cell by first calculating the
                     ' proper frame index (i.e., the row) - we can then directly access the correct measurement using the index
-                    sample.Frames(System.Math.Floor((.Ticks + 1@) / m_frameRate)).Measurements(.ID).RawValue = .Value
+                    sample.Frames(System.Math.Floor((.Ticks + 1@) / m_frameRate)).Measurements(.ID).Value = .Value
 
                     ' Track absolute lastest timestamp and immediate measurement values...
                     RealTimeTicks = .Ticks

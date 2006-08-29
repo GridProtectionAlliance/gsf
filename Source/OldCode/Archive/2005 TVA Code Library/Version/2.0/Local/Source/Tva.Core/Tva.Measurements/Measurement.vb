@@ -25,7 +25,7 @@ Namespace Measurements
         Implements IMeasurement
 
         Private m_id As Integer
-        Private m_rawValue As Double
+        Private m_value As Double
         Private m_adder As Double
         Private m_multiplier As Double
         Private m_ticks As Long
@@ -38,22 +38,22 @@ Namespace Measurements
 
         End Sub
 
-        Public Sub New(ByVal id As Integer, ByVal rawValue As Double, ByVal timestamp As Date)
+        Public Sub New(ByVal id As Integer, ByVal value As Double, ByVal timestamp As Date)
 
-            MyClass.New(id, rawValue, timestamp.Ticks)
-
-        End Sub
-
-        Public Sub New(ByVal id As Integer, ByVal rawValue As Double, ByVal ticks As Long)
-
-            MyClass.New(id, rawValue, 0.0R, 1.0R, ticks)
+            MyClass.New(id, Value, timestamp.Ticks)
 
         End Sub
 
-        Public Sub New(ByVal id As Integer, ByVal rawValue As Double, ByVal adder As Double, ByVal multiplier As Double, ByVal ticks As Long)
+        Public Sub New(ByVal id As Integer, ByVal value As Double, ByVal ticks As Long)
+
+            MyClass.New(id, Value, 0.0R, 1.0R, ticks)
+
+        End Sub
+
+        Public Sub New(ByVal id As Integer, ByVal value As Double, ByVal adder As Double, ByVal multiplier As Double, ByVal ticks As Long)
 
             m_id = id
-            m_rawValue = rawValue
+            m_value = Value
             m_adder = adder
             m_multiplier = multiplier
             m_ticks = ticks
@@ -79,24 +79,24 @@ Namespace Measurements
             End Set
         End Property
 
-        ''' <summary>Gets or sets numeric value of this measurement</summary>
-        ''' <remarks>Note that returned value will be offset by adder and multiplier</remarks>
-        ''' <returns>Value offset by adder and multipler (i.e., RawValue * Multiplier + Adder)</returns>
-        Public Overridable ReadOnly Property Value() As Double Implements IMeasurement.Value
-            Get
-                Return m_rawValue * m_multiplier + m_adder
-            End Get
-        End Property
-
-        ''' <summary>Raw measurement value that is not offset by adder and multiplier</summary>
+        ''' <summary>Gets or sets the raw measurement value that is not offset by adder and multiplier</summary>
         ''' <returns>Raw value of this measurement (i.e., value that is not offset by adder and multiplier)</returns>
-        Public Property RawValue() As Double Implements IMeasurement.RawValue
+        Public Property Value() As Double Implements IMeasurement.Value
             Get
-                Return m_rawValue
+                Return m_value
             End Get
             Set(ByVal value As Double)
-                m_rawValue = value
+                m_value = value
             End Set
+        End Property
+
+        ''' <summary>Returns the adjusted numeric value of this measurement</summary>
+        ''' <remarks>Note that returned value will be offset by adder and multiplier</remarks>
+        ''' <returns>Value offset by adder and multipler (i.e., Value * Multiplier + Adder)</returns>
+        Public Overridable ReadOnly Property AdjustedValue() As Double Implements IMeasurement.AdjustedValue
+            Get
+                Return m_value * m_multiplier + m_adder
+            End Get
         End Property
 
         ''' <summary>Defines an offset to add to the measurement value - defaults to zero</summary>
@@ -161,7 +161,7 @@ Namespace Measurements
         Public Function CompareTo(ByVal obj As Object) As Integer Implements System.IComparable.CompareTo
 
             If TypeOf obj Is IMeasurement Then
-                Return m_rawValue.CompareTo(DirectCast(obj, IMeasurement).Value)
+                Return m_value.CompareTo(DirectCast(obj, IMeasurement).Value)
             Else
                 Throw New ArgumentException("Measurement can only be compared with other IMeasurements...")
             End If

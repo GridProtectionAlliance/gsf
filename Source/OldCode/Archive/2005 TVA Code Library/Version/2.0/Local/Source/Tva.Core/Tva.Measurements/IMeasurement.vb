@@ -31,15 +31,15 @@ Namespace Measurements
         ''' <summary>Gets or sets index or ID of this measurement</summary>
         Property ID() As Integer
 
-        ''' <summary>Returns the numeric value of this measurement, taking into account the specified adder and multiplier offsets</summary>
-        ''' <remarks>
-        ''' <para>Implementors should account for adder and multiplier in return value, e.g.:</para>
-        ''' <code>Return m_rawValue * m_multiplier + m_adder</code>
-        ''' </remarks>
-        ReadOnly Property Value() As Double
-
         ''' <summary>Gets or sets the raw value of this measurement (i.e., the numeric value that is not offset by adder and multiplier)</summary>
-        Property RawValue() As Double
+        Property Value() As Double
+
+        ''' <summary>Returns the adjusted numeric value of this measurement, taking into account the specified adder and multiplier offsets</summary>
+        ''' <remarks>
+        ''' <para>Implementors need to account for adder and multiplier in return value, e.g.:</para>
+        ''' <code>Return RawValue * Multiplier + Adder</code>
+        ''' </remarks>
+        ReadOnly Property AdjustedValue() As Double
 
         ''' <summary>Defines an offset to add to the measurement value</summary>
         ''' <remarks>Implementors should make sure this value defaults to zero</remarks>
