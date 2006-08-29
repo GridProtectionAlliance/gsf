@@ -172,6 +172,7 @@ Public Class PhasorMeasurementReceiver
             Dim parser As MultiProtocolFrameParser
             Dim source As String
             Dim timezone As String
+            Dim timeAdjustmentTicks As Long
             Dim pmuIDs As PmuInfoCollection
             Dim x, y As Integer
 
@@ -198,7 +199,6 @@ Public Class PhasorMeasurementReceiver
             UpdateStatus("Loaded " & measurementIDs.Count & " measurement ID's...")
 
             ' Load reference angle measurements for this archiver, if any
-            ' TODO: Create view to handle this query - or configure a "set of calculated measurements that define required input measurements..."
             With RetrieveData("SELECT MeasurementID FROM ReferenceAngleMeasurements WHERE PlantCode='" & m_archiverCode & "' ORDER BY Priority", connection)
                 For x = 0 To .Rows.Count - 1
                     ' Get current row
@@ -208,8 +208,7 @@ Public Class PhasorMeasurementReceiver
 
             If angleMeasurementIDs.Count > 0 Then
                 ' Query reference angle measurement ID
-                ' TODO: Create view to handle this query
-                referenceAngleMeasurementID = ExecuteScalar("SELECT ID FROM Measurements WHERE PMUID='EIRA' AND PlantCode='" & m_archiverCode & "'", connection)
+                referenceAngleMeasurementID = ExecuteScalar("SELECT MeasurementID FROM OutputReferenceAngleMeasurement", connection)
                 m_referenceCalculator = New ReferenceAngleCalculator(referenceAngleMeasurementID, angleMeasurementIDs, m_angleCount, m_framesPerSecond, m_lagTime, m_leadTime)
 
                 With m_referenceCalculator
@@ -232,11 +231,31 @@ Public Class PhasorMeasurementReceiver
 
                     source = row("SourceID").ToString.Trim.ToUpper
                     timezone = row("TimeZone")
+                    timeAdjustmentTicks = row("TimeAdjustmentTicks")
 
+                    ' Setup phasor frame parser
                     With parser
-                        .PhasorProtocol = [Enum].Parse(GetType(PhasorProtocol), row("DataID"))
+                        Try
+                            .PhasorProtocol = [Enum].Parse(GetType(PhasorProtocol), row("DataID"), True)
+                        Catch ex As ArgumentException
+                            UpdateStatus("Unexpected phasor protocol encountered for """ & source & """: " & row("DataID") & " - defaulting to IEEE C37.118 V1.")
+                            .PhasorProtocol = PhasorProtocol.IeeeC37_118V1
+                        End Try
+
+                        ' TODO: This will need to modified to execute like the above if serial connections should be allowed
                         .TransportProtocol = IIf(String.Compare(row("NTP"), "UDP", True) = 0, TransportProtocol.Udp, TransportProtocol.Tcp)
-                        .ConnectionString = "server=" & row("IPAddress") & "; port=" & row("IPPort")
+
+                        If .TransportProtocol = TransportProtocol.Tcp Then
+                            .ConnectionString = "server=" & row("IPAddress") & "; port=" & row("IPPort")
+                        Else
+                            ' TODO: May need to account for UDP connections supporting remote server commands at some point
+                            ' Note that this will require an extra database field for remote port...
+                            .ConnectionString = "localport=" & row("IPPort")
+
+                            ' Example UDP connect string supporting remote UDP commands
+                            '.ConnectionString = "server=" & row("IPAddress") & "; localport=" & row("IPPort") & "; remoteport=" & row("IPCommandPort")
+                        End If
+
                         .PmuID = row("AccessID")
                         .SourceName = source
                     End With
@@ -268,6 +287,9 @@ Public Class PhasorMeasurementReceiver
                                     UpdateStatus("Failed to assign timezone offset """ & timezone & """ to PDC/PMU """ & source & """ due to exception: " & ex.Message)
                                 End Try
                             End If
+
+                            ' Define time adjustment ticks
+                            .TimeAdjustmentTicks = timeAdjustmentTicks
 
                             ' Bubble mapper status messages out to local update status function
                             AddHandler .ParsingStatus, AddressOf UpdateStatus
@@ -319,6 +341,8 @@ Public Class PhasorMeasurementReceiver
                     .Append(parser.Status())
                     .Append(Environment.NewLine)
                 Next
+
+                If m_referenceCalculator IsNot Nothing Then .Append(m_referenceCalculator.Status)
 
                 Return .ToString()
             End With
@@ -486,7 +510,7 @@ Public Class PhasorMeasurementReceiver
     Private Sub NewParsedMeasurements(ByVal measurements As Dictionary(Of Integer, IMeasurement))
 
         ' TODO: Provide parsed measurements "directly" to all calculated measurement modules
-        If m_referenceCalculator IsNot Nothing Then m_referenceCalculator.SortMeasurements(measurements)
+        If m_referenceCalculator IsNot Nothing Then m_referenceCalculator.QueueMeasurementsForCalculation(measurements)
 
         ' Provide real-time parsed measurements outside of receiver as needed...
         RaiseEvent NewMeasurements(measurements)

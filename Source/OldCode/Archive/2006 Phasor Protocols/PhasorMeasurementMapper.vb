@@ -40,6 +40,7 @@ Public Class PhasorMeasurementMapper
     Private m_errorTime As Long
     Private m_receivedConfigFrame As Boolean
     Private m_timezone As Win32TimeZone
+    Private m_timeAdjustmentTicks As Long
 
     Public Sub New(ByVal frameParser As MultiProtocolFrameParser, ByVal source As String, ByVal pmuIDs As PmuInfoCollection, ByVal measurementIDs As Dictionary(Of String, MeasurementDefinition))
 
@@ -155,6 +156,15 @@ Public Class PhasorMeasurementMapper
         End Set
     End Property
 
+    Public Property TimeAdjustmentTicks() As Long
+        Get
+            Return m_timeAdjustmentTicks
+        End Get
+        Set(ByVal value As Long)
+            m_timeAdjustmentTicks = value
+        End Set
+    End Property
+
     Public ReadOnly Property PmuIDs() As PmuInfoCollection
         Get
             Return m_pmuIDs
@@ -172,6 +182,9 @@ Public Class PhasorMeasurementMapper
 
             ' Adjust time to UTC based on source PDC/PMU time zone, if provided (typically when not UTC already)
             If m_timezone IsNot Nothing Then .Ticks = m_timezone.ToUniversalTime(.Timestamp).Ticks
+
+            ' We also allow "fine tuning" of time for fickle GPS clocks...
+            If m_timeAdjustmentTicks > 0 Then .Ticks += m_timeAdjustmentTicks
 
             ' Get ticks of this frame
             ticks = .Ticks
@@ -222,13 +235,13 @@ Public Class PhasorMeasurementMapper
             Next
         End With
 
+        ' Provide real-time measurements where needed
+        RaiseEvent NewParsedMeasurements(frame.Measurements)
+
         ' Queue up frame for polled retrieval into DatAWare...
         SyncLock m_measurementFrames
             m_measurementFrames.Add(frame)
         End SyncLock
-
-        ' Provide real-time measurements where needed
-        RaiseEvent NewParsedMeasurements(frame.Measurements)
 
     End Sub
 

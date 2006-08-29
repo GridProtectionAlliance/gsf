@@ -15,8 +15,10 @@
 '
 '*******************************************************************************************************
 
+Imports System.Text
 Imports Tva.Common
 Imports Tva.Measurements
+Imports Tva.Collections.Common
 
 ' TODO: Move into an external class...
 Public Class ReferenceAngleCalculator
@@ -27,13 +29,14 @@ Public Class ReferenceAngleCalculator
     Private Const BackupQueueSize As Integer = 10
 
     ' We need to time align data before attempting to calculate reference angle
-    Private m_concentrator As Concentrator
+    Private WithEvents m_concentrator As Concentrator
     Private m_referenceAngleMeasurementID As Integer
     Private m_angleMeasurements As List(Of Integer)
     Private m_angleCount As Integer
     Private m_phaseResetAngle As Double
     Private m_lastAngles As Double()
     Private m_latestCalculatedAngles As List(Of Double)
+    Private m_currentAngle As Double
 
     Public Sub New(ByVal referenceAngleMeasurementID As Integer, ByVal angleMeasurements As List(Of Integer), ByVal angleCount As Integer, ByVal framesPerSecond As Integer, ByVal lagTime As Double, ByVal leadTime As Double)
 
@@ -49,8 +52,15 @@ Public Class ReferenceAngleCalculator
 
     End Sub
 
-    Public Sub SortMeasurements(ByVal measurements As Dictionary(Of Integer, IMeasurement))
+    Public Sub QueueMeasurementsForCalculation(ByVal measurements As Dictionary(Of Integer, IMeasurement))
 
+        Threading.ThreadPool.QueueUserWorkItem(AddressOf SortMeasurements, measurements)
+
+    End Sub
+
+    Private Sub SortMeasurements(ByVal state As Object)
+
+        Dim measurements As Dictionary(Of Integer, IMeasurement) = state
         Dim measurement As IMeasurement = Nothing
 
         ' Sort all the relevant measurements that were loaded from the parsed data frame
@@ -61,6 +71,29 @@ Public Class ReferenceAngleCalculator
         Next
 
     End Sub
+
+    Public ReadOnly Property Status() As String
+        Get
+            With New StringBuilder
+                .Append("  Latest calculated angles: ")
+                SyncLock m_latestCalculatedAngles
+                    .Append(ListToString(m_latestCalculatedAngles, ","c))
+                End SyncLock
+                .Append(Environment.NewLine)
+                .Append("      Ouput measurement ID: ")
+                .Append(m_referenceAngleMeasurementID)
+                .Append(Environment.NewLine)
+                .Append("    Input measurement ID's: ")
+                .Append(ListToString(m_angleMeasurements, ","c))
+                .Append(Environment.NewLine)
+                .Append("   Minimum required angles: ")
+                .Append(m_angleCount)
+                .Append(Environment.NewLine)
+                .Append(m_concentrator.Status)
+                Return .ToString()
+            End With
+        End Get
+    End Property
 
     Private Sub PublishFrame(ByVal frame As IFrame, ByVal index As Integer)
 
@@ -101,18 +134,21 @@ Public Class ReferenceAngleCalculator
 
         ' Slide angle value in range of -179 to +180
         If angleAverage > 180 Then angleAverage -= 360
-        calculatedAngleMeasurement.RawValue = angleAverage
+        calculatedAngleMeasurement.Value = angleAverage
+        m_currentAngle = angleAverage
 
         ' Provide calculated measurement for external consumption
         RaiseEvent NewCalculatedMeasurement(calculatedAngleMeasurement)
 
         ' Add calculated reference angle to latest angle queue (used as backup in case PMU's go offline)
-        With m_latestCalculatedAngles
-            .Add(angleAverage)
-            While .Count > BackupQueueSize
-                .RemoveAt(0)
-            End While
-        End With
+        SyncLock m_latestCalculatedAngles
+            With m_latestCalculatedAngles
+                .Add(angleAverage)
+                While .Count > BackupQueueSize
+                    .RemoveAt(0)
+                End While
+            End With
+        End SyncLock
 
     End Sub
 
@@ -124,7 +160,7 @@ Public Class ReferenceAngleCalculator
         ' Move through angle measurements in priority order and try to get minimum needed set of reporting angles
         For x As Integer = 0 To m_angleMeasurements.Count - 1
             If frame.Measurements.TryGetValue(m_angleMeasurements(x), measurement) Then
-                angles(index) = GetUnwrappedPhaseAngle(index, measurement.Value)
+                angles(index) = GetUnwrappedPhaseAngle(index, measurement.AdjustedValue)
                 index += 1
                 If index = m_angleCount Then Exit For
             End If
@@ -156,11 +192,5 @@ Public Class ReferenceAngleCalculator
         Return angle
 
     End Function
-
-    Private Sub UpdateStatus(ByVal message As String)
-
-        RaiseEvent CalculationStatus(message)
-
-    End Sub
 
 End Class
