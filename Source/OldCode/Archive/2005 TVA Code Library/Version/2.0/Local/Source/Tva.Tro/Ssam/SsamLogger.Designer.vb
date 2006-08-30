@@ -20,7 +20,7 @@ Namespace Ssam
         Public Sub New()
             ' During the this default initialization, we will not initialize the SSAM API implicitly 
             ' since it is done explicitly after the component has initialized.
-            MyClass.New(New SsamApi(SsamServer.Development, True, True), False)
+            MyClass.New(New SsamApi(SsamServer.Development, True, True, False))
 
             'This call is required by the Component Designer.
             InitializeComponent()

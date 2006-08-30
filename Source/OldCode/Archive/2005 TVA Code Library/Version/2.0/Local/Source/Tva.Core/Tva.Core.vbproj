@@ -59,8 +59,6 @@
     <Import Include="System.Diagnostics" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Tva.Services\ServiceRequest.vb" />
-    <Compile Include="Tva.Services\ServiceResponse.vb" />
     <Compile Include="Tva\ScheduleManager.Designer.vb">
       <DependentUpon>ScheduleManager.vb</DependentUpon>
     </Compile>

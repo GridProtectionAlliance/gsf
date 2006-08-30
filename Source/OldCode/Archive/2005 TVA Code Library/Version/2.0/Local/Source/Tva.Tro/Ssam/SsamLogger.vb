@@ -65,7 +65,12 @@ Namespace Ssam
         End Sub
 
         Public Sub New(ByVal ssamApi As SsamApi)
-            MyClass.New(ssamApi, True)
+            MyBase.New()
+            m_ssamApi = ssamApi
+            m_enabled = True
+            m_eventQueue = ProcessQueue(Of SsamEvent).CreateSynchronousQueue(AddressOf ProcessEvent)
+            m_eventQueue.RequeueOnException = True
+            m_eventQueue.Start()
         End Sub
 
         ''' <summary>
@@ -183,28 +188,6 @@ Namespace Ssam
 
         End Sub
 
-#Region " Internal Code "
-
-        ''' <summary>
-        ''' This constructor is for internal use only.
-        ''' </summary>
-        ''' <param name="ssamApi"></param>
-        ''' <param name="initializeApi">
-        ''' True to update the configuration file of the client application with the connection strings required 
-        ''' for connecting with any of the SSAM servers.
-        ''' </param>
-        ''' <remarks></remarks>
-        Friend Sub New(ByVal ssamApi As SsamApi, ByVal initializeApi As Boolean)
-            MyBase.New()
-            m_ssamApi = ssamApi
-            m_enabled = True
-            m_eventQueue = ProcessQueue(Of SsamEvent).CreateSynchronousQueue(AddressOf ProcessEvent)
-            m_eventQueue.RequeueOnException = True
-            m_eventQueue.Start()
-        End Sub
-
-#End Region
-
 #Region " ISupportInitialize Implementation "
 
         Public Sub BeginInit() Implements System.ComponentModel.ISupportInitialize.BeginInit
@@ -219,8 +202,8 @@ Namespace Ssam
             ' exception raised by the configuration API because initialization of the Ssam API
             ' involves saving connection strings for connecting to the SSAM servers in the configuration
             ' file of the client application.
-            ' Note: The DesignMode() property is available only after the component has initialized.
-            If Not DesignMode() Then m_ssamApi.Initialize()
+            ' Note: The DesignMode property is available only after the component has initialized.
+            If Not DesignMode Then m_ssamApi.Initialize()
 
         End Sub
 
