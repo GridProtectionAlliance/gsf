@@ -32,6 +32,7 @@ Imports Tva.Phasors
 Imports Tva.Phasors.Common
 Imports Tva.Communication
 Imports Tva.Measurements
+Imports RealTimeCalculatedMeasurements
 
 ' TODO: Abstract "calculated" measurements into an externally implementable interface definition (like archiver)
 
@@ -209,11 +210,12 @@ Public Class PhasorMeasurementReceiver
             If angleMeasurementIDs.Count > 0 Then
                 ' Query reference angle measurement ID
                 referenceAngleMeasurementID = ExecuteScalar("SELECT MeasurementID FROM OutputReferenceAngleMeasurement", connection)
-                m_referenceCalculator = New ReferenceAngleCalculator(referenceAngleMeasurementID, angleMeasurementIDs, m_angleCount, m_framesPerSecond, m_lagTime, m_leadTime)
+                m_referenceCalculator = New ReferenceAngleCalculator()
+                m_referenceCalculator.Initialize(referenceAngleMeasurementID, angleMeasurementIDs.ToArray(), m_angleCount, m_framesPerSecond, m_lagTime, m_leadTime)
 
                 With m_referenceCalculator
                     ' Bubble calculation module status messages out to local update status function
-                    AddHandler .CalculationStatus, AddressOf UpdateStatus
+                    AddHandler .StatusMessage, AddressOf UpdateStatus
 
                     ' Bubble newly calculated measurement out to functions that need the real-time data
                     AddHandler .NewCalculatedMeasurement, AddressOf NewCalculatedMeasurement
