@@ -16,11 +16,13 @@
 '*******************************************************************************************************
 
 Imports System.Text
+Imports System.Threading
 Imports System.Drawing
 Imports System.ComponentModel
 Imports Tva.Common
 Imports Tva.Serialization
 Imports Tva.DateTime.Common
+Imports Tva.IO.Common
 Imports Tva.Communication.CommunicationHelper
 
 ''' <summary>
@@ -457,11 +459,7 @@ Public MustInherit Class CommunicationServerBase
     ''' <param name="data">The binary data that is to be sent to the client.</param>
     Public Overridable Sub SendTo(ByVal clientID As Guid, ByVal data As Byte()) Implements ICommunicationServer.SendTo
 
-        If data IsNot Nothing AndAlso data.Length() > 0 Then
-            SendTo(clientID, data, 0, data.Length())
-        Else
-            Throw New ArgumentNullException("data")
-        End If
+        SendTo(clientID, data, 0, data.Length())
 
     End Sub
 
@@ -475,20 +473,31 @@ Public MustInherit Class CommunicationServerBase
     Public Sub SendTo(ByVal clientID As System.Guid, ByVal data As Byte(), ByVal offset As Integer, ByVal size As Integer) Implements ICommunicationServer.SendTo
 
         If m_enabled AndAlso m_isRunning Then
-            If data IsNot Nothing AndAlso data.Length() > 0 Then
-                Dim dataToSend As Byte() = GetPreparedData(Tva.IO.Common.CopyBuffer(data, offset, size))
+            If data Is Nothing Then Throw New ArgumentNullException("data")
+            If size > 0 Then
+                Dim dataToSend As Byte() = GetPreparedData(CopyBuffer(data, offset, size))
                 If dataToSend.Length() <= MaximumDataSize Then
                     'SendPreparedDataTo(clientID, dataToSend)
+                    ' JRC: Removed reflective thread invocation and changed to thread pool for speed...
+                    '   Tva.Threading.RunThread.ExecuteNonPublicMethod(Me, "SendPreparedDataTo", clientID, dataToSend)
+
                     ' Begin sending data on a seperate thread.
-                    Tva.Threading.RunThread.ExecuteNonPublicMethod(Me, "SendPreparedDataTo", clientID, dataToSend)
+                    ThreadPool.QueueUserWorkItem(AddressOf SendPreparedDataTo, New Object() {clientID, dataToSend})
                 Else
                     ' Prepared data is too large to be sent.
                     Throw New ArgumentException("Size of the data to be sent exceeds the maximum data size of " & MaximumDataSize & " bytes.")
                 End If
-            Else
-                Throw New ArgumentNullException("data")
             End If
         End If
+
+    End Sub
+
+    ' This function proxies data to proper derived class function from thread pool
+    Private Sub SendPreparedDataTo(ByVal state As Object)
+
+        With DirectCast(state, Object())
+            SendPreparedDataTo(DirectCast(.GetValue(0), Guid), DirectCast(.GetValue(1), Byte()))
+        End With
 
     End Sub
 
@@ -518,11 +527,7 @@ Public MustInherit Class CommunicationServerBase
     ''' <param name="data">The binary data that is to sent to the subscribed clients.</param>
     Public Overridable Sub Multicast(ByVal data As Byte()) Implements ICommunicationServer.Multicast
 
-        If data IsNot Nothing AndAlso data.Length() > 0 Then
-            Multicast(data, 0, data.Length())
-        Else
-            Throw New ArgumentNullException("data")
-        End If
+        Multicast(data, 0, data.Length())
 
     End Sub
 
@@ -535,20 +540,22 @@ Public MustInherit Class CommunicationServerBase
     Public Sub Multicast(ByVal data As Byte(), ByVal offset As Integer, ByVal size As Integer) Implements ICommunicationServer.Multicast
 
         If m_enabled AndAlso m_isRunning Then
-            If data IsNot Nothing AndAlso data.Length() > 0 Then
-                Dim dataToSend As Byte() = GetPreparedData(Tva.IO.Common.CopyBuffer(data, offset, size))
+            If data Is Nothing Then Throw New ArgumentNullException("data")
+            If size > 0 Then
+                Dim dataToSend As Byte() = GetPreparedData(CopyBuffer(data, offset, size))
                 If dataToSend.Length() <= MaximumDataSize Then
                     For Each clientID As Guid In m_clientIDs
                         'SendPreparedDataTo(clientID, dataToSend)
+                        ' JRC: Removed reflective thread invocation and changed to thread pool for speed...
+                        '   Tva.Threading.RunThread.ExecuteNonPublicMethod(Me, "SendPreparedDataTo", clientID, dataToSend)
+
                         ' Begin sending data on a seperate thread.
-                        Tva.Threading.RunThread.ExecuteNonPublicMethod(Me, "SendPreparedDataTo", clientID, dataToSend)
+                        ThreadPool.QueueUserWorkItem(AddressOf SendPreparedDataTo, New Object() {clientID, dataToSend})
                     Next
                 Else
                     ' Prepared data is too large to be sent.
                     Throw New ArgumentException("Size of the data to be sent exceeds the maximum data size of " & MaximumDataSize & " bytes.")
                 End If
-            Else
-                Throw New ArgumentNullException("data")
             End If
         End If
 

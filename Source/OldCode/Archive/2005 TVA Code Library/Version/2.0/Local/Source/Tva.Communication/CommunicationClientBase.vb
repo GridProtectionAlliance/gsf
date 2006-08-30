@@ -16,11 +16,13 @@
 '*******************************************************************************************************
 
 Imports System.Text
+Imports System.Threading
 Imports System.Drawing
 Imports System.ComponentModel
 Imports Tva.Common
 Imports Tva.Serialization
 Imports Tva.DateTime.Common
+Imports Tva.IO.Common
 Imports Tva.Communication.CommunicationHelper
 
 ''' <summary>
@@ -540,11 +542,7 @@ Public MustInherit Class CommunicationClientBase
     ''' <param name="data">The binary data that is to be sent to the server.</param>
     Public Overridable Sub Send(ByVal data As Byte()) Implements ICommunicationClient.Send
 
-        If data IsNot Nothing AndAlso data.Length() > 0 Then
-            Send(data, 0, data.Length())
-        Else
-            Throw New ArgumentNullException("data")
-        End If
+        Send(data, 0, data.Length())
 
     End Sub
 
@@ -557,12 +555,16 @@ Public MustInherit Class CommunicationClientBase
     Public Sub Send(ByVal data As Byte(), ByVal offset As Integer, ByVal size As Integer) Implements ICommunicationClient.Send
 
         If m_enabled AndAlso m_isConnected Then
-            If data IsNot Nothing AndAlso data.Length() > 0 Then
-                Dim dataToSend As Byte() = GetPreparedData(Tva.IO.Common.CopyBuffer(data, offset, size))
+            If data Is Nothing Then Throw New ArgumentNullException("data")
+            If size > 0 Then
+                Dim dataToSend As Byte() = GetPreparedData(CopyBuffer(data, offset, size))
                 If dataToSend.Length() <= MaximumDataSize Then
                     'SendPreparedData(dataToSend)
+                    ' JRC: Removed reflective thread invocation and changed to thread pool for speed...
+                    '   Tva.Threading.RunThread.ExecuteNonPublicMethod(Me, "SendPreparedData", dataToSend)
+
                     ' Begin sending data on a seperate thread.
-                    Tva.Threading.RunThread.ExecuteNonPublicMethod(Me, "SendPreparedData", dataToSend)
+                    ThreadPool.QueueUserWorkItem(AddressOf SendPreparedData, dataToSend)
                 Else
                     ' Prepared data is too large to be sent.
                     Throw New ArgumentException("Size of the data to be sent exceeds the maximum data size of " & MaximumDataSize & " bytes.")
@@ -571,6 +573,13 @@ Public MustInherit Class CommunicationClientBase
                 Throw New ArgumentNullException("data")
             End If
         End If
+
+    End Sub
+
+    ' This function proxies data to proper derived class function from thread pool
+    Private Sub SendPreparedData(ByVal state As Object)
+
+        SendPreparedData(DirectCast(state, Byte()))
 
     End Sub
 
