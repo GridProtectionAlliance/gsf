@@ -32,6 +32,9 @@ Imports Tva.Phasors
 Imports Tva.Phasors.Common
 Imports Tva.Communication
 Imports Tva.Measurements
+Imports InterfaceAdapters
+
+' Once debugged, removed direct reference...
 Imports RealTimeCalculatedMeasurements
 
 ' TODO: Abstract "calculated" measurements into an externally implementable interface definition (like archiver)
@@ -56,25 +59,18 @@ Public Class PhasorMeasurementReceiver
     Private m_pollEvents As Long
     Private m_processedMeasurements As Long
     Private m_mappers As Dictionary(Of String, PhasorMeasurementMapper)
+    Private m_calculatedMeasurements As ICalculatedMeasurementAdapter()
     Private m_measurementBuffer As List(Of IMeasurement)
-    Private m_referenceCalculator As ReferenceAngleCalculator
     Private m_statusInterval As Integer
-    Private m_angleCount As Integer
-    Private m_framesPerSecond As Integer
-    Private m_lagTime As Double
-    Private m_leadTime As Double
     Private m_intializing As Boolean
 
-    Public Sub New(ByVal archiverIP As String, ByVal archiverCode As String, ByVal connectString As String, ByVal statusInterval As Integer, ByVal angleCount As Integer, ByVal framesPerSecond As Integer, ByVal lagTime As Double, ByVal leadTime As Double)
+    Public Sub New(ByVal archiverIP As String, ByVal archiverCode As String, ByVal connectString As String, ByVal statusInterval As Integer, ByVal calculatedMeasurements As ICalculatedMeasurementAdapter())
 
         m_archiverIP = archiverIP
         m_archiverCode = archiverCode
         m_connectString = connectString
         m_statusInterval = statusInterval
-        m_angleCount = angleCount
-        m_framesPerSecond = framesPerSecond
-        m_lagTime = lagTime
-        m_leadTime = leadTime
+        m_calculatedMeasurements = calculatedMeasurements
         m_measurementBuffer = New List(Of IMeasurement)
         m_connectionTimer = New Timers.Timer
         m_reportingStatus = New Timers.Timer
@@ -167,8 +163,6 @@ Public Class PhasorMeasurementReceiver
 
             Dim connection As New SqlConnection(m_connectString)
             Dim measurementIDs As New Dictionary(Of String, MeasurementDefinition)
-            Dim angleMeasurementIDs As New List(Of Integer)
-            Dim referenceAngleMeasurementID As Integer
             Dim row As DataRow
             Dim parser As MultiProtocolFrameParser
             Dim source As String
@@ -198,29 +192,6 @@ Public Class PhasorMeasurementReceiver
             End With
 
             UpdateStatus("Loaded " & measurementIDs.Count & " measurement ID's...")
-
-            ' Load reference angle measurements for this archiver, if any
-            With RetrieveData("SELECT MeasurementID FROM ReferenceAngleMeasurements WHERE PlantCode='" & m_archiverCode & "' ORDER BY Priority", connection)
-                For x = 0 To .Rows.Count - 1
-                    ' Get current row
-                    angleMeasurementIDs.Add(Convert.ToInt32(.Rows(x)("MeasurementID")))
-                Next
-            End With
-
-            If angleMeasurementIDs.Count > 0 Then
-                ' Query reference angle measurement ID
-                referenceAngleMeasurementID = ExecuteScalar("SELECT MeasurementID FROM OutputReferenceAngleMeasurement", connection)
-                m_referenceCalculator = New ReferenceAngleCalculator()
-                m_referenceCalculator.Initialize(referenceAngleMeasurementID, angleMeasurementIDs.ToArray(), m_angleCount, m_framesPerSecond, m_lagTime, m_leadTime)
-
-                With m_referenceCalculator
-                    ' Bubble calculation module status messages out to local update status function
-                    AddHandler .StatusMessage, AddressOf UpdateStatus
-
-                    ' Bubble newly calculated measurement out to functions that need the real-time data
-                    AddHandler .NewCalculatedMeasurement, AddressOf NewCalculatedMeasurement
-                End With
-            End If
 
             ' Initialize each data connection
             With RetrieveData("SELECT * FROM IEEEDataConnections WHERE PlantCode='" & m_archiverCode & "' OR SourceID IN (SELECT PDCID FROM IEEEDataConnectionPDCPMUs WHERE PlantCode='" & m_archiverCode & "')", connection)
@@ -343,8 +314,6 @@ Public Class PhasorMeasurementReceiver
                     .Append(parser.Status())
                     .Append(Environment.NewLine)
                 Next
-
-                If m_referenceCalculator IsNot Nothing Then .Append(m_referenceCalculator.Status)
 
                 Return .ToString()
             End With
@@ -494,10 +463,12 @@ Public Class PhasorMeasurementReceiver
 
     End Function
 
-    ' Note: callers should synchronize m_measurementBuffer before calling this function for thread safety
-    Private Sub QueueMeasurementForArchival(ByVal measurement As IMeasurement)
+    Public Sub QueueMeasurementForArchival(ByVal measurement As IMeasurement)
 
-        m_measurementBuffer.Add(measurement)
+        SyncLock m_measurementBuffer
+            m_measurementBuffer.Add(measurement)
+        End SyncLock
+
         m_processedMeasurements += 1
         If m_processedMeasurements Mod 100000 = 0 Then UpdateStatus(m_processedMeasurements.ToString("#,##0") & " measurements have been uploaded so far...")
 
@@ -511,24 +482,14 @@ Public Class PhasorMeasurementReceiver
 
     Private Sub NewParsedMeasurements(ByVal measurements As Dictionary(Of Integer, IMeasurement))
 
-        ' TODO: Provide parsed measurements "directly" to all calculated measurement modules
-        If m_referenceCalculator IsNot Nothing Then m_referenceCalculator.QueueMeasurementsForCalculation(measurements)
+        ' Provide parsed measurements "directly" to all calculated measurement modules
+        If m_calculatedMeasurements IsNot Nothing Then
+            For x As Integer = 0 To m_calculatedMeasurements.Length - 1
+                m_calculatedMeasurements(x).QueueMeasurementsForCalculation(measurements)
+            Next
+        End If
 
         ' Provide real-time parsed measurements outside of receiver as needed...
-        RaiseEvent NewMeasurements(measurements)
-
-    End Sub
-
-    Private Sub NewCalculatedMeasurement(ByVal measurement As IMeasurement)
-
-        SyncLock m_measurementBuffer
-            ' Append calculated reference angle measurements to measurement buffer for later archival
-            QueueMeasurementForArchival(measurement)
-        End SyncLock
-
-        ' Provide real-time calculated measurement outside of receiver as needed...
-        Dim measurements As New Dictionary(Of Integer, IMeasurement)
-        measurements.Add(measurement.ID, measurement)
         RaiseEvent NewMeasurements(measurements)
 
     End Sub

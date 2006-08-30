@@ -17,11 +17,18 @@
 
 Imports System.Text
 Imports System.Security.Principal
+Imports System.Data.SqlClient
 Imports Tva.Common
 Imports Tva.Assembly
 Imports Tva.IO.FilePath
 Imports Tva.Configuration.Common
 Imports Tva.Text.Common
+Imports Tva.Data.Common
+Imports Tva.Measurements
+Imports InterfaceAdapters
+
+
+Imports RealTimeCalculatedMeasurements
 
 Module MainModule
 
@@ -31,6 +38,8 @@ Module MainModule
 
         Dim consoleLine, receiverCategory As String
         Dim mapper As PhasorMeasurementMapper = Nothing
+        Dim calculatedMeasurements As ICalculatedMeasurementAdapter()
+        Dim x As Integer
 
         Console.WriteLine(MonitorInformation)
 
@@ -53,7 +62,9 @@ Module MainModule
             .Add("InitializeOnStartup", "True", "Set to True to intialize phasor measurement mapper at startup")
         End With
 
-        With CategorizedSettings("ReferenceAngle")
+        With CategorizedSettings("ReferenceAngleCalculation")
+            .Add("OutputMeasurementIDSql", "SELECT MeasurementID FROM OutputReferenceAngleMeasurement")
+            .Add("InputMeasurementIDsSql", "SELECT MeasurementID FROM ReferenceAngleMeasurements ORDER BY Priority")
             .Add("AngleCount", "3", "Number of phase angles to use to calculate reference phase angle")
             .Add("FramesPerSecond", "30", "Expected frames per second for incoming data (used for pre-sorting data for reference angle calculations)")
             .Add("LagTime", "0.134", "Allowed lag time, in seconds, for incoming data before starting reference angle calculations")
@@ -62,9 +73,15 @@ Module MainModule
 
         SaveSettings()
 
+        ' TODO: Loop through database table of settings for calculated measurements...
+        Dim connection As New SqlConnection(CategorizedStringSetting("MeasurementReceiver", "PMUDatabase"))
+        connection.Open()
+        calculatedMeasurements = DefineCalculatedMeasurement(connection, "ReferenceAngleCalculation")
+        connection.Close()
+
         m_receivers = CreateArray(Of PhasorMeasurementReceiver)(CategorizedIntegerSetting("MeasurementReceiver", "TotalReceivers"))
 
-        For x As Integer = 0 To m_receivers.Length - 1
+        For x = 0 To m_receivers.Length - 1
             receiverCategory = "Receiver" & (x + 1)
 
             m_receivers(x) = New PhasorMeasurementReceiver( _
@@ -72,10 +89,7 @@ Module MainModule
                 CategorizedStringSetting(receiverCategory, "ArchiverCode"), _
                 CategorizedStringSetting("MeasurementReceiver", "PMUDatabase"), _
                 CategorizedIntegerSetting("MeasurementReceiver", "PMUStatusInterval"), _
-                CategorizedIntegerSetting("ReferenceAngle", "AngleCount"), _
-                CategorizedIntegerSetting("ReferenceAngle", "FramesPerSecond"), _
-                CategorizedDoubleSetting("ReferenceAngle", "LagTime"), _
-                CategorizedDoubleSetting("ReferenceAngle", "LeadTime"))
+                calculatedMeasurements)
 
             With m_receivers(x)
                 AddHandler .StatusMessage, AddressOf DisplayStatusMessage
@@ -98,13 +112,16 @@ Module MainModule
                 End If
             ElseIf consoleLine.StartsWith("reload", True, Nothing) Then
                 Console.WriteLine()
-                For x As Integer = 0 To m_receivers.Length - 1
+                For x = 0 To m_receivers.Length - 1
                     m_receivers(x).Initialize()
                 Next
             ElseIf consoleLine.StartsWith("status", True, Nothing) Then
                 Console.WriteLine()
-                For x As Integer = 0 To m_receivers.Length - 1
+                For x = 0 To m_receivers.Length - 1
                     Console.WriteLine(m_receivers(x).Status)
+                Next
+                For x = 0 To calculatedMeasurements.Length - 1
+                    Console.WriteLine(calculatedMeasurements(x).Status)
                 Next
             ElseIf consoleLine.StartsWith("list", True, Nothing) Then
                 Console.WriteLine()
@@ -125,11 +142,62 @@ Module MainModule
         Loop
 
         ' Attempt an orderly shutdown...
-        For x As Integer = 0 To m_receivers.Length - 1
+        For x = 0 To m_receivers.Length - 1
             m_receivers(x).DisconnectAll()
         Next
 
         End
+
+    End Sub
+
+    Private Function DefineCalculatedMeasurement(ByVal connection As SqlConnection, ByVal calculatedMeasurementName As String) As ICalculatedMeasurementAdapter
+
+        Dim calculatedMeasurement As ICalculatedMeasurementAdapter
+        Dim outputMeasurementID As Integer = ExecuteScalar(CategorizedStringSetting(calculatedMeasurementName, "OutputMeasurementIDSql"), connection)
+        Dim inputMeasurementIDs As New List(Of Integer)
+
+        ' Load ouput measurement ID
+        outputMeasurementID = ExecuteScalar(CategorizedStringSetting(calculatedMeasurementName, "OutputMeasurementIDSql"), connection)
+
+        ' Load input measurement IDs
+        With RetrieveData(CategorizedStringSetting(calculatedMeasurementName, "InputMeasurementIDsSql"), connection)
+            For x As Integer = 0 To .Rows.Count - 1
+                ' Get current row
+                inputMeasurementIDs.Add(Convert.ToInt32(.Rows(x)("MeasurementID")))
+            Next
+        End With
+
+        If inputMeasurementIDs.Count > 0 Then
+            ' TODO: Need to identify "destination archive" for measurement - needs to travel with measurement...
+            ' Query reference angle measurement ID
+            calculatedMeasurement = New ReferenceAngleCalculator()
+            calculatedMeasurement.Initialize( _
+                outputMeasurementID, _
+                inputMeasurementIDs.ToArray(), _
+                CategorizedIntegerSetting(calculatedMeasurementName, "AngleCount"), _
+                CategorizedIntegerSetting(calculatedMeasurementName, "FramesPerSecond"), _
+                CategorizedDoubleSetting(calculatedMeasurementName, "LagTime"), _
+                CategorizedDoubleSetting(calculatedMeasurementName, "LeadTime"))
+
+            With calculatedMeasurement
+                ' Bubble calculation module status messages out to local update status function
+                AddHandler .StatusMessage, AddressOf DisplayStatusMessage
+
+                ' Bubble newly calculated measurement out to functions that need the real-time data
+                AddHandler .NewCalculatedMeasurement, AddressOf NewCalculatedMeasurement
+            End With
+        End If
+
+        Return calculatedMeasurement
+
+    End Function
+
+    Private Sub NewCalculatedMeasurement(ByVal measurement As IMeasurement)
+
+        ' TODO: Make sure measurement gets sent to correct archive...
+
+        ' Append calculated reference angle measurements to measurement buffer for later archival
+        'QueueMeasurementForArchival(measurement)
 
     End Sub
 

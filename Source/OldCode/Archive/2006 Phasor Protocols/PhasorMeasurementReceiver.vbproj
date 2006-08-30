@@ -107,6 +107,14 @@
       <Project>{86D45927-5D18-4A8D-BC5E-31093A800EB4}</Project>
       <Name>Tva.DatAWare</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Concentrator\InterfaceAdapters\InterfaceAdapters.vbproj">
+      <Project>{45B13CE3-0EE6-4BF7-B36E-638F2BD68071}</Project>
+      <Name>InterfaceAdapters</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Concentrator\RealTimeCalculatedMeasurements\RealTimeCalculatedMeasurements.vbproj">
+      <Project>{DFAF5597-0D41-4010-BE81-42EBD243D3C5}</Project>
+      <Name>RealTimeCalculatedMeasurements</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Tva.Phasors.vbproj">
       <Project>{54CA98CC-2F0A-41F2-879D-0E42B17E8544}</Project>
       <Name>Tva.Phasors</Name>
