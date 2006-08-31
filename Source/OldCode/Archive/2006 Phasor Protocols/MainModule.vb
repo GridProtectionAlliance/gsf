@@ -26,19 +26,17 @@ Imports Tva.Text.Common
 Imports Tva.Data.Common
 Imports Tva.Measurements
 Imports InterfaceAdapters
-
-
-Imports RealTimeCalculatedMeasurements
+Imports System.Reflection
 
 Module MainModule
 
     Private m_receivers As PhasorMeasurementReceiver()
+    Private m_calculatedMeasurements As ICalculatedMeasurementAdapter()
 
     Public Sub Main()
 
         Dim consoleLine, receiverCategory As String
         Dim mapper As PhasorMeasurementMapper = Nothing
-        Dim calculatedMeasurements As ICalculatedMeasurementAdapter()
         Dim x As Integer
 
         Console.WriteLine(MonitorInformation)
@@ -62,22 +60,9 @@ Module MainModule
             .Add("InitializeOnStartup", "True", "Set to True to intialize phasor measurement mapper at startup")
         End With
 
-        With CategorizedSettings("ReferenceAngleCalculation")
-            .Add("OutputMeasurementIDSql", "SELECT MeasurementID FROM OutputReferenceAngleMeasurement")
-            .Add("InputMeasurementIDsSql", "SELECT MeasurementID FROM ReferenceAngleMeasurements ORDER BY Priority")
-            .Add("AngleCount", "3", "Number of phase angles to use to calculate reference phase angle")
-            .Add("FramesPerSecond", "30", "Expected frames per second for incoming data (used for pre-sorting data for reference angle calculations)")
-            .Add("LagTime", "0.134", "Allowed lag time, in seconds, for incoming data before starting reference angle calculations")
-            .Add("LeadTime", "0.5", "Allowed advanced time, in seconds, to tolerate before assuming incoming measurement time is floating (i.e., not locked)")
-        End With
-
         SaveSettings()
 
-        ' TODO: Loop through database table of settings for calculated measurements...
-        Dim connection As New SqlConnection(CategorizedStringSetting("MeasurementReceiver", "PMUDatabase"))
-        connection.Open()
-        calculatedMeasurements = DefineCalculatedMeasurement(connection, "ReferenceAngleCalculation")
-        connection.Close()
+        m_calculatedMeasurements = DefineCalculatedMeasurements(CategorizedStringSetting("MeasurementReceiver", "PMUDatabase"))
 
         m_receivers = CreateArray(Of PhasorMeasurementReceiver)(CategorizedIntegerSetting("MeasurementReceiver", "TotalReceivers"))
 
@@ -89,7 +74,7 @@ Module MainModule
                 CategorizedStringSetting(receiverCategory, "ArchiverCode"), _
                 CategorizedStringSetting("MeasurementReceiver", "PMUDatabase"), _
                 CategorizedIntegerSetting("MeasurementReceiver", "PMUStatusInterval"), _
-                calculatedMeasurements)
+                m_calculatedMeasurements)
 
             With m_receivers(x)
                 AddHandler .StatusMessage, AddressOf DisplayStatusMessage
@@ -120,8 +105,8 @@ Module MainModule
                 For x = 0 To m_receivers.Length - 1
                     Console.WriteLine(m_receivers(x).Status)
                 Next
-                For x = 0 To calculatedMeasurements.Length - 1
-                    Console.WriteLine(calculatedMeasurements(x).Status)
+                For x = 0 To m_calculatedMeasurements.Length - 1
+                    Console.WriteLine(m_calculatedMeasurements(x).Status)
                 Next
             ElseIf consoleLine.StartsWith("list", True, Nothing) Then
                 Console.WriteLine()
@@ -150,45 +135,99 @@ Module MainModule
 
     End Sub
 
-    Private Function DefineCalculatedMeasurement(ByVal connection As SqlConnection, ByVal calculatedMeasurementName As String) As ICalculatedMeasurementAdapter
+    Private Function DefineCalculatedMeasurements(ByVal connectionString As String) As ICalculatedMeasurementAdapter()
 
-        Dim calculatedMeasurement As ICalculatedMeasurementAdapter
-        Dim outputMeasurementID As Integer = ExecuteScalar(CategorizedStringSetting(calculatedMeasurementName, "OutputMeasurementIDSql"), connection)
-        Dim inputMeasurementIDs As New List(Of Integer)
+        Dim connection As New SqlConnection(connectionString)
+        Dim calculatedMeasurements As New List(Of ICalculatedMeasurementAdapter)
+        Dim calculatedMeasurementAdapter As ICalculatedMeasurementAdapter
+        Dim externalAssemblyName As String
+        Dim externalAssembly As Assembly
+        Dim adapterType As Type
+        Dim outputMeasurementID As Integer
+        Dim inputMeasurementIDs As List(Of Integer)
 
-        ' Load ouput measurement ID
-        outputMeasurementID = ExecuteScalar(CategorizedStringSetting(calculatedMeasurementName, "OutputMeasurementIDSql"), connection)
+        'With CategorizedSettings("ReferenceAngleCalculation")
+        '    .Add("OutputMeasurementIDSql", "SELECT MeasurementID FROM OutputReferenceAngleMeasurement")
+        '    .Add("InputMeasurementIDsSql", "SELECT MeasurementID FROM ReferenceAngleMeasurements ORDER BY Priority")
+        '    .Add("AngleCount", "3", "Number of phase angles to use to calculate reference phase angle")
+        '    .Add("FramesPerSecond", "30", "Expected frames per second for incoming data (used for pre-sorting data for reference angle calculations)")
+        '    .Add("LagTime", "0.134", "Allowed lag time, in seconds, for incoming data before starting reference angle calculations")
+        '    .Add("LeadTime", "0.5", "Allowed advanced time, in seconds, to tolerate before assuming incoming measurement time is floating (i.e., not locked)")
+        'End With
 
-        ' Load input measurement IDs
-        With RetrieveData(CategorizedStringSetting(calculatedMeasurementName, "InputMeasurementIDsSql"), connection)
+        ' TODO: Define this table...
+        ' CalculatedMeasurements Fields:
+        '   ID                          AutoInc
+        '   Name                        String
+        '   TypeName                    String
+        '   AssemblyName                String
+        '   DestinationArchive          String
+        '   OuputMeasurementIDSql       String      Expects one row, with one field named "MeasurementID"
+        '   InputMeasurementIDsSql      String      Expects one or more rows, with one field named "MeasurementID"
+        '   MinimumInputMeasurements    Integer     Defaults to -1 (use all)
+        '   ExpectedFrameRate           Integer
+        '   LagTime                     Double
+        '   LeadTime                    Double
+
+        connection.Open()
+
+        ' Load all the unique calculated measurement assemlies into the current application domain
+        With RetrieveData("SELECT DISTINCT AssemblyName FROM CalculatedMeasurements", connection)
             For x As Integer = 0 To .Rows.Count - 1
-                ' Get current row
-                inputMeasurementIDs.Add(Convert.ToInt32(.Rows(x)("MeasurementID")))
+                ' Load the external assembly
+                externalAssemblyName = .Rows(x)("AssemblyName").ToString()
+                externalAssembly = Assembly.LoadFrom(externalAssemblyName)
+
+                ' Load all the defined types in the external assembly
+                With RetrieveData("SELECT * FROM CalculatedMeasurements WHERE AssemblyName='" & externalAssemblyName & "'", connection)
+                    For y As Integer = 0 To .Rows.Count - 1
+                        ' Query ouput measurement ID
+                        outputMeasurementID = ExecuteScalar(.Rows(y)("OuputMeasurementIDSql").ToString(), connection)
+
+                        ' Query input measurement IDs
+                        inputMeasurementIDs = New List(Of Integer)
+
+                        With RetrieveData(.Rows(y)("InputMeasurementIDsSql").ToString(), connection)
+                            For z As Integer = 0 To .Rows.Count - 1
+                                inputMeasurementIDs.Add(Convert.ToInt32(.Rows(z)("MeasurementID")))
+                            Next
+                        End With
+
+                        ' Load the specified type from the assembly
+                        adapterType = externalAssembly.GetType(.Rows(y)("TypeName").ToString())
+
+                        ' Create a new instance of the adpater
+                        calculatedMeasurementAdapter = Activator.CreateInstance(adapterType)
+
+                        ' Intialize calculated measurement adapter
+                        With .Rows(y)
+                            calculatedMeasurementAdapter.Initialize( _
+                                outputMeasurementID, _
+                                inputMeasurementIDs.ToArray(), _
+                                Convert.ToInt32(.Item("MinimumInputMeasurements")), _
+                                Convert.ToInt32(.Item("ExpectedFrameRate")), _
+                                Convert.ToDouble(.Item("LagTime")), _
+                                Convert.ToDouble(.Item("LeadTime")))
+                        End With
+
+                        With calculatedMeasurementAdapter
+                            ' Bubble calculation module status messages out to local update status function
+                            AddHandler .StatusMessage, AddressOf DisplayStatusMessage
+
+                            ' Bubble newly calculated measurement out to functions that need the real-time data
+                            AddHandler .NewCalculatedMeasurement, AddressOf NewCalculatedMeasurement
+                        End With
+                    Next
+                End With
             Next
         End With
 
-        If inputMeasurementIDs.Count > 0 Then
-            ' TODO: Need to identify "destination archive" for measurement - needs to travel with measurement...
-            ' Query reference angle measurement ID
-            calculatedMeasurement = New ReferenceAngleCalculator()
-            calculatedMeasurement.Initialize( _
-                outputMeasurementID, _
-                inputMeasurementIDs.ToArray(), _
-                CategorizedIntegerSetting(calculatedMeasurementName, "AngleCount"), _
-                CategorizedIntegerSetting(calculatedMeasurementName, "FramesPerSecond"), _
-                CategorizedDoubleSetting(calculatedMeasurementName, "LagTime"), _
-                CategorizedDoubleSetting(calculatedMeasurementName, "LeadTime"))
 
-            With calculatedMeasurement
-                ' Bubble calculation module status messages out to local update status function
-                AddHandler .StatusMessage, AddressOf DisplayStatusMessage
 
-                ' Bubble newly calculated measurement out to functions that need the real-time data
-                AddHandler .NewCalculatedMeasurement, AddressOf NewCalculatedMeasurement
-            End With
-        End If
+        'calculatedMeasurements = DefineCalculatedMeasurement(connection, "ReferenceAngleCalculation")
+        connection.Close()
 
-        Return calculatedMeasurement
+        Return calculatedMeasurements.ToArray()
 
     End Function
 

@@ -34,11 +34,6 @@ Imports Tva.Communication
 Imports Tva.Measurements
 Imports InterfaceAdapters
 
-' Once debugged, removed direct reference...
-Imports RealTimeCalculatedMeasurements
-
-' TODO: Abstract "calculated" measurements into an externally implementable interface definition (like archiver)
-
 Public Class PhasorMeasurementReceiver
 
     Public Event NewMeasurements(ByVal measurements As Dictionary(Of Integer, IMeasurement))
