@@ -144,27 +144,16 @@ Module MainModule
         Dim externalAssemblyName As String
         Dim externalAssembly As Assembly
         Dim adapterType As Type
-        Dim outputMeasurement As MeasurementKey
-        Dim inputMeasurements As List(Of MeasurementKey)
+        Dim outputMeasurement As Measurement
+        Dim inputMeasurements As List(Of Measurement)
 
-        'With CategorizedSettings("ReferenceAngleCalculation")
-        '    .Add("OutputMeasurementIDSql", "SELECT MeasurementID FROM OutputReferenceAngleMeasurement")
-        '    .Add("InputMeasurementIDsSql", "SELECT MeasurementID FROM ReferenceAngleMeasurements ORDER BY Priority")
-        '    .Add("AngleCount", "3", "Number of phase angles to use to calculate reference phase angle")
-        '    .Add("FramesPerSecond", "30", "Expected frames per second for incoming data (used for pre-sorting data for reference angle calculations)")
-        '    .Add("LagTime", "0.134", "Allowed lag time, in seconds, for incoming data before starting reference angle calculations")
-        '    .Add("LeadTime", "0.5", "Allowed advanced time, in seconds, to tolerate before assuming incoming measurement time is floating (i.e., not locked)")
-        'End With
-
-        ' TODO: Define this table...
         ' CalculatedMeasurements Fields:
         '   ID                          AutoInc
         '   Name                        String
         '   TypeName                    String
         '   AssemblyName                String
-        '   DestinationArchive          String
-        '   OuputMeasurementSql         String      Expects one row, with two fields named "MeasurementID" and "ArchiveSource"
-        '   InputMeasurementsSql        String      Expects one or more rows, with two fields named "MeasurementID" and "ArchiveSource"
+        '   OuputMeasurementSql         String      Expects one row, with four fields named "MeasurementID", "ArchiveSource", "Adder" and "Multipler"
+        '   InputMeasurementsSql        String      Expects one or more rows, with four fields named "MeasurementID", "ArchiveSource", "Adder" and "Multipler"
         '   MinimumInputMeasurements    Integer     Defaults to -1 (use all)
         '   ExpectedFrameRate           Integer
         '   LagTime                     Double
@@ -184,21 +173,27 @@ Module MainModule
                     For y As Integer = 0 To .Rows.Count - 1
                         ' Query ouput measurement
                         With RetrieveRow(.Rows(y)("OuputMeasurementSql").ToString(), connection)
-                            outputMeasurement = New MeasurementKey( _
+                            outputMeasurement = New Measurement( _
                                 Convert.ToInt32(.Item("MeasurementID")), _
-                                .Item("ArchiveSource").ToString())
+                                .Item("ArchiveSource").ToString(), _
+                                Double.NaN, _
+                                Convert.ToDouble(.Item("Adder")), _
+                                Convert.ToDouble(.Item("Multiplier")))
                         End With
 
                         ' Query input measurements
-                        inputMeasurements = New List(Of MeasurementKey)
+                        inputMeasurements = New List(Of Measurement)
 
                         With RetrieveData(.Rows(y)("InputMeasurementsSql").ToString(), connection)
                             For z As Integer = 0 To .Rows.Count - 1
                                 With .Rows(z)
                                     inputMeasurements.Add( _
-                                        New MeasurementKey( _
+                                        New Measurement( _
                                             Convert.ToInt32(.Item("MeasurementID")), _
-                                            .Item("ArchiveSource").ToString()))
+                                            .Item("ArchiveSource").ToString(), _
+                                            Double.NaN, _
+                                            Convert.ToDouble(.Item("Adder")), _
+                                            Convert.ToDouble(.Item("Multiplier"))))
                                 End With
                             Next
                         End With

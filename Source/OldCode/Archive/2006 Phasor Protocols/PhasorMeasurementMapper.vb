@@ -29,7 +29,7 @@ Public Class PhasorMeasurementMapper
 
     Private WithEvents m_dataStreamMonitor As Timers.Timer
     Private WithEvents m_frameParser As MultiProtocolFrameParser
-    Private m_archiverCode As String
+    Private m_archiverSource As String
     Private m_source As String
     Private m_pmuIDs As PmuInfoCollection
     Private m_measurementIDs As Dictionary(Of String, Measurement)
@@ -45,13 +45,13 @@ Public Class PhasorMeasurementMapper
 
     Public Sub New( _
         ByVal frameParser As MultiProtocolFrameParser, _
-        ByVal archiverCode As String, _
+        ByVal archiverSource As String, _
         ByVal source As String, _
         ByVal pmuIDs As PmuInfoCollection, _
         ByVal measurementIDs As Dictionary(Of String, Measurement))
 
         m_frameParser = frameParser
-        m_archiverCode = archiverCode
+        m_archiverSource = archiverSource
         m_source = source
         m_pmuIDs = pmuIDs
         m_measurementIDs = measurementIDs
@@ -264,12 +264,12 @@ Public Class PhasorMeasurementMapper
             ' Assign ID and other relavent attributes to the measurement value
             With measurementValue
                 .ID = measurementID.ID
-                .Source = m_archiverCode
+                .Source = m_archiverSource
                 .Adder = measurementID.Adder
                 .Multiplier = measurementID.Multiplier
             End With
 
-            ' Add the updated measurement value to frame measurement list which is keyed on ID
+            ' Add the updated measurement value to the keyed frame measurement list
             frame.Measurements.Add(measurementValue.Key, measurementValue)
         End If
 

@@ -43,7 +43,7 @@ Public Class PhasorMeasurementReceiver
     Private WithEvents m_reportingStatus As Timers.Timer
     Private m_connectString As String
     Private m_archiverIP As String
-    Private m_archiverCode As String
+    Private m_archiverSource As String
     Private m_archiverPort As Integer
     Private m_tcpSocket As Sockets.TcpClient
     Private m_clientStream As NetworkStream
@@ -59,10 +59,10 @@ Public Class PhasorMeasurementReceiver
     Private m_statusInterval As Integer
     Private m_intializing As Boolean
 
-    Public Sub New(ByVal archiverIP As String, ByVal archiverCode As String, ByVal connectString As String, ByVal statusInterval As Integer, ByVal calculatedMeasurements As ICalculatedMeasurementAdapter())
+    Public Sub New(ByVal archiverIP As String, ByVal archiverSource As String, ByVal connectString As String, ByVal statusInterval As Integer, ByVal calculatedMeasurements As ICalculatedMeasurementAdapter())
 
         m_archiverIP = archiverIP
-        m_archiverCode = archiverCode
+        m_archiverSource = archiverSource
         m_connectString = connectString
         m_statusInterval = statusInterval
         m_calculatedMeasurements = calculatedMeasurements
@@ -177,13 +177,13 @@ Public Class PhasorMeasurementReceiver
             UpdateStatus("Database connection opened...")
 
             ' Initialize complete measurement list for this archive keyed on the synonym field
-            With RetrieveData("SELECT * FROM IEEEDataConnectionMeasurements WHERE PlantCode='" & m_archiverCode & "'", connection)
+            With RetrieveData("SELECT * FROM IEEEDataConnectionMeasurements WHERE PlantCode='" & m_archiverSource & "'", connection)
                 For x = 0 To .Rows.Count - 1
                     With .Rows(x)
                         measurementIDs.Add(.Item("Synonym"), _
                             New Measurement( _
                                 Convert.ToInt32(.Item("ID")), _
-                                m_archiverCode, _
+                                m_archiverSource, _
                                 .Item("Synonym").ToString(), _
                                 Convert.ToDouble(.Item("Adder")), _
                                 Convert.ToDouble(.Item("Multiplier"))))
@@ -194,7 +194,7 @@ Public Class PhasorMeasurementReceiver
             UpdateStatus("Loaded " & measurementIDs.Count & " measurement ID's...")
 
             ' Initialize each data connection
-            With RetrieveData("SELECT * FROM IEEEDataConnections WHERE PlantCode='" & m_archiverCode & "' OR SourceID IN (SELECT PDCID FROM IEEEDataConnectionPDCPMUs WHERE PlantCode='" & m_archiverCode & "')", connection)
+            With RetrieveData("SELECT * FROM IEEEDataConnections WHERE PlantCode='" & m_archiverSource & "' OR SourceID IN (SELECT PDCID FROM IEEEDataConnectionPDCPMUs WHERE PlantCode='" & m_archiverSource & "')", connection)
                 For x = 0 To .Rows.Count - 1
                     ' Get current row
                     row = .Rows(x)
@@ -237,7 +237,7 @@ Public Class PhasorMeasurementReceiver
                         UpdateStatus("Loading expected PMU list for """ & source & """:")
 
                         ' Making a connection to a concentrator - this may support multiple PMU's
-                        With RetrieveData("SELECT PMUID FROM IEEEDataConnectionPMUs WHERE PlantCode='" & m_archiverCode & "' AND PDCID='" & source & "' ORDER BY PMUIndex", connection)
+                        With RetrieveData("SELECT PMUID FROM IEEEDataConnectionPMUs WHERE PlantCode='" & m_archiverSource & "' AND PDCID='" & source & "' ORDER BY PMUIndex", connection)
                             For y = 0 To .Rows.Count - 1
                                 With .Rows(y)
                                     pmuIDs.Add(New PmuInfo(.Item("PMUIndex"), .Item("PMUID")))
@@ -251,7 +251,7 @@ Public Class PhasorMeasurementReceiver
                     End If
 
                     SyncLock m_measurementBuffer
-                        With New PhasorMeasurementMapper(parser, m_archiverCode, source, pmuIDs, measurementIDs)
+                        With New PhasorMeasurementMapper(parser, m_archiverSource, source, pmuIDs, measurementIDs)
                             ' Add timezone mapping if not UTC...
                             If String.Compare(timezone, "GMT Standard Time", True) <> 0 Then
                                 Try
@@ -293,7 +293,7 @@ Public Class PhasorMeasurementReceiver
 
     Public ReadOnly Property ArchiverName() As String
         Get
-            Return m_archiverCode & " (" & m_archiverIP & ":" & m_archiverPort & ")"
+            Return m_archiverSource & " (" & m_archiverIP & ":" & m_archiverPort & ")"
         End Get
     End Property
 
@@ -476,7 +476,7 @@ Public Class PhasorMeasurementReceiver
 
     Private Sub UpdateStatus(ByVal status As String)
 
-        RaiseEvent StatusMessage("[" & m_archiverCode & "]: " & status)
+        RaiseEvent StatusMessage("[" & m_archiverSource & "]: " & status)
 
     End Sub
 
@@ -489,7 +489,7 @@ Public Class PhasorMeasurementReceiver
             Next
         End If
 
-        ' Provide real-time parsed measurements outside of receiver as needed...
+        ' Bubble real-time parsed measurements outside of receiver as needed...
         RaiseEvent NewMeasurements(measurements)
 
     End Sub
