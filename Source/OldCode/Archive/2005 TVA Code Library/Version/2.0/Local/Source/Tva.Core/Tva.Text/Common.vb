@@ -45,8 +45,10 @@ Namespace Text
         ''' <param name="values">String array to concatenate</param>
         ''' <returns>The concatenated string representation of the values of the elements in <paramref name="values" /> string array.</returns>
         ''' <remarks>
-        ''' This is a replacement for the String.Concat function.  Tests show that the system implemenation of this function is slow:
+        ''' <para>This is a replacement for the String.Concat function.  Tests show that the system implemenation of this function is slow:
         ''' http://www.developer.com/net/cplus/article.php/3304901
+        ''' </para>
+        ''' <para>Reflection into the mscorlib for this function for all versions up to 2.0 shows that it does simple string addition</para>
         ''' </remarks>
         Public Shared Function Concat(ByVal ParamArray values As String()) As String
 

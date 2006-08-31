@@ -25,6 +25,8 @@ Namespace Measurements
         Implements IMeasurement
 
         Private m_id As Integer
+        Private m_source As String
+        Private m_tag As String
         Private m_value As Double
         Private m_adder As Double
         Private m_multiplier As Double
@@ -34,26 +36,40 @@ Namespace Measurements
 
         Public Sub New()
 
-            MyClass.New(-1, Double.NaN, 0)
+            MyClass.New(-1, Nothing, Double.NaN, 0)
 
         End Sub
 
-        Public Sub New(ByVal id As Integer, ByVal value As Double, ByVal timestamp As Date)
+        Public Sub New(ByVal key As MeasurementKey, ByVal ticks As Long)
 
-            MyClass.New(id, Value, timestamp.Ticks)
-
-        End Sub
-
-        Public Sub New(ByVal id As Integer, ByVal value As Double, ByVal ticks As Long)
-
-            MyClass.New(id, Value, 0.0R, 1.0R, ticks)
+            MyClass.New(key.ID, key.Source, Double.NaN, ticks)
 
         End Sub
 
-        Public Sub New(ByVal id As Integer, ByVal value As Double, ByVal adder As Double, ByVal multiplier As Double, ByVal ticks As Long)
+        Public Sub New(ByVal id As Integer, ByVal source As String, ByVal value As Double, ByVal timestamp As Date)
+
+            MyClass.New(id, source, value, timestamp.Ticks)
+
+        End Sub
+
+        Public Sub New(ByVal id As Integer, ByVal source As String, ByVal value As Double, ByVal ticks As Long)
+
+            MyClass.New(id, source, value, 0.0R, 1.0R, ticks)
+
+        End Sub
+
+        Public Sub New(ByVal id As Integer, ByVal source As String, ByVal tag As String, ByVal adder As Double, ByVal multiplier As Double)
+
+            MyClass.New(id, source, Double.NaN, adder, multiplier, 0)
+            m_tag = tag
+
+        End Sub
+
+        Public Sub New(ByVal id As Integer, ByVal source As String, ByVal value As Double, ByVal adder As Double, ByVal multiplier As Double, ByVal ticks As Long)
 
             m_id = id
-            m_value = Value
+            m_source = source
+            m_value = value
             m_adder = adder
             m_multiplier = multiplier
             m_ticks = ticks
@@ -69,13 +85,49 @@ Namespace Measurements
             End Get
         End Property
 
-        ''' <summary>Gets or sets index or ID of this measurement</summary>
+        ''' <summary>Gets or sets the numeric ID of this measurement</summary>
+        ''' <remarks>
+        ''' <para>In most implementations, this will be a required field</para>
+        ''' <para>Note that this field, in addition to Source, typically creates the primary key for a measurement</para>
+        ''' </remarks>
         Public Overridable Property ID() As Integer Implements IMeasurement.ID
             Get
                 Return m_id
             End Get
             Set(ByVal value As Integer)
                 m_id = value
+            End Set
+        End Property
+
+        ''' <summary>Gets or sets the source of this measurement</summary>
+        ''' <remarks>
+        ''' <para>In most implementations, this will be a required field</para>
+        ''' <para>Note that this field, in addition to ID, typically creates the primary key for a measurement</para>
+        ''' <para>This value is typically used to track the archive name in which measurement is stored</para>
+        ''' </remarks>
+        Public Overridable Property Source() As String Implements IMeasurement.Source
+            Get
+                Return m_source
+            End Get
+            Set(ByVal value As String)
+                m_source = value
+            End Set
+        End Property
+
+        ''' <summary>Returns the primary key of this measurement</summary>
+        Public ReadOnly Property Key() As MeasurementKey Implements IMeasurement.Key
+            Get
+                Return New MeasurementKey(m_id, m_source)
+            End Get
+        End Property
+
+        ''' <summary>Gets or sets the text based ID of this measurement</summary>
+        Public Overridable Property Tag() As String Implements IMeasurement.Tag
+            Get
+                Return m_tag
+            End Get
+            Set(ByVal value As String)
+                m_tag = value
             End Set
         End Property
 

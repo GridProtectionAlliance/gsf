@@ -8,7 +8,7 @@
 '       Phone: 423/751-2827
 '       Email: jrcarrol@tva.gov
 '
-'  This interface represents a value measured at an exact time interval
+'  This interface abstractly represents a value measured at an exact time interval
 '
 '  Code Modification History:
 '  -----------------------------------------------------------------------------------------------------
@@ -21,6 +21,7 @@ Imports System.ComponentModel
 
 Namespace Measurements
 
+    ''' <summary>Abstract measured value interface</summary>
     Public Interface IMeasurement
 
         Inherits IComparable
@@ -28,8 +29,27 @@ Namespace Measurements
         ''' <summary>Handy instance reference to self</summary>
         ReadOnly Property This() As IMeasurement
 
-        ''' <summary>Gets or sets index or ID of this measurement</summary>
+        ''' <summary>Gets or sets the numeric ID of this measurement</summary>
+        ''' <remarks>
+        ''' <para>In most implementations, this will be a required field</para>
+        ''' <para>Note that this field, in addition to Source, typically creates the primary key for a measurement</para>
+        ''' </remarks>
         Property ID() As Integer
+
+        ''' <summary>Gets or sets the source of this measurement</summary>
+        ''' <remarks>
+        ''' <para>In most implementations, this will be a required field</para>
+        ''' <para>Note that this field, in addition to ID, typically creates the primary key for a measurement</para>
+        ''' <para>This value is typically used to track the archive name in which measurement is stored</para>
+        ''' </remarks>
+        Property Source() As String
+
+        ''' <summary>Returns the primary key of this measurement</summary>
+        ReadOnly Property Key() As MeasurementKey
+
+        ''' <summary>Gets or sets the text based ID of this measurement</summary>
+        Property Tag() As String
+
 
         ''' <summary>Gets or sets the raw value of this measurement (i.e., the numeric value that is not offset by adder and multiplier)</summary>
         Property Value() As Double
@@ -37,7 +57,7 @@ Namespace Measurements
         ''' <summary>Returns the adjusted numeric value of this measurement, taking into account the specified adder and multiplier offsets</summary>
         ''' <remarks>
         ''' <para>Implementors need to account for adder and multiplier in return value, e.g.:</para>
-        ''' <code>Return RawValue * Multiplier + Adder</code>
+        ''' <code>Return Value * Multiplier + Adder</code>
         ''' </remarks>
         ReadOnly Property AdjustedValue() As Double
 

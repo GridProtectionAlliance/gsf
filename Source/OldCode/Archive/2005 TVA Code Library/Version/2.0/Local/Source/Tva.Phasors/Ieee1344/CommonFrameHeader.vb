@@ -290,7 +290,7 @@ Namespace Ieee1344
                 End If
             End Function
 
-            Private ReadOnly Property IFrameMeasurements() As Dictionary(Of Integer, Measurements.IMeasurement) Implements Measurements.IFrame.Measurements
+            Private ReadOnly Property IFrameMeasurements() As Dictionary(Of Measurements.MeasurementKey, Measurements.IMeasurement) Implements Measurements.IFrame.Measurements
                 Get
                     Throw New NotImplementedException()
                 End Get

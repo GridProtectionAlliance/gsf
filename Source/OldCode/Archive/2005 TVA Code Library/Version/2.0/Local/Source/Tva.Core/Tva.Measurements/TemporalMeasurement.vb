@@ -30,19 +30,19 @@ Namespace Measurements
 
         Public Sub New(ByVal lagTime As Double, ByVal leadTime As Double)
 
-            MyClass.New(-1, Double.NaN, 0, lagTime, leadTime)
+            MyClass.New(-1, Nothing, Double.NaN, 0, lagTime, leadTime)
 
         End Sub
 
-        Public Sub New(ByVal index As Integer, ByVal value As Double, ByVal timestamp As Date, ByVal lagTime As Double, ByVal leadTime As Double)
+        Public Sub New(ByVal id As Integer, ByVal source As String, ByVal value As Double, ByVal timestamp As Date, ByVal lagTime As Double, ByVal leadTime As Double)
 
-            MyClass.New(index, value, timestamp.Ticks, lagTime, leadTime)
+            MyClass.New(id, source, value, timestamp.Ticks, lagTime, leadTime)
 
         End Sub
 
-        Public Sub New(ByVal index As Integer, ByVal value As Double, ByVal ticks As Long, ByVal lagTime As Double, ByVal leadTime As Double)
+        Public Sub New(ByVal id As Integer, ByVal source As String, ByVal value As Double, ByVal ticks As Long, ByVal lagTime As Double, ByVal leadTime As Double)
 
-            MyBase.New(index, value, ticks)
+            MyBase.New(id, source, value, ticks)
 
             If lagTime <= 0 Then Throw New ArgumentOutOfRangeException("lagTime", "lagTime must be greater than zero, but it can be less than one")
             If leadTime <= 0 Then Throw New ArgumentOutOfRangeException("leadTime", "leadTime must be greater than zero, but it can be less than one")
@@ -84,8 +84,12 @@ Namespace Measurements
             End Set
         End Property
 
-        ''' <summary>Returns numeric value of this measurement, constrained within specified ticks</summary>
-        ''' <remarks>Operation will return NaN if ticks are outside of time deviation tolerances</remarks>
+        ''' <summary>Returns numeric adjusted value of this measurement, constrained within specified ticks</summary>
+        ''' <remarks>
+        ''' <para>Operation will return NaN if ticks are outside of time deviation tolerances</para>
+        ''' <para>Note that returned value will be offset by adder and multiplier</para>
+        ''' </remarks>
+        ''' <returns>Value offset by adder and multipler (i.e., Value * Multiplier + Adder)</returns>
         Public Overloads ReadOnly Property AdjustedValue(ByVal ticks As Long) As Double
             Get
                 ' We only return a measurement value that is up-to-date...
@@ -102,7 +106,8 @@ Namespace Measurements
         ''' <para>Get operation will return NaN if ticks are outside of time deviation tolerances</para>
         ''' <para>Set operation will only store a value that is newer than the cached value</para>
         ''' </remarks>
-        Default Public Overloads Property RawValue(ByVal ticks As Long) As Double
+        ''' <returns>Raw value of this measurement (i.e., value that is not offset by adder and multiplier)</returns>
+        Default Public Overloads Property Value(ByVal ticks As Long) As Double
             Get
                 ' We only return a measurement value that is up-to-date...
                 If TimeIsValid(ticks, Me.Ticks, m_lagTime, m_leadTime) Then
@@ -112,7 +117,7 @@ Namespace Measurements
                 End If
             End Get
             Set(ByVal value As Double)
-                ' We only store a value that is newer than the current value
+                ' We only store a value that is is newer than the current value
                 If ticks > Me.Ticks Then
                     MyBase.Value = value
                     Me.Ticks = ticks
@@ -125,7 +130,8 @@ Namespace Measurements
         ''' <para>Get operation will return NaN if timestamp is outside of time deviation tolerances</para>
         ''' <para>Set operation will only store a value that is newer than the cached value</para>
         ''' </remarks>
-        Default Public Overloads Property RawValue(ByVal timestamp As Date) As Double
+        ''' <returns>Raw value of this measurement (i.e., value that is not offset by adder and multiplier)</returns>
+        Default Public Overloads Property Value(ByVal timestamp As Date) As Double
             Get
                 Return Me(timestamp.Ticks)
             End Get

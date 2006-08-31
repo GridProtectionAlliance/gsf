@@ -23,14 +23,14 @@ Namespace Measurements
     Public Class ImmediateMeasurements
 
         Private WithEvents m_parent As Concentrator
-        Private m_measurements As Dictionary(Of Integer, TemporalMeasurement)
-        Private m_taggedMeasurements As Dictionary(Of String, List(Of Integer))
+        Private m_measurements As Dictionary(Of MeasurementKey, TemporalMeasurement)
+        Private m_taggedMeasurements As Dictionary(Of String, List(Of MeasurementKey))
 
         Friend Sub New(ByVal parent As Concentrator)
 
             m_parent = parent
-            m_measurements = New Dictionary(Of Integer, TemporalMeasurement)
-            m_taggedMeasurements = New Dictionary(Of String, List(Of Integer))
+            m_measurements = New Dictionary(Of MeasurementKey, TemporalMeasurement)
+            m_taggedMeasurements = New Dictionary(Of String, List(Of MeasurementKey))
 
         End Sub
 
@@ -41,59 +41,68 @@ Namespace Measurements
             End Get
         End Property
 
-        ''' <summary>Returns key collection of measurement ID's</summary>
-        Public ReadOnly Property MeasurementIDs() As Dictionary(Of Integer, TemporalMeasurement).KeyCollection
+        ''' <summary>Returns key collection of measurement keys</summary>
+        Public ReadOnly Property MeasurementKeys() As Dictionary(Of MeasurementKey, TemporalMeasurement).KeyCollection
             Get
                 Return m_measurements.Keys
             End Get
         End Property
 
         ''' <summary>Returns key collection for measurement tags</summary>
-        Public ReadOnly Property Tags() As Dictionary(Of String, List(Of Integer)).KeyCollection
+        Public ReadOnly Property Tags() As Dictionary(Of String, List(Of MeasurementKey)).KeyCollection
             Get
                 Return m_taggedMeasurements.Keys
             End Get
         End Property
 
-        ''' <summary>Returns measurement ID list of specified tag, if it exists</summary>
-        Public ReadOnly Property TagMeasurementIDs(ByVal tag As String) As List(Of Integer)
+        ''' <summary>Returns measurement key list of specified tag, if it exists</summary>
+        Public ReadOnly Property TagMeasurementKeys(ByVal tag As String) As List(Of MeasurementKey)
             Get
                 Return m_taggedMeasurements(tag)
             End Get
         End Property
 
         ''' <summary>We retrieve measurement values within time tolerance of concentrator real-time</summary>
-        Default Public ReadOnly Property Value(ByVal measurementID As Integer) As Double
+        Default Public ReadOnly Property Value(ByVal measurementID As Integer, ByVal source As String) As Double
             Get
-                Return Measurement(measurementID)(m_parent.RealTimeTicks)
+                Return Value(New MeasurementKey(measurementID, source))
             End Get
         End Property
 
-        ''' <summary>We only store a measurement value that is newer than the cached value</summary>
-        Default Friend WriteOnly Property Value(ByVal measurementID As Integer, ByVal timestamp As Date) As Double
-            Set(ByVal value As Double)
-                Measurement(measurementID)(timestamp.Ticks) = value
-            End Set
+        ''' <summary>We retrieve measurement values within time tolerance of concentrator real-time</summary>
+        Default Public ReadOnly Property Value(ByVal key As MeasurementKey) As Double
+            Get
+                Return Measurement(key)(m_parent.RealTimeTicks)
+            End Get
         End Property
 
-        ''' <summary>We only store a measurement value that is newer than the cached value</summary>
-        Default Friend WriteOnly Property Value(ByVal measurementID As Integer, ByVal ticks As Long) As Double
-            Set(ByVal value As Double)
-                Measurement(measurementID)(ticks) = value
-            End Set
+        ''' <summary>We only store a new measurement value that is newer than the cached value</summary>
+        Friend Sub UpdateMeasurementValue(ByVal newMeasurement As IMeasurement)
+
+            With newMeasurement
+                Measurement(.Key)(.Ticks) = .Value
+            End With
+
+        End Sub
+
+        ''' <summary>Retrieves the specified immediate temporal measurement, creating it if needed</summary>
+        Public ReadOnly Property Measurement(ByVal measurementID As Integer, ByVal source As String) As TemporalMeasurement
+            Get
+                Return Measurement(New MeasurementKey(measurementID, source))
+            End Get
         End Property
 
         ''' <summary>Retrieves the specified immediate temporal measurement, creating it if needed</summary>
-        Public ReadOnly Property Measurement(ByVal measurementID As Integer) As TemporalMeasurement
+        Public ReadOnly Property Measurement(ByVal key As MeasurementKey) As TemporalMeasurement
             Get
                 SyncLock m_measurements
                     Dim value As TemporalMeasurement
 
-                    If Not m_measurements.TryGetValue(measurementID, value) Then
+                    If Not m_measurements.TryGetValue(key, value) Then
                         ' Create new temporal measurement if it doesn't exist
                         With m_parent
-                            value = New TemporalMeasurement(measurementID, Double.NaN, .RealTimeTicks, .LagTime, .LeadTime)
-                            m_measurements.Add(measurementID, value)
+                            value = New TemporalMeasurement(key.ID, key.Source, Double.NaN, .RealTimeTicks, .LagTime, .LeadTime)
+                            m_measurements.Add(key, value)
                         End With
                     End If
 
@@ -103,29 +112,29 @@ Namespace Measurements
         End Property
 
         ''' <summary>Defines tagged measurements from a data table</summary>
-        ''' <remarks>Expects tag field to be aliased as "Tag" and measurement ID field to be aliased as "ID"</remarks>
+        ''' <remarks>Expects tag field to be aliased as "Tag", measurement ID field to be aliased as "ID" and source field to be aliased as "Source"</remarks>
         Public Sub DefineTaggedMeasurements(ByVal taggedMeasurements As DataTable)
 
             For Each row As DataRow In taggedMeasurements.Rows
-                AddTaggedMeasurement(row("Tag"), row("ID"))
+                AddTaggedMeasurement(row("Tag").ToString(), New MeasurementKey(Convert.ToInt32(row("ID")), row("Source").ToString()))
             Next
 
         End Sub
 
         ''' <summary>Associates a new measurement ID with a tag, creating the new tag if needed</summary>
         ''' <remarks>Allows you to define "grouped" points so you can aggregate certain measurements</remarks>
-        Public Sub AddTaggedMeasurement(ByVal tag As String, ByVal measurementID As Integer)
+        Public Sub AddTaggedMeasurement(ByVal tag As String, ByVal key As MeasurementKey)
 
             With m_taggedMeasurements
                 ' Check for new tag
                 If Not .ContainsKey(tag) Then
-                    .Add(tag, New List(Of Integer))
+                    .Add(tag, New List(Of MeasurementKey))
                 End If
 
                 ' Add measurement to tag's measurement list
                 With .Item(tag)
-                    If .BinarySearch(measurementID) < 0 Then
-                        .Add(measurementID)
+                    If .BinarySearch(key) < 0 Then
+                        .Add(key)
                         .Sort()
                     End If
                 End With
@@ -141,8 +150,8 @@ Namespace Measurements
             Dim total As Double
 
             SyncLock m_measurements
-                For Each measurementID As Integer In m_measurements.Keys
-                    measurement = Value(measurementID)
+                For Each key As MeasurementKey In m_measurements.Keys
+                    measurement = Value(key)
                     If Not Double.IsNaN(measurement) Then
                         total += measurement
                         count += 1
@@ -160,8 +169,8 @@ Namespace Measurements
             Dim measurement As Double
             Dim total As Double
 
-            For Each measurementID As Integer In m_taggedMeasurements(tag)
-                measurement = Value(measurementID)
+            For Each key As MeasurementKey In m_taggedMeasurements(tag)
+                measurement = Value(key)
                 If Not Double.IsNaN(measurement) Then
                     total += measurement
                     count += 1
@@ -180,8 +189,8 @@ Namespace Measurements
                 Dim measurement As Double
 
                 SyncLock m_measurements
-                    For Each measurementID As Integer In m_measurements.Keys
-                        measurement = Value(measurementID)
+                    For Each key As MeasurementKey In m_measurements.Keys
+                        measurement = Value(key)
                         If Not Double.IsNaN(measurement) Then
                             If measurement < minValue Then minValue = measurement
                         End If
@@ -200,8 +209,8 @@ Namespace Measurements
                 Dim measurement As Double
 
                 SyncLock m_measurements
-                    For Each measurementID As Integer In m_measurements.Keys
-                        measurement = Value(measurementID)
+                    For Each key As MeasurementKey In m_measurements.Keys
+                        measurement = Value(key)
                         If Not Double.IsNaN(measurement) Then
                             If measurement > maxValue Then maxValue = measurement
                         End If
@@ -218,8 +227,8 @@ Namespace Measurements
                 Dim minValue As Double = Double.MaxValue
                 Dim measurement As Double
 
-                For Each measurementID As Integer In m_taggedMeasurements(tag)
-                    measurement = Value(measurementID)
+                For Each key As MeasurementKey In m_taggedMeasurements(tag)
+                    measurement = Value(key)
                     If Not Double.IsNaN(measurement) Then
                         If measurement < minValue Then minValue = measurement
                     End If
@@ -235,8 +244,8 @@ Namespace Measurements
                 Dim maxValue As Double = Double.MinValue
                 Dim measurement As Double
 
-                For Each measurementID As Integer In m_taggedMeasurements(tag)
-                    measurement = Value(measurementID)
+                For Each key As MeasurementKey In m_taggedMeasurements(tag)
+                    measurement = Value(key)
                     If Not Double.IsNaN(measurement) Then
                         If measurement > maxValue Then maxValue = measurement
                     End If
@@ -249,8 +258,8 @@ Namespace Measurements
         Private Sub m_parent_LagTimeUpdated(ByVal lagTime As Double) Handles m_parent.LagTimeUpdated
 
             SyncLock m_measurements
-                For Each measurementID As Integer In m_measurements.Keys
-                    Measurement(measurementID).LagTime = lagTime
+                For Each key As MeasurementKey In m_measurements.Keys
+                    Measurement(key).LagTime = lagTime
                 Next
             End SyncLock
 
@@ -259,8 +268,8 @@ Namespace Measurements
         Private Sub m_parent_LeadTimeUpdated(ByVal leadTime As Double) Handles m_parent.LeadTimeUpdated
 
             SyncLock m_measurements
-                For Each measurementID As Integer In m_measurements.Keys
-                    Measurement(measurementID).LeadTime = leadTime
+                For Each key As MeasurementKey In m_measurements.Keys
+                    Measurement(key).LeadTime = leadTime
                 Next
             End SyncLock
 

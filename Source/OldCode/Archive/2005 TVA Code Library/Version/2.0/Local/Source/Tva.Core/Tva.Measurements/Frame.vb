@@ -26,17 +26,17 @@ Namespace Measurements
 
         Private m_ticks As Long
         Private m_published As Boolean
-        Private m_measurements As Dictionary(Of Integer, IMeasurement)
+        Private m_measurements As Dictionary(Of MeasurementKey, IMeasurement)
 
         Public Sub New(ByVal ticks As Long)
 
             m_ticks = ticks
-            m_measurements = New Dictionary(Of Integer, IMeasurement)
+            m_measurements = New Dictionary(Of MeasurementKey, IMeasurement)
 
         End Sub
 
         ''' <summary>Keyed measurements in this frame</summary>
-        Public ReadOnly Property Measurements() As Dictionary(Of Integer, IMeasurement) Implements IFrame.Measurements
+        Public ReadOnly Property Measurements() As Dictionary(Of MeasurementKey, IMeasurement) Implements IFrame.Measurements
             Get
                 Return m_measurements
             End Get

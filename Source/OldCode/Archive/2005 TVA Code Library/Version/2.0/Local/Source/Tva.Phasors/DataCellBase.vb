@@ -33,7 +33,11 @@ Public MustInherit Class DataCellBase
     Private m_frequencyValue As IFrequencyValue
     Private m_analogValues As AnalogValueCollection
     Private m_digitalValues As DigitalValueCollection
+
+    ' IMeasurement implementation memembers
     Private m_id As Integer
+    Private m_tag As String
+    Private m_source As String
     Private m_adder As Double
     Private m_multiplier As Double
 
@@ -174,7 +178,7 @@ Public MustInherit Class DataCellBase
 
 #Region " IMeasurement Implementation "
 
-    Private Property IMeasurementValue() As Double Implements Measurements.IMeasurement.Value
+    Private Property IMeasurementValue() As Double Implements IMeasurement.Value
         Get
             Return m_statusFlags
         End Get
@@ -192,7 +196,7 @@ Public MustInherit Class DataCellBase
 
     ' I don't imagine you would want offsets for status flags - but this may yet be handy for
     ' "forcing" a particular set of quality flags to come through the system (M=0, A=New Flags)
-    Private Property IMeasurementAdder() As Double Implements Measurements.IMeasurement.Adder
+    Private Property IMeasurementAdder() As Double Implements IMeasurement.Adder
         Get
             Return m_adder
         End Get
@@ -201,7 +205,7 @@ Public MustInherit Class DataCellBase
         End Set
     End Property
 
-    Private Property IMeasurementMultiplier() As Double Implements Measurements.IMeasurement.Multiplier
+    Private Property IMeasurementMultiplier() As Double Implements IMeasurement.Multiplier
         Get
             Return m_multiplier
         End Get
@@ -210,7 +214,7 @@ Public MustInherit Class DataCellBase
         End Set
     End Property
 
-    Private Property IMeasurementTicks() As Long Implements Measurements.IMeasurement.Ticks
+    Private Property IMeasurementTicks() As Long Implements IMeasurement.Ticks
         Get
             Return Parent.Ticks
         End Get
@@ -225,12 +229,36 @@ Public MustInherit Class DataCellBase
         End Get
     End Property
 
-    Private Property IMeasurementID() As Integer Implements Measurements.IMeasurement.ID
+    Private Property IMeasurementID() As Integer Implements IMeasurement.ID
         Get
             Return m_id
         End Get
         Set(ByVal value As Integer)
             m_id = value
+        End Set
+    End Property
+
+    Private Property IMeasurementSource() As String Implements IMeasurement.Source
+        Get
+            Return m_source
+        End Get
+        Set(ByVal value As String)
+            m_source = value
+        End Set
+    End Property
+
+    Private ReadOnly Property IMeasurementKey() As MeasurementKey Implements IMeasurement.Key
+        Get
+            Return New MeasurementKey(m_id, m_source)
+        End Get
+    End Property
+
+    Private Property IMeasurementTag() As String Implements IMeasurement.Tag
+        Get
+            Return m_tag
+        End Get
+        Set(ByVal value As String)
+            m_tag = value
         End Set
     End Property
 
@@ -240,7 +268,7 @@ Public MustInherit Class DataCellBase
         End Get
     End Property
 
-    Public Function CompareTo(ByVal obj As Object) As Integer Implements System.IComparable.CompareTo
+    Private Function IComparableCompareTo(ByVal obj As Object) As Integer Implements IComparable.CompareTo
 
         If TypeOf obj Is IMeasurement Then
             Return IMeasurementValue.CompareTo(DirectCast(obj, IMeasurement).Value)

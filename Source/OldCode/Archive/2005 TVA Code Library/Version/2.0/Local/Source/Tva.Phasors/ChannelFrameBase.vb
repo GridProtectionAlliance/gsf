@@ -35,7 +35,7 @@ Public MustInherit Class ChannelFrameBase(Of T As IChannelCell)
     Private m_ticks As Long
     Private m_published As Boolean
     Private m_parsedBinaryLength As UInt16
-    Private m_measurements As Dictionary(Of Integer, IMeasurement)
+    Private m_measurements As Dictionary(Of MeasurementKey, IMeasurement)
 
     Protected Sub New()
     End Sub
@@ -100,9 +100,9 @@ Public MustInherit Class ChannelFrameBase(Of T As IChannelCell)
         End Get
     End Property
 
-    Public ReadOnly Property Measurements() As Dictionary(Of Integer, IMeasurement) Implements Measurements.IFrame.Measurements
+    Public ReadOnly Property Measurements() As Dictionary(Of MeasurementKey, IMeasurement) Implements IFrame.Measurements
         Get
-            If m_measurements Is Nothing Then m_measurements = New Dictionary(Of Integer, IMeasurement)
+            If m_measurements Is Nothing Then m_measurements = New Dictionary(Of MeasurementKey, IMeasurement)
             Return m_measurements
         End Get
     End Property

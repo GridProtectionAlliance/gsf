@@ -25,6 +25,8 @@ Friend Class ChannelValueMeasurement(Of T As IChannelDefinition)
 
     Private m_parent As IChannelValue(Of T)
     Private m_id As Integer
+    Private m_tag As String
+    Private m_source As String
     Private m_valueIndex As Integer
     Private m_adder As Double
     Private m_multiplier As Double
@@ -40,18 +42,42 @@ Friend Class ChannelValueMeasurement(Of T As IChannelDefinition)
 
     End Sub
 
-    Public ReadOnly Property This() As Measurements.IMeasurement Implements Measurements.IMeasurement.This
+    Public ReadOnly Property This() As IMeasurement Implements IMeasurement.This
         Get
             Return Me
         End Get
     End Property
 
-    Public Property ID() As Integer Implements Measurements.IMeasurement.ID
+    Public Property ID() As Integer Implements IMeasurement.ID
         Get
             Return m_id
         End Get
         Set(ByVal value As Integer)
             m_id = value
+        End Set
+    End Property
+
+    Public Property Source() As String Implements IMeasurement.Source
+        Get
+            Return m_source
+        End Get
+        Set(ByVal value As String)
+            m_source = value
+        End Set
+    End Property
+
+    Public ReadOnly Property Key() As MeasurementKey Implements IMeasurement.Key
+        Get
+            Return New MeasurementKey(m_id, m_source)
+        End Get
+    End Property
+
+    Public Property Tag() As String Implements IMeasurement.Tag
+        Get
+            Return m_tag
+        End Get
+        Set(ByVal value As String)
+            m_tag = value
         End Set
     End Property
 
@@ -73,7 +99,7 @@ Friend Class ChannelValueMeasurement(Of T As IChannelDefinition)
         End Set
     End Property
 
-    Public ReadOnly Property AdjustedValue() As Double Implements Measurements.IMeasurement.AdjustedValue
+    Public ReadOnly Property AdjustedValue() As Double Implements IMeasurement.AdjustedValue
         Get
             Return m_parent(m_valueIndex) * m_multiplier + m_adder
         End Get
@@ -97,7 +123,7 @@ Friend Class ChannelValueMeasurement(Of T As IChannelDefinition)
         End Set
     End Property
 
-    Public Property TimestampQualityIsGood() As Boolean Implements Measurements.IMeasurement.TimestampQualityIsGood
+    Public Property TimestampQualityIsGood() As Boolean Implements IMeasurement.TimestampQualityIsGood
         Get
             Return m_parent.Parent.SynchronizationIsValid
         End Get
@@ -106,7 +132,7 @@ Friend Class ChannelValueMeasurement(Of T As IChannelDefinition)
         End Set
     End Property
 
-    Public Property ValueQualityIsGood() As Boolean Implements Measurements.IMeasurement.ValueQualityIsGood
+    Public Property ValueQualityIsGood() As Boolean Implements IMeasurement.ValueQualityIsGood
         Get
             Return m_parent.Parent.DataIsValid
         End Get
@@ -115,7 +141,7 @@ Friend Class ChannelValueMeasurement(Of T As IChannelDefinition)
         End Set
     End Property
 
-    Public Property Ticks() As Long Implements Measurements.IMeasurement.Ticks
+    Public Property Ticks() As Long Implements IMeasurement.Ticks
         Get
             Return m_parent.Parent.Parent.Ticks
         End Get
@@ -124,7 +150,7 @@ Friend Class ChannelValueMeasurement(Of T As IChannelDefinition)
         End Set
     End Property
 
-    Public ReadOnly Property Timestamp() As Date Implements Measurements.IMeasurement.Timestamp
+    Public ReadOnly Property Timestamp() As Date Implements IMeasurement.Timestamp
         Get
             Return New Date(Ticks)
         End Get
