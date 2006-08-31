@@ -40,12 +40,6 @@ Namespace Measurements
 
         End Sub
 
-        Public Sub New(ByVal key As MeasurementKey, ByVal ticks As Long)
-
-            MyClass.New(key.ID, key.Source, Double.NaN, ticks)
-
-        End Sub
-
         Public Sub New(ByVal id As Integer, ByVal source As String, ByVal value As Double, ByVal timestamp As Date)
 
             MyClass.New(id, source, value, timestamp.Ticks)
@@ -84,6 +78,33 @@ Namespace Measurements
                 Return Me
             End Get
         End Property
+
+        ''' <summary>Creates a copy of the specified measurement</summary>
+        Public Shared Function Clone(ByVal measurementToClone As IMeasurement) As Measurement
+
+            With measurementToClone
+                Return New Measurement(.ID, .Source, .Value, .Adder, .Multiplier, .Ticks)
+            End With
+
+        End Function
+
+        ''' <summary>Creates a copy of the specified measurement using a new timestamp</summary>
+        Public Shared Function Clone(ByVal measurementToClone As IMeasurement, ByVal ticks As Long) As Measurement
+
+            With measurementToClone
+                Return New Measurement(.ID, .Source, .Value, .Adder, .Multiplier, ticks)
+            End With
+
+        End Function
+
+        ''' <summary>Creates a copy of the specified measurement using a new value and timestamp</summary>
+        Public Shared Function Clone(ByVal measurementToClone As IMeasurement, ByVal value As Double, ByVal ticks As Long) As Measurement
+
+            With measurementToClone
+                Return New Measurement(.ID, .Source, value, .Adder, .Multiplier, ticks)
+            End With
+
+        End Function
 
         ''' <summary>Gets or sets the numeric ID of this measurement</summary>
         ''' <remarks>
@@ -208,6 +229,12 @@ Namespace Measurements
                 m_timestampQualityIsGood = value
             End Set
         End Property
+
+        Public Overrides Function ToString() As String
+
+            Return Key.ToString()
+
+        End Function
 
         ''' <summary>This implementation of a basic measurement compares itself by value</summary>
         Public Function CompareTo(ByVal obj As Object) As Integer Implements System.IComparable.CompareTo
