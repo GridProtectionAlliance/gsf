@@ -65,6 +65,7 @@ Module MainModule
         ' Define all of the calculated measurements
         m_calculatedMeasurements = DefineCalculatedMeasurements(CategorizedStringSetting("MeasurementReceiver", "PMUDatabase"))
 
+        ' TODO: Load these from database too...
         m_receivers = CreateArray(Of PhasorMeasurementReceiver)(CategorizedIntegerSetting("MeasurementReceiver", "TotalReceivers"))
 
         For x = 0 To m_receivers.Length - 1
@@ -162,14 +163,14 @@ Module MainModule
         connection.Open()
 
         ' Load all the unique calculated measurement assemlies into the current application domain
-        With RetrieveData("SELECT DISTINCT AssemblyName FROM CalculatedMeasurements", connection)
+        With RetrieveData("SELECT DISTINCT AssemblyName FROM CalculatedMeasurements WHERE Enabled != 0", connection)
             For x As Integer = 0 To .Rows.Count - 1
                 ' Load the external assembly
                 externalAssemblyName = .Rows(x)("AssemblyName").ToString()
                 externalAssembly = Assembly.LoadFrom(externalAssemblyName)
 
                 ' Load all the defined types in the external assembly
-                With RetrieveData("SELECT * FROM CalculatedMeasurements WHERE AssemblyName='" & externalAssemblyName & "'", connection)
+                With RetrieveData("SELECT * FROM CalculatedMeasurements WHERE AssemblyName='" & externalAssemblyName & "' AND Enabled != 0", connection)
                     For y As Integer = 0 To .Rows.Count - 1
                         ' Query ouput measurement
                         With RetrieveRow(.Rows(y)("OuputMeasurementSql").ToString(), connection)

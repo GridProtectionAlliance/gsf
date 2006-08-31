@@ -157,7 +157,7 @@ Public Class PhasorMeasurementReceiver
             m_intializing = True
 
             Dim connection As New SqlConnection(m_connectString)
-            Dim measurementIDs As New Dictionary(Of String, Measurement)
+            Dim measurementIDs As New Dictionary(Of String, IMeasurement)
             Dim row As DataRow
             Dim parser As MultiProtocolFrameParser
             Dim source As String

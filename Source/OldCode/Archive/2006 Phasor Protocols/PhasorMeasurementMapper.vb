@@ -32,7 +32,7 @@ Public Class PhasorMeasurementMapper
     Private m_archiverSource As String
     Private m_source As String
     Private m_pmuIDs As PmuInfoCollection
-    Private m_measurementIDs As Dictionary(Of String, Measurement)
+    Private m_measurementIDs As Dictionary(Of String, IMeasurement)
     Private m_measurementFrames As List(Of IFrame)
     Private m_lastReportTime As Long
     Private m_bytesReceived As Long
@@ -48,7 +48,7 @@ Public Class PhasorMeasurementMapper
         ByVal archiverSource As String, _
         ByVal source As String, _
         ByVal pmuIDs As PmuInfoCollection, _
-        ByVal measurementIDs As Dictionary(Of String, Measurement))
+        ByVal measurementIDs As Dictionary(Of String, IMeasurement))
 
         m_frameParser = frameParser
         m_archiverSource = archiverSource
@@ -257,7 +257,7 @@ Public Class PhasorMeasurementMapper
 
     Private Sub MapMeasurementIDToValue(ByVal frame As IDataFrame, ByVal synonym As String, ByVal measurementValue As IMeasurement)
 
-        Dim measurementID As Measurement = Nothing
+        Dim measurementID As IMeasurement
 
         ' Lookup synonym value in measurement ID list
         If m_measurementIDs.TryGetValue(synonym, measurementID) Then
