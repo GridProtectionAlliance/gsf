@@ -2,6 +2,10 @@
 Microsoft Visual Studio Solution File, Format Version 9.00
 # Visual Studio 2005
 Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "Tva.Core", "Tva.Core\Tva.Core.vbproj", "{29A7B606-D1BC-4A4B-96D0-258D5A72C3EC}"
+	ProjectSection(ProjectDependencies) = postProject
+		{A4F0413C-4CDF-4B41-AA77-4DA7B9C1C18E} = {A4F0413C-4CDF-4B41-AA77-4DA7B9C1C18E}
+		{36E05B5E-3209-4097-9A6F-CE96749C181E} = {36E05B5E-3209-4097-9A6F-CE96749C181E}
+	EndProjectSection
 EndProject
 Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "Tva.Web", "Tva.Web\Tva.Web.vbproj", "{1A51E8F7-BE43-4353-A6E6-E7189911BA53}"
 EndProject
@@ -38,8 +42,8 @@ Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "Tva.Phasors", "Tva.Phasors\
 EndProject
 Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "TVA PMU Connection Tester", "Tva.Phasors\PMU Connection Tester\TVA PMU Connection Tester.vbproj", "{AB9A5D8C-38C2-4393-93D9-BC548ED0AB38}"
 	ProjectSection(ProjectDependencies) = postProject
-		{36E05B5E-3209-4097-9A6F-CE96749C181E} = {36E05B5E-3209-4097-9A6F-CE96749C181E}
 		{F611B9BA-C69D-449B-B596-FABFB746EA2A} = {F611B9BA-C69D-449B-B596-FABFB746EA2A}
+		{36E05B5E-3209-4097-9A6F-CE96749C181E} = {36E05B5E-3209-4097-9A6F-CE96749C181E}
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{0C2CAD57-581F-4C7A-9D59-8A9A1270A28E}"
@@ -83,7 +87,7 @@ Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "Tva.Services", "Tva.Service
 EndProject
 Global
 	GlobalSection(SourceCodeControl) = preSolution
-		SccNumberOfProjects = 20
+		SccNumberOfProjects = 21
 		SccProjectName0 = \u0022$/TVA\u0020Code\u0020Library/Version/2.0/Local\u0022,\u0020HWHAAAAA
 		SccLocalPath0 = ..
 		SccProvider0 = MSSCCI:Microsoft\u0020Visual\u0020SourceSafe
@@ -184,6 +188,11 @@ Global
 		SccLocalPath19 = ..
 		CanCheckoutShared = false
 		SccProjectFilePathRelativizedFromConnection19 = Source\\Tva.Services\\
+		SccProjectUniqueName20 = Tva.Phasors\\Concentrator\\RealTimeCalculatedMeasurements\\RealTimeCalculatedMeasurements.vbproj
+		SccProjectTopLevelParentUniqueName20 = TVA\u0020Code\u0020Library.sln
+		SccProjectName20 = \u0022$/TVA\u0020Code\u0020Library/Version/2.0/Local/Source/Tva.Phasors/Concentrator/RealTimeCalculatedMeasurements\u0022,\u0020UBPAAAAA
+		SccLocalPath20 = Tva.Phasors\\Concentrator\\RealTimeCalculatedMeasurements
+		CanCheckoutShared = false
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
