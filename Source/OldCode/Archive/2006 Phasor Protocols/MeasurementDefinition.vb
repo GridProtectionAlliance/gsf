@@ -15,7 +15,7 @@
 '
 '*******************************************************************************************************
 
-Public Class MeasurementDefinition
+Public Class MeasurementDefinition1
 
     Private m_id As Integer
     Private m_name As String
