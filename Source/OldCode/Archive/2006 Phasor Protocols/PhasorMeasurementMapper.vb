@@ -24,14 +24,15 @@ Imports Tva.Measurements
 <CLSCompliant(False)> _
 Public Class PhasorMeasurementMapper
 
-    Public Event NewParsedMeasurements(ByVal measurements As Dictionary(Of Integer, IMeasurement))
+    Public Event NewParsedMeasurements(ByVal measurements As Dictionary(Of MeasurementKey, IMeasurement))
     Public Event ParsingStatus(ByVal message As String)
 
     Private WithEvents m_dataStreamMonitor As Timers.Timer
     Private WithEvents m_frameParser As MultiProtocolFrameParser
+    Private m_archiverCode As String
     Private m_source As String
     Private m_pmuIDs As PmuInfoCollection
-    Private m_measurementIDs As Dictionary(Of String, MeasurementDefinition)
+    Private m_measurementIDs As Dictionary(Of String, Measurement)
     Private m_measurementFrames As List(Of IFrame)
     Private m_lastReportTime As Long
     Private m_bytesReceived As Long
@@ -42,9 +43,15 @@ Public Class PhasorMeasurementMapper
     Private m_timezone As Win32TimeZone
     Private m_timeAdjustmentTicks As Long
 
-    Public Sub New(ByVal frameParser As MultiProtocolFrameParser, ByVal source As String, ByVal pmuIDs As PmuInfoCollection, ByVal measurementIDs As Dictionary(Of String, MeasurementDefinition))
+    Public Sub New( _
+        ByVal frameParser As MultiProtocolFrameParser, _
+        ByVal archiverCode As String, _
+        ByVal source As String, _
+        ByVal pmuIDs As PmuInfoCollection, _
+        ByVal measurementIDs As Dictionary(Of String, Measurement))
 
         m_frameParser = frameParser
+        m_archiverCode = archiverCode
         m_source = source
         m_pmuIDs = pmuIDs
         m_measurementIDs = measurementIDs
@@ -171,7 +178,7 @@ Public Class PhasorMeasurementMapper
         End Get
     End Property
 
-    ''' <summary>This key function is the glue that binds a phasor measurement to a historian measurement ID</summary>
+    ''' <summary>This key function is the glue that binds a phasor measurement value to a historian measurement ID</summary>
     Protected Overridable Sub MapDataFrameMeasurements(ByVal frame As Tva.Phasors.IDataFrame)
 
         ' Map data frame measurement instances to their associated point ID's
@@ -198,33 +205,36 @@ Public Class PhasorMeasurementMapper
                         If ticks > pmuID.LastReportTime Then pmuID.LastReportTime = ticks
                         If ticks > m_lastReportTime Then m_lastReportTime = ticks
 
-                        ' Map status flags SF from PMU data cell
-                        MapMeasurement(frame, pmuID.Tag & "-SF", .This)
+                        ' Map status flags (SF) from PMU data cell itself
+                        MapMeasurementIDToValue(frame, pmuID.Tag & "-SF", .This)
 
+                        ' Map phasor angles (PAn) and magnitudes (PMn)
                         With .PhasorValues
                             For y = 0 To .Count - 1
                                 With .Item(y)
-                                    ' Map angle - PA(n)
-                                    MapMeasurement(frame, pmuID.Tag & "-PA" & (y + 1), .Measurements(CompositePhasorValue.Angle))
+                                    ' Map angle
+                                    MapMeasurementIDToValue(frame, pmuID.Tag & "-PA" & (y + 1), .Measurements(CompositePhasorValue.Angle))
 
-                                    ' Map magnitude - PM(m)
-                                    MapMeasurement(frame, pmuID.Tag & "-PM" & (y + 1), .Measurements(CompositePhasorValue.Magnitude))
+                                    ' Map magnitude
+                                    MapMeasurementIDToValue(frame, pmuID.Tag & "-PM" & (y + 1), .Measurements(CompositePhasorValue.Magnitude))
                                 End With
                             Next
                         End With
 
+                        ' Map frequency (FQ) and delta-frequency (DF)
                         With .FrequencyValue
-                            ' Map frequency - FQ
-                            MapMeasurement(frame, pmuID.Tag & "-FQ", .Measurements(CompositeFrequencyValue.Frequency))
+                            ' Map frequency
+                            MapMeasurementIDToValue(frame, pmuID.Tag & "-FQ", .Measurements(CompositeFrequencyValue.Frequency))
 
-                            ' Map df/dt - DF
-                            MapMeasurement(frame, pmuID.Tag & "-DF", .Measurements(CompositeFrequencyValue.DfDt))
+                            ' Map df/dt
+                            MapMeasurementIDToValue(frame, pmuID.Tag & "-DF", .Measurements(CompositeFrequencyValue.DfDt))
                         End With
 
+                        ' Map digital values (DVn)
                         With .DigitalValues
                             For y = 0 To .Count - 1
-                                ' Map digital values - DV(n)
-                                MapMeasurement(frame, pmuID.Tag & "-DV" & y, .Item(y).Measurements(0))
+                                ' Map digital value
+                                MapMeasurementIDToValue(frame, pmuID.Tag & "-DV" & y, .Item(y).Measurements(0))
                             Next
                         End With
                     Else
@@ -245,19 +255,22 @@ Public Class PhasorMeasurementMapper
 
     End Sub
 
-    Private Sub MapMeasurement(ByVal frame As IDataFrame, ByVal key As String, ByVal measurement As IMeasurement)
+    Private Sub MapMeasurementIDToValue(ByVal frame As IDataFrame, ByVal synonym As String, ByVal measurementValue As IMeasurement)
 
-        Dim definition As MeasurementDefinition = Nothing
+        Dim measurementID As Measurement = Nothing
 
         ' Lookup synonym value in measurement ID list
-        If m_measurementIDs.TryGetValue(key, definition) Then
-            With measurement
-                .ID = definition.ID
-                .Adder = definition.Adder
-                .Multiplier = definition.Multiplier
+        If m_measurementIDs.TryGetValue(synonym, measurementID) Then
+            ' Assign ID and other relavent attributes to the measurement value
+            With measurementValue
+                .ID = measurementID.ID
+                .Source = m_archiverCode
+                .Adder = measurementID.Adder
+                .Multiplier = measurementID.Multiplier
             End With
 
-            frame.Measurements.Add(measurement.ID, measurement)
+            ' Add the updated measurement value to frame measurement list which is keyed on ID
+            frame.Measurements.Add(measurementValue.Key, measurementValue)
         End If
 
     End Sub

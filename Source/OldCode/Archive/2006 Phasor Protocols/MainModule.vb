@@ -62,6 +62,7 @@ Module MainModule
 
         SaveSettings()
 
+        ' Define all of the calculated measurements
         m_calculatedMeasurements = DefineCalculatedMeasurements(CategorizedStringSetting("MeasurementReceiver", "PMUDatabase"))
 
         m_receivers = CreateArray(Of PhasorMeasurementReceiver)(CategorizedIntegerSetting("MeasurementReceiver", "TotalReceivers"))
@@ -138,13 +139,13 @@ Module MainModule
     Private Function DefineCalculatedMeasurements(ByVal connectionString As String) As ICalculatedMeasurementAdapter()
 
         Dim connection As New SqlConnection(connectionString)
-        Dim calculatedMeasurements As New List(Of ICalculatedMeasurementAdapter)
+        Dim calculatedMeasurementAdapters As New List(Of ICalculatedMeasurementAdapter)
         Dim calculatedMeasurementAdapter As ICalculatedMeasurementAdapter
         Dim externalAssemblyName As String
         Dim externalAssembly As Assembly
         Dim adapterType As Type
-        Dim outputMeasurementID As Integer
-        Dim inputMeasurementIDs As List(Of Integer)
+        Dim outputMeasurement As MeasurementKey
+        Dim inputMeasurements As List(Of MeasurementKey)
 
         'With CategorizedSettings("ReferenceAngleCalculation")
         '    .Add("OutputMeasurementIDSql", "SELECT MeasurementID FROM OutputReferenceAngleMeasurement")
@@ -162,8 +163,8 @@ Module MainModule
         '   TypeName                    String
         '   AssemblyName                String
         '   DestinationArchive          String
-        '   OuputMeasurementIDSql       String      Expects one row, with one field named "MeasurementID"
-        '   InputMeasurementIDsSql      String      Expects one or more rows, with one field named "MeasurementID"
+        '   OuputMeasurementSql         String      Expects one row, with two fields named "MeasurementID" and "ArchiveSource"
+        '   InputMeasurementsSql        String      Expects one or more rows, with two fields named "MeasurementID" and "ArchiveSource"
         '   MinimumInputMeasurements    Integer     Defaults to -1 (use all)
         '   ExpectedFrameRate           Integer
         '   LagTime                     Double
@@ -181,15 +182,24 @@ Module MainModule
                 ' Load all the defined types in the external assembly
                 With RetrieveData("SELECT * FROM CalculatedMeasurements WHERE AssemblyName='" & externalAssemblyName & "'", connection)
                     For y As Integer = 0 To .Rows.Count - 1
-                        ' Query ouput measurement ID
-                        outputMeasurementID = ExecuteScalar(.Rows(y)("OuputMeasurementIDSql").ToString(), connection)
+                        ' Query ouput measurement
+                        With RetrieveRow(.Rows(y)("OuputMeasurementSql").ToString(), connection)
+                            outputMeasurement = New MeasurementKey( _
+                                Convert.ToInt32(.Item("MeasurementID")), _
+                                .Item("ArchiveSource").ToString())
+                        End With
 
-                        ' Query input measurement IDs
-                        inputMeasurementIDs = New List(Of Integer)
+                        ' Query input measurements
+                        inputMeasurements = New List(Of MeasurementKey)
 
-                        With RetrieveData(.Rows(y)("InputMeasurementIDsSql").ToString(), connection)
+                        With RetrieveData(.Rows(y)("InputMeasurementsSql").ToString(), connection)
                             For z As Integer = 0 To .Rows.Count - 1
-                                inputMeasurementIDs.Add(Convert.ToInt32(.Rows(z)("MeasurementID")))
+                                With .Rows(z)
+                                    inputMeasurements.Add( _
+                                        New MeasurementKey( _
+                                            Convert.ToInt32(.Item("MeasurementID")), _
+                                            .Item("ArchiveSource").ToString()))
+                                End With
                             Next
                         End With
 
@@ -202,8 +212,8 @@ Module MainModule
                         ' Intialize calculated measurement adapter
                         With .Rows(y)
                             calculatedMeasurementAdapter.Initialize( _
-                                outputMeasurementID, _
-                                inputMeasurementIDs.ToArray(), _
+                                outputMeasurement, _
+                                inputMeasurements.ToArray(), _
                                 Convert.ToInt32(.Item("MinimumInputMeasurements")), _
                                 Convert.ToInt32(.Item("ExpectedFrameRate")), _
                                 Convert.ToDouble(.Item("LagTime")), _
@@ -217,17 +227,17 @@ Module MainModule
                             ' Bubble newly calculated measurement out to functions that need the real-time data
                             AddHandler .NewCalculatedMeasurement, AddressOf NewCalculatedMeasurement
                         End With
+
+                        ' Add new adapter to the list
+                        calculatedMeasurementAdapters.Add(calculatedMeasurementAdapter)
                     Next
                 End With
             Next
         End With
 
-
-
-        'calculatedMeasurements = DefineCalculatedMeasurement(connection, "ReferenceAngleCalculation")
         connection.Close()
 
-        Return calculatedMeasurements.ToArray()
+        Return calculatedMeasurementAdapters.ToArray()
 
     End Function
 

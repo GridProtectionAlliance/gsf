@@ -36,7 +36,7 @@ Imports InterfaceAdapters
 
 Public Class PhasorMeasurementReceiver
 
-    Public Event NewMeasurements(ByVal measurements As Dictionary(Of Integer, IMeasurement))
+    Public Event NewMeasurements(ByVal measurements As Dictionary(Of MeasurementKey, IMeasurement))
     Public Event StatusMessage(ByVal status As String)
 
     Private WithEvents m_connectionTimer As Timers.Timer
@@ -157,7 +157,7 @@ Public Class PhasorMeasurementReceiver
             m_intializing = True
 
             Dim connection As New SqlConnection(m_connectString)
-            Dim measurementIDs As New Dictionary(Of String, MeasurementDefinition)
+            Dim measurementIDs As New Dictionary(Of String, Measurement)
             Dim row As DataRow
             Dim parser As MultiProtocolFrameParser
             Dim source As String
@@ -176,12 +176,17 @@ Public Class PhasorMeasurementReceiver
 
             UpdateStatus("Database connection opened...")
 
-            ' Initialize complete measurement ID list
+            ' Initialize complete measurement list for this archive keyed on the synonym field
             With RetrieveData("SELECT * FROM IEEEDataConnectionMeasurements WHERE PlantCode='" & m_archiverCode & "'", connection)
                 For x = 0 To .Rows.Count - 1
-                    ' Get current row
                     With .Rows(x)
-                        measurementIDs.Add(.Item("Synonym"), New MeasurementDefinition(.Item("ID"), .Item("Synonym"), .Item("Adder"), .Item("Multiplier")))
+                        measurementIDs.Add(.Item("Synonym"), _
+                            New Measurement( _
+                                Convert.ToInt32(.Item("ID")), _
+                                m_archiverCode, _
+                                .Item("Synonym").ToString(), _
+                                Convert.ToDouble(.Item("Adder")), _
+                                Convert.ToDouble(.Item("Multiplier"))))
                     End With
                 Next
             End With
@@ -246,7 +251,7 @@ Public Class PhasorMeasurementReceiver
                     End If
 
                     SyncLock m_measurementBuffer
-                        With New PhasorMeasurementMapper(parser, source, pmuIDs, measurementIDs)
+                        With New PhasorMeasurementMapper(parser, m_archiverCode, source, pmuIDs, measurementIDs)
                             ' Add timezone mapping if not UTC...
                             If String.Compare(timezone, "GMT Standard Time", True) <> 0 Then
                                 Try
@@ -475,7 +480,7 @@ Public Class PhasorMeasurementReceiver
 
     End Sub
 
-    Private Sub NewParsedMeasurements(ByVal measurements As Dictionary(Of Integer, IMeasurement))
+    Private Sub NewParsedMeasurements(ByVal measurements As Dictionary(Of MeasurementKey, IMeasurement))
 
         ' Provide parsed measurements "directly" to all calculated measurement modules
         If m_calculatedMeasurements IsNot Nothing Then
