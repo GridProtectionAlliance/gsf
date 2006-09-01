@@ -59,6 +59,7 @@
     <Import Include="System.Diagnostics" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Tva.Collections\DictionaryList.vb" />
     <Compile Include="Tva.Measurements\MeasurementKey.vb" />
     <Compile Include="Tva\ScheduleManager.Designer.vb">
       <DependentUpon>ScheduleManager.vb</DependentUpon>

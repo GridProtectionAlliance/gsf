@@ -353,11 +353,11 @@ Namespace Collections
 #Region " Protected Constructors "
 
         ''' <summary>
-        ''' This constructor creates a ProcessList based on the generic SortedDictionary class
+        ''' This constructor creates a ProcessList based on the generic DictionaryList class
         ''' </summary>
         Protected Sub New(ByVal processItemFunction As ProcessItemFunctionSignature, ByVal canProcessItemFunction As CanProcessItemFunctionSignature, ByVal processInterval As Double, ByVal maximumThreads As Integer, ByVal processTimeout As Integer, ByVal requeueOnTimeout As Boolean, ByVal requeueOnException As Boolean)
 
-            MyBase.New(Nothing, Nothing, Nothing, New SortedDictionary(Of TKey, TValue), processInterval, maximumThreads, processTimeout, requeueOnTimeout, requeueOnException)
+            MyBase.New(Nothing, Nothing, Nothing, New DictionaryList(Of TKey, TValue), processInterval, maximumThreads, processTimeout, requeueOnTimeout, requeueOnException)
 
             m_processItemFunction = processItemFunction         ' Defining this function creates a ProcessingStyle = OneAtATime keyed process queue
             m_canProcessItemFunction = canProcessItemFunction
@@ -369,11 +369,11 @@ Namespace Collections
         End Sub
 
         ''' <summary>
-        ''' This constructor creates a bulk-item ProcessList based on the generic SortedDictionary class
+        ''' This constructor creates a bulk-item ProcessList based on the generic DictionaryList class
         ''' </summary>
         Protected Sub New(ByVal processItemsFunction As ProcessItemsFunctionSignature, ByVal canProcessItemFunction As CanProcessItemFunctionSignature, ByVal processInterval As Double, ByVal maximumThreads As Integer, ByVal processTimeout As Integer, ByVal requeueOnTimeout As Boolean, ByVal requeueOnException As Boolean)
 
-            MyBase.New(Nothing, Nothing, Nothing, New SortedDictionary(Of TKey, TValue), processInterval, maximumThreads, processTimeout, requeueOnTimeout, requeueOnException)
+            MyBase.New(Nothing, Nothing, Nothing, New DictionaryList(Of TKey, TValue), processInterval, maximumThreads, processTimeout, requeueOnTimeout, requeueOnException)
 
             m_processItemsFunction = processItemsFunction       ' Defining this function creates a ProcessingStyle = ManyAtOnce keyed process queue
             m_canProcessItemFunction = canProcessItemFunction
@@ -477,9 +477,9 @@ Namespace Collections
         ''' <summary>
         ''' This property allows derived classes to access the internal sorted dictionary directly
         ''' </summary>
-        Protected ReadOnly Property InternalDictionary() As SortedDictionary(Of TKey, TValue)
+        Protected ReadOnly Property InternalDictionary() As DictionaryList(Of TKey, TValue)
             Get
-                Return DirectCast(InternalList, SortedDictionary(Of TKey, TValue))
+                Return DirectCast(InternalList, DictionaryList(Of TKey, TValue))
             End Get
         End Property
 
@@ -532,7 +532,7 @@ Namespace Collections
         ''' <exception cref="NotSupportedException">The queue is read-only.</exception>
         ''' <exception cref="ArgumentException">An element with the same key already exists in the queue.</exception>
         ''' <exception cref="ArgumentNullException">key is null.</exception>
-        Public Overloads Sub Add(ByVal key As TKey, ByVal value As TValue) Implements System.Collections.Generic.IDictionary(Of TKey, TValue).Add
+        Public Overloads Sub Add(ByVal key As TKey, ByVal value As TValue) Implements IDictionary(Of TKey, TValue).Add
 
             SyncLock SyncRoot
                 InternalDictionary.Add(key, value)
@@ -545,7 +545,7 @@ Namespace Collections
         ''' <returns>true if the queue contains an element with the key; otherwise, false.</returns>
         ''' <param name="key">The key to locate in the queue.</param>
         ''' <exception cref="ArgumentNullException">key is null.</exception>
-        Public Function ContainsKey(ByVal key As TKey) As Boolean Implements System.Collections.Generic.IDictionary(Of TKey, TValue).ContainsKey
+        Public Function ContainsKey(ByVal key As TKey) As Boolean Implements IDictionary(Of TKey, TValue).ContainsKey
 
             SyncLock SyncRoot
                 Return InternalDictionary.ContainsKey(key)
@@ -564,12 +564,28 @@ Namespace Collections
 
         End Function
 
+        Public Function IndexOfKey(ByVal key As TKey) As Integer
+
+            SyncLock SyncRoot
+                Return InternalDictionary.IndexOfKey(key)
+            End SyncLock
+
+        End Function
+
+        Public Function IndexOfValue(ByVal value As TValue) As Integer
+
+            SyncLock SyncRoot
+                Return InternalDictionary.IndexOfValue(value)
+            End SyncLock
+
+        End Function
+
         ''' <summary>Gets or sets the value associated with the specified key.</summary>
         ''' <returns>The value associated with the specified key. If the specified key is not found, a get operation throws a KeyNotFoundException, and a set operation creates a new element with the specified key.</returns>
         ''' <param name="key">The key of the value to get or set.</param>
         ''' <exception cref="ArgumentNullException">key is null.</exception>
         ''' <exception cref="KeyNotFoundException">The property is retrieved and key does not exist in the collection.</exception>
-        Default Public Overloads Property Item(ByVal key As TKey) As TValue Implements System.Collections.Generic.IDictionary(Of TKey, TValue).Item
+        Default Public Overloads Property Item(ByVal key As TKey) As TValue Implements IDictionary(Of TKey, TValue).Item
             Get
                 SyncLock SyncRoot
                     Return InternalDictionary(key)
@@ -586,7 +602,7 @@ Namespace Collections
         ''' <summary>Removes the element with the specified key from the queue.</summary>
         ''' <param name="key">The key of the element to remove.</param>
         ''' <exception cref="ArgumentNullException">key is null.</exception>
-        Public Overloads Function Remove(ByVal key As TKey) As Boolean Implements System.Collections.Generic.IDictionary(Of TKey, TValue).Remove
+        Public Overloads Function Remove(ByVal key As TKey) As Boolean Implements IDictionary(Of TKey, TValue).Remove
 
             SyncLock SyncRoot
                 InternalDictionary.Remove(key)
@@ -599,7 +615,7 @@ Namespace Collections
         ''' <param name="value">When this method returns, contains the value associated with the specified key, if the key is found; otherwise, the default value for the type of the value parameter. This parameter is passed uninitialized.</param>
         ''' <param name="key">The key of the value to get.</param>
         ''' <exception cref="ArgumentNullException">key is null.</exception>
-        Public Function TryGetValue(ByVal key As TKey, ByRef value As TValue) As Boolean Implements System.Collections.Generic.IDictionary(Of TKey, TValue).TryGetValue
+        Public Function TryGetValue(ByVal key As TKey, ByRef value As TValue) As Boolean Implements IDictionary(Of TKey, TValue).TryGetValue
 
             SyncLock SyncRoot
                 Return InternalDictionary.TryGetValue(key, value)
@@ -609,7 +625,7 @@ Namespace Collections
 
         ''' <summary>Gets an ICollection containing the keys of the queue.</summary>
         ''' <returns>An ICollection containing the keys of the queue.</returns>
-        Public ReadOnly Property Keys() As System.Collections.Generic.ICollection(Of TKey) Implements System.Collections.Generic.IDictionary(Of TKey, TValue).Keys
+        Public ReadOnly Property Keys() As ICollection(Of TKey) Implements IDictionary(Of TKey, TValue).Keys
             Get
                 Return InternalDictionary.Keys
             End Get
@@ -617,7 +633,7 @@ Namespace Collections
 
         ''' <summary>Gets an ICollection containing the values of the queue.</summary>
         ''' <returns>An ICollection containing the values of the queue.</returns>
-        Public ReadOnly Property Values() As System.Collections.Generic.ICollection(Of TValue) Implements System.Collections.Generic.IDictionary(Of TKey, TValue).Values
+        Public ReadOnly Property Values() As ICollection(Of TValue) Implements IDictionary(Of TKey, TValue).Values
             Get
                 Return InternalDictionary.Values
             End Get
