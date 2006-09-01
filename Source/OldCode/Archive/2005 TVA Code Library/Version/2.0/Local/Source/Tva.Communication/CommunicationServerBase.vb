@@ -495,9 +495,15 @@ Public MustInherit Class CommunicationServerBase
     ' This function proxies data to proper derived class function from thread pool
     Private Sub SendPreparedDataTo(ByVal state As Object)
 
-        With DirectCast(state, Object())
-            SendPreparedDataTo(DirectCast(.GetValue(0), Guid), DirectCast(.GetValue(1), Byte()))
-        End With
+        Try
+            With DirectCast(state, Object())
+                SendPreparedDataTo(DirectCast(.GetValue(0), Guid), DirectCast(.GetValue(1), Byte()))
+            End With
+        Catch ex As NotSupportedException
+            ' We can safely ignore this error
+        Catch
+            Throw
+        End Try
 
     End Sub
 

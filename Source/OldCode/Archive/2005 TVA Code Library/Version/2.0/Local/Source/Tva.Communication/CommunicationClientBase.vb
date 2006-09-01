@@ -579,7 +579,13 @@ Public MustInherit Class CommunicationClientBase
     ' This function proxies data to proper derived class function from thread pool
     Private Sub SendPreparedData(ByVal state As Object)
 
-        SendPreparedData(DirectCast(state, Byte()))
+        Try
+            SendPreparedData(DirectCast(state, Byte()))
+        Catch ex As NotSupportedException
+            ' We can safely ignore this error - some clients are read only
+        Catch
+            Throw
+        End Try
 
     End Sub
 
