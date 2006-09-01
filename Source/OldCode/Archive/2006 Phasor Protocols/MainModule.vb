@@ -30,12 +30,13 @@ Imports System.Reflection
 
 Module MainModule
 
-    Private m_receivers As PhasorMeasurementReceiver()
+    Private m_receivers As Dictionary(Of String, PhasorMeasurementReceiver)
     Private m_calculatedMeasurements As ICalculatedMeasurementAdapter()
 
     Public Sub Main()
 
-        Dim consoleLine, receiverCategory As String
+        Dim consoleLine, receiverCategory, archiveSource As String
+        Dim receiver As PhasorMeasurementReceiver
         Dim mapper As PhasorMeasurementMapper = Nothing
         Dim x As Integer
 
@@ -65,23 +66,28 @@ Module MainModule
         ' Define all of the calculated measurements
         m_calculatedMeasurements = DefineCalculatedMeasurements(CategorizedStringSetting("MeasurementReceiver", "PMUDatabase"))
 
+        End
+
         ' TODO: Load these from database too...
-        m_receivers = CreateArray(Of PhasorMeasurementReceiver)(CategorizedIntegerSetting("MeasurementReceiver", "TotalReceivers"))
+        m_receivers = New Dictionary(Of String, PhasorMeasurementReceiver)
 
-        For x = 0 To m_receivers.Length - 1
+        For x = 0 To CategorizedIntegerSetting("MeasurementReceiver", "TotalReceivers") - 1
             receiverCategory = "Receiver" & (x + 1)
+            archiveSource = CategorizedStringSetting(receiverCategory, "ArchiverCode")
 
-            m_receivers(x) = New PhasorMeasurementReceiver( _
+            receiver = New PhasorMeasurementReceiver( _
                 CategorizedStringSetting(receiverCategory, "ArchiverIP"), _
-                CategorizedStringSetting(receiverCategory, "ArchiverCode"), _
+                archiveSource, _
                 CategorizedStringSetting("MeasurementReceiver", "PMUDatabase"), _
                 CategorizedIntegerSetting("MeasurementReceiver", "PMUStatusInterval"), _
                 m_calculatedMeasurements)
 
-            With m_receivers(x)
+            With receiver
                 AddHandler .StatusMessage, AddressOf DisplayStatusMessage
                 If CategorizedBooleanSetting(receiverCategory, "InitializeOnStartup") Then .Initialize()
             End With
+
+            m_receivers.Add(archiveSource, receiver)
         Next
 
         Do While True
@@ -99,13 +105,13 @@ Module MainModule
                 End If
             ElseIf consoleLine.StartsWith("reload", True, Nothing) Then
                 Console.WriteLine()
-                For x = 0 To m_receivers.Length - 1
-                    m_receivers(x).Initialize()
+                For Each receiver In m_receivers.Values
+                    receiver.Initialize()
                 Next
             ElseIf consoleLine.StartsWith("status", True, Nothing) Then
                 Console.WriteLine()
-                For x = 0 To m_receivers.Length - 1
-                    Console.WriteLine(m_receivers(x).Status)
+                For Each receiver In m_receivers.Values
+                    Console.WriteLine(receiver.Status)
                 Next
                 For x = 0 To m_calculatedMeasurements.Length - 1
                     Console.WriteLine(m_calculatedMeasurements(x).Status)
@@ -129,8 +135,8 @@ Module MainModule
         Loop
 
         ' Attempt an orderly shutdown...
-        For x = 0 To m_receivers.Length - 1
-            m_receivers(x).DisconnectAll()
+        For Each receiver In m_receivers.Values
+            receiver.DisconnectAll()
         Next
 
         End
@@ -253,8 +259,8 @@ Module MainModule
             Dim pmuID As String = RemoveDuplicateWhiteSpace(consoleLine).Split(" "c)(1).ToUpper()
             Dim foundMapper As Boolean
 
-            For x As Integer = 0 To m_receivers.Length - 1
-                If m_receivers(x).Mappers.TryGetValue(pmuID, mapper) Then
+            For Each receiver As PhasorMeasurementReceiver In m_receivers.Values
+                If receiver.Mappers.TryGetValue(pmuID, mapper) Then
                     foundMapper = True
                     Exit For
                 End If
@@ -304,9 +310,9 @@ Module MainModule
 
     Private Sub DisplayConnectionList()
 
-        For x As Integer = 0 To m_receivers.Length - 1
-            Console.WriteLine("Phasor Measurement Retriever for Archive """ & m_receivers(x).ArchiverName & """")
-            Console.WriteLine(">> PMU/PDC Connection List (" & m_receivers(x).Mappers.Count & " Total)")
+        For Each receiver As PhasorMeasurementReceiver In m_receivers.Values
+            Console.WriteLine("Phasor Measurement Retriever for Archive """ & receiver.ArchiverName & """")
+            Console.WriteLine(">> PMU/PDC Connection List (" & receiver.Mappers.Count & " Total)")
             Console.WriteLine()
 
             Console.WriteLine("  Last Data Report Time:   PDC/PMU [PMU list]:")
@@ -314,7 +320,7 @@ Module MainModule
             '                    01-JAN-2006 12:12:24.000 SourceName [Pmu0, Pmu1, Pmu2, Pmu3, Pmu4]
             '                    >> No data frame has been parsed for SourceName - 00000 bytes received"
 
-            For Each mapper As PhasorMeasurementMapper In m_receivers(x).Mappers.Values
+            For Each mapper As PhasorMeasurementMapper In receiver.Mappers.Values
                 With mapper
                     Console.Write("  ")
                     If .LastReportTime > 0 Then
