@@ -5,27 +5,35 @@ Imports Tva.Text.Common
 <Serializable()> _
 Public Class ServiceResponse
 
-    Private m_type As ServiceResponseType
+    Private m_type As String
     Private m_parameters As String()
 
     Public Sub New()
-        MyClass.New(ServiceResponseType.Undetermined)
+        MyClass.New("UNDETERMINED")
     End Sub
 
-    Public Sub New(ByVal type As ServiceResponseType)
-        MyClass.New(type, New String() {"Undetermined"})
+    Public Sub New(ByVal type As String)
+        MyClass.New(type, New String() {})
     End Sub
 
-    Public Sub New(ByVal type As ServiceResponseType, ByVal parameters As String())
+    Public Sub New(ByVal type As String, ByVal parameters As String())
         m_type = type
         m_parameters = parameters
     End Sub
 
-    Public Property Type() As ServiceResponseType
+    ' Standard Response Type
+    '    Undetermined
+    '    UnicastMessage
+    '    MulticastMessage
+    '    BroadcastMessage
+    '    ServiceStateChanged
+    '    ProcessStateChanged
+    '    ProcessProgressUpdate
+    Public Property Type() As String
         Get
             Return m_type
         End Get
-        Set(ByVal value As ServiceResponseType)
+        Set(ByVal value As String)
             m_type = value
         End Set
     End Property

@@ -47,7 +47,12 @@
     <Import Include="System.Diagnostics" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Enumerations.vb" />
+    <Compile Include="MonitorHelper.Designer.vb">
+      <DependentUpon>MonitorHelper.vb</DependentUpon>
+    </Compile>
+    <Compile Include="MonitorHelper.vb">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="My Project\AssemblyInfo.vb" />
     <Compile Include="ServiceHelper.Designer.vb">
       <DependentUpon>ServiceHelper.vb</DependentUpon>
@@ -73,6 +78,10 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="MonitorHelper.resx">
+      <SubType>Designer</SubType>
+      <DependentUpon>MonitorHelper.vb</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="ServiceHelper.resx">
       <SubType>Designer</SubType>
       <DependentUpon>ServiceHelper.vb</DependentUpon>
