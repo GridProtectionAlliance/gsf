@@ -57,10 +57,6 @@ Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "ProtectedResourceDecoder", 
 EndProject
 Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "PhasorMeasurementReceiver", "Tva.Phasors\PhasorMeasurementReceiver\PhasorMeasurementReceiver.vbproj", "{0BDCD521-D91F-4E5E-A89A-62A19D2054BE}"
 EndProject
-Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "InterfaceAdapters", "Tva.Phasors\Concentrator\InterfaceAdapters\InterfaceAdapters.vbproj", "{45B13CE3-0EE6-4BF7-B36E-638F2BD68071}"
-EndProject
-Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "DatAWareAdapter.vb", "Tva.Phasors\Concentrator\DatAWareAdapter.vb\DatAWareAdapter.vb.vbproj", "{F452CF72-30CA-4245-B054-F9E73783FD78}"
-EndProject
 Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "Tva.Communication", "Tva.Communication\Tva.Communication.vbproj", "{99F93056-9EDE-4EB8-BF8B-61E3B8728F9D}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Strong Name Key File", "Strong Name Key File", "{9D316AAF-D094-4918-AABB-FE57CF1D2ECF}"
@@ -74,9 +70,13 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Concentrator", "Concentrato
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "PMU Connection Tester", "PMU Connection Tester", "{28E188A8-F790-43C7-B39C-4E32B16E31C5}"
 EndProject
-Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "RealTimeCalculatedMeasurements", "Tva.Phasors\Concentrator\RealTimeCalculatedMeasurements\RealTimeCalculatedMeasurements.vbproj", "{DFAF5597-0D41-4010-BE81-42EBD243D3C5}"
-EndProject
 Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "Tva.Services", "Tva.Services\Tva.Services.vbproj", "{072D5E46-0944-48DE-A1E1-C06D145FB366}"
+EndProject
+Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "DatAWareAdapter", "Tva.Phasors\DatAWareAdapter\DatAWareAdapter.vbproj", "{F452CF72-30CA-4245-B054-F9E73783FD78}"
+EndProject
+Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "InterfaceAdapters", "Tva.Phasors\InterfaceAdapters\InterfaceAdapters.vbproj", "{45B13CE3-0EE6-4BF7-B36E-638F2BD68071}"
+EndProject
+Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "RealTimeCalculatedMeasurements", "Tva.Phasors\RealTimeCalculatedMeasurements\RealTimeCalculatedMeasurements.vbproj", "{DFAF5597-0D41-4010-BE81-42EBD243D3C5}"
 EndProject
 Global
 	GlobalSection(SourceCodeControl) = preSolution
@@ -151,36 +151,36 @@ Global
 		SccLocalPath13 = ..
 		CanCheckoutShared = false
 		SccProjectFilePathRelativizedFromConnection13 = Source\\Tva.Phasors\\PhasorMeasurementReceiver\\
-		SccProjectUniqueName14 = Tva.Phasors\\Concentrator\\DatAWareAdapter.vb\\DatAWareAdapter.vb.vbproj
+		SccProjectUniqueName14 = Tva.Communication\\Tva.Communication.vbproj
 		SccProjectTopLevelParentUniqueName14 = TVA\u0020Code\u0020Library.sln
 		SccLocalPath14 = ..
 		CanCheckoutShared = false
-		SccProjectFilePathRelativizedFromConnection14 = Source\\Tva.Phasors\\Concentrator\\DatAWareAdapter.vb\\
-		SccProjectUniqueName15 = Tva.Phasors\\Concentrator\\InterfaceAdapters\\InterfaceAdapters.vbproj
+		SccProjectFilePathRelativizedFromConnection14 = Source\\Tva.Communication\\
+		SccProjectUniqueName15 = Setup\\Setup.vdproj
 		SccProjectTopLevelParentUniqueName15 = TVA\u0020Code\u0020Library.sln
 		SccLocalPath15 = ..
 		CanCheckoutShared = false
-		SccProjectFilePathRelativizedFromConnection15 = Source\\Tva.Phasors\\Concentrator\\InterfaceAdapters\\
-		SccProjectUniqueName16 = Tva.Communication\\Tva.Communication.vbproj
+		SccProjectFilePathRelativizedFromConnection15 = Source\\Setup\\
+		SccProjectUniqueName16 = Tva.Services\\Tva.Services.vbproj
 		SccProjectTopLevelParentUniqueName16 = TVA\u0020Code\u0020Library.sln
 		SccLocalPath16 = ..
 		CanCheckoutShared = false
-		SccProjectFilePathRelativizedFromConnection16 = Source\\Tva.Communication\\
-		SccProjectUniqueName17 = Setup\\Setup.vdproj
+		SccProjectFilePathRelativizedFromConnection16 = Source\\Tva.Services\\
+		SccProjectUniqueName17 = Tva.Phasors\\InterfaceAdapters\\InterfaceAdapters.vbproj
 		SccProjectTopLevelParentUniqueName17 = TVA\u0020Code\u0020Library.sln
-		SccLocalPath17 = ..
+		SccProjectName17 = \u0022$/TVA\u0020Code\u0020Library/Version/2.0/Local/Source/Tva.Phasors/InterfaceAdapters\u0022,\u0020CDIAAAAA
+		SccLocalPath17 = Tva.Phasors\\InterfaceAdapters
 		CanCheckoutShared = false
-		SccProjectFilePathRelativizedFromConnection17 = Source\\Setup\\
-		SccProjectUniqueName18 = Tva.Services\\Tva.Services.vbproj
+		SccProjectUniqueName18 = Tva.Phasors\\RealTimeCalculatedMeasurements\\RealTimeCalculatedMeasurements.vbproj
 		SccProjectTopLevelParentUniqueName18 = TVA\u0020Code\u0020Library.sln
-		SccLocalPath18 = ..
+		SccProjectName18 = \u0022$/TVA\u0020Code\u0020Library/Version/2.0/Local/Source/Tva.Phasors/RealTimeCalculatedMeasurements\u0022,\u0020UBPAAAAA
+		SccLocalPath18 = Tva.Phasors\\RealTimeCalculatedMeasurements
 		CanCheckoutShared = false
-		SccProjectFilePathRelativizedFromConnection18 = Source\\Tva.Services\\
-		SccProjectUniqueName19 = Tva.Phasors\\Concentrator\\RealTimeCalculatedMeasurements\\RealTimeCalculatedMeasurements.vbproj
+		SccProjectUniqueName19 = Tva.Phasors\\DatAWareAdapter\\DatAWareAdapter.vbproj
 		SccProjectTopLevelParentUniqueName19 = TVA\u0020Code\u0020Library.sln
-		SccProjectName19 = \u0022$/TVA\u0020Code\u0020Library/Version/2.0/Local/Source/Tva.Phasors/Concentrator/RealTimeCalculatedMeasurements\u0022,\u0020UBPAAAAA
-		SccLocalPath19 = Tva.Phasors\\Concentrator\\RealTimeCalculatedMeasurements
+		SccLocalPath19 = ..
 		CanCheckoutShared = false
+		SccProjectFilePathRelativizedFromConnection19 = Source\\Tva.Phasors\\DatAWareAdapter\\
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -311,22 +311,6 @@ Global
 		{0BDCD521-D91F-4E5E-A89A-62A19D2054BE}.Release|Any CPU.Build.0 = Release|Any CPU
 		{0BDCD521-D91F-4E5E-A89A-62A19D2054BE}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{0BDCD521-D91F-4E5E-A89A-62A19D2054BE}.Release|Win32.ActiveCfg = Release|Any CPU
-		{45B13CE3-0EE6-4BF7-B36E-638F2BD68071}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{45B13CE3-0EE6-4BF7-B36E-638F2BD68071}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{45B13CE3-0EE6-4BF7-B36E-638F2BD68071}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
-		{45B13CE3-0EE6-4BF7-B36E-638F2BD68071}.Debug|Win32.ActiveCfg = Debug|Any CPU
-		{45B13CE3-0EE6-4BF7-B36E-638F2BD68071}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{45B13CE3-0EE6-4BF7-B36E-638F2BD68071}.Release|Any CPU.Build.0 = Release|Any CPU
-		{45B13CE3-0EE6-4BF7-B36E-638F2BD68071}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
-		{45B13CE3-0EE6-4BF7-B36E-638F2BD68071}.Release|Win32.ActiveCfg = Release|Any CPU
-		{F452CF72-30CA-4245-B054-F9E73783FD78}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{F452CF72-30CA-4245-B054-F9E73783FD78}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{F452CF72-30CA-4245-B054-F9E73783FD78}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
-		{F452CF72-30CA-4245-B054-F9E73783FD78}.Debug|Win32.ActiveCfg = Debug|Any CPU
-		{F452CF72-30CA-4245-B054-F9E73783FD78}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{F452CF72-30CA-4245-B054-F9E73783FD78}.Release|Any CPU.Build.0 = Release|Any CPU
-		{F452CF72-30CA-4245-B054-F9E73783FD78}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
-		{F452CF72-30CA-4245-B054-F9E73783FD78}.Release|Win32.ActiveCfg = Release|Any CPU
 		{99F93056-9EDE-4EB8-BF8B-61E3B8728F9D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{99F93056-9EDE-4EB8-BF8B-61E3B8728F9D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{99F93056-9EDE-4EB8-BF8B-61E3B8728F9D}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
@@ -344,14 +328,6 @@ Global
 		{4DF64992-FEA6-49B3-BACE-1F11A98A1629}.Release|Mixed Platforms.ActiveCfg = Release
 		{4DF64992-FEA6-49B3-BACE-1F11A98A1629}.Release|Mixed Platforms.Build.0 = Release
 		{4DF64992-FEA6-49B3-BACE-1F11A98A1629}.Release|Win32.ActiveCfg = Release
-		{DFAF5597-0D41-4010-BE81-42EBD243D3C5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{DFAF5597-0D41-4010-BE81-42EBD243D3C5}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{DFAF5597-0D41-4010-BE81-42EBD243D3C5}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
-		{DFAF5597-0D41-4010-BE81-42EBD243D3C5}.Debug|Win32.ActiveCfg = Debug|Any CPU
-		{DFAF5597-0D41-4010-BE81-42EBD243D3C5}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{DFAF5597-0D41-4010-BE81-42EBD243D3C5}.Release|Any CPU.Build.0 = Release|Any CPU
-		{DFAF5597-0D41-4010-BE81-42EBD243D3C5}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
-		{DFAF5597-0D41-4010-BE81-42EBD243D3C5}.Release|Win32.ActiveCfg = Release|Any CPU
 		{072D5E46-0944-48DE-A1E1-C06D145FB366}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{072D5E46-0944-48DE-A1E1-C06D145FB366}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{072D5E46-0944-48DE-A1E1-C06D145FB366}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
@@ -362,6 +338,36 @@ Global
 		{072D5E46-0944-48DE-A1E1-C06D145FB366}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{072D5E46-0944-48DE-A1E1-C06D145FB366}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{072D5E46-0944-48DE-A1E1-C06D145FB366}.Release|Win32.ActiveCfg = Release|Any CPU
+		{F452CF72-30CA-4245-B054-F9E73783FD78}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F452CF72-30CA-4245-B054-F9E73783FD78}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F452CF72-30CA-4245-B054-F9E73783FD78}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{F452CF72-30CA-4245-B054-F9E73783FD78}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{F452CF72-30CA-4245-B054-F9E73783FD78}.Debug|Win32.ActiveCfg = Debug|Any CPU
+		{F452CF72-30CA-4245-B054-F9E73783FD78}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F452CF72-30CA-4245-B054-F9E73783FD78}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F452CF72-30CA-4245-B054-F9E73783FD78}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{F452CF72-30CA-4245-B054-F9E73783FD78}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{F452CF72-30CA-4245-B054-F9E73783FD78}.Release|Win32.ActiveCfg = Release|Any CPU
+		{45B13CE3-0EE6-4BF7-B36E-638F2BD68071}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{45B13CE3-0EE6-4BF7-B36E-638F2BD68071}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{45B13CE3-0EE6-4BF7-B36E-638F2BD68071}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{45B13CE3-0EE6-4BF7-B36E-638F2BD68071}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{45B13CE3-0EE6-4BF7-B36E-638F2BD68071}.Debug|Win32.ActiveCfg = Debug|Any CPU
+		{45B13CE3-0EE6-4BF7-B36E-638F2BD68071}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{45B13CE3-0EE6-4BF7-B36E-638F2BD68071}.Release|Any CPU.Build.0 = Release|Any CPU
+		{45B13CE3-0EE6-4BF7-B36E-638F2BD68071}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{45B13CE3-0EE6-4BF7-B36E-638F2BD68071}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{45B13CE3-0EE6-4BF7-B36E-638F2BD68071}.Release|Win32.ActiveCfg = Release|Any CPU
+		{DFAF5597-0D41-4010-BE81-42EBD243D3C5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DFAF5597-0D41-4010-BE81-42EBD243D3C5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DFAF5597-0D41-4010-BE81-42EBD243D3C5}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{DFAF5597-0D41-4010-BE81-42EBD243D3C5}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{DFAF5597-0D41-4010-BE81-42EBD243D3C5}.Debug|Win32.ActiveCfg = Debug|Any CPU
+		{DFAF5597-0D41-4010-BE81-42EBD243D3C5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DFAF5597-0D41-4010-BE81-42EBD243D3C5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DFAF5597-0D41-4010-BE81-42EBD243D3C5}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{DFAF5597-0D41-4010-BE81-42EBD243D3C5}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{DFAF5597-0D41-4010-BE81-42EBD243D3C5}.Release|Win32.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -388,9 +394,9 @@ Global
 		{36E05B5E-3209-4097-9A6F-CE96749C181E} = {28E188A8-F790-43C7-B39C-4E32B16E31C5}
 		{A4F0413C-4CDF-4B41-AA77-4DA7B9C1C18E} = {28E188A8-F790-43C7-B39C-4E32B16E31C5}
 		{AB9A5D8C-38C2-4393-93D9-BC548ED0AB38} = {28E188A8-F790-43C7-B39C-4E32B16E31C5}
-		{45B13CE3-0EE6-4BF7-B36E-638F2BD68071} = {394C6C5A-DBA9-400C-8DB6-6F9CAE1B8B0C}
-		{F452CF72-30CA-4245-B054-F9E73783FD78} = {394C6C5A-DBA9-400C-8DB6-6F9CAE1B8B0C}
 		{0BDCD521-D91F-4E5E-A89A-62A19D2054BE} = {394C6C5A-DBA9-400C-8DB6-6F9CAE1B8B0C}
+		{F452CF72-30CA-4245-B054-F9E73783FD78} = {394C6C5A-DBA9-400C-8DB6-6F9CAE1B8B0C}
+		{45B13CE3-0EE6-4BF7-B36E-638F2BD68071} = {394C6C5A-DBA9-400C-8DB6-6F9CAE1B8B0C}
 		{DFAF5597-0D41-4010-BE81-42EBD243D3C5} = {394C6C5A-DBA9-400C-8DB6-6F9CAE1B8B0C}
 	EndGlobalSection
 EndGlobal
