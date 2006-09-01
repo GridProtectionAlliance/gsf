@@ -106,7 +106,7 @@
       <Project>{86D45927-5D18-4A8D-BC5E-31093A800EB4}</Project>
       <Name>Tva.DatAWare</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Concentrator\InterfaceAdapters\InterfaceAdapters.vbproj">
+    <ProjectReference Include="..\InterfaceAdapters\InterfaceAdapters.vbproj">
       <Project>{45B13CE3-0EE6-4BF7-B36E-638F2BD68071}</Project>
       <Name>InterfaceAdapters</Name>
     </ProjectReference>

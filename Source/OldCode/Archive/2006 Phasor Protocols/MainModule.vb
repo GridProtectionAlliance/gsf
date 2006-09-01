@@ -142,6 +142,7 @@ Module MainModule
         Dim connection As New SqlConnection(connectionString)
         Dim calculatedMeasurementAdapters As New List(Of ICalculatedMeasurementAdapter)
         Dim calculatedMeasurementAdapter As ICalculatedMeasurementAdapter
+        Dim calculatedMeasurementName As String
         Dim externalAssemblyName As String
         Dim externalAssembly As Assembly
         Dim adapterType As Type
@@ -163,71 +164,71 @@ Module MainModule
         connection.Open()
 
         ' Load all the unique calculated measurement assemlies into the current application domain
-        With RetrieveData("SELECT DISTINCT AssemblyName FROM CalculatedMeasurements WHERE Enabled != 0", connection)
+        With RetrieveData("SELECT * FROM CalculatedMeasurements WHERE Enabled != 0", connection)
             For x As Integer = 0 To .Rows.Count - 1
-                ' Load the external assembly
-                externalAssemblyName = .Rows(x)("AssemblyName").ToString()
-                externalAssembly = Assembly.LoadFrom(externalAssemblyName)
+                Try
+                    ' Load the external assembly
+                    calculatedMeasurementName = .Rows(x)("Name").ToString()
+                    externalAssemblyName = .Rows(x)("AssemblyName").ToString()
+                    externalAssembly = Assembly.LoadFrom(externalAssemblyName)
 
-                ' Load all the defined types in the external assembly
-                With RetrieveData("SELECT * FROM CalculatedMeasurements WHERE AssemblyName='" & externalAssemblyName & "' AND Enabled != 0", connection)
-                    For y As Integer = 0 To .Rows.Count - 1
-                        ' Query ouput measurement
-                        With RetrieveRow(.Rows(y)("OuputMeasurementSql").ToString(), connection)
-                            outputMeasurement = New Measurement( _
-                                Convert.ToInt32(.Item("MeasurementID")), _
-                                .Item("ArchiveSource").ToString(), _
-                                Double.NaN, _
-                                Convert.ToDouble(.Item("Adder")), _
-                                Convert.ToDouble(.Item("Multiplier")))
-                        End With
+                    ' Query ouput measurement
+                    With RetrieveRow(.Rows(x)("OuputMeasurementSql").ToString(), connection)
+                        outputMeasurement = New Measurement( _
+                            Convert.ToInt32(.Item("MeasurementID")), _
+                            .Item("ArchiveSource").ToString(), _
+                            Double.NaN, _
+                            Convert.ToDouble(.Item("Adder")), _
+                            Convert.ToDouble(.Item("Multiplier")))
+                    End With
 
-                        ' Query input measurements
-                        inputMeasurements = New List(Of Measurement)
+                    ' Query input measurements
+                    inputMeasurements = New List(Of Measurement)
 
-                        With RetrieveData(.Rows(y)("InputMeasurementsSql").ToString(), connection)
-                            For z As Integer = 0 To .Rows.Count - 1
-                                With .Rows(z)
-                                    inputMeasurements.Add( _
-                                        New Measurement( _
-                                            Convert.ToInt32(.Item("MeasurementID")), _
-                                            .Item("ArchiveSource").ToString(), _
-                                            Double.NaN, _
-                                            Convert.ToDouble(.Item("Adder")), _
-                                            Convert.ToDouble(.Item("Multiplier"))))
-                                End With
-                            Next
-                        End With
+                    With RetrieveData(.Rows(x)("InputMeasurementsSql").ToString(), connection)
+                        For y As Integer = 0 To .Rows.Count - 1
+                            With .Rows(y)
+                                inputMeasurements.Add( _
+                                    New Measurement( _
+                                        Convert.ToInt32(.Item("MeasurementID")), _
+                                        .Item("ArchiveSource").ToString(), _
+                                        Double.NaN, _
+                                        Convert.ToDouble(.Item("Adder")), _
+                                        Convert.ToDouble(.Item("Multiplier"))))
+                            End With
+                        Next
+                    End With
 
-                        ' Load the specified type from the assembly
-                        adapterType = externalAssembly.GetType(.Rows(y)("TypeName").ToString())
+                    ' Load the specified type from the assembly
+                    adapterType = externalAssembly.GetType(.Rows(x)("TypeName").ToString())
 
-                        ' Create a new instance of the adpater
-                        calculatedMeasurementAdapter = Activator.CreateInstance(adapterType)
+                    ' Create a new instance of the adpater
+                    calculatedMeasurementAdapter = Activator.CreateInstance(adapterType)
 
-                        ' Intialize calculated measurement adapter
-                        With .Rows(y)
-                            calculatedMeasurementAdapter.Initialize( _
-                                outputMeasurement, _
-                                inputMeasurements.ToArray(), _
-                                Convert.ToInt32(.Item("MinimumInputMeasurements")), _
-                                Convert.ToInt32(.Item("ExpectedFrameRate")), _
-                                Convert.ToDouble(.Item("LagTime")), _
-                                Convert.ToDouble(.Item("LeadTime")))
-                        End With
+                    ' Intialize calculated measurement adapter
+                    With .Rows(x)
+                        calculatedMeasurementAdapter.Initialize( _
+                            outputMeasurement, _
+                            inputMeasurements.ToArray(), _
+                            Convert.ToInt32(.Item("MinimumInputMeasurements")), _
+                            Convert.ToInt32(.Item("ExpectedFrameRate")), _
+                            Convert.ToDouble(.Item("LagTime")), _
+                            Convert.ToDouble(.Item("LeadTime")))
+                    End With
 
-                        With calculatedMeasurementAdapter
-                            ' Bubble calculation module status messages out to local update status function
-                            AddHandler .StatusMessage, AddressOf DisplayStatusMessage
+                    With calculatedMeasurementAdapter
+                        ' Bubble calculation module status messages out to local update status function
+                        AddHandler .StatusMessage, AddressOf DisplayStatusMessage
 
-                            ' Bubble newly calculated measurement out to functions that need the real-time data
-                            AddHandler .NewCalculatedMeasurement, AddressOf NewCalculatedMeasurement
-                        End With
+                        ' Bubble newly calculated measurement out to functions that need the real-time data
+                        AddHandler .NewCalculatedMeasurement, AddressOf NewCalculatedMeasurement
+                    End With
 
-                        ' Add new adapter to the list
-                        calculatedMeasurementAdapters.Add(calculatedMeasurementAdapter)
-                    Next
-                End With
+                    ' Add new adapter to the list
+                    calculatedMeasurementAdapters.Add(calculatedMeasurementAdapter)
+                Catch ex As Exception
+                    DisplayStatusMessage("Failed to load calculated measurement """ & calculatedMeasurementName & """ from assembly """ & externalAssemblyName & """ due to exception: " & ex.Message)
+                End Try
             Next
         End With
 
