@@ -3,6 +3,7 @@
 Imports System.ComponentModel
 Imports Tva.Tro.Ssam
 Imports Tva.Communication
+Imports Tva.Serialization
 
 Public Class ServiceHelper
 
@@ -109,5 +110,39 @@ Public Class ServiceHelper
         RaiseEvent Shutdown(Me, EventArgs.Empty)
 
     End Sub
+
+
+#Region " TcpServer Events "
+
+    Private Sub SHTcpServer_ReceivedClientData(ByVal clientID As System.Guid, ByVal data() As System.Byte) Handles SHTcpServer.ReceivedClientData
+
+        Dim request As ClientRequest = GetObject(Of ClientRequest)(data)
+        If request IsNot Nothing Then
+            Select Case request.Type.ToUpper()
+                Case "PAUSESERVICE"
+                Case "RESUMESERVICE"
+                Case "STOPSERVICE"
+                Case "RESTARTSERVICE"
+                Case "LISTPROCESSES"
+                Case "STARTPROCESS"
+                Case "ABORTPROCESS"
+                Case "UNSCHEDULEPROCESS"
+                Case "RESCHEDULEPROCESS"
+                Case "PINGSERVICE"
+                Case "PINGALLCLIENTS"
+                Case "LISTALLCLIENTS"
+                Case "GETSERVICESTATUS"
+                Case "GETPROCESSSTATUS"
+                Case "GETCOMMANDHISTORY"
+                Case "GETDIRECTORYLISTING"
+                Case "LISTSETTINGS"
+                Case "UPDATESETTINGS"
+                Case "SAVESETTINGS"
+            End Select
+        End If
+
+    End Sub
+
+#End Region
 
 End Class
