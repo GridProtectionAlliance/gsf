@@ -50,7 +50,6 @@ Namespace Measurements
         ''' <summary>Gets or sets the text based ID of this measurement</summary>
         Property Tag() As String
 
-
         ''' <summary>Gets or sets the raw value of this measurement (i.e., the numeric value that is not offset by adder and multiplier)</summary>
         Property Value() As Double
 
