@@ -239,6 +239,7 @@ Public Class ScheduleManager
                 .Append("        Number of schedules:")
                 .Append(m_schedules.Count)
                 .Append(Environment.NewLine)
+                .Append(Environment.NewLine)
                 For Each scheduleName As String In m_schedules.Keys
                     .Append(m_schedules(scheduleName).Status)
                     .Append(Environment.NewLine)

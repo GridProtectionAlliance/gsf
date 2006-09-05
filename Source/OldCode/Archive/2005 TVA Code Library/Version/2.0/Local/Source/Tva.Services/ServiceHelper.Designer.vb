@@ -9,13 +9,10 @@ Partial Class ServiceHelper
 
         'Required for Windows.Forms Class Composition Designer support
         Container.Add(Me)
-        m_tcpServer = New Tva.Communication.TcpServer()
-        m_schedulemanager = New Tva.ScheduleManager()
-        m_ssamLogger = New Tva.Tro.Ssam.SsamLogger()
         m_serviceComponents = New List(Of IServiceComponent)
-        m_serviceComponents.Add(m_tcpServer)
-        m_serviceComponents.Add(m_schedulemanager)
-        m_serviceComponents.Add(m_ssamLogger)
+        m_serviceComponents.Add(SHTcpServer)
+        m_serviceComponents.Add(SHScheduleManager)
+        m_serviceComponents.Add(SHSsamLogger)
 
     End Sub
 

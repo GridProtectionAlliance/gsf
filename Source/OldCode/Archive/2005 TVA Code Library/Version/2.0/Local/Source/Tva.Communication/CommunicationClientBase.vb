@@ -427,9 +427,9 @@ Public MustInherit Class CommunicationClientBase
             Dim clientConnectionTime As Double = 0
             If m_connectTime > 0 Then
                 If m_isConnected Then   ' Client is connected to the server.
-                    clientConnectionTime = (System.DateTime.Now.Ticks() - m_connectTime) / 10000000L
+                    clientConnectionTime = TicksToSeconds(System.DateTime.Now.Ticks() - m_connectTime)
                 Else    ' Client is not connected to the server.
-                    clientConnectionTime = (m_disconnectTime - m_connectTime) / 10000000L
+                    clientConnectionTime = TicksToSeconds(m_disconnectTime - m_connectTime)
                 End If
             End If
             Return clientConnectionTime
@@ -532,19 +532,6 @@ Public MustInherit Class CommunicationClientBase
                 Throw New ArgumentNullException("data")
             End If
         End If
-
-    End Sub
-
-    ' This function proxies data to proper derived class function from thread pool
-    Private Sub SendPreparedData(ByVal state As Object)
-
-        Try
-            SendPreparedData(DirectCast(state, Byte()))
-        Catch ex As NotSupportedException
-            ' We can safely ignore this error - some clients are read only
-        Catch
-            Throw
-        End Try
 
     End Sub
 
@@ -728,6 +715,22 @@ Public MustInherit Class CommunicationClientBase
     ''' <param name="connectionString">The connection string to be validated.</param>
     ''' <returns>True is the connection string is valid; otherwise False.</returns>
     Protected MustOverride Function ValidConnectionString(ByVal connectionString As String) As Boolean
+
+    ''' <summary>
+    ''' This function proxies data to proper derived class function from thread pool.
+    ''' </summary>
+    ''' <param name="state"></param>
+    Private Sub SendPreparedData(ByVal state As Object)
+
+        Try
+            SendPreparedData(DirectCast(state, Byte()))
+        Catch ex As NotSupportedException
+            ' We can safely ignore this error - some clients are read only
+        Catch
+            Throw
+        End Try
+
+    End Sub
 
 #Region " IServiceComponent Implementation "
 

@@ -373,9 +373,9 @@ Public MustInherit Class CommunicationServerBase
             Dim serverRunTime As Double = 0
             If m_startTime > 0 Then
                 If m_isRunning Then ' Server is running.
-                    serverRunTime = (System.DateTime.Now.Ticks() - m_startTime) / 10000000L
+                    serverRunTime = TicksToSeconds(System.DateTime.Now.Ticks() - m_startTime)
                 Else    ' Server is not running.
-                    serverRunTime = (m_stopTime - m_startTime) / 10000000L
+                    serverRunTime = TicksToSeconds(m_stopTime - m_startTime)
                 End If
             End If
             Return serverRunTime
@@ -451,21 +451,6 @@ Public MustInherit Class CommunicationServerBase
                 End If
             End If
         End If
-
-    End Sub
-
-    ' This function proxies data to proper derived class function from thread pool
-    Private Sub SendPreparedDataTo(ByVal state As Object)
-
-        Try
-            With DirectCast(state, Object())
-                SendPreparedDataTo(DirectCast(.GetValue(0), Guid), DirectCast(.GetValue(1), Byte()))
-            End With
-        Catch ex As NotSupportedException
-            ' We can safely ignore this error
-        Catch
-            Throw
-        End Try
 
     End Sub
 
@@ -655,6 +640,24 @@ Public MustInherit Class CommunicationServerBase
     ''' <param name="configurationString">The configuration string to be validated.</param>
     ''' <returns>True is the configuration string is valid; otherwise False.</returns>
     Protected MustOverride Function ValidConfigurationString(ByVal configurationString As String) As Boolean
+
+    ''' <summary>
+    ''' This function proxies data to proper derived class function from thread pool.
+    ''' </summary>
+    ''' <param name="state"></param>
+    Private Sub SendPreparedDataTo(ByVal state As Object)
+
+        Try
+            With DirectCast(state, Object())
+                SendPreparedDataTo(DirectCast(.GetValue(0), Guid), DirectCast(.GetValue(1), Byte()))
+            End With
+        Catch ex As NotSupportedException
+            ' We can safely ignore this error
+        Catch
+            Throw
+        End Try
+
+    End Sub
 
 #Region " IServiceComponent Implementation "
 
