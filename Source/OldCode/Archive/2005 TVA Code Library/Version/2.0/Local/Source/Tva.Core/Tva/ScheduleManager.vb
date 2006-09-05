@@ -9,7 +9,7 @@ Imports Tva.Configuration.Common
 
 <ToolboxBitmap(GetType(ScheduleManager)), DefaultEvent("ScheduleDue")> _
 Public Class ScheduleManager
-    Implements ISupportInitialize, IServiceComponent
+    Implements IServiceComponent
 
     Private m_configurationElement As String
     Private m_persistSchedules As Boolean
@@ -114,6 +114,7 @@ Public Class ScheduleManager
     Public Sub Start()
 
         If Not m_timer.Enabled AndAlso m_enabled Then
+            LoadSchedules()
             m_startTimerThread = New Thread(AddressOf StartTimer)
             m_startTimerThread.Start()
         End If
@@ -213,21 +214,6 @@ Public Class ScheduleManager
         CheckAllSchedules()
 
     End Sub
-
-#Region " ISupportInitialize Implementation "
-
-    Public Sub BeginInit() Implements System.ComponentModel.ISupportInitialize.BeginInit
-
-    End Sub
-
-    Public Sub EndInit() Implements System.ComponentModel.ISupportInitialize.EndInit
-
-        ' Load the schedules from config file only when the component is not in design mode.
-        If Not DesignMode Then LoadSchedules()
-
-    End Sub
-
-#End Region
 
 #Region " IServiceComponent Implementation "
 
