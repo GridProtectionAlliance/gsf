@@ -47,8 +47,6 @@ Partial Class ServiceHelper
         Me.SHTcpServer = New Tva.Communication.TcpServer(Me.components)
         Me.SHScheduleManager = New Tva.ScheduleManager(Me.components)
         Me.SHSsamLogger = New Tva.Tro.Ssam.SsamLogger(Me.components)
-        CType(Me.SHScheduleManager, System.ComponentModel.ISupportInitialize).BeginInit()
-        CType(Me.SHSsamLogger, System.ComponentModel.ISupportInitialize).BeginInit()
         '
         'SHTcpServer
         '
@@ -64,8 +62,6 @@ Partial Class ServiceHelper
         'SHSsamLogger
         '
         Me.SHSsamLogger.SsamApi.ConnectionString = "Server=RGOCSQLD;Database=Ssam;Trusted_Connection=True;"
-        CType(Me.SHScheduleManager, System.ComponentModel.ISupportInitialize).EndInit()
-        CType(Me.SHSsamLogger, System.ComponentModel.ISupportInitialize).EndInit()
 
     End Sub
     Friend WithEvents SHTcpServer As Tva.Communication.TcpServer

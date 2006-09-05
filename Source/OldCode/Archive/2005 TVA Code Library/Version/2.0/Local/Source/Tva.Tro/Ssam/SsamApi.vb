@@ -186,6 +186,35 @@ Namespace Ssam
         End Property
 
         ''' <summary>
+        ''' Initializes the connection strings used for connecting to the SSAM server.
+        ''' </summary>
+        Public Sub Initialize()
+
+            CheckDisposed()
+
+            If m_persistConnectionStrings Then
+                ' Initialize the connection string variables from the config file only if the connection strings 
+                ' are present (Connection strings are persisted when PersistConnectionStrings = True).
+                Dim persistedCS As String = ""
+
+                Try
+                    persistedCS = DefaultConfigFile.CategorizedSettings(ConfigurationElement)("Development").Value
+                Catch ex As Exception
+                    ' We can safely ignore any exception encountered while retrieving connection string from the config file.
+                End Try
+                If Not String.IsNullOrEmpty(persistedCS) Then m_developmentConnectionString = persistedCS
+
+                Try
+                    persistedCS = DefaultConfigFile.CategorizedSettings(ConfigurationElement)("Production").Value
+                Catch ex As Exception
+                    ' We can safely ignore any exception encountered while retrieving connection string from the config file.
+                End Try
+                If Not String.IsNullOrEmpty(persistedCS) Then m_productionConnectionString = persistedCS
+            End If
+
+        End Sub
+
+        ''' <summary>
         ''' Connects with the selected SSAM server.
         ''' </summary>
         Public Sub Connect()
@@ -208,12 +237,16 @@ Namespace Ssam
 
             If m_connection.State <> System.Data.ConnectionState.Closed Then m_connection.Close()
             If m_persistConnectionStrings Then
-                ' Save SSAM connection strings to the config file.
-                CategorizedSettings(ConfigurationElement).Add("Development", m_developmentConnectionString, _
-                    "Connection string for connecting to development SSAM server.", True)
-                CategorizedSettings(ConfigurationElement).Add("Production", m_productionConnectionString, _
-                    "Connection string for connecting to production SSAM server.", True)
-                SaveSettings()
+                Try
+                    ' Save SSAM connection strings to the config file.
+                    CategorizedSettings(ConfigurationElement).Add("Development", m_developmentConnectionString, _
+                        "Connection string for connecting to development SSAM server.", True)
+                    CategorizedSettings(ConfigurationElement).Add("Production", m_productionConnectionString, _
+                        "Connection string for connecting to production SSAM server.", True)
+                    SaveSettings()
+                Catch ex As Exception
+                    ' We can safely ignore any exceptions encountered while saving connections strings to the config file.
+                End Try
             End If
             m_connectionState = SsamConnectionState.Closed
 
@@ -285,28 +318,6 @@ Namespace Ssam
             m_productionConnectionString = "Server=OPSSAMSQL;Database=Ssam;Trusted_Connection=True;"
             m_connection = New SqlConnection()
             If initializeApi Then Initialize()
-        End Sub
-
-        ''' <summary>
-        ''' Initializes the connection strings used for connecting to the SSAM server.
-        ''' </summary>
-        ''' <remarks>This method is for internal use only and must be called before using the API.</remarks>
-        Friend Sub Initialize()
-
-            CheckDisposed()
-
-            If m_persistConnectionStrings Then
-                ' Initialize the connection string variables from the config file only if the connection strings 
-                ' are present (Connection strings are persisted when PersistConnectionStrings = True).
-                Dim persistedCS As String = ""
-
-                persistedCS = DefaultConfigFile.CategorizedSettings(ConfigurationElement)("Development").Value
-                If Not String.IsNullOrEmpty(persistedCS) Then m_developmentConnectionString = persistedCS
-
-                persistedCS = DefaultConfigFile.CategorizedSettings(ConfigurationElement)("Production").Value
-                If Not String.IsNullOrEmpty(persistedCS) Then m_productionConnectionString = persistedCS
-            End If
-
         End Sub
 
 #End Region

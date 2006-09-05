@@ -1,12 +1,15 @@
 ' 08-29-06
 
 Imports System.ComponentModel
+Imports System.ServiceProcess
 Imports Tva.Tro.Ssam
 Imports Tva.Communication
 Imports Tva.Serialization
 
 Public Class ServiceHelper
 
+    Private m_parentService As ServiceBase
+    Private m_serviceController As ServiceController
     Private m_serviceComponents As List(Of IServiceComponent)
     Private m_startedEventHandlerList As New List(Of EventHandler)
 
@@ -36,6 +39,15 @@ Public Class ServiceHelper
 
     Public Event ReceivedClientRequest(ByVal request As ClientRequest)
 
+    Public Property ParentService() As ServiceBase
+        Get
+            Return m_parentService
+        End Get
+        Set(ByVal value As ServiceBase)
+            m_parentService = value
+        End Set
+    End Property
+
     <TypeConverter(GetType(ExpandableObjectConverter)), DesignerSerializationVisibility(DesignerSerializationVisibility.Content)> _
     Public ReadOnly Property TcpServer() As TcpServer
         Get
@@ -57,6 +69,7 @@ Public Class ServiceHelper
         End Get
     End Property
 
+    <Browsable(False)> _
     Public ReadOnly Property ServiceComponents() As List(Of IServiceComponent)
         Get
             Return m_serviceComponents
@@ -113,7 +126,6 @@ Public Class ServiceHelper
 
     End Sub
 
-
 #Region " TcpServer Events "
 
     Private Sub SHTcpServer_ReceivedClientData(ByVal clientID As System.Guid, ByVal data() As System.Byte) Handles SHTcpServer.ReceivedClientData
@@ -124,9 +136,9 @@ Public Class ServiceHelper
 
             Select Case request.Type.ToUpper()
                 Case "PAUSESERVICE"
+                    If m_serviceController IsNot Nothing Then m_serviceController.Pause()
                 Case "RESUMESERVICE"
-                Case "STOPSERVICE"
-                Case "RESTARTSERVICE"
+                    If m_serviceController IsNot Nothing Then m_serviceController.Continue()
                 Case "LISTPROCESSES"
                 Case "STARTPROCESS"
                 Case "ABORTPROCESS"

@@ -139,11 +139,15 @@ Public Class ScheduleManager
     Public Sub LoadSchedules()
 
         If m_enabled AndAlso m_persistSchedules Then
-            For Each savedSchedule As CategorizedSettingsElement In DefaultConfigFile.CategorizedSettings(m_configurationElement)
-                Dim schedule As New Schedule(savedSchedule.Name)
-                schedule.Rule = savedSchedule.Value
-                m_schedules(savedSchedule.Name) = schedule
-            Next
+            Try
+                For Each savedSchedule As CategorizedSettingsElement In DefaultConfigFile.CategorizedSettings(m_configurationElement)
+                    Dim schedule As New Schedule(savedSchedule.Name)
+                    schedule.Rule = savedSchedule.Value
+                    m_schedules(savedSchedule.Name) = schedule
+                Next
+            Catch ex As Exception
+                ' We can safely ignore any exceptions encountered while loading schedules from the config file.
+            End Try
         End If
 
     End Sub
@@ -154,11 +158,15 @@ Public Class ScheduleManager
     Public Sub SaveSchedules()
 
         If m_enabled AndAlso m_persistSchedules Then
-            DefaultConfigFile.CategorizedSettings(m_configurationElement).Clear()
-            For Each scheduleName As String In m_schedules.Keys
-                DefaultConfigFile.CategorizedSettings(m_configurationElement).Add(scheduleName, m_schedules(scheduleName).Rule)
-            Next
-            SaveSettings()
+            Try
+                DefaultConfigFile.CategorizedSettings(m_configurationElement).Clear()
+                For Each scheduleName As String In m_schedules.Keys
+                    DefaultConfigFile.CategorizedSettings(m_configurationElement).Add(scheduleName, m_schedules(scheduleName).Rule)
+                Next
+                SaveSettings()
+            Catch ex As Exception
+                ' We can safely ignore any exceptions encountered while saving schedules to the config file.
+            End Try
         End If
 
     End Sub
