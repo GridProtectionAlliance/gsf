@@ -16,6 +16,15 @@
 '*******************************************************************************************************
 
 ''' <summary>This is essentially a sorted dictionary style list that implements IList</summary>
+''' <remarks>
+''' <para>
+''' Important note about using an "Integer" as the key for this class: IDictionary implementations
+''' do not normally implement the IList interface because of ambiguity that is caused when implementing
+''' an integer key.  For example, if you implement this class with a key of type "Integer" you will not
+''' be able to access items in the queue by index without "casting" the class as IList, this is because
+''' the Item property in both the IDictionary and IList would have the same parameters.
+''' </para>
+''' </remarks>
 Public Class DictionaryList(Of TKey, TValue)
 
     Implements IList(Of KeyValuePair(Of TKey, TValue)), IDictionary(Of TKey, TValue)

@@ -29,6 +29,21 @@ Namespace Collections
     ''' <para>This class acts as a strongly typed sorted dictionary of objects to be processed.</para>
     ''' <para>Consumers are expected to create new instances of this class through the static construction functions (e.g., CreateAsynchronousQueue, CreateSynchronousQueue, etc.)</para>
     ''' <para>Note that the queue will not start processing until the Start method is called.</para>
+    ''' <para>Because this queue represents a dictionary style collection, all keys must be unique.</para>
+    ''' <para>
+    ''' Be aware that this class is based on a DictionaryList (i.e., a SortedList that implements IList) and
+    ''' since items in this kind of list are automatically sorted, items will be processed in "sorted" order
+    ''' regardless of the order in which they are added to the list.
+    ''' </para>
+    ''' <para>
+    ''' Important note about using an "Integer" as the key for this class: because the queue base class must
+    ''' implement IList, a normal dictionary cannot be used for the base class.  IDictionary implementations
+    ''' do not normally implement the IList interface because of ambiguity that is caused when implementing
+    ''' an integer key.  For example, if you implement this class with a key of type "Integer" you will not
+    ''' be able to access items in the queue by index without "casting" the queue as IList, this is because
+    ''' the Item property in both the IDictionary and IList would have the same parameters (see the
+    ''' DictionaryList class for more details.)
+    ''' </para>
     ''' </remarks>
     Public Class KeyedProcessQueue(Of TKey, TValue)
 
