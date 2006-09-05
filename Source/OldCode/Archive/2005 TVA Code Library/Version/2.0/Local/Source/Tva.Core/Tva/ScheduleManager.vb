@@ -225,11 +225,30 @@ Public Class ScheduleManager
 
     Private m_previouslyEnabled As Boolean = False
 
+    <Browsable(False)> _
     Public ReadOnly Property Name() As String Implements Services.IServiceComponent.Name
         Get
-            Return Me.GetType.Name
+            Return Me.GetType().Name
         End Get
     End Property
+
+    <Browsable(False)> _
+    Public ReadOnly Property Status() As String Implements Services.IServiceComponent.Status
+        Get
+            With New System.Text.StringBuilder()
+                .Append("        Number of schedules:")
+                .Append(m_schedules.Count)
+                .Append(Environment.NewLine)
+                For Each scheduleName As String In m_schedules.Keys
+                    .Append(m_schedules(scheduleName).Status)
+                    .Append(Environment.NewLine)
+                Next
+
+                Return .ToString()
+            End With
+        End Get
+    End Property
+
 
     Public Sub ProcessStateChanged(ByVal processName As String, ByVal newState As Services.ProcessState) Implements Services.IServiceComponent.ProcessStateChanged
 
@@ -252,22 +271,6 @@ Public Class ScheduleManager
         End Select
 
     End Sub
-
-    Public ReadOnly Property Status() As String Implements Services.IServiceComponent.Status
-        Get
-            With New System.Text.StringBuilder()
-                .Append("        Number of schedules:")
-                .Append(m_schedules.Count)
-                .Append(Environment.NewLine)
-                For Each scheduleName As String In m_schedules.Keys
-                    .Append(m_schedules(scheduleName).Status)
-                    .Append(Environment.NewLine)
-                Next
-
-                Return .ToString()
-            End With
-        End Get
-    End Property
 
 #End Region
 

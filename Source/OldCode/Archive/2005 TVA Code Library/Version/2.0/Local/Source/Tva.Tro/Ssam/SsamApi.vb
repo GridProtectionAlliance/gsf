@@ -26,7 +26,6 @@ Namespace Ssam
     ''' <summary>
     ''' Defines the mechanism for communicating with SSAM programatically.
     ''' </summary>
-    <TypeConverter(GetType(ExpandableObjectConverter))> _
     Public Class SsamApi
         Implements IDisposable
 

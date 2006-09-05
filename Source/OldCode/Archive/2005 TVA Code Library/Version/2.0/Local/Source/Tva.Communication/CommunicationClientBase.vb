@@ -21,8 +21,9 @@ Imports System.Drawing
 Imports System.ComponentModel
 Imports Tva.Common
 Imports Tva.Serialization
-Imports Tva.DateTime.Common
+Imports Tva.Services
 Imports Tva.IO.Common
+Imports Tva.DateTime.Common
 Imports Tva.Communication.CommunicationHelper
 
 ''' <summary>
@@ -460,48 +461,6 @@ Public MustInherit Class CommunicationClientBase
     End Property
 
     ''' <summary>
-    ''' Gets the current status of the client.
-    ''' </summary>
-    ''' <value></value>
-    ''' <returns>The current status of the client.</returns>
-    <Browsable(False)> _
-    Public ReadOnly Property Status() As String Implements ICommunicationClient.Status
-        Get
-            With New StringBuilder()
-                .Append("                 Server ID: ")
-                .Append(m_serverID.ToString())
-                .Append(Environment.NewLine())
-                .Append("                 Client ID: ")
-                .Append(m_clientID.ToString())
-                .Append(Environment.NewLine())
-                .Append("              Client state: ")
-                .Append(IIf(m_isConnected, "Connected", "Not Connected"))
-                .Append(Environment.NewLine())
-                .Append("           Connection time: ")
-                .Append(SecondsToText(ConnectionTime()))
-                .Append(Environment.NewLine())
-                .Append("            Receive buffer: ")
-                .Append(m_receiveBufferSize.ToString())
-                .Append(Environment.NewLine())
-                .Append("        Transport protocol: ")
-                .Append(m_protocol.ToString())
-                .Append(Environment.NewLine())
-                .Append("        Text encoding used: ")
-                .Append(m_textEncoding.EncodingName())
-                .Append(Environment.NewLine())
-                .Append("          Total bytes sent: ")
-                .Append(m_totalBytesSent)
-                .Append(Environment.NewLine())
-                .Append("      Total bytes received: ")
-                .Append(m_totalBytesReceived)
-                .Append(Environment.NewLine())
-
-                Return .ToString()
-            End With
-        End Get
-    End Property
-
-    ''' <summary>
     ''' Connects the client to the server.
     ''' </summary>
     Public MustOverride Sub Connect() Implements ICommunicationClient.Connect
@@ -769,5 +728,82 @@ Public MustInherit Class CommunicationClientBase
     ''' <param name="connectionString">The connection string to be validated.</param>
     ''' <returns>True is the connection string is valid; otherwise False.</returns>
     Protected MustOverride Function ValidConnectionString(ByVal connectionString As String) As Boolean
+
+#Region " IServiceComponent Implementation "
+
+    Private m_previouslyEnabled As Boolean = False
+
+    <Browsable(False)> _
+    Public ReadOnly Property Name() As String Implements Services.IServiceComponent.Name
+        Get
+            Return Me.GetType().Name
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' Gets the current status of the client.
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns>The current status of the client.</returns>
+    <Browsable(False)> _
+    Public ReadOnly Property Status() As String Implements Services.IServiceComponent.Status
+        Get
+            With New StringBuilder()
+                .Append("                 Server ID: ")
+                .Append(m_serverID.ToString())
+                .Append(Environment.NewLine())
+                .Append("                 Client ID: ")
+                .Append(m_clientID.ToString())
+                .Append(Environment.NewLine())
+                .Append("              Client state: ")
+                .Append(IIf(m_isConnected, "Connected", "Not Connected"))
+                .Append(Environment.NewLine())
+                .Append("           Connection time: ")
+                .Append(SecondsToText(ConnectionTime()))
+                .Append(Environment.NewLine())
+                .Append("            Receive buffer: ")
+                .Append(m_receiveBufferSize.ToString())
+                .Append(Environment.NewLine())
+                .Append("        Transport protocol: ")
+                .Append(m_protocol.ToString())
+                .Append(Environment.NewLine())
+                .Append("        Text encoding used: ")
+                .Append(m_textEncoding.EncodingName())
+                .Append(Environment.NewLine())
+                .Append("          Total bytes sent: ")
+                .Append(m_totalBytesSent)
+                .Append(Environment.NewLine())
+                .Append("      Total bytes received: ")
+                .Append(m_totalBytesReceived)
+                .Append(Environment.NewLine())
+
+                Return .ToString()
+            End With
+        End Get
+    End Property
+
+    Public Sub ProcessStateChanged(ByVal processName As String, ByVal newState As Services.ProcessState) Implements Services.IServiceComponent.ProcessStateChanged
+
+    End Sub
+
+    Public Sub ServiceStateChanged(ByVal newState As Services.ServiceState) Implements Services.IServiceComponent.ServiceStateChanged
+
+        Select Case newState
+            Case ServiceState.Started
+                Me.Connect()
+            Case ServiceState.Stopped
+                Me.Disconnect()
+            Case ServiceState.Paused
+                m_previouslyEnabled = Me.Enabled
+                Me.Enabled = False
+            Case ServiceState.Resumed
+                Me.Enabled = m_previouslyEnabled
+            Case ServiceState.Shutdown
+                Me.Dispose()
+        End Select
+
+    End Sub
+
+#End Region
 
 End Class

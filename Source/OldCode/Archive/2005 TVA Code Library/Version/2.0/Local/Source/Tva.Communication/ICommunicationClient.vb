@@ -1,6 +1,7 @@
 ' 07-26-06
 
 Public Interface ICommunicationClient
+    Inherits Tva.Services.IServiceComponent
 
     ''' <summary>
     ''' Occurs when the client is trying to connect to the server.
@@ -191,13 +192,6 @@ Public Interface ICommunicationClient
     ''' <value></value>
     ''' <returns>The total number of bytes received by the client from the server since the connection is established.</returns>
     ReadOnly Property TotalBytesReceived() As Integer
-
-    ''' <summary>
-    ''' Gets the current status of the client.
-    ''' </summary>
-    ''' <value></value>
-    ''' <returns>The current status of the client.</returns>
-    ReadOnly Property Status() As String
 
     ''' <summary>
     ''' Connects the client to the server.

@@ -1,6 +1,7 @@
 ' 07-26-06
 
 Public Interface ICommunicationServer
+    Inherits Tva.Services.IServiceComponent
 
     ''' <summary>
     ''' Occurs when the server is started.
@@ -149,13 +150,6 @@ Public Interface ICommunicationServer
     ''' <value></value>
     ''' <returns>The time in seconds for which the server has been running.</returns>
     ReadOnly Property RunTime() As Double
-
-    ''' <summary>
-    ''' Gets the current status of the server.
-    ''' </summary>
-    ''' <value></value>
-    ''' <returns>The current status of the server.</returns>
-    ReadOnly Property Status() As String
 
     ''' <summary>
     ''' Starts the server.

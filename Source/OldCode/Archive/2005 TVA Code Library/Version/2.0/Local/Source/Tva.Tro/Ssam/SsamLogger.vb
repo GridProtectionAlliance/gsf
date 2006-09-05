@@ -100,7 +100,7 @@ Namespace Ssam
         ''' <value></value>
         ''' <returns>The Tva.Tro.Ssam.SsamApi inistance used for logging events to the SSAM server.</returns>
         ''' <remarks></remarks>
-        <Description("The Tva.Tro.Ssam.SsamApi inistance used for logging events to the SSAM server."), Category("Configuration"), DesignerSerializationVisibility(DesignerSerializationVisibility.Content)> _
+        <Description("The Tva.Tro.Ssam.SsamApi inistance used for logging events to the SSAM server."), Category("Configuration"), TypeConverter(GetType(ExpandableObjectConverter)), DesignerSerializationVisibility(DesignerSerializationVisibility.Content)> _
         Public ReadOnly Property SsamApi() As SsamApi
             Get
                 Return m_ssamApi
@@ -219,7 +219,25 @@ Namespace Ssam
         <Browsable(False)> _
         Public ReadOnly Property Name() As String Implements Services.IServiceComponent.Name
             Get
-                Return Me.GetType.Name()
+                Return Me.GetType().Name()
+            End Get
+        End Property
+
+        <Browsable(False)> _
+        Public ReadOnly Property Status() As String Implements Services.IServiceComponent.Status
+            Get
+                With New StringBuilder()
+                    .Append("                    Logger: ")
+                    Select Case Me.Enabled()
+                        Case True
+                            .Append("Enabled")
+                        Case False
+                            .Append("Disabled")
+                    End Select
+                    .Append(Environment.NewLine())
+                    .Append(m_eventQueue.Status())
+                    Return .ToString()
+                End With
             End Get
         End Property
 
@@ -246,24 +264,6 @@ Namespace Ssam
             End Select
 
         End Sub
-
-        <Browsable(False)> _
-        Public ReadOnly Property Status() As String Implements Services.IServiceComponent.Status
-            Get
-                With New StringBuilder()
-                    .Append("                    Logger: ")
-                    Select Case Me.Enabled()
-                        Case True
-                            .Append("Enabled")
-                        Case False
-                            .Append("Disabled")
-                    End Select
-                    .Append(Environment.NewLine())
-                    .Append(m_eventQueue.Status())
-                    Return .ToString()
-                End With
-            End Get
-        End Property
 
 #End Region
 

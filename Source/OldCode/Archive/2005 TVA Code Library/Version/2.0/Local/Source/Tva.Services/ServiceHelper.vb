@@ -1,9 +1,16 @@
 ' 08-29-06
 
+Imports System.ComponentModel
+Imports Tva.Tro.Ssam
+Imports Tva.Communication
+
 Public Class ServiceHelper
 
     Private m_serviceComponents As List(Of IServiceComponent)
     Private m_startedEventHandlerList As New List(Of EventHandler)
+    Private WithEvents m_tcpServer As TcpServer
+    Private WithEvents m_schedulemanager As ScheduleManager
+    Private WithEvents m_ssamLogger As SsamLogger
 
     Public Custom Event Started As EventHandler
         AddHandler(ByVal value As EventHandler)
@@ -28,6 +35,27 @@ Public Class ServiceHelper
     Public Event Resumed As EventHandler
 
     Public Event Shutdown As EventHandler
+
+    <TypeConverter(GetType(ExpandableObjectConverter)), DesignerSerializationVisibility(DesignerSerializationVisibility.Content)> _
+    Public ReadOnly Property TcpServer() As TcpServer
+        Get
+            Return m_tcpServer
+        End Get
+    End Property
+
+    <DesignerSerializationVisibility(DesignerSerializationVisibility.Content)> _
+    Public ReadOnly Property ScheduleManager() As ScheduleManager
+        Get
+            Return m_schedulemanager
+        End Get
+    End Property
+
+    <DesignerSerializationVisibility(DesignerSerializationVisibility.Content)> _
+    Public ReadOnly Property SsamLogger() As SsamLogger
+        Get
+            Return m_ssamLogger
+        End Get
+    End Property
 
     Public ReadOnly Property ServiceComponents() As List(Of IServiceComponent)
         Get

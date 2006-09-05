@@ -9,7 +9,13 @@ Partial Class ServiceHelper
 
         'Required for Windows.Forms Class Composition Designer support
         Container.Add(Me)
+        m_tcpServer = New Tva.Communication.TcpServer()
+        m_schedulemanager = New Tva.ScheduleManager()
+        m_ssamLogger = New Tva.Tro.Ssam.SsamLogger()
         m_serviceComponents = New List(Of IServiceComponent)
+        m_serviceComponents.Add(m_tcpServer)
+        m_serviceComponents.Add(m_schedulemanager)
+        m_serviceComponents.Add(m_ssamLogger)
 
     End Sub
 
@@ -41,32 +47,32 @@ Partial Class ServiceHelper
     Private Sub InitializeComponent()
         Me.components = New System.ComponentModel.Container
         Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(ServiceHelper))
-        Me.TcpServer = New Tva.Communication.TcpServer(Me.components)
-        Me.ScheduleManager = New Tva.ScheduleManager(Me.components)
-        Me.SsamLogger = New Tva.Tro.Ssam.SsamLogger(Me.components)
-        CType(Me.ScheduleManager, System.ComponentModel.ISupportInitialize).BeginInit()
-        CType(Me.SsamLogger, System.ComponentModel.ISupportInitialize).BeginInit()
+        Me.SHTcpServer = New Tva.Communication.TcpServer(Me.components)
+        Me.SHScheduleManager = New Tva.ScheduleManager(Me.components)
+        Me.SHSsamLogger = New Tva.Tro.Ssam.SsamLogger(Me.components)
+        CType(Me.SHScheduleManager, System.ComponentModel.ISupportInitialize).BeginInit()
+        CType(Me.SHSsamLogger, System.ComponentModel.ISupportInitialize).BeginInit()
         '
-        'TcpServer
+        'SHTcpServer
         '
-        Me.TcpServer.ConfigurationString = "Port=8888"
-        Me.TcpServer.TextEncoding = CType(resources.GetObject("TcpServer.TextEncoding"), System.Text.Encoding)
+        Me.SHTcpServer.ConfigurationString = "Port=8888"
+        Me.SHTcpServer.TextEncoding = CType(resources.GetObject("SHTcpServer.TextEncoding"), System.Text.Encoding)
         '
-        'ScheduleManager
+        'SHScheduleManager
         '
-        Me.ScheduleManager.ConfigurationElement = "ScheduleManager"
-        Me.ScheduleManager.Enabled = True
-        Me.ScheduleManager.PersistSchedules = True
+        Me.SHScheduleManager.ConfigurationElement = "ScheduleManager"
+        Me.SHScheduleManager.Enabled = True
+        Me.SHScheduleManager.PersistSchedules = True
         '
-        'SsamLogger
+        'SHSsamLogger
         '
-        Me.SsamLogger.SsamApi.ConnectionString = "Server=RGOCSQLD;Database=Ssam;Trusted_Connection=True;"
-        CType(Me.ScheduleManager, System.ComponentModel.ISupportInitialize).EndInit()
-        CType(Me.SsamLogger, System.ComponentModel.ISupportInitialize).EndInit()
+        Me.SHSsamLogger.SsamApi.ConnectionString = "Server=RGOCSQLD;Database=Ssam;Trusted_Connection=True;"
+        CType(Me.SHScheduleManager, System.ComponentModel.ISupportInitialize).EndInit()
+        CType(Me.SHSsamLogger, System.ComponentModel.ISupportInitialize).EndInit()
 
     End Sub
-    Friend WithEvents TcpServer As Tva.Communication.TcpServer
-    Friend WithEvents ScheduleManager As Tva.ScheduleManager
-    Friend WithEvents SsamLogger As Tva.Tro.Ssam.SsamLogger
+    Friend WithEvents SHTcpServer As Tva.Communication.TcpServer
+    Friend WithEvents SHScheduleManager As Tva.ScheduleManager
+    Friend WithEvents SHSsamLogger As Tva.Tro.Ssam.SsamLogger
 
 End Class

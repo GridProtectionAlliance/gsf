@@ -1,6 +1,7 @@
 Imports System
 Imports System.Reflection
 Imports System.Runtime.InteropServices
+Imports System.Security.Permissions
 
 ' General Information about an assembly is controlled through the following 
 ' set of attributes. Change these attribute values to modify the information
@@ -15,7 +16,9 @@ Imports System.Runtime.InteropServices
 <Assembly: AssemblyCopyright("Copyright © 2006, TVA - All rights reserved")> 
 <Assembly: AssemblyTrademark("Authors: J. Ritchie Carroll, Pinal C. Patel")> 
 
-<Assembly: ComVisible(False)>
+<Assembly: ComVisible(False)> 
+<Assembly: CLSCompliant(True)> 
+<Assembly: SecurityPermission(SecurityAction.RequestMinimum, Execution:=True)> 
 
 'The following GUID is for the ID of the typelib if this project is exposed to COM
 <Assembly: Guid("7f6a2a63-956e-4c1c-a72f-53d7243f6d3c")>

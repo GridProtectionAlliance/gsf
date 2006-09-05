@@ -21,8 +21,9 @@ Imports System.Drawing
 Imports System.ComponentModel
 Imports Tva.Common
 Imports Tva.Serialization
-Imports Tva.DateTime.Common
+Imports Tva.Services
 Imports Tva.IO.Common
+Imports Tva.DateTime.Common
 Imports Tva.Communication.CommunicationHelper
 
 ''' <summary>
@@ -382,45 +383,6 @@ Public MustInherit Class CommunicationServerBase
     End Property
 
     ''' <summary>
-    ''' Gets the current status of the server.
-    ''' </summary>
-    ''' <value></value>
-    ''' <returns>The current status of the server.</returns>
-    <Browsable(False)> _
-    Public ReadOnly Property Status() As String Implements ICommunicationServer.Status
-        Get
-            With New StringBuilder()
-                .Append("                 Server ID: ")
-                .Append(m_serverID.ToString())
-                .Append(Environment.NewLine())
-                .Append("              Server state: ")
-                .Append(IIf(m_isRunning, "Running", "Not Running"))
-                .Append(Environment.NewLine())
-                .Append("            Server runtime: ")
-                .Append(SecondsToText(RunTime()))
-                .Append(Environment.NewLine())
-                .Append("        Subscribed clients: ")
-                .Append(m_clientIDs.Count())
-                .Append(Environment.NewLine())
-                .Append("           Maximum clients: ")
-                .Append(IIf(m_maximumClients = -1, "Infinite", m_maximumClients.ToString()))
-                .Append(Environment.NewLine())
-                .Append("            Receive buffer: ")
-                .Append(m_receiveBufferSize.ToString())
-                .Append(Environment.NewLine())
-                .Append("        Transport protocol: ")
-                .Append(m_protocol.ToString())
-                .Append(Environment.NewLine())
-                .Append("        Text encoding used: ")
-                .Append(m_textEncoding.EncodingName())
-                .Append(Environment.NewLine())
-
-                Return .ToString()
-            End With
-        End Get
-    End Property
-
-    ''' <summary>
     ''' Starts the server.
     ''' </summary>
     Public MustOverride Sub Start() Implements ICommunicationServer.Start
@@ -693,5 +655,79 @@ Public MustInherit Class CommunicationServerBase
     ''' <param name="configurationString">The configuration string to be validated.</param>
     ''' <returns>True is the configuration string is valid; otherwise False.</returns>
     Protected MustOverride Function ValidConfigurationString(ByVal configurationString As String) As Boolean
+
+#Region " IServiceComponent Implementation "
+
+    Private m_previouslyEnabled As Boolean = False
+
+    <Browsable(False)> _
+    Public ReadOnly Property Name() As String Implements Services.IServiceComponent.Name
+        Get
+            Return Me.GetType().Name
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' Gets the current status of the server.
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns>The current status of the server.</returns>
+    <Browsable(False)> _
+    Public ReadOnly Property Status() As String Implements Services.IServiceComponent.Status
+        Get
+            With New StringBuilder()
+                .Append("                 Server ID: ")
+                .Append(m_serverID.ToString())
+                .Append(Environment.NewLine())
+                .Append("              Server state: ")
+                .Append(IIf(m_isRunning, "Running", "Not Running"))
+                .Append(Environment.NewLine())
+                .Append("            Server runtime: ")
+                .Append(SecondsToText(RunTime()))
+                .Append(Environment.NewLine())
+                .Append("        Subscribed clients: ")
+                .Append(m_clientIDs.Count())
+                .Append(Environment.NewLine())
+                .Append("           Maximum clients: ")
+                .Append(IIf(m_maximumClients = -1, "Infinite", m_maximumClients.ToString()))
+                .Append(Environment.NewLine())
+                .Append("            Receive buffer: ")
+                .Append(m_receiveBufferSize.ToString())
+                .Append(Environment.NewLine())
+                .Append("        Transport protocol: ")
+                .Append(m_protocol.ToString())
+                .Append(Environment.NewLine())
+                .Append("        Text encoding used: ")
+                .Append(m_textEncoding.EncodingName())
+                .Append(Environment.NewLine())
+
+                Return .ToString()
+            End With
+        End Get
+    End Property
+
+    Public Sub ProcessStateChanged(ByVal processName As String, ByVal newState As Services.ProcessState) Implements Services.IServiceComponent.ProcessStateChanged
+
+    End Sub
+
+    Public Sub ServiceStateChanged(ByVal newState As Services.ServiceState) Implements Services.IServiceComponent.ServiceStateChanged
+
+        Select Case newState
+            Case ServiceState.Started
+                Me.Start()
+            Case ServiceState.Stopped
+                Me.Stop()
+            Case ServiceState.Paused
+                m_previouslyEnabled = Me.Enabled
+                Me.Enabled = False
+            Case ServiceState.Resumed
+                Me.Enabled = m_previouslyEnabled
+            Case ServiceState.Shutdown
+                Me.Dispose()
+        End Select
+
+    End Sub
+
+#End Region
 
 End Class
