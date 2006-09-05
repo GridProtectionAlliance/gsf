@@ -34,6 +34,8 @@ Public Class ServiceHelper
 
     Public Event Shutdown As EventHandler
 
+    Public Event ReceivedClientRequest(ByVal request As ClientRequest)
+
     <TypeConverter(GetType(ExpandableObjectConverter)), DesignerSerializationVisibility(DesignerSerializationVisibility.Content)> _
     Public ReadOnly Property TcpServer() As TcpServer
         Get
@@ -118,6 +120,8 @@ Public Class ServiceHelper
 
         Dim request As ClientRequest = GetObject(Of ClientRequest)(data)
         If request IsNot Nothing Then
+            RaiseEvent ReceivedClientRequest(request)
+
             Select Case request.Type.ToUpper()
                 Case "PAUSESERVICE"
                 Case "RESUMESERVICE"

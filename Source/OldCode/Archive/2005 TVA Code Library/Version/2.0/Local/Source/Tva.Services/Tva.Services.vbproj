@@ -47,10 +47,10 @@
     <Import Include="System.Diagnostics" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="MonitorHelper.Designer.vb">
-      <DependentUpon>MonitorHelper.vb</DependentUpon>
+    <Compile Include="ClientHelper.Designer.vb">
+      <DependentUpon>ClientHelper.vb</DependentUpon>
     </Compile>
-    <Compile Include="MonitorHelper.vb">
+    <Compile Include="ClientHelper.vb">
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="My Project\AssemblyInfo.vb" />
@@ -78,9 +78,9 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="MonitorHelper.resx">
+    <EmbeddedResource Include="ClientHelper.resx">
       <SubType>Designer</SubType>
-      <DependentUpon>MonitorHelper.vb</DependentUpon>
+      <DependentUpon>ClientHelper.vb</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="ServiceHelper.resx">
       <SubType>Designer</SubType>
