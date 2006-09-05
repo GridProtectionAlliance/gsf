@@ -9,6 +9,7 @@ Partial Class ServiceHelper
 
         'Required for Windows.Forms Class Composition Designer support
         Container.Add(Me)
+        m_serviceComponents = New List(Of IServiceComponent)
 
     End Sub
 

@@ -7,7 +7,7 @@ Imports Tva.Services
 Imports Tva.Configuration
 Imports Tva.Configuration.Common
 
-<ToolboxBitmap(GetType(ScheduleManager)), DefaultEvent("ProcessSchedule")> _
+<ToolboxBitmap(GetType(ScheduleManager)), DefaultEvent("ScheduleDue")> _
 Public Class ScheduleManager
     Implements ISupportInitialize, IServiceComponent
 
@@ -16,20 +16,42 @@ Public Class ScheduleManager
     Private m_enabled As Boolean
     Private m_schedules As Dictionary(Of String, Schedule)
     Private m_startTimerThread As Thread
+    Private m_scheduleDueEventHandlerList As List(Of ScheduleDueEventHandler)
     Private WithEvents m_timer As System.Timers.Timer
 
+    Public Delegate Sub ScheduleDueEventHandler(ByVal schedule As Schedule)
+
     Public Event Starting As EventHandler
+
     Public Event Started As EventHandler
+
     Public Event Stopped As EventHandler
+
     Public Event CheckingSchedule(ByVal schedule As Schedule)
-    Public Event ProcessSchedule(ByVal schedule As Schedule)
+
+    Public Custom Event ScheduleDue As ScheduleDueEventHandler
+        AddHandler(ByVal value As ScheduleDueEventHandler)
+            m_scheduleDueEventHandlerList.Add(value)
+        End AddHandler
+
+        RemoveHandler(ByVal value As ScheduleDueEventHandler)
+            m_scheduleDueEventHandlerList.Remove(value)
+        End RemoveHandler
+
+        RaiseEvent(ByVal schedule As Schedule)
+            For Each handler As ScheduleDueEventHandler In m_scheduleDueEventHandlerList
+                handler.BeginInvoke(schedule, Nothing, Nothing)
+            Next
+        End RaiseEvent
+    End Event
 
     Public Sub New(ByVal persistSchedules As Boolean)
         MyBase.New()
-        MyClass.ConfigurationElement = "ScheduleManager"
-        MyClass.PersistSchedules = persistSchedules
-        MyClass.Enabled = True
+        Me.ConfigurationElement = "ScheduleManager"
+        Me.PersistSchedules = persistSchedules
+        Me.Enabled = True
         m_schedules = New Dictionary(Of String, Schedule)()
+        m_scheduleDueEventHandlerList = New List(Of ScheduleDueEventHandler)
         m_timer = New System.Timers.Timer(60000)
     End Sub
 
@@ -91,7 +113,7 @@ Public Class ScheduleManager
 
     Public Sub Start()
 
-        If m_enabled Then
+        If Not m_timer.Enabled AndAlso m_enabled Then
             m_startTimerThread = New Thread(AddressOf StartTimer)
             m_startTimerThread.Start()
         End If
@@ -146,7 +168,7 @@ Public Class ScheduleManager
         If m_enabled Then
             RaiseEvent CheckingSchedule(m_schedules(scheduleName))
             If m_schedules(scheduleName).IsDue() Then
-                ThreadPool.QueueUserWorkItem(AddressOf AsynchronousProcessSchedule, scheduleName)
+                RaiseEvent ScheduleDue(m_schedules(scheduleName))   ' This event will be raised asynchronously.
             End If
         End If
 
@@ -162,26 +184,18 @@ Public Class ScheduleManager
 
     End Sub
 
-    Private Sub AsynchronousProcessSchedule(ByVal state As Object)
-
-        Dim scheduleName As String = Convert.ToString(state)
-        RaiseEvent ProcessSchedule(m_schedules(scheduleName))
-
-    End Sub
-
     Private Sub StartTimer()
 
-        If Not m_timer.Enabled Then
-            Do While True
-                RaiseEvent Starting(Me, EventArgs.Empty)
-                If System.DateTime.Now.Second = 0 Then
-                    m_timer.Start()
-                    RaiseEvent Started(Me, EventArgs.Empty)
-                    CheckAllSchedules()
-                    Exit Do
-                End If
-            Loop
-        End If
+        Do While True
+            RaiseEvent Starting(Me, EventArgs.Empty)
+            If System.DateTime.Now.Second = 0 Then
+                m_timer.Start()
+                RaiseEvent Started(Me, EventArgs.Empty)
+                CheckAllSchedules()
+                Exit Do
+            End If
+        Loop
+
         m_startTimerThread = Nothing
 
     End Sub
@@ -224,11 +238,17 @@ Public Class ScheduleManager
     Public Sub ServiceStateChanged(ByVal newState As Services.ServiceState) Implements Services.IServiceComponent.ServiceStateChanged
 
         Select Case newState
+            Case ServiceState.Started
+                Me.Start()
+            Case ServiceState.Stopped
+                Me.Stop()
             Case ServiceState.Paused
                 m_previouslyEnabled = Enabled
-                MyClass.Enabled = False
+                Me.Enabled = False
             Case ServiceState.Resumed
-                MyClass.Enabled = m_previouslyEnabled
+                Me.Enabled = m_previouslyEnabled
+            Case ServiceState.Shutdown
+                Me.Dispose()
         End Select
 
     End Sub
@@ -236,7 +256,7 @@ Public Class ScheduleManager
     Public ReadOnly Property Status() As String Implements Services.IServiceComponent.Status
         Get
             With New System.Text.StringBuilder()
-                .Append("       Number of schedules:")
+                .Append("        Number of schedules:")
                 .Append(m_schedules.Count)
                 .Append(Environment.NewLine)
                 For Each scheduleName As String In m_schedules.Keys

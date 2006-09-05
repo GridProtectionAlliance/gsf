@@ -23,7 +23,7 @@ Namespace Services
         Stopped
         Paused
         Resumed
-        ShutDown
+        Shutdown
     End Enum
 
     ''' <summary>Windows service process states</summary>

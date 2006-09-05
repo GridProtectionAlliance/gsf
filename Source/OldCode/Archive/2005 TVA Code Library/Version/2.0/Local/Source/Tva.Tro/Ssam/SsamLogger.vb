@@ -164,7 +164,7 @@ Namespace Ssam
         Public Sub LogEvent(ByVal newEvent As SsamEvent)
 
             ' Discard the event if SSAM Logger has been disabled.
-            If Me.Enabled Then
+            If m_enabled Then
                 ' SSAM Logger is enabled so queue the event for logging.
                 m_eventQueue.Add(newEvent)
             End If
@@ -178,7 +178,10 @@ Namespace Ssam
         ''' <remarks></remarks>
         Private Sub ProcessEvent(ByVal item As SsamEvent)
 
-            m_ssamApi.LogEvent(item)
+            If m_enabled Then
+                ' Process the queued events only when the SSAM Logger is enabled.
+                m_ssamApi.LogEvent(item)
+            End If
 
         End Sub
 
@@ -229,11 +232,17 @@ Namespace Ssam
         Public Sub ServiceStateChanged(ByVal newState As Services.ServiceState) Implements Services.IServiceComponent.ServiceStateChanged
 
             Select Case newState
+                Case ServiceState.Started
+                    ' No action required when the service is started.
+                Case ServiceState.Stopped
+                    ' No action required when the service is stopped.
                 Case ServiceState.Paused
                     m_previouslyEnabled = Me.Enabled
                     Me.Enabled = False
                 Case ServiceState.Resumed
                     Me.Enabled = m_previouslyEnabled
+                Case ServiceState.Shutdown
+                    Me.Dispose()
             End Select
 
         End Sub
