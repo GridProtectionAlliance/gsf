@@ -68,7 +68,15 @@ Namespace Ssam
 
         Public Sub New(ByVal server As SsamServer, ByVal keepConnectionOpen As Boolean, _
                 ByVal persistConnectionStrings As Boolean)
-            MyClass.New(server, keepConnectionOpen, persistConnectionStrings, True)
+            MyBase.New()
+            m_server = server
+            m_keepConnectionOpen = keepConnectionOpen
+            m_persistConnectionStrings = persistConnectionStrings
+            m_connectionState = SsamConnectionState.Closed
+            m_developmentConnectionString = "Server=RGOCSQLD;Database=Ssam;Trusted_Connection=True;"
+            m_productionConnectionString = "Server=OPSSAMSQL;Database=Ssam;Trusted_Connection=True;"
+            m_connection = New SqlConnection()
+            Initialize()
         End Sub
 
         ''' <summary>
@@ -291,36 +299,6 @@ Namespace Ssam
             Dispose(False)
 
         End Sub
-
-#Region " Internal Code "
-
-        ''' <summary>
-        ''' This constructor is for internal use only.
-        ''' </summary>
-        ''' <param name="server">One of the Tva.Tro.Ssam.SsamApi.SsamServer values.</param>
-        ''' <param name="keepConnectionOpen">
-        ''' True if connection with the SSAM server is to be kept open after the first event is logged for 
-        ''' any consecutive events that will follow; otherwise False.
-        ''' </param>
-        ''' <param name="persistConnectionStrings"></param>
-        ''' <param name="initializeApi">
-        ''' True to update the configuration file of the client application with the connection strings required 
-        ''' for connecting with any of the SSAM servers.
-        ''' </param>
-        Friend Sub New(ByVal server As SsamServer, ByVal keepConnectionOpen As Boolean, ByVal persistConnectionStrings As Boolean, _
-                 ByVal initializeApi As Boolean)
-            MyBase.New()
-            m_server = server
-            m_keepConnectionOpen = keepConnectionOpen
-            m_persistConnectionStrings = persistConnectionStrings
-            m_connectionState = SsamConnectionState.Closed
-            m_developmentConnectionString = "Server=RGOCSQLD;Database=Ssam;Trusted_Connection=True;"
-            m_productionConnectionString = "Server=OPSSAMSQL;Database=Ssam;Trusted_Connection=True;"
-            m_connection = New SqlConnection()
-            If initializeApi Then Initialize()
-        End Sub
-
-#End Region
 
 #Region " IDisposable Implementation "
 

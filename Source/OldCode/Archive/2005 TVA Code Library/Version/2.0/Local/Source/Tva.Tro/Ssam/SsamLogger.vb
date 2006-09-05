@@ -32,7 +32,7 @@ Namespace Ssam
     ''' <remarks></remarks>
     <ToolboxBitmap(GetType(SsamLogger))> _
     Public Class SsamLogger
-        Implements ISupportInitialize, IServiceComponent
+        Implements IServiceComponent
 
         Private m_enabled As Boolean
         Private m_ssamApi As SsamApi
@@ -190,27 +190,6 @@ Namespace Ssam
             RaiseEvent LogException(ex)
 
         End Sub
-
-#Region " ISupportInitialize Implementation "
-
-        Public Sub BeginInit() Implements System.ComponentModel.ISupportInitialize.BeginInit
-
-            ' There is nothing we need to do before the component is initialized.
-
-        End Sub
-
-        Public Sub EndInit() Implements System.ComponentModel.ISupportInitialize.EndInit
-
-            ' We will initialize the API only when we are not in design mode. This is done to avoid 
-            ' exception raised by the configuration API because initialization of the Ssam API
-            ' involves saving connection strings for connecting to the SSAM servers in the configuration
-            ' file of the client application.
-            ' Note: The DesignMode property is available only after the component has initialized.
-            If Not DesignMode Then m_ssamApi.Initialize()
-
-        End Sub
-
-#End Region
 
 #Region " IServiceComponent Implementation "
 
