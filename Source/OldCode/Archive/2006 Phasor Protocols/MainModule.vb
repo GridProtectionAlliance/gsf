@@ -30,65 +30,25 @@ Imports System.Reflection
 
 Module MainModule
 
-    Private m_receivers As Dictionary(Of String, PhasorMeasurementReceiver)
+    Private Delegate Sub InitializationFunctionSignature(ByVal connection As SqlConnection)
+
+    Private m_measurementReceivers As Dictionary(Of String, PhasorMeasurementReceiver)
     Private m_calculatedMeasurements As ICalculatedMeasurementAdapter()
 
     Public Sub Main()
 
-        Dim consoleLine, receiverCategory, archiveSource As String
+        Dim consoleLine As String
         Dim receiver As PhasorMeasurementReceiver
         Dim mapper As PhasorMeasurementMapper = Nothing
-        Dim x As Integer
 
         Console.WriteLine(MonitorInformation)
 
         ' Make sure service settings exist
-        With CategorizedSettings("MeasurementReceiver")
-            .Add("TotalReceivers", "2", "Total receiver instances to setup (typically one per archive)")
-            .Add("PMUDatabase", "Data Source=RGOCSQLD;Initial Catalog=PMU_SDS;Integrated Security=False;user ID=ESOPublic;pwd=4all2see", "PMU metaData database connect string", True)
-            .Add("PMUStatusInterval", "5", "Number of seconds of deviation from UTC time (according to local clock) that last PMU reporting time is allowed before considering it offline")
-        End With
-
-        With CategorizedSettings("Receiver1")
-            .Add("ArchiverIP", "127.0.0.1", "DatAWare Archiver IP")
-            .Add("ArchiverCode", "PM", "DatAWare Archiver Plant Code")
-            .Add("InitializeOnStartup", "True", "Set to True to intialize phasor measurement mapper at startup")
-        End With
-
-        With CategorizedSettings("Receiver2")
-            .Add("ArchiverIP", "152.85.38.12", "DatAWare Archiver IP")
-            .Add("ArchiverCode", "P0", "DatAWare Archiver Plant Code")
-            .Add("InitializeOnStartup", "True", "Set to True to intialize phasor measurement mapper at startup")
-        End With
-
+        Settings.Add("PMUDatabase", "Data Source=RGOCSQLD;Initial Catalog=PMU_SDS;Integrated Security=False;user ID=ESOPublic;pwd=4all2see", "PMU metaData database connect string", True)
+        Settings.Add("PMUStatusInterval", "5", "Number of seconds of deviation from UTC time (according to local clock) that last PMU reporting time is allowed before considering it offline")
         SaveSettings()
 
-        ' Define all of the calculated measurements
-        m_calculatedMeasurements = DefineCalculatedMeasurements(CategorizedStringSetting("MeasurementReceiver", "PMUDatabase"))
-
-        End
-
-        ' TODO: Load these from database too...
-        m_receivers = New Dictionary(Of String, PhasorMeasurementReceiver)
-
-        For x = 0 To CategorizedIntegerSetting("MeasurementReceiver", "TotalReceivers") - 1
-            receiverCategory = "Receiver" & (x + 1)
-            archiveSource = CategorizedStringSetting(receiverCategory, "ArchiverCode")
-
-            receiver = New PhasorMeasurementReceiver( _
-                CategorizedStringSetting(receiverCategory, "ArchiverIP"), _
-                archiveSource, _
-                CategorizedStringSetting("MeasurementReceiver", "PMUDatabase"), _
-                CategorizedIntegerSetting("MeasurementReceiver", "PMUStatusInterval"), _
-                m_calculatedMeasurements)
-
-            With receiver
-                AddHandler .StatusMessage, AddressOf DisplayStatusMessage
-                If CategorizedBooleanSetting(receiverCategory, "InitializeOnStartup") Then .Initialize()
-            End With
-
-            m_receivers.Add(archiveSource, receiver)
-        Next
+        InitializeConfiguration(AddressOf InitializeSystem)
 
         Do While True
             ' This console window stays open by continually reading in console lines
@@ -105,15 +65,13 @@ Module MainModule
                 End If
             ElseIf consoleLine.StartsWith("reload", True, Nothing) Then
                 Console.WriteLine()
-                For Each receiver In m_receivers.Values
-                    receiver.Initialize()
-                Next
+                InitializeConfiguration(AddressOf ReinitializeReceivers)
             ElseIf consoleLine.StartsWith("status", True, Nothing) Then
                 Console.WriteLine()
-                For Each receiver In m_receivers.Values
+                For Each receiver In m_measurementReceivers.Values
                     Console.WriteLine(receiver.Status)
                 Next
-                For x = 0 To m_calculatedMeasurements.Length - 1
+                For x As Integer = 0 To m_calculatedMeasurements.Length - 1
                     Console.WriteLine(m_calculatedMeasurements(x).Status)
                 Next
             ElseIf consoleLine.StartsWith("list", True, Nothing) Then
@@ -135,7 +93,7 @@ Module MainModule
         Loop
 
         ' Attempt an orderly shutdown...
-        For Each receiver In m_receivers.Values
+        For Each receiver In m_measurementReceivers.Values
             receiver.DisconnectAll()
         Next
 
@@ -143,9 +101,81 @@ Module MainModule
 
     End Sub
 
-    Private Function DefineCalculatedMeasurements(ByVal connectionString As String) As ICalculatedMeasurementAdapter()
+    Private Sub InitializeConfiguration(ByVal initializationFunction As InitializationFunctionSignature)
 
-        Dim connection As New SqlConnection(connectionString)
+        Dim connection As SqlConnection
+
+        Try
+            connection = New SqlConnection(StringSetting("PMUDatabase"))
+
+            connection.Open()
+
+            DisplayStatusMessage("PMU database connection opened...")
+
+            ' Call user initialization function
+            initializationFunction(connection)
+        Catch ex As Exception
+            DisplayStatusMessage("Failure during initialization: " & ex.Message)
+        Finally
+            If connection IsNot Nothing AndAlso connection.State = ConnectionState.Open Then connection.Close()
+            DisplayStatusMessage("PMU database connection close.")
+        End Try
+
+    End Sub
+
+    Private Sub InitializeSystem(ByVal connection As SqlConnection)
+
+        ' Define all of the calculated measurements
+        m_calculatedMeasurements = DefineCalculatedMeasurements(connection)
+
+        ' Load the phasor measurement receivers (one per each established archive)
+        m_measurementReceivers = LoadMeasurementReceivers(connection, IntegerSetting("PMUStatusInterval"), m_calculatedMeasurements)
+
+    End Sub
+
+    Private Sub ReinitializeReceivers(ByVal connection As SqlConnection)
+
+        For Each receiver As PhasorMeasurementReceiver In m_measurementReceivers.Values
+            receiver.Initialize(connection)
+        Next
+
+    End Sub
+
+    Private Function LoadMeasurementReceivers(ByVal connection As SqlConnection, ByVal pmuStatusInterval As Integer, ByVal calculatedMeasurements As ICalculatedMeasurementAdapter()) As Dictionary(Of String, PhasorMeasurementReceiver)
+
+        Dim measurementReceivers As New Dictionary(Of String, PhasorMeasurementReceiver)
+        Dim measurementReceiver As PhasorMeasurementReceiver
+        Dim connectionString As String = StringSetting("PMUDatabase")
+        Dim archiveSource As String
+
+        With RetrieveData("SELECT * FROM MeasurementArchives WHERE Enabled != 0", connection)
+            For x As Integer = 0 To .Rows.Count - 1
+                Try
+                    archiveSource = .Rows(x)("ArchiveSource").ToString()
+
+                    measurementReceiver = New PhasorMeasurementReceiver( _
+                        archiveSource, _
+                        .Rows(x)("ArchiveIP").ToString(), _
+                        pmuStatusInterval, _
+                        connectionString, _
+                        calculatedMeasurements)
+
+                    AddHandler measurementReceiver.StatusMessage, AddressOf DisplayStatusMessage
+                    If Convert.ToBoolean(.Rows(x)("InitializeOnStartup")) Then measurementReceiver.Initialize(connection)
+
+                    measurementReceivers.Add(archiveSource, measurementReceiver)
+                Catch ex As Exception
+                    DisplayStatusMessage("Failed to load measurement receiver for archive """ & archiveSource & """ due to exception: " & ex.Message)
+                End Try
+            Next
+        End With
+
+        Return measurementReceivers
+
+    End Function
+
+    Private Function DefineCalculatedMeasurements(ByVal connection As SqlConnection) As ICalculatedMeasurementAdapter()
+
         Dim calculatedMeasurementAdapters As New List(Of ICalculatedMeasurementAdapter)
         Dim calculatedMeasurementAdapter As ICalculatedMeasurementAdapter
         Dim calculatedMeasurementName As String
@@ -166,8 +196,6 @@ Module MainModule
         '   ExpectedFrameRate           Integer
         '   LagTime                     Double
         '   LeadTime                    Double
-
-        connection.Open()
 
         ' Load all the unique calculated measurement assemlies into the current application domain
         With RetrieveData("SELECT * FROM CalculatedMeasurements WHERE Enabled != 0", connection)
@@ -246,10 +274,14 @@ Module MainModule
 
     Private Sub NewCalculatedMeasurement(ByVal measurement As IMeasurement)
 
-        ' TODO: Make sure measurement gets sent to correct archive...
+        Dim measurementReceiver As PhasorMeasurementReceiver
 
-        ' Append calculated reference angle measurements to measurement buffer for later archival
-        'QueueMeasurementForArchival(measurement)
+        ' Make sure new calculated measurement gets sent to correct archive...
+        If m_measurementReceivers.TryGetValue(measurement.Source, measurementReceiver) Then
+            measurementReceiver.QueueMeasurementForArchival(measurement)
+        End If
+
+        ' TODO: Provide real-time calculated measurements outside of receiver as needed...
 
     End Sub
 
@@ -259,7 +291,7 @@ Module MainModule
             Dim pmuID As String = RemoveDuplicateWhiteSpace(consoleLine).Split(" "c)(1).ToUpper()
             Dim foundMapper As Boolean
 
-            For Each receiver As PhasorMeasurementReceiver In m_receivers.Values
+            For Each receiver As PhasorMeasurementReceiver In m_measurementReceivers.Values
                 If receiver.Mappers.TryGetValue(pmuID, mapper) Then
                     foundMapper = True
                     Exit For
@@ -310,7 +342,7 @@ Module MainModule
 
     Private Sub DisplayConnectionList()
 
-        For Each receiver As PhasorMeasurementReceiver In m_receivers.Values
+        For Each receiver As PhasorMeasurementReceiver In m_measurementReceivers.Values
             Console.WriteLine("Phasor Measurement Retriever for Archive """ & receiver.ArchiverName & """")
             Console.WriteLine(">> PMU/PDC Connection List (" & receiver.Mappers.Count & " Total)")
             Console.WriteLine()

@@ -41,9 +41,8 @@ Public Class PhasorMeasurementReceiver
 
     Private WithEvents m_connectionTimer As Timers.Timer
     Private WithEvents m_reportingStatus As Timers.Timer
-    Private m_connectString As String
-    Private m_archiverIP As String
     Private m_archiverSource As String
+    Private m_archiverIP As String
     Private m_archiverPort As Integer
     Private m_tcpSocket As Sockets.TcpClient
     Private m_clientStream As NetworkStream
@@ -52,6 +51,7 @@ Public Class PhasorMeasurementReceiver
     Private m_useTimeout As Boolean
     Private m_bufferSize As Integer
     Private m_pollEvents As Long
+    Private m_connectionString As String
     Private m_processedMeasurements As Long
     Private m_mappers As Dictionary(Of String, PhasorMeasurementMapper)
     Private m_calculatedMeasurements As ICalculatedMeasurementAdapter()
@@ -59,11 +59,10 @@ Public Class PhasorMeasurementReceiver
     Private m_statusInterval As Integer
     Private m_intializing As Boolean
 
-    Public Sub New(ByVal archiverIP As String, ByVal archiverSource As String, ByVal connectString As String, ByVal statusInterval As Integer, ByVal calculatedMeasurements As ICalculatedMeasurementAdapter())
+    Public Sub New(ByVal archiverSource As String, ByVal archiverIP As String, ByVal statusInterval As Integer, ByVal connectionString As String, ByVal calculatedMeasurements As ICalculatedMeasurementAdapter())
 
-        m_archiverIP = archiverIP
         m_archiverSource = archiverSource
-        m_connectString = connectString
+        m_archiverIP = archiverIP
         m_statusInterval = statusInterval
         m_calculatedMeasurements = calculatedMeasurements
         m_measurementBuffer = New List(Of IMeasurement)
@@ -78,9 +77,11 @@ Public Class PhasorMeasurementReceiver
 
         With m_reportingStatus
             .AutoReset = True
-            .Interval = 1000
+            .Interval = statusInterval * 1000
             .Enabled = False
         End With
+
+        m_connectionString = connectionString
 
         ' Archiver Settings Path: HKEY_LOCAL_MACHINE\SOFTWARE\DatAWare\Interface Configuration\
         With Registry.LocalMachine.OpenSubKey("SOFTWARE\DatAWare\Interface Configuration")
@@ -143,7 +144,7 @@ Public Class PhasorMeasurementReceiver
 
     End Sub
 
-    Public Sub Initialize()
+    Public Sub Initialize(ByVal connection As SqlConnection)
 
         ' Disconnect archiver and all phasor measurement mappers...
         DisconnectAll()
@@ -156,7 +157,6 @@ Public Class PhasorMeasurementReceiver
         Try
             m_intializing = True
 
-            Dim connection As New SqlConnection(m_connectString)
             Dim measurementIDs As New Dictionary(Of String, IMeasurement)
             Dim row As DataRow
             Dim parser As MultiProtocolFrameParser
@@ -171,10 +171,6 @@ Public Class PhasorMeasurementReceiver
             End SyncLock
 
             m_mappers = New Dictionary(Of String, PhasorMeasurementMapper)
-
-            connection.Open()
-
-            UpdateStatus("Database connection opened...")
 
             ' Initialize complete measurement list for this archive keyed on the synonym field
             With RetrieveData("SELECT * FROM IEEEDataConnectionMeasurements WHERE PlantCode='" & m_archiverSource & "'", connection)
@@ -237,7 +233,7 @@ Public Class PhasorMeasurementReceiver
                         UpdateStatus("Loading expected PMU list for """ & source & """:")
 
                         ' Making a connection to a concentrator - this may support multiple PMU's
-                        With RetrieveData("SELECT PMUID FROM IEEEDataConnectionPMUs WHERE PlantCode='" & m_archiverSource & "' AND PDCID='" & source & "' ORDER BY PMUIndex", connection)
+                        With RetrieveData("SELECT PMUIndex, PMUID FROM IEEEDataConnectionPMUs WHERE PlantCode='" & m_archiverSource & "' AND PDCID='" & source & "' ORDER BY PMUIndex", connection)
                             For y = 0 To .Rows.Count - 1
                                 With .Rows(y)
                                     pmuIDs.Add(New PmuInfo(.Item("PMUIndex"), .Item("PMUID")))
@@ -279,8 +275,6 @@ Public Class PhasorMeasurementReceiver
                     End SyncLock
                 Next
             End With
-
-            connection.Close()
 
             UpdateStatus("[" & Now() & "] Phasor measurement receiver initialized successfully.")
         Catch ex As Exception
@@ -497,27 +491,33 @@ Public Class PhasorMeasurementReceiver
     Private Sub m_reportingStatus_Elapsed(ByVal sender As Object, ByVal e As System.Timers.ElapsedEventArgs) Handles m_reportingStatus.Elapsed
 
         If Not m_intializing Then
+            Dim connection As New SqlConnection(m_connectionString)
+
             Try
-                Dim connection As New SqlConnection(m_connectString)
                 Dim updateSqlBatch As New StringBuilder
                 Dim isReporting As Integer
 
+                connection = New SqlConnection(m_connectionString)
                 connection.Open()
 
                 ' Check all PMU's for "reporting status"...
                 For Each mapper As PhasorMeasurementMapper In m_mappers.Values
                     For Each pmuID As PmuInfo In mapper.PmuIDs
-                        isReporting = IIf(Math.Abs(DateTime.UtcNow.Subtract(New DateTime(pmuID.LastReportTime)).Seconds) <= m_statusInterval, 1, 0)
-                        updateSqlBatch.Append("UPDATE PMUs SET IsReporting=" & isReporting & ", ReportTime='" & DateTime.UtcNow.ToString() & "' WHERE PMUID_Uniq='" & pmuID.Tag & "';" & Environment.NewLine)
+                        If Not String.IsNullOrEmpty(pmuID.Tag) Then
+                            isReporting = IIf(Math.Abs(DateTime.UtcNow.Subtract(New DateTime(pmuID.LastReportTime)).Seconds) <= m_statusInterval, 1, 0)
+                            updateSqlBatch.Append("UPDATE PMUs SET IsReporting=" & isReporting & ", ReportTime='" & DateTime.UtcNow.ToString() & "' WHERE PMUID_Uniq='" & pmuID.Tag & "'; " & Environment.NewLine)
+                        End If
                     Next
                 Next
 
                 ' Update reporting status for each PMU
-                ExecuteNonQuery(updateSqlBatch.ToString(), connection, 30)
+                ExecuteNonQuery(updateSqlBatch.ToString(), connection)
 
                 connection.Close()
             Catch ex As Exception
                 UpdateStatus("[" & Now() & "] ERROR: Failed to update PMU reporting status due to exception: " & ex.Message)
+            Finally
+                If connection IsNot Nothing AndAlso connection.State = ConnectionState.Open Then connection.Close()
             End Try
         End If
 
