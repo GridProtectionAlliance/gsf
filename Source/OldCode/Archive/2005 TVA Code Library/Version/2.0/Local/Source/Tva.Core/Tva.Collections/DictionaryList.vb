@@ -89,12 +89,6 @@ Public Class DictionaryList(Of TKey, TValue)
 
     End Function
 
-    Public Sub Insert(ByVal index As Integer, ByVal item As KeyValuePair(Of TKey, TValue)) Implements IList(Of KeyValuePair(Of TKey, TValue)).Insert
-
-        Throw New NotSupportedException()
-
-    End Sub
-
     Default Public Overloads Property Item(ByVal index As Integer) As KeyValuePair(Of TKey, TValue) Implements IList(Of KeyValuePair(Of TKey, TValue)).Item
         Get
             Return New KeyValuePair(Of TKey, TValue)(m_list.Keys(index), m_list.Values(index))
@@ -115,6 +109,12 @@ Public Class DictionaryList(Of TKey, TValue)
         Return m_list.GetEnumerator
 
     End Function
+
+    Private Sub IListInsert(ByVal index As Integer, ByVal item As KeyValuePair(Of TKey, TValue)) Implements IList(Of KeyValuePair(Of TKey, TValue)).Insert
+
+        Throw New NotSupportedException()
+
+    End Sub
 
     Private Function IEnumerableGetEnumerator() As IEnumerator Implements IEnumerable.GetEnumerator
 
