@@ -260,6 +260,8 @@ Module MainModule
 
                     ' Add new adapter to the list
                     calculatedMeasurementAdapters.Add(calculatedMeasurementAdapter)
+
+                    DisplayStatusMessage("Loaded calculated measurement """ & calculatedMeasurementName & """ from assembly """ & externalAssemblyName & """")
                 Catch ex As Exception
                     DisplayStatusMessage("Failed to load calculated measurement """ & calculatedMeasurementName & """ from assembly """ & externalAssemblyName & """ due to exception: " & ex.Message)
                 End Try

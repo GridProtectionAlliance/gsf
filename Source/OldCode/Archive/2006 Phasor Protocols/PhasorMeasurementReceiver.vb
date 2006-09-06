@@ -64,6 +64,7 @@ Public Class PhasorMeasurementReceiver
         m_archiverSource = archiverSource
         m_archiverIP = archiverIP
         m_statusInterval = statusInterval
+        m_connectionString = connectionString
         m_calculatedMeasurements = calculatedMeasurements
         m_measurementBuffer = New List(Of IMeasurement)
         m_connectionTimer = New Timers.Timer
@@ -77,19 +78,23 @@ Public Class PhasorMeasurementReceiver
 
         With m_reportingStatus
             .AutoReset = True
-            .Interval = statusInterval * 1000
+            .Interval = 10000
             .Enabled = False
         End With
 
-        m_connectionString = connectionString
-
         ' Archiver Settings Path: HKEY_LOCAL_MACHINE\SOFTWARE\DatAWare\Interface Configuration\
-        With Registry.LocalMachine.OpenSubKey("SOFTWARE\DatAWare\Interface Configuration")
-            m_archiverPort = .GetValue("ArchiverPort", 1002)
-            m_maximumEvents = .GetValue("MaxPktSize", 50)
-            m_useTimeout = Convert.ToBoolean(Convert.ToInt32(.GetValue("UseTimeout", -1)))
-            .Close()
-        End With
+        Try
+            With Registry.LocalMachine.OpenSubKey("SOFTWARE\DatAWare\Interface Configuration")
+                m_archiverPort = .GetValue("ArchiverPort", 1002)
+                m_maximumEvents = .GetValue("MaxPktSize", 50)
+                m_useTimeout = Convert.ToBoolean(Convert.ToInt32(.GetValue("UseTimeout", -1)))
+                .Close()
+            End With
+        Catch
+            m_archiverPort = 1002
+            m_maximumEvents = 50
+            m_useTimeout = -1
+        End Try
 
         If String.IsNullOrEmpty(m_archiverIP) Then Throw New InvalidOperationException("Cannot start TCP stream listener connection to Archiver without specifing a host IP")
         If m_archiverPort = 0 Then Throw New InvalidOperationException("Cannot start TCP stream listener connection to Archiver without specifing a port")
@@ -152,7 +157,7 @@ Public Class PhasorMeasurementReceiver
         ' Restart connect cycle to archiver
         Connect()
 
-        UpdateStatus("[" & Now() & "] Initializing phasor measurement receiver...")
+        UpdateStatus("Initializing phasor measurement receiver...")
 
         Try
             m_intializing = True
@@ -276,9 +281,9 @@ Public Class PhasorMeasurementReceiver
                 Next
             End With
 
-            UpdateStatus("[" & Now() & "] Phasor measurement receiver initialized successfully.")
+            UpdateStatus("Phasor measurement receiver initialized successfully.")
         Catch ex As Exception
-            UpdateStatus("[" & Now() & "] ERROR: Phasor measurement receiver failed to initialize: " & ex.Message)
+            UpdateStatus("Phasor measurement receiver failed to initialize: " & ex.Message)
         Finally
             m_intializing = False
         End Try
