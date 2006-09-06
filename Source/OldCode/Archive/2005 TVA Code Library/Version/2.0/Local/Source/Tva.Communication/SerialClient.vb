@@ -115,8 +115,10 @@ Public Class SerialClient
 
         Dim data As Byte() = CreateArray(Of Byte)(ReceiveBufferSize())
         Dim dataLength As Integer = m_serialClient.Read(data, 0, data.Length())
-        data = CopyBuffer(data, 0, dataLength)
 
+        If m_receiveRawDataFunction IsNot Nothing Then m_receiveRawDataFunction(data, 0, dataLength)
+
+        data = CopyBuffer(data, 0, dataLength)
         OnReceivedData(data)
 
     End Sub

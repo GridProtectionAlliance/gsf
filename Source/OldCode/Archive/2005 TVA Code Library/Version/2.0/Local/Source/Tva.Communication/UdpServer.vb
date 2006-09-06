@@ -75,8 +75,8 @@ Public Class UdpServer
                         Dim udpClient As New StateKeeper(Of IPEndPoint)
                         udpClient.ID = Guid.NewGuid()
                         udpClient.Client = GetIpEndPoint(clientNameOrAddress, Convert.ToInt32(m_configurationData("port")))
-                        m_udpClients.Add(udpClient.ID(), udpClient)
-                        OnClientConnected(udpClient.ID())
+                        m_udpClients.Add(udpClient.ID, udpClient)
+                        OnClientConnected(udpClient.ID)
                     Else
                         ' Handshaking with the clients is required.
                         m_pendingUdpClients.Add(Dns.GetHostEntry(clientNameOrAddress).AddressList(0))
@@ -102,7 +102,7 @@ Public Class UdpServer
                 If Handshake() Then
                     Dim goodbye As Byte() = GetPreparedData(GetBytes(New GoodbyeMessage(udpClientID)))
                     If m_payloadAware Then goodbye = AddBeginHeader(goodbye)
-                    m_udpServer.Client.SendTo(goodbye, m_udpClients(udpClientID).Client())
+                    m_udpServer.Client.SendTo(goodbye, m_udpClients(udpClientID).Client)
                 End If
                 OnClientDisconnected(udpClientID)
             Next
@@ -121,13 +121,13 @@ Public Class UdpServer
         If Enabled() AndAlso IsRunning() Then
             Dim udpClient As StateKeeper(Of IPEndPoint) = Nothing
             If m_udpClients.TryGetValue(clientID, udpClient) Then
-                If SecureSession() Then data = EncryptData(data, udpClient.Passphrase(), Encryption())
+                If SecureSession() Then data = EncryptData(data, udpClient.Passphrase, Encryption())
                 If m_payloadAware Then data = AddBeginHeader(data)
 
                 For i As Integer = 0 To IIf(data.Length() > MaximumPacketSize, data.Length() - 1, 0) Step MaximumPacketSize
                     Dim packetSize As Integer = MaximumPacketSize
                     If data.Length() - i < MaximumPacketSize Then packetSize = data.Length() - i
-                    m_udpServer.Client.BeginSendTo(data, i, packetSize, SocketFlags.None, udpClient.Client(), Nothing, Nothing)
+                    m_udpServer.Client.BeginSendTo(data, i, packetSize, SocketFlags.None, udpClient.Client, Nothing, Nothing)
                 Next
             Else
                 Throw New ArgumentException("Client ID '" & clientID.ToString() & "' is invalid.")
@@ -165,7 +165,7 @@ Public Class UdpServer
         Try
             Do While True
                 Dim tempEP As EndPoint = New IPEndPoint(IPAddress.Any, 0) ' Used to capture the client's identity.
-                If m_udpServer.DataBuffer() Is Nothing Then
+                If m_udpServer.DataBuffer Is Nothing Then
                     ' By default we'll prepare to receive a maximum of MaximumPacketSize from the server.
                     m_udpServer.DataBuffer = CreateArray(Of Byte)(MaximumPacketSize)
                 End If
@@ -174,15 +174,15 @@ Public Class UdpServer
                         m_udpServer.DataBuffer.Length - m_udpServer.BytesReceived, SocketFlags.None, tempEP)
 
                 If m_payloadAware Then
-                    If m_udpServer.PacketSize() = -1 Then
+                    If m_udpServer.PacketSize = -1 Then
                         ' We have not yet received the payload size. 
                         If HasBeginMarker(m_udpServer.DataBuffer) Then
                             ' This packet has the payload size.
-                            m_udpServer.PacketSize = BitConverter.ToInt32(m_udpServer.DataBuffer(), m_packetBeginMarker.Length())
+                            m_udpServer.PacketSize = BitConverter.ToInt32(m_udpServer.DataBuffer, m_packetBeginMarker.Length())
                             ' We'll save the payload received in this packet.
                             Dim tempBuffer As Byte() = CreateArray(Of Byte)(IIf(m_udpServer.PacketSize < MaximumPacketSize - 8, m_udpServer.PacketSize, MaximumPacketSize - 8))
                             Buffer.BlockCopy(m_udpServer.DataBuffer, 8, tempBuffer, 0, tempBuffer.Length)
-                            m_udpServer.DataBuffer = CreateArray(Of Byte)(m_udpServer.PacketSize())
+                            m_udpServer.DataBuffer = CreateArray(Of Byte)(m_udpServer.PacketSize)
                             Buffer.BlockCopy(tempBuffer, 0, m_udpServer.DataBuffer, 0, tempBuffer.Length)
                             m_udpServer.BytesReceived = tempBuffer.Length
                         Else
@@ -194,10 +194,10 @@ Public Class UdpServer
                         Continue Do
                     End If
                 Else
-                    m_udpServer.DataBuffer = CopyBuffer(m_udpServer.DataBuffer(), 0, m_udpServer.BytesReceived())
+                    m_udpServer.DataBuffer = CopyBuffer(m_udpServer.DataBuffer, 0, m_udpServer.BytesReceived)
                 End If
 
-                Dim clientMessage As Object = GetObject(GetActualData(m_udpServer.DataBuffer()))
+                Dim clientMessage As Object = GetObject(GetActualData(m_udpServer.DataBuffer))
                 If clientMessage IsNot Nothing AndAlso TypeOf clientMessage Is HandshakeMessage Then
                     ' The client sent a handshake message.
                     Dim clientInfo As HandshakeMessage = DirectCast(clientMessage, HandshakeMessage)
@@ -208,13 +208,13 @@ Public Class UdpServer
                         udpClient.Passphrase = clientInfo.Passphrase()
                         If SecureSession() Then udpClient.Passphrase = GenerateKey()
 
-                        Dim myInfo As Byte() = GetPreparedData(GetBytes(New HandshakeMessage(m_udpServer.ID(), udpClient.Passphrase())))
+                        Dim myInfo As Byte() = GetPreparedData(GetBytes(New HandshakeMessage(m_udpServer.ID, udpClient.Passphrase)))
                         If m_payloadAware Then myInfo = AddBeginHeader(myInfo)
-                        m_udpServer.Client.SendTo(myInfo, udpClient.Client())
+                        m_udpServer.Client.SendTo(myInfo, udpClient.Client)
 
                         m_pendingUdpClients.Remove(udpClient.Client.Address())
-                        m_udpClients.Add(udpClient.ID(), udpClient)
-                        OnClientConnected(udpClient.ID())
+                        m_udpClients.Add(udpClient.ID, udpClient)
+                        OnClientConnected(udpClient.ID)
                     End If
                 ElseIf clientMessage IsNot Nothing AndAlso TypeOf clientMessage Is GoodbyeMessage Then
                     ' The client sent a goodbye message.
@@ -238,9 +238,9 @@ Public Class UdpServer
                         Next
 
                         If SecureSession() AndAlso clientID <> Guid.Empty Then
-                            m_udpServer.DataBuffer = DecryptData(m_udpServer.DataBuffer(), m_udpClients(clientID).Passphrase(), Encryption())
+                            m_udpServer.DataBuffer = DecryptData(m_udpServer.DataBuffer, m_udpClients(clientID).Passphrase, Encryption())
                         End If
-                        OnReceivedClientData(clientID, m_udpServer.DataBuffer())
+                        OnReceivedClientData(clientID, m_udpServer.DataBuffer)
                     End If
                 End If
 
@@ -250,7 +250,7 @@ Public Class UdpServer
         Catch ex As Exception
 
         Finally
-            If m_udpServer IsNot Nothing AndAlso m_udpServer.Client() IsNot Nothing Then
+            If m_udpServer IsNot Nothing AndAlso m_udpServer.Client IsNot Nothing Then
                 m_udpServer.Client.Close()
                 m_udpServer = Nothing
             End If

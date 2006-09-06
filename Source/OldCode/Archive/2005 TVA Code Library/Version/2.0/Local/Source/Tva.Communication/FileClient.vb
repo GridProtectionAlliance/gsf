@@ -246,10 +246,12 @@ Public Class FileClient
             With m_fileClient
                 Do While .Client.Position() < .Client.Length()  ' Process the entire file content.
                     .DataBuffer = CreateArray(Of Byte)(ReceiveBufferSize())
-                    .BytesReceived = .Client.Read(.DataBuffer(), 0, .DataBuffer.Length())
-                    .DataBuffer = CopyBuffer(.DataBuffer(), 0, .BytesReceived())
+                    .BytesReceived = .Client.Read(.DataBuffer, 0, .DataBuffer.Length())
 
-                    OnReceivedData(.DataBuffer())
+                    If m_receiveRawDataFunction IsNot Nothing Then m_receiveRawDataFunction(.DataBuffer, 0, .BytesReceived)
+
+                    .DataBuffer = CopyBuffer(.DataBuffer, 0, .BytesReceived)
+                    OnReceivedData(.DataBuffer)
 
                     ' We must stop processing the file if user has either opted to receive data on 
                     ' demand or receive data at a predefined interval.

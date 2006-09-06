@@ -25,12 +25,14 @@ Imports Tva.Services
 Imports Tva.IO.Common
 Imports Tva.DateTime.Common
 Imports Tva.Communication.CommunicationHelper
+Imports Tva.Communication.Common
 
 ''' <summary>
 ''' Represents a client involved in the transportation of data.
 ''' </summary>
 <ToolboxBitmap(GetType(CommunicationClientBase)), DefaultEvent("ReceivedData")> _
 Public MustInherit Class CommunicationClientBase
+
     Implements ICommunicationClient
 
     Private m_connectionString As String
@@ -53,6 +55,8 @@ Public MustInherit Class CommunicationClientBase
     Private m_disconnectTime As Long
     Private m_totalBytesSent As Integer
     Private m_totalBytesReceived As Integer
+
+    Protected m_receiveRawDataFunction As ReceiveRawDataFunctionSignature
 
     ''' <summary>
     ''' The maximum number of bytes that can be sent from the client to server in a single send operation.
@@ -534,6 +538,18 @@ Public MustInherit Class CommunicationClientBase
         End If
 
     End Sub
+
+    ''' <summary>
+    ''' Setting this property allows consumer to "intercept" data before it goes through normal processing
+    ''' </summary>
+    Public Property ReceiveRawDataFunction() As ReceiveRawDataFunctionSignature Implements ICommunicationClient.ReceiveRawDataFunction
+        Get
+            Return m_receiveRawDataFunction
+        End Get
+        Set(ByVal value As ReceiveRawDataFunctionSignature)
+            m_receiveRawDataFunction = value
+        End Set
+    End Property
 
     ''' <summary>
     ''' The key used for encryption and decryption when Encryption is enabled but HandshakePassphrase is not set.

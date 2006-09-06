@@ -4,6 +4,8 @@ Imports Tva.Text.Common
 
 Public Class Common
 
+    Delegate Sub ReceiveRawDataFunctionSignature(ByVal data As Byte(), ByVal offset As Integer, ByVal length As Integer)
+
     Public Shared Function CreateCommunicationServer(ByVal configurationString As String) As ICommunicationServer
 
         Dim server As ICommunicationServer = Nothing

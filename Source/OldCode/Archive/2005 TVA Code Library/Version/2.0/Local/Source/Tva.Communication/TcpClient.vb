@@ -100,7 +100,7 @@ Public Class TcpClient
         CancelConnect() ' Cancel any active connection attempts.
 
         If Enabled() AndAlso IsConnected() AndAlso _
-                m_tcpClient IsNot Nothing AndAlso m_tcpClient.Client() IsNot Nothing Then
+                m_tcpClient IsNot Nothing AndAlso m_tcpClient.Client IsNot Nothing Then
             ' Close the client socket that is connected to the server.
             m_tcpClient.Client.Close()
         End If
@@ -114,7 +114,7 @@ Public Class TcpClient
     Protected Overrides Sub SendPreparedData(ByVal data As Byte())
 
         If Enabled() AndAlso IsConnected() Then
-            If SecureSession() Then data = EncryptData(data, m_tcpClient.Passphrase(), Encryption())
+            If SecureSession() Then data = EncryptData(data, m_tcpClient.Passphrase, Encryption())
             ' We'll send data over the wire asynchronously for improved performance.
             OnSendDataBegin(data)
             If m_payloadAware Then
@@ -207,104 +207,115 @@ Public Class TcpClient
     ''' <remarks>This method is meant to be executed on a seperate thread.</remarks>
     Private Sub ReceiveServerData()
 
-        Try
-            If Handshake() Then
-                ' Handshaking is to be performed so we'll send our information to the server.
-                Dim myInfo As Byte() = _
-                    GetPreparedData(GetBytes(New HandshakeMessage(ClientID(), HandshakePassphrase())))
-                If m_payloadAware Then m_tcpClient.Client.Send(BitConverter.GetBytes(myInfo.Length()))
-                m_tcpClient.Client.Send(myInfo)
-            Else
-                ' Handshaking is not to be performed.
-                OnConnected(EventArgs.Empty)    ' Notify that the client has been connected to the server.
-            End If
-
-            Do While True   ' Wait for data from the server
-                If m_tcpClient.DataBuffer() Is Nothing Then
-                    Dim bufferSize As Integer = PacketHeaderSize
-                    If Not m_payloadAware Then bufferSize = ReceiveBufferSize()
-                    m_tcpClient.DataBuffer = CreateArray(Of Byte)(bufferSize)
-                End If
-
-                Dim dataLength As Integer
-                Try
-                    dataLength = _
-                        m_tcpClient.Client.Receive(m_tcpClient.DataBuffer(), m_tcpClient.BytesReceived(), m_tcpClient.DataBuffer.Length() - m_tcpClient.BytesReceived(), SocketFlags.None)
-                    m_tcpClient.BytesReceived += dataLength
-                Catch ex As SocketException
-                    If ex.SocketErrorCode() = SocketError.TimedOut Then
-                        OnReceiveTimedOut(EventArgs.Empty)  ' Notify that a timeout has been encountered.
-                        ' NOTE: The line of code below is a fix to a known bug in .Net Framework 2.0.
-                        ' Refer http://forums.microsoft.com/MSDN/ShowPost.aspx?PostID=178213&SiteID=1
-                        m_tcpClient.Client.Blocking = True  ' <= Temporary bug fix!
-                        Continue Do
-                    Else
-                        Throw
-                    End If
-                Catch ex As Exception
-                    Throw
-                End Try
-
-                If dataLength > 0 Then
-                    If m_payloadAware Then
-                        If m_tcpClient.PacketSize() = -1 AndAlso m_tcpClient.BytesReceived() = PacketHeaderSize Then
-                            ' Size of the packet has been received.
-                            m_tcpClient.PacketSize = BitConverter.ToInt32(m_tcpClient.DataBuffer(), 0)
-                            If m_tcpClient.PacketSize() <= MaximumDataSize Then
-                                m_tcpClient.DataBuffer = CreateArray(Of Byte)(m_tcpClient.PacketSize())
-                                Continue Do
-                            Else
-                                Exit Do ' Packet size is not valid
-                            End If
-                        ElseIf m_tcpClient.PacketSize() = -1 AndAlso m_tcpClient.BytesReceived() < PacketHeaderSize Then
-                            ' Size of the packet is yet to be received.
-                            Continue Do
-                        ElseIf m_tcpClient.BytesReceived() < m_tcpClient.DataBuffer.Length() Then
-                            ' We have not yet received the entire packet.
-                            Continue Do
-                        End If
-                    Else
-                        m_tcpClient.DataBuffer = CopyBuffer(m_tcpClient.DataBuffer(), 0, m_tcpClient.BytesReceived())
-                    End If
-
-                    If ServerID() = Guid.Empty AndAlso Handshake() Then
-                        ' Authentication is required, but not performed yet. When authentication is required
-                        ' the first message from the server, upon successful authentication, must be 
-                        ' information about itself.
-                        Dim serverInfo As HandshakeMessage = GetObject(Of HandshakeMessage)(GetActualData(m_tcpClient.DataBuffer))
-                        If serverInfo IsNot Nothing AndAlso _
-                                serverInfo.ID() <> Guid.Empty Then
-                            ' Authentication was successful and the server responded with its information.
-                            m_tcpClient.Passphrase = serverInfo.Passphrase()
-                            ServerID = serverInfo.ID()
-                            OnConnected(EventArgs.Empty)    ' Notify that the client has been connected to the server.
-                        Else
-                            ' Authetication was unsuccessful, so we must now disconnect.
-                            Exit Do
-                        End If
-                    Else
-                        If SecureSession() Then
-                            m_tcpClient.DataBuffer = DecryptData(m_tcpClient.DataBuffer(), m_tcpClient.Passphrase(), Encryption())
-                        End If
-                        ' Notify of data received from the client.
-                        OnReceivedData(m_tcpClient.DataBuffer())
-                    End If
-                    m_tcpClient.PacketSize = -1
-                    m_tcpClient.DataBuffer = Nothing
+        With m_tcpClient
+            Try
+                If Handshake() Then
+                    ' Handshaking is to be performed so we'll send our information to the server.
+                    Dim myInfo As Byte() = _
+                        GetPreparedData(GetBytes(New HandshakeMessage(ClientID(), HandshakePassphrase())))
+                    If m_payloadAware Then .Client.Send(BitConverter.GetBytes(myInfo.Length()))
+                    .Client.Send(myInfo)
                 Else
-                    ' Client connection was forcibly closed by the server.
-                    Exit Do
+                    ' Handshaking is not to be performed.
+                    OnConnected(EventArgs.Empty)    ' Notify that the client has been connected to the server.
                 End If
-            Loop
-        Catch ex As Exception
-            ' We don't need to take any action when an exception is encountered.
-        Finally
-            If m_tcpClient IsNot Nothing AndAlso m_tcpClient.Client() IsNot Nothing Then
-                m_tcpClient.Client.Close()
-                m_tcpClient.Client = Nothing
-            End If
-            OnDisconnected(EventArgs.Empty) ' Notify that the client has been disconnected to the server.
-        End Try
+
+                Dim received As Integer
+                Dim buffer As Byte() = CreateArray(Of Byte)(ReceiveBufferSize)
+
+                Do While True   ' Wait for data from the server
+                    If .DataBuffer Is Nothing Then
+                        Dim bufferSize As Integer = PacketHeaderSize
+                        If Not m_payloadAware Then bufferSize = ReceiveBufferSize()
+                        .DataBuffer = CreateArray(Of Byte)(bufferSize)
+                    End If
+
+                    Try
+                        received = .Client.Receive(buffer, 0, buffer.Length, SocketFlags.None)
+                        If m_receiveRawDataFunction IsNot Nothing Then m_receiveRawDataFunction(buffer, 0, received)
+
+                        'received = _
+                        '    .Client.Receive(.DataBuffer, .BytesReceived, .DataBuffer.Length() - .BytesReceived, SocketFlags.None)
+
+                        ' Copy local buffer into member state buffer
+                        System.Buffer.BlockCopy(buffer, 0, .DataBuffer, 0, received)
+                        .BytesReceived += received
+                    Catch ex As SocketException
+                        If ex.SocketErrorCode() = SocketError.TimedOut Then
+                            OnReceiveTimedOut(EventArgs.Empty)  ' Notify that a timeout has been encountered.
+                            ' NOTE: The line of code below is a fix to a known bug in .Net Framework 2.0.
+                            ' Refer http://forums.microsoft.com/MSDN/ShowPost.aspx?PostID=178213&SiteID=1
+                            .Client.Blocking = True  ' <= Temporary bug fix!
+                            Continue Do
+                        Else
+                            Throw
+                        End If
+                    Catch ex As Exception
+                        Throw
+                    End Try
+
+                    If received > 0 Then
+                        If m_payloadAware Then
+                            If .PacketSize = -1 AndAlso .BytesReceived = PacketHeaderSize Then
+                                ' Size of the packet has been received.
+                                .PacketSize = BitConverter.ToInt32(.DataBuffer, 0)
+                                If .PacketSize <= MaximumDataSize Then
+                                    .DataBuffer = CreateArray(Of Byte)(.PacketSize)
+                                    Continue Do
+                                Else
+                                    Exit Do ' Packet size is not valid
+                                End If
+                            ElseIf .PacketSize = -1 AndAlso .BytesReceived < PacketHeaderSize Then
+                                ' Size of the packet is yet to be received.
+                                Continue Do
+                            ElseIf .BytesReceived < .DataBuffer.Length() Then
+                                ' We have not yet received the entire packet.
+                                Continue Do
+                            End If
+                        Else
+                            .DataBuffer = CopyBuffer(.DataBuffer, 0, received)
+                        End If
+
+                        If ServerID() = Guid.Empty AndAlso Handshake() Then
+                            ' Authentication is required, but not performed yet. When authentication is required
+                            ' the first message from the server, upon successful authentication, must be 
+                            ' information about itself.
+                            Dim serverInfo As HandshakeMessage = GetObject(Of HandshakeMessage)(GetActualData(.DataBuffer))
+                            If serverInfo IsNot Nothing AndAlso _
+                                    serverInfo.ID() <> Guid.Empty Then
+                                ' Authentication was successful and the server responded with its information.
+                                .Passphrase = serverInfo.Passphrase()
+                                ServerID = serverInfo.ID()
+                                OnConnected(EventArgs.Empty)    ' Notify that the client has been connected to the server.
+                            Else
+                                ' Authetication was unsuccessful, so we must now disconnect.
+                                Exit Do
+                            End If
+                        Else
+                            If SecureSession() Then
+                                .DataBuffer = DecryptData(.DataBuffer, .Passphrase, Encryption())
+                            End If
+                            ' Notify of data received from the client.
+                            OnReceivedData(.DataBuffer)
+                        End If
+
+                        .PacketSize = -1
+                        .DataBuffer = Nothing
+                    Else
+                        ' Client connection was forcibly closed by the server.
+                        Exit Do
+                    End If
+                Loop
+            Catch ex As Exception
+                ' We don't need to take any action when an exception is encountered.
+            Finally
+                If m_tcpClient IsNot Nothing AndAlso .Client IsNot Nothing Then
+                    .Client.Close()
+                    .Client = Nothing
+                End If
+                OnDisconnected(EventArgs.Empty) ' Notify that the client has been disconnected to the server.
+            End Try
+        End With
 
     End Sub
 

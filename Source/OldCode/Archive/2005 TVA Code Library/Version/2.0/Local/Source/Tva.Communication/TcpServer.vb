@@ -97,14 +97,14 @@ Public Class TcpServer
             ' *** Diconnect all of the connected clients ***
             SyncLock m_tcpClients
                 For Each tcpClient As StateKeeper(Of Socket) In m_tcpClients.Values()
-                    If tcpClient IsNot Nothing AndAlso tcpClient.Client() IsNot Nothing Then
+                    If tcpClient IsNot Nothing AndAlso tcpClient.Client IsNot Nothing Then
                         tcpClient.Client.Close()
                     End If
                 Next
             End SyncLock
             SyncLock m_pendingTcpClients
                 For Each pendingTcpClient As StateKeeper(Of Socket) In m_pendingTcpClients
-                    If pendingTcpClient IsNot Nothing AndAlso pendingTcpClient.Client() IsNot Nothing Then
+                    If pendingTcpClient IsNot Nothing AndAlso pendingTcpClient.Client IsNot Nothing Then
                         pendingTcpClient.Client.Close()
                     End If
                 Next
@@ -125,7 +125,7 @@ Public Class TcpServer
             ' all incoming connections (in ListenForConnections) while sending data to client(s). 
             Dim tcpClient As StateKeeper(Of Socket) = Nothing
             If m_tcpClients.TryGetValue(clientID, tcpClient) Then
-                If SecureSession() Then data = EncryptData(data, tcpClient.Passphrase(), Encryption())
+                If SecureSession() Then data = EncryptData(data, tcpClient.Passphrase, Encryption())
                 ' We'll send data over the wire asynchronously for improved performance.
                 If m_payloadAware Then
                     Dim packetHeader As Byte() = BitConverter.GetBytes(data.Length())
@@ -223,53 +223,53 @@ Public Class TcpServer
                 ' No handshaking is to be performed for authenicating the client.
                 tcpClient.ID = Guid.NewGuid()
                 SyncLock m_tcpClients
-                    m_tcpClients.Add(tcpClient.ID(), tcpClient)
+                    m_tcpClients.Add(tcpClient.ID, tcpClient)
                 End SyncLock
 
-                OnClientConnected(tcpClient.ID())    ' Notify that the client is connected.
+                OnClientConnected(tcpClient.ID)    ' Notify that the client is connected.
             End If
 
             Do While True   ' Wait for data from the client.
-                If tcpClient.DataBuffer() Is Nothing Then
+                If tcpClient.DataBuffer Is Nothing Then
                     Dim bufferSize As Integer = PacketHeaderSize
                     If Not m_payloadAware Then bufferSize = ReceiveBufferSize()
                     tcpClient.DataBuffer = CreateArray(Of Byte)(bufferSize)
                 End If
 
                 Dim dataLength As Integer = _
-                    tcpClient.Client.Receive(tcpClient.DataBuffer(), tcpClient.BytesReceived(), tcpClient.DataBuffer.Length() - tcpClient.BytesReceived(), SocketFlags.None)
+                    tcpClient.Client.Receive(tcpClient.DataBuffer, tcpClient.BytesReceived, tcpClient.DataBuffer.Length() - tcpClient.BytesReceived, SocketFlags.None)
                 tcpClient.BytesReceived += dataLength
 
                 If dataLength > 0 Then
                     If m_payloadAware Then
-                        If tcpClient.PacketSize() = -1 AndAlso tcpClient.BytesReceived() = PacketHeaderSize Then
+                        If tcpClient.PacketSize = -1 AndAlso tcpClient.BytesReceived = PacketHeaderSize Then
                             ' Size of the packet has been received.
-                            tcpClient.PacketSize = BitConverter.ToInt32(tcpClient.DataBuffer(), 0)
-                            If tcpClient.PacketSize() <= MaximumDataSize Then
-                                tcpClient.DataBuffer = CreateArray(Of Byte)(tcpClient.PacketSize())
+                            tcpClient.PacketSize = BitConverter.ToInt32(tcpClient.DataBuffer, 0)
+                            If tcpClient.PacketSize <= MaximumDataSize Then
+                                tcpClient.DataBuffer = CreateArray(Of Byte)(tcpClient.PacketSize)
                                 Continue Do
                             Else
                                 Exit Do ' Packet size is not valid.
                             End If
-                        ElseIf tcpClient.PacketSize() = -1 AndAlso tcpClient.BytesReceived() < PacketHeaderSize Then
+                        ElseIf tcpClient.PacketSize = -1 AndAlso tcpClient.BytesReceived < PacketHeaderSize Then
                             ' Size of the packet is yet to be received.
                             Continue Do
-                        ElseIf tcpClient.BytesReceived() < tcpClient.DataBuffer.Length() Then
+                        ElseIf tcpClient.BytesReceived < tcpClient.DataBuffer.Length() Then
                             ' We have not yet received the entire packet.
                             Continue Do
                         End If
                     Else
-                        tcpClient.DataBuffer = CopyBuffer(tcpClient.DataBuffer(), 0, tcpClient.BytesReceived())
+                        tcpClient.DataBuffer = CopyBuffer(tcpClient.DataBuffer, 0, tcpClient.BytesReceived)
                     End If
 
-                    If tcpClient.ID() = Guid.Empty AndAlso Handshake() Then
+                    If tcpClient.ID = Guid.Empty AndAlso Handshake() Then
                         ' Authentication is required, but not performed yet. When authentication is required
                         ' the first message from the client must be information about itself.
-                        Dim clientInfo As HandshakeMessage = GetObject(Of HandshakeMessage)(GetActualData(tcpClient.DataBuffer()))
+                        Dim clientInfo As HandshakeMessage = GetObject(Of HandshakeMessage)(GetActualData(tcpClient.DataBuffer))
                         If clientInfo IsNot Nothing AndAlso clientInfo.ID() <> Guid.Empty AndAlso _
                                 clientInfo.Passphrase() = HandshakePassphrase() Then
                             If SecureSession() Then tcpClient.Passphrase = GenerateKey()
-                            Dim myInfo As Byte() = GetPreparedData(GetBytes(New HandshakeMessage(ServerID(), tcpClient.Passphrase())))
+                            Dim myInfo As Byte() = GetPreparedData(GetBytes(New HandshakeMessage(ServerID(), tcpClient.Passphrase)))
                             If m_payloadAware Then tcpClient.Client.Send(BitConverter.GetBytes(myInfo.Length()))
                             tcpClient.Client.ReceiveTimeout = 0
                             tcpClient.Client.Send(myInfo)   ' Send server info to the client.
@@ -279,9 +279,9 @@ Public Class TcpServer
                                 m_pendingTcpClients.Remove(tcpClient)
                             End SyncLock
                             SyncLock m_tcpClients
-                                m_tcpClients.Add(tcpClient.ID(), tcpClient)
+                                m_tcpClients.Add(tcpClient.ID, tcpClient)
                             End SyncLock
-                            OnClientConnected(tcpClient.ID())    ' Notify that the client is connected.
+                            OnClientConnected(tcpClient.ID)    ' Notify that the client is connected.
                         Else
                             ' The first response from the client is either not information about itself, or
                             ' the information provided by the client is invalid.
@@ -289,10 +289,10 @@ Public Class TcpServer
                         End If
                     Else
                         If SecureSession() Then
-                            tcpClient.DataBuffer = DecryptData(tcpClient.DataBuffer(), tcpClient.Passphrase(), Encryption())
+                            tcpClient.DataBuffer = DecryptData(tcpClient.DataBuffer, tcpClient.Passphrase, Encryption())
                         End If
                         ' Notify of data received from the client.
-                        OnReceivedClientData(tcpClient.ID(), tcpClient.DataBuffer())
+                        OnReceivedClientData(tcpClient.ID, tcpClient.DataBuffer)
                     End If
                     tcpClient.PacketSize = -1
                     tcpClient.DataBuffer = Nothing
@@ -305,7 +305,7 @@ Public Class TcpServer
             ' We will exit gracefully in case of any exception.
         Finally
             ' We are now done with the client.
-            If tcpClient IsNot Nothing AndAlso tcpClient.Client() IsNot Nothing Then
+            If tcpClient IsNot Nothing AndAlso tcpClient.Client IsNot Nothing Then
                 tcpClient.Client.Close()
                 tcpClient.Client = Nothing
             End If
@@ -313,9 +313,9 @@ Public Class TcpServer
                 m_pendingTcpClients.Remove(tcpClient)
             End SyncLock
             SyncLock m_tcpClients
-                If m_tcpClients.ContainsKey(tcpClient.ID()) Then
-                    m_tcpClients.Remove(tcpClient.ID())
-                    OnClientDisconnected(tcpClient.ID())    ' Notify that the client is disconnected.
+                If m_tcpClients.ContainsKey(tcpClient.ID) Then
+                    m_tcpClients.Remove(tcpClient.ID)
+                    OnClientDisconnected(tcpClient.ID)    ' Notify that the client is disconnected.
                 End If
             End SyncLock
         End Try

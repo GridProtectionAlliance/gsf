@@ -1,6 +1,7 @@
 ' 07-26-06
 
 Public Interface ICommunicationClient
+
     Inherits Tva.Services.IServiceComponent
 
     ''' <summary>
@@ -233,5 +234,10 @@ Public Interface ICommunicationClient
     ''' <param name="offset">The zero-based position in the buffer parameter at which to begin sending data.</param>
     ''' <param name="size">The number of bytes to be sent.</param>
     Sub Send(ByVal data As Byte(), ByVal offset As Integer, ByVal size As Integer)
+
+    ''' <summary>
+    ''' Setting this property allows consumer to "intercept" data before it goes through normal processing
+    ''' </summary>
+    Property ReceiveRawDataFunction() As Common.ReceiveRawDataFunctionSignature
 
 End Interface
