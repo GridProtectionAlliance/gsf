@@ -249,6 +249,7 @@ Public Class MultiProtocolFrameParser
             End Select
 
             With m_communicationClient
+                .ReceiveRawDataFunction = AddressOf IFrameParserWrite
                 If .Protocol = Communication.TransportProtocol.File Then
                     .ReceiveBufferSize = 32
                 Else
@@ -595,22 +596,15 @@ Public Class MultiProtocolFrameParser
 
     End Sub
 
-    Private Sub m_communicationClient_ReceivedData(ByVal data() As Byte) Handles m_communicationClient.ReceivedData
+    Private Sub IFrameParserWrite(ByVal buffer() As Byte, ByVal offset As Integer, ByVal count As Integer) Implements IFrameParser.Write
 
-        Dim length As Integer = data.Length
-        m_frameParser.Write(data, 0, length)
-        m_byteRateTotal += length
+        m_frameParser.Write(buffer, offset, count)
+        m_byteRateTotal += count
 
         If m_transportProtocol = Communication.TransportProtocol.File Then
             ' To keep precise timing on "frames per second", we wait for defined frame rate interval
             Thread.Sleep((m_definedFrameRate - TicksToSeconds(Date.Now.Ticks - m_lastFrameReceivedTime)) * 1000)
         End If
-
-    End Sub
-
-    Private Sub IFrameParserWrite(ByVal buffer() As Byte, ByVal offset As Integer, ByVal count As Integer) Implements IFrameParser.Write
-
-        m_communicationClient_ReceivedData(CopyBuffer(buffer, offset, count))
 
     End Sub
 
