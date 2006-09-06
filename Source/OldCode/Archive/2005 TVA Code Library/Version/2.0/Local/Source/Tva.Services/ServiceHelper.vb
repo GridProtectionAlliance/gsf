@@ -9,9 +9,9 @@ Imports Tva.Serialization
 Public Class ServiceHelper
 
     Private m_parentService As ServiceBase
-    Private m_serviceController As ServiceController
     Private m_serviceComponents As List(Of IServiceComponent)
-    Private m_startedEventHandlerList As New List(Of EventHandler)
+    Private m_startedEventHandlerList As List(Of EventHandler)
+    Private m_stoppedEventHandlerList As List(Of EventHandler)
 
     Public Custom Event Started As EventHandler
         AddHandler(ByVal value As EventHandler)
@@ -29,7 +29,21 @@ Public Class ServiceHelper
         End RaiseEvent
     End Event
 
-    Public Event Stoped As EventHandler
+    Public Custom Event Stopped As EventHandler
+        AddHandler(ByVal value As EventHandler)
+            m_startedEventHandlerList.Add(value)
+        End AddHandler
+
+        RemoveHandler(ByVal value As EventHandler)
+            m_startedEventHandlerList.Remove(value)
+        End RemoveHandler
+
+        RaiseEvent(ByVal sender As Object, ByVal e As System.EventArgs)
+            For Each handler As EventHandler In m_startedEventHandlerList
+                handler.BeginInvoke(sender, e, Nothing, Nothing)
+            Next
+        End RaiseEvent
+    End Event
 
     Public Event Paused As EventHandler
 
@@ -37,7 +51,7 @@ Public Class ServiceHelper
 
     Public Event Shutdown As EventHandler
 
-    Public Event ReceivedClientRequest(ByVal request As ClientRequest)
+    Public Event ReceivedClientRequest(ByVal clientID As Guid, ByVal clientRequest As ClientRequest)
 
     Public Property ParentService() As ServiceBase
         Get
@@ -76,7 +90,7 @@ Public Class ServiceHelper
         End Get
     End Property
 
-    Public Sub Start()
+    Public Sub OnStart()
 
         For Each component As IServiceComponent In m_serviceComponents
             component.ServiceStateChanged(ServiceState.Started)
@@ -92,7 +106,7 @@ Public Class ServiceHelper
             component.ServiceStateChanged(ServiceState.Stopped)
         Next
 
-        RaiseEvent Stoped(Me, EventArgs.Empty)
+        RaiseEvent Stopped(Me, EventArgs.Empty)
 
     End Sub
 
@@ -126,19 +140,27 @@ Public Class ServiceHelper
 
     End Sub
 
+    Public Sub SendResponse(ByVal response As ServiceResponse)
+
+        SHTcpServer.Multicast(response)
+
+    End Sub
+
+    Public Sub SendResponse(ByVal clientID As Guid, ByVal response As ServiceResponse)
+
+        SHTcpServer.SendTo(clientID, response)
+
+    End Sub
+
 #Region " TcpServer Events "
 
     Private Sub SHTcpServer_ReceivedClientData(ByVal clientID As System.Guid, ByVal data() As System.Byte) Handles SHTcpServer.ReceivedClientData
 
         Dim request As ClientRequest = GetObject(Of ClientRequest)(data)
         If request IsNot Nothing Then
-            RaiseEvent ReceivedClientRequest(request)
+            RaiseEvent ReceivedClientRequest(clientID, request)
 
             Select Case request.Type.ToUpper()
-                Case "PAUSESERVICE"
-                    If m_serviceController IsNot Nothing Then m_serviceController.Pause()
-                Case "RESUMESERVICE"
-                    If m_serviceController IsNot Nothing Then m_serviceController.Continue()
                 Case "LISTPROCESSES"
                 Case "STARTPROCESS"
                 Case "ABORTPROCESS"

@@ -38,15 +38,18 @@ Partial Class ClientHelper
     Private Sub InitializeComponent()
         Me.components = New System.ComponentModel.Container
         Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(ClientHelper))
-        Me.TcpClient = New Tva.Communication.TcpClient(Me.components)
+        Me.CHTcpClient = New Tva.Communication.TcpClient(Me.components)
         '
-        'TcpClient
+        'CHTcpClient
         '
-        Me.TcpClient.ConnectionString = "Server=localhost; Port=8888"
-        Me.TcpClient.HandshakePassphrase = Nothing
-        Me.TcpClient.TextEncoding = CType(resources.GetObject("TcpClient.TextEncoding"), System.Text.Encoding)
+        Me.CHTcpClient.ConnectionString = "Server=localhost; Port=6500"
+        Me.CHTcpClient.Encryption = Tva.Security.Cryptography.EncryptLevel.Level4
+        Me.CHTcpClient.HandshakePassphrase = Nothing
+        Me.CHTcpClient.PayloadAware = True
+        Me.CHTcpClient.SecureSession = True
+        Me.CHTcpClient.TextEncoding = CType(resources.GetObject("CHTcpClient.TextEncoding"), System.Text.Encoding)
 
     End Sub
-    Friend WithEvents TcpClient As Tva.Communication.TcpClient
+    Friend WithEvents CHTcpClient As Tva.Communication.TcpClient
 
 End Class

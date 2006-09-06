@@ -6,26 +6,27 @@ Imports Tva.Text.Common
 Public Class ServiceResponse
 
     Private m_type As String
-    Private m_parameters As String()
+    Private m_message As String
+    Private m_attachments As List(Of Object)
 
     Public Sub New()
         MyClass.New("UNDETERMINED")
     End Sub
 
     Public Sub New(ByVal type As String)
-        MyClass.New(type, New String() {})
+        MyClass.New(type, "")
     End Sub
 
-    Public Sub New(ByVal type As String, ByVal parameters As String())
+    Public Sub New(ByVal type As String, ByVal message As String)
         m_type = type
-        m_parameters = parameters
+        m_message = message
+        m_attachments = New List(Of Object)
     End Sub
 
     ' Standard Response Type
     '    Undetermined
     '    UnicastMessage
     '    MulticastMessage
-    '    BroadcastMessage
     '    ServiceStateChanged
     '    ProcessStateChanged
     '    ProcessProgressUpdate
@@ -38,13 +39,19 @@ Public Class ServiceResponse
         End Set
     End Property
 
-    Public Property Parameters() As String()
+    Public Property Message() As String
         Get
-            Return m_parameters
+            Return m_message
         End Get
-        Set(ByVal value As String())
-            m_parameters = value
+        Set(ByVal value As String)
+            m_message = value
         End Set
+    End Property
+
+    Public ReadOnly Property Attachments() As List(Of Object)
+        Get
+            Return m_attachments
+        End Get
     End Property
 
 End Class

@@ -9,6 +9,8 @@ Partial Class ServiceHelper
 
         'Required for Windows.Forms Class Composition Designer support
         Container.Add(Me)
+        m_startedEventHandlerList = New List(Of EventHandler)
+        m_stoppedEventHandlerList = New List(Of EventHandler)
         m_serviceComponents = New List(Of IServiceComponent)
         m_serviceComponents.Add(SHTcpServer)
         m_serviceComponents.Add(SHScheduleManager)
@@ -50,7 +52,10 @@ Partial Class ServiceHelper
         '
         'SHTcpServer
         '
-        Me.SHTcpServer.ConfigurationString = "Port=8888"
+        Me.SHTcpServer.ConfigurationString = "Port=6500"
+        Me.SHTcpServer.Encryption = Tva.Security.Cryptography.EncryptLevel.Level4
+        Me.SHTcpServer.PayloadAware = True
+        Me.SHTcpServer.SecureSession = True
         Me.SHTcpServer.TextEncoding = CType(resources.GetObject("SHTcpServer.TextEncoding"), System.Text.Encoding)
         '
         'SHScheduleManager

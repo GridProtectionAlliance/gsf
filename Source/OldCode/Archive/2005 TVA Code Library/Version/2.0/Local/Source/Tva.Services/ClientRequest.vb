@@ -23,10 +23,6 @@ Public Class ClientRequest
 
     ' Standard Request Type
     '    Undetermined
-    '    PauseService
-    '    ResumeService
-    '    StopService
-    '    RestartService
     '    ListProcesses
     '    StartProcess
     '    AbortProcess
