@@ -13,6 +13,10 @@ Public Class ServiceHelper
     Private m_startedEventHandlerList As List(Of EventHandler)
     Private m_stoppedEventHandlerList As List(Of EventHandler)
 
+    ''' <summary>
+    ''' Occurs when the service has started.
+    ''' </summary>
+    ''' <remarks>This is a non-blocking event.</remarks>
     Public Custom Event Started As EventHandler
         AddHandler(ByVal value As EventHandler)
             m_startedEventHandlerList.Add(value)
@@ -29,6 +33,10 @@ Public Class ServiceHelper
         End RaiseEvent
     End Event
 
+    ''' <summary>
+    ''' Occurs when the service has stopped.
+    ''' </summary>
+    ''' <remarks>This is a non-blocking event.</remarks>
     Public Custom Event Stopped As EventHandler
         AddHandler(ByVal value As EventHandler)
             m_startedEventHandlerList.Add(value)
@@ -45,14 +53,33 @@ Public Class ServiceHelper
         End RaiseEvent
     End Event
 
+    ''' <summary>
+    ''' Occurs when the service is paused.
+    ''' </summary>
     Public Event Paused As EventHandler
 
+    ''' <summary>
+    ''' Occurs when the service is resumed.
+    ''' </summary>
     Public Event Resumed As EventHandler
 
+    ''' <summary>
+    ''' Occurs when the system is being shutdowm.
+    ''' </summary>
     Public Event Shutdown As EventHandler
 
+    ''' <summary>
+    ''' Occurs when a request is received from a client.
+    ''' </summary>
+    ''' <param name="clientID">ID of the client that sent the request.</param>
+    ''' <param name="clientRequest">The request sent by the client.</param>
     Public Event ReceivedClientRequest(ByVal clientID As Guid, ByVal clientRequest As ClientRequest)
 
+    ''' <summary>
+    ''' Gets or sets the parent service to which the service helper belongs.
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns>The parent service to which the service helper belongs.</returns>
     Public Property ParentService() As ServiceBase
         Get
             Return m_parentService
@@ -62,6 +89,11 @@ Public Class ServiceHelper
         End Set
     End Property
 
+    ''' <summary>
+    ''' Gets the instance of TCP server used for communicating with the clients.
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns>An instance of TCP server.</returns>
     <TypeConverter(GetType(ExpandableObjectConverter)), DesignerSerializationVisibility(DesignerSerializationVisibility.Content)> _
     Public ReadOnly Property TcpServer() As TcpServer
         Get
@@ -69,6 +101,11 @@ Public Class ServiceHelper
         End Get
     End Property
 
+    ''' <summary>
+    ''' Gets the instance of schedule manager that can be used for scheduling jobs/tasks.
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns>An instance of schedule manager.</returns>
     <DesignerSerializationVisibility(DesignerSerializationVisibility.Content)> _
     Public ReadOnly Property ScheduleManager() As ScheduleManager
         Get
@@ -76,6 +113,11 @@ Public Class ServiceHelper
         End Get
     End Property
 
+    ''' <summary>
+    ''' Gets the instance of SSAM logger that can be used to log events to SSAM.
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns>An instance of SSAM logger.</returns>
     <DesignerSerializationVisibility(DesignerSerializationVisibility.Content)> _
     Public ReadOnly Property SsamLogger() As SsamLogger
         Get
@@ -83,6 +125,11 @@ Public Class ServiceHelper
         End Get
     End Property
 
+    ''' <summary>
+    ''' Gets a list of all the components that implement the Tva.Services.IServiceComponent interface.
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
     <Browsable(False)> _
     Public ReadOnly Property ServiceComponents() As List(Of IServiceComponent)
         Get

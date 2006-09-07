@@ -15,6 +15,8 @@
 '
 '*******************************************************************************************************
 
+Option Strict On
+
 Imports System.IO
 Imports System.Runtime.Serialization.Formatters.Binary
 

@@ -168,6 +168,11 @@ Public Class Schedule
         MyClass.Rule = minutes & " " & hours & " " & days & " " & months & " " & DaysOfWeek
     End Sub
 
+    ''' <summary>
+    ''' Gets or sets the schedule name.
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns>The schedule name.</returns>
     Public Property Name() As String
         Get
             Return m_name
@@ -181,6 +186,11 @@ Public Class Schedule
         End Set
     End Property
 
+    ''' <summary>
+    ''' Gets or sets the schedule rule.
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns>The schedule rule.</returns>
     Public Property Rule() As String
         Get
             Return m_minutes.Text & " " & m_hours.Text & " " & m_days.Text & " " & m_months.Text & " " & m_dayOfWeek.Text
@@ -189,11 +199,11 @@ Public Class Schedule
             If Not String.IsNullOrEmpty(value) Then
                 With RemoveDuplicateWhiteSpace(value).Split(" "c)
                     If .Length = 5 Then
-                        MyClass.Minutes = .GetValue(0).ToString()
-                        MyClass.Hours = .GetValue(1).ToString()
-                        MyClass.Days = .GetValue(2).ToString()
+                        Me.Minutes = .GetValue(0).ToString()
+                        Me.Hours = .GetValue(1).ToString()
+                        Me.Days = .GetValue(2).ToString()
                         MyClass.Months = .GetValue(3).ToString()
-                        MyClass.DaysOfWeek = .GetValue(4).ToString()
+                        Me.DaysOfWeek = .GetValue(4).ToString()
                     Else
                         Throw New ArgumentException("Schedule rule must have exactly 5 elements (Example: * * * * *).")
                     End If
@@ -204,6 +214,11 @@ Public Class Schedule
         End Set
     End Property
 
+    ''' <summary>
+    ''' Gets or sets the 1st element of the 5 element schedule rule.
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns>The 1st element of the 5 element schedule rule.</returns>
     Public Property Minutes() As String
         Get
             Return m_minutes.Text
@@ -213,6 +228,11 @@ Public Class Schedule
         End Set
     End Property
 
+    ''' <summary>
+    ''' Gets or sets the 2nd element of the 5 element schedule rule.
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns>The 2nd element of the 5 element schedule rule.</returns>
     Public Property Hours() As String
         Get
             Return m_hours.Text
@@ -222,6 +242,11 @@ Public Class Schedule
         End Set
     End Property
 
+    ''' <summary>
+    ''' Gets or sets the 3rd element of the 5 element schedule rule.
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns>The 3rd element of the 5 element schedule rule.</returns>
     Public Property Days() As String
         Get
             Return m_days.Text
@@ -231,6 +256,11 @@ Public Class Schedule
         End Set
     End Property
 
+    ''' <summary>
+    ''' Gets or sets the 4th element of the 5 element schedule rule.
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns>The 4th element of the 5 element schedule rule.</returns>
     Public Property Months() As String
         Get
             Return m_months.Text
@@ -240,6 +270,11 @@ Public Class Schedule
         End Set
     End Property
 
+    ''' <summary>
+    ''' Gets or sets the 5th element of the 5 element schedule rule.
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns>The 5th element of the 5 element schedule rule.</returns>
     Public Property DaysOfWeek() As String
         Get
             Return m_dayOfWeek.Text
@@ -249,6 +284,11 @@ Public Class Schedule
         End Set
     End Property
 
+    ''' <summary>
+    ''' Gets the current status of the schedule.
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns>The current status of the schedule.</returns>
     Public ReadOnly Property Status() As String
         Get
             With New System.Text.StringBuilder()
@@ -267,6 +307,10 @@ Public Class Schedule
         End Get
     End Property
 
+    ''' <summary>
+    ''' Checks whether the schedule is due at the present system time.
+    ''' </summary>
+    ''' <returns>True if the schedule is due at the present system time; otherwise False.</returns>
     Public Function IsDue() As Boolean
 
         Dim currentDateTime As System.DateTime = System.DateTime.Now

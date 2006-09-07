@@ -79,7 +79,7 @@ Namespace Ssam
         ''' <value></value>
         ''' <returns>True if logging of SSAM events is enabled; otherwise False.</returns>
         ''' <remarks></remarks>
-        <Description("Determines whether the logging of SSAM events is enabled."), Category("Configuration"), DefaultValue(GetType(Boolean), "True")> _
+        <Description("Determines whether the logging of SSAM events is enabled."), Category("Behavior"), DefaultValue(GetType(Boolean), "True")> _
         Public Property Enabled() As Boolean
             Get
                 Return m_enabled

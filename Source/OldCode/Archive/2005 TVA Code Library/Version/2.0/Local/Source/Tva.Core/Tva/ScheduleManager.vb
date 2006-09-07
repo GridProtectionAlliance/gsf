@@ -1,5 +1,7 @@
 ' 08-01-06
 
+Option Strict On
+
 Imports System.Drawing
 Imports System.ComponentModel
 Imports System.Threading
@@ -21,14 +23,36 @@ Public Class ScheduleManager
 
     Public Delegate Sub ScheduleDueEventHandler(ByVal schedule As Schedule)
 
+    ''' <summary>
+    ''' Occurs while the schedule manager is waiting to start at top of the minute.
+    ''' </summary>
+    <Category("State")> _
     Public Event Starting As EventHandler
 
+    ''' <summary>
+    ''' Occurs when the schedule manager has started.
+    ''' </summary>
+    <Category("State")> _
     Public Event Started As EventHandler
 
+    ''' <summary>
+    ''' Occurs when the schedule manager has stopped.
+    ''' </summary>
+    <Category("State")> _
     Public Event Stopped As EventHandler
 
+    ''' <summary>
+    ''' Occurs when the a particular schedule is being checked to see if it is due.
+    ''' </summary>
+    ''' <param name="schedule">The schedule that is being checked.</param>
+    <Category("Schedules")> _
     Public Event CheckingSchedule(ByVal schedule As Schedule)
 
+    ''' <summary>
+    ''' Occurs when a particular schedule is due.
+    ''' </summary>
+    ''' <remarks>This is a non-blocking event.</remarks>
+    <Category("Schedules")> _
     Public Custom Event ScheduleDue As ScheduleDueEventHandler
         AddHandler(ByVal value As ScheduleDueEventHandler)
             m_scheduleDueEventHandlerList.Add(value)
@@ -60,6 +84,7 @@ Public Class ScheduleManager
     ''' </summary>
     ''' <value></value>
     ''' <returns>The element name of the application configuration file under which the schedules will be saved.</returns>
+    <Category("Configuration"), DefaultValue(GetType(String), "ScheduleManager")> _
     Public Property ConfigurationElement() As String
         Get
             Return m_configurationElement
@@ -74,11 +99,11 @@ Public Class ScheduleManager
     End Property
 
     ''' <summary>
-    ''' Gets or sets a boolean value indicating whether the schedules will be saved to the application configuration 
-    ''' file when this instance of Tva.ScheduleManager is stopped or disposed.
+    ''' Gets or sets a boolean value indicating whether the schedules will be saved to the application 
+    ''' configuration file when this instance of Tva.ScheduleManager is stopped or disposed.
     ''' </summary>
-    ''' <value></value>
-    ''' <returns></returns>
+    ''' <value>True if the schedules will be saved to the application configuration file; otherwise False.</value>
+    <Category("Configuration"), DefaultValue(GetType(Boolean), "True")> _
     Public Property PersistSchedules() As Boolean
         Get
             Return m_persistSchedules
@@ -88,6 +113,12 @@ Public Class ScheduleManager
         End Set
     End Property
 
+    ''' <summary>
+    ''' Gets or sets a boolean value indicating whether the schedule manager is enabled.
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns>True if the schedule manager is enabled; otherwise False.</returns>
+    <Category("Behavior"), DefaultValue(GetType(Boolean), "True")> _
     Public Property Enabled() As Boolean
         Get
             Return m_enabled
@@ -97,6 +128,11 @@ Public Class ScheduleManager
         End Set
     End Property
 
+    ''' <summary>
+    ''' Gets a boolean value indicating whether the schedule manager is running.
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns>True if the schedule manager is running; otherwise False.</returns>
     <Browsable(False)> _
     Public ReadOnly Property IsRunning() As Boolean
         Get
@@ -104,6 +140,11 @@ Public Class ScheduleManager
         End Get
     End Property
 
+    ''' <summary>
+    ''' Gets a list of all the schedules.
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns>A list of the schedules.</returns>
     <Browsable(False)> _
     Public ReadOnly Property Schedules() As Dictionary(Of String, Schedule)
         Get
@@ -111,6 +152,9 @@ Public Class ScheduleManager
         End Get
     End Property
 
+    ''' <summary>
+    ''' Starts the schedule manager asynchronously.
+    ''' </summary>
     Public Sub Start()
 
         If Not m_timer.Enabled AndAlso m_enabled Then
@@ -121,6 +165,9 @@ Public Class ScheduleManager
 
     End Sub
 
+    ''' <summary>
+    ''' Stops the schedule manager.
+    ''' </summary>
     Public Sub [Stop]()
 
         If m_enabled Then
@@ -172,6 +219,10 @@ Public Class ScheduleManager
 
     End Sub
 
+    ''' <summary>
+    ''' Checks the specified schedule to determine if it is due.
+    ''' </summary>
+    ''' <param name="scheduleName">Name of the schedule to be checked.</param>
     Public Sub CheckSchedule(ByVal scheduleName As String)
 
         If m_enabled Then
@@ -183,6 +234,9 @@ Public Class ScheduleManager
 
     End Sub
 
+    ''' <summary>
+    ''' Checks all of the schedules to determine if they are due.
+    ''' </summary>
     Public Sub CheckAllSchedules()
 
         If m_enabled Then
@@ -243,7 +297,6 @@ Public Class ScheduleManager
             End With
         End Get
     End Property
-
 
     Public Sub ProcessStateChanged(ByVal processName As String, ByVal newState As Services.ProcessState) Implements Services.IServiceComponent.ProcessStateChanged
 
