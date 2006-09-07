@@ -181,7 +181,7 @@ Public Class UdpServer
                 ' Enter data read loop, socket receive will block thread while waiting for data from the client.
                 Do While True
                     ' Retrieve data from the UDP socket
-                    received += .Client.ReceiveFrom(m_buffer, 0, length, SocketFlags.None, clientEndPoint)
+                    received = .Client.ReceiveFrom(m_buffer, 0, length, SocketFlags.None, clientEndPoint)
 
                     ' Post raw data to real-time function delegate if defined - this bypasses all other activity
                     If m_receiveRawDataFunction IsNot Nothing Then
@@ -196,7 +196,7 @@ Public Class UdpServer
                     End If
 
                     ' Copy data into local cumulative buffer to start the unpacking process and eventually make the data available via event
-                    Buffer.BlockCopy(m_buffer, 0, dataBuffer, totalBytesReceived, received) 'dataBuffer.Length - totalBytesReceived
+                    Buffer.BlockCopy(m_buffer, 0, dataBuffer, totalBytesReceived, dataBuffer.Length - totalBytesReceived)
                     totalBytesReceived += received
 
                     If m_payloadAware Then

@@ -227,6 +227,7 @@ Public MustInherit Class CommunicationServerBase
             Return m_receiveBufferSize
         End Get
         Set(ByVal value As Integer)
+            If m_isRunning Then Throw New InvalidOperationException("Cannot change receive buffer size while server is running")
             If value > 0 Then
                 m_receiveBufferSize = value
                 m_buffer = CreateArray(Of Byte)(value)

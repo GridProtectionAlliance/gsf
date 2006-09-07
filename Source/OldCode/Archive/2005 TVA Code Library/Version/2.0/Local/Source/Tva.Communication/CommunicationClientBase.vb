@@ -256,6 +256,7 @@ Public MustInherit Class CommunicationClientBase
         End Get
         Set(ByVal value As Integer)
             If value > 0 Then
+                If m_isConnected Then Throw New InvalidOperationException("Cannot change receive buffer size while client is connected")
                 m_receiveBufferSize = value
                 m_buffer = CreateArray(Of Byte)(value)
             Else
