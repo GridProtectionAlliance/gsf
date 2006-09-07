@@ -193,7 +193,7 @@ Public Class UdpClient
                     End If
 
                     Try
-                        ' Retrieve data from th4e UDP socket
+                        ' Retrieve data from the UDP socket
                         received = .Client.ReceiveFrom(m_buffer, 0, length, SocketFlags.None, CType(m_udpServer, EndPoint))
 
                         ' Post raw data to real-time function delegate if defined - this bypasses all other activity
