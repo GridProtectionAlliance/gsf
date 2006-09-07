@@ -196,7 +196,7 @@ Public Class UdpServer
                     End If
 
                     ' Copy data into local cumulative buffer to start the unpacking process and eventually make the data available via event
-                    Buffer.BlockCopy(m_buffer, 0, dataBuffer, totalBytesReceived, dataBuffer.Length - totalBytesReceived)
+                    Buffer.BlockCopy(m_buffer, 0, dataBuffer, totalBytesReceived, received) 'dataBuffer.Length - totalBytesReceived
                     totalBytesReceived += received
 
                     If m_payloadAware Then

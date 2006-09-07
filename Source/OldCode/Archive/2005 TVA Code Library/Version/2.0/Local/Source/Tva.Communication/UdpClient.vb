@@ -193,7 +193,7 @@ Public Class UdpClient
                     End If
 
                     Try
-                        ' Retrieve data from the UDP socket
+                        ' Retrieve data from th4e UDP socket
                         received += .Client.ReceiveFrom(m_buffer, 0, length, SocketFlags.None, CType(m_udpServer, EndPoint))
 
                         ' Post raw data to real-time function delegate if defined - this bypasses all other activity
@@ -230,7 +230,7 @@ Public Class UdpClient
                     End If
 
                     ' Copy data into local cumulative buffer to start the unpacking process and eventually make the data available via event
-                    Buffer.BlockCopy(m_buffer, 0, dataBuffer, totalBytesReceived, dataBuffer.Length - totalBytesReceived)
+                    Buffer.BlockCopy(m_buffer, 0, dataBuffer, totalBytesReceived, received)
                     totalBytesReceived += received
 
                     If m_payloadAware Then
