@@ -12,6 +12,8 @@
 '  -----------------------------------------------------------------------------------------------------
 '  06/01/2006 - Pinal C. Patel
 '       Original version of source code generated
+'  09/06/2006 - J. Ritchie Carroll
+'       Added bypass optimizations for high-speed client data access
 '
 '*******************************************************************************************************
 
@@ -56,7 +58,9 @@ Public MustInherit Class CommunicationClientBase
     Private m_totalBytesSent As Integer
     Private m_totalBytesReceived As Integer
 
+    ' We expose these two members to derived classes for their own internal use
     Protected m_receiveRawDataFunction As ReceiveRawDataFunctionSignature
+    Protected m_buffer As Byte()
 
     ''' <summary>
     ''' The maximum number of bytes that can be sent from the client to server in a single send operation.
@@ -121,13 +125,20 @@ Public MustInherit Class CommunicationClientBase
     <Description("Occurs when no data is received from the server after waiting for the specified time."), Category("Data")> _
     Public Event ReceiveTimedOut(ByVal sender As Object, ByVal e As System.EventArgs) Implements ICommunicationClient.ReceiveTimedOut
 
+    Public Sub New(ByVal connectionString As String)
+
+        MyClass.New()
+        m_connectionString = connectionString
+
+    End Sub
+
     ''' <summary>
     ''' Gets or sets the data required by the client to connect to the server.
     ''' </summary>
     ''' <value></value>
     ''' <returns>The data required by the client to connect to the server.</returns>
     <Description("The data required by the client to connect to the server."), Category("Configuration")> _
-    Public Property ConnectionString() As String Implements ICommunicationClient.ConnectionString
+    Public Overridable Property ConnectionString() As String Implements ICommunicationClient.ConnectionString
         Get
             Return m_connectionString
         End Get
@@ -150,7 +161,7 @@ Public MustInherit Class CommunicationClientBase
     ''' <returns>The maximum number of times the client will attempt to connect to the server.</returns>
     ''' <remarks>Set MaximumConnectionAttempts = -1 for infinite connection attempts.</remarks>
     <Description("The maximum number of times the client will attempt to connect to the server. Set MaximumConnectionAttempts = -1 for infinite connection attempts."), Category("Configuration"), DefaultValue(GetType(Integer), "-1")> _
-    Public Property MaximumConnectionAttempts() As Integer Implements ICommunicationClient.MaximumConnectionAttempts
+    Public Overridable Property MaximumConnectionAttempts() As Integer Implements ICommunicationClient.MaximumConnectionAttempts
         Get
             Return m_maximumConnectionAttempts
         End Get
@@ -174,7 +185,7 @@ Public MustInherit Class CommunicationClientBase
     ''' </returns>
     '''<remarks>Handshake and Encryption must be enabled in order to use SecureSession.</remarks>
     <Description("Indicates whether the data exchanged between the server and clients will be encrypted using a private session passphrase."), Category("Security"), DefaultValue(GetType(Boolean), "False")> _
-    Public Property SecureSession() As Boolean Implements ICommunicationClient.SecureSession
+    Public Overridable Property SecureSession() As Boolean Implements ICommunicationClient.SecureSession
         Get
             Return m_secureSession
         End Get
@@ -196,7 +207,7 @@ Public MustInherit Class CommunicationClientBase
     ''' <returns>True is the server will do a handshake with the client; otherwise False.</returns>
     ''' <remarks>SecureSession must be disabled before disabling Handshake.</remarks>
     <Description("Indicates whether the server will do a handshake with the client after accepting its connection."), Category("Security"), DefaultValue(GetType(Boolean), "True")> _
-    Public Property Handshake() As Boolean Implements ICommunicationClient.Handshake
+    Public Overridable Property Handshake() As Boolean Implements ICommunicationClient.Handshake
         Get
             Return m_handshake
         End Get
@@ -220,7 +231,7 @@ Public MustInherit Class CommunicationClientBase
     ''' <value></value>
     ''' <returns>The passpharse that will provided to the server for authentication during the handshake process.</returns>
     <Description("The passpharse that will provided to the server for authentication during the handshake process."), Category("Security"), DefaultValue(GetType(String), "")> _
-    Public Property HandshakePassphrase() As String Implements ICommunicationClient.HandshakePassphrase
+    Public Overridable Property HandshakePassphrase() As String Implements ICommunicationClient.HandshakePassphrase
         Get
             Return m_handshakePassphrase
         End Get
@@ -239,13 +250,14 @@ Public MustInherit Class CommunicationClientBase
     ''' <value></value>
     ''' <returns>The maximum number of bytes that can be received at a time by the client from the server.</returns>
     <Description("The maximum number of bytes that can be received at a time by the client from the server."), Category("Data"), DefaultValue(GetType(Integer), "8192")> _
-    Public Property ReceiveBufferSize() As Integer Implements ICommunicationClient.ReceiveBufferSize
+    Public Overridable Property ReceiveBufferSize() As Integer Implements ICommunicationClient.ReceiveBufferSize
         Get
             Return m_receiveBufferSize
         End Get
         Set(ByVal value As Integer)
             If value > 0 Then
                 m_receiveBufferSize = value
+                m_buffer = CreateArray(Of Byte)(value)
             Else
                 Throw New ArgumentOutOfRangeException("value")
             End If
@@ -259,7 +271,7 @@ Public MustInherit Class CommunicationClientBase
     ''' <returns>The time to wait in seconds for data to be received from the server before timing out.</returns>
     ''' <remarks>Set ReceiveTimeout = -1 to disable timeout for receiving data.</remarks>
     <Description("The time to wait in seconds for data to be received from the server before timing out. Set ReceiveTimeout = -1 to disable timeout for receiving data."), Category("Data"), DefaultValue(GetType(Integer), "-1")> _
-    Public Property ReceiveTimeout() As Integer Implements ICommunicationClient.ReceiveTimeout
+    Public Overridable Property ReceiveTimeout() As Integer Implements ICommunicationClient.ReceiveTimeout
         Get
             Return m_receiveTimeout
         End Get
@@ -290,7 +302,7 @@ Public MustInherit Class CommunicationClientBase
     ''' </para>
     ''' </remarks>
     <Description("The encryption level to be used for encrypting the data exchanged between the client and server."), Category("Data"), DefaultValue(GetType(Tva.Security.Cryptography.EncryptLevel), "None")> _
-    Public Property Encryption() As Tva.Security.Cryptography.EncryptLevel Implements ICommunicationClient.Encryption
+    Public Overridable Property Encryption() As Tva.Security.Cryptography.EncryptLevel Implements ICommunicationClient.Encryption
         Get
             Return m_encryption
         End Get
@@ -312,7 +324,7 @@ Public MustInherit Class CommunicationClientBase
     ''' <returns>The compression level to be used for compressing the data exchanged between the client and server.</returns>
     ''' <remarks>Set Compression = NoCompression to disable compression.</remarks>
     <Description("The compression level to be used for compressing the data exchanged between the client and server."), Category("Data"), DefaultValue(GetType(Tva.IO.Compression.CompressLevel), "NoCompression")> _
-    Public Property Compression() As Tva.IO.Compression.CompressLevel Implements ICommunicationClient.Compression
+    Public Overridable Property Compression() As Tva.IO.Compression.CompressLevel Implements ICommunicationClient.Compression
         Get
             Return m_compression
         End Get
@@ -327,7 +339,7 @@ Public MustInherit Class CommunicationClientBase
     ''' <value></value>
     ''' <returns>True if the client is enabled; otherwise False.</returns>
     <Description("Indicates whether the client is enabled."), Category("Behavior"), DefaultValue(GetType(Boolean), "True")> _
-    Public Property Enabled() As Boolean Implements ICommunicationClient.Enabled
+    Public Overridable Property Enabled() As Boolean Implements ICommunicationClient.Enabled
         Get
             Return m_enabled
         End Get
@@ -342,7 +354,7 @@ Public MustInherit Class CommunicationClientBase
     ''' <value></value>
     ''' <returns>The encoding to be used for the text sent to the server.</returns>
     <Browsable(False)> _
-    Public Property TextEncoding() As Encoding Implements ICommunicationClient.TextEncoding
+    Public Overridable Property TextEncoding() As Encoding Implements ICommunicationClient.TextEncoding
         Get
             Return m_textEncoding
         End Get
@@ -357,7 +369,7 @@ Public MustInherit Class CommunicationClientBase
     ''' <value></value>
     ''' <returns>The protocol used by the client for transferring data to and from the server.</returns>
     <Browsable(False)> _
-    Public Property Protocol() As TransportProtocol Implements ICommunicationClient.Protocol
+    Public Overridable Property Protocol() As TransportProtocol Implements ICommunicationClient.Protocol
         Get
             Return m_protocol
         End Get
@@ -372,7 +384,7 @@ Public MustInherit Class CommunicationClientBase
     ''' <value></value>
     ''' <returns>ID of the server to which the client is connected.</returns>
     <Browsable(False)> _
-    Public Property ServerID() As Guid Implements ICommunicationClient.ServerID
+    Public Overridable Property ServerID() As Guid Implements ICommunicationClient.ServerID
         Get
             Return m_serverID
         End Get
@@ -387,7 +399,7 @@ Public MustInherit Class CommunicationClientBase
     ''' <value></value>
     ''' <returns>ID of the client.</returns>
     <Browsable(False)> _
-    Public Property ClientID() As Guid Implements ICommunicationClient.ClientID
+    Public Overridable Property ClientID() As Guid Implements ICommunicationClient.ClientID
         Get
             Return m_clientID
         End Get
@@ -414,7 +426,7 @@ Public MustInherit Class CommunicationClientBase
     ''' <value></value>
     ''' <returns>True if the client is connected; otherwise False.</returns>
     <Browsable(False)> _
-    Public ReadOnly Property IsConnected() As Boolean Implements ICommunicationClient.IsConnected
+    Public Overridable ReadOnly Property IsConnected() As Boolean Implements ICommunicationClient.IsConnected
         Get
             Return m_isConnected
         End Get
@@ -426,7 +438,7 @@ Public MustInherit Class CommunicationClientBase
     ''' <value></value>
     ''' <returns>The time in seconds for which the client has been connected to the server.</returns>
     <Browsable(False)> _
-    Public ReadOnly Property ConnectionTime() As Double Implements ICommunicationClient.ConnectionTime
+    Public Overridable ReadOnly Property ConnectionTime() As Double Implements ICommunicationClient.ConnectionTime
         Get
             Dim clientConnectionTime As Double = 0
             If m_connectTime > 0 Then
@@ -446,7 +458,7 @@ Public MustInherit Class CommunicationClientBase
     ''' <value></value>
     ''' <returns>The total number of bytes sent by the client to the server since the connection is established.</returns>
     <Browsable(False)> _
-    Public ReadOnly Property TotalBytesSent() As Integer Implements ICommunicationClient.TotalBytesSent
+    Public Overridable ReadOnly Property TotalBytesSent() As Integer Implements ICommunicationClient.TotalBytesSent
         Get
             Return m_totalBytesSent
         End Get
@@ -458,7 +470,7 @@ Public MustInherit Class CommunicationClientBase
     ''' <value></value>
     ''' <returns>The total number of bytes received by the client from the server since the connection is established.</returns>
     <Browsable(False)> _
-    Public ReadOnly Property TotalBytesReceived() As Integer Implements ICommunicationClient.TotalBytesReceived
+    Public Overridable ReadOnly Property TotalBytesReceived() As Integer Implements ICommunicationClient.TotalBytesReceived
         Get
             Return m_totalBytesReceived
         End Get
@@ -515,7 +527,7 @@ Public MustInherit Class CommunicationClientBase
     ''' <param name="data">The buffer that contains the binary data to be sent.</param>
     ''' <param name="offset">The zero-based position in the buffer parameter at which to begin sending data.</param>
     ''' <param name="size">The number of bytes to be sent.</param>
-    Public Sub Send(ByVal data As Byte(), ByVal offset As Integer, ByVal size As Integer) Implements ICommunicationClient.Send
+    Public Overridable Sub Send(ByVal data As Byte(), ByVal offset As Integer, ByVal size As Integer) Implements ICommunicationClient.Send
 
         If m_enabled AndAlso m_isConnected Then
             If data Is Nothing Then Throw New ArgumentNullException("data")
@@ -542,7 +554,7 @@ Public MustInherit Class CommunicationClientBase
     ''' <summary>
     ''' Setting this property allows consumer to "intercept" data before it goes through normal processing
     ''' </summary>
-    Public Property ReceiveRawDataFunction() As ReceiveRawDataFunctionSignature Implements ICommunicationClient.ReceiveRawDataFunction
+    Public Overridable Property ReceiveRawDataFunction() As ReceiveRawDataFunctionSignature Implements ICommunicationClient.ReceiveRawDataFunction
         Get
             Return m_receiveRawDataFunction
         End Get
@@ -559,9 +571,9 @@ Public MustInherit Class CommunicationClientBase
     ''' <summary>
     ''' Raises the Tva.Communication.ClientBase.Connecting event.
     ''' </summary>
-    ''' <param name="e">An System.EventArgs that contains the event data.</param>
+    ''' <param name="e">A System.EventArgs that contains the event data.</param>
     ''' <remarks>This method is to be called when the client is attempting connection to the server.</remarks>
-    Protected Sub OnConnecting(ByVal e As EventArgs)
+    Protected Overridable Sub OnConnecting(ByVal e As EventArgs)
 
         RaiseEvent Connecting(Me, e)
 
@@ -570,12 +582,12 @@ Public MustInherit Class CommunicationClientBase
     ''' <summary>
     ''' Raises the Tva.Communication.ClientBase.ConnectingCancelled event.
     ''' </summary>
-    ''' <param name="e">An System.EventArgs that contains the event data.</param>
+    ''' <param name="e">A System.EventArgs that contains the event data.</param>
     ''' <remarks>
     ''' This method is to be called when attempts for connecting the client to the server are stopped on user's
     ''' request (i.e. When CancelConnect() is called before client is connected to the server).
     ''' </remarks>
-    Protected Sub OnConnectingCancelled(ByVal e As EventArgs)
+    Protected Overridable Sub OnConnectingCancelled(ByVal e As EventArgs)
 
         RaiseEvent ConnectingCancelled(Me, e)
 
@@ -589,7 +601,7 @@ Public MustInherit Class CommunicationClientBase
     ''' This method is to be called when all attempts for connecting to the server have been made but failed 
     ''' due to exceptions.
     ''' </remarks>
-    Protected Sub OnConnectingException(ByVal ex As Exception)
+    Protected Overridable Sub OnConnectingException(ByVal ex As Exception)
 
         RaiseEvent ConnectingException(ex)
 
@@ -598,9 +610,9 @@ Public MustInherit Class CommunicationClientBase
     ''' <summary>
     ''' Raises the Tva.Communication.ClientBase.Connected event.
     ''' </summary>
-    ''' <param name="e">An System.EventArgs that contains the event data.</param>
+    ''' <param name="e">A System.EventArgs that contains the event data.</param>
     ''' <remarks>This method is to be called when the client has successfully connected to the server.</remarks>
-    Protected Sub OnConnected(ByVal e As EventArgs)
+    Protected Overridable Sub OnConnected(ByVal e As EventArgs)
 
         m_isConnected = True
         m_connectTime = System.DateTime.Now.Ticks  ' Save the time when the client connected to the server.
@@ -614,9 +626,9 @@ Public MustInherit Class CommunicationClientBase
     ''' <summary>
     ''' Raises the Tva.Communication.ClientBase.Disconnected event.
     ''' </summary>
-    ''' <param name="e">An System.EventArgs that contains the event data.</param>
+    ''' <param name="e">A System.EventArgs that contains the event data.</param>
     ''' <remarks>This method is to be called when the client has disconnected from the server.</remarks>
-    Protected Sub OnDisconnected(ByVal e As EventArgs)
+    Protected Overridable Sub OnDisconnected(ByVal e As EventArgs)
 
         m_serverID = Guid.Empty
         m_isConnected = False
@@ -630,7 +642,7 @@ Public MustInherit Class CommunicationClientBase
     ''' </summary>
     ''' <param name="data">The data being sent to the server.</param>
     ''' <remarks>This method is to be called when the client begins sending data to the server.</remarks>
-    Protected Sub OnSendDataBegin(ByVal data As Byte())
+    Protected Overridable Sub OnSendDataBegin(ByVal data As Byte())
 
         RaiseEvent SendDataBegin(data)
 
@@ -641,7 +653,7 @@ Public MustInherit Class CommunicationClientBase
     ''' </summary>
     ''' <param name="data">The data sent to the server.</param>
     ''' <remarks>This method is to be called when the client has finished sending data to the server.</remarks>
-    Protected Sub OnSendDataComplete(ByVal data As Byte())
+    Protected Overridable Sub OnSendDataComplete(ByVal data As Byte())
 
         m_totalBytesSent += data.Length()
         RaiseEvent SendDataComplete(data)
@@ -653,7 +665,7 @@ Public MustInherit Class CommunicationClientBase
     ''' </summary>
     ''' <param name="data">The data that was received from the server.</param>
     ''' <remarks>This method is to be called when the client receives data from the server.</remarks>
-    Protected Sub OnReceivedData(ByVal data As Byte())
+    Protected Overridable Sub OnReceivedData(ByVal data As Byte())
 
         m_totalBytesReceived += data.Length()
 
@@ -669,11 +681,11 @@ Public MustInherit Class CommunicationClientBase
     ''' <summary>
     ''' Raises the Tva.Communication.ClientBase.ReceiveTimedOut event.
     ''' </summary>
-    ''' <param name="e">An System.EventArgs that contains the event data.</param>
+    ''' <param name="e">A System.EventArgs that contains the event data.</param>
     ''' <remarks>
     ''' This method is to be called when no data is received from the server after waiting for the specified time.
     ''' </remarks>
-    Protected Sub OnReceiveTimedOut(ByVal e As EventArgs)
+    Protected Overridable Sub OnReceiveTimedOut(ByVal e As EventArgs)
 
         RaiseEvent ReceiveTimedOut(Me, e)
 
@@ -685,7 +697,7 @@ Public MustInherit Class CommunicationClientBase
     ''' <param name="data">The data on which compression and encryption is to be performed.</param>
     ''' <returns>Compressed and encrypted data.</returns>
     ''' <remarks>No encryption is performed if SecureSession is enabled, even if Encryption is enabled.</remarks>
-    Protected Function GetPreparedData(ByVal data As Byte()) As Byte()
+    Protected Overridable Function GetPreparedData(ByVal data As Byte()) As Byte()
 
         data = CompressData(data, m_compression)
         If Not m_secureSession Then
@@ -705,7 +717,7 @@ Public MustInherit Class CommunicationClientBase
     ''' <param name="data">The data on which uncompression and decryption is to be performed.</param>
     ''' <returns>Uncompressed and decrypted data.</returns>
     ''' <remarks>No decryption is performed if SecureSession is enabled, even if Encryption is enabled.</remarks>
-    Protected Function GetActualData(ByVal data As Byte()) As Byte()
+    Protected Overridable Function GetActualData(ByVal data As Byte()) As Byte()
 
         If Not m_secureSession Then
             Dim key As String = m_handshakePassphrase
@@ -753,7 +765,7 @@ Public MustInherit Class CommunicationClientBase
     Private m_previouslyEnabled As Boolean = False
 
     <Browsable(False)> _
-    Public ReadOnly Property Name() As String Implements Services.IServiceComponent.Name
+    Public Overridable ReadOnly Property Name() As String Implements Services.IServiceComponent.Name
         Get
             Return Me.GetType().Name
         End Get
@@ -765,7 +777,7 @@ Public MustInherit Class CommunicationClientBase
     ''' <value></value>
     ''' <returns>The current status of the client.</returns>
     <Browsable(False)> _
-    Public ReadOnly Property Status() As String Implements Services.IServiceComponent.Status
+    Public Overridable ReadOnly Property Status() As String Implements Services.IServiceComponent.Status
         Get
             With New StringBuilder()
                 .Append("                 Server ID: ")
@@ -801,11 +813,11 @@ Public MustInherit Class CommunicationClientBase
         End Get
     End Property
 
-    Public Sub ProcessStateChanged(ByVal processName As String, ByVal newState As Services.ProcessState) Implements Services.IServiceComponent.ProcessStateChanged
+    Public Overridable Sub ProcessStateChanged(ByVal processName As String, ByVal newState As Services.ProcessState) Implements Services.IServiceComponent.ProcessStateChanged
 
     End Sub
 
-    Public Sub ServiceStateChanged(ByVal newState As Services.ServiceState) Implements Services.IServiceComponent.ServiceStateChanged
+    Public Overridable Sub ServiceStateChanged(ByVal newState As Services.ServiceState) Implements Services.IServiceComponent.ServiceStateChanged
 
         Select Case newState
             Case ServiceState.Started

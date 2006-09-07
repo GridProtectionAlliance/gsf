@@ -1,11 +1,49 @@
+'*******************************************************************************************************
+'  Tva.Communication.Common.vb - Common global communications functions
+'  Copyright © 2006 - TVA, all rights reserved - Gbtc
+'
+'  Build Environment: VB.NET, Visual Studio 2005
+'  Primary Developer: Pinal C. Patel, Operations Data Architecture [TVA]
+'      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
+'       Phone: 423/751-2250
+'       Email: pcpatel@tva.gov
+'
+'  Code Modification History:
+'  -----------------------------------------------------------------------------------------------------
+'  08/04/2006 - Pinal C. Patel
+'       Original version of source code generated
+'  09/06/2006 - J. Ritchie Carroll
+'       Added delegate signature to support bypass optimizations for high-speed data access
+'
+'*******************************************************************************************************
+
 ' 08-04-06
 
 Imports Tva.Text.Common
 
 Public Class Common
 
+    ''' <summary>
+    ''' Size of the TCP packet that will contain the size of the acutal packet.
+    ''' </summary>
+    Public Const TcpPacketHeaderSize As Integer = 4
+
+    ''' <summary>
+    ''' The maximum number of bytes that can be sent in a single UDP packet.
+    ''' </summary>
+    Public Const MaximumUdpPacketSize As Integer = 32768
+
+    ''' <summary>
+    ''' This function signature gets implemented as needed to allow consumers to "intercept" data before it goes through normal processing
+    ''' </summary>
     Delegate Sub ReceiveRawDataFunctionSignature(ByVal data As Byte(), ByVal offset As Integer, ByVal length As Integer)
 
+    ''' <summary>
+    ''' Create a communications server
+    ''' </summary>
+    ''' <remarks>
+    ''' Note that typical configuration string should be prefixed with a "protocol=tcp" or a "protocol=udp"
+    ''' </remarks>
     Public Shared Function CreateCommunicationServer(ByVal configurationString As String) As ICommunicationServer
 
         Dim server As ICommunicationServer = Nothing
@@ -38,6 +76,12 @@ Public Class Common
 
     End Function
 
+    ''' <summary>
+    ''' Create a communications client
+    ''' </summary>
+    ''' <remarks>
+    ''' Note that typical connection string should be prefixed with a "protocol=tcp", "protocol=udp", "protocol=serial" or "protocol=file"
+    ''' </remarks>
     Public Shared Function CreateCommunicationClient(ByVal connectionString As String) As ICommunicationClient
 
         Dim client As ICommunicationClient = Nothing

@@ -12,6 +12,8 @@
 '  -----------------------------------------------------------------------------------------------------
 '  06/02/2006 - Pinal C. Patel
 '       Original version of source code generated
+'  09/06/2006 - J. Ritchie Carroll
+'       Added bypass optimizations for high-speed socket access
 '
 '*******************************************************************************************************
 
@@ -24,6 +26,7 @@ Imports Tva.Common
 Imports Tva.IO.Common
 Imports Tva.Serialization
 Imports Tva.Communication.CommunicationHelper
+Imports Tva.Communication.Common
 
 ''' <summary>
 ''' Represents a TCP-based communication client.
@@ -34,11 +37,6 @@ Public Class TcpClient
     Private m_tcpClient As StateKeeper(Of Socket)
     Private m_connectionThread As Thread
     Private m_connectionData As Dictionary(Of String, String)
-
-    ''' <summary>
-    ''' Size of the packet that will contain the size of the acutal packet.
-    ''' </summary>
-    Private Const PacketHeaderSize As Integer = 4
 
     ''' <summary>
     ''' Initializes a instance of Tva.Communication.TcpClient with the specified data.
@@ -77,7 +75,6 @@ Public Class TcpClient
         If Enabled() AndAlso m_connectionThread IsNot Nothing Then m_connectionThread.Abort()
 
     End Sub
-
 
     ''' <summary>
     ''' Connects to the server asynchronously.
@@ -221,25 +218,31 @@ Public Class TcpClient
                 End If
 
                 Dim received As Integer
-                Dim buffer As Byte() = CreateArray(Of Byte)(ReceiveBufferSize)
+                Dim dataBuffer As Byte() = Nothing
+                Dim totalBytesReceived As Integer
 
-                Do While True   ' Wait for data from the server
-                    If .DataBuffer Is Nothing Then
-                        Dim bufferSize As Integer = PacketHeaderSize
-                        If Not m_payloadAware Then bufferSize = ReceiveBufferSize()
-                        .DataBuffer = CreateArray(Of Byte)(bufferSize)
-                    End If
-
+                ' Enter data read loop, this blocks thread while waiting for data from the server.
+                Do While True
                     Try
-                        received = .Client.Receive(buffer, 0, buffer.Length, SocketFlags.None)
-                        If m_receiveRawDataFunction IsNot Nothing Then m_receiveRawDataFunction(buffer, 0, received)
+                        ' Retrieve data from the TCP socket
+                        received = .Client.Receive(m_buffer, 0, m_buffer.Length, SocketFlags.None)
 
-                        'received = _
-                        '    .Client.Receive(.DataBuffer, .BytesReceived, .DataBuffer.Length() - .BytesReceived, SocketFlags.None)
+                        ' Post raw data to real-time function delegate if defined - this bypasses all other activity
+                        If m_receiveRawDataFunction IsNot Nothing Then
+                            m_receiveRawDataFunction(m_buffer, 0, received)
+                            Continue Do
+                        End If
 
-                        ' Copy local buffer into member state buffer
-                        System.Buffer.BlockCopy(buffer, 0, .DataBuffer, 0, received)
-                        .BytesReceived += received
+                        If dataBuffer Is Nothing Then
+                            Dim bufferSize As Integer = TcpPacketHeaderSize
+                            If Not m_payloadAware Then bufferSize = ReceiveBufferSize()
+                            dataBuffer = CreateArray(Of Byte)(bufferSize)
+                            totalBytesReceived = 0
+                        End If
+
+                        ' Copy data into local cumulative buffer to start the unpacking process and eventually make the data available via event
+                        Buffer.BlockCopy(m_buffer, 0, dataBuffer, totalBytesReceived, dataBuffer.Length - totalBytesReceived)
+                        totalBytesReceived += received
                     Catch ex As SocketException
                         If ex.SocketErrorCode() = SocketError.TimedOut Then
                             OnReceiveTimedOut(EventArgs.Empty)  ' Notify that a timeout has been encountered.
@@ -256,33 +259,35 @@ Public Class TcpClient
 
                     If received > 0 Then
                         If m_payloadAware Then
-                            If .PacketSize = -1 AndAlso .BytesReceived = PacketHeaderSize Then
+                            If .PacketSize = -1 AndAlso totalBytesReceived = TcpPacketHeaderSize Then
                                 ' Size of the packet has been received.
-                                .PacketSize = BitConverter.ToInt32(.DataBuffer, 0)
+                                .PacketSize = BitConverter.ToInt32(dataBuffer, 0)
                                 If .PacketSize <= MaximumDataSize Then
-                                    .DataBuffer = CreateArray(Of Byte)(.PacketSize)
+                                    dataBuffer = CreateArray(Of Byte)(.PacketSize)
+                                    totalBytesReceived = 0
                                     Continue Do
                                 Else
                                     Exit Do ' Packet size is not valid
                                 End If
-                            ElseIf .PacketSize = -1 AndAlso .BytesReceived < PacketHeaderSize Then
+                            ElseIf .PacketSize = -1 AndAlso totalBytesReceived < TcpPacketHeaderSize Then
                                 ' Size of the packet is yet to be received.
                                 Continue Do
-                            ElseIf .BytesReceived < .DataBuffer.Length() Then
+                            ElseIf totalBytesReceived < dataBuffer.Length() Then
                                 ' We have not yet received the entire packet.
                                 Continue Do
                             End If
                         Else
-                            .DataBuffer = CopyBuffer(.DataBuffer, 0, received)
+                            dataBuffer = CopyBuffer(dataBuffer, 0, received)
+                            totalBytesReceived = 0
                         End If
 
                         If ServerID() = Guid.Empty AndAlso Handshake() Then
                             ' Authentication is required, but not performed yet. When authentication is required
                             ' the first message from the server, upon successful authentication, must be 
                             ' information about itself.
-                            Dim serverInfo As HandshakeMessage = GetObject(Of HandshakeMessage)(GetActualData(.DataBuffer))
-                            If serverInfo IsNot Nothing AndAlso _
-                                    serverInfo.ID() <> Guid.Empty Then
+                            Dim serverInfo As HandshakeMessage = GetObject(Of HandshakeMessage)(GetActualData(dataBuffer))
+
+                            If serverInfo IsNot Nothing AndAlso serverInfo.ID() <> Guid.Empty Then
                                 ' Authentication was successful and the server responded with its information.
                                 .Passphrase = serverInfo.Passphrase()
                                 ServerID = serverInfo.ID()
@@ -293,14 +298,17 @@ Public Class TcpClient
                             End If
                         Else
                             If SecureSession() Then
-                                .DataBuffer = DecryptData(.DataBuffer, .Passphrase, Encryption())
+                                dataBuffer = DecryptData(dataBuffer, .Passphrase, Encryption)
+                                totalBytesReceived = 0
                             End If
+
                             ' Notify of data received from the client.
-                            OnReceivedData(.DataBuffer)
+                            OnReceivedData(dataBuffer)
                         End If
 
                         .PacketSize = -1
-                        .DataBuffer = Nothing
+                        dataBuffer = Nothing
+                        totalBytesReceived = 0
                     Else
                         ' Client connection was forcibly closed by the server.
                         Exit Do

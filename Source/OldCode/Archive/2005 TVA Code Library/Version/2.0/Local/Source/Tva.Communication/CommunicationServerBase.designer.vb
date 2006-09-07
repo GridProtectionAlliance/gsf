@@ -15,7 +15,10 @@
 '
 '*******************************************************************************************************
 
+Imports Tva.Common
+
 Partial Class CommunicationServerBase
+
     Inherits System.ComponentModel.Component
 
     <System.Diagnostics.DebuggerNonUserCode()> _
@@ -50,6 +53,7 @@ Partial Class CommunicationServerBase
         m_isRunning = False
         m_startTime = 0
         m_stopTime = 0
+        m_buffer = CreateArray(Of Byte)(m_receiveBufferSize)
 
     End Sub
 

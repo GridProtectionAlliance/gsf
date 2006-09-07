@@ -1,4 +1,21 @@
-' 07-27-06
+'*******************************************************************************************************
+'  Tva.Communication.SerialClient.vb - Serial port communication client
+'  Copyright © 2006 - TVA, all rights reserved - Gbtc
+'
+'  Build Environment: VB.NET, Visual Studio 2005
+'  Primary Developer: Pinal C. Patel, Operations Data Architecture [TVA]
+'      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
+'       Phone: 423/751-2250
+'       Email: pcpatel@tva.gov
+'
+'  Code Modification History:
+'  -----------------------------------------------------------------------------------------------------
+'  07/24/2006 - Pinal C. Patel
+'       Original version of source code generated
+'  09/06/2006 - J. Ritchie Carroll
+'       Added bypass optimizations for high-speed serial port data access
+'
+'*******************************************************************************************************
 
 Imports System.Text
 Imports System.IO.Ports
@@ -6,17 +23,29 @@ Imports System.Threading
 Imports Tva.Common
 Imports Tva.IO.Common
 
+''' <summary>
+''' Represents a serial port communication client.
+''' </summary>
 Public Class SerialClient
 
     Private m_connectionThread As Thread
     Private m_connectionData As Dictionary(Of String, String)
     Private WithEvents m_serialClient As SerialPort
 
+    ''' <summary>
+    ''' Initializes a instance of Tva.Communication.SerialClient with the specified data.
+    ''' </summary>
+    ''' <param name="connectionString">The data that is required by the client to initialize.</param>
     Public Sub New(ByVal connectionString As String)
+
         MyClass.New()
         MyBase.ConnectionString = connectionString
+
     End Sub
 
+    ''' <summary>
+    ''' Cancels any active attempts of connecting to the serial port.
+    ''' </summary>
     Public Overrides Sub CancelConnect()
 
         If Enabled() AndAlso m_connectionThread IsNot Nothing Then
@@ -26,6 +55,9 @@ Public Class SerialClient
 
     End Sub
 
+    ''' <summary>
+    ''' Connects to the serial port asynchronously.
+    ''' </summary>
     Public Overrides Sub Connect()
 
         If Enabled() AndAlso Not IsConnected() AndAlso ValidConnectionString(ConnectionString()) Then
@@ -45,6 +77,9 @@ Public Class SerialClient
 
     End Sub
 
+    ''' <summary>
+    ''' Disconnects from serial port.
+    ''' </summary>
     Public Overrides Sub Disconnect()
 
         CancelConnect()
@@ -56,6 +91,10 @@ Public Class SerialClient
 
     End Sub
 
+    ''' <summary>
+    ''' Sends prepared data to the server.
+    ''' </summary>
+    ''' <param name="data">The prepared data that is to be sent to the server.</param>
     Protected Overrides Sub SendPreparedData(ByVal data As Byte())
 
         If Enabled() And IsConnected() Then
@@ -66,6 +105,11 @@ Public Class SerialClient
 
     End Sub
 
+    ''' <summary>
+    ''' Determines whether specified connection string required for connecting to the serial port is valid.
+    ''' </summary>
+    ''' <param name="connectionString">The connection string to be validated.</param>
+    ''' <returns>True is the connection string is valid; otherwise False.</returns>
     Protected Overrides Function ValidConnectionString(ByVal connectionString As String) As Boolean
 
         If Not String.IsNullOrEmpty(connectionString) Then
@@ -89,10 +133,14 @@ Public Class SerialClient
 
     End Function
 
+    ''' <summary>
+    ''' Connects to the serial port.
+    ''' </summary>
+    ''' <remarks>This method is meant to be executed on a seperate thread.</remarks>
     Private Sub ConnectToPort()
 
         Dim connectionAttempts As Integer = 0
-        Do While MaximumConnectionAttempts() = -1 OrElse connectionAttempts < MaximumConnectionAttempts()
+        Do While MaximumConnectionAttempts = -1 OrElse connectionAttempts < MaximumConnectionAttempts
             Try
                 OnConnecting(EventArgs.Empty)
                 m_serialClient.Open()
@@ -111,15 +159,26 @@ Public Class SerialClient
 
     End Sub
 
+    ''' <summary>
+    ''' Receive data from the serial port (.NET serial port class raises this event when data is available)
+    ''' </summary>
     Private Sub m_serialClient_DataReceived(ByVal sender As Object, ByVal e As System.IO.Ports.SerialDataReceivedEventArgs) Handles m_serialClient.DataReceived
 
-        Dim data As Byte() = CreateArray(Of Byte)(ReceiveBufferSize())
-        Dim dataLength As Integer = m_serialClient.Read(data, 0, data.Length())
+        Dim received As Integer
 
-        If m_receiveRawDataFunction IsNot Nothing Then m_receiveRawDataFunction(data, 0, dataLength)
+        ' JRC: modified this code to make sure all available data on the serial port buffer is read, regardless of size of communication buffer
+        For x As Integer = 1 To Convert.ToInt32(System.Math.Ceiling(m_serialClient.BytesToRead / m_buffer.Length))
+            ' Retrieve data from the serial port
+            received = m_serialClient.Read(m_buffer, 0, m_buffer.Length)
 
-        data = CopyBuffer(data, 0, dataLength)
-        OnReceivedData(data)
+            ' Post raw data to real-time function delegate if defined - this bypasses all other activity
+            If m_receiveRawDataFunction IsNot Nothing Then
+                m_receiveRawDataFunction(m_buffer, 0, received)
+            Else
+                ' Unpack data and make available via event
+                OnReceivedData(CopyBuffer(m_buffer, 0, received))
+            End If
+        Next
 
     End Sub
 

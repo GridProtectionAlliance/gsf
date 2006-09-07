@@ -12,6 +12,8 @@
 '  -----------------------------------------------------------------------------------------------------
 '  07/06/2006 - Pinal C. Patel
 '       Original version of source code generated
+'  09/06/2006 - J. Ritchie Carroll
+'       Added bypass optimizations for high-speed socket access
 '
 '*******************************************************************************************************
 
@@ -37,6 +39,7 @@ Imports Tva.Common
 Imports Tva.IO.Common
 Imports Tva.Serialization
 Imports Tva.Communication.CommunicationHelper
+Imports Tva.Communication.Common
 
 Public Class UdpClient
 
@@ -47,14 +50,9 @@ Public Class UdpClient
     Private m_receivingThread As Thread
     Private m_packetBeginMarker As Byte() = {&HAA, &HBB, &HCC, &HDD}
 
-    ''' <summary>
-    ''' The maximum number of bytes that can be sent from the client to server in a single packet.
-    ''' </summary>
-    Private Const MaximumPacketSize As Integer = 32768
-
     Public Sub New(ByVal connectionString As String)
         MyClass.New()
-        MyBase.ConnectionString = ConnectionString
+        MyBase.ConnectionString = connectionString
     End Sub
 
     <Category("Data"), DefaultValue(GetType(Boolean), "False")> _
@@ -132,9 +130,9 @@ Public Class UdpClient
             ' Since we can only send MaximumPacketSize bytes in a given packet, we may need to break the actual 
             ' packet into a series of packets if the packet's size exceed the MaximumPacketSize.
             OnSendDataBegin(data)
-            For i As Integer = 0 To IIf(data.Length() > MaximumPacketSize, data.Length() - 1, 0) Step MaximumPacketSize
-                Dim packetSize As Integer = MaximumPacketSize
-                If data.Length() - i < MaximumPacketSize Then packetSize = data.Length() - i ' Last or the only packet in the series.
+            For i As Integer = 0 To IIf(data.Length() > MaximumUdpPacketSize, data.Length() - 1, 0) Step MaximumUdpPacketSize
+                Dim packetSize As Integer = MaximumUdpPacketSize
+                If data.Length() - i < MaximumUdpPacketSize Then packetSize = data.Length() - i ' Last or the only packet in the series.
                 m_udpClient.Client.BeginSendTo(data, i, packetSize, SocketFlags.None, m_udpServer, Nothing, Nothing)
             Next
             OnSendDataComplete(data)
@@ -170,8 +168,10 @@ Public Class UdpClient
             Try
                 Dim connectionAttempts As Integer = 0
                 Dim received As Integer
-                Dim buffer As Byte() = CreateArray(Of Byte)(ReceiveBufferSize)
+                Dim dataBuffer As Byte() = Nothing
+                Dim totalBytesReceived As Integer
 
+                ' Enter data read loop, socket receive will block thread while waiting for data from the server.
                 Do While True
                     If Not IsConnected() Then
                         OnConnecting(EventArgs.Empty)
@@ -185,22 +185,25 @@ Public Class UdpClient
                         End If
                     End If
 
-                    If .DataBuffer Is Nothing Then
-                        ' By default we'll prepare to receive a maximum of MaximumPacketSize from the server.
-                        .DataBuffer = CreateArray(Of Byte)(MaximumPacketSize)
-                    End If
-
                     Try
-                        '.BytesReceived += _
-                        '    .Client.ReceiveFrom(.DataBuffer, .BytesReceived, _
-                        '    .DataBuffer.Length - .BytesReceived, SocketFlags.None, CType(m_udpServer, EndPoint))
+                        ' Retrieve data from the UDP socket
+                        received += .Client.ReceiveFrom(m_buffer, 0, m_buffer.Length, SocketFlags.None, CType(m_udpServer, EndPoint))
 
-                        received += .Client.ReceiveFrom(buffer, 0, buffer.Length, SocketFlags.None, CType(m_udpServer, EndPoint))
-                        If m_receiveRawDataFunction IsNot Nothing Then m_receiveRawDataFunction(buffer, 0, received)
+                        ' Post raw data to real-time function delegate if defined - this bypasses all other activity
+                        If m_receiveRawDataFunction IsNot Nothing Then
+                            m_receiveRawDataFunction(m_buffer, 0, received)
+                            Continue Do
+                        End If
 
-                        ' Copy local buffer into member state buffer
-                        System.Buffer.BlockCopy(buffer, 0, .DataBuffer, 0, received)
-                        .BytesReceived += received
+                        ' By default we'll prepare to receive a maximum of MaximumUdpPacketSize from the server.
+                        If dataBuffer Is Nothing Then
+                            dataBuffer = CreateArray(Of Byte)(MaximumUdpPacketSize)
+                            totalBytesReceived = 0
+                        End If
+
+                        ' Copy data into local cumulative buffer to start the unpacking process and eventually make the data available via event
+                        Buffer.BlockCopy(m_buffer, 0, dataBuffer, totalBytesReceived, dataBuffer.Length - totalBytesReceived)
+                        totalBytesReceived += received
                     Catch ex As SocketException
                         If ex.SocketErrorCode = SocketError.TimedOut Then
                             .Client.Blocking = True
@@ -226,47 +229,50 @@ Public Class UdpClient
                     If m_payloadAware Then
                         If .PacketSize = -1 Then
                             ' We have not yet received the payload size. 
-                            If HasBeginMarker(.DataBuffer) Then
+                            If HasBeginMarker(dataBuffer) Then
                                 ' This packet has the payload size.
-                                .PacketSize = BitConverter.ToInt32(.DataBuffer, m_packetBeginMarker.Length())
+                                .PacketSize = BitConverter.ToInt32(dataBuffer, m_packetBeginMarker.Length())
                                 ' We'll save the payload received in this packet.
-                                Dim tempBuffer As Byte() = CreateArray(Of Byte)(IIf(.PacketSize < MaximumPacketSize - 8, .PacketSize, MaximumPacketSize - 8))
-                                System.Buffer.BlockCopy(.DataBuffer, 8, tempBuffer, 0, tempBuffer.Length)
-                                .DataBuffer = CreateArray(Of Byte)(.PacketSize)
-                                System.Buffer.BlockCopy(tempBuffer, 0, .DataBuffer, 0, tempBuffer.Length)
-                                .BytesReceived = tempBuffer.Length
+                                Dim tempBuffer As Byte() = CreateArray(Of Byte)(IIf(.PacketSize < MaximumUdpPacketSize - 8, .PacketSize, MaximumUdpPacketSize - 8))
+                                Buffer.BlockCopy(dataBuffer, 8, tempBuffer, 0, tempBuffer.Length)
+                                dataBuffer = CreateArray(Of Byte)(.PacketSize)
+                                totalBytesReceived = 0
+                                Buffer.BlockCopy(tempBuffer, 0, dataBuffer, 0, tempBuffer.Length)
+                                totalBytesReceived = tempBuffer.Length
                             Else
                                 ' We'll wait for a packet that has payload size.
                                 Continue Do
                             End If
                         End If
-                        If .BytesReceived < .PacketSize Then
+                        If totalBytesReceived < .PacketSize Then
                             Continue Do
                         End If
                     Else
-                        .DataBuffer = CopyBuffer(.DataBuffer, 0, .BytesReceived)
+                        dataBuffer = CopyBuffer(dataBuffer, 0, totalBytesReceived)
+                        totalBytesReceived = 0
                     End If
 
                     If ServerID = Guid.Empty AndAlso Handshake Then
-                        Dim serverInfo As HandshakeMessage = GetObject(Of HandshakeMessage)(GetActualData(.DataBuffer))
+                        Dim serverInfo As HandshakeMessage = GetObject(Of HandshakeMessage)(GetActualData(dataBuffer))
                         If serverInfo IsNot Nothing Then
                             ServerID = serverInfo.ID
                             .Passphrase = serverInfo.Passphrase
                             OnConnected(EventArgs.Empty)
                         End If
                     Else
-                        If Handshake AndAlso _
-                                GetObject(Of GoodbyeMessage)(GetActualData(.DataBuffer)) IsNot Nothing Then
+                        If Handshake AndAlso GetObject(Of GoodbyeMessage)(GetActualData(dataBuffer)) IsNot Nothing Then
                             Exit Do
                         End If
                         If SecureSession Then
-                            .DataBuffer = DecryptData(.DataBuffer, .Passphrase, Encryption)
+                            dataBuffer = DecryptData(dataBuffer, .Passphrase, Encryption)
+                            totalBytesReceived = 0
                         End If
 
-                        OnReceivedData(.DataBuffer)
+                        OnReceivedData(dataBuffer)
                     End If
 
-                    .DataBuffer = Nothing
+                    dataBuffer = Nothing
+                    totalBytesReceived = 0
                     .PacketSize = -1
                 Loop
             Catch ex As Exception

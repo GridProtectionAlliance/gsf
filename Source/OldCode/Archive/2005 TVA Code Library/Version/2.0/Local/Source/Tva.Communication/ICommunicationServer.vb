@@ -1,6 +1,26 @@
-' 07-26-06
+'*******************************************************************************************************
+'  Tva.Communication.ICommunicationClient.vb - Abstract communications client interface
+'  Copyright © 2006 - TVA, all rights reserved - Gbtc
+'
+'  Build Environment: VB.NET, Visual Studio 2005
+'  Primary Developer: Pinal C. Patel, Operations Data Architecture [TVA]
+'      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
+'       Phone: 423/751-2250
+'       Email: pcpatel@tva.gov
+'
+'  Code Modification History:
+'  -----------------------------------------------------------------------------------------------------
+'  07/26/2006 - Pinal C. Patel
+'       Original version of source code generated
+'  09/06/2006 - J. Ritchie Carroll
+'       Added ReceiveRawDataFunction delegate to allow bypass optimizations for high-speed data access
+'
+'*******************************************************************************************************
+
+Imports Tva.Communication.Common
 
 Public Interface ICommunicationServer
+
     Inherits Tva.Services.IServiceComponent
 
     ''' <summary>
@@ -12,6 +32,12 @@ Public Interface ICommunicationServer
     ''' Occurs when the server is stopped.
     ''' </summary>
     Event ServerStopped As EventHandler
+
+    ''' <summary>
+    ''' Occurs when an exception is encountered while starting up the server.
+    ''' </summary>
+    ''' <param name="ex">The exception that was encountered while connecting to the server.</param>
+    Event ServerStartupException(ByVal ex As Exception)
 
     ''' <summary>
     ''' Occurs when a client is connected to the server.
@@ -216,5 +242,10 @@ Public Interface ICommunicationServer
     ''' <param name="offset">The zero-based position in the buffer parameter at which to begin sending data.</param>
     ''' <param name="size">The number of bytes to be sent.</param>
     Sub Multicast(ByVal data As Byte(), ByVal offset As Integer, ByVal size As Integer)
+
+    ''' <summary>
+    ''' Setting this property allows consumer to "intercept" data before it goes through normal processing
+    ''' </summary>
+    Property ReceiveRawDataFunction() As ReceiveRawDataFunctionSignature
 
 End Interface

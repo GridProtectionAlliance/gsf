@@ -12,6 +12,8 @@
 '  -----------------------------------------------------------------------------------------------------
 '  07/24/2006 - Pinal C. Patel
 '       Original version of source code generated
+'  09/06/2006 - J. Ritchie Carroll
+'       Added bypass optimizations for high-speed file data access
 '
 '*******************************************************************************************************
 
@@ -151,7 +153,7 @@ Public Class FileClient
     End Sub
 
     ''' <summary>
-    ''' Disconnects from the file it is connected to.
+    ''' Disconnects from the file (i.e., closes the file stream).
     ''' </summary>
     Public Overrides Sub Disconnect()
 
@@ -244,14 +246,23 @@ Public Class FileClient
 
         Try
             With m_fileClient
-                Do While .Client.Position() < .Client.Length()  ' Process the entire file content.
-                    .DataBuffer = CreateArray(Of Byte)(ReceiveBufferSize())
-                    .BytesReceived = .Client.Read(.DataBuffer, 0, .DataBuffer.Length())
+                Dim received As Integer
 
-                    If m_receiveRawDataFunction IsNot Nothing Then m_receiveRawDataFunction(.DataBuffer, 0, .BytesReceived)
+                ' Process the entire file content
+                Do While .Client.Position < .Client.Length
+                    ' Retrieve data from the file stream
+                    received = .Client.Read(m_buffer, 0, m_buffer.Length)
 
-                    .DataBuffer = CopyBuffer(.DataBuffer, 0, .BytesReceived)
-                    OnReceivedData(.DataBuffer)
+                    ' Post raw data to real-time function delegate
+                    If m_receiveRawDataFunction IsNot Nothing Then m_receiveRawDataFunction(m_buffer, 0, received)
+
+                    ' Post raw data to real-time function delegate if defined - this bypasses all other activity
+                    If m_receiveRawDataFunction IsNot Nothing Then
+                        m_receiveRawDataFunction(m_buffer, 0, received)
+                    Else
+                        ' Unpack data and make available via event
+                        OnReceivedData(CopyBuffer(m_buffer, 0, received))
+                    End If
 
                     ' We must stop processing the file if user has either opted to receive data on 
                     ' demand or receive data at a predefined interval.

@@ -1,4 +1,23 @@
-' 07-26-06
+'*******************************************************************************************************
+'  Tva.Communication.ICommunicationClient.vb - Abstract communications client interface
+'  Copyright © 2006 - TVA, all rights reserved - Gbtc
+'
+'  Build Environment: VB.NET, Visual Studio 2005
+'  Primary Developer: Pinal C. Patel, Operations Data Architecture [TVA]
+'      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
+'       Phone: 423/751-2250
+'       Email: pcpatel@tva.gov
+'
+'  Code Modification History:
+'  -----------------------------------------------------------------------------------------------------
+'  07/26/2006 - Pinal C. Patel
+'       Original version of source code generated
+'  09/06/2006 - J. Ritchie Carroll
+'       Added ReceiveRawDataFunction delegate to allow bypass optimizations for high-speed data access
+'
+'*******************************************************************************************************
+
+Imports Tva.Communication.Common
 
 Public Interface ICommunicationClient
 
@@ -238,6 +257,6 @@ Public Interface ICommunicationClient
     ''' <summary>
     ''' Setting this property allows consumer to "intercept" data before it goes through normal processing
     ''' </summary>
-    Property ReceiveRawDataFunction() As Common.ReceiveRawDataFunctionSignature
+    Property ReceiveRawDataFunction() As ReceiveRawDataFunctionSignature
 
 End Interface

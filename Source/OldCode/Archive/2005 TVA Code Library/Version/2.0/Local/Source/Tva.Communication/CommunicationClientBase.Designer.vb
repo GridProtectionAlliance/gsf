@@ -15,7 +15,10 @@
 '
 '*******************************************************************************************************
 
+Imports Tva.Common
+
 Partial Class CommunicationClientBase
+
     Inherits System.ComponentModel.Component
 
     <System.Diagnostics.DebuggerNonUserCode()> _
@@ -33,6 +36,7 @@ Partial Class CommunicationClientBase
 
         'This call is required by the Component Designer.
         InitializeComponent()
+
         ' Setup the default values.
         m_connectionString = ""
         m_receiveBufferSize = 8192
@@ -51,6 +55,7 @@ Partial Class CommunicationClientBase
         m_disconnectTime = 0
         m_totalBytesSent = 0
         m_totalBytesReceived = 0
+        m_buffer = CreateArray(Of Byte)(m_receiveBufferSize)
 
     End Sub
 

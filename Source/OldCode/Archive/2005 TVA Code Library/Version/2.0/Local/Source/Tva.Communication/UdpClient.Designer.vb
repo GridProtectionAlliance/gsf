@@ -15,7 +15,10 @@
 '
 '*******************************************************************************************************
 
+Imports Tva.Communication.Common
+
 Partial Class UdpClient
+
     Inherits Tva.Communication.CommunicationClientBase
 
     <System.Diagnostics.DebuggerNonUserCode()> _
@@ -36,6 +39,7 @@ Partial Class UdpClient
         m_payloadAware = False
         MyBase.ConnectionString = "Server=localhost; RemotePort=8888; LocalPort=8888"
         MyBase.Protocol = TransportProtocol.Udp
+        MyBase.ReceiveBufferSize = MaximumUdpPacketSize
 
     End Sub
 

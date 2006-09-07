@@ -7,9 +7,7 @@ Friend Class StateKeeper(Of T)
 
     Public Client As T
     Public ID As Guid
-    'Public DataBuffer As Byte()
     Public Passphrase As String
-    Public BytesReceived As Integer
     Public PacketSize As Integer
 
     Public Sub New()
@@ -17,6 +15,17 @@ Friend Class StateKeeper(Of T)
         PacketSize = -1
 
     End Sub
+
+    Public ReadOnly Property This() As StateKeeper(Of T)
+        Get
+            Return Me
+        End Get
+    End Property
+
+#Region " Old Code "
+
+    'Public DataBuffer As Byte()
+    'Public BytesReceived As Integer
 
     'Public Property ID() As Guid
     '    Get
@@ -36,15 +45,15 @@ Friend Class StateKeeper(Of T)
     '    End Set
     'End Property
 
-    Public Property DataBuffer() As Byte()
-        Get
-            Return m_dataBuffer
-        End Get
-        Set(ByVal value As Byte())
-            m_dataBuffer = value
-            m_bytesReceived = 0
-        End Set
-    End Property
+    'Public Property DataBuffer() As Byte()
+    '    Get
+    '        Return m_dataBuffer
+    '    End Get
+    '    Set(ByVal value As Byte())
+    '        m_dataBuffer = value
+    '        m_bytesReceived = 0
+    '    End Set
+    'End Property
 
     'Public Property Passphrase() As String
     '    Get
@@ -72,5 +81,7 @@ Friend Class StateKeeper(Of T)
     '        m_packetSize = value
     '    End Set
     'End Property
+
+#End Region
 
 End Class
