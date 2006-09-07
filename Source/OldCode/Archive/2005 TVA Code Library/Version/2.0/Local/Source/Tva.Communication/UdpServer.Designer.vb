@@ -15,7 +15,10 @@
 '
 '*******************************************************************************************************
 
+Imports Tva.Communication.Common
+
 Partial Class UdpServer
+
     Inherits Tva.Communication.CommunicationServerBase
 
     <System.Diagnostics.DebuggerNonUserCode()> _
@@ -38,6 +41,7 @@ Partial Class UdpServer
         m_pendingUdpClients = New List(Of System.Net.IPAddress)
         MyBase.ConfigurationString = "Port=8888; Clients=255.255.255.255"
         MyBase.Protocol = TransportProtocol.Udp
+        MyBase.ReceiveBufferSize = MaximumUdpPacketSize
 
     End Sub
 
