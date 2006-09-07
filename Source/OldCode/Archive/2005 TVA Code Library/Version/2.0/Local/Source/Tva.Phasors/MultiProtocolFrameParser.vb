@@ -78,7 +78,6 @@ Public Class MultiProtocolFrameParser
     Private m_byteRate As Double
     Private m_sourceName As String
     Private m_definedFrameRate As Double
-    Private m_dataFrameReceived As Boolean
     Private m_lastFrameReceivedTime As Long
     Private m_autoStartDataParsingSequence As Boolean
 
@@ -242,19 +241,13 @@ Public Class MultiProtocolFrameParser
                     m_communicationClient = New UdpClient
                 Case TransportProtocol.Serial
                     m_communicationClient = New SerialClient
-                Case Communication.TransportProtocol.File
-                    Dim fileClient As New FileClient
-                    fileClient.ReceiveInterval = m_definedFrameRate
-                    m_communicationClient = fileClient
+                Case TransportProtocol.File
+                    m_communicationClient = New FileClient
             End Select
 
             With m_communicationClient
                 .ReceiveRawDataFunction = AddressOf IFrameParserWrite
-                If .Protocol = Communication.TransportProtocol.File Then
-                    .ReceiveBufferSize = 32
-                Else
-                    .ReceiveBufferSize = m_bufferSize
-                End If
+                .ReceiveBufferSize = m_bufferSize
                 .ConnectionString = m_connectionString
                 .MaximumConnectionAttempts = m_maximumConnectionAttempts
                 .Handshake = False
@@ -280,7 +273,7 @@ Public Class MultiProtocolFrameParser
         m_frameParser = Nothing
 
         m_configurationFrame = Nothing
-        m_dataFrameReceived = False
+        m_lastFrameReceivedTime = 0
 
     End Sub
 
@@ -476,15 +469,13 @@ Public Class MultiProtocolFrameParser
         m_frameRateTotal += 1
         RaiseEvent ReceivedDataFrame(frame)
 
-        If m_transportProtocol = Communication.TransportProtocol.File Then
-            ' We adjust buffer size to equal data frame length on captured file streams
-            If Not m_dataFrameReceived Then
-                DirectCast(m_communicationClient, FileClient).ReceiveBufferSize = frame.BinaryLength
-                m_dataFrameReceived = True
-            End If
-
-            m_lastFrameReceivedTime = Date.Now.Ticks
+        If m_transportProtocol = Communication.TransportProtocol.File AndAlso m_lastFrameReceivedTime > 0 Then
+            ' To keep precise timing on "frames per second", we wait for defined frame rate interval
+            Dim sleepTime As Double = m_definedFrameRate - TicksToSeconds(Date.Now.Ticks - m_lastFrameReceivedTime)
+            If sleepTime > 0 Then Thread.Sleep(sleepTime * 1000)
         End If
+
+        m_lastFrameReceivedTime = Date.Now.Ticks
 
     End Sub
 
@@ -600,11 +591,6 @@ Public Class MultiProtocolFrameParser
 
         m_frameParser.Write(buffer, offset, count)
         m_byteRateTotal += count
-
-        If m_transportProtocol = Communication.TransportProtocol.File Then
-            ' To keep precise timing on "frames per second", we wait for defined frame rate interval
-            Thread.Sleep((m_definedFrameRate - TicksToSeconds(Date.Now.Ticks - m_lastFrameReceivedTime)) * 1000)
-        End If
 
     End Sub
 
