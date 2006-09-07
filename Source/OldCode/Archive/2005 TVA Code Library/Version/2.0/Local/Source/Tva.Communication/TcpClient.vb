@@ -242,7 +242,7 @@ Public Class TcpClient
 
                         ' Copy data into local cumulative buffer to start the unpacking process and eventually make the data available via event
                         Buffer.BlockCopy(m_buffer, 0, dataBuffer, totalBytesReceived, dataBuffer.Length - totalBytesReceived)
-                        totalBytesReceived += received
+                        totalBytesReceived += (dataBuffer.Length - totalBytesReceived)
                     Catch ex As SocketException
                         If ex.SocketErrorCode() = SocketError.TimedOut Then
                             OnReceiveTimedOut(EventArgs.Empty)  ' Notify that a timeout has been encountered.

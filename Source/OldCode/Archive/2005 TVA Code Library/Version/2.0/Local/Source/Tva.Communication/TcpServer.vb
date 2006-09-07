@@ -264,7 +264,7 @@ Public Class TcpServer
 
                         ' Copy data into local cumulative buffer to start the unpacking process and eventually make the data available via event
                         Buffer.BlockCopy(m_buffer, 0, dataBuffer, totalBytesReceived, dataBuffer.Length - totalBytesReceived)
-                        totalBytesReceived += received
+                        totalBytesReceived += (dataBuffer.Length - totalBytesReceived)
 
                         If m_payloadAware Then
                             If .PacketSize = -1 AndAlso totalBytesReceived = TcpPacketHeaderSize Then
