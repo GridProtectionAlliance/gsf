@@ -168,6 +168,7 @@ Public Class UdpClient
             Try
                 Dim connectionAttempts As Integer = 0
                 Dim received As Integer
+                Dim length As Integer
                 Dim dataBuffer As Byte() = Nothing
                 Dim totalBytesReceived As Integer
 
@@ -185,25 +186,21 @@ Public Class UdpClient
                         End If
                     End If
 
+                    If m_receiveRawDataFunction Is Nothing Then
+                        length = MaximumUdpPacketSize
+                    Else
+                        length = m_buffer.Length
+                    End If
+
                     Try
                         ' Retrieve data from the UDP socket
-                        received += .Client.ReceiveFrom(m_buffer, 0, m_buffer.Length, SocketFlags.None, CType(m_udpServer, EndPoint))
+                        received += .Client.ReceiveFrom(m_buffer, 0, length, SocketFlags.None, CType(m_udpServer, EndPoint))
 
                         ' Post raw data to real-time function delegate if defined - this bypasses all other activity
                         If m_receiveRawDataFunction IsNot Nothing Then
                             m_receiveRawDataFunction(m_buffer, 0, received)
                             Continue Do
                         End If
-
-                        ' By default we'll prepare to receive a maximum of MaximumUdpPacketSize from the server.
-                        If dataBuffer Is Nothing Then
-                            dataBuffer = CreateArray(Of Byte)(MaximumUdpPacketSize)
-                            totalBytesReceived = 0
-                        End If
-
-                        ' Copy data into local cumulative buffer to start the unpacking process and eventually make the data available via event
-                        Buffer.BlockCopy(m_buffer, 0, dataBuffer, totalBytesReceived, dataBuffer.Length - totalBytesReceived)
-                        totalBytesReceived += (dataBuffer.Length - totalBytesReceived)
                     Catch ex As SocketException
                         If ex.SocketErrorCode = SocketError.TimedOut Then
                             .Client.Blocking = True
@@ -226,6 +223,16 @@ Public Class UdpClient
                         Throw
                     End Try
 
+                    ' By default we'll prepare to receive a maximum of MaximumUdpPacketSize from the server.
+                    If dataBuffer Is Nothing Then
+                        dataBuffer = CreateArray(Of Byte)(length)
+                        totalBytesReceived = 0
+                    End If
+
+                    ' Copy data into local cumulative buffer to start the unpacking process and eventually make the data available via event
+                    Buffer.BlockCopy(m_buffer, 0, dataBuffer, totalBytesReceived, dataBuffer.Length - totalBytesReceived)
+                    totalBytesReceived += received
+
                     If m_payloadAware Then
                         If .PacketSize = -1 Then
                             ' We have not yet received the payload size. 
@@ -236,9 +243,9 @@ Public Class UdpClient
                                 Dim tempBuffer As Byte() = CreateArray(Of Byte)(IIf(.PacketSize < MaximumUdpPacketSize - 8, .PacketSize, MaximumUdpPacketSize - 8))
                                 Buffer.BlockCopy(dataBuffer, 8, tempBuffer, 0, tempBuffer.Length)
                                 dataBuffer = CreateArray(Of Byte)(.PacketSize)
-                                totalBytesReceived = 0
                                 Buffer.BlockCopy(tempBuffer, 0, dataBuffer, 0, tempBuffer.Length)
                                 totalBytesReceived = tempBuffer.Length
+                                length = dataBuffer.Length
                             Else
                                 ' We'll wait for a packet that has payload size.
                                 Continue Do
@@ -273,6 +280,7 @@ Public Class UdpClient
 
                     dataBuffer = Nothing
                     totalBytesReceived = 0
+                    length = MaximumUdpPacketSize
                     .PacketSize = -1
                 Loop
             Catch ex As Exception

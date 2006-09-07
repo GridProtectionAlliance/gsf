@@ -167,14 +167,21 @@ Public Class UdpServer
         With m_udpServer
             Try
                 Dim received As Integer
+                Dim length As Integer
                 Dim dataBuffer As Byte() = Nothing
                 Dim totalBytesReceived As Integer                
                 Dim clientEndPoint As EndPoint = New IPEndPoint(IPAddress.Any, 0) ' Used to capture the client's identity.
 
+                If m_receiveRawDataFunction Is Nothing Then
+                    length = MaximumUdpPacketSize
+                Else
+                    length = m_buffer.Length
+                End If
+
                 ' Enter data read loop, socket receive will block thread while waiting for data from the client.
                 Do While True
                     ' Retrieve data from the UDP socket
-                    received += .Client.ReceiveFrom(m_buffer, 0, m_buffer.Length, SocketFlags.None, clientEndPoint)
+                    received += .Client.ReceiveFrom(m_buffer, 0, length, SocketFlags.None, clientEndPoint)
 
                     ' Post raw data to real-time function delegate if defined - this bypasses all other activity
                     If m_receiveRawDataFunction IsNot Nothing Then
@@ -184,13 +191,13 @@ Public Class UdpServer
 
                     If dataBuffer Is Nothing Then
                         ' By default we'll prepare to receive a maximum of MaximumPacketSize from the server.
-                        dataBuffer = CreateArray(Of Byte)(MaximumUdpPacketSize)
+                        dataBuffer = CreateArray(Of Byte)(length)
                         totalBytesReceived = 0
                     End If
 
                     ' Copy data into local cumulative buffer to start the unpacking process and eventually make the data available via event
                     Buffer.BlockCopy(m_buffer, 0, dataBuffer, totalBytesReceived, dataBuffer.Length - totalBytesReceived)
-                    totalBytesReceived += (dataBuffer.Length - totalBytesReceived)
+                    totalBytesReceived += received
 
                     If m_payloadAware Then
                         If .PacketSize = -1 Then
@@ -269,6 +276,7 @@ Public Class UdpServer
 
                     dataBuffer = Nothing
                     totalBytesReceived = 0
+                    length = MaximumUdpPacketSize
                     .PacketSize = -1
                 Loop
             Catch ex As Exception

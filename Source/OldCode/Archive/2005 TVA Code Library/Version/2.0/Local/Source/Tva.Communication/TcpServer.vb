@@ -240,13 +240,24 @@ Public Class TcpServer
                 End If
 
                 Dim received As Integer
+                Dim length As Integer
                 Dim dataBuffer As Byte() = Nothing
                 Dim totalBytesReceived As Integer
+
+                If m_receiveRawDataFunction Is Nothing Then
+                    If m_payloadAware Then
+                        length = TcpPacketHeaderSize
+                    Else
+                        length = ReceiveBufferSize
+                    End If
+                Else
+                    length = m_buffer.Length
+                End If
 
                 ' Enter data read loop, this blocks thread while waiting for data from the client.
                 Do While True
                     ' Retrieve data from the TCP socket
-                    received = .Client.Receive(m_buffer, 0, m_buffer.Length, SocketFlags.None)
+                    received = .Client.Receive(m_buffer, 0, length, SocketFlags.None)
 
                     If received > 0 Then
                         ' Post raw data to real-time function delegate if defined - this bypasses all other activity
@@ -256,15 +267,13 @@ Public Class TcpServer
                         End If
 
                         If dataBuffer Is Nothing Then
-                            Dim bufferSize As Integer = TcpPacketHeaderSize
-                            If Not m_payloadAware Then bufferSize = ReceiveBufferSize()
-                            dataBuffer = CreateArray(Of Byte)(bufferSize)
+                            dataBuffer = CreateArray(Of Byte)(length)
                             totalBytesReceived = 0
                         End If
 
                         ' Copy data into local cumulative buffer to start the unpacking process and eventually make the data available via event
                         Buffer.BlockCopy(m_buffer, 0, dataBuffer, totalBytesReceived, dataBuffer.Length - totalBytesReceived)
-                        totalBytesReceived += (dataBuffer.Length - totalBytesReceived)
+                        totalBytesReceived += received
 
                         If m_payloadAware Then
                             If .PacketSize = -1 AndAlso totalBytesReceived = TcpPacketHeaderSize Then
@@ -273,6 +282,7 @@ Public Class TcpServer
                                 If .PacketSize <= MaximumDataSize Then
                                     dataBuffer = CreateArray(Of Byte)(.PacketSize)
                                     totalBytesReceived = 0
+                                    length = dataBuffer.Length
                                     Continue Do
                                 Else
                                     Exit Do ' Packet size is not valid.
@@ -331,6 +341,11 @@ Public Class TcpServer
                         .PacketSize = -1
                         dataBuffer = Nothing
                         totalBytesReceived = 0
+                        If m_payloadAware Then
+                            length = TcpPacketHeaderSize
+                        Else
+                            length = ReceiveBufferSize
+                        End If
                     Else
                         ' Connection is forcibly closed by the client.
                         Exit Do
