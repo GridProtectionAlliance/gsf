@@ -24,6 +24,7 @@ Public Class ClientHelper
 
     Public Sub SendRequest(ByVal request As ClientRequest)
 
+        RaiseEvent UpdateStatus("Connecting...")
         CHTcpClient.Send(request)
 
     End Sub
@@ -32,13 +33,13 @@ Public Class ClientHelper
 
     Private Sub CHTcpClient_Connected(ByVal sender As Object, ByVal e As System.EventArgs) Handles CHTcpClient.Connected
 
-        RaiseEvent UpdateStatus("Connected!")
+        RaiseEvent UpdateStatus("Done")
 
     End Sub
 
     Private Sub CHTcpClient_Connecting(ByVal sender As Object, ByVal e As System.EventArgs) Handles CHTcpClient.Connecting
 
-        RaiseEvent UpdateStatus("Connecting...")
+        RaiseEvent UpdateStatus(".")
 
     End Sub
 

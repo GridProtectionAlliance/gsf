@@ -2,6 +2,7 @@
 
 Imports System.ComponentModel
 Imports System.ServiceProcess
+Imports Tva.Services
 Imports Tva.Tro.Ssam
 Imports Tva.Communication
 Imports Tva.Serialization
@@ -129,7 +130,7 @@ Public Class ServiceHelper
     ''' Gets a list of all the components that implement the Tva.Services.IServiceComponent interface.
     ''' </summary>
     ''' <value></value>
-    ''' <returns></returns>
+    ''' <returns>An instance of System.Collections.Generic.List(Of Tva.Services.IServiceComponent).</returns>
     <Browsable(False)> _
     Public ReadOnly Property ServiceComponents() As List(Of IServiceComponent)
         Get
@@ -137,6 +138,9 @@ Public Class ServiceHelper
         End Get
     End Property
 
+    ''' <summary>
+    ''' To be called when the service is starts (inside the service's OnStart method).
+    ''' </summary>
     Public Sub OnStart()
 
         For Each component As IServiceComponent In m_serviceComponents
@@ -147,6 +151,9 @@ Public Class ServiceHelper
 
     End Sub
 
+    ''' <summary>
+    ''' To be called when the service is stopped (inside the service's OnStop method).
+    ''' </summary>
     Public Sub OnStop()
 
         For Each component As IServiceComponent In m_serviceComponents
@@ -157,6 +164,9 @@ Public Class ServiceHelper
 
     End Sub
 
+    ''' <summary>
+    ''' To be called when the service is paused (inside the service's OnPause method).
+    ''' </summary>
     Public Sub OnPause()
 
         For Each component As IServiceComponent In m_serviceComponents
@@ -167,6 +177,9 @@ Public Class ServiceHelper
 
     End Sub
 
+    ''' <summary>
+    ''' To be called when the service is resumed (inside the service's OnContinue method).
+    ''' </summary>
     Public Sub OnResume()
 
         For Each component As IServiceComponent In m_serviceComponents
@@ -177,6 +190,9 @@ Public Class ServiceHelper
 
     End Sub
 
+    ''' <summary>
+    ''' To be when the system is shutting down (inside the service's OnShutdown method).
+    ''' </summary>
     Public Sub OnShutdown()
 
         For Each component As IServiceComponent In m_serviceComponents
@@ -184,6 +200,14 @@ Public Class ServiceHelper
         Next
 
         RaiseEvent Shutdown(Me, EventArgs.Empty)
+
+    End Sub
+
+    Public Sub ProcessStateChanged(ByVal processName As String, ByVal processState As ProcessState)
+
+        For Each component As IServiceComponent In m_serviceComponents
+            component.ProcessStateChanged(processName, processState)
+        Next
 
     End Sub
 
