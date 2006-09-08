@@ -443,7 +443,7 @@ Public MustInherit Class CommunicationClientBase
     <Browsable(False)> _
     Public Overridable ReadOnly Property ConnectionTime() As Double Implements ICommunicationClient.ConnectionTime
         Get
-            Dim clientConnectionTime As Double = 0
+            Dim clientConnectionTime As Double
             If m_connectTime > 0 Then
                 If m_isConnected Then   ' Client is connected to the server.
                     clientConnectionTime = TicksToSeconds(System.DateTime.Now.Ticks() - m_connectTime)

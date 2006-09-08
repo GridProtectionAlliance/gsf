@@ -389,7 +389,7 @@ Public MustInherit Class CommunicationServerBase
     <Browsable(False)> _
     Public Overridable ReadOnly Property RunTime() As Double Implements ICommunicationServer.RunTime
         Get
-            Dim serverRunTime As Double = 0
+            Dim serverRunTime As Double
             If m_startTime > 0 Then
                 If m_isRunning Then ' Server is running.
                     serverRunTime = TicksToSeconds(System.DateTime.Now.Ticks() - m_startTime)
