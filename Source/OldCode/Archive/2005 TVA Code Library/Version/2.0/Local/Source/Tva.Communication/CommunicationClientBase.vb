@@ -247,7 +247,9 @@ Public MustInherit Class CommunicationClientBase
     ''' <summary>
     ''' Gets or sets the maximum number of bytes that can be received at a time by the client from the server.
     ''' </summary>
-    ''' <value></value>
+    ''' <value>Receive buffer size</value>
+    ''' <exception cref="InvalidOperationException">This exception will be thrown if an attempt is made to change the receive buffer size while client is connected</exception>
+    ''' <exception cref="ArgumentOutOfRangeException">This exception will be thrown if an attempt is made to set the receive buffer size to a value that is less than one</exception>
     ''' <returns>The maximum number of bytes that can be received at a time by the client from the server.</returns>
     <Description("The maximum number of bytes that can be received at a time by the client from the server."), Category("Data"), DefaultValue(GetType(Integer), "8192")> _
     Public Overridable Property ReceiveBufferSize() As Integer Implements ICommunicationClient.ReceiveBufferSize
