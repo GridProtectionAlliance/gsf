@@ -342,29 +342,29 @@ Namespace Ieee1344
 
         Private Sub RaiseReceivedCommonFrameHeader(ByVal frame As ICommonFrameHeader)
 
-            RaiseEvent ReceivedCommonFrameHeader(frame)
             RaiseEvent IFrameParserReceivedUndeterminedFrame(frame)
+            RaiseEvent ReceivedCommonFrameHeader(frame)
 
         End Sub
 
         Private Sub RaiseReceivedConfigurationFrame(ByVal frame As ConfigurationFrame)
 
-            RaiseEvent ReceivedConfigurationFrame(frame)
             RaiseEvent IFrameParserReceivedConfigurationFrame(frame)
+            RaiseEvent ReceivedConfigurationFrame(frame)
 
         End Sub
 
         Private Sub RaiseReceivedDataFrame(ByVal frame As DataFrame)
 
-            RaiseEvent ReceivedDataFrame(frame)
             RaiseEvent IFrameParserReceivedDataFrame(frame)
+            RaiseEvent ReceivedDataFrame(frame)
 
         End Sub
 
         Private Sub RaiseReceivedHeaderFrame(ByVal frame As HeaderFrame)
 
-            RaiseEvent ReceivedHeaderFrame(frame)
             RaiseEvent IFrameParserReceivedHeaderFrame(frame)
+            RaiseEvent ReceivedHeaderFrame(frame)
 
         End Sub
 

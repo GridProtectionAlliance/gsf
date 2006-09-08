@@ -103,6 +103,7 @@ Namespace IeeeC37_118
         Public Sub Start() Implements IFrameParser.Start
 
             m_initialized = False
+            m_configurationChangeHandled = False
             m_bufferQueue.Start()
 
         End Sub
@@ -384,29 +385,29 @@ Namespace IeeeC37_118
 
         Private Sub RaiseReceivedCommonFrameHeader(ByVal frame As ICommonFrameHeader)
 
-            RaiseEvent ReceivedCommonFrameHeader(frame)
             RaiseEvent IFrameParserReceivedUndeterminedFrame(frame)
+            RaiseEvent ReceivedCommonFrameHeader(frame)
 
         End Sub
 
         Private Sub RaiseReceivedConfigurationFrame1(ByVal frame As ConfigurationFrame)
 
-            RaiseEvent ReceivedConfigurationFrame1(frame)
             RaiseEvent IFrameParserReceivedConfigurationFrame(frame)
+            RaiseEvent ReceivedConfigurationFrame1(frame)
 
         End Sub
 
         Private Sub RaiseReceivedConfigurationFrame2(ByVal frame As ConfigurationFrame)
 
-            RaiseEvent ReceivedConfigurationFrame2(frame)
             RaiseEvent IFrameParserReceivedConfigurationFrame(frame)
+            RaiseEvent ReceivedConfigurationFrame2(frame)
 
         End Sub
 
         Private Sub RaiseReceivedDataFrame(ByVal frame As DataFrame)
 
-            RaiseEvent ReceivedDataFrame(frame)
             RaiseEvent IFrameParserReceivedDataFrame(frame)
+            RaiseEvent ReceivedDataFrame(frame)
 
             ' We only need to look at first PMU data cell to determine if configuration has changed
             If frame.Cells.Count > 0 Then
@@ -425,15 +426,15 @@ Namespace IeeeC37_118
 
         Private Sub RaiseReceivedHeaderFrame(ByVal frame As HeaderFrame)
 
-            RaiseEvent ReceivedHeaderFrame(frame)
             RaiseEvent IFrameParserReceivedHeaderFrame(frame)
+            RaiseEvent ReceivedHeaderFrame(frame)
 
         End Sub
 
         Private Sub RaiseReceivedCommandFrame(ByVal frame As CommandFrame)
 
-            RaiseEvent ReceivedCommandFrame(frame)
             RaiseEvent IFrameParserReceivedCommandFrame(frame)
+            RaiseEvent ReceivedCommandFrame(frame)
 
         End Sub
 

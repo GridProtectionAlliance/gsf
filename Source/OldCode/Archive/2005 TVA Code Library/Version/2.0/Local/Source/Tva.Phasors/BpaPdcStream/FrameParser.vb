@@ -323,15 +323,15 @@ Namespace BpaPdcStream
 
         Private Sub RaiseReceivedConfigurationFrame(ByVal frame As ConfigurationFrame)
 
-            RaiseEvent ReceivedConfigurationFrame(frame)
             RaiseEvent IFrameParserReceivedConfigurationFrame(frame)
+            RaiseEvent ReceivedConfigurationFrame(frame)
 
         End Sub
 
         Private Sub RaiseReceivedDataFrame(ByVal frame As DataFrame)
 
-            RaiseEvent ReceivedDataFrame(frame)
             RaiseEvent IFrameParserReceivedDataFrame(frame)
+            RaiseEvent ReceivedDataFrame(frame)
 
         End Sub
 
