@@ -384,12 +384,12 @@ Public Class MultiProtocolFrameParser
                 Case Phasors.PhasorProtocol.IeeeC37_118V1, Phasors.PhasorProtocol.IeeeC37_118D6
                     With New IeeeC37_118.CommandFrame(m_pmuID, command, 1)
                         binaryImage = .BinaryImage
-                        binaryLength = .BinaryLength
+                        binaryLength = binaryImage.Length
                     End With
                 Case Phasors.PhasorProtocol.Ieee1344
                     With New Ieee1344.CommandFrame(m_pmuID, command)
                         binaryImage = .BinaryImage
-                        binaryLength = .BinaryLength
+                        binaryLength = binaryImage.Length
                     End With
                 Case Else
                     binaryImage = Nothing
@@ -454,7 +454,15 @@ Public Class MultiProtocolFrameParser
 
     End Sub
 
-    Private Sub ProcessFrame(ByVal frame As IConfigurationFrame)
+    Private Sub m_frameParser_ReceivedCommandFrame(ByVal frame As ICommandFrame) Handles m_frameParser.ReceivedCommandFrame
+
+        m_totalFramesReceived += 1
+        m_frameRateTotal += 1
+        RaiseEvent ReceivedCommandFrame(frame)
+
+    End Sub
+
+    Private Sub m_frameParser_ReceivedConfigurationFrame(ByVal frame As IConfigurationFrame) Handles m_frameParser.ReceivedConfigurationFrame
 
         m_totalFramesReceived += 1
         m_frameRateTotal += 1
@@ -463,7 +471,7 @@ Public Class MultiProtocolFrameParser
 
     End Sub
 
-    Private Sub ProcessFrame(ByVal frame As IDataFrame)
+    Private Sub m_frameParser_ReceivedDataFrame(ByVal frame As IDataFrame) Handles m_frameParser.ReceivedDataFrame
 
         m_totalFramesReceived += 1
         m_frameRateTotal += 1
@@ -479,7 +487,7 @@ Public Class MultiProtocolFrameParser
 
     End Sub
 
-    Private Sub ProcessFrame(ByVal frame As IHeaderFrame)
+    Private Sub m_frameParser_ReceivedHeaderFrame(ByVal frame As IHeaderFrame) Handles m_frameParser.ReceivedHeaderFrame
 
         m_totalFramesReceived += 1
         m_frameRateTotal += 1
@@ -487,49 +495,11 @@ Public Class MultiProtocolFrameParser
 
     End Sub
 
-    Private Sub ProcessFrame(ByVal frame As ICommandFrame)
-
-        m_totalFramesReceived += 1
-        m_frameRateTotal += 1
-        RaiseEvent ReceivedCommandFrame(frame)
-
-    End Sub
-
-    Private Sub ProcessFrame(ByVal frame As IChannelFrame)
+    Private Sub m_frameParser_ReceivedUndeterminedFrame(ByVal frame As IChannelFrame) Handles m_frameParser.ReceivedUndeterminedFrame
 
         m_totalFramesReceived += 1
         m_frameRateTotal += 1
         RaiseEvent ReceivedUndeterminedFrame(frame)
-
-    End Sub
-
-    Private Sub m_frameParser_ReceivedCommandFrame(ByVal frame As ICommandFrame) Handles m_frameParser.ReceivedCommandFrame
-
-        ProcessFrame(frame)
-
-    End Sub
-
-    Private Sub m_frameParser_ReceivedConfigurationFrame(ByVal frame As IConfigurationFrame) Handles m_frameParser.ReceivedConfigurationFrame
-
-        ProcessFrame(frame)
-
-    End Sub
-
-    Private Sub m_frameParser_ReceivedDataFrame(ByVal frame As IDataFrame) Handles m_frameParser.ReceivedDataFrame
-
-        ProcessFrame(frame)
-
-    End Sub
-
-    Private Sub m_frameParser_ReceivedHeaderFrame(ByVal frame As IHeaderFrame) Handles m_frameParser.ReceivedHeaderFrame
-
-        ProcessFrame(frame)
-
-    End Sub
-
-    Private Sub m_frameParser_ReceivedUndeterminedFrame(ByVal frame As IChannelFrame) Handles m_frameParser.ReceivedUndeterminedFrame
-
-        ProcessFrame(frame)
 
     End Sub
 
@@ -559,10 +529,10 @@ Public Class MultiProtocolFrameParser
             ' Handle reception of configuration frame - in case of device that only responds to commands when
             ' not sending real-time data, such as the SEL 421, we disable real-time data stream first...
             SendDeviceCommand(DeviceCommand.DisableRealTimeData)
-            Thread.Sleep(100)
+            Thread.Sleep(300)
 
             SendDeviceCommand(DeviceCommand.SendConfigurationFrame2)
-            Thread.Sleep(100)
+            Thread.Sleep(300)
 
             SendDeviceCommand(DeviceCommand.EnableRealTimeData)
         End If
@@ -589,6 +559,7 @@ Public Class MultiProtocolFrameParser
 
     Private Sub IFrameParserWrite(ByVal buffer() As Byte, ByVal offset As Integer, ByVal count As Integer) Implements IFrameParser.Write
 
+        ' Pass data from communications client into protocol specific frame parser
         m_frameParser.Write(buffer, offset, count)
         m_byteRateTotal += count
 
