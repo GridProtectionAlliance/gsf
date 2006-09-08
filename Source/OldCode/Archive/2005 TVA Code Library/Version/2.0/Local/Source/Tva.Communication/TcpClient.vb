@@ -262,7 +262,7 @@ Public Class TcpClient
                         Else
                             Throw
                         End If
-                    Catch ex As Exception
+                    Catch
                         Throw
                     End Try
 
