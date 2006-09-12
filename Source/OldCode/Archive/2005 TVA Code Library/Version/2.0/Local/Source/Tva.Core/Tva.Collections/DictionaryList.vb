@@ -110,9 +110,10 @@ Public Class DictionaryList(Of TKey, TValue)
 
     End Function
 
-    Private Sub IListInsert(ByVal index As Integer, ByVal item As KeyValuePair(Of TKey, TValue)) Implements IList(Of KeyValuePair(Of TKey, TValue)).Insert
+    Public Sub Insert(ByVal index As Integer, ByVal item As KeyValuePair(Of TKey, TValue)) Implements IList(Of KeyValuePair(Of TKey, TValue)).Insert
 
-        Throw New NotSupportedException()
+        ' Doesn't matter where you try to insert the value since it will be inserted into its sorted location - so we just add the value
+        m_list.Add(item.Key, item.Value)
 
     End Sub
 

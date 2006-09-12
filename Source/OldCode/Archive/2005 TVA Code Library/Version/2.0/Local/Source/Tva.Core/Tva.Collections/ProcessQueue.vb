@@ -1209,24 +1209,16 @@ Namespace Collections
 
             ' Create a real-time processing loop which will process items as fast as possible
             Do While True
-                Try
-                    If m_processItemsFunction Is Nothing Then
-                        ' Process one item at a time
-                        ProcessNextItem()
-                    Else
-                        ' Process multiple items at once
-                        ProcessNextItems()
-                    End If
+                If m_processItemsFunction Is Nothing Then
+                    ' Process one item at a time
+                    ProcessNextItem()
+                Else
+                    ' Process multiple items at once
+                    ProcessNextItems()
+                End If
 
-                    ' We sleep the thread between each loop to help minimize CPU loading...
-                    Thread.Sleep(1)
-                Catch ex As ThreadAbortException
-                    ' We egress gracefully if the thread's being aborted
-                    Exit Do
-                Catch ex As Exception When Not m_debugMode
-                    ' We won't stop for any errors thrown by the user function, but we will report them...
-                    RaiseEvent ProcessException(ex)
-                End Try
+                ' We sleep the thread between each loop to help minimize CPU loading...
+                Thread.Sleep(1)
             Loop
 
         End Sub
