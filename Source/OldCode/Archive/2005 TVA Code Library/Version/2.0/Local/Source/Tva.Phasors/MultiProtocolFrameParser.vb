@@ -464,6 +464,11 @@ Public Class MultiProtocolFrameParser
 
     Private Sub m_frameParser_ReceivedConfigurationFrame(ByVal frame As IConfigurationFrame) Handles m_frameParser.ReceivedConfigurationFrame
 
+        ' We automatically request enabling of real-time data upon reception of config frame if requested
+        If m_configurationFrame Is Nothing AndAlso m_autoStartDataParsingSequence Then
+            SendDeviceCommand(DeviceCommand.EnableRealTimeData)
+        End If
+
         m_totalFramesReceived += 1
         m_frameRateTotal += 1
         m_configurationFrame = frame
@@ -529,12 +534,7 @@ Public Class MultiProtocolFrameParser
             ' Handle reception of configuration frame - in case of device that only responds to commands when
             ' not sending real-time data, such as the SEL 421, we disable real-time data stream first...
             SendDeviceCommand(DeviceCommand.DisableRealTimeData)
-            Thread.Sleep(300)
-
             SendDeviceCommand(DeviceCommand.SendConfigurationFrame2)
-            Thread.Sleep(300)
-
-            SendDeviceCommand(DeviceCommand.EnableRealTimeData)
         End If
 
     End Sub
