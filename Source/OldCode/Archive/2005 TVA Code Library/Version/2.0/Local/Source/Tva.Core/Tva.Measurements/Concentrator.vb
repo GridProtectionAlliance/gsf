@@ -368,90 +368,85 @@ Namespace Measurements
         ''' <summary>Detailed current state and status of concentrator</summary>
         Public ReadOnly Property Status() As String
             Get
-                Try
-                    Dim publishingSampleTimestamp As Date
-                    Dim sampleDetail As New StringBuilder
-                    Dim currentTime As Date = Date.UtcNow
+                Dim publishingSampleTimestamp As Date
+                Dim sampleDetail As New StringBuilder
+                Dim currentTime As Date = Date.UtcNow
 
-                    With sampleDetail
-                        For x As Integer = 0 To m_sampleQueue.Count - 1
-                            .Append(Environment.NewLine)
-                            .Append("     Sample ")
-                            .Append(x)
-                            .Append(" @ ")
-                            .Append(m_sampleQueue(x).Value.Timestamp.ToString("dd-MMM-yyyy HH:mm:ss"))
-                            .Append(": ")
+                With sampleDetail
+                    For x As Integer = 0 To m_sampleQueue.Count - 1
+                        .Append(Environment.NewLine)
+                        .Append("     Sample ")
+                        .Append(x)
+                        .Append(" @ ")
+                        .Append(m_sampleQueue(x).Value.Timestamp.ToString("dd-MMM-yyyy HH:mm:ss"))
+                        .Append(": ")
 
-                            If x = 0 Then
-                                .Append("publishing...")
-                                publishingSampleTimestamp = m_sampleQueue(x).Value.Timestamp
-                            Else
-                                .Append("concentrating...")
-                            End If
-
-                            .Append(Environment.NewLine)
-                        Next
-                    End With
-
-                    With New StringBuilder
-                        .Append(m_sampleQueue.Status)
-                        .Append("     Data concentration is: ")
-                        If m_enabled Then
-                            .Append("Enabled")
+                        If x = 0 Then
+                            .Append("publishing...")
+                            publishingSampleTimestamp = m_sampleQueue(x).Value.Timestamp
                         Else
-                            .Append("Disabled")
+                            .Append("concentrating...")
                         End If
-                        .Append(Environment.NewLine)
-                        .Append("    Discarded measurements: ")
-                        .Append(m_discardedMeasurements)
-                        .Append(Environment.NewLine)
-                        .Append("          Defined lag time: ")
-                        .Append(m_lagTime)
-                        .Append(" seconds")
-                        .Append(Environment.NewLine)
-                        .Append("         Defined lead time: ")
-                        .Append(m_leadTime)
-                        .Append(" seconds")
-                        .Append(Environment.NewLine)
-                        .Append("       Current server time: ")
-                        .Append(currentTime.ToString("dd-MMM-yyyy HH:mm:ss"))
-                        .Append(Environment.NewLine)
-                        .Append("        Most recent sample: ")
-                        .Append(m_currentSampleTimestamp.ToString("dd-MMM-yyyy HH:mm:ss"))
-                        .Append(", ")
-                        .Append(DistanceFromRealTime(currentTime.Ticks).ToString("0.00"))
-                        .Append(" second deviation")
-                        .Append(Environment.NewLine)
-                        .Append("         Publishing sample: ")
-                        .Append(publishingSampleTimestamp.ToString("dd-MMM-yyyy HH:mm:ss"))
-                        .Append(", ")
-                        .Append(TicksToSeconds(currentTime.Ticks - publishingSampleTimestamp.Ticks).ToString("0.00"))
-                        .Append(" second deviation")
-                        .Append(Environment.NewLine)
-                        .Append("    Total published frames: ")
-                        .Append(m_publishedFrames)
-                        .Append(Environment.NewLine)
-                        .Append("        Defined frame rate: ")
-                        .Append(m_framesPerSecond)
-                        .Append(" frames/sec, ")
-                        .Append(m_frameRate.ToString("0.00"))
-                        .Append(" ticks/frame")
-                        .Append(Environment.NewLine)
-                        .Append("    Actual mean frame rate: ")
-                        .Append((m_publishedFrames / (m_sampleQueue.RunTime - m_lagTime)).ToString("0.00"))
-                        .Append(" frames/sec")
-                        .Append(Environment.NewLine)
-                        .Append(Environment.NewLine)
-                        .Append("Current sample detail:")
-                        .Append(Environment.NewLine)
-                        .Append(sampleDetail.ToString)
 
-                        Return .ToString()
-                    End With
-                Catch ex As Exception
-                    ' TODO: Remove this after debugging...
-                    Return "Failed to generate concentrator status due to exception: " & ex.Message & Environment.NewLine
-                End Try
+                        .Append(Environment.NewLine)
+                    Next
+                End With
+
+                With New StringBuilder
+                    .Append(m_sampleQueue.Status)
+                    .Append("     Data concentration is: ")
+                    If m_enabled Then
+                        .Append("Enabled")
+                    Else
+                        .Append("Disabled")
+                    End If
+                    .Append(Environment.NewLine)
+                    .Append("    Discarded measurements: ")
+                    .Append(m_discardedMeasurements)
+                    .Append(Environment.NewLine)
+                    .Append("          Defined lag time: ")
+                    .Append(m_lagTime)
+                    .Append(" seconds")
+                    .Append(Environment.NewLine)
+                    .Append("         Defined lead time: ")
+                    .Append(m_leadTime)
+                    .Append(" seconds")
+                    .Append(Environment.NewLine)
+                    .Append("       Current server time: ")
+                    .Append(currentTime.ToString("dd-MMM-yyyy HH:mm:ss"))
+                    .Append(Environment.NewLine)
+                    .Append("        Most recent sample: ")
+                    .Append(m_currentSampleTimestamp.ToString("dd-MMM-yyyy HH:mm:ss"))
+                    .Append(", ")
+                    .Append(DistanceFromRealTime(currentTime.Ticks).ToString("0.00"))
+                    .Append(" second deviation")
+                    .Append(Environment.NewLine)
+                    .Append("         Publishing sample: ")
+                    .Append(publishingSampleTimestamp.ToString("dd-MMM-yyyy HH:mm:ss"))
+                    .Append(", ")
+                    .Append(TicksToSeconds(currentTime.Ticks - publishingSampleTimestamp.Ticks).ToString("0.00"))
+                    .Append(" second deviation")
+                    .Append(Environment.NewLine)
+                    .Append("    Total published frames: ")
+                    .Append(m_publishedFrames)
+                    .Append(Environment.NewLine)
+                    .Append("        Defined frame rate: ")
+                    .Append(m_framesPerSecond)
+                    .Append(" frames/sec, ")
+                    .Append(m_frameRate.ToString("0.00"))
+                    .Append(" ticks/frame")
+                    .Append(Environment.NewLine)
+                    .Append("    Actual mean frame rate: ")
+                    .Append((m_publishedFrames / (m_sampleQueue.RunTime - m_lagTime)).ToString("0.00"))
+                    .Append(" frames/sec")
+                    .Append(Environment.NewLine)
+                    .Append(Environment.NewLine)
+                    .Append("Current sample detail:")
+                    .Append(Environment.NewLine)
+                    .Append(sampleDetail.ToString)
+
+                    Return .ToString()
+                End With
             End Get
         End Property
 
