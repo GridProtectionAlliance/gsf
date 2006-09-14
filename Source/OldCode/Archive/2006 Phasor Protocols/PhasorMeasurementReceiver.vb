@@ -59,7 +59,12 @@ Public Class PhasorMeasurementReceiver
     Private m_statusInterval As Integer
     Private m_intializing As Boolean
 
-    Public Sub New(ByVal archiverSource As String, ByVal archiverIP As String, ByVal statusInterval As Integer, ByVal connectionString As String, ByVal calculatedMeasurements As ICalculatedMeasurementAdapter())
+    Public Sub New( _
+        ByVal archiverSource As String, _
+        ByVal archiverIP As String, _
+        ByVal statusInterval As Integer, _
+        ByVal connectionString As String, _
+        ByVal calculatedMeasurements As ICalculatedMeasurementAdapter())
 
         m_archiverSource = archiverSource
         m_archiverIP = archiverIP
@@ -370,7 +375,8 @@ Public Class PhasorMeasurementReceiver
                             System.Buffer.BlockCopy(events(x).BinaryImage, 0, buffer, x * StandardEvent.BinaryLength, StandardEvent.BinaryLength)
                         Next
 
-                        ' Post data to TCP stream
+#If Not Debug Then
+                         Post data to TCP stream
                         m_clientStream.Write(buffer, 0, events.Length * StandardEvent.BinaryLength)
 
                         If m_useTimeout Then
@@ -392,6 +398,7 @@ Public Class PhasorMeasurementReceiver
                             ' We sleep between data polls to prevent CPU loading
                             Thread.Sleep(1)
                         End If
+#End If
                     End If
 
                     ' We shouldn't stay in this loop forever (this would mean we're falling behind) so we broadcast the status of things...
@@ -517,12 +524,10 @@ Public Class PhasorMeasurementReceiver
 
                 ' Update reporting status for each PMU
                 ExecuteNonQuery(updateSqlBatch.ToString(), connection)
-
-                connection.Close()
             Catch ex As Exception
                 UpdateStatus("[" & Now() & "] ERROR: Failed to update PMU reporting status due to exception: " & ex.Message)
             Finally
-                If connection IsNot Nothing AndAlso connection.State = ConnectionState.Open Then connection.Close()
+                If connection IsNot Nothing Then connection.Close()
             End Try
         End If
 

@@ -16,6 +16,7 @@
 '*******************************************************************************************************
 
 Imports System.Text
+Imports System.Threading
 Imports Tva.DateTime
 Imports Tva.Phasors
 Imports Tva.Communication
@@ -36,7 +37,6 @@ Public Class PhasorMeasurementMapper
     Private m_measurementFrames As List(Of IFrame)
     Private m_lastReportTime As Long
     Private m_bytesReceived As Long
-    Private m_totalBytesReceived As Long
     Private m_errorCount As Integer
     Private m_errorTime As Long
     Private m_receivedConfigFrame As Boolean
@@ -73,7 +73,6 @@ Public Class PhasorMeasurementMapper
         Disconnect()
 
         ' Start the connection cycle
-        m_totalBytesReceived = 0
         m_frameParser.Start()
 
     End Sub
@@ -131,7 +130,7 @@ Public Class PhasorMeasurementMapper
 
     Public ReadOnly Property TotalBytesReceived() As Long
         Get
-            Return m_totalBytesReceived
+            Return m_frameParser.TotalBytesReceived
         End Get
     End Property
 
@@ -245,13 +244,9 @@ Public Class PhasorMeasurementMapper
             Next
         End With
 
-        ' Provide real-time measurements where needed
-        RaiseEvent NewParsedMeasurements(frame.Measurements)
-
-        ' Queue up frame for polled retrieval into DatAWare...
-        SyncLock m_measurementFrames
-            m_measurementFrames.Add(frame)
-        End SyncLock
+        ' Don't want to waste time on the parsing thread providing new measurements to external
+        ' sources (e.g., archive queue and calculated measurement modules, so we queue this up
+        ThreadPool.QueueUserWorkItem(AddressOf ProcessParsedFrame, frame)
 
     End Sub
 
@@ -272,6 +267,20 @@ Public Class PhasorMeasurementMapper
             ' Add the updated measurement value to the keyed frame measurement list
             frame.Measurements.Add(measurementValue.Key, measurementValue)
         End If
+
+    End Sub
+
+    Private Sub ProcessParsedFrame(ByVal state As Object)
+
+        Dim frame As IFrame = DirectCast(state, IFrame)
+
+        ' Provide real-time measurements where needed
+        RaiseEvent NewParsedMeasurements(frame.Measurements)
+
+        ' Queue up frame for polled retrieval into DatAWare...
+        SyncLock m_measurementFrames
+            m_measurementFrames.Add(frame)
+        End SyncLock
 
     End Sub
 
@@ -360,7 +369,6 @@ Public Class PhasorMeasurementMapper
     Private Sub m_frameParser_ReceivedFrameBufferImage(ByVal frameType As FundamentalFrameType, ByVal binaryImage() As Byte, ByVal offset As Integer, ByVal length As Integer) Handles m_frameParser.ReceivedFrameBufferImage
 
         m_bytesReceived += length
-        m_totalBytesReceived += length
 
     End Sub
 
