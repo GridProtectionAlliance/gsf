@@ -174,6 +174,7 @@ Public Class SerialClient
             ' Post raw data to real-time function delegate if defined - this bypasses all other activity
             If m_receiveRawDataFunction IsNot Nothing Then
                 m_receiveRawDataFunction(m_buffer, 0, received)
+                m_totalBytesReceived += received
             Else
                 ' Unpack data and make available via event
                 OnReceivedData(CopyBuffer(m_buffer, 0, received))

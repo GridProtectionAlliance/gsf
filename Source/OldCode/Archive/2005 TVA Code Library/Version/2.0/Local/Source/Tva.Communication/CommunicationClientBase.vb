@@ -56,9 +56,9 @@ Public MustInherit Class CommunicationClientBase
     Private m_connectTime As Long
     Private m_disconnectTime As Long
     Private m_totalBytesSent As Integer
-    Private m_totalBytesReceived As Integer
 
     ' We expose these two members to derived classes for their own internal use
+    Protected m_totalBytesReceived As Integer
     Protected m_receiveRawDataFunction As ReceiveRawDataFunctionSignature
     Protected m_buffer As Byte()
 

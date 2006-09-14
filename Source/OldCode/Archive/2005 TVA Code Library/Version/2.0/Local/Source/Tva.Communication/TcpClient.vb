@@ -241,6 +241,7 @@ Public Class TcpClient
                         ' Post raw data to real-time function delegate if defined - this bypasses all other activity
                         If m_receiveRawDataFunction IsNot Nothing Then
                             m_receiveRawDataFunction(m_buffer, 0, received)
+                            m_totalBytesReceived += received
                             Continue Do
                         End If
 
