@@ -9,7 +9,9 @@ Imports Tva.Serialization
 
 Public Class ServiceHelper
 
-    Private m_parentService As ServiceBase
+    Private m_service As ServiceBase
+    Private m_processes As List(Of ServiceProcess)
+    Private m_clientInfo As Dictionary(Of Guid, ClientInfo)
     Private m_serviceComponents As List(Of IServiceComponent)
     Private m_startedEventHandlerList As List(Of EventHandler)
     Private m_stoppedEventHandlerList As List(Of EventHandler)
@@ -74,20 +76,27 @@ Public Class ServiceHelper
     ''' </summary>
     ''' <param name="clientID">ID of the client that sent the request.</param>
     ''' <param name="clientRequest">The request sent by the client.</param>
-    Public Event ReceivedClientRequest(ByVal clientID As Guid, ByVal clientRequest As ClientRequest)
+    Public Event ReceivedClientRequest(ByVal clientID As Guid, ByRef clientRequest As ClientRequest)
 
     ''' <summary>
     ''' Gets or sets the parent service to which the service helper belongs.
     ''' </summary>
     ''' <value></value>
     ''' <returns>The parent service to which the service helper belongs.</returns>
-    Public Property ParentService() As ServiceBase
+    Public Property Service() As ServiceBase
         Get
-            Return m_parentService
+            Return m_service
         End Get
         Set(ByVal value As ServiceBase)
-            m_parentService = value
+            m_service = value
         End Set
+    End Property
+
+    <Browsable(False)> _
+    Public ReadOnly Property Processes() As List(Of ServiceProcess)
+        Get
+            Return m_processes
+        End Get
     End Property
 
     ''' <summary>
@@ -203,6 +212,11 @@ Public Class ServiceHelper
 
     End Sub
 
+    ''' <summary>
+    ''' To be called when the state of a process changes.
+    ''' </summary>
+    ''' <param name="processName">Name of the process whose state changed.</param>
+    ''' <param name="processState">New state of the process.</param>
     Public Sub ProcessStateChanged(ByVal processName As String, ByVal processState As ProcessState)
 
         For Each component As IServiceComponent In m_serviceComponents
@@ -211,12 +225,21 @@ Public Class ServiceHelper
 
     End Sub
 
+    ''' <summary>
+    ''' Sends the specified response to all of the connected clients.
+    ''' </summary>
+    ''' <param name="response">The response to be sent to the clients.</param>
     Public Sub SendResponse(ByVal response As ServiceResponse)
 
         SHTcpServer.Multicast(response)
 
     End Sub
 
+    ''' <summary>
+    ''' Sends the specified resonse to the specified client only.
+    ''' </summary>
+    ''' <param name="clientID">ID of the client to whom the response is to be sent.</param>
+    ''' <param name="response">The response to be sent to the client.</param>
     Public Sub SendResponse(ByVal clientID As Guid, ByVal response As ServiceResponse)
 
         SHTcpServer.SendTo(clientID, response)
@@ -225,30 +248,68 @@ Public Class ServiceHelper
 
 #Region " TcpServer Events "
 
+    Private Sub SHTcpServer_ClientConnected(ByVal clientID As System.Guid) Handles SHTcpServer.ClientConnected
+
+        m_clientInfo.Add(clientID, Nothing)
+
+    End Sub
+
+    Private Sub SHTcpServer_ClientDisconnected(ByVal clientID As System.Guid) Handles SHTcpServer.ClientDisconnected
+
+        m_clientInfo.Remove(clientID)
+
+    End Sub
+
     Private Sub SHTcpServer_ReceivedClientData(ByVal clientID As System.Guid, ByVal data() As System.Byte) Handles SHTcpServer.ReceivedClientData
 
+        Dim info As ClientInfo = GetObject(Of ClientInfo)(data)
         Dim request As ClientRequest = GetObject(Of ClientRequest)(data)
-        If request IsNot Nothing Then
+
+        If info IsNot Nothing Then
+            m_clientInfo(clientID) = info
+        ElseIf request IsNot Nothing Then
             RaiseEvent ReceivedClientRequest(clientID, request)
 
-            Select Case request.Type.ToUpper()
-                Case "LISTPROCESSES"
-                Case "STARTPROCESS"
-                Case "ABORTPROCESS"
-                Case "UNSCHEDULEPROCESS"
-                Case "RESCHEDULEPROCESS"
-                Case "PINGSERVICE"
-                Case "PINGALLCLIENTS"
-                Case "LISTALLCLIENTS"
-                Case "GETSERVICESTATUS"
-                Case "GETPROCESSSTATUS"
-                Case "GETCOMMANDHISTORY"
-                Case "GETDIRECTORYLISTING"
-                Case "LISTSETTINGS"
-                Case "UPDATESETTINGS"
-                Case "SAVESETTINGS"
-            End Select
+            If Not request.ServiceHandled Then
+                ' We'll process the request only if the service didn't handle it.
+                Select Case request.Type.ToUpper()
+                    Case "LISTPROCESSES"
+                    Case "STARTPROCESS"
+                    Case "ABORTPROCESS"
+                    Case "UNSCHEDULEPROCESS"
+                    Case "RESCHEDULEPROCESS"
+                    Case "PINGSERVICE"
+                        'HandlePingServiceRequest()
+                    Case "PINGALLCLIENTS"
+                        'HandlePingAllClientsRequest()
+                    Case "LISTALLCLIENTS"
+                        'HandleListAllClientsRequest()
+                    Case "GETSERVICESTATUS"
+                        'HandlePingServiceRequest()
+                    Case "GETPROCESSSTATUS"
+                        'HandleGetProcessStatusRequest()
+                    Case "GETCOMMANDHISTORY"
+                        'HandleGetCommandHistoryRequest()
+                    Case "GETDIRECTORYLISTING"
+                        'HandleGetRequest()
+                    Case "LISTSETTINGS"
+                    Case "UPDATESETTING"
+                    Case "SAVESETTINGS"
+                    Case Else
+
+                End Select
+            End If
+        Else
+
         End If
+
+    End Sub
+
+#End Region
+
+#Region " Private Methods "
+
+    Private Sub SendResponse(ByVal response As String)
 
     End Sub
 

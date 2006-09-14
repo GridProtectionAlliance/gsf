@@ -54,6 +54,7 @@
     <Compile Include="ClientHelper.vb">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="Internal Code\ClientInfo.vb" />
     <Compile Include="My Project\AssemblyInfo.vb" />
     <Compile Include="ServiceHelper.Designer.vb">
       <DependentUpon>ServiceHelper.vb</DependentUpon>
@@ -62,6 +63,7 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="ClientRequest.vb" />
+    <Compile Include="ServiceProcess.vb" />
     <Compile Include="ServiceResponse.vb" />
   </ItemGroup>
   <ItemGroup>
