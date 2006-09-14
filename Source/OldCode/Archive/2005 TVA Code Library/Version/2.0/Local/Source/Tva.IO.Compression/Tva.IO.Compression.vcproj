@@ -104,7 +104,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="&#x0D;&#x0A;"
+				CommandLine=""
 			/>
 		</Configuration>
 		<Configuration
@@ -196,7 +196,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="XCOPY /C /R /Y &quot;$(OutDir)\$(TargetFileName)&quot; &quot;..\Tva.Phasors\PMU Connection Tester\$(TargetFileName)&quot;&#x0D;&#x0A;ATTRIB +R &quot;..\Tva.Phasors\PMU Connection Tester\$(TargetFileName)&quot;&#x0D;&#x0A;"
+				CommandLine=""
 			/>
 		</Configuration>
 	</Configurations>
