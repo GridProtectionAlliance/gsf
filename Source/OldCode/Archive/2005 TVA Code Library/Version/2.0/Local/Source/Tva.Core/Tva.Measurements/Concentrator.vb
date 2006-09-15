@@ -26,6 +26,7 @@
 Imports System.Text
 Imports System.Threading
 Imports Tva.Collections
+Imports Tva.DateTime
 Imports Tva.DateTime.Common
 
 Namespace Measurements
@@ -111,8 +112,10 @@ Namespace Measurements
                 m_createNewFrameFunction = createNewFrameFunction
             End If
 
-            m_realTimeTicks = Date.UtcNow.Ticks
-            m_currentSampleTimestamp = BaselinedTimestamp(New Date(m_realTimeTicks))
+            Dim currentTime As Date = Date.UtcNow
+
+            m_realTimeTicks = currentTime.Ticks
+            m_currentSampleTimestamp = BaselinedTimestamp(currentTime, BaselineTimeInterval.Second)
             m_framesPerSecond = framesPerSecond
             m_lagTime = lagTime
             m_leadTime = leadTime
@@ -290,13 +293,13 @@ Namespace Measurements
         ''' </remarks>
         Public Property RealTimeTicks() As Long
             Get
-                Dim currentTime As Date = Date.UtcNow
+                Dim currentTimeTicks As Long = Date.UtcNow.Ticks
 
                 ' If the current value for real-time is outside of the time deviation tolerance of the local clock
                 ' then we set real-time to be the current local clock time value
-                If Not TimeIsValid(currentTime.Ticks, m_realTimeTicks, m_lagTime, m_leadTime) Then
-                    m_realTimeTicks = currentTime.Ticks
-                    m_currentSampleTimestamp = BaselinedTimestamp(currentTime)
+                If Not TimeIsValid(currentTimeTicks, m_realTimeTicks, m_lagTime, m_leadTime) Then
+                    m_realTimeTicks = currentTimeTicks
+                    m_currentSampleTimestamp = BaselinedTimestamp(currentTimeTicks, BaselineTimeInterval.Second)
                 End If
 
                 Return m_realTimeTicks
@@ -305,14 +308,17 @@ Namespace Measurements
                 ' If the specified date is newer than the current value and is within the specified time
                 ' deviation tolerance of the local clock time then we set the new date as "real-time"
                 If value > m_realTimeTicks Then
-                    Dim currentTime As Date = Date.UtcNow
+                    Dim currentTimeTicks As Long = Date.UtcNow.Ticks
 
-                    If TimeIsValid(currentTime.Ticks, value, m_lagTime, m_leadTime) Then
+                    If TimeIsValid(currentTimeTicks, value, m_lagTime, m_leadTime) Then
+                        ' New time measurement looks good, assume this time as "real-time"
                         m_realTimeTicks = value
-                        m_currentSampleTimestamp = BaselinedTimestamp(New Date(m_realTimeTicks))
-                    Else
-                        m_realTimeTicks = currentTime.Ticks
-                        m_currentSampleTimestamp = BaselinedTimestamp(currentTime)
+                        m_currentSampleTimestamp = BaselinedTimestamp(m_realTimeTicks, BaselineTimeInterval.Second)
+                    ElseIf Not TimeIsValid(currentTimeTicks, m_realTimeTicks, m_lagTime, m_leadTime) Then
+                        ' New time measurement was invalid and current real-time value was old so we
+                        ' assume the current time as "real-time"
+                        m_realTimeTicks = currentTimeTicks
+                        m_currentSampleTimestamp = BaselinedTimestamp(currentTimeTicks, BaselineTimeInterval.Second)
                     End If
                 End If
             End Set
@@ -337,7 +343,7 @@ Namespace Measurements
 
             With measurement
                 ' Get sample for this timestamp, creating it if needed
-                Dim sample As Sample = GetSample(.Timestamp)
+                Dim sample As Sample = GetSample(.Ticks)
 
                 If sample Is Nothing Then
                     ' No samples exist for this timestamp - measurement must have been outside time deviation tolerance (past or future) 
@@ -487,13 +493,13 @@ Namespace Measurements
 
         ''' <summary>This critical function automatically manages the sample queue based on timestamps of incoming measurements</summary>
         ''' <returns>The sample associated with the specified timestamp. If the sample is not found at timestamp, it will be created.</returns>
-        ''' <param name="timestamp">The timestamp of the sample to get.</param>
+        ''' <param name="ticks">Ticks of the timestamp of the sample to get</param>
         ''' <remarks>Function will return null if timestamp is outside of the specified time deviation tolerance</remarks>
-        Protected Function GetSample(ByVal timestamp As Date) As Sample
+        Protected Function GetSample(ByVal ticks As Long) As Sample
 
             ' Baseline measurement timestamp at bottom of the second
-            Dim baseTime As Date = BaselinedTimestamp(timestamp)
-            Dim sample As Sample = LookupSample(baseTime.Ticks)
+            Dim baseTimeTicks As Long = BaselinedTimestamp(ticks, BaselineTimeInterval.Second).Ticks
+            Dim sample As Sample = LookupSample(baseTimeTicks)
 
             ' Enter loop to wait until the sample exists, we will attempt to enter critical section and create it ourselves
             Do Until sample IsNot Nothing
@@ -503,7 +509,7 @@ Namespace Measurements
                     Try
                         ' Check difference between timestamp and current sample base-time in seconds and fill in any gaps.
                         ' Note that current sample base-time will be validated against local clock
-                        Dim distance As Double = DistanceFromRealTime(timestamp.Ticks)
+                        Dim distance As Double = DistanceFromRealTime(ticks)
 
                         If distance > m_lagTime OrElse distance < -m_leadTime Then
                             ' This data has come in late or has a future timestamp.  For old timestamps, we're not
@@ -519,7 +525,7 @@ Namespace Measurements
                         End If
 
                         ' Create sample for new base time
-                        CreateSample(baseTime.Ticks)
+                        CreateSample(baseTimeTicks)
                     Catch
                         ' Rethrow any exceptions - we are just catching any exceptions so we can
                         ' make sure to release thread lock in finally
@@ -537,7 +543,7 @@ Namespace Measurements
                 ' Additionally, the Item property (referenced from within LookupSample) internally performs a SyncLock
                 ' on the SyncRoot and waits for it to be released, so if another thread was creating new samples then
                 ' we'll definitely pick up our needed sample when the lock is released.  Nice and safe.
-                sample = LookupSample(baseTime.Ticks)
+                sample = LookupSample(baseTimeTicks)
             Loop
 
             ' Return sample for this timestamp
