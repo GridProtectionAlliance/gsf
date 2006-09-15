@@ -202,7 +202,7 @@ Public Class Schedule
                         Me.Minutes = .GetValue(0).ToString()
                         Me.Hours = .GetValue(1).ToString()
                         Me.Days = .GetValue(2).ToString()
-                        MyClass.Months = .GetValue(3).ToString()
+                        Me.Months = .GetValue(3).ToString()
                         Me.DaysOfWeek = .GetValue(4).ToString()
                     Else
                         Throw New ArgumentException("Schedule rule must have exactly 5 elements (Example: * * * * *).")

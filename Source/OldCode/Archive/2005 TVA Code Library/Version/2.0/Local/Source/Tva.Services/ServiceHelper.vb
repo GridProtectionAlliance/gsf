@@ -10,7 +10,7 @@ Imports Tva.Serialization
 Public Class ServiceHelper
 
     Private m_service As ServiceBase
-    Private m_processes As List(Of ServiceProcess)
+    Private m_processes As Dictionary(Of String, ServiceProcess)
     Private m_clientInfo As Dictionary(Of Guid, ClientInfo)
     Private m_serviceComponents As List(Of IServiceComponent)
     Private m_startedEventHandlerList As List(Of EventHandler)
@@ -93,7 +93,7 @@ Public Class ServiceHelper
     End Property
 
     <Browsable(False)> _
-    Public ReadOnly Property Processes() As List(Of ServiceProcess)
+    Public ReadOnly Property Processes() As Dictionary(Of String, ServiceProcess)
         Get
             Return m_processes
         End Get
@@ -225,6 +225,76 @@ Public Class ServiceHelper
 
     End Sub
 
+    Public Sub AddProcess(ByVal processExecutionMethod As ServiceProcess.ExecutionMethodSignature, _
+            ByVal processName As String)
+
+        AddProcess(processExecutionMethod, processName)
+
+    End Sub
+
+    Public Sub AddProcess(ByVal processExecutionMethod As ServiceProcess.ExecutionMethodSignature, _
+            ByVal processName As String, ByVal processParameters As Object())
+
+        If Not m_processes.ContainsKey(processName) Then
+            m_processes.Add(processName, New ServiceProcess(processExecutionMethod, processName, processParameters, Me))
+        Else
+            Throw New InvalidOperationException("Process '" & processName & "' already exists.")
+        End If
+
+    End Sub
+
+    Public Sub AddScheduledProcess(ByVal processExecutionMethod As ServiceProcess.ExecutionMethodSignature, _
+            ByVal processName As String, ByVal processSchedule As String)
+
+        AddScheduledProcess(processExecutionMethod, processName, Nothing, processSchedule)
+
+    End Sub
+
+    Public Sub AddScheduledProcess(ByVal processExecutionMethod As ServiceProcess.ExecutionMethodSignature, _
+            ByVal processName As String, ByVal processParameters As Object(), ByVal processSchedule As String)
+
+        AddProcess(processExecutionMethod, processName, processParameters)
+        ScheduleProcess(processName, processSchedule)
+
+    End Sub
+
+    Public Sub ScheduleProcess(ByVal processName As String, ByVal processSchedule As String)
+
+        If m_processes.ContainsKey(processName) Then
+            Dim schedule As Schedule = Nothing
+            If Not SHScheduleManager.Schedules.TryGetValue(processName, schedule) Then
+                ' Update the process schedule if it is already exists.
+                schedule.Rule = processSchedule
+            Else
+                ' Schedule the process if it is not scheduled already.
+                schedule = New Schedule(processName)
+                schedule.Rule = processSchedule
+                SHScheduleManager.Schedules.Add(processName, schedule)
+            End If
+        Else
+            Throw New InvalidOperationException("Process '" & processName & "' does not exist.")
+        End If
+
+    End Sub
+
+    Public Sub SendUpdateStatusResponse(ByVal response As String)
+
+        Dim serviceResponse As New ServiceResponse()
+        serviceResponse.Type = "UPDATESTATUS"
+        serviceResponse.Message = response
+        SendResponse(serviceResponse)
+
+    End Sub
+
+    Public Sub SendUpdateStatusResponse(ByVal clientID As Guid, ByVal response As String)
+
+        Dim serviceResponse As New ServiceResponse()
+        serviceResponse.Type = "UPDATESTATUS"
+        serviceResponse.Message = response
+        SendResponse(clientID, serviceResponse)
+
+    End Sub
+
     ''' <summary>
     ''' Sends the specified response to all of the connected clients.
     ''' </summary>
@@ -307,11 +377,20 @@ Public Class ServiceHelper
 
 #End Region
 
-#Region " Private Methods "
+#Region " ScheduleManager Events "
 
-    Private Sub SendResponse(ByVal response As String)
+    Private Sub SHScheduleManager_ScheduleDue(ByVal schedule As Schedule) Handles SHScheduleManager.ScheduleDue
+
+        Dim scheduledProcess As ServiceProcess = Nothing
+        If m_processes.TryGetValue(schedule.Name, scheduledProcess) Then
+            scheduledProcess.StartProcess() ' Start the process execution if it exists.
+        End If
 
     End Sub
+
+#End Region
+
+#Region " Private Methods "
 
 #End Region
 

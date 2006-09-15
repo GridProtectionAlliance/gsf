@@ -75,7 +75,7 @@ Public Class ScheduleManager
         Me.PersistSchedules = persistSchedules
         Me.Enabled = True
         m_schedules = New Dictionary(Of String, Schedule)()
-        m_scheduleDueEventHandlerList = New List(Of ScheduleDueEventHandler)
+        m_scheduleDueEventHandlerList = New List(Of ScheduleDueEventHandler)()
         m_timer = New System.Timers.Timer(60000)
     End Sub
 

@@ -1,6 +1,8 @@
 ' 09-13-06
 
+Imports System.Text
 Imports System.Threading
+Imports Tva.DateTime.Common
 
 Public Class ServiceProcess
 
@@ -9,6 +11,8 @@ Public Class ServiceProcess
     Private m_parameters As Object()
     Private m_executionMethod As ExecutionMethodSignature
     Private m_serviceHelper As ServiceHelper
+    Private m_currentState As ProcessState
+    Private m_lastExecutionTime As Double
 
     Public Delegate Sub ExecutionMethodSignature(ByVal name As String, ByVal parameters As Object())
 
@@ -23,6 +27,7 @@ Public Class ServiceProcess
         m_parameters = parameters
         m_executionMethod = executionMethod
         m_serviceHelper = serviceHelper
+        m_currentState = ProcessState.Unprocessed
     End Sub
 
     Public Property Name() As String
@@ -65,9 +70,25 @@ Public Class ServiceProcess
         End Set
     End Property
 
+    Public Property CurrentState() As ProcessState
+        Get
+            Return m_currentState
+        End Get
+        Private Set(ByVal value As ProcessState)
+            m_currentState = value
+            m_serviceHelper.ProcessStateChanged(m_name, m_currentState)
+        End Set
+    End Property
+
+    Public ReadOnly Property LastExecutionTime() As Double
+        Get
+            Return m_lastExecutionTime
+        End Get
+    End Property
+
     Public Sub StartProcess()
 
-        m_processThread = New Thread(AddressOf InvokeProcessExecutionMethod)
+        m_processThread = New Thread(AddressOf InvokeExecutionMethod)
         m_processThread.Start()
 
     End Sub
@@ -75,16 +96,37 @@ Public Class ServiceProcess
     Public Sub AbortProcess()
 
         If m_processThread IsNot Nothing Then m_processThread.Abort()
-        m_serviceHelper.ProcessStateChanged(m_name, ProcessState.Aborted)
+        Me.CurrentState = ProcessState.Aborted
 
     End Sub
 
-    Private Sub InvokeProcessExecutionMethod()
+    Public Function Status() As String
+
+        With New StringBuilder()
+            .Append("              Process Name: ")
+            .Append(m_name)
+            .Append(Environment.NewLine)
+            .Append("             Current State: ")
+            .Append(m_currentState.ToString())
+            .Append(Environment.NewLine)
+            .Append("       Last Execution Time: ")
+            .Append(SecondsToText(m_lastExecutionTime))
+            .Append(Environment.NewLine)
+
+            Return .ToString()
+        End With
+
+    End Function
+
+    Private Sub InvokeExecutionMethod()
 
         If m_executionMethod IsNot Nothing Then
-            m_serviceHelper.ProcessStateChanged(m_name, ProcessState.Processing)
+            Me.CurrentState = ProcessState.Processing
+            Dim startTime As Long = System.DateTime.Now.Ticks
             m_executionMethod.Invoke(m_name, m_parameters)
-            m_serviceHelper.ProcessStateChanged(m_name, ProcessState.Processed)
+            Dim stopTime As Long = System.DateTime.Now.Ticks
+            m_lastExecutionTime = TicksToSeconds(stopTime - startTime)
+            Me.CurrentState = ProcessState.Processed
         End If
         m_processThread = Nothing
 

@@ -9,11 +9,11 @@ Partial Class ServiceHelper
 
         'Required for Windows.Forms Class Composition Designer support
         Container.Add(Me)
-        m_processes = New List(Of ServiceProcess)
-        m_clientInfo = New Dictionary(Of Guid, ClientInfo)
-        m_startedEventHandlerList = New List(Of EventHandler)
-        m_stoppedEventHandlerList = New List(Of EventHandler)
-        m_serviceComponents = New List(Of IServiceComponent)
+        m_processes = New Dictionary(Of String, ServiceProcess)()
+        m_clientInfo = New Dictionary(Of Guid, ClientInfo)()
+        m_startedEventHandlerList = New List(Of EventHandler)()
+        m_stoppedEventHandlerList = New List(Of EventHandler)()
+        m_serviceComponents = New List(Of IServiceComponent)()
         m_serviceComponents.Add(SHTcpServer)
         m_serviceComponents.Add(SHScheduleManager)
         m_serviceComponents.Add(SHSsamLogger)
