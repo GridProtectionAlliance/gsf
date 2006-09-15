@@ -19,7 +19,9 @@
 '  12/21/2005 - J. Ritchie Carroll
 '       2.0 version of source code migrated from 1.1 source (TVA.Shared.DateTime)
 '  08/28/2006 - J. Ritchie Carroll
-'       Added "TimeIsValid" functions
+'       Added TimeIsValid, LocalTimeIsValid and UtcTimeIsValid functions
+'  09/15/2007 - J. Ritchie Carroll
+'       Updated BaselinedTimestamp function to support multiple time intervals
 '
 '*******************************************************************************************************
 
@@ -59,12 +61,12 @@ Namespace DateTime
         ''' <summary>Converts seconds to 100-nanosecond tick intervals</summary>
         Public Shared ReadOnly Property SecondsToTicks(ByVal seconds As Double) As Long
             Get
-                Return seconds * 10000000L
+                Return Convert.ToInt64(seconds * 10000000.0F)
             End Get
         End Property
 
         ''' <summary>Determines if the specified UTC time is valid by comparing it to the system clock</summary>
-        ''' <param name="dateTime">Time to test for validity</param>
+        ''' <param name="utcTime">Time to test for validity</param>
         ''' <param name="lagTime">Allowed lag time, in seconds, before assuming time is too old to be valid</param>
         ''' <param name="leadTime">Allowed lead time, in seconds, before assuming time is too advanced to be valid</param>
         ''' <returns>True if time is within the specified range</returns>
@@ -73,14 +75,14 @@ Namespace DateTime
         ''' <para>Note that lag time and lead time must be greater than zero, but can be set to sub-second intervals</para>
         ''' </remarks>
         ''' <exception cref="ArgumentOutOfRangeException">LagTime and LeadTime must be greater than zero, but can be less than one</exception>
-        Public Shared Function UtcTimeIsValid(ByVal dateTime As Date, ByVal lagTime As Double, ByVal leadTime As Double) As Boolean
+        Public Shared Function UtcTimeIsValid(ByVal utcTime As Date, ByVal lagTime As Double, ByVal leadTime As Double) As Boolean
 
-            Return UtcTimeIsValid(dateTime.Ticks, lagTime, leadTime)
+            Return UtcTimeIsValid(utcTime.Ticks, lagTime, leadTime)
 
         End Function
 
         ''' <summary>Determines if the specified UTC time ticks are valid by comparing them to the system clock</summary>
-        ''' <param name="ticks">Ticks of time to test for validity</param>
+        ''' <param name="utcTicks">Ticks of time to test for validity</param>
         ''' <param name="lagTime">Allowed lag time, in seconds, before assuming time is too old to be valid</param>
         ''' <param name="leadTime">Allowed lead time, in seconds, before assuming time is too advanced to be valid</param>
         ''' <returns>True if time is within the specified range</returns>
@@ -89,14 +91,14 @@ Namespace DateTime
         ''' <para>Note that lag time and lead time must be greater than zero, but can be set to sub-second intervals</para>
         ''' </remarks>
         ''' <exception cref="ArgumentOutOfRangeException">LagTime and LeadTime must be greater than zero, but can be less than one</exception>
-        Public Shared Function UtcTimeIsValid(ByVal ticks As Long, ByVal lagTime As Double, ByVal leadTime As Double) As Boolean
+        Public Shared Function UtcTimeIsValid(ByVal utcTicks As Long, ByVal lagTime As Double, ByVal leadTime As Double) As Boolean
 
-            Return TimeIsValid(Date.UtcNow.Ticks, ticks, lagTime, leadTime)
+            Return TimeIsValid(Date.UtcNow.Ticks, utcTicks, lagTime, leadTime)
 
         End Function
 
         ''' <summary>Determines if the specified local time is valid by comparing it to the system clock</summary>
-        ''' <param name="dateTime">Time to test for validity</param>
+        ''' <param name="localTime">Time to test for validity</param>
         ''' <param name="lagTime">Allowed lag time, in seconds, before assuming time is too old to be valid</param>
         ''' <param name="leadTime">Allowed lead time, in seconds, before assuming time is too advanced to be valid</param>
         ''' <returns>True if time is within the specified range</returns>
@@ -105,14 +107,14 @@ Namespace DateTime
         ''' <para>Note that lag time and lead time must be greater than zero, but can be set to sub-second intervals</para>
         ''' </remarks>
         ''' <exception cref="ArgumentOutOfRangeException">LagTime and LeadTime must be greater than zero, but can be less than one</exception>
-        Public Shared Function LocalTimeIsValid(ByVal dateTime As Date, ByVal lagTime As Double, ByVal leadTime As Double) As Boolean
+        Public Shared Function LocalTimeIsValid(ByVal localTime As Date, ByVal lagTime As Double, ByVal leadTime As Double) As Boolean
 
-            Return LocalTimeIsValid(dateTime.Ticks, lagTime, leadTime)
+            Return LocalTimeIsValid(localTime.Ticks, lagTime, leadTime)
 
         End Function
 
         ''' <summary>Determines if the specified local time ticks are valid by comparing them to the system clock</summary>
-        ''' <param name="ticks">Ticks of time to test for validity</param>
+        ''' <param name="localTicks">Ticks of time to test for validity</param>
         ''' <param name="lagTime">Allowed lag time, in seconds, before assuming time is too old to be valid</param>
         ''' <param name="leadTime">Allowed lead time, in seconds, before assuming time is too advanced to be valid</param>
         ''' <returns>True if time is within the specified range</returns>
@@ -121,15 +123,15 @@ Namespace DateTime
         ''' <para>Note that lag time and lead time must be greater than zero, but can be set to sub-second intervals</para>
         ''' </remarks>
         ''' <exception cref="ArgumentOutOfRangeException">LagTime and LeadTime must be greater than zero, but can be less than one</exception>
-        Public Shared Function LocalTimeIsValid(ByVal ticks As Long, ByVal lagTime As Double, ByVal leadTime As Double) As Boolean
+        Public Shared Function LocalTimeIsValid(ByVal localTicks As Long, ByVal lagTime As Double, ByVal leadTime As Double) As Boolean
 
-            Return TimeIsValid(Date.Now.Ticks, ticks, lagTime, leadTime)
+            Return TimeIsValid(Date.Now.Ticks, localTicks, lagTime, leadTime)
 
         End Function
 
         ''' <summary>Determines if time is valid by comparing it to the specified current time</summary>
         ''' <param name="currentTime">Specified current time (e.g., could be Date.Now or Date.UtcNow)</param>
-        ''' <param name="dateTime">Time to test for validity</param>
+        ''' <param name="testTime">Time to test for validity</param>
         ''' <param name="lagTime">Allowed lag time, in seconds, before assuming time is too old to be valid</param>
         ''' <param name="leadTime">Allowed lead time, in seconds, before assuming time is too advanced to be valid</param>
         ''' <returns>True if time is within the specified range</returns>
@@ -138,15 +140,15 @@ Namespace DateTime
         ''' <para>Note that lag time and lead time must be greater than zero, but can be set to sub-second intervals</para>
         ''' </remarks>
         ''' <exception cref="ArgumentOutOfRangeException">LagTime and LeadTime must be greater than zero, but can be less than one</exception>
-        Public Shared Function TimeIsValid(ByVal currentTime As Date, ByVal dateTime As Date, ByVal lagTime As Double, ByVal leadTime As Double) As Boolean
+        Public Shared Function TimeIsValid(ByVal currentTime As Date, ByVal testTime As Date, ByVal lagTime As Double, ByVal leadTime As Double) As Boolean
 
-            Return TimeIsValid(currentTime.Ticks, dateTime.Ticks, lagTime, leadTime)
+            Return TimeIsValid(currentTime.Ticks, testTime.Ticks, lagTime, leadTime)
 
         End Function
 
         ''' <summary>Determines if time is valid by comparing it to the specified current time</summary>
-        ''' <param name="currentTimeTicks">Specified ticks of current time (e.g., could be Date.Now.Ticks or Date.UtcNow.Ticks)</param>
-        ''' <param name="ticks">Ticks of time to test for validity</param>
+        ''' <param name="currentTicks">Specified ticks of current time (e.g., could be Date.Now.Ticks or Date.UtcNow.Ticks)</param>
+        ''' <param name="testTicks">Ticks of time to test for validity</param>
         ''' <param name="lagTime">Allowed lag time, in seconds, before assuming time is too old to be valid</param>
         ''' <param name="leadTime">Allowed lead time, in seconds, before assuming time is too advanced to be valid</param>
         ''' <returns>True if time is within the specified range</returns>
@@ -155,12 +157,12 @@ Namespace DateTime
         ''' <para>Note that lag time and lead time must be greater than zero, but can be set to sub-second intervals</para>
         ''' </remarks>
         ''' <exception cref="ArgumentOutOfRangeException">LagTime and LeadTime must be greater than zero, but can be less than one</exception>
-        Public Shared Function TimeIsValid(ByVal currentTimeTicks As Long, ByVal ticks As Long, ByVal lagTime As Double, ByVal leadTime As Double) As Boolean
+        Public Shared Function TimeIsValid(ByVal currentTicks As Long, ByVal testTicks As Long, ByVal lagTime As Double, ByVal leadTime As Double) As Boolean
 
             If lagTime <= 0 Then Throw New ArgumentOutOfRangeException("lagTime", "lagTime must be greater than zero, but it can be less than one")
             If leadTime <= 0 Then Throw New ArgumentOutOfRangeException("leadTime", "leadTime must be greater than zero, but it can be less than one")
 
-            Dim distance As Double = TicksToSeconds(currentTimeTicks - ticks)
+            Dim distance As Double = TicksToSeconds(currentTicks - testTicks)
             Return (distance >= -leadTime AndAlso distance <= lagTime)
 
         End Function
@@ -172,7 +174,7 @@ Namespace DateTime
             End Get
         End Property
 
-        ''' <summary>Returns the number of seconds in the Universally coordinated timezone, including fractional seconds, since that have elapsed since 12:00:00 midnight, January 1, 0001</summary>
+        ''' <summary>Returns the number of seconds in the universally coordinated timezone, including fractional seconds, since that have elapsed since 12:00:00 midnight, January 1, 0001</summary>
         Public Shared ReadOnly Property UtcSystemTimer() As Double
             Get
                 Return TicksToSeconds(Date.UtcNow.Ticks)
@@ -180,11 +182,45 @@ Namespace DateTime
         End Property
 
         ''' <summary>Removes any milliseconds from a timestamp value to baseline the time at the bottom of the second</summary>
+        ''' <param name="ticks">Ticks of timestamp to baseline</param>
+        ''' <param name="baselineTo">Time interval to which timestamp should be baselined</param>
+        Public Shared Function BaselinedTimestamp(ByVal ticks As Long, ByVal baselineTo As BaselineTimeInterval) As Date
+
+            Return BaselinedTimestamp(New Date(ticks), baselineTo)
+
+        End Function
+
+        ''' <summary>Creates a baselined the timestamp which begins at the specified time interval</summary>
         ''' <param name="timestamp">Timestamp to baseline</param>
-        Public Shared Function BaselinedTimestamp(ByVal timestamp As Date) As Date
+        ''' <param name="baselineTo">Time interval to which timestamp should be baselined</param>
+        ''' <returns>Baselined timestamp which begins at the specified time interval</returns>
+        ''' <remarks>
+        ''' <para>Baselining to the second would return the timestamp starting at zero milliseconds</para>
+        ''' <para>Baselining to the minute would return the timestamp starting at zero seconds and milliseconds</para>
+        ''' <para>Baselining to the hour would return the timestamp starting at zero minutes, seconds and milliseconds</para>
+        ''' <para>Baselining to the day would return the timestamp starting at zero hours, minutes, seconds and milliseconds</para>
+        ''' <para>Baselining to the month would return the timestamp starting at day one, zero hours, minutes, seconds and milliseconds</para>
+        ''' <para>Baselining to the year would return the timestamp starting at month one, day one, zero hours, minutes, seconds and milliseconds</para>
+        ''' </remarks>
+        Public Shared Function BaselinedTimestamp(ByVal timestamp As Date, ByVal baselineTo As BaselineTimeInterval) As Date
 
             With timestamp
-                Return New Date(.Year, .Month, .Day, .Hour, .Minute, .Second, 0)
+                Select Case baselineTo
+                    Case BaselineTimeInterval.Second
+                        Return New Date(.Year, .Month, .Day, .Hour, .Minute, .Second, 0)
+                    Case BaselineTimeInterval.Minute
+                        Return New Date(.Year, .Month, .Day, .Hour, .Minute, 0, 0)
+                    Case BaselineTimeInterval.Hour
+                        Return New Date(.Year, .Month, .Day, .Hour, 0, 0, 0)
+                    Case BaselineTimeInterval.Day
+                        Return New Date(.Year, .Month, .Day, 0, 0, 0, 0)
+                    Case BaselineTimeInterval.Month
+                        Return New Date(.Year, .Month, 1, 0, 0, 0, 0)
+                    Case BaselineTimeInterval.Year
+                        Return New Date(.Year, 1, 1, 0, 0, 0, 0)
+                    Case Else
+                        Return timestamp
+                End Select
             End With
 
         End Function
@@ -340,92 +376,20 @@ Namespace DateTime
 
         End Function
 
-        ''' <summary>Returns 3 letter month abbreviation for given month number (1-12).</summary>
-        ''' <remarks>Month abbreviations are English only.</remarks>
-        ''' <param name="monthNumber">Numeric month number (1-12)</param>
-        Public Shared ReadOnly Property ShortMonthName(ByVal monthNumber As Integer) As String
-            Get
-                Select Case monthNumber
-                    Case 1
-                        Return "Jan"
-                    Case 2
-                        Return "Feb"
-                    Case 3
-                        Return "Mar"
-                    Case 4
-                        Return "Apr"
-                    Case 5
-                        Return "May"
-                    Case 6
-                        Return "Jun"
-                    Case 7
-                        Return "Jul"
-                    Case 8
-                        Return "Aug"
-                    Case 9
-                        Return "Sep"
-                    Case 10
-                        Return "Oct"
-                    Case 11
-                        Return "Nov"
-                    Case 12
-                        Return "Dec"
-                    Case Else
-                        Throw New ArgumentOutOfRangeException("monthNumber", "Invalid month number """ & monthNumber & """ specified - expected a value between 1 and 12")
-                End Select
-            End Get
-        End Property
-
-        ''' <summary>Returns full month name for given month number (1-12).</summary>
-        ''' <remarks>Month names are English only.</remarks>
-        ''' <param name="monthNumber">Numeric month number (1-12)</param>
-        Public Shared ReadOnly Property LongMonthName(ByVal monthNumber As Integer) As String
-            Get
-                Select Case monthNumber
-                    Case 1
-                        Return "January"
-                    Case 2
-                        Return "February"
-                    Case 3
-                        Return "March"
-                    Case 4
-                        Return "April"
-                    Case 5
-                        Return "May"
-                    Case 6
-                        Return "June"
-                    Case 7
-                        Return "July"
-                    Case 8
-                        Return "August"
-                    Case 9
-                        Return "September"
-                    Case 10
-                        Return "October"
-                    Case 11
-                        Return "November"
-                    Case 12
-                        Return "December"
-                    Case Else
-                        Throw New ArgumentOutOfRangeException("monthNumber", "Invalid month number """ & monthNumber & """ specified - expected a value between 1 and 12")
-                End Select
-            End Get
-        End Property
-
         ' JRC - These functions added to make time zone management classes easier to use...
 
         ''' <summary>Returns the specified Win32 time zone using its standard name</summary>
         ''' <param name="standardName">Standard name for desired Win32 time zone</param>
         Public Shared Function GetWin32TimeZone(ByVal standardName As String) As Win32TimeZone
 
-            Return GetWin32TimeZone(TimeZoneName.StandardName, standardName)
+            Return GetWin32TimeZone(standardName, TimeZoneName.StandardName)
 
         End Function
 
         ''' <summary>Returns the specified Win32 time zone using specified name</summary>
-        ''' <param name="lookupBy">Type of name used for time zone lookup</param>
         ''' <param name="name">Value of name used for time zone lookup</param>
-        Public Shared Function GetWin32TimeZone(ByVal lookupBy As TimeZoneName, ByVal name As String) As Win32TimeZone
+        ''' <param name="lookupBy">Type of name used for time zone lookup</param>
+        Public Shared Function GetWin32TimeZone(ByVal name As String, ByVal lookupBy As TimeZoneName) As Win32TimeZone
 
             For Each timeZone As Win32TimeZone In TimeZones.GetTimeZones
                 With timeZone
@@ -617,6 +581,78 @@ Namespace DateTime
             Return sourceTimeZone.ToUniversalTime(timestamp).AddHours(destOffset)
 
         End Function
+
+        ''' <summary>Returns 3 letter month abbreviation for given month number (1-12).</summary>
+        ''' <remarks>Month abbreviations are English only.</remarks>
+        ''' <param name="monthNumber">Numeric month number (1-12)</param>
+        Public Shared ReadOnly Property ShortMonthName(ByVal monthNumber As Integer) As String
+            Get
+                Select Case monthNumber
+                    Case 1
+                        Return "Jan"
+                    Case 2
+                        Return "Feb"
+                    Case 3
+                        Return "Mar"
+                    Case 4
+                        Return "Apr"
+                    Case 5
+                        Return "May"
+                    Case 6
+                        Return "Jun"
+                    Case 7
+                        Return "Jul"
+                    Case 8
+                        Return "Aug"
+                    Case 9
+                        Return "Sep"
+                    Case 10
+                        Return "Oct"
+                    Case 11
+                        Return "Nov"
+                    Case 12
+                        Return "Dec"
+                    Case Else
+                        Throw New ArgumentOutOfRangeException("monthNumber", "Invalid month number """ & monthNumber & """ specified - expected a value between 1 and 12")
+                End Select
+            End Get
+        End Property
+
+        ''' <summary>Returns full month name for given month number (1-12).</summary>
+        ''' <remarks>Month names are English only.</remarks>
+        ''' <param name="monthNumber">Numeric month number (1-12)</param>
+        Public Shared ReadOnly Property LongMonthName(ByVal monthNumber As Integer) As String
+            Get
+                Select Case monthNumber
+                    Case 1
+                        Return "January"
+                    Case 2
+                        Return "February"
+                    Case 3
+                        Return "March"
+                    Case 4
+                        Return "April"
+                    Case 5
+                        Return "May"
+                    Case 6
+                        Return "June"
+                    Case 7
+                        Return "July"
+                    Case 8
+                        Return "August"
+                    Case 9
+                        Return "September"
+                    Case 10
+                        Return "October"
+                    Case 11
+                        Return "November"
+                    Case 12
+                        Return "December"
+                    Case Else
+                        Throw New ArgumentOutOfRangeException("monthNumber", "Invalid month number """ & monthNumber & """ specified - expected a value between 1 and 12")
+                End Select
+            End Get
+        End Property
 
     End Class
 
