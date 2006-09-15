@@ -284,8 +284,9 @@ Namespace Measurements
         ''' If real-time (i.e., newest received measurement timestamp) gets too old or creeps too far
         ''' into the future, we fall back on local system time.  Note that this creates a dependency
         ''' on an accurate local clock - the smaller the time deviation tolerances the better the needed
-        ''' acuracy (e.g., time deviations tolerance of a few seconds might only require keeping the
-        ''' clock sync'd to an NTP time source but subsecond tolerances would require a GPS time sync)
+        ''' local clock acuracy.  For exampe, time deviation tolerances of a few seconds might only
+        ''' require keeping the local clock synchronized to an NTP time source but sub-second tolerances
+        ''' would require that the local clock be synchronized to a GPS time source.
         ''' </remarks>
         Public Property RealTimeTicks() As Long
             Get
