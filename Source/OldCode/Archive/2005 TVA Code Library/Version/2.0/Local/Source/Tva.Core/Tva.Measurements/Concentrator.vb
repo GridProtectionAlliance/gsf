@@ -66,6 +66,7 @@ Namespace Measurements
         Private m_discardedMeasurements As Long                             ' Total number of discarded measurements
         Private m_publishedFrames As Long                                   ' Total number of published frames
         Private m_enabled As Boolean                                        ' Enabled state of concentrator
+        Private m_inputMeasurements As IMeasurement()
         Private m_latestMeasurements As ImmediateMeasurements               ' Absolute latest received measurement values
         Private m_sampleQueue As KeyedProcessQueue(Of Long, Sample)         ' Sample processing queue
         Private m_publishFrameFunction As PublishFrameFunctionSignature     ' Frame publishing function
@@ -351,7 +352,16 @@ Namespace Measurements
                 Else
                     ' We've found the right sample for this data, so we access the proper data cell by first calculating the
                     ' proper frame index (i.e., the row) - we can then directly access the correct measurement using its key
-                    sample.Frames(System.Math.Floor((TicksBeyondSecond(.Ticks) + 1@) / m_frameRate)).Measurements(.Key).Value = .Value
+                    Dim frame As IFrame = sample.Frames(System.Math.Floor((TicksBeyondSecond(.Ticks) + 1@) / m_frameRate))
+                    Dim frameMeasurement As IMeasurement
+
+                    If frame.Measurements.TryGetValue(.Key, frameMeasurement) Then
+                        ' Measurement already exists, so we just update value
+                        frameMeasurement.Value = .Value
+                    Else
+                        ' Create new frame measurement if it doesn't exist
+                        frame.Measurements.Add(.Key, measurement)
+                    End If
 
                     ' Track absolute lastest timestamp and immediate measurement values...
                     RealTimeTicks = .Ticks
