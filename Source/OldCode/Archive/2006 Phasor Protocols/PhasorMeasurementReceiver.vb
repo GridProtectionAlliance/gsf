@@ -376,7 +376,7 @@ Public Class PhasorMeasurementReceiver
                         Next
 
 #If Not Debug Then
-                         Post data to TCP stream
+                        ' Post data to TCP stream
                         m_clientStream.Write(buffer, 0, events.Length * StandardEvent.BinaryLength)
 
                         If m_useTimeout Then
