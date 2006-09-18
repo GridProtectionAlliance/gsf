@@ -579,13 +579,13 @@ Public Class MultiProtocolFrameParser
             SendDeviceCommand(DeviceCommand.DisableRealTimeData)
             Thread.Sleep(300)
 
-            ' Wait for real-time data stream to cease
+            ' Wait for real-time data stream to cease for up to two seconds
             Do While m_initialBytesReceived > 0
                 m_initialBytesReceived = 0
                 Thread.Sleep(100)
 
                 attempts += 1
-                If attempts >= 50 Then Exit Do
+                If attempts >= 20 Then Exit Do
             Loop
         Catch
             Throw
