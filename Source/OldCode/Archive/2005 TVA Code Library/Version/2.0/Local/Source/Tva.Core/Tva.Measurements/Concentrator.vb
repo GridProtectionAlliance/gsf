@@ -351,7 +351,7 @@ Namespace Measurements
                 Else
                     ' We've found the right sample for this data, so we access the proper data cell by first calculating the
                     ' proper frame index (i.e., the row) - we can then directly access the correct measurement using the index
-                    sample.Frames(System.Math.Floor((.Ticks + 1@) / m_frameRate)).Measurements(.Key).Value = .Value
+                    sample.Frames(System.Math.Floor((TicksBeyondSecond(.Ticks) + 1@) / m_frameRate)).Measurements(.Key).Value = .Value
 
                     ' Track absolute lastest timestamp and immediate measurement values...
                     RealTimeTicks = .Ticks
