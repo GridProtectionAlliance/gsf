@@ -134,7 +134,7 @@ Public Class TcpClient
         If Not String.IsNullOrEmpty(connectionString) Then
             m_connectionData = Tva.Text.Common.ParseKeyValuePairs(connectionString)
             If m_connectionData.ContainsKey("server") AndAlso _
-                    Dns.GetHostEntry(m_connectionData("server")) IsNot Nothing AndAlso _
+                    Not String.IsNullOrEmpty(m_connectionData("server")) AndAlso _
                     m_connectionData.ContainsKey("port") AndAlso _
                     ValidPortNumber(m_connectionData("port")) Then
                 Return True

@@ -2,6 +2,7 @@
 
 Imports System.IO
 Imports System.Net
+Imports System.Net.Sockets
 Imports Tva.IO.Compression.Common
 Imports Tva.Security.Cryptography
 Imports Tva.Security.Cryptography.Common
@@ -16,8 +17,14 @@ Friend NotInheritable Class CommunicationHelper
     ''' <returns>IP endpoint for the specified host name and port number.</returns>
     Public Shared Function GetIpEndPoint(ByVal hostNameOrAddress As String, ByVal port As Integer) As IPEndPoint
 
-        ' SocketException will be thrown is the host is not found.
-        Return New IPEndPoint(Dns.GetHostEntry(hostNameOrAddress).AddressList(0), port)
+        Try
+            Return New IPEndPoint(Dns.GetHostEntry(hostNameOrAddress).AddressList(0), port)
+        Catch ex As SocketException
+            ' SocketException will be thrown if the host is not found, so we'll try manual IP
+            Return New IPEndPoint(IPAddress.Parse(hostNameOrAddress), port)
+        Catch
+            Throw
+        End Try
 
     End Function
 
