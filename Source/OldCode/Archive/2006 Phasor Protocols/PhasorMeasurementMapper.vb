@@ -17,10 +17,14 @@
 
 Imports System.Text
 Imports System.Threading
+Imports System.IO
+Imports System.Runtime.Serialization.Formatters
+Imports System.Runtime.Serialization.Formatters.Soap
 Imports Tva.DateTime
 Imports Tva.Phasors
 Imports Tva.Communication
 Imports Tva.Measurements
+Imports Tva.IO.FilePath
 
 <CLSCompliant(False)> _
 Public Class PhasorMeasurementMapper
@@ -79,14 +83,21 @@ Public Class PhasorMeasurementMapper
 
     Public Sub Disconnect()
 
-        If m_frameParser IsNot Nothing Then m_frameParser.[Stop]()
-
         ' Stop data stream monitor, if running
         If m_dataStreamMonitor IsNot Nothing Then m_dataStreamMonitor.Enabled = False
+
+        If m_frameParser IsNot Nothing Then m_frameParser.[Stop]()
 
         m_receivedConfigFrame = False
         m_errorCount = 0
         m_errorTime = 0
+
+    End Sub
+
+    Public Sub SendDeviceCommand(ByVal command As DeviceCommand)
+
+        If m_frameParser IsNot Nothing Then m_frameParser.SendDeviceCommand(command)
+        UpdateStatus("Sent device command """ & [Enum].GetName(GetType(DeviceCommand), command) & """...")
 
     End Sub
 
@@ -358,6 +369,20 @@ Public Class PhasorMeasurementMapper
         UpdateStatus("Received " & m_source & " configuration frame at " & Date.Now)
         m_receivedConfigFrame = True
 
+        Try
+            Dim configFile As FileStream = File.Create(GetApplicationPath() & m_source & ".configuration.xml")
+
+            With New SoapFormatter
+                .AssemblyFormat = FormatterAssemblyStyle.Simple
+                .TypeFormat = FormatterTypeStyle.TypesWhenNeeded
+                .Serialize(configFile, frame)
+            End With
+
+            configFile.Close()
+        Catch ex As Exception
+            UpdateStatus("Failed to serialize configuration frame: " & ex.Message)
+        End Try
+
     End Sub
 
     Private Sub m_frameParser_ReceivedDataFrame(ByVal frame As Tva.Phasors.IDataFrame) Handles m_frameParser.ReceivedDataFrame
@@ -367,6 +392,14 @@ Public Class PhasorMeasurementMapper
     End Sub
 
     Private Sub m_frameParser_ReceivedFrameBufferImage(ByVal frameType As FundamentalFrameType, ByVal binaryImage() As Byte, ByVal offset As Integer, ByVal length As Integer) Handles m_frameParser.ReceivedFrameBufferImage
+
+#If DEBUG Then
+        ' TODO: Remove this debug code...
+        Static dataFramesReceived As Integer
+
+        If frameType = FundamentalFrameType.DataFrame Then dataFramesReceived += 1
+        If dataFramesReceived Mod 180 = 0 Then UpdateStatus(dataFramesReceived & " data frame images on " & m_source & " have been received (" & Date.Now & ")")
+#End If
 
         m_bytesReceived += length
 

@@ -25,6 +25,7 @@ Imports Tva.Configuration.Common
 Imports Tva.Text.Common
 Imports Tva.Data.Common
 Imports Tva.Measurements
+Imports Tva.Phasors
 Imports InterfaceAdapters
 Imports System.Reflection
 
@@ -67,6 +68,10 @@ Module MainModule
             ElseIf consoleLine.StartsWith("disconnect", True, Nothing) Then
                 If TryGetMapper(consoleLine, mapper) Then
                     mapper.Disconnect()
+                End If
+            ElseIf consoleLine.StartsWith("sendcommand", True, Nothing) Then
+                If TryGetMapper(consoleLine, mapper) Then
+                    mapper.SendDeviceCommand(ParseDeviceCommand(consoleLine))
                 End If
             ElseIf consoleLine.StartsWith("reload", True, Nothing) Then
                 Console.WriteLine()
@@ -123,7 +128,7 @@ Module MainModule
             DisplayStatusMessage("Failure during initialization: " & ex.Message)
         Finally
             If connection IsNot Nothing AndAlso connection.State = ConnectionState.Open Then connection.Close()
-            DisplayStatusMessage("PMU database connection close.")
+            DisplayStatusMessage("PMU database connection closed.")
         End Try
 
     End Sub
@@ -273,8 +278,6 @@ Module MainModule
             Next
         End With
 
-        connection.Close()
-
         Return calculatedMeasurementAdapters.ToArray()
 
     End Function
@@ -312,6 +315,21 @@ Module MainModule
             Console.WriteLine("Failed to lookup specified mapper due to exception: " & ex.Message)
             Return False
         End Try
+
+    End Function
+
+    Private Function ParseDeviceCommand(ByVal consoleLine As String) As Tva.Phasors.DeviceCommand
+
+        Select Case RemoveDuplicateWhiteSpace(consoleLine).Split(" "c)(2).ToLower()
+            Case "disabledata"
+                Return DeviceCommand.DisableRealTimeData
+            Case "enabledata"
+                Return DeviceCommand.EnableRealTimeData
+            Case "getconfig"
+                Return DeviceCommand.SendConfigurationFrame2
+            Case Else
+                Return DeviceCommand.SendHeaderFrame
+        End Select
 
     End Function
 
@@ -381,14 +399,17 @@ Module MainModule
 
         Console.WriteLine("Possible commands:")
         Console.WriteLine()
-        Console.WriteLine("    ""Connect PmuID""        - Restarts PMU connection cycle")
-        Console.WriteLine("    ""Disconnect PmuID""     - Terminates PMU connection")
-        Console.WriteLine("    ""Reload""               - Reloads the entire service process")
-        Console.WriteLine("    ""Status""               - Returns current service status")
-        Console.WriteLine("    ""List""                 - Displays loaded PMU/PDC connections")
-        Console.WriteLine("    ""Version""              - Displays service version information")
-        Console.WriteLine("    ""Help""                 - Displays this help information")
-        Console.WriteLine("    ""Exit""                 - Exits this console monitor")
+        Console.WriteLine("  ""Connect PmuID""                 - Restarts PMU connection cycle")
+        Console.WriteLine("  ""Disconnect PmuID""              - Terminates PMU connection")
+        Console.WriteLine("  ""SendCommand PmuID DisableData"" - Turns off real-time data")
+        Console.WriteLine("  ""SendCommand PmuID EnableData""  - Turns on real-time data")
+        Console.WriteLine("  ""SendCommand PmuID GetConfig""   - Requests configuration frame")
+        Console.WriteLine("  ""Reload""                        - Reloads the entire service process")
+        Console.WriteLine("  ""Status""                        - Returns current service status")
+        Console.WriteLine("  ""List""                          - Displays loaded PMU/PDC connections")
+        Console.WriteLine("  ""Version""                       - Displays service version information")
+        Console.WriteLine("  ""Help""                          - Displays this help information")
+        Console.WriteLine("  ""Exit""                          - Exits this console monitor")
         Console.WriteLine()
 
     End Sub

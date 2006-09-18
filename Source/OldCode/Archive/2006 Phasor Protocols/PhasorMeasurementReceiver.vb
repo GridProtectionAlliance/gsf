@@ -121,16 +121,16 @@ Public Class PhasorMeasurementReceiver
     Public Sub Disconnect()
 
         Try
-            If m_socketThread IsNot Nothing AndAlso m_socketThread.IsAlive Then m_socketThread.Abort()
+            If m_socketThread IsNot Nothing Then m_socketThread.Abort()
             m_socketThread = Nothing
         Catch
             ' Not going to stop for exceptions thrown when trying to disconnect...
         End Try
 
         Try
-            If m_tcpSocket IsNot Nothing AndAlso m_tcpSocket.Connected Then m_tcpSocket.Close()
+            If m_tcpSocket IsNot Nothing Then m_tcpSocket.Close()
             m_tcpSocket = Nothing
-        Catch ex As Exception
+        Catch
             ' Not going to stop for exceptions thrown when trying to disconnect...
         End Try
 
@@ -173,6 +173,7 @@ Public Class PhasorMeasurementReceiver
             Dim source As String
             Dim timezone As String
             Dim timeAdjustmentTicks As Long
+            Dim accessID As Integer
             Dim pmuIDs As PmuInfoCollection
             Dim x, y As Integer
 
@@ -211,6 +212,7 @@ Public Class PhasorMeasurementReceiver
                     source = row("SourceID").ToString.Trim.ToUpper
                     timezone = row("TimeZone")
                     timeAdjustmentTicks = row("TimeAdjustmentTicks")
+                    accessID = row("AccessID")
 
                     ' Setup phasor frame parser
                     With parser
@@ -235,7 +237,7 @@ Public Class PhasorMeasurementReceiver
                             '.ConnectionString = "server=" & row("IPAddress") & "; localport=" & row("IPPort") & "; remoteport=" & row("IPCommandPort")
                         End If
 
-                        .PmuID = row("AccessID")
+                        .PmuID = accessID
                         .SourceName = source
                     End With
 
@@ -253,7 +255,7 @@ Public Class PhasorMeasurementReceiver
                         End With
                     Else
                         ' Making a connection to a single device
-                        pmuIDs.Add(New PmuInfo(0, source))
+                        pmuIDs.Add(New PmuInfo(accessID, source))
                     End If
 
                     SyncLock m_measurementBuffer
@@ -424,6 +426,9 @@ Public Class PhasorMeasurementReceiver
                 End If
             Catch ex As ThreadAbortException
                 ' If we received an abort exception, we'll egress gracefully
+                Exit Do
+            Catch ex As ObjectDisposedException
+                ' This will be a normal exception...
                 Exit Do
             Catch ex As Exception
                 UpdateStatus("Archiver connection exception: " & ex.Message)
