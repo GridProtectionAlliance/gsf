@@ -73,6 +73,7 @@ Public Class TcpClient
         ' Client has not yet connected to the server so we'll abort the thread on which the client
         ' is attempting to connect to the server.
         If Enabled() AndAlso m_connectionThread IsNot Nothing Then m_connectionThread.Abort()
+        m_connectionThread = Nothing
 
     End Sub
 
@@ -81,7 +82,7 @@ Public Class TcpClient
     ''' </summary>
     Public Overrides Sub Connect()
 
-        If Enabled() AndAlso Not IsConnected() Then
+        If Enabled AndAlso Not IsConnected AndAlso ValidConnectionString(ConnectionString) Then
             ' Spawn a new thread on which the client will attempt to connect to the server.
             m_connectionThread = New Thread(AddressOf ConnectToServer)
             m_connectionThread.Start()
@@ -173,8 +174,7 @@ Public Class TcpClient
                 If ReceiveTimeout() <> -1 Then m_tcpClient.Client.ReceiveTimeout = ReceiveTimeout() * 1000
 
                 ' Connect the client socket to the remote server endpoint.
-                m_tcpClient.Client.Connect(GetIpEndPoint(Convert.ToString(m_connectionData("server")), _
-                    Convert.ToInt32(m_connectionData("port"))))
+                m_tcpClient.Client.Connect(GetIpEndPoint(m_connectionData("server"), Convert.ToInt32(m_connectionData("port"))))
 
                 If m_tcpClient.Client.Connected() Then ' Client connected to the server successfully.
                     ' Start a seperate thread for the client to receive data from the server.

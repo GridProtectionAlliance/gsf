@@ -46,6 +46,7 @@ Public Class UdpClient
     Private m_payloadAware As Boolean
     Private m_udpServer As IPEndPoint
     Private m_udpClient As StateKeeper(Of Socket)
+    Private m_connectionThread As Thread
     Private m_connectionData As Dictionary(Of String, String)
     Private m_receivingThread As Thread
     Private m_packetBeginMarker As Byte() = {&HAA, &HBB, &HCC, &HDD}
@@ -65,40 +66,27 @@ Public Class UdpClient
         End Set
     End Property
 
-    Public Overrides Sub Connect()
+    ''' <summary>
+    ''' Cancels any active attempts of connecting to the server.
+    ''' </summary>
+    Public Overrides Sub CancelConnect()
 
-        If Enabled() AndAlso Not IsConnected() AndAlso ValidConnectionString(ConnectionString()) Then
-            ' Initialize the server endpoint that will be used when sending data to the server.
-            Dim server As String = "localhost"
-            Dim remotePort As Integer = 0
-            If m_connectionData.ContainsKey("server") Then server = m_connectionData("server")
-            If m_connectionData.ContainsKey("remoteport") Then remotePort = Convert.ToInt32(m_connectionData("remoteport"))
-            m_udpServer = GetIpEndPoint(server, remotePort)
+        ' Client has not yet connected to the server so we'll abort the thread on which the client
+        ' is attempting to connect to the server.
+        If m_receivingThread IsNot Nothing Then m_receivingThread.Abort()
+        m_receivingThread = Nothing
 
-            ' Use the specified port only if handshaking is disabled otherwise let the system pick a port for us.
-            Dim localPort As Integer = 0
-            If Not Handshake() Then localPort = Convert.ToInt32(m_connectionData("localport"))
-
-            ' Initialize the client .
-            m_udpClient = New StateKeeper(Of Socket)
-            m_udpClient.ID = ClientID()
-            m_udpClient.Passphrase = HandshakePassphrase()
-            m_udpClient.Client = New Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp)
-            m_udpClient.Client.Bind(New IPEndPoint(IPAddress.Any, localPort))
-            If ReceiveTimeout() <> -1 Then m_udpClient.Client.ReceiveTimeout = ReceiveTimeout() * 1000
-
-            ' Start listening for data from the server on a seperate thread.
-            m_receivingThread = New Thread(AddressOf ReceiveServerData)
-            m_receivingThread.Start()
-        End If
+        If Enabled() AndAlso m_connectionThread IsNot Nothing Then m_connectionThread.Abort()
+        m_connectionThread = Nothing
 
     End Sub
 
-    Public Overrides Sub CancelConnect()
+    Public Overrides Sub Connect()
 
-        If m_receivingThread IsNot Nothing AndAlso Not IsConnected() Then
-            m_receivingThread.Abort()
-            OnConnectingCancelled(EventArgs.Empty)
+        If Enabled AndAlso Not IsConnected AndAlso ValidConnectionString(ConnectionString) Then
+            ' Spawn a new thread on which the client will attempt to connect to the server.
+            m_connectionThread = New Thread(AddressOf ConnectToServer)
+            m_connectionThread.Start()
         End If
 
     End Sub
@@ -161,6 +149,56 @@ Public Class UdpClient
         End If
 
     End Function
+
+    ''' <summary>
+    ''' Connects to the server.
+    ''' </summary>
+    ''' <remarks>This method is meant to be executed on a seperate thread.</remarks>
+    Private Sub ConnectToServer()
+
+        Dim connectionAttempts As Integer = 0
+
+        Do While (MaximumConnectionAttempts() = -1) OrElse (connectionAttempts < MaximumConnectionAttempts())
+            Try
+                OnConnecting(EventArgs.Empty)   ' Notify that the client is connecting to the server.
+
+                ' Initialize the server endpoint that will be used when sending data to the server.
+                Dim server As String = "localhost"
+                Dim remotePort As Integer = 0
+                If m_connectionData.ContainsKey("server") Then server = m_connectionData("server")
+                If m_connectionData.ContainsKey("remoteport") Then remotePort = Convert.ToInt32(m_connectionData("remoteport"))
+                m_udpServer = GetIpEndPoint(server, remotePort)
+
+                ' Use the specified port only if handshaking is disabled otherwise let the system pick a port for us.
+                Dim localPort As Integer = 0
+                If Not Handshake() Then localPort = Convert.ToInt32(m_connectionData("localport"))
+
+                ' Initialize the client .
+                m_udpClient = New StateKeeper(Of Socket)
+                m_udpClient.ID = ClientID()
+                m_udpClient.Passphrase = HandshakePassphrase()
+                m_udpClient.Client = New Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp)
+                m_udpClient.Client.Bind(New IPEndPoint(IPAddress.Any, localPort))
+                If ReceiveTimeout() <> -1 Then m_udpClient.Client.ReceiveTimeout = ReceiveTimeout() * 1000
+
+                ' Start listening for data from the server on a seperate thread.
+                m_receivingThread = New Thread(AddressOf ReceiveServerData)
+                m_receivingThread.Start()
+
+                Exit Do ' Client successfully connected to the server.
+            Catch ex As ThreadAbortException
+                ' We'll stop trying to connect if a ThreadAbortException exception is encountered. This will
+                ' be the case when the thread is deliberately aborted in CancelConnect() method in which case 
+                ' we want to stop attempting to connect to the server.
+                OnConnectingCancelled(EventArgs.Empty)
+                Exit Do
+            Catch ex As Exception
+                connectionAttempts += 1
+                OnConnectingException(ex)
+            End Try
+        Loop
+
+    End Sub
 
     Private Sub ReceiveServerData()
 
