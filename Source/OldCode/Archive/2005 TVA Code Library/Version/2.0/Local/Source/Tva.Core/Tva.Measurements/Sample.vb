@@ -26,21 +26,19 @@ Namespace Measurements
 
         Implements IComparable
 
-        Private m_parent As Concentrator        ' Parent concentrator
         Private m_frames As IFrame()            ' Array of frames
         Private m_ticks As Long                 ' Ticks at the beginning of sample
 
         Friend Sub New(ByVal parent As Concentrator, ByVal ticks As Long)
 
-            m_parent = m_parent
             m_ticks = ticks
 
             ' Create new array of frames for this sample...
-            m_frames = CreateArray(Of IFrame)(m_parent.FramesPerSecond)
+            m_frames = CreateArray(Of IFrame)(parent.FramesPerSecond)
 
             For x As Integer = 0 To m_frames.Length - 1
                 ' We precalculate frame ticks sitting in the middle of the frame
-                m_frames(x) = m_parent.CreateNewFrameFunction.Invoke(ticks + ((x + 0.5@) * m_parent.FrameRate))
+                m_frames(x) = parent.CreateNewFrameFunction.Invoke(ticks + ((x + 0.5@) * parent.FrameRate))
             Next
 
         End Sub
