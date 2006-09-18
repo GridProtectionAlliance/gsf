@@ -19,18 +19,18 @@ Public Class PmuInfo
 
     Implements IComparable(Of PmuInfo)
 
-    Private m_id As UShort
+    Private m_id As UInt16
     Private m_tag As String
     Private m_lastReportTime As Long
 
-    Public Sub New(ByVal id As UShort, ByVal tag As String)
+    Public Sub New(ByVal id As UInt16, ByVal tag As String)
 
         m_id = id
         m_tag = tag
 
     End Sub
 
-    Public ReadOnly Property ID() As UShort
+    Public ReadOnly Property ID() As UInt16
         Get
             Return m_id
         End Get
