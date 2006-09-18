@@ -20,8 +20,10 @@
 '       2.0 version of source code migrated from 1.1 source (TVA.Shared.DateTime)
 '  08/28/2006 - J. Ritchie Carroll
 '       Added TimeIsValid, LocalTimeIsValid and UtcTimeIsValid functions
-'  09/15/2007 - J. Ritchie Carroll
+'  09/15/2006 - J. Ritchie Carroll
 '       Updated BaselinedTimestamp function to support multiple time intervals
+'  09/18/2006 - J. Ritchie Carroll
+'       Added TicksBeyondSecond function to support high-resolution timestamp intervals
 '
 '*******************************************************************************************************
 
@@ -178,6 +180,15 @@ Namespace DateTime
         Public Shared ReadOnly Property UtcSystemTimer() As Double
             Get
                 Return TicksToSeconds(Date.UtcNow.Ticks)
+            End Get
+        End Property
+
+        ''' <summary>Determines the distance, in ticks, beyond the top of the timestamp second</summary>
+        ''' <param name="ticks">Ticks of timestamp to evaluate</param>
+        ''' <returns>Timestamp's tick distance from the top of the second</returns>
+        Public Shared ReadOnly Property TicksBeyondSecond(ByVal ticks As Long) As Long
+            Get
+                Return ticks - BaselinedTimestamp(ticks, BaselineTimeInterval.Second).Ticks
             End Get
         End Property
 
