@@ -374,7 +374,7 @@ Namespace Measurements
         ''' <summary>Queues measurement for sorting in the thread pool</summary>
         ''' <remarks>
         ''' Sorting items directly may provide a small speed improvement and will use less resources, however TCP stream processing
-        ''' can fall behind, so sorting measurements on a thread may be required for high-volume TCP input streams
+        ''' can fall behind under heavy load, so sorting measurements on a thread may be required for high-volume TCP input streams
         ''' </remarks>
         Public Sub QueueMeasurementForSorting(ByVal measurement As IMeasurement)
 
