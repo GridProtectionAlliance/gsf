@@ -61,7 +61,7 @@ Public Class MultiProtocolFrameParser
     Private m_transportProtocol As TransportProtocol
     Private m_connectionString As String
     Private m_maximumConnectionAttempts As Integer
-    Private m_pmuID As Int32
+    Private m_pmuID As UInt16
     Private m_bufferSize As Int32
 
     ' We internalize protocol specfic processing to simplfy end user consumption
@@ -80,6 +80,8 @@ Public Class MultiProtocolFrameParser
     Private m_definedFrameRate As Double
     Private m_lastFrameReceivedTime As Long
     Private m_autoStartDataParsingSequence As Boolean
+    Private m_initiatingDataStream As Boolean
+    Private m_initialBytesReceived As Long
 
 #End Region
 
@@ -145,11 +147,11 @@ Public Class MultiProtocolFrameParser
         End Set
     End Property
 
-    Public Property PmuID() As Int32
+    Public Property PmuID() As UInt16
         Get
             Return m_pmuID
         End Get
-        Set(ByVal value As Int32)
+        Set(ByVal value As UInt16)
             m_pmuID = value
         End Set
     End Property
@@ -530,11 +532,11 @@ Public Class MultiProtocolFrameParser
 
         RaiseEvent Connected()
 
+        ' Begin data parsing sequence to handle reception of configuration frame
         If m_autoStartDataParsingSequence Then
-            ' Handle reception of configuration frame - in case of device that only responds to commands when
-            ' not sending real-time data, such as the SEL 421, we disable real-time data stream first...
-            SendDeviceCommand(DeviceCommand.DisableRealTimeData)
-            SendDeviceCommand(DeviceCommand.SendConfigurationFrame2)
+            m_initialBytesReceived = 0
+            m_initiatingDataStream = True
+            ThreadPool.QueueUserWorkItem(AddressOf StartDataParsingSequence)
         End If
 
     End Sub
@@ -562,6 +564,37 @@ Public Class MultiProtocolFrameParser
         ' Pass data from communications client into protocol specific frame parser
         m_frameParser.Write(buffer, offset, count)
         m_byteRateTotal += count
+        If m_initiatingDataStream Then m_initialBytesReceived += count
+
+    End Sub
+
+    Private Sub StartDataParsingSequence(ByVal state As Object)
+
+        Dim attempts As Integer
+
+        ' Some devices will only send a config frame once data streaming has been disabled, so
+        ' we use this code to disable real-time data and wait for data to stop streaming...
+        Try
+            ' Make sure data stream is disabled
+            SendDeviceCommand(DeviceCommand.DisableRealTimeData)
+            Thread.Sleep(300)
+
+            ' Wait for real-time data stream to cease
+            Do While m_initialBytesReceived > 0
+                m_initialBytesReceived = 0
+                Thread.Sleep(100)
+
+                attempts += 1
+                If attempts >= 50 Then Exit Do
+            Loop
+        Catch
+            Throw
+        Finally
+            m_initiatingDataStream = False
+        End Try
+
+        ' Request configuration frame once real-time data has been disabled
+        SendDeviceCommand(DeviceCommand.SendConfigurationFrame2)
 
     End Sub
 
