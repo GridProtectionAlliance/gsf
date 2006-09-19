@@ -207,9 +207,6 @@ Namespace IeeeC37_118
                         Next
                         .Append("]"c)
                         .Append(Environment.NewLine)
-                        .Append("           PDC/PMU ID code: ")
-                        .Append(m_configurationFrame2.IDCode)
-                        .Append(Environment.NewLine)
                         .Append("     Configured frame rate: ")
                         .Append(m_configurationFrame2.FrameRate)
                         .Append(Environment.NewLine)
