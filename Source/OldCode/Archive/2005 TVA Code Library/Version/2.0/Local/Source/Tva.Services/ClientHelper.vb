@@ -33,6 +33,10 @@ Public Class ClientHelper
     ''' <param name="message">The message that the service client must display in its status.</param>
     Public Event UpdateStatus(ByVal message As String)
 
+    Public Event ServiceStateChanged(ByVal serviceName As String, ByVal serviceState As ServiceState)
+
+    Public Event ProcessStateChanged(ByVal processName As String, ByVal processState As ProcessState)
+
     ''' <summary>
     ''' Gets the instance of TCP client used for communicating with the service.
     ''' </summary>
@@ -87,11 +91,33 @@ Public Class ClientHelper
 
     End Sub
 
+    Private Sub CHTcpClient_Disconnected(ByVal sender As Object, ByVal e As System.EventArgs) Handles CHTcpClient.Disconnected
+
+        RaiseEvent UpdateStatus("Disconnected from service")
+
+    End Sub
+
     Private Sub CHTcpClient_ReceivedData(ByVal data() As System.Byte) Handles CHTcpClient.ReceivedData
 
         Dim response As ServiceResponse = GetObject(Of ServiceResponse)(data)
         If response IsNot Nothing Then
             RaiseEvent ReceivedServiceResponse(response)
+            Select Case response.Type
+                Case "UPDATESTATUS"
+                    RaiseEvent UpdateStatus(response.Message)
+                Case "SERVICESTATECHANGED"
+                    Dim messageSegments As String() = response.Message.Split(">"c)
+                    If messageSegments.Length = 2 Then
+                        RaiseEvent ServiceStateChanged(messageSegments(0), DirectCast(System.Enum.Parse(GetType(ServiceState), messageSegments(1)), ServiceState))
+                        RaiseEvent UpdateStatus("Service ‘" & messageSegments(0) & "’ has " & messageSegments(1) & Environment.NewLine)
+                    End If
+                Case "PROCESSSTATECHANGED"
+                    Dim messageSegments As String() = response.Message.Split(">"c)
+                    If messageSegments.Length = 2 Then
+                        RaiseEvent ProcessStateChanged(messageSegments(0), DirectCast(System.Enum.Parse(GetType(ProcessState), messageSegments(1)), ProcessState))
+                        RaiseEvent UpdateStatus("Process ‘" & messageSegments(0) & "’ is " & messageSegments(1) & Environment.NewLine)
+                    End If
+            End Select
         End If
 
     End Sub

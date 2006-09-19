@@ -2,6 +2,7 @@
 
 Imports System.ComponentModel
 Imports System.ServiceProcess
+Imports Tva.Common
 Imports Tva.Services
 Imports Tva.Tro.Ssam
 Imports Tva.Communication
@@ -152,6 +153,8 @@ Public Class ServiceHelper
     ''' </summary>
     Public Sub OnStart()
 
+        SendServiceStateChangedResponse(ServiceState.Started)
+
         For Each component As IServiceComponent In m_serviceComponents
             component.ServiceStateChanged(ServiceState.Started)
         Next
@@ -164,6 +167,8 @@ Public Class ServiceHelper
     ''' To be called when the service is stopped (inside the service's OnStop method).
     ''' </summary>
     Public Sub OnStop()
+
+        SendServiceStateChangedResponse(ServiceState.Stopped)
 
         For Each component As IServiceComponent In m_serviceComponents
             component.ServiceStateChanged(ServiceState.Stopped)
@@ -178,6 +183,8 @@ Public Class ServiceHelper
     ''' </summary>
     Public Sub OnPause()
 
+        SendServiceStateChangedResponse(ServiceState.Paused)
+
         For Each component As IServiceComponent In m_serviceComponents
             component.ServiceStateChanged(ServiceState.Paused)
         Next
@@ -191,6 +198,8 @@ Public Class ServiceHelper
     ''' </summary>
     Public Sub OnResume()
 
+        SendServiceStateChangedResponse(ServiceState.Resumed)
+
         For Each component As IServiceComponent In m_serviceComponents
             component.ServiceStateChanged(ServiceState.Resumed)
         Next
@@ -203,6 +212,8 @@ Public Class ServiceHelper
     ''' To be when the system is shutting down (inside the service's OnShutdown method).
     ''' </summary>
     Public Sub OnShutdown()
+
+        SendServiceStateChangedResponse(ServiceState.Shutdown)
 
         For Each component As IServiceComponent In m_serviceComponents
             component.ServiceStateChanged(ServiceState.Shutdown)
@@ -223,12 +234,14 @@ Public Class ServiceHelper
             component.ProcessStateChanged(processName, processState)
         Next
 
+        SendProcessStateChangedResponse(processName, processState)
+
     End Sub
 
     Public Sub AddProcess(ByVal processExecutionMethod As ServiceProcess.ExecutionMethodSignature, _
             ByVal processName As String)
 
-        AddProcess(processExecutionMethod, processName)
+        AddProcess(processExecutionMethod, processName, Nothing)
 
     End Sub
 
@@ -238,7 +251,7 @@ Public Class ServiceHelper
         If Not m_processes.ContainsKey(processName) Then
             m_processes.Add(processName, New ServiceProcess(processExecutionMethod, processName, processParameters, Me))
         Else
-            Throw New InvalidOperationException("Process '" & processName & "' already exists.")
+            UpdateStatus("Process '" & processName & "' already exists.")
         End If
 
     End Sub
@@ -272,26 +285,8 @@ Public Class ServiceHelper
                 SHScheduleManager.Schedules.Add(processName, schedule)
             End If
         Else
-            Throw New InvalidOperationException("Process '" & processName & "' does not exist.")
+            UpdateStatus("Process '" & processName & "' does not exist.")
         End If
-
-    End Sub
-
-    Public Sub SendUpdateStatusResponse(ByVal response As String)
-
-        Dim serviceResponse As New ServiceResponse()
-        serviceResponse.Type = "UPDATESTATUS"
-        serviceResponse.Message = response
-        SendResponse(serviceResponse)
-
-    End Sub
-
-    Public Sub SendUpdateStatusResponse(ByVal clientID As Guid, ByVal response As String)
-
-        Dim serviceResponse As New ServiceResponse()
-        serviceResponse.Type = "UPDATESTATUS"
-        serviceResponse.Message = response
-        SendResponse(clientID, serviceResponse)
 
     End Sub
 
@@ -313,6 +308,13 @@ Public Class ServiceHelper
     Public Sub SendResponse(ByVal clientID As Guid, ByVal response As ServiceResponse)
 
         SHTcpServer.SendTo(clientID, response)
+
+    End Sub
+
+    Public Sub UpdateStatus(ByVal message As String)
+
+        SendUpdateStatusResponse(message)
+        ' TODO: Add code to log to the event log and SSAM.
 
     End Sub
 
@@ -344,8 +346,11 @@ Public Class ServiceHelper
                 ' We'll process the request only if the service didn't handle it.
                 Select Case request.Type.ToUpper()
                     Case "LISTPROCESSES"
-                    Case "STARTPROCESS"
-                    Case "ABORTPROCESS"
+                    Case "START", "STARTPROCESS"
+                        If m_processes.Count > 0 Then
+                            m_processes("PrimaryProcess").StartProcess()
+                        End If
+                    Case "ABORT", "ABORTPROCESS"
                     Case "UNSCHEDULEPROCESS"
                     Case "RESCHEDULEPROCESS"
                     Case "PINGSERVICE"
@@ -366,11 +371,11 @@ Public Class ServiceHelper
                     Case "UPDATESETTING"
                     Case "SAVESETTINGS"
                     Case Else
-
+                        HandleInvalidClientRequest()
                 End Select
             End If
         Else
-
+            HandleInvalidClientRequest()
         End If
 
     End Sub
@@ -391,6 +396,37 @@ Public Class ServiceHelper
 #End Region
 
 #Region " Private Methods "
+
+    Private Sub HandleInvalidClientRequest()
+
+    End Sub
+
+    Private Sub SendUpdateStatusResponse(ByVal response As String)
+
+        Dim serviceResponse As New ServiceResponse()
+        serviceResponse.Type = "UPDATESTATUS"
+        serviceResponse.Message = response
+        SendResponse(serviceResponse)
+
+    End Sub
+
+    Private Sub SendServiceStateChangedResponse(ByVal serviceState As ServiceState)
+
+        Dim serviceResponse As New ServiceResponse()
+        serviceResponse.Type = "SERVICESTATECHANGED"
+        serviceResponse.Message = m_service.ServiceName & ">" & serviceState.ToString()
+        SendResponse(serviceResponse)
+
+    End Sub
+
+    Private Sub SendProcessStateChangedResponse(ByVal processName As String, ByVal processState As ProcessState)
+
+        Dim serviceResponse As New ServiceResponse()
+        serviceResponse.Type = "PROCESSSTATECHANGED"
+        serviceResponse.Message = processName & ">" & processState.ToString()
+        SendResponse(serviceResponse)
+
+    End Sub
 
 #End Region
 
