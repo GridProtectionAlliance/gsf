@@ -87,6 +87,7 @@ Public Class PhasorMeasurementMapper
         ' Stop data stream monitor, if running
         If m_dataStreamMonitor IsNot Nothing Then m_dataStreamMonitor.Enabled = False
 
+        ' Stop multi-protocol frame parser
         If m_frameParser IsNot Nothing Then m_frameParser.[Stop]()
 
         m_receivedConfigFrame = False
@@ -191,7 +192,10 @@ Public Class PhasorMeasurementMapper
     End Property
 
     ''' <summary>This key function is the glue that binds a phasor measurement value to a historian measurement ID</summary>
-    Protected Overridable Sub MapDataFrameMeasurements(ByVal frame As Tva.Phasors.IDataFrame)
+    ''' <remarks>This function is expected to be executed on an independent thread (e.g., queued via Threadpool)</remarks>
+    Protected Overridable Sub MapDataFrameMeasurements(ByVal state As Object)
+
+        Dim frame As IDataFrame = DirectCast(state, IDataFrame)
 
         ' Map data frame measurement instances to their associated point ID's
         With frame
@@ -257,12 +261,17 @@ Public Class PhasorMeasurementMapper
             Next
         End With
 
-        ' Don't want to waste time on the parsing thread providing new measurements to external
-        ' sources (e.g., archive queue and calculated measurement modules, so we queue this up
-        ThreadPool.QueueUserWorkItem(AddressOf ProcessParsedFrame, frame)
+        ' Provide real-time measurements where needed
+        RaiseEvent NewParsedMeasurements(frame.Measurements)
+
+        ' Queue up frame for polled retrieval into DatAWare...
+        SyncLock m_measurementFrames
+            m_measurementFrames.Add(frame)
+        End SyncLock
 
     End Sub
 
+    ''' <summary>This procedure is used to identify a measured value and apply any additional needed attributes to the measurement</summary>
     Private Sub MapMeasurementIDToValue(ByVal frame As IDataFrame, ByVal synonym As String, ByVal measurementValue As IMeasurement)
 
         Dim measurementID As IMeasurement
@@ -280,20 +289,6 @@ Public Class PhasorMeasurementMapper
             ' Add the updated measurement value to the keyed frame measurement list
             frame.Measurements.Add(measurementValue.Key, measurementValue)
         End If
-
-    End Sub
-
-    Private Sub ProcessParsedFrame(ByVal state As Object)
-
-        Dim frame As IFrame = DirectCast(state, IFrame)
-
-        ' Provide real-time measurements where needed
-        RaiseEvent NewParsedMeasurements(frame.Measurements)
-
-        ' Queue up frame for polled retrieval into DatAWare...
-        SyncLock m_measurementFrames
-            m_measurementFrames.Add(frame)
-        End SyncLock
 
     End Sub
 
@@ -366,13 +361,23 @@ Public Class PhasorMeasurementMapper
 
     End Sub
 
-    Private Sub m_frameParser_ReceivedConfigurationFrame(ByVal frame As Tva.Phasors.IConfigurationFrame) Handles m_frameParser.ReceivedConfigurationFrame
+    Private Sub m_frameParser_ReceivedConfigurationFrame(ByVal frame As IConfigurationFrame) Handles m_frameParser.ReceivedConfigurationFrame
+
+        m_receivedConfigFrame = True
+        ThreadPool.QueueUserWorkItem(AddressOf CacheConfigurationFrame, frame)
+
+    End Sub
+
+    Private Sub CacheConfigurationFrame(ByVal state As Object)
+
+        Dim frame As IConfigurationFrame = DirectCast(state, IConfigurationFrame)
 
         UpdateStatus("Received " & m_source & " configuration frame at " & Date.Now)
-        m_receivedConfigFrame = True
 
         Try
-            Dim configFile As FileStream = File.Create(GetApplicationPath() & m_source & ".configuration.xml")
+            Dim cachePath As String = GetApplicationPath() & "ConfigurationCache\"
+            If Not Directory.Exists(cachePath) Then Directory.CreateDirectory(cachePath)
+            Dim configFile As FileStream = File.Create(cachePath & m_source & ".configuration.xml")
 
             With New SoapFormatter
                 .AssemblyFormat = FormatterAssemblyStyle.Simple
@@ -387,9 +392,12 @@ Public Class PhasorMeasurementMapper
 
     End Sub
 
-    Private Sub m_frameParser_ReceivedDataFrame(ByVal frame As Tva.Phasors.IDataFrame) Handles m_frameParser.ReceivedDataFrame
+    Private Sub m_frameParser_ReceivedDataFrame(ByVal frame As IDataFrame) Handles m_frameParser.ReceivedDataFrame
 
-        MapDataFrameMeasurements(frame)
+        ' Don't want to waste time on the parsing thread handling data mapping and providing new measurements
+        ' to external sources such as the archive queue and calculated measurement modules so we queue this
+        ' work up and get back to parsing as quickly as possible
+        ThreadPool.QueueUserWorkItem(AddressOf MapDataFrameMeasurements, frame)
 
     End Sub
 
