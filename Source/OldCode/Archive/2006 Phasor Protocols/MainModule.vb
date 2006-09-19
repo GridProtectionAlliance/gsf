@@ -52,12 +52,9 @@ Module MainModule
         ' Make sure service settings exist
         Settings.Add("PMUDatabase", "Data Source=ESOEXTSQL;Initial Catalog=PMU_SDS;Integrated Security=False;user ID=ESOPublic;pwd=4all2see", "PMU metaData database connect string")
         Settings.Add("PMUStatusInterval", "5", "Number of seconds of deviation from UTC time (according to local clock) that last PMU reporting time is allowed before considering it offline")
-        Settings.Add("MessageDisplayTimespan", "2", "Timespan, in seconds, over which to monitor message volume")
-        Settings.Add("MaximumMessagesToDisplay", "6", "Maximum number of messages to be tolerated during MessageDisplayTimespan")
+        Settings.Add("MessageDisplayTimespan", "1", "Timespan, in seconds, over which to monitor message volume")
+        Settings.Add("MaximumMessagesToDisplay", "20", "Maximum number of messages to be tolerated during MessageDisplayTimespan")
         SaveSettings()
-
-        m_messageDisplayTimepan = IntegerSetting("MessageDisplayTimespan")
-        m_maximumMessagesToDisplay = IntegerSetting("MaximumMessagesToDisplay")
 
         InitializeConfiguration(AddressOf InitializeSystem)
 
@@ -122,13 +119,20 @@ Module MainModule
 
         Try
             connection = New SqlConnection(StringSetting("PMUDatabase"))
-
             connection.Open()
+
+            ' We tolerate a higher message volume during initialization
+            m_messageDisplayTimepan = 1
+            m_maximumMessagesToDisplay = 100
 
             DisplayStatusMessage("PMU database connection opened...")
 
             ' Call user initialization function
             initializationFunction(connection)
+
+            ' Restore normal message volume tolerances
+            m_messageDisplayTimepan = IntegerSetting("MessageDisplayTimespan")
+            m_maximumMessagesToDisplay = IntegerSetting("MaximumMessagesToDisplay")
         Catch ex As Exception
             DisplayStatusMessage("Failure during initialization: " & ex.Message)
         Finally
@@ -305,7 +309,7 @@ Module MainModule
 
     Private Sub CalculationException(ByVal source As String, ByVal ex As Exception)
 
-        DisplayStatusMessage("ERROR: " & source & " threw an exception: " & ex.Message)
+        DisplayStatusMessage("ERROR: """ & source & """ threw an exception: " & ex.Message)
 
     End Sub
 
