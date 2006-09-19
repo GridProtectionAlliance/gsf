@@ -36,7 +36,7 @@ Public NotInheritable Class Serialization
     ''' <returns>A clone of the source serializable object.</returns>
     Public Shared Function CloneObject(Of T)(ByVal sourceObject As T) As T
 
-        Return DirectCast(GetObject(GetBytes(sourceObject)), T)
+        Return GetObject(Of T)(GetBytes(sourceObject))
 
     End Function
 
@@ -48,7 +48,12 @@ Public NotInheritable Class Serialization
     ''' <returns>An instance of the specified type if the bytes can be deserialized; otherwise Nothing.</returns>
     Public Shared Function GetObject(Of T)(ByVal serializedObject As Byte()) As T
 
-        Return DirectCast(GetObject(serializedObject), T)
+        Dim deserializedObject As Object = GetObject(serializedObject)
+        If TypeOf deserializedObject Is T Then  ' Cannot use TryCast because of the templated parameter restriction.
+            Return DirectCast(GetObject(serializedObject), T)
+        Else
+            Return Nothing
+        End If
 
     End Function
 
