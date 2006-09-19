@@ -25,6 +25,7 @@ Imports Tva.Configuration.Common
 Imports Tva.Text.Common
 Imports Tva.Data.Common
 Imports Tva.Measurements
+Imports Tva.DateTime.Common
 Imports Tva.Phasors
 Imports InterfaceAdapters
 Imports System.Reflection
@@ -35,6 +36,10 @@ Module MainModule
 
     Private m_measurementReceivers As Dictionary(Of String, PhasorMeasurementReceiver)
     Private m_calculatedMeasurements As ICalculatedMeasurementAdapter()
+    Private m_messageDisplayTimepan As Integer
+    Private m_maximumMessagesToDisplay As Integer
+    Private m_lastDisplayedMessageTime As Long
+    Private m_displayedMessageCount As Long
 
     Public Sub Main()
 
@@ -47,7 +52,12 @@ Module MainModule
         ' Make sure service settings exist
         Settings.Add("PMUDatabase", "Data Source=ESOEXTSQL;Initial Catalog=PMU_SDS;Integrated Security=False;user ID=ESOPublic;pwd=4all2see", "PMU metaData database connect string")
         Settings.Add("PMUStatusInterval", "5", "Number of seconds of deviation from UTC time (according to local clock) that last PMU reporting time is allowed before considering it offline")
+        Settings.Add("MessageDisplayTimespan", "2", "Timespan, in seconds, over which to monitor message volume")
+        Settings.Add("MaximumMessagesToDisplay", "6", "Maximum number of messages to be tolerated during MessageDisplayTimespan")
         SaveSettings()
+
+        m_messageDisplayTimepan = IntegerSetting("MessageDisplayTimespan")
+        m_maximumMessagesToDisplay = IntegerSetting("MaximumMessagesToDisplay")
 
         InitializeConfiguration(AddressOf InitializeSystem)
 
@@ -261,6 +271,9 @@ Module MainModule
 
                         ' Bubble newly calculated measurement out to functions that need the real-time data
                         AddHandler .NewCalculatedMeasurement, AddressOf NewCalculatedMeasurement
+
+                        ' Bubble calculation exceptions out to procedure that can handle these exceptions
+                        AddHandler .CalculationException, AddressOf CalculationException
                     End With
 
                     ' Add new adapter to the list
@@ -287,6 +300,12 @@ Module MainModule
         End If
 
         ' TODO: Provide real-time calculated measurements outside of receiver as needed...
+
+    End Sub
+
+    Private Sub CalculationException(ByVal source As String, ByVal ex As Exception)
+
+        DisplayStatusMessage("ERROR: " & source & " threw an exception: " & ex.Message)
 
     End Sub
 
@@ -412,8 +431,28 @@ Module MainModule
     ' Display status messages bubbled up from phasor measurement receiver and its internal components
     Private Sub DisplayStatusMessage(ByVal status As String)
 
-        Console.WriteLine(status)
-        Console.WriteLine()
+        Dim displayMessage As Boolean
+
+        ' When errors happen with data being processed at 30 samples per second you can get a hefty volume
+        ' of errors very quickly, so to keep from flooding the message queue - we'll only send a handful
+        ' of messages every couple of seconds
+        If TicksToSeconds(DateTime.Now.Ticks - m_lastDisplayedMessageTime) < m_messageDisplayTimepan Then
+            displayMessage = (m_displayedMessageCount < m_maximumMessagesToDisplay)
+            m_displayedMessageCount += 1
+        Else
+            If m_displayedMessageCount > m_maximumMessagesToDisplay Then
+                Console.WriteLine("WARNING: " & (m_displayedMessageCount - m_maximumMessagesToDisplay) & " error messages discarded to avoid flooding message queue...")
+                Console.WriteLine()
+            End If
+            displayMessage = True
+            m_displayedMessageCount = 0
+            m_lastDisplayedMessageTime = DateTime.Now.Ticks
+        End If
+
+        If displayMessage Then
+            Console.WriteLine(status)
+            Console.WriteLine()
+        End If
 
     End Sub
 
