@@ -49,29 +49,32 @@ Namespace Measurements
         ''' <summary>This event gets raised every second allowing consumer to track current number of unpublished samlples</summary>
         Public Event UnpublishedSamples(ByVal total As Integer)
 
+        ''' <summary>This event will be raised if there is an exception encountered while attempting to process a frame in the sample queue</summary>
+        ''' <remarks>Processing won't stop for any exceptions thrown by the user function, but any captured exceptions will be exposed through this event</remarks>
+        Public Event ProcessException(ByVal ex As Exception)
+
 #End Region
 
 #Region " Private Member Declarations "
 
-        Friend Event LeadTimeUpdated(ByVal leadTime As Double)              ' Raised, for the benefit of dependent classes, when lead time is updated
-        Friend Event LagTimeUpdated(ByVal lagTime As Double)                ' Raised, for the benefit of dependent classes, when lag time is updated
+        Friend Event LeadTimeUpdated(ByVal leadTime As Double)                  ' Raised, for the benefit of dependent classes, when lead time is updated
+        Friend Event LagTimeUpdated(ByVal lagTime As Double)                    ' Raised, for the benefit of dependent classes, when lag time is updated
 
-        Private m_realTimeTicks As Long                                     ' Ticks of the most recently received measurement (i.e., real-time)
-        Private m_currentSampleTimestamp As Date                            ' Timestamp of current real-time value baselined at the bottom of the second
-        Private m_framesPerSecond As Integer                                ' Frames per second
-        Private m_lagTime As Double                                         ' Allowed past time deviation tolerance
-        Private m_leadTime As Double                                        ' Allowed future time deviation tolerance
-        Private m_frameRate As Decimal                                      ' Frame rate - we use a 64-bit scaled integer to avoid round-off errors in calculations
-        Private m_frameIndex As Integer                                     ' Current publishing frame index
-        Private m_discardedMeasurements As Long                             ' Total number of discarded measurements
-        Private m_publishedFrames As Long                                   ' Total number of published frames
-        Private m_enabled As Boolean                                        ' Enabled state of concentrator
-        Private m_inputMeasurements As IMeasurement()
-        Private m_latestMeasurements As ImmediateMeasurements               ' Absolute latest received measurement values
-        Private m_sampleQueue As KeyedProcessQueue(Of Long, Sample)         ' Sample processing queue
-        Private m_publishFrameFunction As PublishFrameFunctionSignature     ' Frame publishing function
-        Private m_createNewFrameFunction As CreateNewFrameFunctionSignature ' New frame creation function
-        Private WithEvents m_monitorTimer As Timers.Timer                   ' Sample monitor
+        Private m_realTimeTicks As Long                                         ' Ticks of the most recently received measurement (i.e., real-time)
+        Private m_currentSampleTimestamp As Date                                ' Timestamp of current real-time value baselined at the bottom of the second
+        Private m_framesPerSecond As Integer                                    ' Frames per second
+        Private m_lagTime As Double                                             ' Allowed past time deviation tolerance
+        Private m_leadTime As Double                                            ' Allowed future time deviation tolerance
+        Private m_frameRate As Decimal                                          ' Frame rate - we use a 64-bit scaled integer to avoid round-off errors in calculations
+        Private m_frameIndex As Integer                                         ' Current publishing frame index
+        Private m_discardedMeasurements As Long                                 ' Total number of discarded measurements
+        Private m_publishedFrames As Long                                       ' Total number of published frames
+        Private m_enabled As Boolean                                            ' Enabled state of concentrator
+        Private m_latestMeasurements As ImmediateMeasurements                   ' Absolute latest received measurement values
+        Private m_publishFrameFunction As PublishFrameFunctionSignature         ' Frame publishing function
+        Private m_createNewFrameFunction As CreateNewFrameFunctionSignature     ' New frame creation function
+        Private WithEvents m_sampleQueue As KeyedProcessQueue(Of Long, Sample)  ' Sample processing queue
+        Private WithEvents m_monitorTimer As Timers.Timer                       ' Sample monitor
 
 #End Region
 
@@ -432,16 +435,16 @@ Namespace Measurements
                     .Append(" seconds")
                     .Append(Environment.NewLine)
                     .Append("       Current server time: ")
-                    .Append(currentTime.ToString("dd-MMM-yyyy HH:mm:ss"))
+                    .Append(currentTime.ToString("dd-MMM-yyyy HH:mm:ss.fff"))
                     .Append(Environment.NewLine)
                     .Append("        Most recent sample: ")
-                    .Append(m_currentSampleTimestamp.ToString("dd-MMM-yyyy HH:mm:ss"))
+                    .Append(m_currentSampleTimestamp.ToString("dd-MMM-yyyy HH:mm:ss.fff"))
                     .Append(", ")
                     .Append(DistanceFromRealTime(currentTime.Ticks).ToString("0.00"))
                     .Append(" second deviation")
                     .Append(Environment.NewLine)
                     .Append("         Publishing sample: ")
-                    .Append(publishingSampleTimestamp.ToString("dd-MMM-yyyy HH:mm:ss"))
+                    .Append(publishingSampleTimestamp.ToString("dd-MMM-yyyy HH:mm:ss.fff"))
                     .Append(", ")
                     .Append(TicksToSeconds(currentTime.Ticks - publishingSampleTimestamp.Ticks).ToString("0.00"))
                     .Append(" second deviation")
@@ -597,8 +600,12 @@ Namespace Measurements
             ' is just wait for the lagtime to pass and begin publishing...
             With sample.Frames(m_frameIndex)
                 If DistanceFromRealTime(.Ticks) > m_lagTime Then
-                    ' Publish current frame
-                    m_publishFrameFunction(.This, m_frameIndex)
+                    Try
+                        ' Publish current frame
+                        m_publishFrameFunction(.This, m_frameIndex)
+                    Catch ex As Exception
+                        RaiseEvent ProcessException(ex)
+                    End Try
                     .Published = True
                     m_publishedFrames += 1
 
@@ -657,6 +664,13 @@ Namespace Measurements
             Return New Frame(ticks)
 
         End Function
+
+        ' We expose any process exceptions to user
+        Private Sub m_sampleQueue_ProcessException(ByVal ex As System.Exception) Handles m_sampleQueue.ProcessException
+
+            RaiseEvent ProcessException(ex)
+
+        End Sub
 
 #End Region
 
