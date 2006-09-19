@@ -355,13 +355,15 @@ Namespace Measurements
                     Dim frame As IFrame = sample.Frames(System.Math.Floor((TicksBeyondSecond(.Ticks) + 1@) / m_frameRate))
                     Dim frameMeasurement As IMeasurement
 
-                    If frame.Measurements.TryGetValue(.Key, frameMeasurement) Then
-                        ' Measurement already exists, so we just update value
-                        frameMeasurement.Value = .Value
-                    Else
-                        ' Create new frame measurement if it doesn't exist
-                        frame.Measurements.Add(.Key, measurement)
-                    End If
+                    SyncLock frame.Measurements
+                        If frame.Measurements.TryGetValue(.Key, frameMeasurement) Then
+                            ' Measurement already exists, so we just update value
+                            frameMeasurement.Value = .Value
+                        Else
+                            ' Create new frame measurement if it doesn't exist
+                            frame.Measurements.Add(.Key, measurement)
+                        End If
+                    End SyncLock
 
                     ' Track absolute lastest timestamp and immediate measurement values...
                     RealTimeTicks = .Ticks

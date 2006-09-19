@@ -22,6 +22,8 @@ Namespace Measurements
     ''' <summary>Defines a primary key for a measurement</summary>
     Public Structure MeasurementKey
 
+        Implements IEquatable(Of MeasurementKey)
+
         Public ID As Integer
         Public Source As String
 
@@ -43,6 +45,12 @@ Namespace Measurements
             ' 1234567890
             ' 2147483647
             Return Concat(Source, ID.ToString().PadLeft(10, "0"c)).GetHashCode()
+
+        End Function
+
+        Public Overloads Function Equals(ByVal other As MeasurementKey) As Boolean Implements System.IEquatable(Of MeasurementKey).Equals
+
+            Return (GetHashCode() = other.GetHashCode())
 
         End Function
 
