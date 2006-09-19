@@ -197,16 +197,16 @@ Namespace IeeeC37_118
                     If m_configurationFrame2 IsNot Nothing Then
                         .Append("     PMU's in config frame: ")
                         .Append(m_configurationFrame2.Cells.Count)
-                        .Append(" total [")
+                        .Append(" total - ")
+                        .Append(Environment.NewLine)
                         For x As Integer = 0 To m_configurationFrame2.Cells.Count - 1
-                            .Append(" "c)
+                            .Append("               ")
                             .Append(m_configurationFrame2.Cells(x).StationName)
                             .Append(" (")
                             .Append(m_configurationFrame2.Cells(x).IDCode)
                             .Append(")"c)
+                            .Append(Environment.NewLine)
                         Next
-                        .Append("]"c)
-                        .Append(Environment.NewLine)
                         .Append("     Configured frame rate: ")
                         .Append(m_configurationFrame2.FrameRate)
                         .Append(Environment.NewLine)
