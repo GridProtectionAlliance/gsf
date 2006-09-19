@@ -43,6 +43,7 @@ Public Class PhasorMeasurementMapper
     Private m_bytesReceived As Long
     Private m_errorCount As Integer
     Private m_errorTime As Long
+    Private m_unknownFramesReceived As Integer
     Private m_receivedConfigFrame As Boolean
     Private m_timezone As Win32TimeZone
     Private m_timeAdjustmentTicks As Long
@@ -91,6 +92,7 @@ Public Class PhasorMeasurementMapper
         m_receivedConfigFrame = False
         m_errorCount = 0
         m_errorTime = 0
+        m_unknownFramesReceived = 0
 
     End Sub
 
@@ -340,7 +342,7 @@ Public Class PhasorMeasurementMapper
 
     Private Sub m_frameParser_DataStreamException(ByVal ex As System.Exception) Handles m_frameParser.DataStreamException
 
-        UpdateStatus("Data stream exception: " & ex.Message)
+        UpdateStatus("WARNING: " & m_source & " data stream exception: " & ex.Message)
 
         ' We monitor for exceptions that occur in quick succession
         If Date.Now.Ticks - m_errorTime > 100000000L Then
@@ -352,7 +354,7 @@ Public Class PhasorMeasurementMapper
 
         ' When we get 10 or more exceptions within a ten second timespan, we will then restart connection cycle...
         If m_errorCount >= 10 Then
-            UpdateStatus("Client connection terminated due to excessive exceptions.")
+            UpdateStatus(m_source & " connection terminated due to excessive exceptions.")
             Connect()
         End If
 
@@ -393,15 +395,12 @@ Public Class PhasorMeasurementMapper
 
     Private Sub m_frameParser_ReceivedFrameBufferImage(ByVal frameType As FundamentalFrameType, ByVal binaryImage() As Byte, ByVal offset As Integer, ByVal length As Integer) Handles m_frameParser.ReceivedFrameBufferImage
 
-#If DEBUG Then
-        ' TODO: Remove this debug code...
-        Static dataFramesReceived As Integer
-
-        If frameType = FundamentalFrameType.DataFrame Then dataFramesReceived += 1
-        If dataFramesReceived Mod 180 = 0 Then UpdateStatus(dataFramesReceived & " data frame images on " & m_source & " have been received (" & Date.Now & ")")
-#End If
-
         m_bytesReceived += length
+
+        If frameType = FundamentalFrameType.Undetermined Then
+            m_unknownFramesReceived += 1
+            If m_unknownFramesReceived Mod 300 = 0 Then UpdateStatus("WARNING: " & m_source & " has received " & m_unknownFramesReceived & " undetermined frame images.")
+        End If
 
     End Sub
 

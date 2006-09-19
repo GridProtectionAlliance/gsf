@@ -377,7 +377,6 @@ Public Class PhasorMeasurementReceiver
                             System.Buffer.BlockCopy(events(x).BinaryImage, 0, buffer, x * StandardEvent.BinaryLength, StandardEvent.BinaryLength)
                         Next
 
-#If Not Debug Then
                         ' Post data to TCP stream
                         m_clientStream.Write(buffer, 0, events.Length * StandardEvent.BinaryLength)
 
@@ -400,7 +399,6 @@ Public Class PhasorMeasurementReceiver
                             ' We sleep between data polls to prevent CPU loading
                             Thread.Sleep(1)
                         End If
-#End If
                     End If
 
                     ' We shouldn't stay in this loop forever (this would mean we're falling behind) so we broadcast the status of things...
