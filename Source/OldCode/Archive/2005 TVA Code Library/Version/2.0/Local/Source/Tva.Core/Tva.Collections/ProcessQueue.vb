@@ -169,7 +169,6 @@ Namespace Collections
         Private m_realTimeProcessThreadPriority As ThreadPriority
         Private WithEvents m_processTimer As System.Timers.Timer
         Private m_debugMode As Boolean
-        Private m_emptyValue As T
 
 #End Region
 
@@ -708,21 +707,6 @@ Namespace Collections
         End Property
 
         ''' <summary>
-        ''' This property defines an "empty" type value
-        ''' </summary>
-        ''' <remarks>
-        ''' For value types, this property allows you specify an "empty" type
-        ''' </remarks>
-        Public Overridable Property EmptyType() As T
-            Get
-                Return m_emptyValue
-            End Get
-            Set(ByVal value As T)
-                m_emptyValue = value
-            End Set
-        End Property
-
-        ''' <summary>
         ''' Starts item processing
         ''' </summary>
         Public Overridable Sub Start()
@@ -1003,23 +987,6 @@ Namespace Collections
         End Sub
 
         ''' <summary>
-        ''' Determines if a value is nothing
-        ''' </summary>
-        ''' <remarks>
-        ''' <para>For reference types, this is equivalent to "Is Nothing"</para>
-        ''' <para>For value types, the value is compared to the "EmptyValue"</para>
-        ''' </remarks>
-        Protected ReadOnly Property ValueIsNothing(ByVal testValue As T) As Boolean
-            Get
-                If TypeOf testValue Is ValueType Then
-                    Return testValue.Equals(m_emptyValue)
-                Else
-                    Return testValue Is Nothing
-                End If
-            End Get
-        End Property
-
-        ''' <summary>
         ''' Determines if an item can be processed
         ''' </summary>
         ''' <remarks>
@@ -1287,6 +1254,7 @@ Namespace Collections
         Private Sub ProcessNextItem()
 
             Dim nextItem As T
+            Dim processingItem As Boolean
 
             Try
                 ' Handle all queue operations for getting next item in a single synchronous operation.
@@ -1306,15 +1274,14 @@ Namespace Collections
 
                                 ' Remove the item about to be processed from the queue
                                 .RemoveAt(0)
-                            Else
-                                ' User opted not to process item at this time - we'll try again later
-                                nextItem = Nothing
+
+                                processingItem = True
                             End If
                         End If
                     End With
                 End SyncLock
 
-                If Not ValueIsNothing(nextItem) Then
+                If processingItem Then
                     If m_processTimeout = Timeout.Infinite Then
                         ' If we have an item to process and the process queue wasn't setup with a process timeout, we just use
                         ' the current thread (i.e., the timer event or real-time thread) to process the next item taking as long
@@ -1349,7 +1316,7 @@ Namespace Collections
                 RaiseEvent ProcessException(ex)
             Finally
                 ' Decrement thread count if item was retrieved for processing
-                If Not ValueIsNothing(nextItem) Then DecrementThreadCount()
+                If processingItem Then DecrementThreadCount()
             End Try
 
         End Sub
@@ -1358,6 +1325,7 @@ Namespace Collections
         Private Sub ProcessNextItems()
 
             Dim nextItems As T()
+            Dim processingItems As Boolean
 
             Try
                 ' Handle all queue operations for getting next items in a single synchronous operation.
@@ -1377,15 +1345,14 @@ Namespace Collections
 
                                 ' Clear all items from the queue
                                 .Clear()
-                            Else
-                                ' User opted not to process items at this time - we'll try again later
-                                nextItems = Nothing
+
+                                processingItems = True
                             End If
                         End If
                     End With
                 End SyncLock
 
-                If nextItems IsNot Nothing Then
+                If processingItems Then
                     If m_processTimeout = Timeout.Infinite Then
                         ' If we have items to process and the process queue wasn't setup with a process timeout, we just use the
                         ' current thread (i.e., the timer event or real-time thread) to process the next items taking as long as
@@ -1420,7 +1387,7 @@ Namespace Collections
                 RaiseEvent ProcessException(ex)
             Finally
                 ' Decrement thread count if items were retrieved for processing
-                If nextItems IsNot Nothing Then DecrementThreadCount()
+                If processingItems Then DecrementThreadCount()
             End Try
 
         End Sub
