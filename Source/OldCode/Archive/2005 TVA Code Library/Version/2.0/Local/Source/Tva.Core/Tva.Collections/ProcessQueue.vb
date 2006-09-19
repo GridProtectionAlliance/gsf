@@ -1000,13 +1000,21 @@ Namespace Collections
         ''' </remarks>
         Protected Overridable Function CanProcessItem(ByVal item As T) As Boolean
 
-            If m_canProcessItemFunction Is Nothing Then
-                ' If user provided no implementation for this function, we assume item can be processed
-                Return True
-            Else
-                ' Otherwise we call user function to determine if item should be processed at this time
-                Return m_canProcessItemFunction(item)
+            If m_canProcessItemFunction IsNot Nothing Then
+                Try
+                    ' Otherwise we call user function to determine if item should be processed at this time
+                    Return m_canProcessItemFunction(item)
+                Catch ex As ThreadAbortException
+                    ' Rethrow thread abort so calling method can respond appropriately
+                    Throw ex
+                Catch ex As Exception When Not m_debugMode
+                    ' Processing won't stop for any errors thrown by the user function, but we will report them...
+                    RaiseEvent ProcessException(ex)
+                End Try
             End If
+
+            ' If user provided no implementation for this function or function failed, we assume item can be processed
+            Return True
 
         End Function
 
@@ -1032,7 +1040,7 @@ Namespace Collections
                 Dim allItemsCanBeProcessed As Boolean = True
 
                 For Each item As T In items
-                    If Not m_canProcessItemFunction(item) Then
+                    If Not CanProcessItem(item) Then
                         allItemsCanBeProcessed = False
                         Exit For
                     End If
