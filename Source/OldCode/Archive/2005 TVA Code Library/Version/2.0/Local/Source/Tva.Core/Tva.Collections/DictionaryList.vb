@@ -106,18 +106,18 @@ Namespace Collections
 
         End Sub
 
-        Public Function GetEnumerator() As IEnumerator(Of KeyValuePair(Of TKey, TValue)) Implements IEnumerable(Of KeyValuePair(Of TKey, TValue)).GetEnumerator
-
-            Return m_list.GetEnumerator
-
-        End Function
-
         Public Sub Insert(ByVal index As Integer, ByVal item As KeyValuePair(Of TKey, TValue)) Implements IList(Of KeyValuePair(Of TKey, TValue)).Insert
 
             ' Doesn't matter where you try to insert the value since it will be inserted into its sorted location - so we just add the value
             m_list.Add(item.Key, item.Value)
 
         End Sub
+
+        Public Function GetEnumerator() As IEnumerator(Of KeyValuePair(Of TKey, TValue)) Implements IEnumerable(Of KeyValuePair(Of TKey, TValue)).GetEnumerator
+
+            Return m_list.GetEnumerator()
+
+        End Function
 
         Private Function IEnumerableGetEnumerator() As IEnumerator Implements IEnumerable.GetEnumerator
 
@@ -129,13 +129,13 @@ Namespace Collections
 
 #Region " Generic IDictionary(Of TKey, TValue) Implemenentation "
 
-        Public Sub Add(ByVal key As TKey, ByVal value As TValue) Implements System.Collections.Generic.IDictionary(Of TKey, TValue).Add
+        Public Sub Add(ByVal key As TKey, ByVal value As TValue) Implements IDictionary(Of TKey, TValue).Add
 
             m_list.Add(key, value)
 
         End Sub
 
-        Public Function ContainsKey(ByVal key As TKey) As Boolean Implements System.Collections.Generic.IDictionary(Of TKey, TValue).ContainsKey
+        Public Function ContainsKey(ByVal key As TKey) As Boolean Implements IDictionary(Of TKey, TValue).ContainsKey
 
             Return m_list.ContainsKey(key)
 
@@ -159,7 +159,7 @@ Namespace Collections
 
         End Function
 
-        Default Public Overloads Property Item(ByVal key As TKey) As TValue Implements System.Collections.Generic.IDictionary(Of TKey, TValue).Item
+        Default Public Overloads Property Item(ByVal key As TKey) As TValue Implements IDictionary(Of TKey, TValue).Item
             Get
                 Return m_list(key)
             End Get
@@ -168,25 +168,25 @@ Namespace Collections
             End Set
         End Property
 
-        Public ReadOnly Property Keys() As System.Collections.Generic.ICollection(Of TKey) Implements System.Collections.Generic.IDictionary(Of TKey, TValue).Keys
+        Public ReadOnly Property Keys() As ICollection(Of TKey) Implements IDictionary(Of TKey, TValue).Keys
             Get
                 Return m_list.Keys
             End Get
         End Property
 
-        Public Function Remove(ByVal key As TKey) As Boolean Implements System.Collections.Generic.IDictionary(Of TKey, TValue).Remove
+        Public Function Remove(ByVal key As TKey) As Boolean Implements IDictionary(Of TKey, TValue).Remove
 
             m_list.Remove(key)
 
         End Function
 
-        Public Function TryGetValue(ByVal key As TKey, ByRef value As TValue) As Boolean Implements System.Collections.Generic.IDictionary(Of TKey, TValue).TryGetValue
+        Public Function TryGetValue(ByVal key As TKey, ByRef value As TValue) As Boolean Implements IDictionary(Of TKey, TValue).TryGetValue
 
             Return m_list.TryGetValue(key, value)
 
         End Function
 
-        Public ReadOnly Property Values() As System.Collections.Generic.ICollection(Of TValue) Implements System.Collections.Generic.IDictionary(Of TKey, TValue).Values
+        Public ReadOnly Property Values() As ICollection(Of TValue) Implements IDictionary(Of TKey, TValue).Values
             Get
                 Return m_list.Values
             End Get

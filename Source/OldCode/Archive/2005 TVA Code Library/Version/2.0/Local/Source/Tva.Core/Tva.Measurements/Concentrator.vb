@@ -434,19 +434,23 @@ Namespace Measurements
                     .Append(m_leadTime)
                     .Append(" seconds")
                     .Append(Environment.NewLine)
-                    .Append("       Current server time: ")
+                    .Append("        Local clock time: ")
                     .Append(currentTime.ToString("dd-MMM-yyyy HH:mm:ss.fff"))
                     .Append(Environment.NewLine)
+                    .Append("    Local clock accuracy: ")
+                    .Append(DistanceFromRealTime(Date.UtcNow.Ticks).ToString("0.0000"))
+                    .Append(" second deviation from real-time")
+                    .Append(Environment.NewLine)
                     .Append("        Most recent sample: ")
-                    .Append(m_currentSampleTimestamp.ToString("dd-MMM-yyyy HH:mm:ss.fff"))
+                    .Append(m_currentSampleTimestamp.ToString("dd-MMM-yyyy HH:mm:ss"))
                     .Append(", ")
-                    .Append(DistanceFromRealTime(currentTime.Ticks).ToString("0.00"))
+                    .Append(TicksToSeconds(currentTime.Ticks - m_currentSampleTimestamp.Ticks).ToString("0"))
                     .Append(" second deviation")
                     .Append(Environment.NewLine)
                     .Append("         Publishing sample: ")
-                    .Append(publishingSampleTimestamp.ToString("dd-MMM-yyyy HH:mm:ss.fff"))
+                    .Append(publishingSampleTimestamp.ToString("dd-MMM-yyyy HH:mm:ss"))
                     .Append(", ")
-                    .Append(TicksToSeconds(currentTime.Ticks - publishingSampleTimestamp.Ticks).ToString("0.00"))
+                    .Append(TicksToSeconds(currentTime.Ticks - publishingSampleTimestamp.Ticks).ToString("0"))
                     .Append(" second deviation")
                     .Append(Environment.NewLine)
                     .Append("    Total published frames: ")
@@ -599,7 +603,7 @@ Namespace Measurements
             ' Frame timestamps are evenly distributed across their parent sample, so all we need to do
             ' is just wait for the lagtime to pass and begin publishing...
             With sample.Frames(m_frameIndex)
-                If DistanceFromRealTime(.Ticks) > m_lagTime Then
+                If DistanceFromRealTime(.Ticks) >= m_lagTime Then
                     Try
                         ' Publish current frame
                         m_publishFrameFunction(.This, m_frameIndex)

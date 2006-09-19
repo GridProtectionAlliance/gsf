@@ -15,6 +15,7 @@
 '
 '*******************************************************************************************************
 
+Imports System.ComponentModel
 Imports Tva.Common
 
 Namespace Collections
@@ -653,6 +654,90 @@ Namespace Collections
                 Return InternalDictionary.Values
             End Get
         End Property
+
+#End Region
+
+#Region " Overriden List(T) Functions "
+
+        ' Because consumers will be able to call these functions in their "dictionary" style queue, we'll make
+        ' sure they return something that makes sense in case they get called - but we'll hide them from the
+        ' editor to help avoid confusion
+        <EditorBrowsable(EditorBrowsableState.Never)> _
+        Public Overrides Function BinarySearch(ByVal item As KeyValuePair(Of TKey, TValue)) As Integer
+
+            Return IndexOfKey(item.Key)
+
+        End Function
+
+        <EditorBrowsable(EditorBrowsableState.Never)> _
+        Public Overrides Function BinarySearch(ByVal item As KeyValuePair(Of TKey, TValue), ByVal comparer As IComparer(Of KeyValuePair(Of TKey, TValue))) As Integer
+
+            Return IndexOfKey(item.Key)
+
+        End Function
+
+        <EditorBrowsable(EditorBrowsableState.Never)> _
+        Public Overrides Function BinarySearch(ByVal index As Integer, ByVal count As Integer, ByVal item As KeyValuePair(Of TKey, TValue), ByVal comparer As IComparer(Of KeyValuePair(Of TKey, TValue))) As Integer
+
+            Return IndexOfKey(item.Key)
+
+        End Function
+
+        <EditorBrowsable(EditorBrowsableState.Never)> _
+        Public Overrides Function IndexOf(ByVal item As KeyValuePair(Of TKey, TValue)) As Integer
+
+            Return IndexOfKey(item.Key)
+
+        End Function
+
+        <EditorBrowsable(EditorBrowsableState.Never)> _
+        Public Overrides Function IndexOf(ByVal item As KeyValuePair(Of TKey, TValue), ByVal index As Integer, ByVal count As Integer) As Integer
+
+            Return IndexOfKey(item.Key)
+
+        End Function
+
+        <EditorBrowsable(EditorBrowsableState.Never)> _
+        Public Overrides Function LastIndexOf(ByVal item As KeyValuePair(Of TKey, TValue)) As Integer
+
+            Return IndexOfKey(item.Key)
+
+        End Function
+
+        <EditorBrowsable(EditorBrowsableState.Never)> _
+        Public Overrides Function LastIndexOf(ByVal item As KeyValuePair(Of TKey, TValue), ByVal index As Integer, ByVal count As Integer) As Integer
+
+            Return IndexOfKey(item.Key)
+
+        End Function
+
+        <EditorBrowsable(EditorBrowsableState.Never)> _
+        Public Overrides Sub Sort()
+
+            ' This list is already sorted...
+
+        End Sub
+
+        <EditorBrowsable(EditorBrowsableState.Never)> _
+        Public Overrides Sub Sort(ByVal comparer As IComparer(Of KeyValuePair(Of TKey, TValue)))
+
+            ' This list is already sorted...
+
+        End Sub
+
+        <EditorBrowsable(EditorBrowsableState.Never)> _
+        Public Overrides Sub Sort(ByVal comparison As System.Comparison(Of KeyValuePair(Of TKey, TValue)))
+
+            ' This list is already sorted...
+
+        End Sub
+
+        <EditorBrowsable(EditorBrowsableState.Never)> _
+        Public Overrides Sub Sort(ByVal index As Integer, ByVal count As Integer, ByVal comparer As IComparer(Of KeyValuePair(Of TKey, TValue)))
+
+            ' This list is already sorted...
+
+        End Sub
 
 #End Region
 
