@@ -269,13 +269,11 @@ Public Class MultiProtocolFrameParser
         m_rateCalcTimer.Enabled = False
 
         If m_communicationClient IsNot Nothing Then m_communicationClient.Disconnect()
-        m_communicationClient = Nothing
-
         If m_frameParser IsNot Nothing Then m_frameParser.Stop()
-        m_frameParser = Nothing
 
-        m_configurationFrame = Nothing
         m_lastFrameReceivedTime = 0
+        m_configurationFrame = Nothing
+        m_frameParser = Nothing
 
     End Sub
 
@@ -556,6 +554,7 @@ Public Class MultiProtocolFrameParser
     Private Sub m_communicationClient_Disconnected(ByVal sender As Object, ByVal e As System.EventArgs) Handles m_communicationClient.Disconnected
 
         RaiseEvent Disconnected()
+        m_communicationClient = Nothing
 
     End Sub
 
