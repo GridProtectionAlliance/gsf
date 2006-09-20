@@ -194,7 +194,7 @@ Public Class TcpServer
 
                     ' Start the client on a seperate thread so all the connected clients run independently.
                     ThreadPool.QueueUserWorkItem(AddressOf ReceiveClientData, tcpClient)
-                    'Thread.Sleep(1000)   ' Wait enough for the client thread to kick-off.
+                    Thread.Sleep(1000)   ' Wait enough for the client thread to kick-off.
                 End If
             Loop
         Catch ex As ThreadAbortException

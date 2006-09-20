@@ -1,5 +1,6 @@
 ' 08-29-06
 
+Imports System.Text
 Imports System.ComponentModel
 Imports System.ServiceProcess
 Imports Tva.Common
@@ -248,10 +249,11 @@ Public Class ServiceHelper
     Public Sub AddProcess(ByVal processExecutionMethod As ServiceProcess.ExecutionMethodSignature, _
             ByVal processName As String, ByVal processParameters As Object())
 
+        processName = processName.ToUpper()
         If Not m_processes.ContainsKey(processName) Then
             m_processes.Add(processName, New ServiceProcess(processExecutionMethod, processName, processParameters, Me))
         Else
-            UpdateStatus("Process '" & processName & "' already exists.")
+            UpdateStatus("Process """ & processName & """ already exists.")
         End If
 
     End Sub
@@ -273,6 +275,7 @@ Public Class ServiceHelper
 
     Public Sub ScheduleProcess(ByVal processName As String, ByVal processSchedule As String)
 
+        processName = processName.ToUpper()
         If m_processes.ContainsKey(processName) Then
             Dim schedule As Schedule = Nothing
             If Not SHScheduleManager.Schedules.TryGetValue(processName, schedule) Then
@@ -285,7 +288,7 @@ Public Class ServiceHelper
                 SHScheduleManager.Schedules.Add(processName, schedule)
             End If
         Else
-            UpdateStatus("Process '" & processName & "' does not exist.")
+            UpdateStatus("Process """ & processName & """ does not exist.")
         End If
 
     End Sub
@@ -313,7 +316,8 @@ Public Class ServiceHelper
 
     Public Sub UpdateStatus(ByVal message As String)
 
-        SendUpdateStatusResponse(message)
+        message &= Environment.NewLine
+        SendUpdateClientStatusResponse(message)
         ' TODO: Add code to log to the event log and SSAM.
 
     End Sub
@@ -346,36 +350,38 @@ Public Class ServiceHelper
                 ' We'll process the request only if the service didn't handle it.
                 Select Case request.Type.ToUpper()
                     Case "LISTPROCESSES"
+
                     Case "START", "STARTPROCESS"
-                        If m_processes.Count > 0 Then
-                            m_processes("PrimaryProcess").StartProcess()
-                        End If
+                        HandleStartProcessRequest(request)
                     Case "ABORT", "ABORTPROCESS"
+                        HandleAbortProcessRequest(request)
                     Case "UNSCHEDULEPROCESS"
+
                     Case "RESCHEDULEPROCESS"
-                    Case "PINGSERVICE"
-                        'HandlePingServiceRequest()
-                    Case "PINGALLCLIENTS"
-                        'HandlePingAllClientsRequest()
-                    Case "LISTALLCLIENTS"
-                        'HandleListAllClientsRequest()
+
+                    Case "LISTCLIENTS", "LISTALLCLIENTS"
+                        'HandleListClientsRequest()
                     Case "GETSERVICESTATUS"
                         'HandlePingServiceRequest()
                     Case "GETPROCESSSTATUS"
-                        'HandleGetProcessStatusRequest()
+                        'HandleProcessStatusRequest()
                     Case "GETCOMMANDHISTORY"
-                        'HandleGetCommandHistoryRequest()
+                        'HandleCommandHistoryRequest()
                     Case "GETDIRECTORYLISTING"
-                        'HandleGetRequest()
+
                     Case "LISTSETTINGS"
+
                     Case "UPDATESETTING"
+
                     Case "SAVESETTINGS"
+
                     Case Else
-                        HandleInvalidClientRequest()
+                        ' "PINGSERVICE", "PINGALLCLIENTS"
+                        HandleInvalidClientRequest(request)
                 End Select
             End If
         Else
-            HandleInvalidClientRequest()
+            HandleInvalidClientRequest(request)
         End If
 
     End Sub
@@ -397,14 +403,78 @@ Public Class ServiceHelper
 
 #Region " Private Methods "
 
-    Private Sub HandleInvalidClientRequest()
+    Private Sub HandleStartProcessRequest(ByVal request As ClientRequest)
+
+        If request.Parameters IsNot Nothing AndAlso request.Parameters.Length > 0 Then
+            Dim processName As String = request.Parameters(0).ToUpper()
+            Dim process As ServiceProcess = Nothing
+            If m_processes.TryGetValue(processName, process) Then
+                process.StartProcess()
+            Else
+                With New StringBuilder()
+                    .Append("Process cannot be started. The process name """)
+                    .Append(processName)
+                    .Append(""" is not valid.")
+
+                    UpdateStatus(.ToString())
+                End With
+            End If
+        Else
+            ' Start the very first process in the list if no process name is specified.
+            If m_processes.Count > 0 Then
+                For Each process As ServiceProcess In m_processes.Values
+                    process.StartProcess()
+                    Exit For
+                Next
+            End If
+        End If
 
     End Sub
 
-    Private Sub SendUpdateStatusResponse(ByVal response As String)
+    Private Sub HandleAbortProcessRequest(ByVal request As ClientRequest)
+
+        If request.Parameters IsNot Nothing AndAlso request.Parameters.Length > 0 Then
+            Dim processName As String = request.Parameters(0).ToUpper()
+            Dim process As ServiceProcess = Nothing
+            If m_processes.TryGetValue(processName, process) Then
+                process.AbortProcess()
+            Else
+                With New StringBuilder()
+                    .Append("Process cannot be aborted. The process name """)
+                    .Append(processName)
+                    .Append(""" is not valid.")
+
+                    UpdateStatus(.ToString())
+                End With
+            End If
+        Else
+            ' Start the very first process in the list if no process name is specified.
+            If m_processes.Count > 0 Then
+                For Each process As ServiceProcess In m_processes.Values
+                    process.AbortProcess()
+                    Exit For
+                Next
+            End If
+        End If
+
+    End Sub
+
+    Private Sub HandleInvalidClientRequest(ByVal request As ClientRequest)
+
+        With New StringBuilder()
+            .Append("Request cannot be processed. The request of type """)
+            .Append(request.Type)
+            .Append(""" is not valid.")
+
+            UpdateStatus(.ToString())
+        End With
+
+    End Sub
+
+    Private Sub SendUpdateClientStatusResponse(ByVal response As String)
 
         Dim serviceResponse As New ServiceResponse()
-        serviceResponse.Type = "UPDATESTATUS"
+        serviceResponse.Type = "UPDATECLIENTSTATUS"
         serviceResponse.Message = response
         SendResponse(serviceResponse)
 

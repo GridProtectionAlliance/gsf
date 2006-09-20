@@ -60,23 +60,6 @@ Public Class ClientRequest
             Return m_type
         End Get
         Set(ByVal value As String)
-            ' Standard Request Type
-            '    Undetermined
-            '    ListProcesses
-            '    StartProcess
-            '    AbortProcess
-            '    UnscheduleProcess
-            '    RescheduleProcess
-            '    PingService
-            '    PingAllClients
-            '    ListClients
-            '    GetServiceStatus
-            '    GetProcessStatus
-            '    GetCommandHistory
-            '    GetDirectoryListing
-            '    ListSettings
-            '    UpdateSetting
-            '    SaveSettings
             m_type = value.ToUpper()
         End Set
     End Property

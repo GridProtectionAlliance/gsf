@@ -15,6 +15,7 @@
 '
 '*******************************************************************************************************
 
+Imports System.Text
 Imports System.ComponentModel
 Imports Tva.Communication
 Imports Tva.Serialization
@@ -31,7 +32,7 @@ Public Class ClientHelper
     ''' Occurs when the service client needs to update its status.
     ''' </summary>
     ''' <param name="message">The message that the service client must display in its status.</param>
-    Public Event UpdateStatus(ByVal message As String)
+    Public Event UpdateClientStatus(ByVal message As String)
 
     Public Event ServiceStateChanged(ByVal serviceName As String, ByVal serviceState As ServiceState)
 
@@ -53,10 +54,15 @@ Public Class ClientHelper
     ''' Attempts to connect to the service.
     ''' </summary>
     ''' <remarks>This method must be called in order to establish connection with the service.</remarks>
-    Public Sub Initialize()
+    Public Sub Connect()
 
-        RaiseEvent UpdateStatus("Connecting...")
         CHTcpClient.Connect()
+
+    End Sub
+
+    Public Sub Disconnect()
+
+        CHTcpClient.Disconnect()
 
     End Sub
 
@@ -75,25 +81,31 @@ Public Class ClientHelper
     Private Sub CHTcpClient_Connected(ByVal sender As Object, ByVal e As System.EventArgs) Handles CHTcpClient.Connected
 
         CHTcpClient.Send(New ClientInfo())
-        RaiseEvent UpdateStatus("Done")
+        UpdateStatus("Successfully connected to the service!", True, 0, 2)
 
     End Sub
 
     Private Sub CHTcpClient_Connecting(ByVal sender As Object, ByVal e As System.EventArgs) Handles CHTcpClient.Connecting
 
-        RaiseEvent UpdateStatus(".")
+        UpdateStatus("Attempting to connect to the service...", True, 0, 2)
 
     End Sub
 
     Private Sub CHTcpClient_ConnectingException(ByVal ex As System.Exception) Handles CHTcpClient.ConnectingException
 
-        RaiseEvent UpdateStatus(ex.ToString())
+        With New StringBuilder()
+            .Append("Failed to connect to the service due to an exception:")
+            .Append(Environment.NewLine)
+            .Append(ex.Message)
+
+            UpdateStatus(.ToString(), True, 0, 2)
+        End With
 
     End Sub
 
     Private Sub CHTcpClient_Disconnected(ByVal sender As Object, ByVal e As System.EventArgs) Handles CHTcpClient.Disconnected
 
-        RaiseEvent UpdateStatus("Disconnected from service")
+        UpdateStatus("Disconnected from the service.", True, 0, 2)
 
     End Sub
 
@@ -103,22 +115,69 @@ Public Class ClientHelper
         If response IsNot Nothing Then
             RaiseEvent ReceivedServiceResponse(response)
             Select Case response.Type
-                Case "UPDATESTATUS"
-                    RaiseEvent UpdateStatus(response.Message)
+                Case "UPDATECLIENTSTATUS"
+                    UpdateStatus(response.Message, True, 1, 1)
                 Case "SERVICESTATECHANGED"
                     Dim messageSegments As String() = response.Message.Split(">"c)
                     If messageSegments.Length = 2 Then
+                        With New StringBuilder()
+                            .Append("Received ServiceStateChanged service response.")
+                            .Append(Environment.NewLine)
+                            .Append("              Service Name: ")
+                            .Append(messageSegments(0))
+                            .Append(Environment.NewLine)
+                            .Append("             Service State: ")
+                            .Append(messageSegments(1))
+
+                            UpdateStatus(.ToString(), True, 1, 2)
+                        End With
                         RaiseEvent ServiceStateChanged(messageSegments(0), DirectCast(System.Enum.Parse(GetType(ServiceState), messageSegments(1)), ServiceState))
-                        RaiseEvent UpdateStatus("Service ‘" & messageSegments(0) & "’ has " & messageSegments(1) & Environment.NewLine)
                     End If
                 Case "PROCESSSTATECHANGED"
                     Dim messageSegments As String() = response.Message.Split(">"c)
                     If messageSegments.Length = 2 Then
+                        With New StringBuilder()
+                            .Append("Received ProcessStateChanged service response.")
+                            .Append(Environment.NewLine)
+                            .Append("              Process Name: ")
+                            .Append(messageSegments(0))
+                            .Append(Environment.NewLine)
+                            .Append("             Process State: ")
+                            .Append(messageSegments(1))
+
+                            UpdateStatus(.ToString(), True, 1, 2)
+                        End With
                         RaiseEvent ProcessStateChanged(messageSegments(0), DirectCast(System.Enum.Parse(GetType(ProcessState), messageSegments(1)), ProcessState))
-                        RaiseEvent UpdateStatus("Process ‘" & messageSegments(0) & "’ is " & messageSegments(1) & Environment.NewLine)
                     End If
             End Select
         End If
+
+    End Sub
+
+#End Region
+
+#Region " Private Methods "
+
+    Private Sub UpdateStatus(ByVal message As String, ByVal showDateTime As Boolean, _
+            ByVal prependedCrlf As Integer, ByVal appendedCrlf As Integer)
+
+        With New StringBuilder()
+            For i As Integer = 0 To prependedCrlf - 1
+                .Append(Environment.NewLine)
+            Next
+            If showDateTime Then
+                .Append("[")
+                .Append(System.DateTime.Now.ToString())
+                .Append("] ")
+                .Append(Environment.NewLine)
+            End If
+            .Append(message)
+            For i As Integer = 0 To appendedCrlf - 1
+                .Append(Environment.NewLine)
+            Next
+
+            RaiseEvent UpdateClientStatus(.ToString())
+        End With
 
     End Sub
 

@@ -60,10 +60,6 @@ Public Class ServiceResponse
             Return m_type
         End Get
         Set(ByVal value As String)
-            ' Standard Response Type
-            '    UpdateStatus
-            '    ServiceStateChanged
-            '    ProcessStateChanged
             m_type = value.ToUpper()
         End Set
     End Property
