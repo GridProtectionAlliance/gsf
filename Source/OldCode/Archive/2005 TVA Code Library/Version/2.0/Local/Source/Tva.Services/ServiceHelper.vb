@@ -278,7 +278,7 @@ Public Class ServiceHelper
         processName = processName.ToUpper()
         If m_processes.ContainsKey(processName) Then
             Dim schedule As Schedule = Nothing
-            If Not SHScheduleManager.Schedules.TryGetValue(processName, schedule) Then
+            If SHScheduleManager.Schedules.TryGetValue(processName, schedule) Then
                 ' Update the process schedule if it is already exists.
                 schedule.Rule = processSchedule
             Else
@@ -349,8 +349,6 @@ Public Class ServiceHelper
             If Not request.ServiceHandled Then
                 ' We'll process the request only if the service didn't handle it.
                 Select Case request.Type.ToUpper()
-                    Case "LISTPROCESSES"
-
                     Case "START", "STARTPROCESS"
                         HandleStartProcessRequest(request)
                     Case "ABORT", "ABORTPROCESS"
@@ -359,6 +357,8 @@ Public Class ServiceHelper
 
                     Case "RESCHEDULEPROCESS"
 
+                    Case "LISTPROCESSES"
+                        HandleListProcessesRequest()
                     Case "LISTCLIENTS", "LISTALLCLIENTS"
                         'HandleListClientsRequest()
                     Case "GETSERVICESTATUS"
@@ -402,6 +402,31 @@ Public Class ServiceHelper
 #End Region
 
 #Region " Private Methods "
+
+    Private Sub HandleListProcessesRequest()
+
+        With New StringBuilder()
+            For Each process As ServiceProcess In m_processes.Values
+                .Append(process.Status)
+                Dim processSchedule As Schedule = Nothing
+                If SHScheduleManager.Schedules.TryGetValue(process.Name, processSchedule) Then
+                    .Append("                 Scheduled: Yes")
+                    .Append(Environment.NewLine)
+                    .Append("             Schedule Rule: ")
+                    .Append(processSchedule.Rule)
+                Else
+                    .Append("                 Scheduled: No")
+                    .Append(Environment.NewLine)
+                    .Append("             Schedule Rule: N/A")
+                End If
+                .Append(Environment.NewLine)
+                .Append(Environment.NewLine)
+            Next
+
+            UpdateStatus(.ToString())
+        End With
+
+    End Sub
 
     Private Sub HandleStartProcessRequest(ByVal request As ClientRequest)
 

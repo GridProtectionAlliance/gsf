@@ -86,6 +86,24 @@ Public Class ServiceProcess
         End Get
     End Property
 
+    Public ReadOnly Property Status() As String
+        Get
+            With New StringBuilder()
+                .Append("              Process Name: ")
+                .Append(m_name)
+                .Append(Environment.NewLine)
+                .Append("             Current State: ")
+                .Append(m_currentState.ToString())
+                .Append(Environment.NewLine)
+                .Append("       Last Execution Time: ")
+                .Append(SecondsToText(m_lastExecutionTime))
+                .Append(Environment.NewLine)
+
+                Return .ToString()
+            End With
+        End Get
+    End Property
+
     Public Sub StartProcess()
 
         m_processThread = New Thread(AddressOf InvokeExecutionMethod)
@@ -99,24 +117,6 @@ Public Class ServiceProcess
         Me.CurrentState = ProcessState.Aborted
 
     End Sub
-
-    Public Function Status() As String
-
-        With New StringBuilder()
-            .Append("              Process Name: ")
-            .Append(m_name)
-            .Append(Environment.NewLine)
-            .Append("             Current State: ")
-            .Append(m_currentState.ToString())
-            .Append(Environment.NewLine)
-            .Append("       Last Execution Time: ")
-            .Append(SecondsToText(m_lastExecutionTime))
-            .Append(Environment.NewLine)
-
-            Return .ToString()
-        End With
-
-    End Function
 
     Private Sub InvokeExecutionMethod()
 
