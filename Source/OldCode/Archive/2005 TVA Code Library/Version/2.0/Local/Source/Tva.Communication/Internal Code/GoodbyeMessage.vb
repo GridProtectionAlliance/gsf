@@ -6,7 +6,7 @@ Friend Class GoodbyeMessage
     Private m_id As Guid
 
     Public Sub New(ByVal id As Guid)
-        MyClass.ID = id
+        Me.ID = id
     End Sub
 
     Public Property ID() As Guid

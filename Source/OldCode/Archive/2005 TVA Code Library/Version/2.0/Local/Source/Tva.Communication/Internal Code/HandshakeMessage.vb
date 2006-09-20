@@ -7,8 +7,8 @@ Friend Class HandshakeMessage
     Private m_passphrase As String
 
     Public Sub New(ByVal id As Guid, ByVal passphrase As String)
-        MyClass.ID = id
-        MyClass.Passphrase = passphrase
+        Me.ID = id
+        Me.Passphrase = passphrase
     End Sub
 
     Public Property ID() As Guid
