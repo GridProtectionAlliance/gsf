@@ -203,21 +203,21 @@ Namespace Ssam
             If m_persistConnectionStrings Then
                 ' Initialize the connection string variables from the config file only if the connection strings 
                 ' are present (Connection strings are persisted when PersistConnectionStrings = True).
-                Dim persistedCS As String = ""
-
+                Dim developmentCS As String = ""
                 Try
-                    persistedCS = DefaultConfigFile.CategorizedSettings(ConfigurationElement)("Development").Value
+                    developmentCS = CategorizedSettings(ConfigurationElement)("Development").Value
                 Catch ex As Exception
                     ' We can safely ignore any exception encountered while retrieving connection string from the config file.
                 End Try
-                If Not String.IsNullOrEmpty(persistedCS) Then m_developmentConnectionString = persistedCS
+                If Not String.IsNullOrEmpty(developmentCS) Then m_developmentConnectionString = developmentCS
 
+                Dim productionCS As String = ""
                 Try
-                    persistedCS = DefaultConfigFile.CategorizedSettings(ConfigurationElement)("Production").Value
+                    productionCS = CategorizedSettings(ConfigurationElement)("Production").Value
                 Catch ex As Exception
                     ' We can safely ignore any exception encountered while retrieving connection string from the config file.
                 End Try
-                If Not String.IsNullOrEmpty(persistedCS) Then m_productionConnectionString = persistedCS
+                If Not String.IsNullOrEmpty(productionCS) Then m_productionConnectionString = productionCS
             End If
 
         End Sub

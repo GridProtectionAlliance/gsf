@@ -60,10 +60,6 @@ Namespace Configuration
         ''' <remarks></remarks>
         Default Public Shadows ReadOnly Property Item(ByVal name As String) As CategorizedSettingsElement
             Get
-                If MyBase.BaseGet(name) Is Nothing Then
-                    ' We'll add a configuration element for the specified name if it doesn't exist.
-                    MyClass.Add(name, "")
-                End If
                 Return DirectCast(MyBase.BaseGet(name), CategorizedSettingsElement)
             End Get
         End Property
