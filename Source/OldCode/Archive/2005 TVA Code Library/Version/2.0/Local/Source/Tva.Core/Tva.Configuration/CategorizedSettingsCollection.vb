@@ -84,7 +84,7 @@ Namespace Configuration
         ''' <remarks></remarks>
         Public Sub Add(ByVal name As String, ByVal value As String)
 
-            MyClass.Add(name, value, False)
+            Add(name, value, False)
 
         End Sub
 
@@ -97,7 +97,7 @@ Namespace Configuration
         ''' <remarks></remarks>
         Public Sub Add(ByVal name As String, ByVal value As String, ByVal encryptValue As Boolean)
 
-            MyClass.Add(name, value, "", encryptValue)
+            Add(name, value, "", encryptValue)
 
         End Sub
 
@@ -110,7 +110,7 @@ Namespace Configuration
         ''' <remarks></remarks>
         Public Sub Add(ByVal name As String, ByVal value As String, ByVal description As String)
 
-            MyClass.Add(New CategorizedSettingsElement(name, value, description, False))
+            Add(New CategorizedSettingsElement(name, value, description, False))
 
         End Sub
 
@@ -124,7 +124,7 @@ Namespace Configuration
         ''' <remarks></remarks>
         Public Sub Add(ByVal name As String, ByVal value As String, ByVal description As String, ByVal encryptValue As Boolean)
 
-            MyClass.Add(New CategorizedSettingsElement(name, value, description, encryptValue))
+            Add(New CategorizedSettingsElement(name, value, description, encryptValue))
 
         End Sub
 
@@ -161,7 +161,7 @@ Namespace Configuration
         Public Sub Remove(ByVal setting As CategorizedSettingsElement)
 
             If MyBase.BaseIndexOf(setting) >= 0 Then
-                MyClass.Remove(setting.Name())
+                Remove(setting.Name())
             End If
 
         End Sub

@@ -164,8 +164,8 @@ Public Class Schedule
     Public Sub New(ByVal name As String, ByVal minutes As String, ByVal hours As String, ByVal days As String, _
             ByVal months As String, ByVal daysOfWeek As String)
         MyBase.New()
-        MyClass.Name = name
-        MyClass.Rule = minutes & " " & hours & " " & days & " " & months & " " & DaysOfWeek
+        Me.Name = name
+        Me.Rule = minutes & " " & hours & " " & days & " " & months & " " & daysOfWeek
     End Sub
 
     ''' <summary>

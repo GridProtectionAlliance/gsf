@@ -144,7 +144,7 @@ Namespace Configuration
         ''' <remarks></remarks>
         Public Sub Save()
 
-            MyClass.Save(ConfigurationSaveMode.Modified)
+            Save(ConfigurationSaveMode.Modified)
 
         End Sub
 
@@ -178,7 +178,7 @@ Namespace Configuration
 
             If configFilePath IsNot Nothing Then
                 If configFilePath = "" OrElse JustFileExtension(configFilePath) = ".config" Then
-                    Select Case MyClass.Environment()
+                    Select Case Environment()
                         Case ApplicationEnvironment.Win
                             configuration = ConfigurationManager.OpenExeConfiguration(configFilePath.TrimEnd(".config".ToCharArray()))
                         Case ApplicationEnvironment.Web

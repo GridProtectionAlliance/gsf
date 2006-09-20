@@ -83,7 +83,6 @@
     <Compile Include="Tva.Security\Cryptography\Enumerations.vb" />
     <Compile Include="Tva.Services\Enumerations.vb" />
     <Compile Include="Tva.Services\IServiceComponent.vb" />
-    <Compile Include="Tva.Services\ServiceCommandEventArgs.vb" />
     <Compile Include="Tva.Threading\QueueThread.vb" />
     <Compile Include="Tva.Threading\RunThread.vb" />
     <Compile Include="Tva.Threading\ThreadBase.vb" />

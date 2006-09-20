@@ -87,10 +87,10 @@ Namespace Configuration
         ''' <remarks></remarks>
         Public Sub New(ByVal name As String, ByVal value As String, ByVal description As String, ByVal encrypted As Boolean)
             MyBase.New()
-            MyClass.Name = name
-            MyClass.Value = value
-            MyClass.Description = description
-            MyClass.Encrypted = encrypted
+            Me.Name = name
+            Me.Value = value
+            Me.Description = description
+            Me.Encrypted = encrypted
         End Sub
 
         ''' <summary>
@@ -135,11 +135,11 @@ Namespace Configuration
         Public Function GetTypedValue(Of T)(ByVal defaultValue As T) As T
 
             Try
-                Dim value As String = MyClass.Value()
+                Dim stringValue As String = Value()
 
-                If Not String.IsNullOrEmpty(value) Then
+                If Not String.IsNullOrEmpty(stringValue) Then
                     ' Element's value string is present - convert it to the proper type
-                    Return CType(DirectCast(value, Object), T)
+                    Return CType(DirectCast(stringValue, Object), T)
                 Else
                     ' Element's value string is not present, so use the default
                     Return defaultValue
@@ -159,7 +159,7 @@ Namespace Configuration
         Public Function GetTypedValue(ByVal defaultValue As Boolean) As Boolean
 
             Try
-                Return ParseBoolean(MyClass.Value)
+                Return ParseBoolean(Value)
             Catch
                 Return defaultValue
             End Try
@@ -194,9 +194,9 @@ Namespace Configuration
                 Return Convert.ToBoolean(MyBase.Item("encrypted"))
             End Get
             Set(ByVal value As Boolean)
-                Dim elementValue As String = MyClass.Value() ' Get the decrypted value if encrypted.
+                Dim elementValue As String = Me.Value() ' Get the decrypted value if encrypted.
                 MyBase.Item("encrypted") = value
-                MyClass.Value = elementValue ' Setting the value again will cause encryption to be performed if required.
+                Me.Value = elementValue ' Setting the value again will cause encryption to be performed if required.
             End Set
         End Property
 
