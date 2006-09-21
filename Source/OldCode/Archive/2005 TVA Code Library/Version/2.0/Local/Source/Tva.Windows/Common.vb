@@ -51,7 +51,12 @@ Public NotInheritable Class Common
     ''' <remarks></remarks>
     Public Shared Sub SaveWindowSize(ByVal form As System.Windows.Forms.Form)
 
-        CategorizedSettings(LastWindowSizeSetting)(form.Name()).Value = form.Size.ToString()
+        If CategorizedSettings(LastWindowSizeSetting)(form.Name()) IsNot Nothing Then
+            CategorizedSettings(LastWindowSizeSetting)(form.Name()).Value = form.Size.ToString()
+        Else
+            CategorizedSettings(LastWindowSizeSetting).Add(form.Name(), form.Size.ToString())
+        End If
+
         SaveSettings()
 
     End Sub
@@ -63,7 +68,12 @@ Public NotInheritable Class Common
     ''' <remarks></remarks>
     Public Shared Sub SaveWindowLocation(ByVal form As System.Windows.Forms.Form)
 
-        CategorizedSettings(LastWindowLocationSetting)(form.Name()).Value = form.Location.ToString()
+        If CategorizedSettings(LastWindowLocationSetting)(form.Name()) IsNot Nothing Then
+            CategorizedSettings(LastWindowLocationSetting)(form.Name()).Value = form.Location.ToString()
+        Else
+            CategorizedSettings(LastWindowLocationSetting).Add(form.Name(), form.Location.ToString())
+        End If
+
         SaveSettings()
 
     End Sub
@@ -88,15 +98,14 @@ Public NotInheritable Class Common
     ''' <remarks></remarks>
     Public Shared Sub RestoreWindowSize(ByVal form As System.Windows.Forms.Form)
 
-        Dim savedSize As String = CategorizedSettings(LastWindowSizeSetting)(form.Name()).Value()
-
-        If Not String.IsNullOrEmpty(savedSize) Then
+        If CategorizedSettings(LastWindowSizeSetting)(form.Name()) IsNot Nothing Then
             ' Restore last saved window size.
-            Dim sizeSetting As New Setting(Of Integer)(savedSize)
+            Dim sizeSetting As New Setting(Of Integer)(CategorizedSettings(LastWindowSizeSetting)(form.Name()).Value())
             With form
                 .Width = Minimum(sizeSetting.ParamA(), GetTotalScreenWidth())
                 .Height = Minimum(sizeSetting.ParamB(), GetMaximumScreenHeight())
             End With
+
         End If
 
     End Sub
@@ -108,11 +117,9 @@ Public NotInheritable Class Common
     ''' <remarks></remarks>
     Public Shared Sub RestoreWindowLocation(ByVal form As System.Windows.Forms.Form)
 
-        Dim savedLocation As String = CategorizedSettings(LastWindowLocationSetting)(form.Name()).Value()
-
-        If Not String.IsNullOrEmpty(savedLocation) Then
+        If CategorizedSettings(LastWindowLocationSetting)(form.Name()) IsNot Nothing Then
             ' Restore last saved window location.
-            Dim locationSetting As New Setting(Of Integer)(savedLocation)
+            Dim locationSetting As New Setting(Of Integer)(CategorizedSettings(LastWindowLocationSetting)(form.Name()).Value())
             With form
                 .Left = Minimum(locationSetting.ParamA(), (GetTotalScreenWidth() - .Width()))
                 .Top = Minimum(locationSetting.ParamB(), (GetMaximumScreenHeight() - .Height()))
