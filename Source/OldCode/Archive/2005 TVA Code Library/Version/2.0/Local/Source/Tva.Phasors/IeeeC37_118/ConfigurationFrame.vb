@@ -51,7 +51,7 @@ Namespace IeeeC37_118
 
         End Sub
 
-        Public Sub New(ByVal frameType As FrameType, ByVal timeBase As Int32, ByVal idCode As Int16, ByVal ticks As Long, ByVal frameRate As Int16, ByVal version As Byte)
+        Public Sub New(ByVal frameType As FrameType, ByVal timeBase As Int32, ByVal idCode As UInt16, ByVal ticks As Long, ByVal frameRate As Int16, ByVal version As Byte)
 
             MyBase.New(idCode, New ConfigurationCellCollection, ticks, frameRate)
             Me.FrameType = frameType
