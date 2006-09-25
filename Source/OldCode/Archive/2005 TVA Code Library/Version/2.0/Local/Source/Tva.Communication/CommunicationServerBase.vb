@@ -699,10 +699,8 @@ Public MustInherit Class CommunicationServerBase
             With DirectCast(state, Object())
                 SendPreparedDataTo(DirectCast(.GetValue(0), Guid), DirectCast(.GetValue(1), Byte()))
             End With
-        Catch ex As NotSupportedException
-            ' We can safely ignore this error
         Catch
-            Throw
+            ' We can safely ignore errors here
         End Try
 
     End Sub

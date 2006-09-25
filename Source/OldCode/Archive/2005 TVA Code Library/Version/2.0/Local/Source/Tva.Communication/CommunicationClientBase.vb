@@ -735,7 +735,9 @@ Public MustInherit Class CommunicationClientBase
             End If
             data = DecryptData(data, key, m_encryption)
         End If
+
         data = UncompressData(data, m_compression)
+
         Return data
 
     End Function
@@ -761,10 +763,8 @@ Public MustInherit Class CommunicationClientBase
 
         Try
             SendPreparedData(DirectCast(state, Byte()))
-        Catch ex As NotSupportedException
-            ' We can safely ignore this error - some clients are read only
         Catch
-            Throw
+            ' We can safely ignore errors here
         End Try
 
     End Sub
