@@ -19,9 +19,6 @@ Namespace Ssam
         <System.Diagnostics.DebuggerNonUserCode(), EditorBrowsable(EditorBrowsableState.Never)> _
         Public Sub New()
             MyClass.New(SsamServer.Development, True)
-
-            'This call is required by the Component Designer.
-            InitializeComponent()
         End Sub
 
         'Component overrides dispose to clean up the component list.

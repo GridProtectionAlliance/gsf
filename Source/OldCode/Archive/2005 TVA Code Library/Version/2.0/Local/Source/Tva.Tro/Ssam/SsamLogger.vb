@@ -56,12 +56,7 @@ Namespace Ssam
         ''' </param>
         ''' <remarks></remarks>
         Public Sub New(ByVal server As SsamServer, ByVal keepConnectionOpen As Boolean)
-            MyClass.New(server, keepConnectionOpen, True)
-        End Sub
-
-        Public Sub New(ByVal server As SsamServer, ByVal keepConnectionOpen As Boolean, _
-                ByVal persistConnectionStrings As Boolean)
-            MyClass.New(New SsamApi(server, keepConnectionOpen, persistConnectionStrings))
+            MyClass.New(New SsamApi(server, keepConnectionOpen))
         End Sub
 
         Public Sub New(ByVal ssamApi As SsamApi)
@@ -71,6 +66,9 @@ Namespace Ssam
             m_eventQueue = ProcessQueue(Of SsamEvent).CreateSynchronousQueue(AddressOf ProcessEvent)
             m_eventQueue.RequeueOnException = True
             m_eventQueue.Start()
+
+            'This call is required by the Component Designer.
+            InitializeComponent()
         End Sub
 
         ''' <summary>

@@ -31,7 +31,7 @@ Namespace Ssam
 
         Private m_server As SsamServer
         Private m_keepConnectionOpen As Boolean
-        Private m_persistConnectionStrings As Boolean
+        'Private m_persistConnectionStrings As Boolean
         Private m_connectionState As SsamConnectionState
         Private m_developmentConnectionString As String
         Private m_productionConnectionString As String
@@ -63,20 +63,24 @@ Namespace Ssam
         ''' any consecutive events that will follow; otherwise False.
         ''' </param>
         Public Sub New(ByVal server As SsamServer, ByVal keepConnectionOpen As Boolean)
-            MyClass.New(server, keepConnectionOpen, True)
-        End Sub
-
-        Public Sub New(ByVal server As SsamServer, ByVal keepConnectionOpen As Boolean, _
-                ByVal persistConnectionStrings As Boolean)
             MyBase.New()
             m_server = server
             m_keepConnectionOpen = keepConnectionOpen
-            m_persistConnectionStrings = persistConnectionStrings
             m_connectionState = SsamConnectionState.Closed
-            m_developmentConnectionString = "Server=RGOCSQLD;Database=Ssam;Trusted_Connection=True;"
-            m_productionConnectionString = "Server=OPSSAMSQL;Database=Ssam;Trusted_Connection=True;"
             m_connection = New SqlConnection()
-            Initialize()
+            ' We'll try to load the connection string from the config file if can, or else use the default ones.
+            Try
+                m_developmentConnectionString = "Server=RGOCSQLD;Database=Ssam;Trusted_Connection=True;"
+                m_developmentConnectionString = CategorizedSettings(ConfigurationElement)("Development").Value
+            Catch ex As Exception
+                ' We can safely ignore any exception encountered while retrieving connection string from the config file.
+            End Try
+            Try
+                m_productionConnectionString = "Server=OPSSAMSQL;Database=Ssam;Trusted_Connection=True;"
+                m_productionConnectionString = CategorizedSettings(ConfigurationElement)("Production").Value
+            Catch ex As Exception
+                ' We can safely ignore any exception encountered while retrieving connection string from the config file.
+            End Try
         End Sub
 
         ''' <summary>
@@ -122,22 +126,6 @@ Namespace Ssam
                     Disconnect()
                 End If
                 m_keepConnectionOpen = value
-            End Set
-        End Property
-
-        ''' <summary>
-        ''' Gets or sets a boolean value indicating whether the connection strings for connecting to the SSAM server
-        ''' are to be saved to the application configuration file when 
-        ''' </summary>
-        ''' <value></value>
-        ''' <returns></returns>
-        <DefaultValue(GetType(Boolean), "True")> _
-        Public Property PersistConnectionStrings() As Boolean
-            Get
-                Return m_persistConnectionStrings
-            End Get
-            Set(ByVal value As Boolean)
-                m_persistConnectionStrings = value
             End Set
         End Property
 
@@ -194,35 +182,6 @@ Namespace Ssam
         End Property
 
         ''' <summary>
-        ''' Initializes the connection strings used for connecting to the SSAM server.
-        ''' </summary>
-        Public Sub Initialize()
-
-            CheckDisposed()
-
-            If m_persistConnectionStrings Then
-                ' Initialize the connection string variables from the config file only if the connection strings 
-                ' are present (Connection strings are persisted when PersistConnectionStrings = True).
-                Dim developmentCS As String = ""
-                Try
-                    developmentCS = CategorizedSettings(ConfigurationElement)("Development").Value
-                Catch ex As Exception
-                    ' We can safely ignore any exception encountered while retrieving connection string from the config file.
-                End Try
-                If Not String.IsNullOrEmpty(developmentCS) Then m_developmentConnectionString = developmentCS
-
-                Dim productionCS As String = ""
-                Try
-                    productionCS = CategorizedSettings(ConfigurationElement)("Production").Value
-                Catch ex As Exception
-                    ' We can safely ignore any exception encountered while retrieving connection string from the config file.
-                End Try
-                If Not String.IsNullOrEmpty(productionCS) Then m_productionConnectionString = productionCS
-            End If
-
-        End Sub
-
-        ''' <summary>
         ''' Connects with the selected SSAM server.
         ''' </summary>
         Public Sub Connect()
@@ -244,18 +203,26 @@ Namespace Ssam
             CheckDisposed()
 
             If m_connection.State <> System.Data.ConnectionState.Closed Then m_connection.Close()
-            If m_persistConnectionStrings Then
-                Try
-                    ' Save SSAM connection strings to the config file.
+
+            Try
+                ' Save SSAM connection strings to the config file.
+                If CategorizedSettings(ConfigurationElement)("Development") Is Nothing Then
                     CategorizedSettings(ConfigurationElement).Add("Development", m_developmentConnectionString, _
                         "Connection string for connecting to development SSAM server.", True)
+                Else
+                    CategorizedSettings(ConfigurationElement)("Development").Value = m_developmentConnectionString
+                End If
+                If CategorizedSettings(ConfigurationElement)("Production") Is Nothing Then
                     CategorizedSettings(ConfigurationElement).Add("Production", m_productionConnectionString, _
                         "Connection string for connecting to production SSAM server.", True)
-                    SaveSettings()
-                Catch ex As Exception
-                    ' We can safely ignore any exceptions encountered while saving connections strings to the config file.
-                End Try
-            End If
+                Else
+                    CategorizedSettings(ConfigurationElement)("Production").Value = m_productionConnectionString
+                End If
+                SaveSettings()
+            Catch ex As Exception
+                ' We can safely ignore any exceptions encountered while saving connections strings to the config file.
+            End Try
+
             m_connectionState = SsamConnectionState.Closed
 
         End Sub
