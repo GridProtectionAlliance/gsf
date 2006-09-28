@@ -15,6 +15,8 @@
 '
 '*******************************************************************************************************
 
+Imports Tva.Measurements
+
 Public Class PmuInfo
 
     Implements IComparable(Of PmuInfo)
@@ -22,6 +24,7 @@ Public Class PmuInfo
     Private m_id As UInt16
     Private m_tag As String
     Private m_lastReportTime As Long
+    Private m_activeMeasurements As Dictionary(Of String, IMeasurement)
 
     Public Sub New(ByVal id As UInt16, ByVal tag As String)
 
@@ -49,6 +52,13 @@ Public Class PmuInfo
         Set(ByVal value As Long)
             m_lastReportTime = value
         End Set
+    End Property
+
+    Public ReadOnly Property Measurements() As Dictionary(Of String, IMeasurement)
+        Get
+            If m_activeMeasurements Is Nothing Then m_activeMeasurements = New Dictionary(Of String, IMeasurement)
+            Return m_activeMeasurements
+        End Get
     End Property
 
     Public Function CompareTo(ByVal other As PmuInfo) As Integer Implements System.IComparable(Of PmuInfo).CompareTo
