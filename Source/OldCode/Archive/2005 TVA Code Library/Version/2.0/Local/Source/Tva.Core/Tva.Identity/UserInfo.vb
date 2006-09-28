@@ -14,6 +14,8 @@
 '       Original version of source code generated
 '  01/03/2006 - Pinal C. Patel
 '       2.0 version of source code migrated from 1.1 source (TVA.Shared.Identity)
+'  09/27/2006 - Pinal C. Patel
+'       Added Authenticate() function.
 '
 '*******************************************************************************************************
 
@@ -23,14 +25,21 @@ Namespace Identity
 
     Public Class UserInfo
 
-        Private m_userDirectoryEntry As DirectoryEntry
-        Private m_userLoginID As String
+        Private m_loginID As String
+        Private m_domain As String
+        Private m_username As String
+        Private m_userEntry As DirectoryEntry
 
         ''' <summary>Initializes a new instance of the user information class.</summary>
         ''' <remarks>Specify login information as domain\username.</remarks>
         Public Sub New(ByVal loginID As String)
 
-            m_userLoginID = loginID
+            Dim loginIDParts As String() = loginID.Split("\"c)
+            If loginIDParts.Length = 2 Then
+                m_domain = loginIDParts(0)
+                m_username = loginIDParts(1)
+            End If
+            m_loginID = loginID
 
         End Sub
 
@@ -44,29 +53,27 @@ Namespace Identity
         ''' <summary>Gets the login ID of the user.</summary>
         Public ReadOnly Property LoginID() As String
             Get
-                Return m_userLoginID
+                Return m_loginID
             End Get
         End Property
 
         ''' <summary>Gets the System.DirectoryServices.DirectoryEntry of the user</summary>
         Public ReadOnly Property UserEntry() As DirectoryEntry
             Get
-                If m_userDirectoryEntry Is Nothing Then
+                If m_userEntry Is Nothing Then
                     Try
-                        Dim domain As String = m_userLoginID.Substring(0, m_userLoginID.IndexOf("\"c)).Trim()
-                        Dim userName As String = m_userLoginID.Replace(domain & "\", "").Trim()
-                        Dim entry As New DirectoryEntry("LDAP://" & domain)
+                        Dim entry As New DirectoryEntry("LDAP://" & m_domain)
 
                         With New DirectorySearcher(entry)
-                            .Filter = "(SAMAccountName=" & userName & ")"
-                            m_userDirectoryEntry = .FindOne().GetDirectoryEntry()
+                            .Filter = "(SAMAccountName=" & m_username & ")"
+                            m_userEntry = .FindOne().GetDirectoryEntry()
                         End With
                     Catch
-                        m_userDirectoryEntry = Nothing
+                        m_userEntry = Nothing
                     End Try
                 End If
 
-                Return m_userDirectoryEntry
+                Return m_userEntry
             End Get
         End Property
 
@@ -95,7 +102,7 @@ Namespace Identity
                         Return displayName
                     End If
                 Else
-                    Return m_userLoginID
+                    Return m_loginID
                 End If
 
             End Get
@@ -156,6 +163,23 @@ Namespace Identity
                 Return UserProperty("streetAddress")
             End Get
         End Property
+
+        ''' <summary>
+        ''' Authenticates the user against Active Directory with the specified password.
+        ''' </summary>
+        ''' <param name="password">The password to be used for authentication.</param>
+        ''' <returns>True is the user can be authenticated; otherwise False.</returns>
+        Public Function Authenticate(ByVal password As String) As Boolean
+
+            Try
+                Dim userEntry As New DirectoryEntry("LDAP://" & m_domain, m_username, password)
+                Return New DirectorySearcher(userEntry).FindOne() IsNot Nothing
+            Catch ex As Exception
+                ' Failed to authenticate against the active directory with the specified password.
+            End Try
+            Return False
+
+        End Function
 
     End Class
 
