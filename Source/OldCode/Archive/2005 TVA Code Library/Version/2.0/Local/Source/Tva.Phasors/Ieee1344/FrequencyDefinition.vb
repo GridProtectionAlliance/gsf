@@ -54,9 +54,9 @@ Namespace Ieee1344
 
         End Sub
 
-        Public Sub New(ByVal parent As ConfigurationCell, ByVal index As Int32, ByVal label As String, ByVal scale As Int32, ByVal offset As Single, ByVal dfdtScale As Int32, ByVal dfdtOffset As Single)
+        Public Sub New(ByVal parent As ConfigurationCell, ByVal label As String, ByVal scale As Int32, ByVal offset As Single, ByVal dfdtScale As Int32, ByVal dfdtOffset As Single)
 
-            MyBase.New(parent, index, label, scale, offset, dfdtScale, dfdtOffset)
+            MyBase.New(parent, label, scale, offset, dfdtScale, dfdtOffset)
 
         End Sub
 

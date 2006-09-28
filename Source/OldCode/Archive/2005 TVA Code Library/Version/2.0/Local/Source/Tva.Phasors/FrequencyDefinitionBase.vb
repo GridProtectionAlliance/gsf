@@ -16,6 +16,7 @@
 '*******************************************************************************************************
 
 Imports System.Runtime.Serialization
+Imports System.ComponentModel
 Imports Tva.Phasors.Common
 
 ''' <summary>This class represents the common implementation of the protocol independent definition of a frequency and df/dt value.</summary>
@@ -47,9 +48,9 @@ Public MustInherit Class FrequencyDefinitionBase
 
     End Sub
 
-    Protected Sub New(ByVal parent As IConfigurationCell, ByVal index As Int32, ByVal label As String, ByVal scale As Int32, ByVal offset As Single, ByVal dfdtScale As Int32, ByVal dfdtOffset As Single)
+    Protected Sub New(ByVal parent As IConfigurationCell, ByVal label As String, ByVal scale As Int32, ByVal offset As Single, ByVal dfdtScale As Int32, ByVal dfdtOffset As Single)
 
-        MyBase.New(parent, index, label, scale, offset)
+        MyBase.New(parent, 0, label, scale, offset)
 
         m_dfdtScale = dfdtScale
         m_dfdtOffset = dfdtOffset
@@ -65,7 +66,7 @@ Public MustInherit Class FrequencyDefinitionBase
     ' Derived classes are expected to expose a Public Sub New(ByVal frequencyDefinition As IFrequencyDefinition)
     Protected Sub New(ByVal frequencyDefinition As IFrequencyDefinition)
 
-        MyClass.New(frequencyDefinition.Parent, frequencyDefinition.Index, frequencyDefinition.Label, frequencyDefinition.ScalingFactor, _
+        MyClass.New(frequencyDefinition.Parent, frequencyDefinition.Label, frequencyDefinition.ScalingFactor, _
             frequencyDefinition.Offset, frequencyDefinition.DfDtScalingFactor, frequencyDefinition.DfDtOffset)
 
     End Sub
@@ -80,6 +81,16 @@ Public MustInherit Class FrequencyDefinitionBase
         Get
             Return Parent.NominalFrequency
         End Get
+    End Property
+
+    <EditorBrowsable(EditorBrowsableState.Never)> _
+    Public Overrides Property Index() As Integer
+        Get
+            Return MyBase.Index
+        End Get
+        Set(ByVal value As Integer)
+            MyBase.Index = value
+        End Set
     End Property
 
     Public Overrides Property Offset() As Single

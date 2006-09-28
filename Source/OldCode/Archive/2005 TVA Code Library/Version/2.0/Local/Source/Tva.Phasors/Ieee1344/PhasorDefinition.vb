@@ -39,9 +39,9 @@ Namespace Ieee1344
 
         End Sub
 
-        Public Sub New(ByVal parent As ConfigurationCell, ByVal index As Int32, ByVal label As String, ByVal scale As Int32, ByVal offset As Single, ByVal format As CoordinateFormat, ByVal type As PhasorType, ByVal voltageReference As PhasorDefinition)
+        Public Sub New(ByVal parent As ConfigurationCell, ByVal index As Int32, ByVal label As String, ByVal scale As Int32, ByVal offset As Single, ByVal type As PhasorType, ByVal voltageReference As PhasorDefinition)
 
-            MyBase.New(parent, index, label, scale, offset, format, type, voltageReference)
+            MyBase.New(parent, index, label, scale, offset, type, voltageReference)
 
         End Sub
 
