@@ -46,8 +46,8 @@ Namespace UI
             ' Set the defaults.
             Dim thisAssembly As Assembly = New Assembly(GetExecutingAssembly())
             SetCompanyUrl("http://www.tva.gov")
-            SetCompanyLogo(thisAssembly.GetEmbeddedResource("TVALogo.bmp"))
-            SetCompanyDisclaimer(thisAssembly.GetEmbeddedResource("TVADisclaimer.txt"))
+            SetCompanyLogo(thisAssembly.GetEmbeddedResource("UI.TVALogo.bmp"))
+            SetCompanyDisclaimer(thisAssembly.GetEmbeddedResource("UI.TVADisclaimer.txt"))
 
         End Sub
 
