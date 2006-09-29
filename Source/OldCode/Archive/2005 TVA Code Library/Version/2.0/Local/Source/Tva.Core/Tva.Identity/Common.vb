@@ -14,6 +14,8 @@
 '       Original version of source code generated
 '  01/03/2006 - Pinal C. Patel
 '       2.0 version of source code migrated from 1.1 source (TVA.Shared.Identity)
+'  09/29/2006 - Pinal C. Patel
+'       Added overload for ImpersonateUser() that does not take the "domain" parameter.
 '
 '*******************************************************************************************************
 
@@ -76,6 +78,12 @@ Namespace Identity
             End Try
 
             Return authenticated
+
+        End Function
+
+        Public Shared Function ImpersonateUser(ByVal username As String, ByVal password As String) As WindowsImpersonationContext
+
+            Return ImpersonateUser(username, password, "TVA")
 
         End Function
 
