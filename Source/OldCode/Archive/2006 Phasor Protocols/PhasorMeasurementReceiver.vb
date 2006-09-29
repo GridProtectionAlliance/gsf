@@ -228,13 +228,16 @@ Public Class PhasorMeasurementReceiver
 
                         If .TransportProtocol = TransportProtocol.Tcp Then
                             .ConnectionString = "server=" & row("IPAddress") & "; port=" & row("IPPort")
+                            .DeviceSupportsCommands = True
                         Else
                             ' TODO: May need to account for UDP connections supporting remote server commands at some point
                             ' Note that this will require an extra database field for remote port...
                             .ConnectionString = "localport=" & row("IPPort")
+                            .DeviceSupportsCommands = False
 
                             ' Example UDP connect string supporting remote UDP commands
                             '.ConnectionString = "server=" & row("IPAddress") & "; localport=" & row("IPPort") & "; remoteport=" & row("IPCommandPort")
+                            '.DeviceSupportsCommands = True
                         End If
 
                         .PmuID = accessID
