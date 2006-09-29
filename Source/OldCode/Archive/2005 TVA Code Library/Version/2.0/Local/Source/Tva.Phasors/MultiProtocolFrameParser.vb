@@ -82,6 +82,7 @@ Public Class MultiProtocolFrameParser
     Private m_autoStartDataParsingSequence As Boolean
     Private m_initiatingDataStream As Boolean
     Private m_initialBytesReceived As Long
+    Private m_deviceSupportsCommands As Boolean
 
 #End Region
 
@@ -135,6 +136,24 @@ Public Class MultiProtocolFrameParser
         End Get
         Set(ByVal value As TransportProtocol)
             m_transportProtocol = value
+
+            Select Case value
+                Case Communication.TransportProtocol.Tcp, Communication.TransportProtocol.Serial
+                    m_deviceSupportsCommands = True
+                Case Communication.TransportProtocol.Udp, Communication.TransportProtocol.File
+                    m_deviceSupportsCommands = False
+                Case Else
+                    m_deviceSupportsCommands = False
+            End Select
+        End Set
+    End Property
+
+    Public Property DeviceSupportsCommands() As Boolean
+        Get
+            Return m_deviceSupportsCommands
+        End Get
+        Set(ByVal value As Boolean)
+            m_deviceSupportsCommands = value
         End Set
     End Property
 
@@ -396,7 +415,7 @@ Public Class MultiProtocolFrameParser
                     binaryLength = 0
             End Select
 
-            If binaryLength > 0 Then m_communicationClient.Send(binaryImage)
+            If binaryLength > 0 AndAlso m_deviceSupportsCommands Then m_communicationClient.Send(binaryImage)
         End If
 
     End Sub
@@ -465,7 +484,7 @@ Public Class MultiProtocolFrameParser
     Private Sub m_frameParser_ReceivedConfigurationFrame(ByVal frame As IConfigurationFrame) Handles m_frameParser.ReceivedConfigurationFrame
 
         ' We automatically request enabling of real-time data upon reception of config frame if requested
-        If m_configurationFrame Is Nothing AndAlso m_autoStartDataParsingSequence Then
+        If m_configurationFrame Is Nothing AndAlso m_deviceSupportsCommands AndAlso m_autoStartDataParsingSequence Then
             SendDeviceCommand(DeviceCommand.EnableRealTimeData)
         End If
 
@@ -531,7 +550,7 @@ Public Class MultiProtocolFrameParser
         RaiseEvent Connected()
 
         ' Begin data parsing sequence to handle reception of configuration frame
-        If m_autoStartDataParsingSequence Then
+        If m_deviceSupportsCommands AndAlso m_autoStartDataParsingSequence Then
             m_initialBytesReceived = 0
             m_initiatingDataStream = True
             ThreadPool.QueueUserWorkItem(AddressOf StartDataParsingSequence)
