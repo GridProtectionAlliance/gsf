@@ -40,6 +40,8 @@
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.Web" />
+    <Reference Include="System.Windows.Forms" />
   </ItemGroup>
   <ItemGroup>
     <Import Include="Microsoft.VisualBasic" />
@@ -49,6 +51,22 @@
     <Import Include="System.Diagnostics" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ApplicationSecurity\Application.vb" />
+    <Compile Include="ApplicationSecurity\Role.vb" />
+    <Compile Include="ApplicationSecurity\User.vb" />
+    <Compile Include="ApplicationSecurity\Enumerations.vb" />
+    <Compile Include="ApplicationSecurity\SecurityProviderBase.Designer.vb">
+      <DependentUpon>SecurityProviderBase.vb</DependentUpon>
+    </Compile>
+    <Compile Include="ApplicationSecurity\SecurityProviderBase.vb">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="ApplicationSecurity\WebSecurityProvider.Designer.vb">
+      <DependentUpon>WebSecurityProvider.vb</DependentUpon>
+    </Compile>
+    <Compile Include="ApplicationSecurity\WebSecurityProvider.vb">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="My Project\AssemblyInfo.vb" />
     <Compile Include="Ssam\Enumerations.vb" />
     <Compile Include="Ssam\SsamApi.vb" />
@@ -65,13 +83,22 @@
       <Project>{29A7B606-D1BC-4A4B-96D0-258D5A72C3EC}</Project>
       <Name>Tva.Core</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Tva.IO.Compression\Tva.IO.Compression.vcproj">
+      <Project>{F611B9BA-C69D-449B-B596-FABFB746EA2A}</Project>
+      <Name>Tva.IO.Compression</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Embedded Resources\Ssam.SsamLogger.bmp" />
   </ItemGroup>
   <ItemGroup>
+    <Service Include="{94E38DFF-614B-4CBD-B67C-F211BB35CE8B}" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Embedded Resources\ApplicationSecurity.WebFiles.dat" />
+  </ItemGroup>
+  <ItemGroup>
     <Folder Include="DataJunction\" />
-    <Folder Include="WebSecurity\" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.VisualBasic.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

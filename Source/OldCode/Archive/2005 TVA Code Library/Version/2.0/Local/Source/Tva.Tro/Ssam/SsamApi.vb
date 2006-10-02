@@ -31,10 +31,9 @@ Namespace Ssam
 
         Private m_server As SsamServer
         Private m_keepConnectionOpen As Boolean
-        'Private m_persistConnectionStrings As Boolean
         Private m_connectionState As SsamConnectionState
-        Private m_developmentConnectionString As String
-        Private m_productionConnectionString As String
+        Private m_devConnectionString As String
+        Private m_prdConnectionString As String
         Private m_connection As SqlConnection
 
         Private Const ConfigurationElement As String = "Ssam"
@@ -70,14 +69,14 @@ Namespace Ssam
             m_connection = New SqlConnection()
             ' We'll try to load the connection string from the config file if can, or else use the default ones.
             Try
-                m_developmentConnectionString = "Server=RGOCSQLD;Database=Ssam;Trusted_Connection=True;"
-                m_developmentConnectionString = CategorizedSettings(ConfigurationElement)("Development").Value
+                m_devConnectionString = "Server=RGOCSQLD;Database=Ssam;Trusted_Connection=True;"
+                m_devConnectionString = CategorizedSettings(ConfigurationElement)("Development").Value
             Catch ex As Exception
                 ' We can safely ignore any exception encountered while retrieving connection string from the config file.
             End Try
             Try
-                m_productionConnectionString = "Server=OPSSAMSQL;Database=Ssam;Trusted_Connection=True;"
-                m_productionConnectionString = CategorizedSettings(ConfigurationElement)("Production").Value
+                m_prdConnectionString = "Server=OPSSAMSQL;Database=Ssam;Trusted_Connection=True;"
+                m_prdConnectionString = CategorizedSettings(ConfigurationElement)("Production").Value
             Catch ex As Exception
                 ' We can safely ignore any exception encountered while retrieving connection string from the config file.
             End Try
@@ -160,25 +159,18 @@ Namespace Ssam
         ''' <value></value>
         ''' <returns>The connection string used for connecting with the current SSAM server.</returns>
         <Browsable(False)> _
-        Public Property ConnectionString() As String
+        Public ReadOnly Property ConnectionString() As String
             Get
                 ' Return the connection string for connecting to the selected SSAM server.
                 Select Case m_server
                     Case SsamServer.Development
-                        Return m_developmentConnectionString
+                        Return m_devConnectionString
                     Case SsamServer.Production
-                        Return m_productionConnectionString
+                        Return m_prdConnectionString
+                    Case Else
+                        Return ""
                 End Select
-                Return ""
             End Get
-            Set(ByVal value As String)
-                Select Case m_server
-                    Case SsamServer.Development
-                        m_developmentConnectionString = value
-                    Case SsamServer.Production
-                        m_productionConnectionString = value
-                End Select
-            End Set
         End Property
 
         ''' <summary>
@@ -207,16 +199,16 @@ Namespace Ssam
             Try
                 ' Save SSAM connection strings to the config file.
                 If CategorizedSettings(ConfigurationElement)("Development") Is Nothing Then
-                    CategorizedSettings(ConfigurationElement).Add("Development", m_developmentConnectionString, _
+                    CategorizedSettings(ConfigurationElement).Add("Development", m_devConnectionString, _
                         "Connection string for connecting to development SSAM server.", True)
                 Else
-                    CategorizedSettings(ConfigurationElement)("Development").Value = m_developmentConnectionString
+                    CategorizedSettings(ConfigurationElement)("Development").Value = m_devConnectionString
                 End If
                 If CategorizedSettings(ConfigurationElement)("Production") Is Nothing Then
-                    CategorizedSettings(ConfigurationElement).Add("Production", m_productionConnectionString, _
+                    CategorizedSettings(ConfigurationElement).Add("Production", m_prdConnectionString, _
                         "Connection string for connecting to production SSAM server.", True)
                 Else
-                    CategorizedSettings(ConfigurationElement)("Production").Value = m_productionConnectionString
+                    CategorizedSettings(ConfigurationElement)("Production").Value = m_prdConnectionString
                 End If
                 SaveSettings()
             Catch ex As Exception
