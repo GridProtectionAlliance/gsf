@@ -198,18 +198,10 @@ Namespace Ssam
 
             Try
                 ' Save SSAM connection strings to the config file.
-                If CategorizedSettings(ConfigurationElement)("Development") Is Nothing Then
-                    CategorizedSettings(ConfigurationElement).Add("Development", m_devConnectionString, _
-                        "Connection string for connecting to development SSAM server.", True)
-                Else
-                    CategorizedSettings(ConfigurationElement)("Development").Value = m_devConnectionString
-                End If
-                If CategorizedSettings(ConfigurationElement)("Production") Is Nothing Then
-                    CategorizedSettings(ConfigurationElement).Add("Production", m_prdConnectionString, _
-                        "Connection string for connecting to production SSAM server.", True)
-                Else
-                    CategorizedSettings(ConfigurationElement)("Production").Value = m_prdConnectionString
-                End If
+                CategorizedSettings(ConfigurationElement).Add("Development", m_devConnectionString, _
+                    "Connection string for connecting to development SSAM server.", True)
+                CategorizedSettings(ConfigurationElement).Add("Production", m_prdConnectionString, _
+                    "Connection string for connecting to production SSAM server.", True)
                 SaveSettings()
             Catch ex As Exception
                 ' We can safely ignore any exceptions encountered while saving connections strings to the config file.

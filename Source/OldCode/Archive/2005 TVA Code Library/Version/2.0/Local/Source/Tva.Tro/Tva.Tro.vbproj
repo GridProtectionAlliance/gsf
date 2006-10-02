@@ -98,6 +98,9 @@
     <EmbeddedResource Include="Embedded Resources\ApplicationSecurity.WebFiles.dat" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Embedded Resources\ApplicationSecurity.WebSecurityProvider.bmp" />
+  </ItemGroup>
+  <ItemGroup>
     <Folder Include="DataJunction\" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.VisualBasic.targets" />

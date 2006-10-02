@@ -2,6 +2,8 @@
 
 Imports System.IO
 Imports System.Text
+Imports System.Drawing
+Imports System.ComponentModel
 Imports Tva.Assembly
 Imports Tva.IO.Common
 Imports Tva.IO.Compression
@@ -9,10 +11,12 @@ Imports Tva.Security.Cryptography.Common
 
 Namespace ApplicationSecurity
 
+    <ToolboxBitmap(GetType(WebSecurityProvider))> _
     Public Class WebSecurityProvider
 
-        Private m_parent As System.Web.UI.Page
+        Private WithEvents m_parent As System.Web.UI.Page
 
+        <Category("Configuration")> _
         Public Property Parent() As System.Web.UI.Page
             Get
                 Return m_parent
@@ -135,18 +139,27 @@ Namespace ApplicationSecurity
                 .Append("http://")
                 Select Case MyBase.Server
                     Case SecurityServer.Development
-                        .Append("chadesoweb")
+                        .Append("chadesoweb.cha.tva.gov")
                     Case SecurityServer.Acceptance
-                        .Append("chaaesoweb")
+                        .Append("chaaesoweb.cha.tva.gov")
                     Case SecurityServer.Production
-                        .Append("chapesoweb")
+                        .Append("troweb.cha.tva.gov")
                 End Select
-                .Append("/TROApplicationSecurity/")
+                .Append("/troapplicationsecurity/")
 
                 Return .ToString()
             End With
 
         End Function
+
+        Private Sub m_parent_PreLoad(ByVal sender As Object, ByVal e As System.EventArgs) Handles m_parent.PreLoad
+
+            If MyBase.User Is Nothing Then
+                ' The developer failed to call the LoginUser() method so we'll do it for the developer.
+                LoginUser()
+            End If
+
+        End Sub
 
     End Class
 

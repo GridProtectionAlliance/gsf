@@ -55,6 +55,7 @@ Namespace ApplicationSecurity
 
         End Sub
 
+        <Category("Configuration")> _
         Public Property Server() As SecurityServer
             Get
                 Return m_server
@@ -64,6 +65,7 @@ Namespace ApplicationSecurity
             End Set
         End Property
 
+        <Category("Configuration")> _
         Public Property ApplicationName() As String
             Get
                 Return m_applicationName
@@ -93,6 +95,7 @@ Namespace ApplicationSecurity
             End Get
         End Property
 
+        <Browsable(False)> _
         Public ReadOnly Property User() As User
             Get
                 Return m_user
