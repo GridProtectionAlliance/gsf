@@ -102,7 +102,7 @@ Namespace ApplicationSecurity
             End Get
         End Property
 
-        Public Sub LoginUser()
+        Protected Sub LoginUser()
 
             If Not String.IsNullOrEmpty(m_applicationName) Then
                 Dim userLoginID As String = System.Threading.Thread.CurrentPrincipal.Identity.Name

@@ -16,10 +16,12 @@
 '*******************************************************************************************************
 
 Imports System.Text
+Imports System.Drawing
 Imports System.ComponentModel
 Imports Tva.Communication
 Imports Tva.Serialization
 
+<ToolboxBitmap(GetType(ClientHelper))> _
 Public Class ClientHelper
 
     ''' <summary>

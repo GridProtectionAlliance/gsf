@@ -1,6 +1,7 @@
 ' 08-29-06
 
 Imports System.Text
+Imports System.Drawing
 Imports System.ComponentModel
 Imports System.ServiceProcess
 Imports Tva.Common
@@ -9,6 +10,7 @@ Imports Tva.Tro.Ssam
 Imports Tva.Communication
 Imports Tva.Serialization
 
+<ToolboxBitmap(GetType(ServiceHelper))> _
 Public Class ServiceHelper
 
     Private m_service As ServiceBase

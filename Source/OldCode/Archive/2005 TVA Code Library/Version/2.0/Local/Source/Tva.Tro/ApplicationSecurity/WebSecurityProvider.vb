@@ -155,7 +155,8 @@ Namespace ApplicationSecurity
         Private Sub m_parent_PreLoad(ByVal sender As Object, ByVal e As System.EventArgs) Handles m_parent.PreLoad
 
             If MyBase.User Is Nothing Then
-                ' The developer failed to call the LoginUser() method so we'll do it for the developer.
+                ' EndInit() method of the ISupportInitialize interface was not called which in-turn calls the
+                ' LoginUser() method, so we'll call LoginUser() over here implicitly before the web page loads.
                 LoginUser()
             End If
 
