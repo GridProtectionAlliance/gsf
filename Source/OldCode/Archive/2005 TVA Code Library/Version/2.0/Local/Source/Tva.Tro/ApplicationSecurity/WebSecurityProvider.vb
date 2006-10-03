@@ -34,7 +34,8 @@ Namespace ApplicationSecurity
 
             If m_parent IsNot Nothing Then
                 If m_parent.Request("AS.Username") IsNot Nothing Then
-                    m_parent.Session.Add("AS.Username", Decrypt(m_parent.Request("AS.Username").ToString(), Security.Cryptography.EncryptLevel.Level4))
+                    m_parent.Session.Add("AS.Username", _
+                        Decrypt(m_parent.Server.UrlDecode(m_parent.Request("AS.Username").ToString()), Security.Cryptography.EncryptLevel.Level4))
                 End If
 
                 If m_parent.Session("AS.Username") IsNot Nothing Then
@@ -52,7 +53,8 @@ Namespace ApplicationSecurity
 
             If m_parent IsNot Nothing Then
                 If m_parent.Request("AS.Password") IsNot Nothing Then
-                    m_parent.Session.Add("AS.Password", Decrypt(m_parent.Request("AS.Password").ToString(), Security.Cryptography.EncryptLevel.Level4))
+                    m_parent.Session.Add("AS.Password", _
+                        Decrypt(m_parent.Server.UrlDecode(m_parent.Request("AS.Password").ToString()), Security.Cryptography.EncryptLevel.Level4))
                 End If
 
                 If m_parent.Session("AS.Password") IsNot Nothing Then
@@ -79,9 +81,9 @@ Namespace ApplicationSecurity
                     With New StringBuilder()
                         .Append(GetWebSiteUrl())
                         .Append("Login.aspx?AS.ConnectionString=")
-                        .Append(Encrypt(MyBase.ConnectionString, Security.Cryptography.EncryptLevel.Level4))
+                        .Append(m_parent.Server.UrlEncode(Encrypt(MyBase.ConnectionString, Security.Cryptography.EncryptLevel.Level4)))
                         .Append("&AS.ApplicationName=")
-                        .Append(Encrypt(MyBase.ApplicationName, Security.Cryptography.EncryptLevel.Level4))
+                        .Append(m_parent.Server.UrlEncode(Encrypt(MyBase.ApplicationName, Security.Cryptography.EncryptLevel.Level4)))
 
                         m_parent.Response.Redirect(.ToString())
                     End With
@@ -101,9 +103,9 @@ Namespace ApplicationSecurity
                     ' We'll try to redirect to the "Access Denied" web page extacted from the embedded zip file.
                     ' However, this will fail when the web site has not been published and the developer is 
                     ' debugging it from Visual Studio.
-                    m_parent.Response.Redirect("AccessDenied.aspx")
+                    m_parent.Response.Redirect("ErrorPage.aspx?AS.ErrorType=AccessDenied")
                 Catch ex As Exception
-                    m_parent.Response.Redirect(GetWebSiteUrl() & "AccessDenied.aspx")
+                    m_parent.Response.Redirect(GetWebSiteUrl() & "ErrorPage.aspx?AS.ErrorType=AccessDenied")
                 End Try
             Else
                 Throw New InvalidOperationException("Parent must be set in order to proceed.")

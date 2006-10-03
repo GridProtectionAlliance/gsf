@@ -60,6 +60,7 @@ Namespace Ssam
         End Sub
 
         Public Sub New(ByVal ssamApi As SsamApi)
+
             MyBase.New()
             m_ssamApi = ssamApi
             m_enabled = True
@@ -69,6 +70,7 @@ Namespace Ssam
 
             'This call is required by the Component Designer.
             InitializeComponent()
+
         End Sub
 
         ''' <summary>

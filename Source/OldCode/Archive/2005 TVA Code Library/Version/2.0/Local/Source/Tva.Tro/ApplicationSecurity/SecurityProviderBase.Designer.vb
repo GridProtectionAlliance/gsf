@@ -16,7 +16,31 @@ Namespace ApplicationSecurity
 
         <System.Diagnostics.DebuggerNonUserCode()> _
         Public Sub New()
-            MyClass.New(SecurityServer.Development, "")
+            MyBase.New()
+
+            m_propertyValues = New Hashtable()
+            Try
+                m_devConnectionString = "Server=RGOCDSQL; Database=ApplicationSecurity; UID=websecurity; PWD=123-xyz"
+                m_devConnectionString = CategorizedSettings(ConfigurationElement)("Development").Value
+            Catch ex As Exception
+                ' We can safely ignore any exceptions encountered.
+            End Try
+            Try
+                m_accConnectionString = "Server=RGOCDSQL; Database=ApplicationSecurity; UID=websecurity; PWD=123-xyz"
+                m_accConnectionString = CategorizedSettings(ConfigurationElement)("Acceptance").Value
+            Catch ex As Exception
+                ' We can safely ignore any exceptions encountered.
+            End Try
+            Try
+                m_prdConnectionString = "Server=RGOCDSQL; Database=ApplicationSecurity; UID=websecurity; PWD=123-xyz"
+                m_prdConnectionString = CategorizedSettings(ConfigurationElement)("Production").Value
+            Catch ex As Exception
+                ' We can safely ignore any exceptions encountered.
+            End Try
+
+            'This call is required by the Component Designer.
+            InitializeComponent()
+
         End Sub
 
         'Component overrides dispose to clean up the component list.

@@ -3,8 +3,6 @@
 Imports System.Reflection
 Imports System.ComponentModel
 Imports System.Data.SqlClient
-Imports Tva.Data.Common
-Imports Tva.Configuration.Common
 
 Namespace ApplicationSecurity
 
@@ -24,36 +22,6 @@ Namespace ApplicationSecurity
 
         Public Event LoginFailed As EventHandler
         Public Event LoginSuccessful As EventHandler
-
-        Public Sub New(ByVal server As SecurityServer, ByVal applicationName As String)
-
-            MyBase.New()
-            m_server = server
-            m_applicationName = applicationName
-            m_propertyValues = New Hashtable()
-            Try
-                m_devConnectionString = "Server=RGOCDSQL; Database=ApplicationSecurity; UID=websecurity; PWD=123-xyz"
-                m_devConnectionString = CategorizedSettings(ConfigurationElement)("Development").Value
-            Catch ex As Exception
-                ' We can safely ignore any exceptions encountered.
-            End Try
-            Try
-                m_accConnectionString = "Server=RGOCDSQL; Database=ApplicationSecurity; UID=websecurity; PWD=123-xyz"
-                m_accConnectionString = CategorizedSettings(ConfigurationElement)("Acceptance").Value
-            Catch ex As Exception
-                ' We can safely ignore any exceptions encountered.
-            End Try
-            Try
-                m_prdConnectionString = "Server=RGOCDSQL; Database=ApplicationSecurity; UID=websecurity; PWD=123-xyz"
-                m_prdConnectionString = CategorizedSettings(ConfigurationElement)("Production").Value
-            Catch ex As Exception
-                ' We can safely ignore any exceptions encountered.
-            End Try
-
-            'This call is required by the Component Designer.
-            InitializeComponent()
-
-        End Sub
 
         <Category("Configuration")> _
         Public Property Server() As SecurityServer
@@ -105,7 +73,7 @@ Namespace ApplicationSecurity
         Protected Sub LoginUser()
 
             If Not String.IsNullOrEmpty(m_applicationName) Then
-                Dim userLoginID As String = System.Threading.Thread.CurrentPrincipal.Identity.Name
+                Dim userLoginID As String = "" 'System.Threading.Thread.CurrentPrincipal.Identity.Name
                 If Not String.IsNullOrEmpty(userLoginID) Then
                     ' User is internal since we have his/her login ID.
                     m_user = New User(userLoginID.Split("\"c)(1), New SqlConnection(ConnectionString))

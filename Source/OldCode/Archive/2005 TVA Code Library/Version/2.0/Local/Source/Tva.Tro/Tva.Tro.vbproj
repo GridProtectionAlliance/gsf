@@ -67,6 +67,12 @@
     <Compile Include="ApplicationSecurity\WebSecurityProvider.vb">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="ApplicationSecurity\WindowsSecurityProvider.Designer.vb">
+      <DependentUpon>WindowsSecurityProvider.vb</DependentUpon>
+    </Compile>
+    <Compile Include="ApplicationSecurity\WindowsSecurityProvider.vb">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="My Project\AssemblyInfo.vb" />
     <Compile Include="Ssam\Enumerations.vb" />
     <Compile Include="Ssam\SsamApi.vb" />

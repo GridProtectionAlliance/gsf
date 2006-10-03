@@ -1,25 +1,23 @@
-' 04-24-06
+Namespace ApplicationSecurity
 
-Imports System.ComponentModel
-Imports Tva.Collections
+    Partial Class WindowsSecurityProvider
+        Inherits Tva.Tro.ApplicationSecurity.SecurityProviderBase
 
-Namespace Ssam
-
-    Partial Class SsamLogger
-        Inherits System.ComponentModel.Component
-
-        <System.Diagnostics.DebuggerNonUserCode(), EditorBrowsable(EditorBrowsableState.Never)> _
+        <System.Diagnostics.DebuggerNonUserCode()> _
         Public Sub New(ByVal Container As System.ComponentModel.IContainer)
             MyClass.New()
 
             'Required for Windows.Forms Class Composition Designer support
             Container.Add(Me)
+
         End Sub
 
-        <System.Diagnostics.DebuggerNonUserCode(), EditorBrowsable(EditorBrowsableState.Never)> _
+        <System.Diagnostics.DebuggerNonUserCode()> _
         Public Sub New()
+            MyBase.New()
 
-            MyClass.New(SsamServer.Development, True)
+            'This call is required by the Component Designer.
+            InitializeComponent()
 
         End Sub
 
@@ -27,7 +25,6 @@ Namespace Ssam
         <System.Diagnostics.DebuggerNonUserCode()> _
         Protected Overrides Sub Dispose(ByVal disposing As Boolean)
             If disposing AndAlso components IsNot Nothing Then
-                m_ssamApi.Dispose()
                 components.Dispose()
             End If
             MyBase.Dispose(disposing)
