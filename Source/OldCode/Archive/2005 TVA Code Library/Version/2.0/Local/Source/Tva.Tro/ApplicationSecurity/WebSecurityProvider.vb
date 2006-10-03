@@ -1,6 +1,7 @@
 ' 09-26-06
 
 Imports System.IO
+Imports System.Net
 Imports System.Text
 Imports System.Drawing
 Imports System.ComponentModel
@@ -34,12 +35,7 @@ Namespace ApplicationSecurity
 
             If m_parent IsNot Nothing Then
                 If m_parent.Request("AS.Username") IsNot Nothing Then
-                    m_parent.Session.Add("AS.Username", _
-                        Decrypt(m_parent.Server.UrlDecode(m_parent.Request("AS.Username").ToString()), Security.Cryptography.EncryptLevel.Level4))
-                End If
-
-                If m_parent.Session("AS.Username") IsNot Nothing Then
-                    Return m_parent.Session("AS.Username").ToString()
+                    Return Decrypt(m_parent.Server.UrlDecode(m_parent.Request("AS.Username").ToString()), Security.Cryptography.EncryptLevel.Level4)
                 Else
                     Return ""
                 End If
@@ -53,12 +49,7 @@ Namespace ApplicationSecurity
 
             If m_parent IsNot Nothing Then
                 If m_parent.Request("AS.Password") IsNot Nothing Then
-                    m_parent.Session.Add("AS.Password", _
-                        Decrypt(m_parent.Server.UrlDecode(m_parent.Request("AS.Password").ToString()), Security.Cryptography.EncryptLevel.Level4))
-                End If
-
-                If m_parent.Session("AS.Password") IsNot Nothing Then
-                    Return m_parent.Session("AS.Password").ToString()
+                    Return Decrypt(m_parent.Server.UrlDecode(m_parent.Request("AS.Password").ToString()), Security.Cryptography.EncryptLevel.Level4)
                 Else
                     Return ""
                 End If
@@ -73,21 +64,29 @@ Namespace ApplicationSecurity
             If m_parent IsNot Nothing Then
                 ExtractWebFiles()   ' Make sure that the required web file exist in the application bin directory.
 
-                Try
-                    m_parent.Application.Add("AS.ConnectionString", MyBase.ConnectionString)
-                    m_parent.Application.Add("AS.ApplicationName", MyBase.ApplicationName)
-                    m_parent.Response.Redirect("Login.aspx")
-                Catch ex As Exception
-                    With New StringBuilder()
-                        .Append(GetWebSiteUrl())
-                        .Append("Login.aspx?AS.ConnectionString=")
-                        .Append(m_parent.Server.UrlEncode(Encrypt(MyBase.ConnectionString, Security.Cryptography.EncryptLevel.Level4)))
-                        .Append("&AS.ApplicationName=")
-                        .Append(m_parent.Server.UrlEncode(Encrypt(MyBase.ApplicationName, Security.Cryptography.EncryptLevel.Level4)))
+                With New StringBuilder()
+                    Try
+                        Dim getRequest As WebRequest = WebRequest.Create(GetLocalWebSiteUrl() & "Login.aspx")
+                        getRequest.Credentials = CredentialCache.DefaultCredentials
 
-                        m_parent.Response.Redirect(.ToString())
-                    End With
-                End Try
+                        If getRequest.GetResponse() Is Nothing Then
+                            ' We'll redirect to the "Login Page" on predefined remote web site if we're unable
+                            ' to request the page locally. This will be case when the developer is debugging the
+                            ' the web site from Visual Studio, since the page we're trying to access is embedded.
+                            .Append(GetRemoteWebSiteUrl())
+                        End If
+                    Catch ex As Exception
+                        .Append(GetRemoteWebSiteUrl())
+                    End Try
+                    .Append("Login.aspx?AS.ReturnUrl=")
+                    .Append(m_parent.Server.UrlEncode(m_parent.Request.Url.AbsoluteUri))
+                    .Append("&AS.ApplicationName=")
+                    .Append(m_parent.Server.UrlEncode(Encrypt(MyBase.ApplicationName, Security.Cryptography.EncryptLevel.Level4)))
+                    .Append("&AS.ConnectionString=")
+                    .Append(m_parent.Server.UrlEncode(Encrypt(MyBase.ConnectionString, Security.Cryptography.EncryptLevel.Level4)))
+
+                    m_parent.Response.Redirect(.ToString())
+                End With
             Else
                 Throw New InvalidOperationException("Parent must be set in order to login the user.")
             End If
@@ -99,14 +98,24 @@ Namespace ApplicationSecurity
             If m_parent IsNot Nothing Then
                 ExtractWebFiles()   ' Make sure that the required web file exist in the application bin directory.
 
-                Try
-                    ' We'll try to redirect to the "Access Denied" web page extacted from the embedded zip file.
-                    ' However, this will fail when the web site has not been published and the developer is 
-                    ' debugging it from Visual Studio.
-                    m_parent.Response.Redirect("ErrorPage.aspx?AS.ErrorType=AccessDenied")
-                Catch ex As Exception
-                    m_parent.Response.Redirect(GetWebSiteUrl() & "ErrorPage.aspx?AS.ErrorType=AccessDenied")
-                End Try
+                With New StringBuilder()
+                    Try
+                        Dim getRequest As WebRequest = WebRequest.Create(GetLocalWebSiteUrl() & "ErrorPage.aspx")
+                        getRequest.Credentials = CredentialCache.DefaultCredentials
+
+                        If getRequest.GetResponse() Is Nothing Then
+                            ' We'll redirect to the "Error Page" on predefined remote web site if we're unable
+                            ' to request the page locally. This will be case when the developer is debugging the
+                            ' the web site from Visual Studio, since the page we're trying to access is embedded.
+                            .Append(GetRemoteWebSiteUrl())
+                        End If
+                    Catch ex As Exception
+                        .Append(GetRemoteWebSiteUrl())
+                    End Try
+                    .Append("ErrorPage.aspx?AS.ErrorType=AccessDenied")
+
+                    m_parent.Response.Redirect(.ToString())
+                End With
             Else
                 Throw New InvalidOperationException("Parent must be set in order to proceed.")
             End If
@@ -119,11 +128,11 @@ Namespace ApplicationSecurity
                 ' Extract the embedded web files to the the web site's bin directory.
                 Try
                     Dim webFiles As ZipFile = Nothing
-                    Dim zipFilePath As String = m_parent.Server.MapPath("~/bin/")
+                    Dim zipFilePath As String = m_parent.Server.MapPath("~/")
                     Dim zipFileName As String = zipFilePath & "WebFiles.dat"
                     File.WriteAllBytes(zipFileName, ReadStream(CallingAssembly.GetEmbeddedResource("WebFiles.dat")))
                     webFiles = ZipFile.Open(zipFileName)
-                    webFiles.Extract("*.*", zipFilePath, UpdateOption.ZipFileIsNewer)
+                    webFiles.Extract("*.*", zipFilePath, UpdateOption.ZipFileIsNewer, True)
                     webFiles.Close()
                     File.Delete(zipFileName)
                     m_parent.Application.Add("AP.WebFilesExtracted", True)
@@ -135,7 +144,21 @@ Namespace ApplicationSecurity
 
         End Sub
 
-        Private Function GetWebSiteUrl() As String
+        Private Function GetLocalWebSiteUrl() As String
+
+            With New StringBuilder()
+                .Append(m_parent.Request.Url.Scheme)
+                .Append(System.Uri.SchemeDelimiter)
+                .Append(m_parent.Request.Url.Host)
+                .Append(m_parent.Request.ApplicationPath)
+                .Append("/")
+
+                Return .ToString()
+            End With
+
+        End Function
+
+        Private Function GetRemoteWebSiteUrl() As String
 
             With New StringBuilder()
                 .Append("http://")

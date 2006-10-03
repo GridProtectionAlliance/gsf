@@ -9,6 +9,13 @@ Partial Class ServiceHelper
 
         'Required for Windows.Forms Class Composition Designer support
         Container.Add(Me)
+
+    End Sub
+
+    <System.Diagnostics.DebuggerNonUserCode()> _
+    Public Sub New()
+        MyBase.New()
+
         m_processes = New Dictionary(Of String, ServiceProcess)()
         m_clientInfo = New Dictionary(Of Guid, ClientInfo)()
         m_startedEventHandlerList = New List(Of EventHandler)()
@@ -17,12 +24,6 @@ Partial Class ServiceHelper
         m_serviceComponents.Add(SHTcpServer)
         m_serviceComponents.Add(SHScheduleManager)
         m_serviceComponents.Add(SHSsamLogger)
-
-    End Sub
-
-    <System.Diagnostics.DebuggerNonUserCode()> _
-    Public Sub New()
-        MyBase.New()
 
         'This call is required by the Component Designer.
         InitializeComponent()
