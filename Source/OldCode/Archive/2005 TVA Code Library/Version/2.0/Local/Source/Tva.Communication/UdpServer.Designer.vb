@@ -34,14 +34,15 @@ Partial Class UdpServer
     Public Sub New()
         MyBase.New()
 
-        'This call is required by the Component Designer.
-        InitializeComponent()
         m_payloadAware = False
         m_udpClients = New Dictionary(Of Guid, StateKeeper(Of System.Net.IPEndPoint))
         m_pendingUdpClients = New List(Of System.Net.IPAddress)
         MyBase.ConfigurationString = "Port=8888; Clients=255.255.255.255"
         MyBase.Protocol = TransportProtocol.Udp
         MyBase.ReceiveBufferSize = MaximumUdpPacketSize
+
+        'This call is required by the Component Designer.
+        InitializeComponent()
 
     End Sub
 

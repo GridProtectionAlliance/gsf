@@ -31,8 +31,6 @@ Partial Class FileClient
     Public Sub New()
         MyBase.New()
 
-        'This call is required by the Component Designer.
-        InitializeComponent()
         m_receiveOnDemand = False
         m_receiveInterval = -1
         m_startingOffset = 0
@@ -40,6 +38,9 @@ Partial Class FileClient
         m_receiveDataTimer = New System.Timers.Timer()
         MyBase.ConnectionString = "File=DataFile.txt"
         MyBase.Protocol = TransportProtocol.File
+
+        'This call is required by the Component Designer.
+        InitializeComponent()
 
     End Sub
 

@@ -34,9 +34,6 @@ Partial Class CommunicationClientBase
     Public Sub New()
         MyBase.New()
 
-        'This call is required by the Component Designer.
-        InitializeComponent()
-
         ' Setup the default values.
         m_connectionString = ""
         m_receiveBufferSize = 8192
@@ -56,6 +53,9 @@ Partial Class CommunicationClientBase
         m_totalBytesSent = 0
         m_totalBytesReceived = 0
         m_buffer = CreateArray(Of Byte)(m_receiveBufferSize)
+
+        'This call is required by the Component Designer.
+        InitializeComponent()
 
     End Sub
 

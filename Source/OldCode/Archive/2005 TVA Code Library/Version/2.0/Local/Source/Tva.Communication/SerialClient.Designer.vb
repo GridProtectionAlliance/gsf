@@ -16,11 +16,12 @@ Partial Class SerialClient
     Public Sub New()
         MyBase.New()
 
-        'This call is required by the Component Designer.
-        InitializeComponent()
         m_serialClient = New System.IO.Ports.SerialPort()
         MyBase.ConnectionString = "Port=COM1; BaudRate=9600; Parity=None; StopBits=One; DataBits=8; DtrEnable=False; RtsEnable=False"
         MyBase.Protocol = TransportProtocol.Serial
+
+        'This call is required by the Component Designer.
+        InitializeComponent()
 
     End Sub
 

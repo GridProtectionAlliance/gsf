@@ -34,12 +34,13 @@ Partial Class UdpClient
     Public Sub New()
         MyBase.New()
 
-        'This call is required by the Component Designer.
-        InitializeComponent()
         m_payloadAware = False
         MyBase.ConnectionString = "Server=localhost; RemotePort=8888; LocalPort=8888"
         MyBase.Protocol = TransportProtocol.Udp
         MyBase.ReceiveBufferSize = MaximumUdpPacketSize
+
+        'This call is required by the Component Designer.
+        InitializeComponent()
 
     End Sub
 

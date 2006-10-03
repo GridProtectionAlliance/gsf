@@ -31,11 +31,12 @@ Partial Class TcpClient
     Public Sub New()
         MyBase.New()
 
-        'This call is required by the Component Designer.
-        InitializeComponent()
         m_payloadAware = False
         MyBase.ConnectionString = "Server=localhost; Port=8888"
         MyBase.Protocol = TransportProtocol.Tcp
+
+        'This call is required by the Component Designer.
+        InitializeComponent()
 
     End Sub
 
