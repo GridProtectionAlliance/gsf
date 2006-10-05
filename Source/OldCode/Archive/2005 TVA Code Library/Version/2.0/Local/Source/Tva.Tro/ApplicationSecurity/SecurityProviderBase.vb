@@ -76,7 +76,7 @@ Namespace ApplicationSecurity
         Public Sub LoginUser()
 
             If Not String.IsNullOrEmpty(m_applicationName) Then
-                Dim userLoginID As String = System.Threading.Thread.CurrentPrincipal.Identity.Name
+                Dim userLoginID As String = "" 'System.Threading.Thread.CurrentPrincipal.Identity.Name
                 If Not String.IsNullOrEmpty(userLoginID) Then
                     ' User is internal since we have his/her login ID.
                     m_user = New User(userLoginID.Split("\"c)(1), New SqlConnection(ConnectionString))

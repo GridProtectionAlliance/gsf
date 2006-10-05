@@ -144,7 +144,7 @@ Namespace ApplicationSecurity
 
         Public ReadOnly Property Exists() As Boolean
             Get
-
+                Return m_exists
             End Get
         End Property
 
