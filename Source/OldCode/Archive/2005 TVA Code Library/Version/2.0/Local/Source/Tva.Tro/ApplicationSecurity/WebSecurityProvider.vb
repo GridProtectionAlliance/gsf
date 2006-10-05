@@ -125,35 +125,6 @@ Namespace ApplicationSecurity
 
         End Sub
 
-        'Protected Overrides Sub HandleLoginFailure()
-
-        '    If m_parent IsNot Nothing Then
-        '        ExtractWebFiles()   ' Make sure that the required web file exist in the application bin directory.
-
-        '        With New StringBuilder()
-        '            Try
-        '                Dim getRequest As WebRequest = WebRequest.Create(GetLocalWebSiteUrl() & "ErrorPage.aspx")
-        '                getRequest.Credentials = CredentialCache.DefaultCredentials
-
-        '                If getRequest.GetResponse() Is Nothing Then
-        '                    ' We'll redirect to the "Error Page" on predefined remote web site if we're unable
-        '                    ' to request the page locally. This will be case when the developer is debugging the
-        '                    ' the web site from Visual Studio, since the page we're trying to access is embedded.
-        '                    .Append(GetRemoteWebSiteUrl())
-        '                End If
-        '            Catch ex As Exception
-        '                .Append(GetRemoteWebSiteUrl())
-        '            End Try
-        '            .Append("ErrorPage.aspx?t=AccessDenied")
-
-        '            m_parent.Response.Redirect(.ToString())
-        '        End With
-        '    Else
-        '        Throw New InvalidOperationException("Parent must be set in order to proceed.")
-        '    End If
-
-        'End Sub
-
         Private Sub ExtractWebFiles()
 
             If m_parent.Application("AP.WebFilesExtracted") Is Nothing Then

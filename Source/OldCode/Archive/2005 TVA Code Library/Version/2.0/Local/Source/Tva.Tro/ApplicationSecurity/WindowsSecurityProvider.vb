@@ -42,23 +42,9 @@ Namespace ApplicationSecurity
 
         Protected Overrides Sub ShowLoginScreen()
 
-            'HandleLoginFailure()
+            ' TODO: Show login dialog
 
         End Sub
-
-        'Protected Overrides Sub HandleLoginFailure()
-
-        '    With New StringBuilder()
-        '        .Append("Access to the form is denied.")
-
-        '        MessageBox.Show(.ToString(), "Windows Security Provider", MessageBoxButtons.OK, MessageBoxIcon.Error)
-        '    End With
-
-        '    If m_parent IsNot Nothing Then
-        '        m_parent.Close()
-        '    End If
-
-        'End Sub
 
         Private Sub m_parent_(ByVal sender As Object, ByVal e As System.Windows.Forms.PaintEventArgs) Handles m_parent.Paint
 

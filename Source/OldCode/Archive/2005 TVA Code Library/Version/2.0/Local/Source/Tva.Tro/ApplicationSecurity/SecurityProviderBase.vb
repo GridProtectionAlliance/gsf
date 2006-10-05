@@ -118,11 +118,6 @@ Namespace ApplicationSecurity
         ''' </summary>
         Protected MustOverride Sub ShowLoginScreen()
 
-        '''' <summary>
-        '''' Takes appropriate action when the login process for the user fails.
-        '''' </summary>
-        'Protected MustOverride Sub HandleLoginFailure()
-
         ''' <summary>
         ''' Gets the name that the user provided on the login screen.
         ''' </summary>
