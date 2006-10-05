@@ -70,10 +70,13 @@ Namespace ApplicationSecurity
             End Get
         End Property
 
-        Protected Sub LoginUser()
+        ''' <summary>
+        ''' Logs in the current user.
+        ''' </summary>
+        Public Sub LoginUser()
 
             If Not String.IsNullOrEmpty(m_applicationName) Then
-                Dim userLoginID As String = "" 'System.Threading.Thread.CurrentPrincipal.Identity.Name
+                Dim userLoginID As String = System.Threading.Thread.CurrentPrincipal.Identity.Name
                 If Not String.IsNullOrEmpty(userLoginID) Then
                     ' User is internal since we have his/her login ID.
                     m_user = New User(userLoginID.Split("\"c)(1), New SqlConnection(ConnectionString))
@@ -84,7 +87,8 @@ Namespace ApplicationSecurity
                     If Not String.IsNullOrEmpty(username) AndAlso Not String.IsNullOrEmpty(password) Then
                         m_user = New User(username, password, New SqlConnection(ConnectionString))
                     Else
-                        ' Show the login screen where the user can either his/her username and password.
+                        ' Since we don't have the username and password to authenticate againgst, we'll show 
+                        ' the login screen where the user can either his/her username and password.
                         ShowLoginScreen()
                     End If
                 End If
@@ -94,8 +98,9 @@ Namespace ApplicationSecurity
                     ' User has been authenticated successfully and has access to the current application.
                     RaiseEvent LoginSuccessful(Me, EventArgs.Empty)
                 Else
+                    ' You could not be autheticated so we'll give him/her a chance to enter the credentials again.
                     RaiseEvent LoginFailed(Me, EventArgs.Empty)
-                    HandleLoginFailure()
+                    ShowLoginScreen()
                 End If
             Else
                 Throw New InvalidOperationException("ApplicationName must be set in order to login the user.")
@@ -104,14 +109,19 @@ Namespace ApplicationSecurity
         End Sub
 
         ''' <summary>
+        ''' Logs out the logged in user.
+        ''' </summary>
+        Public MustOverride Sub LogoutUser()
+
+        ''' <summary>
         ''' Shows a screen to provide the logn credentials.
         ''' </summary>
         Protected MustOverride Sub ShowLoginScreen()
 
-        ''' <summary>
-        ''' Takes appropriate action when the login process for the user fails.
-        ''' </summary>
-        Protected MustOverride Sub HandleLoginFailure()
+        '''' <summary>
+        '''' Takes appropriate action when the login process for the user fails.
+        '''' </summary>
+        'Protected MustOverride Sub HandleLoginFailure()
 
         ''' <summary>
         ''' Gets the name that the user provided on the login screen.
@@ -141,7 +151,22 @@ Namespace ApplicationSecurity
 
         Public Sub SetValidRole(ByVal extendee As Object, ByVal value As String)
 
-            GetProperties(extendee).ValidRole = value
+            Dim extendedProperties As ControlProperties = GetProperties(extendee)
+            extendedProperties.ValidRole = value
+
+            If Not extendedProperties.ActionTaken AndAlso _
+                    extendedProperties.ValidRoleAction <> ValidRoleAction.None Then
+                Dim controlProperty As PropertyInfo = _
+                        extendee.GetType().GetProperty(extendedProperties.ValidRoleAction.ToString())
+
+                If controlProperty IsNot Nothing AndAlso _
+                        m_user IsNot Nothing AndAlso m_user.FindRole(extendedProperties.ValidRole) Is Nothing Then
+                    ' User is not in the specified role, so we'll set the property value to False.
+                    controlProperty.SetValue(extendee, False, Nothing)
+                End If
+
+                extendedProperties.ActionTaken = True
+            End If
 
         End Sub
 
@@ -156,15 +181,15 @@ Namespace ApplicationSecurity
             Dim extendedProperties As ControlProperties = GetProperties(extendee)
             extendedProperties.ValidRoleAction = value
 
-            If Not extendedProperties.ActionTaken Then
-                If extendedProperties.ValidRoleAction <> ValidRoleAction.None Then
-                    Dim controlProperty As PropertyInfo = _
+            If Not extendedProperties.ActionTaken AndAlso _
+                    extendedProperties.ValidRoleAction <> ValidRoleAction.None Then
+                Dim controlProperty As PropertyInfo = _
                         extendee.GetType().GetProperty(extendedProperties.ValidRoleAction.ToString())
-                    If controlProperty IsNot Nothing AndAlso _
-                            m_user IsNot Nothing AndAlso m_user.FindRole(extendedProperties.ValidRole) Is Nothing Then
-                        ' User is not in the specified role, so we'll NOT the specified control property.
-                        controlProperty.SetValue(extendee, Not Convert.ToBoolean(controlProperty.GetValue(extendee, Nothing)), Nothing)
-                    End If
+
+                If controlProperty IsNot Nothing AndAlso _
+                        m_user IsNot Nothing AndAlso m_user.FindRole(extendedProperties.ValidRole) Is Nothing Then
+                    ' User is not in the specified role, so we'll set the property value to False.
+                    controlProperty.SetValue(extendee, False, Nothing)
                 End If
 
                 extendedProperties.ActionTaken = True

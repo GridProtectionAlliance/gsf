@@ -31,11 +31,38 @@ Namespace ApplicationSecurity
             End Set
         End Property
 
+        Public Overrides Sub LogoutUser()
+
+            If MyBase.User IsNot Nothing AndAlso m_parent IsNot Nothing Then
+                m_parent.Session.Remove("u")
+                m_parent.Session.Remove("p")
+
+                With New StringBuilder()
+                    .Append(m_parent.Request.Url.AbsolutePath)
+                    .Append("?")
+                    For Each parameter As String In m_parent.Request.Url.Query.TrimStart("?"c).Split("&"c)
+                        Dim key As String = parameter.Split("="c)(0)
+                        If Not (key = "u" OrElse key = "p") Then
+                            .Append(parameter)
+                        End If
+                    Next
+
+                    m_parent.Response.Redirect(.ToString())
+                End With
+            End If
+
+        End Sub
+
         Protected Overrides Function GetUsername() As String
 
             If m_parent IsNot Nothing Then
-                If m_parent.Request("AS.Username") IsNot Nothing Then
-                    Return Decrypt(m_parent.Server.UrlDecode(m_parent.Request("AS.Username").ToString()), Security.Cryptography.EncryptLevel.Level4)
+                If m_parent.Request("u") IsNot Nothing Then
+                    m_parent.Session.Add("u", _
+                        Decrypt(m_parent.Server.UrlDecode(m_parent.Request("u").ToString()), Security.Cryptography.EncryptLevel.Level4))
+                End If
+
+                If m_parent.Session("u") IsNot Nothing Then
+                    Return m_parent.Session("u").ToString()
                 Else
                     Return ""
                 End If
@@ -48,8 +75,13 @@ Namespace ApplicationSecurity
         Protected Overrides Function GetPassword() As String
 
             If m_parent IsNot Nothing Then
-                If m_parent.Request("AS.Password") IsNot Nothing Then
-                    Return Decrypt(m_parent.Server.UrlDecode(m_parent.Request("AS.Password").ToString()), Security.Cryptography.EncryptLevel.Level4)
+                If m_parent.Request("p") IsNot Nothing Then
+                    m_parent.Session.Add("p", _
+                        Decrypt(m_parent.Server.UrlDecode(m_parent.Request("p").ToString()), Security.Cryptography.EncryptLevel.Level4))
+                End If
+
+                If m_parent.Session("p") IsNot Nothing Then
+                    Return m_parent.Session("p").ToString()
                 Else
                     Return ""
                 End If
@@ -78,11 +110,11 @@ Namespace ApplicationSecurity
                     Catch ex As Exception
                         .Append(GetRemoteWebSiteUrl())
                     End Try
-                    .Append("Login.aspx?AS.ReturnUrl=")
+                    .Append("Login.aspx?r=")    ' Return Url
                     .Append(m_parent.Server.UrlEncode(m_parent.Request.Url.AbsoluteUri))
-                    .Append("&AS.ApplicationName=")
+                    .Append("&a=")              ' Application Name
                     .Append(m_parent.Server.UrlEncode(Encrypt(MyBase.ApplicationName, Security.Cryptography.EncryptLevel.Level4)))
-                    .Append("&AS.ConnectionString=")
+                    .Append("&c=")              ' Connection String
                     .Append(m_parent.Server.UrlEncode(Encrypt(MyBase.ConnectionString, Security.Cryptography.EncryptLevel.Level4)))
 
                     m_parent.Response.Redirect(.ToString())
@@ -93,34 +125,34 @@ Namespace ApplicationSecurity
 
         End Sub
 
-        Protected Overrides Sub HandleLoginFailure()
+        'Protected Overrides Sub HandleLoginFailure()
 
-            If m_parent IsNot Nothing Then
-                ExtractWebFiles()   ' Make sure that the required web file exist in the application bin directory.
+        '    If m_parent IsNot Nothing Then
+        '        ExtractWebFiles()   ' Make sure that the required web file exist in the application bin directory.
 
-                With New StringBuilder()
-                    Try
-                        Dim getRequest As WebRequest = WebRequest.Create(GetLocalWebSiteUrl() & "ErrorPage.aspx")
-                        getRequest.Credentials = CredentialCache.DefaultCredentials
+        '        With New StringBuilder()
+        '            Try
+        '                Dim getRequest As WebRequest = WebRequest.Create(GetLocalWebSiteUrl() & "ErrorPage.aspx")
+        '                getRequest.Credentials = CredentialCache.DefaultCredentials
 
-                        If getRequest.GetResponse() Is Nothing Then
-                            ' We'll redirect to the "Error Page" on predefined remote web site if we're unable
-                            ' to request the page locally. This will be case when the developer is debugging the
-                            ' the web site from Visual Studio, since the page we're trying to access is embedded.
-                            .Append(GetRemoteWebSiteUrl())
-                        End If
-                    Catch ex As Exception
-                        .Append(GetRemoteWebSiteUrl())
-                    End Try
-                    .Append("ErrorPage.aspx?AS.ErrorType=AccessDenied")
+        '                If getRequest.GetResponse() Is Nothing Then
+        '                    ' We'll redirect to the "Error Page" on predefined remote web site if we're unable
+        '                    ' to request the page locally. This will be case when the developer is debugging the
+        '                    ' the web site from Visual Studio, since the page we're trying to access is embedded.
+        '                    .Append(GetRemoteWebSiteUrl())
+        '                End If
+        '            Catch ex As Exception
+        '                .Append(GetRemoteWebSiteUrl())
+        '            End Try
+        '            .Append("ErrorPage.aspx?t=AccessDenied")
 
-                    m_parent.Response.Redirect(.ToString())
-                End With
-            Else
-                Throw New InvalidOperationException("Parent must be set in order to proceed.")
-            End If
+        '            m_parent.Response.Redirect(.ToString())
+        '        End With
+        '    Else
+        '        Throw New InvalidOperationException("Parent must be set in order to proceed.")
+        '    End If
 
-        End Sub
+        'End Sub
 
         Private Sub ExtractWebFiles()
 

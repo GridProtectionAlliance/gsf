@@ -20,6 +20,7 @@ Namespace ApplicationSecurity
         Private m_isExternal As Boolean
         Private m_isLockedOut As Boolean
         Private m_isAuthenticated As Boolean
+        Private m_exists As Boolean
         Private m_roles As List(Of Role)
         Private m_applications As List(Of Application)
 
@@ -38,6 +39,7 @@ Namespace ApplicationSecurity
                 Dim userData As DataTable = RetrieveData(sql, dbConnection)
                 If userData IsNot Nothing AndAlso userData.Rows.Count > 0 Then
                     ' User does exist in the security database.
+                    m_exists = True
                     m_username = userData.Rows(0)("UserName").ToString()
                     m_password = userData.Rows(0)("UserPassword").ToString()
                     m_isExternal = Convert.ToBoolean(userData.Rows(0)("UserIsExternal"))
@@ -137,6 +139,12 @@ Namespace ApplicationSecurity
         Public ReadOnly Property IsAuthenticated() As Boolean
             Get
                 Return m_isAuthenticated
+            End Get
+        End Property
+
+        Public ReadOnly Property Exists() As Boolean
+            Get
+
             End Get
         End Property
 

@@ -16,7 +16,6 @@ Namespace ApplicationSecurity
         None
         Visible
         Enabled
-        [ReadOnly]
     End Enum
 
 End Namespace

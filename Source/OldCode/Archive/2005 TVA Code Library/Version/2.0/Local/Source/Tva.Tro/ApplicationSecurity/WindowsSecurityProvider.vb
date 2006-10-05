@@ -24,6 +24,10 @@ Namespace ApplicationSecurity
             End Set
         End Property
 
+        Public Overrides Sub LogoutUser()
+
+        End Sub
+
         Protected Overrides Function GetUsername() As String
 
             Return ""
@@ -38,23 +42,23 @@ Namespace ApplicationSecurity
 
         Protected Overrides Sub ShowLoginScreen()
 
-            HandleLoginFailure()
+            'HandleLoginFailure()
 
         End Sub
 
-        Protected Overrides Sub HandleLoginFailure()
+        'Protected Overrides Sub HandleLoginFailure()
 
-            'With New StringBuilder()
-            '    .Append("Access to the form is denied.")
+        '    With New StringBuilder()
+        '        .Append("Access to the form is denied.")
 
-            '    MessageBox.Show(.ToString(), "Windows Security Provider", MessageBoxButtons.OK, MessageBoxIcon.Error)
-            'End With
+        '        MessageBox.Show(.ToString(), "Windows Security Provider", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        '    End With
 
-            'If m_parent IsNot Nothing Then
-            '    m_parent.Close()
-            'End If
+        '    If m_parent IsNot Nothing Then
+        '        m_parent.Close()
+        '    End If
 
-        End Sub
+        'End Sub
 
         Private Sub m_parent_(ByVal sender As Object, ByVal e As System.Windows.Forms.PaintEventArgs) Handles m_parent.Paint
 
