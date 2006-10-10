@@ -17,6 +17,9 @@ Namespace ApplicationSecurity
 
         Private WithEvents m_parent As System.Web.UI.Page
 
+        Private Const UsernameKey As String = "u"
+        Private Const PasswordKey As String = "p"
+
         <Category("Configuration")> _
         Public Property Parent() As System.Web.UI.Page
             Get
@@ -56,12 +59,14 @@ Namespace ApplicationSecurity
         Protected Overrides Function GetUsername() As String
 
             If m_parent IsNot Nothing Then
-                If m_parent.Request("u") IsNot Nothing Then
+                If m_parent.Request("u") IsNot Nothing AndAlso m_parent.Session("u") Is Nothing Then
+                    ' Username is present in the query string, but doesn't exist in the session, so we'll add it.
                     m_parent.Session.Add("u", _
                         Decrypt(m_parent.Server.UrlDecode(m_parent.Request("u").ToString()), Security.Cryptography.EncryptLevel.Level4))
                 End If
 
                 If m_parent.Session("u") IsNot Nothing Then
+                    ' Username was saved in the session previously, so we'll send it.
                     Return m_parent.Session("u").ToString()
                 Else
                     Return ""
@@ -75,12 +80,14 @@ Namespace ApplicationSecurity
         Protected Overrides Function GetPassword() As String
 
             If m_parent IsNot Nothing Then
-                If m_parent.Request("p") IsNot Nothing Then
+                If m_parent.Request("p") IsNot Nothing AndAlso m_parent.Session("p") Is Nothing Then
+                    ' Password is present in the query string, but doesn't exist in the session, so we'll add it.
                     m_parent.Session.Add("p", _
                         Decrypt(m_parent.Server.UrlDecode(m_parent.Request("p").ToString()), Security.Cryptography.EncryptLevel.Level4))
                 End If
 
                 If m_parent.Session("p") IsNot Nothing Then
+                    ' Password was saved in the session previously, so we'll send it.
                     Return m_parent.Session("p").ToString()
                 Else
                     Return ""
@@ -127,7 +134,7 @@ Namespace ApplicationSecurity
 
         Private Sub ExtractWebFiles()
 
-            If m_parent.Application("AP.WebFilesExtracted") Is Nothing Then
+            If m_parent.Application("AS.WebFilesExtracted") Is Nothing Then
                 ' Extract the embedded web files to the the web site's bin directory.
                 Try
                     Dim webFiles As ZipFile = Nothing
@@ -138,7 +145,7 @@ Namespace ApplicationSecurity
                     webFiles.Extract("*.*", zipFilePath, UpdateOption.ZipFileIsNewer, True)
                     webFiles.Close()
                     File.Delete(zipFileName)
-                    m_parent.Application.Add("AP.WebFilesExtracted", True)
+                    m_parent.Application.Add("AS.WebFilesExtracted", True)
                 Catch ex As Exception
                     ' We most likely encountered some sort of an access violation exception.
                     Throw New AccessViolationException("Failed to extract the required web files.", ex)

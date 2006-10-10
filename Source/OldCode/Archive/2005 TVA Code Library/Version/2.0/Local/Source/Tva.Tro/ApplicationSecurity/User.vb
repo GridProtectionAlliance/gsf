@@ -19,6 +19,7 @@ Namespace ApplicationSecurity
         Private m_emailAddress As String
         Private m_isExternal As Boolean
         Private m_isLockedOut As Boolean
+        Private m_userSince As System.DateTime
         Private m_isAuthenticated As Boolean
         Private m_exists As Boolean
         Private m_roles As List(Of Role)
@@ -27,7 +28,9 @@ Namespace ApplicationSecurity
         Private Const CryptoKey As String = "c7d8f9d6-bfff-4a74-bcf6-64ea7c3e3d7a"
 
         Public Sub New(ByVal username As String, ByVal dbConnection As SqlConnection)
+
             MyClass.New(username, "", dbConnection)
+
         End Sub
 
         Public Sub New(ByVal username As String, ByVal password As String, ByVal dbConnection As SqlConnection)
@@ -44,6 +47,7 @@ Namespace ApplicationSecurity
                     m_password = userData.Rows(0)("UserPassword").ToString()
                     m_isExternal = Convert.ToBoolean(userData.Rows(0)("UserIsExternal"))
                     m_isLockedOut = Convert.ToBoolean(userData.Rows(0)("UserIsLockedOut"))
+                    m_userSince = Convert.ToDateTime(userData.Rows(0)("UserSince"))
                     If m_isExternal AndAlso Not String.IsNullOrEmpty(m_password) Then
                         ' User is external according to the security database.
                         If m_password = EncryptPassword(password) Then
@@ -133,6 +137,12 @@ Namespace ApplicationSecurity
         Public ReadOnly Property IsLockedOut() As Boolean
             Get
                 Return m_isLockedOut
+            End Get
+        End Property
+
+        Public ReadOnly Property UserSince() As System.DateTime
+            Get
+                Return m_userSince
             End Get
         End Property
 
