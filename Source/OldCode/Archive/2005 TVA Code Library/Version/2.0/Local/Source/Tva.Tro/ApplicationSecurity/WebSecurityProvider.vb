@@ -17,9 +17,6 @@ Namespace ApplicationSecurity
 
         Private WithEvents m_parent As System.Web.UI.Page
 
-        Private Const UsernameKey As String = "u"
-        Private Const PasswordKey As String = "p"
-
         <Category("Configuration")> _
         Public Property Parent() As System.Web.UI.Page
             Get
