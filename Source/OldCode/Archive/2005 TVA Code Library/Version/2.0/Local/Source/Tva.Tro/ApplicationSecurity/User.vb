@@ -19,7 +19,8 @@ Namespace ApplicationSecurity
         Private m_emailAddress As String
         Private m_isExternal As Boolean
         Private m_isLockedOut As Boolean
-        Private m_userSince As System.DateTime
+        Private m_passwordChangeDateTime As System.DateTime
+        Private m_joinedDateTime As System.DateTime
         Private m_isAuthenticated As Boolean
         Private m_exists As Boolean
         Private m_roles As List(Of Role)
@@ -47,7 +48,10 @@ Namespace ApplicationSecurity
                     m_password = userData.Rows(0)("UserPassword").ToString()
                     m_isExternal = Convert.ToBoolean(userData.Rows(0)("UserIsExternal"))
                     m_isLockedOut = Convert.ToBoolean(userData.Rows(0)("UserIsLockedOut"))
-                    m_userSince = Convert.ToDateTime(userData.Rows(0)("UserSince"))
+                    If userData.Rows(0)("UserPasswordChangeDateTime") IsNot DBNull.Value Then
+                        m_passwordChangeDateTime = Convert.ToDateTime(userData.Rows(0)("UserPasswordChangeDateTime"))
+                    End If
+                    m_joinedDateTime = Convert.ToDateTime(userData.Rows(0)("UserJoinedDateTime"))
                     If m_isExternal AndAlso Not String.IsNullOrEmpty(m_password) Then
                         ' User is external according to the security database.
                         If m_password = EncryptPassword(password) Then
@@ -140,9 +144,25 @@ Namespace ApplicationSecurity
             End Get
         End Property
 
-        Public ReadOnly Property UserSince() As System.DateTime
+        ''' <summary>
+        ''' Gets the date and time when user must change the password.
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns>The date and time when user must change the password.</returns>
+        Public ReadOnly Property PasswordChangeDateTime() As System.DateTime
             Get
-                Return m_userSince
+                Return m_passwordChangeDateTime
+            End Get
+        End Property
+
+        ''' <summary>
+        ''' Gets the date and time when user account was created.
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns>The date and time when user account was created.</returns>
+        Public ReadOnly Property JoinedDateTime() As System.DateTime
+            Get
+                Return m_joinedDateTime
             End Get
         End Property
 

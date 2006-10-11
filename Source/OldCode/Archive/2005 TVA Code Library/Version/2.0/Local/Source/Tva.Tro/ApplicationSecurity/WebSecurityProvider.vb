@@ -59,7 +59,7 @@ Namespace ApplicationSecurity
                 If m_parent.Request("u") IsNot Nothing AndAlso m_parent.Session("u") Is Nothing Then
                     ' Username is present in the query string, but doesn't exist in the session, so we'll add it.
                     m_parent.Session.Add("u", _
-                        Decrypt(m_parent.Server.UrlDecode(m_parent.Request("u").ToString()), Security.Cryptography.EncryptLevel.Level4))
+                        Decrypt(m_parent.Request("u").ToString(), Security.Cryptography.EncryptLevel.Level4))
                 End If
 
                 If m_parent.Session("u") IsNot Nothing Then
@@ -80,7 +80,7 @@ Namespace ApplicationSecurity
                 If m_parent.Request("p") IsNot Nothing AndAlso m_parent.Session("p") Is Nothing Then
                     ' Password is present in the query string, but doesn't exist in the session, so we'll add it.
                     m_parent.Session.Add("p", _
-                        Decrypt(m_parent.Server.UrlDecode(m_parent.Request("p").ToString()), Security.Cryptography.EncryptLevel.Level4))
+                        Decrypt(m_parent.Request("p").ToString(), Security.Cryptography.EncryptLevel.Level4))
                 End If
 
                 If m_parent.Session("p") IsNot Nothing Then
