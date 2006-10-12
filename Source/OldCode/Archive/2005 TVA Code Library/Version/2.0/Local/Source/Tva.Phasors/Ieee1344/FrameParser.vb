@@ -52,6 +52,7 @@ Namespace Ieee1344
         Private Event IFrameParserReceivedUndeterminedFrame(ByVal frame As IChannelFrame) Implements IFrameParser.ReceivedUndeterminedFrame
         Private Event IFrameParserConfigurationChanged() Implements IFrameParser.ConfigurationChanged
 
+        Private m_executeParseOnSeperateThread As Boolean
         Private WithEvents m_bufferQueue As ProcessQueue(Of Byte())
         Private m_dataStream As MemoryStream
         Private m_configurationFrame As ConfigurationFrame
@@ -82,13 +83,13 @@ Namespace Ieee1344
 
         Public Sub Start() Implements IFrameParser.Start
 
-            m_bufferQueue.Start()
+            If m_executeParseOnSeperateThread Then m_bufferQueue.Start()
 
         End Sub
 
         Public Sub [Stop]() Implements IFrameParser.Stop
 
-            m_bufferQueue.Stop()
+            If m_executeParseOnSeperateThread Then m_bufferQueue.Stop()
 
         End Sub
 
@@ -96,6 +97,15 @@ Namespace Ieee1344
             Get
                 Return m_bufferQueue.Enabled
             End Get
+        End Property
+
+        Public Property ExecuteParseOnSeperateThread() As Boolean Implements IFrameParser.ExecuteParseOnSeperateThread
+            Get
+                Return m_executeParseOnSeperateThread
+            End Get
+            Set(ByVal value As Boolean)
+                m_executeParseOnSeperateThread = value
+            End Set
         End Property
 
         Public ReadOnly Property QueuedBuffers() As Int32 Implements IFrameParser.QueuedBuffers
@@ -116,8 +126,13 @@ Namespace Ieee1344
         ' Stream implementation overrides
         Public Overrides Sub Write(ByVal buffer As Byte(), ByVal offset As Int32, ByVal count As Int32) Implements IFrameParser.Write
 
-            ' Queue up received data buffer for real-time parsing and return to data collection as quickly as possible...
-            m_bufferQueue.Add(CopyBuffer(buffer, offset, count))
+            If m_executeParseOnSeperateThread Then
+                ' Queue up received data buffer for real-time parsing and return to data collection as quickly as possible...
+                m_bufferQueue.Add(CopyBuffer(buffer, offset, count))
+            Else
+                ' Directly parse frame using calling thread (typically communications thread)
+                ParseData(buffer, offset, count)
+            End If
 
         End Sub
 
@@ -156,7 +171,15 @@ Namespace Ieee1344
                         .Append(m_configurationFrame.FrameRate)
                         .Append(Environment.NewLine)
                     End If
-                    .Append(m_bufferQueue.Status)
+                    .Append("  Parsing execution source: ")
+                    If m_executeParseOnSeperateThread Then
+                        .Append("Independent thread using queued data")
+                        .Append(Environment.NewLine)
+                        .Append(m_bufferQueue.Status)
+                    Else
+                        .Append("Communications thread")
+                        .Append(Environment.NewLine)
+                    End If
 
                     Return .ToString()
                 End With
@@ -220,57 +243,69 @@ Namespace Ieee1344
         ' We process all queued data buffers that are available at once...
         Private Sub ProcessBuffers(ByVal buffers As Byte()())
 
-            Dim parsedFrameHeader As ICommonFrameHeader
-            Dim buffer As Byte()
-            Dim index As Integer
-
             With New MemoryStream
-                ' Add any left over buffer data from last processing run
-                If m_dataStream IsNot Nothing Then
-                    .Write(m_dataStream.ToArray(), 0, m_dataStream.Length)
-                    m_dataStream = Nothing
-                End If
-
-                ' Add all currently queued buffers
+                ' Combine all currently queued buffers
                 For x As Integer = 0 To buffers.Length - 1
                     .Write(buffers(x), 0, buffers(x).Length)
                 Next
 
-                ' Pull all queued data together as one big buffer
-                buffer = .ToArray()
+                ' Parse combined data buffers
+                ParseData(.ToArray(), 0, .Length)
             End With
 
-            Do Until index >= buffer.Length
+        End Sub
+
+        Private Sub ParseData(ByVal buffer As Byte(), ByVal offset As Int32, ByVal count As Int32)
+
+            Dim parsedFrameHeader As ICommonFrameHeader
+
+            ' Prepend any left over buffer data from last parse call
+            If m_dataStream IsNot Nothing Then
+                With New MemoryStream
+                    .Write(m_dataStream.ToArray(), 0, m_dataStream.Length)
+                    m_dataStream = Nothing
+
+                    ' Append new incoming data
+                    .Write(buffer, offset, count)
+
+                    ' Pull all queued data together as one big buffer
+                    buffer = .ToArray()
+                    offset = 0
+                    count = .Length
+                End With
+            End If
+
+            Do Until offset >= count
                 ' See if there is enough data in the buffer to parse the common frame header
-                If index + CommonFrameHeader.BinaryLength + 2 > buffer.Length Then
+                If offset + CommonFrameHeader.BinaryLength + 2 > count Then
                     ' If not, save off remaining buffer to prepend onto next read
                     m_dataStream = New MemoryStream
-                    m_dataStream.Write(buffer, index, buffer.Length - index)
+                    m_dataStream.Write(buffer, offset, count - offset)
                     Exit Do
                 End If
 
                 ' Parse frame header
-                parsedFrameHeader = CommonFrameHeader.ParseBinaryImage(m_configurationFrame, buffer, index)
+                parsedFrameHeader = CommonFrameHeader.ParseBinaryImage(m_configurationFrame, buffer, offset)
 
                 ' Until we receive configuration frame, we at least expose part of frame we have parsed
                 If m_configurationFrame Is Nothing Then RaiseReceivedCommonFrameHeader(parsedFrameHeader)
 
                 ' See if there is enough data in the buffer to parse the entire frame
-                If index + parsedFrameHeader.FrameLength > buffer.Length Then
+                If offset + parsedFrameHeader.FrameLength > count Then
                     ' If not, save off remaining buffer to prepend onto next read
                     m_dataStream = New MemoryStream
-                    m_dataStream.Write(buffer, index, buffer.Length - index)
+                    m_dataStream.Write(buffer, offset, count - offset)
                     Exit Do
                 End If
 
-                RaiseEvent ReceivedFrameBufferImage(parsedFrameHeader.FundamentalFrameType, buffer, index, parsedFrameHeader.FrameLength)
+                RaiseEvent ReceivedFrameBufferImage(parsedFrameHeader.FundamentalFrameType, buffer, offset, parsedFrameHeader.FrameLength)
 
                 ' Entire frame is availble, so we go ahead and parse it
                 Select Case parsedFrameHeader.FrameType
                     Case FrameType.DataFrame
                         ' We can only start parsing data frames once we have successfully received a configuration file...
                         If m_configurationFrame IsNot Nothing Then
-                            RaiseReceivedDataFrame(New DataFrame(parsedFrameHeader, m_configurationFrame, buffer, index))
+                            RaiseReceivedDataFrame(New DataFrame(parsedFrameHeader, m_configurationFrame, buffer, offset))
                         End If
                     Case FrameType.ConfigurationFrame
                         ' Cumulate all partial frames together as once complete frame
@@ -279,7 +314,7 @@ Namespace Ieee1344
 
                             If m_configurationFrameCollection IsNot Nothing Then
                                 Try
-                                    m_configurationFrameCollection.AppendFrameImage(buffer, index, .FrameLength)
+                                    m_configurationFrameCollection.AppendFrameImage(buffer, offset, .FrameLength)
 
                                     If .IsLastFrame Then
                                         m_configurationFrame = New ConfigurationFrame(m_configurationFrameCollection, m_configurationFrameCollection.BinaryImage, 0)
@@ -300,7 +335,7 @@ Namespace Ieee1344
 
                             If m_headerFrameCollection IsNot Nothing Then
                                 Try
-                                    m_headerFrameCollection.AppendFrameImage(buffer, index, .FrameLength)
+                                    m_headerFrameCollection.AppendFrameImage(buffer, offset, .FrameLength)
 
                                     If .IsLastFrame Then
                                         RaiseReceivedHeaderFrame(New HeaderFrame(m_headerFrameCollection, m_headerFrameCollection.BinaryImage, 0))
@@ -315,7 +350,7 @@ Namespace Ieee1344
                         End With
                 End Select
 
-                index += parsedFrameHeader.FrameLength
+                offset += parsedFrameHeader.FrameLength
             Loop
 
         End Sub

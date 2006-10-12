@@ -50,6 +50,7 @@ Namespace BpaPdcStream
         Private Event IFrameParserReceivedCommandFrame(ByVal frame As ICommandFrame) Implements IFrameParser.ReceivedCommandFrame
         Private Event IFrameParserReceivedUndeterminedFrame(ByVal frame As IChannelFrame) Implements IFrameParser.ReceivedUndeterminedFrame
 
+        Private m_executeParseOnSeperateThread As Boolean
         Private WithEvents m_bufferQueue As ProcessQueue(Of Byte())
         Private m_dataStream As MemoryStream
         Private m_totalFramesReceived As Long
@@ -74,13 +75,13 @@ Namespace BpaPdcStream
 
         Public Sub Start() Implements IFrameParser.Start
 
-            m_bufferQueue.Start()
+            If m_executeParseOnSeperateThread Then m_bufferQueue.Start()
 
         End Sub
 
         Public Sub [Stop]() Implements IFrameParser.Stop
 
-            m_bufferQueue.Stop()
+            If m_executeParseOnSeperateThread Then m_bufferQueue.Stop()
 
         End Sub
 
@@ -88,6 +89,15 @@ Namespace BpaPdcStream
             Get
                 Return m_bufferQueue.Enabled
             End Get
+        End Property
+
+        Public Property ExecuteParseOnSeperateThread() As Boolean Implements IFrameParser.ExecuteParseOnSeperateThread
+            Get
+                Return m_executeParseOnSeperateThread
+            End Get
+            Set(ByVal value As Boolean)
+                m_executeParseOnSeperateThread = value
+            End Set
         End Property
 
         Public ReadOnly Property QueuedBuffers() As Int32 Implements IFrameParser.QueuedBuffers
@@ -109,15 +119,24 @@ Namespace BpaPdcStream
         Public Overrides Sub Write(ByVal buffer As Byte(), ByVal offset As Int32, ByVal count As Int32) Implements IFrameParser.Write
 
             If m_initialized Then
-                ' Queue up received data buffer for real-time parsing and return to data collection as quickly as possible...
-                m_bufferQueue.Add(CopyBuffer(buffer, offset, count))
+                If m_executeParseOnSeperateThread Then
+                    ' Queue up received data buffer for real-time parsing and return to data collection as quickly as possible...
+                    m_bufferQueue.Add(CopyBuffer(buffer, offset, count))
+                Else
+                    ' Directly parse frame using calling thread (typically communications thread)
+                    ParseData(buffer, offset, count)
+                End If
             Else
                 ' Initial stream may be any where in the middle of a frame, so we attempt to locate sync byte to "line-up" data stream
                 Dim syncBytePosition As Int32 = Array.IndexOf(buffer, SyncByte, offset, count)
 
                 If syncBytePosition > -1 Then
                     ' Initialize data stream starting at located sync byte
-                    m_bufferQueue.Add(CopyBuffer(buffer, syncBytePosition, count - syncBytePosition))
+                    If m_executeParseOnSeperateThread Then
+                        m_bufferQueue.Add(CopyBuffer(buffer, syncBytePosition, count - syncBytePosition))
+                    Else
+                        ParseData(buffer, syncBytePosition, count - syncBytePosition)
+                    End If
                     m_initialized = True
                 End If
             End If
@@ -151,24 +170,28 @@ Namespace BpaPdcStream
                     If m_configurationFrame IsNot Nothing Then
                         .Append("     PMU's in config frame: ")
                         .Append(m_configurationFrame.Cells.Count)
-                        .Append(" total [")
+                        .Append(" total - ")
+                        .Append(Environment.NewLine)
                         For x As Integer = 0 To m_configurationFrame.Cells.Count - 1
-                            .Append(" "c)
-                            .Append(m_configurationFrame.Cells(x).StationName)
-                            .Append(" (")
+                            .Append("               (")
                             .Append(m_configurationFrame.Cells(x).IDCode)
-                            .Append(")"c)
+                            .Append(") ")
+                            .Append(m_configurationFrame.Cells(x).StationName)
+                            .Append(Environment.NewLine)
                         Next
-                        .Append("]"c)
-                        .Append(Environment.NewLine)
-                        .Append("       Defined PDC ID code: ")
-                        .Append(m_configurationFrame.IDCode)
-                        .Append(Environment.NewLine)
                         .Append("     Configured frame rate: ")
                         .Append(m_configurationFrame.FrameRate)
                         .Append(Environment.NewLine)
                     End If
-                    .Append(m_bufferQueue.Status)
+                    .Append("  Parsing execution source: ")
+                    If m_executeParseOnSeperateThread Then
+                        .Append("Independent thread using queued data")
+                        .Append(Environment.NewLine)
+                        .Append(m_bufferQueue.Status)
+                    Else
+                        .Append("Communications thread")
+                        .Append(Environment.NewLine)
+                    End If
 
                     Return .ToString()
                 End With
@@ -229,7 +252,22 @@ Namespace BpaPdcStream
 
 #Region " Private Methods Implementation "
 
+        ' We process all queued data buffers that are available at once...
         Private Sub ProcessBuffers(ByVal buffers As Byte()())
+
+            With New MemoryStream
+                ' Combine all currently queued buffers
+                For x As Integer = 0 To buffers.Length - 1
+                    .Write(buffers(x), 0, buffers(x).Length)
+                Next
+
+                ' Parse combined data buffers
+                ParseData(.ToArray(), 0, .Length)
+            End With
+
+        End Sub
+
+        Private Sub ParseData(ByVal buffer As Byte(), ByVal offset As Int32, ByVal count As Int32)
 
             'Dim parsedFrameHeader As ICommonFrameHeader
             'Dim index As Int32

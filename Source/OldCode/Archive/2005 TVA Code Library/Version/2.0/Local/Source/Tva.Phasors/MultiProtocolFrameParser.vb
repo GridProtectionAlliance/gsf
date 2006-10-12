@@ -71,6 +71,7 @@ Public Class MultiProtocolFrameParser
 
     Private m_configurationFrame As IConfigurationFrame
     Private m_dataStreamStartTime As Long
+    Private m_executeParseOnSeperateThread As Boolean
     Private m_totalFramesReceived As Long
     Private m_frameRateTotal As Int32
     Private m_byteRateTotal As Int32
@@ -83,6 +84,7 @@ Public Class MultiProtocolFrameParser
     Private m_initiatingDataStream As Boolean
     Private m_initialBytesReceived As Long
     Private m_deviceSupportsCommands As Boolean
+    Private m_enabled As Boolean
 
 #End Region
 
@@ -252,6 +254,7 @@ Public Class MultiProtocolFrameParser
                     m_frameParser = New BpaPdcStream.FrameParser
             End Select
 
+            m_frameParser.ExecuteParseOnSeperateThread = m_executeParseOnSeperateThread
             m_frameParser.Start()
 
             ' Start reading data from selected transport layer
@@ -276,6 +279,7 @@ Public Class MultiProtocolFrameParser
             End With
 
             m_rateCalcTimer.Enabled = True
+            m_enabled = True
         Catch
             [Stop]()
             Throw
@@ -285,6 +289,7 @@ Public Class MultiProtocolFrameParser
 
     Public Sub [Stop]() Implements IFrameParser.Stop
 
+        m_enabled = False
         m_rateCalcTimer.Enabled = False
 
         If m_communicationClient IsNot Nothing Then m_communicationClient.Disconnect()
@@ -295,6 +300,15 @@ Public Class MultiProtocolFrameParser
         m_frameParser = Nothing
 
     End Sub
+
+    Public Property ExecuteParseOnSeperateThread() As Boolean Implements IFrameParser.ExecuteParseOnSeperateThread
+        Get
+            Return m_executeParseOnSeperateThread
+        End Get
+        Set(ByVal value As Boolean)
+            m_executeParseOnSeperateThread = value
+        End Set
+    End Property
 
     Public Property ConfigurationFrame() As IConfigurationFrame Implements IFrameParser.ConfigurationFrame
         Get
@@ -318,9 +332,7 @@ Public Class MultiProtocolFrameParser
 
     Public ReadOnly Property Enabled() As Boolean Implements IFrameParser.Enabled
         Get
-            If m_frameParser IsNot Nothing Then
-                Return m_frameParser.Enabled
-            End If
+            Return m_enabled
         End Get
     End Property
 

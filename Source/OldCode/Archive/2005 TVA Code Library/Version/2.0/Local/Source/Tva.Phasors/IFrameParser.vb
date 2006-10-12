@@ -30,6 +30,7 @@ Public Interface IFrameParser
     Sub Start()
     Sub [Stop]()
     ReadOnly Property Enabled() As Boolean
+    Property ExecuteParseOnSeperateThread() As Boolean
     ReadOnly Property QueuedBuffers() As Int32
     Property ConfigurationFrame() As IConfigurationFrame
     Sub Write(ByVal buffer As Byte(), ByVal offset As Int32, ByVal count As Int32)
