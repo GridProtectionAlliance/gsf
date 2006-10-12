@@ -52,39 +52,33 @@ Namespace ApplicationSecurity
                         m_passwordChangeDateTime = Convert.ToDateTime(userData.Rows(0)("UserPasswordChangeDateTime"))
                     End If
                     m_joinedDateTime = Convert.ToDateTime(userData.Rows(0)("UserJoinedDateTime"))
-                    If m_isExternal AndAlso Not String.IsNullOrEmpty(m_password) Then
+                    If m_isExternal Then
                         ' User is external according to the security database.
-                        If m_password = EncryptPassword(password) Then
-                            ' User's credentials are valid.
-                            m_firstName = userData.Rows(0)("UserFirstName").ToString()
-                            m_lastName = userData.Rows(0)("UserLastName").ToString()
-                            m_companyName = userData.Rows(0)("UserCompanyName").ToString()
-                            m_phoneNumber = userData.Rows(0)("UserPhoneNumber").ToString()
-                            m_emailAddress = userData.Rows(0)("UserEmailAddress").ToString()
-                            PopulateApplicationsAndRoles(dbConnection)
+                        m_firstName = userData.Rows(0)("UserFirstName").ToString()
+                        m_lastName = userData.Rows(0)("UserLastName").ToString()
+                        m_companyName = userData.Rows(0)("UserCompanyName").ToString()
+                        m_phoneNumber = userData.Rows(0)("UserPhoneNumber").ToString()
+                        m_emailAddress = userData.Rows(0)("UserEmailAddress").ToString()
+
+                        If Not String.IsNullOrEmpty(m_password) AndAlso m_password = EncryptPassword(password) Then
+                            ' User's password is valid.
                             m_isAuthenticated = True
                         End If
                     Else
                         ' User is internal according to the security database.
                         Dim userInfo As Tva.Identity.UserInfo = New Tva.Identity.UserInfo(m_username, "TVA", True)
-                        Try
-                            If Not String.IsNullOrEmpty(password) AndAlso Not userInfo.Authenticate(password) Then
-                                ' User is internal but has provided with a password, but authentication failed.
-                                Throw New Exception()
-                            End If
-                            If userInfo.FullName <> userInfo.LoginID Then
-                                m_firstName = userInfo.FirstName
-                                m_lastName = userInfo.LastName
-                                m_companyName = userInfo.Company
-                                m_phoneNumber = userInfo.Telephone
-                                m_emailAddress = userInfo.Email
-                                PopulateApplicationsAndRoles(dbConnection)
-                                m_isAuthenticated = True
-                            End If
-                        Catch ex As Exception
+                        m_firstName = userInfo.FirstName
+                        m_lastName = userInfo.LastName
+                        m_companyName = userInfo.Company
+                        m_phoneNumber = userInfo.Telephone
+                        m_emailAddress = userInfo.Email
 
-                        End Try
+                        If Not String.IsNullOrEmpty(password) AndAlso userInfo.Authenticate(password) Then
+                            ' User's password is valid.
+                            m_isAuthenticated = True
+                        End If
                     End If
+                    PopulateApplicationsAndRoles(dbConnection)
                 End If
             End If
 

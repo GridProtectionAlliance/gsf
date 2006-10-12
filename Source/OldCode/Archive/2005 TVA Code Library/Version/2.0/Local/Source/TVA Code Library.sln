@@ -14,9 +14,6 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Source Code", "Source Code", "{4F631798-355B-4607-AEEB-742B670AD834}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Documentation", "Documentation", "{6CBBC083-2AFB-48F2-97FB-F7BA12F4AFFE}"
-	ProjectSection(SolutionItems) = preProject
-		..\Documentation\TVA Code Library.ndoc = ..\Documentation\TVA Code Library.ndoc
-	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Tva.IO.Compression", "Tva.IO.Compression\Tva.IO.Compression.vcproj", "{F611B9BA-C69D-449B-B596-FABFB746EA2A}"
 EndProject
