@@ -29,7 +29,7 @@ Imports System.Runtime.InteropServices
 '
 ' You can specify all the values or you can default the Build and Revision Numbers 
 ' by using the '*' as shown below:
-' <Assembly: AssemblyVersion("2.1.28.47205")> 
+' <Assembly: AssemblyVersion("2.1.29.27899")> 
 
-<Assembly: AssemblyVersion("2.1.28.47205")> 
-<Assembly: AssemblyFileVersion("2.1.26.34673")> 
+<Assembly: AssemblyVersion("2.1.29.27899")> 
+<Assembly: AssemblyFileVersion("2.1.29.27899")> 
