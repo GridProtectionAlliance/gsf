@@ -80,13 +80,13 @@ Namespace ApplicationSecurity
                 Dim userLoginID As String = "" 'System.Threading.Thread.CurrentPrincipal.Identity.Name
                 If Not String.IsNullOrEmpty(userLoginID) Then
                     ' User is internal since we have his/her login ID.
-                    m_user = New User(userLoginID.Split("\"c)(1), New SqlConnection(ConnectionString))
+                    InitializeUser(userLoginID.Split("\"c)(1))
                 Else
                     ' User is either external or internal accessing from the internet (in case of web application).
                     Dim username As String = GetUsername()
                     Dim password As String = GetPassword()
                     If Not String.IsNullOrEmpty(username) AndAlso Not String.IsNullOrEmpty(password) Then
-                        m_user = New User(username, password, New SqlConnection(ConnectionString))
+                        InitializeUser(username, password)
                     Else
                         ' Since we don't have the username and password to authenticate againgst, we'll show 
                         ' the login screen where the user can either his/her username and password.
@@ -238,6 +238,33 @@ Namespace ApplicationSecurity
             If Not DesignMode Then
                 LoginUser()
             End If
+
+        End Sub
+
+#End Region
+
+#Region " Private Methods "
+
+        Private Sub InitializeUser(ByVal username As String)
+
+            InitializeUser(username, "")
+
+        End Sub
+
+        Private Sub initializeUser(ByVal username As String, ByVal password As String)
+
+            Dim connection As SqlConnection = Nothing
+            Try
+                ' We'll try to retrieve user information from the security database.
+                connection = New SqlConnection(ConnectionString)
+                connection.Open()
+                m_user = New User(username, password, connection)
+            Catch ex As Exception
+                If connection IsNot Nothing Then
+                    connection.Close()
+                    connection = Nothing
+                End If
+            End Try
 
         End Sub
 

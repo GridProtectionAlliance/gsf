@@ -46,8 +46,12 @@ Namespace ApplicationSecurity
                     m_exists = True
                     m_username = userData.Rows(0)("UserName").ToString()
                     m_password = userData.Rows(0)("UserPassword").ToString()
-                    m_isExternal = Convert.ToBoolean(userData.Rows(0)("UserIsExternal"))
-                    m_isLockedOut = Convert.ToBoolean(userData.Rows(0)("UserIsLockedOut"))
+                    If userData.Rows(0)("UserIsExternal") IsNot DBNull.Value Then
+                        m_isExternal = Convert.ToBoolean(userData.Rows(0)("UserIsExternal"))
+                    End If
+                    If userData.Rows(0)("UserIsLockedOut") IsNot DBNull.Value Then
+                        m_isLockedOut = Convert.ToBoolean(userData.Rows(0)("UserIsLockedOut"))
+                    End If
                     If userData.Rows(0)("UserPasswordChangeDateTime") IsNot DBNull.Value Then
                         m_passwordChangeDateTime = Convert.ToDateTime(userData.Rows(0)("UserPasswordChangeDateTime"))
                     End If
