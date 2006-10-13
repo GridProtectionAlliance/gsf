@@ -291,7 +291,7 @@ Namespace Measurements
         ''' If real-time (i.e., newest received measurement timestamp) gets too old or creeps too far
         ''' into the future, we fall back on local system time.  Note that this creates a dependency
         ''' on an accurate local clock - the smaller the time deviation tolerances the better the needed
-        ''' local clock acuracy.  For exampe, time deviation tolerances of a few seconds might only
+        ''' local clock acuracy.  For example, time deviation tolerances of a few seconds might only
         ''' require keeping the local clock synchronized to an NTP time source but sub-second tolerances
         ''' would require that the local clock be synchronized to a GPS time source.
         ''' </remarks>
@@ -355,12 +355,12 @@ Namespace Measurements
                 Else
                     ' We've found the right sample for this data, so we access the proper data cell by first calculating the
                     ' proper frame index (i.e., the row) - we can then directly access the correct measurement using its key
-                    Dim frame As IFrame = sample.Frames(System.Math.Floor((TicksBeyondSecond(.Ticks) + 1@) / m_frameRate))
+                    Dim frame As IFrame = sample.Frames(Convert.ToInt32(System.Math.Floor((TicksBeyondSecond(.Ticks) + 1@) / m_frameRate)))
                     Dim frameMeasurement As IMeasurement
 
                     SyncLock frame.Measurements
                         If frame.Measurements.TryGetValue(.Key, frameMeasurement) Then
-                            ' Measurement already exists, so we just update value
+                            ' Measurement already exists, so we just update value with the latest value
                             frameMeasurement.Value = .Value
                         Else
                             ' Create new frame measurement if it doesn't exist
@@ -559,9 +559,9 @@ Namespace Measurements
 
                 ' If we just created the sample we needed, then we'll get it here.  Otherwise the sample may have been
                 ' created by another thread while we were sleeping, so we'll check again to see to see if sample exists.
-                ' Additionally, the Item property (referenced from within LookupSample) internally performs a SyncLock
-                ' on the SyncRoot and waits for it to be released, so if another thread was creating new samples then
-                ' we'll definitely pick up our needed sample when the lock is released.  Nice and safe.
+                ' Additionally, the TryGetValue function (referenced from within LookupSample) internally performs a
+                ' SyncLock on the SyncRoot and waits for it to be released, so if another thread was creating new
+                ' samples then we'll definitely pick up our needed sample when the lock is released.  Nice and safe.
                 sample = LookupSample(baseTimeTicks)
             Loop
 

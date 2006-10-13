@@ -257,7 +257,7 @@ Public Class MultiProtocolFrameParser
             m_frameParser.ExecuteParseOnSeperateThread = m_executeParseOnSeperateThread
             m_frameParser.Start()
 
-            ' Start reading data from selected transport layer
+            ' Instantiate selected transport layer
             Select Case m_transportProtocol
                 Case TransportProtocol.Tcp
                     m_communicationClient = New TcpClient
@@ -479,9 +479,9 @@ Public Class MultiProtocolFrameParser
         m_frameRate = m_frameRateTotal / time
         m_byteRate = m_byteRateTotal / time
 
-        m_dataStreamStartTime = Date.Now.Ticks
         m_frameRateTotal = 0
         m_byteRateTotal = 0
+        m_dataStreamStartTime = Date.Now.Ticks
 
     End Sub
 
