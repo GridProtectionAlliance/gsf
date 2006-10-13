@@ -50,7 +50,7 @@ Namespace Measurements
 
         Public Overloads Function Equals(ByVal other As MeasurementKey) As Boolean Implements System.IEquatable(Of MeasurementKey).Equals
 
-            Return (GetHashCode() = other.GetHashCode())
+            Return (ID = other.ID AndAlso String.Compare(Source, other.Source, True) = 0)
 
         End Function
 
