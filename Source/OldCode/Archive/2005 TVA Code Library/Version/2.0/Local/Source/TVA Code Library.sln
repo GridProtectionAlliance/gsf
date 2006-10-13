@@ -75,9 +75,11 @@ Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "InterfaceAdapters", "Tva.Ph
 EndProject
 Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "RealTimeCalculatedMeasurements", "Tva.Phasors\RealTimeCalculatedMeasurements\RealTimeCalculatedMeasurements.vbproj", "{DFAF5597-0D41-4010-BE81-42EBD243D3C5}"
 EndProject
+Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "Tva.Security", "Tva.Security\Tva.Security.vbproj", "{7E20F0D7-CD03-4C51-ADB2-03C522A71A84}"
+EndProject
 Global
 	GlobalSection(SourceCodeControl) = preSolution
-		SccNumberOfProjects = 20
+		SccNumberOfProjects = 21
 		SccProjectName0 = \u0022$/TVA\u0020Code\u0020Library/Version/2.0/Local\u0022,\u0020HWHAAAAA
 		SccLocalPath0 = ..
 		SccProvider0 = MSSCCI:Microsoft\u0020Visual\u0020SourceSafe
@@ -178,6 +180,11 @@ Global
 		SccLocalPath19 = ..
 		CanCheckoutShared = false
 		SccProjectFilePathRelativizedFromConnection19 = Source\\Tva.Phasors\\DatAWareAdapter\\
+		SccProjectUniqueName20 = Tva.Security\\Tva.Security.vbproj
+		SccProjectTopLevelParentUniqueName20 = TVA\u0020Code\u0020Library.sln
+		SccLocalPath20 = ..
+		CanCheckoutShared = false
+		SccProjectFilePathRelativizedFromConnection20 = Source\\Tva.Security\\
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -365,6 +372,16 @@ Global
 		{DFAF5597-0D41-4010-BE81-42EBD243D3C5}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{DFAF5597-0D41-4010-BE81-42EBD243D3C5}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{DFAF5597-0D41-4010-BE81-42EBD243D3C5}.Release|Win32.ActiveCfg = Release|Any CPU
+		{7E20F0D7-CD03-4C51-ADB2-03C522A71A84}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7E20F0D7-CD03-4C51-ADB2-03C522A71A84}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7E20F0D7-CD03-4C51-ADB2-03C522A71A84}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{7E20F0D7-CD03-4C51-ADB2-03C522A71A84}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{7E20F0D7-CD03-4C51-ADB2-03C522A71A84}.Debug|Win32.ActiveCfg = Debug|Any CPU
+		{7E20F0D7-CD03-4C51-ADB2-03C522A71A84}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7E20F0D7-CD03-4C51-ADB2-03C522A71A84}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7E20F0D7-CD03-4C51-ADB2-03C522A71A84}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{7E20F0D7-CD03-4C51-ADB2-03C522A71A84}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{7E20F0D7-CD03-4C51-ADB2-03C522A71A84}.Release|Win32.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -382,6 +399,7 @@ Global
 		{99F93056-9EDE-4EB8-BF8B-61E3B8728F9D} = {4F631798-355B-4607-AEEB-742B670AD834}
 		{4DF64992-FEA6-49B3-BACE-1F11A98A1629} = {4F631798-355B-4607-AEEB-742B670AD834}
 		{072D5E46-0944-48DE-A1E1-C06D145FB366} = {4F631798-355B-4607-AEEB-742B670AD834}
+		{7E20F0D7-CD03-4C51-ADB2-03C522A71A84} = {4F631798-355B-4607-AEEB-742B670AD834}
 		{2E2A8AA0-A387-4245-A419-496B50CB7939} = {CDC349A8-4D7D-4D2F-8D15-8CE2359FBF3D}
 		{1BFB8969-4479-4EAB-8CCB-1CF0C3DE2DEE} = {CDC349A8-4D7D-4D2F-8D15-8CE2359FBF3D}
 		{DC7668BE-7A7E-4429-9E1C-02E26EC86922} = {0C2CAD57-581F-4C7A-9D59-8A9A1270A28E}

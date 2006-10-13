@@ -5,18 +5,17 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProductVersion>8.0.50727</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{150FD25F-8563-4F35-92DA-05754508B192}</ProjectGuid>
+    <ProjectGuid>{7E20F0D7-CD03-4C51-ADB2-03C522A71A84}</ProjectGuid>
     <OutputType>Library</OutputType>
-    <RootNamespace>Tva.Tro</RootNamespace>
-    <AssemblyName>Tva.Tro</AssemblyName>
+    <RootNamespace>Tva.Security</RootNamespace>
+    <AssemblyName>Tva.Security</AssemblyName>
     <MyType>Windows</MyType>
-    <OptionStrict>On</OptionStrict>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>..\TVA.snk</AssemblyOriginatorKeyFile>
     <SccProjectName>SAK</SccProjectName>
     <SccLocalPath>SAK</SccLocalPath>
     <SccAuxPath>SAK</SccAuxPath>
     <SccProvider>SAK</SccProvider>
-    <SignAssembly>true</SignAssembly>
-    <AssemblyOriginatorKeyFile>..\TVA.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -24,7 +23,7 @@
     <DefineDebug>true</DefineDebug>
     <DefineTrace>true</DefineTrace>
     <OutputPath>..\bin\</OutputPath>
-    <DocumentationFile>Tva.Tro.xml</DocumentationFile>
+    <DocumentationFile>Tva.Security.xml</DocumentationFile>
     <NoWarn>42016,41999,42017,42018,42019,42032,42036,42020,42021,42022</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
@@ -33,13 +32,15 @@
     <DefineTrace>true</DefineTrace>
     <Optimize>true</Optimize>
     <OutputPath>..\bin\</OutputPath>
-    <DocumentationFile>Tva.Tro.xml</DocumentationFile>
+    <DocumentationFile>Tva.Security.xml</DocumentationFile>
     <NoWarn>42016,41999,42017,42018,42019,42032,42036,42020,42021,42022</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.Web" />
+    <Reference Include="System.Windows.Forms" />
   </ItemGroup>
   <ItemGroup>
     <Import Include="Microsoft.VisualBasic" />
@@ -49,28 +50,48 @@
     <Import Include="System.Diagnostics" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="My Project\AssemblyInfo.vb" />
-    <Compile Include="Ssam\Enumerations.vb" />
-    <Compile Include="Ssam\SsamApi.vb" />
-    <Compile Include="Ssam\SsamEvent.vb" />
-    <Compile Include="Ssam\SsamLogger.Designer.vb">
-      <DependentUpon>SsamLogger.vb</DependentUpon>
+    <Compile Include="Application\Application.vb" />
+    <Compile Include="Application\Enumerations.vb" />
+    <Compile Include="Application\Role.vb" />
+    <Compile Include="Application\SecurityProviderBase.Designer.vb">
+      <DependentUpon>SecurityProviderBase.vb</DependentUpon>
     </Compile>
-    <Compile Include="Ssam\SsamLogger.vb">
+    <Compile Include="Application\SecurityProviderBase.vb">
       <SubType>Component</SubType>
     </Compile>
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Embedded Resources\Ssam.SsamLogger.bmp" />
-  </ItemGroup>
-  <ItemGroup>
-    <Service Include="{94E38DFF-614B-4CBD-B67C-F211BB35CE8B}" />
+    <Compile Include="Application\User.vb" />
+    <Compile Include="Application\WebSecurityProvider.Designer.vb">
+      <DependentUpon>WebSecurityProvider.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Application\WebSecurityProvider.vb">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Application\WindowsSecurityProvider.Designer.vb">
+      <DependentUpon>WindowsSecurityProvider.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Application\WindowsSecurityProvider.vb">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="My Project\AssemblyInfo.vb" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Tva.Core\Tva.Core.vbproj">
       <Project>{29A7B606-D1BC-4A4B-96D0-258D5A72C3EC}</Project>
       <Name>Tva.Core</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Tva.IO.Compression\Tva.IO.Compression.vcproj">
+      <Project>{F611B9BA-C69D-449B-B596-FABFB746EA2A}</Project>
+      <Name>Tva.IO.Compression</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Embedded Resources\Application.WebFiles.dat" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Embedded Resources\Application.WebSecurityProvider.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Embedded Resources\Application.WindowsSecurityProvider.bmp" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.VisualBasic.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
