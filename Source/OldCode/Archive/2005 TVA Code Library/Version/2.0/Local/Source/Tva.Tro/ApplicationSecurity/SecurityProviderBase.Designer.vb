@@ -18,7 +18,7 @@ Namespace ApplicationSecurity
         Public Sub New()
             MyBase.New()
 
-            m_propertyValues = New Hashtable()
+            m_extendeeControls = New Hashtable()
             Try
                 m_devConnectionString = "Server=RGOCDSQL; Database=ApplicationSecurity; UID=appsec; PWD=123-xyz"
                 m_devConnectionString = CategorizedSettings(ConfigurationElement)("Development").Value

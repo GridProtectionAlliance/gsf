@@ -13,7 +13,7 @@ Namespace ApplicationSecurity
         Private m_user As User
         Private m_server As SecurityServer
         Private m_applicationName As String
-        Private m_propertyValues As Hashtable
+        Private m_extendeeControls As Hashtable
         Private m_devConnectionString As String
         Private m_accConnectionString As String
         Private m_prdConnectionString As String
@@ -42,7 +42,7 @@ Namespace ApplicationSecurity
                 If Not String.IsNullOrEmpty(value) Then
                     m_applicationName = value
                 Else
-                    Throw New ArgumentException("ArgumentName cannot be null or empty.")
+                    Throw New ArgumentException("ApplicationName cannot be null or empty.")
                 End If
             End Set
         End Property
@@ -77,7 +77,7 @@ Namespace ApplicationSecurity
 
             If Not String.IsNullOrEmpty(m_applicationName) Then
                 ' This is the best way of getting the current user's NT ID both in windows and web environments.
-                Dim userLoginID As String = "" 'System.Threading.Thread.CurrentPrincipal.Identity.Name
+                Dim userLoginID As String = System.Threading.Thread.CurrentPrincipal.Identity.Name
                 If Not String.IsNullOrEmpty(userLoginID) Then
                     ' User is internal since we have his/her login ID.
                     InitializeUser(userLoginID.Split("\"c)(1))
@@ -97,6 +97,7 @@ Namespace ApplicationSecurity
                 If m_user IsNot Nothing AndAlso m_user.IsAuthenticated AndAlso _
                         m_user.FindApplication(m_applicationName) IsNot Nothing Then
                     ' User has been authenticated successfully and has access to the current application.
+                    ProcessControls()
                     RaiseEvent LoginSuccessful(Me, EventArgs.Empty)
                 Else
                     ' You could not be autheticated so we'll give him/her a chance to enter the credentials again.
@@ -150,24 +151,7 @@ Namespace ApplicationSecurity
             Dim extendedProperties As ControlProperties = GetProperties(extendee)
             extendedProperties.ValidRoles = value
 
-            If Not extendedProperties.ActionTaken AndAlso _
-                    extendedProperties.ValidRoleAction <> ValidRoleAction.None Then
-                Dim controlProperty As PropertyInfo = _
-                    extendee.GetType().GetProperty(extendedProperties.ValidRoleAction.ToString())
-
-                If controlProperty IsNot Nothing AndAlso m_user IsNot Nothing Then
-                    ' Control property exists and user has been logged in.
-                    controlProperty.SetValue(extendee, False, Nothing)   ' By default we'll set the property to False.
-
-                    For Each role As String In extendedProperties.ValidRoles.Replace(" ", "").Split(";"c)
-                        If m_user.FindRole(role) IsNot Nothing Then
-                            ' We'll set the property to True if the current user belongs either one of the valid roles.
-                            controlProperty.SetValue(extendee, True, Nothing)
-                            Exit For
-                        End If
-                    Next
-                End If
-            End If
+            ProcessControl(extendee, extendedProperties)
 
         End Sub
 
@@ -182,33 +166,16 @@ Namespace ApplicationSecurity
             Dim extendedProperties As ControlProperties = GetProperties(extendee)
             extendedProperties.ValidRoleAction = value
 
-            If Not extendedProperties.ActionTaken AndAlso _
-                    extendedProperties.ValidRoleAction <> ValidRoleAction.None Then
-                Dim controlProperty As PropertyInfo = _
-                    extendee.GetType().GetProperty(extendedProperties.ValidRoleAction.ToString())
-
-                If controlProperty IsNot Nothing AndAlso m_user IsNot Nothing Then
-                    ' Control property exists and user has been logged in.
-                    controlProperty.SetValue(extendee, False, Nothing)   ' By default we'll set the property to False.
-
-                    For Each role As String In extendedProperties.ValidRoles.Replace(" ", "").Split(";"c)
-                        If m_user.FindRole(role) IsNot Nothing Then
-                            ' We'll set the property to True if the current user belongs either one of the valid roles.
-                            controlProperty.SetValue(extendee, True, Nothing)
-                            Exit For
-                        End If
-                    Next
-                End If
-            End If
+            ProcessControl(extendee, extendedProperties)
 
         End Sub
 
         Private Function GetProperties(ByVal extendee As Object) As ControlProperties
 
-            Dim properties As ControlProperties = DirectCast(m_propertyValues(extendee), ControlProperties)
+            Dim properties As ControlProperties = DirectCast(m_extendeeControls(extendee), ControlProperties)
             If properties Is Nothing Then
                 properties = New ControlProperties()
-                m_propertyValues.Add(extendee, properties)
+                m_extendeeControls.Add(extendee, properties)
             End If
 
             Return properties
@@ -247,11 +214,11 @@ Namespace ApplicationSecurity
 
         Private Sub InitializeUser(ByVal username As String)
 
-            InitializeUser(username, "")
+            InitializeUser(username, Nothing)
 
         End Sub
 
-        Private Sub initializeUser(ByVal username As String, ByVal password As String)
+        Private Sub InitializeUser(ByVal username As String, ByVal password As String)
 
             Dim connection As SqlConnection = Nothing
             Try
@@ -265,6 +232,38 @@ Namespace ApplicationSecurity
                     connection = Nothing
                 End If
             End Try
+
+        End Sub
+
+        Private Sub ProcessControls()
+
+            For Each extendee As Object In m_extendeeControls.Keys
+                ProcessControl(extendee, DirectCast(m_extendeeControls(extendee), ControlProperties))
+            Next
+
+        End Sub
+
+        Private Sub ProcessControl(ByVal extendee As Object, ByVal extendedProperties As ControlProperties)
+
+            If Not extendedProperties.ActionTaken AndAlso _
+                    extendedProperties.ValidRoleAction <> ValidRoleAction.None AndAlso _
+                    extendedProperties.ValidRoles IsNot Nothing Then
+                Dim controlProperty As PropertyInfo = _
+                    extendee.GetType().GetProperty(extendedProperties.ValidRoleAction.ToString())
+
+                If m_user IsNot Nothing AndAlso controlProperty IsNot Nothing Then
+                    ' User has been logged in and the control property exists.
+                    controlProperty.SetValue(extendee, False, Nothing)   ' By default we'll set the property to False.
+
+                    For Each role As String In extendedProperties.ValidRoles.Replace(" ", "").Replace(",", ";").Split(";"c)
+                        If m_user.FindRole(role, m_applicationName) IsNot Nothing Then
+                            ' We'll set the property to True if the current user belongs either one of the valid roles.
+                            controlProperty.SetValue(extendee, True, Nothing)
+                            Exit For
+                        End If
+                    Next
+                End If
+            End If
 
         End Sub
 

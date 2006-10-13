@@ -30,7 +30,7 @@ Namespace ApplicationSecurity
 
         Public Sub New(ByVal username As String, ByVal dbConnection As SqlConnection)
 
-            MyClass.New(username, "", dbConnection)
+            MyClass.New(username, Nothing, dbConnection)
 
         End Sub
 
@@ -64,8 +64,8 @@ Namespace ApplicationSecurity
                         m_phoneNumber = userData.Rows(0)("UserPhoneNumber").ToString()
                         m_emailAddress = userData.Rows(0)("UserEmailAddress").ToString()
 
-                        If Not String.IsNullOrEmpty(m_password) AndAlso m_password = EncryptPassword(password) Then
-                            ' User's password is valid.
+                        If password IsNot Nothing AndAlso EncryptPassword(password) = m_password Then
+                            ' External user's password is valid.
                             m_isAuthenticated = True
                         End If
                     Else
@@ -77,8 +77,16 @@ Namespace ApplicationSecurity
                         m_phoneNumber = userInfo.Telephone
                         m_emailAddress = userInfo.Email
 
-                        If Not String.IsNullOrEmpty(password) AndAlso userInfo.Authenticate(password) Then
-                            ' User's password is valid.
+                        If password IsNot Nothing Then
+                            ' We have password for internal user so we must validate it against active directory.
+                            If userInfo.Authenticate(password) Then
+                                ' Internal user's password is valid.
+                                m_isAuthenticated = True
+                            End If
+                        Else
+                            ' When an internal user is found in the security database, he/she is considered
+                            ' autheticated and we are not required to validate the password unless one is 
+                            ' provided to us by the caller.
                             m_isAuthenticated = True
                         End If
                     End If
@@ -192,8 +200,22 @@ Namespace ApplicationSecurity
 
             If m_roles IsNot Nothing Then
                 For i As Integer = 0 To m_roles.Count - 1
-                    If m_roles(i).Name = roleName.ToUpper() Then Return m_roles(i)
+                    If String.Compare(m_roles(i).Name, roleName, True) = 0 Then
+                        ' User is in the specified role.
+                        Return m_roles(i)
+                    End If
                 Next
+            End If
+            Return Nothing
+
+        End Function
+
+        Public Function FindRole(ByVal roleName As String, ByVal applicationName As String) As Role
+
+            Dim role As Role = FindRole(roleName)
+            If role IsNot Nothing AndAlso String.Compare(role.Application.Name, applicationName, True) = 0 Then
+                ' User is in the specified role and the specified role belongs to the specified application.
+                Return role
             End If
             Return Nothing
 
@@ -203,7 +225,10 @@ Namespace ApplicationSecurity
 
             If m_applications IsNot Nothing Then
                 For i As Integer = 0 To m_applications.Count - 1
-                    If m_applications(i).Name = applicationName.ToUpper() Then Return m_applications(i)
+                    If String.Compare(m_applications(i).Name, applicationName, True) = 0 Then
+                        ' User has access to the specified application.
+                        Return m_applications(i)
+                    End If
                 Next
             End If
             Return Nothing
