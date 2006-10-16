@@ -83,26 +83,26 @@ Namespace Application
                     InitializeUser(userLoginID.Split("\"c)(1))
                 Else
                     ' User is either external or internal accessing from the internet (in case of web application).
+                    ' NOTE: It is important to note that this condition will never be true in case of a windows
+                    ' application, since we will always get the NT ID of the current user.
                     Dim username As String = GetUsername()
                     Dim password As String = GetPassword()
                     If Not String.IsNullOrEmpty(username) AndAlso Not String.IsNullOrEmpty(password) Then
                         InitializeUser(username, password)
                     Else
-                        ' Since we don't have the username and password to authenticate againgst, we'll show 
-                        ' the login screen where the user can either his/her username and password.
-                        ShowLoginScreen()
+                        HandleLoginFailure()
                     End If
                 End If
 
                 If m_user IsNot Nothing AndAlso m_user.IsAuthenticated AndAlso _
                         m_user.FindApplication(m_applicationName) IsNot Nothing Then
-                    ' User has been authenticated successfully and has access to the current application.
+                    ' User has been authenticated successfully and has access to the specified application.
                     ProcessControls()
                     RaiseEvent LoginSuccessful(Me, EventArgs.Empty)
                 Else
-                    ' You could not be autheticated so we'll give him/her a chance to enter the credentials again.
+                    ' The user could not be autheticated or doen't have access to the specified application.
                     RaiseEvent LoginFailed(Me, EventArgs.Empty)
-                    ShowLoginScreen()
+                    HandleLoginFailure()
                 End If
             Else
                 Throw New InvalidOperationException("ApplicationName must be set in order to login the user.")
@@ -118,7 +118,7 @@ Namespace Application
         ''' <summary>
         ''' Shows a screen to provide the logn credentials.
         ''' </summary>
-        Protected MustOverride Sub ShowLoginScreen()
+        Protected MustOverride Sub HandleLoginFailure()
 
         ''' <summary>
         ''' Gets the name that the user provided on the login screen.
@@ -229,7 +229,7 @@ Namespace Application
             Catch ex As Exception
                 If connection IsNot Nothing Then
                     connection.Close()
-                    connection = Nothing
+                    connection.Dispose()
                 End If
             End Try
 
