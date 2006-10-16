@@ -541,13 +541,13 @@ String* CharBufferToString(const char* str)
 	int len = strlen(str);
 	System::Byte gcBytes[] = new System::Byte[len];
 	Marshal::Copy((IntPtr)(char *)str, gcBytes, 0, len);
-	return ASCIIEncoding::ASCII->GetString(gcBytes);
+	return Encoding::Default->GetString(gcBytes);
 }
 
 // Caller responsible for calling "free()" on returned buffer...
 char* StringToCharBuffer(String* gcStr)
 {
-	System::Byte gcBytes[] = ASCIIEncoding::ASCII->GetBytes(gcStr);
+	System::Byte gcBytes[] = Encoding::Default->GetBytes(gcStr);
 	char* str = (char*)malloc(gcStr->get_Length() + 1);
 	if (str == NULL) throw new OutOfMemoryException();
 	Marshal::Copy(gcBytes, 0, (IntPtr)str, gcStr->get_Length());
