@@ -257,101 +257,105 @@ Namespace Ieee1344
 
         Private Sub ParseData(ByVal buffer As Byte(), ByVal offset As Int32, ByVal count As Int32)
 
-            Dim parsedFrameHeader As ICommonFrameHeader
+            Try
+                Dim parsedFrameHeader As ICommonFrameHeader
 
-            ' Prepend any left over buffer data from last parse call
-            If m_dataStream IsNot Nothing Then
-                With New MemoryStream
-                    .Write(m_dataStream.ToArray(), 0, m_dataStream.Length)
-                    m_dataStream = Nothing
+                ' Prepend any left over buffer data from last parse call
+                If m_dataStream IsNot Nothing Then
+                    With New MemoryStream
+                        .Write(m_dataStream.ToArray(), 0, m_dataStream.Length)
+                        m_dataStream = Nothing
 
-                    ' Append new incoming data
-                    .Write(buffer, offset, count)
+                        ' Append new incoming data
+                        .Write(buffer, offset, count)
 
-                    ' Pull all queued data together as one big buffer
-                    buffer = .ToArray()
-                    offset = 0
-                    count = .Length
-                End With
-            End If
-
-            Do Until offset >= count
-                ' See if there is enough data in the buffer to parse the common frame header
-                If offset + CommonFrameHeader.BinaryLength + 2 > count Then
-                    ' If not, save off remaining buffer to prepend onto next read
-                    m_dataStream = New MemoryStream
-                    m_dataStream.Write(buffer, offset, count - offset)
-                    Exit Do
+                        ' Pull all queued data together as one big buffer
+                        buffer = .ToArray()
+                        offset = 0
+                        count = .Length
+                    End With
                 End If
 
-                ' Parse frame header
-                parsedFrameHeader = CommonFrameHeader.ParseBinaryImage(m_configurationFrame, buffer, offset)
+                Do Until offset >= count
+                    ' See if there is enough data in the buffer to parse the common frame header
+                    If offset + CommonFrameHeader.BinaryLength + 2 > count Then
+                        ' If not, save off remaining buffer to prepend onto next read
+                        m_dataStream = New MemoryStream
+                        m_dataStream.Write(buffer, offset, count - offset)
+                        Exit Do
+                    End If
 
-                ' Until we receive configuration frame, we at least expose part of frame we have parsed
-                If m_configurationFrame Is Nothing Then RaiseReceivedCommonFrameHeader(parsedFrameHeader)
+                    ' Parse frame header
+                    parsedFrameHeader = CommonFrameHeader.ParseBinaryImage(m_configurationFrame, buffer, offset)
 
-                ' See if there is enough data in the buffer to parse the entire frame
-                If offset + parsedFrameHeader.FrameLength > count Then
-                    ' If not, save off remaining buffer to prepend onto next read
-                    m_dataStream = New MemoryStream
-                    m_dataStream.Write(buffer, offset, count - offset)
-                    Exit Do
-                End If
+                    ' Until we receive configuration frame, we at least expose part of frame we have parsed
+                    If m_configurationFrame Is Nothing Then RaiseReceivedCommonFrameHeader(parsedFrameHeader)
 
-                RaiseEvent ReceivedFrameBufferImage(parsedFrameHeader.FundamentalFrameType, buffer, offset, parsedFrameHeader.FrameLength)
+                    ' See if there is enough data in the buffer to parse the entire frame
+                    If offset + parsedFrameHeader.FrameLength > count Then
+                        ' If not, save off remaining buffer to prepend onto next read
+                        m_dataStream = New MemoryStream
+                        m_dataStream.Write(buffer, offset, count - offset)
+                        Exit Do
+                    End If
 
-                ' Entire frame is availble, so we go ahead and parse it
-                Select Case parsedFrameHeader.FrameType
-                    Case FrameType.DataFrame
-                        ' We can only start parsing data frames once we have successfully received a configuration file...
-                        If m_configurationFrame IsNot Nothing Then
-                            RaiseReceivedDataFrame(New DataFrame(parsedFrameHeader, m_configurationFrame, buffer, offset))
-                        End If
-                    Case FrameType.ConfigurationFrame
-                        ' Cumulate all partial frames together as once complete frame
-                        With DirectCast(parsedFrameHeader, CommonFrameHeader.CommonFrameHeaderInstance)
-                            If .IsFirstFrame Then m_configurationFrameCollection = parsedFrameHeader
+                    RaiseEvent ReceivedFrameBufferImage(parsedFrameHeader.FundamentalFrameType, buffer, offset, parsedFrameHeader.FrameLength)
 
-                            If m_configurationFrameCollection IsNot Nothing Then
-                                Try
-                                    m_configurationFrameCollection.AppendFrameImage(buffer, offset, .FrameLength)
+                    ' Entire frame is availble, so we go ahead and parse it
+                    Select Case parsedFrameHeader.FrameType
+                        Case FrameType.DataFrame
+                            ' We can only start parsing data frames once we have successfully received a configuration file...
+                            If m_configurationFrame IsNot Nothing Then
+                                RaiseReceivedDataFrame(New DataFrame(parsedFrameHeader, m_configurationFrame, buffer, offset))
+                            End If
+                        Case FrameType.ConfigurationFrame
+                            ' Cumulate all partial frames together as once complete frame
+                            With DirectCast(parsedFrameHeader, CommonFrameHeader.CommonFrameHeaderInstance)
+                                If .IsFirstFrame Then m_configurationFrameCollection = parsedFrameHeader
 
-                                    If .IsLastFrame Then
-                                        m_configurationFrame = New ConfigurationFrame(m_configurationFrameCollection, m_configurationFrameCollection.BinaryImage, 0)
-                                        RaiseReceivedConfigurationFrame(m_configurationFrame)
+                                If m_configurationFrameCollection IsNot Nothing Then
+                                    Try
+                                        m_configurationFrameCollection.AppendFrameImage(buffer, offset, .FrameLength)
+
+                                        If .IsLastFrame Then
+                                            m_configurationFrame = New ConfigurationFrame(m_configurationFrameCollection, m_configurationFrameCollection.BinaryImage, 0)
+                                            RaiseReceivedConfigurationFrame(m_configurationFrame)
+                                            m_configurationFrameCollection = Nothing
+                                        End If
+                                    Catch
+                                        ' If CRC check or other exception occurs, we cancel frame cumulation process
                                         m_configurationFrameCollection = Nothing
-                                    End If
-                                Catch
-                                    ' If CRC check or other exception occurs, we cancel frame cumulation process
-                                    m_configurationFrameCollection = Nothing
-                                    Throw
-                                End Try
-                            End If
-                        End With
-                    Case FrameType.HeaderFrame
-                        ' Cumulate all partial frames together as once complete frame
-                        With DirectCast(parsedFrameHeader, CommonFrameHeader.CommonFrameHeaderInstance)
-                            If .IsFirstFrame Then m_headerFrameCollection = parsedFrameHeader
+                                        Throw
+                                    End Try
+                                End If
+                            End With
+                        Case FrameType.HeaderFrame
+                            ' Cumulate all partial frames together as once complete frame
+                            With DirectCast(parsedFrameHeader, CommonFrameHeader.CommonFrameHeaderInstance)
+                                If .IsFirstFrame Then m_headerFrameCollection = parsedFrameHeader
 
-                            If m_headerFrameCollection IsNot Nothing Then
-                                Try
-                                    m_headerFrameCollection.AppendFrameImage(buffer, offset, .FrameLength)
+                                If m_headerFrameCollection IsNot Nothing Then
+                                    Try
+                                        m_headerFrameCollection.AppendFrameImage(buffer, offset, .FrameLength)
 
-                                    If .IsLastFrame Then
-                                        RaiseReceivedHeaderFrame(New HeaderFrame(m_headerFrameCollection, m_headerFrameCollection.BinaryImage, 0))
+                                        If .IsLastFrame Then
+                                            RaiseReceivedHeaderFrame(New HeaderFrame(m_headerFrameCollection, m_headerFrameCollection.BinaryImage, 0))
+                                            m_headerFrameCollection = Nothing
+                                        End If
+                                    Catch
+                                        ' If CRC check or other exception occurs, we cancel frame cumulation process
                                         m_headerFrameCollection = Nothing
-                                    End If
-                                Catch
-                                    ' If CRC check or other exception occurs, we cancel frame cumulation process
-                                    m_headerFrameCollection = Nothing
-                                    Throw
-                                End Try
-                            End If
-                        End With
-                End Select
+                                        Throw
+                                    End Try
+                                End If
+                            End With
+                    End Select
 
-                offset += parsedFrameHeader.FrameLength
-            Loop
+                    offset += parsedFrameHeader.FrameLength
+                Loop
+            Catch ex As Exception
+                RaiseEvent DataStreamException(ex)
+            End Try
 
         End Sub
 

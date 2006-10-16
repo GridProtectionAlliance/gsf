@@ -315,82 +315,86 @@ Namespace IeeeC37_118
 
         Private Sub ParseData(ByVal buffer As Byte(), ByVal offset As Int32, ByVal count As Int32)
 
-            Dim parsedFrameHeader As ICommonFrameHeader
+            Try
+                Dim parsedFrameHeader As ICommonFrameHeader
 
-            ' Prepend any left over buffer data from last parse call
-            If m_dataStream IsNot Nothing Then
-                With New MemoryStream
-                    .Write(m_dataStream.ToArray(), 0, m_dataStream.Length)
-                    m_dataStream = Nothing
+                ' Prepend any left over buffer data from last parse call
+                If m_dataStream IsNot Nothing Then
+                    With New MemoryStream
+                        .Write(m_dataStream.ToArray(), 0, m_dataStream.Length)
+                        m_dataStream = Nothing
 
-                    ' Append new incoming data
-                    .Write(buffer, offset, count)
+                        ' Append new incoming data
+                        .Write(buffer, offset, count)
 
-                    ' Pull all queued data together as one big buffer
-                    buffer = .ToArray()
-                    offset = 0
-                    count = .Length
-                End With
-            End If
-
-            Do Until offset >= count
-                ' See if there is enough data in the buffer to parse the common frame header
-                If offset + CommonFrameHeader.BinaryLength > count Then
-                    ' If not, save off remaining buffer to prepend onto next read
-                    m_dataStream = New MemoryStream
-                    m_dataStream.Write(buffer, offset, count - offset)
-                    Exit Do
+                        ' Pull all queued data together as one big buffer
+                        buffer = .ToArray()
+                        offset = 0
+                        count = .Length
+                    End With
                 End If
 
-                ' Parse frame header
-                parsedFrameHeader = CommonFrameHeader.ParseBinaryImage(m_configurationFrame2, buffer, offset)
+                Do Until offset >= count
+                    ' See if there is enough data in the buffer to parse the common frame header
+                    If offset + CommonFrameHeader.BinaryLength > count Then
+                        ' If not, save off remaining buffer to prepend onto next read
+                        m_dataStream = New MemoryStream
+                        m_dataStream.Write(buffer, offset, count - offset)
+                        Exit Do
+                    End If
 
-                ' Until we receive configuration frame, we at least expose part of frame we have parsed
-                If m_configurationFrame2 Is Nothing Then RaiseReceivedCommonFrameHeader(parsedFrameHeader)
+                    ' Parse frame header
+                    parsedFrameHeader = CommonFrameHeader.ParseBinaryImage(m_configurationFrame2, buffer, offset)
 
-                ' See if there is enough data in the buffer to parse the entire frame
-                If offset + parsedFrameHeader.FrameLength > count Then
-                    ' If not, save off remaining buffer to prepend onto next read
-                    m_dataStream = New MemoryStream
-                    m_dataStream.Write(buffer, offset, count - offset)
-                    Exit Do
-                End If
+                    ' Until we receive configuration frame, we at least expose part of frame we have parsed
+                    If m_configurationFrame2 Is Nothing Then RaiseReceivedCommonFrameHeader(parsedFrameHeader)
 
-                RaiseEvent ReceivedFrameBufferImage(parsedFrameHeader.FundamentalFrameType, buffer, offset, parsedFrameHeader.FrameLength)
+                    ' See if there is enough data in the buffer to parse the entire frame
+                    If offset + parsedFrameHeader.FrameLength > count Then
+                        ' If not, save off remaining buffer to prepend onto next read
+                        m_dataStream = New MemoryStream
+                        m_dataStream.Write(buffer, offset, count - offset)
+                        Exit Do
+                    End If
 
-                ' Entire frame is available, so we go ahead and parse it
-                Select Case parsedFrameHeader.FrameType
-                    Case FrameType.DataFrame
-                        ' We can only start parsing data frames once we have successfully received configuration file 2...
-                        If m_configurationFrame2 IsNot Nothing Then RaiseReceivedDataFrame(New DataFrame(parsedFrameHeader, m_configurationFrame2, buffer, offset))
-                    Case FrameType.ConfigurationFrame2
-                        Select Case m_draftRevision
-                            Case DraftRevision.Draft6
-                                With New ConfigurationFrameDraft6(parsedFrameHeader, buffer, offset)
-                                    m_configurationFrame2 = .This
-                                    RaiseReceivedConfigurationFrame2(.This)
-                                End With
-                            Case DraftRevision.Draft7
-                                With New ConfigurationFrame(parsedFrameHeader, buffer, offset)
-                                    m_configurationFrame2 = .This
-                                    RaiseReceivedConfigurationFrame2(.This)
-                                End With
-                        End Select
-                    Case FrameType.ConfigurationFrame1
-                        Select Case m_draftRevision
-                            Case DraftRevision.Draft6
-                                RaiseReceivedConfigurationFrame1(New ConfigurationFrameDraft6(parsedFrameHeader, buffer, offset))
-                            Case DraftRevision.Draft7
-                                RaiseReceivedConfigurationFrame1(New ConfigurationFrame(parsedFrameHeader, buffer, offset))
-                        End Select
-                    Case FrameType.HeaderFrame
-                        RaiseReceivedHeaderFrame(New HeaderFrame(parsedFrameHeader, buffer, offset))
-                    Case FrameType.CommandFrame
-                        RaiseReceivedCommandFrame(New CommandFrame(parsedFrameHeader, buffer, offset))
-                End Select
+                    RaiseEvent ReceivedFrameBufferImage(parsedFrameHeader.FundamentalFrameType, buffer, offset, parsedFrameHeader.FrameLength)
 
-                offset += parsedFrameHeader.FrameLength
-            Loop
+                    ' Entire frame is available, so we go ahead and parse it
+                    Select Case parsedFrameHeader.FrameType
+                        Case FrameType.DataFrame
+                            ' We can only start parsing data frames once we have successfully received configuration file 2...
+                            If m_configurationFrame2 IsNot Nothing Then RaiseReceivedDataFrame(New DataFrame(parsedFrameHeader, m_configurationFrame2, buffer, offset))
+                        Case FrameType.ConfigurationFrame2
+                            Select Case m_draftRevision
+                                Case DraftRevision.Draft6
+                                    With New ConfigurationFrameDraft6(parsedFrameHeader, buffer, offset)
+                                        m_configurationFrame2 = .This
+                                        RaiseReceivedConfigurationFrame2(.This)
+                                    End With
+                                Case DraftRevision.Draft7
+                                    With New ConfigurationFrame(parsedFrameHeader, buffer, offset)
+                                        m_configurationFrame2 = .This
+                                        RaiseReceivedConfigurationFrame2(.This)
+                                    End With
+                            End Select
+                        Case FrameType.ConfigurationFrame1
+                            Select Case m_draftRevision
+                                Case DraftRevision.Draft6
+                                    RaiseReceivedConfigurationFrame1(New ConfigurationFrameDraft6(parsedFrameHeader, buffer, offset))
+                                Case DraftRevision.Draft7
+                                    RaiseReceivedConfigurationFrame1(New ConfigurationFrame(parsedFrameHeader, buffer, offset))
+                            End Select
+                        Case FrameType.HeaderFrame
+                            RaiseReceivedHeaderFrame(New HeaderFrame(parsedFrameHeader, buffer, offset))
+                        Case FrameType.CommandFrame
+                            RaiseReceivedCommandFrame(New CommandFrame(parsedFrameHeader, buffer, offset))
+                    End Select
+
+                    offset += parsedFrameHeader.FrameLength
+                Loop
+            Catch ex As Exception
+                RaiseEvent DataStreamException(ex)
+            End Try
 
         End Sub
 
