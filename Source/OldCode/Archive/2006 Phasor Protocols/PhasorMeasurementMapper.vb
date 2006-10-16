@@ -331,6 +331,14 @@ Public Class PhasorMeasurementMapper
     Private Sub m_frameParser_ConnectionException(ByVal ex As System.Exception) Handles m_frameParser.ConnectionException
 
         UpdateStatus(m_source & " connection to """ & m_frameParser.ConnectionName & """ failed: " & ex.Message)
+
+        ' Start reconnection attempt on a seperate thread (need to let this communications thread die gracefully)
+        ThreadPool.QueueUserWorkItem(AddressOf AttemptReconnection)
+
+    End Sub
+
+    Private Sub AttemptReconnection(ByVal state As Object)
+
         Connect()
 
     End Sub
