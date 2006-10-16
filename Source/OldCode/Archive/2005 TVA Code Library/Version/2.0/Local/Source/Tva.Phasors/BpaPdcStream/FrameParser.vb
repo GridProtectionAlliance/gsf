@@ -269,73 +269,77 @@ Namespace BpaPdcStream
 
         Private Sub ParseData(ByVal buffer As Byte(), ByVal offset As Int32, ByVal count As Int32)
 
-            'Dim parsedFrameHeader As ICommonFrameHeader
-            'Dim index As Int32
+            Try
+                'Dim parsedFrameHeader As ICommonFrameHeader
+                'Dim index As Int32
 
-            'If m_dataStream IsNot Nothing Then
-            '    m_dataStream.Write(buffer, 0, buffer.Length)
-            '    buffer = m_dataStream.ToArray()
-            '    m_dataStream = Nothing
-            'End If
+                'If m_dataStream IsNot Nothing Then
+                '    m_dataStream.Write(buffer, 0, buffer.Length)
+                '    buffer = m_dataStream.ToArray()
+                '    m_dataStream = Nothing
+                'End If
 
-            'Do Until index >= buffer.Length
-            '    ' See if there is enough data in the buffer to parse a frame header
-            '    If index + CommonFrameHeader.BinaryLength > buffer.Length Then
-            '        ' If not, save off remaining buffer to prepend onto next read
-            '        m_dataStream = New MemoryStream
-            '        m_dataStream.Write(buffer, index, buffer.Length - index)
-            '        Exit Do
-            '    End If
+                'Do Until index >= buffer.Length
+                '    ' See if there is enough data in the buffer to parse a frame header
+                '    If index + CommonFrameHeader.BinaryLength > buffer.Length Then
+                '        ' If not, save off remaining buffer to prepend onto next read
+                '        m_dataStream = New MemoryStream
+                '        m_dataStream.Write(buffer, index, buffer.Length - index)
+                '        Exit Do
+                '    End If
 
-            '    ' Parse frame header
-            '    parsedFrameHeader = CommonFrameHeader.ParseBinaryImage(m_revisionNumber, m_configFrame2, buffer, index)
+                '    ' Parse frame header
+                '    parsedFrameHeader = CommonFrameHeader.ParseBinaryImage(m_revisionNumber, m_configFrame2, buffer, index)
 
-            '    ' See if there is enough data in the buffer to parse the entire frame
-            '    If index + parsedFrameHeader.FrameLength > buffer.Length Then
-            '        ' If not, save off remaining buffer to prepend onto next read
-            '        m_dataStream = New MemoryStream
-            '        m_dataStream.Write(buffer, index, buffer.Length - index)
-            '        Exit Do
-            '    End If
+                '    ' See if there is enough data in the buffer to parse the entire frame
+                '    If index + parsedFrameHeader.FrameLength > buffer.Length Then
+                '        ' If not, save off remaining buffer to prepend onto next read
+                '        m_dataStream = New MemoryStream
+                '        m_dataStream.Write(buffer, index, buffer.Length - index)
+                '        Exit Do
+                '    End If
 
-            '    ' Entire frame is availble, so we go ahead and parse it
-            '    RaiseEvent ReceivedFrame(parsedFrameHeader, buffer, index)
+                '    ' Entire frame is availble, so we go ahead and parse it
+                '    RaiseEvent ReceivedFrame(parsedFrameHeader, buffer, index)
 
-            '    Select Case parsedFrameHeader.FrameType
-            '        Case FrameType.DataFrame
-            '            ' We can only start parsing data frames once we have successfully received configuration file 2...
-            '            If Not m_configFrame2 Is Nothing Then
-            '                With New DataFrame(parsedFrameHeader, m_configFrame2, buffer, index)
-            '                    RaiseEvent ReceivedDataFrame(.This)
-            '                End With
-            '            End If
-            '        Case FrameType.HeaderFrame
-            '            'With New HeaderFrame(parsedFrameHeader, buffer, startIndex)
-            '            '    If .IsFirstFrame Then m_headerFile = New HeaderFile
+                '    Select Case parsedFrameHeader.FrameType
+                '        Case FrameType.DataFrame
+                '            ' We can only start parsing data frames once we have successfully received configuration file 2...
+                '            If Not m_configFrame2 Is Nothing Then
+                '                With New DataFrame(parsedFrameHeader, m_configFrame2, buffer, index)
+                '                    RaiseEvent ReceivedDataFrame(.This)
+                '                End With
+                '            End If
+                '        Case FrameType.HeaderFrame
+                '            'With New HeaderFrame(parsedFrameHeader, buffer, startIndex)
+                '            '    If .IsFirstFrame Then m_headerFile = New HeaderFile
 
-            '            '    m_headerFile.AppendNextFrame(.This)
+                '            '    m_headerFile.AppendNextFrame(.This)
 
-            '            '    If .IsLastFrame Then
-            '            '        RaiseEvent ReceivedHeaderFile(m_headerFile)
-            '            '        m_headerFile = Nothing
-            '            '    End If
+                '            '    If .IsLastFrame Then
+                '            '        RaiseEvent ReceivedHeaderFile(m_headerFile)
+                '            '        m_headerFile = Nothing
+                '            '    End If
 
-            '            '    startIndex += .FrameLength
-            '            'End With
-            '        Case FrameType.ConfigurationFrame1
-            '            With New ConfigurationFrame(parsedFrameHeader, buffer, index)
-            '                m_configFrame1 = .This
-            '                RaiseEvent ReceivedConfigFile1(.This)
-            '            End With
-            '        Case FrameType.ConfigurationFrame2
-            '            With New ConfigurationFrame(parsedFrameHeader, buffer, index)
-            '                m_configFrame2 = .This
-            '                RaiseEvent ReceivedConfigFile2(.This)
-            '            End With
-            '    End Select
+                '            '    startIndex += .FrameLength
+                '            'End With
+                '        Case FrameType.ConfigurationFrame1
+                '            With New ConfigurationFrame(parsedFrameHeader, buffer, index)
+                '                m_configFrame1 = .This
+                '                RaiseEvent ReceivedConfigFile1(.This)
+                '            End With
+                '        Case FrameType.ConfigurationFrame2
+                '            With New ConfigurationFrame(parsedFrameHeader, buffer, index)
+                '                m_configFrame2 = .This
+                '                RaiseEvent ReceivedConfigFile2(.This)
+                '            End With
+                '    End Select
 
-            '    index += parsedFrameHeader.FrameLength
-            'Loop
+                '    index += parsedFrameHeader.FrameLength
+                'Loop
+            Catch ex As Exception
+                RaiseEvent DataStreamException(ex)
+            End Try
 
         End Sub
 
