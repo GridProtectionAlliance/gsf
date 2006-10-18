@@ -91,10 +91,8 @@ Namespace Application
                                 "Application Exiting", MessageBoxButtons.OK, MessageBoxIcon.Information)
                     End Select
 
-                    ' Exit the application after all the pending messages have been processed.
-                    With New System.Threading.Thread(AddressOf ExitApplication)
-                        .Start()
-                    End With
+                    ' This worked out to be the best way to exit the application.
+                    Process.GetCurrentProcess().Kill()
                 End With
             Else
                 Throw New InvalidOperationException("Parent must be set.")
@@ -115,16 +113,6 @@ Namespace Application
         End Function
 
 #Region " Private Methods "
-
-        Private Sub ExitApplication()
-
-            Try
-                System.Windows.Forms.Application.Exit()
-            Catch ex As Exception
-                ExitApplication()   ' Retry exiting the application if and exception is encountered.
-            End Try
-
-        End Sub
 
         Private Sub m_parent_Load(ByVal sender As Object, ByVal e As System.EventArgs) Handles m_parent.Load
 
