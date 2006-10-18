@@ -96,7 +96,7 @@ Namespace IeeeC37_118
 
                 buffer(0) = m_type
 
-                EndianOrder.BigEndian.Copy(BitConverter.GetBytes(ScalingFactor), 0, buffer, 1, 3)
+                EndianOrder.BigEndian.CopyBuffer(BitConverter.GetBytes(ScalingFactor), 0, buffer, 1, 3)
 
                 Return buffer
             End Get
@@ -110,7 +110,7 @@ Namespace IeeeC37_118
             m_type = binaryImage(startIndex)
 
             ' Last three bytes represent scaling factor
-            EndianOrder.BigEndian.Copy(binaryImage, startIndex + 1, buffer, 0, 3)
+            EndianOrder.BigEndian.CopyBuffer(binaryImage, startIndex + 1, buffer, 0, 3)
             ScalingFactor = BitConverter.ToInt32(buffer, 0)
 
         End Sub

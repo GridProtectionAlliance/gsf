@@ -81,7 +81,7 @@ Namespace IeeeC37_118
 
                 buffer(0) = IIf(Of Byte)(Type = PhasorType.Voltage, 0, 1)
 
-                EndianOrder.BigEndian.Copy(BitConverter.GetBytes(ScalingFactor), 0, buffer, 1, 3)
+                EndianOrder.BigEndian.CopyBuffer(BitConverter.GetBytes(ScalingFactor), 0, buffer, 1, 3)
 
                 Return buffer
             End Get
@@ -95,7 +95,7 @@ Namespace IeeeC37_118
             Type = IIf(binaryImage(startIndex) = 0, PhasorType.Voltage, PhasorType.Current)
 
             ' Last three bytes represent scaling factor
-            EndianOrder.BigEndian.Copy(binaryImage, startIndex + 1, buffer, 0, 3)
+            EndianOrder.BigEndian.CopyBuffer(binaryImage, startIndex + 1, buffer, 0, 3)
             ScalingFactor = BitConverter.ToInt32(buffer, 0)
 
         End Sub
