@@ -1,0 +1,316 @@
+Imports Tva.Security.Application
+Imports System.Data
+Imports System.Data.SqlClient
+Imports Tva.Data.Common
+
+Partial Class Login
+    Inherits System.Web.UI.Page
+
+    Private connectionString, applicationName, returnUrl As String
+    Private queryStringExists, returnUrlHasQueryString As Boolean
+
+    Protected Sub Page_Load(ByVal sender As Object, ByVal e As System.EventArgs) Handles Me.Load
+
+        Me.TextBoxUserName.Focus()
+        If Not IsPostBack Then
+            'Session("ApplicationName") = "TEST_APP_1"
+            'Session("ConnectionString") = "Server=RGOCDSQL; Database=ApplicationSecurity; UID=appsec; PWD=123-xyz"
+            'Session("ReturnUrl") = "http://mail.yahoo.com"
+
+            'c = connection string
+            'a = application name
+            'r = return url
+            't = error type
+            If Request("c") IsNot Nothing AndAlso _
+                    Not String.IsNullOrEmpty(Request("c").ToString()) AndAlso _
+                        Request("a") IsNot Nothing AndAlso _
+                            Not String.IsNullOrEmpty(Request("a").ToString()) AndAlso _
+                                Request("r") IsNot Nothing AndAlso _
+                                    Not String.IsNullOrEmpty(Request("r").ToString()) Then
+
+                ViewState("QueryStringExists") = True
+
+                'connectionString = Server.UrlDecode(Tva.Security.Cryptography.Common.Decrypt(Request("c").ToString, Tva.Security.Cryptography.EncryptLevel.Level4))
+                connectionString = Tva.Security.Cryptography.Common.Decrypt(Request("c").ToString, Tva.Security.Cryptography.EncryptLevel.Level4)
+                applicationName = Server.UrlDecode(Tva.Security.Cryptography.Common.Decrypt(Request("a").ToString, Tva.Security.Cryptography.EncryptLevel.Level4))
+                returnUrl = Server.UrlDecode(Request("r").ToString)
+                Session("ApplicationName") = applicationName
+                Session("ConnectionString") = connectionString
+                Session("ReturnUrl") = returnUrl
+
+                Dim returnUri As Uri = New Uri(returnUrl)
+                Dim query As String = returnUri.Query
+                If query.Length > 0 Then
+                    ViewState("ReturnUrlHasQueryString") = True
+                Else
+                    ViewState("ReturnUrlHasQueryString") = False
+                End If
+
+                'Check for existance of the Cookie
+                If Request.Cookies("Credentials") IsNot Nothing Then
+                    Dim userName As String = Tva.Security.Cryptography.Common.Decrypt(Request.Cookies("Credentials")("u"), Tva.Security.Cryptography.EncryptLevel.Level4)
+                    Dim password As String = Tva.Security.Cryptography.Common.Decrypt(Request.Cookies("Credentials")("p"), Tva.Security.Cryptography.EncryptLevel.Level4)
+                    AuthenticateUser(userName, password)
+                    'Response.Write(userName & " - " & password & "<BR>Expires On: " & Request.Cookies("Credentials").Expires.ToString)
+                End If
+
+            ElseIf Session("ApplicationName") IsNot Nothing AndAlso _
+                    Session("ConnectionString") IsNot Nothing AndAlso _
+                    Session("ReturnUrl") IsNot Nothing Then
+
+                applicationName = Session("ApplicationName")
+                connectionString = Session("ConnectionString")
+                returnUrl = Session("ReturnUrl")
+
+                Dim returnUri As Uri = New Uri(Session("ReturnUrl"))
+                Dim query As String = returnUri.Query
+                If query.Length > 0 Then
+                    ViewState("ReturnUrlHasQueryString") = True
+                Else
+                    ViewState("ReturnUrlHasQueryString") = False
+                End If
+                ViewState("QueryStringExists") = True
+
+            Else
+                queryStringExists = False
+                Response.Redirect("ErrorPage.aspx?t=1", True)
+            End If
+
+
+            Session("LoginAttempts") = 0
+        End If
+
+    End Sub
+
+    Protected Sub ButtonLogin_Click(ByVal sender As Object, ByVal e As System.EventArgs) Handles ButtonLogin.Click
+
+        Dim userName, password As String
+        userName = Me.TextBoxUserName.Text
+        password = Me.TextBoxPassword.Text
+
+        userName = userName.Replace("'", "")
+        userName = userName.Replace("%", "")
+        password = password.Replace("'", "")
+        password = password.Replace("%", "")
+
+        AuthenticateUser(userName, password)
+
+    End Sub
+
+    Private Sub AuthenticateUser(ByVal userName As String, ByVal password As String)
+
+        Dim conn As New SqlConnection(Session("ConnectionString").ToString)
+        Try
+
+            Dim u As New User(userName, password, New Data.SqlClient.SqlConnection(Session("ConnectionString").ToString))
+            With u 'New User(userName, password, New Data.SqlClient.SqlConnection(connectionString))
+                If .IsAuthenticated Then
+
+                    If .IsLockedOut = False Then
+                        If .FindApplication(Session("ApplicationName").ToString) IsNot Nothing Then
+
+                            'Check if password is not expired for this username. If so then force user to change passsword.\
+                            If .PasswordChangeDateTime <> DateTime.MinValue AndAlso _
+                                    DateDiff(DateInterval.Day, .PasswordChangeDateTime, DateTime.Now) >= 0 Then
+                                Response.Redirect("ChangePassword.aspx?m=0", False)
+                            Else
+
+                                If ViewState("QueryStringExists") Then
+
+                                    'u = user name
+                                    'p = password
+                                    't = error type
+                                    If ViewState("ReturnUrlHasQueryString") Then
+                                        returnUrl = Session("ReturnUrl") & "&u=" & Server.UrlEncode(Tva.Security.Cryptography.Common.Encrypt(userName, Tva.Security.Cryptography.EncryptLevel.Level4)) & "&p=" & Server.UrlEncode(Tva.Security.Cryptography.Common.Encrypt(password, Tva.Security.Cryptography.EncryptLevel.Level4))
+                                    Else
+                                        returnUrl = Session("ReturnUrl") & "?u=" & Server.UrlEncode(Tva.Security.Cryptography.Common.Encrypt(userName, Tva.Security.Cryptography.EncryptLevel.Level4)) & "&p=" & Server.UrlEncode(Tva.Security.Cryptography.Common.Encrypt(password, Tva.Security.Cryptography.EncryptLevel.Level4))
+                                    End If
+
+                                    If Not conn.State = ConnectionState.Open Then
+                                        conn.Open()
+                                    End If
+                                    ExecuteNonQuery("LogAccess", conn, userName, Session("ApplicationName"), False)
+
+                                    'Create Cookie here...
+                                    'On successful login, this will overwrite any previous values for this cookies.
+                                    Dim credentialCookie As New HttpCookie("Credentials")
+                                    credentialCookie.Values.Add("u", Tva.Security.Cryptography.Common.Encrypt(userName, Tva.Security.Cryptography.EncryptLevel.Level4))
+                                    credentialCookie.Values.Add("p", Tva.Security.Cryptography.Common.Encrypt(password, Tva.Security.Cryptography.EncryptLevel.Level4))
+                                    Response.Cookies.Add(credentialCookie)
+
+                                    Response.Redirect(returnUrl, False)
+
+                                Else
+                                    If Not conn.State = ConnectionState.Open Then
+                                        conn.Open()
+                                    End If
+                                    ExecuteNonQuery("LogAccess", conn, userName, Session("ApplicationName"), True)
+                                    Response.Redirect("ErrorPage.aspx?t=1", False)
+
+                                End If
+
+                            End If
+
+                        Else
+                            If Not conn.State = ConnectionState.Open Then
+                                conn.Open()
+                            End If
+                            ExecuteNonQuery("LogAccess", conn, userName, Session("ApplicationName"), True)
+                            Response.Redirect("ErrorPage.aspx?t=0", False)
+
+                        End If
+                    Else
+                        If Not conn.State = ConnectionState.Open Then
+                            conn.Open()
+                        End If
+                        ExecuteNonQuery("LogAccess", conn, userName, Session("ApplicationName"), True)
+                        Response.Redirect("ErrorPage.aspx?t=2", False)
+
+                    End If
+
+                Else
+                    'If Not conn.State = ConnectionState.Open Then
+                    '    conn.Open()
+                    'End If
+                    'ExecuteNonQuery("LogAccess", conn, userName, Session("ApplicationName"), True)
+                    Session("LoginAttempts") += 1
+                    If Session("LoginAttempts") > GetMaxLoginAttempts() Then
+                        LockUser(userName)
+                        Response.Redirect("ErrorPage.aspx?t=2", False)
+                    End If
+                    Me.LabelError.Text = "Login Failed. Please try again."
+
+                End If
+
+            End With
+
+        Catch sqlEx As SqlException
+            If sqlEx.Number = 18456 Then
+                Me.LabelError.Text = "Error occured while connecting to the database. We will not be able to process your request. Please try again later."
+            Else
+                'Log into the error log.
+                If Not conn.State = ConnectionState.Open Then
+                    conn.Open()
+                End If
+
+                Try
+                    ExecuteNonQuery("LogError", conn, Session("ApplicationName"), "Login.aspx LoginClick()", sqlEx.ToString)
+                Catch
+                    Response.Redirect("ErrorPage.aspx", False)
+                End Try
+
+                Response.Redirect("ErrorPage.aspx", False)
+            End If
+
+        Catch ex As Exception
+            'Log into the error log.
+            If Not conn.State = ConnectionState.Open Then
+                conn.Open()
+            End If
+
+            Try
+                ExecuteNonQuery("LogError", conn, Session("ApplicationName"), "Login.aspx LoginClick()", ex.ToString)
+            Catch
+                Response.Redirect("ErrorPage.aspx", False)
+            End Try
+
+            Response.Redirect("ErrorPage.aspx", False)
+
+        Finally
+            If conn.State = ConnectionState.Open Then
+                conn.Close()
+            End If
+
+        End Try
+
+    End Sub
+
+    Private Sub LockUser(ByVal userName As String)
+        Dim conn As New SqlConnection(Session("ConnectionString").ToString)
+        Try
+            If Not conn.State = ConnectionState.Open Then
+                conn.Open()
+            End If
+
+            Dim qStr As String = "Update Users Set UserIsLockedOut = '1' Where UserName = '" & userName & "'"
+            ExecuteNonQuery(qStr, conn)
+
+        Catch sqlEx As SqlException
+            If sqlEx.Number = 18456 Then
+                Me.LabelError.Text = "Error occured while connecting to the database. We will not be able to process your request. Please try again later."
+            Else
+                'Log into the error log.
+                If Not conn.State = ConnectionState.Open Then
+                    conn.Open()
+                End If
+
+                ExecuteNonQuery("LogError", conn, Session("ApplicationName"), "Login.aspx LockUser()", sqlEx.ToString)
+
+                Response.Redirect("ErrorPage.aspx", True)
+            End If
+
+        Catch ex As Exception
+            'Log into the error log.
+            If Not conn.State = ConnectionState.Open Then
+                conn.Open()
+            End If
+
+            ExecuteNonQuery("LogError", conn, Session("ApplicationName"), "Login.aspx LockUser()", ex.ToString)
+
+            Response.Redirect("ErrorPage.aspx", True)
+
+        Finally
+            If conn.State = ConnectionState.Open Then
+                conn.Close()
+            End If
+
+        End Try
+    End Sub
+
+    Private Function GetMaxLoginAttempts() As Integer
+        'Get maxumum number of login attempts allowed.
+        Dim conn As New SqlConnection(Session("ConnectionString").ToString)
+        Dim maxLoginAttempts As Integer = 0
+        Try
+            If Not conn.State = ConnectionState.Open Then
+                conn.Open()
+            End If
+
+            maxLoginAttempts = ExecuteScalar("Select SettingValue From Settings Where SettingName = 'Security.MaxLoginAttempts'", conn)
+
+        Catch sqlEx As SqlException
+            If sqlEx.Number = 18456 Then
+                Me.LabelError.Text = "Error occured while connecting to the database. We will not be able to process your request. Please try again later."
+            Else
+                'Log into the error log.
+                If Not conn.State = ConnectionState.Open Then
+                    conn.Open()
+                End If
+
+                ExecuteNonQuery("LogError", conn, Session("ApplicationName"), "Login.aspx GettinMaxLoginAttempts()", sqlEx.ToString)
+
+                Response.Redirect("ErrorPage.aspx", False)
+            End If
+
+        Catch ex As Exception
+            'Log into the error log.
+            If Not conn.State = ConnectionState.Open Then
+                conn.Open()
+            End If
+
+            ExecuteNonQuery("LogError", conn, Session("ApplicationName"), "Login.aspx GettinMaxLoginAttempts()", ex.ToString)
+
+            Response.Redirect("ErrorPage.aspx", False)
+
+        Finally
+            If conn.State = ConnectionState.Open Then
+                conn.Close()
+            End If
+
+        End Try
+
+        Return maxLoginAttempts
+
+    End Function
+
+End Class

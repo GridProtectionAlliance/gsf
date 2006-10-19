@@ -1,0 +1,103 @@
+﻿body 
+{
+	margin-top: 0;
+	margin-left: 0;
+	margin-right:0;
+	font-family: Verdana;
+}
+
+table
+{
+	font-family: Verdana;	
+}
+
+.HeadingLabel
+{
+	font-family: Franklin Gothic Medium;
+	font-size: 1.1em;
+	color: #FFFFFF;
+}
+
+.BoldLabel
+{
+	font-family: Tahoma;
+	font-size: .8em;
+	font-weight:bold;
+	color: #FFFFFF;
+}
+
+.Label
+{
+	font-family: Tahoma;
+	font-size: .7em;
+	color: #000000;
+}
+
+.SmallLabel
+{
+	color: #ffffff;
+	font-family:Tahoma;
+	font-size: .7em;
+}
+
+.PageHeader
+{
+	background-image: url(Images/HeaderGradient.gif);
+	background-repeat: repeat-x;
+	background-position: left top;
+}
+
+a.helpHyperLink:hover {
+	color: #ffffff;
+	font-family:Tahoma;
+	font-size: .7em;
+}
+
+a.helpHyperLink:link {
+	color: #ffffff;
+	font-family:Tahoma;
+	font-size: .7em;
+}
+a.helpHyperLink:visited {
+	color: #ffffff;
+	font-family:Tahoma;
+	font-size: .7em;
+}
+
+.buttonCell { 
+    background-color: #77AADD;
+    padding-right:20; 
+}
+
+.buttonRow {     
+    padding-left:30; 
+} 
+
+.buttonText 
+{
+	font-family: Tahoma;
+	font-size: .7em;
+	font-weight: bold;
+	width: 75px;
+}
+
+.whiteCell
+{
+	background-color: White;
+}
+
+.TextBox
+{
+	font-family: Tahoma;
+	font-size: .7em;
+}
+
+.Error
+{
+	font-family: Tahoma;
+	font-size: .7em;
+	color: #C00000;
+	font-weight:bold;
+}
+	
+
