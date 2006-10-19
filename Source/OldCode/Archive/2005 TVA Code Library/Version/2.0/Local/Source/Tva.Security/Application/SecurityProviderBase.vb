@@ -77,7 +77,7 @@ Namespace Application
 
             If Not String.IsNullOrEmpty(m_applicationName) Then
                 ' This is the best way of getting the current user's NT ID both in windows and web environments.
-                Dim userLoginID As String = System.Threading.Thread.CurrentPrincipal.Identity.Name
+                Dim userLoginID As String = "" 'System.Threading.Thread.CurrentPrincipal.Identity.Name
                 If Not String.IsNullOrEmpty(userLoginID) Then
                     ' User is internal since we have his/her login ID.
                     InitializeUser(userLoginID.Split("\"c)(1))

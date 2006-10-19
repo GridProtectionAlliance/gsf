@@ -26,8 +26,6 @@ Namespace Application
         Private m_roles As List(Of Role)
         Private m_applications As List(Of Application)
 
-        Private Const CryptoKey As String = "c7d8f9d6-bfff-4a74-bcf6-64ea7c3e3d7a"
-
         Public Sub New(ByVal username As String, ByVal dbConnection As SqlConnection)
 
             MyClass.New(username, Nothing, dbConnection)
@@ -237,7 +235,8 @@ Namespace Application
 
         Public Shared Function EncryptPassword(ByVal password As String) As String
 
-            Return Tva.Security.Cryptography.Common.Encrypt(password, CryptoKey, Security.Cryptography.EncryptLevel.Level4)
+            ' We prepend salt text to the password and then has it to make it even more secure.
+            Return System.Web.Security.FormsAuthentication.HashPasswordForStoringInConfigFile("O3990\P78f9E66b:a35_V©6M13©6~2&[" & password, "SHA1")
 
         End Function
 

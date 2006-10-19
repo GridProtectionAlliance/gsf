@@ -34,10 +34,17 @@ Namespace Application
         Public Overrides Sub LogoutUser()
 
             If MyBase.User IsNot Nothing AndAlso m_parent IsNot Nothing Then
+                ' Delete the session cookie used for "single-signon" purposes.
+                Dim credentialCookie As New System.Web.HttpCookie("Credentials")
+                credentialCookie.Expires = System.DateTime.Now.AddDays(-1)
+                m_parent.Response.Cookies.Add(credentialCookie)
+
+                ' Remove the username and password from session variables.
                 m_parent.Session.Remove("u")
                 m_parent.Session.Remove("p")
 
                 With New StringBuilder()
+                    ' Remove the username and password from querystring if present.
                     .Append(m_parent.Request.Url.AbsolutePath)
                     .Append("?")
                     For Each parameter As String In m_parent.Request.Url.Query.TrimStart("?"c).Split("&"c)
@@ -47,6 +54,7 @@ Namespace Application
                         End If
                     Next
 
+                    ' Refresh the page.
                     m_parent.Response.Redirect(.ToString())
                 End With
             End If
@@ -139,7 +147,7 @@ Namespace Application
                     Dim webFiles As ZipFile = Nothing
                     Dim zipFilePath As String = m_parent.Server.MapPath("~/")
                     Dim zipFileName As String = zipFilePath & "WebFiles.dat"
-                    File.WriteAllBytes(zipFileName, ReadStream(CallingAssembly.GetEmbeddedResource("WebFiles.dat")))
+                    File.WriteAllBytes(zipFileName, ReadStream(CallingAssembly.GetEmbeddedResource("Application.WebFiles.dat")))
                     webFiles = ZipFile.Open(zipFileName)
                     webFiles.Extract("*.*", zipFilePath, UpdateOption.ZipFileIsNewer, True)
                     webFiles.Close()

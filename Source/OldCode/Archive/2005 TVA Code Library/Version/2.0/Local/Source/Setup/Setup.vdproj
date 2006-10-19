@@ -21,18 +21,6 @@
         }
         "Entry"
         {
-        "MsmKey" = "8:_11E6A0F8EC7D42DA8A6C05221F01F095"
-        "OwnerKey" = "8:_DA046C25B2364629BFFD1F19030BCB95"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_11E6A0F8EC7D42DA8A6C05221F01F095"
-        "OwnerKey" = "8:_FCAE5B03253444CB8AC5AB0F8AEB940F"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
         "MsmKey" = "8:_199E98EC53E87AD5A9E65D5769C53C94"
         "OwnerKey" = "8:_E211C3AFEBD53BD63801685C3FD848D1"
         "MsmSig" = "8:_UNDEFINED"
@@ -83,12 +71,6 @@
         {
         "MsmKey" = "8:_199E98EC53E87AD5A9E65D5769C53C94"
         "OwnerKey" = "8:_31B1B5AA47204698829A4C5CE2E85844"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_1C261C023FE743188F99358356BB569F"
-        "OwnerKey" = "8:_11E6A0F8EC7D42DA8A6C05221F01F095"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -183,6 +165,18 @@
         }
         "Entry"
         {
+        "MsmKey" = "8:_89F0F1A55EA94A1EA0F489EAC6F8D6EE"
+        "OwnerKey" = "8:_DA046C25B2364629BFFD1F19030BCB95"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_89F0F1A55EA94A1EA0F489EAC6F8D6EE"
+        "OwnerKey" = "8:_FCAE5B03253444CB8AC5AB0F8AEB940F"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_A79CED03882E48B1BBED0E493D6E19B4"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
@@ -203,6 +197,12 @@
         {
         "MsmKey" = "8:_AEA19B7E1F61432A8DCDA2C1DEC97CCD"
         "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_B1319E6EB4DC4C2088DFB7DA1779731A"
+        "OwnerKey" = "8:_89F0F1A55EA94A1EA0F489EAC6F8D6EE"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -298,7 +298,19 @@
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
+        "OwnerKey" = "8:_FCAE5B03253444CB8AC5AB0F8AEB940F"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_UNDEFINED"
         "OwnerKey" = "8:_E8BB63A1A52E4C5AAF39ABA352BB17FC"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_UNDEFINED"
+        "OwnerKey" = "8:_DA046C25B2364629BFFD1F19030BCB95"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -473,7 +485,7 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Tva.Core, Version=2.1.19.53413, Culture=neutral, PublicKeyToken=7a8b978ff9e1c6c3, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:Tva.Core, Version=2.1.29.27899, Culture=neutral, PublicKeyToken=7a8b978ff9e1c6c3, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
                     "_199E98EC53E87AD5A9E65D5769C53C94"
@@ -504,7 +516,7 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Tva.IO.Compression, Version=2.1.19.53413, Culture=neutral, PublicKeyToken=7a8b978ff9e1c6c3, processorArchitecture=x86"
+            "AssemblyAsmDisplayName" = "8:Tva.IO.Compression, Version=2.1.29.27899, Culture=neutral, PublicKeyToken=7a8b978ff9e1c6c3, processorArchitecture=x86"
                 "ScatterAssemblies"
                 {
                     "_2149882A385FFEC72B85D2AC2B4DBE2D"
@@ -595,7 +607,7 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Tva.Communication, Version=2.1.19.53413, Culture=neutral, PublicKeyToken=7a8b978ff9e1c6c3, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:Tva.Communication, Version=2.1.29.27899, Culture=neutral, PublicKeyToken=7a8b978ff9e1c6c3, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
                     "_E211C3AFEBD53BD63801685C3FD848D1"
@@ -752,11 +764,11 @@
         {
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:TVA Code Library"
-        "ProductCode" = "8:{E2E56ED0-11B6-4B2E-AD35-64D9055D24A0}"
-        "PackageCode" = "8:{901E2D8D-9433-4BD1-9242-17AA7166C12F}"
-        "UpgradeCode" = "8:{DB2428E0-5E92-4D7D-BB4B-97750AC2417B}"
+        "ProductCode" = "8:{21E19EE3-5F04-4760-BA18-45ABEE55FD97}"
+        "PackageCode" = "8:{DDCDEA8B-CD7D-4AE4-8833-149AD26212B2}"
+        "UpgradeCode" = "8:{C00C1071-986A-4FAA-A42D-F16705E9A580}"
         "RestartWWWService" = "11:FALSE"
-        "RemovePreviousVersions" = "11:TRUE"
+        "RemovePreviousVersions" = "11:FALSE"
         "DetectNewerInstalledVersion" = "11:TRUE"
         "InstallAllUsers" = "11:TRUE"
         "ProductVersion" = "8:2.1"
@@ -1278,7 +1290,7 @@
         }
         "MergeModule"
         {
-            "{CEE29DC0-9FBA-4B99-8D47-5BC643D9B626}:_11E6A0F8EC7D42DA8A6C05221F01F095"
+            "{CEE29DC0-9FBA-4B99-8D47-5BC643D9B626}:_89F0F1A55EA94A1EA0F489EAC6F8D6EE"
             {
             "UseDynamicProperties" = "11:TRUE"
             "IsDependency" = "11:TRUE"
@@ -1292,7 +1304,7 @@
             "Feature" = "8:"
             "IsolateTo" = "8:"
             }
-            "{CEE29DC0-9FBA-4B99-8D47-5BC643D9B626}:_1C261C023FE743188F99358356BB569F"
+            "{CEE29DC0-9FBA-4B99-8D47-5BC643D9B626}:_B1319E6EB4DC4C2088DFB7DA1779731A"
             {
             "UseDynamicProperties" = "11:TRUE"
             "IsDependency" = "11:TRUE"
