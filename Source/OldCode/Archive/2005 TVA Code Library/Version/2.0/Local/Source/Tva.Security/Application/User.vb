@@ -23,6 +23,7 @@ Namespace Application
         Private m_joinedDateTime As System.DateTime
         Private m_isAuthenticated As Boolean
         Private m_exists As Boolean
+        Private m_groups As List(Of Group)
         Private m_roles As List(Of Role)
         Private m_applications As List(Of Application)
 
@@ -88,6 +89,7 @@ Namespace Application
                             m_isAuthenticated = True
                         End If
                     End If
+                    PopulateGroups(dbConnection)
                     PopulateApplicationsAndRoles(dbConnection)
                 End If
             End If
@@ -182,6 +184,12 @@ Namespace Application
             End Get
         End Property
 
+        Public ReadOnly Property Groups() As List(Of Group)
+            Get
+                Return m_groups
+            End Get
+        End Property
+
         Public ReadOnly Property Roles() As List(Of Role)
             Get
                 Return m_roles
@@ -193,6 +201,20 @@ Namespace Application
                 Return m_applications
             End Get
         End Property
+
+        Public Function FindGroup(ByVal groupName As String) As Group
+
+            If m_groups IsNot Nothing Then
+                For i As Integer = 0 To m_groups.Count - 1
+                    If String.Compare(m_groups(i).Name, groupName, True) = 0 Then
+                        ' User does belong to the specified group.
+                        Return m_groups(i)
+                    End If
+                Next
+            End If
+            Return Nothing
+
+        End Function
 
         Public Function FindRole(ByVal roleName As String) As Role
 
@@ -242,13 +264,28 @@ Namespace Application
 
 #Region " Private Methods "
 
+        Private Sub PopulateGroups(ByVal dbConnection As SqlConnection)
+
+            m_groups = New List(Of Group)
+
+            Dim sql As String = "SELECT * FROM dbo.GetUserGroups('" & m_username & "')"
+            Dim userGroups As DataTable = RetrieveData(sql, dbConnection)
+            If userGroups IsNot Nothing AndAlso userGroups.Rows.Count > 0 Then
+                For i As Integer = 0 To userGroups.Rows.Count - 1
+                    m_groups.Add(New Group(userGroups.Rows(i)("GroupName").ToString(), userGroups.Rows(i)("GroupDescription").ToString()))
+                Next
+            End If
+
+        End Sub
+
         Private Sub PopulateApplicationsAndRoles(ByVal dbConnection As SqlConnection)
+
+            m_roles = New List(Of Role)
+            m_applications = New List(Of Application)
 
             Dim sql As String = "SELECT * FROM dbo.GetUserRoles('" & m_username & "')"
             Dim userRoles As DataTable = RetrieveData(sql, dbConnection)
             If userRoles IsNot Nothing AndAlso userRoles.Rows.Count > 0 Then
-                m_roles = New List(Of Role)
-                m_applications = New List(Of Application)
                 For i As Integer = 0 To userRoles.Rows.Count - 1
                     Dim application As New Application(userRoles.Rows(i)("ApplicationName").ToString(), userRoles.Rows(i)("ApplicationDescription").ToString())
                     m_roles.Add(New Role(userRoles.Rows(i)("RoleName").ToString(), userRoles.Rows(i)("RoleDescription").ToString(), application))

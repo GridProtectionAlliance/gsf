@@ -63,6 +63,7 @@
     </Compile>
     <Compile Include="Application\Application.vb" />
     <Compile Include="Application\Enumerations.vb" />
+    <Compile Include="Application\Group.vb" />
     <Compile Include="Application\Role.vb" />
     <Compile Include="Application\SecurityProviderBase.Designer.vb">
       <DependentUpon>SecurityProviderBase.vb</DependentUpon>
