@@ -121,12 +121,11 @@ Public Class ServiceProcess
     Private Sub InvokeExecutionMethod()
 
         If m_executionMethod IsNot Nothing Then
-            Me.CurrentState = ProcessState.Processing
-            Dim startTime As Long = System.DateTime.Now.Ticks
+            CurrentState = ProcessState.Processing
+            Dim startTime As Long = Date.Now.Ticks
             m_executionMethod.Invoke(m_name, m_parameters)
-            Dim stopTime As Long = System.DateTime.Now.Ticks
-            m_lastExecutionTime = TicksToSeconds(stopTime - startTime)
-            Me.CurrentState = ProcessState.Processed
+            m_lastExecutionTime = TicksToSeconds(Date.Now.Ticks - startTime)
+            CurrentState = ProcessState.Processed
         End If
         m_processThread = Nothing
 

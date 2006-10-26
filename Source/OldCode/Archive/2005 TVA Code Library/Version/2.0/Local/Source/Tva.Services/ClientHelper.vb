@@ -78,6 +78,28 @@ Public Class ClientHelper
 
     End Sub
 
+    Public Sub UpdateStatus(ByVal message As String, ByVal showDateTime As Boolean, ByVal prependedCrlf As Integer, ByVal appendedCrlf As Integer)
+
+        With New StringBuilder()
+            For i As Integer = 0 To prependedCrlf - 1
+                .Append(Environment.NewLine)
+            Next
+            If showDateTime Then
+                .Append("[")
+                .Append(System.DateTime.Now.ToString())
+                .Append("] ")
+                .Append(Environment.NewLine)
+            End If
+            .Append(message)
+            For i As Integer = 0 To appendedCrlf - 1
+                .Append(Environment.NewLine)
+            Next
+
+            RaiseEvent UpdateClientStatus(.ToString())
+        End With
+
+    End Sub
+
 #Region " TcpClient Events "
 
     Private Sub CHTcpClient_Connected(ByVal sender As Object, ByVal e As System.EventArgs) Handles CHTcpClient.Connected
@@ -153,33 +175,6 @@ Public Class ClientHelper
                     End If
             End Select
         End If
-
-    End Sub
-
-#End Region
-
-#Region " Private Methods "
-
-    Private Sub UpdateStatus(ByVal message As String, ByVal showDateTime As Boolean, _
-            ByVal prependedCrlf As Integer, ByVal appendedCrlf As Integer)
-
-        With New StringBuilder()
-            For i As Integer = 0 To prependedCrlf - 1
-                .Append(Environment.NewLine)
-            Next
-            If showDateTime Then
-                .Append("[")
-                .Append(System.DateTime.Now.ToString())
-                .Append("] ")
-                .Append(Environment.NewLine)
-            End If
-            .Append(message)
-            For i As Integer = 0 To appendedCrlf - 1
-                .Append(Environment.NewLine)
-            Next
-
-            RaiseEvent UpdateClientStatus(.ToString())
-        End With
 
     End Sub
 

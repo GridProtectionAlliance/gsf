@@ -12,6 +12,9 @@
 '  -----------------------------------------------------------------------------------------------------
 '  08/29/2006 - Pinal C. Patel
 '       Original version of source code generated
+'  10/26/2006 - J. Ritchie Carroll
+'       Modified TryParse to make sure extraneous spaces were removed from command string and
+'       made all command parameters upper-case for easier compare
 '
 '*******************************************************************************************************
 
@@ -93,19 +96,27 @@ Public Class ClientRequest
         End Set
     End Property
 
-    Public Shared Function TryParse(ByVal command As String, ByRef result As ClientRequest) As Boolean
+    ''' <summary>
+    ''' Parses a command string into a type and parameters array
+    ''' </summary>
+    ''' <param name="command">Command string to parse</param>
+    ''' <param name="request">Parsed command string results</param>
+    ''' <returns>True if parse succeeded</returns>
+    ''' <remarks>All parsed items in command string will be stored in upper-case</remarks>
+    Public Shared Function TryParse(ByVal command As String, ByRef request As ClientRequest) As Boolean
+
         If Not String.IsNullOrEmpty(command) Then
-            Dim request As New ClientRequest()
-            Dim commandSegments As String() = command.Split(" "c)
+            Dim commandSegments As String() = RemoveDuplicateWhiteSpace(command.Trim().ToUpper()).Split(" "c)
 
             If commandSegments.Length > 0 Then
-                request.Type = commandSegments(0).ToUpper()
+                request = New ClientRequest()
+                request.Type = commandSegments(0)
+
                 If commandSegments.Length > 1 Then
                     request.Parameters = CreateArray(Of String)(commandSegments.Length - 1)
                     Array.ConstrainedCopy(commandSegments, 1, request.Parameters, 0, request.Parameters.Length)
                 End If
 
-                result = request
                 Return True
             End If
         End If

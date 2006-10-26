@@ -13,29 +13,32 @@ Imports Tva.Serialization
 <ToolboxBitmap(GetType(ServiceHelper))> _
 Public Class ServiceHelper
 
+    Public Delegate Sub StartedEvent(ByVal args As String())
+    Public Delegate Sub StoppedEvent()
+
     Private m_service As ServiceBase
     Private m_processes As Dictionary(Of String, ServiceProcess)
     Private m_clientInfo As Dictionary(Of Guid, ClientInfo)
     Private m_serviceComponents As List(Of IServiceComponent)
-    Private m_startedEventHandlerList As List(Of EventHandler)
-    Private m_stoppedEventHandlerList As List(Of EventHandler)
+    Private m_startedEventHandlerList As List(Of StartedEvent)
+    Private m_stoppedEventHandlerList As List(Of StoppedEvent)
 
     ''' <summary>
     ''' Occurs when the service has started.
     ''' </summary>
     ''' <remarks>This is a non-blocking event.</remarks>
-    Public Custom Event Started As EventHandler
-        AddHandler(ByVal value As EventHandler)
+    Public Custom Event Started As StartedEvent
+        AddHandler(ByVal value As StartedEvent)
             m_startedEventHandlerList.Add(value)
         End AddHandler
 
-        RemoveHandler(ByVal value As EventHandler)
+        RemoveHandler(ByVal value As StartedEvent)
             m_startedEventHandlerList.Remove(value)
         End RemoveHandler
 
-        RaiseEvent(ByVal sender As Object, ByVal e As System.EventArgs)
-            For Each handler As EventHandler In m_startedEventHandlerList
-                handler.BeginInvoke(sender, e, Nothing, Nothing)
+        RaiseEvent(ByVal args As String())
+            For Each handler As StartedEvent In m_startedEventHandlerList
+                handler.BeginInvoke(args, Nothing, Nothing)
             Next
         End RaiseEvent
     End Event
@@ -44,18 +47,18 @@ Public Class ServiceHelper
     ''' Occurs when the service has stopped.
     ''' </summary>
     ''' <remarks>This is a non-blocking event.</remarks>
-    Public Custom Event Stopped As EventHandler
-        AddHandler(ByVal value As EventHandler)
-            m_startedEventHandlerList.Add(value)
+    Public Custom Event Stopped As StoppedEvent
+        AddHandler(ByVal value As StoppedEvent)
+            m_stoppedEventHandlerList.Add(value)
         End AddHandler
 
-        RemoveHandler(ByVal value As EventHandler)
-            m_startedEventHandlerList.Remove(value)
+        RemoveHandler(ByVal value As StoppedEvent)
+            m_stoppedEventHandlerList.Remove(value)
         End RemoveHandler
 
-        RaiseEvent(ByVal sender As Object, ByVal e As System.EventArgs)
-            For Each handler As EventHandler In m_startedEventHandlerList
-                handler.BeginInvoke(sender, e, Nothing, Nothing)
+        RaiseEvent()
+            For Each handler As StoppedEvent In m_stoppedEventHandlerList
+                handler.BeginInvoke(Nothing, Nothing)
             Next
         End RaiseEvent
     End Event
@@ -63,17 +66,17 @@ Public Class ServiceHelper
     ''' <summary>
     ''' Occurs when the service is paused.
     ''' </summary>
-    Public Event Paused As EventHandler
+    Public Event Paused()
 
     ''' <summary>
     ''' Occurs when the service is resumed.
     ''' </summary>
-    Public Event Resumed As EventHandler
+    Public Event Resumed()
 
     ''' <summary>
     ''' Occurs when the system is being shutdowm.
     ''' </summary>
-    Public Event Shutdown As EventHandler
+    Public Event Shutdown()
 
     ''' <summary>
     ''' Occurs when a request is received from a client.
@@ -154,7 +157,8 @@ Public Class ServiceHelper
     ''' <summary>
     ''' To be called when the service is starts (inside the service's OnStart method).
     ''' </summary>
-    Public Sub OnStart()
+    <EditorBrowsable(EditorBrowsableState.Advanced)> _
+    Public Sub OnStart(ByVal args As String())
 
         SendServiceStateChangedResponse(ServiceState.Started)
 
@@ -162,13 +166,14 @@ Public Class ServiceHelper
             component.ServiceStateChanged(ServiceState.Started)
         Next
 
-        RaiseEvent Started(Me, EventArgs.Empty)
+        RaiseEvent Started(args)
 
     End Sub
 
     ''' <summary>
     ''' To be called when the service is stopped (inside the service's OnStop method).
     ''' </summary>
+    <EditorBrowsable(EditorBrowsableState.Advanced)> _
     Public Sub OnStop()
 
         SendServiceStateChangedResponse(ServiceState.Stopped)
@@ -177,13 +182,14 @@ Public Class ServiceHelper
             component.ServiceStateChanged(ServiceState.Stopped)
         Next
 
-        RaiseEvent Stopped(Me, EventArgs.Empty)
+        RaiseEvent Stopped()
 
     End Sub
 
     ''' <summary>
     ''' To be called when the service is paused (inside the service's OnPause method).
     ''' </summary>
+    <EditorBrowsable(EditorBrowsableState.Advanced)> _
     Public Sub OnPause()
 
         SendServiceStateChangedResponse(ServiceState.Paused)
@@ -192,13 +198,14 @@ Public Class ServiceHelper
             component.ServiceStateChanged(ServiceState.Paused)
         Next
 
-        RaiseEvent Paused(Me, EventArgs.Empty)
+        RaiseEvent Paused()
 
     End Sub
 
     ''' <summary>
     ''' To be called when the service is resumed (inside the service's OnContinue method).
     ''' </summary>
+    <EditorBrowsable(EditorBrowsableState.Advanced)> _
     Public Sub OnResume()
 
         SendServiceStateChangedResponse(ServiceState.Resumed)
@@ -207,13 +214,14 @@ Public Class ServiceHelper
             component.ServiceStateChanged(ServiceState.Resumed)
         Next
 
-        RaiseEvent Resumed(Me, EventArgs.Empty)
+        RaiseEvent Resumed()
 
     End Sub
 
     ''' <summary>
     ''' To be when the system is shutting down (inside the service's OnShutdown method).
     ''' </summary>
+    <EditorBrowsable(EditorBrowsableState.Advanced)> _
     Public Sub OnShutdown()
 
         SendServiceStateChangedResponse(ServiceState.Shutdown)
@@ -222,7 +230,7 @@ Public Class ServiceHelper
             component.ServiceStateChanged(ServiceState.Shutdown)
         Next
 
-        RaiseEvent Shutdown(Me, EventArgs.Empty)
+        RaiseEvent Shutdown()
 
     End Sub
 
@@ -251,7 +259,8 @@ Public Class ServiceHelper
     Public Sub AddProcess(ByVal processExecutionMethod As ServiceProcess.ExecutionMethodSignature, _
             ByVal processName As String, ByVal processParameters As Object())
 
-        processName = processName.ToUpper()
+        processName = processName.ToUpper().Trim()
+
         If Not m_processes.ContainsKey(processName) Then
             m_processes.Add(processName, New ServiceProcess(processExecutionMethod, processName, processParameters, Me))
         Else
@@ -277,7 +286,8 @@ Public Class ServiceHelper
 
     Public Sub ScheduleProcess(ByVal processName As String, ByVal processSchedule As String)
 
-        processName = processName.ToUpper()
+        processName = processName.ToUpper().Trim()
+
         If m_processes.ContainsKey(processName) Then
             Dim schedule As Schedule = Nothing
             If SHScheduleManager.Schedules.TryGetValue(processName, schedule) Then
@@ -355,15 +365,15 @@ Public Class ServiceHelper
                         HandleStartProcessRequest(request)
                     Case "ABORT", "ABORTPROCESS"
                         HandleAbortProcessRequest(request)
-                    Case "UNSCHEDULEPROCESS"
+                    Case "RESCHEDULE", "RESCHEDULEPROCESS"
 
-                    Case "RESCHEDULEPROCESS"
+                    Case "UNSCHEDULE", "UNSCHEDULEPROCESS"
 
-                    Case "LISTPROCESSES"
+                    Case "PROCESSES", "LISTPROCESSES"
                         HandleListProcessesRequest()
-                    Case "LISTCLIENTS", "LISTALLCLIENTS"
+                    Case "CLIENTS", "LISTCLIENTS", "LISTALLCLIENTS"
                         'HandleListClientsRequest()
-                    Case "GETSERVICESTATUS"
+                    Case "STATUS", "GETSERVICESTATUS"
                         'HandlePingServiceRequest()
                     Case "GETPROCESSSTATUS"
                         'HandleProcessStatusRequest()
@@ -371,12 +381,14 @@ Public Class ServiceHelper
                         'HandleCommandHistoryRequest()
                     Case "GETDIRECTORYLISTING"
 
-                    Case "LISTSETTINGS"
+                    Case "SETTINGS", "LISTSETTINGS"
 
-                    Case "UPDATESETTING"
+                    Case "SETTING", "UPDATESETTING"
 
                     Case "SAVESETTINGS"
 
+                    Case "PING", "PINGSERVICE"
+                    Case "PINGALL", "PINGCLIENTS"
                     Case Else
                         ' "PINGSERVICE", "PINGALLCLIENTS"
                         HandleInvalidClientRequest(request)
@@ -461,8 +473,9 @@ Public Class ServiceHelper
     Private Sub HandleAbortProcessRequest(ByVal request As ClientRequest)
 
         If request.Parameters IsNot Nothing AndAlso request.Parameters.Length > 0 Then
-            Dim processName As String = request.Parameters(0).ToUpper()
+            Dim processName As String = request.Parameters(0).ToUpper().Trim()
             Dim process As ServiceProcess = Nothing
+
             If m_processes.TryGetValue(processName, process) Then
                 process.AbortProcess()
             Else
