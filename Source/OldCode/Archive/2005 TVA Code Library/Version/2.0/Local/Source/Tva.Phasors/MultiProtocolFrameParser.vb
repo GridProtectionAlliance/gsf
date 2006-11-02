@@ -44,7 +44,7 @@ Public Class MultiProtocolFrameParser
     Public Event ReceivedFrameBufferImage(ByVal frameType As FundamentalFrameType, ByVal binaryImage As Byte(), ByVal offset As Integer, ByVal length As Integer) Implements IFrameParser.ReceivedFrameBufferImage
     Public Event ConfigurationChanged() Implements IFrameParser.ConfigurationChanged
     Public Event DataStreamException(ByVal ex As Exception) Implements IFrameParser.DataStreamException
-    Public Event ConnectionException(ByVal ex As Exception)
+    Public Event ConnectionException(ByVal ex As Exception, ByVal connectionAttempts As Integer)
     Public Event AttemptingConnection()
     Public Event Connected()
     Public Event Disconnected()
@@ -576,9 +576,9 @@ Public Class MultiProtocolFrameParser
 
     End Sub
 
-    Private Sub m_communicationClient_ConnectingException(ByVal ex As System.Exception) Handles m_communicationClient.ConnectingException
+    Private Sub m_communicationClient_ConnectingException(ByVal ex As System.Exception, ByVal connectionAttempts As Integer) Handles m_communicationClient.ConnectingException
 
-        RaiseEvent ConnectionException(ex)
+        RaiseEvent ConnectionException(ex, connectionAttempts)
 
     End Sub
 

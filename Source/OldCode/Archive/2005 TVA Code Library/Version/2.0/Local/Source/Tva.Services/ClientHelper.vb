@@ -115,10 +115,10 @@ Public Class ClientHelper
 
     End Sub
 
-    Private Sub CHTcpClient_ConnectingException(ByVal ex As System.Exception) Handles CHTcpClient.ConnectingException
+    Private Sub CHTcpClient_ConnectingException(ByVal ex As System.Exception, ByVal connectionAttempts As Integer) Handles CHTcpClient.ConnectingException
 
         With New StringBuilder()
-            .Append("Failed to connect to the service due to an exception:")
+            .Append("Failed to connect to the service on attempt " & connectionAttempts & "due to an exception:")
             .Append(Environment.NewLine)
             .Append(ex.Message)
 

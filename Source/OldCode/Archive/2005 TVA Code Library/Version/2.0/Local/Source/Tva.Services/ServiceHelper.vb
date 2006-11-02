@@ -366,9 +366,9 @@ Public Class ServiceHelper
                     Case "ABORT", "ABORTPROCESS"
                         HandleAbortProcessRequest(request)
                     Case "RESCHEDULE", "RESCHEDULEPROCESS"
-
+                        'HandleRescheduleProcessRequest(request)
                     Case "UNSCHEDULE", "UNSCHEDULEPROCESS"
-
+                        'HandleUnscheduleProcessRequest(request)
                     Case "PROCESSES", "LISTPROCESSES"
                         HandleListProcessesRequest()
                     Case "CLIENTS", "LISTCLIENTS", "LISTALLCLIENTS"
@@ -379,8 +379,8 @@ Public Class ServiceHelper
                         'HandleProcessStatusRequest()
                     Case "GETCOMMANDHISTORY"
                         'HandleCommandHistoryRequest()
-                    Case "GETDIRECTORYLISTING"
-
+                    Case "DIR", "GETDIRECTORYLISTING"
+                        'HandleDirectoryListingRequest()
                     Case "SETTINGS", "LISTSETTINGS"
 
                     Case "SETTING", "UPDATESETTING"
