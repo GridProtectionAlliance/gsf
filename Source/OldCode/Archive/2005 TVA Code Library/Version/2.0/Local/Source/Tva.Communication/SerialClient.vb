@@ -140,6 +140,7 @@ Public Class SerialClient
     Private Sub ConnectToPort()
 
         Dim connectionAttempts As Integer = 0
+
         Do While MaximumConnectionAttempts = -1 OrElse connectionAttempts < MaximumConnectionAttempts
             Try
                 OnConnecting(EventArgs.Empty)
@@ -150,11 +151,12 @@ Public Class SerialClient
             Catch ex As ThreadAbortException
                 Exit Do
             Catch ex As Exception
-                OnConnectingException(ex)
+                OnConnectingException(ex, connectionAttempts + 1)
             Finally
                 connectionAttempts += 1
             End Try
         Loop
+
         m_connectionThread = Nothing
 
     End Sub

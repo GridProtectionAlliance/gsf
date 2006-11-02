@@ -161,8 +161,8 @@ Public Class TcpClient
     Private Sub ConnectToServer()
 
         Dim connectionAttempts As Integer = 0
-        Do While (MaximumConnectionAttempts() = -1) OrElse _
-                (connectionAttempts < MaximumConnectionAttempts())
+
+        Do While MaximumConnectionAttempts = -1 OrElse connectionAttempts < MaximumConnectionAttempts
             Try
                 OnConnecting(EventArgs.Empty)   ' Notify that the client is connecting to the server.
 
@@ -192,7 +192,7 @@ Public Class TcpClient
                 Exit Do
             Catch ex As Exception
                 connectionAttempts += 1
-                OnConnectingException(ex)
+                OnConnectingException(ex, connectionAttempts)
             End Try
         Loop
 

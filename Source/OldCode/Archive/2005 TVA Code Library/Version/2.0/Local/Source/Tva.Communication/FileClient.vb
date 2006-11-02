@@ -207,7 +207,8 @@ Public Class FileClient
     Private Sub ConnectToFile()
 
         Dim connectionAttempts As Integer = 0
-        Do While MaximumConnectionAttempts() = -1 OrElse connectionAttempts < MaximumConnectionAttempts()
+
+        Do While MaximumConnectionAttempts = -1 OrElse connectionAttempts < MaximumConnectionAttempts
             Try
                 OnConnecting(EventArgs.Empty)
                 m_fileClient.Client = New FileStream(m_connectionData("file"), FileMode.Open)
@@ -229,11 +230,12 @@ Public Class FileClient
             Catch ex As ThreadAbortException
                 Exit Do ' We must abort connecting to the file.
             Catch ex As Exception
-                OnConnectingException(ex)
+                OnConnectingException(ex, connectionAttempts + 1)
             Finally
                 connectionAttempts += 1
             End Try
         Loop
+
         m_connectionThread = Nothing
 
     End Sub

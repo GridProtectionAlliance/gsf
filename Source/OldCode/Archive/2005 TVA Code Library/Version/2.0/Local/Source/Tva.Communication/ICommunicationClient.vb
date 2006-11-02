@@ -37,7 +37,7 @@ Public Interface ICommunicationClient
     ''' Occurs when an exception is encountered while connecting to the server.
     ''' </summary>
     ''' <param name="ex">The exception that was encountered while connecting to the server.</param>
-    Event ConnectingException(ByVal ex As Exception)
+    Event ConnectingException(ByVal ex As Exception, ByVal connectionAttempts As Integer)
 
     ''' <summary>
     ''' Occurs when the client has successfully connected to the server.

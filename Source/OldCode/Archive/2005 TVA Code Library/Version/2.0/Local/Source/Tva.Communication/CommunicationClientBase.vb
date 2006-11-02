@@ -84,7 +84,7 @@ Public MustInherit Class CommunicationClientBase
     ''' </summary>
     ''' <param name="ex">The exception that was encountered while connecting to the server.</param>
     <Description("Occurs when an exception occurs while connecting to the server."), Category("Connection")> _
-    Public Event ConnectingException(ByVal ex As Exception) Implements ICommunicationClient.ConnectingException
+    Public Event ConnectingException(ByVal ex As Exception, ByVal connectionAttempts As Integer) Implements ICommunicationClient.ConnectingException
 
     ''' <summary>
     ''' Occurs when the client has successfully connected to the server.
@@ -610,9 +610,9 @@ Public MustInherit Class CommunicationClientBase
     ''' This method is to be called when all attempts for connecting to the server have been made but failed 
     ''' due to exceptions.
     ''' </remarks>
-    Protected Overridable Sub OnConnectingException(ByVal ex As Exception)
+    Protected Overridable Sub OnConnectingException(ByVal ex As Exception, ByVal connectionAttempts As Integer)
 
-        RaiseEvent ConnectingException(ex)
+        RaiseEvent ConnectingException(ex, connectionAttempts)
 
     End Sub
 
