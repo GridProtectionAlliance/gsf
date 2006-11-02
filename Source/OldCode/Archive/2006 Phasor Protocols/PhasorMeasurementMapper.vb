@@ -328,7 +328,7 @@ Public Class PhasorMeasurementMapper
 
     End Sub
 
-    Private Sub m_frameParser_ConnectionException(ByVal ex As System.Exception) Handles m_frameParser.ConnectionException
+    Private Sub m_frameParser_ConnectionException(ByVal ex As System.Exception, ByVal connectionAttempts As Integer) Handles m_frameParser.ConnectionException
 
         UpdateStatus(m_source & " connection to """ & m_frameParser.ConnectionName & """ failed: " & ex.Message)
 
