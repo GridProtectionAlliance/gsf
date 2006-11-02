@@ -30,7 +30,7 @@ using namespace System::Runtime::CompilerServices;
 // You can specify all the value or you can default the Revision and Build Numbers 
 // by using the '*' as shown below:
 
-[assembly:AssemblyVersion("2.1.29.27899")];
+[assembly:AssemblyVersion("2.1.30.57123")];
 
 //
 // In order to sign your assembly you must specify a key to use. Refer to the 
