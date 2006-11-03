@@ -26,7 +26,7 @@ Namespace DateTime
     ''' <summary>Base class for alternate time tag implementations</summary>
     Public MustInherit Class TimeTagBase
 
-        Implements IComparable, ISerializable
+        Implements IComparable, ISerializable, IEquatable(Of TimeTagBase)
 
         Private m_baseDateOffsetTicks As Long
         Private m_seconds As Double
@@ -117,6 +117,12 @@ Namespace DateTime
         Public Overrides Function Equals(ByVal obj As Object) As Boolean
 
             Return (CompareTo(obj) = 0)
+
+        End Function
+
+        Public Overloads Function Equals(ByVal other As TimeTagBase) As Boolean Implements System.IEquatable(Of TimeTagBase).Equals
+
+            Return (CompareTo(other) = 0)
 
         End Function
 
