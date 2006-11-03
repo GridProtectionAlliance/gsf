@@ -53,6 +53,7 @@ Public Class PhasorMeasurementReceiver
     Private m_pollEvents As Long
     Private m_connectionString As String
     Private m_processedMeasurements As Long
+    Private m_dataLossInterval As Integer
     Private m_mappers As Dictionary(Of String, PhasorMeasurementMapper)
     Private m_calculatedMeasurements As ICalculatedMeasurementAdapter()
     Private m_measurementBuffer As List(Of IMeasurement)
@@ -64,12 +65,14 @@ Public Class PhasorMeasurementReceiver
         ByVal archiverIP As String, _
         ByVal statusInterval As Integer, _
         ByVal connectionString As String, _
+        ByVal dataLossInterval As Integer, _
         ByVal calculatedMeasurements As ICalculatedMeasurementAdapter())
 
         m_archiverSource = archiverSource
         m_archiverIP = archiverIP
         m_statusInterval = statusInterval
         m_connectionString = connectionString
+        m_dataLossInterval = dataLossInterval
         m_calculatedMeasurements = calculatedMeasurements
         m_measurementBuffer = New List(Of IMeasurement)
         m_connectionTimer = New Timers.Timer
@@ -262,7 +265,7 @@ Public Class PhasorMeasurementReceiver
                     End If
 
                     SyncLock m_measurementBuffer
-                        With New PhasorMeasurementMapper(parser, m_archiverSource, source, pmuIDs, measurementIDs)
+                        With New PhasorMeasurementMapper(parser, m_archiverSource, source, pmuIDs, measurementIDs, m_dataLossInterval)
                             ' Add timezone mapping if not UTC...
                             If String.Compare(timezone, "GMT Standard Time", True) <> 0 Then
                                 Try

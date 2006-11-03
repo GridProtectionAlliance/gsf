@@ -52,6 +52,7 @@ Module MainModule
         ' Make sure service settings exist
         Settings.Add("PMUDatabase", "Data Source=ESOEXTSQL;Initial Catalog=PMU_SDS;Integrated Security=False;user ID=ESOPublic;pwd=4all2see", "PMU metaData database connect string")
         Settings.Add("PMUStatusInterval", "5", "Number of seconds of deviation from UTC time (according to local clock) that last PMU reporting time is allowed before considering it offline")
+        Settings.Add("DataLossInterval", "10000", "Number of milliseconds to wait for incoming data before restarting connection cycle to device")
         Settings.Add("MessageDisplayTimespan", "1", "Timespan, in seconds, over which to monitor message volume")
         Settings.Add("MaximumMessagesToDisplay", "20", "Maximum number of messages to be tolerated during MessageDisplayTimespan")
         SaveSettings()
@@ -148,7 +149,7 @@ Module MainModule
         m_calculatedMeasurements = DefineCalculatedMeasurements(connection)
 
         ' Load the phasor measurement receivers (one per each established archive)
-        m_measurementReceivers = LoadMeasurementReceivers(connection, IntegerSetting("PMUStatusInterval"), m_calculatedMeasurements)
+        m_measurementReceivers = LoadMeasurementReceivers(connection, IntegerSetting("PMUStatusInterval"), IntegerSetting("DataLossInterval"), m_calculatedMeasurements)
 
     End Sub
 
@@ -160,7 +161,7 @@ Module MainModule
 
     End Sub
 
-    Private Function LoadMeasurementReceivers(ByVal connection As SqlConnection, ByVal pmuStatusInterval As Integer, ByVal calculatedMeasurements As ICalculatedMeasurementAdapter()) As Dictionary(Of String, PhasorMeasurementReceiver)
+    Private Function LoadMeasurementReceivers(ByVal connection As SqlConnection, ByVal pmuStatusInterval As Integer, ByVal dataLossInterval As Integer, ByVal calculatedMeasurements As ICalculatedMeasurementAdapter()) As Dictionary(Of String, PhasorMeasurementReceiver)
 
         Dim measurementReceivers As New Dictionary(Of String, PhasorMeasurementReceiver)
         Dim measurementReceiver As PhasorMeasurementReceiver
@@ -177,6 +178,7 @@ Module MainModule
                         .Rows(x)("ArchiveIP").ToString(), _
                         pmuStatusInterval, _
                         connectionString, _
+                        dataLossInterval, _
                         calculatedMeasurements)
 
                     AddHandler measurementReceiver.StatusMessage, AddressOf DisplayStatusMessage

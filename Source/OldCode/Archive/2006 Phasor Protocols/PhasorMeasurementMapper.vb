@@ -53,7 +53,8 @@ Public Class PhasorMeasurementMapper
         ByVal archiverSource As String, _
         ByVal source As String, _
         ByVal pmuIDs As PmuInfoCollection, _
-        ByVal measurementIDs As Dictionary(Of String, IMeasurement))
+        ByVal measurementIDs As Dictionary(Of String, IMeasurement), _
+        ByVal dataLossInterval As Integer)
 
         m_frameParser = frameParser
         m_archiverSource = archiverSource
@@ -66,7 +67,7 @@ Public Class PhasorMeasurementMapper
 
         With m_dataStreamMonitor
             .AutoReset = True
-            .Interval = 10000
+            .Interval = dataLossInterval
             .Enabled = False
         End With
 
