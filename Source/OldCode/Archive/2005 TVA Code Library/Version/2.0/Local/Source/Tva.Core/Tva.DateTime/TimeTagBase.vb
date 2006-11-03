@@ -12,6 +12,9 @@
 '  -----------------------------------------------------------------------------------------------------
 '  07/12/2006 - J. Ritchie Carroll
 '       Original version of source generated
+'  11/03/2006 - J. Ritchie Carroll
+'       Updated base time comparison to use .NET date time since compared time-tags may not
+'       have the same base time ticks
 '
 '*******************************************************************************************************
 
@@ -36,8 +39,9 @@ Namespace DateTime
 
         End Sub
 
-        ''' <summary>Creates new Unix timetag given number of seconds since 1/1/1900</summary>
-        ''' <param name="seconds">Number of seconds since 1/1/1970</param>
+        ''' <summary>Creates new time-tag given number base time (in ticks) and seconds since base time</summary>
+        ''' <param name="baseDateOffsetTicks">Ticks of time-tag base</param>
+        ''' <param name="seconds">Number of seconds since base time</param>
         Protected Sub New(ByVal baseDateOffsetTicks As Long, ByVal seconds As Double)
 
             m_baseDateOffsetTicks = baseDateOffsetTicks
@@ -45,8 +49,9 @@ Namespace DateTime
 
         End Sub
 
-        ''' <summary>Creates new Unix timetag given standard .NET DateTime</summary>
-        ''' <param name="timestamp">.NET DateTime to create Unix timetag from (minimum valid date is 1/1/1970)</param>
+        ''' <summary>Creates new time-tag given standard .NET DateTime</summary>
+        ''' <param name="baseDateOffsetTicks">Ticks of time-tag base</param>
+        ''' <param name="timestamp">.NET DateTime used to create time-tag from</param>
         Protected Sub New(ByVal baseDateOffsetTicks As Long, ByVal timestamp As Date)
 
             ' Zero base 100-nanosecond ticks from 1/1/1970 and convert to seconds
@@ -55,7 +60,7 @@ Namespace DateTime
 
         End Sub
 
-        ''' <summary>Value represents number of seconds since 1/1/1970</summary>
+        ''' <summary>Value represents number of seconds since base time</summary>
         Public Overridable Property Value() As Double
             Get
                 Return m_seconds
@@ -69,7 +74,7 @@ Namespace DateTime
         ''' <summary>Returns standard .NET DateTime representation for timetag</summary>
         Public Overridable Function ToDateTime() As Date
 
-            ' Convert m_seconds to 100-nanosecond ticks and add the 1/1/1970 offset
+            ' Convert m_seconds to 100-nanosecond ticks and add the base time offset
             Return New Date(SecondsToTicks(m_seconds) + m_baseDateOffsetTicks)
 
         End Function
@@ -78,7 +83,7 @@ Namespace DateTime
         ''' <remarks>Format is "yyyy-MM-dd HH:mm:ss.fff" so that textual representation can be sorted in the correct chronological order</remarks>
         Public Overrides Function ToString() As String
 
-            Return ToDateTime.ToString("yyyy-MM-dd HH:mm:ss.fff")
+            Return ToDateTime().ToString("yyyy-MM-dd HH:mm:ss.fff")
 
         End Function
 
@@ -90,14 +95,21 @@ Namespace DateTime
         End Property
 
         ''' <summary>Compares this timetag to another one</summary>
+        Public Function CompareTo(ByVal timeTag As TimeTagBase) As Integer
+
+            ' Since compared time-tags may not have the same base time, we compare using .NET date time
+            Return ToDateTime().CompareTo(timeTag.ToDateTime())
+
+        End Function
+
         Public Overridable Function CompareTo(ByVal obj As Object) As Integer Implements System.IComparable.CompareTo
 
             If TypeOf obj Is TimeTagBase Then
-                Return m_seconds.CompareTo(DirectCast(obj, TimeTagBase).Value)
+                Return CompareTo(DirectCast(obj, TimeTagBase))
             ElseIf TypeOf obj Is Double Then
                 Return m_seconds.CompareTo(CDbl(obj))
             Else
-                Throw New ArgumentException("Timetag can only be compared with other timetags...")
+                Throw New ArgumentException("Time-tag can only be compared with other time-tags...")
             End If
 
         End Function
