@@ -16,6 +16,7 @@
     <SccProvider>SAK</SccProvider>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\TVA.snk</AssemblyOriginatorKeyFile>
+    <OptionStrict>On</OptionStrict>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -24,7 +25,9 @@
     <DefineTrace>true</DefineTrace>
     <OutputPath>..\bin\</OutputPath>
     <DocumentationFile>Tva.DatAWare.xml</DocumentationFile>
-    <NoWarn>42016,41999,42017,42018,42019,42032,42036,42020,42021,42022</NoWarn>
+    <NoWarn>
+    </NoWarn>
+    <WarningsAsErrors>41999,42016,42017,42018,42019,42020,42021,42022,42032,42036</WarningsAsErrors>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -33,7 +36,9 @@
     <Optimize>true</Optimize>
     <OutputPath>..\bin\</OutputPath>
     <DocumentationFile>Tva.DatAWare.xml</DocumentationFile>
-    <NoWarn>42016,41999,42017,42018,42019,42032,42036,42020,42021,42022</NoWarn>
+    <NoWarn>
+    </NoWarn>
+    <WarningsAsErrors>41999,42016,42017,42018,42019,42020,42021,42022,42032,42036</WarningsAsErrors>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -47,17 +52,13 @@
     <Import Include="Tva.Common" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Legacy Interfaces\Common.vb" />
-    <Compile Include="Legacy Interfaces\Connection.vb" />
-    <Compile Include="Legacy Interfaces\DatabaseStructure.vb" />
-    <Compile Include="Legacy Interfaces\DataBlock.vb" />
-    <Compile Include="Legacy Interfaces\EventProcessor.vb" />
-    <Compile Include="Legacy Interfaces\Listener.vb" />
-    <Compile Include="Legacy Interfaces\Points.vb" />
-    <Compile Include="Legacy Interfaces\ProcessEvent.vb" />
-    <Compile Include="Legacy Interfaces\StandardEvent.vb" />
-    <Compile Include="Legacy Interfaces\TimeTag.vb" />
+    <Compile Include="Enumerations.vb" />
+    <Compile Include="IPacket.vb" />
     <Compile Include="My Project\AssemblyInfo.vb" />
+    <Compile Include="PacketBase.vb" />
+    <Compile Include="DataPoint.vb" />
+    <Compile Include="StandardPacket.vb" />
+    <Compile Include="TimeTag.vb" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Tva.Core\Tva.Core.vbproj">
