@@ -6,6 +6,10 @@ Public MustInherit Class PacketBase
     Private m_saveLocation As PacketSaveLocation
     Private m_items As Dictionary(Of String, Object)
 
+    ''' <summary>
+    ''' This constant is required only for packet types of fixed length.
+    ''' </summary>
+    ''' <remarks>A value of -1 indicates that the packets can be of variable length.</remarks>
     Public Const BinaryImageLength As Integer = -1
 
     Public Sub New()

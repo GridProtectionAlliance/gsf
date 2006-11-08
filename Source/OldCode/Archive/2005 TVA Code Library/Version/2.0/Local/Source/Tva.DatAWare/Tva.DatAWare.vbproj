@@ -54,9 +54,45 @@
   <ItemGroup>
     <Compile Include="Enumerations.vb" />
     <Compile Include="IPacket.vb" />
+    <Compile Include="Legacy Interfaces\Common.vb">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Legacy Interfaces\Connection.vb">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Legacy Interfaces\DatabaseStructure.vb">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Legacy Interfaces\DataBlock.vb">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Legacy Interfaces\EventProcessor.vb">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Legacy Interfaces\Listener.vb">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Legacy Interfaces\Points.vb">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Legacy Interfaces\ProcessEvent.vb">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Legacy Interfaces\StandardEvent.vb">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Legacy Interfaces\TimeTag.vb">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="My Project\AssemblyInfo.vb" />
     <Compile Include="PacketBase.vb" />
     <Compile Include="DataPoint.vb" />
+    <Compile Include="PacketProcessor.Designer.vb">
+      <DependentUpon>PacketProcessor.vb</DependentUpon>
+    </Compile>
+    <Compile Include="PacketProcessor.vb">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="StandardPacket.vb" />
     <Compile Include="TimeTag.vb" />
   </ItemGroup>
