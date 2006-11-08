@@ -18,6 +18,8 @@
 '       Added crytographically strong random number generation functions
 '  01/24/2006 - J. Ritchie Carroll
 '       Added curve fit function (courtesy of Brian Fox from DatAWare client code)
+'  11/08/2006 - J. Ritchie Carroll
+'       Added standard devitaion and average functions
 '
 '*******************************************************************************************************
 
@@ -339,6 +341,37 @@ Namespace Math
 
             ' Return slopes...
             Return coeffs
+
+        End Function
+
+        Public Shared Function StandardDeviation(ByVal dataSample As Double()) As Double
+
+            If dataSample.Length = 0 Then Return 0.0R
+
+            Dim sampleAverage As Double = Average(dataSample)
+            Dim totalVariance As Double
+            Dim dataPointDeviation As Double
+
+            For x As Integer = 0 To dataSample.Length - 1
+                dataPointDeviation = dataSample(x) - sampleAverage
+                totalVariance += (dataPointDeviation * dataPointDeviation)
+            Next
+
+            Return System.Math.Sqrt(totalVariance / dataSample.Length)
+
+        End Function
+
+        Public Shared Function Average(ByVal dataSample As Double()) As Double
+
+            If dataSample.Length = 0 Then Return 0.0R
+
+            Dim sampleTotal As Double
+
+            For x As Integer = 0 To dataSample.Length - 1
+                sampleTotal += dataSample(x)
+            Next
+
+            Return sampleTotal / dataSample.Length
 
         End Function
 
