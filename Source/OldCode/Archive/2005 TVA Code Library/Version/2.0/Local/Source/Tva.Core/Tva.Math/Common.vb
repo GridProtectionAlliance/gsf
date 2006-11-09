@@ -233,7 +233,7 @@ Namespace Math
         End Property
 
         ''' <summary>Linear regression algorithm</summary>
-        Public Shared Function CurveFit(ByVal polynomialOrder As Integer, ByVal pointCount As Integer, ByVal xValues As Double(), ByVal yValues As Double()) As Double()
+        Public Shared Function CurveFit(ByVal polynomialOrder As Integer, ByVal pointCount As Integer, ByVal xValues As IList(Of Double), ByVal yValues As IList(Of Double)) As Double()
 
             Dim coeffs(7) As Double
             Dim sum(21) As Double
@@ -344,34 +344,34 @@ Namespace Math
 
         End Function
 
-        Public Shared Function StandardDeviation(ByVal dataSample As Double()) As Double
+        Public Shared Function StandardDeviation(ByVal dataSample As IList(Of Double)) As Double
 
-            If dataSample.Length = 0 Then Return 0.0R
+            If dataSample.Count = 0 Then Return 0.0R
 
             Dim sampleAverage As Double = Average(dataSample)
             Dim totalVariance As Double
             Dim dataPointDeviation As Double
 
-            For x As Integer = 0 To dataSample.Length - 1
+            For x As Integer = 0 To dataSample.Count - 1
                 dataPointDeviation = dataSample(x) - sampleAverage
                 totalVariance += (dataPointDeviation * dataPointDeviation)
             Next
 
-            Return System.Math.Sqrt(totalVariance / dataSample.Length)
+            Return System.Math.Sqrt(totalVariance / dataSample.Count)
 
         End Function
 
-        Public Shared Function Average(ByVal dataSample As Double()) As Double
+        Public Shared Function Average(ByVal dataSample As IList(Of Double)) As Double
 
-            If dataSample.Length = 0 Then Return 0.0R
+            If dataSample.Count = 0 Then Return 0.0R
 
             Dim sampleTotal As Double
 
-            For x As Integer = 0 To dataSample.Length - 1
+            For x As Integer = 0 To dataSample.Count - 1
                 sampleTotal += dataSample(x)
             Next
 
-            Return sampleTotal / dataSample.Length
+            Return sampleTotal / dataSample.Count
 
         End Function
 

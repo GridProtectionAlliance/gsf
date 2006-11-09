@@ -75,9 +75,11 @@ Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "RealTimeCalculatedMeasureme
 EndProject
 Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "Tva.Security", "Tva.Security\Tva.Security.vbproj", "{7E20F0D7-CD03-4C51-ADB2-03C522A71A84}"
 EndProject
+Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "RealTimeStabilityAlarm", "Tva.Phasors\RealTimeStabilityAlarm\RealTimeStabilityAlarm.vbproj", "{0BCA43CD-81D6-495B-BFFB-98B6F414AB13}"
+EndProject
 Global
 	GlobalSection(SourceCodeControl) = preSolution
-		SccNumberOfProjects = 20
+		SccNumberOfProjects = 21
 		SccProjectName0 = \u0022$/TVA\u0020Code\u0020Library/Version/2.0/Local\u0022,\u0020HWHAAAAA
 		SccLocalPath0 = ..
 		SccProvider0 = MSSCCI:Microsoft\u0020Visual\u0020SourceSafe
@@ -178,6 +180,11 @@ Global
 		SccLocalPath19 = ..
 		CanCheckoutShared = false
 		SccProjectFilePathRelativizedFromConnection19 = Source\\Tva.Security\\
+		SccProjectUniqueName20 = Tva.Phasors\\RealTimeStabilityAlarm\\RealTimeStabilityAlarm.vbproj
+		SccProjectTopLevelParentUniqueName20 = TVA\u0020Code\u0020Library.sln
+		SccLocalPath20 = ..
+		CanCheckoutShared = false
+		SccProjectFilePathRelativizedFromConnection20 = Source\\Tva.Phasors\\RealTimeStabilityAlarm\\
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -365,6 +372,16 @@ Global
 		{7E20F0D7-CD03-4C51-ADB2-03C522A71A84}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{7E20F0D7-CD03-4C51-ADB2-03C522A71A84}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{7E20F0D7-CD03-4C51-ADB2-03C522A71A84}.Release|Win32.ActiveCfg = Release|Any CPU
+		{0BCA43CD-81D6-495B-BFFB-98B6F414AB13}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0BCA43CD-81D6-495B-BFFB-98B6F414AB13}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0BCA43CD-81D6-495B-BFFB-98B6F414AB13}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{0BCA43CD-81D6-495B-BFFB-98B6F414AB13}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{0BCA43CD-81D6-495B-BFFB-98B6F414AB13}.Debug|Win32.ActiveCfg = Debug|Any CPU
+		{0BCA43CD-81D6-495B-BFFB-98B6F414AB13}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0BCA43CD-81D6-495B-BFFB-98B6F414AB13}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0BCA43CD-81D6-495B-BFFB-98B6F414AB13}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{0BCA43CD-81D6-495B-BFFB-98B6F414AB13}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{0BCA43CD-81D6-495B-BFFB-98B6F414AB13}.Release|Win32.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -395,5 +412,6 @@ Global
 		{F452CF72-30CA-4245-B054-F9E73783FD78} = {394C6C5A-DBA9-400C-8DB6-6F9CAE1B8B0C}
 		{45B13CE3-0EE6-4BF7-B36E-638F2BD68071} = {394C6C5A-DBA9-400C-8DB6-6F9CAE1B8B0C}
 		{DFAF5597-0D41-4010-BE81-42EBD243D3C5} = {394C6C5A-DBA9-400C-8DB6-6F9CAE1B8B0C}
+		{0BCA43CD-81D6-495B-BFFB-98B6F414AB13} = {394C6C5A-DBA9-400C-8DB6-6F9CAE1B8B0C}
 	EndGlobalSection
 EndGlobal
