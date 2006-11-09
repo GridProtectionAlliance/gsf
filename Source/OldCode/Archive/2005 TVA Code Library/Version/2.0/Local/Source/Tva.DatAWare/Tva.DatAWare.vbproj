@@ -87,10 +87,10 @@
     <Compile Include="My Project\AssemblyInfo.vb" />
     <Compile Include="PacketBase.vb" />
     <Compile Include="DataPoint.vb" />
-    <Compile Include="PacketProcessor.Designer.vb">
-      <DependentUpon>PacketProcessor.vb</DependentUpon>
+    <Compile Include="DataProcessor.Designer.vb">
+      <DependentUpon>DataProcessor.vb</DependentUpon>
     </Compile>
-    <Compile Include="PacketProcessor.vb">
+    <Compile Include="DataProcessor.vb">
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="StandardPacket.vb" />

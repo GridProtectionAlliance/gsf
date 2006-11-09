@@ -1,7 +1,5 @@
 Public Interface IPacket
 
-    Property TypeID() As Short
-
     Property ActionType() As PacketActionType
 
     Property SaveLocation() As PacketSaveLocation
