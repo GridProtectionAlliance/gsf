@@ -7,7 +7,7 @@ Public Class StandardPacket
     ' *             Packet structure                *
     ' ***********************************************
     ' * # Of Bytes    Byte Index  Description       *
-    ' * ---------     ----------  -----------       *
+    ' * ----------    ----------  -----------       *
     ' * 2             0-1         Packet ID         *
     ' * 4             2-5         Database index    *
     ' * 16            6-21        Data point        *
@@ -35,7 +35,7 @@ Public Class StandardPacket
                 MyBase.ActionType = PacketActionType.SaveAndReply
                 MyBase.SaveLocation = PacketSaveLocation.ArchiveFile
                 With MyBase.Items
-                    ' We don't need to save the type ID in the list of items.
+                    .Add("TypeID", packetTypeID)
                     .Add("Index", BitConverter.ToInt32(binaryImage, startIndex + 2))
                     .Add("DataPoint", New DataPoint(binaryImage, startIndex + 6))
                 End With

@@ -1,4 +1,4 @@
-Partial Class DataProcessor
+Partial Class DataParser
     Inherits System.ComponentModel.Component
 
     <System.Diagnostics.DebuggerNonUserCode()> _
@@ -14,9 +14,8 @@ Partial Class DataProcessor
     Public Sub New()
         MyBase.New()
 
-        m_toArchiveFile = Tva.Collections.KeyedProcessQueue(Of Guid, IPacket).CreateRealTimeQueue(AddressOf SaveToArchiveFile)
-        m_toMetadataFile = Tva.Collections.KeyedProcessQueue(Of Guid, IPacket).CreateRealTimeQueue(AddressOf SaveToMetadataFile)
-        m_toReplySender = Tva.Collections.KeyedProcessQueue(Of Guid, IPacket).CreateRealTimeQueue(AddressOf ReplyToSender)
+        m_packetTypes = New Dictionary(Of Short, PacketTypeInfo)
+        m_dataQueue = Tva.Collections.KeyedProcessQueue(Of Guid, Byte()).CreateRealTimeQueue(AddressOf ParseData)
 
         'This call is required by the Component Designer.
         InitializeComponent()
@@ -40,15 +39,7 @@ Partial Class DataProcessor
     'Do not modify it using the code editor.
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
-        Me.components = New System.ComponentModel.Container
-        Me.DataParser = New Tva.DatAWare.DataParser(Me.components)
-        CType(Me.DataParser, System.ComponentModel.ISupportInitialize).BeginInit()
-        '
-        'DataParser
-        '
-        CType(Me.DataParser, System.ComponentModel.ISupportInitialize).EndInit()
-
+        components = New System.ComponentModel.Container()
     End Sub
-    Friend WithEvents DataParser As Tva.DatAWare.DataParser
 
 End Class
