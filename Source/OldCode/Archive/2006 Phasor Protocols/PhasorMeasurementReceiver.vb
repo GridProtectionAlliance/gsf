@@ -162,6 +162,9 @@ Public Class PhasorMeasurementReceiver
         ' Disconnect archiver and all phasor measurement mappers...
         DisconnectAll()
 
+        ' Restart connect cycle to archiver
+        Connect()
+
         UpdateStatus("Initializing phasor measurement receiver...")
 
         Try
@@ -292,9 +295,6 @@ Public Class PhasorMeasurementReceiver
             End With
 
             UpdateStatus("Phasor measurement receiver initialized successfully.")
-
-            ' Restart connect cycle to archiver
-            Connect()
         Catch ex As Exception
             UpdateStatus("Phasor measurement receiver failed to initialize: " & ex.Message)
         Finally
@@ -377,7 +377,7 @@ Public Class PhasorMeasurementReceiver
                 Do
                     events = LoadEvents()
 
-                    If events IsNot Nothing Then
+                    If events IsNot Nothing AndAlso events.Length > 0 Then
                         ' Load binary standard event images into local buffer
                         For x As Integer = 0 To events.Length - 1
                             System.Buffer.BlockCopy(events(x).BinaryImage, 0, buffer, x * StandardEvent.BinaryLength, StandardEvent.BinaryLength)
@@ -391,21 +391,23 @@ Public Class PhasorMeasurementReceiver
                                 ' Wait for acknowledgement (limited to readtimeout)...
                                 received = m_clientStream.Read(buffer, 0, buffer.Length)
 
-                                ' Interpret response as a string
-                                response = Encoding.Default.GetString(buffer, 0, received)
+                                If received > 0 Then
+                                    ' Interpret response as a string
+                                    response = Encoding.Default.GetString(buffer, 0, received)
 
-                                ' Verify archiver response
-                                If Not response.StartsWith("ACK", True, Nothing) Then Throw New InvalidOperationException("DatAWare archiver failed to acknowledge packet transmission: " & response)
+                                    ' Verify archiver response
+                                    If Not response.StartsWith("ACK", True, Nothing) Then Throw New InvalidOperationException("DatAWare archiver failed to acknowledge packet transmission: " & response)
+                                End If
                             Catch ex As IOException
                                 UpdateStatus(">> WARNING: Timed-out waiting on acknowledgement from archiver...")
                             Catch
                                 Throw
                             End Try
-                        Else
-                            ' We sleep between data polls to prevent CPU loading
-                            Thread.Sleep(1)
                         End If
                     End If
+
+                    ' We sleep between data polls to prevent CPU loading
+                    Thread.Sleep(1)
 
                     ' We shouldn't stay in this loop forever (this would mean we're falling behind) so we broadcast the status of things...
                     pollEvents += 1
@@ -447,32 +449,36 @@ Public Class PhasorMeasurementReceiver
 
         Dim events As StandardEvent() = Nothing
 
-        SyncLock m_measurementBuffer
-            ' Extract all queued data frames from the data parsers
-            For Each mapper As PhasorMeasurementMapper In m_mappers.Values
-                ' Get all queued frames in this parser
-                For Each frame As IFrame In mapper.GetQueuedFrames()
-                    ' Extract each measurement from the frame and add queue up for processing
-                    For Each measurement As IMeasurement In frame.Measurements.Values
-                        QueueMeasurementForArchival(measurement)
+        Try
+            SyncLock m_measurementBuffer
+                ' Extract all queued data frames from the data parsers
+                For Each mapper As PhasorMeasurementMapper In m_mappers.Values
+                    ' Get all queued frames in this parser
+                    For Each frame As IFrame In mapper.GetQueuedFrames()
+                        ' Extract each measurement from the frame and add queue up for processing
+                        For Each measurement As IMeasurement In frame.Measurements.Values
+                            QueueMeasurementForArchival(measurement)
+                        Next
                     Next
                 Next
-            Next
 
-            Dim totalEvents As Integer = Minimum(m_maximumEvents, m_measurementBuffer.Count)
+                Dim totalEvents As Integer = Minimum(m_maximumEvents, m_measurementBuffer.Count)
 
-            If totalEvents > 0 Then
-                ' Create standard DatAWare event array of all points to be processed
-                events = CreateArray(Of StandardEvent)(totalEvents)
+                If totalEvents > 0 Then
+                    ' Create standard DatAWare event array of all points to be processed
+                    events = CreateArray(Of StandardEvent)(totalEvents)
 
-                For x As Integer = 0 To totalEvents - 1
-                    events(x) = New StandardEvent(m_measurementBuffer(x))
-                Next
+                    For x As Integer = 0 To totalEvents - 1
+                        events(x) = New StandardEvent(m_measurementBuffer(x))
+                    Next
 
-                ' Remove measurements being processed
-                m_measurementBuffer.RemoveRange(0, totalEvents)
-            End If
-        End SyncLock
+                    ' Remove measurements being processed
+                    m_measurementBuffer.RemoveRange(0, totalEvents)
+                End If
+            End SyncLock
+        Catch ex As Exception
+            UpdateStatus("Failed to load events from frame measurements: " & ex.Message)
+        End Try
 
         Return events
 

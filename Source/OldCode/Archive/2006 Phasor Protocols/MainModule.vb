@@ -240,16 +240,22 @@ Module MainModule
                     ' Query input measurement keys
                     inputMeasurementKeys = New List(Of MeasurementKey)
 
-                    With RetrieveData(.Rows(x)("InputMeasurementsSql").ToString(), connection)
-                        For y As Integer = 0 To .Rows.Count - 1
-                            With .Rows(y)
-                                inputMeasurementKeys.Add( _
-                                    New MeasurementKey( _
-                                        Convert.ToInt32(.Item("MeasurementID")), _
-                                        .Item("ArchiveSource").ToString()))
+                    If Not IsDBNull(.Rows(x)("InputMeasurementsSql")) Then
+                        Try
+                            With RetrieveData(.Rows(x)("InputMeasurementsSql").ToString(), connection)
+                                For y As Integer = 0 To .Rows.Count - 1
+                                    With .Rows(y)
+                                        inputMeasurementKeys.Add( _
+                                            New MeasurementKey( _
+                                                Convert.ToInt32(.Item("MeasurementID")), _
+                                                .Item("ArchiveSource").ToString()))
+                                    End With
+                                Next
                             End With
-                        Next
-                    End With
+                        Catch ex As Exception
+                            DisplayStatusMessage("Failed to load input measurements: " & ex.Message)
+                        End Try
+                    End If
 
                     ' Load the specified type from the assembly
                     adapterType = externalAssembly.GetType(.Rows(x)("TypeName").ToString())
