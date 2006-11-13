@@ -29,6 +29,9 @@ Public MustInherit Class PhasorValueBase
 
     Protected Delegate Function CreateNewPhasorValueFunctionSignature(ByVal parent As IDataCell, ByVal phasorDefintion As IPhasorDefinition, ByVal real As Single, ByVal imaginary As Single) As IPhasorValue
 
+    Private Const DegreesToRadians As Double = System.Math.PI / 180.0R
+    Private Const RadiansToDegrees As Double = 180.0R / System.Math.PI
+
     Private m_real As Single
     Private m_imaginary As Single
     Private m_compositeValues As CompositeValues
@@ -62,14 +65,14 @@ Public MustInherit Class PhasorValueBase
     ''' <summary>Gets real component from angle (in Degrees) and magnitude</summary>
     Public Shared Function CalculateRealComponent(ByVal angle As Single, ByVal magnitude As Single) As Single
 
-        Return magnitude * System.Math.Cos(angle * System.Math.PI / 180)
+        Return magnitude * System.Math.Cos(angle * DegreesToRadians)
 
     End Function
 
     ''' <summary>Gets imaginary component from angle (in Degrees) and magnitude</summary>
     Public Shared Function CalculateImaginaryComponent(ByVal angle As Single, ByVal magnitude As Single) As Single
 
-        Return magnitude * System.Math.Sin(angle * System.Math.PI / 180)
+        Return magnitude * System.Math.Sin(angle * DegreesToRadians)
 
     End Function
 
@@ -80,7 +83,7 @@ Public MustInherit Class PhasorValueBase
         If current Is Nothing Then Throw New ArgumentNullException("No current specified")
 
         Return 3 * (voltage.Real * current.Real + voltage.Imaginary * current.Imaginary)
-        'Return 3 * voltage.Magnitude * current.Magnitude * System.Math.Cos((voltage.Angle - current.Angle) * System.Math.PI / 180)
+        'Return 3 * voltage.Magnitude * current.Magnitude * System.Math.Cos((voltage.Angle - current.Angle) * DegreesToRadians)
 
     End Function
 
@@ -91,7 +94,7 @@ Public MustInherit Class PhasorValueBase
         If current Is Nothing Then Throw New ArgumentNullException("No current specified")
 
         Return 3 * (voltage.Imaginary * current.Real - voltage.Real * current.Imaginary)
-        'Return 3 * voltage.Magnitude * current.Magnitude * System.Math.Sin((voltage.Angle - current.Angle) * System.Math.PI / 180)
+        'Return 3 * voltage.Magnitude * current.Magnitude * System.Math.Sin((voltage.Angle - current.Angle) * DegreesToRadians)
 
     End Function
 
@@ -164,7 +167,7 @@ Public MustInherit Class PhasorValueBase
 
     Public Overridable Property Angle() As Single Implements IPhasorValue.Angle
         Get
-            Return System.Math.Atan2(m_imaginary, m_real) * 180 / System.Math.PI
+            Return System.Math.Atan2(m_imaginary, m_real) * RadiansToDegrees
         End Get
         Set(ByVal value As Single)
             ' We store angle as one of our required composite values
@@ -310,10 +313,10 @@ Public MustInherit Class PhasorValueBase
             Else
                 If DataFormat = Phasors.DataFormat.FixedInteger Then
                     EndianOrder.BigEndian.CopyBytes(Convert.ToUInt16(Magnitude), buffer, 0)
-                    EndianOrder.BigEndian.CopyBytes(Convert.ToInt16(Angle * System.Math.PI / 180 * 10000), buffer, 2)
+                    EndianOrder.BigEndian.CopyBytes(Convert.ToInt16(Angle * DegreesToRadians * 10000), buffer, 2)
                 Else
                     EndianOrder.BigEndian.CopyBytes(Magnitude, buffer, 0)
-                    EndianOrder.BigEndian.CopyBytes(Convert.ToSingle(Angle * System.Math.PI / 180), buffer, 4)
+                    EndianOrder.BigEndian.CopyBytes(Convert.ToSingle(Angle * DegreesToRadians), buffer, 4)
                 End If
             End If
 
@@ -337,10 +340,10 @@ Public MustInherit Class PhasorValueBase
 
             If DataFormat = Phasors.DataFormat.FixedInteger Then
                 magnitude = Convert.ToSingle(EndianOrder.BigEndian.ToUInt16(binaryImage, startIndex))
-                angle = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 2) * 180 / System.Math.PI / 10000
+                angle = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 2) * RadiansToDegrees / 10000
             Else
                 magnitude = EndianOrder.BigEndian.ToSingle(binaryImage, startIndex)
-                angle = EndianOrder.BigEndian.ToSingle(binaryImage, startIndex + 4) * 180 / System.Math.PI
+                angle = EndianOrder.BigEndian.ToSingle(binaryImage, startIndex + 4) * RadiansToDegrees
             End If
 
             m_real = CalculateRealComponent(angle, magnitude)
