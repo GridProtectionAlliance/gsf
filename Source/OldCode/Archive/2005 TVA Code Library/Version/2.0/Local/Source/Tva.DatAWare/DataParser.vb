@@ -4,6 +4,7 @@ Imports System.Reflection
 Imports System.ComponentModel
 Imports Tva.IO
 Imports Tva.Collections
+Imports Tva.DatAWare.Packets
 
 <ToolboxBitmap(GetType(DataParser)), DefaultEvent("DataParsed")> _
 Public Class DataParser

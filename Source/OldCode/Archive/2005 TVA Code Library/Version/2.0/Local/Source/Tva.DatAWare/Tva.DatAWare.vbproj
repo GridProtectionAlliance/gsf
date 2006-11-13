@@ -60,7 +60,6 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Enumerations.vb" />
-    <Compile Include="IPacket.vb" />
     <Compile Include="Legacy Interfaces\Common.vb">
       <SubType>Code</SubType>
     </Compile>
@@ -92,7 +91,6 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="My Project\AssemblyInfo.vb" />
-    <Compile Include="PacketBase.vb" />
     <Compile Include="DataPoint.vb" />
     <Compile Include="DataProcessor.Designer.vb">
       <DependentUpon>DataProcessor.vb</DependentUpon>
@@ -100,7 +98,10 @@
     <Compile Include="DataProcessor.vb">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="StandardPacket.vb" />
+    <Compile Include="Packets\Enumerations.vb" />
+    <Compile Include="Packets\IPacket.vb" />
+    <Compile Include="Packets\PacketBase.vb" />
+    <Compile Include="Packets\StandardPacket.vb" />
     <Compile Include="TimeTag.vb" />
   </ItemGroup>
   <ItemGroup>
@@ -115,6 +116,12 @@
       <DependentUpon>DataProcessor.vb</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Embedded Resources\DataParser.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Embedded Resources\ArchiveFile.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Embedded Resources\MetadataFile.bmp" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.VisualBasic.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

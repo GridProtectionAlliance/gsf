@@ -3,6 +3,7 @@ Imports System.Reflection
 Imports System.ComponentModel
 Imports Tva.IO
 Imports Tva.Collections
+Imports Tva.DatAWare.Packets
 
 Public Class DataProcessor
 
@@ -16,8 +17,6 @@ Public Class DataProcessor
 
 #Region " Member Declaration "
 
-    Private m_toArchiveFile As KeyedProcessQueue(Of Guid, IPacket)
-    Private m_toMetadataFile As KeyedProcessQueue(Of Guid, IPacket)
     Private m_toReplySender As KeyedProcessQueue(Of Guid, IPacket)
 
 #End Region

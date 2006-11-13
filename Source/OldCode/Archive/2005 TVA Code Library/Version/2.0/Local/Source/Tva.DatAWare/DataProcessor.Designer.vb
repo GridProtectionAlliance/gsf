@@ -14,9 +14,7 @@ Partial Class DataProcessor
     Public Sub New()
         MyBase.New()
 
-        m_toArchiveFile = Tva.Collections.KeyedProcessQueue(Of Guid, IPacket).CreateRealTimeQueue(AddressOf SaveToArchiveFile)
-        m_toMetadataFile = Tva.Collections.KeyedProcessQueue(Of Guid, IPacket).CreateRealTimeQueue(AddressOf SaveToMetadataFile)
-        m_toReplySender = Tva.Collections.KeyedProcessQueue(Of Guid, IPacket).CreateRealTimeQueue(AddressOf ReplyToSender)
+        m_toReplySender = Tva.Collections.KeyedProcessQueue(Of Guid, Packets.IPacket).CreateRealTimeQueue(AddressOf ReplyToSender)
 
         'This call is required by the Component Designer.
         InitializeComponent()
