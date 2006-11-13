@@ -80,7 +80,7 @@ Public Class PhasorMeasurementReceiver
 
         With m_connectionTimer
             .AutoReset = False
-            .Interval = 1
+            .Interval = 1000
             .Enabled = False
         End With
 
@@ -161,9 +161,6 @@ Public Class PhasorMeasurementReceiver
 
         ' Disconnect archiver and all phasor measurement mappers...
         DisconnectAll()
-
-        ' Restart connect cycle to archiver
-        Connect()
 
         UpdateStatus("Initializing phasor measurement receiver...")
 
@@ -295,6 +292,9 @@ Public Class PhasorMeasurementReceiver
             End With
 
             UpdateStatus("Phasor measurement receiver initialized successfully.")
+
+            ' Restart connect cycle to archiver
+            Connect()
         Catch ex As Exception
             UpdateStatus("Phasor measurement receiver failed to initialize: " & ex.Message)
         Finally

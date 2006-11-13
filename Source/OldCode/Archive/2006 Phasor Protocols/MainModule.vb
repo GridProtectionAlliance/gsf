@@ -204,7 +204,7 @@ Module MainModule
         Dim externalAssembly As Assembly
         Dim adapterType As Type
         Dim outputMeasurement As Measurement
-        Dim inputMeasurements As List(Of Measurement)
+        Dim inputMeasurementKeys As List(Of MeasurementKey)
 
         ' CalculatedMeasurements Fields:
         '   ID                          AutoInc
@@ -212,7 +212,7 @@ Module MainModule
         '   TypeName                    String
         '   AssemblyName                String
         '   OuputMeasurementSql         String      Expects one row, with four fields named "MeasurementID", "ArchiveSource", "Adder" and "Multipler"
-        '   InputMeasurementsSql        String      Expects one or more rows, with four fields named "MeasurementID", "ArchiveSource", "Adder" and "Multipler"
+        '   InputMeasurementsSql        String      Expects one or more rows, with two fields each named "MeasurementID" and "ArchiveSource"
         '   MinimumInputMeasurements    Integer     Defaults to -1 (use all)
         '   ExpectedFrameRate           Integer
         '   LagTime                     Double
@@ -237,19 +237,16 @@ Module MainModule
                             Convert.ToDouble(.Item("Multiplier")))
                     End With
 
-                    ' Query input measurements
-                    inputMeasurements = New List(Of Measurement)
+                    ' Query input measurement keys
+                    inputMeasurementKeys = New List(Of MeasurementKey)
 
                     With RetrieveData(.Rows(x)("InputMeasurementsSql").ToString(), connection)
                         For y As Integer = 0 To .Rows.Count - 1
                             With .Rows(y)
-                                inputMeasurements.Add( _
-                                    New Measurement( _
+                                inputMeasurementKeys.Add( _
+                                    New MeasurementKey( _
                                         Convert.ToInt32(.Item("MeasurementID")), _
-                                        .Item("ArchiveSource").ToString(), _
-                                        Double.NaN, _
-                                        Convert.ToDouble(.Item("Adder")), _
-                                        Convert.ToDouble(.Item("Multiplier"))))
+                                        .Item("ArchiveSource").ToString()))
                             End With
                         Next
                     End With
@@ -264,7 +261,7 @@ Module MainModule
                     With .Rows(x)
                         calculatedMeasurementAdapter.Initialize( _
                             outputMeasurement, _
-                            inputMeasurements.ToArray(), _
+                            inputMeasurementKeys.ToArray(), _
                             Convert.ToInt32(.Item("MinimumInputMeasurements")), _
                             Convert.ToInt32(.Item("ExpectedFrameRate")), _
                             Convert.ToDouble(.Item("LagTime")), _
