@@ -12,7 +12,13 @@ Namespace Application
     <ToolboxBitmap(GetType(WindowsSecurityProvider))> _
     Public Class WindowsSecurityProvider
 
+#Region " Member Declaration "
+
         Private WithEvents m_parent As System.Windows.Forms.Form
+
+#End Region
+
+#Region " Public Code "
 
         <Category("Configuration")> _
         Public Property Parent() As System.Windows.Forms.Form
@@ -34,6 +40,10 @@ Namespace Application
             Throw New NotSupportedException()
 
         End Sub
+
+#End Region
+
+#Region " Protected Code "
 
         Protected Overrides Sub HandleLoginFailure()
 
@@ -111,6 +121,8 @@ Namespace Application
             Return ""   ' This function will never be called by the base class in windows environment.
 
         End Function
+
+#End Region
 
 #Region " Private Methods "
 

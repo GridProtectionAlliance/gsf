@@ -8,6 +8,7 @@ Imports Tva.Identity.Common
 
 Namespace Application
 
+    <Serializable()> _
     Public Class User
 
         Private m_username As String

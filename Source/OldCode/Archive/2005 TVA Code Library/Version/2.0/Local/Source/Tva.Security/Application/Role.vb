@@ -1,6 +1,7 @@
 
 Namespace Application
 
+    <Serializable()> _
     Public Class Role
 
         Private m_name As String

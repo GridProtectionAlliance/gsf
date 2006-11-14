@@ -10,6 +10,8 @@ Namespace Application
     Public MustInherit Class SecurityProviderBase
         Implements IExtenderProvider, ISupportInitialize
 
+#Region " Member Declaration "
+
         Private m_user As User
         Private m_server As SecurityServer
         Private m_applicationName As String
@@ -20,8 +22,16 @@ Namespace Application
 
         Private Const ConfigurationElement As String = "SecurityProvider"
 
+#End Region
+
+#Region " Event Declaration "
+
         Public Event LoginFailed As EventHandler
         Public Event LoginSuccessful As EventHandler
+
+#End Region
+
+#Region " Public Code "
 
         <Category("Configuration")> _
         Public Property Server() As SecurityServer
@@ -115,6 +125,10 @@ Namespace Application
         ''' </summary>
         Public MustOverride Sub LogoutUser()
 
+#End Region
+
+#Region " Protected Code "
+
         ''' <summary>
         ''' Shows a screen to provide the logn credentials.
         ''' </summary>
@@ -131,6 +145,67 @@ Namespace Application
         ''' </summary>
         ''' <returns></returns>
         Protected MustOverride Function GetPassword() As String
+
+#End Region
+
+#Region " Private Code "
+
+        Private Sub InitializeUser(ByVal username As String)
+
+            InitializeUser(username, Nothing)
+
+        End Sub
+
+        Private Sub InitializeUser(ByVal username As String, ByVal password As String)
+
+            Dim connection As SqlConnection = Nothing
+            Try
+                ' We'll try to retrieve user information from the security database.
+                connection = New SqlConnection(ConnectionString)
+                connection.Open()
+                m_user = New User(username, password, connection)
+            Catch ex As Exception
+                If connection IsNot Nothing Then
+                    connection.Close()
+                    connection.Dispose()
+                End If
+            End Try
+
+        End Sub
+
+        Private Sub ProcessControls()
+
+            For Each extendee As Object In m_extendeeControls.Keys
+                ProcessControl(extendee, DirectCast(m_extendeeControls(extendee), ControlProperties))
+            Next
+
+        End Sub
+
+        Private Sub ProcessControl(ByVal extendee As Object, ByVal extendedProperties As ControlProperties)
+
+            If Not extendedProperties.ActionTaken AndAlso _
+                    extendedProperties.ValidRoleAction <> ValidRoleAction.None AndAlso _
+                    extendedProperties.ValidRoles IsNot Nothing Then
+                Dim controlProperty As PropertyInfo = _
+                    extendee.GetType().GetProperty(extendedProperties.ValidRoleAction.ToString())
+
+                If m_user IsNot Nothing AndAlso controlProperty IsNot Nothing Then
+                    ' User has been logged in and the control property exists.
+                    controlProperty.SetValue(extendee, False, Nothing)   ' By default we'll set the property to False.
+
+                    For Each role As String In extendedProperties.ValidRoles.Replace(" ", "").Replace(",", ";").Split(";"c)
+                        If m_user.FindRole(role, m_applicationName) IsNot Nothing Then
+                            ' We'll set the property to True if the current user belongs either one of the valid roles.
+                            controlProperty.SetValue(extendee, True, Nothing)
+                            Exit For
+                        End If
+                    Next
+                End If
+            End If
+
+        End Sub
+
+#End Region
 
 #Region " IExtenderProvider Implementation "
 
@@ -204,65 +279,6 @@ Namespace Application
 
             If Not DesignMode Then
                 LoginUser()
-            End If
-
-        End Sub
-
-#End Region
-
-#Region " Private Methods "
-
-        Private Sub InitializeUser(ByVal username As String)
-
-            InitializeUser(username, Nothing)
-
-        End Sub
-
-        Private Sub InitializeUser(ByVal username As String, ByVal password As String)
-
-            Dim connection As SqlConnection = Nothing
-            Try
-                ' We'll try to retrieve user information from the security database.
-                connection = New SqlConnection(ConnectionString)
-                connection.Open()
-                m_user = New User(username, password, connection)
-            Catch ex As Exception
-                If connection IsNot Nothing Then
-                    connection.Close()
-                    connection.Dispose()
-                End If
-            End Try
-
-        End Sub
-
-        Private Sub ProcessControls()
-
-            For Each extendee As Object In m_extendeeControls.Keys
-                ProcessControl(extendee, DirectCast(m_extendeeControls(extendee), ControlProperties))
-            Next
-
-        End Sub
-
-        Private Sub ProcessControl(ByVal extendee As Object, ByVal extendedProperties As ControlProperties)
-
-            If Not extendedProperties.ActionTaken AndAlso _
-                    extendedProperties.ValidRoleAction <> ValidRoleAction.None AndAlso _
-                    extendedProperties.ValidRoles IsNot Nothing Then
-                Dim controlProperty As PropertyInfo = _
-                    extendee.GetType().GetProperty(extendedProperties.ValidRoleAction.ToString())
-
-                If m_user IsNot Nothing AndAlso controlProperty IsNot Nothing Then
-                    ' User has been logged in and the control property exists.
-                    controlProperty.SetValue(extendee, False, Nothing)   ' By default we'll set the property to False.
-
-                    For Each role As String In extendedProperties.ValidRoles.Replace(" ", "").Replace(",", ";").Split(";"c)
-                        If m_user.FindRole(role, m_applicationName) IsNot Nothing Then
-                            ' We'll set the property to True if the current user belongs either one of the valid roles.
-                            controlProperty.SetValue(extendee, True, Nothing)
-                            Exit For
-                        End If
-                    Next
-                End If
             End If
 
         End Sub

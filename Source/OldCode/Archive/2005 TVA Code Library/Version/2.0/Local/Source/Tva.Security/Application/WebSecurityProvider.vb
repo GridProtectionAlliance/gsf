@@ -15,7 +15,13 @@ Namespace Application
     <ToolboxBitmap(GetType(WebSecurityProvider))> _
     Public Class WebSecurityProvider
 
+#Region " Member Declaration "
+
         Private WithEvents m_parent As System.Web.UI.Page
+
+#End Region
+
+#Region " Public Code "
 
         <Category("Configuration")> _
         Public Property Parent() As System.Web.UI.Page
@@ -60,6 +66,10 @@ Namespace Application
             End If
 
         End Sub
+
+#End Region
+
+#Region " Protected Code "
 
         Protected Overrides Sub HandleLoginFailure()
 
@@ -137,7 +147,9 @@ Namespace Application
 
         End Function
 
-#Region " Private Methods "
+#End Region
+
+#Region " Private Code "
 
         Private Sub ExtractWebFiles()
 
