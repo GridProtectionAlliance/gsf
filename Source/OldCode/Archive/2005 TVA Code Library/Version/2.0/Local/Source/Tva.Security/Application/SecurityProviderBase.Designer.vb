@@ -18,6 +18,7 @@ Namespace Application
         Public Sub New()
             MyBase.New()
 
+            m_enableCaching = True
             m_extendeeControls = New Hashtable()
             Try
                 m_devConnectionString = "Server=RGOCDSQL; Database=ApplicationSecurity; UID=appsec; PWD=123-xyz"

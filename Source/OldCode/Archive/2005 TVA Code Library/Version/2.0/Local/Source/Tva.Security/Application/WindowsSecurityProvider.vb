@@ -45,6 +45,18 @@ Namespace Application
 
 #Region " Protected Code "
 
+        Protected Overrides Sub CacheUserData()
+
+            ' We don't need to implement this method is windows environment.
+
+        End Sub
+
+        Protected Overrides Sub RetrieveUserData()
+
+            ' We don't need to implement this method is windows environment.
+
+        End Sub
+
         Protected Overrides Sub HandleLoginFailure()
 
             If m_parent IsNot Nothing Then

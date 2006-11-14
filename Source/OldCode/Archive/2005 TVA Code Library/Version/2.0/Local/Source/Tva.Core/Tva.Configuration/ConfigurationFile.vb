@@ -12,7 +12,8 @@
 '  -----------------------------------------------------------------------------------------------------
 '  04/12/2006 - Pinal C. Patel
 '       Original version of source code generated
-'
+'  11/14/2006 - Pinal C. Patel
+'       Modified the ValidateConfigurationFile to save the config file only it was modified.
 '*******************************************************************************************************
 
 Imports System.Xml
@@ -221,23 +222,34 @@ Namespace Configuration
 
             If Not String.IsNullOrEmpty(configFilePath) Then
                 Dim configFile As New XmlDocument()
+                Dim configFileModified As Boolean = False
                 configFile.Load(configFilePath)
 
                 ' Make sure that the config file has the necessary section information under <customSections />
                 ' that is required by the .Net configuration API to process our custom <categorizedSettings />
                 ' section. The configuration API will raise an exception if it doesn't find this section.
                 If configFile.DocumentElement.SelectNodes("configSections").Count() = 0 Then
+                    ' The <configSections> node is not present, so we'll add one.
                     configFile.DocumentElement.InsertBefore(configFile.CreateElement("configSections"), _
                         configFile.DocumentElement.FirstChild())
+
+                    configFileModified = True
                 End If
                 Dim configSectionsNode As XmlNode = configFile.DocumentElement.SelectSingleNode("configSections")
                 If configSectionsNode.SelectNodes("section[@name = '" & CustomSectionName & "']").Count() = 0 Then
+                    ' The <section> node that specifies the DLL that handles the <categorizedSettings> node in
+                    ' the config file is not present, so we'll add it.
                     Dim node As XmlNode = configFile.CreateElement("section")
                     Attribute(node, "name") = CustomSectionName
                     Attribute(node, "type") = CustomSectionType
                     configSectionsNode.AppendChild(node)
+
+                    configFileModified = True
                 End If
-                configFile.Save(configFilePath)
+
+                ' 11/14/2006 - PCP: We'll save the config file only it was modified. This will prevent ASP.Net
+                ' web sites from restarting every time a configuration element is accessed.
+                If configFileModified Then configFile.Save(configFilePath)
             Else
                 Throw New ArgumentNullException("configFilePath", "Path of configuration file path cannot be null")
             End If

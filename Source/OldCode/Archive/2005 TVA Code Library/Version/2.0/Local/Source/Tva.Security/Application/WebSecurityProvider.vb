@@ -23,14 +23,21 @@ Namespace Application
         ''' Key used for storing the username.
         ''' </summary>
         Private Const UNKey As String = "u"
+
         ''' <summary>
         ''' Key used for storing the password.
         ''' </summary>
         Private Const PWKey As String = "p"
+
         ''' <summary>
         ''' Key used for storing whether or not the supported web file have been extracted.
         ''' </summary>
-        Private Const WEKey As String = "e"
+        Private Const WEKey As String = "we"
+
+        ''' <summary>
+        ''' Key used for storing the user data.
+        ''' </summary>
+        Private Const UDKey As String = "ud"
 
 #End Region
 
@@ -83,6 +90,24 @@ Namespace Application
 #End Region
 
 #Region " Protected Code "
+
+        Protected Overrides Sub CacheUserData()
+
+            If m_parent IsNot Nothing AndAlso m_parent.Session(UDKey) Is Nothing Then
+                ' Cache the current user's data.
+                m_parent.Session.Add(UDKey, MyBase.User)
+            End If
+
+        End Sub
+
+        Protected Overrides Sub RetrieveUserData()
+
+            If m_parent IsNot Nothing AndAlso m_parent.Session(UDKey) IsNot Nothing Then
+                ' Retrieve previously cached user data.
+                UpdateUserData(TryCast(m_parent.Session(UDKey), User))
+            End If
+
+        End Sub
 
         Protected Overrides Sub HandleLoginFailure()
 
@@ -227,7 +252,7 @@ Namespace Application
 
         End Sub
 
-        Private Sub m_parent_Disposed(ByVal sender As Object, ByVal e As System.EventArgs) Handles m_parent.Disposed
+        Private Sub m_parent_Unload(ByVal sender As Object, ByVal e As System.EventArgs) Handles m_parent.Unload
 
             Dispose()
 
