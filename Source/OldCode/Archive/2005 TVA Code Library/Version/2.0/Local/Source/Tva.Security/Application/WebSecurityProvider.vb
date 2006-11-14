@@ -19,6 +19,19 @@ Namespace Application
 
         Private WithEvents m_parent As System.Web.UI.Page
 
+        ''' <summary>
+        ''' Key used for storing the username.
+        ''' </summary>
+        Private Const UNKey As String = "u"
+        ''' <summary>
+        ''' Key used for storing the password.
+        ''' </summary>
+        Private Const PWKey As String = "p"
+        ''' <summary>
+        ''' Key used for storing whether or not the supported web file have been extracted.
+        ''' </summary>
+        Private Const WEKey As String = "e"
+
 #End Region
 
 #Region " Public Code "
@@ -46,8 +59,8 @@ Namespace Application
                 m_parent.Response.Cookies.Add(credentialCookie)
 
                 ' Remove the username and password from session variables.
-                m_parent.Session.Remove("u")
-                m_parent.Session.Remove("p")
+                m_parent.Session.Remove(UNKey)
+                m_parent.Session.Remove(PWKey)
 
                 With New StringBuilder()
                     ' Remove the username and password from querystring if present.
@@ -55,7 +68,7 @@ Namespace Application
                     .Append("?")
                     For Each parameter As String In m_parent.Request.Url.Query.TrimStart("?"c).Split("&"c)
                         Dim key As String = parameter.Split("="c)(0)
-                        If Not (key = "u" OrElse key = "p") Then
+                        If Not (key = UNKey OrElse key = PWKey) Then
                             .Append(parameter)
                         End If
                     Next
@@ -108,15 +121,14 @@ Namespace Application
         Protected Overrides Function GetUsername() As String
 
             If m_parent IsNot Nothing Then
-                If m_parent.Request("u") IsNot Nothing AndAlso m_parent.Session("u") Is Nothing Then
+                If m_parent.Request(UNKey) IsNot Nothing AndAlso m_parent.Session(UNKey) Is Nothing Then
                     ' Username is present in the query string, but doesn't exist in the session, so we'll add it.
-                    m_parent.Session.Add("u", _
-                        Decrypt(m_parent.Request("u").ToString(), Security.Cryptography.EncryptLevel.Level4))
+                    m_parent.Session.Add(UNKey, m_parent.Request(UNKey).ToString())
                 End If
 
-                If m_parent.Session("u") IsNot Nothing Then
+                If m_parent.Session(UNKey) IsNot Nothing Then
                     ' Username was saved in the session previously, so we'll send it.
-                    Return m_parent.Session("u").ToString()
+                    Return Decrypt(m_parent.Session(UNKey).ToString(), Cryptography.EncryptLevel.Level4)
                 Else
                     Return ""
                 End If
@@ -129,15 +141,14 @@ Namespace Application
         Protected Overrides Function GetPassword() As String
 
             If m_parent IsNot Nothing Then
-                If m_parent.Request("p") IsNot Nothing AndAlso m_parent.Session("p") Is Nothing Then
+                If m_parent.Request(PWKey) IsNot Nothing AndAlso m_parent.Session(PWKey) Is Nothing Then
                     ' Password is present in the query string, but doesn't exist in the session, so we'll add it.
-                    m_parent.Session.Add("p", _
-                        Decrypt(m_parent.Request("p").ToString(), Security.Cryptography.EncryptLevel.Level4))
+                    m_parent.Session.Add(PWKey, m_parent.Request(PWKey).ToString())
                 End If
 
-                If m_parent.Session("p") IsNot Nothing Then
+                If m_parent.Session(PWKey) IsNot Nothing Then
                     ' Password was saved in the session previously, so we'll send it.
-                    Return m_parent.Session("p").ToString()
+                    Return Decrypt(m_parent.Session(PWKey).ToString(), Cryptography.EncryptLevel.Level4)
                 Else
                     Return ""
                 End If
@@ -153,7 +164,7 @@ Namespace Application
 
         Private Sub ExtractWebFiles()
 
-            If m_parent.Application("AS.WebFilesExtracted") Is Nothing Then
+            If m_parent.Application(WEKey) Is Nothing Then
                 ' Extract the embedded web files to the the web site's bin directory.
                 Try
                     Dim webFiles As ZipFile = Nothing
@@ -164,7 +175,7 @@ Namespace Application
                     webFiles.Extract("*.*", zipFilePath, UpdateOption.ZipFileIsNewer, True)
                     webFiles.Close()
                     File.Delete(zipFileName)
-                    m_parent.Application.Add("AS.WebFilesExtracted", True)
+                    m_parent.Application.Add(WEKey, True)
                 Catch ex As Exception
                     ' We most likely encountered some sort of an access violation exception.
                     Throw New AccessViolationException("Failed to extract the required web files.", ex)
@@ -213,6 +224,12 @@ Namespace Application
                 ' LoginUser() method, so we'll call LoginUser() over here implicitly before the web page loads.
                 LoginUser()
             End If
+
+        End Sub
+
+        Private Sub m_parent_Disposed(ByVal sender As Object, ByVal e As System.EventArgs) Handles m_parent.Disposed
+
+            Dispose()
 
         End Sub
 
