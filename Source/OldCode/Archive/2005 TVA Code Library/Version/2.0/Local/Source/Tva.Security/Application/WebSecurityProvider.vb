@@ -39,6 +39,14 @@ Namespace Application
         ''' </summary>
         Private Const UDKey As String = "ud"
 
+        ''' <summary>
+        ''' Name of the cookie that will contain the current user's credentials.
+        ''' </summary>
+        ''' <remarks>
+        ''' This cookie is used for "single-signon" purposes.
+        ''' </remarks>
+        Private Const CCName As String = "Credentials"
+
 #End Region
 
 #Region " Public Code "
@@ -61,7 +69,7 @@ Namespace Application
 
             If MyBase.User IsNot Nothing AndAlso m_parent IsNot Nothing Then
                 ' Delete the session cookie used for "single-signon" purposes.
-                Dim credentialCookie As New System.Web.HttpCookie("Credentials")
+                Dim credentialCookie As New System.Web.HttpCookie(CCName)
                 credentialCookie.Expires = System.DateTime.Now.AddDays(-1)
                 m_parent.Response.Cookies.Add(credentialCookie)
 
@@ -100,17 +108,24 @@ Namespace Application
         Protected Overrides Function GetUsername() As String
 
             If m_parent IsNot Nothing Then
-                If m_parent.Request(UNKey) IsNot Nothing AndAlso m_parent.Session(UNKey) Is Nothing Then
-                    ' Username is present in the query string, but doesn't exist in the session, so we'll add it.
+                Dim username As String = ""
+
+                If m_parent.Request(UNKey) IsNot Nothing Then
+                    ' We'll save the username present in the query string to session and cookie for later use.
                     m_parent.Session.Add(UNKey, m_parent.Request(UNKey).ToString())
+                    m_parent.Response.Cookies(CCName)(UNKey) = m_parent.Request(UNKey).ToString()
+                    username = Decrypt(m_parent.Request(UNKey).ToString(), Cryptography.EncryptLevel.Level4)
+                Else
+                    If m_parent.Session(UNKey) IsNot Nothing Then
+                        ' Retrieve previouslt saved username from session.
+                        username = Decrypt(m_parent.Session(UNKey).ToString(), Cryptography.EncryptLevel.Level4)
+                    ElseIf m_parent.Request.Cookies(CCName) IsNot Nothing Then
+                        ' Retrieve previouslt saved username from cookie.
+                        username = Decrypt(m_parent.Request.Cookies(CCName)(UNKey).ToString(), Cryptography.EncryptLevel.Level4)
+                    End If
                 End If
 
-                If m_parent.Session(UNKey) IsNot Nothing Then
-                    ' Username was saved in the session previously, so we'll send it.
-                    Return Decrypt(m_parent.Session(UNKey).ToString(), Cryptography.EncryptLevel.Level4)
-                Else
-                    Return ""
-                End If
+                Return username
             Else
                 Throw New InvalidOperationException("Parent must be set in order to retrieve the username.")
             End If
@@ -120,17 +135,24 @@ Namespace Application
         Protected Overrides Function GetPassword() As String
 
             If m_parent IsNot Nothing Then
-                If m_parent.Request(PWKey) IsNot Nothing AndAlso m_parent.Session(PWKey) Is Nothing Then
-                    ' Password is present in the query string, but doesn't exist in the session, so we'll add it.
+                Dim password As String = ""
+
+                If m_parent.Request(PWKey) IsNot Nothing Then
+                    ' We'll save the password present in the query string to session and cookie for later use.
                     m_parent.Session.Add(PWKey, m_parent.Request(PWKey).ToString())
+                    m_parent.Response.Cookies(CCName)(PWKey) = m_parent.Request(PWKey).ToString()
+                    password = Decrypt(m_parent.Request(PWKey).ToString(), Cryptography.EncryptLevel.Level4)
+                Else
+                    If m_parent.Session(UNKey) IsNot Nothing Then
+                        ' Retrieve previouslt saved username from session.
+                        password = Decrypt(m_parent.Session(PWKey).ToString(), Cryptography.EncryptLevel.Level4)
+                    ElseIf m_parent.Request.Cookies(CCName) IsNot Nothing Then
+                        ' Retrieve previouslt saved username from cookie.
+                        password = Decrypt(m_parent.Request.Cookies(CCName)(PWKey).ToString(), Cryptography.EncryptLevel.Level4)
+                    End If
                 End If
 
-                If m_parent.Session(PWKey) IsNot Nothing Then
-                    ' Password was saved in the session previously, so we'll send it.
-                    Return Decrypt(m_parent.Session(PWKey).ToString(), Cryptography.EncryptLevel.Level4)
-                Else
-                    Return ""
-                End If
+                Return password
             Else
                 Throw New InvalidOperationException("Parent must be set in order to retrieve the password.")
             End If
