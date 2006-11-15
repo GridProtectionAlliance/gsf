@@ -66,8 +66,9 @@ Namespace Application
                 m_parent.Response.Cookies.Add(credentialCookie)
 
                 ' Remove the username and password from session variables.
-                m_parent.Session.Remove(UNKey)
-                m_parent.Session.Remove(PWKey)
+                If m_parent.Session(UNKey) IsNot Nothing Then m_parent.Session.Remove(UNKey)
+                If m_parent.Session(PWKey) IsNot Nothing Then m_parent.Session.Remove(PWKey)
+                If m_parent.Session(UDKey) IsNot Nothing Then m_parent.Session.Remove(UDKey)
 
                 With New StringBuilder()
                     ' Remove the username and password from querystring if present.
