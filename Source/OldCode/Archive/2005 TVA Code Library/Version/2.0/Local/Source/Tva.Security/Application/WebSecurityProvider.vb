@@ -105,6 +105,55 @@ Namespace Application
 
         End Sub
 
+        Protected Overrides Sub ShowLoginScreen()
+
+            If m_parent IsNot Nothing Then
+                ExtractWebFiles()   ' Make sure that the required web file exist in the application bin directory.
+
+                With New StringBuilder()
+                    .Append(GetSafeUrl("Login.aspx"))
+                    .Append("?r=")              ' Return Url
+                    .Append(m_parent.Server.UrlEncode(m_parent.Request.Url.AbsoluteUri))
+                    .Append("&a=")              ' Application Name
+                    .Append(m_parent.Server.UrlEncode(Encrypt(MyBase.ApplicationName, Security.Cryptography.EncryptLevel.Level4)))
+                    .Append("&c=")              ' Connection String
+                    .Append(m_parent.Server.UrlEncode(Encrypt(MyBase.ConnectionString, Security.Cryptography.EncryptLevel.Level4)))
+
+                    m_parent.Response.Redirect(.ToString())
+                End With
+            Else
+                Throw New InvalidOperationException("Parent must be set in order to login the user.")
+            End If
+
+        End Sub
+
+        Protected Overrides Sub HandleSuccessfulLogin()
+
+            If m_parent IsNot Nothing Then
+                If m_parent.Request(UNKey) IsNot Nothing OrElse m_parent.Request(PWKey) IsNot Nothing Then
+                    ' Upon successful login, we'll remove the username and password from the querystring if present.
+                    m_parent.Response.Redirect(GetCleanUrl())
+                End If
+            End If
+
+        End Sub
+
+        Protected Overrides Sub HandleUnsuccessfulLogin()
+
+            ' Upon unsuccessful login, we'll redirect the user to the *Access Denied* page.
+            If m_parent IsNot Nothing Then
+                ExtractWebFiles()   ' Make sure that the required web file exist in the application bin directory.
+
+                With New StringBuilder()
+                    .Append(GetSafeUrl("ErrorPage.aspx"))
+                    .Append("?t=0")              ' Specify the type of error to be "Access Denied".
+
+                    m_parent.Response.Redirect(.ToString())
+                End With
+            End If
+
+        End Sub
+
         Protected Overrides Function GetUsername() As String
 
             If m_parent IsNot Nothing Then
@@ -203,6 +252,29 @@ Namespace Application
 
         End Function
 
+        Private Function GetSafeUrl(ByVal webPage As String) As String
+
+            With New StringBuilder()
+                Try
+                    ' First try to make a request for the page locally. If we're unable to request the page
+                    ' locally or if an exception is encountered when making the request, we'll use the page
+                    ' at one of the three remote web sites (development/acceptance/production).
+                    Dim getRequest As WebRequest = WebRequest.Create(GetLocalWebSiteUrl() & webPage)
+                    getRequest.Credentials = CredentialCache.DefaultCredentials
+
+                    If getRequest.GetResponse() Is Nothing Then
+                        .Append(GetRemoteWebSiteUrl())
+                    End If
+                Catch ex As Exception
+                    .Append(GetRemoteWebSiteUrl())
+                End Try
+                .Append(webPage)
+
+                Return .ToString()
+            End With
+
+        End Function
+
         Private Function GetLocalWebSiteUrl() As String
 
             With New StringBuilder()
@@ -235,51 +307,6 @@ Namespace Application
             End With
 
         End Function
-
-        Private Sub WebSecurityProvider_Successful(ByVal sender As Object, ByVal e As System.EventArgs) Handles Me.LoginSuccessful
-
-            If m_parent IsNot Nothing Then
-                If m_parent.Request(UNKey) IsNot Nothing OrElse m_parent.Request(PWKey) IsNot Nothing Then
-                    ' Upon successful login, we'll remove the username and password from the querystring if present.
-                    m_parent.Response.Redirect(GetCleanUrl())
-                End If
-            End If
-
-        End Sub
-
-        Private Sub WebSecurityProvider_Unsuccessful(ByVal sender As Object, ByVal e As System.EventArgs) Handles Me.LoginUnsuccessful
-
-            If m_parent IsNot Nothing Then
-                ExtractWebFiles()   ' Make sure that the required web file exist in the application bin directory.
-
-                With New StringBuilder()
-                    Try
-                        Dim getRequest As WebRequest = WebRequest.Create(GetLocalWebSiteUrl() & "Login.aspx")
-                        getRequest.Credentials = CredentialCache.DefaultCredentials
-
-                        If getRequest.GetResponse() Is Nothing Then
-                            ' We'll redirect to the "Login Page" on predefined remote web site if we're unable
-                            ' to request the page locally. This will be case when the developer is debugging the
-                            ' the web site from Visual Studio, since the page we're trying to access is embedded.
-                            .Append(GetRemoteWebSiteUrl())
-                        End If
-                    Catch ex As Exception
-                        .Append(GetRemoteWebSiteUrl())
-                    End Try
-                    .Append("Login.aspx?r=")    ' Return Url
-                    .Append(m_parent.Server.UrlEncode(m_parent.Request.Url.AbsoluteUri))
-                    .Append("&a=")              ' Application Name
-                    .Append(m_parent.Server.UrlEncode(Encrypt(MyBase.ApplicationName, Security.Cryptography.EncryptLevel.Level4)))
-                    .Append("&c=")              ' Connection String
-                    .Append(m_parent.Server.UrlEncode(Encrypt(MyBase.ConnectionString, Security.Cryptography.EncryptLevel.Level4)))
-
-                    m_parent.Response.Redirect(.ToString())
-                End With
-            Else
-                Throw New InvalidOperationException("Parent must be set in order to login the user.")
-            End If
-
-        End Sub
 
         Private Sub m_parent_PreLoad(ByVal sender As Object, ByVal e As System.EventArgs) Handles m_parent.PreLoad
 

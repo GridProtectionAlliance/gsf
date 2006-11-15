@@ -57,23 +57,7 @@ Namespace Application
 
         End Sub
 
-        Protected Overrides Function GetUsername() As String
-
-            Return ""   ' This function will never be called by the base class in windows environment.
-
-        End Function
-
-        Protected Overrides Function GetPassword() As String
-
-            Return ""   ' This function will never be called by the base class in windows environment.
-
-        End Function
-
-#End Region
-
-#Region " Private Methods "
-
-        Private Sub WebSecurityProvider_Unsuccessful(ByVal sender As Object, ByVal e As System.EventArgs) Handles Me.LoginUnsuccessful
+        Protected Overrides Sub ShowLoginScreen()
 
             If m_parent IsNot Nothing Then
                 With New AccessDenied()
@@ -137,6 +121,30 @@ Namespace Application
             End If
 
         End Sub
+
+        Protected Overrides Sub HandleSuccessfulLogin()
+
+        End Sub
+
+        Protected Overrides Sub HandleUnsuccessfulLogin()
+
+        End Sub
+
+        Protected Overrides Function GetUsername() As String
+
+            Return ""   ' This function will never be called by the base class in windows environment.
+
+        End Function
+
+        Protected Overrides Function GetPassword() As String
+
+            Return ""   ' This function will never be called by the base class in windows environment.
+
+        End Function
+
+#End Region
+
+#Region " Private Methods "
 
         Private Sub m_parent_Load(ByVal sender As Object, ByVal e As System.EventArgs) Handles m_parent.Load
 

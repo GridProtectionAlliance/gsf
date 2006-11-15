@@ -27,8 +27,8 @@ Namespace Application
 
 #Region " Event Declaration "
 
-        Public Event LoginUnsuccessful As EventHandler
-        Public Event LoginSuccessful As EventHandler
+        Public Event LoginSuccessful(ByRef cancelProcessing As Boolean)
+        Public Event LoginUnsuccessful(ByRef cancelProcessing As Boolean)
 
 #End Region
 
@@ -113,18 +113,27 @@ Namespace Application
                         Dim password As String = GetPassword()
                         If Not String.IsNullOrEmpty(username) AndAlso Not String.IsNullOrEmpty(password) Then
                             InitializeUser(username, password)
+                        Else
+                            ' Since we don't have the username and password required for authenticating the user,
+                            ' we'll ask for the user's username and password.
+                            ShowLoginScreen()
                         End If
                     End If
                 End If
 
-                If m_user IsNot Nothing AndAlso m_user.IsAuthenticated AndAlso _
-                        m_user.FindApplication(m_applicationName) IsNot Nothing Then
-                    ' User has been authenticated successfully and has access to the specified application.
-                    ProcessControls()
-                    RaiseEvent LoginSuccessful(Me, EventArgs.Empty)
-                Else
-                    ' User could not be autheticated or doen't have access to the specified application.
-                    RaiseEvent LoginUnsuccessful(Me, EventArgs.Empty)
+                If m_user IsNot Nothing Then
+                    If m_user.IsAuthenticated AndAlso m_user.FindApplication(m_applicationName) IsNot Nothing Then
+                        ' User has been authenticated successfully and has access to the specified application.
+                        ProcessControls()
+                        Dim cancelProcessing As Boolean = False
+                        RaiseEvent LoginSuccessful(cancelProcessing)
+                        If Not cancelProcessing Then HandleSuccessfulLogin()
+                    Else
+                        ' User could not be autheticated or doen't have access to the specified application.
+                        Dim cancelProcessing As Boolean = False
+                        RaiseEvent LoginUnsuccessful(cancelProcessing)
+                        If Not cancelProcessing Then HandleUnsuccessfulLogin()
+                    End If
                 End If
             Else
                 Throw New InvalidOperationException("ApplicationName must be set in order to login the user.")
@@ -156,6 +165,22 @@ Namespace Application
         ''' Retrieves previously cached user data.
         ''' </summary>
         Protected MustOverride Sub RetrieveUserData()
+
+        ''' <summary>
+        ''' Shows a login screen where user can enter his/her credentials.
+        ''' </summary>
+        ''' <remarks></remarks>
+        Protected MustOverride Sub ShowLoginScreen()
+
+        ''' <summary>
+        ''' Performs any necessary actions that must be performed upon successful login.
+        ''' </summary>
+        Protected MustOverride Sub HandleSuccessfulLogin()
+
+        ''' <summary>
+        ''' Performs any necessary actions that must be performed upon unsuccessful login.
+        ''' </summary>
+        Protected MustOverride Sub HandleUnsuccessfulLogin()
 
         ''' <summary>
         ''' Gets the name that the user provided on the login screen.
