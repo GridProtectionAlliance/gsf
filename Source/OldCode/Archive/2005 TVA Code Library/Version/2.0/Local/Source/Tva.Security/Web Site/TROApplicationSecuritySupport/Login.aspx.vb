@@ -46,13 +46,14 @@ Partial Class Login
                     ViewState("ReturnUrlHasQueryString") = False
                 End If
 
-                'Check for existance of the Cookie
-                If Request.Cookies("Credentials") IsNot Nothing Then
-                    Dim userName As String = Tva.Security.Cryptography.Common.Decrypt(Request.Cookies("Credentials")("u"), Tva.Security.Cryptography.EncryptLevel.Level4)
-                    Dim password As String = Tva.Security.Cryptography.Common.Decrypt(Request.Cookies("Credentials")("p"), Tva.Security.Cryptography.EncryptLevel.Level4)
-                    AuthenticateUser(userName, password)
-                    'Response.Write(userName & " - " & password & "<BR>Expires On: " & Request.Cookies("Credentials").Expires.ToString)
-                End If
+                ' 11/15/2006 - PCP: This logic has been moved to the WebSecurityProvider component in TVA Code Library.
+                ''Check for existance of the Cookie
+                'If Request.Cookies("Credentials") IsNot Nothing Then
+                '    Dim userName As String = Tva.Security.Cryptography.Common.Decrypt(Request.Cookies("Credentials")("u"), Tva.Security.Cryptography.EncryptLevel.Level4)
+                '    Dim password As String = Tva.Security.Cryptography.Common.Decrypt(Request.Cookies("Credentials")("p"), Tva.Security.Cryptography.EncryptLevel.Level4)
+                '    AuthenticateUser(userName, password)
+                '    'Response.Write(userName & " - " & password & "<BR>Expires On: " & Request.Cookies("Credentials").Expires.ToString)
+                'End If
 
             ElseIf Session("ApplicationName") IsNot Nothing AndAlso _
                     Session("ConnectionString") IsNot Nothing AndAlso _
@@ -131,15 +132,15 @@ Partial Class Login
                                     End If
                                     ExecuteNonQuery("LogAccess", conn, userName, Session("ApplicationName"), False)
 
-                                    'Create Cookie here...
-                                    'On successful login, this will overwrite any previous values for this cookies.
-                                    Dim credentialCookie As New HttpCookie("Credentials")
-                                    credentialCookie.Values.Add("u", Tva.Security.Cryptography.Common.Encrypt(userName, Tva.Security.Cryptography.EncryptLevel.Level4))
-                                    credentialCookie.Values.Add("p", Tva.Security.Cryptography.Common.Encrypt(password, Tva.Security.Cryptography.EncryptLevel.Level4))
-                                    Response.Cookies.Add(credentialCookie)
+                                    ' 11/15/2006 - PCP: This logic has been moved to the WebSecurityProvider component in TVA Code Library.
+                                    ''Create Cookie here...
+                                    ''On successful login, this will overwrite any previous values for this cookies.
+                                    'Dim credentialCookie As New HttpCookie("Credentials")
+                                    'credentialCookie.Values.Add("u", Tva.Security.Cryptography.Common.Encrypt(userName, Tva.Security.Cryptography.EncryptLevel.Level4))
+                                    'credentialCookie.Values.Add("p", Tva.Security.Cryptography.Common.Encrypt(password, Tva.Security.Cryptography.EncryptLevel.Level4))
+                                    'Response.Cookies.Add(credentialCookie)
 
                                     Response.Redirect(returnUrl, False)
-
                                 Else
                                     If Not conn.State = ConnectionState.Open Then
                                         conn.Open()
