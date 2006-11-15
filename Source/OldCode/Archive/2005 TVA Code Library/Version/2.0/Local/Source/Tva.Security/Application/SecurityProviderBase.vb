@@ -27,7 +27,7 @@ Namespace Application
 
 #Region " Event Declaration "
 
-        Public Event LoginFailed As EventHandler
+        Public Event LoginUnsuccessful As EventHandler
         Public Event LoginSuccessful As EventHandler
 
 #End Region
@@ -113,8 +113,6 @@ Namespace Application
                         Dim password As String = GetPassword()
                         If Not String.IsNullOrEmpty(username) AndAlso Not String.IsNullOrEmpty(password) Then
                             InitializeUser(username, password)
-                        Else
-                            HandleLoginFailure()
                         End If
                     End If
                 End If
@@ -125,9 +123,8 @@ Namespace Application
                     ProcessControls()
                     RaiseEvent LoginSuccessful(Me, EventArgs.Empty)
                 Else
-                    ' The user could not be autheticated or doen't have access to the specified application.
-                    RaiseEvent LoginFailed(Me, EventArgs.Empty)
-                    HandleLoginFailure()
+                    ' User could not be autheticated or doen't have access to the specified application.
+                    RaiseEvent LoginUnsuccessful(Me, EventArgs.Empty)
                 End If
             Else
                 Throw New InvalidOperationException("ApplicationName must be set in order to login the user.")
@@ -159,11 +156,6 @@ Namespace Application
         ''' Retrieves previously cached user data.
         ''' </summary>
         Protected MustOverride Sub RetrieveUserData()
-
-        ''' <summary>
-        ''' Shows a screen to provide the logn credentials.
-        ''' </summary>
-        Protected MustOverride Sub HandleLoginFailure()
 
         ''' <summary>
         ''' Gets the name that the user provided on the login screen.
