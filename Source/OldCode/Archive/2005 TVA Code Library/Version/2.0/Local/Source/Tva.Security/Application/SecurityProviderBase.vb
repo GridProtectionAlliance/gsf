@@ -27,8 +27,13 @@ Namespace Application
 
 #Region " Event Declaration "
 
-        Public Event LoginSuccessful(ByRef cancelProcessing As Boolean)
-        Public Event LoginUnsuccessful(ByRef cancelProcessing As Boolean)
+        Public Event BeforeLogin(ByVal sender As Object, ByVal e As CancelEventArgs)
+        Public Event BeforeAuthenticate(ByVal sender As Object, ByVal e As CancelEventArgs)
+        Public Event AfterLogin As EventHandler
+        Public Event AfterAuthenticate As EventHandler
+        Public Event AccessGranted(ByVal sender As Object, ByVal e As CancelEventArgs)
+        Public Event AccessDenied(ByVal sender As Object, ByVal e As CancelEventArgs)
+        Public Event ServerUnavailable As EventHandler
 
 #End Region
 
@@ -97,6 +102,10 @@ Namespace Application
         Public Sub LoginUser()
 
             If Not String.IsNullOrEmpty(m_applicationName) Then
+                Dim beforeLoginResponse As New CancelEventArgs()
+                RaiseEvent BeforeLogin(Me, beforeLoginResponse)
+                If beforeLoginResponse.Cancel Then Exit Sub
+
                 RetrieveUserData()
                 ' m_user will be initialized by RetrieveUserData() if user data was cached previously.
                 If m_user Is Nothing Then
@@ -122,19 +131,31 @@ Namespace Application
                 End If
 
                 If m_user IsNot Nothing Then
+                    Dim beforeAuthenticateResponse As New CancelEventArgs()
+                    RaiseEvent BeforeAuthenticate(Me, beforeAuthenticateResponse)
+                    If beforeAuthenticateResponse.Cancel Then Exit Sub
+
                     If m_user.IsAuthenticated AndAlso m_user.FindApplication(m_applicationName) IsNot Nothing Then
                         ' User has been authenticated successfully and has access to the specified application.
+                        Dim accessGrantedResponse As New CancelEventArgs()
+                        RaiseEvent AccessGranted(Me, accessGrantedResponse)
+                        If accessGrantedResponse.Cancel Then Exit Sub
+
                         ProcessControls()
-                        Dim cancelProcessing As Boolean = False
-                        RaiseEvent LoginSuccessful(cancelProcessing)
-                        If Not cancelProcessing Then HandleSuccessfulLogin()
+                        HandleAccessGranted()
                     Else
                         ' User could not be autheticated or doen't have access to the specified application.
-                        Dim cancelProcessing As Boolean = False
-                        RaiseEvent LoginUnsuccessful(cancelProcessing)
-                        If Not cancelProcessing Then HandleUnsuccessfulLogin()
+                        Dim accessDeniedResponse As New CancelEventArgs()
+                        RaiseEvent AccessDenied(Me, accessDeniedResponse)
+                        If accessDeniedResponse.Cancel Then Exit Sub
+
+                        HandleAccessDenied()
                     End If
+
+                    RaiseEvent AfterAuthenticate(Me, EventArgs.Empty)
                 End If
+
+                RaiseEvent AfterLogin(Me, EventArgs.Empty)
             Else
                 Throw New InvalidOperationException("ApplicationName must be set in order to login the user.")
             End If
@@ -175,12 +196,12 @@ Namespace Application
         ''' <summary>
         ''' Performs any necessary actions that must be performed upon successful login.
         ''' </summary>
-        Protected MustOverride Sub HandleSuccessfulLogin()
+        Protected MustOverride Sub HandleAccessGranted()
 
         ''' <summary>
         ''' Performs any necessary actions that must be performed upon unsuccessful login.
         ''' </summary>
-        Protected MustOverride Sub HandleUnsuccessfulLogin()
+        Protected MustOverride Sub HandleAccessDenied()
 
         ''' <summary>
         ''' Gets the name that the user provided on the login screen.
@@ -215,7 +236,12 @@ Namespace Application
 
                 ' We'll cache the user data if specified in the configuration.
                 If m_enableCaching Then CacheUserData()
+            Catch ex As SqlException
+                ' We're likely to encounter a SQL exception only when the database server is offline.
+                RaiseEvent ServerUnavailable(Me, EventArgs.Empty)
             Catch ex As Exception
+                ' We'll just ignore all other exceptions.
+            Finally
                 If connection IsNot Nothing Then
                     connection.Close()
                     connection.Dispose()

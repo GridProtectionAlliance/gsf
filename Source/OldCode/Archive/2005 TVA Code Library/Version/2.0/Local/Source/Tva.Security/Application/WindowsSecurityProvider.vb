@@ -122,11 +122,11 @@ Namespace Application
 
         End Sub
 
-        Protected Overrides Sub HandleSuccessfulLogin()
+        Protected Overrides Sub HandleAccessGranted()
 
         End Sub
 
-        Protected Overrides Sub HandleUnsuccessfulLogin()
+        Protected Overrides Sub HandleAccessDenied()
 
         End Sub
 

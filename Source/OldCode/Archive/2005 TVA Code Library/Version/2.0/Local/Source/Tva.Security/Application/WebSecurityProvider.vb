@@ -127,7 +127,7 @@ Namespace Application
 
         End Sub
 
-        Protected Overrides Sub HandleSuccessfulLogin()
+        Protected Overrides Sub HandleAccessGranted()
 
             If m_parent IsNot Nothing Then
                 If m_parent.Request(UNKey) IsNot Nothing OrElse m_parent.Request(PWKey) IsNot Nothing Then
@@ -138,7 +138,7 @@ Namespace Application
 
         End Sub
 
-        Protected Overrides Sub HandleUnsuccessfulLogin()
+        Protected Overrides Sub HandleAccessDenied()
 
             ' Upon unsuccessful login, we'll redirect the user to the *Access Denied* page.
             If m_parent IsNot Nothing Then
@@ -307,6 +307,42 @@ Namespace Application
             End With
 
         End Function
+
+        Private Sub WebSecurityProvider_ServerUnavailable(ByVal sender As Object, ByVal e As System.EventArgs) Handles Me.ServerUnavailable
+
+            If m_parent IsNot Nothing Then
+                With New StringBuilder()
+                    .Append("<html>")
+                    .Append(Environment.NewLine)
+                    .Append("<head>")
+                    .Append(Environment.NewLine)
+                    .Append("<Title>Server Unavailable</Title>")
+                    .Append(Environment.NewLine)
+                    .Append("</head>")
+                    .Append(Environment.NewLine)
+                    .Append("<body>")
+                    .Append(Environment.NewLine)
+                    .Append("<div style=""font-family: Tahoma; font-size: 8pt; font-weight: bold; text-align: center;"">")
+                    .Append(Environment.NewLine)
+                    .Append("<span style=""font-size: 22pt; color: red;"">")
+                    .Append("Login Process Halted")
+                    .Append("</span><br /><br />")
+                    .Append(Environment.NewLine)
+                    .Append("(The security database server is unavailable at this time.)")
+                    .Append(Environment.NewLine)
+                    .Append("</div>")
+                    .Append(Environment.NewLine)
+                    .Append("</body>")
+                    .Append(Environment.NewLine)
+                    .Append("</html>")
+
+                    m_parent.Response.Clear()
+                    m_parent.Response.Write(.ToString())
+                    m_parent.Response.End()
+                End With
+            End If
+
+        End Sub
 
         Private Sub m_parent_PreLoad(ByVal sender As Object, ByVal e As System.EventArgs) Handles m_parent.PreLoad
 
