@@ -308,7 +308,7 @@ Namespace Application
 
         End Function
 
-        Private Sub WebSecurityProvider_ServerUnavailable(ByVal sender As Object, ByVal e As System.EventArgs) Handles Me.ServerUnavailable
+        Private Sub WebSecurityProvider_DbConnectionException(ByVal sender As Object, ByVal e As ExceptionEventArgs) Handles Me.DbConnectionException
 
             If m_parent IsNot Nothing Then
                 With New StringBuilder()
@@ -316,7 +316,7 @@ Namespace Application
                     .Append(Environment.NewLine)
                     .Append("<head>")
                     .Append(Environment.NewLine)
-                    .Append("<Title>Server Unavailable</Title>")
+                    .Append("<Title>Login Aborted</Title>")
                     .Append(Environment.NewLine)
                     .Append("</head>")
                     .Append(Environment.NewLine)
@@ -325,10 +325,10 @@ Namespace Application
                     .Append("<div style=""font-family: Tahoma; font-size: 8pt; font-weight: bold; text-align: center;"">")
                     .Append(Environment.NewLine)
                     .Append("<span style=""font-size: 22pt; color: red;"">")
-                    .Append("Login Process Halted")
+                    .Append("Login Process Aborted")
                     .Append("</span><br /><br />")
                     .Append(Environment.NewLine)
-                    .Append("(The security database server is unavailable at this time.)")
+                    .Append("[Connection could not be established with the security database]")
                     .Append(Environment.NewLine)
                     .Append("</div>")
                     .Append(Environment.NewLine)

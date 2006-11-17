@@ -33,7 +33,7 @@ Namespace Application
         Public Event AfterAuthenticate As EventHandler
         Public Event AccessGranted(ByVal sender As Object, ByVal e As CancelEventArgs)
         Public Event AccessDenied(ByVal sender As Object, ByVal e As CancelEventArgs)
-        Public Event ServerUnavailable As EventHandler
+        Public Event DbConnectionException(ByVal sender As Object, ByVal e As ExceptionEventArgs)
 
 #End Region
 
@@ -237,8 +237,8 @@ Namespace Application
                 ' We'll cache the user data if specified in the configuration.
                 If m_enableCaching Then CacheUserData()
             Catch ex As SqlException
-                ' We're likely to encounter a SQL exception only when the database server is offline.
-                RaiseEvent ServerUnavailable(Me, EventArgs.Empty)
+                ' We'll notifying about the excountered SQL exception by rasing an event.
+                RaiseEvent DbConnectionException(Me, New ExceptionEventArgs(ex))
             Catch ex As Exception
                 ' We'll just ignore all other exceptions.
             Finally
