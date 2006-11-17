@@ -135,7 +135,8 @@ Namespace Application
                     RaiseEvent BeforeAuthenticate(Me, beforeAuthenticateResponse)
                     If beforeAuthenticateResponse.Cancel Then Exit Sub
 
-                    If m_user.IsAuthenticated AndAlso m_user.FindApplication(m_applicationName) IsNot Nothing Then
+                    If Not m_user.IsLockedOut AndAlso m_user.IsAuthenticated AndAlso _
+                            m_user.FindApplication(m_applicationName) IsNot Nothing Then
                         ' User has been authenticated successfully and has access to the specified application.
                         Dim accessGrantedResponse As New CancelEventArgs()
                         RaiseEvent AccessGranted(Me, accessGrantedResponse)
