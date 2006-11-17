@@ -75,7 +75,7 @@ Namespace Identity
         ''' </summary>
         ''' <value></value>
         ''' <returns>True if previliged account is to be used; otherwise False.</returns>
-        Public Property UserPreviligedAccount() As Boolean
+        Public Property UsePreviligedAccount() As Boolean
             Get
                 Return m_usePreviligedAccount
             End Get
