@@ -4,7 +4,7 @@ Imports System.Data
 Imports System.Data.SqlClient
 Imports System.Security.Principal
 Imports Tva.Data.Common
-Imports Tva.Identity.Common
+Imports Tva.Identity
 
 Namespace Application
 
@@ -46,6 +46,11 @@ Namespace Application
                     m_exists = True
                     m_username = userData.Rows(0)("UserName").ToString()
                     m_password = userData.Rows(0)("UserPassword").ToString()
+                    m_firstName = userData.Rows(0)("UserFirstName").ToString()
+                    m_lastName = userData.Rows(0)("UserLastName").ToString()
+                    m_companyName = userData.Rows(0)("UserCompanyName").ToString()
+                    m_phoneNumber = userData.Rows(0)("UserPhoneNumber").ToString()
+                    m_emailAddress = userData.Rows(0)("UserEmailAddress").ToString()
                     If userData.Rows(0)("UserIsExternal") IsNot DBNull.Value Then
                         m_isExternal = Convert.ToBoolean(userData.Rows(0)("UserIsExternal"))
                     End If
@@ -56,33 +61,21 @@ Namespace Application
                         m_passwordChangeDateTime = Convert.ToDateTime(userData.Rows(0)("UserPasswordChangeDateTime"))
                     End If
                     m_joinedDateTime = Convert.ToDateTime(userData.Rows(0)("UserJoinedDateTime"))
+
+                    PopulateGroups(dbConnection)
+                    PopulateApplicationsAndRoles(dbConnection)
+
                     If m_isExternal Then
                         ' User is external according to the security database.
-                        m_firstName = userData.Rows(0)("UserFirstName").ToString()
-                        m_lastName = userData.Rows(0)("UserLastName").ToString()
-                        m_companyName = userData.Rows(0)("UserCompanyName").ToString()
-                        m_phoneNumber = userData.Rows(0)("UserPhoneNumber").ToString()
-                        m_emailAddress = userData.Rows(0)("UserEmailAddress").ToString()
-
-                        If password IsNot Nothing AndAlso EncryptPassword(password) = m_password Then
-                            ' External user's password is valid.
-                            m_isAuthenticated = True
+                        If password IsNot Nothing Then
+                            ' We'll validate the password against the security database.
+                            m_isAuthenticated = (EncryptPassword(password) = m_password)
                         End If
                     Else
                         ' User is internal according to the security database.
-                        Dim userInfo As Tva.Identity.UserInfo = New Tva.Identity.UserInfo(m_username, "TVA", True)
-                        m_firstName = userInfo.FirstName
-                        m_lastName = userInfo.LastName
-                        m_companyName = userInfo.Company
-                        m_phoneNumber = userInfo.Telephone
-                        m_emailAddress = userInfo.Email
-
                         If password IsNot Nothing Then
-                            ' We have password for internal user so we must validate it against active directory.
-                            If userInfo.Authenticate(password) Then
-                                ' Internal user's password is valid.
-                                m_isAuthenticated = True
-                            End If
+                            ' We'll validate the password against the active directory.
+                            m_isAuthenticated = New UserInfo(m_username, "TVA", True).Authenticate(password)
                         Else
                             ' When an internal user is found in the security database, he/she is considered
                             ' autheticated and we are not required to validate the password unless one is 
@@ -90,8 +83,6 @@ Namespace Application
                             m_isAuthenticated = True
                         End If
                     End If
-                    PopulateGroups(dbConnection)
-                    PopulateApplicationsAndRoles(dbConnection)
                 End If
             End If
 
