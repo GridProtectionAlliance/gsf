@@ -26,6 +26,10 @@ Imports Tva.Communication
 Imports Tva.Measurements
 Imports Tva.IO.FilePath
 
+''' <summary>
+''' <para>This class takes parsed phasor frames and maps measured elements to historian points</para>
+''' <para>Real-time measurements are also provided to entites that need them (i.e., calculated measurements)</para>
+''' </summary>
 <CLSCompliant(False)> _
 Public Class PhasorMeasurementMapper
 
@@ -110,11 +114,22 @@ Public Class PhasorMeasurementMapper
         Dim frames As IFrame()
 
         SyncLock m_measurementFrames
-            frames = m_measurementFrames.ToArray()
-            m_measurementFrames.Clear()
+            If m_measurementFrames.Count > 0 Then
+                ' It possible, because of threading, that frames can be processed out of order
+                ' so we at least sort them by time before providing them to a historian
+                m_measurementFrames.Sort(AddressOf CompareFramesByTicks)
+                frames = m_measurementFrames.ToArray()
+                m_measurementFrames.Clear()
+            End If
         End SyncLock
 
         Return frames
+
+    End Function
+
+    Private Function CompareFramesByTicks(ByVal x As IFrame, ByVal y As IFrame) As Integer
+
+        Return x.Ticks.CompareTo(y.Ticks)
 
     End Function
 
@@ -262,13 +277,13 @@ Public Class PhasorMeasurementMapper
             Next
         End With
 
-        ' Provide real-time measurements where needed
-        RaiseEvent NewParsedMeasurements(frame.Measurements)
-
-        ' Queue up frame for polled retrieval into DatAWare...
+        ' Queue up frame for polled retrieval into historian...
         SyncLock m_measurementFrames
             m_measurementFrames.Add(frame)
         End SyncLock
+
+        ' Provide real-time measurements where needed
+        RaiseEvent NewParsedMeasurements(frame.Measurements)
 
     End Sub
 

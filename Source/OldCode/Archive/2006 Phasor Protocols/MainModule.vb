@@ -203,7 +203,9 @@ Module MainModule
         Dim externalAssemblyName As String
         Dim externalAssembly As Assembly
         Dim adapterType As Type
+        Dim outputMeasurementSql As String
         Dim outputMeasurement As Measurement
+        Dim inputMeasurementsSql As String
         Dim inputMeasurementKeys As List(Of MeasurementKey)
 
         ' CalculatedMeasurements Fields:
@@ -228,21 +230,33 @@ Module MainModule
                     externalAssembly = Assembly.LoadFrom(externalAssemblyName)
 
                     ' Query ouput measurement
-                    With RetrieveRow(.Rows(x)("OuputMeasurementSql").ToString(), connection)
-                        outputMeasurement = New Measurement( _
-                            Convert.ToInt32(.Item("MeasurementID")), _
-                            .Item("ArchiveSource").ToString(), _
-                            Double.NaN, _
-                            Convert.ToDouble(.Item("Adder")), _
-                            Convert.ToDouble(.Item("Multiplier")))
-                    End With
+                    outputMeasurementSql = .Rows(x)("OutputMeasurementSql").ToString()
+                    outputMeasurement = Nothing
+
+                    ' Calculated measurements have the option of internally defining the output measurement
+                    If Not String.IsNullOrEmpty(outputMeasurementSql) Then
+                        Try
+                            With RetrieveRow(outputMeasurementSql, connection)
+                                outputMeasurement = New Measurement( _
+                                    Convert.ToInt32(.Item("MeasurementID")), _
+                                    .Item("ArchiveSource").ToString(), _
+                                    Double.NaN, _
+                                    Convert.ToDouble(.Item("Adder")), _
+                                    Convert.ToDouble(.Item("Multiplier")))
+                            End With
+                        Catch ex As Exception
+                            DisplayStatusMessage("Faile to load output measurement for """ & calculatedMeasurementName & """: " & ex.Message)
+                        End Try
+                    End If
 
                     ' Query input measurement keys
+                    inputMeasurementsSql = .Rows(x)("InputMeasurementsSql").ToString()
                     inputMeasurementKeys = New List(Of MeasurementKey)
 
-                    If Not IsDBNull(.Rows(x)("InputMeasurementsSql")) Then
+                    ' Calculated measurements have the option of internally defining the input measurements
+                    If Not String.IsNullOrEmpty(inputMeasurementsSql) Then
                         Try
-                            With RetrieveData(.Rows(x)("InputMeasurementsSql").ToString(), connection)
+                            With RetrieveData(inputMeasurementsSql, connection)
                                 For y As Integer = 0 To .Rows.Count - 1
                                     With .Rows(y)
                                         inputMeasurementKeys.Add( _
@@ -253,7 +267,7 @@ Module MainModule
                                 Next
                             End With
                         Catch ex As Exception
-                            DisplayStatusMessage("Failed to load input measurements: " & ex.Message)
+                            DisplayStatusMessage("Failed to load input measurements for """ & calculatedMeasurementName & """: " & ex.Message)
                         End Try
                     End If
 

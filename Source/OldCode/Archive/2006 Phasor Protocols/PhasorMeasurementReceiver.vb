@@ -364,7 +364,7 @@ Public Class PhasorMeasurementReceiver
         Const postDumpCount As Integer = 100
 
         Dim buffer As Byte() = CreateArray(Of Byte)(m_bufferSize)
-        Dim events As StandardEvent()
+        Dim archivePoints As StandardEvent()
         Dim received As Integer
         Dim response As String
         Dim pollEvents As Long
@@ -375,16 +375,16 @@ Public Class PhasorMeasurementReceiver
                 pollEvents = 0
 
                 Do
-                    events = LoadEvents()
+                    archivePoints = PrepareArchivePoints()
 
-                    If events IsNot Nothing AndAlso events.Length > 0 Then
+                    If archivePoints IsNot Nothing AndAlso archivePoints.Length > 0 Then
                         ' Load binary standard event images into local buffer
-                        For x As Integer = 0 To events.Length - 1
-                            System.Buffer.BlockCopy(events(x).BinaryImage, 0, buffer, x * StandardEvent.BinaryLength, StandardEvent.BinaryLength)
+                        For x As Integer = 0 To archivePoints.Length - 1
+                            System.Buffer.BlockCopy(archivePoints(x).BinaryImage, 0, buffer, x * StandardEvent.BinaryLength, StandardEvent.BinaryLength)
                         Next
 
                         ' Post data to TCP stream
-                        m_clientStream.Write(buffer, 0, events.Length * StandardEvent.BinaryLength)
+                        m_clientStream.Write(buffer, 0, archivePoints.Length * StandardEvent.BinaryLength)
 
                         If m_useTimeout Then
                             Try
@@ -419,6 +419,10 @@ Public Class PhasorMeasurementReceiver
 
                 ' We're getting behind, must dump measurements :(
                 If m_measurementBuffer.Count > dumpInterval Then
+                    ' TODO: It would certainly be advisable at this point to take pre-defined evasive action, e.g., you could
+                    ' prioritize all data connections for this receiver and start dropping connections (with proper
+                    ' notifications of control actions) to help alleviate data loss (that's all I do manually when this problem
+                    ' happens)
                     SyncLock m_measurementBuffer
                         ' TODO: When this starts happening - you've overloaded the real-time capacity of your historian
                         ' and you must do something about it - bigger hardware, scale out, etc. Make sure to log this
@@ -445,31 +449,36 @@ Public Class PhasorMeasurementReceiver
 
     End Sub
 
-    Private Function LoadEvents() As StandardEvent()
+    Private Function PrepareArchivePoints() As StandardEvent()
 
-        Dim events As StandardEvent() = Nothing
+        Dim archivePoints As StandardEvent() = Nothing
+        Dim frames As IFrame()
 
         Try
             SyncLock m_measurementBuffer
                 ' Extract all queued data frames from the data parsers
                 For Each mapper As PhasorMeasurementMapper In m_mappers.Values
                     ' Get all queued frames in this parser
-                    For Each frame As IFrame In mapper.GetQueuedFrames()
-                        ' Extract each measurement from the frame and add queue up for processing
-                        For Each measurement As IMeasurement In frame.Measurements.Values
-                            QueueMeasurementForArchival(measurement)
+                    frames = mapper.GetQueuedFrames()
+
+                    If frames IsNot Nothing Then
+                        For Each frame As IFrame In frames
+                            ' Extract each measurement from the frame and queue it up for processing
+                            For Each measurement As IMeasurement In frame.Measurements.Values
+                                QueueMeasurementForArchival(measurement)
+                            Next
                         Next
-                    Next
+                    End If
                 Next
 
                 Dim totalEvents As Integer = Minimum(m_maximumEvents, m_measurementBuffer.Count)
 
                 If totalEvents > 0 Then
                     ' Create standard DatAWare event array of all points to be processed
-                    events = CreateArray(Of StandardEvent)(totalEvents)
+                    archivePoints = CreateArray(Of StandardEvent)(totalEvents)
 
                     For x As Integer = 0 To totalEvents - 1
-                        events(x) = New StandardEvent(m_measurementBuffer(x))
+                        archivePoints(x) = New StandardEvent(m_measurementBuffer(x))
                     Next
 
                     ' Remove measurements being processed
@@ -480,7 +489,7 @@ Public Class PhasorMeasurementReceiver
             UpdateStatus("Failed to load events from frame measurements: " & ex.Message)
         End Try
 
-        Return events
+        Return archivePoints
 
     End Function
 
