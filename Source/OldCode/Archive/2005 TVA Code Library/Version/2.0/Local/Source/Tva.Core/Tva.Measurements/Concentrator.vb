@@ -355,7 +355,7 @@ Namespace Measurements
                 Else
                     ' We've found the right sample for this data, so we access the proper data cell by first calculating the
                     ' proper frame index (i.e., the row) - we can then directly access the correct measurement using its key
-                    Dim frame As IFrame = sample.Frames(Convert.ToInt32(System.Math.Floor((TicksBeyondSecond(.Ticks) + 1@) / m_frameRate)))
+                    Dim frame As IFrame = sample.Frames(Convert.ToInt32(TicksBeyondSecond(.Ticks) / m_frameRate))
                     Dim frameMeasurement As IMeasurement
 
                     SyncLock frame.Measurements
