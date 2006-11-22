@@ -61,6 +61,7 @@
   <ItemGroup>
     <Compile Include="Tva.Collections\DictionaryList.vb" />
     <Compile Include="Tva.Measurements\MeasurementKey.vb" />
+    <Compile Include="Tva\DataEventArgs.vb" />
     <Compile Include="Tva\ExceptionEventArgs.vb" />
     <Compile Include="Tva\ScheduleManager.Designer.vb">
       <DependentUpon>ScheduleManager.vb</DependentUpon>
