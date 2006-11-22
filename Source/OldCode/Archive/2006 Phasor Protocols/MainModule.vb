@@ -203,8 +203,8 @@ Module MainModule
         Dim externalAssemblyName As String
         Dim externalAssembly As Assembly
         Dim adapterType As Type
-        Dim outputMeasurementSql As String
-        Dim outputMeasurement As Measurement
+        Dim outputMeasurementsSql As String
+        Dim outputMeasurements As List(Of IMeasurement)
         Dim inputMeasurementsSql As String
         Dim inputMeasurementKeys As List(Of MeasurementKey)
 
@@ -213,7 +213,7 @@ Module MainModule
         '   Name                        String
         '   TypeName                    String
         '   AssemblyName                String
-        '   OuputMeasurementSql         String      Expects one row, with four fields named "MeasurementID", "ArchiveSource", "Adder" and "Multipler"
+        '   OuputMeasurementsSql        String      Expects one or more rows, with four fields named "MeasurementID", "ArchiveSource", "Adder" and "Multipler"
         '   InputMeasurementsSql        String      Expects one or more rows, with two fields each named "MeasurementID" and "ArchiveSource"
         '   MinimumInputMeasurements    Integer     Defaults to -1 (use all)
         '   ExpectedFrameRate           Integer
@@ -229,27 +229,32 @@ Module MainModule
                     externalAssemblyName = .Rows(x)("AssemblyName").ToString()
                     externalAssembly = Assembly.LoadFrom(externalAssemblyName)
 
-                    ' Query ouput measurement
-                    outputMeasurementSql = .Rows(x)("OutputMeasurementSql").ToString()
-                    outputMeasurement = Nothing
+                    ' Query the output measurements
+                    outputMeasurementsSql = .Rows(x)("OutputMeasurementsSql").ToString()
+                    outputMeasurements = New List(Of IMeasurement)
 
-                    ' Calculated measurements have the option of internally defining the output measurement
-                    If Not String.IsNullOrEmpty(outputMeasurementSql) Then
+                    ' Calculated measurements have the option of internally defining the output measurements
+                    If Not String.IsNullOrEmpty(outputMeasurementsSql) Then
                         Try
-                            With RetrieveRow(outputMeasurementSql, connection)
-                                outputMeasurement = New Measurement( _
-                                    Convert.ToInt32(.Item("MeasurementID")), _
-                                    .Item("ArchiveSource").ToString(), _
-                                    Double.NaN, _
-                                    Convert.ToDouble(.Item("Adder")), _
-                                    Convert.ToDouble(.Item("Multiplier")))
+                            With RetrieveData(outputMeasurementsSql, connection)
+                                For y As Integer = 0 To .Rows.Count - 1
+                                    With .Rows(y)
+                                        outputMeasurements.Add( _
+                                            New Measurement( _
+                                                Convert.ToInt32(.Item("MeasurementID")), _
+                                                .Item("ArchiveSource").ToString(), _
+                                                Double.NaN, _
+                                                Convert.ToDouble(.Item("Adder")), _
+                                                Convert.ToDouble(.Item("Multiplier"))))
+                                    End With
+                                Next
                             End With
                         Catch ex As Exception
                             DisplayStatusMessage("Faile to load output measurement for """ & calculatedMeasurementName & """: " & ex.Message)
                         End Try
                     End If
 
-                    ' Query input measurement keys
+                    ' Query the input measurement keys
                     inputMeasurementsSql = .Rows(x)("InputMeasurementsSql").ToString()
                     inputMeasurementKeys = New List(Of MeasurementKey)
 
@@ -280,7 +285,7 @@ Module MainModule
                     ' Intialize calculated measurement adapter
                     With .Rows(x)
                         calculatedMeasurementAdapter.Initialize( _
-                            outputMeasurement, _
+                            outputMeasurements.ToArray(), _
                             inputMeasurementKeys.ToArray(), _
                             Convert.ToInt32(.Item("MinimumInputMeasurements")), _
                             Convert.ToInt32(.Item("ExpectedFrameRate")), _
@@ -293,7 +298,7 @@ Module MainModule
                         AddHandler .StatusMessage, AddressOf DisplayStatusMessage
 
                         ' Bubble newly calculated measurement out to functions that need the real-time data
-                        AddHandler .NewCalculatedMeasurement, AddressOf NewCalculatedMeasurement
+                        AddHandler .NewCalculatedMeasurements, AddressOf NewCalculatedMeasurements
 
                         ' Bubble calculation exceptions out to procedure that can handle these exceptions
                         AddHandler .CalculationException, AddressOf CalculationException
@@ -313,16 +318,29 @@ Module MainModule
 
     End Function
 
-    Private Sub NewCalculatedMeasurement(ByVal measurement As IMeasurement)
+    Private Sub NewCalculatedMeasurements(ByVal measurements As IList(Of IMeasurement))
 
-        Dim measurementReceiver As PhasorMeasurementReceiver
+        If measurements IsNot Nothing Then
+            Dim measurementReceiver As PhasorMeasurementReceiver
+            Dim x As Integer
 
-        ' Make sure new calculated measurement gets sent to correct archive...
-        If m_measurementReceivers.TryGetValue(measurement.Source, measurementReceiver) Then
-            measurementReceiver.QueueMeasurementForArchival(measurement)
+            ' Make sure new calculated measurement gets sent to correct archive...
+            For x = 0 To measurements.Count - 1
+                If m_measurementReceivers.TryGetValue(measurements(x).Source, measurementReceiver) Then
+                    measurementReceiver.QueueMeasurementForArchival(measurements(x))
+                End If
+            Next
+
+            ' Provide new calculated measurements "directly" to all calculated measurement modules
+            ' such that calculated measurements can be based on other calculated measurements
+            If m_calculatedMeasurements IsNot Nothing Then
+                For x = 0 To m_calculatedMeasurements.Length - 1
+                    m_calculatedMeasurements(x).QueueMeasurementsForCalculation(measurements)
+                Next
+            End If
+
+            ' TODO: Provide real-time calculated measurements outside of receiver as needed...
         End If
-
-        ' TODO: Provide real-time calculated measurements outside of receiver as needed...
 
     End Sub
 
