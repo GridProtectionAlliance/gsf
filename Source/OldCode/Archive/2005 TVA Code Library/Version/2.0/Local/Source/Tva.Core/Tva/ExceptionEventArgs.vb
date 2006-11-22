@@ -3,8 +3,8 @@
 Public Class ExceptionEventArgs
     Inherits EventArgs
 
-    Private m_retries As Integer
     Private m_exception As Exception
+    Private m_recurrenceCount As Integer
 
     ''' <summary>
     ''' Initializes a new instance of the Tva.ExceptionEventArgs class.
@@ -20,28 +20,14 @@ Public Class ExceptionEventArgs
     ''' Initializes a new instance of the Tva.ExceptionEventArgs class.
     ''' </summary>
     ''' <param name="exception">The exception that was encountered.</param>
-    ''' <param name="retries">The number of retries that were performed as a result of the encountered exception.</param>
-    Public Sub New(ByVal exception As Exception, ByVal retries As Integer)
+    ''' <param name="recurrenceCount">The number of time the exception has been encountered.</param>
+    Public Sub New(ByVal exception As Exception, ByVal recurrenceCount As Integer)
 
         MyBase.New()
-        Me.Retries = retries
-        Me.Exception = exception
+        m_exception = exception
+        m_recurrenceCount = recurrenceCount
 
     End Sub
-
-    ''' <summary>
-    ''' Gets or sets the number of retries if any that were performed as a result of the encountered exception.
-    ''' </summary>
-    ''' <value></value>
-    ''' <returns>The number of retries that were performed as a result of the encountered exception.</returns>
-    Public Property Retries() As Integer
-        Get
-            Return m_retries
-        End Get
-        Set(ByVal value As Integer)
-            m_retries = value
-        End Set
-    End Property
 
     ''' <summary>
     ''' Gets or sets the exception that was encountered.
@@ -54,6 +40,20 @@ Public Class ExceptionEventArgs
         End Get
         Set(ByVal value As Exception)
             m_exception = value
+        End Set
+    End Property
+
+    ''' <summary>
+    ''' Gets or sets the number of time the exception has been encountered.
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns>The number of time the exception has been encountered.</returns>
+    Public Property RecurrenceCount() As Integer
+        Get
+            Return m_recurrenceCount
+        End Get
+        Set(ByVal value As Integer)
+            m_recurrenceCount = value
         End Set
     End Property
 
