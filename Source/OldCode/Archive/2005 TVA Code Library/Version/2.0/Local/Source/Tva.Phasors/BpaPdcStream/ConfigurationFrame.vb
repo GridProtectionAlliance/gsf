@@ -51,7 +51,7 @@ Namespace BpaPdcStream
         Public Event ConfigFileReloaded()
 
         Public Const DefaultVoltagePhasorEntry As String = "V,4500.0,0.0060573,0,0,500,Default 500kV"
-        Public Const DefaultCurrentPhasorEntry As String = "V,4500.0,0.0060573,0,0,500,Default 500kV"
+        Public Const DefaultCurrentPhasorEntry As String = "I,600.00,0.000040382,0,1,1.0,Default Current"
         Public Const DefaultFrequencyEntry As String = "F,1000,60,1000,0,0,Frequency"
 
         Protected Sub New()
