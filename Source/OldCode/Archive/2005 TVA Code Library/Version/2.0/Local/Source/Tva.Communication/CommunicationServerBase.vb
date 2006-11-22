@@ -79,31 +79,26 @@ Public MustInherit Class CommunicationServerBase
     ''' <summary>
     ''' Occurs when an exception is encountered while starting up the server.
     ''' </summary>
-    ''' <param name="ex">The exception that was encountered while connecting to the server.</param>
     <Description("Occurs when an exception is encountered while starting up the server."), Category("Server")> _
-    Public Event ServerStartupException(ByVal ex As Exception) Implements ICommunicationServer.ServerStartupException
+    Public Event ServerStartupException(ByVal sender As Object, ByVal e As ExceptionEventArgs) Implements ICommunicationServer.ServerStartupException
 
     ''' <summary>
     ''' Occurs when a client is connected to the server.
     ''' </summary>
-    ''' <param name="clientID">ID of the client that was connected.</param>
     <Description("Occurs when a client is connected to the server."), Category("Client")> _
-    Public Event ClientConnected(ByVal clientID As Guid) Implements ICommunicationServer.ClientConnected
+    Public Event ClientConnected(ByVal sender As Object, ByVal e As IdentifiableSourceEventArgs) Implements ICommunicationServer.ClientConnected
 
     ''' <summary>
     ''' Occurs when a client is disconnected from the server.
     ''' </summary>
-    ''' <param name="clientID">ID of the client that was disconnected.</param>
     <Description("Occurs when a client is disconnected from the server."), Category("Client")> _
-    Public Event ClientDisconnected(ByVal clientID As Guid) Implements ICommunicationServer.ClientDisconnected
+    Public Event ClientDisconnected(ByVal sender As Object, ByVal e As IdentifiableSourceEventArgs) Implements ICommunicationServer.ClientDisconnected
 
     ''' <summary>
     ''' Occurs when data is received from a client.
     ''' </summary>
-    ''' <param name="clientID">ID of the client from which the data is received.</param>
-    ''' <param name="data">The data that is received from the client.</param>
     <Description("Occurs when data is received from a client."), Category("Data")> _
-    Public Event ReceivedClientData(ByVal clientID As Guid, ByVal data As Byte()) Implements ICommunicationServer.ReceivedClientData
+    Public Event ReceivedClientData(ByVal sender As Object, ByVal e As DataEventArgs) Implements ICommunicationServer.ReceivedClientData
 
     ''' <summary>
     ''' Gets or sets the data that is required by the server to initialize.
@@ -586,52 +581,51 @@ Public MustInherit Class CommunicationServerBase
     ''' <summary>
     ''' Raises the Tva.Communication.ServerBase.ServerStartupException event.
     ''' </summary>
-    ''' <param name="ex">A System.Exception that contains the startup exception.</param>
+    ''' <param name="e">A Tva.ExceptionEventArgs that contains the event data.</param>
     ''' <remarks>This method is to be called if the server throws an exception during startup.</remarks>
-    Protected Overridable Sub OnServerStartupException(ByVal ex As Exception)
+    Protected Overridable Sub OnServerStartupException(ByVal e As ExceptionEventArgs)
 
-        RaiseEvent ServerStartupException(ex)
+        RaiseEvent ServerStartupException(Me, e)
 
     End Sub
 
     ''' <summary>
     ''' Raises the Tva.Communication.ServerBase.ClientConnected event.
     ''' </summary>
-    ''' <param name="clientID">ID of the client that was connected.</param>
+    ''' <param name="e">A Tva.IdentifiableSourceEventArgs that contains the event data.</param>
     ''' <remarks>This method is to be called when a client is connected to the server.</remarks>
-    Protected Overridable Sub OnClientConnected(ByVal clientID As Guid)
+    Protected Overridable Sub OnClientConnected(ByVal e As IdentifiableSourceEventArgs)
 
-        m_clientIDs.Add(clientID)
-        RaiseEvent ClientConnected(clientID)
+        m_clientIDs.Add(e.Source)
+        RaiseEvent ClientConnected(Me, e)
 
     End Sub
 
     ''' <summary>
     ''' Raises the Tva.Communication.ServerBase.ClientDisconnected event.
     ''' </summary>
-    ''' <param name="clientID">ID of the client that was disconnected.</param>
+    ''' <param name="e">A Tva.IdentifiableSourceEventArgs that contains the event data.</param>
     ''' <remarks>This method is to be called when a client has disconnected from the server.</remarks>
-    Protected Overridable Sub OnClientDisconnected(ByVal clientID As Guid)
+    Protected Overridable Sub OnClientDisconnected(ByVal e As IdentifiableSourceEventArgs)
 
-        m_clientIDs.Remove(clientID)
-        RaiseEvent ClientDisconnected(clientID)
+        m_clientIDs.Remove(e.Source)
+        RaiseEvent ClientDisconnected(Me, e)
 
     End Sub
 
     ''' <summary>
     ''' Raises the Tva.Communication.ServerBase.ReceivedClientData event.
     ''' </summary>
-    ''' <param name="clientID">ID of the client from which the data is received.</param>
-    ''' <param name="data">The data that was received from the client.</param>
+    ''' <param name="e">A Tva.DataEventArgs that contains the event data.</param>
     ''' <remarks>This method is to be called when the server receives data from a client.</remarks>
-    Protected Overridable Sub OnReceivedClientData(ByVal clientID As Guid, ByVal data As Byte())
+    Protected Overridable Sub OnReceivedClientData(ByVal e As DataEventArgs)
 
         Try
-            data = GetActualData(data)
+            e.Data = GetActualData(e.Data)
         Catch ex As Exception
             ' We'll just pass on the data that we received.
         End Try
-        RaiseEvent ReceivedClientData(clientID, data)
+        RaiseEvent ReceivedClientData(Me, e)
 
     End Sub
 

@@ -230,9 +230,8 @@ Public Class FileClient
             Catch ex As ThreadAbortException
                 Exit Do ' We must abort connecting to the file.
             Catch ex As Exception
-                OnConnectingException(ex, connectionAttempts + 1)
-            Finally
                 connectionAttempts += 1
+                OnConnectingException(New ExceptionEventArgs(ex, connectionAttempts + 1))
             End Try
         Loop
 
@@ -264,7 +263,7 @@ Public Class FileClient
                         m_totalBytesReceived += received
                     Else
                         ' Unpack data and make available via event
-                        OnReceivedData(CopyBuffer(m_buffer, 0, received))
+                        OnReceivedData(New DataEventArgs(CopyBuffer(m_buffer, 0, received)))
                     End If
 
                     ' We must stop processing the file if user has either opted to receive data on 

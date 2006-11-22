@@ -114,13 +114,13 @@ Public Class TcpClient
         If Enabled() AndAlso IsConnected() Then
             If SecureSession() Then data = EncryptData(data, m_tcpClient.Passphrase, Encryption())
             ' We'll send data over the wire asynchronously for improved performance.
-            OnSendDataBegin(data)
+            OnSendDataBegin(New DataEventArgs(data))
             If m_payloadAware Then
                 Dim packetHeader As Byte() = BitConverter.GetBytes(data.Length())
                 m_tcpClient.Client.BeginSend(packetHeader, 0, packetHeader.Length(), SocketFlags.None, Nothing, Nothing)
             End If
             m_tcpClient.Client.BeginSend(data, 0, data.Length(), SocketFlags.None, Nothing, Nothing)
-            OnSendDataComplete(data)
+            OnSendDataComplete(New DataEventArgs(data))
         End If
 
     End Sub
@@ -192,7 +192,7 @@ Public Class TcpClient
                 Exit Do
             Catch ex As Exception
                 connectionAttempts += 1
-                OnConnectingException(ex, connectionAttempts)
+                OnConnectingException(New ExceptionEventArgs(ex, connectionAttempts))
             End Try
         Loop
 
@@ -314,7 +314,7 @@ Public Class TcpClient
                             End If
 
                             ' Notify of data received from the client.
-                            OnReceivedData(dataBuffer)
+                            OnReceivedData(New DataEventArgs(dataBuffer))
                         End If
 
                         .PacketSize = -1

@@ -204,7 +204,7 @@ Public Class TcpServer
             ' This will be a normal exception...
         Catch ex As Exception
             ' We will gracefully exit when an exception occurs.
-            OnServerStartupException(ex)
+            OnServerStartupException(New ExceptionEventArgs(ex))
         Finally
             If m_tcpServer IsNot Nothing Then
                 m_tcpServer.Close()
@@ -237,7 +237,7 @@ Public Class TcpServer
                         m_tcpClients.Add(.ID, .This)
                     End SyncLock
 
-                    OnClientConnected(.ID)    ' Notify that the client is connected.
+                    OnClientConnected(New IdentifiableSourceEventArgs(.ID))    ' Notify that the client is connected.
                 End If
 
                 Dim received As Integer
@@ -323,7 +323,7 @@ Public Class TcpServer
                                     m_tcpClients.Add(.ID, .This)
                                 End SyncLock
 
-                                OnClientConnected(.ID)    ' Notify that the client is connected.
+                                OnClientConnected(New IdentifiableSourceEventArgs(.ID))    ' Notify that the client is connected.
                             Else
                                 ' The first response from the client is either not information about itself, or
                                 ' the information provided by the client is invalid.
@@ -336,7 +336,7 @@ Public Class TcpServer
                             End If
 
                             ' Notify of data received from the client.
-                            OnReceivedClientData(.ID, dataBuffer)
+                            OnReceivedClientData(New DataEventArgs(.ID, dataBuffer))
                         End If
 
                         .PacketSize = -1
@@ -368,7 +368,7 @@ Public Class TcpServer
                 SyncLock m_tcpClients
                     If m_tcpClients.ContainsKey(.ID) Then
                         m_tcpClients.Remove(.ID)
-                        OnClientDisconnected(.ID)    ' Notify that the client is disconnected.
+                        OnClientDisconnected(New IdentifiableSourceEventArgs(.ID))    ' Notify that the client is disconnected.
                     End If
                 End SyncLock
             End Try

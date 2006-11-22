@@ -75,7 +75,7 @@ Public Class UdpServer
                             udpClient.ID = Guid.NewGuid()
                             udpClient.Client = GetIpEndPoint(clientNameOrAddress, Convert.ToInt32(m_configurationData("port")))
                             m_udpClients.Add(udpClient.ID, udpClient)
-                            OnClientConnected(udpClient.ID)
+                            OnClientConnected(New IdentifiableSourceEventArgs(udpClient.ID))
                         Else
                             ' Handshaking with the clients is required.
                             m_pendingUdpClients.Add(Dns.GetHostEntry(clientNameOrAddress).AddressList(0))
@@ -91,7 +91,7 @@ Public Class UdpServer
 
                 OnServerStarted(EventArgs.Empty)
             Catch ex As Exception
-                OnServerStartupException(ex)
+                OnServerStartupException(New ExceptionEventArgs(ex))
             End Try
         End If
 
@@ -106,7 +106,7 @@ Public Class UdpServer
                     If m_payloadAware Then goodbye = AddBeginHeader(goodbye)
                     m_udpServer.Client.SendTo(goodbye, m_udpClients(udpClientID).Client)
                 End If
-                OnClientDisconnected(udpClientID)
+                OnClientDisconnected(New IdentifiableSourceEventArgs(udpClientID))
             Next
             m_udpClients.Clear()
 
@@ -242,14 +242,14 @@ Public Class UdpServer
 
                             m_pendingUdpClients.Remove(udpClient.Client.Address())
                             m_udpClients.Add(udpClient.ID, udpClient)
-                            OnClientConnected(udpClient.ID)
+                            OnClientConnected(New IdentifiableSourceEventArgs(udpClient.ID))
                         End If
                     ElseIf clientMessage IsNot Nothing AndAlso TypeOf clientMessage Is GoodbyeMessage Then
                         ' The client sent a goodbye message.
                         Dim clientInfo As GoodbyeMessage = DirectCast(clientMessage, GoodbyeMessage)
                         If m_udpClients.ContainsKey(clientInfo.ID()) Then
                             m_udpClients.Remove(clientInfo.ID())
-                            OnClientDisconnected(clientInfo.ID())
+                            OnClientDisconnected(New IdentifiableSourceEventArgs(clientInfo.ID()))
                         End If
                     Else
                         Dim remoteEP As IPEndPoint = CType(clientEndPoint, IPEndPoint)
@@ -270,7 +270,7 @@ Public Class UdpServer
                                 totalBytesReceived = 0
                             End If
 
-                            OnReceivedClientData(clientID, dataBuffer)
+                            OnReceivedClientData(New DataEventArgs(clientID, dataBuffer))
                         End If
                     End If
 

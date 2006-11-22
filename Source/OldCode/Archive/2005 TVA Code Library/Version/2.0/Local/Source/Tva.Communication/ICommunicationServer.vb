@@ -36,27 +36,22 @@ Public Interface ICommunicationServer
     ''' <summary>
     ''' Occurs when an exception is encountered while starting up the server.
     ''' </summary>
-    ''' <param name="ex">The exception that was encountered while connecting to the server.</param>
-    Event ServerStartupException(ByVal ex As Exception)
+    Event ServerStartupException(ByVal sender As Object, ByVal e As ExceptionEventArgs)
 
     ''' <summary>
     ''' Occurs when a client is connected to the server.
     ''' </summary>
-    ''' <param name="clientID">ID of the client that was connected.</param>
-    Event ClientConnected(ByVal clientID As Guid)
+    Event ClientConnected(ByVal sender As Object, ByVal e As IdentifiableSourceEventArgs)
 
     ''' <summary>
     ''' Occurs when a client is disconnected from the server.
     ''' </summary>
-    ''' <param name="clientID">ID of the client that was disconnected.</param>
-    Event ClientDisconnected(ByVal clientID As Guid)
+    Event ClientDisconnected(ByVal sender As Object, ByVal e As IdentifiableSourceEventArgs)
 
     ''' <summary>
     ''' Occurs when data is received from a client.
     ''' </summary>
-    ''' <param name="clientID">ID of the client from which the data is received.</param>
-    ''' <param name="data">The data that is received from the client.</param>
-    Event ReceivedClientData(ByVal clientID As Guid, ByVal data As Byte())
+    Event ReceivedClientData(ByVal sender As Object, ByVal e As DataEventArgs)
 
     ''' <summary>
     ''' Gets or sets the data that is required by the server to initialize.

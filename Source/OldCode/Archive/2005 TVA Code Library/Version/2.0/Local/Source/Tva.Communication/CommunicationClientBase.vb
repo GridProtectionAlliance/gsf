@@ -82,9 +82,8 @@ Public MustInherit Class CommunicationClientBase
     ''' <summary>
     ''' Occurs when an exception is encountered while connecting to the server.
     ''' </summary>
-    ''' <param name="ex">The exception that was encountered while connecting to the server.</param>
     <Description("Occurs when an exception occurs while connecting to the server."), Category("Connection")> _
-    Public Event ConnectingException(ByVal ex As Exception, ByVal connectionAttempts As Integer) Implements ICommunicationClient.ConnectingException
+    Public Event ConnectingException(ByVal sender As Object, ByVal e As ExceptionEventArgs) Implements ICommunicationClient.ConnectingException
 
     ''' <summary>
     ''' Occurs when the client has successfully connected to the server.
@@ -101,23 +100,20 @@ Public MustInherit Class CommunicationClientBase
     ''' <summary>
     ''' Occurs when the client begins sending data to the server.
     ''' </summary>
-    ''' <param name="data">The data being sent to the server.</param>
     <Description("Occurs when the client begins sending data to the server."), Category("Data")> _
-    Public Event SendDataBegin(ByVal data As Byte()) Implements ICommunicationClient.SendDataBegin
+    Public Event SendDataBegin(ByVal sender As Object, ByVal e As DataEventArgs) Implements ICommunicationClient.SendDataBegin
 
     ''' <summary>
     ''' Occurs when the client has successfully send data to the server.
     ''' </summary>
-    ''' <param name="data">The data sent to the server.</param>
     <Description("Occurs when the client has successfully send data to the server."), Category("Data")> _
-    Public Event SendDataComplete(ByVal data As Byte()) Implements ICommunicationClient.SendDataComplete
+    Public Event SendDataComplete(ByVal sender As Object, ByVal e As DataEventArgs) Implements ICommunicationClient.SendDataComplete
 
     ''' <summary>
     ''' Occurs when the client receives data from the server.
     ''' </summary>
-    ''' <param name="data">The data that was received from the server.</param>
     <Description("Occurs when the client receives data from the server."), Category("Data")> _
-    Public Event ReceivedData(ByVal data As Byte()) Implements ICommunicationClient.ReceivedData
+    Public Event ReceivedData(ByVal sender As Object, ByVal e As DataEventArgs) Implements ICommunicationClient.ReceivedData
 
     ''' <summary>
     ''' Occurs when no data is received from the server after waiting for the specified time.
@@ -605,14 +601,14 @@ Public MustInherit Class CommunicationClientBase
     ''' <summary>
     ''' Raises the Tva.Communication.ClientBase.ConnectingException event.
     ''' </summary>
-    ''' <param name="ex">The exception that was encountered while connecting to the server.</param>
+    ''' <param name="e">A Tva.ExceptionEventArgs that contains the event data.</param>
     ''' <remarks>
     ''' This method is to be called when all attempts for connecting to the server have been made but failed 
     ''' due to exceptions.
     ''' </remarks>
-    Protected Overridable Sub OnConnectingException(ByVal ex As Exception, ByVal connectionAttempts As Integer)
+    Protected Overridable Sub OnConnectingException(ByVal e As ExceptionEventArgs)
 
-        RaiseEvent ConnectingException(ex, connectionAttempts)
+        RaiseEvent ConnectingException(Me, e)
 
     End Sub
 
@@ -649,41 +645,41 @@ Public MustInherit Class CommunicationClientBase
     ''' <summary>
     ''' Raises the Tva.Communication.ClientBase.SendBegin event.
     ''' </summary>
-    ''' <param name="data">The data being sent to the server.</param>
+    ''' <param name="e">A Tva.DataEventArgs that contains the event data.</param>
     ''' <remarks>This method is to be called when the client begins sending data to the server.</remarks>
-    Protected Overridable Sub OnSendDataBegin(ByVal data As Byte())
+    Protected Overridable Sub OnSendDataBegin(ByVal e As DataEventArgs)
 
-        RaiseEvent SendDataBegin(data)
+        RaiseEvent SendDataBegin(Me, e)
 
     End Sub
 
     ''' <summary>
     ''' Raises the Tva.Communication.ClientBase.SendComplete event.
     ''' </summary>
-    ''' <param name="data">The data sent to the server.</param>
+    ''' <param name="e">A Tva.DataEventArgs that contains the event data.</param>
     ''' <remarks>This method is to be called when the client has finished sending data to the server.</remarks>
-    Protected Overridable Sub OnSendDataComplete(ByVal data As Byte())
+    Protected Overridable Sub OnSendDataComplete(ByVal e As DataEventArgs)
 
-        m_totalBytesSent += data.Length()
-        RaiseEvent SendDataComplete(data)
+        m_totalBytesSent += e.Data.Length()
+        RaiseEvent SendDataComplete(Me, e)
 
     End Sub
 
     ''' <summary>
     ''' Raises the Tva.Communication.ClientBase.ReceivedData event.
     ''' </summary>
-    ''' <param name="data">The data that was received from the server.</param>
+    ''' <param name="e">A Tva.DataEventArgs that contains the event data.</param>
     ''' <remarks>This method is to be called when the client receives data from the server.</remarks>
-    Protected Overridable Sub OnReceivedData(ByVal data As Byte())
+    Protected Overridable Sub OnReceivedData(ByVal e As DataEventArgs)
 
-        m_totalBytesReceived += data.Length()
+        m_totalBytesReceived += e.Data.Length()
 
         Try
-            data = GetActualData(data)
+            e.Data = GetActualData(e.Data)
         Catch ex As Exception
             ' We'll just pass on the data that we received.
         End Try
-        RaiseEvent ReceivedData(data)
+        RaiseEvent ReceivedData(Me, e)
 
     End Sub
 

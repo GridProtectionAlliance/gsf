@@ -98,9 +98,9 @@ Public Class SerialClient
     Protected Overrides Sub SendPreparedData(ByVal data As Byte())
 
         If Enabled() And IsConnected() Then
-            OnSendDataBegin(data)
+            OnSendDataBegin(New DataEventArgs(data))
             m_serialClient.Write(data, 0, data.Length())
-            OnSendDataComplete(data)
+            OnSendDataComplete(New DataEventArgs(data))
         End If
 
     End Sub
@@ -151,9 +151,8 @@ Public Class SerialClient
             Catch ex As ThreadAbortException
                 Exit Do
             Catch ex As Exception
-                OnConnectingException(ex, connectionAttempts + 1)
-            Finally
                 connectionAttempts += 1
+                OnConnectingException(New ExceptionEventArgs(ex, connectionAttempts + 1))
             End Try
         Loop
 
@@ -179,7 +178,7 @@ Public Class SerialClient
                 m_totalBytesReceived += received
             Else
                 ' Unpack data and make available via event
-                OnReceivedData(CopyBuffer(m_buffer, 0, received))
+                OnReceivedData(New DataEventArgs(CopyBuffer(m_buffer, 0, received)))
             End If
         Next
 

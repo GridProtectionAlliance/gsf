@@ -117,13 +117,13 @@ Public Class UdpClient
 
             ' Since we can only send MaximumPacketSize bytes in a given packet, we may need to break the actual 
             ' packet into a series of packets if the packet's size exceed the MaximumPacketSize.
-            OnSendDataBegin(data)
+            OnSendDataBegin(New DataEventArgs(data))
             For i As Integer = 0 To IIf(data.Length() > MaximumUdpPacketSize, data.Length() - 1, 0) Step MaximumUdpPacketSize
                 Dim packetSize As Integer = MaximumUdpPacketSize
                 If data.Length() - i < MaximumUdpPacketSize Then packetSize = data.Length() - i ' Last or the only packet in the series.
                 m_udpClient.Client.BeginSendTo(data, i, packetSize, SocketFlags.None, m_udpServer, Nothing, Nothing)
             Next
-            OnSendDataComplete(data)
+            OnSendDataComplete(New DataEventArgs(data))
         End If
 
     End Sub
@@ -194,7 +194,7 @@ Public Class UdpClient
                 Exit Do
             Catch ex As Exception
                 connectionAttempts += 1
-                OnConnectingException(ex, connectionAttempts)
+                OnConnectingException(New ExceptionEventArgs(ex, connectionAttempts))
             End Try
         Loop
 
@@ -248,7 +248,7 @@ Public Class UdpClient
                         ElseIf ex.SocketErrorCode = SocketError.ConnectionReset Then
                             If Not IsConnected() Then
                                 connectionAttempts += 1
-                                OnConnectingException(ex, connectionAttempts)
+                                OnConnectingException(New ExceptionEventArgs(ex, connectionAttempts))
                                 If MaximumConnectionAttempts = -1 OrElse connectionAttempts < MaximumConnectionAttempts Then
                                     Continue Do
                                 Else
@@ -313,7 +313,7 @@ Public Class UdpClient
                             totalBytesReceived = 0
                         End If
 
-                        OnReceivedData(dataBuffer)
+                        OnReceivedData(New DataEventArgs(dataBuffer))
                     End If
 
                     dataBuffer = Nothing
