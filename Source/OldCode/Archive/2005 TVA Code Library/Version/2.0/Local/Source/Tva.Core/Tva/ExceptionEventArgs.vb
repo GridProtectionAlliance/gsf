@@ -7,7 +7,7 @@ Public Class ExceptionEventArgs
     Private m_exception As Exception
 
     ''' <summary>
-    ''' Initializes a new instance of the ExceptionEventArgs class.
+    ''' Initializes a new instance of the Tva.ExceptionEventArgs class.
     ''' </summary>
     ''' <param name="exception">The exception that was encountered.</param>
     Public Sub New(ByVal exception As Exception)
@@ -17,7 +17,7 @@ Public Class ExceptionEventArgs
     End Sub
 
     ''' <summary>
-    ''' Initializes a new instance of the ExceptionEventArgs class.
+    ''' Initializes a new instance of the Tva.ExceptionEventArgs class.
     ''' </summary>
     ''' <param name="exception">The exception that was encountered.</param>
     ''' <param name="retries">The number of retries that were performed as a result of the encountered exception.</param>
