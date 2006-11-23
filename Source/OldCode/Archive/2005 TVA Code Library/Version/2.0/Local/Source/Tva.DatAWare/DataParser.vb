@@ -19,8 +19,8 @@ Public Class DataParser
 
 #Region " Event Declaration "
 
-    Public Event DataParsed(ByVal source As Guid, ByVal packets As List(Of IPacket))
-    Public Event DataDiscarded(ByVal source As Guid, ByVal data As Byte())
+    Public Event DataParsed(ByVal sender As Object, ByVal e As DataParsedEventArgs)
+    Public Event DataDiscarded(ByVal sender As Object, ByVal e As DataEventArgs)
 
 #End Region
 
@@ -35,7 +35,7 @@ Public Class DataParser
                 Dim asm As Reflection.Assembly = Reflection.Assembly.LoadFrom(dll)
                 For Each asmType As Type In asm.GetTypes()
                     If Not asmType.IsAbstract AndAlso _
-                            asmType.GetInterface("Tva.DatAWare.IPacket", True) IsNot Nothing Then
+                            asmType.GetInterface("Tva.DatAWare.Packets.IPacket", True) IsNot Nothing Then
                         ' We need to cache this type since it implements the IPacket interface.
                         Dim typeInfo As New PacketTypeInfo()
 
@@ -91,13 +91,13 @@ Public Class DataParser
 
                 If packetType.TryParse(data, packets) Then
                     ' Data could be parsed and was converted to packets.
-                    RaiseEvent DataParsed(source, packets)
+                    RaiseEvent DataParsed(Me, New DataParsedEventArgs(source, packets))
                 Else
                     ' Data could not be parsed for some reason.
-                    RaiseEvent DataDiscarded(source, data)
+                    RaiseEvent DataDiscarded(Me, New DataEventArgs(source, data))
                 End If
             Else
-                RaiseEvent DataDiscarded(source, data)
+                RaiseEvent DataDiscarded(Me, New DataEventArgs(source, data))
             End If
         End If
 

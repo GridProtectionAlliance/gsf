@@ -18,69 +18,115 @@
 ' This is the most basic form of a point of data in DatAWare (used by ReadEvent and ReadRange)
 Public Class DataPoint
 
-    'Implements IComparable
+#Region " Member Declaration "
 
-    Public TTag As TimeTag
-    Public QualityBits As Integer
-    Public Value As Single
+    ' *******************************************************************************
+    ' *                             Bit usage for *Flags*                           *
+    ' *******************************************************************************
+    ' * Bits    Mask    Description                                                 *
+    ' * ----    ----    -----------                                                 *
+    ' * 0-4     &H1F    Data quality indicator, a number between 0 and 31.          *
+    ' *                 Maps to the same qualities as used by PMS process computer. *
+    ' * 5-10    &H7E0   Index of time-zone used, number between 0 and 51            *
+    ' * 11      &H800   DST indicator. When set, DST else Standard Time.            *
+    ' *******************************************************************************
 
-    ' ***************************************
-    ' *  Bit usage of IntEvent.Quality word
-    ' *
-    ' *    Bits 0-4 (data quality indicator, a number between 0 and 31, 5 bits.
-    ' *              Maps to the same qualities as used by PMS process computer.)
-    ' *
-    ' *             mask = &H1F
-    ' *
-    ' *    Bits 5-10 (index of time-zone used, number between 0 and 51, 6 bits)
-    ' *
-    ' *             mask = &H7E0
-    ' *
-    ' *    Bit 11 (Flag for Daylight Savings Time, one bit.  When set, indicates
-    ' *            DST is in effect.  When clear, Standard Time.
-    ' *
-    ' *             mask = &H800
-    ' *
-    ' ***************************************
+    Private m_tTag As TimeTag
+    Private m_value As Single
+    Private m_flags As Integer
 
-    Public Const BinaryLength As Integer = 16
     Private Const QualityMask As Integer = &H1F
 
-    Public Sub New(ByVal ttag As TimeTag, ByVal value As Single, ByVal qual As Quality)
+#End Region
 
-        Me.TTag = ttag
-        Me.Value = value
-        QualityBits = -1    ' A quality set to -1 tells Archiver to perform limit checking
-        Quality = qual
+#Region " Public Code "
 
-    End Sub
+    Public Const BinaryLength As Integer = 16
 
-    Public Sub New(ByVal timestamp As Date, ByVal value As Single, ByVal valueQuality As Quality)
-
-        Me.New(New TimeTag(timestamp), value, valueQuality)
-
-    End Sub
+#Region " Constructors "
 
     Public Sub New(ByVal binaryImage As Byte(), ByVal startIndex As Integer)
 
-        If binaryImage Is Nothing Then
-            Throw New ArgumentNullException("BinaryImage was null - could not create DatAWare.ProcessEvent")
-        ElseIf binaryImage.Length - startIndex < BinaryLength Then
-            Throw New ArgumentException("BinaryImage size from startIndex is too small - could not create DatAWare.ProcessEvent")
+        MyBase.New()
+        If binaryImage IsNot Nothing Then
+            If binaryImage.Length - startIndex >= BinaryLength Then
+                m_tTag = New TimeTag(BitConverter.ToDouble(binaryImage, startIndex))
+                m_flags = BitConverter.ToInt32(binaryImage, startIndex + 8)
+                m_value = BitConverter.ToSingle(binaryImage, startIndex + 12)
+            Else
+                Throw New ArgumentException("BinaryImage is too small.")
+            End If
         Else
-            Me.TTag = New TimeTag(BitConverter.ToDouble(binaryImage, startIndex))
-            Me.QualityBits = BitConverter.ToInt32(binaryImage, startIndex + 8)
-            Me.Value = BitConverter.ToSingle(binaryImage, startIndex + 12)
+            Throw New ArgumentNullException("BinaryImage cannot be null.")
         End If
 
     End Sub
 
+    Public Sub New(ByVal seconds As Double, ByVal value As Single, ByVal quality As Quality)
+
+        MyClass.New(New TimeTag(seconds), value, quality)
+
+    End Sub
+
+    Public Sub New(ByVal timestamp As Date, ByVal value As Single, ByVal quality As Quality)
+
+        MyClass.New(New TimeTag(timestamp), value, quality)
+
+    End Sub
+
+    Public Sub New(ByVal tTag As TimeTag, ByVal value As Single, ByVal quality As Quality)
+
+        MyClass.New(tTag, value, -1)
+        Me.Quality = quality
+
+    End Sub
+
+    Public Sub New(ByVal seconds As Double, ByVal value As Single, ByVal flags As Integer)
+
+        MyClass.New(New TimeTag(seconds), value, flags)
+
+    End Sub
+
+    Public Sub New(ByVal timestamp As Date, ByVal value As Single, ByVal flags As Integer)
+
+        MyClass.New(New TimeTag(timestamp), value, flags)
+
+    End Sub
+
+    Public Sub New(ByVal tTag As TimeTag, ByVal value As Single, ByVal flags As Integer)
+
+        m_tTag = tTag
+        m_value = value
+        m_flags = flags
+
+    End Sub
+
+#End Region
+
+    Public Property TTag() As TimeTag
+        Get
+            Return m_tTag
+        End Get
+        Set(ByVal value As TimeTag)
+            m_tTag = value
+        End Set
+    End Property
+
+    Public Property Value() As Single
+        Get
+            Return m_value
+        End Get
+        Set(ByVal value As Single)
+            m_value = value
+        End Set
+    End Property
+
     Public Property Quality() As Quality
         Get
-            Return CType((QualityBits And QualityMask), Quality)
+            Return CType((m_flags And QualityMask), Quality)
         End Get
-        Set(ByVal Value As Quality)
-            QualityBits = (QualityBits Or Value)
+        Set(ByVal value As Quality)
+            m_flags = (m_flags Or value)
         End Set
     End Property
 
@@ -89,23 +135,14 @@ Public Class DataPoint
             Dim buffer As Byte() = CreateArray(Of Byte)(BinaryLength)
 
             ' Construct the binary IP buffer for this event
-            Array.Copy(BitConverter.GetBytes(TTag.Value), 0, buffer, 0, 8)
-            Array.Copy(BitConverter.GetBytes(QualityBits), 0, buffer, 8, 4)
-            Array.Copy(BitConverter.GetBytes(Value), 0, buffer, 12, 4)
+            Array.Copy(BitConverter.GetBytes(m_tTag.Value), 0, buffer, 0, 8)
+            Array.Copy(BitConverter.GetBytes(m_flags), 0, buffer, 8, 4)
+            Array.Copy(BitConverter.GetBytes(m_value), 0, buffer, 12, 4)
 
             Return buffer
         End Get
     End Property
 
-    '' Process events are sorted in TimeTag order
-    'Public Function CompareTo(ByVal obj As Object) As Integer Implements System.IComparable.CompareTo
-
-    '    If TypeOf obj Is ProcessEvent Then
-    '        Return TTag.CompareTo(DirectCast(obj, ProcessEvent).TTag)
-    '    Else
-    '        Throw New ArgumentException("ProcessEvent can only be compared with other ProcessEvents")
-    '    End If
-
-    'End Function
+#End Region
 
 End Class

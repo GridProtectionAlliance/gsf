@@ -126,6 +126,7 @@
     <Compile Include="Tva\ByteEncoding.vb" />
     <Compile Include="Tva\Schedule.vb" />
     <Compile Include="Tva\Serialization.vb" />
+    <Compile Include="Tva\ObjectStateChangedEventArgs.vb" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Tva.Collections\Tva.Collections.cd" />

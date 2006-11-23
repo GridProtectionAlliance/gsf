@@ -115,12 +115,12 @@ Public Class ClientHelper
 
     End Sub
 
-    Private Sub CHTcpClient_ConnectingException(ByVal ex As System.Exception, ByVal connectionAttempts As Integer) Handles CHTcpClient.ConnectingException
+    Private Sub CHTcpClient_ConnectingException(ByVal sender As Object, ByVal e As ExceptionEventArgs) Handles CHTcpClient.ConnectingException
 
         With New StringBuilder()
-            .Append("Failed to connect to the service on attempt " & connectionAttempts & "due to an exception:")
+            .Append("Failed to connect to the service on attempt " & e.RecurrenceCount & "due to an exception:")
             .Append(Environment.NewLine)
-            .Append(ex.Message)
+            .Append(e.Exception.Message)
 
             UpdateStatus(.ToString(), True, 0, 2)
         End With
@@ -133,9 +133,9 @@ Public Class ClientHelper
 
     End Sub
 
-    Private Sub CHTcpClient_ReceivedData(ByVal data() As System.Byte) Handles CHTcpClient.ReceivedData
+    Private Sub CHTcpClient_ReceivedData(ByVal sender As Object, ByVal e As DataEventArgs) Handles CHTcpClient.ReceivedData
 
-        Dim response As ServiceResponse = GetObject(Of ServiceResponse)(data)
+        Dim response As ServiceResponse = GetObject(Of ServiceResponse)(e.Data)
         If response IsNot Nothing Then
             RaiseEvent ReceivedServiceResponse(response)
             Select Case response.Type

@@ -53,6 +53,7 @@
     <Import Include="Tva.Common" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DataParsedEventArgs.vb" />
     <Compile Include="DataParser.Designer.vb">
       <DependentUpon>DataParser.vb</DependentUpon>
     </Compile>
@@ -99,6 +100,7 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Packets\Enumerations.vb" />
+    <Compile Include="Packets\ExtendedPacket.vb" />
     <Compile Include="Packets\IPacket.vb" />
     <Compile Include="Packets\PacketBase.vb" />
     <Compile Include="Packets\StandardPacket.vb" />

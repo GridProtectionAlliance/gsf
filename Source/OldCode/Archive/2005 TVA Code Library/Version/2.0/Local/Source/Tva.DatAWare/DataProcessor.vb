@@ -5,6 +5,8 @@ Imports Tva.IO
 Imports Tva.Collections
 Imports Tva.DatAWare.Packets
 
+' TODO: This code is to be moved to the DatAWare Archiver windows service.
+
 Public Class DataProcessor
 
 #Region " Event Declaration "
@@ -33,42 +35,26 @@ Public Class DataProcessor
 
 #Region " Private Code "
 
-    Private Sub DataParser_DataParsed(ByVal source As System.Guid, ByVal packets As System.Collections.Generic.List(Of IPacket)) Handles DataParser.DataParsed
+    Private Sub DataParser_DataParsed(ByVal sender As Object, ByVal e As DataParsedEventArgs) Handles DataParser.DataParsed
 
-        For Each packet As IPacket In packets
+        For Each packet As IPacket In e.Packets
             ' Process all of the packets.
             Select Case packet.ActionType
                 Case PacketActionType.SaveOnly, PacketActionType.SaveAndReply
                     Select Case packet.SaveLocation
                         Case PacketSaveLocation.ArchiveFile
-
+                            ' Call ArchiveFile.Write()
                         Case PacketSaveLocation.MetadataFile
-
+                            ' Call ArchiveFile.Write()
                     End Select
                 Case PacketActionType.ReplyOnly
-
+                    ' Add to the Reply Sender queue.
             End Select
         Next
 
     End Sub
 
 #Region " ProcessQueue Delegates "
-
-    Private Sub SaveToArchiveFile(ByVal senderID As Guid, ByVal packet As IPacket)
-
-        If packet.SaveLocation = PacketSaveLocation.ArchiveFile Then
-
-        End If
-
-    End Sub
-
-    Private Sub SaveToMetadataFile(ByVal senderID As Guid, ByVal packet As IPacket)
-
-        If packet.SaveLocation = PacketSaveLocation.MetadataFile Then
-
-        End If
-
-    End Sub
 
     Private Sub ReplyToSender(ByVal senderID As Guid, ByVal packet As IPacket)
 

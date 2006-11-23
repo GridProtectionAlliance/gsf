@@ -2,7 +2,7 @@ Imports System.Text
 
 Namespace Packets
 
-    Public Class StandardPacket
+    Public Class ExtendedPacket
         Inherits PacketBase
 
         ' *******************************************************
@@ -17,7 +17,7 @@ Namespace Packets
         ' * 4           18-21       Single      Value           *
         ' *******************************************************
 
-        Public Shadows Const TypeID As Short = 1
+        Public Shadows Const TypeID As Short = 2
 
         Public Shadows Const BinaryLength As Integer = 22
 
@@ -41,8 +41,15 @@ Namespace Packets
                     With MyBase.Items
                         .Add("TypeID", packetTypeID)
                         .Add("Index", BitConverter.ToInt32(binaryImage, startIndex + 2))
-                        .Add("TimeTag", BitConverter.ToDouble(binaryImage, startIndex + 6))
-                        .Add("Quality", BitConverter.ToInt32(binaryImage, startIndex + 14))
+                        .Add("Year", BitConverter.ToInt16(binaryImage, startIndex + 6))
+                        .Add("Month", binaryImage(startIndex + 8))
+                        .Add("Day", binaryImage(startIndex + 9))
+                        .Add("Hour", binaryImage(startIndex + 10))
+                        .Add("Minute", binaryImage(startIndex + 11))
+                        .Add("Second", binaryImage(startIndex + 12))
+                        .Add("Quality", binaryImage(startIndex + 13))
+                        .Add("Millisecond", BitConverter.ToInt16(binaryImage, startIndex + 14))
+                        .Add("GMTOffset", BitConverter.ToInt16(binaryImage, startIndex + 16))
                         .Add("Value", BitConverter.ToSingle(binaryImage, startIndex + 18))
                     End With
                 Else
@@ -54,15 +61,23 @@ Namespace Packets
 
         End Sub
 
-        Public Sub New(ByVal index As Integer, ByVal timeTag As Double, ByVal quality As Integer, _
-                ByVal value As Single)
+        Public Sub New(ByVal index As Integer, ByVal year As Short, ByVal month As Byte, ByVal day As Byte, _
+                ByVal hour As Byte, ByVal minute As Byte, ByVal second As Byte, ByVal quality As Byte, _
+                ByVal millisecond As Short, ByVal gmtOffset As Short, ByVal value As Single)
 
             MyBase.New()
             With MyBase.Items
-                .Add("TypeID", StandardPacket.TypeID)
+                .Add("TypeID", ExtendedPacket.TypeID)
                 .Add("Index", index)
-                .Add("TimeTag", timeTag)
+                .Add("Year", year)
+                .Add("Month", month)
+                .Add("Day", day)
+                .Add("Hour", hour)
+                .Add("Minute", minute)
+                .Add("Second", second)
                 .Add("Quality", quality)
+                .Add("Millisecond", millisecond)
+                .Add("GMTOffset", gmtOffset)
                 .Add("Value", value)
             End With
 
@@ -76,7 +91,16 @@ Namespace Packets
 
         Public Overrides Function GetSaveData() As Byte()
 
-            Return New DataPoint(GetItemValue(Of Double)("TimeTag"), GetItemValue(Of Single)("Value"), GetItemValue(Of Integer)("Quality")).BinaryImage
+            Dim timestamp As New Date(GetItemValue(Of Integer)("Year"), GetItemValue(Of Integer)("Month"), _
+                GetItemValue(Of Integer)("Day"), GetItemValue(Of Integer)("Hour"), _
+                GetItemValue(Of Integer)("Minute"), GetItemValue(Of Integer)("Second"), _
+                GetItemValue(Of Integer)("Millisecond"))
+
+            If Date.Compare(timestamp, Date.Now) = 0 Then
+
+            End If
+
+            'Return New DataPoint(timestamp, GetItemValue(Of Single)("Value"), GetItemValue(Of Integer)("Quality")).BinaryImage
 
         End Function
 

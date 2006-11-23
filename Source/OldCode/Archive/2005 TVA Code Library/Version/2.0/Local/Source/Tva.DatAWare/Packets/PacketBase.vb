@@ -16,7 +16,7 @@ Namespace Packets
         ''' <summary>
         ''' This constant is required only for packet types of fixed length.
         ''' </summary>
-        ''' <remarks>A value of -1 indicates that the packets can be of variable length.</remarks>
+        ''' <remarks>A value of -1 indicates that the packets is of variable length.</remarks>
         Public Const BinaryLength As Integer = -1
 
         Public Sub New()
@@ -49,6 +49,12 @@ Namespace Packets
                 Return m_items
             End Get
         End Property
+
+        Public Function GetItemValue(Of T)(ByVal item As String) As T Implements IPacket.GetItemValue
+
+            Return CType(m_items(item), T)
+
+        End Function
 
         Public MustOverride Function GetSaveData() As Byte() Implements IPacket.GetSaveData
 

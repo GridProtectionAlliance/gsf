@@ -336,27 +336,27 @@ Public Class ServiceHelper
 
 #Region " TcpServer Events "
 
-    Private Sub SHTcpServer_ClientConnected(ByVal clientID As System.Guid) Handles SHTcpServer.ClientConnected
+    Private Sub SHTcpServer_ClientConnected(ByVal sender As Object, ByVal e As IdentifiableSourceEventArgs) Handles SHTcpServer.ClientConnected
 
-        m_clientInfo.Add(clientID, Nothing)
-
-    End Sub
-
-    Private Sub SHTcpServer_ClientDisconnected(ByVal clientID As System.Guid) Handles SHTcpServer.ClientDisconnected
-
-        m_clientInfo.Remove(clientID)
+        m_clientInfo.Add(e.Source, Nothing)
 
     End Sub
 
-    Private Sub SHTcpServer_ReceivedClientData(ByVal clientID As System.Guid, ByVal data() As System.Byte) Handles SHTcpServer.ReceivedClientData
+    Private Sub SHTcpServer_ClientDisconnected(ByVal sender As Object, ByVal e As IdentifiableSourceEventArgs) Handles SHTcpServer.ClientDisconnected
 
-        Dim info As ClientInfo = GetObject(Of ClientInfo)(data)
-        Dim request As ClientRequest = GetObject(Of ClientRequest)(data)
+        m_clientInfo.Remove(e.Source)
+
+    End Sub
+
+    Private Sub SHTcpServer_ReceivedClientData(ByVal sender As Object, ByVal e As DataEventArgs) Handles SHTcpServer.ReceivedClientData
+
+        Dim info As ClientInfo = GetObject(Of ClientInfo)(e.Data)
+        Dim request As ClientRequest = GetObject(Of ClientRequest)(e.Data)
 
         If info IsNot Nothing Then
-            m_clientInfo(clientID) = info
+            m_clientInfo(e.Source) = info
         ElseIf request IsNot Nothing Then
-            RaiseEvent ReceivedClientRequest(clientID, request)
+            RaiseEvent ReceivedClientRequest(e.Source, request)
 
             If Not request.ServiceHandled Then
                 ' We'll process the request only if the service didn't handle it.
