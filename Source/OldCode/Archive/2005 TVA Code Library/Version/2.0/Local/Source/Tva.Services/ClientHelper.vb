@@ -25,20 +25,19 @@ Imports Tva.Serialization
 Public Class ClientHelper
 
     ''' <summary>
-    ''' Occurs when a response is received from the service.
-    ''' </summary>
-    ''' <param name="response">The response received from the service.</param>
-    Public Event ReceivedServiceResponse(ByVal response As ServiceResponse)
-
-    ''' <summary>
     ''' Occurs when the service client needs to update its status.
     ''' </summary>
     ''' <param name="message">The message that the service client must display in its status.</param>
     Public Event UpdateClientStatus(ByVal message As String)
 
-    Public Event ServiceStateChanged(ByVal serviceName As String, ByVal serviceState As ServiceState)
+    ''' <summary>
+    ''' Occurs when a response is received from the service.
+    ''' </summary>
+    Public Event ReceivedServiceResponse(ByVal sender As Object, ByVal e As ServiceResponseEventArgs)
 
-    Public Event ProcessStateChanged(ByVal processName As String, ByVal processState As ProcessState)
+    Public Event ServiceStateChanged(ByVal sender As Object, ByVal e As ObjectStateChangedEventArgs(Of ServiceState))
+
+    Public Event ProcessStateChanged(ByVal sender As Object, ByVal e As ObjectStateChangedEventArgs(Of ProcessState))
 
     ''' <summary>
     ''' Gets the instance of TCP client used for communicating with the service.
@@ -137,7 +136,7 @@ Public Class ClientHelper
 
         Dim response As ServiceResponse = GetObject(Of ServiceResponse)(e.Data)
         If response IsNot Nothing Then
-            RaiseEvent ReceivedServiceResponse(response)
+            RaiseEvent ReceivedServiceResponse(Me, New ServiceResponseEventArgs(response))
             Select Case response.Type
                 Case "UPDATECLIENTSTATUS"
                     UpdateStatus(response.Message, True, 1, 1)
@@ -155,7 +154,9 @@ Public Class ClientHelper
 
                             UpdateStatus(.ToString(), True, 1, 2)
                         End With
-                        RaiseEvent ServiceStateChanged(messageSegments(0), DirectCast(System.Enum.Parse(GetType(ServiceState), messageSegments(1)), ServiceState))
+
+                        Dim newServiceState As ServiceState = DirectCast(System.Enum.Parse(GetType(ServiceState), messageSegments(1)), ServiceState)
+                        RaiseEvent ServiceStateChanged(Me, New ObjectStateChangedEventArgs(Of ServiceState)(messageSegments(0), newServiceState))
                     End If
                 Case "PROCESSSTATECHANGED"
                     Dim messageSegments As String() = response.Message.Split(">"c)
@@ -171,7 +172,9 @@ Public Class ClientHelper
 
                             UpdateStatus(.ToString(), True, 1, 2)
                         End With
-                        RaiseEvent ProcessStateChanged(messageSegments(0), DirectCast(System.Enum.Parse(GetType(ProcessState), messageSegments(1)), ProcessState))
+
+                        Dim newProcessState As ProcessState = DirectCast(System.Enum.Parse(GetType(ProcessState), messageSegments(1)), ProcessState)
+                        RaiseEvent ProcessStateChanged(Me, New ObjectStateChangedEventArgs(Of ProcessState)(messageSegments(0), newProcessState))
                     End If
             End Select
         End If

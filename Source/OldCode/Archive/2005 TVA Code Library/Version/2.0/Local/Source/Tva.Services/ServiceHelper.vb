@@ -13,32 +13,31 @@ Imports Tva.Serialization
 <ToolboxBitmap(GetType(ServiceHelper))> _
 Public Class ServiceHelper
 
-    Public Delegate Sub StartedEvent(ByVal args As String())
-    Public Delegate Sub StoppedEvent()
+    Public Delegate Sub StartedEventHandler(ByVal sender As Object, ByVal e As GenericEventArgs)
 
     Private m_service As ServiceBase
     Private m_processes As Dictionary(Of String, ServiceProcess)
     Private m_clientInfo As Dictionary(Of Guid, ClientInfo)
     Private m_serviceComponents As List(Of IServiceComponent)
-    Private m_startedEventHandlerList As List(Of StartedEvent)
-    Private m_stoppedEventHandlerList As List(Of StoppedEvent)
+    Private m_startedEventHandlerList As List(Of StartedEventHandler)
+    Private m_stoppedEventHandlerList As List(Of EventHandler)
 
     ''' <summary>
     ''' Occurs when the service has started.
     ''' </summary>
     ''' <remarks>This is a non-blocking event.</remarks>
-    Public Custom Event Started As StartedEvent
-        AddHandler(ByVal value As StartedEvent)
+    Public Custom Event Started As StartedEventHandler
+        AddHandler(ByVal value As StartedEventHandler)
             m_startedEventHandlerList.Add(value)
         End AddHandler
 
-        RemoveHandler(ByVal value As StartedEvent)
+        RemoveHandler(ByVal value As StartedEventHandler)
             m_startedEventHandlerList.Remove(value)
         End RemoveHandler
 
-        RaiseEvent(ByVal args As String())
-            For Each handler As StartedEvent In m_startedEventHandlerList
-                handler.BeginInvoke(args, Nothing, Nothing)
+        RaiseEvent(ByVal sender As Object, ByVal e As GenericEventArgs)
+            For Each handler As StartedEventHandler In m_startedEventHandlerList
+                handler.BeginInvoke(sender, e, Nothing, Nothing)
             Next
         End RaiseEvent
     End Event
@@ -47,18 +46,18 @@ Public Class ServiceHelper
     ''' Occurs when the service has stopped.
     ''' </summary>
     ''' <remarks>This is a non-blocking event.</remarks>
-    Public Custom Event Stopped As StoppedEvent
-        AddHandler(ByVal value As StoppedEvent)
+    Public Custom Event Stopped As EventHandler
+        AddHandler(ByVal value As EventHandler)
             m_stoppedEventHandlerList.Add(value)
         End AddHandler
 
-        RemoveHandler(ByVal value As StoppedEvent)
+        RemoveHandler(ByVal value As EventHandler)
             m_stoppedEventHandlerList.Remove(value)
         End RemoveHandler
 
-        RaiseEvent()
-            For Each handler As StoppedEvent In m_stoppedEventHandlerList
-                handler.BeginInvoke(Nothing, Nothing)
+        RaiseEvent(ByVal sender As Object, ByVal e As System.EventArgs)
+            For Each handler As EventHandler In m_stoppedEventHandlerList
+                handler.BeginInvoke(sender, e, Nothing, Nothing)
             Next
         End RaiseEvent
     End Event
@@ -66,24 +65,22 @@ Public Class ServiceHelper
     ''' <summary>
     ''' Occurs when the service is paused.
     ''' </summary>
-    Public Event Paused()
+    Public Event Paused As EventHandler
 
     ''' <summary>
     ''' Occurs when the service is resumed.
     ''' </summary>
-    Public Event Resumed()
+    Public Event Resumed As EventHandler
 
     ''' <summary>
     ''' Occurs when the system is being shutdowm.
     ''' </summary>
-    Public Event Shutdown()
+    Public Event Shutdown As EventHandler
 
     ''' <summary>
     ''' Occurs when a request is received from a client.
     ''' </summary>
-    ''' <param name="clientID">ID of the client that sent the request.</param>
-    ''' <param name="clientRequest">The request sent by the client.</param>
-    Public Event ReceivedClientRequest(ByVal clientID As Guid, ByRef clientRequest As ClientRequest)
+    Public Event ReceivedClientRequest(ByVal sender As Object, ByVal e As ClientRequestEventArgs)
 
     ''' <summary>
     ''' Gets or sets the parent service to which the service helper belongs.
@@ -166,7 +163,7 @@ Public Class ServiceHelper
             component.ServiceStateChanged(ServiceState.Started)
         Next
 
-        RaiseEvent Started(args)
+        RaiseEvent Started(Me, New GenericEventArgs(args))
 
     End Sub
 
@@ -182,7 +179,7 @@ Public Class ServiceHelper
             component.ServiceStateChanged(ServiceState.Stopped)
         Next
 
-        RaiseEvent Stopped()
+        RaiseEvent Stopped(Me, EventArgs.Empty)
 
     End Sub
 
@@ -198,7 +195,7 @@ Public Class ServiceHelper
             component.ServiceStateChanged(ServiceState.Paused)
         Next
 
-        RaiseEvent Paused()
+        RaiseEvent Paused(Me, EventArgs.Empty)
 
     End Sub
 
@@ -214,7 +211,7 @@ Public Class ServiceHelper
             component.ServiceStateChanged(ServiceState.Resumed)
         Next
 
-        RaiseEvent Resumed()
+        RaiseEvent Resumed(Me, EventArgs.Empty)
 
     End Sub
 
@@ -230,7 +227,7 @@ Public Class ServiceHelper
             component.ServiceStateChanged(ServiceState.Shutdown)
         Next
 
-        RaiseEvent Shutdown()
+        RaiseEvent Shutdown(Me, EventArgs.Empty)
 
     End Sub
 
@@ -356,44 +353,44 @@ Public Class ServiceHelper
         If info IsNot Nothing Then
             m_clientInfo(e.Source) = info
         ElseIf request IsNot Nothing Then
-            RaiseEvent ReceivedClientRequest(e.Source, request)
+            Dim receivedClientRequestEvent As New ClientRequestEventArgs(e.Source, request)
+            RaiseEvent ReceivedClientRequest(Me, receivedClientRequestEvent)
+            If receivedClientRequestEvent.Cancel Then Exit Sub
 
-            If Not request.ServiceHandled Then
-                ' We'll process the request only if the service didn't handle it.
-                Select Case request.Type.ToUpper()
-                    Case "START", "STARTPROCESS"
-                        HandleStartProcessRequest(request)
-                    Case "ABORT", "ABORTPROCESS"
-                        HandleAbortProcessRequest(request)
-                    Case "RESCHEDULE", "RESCHEDULEPROCESS"
-                        'HandleRescheduleProcessRequest(request)
-                    Case "UNSCHEDULE", "UNSCHEDULEPROCESS"
-                        'HandleUnscheduleProcessRequest(request)
-                    Case "PROCESSES", "LISTPROCESSES"
-                        HandleListProcessesRequest()
-                    Case "CLIENTS", "LISTCLIENTS", "LISTALLCLIENTS"
-                        'HandleListClientsRequest()
-                    Case "STATUS", "GETSERVICESTATUS"
-                        'HandlePingServiceRequest()
-                    Case "GETPROCESSSTATUS"
-                        'HandleProcessStatusRequest()
-                    Case "GETCOMMANDHISTORY"
-                        'HandleCommandHistoryRequest()
-                    Case "DIR", "GETDIRECTORYLISTING"
-                        'HandleDirectoryListingRequest()
-                    Case "SETTINGS", "LISTSETTINGS"
+            ' We'll process the request only if the service didn't handle it.
+            Select Case request.Type.ToUpper()
+                Case "START", "STARTPROCESS"
+                    HandleStartProcessRequest(request)
+                Case "ABORT", "ABORTPROCESS"
+                    HandleAbortProcessRequest(request)
+                Case "RESCHEDULE", "RESCHEDULEPROCESS"
+                    'HandleRescheduleProcessRequest(request)
+                Case "UNSCHEDULE", "UNSCHEDULEPROCESS"
+                    'HandleUnscheduleProcessRequest(request)
+                Case "PROCESSES", "LISTPROCESSES"
+                    HandleListProcessesRequest()
+                Case "CLIENTS", "LISTCLIENTS", "LISTALLCLIENTS"
+                    'HandleListClientsRequest()
+                Case "STATUS", "GETSERVICESTATUS"
+                    'HandlePingServiceRequest()
+                Case "GETPROCESSSTATUS"
+                    'HandleProcessStatusRequest()
+                Case "GETCOMMANDHISTORY"
+                    'HandleCommandHistoryRequest()
+                Case "DIR", "GETDIRECTORYLISTING"
+                    'HandleDirectoryListingRequest()
+                Case "SETTINGS", "LISTSETTINGS"
 
-                    Case "SETTING", "UPDATESETTING"
+                Case "SETTING", "UPDATESETTING"
 
-                    Case "SAVESETTINGS"
+                Case "SAVESETTINGS"
 
-                    Case "PING", "PINGSERVICE"
-                    Case "PINGALL", "PINGCLIENTS"
-                    Case Else
-                        ' "PINGSERVICE", "PINGALLCLIENTS"
-                        HandleInvalidClientRequest(request)
-                End Select
-            End If
+                Case "PING", "PINGSERVICE"
+                Case "PINGALL", "PINGCLIENTS"
+                Case Else
+                    ' "PINGSERVICE", "PINGALLCLIENTS"
+                    HandleInvalidClientRequest(request)
+            End Select
         Else
             HandleInvalidClientRequest(request)
         End If

@@ -55,6 +55,7 @@
     <Compile Include="ClientHelper.vb">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="ClientRequestEventArgs.vb" />
     <Compile Include="Internal Code\ClientInfo.vb" />
     <Compile Include="My Project\AssemblyInfo.vb" />
     <Compile Include="ServiceHelper.Designer.vb">
@@ -66,6 +67,7 @@
     <Compile Include="ClientRequest.vb" />
     <Compile Include="ServiceProcess.vb" />
     <Compile Include="ServiceResponse.vb" />
+    <Compile Include="ServiceResponseEventArgs.vb" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Tva.Communication\Tva.Communication.vbproj">

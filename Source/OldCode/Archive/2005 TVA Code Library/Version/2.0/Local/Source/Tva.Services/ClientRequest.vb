@@ -82,21 +82,6 @@ Public Class ClientRequest
     End Property
 
     ''' <summary>
-    ''' Gets or sets a boolean value indicating whether the service has handled the request and need not be 
-    ''' handled by the service helper component.
-    ''' </summary>
-    ''' <value></value>
-    ''' <returns>True if the service has handled the request; otherwise False.</returns>
-    Public Property ServiceHandled() As Boolean
-        Get
-            Return m_serviceHandled
-        End Get
-        Set(ByVal value As Boolean)
-            m_serviceHandled = value
-        End Set
-    End Property
-
-    ''' <summary>
     ''' Parses a command string into a type and parameters array
     ''' </summary>
     ''' <param name="command">Command string to parse</param>

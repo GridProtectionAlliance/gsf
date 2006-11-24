@@ -18,8 +18,8 @@ Partial Class ServiceHelper
 
         m_processes = New Dictionary(Of String, ServiceProcess)
         m_clientInfo = New Dictionary(Of Guid, ClientInfo)
-        m_startedEventHandlerList = New List(Of StartedEvent)
-        m_stoppedEventHandlerList = New List(Of StoppedEvent)
+        m_startedEventHandlerList = New List(Of StartedEventHandler)
+        m_stoppedEventHandlerList = New List(Of EventHandler)
         m_serviceComponents = New List(Of IServiceComponent)
         m_serviceComponents.Add(SHTcpServer)
         m_serviceComponents.Add(SHScheduleManager)

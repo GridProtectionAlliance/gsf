@@ -1,23 +1,24 @@
 ' 11/22/2006
 
-Public Class StateChangedEventArgs(Of T)
+Public Class ObjectStateChangedEventArgs(Of T)
     Inherits EventArgs
 
-    Private m_sourceName As String
+    Private m_objectName As String
     Private m_newState As T
 
-    Public Sub New(ByVal newState As T)
+    Public Sub New(ByVal objectName As String, ByVal newState As T)
 
+        m_objectName = objectName
         m_newState = newState
 
     End Sub
 
     Public Property ObjectName() As String
         Get
-            Return m_sourceName
+            Return m_objectName
         End Get
         Set(ByVal value As String)
-            m_sourceName = value
+            m_objectName = value
         End Set
     End Property
 
