@@ -38,10 +38,25 @@ Namespace Ssam
         ''' <param name="entityID">The mnemonic key or the numeric value of the entity to which the event belongs.</param>
         ''' <param name="entityType">One of the Tva.Tro.Ssam.SsamEntityType values.</param>
         ''' <param name="eventType">One of the Tva.Tro.Ssam.SsamEvent.SsamEventType values.</param>
-        ''' <remarks></remarks>
         Public Sub New(ByVal entityID As String, ByVal entityType As SsamEntityType, ByVal eventType As SsamEventType)
+
             MyClass.New(entityID, entityType, eventType, "", "", "")
+
         End Sub
+
+        ''' <summary>
+        ''' Initializes a instance of Tva.Tro.Ssam.SsamEvent with the specified information.
+        ''' </summary>
+        ''' <param name="entityID">The mnemonic key or the numeric value of the entity to which the event belongs.</param>
+        ''' <param name="entityType">One of the Tva.Tro.Ssam.SsamEntityType values.</param>
+        ''' <param name="eventType">One of the Tva.Tro.Ssam.SsamEvent.SsamEventType values.</param>
+        ''' <param name="message">A brief description of the event (max 120 characters).</param>
+        Public Sub New(ByVal entityID As String, ByVal entityType As SsamEntityType, ByVal eventType As SsamEventType, ByVal message As String)
+
+            MyClass.New(entityID, entityType, eventType, "", message, "")
+
+        End Sub
+
 
         ''' <summary>
         ''' Initializes a instance of Tva.Tro.Ssam.SsamEvent with the specified information.
@@ -52,9 +67,9 @@ Namespace Ssam
         ''' <param name="errorNumber">The error number encountered, if any, for which the event is being logged.</param>
         ''' <param name="message">A brief description of the event (max 120 characters).</param>
         ''' <param name="description">A detailed description of the event (max 2GB).</param>
-        ''' <remarks></remarks>
         Public Sub New(ByVal entityID As String, ByVal entityType As SsamEntityType, ByVal eventType As SsamEventType, _
                 ByVal errorNumber As String, ByVal message As String, ByVal description As String)
+
             MyBase.New()
             m_entityID = entityID
             m_entityType = entityType
@@ -62,6 +77,7 @@ Namespace Ssam
             m_errorNumber = errorNumber
             m_message = message
             m_description = description
+
         End Sub
 
         ''' <summary>

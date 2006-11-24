@@ -41,10 +41,8 @@ Namespace Ssam
         ''' <summary>
         ''' Occurs when an exception is encountered when logging an event to the SSAM server.
         ''' </summary>
-        ''' <param name="ex">The exception that was encountered when logging an event to the SSAM server.</param>
-        ''' <remarks></remarks>
         <Description("Occurs when an exception is encountered when logging an event to the SSAM server.")> _
-        Public Event LogException(ByVal ex As Exception)
+        Public Event LogException(ByVal sender As Object, ByVal e As ExceptionEventArgs)
 
         ''' <summary>
         ''' Initializes a instance of Tva.Tro.Ssam.SsamLogger with the specified information.
@@ -130,7 +128,6 @@ Namespace Ssam
         ''' <param name="entityID">The mnemonic key or the numeric value of the entity to which the event belongs.</param>
         ''' <param name="entityType">One of the Tva.Tro.Ssam.SsamEntityType values.</param>
         ''' <param name="eventType">One of the Tva.Tro.Ssam.SsamEvent.SsamEventType values.</param>
-        ''' <remarks></remarks>
         Public Sub LogEvent(ByVal entityID As String, ByVal entityType As SsamEntityType, _
                 ByVal eventType As SsamEventType)
 
@@ -144,10 +141,23 @@ Namespace Ssam
         ''' <param name="entityID">The mnemonic key or the numeric value of the entity to which the event belongs.</param>
         ''' <param name="entityType">One of the Tva.Tro.Ssam.SsamEntityType values.</param>
         ''' <param name="eventType">One of the Tva.Tro.Ssam.SsamEvent.SsamEventType values.</param>
+        ''' <param name="message">A brief description of the event (max 120 characters).</param>
+        Public Sub LogEvent(ByVal entityID As String, ByVal entityType As SsamEntityType, _
+                ByVal eventType As SsamEventType, ByVal message As String)
+
+            LogEvent(entityID, entityType, eventType, "", message, "")
+
+        End Sub
+
+        ''' <summary>
+        ''' Creates an event with the specified information and queues it for logging to the SSAM server.
+        ''' </summary>
+        ''' <param name="entityID">The mnemonic key or the numeric value of the entity to which the event belongs.</param>
+        ''' <param name="entityType">One of the Tva.Tro.Ssam.SsamEntityType values.</param>
+        ''' <param name="eventType">One of the Tva.Tro.Ssam.SsamEvent.SsamEventType values.</param>
         ''' <param name="errorNumber">The error number encountered, if any, for which the event is being logged.</param>
         ''' <param name="message">A brief description of the event (max 120 characters).</param>
         ''' <param name="description">A detailed description of the event (max 2GB).</param>
-        ''' <remarks></remarks>
         Public Sub LogEvent(ByVal entityID As String, ByVal entityType As SsamEntityType, _
                 ByVal eventType As SsamEventType, ByVal errorNumber As String, ByVal message As String, _
                 ByVal description As String)
@@ -187,7 +197,7 @@ Namespace Ssam
 
         Private Sub m_eventQueue_ProcessException(ByVal ex As Exception) Handles m_eventQueue.ProcessException
 
-            RaiseEvent LogException(ex)
+            RaiseEvent LogException(Me, New ExceptionEventArgs(ex))
 
         End Sub
 

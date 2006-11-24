@@ -212,6 +212,50 @@ Namespace Ssam
         End Sub
 
         ''' <summary>
+        ''' Logs an event with the specified information and queues it for logging to the SSAM server.
+        ''' </summary>
+        ''' <param name="entityID">The mnemonic key or the numeric value of the entity to which the event belongs.</param>
+        ''' <param name="entityType">One of the Tva.Tro.Ssam.SsamEntityType values.</param>
+        ''' <param name="eventType">One of the Tva.Tro.Ssam.SsamEvent.SsamEventType values.</param>
+        Public Sub LogEvent(ByVal entityID As String, ByVal entityType As SsamEntityType, _
+                ByVal eventType As SsamEventType)
+
+            LogEvent(entityID, entityType, eventType, "", "", "")
+
+        End Sub
+
+        ''' <summary>
+        ''' Logs an event with the specified information and queues it for logging to the SSAM server.
+        ''' </summary>
+        ''' <param name="entityID">The mnemonic key or the numeric value of the entity to which the event belongs.</param>
+        ''' <param name="entityType">One of the Tva.Tro.Ssam.SsamEntityType values.</param>
+        ''' <param name="eventType">One of the Tva.Tro.Ssam.SsamEvent.SsamEventType values.</param>
+        ''' <param name="message">A brief description of the event (max 120 characters).</param>
+        Public Sub LogEvent(ByVal entityID As String, ByVal entityType As SsamEntityType, _
+                ByVal eventType As SsamEventType, ByVal message As String)
+
+            LogEvent(entityID, entityType, eventType, "", message, "")
+
+        End Sub
+
+        ''' <summary>
+        ''' Logs an event with the specified information and queues it for logging to the SSAM server.
+        ''' </summary>
+        ''' <param name="entityID">The mnemonic key or the numeric value of the entity to which the event belongs.</param>
+        ''' <param name="entityType">One of the Tva.Tro.Ssam.SsamEntityType values.</param>
+        ''' <param name="eventType">One of the Tva.Tro.Ssam.SsamEvent.SsamEventType values.</param>
+        ''' <param name="errorNumber">The error number encountered, if any, for which the event is being logged.</param>
+        ''' <param name="message">A brief description of the event (max 120 characters).</param>
+        ''' <param name="description">A detailed description of the event (max 2GB).</param>
+        Public Sub LogEvent(ByVal entityID As String, ByVal entityType As SsamEntityType, _
+                ByVal eventType As SsamEventType, ByVal errorNumber As String, ByVal message As String, _
+                ByVal description As String)
+
+            LogEvent(New SsamEvent(entityID, entityType, eventType, errorNumber, message, description))
+
+        End Sub
+
+        ''' <summary>
         ''' Logs the specified Tva.Tro.Ssam.SsamEvent to the current SSAM server.
         ''' </summary>
         ''' <param name="newEvent">The Tva.Tro.Ssam.SsamEvent to log.</param>
