@@ -6,7 +6,6 @@ Imports System.ComponentModel
 Imports System.ServiceProcess
 Imports Tva.Common
 Imports Tva.Services
-Imports Tva.Tro.Ssam
 Imports Tva.Communication
 Imports Tva.Serialization
 
@@ -124,18 +123,6 @@ Public Class ServiceHelper
     Public ReadOnly Property ScheduleManager() As ScheduleManager
         Get
             Return SHScheduleManager
-        End Get
-    End Property
-
-    ''' <summary>
-    ''' Gets the instance of SSAM logger that can be used to log events to SSAM.
-    ''' </summary>
-    ''' <value></value>
-    ''' <returns>An instance of SSAM logger.</returns>
-    <DesignerSerializationVisibility(DesignerSerializationVisibility.Content)> _
-    Public ReadOnly Property SsamLogger() As SsamLogger
-        Get
-            Return SHSsamLogger
         End Get
     End Property
 
@@ -401,10 +388,10 @@ Public Class ServiceHelper
 
 #Region " ScheduleManager Events "
 
-    Private Sub SHScheduleManager_ScheduleDue(ByVal schedule As Schedule) Handles SHScheduleManager.ScheduleDue
+    Private Sub SHScheduleManager_ScheduleDue(ByVal sender As Object, ByVal e As ScheduleEventArgs) Handles SHScheduleManager.ScheduleDue
 
         Dim scheduledProcess As ServiceProcess = Nothing
-        If m_processes.TryGetValue(schedule.Name, scheduledProcess) Then
+        If m_processes.TryGetValue(e.Schedule.Name, scheduledProcess) Then
             scheduledProcess.StartProcess() ' Start the process execution if it exists.
         End If
 
@@ -417,6 +404,9 @@ Public Class ServiceHelper
     Private Sub HandleListProcessesRequest()
 
         With New StringBuilder()
+            .Append("Listing " & m_processes.Count & " of " & m_processes.Count & " process(es)")
+            .Append(Environment.NewLine)
+            .Append(Environment.NewLine)
             For Each process As ServiceProcess In m_processes.Values
                 .Append(process.Status)
                 Dim processSchedule As Schedule = Nothing

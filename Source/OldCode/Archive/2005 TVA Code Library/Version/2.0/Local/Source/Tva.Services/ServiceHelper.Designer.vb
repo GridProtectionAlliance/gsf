@@ -16,6 +16,9 @@ Partial Class ServiceHelper
     Public Sub New()
         MyBase.New()
 
+        'This call is required by the Component Designer.
+        InitializeComponent()
+
         m_processes = New Dictionary(Of String, ServiceProcess)
         m_clientInfo = New Dictionary(Of Guid, ClientInfo)
         m_startedEventHandlerList = New List(Of StartedEventHandler)
@@ -23,10 +26,6 @@ Partial Class ServiceHelper
         m_serviceComponents = New List(Of IServiceComponent)
         m_serviceComponents.Add(SHTcpServer)
         m_serviceComponents.Add(SHScheduleManager)
-        m_serviceComponents.Add(SHSsamLogger)
-
-        'This call is required by the Component Designer.
-        InitializeComponent()
 
     End Sub
 
@@ -51,7 +50,6 @@ Partial Class ServiceHelper
         Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(ServiceHelper))
         Me.SHTcpServer = New Tva.Communication.TcpServer(Me.components)
         Me.SHScheduleManager = New Tva.ScheduleManager(Me.components)
-        Me.SHSsamLogger = New Tva.Tro.Ssam.SsamLogger(Me.components)
         '
         'SHTcpServer
         '
@@ -64,13 +62,9 @@ Partial Class ServiceHelper
         '
         'SHScheduleManager
         '
-        '
-        'SHSsamLogger
-        '
 
     End Sub
     Friend WithEvents SHTcpServer As Tva.Communication.TcpServer
     Friend WithEvents SHScheduleManager As Tva.ScheduleManager
-    Friend WithEvents SHSsamLogger As Tva.Tro.Ssam.SsamLogger
 
 End Class

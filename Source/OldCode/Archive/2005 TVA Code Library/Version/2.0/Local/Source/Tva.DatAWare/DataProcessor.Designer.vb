@@ -14,10 +14,10 @@ Partial Class DataProcessor
     Public Sub New()
         MyBase.New()
 
-        m_toReplySender = Tva.Collections.KeyedProcessQueue(Of Guid, Packets.IPacket).CreateRealTimeQueue(AddressOf ReplyToSender)
-
         'This call is required by the Component Designer.
         InitializeComponent()
+
+        m_toReplySender = Tva.Collections.KeyedProcessQueue(Of Guid, Packets.IPacket).CreateRealTimeQueue(AddressOf ReplyToSender)
 
     End Sub
 

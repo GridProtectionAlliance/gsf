@@ -18,6 +18,9 @@ Namespace Application
         Public Sub New()
             MyBase.New()
 
+            'This call is required by the Component Designer.
+            InitializeComponent()
+
             m_enableCaching = True
             m_extendeeControls = New Hashtable()
             Try
@@ -38,9 +41,6 @@ Namespace Application
             Catch ex As Exception
                 ' We can safely ignore any exceptions encountered.
             End Try
-
-            'This call is required by the Component Designer.
-            InitializeComponent()
 
         End Sub
 

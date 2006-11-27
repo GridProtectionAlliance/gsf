@@ -27,8 +27,7 @@ Public Class ClientHelper
     ''' <summary>
     ''' Occurs when the service client needs to update its status.
     ''' </summary>
-    ''' <param name="message">The message that the service client must display in its status.</param>
-    Public Event UpdateClientStatus(ByVal message As String)
+    Public Event UpdateClientStatus(ByVal sender As Object, ByVal e As UpdateClientStatusEventArgs)
 
     ''' <summary>
     ''' Occurs when a response is received from the service.
@@ -94,7 +93,7 @@ Public Class ClientHelper
                 .Append(Environment.NewLine)
             Next
 
-            RaiseEvent UpdateClientStatus(.ToString())
+            RaiseEvent UpdateClientStatus(Me, New UpdateClientStatusEventArgs(.ToString()))
         End With
 
     End Sub

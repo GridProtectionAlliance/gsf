@@ -14,11 +14,11 @@ Partial Class DataParser
     Public Sub New()
         MyBase.New()
 
-        m_packetTypes = New Dictionary(Of Short, PacketTypeInfo)
-        m_dataQueue = Tva.Collections.KeyedProcessQueue(Of Guid, Byte()).CreateRealTimeQueue(AddressOf ParseData)
-
         'This call is required by the Component Designer.
         InitializeComponent()
+
+        m_packetTypes = New Dictionary(Of Short, PacketTypeInfo)
+        m_dataQueue = Tva.Collections.KeyedProcessQueue(Of Guid, Byte()).CreateRealTimeQueue(AddressOf ParseData)
 
     End Sub
 

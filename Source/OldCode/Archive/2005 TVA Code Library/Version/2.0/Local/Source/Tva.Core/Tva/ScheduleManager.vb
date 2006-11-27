@@ -21,7 +21,7 @@ Public Class ScheduleManager
     Private m_scheduleDueEventHandlerList As List(Of ScheduleDueEventHandler)
     Private WithEvents m_timer As System.Timers.Timer
 
-    Public Delegate Sub ScheduleDueEventHandler(ByVal schedule As Schedule)
+    Public Delegate Sub ScheduleDueEventHandler(ByVal sender As Object, ByVal e As ScheduleEventArgs)
 
     ''' <summary>
     ''' Occurs while the schedule manager is waiting to start at top of the minute.
@@ -44,15 +44,9 @@ Public Class ScheduleManager
     ''' <summary>
     ''' Occurs when the a particular schedule is being checked to see if it is due.
     ''' </summary>
-    ''' <param name="schedule">The schedule that is being checked.</param>
     <Category("Schedules")> _
-    Public Event CheckingSchedule(ByVal schedule As Schedule)
+    Public Event CheckingSchedule(ByVal sender As Object, ByVal e As ScheduleEventArgs)
 
-    ''' <summary>
-    ''' Occurs when a particular schedule is due.
-    ''' </summary>
-    ''' <remarks>This is a non-blocking event.</remarks>
-    <Category("Schedules")> _
     Public Custom Event ScheduleDue As ScheduleDueEventHandler
         AddHandler(ByVal value As ScheduleDueEventHandler)
             m_scheduleDueEventHandlerList.Add(value)
@@ -62,14 +56,15 @@ Public Class ScheduleManager
             m_scheduleDueEventHandlerList.Remove(value)
         End RemoveHandler
 
-        RaiseEvent(ByVal schedule As Schedule)
+        RaiseEvent(ByVal sender As Object, ByVal e As ScheduleEventArgs)
             For Each handler As ScheduleDueEventHandler In m_scheduleDueEventHandlerList
-                handler.BeginInvoke(schedule, Nothing, Nothing)
+                handler.BeginInvoke(sender, e, Nothing, Nothing)
             Next
         End RaiseEvent
     End Event
 
     Public Sub New(ByVal persistSchedules As Boolean)
+
         MyBase.New()
         Me.ConfigurationElement = "ScheduleManager"
         Me.PersistSchedules = persistSchedules
@@ -77,6 +72,7 @@ Public Class ScheduleManager
         m_schedules = New Dictionary(Of String, Schedule)()
         m_scheduleDueEventHandlerList = New List(Of ScheduleDueEventHandler)()
         m_timer = New System.Timers.Timer(60000)
+
     End Sub
 
     ''' <summary>
@@ -226,9 +222,9 @@ Public Class ScheduleManager
     Public Sub CheckSchedule(ByVal scheduleName As String)
 
         If m_enabled Then
-            RaiseEvent CheckingSchedule(m_schedules(scheduleName))
+            RaiseEvent CheckingSchedule(Me, New ScheduleEventArgs(m_schedules(scheduleName)))
             If m_schedules(scheduleName).IsDue() Then
-                RaiseEvent ScheduleDue(m_schedules(scheduleName))   ' This event will be raised asynchronously.
+                RaiseEvent ScheduleDue(Me, New ScheduleEventArgs(m_schedules(scheduleName)))   ' This event will be raised asynchronously.
             End If
         End If
 

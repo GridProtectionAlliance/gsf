@@ -65,6 +65,7 @@
     <Compile Include="Tva\ExceptionEventArgs.vb" />
     <Compile Include="Tva\GenericEventArgs.vb" />
     <Compile Include="Tva\IdentifiableSourceEventArgs.vb" />
+    <Compile Include="Tva\ScheduleEventArgs.vb" />
     <Compile Include="Tva\ScheduleManager.Designer.vb">
       <DependentUpon>ScheduleManager.vb</DependentUpon>
     </Compile>
