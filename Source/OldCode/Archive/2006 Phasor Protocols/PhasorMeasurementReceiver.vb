@@ -101,7 +101,7 @@ Public Class PhasorMeasurementReceiver
         Catch
             m_archiverPort = 1002
             m_maximumEvents = 50
-            m_useTimeout = -1
+            m_useTimeout = True
         End Try
 
         If String.IsNullOrEmpty(m_archiverIP) Then Throw New InvalidOperationException("Cannot start TCP stream listener connection to Archiver without specifing a host IP")
@@ -360,7 +360,7 @@ Public Class PhasorMeasurementReceiver
     Private Sub ProcessTcpStream()
 
         Const statusInterval As Integer = 1000
-        Const dumpInterval As Integer = 5000
+        Const dumpInterval As Integer = 10000
         Const postDumpCount As Integer = 100
 
         Dim buffer As Byte() = CreateArray(Of Byte)(m_bufferSize)

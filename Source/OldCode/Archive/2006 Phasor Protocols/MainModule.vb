@@ -46,16 +46,22 @@ Module MainModule
         Dim consoleLine As String
         Dim receiver As PhasorMeasurementReceiver
         Dim mapper As PhasorMeasurementMapper = Nothing
+        Dim threadPoolSize As Integer
 
         Console.WriteLine(MonitorInformation)
 
         ' Make sure service settings exist
         Settings.Add("PMUDatabase", "Data Source=ESOEXTSQL;Initial Catalog=PMU_SDS;Integrated Security=False;user ID=ESOPublic;pwd=4all2see", "PMU metaData database connect string")
         Settings.Add("PMUStatusInterval", "5", "Number of seconds of deviation from UTC time (according to local clock) that last PMU reporting time is allowed before considering it offline")
-        Settings.Add("DataLossInterval", "10000", "Number of milliseconds to wait for incoming data before restarting connection cycle to device")
+        Settings.Add("DataLossInterval", "35000", "Number of milliseconds to wait for incoming data before restarting connection cycle to device")
         Settings.Add("MessageDisplayTimespan", "1", "Timespan, in seconds, over which to monitor message volume")
         Settings.Add("MaximumMessagesToDisplay", "20", "Maximum number of messages to be tolerated during MessageDisplayTimespan")
+        Settings.Add("ThreadPoolSize", "200", "Defines the size of the thread pool - this may need to expand as connections grow and utilization nears 100%")
         SaveSettings()
+
+        threadPoolSize = IntegerSetting("ThreadPoolSize")
+        Threading.ThreadPool.SetMinThreads(threadPoolSize, threadPoolSize)
+        Threading.ThreadPool.SetMaxThreads(threadPoolSize, threadPoolSize)
 
         InitializeConfiguration(AddressOf InitializeSystem)
 
@@ -87,6 +93,14 @@ Module MainModule
                 For x As Integer = 0 To m_calculatedMeasurements.Length - 1
                     Console.WriteLine(m_calculatedMeasurements(x).Status)
                 Next
+
+                Dim totalWorkerThreads, usedWorkerThreads, totalIOThreads, usedIOThreads As Integer
+
+                Threading.ThreadPool.GetMaxThreads(totalWorkerThreads, totalIOThreads)
+                Threading.ThreadPool.GetAvailableThreads(usedWorkerThreads, usedIOThreads)
+
+                Console.WriteLine("Worker Thread Utilization: " & (usedWorkerThreads / totalWorkerThreads * 100).ToString("000.00") & "%")
+                Console.WriteLine("   I/O Thread Utilization: " & (usedIOThreads / totalIOThreads * 100).ToString("000.00") & "%")
             ElseIf consoleLine.StartsWith("list", True, Nothing) Then
                 Console.WriteLine()
                 DisplayConnectionList()
@@ -124,7 +138,7 @@ Module MainModule
 
             ' We tolerate a higher message volume during initialization
             m_messageDisplayTimepan = 1
-            m_maximumMessagesToDisplay = 100
+            m_maximumMessagesToDisplay = 200
 
             DisplayStatusMessage("PMU database connection opened...")
 
