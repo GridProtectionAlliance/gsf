@@ -194,8 +194,6 @@ Public Class TcpServer
 
                     ' Start the client on a seperate thread so all the connected clients run independently.
                     ThreadPool.QueueUserWorkItem(AddressOf ReceiveClientData, tcpClient)
-                    ' HACK: JRC: This is still causing me troubles with lots of connections... (must be a better way)
-                    'Thread.Sleep(1000)   ' Wait enough for the client thread to kick-off.
                 End If
             Loop
         Catch ex As ThreadAbortException
@@ -226,7 +224,7 @@ Public Class TcpServer
             Try
                 If Handshake() Then
                     ' Handshaking is to be performed to authenticate the client.
-                    .Client.ReceiveTimeout = 5000
+                    .Client.ReceiveTimeout = 30000  ' We'll give the client 30 seconds to initiate handshaking.
                     SyncLock m_pendingTcpClients
                         m_pendingTcpClients.Add(.This)
                     End SyncLock

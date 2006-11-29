@@ -171,7 +171,7 @@ Public Class TcpClient
                 m_tcpClient.Client = New Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp)
                 m_tcpClient.Client.Bind(New IPEndPoint(IPAddress.Any, 0))
                 m_tcpClient.Client.LingerState = New LingerOption(True, 10)
-                If ReceiveTimeout() <> -1 Then m_tcpClient.Client.ReceiveTimeout = ReceiveTimeout() * 1000
+                If ReceiveTimeout() <> -1 Then m_tcpClient.Client.ReceiveTimeout = ReceiveTimeout()
 
                 ' Connect the client socket to the remote server endpoint.
                 m_tcpClient.Client.Connect(GetIpEndPoint(m_connectionData("server"), Convert.ToInt32(m_connectionData("port"))))

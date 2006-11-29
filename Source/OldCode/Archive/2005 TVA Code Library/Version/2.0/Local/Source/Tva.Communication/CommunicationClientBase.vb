@@ -264,12 +264,12 @@ Public MustInherit Class CommunicationClientBase
     End Property
 
     ''' <summary>
-    ''' Gets or sets the time to wait in seconds for data to be received from the server before timing out.
+    ''' Gets or sets the time to wait in milliseconds for data to be received from the server before timing out.
     ''' </summary>
     ''' <value></value>
-    ''' <returns>The time to wait in seconds for data to be received from the server before timing out.</returns>
+    ''' <returns>The time to wait in milliseconds for data to be received from the server before timing out.</returns>
     ''' <remarks>Set ReceiveTimeout = -1 to disable timeout for receiving data.</remarks>
-    <Description("The time to wait in seconds for data to be received from the server before timing out. Set ReceiveTimeout = -1 to disable timeout for receiving data."), Category("Data"), DefaultValue(GetType(Integer), "-1")> _
+    <Description("The time to wait in milliseconds for data to be received from the server before timing out. Set ReceiveTimeout = -1 to disable timeout for receiving data."), Category("Data"), DefaultValue(GetType(Integer), "-1")> _
     Public Overridable Property ReceiveTimeout() As Integer Implements ICommunicationClient.ReceiveTimeout
         Get
             Return m_receiveTimeout
@@ -489,6 +489,31 @@ Public MustInherit Class CommunicationClientBase
     ''' Disconnects the client from the server it is connected to.
     ''' </summary>
     Public MustOverride Sub Disconnect() Implements ICommunicationClient.Disconnect
+
+    ''' <summary>
+    ''' Waits for the client to connect to the server for the specified time and optionally stop the client from
+    ''' retrying connection attempts if the client is unable to connect to the server within the specified time.
+    ''' </summary>
+    ''' <param name="waitTime">
+    ''' The time in milliseconds to wait for the client to connect to the server. Specifying a value of -1 or 0 
+    ''' will cause this method to wait indefinately until the client establishes connection with the server.
+    ''' </param>
+    ''' <param name="stopRetrying">
+    ''' Boolean value indicating whether the client should stop trying to connect to the server if it is unable to 
+    ''' connect to the server after waiting for the specified duration.
+    ''' </param>
+    Public Sub WaitForConnection(ByVal waitTime As Integer, ByVal stopRetrying As Boolean) Implements ICommunicationClient.WaitForConnection
+
+        Dim stopTime As System.DateTime = System.DateTime.MaxValue
+        If waitTime > 0 Then stopTime = System.DateTime.Now.AddMilliseconds(Convert.ToDouble(waitTime))
+
+        Do While Not (m_isConnected OrElse System.DateTime.Now > stopTime)
+            ' We'll wait until connection with the server is established or time to wait for connection has expired.
+        Loop
+
+        If Not m_isConnected AndAlso stopRetrying Then CancelConnect()
+
+    End Sub
 
     ''' <summary>
     ''' Sends data to the server.

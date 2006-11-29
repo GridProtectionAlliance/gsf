@@ -179,7 +179,7 @@ Public Class UdpClient
                 m_udpClient.Passphrase = HandshakePassphrase()
                 m_udpClient.Client = New Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp)
                 m_udpClient.Client.Bind(New IPEndPoint(IPAddress.Any, localPort))
-                If ReceiveTimeout() <> -1 Then m_udpClient.Client.ReceiveTimeout = ReceiveTimeout() * 1000
+                If ReceiveTimeout() <> -1 Then m_udpClient.Client.ReceiveTimeout = ReceiveTimeout()
 
                 ' Start listening for data from the server on a seperate thread.
                 m_receivingThread = New Thread(AddressOf ReceiveServerData)

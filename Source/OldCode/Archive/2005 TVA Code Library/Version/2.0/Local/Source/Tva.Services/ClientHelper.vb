@@ -66,6 +66,17 @@ Public Class ClientHelper
 
     End Sub
 
+    Public Sub SendRequest(ByVal request As String)
+
+        Dim requestInstance As ClientRequest = Nothing
+        If ClientRequest.TryParse(request, requestInstance) Then
+            SendRequest(requestInstance)
+        Else
+            Throw New ArgumentException("Request string is not in correct format.", "request")
+        End If
+
+    End Sub
+
     ''' <summary>
     ''' Sends a request to the service.
     ''' </summary>
@@ -116,7 +127,7 @@ Public Class ClientHelper
     Private Sub CHTcpClient_ConnectingException(ByVal sender As Object, ByVal e As ExceptionEventArgs) Handles CHTcpClient.ConnectingException
 
         With New StringBuilder()
-            .Append("Failed to connect to the service on attempt " & e.RecurrenceCount & "due to an exception:")
+            .Append("Failed to connect to the service on attempt " & e.RecurrenceCount & " due to an exception:")
             .Append(Environment.NewLine)
             .Append(e.Exception.Message)
 

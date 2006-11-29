@@ -28,7 +28,9 @@ Public Class ServiceResponse
     ''' Initializes a default instance of service response.
     ''' </summary>
     Public Sub New()
+
         MyClass.New("UNDETERMINED")
+
     End Sub
 
     ''' <summary>
@@ -36,7 +38,9 @@ Public Class ServiceResponse
     ''' </summary>
     ''' <param name="type">The type of service response.</param>
     Public Sub New(ByVal type As String)
+
         MyClass.New(type, "")
+
     End Sub
 
     ''' <summary>
@@ -45,9 +49,12 @@ Public Class ServiceResponse
     ''' <param name="type">The type of service response.</param>
     ''' <param name="message">The message of the service response.</param>
     Public Sub New(ByVal type As String, ByVal message As String)
+
+        MyBase.New()
         m_type = type.ToUpper()
         m_message = message
         m_attachments = New List(Of Object)
+
     End Sub
 
     ''' <summary>

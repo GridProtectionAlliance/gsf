@@ -54,10 +54,8 @@ Partial Class ServiceHelper
         'SHTcpServer
         '
         Me.SHTcpServer.ConfigurationString = "Port=6500"
-        Me.SHTcpServer.Encryption = Tva.Security.Cryptography.EncryptLevel.Level4
         Me.SHTcpServer.PayloadAware = True
         Me.SHTcpServer.ReceiveRawDataFunction = Nothing
-        Me.SHTcpServer.SecureSession = True
         Me.SHTcpServer.TextEncoding = CType(resources.GetObject("SHTcpServer.TextEncoding"), System.Text.Encoding)
         '
         'SHScheduleManager

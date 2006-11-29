@@ -32,7 +32,9 @@ Public Class ClientRequest
     ''' Initializes a default instance of client request.
     ''' </summary>
     Public Sub New()
+
         MyClass.New("UNDETERMINED")
+
     End Sub
 
     ''' <summary>
@@ -40,7 +42,9 @@ Public Class ClientRequest
     ''' </summary>
     ''' <param name="type">The type of client request.</param>
     Public Sub New(ByVal type As String)
+
         MyClass.New(type, Nothing)
+
     End Sub
 
     ''' <summary>
@@ -49,9 +53,12 @@ Public Class ClientRequest
     ''' <param name="type"></param>
     ''' <param name="parameters"></param>
     Public Sub New(ByVal type As String, ByVal parameters As String())
+
+        MyBase.New()
         m_type = type.ToUpper()
         m_parameters = parameters
         m_serviceHandled = False
+
     End Sub
 
     ''' <summary>

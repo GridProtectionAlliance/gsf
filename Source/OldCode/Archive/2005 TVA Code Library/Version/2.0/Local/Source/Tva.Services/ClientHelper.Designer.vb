@@ -43,10 +43,9 @@ Partial Class ClientHelper
         'CHTcpClient
         '
         Me.CHTcpClient.ConnectionString = "Server=localhost; Port=6500"
-        Me.CHTcpClient.Encryption = Tva.Security.Cryptography.EncryptLevel.Level4
         Me.CHTcpClient.HandshakePassphrase = Nothing
         Me.CHTcpClient.PayloadAware = True
-        Me.CHTcpClient.SecureSession = True
+        Me.CHTcpClient.ReceiveRawDataFunction = Nothing
         Me.CHTcpClient.TextEncoding = CType(resources.GetObject("CHTcpClient.TextEncoding"), System.Text.Encoding)
 
     End Sub

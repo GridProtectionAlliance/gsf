@@ -210,6 +210,11 @@ Public Class ServiceHelper
 
         SendServiceStateChangedResponse(ServiceState.Shutdown)
 
+        For Each process As ServiceProcess In m_processes.Values
+            ' Abort any executing processes.
+            process.Abort()
+        Next
+
         For Each component As IServiceComponent In m_serviceComponents
             component.ServiceStateChanged(ServiceState.Shutdown)
         Next
@@ -392,7 +397,7 @@ Public Class ServiceHelper
 
         Dim scheduledProcess As ServiceProcess = Nothing
         If m_processes.TryGetValue(e.Schedule.Name, scheduledProcess) Then
-            scheduledProcess.StartProcess() ' Start the process execution if it exists.
+            scheduledProcess.Start() ' Start the process execution if it exists.
         End If
 
     End Sub
@@ -435,7 +440,7 @@ Public Class ServiceHelper
             Dim processName As String = request.Parameters(0).ToUpper()
             Dim process As ServiceProcess = Nothing
             If m_processes.TryGetValue(processName, process) Then
-                process.StartProcess()
+                process.Start()
             Else
                 With New StringBuilder()
                     .Append("Process cannot be started. The process name """)
@@ -449,7 +454,7 @@ Public Class ServiceHelper
             ' Start the very first process in the list if no process name is specified.
             If m_processes.Count > 0 Then
                 For Each process As ServiceProcess In m_processes.Values
-                    process.StartProcess()
+                    process.Start()
                     Exit For
                 Next
             End If
@@ -464,7 +469,7 @@ Public Class ServiceHelper
             Dim process As ServiceProcess = Nothing
 
             If m_processes.TryGetValue(processName, process) Then
-                process.AbortProcess()
+                process.Abort()
             Else
                 With New StringBuilder()
                     .Append("Process cannot be aborted. The process name """)
@@ -478,7 +483,7 @@ Public Class ServiceHelper
             ' Start the very first process in the list if no process name is specified.
             If m_processes.Count > 0 Then
                 For Each process As ServiceProcess In m_processes.Values
-                    process.AbortProcess()
+                    process.Abort()
                     Exit For
                 Next
             End If

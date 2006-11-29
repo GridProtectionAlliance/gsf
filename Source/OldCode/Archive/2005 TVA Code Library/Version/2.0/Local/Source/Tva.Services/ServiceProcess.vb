@@ -104,14 +104,14 @@ Public Class ServiceProcess
         End Get
     End Property
 
-    Public Sub StartProcess()
+    Public Sub Start()
 
         m_processThread = New Thread(AddressOf InvokeExecutionMethod)
         m_processThread.Start()
 
     End Sub
 
-    Public Sub AbortProcess()
+    Public Sub Abort()
 
         If m_processThread IsNot Nothing Then m_processThread.Abort()
         Me.CurrentState = ProcessState.Aborted
