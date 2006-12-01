@@ -46,7 +46,6 @@ Module MainModule
         Dim consoleLine As String
         Dim receiver As PhasorMeasurementReceiver
         Dim mapper As PhasorMeasurementMapper = Nothing
-        Dim threadPoolSize As Integer
 
         Console.WriteLine(MonitorInformation)
 
@@ -56,12 +55,7 @@ Module MainModule
         Settings.Add("DataLossInterval", "35000", "Number of milliseconds to wait for incoming data before restarting connection cycle to device")
         Settings.Add("MessageDisplayTimespan", "1", "Timespan, in seconds, over which to monitor message volume")
         Settings.Add("MaximumMessagesToDisplay", "20", "Maximum number of messages to be tolerated during MessageDisplayTimespan")
-        Settings.Add("ThreadPoolSize", "200", "Defines the size of the thread pool - this may need to expand as connections grow and utilization nears 100%")
         SaveSettings()
-
-        threadPoolSize = IntegerSetting("ThreadPoolSize")
-        Threading.ThreadPool.SetMinThreads(threadPoolSize, threadPoolSize)
-        Threading.ThreadPool.SetMaxThreads(threadPoolSize, threadPoolSize)
 
         InitializeConfiguration(AddressOf InitializeSystem)
 
@@ -99,8 +93,8 @@ Module MainModule
                 Threading.ThreadPool.GetMaxThreads(totalWorkerThreads, totalIOThreads)
                 Threading.ThreadPool.GetAvailableThreads(usedWorkerThreads, usedIOThreads)
 
-                Console.WriteLine("Worker Thread Utilization: " & (usedWorkerThreads / totalWorkerThreads * 100).ToString("000.00") & "%")
-                Console.WriteLine("   I/O Thread Utilization: " & (usedIOThreads / totalIOThreads * 100).ToString("000.00") & "%")
+                Console.WriteLine("Worker Thread Utilization: " & usedWorkerThreads & " / " & totalWorkerThreads)
+                Console.WriteLine("  Port Thread Utilization: " & usedIOThreads & " / " & totalIOThreads)
             ElseIf consoleLine.StartsWith("list", True, Nothing) Then
                 Console.WriteLine()
                 DisplayConnectionList()
@@ -121,7 +115,7 @@ Module MainModule
 
         ' Attempt an orderly shutdown...
         For Each receiver In m_measurementReceivers.Values
-            receiver.DisconnectAll()
+            receiver.Disconnect()
         Next
 
         End
@@ -179,6 +173,9 @@ Module MainModule
 
         Dim measurementReceivers As New Dictionary(Of String, PhasorMeasurementReceiver)
         Dim measurementReceiver As PhasorMeasurementReceiver
+        Dim externalAssemblyName As String
+        Dim externalAssembly As Assembly
+        Dim historianAdapter As IHistorianAdapter
         Dim connectionString As String = StringSetting("PMUDatabase")
         Dim archiveSource As String
 
@@ -186,10 +183,17 @@ Module MainModule
             For x As Integer = 0 To .Rows.Count - 1
                 Try
                     archiveSource = .Rows(x)("ArchiveSource").ToString()
+                    externalAssemblyName = .Rows(x)("AssemblyName").ToString()
+
+                    ' Load the external assembly for the historian adapter
+                    externalAssembly = Assembly.LoadFrom(externalAssemblyName)
+
+                    ' Create a new instance of the historian adpater
+                    historianAdapter = Activator.CreateInstance(externalAssembly.GetType(.Rows(x)("TypeName").ToString()))
 
                     measurementReceiver = New PhasorMeasurementReceiver( _
+                        historianAdapter, _
                         archiveSource, _
-                        .Rows(x)("ArchiveIP").ToString(), _
                         pmuStatusInterval, _
                         connectionString, _
                         dataLossInterval, _
@@ -200,7 +204,7 @@ Module MainModule
 
                     measurementReceivers.Add(archiveSource, measurementReceiver)
                 Catch ex As Exception
-                    DisplayStatusMessage("Failed to load measurement receiver for archive """ & archiveSource & """ due to exception: " & ex.Message)
+                    DisplayStatusMessage("Failed to load measurement receiver for archive """ & archiveSource & """ from assembly """ & externalAssemblyName & """ due to exception: " & ex.Message)
                 End Try
             Next
         End With
@@ -216,7 +220,6 @@ Module MainModule
         Dim calculatedMeasurementName As String
         Dim externalAssemblyName As String
         Dim externalAssembly As Assembly
-        Dim adapterType As Type
         Dim outputMeasurementsSql As String
         Dim outputMeasurements As List(Of IMeasurement)
         Dim inputMeasurementsSql As String
@@ -291,37 +294,41 @@ Module MainModule
                     End If
 
                     ' Load the specified type from the assembly
-                    adapterType = externalAssembly.GetType(.Rows(x)("TypeName").ToString())
+                    Try
+                        ' Create a new instance of the adpater
+                        calculatedMeasurementAdapter = Activator.CreateInstance(externalAssembly.GetType(.Rows(x)("TypeName").ToString()))
+                    Catch ex As Exception
+                        DisplayStatusMessage("Failed to load type """ & .Rows(x)("TypeName").ToString() & """ from assembly """ & externalAssemblyName & """ for """ & calculatedMeasurementName & """ due to exception: " & ex.Message)
+                    End Try
 
-                    ' Create a new instance of the adpater
-                    calculatedMeasurementAdapter = Activator.CreateInstance(adapterType)
+                    If calculatedMeasurementAdapter IsNot Nothing Then
+                        ' Intialize calculated measurement adapter
+                        With .Rows(x)
+                            calculatedMeasurementAdapter.Initialize( _
+                                outputMeasurements.ToArray(), _
+                                inputMeasurementKeys.ToArray(), _
+                                Convert.ToInt32(.Item("MinimumInputMeasurements")), _
+                                Convert.ToInt32(.Item("ExpectedFrameRate")), _
+                                Convert.ToDouble(.Item("LagTime")), _
+                                Convert.ToDouble(.Item("LeadTime")))
+                        End With
 
-                    ' Intialize calculated measurement adapter
-                    With .Rows(x)
-                        calculatedMeasurementAdapter.Initialize( _
-                            outputMeasurements.ToArray(), _
-                            inputMeasurementKeys.ToArray(), _
-                            Convert.ToInt32(.Item("MinimumInputMeasurements")), _
-                            Convert.ToInt32(.Item("ExpectedFrameRate")), _
-                            Convert.ToDouble(.Item("LagTime")), _
-                            Convert.ToDouble(.Item("LeadTime")))
-                    End With
+                        With calculatedMeasurementAdapter
+                            ' Bubble calculation module status messages out to local update status function
+                            AddHandler .StatusMessage, AddressOf DisplayStatusMessage
 
-                    With calculatedMeasurementAdapter
-                        ' Bubble calculation module status messages out to local update status function
-                        AddHandler .StatusMessage, AddressOf DisplayStatusMessage
+                            ' Bubble newly calculated measurement out to functions that need the real-time data
+                            AddHandler .NewCalculatedMeasurements, AddressOf NewCalculatedMeasurements
 
-                        ' Bubble newly calculated measurement out to functions that need the real-time data
-                        AddHandler .NewCalculatedMeasurements, AddressOf NewCalculatedMeasurements
+                            ' Bubble calculation exceptions out to procedure that can handle these exceptions
+                            AddHandler .CalculationException, AddressOf CalculationException
+                        End With
 
-                        ' Bubble calculation exceptions out to procedure that can handle these exceptions
-                        AddHandler .CalculationException, AddressOf CalculationException
-                    End With
+                        ' Add new adapter to the list
+                        calculatedMeasurementAdapters.Add(calculatedMeasurementAdapter)
 
-                    ' Add new adapter to the list
-                    calculatedMeasurementAdapters.Add(calculatedMeasurementAdapter)
-
-                    DisplayStatusMessage("Loaded calculated measurement """ & calculatedMeasurementName & """ from assembly """ & externalAssemblyName & """")
+                        DisplayStatusMessage("Loaded calculated measurement """ & calculatedMeasurementName & """ from assembly """ & externalAssemblyName & """")
+                    End If
                 Catch ex As Exception
                     DisplayStatusMessage("Failed to load calculated measurement """ & calculatedMeasurementName & """ from assembly """ & externalAssemblyName & """ due to exception: " & ex.Message)
                 End Try

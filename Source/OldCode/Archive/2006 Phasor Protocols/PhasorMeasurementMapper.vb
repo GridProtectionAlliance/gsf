@@ -42,7 +42,7 @@ Public Class PhasorMeasurementMapper
     Private m_source As String
     Private m_pmuIDs As PmuInfoCollection
     Private m_measurementIDs As Dictionary(Of String, IMeasurement)
-    Private m_measurementFrames As List(Of IFrame)
+    'Private m_measurementFrames As List(Of IFrame)
     Private m_lastReportTime As Long
     Private m_bytesReceived As Long
     Private m_errorCount As Integer
@@ -65,7 +65,7 @@ Public Class PhasorMeasurementMapper
         m_source = source
         m_pmuIDs = pmuIDs
         m_measurementIDs = measurementIDs
-        m_measurementFrames = New List(Of IFrame)
+        'm_measurementFrames = New List(Of IFrame)
 
         m_dataStreamMonitor = New Timers.Timer
 
@@ -109,23 +109,23 @@ Public Class PhasorMeasurementMapper
 
     End Sub
 
-    Public Function GetQueuedFrames() As IFrame()
+    'Public Function GetQueuedFrames() As IFrame()
 
-        Dim frames As IFrame()
+    '    Dim frames As IFrame()
 
-        SyncLock m_measurementFrames
-            If m_measurementFrames.Count > 0 Then
-                ' It possible, because of threading, that frames can be processed out of order
-                ' so we at least sort them by time before providing them to a historian
-                m_measurementFrames.Sort(AddressOf CompareFramesByTicks)
-                frames = m_measurementFrames.ToArray()
-                m_measurementFrames.Clear()
-            End If
-        End SyncLock
+    '    SyncLock m_measurementFrames
+    '        If m_measurementFrames.Count > 0 Then
+    '            ' It possible, because of threading, that frames can be processed out of order
+    '            ' so we at least sort them by time before providing them to a historian
+    '            m_measurementFrames.Sort(AddressOf CompareFramesByTicks)
+    '            frames = m_measurementFrames.ToArray()
+    '            m_measurementFrames.Clear()
+    '        End If
+    '    End SyncLock
 
-        Return frames
+    '    Return frames
 
-    End Function
+    'End Function
 
     Private Function CompareFramesByTicks(ByVal x As IFrame, ByVal y As IFrame) As Integer
 
@@ -277,10 +277,10 @@ Public Class PhasorMeasurementMapper
             Next
         End With
 
-        ' Queue up frame for polled retrieval into historian...
-        SyncLock m_measurementFrames
-            m_measurementFrames.Add(frame)
-        End SyncLock
+        '' Queue up frame for polled retrieval into historian...
+        'SyncLock m_measurementFrames
+        '    m_measurementFrames.Add(frame)
+        'End SyncLock
 
         ' Provide real-time measurements where needed
         RaiseEvent NewParsedMeasurements(frame.Measurements)
