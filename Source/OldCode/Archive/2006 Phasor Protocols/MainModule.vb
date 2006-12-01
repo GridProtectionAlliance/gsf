@@ -444,7 +444,7 @@ Module MainModule
     Private Sub DisplayConnectionList()
 
         For Each receiver As PhasorMeasurementReceiver In m_measurementReceivers.Values
-            Console.WriteLine("Phasor Measurement Retriever for Archive """ & receiver.ArchiverName & """")
+            Console.WriteLine("Phasor Measurement Retriever for Archive """ & receiver.HistorianName & """")
             Console.WriteLine(">> PMU/PDC Connection List (" & receiver.Mappers.Count & " Total)")
             Console.WriteLine()
 

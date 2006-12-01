@@ -31,7 +31,7 @@ Public Class PhasorMeasurementReceiver
     Public Event StatusMessage(ByVal status As String)
 
     Private WithEvents m_reportingStatus As Timers.Timer
-    Private m_historianAdapter As IHistorianAdapter
+    Private WithEvents m_historianAdapter As IHistorianAdapter
     Private m_archiverSource As String
     Private m_connectionString As String
     Private m_dataLossInterval As Integer
@@ -236,7 +236,7 @@ Public Class PhasorMeasurementReceiver
 
     End Sub
 
-    Public ReadOnly Property ArchiverName() As String
+    Public ReadOnly Property HistorianName() As String
         Get
             Return m_historianAdapter.Name
         End Get
@@ -251,7 +251,7 @@ Public Class PhasorMeasurementReceiver
     Public ReadOnly Property Status() As String
         Get
             With New StringBuilder
-                .Append("Phasor Measurement Receiver Status for Archiver """ & ArchiverName & """")
+                .Append("Phasor Measurement Receiver Status for """ & HistorianName & """")
                 .Append(Environment.NewLine)
                 .Append(Environment.NewLine)
                 .Append(m_historianAdapter.Status)
@@ -325,6 +325,12 @@ Public Class PhasorMeasurementReceiver
                 If connection IsNot Nothing Then connection.Close()
             End Try
         End If
+
+    End Sub
+
+    Private Sub m_historianAdapter_ArchivalException(ByVal source As String, ByVal ex As System.Exception) Handles m_historianAdapter.ArchivalException
+
+        UpdateStatus(source & """ data archival exception: " & ex.Message)
 
     End Sub
 
