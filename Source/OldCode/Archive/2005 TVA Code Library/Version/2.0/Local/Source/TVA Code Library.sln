@@ -68,7 +68,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "PMU Connection Tester", "PM
 EndProject
 Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "Tva.Services", "Tva.Services\Tva.Services.vbproj", "{072D5E46-0944-48DE-A1E1-C06D145FB366}"
 EndProject
-Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "DatAWareAdapter", "Tva.Phasors\DatAWareAdapter\DatAWareAdapter.vbproj", "{F452CF72-30CA-4245-B054-F9E73783FD78}"
+Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "DatAWareHistorianAdapter", "Tva.Phasors\DatAWareAdapter\DatAWareHistorianAdapter.vbproj", "{F452CF72-30CA-4245-B054-F9E73783FD78}"
 EndProject
 Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "InterfaceAdapters", "Tva.Phasors\InterfaceAdapters\InterfaceAdapters.vbproj", "{45B13CE3-0EE6-4BF7-B36E-638F2BD68071}"
 EndProject
@@ -171,21 +171,21 @@ Global
 		SccProjectName17 = \u0022$/TVA\u0020Code\u0020Library/Version/2.0/Local/Source/Tva.Phasors/RealTimeCalculatedMeasurements\u0022,\u0020UBPAAAAA
 		SccLocalPath17 = Tva.Phasors\\RealTimeCalculatedMeasurements
 		CanCheckoutShared = false
-		SccProjectUniqueName18 = Tva.Phasors\\DatAWareAdapter\\DatAWareAdapter.vbproj
+		SccProjectUniqueName18 = Tva.Security\\Tva.Security.vbproj
 		SccProjectTopLevelParentUniqueName18 = TVA\u0020Code\u0020Library.sln
 		SccLocalPath18 = ..
 		CanCheckoutShared = false
-		SccProjectFilePathRelativizedFromConnection18 = Source\\Tva.Phasors\\DatAWareAdapter\\
-		SccProjectUniqueName19 = Tva.Security\\Tva.Security.vbproj
+		SccProjectFilePathRelativizedFromConnection18 = Source\\Tva.Security\\
+		SccProjectUniqueName19 = Tva.Phasors\\RealTimeStabilityAlarm\\RealTimeStabilityAlarm.vbproj
 		SccProjectTopLevelParentUniqueName19 = TVA\u0020Code\u0020Library.sln
 		SccLocalPath19 = ..
 		CanCheckoutShared = false
-		SccProjectFilePathRelativizedFromConnection19 = Source\\Tva.Security\\
-		SccProjectUniqueName20 = Tva.Phasors\\RealTimeStabilityAlarm\\RealTimeStabilityAlarm.vbproj
+		SccProjectFilePathRelativizedFromConnection19 = Source\\Tva.Phasors\\RealTimeStabilityAlarm\\
+		SccProjectUniqueName20 = Tva.Phasors\\DatAWareAdapter\\DatAWareHistorianAdapter.vbproj
 		SccProjectTopLevelParentUniqueName20 = TVA\u0020Code\u0020Library.sln
 		SccLocalPath20 = ..
 		CanCheckoutShared = false
-		SccProjectFilePathRelativizedFromConnection20 = Source\\Tva.Phasors\\RealTimeStabilityAlarm\\
+		SccProjectFilePathRelativizedFromConnection20 = Source\\Tva.Phasors\\DatAWareAdapter\\
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

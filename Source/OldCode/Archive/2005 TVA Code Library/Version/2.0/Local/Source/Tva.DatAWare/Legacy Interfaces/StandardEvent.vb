@@ -42,7 +42,7 @@ Public Class StandardEvent
     ''' <summary>Create new standard event from an abstract measurement</summary>
     Public Sub New(ByVal measurement As IMeasurement)
 
-        MyClass.New(measurement.ID, measurement.Timestamp, Convert.ToSingle(measurement.AdjustedValue), IIf(measurement.TimestampQualityIsGood And measurement.ValueQualityIsGood, Tva.DatAWare.Quality.Good, Tva.DatAWare.Quality.SuspectData))
+        MyClass.New(measurement.ID, New TimeTag(measurement.Timestamp), Convert.ToSingle(measurement.AdjustedValue), IIf(measurement.TimestampQualityIsGood And measurement.ValueQualityIsGood, Tva.DatAWare.Quality.Good, Tva.DatAWare.Quality.SuspectData))
 
     End Sub
 
@@ -53,15 +53,15 @@ Public Class StandardEvent
 
     End Sub
 
-    Public Sub New(ByVal databaseIndex As Integer, ByVal ttag As TimeTag, ByVal value As Single, ByVal qual As Quality)
+    Public Sub New(ByVal databaseIndex As Integer, ByVal timeTag As TimeTag, ByVal value As Single, ByVal quality As Quality)
 
-        MyClass.New(databaseIndex, New ProcessEvent(ttag, value, qual))
+        MyClass.New(databaseIndex, New ProcessEvent(timeTag, value, quality))
 
     End Sub
 
-    Public Sub New(ByVal databaseIndex As Integer, ByVal timestamp As Date, ByVal value As Single, ByVal valueQuality As Quality)
+    Public Sub New(ByVal databaseIndex As Integer, ByVal timestamp As Date, ByVal value As Single, ByVal quality As Quality)
 
-        MyClass.New(databaseIndex, New TimeTag(timestamp), value, valueQuality)
+        MyClass.New(databaseIndex, New TimeTag(timestamp), value, quality)
 
     End Sub
 
@@ -87,10 +87,10 @@ Public Class StandardEvent
     ' For convience, we directly expose the relevant process event properties
     Public Property TTag() As TimeTag
         Get
-            Return [Event].TTag
+            Return [Event].TimeTag
         End Get
         Set(ByVal Value As TimeTag)
-            [Event].TTag = Value
+            [Event].TimeTag = Value
         End Set
     End Property
 

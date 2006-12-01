@@ -20,7 +20,7 @@ Public Class ProcessEvent
 
     Implements IComparable
 
-    Public TTag As TimeTag
+    Public TimeTag As TimeTag
     Public QualityBits As Integer
     Public Value As Single
 
@@ -46,18 +46,18 @@ Public Class ProcessEvent
     Public Const BinaryLength As Integer = 16
     Private Const QualityMask As Integer = &H1F
 
-    Public Sub New(ByVal ttag As TimeTag, ByVal value As Single, ByVal qual As Quality)
+    Public Sub New(ByVal timeTag As TimeTag, ByVal value As Single, ByVal quality As Quality)
 
-        Me.TTag = ttag
+        Me.TimeTag = timeTag
         Me.Value = value
+        Me.Quality = quality
         QualityBits = -1    ' A quality set to -1 tells Archiver to perform limit checking
-        Quality = qual
 
     End Sub
 
-    Public Sub New(ByVal timestamp As Date, ByVal value As Single, ByVal valueQuality As Quality)
+    Public Sub New(ByVal timestamp As Date, ByVal value As Single, ByVal quality As Quality)
 
-        Me.New(New TimeTag(timestamp), value, valueQuality)
+        Me.New(New TimeTag(timestamp), value, quality)
 
     End Sub
 
@@ -68,7 +68,7 @@ Public Class ProcessEvent
         ElseIf binaryImage.Length - startIndex < BinaryLength Then
             Throw New ArgumentException("BinaryImage size from startIndex is too small - could not create DatAWare.ProcessEvent")
         Else
-            Me.TTag = New TimeTag(BitConverter.ToDouble(binaryImage, startIndex))
+            Me.TimeTag = New TimeTag(BitConverter.ToDouble(binaryImage, startIndex))
             Me.QualityBits = BitConverter.ToInt32(binaryImage, startIndex + 8)
             Me.Value = BitConverter.ToSingle(binaryImage, startIndex + 12)
         End If
@@ -79,8 +79,8 @@ Public Class ProcessEvent
         Get
             Return CType((QualityBits And QualityMask), Quality)
         End Get
-        Set(ByVal Value As Quality)
-            QualityBits = (QualityBits Or Value)
+        Set(ByVal value As Quality)
+            QualityBits = (QualityBits Or value)
         End Set
     End Property
 
@@ -89,7 +89,7 @@ Public Class ProcessEvent
             Dim buffer As Byte() = CreateArray(Of Byte)(BinaryLength)
 
             ' Construct the binary IP buffer for this event
-            Array.Copy(BitConverter.GetBytes(TTag.Value), 0, buffer, 0, 8)
+            Array.Copy(BitConverter.GetBytes(TimeTag.Value), 0, buffer, 0, 8)
             Array.Copy(BitConverter.GetBytes(QualityBits), 0, buffer, 8, 4)
             Array.Copy(BitConverter.GetBytes(Value), 0, buffer, 12, 4)
 
@@ -101,7 +101,7 @@ Public Class ProcessEvent
     Public Function CompareTo(ByVal obj As Object) As Integer Implements System.IComparable.CompareTo
 
         If TypeOf obj Is ProcessEvent Then
-            Return TTag.CompareTo(DirectCast(obj, ProcessEvent).TTag)
+            Return TimeTag.CompareTo(DirectCast(obj, ProcessEvent).TimeTag)
         Else
             Throw New ArgumentException("ProcessEvent can only be compared with other ProcessEvents")
         End If

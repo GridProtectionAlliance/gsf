@@ -589,6 +589,18 @@ Public Class MultiProtocolFrameParser
 
     End Sub
 
+    'Private Sub m_communicationClient_ReceivedData(ByVal sender As Object, ByVal e As DataEventArgs) Handles m_communicationClient.ReceivedData
+
+    '    With e
+    '        ' Pass data from communications client into protocol specific frame parser
+    '        m_frameParser.Write(.Data, 0, .Data.Length)
+    '        m_byteRateTotal += .Data.Length
+    '        If m_initiatingDataStream Then m_initialBytesReceived += .Data.Length
+    '    End With
+
+    'End Sub
+
+    ' We access the "raw data function" of the ICommunicationsClient for a speed boost in communications processing...
     Private Sub IFrameParserWrite(ByVal buffer() As Byte, ByVal offset As Integer, ByVal count As Integer) Implements IFrameParser.Write
 
         ' Pass data from communications client into protocol specific frame parser
