@@ -272,15 +272,15 @@ Public Class UdpClient
                     totalBytesReceived += received
 
                     If m_payloadAware Then
-                        If .PacketSize = -1 Then
+                        If .PayloadSize = -1 Then
                             ' We have not yet received the payload size. 
                             If HasBeginMarker(dataBuffer) Then
                                 ' This packet has the payload size.
-                                .PacketSize = BitConverter.ToInt32(dataBuffer, m_packetBeginMarker.Length())
+                                .PayloadSize = BitConverter.ToInt32(dataBuffer, m_packetBeginMarker.Length())
                                 ' We'll save the payload received in this packet.
-                                Dim tempBuffer As Byte() = CreateArray(Of Byte)(IIf(.PacketSize < MaximumUdpPacketSize - 8, .PacketSize, MaximumUdpPacketSize - 8))
+                                Dim tempBuffer As Byte() = CreateArray(Of Byte)(IIf(.PayloadSize < MaximumUdpPacketSize - 8, .PayloadSize, MaximumUdpPacketSize - 8))
                                 Buffer.BlockCopy(dataBuffer, 8, tempBuffer, 0, tempBuffer.Length)
-                                dataBuffer = CreateArray(Of Byte)(.PacketSize)
+                                dataBuffer = CreateArray(Of Byte)(.PayloadSize)
                                 Buffer.BlockCopy(tempBuffer, 0, dataBuffer, 0, tempBuffer.Length)
                                 totalBytesReceived = tempBuffer.Length
                                 length = dataBuffer.Length
@@ -289,7 +289,7 @@ Public Class UdpClient
                                 Continue Do
                             End If
                         End If
-                        If totalBytesReceived < .PacketSize Then
+                        If totalBytesReceived < .PayloadSize Then
                             Continue Do
                         End If
                     Else
@@ -319,7 +319,7 @@ Public Class UdpClient
                     dataBuffer = Nothing
                     totalBytesReceived = 0
                     length = MaximumUdpPacketSize
-                    .PacketSize = -1
+                    .PayloadSize = -1
                 Loop
             Catch ex As Exception
 

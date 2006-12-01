@@ -9,6 +9,12 @@ Imports Tva.Security.Cryptography.Common
 
 Friend NotInheritable Class CommunicationHelper
 
+    Private Sub New()
+
+        ' This class contains only global functions and is not meant to be instantiated
+
+    End Sub
+
     ''' <summary>
     ''' Gets an IP endpoint for the specified host name and port number.
     ''' </summary>

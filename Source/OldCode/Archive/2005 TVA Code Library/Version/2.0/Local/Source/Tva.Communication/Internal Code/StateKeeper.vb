@@ -8,11 +8,12 @@ Friend Class StateKeeper(Of T)
     Public Client As T
     Public ID As Guid
     Public Passphrase As String
-    Public PacketSize As Integer
+    Public PayloadSize As Integer
+    Public DataBuffer As Byte()
 
     Public Sub New()
 
-        PacketSize = -1
+        Reset()
 
     End Sub
 
@@ -21,6 +22,13 @@ Friend Class StateKeeper(Of T)
             Return Me
         End Get
     End Property
+
+    Public Sub Reset()
+
+        PayloadSize = -1
+        DataBuffer = Nothing
+
+    End Sub
 
 #Region " Old Code "
 

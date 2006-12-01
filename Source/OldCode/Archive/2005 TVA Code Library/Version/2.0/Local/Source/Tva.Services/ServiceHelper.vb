@@ -162,7 +162,13 @@ Public Class ServiceHelper
 
         SendServiceStateChangedResponse(ServiceState.Stopped)
 
+        For Each process As ServiceProcess In m_processes.Values
+            ' Abort any processes that are currently executing.
+            process.Abort()
+        Next
+
         For Each component As IServiceComponent In m_serviceComponents
+            ' Stop all of the components.
             component.ServiceStateChanged(ServiceState.Stopped)
         Next
 
