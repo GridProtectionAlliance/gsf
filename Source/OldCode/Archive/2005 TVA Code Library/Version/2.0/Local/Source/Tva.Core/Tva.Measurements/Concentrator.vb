@@ -239,10 +239,13 @@ Namespace Measurements
         End Property
 
         ''' <summary>Frames per second</summary>
-        Public ReadOnly Property FramesPerSecond() As Integer
+        Public Property FramesPerSecond() As Integer
             Get
                 Return m_framesPerSecond
             End Get
+            Set(ByVal value As Integer)
+                m_framesPerSecond = value
+            End Set
         End Property
 
         ''' <summary>Frame rate (i.e., ticks per frame)</summary>

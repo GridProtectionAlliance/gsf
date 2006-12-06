@@ -40,6 +40,13 @@ Namespace Measurements
 
         End Sub
 
+        Public Sub New(ByVal id As Integer, ByVal source As String)
+
+            MyClass.New(id, source, Double.NaN, 0.0R, 1.0R, 0)
+
+        End Sub
+
+
         Public Sub New(ByVal id As Integer, ByVal source As String, ByVal value As Double, ByVal timestamp As Date)
 
             MyClass.New(id, source, value, timestamp.Ticks)
