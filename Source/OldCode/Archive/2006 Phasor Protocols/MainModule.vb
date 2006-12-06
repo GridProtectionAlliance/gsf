@@ -130,9 +130,10 @@ Module MainModule
             connection = New SqlConnection(StringSetting("PMUDatabase"))
             connection.Open()
 
-            ' We tolerate a higher message volume during initialization
-            m_messageDisplayTimepan = 1
-            m_maximumMessagesToDisplay = 200
+            ' To make sure any initialization messages don't get missed, we increase message
+            ' tolerance to maximum during the initialization process
+            m_messageDisplayTimepan = 10
+            m_maximumMessagesToDisplay = Integer.MaxValue
 
             DisplayStatusMessage("PMU database connection opened...")
 
@@ -361,6 +362,8 @@ Module MainModule
             End If
 
             ' TODO: Provide real-time calculated measurements outside of receiver as needed...
+            ' In an "integrated" system, this is where you would provide calculated measurements
+            ' as part of the real-time stream (such as in Analog points in C37.118)
         End If
 
     End Sub
