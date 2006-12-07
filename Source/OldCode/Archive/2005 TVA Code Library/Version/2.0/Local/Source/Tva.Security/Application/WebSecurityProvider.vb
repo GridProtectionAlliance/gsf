@@ -344,11 +344,11 @@ Namespace Application
 
         End Sub
 
-        Private Sub m_parent_PreLoad(ByVal sender As Object, ByVal e As System.EventArgs) Handles m_parent.PreLoad
+        Private Sub m_parent_PreInit(ByVal sender As Object, ByVal e As System.EventArgs) Handles m_parent.PreInit
 
             If MyBase.User Is Nothing Then
                 ' EndInit() method of the ISupportInitialize interface was not called which in-turn calls the
-                ' LoginUser() method, so we'll call LoginUser() over here implicitly before the web page loads.
+                ' LoginUser() method, so we'll call LoginUser() over here implicitly before the web page initializes.
                 LoginUser()
             End If
 
