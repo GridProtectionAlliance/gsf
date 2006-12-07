@@ -257,7 +257,7 @@ Public Class PhasorMeasurementReceiver
                 .Append(m_historianAdapter.Status)
 
                 For Each parser As PhasorMeasurementMapper In m_mappers.Values
-                    .Append(parser.Status())
+                    .Append(parser.Status)
                     .Append(Environment.NewLine)
                 Next
 
@@ -268,7 +268,28 @@ Public Class PhasorMeasurementReceiver
 
     Public Sub QueueMeasurementForArchival(ByVal measurement As IMeasurement)
 
-        m_historianAdapter.QueueMeasurementForArchival(measurement)
+        ' Filter incoming measurements to just the ones destined for this archive
+        With measurement
+            If String.Compare(.Source, m_archiverSource, True) = 0 Then
+                m_historianAdapter.QueueMeasurementForArchival(.This)
+            End If
+        End With
+
+    End Sub
+
+    Public Sub QueueMeasurementsForArchival(ByVal measurements As IList(Of IMeasurement))
+
+        For x As Integer = 0 To measurements.Count - 1
+            QueueMeasurementForArchival(measurements(x))
+        Next
+
+    End Sub
+
+    Public Sub QueueMeasurementsForArchival(ByVal measurements As IDictionary(Of MeasurementKey, IMeasurement))
+
+        For Each measurement As IMeasurement In measurements.Values
+            QueueMeasurementForArchival(measurement)
+        Next
 
     End Sub
 

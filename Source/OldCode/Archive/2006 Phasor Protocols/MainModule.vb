@@ -95,6 +95,7 @@ Module MainModule
 
                 Console.WriteLine("Worker Thread Utilization: " & usedWorkerThreads & " / " & totalWorkerThreads)
                 Console.WriteLine("  Port Thread Utilization: " & usedIOThreads & " / " & totalIOThreads)
+                Console.WriteLine()
             ElseIf consoleLine.StartsWith("list", True, Nothing) Then
                 Console.WriteLine()
                 DisplayConnectionList()
@@ -343,20 +344,15 @@ Module MainModule
     Private Sub NewCalculatedMeasurements(ByVal measurements As IList(Of IMeasurement))
 
         If measurements IsNot Nothing Then
-            Dim measurementReceiver As PhasorMeasurementReceiver
-            Dim x As Integer
-
-            ' Make sure new calculated measurement gets sent to correct archive...
-            For x = 0 To measurements.Count - 1
-                If m_measurementReceivers.TryGetValue(measurements(x).Source, measurementReceiver) Then
-                    measurementReceiver.QueueMeasurementForArchival(measurements(x))
-                End If
+            ' Queue new measurements for archival
+            For Each receiver As PhasorMeasurementReceiver In m_measurementReceivers.Values
+                receiver.QueueMeasurementsForArchival(measurements)
             Next
 
             ' Provide new calculated measurements "directly" to all calculated measurement modules
             ' such that calculated measurements can be based on other calculated measurements
             If m_calculatedMeasurements IsNot Nothing Then
-                For x = 0 To m_calculatedMeasurements.Length - 1
+                For x As Integer = 0 To m_calculatedMeasurements.Length - 1
                     m_calculatedMeasurements(x).QueueMeasurementsForCalculation(measurements)
                 Next
             End If
