@@ -349,6 +349,8 @@ Namespace Application
             If MyBase.User Is Nothing Then
                 ' EndInit() method of the ISupportInitialize interface was not called which in-turn calls the
                 ' LoginUser() method, so we'll call LoginUser() over here implicitly before the web page initializes.
+                ' Engaging the security before the page, or anything inside the page for that matter initializes,
+                ' will prove extremely useful when security is to be implemented at a control level.
                 LoginUser()
             End If
 
