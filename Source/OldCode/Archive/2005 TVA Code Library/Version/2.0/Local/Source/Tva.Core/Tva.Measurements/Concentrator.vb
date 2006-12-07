@@ -28,6 +28,7 @@ Imports System.Threading
 Imports Tva.Collections
 Imports Tva.DateTime
 Imports Tva.DateTime.Common
+Imports Tva.Math.Common
 
 Namespace Measurements
 
@@ -68,6 +69,7 @@ Namespace Measurements
         Private m_frameRate As Decimal                                          ' Frame rate - we use a 64-bit scaled integer to avoid round-off errors in calculations
         Private m_frameIndex As Integer                                         ' Current publishing frame index
         Private m_discardedMeasurements As Long                                 ' Total number of discarded measurements
+        Private m_publishedMeasurements As Long                                 ' Total number of published measurements
         Private m_publishedFrames As Long                                       ' Total number of published frames
         Private m_enabled As Boolean                                            ' Enabled state of concentrator
         Private m_latestMeasurements As ImmediateMeasurements                   ' Absolute latest received measurement values
@@ -426,9 +428,6 @@ Namespace Measurements
                         .Append("Disabled")
                     End If
                     .Append(Environment.NewLine)
-                    .Append("    Discarded measurements: ")
-                    .Append(m_discardedMeasurements)
-                    .Append(Environment.NewLine)
                     .Append("          Defined lag time: ")
                     .Append(m_lagTime)
                     .Append(" seconds")
@@ -455,6 +454,15 @@ Namespace Measurements
                     .Append(", ")
                     .Append(TicksToSeconds(currentTime.Ticks - publishingSampleTimestamp.Ticks).ToString("0"))
                     .Append(" second deviation")
+                    .Append(Environment.NewLine)
+                    .Append("    Published measurements: ")
+                    .Append(m_publishedMeasurements)
+                    .Append(Environment.NewLine)
+                    .Append("    Discarded measurements: ")
+                    .Append(m_discardedMeasurements)
+                    .Append(Environment.NewLine)
+                    .Append("Published measurement loss: ")
+                    .Append((m_discardedMeasurements / NotLessThan(m_publishedMeasurements, m_discardedMeasurements) * 100.0R).ToString("##0.0000%"))
                     .Append(Environment.NewLine)
                     .Append("    Total published frames: ")
                     .Append(m_publishedFrames)
@@ -613,8 +621,10 @@ Namespace Measurements
                     Catch ex As Exception
                         RaiseEvent ProcessException(ex)
                     End Try
+
                     .Published = True
                     m_publishedFrames += 1
+                    m_publishedMeasurements += .Measurements.Count
 
                     ' Increment frame index
                     m_frameIndex += 1

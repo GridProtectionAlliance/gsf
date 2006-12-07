@@ -20,6 +20,8 @@
 '       Added curve fit function (courtesy of Brian Fox from DatAWare client code)
 '  11/08/2006 - J. Ritchie Carroll
 '       Added standard devitaion and average functions
+'  12/07/2006 - J. Ritchie Carroll
+'       Added strongly-typed generic Not "comparator" functions (e.g., NotEqualTo)
 '
 '*******************************************************************************************************
 
@@ -39,7 +41,7 @@ Namespace Math
 
         End Sub
 
-        ''' <summary>Ensures parameter passed to a function is not zero - returns -1 if <paramref name="testValue">testValue</paramref> is zero</summary>
+        ''' <summary>Ensures parameter passed to function is not zero - returns -1 if <paramref name="testValue">testValue</paramref> is zero</summary>
         ''' <param name="testValue">Value to test for zero</param>
         ''' <returns>A non-zero value</returns>
         Public Shared Function NotZero(ByVal testValue As Double) As Double
@@ -48,14 +50,103 @@ Namespace Math
 
         End Function
 
-        ''' <summary>Ensures parameter passed to a function is not zero</summary>
+        ''' <summary>Ensures parameter passed to function is not zero</summary>
         ''' <param name="testValue">Value to test for zero</param>
         ''' <param name="nonZeroReturnValue">Value to return if <paramref name="testValue">testValue</paramref> is zero</param>
         ''' <returns>A non-zero value</returns>
-        Public Shared Function NotZero(Of T As Structure)(ByVal testValue As T, ByVal nonZeroReturnValue As T) As T
+        ''' <remarks>To optimize performance this function does not validate that the notZeroReturnValue is not zero</remarks>
+        Public Shared Function NotZero(ByVal testValue As Double, ByVal nonZeroReturnValue As Double) As Double
 
-            If nonZeroReturnValue.Equals(0) Then Throw New ArgumentException("nonZeroReturnValue cannot be zero!")
-            Return IIf(testValue.Equals(0), nonZeroReturnValue, testValue)
+            Return IIf(testValue = 0, nonZeroReturnValue, testValue)
+
+        End Function
+
+        ''' <summary>Ensures test parameter passed to function is not equal to the specified value</summary>
+        ''' <param name="testValue">Value to test</param>
+        ''' <param name="notEqualToValue">Value that represents the undesired value (e.g., zero)</param>
+        ''' <param name="alternateValue">Value to return if <paramref name="testValue">testValue</paramref> is equal to the undesired value</param>
+        ''' <typeparam name="T">Structure or class that implements IEquatable(Of T) (e.g., Double, Single, Integer, etc.)</typeparam>
+        ''' <returns>A value not equal to notEqualToValue</returns>
+        ''' <remarks>To optimize performance this function does not validate that the notEqualToValue is not equal to the alternateValue</remarks>
+        Public Shared Function NotEqualTo(Of T As IEquatable(Of T))(ByVal testValue As T, ByVal notEqualToValue As T, ByVal alternateValue As T) As T
+
+            Return IIf(Of T)(DirectCast(testValue, IEquatable(Of T)).Equals(notEqualToValue), alternateValue, testValue)
+
+        End Function
+
+        ''' <summary>Ensures test parameter passed to function is not less than the specified value</summary>
+        ''' <param name="testValue">Value to test</param>
+        ''' <param name="notLessThanValue">Value that represents the lower limit for the testValue, this value is returned if testValue is less than notLessThanValue</param>
+        ''' <typeparam name="T">Structure or class that implements IComparable(Of T) (e.g., Double, Single, Integer, etc.)</typeparam>
+        ''' <returns>A value not less than notLessThanValue</returns>
+        ''' <remarks>If testValue is less than notLessThanValue then notLessThanValue is returned</remarks>
+        Public Shared Function NotLessThan(Of T As IComparable(Of T))(ByVal testValue As T, ByVal notLessThanValue As T) As T
+
+            Return IIf(Of T)(DirectCast(testValue, IComparable(Of T)).CompareTo(notLessThanValue) < 0, notLessThanValue, testValue)
+
+        End Function
+
+        ''' <summary>Ensures test parameter passed to function is not less than the specified value</summary>
+        ''' <param name="testValue">Value to test</param>
+        ''' <param name="notLessThanValue">Value that represents the lower limit for the testValue</param>
+        ''' <param name="alternateValue">Value to return if <paramref name="testValue">testValue</paramref> is  &lt; <paramref name="notLessThanValue">notLessThanValue</paramref></param>
+        ''' <typeparam name="T">Structure or class that implements IComparable(Of T) (e.g., Double, Single, Integer, etc.)</typeparam>
+        ''' <returns>A value not less than notLessThanValue</returns>
+        ''' <remarks>To optimize performance this function does not validate that the notLessThanValue is not less than the alternateValue</remarks>
+        Public Shared Function NotLessThan(Of T As IComparable(Of T))(ByVal testValue As T, ByVal notLessThanValue As T, ByVal alternateValue As T) As T
+
+            Return IIf(Of T)(DirectCast(testValue, IComparable(Of T)).CompareTo(notLessThanValue) < 0, alternateValue, testValue)
+
+        End Function
+
+        ''' <summary>Ensures test parameter passed to function is not less than or equal to the specified value</summary>
+        ''' <param name="testValue">Value to test</param>
+        ''' <param name="notLessThanOrEqualToValue">Value that represents the lower limit for the testValue</param>
+        ''' <param name="alternateValue">Value to return if <paramref name="testValue">testValue</paramref> is &lt;= <paramref name="notLessThanOrEqualToValue">notLessThanOrEqualToValue</paramref></param>
+        ''' <typeparam name="T">Structure or class that implements IComparable(Of T) (e.g., Double, Single, Integer, etc.)</typeparam>
+        ''' <returns>A value not less than or equal to notLessThanOrEqualToValue</returns>
+        ''' <remarks>To optimize performance this function does not validate that the notLessThanOrEqualToValue is not less than or equal to the alternateValue</remarks>
+        Public Shared Function NotLessThanOrEqualTo(Of T As IComparable(Of T))(ByVal testValue As T, ByVal notLessThanOrEqualToValue As T, ByVal alternateValue As T) As T
+
+            Return IIf(Of T)(DirectCast(testValue, IComparable(Of T)).CompareTo(notLessThanOrEqualToValue) <= 0, alternateValue, testValue)
+
+        End Function
+
+        ''' <summary>Ensures test parameter passed to function is not greater than the specified value</summary>
+        ''' <param name="testValue">Value to test</param>
+        ''' <param name="notGreaterThanValue">Value that represents the upper limit for the testValue, this value is returned if testValue is greater than notGreaterThanValue</param>
+        ''' <typeparam name="T">Structure or class that implements IComparable(Of T) (e.g., Double, Single, Integer, etc.)</typeparam>
+        ''' <returns>A value not greater than notGreaterThanValue</returns>
+        ''' <remarks>If testValue is greater than notGreaterThanValue then notGreaterThanValue is returned</remarks>
+        Public Shared Function NotGreaterThan(Of T As IComparable(Of T))(ByVal testValue As T, ByVal notGreaterThanValue As T) As T
+
+            Return IIf(Of T)(DirectCast(testValue, IComparable(Of T)).CompareTo(notGreaterThanValue) > 0, notGreaterThanValue, testValue)
+
+        End Function
+
+        ''' <summary>Ensures test parameter passed to function is not greater than the specified value</summary>
+        ''' <param name="testValue">Value to test</param>
+        ''' <param name="notGreaterThanValue">Value that represents the upper limit for the testValue</param>
+        ''' <param name="alternateValue">Value to return if <paramref name="testValue">testValue</paramref> is &gt; <paramref name="notGreaterThanValue">notGreaterThanValue</paramref></param>
+        ''' <typeparam name="T">Structure or class that implements IComparable(Of T) (e.g., Double, Single, Integer, etc.)</typeparam>
+        ''' <returns>A value not greater than notGreaterThanValue</returns>
+        ''' <remarks>To optimize performance this function does not validate that the notGreaterThanValue is not greater than the alternateValue</remarks>
+        Public Shared Function NotGreaterThan(Of T As IComparable(Of T))(ByVal testValue As T, ByVal notGreaterThanValue As T, ByVal alternateValue As T) As T
+
+            Return IIf(Of T)(DirectCast(testValue, IComparable(Of T)).CompareTo(notGreaterThanValue) > 0, alternateValue, testValue)
+
+        End Function
+
+        ''' <summary>Ensures test parameter passed to function is not greater than or equal to the specified value</summary>
+        ''' <param name="testValue">Value to test</param>
+        ''' <param name="notGreaterThanOrEqualToValue">Value that represents the upper limit for the testValue</param>
+        ''' <param name="alternateValue">Value to return if <paramref name="testValue">testValue</paramref> is &gt;= <paramref name="notGreaterThanOrEqualToValue">notGreaterThanOrEqualToValue</paramref></param>
+        ''' <typeparam name="T">Structure or class that implements IComparable(Of T) (e.g., Double, Single, Integer, etc.)</typeparam>
+        ''' <returns>A value not greater than or equal to notGreaterThanOrEqualToValue</returns>
+        ''' <remarks>To optimize performance this function does not validate that the notGreaterThanOrEqualToValue is not greater than or equal to the alternateValue</remarks>
+        Public Shared Function NotGreaterThanOrEqualTo(Of T As IComparable(Of T))(ByVal testValue As T, ByVal notGreaterThanOrEqualToValue As T, ByVal alternateValue As T) As T
+
+            Return IIf(Of T)(DirectCast(testValue, IComparable(Of T)).CompareTo(notGreaterThanOrEqualToValue) >= 0, alternateValue, testValue)
 
         End Function
 
