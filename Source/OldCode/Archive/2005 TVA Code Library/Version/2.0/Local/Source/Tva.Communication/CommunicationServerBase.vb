@@ -34,7 +34,6 @@ Imports Tva.Communication.Common
 ''' </summary>
 <ToolboxBitmap(GetType(CommunicationServerBase)), DefaultEvent("ReceivedClientData")> _
 Public MustInherit Class CommunicationServerBase
-
     Implements ICommunicationServer
 
     Private m_configurationString As String
@@ -56,7 +55,7 @@ Public MustInherit Class CommunicationServerBase
     Private m_stopTime As Long
 
     ' We expose these two members to derived classes for their own internal use
-    Protected m_receiveRawDataFunction As ReceiveRawDataFunctionSignature
+    Protected m_receiveRawDataFunction As ICommunicationServer.ReceiveRawDataFunctionSignature
     Protected m_buffer As Byte()
 
     ''' <summary>
@@ -329,6 +328,24 @@ Public MustInherit Class CommunicationServerBase
     End Property
 
     ''' <summary>
+    ''' Setting this property allows consumer to "intercept" data before it goes through normal processing
+    ''' </summary>
+    ''' <remarks>
+    ''' This property only needs to be implemented if you need data from the clients absolutelty as fast as possible, for most uses this
+    ''' will not be necessary.  Setting this property gives the consumer access to the data stream as soon as it's available, but this also
+    ''' bypasses all of the advanced convience properties (e.g., PayloadAware, Handshake, Encryption, Compression, etc.)
+    ''' </remarks>
+    <Browsable(False)> _
+    Public Overridable Property ReceiveRawDataFunction() As ICommunicationServer.ReceiveRawDataFunctionSignature Implements ICommunicationServer.ReceiveRawDataFunction
+        Get
+            Return m_receiveRawDataFunction
+        End Get
+        Set(ByVal value As ICommunicationServer.ReceiveRawDataFunctionSignature)
+            m_receiveRawDataFunction = value
+        End Set
+    End Property
+
+    ''' <summary>
     ''' Gets the current instance of communication server.
     ''' </summary>
     ''' <value></value>
@@ -527,24 +544,6 @@ Public MustInherit Class CommunicationServerBase
         End If
 
     End Sub
-
-    ''' <summary>
-    ''' Setting this property allows consumer to "intercept" data before it goes through normal processing
-    ''' </summary>
-    ''' <remarks>
-    ''' This property only needs to be implemented if you need data from the clients absolutelty as fast as possible, for most uses this
-    ''' will not be necessary.  Setting this property gives the consumer access to the data stream as soon as it's available, but this also
-    ''' bypasses all of the advanced convience properties (e.g., PayloadAware, Handshake, Encryption, Compression, etc.)
-    ''' </remarks>
-    <Browsable(False)> _
-    Public Overridable Property ReceiveRawDataFunction() As ReceiveRawDataFunctionSignature Implements ICommunicationServer.ReceiveRawDataFunction
-        Get
-            Return m_receiveRawDataFunction
-        End Get
-        Set(ByVal value As ReceiveRawDataFunctionSignature)
-            m_receiveRawDataFunction = value
-        End Set
-    End Property
 
     ''' <summary>
     ''' The key used for encryption and decryption when Encryption is enabled but HandshakePassphrase is not set.

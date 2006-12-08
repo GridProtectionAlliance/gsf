@@ -117,4 +117,28 @@ Friend NotInheritable Class CommunicationHelper
 
     End Function
 
+    Public Shared Function IsEndPointReachable(ByVal targetEndPoint As EndPoint) As Boolean
+
+        Try
+            ' We'll check if the target endpoint exist by sending NULL data to it and then wait for data from it. 
+            ' If the endpoint doesn't exist then we'll receive a ConnectionReset socket exception.
+            Using recipientChecker As New Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp)
+                recipientChecker.ReceiveTimeout = 1
+                recipientChecker.BeginSendTo(New Byte() {}, 0, 0, SocketFlags.None, targetEndPoint, Nothing, Nothing)
+                recipientChecker.ReceiveFrom(New Byte() {0}, targetEndPoint)
+            End Using
+        Catch ex As SocketException
+            Select Case ex.SocketErrorCode
+                Case SocketError.ConnectionReset
+                    ' This means that the target endpoint is unreachable.
+                    Return False
+            End Select
+        Catch ex As Exception
+            ' We'll ignore all other exceptions.
+        End Try
+
+        Return True
+
+    End Function
+
 End Class

@@ -54,6 +54,11 @@ Public Interface ICommunicationServer
     Event ReceivedClientData(ByVal sender As Object, ByVal e As DataEventArgs)
 
     ''' <summary>
+    ''' This function signature gets implemented as needed to allow consumers to "intercept" data before it goes through normal processing
+    ''' </summary>
+    Delegate Sub ReceiveRawDataFunctionSignature(ByVal data As Byte(), ByVal offset As Integer, ByVal length As Integer)
+
+    ''' <summary>
     ''' Gets or sets the data that is required by the server to initialize.
     ''' </summary>
     ''' <value></value>
@@ -136,6 +141,11 @@ Public Interface ICommunicationServer
     ''' <value></value>
     ''' <returns>The protocol used by the server for transferring data to and from the clients.</returns>
     Property Protocol() As TransportProtocol
+
+    ''' <summary>
+    ''' Setting this property allows consumer to "intercept" data before it goes through normal processing
+    ''' </summary>
+    Property ReceiveRawDataFunction() As ReceiveRawDataFunctionSignature
 
     ''' <summary>
     ''' Gets the current instance of communication server.
@@ -237,10 +247,5 @@ Public Interface ICommunicationServer
     ''' <param name="offset">The zero-based position in the buffer parameter at which to begin sending data.</param>
     ''' <param name="size">The number of bytes to be sent.</param>
     Sub Multicast(ByVal data As Byte(), ByVal offset As Integer, ByVal size As Integer)
-
-    ''' <summary>
-    ''' Setting this property allows consumer to "intercept" data before it goes through normal processing
-    ''' </summary>
-    Property ReceiveRawDataFunction() As ReceiveRawDataFunctionSignature
 
 End Interface

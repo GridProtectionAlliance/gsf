@@ -12,19 +12,12 @@
 '  -----------------------------------------------------------------------------------------------------
 '  08/04/2006 - Pinal C. Patel
 '       Original version of source code generated
-'  09/06/2006 - J. Ritchie Carroll
-'       Added delegate signature to support bypass optimizations for high-speed data access
 '
 '*******************************************************************************************************
 
 Imports Tva.Text.Common
 
 Public Class Common
-
-    ''' <summary>
-    ''' This function signature gets implemented as needed to allow consumers to "intercept" data before it goes through normal processing
-    ''' </summary>
-    Delegate Sub ReceiveRawDataFunctionSignature(ByVal data As Byte(), ByVal offset As Integer, ByVal length As Integer)
 
     ''' <summary>
     ''' Create a communications server

@@ -163,6 +163,9 @@ Public Class UdpClient
     Protected Overrides Sub SendPreparedData(ByVal data As Byte())
 
         If MyBase.Enabled AndAlso MyBase.IsConnected Then
+            ' We'll check if the server is reachable before send data to it.
+            If Not IsEndPointReachable(CType(m_udpServer, EndPoint)) Then Exit Sub
+
             ' Encrypt the data with private key if SecureSession is enabled.
             If MyBase.SecureSession Then data = EncryptData(data, m_udpClient.Passphrase, MyBase.Encryption)
 
