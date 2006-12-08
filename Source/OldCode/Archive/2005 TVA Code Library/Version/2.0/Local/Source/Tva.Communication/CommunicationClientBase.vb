@@ -486,7 +486,7 @@ Public MustInherit Class CommunicationClientBase
     Public MustOverride Sub CancelConnect() Implements ICommunicationClient.CancelConnect
 
     ''' <summary>
-    ''' Disconnects the client from the server it is connected to.
+    ''' Disconnects the client from the connected server
     ''' </summary>
     Public MustOverride Sub Disconnect() Implements ICommunicationClient.Disconnect
 
@@ -812,31 +812,31 @@ Public MustInherit Class CommunicationClientBase
             With New StringBuilder()
                 .Append("                 Server ID: ")
                 .Append(m_serverID.ToString())
-                .Append(Environment.NewLine())
+                .Append(Environment.NewLine)
                 .Append("                 Client ID: ")
                 .Append(m_clientID.ToString())
-                .Append(Environment.NewLine())
+                .Append(Environment.NewLine)
                 .Append("              Client state: ")
                 .Append(IIf(m_isConnected, "Connected", "Not Connected"))
-                .Append(Environment.NewLine())
+                .Append(Environment.NewLine)
                 .Append("           Connection time: ")
                 .Append(SecondsToText(ConnectionTime()))
-                .Append(Environment.NewLine())
+                .Append(Environment.NewLine)
                 .Append("            Receive buffer: ")
                 .Append(m_receiveBufferSize.ToString())
-                .Append(Environment.NewLine())
+                .Append(Environment.NewLine)
                 .Append("        Transport protocol: ")
                 .Append(m_protocol.ToString())
-                .Append(Environment.NewLine())
+                .Append(Environment.NewLine)
                 .Append("        Text encoding used: ")
                 .Append(m_textEncoding.EncodingName())
-                .Append(Environment.NewLine())
+                .Append(Environment.NewLine)
                 .Append("          Total bytes sent: ")
                 .Append(m_totalBytesSent)
-                .Append(Environment.NewLine())
+                .Append(Environment.NewLine)
                 .Append("      Total bytes received: ")
                 .Append(m_totalBytesReceived)
-                .Append(Environment.NewLine())
+                .Append(Environment.NewLine)
 
                 Return .ToString()
             End With

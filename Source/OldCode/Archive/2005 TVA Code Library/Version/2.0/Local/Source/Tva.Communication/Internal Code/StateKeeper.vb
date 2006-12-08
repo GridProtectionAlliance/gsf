@@ -8,27 +8,13 @@ Friend Class StateKeeper(Of T)
     Public Client As T
     Public ID As Guid
     Public Passphrase As String
-    Public PayloadSize As Integer
     Public DataBuffer As Byte()
-
-    Public Sub New()
-
-        Reset()
-
-    End Sub
 
     Public ReadOnly Property This() As StateKeeper(Of T)
         Get
             Return Me
         End Get
     End Property
-
-    Public Sub Reset()
-
-        PayloadSize = -1
-        DataBuffer = Nothing
-
-    End Sub
 
 #Region " Old Code "
 

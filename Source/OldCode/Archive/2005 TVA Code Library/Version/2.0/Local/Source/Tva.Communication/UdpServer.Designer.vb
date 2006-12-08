@@ -42,7 +42,7 @@ Partial Class UdpServer
         m_pendingUdpClients = New List(Of System.Net.IPAddress)
         MyBase.ConfigurationString = "Port=8888; Clients=255.255.255.255"
         MyBase.Protocol = TransportProtocol.Udp
-        MyBase.ReceiveBufferSize = MaximumUdpPacketSize
+        MyBase.ReceiveBufferSize = MaximumUdpDatagramSize
 
     End Sub
 

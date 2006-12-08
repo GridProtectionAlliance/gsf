@@ -220,7 +220,7 @@ Public Interface ICommunicationClient
     Sub CancelConnect()
 
     ''' <summary>
-    ''' Disconnects the client from the server it is connected to.
+    ''' Disconnects the client from the connected server.
     ''' </summary>
     Sub Disconnect()
 

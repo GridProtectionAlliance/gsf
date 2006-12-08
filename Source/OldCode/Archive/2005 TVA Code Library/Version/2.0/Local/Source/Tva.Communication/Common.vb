@@ -22,16 +22,6 @@ Imports Tva.Text.Common
 Public Class Common
 
     ''' <summary>
-    ''' Size of the TCP packet that will contain the size of the acutal packet.
-    ''' </summary>
-    Public Const TcpPacketHeaderSize As Integer = 4
-
-    ''' <summary>
-    ''' The maximum number of bytes that can be sent in a single UDP packet.
-    ''' </summary>
-    Public Const MaximumUdpPacketSize As Integer = 32768
-
-    ''' <summary>
     ''' This function signature gets implemented as needed to allow consumers to "intercept" data before it goes through normal processing
     ''' </summary>
     Delegate Sub ReceiveRawDataFunctionSignature(ByVal data As Byte(), ByVal offset As Integer, ByVal length As Integer)

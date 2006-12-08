@@ -55,4 +55,19 @@ Friend NotInheritable Class PayloadAwareHelper
 
     End Function
 
+    Public Shared Function GetPayload(ByVal data As Byte()) As Byte()
+
+        If data.Length > PayloadHeaderSize AndAlso HasPayloadBeginMarker(data) Then
+            Dim payloadSize As Integer = GetPayloadSize(data)
+            If payloadSize > (data.Length - PayloadHeaderSize) Then
+                payloadSize = data.Length - PayloadHeaderSize
+            End If
+
+            Return Tva.IO.Common.CopyBuffer(data, PayloadHeaderSize, payloadSize)
+        Else
+            Return New Byte() {}
+        End If
+
+    End Function
+
 End Class

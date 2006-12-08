@@ -12,6 +12,10 @@
 '  -----------------------------------------------------------------------------------------------------
 '  06/02/2006 - Pinal C. Patel
 '       Original version of source code generated
+'  09/06/2006 - J. Ritchie Carroll
+'       Added bypass optimizations for high-speed socket access
+'  12/01/2006 - Pinal C. Patel
+'       Modified code for handling "PayloadAware" transmissions
 '
 '*******************************************************************************************************
 
@@ -20,12 +24,9 @@ Imports System.Net.Sockets
 Imports System.Text
 Imports System.Threading
 Imports System.ComponentModel
-Imports Tva.Common
-Imports Tva.IO.Common
 Imports Tva.Serialization
 Imports Tva.Communication.CommunicationHelper
 Imports Tva.Security.Cryptography.Common
-Imports Tva.Communication.Common
 
 ''' <summary>
 ''' Represents a TCP-based communication server.
@@ -42,21 +43,23 @@ Public Class TcpServer
     ''' <summary>
     ''' Initializes a instance of Tva.Communication.TcpServer with the specified data.
     ''' </summary>
-    ''' <param name="configurationString">The data that is required by the server to initialize.</param>
+    ''' <param name="configurationString">The connection string containing the data required for the TCP server to run.</param>
     Public Sub New(ByVal configurationString As String)
+
         MyClass.New()
-        MyBase.ConfigurationString = configurationString    ' Override the default configuration string value.
+        MyBase.ConfigurationString = configurationString
+
     End Sub
 
     ''' <summary>
-    ''' Gets or sets a boolean value indicating whether the server will send the payload size before sending the payload.
+    ''' Gets or sets a boolean value indicating whether the message boundaries are to be preserved during transmission.
     ''' </summary>
     ''' <value></value>
     ''' <returns>
-    ''' True if the server will send the payload size before sending the payload; otherwise False.
+    ''' True if the message boundaries are to be preserved during transmission; otherwise False.
     ''' </returns>
     ''' <remarks>This property must be set to True if either Encryption or Compression is enabled.</remarks>
-    <Description("Indicates whether the server will send the payload size before sending the payload. Set to True if either Encryption or Compression is enabled."), Category("Data"), DefaultValue(GetType(Boolean), "False")> _
+    <Description("Indicates whether the message boundaries are to be preserved during transmission. Set to True if either Encryption or Compression is enabled."), Category("Data"), DefaultValue(GetType(Boolean), "False")> _
     Public Property PayloadAware() As Boolean
         Get
             Return m_payloadAware
@@ -71,8 +74,8 @@ Public Class TcpServer
     ''' </summary>
     Public Overrides Sub Start()
 
-        If Enabled() AndAlso Not IsRunning() AndAlso ValidConfigurationString(ConfigurationString()) Then
-            ' Start the thread that will be listening for client connections.
+        If MyBase.Enabled AndAlso Not MyBase.IsRunning AndAlso ValidConfigurationString(MyBase.ConfigurationString) Then
+            ' Spawn a new thread on which the server will listen for incoming connections.
             m_listenerThread = New Thread(AddressOf ListenForConnections)
             m_listenerThread.Start()
         End If
@@ -84,16 +87,17 @@ Public Class TcpServer
     ''' </summary>
     Public Overrides Sub [Stop]()
 
-        If Enabled() AndAlso IsRunning() Then
-            ' NOTE: Closing the socket for server and all of the connected clients will cause a SocketException
-            ' in the thread that is using the socket and result in the thread to exit gracefully.
+        If MyBase.Enabled AndAlso MyBase.IsRunning Then
+            ' NOTE: Closing the server and all of the connected client sockets will cause a 
+            '       System.Net.Socket.SocketException in the thread using the socket. This in turn will result in 
+            '       the thread to exit gracefully because of the exception handling in place in the threads.
 
             ' *** Stop accepting incoming connections ***
             If m_tcpServer IsNot Nothing Then m_tcpServer.Close()
 
             ' *** Diconnect all of the connected clients ***
             SyncLock m_tcpClients
-                For Each tcpClient As StateKeeper(Of Socket) In m_tcpClients.Values()
+                For Each tcpClient As StateKeeper(Of Socket) In m_tcpClients.Values
                     If tcpClient IsNot Nothing AndAlso tcpClient.Client IsNot Nothing Then
                         tcpClient.Client.Close()
                     End If
@@ -120,16 +124,17 @@ Public Class TcpServer
     ''' <param name="data">The prepared data that is to be sent to the client.</param>
     Protected Overrides Sub SendPreparedDataTo(ByVal clientID As Guid, ByVal data As Byte())
 
-        If Enabled() AndAlso IsRunning() Then
+        If MyBase.Enabled AndAlso MyBase.IsRunning Then
             ' We don't want to synclock 'm_tcpClients' over here because doing so will block all
             ' all incoming connections (in ListenForConnections) while sending data to client(s). 
             Dim tcpClient As StateKeeper(Of Socket) = Nothing
             If m_tcpClients.TryGetValue(clientID, tcpClient) Then
-                If SecureSession() Then data = EncryptData(data, tcpClient.Passphrase, Encryption())
+                ' Encrypt the data with private key if SecureSession is enabled.
+                If MyBase.SecureSession Then data = EncryptData(data, tcpClient.Passphrase, Encryption())
 
-                If m_payloadAware Then
-                    data = PayloadAwareHelper.AddPayloadHeader(data)
-                End If
+                ' Add payload header if client-server communication is PayloadAware.
+                If m_payloadAware Then data = PayloadAwareHelper.AddPayloadHeader(data)
+
                 ' We'll send data over the wire asynchronously for improved performance.
                 tcpClient.Client.BeginSend(data, 0, data.Length, SocketFlags.None, Nothing, Nothing)
             Else
@@ -150,18 +155,20 @@ Public Class TcpServer
             m_configurationData = Tva.Text.Common.ParseKeyValuePairs(configurationString)
             If m_configurationData.ContainsKey("port") AndAlso _
                     ValidPortNumber(m_configurationData("port")) Then
+                ' The configuration string must always contain the following:
+                ' >> port - Port number on which the server will be listening for incoming connections.
                 Return True
             Else
                 ' Configuration string is not in the expected format.
                 With New StringBuilder()
                     .Append("Configuration string must be in the following format:")
-                    .Append(Environment.NewLine())
-                    .Append("   Port=[Port Number]")
+                    .Append(Environment.NewLine)
+                    .Append("   Port=Local port number")
                     Throw New ArgumentException(.ToString())
                 End With
             End If
         Else
-            Throw New ArgumentNullException()
+            Throw New ArgumentNullException("ConfigurationString")
         End If
 
     End Function
@@ -173,22 +180,21 @@ Public Class TcpServer
     Private Sub ListenForConnections()
 
         Try
-            ' Create a socket for the server.
+            ' Create a TCP socket and bind it a local endpoint at the specified port. Binding the socket will 
+            ' establish a physical presence of the socket necessary for listening to incoming connections.
             m_tcpServer = New Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp)
-
-            ' Bind the server socket to a local endpoint.
             m_tcpServer.Bind(New IPEndPoint(IPAddress.Any, Convert.ToInt32(m_configurationData("port"))))
 
             ' Start listening for connections and keep a maximum of 0 pending connection in the queue.
             m_tcpServer.Listen(0)
 
-            ' Notify users that the server has started.
             OnServerStarted(EventArgs.Empty)
 
+            Dim connectedClient As Integer = 0
             Do While True
-                If MaximumClients() = -1 OrElse ClientIDs.Count() < MaximumClients() Then
+                If MyBase.MaximumClients = -1 OrElse MyBase.ClientIDs.Count < MyBase.MaximumClients Then
                     ' We can accept incoming client connection requests.
-                    Dim tcpClient As New StateKeeper(Of Socket)
+                    Dim tcpClient As New StateKeeper(Of Socket)()
                     tcpClient.Client = m_tcpServer.Accept()  ' Accept client connection.
                     tcpClient.Client.LingerState = New LingerOption(True, 10)
 
@@ -206,9 +212,8 @@ Public Class TcpServer
         Finally
             If m_tcpServer IsNot Nothing Then
                 m_tcpServer.Close()
-                m_tcpServer = Nothing
             End If
-            OnServerStopped(EventArgs.Empty) ' Notify that the server has stopped.
+            OnServerStopped(EventArgs.Empty)
         End Try
 
     End Sub
@@ -222,83 +227,103 @@ Public Class TcpServer
 
         Dim tcpClient As StateKeeper(Of Socket) = DirectCast(state, StateKeeper(Of Socket))
         Try
-            If MyBase.Handshake Then
-                ' Handshaking is to be performed to authenticate the client.
-                'tcpClient.Client.ReceiveTimeout = 30000 ' We'll give the client 30 seconds to initiate handshaking.
+            With tcpClient
+                If MyBase.Handshake Then
+                    ' Handshaking is to be performed to authenticate the client, so we'll add the client to the 
+                    ' list of client who have not been authenticated and give it 30 seconds to initiate handshaking.
+                    .Client.ReceiveTimeout = 30000
 
-                SyncLock m_pendingTcpClients
-                    m_pendingTcpClients.Add(tcpClient)
-                End SyncLock
-            Else
-                ' No handshaking is to be performed for authenicating the client.
-                tcpClient.ID = Guid.NewGuid()
+                    SyncLock m_pendingTcpClients
+                        m_pendingTcpClients.Add(.This)
+                    End SyncLock
+                Else
+                    ' No handshaking is to be performed for authenicating the client, so we'll add the client 
+                    ' to the list of connected clients.
+                    .ID = Guid.NewGuid()
 
-                SyncLock m_tcpClients
-                    m_tcpClients.Add(tcpClient.ID, tcpClient)
-                End SyncLock
+                    SyncLock m_tcpClients
+                        m_tcpClients.Add(.ID, .This)
+                    End SyncLock
 
-                OnClientConnected(New IdentifiableSourceEventArgs(tcpClient.ID))
-            End If
+                    OnClientConnected(New IdentifiableSourceEventArgs(.ID))
+                End If
 
-            Dim bytesReceived As Integer = 0
-            If ((MyBase.ReceiveRawDataFunction IsNot Nothing) OrElse _
-                    (MyBase.ReceiveRawDataFunction Is Nothing AndAlso Not m_payloadAware)) Then
-                ' We'll create the buffer that will be used to store the data that we pull off the wire.
-                tcpClient.DataBuffer = Tva.Common.CreateArray(Of Byte)(MyBase.ReceiveBufferSize)
+                ' Used to count the number of bytes received in a single receive.
+                Dim bytesReceived As Integer = 0
+                ' Receiving of data from the client has been seperated into 2 different section resulting in some 
+                ' redundant coding. This is necessary to achive a high performance TCP server component since it 
+                ' may be used in real-time applications where performance is the key and evey millisecond  saved 
+                ' makes a big difference.
+                If ((MyBase.ReceiveRawDataFunction IsNot Nothing) OrElse _
+                        (MyBase.ReceiveRawDataFunction Is Nothing AndAlso Not m_payloadAware)) Then
+                    ' In this section the consumer either wants to receive data and pass it on to a delegate or 
+                    ' receive data that don't contain metadata used for preserving message boundaries. In either
+                    ' case we can use a static buffer that can be used over and over again for receiving data.
+                    .DataBuffer = Tva.Common.CreateArray(Of Byte)(MyBase.ReceiveBufferSize)
 
-                Do While True
-                    ' The maximum data we'll retrieve will be whatever the ReceiveBufferSize is specified to be
-                    ' because that's the size of the buffer used for storing retrieved data.
-                    With tcpClient
+                    Do While True
+                        ' The maximum data we'll retrieve will be whatever the ReceiveBufferSize is specified to be
+                        ' because that's the size of the buffer used for storing retrieved data.
                         bytesReceived = .Client.Receive(.DataBuffer, 0, .DataBuffer.Length, SocketFlags.None)
-                    End With
 
-                    ' When we start receiving zero length data, it means that the connection was closed by the server.
-                    If bytesReceived = 0 Then Exit Do
+                        ' We start receiving zero-length data when a TCP connection is disconnected by the 
+                        ' opposite party. In such case we must consider ourself disconnected from the client.
+                        If bytesReceived = 0 Then Throw New SocketException(10101)
 
-                    If MyBase.ReceiveRawDataFunction IsNot Nothing Then
-                        MyBase.ReceiveRawDataFunction.Invoke(tcpClient.DataBuffer, 0, bytesReceived)
-                    Else
-                        ProcessReceivedData(Tva.IO.Common.CopyBuffer(tcpClient.DataBuffer, 0, bytesReceived), tcpClient)
-                    End If
-                Loop
-            Else
-                Dim payloadSize As Integer = -1
-                Dim totalBytesReceived As Integer = 0
-                Do While True
-                    If payloadSize = -1 Then
-                        ' If we don't have the payload size, we'll begin by reading the payload header which 
-                        ' contains the payload size. Once we have the payload size we can receive payload.
-                        tcpClient.DataBuffer = Tva.Common.CreateArray(Of Byte)(PayloadAwareHelper.PayloadHeaderSize)
-                    End If
+                        If m_receiveRawDataFunction IsNot Nothing Then
+                            ' Post raw data to the delegate that is most likely used for real-time application.
+                            m_receiveRawDataFunction(.DataBuffer, 0, bytesReceived)
+                        Else
+                            ProcessReceivedClientData(Tva.IO.Common.CopyBuffer(.DataBuffer, 0, bytesReceived), .This)
+                        End If
+                    Loop
+                Else
+                    ' In this section we will be receiving data that has metadata used for preserving message 
+                    ' boundaries. Here a message (the payload) is sent by the other party along with some metadata 
+                    ' (payload header) prepended to the message. The metadata (payload header) consists of a 4-byte 
+                    ' marker used to mark the beginning of a message, followed by the message size (also 4-bytes), 
+                    ' followed by the actual message.
+                    Dim payloadSize As Integer = -1
+                    Dim totalBytesReceived As Integer = 0
+                    Do While True
+                        If payloadSize = -1 Then
+                            ' If we don't have the payload size, we'll begin by reading the payload header which 
+                            ' contains the payload size. Once we have the payload size we can receive payload.
+                            .DataBuffer = Tva.Common.CreateArray(Of Byte)(PayloadAwareHelper.PayloadHeaderSize)
+                        End If
 
-                    With tcpClient
+                        ' Since TCP is a streaming protocol we can receive a part of the available data and
+                        ' the remaing data can be received in subsequent receives.
                         bytesReceived = .Client.Receive(.DataBuffer, totalBytesReceived, (.DataBuffer.Length - totalBytesReceived), SocketFlags.None)
-                    End With
 
-                    ' When we start receiving zero length data, it means that the connection was closed by the server.
-                    If bytesReceived = 0 Then Exit Do
+                        If bytesReceived = 0 Then Throw New SocketException(10101)
 
-                    If payloadSize = -1 Then
-                        payloadSize = PayloadAwareHelper.GetPayloadSize(tcpClient.DataBuffer)
-                        If payloadSize <> -1 AndAlso payloadSize <= CommunicationClientBase.MaximumDataSize Then
-                            ' We have a valid payload size.
-                            tcpClient.DataBuffer = Tva.Common.CreateArray(Of Byte)(payloadSize)
+                        If payloadSize = -1 Then
+                            ' We don't what the payload size is, so we'll check if the data we have contains
+                            ' the size of the payload we need to receive.
+                            payloadSize = PayloadAwareHelper.GetPayloadSize(.DataBuffer)
+                            If payloadSize <> -1 AndAlso payloadSize <= CommunicationClientBase.MaximumDataSize Then
+                                ' We have a valid payload size, so we'll create a buffer that's big enough 
+                                ' to hold the entire payload. Remember, the payload at the most can be as big
+                                ' as whatever the MaximumDataSize is.
+                                .DataBuffer = Tva.Common.CreateArray(Of Byte)(payloadSize)
+                            End If
+                        Else
+                            totalBytesReceived += bytesReceived
+                            If totalBytesReceived = payloadSize Then
+                                ' We've received the entire payload.
+                                ProcessReceivedClientData(.DataBuffer, .This)
+
+                                ' Initialize for receiving the next payload.
+                                payloadSize = -1
+                                totalBytesReceived = 0
+                            End If
                         End If
-                    Else
-                        totalBytesReceived += bytesReceived
-                        If totalBytesReceived = payloadSize Then
-                            ' We've received the entire payload.
-                            ProcessReceivedData(tcpClient.DataBuffer, tcpClient)
-
-                            payloadSize = -1
-                            totalBytesReceived = 0
-                        End If
-                    End If
-                Loop
-            End If
+                    Loop
+                End If
+            End With
         Catch ex As Exception
-
+            ' We don't need to take any action when an exception is encountered.
         Finally
             ' We are now done with the client.
             If tcpClient IsNot Nothing AndAlso tcpClient.Client IsNot Nothing Then
@@ -319,7 +344,12 @@ Public Class TcpServer
 
     End Sub
 
-    Private Sub ProcessReceivedData(ByVal data As Byte(), ByVal tcpClient As StateKeeper(Of Socket))
+    ''' <summary>
+    ''' This method processes the data received from the client.
+    ''' </summary>
+    ''' <param name="data">The data received from the client.</param>
+    ''' <param name="tcpClient">The TCP client who sent the data.</param>
+    Private Sub ProcessReceivedClientData(ByVal data As Byte(), ByVal tcpClient As StateKeeper(Of Socket))
 
         If tcpClient.ID = Guid.Empty AndAlso MyBase.Handshake Then
             ' Authentication is required, but not performed yet. When authentication is required
@@ -327,17 +357,19 @@ Public Class TcpServer
             Dim clientInfo As HandshakeMessage = GetObject(Of HandshakeMessage)(GetActualData(data))
 
             If clientInfo IsNot Nothing AndAlso clientInfo.ID <> Guid.Empty AndAlso clientInfo.Passphrase = MyBase.HandshakePassphrase Then
+                ' We'll generate a private key for the client if SecureSession is enabled.
+                tcpClient.ID = clientInfo.ID
                 If MyBase.SecureSession Then tcpClient.Passphrase = GenerateKey()
 
+                ' We'll send our information to the client which may contain a private crypto key .
                 Dim myInfo As Byte() = GetPreparedData(GetBytes(New HandshakeMessage(MyBase.ServerID, tcpClient.Passphrase)))
-                If m_payloadAware Then
-                    myInfo = PayloadAwareHelper.AddPayloadHeader(myInfo)
-                End If
+                If m_payloadAware Then myInfo = PayloadAwareHelper.AddPayloadHeader(myInfo)
                 tcpClient.Client.Send(myInfo)
 
                 tcpClient.ID = clientInfo.ID
-                tcpClient.Client.ReceiveTimeout = 0
+                tcpClient.Client.ReceiveTimeout = 0 ' We don't want to timeout while waiting for data from client.
 
+                ' The client's authentication is now complete.
                 SyncLock m_pendingTcpClients
                     m_pendingTcpClients.Remove(tcpClient)
                 End SyncLock
@@ -350,169 +382,16 @@ Public Class TcpServer
             Else
                 ' The first response from the client is either not information about itself, or
                 ' the information provided by the client is invalid.
-                Throw New InvalidOperationException()
+                Throw New ApplicationException("Failed to authenticate the client.")
             End If
         Else
-            If MyBase.SecureSession Then
-                data = DecryptData(data, tcpClient.Passphrase, MyBase.Encryption)
-            End If
+            ' Decrypt the data usign private key if SecureSession is enabled.
+            If MyBase.SecureSession Then data = DecryptData(data, tcpClient.Passphrase, MyBase.Encryption)
 
-            ' Notify of data received from the client.
+            ' We'll pass the received data along to the consumer via event.
             OnReceivedClientData(New DataEventArgs(tcpClient.ID, data))
         End If
 
     End Sub
-
-    'With DirectCast(state, StateKeeper(Of Socket))
-    '    Try
-    '        If Handshake() Then
-    '            ' Handshaking is to be performed to authenticate the client.
-    '            .Client.ReceiveTimeout = 30000  ' We'll give the client 30 seconds to initiate handshaking.
-    '            SyncLock m_pendingTcpClients
-    '                m_pendingTcpClients.Add(.This)
-    '            End SyncLock
-    '        Else
-    '            ' No handshaking is to be performed for authenicating the client.
-    '            .ID = Guid.NewGuid()
-    '            SyncLock m_tcpClients
-    '                m_tcpClients.Add(.ID, .This)
-    '            End SyncLock
-
-    '            OnClientConnected(New IdentifiableSourceEventArgs(.ID))    ' Notify that the client is connected.
-    '        End If
-
-    '        Dim received As Integer
-    '        Dim length As Integer
-    '        Dim dataBuffer As Byte() = Nothing
-    '        Dim totalBytesReceived As Integer
-
-    '        If m_receiveRawDataFunction Is Nothing Then
-    '            If m_payloadAware Then
-    '                length = TcpPacketHeaderSize
-    '            Else
-    '                length = ReceiveBufferSize
-    '            End If
-    '        Else
-    '            length = m_buffer.Length
-    '        End If
-
-    '        ' Enter data read loop, this blocks thread while waiting for data from the client.
-    '        Do While True
-    '            ' Retrieve data from the TCP socket
-    '            received = .Client.Receive(m_buffer, 0, length, SocketFlags.None)
-
-    '            If received > 0 Then
-    '                ' Post raw data to real-time function delegate if defined - this bypasses all other activity
-    '                If m_receiveRawDataFunction IsNot Nothing Then
-    '                    m_receiveRawDataFunction(m_buffer, 0, received)
-    '                    Continue Do
-    '                End If
-
-    '                If dataBuffer Is Nothing Then
-    '                    dataBuffer = CreateArray(Of Byte)(length)
-    '                    totalBytesReceived = 0
-    '                End If
-
-    '                ' Copy data into local cumulative buffer to start the unpacking process and eventually make the data available via event
-    '                Buffer.BlockCopy(m_buffer, 0, dataBuffer, totalBytesReceived, dataBuffer.Length - totalBytesReceived)
-    '                totalBytesReceived += received
-
-    '                If m_payloadAware Then
-    '                    If .PayloadSize = -1 AndAlso totalBytesReceived = TcpPacketHeaderSize Then
-    '                        ' Size of the packet has been received.
-    '                        .PayloadSize = BitConverter.ToInt32(dataBuffer, 0)
-    '                        If .PayloadSize <= MaximumDataSize Then
-    '                            dataBuffer = CreateArray(Of Byte)(.PayloadSize)
-    '                            totalBytesReceived = 0
-    '                            length = dataBuffer.Length
-    '                            Continue Do
-    '                        Else
-    '                            Exit Do ' Packet size is not valid.
-    '                        End If
-    '                    ElseIf .PayloadSize = -1 AndAlso totalBytesReceived < TcpPacketHeaderSize Then
-    '                        ' Size of the packet is yet to be received.
-    '                        Continue Do
-    '                    ElseIf totalBytesReceived < dataBuffer.Length() Then
-    '                        ' We have not yet received the entire packet.
-    '                        Continue Do
-    '                    End If
-    '                Else
-    '                    dataBuffer = CopyBuffer(dataBuffer, 0, totalBytesReceived)
-    '                    totalBytesReceived = 0
-    '                End If
-
-    '                If .ID = Guid.Empty AndAlso Handshake() Then
-    '                    ' Authentication is required, but not performed yet. When authentication is required
-    '                    ' the first message from the client must be information about itself.
-    '                    Dim clientInfo As HandshakeMessage = GetObject(Of HandshakeMessage)(GetActualData(dataBuffer))
-
-    '                    If clientInfo IsNot Nothing AndAlso clientInfo.ID() <> Guid.Empty AndAlso clientInfo.Passphrase() = HandshakePassphrase() Then
-    '                        If SecureSession() Then .Passphrase = GenerateKey()
-
-    '                        Dim myInfo As Byte() = GetPreparedData(GetBytes(New HandshakeMessage(ServerID(), .Passphrase)))
-    '                        If m_payloadAware Then .Client.Send(BitConverter.GetBytes(myInfo.Length()))
-
-    '                        .Client.ReceiveTimeout = 0
-    '                        .Client.Send(myInfo)   ' Send server info to the client.
-    '                        .ID = clientInfo.ID()
-
-    '                        SyncLock m_pendingTcpClients
-    '                            m_pendingTcpClients.Remove(.This)
-    '                        End SyncLock
-
-    '                        SyncLock m_tcpClients
-    '                            m_tcpClients.Add(.ID, .This)
-    '                        End SyncLock
-
-    '                        OnClientConnected(New IdentifiableSourceEventArgs(.ID))    ' Notify that the client is connected.
-    '                    Else
-    '                        ' The first response from the client is either not information about itself, or
-    '                        ' the information provided by the client is invalid.
-    '                        Exit Do
-    '                    End If
-    '                Else
-    '                    If SecureSession() Then
-    '                        dataBuffer = DecryptData(dataBuffer, .Passphrase, Encryption())
-    '                        totalBytesReceived = 0
-    '                    End If
-
-    '                    ' Notify of data received from the client.
-    '                    OnReceivedClientData(New DataEventArgs(.ID, dataBuffer))
-    '                End If
-
-    '                .PayloadSize = -1
-    '                dataBuffer = Nothing
-    '                totalBytesReceived = 0
-    '                If m_payloadAware Then
-    '                    length = TcpPacketHeaderSize
-    '                Else
-    '                    length = ReceiveBufferSize
-    '                End If
-    '            Else
-    '                ' Connection is forcibly closed by the client.
-    '                Exit Do
-    '            End If
-    '        Loop
-    '    Catch ex As Exception
-    '        ' We will exit gracefully in case of any exception.
-    '    Finally
-    '        ' We are now done with the client.
-    '        If .Client IsNot Nothing Then
-    '            .Client.Close()
-    '            .Client = Nothing
-    '        End If
-
-    '        SyncLock m_pendingTcpClients
-    '            m_pendingTcpClients.Remove(.This)
-    '        End SyncLock
-
-    '        SyncLock m_tcpClients
-    '            If m_tcpClients.ContainsKey(.ID) Then
-    '                m_tcpClients.Remove(.ID)
-    '                OnClientDisconnected(New IdentifiableSourceEventArgs(.ID))    ' Notify that the client is disconnected.
-    '            End If
-    '        End SyncLock
-    '    End Try
-    'End With
 
 End Class
