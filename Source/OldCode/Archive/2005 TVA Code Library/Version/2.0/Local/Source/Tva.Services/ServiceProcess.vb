@@ -12,7 +12,8 @@ Public Class ServiceProcess
     Private m_executionMethod As ExecutionMethodSignature
     Private m_serviceHelper As ServiceHelper
     Private m_currentState As ProcessState
-    Private m_lastExecutionTime As Double
+    Private m_executionStartTime As System.DateTime
+    Private m_executionStopTime As System.DateTime
 
     Public Delegate Sub ExecutionMethodSignature(ByVal name As String, ByVal parameters As Object())
 
@@ -80,9 +81,21 @@ Public Class ServiceProcess
         End Set
     End Property
 
+    Public ReadOnly Property ExecutionStartTime() As System.DateTime
+        Get
+            Return m_executionStartTime
+        End Get
+    End Property
+
+    Public ReadOnly Property ExecutionStopTime() As System.DateTime
+        Get
+            Return m_executionStopTime
+        End Get
+    End Property
+
     Public ReadOnly Property LastExecutionTime() As Double
         Get
-            Return m_lastExecutionTime
+            Return TicksToSeconds(m_executionStopTime.Ticks - m_executionStartTime.Ticks)
         End Get
     End Property
 
@@ -95,8 +108,22 @@ Public Class ServiceProcess
                 .Append("             Current State: ")
                 .Append(m_currentState.ToString())
                 .Append(Environment.NewLine)
+                .Append("      Execution Start Time: ")
+                If m_executionStartTime <> System.DateTime.MinValue Then
+                    .Append(m_executionStartTime.ToString())
+                Else
+                    .Append("N/A")
+                End If
+                .Append(Environment.NewLine)
+                .Append("       Execution Stop Time: ")
+                If m_executionStopTime <> System.DateTime.MinValue Then
+                    .Append(m_executionStopTime.ToString())
+                Else
+                    .Append("N/A")
+                End If
+                .Append(Environment.NewLine)
                 .Append("       Last Execution Time: ")
-                .Append(SecondsToText(m_lastExecutionTime))
+                .Append(SecondsToText(Me.LastExecutionTime))
                 .Append(Environment.NewLine)
 
                 Return .ToString()
@@ -106,6 +133,7 @@ Public Class ServiceProcess
 
     Public Sub Start()
 
+        ' Start the execution on a seperate thread.
         m_processThread = New Thread(AddressOf InvokeExecutionMethod)
         m_processThread.Start()
 
@@ -113,8 +141,10 @@ Public Class ServiceProcess
 
     Public Sub Abort()
 
-        If m_processThread IsNot Nothing Then m_processThread.Abort()
-        Me.CurrentState = ProcessState.Aborted
+        If m_processThread IsNot Nothing Then
+            ' We'll abort the process only if it is currently executing.
+            m_processThread.Abort()
+        End If
 
     End Sub
 
@@ -122,10 +152,20 @@ Public Class ServiceProcess
 
         If m_executionMethod IsNot Nothing Then
             CurrentState = ProcessState.Processing
-            Dim startTime As Long = Date.Now.Ticks
-            m_executionMethod.Invoke(m_name, m_parameters)
-            m_lastExecutionTime = TicksToSeconds(Date.Now.Ticks - startTime)
-            CurrentState = ProcessState.Processed
+            m_executionStartTime = System.DateTime.Now
+            Try
+                ' We'll keep the invokation of the delegate in Try...Catch to absorb any exceptions that
+                ' were not handled by the consumer.
+                m_executionMethod(m_name, m_parameters)
+                Me.CurrentState = ProcessState.Processed
+            Catch ex As ThreadAbortException
+                Me.CurrentState = ProcessState.Aborted
+            Catch ex As Exception
+                ' We'll absorb any exceptions if unhandled by the client.
+                Me.CurrentState = ProcessState.Exception
+            Finally
+                m_executionStopTime = System.DateTime.Now
+            End Try
         End If
         m_processThread = Nothing
 
