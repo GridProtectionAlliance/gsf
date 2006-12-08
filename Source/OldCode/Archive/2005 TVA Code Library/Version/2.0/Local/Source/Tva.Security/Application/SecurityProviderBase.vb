@@ -145,7 +145,9 @@ Namespace Application
                         ProcessControls()
                         HandleAccessGranted()
                     Else
-                        ' User could not be autheticated or doen't have access to the specified application.
+                        ' User could not be autheticated or doesn't have access to the specified application.
+                        ' Most likely user authentication will never fail because if the user is external, the
+                        ' login page will verify the user's password before this process kicks in.
                         Dim accessDeniedResponse As New CancelEventArgs()
                         RaiseEvent AccessDenied(Me, accessDeniedResponse)
                         If accessDeniedResponse.Cancel Then Exit Sub

@@ -146,7 +146,13 @@ Namespace Application
 
                 With New StringBuilder()
                     .Append(GetSafeUrl("ErrorPage.aspx"))
-                    .Append("?t=0")              ' Specify the type of error to be "Access Denied".
+                    .Append("?t=0")             ' Specify the type of error to be "Access Denied".
+                    .Append("&r=")              ' Return Url
+                    .Append(m_parent.Server.UrlEncode(m_parent.Request.Url.AbsoluteUri))
+                    .Append("&a=")              ' Application Name
+                    .Append(m_parent.Server.UrlEncode(Encrypt(MyBase.ApplicationName, Security.Cryptography.EncryptLevel.Level4)))
+                    .Append("&c=")              ' Connection String
+                    .Append(m_parent.Server.UrlEncode(Encrypt(MyBase.ConnectionString, Security.Cryptography.EncryptLevel.Level4)))
 
                     m_parent.Response.Redirect(.ToString())
                 End With
