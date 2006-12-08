@@ -22,7 +22,7 @@ Namespace IO
     ''' <summary>Defines common IO related functions (e.g., common stream and buffer functions)</summary>
     Public NotInheritable Class Common
 
-        Private Const BufferSize As Integer = 8192
+        Private Const BufferSize As Integer = 32768
 
         Private Sub New()
 
@@ -61,7 +61,7 @@ Namespace IO
 
             Dim copiedBytes As Byte() = CreateArray(Of Byte)(length)
 
-            System.Buffer.BlockCopy(buffer, 0, copiedBytes, 0, length)
+            System.Buffer.BlockCopy(buffer, startIndex, copiedBytes, 0, length)
 
             Return copiedBytes
 

@@ -32,6 +32,7 @@ Namespace Services
         Processing
         Processed
         Aborted
+        Exception
     End Enum
 
 End Namespace
