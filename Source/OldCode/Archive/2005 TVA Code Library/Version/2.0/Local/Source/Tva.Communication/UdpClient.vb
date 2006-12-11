@@ -39,6 +39,7 @@ Imports Tva.Communication.CommunicationHelper
 Public Class UdpClient
 
     Private m_payloadAware As Boolean
+    Private m_destinationReachabilityCheck As Boolean
     Private m_udpServer As IPEndPoint
     Private m_udpClient As StateKeeper(Of Socket)
     Private m_connectionThread As Thread
@@ -96,6 +97,25 @@ Public Class UdpClient
         End Get
         Set(ByVal value As Boolean)
             m_payloadAware = value
+        End Set
+    End Property
+
+    ''' <summary>
+    ''' Gets or sets a boolean value indicating whether a test is to be performed to check if the destination 
+    ''' endpoint that is to receive data is listening for data.
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns>
+    ''' True if a test is to be performed to check if the destination endpoint that is to receive data is listening 
+    ''' for data; otherwise False.
+    ''' </returns>
+    <Description("Indicates whether a test is to be performed to check if the destination endpoint that is to receive data is listening for data."), Category("Behavior"), DefaultValue(GetType(Boolean), "True")> _
+    Public Property DestinationReachabilityCheck() As Boolean
+        Get
+            Return m_destinationReachabilityCheck
+        End Get
+        Set(ByVal value As Boolean)
+            m_destinationReachabilityCheck = value
         End Set
     End Property
 
@@ -164,7 +184,7 @@ Public Class UdpClient
 
         If MyBase.Enabled AndAlso MyBase.IsConnected Then
             ' We'll check if the server is reachable before send data to it.
-            If Not IsEndPointReachable(CType(m_udpServer, EndPoint)) Then Exit Sub
+            If m_destinationReachabilityCheck AndAlso Not IsDestinationReachable(m_udpServer) Then Exit Sub
 
             ' Encrypt the data with private key if SecureSession is enabled.
             If MyBase.SecureSession Then data = EncryptData(data, m_udpClient.Passphrase, MyBase.Encryption)

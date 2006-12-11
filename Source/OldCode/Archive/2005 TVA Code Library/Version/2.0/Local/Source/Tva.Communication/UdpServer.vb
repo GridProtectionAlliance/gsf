@@ -29,6 +29,7 @@ Imports Tva.Security.Cryptography.Common
 Public Class UdpServer
 
     Private m_payloadAware As Boolean
+    Private m_destinationReachabilityCheck As Boolean
     Private m_udpServer As StateKeeper(Of Socket)
     Private m_udpClients As Dictionary(Of Guid, StateKeeper(Of IPEndPoint))
     Private m_pendingUdpClients As List(Of IPAddress)
@@ -71,6 +72,25 @@ Public Class UdpServer
         End Get
         Set(ByVal value As Boolean)
             m_payloadAware = value
+        End Set
+    End Property
+
+    ''' <summary>
+    ''' Gets or sets a boolean value indicating whether a test is to be performed to check if the destination 
+    ''' endpoint that is to receive data is listening for data.
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns>
+    ''' True if a test is to be performed to check if the destination endpoint that is to receive data is listening 
+    ''' for data; otherwise False.
+    ''' </returns>
+    <Description("Indicates whether a test is to be performed to check if the destination endpoint that is to receive data is listening for data."), Category("Behavior"), DefaultValue(GetType(Boolean), "True")> _
+    Public Property DestinationReachabilityCheck() As Boolean
+        Get
+            Return m_destinationReachabilityCheck
+        End Get
+        Set(ByVal value As Boolean)
+            m_destinationReachabilityCheck = value
         End Set
     End Property
 
@@ -143,7 +163,7 @@ Public Class UdpServer
         If MyBase.Enabled AndAlso MyBase.IsRunning Then
             Dim udpClient As StateKeeper(Of IPEndPoint) = Nothing
             If m_udpClients.TryGetValue(clientID, udpClient) Then
-                If Not IsEndPointReachable(CType(udpClient.Client, EndPoint)) Then Exit Sub
+                If m_destinationReachabilityCheck AndAlso Not IsDestinationReachable(udpClient.Client) Then Exit Sub
 
                 If MyBase.SecureSession Then data = EncryptData(data, udpClient.Passphrase, MyBase.Encryption)
 

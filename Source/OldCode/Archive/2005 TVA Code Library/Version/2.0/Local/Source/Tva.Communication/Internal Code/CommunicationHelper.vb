@@ -117,15 +117,16 @@ Friend NotInheritable Class CommunicationHelper
 
     End Function
 
-    Public Shared Function IsEndPointReachable(ByVal targetEndPoint As EndPoint) As Boolean
+    Public Shared Function IsDestinationReachable(ByVal targetIPEndPoint As IPEndPoint) As Boolean
 
         Try
             ' We'll check if the target endpoint exist by sending empty data to it and then wait for data from it. 
             ' If the endpoint doesn't exist then we'll receive a ConnectionReset socket exception.
-            Using recipientChecker As New Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp)
-                recipientChecker.ReceiveTimeout = 1
-                recipientChecker.BeginSendTo(New Byte() {}, 0, 0, SocketFlags.None, targetEndPoint, Nothing, Nothing)
-                recipientChecker.ReceiveFrom(New Byte() {0}, targetEndPoint)
+            Dim targetEndPoint As EndPoint = CType(targetIPEndPoint, EndPoint)
+            Using targetChecker As New Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp)
+                targetChecker.ReceiveTimeout = 1
+                targetChecker.SendTo(New Byte() {}, targetEndPoint)
+                targetChecker.ReceiveFrom(New Byte() {}, targetEndPoint)
             End Using
         Catch ex As SocketException
             Select Case ex.SocketErrorCode

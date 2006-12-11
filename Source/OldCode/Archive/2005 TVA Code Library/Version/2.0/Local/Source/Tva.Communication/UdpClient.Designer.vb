@@ -38,6 +38,7 @@ Partial Class UdpClient
         InitializeComponent()
 
         m_payloadAware = False
+        m_destinationReachabilityCheck = True
         MyBase.ConnectionString = "Server=localhost; RemotePort=8888; LocalPort=8888"
         MyBase.Protocol = TransportProtocol.Udp
         MyBase.ReceiveBufferSize = MaximumUdpDatagramSize
