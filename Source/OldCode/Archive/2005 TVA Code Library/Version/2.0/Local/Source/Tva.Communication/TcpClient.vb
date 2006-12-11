@@ -266,8 +266,6 @@ Public Class TcpClient
                             Else
                                 Throw
                             End If
-                        Catch ex As Exception
-                            Throw
                         End Try
                     Loop
                 Else
@@ -319,8 +317,6 @@ Public Class TcpClient
                             Else
                                 Throw
                             End If
-                        Catch ex As Exception
-                            Throw
                         End Try
                     Loop
                 End If

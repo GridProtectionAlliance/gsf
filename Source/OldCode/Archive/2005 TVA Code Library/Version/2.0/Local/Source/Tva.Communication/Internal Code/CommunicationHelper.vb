@@ -120,7 +120,7 @@ Friend NotInheritable Class CommunicationHelper
     Public Shared Function IsEndPointReachable(ByVal targetEndPoint As EndPoint) As Boolean
 
         Try
-            ' We'll check if the target endpoint exist by sending NULL data to it and then wait for data from it. 
+            ' We'll check if the target endpoint exist by sending empty data to it and then wait for data from it. 
             ' If the endpoint doesn't exist then we'll receive a ConnectionReset socket exception.
             Using recipientChecker As New Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp)
                 recipientChecker.ReceiveTimeout = 1
@@ -134,7 +134,7 @@ Friend NotInheritable Class CommunicationHelper
                     Return False
             End Select
         Catch ex As Exception
-            ' We'll ignore all other exceptions.
+            ' We'll ignore any other exceptions we might encounter.
         End Try
 
         Return True
