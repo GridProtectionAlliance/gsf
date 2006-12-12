@@ -39,7 +39,7 @@ Namespace Application
             MyBase.New()
             If dbConnection IsNot Nothing Then
                 If dbConnection.State <> System.Data.ConnectionState.Open Then dbConnection.Open()
-                Dim sql As String = "SELECT * FROM dbo.UsersAndCompaniesAndSecurityQuestions WHERE UserName = '" & username & "'"
+                Dim sql As String = "SELECT * FROM dbo.GetUserData('" & username & "')"
                 Dim userData As DataTable = RetrieveData(sql, dbConnection)
                 If userData IsNot Nothing AndAlso userData.Rows.Count > 0 Then
                     ' User does exist in the security database.

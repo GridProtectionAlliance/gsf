@@ -1,28 +1,32 @@
 ' 10-16-06
 
-Public Class AccessDenied
+Namespace Application
 
-    Private Sub AccessDenied_Load(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles MyBase.Load
+    Public Class AccessDenied
 
-        If Me.Owner IsNot Nothing Then
-            Me.Font = Me.Owner.Font
-            Me.Text = Windows.Forms.Application.ProductName & " - " & Me.Text
-        End If
+        Private Sub AccessDenied_Load(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles MyBase.Load
 
-    End Sub
+            If Me.Owner IsNot Nothing Then
+                Me.Font = Me.Owner.Font
+                Me.Text = Windows.Forms.Application.ProductName & " - " & Me.Text
+            End If
 
-    Private Sub ButtonExitApplication_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles ButtonExitApplication.Click
+        End Sub
 
-        Me.DialogResult = Windows.Forms.DialogResult.No
-        Me.Close()
+        Private Sub ButtonExitApplication_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles ButtonExitApplication.Click
 
-    End Sub
+            Me.DialogResult = Windows.Forms.DialogResult.No
+            Me.Close()
 
-    Private Sub ButtonRequestAccess_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles ButtonRequestAccess.Click
+        End Sub
 
-        Me.DialogResult = Windows.Forms.DialogResult.Yes
-        Me.Close()
+        Private Sub ButtonRequestAccess_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles ButtonRequestAccess.Click
 
-    End Sub
+            Me.DialogResult = Windows.Forms.DialogResult.Yes
+            Me.Close()
 
-End Class
+        End Sub
+
+    End Class
+
+End Namespace
