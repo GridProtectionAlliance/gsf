@@ -281,7 +281,9 @@ Namespace Application
                 For i As Integer = 0 To userRoles.Rows.Count - 1
                     Dim application As New Application(userRoles.Rows(i)("ApplicationName").ToString(), userRoles.Rows(i)("ApplicationDescription").ToString())
                     m_roles.Add(New Role(userRoles.Rows(i)("RoleName").ToString(), userRoles.Rows(i)("RoleDescription").ToString(), application))
-                    m_applications.Add(application)
+                    ' Since an application can have multiple roles, we're going to add an application to the list
+                    ' of application only if it doesn't exist already.
+                    If Not m_applications.Contains(application) Then m_applications.Add(application)
                 Next
             End If
 

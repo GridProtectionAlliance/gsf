@@ -34,6 +34,22 @@ Namespace Application
             End Get
         End Property
 
+        Public Overrides Function Equals(ByVal obj As Object) As Boolean
+
+            Dim other As Role = TryCast(obj, Role)
+            If other IsNot Nothing Then
+                If m_name = other.Name AndAlso m_description = other.Description AndAlso _
+                        m_application.Equals(other.Application) Then
+                    Return True
+                Else
+                    Return False
+                End If
+            Else
+                Return False
+            End If
+
+        End Function
+
     End Class
 
 End Namespace
