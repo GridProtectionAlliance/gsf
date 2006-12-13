@@ -5,7 +5,7 @@ Partial Class Groups
     Inherits System.Web.UI.UserControl
 
     Private groupsAdapter As New GroupsTableAdapter
-    Private usersAndCompaniesAdapter As New UsersAndCompaniesTableAdapter
+    Private usersAndCompaniesAdapter As New UsersAndCompaniesAndSecurityQuestionsTableAdapter
     Private groupUsersAdapter As New GroupsUsersTableAdapter
     Private usersAdapter As New UsersTableAdapter
     Private rolesAdapter As New RolesTableAdapter
@@ -50,7 +50,7 @@ Partial Class Groups
 
     Private Sub BindToUsersGrid()
         With Me.GridViewUsers
-            .DataSource = usersAndCompaniesAdapter.GetCompaniesAndUsers()
+            .DataSource = usersAndCompaniesAdapter.GetUsersInfo
             .DataBind()
         End With
     End Sub
@@ -183,9 +183,9 @@ Partial Class Groups
                 groupsAdapter.UpdateGroup(newGroupName, newGroupDescription, ViewState("Grp"))
 
                 'On update delete all the existing associations and insert all new ones.
-                Dim origGroupID As Guid = groupsAdapter.GetGroupIDByGroupName(ViewState("Grp"))
-                groupUsersAdapter.DeleteGroupUsers(origGroupID)
-                InsertIntoGroupUsers(ViewState("Grp").ToString)
+                Dim newGroupID As Guid = groupsAdapter.GetGroupIDByGroupName(newGroupName.Replace(" ", ""))
+                groupUsersAdapter.DeleteGroupUsers(newGroupID)
+                InsertIntoGroupUsers(newGroupName.Replace(" ", ""))
                 UpdateGroupsRoles(newGroupName.Replace(" ", ""))
             End If
         End If
@@ -222,7 +222,7 @@ Partial Class Groups
 
     Protected Sub GridViewUsers_Sorting(ByVal sender As Object, ByVal e As System.Web.UI.WebControls.GridViewSortEventArgs) Handles GridViewUsers.Sorting
         Dim dv As New DataView
-        dv = usersAndCompaniesAdapter.GetCompaniesAndUsers().DefaultView
+        dv = usersAndCompaniesAdapter.GetUsersInfo.DefaultView
         dv.Sort = e.SortExpression
         'dv.Sort = String.Format("{0} {1}", e.SortExpression, e.SortDirection)
 

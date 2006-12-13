@@ -33,10 +33,8 @@
             <asp:Label ID="Label1" runat="server" CssClass="BoldLabel" Text="Manage Users"></asp:Label></td>    
     </tr> 
     <tr>
-        <td class="whiteCell" style="width: 110px">&nbsp;</td>
-        <td class="whiteCell"></td>
-        <td class="whiteCell"></td>
-        <td class="whiteCell"></td>
+        <td class="whiteCell" colspan=4>
+            <asp:Label ID="LabelMsg" runat="server" CssClass="Label" ForeColor="#C00000"></asp:Label></td>        
     </tr>   
     <tr>
         <td class="whiteCell" style="width: 110px">
@@ -94,8 +92,8 @@
             <asp:TextBox ID="TextBoxPhone" runat="server" Width="200px" CssClass="TextBox" Enabled="False"></asp:TextBox></td>
     </tr>    
     <tr>
-        <td align="center" class="whiteCell" colspan="4" style="height: 28px">
-            <igtbl:ultrawebgrid id="UltraWebGridRoles" runat="server" Height="200px" Width="650px">
+        <td align="left" class="whiteCell" colspan="4" style="height: 28px">
+            <igtbl:ultrawebgrid id="UltraWebGridRoles" runat="server" Height="200px" Width="675px">
             <Bands>
                 <igtbl:UltraGridBand AddButtonCaption="Column0Column1Column2" Key="Column0Column1Column2">
                     <AddNewRow View="NotSet" Visible="NotSet">
@@ -115,7 +113,7 @@
                     <BorderDetails ColorLeft="White" ColorTop="White" WidthLeft="1px" WidthTop="1px" />
                 </FooterStyleDefault>
                 <RowStyleDefault BackColor="Window" BorderStyle="Solid" BorderWidth="1px">
-                    <BorderDetails ColorLeft="SteelBlue" ColorTop="SteelBlue" />
+                    <BorderDetails ColorLeft="Gainsboro" ColorTop="Gainsboro" />
                     <Padding Left="3px" />
                 </RowStyleDefault>
                 <HeaderStyleDefault BackColor="LightSteelBlue" BorderStyle="Solid" HorizontalAlign="Center" Font-Bold="True">
@@ -124,7 +122,7 @@
                 <EditCellStyleDefault BorderStyle="None" BorderWidth="0px">
                 </EditCellStyleDefault>
                 <FrameStyle BackColor="Window" BorderColor="InactiveCaption" BorderStyle="Solid"
-                    BorderWidth="0px" Font-Names="Tahoma" Font-Size="0.8em" Font-Overline="False" Height="200px" Width="650px">
+                    BorderWidth="0px" Font-Names="Tahoma" Font-Size="0.8em" Font-Overline="False" Height="200px" Width="675px">
                 </FrameStyle>
                 <Pager>
                     <Style BackColor="LightGray" BorderStyle="Solid" BorderWidth="1px">
@@ -136,7 +134,7 @@
 <BorderDetails ColorTop="White" WidthLeft="1px" WidthTop="1px" ColorLeft="White"></BorderDetails>
 </Style>
                 </AddNewBox>
-                <RowAlternateStyleDefault BackColor="LightSteelBlue">
+                <RowAlternateStyleDefault BackColor="Gainsboro">
                 </RowAlternateStyleDefault>
             </DisplayLayout>
         </igtbl:ultrawebgrid>

@@ -2,6 +2,8 @@ Imports System.Data
 Imports System.Data.SqlClient
 Imports Tva.Data.Common
 Imports Tva.Security.Application
+Imports System.Security.Principal
+Imports System.DirectoryServices
 
 Partial Class ApplyForAccount
     Inherits System.Web.UI.Page
@@ -18,6 +20,7 @@ Partial Class ApplyForAccount
         'Session("ApplicationName") = "TROAPPSEC"
         '***********
 
+        SetSessions()
         If Session("ConnectionString") Is Nothing Then
             Response.Redirect("ErrorPage.aspx?t=1", True)
         Else
@@ -31,6 +34,70 @@ Partial Class ApplyForAccount
         Me.TextBoxUserName.Focus()
         If Not IsPostBack Then
             PopulateDropDowns()
+            'PopulateForm()     'leave it for future use.
+
+            If System.Threading.Thread.CurrentPrincipal.Identity.Name IsNot Nothing Then    'if internal user
+                ButtonSubmit.Enabled = False
+                Me.LabelError.Text = "This page is for external users only. TVA internal users should contact Cynthia Hill-Watson at 423.751.6747."
+            Else
+                ButtonSubmit.Enabled = True
+                Me.LabelError.Text = ""
+            End If
+
+        End If
+
+    End Sub
+
+    Private Sub PopulateForm()
+        'If user is internal and his NTID is available then get and populate his information from the active directory.
+
+        If System.Threading.Thread.CurrentPrincipal.Identity.Name IsNot Nothing Then
+
+            Dim ntid As String = System.Threading.Thread.CurrentPrincipal.Identity.Name
+            If ntid.Contains("TVA\") Then
+                ntid = ntid.Replace("TVA\", "")
+            End If
+
+            Dim entry As DirectoryEntry = New DirectoryEntry("LDAP://TVA:389/dc=main,dc=tva,dc=gov", "esocss", "pwd4ctrl")
+            Dim filterStr As String = ntid
+            Dim mySearcher As New System.DirectoryServices.DirectorySearcher
+            mySearcher.SearchRoot = entry
+            mySearcher.SearchScope = SearchScope.Subtree
+            mySearcher.Filter = String.Format("(&(objectCategory=person)(objectclass=user)(samaccountName={0}))", filterStr)
+            Dim resEnt As SearchResult = mySearcher.FindOne
+
+            If resEnt IsNot Nothing Then
+                With resEnt.GetDirectoryEntry
+                    Me.TextBoxUserName.Text = ntid
+                    Me.TextBoxFirstName.Text = DirectCast(.Properties("givenname").Value, String)
+                    Me.TextBoxLastName.Text = DirectCast(.Properties("sn").Value, String)
+                    Me.TextBoxEmail.Text = DirectCast(.Properties("mail").Value, String)
+                    Me.TextBoxPhone.Text = DirectCast(.Properties("telephoneNumber").Value, String)
+                    Me.TextBoxCompanyName.Text = "Tennessee Valley Authority"
+                End With
+
+                Me.TextBoxCompanyName.Enabled = False
+                Me.TextBoxEmail.Enabled = False
+                Me.TextBoxFirstName.Enabled = False
+                Me.TextBoxLastName.Enabled = False
+                Me.TextBoxPassword.Enabled = False
+                Me.TextBoxPhone.Enabled = False
+                Me.TextBoxSecurityAnswer.Enabled = False
+                Me.TextBoxUserName.Enabled = False
+                Me.DropDownListSecurityQuestions.Enabled = False
+            End If
+
+        Else
+            Me.TextBoxCompanyName.Enabled = True
+            Me.TextBoxEmail.Enabled = True
+            Me.TextBoxFirstName.Enabled = True
+            Me.TextBoxLastName.Enabled = True
+            Me.TextBoxPassword.Enabled = True
+            Me.TextBoxPhone.Enabled = True
+            Me.TextBoxSecurityAnswer.Enabled = True
+            Me.TextBoxUserName.Enabled = True
+            Me.DropDownListSecurityQuestions.Enabled = True
+
         End If
 
     End Sub
@@ -98,7 +165,7 @@ Partial Class ApplyForAccount
                 End If
 
                 Dim userName As String = Me.TextBoxUserName.Text.Replace("'", "").Replace("%", "")
-                Dim password As String = Tva.Security.Application.User.EncryptPassword(Me.TextBoxPassword.Text.Replace("'", "").Replace("%", ""))
+                Dim password As String = Tva.Security.Application.User.EncryptPassword(Me.TextBoxPassword.Text.Replace("'", "").Replace("%", "").Replace(" ", ""))
                 Dim securityQuestion As String = Me.DropDownListSecurityQuestions.SelectedItem.ToString
                 Dim securityAnswer As String = Me.TextBoxSecurityAnswer.Text.Replace("'", "''")
                 Dim firstName As String = Me.TextBoxFirstName.Text.Replace("'", "").Replace("%", "")
@@ -106,13 +173,19 @@ Partial Class ApplyForAccount
                 Dim phone As String = Me.TextBoxPhone.Text.Replace("-", "").Replace("(", "").Replace(")", "")
                 Dim email As String = Me.TextBoxEmail.Text.Replace("'", "").Replace("%", "")
 
-                Dim company As String = Me.TextBoxCompanyName.Text.Replace("'", "").Replace("%", "")
-                'If Me.DropDownListCompanies.SelectedItem.ToString = "Other" Then
-                '    company = 
-                'Else
-                '    company = Me.DropDownListCompanies.SelectedItem.ToString
-                'End If
+                If System.Threading.Thread.CurrentPrincipal.Identity.Name Is Nothing Then
+                    If password = "" Then
+                        Me.LabelError.Text &= "Please enter password. "
+                        Exit Try
+                    End If
 
+                    If securityAnswer = "" Then
+                        Me.LabelError.Text &= "Please enter security answer. "
+                        Exit Try
+                    End If
+                End If
+
+                Dim company As String = Me.TextBoxCompanyName.Text.Replace("'", "").Replace("%", "")
                 If company = "" Then
                     Me.LabelError.Text &= "Please enter company name or select company from the drop down. "
                     Exit Try
@@ -157,7 +230,7 @@ Partial Class ApplyForAccount
                     If Not conn.State = ConnectionState.Open Then
                         conn.Open()
                     End If
-                    
+
                     ExecuteNonQuery("LogError", conn, Session("ApplicationName"), "ApplyForAccount.aspx Submit()", sqlEx.ToString)
 
                     Response.Redirect("ErrorPage.aspx", False)
@@ -167,7 +240,7 @@ Partial Class ApplyForAccount
                 If Not conn.State = ConnectionState.Open Then
                     conn.Open()
                 End If
-                
+
                 ExecuteNonQuery("LogError", conn, Session("ApplicationName"), "ApplyForAccount.aspx Submit()", ex.ToString)
 
                 Response.Redirect("ErrorPage.aspx", False)
@@ -250,4 +323,24 @@ Partial Class ApplyForAccount
 
         Return isPending
     End Function
+
+    Private Sub SetSessions()
+
+        If Session("ConnectionString") Is Nothing AndAlso Request("c") IsNot Nothing AndAlso Not String.IsNullOrEmpty(Request("c").ToString()) Then
+            Dim connectionString As String = Tva.Security.Cryptography.Common.Decrypt(Request("c").ToString, Tva.Security.Cryptography.EncryptLevel.Level4)
+            Session("ConnectionString") = connectionString
+        End If
+
+        If Session("ApplicationName") Is Nothing AndAlso Request("a") IsNot Nothing AndAlso Not String.IsNullOrEmpty(Request("a").ToString()) Then
+            Dim applicationName As String = Server.UrlDecode(Tva.Security.Cryptography.Common.Decrypt(Request("a").ToString, Tva.Security.Cryptography.EncryptLevel.Level4))
+            Session("ApplicationName") = applicationName
+        End If
+
+        If Session("ReturnUrl") Is Nothing AndAlso Request("r") IsNot Nothing AndAlso Not String.IsNullOrEmpty(Request("r").ToString()) Then
+            Dim returnUrl As String = Server.UrlDecode(Request("r").ToString)
+            Session("ReturnUrl") = returnUrl
+        End If
+
+    End Sub
+
 End Class

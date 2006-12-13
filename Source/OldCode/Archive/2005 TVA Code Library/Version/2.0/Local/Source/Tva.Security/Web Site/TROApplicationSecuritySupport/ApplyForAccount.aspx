@@ -122,8 +122,7 @@
                     <asp:Label ID="Label4" runat="server" CssClass="Label" Text="Password:"></asp:Label></td>
                 <td class="whiteCell" align=left>
                     <asp:TextBox ID="TextBoxPassword" runat="server" CssClass="TextBox" Width="200px" TextMode="Password"></asp:TextBox>
-                    <asp:RequiredFieldValidator ID="RequiredFieldValidator2" runat="server" ControlToValidate="TextBoxPassword"
-                        CssClass="Label" ErrorMessage="*"></asp:RequiredFieldValidator></td>
+                    </td>
             </tr>
             <tr>
                 <td class="whiteCell" align=left>
@@ -135,8 +134,7 @@
                     <asp:Label ID="Label8" runat="server" CssClass="Label" Text="Security Answer:"></asp:Label></td>
                 <td class="whiteCell" align=left>
                     <asp:TextBox ID="TextBoxSecurityAnswer" runat="server" CssClass="TextBox" Width="200px"></asp:TextBox>
-                    <asp:RequiredFieldValidator ID="RequiredFieldValidator3" runat="server" ControlToValidate="TextBoxSecurityAnswer"
-                        CssClass="Label" ErrorMessage="*"></asp:RequiredFieldValidator></td>
+                    </td>
             </tr>
             <tr>
                 <td class="whiteCell" align=left>

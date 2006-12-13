@@ -82,6 +82,7 @@ Partial Class ChangePassword
 
     Protected Sub Page_Load(ByVal sender As Object, ByVal e As System.EventArgs) Handles Me.Load
         Me.TextBoxUserName.Focus()
+        SetSessions()
         If Request("m") IsNot Nothing AndAlso _
                 Not String.IsNullOrEmpty(Request("m").ToString()) Then
 
@@ -102,4 +103,24 @@ Partial Class ChangePassword
         PasswordExpiredOrReset
 
     End Enum
+
+    Private Sub SetSessions()
+
+        If Session("ConnectionString") Is Nothing AndAlso Request("c") IsNot Nothing AndAlso Not String.IsNullOrEmpty(Request("c").ToString()) Then
+            Dim connectionString As String = Tva.Security.Cryptography.Common.Decrypt(Request("c").ToString, Tva.Security.Cryptography.EncryptLevel.Level4)
+            Session("ConnectionString") = connectionString
+        End If
+
+        If Session("ApplicationName") Is Nothing AndAlso Request("a") IsNot Nothing AndAlso Not String.IsNullOrEmpty(Request("a").ToString()) Then
+            Dim applicationName As String = Server.UrlDecode(Tva.Security.Cryptography.Common.Decrypt(Request("a").ToString, Tva.Security.Cryptography.EncryptLevel.Level4))
+            Session("ApplicationName") = applicationName
+        End If
+
+        If Session("ReturnUrl") Is Nothing AndAlso Request("r") IsNot Nothing AndAlso Not String.IsNullOrEmpty(Request("r").ToString()) Then
+            Dim returnUrl As String = Server.UrlDecode(Request("r").ToString)
+            Session("ReturnUrl") = returnUrl
+        End If
+
+    End Sub
+
 End Class

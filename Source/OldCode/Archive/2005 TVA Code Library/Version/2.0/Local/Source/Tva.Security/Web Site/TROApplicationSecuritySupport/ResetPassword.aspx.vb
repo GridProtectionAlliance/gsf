@@ -12,7 +12,7 @@ Partial Class ResetPassword
         '***********
         'Session("ConnectionString") = "Server=RGOCDSQL; Database=ApplicationSecurity; UID=appsec; PWD=123-xyz"
         '***********
-
+        SetSessions()
         If Session("ConnectionString") Is Nothing Then
             Response.Redirect("ErrorPage.aspx", True)
         Else
@@ -210,4 +210,24 @@ Partial Class ResetPassword
 
         Return footerText
     End Function
+
+    Private Sub SetSessions()
+
+        If Session("ConnectionString") Is Nothing AndAlso Request("c") IsNot Nothing AndAlso Not String.IsNullOrEmpty(Request("c").ToString()) Then
+            Dim connectionString As String = Tva.Security.Cryptography.Common.Decrypt(Request("c").ToString, Tva.Security.Cryptography.EncryptLevel.Level4)
+            Session("ConnectionString") = connectionString
+        End If
+
+        If Session("ApplicationName") Is Nothing AndAlso Request("a") IsNot Nothing AndAlso Not String.IsNullOrEmpty(Request("a").ToString()) Then
+            Dim applicationName As String = Server.UrlDecode(Tva.Security.Cryptography.Common.Decrypt(Request("a").ToString, Tva.Security.Cryptography.EncryptLevel.Level4))
+            Session("ApplicationName") = applicationName
+        End If
+
+        If Session("ReturnUrl") Is Nothing AndAlso Request("r") IsNot Nothing AndAlso Not String.IsNullOrEmpty(Request("r").ToString()) Then
+            Dim returnUrl As String = Server.UrlDecode(Request("r").ToString)
+            Session("ReturnUrl") = returnUrl
+        End If
+
+    End Sub
+
 End Class

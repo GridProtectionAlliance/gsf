@@ -21,41 +21,66 @@ Partial Class Login
             'a = application name
             'r = return url
             't = error type
-            If Request("c") IsNot Nothing AndAlso _
-                    Not String.IsNullOrEmpty(Request("c").ToString()) AndAlso _
-                        Request("a") IsNot Nothing AndAlso _
-                            Not String.IsNullOrEmpty(Request("a").ToString()) AndAlso _
-                                Request("r") IsNot Nothing AndAlso _
-                                    Not String.IsNullOrEmpty(Request("r").ToString()) Then
 
-                ViewState("QueryStringExists") = True
+            'If Request("c") IsNot Nothing AndAlso _
+            '        Not String.IsNullOrEmpty(Request("c").ToString()) AndAlso _
+            '            Request("a") IsNot Nothing AndAlso _
+            '                Not String.IsNullOrEmpty(Request("a").ToString()) AndAlso _
+            '                    Request("r") IsNot Nothing AndAlso _
+            '                        Not String.IsNullOrEmpty(Request("r").ToString()) Then
 
-                'connectionString = Server.UrlDecode(Tva.Security.Cryptography.Common.Decrypt(Request("c").ToString, Tva.Security.Cryptography.EncryptLevel.Level4))
-                connectionString = Tva.Security.Cryptography.Common.Decrypt(Request("c").ToString, Tva.Security.Cryptography.EncryptLevel.Level4)
-                applicationName = Server.UrlDecode(Tva.Security.Cryptography.Common.Decrypt(Request("a").ToString, Tva.Security.Cryptography.EncryptLevel.Level4))
-                returnUrl = Server.UrlDecode(Request("r").ToString)
-                Session("ApplicationName") = applicationName
-                Session("ConnectionString") = connectionString
-                Session("ReturnUrl") = returnUrl
+            '    ViewState("QueryStringExists") = True
 
-                Dim returnUri As Uri = New Uri(returnUrl)
-                Dim query As String = returnUri.Query
-                If query.Length > 0 Then
-                    ViewState("ReturnUrlHasQueryString") = True
-                Else
-                    ViewState("ReturnUrlHasQueryString") = False
-                End If
+            '    'connectionString = Server.UrlDecode(Tva.Security.Cryptography.Common.Decrypt(Request("c").ToString, Tva.Security.Cryptography.EncryptLevel.Level4))
+            '    connectionString = Tva.Security.Cryptography.Common.Decrypt(Request("c").ToString, Tva.Security.Cryptography.EncryptLevel.Level4)
+            '    applicationName = Server.UrlDecode(Tva.Security.Cryptography.Common.Decrypt(Request("a").ToString, Tva.Security.Cryptography.EncryptLevel.Level4))
+            '    returnUrl = Server.UrlDecode(Request("r").ToString)
+            '    Session("ApplicationName") = applicationName
+            '    Session("ConnectionString") = connectionString
+            '    Session("ReturnUrl") = returnUrl
 
-                ' 11/15/2006 - PCP: This logic has been moved to the WebSecurityProvider component in TVA Code Library.
-                ''Check for existance of the Cookie
-                'If Request.Cookies("Credentials") IsNot Nothing Then
-                '    Dim userName As String = Tva.Security.Cryptography.Common.Decrypt(Request.Cookies("Credentials")("u"), Tva.Security.Cryptography.EncryptLevel.Level4)
-                '    Dim password As String = Tva.Security.Cryptography.Common.Decrypt(Request.Cookies("Credentials")("p"), Tva.Security.Cryptography.EncryptLevel.Level4)
-                '    AuthenticateUser(userName, password)
-                '    'Response.Write(userName & " - " & password & "<BR>Expires On: " & Request.Cookies("Credentials").Expires.ToString)
-                'End If
+            '    Dim returnUri As Uri = New Uri(returnUrl)
+            '    Dim query As String = returnUri.Query
+            '    If query.Length > 0 Then
+            '        ViewState("ReturnUrlHasQueryString") = True
+            '    Else
+            '        ViewState("ReturnUrlHasQueryString") = False
+            '    End If
 
-            ElseIf Session("ApplicationName") IsNot Nothing AndAlso _
+            '    ' 11/15/2006 - PCP: This logic has been moved to the WebSecurityProvider component in TVA Code Library.
+            '    ''Check for existance of the Cookie
+            '    'If Request.Cookies("Credentials") IsNot Nothing Then
+            '    '    Dim userName As String = Tva.Security.Cryptography.Common.Decrypt(Request.Cookies("Credentials")("u"), Tva.Security.Cryptography.EncryptLevel.Level4)
+            '    '    Dim password As String = Tva.Security.Cryptography.Common.Decrypt(Request.Cookies("Credentials")("p"), Tva.Security.Cryptography.EncryptLevel.Level4)
+            '    '    AuthenticateUser(userName, password)
+            '    '    'Response.Write(userName & " - " & password & "<BR>Expires On: " & Request.Cookies("Credentials").Expires.ToString)
+            '    'End If
+
+            'ElseIf Session("ApplicationName") IsNot Nothing AndAlso _
+            '        Session("ConnectionString") IsNot Nothing AndAlso _
+            '        Session("ReturnUrl") IsNot Nothing Then
+
+            '    applicationName = Session("ApplicationName")
+            '    connectionString = Session("ConnectionString")
+            '    returnUrl = Session("ReturnUrl")
+
+            '    Dim returnUri As Uri = New Uri(Session("ReturnUrl"))
+            '    Dim query As String = returnUri.Query
+            '    If query.Length > 0 Then
+            '        ViewState("ReturnUrlHasQueryString") = True
+            '    Else
+            '        ViewState("ReturnUrlHasQueryString") = False
+            '    End If
+            '    ViewState("QueryStringExists") = True
+
+            'Else
+            '    queryStringExists = False
+            '    Response.Redirect("ErrorPage.aspx?t=1", True)
+            'End If
+
+            SetSessions()
+
+            If Session("ApplicationName") IsNot Nothing AndAlso _
                     Session("ConnectionString") IsNot Nothing AndAlso _
                     Session("ReturnUrl") IsNot Nothing Then
 
@@ -313,5 +338,24 @@ Partial Class Login
         Return maxLoginAttempts
 
     End Function
+
+    Private Sub SetSessions()
+
+        If Session("ConnectionString") Is Nothing AndAlso Request("c") IsNot Nothing AndAlso Not String.IsNullOrEmpty(Request("c").ToString()) Then
+            Dim connectionString As String = Tva.Security.Cryptography.Common.Decrypt(Request("c").ToString, Tva.Security.Cryptography.EncryptLevel.Level4)
+            Session("ConnectionString") = connectionString
+        End If
+
+        If Session("ApplicationName") Is Nothing AndAlso Request("a") IsNot Nothing AndAlso Not String.IsNullOrEmpty(Request("a").ToString()) Then
+            Dim applicationName As String = Server.UrlDecode(Tva.Security.Cryptography.Common.Decrypt(Request("a").ToString, Tva.Security.Cryptography.EncryptLevel.Level4))
+            Session("ApplicationName") = applicationName
+        End If
+
+        If Session("ReturnUrl") Is Nothing AndAlso Request("r") IsNot Nothing AndAlso Not String.IsNullOrEmpty(Request("r").ToString()) Then
+            Dim returnUrl As String = Server.UrlDecode(Request("r").ToString)
+            Session("ReturnUrl") = returnUrl
+        End If
+
+    End Sub
 
 End Class

@@ -1,5 +1,8 @@
 Imports SecurityTableAdapters
 Imports System.Data
+Imports System.Security.Principal
+Imports System.DirectoryServices
+Imports Tva.Identity.Common
 
 Partial Class Users
     Inherits System.Web.UI.UserControl
@@ -219,33 +222,66 @@ Partial Class Users
 
     Protected Sub ButtonSave_Click(ByVal sender As Object, ByVal e As System.EventArgs) Handles ButtonSave.Click
 
-        Dim userName As String = Me.TextBoxUserName.Text.Replace("'", "''")
-        Dim password As String = Me.TextBoxPassword.Text.Replace("'", "''")
-        'password = Tva.Security.Application.User.EncryptPassword(password)
-        Dim firstName As String = Me.TextBoxFirstName.Text.Replace("'", "''")
-        Dim lastName As String = Me.TextBoxLastName.Text.Replace("'", "''")
-        Dim email As String = Me.TextBoxEmail.Text.Replace("'", "''")
-        Dim securityAnswer As String = Me.TextBoxSecurityAnswer.Text.Replace("'", "''")
-        Dim phone As String = Me.TextBoxPhone.Text.Replace("'", "")
+        Dim userName, password, firstName, lastName, email, securityAnswer, phone As String
+        Dim companyID, securityQnID As Guid
+        Dim isLockedOut, isExternal As Boolean
+
+        userName = Me.TextBoxUserName.Text.Replace("'", "''")
+        companyID = New Guid(Me.DropDownListCompanies.SelectedValue)
+        isLockedOut = Me.CheckBoxIsLocked.Checked
+        isExternal = Me.CheckBoxIsExternal.Checked
+        password = Me.TextBoxPassword.Text.Replace("'", "''")
+        firstName = Me.TextBoxFirstName.Text.Replace("'", "''")
+        lastName = Me.TextBoxLastName.Text.Replace("'", "''")
+        email = Me.TextBoxEmail.Text.Replace("'", "''")
+        securityAnswer = Me.TextBoxSecurityAnswer.Text.Replace("'", "''")
+        phone = Me.TextBoxPhone.Text.Replace("'", "")
         phone = phone.Replace("-", "")
         phone = phone.Replace("(", "")
         phone = phone.Replace(")", "")
-        Dim companyID As Guid = New Guid(Me.DropDownListCompanies.SelectedValue)
-        Dim securityQnID As Guid = New Guid(Me.DropDownListSecurityQuestions.SelectedValue)
-        Dim isLockedOut As Boolean = Me.CheckBoxIsLocked.Checked
-        Dim isExternal As Boolean = Me.CheckBoxIsExternal.Checked
-
+        securityQnID = New Guid(Me.DropDownListSecurityQuestions.SelectedValue)
+        
         If ViewState("Mode") = "Add" Then
-            usersAdapter.InsertUser(companyID, securityQnID, userName, Tva.Security.Application.User.EncryptPassword(password), firstName, lastName, phone, email, securityAnswer, isLockedOut, isExternal)
+            If isExternal Then
+                usersAdapter.InsertUser(companyID, securityQnID, userName, Tva.Security.Application.User.EncryptPassword(password), firstName, lastName, phone, email, securityAnswer, isLockedOut, isExternal)
+            Else
+                'If Internal User then company id must be TVA.
+                companyID = companiesAdapter.GetCompanyIdByCompanyName("Tennessee Valley Authority")
+                'Check if userName (NTID) exists in the active directory.
+                If NtidExistInActiveDirectory(userName) Then
+                    usersAdapter.InsertInternalUsers(companyID, userName)
+                    Me.LabelMsg.Text = ""
+                Else
+                    Me.LabelMsg.Text = "User Name does not exist in the active directory."
+                End If
+
+            End If
+
             UpdateUsersRoles(userName.Replace(" ", ""))
         Else
             If Not ViewState("UN") = "" Then
-                If password = "" Then
-                    usersAdapter.UpdateUserWithoutPassword(companyID, securityQnID, userName, firstName, lastName, phone, email, securityAnswer, isLockedOut, isExternal, ViewState("UN"))
+
+                If isExternal Then
+                    If password = "" Then
+                        usersAdapter.UpdateUserWithoutPassword(companyID, securityQnID, userName, firstName, lastName, phone, email, securityAnswer, isLockedOut, isExternal, ViewState("UN"))
+                    Else
+                        usersAdapter.UpdateUser(companyID, securityQnID, userName, Tva.Security.Application.User.EncryptPassword(password), firstName, lastName, phone, email, securityAnswer, isLockedOut, isExternal, ViewState("UN"))
+                    End If
                 Else
-                    usersAdapter.UpdateUser(companyID, securityQnID, userName, Tva.Security.Application.User.EncryptPassword(password), firstName, lastName, phone, email, securityAnswer, isLockedOut, isExternal, ViewState("UN"))
+
+                    'If Internal User then company id must be TVA.
+                    companyID = companiesAdapter.GetCompanyIdByCompanyName("Tennessee Valley Authority")
+                    'Check if userName (NTID) exists in the active directory.
+                    If NtidExistInActiveDirectory(userName) Then
+                        usersAdapter.UpdateInternalUser(companyID, userName, ViewState("UN"))
+                        Me.LabelMsg.Text = ""
+                    Else
+                        Me.LabelMsg.Text = "User Name does not exist in the active directory."
+                    End If
+
                 End If
 
+                
                 UpdateUsersRoles(userName.Replace(" ", ""))
             End If
         End If
@@ -343,4 +379,23 @@ Partial Class Users
             BindRolesToGrid()
         End If
     End Sub
+
+    Private Function NtidExistInActiveDirectory(ByVal ntid As String) As Boolean
+        Dim exists As Boolean = False
+
+        Dim entry As DirectoryEntry = New DirectoryEntry("LDAP://TVA:389/dc=main,dc=tva,dc=gov", "esocss", "pwd4ctrl")
+        Dim filterStr As String = ntid
+
+        Dim mySearcher As New System.DirectoryServices.DirectorySearcher
+        mySearcher.SearchRoot = entry
+        mySearcher.SearchScope = SearchScope.Subtree
+        mySearcher.Filter = String.Format("(&(objectCategory=person)(objectclass=user)(samaccountName={0}))", filterStr)
+
+        Dim resEnt As SearchResult = mySearcher.FindOne
+
+        exists = Not (resEnt Is Nothing)
+
+        Return exists
+
+    End Function
 End Class

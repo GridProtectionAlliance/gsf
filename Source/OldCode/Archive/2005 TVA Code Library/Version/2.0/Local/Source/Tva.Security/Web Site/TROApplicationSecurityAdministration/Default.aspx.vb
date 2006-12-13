@@ -10,6 +10,7 @@ Partial Class _Default
             context = Tva.Identity.Common.ImpersonateUser("esocss", "pwd4ctrl", "TVA")
             Me.LabelUser.Text = New Tva.Identity.UserInfo(Page.User.Identity.Name).FullName.ToString & " (" & My.User.CurrentPrincipal.Identity.Name & ")"
             Tva.Identity.Common.EndImpersonation(context)
+            'Response.Write(System.Threading.Thread.CurrentPrincipal.Identity.Name)
         End If
 
     End Sub
