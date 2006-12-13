@@ -74,22 +74,6 @@ Namespace Application
         End Property
 
         <Browsable(False)> _
-        Public ReadOnly Property ConnectionString() As String
-            Get
-                Select Case m_server
-                    Case SecurityServer.Development
-                        Return m_devConnectionString
-                    Case SecurityServer.Acceptance
-                        Return m_accConnectionString
-                    Case SecurityServer.Production
-                        Return m_prdConnectionString
-                    Case Else
-                        Return ""
-                End Select
-            End Get
-        End Property
-
-        <Browsable(False)> _
         Public ReadOnly Property User() As User
             Get
                 Return m_user
@@ -173,6 +157,31 @@ Namespace Application
 #End Region
 
 #Region " Protected Code "
+
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>
+        ''' This property must be accessible only by components inheriting from this component that exists in this 
+        ''' assembly. This is done so that the database connection string is not exposed even when a component that
+        ''' exists outside of this assembly inherits from this component.
+        ''' </remarks>
+        Protected Friend ReadOnly Property ConnectionString() As String
+            Get
+                Select Case m_server
+                    Case SecurityServer.Development
+                        Return m_devConnectionString
+                    Case SecurityServer.Acceptance
+                        Return m_accConnectionString
+                    Case SecurityServer.Production
+                        Return m_prdConnectionString
+                    Case Else
+                        Return ""
+                End Select
+            End Get
+        End Property
 
         Protected Sub UpdateUserData(ByVal userData As User)
 

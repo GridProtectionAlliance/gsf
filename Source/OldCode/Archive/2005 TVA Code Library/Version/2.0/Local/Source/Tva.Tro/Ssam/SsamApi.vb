@@ -154,26 +154,6 @@ Namespace Ssam
         End Property
 
         ''' <summary>
-        ''' Gets the connection string used for connecting with the current SSAM server.
-        ''' </summary>
-        ''' <value></value>
-        ''' <returns>The connection string used for connecting with the current SSAM server.</returns>
-        <Browsable(False)> _
-        Public ReadOnly Property ConnectionString() As String
-            Get
-                ' Return the connection string for connecting to the selected SSAM server.
-                Select Case m_server
-                    Case SsamServer.Development
-                        Return m_devConnectionString
-                    Case SsamServer.Production
-                        Return m_prdConnectionString
-                    Case Else
-                        Return ""
-                End Select
-            End Get
-        End Property
-
-        ''' <summary>
         ''' Connects with the selected SSAM server.
         ''' </summary>
         Public Sub Connect()
@@ -284,6 +264,30 @@ Namespace Ssam
             End Try
 
         End Function
+
+        ''' <summary>
+        ''' Gets the connection string used for connecting with the current SSAM server.
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns>The connection string used for connecting with the current SSAM server.</returns>
+        ''' <remarks>
+        ''' This property must be accessible only by components inheriting from this component that exists in this 
+        ''' assembly. This is done so that the database connection string is not exposed even when a component that
+        ''' exists outside of this assembly inherits from this component.
+        ''' </remarks>
+        Protected Friend ReadOnly Property ConnectionString() As String
+            Get
+                ' Return the connection string for connecting to the selected SSAM server.
+                Select Case m_server
+                    Case SsamServer.Development
+                        Return m_devConnectionString
+                    Case SsamServer.Production
+                        Return m_prdConnectionString
+                    Case Else
+                        Return ""
+                End Select
+            End Get
+        End Property
 
         ''' <summary>
         ''' Attempts to free resources and perform other cleanup operations before the Tva.Tro.Ssam.SsamApi 

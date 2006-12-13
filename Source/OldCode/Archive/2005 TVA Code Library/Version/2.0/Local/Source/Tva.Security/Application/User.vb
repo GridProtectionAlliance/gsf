@@ -21,7 +21,7 @@ Namespace Application
         Private m_isExternal As Boolean
         Private m_isLockedOut As Boolean
         Private m_passwordChangeDateTime As System.DateTime
-        Private m_joinedDateTime As System.DateTime
+        Private m_accountCreatedDateTime As System.DateTime
         Private m_isAuthenticated As Boolean
         Private m_exists As Boolean
         Private m_groups As List(Of Group)
@@ -60,7 +60,7 @@ Namespace Application
                     If userData.Rows(0)("UserPasswordChangeDateTime") IsNot DBNull.Value Then
                         m_passwordChangeDateTime = Convert.ToDateTime(userData.Rows(0)("UserPasswordChangeDateTime"))
                     End If
-                    m_joinedDateTime = Convert.ToDateTime(userData.Rows(0)("UserJoinedDateTime"))
+                    m_accountCreatedDateTime = Convert.ToDateTime(userData.Rows(0)("UserAccountCreatedDateTime"))
 
                     PopulateGroups(dbConnection)
                     PopulateApplicationsAndRoles(dbConnection)
@@ -158,9 +158,9 @@ Namespace Application
         ''' </summary>
         ''' <value></value>
         ''' <returns>The date and time when user account was created.</returns>
-        Public ReadOnly Property JoinedDateTime() As System.DateTime
+        Public ReadOnly Property AccountCreatedDateTime() As System.DateTime
             Get
-                Return m_joinedDateTime
+                Return m_accountCreatedDateTime
             End Get
         End Property
 
