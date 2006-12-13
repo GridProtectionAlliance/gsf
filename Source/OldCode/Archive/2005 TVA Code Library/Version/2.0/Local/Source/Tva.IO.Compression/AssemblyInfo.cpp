@@ -31,6 +31,7 @@ using namespace System::Runtime::CompilerServices;
 // by using the '*' as shown below:
 
 [assembly:AssemblyVersion("2.1.45.47171")];
+[assembly:AssemblyFileVersion("2.1.38.41791")];
 
 //
 // In order to sign your assembly you must specify a key to use. Refer to the 

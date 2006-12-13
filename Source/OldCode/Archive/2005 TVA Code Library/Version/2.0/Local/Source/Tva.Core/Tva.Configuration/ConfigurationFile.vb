@@ -14,6 +14,9 @@
 '       Original version of source code generated
 '  11/14/2006 - Pinal C. Patel
 '       Modified the ValidateConfigurationFile to save the config file only it was modified.
+'  12/12/2006 - Pinal C. Patel
+'       Wrote the TrimEnd function that is being used for initialized the Configuration object.
+'
 '*******************************************************************************************************
 
 Imports System.Xml
@@ -179,12 +182,15 @@ Namespace Configuration
 
             If configFilePath IsNot Nothing Then
                 If configFilePath = "" OrElse JustFileExtension(configFilePath) = ".config" Then
+                    ' PCP - 12/12/2006: Using the TrimEnd function to get the correct value that needs to be passed
+                    ' to the method call for getting the Configuration object. The previous method (String.TrimEnd()) 
+                    ' yielded incorrect output resulting in the Configuration object not being initialized correctly.
                     Select Case Environment()
                         Case ApplicationEnvironment.Win
-                            configuration = ConfigurationManager.OpenExeConfiguration(configFilePath.TrimEnd(".config".ToCharArray()))
+                            configuration = ConfigurationManager.OpenExeConfiguration(TrimEnd(configFilePath, ".config"))
                         Case ApplicationEnvironment.Web
                             If configFilePath = "" Then configFilePath = System.Web.HttpContext.Current.Request.ApplicationPath()
-                            configuration = WebConfigurationManager.OpenWebConfiguration(configFilePath.TrimEnd("web.config".ToCharArray()))
+                            configuration = WebConfigurationManager.OpenWebConfiguration(TrimEnd(configFilePath, "web.config"))
                     End Select
                 Else
                     Throw New ArgumentException("Path of configuration file must be either empty or end in '.config'")
@@ -255,6 +261,15 @@ Namespace Configuration
             End If
 
         End Sub
+
+        Private Function TrimEnd(ByVal stringToTrim As String, ByVal textToTrim As String) As String
+
+            Dim trimEndIndex As Integer = stringToTrim.LastIndexOf(textToTrim)
+            If trimEndIndex = -1 Then trimEndIndex = stringToTrim.Length
+
+            Return stringToTrim.Substring(0, trimEndIndex)
+
+        End Function
 
     End Class
 
