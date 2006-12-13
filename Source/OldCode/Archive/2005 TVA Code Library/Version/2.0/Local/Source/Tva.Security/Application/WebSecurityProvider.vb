@@ -226,7 +226,7 @@ Namespace Application
                     Dim webFiles As ZipFile = Nothing
                     Dim zipFilePath As String = m_parent.Server.MapPath("~/")
                     Dim zipFileName As String = zipFilePath & "WebFiles.dat"
-                    File.WriteAllBytes(zipFileName, ReadStream(CallingAssembly.GetEmbeddedResource("Application.WebFiles.dat")))
+                    File.WriteAllBytes(zipFileName, ReadStream(CallingAssembly.GetEmbeddedResource("Tva.Security.Application.WebFiles.dat")))
                     webFiles = ZipFile.Open(zipFileName)
                     webFiles.Extract("*.*", zipFilePath, UpdateOption.ZipFileIsNewer, True)
                     webFiles.Close()

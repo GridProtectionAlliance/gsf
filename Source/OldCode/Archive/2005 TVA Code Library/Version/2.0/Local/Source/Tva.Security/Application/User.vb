@@ -18,6 +18,8 @@ Namespace Application
         Private m_companyName As String
         Private m_phoneNumber As String
         Private m_emailAddress As String
+        Private m_securityQuestion As String
+        Private m_securityAnswer As String
         Private m_isExternal As Boolean
         Private m_isLockedOut As Boolean
         Private m_passwordChangeDateTime As System.DateTime
@@ -51,6 +53,8 @@ Namespace Application
                     m_companyName = userData.Rows(0)("UserCompanyName").ToString()
                     m_phoneNumber = userData.Rows(0)("UserPhoneNumber").ToString()
                     m_emailAddress = userData.Rows(0)("UserEmailAddress").ToString()
+                    m_securityQuestion = userData.Rows(0)("UserSecurityQuestion").ToString()
+                    m_securityAnswer = userData.Rows(0)("UserSecurityAnswer").ToString()
                     If userData.Rows(0)("UserIsExternal") IsNot DBNull.Value Then
                         m_isExternal = Convert.ToBoolean(userData.Rows(0)("UserIsExternal"))
                     End If
@@ -127,6 +131,18 @@ Namespace Application
         Public ReadOnly Property EmailAddress() As String
             Get
                 Return m_emailAddress
+            End Get
+        End Property
+
+        Public ReadOnly Property SecurityQuestion() As String
+            Get
+                Return m_securityQuestion
+            End Get
+        End Property
+
+        Public ReadOnly Property SecurityAnswer() As String
+            Get
+                Return m_securityAnswer
             End Get
         End Property
 
