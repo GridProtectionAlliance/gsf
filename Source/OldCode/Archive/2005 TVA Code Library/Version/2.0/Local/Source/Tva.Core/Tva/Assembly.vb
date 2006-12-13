@@ -390,12 +390,12 @@ Public Class Assembly
     End Function
 
     ''' <summary>Get the specified embedded resource from the assembly.</summary>
-    ''' <param name="resourceName">Name of the embedded resource to get.</param>
+    ''' <param name="resourceName">The full name (including the namespace) of the embedded resource to get.</param>
     ''' <returns>The embedded resource.</returns>
     Public Function GetEmbeddedResource(ByVal resourceName As String) As Stream
 
         'Extract and return the requested embedded resource.
-        Return m_assemblyInstance.GetManifestResourceStream(RootNamespace() & "." & resourceName)
+        Return m_assemblyInstance.GetManifestResourceStream(resourceName)
 
     End Function
 

@@ -521,13 +521,17 @@ Public MustInherit Class CommunicationClientBase
     ''' </param>
     Public Sub WaitForConnection(ByVal waitTime As Integer, ByVal stopRetrying As Boolean) Implements ICommunicationClient.WaitForConnection
 
+        ' By default we'll wait indefinately for the client to connect.
         Dim stopTime As System.DateTime = System.DateTime.MaxValue
+        ' We have to wait for the specified milliseconds for the client to connect.
         If waitTime > 0 Then stopTime = System.DateTime.Now.AddMilliseconds(Convert.ToDouble(waitTime))
 
         Do While Not (m_isConnected OrElse System.DateTime.Now > stopTime)
-            ' We'll wait until connection with the server is established or time to wait for connection has expired.
+            ' We'll wait until client has connected or the time to wait for connection has expired.
         Loop
 
+        ' If the client hasn't connected after waiting for the specified time and if it is specified to stop 
+        ' attempting to connect to the server, then we'll call the CancelConnect() method.
         If Not m_isConnected AndAlso stopRetrying Then CancelConnect()
 
     End Sub

@@ -269,7 +269,7 @@ Public Class UdpServer
                 End If
             End With
         Catch ex As Exception
-
+            ' We don't need to take any action when an exception is encountered.
         Finally
             If m_udpServer IsNot Nothing AndAlso m_udpServer.Client IsNot Nothing Then
                 m_udpServer.Client.Close()
