@@ -30,13 +30,13 @@ Namespace Application
                 ' We can safely ignore any exceptions encountered.
             End Try
             Try
-                m_accConnectionString = "Server=RGOCDSQL; Database=ApplicationSecurity; UID=appsec; PWD=123-xyz"
+                m_accConnectionString = "Server=ESOASQLGENDAT\GENDAT; Database=ApplicationSecurity; UID=appsec; PWD=123-xyz"
                 m_accConnectionString = CategorizedSettings(ConfigurationElement)("Acceptance").Value
             Catch ex As Exception
                 ' We can safely ignore any exceptions encountered.
             End Try
             Try
-                m_prdConnectionString = "Server=RGOCDSQL; Database=ApplicationSecurity; UID=appsec; PWD=123-xyz"
+                m_prdConnectionString = "Server=ESOOPSQL1; Database=ApplicationSecurity; UID=appsec; PWD=123-xyz"
                 m_prdConnectionString = CategorizedSettings(ConfigurationElement)("Production").Value
             Catch ex As Exception
                 ' We can safely ignore any exceptions encountered.

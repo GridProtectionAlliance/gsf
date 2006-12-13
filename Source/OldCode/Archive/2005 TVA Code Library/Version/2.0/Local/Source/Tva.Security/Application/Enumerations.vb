@@ -6,9 +6,7 @@ Namespace Application
 
     Public Enum SecurityServer As Integer
         Development
-        <EditorBrowsable(EditorBrowsableState.Never), Browsable(False)> _
         Acceptance
-        <EditorBrowsable(EditorBrowsableState.Never), Browsable(False)> _
         Production
     End Enum
 
