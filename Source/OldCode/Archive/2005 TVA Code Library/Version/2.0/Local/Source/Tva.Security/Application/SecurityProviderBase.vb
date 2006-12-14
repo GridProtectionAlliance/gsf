@@ -27,13 +27,13 @@ Namespace Application
 
 #Region " Event Declaration "
 
-        Public Event BeforeLogin(ByVal sender As Object, ByVal e As CancelEventArgs)
-        Public Event BeforeAuthenticate(ByVal sender As Object, ByVal e As CancelEventArgs)
+        Public Event BeforeLogin As EventHandler(Of CancelEventArgs)
+        Public Event BeforeAuthenticate As EventHandler(Of CancelEventArgs)
         Public Event AfterLogin As EventHandler
         Public Event AfterAuthenticate As EventHandler
-        Public Event AccessGranted(ByVal sender As Object, ByVal e As CancelEventArgs)
-        Public Event AccessDenied(ByVal sender As Object, ByVal e As CancelEventArgs)
-        Public Event DbConnectionException(ByVal sender As Object, ByVal e As ExceptionEventArgs)
+        Public Event AccessGranted As EventHandler(Of CancelEventArgs)
+        Public Event AccessDenied As EventHandler(Of CancelEventArgs)
+        Public Event DbConnectionException As EventHandler(Of ExceptionEventArgs)
 
 #End Region
 

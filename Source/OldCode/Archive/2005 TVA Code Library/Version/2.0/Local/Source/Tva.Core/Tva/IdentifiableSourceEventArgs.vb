@@ -1,4 +1,5 @@
 Public Class IdentifiableSourceEventArgs
+    Inherits EventArgs
 
     Private m_source As Guid
 

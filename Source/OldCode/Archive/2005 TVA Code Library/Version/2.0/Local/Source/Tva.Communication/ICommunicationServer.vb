@@ -36,22 +36,22 @@ Public Interface ICommunicationServer
     ''' <summary>
     ''' Occurs when an exception is encountered while starting up the server.
     ''' </summary>
-    Event ServerStartupException(ByVal sender As Object, ByVal e As ExceptionEventArgs)
+    Event ServerStartupException As EventHandler(Of ExceptionEventArgs)
 
     ''' <summary>
     ''' Occurs when a client is connected to the server.
     ''' </summary>
-    Event ClientConnected(ByVal sender As Object, ByVal e As IdentifiableSourceEventArgs)
+    Event ClientConnected As EventHandler(Of IdentifiableSourceEventArgs)
 
     ''' <summary>
     ''' Occurs when a client is disconnected from the server.
     ''' </summary>
-    Event ClientDisconnected(ByVal sender As Object, ByVal e As IdentifiableSourceEventArgs)
+    Event ClientDisconnected As EventHandler(Of IdentifiableSourceEventArgs)
 
     ''' <summary>
     ''' Occurs when data is received from a client.
     ''' </summary>
-    Event ReceivedClientData(ByVal sender As Object, ByVal e As DataEventArgs)
+    Event ReceivedClientData As EventHandler(Of DataEventArgs)
 
     ''' <summary>
     ''' This function signature gets implemented as needed to allow consumers to "intercept" data before it goes through normal processing

@@ -42,7 +42,7 @@ Namespace Ssam
         ''' Occurs when an exception is encountered when logging an event to the SSAM server.
         ''' </summary>
         <Description("Occurs when an exception is encountered when logging an event to the SSAM server.")> _
-        Public Event LogException(ByVal sender As Object, ByVal e As ExceptionEventArgs)
+        Public Event LogException As EventHandler(Of ExceptionEventArgs)
 
         ''' <summary>
         ''' Initializes a instance of Tva.Tro.Ssam.SsamLogger with the specified information.

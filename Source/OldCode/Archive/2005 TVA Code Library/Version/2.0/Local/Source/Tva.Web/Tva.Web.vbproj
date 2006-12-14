@@ -54,9 +54,18 @@
   <ItemGroup>
     <Compile Include="Common.vb" />
     <Compile Include="My Project\AssemblyInfo.vb" />
+    <Compile Include="UI\SecurePage.vb">
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="UI\SecureUserControl.vb">
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="UI\" />
+    <ProjectReference Include="..\Tva.Security\Tva.Security.vbproj">
+      <Project>{7E20F0D7-CD03-4C51-ADB2-03C522A71A84}</Project>
+      <Name>Tva.Security</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.VisualBasic.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

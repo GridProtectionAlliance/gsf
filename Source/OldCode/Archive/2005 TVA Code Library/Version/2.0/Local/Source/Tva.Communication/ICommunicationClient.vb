@@ -36,7 +36,7 @@ Public Interface ICommunicationClient
     ''' <summary>
     ''' Occurs when an exception is encountered while connecting to the server.
     ''' </summary>
-    Event ConnectingException(ByVal sender As Object, ByVal e As ExceptionEventArgs)
+    Event ConnectingException As EventHandler(Of ExceptionEventArgs)
 
     ''' <summary>
     ''' Occurs when the client has successfully connected to the server.
@@ -51,17 +51,17 @@ Public Interface ICommunicationClient
     ''' <summary>
     ''' Occurs when the client begins sending data to the server.
     ''' </summary>
-    Event SendDataBegin(ByVal sender As Object, ByVal e As DataEventArgs)
+    Event SendDataBegin As EventHandler(Of DataEventArgs)
 
     ''' <summary>
     ''' Occurs when the client has successfully send data to the server.
     ''' </summary>
-    Event SendDataComplete(ByVal sender As Object, ByVal e As DataEventArgs)
+    Event SendDataComplete As EventHandler(Of DataEventArgs)
 
     ''' <summary>
     ''' Occurs when the client receives data from the server.
     ''' </summary>
-    Event ReceivedData(ByVal sender As Object, ByVal e As DataEventArgs)
+    Event ReceivedData As EventHandler(Of DataEventArgs)
 
     ''' <summary>
     ''' Occurs when no data is received from the server after waiting for the specified time.
