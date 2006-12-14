@@ -36,7 +36,7 @@ Namespace Ssam
         Private m_prdConnectionString As String
         Private m_connection As SqlConnection
 
-        Private Const ConfigurationElement As String = "Ssam"
+        'Private Const ConfigurationElement As String = "Ssam"
 
         ''' <summary>
         ''' Initializes a default instance of Tva.Tro.Ssam.SsamApi.
@@ -67,19 +67,21 @@ Namespace Ssam
             m_keepConnectionOpen = keepConnectionOpen
             m_connectionState = SsamConnectionState.Closed
             m_connection = New SqlConnection()
-            ' We'll try to load the connection string from the config file if can, or else use the default ones.
-            Try
-                m_devConnectionString = "Server=RGOCSQLD;Database=Ssam;Trusted_Connection=True;"
-                m_devConnectionString = CategorizedSettings(ConfigurationElement)("Development").Value
-            Catch ex As Exception
-                ' We can safely ignore any exception encountered while retrieving connection string from the config file.
-            End Try
-            Try
-                m_prdConnectionString = "Server=OPSSAMSQL;Database=Ssam;Trusted_Connection=True;"
-                m_prdConnectionString = CategorizedSettings(ConfigurationElement)("Production").Value
-            Catch ex As Exception
-                ' We can safely ignore any exception encountered while retrieving connection string from the config file.
-            End Try
+            m_devConnectionString = "Server=RGOCSQLD;Database=Ssam;Trusted_Connection=True;"
+            m_prdConnectionString = "Server=OPSSAMSQL;Database=Ssam;Trusted_Connection=True;"
+            '' We'll try to load the connection string from the config file if can, or else use the default ones.
+            'Try
+            '    m_devConnectionString = "Server=RGOCSQLD;Database=Ssam;Trusted_Connection=True;"
+            '    m_devConnectionString = CategorizedSettings(ConfigurationElement)("Development").Value
+            'Catch ex As Exception
+            '    ' We can safely ignore any exception encountered while retrieving connection string from the config file.
+            'End Try
+            'Try
+            '    m_prdConnectionString = "Server=OPSSAMSQL;Database=Ssam;Trusted_Connection=True;"
+            '    m_prdConnectionString = CategorizedSettings(ConfigurationElement)("Production").Value
+            'Catch ex As Exception
+            '    ' We can safely ignore any exception encountered while retrieving connection string from the config file.
+            'End Try
         End Sub
 
         ''' <summary>
@@ -176,16 +178,16 @@ Namespace Ssam
 
             If m_connection.State <> System.Data.ConnectionState.Closed Then m_connection.Close()
 
-            Try
-                ' Save SSAM connection strings to the config file.
-                CategorizedSettings(ConfigurationElement).Add("Development", m_devConnectionString, _
-                    "Connection string for connecting to development SSAM server.", True)
-                CategorizedSettings(ConfigurationElement).Add("Production", m_prdConnectionString, _
-                    "Connection string for connecting to production SSAM server.", True)
-                SaveSettings()
-            Catch ex As Exception
-                ' We can safely ignore any exceptions encountered while saving connections strings to the config file.
-            End Try
+            'Try
+            '    ' Save SSAM connection strings to the config file.
+            '    CategorizedSettings(ConfigurationElement).Add("Development", m_devConnectionString, _
+            '        "Connection string for connecting to development SSAM server.", True)
+            '    CategorizedSettings(ConfigurationElement).Add("Production", m_prdConnectionString, _
+            '        "Connection string for connecting to production SSAM server.", True)
+            '    SaveSettings()
+            'Catch ex As Exception
+            '    ' We can safely ignore any exceptions encountered while saving connections strings to the config file.
+            'End Try
 
             m_connectionState = SsamConnectionState.Closed
 

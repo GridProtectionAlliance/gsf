@@ -102,6 +102,7 @@ Namespace UI
                 ' and security server that was provided (if it was) when this control was initialized.
                 m_securityProvider.ApplicationName = secureParent.SecurityProvider.ApplicationName
                 m_securityProvider.Server = secureParent.SecurityProvider.Server
+                m_securityProvider.EnableCaching = secureParent.SecurityProvider.EnableCaching
             Else
                 m_securityProvider.ApplicationName = m_applicationName
                 m_securityProvider.Server = m_securityServer

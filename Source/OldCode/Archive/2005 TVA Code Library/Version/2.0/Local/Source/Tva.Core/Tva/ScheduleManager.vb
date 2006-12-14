@@ -18,10 +18,8 @@ Public Class ScheduleManager
     Private m_enabled As Boolean
     Private m_schedules As Dictionary(Of String, Schedule)
     Private m_startTimerThread As Thread
-    Private m_scheduleDueEventHandlerList As List(Of ScheduleDueEventHandler)
+    Private m_scheduleDueEventHandlerList As List(Of EventHandler(Of ScheduleEventArgs))
     Private WithEvents m_timer As System.Timers.Timer
-
-    Public Delegate Sub ScheduleDueEventHandler(ByVal sender As Object, ByVal e As ScheduleEventArgs)
 
     ''' <summary>
     ''' Occurs while the schedule manager is waiting to start at top of the minute.
@@ -45,19 +43,19 @@ Public Class ScheduleManager
     ''' Occurs when the a particular schedule is being checked to see if it is due.
     ''' </summary>
     <Category("Schedules")> _
-    Public Event CheckingSchedule(ByVal sender As Object, ByVal e As ScheduleEventArgs)
+    Public Event CheckingSchedule As EventHandler(Of ScheduleEventArgs)
 
-    Public Custom Event ScheduleDue As ScheduleDueEventHandler
-        AddHandler(ByVal value As ScheduleDueEventHandler)
+    Public Custom Event ScheduleDue As EventHandler(Of ScheduleEventArgs)
+        AddHandler(ByVal value As EventHandler(Of ScheduleEventArgs))
             m_scheduleDueEventHandlerList.Add(value)
         End AddHandler
 
-        RemoveHandler(ByVal value As ScheduleDueEventHandler)
+        RemoveHandler(ByVal value As EventHandler(Of ScheduleEventArgs))
             m_scheduleDueEventHandlerList.Remove(value)
         End RemoveHandler
 
         RaiseEvent(ByVal sender As Object, ByVal e As ScheduleEventArgs)
-            For Each handler As ScheduleDueEventHandler In m_scheduleDueEventHandlerList
+            For Each handler As EventHandler(Of ScheduleEventArgs) In m_scheduleDueEventHandlerList
                 handler.BeginInvoke(sender, e, Nothing, Nothing)
             Next
         End RaiseEvent
@@ -70,7 +68,7 @@ Public Class ScheduleManager
         Me.PersistSchedules = persistSchedules
         Me.Enabled = True
         m_schedules = New Dictionary(Of String, Schedule)()
-        m_scheduleDueEventHandlerList = New List(Of ScheduleDueEventHandler)()
+        m_scheduleDueEventHandlerList = New List(Of EventHandler(Of ScheduleEventArgs))()
         m_timer = New System.Timers.Timer(60000)
 
     End Sub

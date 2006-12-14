@@ -21,7 +21,7 @@ Namespace Application
         Private m_accConnectionString As String
         Private m_prdConnectionString As String
 
-        Private Const ConfigurationElement As String = "SecurityProvider"
+        'Private Const ConfigurationElement As String = "SecurityProvider"
 
 #End Region
 
