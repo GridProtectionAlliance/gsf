@@ -17,15 +17,15 @@ Namespace UI
 #Region " Event Declaration "
 
         ''' <summary>
-        ''' Occurs when the login process is complete, and  the current user has access to the application.
+        ''' Occurs when the login process is complete and  the current user has access to the application.
         ''' </summary>
-        <Description("Occurs when the login process is complete, and  the current user has access to the application."), Category("Security")> _
+        <Description("Occurs when the login process is complete and  the current user has access to the application."), Category("Security")> _
         Public Event LoginSuccessful As EventHandler
 
         ''' <summary>
-        ''' Occurs when the login process is complete, and the current user does not have access to the application.
+        ''' Occurs when the login process is complete and the current user does not have access to the application.
         ''' </summary>
-        <Description("Occurs when the login process is complete, and the current user does not have access to the application."), Category("Security")> _
+        <Description("Occurs when the login process is complete and the current user does not have access to the application."), Category("Security")> _
         Public Event LoginUnsuccessful As EventHandler
 
 #End Region
@@ -37,7 +37,17 @@ Namespace UI
         ''' </summary>
         Public Sub New()
 
-            MyClass.New("", SecurityServer.Development)
+            MyClass.New("")
+
+        End Sub
+
+        ''' <summary>
+        ''' Initializes a new instance of Tva.Web.UI.SecurePage class.
+        ''' </summary>
+        ''' <param name="applicationName">Name of the application as in the security database.</param>
+        Public Sub New(ByVal applicationName As String)
+
+            MyClass.New(applicationName, SecurityServer.Development)
 
         End Sub
 
@@ -86,17 +96,49 @@ Namespace UI
 
 #End Region
 
+#Region " Protected Code "
+
+        ''' <summary>
+        ''' Raises the Tva.Web.UI.SecureUserControl.LoginSuccessful event.
+        ''' </summary>
+        ''' <param name="e">A System.ComponentModel.CancelEventArgs that contains the event data.</param>
+        ''' <remarks>
+        ''' This method is to be called when the login process is complete and  the current user has access to the 
+        ''' application.
+        ''' </remarks>
+        Public Sub OnLoginSuccessful(ByVal e As CancelEventArgs)
+
+            RaiseEvent LoginSuccessful(Me, e)
+
+        End Sub
+
+        ''' <summary>
+        ''' Raises the Tva.Web.UI.SecureUserControl.LoginUnsuccessful event.
+        ''' </summary>
+        ''' <param name="e">A System.ComponentModel.CancelEventArgs that contains the event data.</param>
+        ''' <remarks>
+        ''' This method is to be called when the login process is complete and the current user does not have 
+        ''' access to the application.
+        ''' </remarks>
+        Public Sub OnLoginUnsuccessful(ByVal e As CancelEventArgs)
+
+            RaiseEvent LoginUnsuccessful(Me, e)
+
+        End Sub
+
+#End Region
+
 #Region " Private Code "
 
         Private Sub m_securityProvider_AccessDenied(ByVal sender As Object, ByVal e As System.ComponentModel.CancelEventArgs) Handles m_securityProvider.AccessDenied
 
-            RaiseEvent LoginUnsuccessful(sender, e)
+            OnLoginUnsuccessful(e)
 
         End Sub
 
         Private Sub m_securityProvider_AccessGranted(ByVal sender As Object, ByVal e As System.ComponentModel.CancelEventArgs) Handles m_securityProvider.AccessGranted
 
-            RaiseEvent LoginSuccessful(sender, e)
+            Me.OnLoginSuccessful(e)
 
         End Sub
 

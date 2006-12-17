@@ -41,33 +41,59 @@ Namespace Application
             MyBase.New()
             If dbConnection IsNot Nothing Then
                 If dbConnection.State <> System.Data.ConnectionState.Open Then dbConnection.Open()
-                Dim sql As String = "SELECT * FROM dbo.GetUserData('" & username & "')"
-                Dim userData As DataTable = RetrieveData(sql, dbConnection)
-                If userData IsNot Nothing AndAlso userData.Rows.Count > 0 Then
+                ' We'll retrieve all the data we need in a single trip to the database by calling the stored 
+                ' procedure 'RetrieveApiData' that will return 3 tables to us:
+                ' Table1 (Index 0): Information about the user.
+                ' Table2 (Index 1): Groups the user is a member of.
+                ' Table3 (Index 2): Roles that are assigned to the user either directly or through a group.
+                Dim userData As DataSet = RetrieveDataSet("RetrieveApiData", dbConnection, username)
+
+                If userData.Tables(0).Rows.Count > 0 Then
                     ' User does exist in the security database.
                     m_exists = True
-                    m_username = userData.Rows(0)("UserName").ToString()
-                    m_password = userData.Rows(0)("UserPassword").ToString()
-                    m_firstName = userData.Rows(0)("UserFirstName").ToString()
-                    m_lastName = userData.Rows(0)("UserLastName").ToString()
-                    m_companyName = userData.Rows(0)("UserCompanyName").ToString()
-                    m_phoneNumber = userData.Rows(0)("UserPhoneNumber").ToString()
-                    m_emailAddress = userData.Rows(0)("UserEmailAddress").ToString()
-                    m_securityQuestion = userData.Rows(0)("UserSecurityQuestion").ToString()
-                    m_securityAnswer = userData.Rows(0)("UserSecurityAnswer").ToString()
-                    If userData.Rows(0)("UserIsExternal") IsNot DBNull.Value Then
-                        m_isExternal = Convert.ToBoolean(userData.Rows(0)("UserIsExternal"))
-                    End If
-                    If userData.Rows(0)("UserIsLockedOut") IsNot DBNull.Value Then
-                        m_isLockedOut = Convert.ToBoolean(userData.Rows(0)("UserIsLockedOut"))
-                    End If
-                    If userData.Rows(0)("UserPasswordChangeDateTime") IsNot DBNull.Value Then
-                        m_passwordChangeDateTime = Convert.ToDateTime(userData.Rows(0)("UserPasswordChangeDateTime"))
-                    End If
-                    m_accountCreatedDateTime = Convert.ToDateTime(userData.Rows(0)("UserAccountCreatedDateTime"))
+                    With userData.Tables(0)
+                        m_username = .Rows(0)("UserName").ToString()
+                        m_password = .Rows(0)("UserPassword").ToString()
+                        m_firstName = .Rows(0)("UserFirstName").ToString()
+                        m_lastName = .Rows(0)("UserLastName").ToString()
+                        m_companyName = .Rows(0)("UserCompanyName").ToString()
+                        m_phoneNumber = .Rows(0)("UserPhoneNumber").ToString()
+                        m_emailAddress = .Rows(0)("UserEmailAddress").ToString()
+                        m_securityQuestion = .Rows(0)("UserSecurityQuestion").ToString()
+                        m_securityAnswer = .Rows(0)("UserSecurityAnswer").ToString()
+                        If .Rows(0)("UserIsExternal") IsNot DBNull.Value Then
+                            m_isExternal = Convert.ToBoolean(.Rows(0)("UserIsExternal"))
+                        End If
+                        If .Rows(0)("UserIsLockedOut") IsNot DBNull.Value Then
+                            m_isLockedOut = Convert.ToBoolean(.Rows(0)("UserIsLockedOut"))
+                        End If
+                        If .Rows(0)("UserPasswordChangeDateTime") IsNot DBNull.Value Then
+                            m_passwordChangeDateTime = Convert.ToDateTime(.Rows(0)("UserPasswordChangeDateTime"))
+                        End If
+                        m_accountCreatedDateTime = Convert.ToDateTime(.Rows(0)("UserAccountCreatedDateTime"))
+                    End With
 
-                    PopulateGroups(dbConnection)
-                    PopulateApplicationsAndRoles(dbConnection)
+                    m_groups = New List(Of Group)
+                    With userData.Tables(1)
+                        For i As Integer = 0 To .Rows.Count - 1
+                            m_groups.Add(New Group(.Rows(i)("GroupName").ToString(), .Rows(i)("GroupDescription").ToString()))
+                        Next
+                    End With
+
+                    m_roles = New List(Of Role)
+                    m_applications = New List(Of Application)
+                    With userData.Tables(2)
+                        For i As Integer = 0 To .Rows.Count - 1
+                            Dim application As New Application(.Rows(i)("ApplicationName").ToString(), .Rows(i)("ApplicationDescription").ToString())
+                            m_roles.Add(New Role(.Rows(i)("RoleName").ToString(), .Rows(i)("RoleDescription").ToString(), application))
+
+                            ' Since an application can have multiple roles, we're going to add an application to the list
+                            ' of application only if it doesn't exist already.
+                            If Not m_applications.Contains(application) Then m_applications.Add(application)
+                        Next
+                    End With
+
+                    userData.Dispose()
 
                     If m_isExternal Then
                         ' User is external according to the security database.
@@ -269,43 +295,6 @@ Namespace Application
             Return System.Web.Security.FormsAuthentication.HashPasswordForStoringInConfigFile("O3990\P78f9E66b:a35_V©6M13©6~2&[" & password, "SHA1")
 
         End Function
-
-#Region " Private Methods "
-
-        Private Sub PopulateGroups(ByVal dbConnection As SqlConnection)
-
-            m_groups = New List(Of Group)
-
-            Dim sql As String = "SELECT * FROM dbo.GetUserGroups('" & m_username & "')"
-            Dim userGroups As DataTable = RetrieveData(sql, dbConnection)
-            If userGroups IsNot Nothing AndAlso userGroups.Rows.Count > 0 Then
-                For i As Integer = 0 To userGroups.Rows.Count - 1
-                    m_groups.Add(New Group(userGroups.Rows(i)("GroupName").ToString(), userGroups.Rows(i)("GroupDescription").ToString()))
-                Next
-            End If
-
-        End Sub
-
-        Private Sub PopulateApplicationsAndRoles(ByVal dbConnection As SqlConnection)
-
-            m_roles = New List(Of Role)
-            m_applications = New List(Of Application)
-
-            Dim sql As String = "SELECT * FROM dbo.GetUserRoles('" & m_username & "')"
-            Dim userRoles As DataTable = RetrieveData(sql, dbConnection)
-            If userRoles IsNot Nothing AndAlso userRoles.Rows.Count > 0 Then
-                For i As Integer = 0 To userRoles.Rows.Count - 1
-                    Dim application As New Application(userRoles.Rows(i)("ApplicationName").ToString(), userRoles.Rows(i)("ApplicationDescription").ToString())
-                    m_roles.Add(New Role(userRoles.Rows(i)("RoleName").ToString(), userRoles.Rows(i)("RoleDescription").ToString(), application))
-                    ' Since an application can have multiple roles, we're going to add an application to the list
-                    ' of application only if it doesn't exist already.
-                    If Not m_applications.Contains(application) Then m_applications.Add(application)
-                Next
-            End If
-
-        End Sub
-
-#End Region
 
     End Class
 

@@ -80,6 +80,13 @@ Namespace Application
             End Get
         End Property
 
+        Public Function UserHasApplicationAccess() As Boolean
+
+            Return (m_user IsNot Nothing AndAlso Not m_user.IsLockedOut AndAlso _
+                        m_user.IsAuthenticated AndAlso m_user.FindApplication(m_applicationName) IsNot Nothing)
+
+        End Function
+
         ''' <summary>
         ''' Logs in the current user.
         ''' </summary>
@@ -90,7 +97,7 @@ Namespace Application
                 RaiseEvent BeforeLogin(Me, beforeLoginResponse)
                 If beforeLoginResponse.Cancel Then Exit Sub
 
-                RetrieveUserData()
+                If m_enableCaching Then RetrieveUserData()
                 ' m_user will be initialized by RetrieveUserData() if user data was cached previously.
                 If m_user Is Nothing Then
                     ' This is the best way of getting the current user's NT ID both in windows and web environments.
@@ -119,8 +126,7 @@ Namespace Application
                     RaiseEvent BeforeAuthenticate(Me, beforeAuthenticateResponse)
                     If beforeAuthenticateResponse.Cancel Then Exit Sub
 
-                    If Not m_user.IsLockedOut AndAlso m_user.IsAuthenticated AndAlso _
-                            m_user.FindApplication(m_applicationName) IsNot Nothing Then
+                    If UserHasApplicationAccess() Then
                         ' User has been authenticated successfully and has access to the specified application.
                         Dim accessGrantedResponse As New CancelEventArgs()
                         RaiseEvent AccessGranted(Me, accessGrantedResponse)

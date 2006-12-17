@@ -21,15 +21,15 @@ Namespace UI
 #Region " Event Declaration "
 
         ''' <summary>
-        ''' Occurs when the login process is complete, and  the current user has access to the application.
+        ''' Occurs when the login process is complete and  the current user has access to the application.
         ''' </summary>
-        <Description("Occurs when the login process is complete, and  the current user has access to the application."), Category("Security")> _
+        <Description("Occurs when the login process is complete and  the current user has access to the application."), Category("Security")> _
         Public Event LoginSuccessful As EventHandler
 
         ''' <summary>
-        ''' Occurs when the login process is complete, and the current user does not have access to the application.
+        ''' Occurs when the login process is complete and the current user does not have access to the application.
         ''' </summary>
-        <Description("Occurs when the login process is complete, and the current user does not have access to the application."), Category("Security")> _
+        <Description("Occurs when the login process is complete and the current user does not have access to the application."), Category("Security")> _
         Public Event LoginUnsuccessful As EventHandler
 
 #End Region
@@ -41,7 +41,17 @@ Namespace UI
         ''' </summary>
         Public Sub New()
 
-            MyClass.New("", SecurityServer.Development)
+            MyClass.New("")
+
+        End Sub
+
+        ''' <summary>
+        ''' Initializes a new instance of Tva.Web.UI.SecurePage class.
+        ''' </summary>
+        ''' <param name="applicationName">Name of the application as in the security database.</param>
+        Public Sub New(ByVal applicationName As String)
+
+            MyClass.New(applicationName, SecurityServer.Development)
 
         End Sub
 
@@ -71,7 +81,6 @@ Namespace UI
             m_applicationName = applicationName
             m_securityServer = securityServer
             m_enableCaching = enableCaching
-            m_securityProvider = New WebSecurityProvider()
 
         End Sub
 
@@ -89,32 +98,87 @@ Namespace UI
 
 #End Region
 
+#Region " Protected Code "
+
+        ''' <summary>
+        ''' Raises the Tva.Web.UI.SecureUserControl.LoginSuccessful event.
+        ''' </summary>
+        ''' <param name="e">A System.ComponentModel.CancelEventArgs that contains the event data.</param>
+        ''' <remarks>
+        ''' This method is to be called when the login process is complete and  the current user has access to the 
+        ''' application.
+        ''' </remarks>
+        Public Sub OnLoginSuccessful(ByVal e As CancelEventArgs)
+
+            RaiseEvent LoginSuccessful(Me, e)
+
+        End Sub
+
+        ''' <summary>
+        ''' Raises the Tva.Web.UI.SecureUserControl.LoginUnsuccessful event.
+        ''' </summary>
+        ''' <param name="e">A System.ComponentModel.CancelEventArgs that contains the event data.</param>
+        ''' <remarks>
+        ''' This method is to be called when the login process is complete and the current user does not have 
+        ''' access to the application.
+        ''' </remarks>
+        Public Sub OnLoginUnsuccessful(ByVal e As CancelEventArgs)
+
+            ' At control-level, we don't want the page using the control to be redirected to the default access 
+            ' denied page if the current user doesn't have access to the application, so we cancel further 
+            ' processing of the login process if this method is called from the AccessDenied event of the 
+            ' WebSecurityProvider (remember if this control is being used inside a secure page than we'll just be 
+            ' the page-level security and not go through the login process again); instead we'll set a member 
+            ' variable that'll be used during the PreRender event to hide the control. 
+            e.Cancel = True
+            m_isLoginUnsuccessful = True
+
+            RaiseEvent LoginUnsuccessful(Me, e)
+
+        End Sub
+
+#End Region
+
 #Region " Private Code "
 
         Private Sub Page_Init(ByVal sender As Object, ByVal e As System.EventArgs) Handles Me.Init
 
             ' Initialize the WebSecurityProvider component that will handle the security.
-            m_securityProvider.Parent = Me.Page
-            Dim secureParent As SecurePage = TryCast(m_securityProvider.Parent, SecurePage)
+            Dim secureParent As SecurePage = TryCast(Me.Page, SecurePage)
+            ' We'll check if this control is being used inside a secure page (i.e. page that is already 
+            ' implementing security). If so, we'll just use the page-level security and not go through the login
+            ' process again since it'll be redundant anyways.
             If secureParent IsNot Nothing AndAlso secureParent.SecurityProvider IsNot Nothing Then
-                ' The page in which this control is being used also incorporated security, so we'll use the
-                ' information from the page for the WebSecurityProvider and ingnore the application name
-                ' and security server that was provided (if it was) when this control was initialized.
-                m_securityProvider.ApplicationName = secureParent.SecurityProvider.ApplicationName
-                m_securityProvider.Server = secureParent.SecurityProvider.Server
-                m_securityProvider.EnableCaching = secureParent.SecurityProvider.EnableCaching
+                ' Security has been implemented at page-level so we'll just it instead. This means that we'll be
+                ' checking the current user's access for the application that's defined at the page-level and
+                ' ignore WebSecurityProvider information that is specified at the control-level.
+                With secureParent
+                    m_securityProvider = .SecurityProvider
+                    If .SecurityProvider.UserHasApplicationAccess() Then
+                        ' Current user has access to the application as defined at the page-level so we'll raise
+                        ' the LoginSuccessful event so that the consumer can perform any necessary operations there.
+                        OnLoginSuccessful(New CancelEventArgs())
+                    Else
+                        ' Current user does not have access to the application as defined at the page-level so 
+                        ' we'll raise the LoginUnsuccessful event so that we can perform any necessary operations 
+                        ' that we need to and so can the consumer.
+                        OnLoginUnsuccessful(New CancelEventArgs())
+                    End If
+                End With
             Else
+                ' We'll initialize the WebSecurityProvider component with the specified information since the page
+                ' in which this control is being used does not implement security.
+                m_securityProvider = New WebSecurityProvider()
+                m_securityProvider.Parent = Me.Page
                 m_securityProvider.ApplicationName = m_applicationName
                 m_securityProvider.Server = m_securityServer
                 m_securityProvider.EnableCaching = m_enableCaching
-            End If
 
-            ' We must explicitly call the LoginUser() method because when this event is fired, the page's Pre_Init
-            ' event has already fired and the WebSecurityProvider will not implicitly initiate the login process.
-            ' Even if this control is being used inside a page that is secured (i.e. login process is performed),
-            ' the performance hit will be minimum if caching is enabled, in which case this control will be using
-            ' the user data that has already been initialized by the secure page that contains this control. 
-            m_securityProvider.LoginUser()
+                ' We must explicitly call the LoginUser() method because when this event is fired, the page's  
+                ' Pre_Init event has already fired and the WebSecurityProvider will not implicitly initiate the 
+                ' login process.
+                m_securityProvider.LoginUser()
+            End If
 
         End Sub
 
@@ -133,18 +197,13 @@ Namespace UI
 
         Private Sub m_securityProvider_AccessDenied(ByVal sender As Object, ByVal e As System.ComponentModel.CancelEventArgs) Handles m_securityProvider.AccessDenied
 
-            ' At a control level, we don't want the page using the control to be redirected to the default access 
-            ' denied page if the current user doesn't have access to the application, but we'll hide the control instead. 
-            e.Cancel = True
-            m_isLoginUnsuccessful = True
-
-            RaiseEvent LoginUnsuccessful(sender, e)
+            OnLoginUnsuccessful(e)
 
         End Sub
 
         Private Sub m_securityProvider_AccessGranted(ByVal sender As Object, ByVal e As System.ComponentModel.CancelEventArgs) Handles m_securityProvider.AccessGranted
 
-            RaiseEvent LoginSuccessful(sender, e)
+            OnLoginSuccessful(e)
 
         End Sub
 
