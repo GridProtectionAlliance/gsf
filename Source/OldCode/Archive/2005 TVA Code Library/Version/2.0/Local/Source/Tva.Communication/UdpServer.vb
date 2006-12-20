@@ -112,7 +112,7 @@ Public Class UdpServer
     ''' True if a test is to be performed to check if the destination endpoint that is to receive data is listening 
     ''' for data; otherwise False.
     ''' </returns>
-    <Description("Indicates whether a test is to be performed to check if the destination endpoint that is to receive data is listening for data."), Category("Behavior"), DefaultValue(GetType(Boolean), "True")> _
+    <Description("Indicates whether a test is to be performed to check if the destination endpoint that is to receive data is listening for data."), Category("Behavior"), DefaultValue(GetType(Boolean), "False")> _
     Public Property DestinationReachabilityCheck() As Boolean
         Get
             Return m_destinationReachabilityCheck

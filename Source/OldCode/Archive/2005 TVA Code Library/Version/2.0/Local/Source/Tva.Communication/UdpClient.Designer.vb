@@ -38,7 +38,7 @@ Partial Class UdpClient
         InitializeComponent()
 
         m_payloadAware = False
-        m_destinationReachabilityCheck = True
+        m_destinationReachabilityCheck = False
         m_receivingThread = New System.Threading.Thread(AddressOf ReceiveServerData)
         m_connectionThread = New System.Threading.Thread(AddressOf ConnectToServer)
         MyBase.ConnectionString = "Server=localhost; RemotePort=8888; LocalPort=8888"

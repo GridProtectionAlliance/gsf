@@ -38,7 +38,7 @@ Partial Class UdpServer
         InitializeComponent()
 
         m_payloadAware = False
-        m_destinationReachabilityCheck = True
+        m_destinationReachabilityCheck = False
         m_udpClients = New Dictionary(Of Guid, StateKeeper(Of System.Net.IPEndPoint))
         MyBase.ConfigurationString = "Port=8888; Clients=255.255.255.255:8888"
         MyBase.Protocol = TransportProtocol.Udp
