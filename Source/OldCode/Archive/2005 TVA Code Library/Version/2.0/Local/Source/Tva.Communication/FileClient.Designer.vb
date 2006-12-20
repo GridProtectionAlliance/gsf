@@ -38,6 +38,8 @@ Partial Class FileClient
         m_receiveInterval = -1
         m_startingOffset = 0
         m_fileClient = New StateKeeper(Of System.IO.FileStream)()
+        m_receivingThread = New System.Threading.Thread(AddressOf ReceiveFileData)
+        m_connectionThread = New System.Threading.Thread(AddressOf ConnectToFile)
         m_receiveDataTimer = New System.Timers.Timer()
         MyBase.ConnectionString = "File=DataFile.txt"
         MyBase.Protocol = TransportProtocol.File

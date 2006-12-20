@@ -26,21 +26,21 @@ Imports Tva.Serialization
 Imports Tva.Communication.CommunicationHelper
 Imports Tva.Security.Cryptography.Common
 
+''' <summary>
+''' Represents a UDP-based communication server.
+''' </summary>
+''' <remarks>
+''' UDP by nature is a connectionless protocol, but with this implementation of UDP server we can have a 
+''' connectionfull session with the server by enabling Handshake. This in-turn enables us to take advantage
+''' of SecureSession which otherwise is not possible.
+''' </remarks>
 Public Class UdpServer
 
     Private m_payloadAware As Boolean
     Private m_destinationReachabilityCheck As Boolean
     Private m_udpServer As StateKeeper(Of Socket)
     Private m_udpClients As Dictionary(Of Guid, StateKeeper(Of IPEndPoint))
-    Private m_pendingUdpClients As List(Of IPAddress)
     Private m_configurationData As Dictionary(Of String, String)
-
-    Public Sub New(ByVal configurationString As String)
-
-        MyClass.New()
-        MyBase.ConfigurationString = configurationString
-
-    End Sub
 
     ''' <summary>
     ''' The minimum size of the receive buffer for UDP.
@@ -52,6 +52,24 @@ Public Class UdpServer
     ''' </summary>
     Public Const MaximumUdpDatagramSize As Integer = 32768
 
+    ''' <summary>
+    ''' Initializes a instance of Tva.Communication.UdpServer with the specified data.
+    ''' </summary>
+    ''' <param name="configurationString">The configuration string containing the data required for initializing the UDP server.</param>
+    Public Sub New(ByVal configurationString As String)
+
+        MyClass.New()
+        MyBase.ConfigurationString = configurationString
+
+    End Sub
+
+    ''' <summary>
+    ''' Gets or sets the maximum number of bytes that can be received at a time by the server from the clients.
+    ''' </summary>
+    ''' <value>Receive buffer size</value>
+    ''' <exception cref="InvalidOperationException">This exception will be thrown if an attempt is made to change the receive buffer size while server is running</exception>
+    ''' <exception cref="ArgumentOutOfRangeException">This exception will be thrown if an attempt is made to set the receive buffer size to a value that is less than one</exception>
+    ''' <returns>The maximum number of bytes that can be received at a time by the server from the clients.</returns>
     Public Overrides Property ReceiveBufferSize() As Integer
         Get
             Return MyBase.ReceiveBufferSize
@@ -65,7 +83,17 @@ Public Class UdpServer
         End Set
     End Property
 
-    <Category("Data"), DefaultValue(GetType(Boolean), "False")> _
+    ''' <summary>
+    ''' Gets or sets a boolean value indicating whether the messages that are broken down into multiple datagram 
+    ''' for the purpose of transmission while being sent are to be assembled back when received.
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns>
+    ''' True if the messages that are broken down into multiple datagram for the purpose of transmission while being 
+    ''' sent are to be assembled back when received; otherwise False.
+    ''' </returns>
+    ''' <remarks>This property must be set to True if either Encryption or Compression is enabled.</remarks>
+    <Description("Indicates whether the messages that are broken down into multiple datagram for the purpose of transmission are to be assembled back when received. Set to True if either Encryption or Compression is enabled."), Category("Data"), DefaultValue(GetType(Boolean), "False")> _
     Public Property PayloadAware() As Boolean
         Get
             Return m_payloadAware
@@ -104,8 +132,9 @@ Public Class UdpServer
                 m_udpServer.Client = New Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp)
                 m_udpServer.Client.Bind(New IPEndPoint(IPAddress.Any, Convert.ToInt32(m_configurationData("port"))))
 
-                Dim recevingThread As New Thread(AddressOf ReceiveClientData)
-                recevingThread.Start()
+                With New Thread(AddressOf ReceiveClientData)
+                    .Start()
+                End With
 
                 OnServerStarted(EventArgs.Empty)
 

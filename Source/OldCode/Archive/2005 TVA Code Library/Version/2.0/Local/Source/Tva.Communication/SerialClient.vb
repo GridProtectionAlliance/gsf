@@ -48,10 +48,7 @@ Public Class SerialClient
     ''' </summary>
     Public Overrides Sub CancelConnect()
 
-        If Enabled() AndAlso m_connectionThread IsNot Nothing Then
-            m_connectionThread.Abort()
-            OnConnectingCancelled(EventArgs.Empty)
-        End If
+        If MyBase.Enabled AndAlso m_connectionThread.IsAlive Then m_connectionThread.Abort()
 
     End Sub
 
@@ -60,7 +57,7 @@ Public Class SerialClient
     ''' </summary>
     Public Overrides Sub Connect()
 
-        If Enabled() AndAlso Not IsConnected() AndAlso ValidConnectionString(ConnectionString()) Then
+        If MyBase.Enabled AndAlso Not MyBase.IsConnected AndAlso ValidConnectionString(ConnectionString()) Then
             With m_serialClient
                 .PortName = m_connectionData("port")
                 .BaudRate = Convert.ToInt32(m_connectionData("baudrate"))
@@ -84,7 +81,7 @@ Public Class SerialClient
 
         CancelConnect()
 
-        If Enabled() AndAlso IsConnected() Then
+        If MyBase.Enabled AndAlso MyBase.IsConnected Then
             m_serialClient.Close()
             OnDisconnected(EventArgs.Empty)
         End If
@@ -97,7 +94,7 @@ Public Class SerialClient
     ''' <param name="data">The prepared data that is to be sent to the server.</param>
     Protected Overrides Sub SendPreparedData(ByVal data As Byte())
 
-        If Enabled() And IsConnected() Then
+        If MyBase.Enabled And MyBase.IsConnected Then
             OnSendDataBegin(New DataEventArgs(data))
             m_serialClient.Write(data, 0, data.Length())
             OnSendDataComplete(New DataEventArgs(data))
@@ -149,14 +146,13 @@ Public Class SerialClient
 
                 Exit Do
             Catch ex As ThreadAbortException
+                OnConnectingCancelled(EventArgs.Empty)
                 Exit Do
             Catch ex As Exception
                 connectionAttempts += 1
                 OnConnectingException(New ExceptionEventArgs(ex, connectionAttempts + 1))
             End Try
         Loop
-
-        m_connectionThread = Nothing
 
     End Sub
 

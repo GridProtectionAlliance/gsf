@@ -71,13 +71,12 @@ Public Class TcpClient
     ''' </summary>
     Public Overrides Sub CancelConnect()
 
-        If MyBase.Enabled AndAlso m_connectionThread IsNot Nothing Then
+        If MyBase.Enabled AndAlso m_connectionThread.IsAlive Then
             ' The client attempts to connect to the server on a seperate thread and since that thread is still 
             ' running, we know that the client has not yet connected to the server. We can now abort the thread 
             ' to stop the client from attempting to connect to the server.
             m_connectionThread.Abort()
         End If
-        m_connectionThread = Nothing
 
     End Sub
 
@@ -87,7 +86,7 @@ Public Class TcpClient
     Public Overrides Sub Connect()
 
         If MyBase.Enabled AndAlso Not MyBase.IsConnected AndAlso ValidConnectionString(MyBase.ConnectionString) Then
-            ' Spawn a new thread on which the client will attempt to connect to the server.
+            ' Start the thread on which the client will attempt to connect to the server.
             m_connectionThread = New Thread(AddressOf ConnectToServer)
             m_connectionThread.Start()
         End If
@@ -191,10 +190,10 @@ Public Class TcpClient
 
                 If m_tcpClient.Client.Connected Then ' Client connected to the server successfully.
                     ' Start a seperate thread for the client to receive data from the server.
-                    Dim receiveThread As New Thread(AddressOf ReceiveServerData)
-                    receiveThread.Start()
+                    With New Thread(AddressOf ReceiveServerData)
+                        .Start()
+                    End With
 
-                    m_connectionThread = Nothing
                     Exit Do ' Client successfully connected to the server.
                 End If
             Catch ex As ThreadAbortException

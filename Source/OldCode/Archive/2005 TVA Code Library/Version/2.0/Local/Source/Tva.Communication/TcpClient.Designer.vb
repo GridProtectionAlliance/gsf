@@ -35,6 +35,7 @@ Partial Class TcpClient
         InitializeComponent()
 
         m_payloadAware = False
+        m_connectionThread = New System.Threading.Thread(AddressOf ConnectToServer)
         MyBase.ConnectionString = "Server=localhost; Port=8888"
         MyBase.Protocol = TransportProtocol.Tcp
 

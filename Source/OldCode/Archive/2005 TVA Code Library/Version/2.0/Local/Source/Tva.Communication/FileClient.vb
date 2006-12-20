@@ -33,9 +33,9 @@ Public Class FileClient
     Private m_receiveInterval As Double
     Private m_startingOffset As Long
     Private m_fileClient As StateKeeper(Of FileStream)
-    Private m_connectionData As Dictionary(Of String, String)
-    Private m_connectionThread As Thread
     Private m_receivingThread As Thread
+    Private m_connectionThread As Thread
+    Private m_connectionData As Dictionary(Of String, String)
     Private WithEvents m_receiveDataTimer As System.Timers.Timer
 
     ''' <summary>
@@ -43,8 +43,10 @@ Public Class FileClient
     ''' </summary>
     ''' <param name="connectionString">The data that is required by the client to initialize.</param>
     Public Sub New(ByVal connectionString As String)
+
         MyClass.New()
         MyBase.ConnectionString = connectionString
+
     End Sub
 
     ''' <summary>
@@ -112,27 +114,11 @@ Public Class FileClient
     End Property
 
     ''' <summary>
-    ''' Initiates receiving to data from the file.
-    ''' </summary>
-    ''' <remarks>This method is functional only when ReceiveOnDemand is enabled.</remarks>
-    Public Sub ReceiveData()
-
-        If Enabled() AndAlso IsConnected() AndAlso m_receiveOnDemand AndAlso m_receivingThread Is Nothing Then
-            m_receivingThread = New Thread(AddressOf ReceiveFileData)
-            m_receivingThread.Start()
-        End If
-
-    End Sub
-
-    ''' <summary>
     ''' Cancels any active attempts of connecting to the file.
     ''' </summary>
     Public Overrides Sub CancelConnect()
 
-        If Enabled() AndAlso m_connectionThread IsNot Nothing Then
-            m_connectionThread.Abort()
-            OnConnectingCancelled(EventArgs.Empty)
-        End If
+        If MyBase.Enabled AndAlso m_connectionThread.IsAlive Then m_connectionThread.Abort()
 
     End Sub
 
@@ -141,7 +127,7 @@ Public Class FileClient
     ''' </summary>
     Public Overrides Sub Connect()
 
-        If Enabled() AndAlso Not IsConnected() AndAlso ValidConnectionString(ConnectionString()) Then
+        If MyBase.Enabled AndAlso Not MyBase.IsConnected AndAlso ValidConnectionString(ConnectionString()) Then
             If File.Exists(m_connectionData("file")) Then
                 m_connectionThread = New Thread(AddressOf ConnectToFile)
                 m_connectionThread.Start()
@@ -159,10 +145,24 @@ Public Class FileClient
 
         CancelConnect()
 
-        If Enabled() AndAlso IsConnected() Then
+        If MyBase.Enabled AndAlso MyBase.IsConnected Then
             m_receiveDataTimer.Stop()
             m_fileClient.Client.Close()
             OnDisconnected(EventArgs.Empty)
+        End If
+
+    End Sub
+
+    ''' <summary>
+    ''' Initiates receiving to data from the file.
+    ''' </summary>
+    ''' <remarks>This method is functional only when ReceiveOnDemand is enabled.</remarks>
+    Public Sub ReceiveData()
+
+        If MyBase.Enabled AndAlso MyBase.IsConnected _
+                AndAlso m_receiveOnDemand AndAlso Not m_receivingThread.IsAlive Then
+            m_receivingThread = New Thread(AddressOf ReceiveFileData)
+            m_receivingThread.Start()
         End If
 
     End Sub
@@ -228,14 +228,13 @@ Public Class FileClient
 
                 Exit Do ' We've successfully connected to the file.
             Catch ex As ThreadAbortException
+                OnConnectingCancelled(EventArgs.Empty)
                 Exit Do ' We must abort connecting to the file.
             Catch ex As Exception
                 connectionAttempts += 1
                 OnConnectingException(New ExceptionEventArgs(ex, connectionAttempts + 1))
             End Try
         Loop
-
-        m_connectionThread = Nothing
 
     End Sub
 
@@ -274,13 +273,13 @@ Public Class FileClient
         Catch ex As Exception
             ' Exit gracefully when an exception is encountered while receiving data.
         End Try
-        m_receivingThread = Nothing
 
     End Sub
 
     Private Sub m_receiveDataTimer_Elapsed(ByVal sender As Object, ByVal e As System.Timers.ElapsedEventArgs) Handles m_receiveDataTimer.Elapsed
 
-        If Enabled() AndAlso IsConnected() AndAlso m_receiveInterval > 0 AndAlso m_receivingThread Is Nothing Then
+        If MyBase.Enabled AndAlso MyBase.IsConnected AndAlso _
+                m_receiveInterval > 0 AndAlso Not m_receivingThread.IsAlive Then
             m_receivingThread = New Thread(AddressOf ReceiveFileData)
             m_receivingThread.Start()
         End If

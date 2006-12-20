@@ -31,10 +31,8 @@ Imports Tva.Communication.CommunicationHelper
 ''' </summary>
 ''' <remarks>
 ''' UDP by nature is a connectionless protocol, but with this implementation of UDP client we can have a 
-''' connectionfull session with the server by enabling Handshake. This in-turn enabled us to take advantage
-''' of SecureSession which otherwise is not possible. Running the client in connectionfull mode also means
-''' that it can have bi-directional (send and receive) communication with the server, whereas in 
-''' connectionless mode the client can only engage in uni-directional communication (receive only).
+''' connectionfull session with the server by enabling Handshake. This in-turn enables us to take advantage
+''' of SecureSession which otherwise is not possible.
 ''' </remarks>
 Public Class UdpClient
 
@@ -42,9 +40,9 @@ Public Class UdpClient
     Private m_destinationReachabilityCheck As Boolean
     Private m_udpServer As IPEndPoint
     Private m_udpClient As StateKeeper(Of Socket)
+    Private m_receivingThread As Thread
     Private m_connectionThread As Thread
     Private m_connectionData As Dictionary(Of String, String)
-    Private m_receivingThread As Thread
 
     ''' <summary>
     ''' The minimum size of the receive buffer for UDP.
@@ -67,6 +65,13 @@ Public Class UdpClient
 
     End Sub
 
+    ''' <summary>
+    ''' Gets or sets the maximum number of bytes that can be received at a time by the client from the server.
+    ''' </summary>
+    ''' <value>Receive buffer size</value>
+    ''' <exception cref="InvalidOperationException">This exception will be thrown if an attempt is made to change the receive buffer size while client is connected</exception>
+    ''' <exception cref="ArgumentOutOfRangeException">This exception will be thrown if an attempt is made to set the receive buffer size to a value that is less than one</exception>
+    ''' <returns>The maximum number of bytes that can be received at a time by the client from the server.</returns>
     Public Overrides Property ReceiveBufferSize() As Integer
         Get
             Return MyBase.ReceiveBufferSize
@@ -82,12 +87,12 @@ Public Class UdpClient
 
     ''' <summary>
     ''' Gets or sets a boolean value indicating whether the messages that are broken down into multiple datagram 
-    ''' for the purpose of transmission are to be assembled back when received.
+    ''' for the purpose of transmission while being sent are to be assembled back when received.
     ''' </summary>
     ''' <value></value>
     ''' <returns>
-    ''' True if the messages that are broken down into multiple datagram for the purpose of transmission are to be 
-    ''' assembled back when received; otherwise False.
+    ''' True if the messages that are broken down into multiple datagram for the purpose of transmission while being 
+    ''' sent are to be assembled back when received; otherwise False.
     ''' </returns>
     ''' <remarks>This property must be set to True if either Encryption or Compression is enabled.</remarks>
     <Description("Indicates whether the messages that are broken down into multiple datagram for the purpose of transmission are to be assembled back when received. Set to True if either Encryption or Compression is enabled."), Category("Data"), DefaultValue(GetType(Boolean), "False")> _
@@ -126,14 +131,17 @@ Public Class UdpClient
 
         If MyBase.Enabled Then
             ' We'll abort the thread on which the client is initialized if it's alive.
-            If m_connectionThread IsNot Nothing Then m_connectionThread.Abort()
-            m_connectionThread = Nothing
+            If m_connectionThread.IsAlive Then m_connectionThread.Abort()
+
+            ' *** The above and below conditions are mutually exclusive ***
 
             ' If the client has Handshake enabled, it is not considered connected until a handshake message is
             ' received from the server. So, if the thread on which we receive data from the server is alive, but
             ' the client is not yet flagged as connected, we'll abort that thread.
-            If Not MyBase.IsConnected AndAlso m_receivingThread IsNot Nothing Then m_receivingThread.Abort()
-            m_receivingThread = Nothing
+            If Not MyBase.IsConnected AndAlso m_receivingThread.IsAlive Then
+                m_receivingThread.Abort()
+                OnConnectingCancelled(EventArgs.Empty)
+            End If
         End If
 
     End Sub
@@ -144,7 +152,7 @@ Public Class UdpClient
     Public Overrides Sub Connect()
 
         If MyBase.Enabled AndAlso Not MyBase.IsConnected AndAlso ValidConnectionString(MyBase.ConnectionString) Then
-            ' Spawn a new thread on which the client will be initialized.
+            ' Start the thread on which the client will be initialized.
             m_connectionThread = New Thread(AddressOf ConnectToServer)
             m_connectionThread.Start()
         End If
@@ -292,7 +300,6 @@ Public Class UdpClient
                 m_receivingThread = New Thread(AddressOf ReceiveServerData)
                 m_receivingThread.Start()
 
-                m_connectionThread = Nothing
                 Exit Do ' The process of initiating the connection is complete.
             Catch ex As ThreadAbortException
                 ' We'll stop trying to connect if a System.Threading.ThreadAbortException exception is encountered. 
@@ -456,7 +463,6 @@ Public Class UdpClient
                 m_udpClient.Client.Close()
             End If
             If MyBase.IsConnected Then OnDisconnected(EventArgs.Empty)
-            m_receivingThread = Nothing
         End Try
 
     End Sub

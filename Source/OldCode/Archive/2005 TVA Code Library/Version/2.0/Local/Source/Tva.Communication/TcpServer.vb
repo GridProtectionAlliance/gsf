@@ -75,7 +75,7 @@ Public Class TcpServer
     Public Overrides Sub Start()
 
         If MyBase.Enabled AndAlso Not MyBase.IsRunning AndAlso ValidConfigurationString(MyBase.ConfigurationString) Then
-            ' Spawn a new thread on which the server will listen for incoming connections.
+            ' Start the thread on which the server will listen for incoming connections.
             m_listenerThread = New Thread(AddressOf ListenForConnections)
             m_listenerThread.Start()
         End If
@@ -111,9 +111,6 @@ Public Class TcpServer
                 Next
             End SyncLock
         End If
-
-        m_tcpServer = Nothing
-        m_listenerThread = Nothing
 
     End Sub
 

@@ -578,7 +578,7 @@ Public Class MultiProtocolFrameParser
 
     Private Sub m_communicationClient_ConnectingException(ByVal sender As Object, ByVal e As ExceptionEventArgs) Handles m_communicationClient.ConnectingException
 
-        RaiseEvent ConnectionException(e.Exception, e.RecurrenceCount)
+        RaiseEvent ConnectionException(e.Exception, e.OccurrenceCount)
 
     End Sub
 

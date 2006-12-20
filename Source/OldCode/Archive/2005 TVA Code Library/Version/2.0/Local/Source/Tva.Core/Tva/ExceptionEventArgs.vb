@@ -4,7 +4,7 @@ Public Class ExceptionEventArgs
     Inherits EventArgs
 
     Private m_exception As Exception
-    Private m_recurrenceCount As Integer
+    Private m_occurrenceCount As Integer
 
     ''' <summary>
     ''' Initializes a new instance of the Tva.ExceptionEventArgs class.
@@ -12,7 +12,7 @@ Public Class ExceptionEventArgs
     ''' <param name="exception">The exception that was encountered.</param>
     Public Sub New(ByVal exception As Exception)
 
-        MyClass.New(exception, 0)
+        MyClass.New(exception, 1)
 
     End Sub
 
@@ -20,12 +20,12 @@ Public Class ExceptionEventArgs
     ''' Initializes a new instance of the Tva.ExceptionEventArgs class.
     ''' </summary>
     ''' <param name="exception">The exception that was encountered.</param>
-    ''' <param name="recurrenceCount">The number of time the exception has been encountered.</param>
-    Public Sub New(ByVal exception As Exception, ByVal recurrenceCount As Integer)
+    ''' <param name="occurrenceCount">The number of time the exception has been encountered.</param>
+    Public Sub New(ByVal exception As Exception, ByVal occurrenceCount As Integer)
 
         MyBase.New()
         m_exception = exception
-        m_recurrenceCount = recurrenceCount
+        m_occurrenceCount = occurrenceCount
 
     End Sub
 
@@ -48,12 +48,12 @@ Public Class ExceptionEventArgs
     ''' </summary>
     ''' <value></value>
     ''' <returns>The number of time the exception has been encountered.</returns>
-    Public Property RecurrenceCount() As Integer
+    Public Property OccurrenceCount() As Integer
         Get
-            Return m_recurrenceCount
+            Return m_occurrenceCount
         End Get
         Set(ByVal value As Integer)
-            m_recurrenceCount = value
+            m_occurrenceCount = value
         End Set
     End Property
 

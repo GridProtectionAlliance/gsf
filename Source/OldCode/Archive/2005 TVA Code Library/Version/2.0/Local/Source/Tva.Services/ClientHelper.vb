@@ -127,7 +127,7 @@ Public Class ClientHelper
     Private Sub CHTcpClient_ConnectingException(ByVal sender As Object, ByVal e As ExceptionEventArgs) Handles CHTcpClient.ConnectingException
 
         With New StringBuilder()
-            .Append("Failed to connect to the service on attempt " & e.RecurrenceCount & " due to an exception:")
+            .Append("Failed to connect to the service on attempt " & e.OccurrenceCount & " due to an exception:")
             .Append(Environment.NewLine)
             .Append(e.Exception.Message)
 

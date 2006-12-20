@@ -36,6 +36,7 @@ Partial Class TcpServer
 
         ' Setup the instance defaults.
         m_payloadAware = False
+        m_listenerThread = New System.Threading.Thread(AddressOf ListenForConnections)
         m_tcpClients = New Dictionary(Of Guid, StateKeeper(Of System.Net.Sockets.Socket))
         m_pendingTcpClients = New List(Of StateKeeper(Of System.Net.Sockets.Socket))
         MyBase.ConfigurationString = "Port=8888"
