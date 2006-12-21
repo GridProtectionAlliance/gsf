@@ -444,6 +444,16 @@ Public Class UdpClient
                                     Case SocketError.ConnectionReset
                                         OnConnectingException(New ExceptionEventArgs(ex))
                                         Exit Do
+                                    Case SocketError.MessageSize
+                                        ' When in "PayloadAware" mode, we may by receving a payload broken down into
+                                        ' a series of datagrams and if one of the datagrams from that series is
+                                        ' dropped, we'll encounter this exception because we'll probably be expecting
+                                        ' a datagram of one size whereas we receive a datagram of a different size 
+                                        ' (most likely bigger than the size we're expecting). In this case we'll
+                                        ' drop the partial content of the payload we've received so far and go back
+                                        ' to receiving the next payload.
+                                        payloadSize = -1
+                                        totalBytesReceived = 0
                                     Case Else
                                         Throw
                                 End Select
