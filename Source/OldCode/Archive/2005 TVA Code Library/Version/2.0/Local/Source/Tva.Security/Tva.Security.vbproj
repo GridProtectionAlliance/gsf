@@ -10,7 +10,7 @@
     <RootNamespace>Tva.Security</RootNamespace>
     <AssemblyName>Tva.Security</AssemblyName>
     <MyType>Windows</MyType>
-    <SignAssembly>true</SignAssembly>
+    <SignAssembly>false</SignAssembly>
     <AssemblyOriginatorKeyFile>..\TVA.snk</AssemblyOriginatorKeyFile>
     <SccProjectName>SAK</SccProjectName>
     <SccLocalPath>SAK</SccLocalPath>

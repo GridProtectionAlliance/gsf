@@ -78,7 +78,7 @@
 				AssemblyDebug="1"
 				ProgramDatabaseFile="$(OutDir)/$(ProjectName).pdb"
 				ResourceOnlyDLL="true"
-				KeyFile="..\TVA.snk"
+				KeyFile=""
 			/>
 			<Tool
 				Name="VCALinkTool"

@@ -10,7 +10,7 @@
     <RootNamespace>Tva.Services</RootNamespace>
     <AssemblyName>Tva.Services</AssemblyName>
     <MyType>Windows</MyType>
-    <SignAssembly>true</SignAssembly>
+    <SignAssembly>false</SignAssembly>
     <AssemblyOriginatorKeyFile>..\TVA.snk</AssemblyOriginatorKeyFile>
     <OptionStrict>On</OptionStrict>
     <SccProjectName>SAK</SccProjectName>
