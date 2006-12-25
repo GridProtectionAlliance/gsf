@@ -8,6 +8,7 @@ Imports Tva.Text.Common
 Public Class Schedule
 
     Private m_name As String
+    Private m_description As String
     Private m_minutes As Element
     Private m_hours As Element
     Private m_days As Element
@@ -45,6 +46,7 @@ Public Class Schedule
         MyClass.New(name, minutes, hours, days, months, "*")
 
     End Sub
+
     Public Sub New(ByVal name As String, ByVal minutes As String, ByVal hours As String, ByVal days As String, _
             ByVal months As String, ByVal daysOfWeek As String)
 
@@ -97,6 +99,15 @@ Public Class Schedule
             Else
                 Throw New ArgumentNullException("Rule")
             End If
+        End Set
+    End Property
+
+    Public Property Description() As String
+        Get
+            Return m_description
+        End Get
+        Set(ByVal value As String)
+            m_description = value
         End Set
     End Property
 
@@ -227,7 +238,8 @@ Public Class Schedule
     Private Class Element
 
         Private m_text As String
-        Private m_elementType As ElementType
+        Private m_type As ElementType
+        Private m_syntax As ElementSyntax
         Private m_values As List(Of Integer)
 
         Public Enum ElementType As Integer
@@ -238,10 +250,17 @@ Public Class Schedule
             DayOfWeek
         End Enum
 
+        Public Enum ElementSyntax As Integer
+            Every1
+            EveryN
+            Range
+            Specific
+        End Enum
+
         Public Sub New(ByVal text As String, ByVal type As ElementType)
             If IsValidElement(text, type) Then
                 m_text = text
-                m_elementType = type
+                m_type = type
             Else
                 Throw New ArgumentException()
             End If
@@ -253,6 +272,36 @@ Public Class Schedule
             End Get
         End Property
 
+        Public ReadOnly Property Type() As ElementType
+            Get
+                Return m_type
+            End Get
+        End Property
+
+        Public ReadOnly Property Syntax() As ElementSyntax
+            Get
+                Return m_syntax
+            End Get
+        End Property
+
+        Public ReadOnly Property Description() As String
+            Get
+                Select Case m_syntax
+                    Case ElementSyntax.Every1
+                        Return "Every " & m_type.ToString()
+                    Case ElementSyntax.EveryN
+                        Return "Every " & m_text.Split("/"c)(1) & m_type.ToString()
+                    Case ElementSyntax.Range
+                        Dim range As String() = m_text.Split("-"c)
+                        Return "Every " & m_type.ToString() & " from " & range(0) & " to " & range(1)
+                    Case ElementSyntax.Specific
+                        Return "Every " & m_text & m_type.ToString()
+                    Case Else
+                        Return ""
+                End Select
+            End Get
+        End Property
+
         Public ReadOnly Property Values() As List(Of Integer)
             Get
                 Return m_values
@@ -261,7 +310,7 @@ Public Class Schedule
 
         Public Function Matches(ByVal dateAndTime As System.DateTime) As Boolean
 
-            Select Case m_elementType
+            Select Case m_type
                 Case ElementType.Minute
                     Return m_values.Contains(dateAndTime.Minute)
                 Case ElementType.Hour
@@ -298,6 +347,7 @@ Public Class Schedule
             m_values = New List(Of Integer)()
             If Regex.Match(element, "^(\*){1}$").Success Then
                 ' ^(\*){1}$             Matches: *
+                m_syntax = ElementSyntax.Every1
                 PopulateValues(minValue, maxvalue, 1)
 
                 Return True
@@ -305,7 +355,9 @@ Public Class Schedule
                 ' ^(\*/\d+){1}$         Matches: */[any digit]
                 Dim interval As Integer = Convert.ToInt32(element.Split("/"c)(1))
                 If interval > 0 AndAlso interval >= minValue AndAlso interval <= maxvalue Then
+                    m_syntax = ElementSyntax.EveryN
                     PopulateValues(minValue, maxvalue, interval)
+
                     Return True
                 End If
 
@@ -316,13 +368,16 @@ Public Class Schedule
                 Dim lowRange As Integer = Convert.ToInt32(range(0))
                 Dim highRange As Integer = Convert.ToInt32(range(1))
                 If lowRange < highRange AndAlso lowRange >= minValue AndAlso highRange <= maxvalue Then
+                    m_syntax = ElementSyntax.Range
                     PopulateValues(lowRange, highRange, 1)
+
                     Return True
                 End If
 
                 Return False
             ElseIf Regex.Match(element, "^((\d+,?)+){1}$").Success Then
                 ' ^((\d+,?)+){1}$       Matches: [any digit] AND [any digit], ..., [any digit]
+                m_syntax = ElementSyntax.Specific
                 For Each value As Integer In element.Split(","c)
                     If Not (value >= minValue AndAlso value <= maxvalue) Then
                         Return False

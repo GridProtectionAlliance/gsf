@@ -61,6 +61,7 @@
   <ItemGroup>
     <Compile Include="Tva.Collections\DictionaryList.vb" />
     <Compile Include="Tva.Measurements\MeasurementKey.vb" />
+    <Compile Include="Tva.Net\Smtp\Common.vb" />
     <Compile Include="Tva\DataEventArgs.vb" />
     <Compile Include="Tva\ExceptionEventArgs.vb" />
     <Compile Include="Tva\GenericEventArgs.vb" />
@@ -121,7 +122,6 @@
     <Compile Include="Tva.Measurements\Measurement.vb" />
     <Compile Include="Tva.Measurements\Concentrator.vb" />
     <Compile Include="Tva.Measurements\TemporalMeasurement.vb" />
-    <Compile Include="Tva.Net\Smtp\Common.vb" />
     <Compile Include="Tva.ErrorManagement\SmtpTraceListener.vb" />
     <Compile Include="Tva.Text\Common.vb" />
     <Compile Include="Tva.Xml\Common.vb" />
