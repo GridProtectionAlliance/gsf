@@ -61,4 +61,30 @@ Namespace DateTime
         Year
     End Enum
 
+    ''' <summary>
+    ''' The various parts of System.DateTime type.
+    ''' </summary>
+    Public Enum DateTimePart As Integer
+        ''' <summary>
+        ''' Minute part.
+        ''' </summary>
+        Minute
+        ''' <summary>
+        ''' Hour part.
+        ''' </summary>
+        Hour
+        ''' <summary>
+        ''' Day part.
+        ''' </summary>
+        Day
+        ''' <summary>
+        ''' Month part.
+        ''' </summary>
+        Month
+        ''' <summary>
+        ''' Day of week part.
+        ''' </summary>
+        DayOfWeek
+    End Enum
+
 End Namespace
