@@ -26,7 +26,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build and Deploy Scripts", 
 	ProjectSection(SolutionItems) = preProject
 		..\Build Scripts\RebuildAll.bat = ..\Build Scripts\RebuildAll.bat
 		..\Build Scripts\RebuildAllDebug.bat = ..\Build Scripts\RebuildAllDebug.bat
-		..\Build Scripts\RebuildAllNoChange.bat = ..\Build Scripts\RebuildAllNoChange.bat
 		..\Build Scripts\RebuildAllNoDocs.bat = ..\Build Scripts\RebuildAllNoDocs.bat
 	EndProjectSection
 EndProject
