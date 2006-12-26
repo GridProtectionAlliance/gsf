@@ -62,17 +62,20 @@
     <Compile Include="Tva.Collections\DictionaryList.vb" />
     <Compile Include="Tva.Measurements\MeasurementKey.vb" />
     <Compile Include="Tva.Net\Smtp\Common.vb" />
+    <Compile Include="Tva.Scheduling\Enumerations.vb" />
+    <Compile Include="Tva.Scheduling\Schedule.vb" />
+    <Compile Include="Tva.Scheduling\ScheduleEventArgs.vb" />
+    <Compile Include="Tva.Scheduling\ScheduleManager.Designer.vb">
+      <DependentUpon>ScheduleManager.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Tva.Scheduling\ScheduleManager.vb">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Tva.Scheduling\SchedulePart.vb" />
     <Compile Include="Tva\DataEventArgs.vb" />
     <Compile Include="Tva\ExceptionEventArgs.vb" />
     <Compile Include="Tva\GenericEventArgs.vb" />
     <Compile Include="Tva\IdentifiableSourceEventArgs.vb" />
-    <Compile Include="Tva\ScheduleEventArgs.vb" />
-    <Compile Include="Tva\ScheduleManager.Designer.vb">
-      <DependentUpon>ScheduleManager.vb</DependentUpon>
-    </Compile>
-    <Compile Include="Tva\ScheduleManager.vb">
-      <SubType>Component</SubType>
-    </Compile>
     <Compile Include="Tva.Collections\Enumerations.vb" />
     <Compile Include="Tva.Configuration\Common.vb" />
     <Compile Include="Tva.Data\Enumerations.vb" />
@@ -126,7 +129,6 @@
     <Compile Include="Tva.Text\Common.vb" />
     <Compile Include="Tva.Xml\Common.vb" />
     <Compile Include="Tva\ByteEncoding.vb" />
-    <Compile Include="Tva\Schedule.vb" />
     <Compile Include="Tva\Serialization.vb" />
     <Compile Include="Tva\ObjectStateChangedEventArgs.vb" />
   </ItemGroup>
@@ -134,7 +136,7 @@
     <None Include="Tva.Collections\Tva.Collections.cd" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Embedded Resources\ScheduleManager.bmp" />
+    <EmbeddedResource Include="Embedded Resources\Scheduling.ScheduleManager.bmp" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Tva.Console\" />

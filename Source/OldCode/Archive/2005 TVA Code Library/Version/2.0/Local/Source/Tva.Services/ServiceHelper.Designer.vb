@@ -49,7 +49,7 @@ Partial Class ServiceHelper
         Me.components = New System.ComponentModel.Container
         Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(ServiceHelper))
         Me.SHTcpServer = New Tva.Communication.TcpServer(Me.components)
-        Me.SHScheduleManager = New Tva.ScheduleManager(Me.components)
+        Me.SHScheduleManager = New Tva.Scheduling.ScheduleManager(Me.components)
         '
         'SHTcpServer
         '
@@ -63,6 +63,6 @@ Partial Class ServiceHelper
 
     End Sub
     Friend WithEvents SHTcpServer As Tva.Communication.TcpServer
-    Friend WithEvents SHScheduleManager As Tva.ScheduleManager
+    Friend WithEvents SHScheduleManager As Tva.Scheduling.ScheduleManager
 
 End Class

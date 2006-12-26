@@ -8,6 +8,7 @@ Imports Tva.Common
 Imports Tva.Services
 Imports Tva.Communication
 Imports Tva.Serialization
+Imports Tva.Scheduling
 
 <ToolboxBitmap(GetType(ServiceHelper))> _
 Public Class ServiceHelper
@@ -279,20 +280,19 @@ Public Class ServiceHelper
 
     End Sub
 
-    Public Sub ScheduleProcess(ByVal processName As String, ByVal processSchedule As String)
+    Public Sub ScheduleProcess(ByVal processName As String, ByVal scheduleRule As String)
 
         processName = processName.ToUpper().Trim()
 
         If m_processes.ContainsKey(processName) Then
+            ' The specified process exists, so we'll schedule it, or update its schedule if it is acheduled already.
             Dim schedule As Schedule = Nothing
             If SHScheduleManager.Schedules.TryGetValue(processName, schedule) Then
                 ' Update the process schedule if it is already exists.
-                schedule.Rule = processSchedule
+                schedule.Rule = scheduleRule
             Else
                 ' Schedule the process if it is not scheduled already.
-                schedule = New Schedule(processName)
-                schedule.Rule = processSchedule
-                SHScheduleManager.Schedules.Add(processName, schedule)
+                SHScheduleManager.Schedules.Add(processName, New Schedule(processName, scheduleRule))
             End If
         Else
             UpdateStatus("Process """ & processName & """ does not exist.")
