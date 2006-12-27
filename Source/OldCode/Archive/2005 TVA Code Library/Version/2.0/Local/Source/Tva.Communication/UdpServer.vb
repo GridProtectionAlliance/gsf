@@ -219,13 +219,11 @@ Public Class UdpServer
 
         If Not String.IsNullOrEmpty(configurationString) Then
             m_configurationData = Tva.Text.Common.ParseKeyValuePairs(configurationString)
-            ' Even though clients value is required, it will be ignored if Handshake is enabled.
             If m_configurationData.ContainsKey("port") AndAlso _
-                    ValidPortNumber(m_configurationData("port")) AndAlso _
-                    m_configurationData.ContainsKey("clients") AndAlso _
-                    m_configurationData("clients").Split(","c).Length > 0 Then
+                    ValidPortNumber(m_configurationData("port")) Then
                 ' The configuration string must always contain the following:
                 ' >> port - Port number on which the server will be listening for incoming data.
+                ' The configuration string can optionally contain the following:
                 ' >> clients - A list of clients the server will be sending data to.
                 Return True
             Else
@@ -233,7 +231,7 @@ Public Class UdpServer
                 With New StringBuilder()
                     .Append("Configuration string must be in the following format:")
                     .Append(Environment.NewLine)
-                    .Append("   Port=Local port number; Clients=Client name or IP[:Port number], ..., Client name or IP[:Port number]")
+                    .Append("   Port=Local port number; [Clients=Client name or IP[:Port number], ..., Client name or IP[:Port number]]")
                     .Append(Environment.NewLine)
                     .Append("Text between square brackets, [...], is optional.")
                     Throw New ArgumentException(.ToString())
