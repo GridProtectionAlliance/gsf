@@ -302,13 +302,31 @@ Public MustInherit Class CommunicationServerBase
     ''' </summary>
     ''' <value></value>
     ''' <returns>The encoding to be used for the text sent to the connected clients.</returns>
-    <Browsable(False)> _
+    <Browsable(False), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)> _
     Public Overridable Property TextEncoding() As Encoding Implements ICommunicationServer.TextEncoding
         Get
             Return m_textEncoding
         End Get
         Set(ByVal value As Encoding)
             m_textEncoding = value
+        End Set
+    End Property
+
+    ''' <summary>
+    ''' Setting this property allows consumer to "intercept" data before it goes through normal processing
+    ''' </summary>
+    ''' <remarks>
+    ''' This property only needs to be implemented if you need data from the clients absolutelty as fast as possible, for most uses this
+    ''' will not be necessary.  Setting this property gives the consumer access to the data stream as soon as it's available, but this also
+    ''' bypasses all of the advanced convience properties (e.g., PayloadAware, Handshake, Encryption, Compression, etc.)
+    ''' </remarks>
+    <Browsable(False), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)> _
+    Public Overridable Property ReceiveRawDataFunction() As ICommunicationServer.ReceiveRawDataFunctionSignature Implements ICommunicationServer.ReceiveRawDataFunction
+        Get
+            Return m_receiveRawDataFunction
+        End Get
+        Set(ByVal value As ICommunicationServer.ReceiveRawDataFunctionSignature)
+            m_receiveRawDataFunction = value
         End Set
     End Property
 
@@ -324,24 +342,6 @@ Public MustInherit Class CommunicationServerBase
         End Get
         Protected Set(ByVal value As TransportProtocol)
             m_protocol = value
-        End Set
-    End Property
-
-    ''' <summary>
-    ''' Setting this property allows consumer to "intercept" data before it goes through normal processing
-    ''' </summary>
-    ''' <remarks>
-    ''' This property only needs to be implemented if you need data from the clients absolutelty as fast as possible, for most uses this
-    ''' will not be necessary.  Setting this property gives the consumer access to the data stream as soon as it's available, but this also
-    ''' bypasses all of the advanced convience properties (e.g., PayloadAware, Handshake, Encryption, Compression, etc.)
-    ''' </remarks>
-    <Browsable(False)> _
-    Public Overridable Property ReceiveRawDataFunction() As ICommunicationServer.ReceiveRawDataFunctionSignature Implements ICommunicationServer.ReceiveRawDataFunction
-        Get
-            Return m_receiveRawDataFunction
-        End Get
-        Set(ByVal value As ICommunicationServer.ReceiveRawDataFunctionSignature)
-            m_receiveRawDataFunction = value
         End Set
     End Property
 

@@ -351,13 +351,31 @@ Public MustInherit Class CommunicationClientBase
     ''' </summary>
     ''' <value></value>
     ''' <returns>The encoding to be used for the text sent to the server.</returns>
-    <Browsable(False)> _
+    <Browsable(False), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)> _
     Public Overridable Property TextEncoding() As Encoding Implements ICommunicationClient.TextEncoding
         Get
             Return m_textEncoding
         End Get
         Set(ByVal value As Encoding)
             m_textEncoding = value
+        End Set
+    End Property
+
+    ''' <summary>
+    ''' Setting this property allows consumer to "intercept" data before it goes through normal processing
+    ''' </summary>
+    ''' <remarks>
+    ''' This property only needs to be implemented if you need data from the server absolutelty as fast as possible, for most uses this
+    ''' will not be necessary.  Setting this property gives the consumer access to the data stream as soon as it's available, but this also
+    ''' bypasses all of the advanced convience properties (e.g., PayloadAware, Handshake, Encryption, Compression, etc.)
+    ''' </remarks>
+    <Browsable(False), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)> _
+    Public Overridable Property ReceiveRawDataFunction() As ICommunicationClient.ReceiveRawDataFunctionSignature Implements ICommunicationClient.ReceiveRawDataFunction
+        Get
+            Return m_receiveRawDataFunction
+        End Get
+        Set(ByVal value As ICommunicationClient.ReceiveRawDataFunctionSignature)
+            m_receiveRawDataFunction = value
         End Set
     End Property
 
@@ -403,24 +421,6 @@ Public MustInherit Class CommunicationClientBase
         End Get
         Protected Set(ByVal value As Guid)
             m_clientID = value
-        End Set
-    End Property
-
-    ''' <summary>
-    ''' Setting this property allows consumer to "intercept" data before it goes through normal processing
-    ''' </summary>
-    ''' <remarks>
-    ''' This property only needs to be implemented if you need data from the server absolutelty as fast as possible, for most uses this
-    ''' will not be necessary.  Setting this property gives the consumer access to the data stream as soon as it's available, but this also
-    ''' bypasses all of the advanced convience properties (e.g., PayloadAware, Handshake, Encryption, Compression, etc.)
-    ''' </remarks>
-    <Browsable(False)> _
-    Public Overridable Property ReceiveRawDataFunction() As ICommunicationClient.ReceiveRawDataFunctionSignature Implements ICommunicationClient.ReceiveRawDataFunction
-        Get
-            Return m_receiveRawDataFunction
-        End Get
-        Set(ByVal value As ICommunicationClient.ReceiveRawDataFunctionSignature)
-            m_receiveRawDataFunction = value
         End Set
     End Property
 
@@ -506,6 +506,20 @@ Public MustInherit Class CommunicationClientBase
     ''' Disconnects the client from the connected server
     ''' </summary>
     Public MustOverride Sub Disconnect() Implements ICommunicationClient.Disconnect
+
+    ''' <summary>
+    ''' Waits for the client to connect to the server for the specified time and optionally stop the client from
+    ''' retrying connection attempts if the client is unable to connect to the server within the specified time.
+    ''' </summary>
+    ''' <param name="waitTime">
+    ''' The time in milliseconds to wait for the client to connect to the server. Specifying a value of -1 or 0 
+    ''' will cause this method to wait indefinately until the client establishes connection with the server.
+    ''' </param>
+    Public Sub WaitForConnection(ByVal waitTime As Integer) Implements ICommunicationClient.WaitForConnection
+
+        WaitForConnection(waitTime, False)
+
+    End Sub
 
     ''' <summary>
     ''' Waits for the client to connect to the server for the specified time and optionally stop the client from
