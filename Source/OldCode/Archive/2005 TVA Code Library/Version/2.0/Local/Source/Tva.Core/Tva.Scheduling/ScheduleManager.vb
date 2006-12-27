@@ -200,7 +200,7 @@ Namespace Scheduling
 
             If m_enabled AndAlso m_persistSchedules Then
                 Try
-                    For Each schedule As CategorizedSettingsElement In DefaultConfigFile.CategorizedSettings(m_configurationElement)
+                    For Each schedule As CategorizedSettingsElement In CategorizedSettings(m_configurationElement)
                         ' Add the schedule if it doesn't exist or update it otherwise with data from the config file.
                         m_schedules(schedule.Name) = New Schedule(schedule.Name, schedule.Value, schedule.Description)
                     Next
@@ -218,13 +218,13 @@ Namespace Scheduling
 
             If m_enabled AndAlso m_persistSchedules Then
                 Try
-                    With DefaultConfigFile.CategorizedSettings(m_configurationElement)
+                    With CategorizedSettings(m_configurationElement)
                         .Clear()
                         For Each schedule As Schedule In m_schedules.Values
                             .Add(schedule.Name, schedule.Rule, schedule.Description)
                         Next
-                        SaveSettings()
                     End With
+                    SaveSettings()
                 Catch ex As Exception
                     ' We can safely ignore any exceptions encountered while saving schedules to the config file.
                 End Try
@@ -275,6 +275,8 @@ Namespace Scheduling
                     CheckAllSchedules()
 
                     Exit Do
+                Else
+                    System.Threading.Thread.Sleep(500)
                 End If
             Loop
 
