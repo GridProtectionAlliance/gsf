@@ -242,6 +242,16 @@ Public Interface ICommunicationClient
     ''' The time in milliseconds to wait for the client to connect to the server. Specifying a value of -1 or 0 
     ''' will cause this method to wait indefinately until the client establishes connection with the server.
     ''' </param>
+    Sub WaitForConnection(ByVal waitTime As Integer)
+
+    ''' <summary>
+    ''' Waits for the client to connect to the server for the specified time and optionally stop the client from
+    ''' retrying connection attempts if the client is unable to connect to the server within the specified time.
+    ''' </summary>
+    ''' <param name="waitTime">
+    ''' The time in milliseconds to wait for the client to connect to the server. Specifying a value of -1 or 0 
+    ''' will cause this method to wait indefinately until the client establishes connection with the server.
+    ''' </param>
     ''' <param name="stopRetrying">
     ''' Boolean value indicating whether the client should stop trying to connect to the server if it is unable to 
     ''' connect to the server after waiting for the specified duration.
