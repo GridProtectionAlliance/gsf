@@ -231,22 +231,28 @@ Public Class UdpClient
             ' server and a remote port. Server and remote port is required when Handshake is enable, but if they
             ' are not specified then an arbitrary server enpoint will be created and any attempt of sending data
             ' to the server will fail. So, it becomes the consumer's responsibility to provide a valid server name
-            ' and remote port is Handshake is enabled. At the same time when Handshake is enabled, the local port
+            ' and remote port if Handshake is enabled. At the same time when Handshake is enabled, the local port
             ' value will be ignored even if it is specified.
-            If m_connectionData.ContainsKey("localport") AndAlso _
-                    ValidPortNumber(m_connectionData("localport")) Then
+            If (m_connectionData.ContainsKey("localport") AndAlso _
+                    ValidPortNumber(m_connectionData("localport"))) OrElse _
+                    (m_connectionData.ContainsKey("server") AndAlso _
+                    Not String.IsNullOrEmpty(m_connectionData("server")) AndAlso _
+                    (m_connectionData.ContainsKey("port") AndAlso _
+                    ValidPortNumber(m_connectionData("port"))) OrElse _
+                    m_connectionData.ContainsKey("remoteport") AndAlso _
+                    ValidPortNumber(m_connectionData("remoteport"))) Then
                 ' The connection string must always contain the following:
                 ' >> localport - Port number on which the client is listening for data.
-                ' The connection string can optionally contain the following:
+                ' OR
                 ' >> server - Name or IP of the machine machine on which the server is running.
-                ' >> remoteport - Port number on which the server is listening for connections.
+                ' >> port or remoteport - Port number on which the server is listening for connections.
                 Return True
             Else
                 ' Connection string is not in the expected format.
                 With New StringBuilder()
                     .Append("Connection string must be in the following format:")
                     .Append(Environment.NewLine)
-                    .Append("   [Server=Server name or IP;] [RemotePort=Server port number;] LocalPort=Local port number")
+                    .Append("   [Server=Server name or IP;] [[Remote]Port=Server port number;] LocalPort=Local port number")
                     .Append(Environment.NewLine)
                     .Append("Text between square brackets, [...], is optional.")
                     Throw New ArgumentException(.ToString())
@@ -270,18 +276,23 @@ Public Class UdpClient
                 OnConnecting(EventArgs.Empty)
 
                 ' When the client is not intended for communicating with the server, the "LocalPort" value will be
-                ' present and "Server" and "RemotePort" values may not be present in the connection string. In this 
-                ' case we'll use the default values for server (localhost) and remoteport (0) to create an imaginary 
-                ' server endpoint.
-                ' When the client is intended for communicating with the server, the "Server" and "RemotePort" will
-                ' be present along with the "LocalPort" value. The "LocalPort" value however becomes optional when
-                ' client is configured to do Handshake with the server. When Handshake is enabled, we let the 
-                ' system assign a port to us and the server will then send data to us at the assigned port.
+                ' present and "Server" and "Port" or "RemotePort" values may not be present in the connection string.
+                ' In this case we'll use the default values for server (localhost) and remoteport (0) to create an 
+                ' imaginary server endpoint.
+                ' When the client is intended for communicating with the server, the "Server" and "Port" or 
+                ' "RemotePort" will be present along with the "LocalPort" value. The "LocalPort" value however 
+                ' becomes optional when client is configured to do Handshake with the server. When Handshake is 
+                ' enabled, we let the system assign a port to us and the server will then send data to us at the 
+                ' assigned port.
                 Dim server As String = "localhost"
                 Dim localPort As Integer = 0
                 Dim remotePort As Integer = 0
                 If m_connectionData.ContainsKey("server") Then server = m_connectionData("server")
-                If m_connectionData.ContainsKey("remoteport") Then remotePort = Convert.ToInt32(m_connectionData("remoteport"))
+                If m_connectionData.ContainsKey("port") Then
+                    remotePort = Convert.ToInt32(m_connectionData("port"))
+                ElseIf m_connectionData.ContainsKey("remoteport") Then
+                    remotePort = Convert.ToInt32(m_connectionData("remoteport"))
+                End If
                 If Not MyBase.Handshake Then localPort = Convert.ToInt32(m_connectionData("localport"))
 
                 ' Create the server endpoint that will be used for sending data.
