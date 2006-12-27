@@ -330,7 +330,7 @@ Namespace Scheduling
             Select Case newState
                 Case ServiceState.Started
                     Me.Start()
-                Case ServiceState.Stopped
+                Case ServiceState.Stopped, ServiceState.Shutdown
                     Me.Stop()
                 Case ServiceState.Paused
                     m_previouslyEnabled = Enabled

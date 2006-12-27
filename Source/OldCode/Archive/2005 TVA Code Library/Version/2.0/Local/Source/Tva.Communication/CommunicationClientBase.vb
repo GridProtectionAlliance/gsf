@@ -869,7 +869,7 @@ Public MustInherit Class CommunicationClientBase
         Select Case newState
             Case ServiceState.Started
                 Me.Connect()
-            Case ServiceState.Stopped
+            Case ServiceState.Stopped, ServiceState.Shutdown
                 Me.Disconnect()
             Case ServiceState.Paused
                 m_previouslyEnabled = Me.Enabled
