@@ -176,7 +176,12 @@ Public Class UdpClient
                 ' Add payload header if client-server communication is PayloadAware.
                 If m_payloadAware Then goodbye = PayloadAwareHelper.AddPayloadHeader(goodbye)
 
-                m_udpClient.Client.SendTo(goodbye, m_udpServer)
+                Try
+                    m_udpClient.Client.SendTo(goodbye, m_udpServer)
+                Catch ex As ObjectDisposedException
+                    ' Its OK to igonore ObjectDisposedException which we might encounter if Disconnect() method is
+                    ' called consecutively within a very short duration (before the client is flagged as disconnected).
+                End Try
             End If
 
             m_udpClient.Client.Close()

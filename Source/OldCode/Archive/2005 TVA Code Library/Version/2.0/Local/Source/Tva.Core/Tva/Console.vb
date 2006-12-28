@@ -31,6 +31,7 @@ Public NotInheritable Class Console
 
         ' Member variable is used here so that the delegate is not garbage collected by the time it is called by
         ' WIN API when any of the control events take place.
+        ' http://forums.microsoft.com/MSDN/ShowPost.aspx?PostID=996045&SiteID=1
         m_handler = AddressOf HandleConsoleWindowEvents
         SetConsoleWindowEventRaising(m_handler, True)
 
@@ -56,6 +57,7 @@ Public NotInheritable Class Console
 
         ' ms-help://MS.VSCC.v80/MS.MSDN.v80/MS.WIN32COM.v10.en/dllproc/base/handlerroutine.htm
 
+        ' When this function doesn't return True, the default handler is called and the default action takes place.
         Select Case controlType
             Case ConsoleEventType.CtrlCKeyPress
                 Dim ctrlCKeyPressEventData As New System.ComponentModel.CancelEventArgs()
