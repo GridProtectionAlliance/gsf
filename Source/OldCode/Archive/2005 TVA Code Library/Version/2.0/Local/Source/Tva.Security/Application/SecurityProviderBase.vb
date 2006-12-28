@@ -93,9 +93,9 @@ Namespace Application
         Public Sub LoginUser()
 
             If Not String.IsNullOrEmpty(m_applicationName) Then
-                Dim beforeLoginResponse As New CancelEventArgs()
-                RaiseEvent BeforeLogin(Me, beforeLoginResponse)
-                If beforeLoginResponse.Cancel Then Exit Sub
+                Dim beforeLoginEventData As New CancelEventArgs()
+                RaiseEvent BeforeLogin(Me, beforeLoginEventData)
+                If beforeLoginEventData.Cancel Then Exit Sub
 
                 If m_enableCaching Then RetrieveUserData()
                 ' m_user will be initialized by RetrieveUserData() if user data was cached previously.
@@ -122,15 +122,15 @@ Namespace Application
                 End If
 
                 If m_user IsNot Nothing Then
-                    Dim beforeAuthenticateResponse As New CancelEventArgs()
-                    RaiseEvent BeforeAuthenticate(Me, beforeAuthenticateResponse)
-                    If beforeAuthenticateResponse.Cancel Then Exit Sub
+                    Dim beforeAuthenticateEventData As New CancelEventArgs()
+                    RaiseEvent BeforeAuthenticate(Me, beforeAuthenticateEventData)
+                    If beforeAuthenticateEventData.Cancel Then Exit Sub
 
                     If UserHasApplicationAccess() Then
                         ' User has been authenticated successfully and has access to the specified application.
-                        Dim accessGrantedResponse As New CancelEventArgs()
-                        RaiseEvent AccessGranted(Me, accessGrantedResponse)
-                        If accessGrantedResponse.Cancel Then Exit Sub
+                        Dim accessGrantedEventData As New CancelEventArgs()
+                        RaiseEvent AccessGranted(Me, accessGrantedEventData)
+                        If accessGrantedEventData.Cancel Then Exit Sub
 
                         ProcessControls()
                         HandleAccessGranted()
@@ -138,9 +138,9 @@ Namespace Application
                         ' User could not be autheticated or doesn't have access to the specified application.
                         ' Most likely user authentication will never fail because if the user is external, the
                         ' login page will verify the user's password before this process kicks in.
-                        Dim accessDeniedResponse As New CancelEventArgs()
-                        RaiseEvent AccessDenied(Me, accessDeniedResponse)
-                        If accessDeniedResponse.Cancel Then Exit Sub
+                        Dim accessDeniedEventData As New CancelEventArgs()
+                        RaiseEvent AccessDenied(Me, accessDeniedEventData)
+                        If accessDeniedEventData.Cancel Then Exit Sub
 
                         HandleAccessDenied()
                     End If
