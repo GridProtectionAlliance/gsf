@@ -50,9 +50,6 @@ Namespace Application
         'Component overrides dispose to clean up the component list.
         <System.Diagnostics.DebuggerNonUserCode()> _
         Protected Overrides Sub Dispose(ByVal disposing As Boolean)
-            If disposing AndAlso components IsNot Nothing Then
-                components.Dispose()
-            End If
             'Try
             '    ' Save security database connection strings to the config file.
             '    CategorizedSettings(ConfigurationElement).Add("Development", m_devConnectionString, _
@@ -65,6 +62,9 @@ Namespace Application
             'Catch ex As Exception
             '    ' We can safely ignore any exceptions encountered.
             'End Try
+            If disposing AndAlso components IsNot Nothing Then
+                components.Dispose()
+            End If
             MyBase.Dispose(disposing)
         End Sub
 

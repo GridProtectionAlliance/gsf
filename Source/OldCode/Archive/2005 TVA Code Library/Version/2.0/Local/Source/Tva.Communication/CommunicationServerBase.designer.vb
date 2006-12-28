@@ -61,10 +61,10 @@ Partial Class CommunicationServerBase
     'Component overrides dispose to clean up the component list.
     <System.Diagnostics.DebuggerNonUserCode()> _
     Protected Overrides Sub Dispose(ByVal disposing As Boolean)
+        [Stop]()    ' Stop the server.
         If disposing AndAlso components IsNot Nothing Then
             components.Dispose()
         End If
-        [Stop]()    ' Stop the server.
         MyBase.Dispose(disposing)
     End Sub
 

@@ -26,10 +26,10 @@ Namespace Ssam
         'Component overrides dispose to clean up the component list.
         <System.Diagnostics.DebuggerNonUserCode()> _
         Protected Overrides Sub Dispose(ByVal disposing As Boolean)
+            m_ssamApi.Dispose() ' Dispose the SSAM Api used for logging to SSAM.
             If disposing AndAlso components IsNot Nothing Then
                 components.Dispose()
             End If
-            m_ssamApi.Dispose() ' Dispose the SSAM Api used for logging to SSAM.
             MyBase.Dispose(disposing)
         End Sub
 
