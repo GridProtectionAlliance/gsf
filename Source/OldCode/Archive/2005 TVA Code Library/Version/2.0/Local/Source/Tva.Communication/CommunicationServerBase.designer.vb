@@ -62,9 +62,9 @@ Partial Class CommunicationServerBase
     <System.Diagnostics.DebuggerNonUserCode()> _
     Protected Overrides Sub Dispose(ByVal disposing As Boolean)
         If disposing AndAlso components IsNot Nothing Then
-            [Stop]()    ' Stop the server.
             components.Dispose()
         End If
+        [Stop]()    ' Stop the server.
         MyBase.Dispose(disposing)
     End Sub
 

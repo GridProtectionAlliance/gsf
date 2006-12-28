@@ -63,9 +63,9 @@ Partial Class CommunicationClientBase
     <System.Diagnostics.DebuggerNonUserCode()> _
     Protected Overrides Sub Dispose(ByVal disposing As Boolean)
         If disposing AndAlso components IsNot Nothing Then
-            Disconnect()    ' Disconnect client from the server.
             components.Dispose()
         End If
+        Disconnect()    ' Disconnect client from the server.
         MyBase.Dispose(disposing)
     End Sub
 

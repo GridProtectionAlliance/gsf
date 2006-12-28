@@ -27,9 +27,9 @@ Namespace Ssam
         <System.Diagnostics.DebuggerNonUserCode()> _
         Protected Overrides Sub Dispose(ByVal disposing As Boolean)
             If disposing AndAlso components IsNot Nothing Then
-                m_ssamApi.Dispose()
                 components.Dispose()
             End If
+            m_ssamApi.Dispose() ' Dispose the SSAM Api used for logging to SSAM.
             MyBase.Dispose(disposing)
         End Sub
 
