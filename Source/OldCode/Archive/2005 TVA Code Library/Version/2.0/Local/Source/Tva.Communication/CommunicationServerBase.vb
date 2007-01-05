@@ -55,7 +55,7 @@ Public MustInherit Class CommunicationServerBase
     Private m_stopTime As Long
 
     ' We expose these two members to derived classes for their own internal use
-    Protected m_receiveRawDataFunction As ICommunicationServer.ReceiveRawDataFunctionSignature
+    Protected m_receiveRawDataFunction As ReceiveRawDataFunctionSignature
     Protected m_buffer As Byte()
 
     ''' <summary>
@@ -321,11 +321,11 @@ Public MustInherit Class CommunicationServerBase
     ''' bypasses all of the advanced convience properties (e.g., PayloadAware, Handshake, Encryption, Compression, etc.)
     ''' </remarks>
     <Browsable(False), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)> _
-    Public Overridable Property ReceiveRawDataFunction() As ICommunicationServer.ReceiveRawDataFunctionSignature Implements ICommunicationServer.ReceiveRawDataFunction
+    Public Overridable Property ReceiveRawDataFunction() As ReceiveRawDataFunctionSignature Implements ICommunicationServer.ReceiveRawDataFunction
         Get
             Return m_receiveRawDataFunction
         End Get
-        Set(ByVal value As ICommunicationServer.ReceiveRawDataFunctionSignature)
+        Set(ByVal value As ReceiveRawDataFunctionSignature)
             m_receiveRawDataFunction = value
         End Set
     End Property

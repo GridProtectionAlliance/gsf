@@ -54,11 +54,6 @@ Public Interface ICommunicationServer
     Event ReceivedClientData As EventHandler(Of DataEventArgs)
 
     ''' <summary>
-    ''' This function signature gets implemented as needed to allow consumers to "intercept" data before it goes through normal processing
-    ''' </summary>
-    Delegate Sub ReceiveRawDataFunctionSignature(ByVal data As Byte(), ByVal offset As Integer, ByVal length As Integer)
-
-    ''' <summary>
     ''' Gets or sets the data that is required by the server to initialize.
     ''' </summary>
     ''' <value></value>

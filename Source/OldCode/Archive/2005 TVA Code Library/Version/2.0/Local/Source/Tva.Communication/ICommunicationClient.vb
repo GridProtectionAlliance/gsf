@@ -69,11 +69,6 @@ Public Interface ICommunicationClient
     Event ReceiveTimedOut As EventHandler
 
     ''' <summary>
-    ''' This function signature gets implemented as needed to allow consumers to "intercept" data before it goes through normal processing
-    ''' </summary>
-    Delegate Sub ReceiveRawDataFunctionSignature(ByVal data As Byte(), ByVal offset As Integer, ByVal length As Integer)
-
-    ''' <summary>
     ''' Gets or sets the data required by the client to connect to the server.
     ''' </summary>
     ''' <value></value>

@@ -58,7 +58,7 @@ Public MustInherit Class CommunicationClientBase
 
     ' We expose these two members to derived classes for their own internal use
     Protected m_totalBytesReceived As Integer
-    Protected m_receiveRawDataFunction As ICommunicationClient.ReceiveRawDataFunctionSignature
+    Protected m_receiveRawDataFunction As ReceiveRawDataFunctionSignature
     Protected m_buffer As Byte()
 
     ''' <summary>
@@ -370,11 +370,11 @@ Public MustInherit Class CommunicationClientBase
     ''' bypasses all of the advanced convience properties (e.g., PayloadAware, Handshake, Encryption, Compression, etc.)
     ''' </remarks>
     <Browsable(False), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)> _
-    Public Overridable Property ReceiveRawDataFunction() As ICommunicationClient.ReceiveRawDataFunctionSignature Implements ICommunicationClient.ReceiveRawDataFunction
+    Public Overridable Property ReceiveRawDataFunction() As ReceiveRawDataFunctionSignature Implements ICommunicationClient.ReceiveRawDataFunction
         Get
             Return m_receiveRawDataFunction
         End Get
-        Set(ByVal value As ICommunicationClient.ReceiveRawDataFunctionSignature)
+        Set(ByVal value As ReceiveRawDataFunctionSignature)
             m_receiveRawDataFunction = value
         End Set
     End Property

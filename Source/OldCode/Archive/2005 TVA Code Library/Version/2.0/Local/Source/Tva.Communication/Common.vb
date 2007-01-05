@@ -12,12 +12,19 @@
 '  -----------------------------------------------------------------------------------------------------
 '  08/04/2006 - Pinal C. Patel
 '       Original version of source code generated
+'  01/05/2007 - J. Ritchie Carroll
+'       Moved raw data function signature into common (more logical location)
 '
 '*******************************************************************************************************
 
 Imports Tva.Text.Common
 
 Public Class Common
+
+    ''' <summary>
+    ''' This function signature gets implemented as needed to allow consumers to "intercept" data before it goes through normal processing
+    ''' </summary>
+    Public Delegate Sub ReceiveRawDataFunctionSignature(ByVal data As Byte(), ByVal offset As Integer, ByVal length As Integer)
 
     ''' <summary>
     ''' Create a communications server
