@@ -156,8 +156,8 @@
     <EmbeddedResource Include="Embedded Resources\Scheduling.ScheduleManager.bmp" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Embedded Resources\Ftp.FileWatcher.bmp" />
-    <Content Include="Embedded Resources\Ftp.Session.bmp" />
+    <Content Include="Embedded Resources\Net.Ftp.FileWatcher.bmp" />
+    <Content Include="Embedded Resources\Net.Ftp.Session.bmp" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Tva.Console\" />
