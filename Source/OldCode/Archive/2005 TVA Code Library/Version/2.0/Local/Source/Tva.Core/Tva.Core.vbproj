@@ -61,6 +61,22 @@
   <ItemGroup>
     <Compile Include="Tva.Collections\DictionaryList.vb" />
     <Compile Include="Tva.Measurements\MeasurementKey.vb" />
+    <Compile Include="Tva.Net\Ftp\AsyncResult.vb" />
+    <Compile Include="Tva.Net\Ftp\ControlChannel.vb" />
+    <Compile Include="Tva.Net\Ftp\DataStream.vb" />
+    <Compile Include="Tva.Net\Ftp\Directory.vb" />
+    <Compile Include="Tva.Net\Ftp\Exception.vb" />
+    <Compile Include="Tva.Net\Ftp\File.vb" />
+    <Compile Include="Tva.Net\Ftp\FileTransferer.vb" />
+    <Compile Include="Tva.Net\Ftp\FileWatcher.vb">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Tva.Net\Ftp\Response.vb" />
+    <Compile Include="Tva.Net\Ftp\Session.vb">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Tva.Net\Ftp\SessionConnected.vb" />
+    <Compile Include="Tva.Net\Ftp\SessionDisconnected.vb" />
     <Compile Include="Tva.Net\Smtp\Common.vb" />
     <Compile Include="Tva.Scheduling\Enumerations.vb" />
     <Compile Include="Tva.Scheduling\Schedule.vb" />
@@ -140,9 +156,12 @@
     <EmbeddedResource Include="Embedded Resources\Scheduling.ScheduleManager.bmp" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Embedded Resources\Ftp.FileWatcher.bmp" />
+    <Content Include="Embedded Resources\Ftp.Session.bmp" />
+  </ItemGroup>
+  <ItemGroup>
     <Folder Include="Tva.Console\" />
     <Folder Include="Tva.Exception\" />
-    <Folder Include="Tva.Net\Ftp\" />
     <Folder Include="Tva.Net\Http\" />
     <Folder Include="Tva.Remoting\" />
     <Folder Include="Tva.Web\" />
