@@ -566,7 +566,7 @@ Namespace Text
         ''' <returns>Standard Unicode character representation of specified Regular Expression character</returns>
         Public Shared Function DecodeRegexChar(ByVal value As String) As Char
 
-            Return Convert.ToChar(Convert.ToInt16(value.Replace("\u", "0x"), 16))
+            Return Convert.ToChar(Convert.ToUInt16(value.Replace("\u", "0x"), 16))
 
         End Function
 
