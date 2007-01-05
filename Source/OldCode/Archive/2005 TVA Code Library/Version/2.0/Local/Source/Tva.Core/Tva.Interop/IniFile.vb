@@ -14,6 +14,9 @@
 '       Initial version of source generated
 '  01/05/2006 - J. Ritchie Carroll
 '       2.0 version of source code migrated from 1.1 source (TVA.Interop.Windows.IniFile)
+'  01/05/2007 - J. Ritchie Carroll
+'       Breaking change: Renamed "IniFileName" property to "FileName"
+'       Updated "SectionNames" to use List(Of String) instead of ArrayList
 '
 '*******************************************************************************************************
 
@@ -49,26 +52,30 @@ Namespace Interop
 
         Private Const BufferSize As Integer = 4096
 
-        Private m_iniFileName As String
+        Private m_fileName As String
 
+        ''' <summary>Creates a new instance of IniFile class</summary>
+        ''' <remarks>Ini file name defaults to "Win.ini" - change using FileName property</remarks>
         Public Sub New()
 
-            m_iniFileName = "Win.ini"
+            m_fileName = "Win.ini"
 
         End Sub
 
-        Public Sub New(ByVal iniFileName As String)
+        ''' <summary>Creates a new instance of IniFile class using the specified INI file name</summary>
+        Public Sub New(ByVal fileName As String)
 
-            m_iniFileName = iniFileName
+            m_fileName = fileName
 
         End Sub
 
-        Public Property IniFileName() As String
+        ''' <summary>File name of the INI file</summary>
+        Public Property FileName() As String
             Get
-                Return m_iniFileName
+                Return m_fileName
             End Get
-            Set(ByVal Value As String)
-                m_iniFileName = Value
+            Set(ByVal value As String)
+                m_fileName = value
             End Set
         End Property
 
@@ -85,7 +92,7 @@ Namespace Interop
                 Dim value As String
 
                 If defaultValue Is Nothing Then defaultValue = ""
-                GetPrivateProfileString(section, entry, defaultValue, buffer, BufferSize, m_iniFileName)
+                GetPrivateProfileString(section, entry, defaultValue, buffer, BufferSize, m_fileName)
 
                 ' Remove any trailing comments from key value
                 value = buffer.ToString.Trim()
@@ -103,7 +110,7 @@ Namespace Interop
         ''' <remarks>This is the default member of this class</remarks>
         Default Public WriteOnly Property KeyValue(ByVal section As String, ByVal entry As String) As String
             Set(ByVal value As String)
-                WritePrivateProfileString(section, entry, value, m_iniFileName)
+                WritePrivateProfileString(section, entry, value, m_fileName)
             End Set
         End Property
 
@@ -111,11 +118,11 @@ Namespace Interop
         Public ReadOnly Property SectionNames() As String()
             Get
                 Const BufferSize As Integer = 32768
-                Dim sections As New ArrayList
+                Dim sections As New List(Of String)
                 Dim buffer As Byte() = CreateArray(Of Byte)(BufferSize)
                 Dim readLength, nullIndex, startIndex As Integer
 
-                readLength = GetPrivateProfileSectionNames(buffer, BufferSize, m_iniFileName)
+                readLength = GetPrivateProfileSectionNames(buffer, BufferSize, m_fileName)
 
                 If readLength > 0 Then
                     Do While startIndex < readLength
@@ -130,7 +137,7 @@ Namespace Interop
                     Loop
                 End If
 
-                Return sections.ToArray(GetType(String))
+                Return sections.ToArray()
             End Get
         End Property
 
