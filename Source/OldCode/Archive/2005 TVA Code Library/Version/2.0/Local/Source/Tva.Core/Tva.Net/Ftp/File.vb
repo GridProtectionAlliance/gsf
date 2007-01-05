@@ -4,7 +4,7 @@ Option Explicit On
 Imports System.IO
 Imports System.Net.Sockets
 
-Namespace Ftp
+Namespace Net.Ftp
 
     Public Class File
 

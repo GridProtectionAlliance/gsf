@@ -5,15 +5,15 @@ Imports System.IO
 Imports System.Net.Sockets
 Imports System.Text.RegularExpressions
 
-Namespace Ftp
+Namespace Net.Ftp
 
-	Public Enum TransferMode
-		Ascii
-		Binary
-		Unknown
-	End Enum
+    Public Enum TransferMode
+        Ascii
+        Binary
+        Unknown
+    End Enum
 
-	Public Class ControlChannel
+    Public Class ControlChannel
 
         Private m_sessionHost As Session
         Private m_session As SessionConnected

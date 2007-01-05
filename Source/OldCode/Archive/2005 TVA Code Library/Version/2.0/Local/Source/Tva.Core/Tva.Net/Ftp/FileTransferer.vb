@@ -6,22 +6,22 @@ Imports System.Threading
 Imports System.Net.Sockets
 Imports Tva.IO.FilePath
 
-Namespace Ftp
+Namespace Net.Ftp
 
-	Public Enum TransferDirection
-		Upload
-		Download
-	End Enum
+    Public Enum TransferDirection
+        Upload
+        Download
+    End Enum
 
-	Friend Class FileTransferer
+    Friend Class FileTransferer
 
-		Delegate Sub FileCommandDelegate(ByVal remoteFileName As String)
-		Delegate Sub StreamCopyDelegate(ByVal remote As Stream, ByVal local As Stream)
+        Delegate Sub FileCommandDelegate(ByVal remoteFileName As String)
+        Delegate Sub StreamCopyDelegate(ByVal remote As Stream, ByVal local As Stream)
 
-		Private m_streamCopyRoutine As StreamCopyDelegate
-		Private m_ftpFileCommandRoutine As FileCommandDelegate
+        Private m_streamCopyRoutine As StreamCopyDelegate
+        Private m_ftpFileCommandRoutine As FileCommandDelegate
 
-		Private m_transferStarter As Directory
+        Private m_transferStarter As Directory
         Private m_session As SessionConnected
         Private m_localFile As String
         Private m_remoteFile As String

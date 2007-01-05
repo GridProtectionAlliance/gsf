@@ -3,7 +3,7 @@ Option Explicit On
 
 Imports System.IO
 
-Namespace Ftp
+Namespace Net.Ftp
 
     Friend Class SessionConnected
 

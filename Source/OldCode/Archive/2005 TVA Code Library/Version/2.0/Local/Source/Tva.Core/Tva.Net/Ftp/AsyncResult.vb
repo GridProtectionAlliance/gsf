@@ -1,7 +1,7 @@
 ' James Ritchie Carroll - 2003
 Option Explicit On 
 
-Namespace Ftp
+Namespace Net.Ftp
 
     Public Class AsyncResult
 

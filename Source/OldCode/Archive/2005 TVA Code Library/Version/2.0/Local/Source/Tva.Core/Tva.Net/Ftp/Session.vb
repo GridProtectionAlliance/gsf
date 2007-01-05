@@ -12,7 +12,7 @@ Imports System.Drawing
 ' added detailed file system information for FTP files and directories (size, timestamp, etc), coverted
 ' FTP session into a component that could be dragged onto a design surface, created an FTP FileWatcher
 ' component and an FTP file system crawler based on this library - JRC
-Namespace Ftp
+Namespace Net.Ftp
 
     Friend Interface ISessionState
 

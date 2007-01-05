@@ -3,7 +3,7 @@ Option Explicit On
 
 Imports System.Text
 
-Namespace Ftp
+Namespace Net.Ftp
 
     Friend Class SessionDisconnected
 

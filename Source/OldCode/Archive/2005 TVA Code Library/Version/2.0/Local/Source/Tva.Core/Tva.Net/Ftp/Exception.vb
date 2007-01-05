@@ -1,11 +1,11 @@
 ' James Ritchie Carroll - 2003
 Option Explicit On 
 
-Namespace Ftp
+Namespace Net.Ftp
 
-	Public Class Exception
+    Public Class Exception
 
-		Inherits System.Exception
+        Inherits System.Exception
 
         Private m_ftpResponse As Response = Nothing
 

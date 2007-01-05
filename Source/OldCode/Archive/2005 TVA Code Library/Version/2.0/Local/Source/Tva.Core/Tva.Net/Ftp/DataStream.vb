@@ -4,13 +4,13 @@ Option Explicit On
 Imports System.IO
 Imports System.Net.Sockets
 
-Namespace Ftp
+Namespace Net.Ftp
 
-	Public Class DataStream
+    Public Class DataStream
 
-		Inherits Stream
+        Inherits Stream
 
-		Private m_ctrl As ControlChannel
+        Private m_ctrl As ControlChannel
         Private m_session As SessionConnected
         Private m_tcpClient As TcpClient
         Private m_stream As Stream
@@ -163,64 +163,64 @@ Namespace Ftp
 
     End Class
 
-	Public Class InputDataStream
+    Public Class InputDataStream
 
-		Inherits DataStream
+        Inherits DataStream
 
-		Friend Sub New(ByVal ctrl As ControlChannel, ByVal client As TcpClient)
+        Friend Sub New(ByVal ctrl As ControlChannel, ByVal client As TcpClient)
 
-			MyBase.New(ctrl, client)
+            MyBase.New(ctrl, client)
 
-		End Sub
+        End Sub
 
-		Public Overrides Sub Write(ByVal buffer() As Byte, ByVal offset As Integer, ByVal count As Integer)
+        Public Overrides Sub Write(ByVal buffer() As Byte, ByVal offset As Integer, ByVal count As Integer)
 
-			Throw New NotSupportedException()
+            Throw New NotSupportedException()
 
-		End Sub
+        End Sub
 
-		Public Overrides Sub WriteByte(ByVal b As Byte)
+        Public Overrides Sub WriteByte(ByVal b As Byte)
 
-			Throw New NotSupportedException()
+            Throw New NotSupportedException()
 
-		End Sub
+        End Sub
 
-		Public Overrides ReadOnly Property CanWrite() As Boolean
-			Get
-				Return False
-			End Get
-		End Property
+        Public Overrides ReadOnly Property CanWrite() As Boolean
+            Get
+                Return False
+            End Get
+        End Property
 
-	End Class
+    End Class
 
-	Public Class OutputDataStream
+    Public Class OutputDataStream
 
-		Inherits DataStream
+        Inherits DataStream
 
-		Friend Sub New(ByVal ctrl As ControlChannel, ByVal client As TcpClient)
+        Friend Sub New(ByVal ctrl As ControlChannel, ByVal client As TcpClient)
 
-			MyBase.New(ctrl, client)
+            MyBase.New(ctrl, client)
 
-		End Sub
+        End Sub
 
-		Public Overrides Function Read(ByVal buffer() As Byte, ByVal offset As Integer, ByVal count As Integer) As Integer
+        Public Overrides Function Read(ByVal buffer() As Byte, ByVal offset As Integer, ByVal count As Integer) As Integer
 
-			Throw New NotSupportedException()
+            Throw New NotSupportedException()
 
-		End Function
+        End Function
 
-		Public Overrides Function ReadByte() As Integer
+        Public Overrides Function ReadByte() As Integer
 
-			Throw New NotSupportedException()
+            Throw New NotSupportedException()
 
-		End Function
+        End Function
 
-		Public Overrides ReadOnly Property CanRead() As Boolean
-			Get
-				Return False
-			End Get
-		End Property
+        Public Overrides ReadOnly Property CanRead() As Boolean
+            Get
+                Return False
+            End Get
+        End Property
 
-	End Class
+    End Class
 
 End Namespace

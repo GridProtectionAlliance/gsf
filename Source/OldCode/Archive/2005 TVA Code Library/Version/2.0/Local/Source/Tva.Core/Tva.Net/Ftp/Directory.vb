@@ -6,7 +6,7 @@ Imports System.Text
 Imports System.Net.Sockets
 Imports System.Text.RegularExpressions
 
-Namespace Ftp
+Namespace Net.Ftp
 
     Public Interface IFile
 
