@@ -557,7 +557,7 @@ Namespace Text
         ''' <returns>Specified Unicode character in proper Regular Expression format</returns>
         Public Shared Function EncodeRegexChar(ByVal item As Char) As String
 
-            Return "\u" & Convert.ToInt16(item).ToString("x"c).PadLeft(4, "0"c)
+            Return "\u" & Convert.ToUInt16(item).ToString("x"c).PadLeft(4, "0"c)
 
         End Function
 
