@@ -5,10 +5,10 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProductVersion>8.0.50727</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{0BCA43CD-81D6-495B-BFFB-98B6F414AB13}</ProjectGuid>
+    <ProjectGuid>{DFAF5597-0D41-4010-BE81-42EBD243D3C5}</ProjectGuid>
     <OutputType>Library</OutputType>
-    <RootNamespace>RealTimeStabilityAlarm</RootNamespace>
-    <AssemblyName>RealTimeStabilityAlarm</AssemblyName>
+    <RootNamespace>RealTimeCalculatedMeasurements</RootNamespace>
+    <AssemblyName>RealTimeCalculatedMeasurements</AssemblyName>
     <MyType>Windows</MyType>
     <SccProjectName>SAK</SccProjectName>
     <SccLocalPath>SAK</SccLocalPath>
@@ -21,7 +21,7 @@
     <DefineDebug>true</DefineDebug>
     <DefineTrace>true</DefineTrace>
     <OutputPath>bin\Debug\</OutputPath>
-    <DocumentationFile>RealTimeStabilityAlarm.xml</DocumentationFile>
+    <DocumentationFile>RealTimeCalculatedMeasurements.xml</DocumentationFile>
     <NoWarn>41999,42016,42017,42018,42019,42020,42021,42022,42030,42032,42036,42104,42108,42109</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
@@ -30,7 +30,7 @@
     <DefineTrace>true</DefineTrace>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
-    <DocumentationFile>RealTimeStabilityAlarm.xml</DocumentationFile>
+    <DocumentationFile>RealTimeCalculatedMeasurements.xml</DocumentationFile>
     <NoWarn>41999,42016,42017,42018,42019,42020,42021,42022,42030,42032,42036,42104,42108,42109</NoWarn>
   </PropertyGroup>
   <ItemGroup>
@@ -51,6 +51,8 @@
     <Import Include="System.Diagnostics" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AverageFrequencyCalculator.vb" />
+    <Compile Include="ReferenceMagnitudeCalculator.vb" />
     <Compile Include="My Project\AssemblyInfo.vb" />
     <Compile Include="My Project\Application.Designer.vb">
       <AutoGen>True</AutoGen>
@@ -66,7 +68,7 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
-    <Compile Include="CumberlandPowerDeviationCalculator.vb" />
+    <Compile Include="ReferenceAngleCalculator.vb" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="My Project\Resources.resx">

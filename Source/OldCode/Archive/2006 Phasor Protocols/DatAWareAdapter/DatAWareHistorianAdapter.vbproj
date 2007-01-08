@@ -37,6 +37,14 @@
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
+    <Reference Include="Tva.Core, Version=2.1.63.53023, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\TVA Code Library\Source\bin\Tva.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Tva.DatAWare, Version=2.1.63.53023, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\TVA Code Library\Source\bin\Tva.DatAWare.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Import Include="Microsoft.VisualBasic" />
@@ -84,14 +92,6 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Tva.Core\Tva.Core.vbproj">
-      <Project>{29A7B606-D1BC-4A4B-96D0-258D5A72C3EC}</Project>
-      <Name>Tva.Core</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\Tva.DatAWare\Tva.DatAWare.vbproj">
-      <Project>{86D45927-5D18-4A8D-BC5E-31093A800EB4}</Project>
-      <Name>Tva.DatAWare</Name>
-    </ProjectReference>
     <ProjectReference Include="..\InterfaceAdapters\InterfaceAdapters.vbproj">
       <Project>{45B13CE3-0EE6-4BF7-B36E-638F2BD68071}</Project>
       <Name>InterfaceAdapters</Name>
