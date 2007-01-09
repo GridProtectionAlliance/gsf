@@ -15,6 +15,7 @@ Partial Class Roles
     Protected Sub Page_Load(ByVal sender As Object, ByVal e As System.EventArgs) Handles Me.Load
         If Not IsPostBack Then
             'Populate dropdown list with the list of applications available in the database.
+            ViewState("App") = ""
             PopulateApplications()
             If Me.DropDownListApplications.Items.Count > 0 Then
                 BindToGrid(New Guid(Me.DropDownListApplications.SelectedValue.ToString))
@@ -22,6 +23,7 @@ Partial Class Roles
 
             ViewState("Mode") = "Add"
             ViewState("Role") = ""
+            ViewState("App") = Me.DropDownListApplications.SelectedValue.ToString
 
             'Assign default button to search text box.
             Me.TextBoxSearch.Attributes.Add("onkeypress", "return btnClick(event,'" + Me.ButtonSearch.ClientID + "')")
@@ -42,16 +44,20 @@ Partial Class Roles
             .DataBind()
             .SelectedIndex = 0
         End With
+
+        If Not ViewState("App") = "" Then
+            Me.DropDownListApplications.SelectedValue = ViewState("App")
+        End If
     End Sub
 
     ''' <summary>
     ''' Populate grid with the list of roles for selected application.
     ''' </summary>
-    ''' <param name="companyID"></param>
+    ''' <param name="applicationId"></param>
     ''' <remarks></remarks>
-    Public Sub BindToGrid(ByVal companyID As Guid)
+    Public Sub BindToGrid(ByVal applicationId As Guid)
         With Me.GridViewRoles
-            .DataSource = rolesAdapter.GetRolesByApplicationID(companyID)
+            .DataSource = rolesAdapter.GetRolesByApplicationID(applicationId)
             .DataBind()
         End With
     End Sub
@@ -86,7 +92,7 @@ Partial Class Roles
             ClearForm()
             ViewState("Mode") = "Add"
             ViewState("Role") = ""
-            Session("RefreshData") = 1
+            Session("RefreshRoles") = 1
         End If
     End Sub
 
@@ -119,8 +125,8 @@ Partial Class Roles
     ''' <param name="e"></param>
     ''' <remarks></remarks>
     Protected Sub ButtonSave_Click(ByVal sender As Object, ByVal e As System.EventArgs) Handles ButtonSave.Click
-        Dim newRoleName As String = Me.TextBoxName.Text.Replace("'", "''")
-        Dim newRoleDescription As String = Me.TextBoxDescription.Text.Replace("'", "''")
+        Dim newRoleName As String = Me.TextBoxName.Text '.Replace("'", "''")
+        Dim newRoleDescription As String = Me.TextBoxDescription.Text '.Replace("'", "''")
 
         If ViewState("Mode") = "Add" Then
             rolesAdapter.InsertRole(newRoleDescription, newRoleName, New Guid(Me.DropDownListApplications.SelectedValue.ToString))
@@ -133,14 +139,14 @@ Partial Class Roles
 
         Dim usersControl As New UsersForRoles
         usersControl = DirectCast(Me.FindControl("UltraWebTabUsersAndGroups").FindControl("UsersForRoles1"), UsersForRoles)
-        usersControl.InsertIntoRolesUsers(newRoleName.Replace(" ", ""))
+        usersControl.InsertIntoRolesUsers(newRoleName.Replace(" ", "_"))
 
         Dim groupsControl As New GroupsForRoles
         groupsControl = DirectCast(Me.FindControl("UltraWebTabUsersAndGroups").FindControl("GroupsForRoles1"), GroupsForRoles)
-        groupsControl.InsertIntoRolesGroups(newRoleName.Replace(" ", ""))
+        groupsControl.InsertIntoRolesGroups(newRoleName.Replace(" ", "_"))
 
         ClearForm()
-        Session("RefreshData") = 1
+        Session("RefreshRoles") = 1
 
     End Sub
 
@@ -153,7 +159,11 @@ Partial Class Roles
         Me.TextBoxDescription.Text = ""
         ViewState("Mode") = "Add"
         ViewState("Role") = ""
-        BindToGrid(New Guid(Me.DropDownListApplications.SelectedValue.ToString))
+
+        'If Not ViewState("App") = "" Then
+        '    Me.DropDownListApplications.SelectedValue = ViewState("App")
+        'End If
+        'BindToGrid(New Guid(Me.DropDownListApplications.SelectedValue.ToString))
 
         Dim usersControl As New UsersForRoles
         usersControl = DirectCast(Me.FindControl("UltraWebTabUsersAndGroups").FindControl("UsersForRoles1"), UsersForRoles)
@@ -172,7 +182,6 @@ Partial Class Roles
     ''' <remarks></remarks>
     Protected Sub ButtonCancel_Click(ByVal sender As Object, ByVal e As System.EventArgs) Handles ButtonCancel.Click
         ClearForm()
-        PopulateApplications()
     End Sub
 
     ''' <summary>
@@ -182,6 +191,8 @@ Partial Class Roles
     ''' <param name="e"></param>
     ''' <remarks></remarks>
     Protected Sub DropDownListApplications_SelectedIndexChanged(ByVal sender As Object, ByVal e As System.EventArgs) Handles DropDownListApplications.SelectedIndexChanged
+        ViewState("App") = Me.DropDownListApplications.SelectedValue.ToString
+        Me.BindToGrid(New Guid(Me.DropDownListApplications.SelectedValue.ToString))
         ClearForm()
     End Sub
 
@@ -211,12 +222,16 @@ Partial Class Roles
 
     Protected Sub LinkButtonShowAll_Click(ByVal sender As Object, ByVal e As System.EventArgs) Handles LinkButtonShowAll.Click
         Me.TextBoxSearch.Text = ""
+        Me.BindToGrid(New Guid(Me.DropDownListApplications.SelectedValue.ToString))
         ClearForm()
     End Sub
 
     Protected Sub Page_PreRender(ByVal sender As Object, ByVal e As System.EventArgs) Handles Me.PreRender
-        If Session("RefreshData") = 1 Then
+        If Session("RefreshApps") = 1 Then
             PopulateApplications()
+        End If
+
+        If Session("RefreshRoles") = 1 Then
             If Me.DropDownListApplications.Items.Count > 0 Then
                 BindToGrid(New Guid(Me.DropDownListApplications.SelectedValue.ToString))
             End If

@@ -60,8 +60,8 @@ Partial Class Groups
         Me.TextBoxDescription.Text = ""
         ViewState("Mode") = "Add"
         ViewState("Grp") = ""
-        BindToGrid()
-        BindToUsersGrid()
+        'BindToGrid()
+        'BindToUsersGrid()
         For Each row As GridViewRow In Me.GridViewUsers.Rows
             DirectCast(row.FindControl("CheckBox1"), CheckBox).Checked = False
         Next
@@ -89,7 +89,9 @@ Partial Class Groups
             ClearForm()
             ViewState("Mode") = "Add"
             ViewState("Grp") = ""
-            Session("RefreshData") = 1
+            Session("RefreshGroups") = 1
+        ElseIf e.CommandName = "ViewUsers" Then
+            'Do nothing here since it is going to dispay modal window on clicking event.
         End If
     End Sub
 
@@ -146,6 +148,9 @@ Partial Class Groups
             Dim deleteLink As LinkButton = e.Row.FindControl("LinkButton2")
             deleteLink.Attributes.Add("onclick", "javascript:return confirm('Do you want to delete group: " & _
                                                     DataBinder.Eval(e.Row.DataItem, "GroupName") & "? ');")
+
+            Dim viewLink As LinkButton = e.Row.FindControl("LinkButton3")
+            viewLink.Attributes.Add("onclick", "ShowUsers('" & DataBinder.Eval(e.Row.DataItem, "GroupName") & "');")
         End If
     End Sub
 
@@ -166,32 +171,33 @@ Partial Class Groups
     Protected Sub LinkButtonShowAll_Click(ByVal sender As Object, ByVal e As System.EventArgs) Handles LinkButtonShowAll.Click
         Me.TextBoxSearch.Text = ""
         ClearForm()
+        BindToGrid()
     End Sub
 
     Protected Sub ButtonSave_Click(ByVal sender As Object, ByVal e As System.EventArgs) Handles ButtonSave.Click
-        Dim newGroupName As String = Me.TextBoxName.Text.Replace("'", "''")
-        Dim newGroupDescription As String = Me.TextBoxDescription.Text.Replace("'", "''")
+        Dim newGroupName As String = Me.TextBoxName.Text.Replace("'", "")
+        Dim newGroupDescription As String = Me.TextBoxDescription.Text '.Replace("'", "''")
 
         If ViewState("Mode") = "Add" Then
             groupsAdapter.InsertGroup(newGroupName, newGroupDescription)
 
             'Insert associations into the GroupUsers Table.
             InsertIntoGroupUsers(newGroupName)
-            UpdateGroupsRoles(newGroupName.Replace(" ", ""))
+            UpdateGroupsRoles(newGroupName.Replace(" ", "_"))
         Else
             If Not ViewState("Grp") = "" Then   'if viewstate information is set then use it
                 groupsAdapter.UpdateGroup(newGroupName, newGroupDescription, ViewState("Grp"))
 
                 'On update delete all the existing associations and insert all new ones.
-                Dim newGroupID As Guid = groupsAdapter.GetGroupIDByGroupName(newGroupName.Replace(" ", ""))
+                Dim newGroupID As Guid = groupsAdapter.GetGroupIDByGroupName(newGroupName.Replace(" ", "_"))
                 groupUsersAdapter.DeleteGroupUsers(newGroupID)
-                InsertIntoGroupUsers(newGroupName.Replace(" ", ""))
-                UpdateGroupsRoles(newGroupName.Replace(" ", ""))
+                InsertIntoGroupUsers(newGroupName.Replace(" ", "_"))
+                UpdateGroupsRoles(newGroupName.Replace(" ", "_"))
             End If
         End If
 
         ClearForm()
-        Session("RefreshData") = 1
+        Session("RefreshGroups") = 1
     End Sub
 
     Private Sub UpdateGroupsRoles(ByVal groupName As String)
@@ -211,7 +217,7 @@ Partial Class Groups
     End Sub
 
     Private Sub InsertIntoGroupUsers(ByVal groupName As String)
-        Dim groupID As Guid = groupsAdapter.GetGroupIDByGroupName(groupName.Replace(" ", ""))
+        Dim groupID As Guid = groupsAdapter.GetGroupIDByGroupName(groupName.Replace(" ", "_"))
         For Each row As GridViewRow In Me.GridViewUsers.Rows
             If DirectCast(row.FindControl("CheckBox1"), CheckBox).Checked Then
                 Dim userID As Guid = usersAdapter.GetUserIDByUserName(row.Cells(1).Text)
@@ -230,6 +236,10 @@ Partial Class Groups
             .DataSource = dv
             .DataBind()
         End With
+
+        If ViewState("Mode") = "Edit" AndAlso Not ViewState("Grp") = "" Then
+            PopulateGroupInfo(ViewState("Grp"))
+        End If
     End Sub
 
     Protected Sub GridViewGroups_Sorting(ByVal sender As Object, ByVal e As System.Web.UI.WebControls.GridViewSortEventArgs) Handles GridViewGroups.Sorting
@@ -260,6 +270,8 @@ Partial Class Groups
             .FromKey("ApplicationID").Hidden = True
             .FromKey("ApplicationName").Width = New Unit(100)
             .FromKey("ApplicationDescription").Width = New Unit(425)
+            .FromKey("ApplicationName").Header.Caption = "Application Name"
+            .FromKey("ApplicationDescription").Header.Caption = "Description"
         End With
 
         With Me.UltraWebGridRoles.Bands(1).Columns
@@ -270,14 +282,25 @@ Partial Class Groups
             .FromKey("Select").Width = New Unit(75)
             .FromKey("RoleName").Width = New Unit(125)
             .FromKey("RoleDescription").Width = New Unit(325)
+            .FromKey("RoleName").Header.Caption = "Role Name"
+            .FromKey("RoleDescription").Header.Caption = "Description"
+            .FromKey("Select").Header.Caption = " Select "
         End With
     End Sub
 
     Protected Sub Page_PreRender(ByVal sender As Object, ByVal e As System.EventArgs) Handles Me.PreRender
-        If Session("RefreshData") = 1 Then
+
+        If Session("RefreshGroups") = 1 Then
             BindToGrid()
+        End If
+
+        If Session("RefreshUsers") = 1 Then
             BindToUsersGrid()
+        End If
+
+        If Session("RefreshRoles") = 1 Then
             BindToRolesGrid()
         End If
+
     End Sub
 End Class

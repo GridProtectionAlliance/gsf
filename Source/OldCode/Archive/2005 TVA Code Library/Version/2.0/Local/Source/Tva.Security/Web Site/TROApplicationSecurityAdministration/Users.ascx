@@ -43,9 +43,11 @@
             <asp:DropDownList ID="DropDownListCompanies" runat="server" CssClass="TextBox" Width="203px">
             </asp:DropDownList></td>        
         <td class="whiteCell">
-            <asp:CheckBox ID="CheckBoxIsLocked" runat="server" CssClass="TextBox" Text=" Is Locked?" /></td>        
+            <asp:CheckBox ID="CheckBoxIsLocked" runat="server" CssClass="TextBox" Text=" Is Locked" /></td>        
        <td class="whiteCell">
-           <asp:CheckBox ID="CheckBoxIsExternal" runat="server" CssClass="TextBox" Text=" Is External" /></td>
+           <asp:CheckBox ID="CheckBoxIsExternal" runat="server" CssClass="TextBox" Text=" Is External" />
+           &nbsp;&nbsp;
+           <asp:CheckBox ID="CheckBoxDoNotReplicate" runat="server" CssClass="TextBox" Text=" Do Not Replicate" /></td>
     </tr>
     <tr>
         <td class="whiteCell" style="width: 110px">
@@ -87,7 +89,7 @@
         <td class="whiteCell">
             <asp:TextBox ID="TextBoxEmail" runat="server" Width="200px" CssClass="TextBox" Enabled="False"></asp:TextBox></td>
         <td class="whiteCell">
-            <asp:Label ID="Label8" runat="server" CssClass="Label" Text="Phone:"></asp:Label></td>
+            <asp:Label ID="Label8" runat="server" CssClass="Label" Text="Telephone:"></asp:Label></td>
         <td class="whiteCell">
             <asp:TextBox ID="TextBoxPhone" runat="server" Width="200px" CssClass="TextBox" Enabled="False"></asp:TextBox></td>
     </tr>    
@@ -177,13 +179,7 @@
                     <asp:BoundField DataField="UserLastName" HeaderText="Last Name" SortExpression="UserLastName" />                    
                     <asp:BoundField DataField="UserEmailAddress" HeaderText="Email" />
                     <asp:BoundField DataField="UserPhoneNumber" HeaderText="Phone" />
-                    <asp:CheckBoxField DataField="UserIsLockedOut" HeaderText="Locked Out" />
-                    <asp:TemplateField>
-                        <ItemTemplate>
-                            <asp:LinkButton ID="LinkButton2" runat="server" CausesValidation="False" CommandName="DeleteUser"
-                                Text="Delete" CommandArgument='<%# Eval("UserName") %>'></asp:LinkButton>
-                        </ItemTemplate>
-                    </asp:TemplateField>
+                    <asp:CheckBoxField DataField="UserIsLockedOut" HeaderText="Locked Out" />                   
                 </Columns>
                 
                 <PagerStyle Font-Names="Tahoma" Font-Size="0.8em" HorizontalAlign="Right" />

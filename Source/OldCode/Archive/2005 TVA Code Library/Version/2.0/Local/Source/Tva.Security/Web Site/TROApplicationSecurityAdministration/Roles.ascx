@@ -44,7 +44,7 @@
                 </DefaultTabStyle>
                 
                 <Tabs>
-                    <igtab:Tab Text="Users">
+                    <igtab:Tab Text="Assign Users">
                         <Style>
                          <Padding Top="2px"></Padding>
                         </Style>
@@ -52,7 +52,7 @@
                             <uc2:UsersForRoles ID="UsersForRoles1" runat="server" />
                         </ContentTemplate>
                     </igtab:Tab>
-                    <igtab:Tab Text="Groups">
+                    <igtab:Tab Text="Assign Groups">
                         <Style>
                             <Padding Top="2px"></Padding>
                         </Style>

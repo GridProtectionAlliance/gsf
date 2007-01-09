@@ -31,7 +31,7 @@ Partial Class Companies
     Private Sub ClearForm()
         Me.TextBoxName.Text = ""
         ViewState("Mode") = "Add"
-        BindToGrid()
+        'BindToGrid()
     End Sub
 
     Protected Sub GridViewCompanies_PageIndexChanging(ByVal sender As Object, ByVal e As System.Web.UI.WebControls.GridViewPageEventArgs) Handles GridViewCompanies.PageIndexChanging
@@ -48,7 +48,7 @@ Partial Class Companies
             companiesAdapter.DeleteCompany(e.CommandArgument.ToString)
             ClearForm()
             ViewState("Mode") = "Add"
-            Session("RefreshData") = 1
+            Session("RefreshCompanies") = 1
         End If
     End Sub
 
@@ -59,7 +59,7 @@ Partial Class Companies
     ''' <param name="e"></param>
     ''' <remarks></remarks>
     Protected Sub ButtonSave_Click(ByVal sender As Object, ByVal e As System.EventArgs) Handles ButtonSave.Click
-        Dim newCompanyName As String = Me.TextBoxName.Text.Replace("'", "''")
+        Dim newCompanyName As String = Me.TextBoxName.Text '.Replace("'", "''")
 
         If ViewState("Mode") = "Add" Then
             companiesAdapter.InsertCompany(newCompanyName)
@@ -70,7 +70,7 @@ Partial Class Companies
         End If
 
         ClearForm()
-        Session("RefreshData") = 1
+        Session("RefreshCompanies") = 1
 
     End Sub
 
@@ -99,10 +99,11 @@ Partial Class Companies
     Protected Sub LinkButtonShowAll_Click(ByVal sender As Object, ByVal e As System.EventArgs) Handles LinkButtonShowAll.Click
         Me.TextBoxSearch.Text = ""
         ClearForm()
+        BindToGrid()
     End Sub
 
     Protected Sub Page_PreRender(ByVal sender As Object, ByVal e As System.EventArgs) Handles Me.PreRender
-        If Session("RefreshData") = 1 Then
+        If Session("RefreshCompanies") = 1 Then
             BindToGrid()
         End If
     End Sub

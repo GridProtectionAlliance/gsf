@@ -41,7 +41,7 @@
         <td align="center" class="whiteCell" colspan="4">
             <asp:GridView ID="GridViewCompanies" runat="server" AllowPaging="True" AllowSorting="False"
                 AutoGenerateColumns="False"
-                EmptyDataText="Data Not Available." Font-Names="Tahoma" Font-Size="0.7em" PageSize="15"
+                EmptyDataText="Data Not Available." Font-Names="Tahoma" Font-Size="0.7em" PageSize="22"
                 Width="98%">
                 
                 <Columns>

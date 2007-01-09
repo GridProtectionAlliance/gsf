@@ -13,6 +13,7 @@ Partial Class UsersForRoles
     Protected Sub Page_Load(ByVal sender As Object, ByVal e As System.EventArgs) Handles Me.Load
         If Not IsPostBack Then
             BindToGrid()
+            ViewState("RN") = ""
         End If
     End Sub
 
@@ -27,12 +28,13 @@ Partial Class UsersForRoles
         For Each row As GridViewRow In Me.GridViewUsers.Rows
             DirectCast(row.FindControl("CheckBox1"), CheckBox).Checked = False
         Next
+        ViewState("RN") = ""
     End Sub
 
     Public Sub LoadData(ByVal roleName As String)
 
         ClearCheckBoxes()
-
+        ViewState("RN") = roleName
         Dim rolesUsersDetailTable As Security.RolesUsersDetailDataTable = rolesUsersDetailAdapter.GetRolesUsersDetail(roleName)
 
         For Each rolesUsersDetailRow As Security.RolesUsersDetailRow In rolesUsersDetailTable.Rows
@@ -77,10 +79,14 @@ Partial Class UsersForRoles
             .DataSource = dv
             .DataBind()
         End With
+
+        If Not ViewState("RN") = "" Then
+            LoadData(ViewState("RN"))
+        End If
     End Sub
 
     Protected Sub Page_PreRender(ByVal sender As Object, ByVal e As System.EventArgs) Handles Me.PreRender
-        If Session("RefreshData") = 1 Then
+        If Session("RefreshUsers") = 1 Then
             BindToGrid()
         End If
     End Sub

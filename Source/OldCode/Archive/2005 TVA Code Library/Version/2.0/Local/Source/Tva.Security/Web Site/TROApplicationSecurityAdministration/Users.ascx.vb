@@ -24,6 +24,7 @@ Partial Class Users
             End If
             BindRolesToGrid()
 
+            ViewState("Company") = Me.DropDownListSelectCompanies.SelectedValue.ToString
             ViewState("Mode") = "Add"
             ViewState("UN") = ""
 
@@ -40,6 +41,7 @@ Partial Class Users
             .DataSource = Me.userAndCompaniesAndSecurityQuestionsAdapter.GetUsersByCompanyName(companyName)
             .DataBind()
         End With
+
     End Sub
 
     Private Sub BindRolesToGrid()
@@ -85,6 +87,10 @@ Partial Class Users
             .SelectedIndex = 0
         End With
 
+        If Not ViewState("Company") = "" Then
+            Me.DropDownListSelectCompanies.SelectedValue = ViewState("Company")
+        End If
+
     End Sub
 
     Protected Sub GridViewUsers_PageIndexChanging(ByVal sender As Object, ByVal e As System.Web.UI.WebControls.GridViewPageEventArgs) Handles GridViewUsers.PageIndexChanging
@@ -101,7 +107,7 @@ Partial Class Users
             usersAdapter.DeleteUser(e.CommandArgument.ToString)
             ClearForm()
             ViewState("Mode") = "Add"
-            Session("RefreshData") = 1
+            Session("RefreshUsers") = 1
         End If
     End Sub
 
@@ -115,8 +121,9 @@ Partial Class Users
         Me.TextBoxSecurityAnswer.Text = ""
         Me.CheckBoxIsExternal.Checked = False
         Me.CheckBoxIsLocked.Checked = False
+        Me.CheckBoxDoNotReplicate.Checked = False
         'PopulateDropDowns()
-        BindToGrid(Me.DropDownListSelectCompanies.SelectedItem.ToString)
+        'BindToGrid(Me.DropDownListSelectCompanies.SelectedItem.ToString)
 
         Dim en As Infragistics.WebUI.UltraWebGrid.UltraGridRowsEnumerator = Me.UltraWebGridRoles.Bands(1).GetRowsEnumerator
         While en.MoveNext
@@ -141,7 +148,6 @@ Partial Class Users
         Me.TextBoxPhone.Text = user.UserPhoneNumber
         Me.TextBoxSecurityAnswer.Text = user.UserSecurityAnswer
 
-
         If Not user.UserSecurityQuestion = "" Then
             Me.DropDownListSecurityQuestions.SelectedValue = user.SecurityQuestionID.ToString
         End If
@@ -158,6 +164,12 @@ Partial Class Users
             Me.CheckBoxIsExternal.Checked = True
         Else
             Me.CheckBoxIsExternal.Checked = False
+        End If
+
+        If user.UserNotForReplication Then
+            Me.CheckBoxDoNotReplicate.Checked = True
+        Else
+            Me.CheckBoxDoNotReplicate.Checked = False
         End If
 
         ChangeFieldsStatus(user.UserIsExternal)
@@ -208,28 +220,29 @@ Partial Class Users
     End Sub
 
     Protected Sub GridViewUsers_RowDataBound(ByVal sender As Object, ByVal e As System.Web.UI.WebControls.GridViewRowEventArgs) Handles GridViewUsers.RowDataBound
-        If e.Row.RowType = DataControlRowType.DataRow Then
-            Dim deleteLink As LinkButton = e.Row.FindControl("LinkButton2")
-            deleteLink.Attributes.Add("onclick", "javascript:return confirm('Do you want to delete user: " & _
-                                                    DataBinder.Eval(e.Row.DataItem, "UserName") & "? ');")
-        End If
+        'If e.Row.RowType = DataControlRowType.DataRow Then
+        '    Dim deleteLink As LinkButton = e.Row.FindControl("LinkButton2")
+        '    deleteLink.Attributes.Add("onclick", "javascript:return confirm('Do you want to delete user: " & _
+        '                                            DataBinder.Eval(e.Row.DataItem, "UserName") & "? ');")
+        'End If
     End Sub
 
     Protected Sub ButtonCancel_Click(ByVal sender As Object, ByVal e As System.EventArgs) Handles ButtonCancel.Click
         ClearForm()
-        PopulateDropDowns()
+        'PopulateDropDowns()
     End Sub
 
     Protected Sub ButtonSave_Click(ByVal sender As Object, ByVal e As System.EventArgs) Handles ButtonSave.Click
 
         Dim userName, password, firstName, lastName, email, securityAnswer, phone As String
         Dim companyID, securityQnID As Guid
-        Dim isLockedOut, isExternal As Boolean
+        Dim isLockedOut, isExternal, doNotReplicate As Boolean
 
         userName = Me.TextBoxUserName.Text.Replace("'", "''")
         companyID = New Guid(Me.DropDownListCompanies.SelectedValue)
         isLockedOut = Me.CheckBoxIsLocked.Checked
         isExternal = Me.CheckBoxIsExternal.Checked
+        doNotReplicate = Me.CheckBoxDoNotReplicate.Checked
         password = Me.TextBoxPassword.Text.Replace("'", "''")
         firstName = Me.TextBoxFirstName.Text.Replace("'", "''")
         lastName = Me.TextBoxLastName.Text.Replace("'", "''")
@@ -243,13 +256,13 @@ Partial Class Users
         
         If ViewState("Mode") = "Add" Then
             If isExternal Then
-                usersAdapter.InsertUser(companyID, securityQnID, userName, Tva.Security.Application.User.EncryptPassword(password), firstName, lastName, phone, email, securityAnswer, isLockedOut, isExternal)
+                usersAdapter.InsertUser(companyID, securityQnID, userName, Tva.Security.Application.User.EncryptPassword(password), firstName, lastName, phone, email, securityAnswer, isLockedOut, isExternal, doNotReplicate)
             Else
                 'If Internal User then company id must be TVA.
                 companyID = companiesAdapter.GetCompanyIdByCompanyName("Tennessee Valley Authority")
                 'Check if userName (NTID) exists in the active directory.
                 If NtidExistInActiveDirectory(userName) Then
-                    usersAdapter.InsertInternalUsers(companyID, userName)
+                    usersAdapter.InsertInternalUsers(companyID, userName, doNotReplicate)
                     Me.LabelMsg.Text = ""
                 Else
                     Me.LabelMsg.Text = "User Name does not exist in the active directory."
@@ -257,15 +270,15 @@ Partial Class Users
 
             End If
 
-            UpdateUsersRoles(userName.Replace(" ", ""))
+            UpdateUsersRoles(userName.Replace(" ", "_"))
         Else
             If Not ViewState("UN") = "" Then
 
                 If isExternal Then
                     If password = "" Then
-                        usersAdapter.UpdateUserWithoutPassword(companyID, securityQnID, userName, firstName, lastName, phone, email, securityAnswer, isLockedOut, isExternal, ViewState("UN"))
+                        usersAdapter.UpdateUserWithoutPassword(companyID, securityQnID, userName, firstName, lastName, phone, email, securityAnswer, isLockedOut, isExternal, doNotReplicate, ViewState("UN"))
                     Else
-                        usersAdapter.UpdateUser(companyID, securityQnID, userName, Tva.Security.Application.User.EncryptPassword(password), firstName, lastName, phone, email, securityAnswer, isLockedOut, isExternal, ViewState("UN"))
+                        usersAdapter.UpdateUser(companyID, securityQnID, userName, Tva.Security.Application.User.EncryptPassword(password), firstName, lastName, phone, email, securityAnswer, isLockedOut, isExternal, doNotReplicate, ViewState("UN"))
                     End If
                 Else
 
@@ -273,7 +286,7 @@ Partial Class Users
                     companyID = companiesAdapter.GetCompanyIdByCompanyName("Tennessee Valley Authority")
                     'Check if userName (NTID) exists in the active directory.
                     If NtidExistInActiveDirectory(userName) Then
-                        usersAdapter.UpdateInternalUser(companyID, userName, ViewState("UN"))
+                        usersAdapter.UpdateInternalUser(companyID, userName, doNotReplicate, ViewState("UN"))
                         Me.LabelMsg.Text = ""
                     Else
                         Me.LabelMsg.Text = "User Name does not exist in the active directory."
@@ -282,12 +295,12 @@ Partial Class Users
                 End If
 
                 
-                UpdateUsersRoles(userName.Replace(" ", ""))
+                UpdateUsersRoles(userName.Replace(" ", "_"))
             End If
         End If
 
         ClearForm()
-        Session("RefreshData") = 1
+        Session("RefreshUsers") = 1
 
     End Sub
 
@@ -310,7 +323,9 @@ Partial Class Users
 
     Protected Sub DropDownListSelectCompanies_SelectedIndexChanged(ByVal sender As Object, ByVal e As System.EventArgs) Handles DropDownListSelectCompanies.SelectedIndexChanged
         ClearForm()
+        BindToGrid(Me.DropDownListSelectCompanies.SelectedItem.ToString)
         Me.DropDownListCompanies.SelectedValue = Me.DropDownListSelectCompanies.SelectedValue
+        ViewState("Company") = Me.DropDownListSelectCompanies.SelectedValue.ToString
     End Sub
 
     Protected Sub ButtonSearch_Click(ByVal sender As Object, ByVal e As System.EventArgs) Handles ButtonSearch.Click
@@ -326,6 +341,7 @@ Partial Class Users
     Protected Sub LinkButtonShowAll_Click(ByVal sender As Object, ByVal e As System.EventArgs) Handles LinkButtonShowAll.Click
         Me.TextBoxSearch.Text = ""
         ClearForm()
+        BindToGrid(Me.DropDownListSelectCompanies.SelectedItem.ToString)
     End Sub
 
     Protected Sub GridViewUsers_Sorting(ByVal sender As Object, ByVal e As System.Web.UI.WebControls.GridViewSortEventArgs) Handles GridViewUsers.Sorting
@@ -356,6 +372,8 @@ Partial Class Users
             .FromKey("ApplicationID").Hidden = True
             .FromKey("ApplicationName").Width = New Unit(100)
             .FromKey("ApplicationDescription").Width = New Unit(500)
+            .FromKey("ApplicationName").Header.Caption = "Application Name"
+            .FromKey("ApplicationDescription").Header.Caption = "Description"
         End With
 
         With Me.UltraWebGridRoles.Bands(1).Columns
@@ -366,17 +384,27 @@ Partial Class Users
             .FromKey("Select").Width = New Unit(75)
             .FromKey("RoleName").Width = New Unit(125)
             .FromKey("RoleDescription").Width = New Unit(400)
+            .FromKey("RoleName").Header.Caption = "Role Name"
+            .FromKey("RoleDescription").Header.Caption = "Description"
+            .FromKey("Select").Header.Caption = " Select "
         End With
 
     End Sub
 
     Protected Sub Page_PreRender(ByVal sender As Object, ByVal e As System.EventArgs) Handles Me.PreRender
-        If Session("RefreshData") = 1 Then
+        If Session("RefreshCompanies") = 1 Then
             PopulateDropDowns()
-            If Me.DropDownListSelectCompanies.Items.Count > 0 Then
-                BindToGrid(Me.DropDownListSelectCompanies.SelectedItem.ToString)
-            End If
+            'If Me.DropDownListSelectCompanies.Items.Count > 0 Then
+            '    BindToGrid(Me.DropDownListSelectCompanies.SelectedItem.ToString)
+            'End If
+        End If
+
+        If Session("RefreshRoles") = 1 Then
             BindRolesToGrid()
+        End If
+
+        If Session("RefreshUsers") = 1 Then
+            BindToGrid(Me.DropDownListSelectCompanies.SelectedItem.ToString)
         End If
     End Sub
 

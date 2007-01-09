@@ -41,7 +41,7 @@ Partial Class Applications
         Me.TextBoxName.Text = ""
         Me.TextBoxDescription.Text = ""
         ViewState("Mode") = "Add"
-        BindToGrid()
+        'BindToGrid()
     End Sub
 
     Protected Sub GridViewApplications_PageIndexChanging(ByVal sender As Object, ByVal e As System.Web.UI.WebControls.GridViewPageEventArgs) Handles GridViewApplications.PageIndexChanging
@@ -57,8 +57,9 @@ Partial Class Applications
         ElseIf e.CommandName = "DeleteApplication" Then
             appsAdapter.DeleteApplication(e.CommandArgument.ToString)
             ClearForm()
+            'BindToGrid()
             ViewState("Mode") = "Add"
-            Session("RefreshData") = 1
+            Session("RefreshApps") = 1
         End If
     End Sub
 
@@ -79,8 +80,8 @@ Partial Class Applications
     ''' <param name="e"></param>
     ''' <remarks></remarks>
     Protected Sub ButtonSave_Click(ByVal sender As Object, ByVal e As System.EventArgs) Handles ButtonSave.Click
-        Dim newAppName As String = Me.TextBoxName.Text.Replace("'", "''")
-        Dim newAppDescription As String = Me.TextBoxDescription.Text.Replace("'", "''")
+        Dim newAppName As String = Me.TextBoxName.Text '.Replace("'", "''")
+        Dim newAppDescription As String = Me.TextBoxDescription.Text '.Replace("'", "''")
 
         If ViewState("Mode") = "Add" Then
             appsAdapter.InsertApplication(newAppName, newAppDescription)
@@ -91,7 +92,7 @@ Partial Class Applications
 
         End If
         ClearForm()
-        Session("RefreshData") = 1
+        Session("RefreshApps") = 1
 
     End Sub
 
@@ -120,10 +121,11 @@ Partial Class Applications
     Protected Sub LinkButtonShowAll_Click(ByVal sender As Object, ByVal e As System.EventArgs) Handles LinkButtonShowAll.Click
         Me.TextBoxSearch.Text = ""
         ClearForm()
+        BindToGrid()
     End Sub
 
     Protected Sub Page_PreRender(ByVal sender As Object, ByVal e As System.EventArgs) Handles Me.PreRender
-        If Session("RefreshData") = 1 Then
+        If Session("RefreshApps") = 1 Then
             BindToGrid()
         End If
     End Sub

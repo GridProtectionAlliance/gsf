@@ -2,6 +2,15 @@
 <%@ Register Assembly="Infragistics2.WebUI.UltraWebGrid.v6.1, Version=6.1.20061.28, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"
     Namespace="Infragistics.WebUI.UltraWebGrid" TagPrefix="igtbl" %>
 
+
+<script language=javascript>
+    function ShowUsers(groupName)
+    {
+        window.showModalDialog("ShowUsers.aspx?GroupName=" + groupName, "",  "dialogHeight: 750px; dialogWidth:625px; center: Yes;");
+        return false;
+    }       
+</script>
+
 <br />
 <table border=0 cellpadding=2 cellspacing=1 width="750" align=center>
      <tr>
@@ -152,13 +161,19 @@
                     </asp:TemplateField>                    
                     <asp:BoundField DataField="GroupDescription" HeaderText="Description" SortExpression="GroupDescription" >
                         <ItemStyle HorizontalAlign="Left" Wrap="True" />
-                    </asp:BoundField>            
+                    </asp:BoundField>
+                    <asp:TemplateField>
+                         <ItemTemplate>
+                                <asp:LinkButton ID="LinkButton3" runat="server" CausesValidation="False" CommandName="ViewUsers"
+                                    Text="View Users" CommandArgument='<%# Eval("GroupName") %>'></asp:LinkButton>
+                         </ItemTemplate>
+                    </asp:TemplateField>             
                     <asp:TemplateField>
                          <ItemTemplate>
                                 <asp:LinkButton ID="LinkButton2" runat="server" CausesValidation="False" CommandName="DeleteGroup"
                                     Text="Delete" CommandArgument='<%# Eval("GroupName") %>'></asp:LinkButton>
                          </ItemTemplate>
-                    </asp:TemplateField>    
+                    </asp:TemplateField>                       
                 </Columns>  
                 
                 <PagerStyle Font-Names="Tahoma" Font-Size="0.8em" HorizontalAlign="Right" />
