@@ -145,7 +145,8 @@ Public Class MultiProtocolFrameParser
                     m_bufferSize = DefaultBufferSize
                 Case Communication.TransportProtocol.Udp
                     m_deviceSupportsCommands = False
-                    m_bufferSize = m_bufferSize Mod UdpClient.MaximumUdpDatagramSize
+                    If m_bufferSize < UdpClient.MinimumUdpBufferSize Then m_bufferSize = UdpClient.MinimumUdpBufferSize
+                    If m_bufferSize > UdpClient.MaximumUdpDatagramSize Then m_bufferSize = UdpClient.MaximumUdpDatagramSize
                 Case Communication.TransportProtocol.File
                     m_deviceSupportsCommands = False
                     m_bufferSize = DefaultBufferSize
@@ -188,10 +189,12 @@ Public Class MultiProtocolFrameParser
             Return m_bufferSize
         End Get
         Set(ByVal value As Int32)
+            m_bufferSize = value
+
+            ' UDP has special restrictions on overall buffer size
             If m_transportProtocol = Communication.TransportProtocol.Udp Then
-                m_bufferSize = value Mod UdpClient.MaximumUdpDatagramSize
-            Else
-                m_bufferSize = value
+                If m_bufferSize < UdpClient.MinimumUdpBufferSize Then m_bufferSize = UdpClient.MinimumUdpBufferSize
+                If m_bufferSize > UdpClient.MaximumUdpDatagramSize Then m_bufferSize = UdpClient.MaximumUdpDatagramSize
             End If
         End Set
     End Property
