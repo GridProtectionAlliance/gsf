@@ -41,6 +41,10 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\TVA Code Library\Source\bin\Tva.Core.dll</HintPath>
     </Reference>
+    <Reference Include="Tva.Phasors, Version=2.1.63.53023, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\TVA Code Library\Source\bin\Tva.Phasors.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Import Include="Microsoft.VisualBasic" />

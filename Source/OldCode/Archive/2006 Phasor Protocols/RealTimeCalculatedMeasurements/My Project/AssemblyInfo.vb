@@ -8,17 +8,17 @@ Imports System.Runtime.InteropServices
 
 ' Review the values of the assembly attributes
 
-<Assembly: AssemblyTitle("DatAWareAdapter.vb")> 
+<Assembly: AssemblyTitle("ReferenceAngleCalculator")> 
 <Assembly: AssemblyDescription("")> 
 <Assembly: AssemblyCompany("TVA")> 
-<Assembly: AssemblyProduct("DatAWareAdapter.vb")> 
+<Assembly: AssemblyProduct("ReferenceAngleCalculator")> 
 <Assembly: AssemblyCopyright("Copyright © TVA 2006")> 
 <Assembly: AssemblyTrademark("")> 
 
 <Assembly: ComVisible(False)>
 
 'The following GUID is for the ID of the typelib if this project is exposed to COM
-<Assembly: Guid("d57e1507-79f7-4724-8b7a-e82fa7c57f04")> 
+<Assembly: Guid("ddd658a3-a9fb-43ba-99a1-021ef8264e36")> 
 
 ' Version information for an assembly consists of the following four values:
 '
