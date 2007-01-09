@@ -146,7 +146,7 @@ Namespace BpaPdcStream
 
             Try
                 With m_iniFile
-                    If File.Exists(.IniFileName) Then
+                    If File.Exists(.FileName) Then
                         Dim pmuCell As ConfigurationCell
                         Dim x, phasorCount As Int32
 
@@ -182,7 +182,7 @@ Namespace BpaPdcStream
                             End If
                         Next
                     Else
-                        Throw New InvalidOperationException("PDC config file """ & .IniFileName & """ does not exist.")
+                        Throw New InvalidOperationException("PDC config file """ & .FileName & """ does not exist.")
                     End If
                 End With
             Catch ex As Exception
@@ -211,7 +211,7 @@ Namespace BpaPdcStream
                 m_readWriteLock.AcquireReaderLock(-1)
 
                 Try
-                    Return m_iniFile.IniFileName
+                    Return m_iniFile.FileName
                 Catch
                     Throw
                 Finally
@@ -268,7 +268,7 @@ Namespace BpaPdcStream
 
                 Try
                     With New StringBuilder
-                        .Append("; File - " & m_iniFile.IniFileName & vbCrLf)
+                        .Append("; File - " & m_iniFile.FileName & vbCrLf)
                         .Append("; Auto-generated on " & Now() & " by TVA DatAWare PDC" & vbCrLf)
                         .Append(";    Assembly: " & GetShortAssemblyName(GetExecutingAssembly) & vbCrLf)
                         .Append(";    Compiled: " & File.GetLastWriteTime(GetExecutingAssembly.Location) & vbCrLf)
