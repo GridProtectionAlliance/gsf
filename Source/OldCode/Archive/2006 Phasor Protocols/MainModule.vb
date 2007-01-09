@@ -88,13 +88,13 @@ Module MainModule
                     Console.WriteLine(m_calculatedMeasurements(x).Status)
                 Next
 
-                Dim totalWorkerThreads, usedWorkerThreads, totalIOThreads, usedIOThreads As Integer
+                Dim totalWorkerThreads, availableWorkerThreads, totalIOThreads, availableIOThreads As Integer
 
                 Threading.ThreadPool.GetMaxThreads(totalWorkerThreads, totalIOThreads)
-                Threading.ThreadPool.GetAvailableThreads(usedWorkerThreads, usedIOThreads)
+                Threading.ThreadPool.GetAvailableThreads(availableWorkerThreads, availableIOThreads)
 
-                Console.WriteLine("Worker Thread Utilization: " & usedWorkerThreads & " / " & totalWorkerThreads)
-                Console.WriteLine("  Port Thread Utilization: " & usedIOThreads & " / " & totalIOThreads)
+                Console.WriteLine("Worker Thread Utilization: " & ((totalWorkerThreads - availableWorkerThreads) / totalWorkerThreads * 100.0R).ToString("0.00%"))
+                Console.WriteLine("    IO Thread Utilization: " & ((totalIOThreads - availableIOThreads) / totalIOThreads * 100.0R).ToString("0.00%"))
                 Console.WriteLine()
             ElseIf consoleLine.StartsWith("list", True, Nothing) Then
                 Console.WriteLine()
@@ -135,6 +135,7 @@ Module MainModule
             ' tolerance to maximum during the initialization process
             m_messageDisplayTimepan = 10
             m_maximumMessagesToDisplay = Integer.MaxValue
+            m_displayedMessageCount = 0
 
             DisplayStatusMessage("PMU database connection opened...")
 
@@ -144,6 +145,7 @@ Module MainModule
             ' Restore normal message volume tolerances
             m_messageDisplayTimepan = IntegerSetting("MessageDisplayTimespan")
             m_maximumMessagesToDisplay = IntegerSetting("MaximumMessagesToDisplay")
+            m_displayedMessageCount = 0
         Catch ex As Exception
             DisplayStatusMessage("Failure during initialization: " & ex.Message)
         Finally
@@ -192,7 +194,7 @@ Module MainModule
 
                     ' Create a new instance of the historian adpater
                     historianAdapter = Activator.CreateInstance(externalAssembly.GetType(.Rows(x)("TypeName").ToString()))
-                    historianAdapter.Initialize(.Rows(x)("ConnectionString"))
+                    historianAdapter.Initialize(.Rows(x)("ConnectionString").ToString())
 
                     measurementReceiver = New PhasorMeasurementReceiver( _
                         historianAdapter, _
