@@ -91,8 +91,13 @@ Namespace BpaPdcStream
 
         Public Sub New(ByVal configFileName As String, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
-            ' TODO: provide static configuration cell creation function
-            MyBase.New(New ConfigurationFrameParsingState(New ConfigurationCellCollection, 0, Nothing), binaryImage, startIndex)
+            MyBase.New(New ConfigurationFrameParsingState(New ConfigurationCellCollection, 0, _
+                AddressOf BpaPdcStream.ConfigurationCell.CreateNewConfigurationCell), binaryImage, startIndex)
+
+            m_iniFile = New IniFile(configFileName)
+            m_readWriteLock = New ReaderWriterLock
+            m_packetsPerSample = 1
+
             Refresh()
 
         End Sub
