@@ -53,8 +53,8 @@ Module MainModule
         Settings.Add("PMUDatabase", "Data Source=ESOEXTSQL;Initial Catalog=PMU_SDS;Integrated Security=False;user ID=ESOPublic;pwd=4all2see", "PMU metaData database connect string")
         Settings.Add("PMUStatusInterval", "5", "Number of seconds of deviation from UTC time (according to local clock) that last PMU reporting time is allowed before considering it offline")
         Settings.Add("DataLossInterval", "35000", "Number of milliseconds to wait for incoming data before restarting connection cycle to device")
-        Settings.Add("MessageDisplayTimespan", "1", "Timespan, in seconds, over which to monitor message volume")
-        Settings.Add("MaximumMessagesToDisplay", "20", "Maximum number of messages to be tolerated during MessageDisplayTimespan")
+        Settings.Add("MessageDisplayTimespan", "2", "Timespan, in seconds, over which to monitor message volume")
+        Settings.Add("MaximumMessagesToDisplay", "100", "Maximum number of messages to be tolerated during MessageDisplayTimespan")
         SaveSettings()
 
         InitializeConfiguration(AddressOf InitializeSystem)
@@ -192,6 +192,7 @@ Module MainModule
 
                     ' Create a new instance of the historian adpater
                     historianAdapter = Activator.CreateInstance(externalAssembly.GetType(.Rows(x)("TypeName").ToString()))
+                    historianAdapter.Initialize(.Rows(x)("ConnectionString"))
 
                     measurementReceiver = New PhasorMeasurementReceiver( _
                         historianAdapter, _

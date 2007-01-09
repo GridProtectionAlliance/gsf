@@ -2,6 +2,11 @@
 Microsoft Visual Studio Solution File, Format Version 9.00
 # Visual Studio 2005
 Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "PhasorMeasurementReceiver", "PhasorMeasurementReceiver.vbproj", "{0BDCD521-D91F-4E5E-A89A-62A19D2054BE}"
+	ProjectSection(ProjectDependencies) = postProject
+		{F452CF72-30CA-4245-B054-F9E73783FD78} = {F452CF72-30CA-4245-B054-F9E73783FD78}
+		{DFAF5597-0D41-4010-BE81-42EBD243D3C5} = {DFAF5597-0D41-4010-BE81-42EBD243D3C5}
+		{0BCA43CD-81D6-495B-BFFB-98B6F414AB13} = {0BCA43CD-81D6-495B-BFFB-98B6F414AB13}
+	EndProjectSection
 EndProject
 Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "DatAWareHistorianAdapter", "DatAWareAdapter\DatAWareHistorianAdapter.vbproj", "{F452CF72-30CA-4245-B054-F9E73783FD78}"
 EndProject
@@ -14,21 +19,21 @@ EndProject
 Global
 	GlobalSection(SourceCodeControl) = preSolution
 		SccNumberOfProjects = 6
-		SccProjectUniqueName0 = PhasorMeasurementReceiver.vbproj
 		SccLocalPath0 = .
-		SccProjectUniqueName1 = DatAWareAdapter\\DatAWareHistorianAdapter.vbproj
-		SccProjectName1 = \u0022$/Phasor\u0020Tools/PhasorMeasurementReceiver/DatAWareAdapter\u0022,\u0020VCPAAAAA
-		SccLocalPath1 = DatAWareAdapter
-		SccProjectUniqueName2 = InterfaceAdapters\\InterfaceAdapters.vbproj
-		SccProjectName2 = \u0022$/Phasor\u0020Tools/PhasorMeasurementReceiver/InterfaceAdapters\u0022,\u0020CDIAAAAA
-		SccLocalPath2 = InterfaceAdapters
-		SccProjectUniqueName3 = RealTimeCalculatedMeasurements\\RealTimeCalculatedMeasurements.vbproj
-		SccProjectName3 = \u0022$/Phasor\u0020Tools/PhasorMeasurementReceiver/RealTimeCalculatedMeasurements\u0022,\u0020UBPAAAAA
-		SccLocalPath3 = RealTimeCalculatedMeasurements
-		SccProjectUniqueName4 = RealTimeStabilityAlarm\\RealTimeStabilityAlarm.vbproj
-		SccProjectName4 = \u0022$/Phasor\u0020Tools/PhasorMeasurementReceiver/RealTimeStabilityAlarm\u0022,\u0020DJPAAAAA
-		SccLocalPath4 = RealTimeStabilityAlarm
-		SccLocalPath5 = .
+		SccProjectUniqueName1 = PhasorMeasurementReceiver.vbproj
+		SccLocalPath1 = .
+		SccProjectUniqueName2 = DatAWareAdapter\\DatAWareHistorianAdapter.vbproj
+		SccProjectName2 = \u0022$/Phasor\u0020Tools/PhasorMeasurementReceiver/DatAWareAdapter\u0022,\u0020VCPAAAAA
+		SccLocalPath2 = DatAWareAdapter
+		SccProjectUniqueName3 = InterfaceAdapters\\InterfaceAdapters.vbproj
+		SccProjectName3 = \u0022$/Phasor\u0020Tools/PhasorMeasurementReceiver/InterfaceAdapters\u0022,\u0020CDIAAAAA
+		SccLocalPath3 = InterfaceAdapters
+		SccProjectUniqueName4 = RealTimeCalculatedMeasurements\\RealTimeCalculatedMeasurements.vbproj
+		SccProjectName4 = \u0022$/Phasor\u0020Tools/PhasorMeasurementReceiver/RealTimeCalculatedMeasurements\u0022,\u0020UBPAAAAA
+		SccLocalPath4 = RealTimeCalculatedMeasurements
+		SccProjectUniqueName5 = RealTimeStabilityAlarm\\RealTimeStabilityAlarm.vbproj
+		SccProjectName5 = \u0022$/Phasor\u0020Tools/PhasorMeasurementReceiver/RealTimeStabilityAlarm\u0022,\u0020DJPAAAAA
+		SccLocalPath5 = RealTimeStabilityAlarm
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

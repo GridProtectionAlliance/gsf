@@ -293,7 +293,7 @@ Public Class PhasorMeasurementReceiver
 
     End Sub
 
-    Private Sub UpdateStatus(ByVal status As String)
+    Private Sub UpdateStatus(ByVal status As String) Handles m_historianAdapter.StatusMessage
 
         RaiseEvent StatusMessage("[" & m_archiverSource & "]: " & status)
 

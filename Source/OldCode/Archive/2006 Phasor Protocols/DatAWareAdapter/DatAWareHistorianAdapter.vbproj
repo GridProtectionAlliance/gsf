@@ -105,4 +105,8 @@
   <Target Name="AfterBuild">
   </Target>
   -->
+  <PropertyGroup>
+    <PostBuildEvent>ECHO . &gt;"$(SolutionDir)$(OutDir)$(TargetFileName)"
+XCOPY /C /R /Y "$(TargetPath)" "$(SolutionDir)$(OutDir)$(TargetFileName)"</PostBuildEvent>
+  </PropertyGroup>
 </Project>
