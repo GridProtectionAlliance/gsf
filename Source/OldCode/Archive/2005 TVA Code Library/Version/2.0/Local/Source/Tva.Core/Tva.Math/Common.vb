@@ -46,7 +46,7 @@ Namespace Math
         ''' <returns>A non-zero value</returns>
         Public Shared Function NotZero(ByVal testValue As Double) As Double
 
-            Return NotZero(testValue, -1.0#)
+            Return NotZero(testValue, -1.0R)
 
         End Function
 
@@ -57,7 +57,7 @@ Namespace Math
         ''' <remarks>To optimize performance this function does not validate that the notZeroReturnValue is not zero</remarks>
         Public Shared Function NotZero(ByVal testValue As Double, ByVal nonZeroReturnValue As Double) As Double
 
-            Return IIf(testValue = 0, nonZeroReturnValue, testValue)
+            Return IIf(testValue = 0.0R, nonZeroReturnValue, testValue)
 
         End Function
 
