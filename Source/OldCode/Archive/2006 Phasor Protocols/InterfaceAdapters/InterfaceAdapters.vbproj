@@ -51,6 +51,7 @@
     <Import Include="System.Diagnostics" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AdapterBase.vb" />
     <Compile Include="HistorianAdapterBase.vb" />
     <Compile Include="ICalculatedMeasurementAdapter.vb" />
     <Compile Include="IAdapter.vb" />
