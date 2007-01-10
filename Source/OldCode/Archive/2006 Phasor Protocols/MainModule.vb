@@ -157,6 +157,14 @@ Module MainModule
 
     Private Sub InitializeSystem(ByVal connection As SqlConnection)
 
+        ' If calculated measurements are already defined (i.e., we are "re-initializing" code), we need to dispose
+        ' existing calculation instances such that all items can be shut-down in an orderly fashion
+        If Not m_calculatedMeasurements Is Nothing Then
+            For x As Integer = 0 To m_calculatedMeasurements.Length - 1
+                m_calculatedMeasurements(x).Dispose()
+            Next
+        End If
+
         ' Define all of the calculated measurements
         m_calculatedMeasurements = DefineCalculatedMeasurements(connection)
 

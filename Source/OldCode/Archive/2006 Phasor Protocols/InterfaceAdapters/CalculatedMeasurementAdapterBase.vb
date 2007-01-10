@@ -59,6 +59,12 @@ Public MustInherit Class CalculatedMeasurementAdapterBase
 
     End Sub
 
+    Public Overrides Sub Dispose()
+
+        m_concentrator.Enabled = False
+
+    End Sub
+
     ' Since there may be many hundreds of calculated measurements and each measurement can have hundreds of inputs, we do all
     ' the "measurement filtering and sorting" on independent threads so as to not slow up publishing of new measurements
 

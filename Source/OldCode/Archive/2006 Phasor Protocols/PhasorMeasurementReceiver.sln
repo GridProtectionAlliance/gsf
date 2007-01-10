@@ -16,9 +16,11 @@ Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "RealTimeCalculatedMeasureme
 EndProject
 Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "RealTimeStabilityAlarm", "RealTimeStabilityAlarm\RealTimeStabilityAlarm.vbproj", "{0BCA43CD-81D6-495B-BFFB-98B6F414AB13}"
 EndProject
+Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "ICCPDataExport", "ICCPDataExport\ICCPDataExport.vbproj", "{BF6572C0-A38E-4555-8BD8-704BB65DE061}"
+EndProject
 Global
 	GlobalSection(SourceCodeControl) = preSolution
-		SccNumberOfProjects = 6
+		SccNumberOfProjects = 7
 		SccLocalPath0 = .
 		SccProjectUniqueName1 = PhasorMeasurementReceiver.vbproj
 		SccLocalPath1 = .
@@ -34,6 +36,9 @@ Global
 		SccProjectUniqueName5 = RealTimeStabilityAlarm\\RealTimeStabilityAlarm.vbproj
 		SccProjectName5 = \u0022$/Phasor\u0020Tools/PhasorMeasurementReceiver/RealTimeStabilityAlarm\u0022,\u0020DJPAAAAA
 		SccLocalPath5 = RealTimeStabilityAlarm
+		SccProjectUniqueName6 = ICCPDataExport\\ICCPDataExport.vbproj
+		SccLocalPath6 = .
+		SccProjectFilePathRelativizedFromConnection6 = ICCPDataExport\\
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -60,6 +65,10 @@ Global
 		{0BCA43CD-81D6-495B-BFFB-98B6F414AB13}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0BCA43CD-81D6-495B-BFFB-98B6F414AB13}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0BCA43CD-81D6-495B-BFFB-98B6F414AB13}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BF6572C0-A38E-4555-8BD8-704BB65DE061}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BF6572C0-A38E-4555-8BD8-704BB65DE061}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BF6572C0-A38E-4555-8BD8-704BB65DE061}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BF6572C0-A38E-4555-8BD8-704BB65DE061}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

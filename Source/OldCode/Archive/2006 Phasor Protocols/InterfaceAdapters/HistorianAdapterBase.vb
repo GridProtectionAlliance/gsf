@@ -96,6 +96,12 @@ Public MustInherit Class HistorianAdapterBase
 
     End Sub
 
+    Public Overrides Sub Dispose()
+
+        Disconnect()
+
+    End Sub
+
     Protected MustOverride Sub AttemptDisconnection()
 
     Public Overridable Sub QueueMeasurementForArchival(ByVal measurement As IMeasurement) Implements IHistorianAdapter.QueueMeasurementForArchival

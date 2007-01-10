@@ -1,6 +1,6 @@
 '*******************************************************************************************************
-'  AdapterBase.vb - Adpater base class
-'  Copyright © 2006 - TVA, all rights reserved - Gbtc
+'  IAdapter.vb - Abstract adpater interface
+'  Copyright © 2005 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005
 '  Primary Developer: J. Ritchie Carroll, Operations Data Architecture [TVA]
@@ -10,27 +10,22 @@
 '
 '  Code Modification History:
 '  -----------------------------------------------------------------------------------------------------
-'  07/29/2006 - J. Ritchie Carroll
+'  06/01/2006 - J. Ritchie Carroll
 '       Initial version of source generated
 '
 '*******************************************************************************************************
 
-Public MustInherit Class AdapterBase
+Public Interface IAdapter
 
-    Implements IAdapter
+    Inherits IDisposable
 
-    Public Event StatusMessage(ByVal status As String) Implements IAdapter.StatusMessage
+    ''' <summary>Sends informational message from adapter to host</summary>
+    Event StatusMessage(ByVal status As String)
 
-    Public MustOverride Sub Dispose() Implements IDisposable.Dispose
+    ''' <summary>Name of the adapter</summary>
+    ReadOnly Property Name() As String
 
-    Public MustOverride ReadOnly Property Name() As String Implements IAdapter.Name
+    ''' <summary>Provides current status information about the adapter</summary>
+    ReadOnly Property Status() As String
 
-    Public MustOverride ReadOnly Property Status() As String Implements IAdapter.Status
-
-    Protected Overridable Sub UpdateStatus(ByVal message As String)
-
-        RaiseEvent StatusMessage(message)
-
-    End Sub
-
-End Class
+End Interface
