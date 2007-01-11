@@ -22,6 +22,7 @@ Imports Tva.Measurements
 Imports Tva.Configuration.Common
 Imports Tva.IO.FilePath
 Imports Tva.Data.Common
+Imports Tva.DateTime.Common
 Imports InterfaceAdapters
 
 Public Class MeasurementExporter
@@ -64,7 +65,7 @@ Public Class MeasurementExporter
 
     End Sub
 
-    Public Overrides Sub Initialize(ByVal outputMeasurements() As Tva.Measurements.IMeasurement, ByVal inputMeasurementKeys() As Tva.Measurements.MeasurementKey, ByVal minimumMeasurementsToUse As Integer, ByVal expectedMeasurementsPerSecond As Integer, ByVal lagTime As Double, ByVal leadTime As Double)
+    Public Overrides Sub Initialize(ByVal outputMeasurements() As IMeasurement, ByVal inputMeasurementKeys() As MeasurementKey, ByVal minimumMeasurementsToUse As Integer, ByVal expectedMeasurementsPerSecond As Integer, ByVal lagTime As Double, ByVal leadTime As Double)
 
         MyBase.Initialize(outputMeasurements, inputMeasurementKeys, minimumMeasurementsToUse, expectedMeasurementsPerSecond, lagTime, leadTime)
 
@@ -157,6 +158,33 @@ Public Class MeasurementExporter
         End Get
     End Property
 
+    ' To optimize performance, we only sort the exact measurements that will be needed
+    Public Overrides Sub QueueMeasurementForCalculation(ByVal measurement As IMeasurement)
+
+        If IsTimeToExport(measurement.Ticks) Then MyBase.QueueMeasurementForCalculation(measurement)
+
+    End Sub
+
+    Public Overrides Sub QueueMeasurementsForCalculation(ByVal measurements As IList(Of IMeasurement))
+
+        If measurements IsNot Nothing Then
+            For x As Integer = 0 To measurements.Count - 1
+                QueueMeasurementForCalculation(measurements(x))
+            Next
+        End If
+
+    End Sub
+
+    Public Overrides Sub QueueMeasurementsForCalculation(ByVal measurements As IDictionary(Of MeasurementKey, IMeasurement))
+
+        If measurements IsNot Nothing Then
+            For Each measurement As IMeasurement In measurements.Values
+                QueueMeasurementForCalculation(measurement)
+            Next
+        End If
+
+    End Sub
+
     ''' <summary>
     ''' Export PMU data to ICCP using an intermediate file
     ''' </summary>
@@ -171,7 +199,7 @@ Public Class MeasurementExporter
     Protected Overrides Sub PerformCalculation(ByVal frame As IFrame, ByVal index As Integer)
 
         ' We only export data at the specified interval
-        If frame.Timestamp.Second Mod m_exportInterval = 0 Then
+        If IsTimeToExport(frame.Ticks) Then
             ' Note: since this code only gets executed every few seconds we go ahead and publish any error messages as needed
             With frame.Measurements
                 ' Make sure there are measurements to export
@@ -240,5 +268,11 @@ Public Class MeasurementExporter
         End If
 
     End Sub
+
+    Private Function IsTimeToExport(ByVal ticks As Long) As Boolean
+
+        Return ((New Date(ticks)).Second Mod m_exportInterval = 0 AndAlso Convert.ToInt32(TicksBeyondSecond(ticks) / FrameRate) = 0)
+
+    End Function
 
 End Class

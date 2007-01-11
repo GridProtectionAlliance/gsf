@@ -33,7 +33,7 @@ Public MustInherit Class CalculatedMeasurementAdapterBase
     ' We need to time align incoming measurements before attempting to calculate new outgoing measurement
     Private WithEvents m_concentrator As Concentrator
     Private m_outputMeasurements As IMeasurement()
-    Private m_inputMeasurementKeys As MeasurementKey()
+    Private m_inputMeasurementKeys As List(Of MeasurementKey)
     Private m_minimumMeasurementsToUse As Integer
 
     Public Overridable Sub Initialize( _
@@ -45,7 +45,8 @@ Public MustInherit Class CalculatedMeasurementAdapterBase
         ByVal leadTime As Double) Implements ICalculatedMeasurementAdapter.Initialize
 
         m_outputMeasurements = outputMeasurements
-        m_inputMeasurementKeys = inputMeasurementKeys
+        m_inputMeasurementKeys = New List(Of MeasurementKey)(inputMeasurementKeys)
+        m_inputMeasurementKeys.Sort()
 
         ' Default to all measurements of minimum is not specified
         If minimumMeasurementsToUse < 1 Then
@@ -79,12 +80,7 @@ Public MustInherit Class CalculatedMeasurementAdapterBase
         Dim measurement As IMeasurement = DirectCast(state, IMeasurement)
 
         ' If this is an input measurement to this calculation, sort it!
-        For x As Integer = 0 To m_inputMeasurementKeys.Length - 1
-            If measurement.Key.Equals(m_inputMeasurementKeys(x)) Then
-                m_concentrator.SortMeasurement(measurement)
-                Exit For
-            End If
-        Next
+        If IsInputMeasurement(measurement.Key) Then m_concentrator.SortMeasurement(measurement)
 
     End Sub
 
@@ -115,14 +111,12 @@ Public MustInherit Class CalculatedMeasurementAdapterBase
     Private Sub SortNewMeasurementDictionary(ByVal state As Object)
 
         Dim measurements As IDictionary(Of MeasurementKey, IMeasurement) = DirectCast(state, IDictionary(Of MeasurementKey, IMeasurement))
-        Dim measurement As IMeasurement
 
-        For x As Integer = 0 To m_inputMeasurementKeys.Length - 1
-            ' If this is an input measurement to this calculation, sort it!
-            If measurements.TryGetValue(m_inputMeasurementKeys(x), measurement) Then
-                m_concentrator.SortMeasurement(measurement)
-            End If
-        Next
+        If measurements IsNot Nothing Then
+            For Each measurement As IMeasurement In measurements.Values
+                SortNewMeasurement(measurement)
+            Next
+        End If
 
     End Sub
 
@@ -152,11 +146,18 @@ Public MustInherit Class CalculatedMeasurementAdapterBase
 
     Public Overridable Property InputMeasurementKeys() As MeasurementKey() Implements ICalculatedMeasurementAdapter.InputMeasurementKeys
         Get
-            Return m_inputMeasurementKeys
+            Return m_inputMeasurementKeys.ToArray()
         End Get
         Set(ByVal value As MeasurementKey())
-            m_inputMeasurementKeys = value
+            m_inputMeasurementKeys = New List(Of MeasurementKey)(value)
+            m_inputMeasurementKeys.Sort()
         End Set
+    End Property
+
+    Public Overridable ReadOnly Property IsInputMeasurement(ByVal item As MeasurementKey) As Boolean
+        Get
+            Return (m_inputMeasurementKeys.BinarySearch(item) >= 0)
+        End Get
     End Property
 
     Public Overridable Property MinimumMeasurementsToUse() As Integer Implements ICalculatedMeasurementAdapter.MinimumMeasurementsToUse
@@ -171,6 +172,16 @@ Public MustInherit Class CalculatedMeasurementAdapterBase
     Protected ReadOnly Property MeasurementConcentrator() As Concentrator
         Get
             Return m_concentrator
+        End Get
+    End Property
+
+    Public ReadOnly Property FrameRate() As Decimal
+        Get
+            If m_concentrator Is Nothing Then
+                Return -1D
+            Else
+                Return m_concentrator.FrameRate
+            End If
         End Get
     End Property
 
@@ -277,7 +288,7 @@ Public MustInherit Class CalculatedMeasurementAdapterBase
         If measurements Is Nothing Then measurements = CreateArray(Of IMeasurement)(m_minimumMeasurementsToUse)
 
         ' Loop through all input measurements to see if they exist in this frame
-        For x As Integer = 0 To m_inputMeasurementKeys.Length - 1
+        For x As Integer = 0 To m_inputMeasurementKeys.Count - 1
             If frame.Measurements.TryGetValue(m_inputMeasurementKeys(x), measurement) Then
                 measurements(index) = measurement
                 index += 1
