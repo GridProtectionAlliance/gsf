@@ -66,6 +66,12 @@ Namespace BpaPdcStream
 
         End Sub
 
+        Friend Shared Function CreateNewConfigurationCell(ByVal parent As IChannelFrame, ByVal state As IChannelFrameParsingState(Of IConfigurationCell), ByVal index As Int32, ByVal binaryImage As Byte(), ByVal startIndex As Int32) As IConfigurationCell
+
+            Return New ConfigurationCell(parent, state, index, binaryImage, startIndex)
+
+        End Function
+
         Public Overrides ReadOnly Property InheritedType() As System.Type
             Get
                 Return Me.GetType
