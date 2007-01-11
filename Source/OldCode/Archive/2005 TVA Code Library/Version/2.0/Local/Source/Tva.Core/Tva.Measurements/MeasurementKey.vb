@@ -15,6 +15,7 @@
 '
 '*******************************************************************************************************
 
+Imports Tva.Common
 Imports Tva.Text.Common
 
 Namespace Measurements
@@ -22,7 +23,7 @@ Namespace Measurements
     ''' <summary>Defines a primary key for a measurement</summary>
     Public Structure MeasurementKey
 
-        Implements IEquatable(Of MeasurementKey)
+        Implements IEquatable(Of MeasurementKey), IComparable(Of MeasurementKey), IComparable
 
         Public ID As Integer
         Public Source As String
@@ -51,6 +52,25 @@ Namespace Measurements
         Public Overloads Function Equals(ByVal other As MeasurementKey) As Boolean Implements System.IEquatable(Of MeasurementKey).Equals
 
             Return (ID = other.ID AndAlso String.Compare(Source, other.Source, True) = 0)
+
+        End Function
+
+        Public Function CompareTo(ByVal other As MeasurementKey) As Integer Implements System.IComparable(Of MeasurementKey).CompareTo
+
+            Dim sourceCompare As Integer = String.Compare(Source, other.Source, True)
+
+            If sourceCompare = 0 Then
+                Return IIf(ID < other.ID, -1, IIf(ID > other.ID, 1, 0))
+            Else
+                Return sourceCompare
+            End If
+
+        End Function
+
+        Public Function CompareTo(ByVal obj As Object) As Integer Implements System.IComparable.CompareTo
+
+            If TypeOf obj Is MeasurementKey Then Return CompareTo(DirectCast(obj, MeasurementKey))
+            Throw New ArgumentException("Object is not a MeasurementKey")
 
         End Function
 
