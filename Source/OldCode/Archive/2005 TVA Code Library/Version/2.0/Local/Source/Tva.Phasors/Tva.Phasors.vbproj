@@ -218,7 +218,8 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Phasor Class Diagram.cd" />
+    <None Include="Relationship Diagrams\Analog Value Relationships.cd" />
+    <None Include="Relationship Diagrams\Phasor Class Diagram.cd" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.VisualBasic.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -1,0 +1,66 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Font Name="Tahoma" Size="8.25" />
+  <Comment CommentText="Analog Value Relationships">
+    <Position X="2.698" Y="0.5" Height="0.263" Width="2.023" />
+  </Comment>
+  <Class Name="Tva.Phasors.AnalogValueBase">
+    <Position X="5" Y="3.75" Width="2.25" />
+    <TypeIdentifier>
+      <FileName>AnalogValueBase.vb</FileName>
+      <HashCode>AABAAIAAAAAAAAABAAAIAAAgAAQgAAAgAAAgAAQAAAA=</HashCode>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="Tva.Phasors.ChannelValueBase(Of T)">
+    <Position X="2.5" Y="1.75" Width="2" />
+    <TypeIdentifier>
+      <FileName>ChannelValueBase.vb</FileName>
+      <HashCode>AABAAIAAEAAACAAAAAAAQAAgABAgIAIAAAAQAAAAAAA=</HashCode>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="Tva.Phasors.ChannelBase">
+    <Position X="0.5" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <FileName>ChannelBase.vb</FileName>
+      <HashCode>AAAAAAAAAAAIQAAFAAAIAAABQAAAAAAgEAkAAAAAAAg=</HashCode>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="Tva.Phasors.BpaPdcStream.AnalogValue">
+    <Position X="4" Y="8" Width="1.75" />
+    <TypeIdentifier>
+      <FileName>BpaPdcStream\AnalogValue.vb</FileName>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAg=</HashCode>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Tva.Phasors.IeeeC37_118.AnalogValue">
+    <Position X="6.25" Y="8" Width="1.75" />
+    <TypeIdentifier>
+      <FileName>IeeeC37_118\AnalogValue.vb</FileName>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAg=</HashCode>
+    </TypeIdentifier>
+  </Class>
+  <Interface Name="Tva.Phasors.IChannelValue(Of T)">
+    <Position X="8.25" Y="3" Width="1.75" />
+    <TypeIdentifier>
+      <FileName>IChannelValue.vb</FileName>
+      <HashCode>AABAAIAAAAAACAAAAAAAQAAAAAAgAAIAAAAQAAAAAAA=</HashCode>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="Tva.Phasors.IChannel">
+    <Position X="7.25" Y="0.75" Width="1.5" />
+    <TypeIdentifier>
+      <FileName>IChannel.vb</FileName>
+      <HashCode>AAAAAAAAAAAIAAAAAAAAAAABQAAAAAAAAAEAAAAAAAg=</HashCode>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="Tva.Phasors.IAnalogValue">
+    <Position X="9" Y="6" Width="2" />
+    <TypeIdentifier>
+      <FileName>IAnalogValue.vb</FileName>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAQAAAA=</HashCode>
+    </TypeIdentifier>
+  </Interface>
+</ClassDiagram>

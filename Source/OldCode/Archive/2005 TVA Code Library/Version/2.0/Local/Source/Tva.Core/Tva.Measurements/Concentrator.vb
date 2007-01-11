@@ -616,8 +616,10 @@ Namespace Measurements
             With sample.Frames(m_frameIndex)
                 If DistanceFromRealTime(.Ticks) >= m_lagTime Then
                     Try
-                        ' Publish current frame
-                        m_publishFrameFunction(.This, m_frameIndex)
+                        SyncLock .Measurements
+                            ' Publish current frame
+                            m_publishFrameFunction(.This, m_frameIndex)
+                        End SyncLock
                     Catch ex As Exception
                         RaiseEvent ProcessException(ex)
                     End Try
