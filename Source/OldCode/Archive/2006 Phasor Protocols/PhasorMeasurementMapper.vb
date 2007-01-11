@@ -89,16 +89,23 @@ Public Class PhasorMeasurementMapper
 
     Public Sub Disconnect()
 
+        Dim performedDisconnect As Boolean
+
         ' Stop data stream monitor, if running
         If m_dataStreamMonitor IsNot Nothing Then m_dataStreamMonitor.Enabled = False
 
         ' Stop multi-protocol frame parser
-        If m_frameParser IsNot Nothing Then m_frameParser.[Stop]()
+        If m_frameParser IsNot Nothing Then
+            performedDisconnect = True
+            m_frameParser.Stop()
+        End If
 
         m_receivedConfigFrame = False
         m_errorCount = 0
         m_errorTime = 0
         m_unknownFramesReceived = 0
+
+        If performedDisconnect Then UpdateStatus("Disconnected from " & Name)
 
     End Sub
 

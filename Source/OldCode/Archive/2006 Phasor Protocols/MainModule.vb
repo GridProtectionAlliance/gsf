@@ -78,6 +78,9 @@ Module MainModule
                 End If
             ElseIf consoleLine.StartsWith("reload", True, Nothing) Then
                 Console.WriteLine()
+                InitializeConfiguration(AddressOf InitializeSystem)
+            ElseIf consoleLine.StartsWith("reconnectall", True, Nothing) Then
+                Console.WriteLine()
                 InitializeConfiguration(AddressOf ReinitializeReceivers)
             ElseIf consoleLine.StartsWith("status", True, Nothing) Then
                 Console.WriteLine()
@@ -159,7 +162,7 @@ Module MainModule
 
         ' If calculated measurements are already defined (i.e., we are "re-initializing" code), we need to dispose
         ' existing calculation instances such that all items can be shut-down in an orderly fashion
-        If Not m_calculatedMeasurements Is Nothing Then
+        If m_calculatedMeasurements IsNot Nothing Then
             For x As Integer = 0 To m_calculatedMeasurements.Length - 1
                 m_calculatedMeasurements(x).Dispose()
             Next
@@ -168,6 +171,14 @@ Module MainModule
         ' Define all of the calculated measurements
         m_calculatedMeasurements = DefineCalculatedMeasurements(connection)
 
+        ' If the phasor measurement receivers are already defined we must be reloading - so we attempt
+        ' an orderly shutdown
+        If m_measurementReceivers IsNot Nothing Then
+            For Each receiver As PhasorMeasurementReceiver In m_measurementReceivers.Values
+                receiver.Disconnect()
+            Next
+        End If
+
         ' Load the phasor measurement receivers (one per each established archive)
         m_measurementReceivers = LoadMeasurementReceivers(connection, IntegerSetting("PMUStatusInterval"), IntegerSetting("DataLossInterval"), m_calculatedMeasurements)
 
@@ -175,6 +186,7 @@ Module MainModule
 
     Private Sub ReinitializeReceivers(ByVal connection As SqlConnection)
 
+        ' This reloads active data nodes and reconnects
         For Each receiver As PhasorMeasurementReceiver In m_measurementReceivers.Values
             receiver.Initialize(connection)
         Next
@@ -491,6 +503,7 @@ Module MainModule
         Console.WriteLine("  ""SendCommand PmuID EnableData""  - Turns on real-time data")
         Console.WriteLine("  ""SendCommand PmuID GetConfig""   - Requests configuration frame")
         Console.WriteLine("  ""Reload""                        - Reloads the entire service process")
+        Console.WriteLine("  ""ReconnectAll""                  - Reconnects archives and phasor devices")
         Console.WriteLine("  ""Status""                        - Returns current service status")
         Console.WriteLine("  ""List""                          - Displays loaded PMU/PDC connections")
         Console.WriteLine("  ""Version""                       - Displays service version information")
