@@ -54,8 +54,8 @@ Public Class MeasurementExporter
             SaveSettings()
 
             ' Load needed settings
-            m_exportInterval = Convert.ToInt32(.Item("ExportInterval"))
-            m_exportFileName = .Item("ExportShare").Value.ToString() & .Item("ExportShare.Filename").Value.ToString()
+            m_exportInterval = Convert.ToInt32(.Item("ExportInterval").Value)
+            m_exportFileName = .Item("ExportShare").Value.ToString() & .Item("ExportShare.FileName").Value.ToString()
         End With
 
         ' Create new measurement dictionaries

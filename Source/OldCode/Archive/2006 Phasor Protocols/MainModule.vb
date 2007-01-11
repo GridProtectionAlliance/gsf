@@ -20,6 +20,7 @@ Imports System.Security.Principal
 Imports System.Data.SqlClient
 Imports Tva.Common
 Imports Tva.Assembly
+Imports Tva.IO
 Imports Tva.IO.FilePath
 Imports Tva.Configuration.Common
 Imports Tva.Text.Common
@@ -40,6 +41,8 @@ Module MainModule
     Private m_maximumMessagesToDisplay As Integer
     Private m_lastDisplayedMessageTime As Long
     Private m_displayedMessageCount As Long
+    Private m_systemLogEnabled As Boolean
+    Private m_systemLogFile As LogFile
 
     Public Sub Main()
 
@@ -55,7 +58,10 @@ Module MainModule
         Settings.Add("DataLossInterval", "35000", "Number of milliseconds to wait for incoming data before restarting connection cycle to device")
         Settings.Add("MessageDisplayTimespan", "2", "Timespan, in seconds, over which to monitor message volume")
         Settings.Add("MaximumMessagesToDisplay", "100", "Maximum number of messages to be tolerated during MessageDisplayTimespan")
+        Settings.Add("EnableLogFile", "True", "Set to ""True"" to enable log file")
         SaveSettings()
+
+        m_systemLogEnabled = BooleanSetting("EnableLogFile")
 
         InitializeConfiguration(AddressOf InitializeSystem)
 
@@ -318,6 +324,8 @@ Module MainModule
                         End Try
                     End If
 
+                    calculatedMeasurementAdapter = Nothing
+
                     ' Load the specified type from the assembly
                     Try
                         ' Create a new instance of the adpater
@@ -537,6 +545,11 @@ Module MainModule
         If displayMessage Then
             Console.WriteLine(status)
             Console.WriteLine()
+        End If
+
+        If m_systemLogEnabled Then
+            If m_systemLogFile Is Nothing Then m_systemLogFile = New LogFile(GetApplicationPath() & "System Log " & DateTime.Now.ToString("yyyy-MM-dd HH.mm.ss.fff") & ".txt")
+            m_systemLogFile.AppendTimestampedLine(status)
         End If
 
     End Sub
