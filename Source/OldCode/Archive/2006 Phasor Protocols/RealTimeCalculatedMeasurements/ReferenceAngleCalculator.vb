@@ -179,15 +179,11 @@ Public Class ReferenceAngleCalculator
             ' Total all phase angles, unwrapping angles if needed
             For x = 0 To MinimumMeasurementsToUse - 1
                 ' Get the unwrap offset for this angle
-                If m_unwrapOffsets.TryGetValue(m_measurements(x).Key, unwrapOffset) Then
-                    angleTotal += GetUnwrappedPhaseAngle(m_measurements(x).AdjustedValue, lastValue, unwrapOffset)
-                Else
-                    ' Not finding the unwrap offset would be unexpected, but we'll try to handle gracefully
-                    unwrapOffset = 0.0R
-                End If
+                unwrapOffset = m_unwrapOffsets(m_measurements(x).Key)
 
                 ' Get angle difference from last run (if there was a last run)
                 If m_lastAngles.TryGetValue(m_measurements(x).Key, lastValue) Then
+                    ' Unwrap phase angle
                     angleTotal += GetUnwrappedPhaseAngle(m_measurements(x).AdjustedValue, lastValue, unwrapOffset)
 
                     If unwrapOffset > m_phaseResetAngle Then
