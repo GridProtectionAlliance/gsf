@@ -5,7 +5,7 @@ Imports System.DirectoryServices
 Imports Tva.Identity.Common
 
 Partial Class Users
-    Inherits System.Web.UI.UserControl
+    Inherits Tva.Web.UI.SecureUserControl
 
     Private usersAdapter As New UsersTableAdapter
     Private rolesAdapter As New RolesTableAdapter
@@ -16,6 +16,12 @@ Partial Class Users
     Private userAndCompaniesAndSecurityQuestionsAdapter As New UsersAndCompaniesAndSecurityQuestionsTableAdapter
 
     Protected Sub Page_Load(ByVal sender As Object, ByVal e As System.EventArgs) Handles Me.Load
+        If Me.SecurityProvider.User.FindRole("TRO_APP_SEC_ADMIN") Is Nothing And _
+                                Me.SecurityProvider.User.FindRole("TRO_APP_SEC_EDITOR") Is Nothing Then
+            Me.ButtonSave.Visible = False
+        Else
+            Me.ButtonSave.Visible = True
+        End If
 
         If Not IsPostBack Then
             PopulateDropDowns()
@@ -38,7 +44,13 @@ Partial Class Users
     Private Sub BindToGrid(ByVal companyName As String)
 
         With Me.GridViewUsers
-            .DataSource = Me.userAndCompaniesAndSecurityQuestionsAdapter.GetUsersByCompanyName(companyName)
+            Dim searchStr As String = Me.TextBoxSearch.Text.Replace("'", "''").Replace("%", "")
+            If searchStr = String.Empty Then
+                .DataSource = Me.userAndCompaniesAndSecurityQuestionsAdapter.GetUsersByCompanyName(companyName)
+            Else
+                .DataSource = Me.userAndCompaniesAndSecurityQuestionsAdapter.GetUsersByCompanyName(Me.DropDownListSelectCompanies.SelectedItem.ToString).Select("UserName Like '%" & searchStr & "%' OR UserFirstName Like '%" & searchStr & "%' OR UserLastName Like '%" & searchStr & "%'")
+            End If
+
             .DataBind()
         End With
 
@@ -166,10 +178,10 @@ Partial Class Users
             Me.CheckBoxIsExternal.Checked = False
         End If
 
-        If user.UserNotForReplication Then
-            Me.CheckBoxDoNotReplicate.Checked = True
-        Else
+        If user.UserReplicate Then
             Me.CheckBoxDoNotReplicate.Checked = False
+        Else
+            Me.CheckBoxDoNotReplicate.Checked = True
         End If
 
         ChangeFieldsStatus(user.UserIsExternal)
@@ -236,13 +248,18 @@ Partial Class Users
 
         Dim userName, password, firstName, lastName, email, securityAnswer, phone As String
         Dim companyID, securityQnID As Guid
-        Dim isLockedOut, isExternal, doNotReplicate As Boolean
+        Dim isLockedOut, isExternal, userReplicate As Boolean
 
-        userName = Me.TextBoxUserName.Text.Replace("'", "''")
+        userName = Me.TextBoxUserName.Text.Replace("'", "")
+        If userName.Replace(" ", "") = "" Then
+            Me.LabelMsg.Text = "Invalid User Name."
+            Exit Sub
+        End If
+
         companyID = New Guid(Me.DropDownListCompanies.SelectedValue)
         isLockedOut = Me.CheckBoxIsLocked.Checked
         isExternal = Me.CheckBoxIsExternal.Checked
-        doNotReplicate = Me.CheckBoxDoNotReplicate.Checked
+        userReplicate = Not (Me.CheckBoxDoNotReplicate.Checked)
         password = Me.TextBoxPassword.Text.Replace("'", "''")
         firstName = Me.TextBoxFirstName.Text.Replace("'", "''")
         lastName = Me.TextBoxLastName.Text.Replace("'", "''")
@@ -255,14 +272,21 @@ Partial Class Users
         securityQnID = New Guid(Me.DropDownListSecurityQuestions.SelectedValue)
         
         If ViewState("Mode") = "Add" Then
+
+            'Before inserting internal or external users, make sure that username is unique.
+            If usersAdapter.GetUserIDByUserName(userName).HasValue Then
+                Me.LabelMsg.Text = "User Name already exists."
+                Exit Sub
+            End If
+
             If isExternal Then
-                usersAdapter.InsertUser(companyID, securityQnID, userName, Tva.Security.Application.User.EncryptPassword(password), firstName, lastName, phone, email, securityAnswer, isLockedOut, isExternal, doNotReplicate)
+                usersAdapter.InsertUser(companyID, securityQnID, userName, Tva.Security.Application.User.EncryptPassword(password), firstName, lastName, phone, email, securityAnswer, isLockedOut, isExternal, userReplicate)
             Else
                 'If Internal User then company id must be TVA.
                 companyID = companiesAdapter.GetCompanyIdByCompanyName("Tennessee Valley Authority")
                 'Check if userName (NTID) exists in the active directory.
                 If NtidExistInActiveDirectory(userName) Then
-                    usersAdapter.InsertInternalUsers(companyID, userName, doNotReplicate)
+                    usersAdapter.InsertInternalUsers(companyID, userName, userReplicate)
                     Me.LabelMsg.Text = ""
                 Else
                     Me.LabelMsg.Text = "User Name does not exist in the active directory."
@@ -276,9 +300,9 @@ Partial Class Users
 
                 If isExternal Then
                     If password = "" Then
-                        usersAdapter.UpdateUserWithoutPassword(companyID, securityQnID, userName, firstName, lastName, phone, email, securityAnswer, isLockedOut, isExternal, doNotReplicate, ViewState("UN"))
+                        usersAdapter.UpdateUserWithoutPassword(companyID, securityQnID, userName, firstName, lastName, phone, email, securityAnswer, isLockedOut, isExternal, userReplicate, ViewState("UN"))
                     Else
-                        usersAdapter.UpdateUser(companyID, securityQnID, userName, Tva.Security.Application.User.EncryptPassword(password), firstName, lastName, phone, email, securityAnswer, isLockedOut, isExternal, doNotReplicate, ViewState("UN"))
+                        usersAdapter.UpdateUser(companyID, securityQnID, userName, Tva.Security.Application.User.EncryptPassword(password), firstName, lastName, phone, email, securityAnswer, isLockedOut, isExternal, userReplicate, ViewState("UN"))
                     End If
                 Else
 
@@ -286,7 +310,7 @@ Partial Class Users
                     companyID = companiesAdapter.GetCompanyIdByCompanyName("Tennessee Valley Authority")
                     'Check if userName (NTID) exists in the active directory.
                     If NtidExistInActiveDirectory(userName) Then
-                        usersAdapter.UpdateInternalUser(companyID, userName, doNotReplicate, ViewState("UN"))
+                        usersAdapter.UpdateInternalUser(companyID, userName, userReplicate, ViewState("UN"))
                         Me.LabelMsg.Text = ""
                     Else
                         Me.LabelMsg.Text = "User Name does not exist in the active directory."
@@ -294,7 +318,7 @@ Partial Class Users
 
                 End If
 
-                
+
                 UpdateUsersRoles(userName.Replace(" ", "_"))
             End If
         End If
@@ -306,8 +330,8 @@ Partial Class Users
 
     Private Sub UpdateUsersRoles(ByVal userName As String)
 
-        Dim userID As Guid = usersAdapter.GetUserIDByUserName(userName)
-        rolesUsersAdapter.DeleteRolesUsersByUserID(userID)
+        Dim userId As Guid = usersAdapter.GetUserIDByUserName(userName)
+        rolesUsersAdapter.DeleteRolesUsersByUserID(userId)
 
         Dim en As Infragistics.WebUI.UltraWebGrid.UltraGridRowsEnumerator = Me.UltraWebGridRoles.Bands(1).GetRowsEnumerator
 
@@ -426,4 +450,5 @@ Partial Class Users
         Return exists
 
     End Function
+
 End Class

@@ -5,7 +5,7 @@ Imports SecurityTableAdapters
 ''' </summary>
 ''' <remarks></remarks>
 Partial Class Applications
-    Inherits System.Web.UI.UserControl
+    Inherits Tva.Web.UI.SecureUserControl
 
     Private appsAdapter As New ApplicationsTableAdapter
 
@@ -16,6 +16,13 @@ Partial Class Applications
     ''' <param name="e"></param>
     ''' <remarks></remarks>
     Protected Sub Page_Load(ByVal sender As Object, ByVal e As System.EventArgs) Handles Me.Load
+
+        If Me.SecurityProvider.User.FindRole("TRO_APP_SEC_ADMIN") Is Nothing And _
+                                Me.SecurityProvider.User.FindRole("TRO_APP_SEC_EDITOR") Is Nothing Then
+            Me.ButtonSave.Visible = False
+        Else
+            Me.ButtonSave.Visible = True
+        End If
 
         If Not IsPostBack Then
             'Populate dropdown list with the list of applications available in the database.
@@ -31,8 +38,16 @@ Partial Class Applications
     End Sub
 
     Private Sub BindToGrid()
+        Dim searchStr As String = Me.TextBoxSearch.Text.Replace("'", "''")
+        searchStr = searchStr.Replace("%", "")
+
         With Me.GridViewApplications
-            .DataSource = appsAdapter.GetApplications
+            If searchStr = String.Empty Then
+                .DataSource = appsAdapter.GetApplications
+            Else
+                .DataSource = appsAdapter.GetApplications().Select("ApplicationName Like '%" & searchStr & "%' Or ApplicationDescription Like '%" & searchStr & "%'")
+            End If
+
             .DataBind()
         End With
     End Sub
@@ -83,7 +98,19 @@ Partial Class Applications
         Dim newAppName As String = Me.TextBoxName.Text '.Replace("'", "''")
         Dim newAppDescription As String = Me.TextBoxDescription.Text '.Replace("'", "''")
 
+        If newAppName.Replace(" ", "") = "" Then
+            Me.LabelMessage.Text = "Invalid Application Name."
+            Exit Sub
+        End If
+
         If ViewState("Mode") = "Add" Then
+
+            'Before inserting new application, make sure application name is unique.
+            If appsAdapter.GetApplicationId(newAppName).HasValue Then
+                Me.LabelMessage.Text = "Application Name already exists."
+                Exit Sub
+            End If
+
             appsAdapter.InsertApplication(newAppName, newAppDescription)
         Else
             If Not ViewState("App") = "" Then   'if viewstate information is set then use it
@@ -129,4 +156,5 @@ Partial Class Applications
             BindToGrid()
         End If
     End Sub
+
 End Class

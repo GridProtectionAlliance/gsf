@@ -2,7 +2,7 @@ Imports SecurityTableAdapters
 Imports System.Data
 
 Partial Class Groups
-    Inherits System.Web.UI.UserControl
+    Inherits Tva.Web.UI.SecureUserControl
 
     Private groupsAdapter As New GroupsTableAdapter
     Private usersAndCompaniesAdapter As New UsersAndCompaniesAndSecurityQuestionsTableAdapter
@@ -13,6 +13,13 @@ Partial Class Groups
     Private rolesGroupsAdapter As New RolesGroupsTableAdapter
 
     Protected Sub Page_Load(ByVal sender As Object, ByVal e As System.EventArgs) Handles Me.Load
+        If Me.SecurityProvider.User.FindRole("TRO_APP_SEC_ADMIN") Is Nothing And _
+                                Me.SecurityProvider.User.FindRole("TRO_APP_SEC_EDITOR") Is Nothing Then
+            Me.ButtonSave.Visible = False
+        Else
+            Me.ButtonSave.Visible = True
+        End If
+
         If Not IsPostBack Then
             BindToGrid()
             BindToUsersGrid()
@@ -26,8 +33,16 @@ Partial Class Groups
     End Sub
 
     Private Sub BindToGrid()
+        Dim searchStr As String = Me.TextBoxSearch.Text.Replace("'", "''")
+        searchStr = searchStr.Replace("%", "")
+
         With Me.GridViewGroups
-            .DataSource = groupsAdapter.GetGroups()
+            If searchStr = String.Empty Then
+                .DataSource = groupsAdapter.GetGroups()
+            Else
+                .DataSource = groupsAdapter.GetGroups().Select("GroupName Like '%" & searchStr & "%' Or GroupDescription Like '%" & searchStr & "%'")
+            End If
+
             .DataBind()
         End With
     End Sub
@@ -178,7 +193,19 @@ Partial Class Groups
         Dim newGroupName As String = Me.TextBoxName.Text.Replace("'", "")
         Dim newGroupDescription As String = Me.TextBoxDescription.Text '.Replace("'", "''")
 
+        If newGroupName.Replace(" ", "") = "" Then
+            Me.LabelMessage.Text = "Invalid Group Name."
+            Exit Sub
+        End If
+
         If ViewState("Mode") = "Add" Then
+
+            'Before inserting new group, make sure new group name is unique.
+            If groupsAdapter.GetGroupIDByGroupName(newGroupName).HasValue Then
+                Me.LabelMessage.Text = "Group Name already exists."
+                Exit Sub
+            End If
+
             groupsAdapter.InsertGroup(newGroupName, newGroupDescription)
 
             'Insert associations into the GroupUsers Table.

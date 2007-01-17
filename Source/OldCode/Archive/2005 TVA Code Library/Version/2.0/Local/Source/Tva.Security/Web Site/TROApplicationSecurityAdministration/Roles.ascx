@@ -76,6 +76,7 @@
         <td class="whiteCell">
         </td>
         <td align="right" class="whiteCell" colspan="3">
+            <asp:Label ID="LabelMessage" runat="server" CssClass="Label" ForeColor="#C00000"></asp:Label>&nbsp;
             <asp:Button ID="ButtonCancel" runat="server" CssClass="buttonText" Text="Cancel" />&nbsp;
             <asp:Button ID="ButtonSave" runat="server" CssClass="buttonText" Text="Save" /></td>
     </tr>
@@ -107,7 +108,7 @@
                                 Text='<%# Eval("RoleName") %>' CommandArgument='<%# Eval("RoleName") %>'></asp:LinkButton>
                         </ItemTemplate>
                     </asp:TemplateField>                    
-                    <asp:BoundField DataField="RoleDescription" HeaderText="Description" SortExpression="RoleDescription" />
+                    <asp:BoundField DataField="RoleDescription" HeaderText="Description" SortExpression="RoleDescription" />                    
                     <asp:TemplateField>
                         <ItemTemplate>
                             <asp:LinkButton ID="LinkButton2" runat="server" CausesValidation="False" CommandName="DeleteRole"

@@ -43,7 +43,7 @@
         </td>
         <td align="left" class="whiteCell" colspan="3">
         
-            <div id="users" style="height:192px; overflow:auto;">
+            <div id="users" style="height:188px; overflow:auto;">
             <asp:GridView ID="GridViewUsers" runat="server" AllowPaging="False" AllowSorting="True"
                 AutoGenerateColumns="False"
                 EmptyDataText="Data Not Available." Font-Names="Tahoma" Font-Size="0.7em" PageSize="12"
@@ -132,6 +132,7 @@
         <td class="whiteCell" valign="top">
         </td>
         <td align="right" class="whiteCell" colspan="3">
+            <asp:Label ID="LabelMessage" runat="server" CssClass="Label" ForeColor="#C00000"></asp:Label>&nbsp;
             <asp:Button ID="ButtonCancel" runat="server" CssClass="buttonText" Text="Cancel" />&nbsp;
             &nbsp;<asp:Button ID="ButtonSave" runat="server" CssClass="buttonText" Text="Save" /></td>
     </tr>
@@ -149,7 +150,7 @@
         <td align="center" class="whiteCell" colspan="4">
             <asp:GridView ID="GridViewGroups" runat="server" AllowPaging="True" AllowSorting="True"
                 AutoGenerateColumns="False"
-                EmptyDataText="Data Not Available." Font-Names="Tahoma" Font-Size="0.7em" PageSize="5"
+                EmptyDataText="Data Not Available." Font-Names="Tahoma" Font-Size="0.7em" PageSize="4"
                 Width="98%">
                 
                 <Columns>

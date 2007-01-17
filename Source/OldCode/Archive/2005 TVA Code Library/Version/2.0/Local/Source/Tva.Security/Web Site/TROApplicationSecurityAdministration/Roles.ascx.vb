@@ -1,7 +1,7 @@
 Imports SecurityTableAdapters
 
 Partial Class Roles
-    Inherits System.Web.UI.UserControl
+    Inherits Tva.Web.UI.SecureUserControl
 
     Private appsAdapter As New ApplicationsTableAdapter
     Private rolesAdapter As New RolesTableAdapter
@@ -13,6 +13,13 @@ Partial Class Roles
     ''' <param name="e"></param>
     ''' <remarks></remarks>
     Protected Sub Page_Load(ByVal sender As Object, ByVal e As System.EventArgs) Handles Me.Load
+        If Me.SecurityProvider.User.FindRole("TRO_APP_SEC_ADMIN") Is Nothing And _
+                                Me.SecurityProvider.User.FindRole("TRO_APP_SEC_EDITOR") Is Nothing Then
+            Me.ButtonSave.Visible = False
+        Else
+            Me.ButtonSave.Visible = True
+        End If
+
         If Not IsPostBack Then
             'Populate dropdown list with the list of applications available in the database.
             ViewState("App") = ""
@@ -56,10 +63,19 @@ Partial Class Roles
     ''' <param name="applicationId"></param>
     ''' <remarks></remarks>
     Public Sub BindToGrid(ByVal applicationId As Guid)
+        Dim searchStr As String = Me.TextBoxSearch.Text.Replace("'", "''")
+        searchStr = searchStr.Replace("%", "")
+
         With Me.GridViewRoles
-            .DataSource = rolesAdapter.GetRolesByApplicationID(applicationId)
+            If searchStr = String.Empty Then
+                .DataSource = rolesAdapter.GetRolesByApplicationID(applicationId)
+            Else
+                .DataSource = rolesAdapter.GetRolesByApplicationID(applicationId).Select("RoleName Like '%" & searchStr & "%' OR RoleDescription Like '%" & searchStr & "%'")
+            End If
+
             .DataBind()
         End With
+
     End Sub
 
     Protected Sub GridViewRoles_PageIndexChanging(ByVal sender As Object, ByVal e As System.Web.UI.WebControls.GridViewPageEventArgs) Handles GridViewRoles.PageIndexChanging
@@ -79,8 +95,6 @@ Partial Class Roles
             ViewState("Mode") = "Edit"
             ViewState("Role") = e.CommandArgument.ToString
         ElseIf e.CommandName = "DeleteRole" Then
-            rolesAdapter.DeleteRole(e.CommandArgument.ToString)
-
             Dim usersControl As New UsersForRoles
             usersControl = DirectCast(Me.FindControl("UltraWebTabUsersAndGroups").FindControl("UsersForRoles1"), UsersForRoles)
             usersControl.DeleteFromRolesUsers(e.CommandArgument.ToString)
@@ -89,10 +103,13 @@ Partial Class Roles
             groupsControl = DirectCast(Me.FindControl("UltraWebTabUsersAndGroups").FindControl("GroupsForRoles1"), GroupsForRoles)
             groupsControl.DeleteFromRolesGroups(e.CommandArgument.ToString)
 
+            rolesAdapter.DeleteRole(e.CommandArgument.ToString)
+
             ClearForm()
             ViewState("Mode") = "Add"
             ViewState("Role") = ""
             Session("RefreshRoles") = 1
+        
         End If
     End Sub
 
@@ -128,8 +145,21 @@ Partial Class Roles
         Dim newRoleName As String = Me.TextBoxName.Text '.Replace("'", "''")
         Dim newRoleDescription As String = Me.TextBoxDescription.Text '.Replace("'", "''")
 
+        If newRoleName.Replace(" ", "") = "" Then
+            Me.LabelMessage.Text = "Invalid Role Name."
+            Exit Sub
+        End If
+
         If ViewState("Mode") = "Add" Then
+
+            'Before adding new Role, make sure that the role name is uniq.
+            If rolesAdapter.GetRoleID(newRoleName).HasValue Then
+                Me.LabelMessage.Text = "Role Name already exists."
+                Exit Sub
+            End If
+
             rolesAdapter.InsertRole(newRoleDescription, newRoleName, New Guid(Me.DropDownListApplications.SelectedValue.ToString))
+
         Else
             If ViewState("Role") <> "" Then
                 Dim origRoleID As Guid = rolesAdapter.GetRoleID(ViewState("Role").ToString)
@@ -207,6 +237,7 @@ Partial Class Roles
             Dim deleteLink As LinkButton = e.Row.FindControl("LinkButton2")
             deleteLink.Attributes.Add("onclick", "javascript:return confirm('Do you want to delete role: " & _
                                                     DataBinder.Eval(e.Row.DataItem, "RoleName") & "? ');")
+
         End If
     End Sub
 
@@ -237,4 +268,5 @@ Partial Class Roles
             End If
         End If
     End Sub
+
 End Class

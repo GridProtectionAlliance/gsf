@@ -23,6 +23,7 @@
         <td class="whiteCell" valign="top">
         </td>
         <td align="right" class="whiteCell" colspan="3">
+            <asp:Label ID="LabelMessage" runat="server" CssClass="Label" ForeColor="#C00000"></asp:Label>&nbsp;
             <asp:Button ID="ButtonCancel" runat="server" CssClass="buttonText" Text="Cancel" />&nbsp;
             &nbsp;<asp:Button ID="ButtonSave" runat="server" CssClass="buttonText" Text="Save" /></td>
     </tr>

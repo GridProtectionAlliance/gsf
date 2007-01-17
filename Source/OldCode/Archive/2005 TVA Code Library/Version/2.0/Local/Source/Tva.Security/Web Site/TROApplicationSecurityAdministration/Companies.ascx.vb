@@ -1,11 +1,19 @@
 Imports SecurityTableAdapters
 
 Partial Class Companies
-    Inherits System.Web.UI.UserControl
+    Inherits Tva.Web.UI.SecureUserControl
 
     Private companiesAdapter As New CompaniesTableAdapter
 
     Protected Sub Page_Load(ByVal sender As Object, ByVal e As System.EventArgs) Handles Me.Load
+
+        If Me.SecurityProvider.User.FindRole("TRO_APP_SEC_ADMIN") Is Nothing And _
+                                Me.SecurityProvider.User.FindRole("TRO_APP_SEC_EDITOR") Is Nothing Then
+            Me.ButtonSave.Visible = False
+        Else
+            Me.ButtonSave.Visible = True
+        End If
+
         If Not IsPostBack Then
             'Populate dropdown list with the list of applications available in the database.
             BindToGrid()
@@ -20,18 +28,24 @@ Partial Class Companies
     End Sub
 
     Private Sub BindToGrid()
+        Dim searchStr As String = Me.TextBoxSearch.Text.Replace("'", "''")
+        searchStr = searchStr.Replace("%", "")
+
         With Me.GridViewCompanies
-            .DataSource = companiesAdapter.GetCompanies
+            If searchStr = String.Empty Then
+                .DataSource = companiesAdapter.GetCompanies
+            Else
+                .DataSource = companiesAdapter.GetCompanies().Select("CompanyName Like '%" & searchStr & "%'")
+            End If
+
             .DataBind()
         End With
 
-        'Me.GridViewCompanies.Columns(0).HeaderText &= "<img src='Images\Search.png' Border=0>"
     End Sub
 
     Private Sub ClearForm()
         Me.TextBoxName.Text = ""
         ViewState("Mode") = "Add"
-        'BindToGrid()
     End Sub
 
     Protected Sub GridViewCompanies_PageIndexChanging(ByVal sender As Object, ByVal e As System.Web.UI.WebControls.GridViewPageEventArgs) Handles GridViewCompanies.PageIndexChanging
@@ -61,7 +75,19 @@ Partial Class Companies
     Protected Sub ButtonSave_Click(ByVal sender As Object, ByVal e As System.EventArgs) Handles ButtonSave.Click
         Dim newCompanyName As String = Me.TextBoxName.Text '.Replace("'", "''")
 
+        If newCompanyName.Replace(" ", "") = "" Then
+            Me.LabelMessage.Text = "Invalid Company Name."
+            Exit Sub
+        End If
+
         If ViewState("Mode") = "Add" Then
+
+            'Before adding new company, make sure that company name is unique.
+            If companiesAdapter.GetCompanyIdByCompanyName(newCompanyName).HasValue Then
+                Me.LabelMessage.Text = "Company Name already exists."
+                Exit Sub
+            End If
+
             companiesAdapter.InsertCompany(newCompanyName)
         Else
             If Not ViewState("Company") = "" Then   'if viewstate information is set then use it

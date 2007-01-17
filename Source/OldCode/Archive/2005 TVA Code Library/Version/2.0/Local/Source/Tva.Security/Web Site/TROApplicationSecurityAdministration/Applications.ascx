@@ -17,8 +17,7 @@
             <asp:Label ID="Label2" runat="server" CssClass="Label" Text="Application Name:"></asp:Label></td>
         <td class="whiteCell" colspan="3">
             <asp:TextBox ID="TextBoxName" runat="server" Width="575px" CssClass="TextBox"></asp:TextBox>
-            <asp:RequiredFieldValidator ID="RequiredFieldValidator1" runat="server" ControlToValidate="TextBoxName"
-                CssClass="Error" ErrorMessage="*" ForeColor="" Enabled="False"></asp:RequiredFieldValidator></td>
+            </td>
     </tr>
     <tr>
         <td class="whiteCell" valign="top">
@@ -31,6 +30,7 @@
         <td class="whiteCell" valign="top">
         </td>
         <td align="right" class="whiteCell" colspan="3">
+            <asp:Label ID="LabelMessage" runat="server" CssClass="Label" ForeColor="#C00000"></asp:Label>&nbsp;
             <asp:Button ID="ButtonCancel" runat="server" CssClass="buttonText" Text="Cancel" />&nbsp;
             &nbsp;<asp:Button ID="ButtonSave" runat="server" CssClass="buttonText" Text="Save" /></td>
     </tr>
