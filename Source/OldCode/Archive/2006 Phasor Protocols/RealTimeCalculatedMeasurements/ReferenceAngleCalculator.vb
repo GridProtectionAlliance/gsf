@@ -14,10 +14,15 @@
 '       Initial version of source generated
 '  01/16/2007 - Jian Zuo(Ryan) jrzuo@tva.gov
 '       Implement the unwrap offset of the angle
+'  01/17/2006 - J. Ritchie Carroll
+'       Added code to detect data set changes (i.e., PMU's online/offline)
+'  01/17/2007 - Jian Zuo(Ryan) jrzuo@tva.gov
+'       Added code to handle unwrap offset initialization and reset
 '
 '*******************************************************************************************************
 
 Imports System.Text
+Imports System.Math
 Imports Tva.Common
 Imports Tva.Math.Common
 Imports Tva.Measurements
@@ -33,7 +38,7 @@ Public Class ReferenceAngleCalculator
     Private Const BackupQueueSize As Integer = 10
     Private m_phaseResetAngle As Double
     Private m_lastAngles As Dictionary(Of MeasurementKey, Double)
-    Private m_unwrapoffset As Dictionary(Of MeasurementKey, Double)  'Record the unwrap offset 01/16/07 Ryan
+    Private m_unwrapoffset As Dictionary(Of MeasurementKey, Double)
     Private m_latestCalculatedAngles As List(Of Double)
     Private m_measurements As IMeasurement()
     Private m_lastMeasurements As List(Of MeasurementKey)
@@ -45,7 +50,7 @@ Public Class ReferenceAngleCalculator
     Public Sub New()
 
         m_lastAngles = New Dictionary(Of MeasurementKey, Double)
-        m_unwrapoffset = New Dictionary(Of MeasurementKey, Double)   '01/16/07 Ryan
+        m_unwrapoffset = New Dictionary(Of MeasurementKey, Double)
         m_latestCalculatedAngles = New List(Of Double)
         m_lastMeasurements = New List(Of MeasurementKey)
 
@@ -116,6 +121,7 @@ Public Class ReferenceAngleCalculator
         Dim currentAngles As New Dictionary(Of MeasurementKey, Double)
         Dim calculatedMeasurement As Measurement = Measurement.Clone(OutputMeasurements(0), frame.Ticks)
         Dim angleTotal, angleAverage, lastValue, unwrapOffset As Double
+        Dim angleRef, angleDelta0, angleDelta1, angleDelta2 As Double
         Dim dataSetChanged As Boolean
         Dim x As Integer
 
@@ -147,22 +153,42 @@ Public Class ReferenceAngleCalculator
 
                 m_lastMeasurements.Sort()
 
-                ' TODO: Reinitialize all angle calculation variables
+                ' Reinitialize all angle calculation variables
                 m_lastAngles.Clear()
                 m_unwrapoffset.Clear()
-                ' more todo...
+
+                angleRef = m_measurements(0).AdjustedValue
+
+                For x = 0 To MinimumMeasurementsToUse - 1
+                    angleDelta0 = Abs(m_measurements(x).AdjustedValue - angleRef)
+                    angleDelta1 = Abs(m_measurements(x).AdjustedValue + 360.0R - angleRef)
+                    angleDelta2 = Abs(m_measurements(x).AdjustedValue - 360.0R - angleRef)
+
+                    If angleDelta0 < angleDelta1 AndAlso angleDelta0 < angleDelta2 Then
+                        unwrapOffset = 0.0R
+                    ElseIf angleDelta1 < angleDelta2 Then
+                        unwrapOffset = 360.0R
+                    Else
+                        unwrapOffset = -360.0R
+                    End If
+
+                    m_unwrapoffset(m_measurements(x).Key) = unwrapOffset
+                Next
             End If
 
             ' Total all phase angles, unwrapping angles if needed
             For x = 0 To MinimumMeasurementsToUse - 1
+                ' Get the unwrap offset for this angle
+                If m_unwrapoffset.TryGetValue(m_measurements(x).Key, unwrapOffset) Then
+                    angleTotal += GetUnwrappedPhaseAngle(m_measurements(x).AdjustedValue, lastValue, unwrapOffset)
+                Else
+                    ' Not finding the unwrap offset would be unexpected, but we'll try to handle gracefully
+                    unwrapOffset = 0.0R
+                End If
+
                 ' Get angle difference from last run (if there was a last run)
                 If m_lastAngles.TryGetValue(m_measurements(x).Key, lastValue) Then
-                    If m_unwrapoffset.TryGetValue(m_measurements(x).Key, unwrapOffset) Then
-                        angleTotal += GetUnwrappedPhaseAngle(m_measurements(x).AdjustedValue, lastValue, unwrapOffset)
-                    Else
-                        unwrapOffset = 0.0R
-                        angleTotal += GetUnwrappedPhaseAngle(m_measurements(x).AdjustedValue, lastValue, unwrapOffset)
-                    End If
+                    angleTotal += GetUnwrappedPhaseAngle(m_measurements(x).AdjustedValue, lastValue, unwrapOffset)
 
                     If unwrapOffset > m_phaseResetAngle Then
                         unwrapOffset -= m_phaseResetAngle
@@ -172,7 +198,8 @@ Public Class ReferenceAngleCalculator
 
                     m_unwrapoffset(m_measurements(x).Key) = unwrapOffset
                 Else
-                    angleTotal += m_measurements(x).AdjustedValue
+                    ' No last run (starting up or reinitialized), so take raw angle and add offset
+                    angleTotal += (m_measurements(x).AdjustedValue + unwrapOffset)
                 End If
             Next
 
@@ -193,7 +220,6 @@ Public Class ReferenceAngleCalculator
             calculatedMeasurement.ValueQualityIsGood = False
 
 #If DEBUG Then
-            ' TODO: Raise warning when minimum set of PMU's is not available for reference angle calculation - but not 30 times per second :)
             'RaiseCalculationException(
             LogFrameWarning("WARNING: Minimum set of PMU's not available for reference angle calculation - using rolling average")
 #End If
@@ -234,14 +260,8 @@ Public Class ReferenceAngleCalculator
         ElseIf deltaAngle < -300 Then
             unwrapoffset += 360
         End If
-        angle += unwrapoffset
 
-        ' Reset unwrapped phase angle, if needed
-        'If angle > m_phaseResetAngle Then
-        'angle -= m_phaseResetAngle
-        'ElseIf angle < -m_phaseResetAngle Then
-        'angle += m_phaseResetAngle
-        'End If
+        angle += unwrapoffset
 
         Return angle
 

@@ -221,12 +221,27 @@ Public MustInherit Class CalculatedMeasurementAdapterBase
 
     Public Overrides ReadOnly Property Status() As String
         Get
+            Const MaxMeasurementsToShow As Integer = 10
+
             With New StringBuilder
                 .Append("   Output measurement ID's: ")
-                .Append(ListToString(m_outputMeasurements, ","c))
+                If m_outputMeasurements.Length <= MaxMeasurementsToShow Then
+                    .Append(ListToString(m_outputMeasurements, ","c))
+                Else
+                    Dim outputMeasurements As IMeasurement() = CreateArray(Of IMeasurement)(MaxMeasurementsToShow)
+                    Array.Copy(m_outputMeasurements, m_outputMeasurements.Length - MaxMeasurementsToShow - 1, outputMeasurements, 0, MaxMeasurementsToShow)
+                    .Append(ListToString(outputMeasurements, ","c))
+                    .Append(",...")
+                End If
                 .Append(Environment.NewLine)
                 .Append("    Input measurement ID's: ")
                 .Append(ListToString(m_inputMeasurementKeys, ","c))
+                If m_inputMeasurementKeys.Count <= MaxMeasurementsToShow Then
+                    .Append(ListToString(m_inputMeasurementKeys, ","c))
+                Else
+                    .Append(ListToString(m_inputMeasurementKeys.GetRange(m_inputMeasurementKeys.Count - MaxMeasurementsToShow - 1, MaxMeasurementsToShow), ","c))
+                    .Append(",...")
+                End If
                 .Append(Environment.NewLine)
                 .Append(" Minimum measurements used: ")
                 .Append(m_minimumMeasurementsToUse)

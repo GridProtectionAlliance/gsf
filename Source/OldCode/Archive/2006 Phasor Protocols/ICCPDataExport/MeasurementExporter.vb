@@ -240,6 +240,9 @@ Public Class MeasurementExporter
                                     .Write(","c)
                                     .WriteLine(",0,")
                                 End With
+                            Else
+                                ' We were unable to find measurement tag for this key - this is unexpected
+                                RaiseCalculationException(New InvalidOperationException("Failed to find measurement tag for measurement " & measurement.Key.ToString()))
                             End If
                         Next
 
@@ -271,7 +274,7 @@ Public Class MeasurementExporter
 
     Private Function IsTimeToExport(ByVal ticks As Long) As Boolean
 
-        Return ((New Date(ticks)).Second Mod m_exportInterval = 0 AndAlso Convert.ToInt32(TicksBeyondSecond(ticks) / FrameRate) = 0)
+        Return ((New Date(ticks)).Second Mod m_exportInterval = 0 AndAlso TicksBeyondSecond(ticks) = 0)
 
     End Function
 
