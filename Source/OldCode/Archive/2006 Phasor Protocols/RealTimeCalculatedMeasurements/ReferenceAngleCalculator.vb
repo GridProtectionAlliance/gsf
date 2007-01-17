@@ -40,8 +40,8 @@ Public Class ReferenceAngleCalculator
     Private m_lastAngles As Dictionary(Of MeasurementKey, Double)
     Private m_unwrapOffsets As Dictionary(Of MeasurementKey, Double)
     Private m_latestCalculatedAngles As List(Of Double)
-    Private m_measurements As IMeasurement()
     Private m_lastMeasurements As List(Of MeasurementKey)
+    Private m_measurements As IMeasurement()
 
 #If DEBUG Then
     Private m_frameLog As LogFile
