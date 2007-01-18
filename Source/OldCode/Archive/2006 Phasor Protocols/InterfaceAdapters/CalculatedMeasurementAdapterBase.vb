@@ -229,7 +229,7 @@ Public MustInherit Class CalculatedMeasurementAdapterBase
                     .Append(ListToString(m_outputMeasurements, ","c))
                 Else
                     Dim outputMeasurements As IMeasurement() = CreateArray(Of IMeasurement)(MaxMeasurementsToShow)
-                    Array.Copy(m_outputMeasurements, m_outputMeasurements.Length - MaxMeasurementsToShow - 1, outputMeasurements, 0, MaxMeasurementsToShow)
+                    Array.Copy(m_outputMeasurements, m_outputMeasurements.Length - MaxMeasurementsToShow, outputMeasurements, 0, MaxMeasurementsToShow)
                     .Append(ListToString(outputMeasurements, ","c))
                     .Append(",...")
                 End If
@@ -239,7 +239,7 @@ Public MustInherit Class CalculatedMeasurementAdapterBase
                 If m_inputMeasurementKeys.Count <= MaxMeasurementsToShow Then
                     .Append(ListToString(m_inputMeasurementKeys, ","c))
                 Else
-                    .Append(ListToString(m_inputMeasurementKeys.GetRange(m_inputMeasurementKeys.Count - MaxMeasurementsToShow - 1, MaxMeasurementsToShow), ","c))
+                    .Append(ListToString(m_inputMeasurementKeys.GetRange(m_inputMeasurementKeys.Count - MaxMeasurementsToShow, MaxMeasurementsToShow), ","c))
                     .Append(",...")
                 End If
                 .Append(Environment.NewLine)

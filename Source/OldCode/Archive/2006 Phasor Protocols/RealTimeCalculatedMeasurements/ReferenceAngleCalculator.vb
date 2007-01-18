@@ -40,7 +40,6 @@ Public Class ReferenceAngleCalculator
     Private m_lastAngles As Dictionary(Of MeasurementKey, Double)
     Private m_unwrapOffsets As Dictionary(Of MeasurementKey, Double)
     Private m_latestCalculatedAngles As List(Of Double)
-    Private m_lastMeasurements As List(Of MeasurementKey)
     Private m_measurements As IMeasurement()
 
 #If DEBUG Then
@@ -52,7 +51,6 @@ Public Class ReferenceAngleCalculator
         m_lastAngles = New Dictionary(Of MeasurementKey, Double)
         m_unwrapOffsets = New Dictionary(Of MeasurementKey, Double)
         m_latestCalculatedAngles = New List(Of Double)
-        m_lastMeasurements = New List(Of MeasurementKey)
 
 #If DEBUG Then
         m_frameLog = New LogFile(GetApplicationPath() & "ReferenceAngleLog.txt")
@@ -93,7 +91,7 @@ Public Class ReferenceAngleCalculator
                 .Append("  Last " & ValuesToShow & " calculated angles: ")
                 SyncLock m_latestCalculatedAngles
                     If m_latestCalculatedAngles.Count > ValuesToShow Then
-                        .Append(ListToString(m_latestCalculatedAngles.GetRange(m_latestCalculatedAngles.Count - ValuesToShow - 1, ValuesToShow), ","c))
+                        .Append(ListToString(m_latestCalculatedAngles.GetRange(m_latestCalculatedAngles.Count - ValuesToShow, ValuesToShow), ","c))
                     Else
                         .Append("Not enough values calculated yet...")
                     End If
@@ -119,7 +117,8 @@ Public Class ReferenceAngleCalculator
     Protected Overrides Sub PerformCalculation(ByVal frame As IFrame, ByVal index As Integer)
 
         Dim calculatedMeasurement As Measurement = Measurement.Clone(OutputMeasurements(0), frame.Ticks)
-        Dim angleTotal, angleAverage, lastValue, unwrapOffset As Double        
+        Dim angle, deltaAngle, angleTotal, angleAverage, lastAngle, unwrapOffset As Double
+        Dim key As MeasurementKey
         Dim dataSetChanged As Boolean
         Dim x As Integer
 
@@ -127,12 +126,12 @@ Public Class ReferenceAngleCalculator
         LogFrameDetail(frame, index)
 #End If
 
-        ' Attempt to get minimum needed reporting set of reference angle PMU's
+        ' Attempt to get minimum needed reporting set of composite angles used to calculate reference angle
         If TryGetMinimumNeededMeasurements(frame, m_measurements) Then
             ' See if data set has changed since last run
-            If m_lastMeasurements.Count > 0 AndAlso m_lastMeasurements.Count = m_measurements.Length Then
+            If m_lastAngles.Count > 0 AndAlso m_lastAngles.Count = m_measurements.Length Then
                 For x = 0 To MinimumMeasurementsToUse - 1
-                    If m_lastMeasurements.BinarySearch(m_measurements(x).Key) < 0 Then
+                    If Not m_lastAngles.ContainsKey(m_measurements(x).Key) Then
                         dataSetChanged = True
                         Exit For
                     End If
@@ -141,22 +140,15 @@ Public Class ReferenceAngleCalculator
                 dataSetChanged = True
             End If
 
-            ' Recreate data set list if data has changed
+            ' Reinitialize all angle calculation data if data set has changed
             If dataSetChanged Then
-                m_lastMeasurements.Clear()
-
-                For x = 0 To MinimumMeasurementsToUse - 1
-                    m_lastMeasurements.Add(m_measurements(x).Key)
-                Next
-
-                m_lastMeasurements.Sort()
-
-                ' Reinitialize all angle calculation variables
                 Dim angleRef, angleDelta0, angleDelta1, angleDelta2 As Double
 
+                ' Clear last angles and unwrap offsets
                 m_lastAngles.Clear()
                 m_unwrapOffsets.Clear()
 
+                ' Calculate new unwrap offsets
                 angleRef = m_measurements(0).AdjustedValue
 
                 For x = 0 To MinimumMeasurementsToUse - 1
@@ -178,25 +170,40 @@ Public Class ReferenceAngleCalculator
 
             ' Total all phase angles, unwrapping angles if needed
             For x = 0 To MinimumMeasurementsToUse - 1
+                ' Get current angle value and key
+                With m_measurements(x)
+                    angle = .AdjustedValue
+                    key = .Key
+                End With
+
                 ' Get the unwrap offset for this angle
-                unwrapOffset = m_unwrapOffsets(m_measurements(x).Key)
+                unwrapOffset = m_unwrapOffsets(key)
 
-                ' Get angle difference from last run (if there was a last run)
-                If m_lastAngles.TryGetValue(m_measurements(x).Key, lastValue) Then
-                    ' Unwrap phase angle
-                    angleTotal += GetUnwrappedPhaseAngle(m_measurements(x).AdjustedValue, lastValue, unwrapOffset)
+                ' Get angle value from last run (if there was a last run)
+                If m_lastAngles.TryGetValue(key, lastAngle) Then
+                    ' Calculate angle difference from last run
+                    deltaAngle = angle - lastAngle
 
+                    ' Adjust angle unwrap offset, if needed
+                    If deltaAngle > 300 Then
+                        unwrapOffset -= 360
+                    ElseIf deltaAngle < -300 Then
+                        unwrapOffset += 360
+                    End If
+
+                    ' Reset angle unwrap offset, if needed
                     If unwrapOffset > m_phaseResetAngle Then
                         unwrapOffset -= m_phaseResetAngle
                     ElseIf unwrapOffset < -m_phaseResetAngle Then
                         unwrapOffset += m_phaseResetAngle
                     End If
 
-                    m_unwrapOffsets(m_measurements(x).Key) = unwrapOffset
-                Else
-                    ' No last run (starting up or reinitialized), so take raw angle and add offset
-                    angleTotal += (m_measurements(x).AdjustedValue + unwrapOffset)
+                    ' Track last angle unwrap offset
+                    m_unwrapOffsets(key) = unwrapOffset
                 End If
+
+                ' Total composite angles so average can be calculated
+                angleTotal += (angle + unwrapOffset)
             Next
 
             ' We use modulus function to make sure angle is in range of 0 to 359
@@ -245,23 +252,6 @@ Public Class ReferenceAngleCalculator
         End SyncLock
 
     End Sub
-
-    Private Function GetUnwrappedPhaseAngle(ByVal angle As Double, ByVal lastAngle As Double, ByRef unwrapoffset As Double) As Double
-
-        Dim deltaAngle As Double = angle - lastAngle
-
-        ' Unwrap phase angle, if needed
-        If deltaAngle > 300 Then
-            unwrapoffset -= 360
-        ElseIf deltaAngle < -300 Then
-            unwrapoffset += 360
-        End If
-
-        angle += unwrapoffset
-
-        Return angle
-
-    End Function
 
 #If DEBUG Then
 
