@@ -289,6 +289,29 @@ Namespace Application
 
         End Function
 
+        ''' <summary>
+        ''' Returns users roles for an application.
+        ''' </summary>
+        ''' <param name="applicationName">Application Name</param>
+        ''' <returns>List of roles for specified application</returns>
+        ''' <remarks></remarks>
+        Public Function FindApplicationRoles(ByVal applicationName As String) As List(Of Role)
+
+            '**** Added By Mehul
+            Dim applicationRoles As New List(Of Role)
+
+            If m_roles IsNot Nothing Then
+                For i As Integer = 0 To m_roles.Count - 1
+                    If String.Compare(m_roles(i).Application.Name, applicationName, True) = 0 Then
+                        applicationRoles.Add(m_roles(i))
+                    End If
+                Next
+            End If
+
+            Return applicationRoles
+
+        End Function
+
         Public Shared Function EncryptPassword(ByVal password As String) As String
 
             ' We prepend salt text to the password and then has it to make it even more secure.
