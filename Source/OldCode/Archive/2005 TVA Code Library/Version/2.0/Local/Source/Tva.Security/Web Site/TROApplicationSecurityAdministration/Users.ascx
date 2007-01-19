@@ -95,7 +95,7 @@
     </tr>    
     <tr>
         <td align="left" class="whiteCell" colspan="4" style="height: 28px">
-            <igtbl:ultrawebgrid id="UltraWebGridRoles" runat="server" Height="200px" Width="675px">
+            <igtbl:ultrawebgrid id="UltraWebGridRoles" runat="server" Height="200px" Width="725px">
             <Bands>
                 <igtbl:UltraGridBand AddButtonCaption="Column0Column1Column2" Key="Column0Column1Column2">
                     <AddNewRow View="NotSet" Visible="NotSet">
@@ -124,7 +124,7 @@
                 <EditCellStyleDefault BorderStyle="None" BorderWidth="0px">
                 </EditCellStyleDefault>
                 <FrameStyle BackColor="Window" BorderColor="InactiveCaption" BorderStyle="Solid"
-                    BorderWidth="0px" Font-Names="Tahoma" Font-Size="0.8em" Font-Overline="False" Height="200px" Width="675px">
+                    BorderWidth="0px" Font-Names="Tahoma" Font-Size="0.8em" Font-Overline="False" Height="200px" Width="725px">
                 </FrameStyle>
                 <Pager>
                     <Style BackColor="LightGray" BorderStyle="Solid" BorderWidth="1px">

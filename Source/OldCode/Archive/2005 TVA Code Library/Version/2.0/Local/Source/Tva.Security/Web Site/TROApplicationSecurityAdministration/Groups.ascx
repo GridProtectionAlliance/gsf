@@ -38,10 +38,8 @@
             <asp:TextBox ID="TextBoxDescription" runat="server" Height="40px" TextMode="MultiLine"
                 Width="575px" CssClass="TextBox"></asp:TextBox></td>
     </tr>
-    <tr>
-        <td class="whiteCell" valign="top">
-        </td>
-        <td align="left" class="whiteCell" colspan="3">
+    <tr>        
+        <td align="left" class="whiteCell" colspan="4">
         
             <div id="users" style="height:188px; overflow:auto;">
             <asp:GridView ID="GridViewUsers" runat="server" AllowPaging="False" AllowSorting="True"
@@ -54,18 +52,24 @@
                         <ItemTemplate>
                             <asp:CheckBox ID="CheckBox1" runat=server />                                
                         </ItemTemplate>
+                        <ItemStyle HorizontalAlign=center />
+                        <HeaderStyle HorizontalAlign=center />
                     </asp:TemplateField>                                        
                     <asp:BoundField DataField="UserName" HeaderText="User Name" SortExpression="UserName">
                         <ItemStyle Wrap="True" />
+                        <HeaderStyle HorizontalAlign=center />
                     </asp:BoundField>
                     <asp:BoundField DataField="UserFirstName" HeaderText="First Name" SortExpression="UserFirstName" >
                         <ItemStyle Wrap="True" />
+                        <HeaderStyle HorizontalAlign=center />
                     </asp:BoundField>
                     <asp:BoundField DataField="UserLastName" HeaderText="Last Name" SortExpression="UserLastName">
                         <ItemStyle Wrap="True" />
+                        <HeaderStyle HorizontalAlign=center />
                     </asp:BoundField>
                     <asp:BoundField DataField="UserCompanyName" HeaderText="Company Name" SortExpression="UserCompanyName">
                         <ItemStyle Wrap="True" />
+                        <HeaderStyle HorizontalAlign=center />
                     </asp:BoundField>                    
                 </Columns>
                 
@@ -77,11 +81,9 @@
             </div>
         </td>
     </tr>
-    <tr>
-        <td class="whiteCell" valign="top">
-        </td>
-        <td align="left" class="whiteCell" colspan="3">
-            <igtbl:ultrawebgrid id="UltraWebGridRoles" runat="server" Width="575px">
+    <tr>        
+        <td align="left" class="whiteCell" colspan="4">
+            <igtbl:ultrawebgrid id="UltraWebGridRoles" runat="server" Width="725px">
             <Bands>
                 <igtbl:UltraGridBand AddButtonCaption="Column0Column1Column2" Key="Column0Column1Column2">
                     <AddNewRow View="NotSet" Visible="NotSet">
@@ -110,7 +112,7 @@
                 <EditCellStyleDefault BorderStyle="None" BorderWidth="0px">
                 </EditCellStyleDefault>
                 <FrameStyle BackColor="Window" BorderColor="InactiveCaption" BorderStyle="Solid"
-                    BorderWidth="0px" Font-Names="Tahoma" Font-Size="0.8em" Font-Overline="False" Height="200px" Width="575px">
+                    BorderWidth="0px" Font-Names="Tahoma" Font-Size="0.8em" Font-Overline="False" Height="200px" Width="725px">
                 </FrameStyle>
                 <Pager>
                     <Style BackColor="LightGray" BorderStyle="Solid" BorderWidth="1px">

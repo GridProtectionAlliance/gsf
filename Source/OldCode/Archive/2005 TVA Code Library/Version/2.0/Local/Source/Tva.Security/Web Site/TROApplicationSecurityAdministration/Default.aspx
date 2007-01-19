@@ -49,7 +49,7 @@
                     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
                 </td>
                 <td align=right valign=middle width="20%">
-                   <a class="helpHyperLink" href="#">How do I use this tool?</a>&nbsp; <img src="Images/Help.gif" alt="Click Here for Help" border="0" />&nbsp;
+                   <a class="helpHyperLink" target=_blank href="Documents/UserGuide_TROAppSecurity.pdf">How do I use this tool?</a>&nbsp; <img src="Images/Help.gif" alt="Click Here for Help" border="0" />&nbsp;
                 </td>
             </tr>
             <tr>

@@ -250,11 +250,12 @@ Partial Class Users
         Dim companyID, securityQnID As Guid
         Dim isLockedOut, isExternal, userReplicate As Boolean
 
-        userName = Me.TextBoxUserName.Text.Replace("'", "")
-        If userName.Replace(" ", "") = "" Then
+        userName = Me.TextBoxUserName.Text.Replace("'", "").Replace(" ", "_")
+        If userName = "" Or userName = "_" Then
             Me.LabelMsg.Text = "Invalid User Name."
             Exit Sub
         End If
+        userName = userName.ToUpper
 
         companyID = New Guid(Me.DropDownListCompanies.SelectedValue)
         isLockedOut = Me.CheckBoxIsLocked.Checked
@@ -391,7 +392,6 @@ Partial Class Users
             Me.UltraWebGridRoles.Bands(1).Columns.Insert(0, newCol)
         End If
 
-
         With Me.UltraWebGridRoles.Bands(0).Columns
             .FromKey("ApplicationID").Hidden = True
             .FromKey("ApplicationName").Width = New Unit(100)
@@ -402,6 +402,7 @@ Partial Class Users
 
         With Me.UltraWebGridRoles.Bands(1).Columns
             .FromKey("Select").Move(0)
+            .FromKey("Select").CellStyle.HorizontalAlign = HorizontalAlign.Center
             .FromKey("RoleName").Move(1)
             .FromKey("ApplicationID").Hidden = True
             .FromKey("RoleID").Hidden = True
