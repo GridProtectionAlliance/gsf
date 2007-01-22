@@ -130,6 +130,7 @@ Partial Class Login
 
             Dim u As New User(userName, password, New Data.SqlClient.SqlConnection(Session("ConnectionString").ToString))
             With u 'New User(userName, password, New Data.SqlClient.SqlConnection(connectionString))
+
                 If .IsAuthenticated Then
 
                     If .IsLockedOut = False Then

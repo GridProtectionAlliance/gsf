@@ -383,10 +383,12 @@ Partial Class Users
     Protected Sub UltraWebGridRoles_InitializeLayout(ByVal sender As Object, ByVal e As Infragistics.WebUI.UltraWebGrid.LayoutEventArgs) Handles UltraWebGridRoles.InitializeLayout
 
         Dim newCol As Infragistics.WebUI.UltraWebGrid.UltraGridColumn = New Infragistics.WebUI.UltraWebGrid.UltraGridColumn
-        newCol.Key = "Select"
-        newCol.Header.Caption = "Select"
-        newCol.Type = Infragistics.WebUI.UltraWebGrid.ColumnType.CheckBox
-        newCol.AllowUpdate = Infragistics.WebUI.UltraWebGrid.AllowUpdate.Yes
+        With newCol
+            .Key = "Select"
+            .Header.Caption = "Select"
+            .Type = Infragistics.WebUI.UltraWebGrid.ColumnType.CheckBox
+            .AllowUpdate = Infragistics.WebUI.UltraWebGrid.AllowUpdate.Yes
+        End With
 
         If Not Me.UltraWebGridRoles.Bands(1).Columns.IndexOf("Select") >= 0 Then
             Me.UltraWebGridRoles.Bands(1).Columns.Insert(0, newCol)
@@ -394,24 +396,39 @@ Partial Class Users
 
         With Me.UltraWebGridRoles.Bands(0).Columns
             .FromKey("ApplicationID").Hidden = True
-            .FromKey("ApplicationName").Width = New Unit(100)
-            .FromKey("ApplicationDescription").Width = New Unit(500)
-            .FromKey("ApplicationName").Header.Caption = "Application Name"
-            .FromKey("ApplicationDescription").Header.Caption = "Description"
+
+            With .FromKey("ApplicationName")
+                .Width = New Unit(100)
+                .Header.Caption = "Application Name"
+            End With
+
+            With .FromKey("ApplicationDescription")
+                .Width = New Unit(500)
+                .Header.Caption = "Description"
+            End With
         End With
 
         With Me.UltraWebGridRoles.Bands(1).Columns
-            .FromKey("Select").Move(0)
-            .FromKey("Select").CellStyle.HorizontalAlign = HorizontalAlign.Center
-            .FromKey("RoleName").Move(1)
+            With .FromKey("Select")
+                .Move(0)
+                .CellStyle.HorizontalAlign = HorizontalAlign.Center
+                .Width = New Unit(75)
+                .Header.Caption = " Select "
+            End With
+
+            With .FromKey("RoleName")
+                .Move(1)
+                .Width = New Unit(125)
+                .Header.Caption = "Role Name"
+            End With
+
             .FromKey("ApplicationID").Hidden = True
             .FromKey("RoleID").Hidden = True
-            .FromKey("Select").Width = New Unit(75)
-            .FromKey("RoleName").Width = New Unit(125)
-            .FromKey("RoleDescription").Width = New Unit(400)
-            .FromKey("RoleName").Header.Caption = "Role Name"
-            .FromKey("RoleDescription").Header.Caption = "Description"
-            .FromKey("Select").Header.Caption = " Select "
+
+            With .FromKey("RoleDescription")
+                .Width = New Unit(400)
+                .Header.Caption = "Description"
+            End With
         End With
 
     End Sub

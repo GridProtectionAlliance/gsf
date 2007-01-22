@@ -1,5 +1,7 @@
 <%@ Page Language="VB" AutoEventWireup="true" CodeFile="Default.aspx.vb" Inherits="_Default" ValidateRequest="false" %>
 
+<%@ Register Src="DataPorting.ascx" TagName="DataPorting" TagPrefix="uc9" %>
+
 <%@ Register Src="AccessRequest.ascx" TagName="AccessRequest" TagPrefix="uc7" %>
 <%@ Register Src="Settings.ascx" TagName="Settings" TagPrefix="uc8" %>
 
@@ -130,6 +132,9 @@
                                 <Style>
 <Padding Top="2px"></Padding>
 </Style>
+                                <ContentTemplate>
+                                    <uc9:DataPorting ID="DataPorting1" runat="server" />
+                                </ContentTemplate>
                             </igtab:Tab>
                         </Tabs>
                         <RoundedImage FillStyle="LeftMergedWithCenter" HoverImage="[ig_tab_winXP2.gif]" LeftSideWidth="7"

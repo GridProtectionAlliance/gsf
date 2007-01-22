@@ -5,7 +5,7 @@ Partial Class _Default
     Inherits Tva.Web.UI.SecurePage
 
     Public Sub New()
-        MyBase.New("TRO_APP_SEC", SecurityServer.Development, False)
+        MyBase.New("TRO_APP_SEC", CType(System.Configuration.ConfigurationManager.AppSettings("SecurityServer"), SecurityServer), False)
     End Sub
 
     Protected Sub Page_Load(ByVal sender As Object, ByVal e As System.EventArgs) Handles Me.Load
