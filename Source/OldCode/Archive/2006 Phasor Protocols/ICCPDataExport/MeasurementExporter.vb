@@ -115,10 +115,10 @@ Public Class MeasurementExporter
 
         MyBase.Dispose()
 
+        GC.SuppressFinalize(Me)
+
         ' We'll be nice and disconnect network share when this class is disposed...
         DisconnectFromNetworkShare(CategorizedStringSetting(ConfigSection, "ExportShare"))
-
-        GC.SuppressFinalize(Me)
 
     End Sub
 

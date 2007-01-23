@@ -112,7 +112,7 @@ Public Class PhasorMeasurementMapper
     Public Sub SendDeviceCommand(ByVal command As DeviceCommand)
 
         If m_frameParser IsNot Nothing Then m_frameParser.SendDeviceCommand(command)
-        UpdateStatus("Sent device command """ & [Enum].GetName(GetType(DeviceCommand), command) & """...")
+        UpdateStatus(">> Sent device command """ & [Enum].GetName(GetType(DeviceCommand), command) & """...")
 
     End Sub
 
@@ -392,10 +392,19 @@ Public Class PhasorMeasurementMapper
 
     End Sub
 
+    Private Sub m_frameParser_ConfigurationChanged() Handles m_frameParser.ConfigurationChanged
+
+        m_receivedConfigFrame = False
+
+        UpdateStatus("Configuration has changed for """ & m_source & """, requesting new configuration frame...")
+        SendDeviceCommand(DeviceCommand.SendConfigurationFrame2)
+
+    End Sub
+
     Private Sub m_frameParser_ReceivedConfigurationFrame(ByVal frame As IConfigurationFrame) Handles m_frameParser.ReceivedConfigurationFrame
 
+        If Not m_receivedConfigFrame Then ThreadPool.QueueUserWorkItem(AddressOf CacheConfigurationFrame, frame)
         m_receivedConfigFrame = True
-        ThreadPool.QueueUserWorkItem(AddressOf CacheConfigurationFrame, frame)
 
     End Sub
 
@@ -425,9 +434,9 @@ Public Class PhasorMeasurementMapper
 
     Private Sub m_frameParser_ReceivedDataFrame(ByVal frame As IDataFrame) Handles m_frameParser.ReceivedDataFrame
 
-        ' Don't want to waste time on the parsing thread handling data mapping and providing new measurements
-        ' to external sources such as the archive queue and calculated measurement modules so we queue this
-        ' work up and get back to parsing as quickly as possible
+        ' We handle parsed data frame on a new thread since work to be done on data in frame can be
+        ' time consuming (e.g., mapping, sorting and queuing) and we don't want to slow up parsing
+        ' process which typically is utilizing the data transport connection thread anyway
         ThreadPool.QueueUserWorkItem(AddressOf MapDataFrameMeasurements, frame)
 
     End Sub

@@ -111,6 +111,10 @@ Public MustInherit Class HistorianAdapterBase
 
     Protected MustOverride Sub AttemptDisconnection()
 
+    ' Note that since there may be many hundreds of new incoming measurements per second, consumer handling
+    ' the queuing of these new measurements should make sure that queue operations are handled on independent
+    ' threads (as needed) so as to not slow up archiving of new measurements
+
     Public Overridable Sub QueueMeasurementForArchival(ByVal measurement As IMeasurement) Implements IHistorianAdapter.QueueMeasurementForArchival
 
         SyncLock m_measurementBuffer

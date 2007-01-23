@@ -33,7 +33,8 @@ Public MustInherit Class CalculatedMeasurementAdapterBase
     ' We need to time align incoming measurements before attempting to calculate new outgoing measurement
     Private WithEvents m_concentrator As Concentrator
     Private m_outputMeasurements As IMeasurement()
-    Private m_inputMeasurementKeys As List(Of MeasurementKey)
+    Private m_inputMeasurementKeys As MeasurementKey()
+    Private m_inputMeasurementKeysHash As List(Of MeasurementKey)
     Private m_minimumMeasurementsToUse As Integer
 
     Public Overridable Sub Initialize( _
@@ -45,8 +46,12 @@ Public MustInherit Class CalculatedMeasurementAdapterBase
         ByVal leadTime As Double) Implements ICalculatedMeasurementAdapter.Initialize
 
         m_outputMeasurements = outputMeasurements
-        m_inputMeasurementKeys = New List(Of MeasurementKey)(inputMeasurementKeys)
-        m_inputMeasurementKeys.Sort()
+        m_inputMeasurementKeys = inputMeasurementKeys
+
+        ' We create a sorted list of the input keys for quick lookup - we must keep this separate because
+        ' the order of the input measurements may be relevant the calculation
+        m_inputMeasurementKeysHash = New List(Of MeasurementKey)(inputMeasurementKeys)
+        m_inputMeasurementKeysHash.Sort()
 
         ' Default to all measurements of minimum is not specified
         If minimumMeasurementsToUse < 1 Then
@@ -66,18 +71,11 @@ Public MustInherit Class CalculatedMeasurementAdapterBase
 
     End Sub
 
-    ' Since there may be many hundreds of calculated measurements and each measurement can have hundreds of inputs, we do all
-    ' the "measurement filtering and sorting" on independent threads so as to not slow up publishing of new measurements
+    ' Note that since there may be many hundreds of calculated measurements and each measurement can have hundreds
+    ' of inputs, consumer handling the queuing of input measurements should make sure that queue operations are
+    ' handled on independent threads (as needed) so as to not slow up publishing of new measurements
 
     Public Overridable Sub QueueMeasurementForCalculation(ByVal measurement As IMeasurement) Implements ICalculatedMeasurementAdapter.QueueMeasurementForCalculation
-
-        ThreadPool.QueueUserWorkItem(AddressOf SortNewMeasurement, measurement)
-
-    End Sub
-
-    Private Sub SortNewMeasurement(ByVal state As Object)
-
-        Dim measurement As IMeasurement = DirectCast(state, IMeasurement)
 
         ' If this is an input measurement to this calculation, sort it!
         If IsInputMeasurement(measurement.Key) Then m_concentrator.SortMeasurement(measurement)
@@ -86,17 +84,9 @@ Public MustInherit Class CalculatedMeasurementAdapterBase
 
     Public Overridable Sub QueueMeasurementsForCalculation(ByVal measurements As IList(Of IMeasurement)) Implements ICalculatedMeasurementAdapter.QueueMeasurementsForCalculation
 
-        ThreadPool.QueueUserWorkItem(AddressOf SortNewMeasurementList, measurements)
-
-    End Sub
-
-    Private Sub SortNewMeasurementList(ByVal state As Object)
-
-        Dim measurements As IList(Of IMeasurement) = DirectCast(state, IList(Of IMeasurement))
-
         If measurements IsNot Nothing Then
             For x As Integer = 0 To measurements.Count - 1
-                SortNewMeasurement(measurements(x))
+                QueueMeasurementForCalculation(measurements(x))
             Next
         End If
 
@@ -104,17 +94,9 @@ Public MustInherit Class CalculatedMeasurementAdapterBase
 
     Public Overridable Sub QueueMeasurementsForCalculation(ByVal measurements As IDictionary(Of MeasurementKey, IMeasurement)) Implements ICalculatedMeasurementAdapter.QueueMeasurementsForCalculation
 
-        ThreadPool.QueueUserWorkItem(AddressOf SortNewMeasurementDictionary, measurements)
-
-    End Sub
-
-    Private Sub SortNewMeasurementDictionary(ByVal state As Object)
-
-        Dim measurements As IDictionary(Of MeasurementKey, IMeasurement) = DirectCast(state, IDictionary(Of MeasurementKey, IMeasurement))
-
         If measurements IsNot Nothing Then
             For Each measurement As IMeasurement In measurements.Values
-                SortNewMeasurement(measurement)
+                QueueMeasurementForCalculation(measurement)
             Next
         End If
 
@@ -146,17 +128,20 @@ Public MustInherit Class CalculatedMeasurementAdapterBase
 
     Public Overridable Property InputMeasurementKeys() As MeasurementKey() Implements ICalculatedMeasurementAdapter.InputMeasurementKeys
         Get
-            Return m_inputMeasurementKeys.ToArray()
+            Return m_inputMeasurementKeys
         End Get
         Set(ByVal value As MeasurementKey())
-            m_inputMeasurementKeys = New List(Of MeasurementKey)(value)
-            m_inputMeasurementKeys.Sort()
+            m_inputMeasurementKeys = value
+
+            ' Update input key lookup hash table
+            m_inputMeasurementKeysHash = New List(Of MeasurementKey)(value)
+            m_inputMeasurementKeysHash.Sort()
         End Set
     End Property
 
     Public Overridable ReadOnly Property IsInputMeasurement(ByVal item As MeasurementKey) As Boolean
         Get
-            Return (m_inputMeasurementKeys.BinarySearch(item) >= 0)
+            Return (m_inputMeasurementKeysHash.BinarySearch(item) >= 0)
         End Get
     End Property
 
@@ -221,7 +206,7 @@ Public MustInherit Class CalculatedMeasurementAdapterBase
 
     Public Overrides ReadOnly Property Status() As String
         Get
-            Const MaxMeasurementsToShow As Integer = 10
+            Const MaxMeasurementsToShow As Integer = 6
 
             With New StringBuilder
                 .Append("   Output measurement ID's: ")
@@ -229,17 +214,18 @@ Public MustInherit Class CalculatedMeasurementAdapterBase
                     .Append(ListToString(m_outputMeasurements, ","c))
                 Else
                     Dim outputMeasurements As IMeasurement() = CreateArray(Of IMeasurement)(MaxMeasurementsToShow)
-                    Array.Copy(m_outputMeasurements, m_outputMeasurements.Length - MaxMeasurementsToShow, outputMeasurements, 0, MaxMeasurementsToShow)
+                    Array.Copy(m_outputMeasurements, 0, outputMeasurements, 0, MaxMeasurementsToShow)
                     .Append(ListToString(outputMeasurements, ","c))
                     .Append(",...")
                 End If
                 .Append(Environment.NewLine)
                 .Append("    Input measurement ID's: ")
-                .Append(ListToString(m_inputMeasurementKeys, ","c))
-                If m_inputMeasurementKeys.Count <= MaxMeasurementsToShow Then
+                If m_inputMeasurementKeys.Length <= MaxMeasurementsToShow Then
                     .Append(ListToString(m_inputMeasurementKeys, ","c))
                 Else
-                    .Append(ListToString(m_inputMeasurementKeys.GetRange(m_inputMeasurementKeys.Count - MaxMeasurementsToShow, MaxMeasurementsToShow), ","c))
+                    Dim inputMeasurements As MeasurementKey() = CreateArray(Of MeasurementKey)(MaxMeasurementsToShow)
+                    Array.Copy(m_inputMeasurementKeys, 0, inputMeasurements, 0, MaxMeasurementsToShow)
+                    .Append(ListToString(inputMeasurements, ","c))
                     .Append(",...")
                 End If
                 .Append(Environment.NewLine)
@@ -256,13 +242,22 @@ Public MustInherit Class CalculatedMeasurementAdapterBase
 
     Protected Overridable Sub PublishNewCalculatedMeasurement(ByVal measurement As IMeasurement)
 
-        RaiseEvent NewCalculatedMeasurements(New IMeasurement() {measurement})
+        PublishNewCalculatedMeasurements(New IMeasurement() {measurement})
 
     End Sub
 
     Protected Overridable Sub PublishNewCalculatedMeasurements(ByVal measurements As IList(Of IMeasurement))
 
-        RaiseEvent NewCalculatedMeasurements(measurements)
+        ' We handle publication of new measurements on a new thread since work to be done during
+        ' publication can be time consuming (e.g., sorting and queuing) and we don't want to slow
+        ' up calculation process which is being called at rates of, or over, 30 times per second
+        ThreadPool.QueueUserWorkItem(AddressOf PublishNewCalculatedMeasurements, measurements)
+
+    End Sub
+
+    Private Sub PublishNewCalculatedMeasurements(ByVal state As Object)
+
+        RaiseEvent NewCalculatedMeasurements(DirectCast(state, IList(Of IMeasurement)))
 
     End Sub
 
@@ -303,7 +298,7 @@ Public MustInherit Class CalculatedMeasurementAdapterBase
         If measurements Is Nothing Then measurements = CreateArray(Of IMeasurement)(m_minimumMeasurementsToUse)
 
         ' Loop through all input measurements to see if they exist in this frame
-        For x As Integer = 0 To m_inputMeasurementKeys.Count - 1
+        For x As Integer = 0 To m_inputMeasurementKeys.Length - 1
             If frame.Measurements.TryGetValue(m_inputMeasurementKeys(x), measurement) Then
                 measurements(index) = measurement
                 index += 1

@@ -375,11 +375,6 @@ Module MainModule
     Private Sub NewCalculatedMeasurements(ByVal measurements As IList(Of IMeasurement))
 
         If measurements IsNot Nothing Then
-            ' Queue new measurements for archival
-            For Each receiver As PhasorMeasurementReceiver In m_measurementReceivers.Values
-                receiver.QueueMeasurementsForArchival(measurements)
-            Next
-
             ' Provide new calculated measurements "directly" to all calculated measurement modules
             ' such that calculated measurements can be based on other calculated measurements
             If m_calculatedMeasurements IsNot Nothing Then
@@ -387,6 +382,11 @@ Module MainModule
                     m_calculatedMeasurements(x).QueueMeasurementsForCalculation(measurements)
                 Next
             End If
+
+            ' Queue new measurements for archival
+            For Each receiver As PhasorMeasurementReceiver In m_measurementReceivers.Values
+                receiver.QueueMeasurementsForArchival(measurements)
+            Next
 
             ' TODO: Provide real-time calculated measurements outside of receiver as needed...
             ' In an "integrated" system, this is where you would provide calculated measurements
