@@ -14,6 +14,8 @@
 '       Original version of source code generated
 '  01/23/2006 - J. Ritchie Carroll
 '       2.0 version of source code migrated from 1.1 source (TVA.Shared.Common)
+'  01/24/2007 - J. Ritchie Carroll
+'       Added GetDataSet method to convert an XML string of data into a DataSet object
 '
 '*******************************************************************************************************
 
@@ -117,6 +119,24 @@ Namespace Xml
                 End If
             End Set
         End Property
+
+        ''' <summary>
+        ''' Gets a data set object from an XML data set formatted as a String
+        ''' </summary>
+        ''' <param name="xmlData">XML data string in standard DataSet format</param>
+        Public Shared Function GetDataSet(ByVal xmlData As String) As DataSet
+
+            Dim dataSet As New DataSet
+            Dim xmlReader As New XmlTextReader(xmlData, System.Xml.XmlNodeType.Document, Nothing)
+
+            xmlReader.ReadOuterXml()
+
+            ' Read the outer XML into the Dataset
+            dataSet.ReadXml(xmlReader)
+
+            Return dataSet
+
+        End Function
 
     End Class
 
