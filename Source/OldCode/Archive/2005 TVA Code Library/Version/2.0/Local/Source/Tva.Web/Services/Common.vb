@@ -21,17 +21,16 @@ Namespace Services
 
     Public Class Common
 
-        Public Shared Function CreateWebServiceCredentials(ByVal userName As String, ByVal password As String, ByVal server As SecurityServer, ByVal passThroughAuthentication As Boolean) As AuthenticationSoapHeader
+        Public Sub SetWebServiceCredentials(ByVal webService As Object, ByVal userName As String, ByVal password As String, ByVal server As SecurityServer, ByVal passThroughAuthentication As Boolean)
 
-            With New AuthenticationSoapHeader
+            With webService
                 .UserName = userName
                 .Password = password
                 .Server = server
-                .PassThroughAuthentication = True
-                Return .This
+                .PassThroughAuthentication = passThroughAuthentication
             End With
 
-        End Function
+        End Sub
 
     End Class
 

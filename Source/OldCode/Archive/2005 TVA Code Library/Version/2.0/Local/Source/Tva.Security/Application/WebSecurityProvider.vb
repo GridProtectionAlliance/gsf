@@ -305,7 +305,7 @@ Namespace Application
                     Case SecurityServer.Acceptance
                         .Append("chaaesoweb.cha.tva.gov")
                     Case SecurityServer.Production
-                        .Append("troweb.cha.tva.gov")
+                        .Append("opweb1.cha.tva.gov")
                 End Select
                 .Append("/troapplicationsecurity/")
 
