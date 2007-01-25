@@ -74,6 +74,7 @@ Public Enum PhasorProtocol
     IeeeC37_118D6
     Ieee1344
     BpaPdcStream
+    FNet
 End Enum
 
 ''' <summary>Phasor enabled device commands</summary>
