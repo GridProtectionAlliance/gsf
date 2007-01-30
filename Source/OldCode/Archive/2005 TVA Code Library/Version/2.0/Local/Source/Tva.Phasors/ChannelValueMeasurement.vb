@@ -171,7 +171,7 @@ Friend Class ChannelValueMeasurement(Of T As IChannelDefinition)
 
     End Function
 
-    ''' <summary>Returns True if the value of this measurement equals the value of the specified other</summary>
+    ''' <summary>Returns True if the value of this measurement equals the value of the specified other measurement</summary>
     Public Overloads Function Equals(ByVal other As Measurements.IMeasurement) As Boolean Implements System.IEquatable(Of Measurements.IMeasurement).Equals
 
         Return (CompareTo(other) = 0)
