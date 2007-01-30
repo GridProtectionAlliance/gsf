@@ -19,10 +19,20 @@ Imports Tva.Security.Application
 
 Namespace Services
 
-    Public Class Common
+    ''' <summary>Defines common global functions related to Web Services</summary>
+    Public NotInheritable Class Common
 
-        Public Sub SetWebServiceCredentials(ByVal webService As Object, ByVal userName As String, ByVal password As String, ByVal server As SecurityServer, ByVal passThroughAuthentication As Boolean)
+        Private Sub New()
 
+            ' This class contains only global functions and is not meant to be instantiated
+
+        End Sub
+
+        Public Shared Sub SetWebServiceCredentials(ByVal webService As Object, ByVal userName As String, ByVal password As String, ByVal server As SecurityServer, ByVal passThroughAuthentication As Boolean)
+
+            ' Note "webService" parameter must be "Object", because web services create local proxy implementations
+            ' of the AuthenticationSoapHeader and do not support interfaces - hence all calls will be made through
+            ' reflection (i.e., late bound method invocation support), but everything works as expected...
             With webService
                 .UserName = userName
                 .Password = password
