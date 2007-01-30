@@ -24,7 +24,7 @@ Namespace Measurements
     ''' <summary>Abstract measured value interface</summary>
     Public Interface IMeasurement
 
-        Inherits IComparable
+        Inherits IEquatable(Of IMeasurement), IComparable(Of IMeasurement), IComparable
 
         ''' <summary>Handy instance reference to self</summary>
         ReadOnly Property This() As IMeasurement

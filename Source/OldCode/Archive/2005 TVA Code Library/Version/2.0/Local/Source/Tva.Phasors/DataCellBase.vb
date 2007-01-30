@@ -178,9 +178,14 @@ Public MustInherit Class DataCellBase
 
 #Region " IMeasurement Implementation "
 
+    ' We keep the IMeasurement implementation of the DataCell completely private.  Exposing
+    ' these properties publically would only stand to add confusion as to where measurements
+    ' typically come from (i.e., the IDataCell's values) - the only value the cell itself has
+    ' to offer is the "StatusFlags" property, which we expose below
+
     Private Property IMeasurementValue() As Double Implements IMeasurement.Value
         Get
-            Return m_statusFlags
+            Return Convert.ToDouble(m_statusFlags)
         End Get
         Set(ByVal value As Double)
             m_statusFlags = Convert.ToInt16(value)
@@ -268,13 +273,22 @@ Public MustInherit Class DataCellBase
         End Get
     End Property
 
-    Private Function IComparableCompareTo(ByVal obj As Object) As Integer Implements IComparable.CompareTo
+    Private Function IComparableCompareTo(ByVal obj As Object) As Integer Implements System.IComparable.CompareTo
 
-        If TypeOf obj Is IMeasurement Then
-            Return IMeasurementValue.CompareTo(DirectCast(obj, IMeasurement).Value)
-        Else
-            Throw New ArgumentException(InheritedType.Name & " measurement can only be compared with other IMeasurements...")
-        End If
+        If TypeOf obj Is IMeasurement Then Return IComparableCompareTo(DirectCast(obj, IMeasurement))
+        Throw New ArgumentException(InheritedType.Name & " measurement can only be compared with other IMeasurements...")
+
+    End Function
+
+    Private Function IComparableCompareTo(ByVal other As Measurements.IMeasurement) As Integer Implements System.IComparable(Of Measurements.IMeasurement).CompareTo
+
+        Return IMeasurementValue.CompareTo(other.Value)
+
+    End Function
+
+    Private Function IEquatableEquals(ByVal other As Measurements.IMeasurement) As Boolean Implements System.IEquatable(Of Measurements.IMeasurement).Equals
+
+        Return (IComparableCompareTo(other) = 0)
 
     End Function
 

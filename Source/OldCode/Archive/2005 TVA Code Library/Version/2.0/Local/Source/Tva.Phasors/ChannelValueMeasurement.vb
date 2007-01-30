@@ -92,16 +92,16 @@ Friend Class ChannelValueMeasurement(Of T As IChannelDefinition)
 
     Public Property Value() As Double Implements IMeasurement.Value
         Get
-            Return m_parent(m_valueIndex)
+            Return Convert.ToDouble(m_parent(m_valueIndex))
         End Get
         Set(ByVal value As Double)
-            m_parent(m_valueIndex) = value
+            m_parent(m_valueIndex) = Convert.ToSingle(value)
         End Set
     End Property
 
     Public ReadOnly Property AdjustedValue() As Double Implements IMeasurement.AdjustedValue
         Get
-            Return m_parent(m_valueIndex) * m_multiplier + m_adder
+            Return Convert.ToDouble(m_parent(m_valueIndex)) * m_multiplier + m_adder
         End Get
     End Property
 
@@ -159,11 +159,22 @@ Friend Class ChannelValueMeasurement(Of T As IChannelDefinition)
     ''' <summary>This implementation of a basic measurement compares itself by value</summary>
     Public Function CompareTo(ByVal obj As Object) As Integer Implements System.IComparable.CompareTo
 
-        If TypeOf obj Is IMeasurement Then
-            Return Value.CompareTo(DirectCast(obj, IMeasurement).Value)
-        Else
-            Throw New ArgumentException(m_parent.InheritedType.Name & " measurement can only be compared with other IMeasurements...")
-        End If
+        If TypeOf obj Is IMeasurement Then Return CompareTo(DirectCast(obj, IMeasurement))
+        Throw New ArgumentException(m_parent.InheritedType.Name & " measurement can only be compared with other IMeasurements...")
+
+    End Function
+
+    ''' <summary>This implementation of a basic measurement compares itself by value</summary>
+    Public Function CompareTo(ByVal other As Measurements.IMeasurement) As Integer Implements System.IComparable(Of Measurements.IMeasurement).CompareTo
+
+        Return Value.CompareTo(other.Value)
+
+    End Function
+
+    ''' <summary>Returns True if the value of this measurement equals the value of the specified other</summary>
+    Public Overloads Function Equals(ByVal other As Measurements.IMeasurement) As Boolean Implements System.IEquatable(Of Measurements.IMeasurement).Equals
+
+        Return (CompareTo(other) = 0)
 
     End Function
 
