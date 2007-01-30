@@ -42,13 +42,22 @@ Friend Class ChannelValueMeasurement(Of T As IChannelDefinition)
 
     End Sub
 
+    Protected Property Parent() As IChannelValue(Of T)
+        Get
+            Return m_parent
+        End Get
+        Set(ByVal value As IChannelValue(Of T))
+            m_parent = value
+        End Set
+    End Property
+
     Public ReadOnly Property This() As IMeasurement Implements IMeasurement.This
         Get
             Return Me
         End Get
     End Property
 
-    Public Property ID() As Integer Implements IMeasurement.ID
+    Public Overridable Property ID() As Integer Implements IMeasurement.ID
         Get
             Return m_id
         End Get
@@ -57,7 +66,7 @@ Friend Class ChannelValueMeasurement(Of T As IChannelDefinition)
         End Set
     End Property
 
-    Public Property Source() As String Implements IMeasurement.Source
+    Public Overridable Property Source() As String Implements IMeasurement.Source
         Get
             Return m_source
         End Get
@@ -66,13 +75,13 @@ Friend Class ChannelValueMeasurement(Of T As IChannelDefinition)
         End Set
     End Property
 
-    Public ReadOnly Property Key() As MeasurementKey Implements IMeasurement.Key
+    Public Overridable ReadOnly Property Key() As MeasurementKey Implements IMeasurement.Key
         Get
             Return New MeasurementKey(m_id, m_source)
         End Get
     End Property
 
-    Public Property Tag() As String Implements IMeasurement.Tag
+    Public Overridable Property Tag() As String Implements IMeasurement.Tag
         Get
             Return m_tag
         End Get
@@ -81,7 +90,7 @@ Friend Class ChannelValueMeasurement(Of T As IChannelDefinition)
         End Set
     End Property
 
-    Public Property ValueIndex() As Integer
+    Public Overridable Property ValueIndex() As Integer
         Get
             Return m_valueIndex
         End Get
@@ -90,7 +99,7 @@ Friend Class ChannelValueMeasurement(Of T As IChannelDefinition)
         End Set
     End Property
 
-    Public Property Value() As Double Implements IMeasurement.Value
+    Public Overridable Property Value() As Double Implements IMeasurement.Value
         Get
             Return Convert.ToDouble(m_parent(m_valueIndex))
         End Get
@@ -99,13 +108,13 @@ Friend Class ChannelValueMeasurement(Of T As IChannelDefinition)
         End Set
     End Property
 
-    Public ReadOnly Property AdjustedValue() As Double Implements IMeasurement.AdjustedValue
+    Public Overridable ReadOnly Property AdjustedValue() As Double Implements IMeasurement.AdjustedValue
         Get
             Return Convert.ToDouble(m_parent(m_valueIndex)) * m_multiplier + m_adder
         End Get
     End Property
 
-    Public Property Adder() As Double Implements IMeasurement.Adder
+    Public Overridable Property Adder() As Double Implements IMeasurement.Adder
         Get
             Return m_adder
         End Get
@@ -114,7 +123,7 @@ Friend Class ChannelValueMeasurement(Of T As IChannelDefinition)
         End Set
     End Property
 
-    Public Property Multiplier() As Double Implements IMeasurement.Multiplier
+    Public Overridable Property Multiplier() As Double Implements IMeasurement.Multiplier
         Get
             Return m_multiplier
         End Get
@@ -123,41 +132,41 @@ Friend Class ChannelValueMeasurement(Of T As IChannelDefinition)
         End Set
     End Property
 
-    Public Property TimestampQualityIsGood() As Boolean Implements IMeasurement.TimestampQualityIsGood
+    Public Overridable Property TimestampQualityIsGood() As Boolean Implements IMeasurement.TimestampQualityIsGood
         Get
             Return m_parent.Parent.SynchronizationIsValid
         End Get
-        Private Set(ByVal value As Boolean)
+        Set(ByVal value As Boolean)
             Throw New NotImplementedException("Timestamp quality for " & m_parent.InheritedType.Name & " is derived from parent data cell and is hence read-only for channel value measurements")
         End Set
     End Property
 
-    Public Property ValueQualityIsGood() As Boolean Implements IMeasurement.ValueQualityIsGood
+    Public Overridable Property ValueQualityIsGood() As Boolean Implements IMeasurement.ValueQualityIsGood
         Get
             Return m_parent.Parent.DataIsValid
         End Get
-        Private Set(ByVal value As Boolean)
+        Set(ByVal value As Boolean)
             Throw New NotImplementedException("Value quality for " & m_parent.InheritedType.Name & " is derived from parent data cell and is hence read-only for channel value measurements")
         End Set
     End Property
 
-    Public Property Ticks() As Long Implements IMeasurement.Ticks
+    Public Overridable Property Ticks() As Long Implements IMeasurement.Ticks
         Get
             Return m_parent.Parent.Parent.Ticks
         End Get
-        Private Set(ByVal value As Long)
+        Set(ByVal value As Long)
             Throw New NotImplementedException("Ticks for " & m_parent.InheritedType.Name & " are derived from parent frame and are hence read-only for channel value measurements")
         End Set
     End Property
 
-    Public ReadOnly Property Timestamp() As Date Implements IMeasurement.Timestamp
+    Public Overridable ReadOnly Property Timestamp() As Date Implements IMeasurement.Timestamp
         Get
             Return New Date(Ticks)
         End Get
     End Property
 
     ''' <summary>This implementation of a basic measurement compares itself by value</summary>
-    Public Function CompareTo(ByVal obj As Object) As Integer Implements System.IComparable.CompareTo
+    Public Overridable Function CompareTo(ByVal obj As Object) As Integer Implements System.IComparable.CompareTo
 
         If TypeOf obj Is IMeasurement Then Return CompareTo(DirectCast(obj, IMeasurement))
         Throw New ArgumentException(m_parent.InheritedType.Name & " measurement can only be compared with other IMeasurements...")
@@ -165,14 +174,14 @@ Friend Class ChannelValueMeasurement(Of T As IChannelDefinition)
     End Function
 
     ''' <summary>This implementation of a basic measurement compares itself by value</summary>
-    Public Function CompareTo(ByVal other As Measurements.IMeasurement) As Integer Implements System.IComparable(Of Measurements.IMeasurement).CompareTo
+    Public Overridable Function CompareTo(ByVal other As Measurements.IMeasurement) As Integer Implements System.IComparable(Of Measurements.IMeasurement).CompareTo
 
         Return Value.CompareTo(other.Value)
 
     End Function
 
     ''' <summary>Returns True if the value of this measurement equals the value of the specified other measurement</summary>
-    Public Overloads Function Equals(ByVal other As Measurements.IMeasurement) As Boolean Implements System.IEquatable(Of Measurements.IMeasurement).Equals
+    Public Overridable Overloads Function Equals(ByVal other As Measurements.IMeasurement) As Boolean Implements System.IEquatable(Of Measurements.IMeasurement).Equals
 
         Return (CompareTo(other) = 0)
 

@@ -37,7 +37,7 @@ Namespace Measurements
 
         Public Overrides Function ToString() As String
 
-            Return Source & ":" & ID
+            Return Source & ":" & ID.ToString()
 
         End Function
 
