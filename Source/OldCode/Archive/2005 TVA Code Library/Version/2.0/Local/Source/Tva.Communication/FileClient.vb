@@ -253,9 +253,6 @@ Public Class FileClient
                     ' Retrieve data from the file stream
                     received = .Client.Read(m_buffer, 0, m_buffer.Length)
 
-                    ' Post raw data to real-time function delegate
-                    If m_receiveRawDataFunction IsNot Nothing Then m_receiveRawDataFunction(m_buffer, 0, received)
-
                     ' Post raw data to real-time function delegate if defined - this bypasses all other activity
                     If m_receiveRawDataFunction IsNot Nothing Then
                         m_receiveRawDataFunction(m_buffer, 0, received)
