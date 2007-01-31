@@ -271,6 +271,8 @@ Public Class MultiProtocolFrameParser
                     m_frameParser = New Ieee1344.FrameParser
                 Case Phasors.PhasorProtocol.BpaPdcStream
                     m_frameParser = New BpaPdcStream.FrameParser
+                Case Phasors.PhasorProtocol.FNet
+                    m_frameParser = New FNet.FrameParser
             End Select
 
             m_frameParser.ExecuteParseOnSeperateThread = m_executeParseOnSeperateThread
