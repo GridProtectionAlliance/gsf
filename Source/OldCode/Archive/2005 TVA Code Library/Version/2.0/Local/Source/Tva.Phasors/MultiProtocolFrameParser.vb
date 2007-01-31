@@ -14,6 +14,10 @@
 '       Initial version of source generated
 '  06/26/2006 - Pinal C. Patel
 '       Changed out the socket code with TcpClient and UdpClient components from Tva.Communication
+'  01/31/2007 - J. Ritchie Carroll
+'       Added TCP "server" support to allow listening connections from devices that act as data
+'       clients, e.g., FNET devices
+'
 '*******************************************************************************************************
 
 Imports System.IO
@@ -27,6 +31,7 @@ Imports Tva.Phasors
 Imports Tva.Communication
 Imports Tva.Communication.Common
 Imports Tva.IO.Common
+Imports Tva.Text.Common
 
 ''' <summary>Protocol independent frame parser</summary>
 <CLSCompliant(False)> _
@@ -48,6 +53,8 @@ Public Class MultiProtocolFrameParser
     Public Event AttemptingConnection()
     Public Event Connected()
     Public Event Disconnected()
+    Public Event ServerStarted()
+    Public Event ServerStopped()
 
     Public Const DefaultBufferSize As Int32 = 262144    ' 256K
     Public Const DefaultFrameRate As Double = 1 / 30
@@ -67,6 +74,7 @@ Public Class MultiProtocolFrameParser
     ' We internalize protocol specfic processing to simplfy end user consumption
     Private WithEvents m_frameParser As IFrameParser
     Private WithEvents m_communicationClient As ICommunicationClient
+    Private WithEvents m_communicationServer As ICommunicationServer
     Private WithEvents m_rateCalcTimer As Timers.Timer
 
     Private m_configurationFrame As IConfigurationFrame
@@ -75,6 +83,7 @@ Public Class MultiProtocolFrameParser
     Private m_totalFramesReceived As Long
     Private m_frameRateTotal As Int32
     Private m_byteRateTotal As Int32
+    Private m_totalBytesReceived As Long
     Private m_frameRate As Double
     Private m_byteRate As Double
     Private m_sourceName As String
@@ -129,6 +138,7 @@ Public Class MultiProtocolFrameParser
         End Get
         Set(ByVal value As PhasorProtocol)
             m_phasorProtocol = value
+            m_deviceSupportsCommands = GetDerivedCommandSupport()
         End Set
     End Property
 
@@ -137,32 +147,16 @@ Public Class MultiProtocolFrameParser
             Return m_transportProtocol
         End Get
         Set(ByVal value As TransportProtocol)
+            ' UDP transport has special requirements on buffer size
+            If value = Communication.TransportProtocol.Udp Then
+                If m_bufferSize < UdpClient.MinimumUdpBufferSize Then m_bufferSize = UdpClient.MinimumUdpBufferSize
+                If m_bufferSize > UdpClient.MaximumUdpDatagramSize Then m_bufferSize = UdpClient.MaximumUdpDatagramSize
+            Else
+                m_bufferSize = DefaultBufferSize
+            End If
+
             m_transportProtocol = value
-
-            Select Case value
-                Case Communication.TransportProtocol.Tcp, Communication.TransportProtocol.Serial
-                    m_deviceSupportsCommands = True
-                    m_bufferSize = DefaultBufferSize
-                Case Communication.TransportProtocol.Udp
-                    m_deviceSupportsCommands = False
-                    If m_bufferSize < UdpClient.MinimumUdpBufferSize Then m_bufferSize = UdpClient.MinimumUdpBufferSize
-                    If m_bufferSize > UdpClient.MaximumUdpDatagramSize Then m_bufferSize = UdpClient.MaximumUdpDatagramSize
-                Case Communication.TransportProtocol.File
-                    m_deviceSupportsCommands = False
-                    m_bufferSize = DefaultBufferSize
-                Case Else
-                    m_deviceSupportsCommands = False
-                    m_bufferSize = DefaultBufferSize
-            End Select
-        End Set
-    End Property
-
-    Public Property DeviceSupportsCommands() As Boolean
-        Get
-            Return m_deviceSupportsCommands
-        End Get
-        Set(ByVal value As Boolean)
-            m_deviceSupportsCommands = value
+            m_deviceSupportsCommands = GetDerivedCommandSupport()
         End Set
     End Property
 
@@ -172,6 +166,17 @@ Public Class MultiProtocolFrameParser
         End Get
         Set(ByVal value As String)
             m_connectionString = value
+            m_deviceSupportsCommands = GetDerivedCommandSupport()
+        End Set
+    End Property
+
+    Public Property DeviceSupportsCommands() As Boolean
+        Get
+            Return m_deviceSupportsCommands
+        End Get
+        Set(ByVal value As Boolean)
+            ' Consumers can choose to override command support if needed
+            m_deviceSupportsCommands = value
         End Set
     End Property
 
@@ -251,6 +256,7 @@ Public Class MultiProtocolFrameParser
         m_totalFramesReceived = 0
         m_frameRateTotal = 0
         m_byteRateTotal = 0
+        m_totalBytesReceived = 0
         m_frameRate = 0.0#
         m_byteRate = 0.0#
 
@@ -273,7 +279,22 @@ Public Class MultiProtocolFrameParser
             ' Instantiate selected transport layer
             Select Case m_transportProtocol
                 Case TransportProtocol.Tcp
-                    m_communicationClient = New TcpClient
+                    ' The TCP transport may be set up as a server or as a client, we distinguish
+                    ' this simply by deriving the value of an added key/value pair in the
+                    ' connection string called "IsListener"
+                    With ParseKeyValuePairs(m_connectionString)
+                        If .ContainsKey("islistener") Then
+                            If ParseBoolean(.Item("islistener")) Then
+                                m_communicationServer = New TcpServer
+                            Else
+                                m_communicationClient = New TcpClient
+                            End If
+                        Else
+                            ' If the key doesn't exist, we assume it's a client connection
+                            ' (this way old connections strings are still backwards compatible)
+                            m_communicationClient = New TcpClient
+                        End If
+                    End With
                 Case TransportProtocol.Udp
                     m_communicationClient = New UdpClient
                 Case TransportProtocol.Serial
@@ -282,14 +303,29 @@ Public Class MultiProtocolFrameParser
                     m_communicationClient = New FileClient
             End Select
 
-            With m_communicationClient
-                .ReceiveRawDataFunction = AddressOf IFrameParserWrite
-                .ReceiveBufferSize = m_bufferSize
-                .ConnectionString = m_connectionString
-                .MaximumConnectionAttempts = m_maximumConnectionAttempts
-                .Handshake = False
-                .Connect()
-            End With
+            If m_communicationClient IsNot Nothing Then
+                ' Attempting connection to device
+                With m_communicationClient
+                    .ReceiveRawDataFunction = AddressOf IFrameParserWrite
+                    .ReceiveBufferSize = m_bufferSize
+                    .ConnectionString = m_connectionString
+                    .MaximumConnectionAttempts = m_maximumConnectionAttempts
+                    .Handshake = False
+                    .Connect()
+                End With
+            ElseIf m_communicationServer IsNot Nothing Then
+                ' Listening for device connection
+                With m_communicationServer
+                    .ReceiveRawDataFunction = AddressOf IFrameParserWrite
+                    .ReceiveBufferSize = m_bufferSize
+                    .ConfigurationString = m_connectionString
+                    .MaximumClients = 1
+                    .Handshake = False
+                    .Start()
+                End With
+            Else
+                Throw New InvalidOperationException("No communications layer was initialized, cannot start parser")
+            End If
 
             m_rateCalcTimer.Enabled = True
             m_enabled = True
@@ -306,11 +342,14 @@ Public Class MultiProtocolFrameParser
         m_rateCalcTimer.Enabled = False
 
         If m_communicationClient IsNot Nothing Then m_communicationClient.Disconnect()
+        If m_communicationServer IsNot Nothing Then m_communicationServer.Stop()
         If m_frameParser IsNot Nothing Then m_frameParser.Stop()
 
         m_lastFrameReceivedTime = 0
         m_configurationFrame = Nothing
         m_frameParser = Nothing
+        m_communicationClient = Nothing
+        m_communicationServer = Nothing
 
     End Sub
 
@@ -351,9 +390,7 @@ Public Class MultiProtocolFrameParser
 
     Public ReadOnly Property QueuedBuffers() As Int32 Implements IFrameParser.QueuedBuffers
         Get
-            If m_frameParser IsNot Nothing Then
-                Return m_frameParser.QueuedBuffers
-            End If
+            If m_frameParser IsNot Nothing Then Return m_frameParser.QueuedBuffers
         End Get
     End Property
 
@@ -371,6 +408,13 @@ Public Class MultiProtocolFrameParser
         End Get
     End Property
 
+    <EditorBrowsable(EditorBrowsableState.Never)> _
+    Public ReadOnly Property InternalCommunicationServer() As ICommunicationServer
+        Get
+            Return m_communicationServer
+        End Get
+    End Property
+
     Public ReadOnly Property TotalFramesReceived() As Long
         Get
             Return m_totalFramesReceived
@@ -379,11 +423,7 @@ Public Class MultiProtocolFrameParser
 
     Public ReadOnly Property TotalBytesReceived() As Long
         Get
-            If m_communicationClient Is Nothing Then
-                Return 0
-            Else
-                Return m_communicationClient.TotalBytesReceived
-            End If
+            Return m_totalBytesReceived
         End Get
     End Property
 
@@ -419,7 +459,7 @@ Public Class MultiProtocolFrameParser
 
     Public Sub SendDeviceCommand(ByVal command As DeviceCommand)
 
-        If m_communicationClient IsNot Nothing Then
+        If m_deviceSupportsCommands AndAlso m_communicationClient IsNot Nothing OrElse m_communicationServer IsNot Nothing Then
             Dim binaryImage As Byte()
             Dim binaryLength As Int32
 
@@ -440,7 +480,13 @@ Public Class MultiProtocolFrameParser
                     binaryLength = 0
             End Select
 
-            If binaryLength > 0 AndAlso m_deviceSupportsCommands Then m_communicationClient.Send(binaryImage)
+            If binaryLength > 0 Then
+                If m_communicationClient IsNot Nothing Then
+                    m_communicationClient.Send(binaryImage)
+                Else
+                    m_communicationServer.Multicast(binaryImage)
+                End If
+            End If
         End If
 
     End Sub
@@ -475,6 +521,7 @@ Public Class MultiProtocolFrameParser
 
                 If m_frameParser IsNot Nothing Then .Append(m_frameParser.Status)
                 If m_communicationClient IsNot Nothing Then .Append(m_communicationClient.Status)
+                If m_communicationServer IsNot Nothing Then .Append(m_communicationServer.Status)
 
                 Return .ToString()
             End With
@@ -491,12 +538,155 @@ Public Class MultiProtocolFrameParser
 
         m_frameRate = m_frameRateTotal / time
         m_byteRate = m_byteRateTotal / time
+        m_totalBytesReceived += m_byteRateTotal
 
         m_frameRateTotal = 0
         m_byteRateTotal = 0
         m_dataStreamStartTime = Date.Now.Ticks
 
     End Sub
+
+    ' We access the "raw data function" of the ICommunicationClient and ICommunicationServer for a speed boost in communications processing...
+    Private Sub IFrameParserWrite(ByVal buffer() As Byte, ByVal offset As Integer, ByVal count As Integer) Implements IFrameParser.Write
+
+        ' Pass data from communications client into protocol specific frame parser
+        m_frameParser.Write(buffer, offset, count)
+        m_byteRateTotal += count
+        If m_initiatingDataStream Then m_initialBytesReceived += count
+
+    End Sub
+
+    Private Sub ClientConnected()
+
+        RaiseEvent Connected()
+
+        ' Begin data parsing sequence to handle reception of configuration frame
+        If m_deviceSupportsCommands AndAlso m_autoStartDataParsingSequence Then
+            m_initialBytesReceived = 0
+            m_initiatingDataStream = True
+            ThreadPool.QueueUserWorkItem(AddressOf StartDataParsingSequence)
+        End If
+
+    End Sub
+
+    Private Sub StartDataParsingSequence(ByVal state As Object)
+
+        Dim attempts As Integer
+
+        ' Some devices will only send a config frame once data streaming has been disabled, so
+        ' we use this code to disable real-time data and wait for data to stop streaming...
+        Try
+            ' Make sure data stream is disabled
+            SendDeviceCommand(DeviceCommand.DisableRealTimeData)
+            Thread.Sleep(300)
+
+            ' Wait for real-time data stream to cease for up to two seconds
+            Do While m_initialBytesReceived > 0
+                m_initialBytesReceived = 0
+                Thread.Sleep(100)
+
+                attempts += 1
+                If attempts >= 20 Then Exit Do
+            Loop
+        Catch
+            Throw
+        Finally
+            m_initiatingDataStream = False
+        End Try
+
+        ' Request configuration frame once real-time data has been disabled
+        SendDeviceCommand(DeviceCommand.SendConfigurationFrame2)
+
+    End Sub
+
+    Private Function GetDerivedCommandSupport() As Boolean
+
+        ' Command support is based on phasor protocol, transport protocol and connection style
+        If IsIEEEProtocol Then
+            ' IEEE protocols using TCP or Serial connection support device commands
+            If m_transportProtocol = Communication.TransportProtocol.Tcp OrElse _
+                m_transportProtocol = Communication.TransportProtocol.Serial Then _
+                    Return True
+
+            ' IEEE protocols "can" use UDP connection to support devices commands, but only
+            ' when remote device acts as a UDP listener (i.e., a "server" connection)
+            If m_transportProtocol = Communication.TransportProtocol.Udp Then
+                If Not String.IsNullOrEmpty(m_connectionString) Then
+                    With ParseKeyValuePairs(m_connectionString)
+                        Return .ContainsKey("server")
+                    End With
+                End If
+            End If
+        End If
+
+        Return False
+
+    End Function
+
+#Region " Communications Client Event Handlers "
+
+    Private Sub m_communicationClient_Connected(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles m_communicationClient.Connected
+
+        ClientConnected()
+
+    End Sub
+
+    Private Sub m_communicationClient_Connecting(ByVal sender As Object, ByVal e As System.EventArgs) Handles m_communicationClient.Connecting
+
+        RaiseEvent AttemptingConnection()
+
+    End Sub
+
+    Private Sub m_communicationClient_ConnectingException(ByVal sender As Object, ByVal e As ExceptionEventArgs) Handles m_communicationClient.ConnectingException
+
+        RaiseEvent ConnectionException(e.Exception, e.OccurrenceCount)
+
+    End Sub
+
+    Private Sub m_communicationClient_Disconnected(ByVal sender As Object, ByVal e As System.EventArgs) Handles m_communicationClient.Disconnected
+
+        RaiseEvent Disconnected()
+        m_communicationClient = Nothing
+
+    End Sub
+
+#End Region
+
+#Region " Communications Server Event Handlers "
+
+    Private Sub m_communicationServer_ClientConnected(ByVal sender As Object, ByVal e As IdentifiableSourceEventArgs) Handles m_communicationServer.ClientConnected
+
+        ClientConnected()
+
+    End Sub
+
+    Private Sub m_communicationServer_ClientDisconnected(ByVal sender As Object, ByVal e As IdentifiableSourceEventArgs) Handles m_communicationServer.ClientDisconnected
+
+        RaiseEvent Disconnected()
+
+    End Sub
+
+    Private Sub m_communicationServer_ServerStarted(ByVal sender As Object, ByVal e As System.EventArgs) Handles m_communicationServer.ServerStarted
+
+        RaiseEvent ServerStarted()
+
+    End Sub
+
+    Private Sub m_communicationServer_ServerStopped(ByVal sender As Object, ByVal e As System.EventArgs) Handles m_communicationServer.ServerStopped
+
+        RaiseEvent ServerStopped()
+
+    End Sub
+
+    Private Sub m_communicationServer_ServerStartupException(ByVal sender As Object, ByVal e As ExceptionEventArgs) Handles m_communicationServer.ServerStartupException
+
+        RaiseEvent ConnectionException(e.Exception, e.OccurrenceCount)
+
+    End Sub
+
+#End Region
+
+#Region " Frame Parser Event Handlers "
 
     Private Sub m_frameParser_ReceivedCommandFrame(ByVal frame As ICommandFrame) Handles m_frameParser.ReceivedCommandFrame
 
@@ -570,88 +760,7 @@ Public Class MultiProtocolFrameParser
 
     End Sub
 
-    Private Sub m_communicationClient_Connected(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles m_communicationClient.Connected
-
-        RaiseEvent Connected()
-
-        ' Begin data parsing sequence to handle reception of configuration frame
-        If m_deviceSupportsCommands AndAlso m_autoStartDataParsingSequence Then
-            m_initialBytesReceived = 0
-            m_initiatingDataStream = True
-            ThreadPool.QueueUserWorkItem(AddressOf StartDataParsingSequence)
-        End If
-
-    End Sub
-
-    Private Sub m_communicationClient_Connecting(ByVal sender As Object, ByVal e As System.EventArgs) Handles m_communicationClient.Connecting
-
-        RaiseEvent AttemptingConnection()
-
-    End Sub
-
-    Private Sub m_communicationClient_ConnectingException(ByVal sender As Object, ByVal e As ExceptionEventArgs) Handles m_communicationClient.ConnectingException
-
-        RaiseEvent ConnectionException(e.Exception, e.OccurrenceCount)
-
-    End Sub
-
-    Private Sub m_communicationClient_Disconnected(ByVal sender As Object, ByVal e As System.EventArgs) Handles m_communicationClient.Disconnected
-
-        RaiseEvent Disconnected()
-        m_communicationClient = Nothing
-
-    End Sub
-
-    'Private Sub m_communicationClient_ReceivedData(ByVal sender As Object, ByVal e As DataEventArgs) Handles m_communicationClient.ReceivedData
-
-    '    With e
-    '        ' Pass data from communications client into protocol specific frame parser
-    '        m_frameParser.Write(.Data, 0, .Data.Length)
-    '        m_byteRateTotal += .Data.Length
-    '        If m_initiatingDataStream Then m_initialBytesReceived += .Data.Length
-    '    End With
-
-    'End Sub
-
-    ' We access the "raw data function" of the ICommunicationsClient for a speed boost in communications processing...
-    Private Sub IFrameParserWrite(ByVal buffer() As Byte, ByVal offset As Integer, ByVal count As Integer) Implements IFrameParser.Write
-
-        ' Pass data from communications client into protocol specific frame parser
-        m_frameParser.Write(buffer, offset, count)
-        m_byteRateTotal += count
-        If m_initiatingDataStream Then m_initialBytesReceived += count
-
-    End Sub
-
-    Private Sub StartDataParsingSequence(ByVal state As Object)
-
-        Dim attempts As Integer
-
-        ' Some devices will only send a config frame once data streaming has been disabled, so
-        ' we use this code to disable real-time data and wait for data to stop streaming...
-        Try
-            ' Make sure data stream is disabled
-            SendDeviceCommand(DeviceCommand.DisableRealTimeData)
-            Thread.Sleep(300)
-
-            ' Wait for real-time data stream to cease for up to two seconds
-            Do While m_initialBytesReceived > 0
-                m_initialBytesReceived = 0
-                Thread.Sleep(100)
-
-                attempts += 1
-                If attempts >= 20 Then Exit Do
-            Loop
-        Catch
-            Throw
-        Finally
-            m_initiatingDataStream = False
-        End Try
-
-        ' Request configuration frame once real-time data has been disabled
-        SendDeviceCommand(DeviceCommand.SendConfigurationFrame2)
-
-    End Sub
+#End Region
 
 #End Region
 
@@ -815,6 +924,17 @@ Public Class MultiProtocolFrameParser
     '        Exit Do
     '    End Try
     'Loop
+
+    'End Sub
+
+    'Private Sub m_communicationClient_ReceivedData(ByVal sender As Object, ByVal e As DataEventArgs) Handles m_communicationClient.ReceivedData
+
+    '    With e
+    '        ' Pass data from communications client into protocol specific frame parser
+    '        m_frameParser.Write(.Data, 0, .Data.Length)
+    '        m_byteRateTotal += .Data.Length
+    '        If m_initiatingDataStream Then m_initialBytesReceived += .Data.Length
+    '    End With
 
     'End Sub
 
