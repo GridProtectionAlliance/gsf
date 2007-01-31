@@ -249,17 +249,20 @@ Public Class UdpServer
             With m_udpServer
                 Dim bytesReceived As Integer = 0
                 Dim clientEndPoint As EndPoint = New IPEndPoint(IPAddress.Any, 0)
-                If ((MyBase.ReceiveRawDataFunction IsNot Nothing) OrElse _
-                        (MyBase.ReceiveRawDataFunction Is Nothing AndAlso Not m_payloadAware)) Then
-                    .DataBuffer = Tva.Common.CreateArray(Of Byte)(MyBase.ReceiveBufferSize)
-
+                If m_receiveRawDataFunction IsNot Nothing OrElse _
+                        (m_receiveRawDataFunction Is Nothing AndAlso Not m_payloadAware) Then
+                    ' In this section the consumer either wants to receive the datagrams and pass it on to a
+                    ' delegate or receive datagrams that don't contain metadata used for re-assembling the
+                    ' datagrams into the original message and be notified via events. In either case we can use
+                    ' a static buffer that can be used over and over again for receiving datagrams as long as
+                    ' the datagrams received are not bigger than the receive buffer.
                     Do While True
-                        bytesReceived = .Client.ReceiveFrom(.DataBuffer, 0, .DataBuffer.Length, SocketFlags.None, clientEndPoint)
+                        bytesReceived = .Client.ReceiveFrom(m_buffer, 0, m_buffer.Length, SocketFlags.None, clientEndPoint)
 
                         If m_receiveRawDataFunction IsNot Nothing Then
-                            m_receiveRawDataFunction(.DataBuffer, 0, bytesReceived)
+                            m_receiveRawDataFunction(m_buffer, 0, bytesReceived)
                         Else
-                            ProcessReceivedClientData(Tva.IO.Common.CopyBuffer(.DataBuffer, 0, bytesReceived), clientEndPoint)
+                            ProcessReceivedClientData(Tva.IO.Common.CopyBuffer(m_buffer, 0, bytesReceived), clientEndPoint)
                         End If
                     Loop
                 Else

@@ -362,27 +362,25 @@ Public Class UdpClient
                     ' some redundant coding. This is necessary to achive a high performance UDP client component
                     ' since it may be used in real-time applications where performance is the key and evey 
                     ' millisecond saved makes a big difference.
-                    If ((MyBase.ReceiveRawDataFunction IsNot Nothing) OrElse _
-                            (MyBase.ReceiveRawDataFunction Is Nothing AndAlso Not m_payloadAware)) Then
+                    If m_receiveRawDataFunction IsNot Nothing OrElse _
+                            (m_receiveRawDataFunction Is Nothing AndAlso Not m_payloadAware) Then
                         ' In this section the consumer either wants to receive the datagrams and pass it on to a
                         ' delegate or receive datagrams that don't contain metadata used for re-assembling the
                         ' datagrams into the original message and be notified via events. In either case we can use
                         ' a static buffer that can be used over and over again for receiving datagrams as long as
-                        ' the datagrams received and not bigger than the receive buffer.
-                        .DataBuffer = Tva.Common.CreateArray(Of Byte)(MyBase.ReceiveBufferSize)
-
+                        ' the datagrams received are not bigger than the receive buffer.
                         Do While True
                             Try
                                 ' Receive a datagram into the static buffer.
-                                bytesReceived = .Client.ReceiveFrom(.DataBuffer, 0, .DataBuffer.Length, SocketFlags.None, CType(m_udpServer, EndPoint))
+                                bytesReceived = .Client.ReceiveFrom(m_buffer, 0, m_buffer.Length, SocketFlags.None, CType(m_udpServer, EndPoint))
 
                                 If m_receiveRawDataFunction IsNot Nothing Then
                                     ' Post the received datagram to the delegate.
-                                    m_receiveRawDataFunction(.DataBuffer, 0, bytesReceived)
+                                    m_receiveRawDataFunction(m_buffer, 0, bytesReceived)
                                     m_totalBytesReceived += bytesReceived
                                     Continue Do
                                 Else
-                                    ProcessReceivedServerData(Tva.IO.Common.CopyBuffer(.DataBuffer, 0, bytesReceived))
+                                    ProcessReceivedServerData(Tva.IO.Common.CopyBuffer(m_buffer, 0, bytesReceived))
                                 End If
 
                                 ' If Handshake is enabled and we haven't received server information than we're not

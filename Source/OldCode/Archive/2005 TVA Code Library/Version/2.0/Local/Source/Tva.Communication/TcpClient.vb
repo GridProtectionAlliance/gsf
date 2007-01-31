@@ -236,28 +236,26 @@ Public Class TcpClient
                 ' redundant coding. This is necessary to achive a high performance TCP client component since it 
                 ' may be used in real-time applications where performance is the key and evey millisecond saved 
                 ' makes a big difference.
-                If ((MyBase.ReceiveRawDataFunction IsNot Nothing) OrElse _
-                        (MyBase.ReceiveRawDataFunction Is Nothing AndAlso Not m_payloadAware)) Then
+                If m_receiveRawDataFunction IsNot Nothing OrElse _
+                        (m_receiveRawDataFunction Is Nothing AndAlso Not m_payloadAware) Then
                     ' In this section the consumer either wants to receive data and pass it on to a delegate or 
-                    ' receive data that don't contain metadata used for preserving message boundaries. In either
+                    ' receive data that doesn't contain metadata used for preserving message boundaries. In either
                     ' case we can use a static buffer that can be used over and over again for receiving data.
-                    .DataBuffer = Tva.Common.CreateArray(Of Byte)(MyBase.ReceiveBufferSize)
-
                     Do While True
                         Try
                             ' Receive data into the static buffer.
-                            bytesReceived = .Client.Receive(.DataBuffer, 0, .DataBuffer.Length, SocketFlags.None)
+                            bytesReceived = .Client.Receive(m_buffer, 0, m_buffer.Length, SocketFlags.None)
 
                             ' We start receiving zero-length data when a TCP connection is disconnected by the 
                             ' opposite party. In such case we must consider ourself disconnected from the server.
                             If bytesReceived = 0 Then Throw New SocketException(10101)
 
                             If m_receiveRawDataFunction IsNot Nothing Then
-                                ' Post raw data to the delegate that is most likely used for real-time application.
-                                m_receiveRawDataFunction(.DataBuffer, 0, bytesReceived)
+                                ' Post raw data to the delegate that is most likely used for real-time applications.
+                                m_receiveRawDataFunction(m_buffer, 0, bytesReceived)
                                 m_totalBytesReceived += bytesReceived
                             Else
-                                ProcessReceivedServerData(Tva.IO.Common.CopyBuffer(.DataBuffer, 0, bytesReceived))
+                                ProcessReceivedServerData(Tva.IO.Common.CopyBuffer(m_buffer, 0, bytesReceived))
                             End If
                         Catch ex As SocketException
                             If ex.SocketErrorCode = SocketError.TimedOut Then
