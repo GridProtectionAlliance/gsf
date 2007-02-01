@@ -388,7 +388,7 @@ Namespace Measurements
         ''' </remarks>
         Public Sub QueueMeasurementForSorting(ByVal measurement As IMeasurement)
 
-            ThreadPool.QueueUserWorkItem(AddressOf SortMeasurement, measurement)
+            ThreadPool.UnsafeQueueUserWorkItem(AddressOf SortMeasurement, measurement)
 
         End Sub
 
