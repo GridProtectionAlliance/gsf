@@ -88,6 +88,8 @@ Module MainModule
             ElseIf consoleLine.StartsWith("reconnectall", True, Nothing) Then
                 Console.WriteLine()
                 InitializeConfiguration(AddressOf ReinitializeReceivers)
+            ElseIf consoleLine.StartsWith("gc", True, Nothing) Then
+                ForceGarbageCollection()
             ElseIf consoleLine.StartsWith("status", True, Nothing) Then
                 Console.WriteLine()
                 For Each receiver In m_measurementReceivers.Values
@@ -512,12 +514,24 @@ Module MainModule
         Console.WriteLine("  ""SendCommand PmuID GetConfig""   - Requests configuration frame")
         Console.WriteLine("  ""Reload""                        - Reloads the entire service process")
         Console.WriteLine("  ""ReconnectAll""                  - Reconnects archives and phasor devices")
+        Console.WriteLine("  ""GC""                            - Force .NET Garbage Collection")
         Console.WriteLine("  ""Status""                        - Returns current service status")
         Console.WriteLine("  ""List""                          - Displays loaded PMU/PDC connections")
         Console.WriteLine("  ""Version""                       - Displays service version information")
         Console.WriteLine("  ""Help""                          - Displays this help information")
         Console.WriteLine("  ""Exit""                          - Exits this console monitor")
         Console.WriteLine()
+
+    End Sub
+
+    Private Sub ForceGarbageCollection()
+
+        DisplayStatusMessage("Forcing garbage collection and waiting for pending finalizers...")
+
+        GC.Collect()
+        GC.WaitForPendingFinalizers()
+
+        DisplayStatusMessage("Garbage collection complete.")
 
     End Sub
 

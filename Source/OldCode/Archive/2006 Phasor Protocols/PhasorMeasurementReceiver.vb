@@ -37,7 +37,6 @@ Public Class PhasorMeasurementReceiver
     Private m_dataLossInterval As Integer
     Private m_mappers As Dictionary(Of String, PhasorMeasurementMapper)
     Private m_calculatedMeasurements As ICalculatedMeasurementAdapter()
-    Private m_measurementBuffer As List(Of IMeasurement)
     Private m_statusInterval As Integer
     Private m_intializing As Boolean
 
@@ -55,7 +54,6 @@ Public Class PhasorMeasurementReceiver
         m_connectionString = connectionString
         m_dataLossInterval = dataLossInterval
         m_calculatedMeasurements = calculatedMeasurements
-        m_measurementBuffer = New List(Of IMeasurement)
         m_reportingStatus = New Timers.Timer
 
         With m_reportingStatus
@@ -112,10 +110,6 @@ Public Class PhasorMeasurementReceiver
             Dim accessID As Integer
             Dim pmuIDs As PmuInfoCollection
             Dim x, y As Integer
-
-            SyncLock m_measurementBuffer
-                m_measurementBuffer.Clear()
-            End SyncLock
 
             m_mappers = New Dictionary(Of String, PhasorMeasurementMapper)
 
@@ -197,33 +191,31 @@ Public Class PhasorMeasurementReceiver
                         pmuIDs.Add(New PmuInfo(accessID, source))
                     End If
 
-                    SyncLock m_measurementBuffer
-                        With New PhasorMeasurementMapper(parser, m_archiverSource, source, pmuIDs, measurementIDs, m_dataLossInterval)
-                            ' Add timezone mapping if not UTC...
-                            If String.Compare(timezone, "GMT Standard Time", True) <> 0 Then
-                                Try
-                                    .TimeZone = GetWin32TimeZone(timezone)
-                                Catch ex As Exception
-                                    UpdateStatus("Failed to assign timezone offset """ & timezone & """ to PDC/PMU """ & source & """ due to exception: " & ex.Message)
-                                End Try
-                            End If
+                    With New PhasorMeasurementMapper(parser, m_archiverSource, source, pmuIDs, measurementIDs, m_dataLossInterval)
+                        ' Add timezone mapping if not UTC...
+                        If String.Compare(timezone, "GMT Standard Time", True) <> 0 Then
+                            Try
+                                .TimeZone = GetWin32TimeZone(timezone)
+                            Catch ex As Exception
+                                UpdateStatus("Failed to assign timezone offset """ & timezone & """ to PDC/PMU """ & source & """ due to exception: " & ex.Message)
+                            End Try
+                        End If
 
-                            ' Define time adjustment ticks
-                            .TimeAdjustmentTicks = timeAdjustmentTicks
+                        ' Define time adjustment ticks
+                        .TimeAdjustmentTicks = timeAdjustmentTicks
 
-                            ' Bubble mapper status messages out to local update status function
-                            AddHandler .ParsingStatus, AddressOf UpdateStatus
+                        ' Bubble mapper status messages out to local update status function
+                        AddHandler .ParsingStatus, AddressOf UpdateStatus
 
-                            ' Bubble newly parsed measurements out to functions that need the real-time data
-                            AddHandler .NewParsedMeasurements, AddressOf NewParsedMeasurements
+                        ' Bubble newly parsed measurements out to functions that need the real-time data
+                        AddHandler .NewParsedMeasurements, AddressOf NewParsedMeasurements
 
-                            ' Add mapper to collection
-                            m_mappers.Add(source, .This)
+                        ' Add mapper to collection
+                        m_mappers.Add(source, .This)
 
-                            ' Start connection cycle
-                            .Connect()
-                        End With
-                    End SyncLock
+                        ' Start connection cycle
+                        .Connect()
+                    End With
                 Next
             End With
 

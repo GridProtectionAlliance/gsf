@@ -356,7 +356,7 @@ Public Class PhasorMeasurementMapper
         UpdateStatus(m_source & " connection to """ & m_frameParser.ConnectionName & """ failed: " & ex.Message)
 
         ' Start reconnection attempt on a seperate thread (need to let this communications thread die gracefully)
-        ThreadPool.QueueUserWorkItem(AddressOf AttemptReconnection)
+        ThreadPool.UnsafeQueueUserWorkItem(AddressOf AttemptReconnection, Nothing)
 
     End Sub
 
@@ -388,7 +388,16 @@ Public Class PhasorMeasurementMapper
 
     Private Sub m_frameParser_Disconnected() Handles m_frameParser.Disconnected
 
-        UpdateStatus("Disconnected from " & m_source & ".")
+        If m_frameParser.Enabled Then
+            ' Communications layer closed connection (close not initiated by system) - so we terminate gracefully...
+            Disconnect()
+            UpdateStatus("WARNING: Connection closed by remote device """ & m_source & """, attempting reconnection...")
+
+            ' Start reconnection attempt on a seperate thread (need to let this communications thread die gracefully)
+            ThreadPool.UnsafeQueueUserWorkItem(AddressOf AttemptReconnection, Nothing)
+        Else
+            UpdateStatus("Disconnected from " & m_source & ".")
+        End If
 
     End Sub
 
@@ -396,14 +405,14 @@ Public Class PhasorMeasurementMapper
 
         m_receivedConfigFrame = False
 
-        UpdateStatus("Configuration has changed for """ & m_source & """, requesting new configuration frame...")
+        UpdateStatus("NOTICE: Configuration has changed for """ & m_source & """, requesting new configuration frame...")
         SendDeviceCommand(DeviceCommand.SendConfigurationFrame2)
 
     End Sub
 
     Private Sub m_frameParser_ReceivedConfigurationFrame(ByVal frame As IConfigurationFrame) Handles m_frameParser.ReceivedConfigurationFrame
 
-        If Not m_receivedConfigFrame Then ThreadPool.QueueUserWorkItem(AddressOf CacheConfigurationFrame, frame)
+        If Not m_receivedConfigFrame Then ThreadPool.UnsafeQueueUserWorkItem(AddressOf CacheConfigurationFrame, frame)
         m_receivedConfigFrame = True
 
     End Sub
@@ -437,7 +446,7 @@ Public Class PhasorMeasurementMapper
         ' We handle parsed data frame on a new thread since work to be done on data in frame can be
         ' time consuming (e.g., mapping, sorting and queuing) and we don't want to slow up parsing
         ' process which typically is utilizing the data transport connection thread anyway
-        ThreadPool.QueueUserWorkItem(AddressOf MapDataFrameMeasurements, frame)
+        ThreadPool.UnsafeQueueUserWorkItem(AddressOf MapDataFrameMeasurements, frame)
 
     End Sub
 

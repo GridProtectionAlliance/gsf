@@ -251,7 +251,7 @@ Public MustInherit Class CalculatedMeasurementAdapterBase
         ' We handle publication of new measurements on a new thread since work to be done during
         ' publication can be time consuming (e.g., sorting and queuing) and we don't want to slow
         ' up calculation process which is being called at rates of, or over, 30 times per second
-        ThreadPool.QueueUserWorkItem(AddressOf PublishNewCalculatedMeasurements, measurements)
+        ThreadPool.UnsafeQueueUserWorkItem(AddressOf PublishNewCalculatedMeasurements, measurements)
 
     End Sub
 
