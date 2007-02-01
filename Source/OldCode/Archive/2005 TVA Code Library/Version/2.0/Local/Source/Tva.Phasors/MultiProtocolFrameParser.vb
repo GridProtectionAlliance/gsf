@@ -461,7 +461,7 @@ Public Class MultiProtocolFrameParser
 
     Public Sub SendDeviceCommand(ByVal command As DeviceCommand)
 
-        If m_deviceSupportsCommands AndAlso m_communicationClient IsNot Nothing OrElse m_communicationServer IsNot Nothing Then
+        If m_deviceSupportsCommands AndAlso (m_communicationClient IsNot Nothing OrElse m_communicationServer IsNot Nothing) Then
             Dim binaryImage As Byte()
             Dim binaryLength As Int32
 
