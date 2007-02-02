@@ -29,7 +29,7 @@ Public Class MeasurementExporter
 
     Inherits CalculatedMeasurementAdapterBase
 
-    Private Const ConfigSection As String = "ICCPDataExportModule"
+    Private Const DefaultConfigSection As String = "ICCPDataExportModule"
 
     Private m_measurementTags As Dictionary(Of MeasurementKey, String)
     Private m_signalTypes As Dictionary(Of MeasurementKey, String)
@@ -40,10 +40,16 @@ Public Class MeasurementExporter
     Private m_statusDisplayed As Boolean
 
     Public Sub New()
+    End Sub
 
-        ' Make sure needed configuration variables exist - since configuration variables will
-        ' be added to config file of parent process we add them to a new configuration category
-        With CategorizedSettings(ConfigSection)
+    Public Overrides Sub Initialize(ByVal calculationName As String, ByVal configurationSection As String, ByVal outputMeasurements As IMeasurement(), ByVal inputMeasurementKeys As MeasurementKey(), ByVal minimumMeasurementsToUse As Integer, ByVal expectedMeasurementsPerSecond As Integer, ByVal lagTime As Double, ByVal leadTime As Double)
+
+        MyBase.Initialize(calculationName, configurationSection, outputMeasurements, inputMeasurementKeys, minimumMeasurementsToUse, expectedMeasurementsPerSecond, lagTime, leadTime)
+        If String.IsNullOrEmpty(configurationSection) Then MyBase.ConfigurationSection = DefaultConfigSection
+
+        With CategorizedSettings(MyBase.ConfigurationSection)
+            ' Make sure needed configuration variables exist - since configuration variables will
+            ' be added to config file of parent process we add them to a new configuration category
             .Add("ExportInterval", "5", "Data export interval, in seconds")
             .Add("ExportShare", "\\152.85.98.6\pmu", "UNC path (\\server\share) name for export file")
             .Add("ExportShare.Domain", "SOCOPPMU", "Domain used for authentication to UNC path (computer name for local accounts", False)
@@ -57,26 +63,18 @@ Public Class MeasurementExporter
             ' Load needed settings
             m_exportInterval = Convert.ToInt32(.Item("ExportInterval").Value)
             m_exportFileName = .Item("ExportShare").Value.ToString() & .Item("ExportShare.FileName").Value.ToString()
-        End With
 
-        ' Create new measurement dictionaries
-        m_measurementTags = New Dictionary(Of MeasurementKey, String)
-        m_signalTypes = New Dictionary(Of MeasurementKey, String)
-
-    End Sub
-
-    Public Overrides Sub Initialize(ByVal outputMeasurements() As IMeasurement, ByVal inputMeasurementKeys() As MeasurementKey, ByVal minimumMeasurementsToUse As Integer, ByVal expectedMeasurementsPerSecond As Integer, ByVal lagTime As Double, ByVal leadTime As Double)
-
-        MyBase.Initialize(outputMeasurements, inputMeasurementKeys, minimumMeasurementsToUse, expectedMeasurementsPerSecond, lagTime, leadTime)
-
-        ' Attempt connection to external network share - this only needs to be done once
-        With CategorizedSettings(ConfigSection)
+            ' Attempt connection to external network share
             ConnectToNetworkShare( _
                 .Item("ExportShare").Value, _
                 .Item("ExportShare.UserName").Value, _
                 .Item("ExportShare.Password").Value, _
                 .Item("ExportShare.Domain").Value)
         End With
+
+        ' Create new measurement dictionaries
+        m_measurementTags = New Dictionary(Of MeasurementKey, String)
+        m_signalTypes = New Dictionary(Of MeasurementKey, String)
 
         ' Need to open database connection to load measurement tags and signal types.
         ' Note that data connection string defined in config file of parent process.
@@ -118,7 +116,7 @@ Public Class MeasurementExporter
         GC.SuppressFinalize(Me)
 
         ' We'll be nice and disconnect network share when this class is disposed...
-        DisconnectFromNetworkShare(CategorizedStringSetting(ConfigSection, "ExportShare"))
+        DisconnectFromNetworkShare(CategorizedStringSetting(ConfigurationSection, "ExportShare"))
 
     End Sub
 
@@ -128,17 +126,10 @@ Public Class MeasurementExporter
 
     End Sub
 
-    Public Overrides ReadOnly Property Name() As String
-        Get
-            Return "ICCP Data Export Module"
-        End Get
-    End Property
-
     Public Overrides ReadOnly Property Status() As String
         Get
             With New StringBuilder
-                .Append(Name & " Status:")
-                .Append(Environment.NewLine)
+                .Append(MyBase.Status)
                 .Append("   Total ICCP measurements: ")
                 .Append(m_measurementTags.Count)
                 .Append(Environment.NewLine)
@@ -152,7 +143,6 @@ Public Class MeasurementExporter
                 .Append("      Total exports so far: ")
                 .Append(m_exportCount)
                 .Append(Environment.NewLine)
-                .Append(MyBase.Status)
                 Return .ToString()
             End With
         End Get

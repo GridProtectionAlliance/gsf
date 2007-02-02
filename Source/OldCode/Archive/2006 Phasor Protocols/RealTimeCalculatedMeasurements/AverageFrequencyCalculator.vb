@@ -28,21 +28,13 @@ Public Class AverageFrequencyCalculator
     Public Sub New()
     End Sub
 
-    Public Overrides ReadOnly Property Name() As String
-        Get
-            Return "Interconnect Average Frequency Calculator"
-        End Get
-    End Property
-
     Public Overrides ReadOnly Property Status() As String
         Get
             With New StringBuilder
-                .Append(Name & " Status:")
-                .Append(Environment.NewLine)
+                .Append(MyBase.Status)
                 .Append(" Last calculated frequency: ")
                 .Append(m_averageFrequency)
                 .Append(Environment.NewLine)
-                .Append(MyBase.Status)
                 Return .ToString()
             End With
         End Get

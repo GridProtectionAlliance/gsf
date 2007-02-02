@@ -65,10 +65,10 @@ Public Class CumberlandPowerDeviationCalculator
 
     End Sub
 
-    Public Overrides Sub Initialize(ByVal outputMeasurements As IMeasurement(), ByVal inputMeasurementKeys As MeasurementKey(), ByVal minimumMeasurementsToUse As Integer, ByVal expectedMeasurementsPerSecond As Integer, ByVal lagTime As Double, ByVal leadTime As Double)
+    Public Overrides Sub Initialize(ByVal calculationName As String, ByVal configurationSection As String, ByVal outputMeasurements As IMeasurement(), ByVal inputMeasurementKeys As MeasurementKey(), ByVal minimumMeasurementsToUse As Integer, ByVal expectedMeasurementsPerSecond As Integer, ByVal lagTime As Double, ByVal leadTime As Double)
 
         ' Base class will automatically filter and time-align needed measurements from all real-time incoming data
-        MyBase.Initialize(outputMeasurements, inputMeasurementKeys, minimumMeasurementsToUse, expectedMeasurementsPerSecond, lagTime, leadTime)
+        MyBase.Initialize(calculationName, configurationSection, outputMeasurements, inputMeasurementKeys, minimumMeasurementsToUse, expectedMeasurementsPerSecond, lagTime, leadTime)
 
         ' In this calculation, we manually initialize the output measurement to use for the base class since it is
         ' a single hard-coded output that will not change (i.e., no need to specify output measurements from SQL)
@@ -102,12 +102,6 @@ Public Class CumberlandPowerDeviationCalculator
         m_minimumSamples = SampleSize * expectedMeasurementsPerSecond
 
     End Sub
-
-    Public Overrides ReadOnly Property Name() As String
-        Get
-            Return "Cumberland Power Deviation Calculator"
-        End Get
-    End Property
 
     ''' <summary>
     ''' Calculates the Cumberland standard deviation of power output used to detect power system events
@@ -202,8 +196,7 @@ Public Class CumberlandPowerDeviationCalculator
             Const ValuesToShow As Integer = 4
 
             With New StringBuilder
-                .Append(Name & " Status:")
-                .Append(Environment.NewLine)
+                .Append(MyBase.Status)
                 .Append("  Latest " & ValuesToShow & " MegaWatt values: ")
                 SyncLock m_latestMegaWatts
                     If m_latestMegaWatts.Count > ValuesToShow Then
@@ -213,7 +206,6 @@ Public Class CumberlandPowerDeviationCalculator
                     End If
                 End SyncLock
                 .Append(Environment.NewLine)
-                .Append(MyBase.Status)
                 Return .ToString()
             End With
         End Get

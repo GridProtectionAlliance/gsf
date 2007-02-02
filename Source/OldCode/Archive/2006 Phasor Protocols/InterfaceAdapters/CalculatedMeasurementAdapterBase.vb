@@ -32,12 +32,16 @@ Public MustInherit Class CalculatedMeasurementAdapterBase
 
     ' We need to time align incoming measurements before attempting to calculate new outgoing measurement
     Private WithEvents m_concentrator As Concentrator
+    Private m_calculationName As String
+    Private m_configurationSection As String
     Private m_outputMeasurements As IMeasurement()
     Private m_inputMeasurementKeys As MeasurementKey()
     Private m_inputMeasurementKeysHash As List(Of MeasurementKey)
     Private m_minimumMeasurementsToUse As Integer
 
     Public Overridable Sub Initialize( _
+        ByVal calculationName As String, _
+        ByVal configurationSection As String, _
         ByVal outputMeasurements As IMeasurement(), _
         ByVal inputMeasurementKeys As MeasurementKey(), _
         ByVal minimumMeasurementsToUse As Integer, _
@@ -45,6 +49,8 @@ Public MustInherit Class CalculatedMeasurementAdapterBase
         ByVal lagTime As Double, _
         ByVal leadTime As Double) Implements ICalculatedMeasurementAdapter.Initialize
 
+        m_calculationName = calculationName
+        m_configurationSection = configurationSection
         m_outputMeasurements = outputMeasurements
         m_inputMeasurementKeys = inputMeasurementKeys
 
@@ -204,11 +210,28 @@ Public MustInherit Class CalculatedMeasurementAdapterBase
         End Set
     End Property
 
+    Public Overridable Property ConfigurationSection() As String Implements ICalculatedMeasurementAdapter.ConfigurationSection
+        Get
+            Return m_configurationSection
+        End Get
+        Set(ByVal value As String)
+            m_configurationSection = value
+        End Set
+    End Property
+
+    Public Overrides ReadOnly Property Name() As String
+        Get
+            Return m_calculationName
+        End Get
+    End Property
+
     Public Overrides ReadOnly Property Status() As String
         Get
             Const MaxMeasurementsToShow As Integer = 6
 
             With New StringBuilder
+                .Append(Name & " Status:")
+                .Append(Environment.NewLine)
                 .Append("   Output measurement ID's: ")
                 If m_outputMeasurements.Length <= MaxMeasurementsToShow Then
                     .Append(ListToString(m_outputMeasurements, ","c))

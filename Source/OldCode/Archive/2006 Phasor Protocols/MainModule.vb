@@ -263,6 +263,7 @@ Module MainModule
         '   Name                        String
         '   TypeName                    String
         '   AssemblyName                String
+        '   ConfigSection               String
         '   OuputMeasurementsSql        String      Expects one or more rows, with four fields named "MeasurementID", "ArchiveSource", "Adder" and "Multipler"
         '   InputMeasurementsSql        String      Expects one or more rows, with two fields each named "MeasurementID" and "ArchiveSource"
         '   MinimumInputMeasurements    Integer     Defaults to -1 (use all)
@@ -340,6 +341,8 @@ Module MainModule
                         ' Intialize calculated measurement adapter
                         With .Rows(x)
                             calculatedMeasurementAdapter.Initialize( _
+                                .Item("Name").ToString(), _
+                                .Item("ConfigSection").ToString(), _
                                 outputMeasurements.ToArray(), _
                                 inputMeasurementKeys.ToArray(), _
                                 Convert.ToInt32(.Item("MinimumInputMeasurements")), _

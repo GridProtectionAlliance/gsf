@@ -58,9 +58,9 @@ Public Class ReferenceAngleCalculator
 
     End Sub
 
-    Public Overrides Sub Initialize(ByVal outputMeasurements As IMeasurement(), ByVal inputMeasurementKeys As MeasurementKey(), ByVal minimumMeasurementsToUse As Integer, ByVal expectedMeasurementsPerSecond As Integer, ByVal lagTime As Double, ByVal leadTime As Double)
+    Public Overrides Sub Initialize(ByVal calculationName As String, ByVal configurationSection As String, ByVal outputMeasurements As IMeasurement(), ByVal inputMeasurementKeys As MeasurementKey(), ByVal minimumMeasurementsToUse As Integer, ByVal expectedMeasurementsPerSecond As Integer, ByVal lagTime As Double, ByVal leadTime As Double)
 
-        MyBase.Initialize(outputMeasurements, inputMeasurementKeys, minimumMeasurementsToUse, expectedMeasurementsPerSecond, lagTime, LeadTime)
+        MyBase.Initialize(calculationName, configurationSection, outputMeasurements, inputMeasurementKeys, minimumMeasurementsToUse, expectedMeasurementsPerSecond, lagTime, leadTime)
         MyClass.MinimumMeasurementsToUse = minimumMeasurementsToUse
 
     End Sub
@@ -75,19 +75,12 @@ Public Class ReferenceAngleCalculator
         End Set
     End Property
 
-    Public Overrides ReadOnly Property Name() As String
-        Get
-            Return "Interconnect Reference Angle Calculator"
-        End Get
-    End Property
-
     Public Overrides ReadOnly Property Status() As String
         Get
             Const ValuesToShow As Integer = 4
 
             With New StringBuilder
-                .Append(Name & " Status:")
-                .Append(Environment.NewLine)
+                .Append(MyBase.Status)
                 .Append("  Last " & ValuesToShow & " calculated angles: ")
                 SyncLock m_latestCalculatedAngles
                     If m_latestCalculatedAngles.Count > ValuesToShow Then
@@ -97,7 +90,6 @@ Public Class ReferenceAngleCalculator
                     End If
                 End SyncLock
                 .Append(Environment.NewLine)
-                .Append(MyBase.Status)
                 Return .ToString()
             End With
         End Get

@@ -28,21 +28,13 @@ Public Class ReferenceMagnitudeCalculator
     Public Sub New()
     End Sub
 
-    Public Overrides ReadOnly Property Name() As String
-        Get
-            Return "Interconnect Reference Magnitude Calculator"
-        End Get
-    End Property
-
     Public Overrides ReadOnly Property Status() As String
         Get
             With New StringBuilder
-                .Append(Name & " Status:")
-                .Append(Environment.NewLine)
+                .Append(MyBase.Status)
                 .Append(" Last calculated magnitude: ")
                 .Append(m_referenceMagnitude)
                 .Append(Environment.NewLine)
-                .Append(MyBase.Status)
                 Return .ToString()
             End With
         End Get
