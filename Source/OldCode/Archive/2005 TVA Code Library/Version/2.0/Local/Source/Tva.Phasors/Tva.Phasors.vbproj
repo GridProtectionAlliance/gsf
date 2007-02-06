@@ -237,6 +237,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="ClassDiagram1.cd" />
     <None Include="Relationship Diagrams\Analog Value Relationships.cd" />
     <None Include="Relationship Diagrams\Phasor Class Diagram.cd" />
   </ItemGroup>
