@@ -171,7 +171,7 @@ Public MustInherit Class CommunicationServerBase
     ''' accepting its connection.
     ''' </summary>
     ''' <value></value>
-    ''' <returns>True is the server will do a handshake with the client; otherwise False.</returns>
+    ''' <returns>True if the server will do a handshake with the client; otherwise False.</returns>
     ''' <remarks>SecureSession must be disabled before disabling Handshake.</remarks>
     <Description("Indicates whether the server will do a handshake with the client after accepting its connection."), Category("Security"), DefaultValue(GetType(Boolean), "True")> _
     Public Overridable Property Handshake() As Boolean Implements ICommunicationServer.Handshake

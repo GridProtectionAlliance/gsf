@@ -83,7 +83,7 @@ Public Interface ICommunicationServer
     ''' accepting its connection.
     ''' </summary>
     ''' <value></value>
-    ''' <returns>True is the server will do a handshake with the client; otherwise False.</returns>
+    ''' <returns>True if the server will do a handshake with the client; otherwise False.</returns>
     Property Handshake() As Boolean
 
     ''' <summary>
