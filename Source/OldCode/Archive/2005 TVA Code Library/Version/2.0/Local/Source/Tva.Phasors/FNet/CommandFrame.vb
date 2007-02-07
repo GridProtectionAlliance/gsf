@@ -39,7 +39,7 @@ Namespace FNet
             MyBase.New(info, context)
 
             ' Deserialize command frame
-            m_idCode = info.GetUInt64("idCode64Bit")
+            m_idCode = info.GetUInt64("idCode64Bit")   'Configuration file IDcode See IEEE STD 1344 section6.4
 
         End Sub
 
