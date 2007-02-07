@@ -44,7 +44,7 @@ Namespace IO
 
         Public Sub New(ByVal logFileName As String)
 
-            m_logFileName = logFileName
+            Me.LogFileName = logFileName
             m_logFileLock = New ReaderWriterLock
 
             ' We implement a synchronized process queue for log entries such that all entries will
@@ -63,7 +63,13 @@ Namespace IO
                 Return m_logFileName
             End Get
             Set(ByVal value As String)
-                m_logFileName = value
+                ' If we're provided just the name of the log file and not the entire file path, we'll assume that
+                ' the log file is to be created in the directory from where the application is executing.
+                If String.IsNullOrEmpty(Tva.IO.FilePath.JustPath(m_logFileName).TrimEnd("\"c)) Then
+                    m_logFileName = Tva.IO.FilePath.JustPath(Tva.Assembly.EntryAssembly.Location) & value
+                Else
+                    m_logFileName = value
+                End If
             End Set
         End Property
 
