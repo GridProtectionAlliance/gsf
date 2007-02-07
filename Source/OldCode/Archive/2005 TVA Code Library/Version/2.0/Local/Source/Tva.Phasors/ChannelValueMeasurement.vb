@@ -137,7 +137,7 @@ Friend Class ChannelValueMeasurement(Of T As IChannelDefinition)
             Return m_parent.Parent.SynchronizationIsValid
         End Get
         Set(ByVal value As Boolean)
-            Throw New NotImplementedException("Timestamp quality for " & m_parent.InheritedType.Name & " is derived from parent data cell and is hence read-only for channel value measurements")
+            Throw New NotImplementedException("Timestamp quality for " & m_parent.DerivedType.Name & " is derived from parent data cell and is hence read-only for channel value measurements")
         End Set
     End Property
 
@@ -146,7 +146,7 @@ Friend Class ChannelValueMeasurement(Of T As IChannelDefinition)
             Return m_parent.Parent.DataIsValid
         End Get
         Set(ByVal value As Boolean)
-            Throw New NotImplementedException("Value quality for " & m_parent.InheritedType.Name & " is derived from parent data cell and is hence read-only for channel value measurements")
+            Throw New NotImplementedException("Value quality for " & m_parent.DerivedType.Name & " is derived from parent data cell and is hence read-only for channel value measurements")
         End Set
     End Property
 
@@ -155,7 +155,7 @@ Friend Class ChannelValueMeasurement(Of T As IChannelDefinition)
             Return m_parent.Parent.Parent.Ticks
         End Get
         Set(ByVal value As Long)
-            Throw New NotImplementedException("Ticks for " & m_parent.InheritedType.Name & " are derived from parent frame and are hence read-only for channel value measurements")
+            Throw New NotImplementedException("Ticks for " & m_parent.DerivedType.Name & " are derived from parent frame and are hence read-only for channel value measurements")
         End Set
     End Property
 
@@ -169,7 +169,7 @@ Friend Class ChannelValueMeasurement(Of T As IChannelDefinition)
     Public Overridable Function CompareTo(ByVal obj As Object) As Integer Implements System.IComparable.CompareTo
 
         If TypeOf obj Is IMeasurement Then Return CompareTo(DirectCast(obj, IMeasurement))
-        Throw New ArgumentException(m_parent.InheritedType.Name & " measurement can only be compared with other IMeasurements...")
+        Throw New ArgumentException(m_parent.DerivedType.Name & " measurement can only be compared with other IMeasurements...")
 
     End Function
 

@@ -17,6 +17,7 @@
 
 Imports System.Runtime.Serialization
 Imports System.Buffer
+Imports System.Text
 Imports Tva.Phasors.Common
 
 ''' <summary>This class represents the protocol independent common implementation of an element of header frame data that can be received from a PMU.</summary>
@@ -72,7 +73,7 @@ Public Class HeaderCell
 
     End Function
 
-    Public Overrides ReadOnly Property InheritedType() As System.Type
+    Public Overrides ReadOnly Property DerivedType() As System.Type
         Get
             Return Me.GetType()
         End Get
@@ -119,5 +120,12 @@ Public Class HeaderCell
         info.AddValue("character", m_character)
 
     End Sub
+
+    Public Overrides ReadOnly Property Attributes() As System.Collections.Generic.Dictionary(Of String, String)
+        Get
+            MyBase.Attributes.Add("Character", Encoding.ASCII.GetString(New Byte() {Character}))
+            Return MyBase.Attributes
+        End Get
+    End Property
 
 End Class

@@ -51,7 +51,7 @@ Namespace BpaPdcStream
 
         End Sub
 
-        Public Overrides ReadOnly Property InheritedType() As System.Type
+        Public Overrides ReadOnly Property DerivedType() As System.Type
             Get
                 Return GetType(PMUCell)
             End Get

@@ -123,4 +123,11 @@ Public MustInherit Class PhasorDefinitionBase
 
     End Sub
 
+    Public Overrides ReadOnly Property Attributes() As System.Collections.Generic.Dictionary(Of String, String)
+        Get
+            MyBase.Attributes.Add("Phasor Type", [Type] & ": " & [Enum].GetName(GetType(PhasorType), [Type]))
+            Return MyBase.Attributes
+        End Get
+    End Property
+
 End Class

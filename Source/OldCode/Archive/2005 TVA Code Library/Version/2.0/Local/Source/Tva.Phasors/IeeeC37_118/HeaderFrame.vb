@@ -65,7 +65,7 @@ Namespace IeeeC37_118
 
         End Sub
 
-        Public Overrides ReadOnly Property InheritedType() As System.Type
+        Public Overrides ReadOnly Property DerivedType() As System.Type
             Get
                 Return Me.GetType()
             End Get

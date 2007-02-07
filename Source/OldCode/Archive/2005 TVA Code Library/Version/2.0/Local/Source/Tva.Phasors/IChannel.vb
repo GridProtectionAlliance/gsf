@@ -19,7 +19,7 @@
 <CLSCompliant(False)> _
 Public Interface IChannel
 
-    ReadOnly Property InheritedType() As Type
+    ReadOnly Property DerivedType() As Type
 
     ReadOnly Property This() As IChannel
 
@@ -31,6 +31,8 @@ Public Interface IChannel
     ReadOnly Property BinaryLength() As UInt16
 
     ReadOnly Property BinaryImage() As Byte()
+
+    ReadOnly Property Attributes() As Dictionary(Of String, String)
 
 End Interface
 

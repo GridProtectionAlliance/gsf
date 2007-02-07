@@ -333,4 +333,25 @@ Public MustInherit Class ConfigurationCellBase
 
     End Sub
 
+    Public Overrides ReadOnly Property Attributes() As System.Collections.Generic.Dictionary(Of String, String)
+        Get
+            With MyBase.Attributes
+                .Add("Station Name", StationName)
+                .Add("ID Label", IDLabel)
+                .Add("Phasor Coordinate Format", PhasorCoordinateFormat & ": " & [Enum].GetName(GetType(CoordinateFormat), PhasorCoordinateFormat))
+                .Add("Phasor Data Format", PhasorDataFormat & ": " & [Enum].GetName(GetType(DataFormat), PhasorDataFormat))
+                .Add("Frequency Data Format", FrequencyDataFormat & ": " & [Enum].GetName(GetType(DataFormat), FrequencyDataFormat))
+                .Add("Analog Data Format", AnalogDataFormat & ": " & [Enum].GetName(GetType(DataFormat), AnalogDataFormat))
+                .Add("Total Phasor Definitions", PhasorDefinitions.Count)
+                .Add("Total Analog Definitions", AnalogDefinitions.Count)
+                .Add("Total Digital Definitions", DigitalDefinitions.Count)
+                .Add("Nominal Frequency", NominalFrequency & " Hz")
+                .Add("Maximum Station Name Length", MaximumStationNameLength)
+                .Add("ID Label Length", IDLabelLength)
+            End With
+
+            Return MyBase.Attributes
+        End Get
+    End Property
+
 End Class

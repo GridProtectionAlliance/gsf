@@ -127,4 +127,20 @@ Public MustInherit Class CommandFrameBase
 
     End Sub
 
+    Public Overrides ReadOnly Property Attributes() As System.Collections.Generic.Dictionary(Of String, String)
+        Get
+            With MyBase.Attributes
+                .Add("Device Command", Command & ": " & [Enum].GetName(GetType(DeviceCommand), Command))
+
+                If Cells.Count > 0 Then
+                    .Add("Extended Data", ByteEncoding.Hexadecimal.GetString(Cells.BinaryImage, 0, Cells.Count))
+                Else
+                    .Add("Extended Data", "<null>")
+                End If
+            End With
+
+            Return MyBase.Attributes
+        End Get
+    End Property
+
 End Class

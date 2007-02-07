@@ -39,6 +39,7 @@ Namespace IeeeC37_118
             Private m_idCode As UInt16
             Private m_ticks As Long
             Private m_timeQualityFlags As Int32
+            Private m_attributes As Dictionary(Of String, String)
 
             Public Sub New()
 
@@ -62,7 +63,7 @@ Namespace IeeeC37_118
                 End Get
             End Property
 
-            Public ReadOnly Property InheritedType() As System.Type Implements IChannel.InheritedType
+            Public ReadOnly Property InheritedType() As System.Type Implements IChannel.DerivedType
                 Get
                     Return Me.GetType()
                 End Get
@@ -248,6 +249,38 @@ Namespace IeeeC37_118
                 Throw New NotImplementedException()
 
             End Sub
+
+            Public ReadOnly Property Attributes() As System.Collections.Generic.Dictionary(Of String, String) Implements IChannel.Attributes
+                Get
+                    ' Create a new attributes dictionary or clear the contents of any existing one
+                    If m_attributes Is Nothing Then
+                        m_attributes = New Dictionary(Of String, String)
+                    Else
+                        m_attributes.Clear()
+                    End If
+
+                    With m_attributes
+                        .Add("Inherited Type", InheritedType.Name)
+                        .Add("Binary Length", BinaryLength)
+                        .Add("Frame Type", FrameType & ": " & [Enum].GetName(GetType(FrameType), FrameType))
+                        .Add("Fundamental Frame Type", FundamentalFrameType & ": " & [Enum].GetName(GetType(FundamentalFrameType), FundamentalFrameType))
+                        .Add("Frame Length", FrameLength)
+                        .Add("ID Code", IDCode)
+                        .Add("Version", Version & ": " & [Enum].GetName(GetType(Version), Version))
+                        .Add("Second of Century", SecondOfCentury)
+                        .Add("Fraction of Second", FractionOfSecond)
+                        .Add("Time Quality Flags", TimeQualityFlags & ": " & [Enum].GetName(GetType(TimeQualityFlags), TimeQualityFlags))
+                        .Add("Time Quality Indicator Code", TimeQualityIndicatorCode & ": " & [Enum].GetName(GetType(TimeQualityIndicatorCode), TimeQualityIndicatorCode))
+                        .Add("Time Base", TimeBase)
+                        .Add("Is Partial Frame", IsPartial)
+                        .Add("Published", Published)
+                        .Add("Ticks", Ticks)
+                        .Add("Timestamp", Timestamp)
+                    End With
+
+                    Return m_attributes
+                End Get
+            End Property
 
         End Class
 

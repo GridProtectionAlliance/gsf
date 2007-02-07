@@ -23,8 +23,15 @@ Public MustInherit Class ChannelBase
 
     Implements IChannel
 
+    ' This is the attributes dictionary relevant to all channel properties.  This dictionary
+    ' will only be instantiated with a call to "Attributes" property which will begin the
+    ' enumeration of relevant system properties.  This is typically used for display purposes.
+    ' For example, this information is displayed in a tree view on the the PMU Connection
+    ' Tester to display attributes of data elements that may be protocol specific
+    Private m_attributes As Dictionary(Of String, String)
+
     ' This is expected to be overriden by the final derived class
-    Public MustOverride ReadOnly Property InheritedType() As Type Implements IChannel.InheritedType
+    Public MustOverride ReadOnly Property DerivedType() As Type Implements IChannel.DerivedType
 
     Public Overridable ReadOnly Property This() As IChannel Implements IChannel.This
         Get
@@ -110,6 +117,24 @@ Public MustInherit Class ChannelBase
     Protected Overridable ReadOnly Property FooterImage() As Byte()
         Get
             Return Nothing
+        End Get
+    End Property
+
+    Public Overridable ReadOnly Property Attributes() As Dictionary(Of String, String) Implements IChannel.Attributes
+        Get
+            ' Create a new attributes dictionary or clear the contents of any existing one
+            If m_attributes Is Nothing Then
+                m_attributes = New Dictionary(Of String, String)
+            Else
+                m_attributes.Clear()
+            End If
+
+            With m_attributes
+                .Add("Derived Type", DerivedType.FullName)
+                .Add("Binary Length", BinaryLength)
+            End With
+
+            Return m_attributes
         End Get
     End Property
 

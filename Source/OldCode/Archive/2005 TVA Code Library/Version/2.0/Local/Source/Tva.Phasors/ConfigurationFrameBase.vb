@@ -106,4 +106,11 @@ Public MustInherit Class ConfigurationFrameBase
 
     End Sub
 
+    Public Overrides ReadOnly Property Attributes() As System.Collections.Generic.Dictionary(Of String, String)
+        Get
+            MyBase.Attributes.Add("Frame Rate", FrameRate)
+            Return MyBase.Attributes
+        End Get
+    End Property
+
 End Class

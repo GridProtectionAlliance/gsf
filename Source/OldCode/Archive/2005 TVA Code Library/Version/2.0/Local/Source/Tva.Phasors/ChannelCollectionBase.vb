@@ -28,6 +28,7 @@ Public MustInherit Class ChannelCollectionBase(Of T As IChannel)
     Implements IChannelCollection(Of T)
 
     Private m_maximumCount As Int32
+    Private m_attributes As Dictionary(Of String, String)
 
     Protected Sub New()
     End Sub
@@ -58,7 +59,7 @@ Public MustInherit Class ChannelCollectionBase(Of T As IChannel)
 
     End Sub
 
-    Public MustOverride ReadOnly Property InheritedType() As Type Implements IChannelCollection(Of T).InheritedType
+    Public MustOverride ReadOnly Property InheritedType() As Type Implements IChannelCollection(Of T).DerivedType
 
     Public Overridable ReadOnly Property This() As IChannel Implements IChannel.This
         Get
@@ -116,6 +117,26 @@ Public MustInherit Class ChannelCollectionBase(Of T As IChannel)
         Next
 
     End Sub
+
+    Public Overridable ReadOnly Property Attributes() As System.Collections.Generic.Dictionary(Of String, String) Implements IChannel.Attributes
+        Get
+            ' Create a new attributes dictionary or clear the contents of any existing one
+            If m_attributes Is Nothing Then
+                m_attributes = New Dictionary(Of String, String)
+            Else
+                m_attributes.Clear()
+            End If
+
+            With m_attributes
+                .Add("Inherited Type", InheritedType.Name)
+                .Add("Binary Length", BinaryLength)
+                .Add("Maximum Count", MaximumCount)
+                .Add("Current Count", Count)
+            End With
+
+            Return m_attributes
+        End Get
+    End Property
 
 End Class
 

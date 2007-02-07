@@ -34,12 +34,15 @@ Public MustInherit Class DataCellBase
     Private m_analogValues As AnalogValueCollection
     Private m_digitalValues As DigitalValueCollection
 
-    ' IMeasurement implementation memembers
+#Region " IMeasurement Implementation Members "
+
     Private m_id As Integer
     Private m_tag As String
     Private m_source As String
     Private m_adder As Double
     Private m_multiplier As Double
+
+#End Region
 
     Protected Sub New()
     End Sub
@@ -176,124 +179,6 @@ Public MustInherit Class DataCellBase
         End Set
     End Property
 
-#Region " IMeasurement Implementation "
-
-    ' We keep the IMeasurement implementation of the DataCell completely private.  Exposing
-    ' these properties publically would only stand to add confusion as to where measurements
-    ' typically come from (i.e., the IDataCell's values) - the only value the cell itself has
-    ' to offer is the "StatusFlags" property, which we expose below
-
-    Private Property IMeasurementValue() As Double Implements IMeasurement.Value
-        Get
-            Return Convert.ToDouble(m_statusFlags)
-        End Get
-        Set(ByVal value As Double)
-            m_statusFlags = Convert.ToInt16(value)
-        End Set
-    End Property
-
-    ' The only "measured value" a data cell exposes is its "StatusFlags"
-    Private ReadOnly Property IMeasurementAdjustedValue() As Double Implements IMeasurement.AdjustedValue
-        Get
-            Return m_statusFlags * m_multiplier + m_adder
-        End Get
-    End Property
-
-    ' I don't imagine you would want offsets for status flags - but this may yet be handy for
-    ' "forcing" a particular set of quality flags to come through the system (M=0, A=New Flags)
-    Private Property IMeasurementAdder() As Double Implements IMeasurement.Adder
-        Get
-            Return m_adder
-        End Get
-        Set(ByVal value As Double)
-            m_adder = value
-        End Set
-    End Property
-
-    Private Property IMeasurementMultiplier() As Double Implements IMeasurement.Multiplier
-        Get
-            Return m_multiplier
-        End Get
-        Set(ByVal value As Double)
-            m_multiplier = value
-        End Set
-    End Property
-
-    Private Property IMeasurementTicks() As Long Implements IMeasurement.Ticks
-        Get
-            Return Parent.Ticks
-        End Get
-        Set(ByVal value As Long)
-            Throw New NotImplementedException("Ticks for " & InheritedType.Name & " are derived from parent frame and are hence read-only for channel cell measurements")
-        End Set
-    End Property
-
-    Private ReadOnly Property IMeasurementTimestamp() As Date Implements IMeasurement.Timestamp
-        Get
-            Return New Date(Parent.Ticks)
-        End Get
-    End Property
-
-    Private Property IMeasurementID() As Integer Implements IMeasurement.ID
-        Get
-            Return m_id
-        End Get
-        Set(ByVal value As Integer)
-            m_id = value
-        End Set
-    End Property
-
-    Private Property IMeasurementSource() As String Implements IMeasurement.Source
-        Get
-            Return m_source
-        End Get
-        Set(ByVal value As String)
-            m_source = value
-        End Set
-    End Property
-
-    Private ReadOnly Property IMeasurementKey() As MeasurementKey Implements IMeasurement.Key
-        Get
-            Return New MeasurementKey(m_id, m_source)
-        End Get
-    End Property
-
-    Private Property IMeasurementTag() As String Implements IMeasurement.Tag
-        Get
-            Return m_tag
-        End Get
-        Set(ByVal value As String)
-            m_tag = value
-        End Set
-    End Property
-
-    Private ReadOnly Property IMeasurementThis() As IMeasurement Implements IMeasurement.This
-        Get
-            Return Me
-        End Get
-    End Property
-
-    Private Function IComparableCompareTo(ByVal obj As Object) As Integer Implements System.IComparable.CompareTo
-
-        If TypeOf obj Is IMeasurement Then Return IComparableCompareTo(DirectCast(obj, IMeasurement))
-        Throw New ArgumentException(InheritedType.Name & " measurement can only be compared with other IMeasurements...")
-
-    End Function
-
-    Private Function IComparableCompareTo(ByVal other As Measurements.IMeasurement) As Integer Implements System.IComparable(Of Measurements.IMeasurement).CompareTo
-
-        Return IMeasurementValue.CompareTo(other.Value)
-
-    End Function
-
-    Private Function IEquatableEquals(ByVal other As Measurements.IMeasurement) As Boolean Implements System.IEquatable(Of Measurements.IMeasurement).Equals
-
-        Return (IComparableCompareTo(other) = 0)
-
-    End Function
-
-#End Region
-
     Protected Overrides ReadOnly Property BodyLength() As UInt16
         Get
             Return 2 + m_phasorValues.BinaryLength + m_frequencyValue.BinaryLength + m_analogValues.BinaryLength + m_digitalValues.BinaryLength
@@ -367,5 +252,139 @@ Public MustInherit Class DataCellBase
         info.AddValue("digitalValues", m_digitalValues, GetType(DigitalValueCollection))
 
     End Sub
+
+    Public Overrides ReadOnly Property Attributes() As System.Collections.Generic.Dictionary(Of String, String)
+        Get
+            With MyBase.Attributes
+                .Add("Status Flags", StatusFlags)
+                .Add("Data Is Valid", DataIsValid)
+                .Add("Synchronization Is Valid", SynchronizationIsValid)
+                .Add("Total Phasor Values", PhasorValues.Count)
+                .Add("Total Analog Values", AnalogValues.Count)
+                .Add("Total Digital Values", DigitalValues.Count)
+                .Add("All Values Are Empty", AllValuesAreEmpty)
+            End With
+
+            Return MyBase.Attributes
+        End Get
+    End Property
+
+#Region " IMeasurement Implementation "
+
+    ' We keep the IMeasurement implementation of the DataCell completely private.  Exposing
+    ' these properties publically would only stand to add confusion as to where measurements
+    ' typically come from (i.e., the IDataCell's values) - the only value the cell itself has
+    ' to offer is the "StatusFlags" property, which we expose below
+
+    Private Property IMeasurementValue() As Double Implements IMeasurement.Value
+        Get
+            Return Convert.ToDouble(m_statusFlags)
+        End Get
+        Set(ByVal value As Double)
+            m_statusFlags = Convert.ToInt16(value)
+        End Set
+    End Property
+
+    ' The only "measured value" a data cell exposes is its "StatusFlags"
+    Private ReadOnly Property IMeasurementAdjustedValue() As Double Implements IMeasurement.AdjustedValue
+        Get
+            Return m_statusFlags * m_multiplier + m_adder
+        End Get
+    End Property
+
+    ' I don't imagine you would want offsets for status flags - but this may yet be handy for
+    ' "forcing" a particular set of quality flags to come through the system (M=0, A=New Flags)
+    Private Property IMeasurementAdder() As Double Implements IMeasurement.Adder
+        Get
+            Return m_adder
+        End Get
+        Set(ByVal value As Double)
+            m_adder = value
+        End Set
+    End Property
+
+    Private Property IMeasurementMultiplier() As Double Implements IMeasurement.Multiplier
+        Get
+            Return m_multiplier
+        End Get
+        Set(ByVal value As Double)
+            m_multiplier = value
+        End Set
+    End Property
+
+    Private Property IMeasurementTicks() As Long Implements IMeasurement.Ticks
+        Get
+            Return Parent.Ticks
+        End Get
+        Set(ByVal value As Long)
+            Throw New NotImplementedException("Ticks for " & DerivedType.Name & " are derived from parent frame and are hence read-only for channel cell measurements")
+        End Set
+    End Property
+
+    Private ReadOnly Property IMeasurementTimestamp() As Date Implements IMeasurement.Timestamp
+        Get
+            Return New Date(Parent.Ticks)
+        End Get
+    End Property
+
+    Private Property IMeasurementID() As Integer Implements IMeasurement.ID
+        Get
+            Return m_id
+        End Get
+        Set(ByVal value As Integer)
+            m_id = value
+        End Set
+    End Property
+
+    Private Property IMeasurementSource() As String Implements IMeasurement.Source
+        Get
+            Return m_source
+        End Get
+        Set(ByVal value As String)
+            m_source = value
+        End Set
+    End Property
+
+    Private ReadOnly Property IMeasurementKey() As MeasurementKey Implements IMeasurement.Key
+        Get
+            Return New MeasurementKey(m_id, m_source)
+        End Get
+    End Property
+
+    Private Property IMeasurementTag() As String Implements IMeasurement.Tag
+        Get
+            Return m_tag
+        End Get
+        Set(ByVal value As String)
+            m_tag = value
+        End Set
+    End Property
+
+    Private ReadOnly Property IMeasurementThis() As IMeasurement Implements IMeasurement.This
+        Get
+            Return Me
+        End Get
+    End Property
+
+    Private Function IComparableCompareTo(ByVal obj As Object) As Integer Implements System.IComparable.CompareTo
+
+        If TypeOf obj Is IMeasurement Then Return IComparableCompareTo(DirectCast(obj, IMeasurement))
+        Throw New ArgumentException(DerivedType.Name & " measurement can only be compared with other IMeasurements...")
+
+    End Function
+
+    Private Function IComparableCompareTo(ByVal other As Measurements.IMeasurement) As Integer Implements System.IComparable(Of Measurements.IMeasurement).CompareTo
+
+        Return IMeasurementValue.CompareTo(other.Value)
+
+    End Function
+
+    Private Function IEquatableEquals(ByVal other As Measurements.IMeasurement) As Boolean Implements System.IEquatable(Of Measurements.IMeasurement).Equals
+
+        Return (IComparableCompareTo(other) = 0)
+
+    End Function
+
+#End Region
 
 End Class

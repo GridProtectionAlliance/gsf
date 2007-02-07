@@ -72,7 +72,7 @@ Namespace Ieee1344
 
         End Function
 
-        Public Overrides ReadOnly Property InheritedType() As System.Type
+        Public Overrides ReadOnly Property DerivedType() As System.Type
             Get
                 Return Me.GetType
             End Get

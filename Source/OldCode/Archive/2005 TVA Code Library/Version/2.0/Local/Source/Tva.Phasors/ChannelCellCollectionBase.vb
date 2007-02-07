@@ -33,6 +33,9 @@ Public MustInherit Class ChannelCellCollectionBase(Of T As IChannelCell)
 
         MyBase.New(info, context)
 
+        ' Deserialize extra elements
+        m_constantCellLength = info.GetBoolean("constantCellLength")
+
     End Sub
 
     Protected Sub New(ByVal maximumCount As Int32, ByVal constantCellLength As Boolean)
@@ -58,6 +61,25 @@ Public MustInherit Class ChannelCellCollectionBase(Of T As IChannelCell)
 
                 Return length
             End If
+        End Get
+    End Property
+
+    Public Overrides Sub GetObjectData(ByVal info As System.Runtime.Serialization.SerializationInfo, ByVal context As System.Runtime.Serialization.StreamingContext)
+
+        MyBase.GetObjectData(info, context)
+
+        ' Serialize extra elements
+        info.AddValue("constantCellLength", m_constantCellLength)
+
+    End Sub
+
+    Public Overrides ReadOnly Property Attributes() As System.Collections.Generic.Dictionary(Of String, String)
+        Get
+            With MyBase.Attributes
+                .Add("Constant Cell Length", m_constantCellLength)
+            End With
+
+            Return MyBase.Attributes
         End Get
     End Property
 

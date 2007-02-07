@@ -197,7 +197,7 @@ Public MustInherit Class ChannelFrameBase(Of T As IChannelCell)
     Protected Overrides Sub ParseBinaryImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
         ' Validate checksum
-        If Not ChecksumIsValid(binaryImage, startIndex) Then Throw New InvalidOperationException("Invalid binary image detected - check sum of " & InheritedType.Name & " did not match")
+        If Not ChecksumIsValid(binaryImage, startIndex) Then Throw New InvalidOperationException("Invalid binary image detected - check sum of " & DerivedType.Name & " did not match")
 
         ' Perform regular data parse
         MyBase.ParseBinaryImage(state, binaryImage, startIndex)
@@ -254,7 +254,7 @@ Public MustInherit Class ChannelFrameBase(Of T As IChannelCell)
         If TypeOf obj Is IChannelFrame Then
             Return m_ticks.CompareTo(DirectCast(obj, IChannelFrame).Ticks)
         Else
-            Throw New ArgumentException(InheritedType.Name & " can only be compared with other IChannelFrames...")
+            Throw New ArgumentException(DerivedType.Name & " can only be compared with other IChannelFrames...")
         End If
 
     End Function
@@ -267,5 +267,21 @@ Public MustInherit Class ChannelFrameBase(Of T As IChannelCell)
         info.AddValue("ticks", m_ticks)
 
     End Sub
+
+    Public Overrides ReadOnly Property Attributes() As System.Collections.Generic.Dictionary(Of String, String)
+        Get
+            With MyBase.Attributes
+                .Add("Total Cells", Cells.Count)
+                .Add("Fundamental Frame Type", FundamentalFrameType & ": " & [Enum].GetName(GetType(FundamentalFrameType), FundamentalFrameType))
+                .Add("ID Code", IDCode)
+                .Add("Is Partial Frame", IsPartial)
+                .Add("Published", Published)
+                .Add("Ticks", Ticks)
+                .Add("Timestamp", Timestamp)
+            End With
+
+            Return MyBase.Attributes
+        End Get
+    End Property
 
 End Class

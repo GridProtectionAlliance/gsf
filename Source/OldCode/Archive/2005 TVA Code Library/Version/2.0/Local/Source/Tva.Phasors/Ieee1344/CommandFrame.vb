@@ -62,7 +62,7 @@ Namespace Ieee1344
 
         End Sub
 
-        Public Overrides ReadOnly Property InheritedType() As System.Type
+        Public Overrides ReadOnly Property DerivedType() As System.Type
             Get
                 Return Me.GetType()
             End Get
@@ -140,6 +140,13 @@ Namespace Ieee1344
             info.AddValue("idCode64Bit", m_idCode)
 
         End Sub
+
+        Public Overrides ReadOnly Property Attributes() As System.Collections.Generic.Dictionary(Of String, String)
+            Get
+                MyBase.Attributes.Add("64-Bit ID Code", IDCode)
+                Return MyBase.Attributes
+            End Get
+        End Property
 
     End Class
 

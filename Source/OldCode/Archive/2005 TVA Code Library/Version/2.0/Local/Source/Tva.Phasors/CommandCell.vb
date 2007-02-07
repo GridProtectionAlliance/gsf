@@ -72,7 +72,7 @@ Public Class CommandCell
 
     End Function
 
-    Public Overrides ReadOnly Property InheritedType() As System.Type
+    Public Overrides ReadOnly Property DerivedType() As System.Type
         Get
             Return Me.GetType()
         End Get
@@ -119,5 +119,12 @@ Public Class CommandCell
         info.AddValue("extendedDataByte", m_extendedDataByte)
 
     End Sub
+
+    Public Overrides ReadOnly Property Attributes() As System.Collections.Generic.Dictionary(Of String, String)
+        Get
+            MyBase.Attributes.Add("Extended Data Byte", ExtendedDataByte.ToString("x"c))
+            Return MyBase.Attributes
+        End Get
+    End Property
 
 End Class

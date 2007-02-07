@@ -110,5 +110,20 @@ Public MustInherit Class ChannelValueBase(Of T As IChannelDefinition)
 
     End Sub
 
+    Public Overrides ReadOnly Property Attributes() As System.Collections.Generic.Dictionary(Of String, String)
+        Get
+            With MyBase.Attributes
+                .Add("Data Format", DataFormat & ": " & [Enum].GetName(GetType(DataFormat), DataFormat))
+                .Add("Is Empty", IsEmpty)
+                .Add("Total Composite Values", CompositeValueCount)
+                For x As Integer = 0 To CompositeValueCount - 1
+                    .Add("     Composite Value " & x, CompositeValue(x))
+                Next
+            End With
+
+            Return MyBase.Attributes
+        End Get
+    End Property
+
 End Class
 

@@ -40,6 +40,7 @@ Namespace Ieee1344
             Private m_ticks As Long
             Private m_frameQueue As MemoryStream
             Private m_statusFlags As Int16
+            Private m_attributes As Dictionary(Of String, String)
 
             Public Sub New()
 
@@ -63,7 +64,7 @@ Namespace Ieee1344
                 End Get
             End Property
 
-            Public ReadOnly Property InheritedType() As System.Type Implements IChannel.InheritedType
+            Public ReadOnly Property InheritedType() As System.Type Implements IChannel.DerivedType
                 Get
                     Return Me.GetType()
                 End Get
@@ -155,7 +156,7 @@ Namespace Ieee1344
                 End Get
             End Property
 
-            Public ReadOnly Property IChannelFrameFrameType() As FundamentalFrameType Implements IChannelFrame.FrameType, ICommonFrameHeader.FundamentalFrameType
+            Public ReadOnly Property FundamentalFrameType() As FundamentalFrameType Implements IChannelFrame.FrameType, ICommonFrameHeader.FundamentalFrameType
                 Get
                     ' Translate IEEE 1344 specific frame type to fundamental frame type
                     Select Case FrameType
@@ -301,6 +302,37 @@ Namespace Ieee1344
                 Throw New NotImplementedException()
 
             End Sub
+
+            Public ReadOnly Property Attributes() As System.Collections.Generic.Dictionary(Of String, String) Implements IChannel.Attributes
+                Get
+                    ' Create a new attributes dictionary or clear the contents of any existing one
+                    If m_attributes Is Nothing Then
+                        m_attributes = New Dictionary(Of String, String)
+                    Else
+                        m_attributes.Clear()
+                    End If
+
+                    With m_attributes
+                        .Add("Inherited Type", InheritedType.Name)
+                        .Add("Binary Length", BinaryLength)
+                        .Add("Frame Type", FrameType & ": " & [Enum].GetName(GetType(FrameType), FrameType))
+                        .Add("Fundamental Frame Type", FundamentalFrameType & ": " & [Enum].GetName(GetType(FundamentalFrameType), FundamentalFrameType))
+                        .Add("Frame Length", FrameLength)
+                        .Add("ID Code", IDCode)
+                        .Add("Sample Count", InternalSampleCount)
+                        .Add("Status Flags", InternalStatusFlags)
+                        .Add("Frame Count", FrameCount)
+                        .Add("Is First Frame", IsFirstFrame)
+                        .Add("Is Last Frame", IsLastFrame)
+                        .Add("Is Partial Frame", IsPartial)
+                        .Add("Published", Published)
+                        .Add("Ticks", Ticks)
+                        .Add("Timestamp", Timestamp)
+                    End With
+
+                    Return m_attributes
+                End Get
+            End Property
 
         End Class
 

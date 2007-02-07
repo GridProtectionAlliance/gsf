@@ -211,4 +211,21 @@ Public MustInherit Class ChannelDefinitionBase
 
     End Sub
 
+    Public Overrides ReadOnly Property Attributes() As System.Collections.Generic.Dictionary(Of String, String)
+        Get
+            With MyBase.Attributes
+                .Add("Label", Label)
+                .Add("Index", Index)
+                .Add("Offset", Offset)
+                .Add("Scaling Factor", ScalingFactor)
+                .Add("Scale per Bit", ScalePerBit)
+                .Add("Maximum Scaling Factor", MaximumScalingFactor)
+                .Add("Conversion Factor", ConversionFactor)
+                .Add("Maximum Label Length", MaximumLabelLength)
+            End With
+
+            Return MyBase.Attributes
+        End Get
+    End Property
+
 End Class
