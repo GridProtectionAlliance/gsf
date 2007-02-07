@@ -80,7 +80,7 @@ Namespace BpaPdcStream
             End Get
         End Property
 
-        Public Overrides ReadOnly Property InheritedType() As Type
+        Public Overrides ReadOnly Property DerivedType() As Type
             Get
                 Return Me.GetType()
             End Get
@@ -185,7 +185,7 @@ Namespace BpaPdcStream
             If TypeOf obj Is IChannelFrame Then
                 Return Ticks.CompareTo(DirectCast(obj, IChannelFrame).Ticks)
             Else
-                Throw New ArgumentException(InheritedType.Name & " can only be compared with other IChannelFrames...")
+                Throw New ArgumentException(DerivedType.Name & " can only be compared with other IChannelFrames...")
             End If
 
         End Function

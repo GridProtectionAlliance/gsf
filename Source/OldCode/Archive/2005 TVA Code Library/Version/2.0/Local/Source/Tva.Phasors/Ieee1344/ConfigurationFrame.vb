@@ -224,6 +224,16 @@ Namespace Ieee1344
 
         End Sub
 
+        Public Overrides ReadOnly Property Attributes() As System.Collections.Generic.Dictionary(Of String, String)
+            Get
+                With MyBase.Attributes
+                    .Add("64-Bit ID Code", IDCode)
+                End With
+
+                Return MyBase.Attributes
+            End Get
+        End Property
+
     End Class
 
 End Namespace

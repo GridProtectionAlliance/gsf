@@ -64,7 +64,7 @@ Namespace Ieee1344
                 End Get
             End Property
 
-            Public ReadOnly Property InheritedType() As System.Type Implements IChannel.DerivedType
+            Public ReadOnly Property DerivedType() As System.Type Implements IChannel.DerivedType
                 Get
                     Return Me.GetType()
                 End Get
@@ -287,7 +287,7 @@ Namespace Ieee1344
                 If TypeOf obj Is IChannelFrame Then
                     Return m_ticks.CompareTo(DirectCast(obj, IChannelFrame).Ticks)
                 Else
-                    Throw New ArgumentException(InheritedType.Name & " can only be compared with other IChannelFrames...")
+                    Throw New ArgumentException(DerivedType.Name & " can only be compared with other IChannelFrames...")
                 End If
             End Function
 
@@ -313,7 +313,7 @@ Namespace Ieee1344
                     End If
 
                     With m_attributes
-                        .Add("Inherited Type", InheritedType.Name)
+                        .Add("Derived Type", DerivedType.Name)
                         .Add("Binary Length", BinaryLength)
                         .Add("Frame Type", FrameType & ": " & [Enum].GetName(GetType(FrameType), FrameType))
                         .Add("Fundamental Frame Type", FundamentalFrameType & ": " & [Enum].GetName(GetType(FundamentalFrameType), FundamentalFrameType))

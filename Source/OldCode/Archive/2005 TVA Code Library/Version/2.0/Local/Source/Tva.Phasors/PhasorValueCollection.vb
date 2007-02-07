@@ -40,7 +40,7 @@ Public Class PhasorValueCollection
 
     End Sub
 
-    Public Overrides ReadOnly Property InheritedType() As Type
+    Public Overrides ReadOnly Property DerivedType() As Type
         Get
             Return Me.GetType()
         End Get

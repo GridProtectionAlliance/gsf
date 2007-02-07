@@ -54,12 +54,12 @@ Public MustInherit Class ChannelCollectionBase(Of T As IChannel)
 
         ' Note: Maximum count is much easier to specify by using <value>.MaxValue which runs from 0 to MaxValue (i.e., MaxValue + 1)
         ' so we allow one extra item in the following check to keep from having to add 1 to all maximum count specifications
-        If Count > m_maximumCount Then Throw New OverflowException("Maximum " & InheritedType.Name & " item limit reached")
+        If Count > m_maximumCount Then Throw New OverflowException("Maximum " & DerivedType.Name & " item limit reached")
         MyBase.Add(value)
 
     End Sub
 
-    Public MustOverride ReadOnly Property InheritedType() As Type Implements IChannelCollection(Of T).DerivedType
+    Public MustOverride ReadOnly Property DerivedType() As Type Implements IChannelCollection(Of T).DerivedType
 
     Public Overridable ReadOnly Property This() As IChannel Implements IChannel.This
         Get
@@ -128,7 +128,7 @@ Public MustInherit Class ChannelCollectionBase(Of T As IChannel)
             End If
 
             With m_attributes
-                .Add("Inherited Type", InheritedType.Name)
+                .Add("Derived Type", DerivedType.Name)
                 .Add("Binary Length", BinaryLength)
                 .Add("Maximum Count", MaximumCount)
                 .Add("Current Count", Count)

@@ -22,7 +22,7 @@ Public MustInherit Class ChannelParsingStateBase
     Implements IChannelParsingState
 
     ' This is expected to be overriden by the final derived class
-    Public MustOverride ReadOnly Property InheritedType() As Type Implements IChannelParsingState.InheritedType
+    Public MustOverride ReadOnly Property DerivedType() As Type Implements IChannelParsingState.DerivedType
 
     Public Overridable ReadOnly Property This() As IChannelParsingState Implements IChannelParsingState.This
         Get

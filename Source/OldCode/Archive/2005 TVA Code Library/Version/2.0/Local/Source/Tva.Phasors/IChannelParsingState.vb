@@ -19,7 +19,7 @@
 ''' <remarks>Data parsing is very format specific, classes implementing this interface create a common form for parsing state information particular to a data type.</remarks>
 Public Interface IChannelParsingState
 
-    ReadOnly Property InheritedType() As Type
+    ReadOnly Property DerivedType() As Type
 
     ReadOnly Property This() As IChannelParsingState
 
