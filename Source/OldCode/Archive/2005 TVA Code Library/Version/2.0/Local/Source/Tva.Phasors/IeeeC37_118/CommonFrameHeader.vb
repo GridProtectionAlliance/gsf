@@ -262,20 +262,21 @@ Namespace IeeeC37_118
                     With m_attributes
                         .Add("Derived Type", DerivedType.Name)
                         .Add("Binary Length", BinaryLength)
-                        .Add("Frame Type", FrameType & ": " & [Enum].GetName(GetType(FrameType), FrameType))
+                        .Add("Total Cells", "0")
                         .Add("Fundamental Frame Type", FundamentalFrameType & ": " & [Enum].GetName(GetType(FundamentalFrameType), FundamentalFrameType))
-                        .Add("Frame Length", FrameLength)
                         .Add("ID Code", IDCode)
+                        .Add("Is Partial Frame", IsPartial)
+                        .Add("Published", Published)
+                        .Add("Ticks", Ticks)
+                        .Add("Timestamp", Timestamp)
+                        .Add("Frame Type", FrameType & ": " & [Enum].GetName(GetType(FrameType), FrameType))
+                        .Add("Frame Length", FrameLength)
                         .Add("Version", Version & ": " & [Enum].GetName(GetType(Version), Version))
                         .Add("Second of Century", SecondOfCentury)
                         .Add("Fraction of Second", FractionOfSecond)
                         .Add("Time Quality Flags", TimeQualityFlags & ": " & [Enum].GetName(GetType(TimeQualityFlags), TimeQualityFlags))
                         .Add("Time Quality Indicator Code", TimeQualityIndicatorCode & ": " & [Enum].GetName(GetType(TimeQualityIndicatorCode), TimeQualityIndicatorCode))
                         .Add("Time Base", TimeBase)
-                        .Add("Is Partial Frame", IsPartial)
-                        .Add("Published", Published)
-                        .Add("Ticks", Ticks)
-                        .Add("Timestamp", Timestamp)
                     End With
 
                     Return m_attributes
