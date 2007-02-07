@@ -298,7 +298,7 @@ Namespace Application
         Public Function FindApplicationRoles(ByVal applicationName As String) As List(Of Role)
 
             '**** Added By Mehul
-            Dim applicationRoles As New List(Of Role)
+            Dim applicationRoles As New List(Of Role)()
 
             If m_roles IsNot Nothing Then
                 For i As Integer = 0 To m_roles.Count - 1
