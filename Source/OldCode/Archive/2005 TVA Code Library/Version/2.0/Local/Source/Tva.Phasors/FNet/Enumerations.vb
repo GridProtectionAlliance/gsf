@@ -17,14 +17,16 @@
 
 Namespace FNet
 
-    ''' <summary>Frame type</summary>
-    <Serializable()> _
-    Public Enum FrameType As Int16
-        ''' <summary>Data frame</summary>
-        DataFrame
-        ''' <summary>Configuration frame</summary>
-        ''' <remarks>This is a virtual frame - it is not transmitted in the data stream</remarks>
-        ConfigurationFrame
+    ''' <summary>FNet data elements</summary>
+    Public Enum Element
+        UnitID
+        [Date]
+        Time
+        SampleCount
+        Analog
+        Frequency
+        Voltage
+        Angle
     End Enum
 
 End Namespace

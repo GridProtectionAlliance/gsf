@@ -37,18 +37,6 @@ Namespace FNet
 
         End Sub
 
-        Public Sub New(ByVal idCode As UInt16, ByVal ticks As Long)
-
-            MyClass.New(idCode, ticks, 10)
-
-        End Sub
-
-        Public Sub New(ByVal idCode As UInt16, ByVal ticks As Long, ByVal frameRate As Int16)
-
-            MyClass.New(idCode, ticks, frameRate, LineFrequency.Hz60)
-
-        End Sub
-
         Public Sub New(ByVal idCode As UInt16, ByVal ticks As Long, ByVal frameRate As Int16, ByVal nominalFrequency As LineFrequency)
 
             MyClass.New(idCode, ticks, frameRate, nominalFrequency, "FNet-" & idCode)

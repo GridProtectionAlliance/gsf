@@ -28,17 +28,6 @@ Namespace FNet
 
         Inherits DataCellBase
 
-        Private Enum Element
-            UnitID
-            [Date]
-            Time
-            SampleCount
-            Analog
-            Frequency
-            Voltage
-            Angle
-        End Enum
-
         Private m_analogValue As Single
 
         Protected Sub New()
@@ -204,9 +193,7 @@ Namespace FNet
                 ' Parse FNet data frame into inividual fields seperated by spaces
                 Data = Encoding.ASCII.GetString(binaryImage, startIndex + 1, stopByteIndex - startIndex - 1).Split(" "c)
 
-                ' Retrieve ID code (only need to get this once)
-                If .IDCode = 0 Then .IDCode = Convert.ToUInt16(data(Element.UnitID))
-
+                ' Get timestamp of dat record
                 Parent.Ticks = ParseTimestamp(data(Element.Date), data(Element.Time), Convert.ToInt32(data(Element.SampleCount)), .FrameRate)
 
                 ' Parse out first frequency (can be long/lat at top of minute)
@@ -239,13 +226,13 @@ Namespace FNet
             fnetDate = fnetDate.PadLeft(6, "0"c)
 
             Return New Date( _
-                Convert.ToInt32(fnetDate.Substring(4, 2)), _
+                2000 + Convert.ToInt32(fnetDate.Substring(4, 2)), _
                 Convert.ToInt32(fnetDate.Substring(0, 2).Trim()), _
                 Convert.ToInt32(fnetDate.Substring(2, 2)), _
                 Convert.ToInt32(fnetTime.Substring(0, 2)), _
                 Convert.ToInt32(fnetTime.Substring(2, 2)), _
                 Convert.ToInt32(fnetTime.Substring(4, 2)), _
-                Convert.ToInt32(sampleIndex / frameRate * 1000)).Ticks
+                Convert.ToInt32((sampleIndex - 1) / frameRate * 1000)).Ticks
 
         End Function
 

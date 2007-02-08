@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  FrameParser.vb - IEEE1344 Frame Parser
+'  FrameParser.vb - FNet Frame Parser
 '  Copyright © 2005 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005
@@ -21,12 +21,11 @@ Imports System.ComponentModel
 Imports Tva.Collections
 Imports Tva.IO.Common
 Imports Tva.Phasors.Common
+Imports Tva.Phasors.FNet.Common
 
 Namespace FNet
 
-    ' NOTE TO RYAN:  The IEEEC37.118 Parser is a litter simpler than the IEEE1344 below and may provide a better model.
-
-    ''' <summary>This class parses an IEEE 1344 binary data stream and returns parsed data via events</summary>
+    ''' <summary>This class parses an FNet binary data stream and returns parsed data via events</summary>
     ''' <remarks>Frame parser is implemented as a write-only stream - this way data can come from any source</remarks>
     <CLSCompliant(False)> _
     Public Class FrameParser
@@ -257,8 +256,6 @@ Namespace FNet
         Private Sub ParseData(ByVal buffer As Byte(), ByVal offset As Int32, ByVal count As Int32)
 
             Try
-                'Dim parsedFrameHeader As ICommonFrameHeader
-
                 ' Prepend any left over buffer data from last parse call
                 If m_dataStream IsNot Nothing Then
                     With New MemoryStream
@@ -275,82 +272,56 @@ Namespace FNet
                     End With
                 End If
 
+                Dim x, startByteIndex, endByteIndex As Integer
+
                 Do Until offset >= count
-                    '' See if there is enough data in the buffer to parse the common frame header
-                    'If offset + CommonFrameHeader.BinaryLength + 2 > count Then
-                    '    ' If not, save off remaining buffer to prepend onto next read
-                    '    m_dataStream = New MemoryStream
-                    '    m_dataStream.Write(buffer, offset, count - offset)
-                    '    Exit Do
-                    'End If
+                    ' See if there is enough data in the buffer to parse the entire frame
+                    startByteIndex = -1
+                    endByteIndex = -1
 
-                    '' Parse frame header
-                    'parsedFrameHeader = CommonFrameHeader.ParseBinaryImage(m_configurationFrame, buffer, offset)
+                    For x = offset To buffer.Length - 1
+                        ' Found start index
+                        If buffer(x) = StartByte Then startByteIndex = x
 
-                    '' Until we receive configuration frame, we at least expose part of frame we have parsed
-                    'If m_configurationFrame Is Nothing Then RaiseReceivedCommonFrameHeader(parsedFrameHeader)
+                        If buffer(x) = EndByte Then
+                            If startByteIndex = -1 Then
+                                ' Found end before beginning, bad buffer - keep looking
+                                Continue For
+                            Else
+                                ' Foound a complete buffer
+                                endByteIndex = x
+                                Exit For
+                            End If
+                        End If
+                    Next
 
-                    '' See if there is enough data in the buffer to parse the entire frame
-                    'If offset + parsedFrameHeader.FrameLength > count Then
-                    '    ' If not, save off remaining buffer to prepend onto next read
-                    '    m_dataStream = New MemoryStream
-                    '    m_dataStream.Write(buffer, offset, count - offset)
-                    '    Exit Do
-                    'End If
+                    If endByteIndex = -1 Then
+                        ' If not, save off remaining buffer to prepend onto next read
+                        m_dataStream = New MemoryStream
+                        m_dataStream.Write(buffer, offset, count - offset)
+                        Exit Do
+                    End If
 
-                    'RaiseEvent ReceivedFrameBufferImage(parsedFrameHeader.FundamentalFrameType, buffer, offset, parsedFrameHeader.FrameLength)
+                    ' Entire frame is availble, so we go ahead and parse it
+                    RaiseEvent ReceivedFrameBufferImage(FundamentalFrameType.DataFrame, buffer, startByteIndex, endByteIndex - startByteIndex + 1)
 
-                    '' Entire frame is availble, so we go ahead and parse it
-                    'Select Case parsedFrameHeader.FrameType
-                    '    Case FrameType.DataFrame
-                    '        ' We can only start parsing data frames once we have successfully received a configuration file...
-                    '        If m_configurationFrame IsNot Nothing Then
-                    '            RaiseReceivedDataFrame(New DataFrame(parsedFrameHeader, m_configurationFrame, buffer, offset))
-                    '        End If
-                    '    Case FrameType.ConfigurationFrame
-                    '        ' Cumulate all partial frames together as once complete frame
-                    '        With DirectCast(parsedFrameHeader, CommonFrameHeader.CommonFrameHeaderInstance)
-                    '            If .IsFirstFrame Then m_configurationFrameCollection = parsedFrameHeader
+                    ' If no configuration frame has been created, we create one now
+                    If m_configurationFrame Is Nothing Then
+                        ' Pre-parse first FNet data frame to get unit ID field and establish a virutal configuration frame
+                        Dim data As String() = Encoding.ASCII.GetString(buffer, startByteIndex + 1, endByteIndex - startByteIndex - 1).Split(" "c)
 
-                    '            If m_configurationFrameCollection IsNot Nothing Then
-                    '                Try
-                    '                    m_configurationFrameCollection.AppendFrameImage(buffer, offset, .FrameLength)
+                        ' TODO: Must define properties to assign non-default frame rate and/or nominal frequency
+                        m_configurationFrame = New ConfigurationFrame(Convert.ToUInt16(data(Element.UnitID)), Date.Now.Ticks, 10, LineFrequency.Hz60)
 
-                    '                    If .IsLastFrame Then
-                    '                        m_configurationFrame = New ConfigurationFrame(m_configurationFrameCollection, m_configurationFrameCollection.BinaryImage, 0)
-                    '                        RaiseReceivedConfigurationFrame(m_configurationFrame)
-                    '                        m_configurationFrameCollection = Nothing
-                    '                    End If
-                    '                Catch
-                    '                    ' If CRC check or other exception occurs, we cancel frame cumulation process
-                    '                    m_configurationFrameCollection = Nothing
-                    '                    Throw
-                    '                End Try
-                    '            End If
-                    '        End With
-                    '    Case FrameType.HeaderFrame
-                    '        ' Cumulate all partial frames together as once complete frame
-                    '        With DirectCast(parsedFrameHeader, CommonFrameHeader.CommonFrameHeaderInstance)
-                    '            If .IsFirstFrame Then m_headerFrameCollection = parsedFrameHeader
+                        ' Notify clients of new configuration frame
+                        RaiseReceivedConfigurationFrame(m_configurationFrame)
+                    End If
 
-                    '            If m_headerFrameCollection IsNot Nothing Then
-                    '                Try
-                    '                    m_headerFrameCollection.AppendFrameImage(buffer, offset, .FrameLength)
+                    ' Provide new FNet data frame to clients
+                    RaiseReceivedDataFrame(New DataFrame(m_configurationFrame, buffer, startByteIndex))
 
-                    '                    If .IsLastFrame Then
-                    '                        RaiseReceivedHeaderFrame(New HeaderFrame(m_headerFrameCollection, m_headerFrameCollection.BinaryImage, 0))
-                    '                        m_headerFrameCollection = Nothing
-                    '                    End If
-                    '                Catch
-                    '                    ' If CRC check or other exception occurs, we cancel frame cumulation process
-                    '                    m_headerFrameCollection = Nothing
-                    '                    Throw
-                    '                End Try
-                    '            End If
-                    '        End With
-                    'End Select
-
-                    'offset += parsedFrameHeader.FrameLength
+                    ' Increment offset past end of data frame
+                    offset = endByteIndex + 1
                 Loop
             Catch ex As Exception
                 RaiseEvent DataStreamException(ex)
