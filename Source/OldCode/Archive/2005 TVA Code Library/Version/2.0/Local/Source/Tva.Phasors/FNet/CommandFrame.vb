@@ -141,6 +141,12 @@ Namespace FNet
 
         End Sub
 
+        Public Overrides ReadOnly Property Attributes() As Dictionary(Of String, String)
+            Get
+                MyBase.Attributes.Add("64-Bit ID Code", IDCode)
+                Return MyBase.Attributes
+            End Get
+        End Property
     End Class
 
 End Namespace

@@ -138,6 +138,13 @@ Namespace FNet
             End Set
         End Property
 
+        Public Overrides ReadOnly Property Attributes() As Dictionary(Of String, String)
+            Get
+                MyBase.Attributes.Add("Trigger Status", TriggerStatus & ": " & [Enum].GetName(GetType(TriggerStatus), TriggerStatus))
+                Return MyBase.Attributes
+            End Get
+        End Property
+
     End Class
 
 End Namespace

@@ -133,6 +133,17 @@ Namespace FNet
 
         End Sub
 
+        Public Overrides ReadOnly Property Attributes() As Dictionary(Of String, String)
+            Get
+                With MyBase.Attributes
+                    .Add("Normal Status", NormalStatus)
+                    .Add("Valid Input", ValidInput)
+                End With
+
+                Return MyBase.Attributes
+            End Get
+        End Property
+
     End Class
 
 End Namespace

@@ -144,6 +144,17 @@ Namespace FNet
 
         End Sub
 
+        Public Overrides ReadOnly Property Attributes() As Dictionary(Of String, String)
+            Get
+                With MyBase.Attributes
+                    .Add("Frequency Is Available", FrequencyIsAvailable)
+                    .Add("df/dt Is Available", DfDtIsAvailable)
+                End With
+
+                Return MyBase.Attributes
+            End Get
+        End Property
+
     End Class
 
 End Namespace

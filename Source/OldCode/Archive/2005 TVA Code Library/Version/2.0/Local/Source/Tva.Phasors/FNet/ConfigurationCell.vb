@@ -298,6 +298,19 @@ Namespace FNet
 
         End Sub
 
+        Public Overrides ReadOnly Property Attributes() As Dictionary(Of String, String)
+            Get
+                With MyBase.Attributes
+                    .Add("Status Flags", StatusFlags)
+                    .Add("Synchronization Is Valid", SynchronizationIsValid)
+                    .Add("Data Is Valid", DataIsValid)
+                    .Add("Trigger Status", TriggerStatus & ": " & [Enum].GetName(GetType(TriggerStatus), TriggerStatus))
+                End With
+
+                Return MyBase.Attributes
+            End Get
+        End Property
+
     End Class
 
 End Namespace

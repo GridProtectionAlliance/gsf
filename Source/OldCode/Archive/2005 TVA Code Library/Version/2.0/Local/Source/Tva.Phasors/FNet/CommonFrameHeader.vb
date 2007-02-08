@@ -324,6 +324,12 @@ Namespace FNet
                         .Add("Timestamp", Timestamp)
                         .Add("Frame Type", FrameType & ": " & [Enum].GetName(GetType(FrameType), FrameType))
                         .Add("Frame Length", FrameLength)
+                        .Add("64-Bit ID Code", IDCode)
+                        .Add("Sample Count", InternalSampleCount)
+                        .Add("Status Flags", InternalStatusFlags)
+                        .Add("Frame Count", FrameCount)
+                        .Add("Is First Frame", IsFirstFrame)
+                        .Add("Is Last Frame", IsLastFrame)
                     End With
 
                     Return m_attributes
