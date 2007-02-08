@@ -101,7 +101,7 @@ Namespace FNet
                 Return ConfigurationCell.NumberOfSatellites > 0
             End Get
             Set(ByVal value As Boolean)
-                Throw (New NotSupportedException("FNet defines synchronization validity as a dervied value based on the number of available satellites"))
+                Throw (New NotSupportedException("FNet defines synchronization validity as a derived value based on the number of available satellites"))
             End Set
         End Property
 
