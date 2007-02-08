@@ -44,7 +44,7 @@ Namespace IO
 
         Public Sub New(ByVal logFileName As String)
 
-            Me.LogFileName = logFileName
+            m_logFileName = logFileName
             m_logFileLock = New ReaderWriterLock
 
             ' We implement a synchronized process queue for log entries such that all entries will
@@ -60,16 +60,16 @@ Namespace IO
 
         Public Property LogFileName() As String
             Get
-                Return m_logFileName
-            End Get
-            Set(ByVal value As String)
                 ' If we're provided just the name of the log file and not the entire file path, we'll assume that
                 ' the log file is to be created in the directory from where the application is executing.
                 If String.IsNullOrEmpty(Tva.IO.FilePath.JustPath(m_logFileName).TrimEnd("\"c)) Then
-                    m_logFileName = Tva.IO.FilePath.JustPath(Tva.Assembly.EntryAssembly.Location) & value
+                    Return Tva.IO.FilePath.JustPath(Tva.Assembly.EntryAssembly.Location) & m_logFileName
                 Else
-                    m_logFileName = value
+                    Return m_logFileName
                 End If
+            End Get
+            Set(ByVal value As String)
+                m_logFileName = value
             End Set
         End Property
 
@@ -129,8 +129,8 @@ Namespace IO
 
             Try
                 ' Read log contents into a string
-                If File.Exists(m_logFileName) Then
-                    With File.OpenText(m_logFileName)
+                If File.Exists(Me.LogFileName) Then
+                    With File.OpenText(Me.LogFileName)
                         logData = .ReadToEnd
                         .Close()
                     End With
@@ -160,7 +160,7 @@ Namespace IO
 
             Try
                 ' Append queued data to log file
-                With File.AppendText(m_logFileName)
+                With File.AppendText(Me.LogFileName)
                     For Each item As String In items
                         .Write(item)
                     Next
