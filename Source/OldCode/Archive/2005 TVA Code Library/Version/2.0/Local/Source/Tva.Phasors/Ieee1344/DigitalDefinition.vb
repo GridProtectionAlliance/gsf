@@ -74,7 +74,6 @@ Namespace Ieee1344
             End Get
         End Property
 
-        ' TODO: May want to shadow all parents in final derived classes...
         Public Shadows ReadOnly Property Parent() As ConfigurationCell
             Get
                 Return MyBase.Parent
@@ -133,6 +132,17 @@ Namespace Ieee1344
             info.AddValue("statusFlags", m_statusFlags)
 
         End Sub
+
+        Public Overrides ReadOnly Property Attributes() As Dictionary(Of String, String)
+            Get
+                With MyBase.Attributes
+                    .Add("Normal Status", NormalStatus)
+                    .Add("Valid Input", ValidInput)
+                End With
+
+                Return MyBase.Attributes
+            End Get
+        End Property
 
     End Class
 

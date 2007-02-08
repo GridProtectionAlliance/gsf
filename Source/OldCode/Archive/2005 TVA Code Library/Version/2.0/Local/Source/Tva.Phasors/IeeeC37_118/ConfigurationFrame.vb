@@ -33,7 +33,6 @@ Namespace IeeeC37_118
         Private m_version As Byte
         Private m_timeBase As Int32
         Private m_timeQualityFlags As Int32
-        Private m_configurationRevision As UInt16
 
         Protected Sub New()
         End Sub
@@ -47,7 +46,6 @@ Namespace IeeeC37_118
             m_version = info.GetByte("version")
             m_timeBase = info.GetInt32("timeBase")
             m_timeQualityFlags = info.GetInt32("timeQualityFlags")
-            m_configurationRevision = info.GetUInt16("configurationRevision")
 
         End Sub
 
@@ -193,15 +191,6 @@ Namespace IeeeC37_118
             End Set
         End Property
 
-        Public Property ConfigurationRevision() As UInt16
-            Get
-                Return m_configurationRevision
-            End Get
-            Set(ByVal value As UInt16)
-                m_configurationRevision = value
-            End Set
-        End Property
-
         Protected Overrides ReadOnly Property HeaderLength() As UInt16
             Get
                 Return CommonFrameHeader.BinaryLength + 6
@@ -247,11 +236,6 @@ Namespace IeeeC37_118
 
                 EndianOrder.BigEndian.CopyBytes(FrameRate, buffer, 0)
 
-                If DraftRevision > DraftRevision.Draft6 Then
-                    ' Add configuration revision count for version 7 and beyond
-                    EndianOrder.BigEndian.CopyBytes(m_configurationRevision, buffer, 2)
-                End If
-
                 Return buffer
             End Get
         End Property
@@ -259,12 +243,6 @@ Namespace IeeeC37_118
         Protected Overrides Sub ParseFooterImage(ByVal state As IChannelParsingState, ByVal binaryImage() As Byte, ByVal startIndex As Int32)
 
             FrameRate = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex)
-
-            ' Parse out configuration revision count for version 7 and beyond
-            If DraftRevision > DraftRevision.Draft6 Then
-                startIndex += 2
-                m_configurationRevision = EndianOrder.BigEndian.ToUInt16(binaryImage, startIndex)
-            End If
 
         End Sub
 
@@ -277,9 +255,25 @@ Namespace IeeeC37_118
             info.AddValue("version", m_version)
             info.AddValue("timeBase", m_timeBase)
             info.AddValue("timeQualityFlags", m_timeQualityFlags)
-            info.AddValue("configurationRevision", m_configurationRevision)
 
         End Sub
+
+        Public Overrides ReadOnly Property Attributes() As Dictionary(Of String, String)
+            Get
+                With MyBase.Attributes
+                    .Add("Frame Type", FrameType & ": " & [Enum].GetName(GetType(FrameType), FrameType))
+                    .Add("Frame Length", FrameLength)
+                    .Add("Version", Version & ": " & [Enum].GetName(GetType(Version), Version))
+                    .Add("Second of Century", SecondOfCentury)
+                    .Add("Fraction of Second", FractionOfSecond)
+                    .Add("Time Quality Flags", TimeQualityFlags & ": " & [Enum].GetName(GetType(TimeQualityFlags), TimeQualityFlags))
+                    .Add("Time Quality Indicator Code", TimeQualityIndicatorCode & ": " & [Enum].GetName(GetType(TimeQualityIndicatorCode), TimeQualityIndicatorCode))
+                    .Add("Time Base", TimeBase)
+                End With
+
+                Return MyBase.Attributes
+            End Get
+        End Property
 
     End Class
 

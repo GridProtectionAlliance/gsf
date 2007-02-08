@@ -62,6 +62,18 @@ Namespace BpaPdcStream
 
         End Sub
 
+        Public Overrides ReadOnly Property DerivedType() As Type
+            Get
+                Return Me.GetType()
+            End Get
+        End Property
+
+        Public ReadOnly Property Parent() As DataCell
+            Get
+                Return m_parent
+            End Get
+        End Property
+
         Private ReadOnly Property FundamentalFrameType() As FundamentalFrameType Implements IChannelFrame.FrameType
             Get
                 Return Phasors.FundamentalFrameType.DataFrame
@@ -80,27 +92,12 @@ Namespace BpaPdcStream
             End Get
         End Property
 
-        Public Overrides ReadOnly Property DerivedType() As Type
-            Get
-                Return Me.GetType()
-            End Get
-        End Property
-
         Public Property ChannelFlags() As ChannelFlags
             Get
                 Return m_flags
             End Get
             Set(ByVal Value As ChannelFlags)
                 m_flags = Value
-            End Set
-        End Property
-
-        Public Property Parent() As DataCell
-            Get
-                Return m_parent
-            End Get
-            Set(ByVal Value As DataCell)
-                m_parent = Value
             End Set
         End Property
 

@@ -74,7 +74,6 @@ Namespace FNet
             End Get
         End Property
 
-        ' TODO: May want to shadow all parents in final derived classes...
         Public Shadows ReadOnly Property Parent() As ConfigurationCell
             Get
                 Return MyBase.Parent

@@ -448,18 +448,24 @@ Namespace IeeeC37_118
             RaiseEvent IFrameParserReceivedDataFrame(frame)
             RaiseEvent ReceivedDataFrame(frame)
 
-            ' We only need to look at first PMU data cell to determine if configuration has changed
-            If frame.Cells.Count > 0 Then
-                If frame.Cells(0).ConfigurationChangeDetected Then
-                    ' Notification should terminate after one minute...
+            Dim configurationChangeDetected As Boolean
+
+            For x As Integer = 0 To frame.Cells.Count - 1
+                If frame.Cells(x).ConfigurationChangeDetected Then
+                    configurationChangeDetected = True
+
+                    ' Configuration change detection flag should terminate after one minute, but
+                    ' we only want to send a single notification
                     If Not m_configurationChangeHandled Then
                         m_configurationChangeHandled = True
                         RaiseEvent ConfigurationChanged()
                     End If
-                Else
-                    m_configurationChangeHandled = False
+
+                    Exit For
                 End If
-            End If
+            Next
+
+            If Not configurationChangeDetected Then m_configurationChangeHandled = False
 
         End Sub
 

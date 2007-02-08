@@ -75,6 +75,12 @@ Namespace IeeeC37_118
             End Get
         End Property
 
+        Public Shadows ReadOnly Property Parent() As ConfigurationCell
+            Get
+                Return MyBase.Parent
+            End Get
+        End Property
+
         Public Property [Type]() As AnalogType
             Get
                 Return m_type
@@ -123,6 +129,13 @@ Namespace IeeeC37_118
             info.AddValue("type", m_type, GetType(AnalogType))
 
         End Sub
+
+        Public Overrides ReadOnly Property Attributes() As Dictionary(Of String, String)
+            Get
+                MyBase.Attributes.Add("Analog Type", [Type] & ": " & [Enum].GetName(GetType(AnalogType), [Type]))
+                Return MyBase.Attributes
+            End Get
+        End Property
 
     End Class
 

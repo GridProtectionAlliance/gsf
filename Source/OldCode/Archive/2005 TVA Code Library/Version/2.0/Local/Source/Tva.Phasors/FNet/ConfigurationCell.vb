@@ -76,16 +76,15 @@ Namespace FNet
 
         End Function
 
-        ' TODO: May want to shadow all parents in final derived classes - also go through code and make sure all MustInherit class properties are overridable
-        Public Shadows ReadOnly Property Parent() As ConfigurationFrame
-            Get
-                Return MyBase.Parent
-            End Get
-        End Property
-
         Public Overrides ReadOnly Property DerivedType() As System.Type
             Get
                 Return Me.GetType
+            End Get
+        End Property
+
+        Public Shadows ReadOnly Property Parent() As ConfigurationFrame
+            Get
+                Return MyBase.Parent
             End Get
         End Property
 

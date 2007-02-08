@@ -76,16 +76,15 @@ Namespace Ieee1344
 
         End Function
 
-        ' TODO: May want to shadow all parents in final derived classes - also go through code and make sure all MustInherit class properties are overridable
-        Public Shadows ReadOnly Property Parent() As ConfigurationFrame
-            Get
-                Return MyBase.Parent
-            End Get
-        End Property
-
         Public Overrides ReadOnly Property DerivedType() As System.Type
             Get
                 Return Me.GetType
+            End Get
+        End Property
+
+        Public Shadows ReadOnly Property Parent() As ConfigurationFrame
+            Get
+                Return MyBase.Parent
             End Get
         End Property
 
@@ -298,6 +297,19 @@ Namespace Ieee1344
             info.AddValue("statusFlags", m_statusFlags)
 
         End Sub
+
+        Public Overrides ReadOnly Property Attributes() As Dictionary(Of String, String)
+            Get
+                With MyBase.Attributes
+                    .Add("Status Flags", StatusFlags)
+                    .Add("Synchronization Is Valid", SynchronizationIsValid)
+                    .Add("Data Is Valid", DataIsValid)
+                    .Add("Trigger Status", TriggerStatus & ": " & [Enum].GetName(GetType(TriggerStatus), TriggerStatus))
+                End With
+
+                Return MyBase.Attributes
+            End Get
+        End Property
 
     End Class
 

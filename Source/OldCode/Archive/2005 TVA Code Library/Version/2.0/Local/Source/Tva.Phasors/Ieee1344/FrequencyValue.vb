@@ -69,6 +69,12 @@ Namespace Ieee1344
             End Get
         End Property
 
+        Public Shadows ReadOnly Property Parent() As DataCell
+            Get
+                Return MyBase.Parent
+            End Get
+        End Property
+
         Public Shadows Property Definition() As FrequencyDefinition
             Get
                 Return MyBase.Definition
@@ -82,8 +88,8 @@ Namespace Ieee1344
             Get
                 Dim length As UInt16
 
-                If Definition.FrequencyAvailable Then length += 2
-                If Definition.DfDtAvailable Then length += 2
+                If Definition.FrequencyIsAvailable Then length += 2
+                If Definition.DfDtIsAvailable Then length += 2
 
                 Return length
             End Get
@@ -93,8 +99,8 @@ Namespace Ieee1344
             Get
                 Dim buffer As Byte() = CreateArray(Of Byte)(BodyLength)
 
-                If Definition.FrequencyAvailable Then EndianOrder.BigEndian.CopyBytes(UnscaledFrequency, buffer, 0)
-                If Definition.DfDtAvailable Then EndianOrder.BigEndian.CopyBytes(UnscaledDfDt, buffer, 2)
+                If Definition.FrequencyIsAvailable Then EndianOrder.BigEndian.CopyBytes(UnscaledFrequency, buffer, 0)
+                If Definition.DfDtIsAvailable Then EndianOrder.BigEndian.CopyBytes(UnscaledDfDt, buffer, 2)
 
                 Return buffer
             End Get
@@ -103,12 +109,12 @@ Namespace Ieee1344
         Protected Overrides Sub ParseBodyImage(ByVal state As IChannelParsingState, ByVal binaryImage() As Byte, ByVal startIndex As Integer)
 
             ' Note that IEEE 1344 only supports scaled integers (no need to worry about floating points)
-            If Definition.FrequencyAvailable Then
+            If Definition.FrequencyIsAvailable Then
                 UnscaledFrequency = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex)
                 startIndex += 2
             End If
 
-            If Definition.DfDtAvailable Then UnscaledDfDt = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex)
+            If Definition.DfDtIsAvailable Then UnscaledDfDt = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex)
 
         End Sub
 

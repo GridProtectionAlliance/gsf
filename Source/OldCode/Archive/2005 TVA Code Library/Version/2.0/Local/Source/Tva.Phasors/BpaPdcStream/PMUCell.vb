@@ -57,6 +57,12 @@ Namespace BpaPdcStream
             End Get
         End Property
 
+        Public Shadows ReadOnly Property Parent() As PMUCellCollection
+            Get
+                Return MyBase.Parent
+            End Get
+        End Property
+
         Public Property ChannelFlags() As ChannelFlags
             Get
                 Return m_flags

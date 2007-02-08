@@ -78,7 +78,7 @@ Public MustInherit Class HeaderFrameBase
         End Set
     End Property
 
-    Public Overrides ReadOnly Property Attributes() As System.Collections.Generic.Dictionary(Of String, String)
+    Public Overrides ReadOnly Property Attributes() As Dictionary(Of String, String)
         Get
             MyBase.Attributes.Add("Header Data", HeaderData)
             Return MyBase.Attributes

@@ -93,6 +93,21 @@ Namespace FNet
             End Get
         End Property
 
+        Public Shadows ReadOnly Property Parent() As DataCell
+            Get
+                Return MyBase.Parent
+            End Get
+        End Property
+
+        Public Shadows Property Definition() As PhasorDefinition
+            Get
+                Return MyBase.Definition
+            End Get
+            Set(ByVal value As PhasorDefinition)
+                MyBase.Definition = value
+            End Set
+        End Property
+
     End Class
 
 End Namespace

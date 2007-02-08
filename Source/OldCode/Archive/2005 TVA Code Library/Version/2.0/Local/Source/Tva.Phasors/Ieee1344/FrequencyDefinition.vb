@@ -78,7 +78,13 @@ Namespace Ieee1344
             End Get
         End Property
 
-        Public Property FrequencyAvailable() As Boolean
+        Public Shadows ReadOnly Property Parent() As ConfigurationCell
+            Get
+                Return MyBase.Parent
+            End Get
+        End Property
+
+        Public Property FrequencyIsAvailable() As Boolean
             Get
                 Return (m_statusFlags And Bit8) = 0
             End Get
@@ -91,7 +97,7 @@ Namespace Ieee1344
             End Set
         End Property
 
-        Public Property DfDtAvailable() As Boolean
+        Public Property DfDtIsAvailable() As Boolean
             Get
                 Return (m_statusFlags And Bit9) = 0
             End Get
@@ -137,6 +143,17 @@ Namespace Ieee1344
             info.AddValue("statusFlags", m_statusFlags)
 
         End Sub
+
+        Public Overrides ReadOnly Property Attributes() As Dictionary(Of String, String)
+            Get
+                With MyBase.Attributes
+                    .Add("Frequency Is Available", FrequencyIsAvailable)
+                    .Add("df/dt Is Available", DfDtIsAvailable)
+                End With
+
+                Return MyBase.Attributes
+            End Get
+        End Property
 
     End Class
 

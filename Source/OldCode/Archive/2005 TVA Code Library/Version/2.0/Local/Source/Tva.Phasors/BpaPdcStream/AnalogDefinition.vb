@@ -57,6 +57,12 @@ Namespace BpaPdcStream
             End Get
         End Property
 
+        Public Shadows ReadOnly Property Parent() As ConfigurationCell
+            Get
+                Return MyBase.Parent
+            End Get
+        End Property
+
         Public Overrides ReadOnly Property MaximumLabelLength() As Int32
             Get
                 Return Int32.MaxValue

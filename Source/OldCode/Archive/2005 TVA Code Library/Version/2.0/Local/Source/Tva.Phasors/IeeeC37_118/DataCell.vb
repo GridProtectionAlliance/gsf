@@ -93,6 +93,21 @@ Namespace IeeeC37_118
             End Get
         End Property
 
+        Public Shadows ReadOnly Property Parent() As DataFrame
+            Get
+                Return MyBase.Parent
+            End Get
+        End Property
+
+        Public Shadows Property ConfigurationCell() As ConfigurationCell
+            Get
+                Return MyBase.ConfigurationCell
+            End Get
+            Set(ByVal value As ConfigurationCell)
+                MyBase.ConfigurationCell = value
+            End Set
+        End Property
+
         Public Shadows Property StatusFlags() As StatusFlags
             Get
                 Return MyBase.StatusFlags And Not (StatusFlags.UnlockedTimeMask Or StatusFlags.TriggerReasonMask)

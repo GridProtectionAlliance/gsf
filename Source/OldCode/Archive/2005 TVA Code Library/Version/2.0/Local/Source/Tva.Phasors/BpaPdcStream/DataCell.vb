@@ -97,6 +97,12 @@ Namespace BpaPdcStream
             End Get
         End Property
 
+        Public Shadows ReadOnly Property Parent() As DataFrame
+            Get
+                Return MyBase.Parent
+            End Get
+        End Property
+
         Public Shadows Property ConfigurationCell() As ConfigurationCell
             Get
                 Return MyBase.ConfigurationCell

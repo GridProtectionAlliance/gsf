@@ -137,7 +137,7 @@ Public MustInherit Class DigitalValueBase
 
     End Sub
 
-    Public Overrides ReadOnly Property Attributes() As System.Collections.Generic.Dictionary(Of String, String)
+    Public Overrides ReadOnly Property Attributes() As Dictionary(Of String, String)
         Get
             With MyBase.Attributes
                 Dim valueBytes As Byte() = BitConverter.GetBytes(Value)

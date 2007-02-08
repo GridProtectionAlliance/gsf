@@ -303,7 +303,7 @@ Namespace Ieee1344
 
             End Sub
 
-            Public ReadOnly Property Attributes() As System.Collections.Generic.Dictionary(Of String, String) Implements IChannel.Attributes
+            Public ReadOnly Property Attributes() As Dictionary(Of String, String) Implements IChannel.Attributes
                 Get
                     ' Create a new attributes dictionary or clear the contents of any existing one
                     If m_attributes Is Nothing Then
@@ -315,19 +315,21 @@ Namespace Ieee1344
                     With m_attributes
                         .Add("Derived Type", DerivedType.Name)
                         .Add("Binary Length", BinaryLength)
-                        .Add("Frame Type", FrameType & ": " & [Enum].GetName(GetType(FrameType), FrameType))
+                        .Add("Total Cells", "0")
                         .Add("Fundamental Frame Type", FundamentalFrameType & ": " & [Enum].GetName(GetType(FundamentalFrameType), FundamentalFrameType))
-                        .Add("Frame Length", FrameLength)
                         .Add("ID Code", IDCode)
+                        .Add("Is Partial Frame", IsPartial)
+                        .Add("Published", Published)
+                        .Add("Ticks", Ticks)
+                        .Add("Timestamp", Timestamp)
+                        .Add("Frame Type", FrameType & ": " & [Enum].GetName(GetType(FrameType), FrameType))
+                        .Add("Frame Length", FrameLength)
+                        .Add("64-Bit ID Code", IDCode)
                         .Add("Sample Count", InternalSampleCount)
                         .Add("Status Flags", InternalStatusFlags)
                         .Add("Frame Count", FrameCount)
                         .Add("Is First Frame", IsFirstFrame)
                         .Add("Is Last Frame", IsLastFrame)
-                        .Add("Is Partial Frame", IsPartial)
-                        .Add("Published", Published)
-                        .Add("Ticks", Ticks)
-                        .Add("Timestamp", Timestamp)
                     End With
 
                     Return m_attributes

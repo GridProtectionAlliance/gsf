@@ -74,6 +74,12 @@ Namespace IeeeC37_118
             End Get
         End Property
 
+        Public Shadows ReadOnly Property Parent() As ConfigurationCell
+            Get
+                Return MyBase.Parent
+            End Get
+        End Property
+
         Protected Overrides ReadOnly Property BodyLength() As UInt16
             Get
                 Return 2

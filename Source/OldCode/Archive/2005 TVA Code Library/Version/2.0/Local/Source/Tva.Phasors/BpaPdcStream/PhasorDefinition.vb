@@ -99,6 +99,12 @@ Namespace BpaPdcStream
             End Get
         End Property
 
+        Public Shadows ReadOnly Property Parent() As ConfigurationCell
+            Get
+                Return MyBase.Parent
+            End Get
+        End Property
+
         Public Property Ratio() As Single
             Get
                 Return m_ratio

@@ -86,15 +86,24 @@ Namespace BpaPdcStream
             End Get
         End Property
 
-        Protected Overrides ReadOnly Property FundamentalFrameType() As FundamentalFrameType
-            Get
-                Return Phasors.FundamentalFrameType.DataFrame
-            End Get
-        End Property
-
         Public Shadows ReadOnly Property Cells() As DataCellCollection
             Get
                 Return MyBase.Cells
+            End Get
+        End Property
+
+        Public Shadows Property ConfigurationFrame() As ConfigurationFrame
+            Get
+                Return MyBase.ConfigurationFrame
+            End Get
+            Set(ByVal value As ConfigurationFrame)
+                MyBase.ConfigurationFrame = value
+            End Set
+        End Property
+
+        Protected Overrides ReadOnly Property FundamentalFrameType() As FundamentalFrameType
+            Get
+                Return Phasors.FundamentalFrameType.DataFrame
             End Get
         End Property
 

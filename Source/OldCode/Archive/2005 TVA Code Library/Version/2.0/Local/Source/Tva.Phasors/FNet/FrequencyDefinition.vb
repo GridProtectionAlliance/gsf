@@ -78,6 +78,12 @@ Namespace FNet
             End Get
         End Property
 
+        Public Shadows ReadOnly Property Parent() As ConfigurationCell
+            Get
+                Return MyBase.Parent
+            End Get
+        End Property
+
         Public Property FrequencyAvailable() As Boolean
             Get
                 Return (m_statusFlags And Bit8) = 0

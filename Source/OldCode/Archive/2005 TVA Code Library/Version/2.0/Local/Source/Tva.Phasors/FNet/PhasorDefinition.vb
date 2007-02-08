@@ -69,6 +69,12 @@ Namespace FNet
             End Get
         End Property
 
+        Public Shadows ReadOnly Property Parent() As ConfigurationCell
+            Get
+                Return MyBase.Parent
+            End Get
+        End Property
+
         Friend Shared ReadOnly Property ConversionFactorLength() As Int32
             Get
                 Return 4

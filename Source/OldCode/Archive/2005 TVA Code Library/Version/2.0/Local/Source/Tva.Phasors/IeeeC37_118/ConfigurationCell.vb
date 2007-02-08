@@ -27,9 +27,7 @@ Namespace IeeeC37_118
 
         Inherits ConfigurationCellBase
 
-        ' Because the protocol doesn't include a version number that can account draft implementations, we must manually account for this where needed
         Private m_formatFlags As FormatFlags
-        Private m_configurationCount As UInt16
 
         Protected Sub New()
         End Sub
@@ -40,7 +38,6 @@ Namespace IeeeC37_118
 
             ' Deserialize configuration cell
             m_formatFlags = info.GetValue("formatFlags", GetType(FormatFlags))
-            m_configurationCount = info.GetUInt16("configurationCount")
 
         End Sub
 
@@ -77,7 +74,6 @@ Namespace IeeeC37_118
 
         End Function
 
-        ' TODO: May want to shadow all parents in final derived classes - also go through code and make sure all MustInherit class properties are overridable
         Public Shadows ReadOnly Property Parent() As ConfigurationFrame
             Get
                 Return MyBase.Parent
@@ -96,15 +92,6 @@ Namespace IeeeC37_118
             End Get
             Set(ByVal value As FormatFlags)
                 m_formatFlags = value
-            End Set
-        End Property
-
-        Public Property ConfigurationCount() As UInt16
-            Get
-                Return m_configurationCount
-            End Get
-            Set(ByVal value As UInt16)
-                m_configurationCount = value
             End Set
         End Property
 
@@ -207,7 +194,7 @@ Namespace IeeeC37_118
                     PhasorDefinitions.Count * PhasorDefinition.ConversionFactorLength + _
                     AnalogDefinitions.Count * AnalogDefinition.ConversionFactorLength + _
                     DigitalDefinitions.Count * DigitalDefinition.ConversionFactorLength + _
-                    IIf(Parent.DraftRevision = DraftRevision.Draft7, 2, 0)
+                    IIf(Parent.DraftRevision > DraftRevision.Draft6, 2, 0)
             End Get
         End Property
 
@@ -239,7 +226,7 @@ Namespace IeeeC37_118
                 CopyImage(MyBase.FooterImage, buffer, index, MyBase.FooterLength)
 
                 ' Include configuration count (new for version 7.0)
-                If Parent.DraftRevision = DraftRevision.Draft7 Then EndianOrder.BigEndian.CopyBytes(m_configurationCount, buffer, index)
+                If Parent.DraftRevision > DraftRevision.Draft6 Then EndianOrder.BigEndian.CopyBytes(RevisionCount, buffer, index)
 
                 Return buffer
             End Get
@@ -275,7 +262,7 @@ Namespace IeeeC37_118
             MyBase.ParseFooterImage(state, binaryImage, startIndex)
 
             ' Get configuration count (new for version 7.0)
-            If Parent.DraftRevision = DraftRevision.Draft7 Then m_configurationCount = EndianOrder.BigEndian.ToUInt16(binaryImage, startIndex)
+            If Parent.DraftRevision > DraftRevision.Draft6 Then RevisionCount = EndianOrder.BigEndian.ToUInt16(binaryImage, startIndex)
 
         End Sub
 
@@ -285,7 +272,6 @@ Namespace IeeeC37_118
 
             ' Serialize configuration cell
             info.AddValue("formatFlags", m_formatFlags, GetType(FormatFlags))
-            info.AddValue("configurationCount", m_configurationCount)
 
         End Sub
 

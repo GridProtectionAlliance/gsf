@@ -77,6 +77,12 @@ Namespace BpaPdcStream
             End Get
         End Property
 
+        Public Shadows ReadOnly Property Parent() As ConfigurationCell
+            Get
+                Return MyBase.Parent
+            End Get
+        End Property
+
         Public Shared ReadOnly Property ConfigFileFormat(ByVal frequency As FrequencyDefinition) As String
             Get
                 With New StringBuilder

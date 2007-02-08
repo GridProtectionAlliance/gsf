@@ -78,7 +78,7 @@ Namespace FNet
             End Get
         End Property
 
-        Public Shadows Property ConfigurationFrame() As FNet.ConfigurationFrame
+        Public Shadows Property ConfigurationFrame() As ConfigurationFrame
             Get
                 Return MyBase.ConfigurationFrame
             End Get

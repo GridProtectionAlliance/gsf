@@ -55,4 +55,6 @@ Public Interface IConfigurationCell
 
     ReadOnly Property FrameRate() As Int16
 
+    Property RevisionCount() As UInt16
+
 End Interface

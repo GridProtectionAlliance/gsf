@@ -77,7 +77,7 @@ Public MustInherit Class FrequencyDefinitionBase
         End Get
     End Property
 
-    Public ReadOnly Property NominalFrequency() As LineFrequency Implements IFrequencyDefinition.NominalFrequency
+    Public Overridable ReadOnly Property NominalFrequency() As LineFrequency Implements IFrequencyDefinition.NominalFrequency
         Get
             Return Parent.NominalFrequency
         End Get
@@ -130,7 +130,7 @@ Public MustInherit Class FrequencyDefinitionBase
 
     End Sub
 
-    Public Overrides ReadOnly Property Attributes() As System.Collections.Generic.Dictionary(Of String, String)
+    Public Overrides ReadOnly Property Attributes() As Dictionary(Of String, String)
         Get
             With MyBase.Attributes
                 .Add("df/dt Offset", DfDtOffset)

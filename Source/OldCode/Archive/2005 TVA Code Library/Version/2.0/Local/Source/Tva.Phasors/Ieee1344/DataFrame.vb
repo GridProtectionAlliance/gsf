@@ -78,7 +78,7 @@ Namespace Ieee1344
             End Get
         End Property
 
-        Public Shadows Property ConfigurationFrame() As Ieee1344.ConfigurationFrame
+        Public Shadows Property ConfigurationFrame() As ConfigurationFrame
             Get
                 Return MyBase.ConfigurationFrame
             End Get
@@ -184,6 +184,19 @@ Namespace Ieee1344
             info.AddValue("sampleCount", m_sampleCount)
 
         End Sub
+
+        Public Overrides ReadOnly Property Attributes() As Dictionary(Of String, String)
+            Get
+                With MyBase.Attributes
+                    .Add("Frame Type", FrameType & ": " & [Enum].GetName(GetType(FrameType), FrameType))
+                    .Add("Frame Length", FrameLength)
+                    .Add("64-Bit ID Code", IDCode)
+                    .Add("Sample Count", SampleCount)
+                End With
+
+                Return MyBase.Attributes
+            End Get
+        End Property
 
     End Class
 

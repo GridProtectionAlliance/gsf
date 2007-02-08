@@ -175,6 +175,23 @@ Namespace IeeeC37_118
 
         End Sub
 
+        Public Overrides ReadOnly Property Attributes() As Dictionary(Of String, String)
+            Get
+                With MyBase.Attributes
+                    .Add("Frame Type", FrameType & ": " & [Enum].GetName(GetType(FrameType), FrameType))
+                    .Add("Frame Length", FrameLength)
+                    .Add("Version", Version & ": " & [Enum].GetName(GetType(Version), Version))
+                    .Add("Second of Century", SecondOfCentury)
+                    .Add("Fraction of Second", FractionOfSecond)
+                    .Add("Time Quality Flags", TimeQualityFlags & ": " & [Enum].GetName(GetType(TimeQualityFlags), TimeQualityFlags))
+                    .Add("Time Quality Indicator Code", TimeQualityIndicatorCode & ": " & [Enum].GetName(GetType(TimeQualityIndicatorCode), TimeQualityIndicatorCode))
+                    .Add("Time Base", TimeBase)
+                End With
+
+                Return MyBase.Attributes
+            End Get
+        End Property
+
     End Class
 
 End Namespace

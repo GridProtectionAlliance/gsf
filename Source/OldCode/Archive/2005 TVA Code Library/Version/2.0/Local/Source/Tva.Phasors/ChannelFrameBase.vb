@@ -100,7 +100,7 @@ Public MustInherit Class ChannelFrameBase(Of T As IChannelCell)
         End Get
     End Property
 
-    Public ReadOnly Property Measurements() As Dictionary(Of MeasurementKey, IMeasurement) Implements IFrame.Measurements
+    Public Overridable ReadOnly Property Measurements() As Dictionary(Of MeasurementKey, IMeasurement) Implements IFrame.Measurements
         Get
             If m_measurements Is Nothing Then m_measurements = New Dictionary(Of MeasurementKey, IMeasurement)
             Return m_measurements
@@ -268,7 +268,7 @@ Public MustInherit Class ChannelFrameBase(Of T As IChannelCell)
 
     End Sub
 
-    Public Overrides ReadOnly Property Attributes() As System.Collections.Generic.Dictionary(Of String, String)
+    Public Overrides ReadOnly Property Attributes() As Dictionary(Of String, String)
         Get
             With MyBase.Attributes
                 .Add("Total Cells", Cells.Count)

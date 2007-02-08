@@ -69,6 +69,12 @@ Namespace IeeeC37_118
             End Get
         End Property
 
+        Public Shadows ReadOnly Property Parent() As DataCell
+            Get
+                Return MyBase.Parent
+            End Get
+        End Property
+
     End Class
 
 End Namespace

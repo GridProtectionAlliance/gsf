@@ -118,7 +118,7 @@ Public MustInherit Class ChannelCollectionBase(Of T As IChannel)
 
     End Sub
 
-    Public Overridable ReadOnly Property Attributes() As System.Collections.Generic.Dictionary(Of String, String) Implements IChannel.Attributes
+    Public Overridable ReadOnly Property Attributes() As Dictionary(Of String, String) Implements IChannel.Attributes
         Get
             ' Create a new attributes dictionary or clear the contents of any existing one
             If m_attributes Is Nothing Then

@@ -88,11 +88,19 @@ Namespace Ieee1344
             End Get
         End Property
 
-        ' TODO: May want to shadow all parents in final derived classes - also go through code and make sure all MustInherit class properties are overridable
         Public Shadows ReadOnly Property Parent() As DataFrame
             Get
                 Return MyBase.Parent
             End Get
+        End Property
+
+        Public Shadows Property ConfigurationCell() As ConfigurationCell
+            Get
+                Return MyBase.ConfigurationCell
+            End Get
+            Set(ByVal value As ConfigurationCell)
+                MyBase.ConfigurationCell = value
+            End Set
         End Property
 
         Public Overrides Property SynchronizationIsValid() As Boolean
@@ -128,6 +136,13 @@ Namespace Ieee1344
             Set(ByVal value As TriggerStatus)
                 StatusFlags = (StatusFlags And Not TriggerMask) Or value
             End Set
+        End Property
+
+        Public Overrides ReadOnly Property Attributes() As Dictionary(Of String, String)
+            Get
+                MyBase.Attributes.Add("Trigger Status", TriggerStatus & ": " & [Enum].GetName(GetType(TriggerStatus), TriggerStatus))
+                Return MyBase.Attributes
+            End Get
         End Property
 
     End Class

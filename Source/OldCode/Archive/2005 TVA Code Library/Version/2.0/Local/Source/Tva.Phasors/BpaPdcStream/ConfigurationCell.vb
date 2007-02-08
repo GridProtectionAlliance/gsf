@@ -78,6 +78,12 @@ Namespace BpaPdcStream
             End Get
         End Property
 
+        Public Shadows ReadOnly Property Parent() As ConfigurationFrame
+            Get
+                Return MyBase.Parent
+            End Get
+        End Property
+
         Public Overrides ReadOnly Property MaximumStationNameLength() As Int32
             Get
                 ' The station name in the PDCstream is read from an INI file, so there is no set limit

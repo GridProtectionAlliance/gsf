@@ -120,7 +120,7 @@ Public Class CommandCell
 
     End Sub
 
-    Public Overrides ReadOnly Property Attributes() As System.Collections.Generic.Dictionary(Of String, String)
+    Public Overrides ReadOnly Property Attributes() As Dictionary(Of String, String)
         Get
             MyBase.Attributes.Add("Extended Data Byte", ExtendedDataByte.ToString("x"c))
             Return MyBase.Attributes

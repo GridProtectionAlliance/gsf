@@ -24,6 +24,8 @@ Imports Tva.Phasors.Common
 
 Namespace FNet
 
+    ' NOTE TO RYAN:  The IEEEC37.118 Parser is a litter simpler than the IEEE1344 below and may provide a better model.
+
     ''' <summary>This class parses an IEEE 1344 binary data stream and returns parsed data via events</summary>
     ''' <remarks>Frame parser is implemented as a write-only stream - this way data can come from any source</remarks>
     <CLSCompliant(False)> _

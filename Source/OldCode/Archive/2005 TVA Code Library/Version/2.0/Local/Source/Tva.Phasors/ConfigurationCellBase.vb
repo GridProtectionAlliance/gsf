@@ -35,6 +35,7 @@ Public MustInherit Class ConfigurationCellBase
     Private m_analogDefinitions As AnalogDefinitionCollection
     Private m_digitalDefinitions As DigitalDefinitionCollection
     Private m_nominalFrequency As LineFrequency
+    Private m_revisionCount As UInt16
 
     Protected Sub New()
     End Sub
@@ -51,6 +52,7 @@ Public MustInherit Class ConfigurationCellBase
         m_analogDefinitions = info.GetValue("analogDefinitions", GetType(AnalogDefinitionCollection))
         m_digitalDefinitions = info.GetValue("digitalDefinitions", GetType(DigitalDefinitionCollection))
         m_nominalFrequency = info.GetValue("nominalFrequency", GetType(LineFrequency))
+        m_revisionCount = info.GetUInt16("revisionCount")
 
     End Sub
 
@@ -218,6 +220,15 @@ Public MustInherit Class ConfigurationCellBase
         End Get
     End Property
 
+    Public Overridable Property RevisionCount() As UInt16 Implements IConfigurationCell.RevisionCount
+        Get
+            Return m_revisionCount
+        End Get
+        Set(ByVal value As UInt16)
+            m_revisionCount = value
+        End Set
+    End Property
+
     Public Overridable Function CompareTo(ByVal obj As Object) As Int32 Implements IComparable.CompareTo
 
         ' We sort configuration cells by ID code...
@@ -330,10 +341,11 @@ Public MustInherit Class ConfigurationCellBase
         info.AddValue("analogDefinitions", m_analogDefinitions, GetType(AnalogDefinitionCollection))
         info.AddValue("digitalDefinitions", m_digitalDefinitions, GetType(DigitalDefinitionCollection))
         info.AddValue("nominalFrequency", m_nominalFrequency, GetType(LineFrequency))
+        info.AddValue("revisionCount", m_revisionCount)
 
     End Sub
 
-    Public Overrides ReadOnly Property Attributes() As System.Collections.Generic.Dictionary(Of String, String)
+    Public Overrides ReadOnly Property Attributes() As Dictionary(Of String, String)
         Get
             With MyBase.Attributes
                 .Add("Station Name", StationName)
@@ -346,6 +358,7 @@ Public MustInherit Class ConfigurationCellBase
                 .Add("Total Analog Definitions", AnalogDefinitions.Count)
                 .Add("Total Digital Definitions", DigitalDefinitions.Count)
                 .Add("Nominal Frequency", NominalFrequency & " Hz")
+                .Add("Revision Count", RevisionCount)
                 .Add("Maximum Station Name Length", MaximumStationNameLength)
                 .Add("ID Label Length", IDLabelLength)
             End With
