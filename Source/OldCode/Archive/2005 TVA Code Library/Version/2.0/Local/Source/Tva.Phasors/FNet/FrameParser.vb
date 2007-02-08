@@ -302,7 +302,7 @@ Namespace FNet
                         Exit Do
                     End If
 
-                    ' Entire frame is availble, so we go ahead and parse it
+                    ' Entire frame is available, so we go ahead and parse it
                     RaiseEvent ReceivedFrameBufferImage(FundamentalFrameType.DataFrame, buffer, startByteIndex, endByteIndex - startByteIndex + 1)
 
                     ' If no configuration frame has been created, we create one now

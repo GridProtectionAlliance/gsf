@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  PhasorValue.vb - Phasor value
+'  PhasorValue.vb - FNet Phasor value
 '  Copyright © 2005 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005

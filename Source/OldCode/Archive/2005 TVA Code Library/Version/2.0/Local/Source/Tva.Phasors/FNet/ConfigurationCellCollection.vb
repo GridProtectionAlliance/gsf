@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  ConfigurationCellCollection.vb - IEEE 1344 specific configuration cell collection
+'  ConfigurationCellCollection.vb - FNet specific configuration cell collection
 '  Copyright © 2005 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005

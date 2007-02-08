@@ -22,7 +22,7 @@ Namespace FNet
         UnitID
         [Date]
         Time
-        SampleCount
+        SampleIndex
         Analog
         Frequency
         Voltage

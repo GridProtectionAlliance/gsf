@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  DataCellCollection.vb - IEEE 1344 specific data cell collection
+'  DataCellCollection.vb - FNet specific data cell collection
 '  Copyright © 2005 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005

@@ -194,14 +194,14 @@ Namespace FNet
                 Data = Encoding.ASCII.GetString(binaryImage, startIndex + 1, stopByteIndex - startIndex - 1).Split(" "c)
 
                 ' Get timestamp of dat record
-                Parent.Ticks = ParseTimestamp(data(Element.Date), data(Element.Time), Convert.ToInt32(data(Element.SampleCount)), .FrameRate)
+                Parent.Ticks = ParseTimestamp(data(Element.Date), data(Element.Time), Convert.ToInt32(data(Element.SampleIndex)), .FrameRate)
 
                 ' Parse out first frequency (can be long/lat at top of minute)
                 m_analogValue = Convert.ToSingle(data(Element.Analog))
 
                 If Convert.ToInt32(data(Element.Time).Substring(4, 2)) = 0 Then
                     With DirectCast(.Parent, ConfigurationFrame)
-                        Select Case Convert.ToInt32(data(Element.SampleCount))
+                        Select Case Convert.ToInt32(data(Element.SampleIndex))
                             Case 0
                                 .Longitude = m_analogValue
                             Case 1

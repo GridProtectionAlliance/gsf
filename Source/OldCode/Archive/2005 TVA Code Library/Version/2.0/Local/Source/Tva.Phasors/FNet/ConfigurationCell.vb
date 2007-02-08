@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  ConfigurationCell.vb - IEEE 1344 Cconfiguration cell
+'  ConfigurationCell.vb - FNet Cconfiguration cell
 '  Copyright © 2005 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005
