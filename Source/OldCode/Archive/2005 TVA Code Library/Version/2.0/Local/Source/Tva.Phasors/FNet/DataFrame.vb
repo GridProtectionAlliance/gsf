@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  DataFrame.vb - IEEE1344 Data Frame
+'  DataFrame.vb - FNet Data Frame
 '  Copyright © 2005 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005
@@ -26,9 +26,8 @@ Namespace FNet
     Public Class DataFrame
 
         Inherits DataFrameBase
-        Implements ICommonFrameHeader
 
-        Private m_sampleCount As Int16
+        Private m_sampleIndex As Int16
 
         Protected Sub New()
         End Sub
@@ -38,31 +37,26 @@ Namespace FNet
             MyBase.New(info, context)
 
             ' Deserialize data frame
-            m_sampleCount = info.GetInt16("sampleCount")
+            m_sampleIndex = info.GetInt16("sampleIndex")
 
         End Sub
 
         Public Sub New(ByVal ticks As Long, ByVal configurationFrame As ConfigurationFrame)
 
             MyBase.New(New DataCellCollection, ticks, configurationFrame)
-            CommonFrameHeader.FrameType(Me) = FNet.FrameType.DataFrame
 
         End Sub
 
-        Public Sub New(ByVal parsedFrameHeader As ICommonFrameHeader, ByVal configurationFrame As ConfigurationFrame, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
+        Public Sub New(ByVal configurationFrame As ConfigurationFrame, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
-            MyBase.New(New DataFrameParsingState(New DataCellCollection, parsedFrameHeader.FrameLength, configurationFrame, _
+            MyBase.New(New DataFrameParsingState(New DataCellCollection, 0, configurationFrame, _
                 AddressOf FNet.DataCell.CreateNewDataCell), binaryImage, startIndex)
-
-            CommonFrameHeader.FrameType(Me) = FNet.FrameType.DataFrame
-            CommonFrameHeader.Clone(parsedFrameHeader, Me)
 
         End Sub
 
         Public Sub New(ByVal dataFrame As IDataFrame)
 
             MyBase.New(dataFrame)
-            CommonFrameHeader.FrameType(Me) = FNet.FrameType.DataFrame
 
         End Sub
 
@@ -87,111 +81,35 @@ Namespace FNet
             End Set
         End Property
 
-        Public Shadows Property IDCode() As UInt64 Implements ICommonFrameHeader.IDCode
+        Public Property SampleIndex() As Int16
             Get
-                Return ConfigurationFrame.IDCode
-            End Get
-            Friend Set(ByVal value As UInt64)
-                ' ID code is readonly for data frames - we don't throw an exception here if someone attempts to change
-                ' the ID code on a data frame (e.g., the CommonFrameHeader.Clone method will attempt to copy this property)
-                ' but we don't do anything with the value either.
-            End Set
-        End Property
-
-        Public ReadOnly Property FrameLength() As Int16 Implements ICommonFrameHeader.FrameLength
-            Get
-                Return CommonFrameHeader.FrameLength(Me)
-            End Get
-        End Property
-
-        Public ReadOnly Property DataLength() As Int16 Implements ICommonFrameHeader.DataLength
-            Get
-                Return CommonFrameHeader.DataLength(Me)
-            End Get
-        End Property
-
-        Public Property SampleCount() As Int16
-            Get
-                Return CommonFrameHeader.SampleCount(Me)
+                Return m_sampleIndex
             End Get
             Set(ByVal value As Int16)
-                CommonFrameHeader.SampleCount(Me) = value
+                m_sampleIndex = value
             End Set
         End Property
 
-        Private Property InternalSampleCount() As Int16 Implements ICommonFrameHeader.InternalSampleCount
-            Get
-                Return m_sampleCount
-            End Get
-            Set(ByVal value As Int16)
-                m_sampleCount = value
-            End Set
-        End Property
+        Protected Overrides Function ChecksumIsValid(ByVal buffer() As Byte, ByVal startIndex As Integer) As Boolean
 
-        ' Since IEEE 1344 only supports a single PMU there will only be one cell, so we just share status flags with our only child
-        ' and expose the value at the parent level for convience in determing frame length at the frame level
-        Private Property InternalStatusFlags() As Short Implements ICommonFrameHeader.InternalStatusFlags
-            Get
-                Return Cells(0).StatusFlags
-            End Get
-            Set(ByVal value As Int16)
-                Cells(0).StatusFlags = value
-            End Set
-        End Property
-
-        Public Shadows ReadOnly Property TimeTag() As NtpTimeTag Implements ICommonFrameHeader.TimeTag
-            Get
-                Return CommonFrameHeader.TimeTag(Me)
-            End Get
-        End Property
-
-        Public ReadOnly Property FrameType() As FrameType Implements ICommonFrameHeader.FrameType
-            Get
-                Return FNet.FrameType.DataFrame
-            End Get
-        End Property
-
-        Protected Overrides ReadOnly Property FundamentalFrameType() As FundamentalFrameType Implements ICommonFrameHeader.FundamentalFrameType
-            Get
-                Return MyBase.FundamentalFrameType
-            End Get
-        End Property
-
-        Protected Overrides Function CalculateChecksum(ByVal buffer() As Byte, ByVal offset As Int32, ByVal length As Int32) As UInt16
-
-            ' IEEE 1344 uses CRC16 to calculate checksum for frames
-            Return CRC16(UInt16.MaxValue, buffer, offset, length)
+            ' FNet uses no checksum, we assume data packet is valid
+            Return True
 
         End Function
-
-        Protected Overrides ReadOnly Property HeaderLength() As UInt16
-            Get
-                Return CommonFrameHeader.BinaryLength
-            End Get
-        End Property
-
-        Protected Overrides ReadOnly Property HeaderImage() As Byte()
-            Get
-                Return CommonFrameHeader.BinaryImage(Me)
-            End Get
-        End Property
 
         Public Overrides Sub GetObjectData(ByVal info As System.Runtime.Serialization.SerializationInfo, ByVal context As System.Runtime.Serialization.StreamingContext)
 
             MyBase.GetObjectData(info, context)
 
             ' Serialize data frame
-            info.AddValue("sampleCount", m_sampleCount)
+            info.AddValue("sampleIndex", m_sampleIndex)
 
         End Sub
 
         Public Overrides ReadOnly Property Attributes() As Dictionary(Of String, String)
             Get
                 With MyBase.Attributes
-                    .Add("Frame Type", FrameType & ": " & [Enum].GetName(GetType(FrameType), FrameType))
-                    .Add("Frame Length", FrameLength)
-                    .Add("64-Bit ID Code", IDCode)
-                    .Add("Sample Count", SampleCount)
+                    .Add("Sample Index", SampleIndex)
                 End With
 
                 Return MyBase.Attributes

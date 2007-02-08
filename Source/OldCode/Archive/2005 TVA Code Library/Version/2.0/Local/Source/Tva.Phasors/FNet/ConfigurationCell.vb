@@ -27,8 +27,9 @@ Namespace FNet
 
         Inherits ConfigurationCellBase
 
-        Private m_coordinateFormat As CoordinateFormat
-        Private m_statusFlags As Int16
+        Private m_longitude As Single
+        Private m_latitude As Single
+        Private m_numberOfSatellites As Integer
 
         Protected Sub New()
         End Sub
@@ -38,8 +39,9 @@ Namespace FNet
             MyBase.New(info, context)
 
             ' Deserialize configuration cell
-            m_coordinateFormat = info.GetValue("coordinateFormat", GetType(CoordinateFormat))
-            m_statusFlags = info.GetInt16("statusFlags")
+            m_longitude = info.GetSingle("longitude")
+            m_latitude = info.GetSingle("latitude")
+            m_numberOfSatellites = info.GetInt32("numberOfSatellites")
 
         End Sub
 
@@ -55,26 +57,28 @@ Namespace FNet
 
         End Sub
 
-        ' This constructor satisfies ChannelCellBase class requirement:
-        '   Final dervived classes must expose Public Sub New(ByVal parent As IChannelFrame, ByVal state As IChannelFrameParsingState, ByVal index As Int32, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
-        Public Sub New(ByVal parent As IConfigurationFrame, ByVal state As IConfigurationFrameParsingState, ByVal index As Int32, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
+        ' FNet supports no configuration frame in the data stream - so there will be nothing to parse
 
-            ' We pass in defaults for id code and nominal frequency since these will be parsed out later
-            MyBase.New(parent, False, MaximumPhasorValues, MaximumAnalogValues, MaximumDigitalValues, _
-                New ConfigurationCellParsingState( _
-                    AddressOf FNet.PhasorDefinition.CreateNewPhasorDefintion, _
-                    AddressOf FNet.FrequencyDefinition.CreateNewFrequencyDefintion, _
-                    Nothing, _
-                    AddressOf FNet.DigitalDefinition.CreateNewDigitalDefintion), _
-                binaryImage, startIndex)
+        '' This constructor satisfies ChannelCellBase class requirement:
+        ''   Final dervived classes must expose Public Sub New(ByVal parent As IChannelFrame, ByVal state As IChannelFrameParsingState, ByVal index As Int32, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
+        'Public Sub New(ByVal parent As IConfigurationFrame, ByVal state As IConfigurationFrameParsingState, ByVal index As Int32, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
-        End Sub
+        '    '' We pass in defaults for id code and nominal frequency since these will be parsed out later
+        '    'MyBase.New(parent, False, MaximumPhasorValues, MaximumAnalogValues, MaximumDigitalValues, _
+        '    '    New ConfigurationCellParsingState( _
+        '    '        AddressOf FNet.PhasorDefinition.CreateNewPhasorDefintion, _
+        '    '        AddressOf FNet.FrequencyDefinition.CreateNewFrequencyDefintion, _
+        '    '        Nothing, _
+        '    '        Nothing), _
+        '    '    binaryImage, startIndex)
 
-        Friend Shared Function CreateNewConfigurationCell(ByVal parent As IChannelFrame, ByVal state As IChannelFrameParsingState(Of IConfigurationCell), ByVal index As Int32, ByVal binaryImage As Byte(), ByVal startIndex As Int32) As IConfigurationCell
+        'End Sub
 
-            Return New ConfigurationCell(parent, state, index, binaryImage, startIndex)
+        'Friend Shared Function CreateNewConfigurationCell(ByVal parent As IChannelFrame, ByVal state As IChannelFrameParsingState(Of IConfigurationCell), ByVal index As Int32, ByVal binaryImage As Byte(), ByVal startIndex As Int32) As IConfigurationCell
 
-        End Function
+        '    Return New ConfigurationCell(parent, state, index, binaryImage, startIndex)
+
+        'End Function
 
         Public Overrides ReadOnly Property DerivedType() As System.Type
             Get
@@ -88,223 +92,87 @@ Namespace FNet
             End Get
         End Property
 
-        Public Property StatusFlags() As Int16
+        Public Property Longitude() As Single
             Get
-                Return m_statusFlags
+                Return m_longitude
             End Get
-            Set(ByVal value As Int16)
-                m_statusFlags = value
+            Set(ByVal value As Single)
+                m_longitude = value
             End Set
         End Property
 
-        Public Shadows Property IDCode() As UInt64
+        Public Property Latitude() As Single
             Get
-                ' IEEE 1344 only allows one PMU, so we share ID code with parent frame...
-                Return Parent.IDCode
+                Return m_latitude
             End Get
-            Set(ByVal value As UInt64)
-                Parent.IDCode = value
-
-                ' Base classes constrain maximum value to 65535
-                If value > UInt16.MaxValue Then
-                    MyBase.IDCode = UInt16.MaxValue
-                Else
-                    MyBase.IDCode = Convert.ToUInt16(value)
-                End If
+            Set(ByVal value As Single)
+                m_latitude = value
             End Set
         End Property
 
-        Public Property SynchronizationIsValid() As Boolean
+        Public Property NumberOfSatellites() As Integer
             Get
-                Return (StatusFlags And Bit15) = 0
+                Return m_numberOfSatellites
             End Get
-            Set(ByVal value As Boolean)
-                If value Then
-                    StatusFlags = StatusFlags And Not Bit15
-                Else
-                    StatusFlags = StatusFlags Or Bit15
-                End If
+            Set(ByVal value As Integer)
+                m_numberOfSatellites = value
             End Set
         End Property
 
-        Public Property DataIsValid() As Boolean
-            Get
-                Return (StatusFlags And Bit14) = 0
-            End Get
-            Set(ByVal value As Boolean)
-                If value Then
-                    StatusFlags = StatusFlags And Not Bit14
-                Else
-                    StatusFlags = StatusFlags Or Bit14
-                End If
-            End Set
-        End Property
-
-        Public Property TriggerStatus() As TriggerStatus
-            Get
-                Return StatusFlags And TriggerMask
-            End Get
-            Set(ByVal value As TriggerStatus)
-                StatusFlags = (StatusFlags And Not TriggerMask) Or value
-            End Set
-        End Property
-
-        ' IEEE 1344 only supports scaled data
+        ' FNet only supports floating point data
         Public Overrides Property PhasorDataFormat() As DataFormat
             Get
-                Return DataFormat.FixedInteger
+                Return DataFormat.FloatingPoint
             End Get
             Set(ByVal value As DataFormat)
-                If value <> DataFormat.FixedInteger Then Throw New NotSupportedException("IEEE 1344 only supports scaled data")
+                If value <> DataFormat.FloatingPoint Then Throw New NotSupportedException("FNet only supports floating point data")
             End Set
         End Property
 
         Public Overrides Property PhasorCoordinateFormat() As CoordinateFormat
             Get
-                Return m_coordinateFormat
+                Return CoordinateFormat.Polar
             End Get
             Set(ByVal value As CoordinateFormat)
-                m_coordinateFormat = value
+                If value <> CoordinateFormat.Polar Then Throw New NotSupportedException("FNet only supports polar coordinates")
             End Set
         End Property
 
         Public Overrides Property FrequencyDataFormat() As DataFormat
             Get
-                Return DataFormat.FixedInteger
+                Return DataFormat.FloatingPoint
             End Get
             Set(ByVal value As DataFormat)
-                If value <> DataFormat.FixedInteger Then Throw New NotSupportedException("IEEE 1344 only supports scaled data")
+                If value <> DataFormat.FloatingPoint Then Throw New NotSupportedException("FNet only supports floating point data")
             End Set
         End Property
 
         Public Overrides Property AnalogDataFormat() As DataFormat
             Get
-                Return DataFormat.FixedInteger
+                Return DataFormat.FloatingPoint
             End Get
             Set(ByVal value As DataFormat)
-                If value <> DataFormat.FixedInteger Then Throw New NotSupportedException("IEEE 1344 only supports scaled data")
+                If value <> DataFormat.FloatingPoint Then Throw New NotSupportedException("FNet only supports floating point data")
             End Set
         End Property
-
-        Protected Overrides ReadOnly Property HeaderLength() As UInt16
-            Get
-                Return MyBase.HeaderLength + 14
-            End Get
-        End Property
-
-        Protected Overrides ReadOnly Property HeaderImage() As Byte()
-            Get
-                Dim buffer As Byte() = CreateArray(Of Byte)(HeaderLength)
-                Dim index As Int32
-
-                EndianOrder.BigEndian.CopyBytes(m_statusFlags, buffer, index)
-
-                ' Copy in station name
-                index += 2
-                CopyImage(MyBase.HeaderImage, buffer, index, MyBase.HeaderLength)
-
-                EndianOrder.BigEndian.CopyBytes(IDCode, buffer, index)
-                EndianOrder.BigEndian.CopyBytes(Convert.ToInt16(PhasorDefinitions.Count), buffer, index + 8)
-                EndianOrder.BigEndian.CopyBytes(Convert.ToInt16(DigitalDefinitions.Count), buffer, index + 10)
-
-                Return buffer
-            End Get
-        End Property
-
-        Protected Overrides Sub ParseHeaderImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
-
-            Dim parsingState As IConfigurationCellParsingState = DirectCast(state, IConfigurationCellParsingState)
-
-            m_statusFlags = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex)
-            startIndex += 2
-
-            ' Parse out station name
-            MyBase.ParseHeaderImage(state, binaryImage, startIndex)
-            startIndex += MyBase.HeaderLength
-
-            IDCode = EndianOrder.BigEndian.ToUInt64(binaryImage, startIndex)
-
-            With parsingState
-                .PhasorCount = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 8)
-                .DigitalCount = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 10)
-            End With
-
-        End Sub
-
-        Protected Overrides ReadOnly Property FooterLength() As UInt16
-            Get
-                Return MyBase.FooterLength + _
-                    PhasorDefinitions.Count * PhasorDefinition.ConversionFactorLength + _
-                    DigitalDefinitions.Count * DigitalDefinition.ConversionFactorLength
-            End Get
-        End Property
-
-        Protected Overrides ReadOnly Property FooterImage() As Byte()
-            Get
-                Dim buffer As Byte() = CreateArray(Of Byte)(FooterLength)
-                Dim x, index As Int32
-
-                ' Include conversion factors in configuration cell footer
-                With PhasorDefinitions
-                    For x = 0 To .Count - 1
-                        CopyImage(DirectCast(.Item(x), PhasorDefinition).ConversionFactorImage, buffer, index, PhasorDefinition.ConversionFactorLength)
-                    Next
-                End With
-
-                With DigitalDefinitions
-                    For x = 0 To .Count - 1
-                        CopyImage(DirectCast(.Item(x), DigitalDefinition).ConversionFactorImage, buffer, index, DigitalDefinition.ConversionFactorLength)
-                    Next
-                End With
-
-                ' Include nominal frequency
-                CopyImage(MyBase.FooterImage, buffer, index, MyBase.FooterLength)
-
-                Return buffer
-            End Get
-        End Property
-
-        Protected Overrides Sub ParseFooterImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
-
-            Dim x As Int32
-
-            ' Parse conversion factors from configuration cell footer
-            With PhasorDefinitions
-                For x = 0 To .Count - 1
-                    DirectCast(.Item(x), PhasorDefinition).ParseConversionFactor(binaryImage, startIndex)
-                    startIndex += PhasorDefinition.ConversionFactorLength
-                Next
-            End With
-
-            With DigitalDefinitions
-                For x = 0 To .Count - 1
-                    DirectCast(.Item(x), DigitalDefinition).ParseConversionFactor(binaryImage, startIndex)
-                    startIndex += DigitalDefinition.ConversionFactorLength
-                Next
-            End With
-
-            ' Parse nominal frequency
-            MyBase.ParseFooterImage(state, binaryImage, startIndex)
-
-        End Sub
 
         Public Overrides Sub GetObjectData(ByVal info As System.Runtime.Serialization.SerializationInfo, ByVal context As System.Runtime.Serialization.StreamingContext)
 
             MyBase.GetObjectData(info, context)
 
             ' Serialize configuration cell
-            info.AddValue("coordinateFormat", m_coordinateFormat, GetType(CoordinateFormat))
-            info.AddValue("statusFlags", m_statusFlags)
+            info.AddValue("longitude", m_longitude)
+            info.AddValue("latitude", m_latitude)
+            info.AddValue("numberOfSatellites", m_numberOfSatellites)
 
         End Sub
 
         Public Overrides ReadOnly Property Attributes() As Dictionary(Of String, String)
             Get
                 With MyBase.Attributes
-                    .Add("Status Flags", StatusFlags)
-                    .Add("Synchronization Is Valid", SynchronizationIsValid)
-                    .Add("Data Is Valid", DataIsValid)
-                    .Add("Trigger Status", TriggerStatus & ": " & [Enum].GetName(GetType(TriggerStatus), TriggerStatus))
+                    .Add("Longitude", Longitude)
+                    .Add("Latitude", Latitude)
+                    .Add("Number of Satellites", NumberOfSatellites)
                 End With
 
                 Return MyBase.Attributes

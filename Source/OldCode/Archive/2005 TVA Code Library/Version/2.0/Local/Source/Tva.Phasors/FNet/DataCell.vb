@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  DataCell.vb - IEEE 1344 PMU Data Cell
+'  DataCell.vb - FNet Data Cell
 '  Copyright © 2005 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005
@@ -16,6 +16,8 @@
 '*******************************************************************************************************
 
 Imports System.Runtime.Serialization
+Imports System.Text
+Imports Tva.Phasors.Common
 Imports Tva.Phasors.FNet.Common
 
 Namespace FNet
@@ -25,6 +27,19 @@ Namespace FNet
     Public Class DataCell
 
         Inherits DataCellBase
+
+        Private Enum Element
+            UnitID
+            [Date]
+            Time
+            SampleCount
+            Analog
+            Frequency
+            Voltage
+            Angle
+        End Enum
+
+        Private m_analogValue As Single
 
         Protected Sub New()
         End Sub
@@ -42,18 +57,11 @@ Namespace FNet
             Dim x As Int32
 
             With configurationCell
-                ' Initialize phasor values and frequency value with an empty value
-                For x = 0 To .PhasorDefinitions.Count - 1
-                    PhasorValues.Add(New PhasorValue(Me, .PhasorDefinitions(x), 0, 0))
-                Next
+                ' Initialize single phasor value and frequency value with an empty value
+                PhasorValues.Add(New PhasorValue(Me, .PhasorDefinitions(x), 0, 0))
 
                 ' Initialize frequency and df/dt
                 FrequencyValue = New FrequencyValue(Me, .FrequencyDefinition, 0, 0)
-
-                ' Initialize any digital values
-                For x = 0 To .DigitalDefinitions.Count - 1
-                    DigitalValues.Add(New DigitalValue(Me, .DigitalDefinitions(x), 0))
-                Next
             End With
 
         End Sub
@@ -67,11 +75,7 @@ Namespace FNet
         Public Sub New(ByVal parent As IDataFrame, ByVal state As DataFrameParsingState, ByVal index As Int32, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
             MyBase.New(parent, False, MaximumPhasorValues, MaximumAnalogValues, MaximumDigitalValues, _
-                New DataCellParsingState(state.ConfigurationFrame.Cells(index), _
-                    AddressOf FNet.PhasorValue.CreateNewPhasorValue, _
-                    AddressOf FNet.FrequencyValue.CreateNewFrequencyValue, _
-                    Nothing, _
-                    AddressOf FNet.DigitalValue.CreateNewDigitalValue), _
+                New DataCellParsingState(state.ConfigurationFrame.Cells(index), Nothing, Nothing, Nothing, Nothing), _
                 binaryImage, startIndex)
 
         End Sub
@@ -105,45 +109,145 @@ Namespace FNet
 
         Public Overrides Property SynchronizationIsValid() As Boolean
             Get
-                Return (StatusFlags And Bit15) = 0
+                Return ConfigurationCell.NumberOfSatellites > 0
             End Get
             Set(ByVal value As Boolean)
-                If value Then
-                    StatusFlags = StatusFlags And Not Bit15
-                Else
-                    StatusFlags = StatusFlags Or Bit15
-                End If
+                Throw (New NotSupportedException("FNet defines synchronization validity as a dervied value based on the number of available satellites"))
             End Set
         End Property
 
         Public Overrides Property DataIsValid() As Boolean
             Get
-                Return (StatusFlags And Bit14) = 0
+                Return True
             End Get
             Set(ByVal value As Boolean)
-                If value Then
-                    StatusFlags = StatusFlags And Not Bit14
-                Else
-                    StatusFlags = StatusFlags Or Bit14
+                Throw New NotSupportedException("FNet defines no flags for data validity")
+            End Set
+        End Property
+
+        Public ReadOnly Property FNetDate() As String
+            Get
+                Return Parent.Timestamp.ToString("MMddyy")
+            End Get
+        End Property
+
+        Public ReadOnly Property FNetTime() As String
+            Get
+                Return Parent.Timestamp.ToString("HHmmss")
+            End Get
+        End Property
+
+        Public Property AnalogValue() As Single
+            Get
+                Return m_analogValue
+            End Get
+            Set(ByVal value As Single)
+                m_analogValue = value
+            End Set
+        End Property
+
+        Public ReadOnly Property FNetDataString() As String
+            Get
+                With New StringBuilder
+                    .Append(StartByte)
+                    .Append(IDCode)
+                    .Append(" "c)
+                    .Append(FNetDate)
+                    .Append(" "c)
+                    .Append(FNetTime)
+                    .Append(" "c)
+                    .Append(Parent.SampleIndex)
+                    .Append(" "c)
+                    .Append(m_analogValue)
+                    .Append(" "c)
+                    .Append(FrequencyValue.Frequency)
+                    .Append(" "c)
+                    .Append(PhasorValues(0).Magnitude)
+                    .Append(" "c)
+                    .Append(PhasorValues(0).Angle)
+                    .Append(EndByte)
+
+                    Return .ToString()
+                End With
+            End Get
+        End Property
+
+        Protected Overrides ReadOnly Property BodyLength() As UInt16
+            Get
+                Return FNetDataString.Length()
+            End Get
+        End Property
+
+        Protected Overrides ReadOnly Property BodyImage() As Byte()
+            Get
+                Return Encoding.ASCII.GetBytes(FNetDataString)
+            End Get
+        End Property
+
+        Protected Overrides Sub ParseBodyImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
+
+            If binaryImage(startIndex) <> StartByte Then Throw New InvalidOperationException("Bad data stream, expected start byte 01 as first byte in FNet frame, got " & binaryImage(startIndex).ToString("x"c).PadLeft(2, "0"c).ToUpper())
+
+            Dim parsingState As IDataCellParsingState = DirectCast(state, IDataCellParsingState)
+
+            With parsingState.ConfigurationCell
+                Dim data As String()
+                Dim stopByteIndex As Integer
+
+                For x As Integer = startIndex To binaryImage.Length - 1
+                    If binaryImage(x) = EndByte Then
+                        stopByteIndex = x
+                        Exit For
+                    End If
+                Next
+
+                ' Parse FNet data frame into inividual fields seperated by spaces
+                Data = Encoding.ASCII.GetString(binaryImage, startIndex + 1, stopByteIndex - startIndex - 1).Split(" "c)
+
+                ' Retrieve ID code (only need to get this once)
+                If .IDCode = 0 Then .IDCode = Convert.ToUInt16(data(Element.UnitID))
+
+                Parent.Ticks = ParseTimestamp(data(Element.Date), data(Element.Time), Convert.ToInt32(data(Element.SampleCount)), .FrameRate)
+
+                ' Parse out first frequency (can be long/lat at top of minute)
+                m_analogValue = Convert.ToSingle(data(Element.Analog))
+
+                If Convert.ToInt32(data(Element.Time).Substring(4, 2)) = 0 Then
+                    With DirectCast(.Parent, ConfigurationFrame)
+                        Select Case Convert.ToInt32(data(Element.SampleCount))
+                            Case 0
+                                .Longitude = m_analogValue
+                            Case 1
+                                .Latitude = m_analogValue
+                            Case 2
+                                .NumberOfSatellites = m_analogValue
+                        End Select
+                    End With
                 End If
-            End Set
-        End Property
 
-        Public Property TriggerStatus() As TriggerStatus
-            Get
-                Return StatusFlags And TriggerMask
-            End Get
-            Set(ByVal value As TriggerStatus)
-                StatusFlags = (StatusFlags And Not TriggerMask) Or value
-            End Set
-        End Property
+                ' Create frequency value
+                FrequencyValue = New FrequencyValue(Me, .FrequencyDefinition, Convert.ToSingle(data(Element.Frequency)), 0)
 
-        Public Overrides ReadOnly Property Attributes() As Dictionary(Of String, String)
-            Get
-                MyBase.Attributes.Add("Trigger Status", TriggerStatus & ": " & [Enum].GetName(GetType(TriggerStatus), TriggerStatus))
-                Return MyBase.Attributes
-            End Get
-        End Property
+                ' Create single phasor value
+                PhasorValues.Add(PhasorValue.CreateFromPolarValues(Me, .PhasorDefinitions(0), Convert.ToSingle(data(Element.Angle)), Convert.ToSingle(data(Element.Voltage))))
+            End With
+
+        End Sub
+
+        Private Function ParseTimestamp(ByVal fnetDate As String, ByVal fnetTime As String, ByVal sampleIndex As Integer, ByVal frameRate As Integer) As Long
+
+            fnetDate = fnetDate.PadLeft(6, "0"c)
+
+            Return New Date( _
+                Convert.ToInt32(fnetDate.Substring(4, 2)), _
+                Convert.ToInt32(fnetDate.Substring(0, 2).Trim()), _
+                Convert.ToInt32(fnetDate.Substring(2, 2)), _
+                Convert.ToInt32(fnetTime.Substring(0, 2)), _
+                Convert.ToInt32(fnetTime.Substring(2, 2)), _
+                Convert.ToInt32(fnetTime.Substring(4, 2)), _
+                Convert.ToInt32(sampleIndex / frameRate * 1000)).Ticks
+
+        End Function
 
     End Class
 

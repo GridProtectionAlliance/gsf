@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  ConfigurationFrame.vb - IEEE1344 Configuration Frame
+'  ConfigurationFrame.vb - FNet Configuration Frame
 '  Copyright © 2005 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005
@@ -27,10 +27,6 @@ Namespace FNet
     Public Class ConfigurationFrame
 
         Inherits ConfigurationFrameBase
-        Implements ICommonFrameHeader
-
-        Private m_idCode As UInt64
-        Private m_sampleCount As Int16
 
         Protected Sub New()
         End Sub
@@ -39,34 +35,61 @@ Namespace FNet
 
             MyBase.New(info, context)
 
-            ' Deserialize configuration frame
-            m_idCode = info.GetUInt64("idCode64Bit")
-            m_sampleCount = info.GetInt16("sampleCount")
+        End Sub
+
+        Public Sub New(ByVal idCode As UInt16, ByVal ticks As Long)
+
+            MyClass.New(idCode, ticks, 10)
 
         End Sub
 
-        Public Sub New(ByVal frameType As FrameType, ByVal idCode As UInt64, ByVal ticks As Long, ByVal frameRate As Int16)
+        Public Sub New(ByVal idCode As UInt16, ByVal ticks As Long, ByVal frameRate As Int16)
 
-            MyBase.New(idCode Mod UInt16.MaxValue, New ConfigurationCellCollection, ticks, frameRate)
-            CommonFrameHeader.FrameType(Me) = FNet.FrameType.ConfigurationFrame
-            m_idCode = idCode
+            MyClass.New(idCode, ticks, frameRate, LineFrequency.Hz60)
 
         End Sub
 
-        Public Sub New(ByVal parsedFrameHeader As ICommonFrameHeader, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
+        Public Sub New(ByVal idCode As UInt16, ByVal ticks As Long, ByVal frameRate As Int16, ByVal nominalFrequency As LineFrequency)
 
-            MyBase.New(New ConfigurationFrameParsingState(New ConfigurationCellCollection, parsedFrameHeader.FrameLength, _
-                    AddressOf FNet.ConfigurationCell.CreateNewConfigurationCell), binaryImage, startIndex)
-
-            CommonFrameHeader.FrameType(Me) = FNet.FrameType.ConfigurationFrame
-            CommonFrameHeader.Clone(parsedFrameHeader, Me)
+            MyClass.New(idCode, ticks, frameRate, nominalFrequency, "FNet-" & idCode)
 
         End Sub
+
+        Public Sub New(ByVal idCode As UInt16, ByVal ticks As Long, ByVal frameRate As Int16, ByVal nominalFrequency As LineFrequency, ByVal stationName As String)
+
+            MyBase.New(idCode, New ConfigurationCellCollection, ticks, frameRate)
+
+            ' FNet protocol sends data for one device
+            Cells.Add(New ConfigurationCell(Me, nominalFrequency))
+
+            With Cells(0)
+                .StationName = stationName
+
+                ' Add a single frequency definition
+                .FrequencyDefinition = New FrequencyDefinition(DirectCast(.This, ConfigurationCell))
+
+                ' Add a single phasor definition
+                .PhasorDefinitions.Add(New PhasorDefinition(DirectCast(.This, ConfigurationCell)))
+
+                With .PhasorDefinitions(0)
+                    .Label = "120V Phasor"
+                    .Type = PhasorType.Voltage
+                End With
+            End With
+
+        End Sub
+
+        ' FNet supports no configuration frame in the data stream - so there will be nothing to parse
+        'Public Sub New(ByVal binaryImage As Byte(), ByVal startIndex As Int32)
+
+        '    MyBase.New(New ConfigurationFrameParsingState(New ConfigurationCellCollection, 0, _
+        '            AddressOf FNet.ConfigurationCell.CreateNewConfigurationCell), binaryImage, startIndex)
+
+        'End Sub
 
         Public Sub New(ByVal configurationFrame As IConfigurationFrame)
 
             MyBase.New(configurationFrame)
-            CommonFrameHeader.FrameType(Me) = FNet.FrameType.ConfigurationFrame
 
         End Sub
 
@@ -82,62 +105,8 @@ Namespace FNet
             End Get
         End Property
 
-        Public Shadows Property IDCode() As UInt64 Implements ICommonFrameHeader.IDCode
-            Get
-                Return m_idCode
-            End Get
-            Set(ByVal value As UInt64)
-                m_idCode = value
-
-                ' Base classes constrain maximum value to 65535
-                If m_idCode > UInt16.MaxValue Then
-                    MyBase.IDCode = UInt16.MaxValue
-                Else
-                    MyBase.IDCode = Convert.ToUInt16(value)
-                End If
-            End Set
-        End Property
-
-        Public ReadOnly Property FrameLength() As Int16 Implements ICommonFrameHeader.FrameLength
-            Get
-                Return CommonFrameHeader.FrameLength(Me)
-            End Get
-        End Property
-
-        Public ReadOnly Property DataLength() As Int16 Implements ICommonFrameHeader.DataLength
-            Get
-                Return CommonFrameHeader.DataLength(Me)
-            End Get
-        End Property
-
-        Private Property InternalSampleCount() As Int16 Implements ICommonFrameHeader.InternalSampleCount
-            Get
-                Return m_sampleCount
-            End Get
-            Set(ByVal value As Int16)
-                m_sampleCount = value
-            End Set
-        End Property
-
-        ' Since IEEE 1344 only supports a single PMU there will only be one cell, so we just share status flags with our only child
-        ' and expose the value at the parent level for convience in determing frame length at the frame level
-        Private Property InternalStatusFlags() As Int16 Implements ICommonFrameHeader.InternalStatusFlags
-            Get
-                Return Cells(0).StatusFlags
-            End Get
-            Set(ByVal value As Int16)
-                Cells(0).StatusFlags = value
-            End Set
-        End Property
-
-        Public Shadows ReadOnly Property TimeTag() As NtpTimeTag Implements ICommonFrameHeader.TimeTag
-            Get
-                Return CommonFrameHeader.TimeTag(Me)
-            End Get
-        End Property
-
-        ' Since IEEE 1344 only supports a single PMU there will only be one cell, so we just share nominal frequency with our only child
-        ' and expose the value at the parent level for convience
+        ' Since FNet only supports a single device there will only be one cell, so we just share nominal frequency, longitude,
+        ' latitude and number of satellites with our only child and expose the value at the parent level for convience
         Public Property NominalFrequency() As LineFrequency
             Get
                 Return Cells(0).NominalFrequency
@@ -147,95 +116,31 @@ Namespace FNet
             End Set
         End Property
 
-        Public Property Period() As Int16
+        Public Property Longitude() As Single
             Get
-                Return NominalFrequency / FrameRate * 100
+                Return Cells(0).Longitude
             End Get
-            Set(ByVal value As Int16)
-                FrameRate = NominalFrequency * 100 / value
+            Set(ByVal value As Single)
+                Cells(0).Longitude = value
             End Set
         End Property
 
-        Public ReadOnly Property FrameType() As FrameType Implements ICommonFrameHeader.FrameType
+        Public Property Latitude() As Single
             Get
-                Return FNet.FrameType.ConfigurationFrame
+                Return Cells(0).Latitude
             End Get
+            Set(ByVal value As Single)
+                Cells(0).Latitude = value
+            End Set
         End Property
 
-        Protected Overrides ReadOnly Property FundamentalFrameType() As FundamentalFrameType Implements ICommonFrameHeader.FundamentalFrameType
+        Public Property NumberOfSatellites() As Integer
             Get
-                Return MyBase.FundamentalFrameType
+                Return Cells(0).NumberOfSatellites
             End Get
-        End Property
-
-        Protected Overrides Function CalculateChecksum(ByVal buffer() As Byte, ByVal offset As Int32, ByVal length As Int32) As UInt16
-
-            ' IEEE 1344 uses CRC16 to calculate checksum for frames
-            Return CRC16(UInt16.MaxValue, buffer, offset, length)
-
-        End Function
-
-        Protected Overrides ReadOnly Property HeaderLength() As UInt16
-            Get
-                Return CommonFrameHeader.BinaryLength
-            End Get
-        End Property
-
-        Protected Overrides ReadOnly Property HeaderImage() As Byte()
-            Get
-                Return CommonFrameHeader.BinaryImage(Me)
-            End Get
-        End Property
-
-        Protected Overrides Sub ParseHeaderImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
-
-            ' Header was preparsed by common frame header...
-
-            ' IEEE 1344 only supports a single PMU...
-            DirectCast(state, IConfigurationFrameParsingState).CellCount = 1
-
-        End Sub
-
-        Protected Overrides ReadOnly Property FooterLength() As UInt16
-            Get
-                Return 2
-            End Get
-        End Property
-
-        Protected Overrides ReadOnly Property FooterImage() As Byte()
-            Get
-                Return EndianOrder.BigEndian.GetBytes(Period)
-            End Get
-        End Property
-
-        Protected Overrides Sub ParseFooterImage(ByVal state As IChannelParsingState, ByVal binaryImage() As Byte, ByVal startIndex As Int32)
-
-            Period = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex)
-
-        End Sub
-
-        Public Overrides Sub GetObjectData(ByVal info As System.Runtime.Serialization.SerializationInfo, ByVal context As System.Runtime.Serialization.StreamingContext)
-
-            MyBase.GetObjectData(info, context)
-
-            ' Serialize configuration frame
-            info.AddValue("idCode64Bit", m_idCode)
-            info.AddValue("sampleCount", m_sampleCount)
-
-        End Sub
-
-        Public Overrides ReadOnly Property Attributes() As Dictionary(Of String, String)
-            Get
-                With MyBase.Attributes
-                    .Add("Frame Type", FrameType & ": " & [Enum].GetName(GetType(FrameType), FrameType))
-                    .Add("Frame Length", FrameLength)
-                    .Add("64-Bit ID Code", IDCode)
-                    .Add("Sample Count", m_sampleCount)
-                    .Add("Period", Period)
-                End With
-
-                Return MyBase.Attributes
-            End Get
+            Set(ByVal value As Integer)
+                Cells(0).NumberOfSatellites = value
+            End Set
         End Property
 
     End Class

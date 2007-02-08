@@ -69,23 +69,11 @@ Namespace FNet
 
         End Sub
 
-        Public Sub New(ByVal parent As IDataCell, ByVal phasorDefinition As IPhasorDefinition, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
-
-            MyBase.New(parent, phasorDefinition, binaryImage, startIndex)
-
-        End Sub
-
         Public Sub New(ByVal phasorValue As IPhasorValue)
 
             MyBase.New(phasorValue)
 
         End Sub
-
-        Friend Shared Function CreateNewPhasorValue(ByVal parent As IDataCell, ByVal definition As IPhasorDefinition, ByVal binaryImage As Byte(), ByVal startIndex As Int32) As IPhasorValue
-
-            Return New PhasorValue(parent, definition, binaryImage, startIndex)
-
-        End Function
 
         Public Overrides ReadOnly Property DerivedType() As System.Type
             Get

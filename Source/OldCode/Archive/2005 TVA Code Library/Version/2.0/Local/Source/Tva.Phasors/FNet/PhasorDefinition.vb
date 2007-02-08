@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  PhasorDefinition.vb - Phasor definition
+'  PhasorDefinition.vb - FNet Phasor definition
 '  Copyright © 2005 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005
@@ -45,23 +45,24 @@ Namespace FNet
 
         End Sub
 
-        Public Sub New(ByVal parent As ConfigurationCell, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
-
-            MyBase.New(parent, binaryImage, startIndex)
-
-        End Sub
-
         Public Sub New(ByVal phasorDefinition As IPhasorDefinition)
 
             MyBase.New(phasorDefinition)
 
         End Sub
 
-        Friend Shared Function CreateNewPhasorDefintion(ByVal parent As IConfigurationCell, ByVal binaryImage As Byte(), ByVal startIndex As Int32) As IPhasorDefinition
+        ' FNet supports no configuration frame in the data stream - so there will be nothing to parse
+        'Public Sub New(ByVal parent As ConfigurationCell, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
-            Return New PhasorDefinition(parent, binaryImage, startIndex)
+        '    MyBase.New(parent, binaryImage, startIndex)
 
-        End Function
+        'End Sub
+
+        'Friend Shared Function CreateNewPhasorDefintion(ByVal parent As IConfigurationCell, ByVal binaryImage As Byte(), ByVal startIndex As Int32) As IPhasorDefinition
+
+        '    Return New PhasorDefinition(parent, binaryImage, startIndex)
+
+        'End Function
 
         Public Overrides ReadOnly Property DerivedType() As System.Type
             Get
@@ -74,37 +75,6 @@ Namespace FNet
                 Return MyBase.Parent
             End Get
         End Property
-
-        Friend Shared ReadOnly Property ConversionFactorLength() As Int32
-            Get
-                Return 4
-            End Get
-        End Property
-
-        Friend ReadOnly Property ConversionFactorImage() As Byte()
-            Get
-                Dim buffer As Byte() = CreateArray(Of Byte)(ConversionFactorLength)
-
-                buffer(0) = IIf(Of Byte)(Type = PhasorType.Voltage, 0, 1)
-
-                EndianOrder.BigEndian.CopyBuffer(BitConverter.GetBytes(ScalingFactor), 0, buffer, 1, 3)
-
-                Return buffer
-            End Get
-        End Property
-
-        Friend Sub ParseConversionFactor(ByVal binaryImage As Byte(), ByVal startIndex As Int32)
-
-            Dim buffer As Byte() = CreateArray(Of Byte)(4)
-
-            ' Get phasor type from first byte
-            Type = IIf(binaryImage(startIndex) = 0, PhasorType.Voltage, PhasorType.Current)
-
-            ' Last three bytes represent scaling factor
-            EndianOrder.BigEndian.CopyBuffer(binaryImage, startIndex + 1, buffer, 0, 3)
-            ScalingFactor = BitConverter.ToInt32(buffer, 0)
-
-        End Sub
 
     End Class
 
