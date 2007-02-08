@@ -60,6 +60,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Tva.Collections\DictionaryList.vb" />
+    <Compile Include="Tva.Console\Arguments.vb" />
+    <Compile Include="Tva.Console\Common.vb" />
     <Compile Include="Tva.Measurements\MeasurementKey.vb" />
     <Compile Include="Tva.Net\Ftp\AsyncResult.vb" />
     <Compile Include="Tva.Net\Ftp\ControlChannel.vb" />
@@ -88,7 +90,6 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Tva.Scheduling\SchedulePart.vb" />
-    <Compile Include="Tva\Console.vb" />
     <Compile Include="Tva\DataEventArgs.vb" />
     <Compile Include="Tva\ExceptionEventArgs.vb" />
     <Compile Include="Tva\GenericEventArgs.vb" />
@@ -160,7 +161,6 @@
     <Content Include="Embedded Resources\Net.Ftp.Session.bmp" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Tva.Console\" />
     <Folder Include="Tva.Exception\" />
     <Folder Include="Tva.Net\Http\" />
     <Folder Include="Tva.Remoting\" />
