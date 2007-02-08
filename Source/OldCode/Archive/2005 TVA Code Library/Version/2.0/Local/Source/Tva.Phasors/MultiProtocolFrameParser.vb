@@ -120,11 +120,11 @@ Public Class MultiProtocolFrameParser
 
     End Sub
 
-    Public Sub New(ByVal phasorProtocol As PhasorProtocol, ByVal transportLayer As TransportProtocol)
+    Public Sub New(ByVal phasorProtocol As PhasorProtocol, ByVal transportProtocol As TransportProtocol)
 
         MyClass.New()
         m_phasorProtocol = phasorProtocol
-        m_transportProtocol = transportLayer
+        m_transportProtocol = transportProtocol
 
     End Sub
 
@@ -764,8 +764,6 @@ Public Class MultiProtocolFrameParser
 
 #End Region
 
-#End Region
-
 #Region " Old Socket Code "
 
     'Private m_socketThread As Thread
@@ -939,6 +937,8 @@ Public Class MultiProtocolFrameParser
     '    End With
 
     'End Sub
+
+#End Region
 
 #End Region
 
