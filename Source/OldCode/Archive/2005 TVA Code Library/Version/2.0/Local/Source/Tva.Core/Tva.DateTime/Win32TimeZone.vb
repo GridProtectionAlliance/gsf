@@ -603,6 +603,21 @@ Namespace DateTime
         Private _index As Int32
         Private _displayName As String
 
+        Private Shared m_unitedStatesTimeZones As List(Of String)
+
+        Shared Sub New()
+
+            m_unitedStatesTimeZones = New List(Of String)()
+            m_unitedStatesTimeZones.Add("ALASKAN STANDARD TIME")
+            m_unitedStatesTimeZones.Add("ATLANTIC STANDARD TIME")
+            m_unitedStatesTimeZones.Add("CENTRAL STANDARD TIME")
+            m_unitedStatesTimeZones.Add("EASTERN STANDARD TIME")
+            m_unitedStatesTimeZones.Add("HAWAIIAN STANDARD TIME")
+            m_unitedStatesTimeZones.Add("MOUNTAIN STANDARD TIME")
+            m_unitedStatesTimeZones.Add("PACIFIC STANDARD TIME")
+            m_unitedStatesTimeZones.Sort()
+
+        End Sub
 
         Public Sub New( _
           ByVal index As Int32, _
@@ -833,11 +848,17 @@ Namespace DateTime
                 Return Nothing
 
             Else
-                Return New DaylightTime( _
-                 _daylightTimeChangeStart.GetDate(year), _
-                 _daylightTimeChangeEnd.GetDate(year), _
-                 _daylightDelta _
-                )
+                If year <= 2006 AndAlso m_unitedStatesTimeZones.BinarySearch(_standardName.ToUpper()) >= 0 Then
+                    Return New DaylightTime(New DaylightTimeChange(4, DayOfWeek.Sunday, 0, New TimeSpan(2, 0, 0)).GetDate(year), _
+                                            New DaylightTimeChange(10, DayOfWeek.Sunday, 4, New TimeSpan(2, 0, 0)).GetDate(year), _
+                                            _daylightDelta)
+                Else
+                    Return New DaylightTime( _
+                     _daylightTimeChangeStart.GetDate(year), _
+                     _daylightTimeChangeEnd.GetDate(year), _
+                     _daylightDelta _
+                    )
+                End If
             End If
 
         End Function
