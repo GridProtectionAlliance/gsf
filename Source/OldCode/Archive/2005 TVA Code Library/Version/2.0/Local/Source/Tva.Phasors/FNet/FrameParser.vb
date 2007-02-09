@@ -34,13 +34,32 @@ Namespace FNet
         Implements IFrameParser
 
 #Region " Public Member Declarations "
-
+        ''' <summary>
+        ''' Raise Event when receive Configuration Frame
+        ''' </summary>
+        ''' <param name="frame"></param>
+        ''' <remarks>See Std IEEE 1344 for the defination of configuration frame. FNET uses the same concept</remarks>
         Public Event ReceivedConfigurationFrame(ByVal frame As ConfigurationFrame)
+        ''' <summary>
+        ''' Raise Event when receive Data Frame
+        ''' </summary>
+        ''' <param name="frame"></param>
+        ''' <remarks>See Std IEEE 1344 for the defination of data frame. FNET uses the same concept</remarks>
         Public Event ReceivedDataFrame(ByVal frame As DataFrame)
+        ''' <summary>
+        ''' Raise event when entire frame is available
+        ''' </summary>
+        ''' <remarks></remarks>
         Public Event ReceivedFrameBufferImage(ByVal frameType As FundamentalFrameType, ByVal binaryImage As Byte(), ByVal offset As Integer, ByVal length As Integer) Implements IFrameParser.ReceivedFrameBufferImage
+        ''' <summary>
+        ''' Raise exception when parse the data or proccess the buffer queue
+        ''' </summary>
+        ''' <remarks></remarks>
         Public Event DataStreamException(ByVal ex As Exception) Implements IFrameParser.DataStreamException
 
 #End Region
+
+
 
 #Region " Private Member Declarations "
 
@@ -297,8 +316,16 @@ Namespace FNet
 
                     If endByteIndex = -1 Then
                         ' If not, save off remaining buffer to prepend onto next read
-                        m_dataStream = New MemoryStream
-                        m_dataStream.Write(buffer, offset, count - offset)
+                        ' If there is no startByte and endByte, dicard the bad buffer
+                        If startByteIndex = -1 Then
+                            m_dataStream = Nothing
+                        Else
+                            m_dataStream = New MemoryStream
+                            ' m_dataStream.Write(buffer, offset, count - offset)
+                            ' Discard the bad buffer
+                            m_dataStream.Write(buffer, startByteIndex, count - startByteIndex)
+                        End If
+                        
                         Exit Do
                     End If
 
