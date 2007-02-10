@@ -102,7 +102,7 @@
     <Compile Include="Tva.Measurements\Frame.vb" />
     <Compile Include="Tva.Security\Cryptography\Common.vb" />
     <Compile Include="Tva.Configuration\ConfigurationFile.vb" />
-    <Compile Include="Tva.Configuration\CategorizedSettingsCollection.vb" />
+    <Compile Include="Tva.Configuration\CategorizedSettingsElementCollection.vb" />
     <Compile Include="Tva.Configuration\CategorizedSettingsElement.vb" />
     <Compile Include="Tva.Configuration\CategorizedSettingsSection.vb" />
     <Compile Include="Tva.Measurements\ImmediateMeasurements.vb" />

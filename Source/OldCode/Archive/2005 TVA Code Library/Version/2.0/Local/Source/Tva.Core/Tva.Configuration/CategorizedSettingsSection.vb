@@ -34,7 +34,7 @@ Namespace Configuration
         ''' <value></value>
         ''' <returns>The Tva.Configuration.CategorizedSettingsCollection with the specified name; otherwise null.</returns>
         ''' <remarks></remarks>
-        Default Public ReadOnly Property Category(ByVal name As String) As CategorizedSettingsCollection
+        Default Public ReadOnly Property Category(ByVal name As String) As CategorizedSettingsElementCollection
             Get
                 ' We'll add the requested category to the default properties collection so that when 
                 ' the settings are saved off to the config file, all of the categories under which 
@@ -44,12 +44,12 @@ Namespace Configuration
                 Dim nameChars() As Char = name.ToCharArray()
                 nameChars(0) = Char.ToLower(nameChars(0))
                 name = Convert.ToString(nameChars)
-                Dim configProperty As New ConfigurationProperty(name, GetType(CategorizedSettingsCollection))
+                Dim configProperty As New ConfigurationProperty(name, GetType(CategorizedSettingsElementCollection))
 
                 MyBase.Properties.Add(configProperty)
-                Dim settingsCategory As CategorizedSettingsCollection = Nothing
+                Dim settingsCategory As CategorizedSettingsElementCollection = Nothing
                 If MyBase.Item(configProperty) IsNot Nothing Then
-                    settingsCategory = DirectCast(MyBase.Item(configProperty), CategorizedSettingsCollection)
+                    settingsCategory = DirectCast(MyBase.Item(configProperty), CategorizedSettingsElementCollection)
                 End If
                 Return settingsCategory
             End Get
@@ -61,7 +61,7 @@ Namespace Configuration
         ''' <value></value>
         ''' <returns>The Tva.Configuration.CategorizedSettingsCollection of the "general" category.</returns>
         ''' <remarks></remarks>
-        Public ReadOnly Property General() As CategorizedSettingsCollection
+        Public ReadOnly Property General() As CategorizedSettingsElementCollection
             Get
                 Return Category("general")
             End Get
@@ -78,7 +78,7 @@ Namespace Configuration
             ' <ConfigurationProperty()> attribute does. If this is not done then exception will be raised
             ' when the category elements are being deserialized.
             For Each category As XmlNode In configSection.DocumentElement.SelectNodes("*")
-                MyBase.Properties.Add(New ConfigurationProperty(category.Name(), GetType(CategorizedSettingsCollection)))
+                MyBase.Properties.Add(New ConfigurationProperty(category.Name(), GetType(CategorizedSettingsElementCollection)))
             Next
             configSectionStream.Seek(0, System.IO.SeekOrigin.Begin)
 

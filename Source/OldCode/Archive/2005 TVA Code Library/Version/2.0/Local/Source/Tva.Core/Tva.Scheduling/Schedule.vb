@@ -79,24 +79,20 @@ Namespace Scheduling
                             m_monthPart = New SchedulePart(.GetValue(3).ToString(), DateTimePart.Month)
                             m_dayOfWeekPart = New SchedulePart(.GetValue(4).ToString(), DateTimePart.DayOfWeek)
 
-                            If String.IsNullOrEmpty(m_description) Then
-                                ' Create a default description for the schedule.
-                                With New StringBuilder()
-                                    .Append("Scheduled for ")
-                                    .Append(m_minutePart.Description)
-                                    .Append(", ")
-                                    .Append(m_hourPart.Description)
-                                    .Append(", ")
-                                    .Append(m_dayPart.Description)
-                                    .Append(", ")
-                                    .Append(m_monthPart.Description)
-                                    .Append(", ")
-                                    .Append(m_dayOfWeekPart.Description)
-                                    .Append(".")
+                            ' Update the schedule description.
+                            With New StringBuilder()
+                                .Append(m_minutePart.Description)
+                                .Append(", ")
+                                .Append(m_hourPart.Description)
+                                .Append(", ")
+                                .Append(m_dayPart.Description)
+                                .Append(", ")
+                                .Append(m_monthPart.Description)
+                                .Append(", ")
+                                .Append(m_dayOfWeekPart.Description)
 
-                                    m_description = .ToString()
-                                End With
-                            End If
+                                m_description = .ToString()
+                            End With
                         Else
                             Throw New ArgumentException("Schedule rule must have exactly 5 parts (Example: * * * * *).")
                         End If

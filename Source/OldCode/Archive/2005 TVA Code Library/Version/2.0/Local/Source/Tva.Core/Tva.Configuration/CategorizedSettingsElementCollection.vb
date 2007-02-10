@@ -26,7 +26,7 @@ Namespace Configuration
     ''' within a configuration file.
     ''' </summary>
     ''' <remarks></remarks>
-    Public Class CategorizedSettingsCollection
+    Public Class CategorizedSettingsElementCollection
         Inherits ConfigurationElementCollection
 
         ''' <summary>

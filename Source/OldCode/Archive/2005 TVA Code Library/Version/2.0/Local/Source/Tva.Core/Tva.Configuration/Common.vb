@@ -166,7 +166,7 @@ Namespace Configuration
         ''' </code>
         ''' </para>
         ''' </remarks>
-        Public Shared ReadOnly Property Settings() As CategorizedSettingsCollection
+        Public Shared ReadOnly Property Settings() As CategorizedSettingsElementCollection
             Get
                 Return DefaultConfigFile.CategorizedSettings.General
             End Get
@@ -199,7 +199,7 @@ Namespace Configuration
         ''' </code>
         ''' </para>
         ''' </remarks>
-        Public Shared ReadOnly Property CategorizedSettings(ByVal category As String) As CategorizedSettingsCollection
+        Public Shared ReadOnly Property CategorizedSettings(ByVal category As String) As CategorizedSettingsElementCollection
             Get
                 Return DefaultConfigFile.CategorizedSettings(category)
             End Get
