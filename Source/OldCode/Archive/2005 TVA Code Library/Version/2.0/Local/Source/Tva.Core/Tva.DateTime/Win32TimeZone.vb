@@ -19,6 +19,10 @@
 '  12/28/2005 - J. Ritchie Carroll
 '       Made modifications to original source (e.g., merged SimpleTimeZone into Win32TimeZone) to
 '       help with FxCop compatibility.
+'  02/09/2007 - Pinal C. Patel
+'       Made modifications to Win32TimeZone.GetDaylightChanges() function in order to accomodate the
+'       extended Daylight Savings Time taking effect from year 2007.
+'       For more information: http://support.microsoft.com/gp/cp_dst
 '
 '*******************************************************************************************************
 
@@ -607,6 +611,10 @@ Namespace DateTime
 
         Shared Sub New()
 
+            ' This is a list of all the United States time zones that are afftected by the exteded Daylight
+            ' Savings Time taking effect from year 2007. The list is declared as a "Shared" member and 
+            ' initialized in this default shared constructor so that this list gets initialized no matter which 
+            ' public gets called.
             m_unitedStatesTimeZones = New List(Of String)()
             m_unitedStatesTimeZones.Add("ALASKAN STANDARD TIME")
             m_unitedStatesTimeZones.Add("ATLANTIC STANDARD TIME")
@@ -848,11 +856,24 @@ Namespace DateTime
                 Return Nothing
 
             Else
+                ' 02/09/2007 - PCP: Made modifications to the code below that returns the start and end date for
+                ' Daylight Savings Time for the current time zone. Because of the The U.S. Energy Policy Act of 
+                ' 2005, the start and end date for Daylight Savings Time for time zones in the United States have
+                ' changed begging year 2007. As a result the registry entries that are used to determine the DST
+                ' dates under Windows are updated to provide the new start and end dates, and the old dates that
+                ' were used up until year 2006 are no longer available. This can cause a problem when looking
+                ' at historical data (year 2006 and earlier), because the DST calculation will yeild incorrect
+                ' result since we will be using the new start and end dates for DST instead of the old ones. To
+                ' overcome this problem, we have hard-coded the DST start and end dates of United States time zones
+                ' for year 2006 and earlier.
                 If year <= 2006 AndAlso m_unitedStatesTimeZones.BinarySearch(_standardName.ToUpper()) >= 0 Then
+                    ' The requested year is 2006 or earlier and the time zone is one of the United States time 
+                    ' zones affected by the extended Daylight Savings Time.
                     Return New DaylightTime(New DaylightTimeChange(4, DayOfWeek.Sunday, 0, New TimeSpan(2, 0, 0)).GetDate(year), _
                                             New DaylightTimeChange(10, DayOfWeek.Sunday, 4, New TimeSpan(2, 0, 0)).GetDate(year), _
                                             _daylightDelta)
                 Else
+
                     Return New DaylightTime( _
                      _daylightTimeChangeStart.GetDate(year), _
                      _daylightTimeChangeEnd.GetDate(year), _
