@@ -8,9 +8,10 @@ Friend Class ClientInfo
     Public Sub New()
 
         MyBase.New()
-        NTUser = System.Threading.Thread.CurrentPrincipal.Identity.Name
+        UserName = String.Format("{0}\{1}", Environment.UserDomainName, Environment.UserName)
+        MachineName = Environment.MachineName
         Try
-            Assembly = EntryAssembly.FullName
+            Assembly = EntryAssembly.Name & ", Version=" & EntryAssembly.Version.ToString()
             Location = EntryAssembly.Location
             Created = EntryAssembly.BuildDate
         Catch ex As Exception
@@ -23,6 +24,7 @@ Friend Class ClientInfo
     Public Assembly As String
     Public Location As String
     Public Created As System.DateTime
-    Public NTUser As String
+    Public UserName As String
+    Public MachineName As String
 
 End Class
