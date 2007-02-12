@@ -1,21 +1,21 @@
 Public Class UpdateClientStatusEventArgs
     Inherits EventArgs
 
-    Private m_update As String
+    Private m_message As String
 
-    Public Sub New(ByVal update As String)
+    Public Sub New(ByVal message As String)
 
         MyBase.New()
-        m_update = update
+        m_message = message
 
     End Sub
 
-    Public Property Update() As String
+    Public Property Message() As String
         Get
-            Return m_update
+            Return m_message
         End Get
         Set(ByVal value As String)
-            m_update = value
+            m_message = value
         End Set
     End Property
 

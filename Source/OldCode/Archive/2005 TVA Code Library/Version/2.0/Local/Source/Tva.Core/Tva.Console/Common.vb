@@ -12,8 +12,8 @@ Namespace Console
 #Region " Member Declaration "
 
         Private Enum ConsoleEventType As UInteger
-            CtrlCKeyPress = 0
-            CtrlBreakKeyPress = 1
+            CancelKeyPress = 0
+            BreakKeyPress = 1
             ConsoleClosing = 2
             UserLoggingOff = 5
             SystemShutdown = 6
@@ -27,9 +27,9 @@ Namespace Console
 
 #Region " Event Declaration "
 
-        Public Shared Event CtrlCKeyPress As EventHandler(Of System.ComponentModel.CancelEventArgs)
+        Public Shared Event CancelKeyPress As EventHandler(Of System.ComponentModel.CancelEventArgs)
 
-        Public Shared Event CtrlBreakKeyPress As EventHandler(Of System.ComponentModel.CancelEventArgs)
+        Public Shared Event BreakKeyPress As EventHandler(Of System.ComponentModel.CancelEventArgs)
 
         Public Shared Event ConsoleClosing As EventHandler(Of System.ComponentModel.CancelEventArgs)
 
@@ -133,13 +133,13 @@ Namespace Console
 
             ' When this function doesn't return True, the default handler is called and the default action takes place.
             Select Case controlType
-                Case ConsoleEventType.CtrlCKeyPress
+                Case ConsoleEventType.CancelKeyPress
                     Dim ctrlCKeyPressEventData As New System.ComponentModel.CancelEventArgs()
-                    RaiseEvent CtrlCKeyPress(Nothing, ctrlCKeyPressEventData)
+                    RaiseEvent CancelKeyPress(Nothing, ctrlCKeyPressEventData)
                     If ctrlCKeyPressEventData.Cancel Then Return True
-                Case ConsoleEventType.CtrlBreakKeyPress
+                Case ConsoleEventType.BreakKeyPress
                     Dim ctrlBreakKeyPressEventData As New System.ComponentModel.CancelEventArgs()
-                    RaiseEvent CtrlBreakKeyPress(Nothing, ctrlBreakKeyPressEventData)
+                    RaiseEvent BreakKeyPress(Nothing, ctrlBreakKeyPressEventData)
                     If ctrlBreakKeyPressEventData.Cancel Then Return True
                 Case ConsoleEventType.ConsoleClosing
                     Dim consoleClosingEventData As New System.ComponentModel.CancelEventArgs()

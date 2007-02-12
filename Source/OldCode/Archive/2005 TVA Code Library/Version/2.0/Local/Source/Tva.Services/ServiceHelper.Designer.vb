@@ -19,13 +19,18 @@ Partial Class ServiceHelper
         'This call is required by the Component Designer.
         InitializeComponent()
 
-        m_processes = New Dictionary(Of String, ServiceProcess)
-        m_clientInfo = New Dictionary(Of Guid, ClientInfo)
-        m_startedEventHandlerList = New List(Of StartedEventHandler)
-        m_stoppedEventHandlerList = New List(Of EventHandler)
-        m_serviceComponents = New List(Of IServiceComponent)
-        m_serviceComponents.Add(SHTcpServer)
-        m_serviceComponents.Add(SHScheduleManager)
+        m_logStatusUpdates = True
+        m_requestHistoryLimit = 50
+        m_encryption = Security.Cryptography.EncryptLevel.Level1
+        m_secureSession = True
+        m_configurationString = "Protocol=Tcp; Port=6500"
+        m_logFile = New Tva.IO.LogFile("StatusUpdates.txt")
+        m_processes = New Dictionary(Of String, ServiceProcess)()
+        m_clientInfo = New Dictionary(Of Guid, ClientInfo)()
+        m_requestHistory = New List(Of RequestInfo)()
+        m_serviceComponents = New List(Of IServiceComponent)()
+        m_startedEventHandlerList = New List(Of StartedEventHandler)()
+        m_stoppedEventHandlerList = New List(Of EventHandler)()
 
     End Sub
 
@@ -46,23 +51,7 @@ Partial Class ServiceHelper
     'Do not modify it using the code editor.
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
-        Me.components = New System.ComponentModel.Container
-        Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(ServiceHelper))
-        Me.SHTcpServer = New Tva.Communication.TcpServer(Me.components)
-        Me.SHScheduleManager = New Tva.Scheduling.ScheduleManager(Me.components)
-        '
-        'SHTcpServer
-        '
-        Me.SHTcpServer.ConfigurationString = "Port=6500"
-        Me.SHTcpServer.PayloadAware = True
-        Me.SHTcpServer.ReceiveRawDataFunction = Nothing
-        Me.SHTcpServer.TextEncoding = CType(resources.GetObject("SHTcpServer.TextEncoding"), System.Text.Encoding)
-        '
-        'SHScheduleManager
-        '
-
+        components = New System.ComponentModel.Container()
     End Sub
-    Friend WithEvents SHTcpServer As Tva.Communication.TcpServer
-    Friend WithEvents SHScheduleManager As Tva.Scheduling.ScheduleManager
 
 End Class

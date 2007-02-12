@@ -307,7 +307,7 @@ Namespace Scheduling
         Public ReadOnly Property Status() As String Implements Services.IServiceComponent.Status
             Get
                 With New System.Text.StringBuilder()
-                    .Append("        Number of schedules:")
+                    .Append("        Number of schedules: ")
                     .Append(m_schedules.Count)
                     .Append(Environment.NewLine)
                     .Append(Environment.NewLine)

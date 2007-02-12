@@ -43,7 +43,7 @@ Public Class ClientRequest
     ''' <param name="type">The type of client request.</param>
     Public Sub New(ByVal type As String)
 
-        MyClass.New(type, Nothing)
+        MyClass.New(type, New String() {})
 
     End Sub
 
@@ -89,31 +89,27 @@ Public Class ClientRequest
     End Property
 
     ''' <summary>
-    ''' Parses a command string into a type and parameters array
+    ''' Parses text into a type and parameters array.
     ''' </summary>
-    ''' <param name="command">Command string to parse</param>
-    ''' <param name="request">Parsed command string results</param>
-    ''' <returns>True if parse succeeded</returns>
-    ''' <remarks>All parsed items in command string will be stored in upper-case</remarks>
-    Public Shared Function TryParse(ByVal command As String, ByRef request As ClientRequest) As Boolean
+    ''' <param name="text">The text to be parsed.</param>
+    ''' <returns>A Tva.Services.ClientRequest instance.</returns>
+    Public Shared Function Parse(ByVal text As String) As ClientRequest
 
-        If Not String.IsNullOrEmpty(command) Then
-            Dim commandSegments As String() = RemoveDuplicateWhiteSpace(command.Trim().ToUpper()).Split(" "c)
+        Dim request As ClientRequest = Nothing
+        If Not String.IsNullOrEmpty(text) Then
+            Dim textSegments As String() = Tva.Console.Common.ParseCommand(text)
 
-            If commandSegments.Length > 0 Then
+            If textSegments.Length > 0 Then
                 request = New ClientRequest()
-                request.Type = commandSegments(0)
+                request.Type = textSegments(0).ToUpper()
 
-                If commandSegments.Length > 1 Then
-                    request.Parameters = CreateArray(Of String)(commandSegments.Length - 1)
-                    Array.ConstrainedCopy(commandSegments, 1, request.Parameters, 0, request.Parameters.Length)
+                If textSegments.Length > 1 Then
+                    request.Parameters = CreateArray(Of String)(textSegments.Length - 1)
+                    Array.ConstrainedCopy(textSegments, 1, request.Parameters, 0, request.Parameters.Length)
                 End If
-
-                Return True
             End If
         End If
-
-        Return False
+        Return request
 
     End Function
 
