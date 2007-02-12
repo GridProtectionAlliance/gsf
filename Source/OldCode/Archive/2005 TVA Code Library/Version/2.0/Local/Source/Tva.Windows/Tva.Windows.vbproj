@@ -89,7 +89,7 @@
   </Target>
   -->
   <PropertyGroup>
-    <PostBuildEvent>XCOPY /C /R /Y "$(OutDir)$(TargetFileName)" "..\Tva.Phasors\PMU Connection Tester\Embedded Resources\$(TargetFileName)"
-ATTRIB +R "..\Tva.Phasors\PMU Connection Tester\Embedded Resources\$(TargetFileName)"</PostBuildEvent>
+    <PostBuildEvent>
+    </PostBuildEvent>
   </PropertyGroup>
 </Project>
