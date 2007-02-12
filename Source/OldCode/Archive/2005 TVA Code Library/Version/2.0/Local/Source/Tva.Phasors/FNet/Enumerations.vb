@@ -10,7 +10,7 @@
 '
 '  Code Modification History:
 '  -----------------------------------------------------------------------------------------------------
-'  07/11/2007 - J. Ritchie Carroll
+'  02/08/2007 - J. Ritchie Carroll & Jian Zuo (Ryan)
 '       Moved all namespace level enumerations into "Enumerations.vb" file
 '
 '*******************************************************************************************************

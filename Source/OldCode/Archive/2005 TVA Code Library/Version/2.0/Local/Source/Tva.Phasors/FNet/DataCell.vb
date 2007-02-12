@@ -10,7 +10,7 @@
 '
 '  Code Modification History:
 '  -----------------------------------------------------------------------------------------------------
-'  11/12/2004 - J. Ritchie Carroll
+'  02/08/2007 - J. Ritchie Carroll & Jian Zuo (Ryan)
 '       Initial version of source generated
 '
 '*******************************************************************************************************
@@ -195,7 +195,7 @@ Namespace FNet
                 Next
 
                 ' Parse FNet data frame into individual fields seperated by spaces
-                Data = Encoding.ASCII.GetString(binaryImage, startIndex + 1, stopByteIndex - startIndex - 1).Split(" "c)
+                data = Encoding.ASCII.GetString(binaryImage, startIndex + 1, stopByteIndex - startIndex - 1).Split(" "c)
 
                 ' Get timestamp of dat record
                 Parent.Ticks = ParseTimestamp(data(Element.Date), data(Element.Time), Convert.ToInt32(data(Element.SampleIndex)), .FrameRate)

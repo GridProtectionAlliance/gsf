@@ -10,7 +10,7 @@
 '
 '  Code Modification History:
 '  -----------------------------------------------------------------------------------------------------
-'  01/14/2005 - J. Ritchie Carroll
+'  02/08/2007 - J. Ritchie Carroll & Jian Zuo (Ryan)
 '       Initial version of source generated
 '
 '*******************************************************************************************************
@@ -35,24 +35,28 @@ Namespace FNet
 
 #Region " Public Member Declarations "
         ''' <summary>
-        ''' Raise Event when receive Configuration Frame
+        ''' This event is raised when a Configuration Frame has been parsed
         ''' </summary>
-        ''' <param name="frame"></param>
-        ''' <remarks>See Std IEEE 1344 for the defination of configuration frame. FNET uses the same concept</remarks>
+        ''' <remarks>
+        ''' <para>See Std IEEE 1344 for the definition of configuration frame. FNET uses a similar concept</para>
+        ''' <para>
+        ''' Note that the FNET data steam does not contain a parsable configuration frame, but a virtual
+        ''' one is created on reception of the first data frame
+        ''' </para>
+        ''' </remarks>
         Public Event ReceivedConfigurationFrame(ByVal frame As ConfigurationFrame)
         ''' <summary>
-        ''' Raise Event when receive Data Frame
+        ''' This event is raised when a Data Frame has been parsed
         ''' </summary>
-        ''' <param name="frame"></param>
-        ''' <remarks>See Std IEEE 1344 for the defination of data frame. FNET uses the same concept</remarks>
+        ''' <remarks>See Std IEEE 1344 for the definition of data frame. FNET uses a similar concept</remarks>
         Public Event ReceivedDataFrame(ByVal frame As DataFrame)
         ''' <summary>
-        ''' Raise event when entire frame is available
+        ''' This event is raised when an entire frame is available
         ''' </summary>
         ''' <remarks></remarks>
         Public Event ReceivedFrameBufferImage(ByVal frameType As FundamentalFrameType, ByVal binaryImage As Byte(), ByVal offset As Integer, ByVal length As Integer) Implements IFrameParser.ReceivedFrameBufferImage
         ''' <summary>
-        ''' Raise exception when parse the data or proccess the buffer queue
+        ''' This event is raised when an exception occurs while parsing the data stream
         ''' </summary>
         ''' <remarks></remarks>
         Public Event DataStreamException(ByVal ex As Exception) Implements IFrameParser.DataStreamException
@@ -73,6 +77,8 @@ Namespace FNet
         Private m_dataStream As MemoryStream
         Private m_configurationFrame As ConfigurationFrame
         Private m_totalFramesReceived As Long
+        Private m_frameRate As Int16
+        Private m_nominalFrequency As LineFrequency
 
 #End Region
 
@@ -80,14 +86,23 @@ Namespace FNet
 
         Public Sub New()
 
-            m_bufferQueue = ProcessQueue(Of Byte()).CreateRealTimeQueue(AddressOf ProcessBuffers)
+            ' FNet devices default to 10 frames per second and 60Hz
+            MyClass.New(10, LineFrequency.Hz60)
 
         End Sub
 
         Public Sub New(ByVal configurationFrame As ConfigurationFrame)
 
-            MyClass.New()
+            MyClass.New(configurationFrame.FrameRate, configurationFrame.NominalFrequency)
             m_configurationFrame = configurationFrame
+
+        End Sub
+
+        Public Sub New(ByVal frameRate As Int16, ByVal nominalFrequency As LineFrequency)
+
+            m_bufferQueue = ProcessQueue(Of Byte()).CreateRealTimeQueue(AddressOf ProcessBuffers)
+            m_frameRate = frameRate
+            m_nominalFrequency = nominalFrequency
 
         End Sub
 
@@ -134,6 +149,24 @@ Namespace FNet
             End Get
             Set(ByVal value As ConfigurationFrame)
                 m_configurationFrame = value
+            End Set
+        End Property
+
+        Public Property FrameRate() As Int16
+            Get
+                Return m_frameRate
+            End Get
+            Set(ByVal value As Int16)
+                m_frameRate = value
+            End Set
+        End Property
+
+        Public Property NominalFrequency() As LineFrequency
+            Get
+                Return m_nominalFrequency
+            End Get
+            Set(ByVal value As LineFrequency)
+                m_nominalFrequency = value
             End Set
         End Property
 
@@ -312,16 +345,16 @@ Namespace FNet
                         End If
                     Next
 
+                    ' If there was not entire frame to parse save off remaining buffer to prepend onto next read
                     If endByteIndex = -1 Then
-                        ' If not, save off remaining buffer to prepend onto next read
-                        ' If there is no startByte and endByte, dicard the bad buffer
+                        ' If there is no startByte and endByte, discard the bad buffer
                         If startByteIndex = -1 Then
                             m_dataStream = Nothing
                         Else
                             m_dataStream = New MemoryStream
                             m_dataStream.Write(buffer, offset, count - offset)
                         End If
-                        
+
                         Exit Do
                     End If
 
@@ -333,8 +366,8 @@ Namespace FNet
                         ' Pre-parse first FNet data frame to get unit ID field and establish a virutal configuration frame
                         Dim data As String() = Encoding.ASCII.GetString(buffer, startByteIndex + 1, endByteIndex - startByteIndex - 1).Split(" "c)
 
-                        ' TODO: Must define properties to assign non-default frame rate and/or nominal frequency
-                        m_configurationFrame = New ConfigurationFrame(Convert.ToUInt16(data(Element.UnitID)), Date.Now.Ticks, 10, LineFrequency.Hz60)
+                        ' Create virtual configuration frame
+                        m_configurationFrame = New ConfigurationFrame(Convert.ToUInt16(data(Element.UnitID)), Date.Now.Ticks, m_frameRate, m_nominalFrequency)
 
                         ' Notify clients of new configuration frame
                         RaiseReceivedConfigurationFrame(m_configurationFrame)
