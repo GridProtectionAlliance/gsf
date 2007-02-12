@@ -866,6 +866,9 @@ Namespace DateTime
                 ' result since we will be using the new start and end dates for DST instead of the old ones. To
                 ' overcome this problem, we have hard-coded the DST start and end dates of United States time zones
                 ' for year 2006 and earlier.
+                ' Daylight Savings Time duration for United States Time zones:
+                ' Until 2006 - first Sunday in April to last Sunday in October
+                ' From 2007 - second Sunday in March to first Sunday in November
                 If year <= 2006 AndAlso m_unitedStatesTimeZones.BinarySearch(_standardName.ToUpper()) >= 0 Then
                     ' The requested year is 2006 or earlier and the time zone is one of the United States time 
                     ' zones affected by the extended Daylight Savings Time.
