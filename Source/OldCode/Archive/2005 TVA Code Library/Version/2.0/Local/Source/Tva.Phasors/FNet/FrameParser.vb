@@ -59,8 +59,6 @@ Namespace FNet
 
 #End Region
 
-
-
 #Region " Private Member Declarations "
 
         Private Event IFrameParserReceivedConfigurationFrame(ByVal frame As IConfigurationFrame) Implements IFrameParser.ReceivedConfigurationFrame
@@ -298,7 +296,7 @@ Namespace FNet
                     startByteIndex = -1
                     endByteIndex = -1
 
-                    For x = offset To buffer.Length - 1
+                    For x = offset To count - 1
                         ' Found start index
                         If buffer(x) = StartByte Then startByteIndex = x
 
@@ -321,9 +319,7 @@ Namespace FNet
                             m_dataStream = Nothing
                         Else
                             m_dataStream = New MemoryStream
-                            ' m_dataStream.Write(buffer, offset, count - offset)
-                            ' Discard the bad buffer before startByteIndex
-                            m_dataStream.Write(buffer, startByteIndex, count - startByteIndex)
+                            m_dataStream.Write(buffer, offset, count - offset)
                         End If
                         
                         Exit Do
