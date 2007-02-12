@@ -625,6 +625,18 @@ Public Class MultiProtocolFrameParser
 
     End Function
 
+    Private Sub MaintainCapturedFrameTiming()
+
+        If m_lastFrameReceivedTime > 0 Then
+            ' To keep precise timing on "frames per second", we wait for defined frame rate interval
+            Dim sleepTime As Double = m_definedFrameRate - TicksToSeconds(Date.Now.Ticks - m_lastFrameReceivedTime)
+            If sleepTime > 0 Then Thread.Sleep(sleepTime * 1000)
+        End If
+
+        m_lastFrameReceivedTime = Date.Now.Ticks
+
+    End Sub
+
 #Region " Communications Client Event Handlers "
 
     Private Sub m_communicationClient_Connected(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles m_communicationClient.Connected
@@ -696,6 +708,8 @@ Public Class MultiProtocolFrameParser
         m_frameRateTotal += 1
         RaiseEvent ReceivedCommandFrame(frame)
 
+        If m_transportProtocol = Communication.TransportProtocol.File Then MaintainCapturedFrameTiming()
+
     End Sub
 
     Private Sub m_frameParser_ReceivedConfigurationFrame(ByVal frame As IConfigurationFrame) Handles m_frameParser.ReceivedConfigurationFrame
@@ -710,6 +724,8 @@ Public Class MultiProtocolFrameParser
         m_configurationFrame = frame
         RaiseEvent ReceivedConfigurationFrame(frame)
 
+        If m_transportProtocol = Communication.TransportProtocol.File Then MaintainCapturedFrameTiming()
+
     End Sub
 
     Private Sub m_frameParser_ReceivedDataFrame(ByVal frame As IDataFrame) Handles m_frameParser.ReceivedDataFrame
@@ -718,13 +734,7 @@ Public Class MultiProtocolFrameParser
         m_frameRateTotal += 1
         RaiseEvent ReceivedDataFrame(frame)
 
-        If m_transportProtocol = Communication.TransportProtocol.File AndAlso m_lastFrameReceivedTime > 0 Then
-            ' To keep precise timing on "frames per second", we wait for defined frame rate interval
-            Dim sleepTime As Double = m_definedFrameRate - TicksToSeconds(Date.Now.Ticks - m_lastFrameReceivedTime)
-            If sleepTime > 0 Then Thread.Sleep(sleepTime * 1000)
-        End If
-
-        m_lastFrameReceivedTime = Date.Now.Ticks
+        If m_transportProtocol = Communication.TransportProtocol.File Then MaintainCapturedFrameTiming()
 
     End Sub
 
@@ -734,6 +744,8 @@ Public Class MultiProtocolFrameParser
         m_frameRateTotal += 1
         RaiseEvent ReceivedHeaderFrame(frame)
 
+        If m_transportProtocol = Communication.TransportProtocol.File Then MaintainCapturedFrameTiming()
+
     End Sub
 
     Private Sub m_frameParser_ReceivedUndeterminedFrame(ByVal frame As IChannelFrame) Handles m_frameParser.ReceivedUndeterminedFrame
@@ -741,6 +753,8 @@ Public Class MultiProtocolFrameParser
         m_totalFramesReceived += 1
         m_frameRateTotal += 1
         RaiseEvent ReceivedUndeterminedFrame(frame)
+
+        If m_transportProtocol = Communication.TransportProtocol.File Then MaintainCapturedFrameTiming()
 
     End Sub
 
