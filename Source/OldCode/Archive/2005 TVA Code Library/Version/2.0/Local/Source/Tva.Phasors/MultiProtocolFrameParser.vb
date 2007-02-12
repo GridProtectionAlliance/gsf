@@ -540,6 +540,8 @@ Public Class MultiProtocolFrameParser
 
         m_frameRate = m_frameRateTotal / time
         m_byteRate = m_byteRateTotal / time
+
+        m_totalFramesReceived += m_frameRateTotal
         m_totalBytesReceived += m_byteRateTotal
 
         m_frameRateTotal = 0
@@ -704,7 +706,6 @@ Public Class MultiProtocolFrameParser
 
     Private Sub m_frameParser_ReceivedCommandFrame(ByVal frame As ICommandFrame) Handles m_frameParser.ReceivedCommandFrame
 
-        m_totalFramesReceived += 1
         m_frameRateTotal += 1
         RaiseEvent ReceivedCommandFrame(frame)
 
@@ -719,7 +720,6 @@ Public Class MultiProtocolFrameParser
             SendDeviceCommand(DeviceCommand.EnableRealTimeData)
         End If
 
-        m_totalFramesReceived += 1
         m_frameRateTotal += 1
         m_configurationFrame = frame
         RaiseEvent ReceivedConfigurationFrame(frame)
@@ -730,7 +730,6 @@ Public Class MultiProtocolFrameParser
 
     Private Sub m_frameParser_ReceivedDataFrame(ByVal frame As IDataFrame) Handles m_frameParser.ReceivedDataFrame
 
-        m_totalFramesReceived += 1
         m_frameRateTotal += 1
         RaiseEvent ReceivedDataFrame(frame)
 
@@ -740,7 +739,6 @@ Public Class MultiProtocolFrameParser
 
     Private Sub m_frameParser_ReceivedHeaderFrame(ByVal frame As IHeaderFrame) Handles m_frameParser.ReceivedHeaderFrame
 
-        m_totalFramesReceived += 1
         m_frameRateTotal += 1
         RaiseEvent ReceivedHeaderFrame(frame)
 
@@ -750,7 +748,6 @@ Public Class MultiProtocolFrameParser
 
     Private Sub m_frameParser_ReceivedUndeterminedFrame(ByVal frame As IChannelFrame) Handles m_frameParser.ReceivedUndeterminedFrame
 
-        m_totalFramesReceived += 1
         m_frameRateTotal += 1
         RaiseEvent ReceivedUndeterminedFrame(frame)
 
