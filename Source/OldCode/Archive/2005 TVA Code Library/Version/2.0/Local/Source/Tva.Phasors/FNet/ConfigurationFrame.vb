@@ -39,7 +39,7 @@ Namespace FNet
 
         Public Sub New(ByVal idCode As UInt16, ByVal ticks As Long, ByVal frameRate As Int16, ByVal nominalFrequency As LineFrequency)
 
-            MyClass.New(idCode, ticks, frameRate, nominalFrequency, "FNet-" & idCode)
+            MyClass.New(idCode, ticks, frameRate, nominalFrequency, "FNet Unit-" & idCode)
 
         End Sub
 

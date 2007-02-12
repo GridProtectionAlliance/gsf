@@ -92,6 +92,16 @@ Namespace FNet
             End Get
         End Property
 
+        ' FNet protocol only allows one device, so we share ID code with parent frame...
+        Public Overrides Property IDCode() As UInt16
+            Get
+                Return Parent.IDCode
+            End Get
+            Set(ByVal value As UInt16)
+                Parent.IDCode = value
+            End Set
+        End Property
+
         Public Property Longitude() As Single
             Get
                 Return m_longitude
