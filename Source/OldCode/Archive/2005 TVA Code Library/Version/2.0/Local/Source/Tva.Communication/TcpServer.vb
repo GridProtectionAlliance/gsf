@@ -203,6 +203,11 @@ Public Class TcpServer
             ' This will be a normal exception...
         Catch ex As ObjectDisposedException
             ' This will be a normal exception...
+        Catch ex As SocketException
+            If ex.SocketErrorCode <> SocketError.Interrupted Then
+                ' If we encounter a socket exception other than SocketError.Interrupt, we'll report it as an exception.
+                OnServerStartupException(New ExceptionEventArgs(ex))
+            End If
         Catch ex As Exception
             ' We will gracefully exit when an exception occurs.
             OnServerStartupException(New ExceptionEventArgs(ex))
