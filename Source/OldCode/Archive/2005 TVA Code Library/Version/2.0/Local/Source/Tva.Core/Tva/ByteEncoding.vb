@@ -14,6 +14,8 @@
 '       Original version of source code generated
 '  04/05/2006 - J. Ritchie Carroll
 '       Transformed code into System.Text.Encoding styled hierarchy
+'  02/13/2007 - J. Ritchie Carroll
+'       Added ASCII character extraction as an encoding option
 '
 '*******************************************************************************************************
 
@@ -24,7 +26,7 @@ Imports Tva.Common
 Imports Tva.Interop
 Imports Tva.Interop.Bit
 
-''' <summary>Handles conversion of a byte buffers to and from user presentable data formats</summary>
+''' <summary>Handles conversion of byte buffers to and from user presentable data formats</summary>
 Public MustInherit Class ByteEncoding
 
 #Region " Hexadecimal Encoding Class "
@@ -348,6 +350,64 @@ Public MustInherit Class ByteEncoding
 
 #End Region
 
+#Region " ASCII Encoding Class "
+
+    <EditorBrowsable(EditorBrowsableState.Never)> _
+    Public Class ASCIIEncoding
+
+        Inherits ByteEncoding
+
+        Friend Sub New()
+
+            ' This class is meant for internal instatiation only
+
+        End Sub
+
+        ''' <summary>Decodes given string back into a byte buffer</summary>
+        ''' <param name="binaryData">Encoded binary data string to decode</param>
+        ''' <param name="spacingCharacter">Original spacing character that was inserted between encoded bytes</param>
+        ''' <returns>Decoded bytes</returns>
+        Public Overrides Function GetBytes(ByVal binaryData As String, ByVal spacingCharacter As Char) As Byte()
+
+            ' Remove spacing characters, if needed
+            binaryData = binaryData.Trim
+            If spacingCharacter <> NoSpacing Then binaryData = binaryData.Replace(spacingCharacter, "")
+
+            Return Encoding.ASCII.GetBytes(binaryData)
+
+        End Function
+
+        ''' <summary>Encodes given buffer into a user presentable representation</summary>
+        ''' <param name="bytes">Bytes to encode</param>
+        ''' <param name="offset">Offset into buffer to bgeing encoding</param>
+        ''' <param name="length">Length of buffer to encode</param>
+        ''' <param name="spacingCharacter">Spacing character to place between encoded bytes</param>
+        ''' <returns>String of encoded bytes</returns>
+        Public Overrides Function GetString(ByVal bytes() As Byte, ByVal offset As Integer, ByVal length As Integer, ByVal spacingCharacter As Char) As String
+
+            If spacingCharacter = NoSpacing Then
+                Return Encoding.ASCII.GetString(bytes, offset, length)
+            Else
+                With New StringBuilder
+                    If bytes IsNot Nothing Then
+                        Dim asciiString As String = Encoding.ASCII.GetString(bytes, offset, length)
+
+                        For x As Integer = 0 To asciiString.Length - 1
+                            If x > 0 Then .Append(spacingCharacter)
+                            .Append(asciiString(x))
+                        Next
+                    End If
+
+                    Return .ToString()
+                End With
+            End If
+
+        End Function
+
+    End Class
+
+#End Region
+
     Public Const NoSpacing As Char = Char.MinValue
 
     Private Shared m_hexadecimalEncoding As HexadecimalEncoding
@@ -355,6 +415,7 @@ Public MustInherit Class ByteEncoding
     Private Shared m_bigEndianBinaryEncoding As BinaryEncoding
     Private Shared m_littleEndianBinaryEncoding As BinaryEncoding
     Private Shared m_base64Encoding As Base64Encoding
+    Private Shared m_asciiEncoding As ASCIIEncoding
 
     Private Sub New()
 
@@ -399,6 +460,14 @@ Public MustInherit Class ByteEncoding
         Get
             If m_base64Encoding Is Nothing Then m_base64Encoding = New Base64Encoding
             Return m_base64Encoding
+        End Get
+    End Property
+
+    ''' <summary>Handles encoding and decoding of a byte buffer into an ASCII character presentation format</summary>
+    Public Shared ReadOnly Property ASCII() As ASCIIEncoding
+        Get
+            If m_asciiEncoding Is Nothing Then m_asciiEncoding = New ASCIIEncoding
+            Return m_asciiEncoding
         End Get
     End Property
 
