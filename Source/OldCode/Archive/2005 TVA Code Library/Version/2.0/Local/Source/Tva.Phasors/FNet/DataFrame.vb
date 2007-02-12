@@ -60,6 +60,10 @@ Namespace FNet
 
         End Sub
 
+        ''' <summary>
+        ''' Return the type
+        ''' </summary>
+      
         Public Overrides ReadOnly Property DerivedType() As System.Type
             Get
                 Return Me.GetType()
@@ -81,7 +85,10 @@ Namespace FNet
             End Set
         End Property
 
-        Public Property SampleIndex() As Int16
+        ''' <summary>
+        ''' Set and Return the SampleIndex
+        ''' </summary>
+                Public Property SampleIndex() As Int16
             Get
                 Return m_sampleIndex
             End Get
@@ -90,6 +97,9 @@ Namespace FNet
             End Set
         End Property
 
+        ''' <summary>
+        ''' Return the checksum verification result. Since FNET data has no checksum, it is always valid.
+        ''' </summary>
         Protected Overrides Function ChecksumIsValid(ByVal buffer() As Byte, ByVal startIndex As Integer) As Boolean
 
             ' FNet uses no checksum, we assume data packet is valid
