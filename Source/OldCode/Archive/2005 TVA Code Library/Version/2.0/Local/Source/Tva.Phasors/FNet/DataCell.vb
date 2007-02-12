@@ -176,7 +176,7 @@ Namespace FNet
         ''' <summary>
         ''' Overrides the ParseBodyImage in ChannelCell,phase the image body
         ''' </summary>
-        ''' <remarks>For the beginning second of each minute, the first three data are longitude,lattitude and number of satellite respectly for FNET data</remarks>
+        ''' <remarks>The longitude,lattitude and number of satellite at the top of minute in FNET data</remarks>
         Protected Overrides Sub ParseBodyImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
             If binaryImage(startIndex) <> StartByte Then Throw New InvalidOperationException("Bad data stream, expected start byte 01 as first byte in FNet frame, got " & binaryImage(startIndex).ToString("x"c).PadLeft(2, "0"c).ToUpper())
@@ -204,7 +204,7 @@ Namespace FNet
                 m_analogValue = Convert.ToSingle(data(Element.Analog))
 
                 If Convert.ToInt32(data(Element.Time).Substring(4, 2)) = 0 Then
-                    With DirectCast(.Parent, ConfigurationFrame)
+                    With DirectCast(.This, ConfigurationCell)
                         Select Case Convert.ToInt32(data(Element.SampleIndex))
                             Case 0
                                 .Longitude = m_analogValue
