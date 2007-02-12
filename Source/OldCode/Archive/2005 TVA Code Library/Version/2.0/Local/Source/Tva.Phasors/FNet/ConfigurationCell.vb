@@ -29,7 +29,7 @@ Namespace FNet
 
         Private m_longitude As Single
         Private m_latitude As Single
-        Private m_numberOfSatellites As Integer
+        Private m_numberOfSatellites As Integer = 1 ' We'll initially assume synchronization is good until told otherwise
 
         Protected Sub New()
         End Sub
