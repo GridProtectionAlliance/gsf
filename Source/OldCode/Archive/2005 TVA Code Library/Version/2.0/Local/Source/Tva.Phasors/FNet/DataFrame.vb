@@ -116,6 +116,10 @@ Namespace FNet
 
         End Sub
 
+        ''' <summary>
+        ''' Set and return the attributes of the FNET protocol
+        ''' </summary>
+        ''' <remarks>Need to add Longitude, Lattitude and Satellite number to the attributes</remarks>
         Public Overrides ReadOnly Property Attributes() As Dictionary(Of String, String)
             Get
                 With MyBase.Attributes

@@ -307,7 +307,7 @@ Namespace FNet
                                 ' Found end before beginning, bad buffer - keep looking
                                 Continue For
                             Else
-                                ' Foound a complete buffer
+                                ' Found a complete buffer
                                 endByteIndex = x
                                 Exit For
                             End If
@@ -322,7 +322,7 @@ Namespace FNet
                         Else
                             m_dataStream = New MemoryStream
                             ' m_dataStream.Write(buffer, offset, count - offset)
-                            ' Discard the bad buffer
+                            ' Discard the bad buffer before startByteIndex
                             m_dataStream.Write(buffer, startByteIndex, count - startByteIndex)
                         End If
                         

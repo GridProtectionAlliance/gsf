@@ -173,6 +173,10 @@ Namespace FNet
             End Get
         End Property
 
+        ''' <summary>
+        ''' Overrides the ParseBodyImage in ChannelCell,phase the image body
+        ''' </summary>
+        ''' <remarks>For the beginning second of each minute, the first three data are longitude,lattitude and number of satellite respectly for FNET data</remarks>
         Protected Overrides Sub ParseBodyImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
             If binaryImage(startIndex) <> StartByte Then Throw New InvalidOperationException("Bad data stream, expected start byte 01 as first byte in FNet frame, got " & binaryImage(startIndex).ToString("x"c).PadLeft(2, "0"c).ToUpper())
@@ -221,6 +225,15 @@ Namespace FNet
 
         End Sub
 
+        ''' <summary>
+        ''' Convert FNET date (mm/dd/yy), time (hh:mm:ss) and subsecond to time ticks
+        ''' </summary>
+        ''' <param name="fnetDate"></param>
+        ''' <param name="fnetTime"></param>
+        ''' <param name="sampleIndex"></param>
+        ''' <param name="frameRate"></param>
+        ''' <returns></returns>
+        ''' <remarks></remarks>
         Private Function ParseTimestamp(ByVal fnetDate As String, ByVal fnetTime As String, ByVal sampleIndex As Integer, ByVal frameRate As Integer) As Long
 
             fnetDate = fnetDate.PadLeft(6, "0"c)
