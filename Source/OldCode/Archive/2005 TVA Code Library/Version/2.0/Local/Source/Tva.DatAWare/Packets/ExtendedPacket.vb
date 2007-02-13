@@ -12,9 +12,16 @@ Namespace Packets
         ' * ----------  ----------  ----------  -----------     *
         ' * 2           0-1         Int16       Packet ID       *
         ' * 4           2-5         Int32       Database index  *
-        ' * 8           6-13        Double      Time-tag        *
-        ' * 4           14-17       Int32       Quality         *
-        ' * 4           18-21       Single      Value           *
+        ' * 2           6-7         Int16       Year            *
+        ' * 1           8           Byte        Month           *
+        ' * 1           9           Byte        Day             *
+        ' * 1           10          Byte        Hour            *
+        ' * 1           11          Byte        Minute          *
+        ' * 1           12          Byte        Second          *
+        ' * 1           13          Byte        Quality         *
+        ' * 2           14-15       Int16       Msec            *
+        ' * 2           16-17       Int16       GMT Offset      *
+        ' * 4           18-21       Int32       Value           *
         ' *******************************************************
 
         Public Shadows Const TypeID As Short = 2
@@ -91,16 +98,14 @@ Namespace Packets
 
         Public Overrides Function GetSaveData() As Byte()
 
-            Dim timestamp As New Date(GetItemValue(Of Integer)("Year"), GetItemValue(Of Integer)("Month"), _
-                GetItemValue(Of Integer)("Day"), GetItemValue(Of Integer)("Hour"), _
+            ' HACK: Check with Ritchie
+            Dim timestamp As New System.DateTime(GetItemValue(Of Integer)("Year"), _
+                GetItemValue(Of Integer)("Month"), GetItemValue(Of Integer)("Day"), _
+                (GetItemValue(Of Integer)("Hour") + GetItemValue(Of Integer)("GMTOffset")), _
                 GetItemValue(Of Integer)("Minute"), GetItemValue(Of Integer)("Second"), _
-                GetItemValue(Of Integer)("Millisecond"))
+                GetItemValue(Of Integer)("Millisecond"), DateTimeKind.Utc)
 
-            If Date.Compare(timestamp, Date.Now) = 0 Then
-
-            End If
-
-            'Return New DataPoint(timestamp, GetItemValue(Of Single)("Value"), GetItemValue(Of Integer)("Quality")).BinaryImage
+            Return New DataPoint(timestamp, GetItemValue(Of Single)("Value"), GetItemValue(Of Integer)("Quality")).BinaryImage
 
         End Function
 
