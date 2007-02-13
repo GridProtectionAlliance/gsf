@@ -17,6 +17,7 @@
 
 ' This is the most basic form of a point of data in DatAWare (used by ReadEvent and ReadRange)
 Public Class DataPoint
+    Implements IComparable
 
 #Region " Member Declaration "
 
@@ -142,6 +143,21 @@ Public Class DataPoint
             Return buffer
         End Get
     End Property
+
+#End Region
+
+#Region " IComparable Implementation "
+
+    Public Function CompareTo(ByVal obj As Object) As Integer Implements System.IComparable.CompareTo
+
+        Dim other As DataPoint = TryCast(obj, DataPoint)
+        If other IsNot Nothing Then
+            Return m_tTag.CompareTo(other.TTag)
+        Else
+            Throw New ArgumentException(String.Format("Cannot compare {0} with {1}.", Me.GetType().Name, other.GetType().Name))
+        End If
+
+    End Function
 
 #End Region
 
