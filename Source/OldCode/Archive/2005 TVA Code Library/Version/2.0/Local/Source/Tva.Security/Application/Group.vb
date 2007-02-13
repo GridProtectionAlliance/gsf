@@ -31,11 +31,7 @@ Namespace Application
 
             Dim other As Group = TryCast(obj, Group)
             If other IsNot Nothing Then
-                If m_name = other.Name AndAlso m_description = other.Description Then
-                    Return True
-                Else
-                    Return False
-                End If
+                Return (m_name = other.Name AndAlso m_description = other.Description)
             Else
                 Return False
             End If

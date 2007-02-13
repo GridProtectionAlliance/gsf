@@ -38,12 +38,7 @@ Namespace Application
 
             Dim other As Role = TryCast(obj, Role)
             If other IsNot Nothing Then
-                If m_name = other.Name AndAlso m_description = other.Description AndAlso _
-                        m_application.Equals(other.Application) Then
-                    Return True
-                Else
-                    Return False
-                End If
+                Return (m_name = other.Name AndAlso m_description = other.Description AndAlso m_application.Equals(other.Application))
             Else
                 Return False
             End If

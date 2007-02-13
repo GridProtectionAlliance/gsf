@@ -30,11 +30,7 @@ Namespace Application
 
             Dim other As Application = TryCast(obj, Application)
             If other IsNot Nothing Then
-                If m_name = other.Name AndAlso m_description = other.Description Then
-                    Return True
-                Else
-                    Return False
-                End If
+                Return (m_name = other.Name AndAlso m_description = other.Description)
             Else
                 Return False
             End If
