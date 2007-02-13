@@ -185,7 +185,9 @@ Namespace FNet
 
             With parsingState.ConfigurationCell
                 Dim data As String()
+                Dim preData As String
                 Dim stopByteIndex As Integer
+                Dim index As Integer
 
                 For x As Integer = startIndex To binaryImage.Length - 1
                     If binaryImage(x) = EndByte Then
@@ -194,8 +196,16 @@ Namespace FNet
                     End If
                 Next
 
+
                 ' Parse FNet data frame into individual fields seperated by spaces
-                data = Encoding.ASCII.GetString(binaryImage, startIndex + 1, stopByteIndex - startIndex - 1).Split(" "c)
+                preData = Encoding.ASCII.GetString(binaryImage, startIndex + 1, stopByteIndex - startIndex - 1)
+                index = preData.IndexOf("  ")
+                While (index) <> -1
+                    preData = preData.Remove(index, 1)
+                    index = preData.IndexOf("  ")
+                End While
+
+                data = preData.Split(" "c)
 
                 ' Get timestamp of dat record
                 Parent.Ticks = ParseTimestamp(data(Element.Date), data(Element.Time), Convert.ToInt32(data(Element.SampleIndex)), .FrameRate)
@@ -237,15 +247,26 @@ Namespace FNet
         Private Function ParseTimestamp(ByVal fnetDate As String, ByVal fnetTime As String, ByVal sampleIndex As Integer, ByVal frameRate As Integer) As Long
 
             fnetDate = fnetDate.PadLeft(6, "0"c)
-
-            Return New Date( _
+            If sampleIndex = 10 Then
+                Return New Date( _
                 2000 + Convert.ToInt32(fnetDate.Substring(4, 2)), _
                 Convert.ToInt32(fnetDate.Substring(0, 2).Trim()), _
                 Convert.ToInt32(fnetDate.Substring(2, 2)), _
                 Convert.ToInt32(fnetTime.Substring(0, 2)), _
                 Convert.ToInt32(fnetTime.Substring(2, 2)), _
                 Convert.ToInt32(fnetTime.Substring(4, 2)), _
-                Convert.ToInt32((sampleIndex - 1) / frameRate * 1000)).Ticks
+                0).AddSeconds(1.0).Ticks
+            Else
+                Return New Date( _
+                    2000 + Convert.ToInt32(fnetDate.Substring(4, 2)), _
+                    Convert.ToInt32(fnetDate.Substring(0, 2).Trim()), _
+                    Convert.ToInt32(fnetDate.Substring(2, 2)), _
+                    Convert.ToInt32(fnetTime.Substring(0, 2)), _
+                    Convert.ToInt32(fnetTime.Substring(2, 2)), _
+                    Convert.ToInt32(fnetTime.Substring(4, 2)), _
+                    Convert.ToInt32(sampleIndex / frameRate * 1000)).Ticks
+            End If
+
 
         End Function
 
