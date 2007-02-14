@@ -292,8 +292,8 @@ Public NotInheritable Class Common
             With New StringBuilder
                 .Append("<script language=""javascript"">" & NewLine())
                 .Append("   Show('" & url & "', " & height & ", " & width & ", " & left & ", " & top & ", " & _
-                    Math.Abs(CInt(center)) & ", " & Math.Abs(CInt(help)) & ", " & Math.Abs(CInt(resizable)) & ", " & _
-                    Math.Abs(CInt(status)) & ");" & NewLine())
+                    System.Math.Abs(CInt(center)) & ", " & System.Math.Abs(CInt(help)) & ", " & System.Math.Abs(CInt(resizable)) & ", " & _
+                    System.Math.Abs(CInt(status)) & ");" & NewLine())
                 .Append("</script>" & NewLine())
 
                 If Not page.ClientScript.IsStartupScriptRegistered("Show." & url) Then
@@ -372,8 +372,8 @@ Public NotInheritable Class Common
         End If
 
         HookupScriptToControl(control, "javascript:return(Show('" & url & "', " & height & ", " & width & ", " & _
-            left & ", " & top & ", " & Math.Abs(CInt(center)) & ", " & Math.Abs(CInt(help)) & ", " & _
-            Math.Abs(CInt(resizable)) & ", " & Math.Abs(CInt(status)) & "))", "OnClick")
+            left & ", " & top & ", " & System.Math.Abs(CInt(center)) & ", " & System.Math.Abs(CInt(help)) & ", " & _
+            System.Math.Abs(CInt(resizable)) & ", " & System.Math.Abs(CInt(status)) & "))", "OnClick")
 
     End Sub
 
@@ -511,12 +511,12 @@ Public NotInheritable Class Common
                 .Append("<script language=""javascript"">" & NewLine())
                 If Not dialogResultHolder Is Nothing Then
                     .Append("   ShowDialog('" & url & "', '" & dialogResultHolder.ClientID() & "', " & height & ", " & _
-                        width & ", " & left & ", " & top & ", " & Math.Abs(CInt(center)) & ", " & Math.Abs(CInt(help)) & _
-                        ", " & Math.Abs(CInt(resizable)) & ", " & Math.Abs(CInt(status)) & ");" & NewLine())
+                        width & ", " & left & ", " & top & ", " & System.Math.Abs(CInt(center)) & ", " & System.Math.Abs(CInt(help)) & _
+                        ", " & System.Math.Abs(CInt(resizable)) & ", " & System.Math.Abs(CInt(status)) & ");" & NewLine())
                 Else
                     .Append("   if (ShowDialog('" & url & "', null, " & height & ", " & width & ", " & left & ", " & _
-                        top & ", " & Math.Abs(CInt(center)) & ", " & Math.Abs(CInt(help)) & ", " & _
-                        Math.Abs(CInt(resizable)) & ", " & Math.Abs(CInt(status)) & "))" & NewLine())
+                        top & ", " & System.Math.Abs(CInt(center)) & ", " & System.Math.Abs(CInt(help)) & ", " & _
+                        System.Math.Abs(CInt(resizable)) & ", " & System.Math.Abs(CInt(status)) & "))" & NewLine())
                     .Append("   {" & NewLine())
                     Dim Control As System.Web.UI.Control
                     For Each Control In page.Controls
@@ -666,12 +666,12 @@ Public NotInheritable Class Common
         If Not dialogResultHolder Is Nothing Then
             HookupScriptToControl(control, "javascript:return(ShowDialog('" & url & "', '" & _
                 dialogResultHolder.ClientID() & "', " & height & ", " & width & ", " & left & ", " & top & ", " & _
-                Math.Abs(CInt(center)) & ", " & Math.Abs(CInt(help)) & ", " & Math.Abs(CInt(resizable)) & ", " & _
-                Math.Abs(CInt(status)) & "))", "OnClick")
+                System.Math.Abs(CInt(center)) & ", " & System.Math.Abs(CInt(help)) & ", " & System.Math.Abs(CInt(resizable)) & ", " & _
+                System.Math.Abs(CInt(status)) & "))", "OnClick")
         Else
             HookupScriptToControl(control, "javascript:return(ShowDialog('" & url & "', null, " & height & ", " & _
-                width & ", " & left & ", " & top & ", " & Math.Abs(CInt(center)) & ", " & Math.Abs(CInt(help)) & _
-                ", " & Math.Abs(CInt(resizable)) & ", " & Math.Abs(CInt(status)) & "))", "OnClick")
+                width & ", " & left & ", " & top & ", " & System.Math.Abs(CInt(center)) & ", " & System.Math.Abs(CInt(help)) & _
+                ", " & System.Math.Abs(CInt(resizable)) & ", " & System.Math.Abs(CInt(status)) & "))", "OnClick")
         End If
 
     End Sub
@@ -756,9 +756,9 @@ Public NotInheritable Class Common
             With New StringBuilder
                 .Append("<script language=""javascript"">" & NewLine())
                 .Append("   ShowPopup('" & url & "', " & height & ", " & width & ", " & left & ", " & top & ", " & _
-                    Math.Abs(CInt(center)) & ", " & Math.Abs(CInt(resizable)) & ", " & Math.Abs(CInt(scrollbars)) & _
-                    ", " & Math.Abs(CInt(toolbar)) & ", " & Math.Abs(CInt(menubar)) & ", " & Math.Abs(CInt(location)) & _
-                    ", " & Math.Abs(CInt(status)) & ", " & Math.Abs(CInt(directories)) & ");" & NewLine())
+                    System.Math.Abs(CInt(center)) & ", " & System.Math.Abs(CInt(resizable)) & ", " & System.Math.Abs(CInt(scrollbars)) & _
+                    ", " & System.Math.Abs(CInt(toolbar)) & ", " & System.Math.Abs(CInt(menubar)) & ", " & System.Math.Abs(CInt(location)) & _
+                    ", " & System.Math.Abs(CInt(status)) & ", " & System.Math.Abs(CInt(directories)) & ");" & NewLine())
                 .Append("</script>" & NewLine())
 
                 page.ClientScript.RegisterStartupScript(page.GetType(), "ShowPopup." & url, .ToString())
@@ -840,9 +840,9 @@ Public NotInheritable Class Common
         End If
 
         HookupScriptToControl(control, "javascript:return(ShowPopup('" & url & "', " & height & ", " & width & ", " & _
-            left & ", " & top & ", " & Math.Abs(CInt(center)) & ", " & Math.Abs(CInt(resizable)) & ", " & _
-            Math.Abs(CInt(scrollbars)) & ", " & Math.Abs(CInt(toolbar)) & ", " & Math.Abs(CInt(menubar)) & ", " & _
-            Math.Abs(CInt(location)) & ", " & Math.Abs(CInt(status)) & ", " & Math.Abs(CInt(directories)) & "))", "OnClick")
+            left & ", " & top & ", " & System.Math.Abs(CInt(center)) & ", " & System.Math.Abs(CInt(resizable)) & ", " & _
+            System.Math.Abs(CInt(scrollbars)) & ", " & System.Math.Abs(CInt(toolbar)) & ", " & System.Math.Abs(CInt(menubar)) & ", " & _
+            System.Math.Abs(CInt(location)) & ", " & System.Math.Abs(CInt(status)) & ", " & System.Math.Abs(CInt(directories)) & "))", "OnClick")
 
     End Sub
 

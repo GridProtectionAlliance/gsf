@@ -49,7 +49,7 @@ Public Class DataParser
                         If tryParse IsNot Nothing Then
                             ' We create a delegate for the TryParse method that is to be called for parsing
                             ' raw binary data. This way we'll be making early bound calls for speed purposes
-                            ' to the method that creates packets out of binary data .
+                            ' to the method that creates packets out of binary data.
                             typeInfo.TryParse = DirectCast(System.Delegate.CreateDelegate(GetType(TryParseFunctionSignature), tryParse), TryParseFunctionSignature)
                         End If
 

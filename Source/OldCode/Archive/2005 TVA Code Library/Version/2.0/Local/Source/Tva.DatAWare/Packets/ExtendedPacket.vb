@@ -105,7 +105,7 @@ Namespace Packets
                 GetItemValue(Of Integer)("Minute"), GetItemValue(Of Integer)("Second"), _
                 GetItemValue(Of Integer)("Millisecond"), DateTimeKind.Utc)
 
-            Return New DataPoint(timestamp, GetItemValue(Of Single)("Value"), GetItemValue(Of Integer)("Quality")).BinaryImage
+            Return New PointData(timestamp, GetItemValue(Of Single)("Value"), GetItemValue(Of Integer)("Quality")).BinaryImage
 
         End Function
 

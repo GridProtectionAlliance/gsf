@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  ProcessEvent.vb - Most basic data element in DatAWare
+'  PointData.vb - Most basic data element in DatAWare
 '  Copyright © 2006 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005
@@ -16,7 +16,7 @@
 '*******************************************************************************************************
 
 ' This is the most basic form of a point of data in DatAWare (used by ReadEvent and ReadRange)
-Public Class DataPoint
+Public Class PointData
     Implements IComparable
 
 #Region " Member Declaration "
@@ -150,7 +150,7 @@ Public Class DataPoint
 
     Public Function CompareTo(ByVal obj As Object) As Integer Implements System.IComparable.CompareTo
 
-        Dim other As DataPoint = TryCast(obj, DataPoint)
+        Dim other As PointData = TryCast(obj, PointData)
         If other IsNot Nothing Then
             Return m_tTag.CompareTo(other.TTag)
         Else

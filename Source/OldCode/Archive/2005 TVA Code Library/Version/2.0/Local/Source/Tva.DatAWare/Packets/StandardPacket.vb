@@ -76,7 +76,7 @@ Namespace Packets
 
         Public Overrides Function GetSaveData() As Byte()
 
-            Return New DataPoint(GetItemValue(Of Double)("TimeTag"), GetItemValue(Of Single)("Value"), GetItemValue(Of Integer)("Quality")).BinaryImage
+            Return New PointData(GetItemValue(Of Double)("TimeTag"), GetItemValue(Of Single)("Value"), GetItemValue(Of Integer)("Quality")).BinaryImage
 
         End Function
 

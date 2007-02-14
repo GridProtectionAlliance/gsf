@@ -92,7 +92,7 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="My Project\AssemblyInfo.vb" />
-    <Compile Include="DataPoint.vb" />
+    <Compile Include="PointData.vb" />
     <Compile Include="DataProcessor.Designer.vb">
       <DependentUpon>DataProcessor.vb</DependentUpon>
     </Compile>
@@ -104,6 +104,7 @@
     <Compile Include="Packets\IPacket.vb" />
     <Compile Include="Packets\PacketBase.vb" />
     <Compile Include="Packets\StandardPacket.vb" />
+    <Compile Include="PointDefinition.vb" />
     <Compile Include="TimeTag.vb" />
   </ItemGroup>
   <ItemGroup>

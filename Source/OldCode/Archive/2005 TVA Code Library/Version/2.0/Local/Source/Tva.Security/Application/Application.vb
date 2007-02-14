@@ -32,7 +32,7 @@ Namespace Application
             If other IsNot Nothing Then
                 Return (m_name = other.Name AndAlso m_description = other.Description)
             Else
-                Return False
+                Throw New ArgumentException(String.Format("Cannot compare {0} with {1}.", Me.GetType().Name, other.GetType().Name))
             End If
 
         End Function
