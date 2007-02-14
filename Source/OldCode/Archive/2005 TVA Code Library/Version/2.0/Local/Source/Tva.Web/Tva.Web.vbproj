@@ -42,6 +42,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
+    <Reference Include="System.configuration" />
     <Reference Include="System.Data" />
     <Reference Include="System.Web" />
     <Reference Include="System.Web.Services" />
@@ -58,6 +59,9 @@
     <Compile Include="Common.vb" />
     <Compile Include="My Project\AssemblyInfo.vb" />
     <Compile Include="Services\AuthenticationSoapHeader.vb" />
+    <Compile Include="Services\BaseWebService.vb">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="Services\Common.vb" />
     <Compile Include="Services\IBusinessObjectsAdapter.vb" />
     <Compile Include="Services\MessageBase.vb" />
