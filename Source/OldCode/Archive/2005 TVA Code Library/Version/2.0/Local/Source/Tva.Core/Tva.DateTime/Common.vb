@@ -560,36 +560,68 @@ Namespace DateTime
 
         End Function
 
+        ''' <summary>
+        ''' Converts the specified universal time timestamp to eastern time timestamp.
+        ''' </summary>
+        ''' <param name="universalTimestamp">The universal time timestamp that is to be converted.</param>
+        ''' <returns>The timestamp in eastern time.</returns>
         Public Shared Function UniversalTimeToEasternTime(ByVal universalTimestamp) As Date
 
             Return UniversalTimeTo(universalTimestamp, EasternTimeZone)
 
         End Function
 
+        ''' <summary>
+        ''' Converts the specified universal time timestamp to central time timestamp.
+        ''' </summary>
+        ''' <param name="universalTimestamp">The universal time timestamp that is to be converted.</param>
+        ''' <returns>The timestamp in central time.</returns>
         Public Shared Function UniversalTimeToCentralTime(ByVal universalTimestamp) As Date
 
             Return UniversalTimeTo(universalTimestamp, CentralTimeZone)
 
         End Function
 
+        ''' <summary>
+        ''' Converts the specified universal time timestamp to mountain time timestamp.
+        ''' </summary>
+        ''' <param name="universalTimestamp">The universal time timestamp that is to be converted.</param>
+        ''' <returns>The timestamp in mountain time.</returns>
         Public Shared Function UniversalTimeToMountainTime(ByVal universalTimestamp) As Date
 
             Return UniversalTimeTo(universalTimestamp, MountainTimeZone)
 
         End Function
 
+        ''' <summary>
+        ''' Converts the specified universal time timestamp to pacific time timestamp.
+        ''' </summary>
+        ''' <param name="universalTimestamp">The universal time timestamp that is to be converted.</param>
+        ''' <returns>The timestamp in pacific time.</returns>
         Public Shared Function UniversalTimeToPacificTime(ByVal universalTimestamp) As Date
 
             Return UniversalTimeTo(universalTimestamp, PacificTimeZone)
 
         End Function
 
+        ''' <summary>
+        ''' Converts the specified universal time timestamp to timestamp in specified time zone.
+        ''' </summary>
+        ''' <param name="universalTimestamp">The universal time timestamp that is to be converted.</param>
+        ''' <param name="destinationTimeZoneStandardName">The time zone standard name to which the universal time timestamp is to be converted to.</param>
+        ''' <returns>The timestamp in the specified time zone.</returns>
         Public Shared Function UniversalTimeTo(ByVal universalTimestamp As Date, ByVal destinationTimeZoneStandardName As String) As Date
 
             Return UniversalTimeTo(universalTimestamp, GetWin32TimeZone(destinationTimeZoneStandardName))
 
         End Function
 
+        ''' <summary>
+        ''' Converts the specified universal time timestamp to timestamp in specified time zone.
+        ''' </summary>
+        ''' <param name="universalTimestamp">The universal time timestamp that is to be converted.</param>
+        ''' <param name="destinationTimeZone">The time zone to which the universal time timestamp is to be converted to.</param>
+        ''' <returns>The timestamp in the specified time zone.</returns>
         Public Shared Function UniversalTimeTo(ByVal universalTimestamp As Date, ByVal destinationTimeZone As Win32TimeZone) As Date
 
             Return destinationTimeZone.ToLocalTime(universalTimestamp)
