@@ -18,7 +18,9 @@
 Imports System.Runtime.Serialization
 
 Namespace FNet
-
+    ''' <summary>
+    ''' Collection of ConfigureCell
+    ''' </summary>
     <CLSCompliant(False), Serializable()> _
     Public Class ConfigurationCellCollection
 

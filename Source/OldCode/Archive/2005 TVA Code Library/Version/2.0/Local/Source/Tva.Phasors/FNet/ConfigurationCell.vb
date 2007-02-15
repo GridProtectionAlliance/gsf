@@ -23,6 +23,7 @@ Imports Tva.Phasors.FNet.Common
 Namespace FNet
 
     <CLSCompliant(False), Serializable()> _
+
     Public Class ConfigurationCell
 
         Inherits ConfigurationCellBase
@@ -34,6 +35,9 @@ Namespace FNet
         Protected Sub New()
         End Sub
 
+        ''' <summary>
+        ''' Deserialize the configuration cell. Retrieve the Longitude, Latitude and the number of satellite
+        ''' </summary>
         Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
 
             MyBase.New(info, context)
@@ -165,6 +169,9 @@ Namespace FNet
                 If value <> DataFormat.FloatingPoint Then Throw New NotSupportedException("FNet only supports floating point data")
             End Set
         End Property
+        ''' <summary>
+        ''' Serialize the parameters of Longitude, Latitude and numberOfSatellite
+        ''' </summary>
 
         Public Overrides Sub GetObjectData(ByVal info As System.Runtime.Serialization.SerializationInfo, ByVal context As System.Runtime.Serialization.StreamingContext)
 
@@ -177,6 +184,9 @@ Namespace FNet
 
         End Sub
 
+        ''' <summary>
+        ''' Retrieve the attribute include Longitude, Latitude and NumberOfSatellite
+        ''' </summary>
         Public Overrides ReadOnly Property Attributes() As Dictionary(Of String, String)
             Get
                 With MyBase.Attributes
