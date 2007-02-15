@@ -560,6 +560,42 @@ Namespace DateTime
 
         End Function
 
+        Public Shared Function UniversalTimeToEasternTime(ByVal universalTimestamp) As Date
+
+            Return UniversalTimeTo(universalTimestamp, EasternTimeZone)
+
+        End Function
+
+        Public Shared Function UniversalTimeToCentralTime(ByVal universalTimestamp) As Date
+
+            Return UniversalTimeTo(universalTimestamp, CentralTimeZone)
+
+        End Function
+
+        Public Shared Function UniversalTimeToMountainTime(ByVal universalTimestamp) As Date
+
+            Return UniversalTimeTo(universalTimestamp, MountainTimeZone)
+
+        End Function
+
+        Public Shared Function UniversalTimeToPacificTime(ByVal universalTimestamp) As Date
+
+            Return UniversalTimeTo(universalTimestamp, PacificTimeZone)
+
+        End Function
+
+        Public Shared Function UniversalTimeTo(ByVal universalTimestamp As Date, ByVal destinationTimeZoneStandardName As String) As Date
+
+            Return UniversalTimeTo(universalTimestamp, GetWin32TimeZone(destinationTimeZoneStandardName))
+
+        End Function
+
+        Public Shared Function UniversalTimeTo(ByVal universalTimestamp As Date, ByVal destinationTimeZone As Win32TimeZone) As Date
+
+            Return universalTimestamp.Add(destinationTimeZone.GetUtcOffset(universalTimestamp))
+
+        End Function
+
         ''' <summary>Converts given timestamp from one time zone to another using standard names for time zones</summary>
         ''' <param name="timestamp">Timestamp in source time zone to be converted to time in destination time zone</param>
         ''' <param name="sourceTimeZoneStandardName">Standard name of time zone for given source timestamp</param>
