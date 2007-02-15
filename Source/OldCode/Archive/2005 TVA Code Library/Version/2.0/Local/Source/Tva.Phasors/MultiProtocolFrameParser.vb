@@ -71,7 +71,7 @@ Public Class MultiProtocolFrameParser
     Private m_deviceID As UInt16
     Private m_bufferSize As Int32
 
-    ' We internalize protocol specfic processing to simplfy end user consumption
+    ' We internalize protocol specific processing to simplfy end user consumption
     Private WithEvents m_frameParser As IFrameParser
     Private WithEvents m_communicationClient As ICommunicationClient
     Private WithEvents m_communicationServer As ICommunicationServer
@@ -627,7 +627,7 @@ Public Class MultiProtocolFrameParser
 
     End Function
 
-    Private Sub MaintainCapturedFrameTiming()
+    Private Sub MaintainCapturedFrameReplayTiming()
 
         If m_lastFrameReceivedTime > 0 Then
             ' To keep precise timing on "frames per second", we wait for defined frame rate interval
@@ -709,7 +709,7 @@ Public Class MultiProtocolFrameParser
         m_frameRateTotal += 1
         RaiseEvent ReceivedCommandFrame(frame)
 
-        If m_transportProtocol = Communication.TransportProtocol.File Then MaintainCapturedFrameTiming()
+        If m_transportProtocol = Communication.TransportProtocol.File Then MaintainCapturedFrameReplayTiming()
 
     End Sub
 
@@ -724,7 +724,7 @@ Public Class MultiProtocolFrameParser
         m_configurationFrame = frame
         RaiseEvent ReceivedConfigurationFrame(frame)
 
-        If m_transportProtocol = Communication.TransportProtocol.File Then MaintainCapturedFrameTiming()
+        If m_transportProtocol = Communication.TransportProtocol.File Then MaintainCapturedFrameReplayTiming()
 
     End Sub
 
@@ -733,7 +733,7 @@ Public Class MultiProtocolFrameParser
         m_frameRateTotal += 1
         RaiseEvent ReceivedDataFrame(frame)
 
-        If m_transportProtocol = Communication.TransportProtocol.File Then MaintainCapturedFrameTiming()
+        If m_transportProtocol = Communication.TransportProtocol.File Then MaintainCapturedFrameReplayTiming()
 
     End Sub
 
@@ -742,7 +742,7 @@ Public Class MultiProtocolFrameParser
         m_frameRateTotal += 1
         RaiseEvent ReceivedHeaderFrame(frame)
 
-        If m_transportProtocol = Communication.TransportProtocol.File Then MaintainCapturedFrameTiming()
+        If m_transportProtocol = Communication.TransportProtocol.File Then MaintainCapturedFrameReplayTiming()
 
     End Sub
 
@@ -751,7 +751,7 @@ Public Class MultiProtocolFrameParser
         m_frameRateTotal += 1
         RaiseEvent ReceivedUndeterminedFrame(frame)
 
-        If m_transportProtocol = Communication.TransportProtocol.File Then MaintainCapturedFrameTiming()
+        If m_transportProtocol = Communication.TransportProtocol.File Then MaintainCapturedFrameReplayTiming()
 
     End Sub
 
