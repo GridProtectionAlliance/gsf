@@ -55,7 +55,7 @@ Namespace IeeeC37_118
         Private Event IFrameParserReceivedUndeterminedFrame(ByVal frame As IChannelFrame) Implements IFrameParser.ReceivedUndeterminedFrame
 
         Private m_draftRevision As DraftRevision
-        Private m_executeParseOnSeperateThread As Boolean
+        Private m_executeParseOnSeparateThread As Boolean
         Private WithEvents m_bufferQueue As ProcessQueue(Of Byte())
         Private m_dataStream As MemoryStream
         Private m_configurationFrame2 As ConfigurationFrame
@@ -105,13 +105,13 @@ Namespace IeeeC37_118
 
             m_initialized = False
             m_configurationChangeHandled = False
-            If m_executeParseOnSeperateThread Then m_bufferQueue.Start()
+            If m_executeParseOnSeparateThread Then m_bufferQueue.Start()
 
         End Sub
 
         Public Sub [Stop]() Implements IFrameParser.Stop
 
-            If m_executeParseOnSeperateThread Then m_bufferQueue.Stop()
+            If m_executeParseOnSeparateThread Then m_bufferQueue.Stop()
 
         End Sub
 
@@ -121,12 +121,12 @@ Namespace IeeeC37_118
             End Get
         End Property
 
-        Public Property ExecuteParseOnSeperateThread() As Boolean Implements IFrameParser.ExecuteParseOnSeperateThread
+        Public Property ExecuteParseOnSeparateThread() As Boolean Implements IFrameParser.ExecuteParseOnSeparateThread
             Get
-                Return m_executeParseOnSeperateThread
+                Return m_executeParseOnSeparateThread
             End Get
             Set(ByVal value As Boolean)
-                m_executeParseOnSeperateThread = value
+                m_executeParseOnSeparateThread = value
             End Set
         End Property
 
@@ -159,7 +159,7 @@ Namespace IeeeC37_118
         Public Overrides Sub Write(ByVal buffer As Byte(), ByVal offset As Int32, ByVal count As Int32) Implements IFrameParser.Write
 
             If m_initialized Then
-                If m_executeParseOnSeperateThread Then
+                If m_executeParseOnSeparateThread Then
                     ' Queue up received data buffer for real-time parsing and return to data collection as quickly as possible...
                     m_bufferQueue.Add(CopyBuffer(buffer, offset, count))
                 Else
@@ -172,7 +172,7 @@ Namespace IeeeC37_118
 
                 If syncBytePosition > -1 Then
                     ' Initialize data stream starting at located sync byte
-                    If m_executeParseOnSeperateThread Then
+                    If m_executeParseOnSeparateThread Then
                         m_bufferQueue.Add(CopyBuffer(buffer, syncBytePosition, count - syncBytePosition))
                     Else
                         ParseData(buffer, syncBytePosition, count - syncBytePosition)
@@ -230,7 +230,7 @@ Namespace IeeeC37_118
                         .Append(Environment.NewLine)
                     End If
                     .Append("  Parsing execution source: ")
-                    If m_executeParseOnSeperateThread Then
+                    If m_executeParseOnSeparateThread Then
                         .Append("Independent thread using queued data")
                         .Append(Environment.NewLine)
                         .Append(m_bufferQueue.Status)
@@ -334,7 +334,9 @@ Namespace IeeeC37_118
                     End With
                 End If
 
-                Do Until offset >= count
+                Dim endOfBuffer As Integer = offset + count - 1
+
+                Do Until offset > endOfBuffer
                     ' See if there is enough data in the buffer to parse the common frame header
                     If offset + CommonFrameHeader.BinaryLength > count Then
                         ' If not, save off remaining buffer to prepend onto next read

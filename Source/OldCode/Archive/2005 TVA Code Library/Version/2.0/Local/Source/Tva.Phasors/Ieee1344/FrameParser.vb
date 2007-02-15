@@ -52,7 +52,7 @@ Namespace Ieee1344
         Private Event IFrameParserReceivedUndeterminedFrame(ByVal frame As IChannelFrame) Implements IFrameParser.ReceivedUndeterminedFrame
         Private Event IFrameParserConfigurationChanged() Implements IFrameParser.ConfigurationChanged
 
-        Private m_executeParseOnSeperateThread As Boolean
+        Private m_executeParseOnSeparateThread As Boolean
         Private WithEvents m_bufferQueue As ProcessQueue(Of Byte())
         Private m_dataStream As MemoryStream
         Private m_configurationFrame As ConfigurationFrame
@@ -83,13 +83,13 @@ Namespace Ieee1344
 
         Public Sub Start() Implements IFrameParser.Start
 
-            If m_executeParseOnSeperateThread Then m_bufferQueue.Start()
+            If m_executeParseOnSeparateThread Then m_bufferQueue.Start()
 
         End Sub
 
         Public Sub [Stop]() Implements IFrameParser.Stop
 
-            If m_executeParseOnSeperateThread Then m_bufferQueue.Stop()
+            If m_executeParseOnSeparateThread Then m_bufferQueue.Stop()
 
         End Sub
 
@@ -99,12 +99,12 @@ Namespace Ieee1344
             End Get
         End Property
 
-        Public Property ExecuteParseOnSeperateThread() As Boolean Implements IFrameParser.ExecuteParseOnSeperateThread
+        Public Property ExecuteParseOnSeparateThread() As Boolean Implements IFrameParser.ExecuteParseOnSeparateThread
             Get
-                Return m_executeParseOnSeperateThread
+                Return m_executeParseOnSeparateThread
             End Get
             Set(ByVal value As Boolean)
-                m_executeParseOnSeperateThread = value
+                m_executeParseOnSeparateThread = value
             End Set
         End Property
 
@@ -126,7 +126,7 @@ Namespace Ieee1344
         ' Stream implementation overrides
         Public Overrides Sub Write(ByVal buffer As Byte(), ByVal offset As Int32, ByVal count As Int32) Implements IFrameParser.Write
 
-            If m_executeParseOnSeperateThread Then
+            If m_executeParseOnSeparateThread Then
                 ' Queue up received data buffer for real-time parsing and return to data collection as quickly as possible...
                 m_bufferQueue.Add(CopyBuffer(buffer, offset, count))
             Else
@@ -173,7 +173,7 @@ Namespace Ieee1344
                         .Append(Environment.NewLine)
                     End If
                     .Append("  Parsing execution source: ")
-                    If m_executeParseOnSeperateThread Then
+                    If m_executeParseOnSeparateThread Then
                         .Append("Independent thread using queued data")
                         .Append(Environment.NewLine)
                         .Append(m_bufferQueue.Status)
@@ -277,7 +277,9 @@ Namespace Ieee1344
                     End With
                 End If
 
-                Do Until offset >= count
+                Dim endOfBuffer As Integer = offset + count - 1
+
+                Do Until offset > endOfBuffer
                     ' See if there is enough data in the buffer to parse the common frame header
                     If offset + CommonFrameHeader.BinaryLength + 2 > count Then
                         ' If not, save off remaining buffer to prepend onto next read

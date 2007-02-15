@@ -68,7 +68,7 @@ Public Class MultiProtocolFrameParser
     Private m_transportProtocol As TransportProtocol
     Private m_connectionString As String
     Private m_maximumConnectionAttempts As Integer
-    Private m_pmuID As UInt16
+    Private m_deviceID As UInt16
     Private m_bufferSize As Int32
 
     ' We internalize protocol specfic processing to simplfy end user consumption
@@ -79,7 +79,7 @@ Public Class MultiProtocolFrameParser
 
     Private m_configurationFrame As IConfigurationFrame
     Private m_dataStreamStartTime As Long
-    Private m_executeParseOnSeperateThread As Boolean
+    Private m_executeParseOnSeparateThread As Boolean
     Private m_totalFramesReceived As Long
     Private m_frameRateTotal As Int32
     Private m_byteRateTotal As Int32
@@ -102,7 +102,7 @@ Public Class MultiProtocolFrameParser
     Public Sub New()
 
         m_connectionString = "server=127.0.0.1; port=4712"
-        m_pmuID = 1
+        m_deviceID = 1
         m_bufferSize = DefaultBufferSize
         m_definedFrameRate = DefaultFrameRate
         m_rateCalcTimer = New Timers.Timer
@@ -180,12 +180,12 @@ Public Class MultiProtocolFrameParser
         End Set
     End Property
 
-    Public Property PmuID() As UInt16
+    Public Property DeviceID() As UInt16
         Get
-            Return m_pmuID
+            Return m_deviceID
         End Get
         Set(ByVal value As UInt16)
-            m_pmuID = value
+            m_deviceID = value
         End Set
     End Property
 
@@ -243,9 +243,9 @@ Public Class MultiProtocolFrameParser
     Public ReadOnly Property ConnectionName() As String
         Get
             If m_sourceName Is Nothing Then
-                Return m_pmuID & " (" & m_connectionString & ")"
+                Return m_deviceID & " (" & m_connectionString & ")"
             Else
-                Return m_sourceName & ", ID " & m_pmuID & " (" & m_connectionString & ")"
+                Return m_sourceName & ", ID " & m_deviceID & " (" & m_connectionString & ")"
             End If
         End Get
     End Property
@@ -275,7 +275,7 @@ Public Class MultiProtocolFrameParser
                     m_frameParser = New FNet.FrameParser
             End Select
 
-            m_frameParser.ExecuteParseOnSeperateThread = m_executeParseOnSeperateThread
+            m_frameParser.ExecuteParseOnSeparateThread = m_executeParseOnSeparateThread
             m_frameParser.Start()
 
             ' Instantiate selected transport layer
@@ -355,12 +355,12 @@ Public Class MultiProtocolFrameParser
 
     End Sub
 
-    Public Property ExecuteParseOnSeperateThread() As Boolean Implements IFrameParser.ExecuteParseOnSeperateThread
+    Public Property ExecuteParseOnSeparateThread() As Boolean Implements IFrameParser.ExecuteParseOnSeparateThread
         Get
-            Return m_executeParseOnSeperateThread
+            Return m_executeParseOnSeparateThread
         End Get
         Set(ByVal value As Boolean)
-            m_executeParseOnSeperateThread = value
+            m_executeParseOnSeparateThread = value
         End Set
     End Property
 
@@ -468,12 +468,12 @@ Public Class MultiProtocolFrameParser
             ' Only the IEEE protocols support commands
             Select Case m_phasorProtocol
                 Case Phasors.PhasorProtocol.IeeeC37_118V1, Phasors.PhasorProtocol.IeeeC37_118D6
-                    With New IeeeC37_118.CommandFrame(m_pmuID, command, 1)
+                    With New IeeeC37_118.CommandFrame(m_deviceID, command, 1)
                         binaryImage = .BinaryImage
                         binaryLength = binaryImage.Length
                     End With
                 Case Phasors.PhasorProtocol.Ieee1344
-                    With New Ieee1344.CommandFrame(m_pmuID, command)
+                    With New Ieee1344.CommandFrame(m_deviceID, command)
                         binaryImage = .BinaryImage
                         binaryLength = binaryImage.Length
                     End With
@@ -496,8 +496,8 @@ Public Class MultiProtocolFrameParser
     Public ReadOnly Property Status() As String Implements IFrameParser.Status
         Get
             With New StringBuilder
-                .Append("     PDC/PMU Connection ID: ")
-                .Append(m_pmuID)
+                .Append("      Device Connection ID: ")
+                .Append(m_deviceID)
                 .Append(Environment.NewLine)
                 .Append("         Connection string: ")
                 .Append(m_connectionString)

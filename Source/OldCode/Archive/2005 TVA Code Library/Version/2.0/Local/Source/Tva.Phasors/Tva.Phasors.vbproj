@@ -115,6 +115,7 @@
     <Compile Include="FNet\FrequencyValue.vb" />
     <Compile Include="FNet\PhasorDefinition.vb" />
     <Compile Include="FNet\PhasorValue.vb" />
+    <Compile Include="FrameParserBase.vb" />
     <Compile Include="IFrameParser.vb" />
     <Compile Include="Enumerations.vb" />
     <Compile Include="MultiProtocolFrameParser.vb" />
