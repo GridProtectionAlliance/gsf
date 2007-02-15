@@ -592,7 +592,7 @@ Namespace DateTime
 
         Public Shared Function UniversalTimeTo(ByVal universalTimestamp As Date, ByVal destinationTimeZone As Win32TimeZone) As Date
 
-            Return universalTimestamp.Add(destinationTimeZone.GetUtcOffset(universalTimestamp))
+            Return destinationTimeZone.ToLocalTime(universalTimestamp)
 
         End Function
 

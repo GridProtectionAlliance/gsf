@@ -1214,18 +1214,18 @@ Namespace DateTime
 
 
         Public Overrides Function ToLocalTime( _
-          ByVal time As Date _
+          ByVal utcTime As Date _
         ) As Date
 
-            time = time.Add(_standardOffset)
+            utcTime = utcTime.Add(_standardOffset)
 
             If (Not (_standardAlways)) Then
-                If (IsDaylightSavingTime(time, True)) Then
-                    time = time.Add(_daylightDelta)
+                If (IsDaylightSavingTime(utcTime, True)) Then
+                    utcTime = utcTime.Add(_daylightDelta)
                 End If
             End If
 
-            Return time
+            Return utcTime
 
         End Function
 
