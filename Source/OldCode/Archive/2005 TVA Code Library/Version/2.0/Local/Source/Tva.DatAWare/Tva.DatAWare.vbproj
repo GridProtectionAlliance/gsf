@@ -91,6 +91,12 @@
     <Compile Include="Legacy Interfaces\TimeTag.vb">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="MetadataFile.Designer.vb">
+      <DependentUpon>MetadataFile.vb</DependentUpon>
+    </Compile>
+    <Compile Include="MetadataFile.vb">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="My Project\AssemblyInfo.vb" />
     <Compile Include="PointData.vb" />
     <Compile Include="DataProcessor.Designer.vb">
