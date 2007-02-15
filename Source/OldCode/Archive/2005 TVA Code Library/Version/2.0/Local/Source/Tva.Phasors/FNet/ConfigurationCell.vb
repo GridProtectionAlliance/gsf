@@ -23,7 +23,6 @@ Imports Tva.Phasors.FNet.Common
 Namespace FNet
 
     <CLSCompliant(False), Serializable()> _
-
     Public Class ConfigurationCell
 
         Inherits ConfigurationCellBase
