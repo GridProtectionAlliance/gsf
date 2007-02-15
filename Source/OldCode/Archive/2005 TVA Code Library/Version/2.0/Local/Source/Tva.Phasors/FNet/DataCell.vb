@@ -195,7 +195,7 @@ Namespace FNet
                     End If
                 Next
 
-                ' Parse FNet data frame into individual fields seperated by spaces
+                ' Parse FNet data frame into individual fields separated by spaces
                 data = RemoveDuplicateWhiteSpace(Encoding.ASCII.GetString(binaryImage, startIndex + 1, stopByteIndex - startIndex - 1)).Split(" "c)
 
                 ' Get timestamp of dat record
