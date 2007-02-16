@@ -20,6 +20,7 @@ Partial Class MetadataFile
         m_name = Me.GetType().Name & MetadataFile.FileExtension
         m_keepOpen = False
         m_pointCursor = New Dictionary(Of String, Integer)
+        m_pointDefinitions = New Dictionary(Of String, PointDefinition)
 
     End Sub
 

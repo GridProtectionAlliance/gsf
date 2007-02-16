@@ -2,6 +2,7 @@
 
 Imports System.IO
 Imports System.Drawing
+Imports System.ComponentModel
 Imports Tva.IO.FilePath
 
 <ToolboxBitmap(GetType(MetadataFile))> _
@@ -13,6 +14,7 @@ Public Class MetadataFile
     Private m_name As String
     Private m_keepOpen As Boolean
     Private m_pointCursor As Dictionary(Of String, Integer)
+    Private m_pointDefinitions As Dictionary(Of String, PointDefinition)
 
 #End Region
 
@@ -44,9 +46,16 @@ Public Class MetadataFile
         End Set
     End Property
 
+    <Browsable(False)> _
     Public ReadOnly Property IsOpen() As Boolean
         Get
             Return (m_file IsNot Nothing)
+        End Get
+    End Property
+
+    Public ReadOnly Property PointDefinitions() As Dictionary(Of String, PointDefinition)
+        Get
+            Return m_pointDefinitions
         End Get
     End Property
 
@@ -54,8 +63,11 @@ Public Class MetadataFile
 
         m_file = New FileStream(m_name, FileMode.OpenOrCreate)
         If m_file.Length Mod PointDefinition.BinaryLength = 0 Then
+            Dim binaryImage As Byte() = CreateArray(Of Byte)(PointDefinition.BinaryLength)
             For i As Long = 0 To m_file.Length - 1 Step PointDefinition.BinaryLength
-
+                m_file.Read(binaryImage, 0, binaryImage.Length)
+                Dim pointDefinition As New PointDefinition(Convert.ToInt32(i), binaryImage, 0)
+                m_pointDefinitions.Add(pointDefinition.PointID, pointDefinition)
             Next
         Else
             Throw New InvalidOperationException(String.Format("File """"{0}"""" is corrupt.", m_name))
@@ -71,11 +83,11 @@ Public Class MetadataFile
 
     End Sub
 
-    Public Sub Insert(ByVal point As PointDefinition)
+    Public Sub Insert(ByVal pointDefinition As PointDefinition)
 
     End Sub
 
-    Public Sub Update(ByVal point As PointDefinition)
+    Public Sub Update(ByVal pointDefinition As PointDefinition)
 
     End Sub
 
@@ -83,7 +95,7 @@ Public Class MetadataFile
 
     End Sub
 
-    Public Sub Delete(ByVal point As PointDefinition)
+    Public Sub Delete(ByVal pointDefinition As PointDefinition)
 
     End Sub
 

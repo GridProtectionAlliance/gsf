@@ -62,7 +62,7 @@ Public Class PointDefinition
 
     End Sub
 
-    Public Sub New(ByVal index As Integer, ByVal binaryImage As Byte(), ByVal startIndex As Integer, ByVal encoding As Encoding = Nothing)
+    Public Sub New(ByVal index As Integer, ByVal binaryImage As Byte(), ByVal startIndex As Integer, ByVal encoding As Encoding)
 
         Me.New(index)
 
