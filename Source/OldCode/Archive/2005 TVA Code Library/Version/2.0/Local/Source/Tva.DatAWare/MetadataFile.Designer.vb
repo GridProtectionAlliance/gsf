@@ -17,6 +17,10 @@ Partial Class MetadataFile
         'This call is required by the Component Designer.
         InitializeComponent()
 
+        m_name = Me.GetType().Name & MetadataFile.FileExtension
+        m_keepOpen = False
+        m_pointCursor = New Dictionary(Of String, Integer)
+
     End Sub
 
     'Component overrides dispose to clean up the component list.
