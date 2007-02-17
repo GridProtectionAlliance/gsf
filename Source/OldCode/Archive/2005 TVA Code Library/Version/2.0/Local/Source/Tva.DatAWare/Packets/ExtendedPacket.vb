@@ -21,12 +21,35 @@ Namespace Packets
         ' * 1           13          Byte        Quality         *
         ' * 2           14-15       Int16       Msec            *
         ' * 2           16-17       Int16       GMT Offset      *
-        ' * 4           18-21       Int32       Value           *
+        ' * 4           18-21       Single      Value           *
         ' *******************************************************
 
-        Public Shadows Const TypeID As Short = 2
+#Region " Member Declaration "
 
+        Private m_index As Integer
+        Private m_year As Short
+        Private m_month As Byte
+        Private m_day As Byte
+        Private m_hour As Byte
+        Private m_minute As Byte
+        Private m_second As Byte
+        Private m_quality As Byte
+        Private m_millisecond As Short
+        Private m_gmtOffset As Short
+        Private m_value As Single
+
+#End Region
+
+        Public Shadows Const TypeID As Short = 2
         Public Shadows Const BinaryLength As Integer = 22
+
+        Public Sub New()
+
+            MyBase.New()
+            MyBase.ActionType = PacketActionType.SaveAndReply
+            MyBase.SaveLocation = PacketSaveLocation.ArchiveFile
+
+        End Sub
 
         Public Sub New(ByVal binaryImage As Byte())
 
@@ -36,34 +59,29 @@ Namespace Packets
 
         Public Sub New(ByVal binaryImage As Byte(), ByVal startIndex As Integer)
 
-            MyBase.New()
+            MyClass.New()
 
             If (binaryImage.Length - startIndex) >= BinaryLength Then
                 ' We have a binary image of valid size.
                 Dim packetTypeID As Short = BitConverter.ToInt16(binaryImage, startIndex)
                 If packetTypeID = TypeID Then
                     ' We have a binary image with the correct type ID.
-                    MyBase.ActionType = PacketActionType.SaveAndReply
-                    MyBase.SaveLocation = PacketSaveLocation.ArchiveFile
-                    With MyBase.Items
-                        .Add("TypeID", packetTypeID)
-                        .Add("Index", BitConverter.ToInt32(binaryImage, startIndex + 2))
-                        .Add("Year", BitConverter.ToInt16(binaryImage, startIndex + 6))
-                        .Add("Month", binaryImage(startIndex + 8))
-                        .Add("Day", binaryImage(startIndex + 9))
-                        .Add("Hour", binaryImage(startIndex + 10))
-                        .Add("Minute", binaryImage(startIndex + 11))
-                        .Add("Second", binaryImage(startIndex + 12))
-                        .Add("Quality", binaryImage(startIndex + 13))
-                        .Add("Millisecond", BitConverter.ToInt16(binaryImage, startIndex + 14))
-                        .Add("GMTOffset", BitConverter.ToInt16(binaryImage, startIndex + 16))
-                        .Add("Value", BitConverter.ToSingle(binaryImage, startIndex + 18))
-                    End With
+                    m_index = BitConverter.ToInt32(binaryImage, startIndex + 2)
+                    m_year = BitConverter.ToInt16(binaryImage, startIndex + 6)
+                    m_month = binaryImage(startIndex + 8)
+                    m_day = binaryImage(startIndex + 9)
+                    m_hour = binaryImage(startIndex + 10)
+                    m_minute = binaryImage(startIndex + 11)
+                    m_second = binaryImage(startIndex + 12)
+                    m_quality = binaryImage(startIndex + 13)
+                    m_millisecond = BitConverter.ToInt16(binaryImage, startIndex + 14)
+                    m_gmtOffset = BitConverter.ToInt16(binaryImage, startIndex + 16)
+                    m_value = BitConverter.ToSingle(binaryImage, startIndex + 18)
                 Else
-                    Throw New ArgumentException(String.Format("Unexpected packet type ID {0}. Expected packet type ID {1}", packetTypeID, TypeID))
+                    Throw New ArgumentException(String.Format("Unexpected packet type ID {0}. Expected packet type ID {1}.", packetTypeID, TypeID))
                 End If
             Else
-                Throw New ArgumentException(String.Format("Binary image smaller than expected. Expected binary image size {0}", BinaryLength))
+                Throw New ArgumentException(String.Format("Binary image smaller than expected. Expected binary image size {0}.", BinaryLength))
             End If
 
         End Sub
@@ -72,23 +90,120 @@ Namespace Packets
                 ByVal hour As Byte, ByVal minute As Byte, ByVal second As Byte, ByVal quality As Byte, _
                 ByVal millisecond As Short, ByVal gmtOffset As Short, ByVal value As Single)
 
-            MyBase.New()
-            With MyBase.Items
-                .Add("TypeID", ExtendedPacket.TypeID)
-                .Add("Index", index)
-                .Add("Year", year)
-                .Add("Month", month)
-                .Add("Day", day)
-                .Add("Hour", hour)
-                .Add("Minute", minute)
-                .Add("Second", second)
-                .Add("Quality", quality)
-                .Add("Millisecond", millisecond)
-                .Add("GMTOffset", gmtOffset)
-                .Add("Value", value)
-            End With
+            MyClass.New()
+
+            m_index = index
+            m_year = year
+            m_month = month
+            m_day = day
+            m_hour = hour
+            m_minute = minute
+            m_second = second
+            m_quality = quality
+            m_millisecond = millisecond
+            m_gmtOffset = gmtOffset
+            m_value = value
 
         End Sub
+
+        Public Property Index() As Integer
+            Get
+                Return m_index
+            End Get
+            Set(ByVal value As Integer)
+                m_index = value
+            End Set
+        End Property
+
+        Public Property Year() As Short
+            Get
+                Return m_year
+            End Get
+            Set(ByVal value As Short)
+                m_year = value
+            End Set
+        End Property
+
+        Public Property Month() As Byte
+            Get
+                Return m_month
+            End Get
+            Set(ByVal value As Byte)
+                m_month = value
+            End Set
+        End Property
+
+        Public Property Day() As Byte
+            Get
+                Return m_day
+            End Get
+            Set(ByVal value As Byte)
+                m_day = value
+            End Set
+        End Property
+
+        Public Property Hour() As Byte
+            Get
+                Return m_hour
+            End Get
+            Set(ByVal value As Byte)
+                m_hour = value
+            End Set
+        End Property
+
+        Public Property Minute() As Byte
+            Get
+                Return m_minute
+            End Get
+            Set(ByVal value As Byte)
+                m_minute = value
+            End Set
+        End Property
+
+        Public Property Second() As Byte
+            Get
+                Return m_second
+            End Get
+            Set(ByVal value As Byte)
+                m_second = value
+            End Set
+        End Property
+
+        Public Property Quality() As Byte
+            Get
+                Return m_quality
+            End Get
+            Set(ByVal value As Byte)
+                m_quality = value
+            End Set
+        End Property
+
+        Public Property Millisecond() As Short
+            Get
+                Return m_millisecond
+            End Get
+            Set(ByVal value As Short)
+                m_millisecond = value
+            End Set
+        End Property
+
+        Public Property GMTOffset() As Short
+            Get
+                Return m_gmtOffset
+            End Get
+            Set(ByVal value As Short)
+                m_gmtOffset = value
+            End Set
+        End Property
+
+        Public Property Value() As Single
+            Get
+                Return m_value
+            End Get
+            Set(ByVal value As Single)
+                m_value = value
+            End Set
+        End Property
 
         Public Overrides Function GetReplyData() As Byte()
 
@@ -98,14 +213,13 @@ Namespace Packets
 
         Public Overrides Function GetSaveData() As Byte()
 
-            ' HACK: Check with Ritchie
-            Dim timestamp As New System.DateTime(GetItemValue(Of Integer)("Year"), _
-                GetItemValue(Of Integer)("Month"), GetItemValue(Of Integer)("Day"), _
-                (GetItemValue(Of Integer)("Hour") + GetItemValue(Of Integer)("GMTOffset")), _
-                GetItemValue(Of Integer)("Minute"), GetItemValue(Of Integer)("Second"), _
-                GetItemValue(Of Integer)("Millisecond"), DateTimeKind.Utc)
+            Dim timestamp As New System.DateTime(Convert.ToInt32(m_year), _
+                Convert.ToInt32(m_month), Convert.ToInt32(m_day), _
+                Convert.ToInt32(m_hour) + Convert.ToInt32(m_gmtOffset), _
+                Convert.ToInt32(m_minute), Convert.ToInt32(m_second), _
+                Convert.ToInt32(m_millisecond), DateTimeKind.Utc)
 
-            Return New PointData(timestamp, GetItemValue(Of Single)("Value"), GetItemValue(Of Integer)("Quality")).BinaryImage
+            Return New PointData(timestamp, m_value, m_quality).BinaryImage
 
         End Function
 

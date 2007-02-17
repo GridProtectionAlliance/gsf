@@ -13,7 +13,7 @@ Public Class DataParser
 #Region " Member Declaration "
 
     Private m_packetTypes As Dictionary(Of Short, PacketTypeInfo)
-    Private m_dataQueue As KeyedProcessQueue(Of Guid, Byte())
+    Private WithEvents m_dataQueue As KeyedProcessQueue(Of Guid, Byte())
 
 #End Region
 
@@ -26,7 +26,7 @@ Public Class DataParser
 
 #Region " Public Code "
 
-    Public Sub Initialize()
+    Public Sub Start()
 
         ' We'll scan all of the assemblies and keep a cached list of all available packet types.
         Dim binDirectory As String = FilePath.JustPath(Tva.Assembly.EntryAssembly.Location)
@@ -64,6 +64,13 @@ Public Class DataParser
         Next
 
         m_dataQueue.Start()
+
+    End Sub
+
+    Public Sub [Stop]()
+
+        m_dataQueue.Stop()      ' Stop processing of queued data.
+        m_packetTypes.Clear()   ' Clear the cached packet type available.
 
     End Sub
 
@@ -134,7 +141,7 @@ Public Class DataParser
     Public Sub EndInit() Implements System.ComponentModel.ISupportInitialize.EndInit
 
         If Not DesignMode Then
-            Initialize()
+            Start()
         End If
 
     End Sub

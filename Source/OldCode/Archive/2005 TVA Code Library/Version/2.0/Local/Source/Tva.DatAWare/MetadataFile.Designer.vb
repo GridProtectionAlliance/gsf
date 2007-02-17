@@ -19,14 +19,15 @@ Partial Class MetadataFile
 
         m_name = Me.GetType().Name & MetadataFile.FileExtension
         m_keepOpen = False
-        m_pointCursor = New Dictionary(Of String, Integer)
-        m_pointDefinitions = New Dictionary(Of String, PointDefinition)
+        m_pointDefinitions = New List(Of PointDefinition)()
 
     End Sub
 
     'Component overrides dispose to clean up the component list.
     <System.Diagnostics.DebuggerNonUserCode()> _
     Protected Overrides Sub Dispose(ByVal disposing As Boolean)
+        WritePointDefinitions() ' Make sure all the point definitions are written back to the file.
+        Close()                 ' Make sure that the file is closed.
         If disposing AndAlso components IsNot Nothing Then
             components.Dispose()
         End If

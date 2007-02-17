@@ -6,7 +6,6 @@ Namespace Packets
         Private m_typeID As Short
         Private m_actiontype As PacketActionType
         Private m_saveLocation As PacketSaveLocation
-        Private m_items As Dictionary(Of String, Object)
 
         ''' <summary>
         ''' Identifies the type of the packet.
@@ -22,7 +21,6 @@ Namespace Packets
         Public Sub New()
 
             MyBase.New()
-            m_items = New Dictionary(Of String, Object)()
 
         End Sub
 
@@ -43,18 +41,6 @@ Namespace Packets
                 m_saveLocation = value
             End Set
         End Property
-
-        Public ReadOnly Property Items() As System.Collections.Generic.Dictionary(Of String, Object) Implements IPacket.Items
-            Get
-                Return m_items
-            End Get
-        End Property
-
-        Public Function GetItemValue(Of T)(ByVal item As String) As T Implements IPacket.GetItemValue
-
-            Return CType(m_items(item), T)
-
-        End Function
 
         Public MustOverride Function GetSaveData() As Byte() Implements IPacket.GetSaveData
 

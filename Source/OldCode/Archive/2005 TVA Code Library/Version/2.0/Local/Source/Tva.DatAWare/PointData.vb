@@ -16,6 +16,7 @@
 '*******************************************************************************************************
 
 ' This is the most basic form of a point of data in DatAWare (used by ReadEvent and ReadRange)
+<Serializable()> _
 Public Class PointData
     Implements IComparable
 
