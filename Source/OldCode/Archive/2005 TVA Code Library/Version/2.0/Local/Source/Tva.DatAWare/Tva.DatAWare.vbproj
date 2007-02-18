@@ -53,12 +53,14 @@
     <Import Include="Tva.Common" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ArchiveDataBlockPointer.vb" />
     <Compile Include="ArchiveFile.Designer.vb">
       <DependentUpon>ArchiveFile.vb</DependentUpon>
     </Compile>
     <Compile Include="ArchiveFile.vb">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="ArchiveFileAllocationTable.vb" />
     <Compile Include="DataParsedEventArgs.vb" />
     <Compile Include="DataParser.Designer.vb">
       <DependentUpon>DataParser.vb</DependentUpon>
