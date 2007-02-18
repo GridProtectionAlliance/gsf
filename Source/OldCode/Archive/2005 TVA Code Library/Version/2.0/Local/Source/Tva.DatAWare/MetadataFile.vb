@@ -14,6 +14,7 @@ Public Class MetadataFile
     Private m_file As FileStream
     Private m_name As String
     Private m_keepOpen As Boolean
+    Private m_initialRecordCount As Integer
     Private m_pointDefinitions As List(Of PointDefinition)
 
 #End Region
@@ -93,6 +94,7 @@ Public Class MetadataFile
                     m_pointDefinitions.Add(pointDefinition)
                 Next
                 m_file.Seek(0, SeekOrigin.Begin)    ' Set the cursor to BOF after we're done reading the file.
+                m_initialRecordCount = m_pointDefinitions.Count
             End If
         Else
             Throw New InvalidOperationException(String.Format("File """"{0}"""" is corrupt.", m_name))
@@ -106,16 +108,21 @@ Public Class MetadataFile
 
         AlignPointDefinitions()
 
-        If Not Me.IsOpen Then Open()
+        If m_pointDefinitions.Count >= m_initialRecordCount Then
+            ' We have at least (if not more) the number of points we read in from the file to begin with.
+            If Not Me.IsOpen Then Open()
 
-        m_file.Seek(0, SeekOrigin.Begin)    ' Set the cursor to BOF before we start writing to the file.
-        For Each pointDefinition As PointDefinition In m_pointDefinitions
-            m_file.Write(pointDefinition.BinaryImage, 0, pointDefinition.BinaryLength)
-        Next
-        m_file.Flush()
-        m_file.Seek(0, SeekOrigin.Begin)    ' Set the cursor to BOF after we're done writing to the file.
+            m_file.Seek(0, SeekOrigin.Begin)    ' Set the cursor to BOF before we start writing to the file.
+            For Each pointDefinition As PointDefinition In m_pointDefinitions
+                m_file.Write(pointDefinition.BinaryImage, 0, pointDefinition.BinaryLength)
+            Next
+            m_file.Flush()
+            m_file.Seek(0, SeekOrigin.Begin)    ' Set the cursor to BOF after we're done writing to the file.
 
-        If Not m_keepOpen Then Close()
+            If Not m_keepOpen Then Close()
+        Else
+            Throw New InvalidOperationException(String.Format("Number of point definition records for file ""{0}"" must be at least {1}.", m_name, m_initialRecordCount))
+        End If
 
     End Sub
 
