@@ -75,9 +75,9 @@ Namespace Scheduling
                         Return "Every " & m_text.Split("/"c)(1) & " " & m_dateTimePart.ToString()
                     Case SchedulePartTextSyntax.Range
                         Dim range As String() = m_text.Split("-"c)
-                        Return "Every " & m_dateTimePart.ToString() & " from " & range(0) & " to " & range(1)
+                        Return m_dateTimePart.ToString() & " " & range(0) & " to " & range(1)
                     Case SchedulePartTextSyntax.Specific
-                        Return "Every " & m_text & " " & m_dateTimePart.ToString()
+                        Return m_dateTimePart.ToString() & " " & m_text
                     Case Else
                         Return ""
                 End Select
