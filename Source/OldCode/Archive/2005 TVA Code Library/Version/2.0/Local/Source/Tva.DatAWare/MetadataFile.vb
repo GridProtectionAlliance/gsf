@@ -19,7 +19,7 @@ Public Class MetadataFile
 
 #End Region
 
-    Public Const FileExtension As String = ".dat"
+    Public Const Extension As String = ".dat"
 
     Public Property Name() As String
         Get
@@ -27,10 +27,10 @@ Public Class MetadataFile
         End Get
         Set(ByVal value As String)
             If Not String.IsNullOrEmpty(value) Then
-                If String.Compare(JustFileExtension(value), MetadataFile.FileExtension) = 0 Then
+                If String.Compare(JustFileExtension(value), MetadataFile.Extension) = 0 Then
                     m_name = value
                 Else
-                    Throw New ArgumentException(String.Format("Name of {0} must have an extension of {1}.", Me.GetType().Name, MetadataFile.FileExtension))
+                    Throw New ArgumentException(String.Format("Name of {0} must have an extension of {1}.", Me.GetType().Name, Extension))
                 End If
             Else
                 Throw New ArgumentNullException("Name")
