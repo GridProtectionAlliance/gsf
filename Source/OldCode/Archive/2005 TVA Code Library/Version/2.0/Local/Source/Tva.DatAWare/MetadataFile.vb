@@ -106,7 +106,7 @@ Public Class MetadataFile
 
     Public Sub WritePointDefinitions()
 
-        AlignPointDefinitions()
+        AnalyzePointDefinitions()
 
         If m_pointDefinitions.Count >= m_initialRecordCount Then
             ' We have at least (if not more) the number of points we read in from the file to begin with.
@@ -126,7 +126,7 @@ Public Class MetadataFile
 
     End Sub
 
-    Public Sub AlignPointDefinitions()
+    Public Sub AnalyzePointDefinitions()
 
         ' First, we'll sort our point definition list to ensure that all the point definitions are sorted by index.
         Dim nonAlignedPointDefinitions As New List(Of PointDefinition)(m_pointDefinitions)
@@ -193,6 +193,7 @@ Public Class MetadataFile
     Public Sub EndInit() Implements System.ComponentModel.ISupportInitialize.EndInit
 
         If Not DesignMode Then
+            Open()
             ReadPointDefinitions()
         End If
 

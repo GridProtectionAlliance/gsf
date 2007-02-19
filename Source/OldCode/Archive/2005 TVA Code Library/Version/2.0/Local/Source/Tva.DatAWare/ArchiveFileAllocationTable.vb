@@ -7,14 +7,6 @@ Public Class ArchiveFileAllocationTable
     ' *******************************************************
     ' *                     FAT structure                   *
     ' *******************************************************
-    ' * # Of Bytes  Byte Index  Data Type   Description     *
-    ' * ----------  ----------  ----------  -----------     *
-    ' * 2           0-1         Int16       Packet ID       *
-    ' * 4           2-5         Int32       Database index  *
-    ' * 8           6-13        Double      Time-tag        *
-    ' * 4           14-17       Int32       Quality         *
-    ' * 4           18-21       Single      Value           *
-    ' *******************************************************
 
     Private m_dataBlockPointers As List(Of ArchiveDataBlockPointer)
     Private m_fileStartTime As TimeTag
@@ -119,5 +111,26 @@ Public Class ArchiveFileAllocationTable
             m_dataBlockCount = value
         End Set
     End Property
+
+    Public ReadOnly Property BinaryImage() As Byte()
+        Get
+
+        End Get
+    End Property
+
+    Public Function GetDataBlockLocation(ByVal pointID As Integer, ByVal startTime As TimeTag) As Long
+
+    End Function
+
+    Public Function GetDataBlockLocation(ByVal dataBlockPointer As ArchiveDataBlockPointer) As Long
+
+        Dim pointerIndex As Integer = m_dataBlockPointers.IndexOf(dataBlockPointer)
+        If pointerIndex >= 0 Then
+            Return pointerIndex * (m_dataBlockSize * 1024)
+        Else
+            Return -1
+        End If
+
+    End Function
 
 End Class

@@ -1,6 +1,7 @@
 ' 02/18/2007
 
 Public Class ArchiveDataBlockPointer
+    Implements IComparable
 
     Public Const BinaryLength As Integer = 12
 
@@ -39,5 +40,22 @@ Public Class ArchiveDataBlockPointer
             m_startTime = value
         End Set
     End Property
+
+    Public ReadOnly Property BinaryImage() As Byte()
+        Get
+
+        End Get
+    End Property
+
+    Public Function CompareTo(ByVal obj As Object) As Integer Implements System.IComparable.CompareTo
+
+        Dim other As ArchiveDataBlockPointer = TryCast(obj, ArchiveDataBlockPointer)
+        If other IsNot Nothing Then
+            Return m_pointID.CompareTo(other.PointID) And m_startTime.CompareTo(other.StartTime)
+        Else
+            Throw New ArgumentException(String.Format("Cannot compare {0} with {1}.", Me.GetType().Name, other.GetType().Name))
+        End If
+
+    End Function
 
 End Class
