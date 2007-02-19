@@ -56,10 +56,10 @@ Public Class PointData
                 m_flags = BitConverter.ToInt32(binaryImage, startIndex + 8)
                 m_value = BitConverter.ToSingle(binaryImage, startIndex + 12)
             Else
-                Throw New ArgumentException("BinaryImage is too small.")
+                Throw New ArgumentException("Binary image size from startIndex is too small.")
             End If
         Else
-            Throw New ArgumentNullException("BinaryImage cannot be null.")
+            Throw New ArgumentNullException("binaryImage")
         End If
 
     End Sub

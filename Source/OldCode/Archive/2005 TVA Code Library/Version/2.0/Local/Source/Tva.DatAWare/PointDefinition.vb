@@ -31,7 +31,7 @@ Public Class PointDefinition
     Private m_flagWord As Integer               ' 4
     Private m_transitionFlag As Integer         ' 4
     Private m_scanRate As Single                ' 4
-    Private m_name As String = ""            ' 20
+    Private m_name As String = ""               ' 20
     Private m_synonym1 As String = ""           ' 20
     Private m_synonym2 As String = ""           ' 20
     Private m_siteName As String = ""           ' 2
@@ -50,6 +50,7 @@ Public Class PointDefinition
 
     Public Sub New(ByVal index As Integer)
 
+        MyBase.New()
         m_index = index
         m_textEncoding = Encoding.Default ' By default we decode strings using encoding for the system's current ANSI code page
         m_spares = CreateArray(Of Byte)(64)
@@ -69,32 +70,34 @@ Public Class PointDefinition
 
         If encoding IsNot Nothing Then m_textEncoding = encoding
 
-        If binaryImage Is Nothing Then
-            Throw New ArgumentNullException("BinaryImage was null - could not create DatAWare.DatabaseStructure")
-        ElseIf binaryImage.Length - startIndex < BinaryLength Then
-            Throw New ArgumentException("BinaryImage size from startIndex is too small - could not create DatAWare.DatabaseStructure")
+        If binaryImage IsNot Nothing Then
+            If binaryImage.Length - startIndex >= BinaryLength Then
+                m_description = m_textEncoding.GetString(binaryImage, startIndex, 40).Trim()
+                m_unit = BitConverter.ToInt16(binaryImage, startIndex + 40)
+                m_securityLevel = BitConverter.ToInt16(binaryImage, startIndex + 42)
+                m_hardwareInfo = m_textEncoding.GetString(binaryImage, startIndex + 44, 64).Trim()
+                Array.Copy(binaryImage, startIndex + 108, m_spares, 0, 64)
+                m_flagWord = BitConverter.ToInt32(binaryImage, startIndex + 172)
+                m_transitionFlag = BitConverter.ToInt32(binaryImage, startIndex + 176)
+                m_scanRate = BitConverter.ToSingle(binaryImage, startIndex + 180)
+                m_name = m_textEncoding.GetString(binaryImage, startIndex + 184, 20).Trim()
+                m_synonym1 = m_textEncoding.GetString(binaryImage, startIndex + 204, 20).Trim()
+                m_synonym2 = m_textEncoding.GetString(binaryImage, startIndex + 224, 20).Trim()
+                m_siteName = m_textEncoding.GetString(binaryImage, startIndex + 244, 2).Trim()
+                m_sourceID = BitConverter.ToInt16(binaryImage, startIndex + 246)
+                m_compressionMinimumTime = BitConverter.ToInt32(binaryImage, startIndex + 248)
+                m_compressionMaximumTime = BitConverter.ToInt32(binaryImage, startIndex + 252)
+                m_system = m_textEncoding.GetString(binaryImage, startIndex + 256, 4).Trim()
+                m_email = m_textEncoding.GetString(binaryImage, startIndex + 260, 50).Trim()
+                m_pager = m_textEncoding.GetString(binaryImage, startIndex + 310, 30).Trim()
+                m_phone = m_textEncoding.GetString(binaryImage, startIndex + 340, 30).Trim()
+                m_remarks = m_textEncoding.GetString(binaryImage, startIndex + 370, 128).Trim()
+                Array.Copy(binaryImage, startIndex + 498, m_binaryInfo, 0, 256)
+            Else
+                Throw New ArgumentException("Binary image size from startIndex is too small.")
+            End If
         Else
-            m_description = m_textEncoding.GetString(binaryImage, startIndex, 40).Trim()
-            m_unit = BitConverter.ToInt16(binaryImage, startIndex + 40)
-            m_securityLevel = BitConverter.ToInt16(binaryImage, startIndex + 42)
-            m_hardwareInfo = m_textEncoding.GetString(binaryImage, startIndex + 44, 64).Trim()
-            Array.Copy(binaryImage, startIndex + 108, m_spares, 0, 64)
-            m_flagWord = BitConverter.ToInt32(binaryImage, startIndex + 172)
-            m_transitionFlag = BitConverter.ToInt32(binaryImage, startIndex + 176)
-            m_scanRate = BitConverter.ToSingle(binaryImage, startIndex + 180)
-            m_name = m_textEncoding.GetString(binaryImage, startIndex + 184, 20).Trim()
-            m_synonym1 = m_textEncoding.GetString(binaryImage, startIndex + 204, 20).Trim()
-            m_synonym2 = m_textEncoding.GetString(binaryImage, startIndex + 224, 20).Trim()
-            m_siteName = m_textEncoding.GetString(binaryImage, startIndex + 244, 2).Trim()
-            m_sourceID = BitConverter.ToInt16(binaryImage, startIndex + 246)
-            m_compressionMinimumTime = BitConverter.ToInt32(binaryImage, startIndex + 248)
-            m_compressionMaximumTime = BitConverter.ToInt32(binaryImage, startIndex + 252)
-            m_system = m_textEncoding.GetString(binaryImage, startIndex + 256, 4).Trim()
-            m_email = m_textEncoding.GetString(binaryImage, startIndex + 260, 50).Trim()
-            m_pager = m_textEncoding.GetString(binaryImage, startIndex + 310, 30).Trim()
-            m_phone = m_textEncoding.GetString(binaryImage, startIndex + 340, 30).Trim()
-            m_remarks = m_textEncoding.GetString(binaryImage, startIndex + 370, 128).Trim()
-            Array.Copy(binaryImage, startIndex + 498, m_binaryInfo, 0, 256)
+            Throw New ArgumentNullException("binaryImage")
         End If
 
     End Sub
