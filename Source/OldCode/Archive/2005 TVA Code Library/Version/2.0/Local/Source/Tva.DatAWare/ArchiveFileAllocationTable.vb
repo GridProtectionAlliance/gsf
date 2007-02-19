@@ -24,13 +24,20 @@ Public Class ArchiveFileAllocationTable
     Private m_dataBlockSize As Integer
     Private m_dataBlockCount As Integer
 
-    Public Sub New(ByVal archiveFileStream As Stream)
+    Private Sub New()
 
         MyBase.New()
+        m_dataBlockPointers = New List(Of ArchiveDataBlockPointer)()
+
+    End Sub
+
+    Public Sub New(ByVal archiveFileStream As Stream)
+
+        MyClass.New()
         If archiveFileStream IsNot Nothing Then
             Dim cursorPosition As Long = archiveFileStream.Position
             Dim fixedFatData As Byte() = CreateArray(Of Byte)(32)
-            archiveFileStream.Seek(-32, SeekOrigin.End)
+            archiveFileStream.Seek(-fixedFatData.Length, SeekOrigin.End)
             archiveFileStream.Read(fixedFatData, 0, fixedFatData.Length)
             m_fileStartTime = New TimeTag(BitConverter.ToDouble(fixedFatData, 0))
             m_fileEndTime = New TimeTag(BitConverter.ToDouble(fixedFatData, 8))
@@ -39,7 +46,13 @@ Public Class ArchiveFileAllocationTable
             m_dataBlockSize = BitConverter.ToInt32(fixedFatData, 24)
             m_dataBlockCount = BitConverter.ToInt32(fixedFatData, 28)
 
-            m_dataBlockPointers = New List(Of ArchiveDataBlockPointer)()
+            Dim variableFatData As Byte() = CreateArray(Of Byte)(m_dataBlockCount * ArchiveDataBlockPointer.BinaryLength)
+            archiveFileStream.Seek(-(variableFatData.Length + fixedFatData.Length), SeekOrigin.End)
+            archiveFileStream.Read(variableFatData, 0, variableFatData.Length)
+            For i As Integer = 0 To variableFatData.Length - 1 Step ArchiveDataBlockPointer.BinaryLength
+                m_dataBlockPointers.Add(New ArchiveDataBlockPointer(variableFatData, i))
+            Next
+
             archiveFileStream.Seek(cursorPosition, SeekOrigin.Begin)
         Else
             Throw New ArgumentNullException("archiveFileStream")
@@ -49,7 +62,7 @@ Public Class ArchiveFileAllocationTable
 
     Public ReadOnly Property DataBlockPointers() As List(Of ArchiveDataBlockPointer)
         Get
-
+            Return m_dataBlockPointers
         End Get
     End Property
 
