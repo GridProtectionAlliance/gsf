@@ -1,4 +1,4 @@
-Public Enum Quality
+Public Enum Quality As Integer
     Unknown
     DeletedFromProcessing
     CouldNotCalcPoint
@@ -29,4 +29,11 @@ Public Enum Quality
     DeletedFromAlarmChecks
     InhibitedByCutoutPoint
     Good
+End Enum
+
+Public Enum PointType As Short
+    Analog
+    Digital
+    Composed
+    Constant
 End Enum

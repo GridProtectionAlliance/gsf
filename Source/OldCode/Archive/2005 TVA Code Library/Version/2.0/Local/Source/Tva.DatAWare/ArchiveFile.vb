@@ -88,7 +88,7 @@ Public Class ArchiveFile
     End Property
 
     <Browsable(False)> _
-    Public ReadOnly Property FAT() As ArchiveFileAllocationTable
+    Public ReadOnly Property FileAllocationTable() As ArchiveFileAllocationTable
         Get
             Return m_fat
         End Get
@@ -103,7 +103,7 @@ Public Class ArchiveFile
         Else
             ' File does not exist, so we have to create it and initialize it.
             m_fileStream = New FileStream(m_name, FileMode.Create)
-            m_fat = New ArchiveFileAllocationTable(m_blockSize, ArchiveFile.MaximumDataBlocks(m_size, m_blockSize))
+            m_fat = New ArchiveFileAllocationTable(m_blockSize, MaximumDataBlocks(m_size, m_blockSize))
             WriteFileAllocationTable()
         End If
         m_size = m_fileStream.Length / (1024 * 1024)

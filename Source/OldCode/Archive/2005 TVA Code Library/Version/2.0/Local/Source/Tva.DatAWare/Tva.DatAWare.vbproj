@@ -105,6 +105,7 @@
     <Compile Include="MetadataFile.vb">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="MetadataFlagWord.vb" />
     <Compile Include="My Project\AssemblyInfo.vb" />
     <Compile Include="PointData.vb" />
     <Compile Include="DataProcessor.Designer.vb">
