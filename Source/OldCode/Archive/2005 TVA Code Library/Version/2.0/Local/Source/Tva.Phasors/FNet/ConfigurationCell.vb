@@ -168,10 +168,10 @@ Namespace FNet
                 If value <> DataFormat.FloatingPoint Then Throw New NotSupportedException("FNet only supports floating point data")
             End Set
         End Property
+
         ''' <summary>
         ''' Serialize the parameters of Longitude, Latitude and numberOfSatellite
         ''' </summary>
-
         Public Overrides Sub GetObjectData(ByVal info As System.Runtime.Serialization.SerializationInfo, ByVal context As System.Runtime.Serialization.StreamingContext)
 
             MyBase.GetObjectData(info, context)
