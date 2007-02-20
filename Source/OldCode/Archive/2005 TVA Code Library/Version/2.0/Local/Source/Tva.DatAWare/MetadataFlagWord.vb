@@ -1,12 +1,14 @@
+Imports Tva.Interop.Bit
+
 ' 02/20/2007
 
 Public Class MetadataFlagWord
 
 #Region " Member Declaration "
 
-    Private m_flagWord As Integer
+    Private m_flagWord As Int32
 
-    Private Const PointTypeMask As Integer = &H7
+    Private Const PointTypeMask As Integer = Bit0 Or Bit1 Or Bit2
     Private Const ArchivedMask As Integer = &H8
     Private Const UsedMask As Integer = &H10
     Private Const AlarmEnabledMask As Integer = &H20
@@ -22,7 +24,7 @@ Public Class MetadataFlagWord
 
 #Region " Public Code "
 
-    Public Sub New(ByVal flagWord As Integer)
+    Public Sub New(ByVal flagWord As Int32)
 
         MyBase.New()
         m_flagWord = flagWord
@@ -34,6 +36,7 @@ Public Class MetadataFlagWord
             Return CType(m_flagWord And PointTypeMask, PointType)
         End Get
         Set(ByVal value As PointType)
+            'm_flagWord = (m_flagWord And Not PointTypeMask Or value)
             m_flagWord = (m_flagWord Or value)
         End Set
     End Property
@@ -46,7 +49,7 @@ Public Class MetadataFlagWord
             If value Then
                 m_flagWord = (m_flagWord Or ArchivedMask)
             Else
-
+                m_flagWord = (m_flagWord And Not ArchivedMask)
             End If
         End Set
     End Property
