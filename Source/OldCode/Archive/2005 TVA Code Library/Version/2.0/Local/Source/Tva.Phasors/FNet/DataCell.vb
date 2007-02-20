@@ -226,6 +226,20 @@ Namespace FNet
 
         End Sub
 
+        Public Overrides ReadOnly Property Attributes() As Dictionary(Of String, String)
+            Get
+                Dim baseAttributes As Dictionary(Of String, String) = MyBase.Attributes
+
+                With baseAttributes
+                    .Add("FNET Date", FNetDate)
+                    .Add("FNET Time", FNetTime)
+                    .Add("Analog Value", m_analogValue)
+                End With
+
+                Return baseAttributes
+            End Get
+        End Property
+
         ''' <summary>
         ''' Convert FNET date (mm/dd/yy), time (hh:mm:ss) and subsecond to time ticks
         ''' </summary>
