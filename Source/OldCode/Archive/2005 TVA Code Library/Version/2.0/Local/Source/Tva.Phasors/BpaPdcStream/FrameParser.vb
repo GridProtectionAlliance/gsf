@@ -29,6 +29,7 @@ Namespace BpaPdcStream
     <CLSCompliant(False)> _
     Public Class FrameParser
 
+        ' TODO: Change out parser to use standard FrameParserBase class
         Inherits Stream
         Implements IFrameParser
 
