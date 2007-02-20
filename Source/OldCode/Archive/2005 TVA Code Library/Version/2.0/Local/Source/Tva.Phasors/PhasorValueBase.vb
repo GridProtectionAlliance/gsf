@@ -364,7 +364,9 @@ Public MustInherit Class PhasorValueBase
 
     Public Overrides ReadOnly Property Attributes() As Dictionary(Of String, String)
         Get
-            With MyBase.Attributes
+            Dim baseAttributes As Dictionary(Of String, String) = MyBase.Attributes
+
+            With baseAttributes
                 .Add("Angle Value", Angle & "°")
                 .Add("Magnitude Value", Magnitude)
                 .Add("Real Value", Real)
@@ -375,7 +377,7 @@ Public MustInherit Class PhasorValueBase
                 .Add("Magnitude Value was Received", MagnitudeReceived)
             End With
 
-            Return MyBase.Attributes
+            Return baseAttributes
         End Get
     End Property
 

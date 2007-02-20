@@ -213,7 +213,9 @@ Public MustInherit Class ChannelDefinitionBase
 
     Public Overrides ReadOnly Property Attributes() As Dictionary(Of String, String)
         Get
-            With MyBase.Attributes
+            Dim baseAttributes As Dictionary(Of String, String) = MyBase.Attributes
+
+            With baseAttributes
                 .Add("Label", Label)
                 .Add("Index", Index)
                 .Add("Offset", Offset)
@@ -224,7 +226,7 @@ Public MustInherit Class ChannelDefinitionBase
                 .Add("Maximum Label Length", MaximumLabelLength)
             End With
 
-            Return MyBase.Attributes
+            Return baseAttributes
         End Get
     End Property
 

@@ -140,8 +140,11 @@ Namespace Ieee1344
 
         Public Overrides ReadOnly Property Attributes() As Dictionary(Of String, String)
             Get
-                MyBase.Attributes.Add("Trigger Status", TriggerStatus & ": " & [Enum].GetName(GetType(TriggerStatus), TriggerStatus))
-                Return MyBase.Attributes
+                Dim baseAttributes As Dictionary(Of String, String) = MyBase.Attributes
+
+                baseAttributes.Add("Trigger Status", TriggerStatus & ": " & [Enum].GetName(GetType(TriggerStatus), TriggerStatus))
+
+                Return baseAttributes
             End Get
         End Property
 

@@ -123,8 +123,11 @@ Public Class HeaderCell
 
     Public Overrides ReadOnly Property Attributes() As Dictionary(Of String, String)
         Get
-            MyBase.Attributes.Add("Character", Encoding.ASCII.GetString(New Byte() {Character}))
-            Return MyBase.Attributes
+            Dim baseAttributes As Dictionary(Of String, String) = MyBase.Attributes
+
+            baseAttributes.Add("Character", Encoding.ASCII.GetString(New Byte() {Character}))
+
+            Return baseAttributes
         End Get
     End Property
 

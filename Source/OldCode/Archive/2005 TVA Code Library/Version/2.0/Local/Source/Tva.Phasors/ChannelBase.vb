@@ -130,7 +130,6 @@ Public MustInherit Class ChannelBase
             End If
 
             With m_attributes
-                .Add("ID", Guid.NewGuid.ToString())
                 .Add("Derived Type", DerivedType.FullName)
                 .Add("Binary Length", BinaryLength)
             End With

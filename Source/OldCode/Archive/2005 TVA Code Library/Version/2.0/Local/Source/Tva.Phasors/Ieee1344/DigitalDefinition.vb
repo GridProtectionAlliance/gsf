@@ -135,12 +135,14 @@ Namespace Ieee1344
 
         Public Overrides ReadOnly Property Attributes() As Dictionary(Of String, String)
             Get
-                With MyBase.Attributes
+                Dim baseAttributes As Dictionary(Of String, String) = MyBase.Attributes
+
+                With baseAttributes
                     .Add("Normal Status", NormalStatus)
                     .Add("Valid Input", ValidInput)
                 End With
 
-                Return MyBase.Attributes
+                Return baseAttributes
             End Get
         End Property
 

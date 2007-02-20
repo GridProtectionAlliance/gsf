@@ -103,13 +103,15 @@ Public MustInherit Class ChannelValueCollectionBase(Of TDefinition As IChannelDe
 
     Public Overrides ReadOnly Property Attributes() As Dictionary(Of String, String)
         Get
-            With MyBase.Attributes
+            Dim baseAttributes As Dictionary(Of String, String) = MyBase.Attributes
+
+            With baseAttributes
                 .Add("Fixed Count", m_fixedCount)
                 .Add("Float Count", m_floatCount)
                 .Add("All Values Empty", AllValuesAreEmpty)
             End With
 
-            Return MyBase.Attributes
+            Return baseAttributes
         End Get
     End Property
 

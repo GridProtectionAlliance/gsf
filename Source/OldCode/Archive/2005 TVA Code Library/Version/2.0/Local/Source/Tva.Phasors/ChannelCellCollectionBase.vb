@@ -75,11 +75,13 @@ Public MustInherit Class ChannelCellCollectionBase(Of T As IChannelCell)
 
     Public Overrides ReadOnly Property Attributes() As Dictionary(Of String, String)
         Get
-            With MyBase.Attributes
+            Dim baseAttributes As Dictionary(Of String, String) = MyBase.Attributes
+
+            With baseAttributes
                 .Add("Constant Cell Length", m_constantCellLength)
             End With
 
-            Return MyBase.Attributes
+            Return baseAttributes
         End Get
     End Property
 

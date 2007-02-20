@@ -80,8 +80,11 @@ Public MustInherit Class HeaderFrameBase
 
     Public Overrides ReadOnly Property Attributes() As Dictionary(Of String, String)
         Get
-            MyBase.Attributes.Add("Header Data", HeaderData)
-            Return MyBase.Attributes
+            Dim baseAttributes As Dictionary(Of String, String) = MyBase.Attributes
+
+            baseAttributes.Add("Header Data", HeaderData)
+
+            Return baseAttributes
         End Get
     End Property
 

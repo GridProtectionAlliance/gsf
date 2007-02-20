@@ -132,12 +132,14 @@ Public MustInherit Class FrequencyDefinitionBase
 
     Public Overrides ReadOnly Property Attributes() As Dictionary(Of String, String)
         Get
-            With MyBase.Attributes
+            Dim baseAttributes As Dictionary(Of String, String) = MyBase.Attributes
+
+            With baseAttributes
                 .Add("df/dt Offset", DfDtOffset)
                 .Add("df/dt Scaling Factor", DfDtScalingFactor)
             End With
 
-            Return MyBase.Attributes
+            Return baseAttributes
         End Get
     End Property
 

@@ -143,8 +143,11 @@ Namespace Ieee1344
 
         Public Overrides ReadOnly Property Attributes() As Dictionary(Of String, String)
             Get
-                MyBase.Attributes.Add("64-Bit ID Code", IDCode)
-                Return MyBase.Attributes
+                Dim baseAttributes As Dictionary(Of String, String) = MyBase.Attributes
+
+                baseAttributes.Add("64-Bit ID Code", IDCode)
+
+                Return baseAttributes
             End Get
         End Property
 

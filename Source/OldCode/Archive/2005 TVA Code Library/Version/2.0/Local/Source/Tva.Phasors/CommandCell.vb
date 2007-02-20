@@ -122,8 +122,11 @@ Public Class CommandCell
 
     Public Overrides ReadOnly Property Attributes() As Dictionary(Of String, String)
         Get
-            MyBase.Attributes.Add("Extended Data Byte", ExtendedDataByte.ToString("x"c))
-            Return MyBase.Attributes
+            Dim baseAttributes As Dictionary(Of String, String) = MyBase.Attributes
+
+            baseAttributes.Add("Extended Data Byte", ExtendedDataByte.ToString("x"c))
+
+            Return baseAttributes
         End Get
     End Property
 

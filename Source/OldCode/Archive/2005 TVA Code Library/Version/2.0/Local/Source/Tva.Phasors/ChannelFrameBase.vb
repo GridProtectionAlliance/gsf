@@ -270,7 +270,9 @@ Public MustInherit Class ChannelFrameBase(Of T As IChannelCell)
 
     Public Overrides ReadOnly Property Attributes() As Dictionary(Of String, String)
         Get
-            With MyBase.Attributes
+            Dim baseAttributes As Dictionary(Of String, String) = MyBase.Attributes
+
+            With baseAttributes
                 .Add("Total Cells", Cells.Count)
                 .Add("Fundamental Frame Type", FundamentalFrameType & ": " & [Enum].GetName(GetType(FundamentalFrameType), FundamentalFrameType))
                 .Add("ID Code", IDCode)
@@ -280,7 +282,7 @@ Public MustInherit Class ChannelFrameBase(Of T As IChannelCell)
                 .Add("Timestamp", Timestamp)
             End With
 
-            Return MyBase.Attributes
+            Return baseAttributes
         End Get
     End Property
 

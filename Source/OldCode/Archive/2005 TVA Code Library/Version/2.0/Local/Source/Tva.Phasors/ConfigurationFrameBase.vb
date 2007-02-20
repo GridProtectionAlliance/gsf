@@ -108,8 +108,11 @@ Public MustInherit Class ConfigurationFrameBase
 
     Public Overrides ReadOnly Property Attributes() As Dictionary(Of String, String)
         Get
-            MyBase.Attributes.Add("Frame Rate", FrameRate)
-            Return MyBase.Attributes
+            Dim baseAttributes As Dictionary(Of String, String) = MyBase.Attributes
+
+            baseAttributes.Add("Frame Rate", FrameRate)
+
+            Return baseAttributes
         End Get
     End Property
 

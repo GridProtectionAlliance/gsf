@@ -361,6 +361,10 @@ Public Class MultiProtocolFrameParser
         End Get
         Set(ByVal value As Boolean)
             m_executeParseOnSeparateThread = value
+
+            ' Since frame parsers support dynamic changes in this value, we'll pass this value along to the
+            ' the frame parser if one has been established...
+            If m_frameParser IsNot Nothing Then m_frameParser.ExecuteParseOnSeparateThread = value
         End Set
     End Property
 
@@ -506,16 +510,16 @@ Public Class MultiProtocolFrameParser
                 .Append([Enum].GetName(GetType(PhasorProtocol), PhasorProtocol))
                 .Append(Environment.NewLine)
                 .Append("               Buffer size: ")
-                .Append(BufferSize)
+                .Append(m_bufferSize)
                 .Append(Environment.NewLine)
                 .Append("     Total frames received: ")
-                .Append(TotalFramesReceived)
+                .Append(m_totalFramesReceived)
                 .Append(Environment.NewLine)
                 .Append("     Calculated frame rate: ")
-                .Append(FrameRate)
+                .Append(m_frameRate)
                 .Append(Environment.NewLine)
                 .Append("      Calculated byte rate: ")
-                .Append(ByteRate)
+                .Append(m_byteRate)
                 .Append(Environment.NewLine)
                 .Append("   Calculated MegaBit rate: ")
                 .Append(MegaBitRate.ToString("0.0000") & " mbps")

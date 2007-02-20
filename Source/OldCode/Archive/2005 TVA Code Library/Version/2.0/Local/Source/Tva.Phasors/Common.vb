@@ -28,7 +28,7 @@ Public NotInheritable Class Common
 
     End Sub
 
-    ''' <summary>Data stream synchrnonization byte</summary>
+    ''' <summary>Typical data stream synchrnonization byte</summary>
     Public Const SyncByte As Byte = &HAA
 
     ''' <summary>This is a common optimized block copy function for any kind of data</summary>

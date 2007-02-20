@@ -188,13 +188,15 @@ Namespace FNet
         ''' </summary>
         Public Overrides ReadOnly Property Attributes() As Dictionary(Of String, String)
             Get
-                With MyBase.Attributes
+                Dim baseAttributes As Dictionary(Of String, String) = MyBase.Attributes
+
+                With baseAttributes
                     .Add("Longitude", Longitude)
                     .Add("Latitude", Latitude)
                     .Add("Number of Satellites", NumberOfSatellites)
                 End With
 
-                Return MyBase.Attributes
+                Return baseAttributes
             End Get
         End Property
 

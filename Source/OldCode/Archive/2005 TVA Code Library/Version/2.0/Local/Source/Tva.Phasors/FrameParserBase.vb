@@ -50,26 +50,8 @@ Public MustInherit Class FrameParserBase
     Private WithEvents m_bufferQueue As ProcessQueue(Of Byte())
     Private m_executeParseOnSeparateThread As Boolean
     Private m_dataStream As MemoryStream
-    Private m_configurationFrame As IConfigurationFrame
-    Private m_totalFramesReceived As Long
     Private m_initialized As Boolean
     Private m_enabled As Boolean
-
-#End Region
-
-#Region " Construction Functions "
-
-    Protected Sub New()
-
-
-    End Sub
-
-    Protected Sub New(ByVal configurationFrame As IConfigurationFrame)
-
-        MyClass.New()
-        m_configurationFrame = CastToDerivedConfigurationFrame(configurationFrame)
-
-    End Sub
 
 #End Region
 
@@ -77,7 +59,7 @@ Public MustInherit Class FrameParserBase
 
     Public Overridable Sub Start() Implements IFrameParser.Start
 
-        m_initialized = False
+        m_initialized = Not ProtocolUsesSyncByte
         If m_executeParseOnSeparateThread Then m_bufferQueue.Start()
         m_enabled = True
 
@@ -101,8 +83,10 @@ Public MustInherit Class FrameParserBase
             Return m_executeParseOnSeparateThread
         End Get
         Set(ByVal value As Boolean)
+            ' This property allows a dynamic change in state of how to process streaming data
             If value Then
-                If m_bufferQueue Is Nothing Then m_bufferQueue = ProcessQueue(Of Byte()).CreateRealTimeQueue(AddressOf ProcessBuffers)
+                If m_bufferQueue Is Nothing Then m_bufferQueue = ProcessQueue(Of Byte()).CreateRealTimeQueue(AddressOf ProcessQueuedBuffers)
+                If m_enabled AndAlso Not m_bufferQueue.Enabled Then m_bufferQueue.Start()
                 m_executeParseOnSeparateThread = True
             Else
                 m_executeParseOnSeparateThread = False
@@ -122,13 +106,14 @@ Public MustInherit Class FrameParserBase
         End Get
     End Property
 
-    Public Overridable Property ConfigurationFrame() As IConfigurationFrame Implements IFrameParser.ConfigurationFrame
+    Public MustOverride Property ConfigurationFrame() As IConfigurationFrame Implements IFrameParser.ConfigurationFrame
+
+    Public MustOverride ReadOnly Property ProtocolUsesSyncByte() As Boolean
+
+    Public Overridable ReadOnly Property ProtocolSyncByte() As Byte
         Get
-            Return m_configurationFrame
+            Return SyncByte
         End Get
-        Set(ByVal value As IConfigurationFrame)
-            m_configurationFrame = CastToDerivedConfigurationFrame(value)
-        End Set
     End Property
 
     ' Stream implementation overrides
@@ -140,19 +125,20 @@ Public MustInherit Class FrameParserBase
                 m_bufferQueue.Add(CopyBuffer(buffer, offset, count))
             Else
                 ' Directly parse frame using calling thread (typically communications thread)
-                ParseData(buffer, offset, count)
+                ParseBuffer(buffer, offset, count)
             End If
         Else
-            ' Initial stream may be any where in the middle of a frame, so we attempt to locate sync byte to "line-up" data stream
-            Dim syncBytePosition As Int32 = Array.IndexOf(buffer, SyncByte, offset, count)
+            ' Initial stream may be anywhere in the middle of a frame, so we attempt to locate sync byte to "line-up" data stream
+            Dim syncBytePosition As Int32 = Array.IndexOf(buffer, ProtocolSyncByte, offset, count)
 
             If syncBytePosition > -1 Then
                 ' Initialize data stream starting at located sync byte
                 If m_executeParseOnSeparateThread Then
                     m_bufferQueue.Add(CopyBuffer(buffer, syncBytePosition, count - syncBytePosition))
                 Else
-                    ParseData(buffer, syncBytePosition, count - syncBytePosition)
+                    ParseBuffer(buffer, syncBytePosition, count - syncBytePosition)
                 End If
+
                 m_initialized = True
             End If
         End If
@@ -186,23 +172,29 @@ Public MustInherit Class FrameParserBase
                 Else
                     .Append("Idle")
                 End If
-                .Append("     Received config frame: ")
-                .Append(IIf(m_configurationFrame Is Nothing, "No", "Yes"))
                 .Append(Environment.NewLine)
-                If m_configurationFrame IsNot Nothing Then
+                If ProtocolUsesSyncByte Then
+                    .Append(" Data synchronization byte: 0x")
+                    .Append(ProtocolSyncByte.ToString("X"c))
+                    .Append(Environment.NewLine)
+                End If
+                .Append("     Received config frame: ")
+                .Append(IIf(ConfigurationFrame Is Nothing, "No", "Yes"))
+                .Append(Environment.NewLine)
+                If ConfigurationFrame IsNot Nothing Then
                     .Append("   Devices in config frame: ")
-                    .Append(m_configurationFrame.Cells.Count)
+                    .Append(ConfigurationFrame.Cells.Count)
                     .Append(" total - ")
                     .Append(Environment.NewLine)
-                    For x As Integer = 0 To m_configurationFrame.Cells.Count - 1
+                    For x As Integer = 0 To ConfigurationFrame.Cells.Count - 1
                         .Append("               (")
-                        .Append(m_configurationFrame.Cells(x).IDCode)
+                        .Append(ConfigurationFrame.Cells(x).IDCode)
                         .Append(") ")
-                        .Append(m_configurationFrame.Cells(x).StationName)
+                        .Append(ConfigurationFrame.Cells(x).StationName)
                         .Append(Environment.NewLine)
                     Next
                     .Append("     Configured frame rate: ")
-                    .Append(m_configurationFrame.FrameRate)
+                    .Append(ConfigurationFrame.FrameRate)
                     .Append(Environment.NewLine)
                 End If
                 .Append("  Parsing execution source: ")
@@ -274,94 +266,19 @@ Public MustInherit Class FrameParserBase
 
 #Region " Protected Methods Implementation "
 
-    Protected MustOverride Function CastToDerivedConfigurationFrame(ByVal configurationFrame As IConfigurationFrame) As IConfigurationFrame
-
-    Protected Overridable Sub ParseData(ByVal buffer As Byte(), ByVal offset As Int32, ByVal count As Int32)
-
-        ''Try
-        ''    Dim parsedFrameHeader As ICommonFrameHeader
-
-        ''    ' Prepend any left over buffer data from last parse call
-        ''    If m_dataStream IsNot Nothing Then
-        ''        With New MemoryStream
-        ''            .Write(m_dataStream.ToArray(), 0, m_dataStream.Length)
-        ''            m_dataStream = Nothing
-
-        ''            ' Append new incoming data
-        ''            .Write(buffer, offset, count)
-
-        ''            ' Pull all queued data together as one big buffer
-        ''            buffer = .ToArray()
-        ''            offset = 0
-        ''            count = .Length
-        ''        End With
-        ''    End If
-
-        ''    Dim endOfBuffer As Integer = offset + count - 1
-
-        ''    Do Until offset > endOfBuffer
-        ''        ' See if there is enough data in the buffer to parse the common frame header
-        ''        If offset + CommonFrameHeader.BinaryLength > count Then
-        ''            ' If not, save off remaining buffer to prepend onto next read
-        ''            m_dataStream = New MemoryStream
-        ''            m_dataStream.Write(buffer, offset, count - offset)
-        ''            Exit Do
-        ''        End If
-
-        ''        ' Parse frame header
-        ''        parsedFrameHeader = CommonFrameHeader.ParseBinaryImage(m_configurationFrame2, buffer, offset)
-
-        ''        ' Until we receive configuration frame, we at least expose part of frame we have parsed
-        ''        If m_configurationFrame Is Nothing Then RaiseReceivedCommonFrameHeader(parsedFrameHeader)
-
-        ''        ' See if there is enough data in the buffer to parse the entire frame
-        ''        If offset + parsedFrameHeader.FrameLength > count Then
-        ''            ' If not, save off remaining buffer to prepend onto next read
-        ''            m_dataStream = New MemoryStream
-        ''            m_dataStream.Write(buffer, offset, count - offset)
-        ''            Exit Do
-        ''        End If
-
-        ''        RaiseEvent ReceivedFrameBufferImage(parsedFrameHeader.FundamentalFrameType, buffer, offset, parsedFrameHeader.FrameLength)
-
-        ''        ' Entire frame is available, so we go ahead and parse it
-        ''        'Select Case parsedFrameHeader.FrameType
-        ''        '    Case FrameType.DataFrame
-        ''        '        ' We can only start parsing data frames once we have successfully received configuration file 2...
-        ''        '        If m_configurationFrame IsNot Nothing Then RaiseReceivedDataFrame(New DataFrame(parsedFrameHeader, m_configurationFrame2, buffer, offset))
-        ''        '    Case FrameType.ConfigurationFrame2
-        ''        '        Select Case m_draftRevision
-        ''        '            Case DraftRevision.Draft6
-        ''        '                With New ConfigurationFrameDraft6(parsedFrameHeader, buffer, offset)
-        ''        '                    m_configurationFrame2 = .This
-        ''        '                    RaiseReceivedConfigurationFrame2(.This)
-        ''        '                End With
-        ''        '            Case DraftRevision.Draft7
-        ''        '                With New ConfigurationFrame(parsedFrameHeader, buffer, offset)
-        ''        '                    m_configurationFrame2 = .This
-        ''        '                    RaiseReceivedConfigurationFrame2(.This)
-        ''        '                End With
-        ''        '        End Select
-        ''        '    Case FrameType.ConfigurationFrame1
-        ''        '        Select Case m_draftRevision
-        ''        '            Case DraftRevision.Draft6
-        ''        '                RaiseReceivedConfigurationFrame1(New ConfigurationFrameDraft6(parsedFrameHeader, buffer, offset))
-        ''        '            Case DraftRevision.Draft7
-        ''        '                RaiseReceivedConfigurationFrame1(New ConfigurationFrame(parsedFrameHeader, buffer, offset))
-        ''        '        End Select
-        ''        '    Case FrameType.HeaderFrame
-        ''        '        RaiseReceivedHeaderFrame(New HeaderFrame(parsedFrameHeader, buffer, offset))
-        ''        '    Case FrameType.CommandFrame
-        ''        '        RaiseReceivedCommandFrame(New CommandFrame(parsedFrameHeader, buffer, offset))
-        ''        'End Select
-
-        ''        offset += parsedFrameHeader.FrameLength
-        ''    Loop
-        ''Catch ex As Exception
-        ''    RaiseEvent DataStreamException(ex)
-        ''End Try
-
-    End Sub
+    ''' <summary>
+    ''' Protocol specific frame parsing algorithm
+    ''' </summary>
+    ''' <param name="buffer">Buffer containing data to parse</param>
+    ''' <param name="offset">Offset index into buffer that represents where to start parsing</param>
+    ''' <param name="length">Maximum length of valid data from offset</param>
+    ''' <param name="parsedFrameLength">Derived implementations update this value with the length of the data that was parsed</param>
+    ''' <remarks>
+    ''' Implementors can choose to focus on parsing a single frame in the buffer even if there are other frames available in the buffer.
+    ''' Base class will continue to move through buffer on behalf of derived class until all the buffer has been processed.  Any data
+    ''' that remains unparsed will be prepended to next received buffer.
+    ''' </remarks>
+    Protected MustOverride Sub ParseFrame(ByVal buffer As Byte(), ByVal offset As Int32, ByVal length As Int32, ByRef parsedFrameLength As Int32)
 
     Protected Overridable Sub RaiseReceivedConfigurationFrame(ByVal frame As IConfigurationFrame)
 
@@ -387,6 +304,18 @@ Public MustInherit Class FrameParserBase
 
     End Sub
 
+    Protected Overridable Sub RaiseReceivedUndeterminedFrame(ByVal frame As IChannelFrame)
+
+        RaiseEvent ReceivedUndeterminedFrame(frame)
+
+    End Sub
+
+    Protected Overridable Sub RaiseReceivedFrameBufferImage(ByVal frameType As FundamentalFrameType, ByVal binaryImage As Byte(), ByVal offset As Integer, ByVal length As Integer)
+
+        RaiseEvent ReceivedFrameBufferImage(frameType, binaryImage, offset, length)
+
+    End Sub
+
     Protected Overridable Sub RaiseConfigurationChangeDetected()
 
         RaiseEvent ConfigurationChanged()
@@ -404,7 +333,7 @@ Public MustInherit Class FrameParserBase
 #Region " Private Methods Implementation "
 
     ' We process all queued data buffers that are available at once...
-    Private Sub ProcessBuffers(ByVal buffers As Byte()())
+    Private Sub ProcessQueuedBuffers(ByVal buffers As Byte()())
 
         With New MemoryStream
             ' Combine all currently queued buffers
@@ -413,8 +342,53 @@ Public MustInherit Class FrameParserBase
             Next
 
             ' Parse combined data buffers
-            ParseData(.ToArray(), 0, .Length)
+            ParseBuffer(.ToArray(), 0, .Length)
         End With
+
+    End Sub
+
+    Private Sub ParseBuffer(ByVal buffer As Byte(), ByVal offset As Int32, ByVal count As Int32)
+
+        Try
+            ' Prepend any left over buffer data from last parse call
+            If m_dataStream IsNot Nothing Then
+                With New MemoryStream
+                    .Write(m_dataStream.ToArray(), 0, m_dataStream.Length)
+                    m_dataStream = Nothing
+
+                    ' Append new incoming data
+                    .Write(buffer, offset, count)
+
+                    ' Pull all combined data together as one big buffer
+                    buffer = .ToArray()
+                    offset = 0
+                    count = .Length
+                End With
+            End If
+
+            Dim endOfBuffer As Integer = offset + count - 1
+            Dim parsedFrameLength As Int32
+
+            ' Move through buffer parsing all available frames
+            Do Until offset > endOfBuffer
+                parsedFrameLength = 0
+
+                ' Call derived class frame parsing algorithm - this is protocol specific
+                ParseFrame(buffer, offset, endOfBuffer - offset + 1, parsedFrameLength)
+
+                If parsedFrameLength > 0 Then
+                    ' If frame was parsed, increment buffer offset by frame length
+                    offset += parsedFrameLength
+                Else
+                    ' If not, save off remaining buffer to prepend onto next read
+                    m_dataStream = New MemoryStream
+                    m_dataStream.Write(buffer, offset, count - offset)
+                    Exit Do
+                End If
+            Loop
+        Catch ex As Exception
+            RaiseEvent DataStreamException(ex)
+        End Try
 
     End Sub
 

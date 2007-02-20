@@ -255,7 +255,9 @@ Public MustInherit Class DataCellBase
 
     Public Overrides ReadOnly Property Attributes() As Dictionary(Of String, String)
         Get
-            With MyBase.Attributes
+            Dim baseAttributes As Dictionary(Of String, String) = MyBase.Attributes
+
+            With baseAttributes
                 .Add("Status Flags", StatusFlags)
                 .Add("Data Is Valid", DataIsValid)
                 .Add("Synchronization Is Valid", SynchronizationIsValid)
@@ -265,7 +267,7 @@ Public MustInherit Class DataCellBase
                 .Add("All Values Are Empty", AllValuesAreEmpty)
             End With
 
-            Return MyBase.Attributes
+            Return baseAttributes
         End Get
     End Property
 

@@ -129,7 +129,9 @@ Public MustInherit Class CommandFrameBase
 
     Public Overrides ReadOnly Property Attributes() As Dictionary(Of String, String)
         Get
-            With MyBase.Attributes
+            Dim baseAttributes As Dictionary(Of String, String) = MyBase.Attributes
+
+            With baseAttributes
                 .Add("Device Command", Command & ": " & [Enum].GetName(GetType(DeviceCommand), Command))
 
                 If Cells.Count > 0 Then
@@ -139,7 +141,7 @@ Public MustInherit Class CommandFrameBase
                 End If
             End With
 
-            Return MyBase.Attributes
+            Return baseAttributes
         End Get
     End Property
 

@@ -177,7 +177,9 @@ Namespace IeeeC37_118
 
         Public Overrides ReadOnly Property Attributes() As Dictionary(Of String, String)
             Get
-                With MyBase.Attributes
+                Dim baseAttributes As Dictionary(Of String, String) = MyBase.Attributes
+
+                With baseAttributes
                     .Add("Frame Type", FrameType & ": " & [Enum].GetName(GetType(FrameType), FrameType))
                     .Add("Frame Length", FrameLength)
                     .Add("Version", Version & ": " & [Enum].GetName(GetType(Version), Version))
@@ -188,7 +190,7 @@ Namespace IeeeC37_118
                     .Add("Time Base", TimeBase)
                 End With
 
-                Return MyBase.Attributes
+                Return baseAttributes
             End Get
         End Property
 

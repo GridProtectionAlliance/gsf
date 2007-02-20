@@ -139,12 +139,14 @@ Public MustInherit Class DigitalValueBase
 
     Public Overrides ReadOnly Property Attributes() As Dictionary(Of String, String)
         Get
-            With MyBase.Attributes
+            Dim baseAttributes As Dictionary(Of String, String) = MyBase.Attributes
+
+            With baseAttributes
                 Dim valueBytes As Byte() = BitConverter.GetBytes(Value)
                 .Add("Digital Value (Big Endian Bits)", ByteEncoding.BigEndianBinary.GetString(valueBytes))
                 .Add("Digital Value (Hexadecimal)", ByteEncoding.Hexadecimal.GetString(valueBytes))
             End With
-            Return MyBase.Attributes
+            Return baseAttributes
         End Get
     End Property
 

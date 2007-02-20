@@ -132,8 +132,11 @@ Namespace IeeeC37_118
 
         Public Overrides ReadOnly Property Attributes() As Dictionary(Of String, String)
             Get
-                MyBase.Attributes.Add("Analog Type", [Type] & ": " & [Enum].GetName(GetType(AnalogType), [Type]))
-                Return MyBase.Attributes
+                Dim baseAttributes As Dictionary(Of String, String) = MyBase.Attributes
+
+                baseAttributes.Add("Analog Type", [Type] & ": " & [Enum].GetName(GetType(AnalogType), [Type]))
+
+                Return baseAttributes
             End Get
         End Property
 

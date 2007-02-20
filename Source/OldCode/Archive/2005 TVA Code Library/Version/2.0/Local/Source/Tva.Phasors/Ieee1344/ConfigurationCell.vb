@@ -300,14 +300,16 @@ Namespace Ieee1344
 
         Public Overrides ReadOnly Property Attributes() As Dictionary(Of String, String)
             Get
-                With MyBase.Attributes
+                Dim baseAttributes As Dictionary(Of String, String) = MyBase.Attributes
+
+                With baseAttributes
                     .Add("Status Flags", StatusFlags)
                     .Add("Synchronization Is Valid", SynchronizationIsValid)
                     .Add("Data Is Valid", DataIsValid)
                     .Add("Trigger Status", TriggerStatus & ": " & [Enum].GetName(GetType(TriggerStatus), TriggerStatus))
                 End With
 
-                Return MyBase.Attributes
+                Return baseAttributes
             End Get
         End Property
 

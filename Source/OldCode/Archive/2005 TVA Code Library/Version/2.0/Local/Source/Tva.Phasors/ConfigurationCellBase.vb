@@ -347,7 +347,9 @@ Public MustInherit Class ConfigurationCellBase
 
     Public Overrides ReadOnly Property Attributes() As Dictionary(Of String, String)
         Get
-            With MyBase.Attributes
+            Dim baseAttributes As Dictionary(Of String, String) = MyBase.Attributes
+
+            With baseAttributes
                 .Add("Station Name", StationName)
                 .Add("ID Label", IDLabel)
                 .Add("Phasor Coordinate Format", PhasorCoordinateFormat & ": " & [Enum].GetName(GetType(CoordinateFormat), PhasorCoordinateFormat))
@@ -363,7 +365,7 @@ Public MustInherit Class ConfigurationCellBase
                 .Add("ID Label Length", IDLabelLength)
             End With
 
-            Return MyBase.Attributes
+            Return baseAttributes
         End Get
     End Property
 
