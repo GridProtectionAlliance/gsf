@@ -8,6 +8,8 @@ Public Class ArchiveFileAllocationTable
     ' *                     FAT structure                   *
     ' *******************************************************
 
+#Region " Member Declaration "
+
     Private m_fileStartTime As TimeTag
     Private m_fileEndTime As TimeTag
     Private m_eventsReceived As Integer
@@ -18,6 +20,8 @@ Public Class ArchiveFileAllocationTable
 
     Private Const MinimumBinaryLength As Integer = 32
 
+#End Region
+
     Private Sub New()
 
         MyBase.New()
@@ -26,6 +30,8 @@ Public Class ArchiveFileAllocationTable
         m_dataBlockPointers = New List(Of ArchiveDataBlockPointer)()
 
     End Sub
+
+#Region " Public Code "
 
     ''' <summary>
     ''' 
@@ -182,5 +188,7 @@ Public Class ArchiveFileAllocationTable
         End If
 
     End Function
+
+#End Region
 
 End Class

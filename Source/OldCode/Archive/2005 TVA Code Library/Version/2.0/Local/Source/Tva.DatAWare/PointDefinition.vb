@@ -22,6 +22,8 @@ Imports System.Text
 Public Class PointDefinition
     Implements IComparable
 
+#Region " Member Declaration "
+
     Private m_index As Integer
     Private m_description As String = ""        ' 40
     Private m_unit As Short                     ' 2
@@ -45,6 +47,10 @@ Public Class PointDefinition
     Private m_remarks As String = ""            ' 128
     Private m_binaryInfo As Byte()              ' 256
     Private m_textEncoding As Encoding
+
+#End Region
+
+#Region " Public Code "
 
     Public Const BinaryLength As Integer = 754
 
@@ -382,6 +388,8 @@ Public Class PointDefinition
         End If
 
     End Function
+
+#End Region
 
 #End Region
 

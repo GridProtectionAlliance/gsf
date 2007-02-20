@@ -20,6 +20,7 @@ Partial Class ArchiveFile
         m_name = Me.GetType().Name & Extension
         m_size = 650D
         m_blockSize = 8
+        m_saveOnClose = True
 
     End Sub
 

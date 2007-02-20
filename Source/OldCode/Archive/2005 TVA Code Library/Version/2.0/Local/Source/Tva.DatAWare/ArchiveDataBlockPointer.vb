@@ -3,10 +3,16 @@
 Public Class ArchiveDataBlockPointer
     Implements IComparable
 
-    Public Const BinaryLength As Integer = 12
+#Region " Member Declaration "
 
     Private m_pointID As Integer
     Private m_startTime As TimeTag
+
+#End Region
+
+#Region " Public Code "
+
+    Public Const BinaryLength As Integer = 12
 
     Public Sub New()
 
@@ -65,6 +71,8 @@ Public Class ArchiveDataBlockPointer
         End Get
     End Property
 
+#Region " IComparable Implementation "
+
     Public Function CompareTo(ByVal obj As Object) As Integer Implements System.IComparable.CompareTo
 
         Dim other As ArchiveDataBlockPointer = TryCast(obj, ArchiveDataBlockPointer)
@@ -75,5 +83,9 @@ Public Class ArchiveDataBlockPointer
         End If
 
     End Function
+
+#End Region
+
+#End Region
 
 End Class

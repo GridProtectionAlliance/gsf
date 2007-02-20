@@ -9,12 +9,18 @@ Imports Tva.IO.FilePath
 Public Class ArchiveFile
     Implements ISupportInitialize
 
+#Region " Member Declaration "
+
     Private m_name As String
     Private m_size As Double
     Private m_blockSize As Integer
     Private m_saveOnClose As Boolean
     Private m_fileStream As FileStream
     Private m_fat As ArchiveFileAllocationTable
+
+#End Region
+
+#Region " Public Code "
 
     Public Const Extension As String = ".d"
 
@@ -142,6 +148,8 @@ Public Class ArchiveFile
         End If
 
     End Sub
+
+#End Region
 
 #End Region
 

@@ -19,6 +19,8 @@ Public Class MetadataFile
 
 #End Region
 
+#Region " Public Code "
+
     Public Const Extension As String = ".dat"
 
     Public Property Name() As String
@@ -197,6 +199,8 @@ Public Class MetadataFile
         End If
 
     End Sub
+
+#End Region
 
 #End Region
 

@@ -145,8 +145,6 @@ Public Class PointData
         End Get
     End Property
 
-#End Region
-
 #Region " IComparable Implementation "
 
     Public Function CompareTo(ByVal obj As Object) As Integer Implements System.IComparable.CompareTo
@@ -159,6 +157,8 @@ Public Class PointData
         End If
 
     End Function
+
+#End Region
 
 #End Region
 
