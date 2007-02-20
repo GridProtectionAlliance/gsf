@@ -32,6 +32,7 @@ Namespace BpaPdcStream
         Inherits Stream
         Implements IFrameParser
 
+
 #Region " Public Member Declarations "
 
         Public Event ReceivedConfigurationFrame(ByVal frame As ConfigurationFrame)

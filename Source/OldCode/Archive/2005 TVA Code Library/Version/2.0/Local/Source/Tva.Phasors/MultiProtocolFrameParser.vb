@@ -47,6 +47,7 @@ Public Class MultiProtocolFrameParser
     Public Event ReceivedCommandFrame(ByVal frame As ICommandFrame) Implements IFrameParser.ReceivedCommandFrame
     Public Event ReceivedUndeterminedFrame(ByVal frame As IChannelFrame) Implements IFrameParser.ReceivedUndeterminedFrame
     Public Event ReceivedFrameBufferImage(ByVal frameType As FundamentalFrameType, ByVal binaryImage As Byte(), ByVal offset As Integer, ByVal length As Integer) Implements IFrameParser.ReceivedFrameBufferImage
+    Public Event SentCommandFrame(ByVal frame As ICommandFrame)
     Public Event ConfigurationChanged() Implements IFrameParser.ConfigurationChanged
     Public Event DataStreamException(ByVal ex As Exception) Implements IFrameParser.DataStreamException
     Public Event ConnectionException(ByVal ex As Exception, ByVal connectionAttempts As Integer)
@@ -466,32 +467,26 @@ Public Class MultiProtocolFrameParser
     Public Sub SendDeviceCommand(ByVal command As DeviceCommand)
 
         If m_deviceSupportsCommands AndAlso (m_communicationClient IsNot Nothing OrElse m_communicationServer IsNot Nothing) Then
-            Dim binaryImage As Byte()
-            Dim binaryLength As Int32
+            Dim commandFrame As ICommandFrame
 
             ' Only the IEEE protocols support commands
             Select Case m_phasorProtocol
                 Case Phasors.PhasorProtocol.IeeeC37_118V1, Phasors.PhasorProtocol.IeeeC37_118D6
-                    With New IeeeC37_118.CommandFrame(m_deviceID, command, 1)
-                        binaryImage = .BinaryImage
-                        binaryLength = binaryImage.Length
-                    End With
+                    commandFrame = New IeeeC37_118.CommandFrame(m_deviceID, command, 1)
                 Case Phasors.PhasorProtocol.Ieee1344
-                    With New Ieee1344.CommandFrame(m_deviceID, command)
-                        binaryImage = .BinaryImage
-                        binaryLength = binaryImage.Length
-                    End With
+                    commandFrame = New Ieee1344.CommandFrame(m_deviceID, command)
                 Case Else
-                    binaryImage = Nothing
-                    binaryLength = 0
+                    commandFrame = Nothing
             End Select
 
-            If binaryLength > 0 Then
+            If commandFrame IsNot Nothing Then
                 If m_communicationClient IsNot Nothing Then
-                    m_communicationClient.Send(binaryImage)
+                    m_communicationClient.Send(commandFrame.BinaryImage)
                 Else
-                    m_communicationServer.Multicast(binaryImage)
+                    m_communicationServer.Multicast(commandFrame.BinaryImage)
                 End If
+
+                RaiseEvent SentCommandFrame(commandFrame)
             End If
         End If
 
