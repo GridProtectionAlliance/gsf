@@ -17,11 +17,16 @@ Partial Class ArchiveFile
         'This call is required by the Component Designer.
         InitializeComponent()
 
+        m_name = Me.GetType().Name & Extension
+        m_size = 650D
+        m_blockSize = 8
+
     End Sub
 
     'Component overrides dispose to clean up the component list.
     <System.Diagnostics.DebuggerNonUserCode()> _
     Protected Overrides Sub Dispose(ByVal disposing As Boolean)
+        Close()
         If disposing AndAlso components IsNot Nothing Then
             components.Dispose()
         End If

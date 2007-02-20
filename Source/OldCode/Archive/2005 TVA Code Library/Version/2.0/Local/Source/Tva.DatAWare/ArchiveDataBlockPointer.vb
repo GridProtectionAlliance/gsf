@@ -8,6 +8,19 @@ Public Class ArchiveDataBlockPointer
     Private m_pointID As Integer
     Private m_startTime As TimeTag
 
+    Public Sub New()
+
+        MyClass.New(-1, New TimeTag(0D))
+
+    End Sub
+
+    Public Sub New(ByVal pointID As Integer, ByVal startTime As TimeTag)
+
+        m_pointID = pointID
+        m_startTime = startTime
+
+    End Sub
+
     Public Sub New(ByVal binaryImage As Byte(), ByVal startIndex As Integer)
 
         If binaryImage IsNot Nothing Then
@@ -43,7 +56,12 @@ Public Class ArchiveDataBlockPointer
 
     Public ReadOnly Property BinaryImage() As Byte()
         Get
+            Dim image As Byte() = CreateArray(Of Byte)(BinaryLength)
 
+            Array.Copy(BitConverter.GetBytes(m_pointID), 0, image, 0, 4)
+            Array.Copy(BitConverter.GetBytes(m_startTime.Value), 0, image, 4, 8)
+
+            Return image
         End Get
     End Property
 

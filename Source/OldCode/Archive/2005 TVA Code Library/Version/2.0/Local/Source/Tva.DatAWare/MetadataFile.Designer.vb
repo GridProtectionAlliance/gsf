@@ -17,7 +17,7 @@ Partial Class MetadataFile
         'This call is required by the Component Designer.
         InitializeComponent()
 
-        m_name = Me.GetType().Name & MetadataFile.Extension
+        m_name = Me.GetType().Name & Extension
         m_keepOpen = False
         m_pointDefinitions = New List(Of PointDefinition)()
 

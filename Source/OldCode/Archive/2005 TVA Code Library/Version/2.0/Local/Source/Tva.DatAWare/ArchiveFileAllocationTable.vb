@@ -8,27 +8,52 @@ Public Class ArchiveFileAllocationTable
     ' *                     FAT structure                   *
     ' *******************************************************
 
-    Private m_dataBlockPointers As List(Of ArchiveDataBlockPointer)
     Private m_fileStartTime As TimeTag
     Private m_fileEndTime As TimeTag
     Private m_eventsReceived As Integer
     Private m_eventsArchived As Integer
     Private m_dataBlockSize As Integer
     Private m_dataBlockCount As Integer
+    Private m_dataBlockPointers As List(Of ArchiveDataBlockPointer)
+
+    Private Const MinimumBinaryLength As Integer = 32
 
     Private Sub New()
 
         MyBase.New()
+        m_fileStartTime = New TimeTag(System.DateTime.Now)
+        m_fileEndTime = New TimeTag(0D)
         m_dataBlockPointers = New List(Of ArchiveDataBlockPointer)()
 
     End Sub
 
+    ''' <summary>
+    ''' 
+    ''' </summary>
+    ''' <param name="blockSize"></param>
+    ''' <param name="blockCount"></param>
+    ''' <remarks>Used when creating new archive file.</remarks>
+    Public Sub New(ByVal blockSize As Integer, ByVal blockCount As Integer)
+
+        MyClass.New()
+        m_dataBlockSize = blockSize
+        m_dataBlockCount = blockCount
+        For i As Integer = 1 To m_dataBlockCount
+            m_dataBlockPointers.Add(New ArchiveDataBlockPointer())
+        Next
+
+    End Sub
+
+    ''' <summary>
+    ''' 
+    ''' </summary>
+    ''' <param name="archiveFileStream"></param>
+    ''' <remarks>Used when reading existing archive file.</remarks>
     Public Sub New(ByVal archiveFileStream As Stream)
 
         MyClass.New()
         If archiveFileStream IsNot Nothing Then
-            Dim cursorPosition As Long = archiveFileStream.Position
-            Dim fixedFatData As Byte() = CreateArray(Of Byte)(32)
+            Dim fixedFatData As Byte() = CreateArray(Of Byte)(MinimumBinaryLength)
             archiveFileStream.Seek(-fixedFatData.Length, SeekOrigin.End)
             archiveFileStream.Read(fixedFatData, 0, fixedFatData.Length)
             m_fileStartTime = New TimeTag(BitConverter.ToDouble(fixedFatData, 0))
@@ -44,8 +69,6 @@ Public Class ArchiveFileAllocationTable
             For i As Integer = 0 To variableFatData.Length - 1 Step ArchiveDataBlockPointer.BinaryLength
                 m_dataBlockPointers.Add(New ArchiveDataBlockPointer(variableFatData, i))
             Next
-
-            archiveFileStream.Seek(cursorPosition, SeekOrigin.Begin)
         Else
             Throw New ArgumentNullException("archiveFileStream")
         End If
@@ -94,6 +117,12 @@ Public Class ArchiveFileAllocationTable
         End Set
     End Property
 
+    ''' <summary>
+    ''' 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks>Size in KB.</remarks>
     Public Property DataBlockSize() As Integer
         Get
             Return m_dataBlockSize
@@ -112,13 +141,34 @@ Public Class ArchiveFileAllocationTable
         End Set
     End Property
 
+    Public ReadOnly Property BinaryLength() As Integer
+        Get
+            Return (m_dataBlockPointers.Count * ArchiveDataBlockPointer.BinaryLength) + MinimumBinaryLength
+        End Get
+    End Property
+
     Public ReadOnly Property BinaryImage() As Byte()
         Get
+            Dim pointersBinaryLength As Integer = Me.BinaryLength - MinimumBinaryLength
+            Dim image As Byte() = CreateArray(Of Byte)(pointersBinaryLength + MinimumBinaryLength)
 
+            For i As Integer = 0 To m_dataBlockPointers.Count - 1
+                Array.Copy(m_dataBlockPointers(i).BinaryImage, 0, image, i * ArchiveDataBlockPointer.BinaryLength, ArchiveDataBlockPointer.BinaryLength)
+            Next
+            Array.Copy(BitConverter.GetBytes(m_fileStartTime.Value), 0, image, pointersBinaryLength, 8)
+            Array.Copy(BitConverter.GetBytes(m_fileEndTime.Value), 0, image, pointersBinaryLength + 8, 8)
+            Array.Copy(BitConverter.GetBytes(m_eventsReceived), 0, image, pointersBinaryLength + 16, 4)
+            Array.Copy(BitConverter.GetBytes(m_eventsArchived), 0, image, pointersBinaryLength + 20, 4)
+            Array.Copy(BitConverter.GetBytes(m_dataBlockSize), 0, image, pointersBinaryLength + 24, 4)
+            Array.Copy(BitConverter.GetBytes(m_dataBlockCount), 0, image, pointersBinaryLength + 28, 4)
+
+            Return image
         End Get
     End Property
 
     Public Function GetDataBlockLocation(ByVal pointID As Integer, ByVal startTime As TimeTag) As Long
+
+        Return GetDataBlockLocation(New ArchiveDataBlockPointer(pointID, startTime))
 
     End Function
 

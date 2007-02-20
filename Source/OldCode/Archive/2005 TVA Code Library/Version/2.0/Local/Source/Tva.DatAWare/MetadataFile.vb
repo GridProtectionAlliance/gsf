@@ -11,11 +11,11 @@ Public Class MetadataFile
 
 #Region " Member Declaration "
 
-    Private m_file As FileStream
     Private m_name As String
     Private m_keepOpen As Boolean
     Private m_initialRecordCount As Integer
     Private m_pointDefinitions As List(Of PointDefinition)
+    Private m_fileStream As FileStream
 
 #End Region
 
@@ -27,7 +27,7 @@ Public Class MetadataFile
         End Get
         Set(ByVal value As String)
             If Not String.IsNullOrEmpty(value) Then
-                If String.Compare(JustFileExtension(value), MetadataFile.Extension) = 0 Then
+                If String.Compare(JustFileExtension(value), Extension) = 0 Then
                     m_name = value
                 Else
                     Throw New ArgumentException(String.Format("Name of {0} must have an extension of {1}.", Me.GetType().Name, Extension))
@@ -50,7 +50,7 @@ Public Class MetadataFile
     <Browsable(False)> _
     Public ReadOnly Property IsOpen() As Boolean
         Get
-            Return (m_file IsNot Nothing)
+            Return (m_fileStream IsNot Nothing)
         End Get
     End Property
 
@@ -63,18 +63,17 @@ Public Class MetadataFile
 
     Public Sub Open()
 
-        If m_file Is Nothing Then
-            m_file = New FileStream(m_name, FileMode.OpenOrCreate)
+        If m_fileStream Is Nothing Then
+            m_fileStream = New FileStream(m_name, FileMode.OpenOrCreate)
         End If
 
     End Sub
 
     Public Sub Close()
 
-        If m_file IsNot Nothing Then
-            m_file.Close()
-            m_file.Dispose()
-            m_file = Nothing
+        If m_fileStream IsNot Nothing Then
+            m_fileStream.Close()
+            m_fileStream = Nothing
         End If
 
     End Sub
@@ -83,17 +82,17 @@ Public Class MetadataFile
 
         If Not Me.IsOpen Then Open()
 
-        If m_file.Length Mod PointDefinition.BinaryLength = 0 Then
+        If m_fileStream.Length Mod PointDefinition.BinaryLength = 0 Then
             If m_pointDefinitions.Count = 0 Then
                 ' We'll read the file, since we've not read the file yet.
-                m_file.Seek(0, SeekOrigin.Begin)    ' Set the cursor to BOF before we start reading the file.
+                m_fileStream.Seek(0, SeekOrigin.Begin)    ' Set the cursor to BOF before we start reading the file.
                 Dim binaryImage As Byte() = CreateArray(Of Byte)(PointDefinition.BinaryLength)
-                For i As Long = 0 To m_file.Length - 1 Step pointDefinition.BinaryLength
-                    m_file.Read(binaryImage, 0, binaryImage.Length)
+                For i As Long = 0 To m_fileStream.Length - 1 Step pointDefinition.BinaryLength
+                    m_fileStream.Read(binaryImage, 0, binaryImage.Length)
                     Dim pointDefinition As New PointDefinition(m_pointDefinitions.Count + 1, binaryImage, 0)
                     m_pointDefinitions.Add(pointDefinition)
                 Next
-                m_file.Seek(0, SeekOrigin.Begin)    ' Set the cursor to BOF after we're done reading the file.
+                m_fileStream.Seek(0, SeekOrigin.Begin)    ' Set the cursor to BOF after we're done reading the file.
                 m_initialRecordCount = m_pointDefinitions.Count
             End If
         Else
@@ -112,12 +111,12 @@ Public Class MetadataFile
             ' We have at least (if not more) the number of points we read in from the file to begin with.
             If Not Me.IsOpen Then Open()
 
-            m_file.Seek(0, SeekOrigin.Begin)    ' Set the cursor to BOF before we start writing to the file.
+            m_fileStream.Seek(0, SeekOrigin.Begin)    ' Set the cursor to BOF before we start writing to the file.
             For Each pointDefinition As PointDefinition In m_pointDefinitions
-                m_file.Write(pointDefinition.BinaryImage, 0, pointDefinition.BinaryLength)
+                m_fileStream.Write(pointDefinition.BinaryImage, 0, pointDefinition.BinaryLength)
             Next
-            m_file.Flush()
-            m_file.Seek(0, SeekOrigin.Begin)    ' Set the cursor to BOF after we're done writing to the file.
+            m_fileStream.Flush()
+            m_fileStream.Seek(0, SeekOrigin.Begin)    ' Set the cursor to BOF after we're done writing to the file.
 
             If Not m_keepOpen Then Close()
         Else

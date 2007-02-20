@@ -134,14 +134,14 @@ Public Class PointData
 
     Public ReadOnly Property BinaryImage() As Byte()
         Get
-            Dim buffer As Byte() = CreateArray(Of Byte)(BinaryLength)
+            Dim image As Byte() = CreateArray(Of Byte)(BinaryLength)
 
             ' Construct the binary IP buffer for this event
-            Array.Copy(BitConverter.GetBytes(m_tTag.Value), 0, buffer, 0, 8)
-            Array.Copy(BitConverter.GetBytes(m_flags), 0, buffer, 8, 4)
-            Array.Copy(BitConverter.GetBytes(m_value), 0, buffer, 12, 4)
+            Array.Copy(BitConverter.GetBytes(m_tTag.Value), 0, image, 0, 8)
+            Array.Copy(BitConverter.GetBytes(m_flags), 0, image, 8, 4)
+            Array.Copy(BitConverter.GetBytes(m_value), 0, image, 12, 4)
 
-            Return buffer
+            Return image
         End Get
     End Property
 

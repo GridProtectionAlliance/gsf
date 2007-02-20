@@ -341,32 +341,32 @@ Public Class PointDefinition
 
     Public ReadOnly Property BinaryImage() As Byte()
         Get
-            Dim buffer As Byte() = CreateArray(Of Byte)(BinaryLength)
+            Dim image As Byte() = CreateArray(Of Byte)(BinaryLength)
 
             ' Construct the binary IP buffer for this event
-            Array.Copy(m_textEncoding.GetBytes(m_description.PadRight(40)), 0, buffer, 0, 40)
-            Array.Copy(BitConverter.GetBytes(m_unit), 0, buffer, 40, 2)
-            Array.Copy(BitConverter.GetBytes(m_securityLevel), 0, buffer, 42, 2)
-            Array.Copy(m_textEncoding.GetBytes(m_hardwareInfo.PadRight(64)), 0, buffer, 44, 64)
-            Array.Copy(m_spares, 0, buffer, 108, 64)
-            Array.Copy(BitConverter.GetBytes(m_flagWord), 0, buffer, 172, 4)
-            Array.Copy(BitConverter.GetBytes(m_transitionFlag), 0, buffer, 176, 4)
-            Array.Copy(BitConverter.GetBytes(m_scanRate), 0, buffer, 180, 4)
-            Array.Copy(m_textEncoding.GetBytes(m_name.PadRight(20)), 0, buffer, 184, 20)
-            Array.Copy(m_textEncoding.GetBytes(m_synonym1.PadRight(20)), 0, buffer, 204, 20)
-            Array.Copy(m_textEncoding.GetBytes(m_synonym2.PadRight(20)), 0, buffer, 224, 20)
-            Array.Copy(m_textEncoding.GetBytes(m_siteName.PadRight(2)), 0, buffer, 244, 2)
-            Array.Copy(BitConverter.GetBytes(m_sourceID), 0, buffer, 246, 2)
-            Array.Copy(BitConverter.GetBytes(m_compressionMinimumTime), 0, buffer, 248, 4)
-            Array.Copy(BitConverter.GetBytes(m_compressionMaximumTime), 0, buffer, 252, 4)
-            Array.Copy(m_textEncoding.GetBytes(m_system.PadRight(4)), 0, buffer, 256, 4)
-            Array.Copy(m_textEncoding.GetBytes(m_email.PadRight(50)), 0, buffer, 260, 50)
-            Array.Copy(m_textEncoding.GetBytes(m_pager.PadRight(30)), 0, buffer, 310, 30)
-            Array.Copy(m_textEncoding.GetBytes(m_phone.PadRight(30)), 0, buffer, 340, 30)
-            Array.Copy(m_textEncoding.GetBytes(m_remarks.PadRight(128)), 0, buffer, 370, 128)
-            Array.Copy(m_binaryInfo, 0, buffer, 498, 256)
+            Array.Copy(m_textEncoding.GetBytes(m_description.PadRight(40)), 0, image, 0, 40)
+            Array.Copy(BitConverter.GetBytes(m_unit), 0, image, 40, 2)
+            Array.Copy(BitConverter.GetBytes(m_securityLevel), 0, image, 42, 2)
+            Array.Copy(m_textEncoding.GetBytes(m_hardwareInfo.PadRight(64)), 0, image, 44, 64)
+            Array.Copy(m_spares, 0, image, 108, 64)
+            Array.Copy(BitConverter.GetBytes(m_flagWord), 0, image, 172, 4)
+            Array.Copy(BitConverter.GetBytes(m_transitionFlag), 0, image, 176, 4)
+            Array.Copy(BitConverter.GetBytes(m_scanRate), 0, image, 180, 4)
+            Array.Copy(m_textEncoding.GetBytes(m_name.PadRight(20)), 0, image, 184, 20)
+            Array.Copy(m_textEncoding.GetBytes(m_synonym1.PadRight(20)), 0, image, 204, 20)
+            Array.Copy(m_textEncoding.GetBytes(m_synonym2.PadRight(20)), 0, image, 224, 20)
+            Array.Copy(m_textEncoding.GetBytes(m_siteName.PadRight(2)), 0, image, 244, 2)
+            Array.Copy(BitConverter.GetBytes(m_sourceID), 0, image, 246, 2)
+            Array.Copy(BitConverter.GetBytes(m_compressionMinimumTime), 0, image, 248, 4)
+            Array.Copy(BitConverter.GetBytes(m_compressionMaximumTime), 0, image, 252, 4)
+            Array.Copy(m_textEncoding.GetBytes(m_system.PadRight(4)), 0, image, 256, 4)
+            Array.Copy(m_textEncoding.GetBytes(m_email.PadRight(50)), 0, image, 260, 50)
+            Array.Copy(m_textEncoding.GetBytes(m_pager.PadRight(30)), 0, image, 310, 30)
+            Array.Copy(m_textEncoding.GetBytes(m_phone.PadRight(30)), 0, image, 340, 30)
+            Array.Copy(m_textEncoding.GetBytes(m_remarks.PadRight(128)), 0, image, 370, 128)
+            Array.Copy(m_binaryInfo, 0, image, 498, 256)
 
-            Return buffer
+            Return image
         End Get
     End Property
 
