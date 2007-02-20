@@ -100,16 +100,14 @@ Public Class ArchiveFile
             ' File has been created already, so we just need to read it.
             m_fileStream = New FileStream(m_name, FileMode.Open)
             m_fat = New ArchiveFileAllocationTable(m_fileStream)
-            m_size = m_fileStream.Length / (1024 * 1024)
-            m_blockSize = m_fat.DataBlockSize
         Else
             ' File does not exist, so we have to create it and initialize it.
             m_fileStream = New FileStream(m_name, FileMode.Create)
             m_fat = New ArchiveFileAllocationTable(m_blockSize, ArchiveFile.MaximumDataBlocks(m_size, m_blockSize))
-            ' Leave space for data blocks.
-            m_fileStream.Seek(m_fat.DataBlockCount * m_fat.DataBlockSize * 1024, SeekOrigin.Begin)
-            m_fileStream.Write(m_fat.BinaryImage, 0, m_fat.BinaryLength)
+            WriteFileAllocationTable()
         End If
+        m_size = m_fileStream.Length / (1024 * 1024)
+        m_blockSize = m_fat.DataBlockSize
 
     End Sub
 
@@ -124,6 +122,9 @@ Public Class ArchiveFile
     End Sub
 
     Public Sub Save()
+
+        ' The only thing that we need to write back to the file is the FAT.
+        WriteFileAllocationTable()
 
     End Sub
 
@@ -150,6 +151,19 @@ Public Class ArchiveFile
     End Sub
 
 #End Region
+
+#End Region
+
+#Region " Private Code "
+
+    Private Sub WriteFileAllocationTable()
+
+        ' Leave space for data blocks.
+        m_fileStream.Seek(m_fat.DataBlockCount * m_fat.DataBlockSize * 1024, SeekOrigin.Begin)
+        m_fileStream.Write(m_fat.BinaryImage, 0, m_fat.BinaryLength)
+        m_fileStream.Flush()
+
+    End Sub
 
 #End Region
 

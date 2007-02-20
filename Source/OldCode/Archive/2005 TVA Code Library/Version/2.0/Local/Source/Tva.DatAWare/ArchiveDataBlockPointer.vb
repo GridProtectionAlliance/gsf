@@ -34,7 +34,7 @@ Public Class ArchiveDataBlockPointer
                 m_pointID = BitConverter.ToInt32(binaryImage, startIndex)
                 m_startTime = New TimeTag(BitConverter.ToDouble(binaryImage, startIndex + 4))
             Else
-                Throw New ArgumentException("Binary image size from startIndex is too small.    ")
+                Throw New ArgumentException("Binary image size from startIndex is too small.")
             End If
         Else
             Throw New ArgumentNullException("binaryImage")
