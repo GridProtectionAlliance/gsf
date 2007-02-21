@@ -47,7 +47,7 @@ Namespace IeeeC37_118
 #Region " Private Member Declarations "
 
         Private m_draftRevision As DraftRevision
-        Private m_configurationFrame As ConfigurationFrame
+        Private m_configurationFrame2 As ConfigurationFrame
         Private m_configurationChangeHandled As Boolean
 
 #End Region
@@ -63,7 +63,7 @@ Namespace IeeeC37_118
         Public Sub New(ByVal configurationFrame As IConfigurationFrame)
 
             MyClass.New()
-            m_configurationFrame = CastToDerivedConfigurationFrame(configurationFrame)
+            m_configurationFrame2 = CastToDerivedConfigurationFrame(configurationFrame)
 
         End Sub
 
@@ -76,7 +76,7 @@ Namespace IeeeC37_118
         Public Sub New(ByVal draftRevision As DraftRevision, ByVal configurationFrame2 As ConfigurationFrame)
 
             m_draftRevision = draftRevision
-            m_configurationFrame = configurationFrame2
+            m_configurationFrame2 = configurationFrame2
 
         End Sub
 
@@ -95,10 +95,10 @@ Namespace IeeeC37_118
 
         Public ReadOnly Property TimeBase() As Int32
             Get
-                If m_configurationFrame Is Nothing Then
+                If m_configurationFrame2 Is Nothing Then
                     Return 0
                 Else
-                    Return m_configurationFrame.TimeBase
+                    Return m_configurationFrame2.TimeBase
                 End If
             End Get
         End Property
@@ -111,10 +111,10 @@ Namespace IeeeC37_118
 
         Public Overrides Property ConfigurationFrame() As IConfigurationFrame
             Get
-                Return m_configurationFrame
+                Return m_configurationFrame2
             End Get
             Set(ByVal value As IConfigurationFrame)
-                m_configurationFrame = CastToDerivedConfigurationFrame(value)
+                m_configurationFrame2 = CastToDerivedConfigurationFrame(value)
             End Set
         End Property
 
@@ -150,7 +150,7 @@ Namespace IeeeC37_118
             ' See if there is enough data in the buffer to parse the common frame header
             If length >= CommonFrameHeader.BinaryLength Then
                 ' Parse frame header
-                Dim parsedFrameHeader As ICommonFrameHeader = CommonFrameHeader.ParseBinaryImage(m_configurationFrame, buffer, offset)
+                Dim parsedFrameHeader As ICommonFrameHeader = CommonFrameHeader.ParseBinaryImage(m_configurationFrame2, buffer, offset)
 
                 ' See if there is enough data in the buffer to parse the entire frame
                 If length >= parsedFrameHeader.FrameLength Then
@@ -160,18 +160,23 @@ Namespace IeeeC37_118
                     ' Entire frame is available, so we go ahead and parse it
                     Select Case parsedFrameHeader.FrameType
                         Case FrameType.DataFrame
-                            ' We can only start parsing data frames once we have successfully received a configuration frame (type 2)...
-                            If m_configurationFrame Is Nothing Then RaiseReceivedDataFrame(New DataFrame(parsedFrameHeader, m_configurationFrame, buffer, offset))
+                            If m_configurationFrame2 Is Nothing Then
+                                ' Until we receive configuration frame 2, we at least expose the part of the frame we have parsed
+                                RaiseReceivedCommonFrameHeader(parsedFrameHeader)
+                            Else
+                                ' We can only start parsing data frames once we have successfully received a configuration frame 2...
+                                RaiseReceivedDataFrame(New DataFrame(parsedFrameHeader, m_configurationFrame2, buffer, offset))
+                            End If
                         Case FrameType.ConfigurationFrame2
                             Select Case m_draftRevision
                                 Case DraftRevision.Draft6
                                     With New ConfigurationFrameDraft6(parsedFrameHeader, buffer, offset)
-                                        m_configurationFrame = .This
+                                        m_configurationFrame2 = .This
                                         RaiseReceivedConfigurationFrame2(.This)
                                     End With
                                 Case DraftRevision.Draft7
                                     With New ConfigurationFrame(parsedFrameHeader, buffer, offset)
-                                        m_configurationFrame = .This
+                                        m_configurationFrame2 = .This
                                         RaiseReceivedConfigurationFrame2(.This)
                                     End With
                             End Select
@@ -189,9 +194,6 @@ Namespace IeeeC37_118
                     End Select
 
                     parsedFrameLength = parsedFrameHeader.FrameLength
-                Else
-                    ' Until we receive configuration frame, we at least expose the part of the frame we have parsed
-                    If m_configurationFrame Is Nothing Then RaiseReceivedCommonFrameHeader(parsedFrameHeader)
                 End If
             End If
 
