@@ -10,7 +10,7 @@ Public Class MetadataAnalogFields
     ' *******************************************************************************
     ' * # Of Bytes  Byte Index  Data Type   Description                             *
     ' * ----------  ----------  ----------  ----------------------------------------*
-    ' * 8           0-7         String(8)   Engineering units of the entry          *
+    ' * 8           0-7         Char(8)     Engineering units of the entry          *
     ' * 4           8-11        Single      High alarm value of point               *
     ' * 4           12-15       Single      Low alarm value of point                *
     ' * 4           16-19       Single      High range value of point               *

@@ -10,8 +10,8 @@ Public Class MetadataDigitalFields
     ' *******************************************************************************
     ' * # Of Bytes  Byte Index  Data Type   Description                             *
     ' * ----------  ----------  ----------  ----------------------------------------*
-    ' * 13          0-12        String(13)  Text describing the input in "1" state  *
-    ' * 13          13-25       String(13)  Text describing the input in "0" state  *
+    ' * 13          0-12        Char(13)    Text describing the input in "1" state  *
+    ' * 13          13-25       Char(13)    Text describing the input in "0" state  *
     ' * 2           26-27       Int16       0 or 1 which corresponds to alarm state *
     ' *******************************************************************************
 
