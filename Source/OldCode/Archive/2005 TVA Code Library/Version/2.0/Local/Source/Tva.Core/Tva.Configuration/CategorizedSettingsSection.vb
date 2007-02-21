@@ -40,10 +40,11 @@ Namespace Configuration
                 ' the settings are saved off to the config file, all of the categories under which 
                 ' settings may be saved are processed and saved to the config file. This is essentially 
                 ' doing what marking a property with <ConfigurationProperty()> attribute does.
-                ' Make the first letter of category name all lower case if not already.
+                ' Make the first letter of category name lower case if not already.
                 Dim nameChars() As Char = name.ToCharArray()
                 nameChars(0) = Char.ToLower(nameChars(0))
-                name = Convert.ToString(nameChars)
+                ' Don't allow spaces in the category name to prevent underlying .Net configuration API from breaking.
+                name = Tva.Text.Common.RemoveWhiteSpace(Convert.ToString(nameChars))
                 Dim configProperty As New ConfigurationProperty(name, GetType(CategorizedSettingsElementCollection))
 
                 MyBase.Properties.Add(configProperty)
