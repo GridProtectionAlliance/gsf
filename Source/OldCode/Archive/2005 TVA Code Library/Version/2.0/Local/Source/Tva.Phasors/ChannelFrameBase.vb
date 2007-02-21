@@ -279,7 +279,7 @@ Public MustInherit Class ChannelFrameBase(Of T As IChannelCell)
                 .Add("Is Partial Frame", IsPartial)
                 .Add("Published", Published)
                 .Add("Ticks", Ticks)
-                .Add("Timestamp", Timestamp)
+                .Add("Timestamp", Timestamp.ToString("yyyy-MM-dd HH:mm:ss.fff"))
             End With
 
             Return baseAttributes
