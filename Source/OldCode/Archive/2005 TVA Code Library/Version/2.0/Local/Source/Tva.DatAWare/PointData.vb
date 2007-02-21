@@ -15,6 +15,8 @@
 '
 '*******************************************************************************************************
 
+Imports Tva.Interop.Bit
+
 ' This is the most basic form of a point of data in DatAWare (used by ReadEvent and ReadRange)
 <Serializable()> _
 Public Class PointData
@@ -35,9 +37,11 @@ Public Class PointData
 
     Private m_tTag As TimeTag
     Private m_value As Single
-    Private m_flags As Integer
+    Private m_flags As Int32
 
-    Private Const QualityMask As Integer = &H1F
+    Private Const QualityMask As Integer = Bit0 Or Bit1 Or Bit2 Or Bit3 Or Bit4
+    Private Const TimeZoneIndexMask As Integer = Bit5 Or Bit6 Or Bit7 Or Bit8 Or Bit9 Or Bit10
+    Private Const DaylightSavingsTimeMask As Integer = Bit11
 
 #End Region
 
@@ -83,19 +87,19 @@ Public Class PointData
 
     End Sub
 
-    Public Sub New(ByVal seconds As Double, ByVal value As Single, ByVal flags As Integer)
+    Public Sub New(ByVal seconds As Double, ByVal value As Single, ByVal flags As Int32)
 
         MyClass.New(New TimeTag(seconds), value, flags)
 
     End Sub
 
-    Public Sub New(ByVal timestamp As Date, ByVal value As Single, ByVal flags As Integer)
+    Public Sub New(ByVal timestamp As Date, ByVal value As Single, ByVal flags As Int32)
 
         MyClass.New(New TimeTag(timestamp), value, flags)
 
     End Sub
 
-    Public Sub New(ByVal tTag As TimeTag, ByVal value As Single, ByVal flags As Integer)
+    Public Sub New(ByVal tTag As TimeTag, ByVal value As Single, ByVal flags As Int32)
 
         m_tTag = tTag
         m_value = value

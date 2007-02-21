@@ -1,4 +1,4 @@
-Public Enum Quality As Integer
+Public Enum Quality As Int32
     Unknown
     DeletedFromProcessing
     CouldNotCalcPoint
@@ -31,7 +31,7 @@ Public Enum Quality As Integer
     Good
 End Enum
 
-Public Enum PointType As Short
+Public Enum PointType As Int32
     Analog
     Digital
     Composed

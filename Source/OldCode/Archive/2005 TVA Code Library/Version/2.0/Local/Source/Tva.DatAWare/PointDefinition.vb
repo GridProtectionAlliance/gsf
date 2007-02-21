@@ -30,7 +30,7 @@ Public Class PointDefinition
     Private m_securityLevel As Short            ' 2
     Private m_hardwareInfo As String = ""       ' 64
     Private m_spares As Byte()                  ' 64
-    Private m_flagWord As Integer               ' 4
+    Private m_flagWord As MetadataFlagWord      ' 4
     Private m_transitionFlag As Integer         ' 4
     Private m_scanRate As Single                ' 4
     Private m_name As String = ""               ' 20
@@ -59,6 +59,7 @@ Public Class PointDefinition
         MyBase.New()
         m_index = index
         m_textEncoding = Encoding.Default ' By default we decode strings using encoding for the system's current ANSI code page
+        m_flagWord = New MetadataFlagWord(0)
         m_spares = CreateArray(Of Byte)(64)
         m_binaryInfo = CreateArray(Of Byte)(256)
 
@@ -83,7 +84,7 @@ Public Class PointDefinition
                 m_securityLevel = BitConverter.ToInt16(binaryImage, startIndex + 42)
                 m_hardwareInfo = m_textEncoding.GetString(binaryImage, startIndex + 44, 64).Trim()
                 Array.Copy(binaryImage, startIndex + 108, m_spares, 0, 64)
-                m_flagWord = BitConverter.ToInt32(binaryImage, startIndex + 172)
+                m_flagWord = New MetadataFlagWord(BitConverter.ToInt32(binaryImage, startIndex + 172))
                 m_transitionFlag = BitConverter.ToInt32(binaryImage, startIndex + 176)
                 m_scanRate = BitConverter.ToSingle(binaryImage, startIndex + 180)
                 m_name = m_textEncoding.GetString(binaryImage, startIndex + 184, 20).Trim()
@@ -192,11 +193,11 @@ Public Class PointDefinition
         End Set
     End Property
 
-    Public Property FlagWord() As Integer
+    Public Property FlagWord() As MetadataFlagWord
         Get
             Return m_flagWord
         End Get
-        Set(ByVal value As Integer)
+        Set(ByVal value As MetadataFlagWord)
             m_flagWord = value
         End Set
     End Property
@@ -355,7 +356,7 @@ Public Class PointDefinition
             Array.Copy(BitConverter.GetBytes(m_securityLevel), 0, image, 42, 2)
             Array.Copy(m_textEncoding.GetBytes(m_hardwareInfo.PadRight(64)), 0, image, 44, 64)
             Array.Copy(m_spares, 0, image, 108, 64)
-            Array.Copy(BitConverter.GetBytes(m_flagWord), 0, image, 172, 4)
+            Array.Copy(BitConverter.GetBytes(m_flagWord.Value), 0, image, 172, 4)
             Array.Copy(BitConverter.GetBytes(m_transitionFlag), 0, image, 176, 4)
             Array.Copy(BitConverter.GetBytes(m_scanRate), 0, image, 180, 4)
             Array.Copy(m_textEncoding.GetBytes(m_name.PadRight(20)), 0, image, 184, 20)

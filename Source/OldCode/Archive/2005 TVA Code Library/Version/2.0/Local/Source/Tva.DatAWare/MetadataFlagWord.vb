@@ -9,16 +9,16 @@ Public Class MetadataFlagWord
     Private m_flagWord As Int32
 
     Private Const PointTypeMask As Integer = Bit0 Or Bit1 Or Bit2
-    Private Const ArchivedMask As Integer = &H8
-    Private Const UsedMask As Integer = &H10
-    Private Const AlarmEnabledMask As Integer = &H20
-    Private Const NotifyByEmailMask As Integer = &H40
-    Private Const NotifyByPagerMask As Integer = &H80
-    Private Const NotifyByPhoneMask As Integer = &H100
-    Private Const LogToFileMask As Integer = &H200
-    Private Const SpareMask As Integer = &H400
-    Private Const ChangedMask As Integer = &H800
-    Private Const StepCheckMask As Integer = &H1000
+    Private Const ArchivedMask As Integer = Bit3
+    Private Const UsedMask As Integer = Bit4
+    Private Const AlarmEnabledMask As Integer = Bit5
+    Private Const NotifyByEmailMask As Integer = Bit6
+    Private Const NotifyByPagerMask As Integer = Bit7
+    Private Const NotifyByPhoneMask As Integer = Bit8
+    Private Const LogToFileMask As Integer = Bit9
+    Private Const SpareMask As Integer = Bit10
+    Private Const ChangedMask As Integer = Bit11
+    Private Const StepCheckMask As Integer = Bit12
 
 #End Region
 
@@ -36,7 +36,6 @@ Public Class MetadataFlagWord
             Return CType(m_flagWord And PointTypeMask, PointType)
         End Get
         Set(ByVal value As PointType)
-            'm_flagWord = (m_flagWord And Not PointTypeMask Or value)
             m_flagWord = (m_flagWord Or value)
         End Set
     End Property
@@ -47,8 +46,10 @@ Public Class MetadataFlagWord
         End Get
         Set(ByVal value As Boolean)
             If value Then
+                ' Set the 'Archived' bit.
                 m_flagWord = (m_flagWord Or ArchivedMask)
             Else
+                ' Clear the 'Archived' bit.
                 m_flagWord = (m_flagWord And Not ArchivedMask)
             End If
         End Set
@@ -59,7 +60,13 @@ Public Class MetadataFlagWord
             Return Convert.ToBoolean(m_flagWord And UsedMask)
         End Get
         Set(ByVal value As Boolean)
-
+            If value Then
+                ' Set the 'Used' bit.
+                m_flagWord = (m_flagWord Or UsedMask)
+            Else
+                ' Clear the 'Used' bit.
+                m_flagWord = (m_flagWord And Not UsedMask)
+            End If
         End Set
     End Property
 
@@ -68,16 +75,28 @@ Public Class MetadataFlagWord
             Return Convert.ToBoolean(m_flagWord And AlarmEnabledMask)
         End Get
         Set(ByVal value As Boolean)
-
+            If value Then
+                ' Set the 'Alarm Enabled' bit.
+                m_flagWord = (m_flagWord Or AlarmEnabledMask)
+            Else
+                ' Clear the 'Alarm Enabled' bit.
+                m_flagWord = (m_flagWord And Not AlarmEnabledMask)
+            End If
         End Set
     End Property
 
     Public Property NotifyByEmail() As Boolean
         Get
-            Convert.ToBoolean(m_flagWord And NotifyByEmailMask)
+            Return Convert.ToBoolean(m_flagWord And NotifyByEmailMask)
         End Get
         Set(ByVal value As Boolean)
-
+            If value Then
+                ' Set the 'Notify By Email' bit.
+                m_flagWord = (m_flagWord Or NotifyByEmailMask)
+            Else
+                ' Clear the 'Nofity By Email' bit.
+                m_flagWord = (m_flagWord And Not NotifyByEmailMask)
+            End If
         End Set
     End Property
 
@@ -86,7 +105,13 @@ Public Class MetadataFlagWord
             Return Convert.ToBoolean(m_flagWord And NotifyByPagerMask)
         End Get
         Set(ByVal value As Boolean)
-
+            If value Then
+                ' Set the 'Notify By Pager' bit.
+                m_flagWord = (m_flagWord Or NotifyByPagerMask)
+            Else
+                ' Clear the 'Notify By Pager' bit.
+                m_flagWord = (m_flagWord And Not NotifyByPagerMask)
+            End If
         End Set
     End Property
 
@@ -95,7 +120,13 @@ Public Class MetadataFlagWord
             Return Convert.ToBoolean(m_flagWord And NotifyByPhoneMask)
         End Get
         Set(ByVal value As Boolean)
-
+            If value Then
+                ' Set the 'Notify By Phone' bit.
+                m_flagWord = (m_flagWord Or NotifyByPhoneMask)
+            Else
+                ' Clear the 'Notify By Phone' bit.
+                m_flagWord = (m_flagWord And Not NotifyByPhoneMask)
+            End If
         End Set
     End Property
 
@@ -104,7 +135,13 @@ Public Class MetadataFlagWord
             Return Convert.ToBoolean(m_flagWord And LogToFileMask)
         End Get
         Set(ByVal value As Boolean)
-
+            If value Then
+                ' Set the 'Log To File' bit.
+                m_flagWord = (m_flagWord Or LogToFileMask)
+            Else
+                ' Clear the 'Log To File' bit.
+                m_flagWord = (m_flagWord And Not LogToFileMask)
+            End If
         End Set
     End Property
 
@@ -113,20 +150,32 @@ Public Class MetadataFlagWord
             Return Convert.ToBoolean(m_flagWord And ChangedMask)
         End Get
         Set(ByVal value As Boolean)
-
+            If value Then
+                ' Set the 'Changed' bit.
+                m_flagWord = (m_flagWord Or ChangedMask)
+            Else
+                ' Clear the 'Changed' bit.
+                m_flagWord = (m_flagWord And Not ChangedMask)
+            End If
         End Set
     End Property
 
     Public Property StepCheck() As Boolean
         Get
-            Convert.ToBoolean(m_flagWord And StepCheckMask)
+            Return Convert.ToBoolean(m_flagWord And StepCheckMask)
         End Get
         Set(ByVal value As Boolean)
-
+            If value Then
+                ' Set the 'Step Check' bit.
+                m_flagWord = (m_flagWord Or StepCheckMask)
+            Else
+                ' Clear the 'Step Check' bit.
+                m_flagWord = (m_flagWord And Not StepCheckMask)
+            End If
         End Set
     End Property
 
-    Public ReadOnly Property Value() As Integer
+    Public ReadOnly Property Value() As Int32
         Get
             Return m_flagWord
         End Get
