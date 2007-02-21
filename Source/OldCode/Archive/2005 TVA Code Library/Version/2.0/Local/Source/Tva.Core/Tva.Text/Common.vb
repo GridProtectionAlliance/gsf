@@ -591,6 +591,19 @@ Namespace Text
 
         End Function
 
+        ''' <summary>
+        ''' Trims the provided string if it is longer that specified length.
+        ''' </summary>
+        Private Shared Function TrimString(ByVal value As String, ByVal maxLength As Integer) As String
+
+            If value.Length > maxLength Then
+                value = value.Substring(0, maxLength)
+            End If
+
+            Return value
+
+        End Function
+
     End Class
 
 End Namespace
