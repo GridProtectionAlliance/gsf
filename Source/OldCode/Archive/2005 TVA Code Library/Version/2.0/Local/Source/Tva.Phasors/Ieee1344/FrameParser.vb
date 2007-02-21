@@ -33,8 +33,7 @@ Namespace Ieee1344
 
 #Region " Public Member Declarations "
 
-        ' We shadow base class events with their IEEE 1344 specific derived versions for convinience in case
-        ' user are consuming this class directly
+        ' We shadow base class events with their IEEE 1344 specific derived versions for convinience in case users consume this class directly
         Public Event ReceivedCommonFrameHeader(ByVal frame As ICommonFrameHeader)
         Public Shadows Event ReceivedConfigurationFrame(ByVal frame As ConfigurationFrame)
         Public Shadows Event ReceivedDataFrame(ByVal frame As DataFrame)

@@ -33,8 +33,7 @@ Namespace IeeeC37_118
 
 #Region " Public Member Declarations "
 
-        ' We shadow base class events with their IEEE C37.118 specific derived versions for convinience in case
-        ' user are consuming this class directly
+        ' We shadow base class events with their IEEE C37.118 specific derived versions for convinience in case users consume this class directly
         Public Event ReceivedCommonFrameHeader(ByVal frame As ICommonFrameHeader)
         Public Event ReceivedConfigurationFrame1(ByVal frame As ConfigurationFrame)
         Public Event ReceivedConfigurationFrame2(ByVal frame As ConfigurationFrame)

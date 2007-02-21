@@ -20,6 +20,7 @@ Imports System.Text
 Imports System.ComponentModel
 Imports Tva.Collections
 Imports Tva.IO.Common
+Imports Tva.Text.Common
 Imports Tva.Phasors.Common
 Imports Tva.Phasors.FNet.Common
 
@@ -34,18 +35,17 @@ Namespace FNet
 
 #Region " Public Member Declarations "
 
-        ' We shadow base class events with their FNET specific derived versions for convinience in case
-        ' user are consuming this class directly
+        ' We shadow base class events with their FNET specific derived versions for convinience in case users consume this class directly 
 
         ''' <summary>This event is raised when a virtual Configuration Frame has been created</summary>
         ''' <remarks>
-        ''' <para>See Std IEEE 1344 for the definition of configuration frame.  This FNET implementation defines a similar concept</para>
+        ''' <para>See Std IEEE 1344 for the definition of a configuration frame.  This FNET implementation defines a similar concept</para>
         ''' <para>Note that the FNET data steam does not contain a parsable configuration frame, but a virtual one is created on reception of the first data frame</para>
         ''' </remarks>
         Public Shadows Event ReceivedConfigurationFrame(ByVal frame As ConfigurationFrame)
 
         ''' <summary>This event is raised when a Data Frame has been parsed</summary>
-        ''' <remarks>See Std IEEE 1344 for the definition of data frame.  FNET uses a similar concept</remarks>
+        ''' <remarks>See Std IEEE 1344 for the definition of a data frame.  FNET uses a similar concept</remarks>
         Public Shadows Event ReceivedDataFrame(ByVal frame As DataFrame)
 
 #End Region
@@ -169,7 +169,7 @@ Namespace FNet
                 ' If no configuration frame has been created, we create one now
                 If m_configurationFrame Is Nothing Then
                     ' Pre-parse first FNet data frame to get unit ID field and establish a virutal configuration frame
-                    Dim data As String() = Encoding.ASCII.GetString(buffer, startByteIndex + 1, endByteIndex - startByteIndex - 1).Split(" "c)
+                    Dim data As String() = RemoveDuplicateWhiteSpace(Encoding.ASCII.GetString(buffer, startByteIndex + 1, endByteIndex - startByteIndex - 1)).Split(" "c)
 
                     ' Create virtual configuration frame
                     m_configurationFrame = New ConfigurationFrame(Convert.ToUInt16(data(Element.UnitID)), Date.Now.Ticks, m_frameRate, m_nominalFrequency)

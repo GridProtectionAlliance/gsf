@@ -177,7 +177,7 @@ Namespace FNet
         ''' <summary>
         ''' Overrides the ParseBodyImage in ChannelCell,phase the image body
         ''' </summary>
-        ''' <remarks>The longitude,lattitude and number of satellite at the top of minute in FNET data</remarks>
+        ''' <remarks>The longitude, latitude and number of satellite at the top of minute in FNET data</remarks>
         Protected Overrides Sub ParseBodyImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
             If binaryImage(startIndex) <> StartByte Then Throw New InvalidOperationException("Bad data stream, expected start byte 01 as first byte in FNet frame, got " & binaryImage(startIndex).ToString("x"c).PadLeft(2, "0"c).ToUpper())
