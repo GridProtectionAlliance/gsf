@@ -200,6 +200,34 @@ Namespace IeeeC37_118
         End Sub
 
         ' We override the base class event raisers to allow derived class to also expose the frame in native (i.e., non-interfaced) format
+        Protected Overrides Sub RaiseReceivedDataFrame(ByVal frame As IDataFrame)
+
+            MyBase.RaiseReceivedDataFrame(frame)
+            RaiseEvent ReceivedDataFrame(frame)
+
+            Dim configurationChangeDetected As Boolean
+
+            With DirectCast(frame.Cells, DataCellCollection)
+                For x As Integer = 0 To .Count - 1
+                    If .Item(x).ConfigurationChangeDetected Then
+                        configurationChangeDetected = True
+
+                        ' Configuration change detection flag should terminate after one minute, but
+                        ' we only want to send a single notification
+                        If Not m_configurationChangeHandled Then
+                            m_configurationChangeHandled = True
+                            MyBase.RaiseConfigurationChangeDetected()
+                        End If
+
+                        Exit For
+                    End If
+                Next
+            End With
+
+            If Not configurationChangeDetected Then m_configurationChangeHandled = False
+
+        End Sub
+
         Protected Overrides Sub RaiseReceivedHeaderFrame(ByVal frame As IHeaderFrame)
 
             MyBase.RaiseReceivedHeaderFrame(frame)
@@ -217,32 +245,6 @@ Namespace IeeeC37_118
 #End Region
 
 #Region " Private Methods Implementation "
-
-        Private Overloads Sub RaiseReceivedDataFrame(ByVal frame As DataFrame)
-
-            MyBase.RaiseReceivedDataFrame(frame)
-            RaiseEvent ReceivedDataFrame(frame)
-
-            Dim configurationChangeDetected As Boolean
-
-            For x As Integer = 0 To frame.Cells.Count - 1
-                If frame.Cells(x).ConfigurationChangeDetected Then
-                    configurationChangeDetected = True
-
-                    ' Configuration change detection flag should terminate after one minute, but
-                    ' we only want to send a single notification
-                    If Not m_configurationChangeHandled Then
-                        m_configurationChangeHandled = True
-                        MyBase.RaiseConfigurationChangeDetected()
-                    End If
-
-                    Exit For
-                End If
-            Next
-
-            If Not configurationChangeDetected Then m_configurationChangeHandled = False
-
-        End Sub
 
         Private Sub RaiseReceivedCommonFrameHeader(ByVal frame As ICommonFrameHeader)
 
