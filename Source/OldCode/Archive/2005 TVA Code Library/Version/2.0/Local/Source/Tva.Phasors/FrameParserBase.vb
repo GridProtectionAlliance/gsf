@@ -78,7 +78,7 @@ Public MustInherit Class FrameParserBase
         End Get
     End Property
 
-    Public Overridable Property ExecuteParseOnSeparateThread() As Boolean Implements IFrameParser.ExecuteParseOnSeparateThread
+    Public Overridable Property ExecuteParseOnSeparateThread() As Boolean Implements IFrameParser.ExecuteParseOnSeperateThread
         Get
             Return m_executeParseOnSeparateThread
         End Get
