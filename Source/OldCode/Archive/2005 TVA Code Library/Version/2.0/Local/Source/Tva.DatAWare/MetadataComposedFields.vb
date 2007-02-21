@@ -132,7 +132,7 @@ Public Class MetadataComposedFields
             Return m_engineeringUnits
         End Get
         Set(ByVal value As String)
-            m_engineeringUnits = TrimString(value, 8)
+            m_engineeringUnits = TruncateString(value, 8)
         End Set
     End Property
 
@@ -141,7 +141,7 @@ Public Class MetadataComposedFields
             Return m_equation
         End Get
         Set(ByVal value As String)
-            m_equation = TrimString(value, 128)
+            m_equation = TruncateString(value, 128)
         End Set
     End Property
 
@@ -186,8 +186,8 @@ Public Class MetadataComposedFields
             Next
             Array.Copy(m_textEncoding.GetBytes(m_engineeringUnits.PadRight(8)), 0, image, 68, 8)
             Array.Copy(m_textEncoding.GetBytes(m_equation.PadRight(128)), 0, image, 76, 128)
-            Array.Copy(BitConverter.GetBytes(m_lowWarning), 0, image, 28, 4)
-            Array.Copy(BitConverter.GetBytes(m_highWarning), 0, image, 24, 4)
+            Array.Copy(BitConverter.GetBytes(m_lowWarning), 0, image, 204, 4)
+            Array.Copy(BitConverter.GetBytes(m_highWarning), 0, image, 208, 4)
 
             Return image
         End Get

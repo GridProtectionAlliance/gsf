@@ -57,7 +57,7 @@ Public Class MetadataDigitalFields
             Return m_setDescription
         End Get
         Set(ByVal value As String)
-            m_setDescription = TrimString(value, 13)
+            m_setDescription = TruncateString(value, 13)
         End Set
     End Property
 
@@ -66,7 +66,7 @@ Public Class MetadataDigitalFields
             Return m_clearDescription
         End Get
         Set(ByVal value As String)
-            m_clearDescription = TrimString(value, 13)
+            m_clearDescription = TruncateString(value, 13)
         End Set
     End Property
 

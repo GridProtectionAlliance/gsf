@@ -46,7 +46,11 @@ Public Class PointDefinition
     Private m_pager As String = ""              ' 30
     Private m_phone As String = ""              ' 30
     Private m_remarks As String = ""            ' 128
-    Private m_binaryInfo As Byte()              ' 256
+    'Private m_binaryInfo As Byte()              ' 256
+    Private m_analogFields As MetadataAnalogFields
+    Private m_digitalFields As MetadataDigitalFields
+    Private m_composedFields As MetadataComposedFields
+    Private m_constantFields As MetadataConstantFields
     Private m_textEncoding As Encoding
 
 #End Region
@@ -62,7 +66,7 @@ Public Class PointDefinition
         m_textEncoding = Encoding.Default ' By default we decode strings using encoding for the system's current ANSI code page
         m_flagWord = New MetadataFlagWord(0)
         m_spares = CreateArray(Of Byte)(64)
-        m_binaryInfo = CreateArray(Of Byte)(256)
+        'm_binaryInfo = CreateArray(Of Byte)(256)
 
     End Sub
 
@@ -80,6 +84,7 @@ Public Class PointDefinition
 
         If binaryImage IsNot Nothing Then
             If binaryImage.Length - startIndex >= BinaryLength Then
+                Dim binaryInfo As Byte() = CreateArray(Of Byte)(256)
                 m_description = m_textEncoding.GetString(binaryImage, startIndex, 40).Trim()
                 m_unit = BitConverter.ToInt16(binaryImage, startIndex + 40)
                 m_securityLevel = BitConverter.ToInt16(binaryImage, startIndex + 42)
@@ -100,7 +105,17 @@ Public Class PointDefinition
                 m_pager = m_textEncoding.GetString(binaryImage, startIndex + 310, 30).Trim()
                 m_phone = m_textEncoding.GetString(binaryImage, startIndex + 340, 30).Trim()
                 m_remarks = m_textEncoding.GetString(binaryImage, startIndex + 370, 128).Trim()
-                Array.Copy(binaryImage, startIndex + 498, m_binaryInfo, 0, 256)
+                Array.Copy(binaryImage, startIndex + 498, binaryInfo, 0, 256)
+                Select Case m_flagWord.PointType
+                    Case PointType.Analog
+                        m_analogFields = New MetadataAnalogFields(binaryInfo)
+                    Case PointType.Digital
+                        m_digitalFields = New MetadataDigitalFields(binaryInfo)
+                    Case PointType.Composed
+                        m_composedFields = New MetadataComposedFields(binaryInfo)
+                    Case PointType.Constant
+                        m_constantFields = New MetadataConstantFields(binaryInfo)
+                End Select
             Else
                 Throw New ArgumentException("Binary image size from startIndex is too small.")
             End If
@@ -135,7 +150,11 @@ Public Class PointDefinition
             .Pager = pointDefinition.Pager
             .Phone = pointDefinition.Phone
             .Remarks = pointDefinition.Remarks
-            Array.Copy(pointDefinition.BinaryInfo, .BinaryInfo, 256)
+            'Array.Copy(pointDefinition.BinaryInfo, .BinaryInfo, 256)
+            .AnalogFields = pointDefinition.AnalogFields
+            .DigitalFields = pointDefinition.DigitalFields
+            .ComposedFields = pointDefinition.ComposedFields
+            .ConstantFields = pointDefinition.ConstantFields
             .TextEncoding = pointDefinition.TextEncoding
         End With
 
@@ -154,7 +173,7 @@ Public Class PointDefinition
             Return m_description
         End Get
         Set(ByVal value As String)
-            m_description = TrimString(value, 40)
+            m_description = TruncateString(value, 40)
         End Set
     End Property
 
@@ -181,7 +200,7 @@ Public Class PointDefinition
             Return m_hardwareInfo
         End Get
         Set(ByVal value As String)
-            m_hardwareInfo = TrimString(value, 64)
+            m_hardwareInfo = TruncateString(value, 64)
         End Set
     End Property
 
@@ -226,7 +245,7 @@ Public Class PointDefinition
             Return m_name
         End Get
         Set(ByVal value As String)
-            m_name = TrimString(value, 20)
+            m_name = TruncateString(value, 20)
         End Set
     End Property
 
@@ -235,7 +254,7 @@ Public Class PointDefinition
             Return m_synonym1
         End Get
         Set(ByVal value As String)
-            m_synonym1 = TrimString(value, 20)
+            m_synonym1 = TruncateString(value, 20)
         End Set
     End Property
 
@@ -244,7 +263,7 @@ Public Class PointDefinition
             Return m_synonym2
         End Get
         Set(ByVal value As String)
-            m_synonym2 = TrimString(value, 20)
+            m_synonym2 = TruncateString(value, 20)
         End Set
     End Property
 
@@ -253,7 +272,7 @@ Public Class PointDefinition
             Return m_siteName
         End Get
         Set(ByVal value As String)
-            m_siteName = TrimString(value, 2)
+            m_siteName = TruncateString(value, 2)
         End Set
     End Property
 
@@ -289,7 +308,7 @@ Public Class PointDefinition
             Return m_system
         End Get
         Set(ByVal value As String)
-            m_system = TrimString(value, 4)
+            m_system = TruncateString(value, 4)
         End Set
     End Property
 
@@ -298,7 +317,7 @@ Public Class PointDefinition
             Return m_email
         End Get
         Set(ByVal value As String)
-            m_email = TrimString(value, 50)
+            m_email = TruncateString(value, 50)
         End Set
     End Property
 
@@ -307,7 +326,7 @@ Public Class PointDefinition
             Return m_pager
         End Get
         Set(ByVal value As String)
-            m_pager = TrimString(value, 30)
+            m_pager = TruncateString(value, 30)
         End Set
     End Property
 
@@ -316,7 +335,7 @@ Public Class PointDefinition
             Return m_phone
         End Get
         Set(ByVal value As String)
-            m_phone = TrimString(value, 30)
+            m_phone = TruncateString(value, 30)
         End Set
     End Property
 
@@ -325,16 +344,52 @@ Public Class PointDefinition
             Return m_remarks
         End Get
         Set(ByVal value As String)
-            m_remarks = TrimString(value, 128)
+            m_remarks = TruncateString(value, 128)
         End Set
     End Property
 
-    Public Property BinaryInfo() As Byte()
+    'Public Property BinaryInfo() As Byte()
+    '    Get
+    '        Return m_binaryInfo
+    '    End Get
+    '    Set(ByVal value As Byte())
+    '        m_binaryInfo = value
+    '    End Set
+    'End Property
+
+    Public Property AnalogFields() As MetadataAnalogFields
         Get
-            Return m_binaryInfo
+            Return m_analogFields
         End Get
-        Set(ByVal value As Byte())
-            m_binaryInfo = value
+        Set(ByVal value As MetadataAnalogFields)
+            m_analogFields = value
+        End Set
+    End Property
+
+    Public Property DigitalFields() As MetadataDigitalFields
+        Get
+            Return m_digitalFields
+        End Get
+        Set(ByVal value As MetadataDigitalFields)
+            m_digitalFields = value
+        End Set
+    End Property
+
+    Public Property ComposedFields() As MetadataComposedFields
+        Get
+            Return m_composedFields
+        End Get
+        Set(ByVal value As MetadataComposedFields)
+            m_composedFields = value
+        End Set
+    End Property
+
+    Public Property ConstantFields() As MetadataConstantFields
+        Get
+            Return m_constantFields
+        End Get
+        Set(ByVal value As MetadataConstantFields)
+            m_constantFields = value
         End Set
     End Property
 
@@ -350,6 +405,7 @@ Public Class PointDefinition
     Public ReadOnly Property BinaryImage() As Byte()
         Get
             Dim image As Byte() = CreateArray(Of Byte)(BinaryLength)
+            Dim binaryInfo As Byte() = CreateArray(Of Byte)(256)
 
             ' Construct the binary IP buffer for this event
             Array.Copy(m_textEncoding.GetBytes(m_description.PadRight(40)), 0, image, 0, 40)
@@ -372,7 +428,17 @@ Public Class PointDefinition
             Array.Copy(m_textEncoding.GetBytes(m_pager.PadRight(30)), 0, image, 310, 30)
             Array.Copy(m_textEncoding.GetBytes(m_phone.PadRight(30)), 0, image, 340, 30)
             Array.Copy(m_textEncoding.GetBytes(m_remarks.PadRight(128)), 0, image, 370, 128)
-            Array.Copy(m_binaryInfo, 0, image, 498, 256)
+            Select Case m_flagWord.PointType
+                Case PointType.Analog
+                    Array.Copy(m_analogFields.BinaryImage, binaryInfo, MetadataAnalogFields.BinaryLength)
+                Case PointType.Digital
+                    Array.Copy(m_digitalFields.BinaryImage, binaryInfo, MetadataDigitalFields.BinaryLength)
+                Case PointType.Composed
+                    Array.Copy(m_composedFields.BinaryImage, binaryInfo, MetadataComposedFields.BinaryLength)
+                Case PointType.Constant
+                    Array.Copy(m_constantFields.BinaryImage, binaryInfo, MetadataConstantFields.BinaryLength)
+            End Select
+            Array.Copy(binaryInfo, 0, image, 498, 256)
 
             Return image
         End Get
