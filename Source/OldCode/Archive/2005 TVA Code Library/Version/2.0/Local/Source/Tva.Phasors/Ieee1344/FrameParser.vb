@@ -107,8 +107,13 @@ Namespace Ieee1344
                     ' Entire frame is availble, so we go ahead and parse it
                     Select Case parsedFrameHeader.FrameType
                         Case FrameType.DataFrame
-                            ' We can only start parsing data frames once we have successfully received a configuration frame...
-                            If m_configurationFrame IsNot Nothing Then RaiseReceivedDataFrame(New DataFrame(parsedFrameHeader, m_configurationFrame, buffer, offset))
+                            If m_configurationFrame Is Nothing Then
+                                ' Until we receive configuration frame, we at least expose the part of the data frame we have parsed
+                                RaiseReceivedCommonFrameHeader(parsedFrameHeader)
+                            Else
+                                ' We can only start parsing data frames once we have successfully received a configuration frame...
+                                RaiseReceivedDataFrame(New DataFrame(parsedFrameHeader, m_configurationFrame, buffer, offset))
+                            End If
                         Case FrameType.ConfigurationFrame
                             ' Cumulate all partial frames together as one complete frame
                             With DirectCast(parsedFrameHeader, CommonFrameHeader.CommonFrameHeaderInstance)
@@ -153,9 +158,6 @@ Namespace Ieee1344
                     End Select
 
                     parsedFrameLength = parsedFrameHeader.FrameLength
-                Else
-                    ' Until we receive configuration frame, we at least expose the part of the frame we have parsed
-                    If m_configurationFrame Is Nothing Then RaiseReceivedCommonFrameHeader(parsedFrameHeader)
                 End If
             End If
 
