@@ -39,9 +39,9 @@ Public Class PointData
     Private m_value As Single
     Private m_flags As Int32
 
-    Private Const QualityMask As Integer = Bit0 Or Bit1 Or Bit2 Or Bit3 Or Bit4
-    Private Const TimeZoneIndexMask As Integer = Bit5 Or Bit6 Or Bit7 Or Bit8 Or Bit9 Or Bit10
-    Private Const DaylightSavingsTimeMask As Integer = Bit11
+    Private Const QualityMask As Int32 = Bit0 Or Bit1 Or Bit2 Or Bit3 Or Bit4
+    Private Const TimeZoneIndexMask As Int32 = Bit5 Or Bit6 Or Bit7 Or Bit8 Or Bit9 Or Bit10
+    Private Const DaylightSavingsTimeMask As Int32 = Bit11
 
 #End Region
 

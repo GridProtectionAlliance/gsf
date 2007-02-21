@@ -99,6 +99,10 @@
     <Compile Include="Legacy Interfaces\TimeTag.vb">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="MetadataAnalogFields.vb" />
+    <Compile Include="MetadataComposedFields.vb" />
+    <Compile Include="MetadataConstantFields.vb" />
+    <Compile Include="MetadataDigitalFields.vb" />
     <Compile Include="MetadataFile.Designer.vb">
       <DependentUpon>MetadataFile.vb</DependentUpon>
     </Compile>

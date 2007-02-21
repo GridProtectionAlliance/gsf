@@ -16,6 +16,7 @@
 '*******************************************************************************************************
 
 Imports System.Text
+Imports Tva.Text.Common
 
 ' Standard database structure element
 <Serializable()> _
@@ -153,7 +154,7 @@ Public Class PointDefinition
             Return m_description
         End Get
         Set(ByVal value As String)
-            m_description = TrimStringValue(value, 40)
+            m_description = TrimString(value, 40)
         End Set
     End Property
 
@@ -180,7 +181,7 @@ Public Class PointDefinition
             Return m_hardwareInfo
         End Get
         Set(ByVal value As String)
-            m_hardwareInfo = TrimStringValue(value, 64)
+            m_hardwareInfo = TrimString(value, 64)
         End Set
     End Property
 
@@ -225,7 +226,7 @@ Public Class PointDefinition
             Return m_name
         End Get
         Set(ByVal value As String)
-            m_name = TrimStringValue(value, 20)
+            m_name = TrimString(value, 20)
         End Set
     End Property
 
@@ -234,7 +235,7 @@ Public Class PointDefinition
             Return m_synonym1
         End Get
         Set(ByVal value As String)
-            m_synonym1 = TrimStringValue(value, 20)
+            m_synonym1 = TrimString(value, 20)
         End Set
     End Property
 
@@ -243,7 +244,7 @@ Public Class PointDefinition
             Return m_synonym2
         End Get
         Set(ByVal value As String)
-            m_synonym2 = TrimStringValue(value, 20)
+            m_synonym2 = TrimString(value, 20)
         End Set
     End Property
 
@@ -252,7 +253,7 @@ Public Class PointDefinition
             Return m_siteName
         End Get
         Set(ByVal value As String)
-            m_siteName = TrimStringValue(value, 2)
+            m_siteName = TrimString(value, 2)
         End Set
     End Property
 
@@ -288,7 +289,7 @@ Public Class PointDefinition
             Return m_system
         End Get
         Set(ByVal value As String)
-            m_system = TrimStringValue(value, 4)
+            m_system = TrimString(value, 4)
         End Set
     End Property
 
@@ -297,7 +298,7 @@ Public Class PointDefinition
             Return m_email
         End Get
         Set(ByVal value As String)
-            m_email = TrimStringValue(value, 50)
+            m_email = TrimString(value, 50)
         End Set
     End Property
 
@@ -306,7 +307,7 @@ Public Class PointDefinition
             Return m_pager
         End Get
         Set(ByVal value As String)
-            m_pager = TrimStringValue(value, 30)
+            m_pager = TrimString(value, 30)
         End Set
     End Property
 
@@ -315,7 +316,7 @@ Public Class PointDefinition
             Return m_phone
         End Get
         Set(ByVal value As String)
-            m_phone = TrimStringValue(value, 30)
+            m_phone = TrimString(value, 30)
         End Set
     End Property
 
@@ -324,7 +325,7 @@ Public Class PointDefinition
             Return m_remarks
         End Get
         Set(ByVal value As String)
-            m_remarks = TrimStringValue(value, 128)
+            m_remarks = TrimString(value, 128)
         End Set
     End Property
 
@@ -391,20 +392,6 @@ Public Class PointDefinition
     End Function
 
 #End Region
-
-#End Region
-
-#Region " Private Code "
-
-    Private Function TrimStringValue(ByVal value As String, ByVal maxLength As Integer) As String
-
-        If value.Length > maxLength Then
-            value = value.Substring(0, maxLength)
-        End If
-
-        Return value
-
-    End Function
 
 #End Region
 

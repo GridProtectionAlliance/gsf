@@ -8,17 +8,17 @@ Public Class MetadataFlagWord
 
     Private m_flagWord As Int32
 
-    Private Const PointTypeMask As Integer = Bit0 Or Bit1 Or Bit2
-    Private Const ArchivedMask As Integer = Bit3
-    Private Const UsedMask As Integer = Bit4
-    Private Const AlarmEnabledMask As Integer = Bit5
-    Private Const NotifyByEmailMask As Integer = Bit6
-    Private Const NotifyByPagerMask As Integer = Bit7
-    Private Const NotifyByPhoneMask As Integer = Bit8
-    Private Const LogToFileMask As Integer = Bit9
-    Private Const SpareMask As Integer = Bit10
-    Private Const ChangedMask As Integer = Bit11
-    Private Const StepCheckMask As Integer = Bit12
+    Private Const PointTypeMask As Int32 = Bit0 Or Bit1 Or Bit2
+    Private Const ArchivedMask As Int32 = Bit3
+    Private Const UsedMask As Int32 = Bit4
+    Private Const AlarmEnabledMask As Int32 = Bit5
+    Private Const NotifyByEmailMask As Int32 = Bit6
+    Private Const NotifyByPagerMask As Int32 = Bit7
+    Private Const NotifyByPhoneMask As Int32 = Bit8
+    Private Const LogToFileMask As Int32 = Bit9
+    Private Const SpareMask As Int32 = Bit10
+    Private Const ChangedMask As Int32 = Bit11
+    Private Const StepCheckMask As Int32 = Bit12
 
 #End Region
 
