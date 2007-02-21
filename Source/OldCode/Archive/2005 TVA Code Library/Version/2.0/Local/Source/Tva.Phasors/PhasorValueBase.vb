@@ -178,7 +178,7 @@ Public MustInherit Class PhasorValueBase
         End Set
     End Property
 
-    Public Overridable ReadOnly Property AngleReceived() As Boolean
+    Public Overridable ReadOnly Property AngleAssigned() As Boolean
         Get
             Return m_compositeValues.Received(CompositePhasorValue.Angle)
         End Get
@@ -196,7 +196,7 @@ Public MustInherit Class PhasorValueBase
         End Set
     End Property
 
-    Public Overridable ReadOnly Property MagnitudeReceived() As Boolean
+    Public Overridable ReadOnly Property MagnitudeAssigned() As Boolean
         Get
             Return m_compositeValues.Received(CompositePhasorValue.Magnitude)
         End Get
@@ -373,8 +373,8 @@ Public MustInherit Class PhasorValueBase
                 .Add("Imaginary Value", Imaginary)
                 .Add("Unscaled Real Value", UnscaledReal)
                 .Add("Unscaled Imaginary Value", UnscaledImaginary)
-                .Add("Angle Value was Received", AngleReceived)
-                .Add("Magnitude Value was Received", MagnitudeReceived)
+                .Add("Angle Value was Assigned", AngleAssigned)
+                .Add("Magnitude Value was Assigned", MagnitudeAssigned)
             End With
 
             Return baseAttributes

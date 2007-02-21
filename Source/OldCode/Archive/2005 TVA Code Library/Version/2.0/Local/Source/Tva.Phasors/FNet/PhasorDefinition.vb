@@ -76,6 +76,13 @@ Namespace FNet
             End Get
         End Property
 
+        ' All FNET values are floating point
+        Public Overrides ReadOnly Property ScalePerBit() As Single
+            Get
+                Return 1.0F
+            End Get
+        End Property
+
     End Class
 
 End Namespace
