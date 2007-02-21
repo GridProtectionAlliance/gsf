@@ -208,7 +208,7 @@ Namespace FNet
 
         Private Function CastToDerivedConfigurationFrame(ByVal configurationFrame As IConfigurationFrame) As ConfigurationFrame
 
-            If TypeOf configurationFrame Is Ieee1344.ConfigurationFrame Then
+            If TypeOf configurationFrame Is FNet.ConfigurationFrame Then
                 Return configurationFrame
             Else
                 Return New FNet.ConfigurationFrame(configurationFrame)
