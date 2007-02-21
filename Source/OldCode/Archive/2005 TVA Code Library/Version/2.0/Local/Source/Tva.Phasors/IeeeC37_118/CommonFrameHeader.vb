@@ -268,7 +268,7 @@ Namespace IeeeC37_118
                         .Add("Is Partial Frame", IsPartial)
                         .Add("Published", Published)
                         .Add("Ticks", Ticks)
-                        .Add("Timestamp", Timestamp)
+                        .Add("Timestamp", Timestamp.ToString("yyyy-MM-dd HH:mm:ss.fff"))
                         .Add("Frame Type", FrameType & ": " & [Enum].GetName(GetType(FrameType), FrameType))
                         .Add("Frame Length", FrameLength)
                         .Add("Version", Version & ": " & [Enum].GetName(GetType(Version), Version))

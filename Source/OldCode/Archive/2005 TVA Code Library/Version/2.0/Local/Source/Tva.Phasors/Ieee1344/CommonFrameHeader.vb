@@ -321,7 +321,7 @@ Namespace Ieee1344
                         .Add("Is Partial Frame", IsPartial)
                         .Add("Published", Published)
                         .Add("Ticks", Ticks)
-                        .Add("Timestamp", Timestamp)
+                        .Add("Timestamp", Timestamp.ToString("yyyy-MM-dd HH:mm:ss.fff"))
                         .Add("Frame Type", FrameType & ": " & [Enum].GetName(GetType(FrameType), FrameType))
                         .Add("Frame Length", FrameLength)
                         .Add("64-Bit ID Code", IDCode)
