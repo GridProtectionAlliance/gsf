@@ -90,7 +90,11 @@ Public MustInherit Class DigitalValueBase
             Return Convert.ToSingle(m_value)
         End Get
         Set(ByVal value As Single)
-            m_value = Convert.ToInt16(value)
+            Try
+                m_value = Convert.ToInt16(value)
+            Catch ex As OverflowException
+                m_value = Int16.MinValue
+            End Try
         End Set
     End Property
 

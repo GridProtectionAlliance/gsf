@@ -106,9 +106,13 @@ Public MustInherit Class FrequencyValueBase
 
     Public Overridable Property UnscaledFrequency() As Int16 Implements IFrequencyValue.UnscaledFrequency
         Get
-            With Definition
-                Return Convert.ToInt16((m_frequency - .Offset) * .ScalingFactor)
-            End With
+            Try
+                With Definition
+                    Return Convert.ToInt16((m_frequency - .Offset) * .ScalingFactor)
+                End With
+            Catch ex As OverflowException
+                Return Int16.MinValue
+            End Try
         End Get
         Set(ByVal value As Int16)
             With Definition
@@ -119,9 +123,13 @@ Public MustInherit Class FrequencyValueBase
 
     Public Overridable Property UnscaledDfDt() As Int16 Implements IFrequencyValue.UnscaledDfDt
         Get
-            With Definition
-                Return Convert.ToInt16((m_dfdt - .DfDtOffset) * .DfDtScalingFactor)
-            End With
+            Try
+                With Definition
+                    Return Convert.ToInt16((m_dfdt - .DfDtOffset) * .DfDtScalingFactor)
+                End With
+            Catch ex As OverflowException
+                Return Int16.MinValue
+            End Try
         End Get
         Set(ByVal value As Int16)
             With Definition

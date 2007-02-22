@@ -271,7 +271,7 @@ Namespace IeeeC37_118
                         .Add("Timestamp", Timestamp.ToString("yyyy-MM-dd HH:mm:ss.fff"))
                         .Add("Frame Type", FrameType & ": " & [Enum].GetName(GetType(FrameType), FrameType))
                         .Add("Frame Length", FrameLength)
-                        .Add("Version", Version & ": " & [Enum].GetName(GetType(Version), Version))
+                        .Add("Version", Version)
                         .Add("Second of Century", SecondOfCentury)
                         .Add("Fraction of Second", FractionOfSecond)
                         .Add("Time Quality Flags", TimeQualityFlags & ": " & [Enum].GetName(GetType(TimeQualityFlags), TimeQualityFlags))

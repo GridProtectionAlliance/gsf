@@ -86,7 +86,11 @@ Public MustInherit Class AnalogValueBase
 
     Public Overridable Property IntegerValue() As Int16 Implements IAnalogValue.IntegerValue
         Get
-            Return Convert.ToInt16(m_value)
+            Try
+                Return Convert.ToInt16(m_value)
+            Catch ex As OverflowException
+                Return Int16.MinValue
+            End Try
         End Get
         Set(ByVal value As Int16)
             m_value = Convert.ToSingle(value)

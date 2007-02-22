@@ -237,7 +237,11 @@ Public MustInherit Class PhasorValueBase
 
     Public Overridable Property UnscaledReal() As Int16 Implements IPhasorValue.UnscaledReal
         Get
-            Return Convert.ToInt16(m_real / Definition.ConversionFactor)
+            Try
+                Return Convert.ToInt16(m_real / Definition.ConversionFactor)
+            Catch ex As OverflowException
+                Return Int16.MinValue
+            End Try
         End Get
         Set(ByVal value As Int16)
             m_real = value * Definition.ConversionFactor
@@ -246,7 +250,11 @@ Public MustInherit Class PhasorValueBase
 
     Public Overridable Property UnscaledImaginary() As Int16 Implements IPhasorValue.UnscaledImaginary
         Get
-            Return Convert.ToInt16(m_imaginary / Definition.ConversionFactor)
+            Try
+                Return Convert.ToInt16(m_imaginary / Definition.ConversionFactor)
+            Catch ex As OverflowException
+                Return Int16.MinValue
+            End Try
         End Get
         Set(ByVal value As Int16)
             m_imaginary = value * Definition.ConversionFactor

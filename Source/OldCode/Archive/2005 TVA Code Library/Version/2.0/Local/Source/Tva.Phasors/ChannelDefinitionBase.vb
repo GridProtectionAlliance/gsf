@@ -128,7 +128,7 @@ Public MustInherit Class ChannelDefinitionBase
     Public Overridable ReadOnly Property ScalePerBit() As Single Implements IChannelDefinition.ScalePerBit
         Get
             ' Typical scale/bit is 10^-5
-            Return 0.00001
+            Return 0.00001F
         End Get
     End Property
 
@@ -219,6 +219,7 @@ Public MustInherit Class ChannelDefinitionBase
                 .Add("Label", Label)
                 .Add("Index", Index)
                 .Add("Offset", Offset)
+                .Add("Data Format", DataFormat & ": " & [Enum].GetName(GetType(DataFormat), DataFormat))
                 .Add("Scaling Factor", ScalingFactor)
                 .Add("Scale per Bit", ScalePerBit)
                 .Add("Maximum Scaling Factor", MaximumScalingFactor)
