@@ -63,7 +63,7 @@ Namespace DateTime
         ''' <summary>Converts seconds to 100-nanosecond tick intervals</summary>
         Public Shared ReadOnly Property SecondsToTicks(ByVal seconds As Double) As Long
             Get
-                Return Convert.ToInt64(seconds * 10000000.0F)
+                Return Convert.ToInt64(seconds * 10000000.0R)
             End Get
         End Property
 
