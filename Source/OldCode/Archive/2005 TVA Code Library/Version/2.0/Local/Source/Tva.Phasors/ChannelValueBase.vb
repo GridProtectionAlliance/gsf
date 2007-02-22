@@ -81,6 +81,12 @@ Public MustInherit Class ChannelValueBase(Of T As IChannelDefinition)
         End Get
     End Property
 
+    Public Overridable ReadOnly Property Label() As String Implements IChannelValue(Of T).Label
+        Get
+            Return m_definition.Label
+        End Get
+    End Property
+
     Public MustOverride ReadOnly Property IsEmpty() As Boolean Implements IChannelValue(Of T).IsEmpty
 
     Default Public MustOverride Property CompositeValue(ByVal index As Integer) As Single Implements IChannelValue(Of T).CompositeValue
@@ -115,6 +121,7 @@ Public MustInherit Class ChannelValueBase(Of T As IChannelDefinition)
             Dim baseAttributes As Dictionary(Of String, String) = MyBase.Attributes
 
             With baseAttributes
+                .Add("Label", Label)
                 .Add("Data Format", DataFormat & ": " & [Enum].GetName(GetType(DataFormat), DataFormat))
                 .Add("Is Empty", IsEmpty)
                 .Add("Total Composite Values", CompositeValueCount)

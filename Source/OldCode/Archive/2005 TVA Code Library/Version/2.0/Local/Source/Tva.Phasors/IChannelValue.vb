@@ -30,6 +30,8 @@ Public Interface IChannelValue(Of T As IChannelDefinition)
 
     ReadOnly Property DataFormat() As DataFormat
 
+    ReadOnly Property Label() As String
+
     ''' <summary>Composite measurements of channel value</summary>
     ''' <remarks>
     ''' Because derived value classes may consist of more than one measured value,
