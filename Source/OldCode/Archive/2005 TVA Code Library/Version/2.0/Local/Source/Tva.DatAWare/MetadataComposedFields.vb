@@ -16,8 +16,8 @@ Public Class MetadataComposedFields
     ' * 4           12-15       Single      Low range of value point                *
     ' * 4           16-19       Int32       Decimal places displyed in the client   *
     ' * 48          20-67       Int32(12)   Inputs to the equation                  *
-    ' * 8           68-75       String(8)   Engineering units of the entry          *
-    ' * 128         76-203      String(128) Mathematical equation defining the point*
+    ' * 8           68-75       Char(8)     Engineering units of the entry          *
+    ' * 128         76-203      Char(128)   Mathematical equation defining the point*
     ' * 4           204-207     Single      Low warning value of point              *
     ' * 4           208-211     Single      High warning value of point             *
     ' *******************************************************************************

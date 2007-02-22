@@ -23,16 +23,37 @@ Imports Tva.Text.Common
 Public Class PointDefinition
     Implements IComparable
 
+    ' *******************************************************************************
+    ' *                         Point Definition Structure                          *
+    ' *******************************************************************************
+    ' * # Of Bytes  Byte Index  Data Type   Description                             *
+    ' * ----------  ----------  ----------  ----------------------------------------*
+    ' * 40          0-39        Char(40)    Text description of the point           *
+    ' * 2           40-41       Int16       Plant unit associated with the point    *
+    ' * 2           42-43       Int16       Security level for the point            *
+    ' * 64          44-107      Char(64)    Detail for hardware or datasource       *
+    ' * 64          108-171     Byte(64)    ???                                     *
+    ' * 4           172-175     Int32       Refer MetadataFlagWord                  *
+
+    ' * 4           16-19       Single      High range value of point               *
+    ' * 4           20-23       Single      Low range of value point                *
+    ' * 4           24-27       Single      High warning value of point             *
+    ' * 4           28-31       Single      Low warning value of point              *
+    ' * 4           32-35       Single      Exception limit in engineering units    *
+    ' * 4           36-39       Single      Compression limit in engineering units  *
+    ' * 4           40-43       Int32       Decimal places displyed in the client   *
+    ' *******************************************************************************
+
 #Region " Member Declaration "
 
     Private m_index As Integer
     Private m_description As String = ""        ' 40
-    Private m_unit As Short                     ' 2
+    Private m_plantUnit As Short                     ' 2
     Private m_securityLevel As Short            ' 2
     Private m_hardwareInfo As String = ""       ' 64
     Private m_spares As Byte()                  ' 64
-    Private m_flagWord As MetadataFlagWord      ' 4
-    Private m_transitionFlag As Integer         ' 4
+    Private m_generalFlagWord As MetadataGeneralFlagWord      ' 4
+    Private m_alarmFlagWord As Integer         ' 4
     Private m_scanRate As Single                ' 4
     Private m_name As String = ""               ' 20
     Private m_synonym1 As String = ""           ' 20
@@ -64,9 +85,8 @@ Public Class PointDefinition
         MyBase.New()
         m_index = index
         m_textEncoding = Encoding.Default ' By default we decode strings using encoding for the system's current ANSI code page
-        m_flagWord = New MetadataFlagWord(0)
+        m_generalFlagWord = New MetadataGeneralFlagWord(0)
         m_spares = CreateArray(Of Byte)(64)
-        'm_binaryInfo = CreateArray(Of Byte)(256)
 
     End Sub
 
@@ -86,12 +106,12 @@ Public Class PointDefinition
             If binaryImage.Length - startIndex >= BinaryLength Then
                 Dim binaryInfo As Byte() = CreateArray(Of Byte)(256)
                 m_description = m_textEncoding.GetString(binaryImage, startIndex, 40).Trim()
-                m_unit = BitConverter.ToInt16(binaryImage, startIndex + 40)
+                m_plantUnit = BitConverter.ToInt16(binaryImage, startIndex + 40)
                 m_securityLevel = BitConverter.ToInt16(binaryImage, startIndex + 42)
                 m_hardwareInfo = m_textEncoding.GetString(binaryImage, startIndex + 44, 64).Trim()
                 Array.Copy(binaryImage, startIndex + 108, m_spares, 0, 64)
-                m_flagWord = New MetadataFlagWord(BitConverter.ToInt32(binaryImage, startIndex + 172))
-                m_transitionFlag = BitConverter.ToInt32(binaryImage, startIndex + 176)
+                m_generalFlagWord = New MetadataGeneralFlagWord(BitConverter.ToInt32(binaryImage, startIndex + 172))
+                m_alarmFlagWord = BitConverter.ToInt32(binaryImage, startIndex + 176)
                 m_scanRate = BitConverter.ToSingle(binaryImage, startIndex + 180)
                 m_name = m_textEncoding.GetString(binaryImage, startIndex + 184, 20).Trim()
                 m_synonym1 = m_textEncoding.GetString(binaryImage, startIndex + 204, 20).Trim()
@@ -106,7 +126,7 @@ Public Class PointDefinition
                 m_phone = m_textEncoding.GetString(binaryImage, startIndex + 340, 30).Trim()
                 m_remarks = m_textEncoding.GetString(binaryImage, startIndex + 370, 128).Trim()
                 Array.Copy(binaryImage, startIndex + 498, binaryInfo, 0, 256)
-                Select Case m_flagWord.PointType
+                Select Case m_generalFlagWord.PointType
                     Case PointType.Analog
                         m_analogFields = New MetadataAnalogFields(binaryInfo)
                     Case PointType.Digital
@@ -131,12 +151,12 @@ Public Class PointDefinition
 
         With newPointDefinition
             .Description = pointDefinition.Description
-            .Unit = pointDefinition.Unit
+            .PlantUnit = pointDefinition.PlantUnit
             .SecurityLevel = pointDefinition.SecurityLevel
             .HardwareInfo = pointDefinition.HardwareInfo
             Array.Copy(pointDefinition.Spares, .Spares, 64)
-            .FlagWord = pointDefinition.FlagWord
-            .TransitionFlag = pointDefinition.TransitionFlag
+            .GeneralFlagWord = pointDefinition.GeneralFlagWord
+            .AlarmFlagWord = pointDefinition.AlarmFlagWord
             .ScanRate = pointDefinition.ScanRate
             .Name = pointDefinition.Name
             .Synonym1 = pointDefinition.Synonym1
@@ -150,7 +170,6 @@ Public Class PointDefinition
             .Pager = pointDefinition.Pager
             .Phone = pointDefinition.Phone
             .Remarks = pointDefinition.Remarks
-            'Array.Copy(pointDefinition.BinaryInfo, .BinaryInfo, 256)
             .AnalogFields = pointDefinition.AnalogFields
             .DigitalFields = pointDefinition.DigitalFields
             .ComposedFields = pointDefinition.ComposedFields
@@ -177,12 +196,12 @@ Public Class PointDefinition
         End Set
     End Property
 
-    Public Property Unit() As Short
+    Public Property PlantUnit() As Short
         Get
-            Return m_unit
+            Return m_plantUnit
         End Get
         Set(ByVal value As Short)
-            m_unit = value
+            m_plantUnit = value
         End Set
     End Property
 
@@ -213,21 +232,21 @@ Public Class PointDefinition
         End Set
     End Property
 
-    Public Property FlagWord() As MetadataFlagWord
+    Public Property GeneralFlagWord() As MetadataGeneralFlagWord
         Get
-            Return m_flagWord
+            Return m_generalFlagWord
         End Get
-        Set(ByVal value As MetadataFlagWord)
-            m_flagWord = value
+        Set(ByVal value As MetadataGeneralFlagWord)
+            m_generalFlagWord = value
         End Set
     End Property
 
-    Public Property TransitionFlag() As Integer
+    Public Property AlarmFlagWord() As Integer
         Get
-            Return m_transitionFlag
+            Return m_alarmFlagWord
         End Get
         Set(ByVal value As Integer)
-            m_transitionFlag = value
+            m_alarmFlagWord = value
         End Set
     End Property
 
@@ -348,15 +367,6 @@ Public Class PointDefinition
         End Set
     End Property
 
-    'Public Property BinaryInfo() As Byte()
-    '    Get
-    '        Return m_binaryInfo
-    '    End Get
-    '    Set(ByVal value As Byte())
-    '        m_binaryInfo = value
-    '    End Set
-    'End Property
-
     Public Property AnalogFields() As MetadataAnalogFields
         Get
             Return m_analogFields
@@ -409,12 +419,12 @@ Public Class PointDefinition
 
             ' Construct the binary IP buffer for this event
             Array.Copy(m_textEncoding.GetBytes(m_description.PadRight(40)), 0, image, 0, 40)
-            Array.Copy(BitConverter.GetBytes(m_unit), 0, image, 40, 2)
+            Array.Copy(BitConverter.GetBytes(m_plantUnit), 0, image, 40, 2)
             Array.Copy(BitConverter.GetBytes(m_securityLevel), 0, image, 42, 2)
             Array.Copy(m_textEncoding.GetBytes(m_hardwareInfo.PadRight(64)), 0, image, 44, 64)
             Array.Copy(m_spares, 0, image, 108, 64)
-            Array.Copy(BitConverter.GetBytes(m_flagWord.Value), 0, image, 172, 4)
-            Array.Copy(BitConverter.GetBytes(m_transitionFlag), 0, image, 176, 4)
+            Array.Copy(BitConverter.GetBytes(m_generalFlagWord.Value), 0, image, 172, 4)
+            Array.Copy(BitConverter.GetBytes(m_alarmFlagWord), 0, image, 176, 4)
             Array.Copy(BitConverter.GetBytes(m_scanRate), 0, image, 180, 4)
             Array.Copy(m_textEncoding.GetBytes(m_name.PadRight(20)), 0, image, 184, 20)
             Array.Copy(m_textEncoding.GetBytes(m_synonym1.PadRight(20)), 0, image, 204, 20)
@@ -428,7 +438,7 @@ Public Class PointDefinition
             Array.Copy(m_textEncoding.GetBytes(m_pager.PadRight(30)), 0, image, 310, 30)
             Array.Copy(m_textEncoding.GetBytes(m_phone.PadRight(30)), 0, image, 340, 30)
             Array.Copy(m_textEncoding.GetBytes(m_remarks.PadRight(128)), 0, image, 370, 128)
-            Select Case m_flagWord.PointType
+            Select Case m_generalFlagWord.PointType
                 Case PointType.Analog
                     Array.Copy(m_analogFields.BinaryImage, binaryInfo, MetadataAnalogFields.BinaryLength)
                 Case PointType.Digital

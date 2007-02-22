@@ -5,7 +5,7 @@ Public Class ArchiveDataBlockPointer
 
 #Region " Member Declaration "
 
-    Private m_pointID As Integer
+    Private m_pointIndex As Integer
     Private m_startTime As TimeTag
 
 #End Region
@@ -20,9 +20,9 @@ Public Class ArchiveDataBlockPointer
 
     End Sub
 
-    Public Sub New(ByVal pointID As Integer, ByVal startTime As TimeTag)
+    Public Sub New(ByVal pointIndex As Integer, ByVal startTime As TimeTag)
 
-        m_pointID = pointID
+        m_pointIndex = pointIndex
         m_startTime = startTime
 
     End Sub
@@ -31,7 +31,7 @@ Public Class ArchiveDataBlockPointer
 
         If binaryImage IsNot Nothing Then
             If binaryImage.Length - startIndex >= BinaryLength Then
-                m_pointID = BitConverter.ToInt32(binaryImage, startIndex)
+                m_pointIndex = BitConverter.ToInt32(binaryImage, startIndex)
                 m_startTime = New TimeTag(BitConverter.ToDouble(binaryImage, startIndex + 4))
             Else
                 Throw New ArgumentException("Binary image size from startIndex is too small.")
@@ -42,12 +42,12 @@ Public Class ArchiveDataBlockPointer
 
     End Sub
 
-    Public Property PointID() As Integer
+    Public Property PointIndex() As Integer
         Get
-            Return m_pointID
+            Return m_pointIndex
         End Get
         Set(ByVal value As Integer)
-            m_pointID = value
+            m_pointIndex = value
         End Set
     End Property
 
@@ -64,7 +64,7 @@ Public Class ArchiveDataBlockPointer
         Get
             Dim image As Byte() = CreateArray(Of Byte)(BinaryLength)
 
-            Array.Copy(BitConverter.GetBytes(m_pointID), 0, image, 0, 4)
+            Array.Copy(BitConverter.GetBytes(m_pointIndex), 0, image, 0, 4)
             Array.Copy(BitConverter.GetBytes(m_startTime.Value), 0, image, 4, 8)
 
             Return image
@@ -77,7 +77,7 @@ Public Class ArchiveDataBlockPointer
 
         Dim other As ArchiveDataBlockPointer = TryCast(obj, ArchiveDataBlockPointer)
         If other IsNot Nothing Then
-            Return m_pointID.CompareTo(other.PointID) And m_startTime.CompareTo(other.StartTime)
+            Return m_pointIndex.CompareTo(other.PointIndex) And m_startTime.CompareTo(other.StartTime)
         Else
             Throw New ArgumentException(String.Format("Cannot compare {0} with {1}.", Me.GetType().Name, other.GetType().Name))
         End If

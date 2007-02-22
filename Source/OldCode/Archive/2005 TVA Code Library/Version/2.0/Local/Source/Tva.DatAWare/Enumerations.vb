@@ -1,7 +1,7 @@
 Public Enum Quality As Int32
     Unknown
     DeletedFromProcessing
-    CouldNotCalcPoint
+    CouldNotCalculatePoint
     DASFrontEndHardwareError
     SensorReadError
     OpenTransducerDetection
@@ -9,23 +9,23 @@ Public Enum Quality As Int32
     UnreasonableHigh
     UnreasonableLow
     Old
-    SuspectValueAboveHIHILimit
-    SuspectValueBelowLOLOLimit
-    SuspectValueAboveHILimit
-    SuspectValueBelowLOLimit
+    SuspectValueAboveHiHiLimit
+    SuspectValueBelowLoLoLimit
+    SuspectValueAboveHiLimit
+    SuspectValueBelowLoLimit
     SuspectData
     DigitalSuspectAlarm
-    InsertedValueAboveHIHILimit
-    InsertedValueBelowLOLOLimit
-    InsertedValueAboveHILimit
-    InsertedValueBelowLOLimit
+    InsertedValueAboveHiHiLimit
+    InsertedValueBelowLoLoLimit
+    InsertedValueAboveHiLimit
+    InsertedValueBelowLoLimit
     InsertedValue
     DigitalInsertedStatusInAlarm
     LogicalAlarm
-    ValueAboveHIHIAlarm
-    ValueBelowLOLOAlarm
-    ValueAboveHIAlarm
-    ValueBelowLOAlarm
+    ValueAboveHiHiAlarm
+    ValueBelowLoLoAlarm
+    ValueAboveHiAlarm
+    ValueBelowLoAlarm
     DeletedFromAlarmChecks
     InhibitedByCutoutPoint
     Good

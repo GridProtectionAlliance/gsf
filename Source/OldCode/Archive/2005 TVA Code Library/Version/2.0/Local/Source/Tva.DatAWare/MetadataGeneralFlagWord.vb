@@ -2,7 +2,7 @@ Imports Tva.Interop.Bit
 
 ' 02/20/2007
 
-Public Class MetadataFlagWord
+Public Class MetadataGeneralFlagWord
 
 #Region " Member Declaration "
 
