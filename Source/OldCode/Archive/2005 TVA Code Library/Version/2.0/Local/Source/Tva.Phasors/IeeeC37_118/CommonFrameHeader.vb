@@ -369,7 +369,7 @@ Namespace IeeeC37_118
 
         Public Shared ReadOnly Property FractionOfSecond(ByVal frameHeader As ICommonFrameHeader) As Int32
             Get
-                Return Convert.ToInt32((TicksBeyondSecond(TimeTag(frameHeader).ToDateTime.Ticks) / 10000000.0R) * frameHeader.TimeBase)
+                Return Convert.ToInt32((TicksBeyondSecond(TimeTag(frameHeader).ToDateTime) / 10000000.0R) * frameHeader.TimeBase)
             End Get
         End Property
 

@@ -188,7 +188,16 @@ Namespace DateTime
         ''' <returns>Timestamp's tick distance from the top of the second</returns>
         Public Shared ReadOnly Property TicksBeyondSecond(ByVal ticks As Long) As Long
             Get
-                Return ticks - BaselinedTimestamp(ticks, BaselineTimeInterval.Second).Ticks
+                Return ticks - BaselinedTimestamp(New Date(ticks), BaselineTimeInterval.Second).Ticks
+            End Get
+        End Property
+
+        ''' <summary>Determines the distance, in ticks, beyond the top of the timestamp second</summary>
+        ''' <param name="timestamp">Timestamp to evaluate</param>
+        ''' <returns>Timestamp's tick distance from the top of the second</returns>
+        Public Shared ReadOnly Property TicksBeyondSecond(ByVal timestamp As Date) As Long
+            Get
+                Return timestamp.Ticks - BaselinedTimestamp(timestamp, BaselineTimeInterval.Second).Ticks
             End Get
         End Property
 
