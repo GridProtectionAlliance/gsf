@@ -29,6 +29,10 @@ Public Interface IDataCell
 
     Property ConfigurationCell() As IConfigurationCell
 
+    ReadOnly Property StationName() As String
+
+    ReadOnly Property IDLabel() As String
+
     Property StatusFlags() As Int16
 
     ReadOnly Property AllValuesAreEmpty() As Boolean

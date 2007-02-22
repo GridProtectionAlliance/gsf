@@ -148,7 +148,7 @@ Public MustInherit Class DigitalValueBase
             With baseAttributes
                 Dim valueBytes As Byte() = BitConverter.GetBytes(Value)
                 .Add("Digital Value (Big Endian Bits)", ByteEncoding.BigEndianBinary.GetString(valueBytes))
-                .Add("Digital Value (Hexadecimal)", ByteEncoding.Hexadecimal.GetString(valueBytes))
+                .Add("Digital Value (Hexadecimal)", "0x" & ByteEncoding.Hexadecimal.GetString(valueBytes))
             End With
             Return baseAttributes
         End Get

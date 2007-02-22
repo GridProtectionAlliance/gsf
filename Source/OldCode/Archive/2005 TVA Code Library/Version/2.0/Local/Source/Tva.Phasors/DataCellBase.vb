@@ -124,6 +124,27 @@ Public MustInherit Class DataCellBase
         End Set
     End Property
 
+    Public Overridable ReadOnly Property StationName() As String Implements IDataCell.StationName
+        Get
+            Return m_configurationCell.StationName
+        End Get
+    End Property
+
+    Public Overridable ReadOnly Property IDLabel() As String Implements IDataCell.IDLabel
+        Get
+            Return m_configurationCell.IDLabel
+        End Get
+    End Property
+
+    Public Overrides Property IDCode() As UInt16
+        Get
+            Return m_configurationCell.IDCode
+        End Get
+        Set(ByVal value As UInt16)
+            Throw New NotSupportedException("Cannot change IDCode of a data cell, change IDCode is associated configuration cell instead")
+        End Set
+    End Property
+
     Public Overridable Property StatusFlags() As Int16 Implements IDataCell.StatusFlags
         Get
             Return m_statusFlags
@@ -168,15 +189,6 @@ Public MustInherit Class DataCellBase
         Get
             Return m_digitalValues
         End Get
-    End Property
-
-    Public Overrides Property IDCode() As UInt16
-        Get
-            Return m_configurationCell.IDCode
-        End Get
-        Set(ByVal value As UInt16)
-            Throw New NotSupportedException("Cannot change IDCode of a data cell, change IDCode is associated configuration cell instead")
-        End Set
     End Property
 
     Protected Overrides ReadOnly Property BodyLength() As UInt16
@@ -258,6 +270,8 @@ Public MustInherit Class DataCellBase
             Dim baseAttributes As Dictionary(Of String, String) = MyBase.Attributes
 
             With baseAttributes
+                .Add("Station Name", StationName)
+                .Add("ID Label", IDLabel)
                 .Add("Status Flags", StatusFlags)
                 .Add("Data Is Valid", DataIsValid)
                 .Add("Synchronization Is Valid", SynchronizationIsValid)
