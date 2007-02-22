@@ -17,6 +17,7 @@
 
 Imports System.Runtime.Serialization
 Imports Tva.DateTime
+Imports Tva.DateTime.Common
 Imports Tva.Phasors.Common
 Imports Tva.Phasors.IeeeC37_118.Common
 
@@ -362,14 +363,13 @@ Namespace IeeeC37_118
 
         Public Shared ReadOnly Property SecondOfCentury(ByVal frameHeader As ICommonFrameHeader) As UInt32
             Get
-                Return System.Math.Floor(TimeTag(frameHeader).Value)
+                Return Convert.ToUInt32(System.Math.Floor(TimeTag(frameHeader).Value))
             End Get
         End Property
 
         Public Shared ReadOnly Property FractionOfSecond(ByVal frameHeader As ICommonFrameHeader) As Int32
             Get
-                Dim seconds As Single = TimeTag(frameHeader).Value
-                Return (seconds - System.Math.Floor(seconds)) * frameHeader.TimeBase
+                Return Convert.ToInt32((TicksBeyondSecond(TimeTag(frameHeader).ToDateTime.Ticks) \ 10000000L) * Convert.ToInt64(frameHeader.TimeBase))
             End Get
         End Property
 
