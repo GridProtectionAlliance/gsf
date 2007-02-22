@@ -99,7 +99,7 @@
     <Compile Include="Legacy Interfaces\TimeTag.vb">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="MetadataAlarmFlagWord.vb" />
+    <Compile Include="MetadataAlarmFlags.vb" />
     <Compile Include="MetadataAnalogFields.vb" />
     <Compile Include="MetadataComposedFields.vb" />
     <Compile Include="MetadataConstantFields.vb" />
@@ -110,7 +110,7 @@
     <Compile Include="MetadataFile.vb">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="MetadataGeneralFlagWord.vb" />
+    <Compile Include="MetadataGeneralFlags.vb" />
     <Compile Include="My Project\AssemblyInfo.vb" />
     <Compile Include="PointData.vb" />
     <Compile Include="DataProcessor.Designer.vb">
