@@ -21,6 +21,8 @@ Public Class MetadataConstantFields
 
 #End Region
 
+#Region " Public Code "
+
     Public Const BinaryLength As Integer = 8
 
     Public Sub New(ByVal binaryInfo As Byte())
@@ -74,5 +76,7 @@ Public Class MetadataConstantFields
         End If
 
     End Sub
+
+#End Region
 
 End Class

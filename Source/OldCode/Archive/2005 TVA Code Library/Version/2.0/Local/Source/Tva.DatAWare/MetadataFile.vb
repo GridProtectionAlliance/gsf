@@ -26,7 +26,13 @@ Public Class MetadataFile
 
 #Region " Event Declaration "
 
-
+    Public Event Opening As EventHandler
+    Public Event Opened As EventHandler
+    Public Event Closing As EventHandler
+    Public Event Closed As EventHandler
+    Public Event Loading As EventHandler(Of ProgressEventArgs(Of Integer))
+    Public Event Saving As EventHandler(Of ProgressEventArgs(Of Integer))
+    Public Event Analyzing As EventHandler(Of ProgressEventArgs(Of Integer))
 
 #End Region
 
@@ -113,6 +119,8 @@ Public Class MetadataFile
     Public Sub Open()
 
         If Not Me.IsOpen Then
+            RaiseEvent Opening(Me, EventArgs.Empty)
+
             ' Initialize the point definition list.
             m_pointDefinitions = New List(Of PointDefinition)()
 
@@ -124,9 +132,11 @@ Public Class MetadataFile
                 If m_fileStream.Length Mod PointDefinition.BinaryLength = 0 Then
                     ' The file we're working with is a valid one.
                     Dim binaryImage As Byte() = CreateArray(Of Byte)(PointDefinition.BinaryLength)
-                    For i As Long = 1 To m_fileStream.Length \ binaryImage.Length   ' <= # of point definitions
+                    Dim pointDefinitionCount As Integer = Convert.ToInt32(m_fileStream.Length \ binaryImage.Length)
+                    For i As Integer = 1 To pointDefinitionCount
                         m_fileStream.Read(binaryImage, 0, binaryImage.Length)
-                        m_pointDefinitions.Add(New PointDefinition(Convert.ToInt32(i), binaryImage))
+                        m_pointDefinitions.Add(New PointDefinition(i, binaryImage))
+                        RaiseEvent Loading(Me, New ProgressEventArgs(Of Integer)(pointDefinitionCount, i))
                     Next
                 Else
                     Close(False)
@@ -152,6 +162,8 @@ Public Class MetadataFile
                 m_autoAnalyzeTimer.Interval = m_autoAnalyzeInterval
                 m_autoAnalyzeTimer.Start()
             End If
+
+            RaiseEvent Opened(Me, EventArgs.Empty)
         End If
 
     End Sub
@@ -165,6 +177,8 @@ Public Class MetadataFile
     Public Sub Close(ByVal saveFile As Boolean)
 
         If Me.IsOpen Then
+            RaiseEvent Closing(Me, EventArgs.Empty)
+
             ' Stop the timers if they are ticking.
             m_autoSaveTimer.Stop()
             m_autoAnalyzeTimer.Stop()
@@ -177,6 +191,8 @@ Public Class MetadataFile
             m_pointDefinitions = Nothing
             m_fileStream.Close()
             m_fileStream = Nothing
+
+            RaiseEvent Closed(Me, EventArgs.Empty)
         End If
 
     End Sub
@@ -190,8 +206,9 @@ Public Class MetadataFile
             ' Set the cursor to BOF before we start writing to the file.
             m_fileStream.Seek(0, SeekOrigin.Begin)
             ' Write all of the point definitions to the file.
-            For Each pointDefinition As PointDefinition In m_pointDefinitions
-                m_fileStream.Write(pointDefinition.BinaryImage, 0, pointDefinition.BinaryLength)
+            For i As Integer = 0 To m_pointDefinitions.Count - 1
+                m_fileStream.Write(m_pointDefinitions(i).BinaryImage, 0, PointDefinition.BinaryLength)
+                RaiseEvent Saving(Me, New ProgressEventArgs(Of Integer)(i + 1, m_pointDefinitions.Count))
             Next
             m_fileStream.Flush()    ' Ensure that the data is written to the file.
         Else
@@ -210,9 +227,10 @@ Public Class MetadataFile
             nonAlignedPointDefinitions.Sort()
             ' Clear the actual point definition list.
             m_pointDefinitions.Clear()
-            For Each pointDefinition As PointDefinition In nonAlignedPointDefinitions
+            For i As Integer = 0 To nonAlignedPointDefinitions.Count - 1
                 ' We'll use the Write() method for adding point definitions to the actual point definition list.
-                Write(pointDefinition)
+                Write(nonAlignedPointDefinitions(i))
+                RaiseEvent Analyzing(Me, New ProgressEventArgs(Of Integer)(nonAlignedPointDefinitions.Count, i + 1))
             Next
         End If
 

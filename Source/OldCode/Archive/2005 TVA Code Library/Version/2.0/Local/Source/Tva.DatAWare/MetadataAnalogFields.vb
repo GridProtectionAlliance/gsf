@@ -38,6 +38,8 @@ Public Class MetadataAnalogFields
 
 #End Region
 
+#Region " Public Code "
+
     Public Const BinaryLength As Integer = 44
 
     Public Sub New(ByVal binaryInfo As Byte())
@@ -196,5 +198,7 @@ Public Class MetadataAnalogFields
         End If
 
     End Sub
+
+#End Region
 
 End Class

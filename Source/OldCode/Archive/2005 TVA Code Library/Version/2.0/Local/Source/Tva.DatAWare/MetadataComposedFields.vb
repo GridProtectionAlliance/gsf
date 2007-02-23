@@ -38,6 +38,8 @@ Public Class MetadataComposedFields
 
 #End Region
 
+#Region " Public Code "
+
     Public Const BinaryLength As Integer = 212
 
     Public Sub New(ByVal binaryInfo As Byte())
@@ -198,5 +200,7 @@ Public Class MetadataComposedFields
         End If
 
     End Sub
+
+#End Region
 
 End Class

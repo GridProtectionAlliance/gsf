@@ -24,6 +24,8 @@ Public Class MetadataDigitalFields
 
 #End Region
 
+#Region " Public Code "
+
     Public Const BinaryLength As Integer = 28
 
     Public Sub New(ByVal binaryInfo As Byte())
@@ -105,5 +107,7 @@ Public Class MetadataDigitalFields
         End If
 
     End Sub
+
+#End Region
 
 End Class

@@ -10,6 +10,8 @@ Public Class MetadataAlarmFlags
 
 #End Region
 
+#Region " Public Code "
+
     Public Sub New(ByVal flagWord As Int32)
 
         MyBase.New()
@@ -415,5 +417,7 @@ Public Class MetadataAlarmFlags
             m_flagWord = value
         End Set
     End Property
+
+#End Region
 
 End Class
