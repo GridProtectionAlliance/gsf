@@ -147,6 +147,7 @@
     <Compile Include="Tva.Text\Common.vb" />
     <Compile Include="Tva.Xml\Common.vb" />
     <Compile Include="Tva\ByteEncoding.vb" />
+    <Compile Include="Tva\ProgressEventArgs.vb" />
     <Compile Include="Tva\Serialization.vb" />
     <Compile Include="Tva\ObjectStateChangedEventArgs.vb" />
   </ItemGroup>
