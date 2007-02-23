@@ -52,24 +52,7 @@ Public Class MetadataAnalogFields
 
         If textEncoding IsNot Nothing Then m_textEncoding = textEncoding Else m_textEncoding = Encoding.Default
 
-        If binaryInfo IsNot Nothing Then
-            If binaryInfo.Length >= BinaryLength Then
-                m_engineeringUnits = m_textEncoding.GetString(binaryInfo, 0, 8).Trim()
-                m_highAlarm = BitConverter.ToSingle(binaryInfo, 8)
-                m_lowAlarm = BitConverter.ToSingle(binaryInfo, 12)
-                m_highRange = BitConverter.ToSingle(binaryInfo, 16)
-                m_lowRange = BitConverter.ToSingle(binaryInfo, 20)
-                m_highWarning = BitConverter.ToSingle(binaryInfo, 24)
-                m_lowWarning = BitConverter.ToSingle(binaryInfo, 28)
-                m_exceptionLimit = BitConverter.ToSingle(binaryInfo, 32)
-                m_compressionLimit = BitConverter.ToSingle(binaryInfo, 36)
-                m_displayedDigits = BitConverter.ToInt32(binaryInfo, 40)
-            Else
-                Throw New ArgumentException("Binary info size is too small.")
-            End If
-        Else
-            Throw New ArgumentNullException("binaryInfo")
-        End If
+        Update(binaryInfo)
 
     End Sub
 
@@ -190,5 +173,28 @@ Public Class MetadataAnalogFields
             Return image
         End Get
     End Property
+
+    Public Sub Update(ByVal binaryInfo As Byte())
+
+        If binaryInfo IsNot Nothing Then
+            If binaryInfo.Length >= BinaryLength Then
+                m_engineeringUnits = m_textEncoding.GetString(binaryInfo, 0, 8).Trim()
+                m_highAlarm = BitConverter.ToSingle(binaryInfo, 8)
+                m_lowAlarm = BitConverter.ToSingle(binaryInfo, 12)
+                m_highRange = BitConverter.ToSingle(binaryInfo, 16)
+                m_lowRange = BitConverter.ToSingle(binaryInfo, 20)
+                m_highWarning = BitConverter.ToSingle(binaryInfo, 24)
+                m_lowWarning = BitConverter.ToSingle(binaryInfo, 28)
+                m_exceptionLimit = BitConverter.ToSingle(binaryInfo, 32)
+                m_compressionLimit = BitConverter.ToSingle(binaryInfo, 36)
+                m_displayedDigits = BitConverter.ToInt32(binaryInfo, 40)
+            Else
+                Throw New ArgumentException("Binary info size is too small.")
+            End If
+        Else
+            Throw New ArgumentNullException("binaryInfo")
+        End If
+
+    End Sub
 
 End Class

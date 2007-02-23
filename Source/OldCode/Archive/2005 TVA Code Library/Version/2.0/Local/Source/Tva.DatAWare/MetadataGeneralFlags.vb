@@ -175,10 +175,13 @@ Public Class MetadataGeneralFlags
         End Set
     End Property
 
-    Public ReadOnly Property Value() As Int32
+    Public Property Value() As Int32
         Get
             Return m_flagWord
         End Get
+        Set(ByVal value As Int32)
+            m_flagWord = value
+        End Set
     End Property
 
 #End Region

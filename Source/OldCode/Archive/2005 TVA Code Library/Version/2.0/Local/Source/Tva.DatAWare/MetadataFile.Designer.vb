@@ -18,16 +18,20 @@ Partial Class MetadataFile
         InitializeComponent()
 
         m_name = Me.GetType().Name & Extension
-        m_keepOpen = False
-        m_pointDefinitions = New List(Of PointDefinition)()
+        m_initialRecordCount = 1500
+        m_saveOnClose = True
+        m_analyzeOnSave = True
+        m_autoSaveInterval = -1
+        m_autoAnalyzeInterval = -1
+        m_autoSaveTimer = New System.Timers.Timer()
+        m_autoAnalyzeTimer = New System.Timers.Timer()
 
     End Sub
 
     'Component overrides dispose to clean up the component list.
     <System.Diagnostics.DebuggerNonUserCode()> _
     Protected Overrides Sub Dispose(ByVal disposing As Boolean)
-        WritePointDefinitions() ' Make sure all the point definitions are written back to the file.
-        Close()                 ' Make sure that the file is closed.
+        Close() ' Close the file.
         If disposing AndAlso components IsNot Nothing Then
             components.Dispose()
         End If
@@ -42,7 +46,7 @@ Partial Class MetadataFile
     'Do not modify it using the code editor.
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
-        components = New System.ComponentModel.Container()
+
     End Sub
 
 End Class

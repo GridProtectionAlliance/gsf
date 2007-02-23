@@ -7,15 +7,26 @@ Imports Tva.IO.FilePath
 
 <ToolboxBitmap(GetType(MetadataFile))> _
 Public Class MetadataFile
-    Implements ISupportInitialize
 
 #Region " Member Declaration "
 
     Private m_name As String
-    Private m_keepOpen As Boolean
     Private m_initialRecordCount As Integer
+    Private m_saveOnClose As Boolean
+    Private m_analyzeOnSave As Boolean
+    Private m_autoSaveInterval As Integer
+    Private m_autoAnalyzeInterval As Integer
     Private m_pointDefinitions As List(Of PointDefinition)
     Private m_fileStream As FileStream
+
+    Private WithEvents m_autoSaveTimer As System.Timers.Timer
+    Private WithEvents m_autoAnalyzeTimer As System.Timers.Timer
+
+#End Region
+
+#Region " Event Declaration "
+
+
 
 #End Region
 
@@ -32,7 +43,7 @@ Public Class MetadataFile
                 If String.Compare(JustFileExtension(value), Extension) = 0 Then
                     m_name = value
                 Else
-                    Throw New ArgumentException(String.Format("Name of {0} must have an extension of {1}.", Me.GetType().Name, Extension))
+                    Throw New ArgumentException(String.Format("Name must have an extension of {0}.", Extension))
                 End If
             Else
                 Throw New ArgumentNullException("Name")
@@ -40,19 +51,55 @@ Public Class MetadataFile
         End Set
     End Property
 
-    Public Property KeepOpen() As Boolean
+    Public Property InitialRecordCount() As Integer
         Get
-            Return m_keepOpen
+            Return m_initialRecordCount
+        End Get
+        Set(ByVal value As Integer)
+            m_initialRecordCount = value
+        End Set
+    End Property
+
+    Public Property SaveOnClose() As Boolean
+        Get
+            Return m_saveOnClose
         End Get
         Set(ByVal value As Boolean)
-            m_keepOpen = value
+            m_saveOnClose = value
+        End Set
+    End Property
+
+    Public Property AnalyzeOnSave() As Boolean
+        Get
+            Return m_analyzeOnSave
+        End Get
+        Set(ByVal value As Boolean)
+            m_analyzeOnSave = value
+        End Set
+    End Property
+
+    Public Property AutoSaveInterval() As Integer
+        Get
+            Return m_autoSaveInterval
+        End Get
+        Set(ByVal value As Integer)
+            m_autoSaveInterval = value
+        End Set
+    End Property
+
+    Public Property AutoAnalyzeInterval() As Integer
+        Get
+            Return m_autoAnalyzeInterval
+        End Get
+        Set(ByVal value As Integer)
+            m_autoAnalyzeInterval = value
         End Set
     End Property
 
     <Browsable(False)> _
     Public ReadOnly Property IsOpen() As Boolean
         Get
-            Return (m_fileStream IsNot Nothing)
+            Return m_fileStream IsNot Nothing
         End Get
     End Property
 
@@ -65,138 +112,189 @@ Public Class MetadataFile
 
     Public Sub Open()
 
-        If m_fileStream Is Nothing Then
-            m_fileStream = New FileStream(m_name, FileMode.OpenOrCreate)
+        If Not Me.IsOpen Then
+            ' Initialize the point definition list.
+            m_pointDefinitions = New List(Of PointDefinition)()
+
+            If File.Exists(m_name) Then
+                ' File exists, so we'll open it.
+                m_fileStream = New FileStream(m_name, FileMode.Open)
+
+                ' Once we have the file open, we'll process the file data.
+                If m_fileStream.Length Mod PointDefinition.BinaryLength = 0 Then
+                    ' The file we're working with is a valid one.
+                    Dim binaryImage As Byte() = CreateArray(Of Byte)(PointDefinition.BinaryLength)
+                    For i As Long = 1 To m_fileStream.Length \ binaryImage.Length   ' <= # of point definitions
+                        m_fileStream.Read(binaryImage, 0, binaryImage.Length)
+                        m_pointDefinitions.Add(New PointDefinition(Convert.ToInt32(i), binaryImage))
+                    Next
+                Else
+                    Close(False)
+                    Throw New InvalidOperationException(String.Format("File """"{0}"""" is corrupt.", m_fileStream.Name))
+                End If
+            Else
+                ' File doesn't exist, so we'll create it.
+                m_fileStream = New FileStream(m_name, FileMode.Create)
+
+                ' Since we're working with a new file, we'll populate the point definition list with the default
+                ' number of point definitions. These points will be witten back to the file when Save() is called
+                ' or Close() is called and SaveOnClose is set to True.
+                For i As Integer = 1 To m_initialRecordCount
+                    m_pointDefinitions.Add(New PointDefinition(i))
+                Next
+            End If
+
+            If m_autoSaveInterval > 0 Then
+                m_autoSaveTimer.Interval = m_autoSaveInterval
+                m_autoSaveTimer.Start()
+            End If
+            If m_autoAnalyzeInterval > 0 Then
+                m_autoAnalyzeTimer.Interval = m_autoAnalyzeInterval
+                m_autoAnalyzeTimer.Start()
+            End If
         End If
 
     End Sub
 
     Public Sub Close()
 
-        If m_fileStream IsNot Nothing Then
+        Close(m_saveOnClose)
+
+    End Sub
+
+    Public Sub Close(ByVal saveFile As Boolean)
+
+        If Me.IsOpen Then
+            ' Stop the timers if they are ticking.
+            m_autoSaveTimer.Stop()
+            m_autoAnalyzeTimer.Stop()
+
+            ' Save point definitions back to the file if specified.
+            If saveFile Then Save()
+
+            ' Release all of the used resources.
+            m_pointDefinitions.Clear()
+            m_pointDefinitions = Nothing
             m_fileStream.Close()
             m_fileStream = Nothing
         End If
 
     End Sub
 
-    Public Sub ReadPointDefinitions()
+    Public Sub Save()
 
-        If Not Me.IsOpen Then Open()
+        If Me.IsOpen Then
+            ' Analyze point definitions before writing them to the file if specified.
+            If m_analyzeOnSave Then Analyze()
 
-        If m_fileStream.Length Mod PointDefinition.BinaryLength = 0 Then
-            If m_pointDefinitions.Count = 0 Then
-                ' We'll read the file, since we've not read the file yet.
-                m_fileStream.Seek(0, SeekOrigin.Begin)    ' Set the cursor to BOF before we start reading the file.
-                Dim binaryImage As Byte() = CreateArray(Of Byte)(PointDefinition.BinaryLength)
-                For i As Long = 0 To m_fileStream.Length - 1 Step pointDefinition.BinaryLength
-                    m_fileStream.Read(binaryImage, 0, binaryImage.Length)
-                    Dim pointDefinition As New PointDefinition(m_pointDefinitions.Count + 1, binaryImage, 0)
-                    m_pointDefinitions.Add(pointDefinition)
-                Next
-                m_fileStream.Seek(0, SeekOrigin.Begin)    ' Set the cursor to BOF after we're done reading the file.
-                m_initialRecordCount = m_pointDefinitions.Count
-            End If
-        Else
-            Throw New InvalidOperationException(String.Format("File """"{0}"""" is corrupt.", m_name))
-        End If
-
-        If Not m_keepOpen Then Close()
-
-    End Sub
-
-    Public Sub WritePointDefinitions()
-
-        AnalyzePointDefinitions()
-
-        If m_pointDefinitions.Count >= m_initialRecordCount Then
-            ' We have at least (if not more) the number of points we read in from the file to begin with.
-            If Not Me.IsOpen Then Open()
-
-            m_fileStream.Seek(0, SeekOrigin.Begin)    ' Set the cursor to BOF before we start writing to the file.
+            ' Set the cursor to BOF before we start writing to the file.
+            m_fileStream.Seek(0, SeekOrigin.Begin)
+            ' Write all of the point definitions to the file.
             For Each pointDefinition As PointDefinition In m_pointDefinitions
                 m_fileStream.Write(pointDefinition.BinaryImage, 0, pointDefinition.BinaryLength)
             Next
-            m_fileStream.Flush()
-            m_fileStream.Seek(0, SeekOrigin.Begin)    ' Set the cursor to BOF after we're done writing to the file.
-
-            If Not m_keepOpen Then Close()
+            m_fileStream.Flush()    ' Ensure that the data is written to the file.
         Else
-            Throw New InvalidOperationException(String.Format("Number of point definition records for file ""{0}"" must be at least {1}.", m_name, m_initialRecordCount))
+            Throw New InvalidOperationException(String.Format("{0} ""{1}"" is not open.", Me.GetType().Name, m_name))
         End If
 
     End Sub
 
-    Public Sub AnalyzePointDefinitions()
+    Public Sub Analyze()
 
-        ' First, we'll sort our point definition list to ensure that all the point definitions are sorted by index.
-        Dim nonAlignedPointDefinitions As New List(Of PointDefinition)(m_pointDefinitions)
-        nonAlignedPointDefinitions.Sort()
-        m_pointDefinitions.Clear()
-        For Each pointDefinition As PointDefinition In nonAlignedPointDefinitions
-            AddPointDefinition(pointDefinition)
-        Next
-
-    End Sub
-
-    Public Sub AddPointDefinition(ByVal pointDefinition As PointDefinition)
-
-        ' Insert to the in-memory list of point definitions.
-        If Not m_pointDefinitions.Contains(pointDefinition) Then
-            If pointDefinition.Index > m_pointDefinitions.Count + 1 Then
-                ' We must add blank definitions as place holders before inserting the specified point definition.
-                For i As Integer = m_pointDefinitions.Count + 1 To pointDefinition.Index - 1
-                    m_pointDefinitions.Add(New PointDefinition(i))
-                Next
-            End If
-
-            m_pointDefinitions.Add(pointDefinition)
-        Else
-            Throw New InvalidOperationException(String.Format("Point definition already exists at index {0}.", pointDefinition.Index))
+        If m_pointDefinitions IsNot Nothing AndAlso m_pointDefinitions.Count > 0 Then
+            ' We can proceed with analyzing point definitions since they have been initialized.
+            ' First, we'll make a working copy of the point definition list.
+            Dim nonAlignedPointDefinitions As New List(Of PointDefinition)(m_pointDefinitions)
+            ' When we sort the point definition list, it will be sorted by the Index of point definition.
+            nonAlignedPointDefinitions.Sort()
+            ' Clear the actual point definition list.
+            m_pointDefinitions.Clear()
+            For Each pointDefinition As PointDefinition In nonAlignedPointDefinitions
+                ' We'll use the Write() method for adding point definitions to the actual point definition list.
+                Write(pointDefinition)
+            Next
         End If
 
     End Sub
 
-    Public Function GetPointDefinition(ByVal pointIndex As Integer) As PointDefinition
+    Public Sub Write(ByVal pointDefinition As PointDefinition)
 
-        For Each pointDefinition As PointDefinition In m_pointDefinitions
-            If pointDefinition.Index = pointIndex Then
-                Return pointDefinition
+        If Me.IsOpen Then
+            ' Insert/Update point definition to the in-memory point definition list.
+            If Not m_pointDefinitions.Contains(pointDefinition) Then
+                ' We have to add the point definition since it doesn't exist.
+                If pointDefinition.Index > m_pointDefinitions.Count + 1 Then
+                    ' We must add blank definitions as place holders before inserting the point definition.
+                    For i As Integer = m_pointDefinitions.Count + 1 To pointDefinition.Index - 1
+                        m_pointDefinitions.Add(New PointDefinition(i))
+                    Next
+                End If
+
+                m_pointDefinitions.Add(pointDefinition)
+            Else
+                ' We have to update the point definition since one already exists.
+                m_pointDefinitions(pointDefinition.Index - 1) = pointDefinition
             End If
-        Next
+        Else
+            Throw New InvalidOperationException(String.Format("{0} ""{1}"" is not open.", Me.GetType().Name, m_name))
+        End If
 
-        Return Nothing
+    End Sub
+
+    Public Function Read(ByVal pointIndex As Integer) As PointDefinition
+
+        If Me.IsOpen Then
+            For Each pointDefinition As PointDefinition In m_pointDefinitions
+                If pointDefinition.Index = pointIndex Then
+                    Return pointDefinition
+                End If
+            Next
+
+            Return Nothing
+        Else
+            Throw New InvalidOperationException(String.Format("{0} ""{1}"" is not open.", Me.GetType().Name, m_name))
+        End If
 
     End Function
 
-    Public Function GetPointDefinition(ByVal pointName As String) As PointDefinition
+    Public Function Read(ByVal pointName As String) As PointDefinition
 
-        For Each pointDefinition As PointDefinition In m_pointDefinitions
-            If String.Compare(pointName, pointDefinition.Name) = 0 OrElse _
-                    String.Compare(pointName, pointDefinition.Synonym1) = 0 OrElse _
-                    String.Compare(pointName, pointDefinition.Synonym2) = 0 Then
-                Return pointDefinition
-            End If
-        Next
+        If Me.IsOpen Then
+            For Each pointDefinition As PointDefinition In m_pointDefinitions
+                If String.Compare(pointName, pointDefinition.Name) = 0 OrElse _
+                        String.Compare(pointName, pointDefinition.Synonym1) = 0 OrElse _
+                        String.Compare(pointName, pointDefinition.Synonym2) = 0 Then
+                    Return pointDefinition
+                End If
+            Next
 
-        Return Nothing
+            Return Nothing
+        Else
+            Throw New InvalidOperationException(String.Format("{0} ""{1}"" is not open.", Me.GetType().Name, m_name))
+        End If
 
     End Function
 
-#Region " ISupportInitialize Implementation "
+#End Region
 
-    Public Sub BeginInit() Implements System.ComponentModel.ISupportInitialize.BeginInit
+#Region " Private Code "
 
-        ' We don't need to do anything before the component is initialized.
+#Region " m_autoSaveTimer Events "
+
+    Private Sub m_autoSaveTimer_Elapsed(ByVal sender As Object, ByVal e As System.Timers.ElapsedEventArgs) Handles m_autoSaveTimer.Elapsed
+
+        If Me.IsOpen Then Save() ' Automatically save point definitions to the file is the file is open.
 
     End Sub
 
-    Public Sub EndInit() Implements System.ComponentModel.ISupportInitialize.EndInit
+#End Region
 
-        If Not DesignMode Then
-            Open()
-            ReadPointDefinitions()
-        End If
+#Region " m_autoAnalyzeTimer Events "
+
+    Private Sub m_autoAnalyzeTimer_Elapsed(ByVal sender As Object, ByVal e As System.Timers.ElapsedEventArgs) Handles m_autoAnalyzeTimer.Elapsed
+
+        Analyze()   ' Automatically analyze the current point definition list.
 
     End Sub
 

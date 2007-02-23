@@ -18,7 +18,6 @@ Public Class MetadataConstantFields
 
     Private m_value As Single
     Private m_displayedDigits As Integer
-    Private m_textEncoding As Encoding
 
 #End Region
 
@@ -26,26 +25,9 @@ Public Class MetadataConstantFields
 
     Public Sub New(ByVal binaryInfo As Byte())
 
-        MyClass.New(binaryInfo, Nothing)
-
-    End Sub
-
-    Public Sub New(ByVal binaryInfo As Byte(), ByVal textEncoding As Encoding)
-
         MyBase.New()
 
-        If textEncoding IsNot Nothing Then m_textEncoding = textEncoding Else m_textEncoding = Encoding.Default
-
-        If binaryInfo IsNot Nothing Then
-            If binaryInfo.Length >= BinaryLength Then
-                m_value = BitConverter.ToSingle(binaryInfo, 0)
-                m_displayedDigits = BitConverter.ToInt32(binaryInfo, 4)
-            Else
-                Throw New ArgumentException("Binary info size is too small.")
-            End If
-        Else
-            Throw New ArgumentNullException("binaryInfo")
-        End If
+        Update(binaryInfo)
 
     End Sub
 
@@ -67,15 +49,6 @@ Public Class MetadataConstantFields
         End Set
     End Property
 
-    Public Property TextEncoding() As Encoding
-        Get
-            Return m_textEncoding
-        End Get
-        Set(ByVal value As Encoding)
-            m_textEncoding = value
-        End Set
-    End Property
-
     Public ReadOnly Property BinaryImage() As Byte()
         Get
             Dim image As Byte() = CreateArray(Of Byte)(BinaryLength)
@@ -86,5 +59,20 @@ Public Class MetadataConstantFields
             Return image
         End Get
     End Property
+
+    Public Sub Update(ByVal binaryInfo As Byte())
+
+        If binaryInfo IsNot Nothing Then
+            If binaryInfo.Length >= BinaryLength Then
+                m_value = BitConverter.ToSingle(binaryInfo, 0)
+                m_displayedDigits = BitConverter.ToInt32(binaryInfo, 4)
+            Else
+                Throw New ArgumentException("Binary info size is too small.")
+            End If
+        Else
+            Throw New ArgumentNullException("binaryInfo")
+        End If
+
+    End Sub
 
 End Class

@@ -27,7 +27,7 @@ Public Class DataProcessor
 
     Public Sub Process(ByVal senderID As Guid, ByVal binaryImage As Byte())
 
-        DataParser.Parse(senderID, binaryImage)
+        DataParser.Add(senderID, binaryImage)
 
     End Sub
 

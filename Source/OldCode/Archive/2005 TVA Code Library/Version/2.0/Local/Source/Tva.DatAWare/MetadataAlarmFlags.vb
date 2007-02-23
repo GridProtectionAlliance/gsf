@@ -8,37 +8,6 @@ Public Class MetadataAlarmFlags
 
     Private m_flagWord As Int32
 
-    'Private Const UnknownMask As Int32 = Bit0
-    'Private Const DeletedFromProcessingMask As Int32 = Bit1
-    'Private Const CouldNotCalculatePointMask As Int32 = Bit2
-    'Private Const DASFrontEndHardwareErrorMask As Int32 = Bit3
-    'Private Const SensorReadErrorMask As Int32 = Bit4
-    'Private Const OpenTransducerDetectionMask As Int32 = Bit5
-    'Private Const InputCountsOutOfSensorRangeMask As Int32 = Bit6
-    'Private Const UnreasonableHighMask As Int32 = Bit7
-    'Private Const UnreasonableLowMask As Int32 = Bit8
-    'Private Const OldMask As Int32 = Bit9
-    'Private Const SuspectValueAboveHiHiLimitMask As Int32 = Bit10
-    'Private Const SuspectValueBelowLoLoLimitMask As Int32 = Bit11
-    'Private Const SuspectValueAboveHiLimitMask As Int32 = Bit12
-    'Private Const SuspectValueBelowLoLimitMask As Int32 = Bit13
-    'Private Const SuspectDataMask As Int32 = Bit14
-    'Private Const DigitalSuspectAlarmMask As Int32 = Bit15
-    'Private Const InsertedValueAboveHiHiLimitMask As Int32 = Bit16
-    'Private Const InsertedValueBelowLoLoLimitMask As Int32 = Bit17
-    'Private Const InsertedValueAboveHiLimitMask As Int32 = Bit18
-    'Private Const InsertedValueBelowLoLimitMask As Int32 = Bit19
-    'Private Const InsertedValueMask As Int32 = Bit20
-    'Private Const DigitalInsertedStatusInAlarmMask As Int32 = Bit21
-    'Private Const LogicalAlarmMask As Int32 = Bit22
-    'Private Const ValueAboveHiHiAlarmMask As Int32 = Bit23
-    'Private Const ValueBelowLoLoAlarmMask As Int32 = Bit24
-    'Private Const ValueAboveHiAlarmMask As Int32 = Bit25
-    'Private Const ValueBelowLoAlarmMask As Int32 = Bit26
-    'Private Const DeletedFromAlarmChecksMask As Int32 = Bit27
-    'Private Const InhibitedByCutoutPointMask As Int32 = Bit28
-    'Private Const GoodMask As Int32 = Bit29
-
 #End Region
 
     Public Sub New(ByVal flagWord As Int32)

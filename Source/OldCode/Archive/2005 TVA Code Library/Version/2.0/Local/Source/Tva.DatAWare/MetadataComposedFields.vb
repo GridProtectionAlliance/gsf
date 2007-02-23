@@ -52,27 +52,7 @@ Public Class MetadataComposedFields
 
         If textEncoding IsNot Nothing Then m_textEncoding = textEncoding Else m_textEncoding = Encoding.Default
 
-        If binaryInfo IsNot Nothing Then
-            If binaryInfo.Length >= BinaryLength Then
-                m_inputPointers = New List(Of Integer)(12)
-                m_highAlarm = BitConverter.ToSingle(binaryInfo, 0)
-                m_lowAlarm = BitConverter.ToSingle(binaryInfo, 4)
-                m_highRange = BitConverter.ToSingle(binaryInfo, 8)
-                m_lowRange = BitConverter.ToSingle(binaryInfo, 12)
-                m_displayedDigits = BitConverter.ToInt32(binaryInfo, 16)
-                For i As Integer = 0 To m_inputPointers.Capacity - 1
-                    m_inputPointers.Add(BitConverter.ToInt32(binaryInfo, (20 + (i * 4))))
-                Next
-                m_engineeringUnits = m_textEncoding.GetString(binaryInfo, 68, 8).Trim()
-                m_equation = m_textEncoding.GetString(binaryInfo, 76, 128).Trim()
-                m_lowWarning = BitConverter.ToSingle(binaryInfo, 204)
-                m_highWarning = BitConverter.ToSingle(binaryInfo, 208)
-            Else
-                Throw New ArgumentException("Binary info size is too small.")
-            End If
-        Else
-            Throw New ArgumentNullException("binaryInfo")
-        End If
+        Update(binaryInfo)
 
     End Sub
 
@@ -192,5 +172,31 @@ Public Class MetadataComposedFields
             Return image
         End Get
     End Property
+
+    Public Sub Update(ByVal binaryInfo As Byte())
+
+        If binaryInfo IsNot Nothing Then
+            If binaryInfo.Length >= BinaryLength Then
+                m_inputPointers = New List(Of Integer)(12)
+                m_highAlarm = BitConverter.ToSingle(binaryInfo, 0)
+                m_lowAlarm = BitConverter.ToSingle(binaryInfo, 4)
+                m_highRange = BitConverter.ToSingle(binaryInfo, 8)
+                m_lowRange = BitConverter.ToSingle(binaryInfo, 12)
+                m_displayedDigits = BitConverter.ToInt32(binaryInfo, 16)
+                For i As Integer = 0 To m_inputPointers.Capacity - 1
+                    m_inputPointers.Add(BitConverter.ToInt32(binaryInfo, (20 + (i * 4))))
+                Next
+                m_engineeringUnits = m_textEncoding.GetString(binaryInfo, 68, 8).Trim()
+                m_equation = m_textEncoding.GetString(binaryInfo, 76, 128).Trim()
+                m_lowWarning = BitConverter.ToSingle(binaryInfo, 204)
+                m_highWarning = BitConverter.ToSingle(binaryInfo, 208)
+            Else
+                Throw New ArgumentException("Binary info size is too small.")
+            End If
+        Else
+            Throw New ArgumentNullException("binaryInfo")
+        End If
+
+    End Sub
 
 End Class

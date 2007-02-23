@@ -54,26 +54,27 @@ Public Class PointDefinition
 #Region " Member Declaration "
 
     Private m_index As Integer
-    Private m_description As String
+    Private m_description As String = ""
     Private m_unitID As Short
     Private m_securityLevel As Short
-    Private m_hardwareInfo As String
+    Private m_hardwareInfo As String = ""
     Private m_spares As Byte()
-    Private m_generalFlagWord As MetadataGeneralFlags
-    Private m_alarmFlagWord As MetadataAlarmFlags
+    Private m_generalFlags As MetadataGeneralFlags
+    Private m_alarmFlags As MetadataAlarmFlags
     Private m_scanRate As Single
-    Private m_name As String
-    Private m_synonym1 As String
-    Private m_synonym2 As String
-    Private m_plantID As String
+    Private m_name As String = ""
+    Private m_synonym1 As String = ""
+    Private m_synonym2 As String = ""
+    Private m_plantID As String = ""
     Private m_sourceID As Short
     Private m_compressionMinimumTime As Integer
     Private m_compressionMaximumTime As Integer
-    Private m_system As String
-    Private m_email As String
-    Private m_pager As String
-    Private m_phone As String
-    Private m_remarks As String
+    Private m_system As String = ""
+    Private m_email As String = ""
+    Private m_pager As String = ""
+    Private m_phone As String = ""
+    Private m_remarks As String = ""
+    Private m_binaryInfo As Byte()
     Private m_analogFields As MetadataAnalogFields
     Private m_digitalFields As MetadataDigitalFields
     Private m_composedFields As MetadataComposedFields
@@ -90,9 +91,21 @@ Public Class PointDefinition
 
         MyBase.New()
         m_index = index
-        m_textEncoding = Encoding.Default ' Default to system's current ANSI code page.
-        m_generalFlagWord = New MetadataGeneralFlags(0)
         m_spares = CreateArray(Of Byte)(64)
+        m_generalFlags = New MetadataGeneralFlags(0)
+        m_alarmFlags = New MetadataAlarmFlags(0)
+        m_binaryInfo = CreateArray(Of Byte)(256)
+        m_analogFields = New MetadataAnalogFields(m_binaryInfo)
+        m_digitalFields = New MetadataDigitalFields(m_binaryInfo)
+        m_composedFields = New MetadataComposedFields(m_binaryInfo)
+        m_constantFields = New MetadataConstantFields(m_binaryInfo)
+        m_textEncoding = Encoding.Default ' Default to system's current ANSI code page.
+
+    End Sub
+
+    Public Sub New(ByVal index As Integer, ByVal binaryImage As Byte())
+
+        MyClass.New(index, binaryImage, 0)
 
     End Sub
 
@@ -110,14 +123,13 @@ Public Class PointDefinition
 
         If binaryImage IsNot Nothing Then
             If binaryImage.Length - startIndex >= BinaryLength Then
-                Dim binaryInfo As Byte() = CreateArray(Of Byte)(256)
                 m_description = m_textEncoding.GetString(binaryImage, startIndex, 40).Trim()
                 m_unitID = BitConverter.ToInt16(binaryImage, startIndex + 40)
                 m_securityLevel = BitConverter.ToInt16(binaryImage, startIndex + 42)
                 m_hardwareInfo = m_textEncoding.GetString(binaryImage, startIndex + 44, 64).Trim()
                 Array.Copy(binaryImage, startIndex + 108, m_spares, 0, 64)
-                m_generalFlagWord = New MetadataGeneralFlags(BitConverter.ToInt32(binaryImage, startIndex + 172))
-                m_alarmFlagWord = New MetadataAlarmFlags(BitConverter.ToInt32(binaryImage, startIndex + 176))
+                m_generalFlags.Value = BitConverter.ToInt32(binaryImage, startIndex + 172)
+                m_alarmFlags.Value = BitConverter.ToInt32(binaryImage, startIndex + 176)
                 m_scanRate = BitConverter.ToSingle(binaryImage, startIndex + 180)
                 m_name = m_textEncoding.GetString(binaryImage, startIndex + 184, 20).Trim()
                 m_synonym1 = m_textEncoding.GetString(binaryImage, startIndex + 204, 20).Trim()
@@ -131,16 +143,16 @@ Public Class PointDefinition
                 m_pager = m_textEncoding.GetString(binaryImage, startIndex + 310, 30).Trim()
                 m_phone = m_textEncoding.GetString(binaryImage, startIndex + 340, 30).Trim()
                 m_remarks = m_textEncoding.GetString(binaryImage, startIndex + 370, 128).Trim()
-                Array.Copy(binaryImage, startIndex + 498, binaryInfo, 0, 256)
-                Select Case m_generalFlagWord.PointType
+                Array.Copy(binaryImage, startIndex + 498, m_binaryInfo, 0, 256)
+                Select Case m_generalFlags.PointType
                     Case PointType.Analog
-                        m_analogFields = New MetadataAnalogFields(binaryInfo)
+                        m_analogFields.Update(m_binaryInfo)
                     Case PointType.Digital
-                        m_digitalFields = New MetadataDigitalFields(binaryInfo)
+                        m_digitalFields.Update(m_binaryInfo)
                     Case PointType.Composed
-                        m_composedFields = New MetadataComposedFields(binaryInfo)
+                        m_composedFields.Update(m_binaryInfo)
                     Case PointType.Constant
-                        m_constantFields = New MetadataConstantFields(binaryInfo)
+                        m_constantFields.Update(m_binaryInfo)
                 End Select
             Else
                 Throw New ArgumentException("Binary image size from startIndex is too small.")
@@ -240,19 +252,19 @@ Public Class PointDefinition
 
     Public Property GeneralFlags() As MetadataGeneralFlags
         Get
-            Return m_generalFlagWord
+            Return m_generalFlags
         End Get
         Set(ByVal value As MetadataGeneralFlags)
-            m_generalFlagWord = value
+            m_generalFlags = value
         End Set
     End Property
 
     Public Property AlarmFlags() As MetadataAlarmFlags
         Get
-            Return m_alarmFlagWord
+            Return m_alarmFlags
         End Get
         Set(ByVal value As MetadataAlarmFlags)
-            m_alarmFlagWord = value
+            m_alarmFlags = value
         End Set
     End Property
 
@@ -421,7 +433,6 @@ Public Class PointDefinition
     Public ReadOnly Property BinaryImage() As Byte()
         Get
             Dim image As Byte() = CreateArray(Of Byte)(BinaryLength)
-            Dim binaryInfo As Byte() = CreateArray(Of Byte)(256)
 
             ' Construct the binary IP buffer for this event
             Array.Copy(m_textEncoding.GetBytes(m_description.PadRight(40)), 0, image, 0, 40)
@@ -429,8 +440,8 @@ Public Class PointDefinition
             Array.Copy(BitConverter.GetBytes(m_securityLevel), 0, image, 42, 2)
             Array.Copy(m_textEncoding.GetBytes(m_hardwareInfo.PadRight(64)), 0, image, 44, 64)
             Array.Copy(m_spares, 0, image, 108, 64)
-            Array.Copy(BitConverter.GetBytes(m_generalFlagWord.Value), 0, image, 172, 4)
-            Array.Copy(BitConverter.GetBytes(m_alarmFlagWord.Value), 0, image, 176, 4)
+            Array.Copy(BitConverter.GetBytes(m_generalFlags.Value), 0, image, 172, 4)
+            Array.Copy(BitConverter.GetBytes(m_alarmFlags.Value), 0, image, 176, 4)
             Array.Copy(BitConverter.GetBytes(m_scanRate), 0, image, 180, 4)
             Array.Copy(m_textEncoding.GetBytes(m_name.PadRight(20)), 0, image, 184, 20)
             Array.Copy(m_textEncoding.GetBytes(m_synonym1.PadRight(20)), 0, image, 204, 20)
@@ -444,17 +455,17 @@ Public Class PointDefinition
             Array.Copy(m_textEncoding.GetBytes(m_pager.PadRight(30)), 0, image, 310, 30)
             Array.Copy(m_textEncoding.GetBytes(m_phone.PadRight(30)), 0, image, 340, 30)
             Array.Copy(m_textEncoding.GetBytes(m_remarks.PadRight(128)), 0, image, 370, 128)
-            Select Case m_generalFlagWord.PointType
+            Select Case m_generalFlags.PointType
                 Case PointType.Analog
-                    Array.Copy(m_analogFields.BinaryImage, binaryInfo, MetadataAnalogFields.BinaryLength)
+                    Array.Copy(m_analogFields.BinaryImage, m_binaryInfo, MetadataAnalogFields.BinaryLength)
                 Case PointType.Digital
-                    Array.Copy(m_digitalFields.BinaryImage, binaryInfo, MetadataDigitalFields.BinaryLength)
+                    Array.Copy(m_digitalFields.BinaryImage, m_binaryInfo, MetadataDigitalFields.BinaryLength)
                 Case PointType.Composed
-                    Array.Copy(m_composedFields.BinaryImage, binaryInfo, MetadataComposedFields.BinaryLength)
+                    Array.Copy(m_composedFields.BinaryImage, m_binaryInfo, MetadataComposedFields.BinaryLength)
                 Case PointType.Constant
-                    Array.Copy(m_constantFields.BinaryImage, binaryInfo, MetadataConstantFields.BinaryLength)
+                    Array.Copy(m_constantFields.BinaryImage, m_binaryInfo, MetadataConstantFields.BinaryLength)
             End Select
-            Array.Copy(binaryInfo, 0, image, 498, 256)
+            Array.Copy(m_binaryInfo, 0, image, 498, 256)
 
             Return image
         End Get

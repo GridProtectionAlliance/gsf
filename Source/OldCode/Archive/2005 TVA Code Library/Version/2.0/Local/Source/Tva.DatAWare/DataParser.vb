@@ -74,7 +74,7 @@ Public Class DataParser
 
     End Sub
 
-    Public Sub Parse(ByVal source As Guid, ByVal data As Byte())
+    Public Sub Add(ByVal source As Guid, ByVal data As Byte())
 
         m_dataQueue.Add(source, data)
 

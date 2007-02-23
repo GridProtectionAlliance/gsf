@@ -38,17 +38,7 @@ Public Class MetadataDigitalFields
 
         If textEncoding IsNot Nothing Then m_textEncoding = textEncoding Else m_textEncoding = Encoding.Default
 
-        If binaryInfo IsNot Nothing Then
-            If binaryInfo.Length >= BinaryLength Then
-                m_setDescription = m_textEncoding.GetString(binaryInfo, 0, 13).Trim()
-                m_clearDescription = m_textEncoding.GetString(binaryInfo, 13, 13).Trim()
-                m_alarmState = BitConverter.ToInt16(binaryInfo, 26)
-            Else
-                Throw New ArgumentException("Binary info size is too small.")
-            End If
-        Else
-            Throw New ArgumentNullException("binaryInfo")
-        End If
+        Update(binaryInfo)
 
     End Sub
 
@@ -99,5 +89,21 @@ Public Class MetadataDigitalFields
             Return image
         End Get
     End Property
+
+    Public Sub Update(ByVal binaryInfo As Byte())
+
+        If binaryInfo IsNot Nothing Then
+            If binaryInfo.Length >= BinaryLength Then
+                m_setDescription = m_textEncoding.GetString(binaryInfo, 0, 13).Trim()
+                m_clearDescription = m_textEncoding.GetString(binaryInfo, 13, 13).Trim()
+                m_alarmState = BitConverter.ToInt16(binaryInfo, 26)
+            Else
+                Throw New ArgumentException("Binary info size is too small.")
+            End If
+        Else
+            Throw New ArgumentNullException("binaryInfo")
+        End If
+
+    End Sub
 
 End Class
