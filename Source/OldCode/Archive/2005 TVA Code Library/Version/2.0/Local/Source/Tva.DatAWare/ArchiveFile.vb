@@ -7,7 +7,6 @@ Imports Tva.IO.FilePath
 
 <ToolboxBitmap(GetType(ArchiveFile))> _
 Public Class ArchiveFile
-    Implements ISupportInitialize
 
 #Region " Member Declaration "
 
@@ -133,24 +132,6 @@ Public Class ArchiveFile
         Return Convert.ToInt32((fileSize * 1024) / blockSize)
 
     End Function
-
-#Region " ISupportInitialize Implementation "
-
-    Public Sub BeginInit() Implements System.ComponentModel.ISupportInitialize.BeginInit
-
-        ' We don't need to do anything before the component is initialized.
-
-    End Sub
-
-    Public Sub EndInit() Implements System.ComponentModel.ISupportInitialize.EndInit
-
-        If Not DesignMode Then
-            Open()
-        End If
-
-    End Sub
-
-#End Region
 
 #End Region
 

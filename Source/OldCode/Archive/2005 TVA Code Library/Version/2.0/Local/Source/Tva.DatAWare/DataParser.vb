@@ -8,7 +8,6 @@ Imports Tva.DatAWare.Packets
 
 <ToolboxBitmap(GetType(DataParser)), DefaultEvent("DataParsed")> _
 Public Class DataParser
-    Implements ISupportInitialize
 
 #Region " Member Declaration "
 
@@ -129,22 +128,6 @@ Public Class DataParser
     End Class
 
 #End Region
-
-#End Region
-
-#Region " ISupportInitialize Implementation "
-
-    Public Sub BeginInit() Implements System.ComponentModel.ISupportInitialize.BeginInit
-
-    End Sub
-
-    Public Sub EndInit() Implements System.ComponentModel.ISupportInitialize.EndInit
-
-        If Not DesignMode Then
-            Start()
-        End If
-
-    End Sub
 
 #End Region
 
