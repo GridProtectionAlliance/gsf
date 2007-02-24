@@ -38,6 +38,7 @@ Public Class PointData
     Private m_tTag As TimeTag
     Private m_value As Single
     Private m_flags As Int32
+    Private m_definition As PointDefinition
 
     Private Const QualityMask As Int32 = Bit0 Or Bit1 Or Bit2 Or Bit3 Or Bit4
     Private Const TimeZoneIndexMask As Int32 = Bit5 Or Bit6 Or Bit7 Or Bit8 Or Bit9 Or Bit10
@@ -50,6 +51,12 @@ Public Class PointData
     Public Const BinaryLength As Integer = 16
 
 #Region " Constructors "
+
+    Public Sub New(ByVal binaryImage As Byte())
+
+        MyClass.New(binaryImage, 0)
+
+    End Sub
 
     Public Sub New(ByVal binaryImage As Byte(), ByVal startIndex As Integer)
 
@@ -133,6 +140,15 @@ Public Class PointData
         End Get
         Set(ByVal value As Quality)
             m_flags = (m_flags Or value)
+        End Set
+    End Property
+
+    Public Property Definition() As PointDefinition
+        Get
+            Return m_definition
+        End Get
+        Set(ByVal value As PointDefinition)
+            m_definition = value
         End Set
     End Property
 
