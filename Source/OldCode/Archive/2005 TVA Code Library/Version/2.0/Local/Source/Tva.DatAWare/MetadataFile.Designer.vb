@@ -19,8 +19,8 @@ Partial Class MetadataFile
 
         m_name = Me.GetType().Name & Extension
         m_initialRecordCount = 1500
-        m_saveOnClose = True
-        m_analyzeOnSave = True
+        m_saveOnClose = False
+        m_analyzeOnSave = False
         m_autoSaveInterval = -1
         m_autoAnalyzeInterval = -1
         m_autoSaveTimer = New System.Timers.Timer()

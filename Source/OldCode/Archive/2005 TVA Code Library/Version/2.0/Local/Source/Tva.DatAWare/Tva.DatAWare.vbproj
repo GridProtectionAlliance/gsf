@@ -70,6 +70,7 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Enumerations.vb" />
+    <Compile Include="IPointData.vb" />
     <Compile Include="Legacy Interfaces\Common.vb">
       <SubType>Code</SubType>
     </Compile>
@@ -113,7 +114,7 @@
     </Compile>
     <Compile Include="MetadataGeneralFlags.vb" />
     <Compile Include="My Project\AssemblyInfo.vb" />
-    <Compile Include="PointData.vb" />
+    <Compile Include="ExtendedPointData.vb" />
     <Compile Include="DataProcessor.Designer.vb">
       <DependentUpon>DataProcessor.vb</DependentUpon>
     </Compile>
@@ -125,7 +126,9 @@
     <Compile Include="Packets\IPacket.vb" />
     <Compile Include="Packets\PacketBase.vb" />
     <Compile Include="Packets\StandardPacket.vb" />
+    <Compile Include="PointDataBase.vb" />
     <Compile Include="PointDefinition.vb" />
+    <Compile Include="StandardPointData.vb" />
     <Compile Include="TimeTag.vb" />
   </ItemGroup>
   <ItemGroup>

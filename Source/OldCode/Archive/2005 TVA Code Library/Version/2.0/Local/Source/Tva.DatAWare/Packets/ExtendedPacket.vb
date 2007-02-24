@@ -219,7 +219,7 @@ Namespace Packets
                 Convert.ToInt32(m_minute), Convert.ToInt32(m_second), _
                 Convert.ToInt32(m_millisecond), DateTimeKind.Utc)
 
-            Return New PointData(timestamp, m_value, m_quality).BinaryImage
+            'Return New ExtendedPointData(timestamp, m_value, m_quality).BinaryImage
 
         End Function
 

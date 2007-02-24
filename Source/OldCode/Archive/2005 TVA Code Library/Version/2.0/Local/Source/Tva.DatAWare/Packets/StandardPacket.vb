@@ -121,7 +121,7 @@ Namespace Packets
 
         Public Overrides Function GetSaveData() As Byte()
 
-            Return New PointData(m_timeTag, m_value, m_quality).BinaryImage
+            'Return New ExtendedPointData(m_timeTag, m_value, m_quality).BinaryImage
 
         End Function
 
