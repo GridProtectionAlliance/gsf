@@ -133,13 +133,19 @@ Public Class ArchiveFile
 
     Public Function Read(ByVal pointIndex As Integer) As List(Of StandardPointData)
 
+        Return Nothing
+
     End Function
 
     Public Function Read(ByVal pointIndex As Integer, ByVal startTime As System.DateTime) As List(Of StandardPointData)
 
+        Return Nothing
+
     End Function
 
     Public Function Read(ByVal pointIndex As Integer, ByVal startTime As System.DateTime, ByVal endTime As System.DateTime) As List(Of StandardPointData)
+
+        Return Nothing
 
     End Function
 

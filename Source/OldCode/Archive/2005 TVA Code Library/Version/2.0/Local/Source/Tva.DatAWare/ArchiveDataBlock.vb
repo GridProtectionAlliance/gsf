@@ -45,6 +45,8 @@ Public Class ArchiveDataBlock
 
     Public Function Read() As List(Of StandardPointData)
 
+        Return Nothing
+
     End Function
 
     Public Sub Write(ByVal pointData As StandardPointData)
