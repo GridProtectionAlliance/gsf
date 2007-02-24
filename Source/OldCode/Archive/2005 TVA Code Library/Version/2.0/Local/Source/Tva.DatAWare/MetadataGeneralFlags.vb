@@ -36,7 +36,7 @@ Public Class MetadataGeneralFlags
             Return CType(m_flagWord And PointTypeMask, PointType)
         End Get
         Set(ByVal value As PointType)
-            m_flagWord = (m_flagWord Or value)
+            m_flagWord = (m_flagWord And Not PointTypeMask Or value)
         End Set
     End Property
 

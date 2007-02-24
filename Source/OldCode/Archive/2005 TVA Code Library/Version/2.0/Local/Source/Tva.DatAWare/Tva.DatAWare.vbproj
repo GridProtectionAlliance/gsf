@@ -54,6 +54,7 @@
     <Import Include="Tva.Common" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ArchiveDataBlock.vb" />
     <Compile Include="ArchiveDataBlockPointer.vb" />
     <Compile Include="ArchiveFile.Designer.vb">
       <DependentUpon>ArchiveFile.vb</DependentUpon>

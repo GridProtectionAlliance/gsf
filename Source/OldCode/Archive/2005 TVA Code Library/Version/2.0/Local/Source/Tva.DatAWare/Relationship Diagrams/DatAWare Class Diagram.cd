@@ -19,13 +19,11 @@
     <Position X="6" Y="7.5" Width="1.75" />
     <TypeIdentifier>
       <FileName>ArchiveFile.vb</FileName>
-      <HashCode>MAAAAIAAACCAoAEEAICAEAQCAgAAAQAAAAAAQCKAQAA=</HashCode>
+      <HashCode>MAAAAIAAACCAoAEEAICAEAQCAgAAAQAAAAAAQCKAAAA=</HashCode>
     </TypeIdentifier>
     <Members>
-      <Method Name="BeginInit" Hidden="true" />
       <Field Name="components" Hidden="true" />
       <Method Name="Dispose" Hidden="true" />
-      <Method Name="EndInit" Hidden="true" />
       <Field Name="Extension" Hidden="true" />
       <Method Name="InitializeComponent" Hidden="true" />
       <Field Name="m_blockSize" Hidden="true" />
@@ -36,7 +34,6 @@
       <Field Name="m_size" Hidden="true" />
       <Method Name="New" Hidden="true" />
     </Members>
-    <Lollipop Position="0.2" />
   </Class>
   <Class Name="Tva.DatAWare.ArchiveFileAllocationTable">
     <Position X="8" Y="7.5" Width="2.5" />
@@ -71,13 +68,11 @@
     <Position X="12.25" Y="7.5" Width="1.5" />
     <TypeIdentifier>
       <FileName>DataParser.vb</FileName>
-      <HashCode>AAIAIAABACAAAAECAACAAAACAAAAAIAAIAAAAAAAQAA=</HashCode>
+      <HashCode>AAIAIAABACAAAAECAACAAAACAAAAAIAAIAAAAAAAAAA=</HashCode>
     </TypeIdentifier>
     <Members>
-      <Method Name="BeginInit" Hidden="true" />
       <Field Name="components" Hidden="true" />
       <Method Name="Dispose" Hidden="true" />
-      <Method Name="EndInit" Hidden="true" />
       <Method Name="InitializeComponent" Hidden="true" />
       <Field Name="m_dataQueue" Hidden="true" />
       <Field Name="m_packetTypes" Hidden="true" />
@@ -95,7 +90,6 @@
         </TypeIdentifier>
       </Class>
     </NestedTypes>
-    <Lollipop Position="0.2" />
   </Class>
   <Class Name="Tva.DatAWare.MetadataAlarmFlags">
     <Position X="12.25" Y="0.5" Width="2.25" />
@@ -234,24 +228,6 @@
       <Field Name="UsedMask" Hidden="true" />
     </Members>
   </Class>
-  <Class Name="Tva.DatAWare.PointData" BaseTypeListCollapsed="true">
-    <Position X="12.25" Y="10.75" Width="1.5" />
-    <TypeIdentifier>
-      <FileName>PointData.vb</FileName>
-      <HashCode>AAAQAAAAAEAAAARAAAAgAAgBQAQACAAAAAAgAAAACAA=</HashCode>
-    </TypeIdentifier>
-    <Members>
-      <Field Name="BinaryLength" Hidden="true" />
-      <Field Name="DaylightSavingsTimeMask" Hidden="true" />
-      <Field Name="m_flags" Hidden="true" />
-      <Field Name="m_tTag" Hidden="true" />
-      <Field Name="m_value" Hidden="true" />
-      <Method Name="New" Hidden="true" />
-      <Field Name="QualityMask" Hidden="true" />
-      <Field Name="TimeZoneIndexMask" Hidden="true" />
-    </Members>
-    <Lollipop Position="0.2" />
-  </Class>
   <Class Name="Tva.DatAWare.PointDefinition" BaseTypeListCollapsed="true">
     <Position X="8" Y="0.5" Width="2" />
     <TypeIdentifier>
@@ -295,7 +271,7 @@
     <Lollipop Position="0.2" />
   </Class>
   <Class Name="Tva.DatAWare.TimeTag">
-    <Position X="14.25" Y="10.75" Width="1.5" />
+    <Position X="12.25" Y="10.75" Width="1.5" />
     <TypeIdentifier>
       <FileName>TimeTag.vb</FileName>
       <HashCode>AAIAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAgAAAAAAAAA=</HashCode>
@@ -371,11 +347,46 @@
       <Compartment Name="Fields" Collapsed="true" />
     </Compartments>
   </Class>
+  <Class Name="Tva.DatAWare.PointDataBase">
+    <Position X="17.5" Y="7.5" Width="1.5" />
+    <TypeIdentifier>
+      <FileName>PointDataBase.vb</FileName>
+      <HashCode>AAAABAAAAEAAAARAAAAgAAgBQAQAAAAAAAAgAAAACAA=</HashCode>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="Tva.DatAWare.StandardPointData">
+    <Position X="16.25" Y="11.5" Width="1.5" />
+    <TypeIdentifier>
+      <FileName>StandardPointData.vb</FileName>
+      <HashCode>AAAAAAAAAACAAAAAAAAAAAABQAAAAAAAAAAAAAAAACA=</HashCode>
+    </TypeIdentifier>
+    <Members>
+      <Method Name="New" Hidden="true" />
+    </Members>
+  </Class>
+  <Class Name="Tva.DatAWare.ExtendedPointData">
+    <Position X="18.5" Y="11.5" Width="1.5" />
+    <TypeIdentifier>
+      <FileName>ExtendedPointData.vb</FileName>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAABQAAAAAAAAAAAAAAAAAA=</HashCode>
+    </TypeIdentifier>
+    <Members>
+      <Method Name="New" Hidden="true" />
+    </Members>
+  </Class>
   <Interface Name="Tva.DatAWare.Packets.IPacket">
     <Position X="2.25" Y="0.5" Width="1.5" />
     <TypeIdentifier>
       <FileName>Packets\IPacket.vb</FileName>
       <HashCode>AAAACAAQAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAgAA=</HashCode>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="Tva.DatAWare.IPointData">
+    <Position X="19.25" Y="7.5" Width="1.5" />
+    <TypeIdentifier>
+      <FileName>IPointData.vb</FileName>
+      <HashCode>AAAABAAAAAAAAABAAAAgAAAAQAAAAAAAAAAgAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Interface>
   <Enum Name="Tva.DatAWare.Quality">

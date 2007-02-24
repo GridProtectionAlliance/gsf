@@ -14,8 +14,9 @@ Public Class ArchiveFile
     Private m_size As Double
     Private m_blockSize As Integer
     Private m_saveOnClose As Boolean
-    Private m_fileStream As FileStream
     Private m_fat As ArchiveFileAllocationTable
+    Private m_fileStream As FileStream
+    Private m_activeDataBlocks As Dictionary(Of Integer, ArchiveDataBlock)
 
 #End Region
 
@@ -95,25 +96,28 @@ Public Class ArchiveFile
 
     Public Sub Open()
 
-        If File.Exists(m_name) Then
-            ' File has been created already, so we just need to read it.
-            m_fileStream = New FileStream(m_name, FileMode.Open)
-            m_fat = New ArchiveFileAllocationTable(m_fileStream)
-        Else
-            ' File does not exist, so we have to create it and initialize it.
-            m_fileStream = New FileStream(m_name, FileMode.Create)
-            m_fat = New ArchiveFileAllocationTable(m_blockSize, MaximumDataBlocks(m_size, m_blockSize))
-            WriteFileAllocationTable()
+        If Not Me.IsOpen Then
+            If File.Exists(m_name) Then
+                ' File has been created already, so we just need to read it.
+                m_fileStream = New FileStream(m_name, FileMode.Open)
+                m_fat = New ArchiveFileAllocationTable(m_fileStream)
+            Else
+                ' File does not exist, so we have to create it and initialize it.
+                m_fileStream = New FileStream(m_name, FileMode.Create)
+                m_fat = New ArchiveFileAllocationTable(m_fileStream, m_blockSize, MaximumDataBlocks(m_size, m_blockSize))
+                WriteFileAllocationTable()
+            End If
+            m_size = m_fileStream.Length / (1024 * 1024)
+            m_blockSize = m_fat.DataBlockSize
         End If
-        m_size = m_fileStream.Length / (1024 * 1024)
-        m_blockSize = m_fat.DataBlockSize
-
+        
     End Sub
 
     Public Sub Close()
 
-        If m_saveOnClose Then Save()
-        If m_fileStream IsNot Nothing Then
+        If Me.IsOpen Then
+            If m_saveOnClose Then Save()
+
             m_fileStream.Close()
             m_fileStream = Nothing
         End If
@@ -126,6 +130,41 @@ Public Class ArchiveFile
         WriteFileAllocationTable()
 
     End Sub
+
+    Public Function Read(ByVal pointIndex As Integer) As List(Of StandardPointData)
+
+    End Function
+
+    Public Function Read(ByVal pointIndex As Integer, ByVal startTime As System.DateTime) As List(Of StandardPointData)
+
+    End Function
+
+    Public Function Read(ByVal pointIndex As Integer, ByVal startTime As System.DateTime, ByVal endTime As System.DateTime) As List(Of StandardPointData)
+
+    End Function
+
+    Public Sub Write(ByVal pointData As StandardPointData)
+
+        If pointData.Definition IsNot Nothing Then
+            ' TODO: Perform compression here.
+            Dim dataBlock As ArchiveDataBlock = m_activeDataBlocks(pointData.Definition.Index)
+            If (dataBlock IsNot Nothing AndAlso dataBlock.IsFull) OrElse dataBlock Is Nothing Then
+                ' We either don't have a active data block where we can archive the point data or we have a active
+                ' data block but it is full, so we have to request a new data block from the FAT.
+                dataBlock = GetDataBlock(m_fat.RequestDataBlock(pointData.Definition.Index, pointData.TTag))
+                m_activeDataBlocks(pointData.Definition.Index) = dataBlock
+            End If
+        Else
+            Throw New ArgumentException("Definition property for point data is not set.")
+        End If
+
+    End Sub
+
+    Public Function GetDataBlock(ByVal blockPointer As ArchiveDataBlockPointer) As ArchiveDataBlock
+
+        Return New ArchiveDataBlock(m_fileStream, m_fat.GetDataBlockLocation(blockPointer), m_fat.DataBlockSize)
+
+    End Function
 
     Public Shared Function MaximumDataBlocks(ByVal fileSize As Double, ByVal blockSize As Integer) As Integer
 

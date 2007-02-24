@@ -10,6 +10,8 @@ Public Interface IPointData
 
     Property Flags() As Int32
 
+    Property Definition() As PointDefinition
+
     ReadOnly Property BinaryImage() As Byte()
 
 End Interface

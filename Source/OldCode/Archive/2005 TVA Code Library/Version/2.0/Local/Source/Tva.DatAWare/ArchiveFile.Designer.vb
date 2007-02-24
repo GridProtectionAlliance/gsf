@@ -21,6 +21,7 @@ Partial Class ArchiveFile
         m_size = 650D
         m_blockSize = 8
         m_saveOnClose = True
+        m_activeDataBlocks = New Dictionary(Of Integer, ArchiveDataBlock)()
 
     End Sub
 

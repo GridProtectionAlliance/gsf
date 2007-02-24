@@ -36,23 +36,6 @@ Public Class ArchiveFileAllocationTable
     ''' <summary>
     ''' 
     ''' </summary>
-    ''' <param name="blockSize"></param>
-    ''' <param name="blockCount"></param>
-    ''' <remarks>Used when creating new archive file.</remarks>
-    Public Sub New(ByVal blockSize As Integer, ByVal blockCount As Integer)
-
-        MyClass.New()
-        m_dataBlockSize = blockSize
-        m_dataBlockCount = blockCount
-        For i As Integer = 1 To m_dataBlockCount
-            m_dataBlockPointers.Add(New ArchiveDataBlockPointer())
-        Next
-
-    End Sub
-
-    ''' <summary>
-    ''' 
-    ''' </summary>
     ''' <param name="archiveFileStream"></param>
     ''' <remarks>Used when reading existing archive file.</remarks>
     Public Sub New(ByVal archiveFileStream As Stream)
@@ -78,6 +61,24 @@ Public Class ArchiveFileAllocationTable
         Else
             Throw New ArgumentNullException("archiveFileStream")
         End If
+
+    End Sub
+
+    ''' <summary>
+    ''' 
+    ''' </summary>
+    ''' <param name="archiveFileStream"></param>
+    ''' <param name="blockSize"></param>
+    ''' <param name="blockCount"></param>
+    ''' <remarks>Used when creating new archive file.</remarks>
+    Public Sub New(ByVal archiveFileStream As FileStream, ByVal blockSize As Integer, ByVal blockCount As Integer)
+
+        MyClass.New()
+        m_dataBlockSize = blockSize
+        m_dataBlockCount = blockCount
+        For i As Integer = 1 To m_dataBlockCount
+            m_dataBlockPointers.Add(New ArchiveDataBlockPointer())
+        Next
 
     End Sub
 
@@ -171,6 +172,15 @@ Public Class ArchiveFileAllocationTable
             Return image
         End Get
     End Property
+
+    Public Function RequestDataBlock(ByVal pointIndex As Integer, ByVal startTime As TimeTag) As ArchiveDataBlockPointer
+
+        Dim unusedPointerIndex As Integer = m_dataBlockPointers.IndexOf(New ArchiveDataBlockPointer())
+        m_dataBlockPointers(unusedPointerIndex).PointIndex = pointIndex
+        m_dataBlockPointers(unusedPointerIndex).StartTime = startTime
+        Return m_dataBlockPointers(unusedPointerIndex)
+
+    End Function
 
     Public Function GetDataBlockLocation(ByVal pointID As Integer, ByVal startTime As TimeTag) As Long
 

@@ -10,6 +10,7 @@ Public MustInherit Class PointDataBase
     Private m_tTag As TimeTag
     Private m_value As Single
     Private m_flags As Int32
+    Private m_definition As PointDefinition
 
     Private Const QualityMask As Int32 = Bit0 Or Bit1 Or Bit2 Or Bit3 Or Bit4
 
@@ -52,6 +53,15 @@ Public MustInherit Class PointDataBase
         End Get
         Set(ByVal value As Int32)
             m_flags = value
+        End Set
+    End Property
+
+    Public Property Definition() As PointDefinition Implements IPointData.Definition
+        Get
+            Return m_definition
+        End Get
+        Set(ByVal value As PointDefinition)
+            m_definition = value
         End Set
     End Property
 
