@@ -17,6 +17,7 @@ Public Class ArchiveFileAllocationTable
     Private m_dataBlockSize As Integer
     Private m_dataBlockCount As Integer
     Private m_dataBlockPointers As List(Of ArchiveDataBlockPointer)
+    Private m_activeDataBlocks As Dictionary(Of Integer, ArchiveDataBlock)
 
     Private Const MinimumBinaryLength As Integer = 32
 
@@ -28,6 +29,7 @@ Public Class ArchiveFileAllocationTable
         m_fileStartTime = New TimeTag(System.DateTime.Now)
         m_fileEndTime = New TimeTag(0D)
         m_dataBlockPointers = New List(Of ArchiveDataBlockPointer)()
+        m_activeDataBlocks = New Dictionary(Of Integer, ArchiveDataBlock)()
 
     End Sub
 
@@ -81,12 +83,6 @@ Public Class ArchiveFileAllocationTable
         Next
 
     End Sub
-
-    Public ReadOnly Property DataBlockPointers() As List(Of ArchiveDataBlockPointer)
-        Get
-            Return m_dataBlockPointers
-        End Get
-    End Property
 
     Public Property FileStartTime() As TimeTag
         Get
@@ -148,12 +144,26 @@ Public Class ArchiveFileAllocationTable
         End Set
     End Property
 
+    Public ReadOnly Property DataBlockPointers() As List(Of ArchiveDataBlockPointer)
+        Get
+            Return m_dataBlockPointers
+        End Get
+    End Property
+
+    Public ReadOnly Property ActiveDataBlocks() As Dictionary(Of Integer, ArchiveDataBlock)
+        Get
+            Return m_activeDataBlocks
+        End Get
+    End Property
+
+    ' Will not be required when Save() method is provided.
     Public ReadOnly Property BinaryLength() As Integer
         Get
             Return (m_dataBlockPointers.Count * ArchiveDataBlockPointer.BinaryLength) + MinimumBinaryLength
         End Get
     End Property
 
+    ' Will not be required when Save() method is provided.
     Public ReadOnly Property BinaryImage() As Byte()
         Get
             Dim pointersBinaryLength As Integer = Me.BinaryLength - MinimumBinaryLength
