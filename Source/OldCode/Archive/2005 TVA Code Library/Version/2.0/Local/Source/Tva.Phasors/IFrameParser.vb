@@ -35,5 +35,6 @@ Public Interface IFrameParser
     Property ConfigurationFrame() As IConfigurationFrame
     Sub Write(ByVal buffer As Byte(), ByVal offset As Int32, ByVal count As Int32)
     ReadOnly Property Status() As String
+    Property ConnectionParameters() As IConnectionParameters
 
 End Interface

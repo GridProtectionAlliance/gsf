@@ -33,7 +33,6 @@ Namespace BpaPdcStream
         Inherits Stream
         Implements IFrameParser
 
-
 #Region " Public Member Declarations "
 
         Public Event ReceivedConfigurationFrame(ByVal frame As ConfigurationFrame)
@@ -58,6 +57,7 @@ Namespace BpaPdcStream
         Private m_totalFramesReceived As Long
         Private m_configurationFrame As ConfigurationFrame
         Private m_initialized As Boolean
+        Private m_iniFileName As String
 
         Private Const BufferSize As Int32 = 4096   ' 4Kb buffer
 
@@ -198,6 +198,26 @@ Namespace BpaPdcStream
                     Return .ToString()
                 End With
             End Get
+        End Property
+
+        Private m_connectionParameters As IConnectionParameters
+
+        Public Property ConnectionParameters() As IConnectionParameters Implements IFrameParser.ConnectionParameters
+            Get
+                Return m_connectionParameters
+            End Get
+            Set(ByVal value As IConnectionParameters)
+                Dim parameters As BpaPdcStream.ConnectionParameters = TryCast(value, BpaPdcStream.ConnectionParameters)
+
+                If parameters IsNot Nothing Then
+                    m_connectionParameters = parameters
+
+                    ' Assign new incoming connection parameter values
+                    With parameters
+                        m_iniFileName = .ConfigurationFileName
+                    End With
+                End If
+            End Set
         End Property
 
 #Region " Unimplemented Stream Overrides "

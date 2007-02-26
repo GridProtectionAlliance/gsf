@@ -55,6 +55,7 @@ Namespace FNet
         Private m_configurationFrame As ConfigurationFrame
         Private m_frameRate As Int16
         Private m_nominalFrequency As LineFrequency
+        Private m_stationName As String
 
 #End Region
 
@@ -63,13 +64,13 @@ Namespace FNet
         Public Sub New()
 
             ' FNet devices default to 10 frames per second and 60Hz
-            MyClass.New(10, LineFrequency.Hz60)
+            MyClass.New(DefaultFrameRate, DefaultNominalFrequency)
 
         End Sub
 
         Public Sub New(ByVal configurationFrame As IConfigurationFrame)
 
-            MyClass.New(configurationFrame.FrameRate, LineFrequency.Hz60)
+            MyClass.New(configurationFrame.FrameRate, DefaultNominalFrequency)
 
             m_configurationFrame = CastToDerivedConfigurationFrame(configurationFrame)
 
@@ -135,6 +136,35 @@ Namespace FNet
             End Set
         End Property
 
+        Public Property StationName() As String
+            Get
+                Return m_stationName
+            End Get
+            Set(ByVal value As String)
+                m_stationName = value
+            End Set
+        End Property
+
+        Public Overrides Property ConnectionParameters() As IConnectionParameters
+            Get
+                Return MyBase.ConnectionParameters
+            End Get
+            Set(ByVal value As IConnectionParameters)
+                Dim parameters As FNet.ConnectionParameters = TryCast(value, FNet.ConnectionParameters)
+
+                If parameters IsNot Nothing Then
+                    MyBase.ConnectionParameters = parameters
+
+                    ' Assign new incoming connection parameter values
+                    With parameters
+                        m_frameRate = .FrameRate
+                        m_nominalFrequency = .NominalFrequency
+                        m_stationName = .StationName
+                    End With
+                End If
+            End Set
+        End Property
+
 #End Region
 
 #Region " Protected Methods Implementation "
@@ -172,7 +202,7 @@ Namespace FNet
                     Dim data As String() = RemoveDuplicateWhiteSpace(Encoding.ASCII.GetString(buffer, startByteIndex + 1, endByteIndex - startByteIndex - 1)).Split(" "c)
 
                     ' Create virtual configuration frame
-                    m_configurationFrame = New ConfigurationFrame(Convert.ToUInt16(data(Element.UnitID)), Date.Now.Ticks, m_frameRate, m_nominalFrequency)
+                    m_configurationFrame = New ConfigurationFrame(Convert.ToUInt16(data(Element.UnitID)), Date.Now.Ticks, m_frameRate, m_nominalFrequency, m_stationName)
 
                     ' Notify clients of new configuration frame
                     RaiseReceivedConfigurationFrame(m_configurationFrame)

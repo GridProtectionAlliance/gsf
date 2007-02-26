@@ -44,6 +44,9 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
+    <Reference Include="System.Design" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
   </ItemGroup>
   <ItemGroup>
     <Import Include="Microsoft.VisualBasic" />
@@ -66,6 +69,7 @@
     <Compile Include="BpaPdcStream\ConfigurationCell.vb" />
     <Compile Include="BpaPdcStream\ConfigurationCellCollection.vb" />
     <Compile Include="BpaPdcStream\ConfigurationFrame.vb" />
+    <Compile Include="BpaPdcStream\ConnectionParameters.vb" />
     <Compile Include="BpaPdcStream\DataCell.vb" />
     <Compile Include="BpaPdcStream\DataCellCollection.vb" />
     <Compile Include="BpaPdcStream\DataFrame.vb" />
@@ -104,10 +108,12 @@
     <Compile Include="CommandCell.vb" />
     <Compile Include="CommandFrameBase.vb" />
     <Compile Include="ChannelValueMeasurement.vb" />
+    <Compile Include="ConnectionParametersBase.vb" />
     <Compile Include="FNet\Common.vb" />
     <Compile Include="FNet\ConfigurationCell.vb" />
     <Compile Include="FNet\ConfigurationCellCollection.vb" />
     <Compile Include="FNet\ConfigurationFrame.vb" />
+    <Compile Include="FNet\ConnectionParameters.vb" />
     <Compile Include="FNet\DataCell.vb" />
     <Compile Include="FNet\DataCellCollection.vb" />
     <Compile Include="FNet\DataFrame.vb" />
@@ -118,6 +124,7 @@
     <Compile Include="FNet\PhasorDefinition.vb" />
     <Compile Include="FNet\PhasorValue.vb" />
     <Compile Include="FrameParserBase.vb" />
+    <Compile Include="IConnectionParameters.vb" />
     <Compile Include="IFrameParser.vb" />
     <Compile Include="Enumerations.vb" />
     <Compile Include="MultiProtocolFrameParser.vb" />

@@ -37,12 +37,6 @@ Namespace FNet
 
         End Sub
 
-        Public Sub New(ByVal idCode As UInt16, ByVal ticks As Long, ByVal frameRate As Int16, ByVal nominalFrequency As LineFrequency)
-
-            MyClass.New(idCode, ticks, frameRate, nominalFrequency, "FNET Unit-" & idCode)
-
-        End Sub
-
         Public Sub New(ByVal idCode As UInt16, ByVal ticks As Long, ByVal frameRate As Int16, ByVal nominalFrequency As LineFrequency, ByVal stationName As String)
 
             MyBase.New(idCode, New ConfigurationCellCollection, ticks, frameRate)
@@ -51,7 +45,12 @@ Namespace FNet
             Cells.Add(New ConfigurationCell(Me, nominalFrequency))
 
             With Cells(0)
-                .StationName = stationName
+                ' Assign station name
+                If String.IsNullOrEmpty(stationName) Then
+                    .StationName = "FNET Unit-" & idCode
+                Else
+                    .StationName = stationName
+                End If
 
                 ' Add a single frequency definition
                 .FrequencyDefinition = New FrequencyDefinition(DirectCast(.This, ConfigurationCell))

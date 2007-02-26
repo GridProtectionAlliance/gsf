@@ -26,21 +26,28 @@ Namespace FNet
 
         End Sub
 
-        ''' <summary>Data frame start byte</summary>
+        ''' <summary>FNET data frame start byte</summary>
         Public Const StartByte As Byte = &H1
 
-        ''' <summary>Data frame start byte</summary>
+        ''' <summary>FNET data frame start byte</summary>
         Public Const EndByte As Byte = &H0
 
         ''' <summary>Absolute maximum number of possible phasor values that could fit into a data frame</summary>
         Public Const MaximumPhasorValues As Int32 = 1
 
         ''' <summary>Absolute maximum number of possible analog values that could fit into a data frame</summary>
-        ''' <remarks>IEEE 1344 doesn't support analog values</remarks>
+        ''' <remarks>FNET doesn't support analog values</remarks>
         Public Const MaximumAnalogValues As Int32 = 0
 
         ''' <summary>Absolute maximum number of possible digital values that could fit into a data frame</summary>
+        ''' <remarks>FNET doesn't support digital values</remarks>
         Public Const MaximumDigitalValues As Int32 = 0
+
+        ''' <summary>Default frame rate for FNET devices is 10 frames per second</summary>
+        Public Const DefaultFrameRate As Int16 = 10
+
+        ''' <summary>Default nominal frequency for FNET devices is 60Hz</summary>
+        Public Const DefaultNominalFrequency As LineFrequency = LineFrequency.Hz60
 
     End Class
 

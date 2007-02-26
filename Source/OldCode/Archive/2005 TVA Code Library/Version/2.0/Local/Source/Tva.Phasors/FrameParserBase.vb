@@ -213,6 +213,15 @@ Public MustInherit Class FrameParserBase
         End Get
     End Property
 
+    Public Overridable Property ConnectionParameters() As IConnectionParameters Implements IFrameParser.ConnectionParameters
+        Get
+            Return Nothing
+        End Get
+        Set(ByVal value As IConnectionParameters)
+            ' Nothing to do unless derived class overrides...
+        End Set
+    End Property
+
 #Region " Unimplemented Stream Overrides "
 
     ' This is a write only stream - so the following methods do not apply to this stream

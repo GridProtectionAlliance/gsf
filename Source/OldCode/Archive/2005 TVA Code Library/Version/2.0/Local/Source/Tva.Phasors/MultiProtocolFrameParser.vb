@@ -95,6 +95,7 @@ Public Class MultiProtocolFrameParser
     Private m_initialBytesReceived As Long
     Private m_deviceSupportsCommands As Boolean
     Private m_enabled As Boolean
+    Private m_connectionParameters As IConnectionParameters
 
 #End Region
 
@@ -140,6 +141,16 @@ Public Class MultiProtocolFrameParser
         Set(ByVal value As PhasorProtocol)
             m_phasorProtocol = value
             m_deviceSupportsCommands = GetDerivedCommandSupport()
+
+            ' Setup protocol specific connection parameters...
+            Select Case value
+                Case Phasors.PhasorProtocol.BpaPdcStream
+                    m_connectionParameters = (New BpaPdcStream.FrameParser).ConnectionParameters
+                Case Phasors.PhasorProtocol.FNet
+                    m_connectionParameters = (New FNet.FrameParser).ConnectionParameters
+                Case Else
+                    m_connectionParameters = Nothing
+            End Select
         End Set
     End Property
 
@@ -527,6 +538,18 @@ Public Class MultiProtocolFrameParser
                 Return .ToString()
             End With
         End Get
+    End Property
+
+    Public Property ConnectionParameters() As IConnectionParameters Implements IFrameParser.ConnectionParameters
+        Get
+            Return m_connectionParameters
+        End Get
+        Set(ByVal value As IConnectionParameters)
+            m_connectionParameters = value
+
+            ' Pass new connection parameters along to derived frame parser if instantiated
+            If m_frameParser IsNot Nothing Then m_frameParser.ConnectionParameters = value
+        End Set
     End Property
 
 #End Region
