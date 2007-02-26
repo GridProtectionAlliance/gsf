@@ -99,11 +99,11 @@ Public Class ArchiveFile
         If Not Me.IsOpen Then
             If File.Exists(m_name) Then
                 ' File has been created already, so we just need to read it.
-                m_fileStream = New FileStream(m_name, FileMode.Open)
+                m_fileStream = New FileStream(m_name, FileMode.Open, FileAccess.ReadWrite, FileShare.Read)
                 m_fat = New ArchiveFileAllocationTable(m_fileStream)
             Else
                 ' File does not exist, so we have to create it and initialize it.
-                m_fileStream = New FileStream(m_name, FileMode.Create)
+                m_fileStream = New FileStream(m_name, FileMode.Create, FileAccess.ReadWrite, FileShare.Read)
                 m_fat = New ArchiveFileAllocationTable(m_fileStream, m_blockSize, MaximumDataBlocks(m_size, m_blockSize))
                 m_fat.Persist()
             End If

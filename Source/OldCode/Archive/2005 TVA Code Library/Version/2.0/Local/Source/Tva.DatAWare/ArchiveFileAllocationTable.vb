@@ -199,15 +199,19 @@ Public Class ArchiveFileAllocationTable
 
     Public Function GetDataBlocks(ByVal pointIndex As Integer, ByVal startTime As TimeTag, ByVal endTime As TimeTag) As List(Of ArchiveDataBlock)
 
-        Dim matchingBlocks As List(Of ArchiveDataBlock) = Nothing
-        Dim matchingPointers As List(Of ArchiveDataBlockPointer) = Nothing
-
+        ' TODO: Look for optimizations...
         m_searchPointIndex = pointIndex
         m_searchStartTime = IIf(startTime IsNot Nothing, startTime, TimeTag.MinValue)
         m_searchEndTime = IIf(endTime IsNot Nothing, endTime, TimeTag.MaxValue)
-        matchingPointers = m_dataBlockPointers.FindAll(AddressOf FindDataBlockPointer)
 
-        Return Nothing
+        Dim blocks As List(Of ArchiveDataBlock) = New List(Of ArchiveDataBlock)()
+        Dim pointers As List(Of ArchiveDataBlockPointer) = m_dataBlockPointers.FindAll(AddressOf FindDataBlockPointer)
+
+        For i As Integer = 0 To pointers.Count - 1
+            blocks.Add(GetDataBlock(pointers(i)))
+        Next
+
+        Return blocks
 
     End Function
 

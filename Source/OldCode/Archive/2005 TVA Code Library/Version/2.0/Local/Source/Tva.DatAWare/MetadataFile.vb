@@ -126,7 +126,7 @@ Public Class MetadataFile
 
             If File.Exists(m_name) Then
                 ' File exists, so we'll open it.
-                m_fileStream = New FileStream(m_name, FileMode.Open)
+                m_fileStream = New FileStream(m_name, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite)
 
                 ' Once we have the file open, we'll process the file data.
                 If m_fileStream.Length Mod PointDefinition.BinaryLength = 0 Then
@@ -144,7 +144,7 @@ Public Class MetadataFile
                 End If
             Else
                 ' File doesn't exist, so we'll create it.
-                m_fileStream = New FileStream(m_name, FileMode.Create)
+                m_fileStream = New FileStream(m_name, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite)
 
                 ' Since we're working with a new file, we'll populate the point definition list with the default
                 ' number of point definitions. These points will be witten back to the file when Save() is called
