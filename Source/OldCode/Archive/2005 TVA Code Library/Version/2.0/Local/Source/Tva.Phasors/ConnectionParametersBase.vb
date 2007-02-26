@@ -15,6 +15,7 @@
 '
 '*******************************************************************************************************
 
+Imports System.ComponentModel
 Imports System.Runtime.Serialization
 
 ''' <summary>This class represents the common implementation of the protocol independent connection parameters base class.</summary>
@@ -27,6 +28,7 @@ Public MustInherit Class ConnectionParametersBase
 
     Implements IConnectionParameters
 
+    <Browsable(False)> _
     Public Overridable ReadOnly Property ValuesAreValid() As Boolean Implements IConnectionParameters.ValuesAreValid
         Get
             Return True
