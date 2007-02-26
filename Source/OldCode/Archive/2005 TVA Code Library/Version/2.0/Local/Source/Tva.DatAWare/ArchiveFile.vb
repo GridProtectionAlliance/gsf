@@ -145,6 +145,7 @@ Public Class ArchiveFile
 
     Public Function Read(ByVal pointIndex As Integer, ByVal startTime As System.DateTime, ByVal endTime As System.DateTime) As List(Of StandardPointData)
 
+        ' Use m_fat.FindDataBlocks(...) function here.
         Return Nothing
 
     End Function
@@ -154,12 +155,12 @@ Public Class ArchiveFile
         If pointData.Definition IsNot Nothing Then
             ' TODO: Perform compression here.
             Dim dataBlock As ArchiveDataBlock = m_activeDataBlocks(pointData.Definition.Index)
-            If (dataBlock IsNot Nothing AndAlso dataBlock.IsFull) OrElse dataBlock Is Nothing Then
-                ' We either don't have a active data block where we can archive the point data or we have a active
-                ' data block but it is full, so we have to request a new data block from the FAT.
-                dataBlock = m_fat.RequestDataBlock(pointData.Definition.Index, pointData.TTag)
-                m_activeDataBlocks(pointData.Definition.Index) = dataBlock
-            End If
+            'If (dataBlock IsNot Nothing AndAlso dataBlock.IsFull) OrElse dataBlock Is Nothing Then
+            '    ' We either don't have a active data block where we can archive the point data or we have a active
+            '    ' data block but it is full, so we have to request a new data block from the FAT.
+            '    dataBlock = m_fat.RequestDataBlock(pointData.Definition.Index, pointData.TTag)
+            '    m_activeDataBlocks(pointData.Definition.Index) = dataBlock
+            'End If
         Else
             Throw New ArgumentException("Definition property for point data is not set.")
         End If

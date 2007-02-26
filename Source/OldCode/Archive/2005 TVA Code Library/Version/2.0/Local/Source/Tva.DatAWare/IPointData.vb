@@ -12,6 +12,8 @@ Public Interface IPointData
 
     Property Definition() As PointDefinition
 
+    ReadOnly Property IsNull() As Boolean
+
     ReadOnly Property BinaryImage() As Byte()
 
 End Interface

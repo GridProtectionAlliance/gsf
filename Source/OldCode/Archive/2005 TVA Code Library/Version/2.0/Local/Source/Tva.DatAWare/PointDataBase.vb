@@ -65,6 +65,12 @@ Public MustInherit Class PointDataBase
         End Set
     End Property
 
+    Public ReadOnly Property IsNull() As Boolean Implements IPointData.IsNull
+        Get
+            Return m_tTag.CompareTo(TimeTag.MinValue) = 0
+        End Get
+    End Property
+
     Public MustOverride ReadOnly Property BinaryImage() As Byte() Implements IPointData.BinaryImage
 
 #Region " IComparable Implementation "

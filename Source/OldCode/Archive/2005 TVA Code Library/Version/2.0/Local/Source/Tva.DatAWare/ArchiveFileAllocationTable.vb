@@ -150,6 +150,7 @@ Public Class ArchiveFileAllocationTable
         End Set
     End Property
 
+    ' Delete this property...
     Public ReadOnly Property DataBlockPointers() As List(Of ArchiveDataBlockPointer)
         Get
             Return m_dataBlockPointers
@@ -167,39 +168,35 @@ Public Class ArchiveFileAllocationTable
 
     Public Function RequestDataBlock(ByVal pointIndex As Integer, ByVal startTime As TimeTag) As ArchiveDataBlock
 
-        ' TODO: Check allocated data blocks for empty space first.
-        If Not m_dataBlocksScanned.Contains(pointIndex) Then
-
+        ' Get the index of the first available data block's pointer.
+        Dim unusedPointerIndex As Integer = m_dataBlockPointers.IndexOf(New ArchiveDataBlockPointer())
+        If unusedPointerIndex >= 0 Then
+            ' Assign the data block to the specified point index.
+            m_dataBlockPointers(unusedPointerIndex).PointIndex = pointIndex
+            m_dataBlockPointers(unusedPointerIndex).StartTime = startTime
+            ' Get the data block that corresponds to data block pointer.
+            Return GetDataBlock(m_dataBlockPointers(unusedPointerIndex))
+        Else
+            Return Nothing
         End If
 
-        Dim unusedPointerIndex As Integer = m_dataBlockPointers.IndexOf(New ArchiveDataBlockPointer())
-        m_dataBlockPointers(unusedPointerIndex).PointIndex = pointIndex
-        m_dataBlockPointers(unusedPointerIndex).StartTime = startTime
-        Return GetDataBlock(m_dataBlockPointers(unusedPointerIndex))
+    End Function
+
+    Public Function FindDataBlocks(ByVal pointIndex As Integer) As List(Of ArchiveDataBlock)
+
+        Return FindDataBlocks(pointIndex, TimeTag.MinValue)
 
     End Function
 
-    Public Function GetDataBlock(ByVal pointID As Integer, ByVal startTime As TimeTag) As ArchiveDataBlock
+    Public Function FindDataBlocks(ByVal pointIndex As Integer, ByVal startTime As TimeTag) As List(Of ArchiveDataBlock)
 
-        Return GetDataBlock(New ArchiveDataBlockPointer(pointID, startTime))
-
-    End Function
-
-    Public Function GetDataBlock(ByVal blockPointer As ArchiveDataBlockPointer) As ArchiveDataBlock
-
-        Return New ArchiveDataBlock(m_fileStream, GetDataBlockLocation(blockPointer), m_dataBlockSize)
+        Return FindDataBlocks(pointIndex, startTime, TimeTag.MaxValue)
 
     End Function
 
-    Public Function GetDataBlocks(ByVal pointIndex As Integer) As List(Of ArchiveDataBlock)
+    Public Function FindDataBlocks(ByVal pointIndex As Integer, ByVal startTime As TimeTag, ByVal endTime As TimeTag) As List(Of ArchiveDataBlock)
 
-        Return GetDataBlocks(pointIndex, TimeTag.MinValue, TimeTag.MaxValue)
-
-    End Function
-
-    Public Function GetDataBlocks(ByVal pointIndex As Integer, ByVal startTime As TimeTag, ByVal endTime As TimeTag) As List(Of ArchiveDataBlock)
-
-        ' TODO: Look for optimizations...
+        ' Setup the search criteria that will be used for finding data block pointers.
         m_searchPointIndex = pointIndex
         m_searchStartTime = IIf(startTime IsNot Nothing, startTime, TimeTag.MinValue)
         m_searchEndTime = IIf(endTime IsNot Nothing, endTime, TimeTag.MaxValue)
@@ -207,6 +204,7 @@ Public Class ArchiveFileAllocationTable
         Dim blocks As List(Of ArchiveDataBlock) = New List(Of ArchiveDataBlock)()
         Dim pointers As List(Of ArchiveDataBlockPointer) = m_dataBlockPointers.FindAll(AddressOf FindDataBlockPointer)
 
+        ' Build a list of data blocks that correspond to the found data block pointers.
         For i As Integer = 0 To pointers.Count - 1
             blocks.Add(GetDataBlock(pointers(i)))
         Next
@@ -244,16 +242,26 @@ Public Class ArchiveFileAllocationTable
         End Get
     End Property
 
-    Private Function GetDataBlockLocation(ByVal pointID As Integer, ByVal startTime As TimeTag) As Long
+    Private Function GetDataBlock(ByVal blockPointer As ArchiveDataBlockPointer) As ArchiveDataBlock
 
-        Return GetDataBlockLocation(New ArchiveDataBlockPointer(pointID, startTime))
+        ' First, get the location of the data block corresponding to the specified data block pointer.
+        Dim location As Long = GetDataBlockLocation(blockPointer)
+        If location >= 0 Then
+            ' We have a valid location, so we'll create a data block instance using this information.
+            Return New ArchiveDataBlock(m_fileStream, location, m_dataBlockSize)
+        Else
+            ' We don't a valid location, so the specified data block pointer must not be valid.
+            Return Nothing
+        End If
 
     End Function
 
     Private Function GetDataBlockLocation(ByVal dataBlockPointer As ArchiveDataBlockPointer) As Long
 
+        ' First, we'll get the index of the specified data block pointer.
         Dim pointerIndex As Integer = m_dataBlockPointers.IndexOf(dataBlockPointer)
         If pointerIndex >= 0 Then
+            ' We calculate the data block's location based on the data block pointer's index.
             Return pointerIndex * (m_dataBlockSize * 1024)
         Else
             Return -1
