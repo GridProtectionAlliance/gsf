@@ -17,7 +17,11 @@ Public Class ArchiveFileAllocationTable
     Private m_dataBlockSize As Integer
     Private m_dataBlockCount As Integer
     Private m_dataBlockPointers As List(Of ArchiveDataBlockPointer)
-    Private m_activeDataBlocks As Dictionary(Of Integer, ArchiveDataBlock)
+    Private m_fileStream As FileStream
+    Private m_dataBlocksScanned As List(Of Integer) ' ???
+    Private m_searchPointIndex As Integer   ' <=|
+    Private m_searchStartTime As TimeTag    ' <=| Used for finding data block pointer in m_dataBlockPointers 
+    Private m_searchEndTime As TimeTag      ' <=|
 
     Private Const MinimumBinaryLength As Integer = 32
 
@@ -29,7 +33,7 @@ Public Class ArchiveFileAllocationTable
         m_fileStartTime = New TimeTag(System.DateTime.Now)
         m_fileEndTime = New TimeTag(0D)
         m_dataBlockPointers = New List(Of ArchiveDataBlockPointer)()
-        m_activeDataBlocks = New Dictionary(Of Integer, ArchiveDataBlock)()
+        m_dataBlocksScanned = New List(Of Integer)()
 
     End Sub
 
@@ -40,13 +44,14 @@ Public Class ArchiveFileAllocationTable
     ''' </summary>
     ''' <param name="archiveFileStream"></param>
     ''' <remarks>Used when reading existing archive file.</remarks>
-    Public Sub New(ByVal archiveFileStream As Stream)
+    Public Sub New(ByVal archiveFileStream As FileStream)
 
         MyClass.New()
         If archiveFileStream IsNot Nothing Then
+            m_fileStream = archiveFileStream
             Dim fixedFatData As Byte() = CreateArray(Of Byte)(MinimumBinaryLength)
-            archiveFileStream.Seek(-fixedFatData.Length, SeekOrigin.End)
-            archiveFileStream.Read(fixedFatData, 0, fixedFatData.Length)
+            m_fileStream.Seek(-fixedFatData.Length, SeekOrigin.End)
+            m_fileStream.Read(fixedFatData, 0, fixedFatData.Length)
             m_fileStartTime = New TimeTag(BitConverter.ToDouble(fixedFatData, 0))
             m_fileEndTime = New TimeTag(BitConverter.ToDouble(fixedFatData, 8))
             m_eventsReceived = BitConverter.ToInt32(fixedFatData, 16)
@@ -55,8 +60,8 @@ Public Class ArchiveFileAllocationTable
             m_dataBlockCount = BitConverter.ToInt32(fixedFatData, 28)
 
             Dim variableFatData As Byte() = CreateArray(Of Byte)(m_dataBlockCount * ArchiveDataBlockPointer.BinaryLength)
-            archiveFileStream.Seek(-(variableFatData.Length + fixedFatData.Length), SeekOrigin.End)
-            archiveFileStream.Read(variableFatData, 0, variableFatData.Length)
+            m_fileStream.Seek(-(variableFatData.Length + fixedFatData.Length), SeekOrigin.End)
+            m_fileStream.Read(variableFatData, 0, variableFatData.Length)
             For i As Integer = 0 To variableFatData.Length - 1 Step ArchiveDataBlockPointer.BinaryLength
                 m_dataBlockPointers.Add(New ArchiveDataBlockPointer(variableFatData, i))
             Next
@@ -76,6 +81,7 @@ Public Class ArchiveFileAllocationTable
     Public Sub New(ByVal archiveFileStream As FileStream, ByVal blockSize As Integer, ByVal blockCount As Integer)
 
         MyClass.New()
+        m_fileStream = archiveFileStream
         m_dataBlockSize = blockSize
         m_dataBlockCount = blockCount
         For i As Integer = 1 To m_dataBlockCount
@@ -150,21 +156,72 @@ Public Class ArchiveFileAllocationTable
         End Get
     End Property
 
-    Public ReadOnly Property ActiveDataBlocks() As Dictionary(Of Integer, ArchiveDataBlock)
-        Get
-            Return m_activeDataBlocks
-        End Get
-    End Property
+    Public Sub Persist()
 
-    ' Will not be required when Save() method is provided.
-    Public ReadOnly Property BinaryLength() As Integer
+        ' Leave space for data blocks.
+        m_fileStream.Seek(m_dataBlockCount * m_dataBlockSize * 1024, SeekOrigin.Begin)
+        m_fileStream.Write(BinaryImage, 0, BinaryLength)
+        m_fileStream.Flush()
+
+    End Sub
+
+    Public Function RequestDataBlock(ByVal pointIndex As Integer, ByVal startTime As TimeTag) As ArchiveDataBlock
+
+        ' TODO: Check allocated data blocks for empty space first.
+        If Not m_dataBlocksScanned.Contains(pointIndex) Then
+
+        End If
+
+        Dim unusedPointerIndex As Integer = m_dataBlockPointers.IndexOf(New ArchiveDataBlockPointer())
+        m_dataBlockPointers(unusedPointerIndex).PointIndex = pointIndex
+        m_dataBlockPointers(unusedPointerIndex).StartTime = startTime
+        Return GetDataBlock(m_dataBlockPointers(unusedPointerIndex))
+
+    End Function
+
+    Public Function GetDataBlock(ByVal pointID As Integer, ByVal startTime As TimeTag) As ArchiveDataBlock
+
+        Return GetDataBlock(New ArchiveDataBlockPointer(pointID, startTime))
+
+    End Function
+
+    Public Function GetDataBlock(ByVal blockPointer As ArchiveDataBlockPointer) As ArchiveDataBlock
+
+        Return New ArchiveDataBlock(m_fileStream, GetDataBlockLocation(blockPointer), m_dataBlockSize)
+
+    End Function
+
+    Public Function GetDataBlocks(ByVal pointIndex As Integer) As List(Of ArchiveDataBlock)
+
+        Return GetDataBlocks(pointIndex, TimeTag.MinValue, TimeTag.MaxValue)
+
+    End Function
+
+    Public Function GetDataBlocks(ByVal pointIndex As Integer, ByVal startTime As TimeTag, ByVal endTime As TimeTag) As List(Of ArchiveDataBlock)
+
+        Dim matchingBlocks As List(Of ArchiveDataBlock) = Nothing
+        Dim matchingPointers As List(Of ArchiveDataBlockPointer) = Nothing
+
+        m_searchPointIndex = pointIndex
+        m_searchStartTime = IIf(startTime IsNot Nothing, startTime, TimeTag.MinValue)
+        m_searchEndTime = IIf(endTime IsNot Nothing, endTime, TimeTag.MaxValue)
+        matchingPointers = m_dataBlockPointers.FindAll(AddressOf FindDataBlockPointer)
+
+        Return Nothing
+
+    End Function
+
+#End Region
+
+#Region " Private Code "
+
+    Private ReadOnly Property BinaryLength() As Integer
         Get
             Return (m_dataBlockPointers.Count * ArchiveDataBlockPointer.BinaryLength) + MinimumBinaryLength
         End Get
     End Property
 
-    ' Will not be required when Save() method is provided.
-    Public ReadOnly Property BinaryImage() As Byte()
+    Private ReadOnly Property BinaryImage() As Byte()
         Get
             Dim pointersBinaryLength As Integer = Me.BinaryLength - MinimumBinaryLength
             Dim image As Byte() = CreateArray(Of Byte)(pointersBinaryLength + MinimumBinaryLength)
@@ -183,22 +240,13 @@ Public Class ArchiveFileAllocationTable
         End Get
     End Property
 
-    Public Function RequestDataBlock(ByVal pointIndex As Integer, ByVal startTime As TimeTag) As ArchiveDataBlockPointer
-
-        Dim unusedPointerIndex As Integer = m_dataBlockPointers.IndexOf(New ArchiveDataBlockPointer())
-        m_dataBlockPointers(unusedPointerIndex).PointIndex = pointIndex
-        m_dataBlockPointers(unusedPointerIndex).StartTime = startTime
-        Return m_dataBlockPointers(unusedPointerIndex)
-
-    End Function
-
-    Public Function GetDataBlockLocation(ByVal pointID As Integer, ByVal startTime As TimeTag) As Long
+    Private Function GetDataBlockLocation(ByVal pointID As Integer, ByVal startTime As TimeTag) As Long
 
         Return GetDataBlockLocation(New ArchiveDataBlockPointer(pointID, startTime))
 
     End Function
 
-    Public Function GetDataBlockLocation(ByVal dataBlockPointer As ArchiveDataBlockPointer) As Long
+    Private Function GetDataBlockLocation(ByVal dataBlockPointer As ArchiveDataBlockPointer) As Long
 
         Dim pointerIndex As Integer = m_dataBlockPointers.IndexOf(dataBlockPointer)
         If pointerIndex >= 0 Then
@@ -206,6 +254,21 @@ Public Class ArchiveFileAllocationTable
         Else
             Return -1
         End If
+
+    End Function
+
+    ''' <summary>
+    ''' Finds data block pointer that match the search criteria that is determined by member variables.
+    ''' </summary>
+    ''' <param name="dataBlockPointer"></param>
+    ''' <returns></returns>
+    Private Function FindDataBlockPointer(ByVal dataBlockPointer As ArchiveDataBlockPointer) As Boolean
+
+        Return (dataBlockPointer.PointIndex = m_searchPointIndex AndAlso _
+                (m_searchStartTime.CompareTo(TimeTag.MinValue) = 0 OrElse _
+                    dataBlockPointer.StartTime.CompareTo(m_searchStartTime) >= 0) AndAlso _
+                (m_searchEndTime.CompareTo(TimeTag.MaxValue) = 0 OrElse _
+                    dataBlockPointer.StartTime.CompareTo(m_searchEndTime) <= 0))
 
     End Function
 

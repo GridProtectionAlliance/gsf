@@ -4,10 +4,10 @@ Imports System.IO
 
 Public Class ArchiveDataBlock
 
-    Private m_fileStream As FileStream
     Private m_location As Long
     Private m_size As Integer
-    Private m_dataCount As Integer
+    Private m_fileStream As FileStream
+    Private m_pointDataCount As Integer
 
     Public Sub New(ByVal archiveFileStream As FileStream, ByVal location As Long, ByVal size As Integer)
 
@@ -24,12 +24,30 @@ Public Class ArchiveDataBlock
                 m_fileStream.Seek(-4, SeekOrigin.Current)
                 Exit For
             Else
-                m_dataCount = i
+                m_pointDataCount = i
                 m_fileStream.Seek(6, SeekOrigin.Current)
             End If
         Next
 
     End Sub
+
+    Public ReadOnly Property Location() As Long
+        Get
+            Return m_location
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks>In KB</remarks>
+    Public ReadOnly Property Size() As Integer
+        Get
+            Return m_size
+        End Get
+    End Property
 
     Public ReadOnly Property Capacity() As Integer
         Get
@@ -39,7 +57,7 @@ Public Class ArchiveDataBlock
 
     Public ReadOnly Property IsFull() As Boolean
         Get
-            Return Me.Capacity - m_dataCount = 0
+            Return Me.Capacity - m_pointDataCount = 0
         End Get
     End Property
 

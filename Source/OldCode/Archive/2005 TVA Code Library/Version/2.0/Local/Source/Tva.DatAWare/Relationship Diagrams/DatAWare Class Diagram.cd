@@ -2,7 +2,7 @@
 <ClassDiagram MajorVersion="1" MinorVersion="1">
   <Font Name="Tahoma" Size="8.25" />
   <Class Name="Tva.DatAWare.ArchiveDataBlockPointer" BaseTypeListCollapsed="true">
-    <Position X="8" Y="10.75" Width="2" />
+    <Position X="8" Y="12.5" Width="2" />
     <TypeIdentifier>
       <FileName>ArchiveDataBlockPointer.vb</FileName>
       <HashCode>AAAAAACAgAAAAAQAAAAAAAABYAAAAAQAAAAAAAAAAAA=</HashCode>
@@ -19,13 +19,14 @@
     <Position X="6" Y="7.5" Width="1.75" />
     <TypeIdentifier>
       <FileName>ArchiveFile.vb</FileName>
-      <HashCode>MAAAAIAAACCAoAEEAICAEAQCAgAAAQAAAAAAQCKAAAA=</HashCode>
+      <HashCode>MAAAAIAAICAAoAEEAICAEAQiAgAAAQAAAAAAQCOAAAA=</HashCode>
     </TypeIdentifier>
     <Members>
       <Field Name="components" Hidden="true" />
       <Method Name="Dispose" Hidden="true" />
       <Field Name="Extension" Hidden="true" />
       <Method Name="InitializeComponent" Hidden="true" />
+      <Field Name="m_activeDataBlocks" Hidden="true" />
       <Field Name="m_blockSize" Hidden="true" />
       <Field Name="m_fat" Hidden="true" />
       <Field Name="m_fileStream" Hidden="true" />
@@ -39,16 +40,21 @@
     <Position X="8" Y="7.5" Width="2.5" />
     <TypeIdentifier>
       <FileName>ArchiveFileAllocationTable.vb</FileName>
-      <HashCode>AABIAAEAAICAAAQQAAAAgAAFQABAACAAAAQBAAABAAI=</HashCode>
+      <HashCode>AABIAAEAAYCgAAQUAEgAgAIFQABAACAAAAUBAAABAII=</HashCode>
     </TypeIdentifier>
     <Members>
       <Field Name="m_dataBlockCount" Hidden="true" />
       <Field Name="m_dataBlockPointers" Hidden="true" />
       <Field Name="m_dataBlockSize" Hidden="true" />
+      <Field Name="m_dataBlocksScanned" Hidden="true" />
       <Field Name="m_eventsArchived" Hidden="true" />
       <Field Name="m_eventsReceived" Hidden="true" />
       <Field Name="m_fileEndTime" Hidden="true" />
       <Field Name="m_fileStartTime" Hidden="true" />
+      <Field Name="m_fileStream" Hidden="true" />
+      <Field Name="m_searchEndTime" Hidden="true" />
+      <Field Name="m_searchPointIndex" Hidden="true" />
+      <Field Name="m_searchStartTime" Hidden="true" />
       <Field Name="MinimumBinaryLength" Hidden="true" />
       <Method Name="New" Hidden="true" />
     </Members>
@@ -274,7 +280,7 @@
     <Position X="12.25" Y="10.75" Width="1.5" />
     <TypeIdentifier>
       <FileName>TimeTag.vb</FileName>
-      <HashCode>AAIAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAgAAAAAAAAA=</HashCode>
+      <HashCode>AAIAAAAAAAAAAAgEAAAAAAAAAAAAAAAAAgAgAAAAAAA=</HashCode>
     </TypeIdentifier>
     <Members>
       <Field Name="m_timeTagOffsetTicks" Hidden="true" />
@@ -348,30 +354,41 @@
     </Compartments>
   </Class>
   <Class Name="Tva.DatAWare.PointDataBase">
-    <Position X="17.5" Y="7.5" Width="1.5" />
+    <Position X="15.75" Y="9.75" Width="1.5" />
     <TypeIdentifier>
       <FileName>PointDataBase.vb</FileName>
-      <HashCode>AAAABAAAAEAAAARAAAAgAAgBQAQAAAAAAAAgAAAACAA=</HashCode>
+      <HashCode>AAAABAAAEEAACARAAAAgAAgBQAQAAAAAAAAgAAAACAA=</HashCode>
     </TypeIdentifier>
+    <Members>
+      <Field Name="BinaryLength" Hidden="true" />
+      <Field Name="m_definition" Hidden="true" />
+      <Field Name="m_flags" Hidden="true" />
+      <Field Name="m_tTag" Hidden="true" />
+      <Field Name="m_value" Hidden="true" />
+      <Field Name="QualityMask" Hidden="true" />
+    </Members>
     <Lollipop Position="0.2" />
   </Class>
   <Class Name="Tva.DatAWare.StandardPointData">
-    <Position X="16.25" Y="11.5" Width="1.5" />
+    <Position X="14.75" Y="13" Width="1.5" />
     <TypeIdentifier>
       <FileName>StandardPointData.vb</FileName>
       <HashCode>AAAAAAAAAACAAAAAAAAAAAABQAAAAAAAAAAAAAAAACA=</HashCode>
     </TypeIdentifier>
     <Members>
+      <Field Name="BinaryLength" Hidden="true" />
+      <Field Name="MillisecondMask" Hidden="true" />
       <Method Name="New" Hidden="true" />
     </Members>
   </Class>
   <Class Name="Tva.DatAWare.ExtendedPointData">
-    <Position X="18.5" Y="11.5" Width="1.5" />
+    <Position X="17" Y="13" Width="1.5" />
     <TypeIdentifier>
       <FileName>ExtendedPointData.vb</FileName>
       <HashCode>AAAAAAAAAAAAAAAAAAAAAAABQAAAAAAAAAAAAAAAAAA=</HashCode>
     </TypeIdentifier>
     <Members>
+      <Field Name="BinaryLength" Hidden="true" />
       <Method Name="New" Hidden="true" />
     </Members>
   </Class>
@@ -383,10 +400,10 @@
     </TypeIdentifier>
   </Interface>
   <Interface Name="Tva.DatAWare.IPointData">
-    <Position X="19.25" Y="7.5" Width="1.5" />
+    <Position X="17.5" Y="9.75" Width="1.5" />
     <TypeIdentifier>
       <FileName>IPointData.vb</FileName>
-      <HashCode>AAAABAAAAAAAAABAAAAgAAAAQAAAAAAAAAAgAAAAAAA=</HashCode>
+      <HashCode>AAAABAAAAAAACABAAAAgAAAAQAAAAAAAAAAgAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Interface>
   <Enum Name="Tva.DatAWare.Quality">

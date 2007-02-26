@@ -105,7 +105,7 @@ Public Class ArchiveFile
                 ' File does not exist, so we have to create it and initialize it.
                 m_fileStream = New FileStream(m_name, FileMode.Create)
                 m_fat = New ArchiveFileAllocationTable(m_fileStream, m_blockSize, MaximumDataBlocks(m_size, m_blockSize))
-                WriteFileAllocationTable()
+                m_fat.Persist()
             End If
             m_size = m_fileStream.Length / (1024 * 1024)
             m_blockSize = m_fat.DataBlockSize
@@ -127,7 +127,7 @@ Public Class ArchiveFile
     Public Sub Save()
 
         ' The only thing that we need to write back to the file is the FAT.
-        WriteFileAllocationTable()
+        m_fat.Persist()
 
     End Sub
 
@@ -157,7 +157,7 @@ Public Class ArchiveFile
             If (dataBlock IsNot Nothing AndAlso dataBlock.IsFull) OrElse dataBlock Is Nothing Then
                 ' We either don't have a active data block where we can archive the point data or we have a active
                 ' data block but it is full, so we have to request a new data block from the FAT.
-                dataBlock = GetDataBlock(m_fat.RequestDataBlock(pointData.Definition.Index, pointData.TTag))
+                dataBlock = m_fat.RequestDataBlock(pointData.Definition.Index, pointData.TTag)
                 m_activeDataBlocks(pointData.Definition.Index) = dataBlock
             End If
         Else
@@ -166,30 +166,11 @@ Public Class ArchiveFile
 
     End Sub
 
-    Public Function GetDataBlock(ByVal blockPointer As ArchiveDataBlockPointer) As ArchiveDataBlock
-
-        Return New ArchiveDataBlock(m_fileStream, m_fat.GetDataBlockLocation(blockPointer), m_fat.DataBlockSize)
-
-    End Function
-
     Public Shared Function MaximumDataBlocks(ByVal fileSize As Double, ByVal blockSize As Integer) As Integer
 
         Return Convert.ToInt32((fileSize * 1024) / blockSize)
 
     End Function
-
-#End Region
-
-#Region " Private Code "
-
-    Private Sub WriteFileAllocationTable()
-
-        ' Leave space for data blocks.
-        m_fileStream.Seek(m_fat.DataBlockCount * m_fat.DataBlockSize * 1024, SeekOrigin.Begin)
-        m_fileStream.Write(m_fat.BinaryImage, 0, m_fat.BinaryLength)
-        m_fileStream.Flush()
-
-    End Sub
 
 #End Region
 
