@@ -145,9 +145,9 @@ Public Class MultiProtocolFrameParser
             ' Setup protocol specific connection parameters...
             Select Case value
                 Case Phasors.PhasorProtocol.BpaPdcStream
-                    m_connectionParameters = (New BpaPdcStream.FrameParser).ConnectionParameters
+                    m_connectionParameters = New BpaPdcStream.ConnectionParameters
                 Case Phasors.PhasorProtocol.FNet
-                    m_connectionParameters = (New FNet.FrameParser).ConnectionParameters
+                    m_connectionParameters = New FNet.ConnectionParameters
                 Case Else
                     m_connectionParameters = Nothing
             End Select
