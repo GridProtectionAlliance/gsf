@@ -20,7 +20,7 @@ Imports System.Runtime.Serialization
 ''' <summary>This class represents the common implementation of the protocol independent connection parameters base class.</summary>
 ''' <remarks>
 ''' <para>This class is inherited by subsequent classes to provide protocol specific connection parameters that may be needed to make a connection.</para>
-''' <para>Derived implementations of this class are designed to be exposed by a "PropertyGrid" so a UI can request protocol specific connectin parameters.</para>
+''' <para>Derived implementations of this class are designed to be exposed by a "PropertyGrid" so a UI can request protocol specific connection parameters.</para>
 ''' </remarks>
 <Serializable()> _
 Public MustInherit Class ConnectionParametersBase
