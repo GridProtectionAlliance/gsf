@@ -52,7 +52,11 @@ Namespace FNet
                 Return m_frameRate
             End Get
             Set(ByVal value As Int16)
-                m_frameRate = value
+                If value < 1 Then
+                    m_frameRate = DefaultFrameRate
+                Else
+                    m_frameRate = value
+                End If
             End Set
         End Property
 

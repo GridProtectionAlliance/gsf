@@ -287,6 +287,7 @@ Public Class MultiProtocolFrameParser
                     m_frameParser = New FNet.FrameParser
             End Select
 
+            m_frameParser.ConnectionParameters = m_connectionParameters
             m_frameParser.ExecuteParseOnSeparateThread = m_executeParseOnSeparateThread
             m_frameParser.Start()
 
