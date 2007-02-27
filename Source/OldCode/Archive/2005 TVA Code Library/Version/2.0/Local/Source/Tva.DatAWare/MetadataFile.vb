@@ -263,9 +263,9 @@ Public Class MetadataFile
     Public Function Read(ByVal pointIndex As Integer) As PointDefinition
 
         If Me.IsOpen Then
-            For Each pointDefinition As PointDefinition In m_pointDefinitions
-                If pointDefinition.Index = pointIndex Then
-                    Return pointDefinition
+            For i As Integer = 0 To m_pointDefinitions.Count - 1
+                If m_pointDefinitions(i).Index = pointIndex Then
+                    Return m_pointDefinitions(i)
                 End If
             Next
 
@@ -279,11 +279,11 @@ Public Class MetadataFile
     Public Function Read(ByVal pointName As String) As PointDefinition
 
         If Me.IsOpen Then
-            For Each pointDefinition As PointDefinition In m_pointDefinitions
-                If String.Compare(pointName, pointDefinition.Name) = 0 OrElse _
-                        String.Compare(pointName, pointDefinition.Synonym1) = 0 OrElse _
-                        String.Compare(pointName, pointDefinition.Synonym2) = 0 Then
-                    Return pointDefinition
+            For i As Integer = 0 To m_pointDefinitions.Count - 1
+                If String.Compare(pointName, m_pointDefinitions(i).Name) = 0 OrElse _
+                        String.Compare(pointName, m_pointDefinitions(i).Synonym1) = 0 OrElse _
+                        String.Compare(pointName, m_pointDefinitions(i).Synonym2) = 0 Then
+                    Return m_pointDefinitions(i)
                 End If
             Next
 

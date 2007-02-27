@@ -7,7 +7,7 @@ Public MustInherit Class PointDataBase
 
 #Region " Member Declaration "
 
-    Private m_tTag As TimeTag
+    Private m_timeTag As TimeTag
     Private m_value As Single
     Private m_flags As Int32
     Private m_definition As PointDefinition
@@ -20,12 +20,12 @@ Public MustInherit Class PointDataBase
 
     Public Const BinaryLength As Integer = -1
 
-    Public Overridable Property TTag() As TimeTag Implements IPointData.TTag
+    Public Overridable Property TimeTag() As TimeTag Implements IPointData.TimeTag
         Get
-            Return m_tTag
+            Return m_timeTag
         End Get
         Set(ByVal value As TimeTag)
-            m_tTag = value
+            m_timeTag = value
         End Set
     End Property
 
@@ -67,7 +67,7 @@ Public MustInherit Class PointDataBase
 
     Public ReadOnly Property IsNull() As Boolean Implements IPointData.IsNull
         Get
-            Return m_tTag.CompareTo(TimeTag.MinValue) = 0
+            Return m_timeTag.CompareTo(TimeTag.MinValue) = 0
         End Get
     End Property
 
@@ -79,7 +79,7 @@ Public MustInherit Class PointDataBase
 
         Dim other As PointDataBase = TryCast(obj, PointDataBase)
         If other IsNot Nothing Then
-            Return m_tTag.CompareTo(other.TTag)
+            Return m_timeTag.CompareTo(other.TimeTag)
         Else
             Throw New ArgumentException(String.Format("Cannot compare {0} with {1}.", Me.GetType().Name, other.GetType().Name))
         End If

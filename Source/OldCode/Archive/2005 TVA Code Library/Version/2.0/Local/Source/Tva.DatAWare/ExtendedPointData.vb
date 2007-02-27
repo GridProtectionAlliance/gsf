@@ -16,7 +16,7 @@ Public Class ExtendedPointData
         MyBase.New()
         If binaryImage IsNot Nothing Then
             If binaryImage.Length - startIndex >= BinaryLength Then
-                MyBase.TTag = New TimeTag(BitConverter.ToDouble(binaryImage, startIndex))
+                MyBase.TimeTag = New TimeTag(BitConverter.ToDouble(binaryImage, startIndex))
                 MyBase.Flags = BitConverter.ToInt32(binaryImage, startIndex + 8)
                 MyBase.Value = BitConverter.ToSingle(binaryImage, startIndex + 12)
             Else
@@ -32,7 +32,7 @@ Public Class ExtendedPointData
         Get
             Dim image As Byte() = CreateArray(Of Byte)(BinaryLength)
 
-            Array.Copy(BitConverter.GetBytes(MyBase.TTag.Value), 0, image, 0, 8)
+            Array.Copy(BitConverter.GetBytes(MyBase.TimeTag.Value), 0, image, 0, 8)
             Array.Copy(BitConverter.GetBytes(MyBase.Flags), 0, image, 8, 4)
             Array.Copy(BitConverter.GetBytes(MyBase.Value), 0, image, 12, 4)
 

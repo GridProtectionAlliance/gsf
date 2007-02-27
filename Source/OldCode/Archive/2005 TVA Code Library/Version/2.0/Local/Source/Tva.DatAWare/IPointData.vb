@@ -2,7 +2,7 @@
 
 Public Interface IPointData
 
-    Property TTag() As TimeTag
+    Property TimeTag() As TimeTag
 
     Property Value() As Single
 

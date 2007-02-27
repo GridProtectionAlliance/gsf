@@ -14,9 +14,16 @@ Public Class ArchiveFile
     Private m_size As Double
     Private m_blockSize As Integer
     Private m_saveOnClose As Boolean
+    Private m_rolloverOnFull As Boolean
     Private m_fat As ArchiveFileAllocationTable
     Private m_fileStream As FileStream
     Private m_activeDataBlocks As Dictionary(Of Integer, ArchiveDataBlock)
+
+#End Region
+
+#Region " Event Declaration "
+
+
 
 #End Region
 
@@ -80,6 +87,15 @@ Public Class ArchiveFile
         End Set
     End Property
 
+    Public Property RolloverOnFull() As Boolean
+        Get
+            Return m_rolloverOnFull
+        End Get
+        Set(ByVal value As Boolean)
+            m_rolloverOnFull = value
+        End Set
+    End Property
+
     <Browsable(False)> _
     Public ReadOnly Property IsOpen() As Boolean
         Get
@@ -133,20 +149,25 @@ Public Class ArchiveFile
 
     Public Function Read(ByVal pointIndex As Integer) As List(Of StandardPointData)
 
-        Return Nothing
+        Return Read(pointIndex, TimeTag.MinValue)
 
     End Function
 
-    Public Function Read(ByVal pointIndex As Integer, ByVal startTime As System.DateTime) As List(Of StandardPointData)
+    Public Function Read(ByVal pointIndex As Integer, ByVal startTime As TimeTag) As List(Of StandardPointData)
 
-        Return Nothing
+        Return Read(pointIndex, startTime, TimeTag.MaxValue)
 
     End Function
 
-    Public Function Read(ByVal pointIndex As Integer, ByVal startTime As System.DateTime, ByVal endTime As System.DateTime) As List(Of StandardPointData)
+    Public Function Read(ByVal pointIndex As Integer, ByVal startTime As TimeTag, ByVal endTime As TimeTag) As List(Of StandardPointData)
 
-        ' Use m_fat.FindDataBlocks(...) function here.
-        Return Nothing
+        Dim data As New List(Of StandardPointData)()
+        Dim foundBlocks As List(Of ArchiveDataBlock) = m_fat.FindDataBlocks(pointIndex, startTime, endTime)
+        For i As Integer = 0 To foundBlocks.Count - 1
+            data.AddRange(foundBlocks(i).Read())
+        Next
+
+        Return data
 
     End Function
 
@@ -155,12 +176,12 @@ Public Class ArchiveFile
         If pointData.Definition IsNot Nothing Then
             ' TODO: Perform compression here.
             Dim dataBlock As ArchiveDataBlock = m_activeDataBlocks(pointData.Definition.Index)
-            'If (dataBlock IsNot Nothing AndAlso dataBlock.IsFull) OrElse dataBlock Is Nothing Then
-            '    ' We either don't have a active data block where we can archive the point data or we have a active
-            '    ' data block but it is full, so we have to request a new data block from the FAT.
-            '    dataBlock = m_fat.RequestDataBlock(pointData.Definition.Index, pointData.TTag)
-            '    m_activeDataBlocks(pointData.Definition.Index) = dataBlock
-            'End If
+            If (dataBlock IsNot Nothing AndAlso dataBlock.SlotsAvailable = 0) OrElse dataBlock Is Nothing Then
+                ' We either don't have a active data block where we can archive the point data or we have a active
+                ' data block but it is full, so we have to request a new data block from the FAT.
+                dataBlock = m_fat.RequestDataBlock(pointData.Definition.Index, pointData.TimeTag)
+                m_activeDataBlocks(pointData.Definition.Index) = dataBlock
+            End If
         Else
             Throw New ArgumentException("Definition property for point data is not set.")
         End If
