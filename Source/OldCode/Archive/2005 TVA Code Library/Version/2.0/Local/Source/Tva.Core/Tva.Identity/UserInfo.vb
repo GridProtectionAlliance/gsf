@@ -96,7 +96,11 @@ Namespace Identity
             Get
                 If m_userEntry Is Nothing Then
                     Try
-                        Dim entry As New DirectoryEntry("LDAP://" & m_domain)
+                        ' 02/27/2007 - PCP: Using the default directory entry instead of specifying the domain name.
+                        ' This is done to overcome "The server is not operational" COM exception that was being 
+                        ' encountered when a domain name was being specified.
+                        Dim entry As New DirectoryEntry()
+                        'Dim entry As New DirectoryEntry("LDAP://" & m_domain)
 
                         With New DirectorySearcher(entry)
                             .Filter = "(SAMAccountName=" & m_username & ")"
@@ -226,7 +230,9 @@ Namespace Identity
         Public Function Authenticate(ByVal password As String) As Boolean
 
             Try
-                Dim userEntry As New DirectoryEntry("LDAP://" & m_domain, m_username, password)
+                Dim userEntry As New DirectoryEntry()
+                userEntry.Username = m_username
+                userEntry.Password = password
                 Return New DirectorySearcher(userEntry).FindOne() IsNot Nothing
             Catch ex As Exception
                 ' Failed to authenticate against the active directory with the specified password.
