@@ -30,8 +30,8 @@ Public Class ArchiveFileAllocationTable
     Private Sub New()
 
         MyBase.New()
-        m_fileStartTime = New TimeTag(System.DateTime.Now)
-        m_fileEndTime = New TimeTag(0D)
+        m_fileStartTime = TimeTag.MinValue
+        m_fileEndTime = TimeTag.MinValue
         m_dataBlockPointers = New List(Of ArchiveDataBlockPointer)()
         m_dataBlocksScanned = New List(Of Integer)()
 

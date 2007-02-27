@@ -73,6 +73,12 @@ Public MustInherit Class PointDataBase
 
     Public MustOverride ReadOnly Property BinaryImage() As Byte() Implements IPointData.BinaryImage
 
+    Public Overrides Function Equals(ByVal obj As Object) As Boolean
+
+        Return Me.CompareTo(obj) = 0
+
+    End Function
+
 #Region " IComparable Implementation "
 
     Public Function CompareTo(ByVal obj As Object) As Integer Implements System.IComparable.CompareTo

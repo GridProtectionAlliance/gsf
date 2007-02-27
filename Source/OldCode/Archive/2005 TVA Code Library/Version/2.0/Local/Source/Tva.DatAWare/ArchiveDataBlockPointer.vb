@@ -16,7 +16,7 @@ Public Class ArchiveDataBlockPointer
 
     Public Sub New()
 
-        MyClass.New(-1, New TimeTag(0D))
+        MyClass.New(-1, TimeTag.MinValue)
 
     End Sub
 
@@ -70,6 +70,12 @@ Public Class ArchiveDataBlockPointer
             Return image
         End Get
     End Property
+
+    Public Overrides Function Equals(ByVal obj As Object) As Boolean
+
+        Return Me.CompareTo(obj) = 0
+
+    End Function
 
 #Region " IComparable Implementation "
 

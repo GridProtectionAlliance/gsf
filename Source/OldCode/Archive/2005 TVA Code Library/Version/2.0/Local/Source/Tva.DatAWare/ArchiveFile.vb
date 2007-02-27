@@ -23,7 +23,10 @@ Public Class ArchiveFile
 
 #Region " Event Declaration "
 
-
+    Public Event DataReceived As EventHandler
+    Public Event DataArchived As EventHandler
+    Public Event DataDiscarded As EventHandler
+    Public Event FileFull As EventHandler
 
 #End Region
 
@@ -123,7 +126,7 @@ Public Class ArchiveFile
                 m_fat = New ArchiveFileAllocationTable(m_fileStream, m_blockSize, MaximumDataBlocks(m_size, m_blockSize))
                 m_fat.Persist()
             End If
-            m_size = m_fileStream.Length / (1024 * 1024)
+            m_size = System.Math.Round(m_fileStream.Length / (1024 * 1024), 2)
             m_blockSize = m_fat.DataBlockSize
         End If
         
@@ -134,6 +137,9 @@ Public Class ArchiveFile
         If Me.IsOpen Then
             If m_saveOnClose Then Save()
 
+            m_fat = Nothing
+            m_activeDataBlocks.Clear()
+            m_activeDataBlocks = Nothing
             m_fileStream.Close()
             m_fileStream = Nothing
         End If
@@ -144,6 +150,15 @@ Public Class ArchiveFile
 
         ' The only thing that we need to write back to the file is the FAT.
         m_fat.Persist()
+
+    End Sub
+
+    Public Sub Rollover()
+
+        ' Update FAT's start & end time
+        ' Close()
+        ' Rename the File
+        ' Open()
 
     End Sub
 
@@ -174,13 +189,32 @@ Public Class ArchiveFile
     Public Sub Write(ByVal pointData As StandardPointData)
 
         If pointData.Definition IsNot Nothing Then
-            ' TODO: Perform compression here.
-            Dim dataBlock As ArchiveDataBlock = m_activeDataBlocks(pointData.Definition.Index)
-            If (dataBlock IsNot Nothing AndAlso dataBlock.SlotsAvailable = 0) OrElse dataBlock Is Nothing Then
-                ' We either don't have a active data block where we can archive the point data or we have a active
-                ' data block but it is full, so we have to request a new data block from the FAT.
-                dataBlock = m_fat.RequestDataBlock(pointData.Definition.Index, pointData.TimeTag)
-                m_activeDataBlocks(pointData.Definition.Index) = dataBlock
+            m_fat.EventsReceived += 1
+
+            If ToBeArchived(pointData) Then
+                Dim dataBlock As ArchiveDataBlock = Nothing
+                m_activeDataBlocks.TryGetValue(pointData.Definition.Index, dataBlock)
+                If dataBlock Is Nothing OrElse (dataBlock IsNot Nothing AndAlso dataBlock.SlotsAvailable = 0) Then
+                    ' We either don't have a active data block where we can archive the point data or we have a 
+                    ' active data block but it is full, so we have to request a new data block from the FAT.
+                    m_activeDataBlocks.Remove(pointData.Definition.Index)
+                    dataBlock = m_fat.RequestDataBlock(pointData.Definition.Index, pointData.TimeTag)
+                    m_activeDataBlocks.Add(pointData.Definition.Index, dataBlock)
+                End If
+
+                If dataBlock IsNot Nothing Then
+                    ' We were able to obtain a data block for writing data.
+                    dataBlock.Write(pointData)
+
+                    m_fat.EventsArchived += 1
+                    m_fat.FileEndTime = pointData.TimeTag
+                    If m_fat.FileStartTime.CompareTo(TimeTag.MinValue) = 0 Then m_fat.FileStartTime = pointData.TimeTag
+                Else
+                    ' We were unable to obtain a data block for writing data to because all data block are in use.
+                    RaiseEvent FileFull(Me, EventArgs.Empty)
+                End If
+            Else
+
             End If
         Else
             Throw New ArgumentException("Definition property for point data is not set.")
@@ -191,6 +225,17 @@ Public Class ArchiveFile
     Public Shared Function MaximumDataBlocks(ByVal fileSize As Double, ByVal blockSize As Integer) As Integer
 
         Return Convert.ToInt32((fileSize * 1024) / blockSize)
+
+    End Function
+
+#End Region
+
+#Region " Private Code "
+
+    Private Function ToBeArchived(ByVal pointDate As StandardPointData) As Boolean
+
+        ' TODO: Perform compression check here.
+        Return True
 
     End Function
 

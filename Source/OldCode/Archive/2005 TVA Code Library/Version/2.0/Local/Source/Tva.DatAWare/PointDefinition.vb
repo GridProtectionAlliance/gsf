@@ -471,6 +471,12 @@ Public Class PointDefinition
         End Get
     End Property
 
+    Public Overrides Function Equals(ByVal obj As Object) As Boolean
+
+        Return Me.CompareTo(obj) = 0
+
+    End Function
+
 #Region " IComparable Implementation "
 
     Public Function CompareTo(ByVal obj As Object) As Integer Implements System.IComparable.CompareTo

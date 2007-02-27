@@ -35,7 +35,7 @@ Public Class TimeTag
 
     End Sub
 
-    Public Shared ReadOnly MinValue As TimeTag = New TimeTag(0)
+    Public Shared ReadOnly MinValue As TimeTag = New TimeTag(0D)
 
     Public Shared ReadOnly MaxValue As TimeTag = New TimeTag(2147483647.999)
 
