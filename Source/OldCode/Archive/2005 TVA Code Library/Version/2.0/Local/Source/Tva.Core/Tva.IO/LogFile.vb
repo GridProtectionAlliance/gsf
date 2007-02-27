@@ -60,13 +60,7 @@ Namespace IO
 
         Public Property LogFileName() As String
             Get
-                ' If we're provided just the name of the log file and not the entire file path, we'll assume that
-                ' the log file is to be created in the directory from where the application is executing.
-                If String.IsNullOrEmpty(Tva.IO.FilePath.JustPath(m_logFileName).TrimEnd("\"c)) Then
-                    Return Tva.IO.FilePath.JustPath(Tva.Assembly.EntryAssembly.Location) & m_logFileName
-                Else
-                    Return m_logFileName
-                End If
+                Return m_logFileName
             End Get
             Set(ByVal value As String)
                 m_logFileName = value
@@ -129,8 +123,9 @@ Namespace IO
 
             Try
                 ' Read log contents into a string
-                If File.Exists(Me.LogFileName) Then
-                    With File.OpenText(Me.LogFileName)
+                Dim fileName As String = AbsolutePath(m_logFileName)
+                If File.Exists(fileName) Then
+                    With File.OpenText(fileName)
                         logData = .ReadToEnd
                         .Close()
                     End With
@@ -160,7 +155,7 @@ Namespace IO
 
             Try
                 ' Append queued data to log file
-                With File.AppendText(Me.LogFileName)
+                With File.AppendText(AbsolutePath(m_logFileName))
                     For Each item As String In items
                         .Write(item)
                     Next

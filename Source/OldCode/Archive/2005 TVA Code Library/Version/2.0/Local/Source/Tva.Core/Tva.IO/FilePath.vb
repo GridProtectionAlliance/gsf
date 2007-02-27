@@ -278,6 +278,16 @@ Namespace IO
 
         End Function
 
+        Public Shared Function AbsolutePath(ByVal filePath As String) As String
+
+            If Not Path.IsPathRooted(filePath) Then
+                filePath = JustPath(Tva.Assembly.EntryAssembly.Location) & filePath
+            End If
+
+            Return filePath
+
+        End Function
+
         ''' <summary>Returns just the path without a filename from a path - path will be suffixed with standard directory separator.</summary>
         Public Shared Function JustPath(ByVal filePath As String) As String
 
