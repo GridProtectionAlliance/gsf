@@ -41,6 +41,7 @@ Namespace IeeeC37_118
             Private m_ticks As Long
             Private m_timeQualityFlags As Int32
             Private m_attributes As Dictionary(Of String, String)
+            Private m_tag As Object
 
             Public Sub New()
 
@@ -282,6 +283,15 @@ Namespace IeeeC37_118
 
                     Return m_attributes
                 End Get
+            End Property
+
+            Public Property Tag() As Object Implements IChannel.Tag
+                Get
+                    Return m_tag
+                End Get
+                Set(ByVal value As Object)
+                    m_tag = value
+                End Set
             End Property
 
         End Class

@@ -18,12 +18,17 @@
 Imports System.Data
 Imports System.Data.SqlClient
 Imports Tva.Configuration.Common
+Imports Tva.Security.Cryptography
+Imports Tva.Security.Cryptography.Common
 Imports Tva.Security.Application
+Imports Tva.Identity.Common
 
 Namespace Services
 
     ''' <summary>Defines common global functions related to Web Services</summary>
     Public NotInheritable Class Common
+
+        Friend Const WebServiceSecurityKey As String = "30#TV9B~~E9=%8~l0aV52.S^$j:9F37:9a1308r1A7~!7285:~b465c@5509488r&78V{4%707~34[e]<_352©4)C51,8P2?5M40f©44%j(~F04AB1F420}5~59*~46Cr233d7o+0>7179N`8|.~649CAT9b3~Bc281125Off9%066CDb7C492\3"
 
         Private Sub New()
 
@@ -31,16 +36,35 @@ Namespace Services
 
         End Sub
 
-        Public Shared Function SetWebServiceCredentials(ByVal webService As Object, ByVal userName As String, ByVal password As String, ByVal server As SecurityServer, ByVal passThroughAuthentication As Boolean) As Object
+        Public Shared Function SetWebServiceCredentials(ByVal webService As Object, ByVal server As SecurityServer) As Object
 
             ' Note "webService" parameter must be "Object", because web services create local proxy implementations
             ' of the AuthenticationSoapHeader and do not support interfaces - hence all calls will be made through
             ' reflection (i.e., late bound method invocation support), but everything works as expected...
             With webService
-                .UserName = userName
-                .Password = password
+                .UserName = Encrypt(CurrentUserID, WebServiceSecurityKey, EncryptLevel.Level4)
+                .Password = Nothing
                 .Server = server
-                .PassThroughAuthentication = passThroughAuthentication
+                .PassThroughAuthentication = True
+            End With
+
+            Return webService
+
+        End Function
+
+        Public Shared Function SetWebServiceCredentials(ByVal webService As Object, ByVal userName As String, ByVal password As String, ByVal server As SecurityServer) As Object
+
+            If String.IsNullOrEmpty(userName) Then Throw New InvalidOperationException("No userName was specified")
+            If String.IsNullOrEmpty(password) Then Throw New InvalidOperationException("No password was specified")
+
+            ' Note "webService" parameter must be "Object", because web services create local proxy implementations
+            ' of the AuthenticationSoapHeader and do not support interfaces - hence all calls will be made through
+            ' reflection (i.e., late bound method invocation support), but everything works as expected...
+            With webService
+                .UserName = Encrypt(userName, WebServiceSecurityKey, EncryptLevel.Level4)
+                .Password = Encrypt(password, WebServiceSecurityKey, EncryptLevel.Level4)
+                .Server = server
+                .PassThroughAuthentication = False
             End With
 
             Return webService

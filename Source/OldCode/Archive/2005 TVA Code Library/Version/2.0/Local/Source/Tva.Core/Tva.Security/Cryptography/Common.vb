@@ -14,6 +14,9 @@
 '       Original version of source code generated
 '  01/04/2006 - J. Ritchie Carroll
 '       2.0 version of source code migrated from 1.1 source (TVA.Shared.Crypto)
+'  02/28/2007 - J. Ritchie Carroll
+'       Change string based encrypt and decrypt functions to return null if
+'       input string to be encrypted or decrypted was null or empty
 '
 '*******************************************************************************************************
 
@@ -59,7 +62,8 @@ Namespace Security.Cryptography
         ''' <summary>Returns a Base64 encoded string of the returned binary array of the encrypted data generated with the given parameters</summary>
         Public Shared Function Encrypt(ByVal str As String, ByVal encryptionKey As String, ByVal strength As EncryptLevel) As String
 
-            If encryptionKey Is Nothing OrElse encryptionKey.Length = 0 Then encryptionKey = StandardKey
+            If String.IsNullOrEmpty(str) Then Return Nothing
+            If String.IsNullOrEmpty(encryptionKey) Then encryptionKey = StandardKey
 
             Dim rgbKey As Byte() = Encoding.ASCII.GetBytes(encryptionKey)
             Dim rgbIV As Byte() = Encoding.ASCII.GetBytes(encryptionKey)
@@ -240,6 +244,7 @@ Namespace Security.Cryptography
         ''' <summary>Returns a decrypted string from a Base64 encoded string of binary encrypted data from the given parameters</summary>
         Public Shared Function Decrypt(ByVal str As String, ByVal encryptionKey As String, ByVal strength As EncryptLevel) As String
 
+            If String.IsNullOrEmpty(str) Then Return Nothing
             If String.IsNullOrEmpty(encryptionKey) Then encryptionKey = StandardKey
 
             Dim rgbKey As Byte() = Encoding.ASCII.GetBytes(encryptionKey)

@@ -34,5 +34,7 @@ Public Interface IChannel
 
     ReadOnly Property Attributes() As Dictionary(Of String, String)
 
+    Property Tag() As Object
+
 End Interface
 

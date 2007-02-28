@@ -41,6 +41,7 @@ Namespace Ieee1344
             Private m_frameQueue As MemoryStream
             Private m_statusFlags As Int16
             Private m_attributes As Dictionary(Of String, String)
+            Private m_tag As Object
 
             Public Sub New()
 
@@ -334,6 +335,15 @@ Namespace Ieee1344
 
                     Return m_attributes
                 End Get
+            End Property
+
+            Public Property Tag() As Object Implements IChannel.Tag
+                Get
+                    Return m_tag
+                End Get
+                Set(ByVal value As Object)
+                    m_tag = value
+                End Set
             End Property
 
         End Class

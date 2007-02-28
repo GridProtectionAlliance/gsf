@@ -2,7 +2,11 @@
 
 Imports System.Xml
 Imports System.Data.SqlClient
+Imports Tva.Security.Cryptography
+Imports Tva.Security.Cryptography.Common
 Imports Tva.Security.Application
+Imports Tva.Identity.Common
+Imports Tva.Web.Services.Common
 
 Namespace Services
 
@@ -26,7 +30,10 @@ Namespace Services
         Public Function UserHasAccessToData(ByVal roleName As String) As Boolean
 
             With tva_credentials
-                Return AuthenticateUser(.UserName, .Password, roleName, .Server, .PassThroughAuthentication)
+                Return AuthenticateUser( _
+                    Decrypt(.UserName, WebServiceSecurityKey, EncryptLevel.Level4), _
+                    Decrypt(.Password, WebServiceSecurityKey, EncryptLevel.Level4), _
+                    roleName, .Server, .PassThroughAuthentication)
             End With
 
         End Function
@@ -34,6 +41,7 @@ Namespace Services
         Public Function BuildMessage() As String Implements IBusinessObjectsAdapter.BuildMessage
 
             Return m_boAdapter.BuildMessage()
+
         End Function
 
         Public Sub Initialize(ByVal ParamArray itemList() As Object) Implements IBusinessObjectsAdapter.Initialize
@@ -58,6 +66,9 @@ Namespace Services
         End Function
 
         Public Shared Function AuthenticateUser(ByVal userID As String, ByVal password As String, ByVal roleName As String, ByVal server As SecurityServer, ByVal passThroughAuthentication As Boolean) As Boolean
+
+            ' Don't allow users to spoof authentication :)
+            If passThroughAuthentication AndAlso String.Compare(userID, CurrentUserID, True) <> 0 Then Return False
 
             Dim connectionString As String
 

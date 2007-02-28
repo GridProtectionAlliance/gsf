@@ -29,6 +29,7 @@ Public MustInherit Class ChannelBase
     ' For example, this information is displayed in a tree view on the the PMU Connection
     ' Tester to display attributes of data elements that may be protocol specific
     Private m_attributes As Dictionary(Of String, String)
+    Private m_tag As Object
 
     ' This is expected to be overriden by the final derived class
     Public MustOverride ReadOnly Property DerivedType() As Type Implements IChannel.DerivedType
@@ -136,6 +137,16 @@ Public MustInherit Class ChannelBase
 
             Return m_attributes
         End Get
+    End Property
+
+    ''' <summary>User definable tag used to hold a reference associated with channel data</summary>
+    Public Overridable Property Tag() As Object Implements IChannel.Tag
+        Get
+            Return m_tag
+        End Get
+        Set(ByVal value As Object)
+            m_tag = value
+        End Set
     End Property
 
 End Class
