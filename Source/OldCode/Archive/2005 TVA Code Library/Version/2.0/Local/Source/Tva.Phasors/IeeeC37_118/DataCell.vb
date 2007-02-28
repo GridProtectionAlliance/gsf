@@ -215,6 +215,23 @@ Namespace IeeeC37_118
             End Set
         End Property
 
+        Public Overrides ReadOnly Property Attributes() As Dictionary(Of String, String)
+            Get
+                Dim baseAttributes As Dictionary(Of String, String) = MyBase.Attributes
+
+                With baseAttributes
+                    .Add("Data Is Sorted By Timestamp", DataIsSortedByTimestamp)
+                    .Add("Unlocked Time", UnlockedTime & ": " & [Enum].GetName(GetType(UnlockedTime), UnlockedTime))
+                    .Add("PMU Trigger Detected", PmuTriggerDetected)
+                    .Add("Trigger Reason", TriggerReason & ": " & [Enum].GetName(GetType(TriggerReason), TriggerReason))
+                    .Add("Configuration Change Detected", ConfigurationChangeDetected)
+                    .Add("PMU Error Detected", PmuErrorDetected)
+                End With
+
+                Return baseAttributes
+            End Get
+        End Property
+
     End Class
 
 End Namespace

@@ -275,6 +275,16 @@ Namespace IeeeC37_118
 
         End Sub
 
+        Public Overrides ReadOnly Property Attributes() As Dictionary(Of String, String)
+            Get
+                Dim baseAttributes As Dictionary(Of String, String) = MyBase.Attributes
+
+                baseAttributes.Add("Format Flags", m_formatFlags & ": " & [Enum].GetName(GetType(FormatFlags), m_formatFlags))
+
+                Return baseAttributes
+            End Get
+        End Property
+
     End Class
 
 End Namespace

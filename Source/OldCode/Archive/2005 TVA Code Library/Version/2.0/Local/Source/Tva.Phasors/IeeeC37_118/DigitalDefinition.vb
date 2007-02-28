@@ -179,17 +179,17 @@ Namespace IeeeC37_118
                 If m_parentAquired Then
                     Return m_draftRevision
                 Else
+                    ' We must assume version 1 until a parent reference is available
+                    ' Note: parent class, being higher up in the chain, is not available during early
+                    ' points of deserialization of this class - however, this method gets called
+                    ' to determine proper number of maximum digital labels - hence the need for
+                    ' this function - since we had to do this anyway, we took the opportunity to
+                    ' cache this value locally for speed
                     If Parent IsNot Nothing AndAlso Parent.Parent IsNot Nothing Then
                         m_parentAquired = True
                         m_draftRevision = Parent.Parent.DraftRevision
                         Return m_draftRevision
                     Else
-                        ' We must assume version 1 until a parent reference is available
-                        ' Note: parent class, being higher up in the chain, is not available during early
-                        ' points of deserialization of this class - however, this method gets called
-                        ' to determine proper number of maximum digital labels - hence the need for
-                        ' this function - since we had to do this anyway, we took the opportunity to
-                        ' cache this value locally for speed
                         Return DraftRevision.Draft7
                     End If
                 End If
@@ -246,6 +246,43 @@ Namespace IeeeC37_118
             info.AddValue("digitalLabels", m_label)
 
         End Sub
+
+        Public Overrides ReadOnly Property Attributes() As Dictionary(Of String, String)
+            Get
+                Dim baseAttributes As Dictionary(Of String, String) = MyBase.Attributes
+
+                With baseAttributes
+                    .Add("Label", Label)
+                    .Add("Index", Index)
+                    .Add("Offset", Offset)
+                    .Add("Data Format", DataFormat & ": " & [Enum].GetName(GetType(DataFormat), DataFormat))
+                    .Add("Scaling Factor", ScalingFactor)
+                    .Add("Scale per Bit", ScalePerBit)
+                    .Add("Maximum Scaling Factor", MaximumScalingFactor)
+                    .Add("Conversion Factor", ConversionFactor)
+                    .Add("Maximum Label Length", MaximumLabelLength)
+
+                    Dim normalStatusBytes As Byte() = BitConverter.GetBytes(NormalStatus)
+                    .Add("Normal Status", NormalStatus)
+                    .Add("Normal Status (Big Endian Bits)", ByteEncoding.BigEndianBinary.GetString(normalStatusBytes))
+                    .Add("Normal Status (Hexadecimal)", "0x" & ByteEncoding.Hexadecimal.GetString(normalStatusBytes))
+
+                    Dim validInputsBytes As Byte() = BitConverter.GetBytes(ValidInputs)
+                    .Add("Valid Inputs", ValidInputs)
+                    .Add("Valid Inputs (Big Endian Bits)", ByteEncoding.BigEndianBinary.GetString(validInputsBytes))
+                    .Add("Valid Inputs (Hexadecimal)", "0x" & ByteEncoding.Hexadecimal.GetString(validInputsBytes))
+
+                    If DraftRevision > DraftRevision.Draft6 Then
+                        .Add("Bit Label Count", LabelCount)
+                        For x As Integer = 0 To LabelCount - 1
+                            .Add("     Bit " & x & " Label", Labels(x))
+                        Next
+                    End If
+                End With
+
+                Return baseAttributes
+            End Get
+        End Property
 
     End Class
 

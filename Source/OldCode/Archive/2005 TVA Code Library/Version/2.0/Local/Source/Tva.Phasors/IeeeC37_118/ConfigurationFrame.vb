@@ -271,6 +271,7 @@ Namespace IeeeC37_118
                     .Add("Time Quality Flags", TimeQualityFlags & ": " & [Enum].GetName(GetType(TimeQualityFlags), TimeQualityFlags))
                     .Add("Time Quality Indicator Code", TimeQualityIndicatorCode & ": " & [Enum].GetName(GetType(TimeQualityIndicatorCode), TimeQualityIndicatorCode))
                     .Add("Time Base", TimeBase)
+                    .Add("Draft Revision", DraftRevision & ": " & [Enum].GetName(GetType(DraftRevision), DraftRevision))
                 End With
 
                 Return baseAttributes

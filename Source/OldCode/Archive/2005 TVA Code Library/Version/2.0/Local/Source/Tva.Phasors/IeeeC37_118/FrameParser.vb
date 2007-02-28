@@ -127,7 +127,7 @@ Namespace IeeeC37_118
         Public Overrides ReadOnly Property Status() As String
             Get
                 With New StringBuilder
-                    .Append("IEEEC37.118 draft revision: ")
+                    .Append("IEEE C37.118 draft revision: ")
                     .Append([Enum].GetName(GetType(DraftRevision), m_draftRevision))
                     .Append(Environment.NewLine)
                     .Append("         Current time base: ")
