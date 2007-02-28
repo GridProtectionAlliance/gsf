@@ -1,9 +1,10 @@
 ' 02/24/2007
 
 Imports Tva.Interop.Bit
+Imports Tva.Measurements
 
 Public MustInherit Class PointDataBase
-    Implements IPointData, IComparable
+    Implements IPointData, IComparable 'IMeasurement 
 
 #Region " Member Declaration "
 
@@ -91,6 +92,123 @@ Public MustInherit Class PointDataBase
         End If
 
     End Function
+
+#End Region
+
+#Region " IMeasurement Implementation "
+
+    'Public Function CompareTo1(ByVal other As Measurements.IMeasurement) As Integer Implements System.IComparable(Of Measurements.IMeasurement).CompareTo
+
+    'End Function
+
+    'Public Function Equals1(ByVal other As Measurements.IMeasurement) As Boolean Implements System.IEquatable(Of Measurements.IMeasurement).Equals
+
+    'End Function
+
+    'Public Property Adder() As Double Implements Measurements.IMeasurement.Adder
+    '    Get
+
+    '    End Get
+    '    Set(ByVal value As Double)
+
+    '    End Set
+    'End Property
+
+    'Public ReadOnly Property AdjustedValue() As Double Implements Measurements.IMeasurement.AdjustedValue
+    '    Get
+
+    '    End Get
+    'End Property
+
+    'Public Property ID() As Integer Implements Measurements.IMeasurement.ID
+    '    Get
+
+    '    End Get
+    '    Set(ByVal value As Integer)
+
+    '    End Set
+    'End Property
+
+    'Public ReadOnly Property Key() As Measurements.MeasurementKey Implements Measurements.IMeasurement.Key
+    '    Get
+
+    '    End Get
+    'End Property
+
+    'Public Property Multiplier() As Double Implements Measurements.IMeasurement.Multiplier
+    '    Get
+
+    '    End Get
+    '    Set(ByVal value As Double)
+
+    '    End Set
+    'End Property
+
+    'Public Property Source() As String Implements Measurements.IMeasurement.Source
+    '    Get
+
+    '    End Get
+    '    Set(ByVal value As String)
+
+    '    End Set
+    'End Property
+
+    'Public Property Tag() As String Implements Measurements.IMeasurement.Tag
+    '    Get
+
+    '    End Get
+    '    Set(ByVal value As String)
+
+    '    End Set
+    'End Property
+
+    'Public ReadOnly Property This() As Measurements.IMeasurement Implements Measurements.IMeasurement.This
+    '    Get
+
+    '    End Get
+    'End Property
+
+    'Public Property Ticks() As Long Implements Measurements.IMeasurement.Ticks
+    '    Get
+
+    '    End Get
+    '    Set(ByVal value As Long)
+
+    '    End Set
+    'End Property
+
+    'Public ReadOnly Property Timestamp() As Date Implements Measurements.IMeasurement.Timestamp
+    '    Get
+
+    '    End Get
+    'End Property
+
+    'Public Property TimestampQualityIsGood() As Boolean Implements Measurements.IMeasurement.TimestampQualityIsGood
+    '    Get
+
+    '    End Get
+    '    Set(ByVal value As Boolean)
+
+    '    End Set
+    'End Property
+
+    'Public Property Value1() As Double Implements Measurements.IMeasurement.Value
+    '    Get
+
+    '    End Get
+    '    Set(ByVal value As Double)
+
+    '    End Set
+    'End Property
+
+    'Public Property ValueQualityIsGood() As Boolean Implements Measurements.IMeasurement.ValueQualityIsGood
+    '    Get
+
+    '    End Get
+    '    Set(ByVal value As Boolean)
+
+    '    End Set
+    'End Property
 
 #End Region
 

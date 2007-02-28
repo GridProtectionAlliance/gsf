@@ -124,9 +124,10 @@ Public Class MetadataFile
             ' Initialize the point definition list.
             m_pointDefinitions = New List(Of PointDefinition)()
 
-            If File.Exists(m_name) Then
+            Dim fileName As String = AbsolutePath(m_name)
+            If File.Exists(fileName) Then
                 ' File exists, so we'll open it.
-                m_fileStream = New FileStream(m_name, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite)
+                m_fileStream = New FileStream(fileName, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite)
 
                 ' Once we have the file open, we'll process the file data.
                 If m_fileStream.Length Mod PointDefinition.BinaryLength = 0 Then
@@ -144,7 +145,7 @@ Public Class MetadataFile
                 End If
             Else
                 ' File doesn't exist, so we'll create it.
-                m_fileStream = New FileStream(m_name, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite)
+                m_fileStream = New FileStream(fileName, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite)
 
                 ' Since we're working with a new file, we'll populate the point definition list with the default
                 ' number of point definitions. These points will be witten back to the file when Save() is called
@@ -212,7 +213,7 @@ Public Class MetadataFile
             Next
             m_fileStream.Flush()    ' Ensure that the data is written to the file.
         Else
-            Throw New InvalidOperationException(String.Format("{0} ""{1}"" is not open.", Me.GetType().Name, m_name))
+            Throw New InvalidOperationException(String.Format("{0} ""{1}"" is not open.", Me.GetType().Name, AbsolutePath(m_name)))
         End If
 
     End Sub
@@ -255,7 +256,7 @@ Public Class MetadataFile
                 m_pointDefinitions(pointDefinition.Index - 1) = pointDefinition
             End If
         Else
-            Throw New InvalidOperationException(String.Format("{0} ""{1}"" is not open.", Me.GetType().Name, m_name))
+            Throw New InvalidOperationException(String.Format("{0} ""{1}"" is not open.", Me.GetType().Name, AbsolutePath(m_name)))
         End If
 
     End Sub
@@ -271,7 +272,7 @@ Public Class MetadataFile
 
             Return Nothing
         Else
-            Throw New InvalidOperationException(String.Format("{0} ""{1}"" is not open.", Me.GetType().Name, m_name))
+            Throw New InvalidOperationException(String.Format("{0} ""{1}"" is not open.", Me.GetType().Name, AbsolutePath(m_name)))
         End If
 
     End Function
@@ -289,7 +290,7 @@ Public Class MetadataFile
 
             Return Nothing
         Else
-            Throw New InvalidOperationException(String.Format("{0} ""{1}"" is not open.", Me.GetType().Name, m_name))
+            Throw New InvalidOperationException(String.Format("{0} ""{1}"" is not open.", Me.GetType().Name, AbsolutePath(m_name)))
         End If
 
     End Function
