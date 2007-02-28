@@ -20,20 +20,19 @@ Namespace Packets
 #Region " Member Declaration "
 
         Private m_index As Integer
-        Private m_timeTag As Double
-        Private m_quality As Integer
+        Private m_timeTag As TimeTag
+        Private m_quality As Quality
         Private m_value As Single
 
 #End Region
 
         Public Shadows Const TypeID As Short = 1
+
         Public Shadows Const BinaryLength As Integer = 22
 
         Public Sub New()
 
-            MyBase.New()
-            MyBase.ActionType = PacketActionType.SaveAndReply
-            MyBase.SaveLocation = PacketSaveLocation.ArchiveFile
+            MyBase.New(PacketActionType.SaveAndReply)
 
         End Sub
 
@@ -47,14 +46,14 @@ Namespace Packets
 
             MyClass.New()
 
-            If (binaryImage.Length - startIndex) >= BinaryLength Then
+            If binaryImage.Length - startIndex >= BinaryLength Then
                 ' We have a binary image of valid size.
                 Dim packetTypeID As Short = BitConverter.ToInt16(binaryImage, startIndex)
                 If packetTypeID = TypeID Then
                     ' We have a binary image with the correct type ID.
                     m_index = BitConverter.ToInt32(binaryImage, startIndex + 2)
-                    m_timeTag = BitConverter.ToDouble(binaryImage, startIndex + 6)
-                    m_quality = BitConverter.ToInt32(binaryImage, startIndex + 14)
+                    m_timeTag = New TimeTag(BitConverter.ToDouble(binaryImage, startIndex + 6))
+                    m_quality = CType(BitConverter.ToInt32(binaryImage, startIndex + 14), Quality)
                     m_value = BitConverter.ToSingle(binaryImage, startIndex + 18)
                 Else
                     Throw New ArgumentException(String.Format("Unexpected packet type ID {0}. Expected packet type ID {1}.", packetTypeID, TypeID))
@@ -65,11 +64,10 @@ Namespace Packets
 
         End Sub
 
-        Public Sub New(ByVal index As Integer, ByVal timeTag As Double, ByVal quality As Integer, _
-                ByVal value As Single)
+        Public Sub New(ByVal index As Integer, ByVal timeTag As TimeTag, ByVal quality As Quality, ByVal value As Single)
 
             MyClass.New()
-            
+
             m_index = index
             m_timeTag = timeTag
             m_quality = quality
@@ -86,20 +84,20 @@ Namespace Packets
             End Set
         End Property
 
-        Public Property TimeTag() As Double
+        Public Property TimeTag() As TimeTag
             Get
                 Return m_timeTag
             End Get
-            Set(ByVal value As Double)
+            Set(ByVal value As TimeTag)
                 m_timeTag = value
             End Set
         End Property
 
-        Public Property Quality() As Integer
+        Public Property Quality() As Quality
             Get
                 Return m_quality
             End Get
-            Set(ByVal value As Integer)
+            Set(ByVal value As Quality)
                 m_quality = value
             End Set
         End Property
@@ -113,18 +111,15 @@ Namespace Packets
             End Set
         End Property
 
-        Public Overrides Function GetReplyData() As Byte()
+        Public Overrides ReadOnly Property ReplyData() As Byte()
+            Get
+                Return Encoding.Default.GetBytes("ACK")
+            End Get
+        End Property
 
-            Return Encoding.ASCII.GetBytes("ACK")
+        Public Overrides Sub SaveData()
 
-        End Function
-
-        Public Overrides Function GetSaveData() As Byte()
-
-            'Return New ExtendedPointData(m_timeTag, m_value, m_quality).BinaryImage
-            Return Nothing
-
-        End Function
+        End Sub
 
         Public Shared Shadows Function TryParse(ByVal binaryImage As Byte(), ByRef packets As List(Of IPacket)) As Boolean
 
@@ -149,3 +144,21 @@ Namespace Packets
     End Class
 
 End Namespace
+
+'Public Shadows Const TypeID As Short = 1
+
+'MyBase.ActionType = PacketActionType.SaveAndReply
+'MyBase.SaveLocation = PacketSaveLocation.ArchiveFile
+
+'Public Overrides Function GetReplyData() As Byte()
+
+'    Return Encoding.ASCII.GetBytes("ACK")
+
+'End Function
+
+'Public Overrides Function GetSaveData() As Byte()
+
+'    'Return New ExtendedPointData(m_timeTag, m_value, m_quality).BinaryImage
+'    Return Nothing
+
+'End Function

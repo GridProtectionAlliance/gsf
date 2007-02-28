@@ -21,6 +21,21 @@ Public MustInherit Class PointDataBase
 
     Public Const BinaryLength As Integer = -1
 
+    Public Sub New()
+
+        MyBase.New()
+
+    End Sub
+
+    Public Sub New(ByVal timeTag As TimeTag, ByVal value As Single, ByVal quality As Quality)
+
+        MyClass.New()
+        m_timeTag = timeTag
+        m_value = value
+        Me.Quality = quality
+
+    End Sub
+
     Public Overridable Property TimeTag() As TimeTag Implements IPointData.TimeTag
         Get
             Return m_timeTag

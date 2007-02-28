@@ -3,9 +3,15 @@ Namespace Packets
     Public MustInherit Class PacketBase
         Implements IPacket
 
-        Private m_typeID As Short
-        Private m_actiontype As PacketActionType
-        Private m_saveLocation As PacketSaveLocation
+#Region " Member Declaration "
+
+        Private m_actionType As PacketActionType
+        Private m_archiveFile As ArchiveFile
+        Private m_metadataFile As MetadataFile
+
+#End Region
+
+#Region " Public Code "
 
         ''' <summary>
         ''' Identifies the type of the packet.
@@ -18,39 +24,48 @@ Namespace Packets
         ''' <remarks>A value of -1 indicates that the packets is of variable length.</remarks>
         Public Const BinaryLength As Integer = -1
 
-        Public Sub New()
+        Public Sub New(ByVal actionType As PacketActionType)
 
             MyBase.New()
+            m_actionType = actionType
 
         End Sub
 
-        Public Property ActionType() As PacketActionType Implements IPacket.ActionType
+        Public Property ArchiveFile() As ArchiveFile Implements IPacket.ArchiveFile
             Get
-                Return m_actiontype
+                Return m_archiveFile
             End Get
-            Set(ByVal value As PacketActionType)
-                m_actiontype = value
+            Set(ByVal value As ArchiveFile)
+                m_archiveFile = value
             End Set
         End Property
 
-        Public Property SaveLocation() As PacketSaveLocation Implements IPacket.SaveLocation
+        Public Property MetadataFile() As MetadataFile Implements IPacket.MetadataFile
             Get
-                Return m_saveLocation
+                Return m_metadataFile
             End Get
-            Set(ByVal value As PacketSaveLocation)
-                m_saveLocation = value
+            Set(ByVal value As MetadataFile)
+                m_metadataFile = value
             End Set
         End Property
 
-        Public MustOverride Function GetSaveData() As Byte() Implements IPacket.GetSaveData
+        Public ReadOnly Property ActionType() As PacketActionType Implements IPacket.ActionType
+            Get
+                Return m_actionType
+            End Get
+        End Property
 
-        Public MustOverride Function GetReplyData() As Byte() Implements IPacket.GetReplyData
+        Public MustOverride ReadOnly Property ReplyData() As Byte() Implements IPacket.ReplyData
+
+        Public MustOverride Sub SaveData() Implements IPacket.SaveData
 
         Public Shared Function TryParse(ByVal binaryImage As Byte(), ByRef packets As List(Of IPacket)) As Boolean
 
             Throw New NotImplementedException("This static method has not been implemented by the derived class.")
 
         End Function
+
+#End Region
 
     End Class
 

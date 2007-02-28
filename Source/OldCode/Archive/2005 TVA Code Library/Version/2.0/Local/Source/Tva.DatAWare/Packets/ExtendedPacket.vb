@@ -41,13 +41,12 @@ Namespace Packets
 #End Region
 
         Public Shadows Const TypeID As Short = 2
+
         Public Shadows Const BinaryLength As Integer = 22
 
         Public Sub New()
 
-            MyBase.New()
-            MyBase.ActionType = PacketActionType.SaveAndReply
-            MyBase.SaveLocation = PacketSaveLocation.ArchiveFile
+            MyBase.New(PacketActionType.SaveAndReply)
 
         End Sub
 
@@ -205,24 +204,15 @@ Namespace Packets
             End Set
         End Property
 
-        Public Overrides Function GetReplyData() As Byte()
+        Public Overrides ReadOnly Property ReplyData() As Byte()
+            Get
+                Return Encoding.Default.GetBytes("ACK")
+            End Get
+        End Property
 
-            Return Encoding.ASCII.GetBytes("ACK")
+        Public Overrides Sub SaveData()
 
-        End Function
-
-        Public Overrides Function GetSaveData() As Byte()
-
-            Dim timestamp As New System.DateTime(Convert.ToInt32(m_year), _
-                Convert.ToInt32(m_month), Convert.ToInt32(m_day), _
-                Convert.ToInt32(m_hour) + Convert.ToInt32(m_gmtOffset), _
-                Convert.ToInt32(m_minute), Convert.ToInt32(m_second), _
-                Convert.ToInt32(m_millisecond), DateTimeKind.Utc)
-
-            'Return New ExtendedPointData(timestamp, m_value, m_quality).BinaryImage
-            Return Nothing
-
-        End Function
+        End Sub
 
         Public Shared Shadows Function TryParse(ByVal binaryImage As Byte(), ByRef packets As List(Of IPacket)) As Boolean
 
@@ -247,3 +237,27 @@ Namespace Packets
     End Class
 
 End Namespace
+
+'Public Shadows Const TypeID As Short = 2
+
+'MyBase.ActionType = PacketActionType.SaveAndReply
+'MyBase.SaveLocation = PacketSaveLocation.ArchiveFile
+
+'Public Overrides Function GetReplyData() As Byte()
+
+'    Return Encoding.ASCII.GetBytes("ACK")
+
+'End Function
+
+'Public Overrides Function GetSaveData() As Byte()
+
+'    Dim timestamp As New System.DateTime(Convert.ToInt32(m_year), _
+'        Convert.ToInt32(m_month), Convert.ToInt32(m_day), _
+'        Convert.ToInt32(m_hour) + Convert.ToInt32(m_gmtOffset), _
+'        Convert.ToInt32(m_minute), Convert.ToInt32(m_second), _
+'        Convert.ToInt32(m_millisecond), DateTimeKind.Utc)
+
+'    'Return New ExtendedPointData(timestamp, m_value, m_quality).BinaryImage
+'    Return Nothing
+
+'End Function

@@ -17,7 +17,8 @@ Partial Class DataProcessor
         'This call is required by the Component Designer.
         InitializeComponent()
 
-        m_toReplySender = Tva.Collections.KeyedProcessQueue(Of Guid, Packets.IPacket).CreateRealTimeQueue(AddressOf ReplyToSender)
+        m_saveQueue = Tva.Collections.KeyedProcessQueue(Of Guid, Packets.IPacket).CreateRealTimeQueue(AddressOf SaveToFile)
+        m_replyQueue = Tva.Collections.KeyedProcessQueue(Of Guid, Packets.IPacket).CreateRealTimeQueue(AddressOf ReplyToSender)
 
     End Sub
 

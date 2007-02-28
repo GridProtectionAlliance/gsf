@@ -2,13 +2,15 @@ Namespace Packets
 
     Public Interface IPacket
 
-        Property ActionType() As PacketActionType
+        Property ArchiveFile() As ArchiveFile
 
-        Property SaveLocation() As PacketSaveLocation
+        Property MetadataFile() As MetadataFile
 
-        Function GetSaveData() As Byte()
+        ReadOnly Property ActionType() As PacketActionType
 
-        Function GetReplyData() As Byte()
+        ReadOnly Property ReplyData() As Byte()
+
+        Sub SaveData()
 
     End Interface
 

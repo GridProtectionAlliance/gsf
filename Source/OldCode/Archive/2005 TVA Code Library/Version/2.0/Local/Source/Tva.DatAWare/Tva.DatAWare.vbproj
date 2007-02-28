@@ -122,7 +122,6 @@
     <Compile Include="DataProcessor.vb">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="Packets\Enumerations.vb" />
     <Compile Include="Packets\ExtendedPacket.vb" />
     <Compile Include="Packets\IPacket.vb" />
     <Compile Include="Packets\PacketBase.vb" />

@@ -13,6 +13,12 @@ Public Class StandardPointData
 
     Public Shadows Const BinaryLength As Integer = 10
 
+    Public Sub New(ByVal timeTag As TimeTag, ByVal value As Single, ByVal quality As Quality)
+
+        MyBase.New(timeTag, value, quality)
+
+    End Sub
+
     Public Sub New(ByVal binaryImage As Byte())
 
         MyClass.New(binaryImage, 0)
