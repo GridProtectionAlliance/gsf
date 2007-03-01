@@ -17,25 +17,21 @@ Namespace Services
         Inherits System.Web.Services.WebService
         Implements IBusinessObjectsAdapter
 
-        Private m_boAdapter As IBusinessObjectsAdapter
+        Private m_businessObjectAdapter As IBusinessObjectsAdapter
+
         Protected DllName As String
         Protected FullyQualifiedClassName As String
-        Protected tva_credentials As AuthenticationSoapHeader
+        Protected TvaWebServiceCredentials As AuthenticationSoapHeader
 
         Public Sub New()
+
             MyBase.New()
 
         End Sub
 
         Public Function UserHasAccessToData(ByVal roleName As String) As Boolean
 
-            With tva_credentials
-
-                Debug.WriteLine("Username = " & Decrypt(.UserName, WebServiceSecurityKey, EncryptLevel.Level4))
-                Debug.WriteLine("Password = " & Decrypt(.Password, WebServiceSecurityKey, EncryptLevel.Level4))
-
-                Stop
-
+            With TvaWebServiceCredentials
                 Return AuthenticateUser( _
                     Decrypt(.UserName, WebServiceSecurityKey, EncryptLevel.Level4), _
                     Decrypt(.Password, WebServiceSecurityKey, EncryptLevel.Level4), _
@@ -46,7 +42,7 @@ Namespace Services
 
         Public Function BuildMessage() As String Implements IBusinessObjectsAdapter.BuildMessage
 
-            Return m_boAdapter.BuildMessage()
+            Return m_businessObjectAdapter.BuildMessage()
 
         End Function
 
@@ -54,8 +50,8 @@ Namespace Services
 
             Dim a As System.Reflection.Assembly = System.Reflection.Assembly.LoadFrom(Server.MapPath(DllName)) '"C:\Documents and Settings\sjohn\My Documents\Visual Studio 2005\Projects\abc\abc\bin\Release\abc.dll")
             Dim t As System.Type = a.GetType(FullyQualifiedClassName, True)
-            m_boAdapter = Activator.CreateInstance(t)
-            m_boAdapter.Initialize(itemList)
+            m_businessObjectAdapter = Activator.CreateInstance(t)
+            m_businessObjectAdapter.Initialize(itemList)
 
         End Sub
 
