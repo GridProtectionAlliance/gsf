@@ -57,7 +57,7 @@ Namespace Services
 
         Public Function ConvertToXMLDoc(ByVal xmlData As String) As XmlDocument
 
-            Dim xmlDoc As XmlDocument = New XmlDocument()
+            Dim xmlDoc As New XmlDocument()
             Dim xmlReader As System.Xml.XmlTextReader
             xmlReader = New System.Xml.XmlTextReader(xmlData, System.Xml.XmlNodeType.Document, Nothing)
             xmlReader.ReadOuterXml()
