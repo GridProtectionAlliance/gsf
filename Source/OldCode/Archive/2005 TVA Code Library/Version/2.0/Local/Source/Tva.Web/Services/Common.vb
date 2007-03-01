@@ -42,7 +42,10 @@ Namespace Services
             ' of the AuthenticationSoapHeader and do not support interfaces - hence all calls will be made through
             ' reflection (i.e., late bound method invocation support), but everything works as expected...
             With webService
-                .UserName = Encrypt(CurrentUserID, WebServiceSecurityKey, EncryptLevel.Level4)
+                ' Remove domain prefix from user ID (if it has one)
+                Dim userName As String = CurrentUserID
+                If userName.Contains("\") Then userName = userName.Split("\"c)(1).Trim()
+                .UserName = Encrypt(userName, WebServiceSecurityKey, EncryptLevel.Level4)
                 .Password = Nothing
                 .Server = server
                 .PassThroughAuthentication = True

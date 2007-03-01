@@ -30,6 +30,12 @@ Namespace Services
         Public Function UserHasAccessToData(ByVal roleName As String) As Boolean
 
             With tva_credentials
+
+                Debug.WriteLine("Username = " & Decrypt(.UserName, WebServiceSecurityKey, EncryptLevel.Level4))
+                Debug.WriteLine("Password = " & Decrypt(.Password, WebServiceSecurityKey, EncryptLevel.Level4))
+
+                Stop
+
                 Return AuthenticateUser( _
                     Decrypt(.UserName, WebServiceSecurityKey, EncryptLevel.Level4), _
                     Decrypt(.Password, WebServiceSecurityKey, EncryptLevel.Level4), _
@@ -68,7 +74,11 @@ Namespace Services
         Public Shared Function AuthenticateUser(ByVal userID As String, ByVal password As String, ByVal roleName As String, ByVal server As SecurityServer, ByVal passThroughAuthentication As Boolean) As Boolean
 
             ' Don't allow users to spoof authentication :)
-            If passThroughAuthentication AndAlso String.Compare(userID, CurrentUserID, True) <> 0 Then Return False
+            If passThroughAuthentication Then
+                Dim userName As String = CurrentUserID
+                If userName.Contains("\") Then userName = userName.Split("\"c)(1).Trim()
+                If String.Compare(userID, userName, True) <> 0 Then Return False
+            End If
 
             Dim connectionString As String
 
