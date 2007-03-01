@@ -5,6 +5,7 @@ Imports System.Drawing
 Imports System.ComponentModel
 Imports System.ServiceProcess
 Imports Tva.IO
+Imports Tva.Common
 Imports Tva.Communication
 Imports Tva.Serialization
 Imports Tva.Scheduling
@@ -711,6 +712,12 @@ Public Class ServiceHelper
             If Not processToStart.CurrentState = ProcessState.Processing Then
                 ' The specified process is currently not executing, so we'll start its execution.
                 UpdateStatus(String.Format("Process ""{0}"" is being started...", processToStart.Name))
+                If request.Parameters.Length > 1 Then
+                    ' We'll provide any additional parameters received to the process for consumption.
+                    Dim processParameters As Object() = CreateArray(Of Object)(request.Parameters.Length - 1)
+                    Array.Copy(request.Parameters, 1, processParameters, 0, processParameters.Length)
+                    processToStart.Parameters = processParameters
+                End If
                 processToStart.Start()
             Else
                 ' We cannot start execution of the specified process because it is currently executing.
