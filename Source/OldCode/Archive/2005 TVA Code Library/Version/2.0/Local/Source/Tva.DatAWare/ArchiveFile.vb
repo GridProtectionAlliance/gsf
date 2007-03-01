@@ -59,7 +59,7 @@ Public Class ArchiveFile
     ''' <remarks>Size in MB.</remarks>
     Public Property Size() As Double
         Get
-            Return System.Math.Round(m_size, 2)
+            Return m_size
         End Get
         Set(ByVal value As Double)
             m_size = value
@@ -127,8 +127,6 @@ Public Class ArchiveFile
                 m_fat = New ArchiveFileAllocationTable(m_fileStream, m_blockSize, MaximumDataBlocks(m_size, m_blockSize))
                 m_fat.Persist()
             End If
-            m_size = m_fileStream.Length / (1024 * 1024)
-            m_blockSize = m_fat.DataBlockSize
             m_activeDataBlocks = New Dictionary(Of Integer, ArchiveDataBlock)()
         End If
         

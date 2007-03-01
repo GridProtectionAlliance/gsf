@@ -59,8 +59,8 @@ Public Class ArchiveFileAllocationTable
             m_dataBlockSize = BitConverter.ToInt32(fixedFatData, 24)
             m_dataBlockCount = BitConverter.ToInt32(fixedFatData, 28)
 
-            Dim variableFatData As Byte() = CreateArray(Of Byte)(m_dataBlockCount * ArchiveDataBlockPointer.BinaryLength)
-            m_fileStream.Seek(-(variableFatData.Length + fixedFatData.Length), SeekOrigin.End)
+            Dim variableFatData As Byte() = CreateArray(Of Byte)(BinaryLength - MinimumBinaryLength)
+            m_fileStream.Seek(-BinaryLength, SeekOrigin.End)
             m_fileStream.Read(variableFatData, 0, variableFatData.Length)
             For i As Integer = 0 To variableFatData.Length - 1 Step ArchiveDataBlockPointer.BinaryLength
                 m_dataBlockPointers.Add(New ArchiveDataBlockPointer(variableFatData, i))
@@ -160,7 +160,13 @@ Public Class ArchiveFileAllocationTable
     Public Sub Persist()
 
         ' Leave space for data blocks.
-        m_fileStream.Seek(m_dataBlockCount * m_dataBlockSize * 1024, SeekOrigin.Begin)
+        If m_fileStream.Length > 0 Then
+            ' Existing file...
+            m_fileStream.Seek(-BinaryLength, SeekOrigin.End)
+        Else
+            ' New file...
+            m_fileStream.Seek(m_dataBlockCount * (m_dataBlockSize * 1024), SeekOrigin.Begin)
+        End If
         m_fileStream.Write(BinaryImage, 0, BinaryLength)
         m_fileStream.Flush()
 
@@ -225,12 +231,13 @@ Public Class ArchiveFileAllocationTable
 
     Private ReadOnly Property BinaryImage() As Byte()
         Get
-            Dim pointersBinaryLength As Integer = Me.BinaryLength - MinimumBinaryLength
-            Dim image As Byte() = CreateArray(Of Byte)(pointersBinaryLength + MinimumBinaryLength)
+            Dim image As Byte() = CreateArray(Of Byte)(BinaryLength)
 
             For i As Integer = 0 To m_dataBlockPointers.Count - 1
                 Array.Copy(m_dataBlockPointers(i).BinaryImage, 0, image, i * ArchiveDataBlockPointer.BinaryLength, ArchiveDataBlockPointer.BinaryLength)
             Next
+
+            Dim pointersBinaryLength As Integer = BinaryLength - MinimumBinaryLength
             Array.Copy(BitConverter.GetBytes(m_fileStartTime.Value), 0, image, pointersBinaryLength, 8)
             Array.Copy(BitConverter.GetBytes(m_fileEndTime.Value), 0, image, pointersBinaryLength + 8, 8)
             Array.Copy(BitConverter.GetBytes(m_eventsReceived), 0, image, pointersBinaryLength + 16, 4)
