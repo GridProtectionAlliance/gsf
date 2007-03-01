@@ -246,7 +246,8 @@ Namespace Measurements
         ''' <summary>This implementation of a basic measurement compares itself by value</summary>
         Public Function CompareTo(ByVal obj As Object) As Integer Implements System.IComparable.CompareTo
 
-            If TypeOf obj Is IMeasurement Then Return CompareTo(DirectCast(obj, IMeasurement))
+            Dim other As IMeasurement = TryCast(obj, IMeasurement)
+            If other IsNot Nothing Then Return CompareTo(other)
             Throw New ArgumentException("Measurement can only be compared with other IMeasurements...")
 
         End Function
