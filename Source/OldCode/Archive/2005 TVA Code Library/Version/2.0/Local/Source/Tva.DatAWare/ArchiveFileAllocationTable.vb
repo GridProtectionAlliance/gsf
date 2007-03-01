@@ -219,7 +219,7 @@ Public Class ArchiveFileAllocationTable
 
     Private ReadOnly Property BinaryLength() As Integer
         Get
-            Return (m_dataBlockPointers.Count * ArchiveDataBlockPointer.BinaryLength) + MinimumBinaryLength
+            Return (m_dataBlockCount * ArchiveDataBlockPointer.BinaryLength) + MinimumBinaryLength
         End Get
     End Property
 
