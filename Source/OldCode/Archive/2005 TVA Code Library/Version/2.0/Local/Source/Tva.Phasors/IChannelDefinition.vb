@@ -21,7 +21,7 @@ Imports System.Runtime.Serialization
 <CLSCompliant(False)> _
 Public Interface IChannelDefinition
 
-    Inherits IChannel, IComparable, ISerializable
+    Inherits IChannel, ISerializable, IEquatable(Of IChannelDefinition), IComparable(Of IChannelDefinition), IComparable
 
     ReadOnly Property Parent() As IConfigurationCell
 

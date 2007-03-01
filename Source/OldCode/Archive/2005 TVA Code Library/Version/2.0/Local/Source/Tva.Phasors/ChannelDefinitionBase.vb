@@ -167,14 +167,24 @@ Public MustInherit Class ChannelDefinitionBase
         End Get
     End Property
 
+    Public Overloads Function Equals(ByVal other As IChannelDefinition) As Boolean Implements System.IEquatable(Of IChannelDefinition).Equals
+
+        Return (CompareTo(other) = 0)
+
+    End Function
+
     Public Overridable Function CompareTo(ByVal obj As Object) As Int32 Implements IComparable.CompareTo
 
+        Dim other As IChannelDefinition = TryCast(obj, IChannelDefinition)
+        If other IsNot Nothing Then Return CompareTo(other)
+        Throw New ArgumentException("ChannelDefinition can only be compared to other IChannelDefinitions")
+
+    End Function
+
+    Public Function CompareTo(ByVal other As IChannelDefinition) As Integer Implements System.IComparable(Of IChannelDefinition).CompareTo
+
         ' We sort channel defintions by index
-        If TypeOf obj Is IChannelDefinition Then
-            Return Index.CompareTo(DirectCast(obj, IChannelDefinition).Index)
-        Else
-            Throw New ArgumentException("ChannelDefinition can only be compared to other IChannelDefinitions")
-        End If
+        Return m_index.CompareTo(other.Index)
 
     End Function
 
