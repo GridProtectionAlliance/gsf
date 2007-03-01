@@ -55,7 +55,7 @@ Namespace Services
 
         End Sub
 
-        Public Function ConvertToXMLDoc(ByVal xmlData As String)
+        Public Function ConvertToXMLDoc(ByVal xmlData As String) As XmlDocument
 
             Dim xmlDoc As XmlDocument = New XmlDocument()
             Dim xmlReader As System.Xml.XmlTextReader
@@ -92,21 +92,20 @@ Namespace Services
             End With
 
             Try
-                Dim uObject As User = New User(userID, password, New SqlConnection(connectionString))
-                With uObject
+                With New User(userID, password, New SqlConnection(connectionString))
                     ' When not using pass through authentication, web service validates user name and password
                     ' otherwise only user name is used to verify user is in role and it becomes the responsibility
                     ' of the owning application to handle user authentication...
                     If Not passThroughAuthentication AndAlso Not .IsAuthenticated() Then Return False
                     If .FindRole(roleName) IsNot Nothing Then Return True
                 End With
-            Catch ex As Exception
+            Catch
             End Try
-
 
             Return False
 
         End Function
+
     End Class
 
 End Namespace
