@@ -209,7 +209,7 @@ Namespace FNet
 
                 If Convert.ToInt32(data(Element.Time).Substring(4, 2)) = 0 Then
                     With DirectCast(.This, ConfigurationCell)
-                        Select Case Convert.ToInt32(data(Element.SampleIndex))
+                        Select Case Parent.SampleIndex
                             Case 1
                                 .Latitude = m_analogValue
                             Case 2
