@@ -52,6 +52,7 @@ Public MustInherit Class FrameParserBase
     Private m_dataStream As MemoryStream
     Private m_initialized As Boolean
     Private m_enabled As Boolean
+    Private m_connectionParameters As IConnectionParameters
 
 #End Region
 
@@ -215,10 +216,10 @@ Public MustInherit Class FrameParserBase
 
     Public Overridable Property ConnectionParameters() As IConnectionParameters Implements IFrameParser.ConnectionParameters
         Get
-            Return Nothing
+            Return m_connectionParameters
         End Get
         Set(ByVal value As IConnectionParameters)
-            ' Nothing to do unless derived class overrides...
+            m_connectionParameters = value
         End Set
     End Property
 
