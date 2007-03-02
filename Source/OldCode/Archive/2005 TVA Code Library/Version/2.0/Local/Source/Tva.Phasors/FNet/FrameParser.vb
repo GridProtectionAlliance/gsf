@@ -199,7 +199,7 @@ Namespace FNet
                 ' If no configuration frame has been created, we create one now
                 If m_configurationFrame Is Nothing Then
                     ' Pre-parse first FNet data frame to get unit ID field and establish a virutal configuration frame
-                    Dim data As String() = RemoveDuplicateWhiteSpace(Encoding.ASCII.GetString(buffer, startByteIndex + 1, endByteIndex - startByteIndex - 1)).Split(" "c)
+                    Dim data As String() = RemoveDuplicateWhiteSpace(Encoding.ASCII.GetString(buffer, startByteIndex + 1, endByteIndex - startByteIndex - 1)).Trim().Split(" "c)
 
                     ' Create virtual configuration frame
                     m_configurationFrame = New ConfigurationFrame(Convert.ToUInt16(data(Element.UnitID)), Date.Now.Ticks, m_frameRate, m_nominalFrequency, m_stationName)
