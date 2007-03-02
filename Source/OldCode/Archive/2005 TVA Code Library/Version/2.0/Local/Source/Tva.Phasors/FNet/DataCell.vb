@@ -198,8 +198,11 @@ Namespace FNet
                 ' Parse FNet data frame into individual fields separated by spaces
                 data = RemoveDuplicateWhiteSpace(Encoding.ASCII.GetString(binaryImage, startIndex + 1, stopByteIndex - startIndex - 1)).Trim().Split(" "c)
 
-                ' Get timestamp of dat record
-                Parent.Ticks = ParseTimestamp(data(Element.Date), data(Element.Time), Convert.ToInt32(data(Element.SampleIndex)), .FrameRate)
+                ' Assign sample index
+                Parent.SampleIndex = Convert.ToInt32(data(Element.SampleIndex))
+
+                ' Get timestamp of data record
+                Parent.Ticks = ParseTimestamp(data(Element.Date), data(Element.Time), Parent.SampleIndex, .FrameRate)
 
                 ' Parse out first frequency (can be long/lat at top of minute)
                 m_analogValue = Convert.ToSingle(data(Element.Analog))
@@ -207,11 +210,11 @@ Namespace FNet
                 If Convert.ToInt32(data(Element.Time).Substring(4, 2)) = 0 Then
                     With DirectCast(.This, ConfigurationCell)
                         Select Case Convert.ToInt32(data(Element.SampleIndex))
-                            Case 0
-                                .Longitude = m_analogValue
                             Case 1
                                 .Latitude = m_analogValue
                             Case 2
+                                .Longitude = m_analogValue
+                            Case 3
                                 .NumberOfSatellites = m_analogValue
                         End Select
                     End With
