@@ -83,7 +83,8 @@ Public Class ArchiveDataBlockPointer
 
         Dim other As ArchiveDataBlockPointer = TryCast(obj, ArchiveDataBlockPointer)
         If other IsNot Nothing Then
-            Return m_pointIndex.CompareTo(other.PointIndex) And m_startTime.CompareTo(other.StartTime)
+            Dim pointIndexCompare As Integer = m_pointIndex.CompareTo(other.PointIndex)
+            Return IIf(pointIndexCompare = 0, m_startTime.CompareTo(other.StartTime), pointIndexCompare)
         Else
             Throw New ArgumentException(String.Format("Cannot compare {0} with {1}.", Me.GetType().Name, other.GetType().Name))
         End If

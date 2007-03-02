@@ -165,7 +165,7 @@ Public Class ArchiveFileAllocationTable
             m_fileStream.Seek(-BinaryLength, SeekOrigin.End)
         Else
             ' New file...
-            m_fileStream.Seek(m_dataBlockCount * (m_dataBlockSize * 1024), SeekOrigin.Begin)
+            m_fileStream.Seek(m_dataBlockCount * (m_dataBlockSize * 1024L), SeekOrigin.Begin)
         End If
         m_fileStream.Write(BinaryImage, 0, BinaryLength)
         m_fileStream.Flush()
@@ -269,7 +269,7 @@ Public Class ArchiveFileAllocationTable
         Dim pointerIndex As Integer = m_dataBlockPointers.IndexOf(dataBlockPointer)
         If pointerIndex >= 0 Then
             ' We calculate the data block's location based on the data block pointer's index.
-            Return pointerIndex * (m_dataBlockSize * 1024)
+            Return pointerIndex * (m_dataBlockSize * 1024L)
         Else
             Return -1
         End If

@@ -39,13 +39,13 @@ Public Class ArchiveDataBlock
 
     Public ReadOnly Property Capacity() As Integer
         Get
-            Return m_size * 1024 \ StandardPointData.BinaryLength
+            Return (m_size * 1024) \ StandardPointData.BinaryLength
         End Get
     End Property
 
     Public ReadOnly Property SlotsOccupied() As Integer
         Get
-            Return Convert.ToInt32(m_writeCursor \ StandardPointData.BinaryLength)
+            Return Convert.ToInt32((m_writeCursor - m_location) \ StandardPointData.BinaryLength)
         End Get
     End Property
 

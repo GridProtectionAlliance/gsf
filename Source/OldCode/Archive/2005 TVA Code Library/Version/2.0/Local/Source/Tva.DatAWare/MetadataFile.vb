@@ -26,13 +26,13 @@ Public Class MetadataFile
 
 #Region " Event Declaration "
 
-    Public Event Opening As EventHandler
-    Public Event Opened As EventHandler
-    Public Event Closing As EventHandler
-    Public Event Closed As EventHandler
-    Public Event Loading As EventHandler(Of ProgressEventArgs(Of Integer))
-    Public Event Saving As EventHandler(Of ProgressEventArgs(Of Integer))
-    Public Event Analyzing As EventHandler(Of ProgressEventArgs(Of Integer))
+    Public Event FileOpening As EventHandler
+    Public Event FileOpened As EventHandler
+    Public Event FileClosing As EventHandler
+    Public Event FileClosed As EventHandler
+    Public Event DataLoading As EventHandler(Of ProgressEventArgs(Of Integer))
+    Public Event DataSaving As EventHandler(Of ProgressEventArgs(Of Integer))
+    Public Event DataAnalyzing As EventHandler(Of ProgressEventArgs(Of Integer))
 
 #End Region
 
@@ -119,15 +119,15 @@ Public Class MetadataFile
     Public Sub Open()
 
         If Not Me.IsOpen Then
-            RaiseEvent Opening(Me, EventArgs.Empty)
+            RaiseEvent FileOpening(Me, EventArgs.Empty)
 
             ' Initialize the point definition list.
             m_pointDefinitions = New List(Of PointDefinition)()
 
-            Dim fileName As String = AbsolutePath(m_name)
-            If File.Exists(fileName) Then
+            m_name = AbsolutePath(m_name)
+            If File.Exists(m_name) Then
                 ' File exists, so we'll open it.
-                m_fileStream = New FileStream(fileName, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite)
+                m_fileStream = New FileStream(m_name, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite)
 
                 ' Once we have the file open, we'll process the file data.
                 If m_fileStream.Length Mod PointDefinition.BinaryLength = 0 Then
@@ -137,15 +137,15 @@ Public Class MetadataFile
                     For i As Integer = 1 To pointDefinitionCount
                         m_fileStream.Read(binaryImage, 0, binaryImage.Length)
                         m_pointDefinitions.Add(New PointDefinition(i, binaryImage))
-                        RaiseEvent Loading(Me, New ProgressEventArgs(Of Integer)(pointDefinitionCount, i))
+                        RaiseEvent DataLoading(Me, New ProgressEventArgs(Of Integer)(pointDefinitionCount, i))
                     Next
                 Else
                     Close(False)
-                    Throw New InvalidOperationException(String.Format("File """"{0}"""" is corrupt.", m_fileStream.Name))
+                    Throw New InvalidOperationException(String.Format("File """"{0}"""" is corrupt.", m_name))
                 End If
             Else
                 ' File doesn't exist, so we'll create it.
-                m_fileStream = New FileStream(fileName, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite)
+                m_fileStream = New FileStream(m_name, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite)
 
                 ' Since we're working with a new file, we'll populate the point definition list with the default
                 ' number of point definitions. These points will be witten back to the file when Save() is called
@@ -164,7 +164,7 @@ Public Class MetadataFile
                 m_autoAnalyzeTimer.Start()
             End If
 
-            RaiseEvent Opened(Me, EventArgs.Empty)
+            RaiseEvent FileOpened(Me, EventArgs.Empty)
         End If
 
     End Sub
@@ -178,7 +178,7 @@ Public Class MetadataFile
     Public Sub Close(ByVal saveFile As Boolean)
 
         If Me.IsOpen Then
-            RaiseEvent Closing(Me, EventArgs.Empty)
+            RaiseEvent FileClosing(Me, EventArgs.Empty)
 
             ' Stop the timers if they are ticking.
             m_autoSaveTimer.Stop()
@@ -193,7 +193,7 @@ Public Class MetadataFile
             m_fileStream.Close()
             m_fileStream = Nothing
 
-            RaiseEvent Closed(Me, EventArgs.Empty)
+            RaiseEvent FileClosed(Me, EventArgs.Empty)
         End If
 
     End Sub
@@ -209,11 +209,11 @@ Public Class MetadataFile
             ' Write all of the point definitions to the file.
             For i As Integer = 0 To m_pointDefinitions.Count - 1
                 m_fileStream.Write(m_pointDefinitions(i).BinaryImage, 0, PointDefinition.BinaryLength)
-                RaiseEvent Saving(Me, New ProgressEventArgs(Of Integer)(i + 1, m_pointDefinitions.Count))
+                RaiseEvent DataSaving(Me, New ProgressEventArgs(Of Integer)(i + 1, m_pointDefinitions.Count))
             Next
             m_fileStream.Flush()    ' Ensure that the data is written to the file.
         Else
-            Throw New InvalidOperationException(String.Format("{0} ""{1}"" is not open.", Me.GetType().Name, AbsolutePath(m_name)))
+            Throw New InvalidOperationException(String.Format("{0} ""{1}"" is not open.", Me.GetType().Name, m_name))
         End If
 
     End Sub
@@ -231,11 +231,45 @@ Public Class MetadataFile
             For i As Integer = 0 To nonAlignedPointDefinitions.Count - 1
                 ' We'll use the Write() method for adding point definitions to the actual point definition list.
                 Write(nonAlignedPointDefinitions(i))
-                RaiseEvent Analyzing(Me, New ProgressEventArgs(Of Integer)(nonAlignedPointDefinitions.Count, i + 1))
+                RaiseEvent DataAnalyzing(Me, New ProgressEventArgs(Of Integer)(nonAlignedPointDefinitions.Count, i + 1))
             Next
         End If
 
     End Sub
+
+    Public Function Read(ByVal pointIndex As Integer) As PointDefinition
+
+        If Me.IsOpen Then
+            For i As Integer = 0 To m_pointDefinitions.Count - 1
+                If m_pointDefinitions(i).Index = pointIndex Then
+                    Return m_pointDefinitions(i)
+                End If
+            Next
+
+            Return Nothing
+        Else
+            Throw New InvalidOperationException(String.Format("{0} ""{1}"" is not open.", Me.GetType().Name, m_name))
+        End If
+
+    End Function
+
+    Public Function Read(ByVal pointName As String) As PointDefinition
+
+        If Me.IsOpen Then
+            For i As Integer = 0 To m_pointDefinitions.Count - 1
+                If String.Compare(pointName, m_pointDefinitions(i).Name) = 0 OrElse _
+                        String.Compare(pointName, m_pointDefinitions(i).Synonym1) = 0 OrElse _
+                        String.Compare(pointName, m_pointDefinitions(i).Synonym2) = 0 Then
+                    Return m_pointDefinitions(i)
+                End If
+            Next
+
+            Return Nothing
+        Else
+            Throw New InvalidOperationException(String.Format("{0} ""{1}"" is not open.", Me.GetType().Name, m_name))
+        End If
+
+    End Function
 
     Public Sub Write(ByVal pointDefinition As PointDefinition)
 
@@ -256,44 +290,10 @@ Public Class MetadataFile
                 m_pointDefinitions(pointDefinition.Index - 1) = pointDefinition
             End If
         Else
-            Throw New InvalidOperationException(String.Format("{0} ""{1}"" is not open.", Me.GetType().Name, AbsolutePath(m_name)))
+            Throw New InvalidOperationException(String.Format("{0} ""{1}"" is not open.", Me.GetType().Name, m_name))
         End If
 
     End Sub
-
-    Public Function Read(ByVal pointIndex As Integer) As PointDefinition
-
-        If Me.IsOpen Then
-            For i As Integer = 0 To m_pointDefinitions.Count - 1
-                If m_pointDefinitions(i).Index = pointIndex Then
-                    Return m_pointDefinitions(i)
-                End If
-            Next
-
-            Return Nothing
-        Else
-            Throw New InvalidOperationException(String.Format("{0} ""{1}"" is not open.", Me.GetType().Name, AbsolutePath(m_name)))
-        End If
-
-    End Function
-
-    Public Function Read(ByVal pointName As String) As PointDefinition
-
-        If Me.IsOpen Then
-            For i As Integer = 0 To m_pointDefinitions.Count - 1
-                If String.Compare(pointName, m_pointDefinitions(i).Name) = 0 OrElse _
-                        String.Compare(pointName, m_pointDefinitions(i).Synonym1) = 0 OrElse _
-                        String.Compare(pointName, m_pointDefinitions(i).Synonym2) = 0 Then
-                    Return m_pointDefinitions(i)
-                End If
-            Next
-
-            Return Nothing
-        Else
-            Throw New InvalidOperationException(String.Format("{0} ""{1}"" is not open.", Me.GetType().Name, AbsolutePath(m_name)))
-        End If
-
-    End Function
 
 #End Region
 

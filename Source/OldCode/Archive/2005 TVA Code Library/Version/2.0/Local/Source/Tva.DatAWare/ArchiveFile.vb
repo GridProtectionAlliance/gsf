@@ -2,6 +2,7 @@
 
 Imports System.IO
 Imports System.Drawing
+Imports System.Threading
 Imports System.ComponentModel
 Imports Tva.IO.FilePath
 
@@ -18,15 +19,26 @@ Public Class ArchiveFile
     Private m_fat As ArchiveFileAllocationTable
     Private m_fileStream As FileStream
     Private m_activeDataBlocks As Dictionary(Of Integer, ArchiveDataBlock)
+    Private m_dataBlockRequestCount As Integer
+    Private m_rolloverPreparationDone As Boolean
+    Private m_rolloverPreparationThread As Thread
 
 #End Region
 
 #Region " Event Declaration "
 
-    Public Event DataReceived As EventHandler
-    Public Event DataArchived As EventHandler
-    Public Event DataDiscarded As EventHandler
     Public Event FileFull As EventHandler
+    Public Event FileOpening As EventHandler
+    Public Event FileOpened As EventHandler
+    Public Event FileClosing As EventHandler
+    Public Event FileClosed As EventHandler
+    Public Event RolloverPreparationStart As EventHandler
+    Public Event RolloverPreparationComplete As EventHandler
+    Public Event RolloverPreparationException As EventHandler(Of ExceptionEventArgs)
+
+    'Public Event DataReceived As EventHandler
+    'Public Event DataArchived As EventHandler
+    'Public Event DataDiscarded As EventHandler
 
 #End Region
 
@@ -116,25 +128,31 @@ Public Class ArchiveFile
     Public Sub Open()
 
         If Not Me.IsOpen Then
-            Dim fileName As String = AbsolutePath(m_name)
-            If File.Exists(fileName) Then
+            RaiseEvent FileOpening(Me, EventArgs.Empty)
+
+            m_name = AbsolutePath(m_name)
+            If File.Exists(m_name) Then
                 ' File has been created already, so we just need to read it.
-                m_fileStream = New FileStream(fileName, FileMode.Open, FileAccess.ReadWrite, FileShare.Read)
+                m_fileStream = New FileStream(m_name, FileMode.Open, FileAccess.ReadWrite, FileShare.Read)
                 m_fat = New ArchiveFileAllocationTable(m_fileStream)
             Else
                 ' File does not exist, so we have to create it and initialize it.
-                m_fileStream = New FileStream(fileName, FileMode.Create, FileAccess.ReadWrite, FileShare.Read)
+                m_fileStream = New FileStream(m_name, FileMode.Create, FileAccess.ReadWrite, FileShare.Read)
                 m_fat = New ArchiveFileAllocationTable(m_fileStream, m_blockSize, MaximumDataBlocks(m_size, m_blockSize))
                 m_fat.Persist()
             End If
             m_activeDataBlocks = New Dictionary(Of Integer, ArchiveDataBlock)()
+
+            RaiseEvent FileOpened(Me, EventArgs.Empty)
         End If
-        
+
     End Sub
 
     Public Sub Close()
 
         If Me.IsOpen Then
+            RaiseEvent FileClosing(Me, EventArgs.Empty)
+
             If m_saveOnClose Then Save()
 
             m_fat = Nothing
@@ -142,23 +160,34 @@ Public Class ArchiveFile
             m_activeDataBlocks = Nothing
             m_fileStream.Close()
             m_fileStream = Nothing
+
+            RaiseEvent FileClosed(Me, EventArgs.Empty)
         End If
 
     End Sub
 
     Public Sub Save()
 
-        ' The only thing that we need to write back to the file is the FAT.
-        m_fat.Persist()
+        If Me.IsOpen Then
+            ' The only thing that we need to write back to the file is the FAT.
+            m_fat.Persist()
+        Else
+            Throw New InvalidOperationException(String.Format("{0} ""{1}"" is not open.", Me.GetType().Name, m_name))
+        End If
 
     End Sub
 
     Public Sub Rollover()
 
-        ' Update FAT's start & end time
-        ' Close()
-        ' Rename the File
-        ' Open()
+        If m_rolloverPreparationDone Then
+            Dim filePath As String = JustPath(m_name)
+            Dim fileName As String = (NoFileExtension(m_name) & "_" & m_fat.FileStartTime.ToString() & "_to_" & m_fat.FileEndTime.ToString() & Extension).Replace(":"c, "!"c)
+
+            Close()
+            File.Move(m_name, filePath & fileName)  ' Rename the file.
+            Open()
+            m_rolloverPreparationDone = False
+        End If
 
     End Sub
 
@@ -176,48 +205,67 @@ Public Class ArchiveFile
 
     Public Function Read(ByVal pointIndex As Integer, ByVal startTime As TimeTag, ByVal endTime As TimeTag) As List(Of StandardPointData)
 
-        Dim data As New List(Of StandardPointData)()
-        Dim foundBlocks As List(Of ArchiveDataBlock) = m_fat.FindDataBlocks(pointIndex, startTime, endTime)
-        For i As Integer = 0 To foundBlocks.Count - 1
-            data.AddRange(foundBlocks(i).Read())
-        Next
+        If Me.IsOpen Then
+            Dim data As New List(Of StandardPointData)()
+            Dim foundBlocks As List(Of ArchiveDataBlock) = m_fat.FindDataBlocks(pointIndex, startTime, endTime)
+            For i As Integer = 0 To foundBlocks.Count - 1
+                data.AddRange(foundBlocks(i).Read())
+            Next
 
-        Return data
+            Return data
+        Else
+            Throw New InvalidOperationException(String.Format("{0} ""{1}"" is not open.", Me.GetType().Name, m_name))
+        End If
 
     End Function
 
     Public Sub Write(ByVal pointData As StandardPointData)
 
-        If pointData.Definition IsNot Nothing Then
-            m_fat.EventsReceived += 1
+        If Me.IsOpen Then
+            If pointData.Definition IsNot Nothing Then
+                m_fat.EventsReceived += 1
 
-            If ToBeArchived(pointData) Then
-                Dim dataBlock As ArchiveDataBlock = Nothing
-                m_activeDataBlocks.TryGetValue(pointData.Definition.Index, dataBlock)
-                If dataBlock Is Nothing OrElse (dataBlock IsNot Nothing AndAlso dataBlock.SlotsAvailable = 0) Then
-                    ' We either don't have a active data block where we can archive the point data or we have a 
-                    ' active data block but it is full, so we have to request a new data block from the FAT.
-                    m_activeDataBlocks.Remove(pointData.Definition.Index)
-                    dataBlock = m_fat.RequestDataBlock(pointData.Definition.Index, pointData.TimeTag)
-                    m_activeDataBlocks.Add(pointData.Definition.Index, dataBlock)
-                End If
+                If ToBeArchived(pointData) Then
+                    Dim dataBlock As ArchiveDataBlock = Nothing
+                    m_activeDataBlocks.TryGetValue(pointData.Definition.Index, dataBlock)
+                    If dataBlock Is Nothing OrElse (dataBlock IsNot Nothing AndAlso dataBlock.SlotsAvailable <= 0) Then
+                        ' We either don't have a active data block where we can archive the point data or we have a 
+                        ' active data block but it is full, so we have to request a new data block from the FAT.
+                        m_dataBlockRequestCount += 1
+                        m_activeDataBlocks.Remove(pointData.Definition.Index)
+                        dataBlock = m_fat.RequestDataBlock(pointData.Definition.Index, pointData.TimeTag)
+                        m_activeDataBlocks.Add(pointData.Definition.Index, dataBlock)
 
-                If dataBlock IsNot Nothing Then
-                    ' We were able to obtain a data block for writing data.
-                    dataBlock.Write(pointData)
+                        If m_dataBlockRequestCount >= m_fat.DataBlockCount * 0.5 AndAlso _
+                                Not m_rolloverPreparationDone AndAlso Not m_rolloverPreparationThread.IsAlive Then
+                            ' We've requested 50% percent of the total number of data blocks in the file, so we
+                            ' must now prepare for the rollver process since has not been done yet and it is not 
+                            ' already in progress.
+                            m_rolloverPreparationThread = New Thread(AddressOf PrepareForRollover)
+                            m_rolloverPreparationThread.Priority = ThreadPriority.Lowest
+                            m_rolloverPreparationThread.Start()
+                        End If
+                    End If
 
-                    m_fat.EventsArchived += 1
-                    m_fat.FileEndTime = pointData.TimeTag
-                    If m_fat.FileStartTime.CompareTo(TimeTag.MinValue) = 0 Then m_fat.FileStartTime = pointData.TimeTag
+                    If dataBlock IsNot Nothing Then
+                        ' We were able to obtain a data block for writing data.
+                        dataBlock.Write(pointData)
+
+                        m_fat.EventsArchived += 1
+                        m_fat.FileEndTime = pointData.TimeTag
+                        If m_fat.FileStartTime.CompareTo(TimeTag.MinValue) = 0 Then m_fat.FileStartTime = pointData.TimeTag
+                    Else
+                        ' We were unable to obtain a data block for writing data to because all data block are in use.
+                        RaiseEvent FileFull(Me, EventArgs.Empty)
+                    End If
                 Else
-                    ' We were unable to obtain a data block for writing data to because all data block are in use.
-                    RaiseEvent FileFull(Me, EventArgs.Empty)
+
                 End If
             Else
-
+                Throw New ArgumentException("Definition property for point data is not set.")
             End If
         Else
-            Throw New ArgumentException("Definition property for point data is not set.")
+            Throw New InvalidOperationException(String.Format("{0} ""{1}"" is not open.", Me.GetType().Name, m_name))
         End If
 
     End Sub
@@ -231,6 +279,33 @@ Public Class ArchiveFile
 #End Region
 
 #Region " Private Code "
+
+    Private Sub PrepareForRollover()
+
+        Try
+            RaiseEvent RolloverPreparationStart(Me, EventArgs.Empty)
+
+            Dim filePath As String = JustPath(m_name)
+            Dim fileName As String = "_" & JustFileName(m_name)
+
+            With New ArchiveFile()
+                .Name = filePath & fileName
+                .Size = m_size
+                .BlockSize = m_blockSize
+                .Open()
+                .Close()
+            End With
+
+            m_rolloverPreparationDone = True
+
+            RaiseEvent RolloverPreparationComplete(Me, EventArgs.Empty)
+        Catch ex As ThreadAbortException
+            ' We can safely ignore this exception.
+        Catch ex As Exception
+            RaiseEvent RolloverPreparationException(Me, New ExceptionEventArgs(ex))
+        End Try
+
+    End Sub
 
     Private Function ToBeArchived(ByVal pointDate As StandardPointData) As Boolean
 
