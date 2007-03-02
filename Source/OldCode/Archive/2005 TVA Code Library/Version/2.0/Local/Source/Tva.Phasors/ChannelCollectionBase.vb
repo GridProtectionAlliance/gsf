@@ -128,12 +128,10 @@ Public MustInherit Class ChannelCollectionBase(Of T As IChannel)
                 m_attributes.Clear()
             End If
 
-            With m_attributes
-                .Add("Derived Type", DerivedType.Name)
-                .Add("Binary Length", BinaryLength)
-                .Add("Maximum Count", MaximumCount)
-                .Add("Current Count", Count)
-            End With
+            m_attributes.Add("Derived Type", DerivedType.Name)
+            m_attributes.Add("Binary Length", BinaryLength)
+            m_attributes.Add("Maximum Count", MaximumCount)
+            m_attributes.Add("Current Count", Count)
 
             Return m_attributes
         End Get

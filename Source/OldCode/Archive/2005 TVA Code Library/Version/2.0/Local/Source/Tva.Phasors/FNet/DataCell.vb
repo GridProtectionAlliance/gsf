@@ -44,15 +44,11 @@ Namespace FNet
 
             MyBase.New(parent, False, configurationCell, MaximumPhasorValues, MaximumAnalogValues, MaximumDigitalValues)
 
-            Dim x As Int32
+            ' Initialize single phasor value and frequency value with an empty value
+            PhasorValues.Add(New PhasorValue(Me, configurationCell.PhasorDefinitions(0), 0, 0))
 
-            With configurationCell
-                ' Initialize single phasor value and frequency value with an empty value
-                PhasorValues.Add(New PhasorValue(Me, .PhasorDefinitions(x), 0, 0))
-
-                ' Initialize frequency and df/dt
-                FrequencyValue = New FrequencyValue(Me, .FrequencyDefinition, 0, 0)
-            End With
+            ' Initialize frequency and df/dt
+            FrequencyValue = New FrequencyValue(Me, configurationCell.FrequencyDefinition, 0, 0)
 
         End Sub
 
@@ -182,50 +178,46 @@ Namespace FNet
 
             If binaryImage(startIndex) <> StartByte Then Throw New InvalidOperationException("Bad data stream, expected start byte 01 as first byte in FNet frame, got " & binaryImage(startIndex).ToString("x"c).PadLeft(2, "0"c).ToUpper())
 
-            Dim parsingState As IDataCellParsingState = DirectCast(state, IDataCellParsingState)
+            Dim configurationCell As ConfigurationCell = DirectCast(DirectCast(state, IDataCellParsingState).ConfigurationCell, ConfigurationCell)
 
-            With parsingState.ConfigurationCell
-                Dim data As String()
-                Dim stopByteIndex As Integer
+            Dim data As String()
+            Dim stopByteIndex As Integer
 
-                For x As Integer = startIndex To binaryImage.Length - 1
-                    If binaryImage(x) = EndByte Then
-                        stopByteIndex = x
-                        Exit For
-                    End If
-                Next
-
-                ' Parse FNet data frame into individual fields separated by spaces
-                data = RemoveDuplicateWhiteSpace(Encoding.ASCII.GetString(binaryImage, startIndex + 1, stopByteIndex - startIndex - 1)).Trim().Split(" "c)
-
-                ' Assign sample index
-                Parent.SampleIndex = Convert.ToInt32(data(Element.SampleIndex))
-
-                ' Get timestamp of data record
-                Parent.Ticks = ParseTimestamp(data(Element.Date), data(Element.Time), Parent.SampleIndex, .FrameRate)
-
-                ' Parse out first frequency (can be long/lat at top of minute)
-                m_analogValue = Convert.ToSingle(data(Element.Analog))
-
-                If Convert.ToInt32(data(Element.Time).Substring(4, 2)) = 0 Then
-                    With DirectCast(.This, ConfigurationCell)
-                        Select Case Parent.SampleIndex
-                            Case 1
-                                .Latitude = m_analogValue
-                            Case 2
-                                .Longitude = m_analogValue
-                            Case 3
-                                .NumberOfSatellites = m_analogValue
-                        End Select
-                    End With
+            For x As Integer = startIndex To binaryImage.Length - 1
+                If binaryImage(x) = EndByte Then
+                    stopByteIndex = x
+                    Exit For
                 End If
+            Next
 
-                ' Create frequency value
-                FrequencyValue = New FrequencyValue(Me, .FrequencyDefinition, Convert.ToSingle(data(Element.Frequency)), 0)
+            ' Parse FNet data frame into individual fields separated by spaces
+            data = RemoveDuplicateWhiteSpace(Encoding.ASCII.GetString(binaryImage, startIndex + 1, stopByteIndex - startIndex - 1)).Trim().Split(" "c)
 
-                ' Create single phasor value
-                PhasorValues.Add(PhasorValue.CreateFromPolarValues(Me, .PhasorDefinitions(0), Convert.ToSingle(data(Element.Angle)), Convert.ToSingle(data(Element.Voltage))))
-            End With
+            ' Assign sample index
+            Parent.SampleIndex = Convert.ToInt32(data(Element.SampleIndex))
+
+            ' Get timestamp of data record
+            Parent.Ticks = ParseTimestamp(data(Element.Date), data(Element.Time), Parent.SampleIndex, configurationCell.FrameRate)
+
+            ' Parse out first frequency (can be long/lat at top of minute)
+            m_analogValue = Convert.ToSingle(data(Element.Analog))
+
+            If Convert.ToInt32(data(Element.Time).Substring(4, 2)) = 0 Then
+                Select Case Parent.SampleIndex
+                    Case 1
+                        configurationCell.Latitude = m_analogValue
+                    Case 2
+                        configurationCell.Longitude = m_analogValue
+                    Case 3
+                        configurationCell.NumberOfSatellites = m_analogValue
+                End Select
+            End If
+
+            ' Create frequency value
+            FrequencyValue = New FrequencyValue(Me, configurationCell.FrequencyDefinition, Convert.ToSingle(data(Element.Frequency)), 0)
+
+            ' Create single phasor value
+            PhasorValues.Add(PhasorValue.CreateFromPolarValues(Me, configurationCell.PhasorDefinitions(0), Convert.ToSingle(data(Element.Angle)), Convert.ToSingle(data(Element.Voltage))))
 
         End Sub
 
@@ -233,11 +225,9 @@ Namespace FNet
             Get
                 Dim baseAttributes As Dictionary(Of String, String) = MyBase.Attributes
 
-                With baseAttributes
-                    .Add("FNET Date", FNetDate)
-                    .Add("FNET Time", FNetTime)
-                    .Add("Analog Value", m_analogValue)
-                End With
+                baseAttributes.Add("FNET Date", FNetDate)
+                baseAttributes.Add("FNET Time", FNetTime)
+                baseAttributes.Add("Analog Value", m_analogValue)
 
                 Return baseAttributes
             End Get

@@ -213,9 +213,7 @@ Namespace BpaPdcStream
                     m_connectionParameters = parameters
 
                     ' Assign new incoming connection parameter values
-                    With parameters
-                        m_iniFileName = .ConfigurationFileName
-                    End With
+                    m_iniFileName = parameters.ConfigurationFileName
                 End If
             End Set
         End Property

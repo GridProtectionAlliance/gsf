@@ -156,11 +156,9 @@ Namespace FNet
                     MyBase.ConnectionParameters = parameters
 
                     ' Assign new incoming connection parameter values
-                    With parameters
-                        m_frameRate = .FrameRate
-                        m_nominalFrequency = .NominalFrequency
-                        m_stationName = .StationName
-                    End With
+                    m_frameRate = parameters.FrameRate
+                    m_nominalFrequency = parameters.NominalFrequency
+                    m_stationName = parameters.StationName
                 End If
             End Set
         End Property

@@ -134,10 +134,8 @@ Public MustInherit Class FrequencyDefinitionBase
         Get
             Dim baseAttributes As Dictionary(Of String, String) = MyBase.Attributes
 
-            With baseAttributes
-                .Add("df/dt Offset", DfDtOffset)
-                .Add("df/dt Scaling Factor", DfDtScalingFactor)
-            End With
+            baseAttributes.Add("df/dt Offset", DfDtOffset)
+            baseAttributes.Add("df/dt Scaling Factor", DfDtScalingFactor)
 
             Return baseAttributes
         End Get

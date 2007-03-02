@@ -77,9 +77,7 @@ Public MustInherit Class ChannelCellCollectionBase(Of T As IChannelCell)
         Get
             Dim baseAttributes As Dictionary(Of String, String) = MyBase.Attributes
 
-            With baseAttributes
-                .Add("Constant Cell Length", m_constantCellLength)
-            End With
+            baseAttributes.Add("Constant Cell Length", m_constantCellLength)
 
             Return baseAttributes
         End Get

@@ -164,12 +164,10 @@ Namespace Ieee1344
             Get
                 Dim baseAttributes As Dictionary(Of String, String) = MyBase.Attributes
 
-                With baseAttributes
-                    .Add("Frame Type", FrameType & ": " & [Enum].GetName(GetType(FrameType), FrameType))
-                    .Add("Frame Length", FrameLength)
-                    .Add("64-Bit ID Code", IDCode)
-                    .Add("Sample Count", m_sampleCount)
-                End With
+                baseAttributes.Add("Frame Type", FrameType & ": " & [Enum].GetName(GetType(FrameType), FrameType))
+                baseAttributes.Add("Frame Length", FrameLength)
+                baseAttributes.Add("64-Bit ID Code", IDCode)
+                baseAttributes.Add("Sample Count", m_sampleCount)
 
                 Return baseAttributes
             End Get

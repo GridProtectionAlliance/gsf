@@ -272,15 +272,13 @@ Public MustInherit Class ChannelFrameBase(Of T As IChannelCell)
         Get
             Dim baseAttributes As Dictionary(Of String, String) = MyBase.Attributes
 
-            With baseAttributes
-                .Add("Total Cells", Cells.Count)
-                .Add("Fundamental Frame Type", FundamentalFrameType & ": " & [Enum].GetName(GetType(FundamentalFrameType), FundamentalFrameType))
-                .Add("ID Code", IDCode)
-                .Add("Is Partial Frame", IsPartial)
-                .Add("Published", Published)
-                .Add("Ticks", Ticks)
-                .Add("Timestamp", Timestamp.ToString("yyyy-MM-dd HH:mm:ss.fff"))
-            End With
+            baseAttributes.Add("Total Cells", Cells.Count)
+            baseAttributes.Add("Fundamental Frame Type", FundamentalFrameType & ": " & [Enum].GetName(GetType(FundamentalFrameType), FundamentalFrameType))
+            baseAttributes.Add("ID Code", IDCode)
+            baseAttributes.Add("Is Partial Frame", IsPartial)
+            baseAttributes.Add("Published", Published)
+            baseAttributes.Add("Ticks", Ticks)
+            baseAttributes.Add("Timestamp", Timestamp.ToString("yyyy-MM-dd HH:mm:ss.fff"))
 
             Return baseAttributes
         End Get

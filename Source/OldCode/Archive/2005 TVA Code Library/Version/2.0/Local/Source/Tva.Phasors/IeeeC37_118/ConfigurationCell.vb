@@ -180,11 +180,9 @@ Namespace IeeeC37_118
             IDCode = EndianOrder.BigEndian.ToUInt16(binaryImage, startIndex)
             m_formatFlags = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 2)
 
-            With parsingState
-                .PhasorCount = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 4)
-                .AnalogCount = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 6)
-                .DigitalCount = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 8)
-            End With
+            parsingState.PhasorCount = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 4)
+            parsingState.AnalogCount = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 6)
+            parsingState.DigitalCount = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 8)
 
         End Sub
 

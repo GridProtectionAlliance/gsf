@@ -261,25 +261,23 @@ Namespace IeeeC37_118
                         m_attributes.Clear()
                     End If
 
-                    With m_attributes
-                        .Add("Derived Type", DerivedType.Name)
-                        .Add("Binary Length", BinaryLength)
-                        .Add("Total Cells", "0")
-                        .Add("Fundamental Frame Type", FundamentalFrameType & ": " & [Enum].GetName(GetType(FundamentalFrameType), FundamentalFrameType))
-                        .Add("ID Code", IDCode)
-                        .Add("Is Partial Frame", IsPartial)
-                        .Add("Published", Published)
-                        .Add("Ticks", Ticks)
-                        .Add("Timestamp", Timestamp.ToString("yyyy-MM-dd HH:mm:ss.fff"))
-                        .Add("Frame Type", FrameType & ": " & [Enum].GetName(GetType(FrameType), FrameType))
-                        .Add("Frame Length", FrameLength)
-                        .Add("Version", Version)
-                        .Add("Second of Century", SecondOfCentury)
-                        .Add("Fraction of Second", FractionOfSecond)
-                        .Add("Time Quality Flags", TimeQualityFlags & ": " & [Enum].GetName(GetType(TimeQualityFlags), TimeQualityFlags))
-                        .Add("Time Quality Indicator Code", TimeQualityIndicatorCode & ": " & [Enum].GetName(GetType(TimeQualityIndicatorCode), TimeQualityIndicatorCode))
-                        .Add("Time Base", TimeBase)
-                    End With
+                    m_attributes.Add("Derived Type", DerivedType.Name)
+                    m_attributes.Add("Binary Length", BinaryLength)
+                    m_attributes.Add("Total Cells", "0")
+                    m_attributes.Add("Fundamental Frame Type", FundamentalFrameType & ": " & [Enum].GetName(GetType(FundamentalFrameType), FundamentalFrameType))
+                    m_attributes.Add("ID Code", IDCode)
+                    m_attributes.Add("Is Partial Frame", IsPartial)
+                    m_attributes.Add("Published", Published)
+                    m_attributes.Add("Ticks", Ticks)
+                    m_attributes.Add("Timestamp", Timestamp.ToString("yyyy-MM-dd HH:mm:ss.fff"))
+                    m_attributes.Add("Frame Type", FrameType & ": " & [Enum].GetName(GetType(FrameType), FrameType))
+                    m_attributes.Add("Frame Length", FrameLength)
+                    m_attributes.Add("Version", Version)
+                    m_attributes.Add("Second of Century", SecondOfCentury)
+                    m_attributes.Add("Fraction of Second", FractionOfSecond)
+                    m_attributes.Add("Time Quality Flags", TimeQualityFlags & ": " & [Enum].GetName(GetType(TimeQualityFlags), TimeQualityFlags))
+                    m_attributes.Add("Time Quality Indicator Code", TimeQualityIndicatorCode & ": " & [Enum].GetName(GetType(TimeQualityIndicatorCode), TimeQualityIndicatorCode))
+                    m_attributes.Add("Time Base", TimeBase)
 
                     Return m_attributes
                 End Get
@@ -339,14 +337,12 @@ Namespace IeeeC37_118
 
             Dim buffer As Byte() = CreateArray(Of Byte)(BinaryLength)
 
-            With frameHeader
-                buffer(0) = SyncByte
-                buffer(1) = .FrameType Or .Version
-                EndianOrder.BigEndian.CopyBytes(.FrameLength, buffer, 2)
-                EndianOrder.BigEndian.CopyBytes(.IDCode, buffer, 4)
-                EndianOrder.BigEndian.CopyBytes(.SecondOfCentury, buffer, 6)
-                EndianOrder.BigEndian.CopyBytes(.FractionOfSecond Or .TimeQualityFlags, buffer, 10)
-            End With
+            buffer(0) = SyncByte
+            buffer(1) = frameHeader.FrameType Or frameHeader.Version
+            EndianOrder.BigEndian.CopyBytes(frameHeader.FrameLength, buffer, 2)
+            EndianOrder.BigEndian.CopyBytes(frameHeader.IDCode, buffer, 4)
+            EndianOrder.BigEndian.CopyBytes(frameHeader.SecondOfCentury, buffer, 6)
+            EndianOrder.BigEndian.CopyBytes(frameHeader.FractionOfSecond Or frameHeader.TimeQualityFlags, buffer, 10)
 
             Return buffer
 
@@ -354,14 +350,12 @@ Namespace IeeeC37_118
 
         Public Shared Sub Clone(ByVal sourceFrameHeader As ICommonFrameHeader, ByVal destinationFrameHeader As ICommonFrameHeader)
 
-            With destinationFrameHeader
-                .FrameType = sourceFrameHeader.FrameType
-                .Version = sourceFrameHeader.Version
-                .FrameLength = sourceFrameHeader.FrameLength
-                .IDCode = sourceFrameHeader.IDCode
-                .Ticks = sourceFrameHeader.Ticks
-                .InternalTimeQualityFlags = sourceFrameHeader.InternalTimeQualityFlags
-            End With
+            destinationFrameHeader.FrameType = sourceFrameHeader.FrameType
+            destinationFrameHeader.Version = sourceFrameHeader.Version
+            destinationFrameHeader.FrameLength = sourceFrameHeader.FrameLength
+            destinationFrameHeader.IDCode = sourceFrameHeader.IDCode
+            destinationFrameHeader.Ticks = sourceFrameHeader.Ticks
+            destinationFrameHeader.InternalTimeQualityFlags = sourceFrameHeader.InternalTimeQualityFlags
 
         End Sub
 
@@ -394,9 +388,7 @@ Namespace IeeeC37_118
                 Return frameHeader.InternalTimeQualityFlags And Not TimeQualityFlags.TimeQualityIndicatorCodeMask
             End Get
             Set(ByVal value As IeeeC37_118.TimeQualityFlags)
-                With frameHeader
-                    .InternalTimeQualityFlags = (.InternalTimeQualityFlags And IeeeC37_118.TimeQualityFlags.TimeQualityIndicatorCodeMask) Or value
-                End With
+                frameHeader.InternalTimeQualityFlags = (frameHeader.InternalTimeQualityFlags And IeeeC37_118.TimeQualityFlags.TimeQualityIndicatorCodeMask) Or value
             End Set
         End Property
 
@@ -405,9 +397,7 @@ Namespace IeeeC37_118
                 Return frameHeader.InternalTimeQualityFlags And IeeeC37_118.TimeQualityFlags.TimeQualityIndicatorCodeMask
             End Get
             Set(ByVal value As IeeeC37_118.TimeQualityIndicatorCode)
-                With frameHeader
-                    .InternalTimeQualityFlags = (.InternalTimeQualityFlags And Not IeeeC37_118.TimeQualityFlags.TimeQualityIndicatorCodeMask) Or value
-                End With
+                frameHeader.InternalTimeQualityFlags = (frameHeader.InternalTimeQualityFlags And Not IeeeC37_118.TimeQualityFlags.TimeQualityIndicatorCodeMask) Or value
             End Set
         End Property
 

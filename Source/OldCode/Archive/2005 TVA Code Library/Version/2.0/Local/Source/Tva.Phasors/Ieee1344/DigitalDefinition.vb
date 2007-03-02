@@ -137,10 +137,8 @@ Namespace Ieee1344
             Get
                 Dim baseAttributes As Dictionary(Of String, String) = MyBase.Attributes
 
-                With baseAttributes
-                    .Add("Normal Status", NormalStatus)
-                    .Add("Valid Input", ValidInput)
-                End With
+                baseAttributes.Add("Normal Status", NormalStatus)
+                baseAttributes.Add("Valid Input", ValidInput)
 
                 Return baseAttributes
             End Get

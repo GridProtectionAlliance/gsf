@@ -105,11 +105,9 @@ Public MustInherit Class ChannelValueCollectionBase(Of TDefinition As IChannelDe
         Get
             Dim baseAttributes As Dictionary(Of String, String) = MyBase.Attributes
 
-            With baseAttributes
-                .Add("Fixed Count", m_fixedCount)
-                .Add("Float Count", m_floatCount)
-                .Add("All Values Empty", AllValuesAreEmpty)
-            End With
+            baseAttributes.Add("Fixed Count", m_fixedCount)
+            baseAttributes.Add("Float Count", m_floatCount)
+            baseAttributes.Add("All Values Empty", AllValuesAreEmpty)
 
             Return baseAttributes
         End Get

@@ -291,22 +291,20 @@ Public MustInherit Class ConfigurationCellBase
 
         ' By the very nature of the IEEE protocols supporting the same order of phasor, analog and digital labels
         ' we are able to "automatically" parse this data out in the configuration cell base class - BEAUTIFUL!!!
-        With parsingState
-            For x = 0 To .PhasorCount - 1
-                m_phasorDefinitions.Add(.CreateNewPhasorDefintionFunction.Invoke(Me, binaryImage, startIndex))
-                startIndex += m_phasorDefinitions(x).MaximumLabelLength
-            Next
+        For x = 0 To parsingState.PhasorCount - 1
+            m_phasorDefinitions.Add(parsingState.CreateNewPhasorDefintionFunction.Invoke(Me, binaryImage, startIndex))
+            startIndex += m_phasorDefinitions(x).MaximumLabelLength
+        Next
 
-            For x = 0 To .AnalogCount - 1
-                m_analogDefinitions.Add(.CreateNewAnalogDefintionFunction.Invoke(Me, binaryImage, startIndex))
-                startIndex += m_analogDefinitions(x).MaximumLabelLength
-            Next
+        For x = 0 To parsingState.AnalogCount - 1
+            m_analogDefinitions.Add(parsingState.CreateNewAnalogDefintionFunction.Invoke(Me, binaryImage, startIndex))
+            startIndex += m_analogDefinitions(x).MaximumLabelLength
+        Next
 
-            For x = 0 To .DigitalCount - 1
-                m_digitalDefinitions.Add(.CreateNewDigitalDefintionFunction.Invoke(Me, binaryImage, startIndex))
-                startIndex += m_digitalDefinitions(x).MaximumLabelLength
-            Next
-        End With
+        For x = 0 To parsingState.DigitalCount - 1
+            m_digitalDefinitions.Add(parsingState.CreateNewDigitalDefintionFunction.Invoke(Me, binaryImage, startIndex))
+            startIndex += m_digitalDefinitions(x).MaximumLabelLength
+        Next
 
     End Sub
 
@@ -349,21 +347,19 @@ Public MustInherit Class ConfigurationCellBase
         Get
             Dim baseAttributes As Dictionary(Of String, String) = MyBase.Attributes
 
-            With baseAttributes
-                .Add("Station Name", StationName)
-                .Add("ID Label", IDLabel)
-                .Add("Phasor Coordinate Format", PhasorCoordinateFormat & ": " & [Enum].GetName(GetType(CoordinateFormat), PhasorCoordinateFormat))
-                .Add("Phasor Data Format", PhasorDataFormat & ": " & [Enum].GetName(GetType(DataFormat), PhasorDataFormat))
-                .Add("Frequency Data Format", FrequencyDataFormat & ": " & [Enum].GetName(GetType(DataFormat), FrequencyDataFormat))
-                .Add("Analog Data Format", AnalogDataFormat & ": " & [Enum].GetName(GetType(DataFormat), AnalogDataFormat))
-                .Add("Total Phasor Definitions", PhasorDefinitions.Count)
-                .Add("Total Analog Definitions", AnalogDefinitions.Count)
-                .Add("Total Digital Definitions", DigitalDefinitions.Count)
-                .Add("Nominal Frequency", NominalFrequency & " Hz")
-                .Add("Revision Count", RevisionCount)
-                .Add("Maximum Station Name Length", MaximumStationNameLength)
-                .Add("ID Label Length", IDLabelLength)
-            End With
+            baseAttributes.Add("Station Name", StationName)
+            baseAttributes.Add("ID Label", IDLabel)
+            baseAttributes.Add("Phasor Coordinate Format", PhasorCoordinateFormat & ": " & [Enum].GetName(GetType(CoordinateFormat), PhasorCoordinateFormat))
+            baseAttributes.Add("Phasor Data Format", PhasorDataFormat & ": " & [Enum].GetName(GetType(DataFormat), PhasorDataFormat))
+            baseAttributes.Add("Frequency Data Format", FrequencyDataFormat & ": " & [Enum].GetName(GetType(DataFormat), FrequencyDataFormat))
+            baseAttributes.Add("Analog Data Format", AnalogDataFormat & ": " & [Enum].GetName(GetType(DataFormat), AnalogDataFormat))
+            baseAttributes.Add("Total Phasor Definitions", PhasorDefinitions.Count)
+            baseAttributes.Add("Total Analog Definitions", AnalogDefinitions.Count)
+            baseAttributes.Add("Total Digital Definitions", DigitalDefinitions.Count)
+            baseAttributes.Add("Nominal Frequency", NominalFrequency & " Hz")
+            baseAttributes.Add("Revision Count", RevisionCount)
+            baseAttributes.Add("Maximum Station Name Length", MaximumStationNameLength)
+            baseAttributes.Add("ID Label Length", IDLabelLength)
 
             Return baseAttributes
         End Get

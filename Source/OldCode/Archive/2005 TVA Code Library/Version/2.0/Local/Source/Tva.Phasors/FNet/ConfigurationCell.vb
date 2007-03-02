@@ -196,11 +196,9 @@ Namespace FNet
             Get
                 Dim baseAttributes As Dictionary(Of String, String) = MyBase.Attributes
 
-                With baseAttributes
-                    .Add("Longitude", Longitude)
-                    .Add("Latitude", Latitude)
-                    .Add("Number of Satellites", NumberOfSatellites)
-                End With
+                baseAttributes.Add("Longitude", Longitude)
+                baseAttributes.Add("Latitude", Latitude)
+                baseAttributes.Add("Number of Satellites", NumberOfSatellites)
 
                 Return baseAttributes
             End Get

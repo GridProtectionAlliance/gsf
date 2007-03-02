@@ -225,17 +225,15 @@ Public MustInherit Class ChannelDefinitionBase
         Get
             Dim baseAttributes As Dictionary(Of String, String) = MyBase.Attributes
 
-            With baseAttributes
-                .Add("Label", Label)
-                .Add("Index", Index)
-                .Add("Offset", Offset)
-                .Add("Data Format", DataFormat & ": " & [Enum].GetName(GetType(DataFormat), DataFormat))
-                .Add("Scaling Factor", ScalingFactor)
-                .Add("Scale per Bit", ScalePerBit)
-                .Add("Maximum Scaling Factor", MaximumScalingFactor)
-                .Add("Conversion Factor", ConversionFactor)
-                .Add("Maximum Label Length", MaximumLabelLength)
-            End With
+            baseAttributes.Add("Label", Label)
+            baseAttributes.Add("Index", Index)
+            baseAttributes.Add("Offset", Offset)
+            baseAttributes.Add("Data Format", DataFormat & ": " & [Enum].GetName(GetType(DataFormat), DataFormat))
+            baseAttributes.Add("Scaling Factor", ScalingFactor)
+            baseAttributes.Add("Scale per Bit", ScalePerBit)
+            baseAttributes.Add("Maximum Scaling Factor", MaximumScalingFactor)
+            baseAttributes.Add("Conversion Factor", ConversionFactor)
+            baseAttributes.Add("Maximum Label Length", MaximumLabelLength)
 
             Return baseAttributes
         End Get

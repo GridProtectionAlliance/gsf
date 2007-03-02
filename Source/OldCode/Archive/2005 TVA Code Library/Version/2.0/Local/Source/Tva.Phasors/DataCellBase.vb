@@ -225,29 +225,27 @@ Public MustInherit Class DataCellBase
 
         ' By the very nature of the three protocols supporting the same order of phasors, frequency, dfreq, analog and digitals
         ' we are able to "automatically" parse this data out in the data cell base class - BEAUTIFUL!!!
-        With m_configurationCell
-            ' Parse out phasor values
-            For x = 0 To .PhasorDefinitions.Count - 1
-                m_phasorValues.Add(parsingState.CreateNewPhasorValueFunction.Invoke(Me, .PhasorDefinitions(x), binaryImage, startIndex))
-                startIndex += m_phasorValues(x).BinaryLength
-            Next
+        ' Parse out phasor values
+        For x = 0 To m_configurationCell.PhasorDefinitions.Count - 1
+            m_phasorValues.Add(parsingState.CreateNewPhasorValueFunction.Invoke(Me, m_configurationCell.PhasorDefinitions(x), binaryImage, startIndex))
+            startIndex += m_phasorValues(x).BinaryLength
+        Next
 
-            ' Parse out frequency and df/dt values
-            m_frequencyValue = parsingState.CreateNewFrequencyValueFunction.Invoke(Me, .FrequencyDefinition, binaryImage, startIndex)
-            startIndex += m_frequencyValue.BinaryLength
+        ' Parse out frequency and df/dt values
+        m_frequencyValue = parsingState.CreateNewFrequencyValueFunction.Invoke(Me, m_configurationCell.FrequencyDefinition, binaryImage, startIndex)
+        startIndex += m_frequencyValue.BinaryLength
 
-            ' Parse out analog values
-            For x = 0 To .AnalogDefinitions.Count - 1
-                m_analogValues.Add(parsingState.CreateNewAnalogValueFunction.Invoke(Me, .AnalogDefinitions(x), binaryImage, startIndex))
-                startIndex += m_analogValues(x).BinaryLength
-            Next
+        ' Parse out analog values
+        For x = 0 To m_configurationCell.AnalogDefinitions.Count - 1
+            m_analogValues.Add(parsingState.CreateNewAnalogValueFunction.Invoke(Me, m_configurationCell.AnalogDefinitions(x), binaryImage, startIndex))
+            startIndex += m_analogValues(x).BinaryLength
+        Next
 
-            ' Parse out digital values
-            For x = 0 To .DigitalDefinitions.Count - 1
-                m_digitalValues.Add(parsingState.CreateNewDigitalValueFunction.Invoke(Me, .DigitalDefinitions(x), binaryImage, startIndex))
-                startIndex += m_digitalValues(x).BinaryLength
-            Next
-        End With
+        ' Parse out digital values
+        For x = 0 To m_configurationCell.DigitalDefinitions.Count - 1
+            m_digitalValues.Add(parsingState.CreateNewDigitalValueFunction.Invoke(Me, m_configurationCell.DigitalDefinitions(x), binaryImage, startIndex))
+            startIndex += m_digitalValues(x).BinaryLength
+        Next
 
     End Sub
 
@@ -269,17 +267,15 @@ Public MustInherit Class DataCellBase
         Get
             Dim baseAttributes As Dictionary(Of String, String) = MyBase.Attributes
 
-            With baseAttributes
-                .Add("Station Name", StationName)
-                .Add("ID Label", IDLabel)
-                .Add("Status Flags", StatusFlags)
-                .Add("Data Is Valid", DataIsValid)
-                .Add("Synchronization Is Valid", SynchronizationIsValid)
-                .Add("Total Phasor Values", PhasorValues.Count)
-                .Add("Total Analog Values", AnalogValues.Count)
-                .Add("Total Digital Values", DigitalValues.Count)
-                .Add("All Values Are Empty", AllValuesAreEmpty)
-            End With
+            baseAttributes.Add("Station Name", StationName)
+            baseAttributes.Add("ID Label", IDLabel)
+            baseAttributes.Add("Status Flags", StatusFlags)
+            baseAttributes.Add("Data Is Valid", DataIsValid)
+            baseAttributes.Add("Synchronization Is Valid", SynchronizationIsValid)
+            baseAttributes.Add("Total Phasor Values", PhasorValues.Count)
+            baseAttributes.Add("Total Analog Values", AnalogValues.Count)
+            baseAttributes.Add("Total Digital Values", DigitalValues.Count)
+            baseAttributes.Add("All Values Are Empty", AllValuesAreEmpty)
 
             Return baseAttributes
         End Get

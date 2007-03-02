@@ -113,10 +113,8 @@ Public MustInherit Class ChannelCellBase
         Get
             Dim baseAttributes As Dictionary(Of String, String) = MyBase.Attributes
 
-            With baseAttributes
-                .Add("ID Code", IDCode)
-                .Add("Align on DWord Boundry", AlignOnDWordBoundry)
-            End With
+            baseAttributes.Add("ID Code", IDCode)
+            baseAttributes.Add("Align on DWord Boundry", AlignOnDWordBoundry)
 
             Return baseAttributes
         End Get

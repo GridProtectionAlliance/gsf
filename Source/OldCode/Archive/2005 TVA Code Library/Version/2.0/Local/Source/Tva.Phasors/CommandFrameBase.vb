@@ -131,15 +131,13 @@ Public MustInherit Class CommandFrameBase
         Get
             Dim baseAttributes As Dictionary(Of String, String) = MyBase.Attributes
 
-            With baseAttributes
-                .Add("Device Command", Command & ": " & [Enum].GetName(GetType(DeviceCommand), Command))
+            baseAttributes.Add("Device Command", Command & ": " & [Enum].GetName(GetType(DeviceCommand), Command))
 
-                If Cells.Count > 0 Then
-                    .Add("Extended Data", ByteEncoding.Hexadecimal.GetString(Cells.BinaryImage, 0, Cells.Count))
-                Else
-                    .Add("Extended Data", "<null>")
-                End If
-            End With
+            If Cells.Count > 0 Then
+                baseAttributes.Add("Extended Data", ByteEncoding.Hexadecimal.GetString(Cells.BinaryImage, 0, Cells.Count))
+            Else
+                baseAttributes.Add("Extended Data", "<null>")
+            End If
 
             Return baseAttributes
         End Get

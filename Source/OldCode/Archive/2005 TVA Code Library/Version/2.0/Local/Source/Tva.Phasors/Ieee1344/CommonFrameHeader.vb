@@ -313,25 +313,23 @@ Namespace Ieee1344
                         m_attributes.Clear()
                     End If
 
-                    With m_attributes
-                        .Add("Derived Type", DerivedType.Name)
-                        .Add("Binary Length", BinaryLength)
-                        .Add("Total Cells", "0")
-                        .Add("Fundamental Frame Type", FundamentalFrameType & ": " & [Enum].GetName(GetType(FundamentalFrameType), FundamentalFrameType))
-                        .Add("ID Code", IDCode)
-                        .Add("Is Partial Frame", IsPartial)
-                        .Add("Published", Published)
-                        .Add("Ticks", Ticks)
-                        .Add("Timestamp", Timestamp.ToString("yyyy-MM-dd HH:mm:ss.fff"))
-                        .Add("Frame Type", FrameType & ": " & [Enum].GetName(GetType(FrameType), FrameType))
-                        .Add("Frame Length", FrameLength)
-                        .Add("64-Bit ID Code", IDCode)
-                        .Add("Sample Count", InternalSampleCount)
-                        .Add("Status Flags", InternalStatusFlags)
-                        .Add("Frame Count", FrameCount)
-                        .Add("Is First Frame", IsFirstFrame)
-                        .Add("Is Last Frame", IsLastFrame)
-                    End With
+                    m_attributes.Add("Derived Type", DerivedType.Name)
+                    m_attributes.Add("Binary Length", BinaryLength)
+                    m_attributes.Add("Total Cells", "0")
+                    m_attributes.Add("Fundamental Frame Type", FundamentalFrameType & ": " & [Enum].GetName(GetType(FundamentalFrameType), FundamentalFrameType))
+                    m_attributes.Add("ID Code", IDCode)
+                    m_attributes.Add("Is Partial Frame", IsPartial)
+                    m_attributes.Add("Published", Published)
+                    m_attributes.Add("Ticks", Ticks)
+                    m_attributes.Add("Timestamp", Timestamp.ToString("yyyy-MM-dd HH:mm:ss.fff"))
+                    m_attributes.Add("Frame Type", FrameType & ": " & [Enum].GetName(GetType(FrameType), FrameType))
+                    m_attributes.Add("Frame Length", FrameLength)
+                    m_attributes.Add("64-Bit ID Code", IDCode)
+                    m_attributes.Add("Sample Count", InternalSampleCount)
+                    m_attributes.Add("Status Flags", InternalStatusFlags)
+                    m_attributes.Add("Frame Count", FrameCount)
+                    m_attributes.Add("Is First Frame", IsFirstFrame)
+                    m_attributes.Add("Is Last Frame", IsLastFrame)
 
                     Return m_attributes
                 End Get
@@ -391,10 +389,8 @@ Namespace Ieee1344
             ' Make sure frame length gets included in status flags for generated binary image
             FrameLength(frameHeader) = frameHeader.BinaryLength
 
-            With frameHeader
-                EndianOrder.BigEndian.CopyBytes(Convert.ToUInt32(.TimeTag.Value), buffer, 0)
-                EndianOrder.BigEndian.CopyBytes(.InternalSampleCount, buffer, 4)
-            End With
+            EndianOrder.BigEndian.CopyBytes(Convert.ToUInt32(frameHeader.TimeTag.Value), buffer, 0)
+            EndianOrder.BigEndian.CopyBytes(frameHeader.InternalSampleCount, buffer, 4)
 
             Return buffer
 
@@ -402,10 +398,8 @@ Namespace Ieee1344
 
         Public Shared Sub Clone(ByVal sourceFrameHeader As ICommonFrameHeader, ByVal destinationFrameHeader As ICommonFrameHeader)
 
-            With destinationFrameHeader
-                .Ticks = sourceFrameHeader.Ticks
-                .InternalSampleCount = sourceFrameHeader.InternalSampleCount
-            End With
+            destinationFrameHeader.Ticks = sourceFrameHeader.Ticks
+            destinationFrameHeader.InternalSampleCount = sourceFrameHeader.InternalSampleCount
 
         End Sub
 

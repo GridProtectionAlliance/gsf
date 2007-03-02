@@ -41,11 +41,9 @@ Public Class DataCellParsingState
         m_createNewAnalogValueFunction = createNewAnalogValueFunction
         m_createNewDigitalValueFunction = createNewDigitalValueFunction
 
-        With m_configurationCell
-            PhasorCount = .PhasorDefinitions.Count
-            AnalogCount = .AnalogDefinitions.Count
-            DigitalCount = .DigitalDefinitions.Count
-        End With
+        PhasorCount = m_configurationCell.PhasorDefinitions.Count
+        AnalogCount = m_configurationCell.AnalogDefinitions.Count
+        DigitalCount = m_configurationCell.DigitalDefinitions.Count
 
     End Sub
 

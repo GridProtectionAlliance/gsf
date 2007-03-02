@@ -250,25 +250,23 @@ Namespace IeeeC37_118
         Public Overrides ReadOnly Property Attributes() As Dictionary(Of String, String)
             Get
                 Dim baseAttributes As Dictionary(Of String, String) = MyBase.Attributes
+                Dim normalStatusBytes As Byte() = BitConverter.GetBytes(NormalStatus)
+                Dim validInputsBytes As Byte() = BitConverter.GetBytes(ValidInputs)
 
-                With baseAttributes
-                    Dim normalStatusBytes As Byte() = BitConverter.GetBytes(NormalStatus)
-                    .Add("Normal Status", NormalStatus)
-                    .Add("Normal Status (Big Endian Bits)", ByteEncoding.BigEndianBinary.GetString(normalStatusBytes))
-                    .Add("Normal Status (Hexadecimal)", "0x" & ByteEncoding.Hexadecimal.GetString(normalStatusBytes))
+                baseAttributes.Add("Normal Status", NormalStatus)
+                baseAttributes.Add("Normal Status (Big Endian Bits)", ByteEncoding.BigEndianBinary.GetString(normalStatusBytes))
+                baseAttributes.Add("Normal Status (Hexadecimal)", "0x" & ByteEncoding.Hexadecimal.GetString(normalStatusBytes))
 
-                    Dim validInputsBytes As Byte() = BitConverter.GetBytes(ValidInputs)
-                    .Add("Valid Inputs", ValidInputs)
-                    .Add("Valid Inputs (Big Endian Bits)", ByteEncoding.BigEndianBinary.GetString(validInputsBytes))
-                    .Add("Valid Inputs (Hexadecimal)", "0x" & ByteEncoding.Hexadecimal.GetString(validInputsBytes))
+                baseAttributes.Add("Valid Inputs", ValidInputs)
+                baseAttributes.Add("Valid Inputs (Big Endian Bits)", ByteEncoding.BigEndianBinary.GetString(validInputsBytes))
+                baseAttributes.Add("Valid Inputs (Hexadecimal)", "0x" & ByteEncoding.Hexadecimal.GetString(validInputsBytes))
 
-                    If DraftRevision > DraftRevision.Draft6 Then
-                        .Add("Bit Label Count", LabelCount)
-                        For x As Integer = 0 To LabelCount - 1
-                            .Add("     Bit " & x & " Label", Labels(x))
-                        Next
-                    End If
-                End With
+                If DraftRevision > DraftRevision.Draft6 Then
+                    baseAttributes.Add("Bit Label Count", LabelCount)
+                    For x As Integer = 0 To LabelCount - 1
+                        baseAttributes.Add("     Bit " & x & " Label", Labels(x))
+                    Next
+                End If
 
                 Return baseAttributes
             End Get

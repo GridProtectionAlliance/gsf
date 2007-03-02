@@ -224,10 +224,8 @@ Namespace Ieee1344
 
             IDCode = EndianOrder.BigEndian.ToUInt64(binaryImage, startIndex)
 
-            With parsingState
-                .PhasorCount = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 8)
-                .DigitalCount = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 10)
-            End With
+            parsingState.PhasorCount = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 8)
+            parsingState.DigitalCount = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 10)
 
         End Sub
 
@@ -302,12 +300,10 @@ Namespace Ieee1344
             Get
                 Dim baseAttributes As Dictionary(Of String, String) = MyBase.Attributes
 
-                With baseAttributes
-                    .Add("Status Flags", StatusFlags)
-                    .Add("Synchronization Is Valid", SynchronizationIsValid)
-                    .Add("Data Is Valid", DataIsValid)
-                    .Add("Trigger Status", TriggerStatus & ": " & [Enum].GetName(GetType(TriggerStatus), TriggerStatus))
-                End With
+                baseAttributes.Add("Status Flags", StatusFlags)
+                baseAttributes.Add("Synchronization Is Valid", SynchronizationIsValid)
+                baseAttributes.Add("Data Is Valid", DataIsValid)
+                baseAttributes.Add("Trigger Status", TriggerStatus & ": " & [Enum].GetName(GetType(TriggerStatus), TriggerStatus))
 
                 Return baseAttributes
             End Get

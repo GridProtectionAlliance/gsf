@@ -179,16 +179,14 @@ Namespace IeeeC37_118
             Get
                 Dim baseAttributes As Dictionary(Of String, String) = MyBase.Attributes
 
-                With baseAttributes
-                    .Add("Frame Type", FrameType & ": " & [Enum].GetName(GetType(FrameType), FrameType))
-                    .Add("Frame Length", FrameLength)
-                    .Add("Version", Version)
-                    .Add("Second of Century", SecondOfCentury)
-                    .Add("Fraction of Second", FractionOfSecond)
-                    .Add("Time Quality Flags", TimeQualityFlags & ": " & [Enum].GetName(GetType(TimeQualityFlags), TimeQualityFlags))
-                    .Add("Time Quality Indicator Code", TimeQualityIndicatorCode & ": " & [Enum].GetName(GetType(TimeQualityIndicatorCode), TimeQualityIndicatorCode))
-                    .Add("Time Base", TimeBase)
-                End With
+                baseAttributes.Add("Frame Type", FrameType & ": " & [Enum].GetName(GetType(FrameType), FrameType))
+                baseAttributes.Add("Frame Length", FrameLength)
+                baseAttributes.Add("Version", Version)
+                baseAttributes.Add("Second of Century", SecondOfCentury)
+                baseAttributes.Add("Fraction of Second", FractionOfSecond)
+                baseAttributes.Add("Time Quality Flags", TimeQualityFlags & ": " & [Enum].GetName(GetType(TimeQualityFlags), TimeQualityFlags))
+                baseAttributes.Add("Time Quality Indicator Code", TimeQualityIndicatorCode & ": " & [Enum].GetName(GetType(TimeQualityIndicatorCode), TimeQualityIndicatorCode))
+                baseAttributes.Add("Time Base", TimeBase)
 
                 Return baseAttributes
             End Get

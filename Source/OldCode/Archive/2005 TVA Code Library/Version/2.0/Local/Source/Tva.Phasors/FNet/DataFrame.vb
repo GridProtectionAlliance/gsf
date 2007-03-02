@@ -124,9 +124,7 @@ Namespace FNet
             Get
                 Dim baseAttributes As Dictionary(Of String, String) = MyBase.Attributes
 
-                With baseAttributes
-                    .Add("Sample Index", SampleIndex)
-                End With
+                baseAttributes.Add("Sample Index", SampleIndex)
 
                 Return baseAttributes
             End Get

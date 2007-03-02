@@ -225,12 +225,10 @@ Public MustInherit Class FrequencyValueBase
         Get
             Dim baseAttributes As Dictionary(Of String, String) = MyBase.Attributes
 
-            With baseAttributes
-                .Add("Frequency Value", Frequency)
-                .Add("df/dt Value", DfDt)
-                .Add("Unscaled Frequency Value", UnscaledFrequency)
-                .Add("Unscaled df/dt Value", UnscaledDfDt)
-            End With
+            baseAttributes.Add("Frequency Value", Frequency)
+            baseAttributes.Add("df/dt Value", DfDt)
+            baseAttributes.Add("Unscaled Frequency Value", UnscaledFrequency)
+            baseAttributes.Add("Unscaled df/dt Value", UnscaledDfDt)
 
             Return baseAttributes
         End Get

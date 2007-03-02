@@ -41,25 +41,23 @@ Namespace IeeeC37_118
 
             Dim x As Int32
 
-            With configurationCell
-                ' Initialize phasor values and frequency value with an empty value
-                For x = 0 To .PhasorDefinitions.Count - 1
-                    PhasorValues.Add(New PhasorValue(Me, .PhasorDefinitions(x), 0, 0))
-                Next
+            ' Initialize phasor values and frequency value with an empty value
+            For x = 0 To configurationCell.PhasorDefinitions.Count - 1
+                PhasorValues.Add(New PhasorValue(Me, configurationCell.PhasorDefinitions(x), 0, 0))
+            Next
 
-                ' Initialize frequency and df/dt
-                FrequencyValue = New FrequencyValue(Me, .FrequencyDefinition, 0, 0)
+            ' Initialize frequency and df/dt
+            FrequencyValue = New FrequencyValue(Me, configurationCell.FrequencyDefinition, 0, 0)
 
-                ' Initialize analog values
-                For x = 0 To .AnalogDefinitions.Count - 1
-                    AnalogValues.Add(New AnalogValue(Me, .AnalogDefinitions(x), 0))
-                Next
+            ' Initialize analog values
+            For x = 0 To configurationCell.AnalogDefinitions.Count - 1
+                AnalogValues.Add(New AnalogValue(Me, configurationCell.AnalogDefinitions(x), 0))
+            Next
 
-                ' Initialize any digital values
-                For x = 0 To .DigitalDefinitions.Count - 1
-                    DigitalValues.Add(New DigitalValue(Me, .DigitalDefinitions(x), 0))
-                Next
-            End With
+            ' Initialize any digital values
+            For x = 0 To configurationCell.DigitalDefinitions.Count - 1
+                DigitalValues.Add(New DigitalValue(Me, configurationCell.DigitalDefinitions(x), 0))
+            Next
 
         End Sub
 
@@ -219,14 +217,12 @@ Namespace IeeeC37_118
             Get
                 Dim baseAttributes As Dictionary(Of String, String) = MyBase.Attributes
 
-                With baseAttributes
-                    .Add("Data Is Sorted By Timestamp", DataIsSortedByTimestamp)
-                    .Add("Unlocked Time", UnlockedTime & ": " & [Enum].GetName(GetType(UnlockedTime), UnlockedTime))
-                    .Add("PMU Trigger Detected", PmuTriggerDetected)
-                    .Add("Trigger Reason", TriggerReason & ": " & [Enum].GetName(GetType(TriggerReason), TriggerReason))
-                    .Add("Configuration Change Detected", ConfigurationChangeDetected)
-                    .Add("PMU Error Detected", PmuErrorDetected)
-                End With
+                baseAttributes.Add("Data Is Sorted By Timestamp", DataIsSortedByTimestamp)
+                baseAttributes.Add("Unlocked Time", UnlockedTime & ": " & [Enum].GetName(GetType(UnlockedTime), UnlockedTime))
+                baseAttributes.Add("PMU Trigger Detected", PmuTriggerDetected)
+                baseAttributes.Add("Trigger Reason", TriggerReason & ": " & [Enum].GetName(GetType(TriggerReason), TriggerReason))
+                baseAttributes.Add("Configuration Change Detected", ConfigurationChangeDetected)
+                baseAttributes.Add("PMU Error Detected", PmuErrorDetected)
 
                 Return baseAttributes
             End Get

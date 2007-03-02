@@ -165,10 +165,8 @@ Public MustInherit Class AnalogValueBase
         Get
             Dim baseAttributes As Dictionary(Of String, String) = MyBase.Attributes
 
-            With baseAttributes
-                .Add("Analog Value (Floating Point)", Value)
-                .Add("Analog Value (Integer)", IntegerValue)
-            End With
+            baseAttributes.Add("Analog Value (Floating Point)", Value)
+            baseAttributes.Add("Analog Value (Integer)", IntegerValue)
 
             Return baseAttributes
         End Get

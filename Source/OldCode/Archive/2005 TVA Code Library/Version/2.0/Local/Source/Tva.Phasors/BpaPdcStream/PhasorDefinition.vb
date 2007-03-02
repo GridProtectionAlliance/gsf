@@ -143,13 +143,11 @@ Namespace BpaPdcStream
 
         Public Overloads Shared ReadOnly Property ScalingFactor(ByVal phasor As PhasorDefinition) As Single
             Get
-                With phasor
-                    If .Type = PhasorType.Voltage Then
-                        Return .CalFactor * .Ratio
-                    Else
-                        Return .CalFactor * .Ratio / .Shunt
-                    End If
-                End With
+                If phasor.Type = PhasorType.Voltage Then
+                    Return phasor.CalFactor * phasor.Ratio
+                Else
+                    Return phasor.CalFactor * phasor.Ratio / phasor.Shunt
+                End If
             End Get
         End Property
 

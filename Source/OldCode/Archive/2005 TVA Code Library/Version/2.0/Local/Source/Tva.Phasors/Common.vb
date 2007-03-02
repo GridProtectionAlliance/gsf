@@ -35,9 +35,7 @@ Public NotInheritable Class Common
     ''' <remarks>This function automatically advances index for convenience</remarks>
     Public Shared Sub CopyImage(ByVal channel As IChannel, ByVal buffer As Byte(), ByRef index As Integer)
 
-        With channel
-            CopyImage(.BinaryImage, buffer, index, .BinaryLength)
-        End With
+        CopyImage(channel.BinaryImage, buffer, index, channel.BinaryLength)
 
     End Sub
 

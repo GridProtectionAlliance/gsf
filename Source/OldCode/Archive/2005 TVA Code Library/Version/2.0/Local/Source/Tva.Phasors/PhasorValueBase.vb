@@ -374,17 +374,15 @@ Public MustInherit Class PhasorValueBase
         Get
             Dim baseAttributes As Dictionary(Of String, String) = MyBase.Attributes
 
-            With baseAttributes
-                .Add("Phasor Type", [Type] & ": " & [Enum].GetName(GetType(PhasorType), [Type]))
-                .Add("Angle Value", Angle & "°")
-                .Add("Magnitude Value", Magnitude)
-                .Add("Real Value", Real)
-                .Add("Imaginary Value", Imaginary)
-                .Add("Unscaled Real Value", UnscaledReal)
-                .Add("Unscaled Imaginary Value", UnscaledImaginary)
-                .Add("Angle Value was Assigned", AngleAssigned)
-                .Add("Magnitude Value was Assigned", MagnitudeAssigned)
-            End With
+            baseAttributes.Add("Phasor Type", [Type] & ": " & [Enum].GetName(GetType(PhasorType), [Type]))
+            baseAttributes.Add("Angle Value", Angle & "°")
+            baseAttributes.Add("Magnitude Value", Magnitude)
+            baseAttributes.Add("Real Value", Real)
+            baseAttributes.Add("Imaginary Value", Imaginary)
+            baseAttributes.Add("Unscaled Real Value", UnscaledReal)
+            baseAttributes.Add("Unscaled Imaginary Value", UnscaledImaginary)
+            baseAttributes.Add("Angle Value was Assigned", AngleAssigned)
+            baseAttributes.Add("Magnitude Value was Assigned", MagnitudeAssigned)
 
             Return baseAttributes
         End Get

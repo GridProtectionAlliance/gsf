@@ -150,46 +150,44 @@ Namespace BpaPdcStream
             m_readWriteLock.AcquireWriterLock(-1)
 
             Try
-                With m_iniFile
-                    If File.Exists(.FileName) Then
-                        Dim pmuCell As ConfigurationCell
-                        Dim x, phasorCount As Int32
+                If File.Exists(m_iniFile.FileName) Then
+                    Dim pmuCell As ConfigurationCell
+                    Dim x, phasorCount As Int32
 
-                        m_defaultPhasorV = New PhasorDefinition(Nothing, 0, .KeyValue("DEFAULT", "PhasorV", DefaultVoltagePhasorEntry))
-                        m_defaultPhasorI = New PhasorDefinition(Nothing, 0, .KeyValue("DEFAULT", "PhasorI", DefaultCurrentPhasorEntry))
-                        m_defaultFrequency = New FrequencyDefinition(Nothing, .KeyValue("DEFAULT", "Frequency", DefaultFrequencyEntry))
-                        FrameRate = Convert.ToInt16(.KeyValue("CONFIG", "SampleRate", "30"))
+                    m_defaultPhasorV = New PhasorDefinition(Nothing, 0, m_iniFile.KeyValue("DEFAULT", "PhasorV", DefaultVoltagePhasorEntry))
+                    m_defaultPhasorI = New PhasorDefinition(Nothing, 0, m_iniFile.KeyValue("DEFAULT", "PhasorI", DefaultCurrentPhasorEntry))
+                    m_defaultFrequency = New FrequencyDefinition(Nothing, m_iniFile.KeyValue("DEFAULT", "Frequency", DefaultFrequencyEntry))
+                    FrameRate = Convert.ToInt16(m_iniFile.KeyValue("CONFIG", "SampleRate", "30"))
 
-                        Cells.Clear()
+                    Cells.Clear()
 
-                        ' Load phasor data for each section in config file...
-                        For Each section As String In .SectionNames()
-                            If Len(section) > 0 Then
-                                ' Make sure this is not a special section
-                                If String.Compare(section, "DEFAULT", True) <> 0 And String.Compare(section, "CONFIG", True) <> 0 Then
-                                    ' Create new PMU entry structure from config file settings...
-                                    phasorCount = Convert.ToInt32(.KeyValue(section, "NumberPhasors", "0"))
+                    ' Load phasor data for each section in config file...
+                    For Each section As String In m_iniFile.SectionNames()
+                        If Len(section) > 0 Then
+                            ' Make sure this is not a special section
+                            If String.Compare(section, "DEFAULT", True) <> 0 And String.Compare(section, "CONFIG", True) <> 0 Then
+                                ' Create new PMU entry structure from config file settings...
+                                phasorCount = Convert.ToInt32(m_iniFile.KeyValue(section, "NumberPhasors", "0"))
 
-                                    pmuCell = New ConfigurationCell(Me, 0, LineFrequency.Hz60)
+                                pmuCell = New ConfigurationCell(Me, 0, LineFrequency.Hz60)
 
-                                    pmuCell.IDLabel = section
-                                    pmuCell.StationName = .KeyValue(section, "Name", section)
-                                    pmuCell.IDCode = Convert.ToUInt16(.KeyValue(section, "PMU", Cells.Count.ToString))
+                                pmuCell.IDLabel = section
+                                pmuCell.StationName = m_iniFile.KeyValue(section, "Name", section)
+                                pmuCell.IDCode = Convert.ToUInt16(m_iniFile.KeyValue(section, "PMU", Cells.Count.ToString))
 
-                                    For x = 0 To phasorCount - 1
-                                        pmuCell.PhasorDefinitions.Add(New PhasorDefinition(pmuCell, x + 1, .KeyValue(section, "Phasor" & (x + 1), DefaultVoltagePhasorEntry)))
-                                    Next
+                                For x = 0 To phasorCount - 1
+                                    pmuCell.PhasorDefinitions.Add(New PhasorDefinition(pmuCell, x + 1, m_iniFile.KeyValue(section, "Phasor" & (x + 1), DefaultVoltagePhasorEntry)))
+                                Next
 
-                                    pmuCell.FrequencyDefinition = New FrequencyDefinition(pmuCell, .KeyValue(section, "Frequency", DefaultFrequencyEntry))
+                                pmuCell.FrequencyDefinition = New FrequencyDefinition(pmuCell, m_iniFile.KeyValue(section, "Frequency", DefaultFrequencyEntry))
 
-                                    Cells.Add(pmuCell)
-                                End If
+                                Cells.Add(pmuCell)
                             End If
-                        Next
-                    Else
-                        Throw New InvalidOperationException("PDC config file """ & .FileName & """ does not exist.")
-                    End If
-                End With
+                        End If
+                    Next
+                Else
+                    Throw New InvalidOperationException("PDC config file """ & m_iniFile.FileName & """ does not exist.")
+                End If
             Catch ex As Exception
                 Throw ex
             Finally

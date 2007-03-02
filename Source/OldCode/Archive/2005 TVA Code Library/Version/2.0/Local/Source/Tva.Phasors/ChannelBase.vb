@@ -130,10 +130,8 @@ Public MustInherit Class ChannelBase
                 m_attributes.Clear()
             End If
 
-            With m_attributes
-                .Add("Derived Type", DerivedType.FullName)
-                .Add("Binary Length", BinaryLength)
-            End With
+            m_attributes.Add("Derived Type", DerivedType.FullName)
+            m_attributes.Add("Binary Length", BinaryLength)
 
             Return m_attributes
         End Get

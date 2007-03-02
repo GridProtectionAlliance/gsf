@@ -148,10 +148,8 @@ Namespace Ieee1344
             Get
                 Dim baseAttributes As Dictionary(Of String, String) = MyBase.Attributes
 
-                With baseAttributes
-                    .Add("Frequency Is Available", FrequencyIsAvailable)
-                    .Add("df/dt Is Available", DfDtIsAvailable)
-                End With
+                baseAttributes.Add("Frequency Is Available", FrequencyIsAvailable)
+                baseAttributes.Add("df/dt Is Available", DfDtIsAvailable)
 
                 Return baseAttributes
             End Get

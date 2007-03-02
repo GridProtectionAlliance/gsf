@@ -120,15 +120,14 @@ Public MustInherit Class ChannelValueBase(Of T As IChannelDefinition)
         Get
             Dim baseAttributes As Dictionary(Of String, String) = MyBase.Attributes
 
-            With baseAttributes
-                .Add("Label", Label)
-                .Add("Data Format", DataFormat & ": " & [Enum].GetName(GetType(DataFormat), DataFormat))
-                .Add("Is Empty", IsEmpty)
-                .Add("Total Composite Values", CompositeValueCount)
-                For x As Integer = 0 To CompositeValueCount - 1
-                    .Add("     Composite Value " & x, CompositeValue(x))
-                Next
-            End With
+            baseAttributes.Add("Label", Label)
+            baseAttributes.Add("Data Format", DataFormat & ": " & [Enum].GetName(GetType(DataFormat), DataFormat))
+            baseAttributes.Add("Is Empty", IsEmpty)
+            baseAttributes.Add("Total Composite Values", CompositeValueCount)
+
+            For x As Integer = 0 To CompositeValueCount - 1
+                baseAttributes.Add("     Composite Value " & x, CompositeValue(x))
+            Next
 
             Return baseAttributes
         End Get
