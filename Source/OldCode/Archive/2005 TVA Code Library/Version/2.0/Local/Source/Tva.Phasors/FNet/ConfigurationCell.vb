@@ -132,6 +132,12 @@ Namespace FNet
             End Set
         End Property
 
+        Public Overrides ReadOnly Property MaximumStationNameLength() As Integer
+            Get
+                Return Integer.MaxValue
+            End Get
+        End Property
+
         ' FNet only supports floating point data
         Public Overrides Property PhasorDataFormat() As DataFormat
             Get
