@@ -252,16 +252,6 @@ Namespace IeeeC37_118
                 Dim baseAttributes As Dictionary(Of String, String) = MyBase.Attributes
 
                 With baseAttributes
-                    .Add("Label", Label)
-                    .Add("Index", Index)
-                    .Add("Offset", Offset)
-                    .Add("Data Format", DataFormat & ": " & [Enum].GetName(GetType(DataFormat), DataFormat))
-                    .Add("Scaling Factor", ScalingFactor)
-                    .Add("Scale per Bit", ScalePerBit)
-                    .Add("Maximum Scaling Factor", MaximumScalingFactor)
-                    .Add("Conversion Factor", ConversionFactor)
-                    .Add("Maximum Label Length", MaximumLabelLength)
-
                     Dim normalStatusBytes As Byte() = BitConverter.GetBytes(NormalStatus)
                     .Add("Normal Status", NormalStatus)
                     .Add("Normal Status (Big Endian Bits)", ByteEncoding.BigEndianBinary.GetString(normalStatusBytes))
