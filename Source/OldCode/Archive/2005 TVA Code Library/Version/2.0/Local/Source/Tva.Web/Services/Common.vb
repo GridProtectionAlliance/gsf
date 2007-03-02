@@ -43,7 +43,7 @@ Namespace Services
             ' reflection (i.e., late bound method invocation support), but everything works as expected...
             With webService
                 ' Remove domain prefix from user ID (if it has one)
-                Dim userName As String = CurrentUserID
+                Dim userName As String = System.Threading.Thread.CurrentPrincipal.Identity.Name
                 If userName.Contains("\") Then userName = userName.Split("\"c)(1).Trim()
                 .UserName = Encrypt(userName, WebServiceSecurityKey, EncryptLevel.Level4)
                 .Password = Nothing

@@ -7,6 +7,7 @@ Imports Tva.Security.Cryptography.Common
 Imports Tva.Security.Application
 Imports Tva.Identity.Common
 Imports Tva.Web.Services.Common
+Imports System.security.Principal
 
 Namespace Services
 
@@ -69,12 +70,15 @@ Namespace Services
 
         Public Shared Function AuthenticateUser(ByVal userID As String, ByVal password As String, ByVal roleName As String, ByVal server As SecurityServer, ByVal passThroughAuthentication As Boolean) As Boolean
 
-            ' Don't allow users to spoof authentication :)
-            If passThroughAuthentication Then
-                Dim userName As String = CurrentUserID
-                If userName.Contains("\") Then userName = userName.Split("\"c)(1).Trim()
-                If String.Compare(userID, userName, True) <> 0 Then Return False
-            End If
+            '' Don't allow users to spoof authentication :)
+            'Tva.Configuration.Common.CategorizedSettings("WebServicesDetails").Add("TestUser", My.User.CurrentPrincipal.Identity.Name, "test", False)
+
+            'Tva.Configuration.Common.SaveSettings()
+            'If passThroughAuthentication Then
+            '    Dim userName As String = System.Threading.Thread.CurrentPrincipal.Identity.Name
+            '    If userName.Contains("\") Then userName = userName.Split("\"c)(1).Trim()
+            '    If String.Compare(userID, userName, True) <> 0 Then Return False
+            'End If
 
             Dim connectionString As String
 
