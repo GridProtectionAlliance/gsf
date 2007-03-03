@@ -132,22 +132,16 @@ Public Class ArchiveFileAllocationTable
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks>Size in KB.</remarks>
-    Public Property DataBlockSize() As Integer
+    Public ReadOnly Property DataBlockSize() As Integer
         Get
             Return m_dataBlockSize
         End Get
-        Set(ByVal value As Integer)
-            m_dataBlockSize = value
-        End Set
     End Property
 
-    Public Property DataBlockCount() As Integer
+    Public ReadOnly Property DataBlockCount() As Integer
         Get
             Return m_dataBlockCount
         End Get
-        Set(ByVal value As Integer)
-            m_dataBlockCount = value
-        End Set
     End Property
 
     ' Delete this property...

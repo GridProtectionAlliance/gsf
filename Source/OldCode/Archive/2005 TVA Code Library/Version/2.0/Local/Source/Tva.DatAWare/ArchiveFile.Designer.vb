@@ -22,6 +22,7 @@ Partial Class ArchiveFile
         m_blockSize = 8
         m_saveOnClose = True
         m_rolloverOnFull = True
+        m_rolloverPreparationThreshold = 50
         m_rolloverPreparationThread = New System.Threading.Thread(AddressOf PrepareForRollover)
 
     End Sub

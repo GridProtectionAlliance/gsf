@@ -16,6 +16,7 @@ Public Class ArchiveFile
     Private m_blockSize As Integer
     Private m_saveOnClose As Boolean
     Private m_rolloverOnFull As Boolean
+    Private m_rolloverPreparationThreshold As Short
     Private m_fat As ArchiveFileAllocationTable
     Private m_fileStream As FileStream
     Private m_activeDataBlocks As Dictionary(Of Integer, ArchiveDataBlock)
@@ -32,6 +33,8 @@ Public Class ArchiveFile
     Public Event FileOpened As EventHandler
     Public Event FileClosing As EventHandler
     Public Event FileClosed As EventHandler
+    Public Event RolloverStart As EventHandler
+    Public Event RolloverComplete As EventHandler
     Public Event RolloverPreparationStart As EventHandler
     Public Event RolloverPreparationComplete As EventHandler
     Public Event RolloverPreparationException As EventHandler(Of ExceptionEventArgs)
@@ -111,6 +114,15 @@ Public Class ArchiveFile
         End Set
     End Property
 
+    Public Property RolloverPreparationThreshold() As Short
+        Get
+            Return m_rolloverPreparationThreshold
+        End Get
+        Set(ByVal value As Short)
+            m_rolloverPreparationThreshold = value
+        End Set
+    End Property
+
     <Browsable(False)> _
     Public ReadOnly Property IsOpen() As Boolean
         Get
@@ -160,6 +172,7 @@ Public Class ArchiveFile
             m_activeDataBlocks = Nothing
             m_fileStream.Close()
             m_fileStream = Nothing
+            m_rolloverPreparationThread.Abort()
 
             RaiseEvent FileClosed(Me, EventArgs.Empty)
         End If
@@ -180,13 +193,18 @@ Public Class ArchiveFile
     Public Sub Rollover()
 
         If m_rolloverPreparationDone Then
-            Dim filePath As String = JustPath(m_name)
-            Dim fileName As String = (NoFileExtension(m_name) & "_" & m_fat.FileStartTime.ToString() & "_to_" & m_fat.FileEndTime.ToString() & Extension).Replace(":"c, "!"c)
+            RaiseEvent RolloverStart(Me, EventArgs.Empty)
+
+            Dim standbyFile As String = GetStandbyArchiveFileName()
+            Dim historyFile As String = GetHistoryArchiveFileName()
 
             Close()
-            File.Move(m_name, filePath & fileName)  ' Rename the file.
+            File.Move(m_name, historyFile)
+            File.Move(standbyFile, m_name)
             Open()
             m_rolloverPreparationDone = False
+
+            RaiseEvent RolloverComplete(Me, EventArgs.Empty)
         End If
 
     End Sub
@@ -236,11 +254,11 @@ Public Class ArchiveFile
                         dataBlock = m_fat.RequestDataBlock(pointData.Definition.Index, pointData.TimeTag)
                         m_activeDataBlocks.Add(pointData.Definition.Index, dataBlock)
 
-                        If m_dataBlockRequestCount >= m_fat.DataBlockCount * 0.5 AndAlso _
+                        If m_dataBlockRequestCount >= m_fat.DataBlockCount * (m_rolloverPreparationThreshold / 100) AndAlso _
                                 Not m_rolloverPreparationDone AndAlso Not m_rolloverPreparationThread.IsAlive Then
-                            ' We've requested 50% percent of the total number of data blocks in the file, so we
-                            ' must now prepare for the rollver process since has not been done yet and it is not 
-                            ' already in progress.
+                            ' We've requested the specified percent of the total number of data blocks in the file, 
+                            ' so we must now prepare for the rollver process since has not been done yet and it is 
+                            ' not already in progress.
                             m_rolloverPreparationThread = New Thread(AddressOf PrepareForRollover)
                             m_rolloverPreparationThread.Priority = ThreadPriority.Lowest
                             m_rolloverPreparationThread.Start()
@@ -285,11 +303,8 @@ Public Class ArchiveFile
         Try
             RaiseEvent RolloverPreparationStart(Me, EventArgs.Empty)
 
-            Dim filePath As String = JustPath(m_name)
-            Dim fileName As String = "_" & JustFileName(m_name)
-
             With New ArchiveFile()
-                .Name = filePath & fileName
+                .Name = GetStandbyArchiveFileName()
                 .Size = m_size
                 .BlockSize = m_blockSize
                 .Open()
@@ -307,12 +322,34 @@ Public Class ArchiveFile
 
     End Sub
 
+    Private Function GetStandbyArchiveFileName() As String
+
+        Return JustPath(m_name) & "_" & JustFileName(m_name)
+
+    End Function
+
+    Private Function GetHistoryArchiveFileName() As String
+
+        Return JustPath(m_name) & (NoFileExtension(m_name) & "_" & m_fat.FileStartTime.ToString() & "_to_" & m_fat.FileEndTime.ToString() & Extension).Replace(":"c, "!"c)
+
+    End Function
+
     Private Function ToBeArchived(ByVal pointDate As StandardPointData) As Boolean
 
         ' TODO: Perform compression check here.
         Return True
 
     End Function
+
+#Region " ArchiveFile Events "
+
+    Private Sub ArchiveFile_FileFull(ByVal sender As Object, ByVal e As System.EventArgs) Handles Me.FileFull
+
+        Rollover()
+
+    End Sub
+
+#End Region
 
 #End Region
 
