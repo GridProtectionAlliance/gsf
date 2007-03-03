@@ -324,7 +324,7 @@ Public Class ArchiveFile
 
     Private Function GetStandbyArchiveFileName() As String
 
-        Return JustPath(m_name) & "_" & JustFileName(m_name)
+        Return JustPath(m_name) & NoFileExtension(m_name) & "_standby" & Extension
 
     End Function
 
