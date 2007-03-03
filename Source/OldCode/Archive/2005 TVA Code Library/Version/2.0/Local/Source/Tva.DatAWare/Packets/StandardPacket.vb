@@ -64,17 +64,6 @@ Namespace Packets
 
         End Sub
 
-        Public Sub New(ByVal index As Integer, ByVal timeTag As TimeTag, ByVal quality As Quality, ByVal value As Single)
-
-            MyClass.New()
-
-            m_index = index
-            m_timeTag = timeTag
-            m_quality = quality
-            m_value = value
-
-        End Sub
-
         Public Property Index() As Integer
             Get
                 Return m_index
@@ -118,6 +107,13 @@ Namespace Packets
         End Property
 
         Public Overrides Sub SaveData()
+
+            If MyBase.ArchiveFile IsNot Nothing AndAlso MyBase.MetadataFile IsNot Nothing Then
+                Dim pointData As New StandardPointData(m_timeTag, m_value, m_quality)
+                pointData.Definition = MyBase.MetadataFile.Read(m_index)
+
+                MyBase.ArchiveFile.Write(pointData)
+            End If
 
         End Sub
 

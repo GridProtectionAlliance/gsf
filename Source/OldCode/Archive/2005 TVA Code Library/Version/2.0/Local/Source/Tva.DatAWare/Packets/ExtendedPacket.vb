@@ -28,12 +28,12 @@ Namespace Packets
 
         Private m_index As Integer
         Private m_year As Short
-        Private m_month As Byte
-        Private m_day As Byte
-        Private m_hour As Byte
-        Private m_minute As Byte
-        Private m_second As Byte
-        Private m_quality As Byte
+        Private m_month As Short ' Byte
+        Private m_day As Short 'Byte
+        Private m_hour As Short 'Byte
+        Private m_minute As Short 'Byte
+        Private m_second As Short ' Byte
+        Private m_quality As Quality
         Private m_millisecond As Short
         Private m_gmtOffset As Short
         Private m_value As Single
@@ -67,12 +67,12 @@ Namespace Packets
                     ' We have a binary image with the correct type ID.
                     m_index = BitConverter.ToInt32(binaryImage, startIndex + 2)
                     m_year = BitConverter.ToInt16(binaryImage, startIndex + 6)
-                    m_month = binaryImage(startIndex + 8)
-                    m_day = binaryImage(startIndex + 9)
-                    m_hour = binaryImage(startIndex + 10)
-                    m_minute = binaryImage(startIndex + 11)
-                    m_second = binaryImage(startIndex + 12)
-                    m_quality = binaryImage(startIndex + 13)
+                    m_month = Convert.ToInt16(binaryImage(startIndex + 8))
+                    m_day = Convert.ToInt16(binaryImage(startIndex + 9))
+                    m_hour = Convert.ToInt16(binaryImage(startIndex + 10))
+                    m_minute = Convert.ToInt16(binaryImage(startIndex + 11))
+                    m_second = Convert.ToInt16(binaryImage(startIndex + 12))
+                    m_quality = CType(binaryImage(startIndex + 13), Quality)
                     m_millisecond = BitConverter.ToInt16(binaryImage, startIndex + 14)
                     m_gmtOffset = BitConverter.ToInt16(binaryImage, startIndex + 16)
                     m_value = BitConverter.ToSingle(binaryImage, startIndex + 18)
@@ -82,26 +82,6 @@ Namespace Packets
             Else
                 Throw New ArgumentException(String.Format("Binary image smaller than expected. Expected binary image size {0}.", BinaryLength))
             End If
-
-        End Sub
-
-        Public Sub New(ByVal index As Integer, ByVal year As Short, ByVal month As Byte, ByVal day As Byte, _
-                ByVal hour As Byte, ByVal minute As Byte, ByVal second As Byte, ByVal quality As Byte, _
-                ByVal millisecond As Short, ByVal gmtOffset As Short, ByVal value As Single)
-
-            MyClass.New()
-
-            m_index = index
-            m_year = year
-            m_month = month
-            m_day = day
-            m_hour = hour
-            m_minute = minute
-            m_second = second
-            m_quality = quality
-            m_millisecond = millisecond
-            m_gmtOffset = gmtOffset
-            m_value = value
 
         End Sub
 
@@ -123,56 +103,56 @@ Namespace Packets
             End Set
         End Property
 
-        Public Property Month() As Byte
+        Public Property Month() As Short
             Get
                 Return m_month
             End Get
-            Set(ByVal value As Byte)
+            Set(ByVal value As Short)
                 m_month = value
             End Set
         End Property
 
-        Public Property Day() As Byte
+        Public Property Day() As Short
             Get
                 Return m_day
             End Get
-            Set(ByVal value As Byte)
+            Set(ByVal value As Short)
                 m_day = value
             End Set
         End Property
 
-        Public Property Hour() As Byte
+        Public Property Hour() As Short
             Get
                 Return m_hour
             End Get
-            Set(ByVal value As Byte)
+            Set(ByVal value As Short)
                 m_hour = value
             End Set
         End Property
 
-        Public Property Minute() As Byte
+        Public Property Minute() As Short
             Get
                 Return m_minute
             End Get
-            Set(ByVal value As Byte)
+            Set(ByVal value As Short)
                 m_minute = value
             End Set
         End Property
 
-        Public Property Second() As Byte
+        Public Property Second() As Short
             Get
                 Return m_second
             End Get
-            Set(ByVal value As Byte)
+            Set(ByVal value As Short)
                 m_second = value
             End Set
         End Property
 
-        Public Property Quality() As Byte
+        Public Property Quality() As Quality
             Get
                 Return m_quality
             End Get
-            Set(ByVal value As Byte)
+            Set(ByVal value As Quality)
                 m_quality = value
             End Set
         End Property
@@ -211,6 +191,16 @@ Namespace Packets
         End Property
 
         Public Overrides Sub SaveData()
+
+            If MyBase.ArchiveFile IsNot Nothing AndAlso MyBase.MetadataFile IsNot Nothing Then
+                Dim timestamp As New System.DateTime(m_year, m_month, m_day, m_hour + m_gmtOffset, m_minute, _
+                    m_second, m_millisecond, DateTimeKind.Utc)
+
+                Dim pointData As New StandardPointData(New TimeTag(timestamp), m_value, m_quality)
+                pointData.Definition = MyBase.MetadataFile.Read(m_index)
+
+                MyBase.ArchiveFile.Write(pointData)
+            End If
 
         End Sub
 
