@@ -250,6 +250,7 @@ Namespace Application
 
         End Function
 
+        <Obsolete("Use the overload that takes application name.")> _
         Public Function FindRole(ByVal roleName As String) As Role
 
             If m_roles IsNot Nothing Then
@@ -266,10 +267,14 @@ Namespace Application
 
         Public Function FindRole(ByVal roleName As String, ByVal applicationName As String) As Role
 
-            Dim role As Role = FindRole(roleName)
-            If role IsNot Nothing AndAlso String.Compare(role.Application.Name, applicationName, True) = 0 Then
-                ' User is in the specified role and the specified role belongs to the specified application.
-                Return role
+            If m_roles IsNot Nothing Then
+                For i As Integer = 0 To m_roles.Count - 1
+                    If String.Compare(m_roles(i).Name, roleName, True) = 0 AndAlso _
+                            String.Compare(m_roles(i).Application.Name, applicationName, True) = 0 Then
+                        ' User is in the specified role and the specified role belongs to the specified application.
+                        Return m_roles(i)
+                    End If
+                Next
             End If
             Return Nothing
 
