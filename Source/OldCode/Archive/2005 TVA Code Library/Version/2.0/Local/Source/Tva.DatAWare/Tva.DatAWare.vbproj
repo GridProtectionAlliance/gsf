@@ -102,18 +102,18 @@
     <Compile Include="Legacy Interfaces\TimeTag.vb">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="MetadataAlarmFlags.vb" />
-    <Compile Include="MetadataAnalogFields.vb" />
-    <Compile Include="MetadataComposedFields.vb" />
-    <Compile Include="MetadataConstantFields.vb" />
-    <Compile Include="MetadataDigitalFields.vb" />
+    <Compile Include="PointDefinitionAlarmFlags.vb" />
+    <Compile Include="PointDefinitionAnalogFields.vb" />
+    <Compile Include="PointDefinitionComposedFields.vb" />
+    <Compile Include="PointDefinitionConstantFields.vb" />
+    <Compile Include="PointDefinitionDigitalFields.vb" />
     <Compile Include="MetadataFile.Designer.vb">
       <DependentUpon>MetadataFile.vb</DependentUpon>
     </Compile>
     <Compile Include="MetadataFile.vb">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="MetadataGeneralFlags.vb" />
+    <Compile Include="PointDefinitionGeneralFlags.vb" />
     <Compile Include="My Project\AssemblyInfo.vb" />
     <Compile Include="ExtendedPointData.vb" />
     <Compile Include="DataProcessor.Designer.vb">
@@ -151,7 +151,10 @@
     <EmbeddedResource Include="Embedded Resources\MetadataFile.bmp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Relationship Diagrams\DatAWare Class Diagram.cd" />
+    <None Include="Relationship Diagrams\File Diagram.cd" />
+    <None Include="Relationship Diagrams\Packet Diagram.cd" />
+    <None Include="Relationship Diagrams\Point Definition Diagram.cd" />
+    <None Include="Relationship Diagrams\Point Data Diagram.cd" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.VisualBasic.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

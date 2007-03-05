@@ -3,7 +3,7 @@
 Imports System.Text
 Imports Tva.Text.Common
 
-Public Class MetadataComposedFields
+Public Class PointDefinitionComposedFields
 
     ' *******************************************************************************
     ' *                             Binary Info Structure                           *

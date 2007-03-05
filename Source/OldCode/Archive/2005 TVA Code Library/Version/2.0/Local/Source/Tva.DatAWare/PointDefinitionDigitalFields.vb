@@ -3,7 +3,7 @@
 Imports System.Text
 Imports Tva.Text.Common
 
-Public Class MetadataDigitalFields
+Public Class PointDefinitionDigitalFields
 
     ' *******************************************************************************
     ' *                             Binary Info Structure                           *

@@ -2,7 +2,7 @@ Imports Tva.Interop.Bit
 
 ' 02/20/2007
 
-Public Class MetadataGeneralFlags
+Public Class PointDefinitionGeneralFlags
 
 #Region " Member Declaration "
 

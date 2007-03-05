@@ -1,0 +1,52 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1" MembersFormat="FullSignature">
+  <Font Name="Tahoma" Size="8.25" />
+  <Class Name="Tva.DatAWare.ArchiveDataBlock">
+    <Position X="10.75" Y="7.75" Width="4.25" />
+    <TypeIdentifier>
+      <FileName>ArchiveDataBlock.vb</FileName>
+      <HashCode>AAACAAAAAAAAgAAEAAIMAAAiAAAAAAAAABAAAAMAAAA=</HashCode>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Tva.DatAWare.ArchiveDataBlockPointer" BaseTypeListCollapsed="true">
+    <Position X="7.25" Y="7.75" Width="3.25" />
+    <TypeIdentifier>
+      <FileName>ArchiveDataBlockPointer.vb</FileName>
+      <HashCode>AAAAAACAgAAAAAQAgAAAAAABYAAAAAQAAAAAAAAAAAA=</HashCode>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="Tva.DatAWare.ArchiveFile">
+    <Position X="0.5" Y="0.5" Width="6" />
+    <TypeIdentifier>
+      <FileName>ArchiveFile.vb</FileName>
+      <HashCode>MQAIAIAEIKAA8QEUAICCUARrhoSCAQgAAAAASCOgAAA=</HashCode>
+    </TypeIdentifier>
+    <Members>
+      <Field Name="components" Hidden="true" />
+      <Method Name="Dispose" Hidden="true" />
+      <Method Name="InitializeComponent" Hidden="true" />
+      <Method Name="New" Hidden="true" />
+    </Members>
+  </Class>
+  <Class Name="Tva.DatAWare.ArchiveFileAllocationTable">
+    <Position X="7.25" Y="0.5" Width="6.5" />
+    <TypeIdentifier>
+      <FileName>ArchiveFileAllocationTable.vb</FileName>
+      <HashCode>AABIAAEAAYCgAAQUAEgAgAIFQABAACAAAAUBAAABAKI=</HashCode>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Tva.DatAWare.MetadataFile">
+    <Position X="0.5" Y="11.25" Width="4.5" />
+    <TypeIdentifier>
+      <FileName>MetadataFile.vb</FileName>
+      <HashCode>MAAAAMEgALIFYAUUAAiAAoQiAACDAQAIAAAAAAGAAAM=</HashCode>
+    </TypeIdentifier>
+    <Members>
+      <Field Name="components" Hidden="true" />
+      <Method Name="Dispose" Hidden="true" />
+      <Method Name="InitializeComponent" Hidden="true" />
+      <Method Name="New" Hidden="true" />
+    </Members>
+  </Class>
+</ClassDiagram>

@@ -3,7 +3,7 @@
 Imports System.Text
 Imports Tva.Text.Common
 
-Public Class MetadataAnalogFields
+Public Class PointDefinitionAnalogFields
 
     ' *******************************************************************************
     ' *                             Binary Info Structure                           *

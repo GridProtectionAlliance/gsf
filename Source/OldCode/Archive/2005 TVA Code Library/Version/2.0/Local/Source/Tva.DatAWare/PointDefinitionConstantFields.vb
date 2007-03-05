@@ -2,7 +2,7 @@
 
 Imports System.Text
 
-Public Class MetadataConstantFields
+Public Class PointDefinitionConstantFields
 
 
     ' *******************************************************************************

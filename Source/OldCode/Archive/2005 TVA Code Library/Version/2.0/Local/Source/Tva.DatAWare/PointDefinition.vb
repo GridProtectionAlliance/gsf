@@ -59,8 +59,8 @@ Public Class PointDefinition
     Private m_securityLevel As Short
     Private m_hardwareInfo As String = ""
     Private m_spares As Byte()
-    Private m_generalFlags As MetadataGeneralFlags
-    Private m_alarmFlags As MetadataAlarmFlags
+    Private m_generalFlags As PointDefinitionGeneralFlags
+    Private m_alarmFlags As PointDefinitionAlarmFlags
     Private m_scanRate As Single
     Private m_name As String = ""
     Private m_synonym1 As String = ""
@@ -75,10 +75,10 @@ Public Class PointDefinition
     Private m_phone As String = ""
     Private m_remarks As String = ""
     Private m_binaryInfo As Byte()
-    Private m_analogFields As MetadataAnalogFields
-    Private m_digitalFields As MetadataDigitalFields
-    Private m_composedFields As MetadataComposedFields
-    Private m_constantFields As MetadataConstantFields
+    Private m_analogFields As PointDefinitionAnalogFields
+    Private m_digitalFields As PointDefinitionDigitalFields
+    Private m_composedFields As PointDefinitionComposedFields
+    Private m_constantFields As PointDefinitionConstantFields
     Private m_textEncoding As Encoding
 
 #End Region
@@ -92,13 +92,13 @@ Public Class PointDefinition
         MyBase.New()
         m_index = index
         m_spares = CreateArray(Of Byte)(64)
-        m_generalFlags = New MetadataGeneralFlags(0)
-        m_alarmFlags = New MetadataAlarmFlags(0)
+        m_generalFlags = New PointDefinitionGeneralFlags(0)
+        m_alarmFlags = New PointDefinitionAlarmFlags(0)
         m_binaryInfo = CreateArray(Of Byte)(256)
-        m_analogFields = New MetadataAnalogFields(m_binaryInfo)
-        m_digitalFields = New MetadataDigitalFields(m_binaryInfo)
-        m_composedFields = New MetadataComposedFields(m_binaryInfo)
-        m_constantFields = New MetadataConstantFields(m_binaryInfo)
+        m_analogFields = New PointDefinitionAnalogFields(m_binaryInfo)
+        m_digitalFields = New PointDefinitionDigitalFields(m_binaryInfo)
+        m_composedFields = New PointDefinitionComposedFields(m_binaryInfo)
+        m_constantFields = New PointDefinitionConstantFields(m_binaryInfo)
         m_textEncoding = Encoding.Default ' Default to system's current ANSI code page.
 
     End Sub
@@ -250,20 +250,20 @@ Public Class PointDefinition
         End Set
     End Property
 
-    Public Property GeneralFlags() As MetadataGeneralFlags
+    Public Property GeneralFlags() As PointDefinitionGeneralFlags
         Get
             Return m_generalFlags
         End Get
-        Set(ByVal value As MetadataGeneralFlags)
+        Set(ByVal value As PointDefinitionGeneralFlags)
             m_generalFlags = value
         End Set
     End Property
 
-    Public Property AlarmFlags() As MetadataAlarmFlags
+    Public Property AlarmFlags() As PointDefinitionAlarmFlags
         Get
             Return m_alarmFlags
         End Get
-        Set(ByVal value As MetadataAlarmFlags)
+        Set(ByVal value As PointDefinitionAlarmFlags)
             m_alarmFlags = value
         End Set
     End Property
@@ -385,38 +385,38 @@ Public Class PointDefinition
         End Set
     End Property
 
-    Public Property AnalogFields() As MetadataAnalogFields
+    Public Property AnalogFields() As PointDefinitionAnalogFields
         Get
             Return m_analogFields
         End Get
-        Set(ByVal value As MetadataAnalogFields)
+        Set(ByVal value As PointDefinitionAnalogFields)
             m_analogFields = value
         End Set
     End Property
 
-    Public Property DigitalFields() As MetadataDigitalFields
+    Public Property DigitalFields() As PointDefinitionDigitalFields
         Get
             Return m_digitalFields
         End Get
-        Set(ByVal value As MetadataDigitalFields)
+        Set(ByVal value As PointDefinitionDigitalFields)
             m_digitalFields = value
         End Set
     End Property
 
-    Public Property ComposedFields() As MetadataComposedFields
+    Public Property ComposedFields() As PointDefinitionComposedFields
         Get
             Return m_composedFields
         End Get
-        Set(ByVal value As MetadataComposedFields)
+        Set(ByVal value As PointDefinitionComposedFields)
             m_composedFields = value
         End Set
     End Property
 
-    Public Property ConstantFields() As MetadataConstantFields
+    Public Property ConstantFields() As PointDefinitionConstantFields
         Get
             Return m_constantFields
         End Get
-        Set(ByVal value As MetadataConstantFields)
+        Set(ByVal value As PointDefinitionConstantFields)
             m_constantFields = value
         End Set
     End Property
@@ -457,13 +457,13 @@ Public Class PointDefinition
             Array.Copy(m_textEncoding.GetBytes(m_remarks.PadRight(128)), 0, image, 370, 128)
             Select Case m_generalFlags.PointType
                 Case PointType.Analog
-                    Array.Copy(m_analogFields.BinaryImage, m_binaryInfo, MetadataAnalogFields.BinaryLength)
+                    Array.Copy(m_analogFields.BinaryImage, m_binaryInfo, PointDefinitionAnalogFields.BinaryLength)
                 Case PointType.Digital
-                    Array.Copy(m_digitalFields.BinaryImage, m_binaryInfo, MetadataDigitalFields.BinaryLength)
+                    Array.Copy(m_digitalFields.BinaryImage, m_binaryInfo, PointDefinitionDigitalFields.BinaryLength)
                 Case PointType.Composed
-                    Array.Copy(m_composedFields.BinaryImage, m_binaryInfo, MetadataComposedFields.BinaryLength)
+                    Array.Copy(m_composedFields.BinaryImage, m_binaryInfo, PointDefinitionComposedFields.BinaryLength)
                 Case PointType.Constant
-                    Array.Copy(m_constantFields.BinaryImage, m_binaryInfo, MetadataConstantFields.BinaryLength)
+                    Array.Copy(m_constantFields.BinaryImage, m_binaryInfo, PointDefinitionConstantFields.BinaryLength)
             End Select
             Array.Copy(m_binaryInfo, 0, image, 498, 256)
 

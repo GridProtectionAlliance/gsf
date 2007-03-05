@@ -2,7 +2,7 @@
 
 Imports Tva.Interop.Bit
 
-Public Class MetadataAlarmFlags
+Public Class PointDefinitionAlarmFlags
 
 #Region " Member Declaration "
 
