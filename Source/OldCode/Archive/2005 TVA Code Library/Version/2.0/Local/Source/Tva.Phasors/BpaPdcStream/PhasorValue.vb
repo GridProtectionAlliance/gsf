@@ -81,6 +81,12 @@ Namespace BpaPdcStream
 
         End Sub
 
+        Friend Shared Function CreateNewPhasorValue(ByVal parent As IDataCell, ByVal definition As IPhasorDefinition, ByVal binaryImage As Byte(), ByVal startIndex As Int32) As IPhasorValue
+
+            Return New PhasorValue(parent, definition, binaryImage, startIndex)
+
+        End Function
+
         Public Overrides ReadOnly Property DerivedType() As System.Type
             Get
                 Return Me.GetType()

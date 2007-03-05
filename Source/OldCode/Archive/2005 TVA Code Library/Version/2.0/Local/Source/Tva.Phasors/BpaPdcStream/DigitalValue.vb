@@ -45,11 +45,17 @@ Namespace BpaPdcStream
 
         End Sub
 
-        Public Sub New(ByVal DigitalValue As IDigitalValue)
+        Public Sub New(ByVal digitalValue As IDigitalValue)
 
-            MyBase.New(DigitalValue)
+            MyBase.New(digitalValue)
 
         End Sub
+
+        Friend Shared Function CreateNewDigitalValue(ByVal parent As IDataCell, ByVal definition As IDigitalDefinition, ByVal binaryImage As Byte(), ByVal startIndex As Int32) As IDigitalValue
+
+            Return New DigitalValue(parent, definition, binaryImage, startIndex)
+
+        End Function
 
         Public Overrides ReadOnly Property DerivedType() As System.Type
             Get

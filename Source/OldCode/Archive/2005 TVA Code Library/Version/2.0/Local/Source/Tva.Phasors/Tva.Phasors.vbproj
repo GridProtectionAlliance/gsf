@@ -25,7 +25,7 @@
     <DefineTrace>true</DefineTrace>
     <OutputPath>..\bin\</OutputPath>
     <DocumentationFile>Tva.Phasors.xml</DocumentationFile>
-    <NoWarn>41999,42016,42017,42018,42019,42020,42021,42022,42032,42036</NoWarn>
+    <NoWarn>41999,42016</NoWarn>
     <WarningsAsErrors>
     </WarningsAsErrors>
     <RemoveIntegerChecks>true</RemoveIntegerChecks>
@@ -37,7 +37,7 @@
     <Optimize>true</Optimize>
     <OutputPath>..\bin\</OutputPath>
     <DocumentationFile>Tva.Phasors.xml</DocumentationFile>
-    <NoWarn>41999,42016,42017,42018,42019,42020,42021,42022,42032,42036</NoWarn>
+    <NoWarn>41999,42016</NoWarn>
     <WarningsAsErrors>
     </WarningsAsErrors>
     <RemoveIntegerChecks>true</RemoveIntegerChecks>
@@ -81,8 +81,6 @@
     <Compile Include="BpaPdcStream\FrequencyValue.vb" />
     <Compile Include="BpaPdcStream\PhasorDefinition.vb" />
     <Compile Include="BpaPdcStream\PhasorValue.vb" />
-    <Compile Include="BpaPdcStream\PMUCell.vb" />
-    <Compile Include="BpaPdcStream\PMUCellCollection.vb" />
     <Compile Include="ChannelBase.vb" />
     <Compile Include="ChannelCellBase.vb" />
     <Compile Include="ChannelCellCollectionBase.vb" />

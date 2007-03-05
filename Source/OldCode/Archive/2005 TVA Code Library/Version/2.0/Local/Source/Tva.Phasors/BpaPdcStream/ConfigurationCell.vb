@@ -110,12 +110,13 @@ Namespace BpaPdcStream
             End Set
         End Property
 
+        ' These flags are defined in the data cell in the BPA PDCstream
         Public Property IEEEFormatFlags() As IEEEFormatFlags
             Get
                 Return m_ieeeFormatFlags
             End Get
-            Set(ByVal Value As IEEEFormatFlags)
-                m_ieeeFormatFlags = Value
+            Set(ByVal value As IEEEFormatFlags)
+                m_ieeeFormatFlags = value
             End Set
         End Property
 
@@ -123,8 +124,8 @@ Namespace BpaPdcStream
             Get
                 Return IIf((m_ieeeFormatFlags And IEEEFormatFlags.Coordinates) > 0, CoordinateFormat.Polar, CoordinateFormat.Rectangular)
             End Get
-            Set(ByVal Value As CoordinateFormat)
-                If Value = CoordinateFormat.Polar Then
+            Set(ByVal value As CoordinateFormat)
+                If value = CoordinateFormat.Polar Then
                     m_ieeeFormatFlags = m_ieeeFormatFlags Or IEEEFormatFlags.Coordinates
                 Else
                     m_ieeeFormatFlags = m_ieeeFormatFlags And Not IEEEFormatFlags.Coordinates
@@ -136,8 +137,8 @@ Namespace BpaPdcStream
             Get
                 Return IIf((m_ieeeFormatFlags And IEEEFormatFlags.Phasors) > 0, DataFormat.FloatingPoint, DataFormat.FixedInteger)
             End Get
-            Set(ByVal Value As DataFormat)
-                If Value = DataFormat.FloatingPoint Then
+            Set(ByVal value As DataFormat)
+                If value = DataFormat.FloatingPoint Then
                     m_ieeeFormatFlags = m_ieeeFormatFlags Or IEEEFormatFlags.Phasors
                 Else
                     m_ieeeFormatFlags = m_ieeeFormatFlags And Not IEEEFormatFlags.Phasors
@@ -149,8 +150,8 @@ Namespace BpaPdcStream
             Get
                 Return IIf((m_ieeeFormatFlags And IEEEFormatFlags.Frequency) > 0, DataFormat.FloatingPoint, DataFormat.FixedInteger)
             End Get
-            Set(ByVal Value As DataFormat)
-                If Value = DataFormat.FloatingPoint Then
+            Set(ByVal value As DataFormat)
+                If value = DataFormat.FloatingPoint Then
                     m_ieeeFormatFlags = m_ieeeFormatFlags Or IEEEFormatFlags.Frequency
                 Else
                     m_ieeeFormatFlags = m_ieeeFormatFlags And Not IEEEFormatFlags.Frequency
@@ -162,8 +163,8 @@ Namespace BpaPdcStream
             Get
                 Return IIf((m_ieeeFormatFlags And IEEEFormatFlags.Analog) > 0, DataFormat.FloatingPoint, DataFormat.FixedInteger)
             End Get
-            Set(ByVal Value As DataFormat)
-                If Value = DataFormat.FloatingPoint Then
+            Set(ByVal value As DataFormat)
+                If value = DataFormat.FloatingPoint Then
                     m_ieeeFormatFlags = m_ieeeFormatFlags Or IEEEFormatFlags.Analog
                 Else
                     m_ieeeFormatFlags = m_ieeeFormatFlags And Not IEEEFormatFlags.Analog
@@ -212,6 +213,17 @@ Namespace BpaPdcStream
             info.AddValue("reserved", m_reserved)
 
         End Sub
+
+        Public Overrides ReadOnly Property Attributes() As System.Collections.Generic.Dictionary(Of String, String)
+            Get
+                Dim baseAttributes As Dictionary(Of String, String) = MyBase.Attributes
+
+                baseAttributes.Add("Offset", m_offset)
+                baseAttributes.Add("Reserved", m_reserved)
+
+                Return baseAttributes
+            End Get
+        End Property
 
     End Class
 

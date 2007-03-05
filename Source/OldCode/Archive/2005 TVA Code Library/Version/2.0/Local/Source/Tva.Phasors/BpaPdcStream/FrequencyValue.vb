@@ -57,6 +57,12 @@ Namespace BpaPdcStream
 
         End Sub
 
+        Friend Shared Function CreateNewFrequencyValue(ByVal parent As IDataCell, ByVal definition As IFrequencyDefinition, ByVal binaryImage As Byte(), ByVal startIndex As Int32) As IFrequencyValue
+
+            Return New FrequencyValue(parent, definition, binaryImage, startIndex)
+
+        End Function
+
         Public Overrides ReadOnly Property DerivedType() As System.Type
             Get
                 Return Me.GetType

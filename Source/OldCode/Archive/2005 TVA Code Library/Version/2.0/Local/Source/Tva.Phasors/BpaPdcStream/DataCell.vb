@@ -83,11 +83,21 @@ Namespace BpaPdcStream
         Public Sub New(ByVal parent As IDataFrame, ByVal state As DataFrameParsingState, ByVal index As Int32, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
             ' TODO: Define static creation functions for data cell value types
-            MyBase.New(parent, True, MaximumPhasorValues, MaximumAnalogValues, MaximumDigitalValues, New DataCellParsingState( _
-                state.ConfigurationFrame.Cells(index), Nothing, Nothing, Nothing, Nothing), _
+            MyBase.New(parent, True, MaximumPhasorValues, MaximumAnalogValues, MaximumDigitalValues, _
+                New DataCellParsingState(state.ConfigurationFrame.Cells(index), _
+                    AddressOf BpaPdcStream.PhasorValue.CreateNewPhasorValue, _
+                    AddressOf BpaPdcStream.FrequencyValue.CreateNewFrequencyValue, _
+                    AddressOf BpaPdcStream.AnalogValue.CreateNewAnalogValue, _
+                    AddressOf BpaPdcStream.DigitalValue.CreateNewDigitalValue), _
                 binaryImage, startIndex)
 
         End Sub
+
+        Friend Shared Function CreateNewDataCell(ByVal parent As IChannelFrame, ByVal state As IChannelFrameParsingState(Of IDataCell), ByVal index As Int32, ByVal binaryImage As Byte(), ByVal startIndex As Int32) As IDataCell
+
+            Return New DataCell(parent, state, index, binaryImage, startIndex)
+
+        End Function
 
         Public Overrides ReadOnly Property DerivedType() As System.Type
             Get
@@ -115,8 +125,8 @@ Namespace BpaPdcStream
             Get
                 Return m_flags
             End Get
-            Set(ByVal Value As ChannelFlags)
-                m_flags = Value
+            Set(ByVal value As ChannelFlags)
+                m_flags = value
             End Set
         End Property
 
@@ -124,8 +134,8 @@ Namespace BpaPdcStream
             Get
                 Return m_reservedFlags
             End Get
-            Set(ByVal Value As ReservedFlags)
-                m_reservedFlags = Value
+            Set(ByVal value As ReservedFlags)
+                m_reservedFlags = value
             End Set
         End Property
 
@@ -133,8 +143,8 @@ Namespace BpaPdcStream
             Get
                 Return ConfigurationCell.IEEEFormatFlags
             End Get
-            Set(ByVal Value As IEEEFormatFlags)
-                ConfigurationCell.IEEEFormatFlags = Value
+            Set(ByVal value As IEEEFormatFlags)
+                ConfigurationCell.IEEEFormatFlags = value
             End Set
         End Property
 
@@ -142,8 +152,8 @@ Namespace BpaPdcStream
             Get
                 Return m_sampleNumber
             End Get
-            Set(ByVal Value As Int16)
-                m_sampleNumber = Value
+            Set(ByVal value As Int16)
+                m_sampleNumber = value
             End Set
         End Property
 
@@ -152,8 +162,8 @@ Namespace BpaPdcStream
             Get
                 Return ((m_reservedFlags And ReservedFlags.Reserved0) > 0)
             End Get
-            Set(ByVal Value As Boolean)
-                If Value Then
+            Set(ByVal value As Boolean)
+                If value Then
                     m_reservedFlags = m_reservedFlags Or ReservedFlags.Reserved0
                 Else
                     m_reservedFlags = m_reservedFlags And Not ReservedFlags.Reserved0
@@ -165,8 +175,8 @@ Namespace BpaPdcStream
             Get
                 Return ((m_reservedFlags And ReservedFlags.Reserved1) > 0)
             End Get
-            Set(ByVal Value As Boolean)
-                If Value Then
+            Set(ByVal value As Boolean)
+                If value Then
                     m_reservedFlags = m_reservedFlags Or ReservedFlags.Reserved1
                 Else
                     m_reservedFlags = m_reservedFlags And Not ReservedFlags.Reserved1
@@ -178,8 +188,8 @@ Namespace BpaPdcStream
             Get
                 Return ((m_flags And ChannelFlags.DataIsValid) = 0)
             End Get
-            Set(ByVal Value As Boolean)
-                If Value Then
+            Set(ByVal value As Boolean)
+                If value Then
                     m_flags = m_flags And Not ChannelFlags.DataIsValid
                 Else
                     m_flags = m_flags Or ChannelFlags.DataIsValid
@@ -191,8 +201,8 @@ Namespace BpaPdcStream
             Get
                 Return ((m_flags And ChannelFlags.TransmissionErrors) > 0)
             End Get
-            Set(ByVal Value As Boolean)
-                If Value Then
+            Set(ByVal value As Boolean)
+                If value Then
                     m_flags = m_flags Or ChannelFlags.TransmissionErrors
                 Else
                     m_flags = m_flags And Not ChannelFlags.TransmissionErrors
@@ -204,8 +214,8 @@ Namespace BpaPdcStream
             Get
                 Return ((m_flags And ChannelFlags.PMUSynchronized) = 0)
             End Get
-            Set(ByVal Value As Boolean)
-                If Value Then
+            Set(ByVal value As Boolean)
+                If value Then
                     m_flags = m_flags And Not ChannelFlags.PMUSynchronized
                 Else
                     m_flags = m_flags Or ChannelFlags.PMUSynchronized
@@ -217,8 +227,8 @@ Namespace BpaPdcStream
             Get
                 Return ((m_flags And ChannelFlags.DataSortedByArrival) > 0)
             End Get
-            Set(ByVal Value As Boolean)
-                If Value Then
+            Set(ByVal value As Boolean)
+                If value Then
                     m_flags = m_flags Or ChannelFlags.DataSortedByArrival
                 Else
                     m_flags = m_flags And Not ChannelFlags.DataSortedByArrival
@@ -231,8 +241,8 @@ Namespace BpaPdcStream
             Get
                 Return ((m_flags And ChannelFlags.DataSortedByTimestamp) = 0)
             End Get
-            Set(ByVal Value As Boolean)
-                If Value Then
+            Set(ByVal value As Boolean)
+                If value Then
                     m_flags = m_flags And Not ChannelFlags.DataSortedByTimestamp
                 Else
                     m_flags = m_flags Or ChannelFlags.DataSortedByTimestamp
@@ -244,8 +254,8 @@ Namespace BpaPdcStream
             Get
                 Return ((m_flags And ChannelFlags.PDCExchangeFormat) > 0)
             End Get
-            Set(ByVal Value As Boolean)
-                If Value Then
+            Set(ByVal value As Boolean)
+                If value Then
                     m_flags = m_flags Or ChannelFlags.PDCExchangeFormat
                 Else
                     m_flags = m_flags And Not ChannelFlags.PDCExchangeFormat
@@ -257,8 +267,8 @@ Namespace BpaPdcStream
             Get
                 Return ((m_flags And ChannelFlags.MacrodyneFormat) > 0)
             End Get
-            Set(ByVal Value As Boolean)
-                If Value Then
+            Set(ByVal value As Boolean)
+                If value Then
                     m_flags = m_flags Or ChannelFlags.MacrodyneFormat
                 Else
                     m_flags = m_flags And Not ChannelFlags.MacrodyneFormat
@@ -270,8 +280,8 @@ Namespace BpaPdcStream
             Get
                 Return ((m_flags And ChannelFlags.MacrodyneFormat) = 0)
             End Get
-            Set(ByVal Value As Boolean)
-                If Value Then
+            Set(ByVal value As Boolean)
+                If value Then
                     m_flags = m_flags And Not ChannelFlags.MacrodyneFormat
                 Else
                     m_flags = m_flags Or ChannelFlags.MacrodyneFormat
@@ -284,7 +294,7 @@ Namespace BpaPdcStream
             Get
                 Return ((m_flags And ChannelFlags.TimestampIncluded) = 0)
             End Get
-            Set(ByVal Value As Boolean)
+            Set(ByVal value As Boolean)
                 If Value Then
                     m_flags = m_flags And Not ChannelFlags.TimestampIncluded
                 Else
@@ -295,7 +305,7 @@ Namespace BpaPdcStream
 
         Protected Overrides ReadOnly Property HeaderLength() As UInt16
             Get
-                Return 6
+                Return 8
             End Get
         End Property
 
@@ -316,20 +326,21 @@ Namespace BpaPdcStream
 
         Protected Overrides Sub ParseHeaderImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
+            Dim configurationCell As BpaPdcStream.ConfigurationCell = DirectCast(DirectCast(state, IDataCellParsingState).ConfigurationCell, BpaPdcStream.ConfigurationCell)
+            Dim analogs As Byte = binaryImage(startIndex + 1)
+            Dim digitals As Byte = binaryImage(startIndex + 2)
+            Dim phasors As Byte = binaryImage(startIndex + 3)
+
             ' Parse PDCstream specific header image
             m_flags = binaryImage(startIndex)
 
-            Dim analogWords As Byte = binaryImage(startIndex + 1)
-            Dim digitalWords As Byte = binaryImage(startIndex + 2)
-            Dim phasorWords As Byte = binaryImage(startIndex + 3)
-
             ' Strip off IEEE flags
-            m_reservedFlags = (analogWords And Not ReservedFlags.AnalogWordsMask)
-            IEEEFormatFlags = (digitalWords And Not IEEEFormatFlags.DigitalWordsMask)
+            m_reservedFlags = (analogs And Not ReservedFlags.AnalogWordsMask)
+            IEEEFormatFlags = (digitals And Not IEEEFormatFlags.DigitalWordsMask)
 
             ' Leave word counts
-            analogWords = (analogWords And ReservedFlags.AnalogWordsMask)
-            digitalWords = (digitalWords And IEEEFormatFlags.DigitalWordsMask)
+            analogs = (analogs And ReservedFlags.AnalogWordsMask)
+            digitals = (digitals And IEEEFormatFlags.DigitalWordsMask)
 
             ' Algorithm Case: Determine best course of action when stream counts don't match
             ' configuration file.  Think about what *will* happen when new data appears in
@@ -337,7 +348,7 @@ Namespace BpaPdcStream
             ' consumer about the mismatch instead of raising an exception - could even make
             ' a boolean property that would allow either case.  The important thing to consider
             ' is that to parse the cell images you have to have a defined definition (see base
-            ' class "Phasor.DataCellBase.ParseDataCell" - more in stream than in config file
+            ' class "Phasors.DataCellBase.ParseBodyImage" - more in stream than in config file
             ' and you won't get the new value, too few and you don't have enough definitions -
             ' that would be bad - either way the definitions won't line up with the appropriate
             ' data value and you won't know which one is missing or added.  I can't change the
@@ -345,21 +356,42 @@ Namespace BpaPdcStream
             ' mismatch.  So for now we'll just throw an exception and deal with consequences :)
             ' Note that this only applies to PDCstream protocol
 
-            If phasorWords <> ConfigurationCell.PhasorDefinitions.Count Then
-                Throw New InvalidOperationException("Stream/Config File Mismatch: Phasor value count in stream (" & phasorWords & ") does not match defined count in configuration file (" & ConfigurationCell.PhasorDefinitions.Count & ")")
+            ' Phasors should be already defined in BPA PDCstream configuration file - we'll stop if they're not
+            If phasors <> configurationCell.PhasorDefinitions.Count Then
+                Throw New InvalidOperationException("Stream/Config File Mismatch: Phasor value count in stream (" & phasors & ") does not match defined count in configuration file (" & configurationCell.PhasorDefinitions.Count & ") for " & configurationCell.IDLabel)
             End If
 
-            ' TODO: If analog values get a clear definition in INI file at some point, we can validate the number in the stream to the number in the config file...
+            ' If analog values get a clear definition in INI file at some point, we can validate the number in the stream to the number in the config file...
             'If analogWords <> ConfigurationCell.AnalogDefinitions.Count Then
             '    Throw New InvalidOperationException("Stream/Config File Mismatch: Analog value count in stream (" analogWords & ") does not match defined count in configuration file (" & ConfigurationCell.AnalogDefinitions.Count & ")")
             'End If
 
-            ' TODO: If digital values get a clear definition in INI file at some point, we can validate the number in the stream to the number in the config file...
+            ' If digital values get a clear definition in INI file at some point, we can validate the number in the stream to the number in the config file...
             'If digitalWords <> ConfigurationCell.DigitalDefinitions.Count Then
             '    Throw New InvalidOperationException("Stream/Config File Mismatch: Digital value count in stream (" digitalWords & ") does not match defined count in configuration file (" & ConfigurationCell.DigitalDefinitions.Count & ")")
             'End If
 
+            ' Dyanmically add analog definitions to configuration cell as needed (they are only defined in data frame of BPA PDCstream)
+            With configurationCell.AnalogDefinitions
+                If analogs > .Count Then
+                    For x As Integer = .Count To analogs - 1
+                        .Add(New BpaPdcStream.AnalogDefinition(configurationCell, x, "Analog " & (x + 1), 1, 0.0F))
+                    Next
+                End If
+            End With
+
+            ' Dyanmically add digital definitions to configuration cell as needed (they are only defined in data frame of BPA PDCstream)
+            With configurationCell.DigitalDefinitions
+                If digitals > .Count Then
+                    For x As Integer = .Count To digitals - 1
+                        .Add(New BpaPdcStream.DigitalDefinition(configurationCell, x, "Digital Word " & (x + 1)))
+                    Next
+                End If
+            End With
+
             m_sampleNumber = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 4)
+
+            ' Status flags and remaining data elements will parsed by base class in the ParseBodyImage method
 
         End Sub
 
@@ -373,6 +405,27 @@ Namespace BpaPdcStream
             info.AddValue("sampleNumber", m_sampleNumber)
 
         End Sub
+
+        Public Overrides ReadOnly Property Attributes() As System.Collections.Generic.Dictionary(Of String, String)
+            Get
+                Dim baseAttributes As Dictionary(Of String, String) = MyBase.Attributes
+
+                baseAttributes.Add("Channel Flags", m_flags)
+                baseAttributes.Add("Reserved Flags", m_reservedFlags)
+                baseAttributes.Add("Sample Number", m_sampleNumber)
+                baseAttributes.Add("Reserved Flag 0 Is Set", ReservedFlag0IsSet)
+                baseAttributes.Add("Reserved Flag 1 Is Set", ReservedFlag1IsSet)
+                baseAttributes.Add("Transmission Errors", TransmissionErrors)
+                baseAttributes.Add("Data Is Sorted By Arrival", DataIsSortedByArrival)
+                baseAttributes.Add("Data Is Sorted By Timestamp", ((m_flags And ChannelFlags.DataSortedByTimestamp) = 0))
+                baseAttributes.Add("Using PDC Exchange Format", UsingPDCExchangeFormat)
+                baseAttributes.Add("Using Macrodyne Format", UsingMacrodyneFormat)
+                baseAttributes.Add("Using IEEE Format", UsingIEEEFormat)
+                baseAttributes.Add("Timestamp Is Included", ((m_flags And ChannelFlags.TimestampIncluded) = 0))
+
+                Return baseAttributes
+            End Get
+        End Property
 
     End Class
 

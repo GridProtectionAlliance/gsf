@@ -57,6 +57,12 @@ Namespace BpaPdcStream
 
         End Sub
 
+        Friend Shared Function CreateNewAnalogValue(ByVal parent As IDataCell, ByVal definition As IAnalogDefinition, ByVal binaryImage As Byte(), ByVal startIndex As Int32) As IAnalogValue
+
+            Return New AnalogValue(parent, definition, binaryImage, startIndex)
+
+        End Function
+
         Public Overrides ReadOnly Property DerivedType() As System.Type
             Get
                 Return Me.GetType

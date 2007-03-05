@@ -45,9 +45,9 @@ Namespace IeeeC37_118
 
         End Sub
 
-        Public Sub New(ByVal DigitalValue As IDigitalValue)
+        Public Sub New(ByVal digitalValue As IDigitalValue)
 
-            MyBase.New(DigitalValue)
+            MyBase.New(digitalValue)
 
         End Sub
 

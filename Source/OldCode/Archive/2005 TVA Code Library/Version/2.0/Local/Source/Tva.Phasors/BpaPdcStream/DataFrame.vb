@@ -17,7 +17,8 @@
 
 Imports System.Runtime.Serialization
 Imports System.Buffer
-Imports Tva.DateTime
+Imports System.Text
+Imports Tva.DateTime.Common
 Imports Tva.Math.Common
 Imports Tva.Phasors.Common
 Imports Tva.Phasors.BpaPdcStream.Common
@@ -59,7 +60,7 @@ Namespace BpaPdcStream
 
         ' If you are going to create multiple data packets, you can use this constructor
         ' Note that this only starts becoming necessary if you start hitting data size
-        ' limits imposed by the nature of the protocol...
+        ' limits imposed by the nature of the transport protocol...
         Public Sub New(ByVal packetNumber As Byte, ByVal sampleNumber As Int16)
 
             MyClass.New(sampleNumber)
@@ -69,8 +70,8 @@ Namespace BpaPdcStream
 
         Public Sub New(ByVal configurationFrame As IConfigurationFrame, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
-            ' TODO: Provide static data cell creation function
-            MyBase.New(New DataFrameParsingState(New DataCellCollection, 0, configurationFrame, Nothing), binaryImage, startIndex)
+            MyBase.New(New DataFrameParsingState(New DataCellCollection, 0, configurationFrame, _
+                AddressOf BpaPdcStream.DataCell.CreateNewDataCell), binaryImage, startIndex)
 
         End Sub
 
@@ -126,14 +127,11 @@ Namespace BpaPdcStream
             End Set
         End Property
 
-        'Public Property DataCellCount() As Int16
-        '    Get
-        '        Return m_dataCellCount
-        '    End Get
-        '    Set(ByVal Value As Int16)
-        '        m_dataCellCount = Value
-        '    End Set
-        'End Property
+        Public ReadOnly Property NtpTimeTag() As DateTime.NtpTimeTag
+            Get
+                Return New DateTime.NtpTimeTag(TicksToSeconds(Ticks))
+            End Get
+        End Property
 
         <CLSCompliant(False)> _
         Protected Overrides Function CalculateChecksum(ByVal buffer() As Byte, ByVal offset As Int32, ByVal length As Int32) As UInt16
@@ -145,7 +143,11 @@ Namespace BpaPdcStream
 
         Protected Overrides ReadOnly Property HeaderLength() As UInt16
             Get
-                Return 12
+                If ConfigurationFrame.StreamType = StreamType.Legacy Then
+                    Return 12 + Cells.Count * 8
+                Else
+                    Return 12
+                End If
             End Get
         End Property
 
@@ -156,9 +158,30 @@ Namespace BpaPdcStream
                 buffer(0) = SyncByte
                 buffer(1) = Convert.ToByte(1)
                 EndianOrder.BigEndian.CopyBytes(Convert.ToInt16(buffer.Length \ 2), buffer, 2)
-                EndianOrder.BigEndian.CopyBytes(Convert.ToUInt32(TimeTag.Value), buffer, 4)
+                If ConfigurationFrame.RevisionNumber = RevisionNumber.Revision0 Then
+                    EndianOrder.BigEndian.CopyBytes(Convert.ToUInt32(NtpTimeTag.Value), buffer, 4)
+                Else
+                    EndianOrder.BigEndian.CopyBytes(Convert.ToUInt32(TimeTag.Value), buffer, 4)
+                End If
                 EndianOrder.BigEndian.CopyBytes(Convert.ToInt16(m_sampleNumber), buffer, 8)
                 EndianOrder.BigEndian.CopyBytes(Convert.ToInt16(Cells.Count), buffer, 10)
+
+                ' If producing a legacy format, include additional header
+                If ConfigurationFrame.StreamType = StreamType.Legacy Then
+                    Dim index As Integer = 12
+                    Dim reservedBytes As Byte() = CreateArray(Of Byte)(2)
+                    Dim offset As Int16
+
+                    For x As Integer = 0 To Cells.Count - 1
+                        With Cells(x)
+                            CopyImage(Encoding.ASCII.GetBytes(.IDLabel), buffer, index, 4)
+                            CopyImage(reservedBytes, buffer, index, 2)
+                            EndianOrder.BigEndian.CopyBytes(offset, buffer, index)
+                            index += 2
+                            offset += .BinaryLength
+                        End With
+                    Next
+                End If
 
                 Return buffer
             End Get
@@ -166,13 +189,14 @@ Namespace BpaPdcStream
 
         Protected Overrides Sub ParseHeaderImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
-            Dim configurationFrame As BpaPdcStream.ConfigurationFrame = DirectCast(state, IDataFrameParsingState).ConfigurationFrame
-
-            Dim dataCellCount As Int16
+            Dim configurationFrame As BpaPdcStream.ConfigurationFrame = DirectCast(DirectCast(state, IDataFrameParsingState).ConfigurationFrame, BpaPdcStream.ConfigurationFrame)
+            Dim secondOfCentury As UInt32
             Dim frameLength As Int16
+            Dim dataCellCount As Int16
+            Dim timestamp As Date
 
             If binaryImage(startIndex) <> SyncByte Then
-                Throw New InvalidOperationException("Bad Data Stream: Expected sync byte &HAA as first byte in PDCstream data frame, got " & binaryImage(startIndex).ToString("x"c).PadLeft(2, "0"c))
+                Throw New InvalidOperationException("Bad Data Stream: Expected sync byte AA as first byte in PDCstream data frame, got " & binaryImage(startIndex).ToString("X"c).PadLeft(2, "0"c))
             End If
 
             m_packetNumber = binaryImage(startIndex + 1)
@@ -181,22 +205,24 @@ Namespace BpaPdcStream
                 Throw New InvalidOperationException("Bad Data Stream: This is not a PDCstream data frame - looks like a configuration frame.")
             End If
 
-            frameLength = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 2)
-            Ticks = (New UnixTimeTag(EndianOrder.BigEndian.ToInt32(binaryImage, startIndex + 4))).ToDateTime.Ticks
+            frameLength = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 2) * 2
+            secondOfCentury = EndianOrder.BigEndian.ToUInt32(binaryImage, startIndex + 4)
             m_sampleNumber = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 8)
             dataCellCount = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 10)
-
-            ' TODO: validate frame length??
 
             If dataCellCount <> configurationFrame.Cells.Count Then
                 Throw New InvalidOperationException("Stream/Config File Mismatch: PMU count (" & dataCellCount & ") in stream does not match defined count in configuration file:" & configurationFrame.Cells.Count)
             End If
 
-            ' Skip through redundant header information for legacy streams...
-            If configurationFrame.StreamType = StreamType.Legacy Then
-                ' We are not validating this data or looking for changes since this information
-                ' was already transmitted via the descriptor....
+            If configurationFrame.RevisionNumber = RevisionNumber.Revision0 Then
+                timestamp = (New DateTime.UnixTimeTag(secondOfCentury)).ToDateTime()
+            Else
+                timestamp = (New DateTime.NtpTimeTag(secondOfCentury)).ToDateTime()
             End If
+
+            Ticks = timestamp.AddMilliseconds(m_sampleNumber * (1000@ / configurationFrame.FrameRate)).Ticks
+
+            ' We don't need PMU info in data frame from a parsing perspective, even if available in legacy stream - so we're done...
 
         End Sub
 
@@ -210,135 +236,16 @@ Namespace BpaPdcStream
 
         End Sub
 
-        ' TODO: place this in proper override...
-        'Public Overrides ReadOnly Property ProtocolSpecificDataLength() As Int16
-        '    Get
-        '        Return 12
-        '    End Get
-        'End Property
+        Public Overrides ReadOnly Property Attributes() As System.Collections.Generic.Dictionary(Of String, String)
+            Get
+                Dim baseAttributes As Dictionary(Of String, String) = MyBase.Attributes
 
-        'Public Overrides ReadOnly Property ProtocolSpecificDataImage() As Byte()
-        '    Get
-        '        Dim buffer As Byte() = CreateArray(Of Byte)(ProtocolSpecificDataLength)
+                baseAttributes.Add("Packet Number", m_packetNumber)
+                baseAttributes.Add("Sample Number", m_sampleNumber)
 
-        '        buffer(0) = Common.SyncByte
-        '        buffer(1) = Convert.ToByte(1)
-        '        EndianOrder.BigEndian.CopyBytes(Convert.ToInt16(buffer.Length \ 2), buffer, 2)
-        '        EndianOrder.BigEndian.CopyBytes(Convert.ToUInt32(TimeTag.Value), buffer, 4)
-        '        EndianOrder.BigEndian.CopyBytes(Convert.ToInt16(m_sampleNumber), buffer, 8)
-        '        EndianOrder.BigEndian.CopyBytes(Convert.ToInt16(Cells.Count), buffer, 10)
-
-        '        Return buffer
-        '    End Get
-        'End Property
-
-        'Private m_configFile As ConfigurationFrame
-        'Private m_timeTag As UnixTimeTag
-        'Private m_timeStamp As DateTime
-        'Private m_sampleNumber As Int32
-
-        'Public Cells As DataCell()
-        'Public Published As Boolean
-
-        'Public Const SyncByte As Byte = &HAA
-
-        'Public Sub New(ByVal configFile As ConfigurationFrame, ByVal timeStamp As DateTime, ByVal index As Int32)
-
-        '    m_configFile = configFile
-        '    m_timeTag = New UnixTimeTag(timeStamp)
-        '    m_sampleNumber = index
-
-        '    ' We precalculate a regular .NET timestamp with milliseconds sitting in the middle of the sample index
-        '    m_timeStamp = timeStamp.AddMilliseconds((m_sampleNumber + 0.5@) * (1000@ / m_configFile.FrameRate))
-
-        '    With m_configFile
-        '        Cells = CreateArray(Of DataCell)(.PMUCount)
-
-        '        For x As Int32 = 0 To Cells.Length - 1
-        '            'Cells(x) = New DataCell(.PMU(x), index)
-        '        Next
-        '    End With
-
-        'End Sub
-
-        'Public ReadOnly Property TimeTag() As UnixTimeTag
-        '    Get
-        '        Return m_timeTag
-        '    End Get
-        'End Property
-
-        'Public ReadOnly Property Index() As Int32
-        '    Get
-        '        Return m_sampleNumber
-        '    End Get
-        'End Property
-
-        'Public ReadOnly Property TimeStamp() As DateTime
-        '    Get
-        '        Return m_timeStamp
-        '    End Get
-        'End Property
-
-        'Public ReadOnly Property ReadyToPublish() As Boolean
-        '    Get
-        '        Static packetReady As Boolean
-
-        '        If Not packetReady Then
-        '            Dim isReady As Boolean = True
-
-        '            ' If we have data for each cell in the row, we can go ahead and publish it...
-        '            For x As Int32 = 0 To Cells.Length - 1
-        '                If Cells(x).IsEmpty Then
-        '                    isReady = False
-        '                    Exit For
-        '                End If
-        '            Next
-
-        '            If isReady Then packetReady = True
-        '            Return isReady
-        '        Else
-        '            Return True
-        '        End If
-        '    End Get
-        'End Property
-
-        'Public ReadOnly Property BinaryLength() As Int32
-        '    Get
-        '        Dim length As Int32 = 14
-
-        '        For x As Int32 = 0 To Cells.Length - 1
-        '            length += Cells(x).BinaryLength
-        '        Next
-
-        '        Return length
-        '    End Get
-        'End Property
-
-        'Public ReadOnly Property BinaryImage() As Byte()
-        '    Get
-        '        Dim buffer As Byte() = CreateArray(Of Byte)(BinaryLength)
-        '        Dim pmuID As Byte()
-        '        Dim index As Int32
-
-        '        buffer(0) = SyncByte
-        '        buffer(1) = Convert.ToByte(1)
-        '        EndianOrder.BigEndian.CopyBytes(Convert.ToInt16(buffer.Length \ 2), buffer, 2)
-        '        EndianOrder.BigEndian.CopyBytes(Convert.ToUInt32(m_timeTag.Value), buffer, 4)
-        '        EndianOrder.BigEndian.CopyBytes(Convert.ToInt16(m_sampleNumber), buffer, 8)
-        '        EndianOrder.BigEndian.CopyBytes(Convert.ToInt16(Cells.Length), buffer, 10)
-        '        index = 12
-
-        '        For x As Int32 = 0 To Cells.Length - 1
-        '            BlockCopy(Cells(x).BinaryImage, 0, buffer, index, Cells(x).BinaryLength)
-        '            index += Cells(x).BinaryLength
-        '        Next
-
-        '        ' Add check sum
-        '        BlockCopy(BitConverter.GetBytes(XorCheckSum(buffer, 0, index)), 0, buffer, index, 2)
-
-        '        Return buffer
-        '    End Get
-        'End Property
+                Return baseAttributes
+            End Get
+        End Property
 
     End Class
 

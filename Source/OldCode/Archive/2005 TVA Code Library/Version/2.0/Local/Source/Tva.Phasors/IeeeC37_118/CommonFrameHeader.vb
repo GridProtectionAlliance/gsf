@@ -306,7 +306,7 @@ Namespace IeeeC37_118
 
         Public Shared Function ParseBinaryImage(ByVal configurationFrame As ConfigurationFrame, ByVal binaryImage As Byte(), ByVal startIndex As Int32) As ICommonFrameHeader
 
-            If binaryImage(startIndex) <> SyncByte Then Throw New InvalidOperationException("Bad data stream, expected sync byte AA as first byte in IEEE C37.118 frame, got " & binaryImage(startIndex).ToString("x"c).PadLeft(2, "0"c).ToUpper())
+            If binaryImage(startIndex) <> SyncByte Then Throw New InvalidOperationException("Bad data stream, expected sync byte AA as first byte in IEEE C37.118 frame, got " & binaryImage(startIndex).ToString("X"c).PadLeft(2, "0"c))
 
             With New CommonFrameHeaderInstance
                 ' Strip out frame type and version information...

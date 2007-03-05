@@ -132,9 +132,10 @@ Namespace FNet
             End Set
         End Property
 
-        Public Overrides ReadOnly Property MaximumStationNameLength() As Integer
+        Public Overrides ReadOnly Property MaximumStationNameLength() As Int32
             Get
-                Return Integer.MaxValue
+                ' The station name is defined external to the protocol, so there is no set limit
+                Return Int32.MaxValue
             End Get
         End Property
 

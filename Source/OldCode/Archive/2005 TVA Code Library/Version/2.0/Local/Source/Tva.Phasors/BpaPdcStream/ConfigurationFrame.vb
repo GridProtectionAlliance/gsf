@@ -81,7 +81,7 @@ Namespace BpaPdcStream
 
         ' If you are going to create multiple data packets, you can use this constructor
         ' Note that this only starts becoming necessary if you start hitting data size
-        ' limits imposed by the nature of the protocol...
+        ' limits imposed by the nature of the transport protocol...
         Public Sub New(ByVal configFileName As String, ByVal packetsPerSample As Int16)
 
             MyClass.New(configFileName)
@@ -117,12 +117,6 @@ Namespace BpaPdcStream
         Public Shadows ReadOnly Property Cells() As ConfigurationCellCollection
             Get
                 Return MyBase.Cells
-            End Get
-        End Property
-
-        Protected Overrides ReadOnly Property FundamentalFrameType() As FundamentalFrameType
-            Get
-                Return Phasors.FundamentalFrameType.ConfigurationFrame
             End Get
         End Property
 
@@ -188,8 +182,8 @@ Namespace BpaPdcStream
                 Else
                     Throw New InvalidOperationException("PDC config file """ & m_iniFile.FileName & """ does not exist.")
                 End If
-            Catch ex As Exception
-                Throw ex
+            Catch
+                Throw
             Finally
                 m_readWriteLock.ReleaseWriterLock()
             End Try
@@ -271,70 +265,70 @@ Namespace BpaPdcStream
 
                 Try
                     With New StringBuilder
-                        .Append("; File - " & m_iniFile.FileName & vbCrLf)
-                        .Append("; Auto-generated on " & Now() & " by TVA DatAWare PDC" & vbCrLf)
-                        .Append(";    Assembly: " & GetShortAssemblyName(GetExecutingAssembly) & vbCrLf)
-                        .Append(";    Compiled: " & File.GetLastWriteTime(GetExecutingAssembly.Location) & vbCrLf)
-                        .Append(";" & vbCrLf)
-                        .Append(";" & vbCrLf)
-                        .Append("; Format:" & vbCrLf)
-                        .Append(";   Each Column in data file is given a bracketed identifier, numbered in the order it" & vbCrLf)
-                        .Append(";   appears in the data file, and identified by data type ( PMU, PDC, or other)" & vbCrLf)
-                        .Append(";     PMU designates column data format from a single PMU" & vbCrLf)
-                        .Append(";     PDC designates column data format from another PDC which is somewhat different from a single PMU" & vbCrLf)
-                        .Append(";   Default gives default values for a processing algorithm in case quantities are omitted" & vbCrLf)
-                        .Append(";   Name= gives the overall station name for print labels" & vbCrLf)
-                        .Append(";   NumberPhasors= :  for PMU data, gives the number of phasors contained in column" & vbCrLf)
-                        .Append(";                     for PDC data, gives the number of PMUs data included in the column" & vbCrLf)
-                        .Append(";                     Note - for PDC data, there will be 2 phasors & 1 freq per PMU" & vbCrLf)
-                        .Append(";   Quantities within the column are listed by PhasorI=, Frequency=, etc" & vbCrLf)
-                        .Append(";   Each quantity has 7 comma separated fields followed by an optional comment" & vbCrLf)
-                        .Append(";" & vbCrLf)
-                        .Append(";   Phasor entry format:  Type, Ratio, Cal Factor, Offset, Shunt, VoltageRef/Class, Label  ;Comments" & vbCrLf)
-                        .Append(";    Type:       Type of measurement, V=voltage, I=current, N=don't care, single ASCII character" & vbCrLf)
-                        .Append(";    Ratio:      PT/CT ratio N:1 where N is a floating point number" & vbCrLf)
-                        .Append(";    Cal Factor: Conversion factor between integer in file and secondary volts, floating point" & vbCrLf)
-                        .Append(";    Offset:     Phase Offset to correct for phase angle measurement errors or differences, floating point" & vbCrLf)
-                        .Append(";    Shunt:      Current- shunt resistence in ohms, or the equivalent ratio for aux CTs, floating point" & vbCrLf)
-                        .Append(";                Voltage- empty, not used" & vbCrLf)
-                        .Append(";    VoltageRef: Current- phasor number (1-10) of voltage phasor to use for power calculation, integer" & vbCrLf)
-                        .Append(";                Voltage- voltage class, standard l-l voltages, 500, 230, 115, etc, integer" & vbCrLf)
-                        .Append(";    Label:      Phasor quantity label for print label, text" & vbCrLf)
-                        .Append(";    Comments:   All text after the semicolon on a line are optional comments not for processing" & vbCrLf)
-                        .Append(";" & vbCrLf)
-                        .Append(";   Voltage Magnitude = MAG(Real,Imaginary) * CalFactor * PTR (line-neutral)" & vbCrLf)
-                        .Append(";   Current Magnitude = MAG(Real,Imaginary) * CalFactor * CTR / Shunt (phase current)" & vbCrLf)
-                        .Append(";   Phase Angle = ATAN(Imaginary/Real) + Phase Offset (usually degrees)" & vbCrLf)
-                        .Append(";     Note: Usually phase Offset is 0, but is sometimes required for comparing measurements" & vbCrLf)
-                        .Append(";           from different systems or through transformer banks" & vbCrLf)
-                        .Append(";" & vbCrLf)
-                        .Append(";   Frequency entry format:  scale, offset, dF/dt scale, dF/dt offset, dummy, label  ;Comments" & vbCrLf)
-                        .Append(";   Frequency = Number / scale + offset" & vbCrLf)
-                        .Append(";   dF/dt = Number / (dF/dt scale) + (dF/dt offset)" & vbCrLf)
-                        .Append(";" & vbCrLf)
-                        .Append(";" & vbCrLf)
+                        .Append("; File - " & m_iniFile.FileName & Environment.NewLine)
+                        .Append("; Auto-generated on " & Now() & " by TVA DatAWare PDC" & Environment.NewLine)
+                        .Append(";    Assembly: " & GetShortAssemblyName(GetExecutingAssembly) & Environment.NewLine)
+                        .Append(";    Compiled: " & File.GetLastWriteTime(GetExecutingAssembly.Location) & Environment.NewLine)
+                        .Append(";" & Environment.NewLine)
+                        .Append(";" & Environment.NewLine)
+                        .Append("; Format:" & Environment.NewLine)
+                        .Append(";   Each Column in data file is given a bracketed identifier, numbered in the order it" & Environment.NewLine)
+                        .Append(";   appears in the data file, and identified by data type ( PMU, PDC, or other)" & Environment.NewLine)
+                        .Append(";     PMU designates column data format from a single PMU" & Environment.NewLine)
+                        .Append(";     PDC designates column data format from another PDC which is somewhat different from a single PMU" & Environment.NewLine)
+                        .Append(";   Default gives default values for a processing algorithm in case quantities are omitted" & Environment.NewLine)
+                        .Append(";   Name= gives the overall station name for print labels" & Environment.NewLine)
+                        .Append(";   NumberPhasors= :  for PMU data, gives the number of phasors contained in column" & Environment.NewLine)
+                        .Append(";                     for PDC data, gives the number of PMUs data included in the column" & Environment.NewLine)
+                        .Append(";                     Note - for PDC data, there will be 2 phasors & 1 freq per PMU" & Environment.NewLine)
+                        .Append(";   Quantities within the column are listed by PhasorI=, Frequency=, etc" & Environment.NewLine)
+                        .Append(";   Each quantity has 7 comma separated fields followed by an optional comment" & Environment.NewLine)
+                        .Append(";" & Environment.NewLine)
+                        .Append(";   Phasor entry format:  Type, Ratio, Cal Factor, Offset, Shunt, VoltageRef/Class, Label  ;Comments" & Environment.NewLine)
+                        .Append(";    Type:       Type of measurement, V=voltage, I=current, N=don't care, single ASCII character" & Environment.NewLine)
+                        .Append(";    Ratio:      PT/CT ratio N:1 where N is a floating point number" & Environment.NewLine)
+                        .Append(";    Cal Factor: Conversion factor between integer in file and secondary volts, floating point" & Environment.NewLine)
+                        .Append(";    Offset:     Phase Offset to correct for phase angle measurement errors or differences, floating point" & Environment.NewLine)
+                        .Append(";    Shunt:      Current- shunt resistence in ohms, or the equivalent ratio for aux CTs, floating point" & Environment.NewLine)
+                        .Append(";                Voltage- empty, not used" & Environment.NewLine)
+                        .Append(";    VoltageRef: Current- phasor number (1-10) of voltage phasor to use for power calculation, integer" & Environment.NewLine)
+                        .Append(";                Voltage- voltage class, standard l-l voltages, 500, 230, 115, etc, integer" & Environment.NewLine)
+                        .Append(";    Label:      Phasor quantity label for print label, text" & Environment.NewLine)
+                        .Append(";    Comments:   All text after the semicolon on a line are optional comments not for processing" & Environment.NewLine)
+                        .Append(";" & Environment.NewLine)
+                        .Append(";   Voltage Magnitude = MAG(Real,Imaginary) * CalFactor * PTR (line-neutral)" & Environment.NewLine)
+                        .Append(";   Current Magnitude = MAG(Real,Imaginary) * CalFactor * CTR / Shunt (phase current)" & Environment.NewLine)
+                        .Append(";   Phase Angle = ATAN(Imaginary/Real) + Phase Offset (usually degrees)" & Environment.NewLine)
+                        .Append(";     Note: Usually phase Offset is 0, but is sometimes required for comparing measurements" & Environment.NewLine)
+                        .Append(";           from different systems or through transformer banks" & Environment.NewLine)
+                        .Append(";" & Environment.NewLine)
+                        .Append(";   Frequency entry format:  scale, offset, dF/dt scale, dF/dt offset, dummy, label  ;Comments" & Environment.NewLine)
+                        .Append(";   Frequency = Number / scale + offset" & Environment.NewLine)
+                        .Append(";   dF/dt = Number / (dF/dt scale) + (dF/dt offset)" & Environment.NewLine)
+                        .Append(";" & Environment.NewLine)
+                        .Append(";" & Environment.NewLine)
 
-                        .Append("[DEFAULT]" & vbCrLf)
-                        .Append("PhasorV=" & PhasorDefinition.ConfigFileFormat(DefaultPhasorV) & vbCrLf)
-                        .Append("PhasorI=" & PhasorDefinition.ConfigFileFormat(DefaultPhasorI) & vbCrLf)
-                        .Append("Frequency=" & FrequencyDefinition.ConfigFileFormat(DefaultFrequency) & vbCrLf)
-                        .Append(vbCrLf)
+                        .Append("[DEFAULT]" & Environment.NewLine)
+                        .Append("PhasorV=" & PhasorDefinition.ConfigFileFormat(DefaultPhasorV) & Environment.NewLine)
+                        .Append("PhasorI=" & PhasorDefinition.ConfigFileFormat(DefaultPhasorI) & Environment.NewLine)
+                        .Append("Frequency=" & FrequencyDefinition.ConfigFileFormat(DefaultFrequency) & Environment.NewLine)
+                        .Append(Environment.NewLine)
 
-                        .Append("[CONFIG]" & vbCrLf)
-                        .Append("SampleRate=" & FrameRate & vbCrLf)
-                        .Append("NumberOfPMUs=" & Cells.Count & vbCrLf)
-                        .Append(vbCrLf)
+                        .Append("[CONFIG]" & Environment.NewLine)
+                        .Append("SampleRate=" & FrameRate & Environment.NewLine)
+                        .Append("NumberOfPMUs=" & Cells.Count & Environment.NewLine)
+                        .Append(Environment.NewLine)
 
                         For x As Int32 = 0 To Cells.Count - 1
-                            .Append("[" & Cells(x).IDLabel & "]" & vbCrLf)
-                            .Append("Name=" & Cells(x).StationName & vbCrLf)
-                            .Append("PMU=" & x & vbCrLf)
-                            .Append("NumberPhasors=" & Cells(x).PhasorDefinitions.Count & vbCrLf)
+                            .Append("[" & Cells(x).IDLabel & "]" & Environment.NewLine)
+                            .Append("Name=" & Cells(x).StationName & Environment.NewLine)
+                            .Append("PMU=" & x & Environment.NewLine)
+                            .Append("NumberPhasors=" & Cells(x).PhasorDefinitions.Count & Environment.NewLine)
                             For y As Int32 = 0 To Cells(x).PhasorDefinitions.Count - 1
-                                .Append("Phasor" & (y + 1) & "=" & PhasorDefinition.ConfigFileFormat(Cells(x).PhasorDefinitions(y)) & vbCrLf)
+                                .Append("Phasor" & (y + 1) & "=" & PhasorDefinition.ConfigFileFormat(Cells(x).PhasorDefinitions(y)) & Environment.NewLine)
                             Next
-                            .Append("Frequency=" & FrequencyDefinition.ConfigFileFormat(Cells(x).FrequencyDefinition) & vbCrLf)
-                            .Append(vbCrLf)
+                            .Append("Frequency=" & FrequencyDefinition.ConfigFileFormat(Cells(x).FrequencyDefinition) & Environment.NewLine)
+                            .Append(Environment.NewLine)
                         Next
 
                         Return .ToString()
@@ -414,7 +408,7 @@ Namespace BpaPdcStream
             Dim wordCount As Int16
 
             If binaryImage(startIndex) <> SyncByte Then
-                Throw New InvalidOperationException("Bad Data Stream: Expected sync byte &HAA as first byte in PDCstream configuration frame, got " & binaryImage(startIndex).ToString("x"c).PadLeft(2, "0"c))
+                Throw New InvalidOperationException("Bad Data Stream: Expected sync byte AA as first byte in PDCstream configuration frame, got " & binaryImage(startIndex).ToString("X"c).PadLeft(2, "0"c))
             End If
 
             If binaryImage(startIndex + 1) <> DescriptorPacketFlag Then
@@ -447,6 +441,19 @@ Namespace BpaPdcStream
             info.AddValue("revisionNumber", m_revisionNumber, GetType(RevisionNumber))
 
         End Sub
+
+        Public Overrides ReadOnly Property Attributes() As System.Collections.Generic.Dictionary(Of String, String)
+            Get
+                Dim baseAttributes As Dictionary(Of String, String) = MyBase.Attributes
+
+                baseAttributes.Add("Configuration File Name", m_iniFile.FileName)
+                baseAttributes.Add("Stream Type", m_streamType & ": " & [Enum].GetName(GetType(StreamType), m_streamType))
+                baseAttributes.Add("Revision Number", m_revisionNumber & ": " & [Enum].GetName(GetType(RevisionNumber), m_revisionNumber))
+                baseAttributes.Add("Packets Per Sample", m_packetsPerSample)
+
+                Return baseAttributes
+            End Get
+        End Property
 
     End Class
 

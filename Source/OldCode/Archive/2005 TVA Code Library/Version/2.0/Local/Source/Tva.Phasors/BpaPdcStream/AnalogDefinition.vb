@@ -77,7 +77,7 @@ Namespace BpaPdcStream
 
         Protected Overrides ReadOnly Property BodyImage() As Byte()
             Get
-                Throw New NotImplementedException("PDCstream does not include analog definition in descriptor packet - must be defined in external INI file")
+                Throw New NotImplementedException("BPA PDCstream does not include analog definition in descriptor packet.  Only a count of available values is defined in the data frame.")
             End Get
         End Property
 
