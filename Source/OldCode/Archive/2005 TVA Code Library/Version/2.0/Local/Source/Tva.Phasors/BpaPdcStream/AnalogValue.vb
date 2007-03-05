@@ -19,6 +19,9 @@ Imports System.Runtime.Serialization
 
 Namespace BpaPdcStream
 
+    ''' <summary>
+    ''' BPA PDCstream Analog Value Class
+    ''' </summary>
     <CLSCompliant(False), Serializable()> _
     Public Class AnalogValue
 

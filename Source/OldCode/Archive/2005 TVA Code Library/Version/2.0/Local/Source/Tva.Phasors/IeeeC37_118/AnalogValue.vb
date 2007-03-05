@@ -19,6 +19,9 @@ Imports System.Runtime.Serialization
 
 Namespace IeeeC37_118
 
+    ''' <summary>
+    ''' IEEE C37.118 Analog Value Class
+    ''' </summary>
     <CLSCompliant(False), Serializable()> _
     Public Class AnalogValue
 
