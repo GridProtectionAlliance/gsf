@@ -250,7 +250,7 @@ Namespace Application
 
         End Function
 
-        <Obsolete("Use the overload that takes application name.")> _
+        <Obsolete("Use the overload that takes application name.", True)> _
         Public Function FindRole(ByVal roleName As String) As Role
 
             If m_roles IsNot Nothing Then
