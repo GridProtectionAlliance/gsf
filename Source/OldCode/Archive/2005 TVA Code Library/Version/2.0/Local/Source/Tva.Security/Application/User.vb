@@ -38,6 +38,12 @@ Namespace Application
 
         Public Sub New(ByVal username As String, ByVal password As String, ByVal dbConnection As SqlConnection)
 
+            MyClass.New(username, password, dbConnection, Nothing)
+
+        End Sub
+
+        Public Sub New(ByVal username As String, ByVal password As String, ByVal dbConnection As SqlConnection, ByVal applicationName As String)
+
             MyBase.New()
             If dbConnection IsNot Nothing Then
                 If dbConnection.State <> System.Data.ConnectionState.Open Then dbConnection.Open()
@@ -46,7 +52,7 @@ Namespace Application
                 ' Table1 (Index 0): Information about the user.
                 ' Table2 (Index 1): Groups the user is a member of.
                 ' Table3 (Index 2): Roles that are assigned to the user either directly or through a group.
-                Dim userData As DataSet = RetrieveDataSet("RetrieveApiData", dbConnection, username)
+                Dim userData As DataSet = RetrieveDataSet("RetrieveApiData", dbConnection, username, applicationName)
 
                 If userData.Tables(0).Rows.Count > 0 Then
                     ' User does exist in the security database.
@@ -230,6 +236,23 @@ Namespace Application
             End Get
         End Property
 
+        Public ReadOnly Property Roles(ByVal applicationName As String) As List(Of Role)
+            Get
+                '**** Added By Mehul
+                Dim applicationRoles As New List(Of Role)()
+
+                If m_roles IsNot Nothing Then
+                    For i As Integer = 0 To m_roles.Count - 1
+                        If String.Compare(m_roles(i).Application.Name, applicationName, True) = 0 Then
+                            applicationRoles.Add(m_roles(i))
+                        End If
+                    Next
+                End If
+
+                Return applicationRoles
+            End Get
+        End Property
+
         Public ReadOnly Property Applications() As List(Of Application)
             Get
                 Return m_applications
@@ -250,7 +273,6 @@ Namespace Application
 
         End Function
 
-        <Obsolete("Use the overload that takes application name.", True)> _
         Public Function FindRole(ByVal roleName As String) As Role
 
             If m_roles IsNot Nothing Then
@@ -267,14 +289,10 @@ Namespace Application
 
         Public Function FindRole(ByVal roleName As String, ByVal applicationName As String) As Role
 
-            If m_roles IsNot Nothing Then
-                For i As Integer = 0 To m_roles.Count - 1
-                    If String.Compare(m_roles(i).Name, roleName, True) = 0 AndAlso _
-                            String.Compare(m_roles(i).Application.Name, applicationName, True) = 0 Then
-                        ' User is in the specified role and the specified role belongs to the specified application.
-                        Return m_roles(i)
-                    End If
-                Next
+            Dim role As Role = FindRole(roleName)
+            If role IsNot Nothing AndAlso String.Compare(role.Application.Name, applicationName, True) = 0 Then
+                ' User is in the specified role and the specified role belongs to the specified application.
+                Return role
             End If
             Return Nothing
 
@@ -300,6 +318,7 @@ Namespace Application
         ''' <param name="applicationName">Application Name</param>
         ''' <returns>List of roles for specified application</returns>
         ''' <remarks></remarks>
+        <Obsolete("Use the Roles property instead that takes an application name as a parameter.", True)> _
         Public Function FindApplicationRoles(ByVal applicationName As String) As List(Of Role)
 
             '**** Added By Mehul

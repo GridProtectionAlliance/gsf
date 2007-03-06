@@ -250,7 +250,7 @@ Namespace Application
                 ' We'll try to retrieve user information from the security database.
                 connection = New SqlConnection(ConnectionString)
                 connection.Open()
-                m_user = New User(username, password, connection)
+                m_user = New User(username, password, connection, m_applicationName)
 
                 ' We'll cache the user data if specified in the configuration.
                 If m_enableCaching Then CacheUserData()
