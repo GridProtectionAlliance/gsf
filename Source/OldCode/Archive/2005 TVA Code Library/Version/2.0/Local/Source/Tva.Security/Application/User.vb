@@ -318,7 +318,7 @@ Namespace Application
         ''' <param name="applicationName">Application Name</param>
         ''' <returns>List of roles for specified application</returns>
         ''' <remarks></remarks>
-        <Obsolete("Use the Roles property instead that takes an application name as a parameter.", True)> _
+        <Obsolete("Use the Roles property that takes an application name as a parameter instead. This function will be removed in a future release.", True)> _
         Public Function FindApplicationRoles(ByVal applicationName As String) As List(Of Role)
 
             '**** Added By Mehul
