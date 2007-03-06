@@ -65,14 +65,15 @@ Namespace BpaPdcStream
             m_packetsPerSample = info.GetInt16("packetsPerSample")
             m_streamType = info.GetValue("streamType", GetType(StreamType))
             m_revisionNumber = info.GetValue("revisionNumber", GetType(RevisionNumber))
+            m_iniFile = New IniFile(info.GetString("configurationFileName"))
 
         End Sub
 
-        Public Sub New(ByVal configFileName As String)
+        Public Sub New(ByVal configurationFileName As String)
 
             MyBase.New(New ConfigurationCellCollection)
 
-            m_iniFile = New IniFile(configFileName)
+            m_iniFile = New IniFile(configurationFileName)
             m_readWriteLock = New ReaderWriterLock
             m_packetsPerSample = 1
             Refresh()
@@ -82,19 +83,19 @@ Namespace BpaPdcStream
         ' If you are going to create multiple data packets, you can use this constructor
         ' Note that this only starts becoming necessary if you start hitting data size
         ' limits imposed by the nature of the transport protocol...
-        Public Sub New(ByVal configFileName As String, ByVal packetsPerSample As Int16)
+        Public Sub New(ByVal configurationFileName As String, ByVal packetsPerSample As Int16)
 
-            MyClass.New(configFileName)
+            MyClass.New(configurationFileName)
             m_packetsPerSample = packetsPerSample
 
         End Sub
 
-        Public Sub New(ByVal configFileName As String, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
+        Public Sub New(ByVal configurationFileName As String, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
             MyBase.New(New ConfigurationFrameParsingState(New ConfigurationCellCollection, 0, _
                 AddressOf BpaPdcStream.ConfigurationCell.CreateNewConfigurationCell), binaryImage, startIndex)
 
-            m_iniFile = New IniFile(configFileName)
+            m_iniFile = New IniFile(configurationFileName)
             m_readWriteLock = New ReaderWriterLock
             m_packetsPerSample = 1
 
@@ -203,7 +204,7 @@ Namespace BpaPdcStream
             End Set
         End Property
 
-        Public ReadOnly Property ConfigFileName() As String
+        Public ReadOnly Property ConfigurationFileName() As String
             Get
                 m_readWriteLock.AcquireReaderLock(-1)
 
@@ -405,17 +406,7 @@ Namespace BpaPdcStream
 
             ' We parse the PDC stream specific header image here...
             Dim parsingState As IConfigurationFrameParsingState = DirectCast(state, IConfigurationFrameParsingState)
-            Dim wordCount As Int16
 
-            If binaryImage(startIndex) <> SyncByte Then
-                Throw New InvalidOperationException("Bad Data Stream: Expected sync byte AA as first byte in PDCstream configuration frame, got " & binaryImage(startIndex).ToString("X"c).PadLeft(2, "0"c))
-            End If
-
-            If binaryImage(startIndex + 1) <> DescriptorPacketFlag Then
-                Throw New InvalidOperationException("Bad Data Stream: This is not a PDCstream configuration frame - looks like a data frame.")
-            End If
-
-            wordCount = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 2)
             StreamType = binaryImage(startIndex + 4)
             RevisionNumber = binaryImage(startIndex + 5)
             FrameRate = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 6)
@@ -439,6 +430,7 @@ Namespace BpaPdcStream
             info.AddValue("packetsPerSample", m_packetsPerSample)
             info.AddValue("streamType", m_streamType, GetType(StreamType))
             info.AddValue("revisionNumber", m_revisionNumber, GetType(RevisionNumber))
+            info.AddValue("configurationFileName", m_iniFile.FileName)
 
         End Sub
 

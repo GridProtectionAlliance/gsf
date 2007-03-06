@@ -66,6 +66,7 @@
     <Compile Include="BpaPdcStream\AnalogDefinition.vb" />
     <Compile Include="BpaPdcStream\AnalogValue.vb" />
     <Compile Include="BpaPdcStream\Common.vb" />
+    <Compile Include="BpaPdcStream\CommonFrameHeader.vb" />
     <Compile Include="BpaPdcStream\ConfigurationCell.vb" />
     <Compile Include="BpaPdcStream\ConfigurationCellCollection.vb" />
     <Compile Include="BpaPdcStream\ConfigurationFrame.vb" />
@@ -79,6 +80,7 @@
     <Compile Include="BpaPdcStream\FrameParser.vb" />
     <Compile Include="BpaPdcStream\FrequencyDefinition.vb" />
     <Compile Include="BpaPdcStream\FrequencyValue.vb" />
+    <Compile Include="BpaPdcStream\ICommonFrameHeader.vb" />
     <Compile Include="BpaPdcStream\PhasorDefinition.vb" />
     <Compile Include="BpaPdcStream\PhasorValue.vb" />
     <Compile Include="ChannelBase.vb" />

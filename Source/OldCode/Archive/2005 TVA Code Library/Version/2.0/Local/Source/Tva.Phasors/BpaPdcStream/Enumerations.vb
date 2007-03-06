@@ -81,6 +81,15 @@ Namespace BpaPdcStream
         DigitalWordsMask = Bit0 Or Bit1 Or Bit2 Or Bit3
     End Enum
 
+    ''' <summary>Frame type</summary>
+    <Serializable()> _
+    Public Enum FrameType As Byte
+        ''' <summary>Configuration frame</summary>
+        ConfigurationFrame
+        ''' <summary>Data frame</summary>
+        DataFrame
+    End Enum
+
     ''' <summary>PMU status flags</summary>
     <Flags(), Serializable()> _
     Public Enum PMUStatusFlags As Byte
