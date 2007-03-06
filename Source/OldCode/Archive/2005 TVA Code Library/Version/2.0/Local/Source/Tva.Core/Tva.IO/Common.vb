@@ -12,6 +12,8 @@
 '  -----------------------------------------------------------------------------------------------------
 '  01/24/2006 - J. Ritchie Carroll
 '       2.0 version of source code migrated from 1.1 source (TVA.Shared.Common)
+'  03/06/2007 - J. Ritchie Carroll
+'       Added "CompareBuffers" method to compare to binary buffers
 '
 '*******************************************************************************************************
 
@@ -64,6 +66,73 @@ Namespace IO
             System.Buffer.BlockCopy(buffer, startIndex, copiedBytes, 0, length)
 
             Return copiedBytes
+
+        End Function
+
+        ''' <summary>Returns comparision results of two binary buffers</summary>
+        Public Shared Function CompareBuffers(ByVal buffer1 As Byte(), ByVal buffer2 As Byte()) As Boolean
+
+            If buffer1 Is Nothing AndAlso buffer2 Is Nothing Then
+                ' Both buffers are assumed equal if both are nothing
+                Return 0
+            ElseIf buffer1 Is Nothing Then
+                ' Buffer 2 has data and buffer 1 is nothing, buffer 2 assumed larger
+                Return 1
+            ElseIf buffer2 Is Nothing Then
+                ' Buffer 1 has data and buffer 2 is nothing, buffer 1 assumed larger
+                Return -1
+            Else
+                ' Code replicated here as an optimization instead of calling overloaded CompareBuffers
+                ' to prevent duplicate "Is Nothing" checks for empty buffers - this function needs to
+                ' execute as quickly as possible given possible intended uses...
+                Dim length1 As Integer = buffer1.Length
+                Dim length2 As Integer = buffer2.Length
+
+                If length1 = length2 Then
+                    Dim comparision As Integer
+
+                    ' Compare elements of buffers that are equal sized
+                    For x As Integer = 0 To length1 - 1
+                        comparision = buffer1(x).CompareTo(buffer2(x))
+                        If comparision <> 0 Then Exit For
+                    Next
+
+                    Return comparision
+                Else
+                    ' Buffer lengths are unequal, buffer with largest number of elements assumed to be largest
+                    Return length1.CompareTo(length2)
+                End If
+            End If
+
+        End Function
+
+        Public Shared Function CompareBuffers(ByVal buffer1 As Byte(), ByVal offset1 As Integer, ByVal length1 As Integer, ByVal buffer2 As Byte(), ByVal offset2 As Integer, ByVal length2 As Integer) As Boolean
+
+            If buffer1 Is Nothing AndAlso buffer2 Is Nothing Then
+                ' Both buffers are assumed equal if both are nothing
+                Return 0
+            ElseIf buffer1 Is Nothing Then
+                ' Buffer 2 has data and buffer 1 is nothing, buffer 2 assumed larger
+                Return 1
+            ElseIf buffer2 Is Nothing Then
+                ' Buffer 1 has data and buffer 2 is nothing, buffer 1 assumed larger
+                Return -1
+            Else
+                If length1 = length2 Then
+                    Dim comparision As Integer
+
+                    ' Compare elements of buffers that are equal sized
+                    For x As Integer = 0 To length1 - 1
+                        comparision = buffer1(offset1 + x).CompareTo(buffer2(offset2 + x))
+                        If comparision <> 0 Then Exit For
+                    Next
+
+                    Return comparision
+                Else
+                    ' Buffer lengths are unequal, buffer with largest number of elements assumed to be largest
+                    Return length1.CompareTo(length2)
+                End If
+            End If
 
         End Function
 
