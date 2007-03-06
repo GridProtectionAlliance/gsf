@@ -168,10 +168,11 @@ Public Class ArchiveFile
             If m_saveOnClose Then Save()
 
             m_fat = Nothing
-            m_activeDataBlocks.Clear()
-            m_activeDataBlocks = Nothing
             m_fileStream.Close()
             m_fileStream = Nothing
+            m_activeDataBlocks.Clear()
+            m_activeDataBlocks = Nothing
+            m_dataBlockRequestCount = 0
             m_rolloverPreparationThread.Abort()
 
             RaiseEvent FileClosed(Me, EventArgs.Empty)

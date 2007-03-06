@@ -188,10 +188,10 @@ Public Class MetadataFile
             If saveFile Then Save()
 
             ' Release all of the used resources.
-            m_pointDefinitions.Clear()
-            m_pointDefinitions = Nothing
             m_fileStream.Close()
             m_fileStream = Nothing
+            m_pointDefinitions.Clear()
+            m_pointDefinitions = Nothing
 
             RaiseEvent FileClosed(Me, EventArgs.Empty)
         End If

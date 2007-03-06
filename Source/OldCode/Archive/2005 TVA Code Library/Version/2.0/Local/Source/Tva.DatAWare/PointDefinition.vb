@@ -30,7 +30,7 @@ Public Class PointDefinition
     ' * ----------  ----------  ----------  ----------------------------------------*
     ' * 40          0-39        Char(40)    Text description of the point           *
     ' * 2           40-41       Int16       Plant unit associated with the point    *
-    ' * 2           42-43       Int16       Security level for the point            *
+    ' * 2           42-43       Int16       Refer SecurityFlags                     *
     ' * 64          44-107      Char(64)    Detail for hardware or datasource       *
     ' * 64          108-171     Byte(64)    ???                                     *
     ' * 4           172-175     Int32       Refer MetadataGeneralFlags              *
@@ -56,7 +56,7 @@ Public Class PointDefinition
     Private m_index As Integer
     Private m_description As String = ""
     Private m_unitID As Short
-    Private m_securityLevel As Short
+    Private m_securityFlags As PointDefinitionSecurityFlags
     Private m_hardwareInfo As String = ""
     Private m_spares As Byte()
     Private m_generalFlags As PointDefinitionGeneralFlags
@@ -91,6 +91,7 @@ Public Class PointDefinition
 
         MyBase.New()
         m_index = index
+        m_securityFlags = New PointDefinitionSecurityFlags(0)
         m_spares = CreateArray(Of Byte)(64)
         m_generalFlags = New PointDefinitionGeneralFlags(0)
         m_alarmFlags = New PointDefinitionAlarmFlags(0)
@@ -125,7 +126,7 @@ Public Class PointDefinition
             If binaryImage.Length - startIndex >= BinaryLength Then
                 m_description = m_textEncoding.GetString(binaryImage, startIndex, 40).Trim()
                 m_unitID = BitConverter.ToInt16(binaryImage, startIndex + 40)
-                m_securityLevel = BitConverter.ToInt16(binaryImage, startIndex + 42)
+                m_securityFlags.Value = BitConverter.ToInt16(binaryImage, startIndex + 42)
                 m_hardwareInfo = m_textEncoding.GetString(binaryImage, startIndex + 44, 64).Trim()
                 Array.Copy(binaryImage, startIndex + 108, m_spares, 0, 64)
                 m_generalFlags.Value = BitConverter.ToInt32(binaryImage, startIndex + 172)
@@ -170,7 +171,7 @@ Public Class PointDefinition
         With newPointDefinition
             .Description = pointDefinition.Description
             .UnitID = pointDefinition.UnitID
-            .SecurityLevel = pointDefinition.SecurityLevel
+            .SecurityFlags = pointDefinition.SecurityFlags
             .HardwareInfo = pointDefinition.HardwareInfo
             Array.Copy(pointDefinition.Spares, .Spares, 64)
             .GeneralFlags = pointDefinition.GeneralFlags
@@ -223,12 +224,12 @@ Public Class PointDefinition
         End Set
     End Property
 
-    Public Property SecurityLevel() As Short
+    Public Property SecurityFlags() As PointDefinitionSecurityFlags
         Get
-            Return m_securityLevel
+            Return m_securityFlags
         End Get
-        Set(ByVal value As Short)
-            m_securityLevel = value
+        Set(ByVal value As PointDefinitionSecurityFlags)
+            m_securityFlags = value
         End Set
     End Property
 
@@ -437,7 +438,7 @@ Public Class PointDefinition
             ' Construct the binary IP buffer for this event
             Array.Copy(m_textEncoding.GetBytes(m_description.PadRight(40)), 0, image, 0, 40)
             Array.Copy(BitConverter.GetBytes(m_unitID), 0, image, 40, 2)
-            Array.Copy(BitConverter.GetBytes(m_securityLevel), 0, image, 42, 2)
+            Array.Copy(BitConverter.GetBytes(m_securityFlags.Value), 0, image, 42, 2)
             Array.Copy(m_textEncoding.GetBytes(m_hardwareInfo.PadRight(64)), 0, image, 44, 64)
             Array.Copy(m_spares, 0, image, 108, 64)
             Array.Copy(BitConverter.GetBytes(m_generalFlags.Value), 0, image, 172, 4)

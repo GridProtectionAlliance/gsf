@@ -68,7 +68,7 @@ Public Class StandardPointData
             Return (MyBase.Flags And MillisecondMask) \ 32 ' 32 because the 1st 5 bits are quality???
         End Get
         Set(ByVal value As Integer)
-            MyBase.Flags = (MyBase.Flags And Not MillisecondMask Or value * 32)
+            MyBase.Flags = (MyBase.Flags And Not MillisecondMask Or (value * 32))
         End Set
     End Property
 
