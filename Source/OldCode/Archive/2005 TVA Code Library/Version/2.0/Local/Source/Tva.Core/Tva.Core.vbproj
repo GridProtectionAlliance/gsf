@@ -62,6 +62,7 @@
     <Compile Include="Tva.Collections\DictionaryList.vb" />
     <Compile Include="Tva.Console\Arguments.vb" />
     <Compile Include="Tva.Console\Common.vb" />
+    <Compile Include="Tva.Interop\VBArrayDescriptor.vb" />
     <Compile Include="Tva.Measurements\MeasurementKey.vb" />
     <Compile Include="Tva.Net\Ftp\AsyncResult.vb" />
     <Compile Include="Tva.Net\Ftp\ControlChannel.vb" />
