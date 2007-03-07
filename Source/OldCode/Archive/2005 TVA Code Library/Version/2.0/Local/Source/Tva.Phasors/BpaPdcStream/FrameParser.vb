@@ -145,10 +145,11 @@ Namespace BpaPdcStream
 
         Protected Overrides Sub ParseFrame(ByVal buffer() As Byte, ByVal offset As Integer, ByVal length As Integer, ByRef parsedFrameLength As Integer)
 
-            ' See if there is enough data in the buffer to parse the common frame header
-            If length >= CommonFrameHeader.BinaryLength Then
+            ' See if there is enough data in the buffer to parse the common frame header.
+            ' Note that in order to get time tag for data frames, we'll need at least two more bytes 
+            If length >= CommonFrameHeader.BinaryLength + 2 Then
                 ' Parse frame header
-                Dim parsedFrameHeader As ICommonFrameHeader = CommonFrameHeader.ParseBinaryImage(buffer, offset)
+                Dim parsedFrameHeader As ICommonFrameHeader = CommonFrameHeader.ParseBinaryImage(m_configurationFrame, buffer, offset)
 
                 ' See if there is enough data in the buffer to parse the entire frame
                 If length >= parsedFrameHeader.FrameLength Then
@@ -163,12 +164,12 @@ Namespace BpaPdcStream
                                 RaiseReceivedCommonFrameHeader(parsedFrameHeader)
                             Else
                                 ' We can only start parsing data frames once we have successfully received a configuration frame 2...
-                                RaiseReceivedDataFrame(New DataFrame(m_configurationFrame, buffer, offset))
+                                RaiseReceivedDataFrame(New DataFrame(parsedFrameHeader, m_configurationFrame, buffer, offset))
                             End If
                         Case FrameType.ConfigurationFrame
                             If m_configurationFrame Is Nothing OrElse CompareBuffers(buffer, offset, parsedFrameHeader.FrameLength, m_configurationFrame.BinaryImage, 0, m_configurationFrame.BinaryLength) <> 0 Then
                                 If m_configurationFrame IsNot Nothing Then MyBase.RaiseConfigurationChangeDetected()
-                                With New ConfigurationFrame(m_configurationFileName, buffer, offset)
+                                With New ConfigurationFrame(parsedFrameHeader, m_configurationFileName, buffer, offset)
                                     m_configurationFrame = .This
                                     RaiseReceivedConfigurationFrame(.This)
                                 End With

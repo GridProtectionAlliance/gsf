@@ -26,7 +26,7 @@ Namespace BpaPdcStream
 
         ReadOnly Property FundamentalFrameType() As FundamentalFrameType
 
-        Property PacketFlag() As Byte
+        Property PacketNumber() As Byte
 
         Property WordCount() As Int16
 

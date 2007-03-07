@@ -95,7 +95,7 @@ Namespace BpaPdcStream
                 End Get
             End Property
 
-            Public Property PacketFlag() As Byte Implements ICommonFrameHeader.PacketFlag
+            Public Property PacketFlag() As Byte Implements ICommonFrameHeader.PacketNumber
                 Get
                     Return m_packetFlag
                 End Get
@@ -252,7 +252,8 @@ Namespace BpaPdcStream
 
         End Sub
 
-        Public Shared Function ParseBinaryImage(ByVal binaryImage As Byte(), ByVal startIndex As Int32) As ICommonFrameHeader
+        ' Note: in order to parse timestamp from data frame, this parse procedure needs two more bytes above and beyond common frame header binary length
+        Public Shared Function ParseBinaryImage(ByVal configurationFrame As ConfigurationFrame, ByVal binaryImage As Byte(), ByVal startIndex As Int32) As ICommonFrameHeader
 
             If binaryImage(startIndex) <> SyncByte Then Throw New InvalidOperationException("Bad data stream, expected sync byte AA as first byte in BPA PDCstream frame, got " & binaryImage(startIndex).ToString("X"c).PadLeft(2, "0"c))
 
@@ -260,6 +261,29 @@ Namespace BpaPdcStream
                 ' Parse out packet flags and word count information...
                 .PacketFlag = binaryImage(startIndex + 1)
                 .WordCount = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 2)
+
+                If .FrameType = FrameType.ConfigurationFrame Then
+                    ' We just assume current timestamp for configuration frames since they don't provide one
+                    .Ticks = Date.UtcNow.Ticks
+                Else
+                    ' Next two bytes in data frame is the timestamp - so we go ahead an get it
+                    Dim secondOfCentury As UInt32 = EndianOrder.BigEndian.ToUInt32(binaryImage, startIndex + 4)
+                    Dim timestamp As Date
+
+                    If configurationFrame Is Nothing Then
+                        ' Until configuration is available, best we can do is assume Unix time tag
+                        timestamp = (New DateTime.UnixTimeTag(secondOfCentury)).ToDateTime()
+                    Else
+                        If configurationFrame.RevisionNumber = RevisionNumber.Revision0 Then
+                            timestamp = (New DateTime.UnixTimeTag(secondOfCentury)).ToDateTime()
+                        Else
+                            timestamp = (New DateTime.NtpTimeTag(secondOfCentury)).ToDateTime()
+                        End If
+                    End If
+
+                    .Ticks = timestamp.Ticks
+                End If
+
                 Return .This
             End With
 
@@ -270,7 +294,7 @@ Namespace BpaPdcStream
             Dim buffer As Byte() = CreateArray(Of Byte)(BinaryLength)
 
             buffer(0) = SyncByte
-            buffer(1) = frameHeader.PacketFlag
+            buffer(1) = frameHeader.PacketNumber
             EndianOrder.BigEndian.CopyBytes(frameHeader.WordCount, buffer, 2)
 
             Return buffer
@@ -279,8 +303,9 @@ Namespace BpaPdcStream
 
         Public Shared Sub Clone(ByVal sourceFrameHeader As ICommonFrameHeader, ByVal destinationFrameHeader As ICommonFrameHeader)
 
-            destinationFrameHeader.PacketFlag = sourceFrameHeader.PacketFlag
+            destinationFrameHeader.PacketNumber = sourceFrameHeader.PacketNumber
             destinationFrameHeader.WordCount = sourceFrameHeader.WordCount
+            destinationFrameHeader.Ticks = sourceFrameHeader.Ticks
 
         End Sub
 

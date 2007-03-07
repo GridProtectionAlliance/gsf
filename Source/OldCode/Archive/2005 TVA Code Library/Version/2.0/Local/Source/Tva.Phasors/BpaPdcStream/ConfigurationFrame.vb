@@ -37,6 +37,7 @@ Namespace BpaPdcStream
     Public Class ConfigurationFrame
 
         Inherits ConfigurationFrameBase
+        Implements ICommonFrameHeader
 
         Private m_readWriteLock As ReaderWriterLock
         Private m_iniFile As IniFile
@@ -90,10 +91,12 @@ Namespace BpaPdcStream
 
         End Sub
 
-        Public Sub New(ByVal configurationFileName As String, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
+        Public Sub New(ByVal parsedFrameHeader As ICommonFrameHeader, ByVal configurationFileName As String, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
-            MyBase.New(New ConfigurationFrameParsingState(New ConfigurationCellCollection, 0, _
+            MyBase.New(New ConfigurationFrameParsingState(New ConfigurationCellCollection, parsedFrameHeader.FrameLength, _
                 AddressOf BpaPdcStream.ConfigurationCell.CreateNewConfigurationCell), binaryImage, startIndex)
+
+            CommonFrameHeader.Clone(parsedFrameHeader, Me)
 
             m_iniFile = New IniFile(configurationFileName)
             m_readWriteLock = New ReaderWriterLock
@@ -137,6 +140,44 @@ Namespace BpaPdcStream
             Set(ByVal Value As RevisionNumber)
                 m_revisionNumber = Value
             End Set
+        End Property
+
+        Public Property PacketNumber() As Byte Implements ICommonFrameHeader.PacketNumber
+            Get
+                Return DescriptorPacketFlag
+            End Get
+            Private Set(ByVal value As Byte)
+                ' Packet number is readonly for configuration frames - we don't throw an exception here if someone attempts to change
+                ' the packet number on a configuration frame (e.g., the CommonFrameHeader.Clone method will attempt to copy this property)
+                ' but we don't do anything with the value either.
+            End Set
+        End Property
+
+        Public ReadOnly Property FrameType() As FrameType Implements ICommonFrameHeader.FrameType
+            Get
+                Return BpaPdcStream.FrameType.DataFrame
+            End Get
+        End Property
+
+        Protected Overrides ReadOnly Property FundamentalFrameType() As FundamentalFrameType Implements ICommonFrameHeader.FundamentalFrameType
+            Get
+                Return MyBase.FundamentalFrameType
+            End Get
+        End Property
+
+        Public Property WordCount() As Int16 Implements ICommonFrameHeader.WordCount
+            Get
+                Return MyBase.BinaryLength / 2
+            End Get
+            Set(ByVal value As Int16)
+                MyBase.ParsedBinaryLength = value * 2
+            End Set
+        End Property
+
+        Public ReadOnly Property FrameLength() As Short Implements ICommonFrameHeader.FrameLength
+            Get
+                Return MyBase.BinaryLength
+            End Get
         End Property
 
         Public Sub Refresh()
@@ -388,9 +429,9 @@ Namespace BpaPdcStream
             Get
                 Dim buffer As Byte() = CreateArray(Of Byte)(HeaderLength)
 
-                buffer(0) = SyncByte
-                buffer(1) = DescriptorPacketFlag
-                EndianOrder.BigEndian.CopyBytes(Convert.ToInt16(BinaryLength \ 2), buffer, 2)
+                ' Common in common frame header portion of header image
+                System.Buffer.BlockCopy(CommonFrameHeader.BinaryImage(Me), 0, buffer, 0, CommonFrameHeader.BinaryLength)
+
                 buffer(4) = StreamType
                 buffer(5) = RevisionNumber
                 EndianOrder.BigEndian.CopyBytes(FrameRate, buffer, 6)
@@ -407,6 +448,7 @@ Namespace BpaPdcStream
             ' We parse the PDC stream specific header image here...
             Dim parsingState As IConfigurationFrameParsingState = DirectCast(state, IConfigurationFrameParsingState)
 
+            ' Only need to parse what wan't already parsed in common frame header
             StreamType = binaryImage(startIndex + 4)
             RevisionNumber = binaryImage(startIndex + 5)
             FrameRate = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 6)
@@ -439,6 +481,7 @@ Namespace BpaPdcStream
                 Dim baseAttributes As Dictionary(Of String, String) = MyBase.Attributes
 
                 baseAttributes.Add("Configuration File Name", m_iniFile.FileName)
+                baseAttributes.Add("Packet Number", DescriptorPacketFlag)
                 baseAttributes.Add("Stream Type", m_streamType & ": " & [Enum].GetName(GetType(StreamType), m_streamType))
                 baseAttributes.Add("Revision Number", m_revisionNumber & ": " & [Enum].GetName(GetType(RevisionNumber), m_revisionNumber))
                 baseAttributes.Add("Packets Per Sample", m_packetsPerSample)

@@ -30,6 +30,7 @@ Namespace BpaPdcStream
     Public Class DataFrame
 
         Inherits DataFrameBase
+        Implements ICommonFrameHeader
 
         Private m_packetNumber As Byte
         Private m_sampleNumber As Int16
@@ -68,10 +69,12 @@ Namespace BpaPdcStream
 
         End Sub
 
-        Public Sub New(ByVal configurationFrame As IConfigurationFrame, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
+        Public Sub New(ByVal parsedFrameHeader As ICommonFrameHeader, ByVal configurationFrame As IConfigurationFrame, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
-            MyBase.New(New DataFrameParsingState(New DataCellCollection, 0, configurationFrame, _
+            MyBase.New(New DataFrameParsingState(New DataCellCollection, parsedFrameHeader.FrameLength, configurationFrame, _
                 AddressOf BpaPdcStream.DataCell.CreateNewDataCell), binaryImage, startIndex)
+
+            CommonFrameHeader.Clone(parsedFrameHeader, Me)
 
         End Sub
 
@@ -102,19 +105,12 @@ Namespace BpaPdcStream
             End Set
         End Property
 
-        Protected Overrides ReadOnly Property FundamentalFrameType() As FundamentalFrameType
-            Get
-                Return Phasors.FundamentalFrameType.DataFrame
-            End Get
-        End Property
-
-        Public Property PacketNumber() As Byte
+        Public Property PacketNumber() As Byte Implements ICommonFrameHeader.PacketNumber
             Get
                 Return m_packetNumber
             End Get
-            Set(ByVal Value As Byte)
-                If Value < 1 Then Throw New ArgumentOutOfRangeException("Data packets must be numbered from 1 to 255")
-                m_packetNumber = Value
+            Set(ByVal value As Byte)
+                m_packetNumber = value
             End Set
         End Property
 
@@ -122,9 +118,36 @@ Namespace BpaPdcStream
             Get
                 Return m_sampleNumber
             End Get
-            Set(ByVal Value As Int16)
-                m_sampleNumber = Value
+            Set(ByVal value As Int16)
+                m_sampleNumber = value
             End Set
+        End Property
+
+        Public ReadOnly Property FrameType() As FrameType Implements ICommonFrameHeader.FrameType
+            Get
+                Return BpaPdcStream.FrameType.DataFrame
+            End Get
+        End Property
+
+        Protected Overrides ReadOnly Property FundamentalFrameType() As FundamentalFrameType Implements ICommonFrameHeader.FundamentalFrameType
+            Get
+                Return MyBase.FundamentalFrameType
+            End Get
+        End Property
+
+        Public Property WordCount() As Int16 Implements ICommonFrameHeader.WordCount
+            Get
+                Return MyBase.BinaryLength / 2
+            End Get
+            Set(ByVal value As Int16)
+                MyBase.ParsedBinaryLength = value * 2
+            End Set
+        End Property
+
+        Public ReadOnly Property FrameLength() As Short Implements ICommonFrameHeader.FrameLength
+            Get
+                Return MyBase.BinaryLength
+            End Get
         End Property
 
         Public ReadOnly Property NtpTimeTag() As DateTime.NtpTimeTag
@@ -155,14 +178,15 @@ Namespace BpaPdcStream
             Get
                 Dim buffer As Byte() = CreateArray(Of Byte)(HeaderLength)
 
-                buffer(0) = SyncByte
-                buffer(1) = Convert.ToByte(1)
-                EndianOrder.BigEndian.CopyBytes(Convert.ToInt16(buffer.Length \ 2), buffer, 2)
+                ' Common in common frame header portion of header image
+                System.Buffer.BlockCopy(CommonFrameHeader.BinaryImage(Me), 0, buffer, 0, CommonFrameHeader.BinaryLength)
+
                 If ConfigurationFrame.RevisionNumber = RevisionNumber.Revision0 Then
                     EndianOrder.BigEndian.CopyBytes(Convert.ToUInt32(NtpTimeTag.Value), buffer, 4)
                 Else
                     EndianOrder.BigEndian.CopyBytes(Convert.ToUInt32(TimeTag.Value), buffer, 4)
                 End If
+
                 EndianOrder.BigEndian.CopyBytes(Convert.ToInt16(m_sampleNumber), buffer, 8)
                 EndianOrder.BigEndian.CopyBytes(Convert.ToInt16(Cells.Count), buffer, 10)
 
@@ -190,23 +214,9 @@ Namespace BpaPdcStream
         Protected Overrides Sub ParseHeaderImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
             Dim configurationFrame As BpaPdcStream.ConfigurationFrame = DirectCast(DirectCast(state, IDataFrameParsingState).ConfigurationFrame, BpaPdcStream.ConfigurationFrame)
-            Dim secondOfCentury As UInt32
-            Dim frameLength As Int16
             Dim dataCellCount As Int16
-            Dim timestamp As Date
 
-            If binaryImage(startIndex) <> SyncByte Then
-                Throw New InvalidOperationException("Bad Data Stream: Expected sync byte AA as first byte in PDCstream data frame, got " & binaryImage(startIndex).ToString("X"c).PadLeft(2, "0"c))
-            End If
-
-            m_packetNumber = binaryImage(startIndex + 1)
-
-            If m_packetNumber = DescriptorPacketFlag Then
-                Throw New InvalidOperationException("Bad Data Stream: This is not a PDCstream data frame - looks like a configuration frame.")
-            End If
-
-            frameLength = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 2) * 2
-            secondOfCentury = EndianOrder.BigEndian.ToUInt32(binaryImage, startIndex + 4)
+            ' Only need to parse what wan't already parsed in common frame header
             m_sampleNumber = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 8)
             dataCellCount = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 10)
 
@@ -214,13 +224,8 @@ Namespace BpaPdcStream
                 Throw New InvalidOperationException("Stream/Config File Mismatch: PMU count (" & dataCellCount & ") in stream does not match defined count in configuration file:" & configurationFrame.Cells.Count)
             End If
 
-            If configurationFrame.RevisionNumber = RevisionNumber.Revision0 Then
-                timestamp = (New DateTime.UnixTimeTag(secondOfCentury)).ToDateTime()
-            Else
-                timestamp = (New DateTime.NtpTimeTag(secondOfCentury)).ToDateTime()
-            End If
-
-            Ticks = timestamp.AddMilliseconds(m_sampleNumber * (1000@ / configurationFrame.FrameRate)).Ticks
+            ' Add "milliseconds" to current timestamp
+            Ticks = Timestamp.AddMilliseconds(m_sampleNumber / configurationFrame.FrameRate * 1000).Ticks
 
             ' We don't need PMU info in data frame from a parsing perspective, even if available in legacy stream - so we're done...
 
