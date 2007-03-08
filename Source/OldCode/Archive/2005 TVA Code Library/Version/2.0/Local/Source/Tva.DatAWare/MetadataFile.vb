@@ -118,7 +118,7 @@ Public Class MetadataFile
 
     Public Sub Open()
 
-        If Not Me.IsOpen Then
+        If Not IsOpen Then
             RaiseEvent FileOpening(Me, EventArgs.Empty)
 
             ' Initialize the point definition list.
@@ -130,9 +130,9 @@ Public Class MetadataFile
                 m_fileStream = New FileStream(m_name, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite)
 
                 ' Once we have the file open, we'll process the file data.
-                If m_fileStream.Length Mod PointDefinition.BinaryLength = 0 Then
+                If m_fileStream.Length Mod PointDefinition.Size = 0 Then
                     ' The file we're working with is a valid one.
-                    Dim binaryImage As Byte() = CreateArray(Of Byte)(PointDefinition.BinaryLength)
+                    Dim binaryImage As Byte() = CreateArray(Of Byte)(PointDefinition.Size)
                     Dim pointDefinitionCount As Integer = Convert.ToInt32(m_fileStream.Length \ binaryImage.Length)
                     For i As Integer = 1 To pointDefinitionCount
                         m_fileStream.Read(binaryImage, 0, binaryImage.Length)
@@ -177,7 +177,7 @@ Public Class MetadataFile
 
     Public Sub Close(ByVal saveFile As Boolean)
 
-        If Me.IsOpen Then
+        If IsOpen Then
             RaiseEvent FileClosing(Me, EventArgs.Empty)
 
             ' Stop the timers if they are ticking.
@@ -200,7 +200,7 @@ Public Class MetadataFile
 
     Public Sub Save()
 
-        If Me.IsOpen Then
+        If IsOpen Then
             ' Analyze point definitions before writing them to the file if specified.
             If m_alignOnSave Then Align()
 
@@ -208,7 +208,7 @@ Public Class MetadataFile
             m_fileStream.Seek(0, SeekOrigin.Begin)
             ' Write all of the point definitions to the file.
             For i As Integer = 0 To m_pointDefinitions.Count - 1
-                m_fileStream.Write(m_pointDefinitions(i).BinaryImage, 0, PointDefinition.BinaryLength)
+                m_fileStream.Write(m_pointDefinitions(i).BinaryData, 0, PointDefinition.Size)
                 RaiseEvent DataSaving(Me, New ProgressEventArgs(Of Integer)(i + 1, m_pointDefinitions.Count))
             Next
             m_fileStream.Flush()    ' Ensure that the data is written to the file.
@@ -239,7 +239,7 @@ Public Class MetadataFile
 
     Public Function Read(ByVal pointIndex As Integer) As PointDefinition
 
-        If Me.IsOpen Then
+        If IsOpen Then
             For i As Integer = 0 To m_pointDefinitions.Count - 1
                 If m_pointDefinitions(i).Index = pointIndex Then
                     Return m_pointDefinitions(i)
@@ -255,7 +255,7 @@ Public Class MetadataFile
 
     Public Function Read(ByVal pointName As String) As PointDefinition
 
-        If Me.IsOpen Then
+        If IsOpen Then
             For i As Integer = 0 To m_pointDefinitions.Count - 1
                 If String.Compare(pointName, m_pointDefinitions(i).Name) = 0 OrElse _
                         String.Compare(pointName, m_pointDefinitions(i).Synonym1) = 0 OrElse _
@@ -273,7 +273,7 @@ Public Class MetadataFile
 
     Public Sub Write(ByVal pointDefinition As PointDefinition)
 
-        If Me.IsOpen Then
+        If IsOpen Then
             ' Insert/Update point definition to the in-memory point definition list.
             If Not m_pointDefinitions.Contains(pointDefinition) Then
                 ' We have to add the point definition since it doesn't exist.
@@ -303,7 +303,7 @@ Public Class MetadataFile
 
     Private Sub m_autoSaveTimer_Elapsed(ByVal sender As Object, ByVal e As System.Timers.ElapsedEventArgs) Handles m_autoSaveTimer.Elapsed
 
-        If Me.IsOpen Then Save() ' Automatically save point definitions to the file is the file is open.
+        If IsOpen Then Save() ' Automatically save point definitions to the file is the file is open.
 
     End Sub
 
