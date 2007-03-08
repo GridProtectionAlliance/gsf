@@ -13,9 +13,9 @@ Public Class MetadataFile
     Private m_name As String
     Private m_initialRecordCount As Integer
     Private m_saveOnClose As Boolean
-    Private m_analyzeOnSave As Boolean
+    Private m_alignOnSave As Boolean
     Private m_autoSaveInterval As Integer
-    Private m_autoAnalyzeInterval As Integer
+    Private m_autoAlignInterval As Integer
     Private m_pointDefinitions As List(Of PointDefinition)
     Private m_fileStream As FileStream
 
@@ -32,7 +32,7 @@ Public Class MetadataFile
     Public Event FileClosed As EventHandler
     Public Event DataLoading As EventHandler(Of ProgressEventArgs(Of Integer))
     Public Event DataSaving As EventHandler(Of ProgressEventArgs(Of Integer))
-    Public Event DataAnalyzing As EventHandler(Of ProgressEventArgs(Of Integer))
+    Public Event DataAligning As EventHandler(Of ProgressEventArgs(Of Integer))
 
 #End Region
 
@@ -75,12 +75,12 @@ Public Class MetadataFile
         End Set
     End Property
 
-    Public Property AnalyzeOnSave() As Boolean
+    Public Property AlignOnSave() As Boolean
         Get
-            Return m_analyzeOnSave
+            Return m_alignOnSave
         End Get
         Set(ByVal value As Boolean)
-            m_analyzeOnSave = value
+            m_alignOnSave = value
         End Set
     End Property
 
@@ -93,12 +93,12 @@ Public Class MetadataFile
         End Set
     End Property
 
-    Public Property AutoAnalyzeInterval() As Integer
+    Public Property AutoAlignInterval() As Integer
         Get
-            Return m_autoAnalyzeInterval
+            Return m_autoAlignInterval
         End Get
         Set(ByVal value As Integer)
-            m_autoAnalyzeInterval = value
+            m_autoAlignInterval = value
         End Set
     End Property
 
@@ -159,8 +159,8 @@ Public Class MetadataFile
                 m_autoSaveTimer.Interval = m_autoSaveInterval
                 m_autoSaveTimer.Start()
             End If
-            If m_autoAnalyzeInterval > 0 Then
-                m_autoAnalyzeTimer.Interval = m_autoAnalyzeInterval
+            If m_autoAlignInterval > 0 Then
+                m_autoAnalyzeTimer.Interval = m_autoAlignInterval
                 m_autoAnalyzeTimer.Start()
             End If
 
@@ -202,7 +202,7 @@ Public Class MetadataFile
 
         If Me.IsOpen Then
             ' Analyze point definitions before writing them to the file if specified.
-            If m_analyzeOnSave Then Analyze()
+            If m_alignOnSave Then Align()
 
             ' Set the cursor to BOF before we start writing to the file.
             m_fileStream.Seek(0, SeekOrigin.Begin)
@@ -218,7 +218,7 @@ Public Class MetadataFile
 
     End Sub
 
-    Public Sub Analyze()
+    Public Sub Align()
 
         If m_pointDefinitions IsNot Nothing AndAlso m_pointDefinitions.Count > 0 Then
             ' We can proceed with analyzing point definitions since they have been initialized.
@@ -231,7 +231,7 @@ Public Class MetadataFile
             For i As Integer = 0 To nonAlignedPointDefinitions.Count - 1
                 ' We'll use the Write() method for adding point definitions to the actual point definition list.
                 Write(nonAlignedPointDefinitions(i))
-                RaiseEvent DataAnalyzing(Me, New ProgressEventArgs(Of Integer)(nonAlignedPointDefinitions.Count, i + 1))
+                RaiseEvent DataAligning(Me, New ProgressEventArgs(Of Integer)(nonAlignedPointDefinitions.Count, i + 1))
             Next
         End If
 
@@ -313,7 +313,7 @@ Public Class MetadataFile
 
     Private Sub m_autoAnalyzeTimer_Elapsed(ByVal sender As Object, ByVal e As System.Timers.ElapsedEventArgs) Handles m_autoAnalyzeTimer.Elapsed
 
-        Analyze()   ' Automatically analyze the current point definition list.
+        Align()   ' Automatically analyze the current point definition list.
 
     End Sub
 

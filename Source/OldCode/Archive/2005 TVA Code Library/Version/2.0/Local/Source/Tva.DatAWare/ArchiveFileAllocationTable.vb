@@ -1,6 +1,7 @@
 ' 02/18/2007
 
 Imports System.IO
+Imports Tva.Interop
 
 Public Class ArchiveFileAllocationTable
 
@@ -18,7 +19,6 @@ Public Class ArchiveFileAllocationTable
     Private m_dataBlockCount As Integer
     Private m_dataBlockPointers As List(Of ArchiveDataBlockPointer)
     Private m_fileStream As FileStream
-    Private m_dataBlocksScanned As List(Of Integer) ' ???
     Private m_searchPointIndex As Integer   ' <=|
     Private m_searchStartTime As TimeTag    ' <=| Used for finding data block pointer in m_dataBlockPointers 
     Private m_searchEndTime As TimeTag      ' <=|
@@ -33,7 +33,6 @@ Public Class ArchiveFileAllocationTable
         m_fileStartTime = TimeTag.MinValue
         m_fileEndTime = TimeTag.MinValue
         m_dataBlockPointers = New List(Of ArchiveDataBlockPointer)()
-        m_dataBlocksScanned = New List(Of Integer)()
 
     End Sub
 
@@ -59,8 +58,8 @@ Public Class ArchiveFileAllocationTable
             m_dataBlockSize = BitConverter.ToInt32(fixedFatData, 24)
             m_dataBlockCount = BitConverter.ToInt32(fixedFatData, 28)
 
-            Dim variableFatData As Byte() = CreateArray(Of Byte)(BinaryLength - MinimumBinaryLength)
-            m_fileStream.Seek(-BinaryLength, SeekOrigin.End)
+            Dim variableFatData As Byte() = CreateArray(Of Byte)(m_dataBlockCount * ArchiveDataBlockPointer.BinaryLength)
+            m_fileStream.Seek(-(variableFatData.Length + MinimumBinaryLength), SeekOrigin.End)
             m_fileStream.Read(variableFatData, 0, variableFatData.Length)
             For i As Integer = 0 To variableFatData.Length - 1 Step ArchiveDataBlockPointer.BinaryLength
                 m_dataBlockPointers.Add(New ArchiveDataBlockPointer(variableFatData, i))
@@ -144,7 +143,6 @@ Public Class ArchiveFileAllocationTable
         End Get
     End Property
 
-    ' Delete this property...
     Public ReadOnly Property DataBlockPointers() As List(Of ArchiveDataBlockPointer)
         Get
             Return m_dataBlockPointers
@@ -154,15 +152,30 @@ Public Class ArchiveFileAllocationTable
     Public Sub Persist()
 
         ' Leave space for data blocks.
-        If m_fileStream.Length > 0 Then
-            ' Existing file...
-            m_fileStream.Seek(-BinaryLength, SeekOrigin.End)
-        Else
-            ' New file...
-            m_fileStream.Seek(m_dataBlockCount * (m_dataBlockSize * 1024L), SeekOrigin.Begin)
-        End If
+        m_fileStream.Seek(m_dataBlockCount * (m_dataBlockSize * 1024L), SeekOrigin.Begin)
+        'If m_fileStream.Length > 0 Then
+        '    ' Existing file...
+        '    m_fileStream.Seek(-BinaryLength, SeekOrigin.End)
+        'Else
+        '    ' New file...
+        '    m_fileStream.Seek(m_dataBlockCount * (m_dataBlockSize * 1024L), SeekOrigin.Begin)
+        'End If
         m_fileStream.Write(BinaryImage, 0, BinaryLength)
         m_fileStream.Flush()
+
+    End Sub
+
+    Public Sub Extend()
+
+        Extend(1)
+
+    End Sub
+
+    Public Sub Extend(ByVal dataBlocksToAdd As Integer)
+
+        m_dataBlockCount += dataBlocksToAdd
+        m_dataBlockPointers.Add(New ArchiveDataBlockPointer())
+        Persist()
 
     End Sub
 
@@ -219,16 +232,20 @@ Public Class ArchiveFileAllocationTable
 
     Private ReadOnly Property BinaryLength() As Integer
         Get
-            Return (m_dataBlockCount * ArchiveDataBlockPointer.BinaryLength) + MinimumBinaryLength
+            ' We add 10 bytes for the array descriptor that required for reading the file from VB.
+            Return (10 + (m_dataBlockCount * ArchiveDataBlockPointer.BinaryLength) + MinimumBinaryLength)
         End Get
     End Property
 
     Private ReadOnly Property BinaryImage() As Byte()
         Get
             Dim image As Byte() = CreateArray(Of Byte)(BinaryLength)
+            Dim arrayDescriptor As VBArrayDescriptor = VBArrayDescriptor.OneBasedOneDimensionalArray(m_dataBlockCount)
 
+            Array.Copy(arrayDescriptor.BinaryImage, 0, image, 0, arrayDescriptor.BinaryLength)
             For i As Integer = 0 To m_dataBlockPointers.Count - 1
-                Array.Copy(m_dataBlockPointers(i).BinaryImage, 0, image, i * ArchiveDataBlockPointer.BinaryLength, ArchiveDataBlockPointer.BinaryLength)
+                Array.Copy(m_dataBlockPointers(i).BinaryImage, 0, image, _
+                    (i * ArchiveDataBlockPointer.BinaryLength) + arrayDescriptor.BinaryLength, ArchiveDataBlockPointer.BinaryLength)
             Next
 
             Dim pointersBinaryLength As Integer = BinaryLength - MinimumBinaryLength

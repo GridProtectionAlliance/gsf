@@ -71,6 +71,7 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Enumerations.vb" />
+    <Compile Include="IBinaryDataProvider.vb" />
     <Compile Include="IPointData.vb" />
     <Compile Include="Legacy Interfaces\Common.vb">
       <SubType>Code</SubType>

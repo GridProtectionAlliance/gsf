@@ -244,41 +244,49 @@ Public Class ArchiveFile
             If pointData.Definition IsNot Nothing Then
                 m_fat.EventsReceived += 1
 
-                If ToBeArchived(pointData) Then
-                    Dim dataBlock As ArchiveDataBlock = Nothing
-                    m_activeDataBlocks.TryGetValue(pointData.Definition.Index, dataBlock)
-                    If dataBlock Is Nothing OrElse (dataBlock IsNot Nothing AndAlso dataBlock.SlotsAvailable <= 0) Then
-                        ' We either don't have a active data block where we can archive the point data or we have a 
-                        ' active data block but it is full, so we have to request a new data block from the FAT.
-                        m_dataBlockRequestCount += 1
-                        m_activeDataBlocks.Remove(pointData.Definition.Index)
-                        dataBlock = m_fat.RequestDataBlock(pointData.Definition.Index, pointData.TimeTag)
-                        m_activeDataBlocks.Add(pointData.Definition.Index, dataBlock)
+                If pointData.TimeTag.CompareTo(m_fat.FileStartTime) >= 0 Then
+                    ' The data to be written has a timetag that is the same as newer than the file's start time.
+                    If ToBeArchived(pointData) Then
+                        ' Archive the data
+                        Dim dataBlock As ArchiveDataBlock = Nothing
+                        m_activeDataBlocks.TryGetValue(pointData.Definition.Index, dataBlock)
+                        If dataBlock Is Nothing OrElse (dataBlock IsNot Nothing AndAlso dataBlock.SlotsAvailable <= 0) Then
+                            ' We either don't have a active data block where we can archive the point data or we have a 
+                            ' active data block but it is full, so we have to request a new data block from the FAT.
+                            m_dataBlockRequestCount += 1
+                            m_activeDataBlocks.Remove(pointData.Definition.Index)
+                            dataBlock = m_fat.RequestDataBlock(pointData.Definition.Index, pointData.TimeTag)
+                            m_activeDataBlocks.Add(pointData.Definition.Index, dataBlock)
 
-                        If m_dataBlockRequestCount >= m_fat.DataBlockCount * (m_rolloverPreparationThreshold / 100) AndAlso _
-                                Not m_rolloverPreparationDone AndAlso Not m_rolloverPreparationThread.IsAlive Then
-                            ' We've requested the specified percent of the total number of data blocks in the file, 
-                            ' so we must now prepare for the rollver process since has not been done yet and it is 
-                            ' not already in progress.
-                            m_rolloverPreparationThread = New Thread(AddressOf PrepareForRollover)
-                            m_rolloverPreparationThread.Priority = ThreadPriority.Lowest
-                            m_rolloverPreparationThread.Start()
+                            If m_dataBlockRequestCount >= m_fat.DataBlockCount * (m_rolloverPreparationThreshold / 100) AndAlso _
+                                    Not m_rolloverPreparationDone AndAlso Not m_rolloverPreparationThread.IsAlive Then
+                                ' We've requested the specified percent of the total number of data blocks in the file, 
+                                ' so we must now prepare for the rollver process since has not been done yet and it is 
+                                ' not already in progress.
+                                m_rolloverPreparationThread = New Thread(AddressOf PrepareForRollover)
+                                m_rolloverPreparationThread.Priority = ThreadPriority.Lowest
+                                m_rolloverPreparationThread.Start()
+                            End If
                         End If
-                    End If
 
-                    If dataBlock IsNot Nothing Then
-                        ' We were able to obtain a data block for writing data.
-                        dataBlock.Write(pointData)
+                        If dataBlock IsNot Nothing Then
+                            ' We were able to obtain a data block for writing data.
+                            dataBlock.Write(pointData)
 
-                        m_fat.EventsArchived += 1
-                        m_fat.FileEndTime = pointData.TimeTag
-                        If m_fat.FileStartTime.CompareTo(TimeTag.MinValue) = 0 Then m_fat.FileStartTime = pointData.TimeTag
+                            m_fat.EventsArchived += 1
+                            m_fat.FileEndTime = pointData.TimeTag
+                            If m_fat.FileStartTime.CompareTo(TimeTag.MinValue) = 0 Then m_fat.FileStartTime = pointData.TimeTag
+                        Else
+                            ' We were unable to obtain a data block for writing data to because all data block are in use.
+                            RaiseEvent FileFull(Me, EventArgs.Empty)
+                        End If
                     Else
-                        ' We were unable to obtain a data block for writing data to because all data block are in use.
-                        RaiseEvent FileFull(Me, EventArgs.Empty)
+                        ' Discard the data
                     End If
                 Else
-
+                    ' The data to be written has a timetag that is older than the file's start time, so the data
+                    ' does not belong in this file but in a historic archive file instead.
+                    WriteToHistoricArchiveFile()    ' <- This is just a stub for now.
                 End If
             Else
                 Throw New ArgumentException("Definition property for point data is not set.")
@@ -323,6 +331,14 @@ Public Class ArchiveFile
 
     End Sub
 
+    Public Sub WriteToHistoricArchiveFile()
+
+    End Sub
+
+    Public Sub InsertInCurrentArchiveFile()
+
+    End Sub
+
     Private Function GetStandbyArchiveFileName() As String
 
         Return JustPath(m_name) & NoFileExtension(m_name) & "_standby" & Extension
@@ -351,6 +367,24 @@ Public Class ArchiveFile
     End Sub
 
 #End Region
+
+    Private Class HistoricPointData
+
+        Public ArchiveFile As HistoricArchiveFile
+
+        Public PointData As List(Of StandardPointData)
+
+    End Class
+
+    Public Class HistoricArchiveFile
+
+        Public FileName As String
+
+        Public StartTimeTag As TimeTag
+
+        Public EndTimeTag As TimeTag
+
+    End Class
 
 #End Region
 

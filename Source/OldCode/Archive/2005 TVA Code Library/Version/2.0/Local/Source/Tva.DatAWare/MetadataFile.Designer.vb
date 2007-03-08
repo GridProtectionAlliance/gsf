@@ -20,9 +20,9 @@ Partial Class MetadataFile
         m_name = Me.GetType().Name & Extension
         m_initialRecordCount = 1500
         m_saveOnClose = False
-        m_analyzeOnSave = False
+        m_alignOnSave = False
         m_autoSaveInterval = -1
-        m_autoAnalyzeInterval = -1
+        m_autoAlignInterval = -1
         m_autoSaveTimer = New System.Timers.Timer()
         m_autoAnalyzeTimer = New System.Timers.Timer()
 
