@@ -19,7 +19,7 @@ Public MustInherit Class PointDataBase
 
 #Region " Public Code "
 
-    Public Const BinaryLength As Integer = -1
+    Public Const Size As Integer = -1
 
     Public Sub New()
 
@@ -32,7 +32,7 @@ Public MustInherit Class PointDataBase
         MyClass.New()
         m_timeTag = timeTag
         m_value = value
-        Me.Quality = quality
+        Quality = quality
 
     End Sub
 
@@ -87,11 +87,9 @@ Public MustInherit Class PointDataBase
         End Get
     End Property
 
-    Public MustOverride ReadOnly Property BinaryImage() As Byte() Implements IPointData.BinaryImage
-
     Public Overrides Function Equals(ByVal obj As Object) As Boolean
 
-        Return Me.CompareTo(obj) = 0
+        Return CompareTo(obj) = 0
 
     End Function
 
@@ -224,6 +222,18 @@ Public MustInherit Class PointDataBase
 
     '    End Set
     'End Property
+
+#End Region
+
+#Region " IBinaryDataProvider Implementation "
+
+    Public MustOverride ReadOnly Property BinaryData() As Byte() Implements IBinaryDataProvider.BinaryData
+
+    Public ReadOnly Property BinaryDataLength() As Integer Implements IBinaryDataProvider.BinaryDataLength
+        Get
+            Return Size
+        End Get
+    End Property
 
 #End Region
 

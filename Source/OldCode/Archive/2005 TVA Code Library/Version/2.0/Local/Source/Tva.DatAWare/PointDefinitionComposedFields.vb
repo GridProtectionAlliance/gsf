@@ -4,6 +4,7 @@ Imports System.Text
 Imports Tva.Text.Common
 
 Public Class PointDefinitionComposedFields
+    Implements IBinaryDataProvider
 
     ' *******************************************************************************
     ' *                             Binary Info Structure                           *
@@ -40,7 +41,7 @@ Public Class PointDefinitionComposedFields
 
 #Region " Public Code "
 
-    Public Const BinaryLength As Integer = 212
+    Public Const Size As Integer = 212
 
     Public Sub New(ByVal binaryInfo As Byte())
 
@@ -154,31 +155,10 @@ Public Class PointDefinitionComposedFields
         End Set
     End Property
 
-    Public ReadOnly Property BinaryImage() As Byte()
-        Get
-            Dim image As Byte() = CreateArray(Of Byte)(BinaryLength)
-
-            Array.Copy(BitConverter.GetBytes(m_highAlarm), 0, image, 0, 4)
-            Array.Copy(BitConverter.GetBytes(m_lowAlarm), 0, image, 4, 4)
-            Array.Copy(BitConverter.GetBytes(m_highRange), 0, image, 8, 4)
-            Array.Copy(BitConverter.GetBytes(m_lowRange), 0, image, 12, 4)
-            Array.Copy(BitConverter.GetBytes(m_displayedDigits), 0, image, 16, 4)
-            For i As Integer = 0 To m_inputPointers.Count - 1
-                Array.Copy(BitConverter.GetBytes(m_inputPointers(i)), 0, image, (20 + (i * 4)), 4)
-            Next
-            Array.Copy(m_textEncoding.GetBytes(m_engineeringUnits.PadRight(8)), 0, image, 68, 8)
-            Array.Copy(m_textEncoding.GetBytes(m_equation.PadRight(128)), 0, image, 76, 128)
-            Array.Copy(BitConverter.GetBytes(m_lowWarning), 0, image, 204, 4)
-            Array.Copy(BitConverter.GetBytes(m_highWarning), 0, image, 208, 4)
-
-            Return image
-        End Get
-    End Property
-
     Public Sub Update(ByVal binaryInfo As Byte())
 
         If binaryInfo IsNot Nothing Then
-            If binaryInfo.Length >= BinaryLength Then
+            If binaryInfo.Length >= Size Then
                 m_inputPointers = New List(Of Integer)(12)
                 m_highAlarm = BitConverter.ToSingle(binaryInfo, 0)
                 m_lowAlarm = BitConverter.ToSingle(binaryInfo, 4)
@@ -200,6 +180,37 @@ Public Class PointDefinitionComposedFields
         End If
 
     End Sub
+
+#Region " IBinaryDataProvider Implementation "
+
+    Public ReadOnly Property BinaryData() As Byte() Implements IBinaryDataProvider.BinaryData
+        Get
+            Dim image As Byte() = CreateArray(Of Byte)(Size)
+
+            Array.Copy(BitConverter.GetBytes(m_highAlarm), 0, image, 0, 4)
+            Array.Copy(BitConverter.GetBytes(m_lowAlarm), 0, image, 4, 4)
+            Array.Copy(BitConverter.GetBytes(m_highRange), 0, image, 8, 4)
+            Array.Copy(BitConverter.GetBytes(m_lowRange), 0, image, 12, 4)
+            Array.Copy(BitConverter.GetBytes(m_displayedDigits), 0, image, 16, 4)
+            For i As Integer = 0 To m_inputPointers.Count - 1
+                Array.Copy(BitConverter.GetBytes(m_inputPointers(i)), 0, image, (20 + (i * 4)), 4)
+            Next
+            Array.Copy(m_textEncoding.GetBytes(m_engineeringUnits.PadRight(8)), 0, image, 68, 8)
+            Array.Copy(m_textEncoding.GetBytes(m_equation.PadRight(128)), 0, image, 76, 128)
+            Array.Copy(BitConverter.GetBytes(m_lowWarning), 0, image, 204, 4)
+            Array.Copy(BitConverter.GetBytes(m_highWarning), 0, image, 208, 4)
+
+            Return image
+        End Get
+    End Property
+
+    Public ReadOnly Property BinaryDataLength() As Integer Implements IBinaryDataProvider.BinaryDataLength
+        Get
+            Return Size
+        End Get
+    End Property
+
+#End Region
 
 #End Region
 

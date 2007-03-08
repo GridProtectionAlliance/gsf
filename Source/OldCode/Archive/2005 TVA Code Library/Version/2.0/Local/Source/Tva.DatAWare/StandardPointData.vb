@@ -11,7 +11,7 @@ Public Class StandardPointData
 
 #Region " Public Code "
 
-    Public Shadows Const BinaryLength As Integer = 10
+    Public Shadows Const Size As Integer = 10
 
     Public Sub New(ByVal timeTag As TimeTag, ByVal value As Single, ByVal quality As Quality)
 
@@ -29,10 +29,10 @@ Public Class StandardPointData
 
         MyBase.new()
         If binaryImage IsNot Nothing Then
-            If binaryImage.Length - startIndex >= BinaryLength Then
+            If binaryImage.Length - startIndex >= Size Then
                 MyBase.Value = BitConverter.ToSingle(binaryImage, 6)
                 MyBase.Flags = BitConverter.ToInt16(binaryImage, 4)
-                MyBase.TimeTag = New TimeTag(BitConverter.ToInt32(binaryImage, 0) + Me.Millisecond / 1000)
+                MyBase.TimeTag = New TimeTag(BitConverter.ToInt32(binaryImage, 0) + Millisecond / 1000)
             Else
                 Throw New ArgumentException("Binary image size from startIndex is too small.")
             End If
@@ -42,12 +42,12 @@ Public Class StandardPointData
 
     End Sub
 
-    Public Overrides ReadOnly Property BinaryImage() As Byte()
+    Public Overrides ReadOnly Property BinaryData() As Byte()
         Get
-            Dim image As Byte() = CreateArray(Of Byte)(BinaryLength)
+            Dim image As Byte() = CreateArray(Of Byte)(Size)
             Dim timeTag As Integer = Convert.ToInt32(System.Math.Truncate(MyBase.TimeTag.Value))
             Dim milliseconds As Integer = Convert.ToInt32((MyBase.TimeTag.Value - timeTag) * 1000)
-            Me.Millisecond = milliseconds
+            Millisecond = milliseconds
 
             Array.Copy(BitConverter.GetBytes(timeTag), 0, image, 0, 4)
             Array.Copy(BitConverter.GetBytes(MyBase.Flags), 0, image, 4, 2)

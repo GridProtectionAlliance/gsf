@@ -2,9 +2,9 @@ Namespace Packets
 
     Public Interface IPacket
 
-        Property ArchiveFile() As ArchiveFile
+        Property ArchiveFile() As Files.ArchiveFile
 
-        Property MetadataFile() As MetadataFile
+        Property MetadataFile() As Files.MetadataFile
 
         ReadOnly Property ActionType() As PacketActionType
 

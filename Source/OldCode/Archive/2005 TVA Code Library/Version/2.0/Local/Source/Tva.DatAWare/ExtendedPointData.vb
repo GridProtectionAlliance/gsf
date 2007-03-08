@@ -3,7 +3,7 @@
 Public Class ExtendedPointData
     Inherits PointDataBase
 
-    Public Shadows Const BinaryLength As Integer = 16
+    Public Shadows Const Size As Integer = 16
 
     Public Sub New(ByVal binaryImage As Byte())
 
@@ -15,7 +15,7 @@ Public Class ExtendedPointData
 
         MyBase.New()
         If binaryImage IsNot Nothing Then
-            If binaryImage.Length - startIndex >= BinaryLength Then
+            If binaryImage.Length - startIndex >= Size Then
                 MyBase.TimeTag = New TimeTag(BitConverter.ToDouble(binaryImage, startIndex))
                 MyBase.Flags = BitConverter.ToInt32(binaryImage, startIndex + 8)
                 MyBase.Value = BitConverter.ToSingle(binaryImage, startIndex + 12)
@@ -28,9 +28,9 @@ Public Class ExtendedPointData
 
     End Sub
 
-    Public Overrides ReadOnly Property BinaryImage() As Byte()
+    Public Overrides ReadOnly Property BinaryData() As Byte()
         Get
-            Dim image As Byte() = CreateArray(Of Byte)(BinaryLength)
+            Dim image As Byte() = CreateArray(Of Byte)(Size)
 
             Array.Copy(BitConverter.GetBytes(MyBase.TimeTag.Value), 0, image, 0, 8)
             Array.Copy(BitConverter.GetBytes(MyBase.Flags), 0, image, 8, 4)

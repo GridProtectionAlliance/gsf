@@ -4,6 +4,7 @@ Imports System.Text
 Imports Tva.Text.Common
 
 Public Class PointDefinitionDigitalFields
+    Implements IBinaryDataProvider
 
     ' *******************************************************************************
     ' *                             Binary Info Structure                           *
@@ -26,7 +27,7 @@ Public Class PointDefinitionDigitalFields
 
 #Region " Public Code "
 
-    Public Const BinaryLength As Integer = 28
+    Public Const Size As Integer = 28
 
     Public Sub New(ByVal binaryInfo As Byte())
 
@@ -80,22 +81,10 @@ Public Class PointDefinitionDigitalFields
         End Set
     End Property
 
-    Public ReadOnly Property BinaryImage() As Byte()
-        Get
-            Dim image As Byte() = CreateArray(Of Byte)(BinaryLength)
-
-            Array.Copy(m_textEncoding.GetBytes(m_setDescription.PadRight(13)), 0, image, 0, 13)
-            Array.Copy(m_textEncoding.GetBytes(m_clearDescription.PadRight(13)), 0, image, 13, 13)
-            Array.Copy(BitConverter.GetBytes(m_alarmState), 0, image, 26, 2)
-
-            Return image
-        End Get
-    End Property
-
     Public Sub Update(ByVal binaryInfo As Byte())
 
         If binaryInfo IsNot Nothing Then
-            If binaryInfo.Length >= BinaryLength Then
+            If binaryInfo.Length >= Size Then
                 m_setDescription = m_textEncoding.GetString(binaryInfo, 0, 13).Trim()
                 m_clearDescription = m_textEncoding.GetString(binaryInfo, 13, 13).Trim()
                 m_alarmState = BitConverter.ToInt16(binaryInfo, 26)
@@ -107,6 +96,28 @@ Public Class PointDefinitionDigitalFields
         End If
 
     End Sub
+
+#Region " IBinaryDataProvider Implementation "
+
+    Public ReadOnly Property BinaryData() As Byte() Implements IBinaryDataProvider.BinaryData
+        Get
+            Dim image As Byte() = CreateArray(Of Byte)(Size)
+
+            Array.Copy(m_textEncoding.GetBytes(m_setDescription.PadRight(13)), 0, image, 0, 13)
+            Array.Copy(m_textEncoding.GetBytes(m_clearDescription.PadRight(13)), 0, image, 13, 13)
+            Array.Copy(BitConverter.GetBytes(m_alarmState), 0, image, 26, 2)
+
+            Return image
+        End Get
+    End Property
+
+    Public ReadOnly Property BinaryDataLength() As Integer Implements IBinaryDataProvider.BinaryDataLength
+        Get
+            Return Size
+        End Get
+    End Property
+
+#End Region
 
 #End Region
 

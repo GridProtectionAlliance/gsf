@@ -3,7 +3,7 @@
 Imports System.Text
 
 Public Class PointDefinitionConstantFields
-
+    Implements IBinaryDataProvider
 
     ' *******************************************************************************
     ' *                             Binary Info Structure                           *
@@ -23,7 +23,7 @@ Public Class PointDefinitionConstantFields
 
 #Region " Public Code "
 
-    Public Const BinaryLength As Integer = 8
+    Public Const Size As Integer = 8
 
     Public Sub New(ByVal binaryInfo As Byte())
 
@@ -51,21 +51,10 @@ Public Class PointDefinitionConstantFields
         End Set
     End Property
 
-    Public ReadOnly Property BinaryImage() As Byte()
-        Get
-            Dim image As Byte() = CreateArray(Of Byte)(BinaryLength)
-
-            Array.Copy(BitConverter.GetBytes(m_value), 0, image, 0, 4)
-            Array.Copy(BitConverter.GetBytes(m_displayedDigits), 0, image, 4, 4)
-
-            Return image
-        End Get
-    End Property
-
     Public Sub Update(ByVal binaryInfo As Byte())
 
         If binaryInfo IsNot Nothing Then
-            If binaryInfo.Length >= BinaryLength Then
+            If binaryInfo.Length >= Size Then
                 m_value = BitConverter.ToSingle(binaryInfo, 0)
                 m_displayedDigits = BitConverter.ToInt32(binaryInfo, 4)
             Else
@@ -76,6 +65,27 @@ Public Class PointDefinitionConstantFields
         End If
 
     End Sub
+
+#Region " IBinaryDataProvider Implementation "
+
+    Public ReadOnly Property BinaryData() As Byte() Implements IBinaryDataProvider.BinaryData
+        Get
+            Dim image As Byte() = CreateArray(Of Byte)(Size)
+
+            Array.Copy(BitConverter.GetBytes(m_value), 0, image, 0, 4)
+            Array.Copy(BitConverter.GetBytes(m_displayedDigits), 0, image, 4, 4)
+
+            Return image
+        End Get
+    End Property
+
+    Public ReadOnly Property BinaryDataLength() As Integer Implements IBinaryDataProvider.BinaryDataLength
+        Get
+            Return Size
+        End Get
+    End Property
+
+#End Region
 
 #End Region
 

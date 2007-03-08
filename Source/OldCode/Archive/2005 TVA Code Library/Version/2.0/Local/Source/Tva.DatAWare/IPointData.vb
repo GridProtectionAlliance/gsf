@@ -1,6 +1,7 @@
 ' 02/24/2007
 
 Public Interface IPointData
+    Inherits IBinaryDataProvider
 
     Property TimeTag() As TimeTag
 
@@ -13,7 +14,5 @@ Public Interface IPointData
     Property Definition() As PointDefinition
 
     ReadOnly Property IsNull() As Boolean
-
-    ReadOnly Property BinaryImage() As Byte()
 
 End Interface

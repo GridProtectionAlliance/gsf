@@ -21,7 +21,7 @@ Imports Tva.Text.Common
 ' Standard database structure element
 <Serializable()> _
 Public Class PointDefinition
-    Implements IComparable
+    Implements IComparable, IBinaryDataProvider
 
     ' *******************************************************************************
     ' *                         Point Definition Structure                          *
@@ -85,7 +85,7 @@ Public Class PointDefinition
 
 #Region " Public Code "
 
-    Public Const BinaryLength As Integer = 754
+    Public Const Size As Integer = 754
 
     Public Sub New(ByVal index As Integer)
 
@@ -118,12 +118,12 @@ Public Class PointDefinition
 
     Public Sub New(ByVal index As Integer, ByVal binaryImage As Byte(), ByVal startIndex As Integer, ByVal encoding As Encoding)
 
-        Me.New(index)
+        MyClass.New(index)
 
         If encoding IsNot Nothing Then m_textEncoding = encoding
 
         If binaryImage IsNot Nothing Then
-            If binaryImage.Length - startIndex >= BinaryLength Then
+            If binaryImage.Length - startIndex >= Size Then
                 m_description = m_textEncoding.GetString(binaryImage, startIndex, 40).Trim()
                 m_unitID = BitConverter.ToInt16(binaryImage, startIndex + 40)
                 m_securityFlags.Value = BitConverter.ToInt16(binaryImage, startIndex + 42)
@@ -431,9 +431,32 @@ Public Class PointDefinition
         End Set
     End Property
 
-    Public ReadOnly Property BinaryImage() As Byte()
+    Public Overrides Function Equals(ByVal obj As Object) As Boolean
+
+        Return CompareTo(obj) = 0
+
+    End Function
+
+#Region " IComparable Implementation "
+
+    Public Function CompareTo(ByVal obj As Object) As Integer Implements System.IComparable.CompareTo
+
+        Dim other As PointDefinition = TryCast(obj, PointDefinition)
+        If other IsNot Nothing Then
+            Return m_index.CompareTo(other.Index)
+        Else
+            Throw New ArgumentException(String.Format("Cannot compare {0} with {1}.", Me.GetType().Name, other.GetType().Name))
+        End If
+
+    End Function
+
+#End Region
+
+#Region " IBinaryDataProvider Implementation "
+
+    Public ReadOnly Property BinaryData() As Byte() Implements IBinaryDataProvider.BinaryData
         Get
-            Dim image As Byte() = CreateArray(Of Byte)(BinaryLength)
+            Dim image As Byte() = CreateArray(Of Byte)(Size)
 
             ' Construct the binary IP buffer for this event
             Array.Copy(m_textEncoding.GetBytes(m_description.PadRight(40)), 0, image, 0, 40)
@@ -458,13 +481,13 @@ Public Class PointDefinition
             Array.Copy(m_textEncoding.GetBytes(m_remarks.PadRight(128)), 0, image, 370, 128)
             Select Case m_generalFlags.PointType
                 Case PointType.Analog
-                    Array.Copy(m_analogFields.BinaryImage, m_binaryInfo, PointDefinitionAnalogFields.BinaryLength)
+                    Array.Copy(m_analogFields.BinaryData, m_binaryInfo, PointDefinitionAnalogFields.Size)
                 Case PointType.Digital
-                    Array.Copy(m_digitalFields.BinaryImage, m_binaryInfo, PointDefinitionDigitalFields.BinaryLength)
+                    Array.Copy(m_digitalFields.BinaryData, m_binaryInfo, PointDefinitionDigitalFields.Size)
                 Case PointType.Composed
-                    Array.Copy(m_composedFields.BinaryImage, m_binaryInfo, PointDefinitionComposedFields.BinaryLength)
+                    Array.Copy(m_composedFields.BinaryData, m_binaryInfo, PointDefinitionComposedFields.Size)
                 Case PointType.Constant
-                    Array.Copy(m_constantFields.BinaryImage, m_binaryInfo, PointDefinitionConstantFields.BinaryLength)
+                    Array.Copy(m_constantFields.BinaryData, m_binaryInfo, PointDefinitionConstantFields.Size)
             End Select
             Array.Copy(m_binaryInfo, 0, image, 498, 256)
 
@@ -472,24 +495,11 @@ Public Class PointDefinition
         End Get
     End Property
 
-    Public Overrides Function Equals(ByVal obj As Object) As Boolean
-
-        Return Me.CompareTo(obj) = 0
-
-    End Function
-
-#Region " IComparable Implementation "
-
-    Public Function CompareTo(ByVal obj As Object) As Integer Implements System.IComparable.CompareTo
-
-        Dim other As PointDefinition = TryCast(obj, PointDefinition)
-        If other IsNot Nothing Then
-            Return m_index.CompareTo(other.Index)
-        Else
-            Throw New ArgumentException(String.Format("Cannot compare {0} with {1}.", Me.GetType().Name, other.GetType().Name))
-        End If
-
-    End Function
+    Public ReadOnly Property BinaryDataLength() As Integer Implements IBinaryDataProvider.BinaryDataLength
+        Get
+            Return Size
+        End Get
+    End Property
 
 #End Region
 

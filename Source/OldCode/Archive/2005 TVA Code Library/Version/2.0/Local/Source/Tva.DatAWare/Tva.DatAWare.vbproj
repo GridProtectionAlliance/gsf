@@ -54,15 +54,15 @@
     <Import Include="Tva.Common" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ArchiveDataBlock.vb" />
-    <Compile Include="ArchiveDataBlockPointer.vb" />
-    <Compile Include="ArchiveFile.Designer.vb">
+    <Compile Include="Files\ArchiveDataBlock.vb" />
+    <Compile Include="Files\ArchiveDataBlockPointer.vb" />
+    <Compile Include="Files\ArchiveFile.Designer.vb">
       <DependentUpon>ArchiveFile.vb</DependentUpon>
     </Compile>
-    <Compile Include="ArchiveFile.vb">
+    <Compile Include="Files\ArchiveFile.vb">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="ArchiveFileAllocationTable.vb" />
+    <Compile Include="Files\ArchiveFileAllocationTable.vb" />
     <Compile Include="DataParsedEventArgs.vb" />
     <Compile Include="DataParser.Designer.vb">
       <DependentUpon>DataParser.vb</DependentUpon>
@@ -71,7 +71,12 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Enumerations.vb" />
-    <Compile Include="IBinaryDataProvider.vb" />
+    <Compile Include="Files\MetadataFile.Designer.vb">
+      <DependentUpon>MetadataFile.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Files\MetadataFile.vb">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="IPointData.vb" />
     <Compile Include="Legacy Interfaces\Common.vb">
       <SubType>Code</SubType>
@@ -108,12 +113,6 @@
     <Compile Include="PointDefinitionComposedFields.vb" />
     <Compile Include="PointDefinitionConstantFields.vb" />
     <Compile Include="PointDefinitionDigitalFields.vb" />
-    <Compile Include="MetadataFile.Designer.vb">
-      <DependentUpon>MetadataFile.vb</DependentUpon>
-    </Compile>
-    <Compile Include="MetadataFile.vb">
-      <SubType>Component</SubType>
-    </Compile>
     <Compile Include="PointDefinitionGeneralFlags.vb" />
     <Compile Include="My Project\AssemblyInfo.vb" />
     <Compile Include="ExtendedPointData.vb" />
@@ -130,6 +129,12 @@
     <Compile Include="PointDataBase.vb" />
     <Compile Include="PointDefinition.vb" />
     <Compile Include="PointDefinitionSecurityFlags.vb" />
+    <Compile Include="Files\SequentialBinaryFileBase.Designer.vb">
+      <DependentUpon>SequentialBinaryFileBase.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Files\SequentialBinaryFileBase.vb">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="StandardPointData.vb" />
     <Compile Include="TimeTag.vb" />
   </ItemGroup>
@@ -147,10 +152,10 @@
     <EmbeddedResource Include="Embedded Resources\DataParser.bmp" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Embedded Resources\ArchiveFile.bmp" />
+    <EmbeddedResource Include="Embedded Resources\Files.ArchiveFile.bmp" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Embedded Resources\MetadataFile.bmp" />
+    <EmbeddedResource Include="Embedded Resources\Files.MetadataFile.bmp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Relationship Diagrams\File Diagram.cd" />

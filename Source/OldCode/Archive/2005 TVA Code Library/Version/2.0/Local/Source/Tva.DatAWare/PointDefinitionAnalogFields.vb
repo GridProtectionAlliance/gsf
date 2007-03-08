@@ -4,6 +4,7 @@ Imports System.Text
 Imports Tva.Text.Common
 
 Public Class PointDefinitionAnalogFields
+    Implements IBinaryDataProvider
 
     ' *******************************************************************************
     ' *                             Binary Info Structure                           *
@@ -40,7 +41,7 @@ Public Class PointDefinitionAnalogFields
 
 #Region " Public Code "
 
-    Public Const BinaryLength As Integer = 44
+    Public Const Size As Integer = 44
 
     Public Sub New(ByVal binaryInfo As Byte())
 
@@ -157,29 +158,10 @@ Public Class PointDefinitionAnalogFields
         End Set
     End Property
 
-    Public ReadOnly Property BinaryImage() As Byte()
-        Get
-            Dim image As Byte() = CreateArray(Of Byte)(BinaryLength)
-
-            Array.Copy(m_textEncoding.GetBytes(m_engineeringUnits.PadRight(8)), 0, image, 0, 8)
-            Array.Copy(BitConverter.GetBytes(m_highAlarm), 0, image, 8, 4)
-            Array.Copy(BitConverter.GetBytes(m_lowAlarm), 0, image, 12, 4)
-            Array.Copy(BitConverter.GetBytes(m_highRange), 0, image, 16, 4)
-            Array.Copy(BitConverter.GetBytes(m_lowRange), 0, image, 20, 4)
-            Array.Copy(BitConverter.GetBytes(m_highWarning), 0, image, 24, 4)
-            Array.Copy(BitConverter.GetBytes(m_lowWarning), 0, image, 28, 4)
-            Array.Copy(BitConverter.GetBytes(m_exceptionLimit), 0, image, 32, 4)
-            Array.Copy(BitConverter.GetBytes(m_compressionLimit), 0, image, 36, 4)
-            Array.Copy(BitConverter.GetBytes(m_displayedDigits), 0, image, 40, 4)
-
-            Return image
-        End Get
-    End Property
-
     Public Sub Update(ByVal binaryInfo As Byte())
 
         If binaryInfo IsNot Nothing Then
-            If binaryInfo.Length >= BinaryLength Then
+            If binaryInfo.Length >= Size Then
                 m_engineeringUnits = m_textEncoding.GetString(binaryInfo, 0, 8).Trim()
                 m_highAlarm = BitConverter.ToSingle(binaryInfo, 8)
                 m_lowAlarm = BitConverter.ToSingle(binaryInfo, 12)
@@ -198,6 +180,35 @@ Public Class PointDefinitionAnalogFields
         End If
 
     End Sub
+
+#Region " IBinaryDataProvider Implementation "
+
+    Public ReadOnly Property BinaryData() As Byte() Implements IBinaryDataProvider.BinaryData
+        Get
+            Dim image As Byte() = CreateArray(Of Byte)(Size)
+
+            Array.Copy(m_textEncoding.GetBytes(m_engineeringUnits.PadRight(8)), 0, image, 0, 8)
+            Array.Copy(BitConverter.GetBytes(m_highAlarm), 0, image, 8, 4)
+            Array.Copy(BitConverter.GetBytes(m_lowAlarm), 0, image, 12, 4)
+            Array.Copy(BitConverter.GetBytes(m_highRange), 0, image, 16, 4)
+            Array.Copy(BitConverter.GetBytes(m_lowRange), 0, image, 20, 4)
+            Array.Copy(BitConverter.GetBytes(m_highWarning), 0, image, 24, 4)
+            Array.Copy(BitConverter.GetBytes(m_lowWarning), 0, image, 28, 4)
+            Array.Copy(BitConverter.GetBytes(m_exceptionLimit), 0, image, 32, 4)
+            Array.Copy(BitConverter.GetBytes(m_compressionLimit), 0, image, 36, 4)
+            Array.Copy(BitConverter.GetBytes(m_displayedDigits), 0, image, 40, 4)
+
+            Return image
+        End Get
+    End Property
+
+    Public ReadOnly Property BinaryDataLength() As Integer Implements IBinaryDataProvider.BinaryDataLength
+        Get
+            Return Size
+        End Get
+    End Property
+
+#End Region
 
 #End Region
 

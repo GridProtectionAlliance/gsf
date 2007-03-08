@@ -1,3 +1,5 @@
+Imports Tva.DatAWare.Files
+
 Namespace Packets
 
     Public MustInherit Class PacketBase
