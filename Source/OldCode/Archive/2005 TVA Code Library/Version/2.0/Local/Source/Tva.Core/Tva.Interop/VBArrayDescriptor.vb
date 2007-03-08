@@ -3,6 +3,7 @@
 Namespace Interop
 
     Public Class VBArrayDescriptor
+        Implements IBinaryDataProvider
 
 #Region " Member Declaration "
 
@@ -25,28 +26,6 @@ Namespace Interop
             End If
 
         End Sub
-
-        Public ReadOnly Property BinaryLength() As Integer
-            Get
-                Return 2 + 8 * m_arrayDimensionDescriptors.Count
-            End Get
-        End Property
-
-        Public ReadOnly Property BinaryImage() As Byte()
-            Get
-                Dim image As Byte() = Tva.Common.CreateArray(Of Byte)(Me.BinaryLength)
-
-                Array.Copy(BitConverter.GetBytes(m_arrayDimensionDescriptors.Count), 0, image, 0, 2)
-                For i As Integer = 0 To m_arrayDimensionDescriptors.Count - 1
-                    Array.Copy(BitConverter.GetBytes(m_arrayDimensionDescriptors(i).Length), 0, image, _
-                        (i * DimensionDescriptor.BinaryLength) + 2, 4)
-                    Array.Copy(BitConverter.GetBytes(m_arrayDimensionDescriptors(i).LowerBound), 0, image, _
-                        (i * DimensionDescriptor.BinaryLength) + 6, 4)
-                Next
-
-                Return image
-            End Get
-        End Property
 
 #Region " Shared Code "
 
@@ -71,6 +50,32 @@ Namespace Interop
         Public Shared ReadOnly Property OneBasedTwoDimensionalArray(ByVal dimensionOneLength As Integer, ByVal dimensionTwoLength As Integer) As VBArrayDescriptor
             Get
                 Return New VBArrayDescriptor(New Integer() {dimensionOneLength, dimensionTwoLength}, New Integer() {1, 1})
+            End Get
+        End Property
+
+#End Region
+
+#Region " IBinaryDataProvider Implementation "
+
+        Public ReadOnly Property BinaryData() As Byte() Implements IBinaryDataProvider.BinaryData
+            Get
+                Dim image As Byte() = Tva.Common.CreateArray(Of Byte)(Me.BinaryDataLength)
+
+                Array.Copy(BitConverter.GetBytes(m_arrayDimensionDescriptors.Count), 0, image, 0, 2)
+                For i As Integer = 0 To m_arrayDimensionDescriptors.Count - 1
+                    Array.Copy(BitConverter.GetBytes(m_arrayDimensionDescriptors(i).Length), 0, image, _
+                        (i * DimensionDescriptor.BinaryLength) + 2, 4)
+                    Array.Copy(BitConverter.GetBytes(m_arrayDimensionDescriptors(i).LowerBound), 0, image, _
+                        (i * DimensionDescriptor.BinaryLength) + 6, 4)
+                Next
+
+                Return image
+            End Get
+        End Property
+
+        Public ReadOnly Property BinaryDataLength() As Integer Implements IBinaryDataProvider.BinaryDataLength
+            Get
+                Return 2 + 8 * m_arrayDimensionDescriptors.Count
             End Get
         End Property
 
