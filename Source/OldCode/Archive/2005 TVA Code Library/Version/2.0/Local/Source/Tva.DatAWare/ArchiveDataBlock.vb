@@ -39,19 +39,19 @@ Public Class ArchiveDataBlock
 
     Public ReadOnly Property Capacity() As Integer
         Get
-            Return (m_size * 1024) \ StandardPointData.BinaryLength
+            Return (m_size * 1024) \ StandardPointData.Size
         End Get
     End Property
 
     Public ReadOnly Property SlotsUsed() As Integer
         Get
-            Return Convert.ToInt32((m_writeCursor - m_location) \ StandardPointData.BinaryLength)
+            Return Convert.ToInt32((m_writeCursor - m_location) \ StandardPointData.Size)
         End Get
     End Property
 
     Public ReadOnly Property SlotsAvailable() As Integer
         Get
-            Return Me.Capacity - Me.SlotsUsed
+            Return Capacity - SlotsUsed
         End Get
     End Property
 
@@ -62,8 +62,8 @@ Public Class ArchiveDataBlock
         ' We'll start reading from where the data block begins.
         m_fileStream.Seek(m_location, SeekOrigin.Begin)
 
-        Dim binaryImage As Byte() = CreateArray(Of Byte)(StandardPointData.BinaryLength)
-        For i As Integer = 1 To Me.Capacity
+        Dim binaryImage As Byte() = CreateArray(Of Byte)(StandardPointData.Size)
+        For i As Integer = 1 To Capacity
             ' Read the binary data from the file and create StandardPointData instance form it.
             m_fileStream.Read(binaryImage, 0, binaryImage.Length)
             Dim pointData As New StandardPointData(binaryImage)
@@ -83,11 +83,11 @@ Public Class ArchiveDataBlock
 
     Public Sub Write(ByVal pointData As StandardPointData)
 
-        If Me.SlotsAvailable > 0 Then
+        If SlotsAvailable > 0 Then
             ' We have enough space to write the provided point data to the data block.
             'm_fileStream.Seek(m_writeCursor - m_fileStream.Position, SeekOrigin.Current)   ' This is slower than
             m_fileStream.Seek(m_writeCursor, SeekOrigin.Begin)                              ' <--------------This
-            m_fileStream.Write(pointData.BinaryImage, 0, StandardPointData.BinaryLength)
+            m_fileStream.Write(pointData.BinaryData, 0, StandardPointData.Size)
             m_writeCursor = m_fileStream.Position   ' Update the write cursor.
         Else
             Throw New InvalidOperationException("No slots available for writing new data.")

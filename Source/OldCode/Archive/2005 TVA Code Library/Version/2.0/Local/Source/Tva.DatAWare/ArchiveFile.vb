@@ -139,7 +139,7 @@ Public Class ArchiveFile
 
     Public Sub Open()
 
-        If Not Me.IsOpen Then
+        If Not IsOpen Then
             RaiseEvent FileOpening(Me, EventArgs.Empty)
 
             m_name = AbsolutePath(m_name)
@@ -162,7 +162,7 @@ Public Class ArchiveFile
 
     Public Sub Close()
 
-        If Me.IsOpen Then
+        If IsOpen Then
             RaiseEvent FileClosing(Me, EventArgs.Empty)
 
             If m_saveOnClose Then Save()
@@ -182,7 +182,7 @@ Public Class ArchiveFile
 
     Public Sub Save()
 
-        If Me.IsOpen Then
+        If IsOpen Then
             ' The only thing that we need to write back to the file is the FAT.
             m_fat.Persist()
         Else
@@ -224,7 +224,7 @@ Public Class ArchiveFile
 
     Public Function Read(ByVal pointIndex As Integer, ByVal startTime As TimeTag, ByVal endTime As TimeTag) As List(Of StandardPointData)
 
-        If Me.IsOpen Then
+        If IsOpen Then
             Dim data As New List(Of StandardPointData)()
             Dim foundBlocks As List(Of ArchiveDataBlock) = m_fat.FindDataBlocks(pointIndex, startTime, endTime)
             For i As Integer = 0 To foundBlocks.Count - 1
@@ -240,7 +240,7 @@ Public Class ArchiveFile
 
     Public Sub Write(ByVal pointData As StandardPointData)
 
-        If Me.IsOpen Then
+        If IsOpen Then
             If pointData.Definition IsNot Nothing Then
                 m_fat.EventsReceived += 1
 

@@ -4,6 +4,7 @@ Imports System.IO
 Imports Tva.Interop
 
 Public Class ArchiveFileAllocationTable
+    Implements IBinaryDataProvider
 
     ' *******************************************************
     ' *                     FAT structure                   *
@@ -58,10 +59,10 @@ Public Class ArchiveFileAllocationTable
             m_dataBlockSize = BitConverter.ToInt32(fixedFatData, 24)
             m_dataBlockCount = BitConverter.ToInt32(fixedFatData, 28)
 
-            Dim variableFatData As Byte() = CreateArray(Of Byte)(m_dataBlockCount * ArchiveDataBlockPointer.BinaryLength)
+            Dim variableFatData As Byte() = CreateArray(Of Byte)(m_dataBlockCount * ArchiveDataBlockPointer.Size)
             m_fileStream.Seek(-(variableFatData.Length + MinimumBinaryLength), SeekOrigin.End)
             m_fileStream.Read(variableFatData, 0, variableFatData.Length)
-            For i As Integer = 0 To variableFatData.Length - 1 Step ArchiveDataBlockPointer.BinaryLength
+            For i As Integer = 0 To variableFatData.Length - 1 Step ArchiveDataBlockPointer.Size
                 m_dataBlockPointers.Add(New ArchiveDataBlockPointer(variableFatData, i))
             Next
         Else
@@ -160,7 +161,7 @@ Public Class ArchiveFileAllocationTable
         '    ' New file...
         '    m_fileStream.Seek(m_dataBlockCount * (m_dataBlockSize * 1024L), SeekOrigin.Begin)
         'End If
-        m_fileStream.Write(BinaryImage, 0, BinaryLength)
+        m_fileStream.Write(BinaryData, 0, BinaryDataLength)
         m_fileStream.Flush()
 
     End Sub
@@ -226,29 +227,20 @@ Public Class ArchiveFileAllocationTable
 
     End Function
 
-#End Region
+#Region " IBinaryDataProvider Implementation "
 
-#Region " Private Code "
-
-    Private ReadOnly Property BinaryLength() As Integer
+    Public ReadOnly Property BinaryData() As Byte() Implements IBinaryDataProvider.BinaryData
         Get
-            ' We add 10 bytes for the array descriptor that required for reading the file from VB.
-            Return (10 + (m_dataBlockCount * ArchiveDataBlockPointer.BinaryLength) + MinimumBinaryLength)
-        End Get
-    End Property
-
-    Private ReadOnly Property BinaryImage() As Byte()
-        Get
-            Dim image As Byte() = CreateArray(Of Byte)(BinaryLength)
+            Dim image As Byte() = CreateArray(Of Byte)(BinaryDataLength)
             Dim arrayDescriptor As VBArrayDescriptor = VBArrayDescriptor.OneBasedOneDimensionalArray(m_dataBlockCount)
 
-            Array.Copy(arrayDescriptor.BinaryImage, 0, image, 0, arrayDescriptor.BinaryLength)
+            Array.Copy(arrayDescriptor.BinaryData, 0, image, 0, arrayDescriptor.BinaryDataLength)
             For i As Integer = 0 To m_dataBlockPointers.Count - 1
-                Array.Copy(m_dataBlockPointers(i).BinaryImage, 0, image, _
-                    (i * ArchiveDataBlockPointer.BinaryLength) + arrayDescriptor.BinaryLength, ArchiveDataBlockPointer.BinaryLength)
+                Array.Copy(m_dataBlockPointers(i).BinaryData, 0, image, _
+                    (i * ArchiveDataBlockPointer.Size) + arrayDescriptor.BinaryDataLength, ArchiveDataBlockPointer.Size)
             Next
 
-            Dim pointersBinaryLength As Integer = BinaryLength - MinimumBinaryLength
+            Dim pointersBinaryLength As Integer = BinaryDataLength - MinimumBinaryLength
             Array.Copy(BitConverter.GetBytes(m_fileStartTime.Value), 0, image, pointersBinaryLength, 8)
             Array.Copy(BitConverter.GetBytes(m_fileEndTime.Value), 0, image, pointersBinaryLength + 8, 8)
             Array.Copy(BitConverter.GetBytes(m_eventsReceived), 0, image, pointersBinaryLength + 16, 4)
@@ -259,6 +251,19 @@ Public Class ArchiveFileAllocationTable
             Return image
         End Get
     End Property
+
+    Public ReadOnly Property BinaryDataLength() As Integer Implements IBinaryDataProvider.BinaryDataLength
+        Get
+            ' We add 10 bytes for the array descriptor that required for reading the file from VB.
+            Return (10 + (m_dataBlockCount * ArchiveDataBlockPointer.Size) + MinimumBinaryLength)
+        End Get
+    End Property
+
+#End Region
+    
+#End Region
+
+#Region " Private Code "
 
     Private Function GetDataBlock(ByVal blockPointer As ArchiveDataBlockPointer) As ArchiveDataBlock
 

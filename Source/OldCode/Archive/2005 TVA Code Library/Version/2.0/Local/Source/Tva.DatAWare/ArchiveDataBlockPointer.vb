@@ -1,7 +1,7 @@
 ' 02/18/2007
 
 Public Class ArchiveDataBlockPointer
-    Implements IComparable
+    Implements IComparable, IBinaryDataProvider
 
 #Region " Member Declaration "
 
@@ -12,7 +12,7 @@ Public Class ArchiveDataBlockPointer
 
 #Region " Public Code "
 
-    Public Const BinaryLength As Integer = 12
+    Public Const Size As Integer = 12
 
     Public Sub New()
 
@@ -30,7 +30,7 @@ Public Class ArchiveDataBlockPointer
     Public Sub New(ByVal binaryImage As Byte(), ByVal startIndex As Integer)
 
         If binaryImage IsNot Nothing Then
-            If binaryImage.Length - startIndex >= BinaryLength Then
+            If binaryImage.Length - startIndex >= Size Then
                 m_pointIndex = BitConverter.ToInt32(binaryImage, startIndex)
                 m_startTime = New TimeTag(BitConverter.ToDouble(binaryImage, startIndex + 4))
             Else
@@ -60,20 +60,9 @@ Public Class ArchiveDataBlockPointer
         End Set
     End Property
 
-    Public ReadOnly Property BinaryImage() As Byte()
-        Get
-            Dim image As Byte() = CreateArray(Of Byte)(BinaryLength)
-
-            Array.Copy(BitConverter.GetBytes(m_pointIndex), 0, image, 0, 4)
-            Array.Copy(BitConverter.GetBytes(m_startTime.Value), 0, image, 4, 8)
-
-            Return image
-        End Get
-    End Property
-
     Public Overrides Function Equals(ByVal obj As Object) As Boolean
 
-        Return Me.CompareTo(obj) = 0
+        Return CompareTo(obj) = 0
 
     End Function
 
@@ -90,6 +79,27 @@ Public Class ArchiveDataBlockPointer
         End If
 
     End Function
+
+#End Region
+
+#Region " IBinaryDataProvider Implementation "
+
+    Public ReadOnly Property BinaryData() As Byte() Implements IBinaryDataProvider.BinaryData
+        Get
+            Dim image As Byte() = CreateArray(Of Byte)(Size)
+
+            Array.Copy(BitConverter.GetBytes(m_pointIndex), 0, image, 0, 4)
+            Array.Copy(BitConverter.GetBytes(m_startTime.Value), 0, image, 4, 8)
+
+            Return image
+        End Get
+    End Property
+
+    Public ReadOnly Property BinaryDataLength() As Integer Implements IBinaryDataProvider.BinaryDataLength
+        Get
+            Return Size
+        End Get
+    End Property
 
 #End Region
 
