@@ -94,6 +94,7 @@
     <Compile Include="Tva\DataEventArgs.vb" />
     <Compile Include="Tva\ExceptionEventArgs.vb" />
     <Compile Include="Tva\GenericEventArgs.vb" />
+    <Compile Include="Tva\IBinaryDataProvider.vb" />
     <Compile Include="Tva\IdentifiableSourceEventArgs.vb" />
     <Compile Include="Tva.Collections\Enumerations.vb" />
     <Compile Include="Tva.Configuration\Common.vb" />
