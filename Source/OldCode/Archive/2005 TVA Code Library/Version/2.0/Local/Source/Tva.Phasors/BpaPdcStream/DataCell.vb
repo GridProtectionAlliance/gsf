@@ -335,12 +335,12 @@ Namespace BpaPdcStream
             m_flags = binaryImage(startIndex)
 
             ' Strip off IEEE flags
-            m_reservedFlags = (analogs And Not ReservedFlags.AnalogWordsMask)
-            IEEEFormatFlags = (digitals And Not IEEEFormatFlags.DigitalWordsMask)
+            m_reservedFlags = (analogs And ReservedFlags.AnalogWordsMask)
+            IEEEFormatFlags = (digitals And IEEEFormatFlags.DigitalWordsMask)
 
             ' Leave word counts
-            analogs = (analogs And ReservedFlags.AnalogWordsMask)
-            digitals = (digitals And IEEEFormatFlags.DigitalWordsMask)
+            analogs = (analogs And Not ReservedFlags.AnalogWordsMask)
+            digitals = (digitals And Not IEEEFormatFlags.DigitalWordsMask)
 
             ' Algorithm Case: Determine best course of action when stream counts don't match
             ' configuration file.  Think about what *will* happen when new data appears in

@@ -419,6 +419,15 @@ Namespace BpaPdcStream
 
         End Function
 
+        Protected Overrides Function ChecksumIsValid(ByVal buffer() As Byte, ByVal startIndex As Integer) As Boolean
+
+            Dim sumLength As Int16 = BinaryLength - 2
+
+            'Return EndianOrder.BigEndian.ToUInt16(buffer, startIndex + sumLength) = CalculateChecksum(buffer, startIndex, sumLength)
+            Return BitConverter.ToUInt16(buffer, startIndex + sumLength) = CalculateChecksum(buffer, startIndex, sumLength)
+
+        End Function
+
         Protected Overrides ReadOnly Property HeaderLength() As UInt16
             Get
                 Return 16

@@ -25,7 +25,8 @@ Namespace BpaPdcStream
 
         Inherits FrequencyDefinitionBase
 
-        Public Dummy As Int32
+        Private m_dummy As Int32
+        Private m_frequencyOffset As Single
 
         Protected Sub New()
         End Sub
@@ -56,12 +57,15 @@ Namespace BpaPdcStream
             End If
 
             ' First entry is an F - we just ignore this
-            If entry.Length > 1 Then ScalingFactor = Convert.ToInt32(Trim(entry(1))) Else ScalingFactor = defaultFrequency.ScalingFactor
-            If entry.Length > 2 Then Offset = Convert.ToSingle(Trim(entry(2))) Else Offset = defaultFrequency.Offset
-            If entry.Length > 3 Then DfDtScalingFactor = Convert.ToInt32(Trim(entry(3))) Else DfDtScalingFactor = defaultFrequency.DfDtScalingFactor
-            If entry.Length > 4 Then DfDtOffset = Convert.ToSingle(Trim(entry(4))) Else DfDtOffset = defaultFrequency.DfDtOffset
-            If entry.Length > 5 Then Dummy = Convert.ToInt32(Trim(entry(5))) Else Dummy = defaultFrequency.Dummy
+            If entry.Length > 1 Then ScalingFactor = CInt(Trim(entry(1))) Else ScalingFactor = defaultFrequency.ScalingFactor
+            If entry.Length > 2 Then m_frequencyOffset = CSng(Trim(entry(2))) Else m_frequencyOffset = defaultFrequency.Offset
+            If entry.Length > 3 Then DfDtScalingFactor = CInt(Trim(entry(3))) Else DfDtScalingFactor = defaultFrequency.DfDtScalingFactor
+            If entry.Length > 4 Then DfDtOffset = CSng(Trim(entry(4))) Else DfDtOffset = defaultFrequency.DfDtOffset
+            If entry.Length > 5 Then m_dummy = CInt(Trim(entry(5))) Else m_dummy = defaultFrequency.m_dummy
             If entry.Length > 6 Then Label = Trim(entry(6)) Else Label = defaultFrequency.Label
+
+            ' Frequency offset is stored as nominal frequency of parent cell
+            If parent IsNot Nothing Then parent.NominalFrequency = CType(CByte(m_frequencyOffset), LineFrequency)
 
         End Sub
 
@@ -91,12 +95,25 @@ Namespace BpaPdcStream
                         frequency.Offset & "," & _
                         frequency.DfDtScalingFactor & "," & _
                         frequency.DfDtOffset & "," & _
-                        frequency.Dummy & "," & _
+                        frequency.m_dummy & "," & _
                         frequency.Label)
 
                     Return .ToString()
                 End With
             End Get
+        End Property
+
+        Public Overrides Property Offset() As Single
+            Get
+                If Parent Is Nothing Then
+                    Return m_frequencyOffset
+                Else
+                    Return MyBase.Offset
+                End If
+            End Get
+            Set(ByVal value As Single)
+                MyBase.Offset = value
+            End Set
         End Property
 
         Public Overrides ReadOnly Property MaximumLabelLength() As Int32

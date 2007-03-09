@@ -275,9 +275,9 @@ Namespace BpaPdcStream
                         timestamp = (New DateTime.UnixTimeTag(secondOfCentury)).ToDateTime()
                     Else
                         If configurationFrame.RevisionNumber = RevisionNumber.Revision0 Then
-                            timestamp = (New DateTime.UnixTimeTag(secondOfCentury)).ToDateTime()
-                        Else
                             timestamp = (New DateTime.NtpTimeTag(secondOfCentury)).ToDateTime()
+                        Else
+                            timestamp = (New DateTime.UnixTimeTag(secondOfCentury)).ToDateTime()
                         End If
                     End If
 

@@ -176,6 +176,24 @@ Namespace BpaPdcStream
         ' other metadata is defined in an external INI based configuration file - so we
         ' override the base class image implementations which attempt to generate and
         ' parse data based on a common nature of configuration frames
+        Protected Overrides ReadOnly Property HeaderLength() As UShort
+            Get
+                Return 0
+            End Get
+        End Property
+
+        Protected Overrides ReadOnly Property HeaderImage() As Byte()
+            Get
+                Return Nothing
+            End Get
+        End Property
+
+        Protected Overrides Sub ParseHeaderImage(ByVal state As IChannelParsingState, ByVal binaryImage() As Byte, ByVal startIndex As Integer)
+
+            ' BPA PDC stream doesn't use standard configuration cell header like IEEE do - so we override this function to do nothing
+
+        End Sub
+
         Protected Overrides ReadOnly Property BodyLength() As UInt16
             Get
                 Return 8
@@ -200,6 +218,24 @@ Namespace BpaPdcStream
             IDLabel = Encoding.ASCII.GetString(binaryImage, startIndex, 4)
             Reserved = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 4)
             Offset = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 6)
+
+        End Sub
+
+        Protected Overrides ReadOnly Property FooterLength() As UShort
+            Get
+                Return 0
+            End Get
+        End Property
+
+        Protected Overrides ReadOnly Property FooterImage() As Byte()
+            Get
+                Return Nothing
+            End Get
+        End Property
+
+        Protected Overrides Sub ParseFooterImage(ByVal state As IChannelParsingState, ByVal binaryImage() As Byte, ByVal startIndex As Integer)
+
+            ' BPA PDC stream doesn't use standard configuration cell footer like IEEE do - so we override this function to do nothing
 
         End Sub
 

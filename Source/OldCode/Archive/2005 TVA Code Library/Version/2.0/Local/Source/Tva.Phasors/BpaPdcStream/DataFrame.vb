@@ -164,6 +164,15 @@ Namespace BpaPdcStream
 
         End Function
 
+        Protected Overrides Function ChecksumIsValid(ByVal buffer() As Byte, ByVal startIndex As Integer) As Boolean
+
+            Dim sumLength As Int16 = BinaryLength - 2
+
+            'Return EndianOrder.BigEndian.ToUInt16(buffer, startIndex + sumLength) = CalculateChecksum(buffer, startIndex, sumLength)
+            Return BitConverter.ToUInt16(buffer, startIndex + sumLength) = CalculateChecksum(buffer, startIndex, sumLength)
+
+        End Function
+
         Protected Overrides ReadOnly Property HeaderLength() As UInt16
             Get
                 If ConfigurationFrame.StreamType = StreamType.Legacy Then
@@ -221,11 +230,15 @@ Namespace BpaPdcStream
             dataCellCount = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 10)
 
             If dataCellCount <> configurationFrame.Cells.Count Then
-                Throw New InvalidOperationException("Stream/Config File Mismatch: PMU count (" & dataCellCount & ") in stream does not match defined count in configuration file:" & configurationFrame.Cells.Count)
+                Throw New InvalidOperationException("Stream/Config File Mismatch: PMU count (" & dataCellCount & ") in stream does not match defined count in configuration file (" & configurationFrame.Cells.Count & ")")
             End If
 
             ' Add "milliseconds" to current timestamp
             Ticks = Timestamp.AddMilliseconds(m_sampleNumber / configurationFrame.FrameRate * 1000).Ticks
+
+            ' Note: because "HeaderLength" needs configuration frame and is called before associated configuration frame
+            ' assignment normally occurs - we assign configuration frame in advance...
+            Me.ConfigurationFrame = configurationFrame
 
             ' We don't need PMU info in data frame from a parsing perspective, even if available in legacy stream - so we're done...
 
