@@ -1,14 +1,16 @@
 Namespace Files
 
-    Partial Class ArchiveFile
-        Inherits System.ComponentModel.Component
+    Partial Class IntercomFile
+        Inherits SequentialBinaryFileBase(Of EnvironmentData)
 
         <System.Diagnostics.DebuggerNonUserCode()> _
-        Public Sub New(ByVal Container As System.ComponentModel.IContainer)
+        Public Sub New(ByVal container As System.ComponentModel.IContainer)
             MyClass.New()
 
             'Required for Windows.Forms Class Composition Designer support
-            Container.Add(Me)
+            If (container IsNot Nothing) Then
+                container.Add(Me)
+            End If
 
         End Sub
 
@@ -19,20 +21,13 @@ Namespace Files
             'This call is required by the Component Designer.
             InitializeComponent()
 
-            m_name = Me.GetType().Name & Extension
-            m_size = 650D
-            m_blockSize = 8
-            m_saveOnClose = True
-            m_rolloverOnFull = True
-            m_rolloverPreparationThreshold = 50
-            m_rolloverPreparationThread = New System.Threading.Thread(AddressOf PrepareForRollover)
+            MyBase.InitialRecordCount = 1
 
         End Sub
 
         'Component overrides dispose to clean up the component list.
         <System.Diagnostics.DebuggerNonUserCode()> _
         Protected Overrides Sub Dispose(ByVal disposing As Boolean)
-            Close() ' Close the file.
             Try
                 If disposing AndAlso components IsNot Nothing Then
                     components.Dispose()

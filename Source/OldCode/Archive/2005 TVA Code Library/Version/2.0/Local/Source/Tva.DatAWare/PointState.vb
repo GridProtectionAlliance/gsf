@@ -50,6 +50,28 @@ Public Class PointState
 
     End Sub
 
+    Public Sub New(ByVal id As Integer, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+
+        MyClass.New(id)
+
+        If binaryImage IsNot Nothing Then
+            If binaryImage.Length - startIndex >= Size Then
+                m_lastArchivedValue = New ExtendedPointData(binaryImage, 0)
+                m_previousValue = New ExtendedPointData(binaryImage, 16)
+                m_currentValue = New ExtendedPointData(binaryImage, 32)
+                m_activeDataBlockIndex = BitConverter.ToInt32(binaryImage, 48)
+                m_activeDataBlockSlotNumber = BitConverter.ToInt32(binaryImage, 52)
+                m_slope1 = BitConverter.ToDouble(binaryImage, 56)
+                m_slope2 = BitConverter.ToDouble(binaryImage, 64)
+            Else
+                Throw New ArgumentException("Binary image size from startIndex is too small.")
+            End If
+        Else
+            Throw New ArgumentNullException("binaryImage")
+        End If
+
+    End Sub
+
     Public Property LastArchivedValue() As ExtendedPointData
         Get
             Return m_lastArchivedValue
@@ -114,28 +136,6 @@ Public Class PointState
             m_slope2 = value
         End Set
     End Property
-
-    Public Sub New(ByVal id As Integer, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
-
-        MyClass.New(id)
-
-        If binaryImage IsNot Nothing Then
-            If binaryImage.Length - startIndex >= Size Then
-                m_lastArchivedValue = New ExtendedPointData(binaryImage, 0)
-                m_previousValue = New ExtendedPointData(binaryImage, 16)
-                m_currentValue = New ExtendedPointData(binaryImage, 32)
-                m_activeDataBlockIndex = BitConverter.ToInt32(binaryImage, 48)
-                m_activeDataBlockSlotNumber = BitConverter.ToInt32(binaryImage, 52)
-                m_slope1 = BitConverter.ToDouble(binaryImage, 56)
-                m_slope2 = BitConverter.ToDouble(binaryImage, 64)
-            Else
-                Throw New ArgumentException("Binary image size from startIndex is too small.")
-            End If
-        Else
-            Throw New ArgumentNullException("binaryImage")
-        End If
-
-    End Sub
 
 #End Region
 

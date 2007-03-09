@@ -9,7 +9,7 @@ Imports Tva.IO.FilePath
 Namespace Files
 
     <ToolboxBitmap(GetType(ArchiveFile))> _
-Public Class ArchiveFile
+    Public Class ArchiveFile
 
 #Region " Member Declaration "
 
@@ -19,6 +19,8 @@ Public Class ArchiveFile
         Private m_saveOnClose As Boolean
         Private m_rolloverOnFull As Boolean
         Private m_rolloverPreparationThreshold As Short
+        Private m_stateFile As StateFile
+        Private m_intercomFile As IntercomFile
         Private m_fat As ArchiveFileAllocationTable
         Private m_fileStream As FileStream
         Private m_activeDataBlocks As Dictionary(Of Integer, ArchiveDataBlock)
@@ -125,6 +127,24 @@ Public Class ArchiveFile
             End Set
         End Property
 
+        Public Property StateFile() As StateFile
+            Get
+                Return m_stateFile
+            End Get
+            Set(ByVal value As StateFile)
+                m_stateFile = value
+            End Set
+        End Property
+
+        Public Property IntercomFile() As IntercomFile
+            Get
+                Return m_intercomFile
+            End Get
+            Set(ByVal value As IntercomFile)
+                m_intercomFile = value
+            End Set
+        End Property
+
         <Browsable(False)> _
         Public ReadOnly Property IsOpen() As Boolean
             Get
@@ -202,6 +222,7 @@ Public Class ArchiveFile
                 Dim historyFile As String = GetHistoryArchiveFileName()
 
                 Close()
+                WaitForWriteLock(m_name)    ' We must wait for the server to release the file.
                 File.Move(m_name, historyFile)
                 File.Move(standbyFile, m_name)
                 Open()

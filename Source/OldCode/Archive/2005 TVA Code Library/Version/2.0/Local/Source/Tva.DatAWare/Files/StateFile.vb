@@ -7,6 +7,12 @@ Namespace Files
     <ToolboxBitmap(GetType(StateFile))> _
     Public Class StateFile
 
+        Public Overrides ReadOnly Property RecordSize() As Integer
+            Get
+                Return PointState.Size
+            End Get
+        End Property
+
         Public Overloads Overrides Function NewRecord(ByVal id As Integer) As PointState
 
             Return New PointState(id)
@@ -18,12 +24,6 @@ Namespace Files
             Return New PointState(id, binaryImage)
 
         End Function
-
-        Public Overrides ReadOnly Property RecordSize() As Integer
-            Get
-                Return PointState.Size
-            End Get
-        End Property
 
     End Class
 
