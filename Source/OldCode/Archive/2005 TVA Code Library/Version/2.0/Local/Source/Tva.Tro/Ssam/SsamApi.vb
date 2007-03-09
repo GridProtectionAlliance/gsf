@@ -240,24 +240,27 @@ Namespace Ssam
 
             CheckDisposed()
 
-            Try
-                If Me.ConnectionState = SsamConnectionState.Closed Then Connect()
-                m_connectionState = SsamConnectionState.OpenAndActive
+            If Not String.IsNullOrEmpty(newEvent.EntityId) Then
+                ' We have a valid SSAM entity ID, so we'll go ahead and log the event.
+                Try
+                    If Me.ConnectionState = SsamConnectionState.Closed Then Connect()
+                    m_connectionState = SsamConnectionState.OpenAndActive
 
-                ' Log the event to SSAM.
-                ExecuteScalar("sp_LogSsamEvent", m_connection, _
-                    New Object() {newEvent.EventType(), newEvent.EntityType(), newEvent.EntityId(), newEvent.ErrorNumber(), newEvent.Message(), newEvent.Description()})
+                    ' Log the event to SSAM.
+                    ExecuteScalar("sp_LogSsamEvent", m_connection, _
+                        New Object() {newEvent.EventType(), newEvent.EntityType(), newEvent.EntityId(), newEvent.ErrorNumber(), newEvent.Message(), newEvent.Description()})
 
-                m_connectionState = SsamConnectionState.OpenAndInactive
-                Return True
-            Catch ex As Exception
-                Throw
-            Finally
-                If Not m_keepConnectionOpen Then
-                    ' Connection with SSAM is not to be kept open after logging an event, so close it.
-                    Disconnect()
-                End If
-            End Try
+                    m_connectionState = SsamConnectionState.OpenAndInactive
+                    Return True
+                Catch ex As Exception
+                    Throw
+                Finally
+                    If Not m_keepConnectionOpen Then
+                        ' Connection with SSAM is not to be kept open after logging an event, so close it.
+                        Disconnect()
+                    End If
+                End Try
+            End If
 
         End Function
 
