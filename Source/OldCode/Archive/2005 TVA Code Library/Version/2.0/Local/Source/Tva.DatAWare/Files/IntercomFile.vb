@@ -1,7 +1,10 @@
 ' 03/09/2007
 
+Imports System.Drawing
+
 Namespace Files
 
+    <ToolboxBitmap(GetType(IntercomFile))> _
     Public Class IntercomFile
 
         Public Overrides ReadOnly Property RecordSize() As Integer

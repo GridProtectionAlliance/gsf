@@ -1,14 +1,26 @@
 Public Class EnvironmentData
     Implements IBinaryDataProvider
 
-    Private m_id As Integer
-    Private m_blockMap As Integer           ' 0     4-Bytes
-    Private m_fileWrap As Integer           ' 4     4-Bytes
-    Private m_lastCVTTimeTag As Double      ' 8     8-Bytes
-    Private m_lastCVTIndex As Integer       ' 16    4-Bytes
-    Private m_sourceIDs As List(Of Double)  ' 20    160-Bytes
+    ' *******************************************************************************
+    ' *                         Environment Data Structure                          *
+    ' *******************************************************************************
+    ' * # Of Bytes  Byte Index  Data Type   Description                             *
+    ' * ----------  ----------  ----------  ----------------------------------------*
+    ' * 4           0-3         Int32       m_blockMap                              *
+    ' * 4           4-7         Boolean     m_fileWrap                              *
+    ' * 8           8-15        Double      m_lastCVTTimeTag                        *
+    ' * 4           16-19       Int32       m_lastCVTIndex                          *
+    ' * 160         20-179      Double(20)  m_sourceIDs                             *
+    ' *******************************************************************************
 
-    Public Const Size As Integer = 20
+    Private m_id As Integer
+    Private m_blockMap As Integer
+    Private m_fileWrap As Boolean
+    Private m_lastCVTTimeTag As Double
+    Private m_lastCVTIndex As Integer
+    Private m_sourceIDs As List(Of Double)
+
+    Public Const Size As Integer = 180
 
     Public Sub New(ByVal id As Integer)
 
@@ -30,7 +42,13 @@ Public Class EnvironmentData
 
         If binaryImage IsNot Nothing Then
             If binaryImage.Length - startIndex >= Size Then
-
+                m_blockMap = BitConverter.ToInt32(binaryImage, 0)
+                m_fileWrap = BitConverter.ToBoolean(binaryImage, 4)
+                m_lastCVTTimeTag = BitConverter.ToDouble(binaryImage, 8)
+                m_lastCVTIndex = BitConverter.ToInt32(binaryImage, 16)
+                For i As Integer = 0 To m_sourceIDs.Capacity - 1
+                    m_sourceIDs.Add(BitConverter.ToDouble(binaryImage, (20 + (i * 8))))
+                Next
             Else
                 Throw New ArgumentException("Binary image size from startIndex is too small.")
             End If
