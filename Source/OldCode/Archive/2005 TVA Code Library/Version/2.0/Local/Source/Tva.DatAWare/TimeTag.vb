@@ -35,9 +35,9 @@ Public Class TimeTag
 
     End Sub
 
-    Public Shared ReadOnly MinValue As TimeTag = New TimeTag(0D)
+    Public Shared ReadOnly MinValue As TimeTag = New TimeTag(0.0R)
 
-    Public Shared ReadOnly MaxValue As TimeTag = New TimeTag(2147483647.999)
+    Public Shared ReadOnly MaxValue As TimeTag = New TimeTag(2147483647.999R)
 
     ''' <summary>Creates new DatAWare timetag given number of seconds since 1/1/1995</summary>
     ''' <param name="seconds">Number of seconds since 1/1/1995</param>
