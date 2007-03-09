@@ -185,20 +185,20 @@ Public Class PointDefinitionAnalogFields
 
     Public ReadOnly Property BinaryData() As Byte() Implements IBinaryDataProvider.BinaryData
         Get
-            Dim image As Byte() = CreateArray(Of Byte)(Size)
+            Dim data As Byte() = CreateArray(Of Byte)(Size)
 
-            Array.Copy(m_textEncoding.GetBytes(m_engineeringUnits.PadRight(8)), 0, image, 0, 8)
-            Array.Copy(BitConverter.GetBytes(m_highAlarm), 0, image, 8, 4)
-            Array.Copy(BitConverter.GetBytes(m_lowAlarm), 0, image, 12, 4)
-            Array.Copy(BitConverter.GetBytes(m_highRange), 0, image, 16, 4)
-            Array.Copy(BitConverter.GetBytes(m_lowRange), 0, image, 20, 4)
-            Array.Copy(BitConverter.GetBytes(m_highWarning), 0, image, 24, 4)
-            Array.Copy(BitConverter.GetBytes(m_lowWarning), 0, image, 28, 4)
-            Array.Copy(BitConverter.GetBytes(m_exceptionLimit), 0, image, 32, 4)
-            Array.Copy(BitConverter.GetBytes(m_compressionLimit), 0, image, 36, 4)
-            Array.Copy(BitConverter.GetBytes(m_displayedDigits), 0, image, 40, 4)
+            Array.Copy(m_textEncoding.GetBytes(m_engineeringUnits.PadRight(8)), 0, data, 0, 8)
+            Array.Copy(BitConverter.GetBytes(m_highAlarm), 0, data, 8, 4)
+            Array.Copy(BitConverter.GetBytes(m_lowAlarm), 0, data, 12, 4)
+            Array.Copy(BitConverter.GetBytes(m_highRange), 0, data, 16, 4)
+            Array.Copy(BitConverter.GetBytes(m_lowRange), 0, data, 20, 4)
+            Array.Copy(BitConverter.GetBytes(m_highWarning), 0, data, 24, 4)
+            Array.Copy(BitConverter.GetBytes(m_lowWarning), 0, data, 28, 4)
+            Array.Copy(BitConverter.GetBytes(m_exceptionLimit), 0, data, 32, 4)
+            Array.Copy(BitConverter.GetBytes(m_compressionLimit), 0, data, 36, 4)
+            Array.Copy(BitConverter.GetBytes(m_displayedDigits), 0, data, 40, 4)
 
-            Return image
+            Return data
         End Get
     End Property
 

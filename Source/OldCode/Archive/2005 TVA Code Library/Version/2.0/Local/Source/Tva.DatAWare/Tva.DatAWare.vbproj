@@ -77,6 +77,12 @@
     <Compile Include="Files\MetadataFile.vb">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="Files\StateFile.Designer.vb">
+      <DependentUpon>StateFile.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Files\StateFile.vb">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="IPointData.vb" />
     <Compile Include="Legacy Interfaces\Common.vb">
       <SubType>Code</SubType>
@@ -135,6 +141,7 @@
     <Compile Include="Files\SequentialBinaryFileBase.vb">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="PointState.vb" />
     <Compile Include="StandardPointData.vb" />
     <Compile Include="TimeTag.vb" />
   </ItemGroup>
@@ -162,6 +169,9 @@
     <None Include="Relationship Diagrams\Packet Diagram.cd" />
     <None Include="Relationship Diagrams\Point Definition Diagram.cd" />
     <None Include="Relationship Diagrams\Point Data Diagram.cd" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Embedded Resources\Files.StateFile.bmp" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.VisualBasic.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -1,7 +1,7 @@
 Namespace Files
 
-    Partial Class SequentialBinaryFileBase(Of T As IBinaryDataProvider)
-        Inherits System.ComponentModel.Component
+    Partial Class StateFile
+        Inherits SequentialBinaryFileBase(Of PointState)
 
         <System.Diagnostics.DebuggerNonUserCode()> _
         Public Sub New(ByVal container As System.ComponentModel.IContainer)
@@ -21,22 +21,12 @@ Namespace Files
             'This call is required by the Component Designer.
             InitializeComponent()
 
-            m_name = Me.GetType().Name & Extension
-            m_initialRecordCount = 100
-            m_saveOnClose = False
-            m_alignOnSave = False
-            m_autoSaveInterval = -1
-            m_autoAlignInterval = -1
-            m_autoSaveTimer = New System.Timers.Timer()
-            m_autoAnalyzeTimer = New System.Timers.Timer()
-
         End Sub
 
         'Component overrides dispose to clean up the component list.
         <System.Diagnostics.DebuggerNonUserCode()> _
         Protected Overrides Sub Dispose(ByVal disposing As Boolean)
             Try
-                Close() ' Close the file.
                 If disposing AndAlso components IsNot Nothing Then
                     components.Dispose()
                 End If

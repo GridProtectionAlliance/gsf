@@ -212,23 +212,23 @@ Public Class ArchiveFile
 
         End Sub
 
-        Public Function Read(ByVal pointIndex As Integer) As List(Of StandardPointData)
+        Public Function Read(ByVal pointID As Integer) As List(Of StandardPointData)
 
-            Return Read(pointIndex, TimeTag.MinValue)
-
-        End Function
-
-        Public Function Read(ByVal pointIndex As Integer, ByVal startTime As TimeTag) As List(Of StandardPointData)
-
-            Return Read(pointIndex, startTime, TimeTag.MaxValue)
+            Return Read(pointID, TimeTag.MinValue)
 
         End Function
 
-        Public Function Read(ByVal pointIndex As Integer, ByVal startTime As TimeTag, ByVal endTime As TimeTag) As List(Of StandardPointData)
+        Public Function Read(ByVal pointID As Integer, ByVal startTime As TimeTag) As List(Of StandardPointData)
+
+            Return Read(pointID, startTime, TimeTag.MaxValue)
+
+        End Function
+
+        Public Function Read(ByVal pointID As Integer, ByVal startTime As TimeTag, ByVal endTime As TimeTag) As List(Of StandardPointData)
 
             If IsOpen Then
                 Dim data As New List(Of StandardPointData)()
-                Dim foundBlocks As List(Of ArchiveDataBlock) = m_fat.FindDataBlocks(pointIndex, startTime, endTime)
+                Dim foundBlocks As List(Of ArchiveDataBlock) = m_fat.FindDataBlocks(pointID, startTime, endTime)
                 For i As Integer = 0 To foundBlocks.Count - 1
                     data.AddRange(foundBlocks(i).Read())
                 Next
@@ -251,14 +251,14 @@ Public Class ArchiveFile
                         If ToBeArchived(pointData) Then
                             ' Archive the data
                             Dim dataBlock As ArchiveDataBlock = Nothing
-                            m_activeDataBlocks.TryGetValue(pointData.Definition.Index, dataBlock)
+                            m_activeDataBlocks.TryGetValue(pointData.Definition.ID, dataBlock)
                             If dataBlock Is Nothing OrElse (dataBlock IsNot Nothing AndAlso dataBlock.SlotsAvailable <= 0) Then
                                 ' We either don't have a active data block where we can archive the point data or we have a 
                                 ' active data block but it is full, so we have to request a new data block from the FAT.
                                 m_dataBlockRequestCount += 1
-                                m_activeDataBlocks.Remove(pointData.Definition.Index)
-                                dataBlock = m_fat.RequestDataBlock(pointData.Definition.Index, pointData.TimeTag)
-                                m_activeDataBlocks.Add(pointData.Definition.Index, dataBlock)
+                                m_activeDataBlocks.Remove(pointData.Definition.ID)
+                                dataBlock = m_fat.RequestDataBlock(pointData.Definition.ID, pointData.TimeTag)
+                                m_activeDataBlocks.Add(pointData.Definition.ID, dataBlock)
 
                                 If m_dataBlockRequestCount >= m_fat.DataBlockCount * (m_rolloverPreparationThreshold / 100) AndAlso _
                                         Not m_rolloverPreparationDone AndAlso Not m_rolloverPreparationThread.IsAlive Then

@@ -5,6 +5,12 @@ Public Class ExtendedPointData
 
     Public Shadows Const Size As Integer = 16
 
+    Public Sub New()
+
+        MyBase.New()
+
+    End Sub
+
     Public Sub New(ByVal binaryImage As Byte())
 
         MyClass.New(binaryImage, 0)
@@ -30,13 +36,13 @@ Public Class ExtendedPointData
 
     Public Overrides ReadOnly Property BinaryData() As Byte()
         Get
-            Dim image As Byte() = CreateArray(Of Byte)(Size)
+            Dim data As Byte() = CreateArray(Of Byte)(Size)
 
-            Array.Copy(BitConverter.GetBytes(MyBase.TimeTag.Value), 0, image, 0, 8)
-            Array.Copy(BitConverter.GetBytes(MyBase.Flags), 0, image, 8, 4)
-            Array.Copy(BitConverter.GetBytes(MyBase.Value), 0, image, 12, 4)
+            Array.Copy(BitConverter.GetBytes(MyBase.TimeTag.Value), 0, data, 0, 8)
+            Array.Copy(BitConverter.GetBytes(MyBase.Flags), 0, data, 8, 4)
+            Array.Copy(BitConverter.GetBytes(MyBase.Value), 0, data, 12, 4)
 
-            Return image
+            Return data
         End Get
     End Property
 

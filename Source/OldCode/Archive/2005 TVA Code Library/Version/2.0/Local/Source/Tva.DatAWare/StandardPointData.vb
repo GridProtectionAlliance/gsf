@@ -13,6 +13,12 @@ Public Class StandardPointData
 
     Public Shadows Const Size As Integer = 10
 
+    Public Sub New()
+
+        MyBase.New()
+
+    End Sub
+
     Public Sub New(ByVal timeTag As TimeTag, ByVal value As Single, ByVal quality As Quality)
 
         MyBase.New(timeTag, value, quality)
@@ -44,16 +50,16 @@ Public Class StandardPointData
 
     Public Overrides ReadOnly Property BinaryData() As Byte()
         Get
-            Dim image As Byte() = CreateArray(Of Byte)(Size)
+            Dim data As Byte() = CreateArray(Of Byte)(Size)
             Dim timeTag As Integer = Convert.ToInt32(System.Math.Truncate(MyBase.TimeTag.Value))
             Dim milliseconds As Integer = Convert.ToInt32((MyBase.TimeTag.Value - timeTag) * 1000)
             Millisecond = milliseconds
 
-            Array.Copy(BitConverter.GetBytes(timeTag), 0, image, 0, 4)
-            Array.Copy(BitConverter.GetBytes(MyBase.Flags), 0, image, 4, 2)
-            Array.Copy(BitConverter.GetBytes(MyBase.Value), 0, image, 6, 4)
+            Array.Copy(BitConverter.GetBytes(timeTag), 0, data, 0, 4)
+            Array.Copy(BitConverter.GetBytes(MyBase.Flags), 0, data, 4, 2)
+            Array.Copy(BitConverter.GetBytes(MyBase.Value), 0, data, 6, 4)
 
-            Return image
+            Return data
         End Get
     End Property
 
@@ -65,7 +71,7 @@ Public Class StandardPointData
 
     Private Property Millisecond() As Integer
         Get
-            Return (MyBase.Flags And MillisecondMask) \ 32 ' 32 because the 1st 5 bits are quality???
+            Return (MyBase.Flags And MillisecondMask) \ 32 ' 1st 5 bits are quality, so 2 ^ 5 = 32.
         End Get
         Set(ByVal value As Integer)
             MyBase.Flags = (MyBase.Flags And Not MillisecondMask Or (value * 32))

@@ -47,9 +47,9 @@ Namespace Files
 
             If IsOpen Then
                 If record IsNot Nothing Then
-                    If record.Index > Records.Count + 1 Then
+                    If record.ID > Records.Count + 1 Then
                         ' We must add blank definitions as place holders before inserting the point definition.
-                        For i As Integer = Records.Count + 1 To record.Index - 1
+                        For i As Integer = Records.Count + 1 To record.ID - 1
                             Records.Add(New PointDefinition(i))
                         Next
                     End If

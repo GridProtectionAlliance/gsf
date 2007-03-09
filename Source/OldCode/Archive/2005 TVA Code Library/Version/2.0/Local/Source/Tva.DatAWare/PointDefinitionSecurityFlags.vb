@@ -33,7 +33,7 @@ Public Class PointDefinitionSecurityFlags
 
     Public Property AccessSecurity() As Short
         Get
-            Return Convert.ToInt16((m_value And AccessSecurityMask) \ 8)
+            Return Convert.ToInt16((m_value And AccessSecurityMask) \ 8) ' <- 1st 3 bit are record security, so 2 ^ 3 = 8.
         End Get
         Set(ByVal value As Short)
             m_value = (m_value And Not AccessSecurityMask Or Convert.ToInt16(value * 8))

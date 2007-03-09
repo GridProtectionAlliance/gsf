@@ -24,6 +24,9 @@ Public MustInherit Class PointDataBase
     Public Sub New()
 
         MyBase.New()
+        m_timeTag = TimeTag.MinValue
+        m_value = 0
+        m_flags = 0
 
     End Sub
 

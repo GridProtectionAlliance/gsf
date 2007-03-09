@@ -185,22 +185,22 @@ Public Class PointDefinitionComposedFields
 
     Public ReadOnly Property BinaryData() As Byte() Implements IBinaryDataProvider.BinaryData
         Get
-            Dim image As Byte() = CreateArray(Of Byte)(Size)
+            Dim data As Byte() = CreateArray(Of Byte)(Size)
 
-            Array.Copy(BitConverter.GetBytes(m_highAlarm), 0, image, 0, 4)
-            Array.Copy(BitConverter.GetBytes(m_lowAlarm), 0, image, 4, 4)
-            Array.Copy(BitConverter.GetBytes(m_highRange), 0, image, 8, 4)
-            Array.Copy(BitConverter.GetBytes(m_lowRange), 0, image, 12, 4)
-            Array.Copy(BitConverter.GetBytes(m_displayedDigits), 0, image, 16, 4)
+            Array.Copy(BitConverter.GetBytes(m_highAlarm), 0, data, 0, 4)
+            Array.Copy(BitConverter.GetBytes(m_lowAlarm), 0, data, 4, 4)
+            Array.Copy(BitConverter.GetBytes(m_highRange), 0, data, 8, 4)
+            Array.Copy(BitConverter.GetBytes(m_lowRange), 0, data, 12, 4)
+            Array.Copy(BitConverter.GetBytes(m_displayedDigits), 0, data, 16, 4)
             For i As Integer = 0 To m_inputPointers.Count - 1
-                Array.Copy(BitConverter.GetBytes(m_inputPointers(i)), 0, image, (20 + (i * 4)), 4)
+                Array.Copy(BitConverter.GetBytes(m_inputPointers(i)), 0, data, (20 + (i * 4)), 4)
             Next
-            Array.Copy(m_textEncoding.GetBytes(m_engineeringUnits.PadRight(8)), 0, image, 68, 8)
-            Array.Copy(m_textEncoding.GetBytes(m_equation.PadRight(128)), 0, image, 76, 128)
-            Array.Copy(BitConverter.GetBytes(m_lowWarning), 0, image, 204, 4)
-            Array.Copy(BitConverter.GetBytes(m_highWarning), 0, image, 208, 4)
+            Array.Copy(m_textEncoding.GetBytes(m_engineeringUnits.PadRight(8)), 0, data, 68, 8)
+            Array.Copy(m_textEncoding.GetBytes(m_equation.PadRight(128)), 0, data, 76, 128)
+            Array.Copy(BitConverter.GetBytes(m_lowWarning), 0, data, 204, 4)
+            Array.Copy(BitConverter.GetBytes(m_highWarning), 0, data, 208, 4)
 
-            Return image
+            Return data
         End Get
     End Property
 

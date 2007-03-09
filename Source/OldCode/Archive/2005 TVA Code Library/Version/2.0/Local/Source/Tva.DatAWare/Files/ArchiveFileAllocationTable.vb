@@ -233,24 +233,24 @@ Namespace Files
 
         Public ReadOnly Property BinaryData() As Byte() Implements IBinaryDataProvider.BinaryData
             Get
-                Dim image As Byte() = CreateArray(Of Byte)(BinaryDataLength)
+                Dim data As Byte() = CreateArray(Of Byte)(BinaryDataLength)
                 Dim arrayDescriptor As VBArrayDescriptor = VBArrayDescriptor.OneBasedOneDimensionalArray(m_dataBlockCount)
 
-                Array.Copy(arrayDescriptor.BinaryData, 0, image, 0, arrayDescriptor.BinaryDataLength)
+                Array.Copy(arrayDescriptor.BinaryData, 0, data, 0, arrayDescriptor.BinaryDataLength)
                 For i As Integer = 0 To m_dataBlockPointers.Count - 1
-                    Array.Copy(m_dataBlockPointers(i).BinaryData, 0, image, _
+                    Array.Copy(m_dataBlockPointers(i).BinaryData, 0, data, _
                         (i * ArchiveDataBlockPointer.Size) + arrayDescriptor.BinaryDataLength, ArchiveDataBlockPointer.Size)
                 Next
 
                 Dim pointersBinaryLength As Integer = BinaryDataLength - MinimumBinaryLength
-                Array.Copy(BitConverter.GetBytes(m_fileStartTime.Value), 0, image, pointersBinaryLength, 8)
-                Array.Copy(BitConverter.GetBytes(m_fileEndTime.Value), 0, image, pointersBinaryLength + 8, 8)
-                Array.Copy(BitConverter.GetBytes(m_eventsReceived), 0, image, pointersBinaryLength + 16, 4)
-                Array.Copy(BitConverter.GetBytes(m_eventsArchived), 0, image, pointersBinaryLength + 20, 4)
-                Array.Copy(BitConverter.GetBytes(m_dataBlockSize), 0, image, pointersBinaryLength + 24, 4)
-                Array.Copy(BitConverter.GetBytes(m_dataBlockCount), 0, image, pointersBinaryLength + 28, 4)
+                Array.Copy(BitConverter.GetBytes(m_fileStartTime.Value), 0, data, pointersBinaryLength, 8)
+                Array.Copy(BitConverter.GetBytes(m_fileEndTime.Value), 0, data, pointersBinaryLength + 8, 8)
+                Array.Copy(BitConverter.GetBytes(m_eventsReceived), 0, data, pointersBinaryLength + 16, 4)
+                Array.Copy(BitConverter.GetBytes(m_eventsArchived), 0, data, pointersBinaryLength + 20, 4)
+                Array.Copy(BitConverter.GetBytes(m_dataBlockSize), 0, data, pointersBinaryLength + 24, 4)
+                Array.Copy(BitConverter.GetBytes(m_dataBlockCount), 0, data, pointersBinaryLength + 28, 4)
 
-                Return image
+                Return data
             End Get
         End Property
 

@@ -70,12 +70,12 @@ Public Class PointDefinitionConstantFields
 
     Public ReadOnly Property BinaryData() As Byte() Implements IBinaryDataProvider.BinaryData
         Get
-            Dim image As Byte() = CreateArray(Of Byte)(Size)
+            Dim data As Byte() = CreateArray(Of Byte)(Size)
 
-            Array.Copy(BitConverter.GetBytes(m_value), 0, image, 0, 4)
-            Array.Copy(BitConverter.GetBytes(m_displayedDigits), 0, image, 4, 4)
+            Array.Copy(BitConverter.GetBytes(m_value), 0, data, 0, 4)
+            Array.Copy(BitConverter.GetBytes(m_displayedDigits), 0, data, 4, 4)
 
-            Return image
+            Return data
         End Get
     End Property
 

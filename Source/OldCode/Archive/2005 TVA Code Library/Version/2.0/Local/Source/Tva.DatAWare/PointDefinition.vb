@@ -53,7 +53,7 @@ Public Class PointDefinition
 
 #Region " Member Declaration "
 
-    Private m_index As Integer
+    Private m_id As Integer
     Private m_description As String = ""
     Private m_unitID As Short
     Private m_securityFlags As PointDefinitionSecurityFlags
@@ -90,7 +90,7 @@ Public Class PointDefinition
     Public Sub New(ByVal index As Integer)
 
         MyBase.New()
-        m_index = index
+        m_id = index
         m_securityFlags = New PointDefinitionSecurityFlags(0)
         m_spares = CreateArray(Of Byte)(64)
         m_generalFlags = New PointDefinitionGeneralFlags(0)
@@ -104,21 +104,21 @@ Public Class PointDefinition
 
     End Sub
 
-    Public Sub New(ByVal index As Integer, ByVal binaryImage As Byte())
+    Public Sub New(ByVal id As Integer, ByVal binaryImage As Byte())
 
-        MyClass.New(index, binaryImage, 0)
-
-    End Sub
-
-    Public Sub New(ByVal index As Integer, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
-
-        MyClass.New(index, binaryImage, startIndex, Nothing)
+        MyClass.New(id, binaryImage, 0)
 
     End Sub
 
-    Public Sub New(ByVal index As Integer, ByVal binaryImage As Byte(), ByVal startIndex As Integer, ByVal encoding As Encoding)
+    Public Sub New(ByVal id As Integer, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
 
-        MyClass.New(index)
+        MyClass.New(id, binaryImage, startIndex, Nothing)
+
+    End Sub
+
+    Public Sub New(ByVal id As Integer, ByVal binaryImage As Byte(), ByVal startIndex As Integer, ByVal encoding As Encoding)
+
+        MyClass.New(id)
 
         If encoding IsNot Nothing Then m_textEncoding = encoding
 
@@ -200,9 +200,9 @@ Public Class PointDefinition
 
     End Function
 
-    Public ReadOnly Property Index() As Integer
+    Public ReadOnly Property ID() As Integer
         Get
-            Return m_index
+            Return m_id
         End Get
     End Property
 
@@ -443,7 +443,7 @@ Public Class PointDefinition
 
         Dim other As PointDefinition = TryCast(obj, PointDefinition)
         If other IsNot Nothing Then
-            Return m_index.CompareTo(other.Index)
+            Return m_id.CompareTo(other.ID)
         Else
             Throw New ArgumentException(String.Format("Cannot compare {0} with {1}.", Me.GetType().Name, other.GetType().Name))
         End If
@@ -456,29 +456,29 @@ Public Class PointDefinition
 
     Public ReadOnly Property BinaryData() As Byte() Implements IBinaryDataProvider.BinaryData
         Get
-            Dim image As Byte() = CreateArray(Of Byte)(Size)
+            Dim data As Byte() = CreateArray(Of Byte)(Size)
 
             ' Construct the binary IP buffer for this event
-            Array.Copy(m_textEncoding.GetBytes(m_description.PadRight(40)), 0, image, 0, 40)
-            Array.Copy(BitConverter.GetBytes(m_unitID), 0, image, 40, 2)
-            Array.Copy(BitConverter.GetBytes(m_securityFlags.Value), 0, image, 42, 2)
-            Array.Copy(m_textEncoding.GetBytes(m_hardwareInfo.PadRight(64)), 0, image, 44, 64)
-            Array.Copy(m_spares, 0, image, 108, 64)
-            Array.Copy(BitConverter.GetBytes(m_generalFlags.Value), 0, image, 172, 4)
-            Array.Copy(BitConverter.GetBytes(m_alarmFlags.Value), 0, image, 176, 4)
-            Array.Copy(BitConverter.GetBytes(m_scanRate), 0, image, 180, 4)
-            Array.Copy(m_textEncoding.GetBytes(m_name.PadRight(20)), 0, image, 184, 20)
-            Array.Copy(m_textEncoding.GetBytes(m_synonym1.PadRight(20)), 0, image, 204, 20)
-            Array.Copy(m_textEncoding.GetBytes(m_synonym2.PadRight(20)), 0, image, 224, 20)
-            Array.Copy(m_textEncoding.GetBytes(m_plantID.PadRight(2)), 0, image, 244, 2)
-            Array.Copy(BitConverter.GetBytes(m_sourceID), 0, image, 246, 2)
-            Array.Copy(BitConverter.GetBytes(m_compressionMinimumTime), 0, image, 248, 4)
-            Array.Copy(BitConverter.GetBytes(m_compressionMaximumTime), 0, image, 252, 4)
-            Array.Copy(m_textEncoding.GetBytes(m_system.PadRight(4)), 0, image, 256, 4)
-            Array.Copy(m_textEncoding.GetBytes(m_email.PadRight(50)), 0, image, 260, 50)
-            Array.Copy(m_textEncoding.GetBytes(m_pager.PadRight(30)), 0, image, 310, 30)
-            Array.Copy(m_textEncoding.GetBytes(m_phone.PadRight(30)), 0, image, 340, 30)
-            Array.Copy(m_textEncoding.GetBytes(m_remarks.PadRight(128)), 0, image, 370, 128)
+            Array.Copy(m_textEncoding.GetBytes(m_description.PadRight(40)), 0, data, 0, 40)
+            Array.Copy(BitConverter.GetBytes(m_unitID), 0, data, 40, 2)
+            Array.Copy(BitConverter.GetBytes(m_securityFlags.Value), 0, data, 42, 2)
+            Array.Copy(m_textEncoding.GetBytes(m_hardwareInfo.PadRight(64)), 0, data, 44, 64)
+            Array.Copy(m_spares, 0, data, 108, 64)
+            Array.Copy(BitConverter.GetBytes(m_generalFlags.Value), 0, data, 172, 4)
+            Array.Copy(BitConverter.GetBytes(m_alarmFlags.Value), 0, data, 176, 4)
+            Array.Copy(BitConverter.GetBytes(m_scanRate), 0, data, 180, 4)
+            Array.Copy(m_textEncoding.GetBytes(m_name.PadRight(20)), 0, data, 184, 20)
+            Array.Copy(m_textEncoding.GetBytes(m_synonym1.PadRight(20)), 0, data, 204, 20)
+            Array.Copy(m_textEncoding.GetBytes(m_synonym2.PadRight(20)), 0, data, 224, 20)
+            Array.Copy(m_textEncoding.GetBytes(m_plantID.PadRight(2)), 0, data, 244, 2)
+            Array.Copy(BitConverter.GetBytes(m_sourceID), 0, data, 246, 2)
+            Array.Copy(BitConverter.GetBytes(m_compressionMinimumTime), 0, data, 248, 4)
+            Array.Copy(BitConverter.GetBytes(m_compressionMaximumTime), 0, data, 252, 4)
+            Array.Copy(m_textEncoding.GetBytes(m_system.PadRight(4)), 0, data, 256, 4)
+            Array.Copy(m_textEncoding.GetBytes(m_email.PadRight(50)), 0, data, 260, 50)
+            Array.Copy(m_textEncoding.GetBytes(m_pager.PadRight(30)), 0, data, 310, 30)
+            Array.Copy(m_textEncoding.GetBytes(m_phone.PadRight(30)), 0, data, 340, 30)
+            Array.Copy(m_textEncoding.GetBytes(m_remarks.PadRight(128)), 0, data, 370, 128)
             Select Case m_generalFlags.PointType
                 Case PointType.Analog
                     Array.Copy(m_analogFields.BinaryData, m_binaryInfo, PointDefinitionAnalogFields.Size)
@@ -489,9 +489,9 @@ Public Class PointDefinition
                 Case PointType.Constant
                     Array.Copy(m_constantFields.BinaryData, m_binaryInfo, PointDefinitionConstantFields.Size)
             End Select
-            Array.Copy(m_binaryInfo, 0, image, 498, 256)
+            Array.Copy(m_binaryInfo, 0, data, 498, 256)
 
-            Return image
+            Return data
         End Get
     End Property
 

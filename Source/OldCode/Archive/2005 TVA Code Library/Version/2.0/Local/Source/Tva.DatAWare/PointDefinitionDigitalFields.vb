@@ -101,13 +101,13 @@ Public Class PointDefinitionDigitalFields
 
     Public ReadOnly Property BinaryData() As Byte() Implements IBinaryDataProvider.BinaryData
         Get
-            Dim image As Byte() = CreateArray(Of Byte)(Size)
+            Dim data As Byte() = CreateArray(Of Byte)(Size)
 
-            Array.Copy(m_textEncoding.GetBytes(m_setDescription.PadRight(13)), 0, image, 0, 13)
-            Array.Copy(m_textEncoding.GetBytes(m_clearDescription.PadRight(13)), 0, image, 13, 13)
-            Array.Copy(BitConverter.GetBytes(m_alarmState), 0, image, 26, 2)
+            Array.Copy(m_textEncoding.GetBytes(m_setDescription.PadRight(13)), 0, data, 0, 13)
+            Array.Copy(m_textEncoding.GetBytes(m_clearDescription.PadRight(13)), 0, data, 13, 13)
+            Array.Copy(BitConverter.GetBytes(m_alarmState), 0, data, 26, 2)
 
-            Return image
+            Return data
         End Get
     End Property
 
