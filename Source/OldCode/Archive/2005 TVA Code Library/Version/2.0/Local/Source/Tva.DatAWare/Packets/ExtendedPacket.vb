@@ -192,14 +192,14 @@ Namespace Packets
 
         Public Overrides Sub SaveData()
 
-            If MyBase.ArchiveFile IsNot Nothing AndAlso MyBase.MetadataFile IsNot Nothing Then
+            If ArchiveFile IsNot Nothing AndAlso MetadataFile IsNot Nothing Then
                 Dim timestamp As New System.DateTime(m_year, m_month, m_day, m_hour + m_gmtOffset, m_minute, _
                     m_second, m_millisecond, DateTimeKind.Utc)
 
                 Dim pointData As New StandardPointData(New TimeTag(timestamp), m_value, m_quality)
-                pointData.Definition = MyBase.MetadataFile.Read(m_index)
+                pointData.Definition = MetadataFile.Read(m_index)
 
-                MyBase.ArchiveFile.Write(pointData)
+                ArchiveFile.Write(pointData)
             End If
 
         End Sub

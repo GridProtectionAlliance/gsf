@@ -33,12 +33,12 @@ Public Class StandardPointData
 
     Public Sub New(ByVal binaryImage As Byte(), ByVal startIndex As Integer)
 
-        MyBase.new()
+        MyBase.New()
         If binaryImage IsNot Nothing Then
             If binaryImage.Length - startIndex >= Size Then
-                MyBase.Value = BitConverter.ToSingle(binaryImage, 6)
-                MyBase.Flags = BitConverter.ToInt16(binaryImage, 4)
-                MyBase.TimeTag = New TimeTag(BitConverter.ToInt32(binaryImage, 0) + Millisecond / 1000)
+                Value = BitConverter.ToSingle(binaryImage, 6)
+                Flags = BitConverter.ToInt16(binaryImage, 4)
+                TimeTag = New TimeTag(BitConverter.ToInt32(binaryImage, 0) + Millisecond / 1000)
             Else
                 Throw New ArgumentException("Binary image size from startIndex is too small.")
             End If
@@ -51,15 +51,21 @@ Public Class StandardPointData
     Public Overrides ReadOnly Property BinaryData() As Byte()
         Get
             Dim data As Byte() = CreateArray(Of Byte)(Size)
-            Dim timeTag As Integer = Convert.ToInt32(System.Math.Truncate(MyBase.TimeTag.Value))
-            Dim milliseconds As Integer = Convert.ToInt32((MyBase.TimeTag.Value - timeTag) * 1000)
+            Dim timeTagValue As Integer = Convert.ToInt32(System.Math.Truncate(TimeTag.Value))
+            Dim milliseconds As Integer = Convert.ToInt32((TimeTag.Value - timeTagValue) * 1000)
             Millisecond = milliseconds
 
-            Array.Copy(BitConverter.GetBytes(timeTag), 0, data, 0, 4)
-            Array.Copy(BitConverter.GetBytes(MyBase.Flags), 0, data, 4, 2)
-            Array.Copy(BitConverter.GetBytes(MyBase.Value), 0, data, 6, 4)
+            Array.Copy(BitConverter.GetBytes(timeTagValue), 0, data, 0, 4)
+            Array.Copy(BitConverter.GetBytes(Flags), 0, data, 4, 2)
+            Array.Copy(BitConverter.GetBytes(Value), 0, data, 6, 4)
 
             Return data
+        End Get
+    End Property
+
+    Public Overrides ReadOnly Property BinaryDataLength() As Integer
+        Get
+            Return Size
         End Get
     End Property
 
@@ -71,10 +77,10 @@ Public Class StandardPointData
 
     Private Property Millisecond() As Integer
         Get
-            Return (MyBase.Flags And MillisecondMask) \ 32 ' 1st 5 bits are quality, so 2 ^ 5 = 32.
+            Return (Flags And MillisecondMask) \ 32 ' 1st 5 bits are quality, so 2 ^ 5 = 32.
         End Get
         Set(ByVal value As Integer)
-            MyBase.Flags = (MyBase.Flags And Not MillisecondMask Or (value * 32))
+            Flags = (Flags And Not MillisecondMask Or (value * 32))
         End Set
     End Property
 

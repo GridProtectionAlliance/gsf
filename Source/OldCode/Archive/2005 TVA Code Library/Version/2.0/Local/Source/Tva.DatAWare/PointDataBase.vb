@@ -25,8 +25,6 @@ Public MustInherit Class PointDataBase
 
         MyBase.New()
         m_timeTag = TimeTag.MinValue
-        m_value = 0
-        m_flags = 0
 
     End Sub
 
@@ -232,11 +230,7 @@ Public MustInherit Class PointDataBase
 
     Public MustOverride ReadOnly Property BinaryData() As Byte() Implements IBinaryDataProvider.BinaryData
 
-    Public ReadOnly Property BinaryDataLength() As Integer Implements IBinaryDataProvider.BinaryDataLength
-        Get
-            Return Size
-        End Get
-    End Property
+    Public MustOverride ReadOnly Property BinaryDataLength() As Integer Implements IBinaryDataProvider.BinaryDataLength
 
 #End Region
 

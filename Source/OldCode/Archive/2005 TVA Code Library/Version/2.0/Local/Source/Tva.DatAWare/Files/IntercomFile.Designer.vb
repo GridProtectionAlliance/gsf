@@ -21,7 +21,7 @@ Namespace Files
             'This call is required by the Component Designer.
             InitializeComponent()
 
-            MyBase.InitialRecordCount = 1
+            InitialRecordCount = 1
 
         End Sub
 

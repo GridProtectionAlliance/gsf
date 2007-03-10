@@ -1,7 +1,12 @@
 ' 02/24/2007
 
+Imports Tva.Interop.Bit
+
 Public Class ExtendedPointData
     Inherits PointDataBase
+
+    Private Const TimeZoneIndexMask As Int32 = Bit5 Or Bit6 Or Bit7 Or Bit8 Or Bit9 Or Bit10
+    Private Const DaylightSavingsTimeMask As Int32 = Bit11
 
     Public Shadows Const Size As Integer = 16
 
@@ -22,9 +27,9 @@ Public Class ExtendedPointData
         MyBase.New()
         If binaryImage IsNot Nothing Then
             If binaryImage.Length - startIndex >= Size Then
-                MyBase.TimeTag = New TimeTag(BitConverter.ToDouble(binaryImage, startIndex))
-                MyBase.Flags = BitConverter.ToInt32(binaryImage, startIndex + 8)
-                MyBase.Value = BitConverter.ToSingle(binaryImage, startIndex + 12)
+                TimeTag = New TimeTag(BitConverter.ToDouble(binaryImage, startIndex))
+                Flags = BitConverter.ToInt32(binaryImage, startIndex + 8)
+                Value = BitConverter.ToSingle(binaryImage, startIndex + 12)
             Else
                 Throw New ArgumentException("Binary image size from startIndex is too small.")
             End If
@@ -34,15 +39,43 @@ Public Class ExtendedPointData
 
     End Sub
 
+    Public Property TimeZoneIndex() As Short
+        Get
+            Return Convert.ToInt16((Flags And TimeZoneIndexMask) \ 32)
+        End Get
+        Set(ByVal value As Short)
+            Flags = (Flags And Not TimeZoneIndexMask Or (value * 32))
+        End Set
+    End Property
+
+    Public Property DaylightSavingsTime() As Boolean
+        Get
+            Return Convert.ToBoolean(Flags And DaylightSavingsTimeMask)
+        End Get
+        Set(ByVal value As Boolean)
+            If value Then
+                Flags = (Flags Or DaylightSavingsTimeMask)
+            Else
+                Flags = (Flags And Not DaylightSavingsTimeMask)
+            End If
+        End Set
+    End Property
+
     Public Overrides ReadOnly Property BinaryData() As Byte()
         Get
             Dim data As Byte() = CreateArray(Of Byte)(Size)
 
-            Array.Copy(BitConverter.GetBytes(MyBase.TimeTag.Value), 0, data, 0, 8)
-            Array.Copy(BitConverter.GetBytes(MyBase.Flags), 0, data, 8, 4)
-            Array.Copy(BitConverter.GetBytes(MyBase.Value), 0, data, 12, 4)
+            Array.Copy(BitConverter.GetBytes(TimeTag.Value), 0, data, 0, 8)
+            Array.Copy(BitConverter.GetBytes(Flags), 0, data, 8, 4)
+            Array.Copy(BitConverter.GetBytes(Value), 0, data, 12, 4)
 
             Return data
+        End Get
+    End Property
+
+    Public Overrides ReadOnly Property BinaryDataLength() As Integer
+        Get
+            Return Size
         End Get
     End Property
 
