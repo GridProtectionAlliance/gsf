@@ -62,4 +62,16 @@ Public NotInheritable Class Common
 
     End Function
 
+    Public Shared Function CreateArray(Of T)(ByVal length As Integer, ByVal defaultValue As T) As T()
+
+        Dim typedArray As T() = CreateArray(Of T)(length)
+        ' Initialized all elements with the default value.
+        For i As Integer = 0 To typedArray.Length - 1
+            typedArray(i) = defaultValue
+        Next
+
+        Return typedArray
+
+    End Function
+
 End Class
