@@ -170,7 +170,7 @@ Public Class PhasorMeasurementReceiver
                             '.DeviceSupportsCommands = True
                         End If
 
-                        .PmuID = accessID
+                        .DeviceID = accessID
                         .SourceName = source
                     End With
 

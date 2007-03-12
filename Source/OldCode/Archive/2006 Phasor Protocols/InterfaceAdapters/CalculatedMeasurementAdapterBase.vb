@@ -166,12 +166,12 @@ Public MustInherit Class CalculatedMeasurementAdapterBase
         End Get
     End Property
 
-    Public ReadOnly Property FrameRate() As Decimal
+    Public ReadOnly Property TicksPerFrame() As Decimal
         Get
             If m_concentrator Is Nothing Then
                 Return -1D
             Else
-                Return m_concentrator.FrameRate
+                Return m_concentrator.TicksPerFrame
             End If
         End Get
     End Property
