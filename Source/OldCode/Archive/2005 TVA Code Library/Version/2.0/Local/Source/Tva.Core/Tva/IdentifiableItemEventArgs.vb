@@ -1,6 +1,7 @@
 ' 03/12/2007
 
-Public Class IdentifiableItem(Of T)
+Public Class IdentifiableItemEventArgs(Of T)
+    Inherits EventArgs
 
     Private m_source As Guid
     Private m_item As T
