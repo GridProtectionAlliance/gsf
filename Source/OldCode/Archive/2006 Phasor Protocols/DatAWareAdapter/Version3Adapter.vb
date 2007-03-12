@@ -35,14 +35,14 @@ Public Class Version3Adapter
     Private m_useTimeout As Boolean
     Private m_bufferSize As Integer
     Private m_buffer As Byte()
-    Private m_connection As TcpClient
+    Private WithEvents m_connection As TcpClient
 
     Public Sub New()
 
         MyBase.New()
 
         m_archiverIP = "127.0.0.1"
-        m_archiverPort = 1005
+        m_archiverPort = 5000
         m_maximumEvents = 100000
         m_useTimeout = True
 
@@ -79,7 +79,7 @@ Public Class Version3Adapter
 
     Protected Overrides Sub AttemptDisconnection()
 
-        m_connection.Disconnect()
+        If m_connection.IsConnected Then m_connection.Disconnect()
 
     End Sub
 
@@ -116,6 +116,12 @@ Public Class Version3Adapter
             ' Post data to TCP stream
             m_connection.Send(m_buffer, 0, totalPoints * StandardEvent.BinaryLength)
         End If
+
+    End Sub
+
+    Private Sub m_connection_Disconnected(ByVal sender As Object, ByVal e As System.EventArgs) Handles m_connection.Disconnected
+
+        Disconnect()
 
     End Sub
 
