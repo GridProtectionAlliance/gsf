@@ -23,7 +23,6 @@ Namespace Files
         Private m_intercomFile As IntercomFile
         Private m_fat As ArchiveFileAllocationTable
         Private m_fileStream As FileStream
-        Private m_activeDataBlocks As Dictionary(Of Integer, ArchiveDataBlock)
         Private m_dataBlockRequestCount As Integer
         Private m_rolloverPreparationDone As Boolean
         Private m_rolloverPreparationThread As Thread
@@ -127,6 +126,12 @@ Namespace Files
             End Set
         End Property
 
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>Used for backwards compatibility with old version of DatAWare Server.</remarks>
         Public Property StateFile() As StateFile
             Get
                 Return m_stateFile
@@ -136,6 +141,12 @@ Namespace Files
             End Set
         End Property
 
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>Used for backwards compatibility with old version of DatAWare Server.</remarks>
         Public Property IntercomFile() As IntercomFile
             Get
                 Return m_intercomFile
@@ -175,7 +186,18 @@ Namespace Files
                     m_fat = New ArchiveFileAllocationTable(m_fileStream, m_blockSize, MaximumDataBlocks(m_size, m_blockSize))
                     m_fat.Persist()
                 End If
-                m_activeDataBlocks = New Dictionary(Of Integer, ArchiveDataBlock)()
+
+                ' Make sure that the necessary files are available and ready for use.
+                If m_stateFile IsNot Nothing Then
+                    If Not m_stateFile.IsOpen Then m_stateFile.Open()
+                Else
+                    Throw New ArgumentNullException("StateFile")
+                End If
+                If m_intercomFile IsNot Nothing Then
+                    If Not m_intercomFile.IsOpen Then m_intercomFile.Open()
+                Else
+                    Throw New ArgumentNullException("IntercomFile")
+                End If
 
                 RaiseEvent FileOpened(Me, EventArgs.Empty)
             End If
@@ -192,8 +214,6 @@ Namespace Files
                 m_fat = Nothing
                 m_fileStream.Close()
                 m_fileStream = Nothing
-                m_activeDataBlocks.Clear()
-                m_activeDataBlocks = Nothing
                 m_dataBlockRequestCount = 0
                 m_rolloverPreparationThread.Abort()
 
@@ -221,11 +241,22 @@ Namespace Files
                 Dim standbyFile As String = GetStandbyArchiveFileName()
                 Dim historyFile As String = GetHistoryArchiveFileName()
 
+                ' Signal the server that we're are performing rollover so it must let go of this file.
+                m_intercomFile.Records(0).FileWrap = True
+                m_intercomFile.Save()
+                m_stateFile.Close()             ' We do this to clear the states of all points.
                 Close()
-                WaitForWriteLock(m_name)    ' We must wait for the server to release the file.
-                File.Move(m_name, historyFile)
-                File.Move(standbyFile, m_name)
+
+                WaitForWriteLock(m_name)        ' Wait for the server to release the file.
+
+                File.Move(m_name, historyFile)  ' Make the active archive file, historic archive file.
+                File.Move(standbyFile, m_name)  ' Make the standby archive file, active archive file.
+
+                ' We're now done with the rollover process, so we must inform the server of this.
                 Open()
+                m_intercomFile.Records(0).FileWrap = False
+                m_intercomFile.Save()
+
                 m_rolloverPreparationDone = False
 
                 RaiseEvent RolloverComplete(Me, EventArgs.Empty)
@@ -269,17 +300,15 @@ Namespace Files
 
                     If pointData.TimeTag.CompareTo(m_fat.FileStartTime) >= 0 Then
                         ' The data to be written has a timetag that is the same as newer than the file's start time.
+                        Dim pointState As PointState = m_stateFile.Read(pointData.Definition.ID)
                         If ToBeArchived(pointData) Then
                             ' Archive the data
-                            Dim dataBlock As ArchiveDataBlock = Nothing
-                            m_activeDataBlocks.TryGetValue(pointData.Definition.ID, dataBlock)
-                            If dataBlock Is Nothing OrElse (dataBlock IsNot Nothing AndAlso dataBlock.SlotsAvailable <= 0) Then
+                            If pointState.ActiveDataBlock Is Nothing OrElse _
+                                    (pointState.ActiveDataBlock IsNot Nothing AndAlso pointState.ActiveDataBlock.SlotsAvailable <= 0) Then
                                 ' We either don't have a active data block where we can archive the point data or we have a 
                                 ' active data block but it is full, so we have to request a new data block from the FAT.
                                 m_dataBlockRequestCount += 1
-                                m_activeDataBlocks.Remove(pointData.Definition.ID)
-                                dataBlock = m_fat.RequestDataBlock(pointData.Definition.ID, pointData.TimeTag)
-                                m_activeDataBlocks.Add(pointData.Definition.ID, dataBlock)
+                                pointState.ActiveDataBlock = m_fat.RequestDataBlock(pointData.Definition.ID, pointData.TimeTag)
 
                                 If m_dataBlockRequestCount >= m_fat.DataBlockCount * (m_rolloverPreparationThreshold / 100) AndAlso _
                                         Not m_rolloverPreparationDone AndAlso Not m_rolloverPreparationThread.IsAlive Then
@@ -292,9 +321,9 @@ Namespace Files
                                 End If
                             End If
 
-                            If dataBlock IsNot Nothing Then
+                            If pointState.ActiveDataBlock IsNot Nothing Then
                                 ' We were able to obtain a data block for writing data.
-                                dataBlock.Write(pointData)
+                                pointState.ActiveDataBlock.Write(pointData)
 
                                 m_fat.EventsArchived += 1
                                 m_fat.FileEndTime = pointData.TimeTag
@@ -339,6 +368,8 @@ Namespace Files
                     .Name = GetStandbyArchiveFileName()
                     .Size = m_size
                     .BlockSize = m_blockSize
+                    .StateFile = m_stateFile
+                    .IntercomFile = m_intercomFile
                     .Open()
                     .Close()
                 End With

@@ -11,8 +11,9 @@ Public Class DataParser
 
 #Region " Member Declaration "
 
+    Private m_processed As Integer
     Private m_packetTypes As Dictionary(Of Short, PacketTypeInfo)
-    Private WithEvents m_dataQueue As ProcessQueue(Of BinaryData)
+    Private WithEvents m_dataQueue As ProcessQueue(Of IdentifiableItem(Of Byte()))
 
 #End Region
 
@@ -24,6 +25,18 @@ Public Class DataParser
 #End Region
 
 #Region " Public Code "
+
+    Public ReadOnly Property ParsedDataCount() As Long
+        Get
+            Return m_dataQueue.TotalProcessedItems
+        End Get
+    End Property
+
+    Public ReadOnly Property UnparsedDataCount() As Long
+        Get
+            Return m_dataQueue.Count
+        End Get
+    End Property
 
     Public Sub Start()
 
@@ -75,7 +88,7 @@ Public Class DataParser
 
     Public Sub Add(ByVal source As Guid, ByVal data As Byte())
 
-        m_dataQueue.Add(New BinaryData(source, data))
+        m_dataQueue.Add(New IdentifiableItem(Of Byte())(source, data))
 
     End Sub
 
@@ -83,11 +96,11 @@ Public Class DataParser
 
 #Region " Private Code"
 
-    Private Sub ParseData(ByVal data As BinaryData)
+    Private Sub ParseData(ByVal data As IdentifiableItem(Of Byte()))
 
-        If data.Data IsNot Nothing AndAlso data.Data.Length >= 1 Then
+        If data.Item IsNot Nothing AndAlso data.Item.Length >= 1 Then
             ' We have data that can now be parsed.
-            Dim typeID As Short = BitConverter.ToInt16(data.Data, 0)
+            Dim typeID As Short = BitConverter.ToInt16(data.Item, 0)
             Dim packetType As PacketTypeInfo = Nothing
 
             If m_packetTypes.TryGetValue(typeID, packetType) Then
@@ -95,38 +108,38 @@ Public Class DataParser
                 ' image to a list of packets. 
                 Dim packets As List(Of IPacket) = Nothing
 
-                If packetType.TryParse(data.Data, packets) Then
+                If packetType.TryParse(data.Item, packets) Then
                     ' Data could be parsed and was converted to packets.
                     RaiseEvent DataParsed(Me, New DataParsedEventArgs(data.Source, packets))
                 Else
                     ' Data could not be parsed for some reason.
-                    RaiseEvent DataDiscarded(Me, New DataEventArgs(data.Source, data.Data))
+                    RaiseEvent DataDiscarded(Me, New DataEventArgs(data.Source, data.Item))
                 End If
             Else
-                RaiseEvent DataDiscarded(Me, New DataEventArgs(data.Source, data.Data))
+                RaiseEvent DataDiscarded(Me, New DataEventArgs(data.Source, data.Item))
             End If
         End If
 
     End Sub
 
-#Region " BinaryData Class "
+    '#Region " BinaryData Class "
 
-    Private Class BinaryData
+    '    Private Class BinaryData
 
-        Public Sub New(ByVal source As Guid, ByVal data As Byte())
+    '        Public Sub New(ByVal source As Guid, ByVal data As Byte())
 
-            Me.Source = source
-            Me.Data = data
+    '            Me.Source = source
+    '            Me.Data = data
 
-        End Sub
+    '        End Sub
 
-        Public Source As Guid
+    '        Public Source As Guid
 
-        Public Data As Byte()
+    '        Public Data As Byte()
 
-    End Class
+    '    End Class
 
-#End Region
+    '#End Region
 
 #Region " PacketTypeInfo Class "
 

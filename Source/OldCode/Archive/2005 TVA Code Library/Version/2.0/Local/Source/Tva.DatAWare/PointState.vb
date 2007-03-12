@@ -23,6 +23,7 @@ Public Class PointState
     Private m_lastArchivedValue As ExtendedPointData
     Private m_previousValue As ExtendedPointData
     Private m_currentValue As ExtendedPointData
+    Private m_activeDataBlock As Files.ArchiveDataBlock
     Private m_activeDataBlockIndex As Integer
     Private m_activeDataBlockSlotNumber As Integer
     Private m_slope1 As Double
@@ -96,6 +97,15 @@ Public Class PointState
         End Get
         Set(ByVal value As ExtendedPointData)
             m_currentValue = value
+        End Set
+    End Property
+
+    Public Property ActiveDataBlock() As Files.ArchiveDataBlock
+        Get
+            Return m_activeDataBlock
+        End Get
+        Set(ByVal value As Files.ArchiveDataBlock)
+            m_activeDataBlock = value
         End Set
     End Property
 
