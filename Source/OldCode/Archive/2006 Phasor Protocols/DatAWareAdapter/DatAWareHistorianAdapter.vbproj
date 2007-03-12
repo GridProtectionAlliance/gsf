@@ -37,6 +37,10 @@
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
+    <Reference Include="Tva.Communication, Version=2.1.91.55141, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\TVA Code Library\Source\bin\Tva.Communication.dll</HintPath>
+    </Reference>
     <Reference Include="Tva.Core, Version=2.1.63.53023, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\TVA Code Library\Source\bin\Tva.Core.dll</HintPath>

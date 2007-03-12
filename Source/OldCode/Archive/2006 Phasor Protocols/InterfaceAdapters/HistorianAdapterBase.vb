@@ -216,7 +216,7 @@ Public MustInherit Class HistorianAdapterBase
 
         ' TODO: This needs to be adjustable based on the total number of items that can be processed by the historian at once...
         Const statusInterval As Integer = 1000
-        Const dumpInterval As Integer = 5000
+        Const dumpInterval As Integer = 500000
         Const postDumpCount As Integer = 100
 
         Dim queuedMeasurements As Integer
