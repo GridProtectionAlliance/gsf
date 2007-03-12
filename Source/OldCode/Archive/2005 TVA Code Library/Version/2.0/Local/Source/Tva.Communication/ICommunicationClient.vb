@@ -51,17 +51,17 @@ Public Interface ICommunicationClient
     ''' <summary>
     ''' Occurs when the client begins sending data to the server.
     ''' </summary>
-    Event SendDataBegin As EventHandler(Of DataEventArgs)
+    Event SendDataBegin As EventHandler(Of IdentifiableItemEventArgs(Of Byte()))
 
     ''' <summary>
     ''' Occurs when the client has successfully send data to the server.
     ''' </summary>
-    Event SendDataComplete As EventHandler(Of DataEventArgs)
+    Event SendDataComplete As EventHandler(Of IdentifiableItemEventArgs(Of Byte()))
 
     ''' <summary>
     ''' Occurs when the client receives data from the server.
     ''' </summary>
-    Event ReceivedData As EventHandler(Of DataEventArgs)
+    Event ReceivedData As EventHandler(Of IdentifiableItemEventArgs(Of Byte()))
 
     ''' <summary>
     ''' Occurs when no data is received from the server after waiting for the specified time.

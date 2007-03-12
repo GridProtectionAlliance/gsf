@@ -236,9 +236,9 @@ Public Class ClientHelper
 
     End Sub
 
-    Private Sub m_communicationClient_ReceivedData(ByVal sender As Object, ByVal e As DataEventArgs) Handles m_communicationClient.ReceivedData
+    Private Sub m_communicationClient_ReceivedData(ByVal sender As Object, ByVal e As IdentifiableItemEventArgs(Of Byte())) Handles m_communicationClient.ReceivedData
 
-        Dim response As ServiceResponse = GetObject(Of ServiceResponse)(e.Data)
+        Dim response As ServiceResponse = GetObject(Of ServiceResponse)(e.Item)
         If response IsNot Nothing Then
             RaiseEvent ReceivedServiceResponse(Me, New ServiceResponseEventArgs(response))
             Select Case response.Type

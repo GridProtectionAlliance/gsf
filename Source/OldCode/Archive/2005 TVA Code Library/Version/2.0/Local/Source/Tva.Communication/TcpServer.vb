@@ -388,7 +388,7 @@ Public Class TcpServer
             If MyBase.SecureSession Then data = DecryptData(data, tcpClient.Passphrase, MyBase.Encryption)
 
             ' We'll pass the received data along to the consumer via event.
-            OnReceivedClientData(New DataEventArgs(tcpClient.ID, data))
+            OnReceivedClientData(New IdentifiableItemEventArgs(Of Byte())(tcpClient.ID, data))
         End If
 
     End Sub

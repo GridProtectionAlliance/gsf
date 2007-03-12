@@ -205,7 +205,7 @@ Public Class UdpClient
             ' Add payload header if client-server communication is PayloadAware.
             If m_payloadAware Then data = PayloadAwareHelper.AddPayloadHeader(data)
 
-            OnSendDataBegin(New DataEventArgs(data))
+            OnSendDataBegin(New IdentifiableItemEventArgs(Of Byte())(data))
 
             ' Since UDP is a Datagram protocol, we must make sure that the datagram we transmit are no bigger
             ' than what the server can receive. For this reason we'll break up the data into multiple datagrams
@@ -223,7 +223,7 @@ Public Class UdpClient
                 m_udpClient.Client.BeginSendTo(data, i, datagramSize, SocketFlags.None, m_udpServer, Nothing, Nothing)
             Next
 
-            OnSendDataComplete(New DataEventArgs(data))
+            OnSendDataComplete(New IdentifiableItemEventArgs(Of Byte())(data))
         End If
 
     End Sub
@@ -532,7 +532,7 @@ Public Class UdpClient
             If MyBase.SecureSession Then data = DecryptData(data, m_udpClient.Passphrase, MyBase.Encryption)
 
             ' We'll pass the received data along to the consumer via event.
-            OnReceivedData(New DataEventArgs(data))
+            OnReceivedData(New IdentifiableItemEventArgs(Of Byte())(data))
         End If
 
     End Sub

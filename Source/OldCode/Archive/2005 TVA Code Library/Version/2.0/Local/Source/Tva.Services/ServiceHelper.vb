@@ -474,10 +474,10 @@ Public Class ServiceHelper
 
     End Sub
 
-    Private Sub m_communicationServer_ReceivedClientData(ByVal sender As Object, ByVal e As DataEventArgs) Handles m_communicationServer.ReceivedClientData
+    Private Sub m_communicationServer_ReceivedClientData(ByVal sender As Object, ByVal e As IdentifiableItemEventArgs(Of Byte())) Handles m_communicationServer.ReceivedClientData
 
-        Dim info As ClientInfo = GetObject(Of ClientInfo)(e.Data)
-        Dim request As ClientRequest = GetObject(Of ClientRequest)(e.Data)
+        Dim info As ClientInfo = GetObject(Of ClientInfo)(e.Item)
+        Dim request As ClientRequest = GetObject(Of ClientRequest)(e.Item)
 
         If info IsNot Nothing Then
             ' We've received client information from a recently connected client.

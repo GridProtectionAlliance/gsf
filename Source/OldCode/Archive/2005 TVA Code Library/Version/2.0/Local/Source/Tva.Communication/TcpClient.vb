@@ -121,12 +121,12 @@ Public Class TcpClient
             ' Add payload header if client-server communication is PayloadAware.
             If m_payloadAware Then data = PayloadAwareHelper.AddPayloadHeader(data)
 
-            OnSendDataBegin(New DataEventArgs(data))
+            OnSendDataBegin(New IdentifiableItemEventArgs(Of Byte())(data))
 
             ' We'll send data over the wire asynchronously for improved performance.
             m_tcpClient.Client.BeginSend(data, 0, data.Length, SocketFlags.None, Nothing, Nothing)
 
-            OnSendDataComplete(New DataEventArgs(data))
+            OnSendDataComplete(New IdentifiableItemEventArgs(Of Byte())(data))
         End If
 
     End Sub
@@ -366,7 +366,7 @@ Public Class TcpClient
             If MyBase.SecureSession Then data = DecryptData(data, m_tcpClient.Passphrase, MyBase.Encryption)
 
             ' We'll pass the received data along to the consumer via event.
-            OnReceivedData(New DataEventArgs(data))
+            OnReceivedData(New IdentifiableItemEventArgs(Of Byte())(data))
         End If
 
     End Sub

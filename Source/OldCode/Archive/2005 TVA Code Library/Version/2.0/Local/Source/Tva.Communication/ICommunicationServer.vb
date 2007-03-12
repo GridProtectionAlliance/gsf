@@ -51,7 +51,7 @@ Public Interface ICommunicationServer
     ''' <summary>
     ''' Occurs when data is received from a client.
     ''' </summary>
-    Event ReceivedClientData As EventHandler(Of DataEventArgs)
+    Event ReceivedClientData As EventHandler(Of IdentifiableItemEventArgs(Of Byte()))
 
     ''' <summary>
     ''' Gets or sets the data that is required by the server to initialize.

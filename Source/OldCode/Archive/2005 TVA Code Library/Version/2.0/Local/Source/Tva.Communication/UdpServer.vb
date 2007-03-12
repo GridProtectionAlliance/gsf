@@ -350,11 +350,11 @@ Public Class UdpServer
                     If senderIPEndPoint.Equals(udpClient.Client) Then
                         If MyBase.SecureSession Then data = DecryptData(data, udpClient.Passphrase, MyBase.Encryption)
 
-                        OnReceivedClientData(New DataEventArgs(udpClient.ID, data))
+                        OnReceivedClientData(New IdentifiableItemEventArgs(Of Byte())(udpClient.ID, data))
                         Exit Sub
                     End If
                 Next
-                OnReceivedClientData(New DataEventArgs(Guid.Empty, data))
+                OnReceivedClientData(New IdentifiableItemEventArgs(Of Byte())(data))
             End If
         End If
 

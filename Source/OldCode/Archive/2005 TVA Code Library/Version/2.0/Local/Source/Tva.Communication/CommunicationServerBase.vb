@@ -97,7 +97,7 @@ Public MustInherit Class CommunicationServerBase
     ''' Occurs when data is received from a client.
     ''' </summary>
     <Description("Occurs when data is received from a client."), Category("Data")> _
-    Public Event ReceivedClientData(ByVal sender As Object, ByVal e As DataEventArgs) Implements ICommunicationServer.ReceivedClientData
+    Public Event ReceivedClientData(ByVal sender As Object, ByVal e As IdentifiableItemEventArgs(Of Byte())) Implements ICommunicationServer.ReceivedClientData
 
     ''' <summary>
     ''' Gets or sets the data that is required by the server to initialize.
@@ -617,10 +617,10 @@ Public MustInherit Class CommunicationServerBase
     ''' </summary>
     ''' <param name="e">A Tva.DataEventArgs that contains the event data.</param>
     ''' <remarks>This method is to be called when the server receives data from a client.</remarks>
-    Protected Overridable Sub OnReceivedClientData(ByVal e As DataEventArgs)
+    Protected Overridable Sub OnReceivedClientData(ByVal e As IdentifiableItemEventArgs(Of Byte()))
 
         Try
-            e.Data = GetActualData(e.Data)
+            e.Item = GetActualData(e.Item)
         Catch ex As Exception
             ' We'll just pass on the data that we received.
         End Try

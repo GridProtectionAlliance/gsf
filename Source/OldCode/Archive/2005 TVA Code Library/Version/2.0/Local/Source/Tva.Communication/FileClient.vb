@@ -259,7 +259,7 @@ Public Class FileClient
                         m_totalBytesReceived += received
                     Else
                         ' Unpack data and make available via event
-                        OnReceivedData(New DataEventArgs(CopyBuffer(m_buffer, 0, received)))
+                        OnReceivedData(New IdentifiableItemEventArgs(Of Byte())(CopyBuffer(m_buffer, 0, received)))
                     End If
 
                     ' We must stop processing the file if user has either opted to receive data on 

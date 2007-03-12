@@ -19,8 +19,8 @@ Public Class DataParser
 
 #Region " Event Declaration "
 
-    Public Event DataParsed(ByVal sender As Object, ByVal e As DataParsedEventArgs)
-    Public Event DataDiscarded(ByVal sender As Object, ByVal e As DataEventArgs)
+    Public Event DataParsed As EventHandler(Of DataParsedEventArgs)
+    Public Event DataDiscarded As EventHandler(Of IdentifiableItemEventArgs(Of Byte()))
 
 #End Region
 
@@ -113,33 +113,14 @@ Public Class DataParser
                     RaiseEvent DataParsed(Me, New DataParsedEventArgs(data.Source, packets))
                 Else
                     ' Data could not be parsed for some reason.
-                    RaiseEvent DataDiscarded(Me, New DataEventArgs(data.Source, data.Item))
+                    RaiseEvent DataDiscarded(Me, New IdentifiableItemEventArgs(Of Byte())(data.Source, data.Item))
                 End If
             Else
-                RaiseEvent DataDiscarded(Me, New DataEventArgs(data.Source, data.Item))
+                RaiseEvent DataDiscarded(Me, New IdentifiableItemEventArgs(Of Byte())(data.Source, data.Item))
             End If
         End If
 
     End Sub
-
-    '#Region " BinaryData Class "
-
-    '    Private Class BinaryData
-
-    '        Public Sub New(ByVal source As Guid, ByVal data As Byte())
-
-    '            Me.Source = source
-    '            Me.Data = data
-
-    '        End Sub
-
-    '        Public Source As Guid
-
-    '        Public Data As Byte()
-
-    '    End Class
-
-    '#End Region
 
 #Region " PacketTypeInfo Class "
 
