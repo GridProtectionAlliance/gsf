@@ -653,7 +653,7 @@ Public Class MultiProtocolFrameParser
         If m_lastFrameReceivedTime > 0 Then
             ' To keep precise timing on "frames per second", we wait for defined frame rate interval
             Dim sleepTime As Double = m_definedFrameRate - TicksToSeconds(Date.Now.Ticks - m_lastFrameReceivedTime)
-            If sleepTime > 0 Then Thread.Sleep(sleepTime * 1000)
+            If sleepTime > 0 Then Thread.Sleep(sleepTime * 900)
         End If
 
         m_lastFrameReceivedTime = Date.Now.Ticks

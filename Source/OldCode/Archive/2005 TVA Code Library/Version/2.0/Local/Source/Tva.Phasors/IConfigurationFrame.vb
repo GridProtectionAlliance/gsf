@@ -25,6 +25,8 @@ Public Interface IConfigurationFrame
 
     Property FrameRate() As Int16
 
+    ReadOnly Property TicksPerFrame() As Decimal
+
     Sub SetNominalFrequency(ByVal value As LineFrequency)
 
 End Interface

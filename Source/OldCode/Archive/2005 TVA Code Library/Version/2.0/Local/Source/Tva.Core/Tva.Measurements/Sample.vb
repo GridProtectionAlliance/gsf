@@ -38,7 +38,7 @@ Namespace Measurements
 
             For x As Integer = 0 To m_frames.Length - 1
                 ' We precalculate frame ticks sitting in the middle of the frame
-                m_frames(x) = parent.CreateNewFrameFunction.Invoke(ticks + (x * parent.FrameRate))
+                m_frames(x) = parent.CreateNewFrameFunction.Invoke(ticks + (x * parent.TicksPerFrame))
             Next
 
         End Sub

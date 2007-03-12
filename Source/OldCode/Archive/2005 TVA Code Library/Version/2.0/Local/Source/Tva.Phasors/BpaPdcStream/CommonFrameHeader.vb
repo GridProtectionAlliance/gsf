@@ -37,6 +37,7 @@ Namespace BpaPdcStream
             Private m_packetFlag As Byte
             Private m_wordCount As Int16
             Private m_idCode As UInt16
+            Private m_sampleNumber As Int16
             Private m_ticks As Long
             Private m_attributes As Dictionary(Of String, String)
             Private m_tag As Object
@@ -110,6 +111,15 @@ Namespace BpaPdcStream
                 End Get
                 Set(ByVal value As Int16)
                     m_wordCount = value
+                End Set
+            End Property
+
+            Public Property SampleNumber() As Int16 Implements ICommonFrameHeader.SampleNumber
+                Get
+                    Return m_sampleNumber
+                End Get
+                Set(ByVal value As Int16)
+                    m_sampleNumber = value
                 End Set
             End Property
 
@@ -226,6 +236,7 @@ Namespace BpaPdcStream
                     m_attributes.Add("Frame Length", FrameLength)
                     m_attributes.Add("Packet Flag", m_packetFlag)
                     m_attributes.Add("Word Count", m_wordCount)
+                    m_attributes.Add("Sample Number", m_sampleNumber)
 
                     Return m_attributes
                 End Get
@@ -252,7 +263,7 @@ Namespace BpaPdcStream
 
         End Sub
 
-        ' Note: in order to parse timestamp from data frame, this parse procedure needs two more bytes above and beyond common frame header binary length
+        ' Note: in order to parse timestamp from data frame, this parse procedure needs six more bytes above and beyond common frame header binary length
         Public Shared Function ParseBinaryImage(ByVal configurationFrame As ConfigurationFrame, ByVal binaryImage As Byte(), ByVal startIndex As Int32) As ICommonFrameHeader
 
             If binaryImage(startIndex) <> SyncByte Then Throw New InvalidOperationException("Bad data stream, expected sync byte AA as first byte in BPA PDCstream frame, got " & binaryImage(startIndex).ToString("X"c).PadLeft(2, "0"c))
@@ -266,22 +277,22 @@ Namespace BpaPdcStream
                     ' We just assume current timestamp for configuration frames since they don't provide one
                     .Ticks = Date.UtcNow.Ticks
                 Else
-                    ' Next two bytes in data frame is the timestamp - so we go ahead an get it
+                    ' Next six bytes in data frame is the timestamp - so we go ahead an get it
                     Dim secondOfCentury As UInt32 = EndianOrder.BigEndian.ToUInt32(binaryImage, startIndex + 4)
-                    Dim timestamp As Date
+                    .SampleNumber = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 8)
 
                     If configurationFrame Is Nothing Then
                         ' Until configuration is available, best we can do is assume Unix time tag
-                        timestamp = (New DateTime.UnixTimeTag(secondOfCentury)).ToDateTime()
+                        .Ticks = (New DateTime.UnixTimeTag(secondOfCentury)).ToDateTime().Ticks
                     Else
                         If configurationFrame.RevisionNumber = RevisionNumber.Revision0 Then
-                            timestamp = (New DateTime.NtpTimeTag(secondOfCentury)).ToDateTime()
+                            .Ticks = (New DateTime.NtpTimeTag(secondOfCentury)).ToDateTime().Ticks + _
+                                (.SampleNumber * configurationFrame.TicksPerFrame)
                         Else
-                            timestamp = (New DateTime.UnixTimeTag(secondOfCentury)).ToDateTime()
+                            .Ticks = (New DateTime.UnixTimeTag(secondOfCentury)).ToDateTime().Ticks + _
+                                (.SampleNumber * configurationFrame.TicksPerFrame)
                         End If
                     End If
-
-                    .Ticks = timestamp.Ticks
                 End If
 
                 Return .This
@@ -306,6 +317,7 @@ Namespace BpaPdcStream
             destinationFrameHeader.PacketNumber = sourceFrameHeader.PacketNumber
             destinationFrameHeader.WordCount = sourceFrameHeader.WordCount
             destinationFrameHeader.Ticks = sourceFrameHeader.Ticks
+            destinationFrameHeader.SampleNumber = sourceFrameHeader.SampleNumber
 
         End Sub
 

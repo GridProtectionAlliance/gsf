@@ -48,6 +48,7 @@ Namespace BpaPdcStream
         Private m_packetsPerSample As Int16
         Private m_streamType As StreamType
         Private m_revisionNumber As RevisionNumber
+        Private m_ticksPerFrame As Decimal
 
         Public Event ConfigFileReloaded()
 
@@ -139,6 +140,17 @@ Namespace BpaPdcStream
             End Get
             Set(ByVal Value As RevisionNumber)
                 m_revisionNumber = Value
+            End Set
+        End Property
+
+        Private Property SampleNumber() As Short Implements ICommonFrameHeader.SampleNumber
+            Get
+                Return -1
+            End Get
+            Set(ByVal value As Short)
+                ' Sample number is readonly for configuration frames - we don't throw an exception here if someone attempts to change
+                ' the packet number on a configuration frame (e.g., the CommonFrameHeader.Clone method will attempt to copy this property)
+                ' but we don't do anything with the value either.
             End Set
         End Property
 
@@ -419,12 +431,17 @@ Namespace BpaPdcStream
 
         End Function
 
+        ' Oddly enough, check sum for frames in BPA PDC stream is little-endian
+        Protected Overrides Sub AppendChecksum(ByVal buffer() As Byte, ByVal startIndex As Integer)
+
+            EndianOrder.LittleEndian.CopyBytes(CalculateChecksum(buffer, 0, startIndex), buffer, startIndex)
+
+        End Sub
+
         Protected Overrides Function ChecksumIsValid(ByVal buffer() As Byte, ByVal startIndex As Integer) As Boolean
 
             Dim sumLength As Int16 = BinaryLength - 2
-
-            'Return EndianOrder.BigEndian.ToUInt16(buffer, startIndex + sumLength) = CalculateChecksum(buffer, startIndex, sumLength)
-            Return BitConverter.ToUInt16(buffer, startIndex + sumLength) = CalculateChecksum(buffer, startIndex, sumLength)
+            Return EndianOrder.LittleEndian.ToUInt16(buffer, startIndex + sumLength) = CalculateChecksum(buffer, startIndex, sumLength)
 
         End Function
 
@@ -468,7 +485,7 @@ Namespace BpaPdcStream
 
             ' The data that's in the data stream will take precedence over what's in the
             ' in the configuration file.  The configuration file may define more PMU's than
-            ' are in the stream - in my opinon that's OK - it's when you have PMU's in the
+            ' are in the stream - in my opinion that's OK - it's when you have PMU's in the
             ' stream that aren't defined in the INI file that you'll have trouble..
 
         End Sub
@@ -489,7 +506,7 @@ Namespace BpaPdcStream
             Get
                 Dim baseAttributes As Dictionary(Of String, String) = MyBase.Attributes
 
-                baseAttributes.Add("Configuration File Name", m_iniFile.FileName)
+                If m_iniFile IsNot Nothing Then baseAttributes.Add("Configuration File Name", m_iniFile.FileName)
                 baseAttributes.Add("Packet Number", DescriptorPacketFlag)
                 baseAttributes.Add("Stream Type", m_streamType & ": " & [Enum].GetName(GetType(StreamType), m_streamType))
                 baseAttributes.Add("Revision Number", m_revisionNumber & ": " & [Enum].GetName(GetType(RevisionNumber), m_revisionNumber))

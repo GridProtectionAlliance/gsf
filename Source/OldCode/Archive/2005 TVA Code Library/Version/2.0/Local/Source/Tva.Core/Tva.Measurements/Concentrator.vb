@@ -66,7 +66,7 @@ Namespace Measurements
         Private m_framesPerSecond As Integer                                    ' Frames per second
         Private m_lagTime As Double                                             ' Allowed past time deviation tolerance
         Private m_leadTime As Double                                            ' Allowed future time deviation tolerance
-        Private m_frameRate As Decimal                                          ' Frame rate - we use a 64-bit scaled integer to avoid round-off errors in calculations
+        Private m_ticksPerFrame As Decimal                                      ' Frame rate - we use a 64-bit scaled integer to avoid round-off errors in calculations
         Private m_frameIndex As Integer                                         ' Current publishing frame index
         Private m_discardedMeasurements As Long                                 ' Total number of discarded measurements
         Private m_publishedMeasurements As Long                                 ' Total number of published measurements
@@ -123,9 +123,9 @@ Namespace Measurements
             m_realTimeTicks = currentTime.Ticks
             m_currentSampleTimestamp = BaselinedTimestamp(currentTime, BaselineTimeInterval.Second)
             m_framesPerSecond = framesPerSecond
+            m_ticksPerFrame = CDec(SecondsToTicks(1)) / CDec(framesPerSecond)
             m_lagTime = lagTime
             m_leadTime = leadTime
-            m_frameRate = Convert.ToDecimal(SecondsToTicks(1)) / Convert.ToDecimal(framesPerSecond)
             m_latestMeasurements = New ImmediateMeasurements(Me)
             m_monitorTimer = New Timers.Timer
 
@@ -250,10 +250,10 @@ Namespace Measurements
             End Set
         End Property
 
-        ''' <summary>Frame rate (i.e., ticks per frame)</summary>
-        Public ReadOnly Property FrameRate() As Decimal
+        ''' <summary>Ticks per frame</summary>
+        Public ReadOnly Property TicksPerFrame() As Decimal
             Get
-                Return m_frameRate
+                Return m_ticksPerFrame
             End Get
         End Property
 
@@ -360,7 +360,7 @@ Namespace Measurements
                 Else
                     ' We've found the right sample for this data, so we access the proper data cell by first calculating the
                     ' proper frame index (i.e., the row) - we can then directly access the correct measurement using its key
-                    Dim frame As IFrame = sample.Frames(Convert.ToInt32(TicksBeyondSecond(.Ticks) / m_frameRate))
+                    Dim frame As IFrame = sample.Frames(Convert.ToInt32(TicksBeyondSecond(.Ticks) / m_ticksPerFrame))
                     Dim frameMeasurement As IMeasurement
 
                     SyncLock frame.Measurements
@@ -470,7 +470,7 @@ Namespace Measurements
                     .Append("        Defined frame rate: ")
                     .Append(m_framesPerSecond)
                     .Append(" frames/sec, ")
-                    .Append(m_frameRate.ToString("0.00"))
+                    .Append(m_ticksPerFrame.ToString("0.00"))
                     .Append(" ticks/frame")
                     .Append(Environment.NewLine)
                     .Append("    Actual mean frame rate: ")

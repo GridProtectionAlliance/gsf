@@ -17,6 +17,7 @@
 
 Imports System.Runtime.Serialization
 Imports Tva.DateTime
+Imports Tva.DateTime.Common
 
 ''' <summary>This class represents the protocol independent common implementation of a configuration frame that can be sent or received from a PMU.</summary>
 <CLSCompliant(False), Serializable()> _
@@ -26,6 +27,7 @@ Public MustInherit Class ConfigurationFrameBase
     Implements IConfigurationFrame
 
     Private m_frameRate As Int16
+    Private m_ticksPerFrame As Decimal
 
     Protected Sub New()
     End Sub
@@ -35,7 +37,7 @@ Public MustInherit Class ConfigurationFrameBase
         MyBase.New(info, context)
 
         ' Deserialize configuration frame
-        m_frameRate = info.GetInt16("frameRate")
+        FrameRate = info.GetInt16("frameRate")
 
     End Sub
 
@@ -48,8 +50,7 @@ Public MustInherit Class ConfigurationFrameBase
     Protected Sub New(ByVal idCode As UInt16, ByVal cells As ConfigurationCellCollection, ByVal ticks As Long, ByVal frameRate As Int16)
 
         MyBase.New(idCode, cells, ticks)
-
-        m_frameRate = frameRate
+        MyClass.FrameRate = frameRate
 
     End Sub
 
@@ -86,7 +87,14 @@ Public MustInherit Class ConfigurationFrameBase
         End Get
         Set(ByVal value As Int16)
             m_frameRate = value
+            m_ticksPerFrame = CDec(SecondsToTicks(1)) / CDec(FrameRate)
         End Set
+    End Property
+
+    Public Overridable ReadOnly Property TicksPerFrame() As Decimal Implements IConfigurationFrame.TicksPerFrame
+        Get
+            Return m_ticksPerFrame
+        End Get
     End Property
 
     Public Overridable Sub SetNominalFrequency(ByVal value As LineFrequency) Implements IConfigurationFrame.SetNominalFrequency
@@ -111,6 +119,7 @@ Public MustInherit Class ConfigurationFrameBase
             Dim baseAttributes As Dictionary(Of String, String) = MyBase.Attributes
 
             baseAttributes.Add("Frame Rate", FrameRate)
+            baseAttributes.Add("Ticks Per Frame", TicksPerFrame)
 
             Return baseAttributes
         End Get

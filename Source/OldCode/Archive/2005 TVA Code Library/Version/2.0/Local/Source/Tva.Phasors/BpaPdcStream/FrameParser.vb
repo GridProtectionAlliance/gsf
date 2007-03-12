@@ -146,8 +146,8 @@ Namespace BpaPdcStream
         Protected Overrides Sub ParseFrame(ByVal buffer() As Byte, ByVal offset As Integer, ByVal length As Integer, ByRef parsedFrameLength As Integer)
 
             ' See if there is enough data in the buffer to parse the common frame header.
-            ' Note that in order to get time tag for data frames, we'll need at least two more bytes 
-            If length >= CommonFrameHeader.BinaryLength + 2 Then
+            ' Note that in order to get time tag for data frames, we'll need at least six more bytes 
+            If length >= CommonFrameHeader.BinaryLength + 6 Then
                 ' Parse frame header
                 Dim parsedFrameHeader As ICommonFrameHeader = CommonFrameHeader.ParseBinaryImage(m_configurationFrame, buffer, offset)
 
@@ -210,7 +210,7 @@ Namespace BpaPdcStream
 
         Private Function CastToDerivedConfigurationFrame(ByVal configurationFrame As IConfigurationFrame) As ConfigurationFrame
 
-            If TypeOf configurationFrame Is IeeeC37_118.ConfigurationFrame Then
+            If TypeOf configurationFrame Is BpaPdcStream.ConfigurationFrame Then
                 Return configurationFrame
             Else
                 Return New BpaPdcStream.ConfigurationFrame(configurationFrame)

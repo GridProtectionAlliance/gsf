@@ -29,6 +29,7 @@ Namespace BpaPdcStream
         Private m_flags As ChannelFlags
         Private m_reservedFlags As ReservedFlags
         Private m_sampleNumber As Int16
+        Private m_dataRate As Byte
 
         Protected Sub New()
         End Sub
@@ -136,6 +137,19 @@ Namespace BpaPdcStream
             End Get
             Set(ByVal value As ReservedFlags)
                 m_reservedFlags = value
+            End Set
+        End Property
+
+        Public Property DataRate() As Byte
+            Get
+                If Parent.ConfigurationFrame.RevisionNumber >= RevisionNumber.Revision2 Then
+                    Return Parent.ConfigurationFrame.FrameRate
+                Else
+                    Return m_dataRate
+                End If
+            End Get
+            Set(ByVal value As Byte)
+                m_dataRate = value
             End Set
         End Property
 
@@ -315,9 +329,17 @@ Namespace BpaPdcStream
 
                 ' Add PDCstream specific image
                 buffer(0) = m_flags
-                buffer(1) = (Convert.ToByte(AnalogValues.Count) Or m_reservedFlags)
-                buffer(2) = (Convert.ToByte(DigitalValues.Count) Or IEEEFormatFlags)
-                buffer(3) = Convert.ToByte(PhasorValues.Count)
+
+                If Parent.ConfigurationFrame.RevisionNumber >= 2 Then
+                    buffer(1) = (Convert.ToByte(AnalogValues.Count) Or m_reservedFlags)
+                    buffer(2) = (Convert.ToByte(DigitalValues.Count) Or IEEEFormatFlags)
+                    buffer(3) = Convert.ToByte(PhasorValues.Count)
+                Else
+                    buffer(1) = m_dataRate
+                    buffer(2) = Convert.ToByte(DigitalValues.Count)
+                    buffer(3) = Convert.ToByte(PhasorValues.Count)
+                End If
+
                 EndianOrder.BigEndian.CopyBytes(m_sampleNumber, buffer, 4)
 
                 Return buffer
@@ -334,13 +356,19 @@ Namespace BpaPdcStream
             ' Parse PDCstream specific header image
             m_flags = binaryImage(startIndex)
 
-            ' Strip off IEEE flags
-            m_reservedFlags = (analogs And ReservedFlags.AnalogWordsMask)
-            IEEEFormatFlags = (digitals And IEEEFormatFlags.DigitalWordsMask)
+            If Parent.ConfigurationFrame.RevisionNumber >= 2 Then
+                ' Strip off IEEE flags
+                m_reservedFlags = (analogs And ReservedFlags.AnalogWordsMask)
+                IEEEFormatFlags = (digitals And IEEEFormatFlags.DigitalWordsMask)
 
-            ' Leave word counts
-            analogs = (analogs And Not ReservedFlags.AnalogWordsMask)
-            digitals = (digitals And Not IEEEFormatFlags.DigitalWordsMask)
+                ' Leave word counts
+                analogs = (analogs And Not ReservedFlags.AnalogWordsMask)
+                digitals = (digitals And Not IEEEFormatFlags.DigitalWordsMask)
+            Else
+                ' Older revisions didn't allow analogs
+                m_dataRate = analogs
+                analogs = 0
+            End If
 
             ' Algorithm Case: Determine best course of action when stream counts don't match
             ' configuration file.  Think about what *will* happen when new data appears in

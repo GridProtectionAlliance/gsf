@@ -34,6 +34,7 @@ Namespace BpaPdcStream
 
         Private m_packetNumber As Byte
         Private m_sampleNumber As Int16
+        Private m_legacyLabels As String()
 
         Public Sub New()
 
@@ -114,7 +115,7 @@ Namespace BpaPdcStream
             End Set
         End Property
 
-        Public Property SampleNumber() As Int16
+        Public Property SampleNumber() As Int16 Implements ICommonFrameHeader.SampleNumber
             Get
                 Return m_sampleNumber
             End Get
@@ -156,6 +157,12 @@ Namespace BpaPdcStream
             End Get
         End Property
 
+        Public ReadOnly Property LegacyLabels() As String()
+            Get
+                Return m_legacyLabels
+            End Get
+        End Property
+
         <CLSCompliant(False)> _
         Protected Overrides Function CalculateChecksum(ByVal buffer() As Byte, ByVal offset As Int32, ByVal length As Int32) As UInt16
 
@@ -164,19 +171,24 @@ Namespace BpaPdcStream
 
         End Function
 
+        ' Oddly enough, check sum for frames in BPA PDC stream is little-endian
+        Protected Overrides Sub AppendChecksum(ByVal buffer() As Byte, ByVal startIndex As Integer)
+
+            EndianOrder.LittleEndian.CopyBytes(CalculateChecksum(buffer, 0, startIndex), buffer, startIndex)
+
+        End Sub
+
         Protected Overrides Function ChecksumIsValid(ByVal buffer() As Byte, ByVal startIndex As Integer) As Boolean
 
             Dim sumLength As Int16 = BinaryLength - 2
-
-            'Return EndianOrder.BigEndian.ToUInt16(buffer, startIndex + sumLength) = CalculateChecksum(buffer, startIndex, sumLength)
-            Return BitConverter.ToUInt16(buffer, startIndex + sumLength) = CalculateChecksum(buffer, startIndex, sumLength)
+            Return EndianOrder.LittleEndian.ToUInt16(buffer, startIndex + sumLength) = CalculateChecksum(buffer, startIndex, sumLength)
 
         End Function
 
         Protected Overrides ReadOnly Property HeaderLength() As UInt16
             Get
                 If ConfigurationFrame.StreamType = StreamType.Legacy Then
-                    Return 12 + Cells.Count * 8
+                    Return 12 + ConfigurationFrame.Cells.Count * 8
                 Else
                     Return 12
                 End If
@@ -226,21 +238,28 @@ Namespace BpaPdcStream
             Dim dataCellCount As Int16
 
             ' Only need to parse what wan't already parsed in common frame header
-            m_sampleNumber = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 8)
             dataCellCount = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 10)
 
             If dataCellCount <> configurationFrame.Cells.Count Then
                 Throw New InvalidOperationException("Stream/Config File Mismatch: PMU count (" & dataCellCount & ") in stream does not match defined count in configuration file (" & configurationFrame.Cells.Count & ")")
             End If
 
-            ' Add "milliseconds" to current timestamp
-            Ticks = Timestamp.AddMilliseconds(m_sampleNumber / configurationFrame.FrameRate * 1000).Ticks
-
             ' Note: because "HeaderLength" needs configuration frame and is called before associated configuration frame
             ' assignment normally occurs - we assign configuration frame in advance...
             Me.ConfigurationFrame = configurationFrame
 
-            ' We don't need PMU info in data frame from a parsing perspective, even if available in legacy stream - so we're done...
+            ' We'll at least retrieve legacy labels if defined (might be useful for debugging dynamic changes in data-stream)
+            If configurationFrame.StreamType = StreamType.Legacy Then
+                Dim index As Integer = 12
+
+                For x As Integer = 0 To configurationFrame.Cells.Count - 1
+                    m_legacyLabels = CreateArray(Of String)(configurationFrame.Cells.Count)
+                    With configurationFrame.Cells(x)
+                        m_legacyLabels(x) = Encoding.ASCII.GetString(binaryImage, index, 4)
+                        index += 8
+                    End With
+                Next
+            End If
 
         End Sub
 
@@ -260,6 +279,14 @@ Namespace BpaPdcStream
 
                 baseAttributes.Add("Packet Number", m_packetNumber)
                 baseAttributes.Add("Sample Number", m_sampleNumber)
+
+                If m_legacyLabels IsNot Nothing Then
+                    baseAttributes.Add("Legacy Label Count", m_legacyLabels.Length)
+
+                    For x As Integer = 0 To m_legacyLabels.Length - 1
+                        baseAttributes.Add("    Legacy Label " & x, m_legacyLabels(x))
+                    Next
+                End If
 
                 Return baseAttributes
             End Get

@@ -30,6 +30,8 @@ Namespace BpaPdcStream
 
         Property WordCount() As Int16
 
+        Property SampleNumber() As Int16
+
         ReadOnly Property FrameLength() As Int16
 
     End Interface
