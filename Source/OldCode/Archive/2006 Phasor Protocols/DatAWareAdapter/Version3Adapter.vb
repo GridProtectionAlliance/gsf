@@ -18,6 +18,7 @@
 Imports InterfaceAdapters
 Imports System.IO
 Imports System.Text
+Imports System.Threading
 Imports Tva.Common
 Imports Tva.Collections.Common
 Imports Tva.Measurements
@@ -32,9 +33,10 @@ Public Class Version3Adapter
     Private m_archiverIP As String
     Private m_archiverPort As Integer
     Private m_maximumEvents As Integer
-    Private m_useTimeout As Boolean
     Private m_bufferSize As Integer
     Private m_buffer As Byte()
+    Private m_waitHandle As AutoResetEvent
+    Private m_connectionException As Exception
     Private WithEvents m_connection As TcpClient
 
     Public Sub New()
@@ -44,7 +46,7 @@ Public Class Version3Adapter
         m_archiverIP = "127.0.0.1"
         m_archiverPort = 5000
         m_maximumEvents = 100000
-        m_useTimeout = True
+        m_waitHandle = New AutoResetEvent(False)
 
     End Sub
 
@@ -73,7 +75,16 @@ Public Class Version3Adapter
         m_connection = New TcpClient("server=" & m_archiverIP & "; port=" & m_archiverPort)
         m_connection.Handshake = True
         m_connection.PayloadAware = True
+        m_connection.MaximumConnectionAttempts = 1
+
+        m_connectionException = Nothing
         m_connection.Connect()
+
+        ' Wait until connection is finished (by success or failure)...
+        m_waitHandle.WaitOne()
+
+        ' If there was a connection exception, re-throw to restart connect cycle
+        If m_connectionException IsNot Nothing Then Throw m_connectionException
 
     End Sub
 
@@ -119,9 +130,33 @@ Public Class Version3Adapter
 
     End Sub
 
+    Private Sub m_connection_Connected(ByVal sender As Object, ByVal e As System.EventArgs) Handles m_connection.Connected
+
+        ' Signal completion of connection cycle
+        m_waitHandle.Set()
+
+    End Sub
+
+    Private Sub m_connection_ConnectingCancelled(ByVal sender As Object, ByVal e As System.EventArgs) Handles m_connection.ConnectingCancelled
+
+        ' Signal completion of connection cycle
+        m_waitHandle.Set()
+
+    End Sub
+
+    Private Sub m_connection_ConnectingException(ByVal sender As Object, ByVal e As Tva.ExceptionEventArgs) Handles m_connection.ConnectingException
+
+        ' Take note of connection exception
+        m_connectionException = e.Exception
+
+        ' Signal completion of connection cycle
+        m_waitHandle.Set()
+
+    End Sub
+
     Private Sub m_connection_Disconnected(ByVal sender As Object, ByVal e As System.EventArgs) Handles m_connection.Disconnected
 
-        Disconnect()
+        Connect()
 
     End Sub
 
