@@ -86,7 +86,7 @@ Namespace Files
 
 #Region " IBinaryDataProvider Implementation "
 
-        Public ReadOnly Property BinaryData() As Byte() Implements IBinaryDataProvider.BinaryData
+        Public ReadOnly Property BinaryData() As Byte() Implements IBinaryDataProvider.BinaryImage
             Get
                 Dim data As Byte() = CreateArray(Of Byte)(Size)
 
@@ -97,7 +97,7 @@ Namespace Files
             End Get
         End Property
 
-        Public ReadOnly Property BinaryDataLength() As Integer Implements IBinaryDataProvider.BinaryDataLength
+        Public ReadOnly Property BinaryDataLength() As Integer Implements IBinaryDataProvider.BinaryLength
             Get
                 Return Size
             End Get

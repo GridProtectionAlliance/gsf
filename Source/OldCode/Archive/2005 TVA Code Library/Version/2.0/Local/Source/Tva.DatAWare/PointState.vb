@@ -151,7 +151,7 @@ Public Class PointState
 
 #Region " IBinaryDataProvider Implementation "
 
-    Public ReadOnly Property BinaryData() As Byte() Implements IBinaryDataProvider.BinaryData
+    Public ReadOnly Property BinaryData() As Byte() Implements IBinaryDataProvider.BinaryImage
         Get
             Dim data As Byte() = CreateArray(Of Byte)(Size)
 
@@ -167,7 +167,7 @@ Public Class PointState
         End Get
     End Property
 
-    Public ReadOnly Property BinaryDataLength() As Integer Implements IBinaryDataProvider.BinaryDataLength
+    Public ReadOnly Property BinaryDataLength() As Integer Implements IBinaryDataProvider.BinaryLength
         Get
             Return Size
         End Get

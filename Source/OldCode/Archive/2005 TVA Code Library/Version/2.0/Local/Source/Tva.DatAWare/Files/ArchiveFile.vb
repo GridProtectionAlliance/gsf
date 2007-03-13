@@ -23,7 +23,6 @@ Namespace Files
         Private m_intercomFile As IntercomFile
         Private m_fat As ArchiveFileAllocationTable
         Private m_fileStream As FileStream
-        Private m_dataBlockRequestCount As Integer
         Private m_rolloverPreparationDone As Boolean
         Private m_rolloverPreparationThread As Thread
 
@@ -214,7 +213,6 @@ Namespace Files
                 m_fat = Nothing
                 m_fileStream.Close()
                 m_fileStream = Nothing
-                m_dataBlockRequestCount = 0
                 m_rolloverPreparationThread.Abort()
 
                 RaiseEvent FileClosed(Me, EventArgs.Empty)
@@ -307,10 +305,9 @@ Namespace Files
                                     (pointState.ActiveDataBlock IsNot Nothing AndAlso pointState.ActiveDataBlock.SlotsAvailable <= 0) Then
                                 ' We either don't have a active data block where we can archive the point data or we have a 
                                 ' active data block but it is full, so we have to request a new data block from the FAT.
-                                m_dataBlockRequestCount += 1
                                 pointState.ActiveDataBlock = m_fat.RequestDataBlock(pointData.Definition.ID, pointData.TimeTag)
 
-                                If m_dataBlockRequestCount >= m_fat.DataBlockCount * (m_rolloverPreparationThreshold / 100) AndAlso _
+                                If m_fat.DataBlocksAvailable <= m_fat.DataBlockCount * (m_rolloverPreparationThreshold / 100) AndAlso _
                                         Not m_rolloverPreparationDone AndAlso Not m_rolloverPreparationThread.IsAlive Then
                                     ' We've requested the specified percent of the total number of data blocks in the file, 
                                     ' so we must now prepare for the rollver process since has not been done yet and it is 
@@ -405,7 +402,7 @@ Namespace Files
 
         End Function
 
-        Private Function ToBeArchived(ByVal pointDate As StandardPointData) As Boolean
+        Private Function ToBeArchived(ByVal pointData As StandardPointData) As Boolean
 
             ' TODO: Perform compression check here.
             Return True

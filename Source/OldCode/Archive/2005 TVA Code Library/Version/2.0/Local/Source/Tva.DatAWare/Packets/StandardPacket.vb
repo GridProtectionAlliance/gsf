@@ -32,7 +32,7 @@ Namespace Packets
 
         Public Sub New()
 
-            MyBase.New(PacketActionType.SaveAndReply)
+            MyBase.New(PacketActionType.SaveOnly)
 
         End Sub
 
@@ -129,6 +129,8 @@ Namespace Packets
                             ' Its likely that we encounter an exception here if the entire buffer is not well formed.
                         End Try
                     Next
+                    packets(packets.Count - 1).ActionType = PacketActionType.SaveAndReply
+
                     Return True
                 End If
             End If

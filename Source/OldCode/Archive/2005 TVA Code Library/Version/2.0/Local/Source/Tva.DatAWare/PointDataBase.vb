@@ -228,9 +228,9 @@ Public MustInherit Class PointDataBase
 
 #Region " IBinaryDataProvider Implementation "
 
-    Public MustOverride ReadOnly Property BinaryData() As Byte() Implements IBinaryDataProvider.BinaryData
+    Public MustOverride ReadOnly Property BinaryData() As Byte() Implements IBinaryDataProvider.BinaryImage
 
-    Public MustOverride ReadOnly Property BinaryDataLength() As Integer Implements IBinaryDataProvider.BinaryDataLength
+    Public MustOverride ReadOnly Property BinaryDataLength() As Integer Implements IBinaryDataProvider.BinaryLength
 
 #End Region
 

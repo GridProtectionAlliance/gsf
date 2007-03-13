@@ -1,7 +1,7 @@
 Public Interface IBinaryDataProvider
 
-    ReadOnly Property BinaryData() As Byte()
+    ReadOnly Property BinaryImage() As Byte()
 
-    ReadOnly Property BinaryDataLength() As Integer
+    ReadOnly Property BinaryLength() As Integer
 
 End Interface

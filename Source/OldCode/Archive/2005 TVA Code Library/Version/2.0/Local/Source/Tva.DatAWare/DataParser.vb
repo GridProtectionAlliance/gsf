@@ -32,7 +32,7 @@ Public Class DataParser
         End Get
     End Property
 
-    Public ReadOnly Property UnparsedDataCount() As Long
+    Public ReadOnly Property UnparsedDataCount() As Integer
         Get
             Return m_dataQueue.Count
         End Get

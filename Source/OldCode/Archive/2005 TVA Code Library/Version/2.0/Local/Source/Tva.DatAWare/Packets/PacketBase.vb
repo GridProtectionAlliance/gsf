@@ -51,10 +51,13 @@ Namespace Packets
             End Set
         End Property
 
-        Public ReadOnly Property ActionType() As PacketActionType Implements IPacket.ActionType
+        Public Property ActionType() As PacketActionType Implements IPacket.ActionType
             Get
                 Return m_actionType
             End Get
+            Set(ByVal value As PacketActionType)
+                m_actionType = value
+            End Set
         End Property
 
         Public MustOverride ReadOnly Property ReplyData() As Byte() Implements IPacket.ReplyData

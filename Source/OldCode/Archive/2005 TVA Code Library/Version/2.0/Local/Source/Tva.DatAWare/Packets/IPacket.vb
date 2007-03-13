@@ -6,7 +6,7 @@ Namespace Packets
 
         Property MetadataFile() As Files.MetadataFile
 
-        ReadOnly Property ActionType() As PacketActionType
+        Property ActionType() As PacketActionType
 
         ReadOnly Property ReplyData() As Byte()
 

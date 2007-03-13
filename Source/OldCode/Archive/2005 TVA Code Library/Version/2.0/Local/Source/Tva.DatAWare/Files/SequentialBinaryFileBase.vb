@@ -208,7 +208,7 @@ Namespace Files
                 m_fileStream.Seek(0, SeekOrigin.Begin)
                 ' Write all of the records to the file.
                 For i As Integer = 0 To m_fileRecords.Count - 1
-                    m_fileStream.Write(m_fileRecords(i).BinaryData, 0, RecordSize)
+                    m_fileStream.Write(m_fileRecords(i).BinaryImage, 0, RecordSize)
                     RaiseEvent DataSaving(Me, New ProgressEventArgs(Of Integer)(i + 1, m_fileRecords.Count))
                 Next
                 m_fileStream.Flush()    ' Ensure that the data is written to the file.

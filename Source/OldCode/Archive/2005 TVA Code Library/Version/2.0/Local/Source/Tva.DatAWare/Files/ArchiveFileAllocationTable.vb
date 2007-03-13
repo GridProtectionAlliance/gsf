@@ -146,6 +146,17 @@ Namespace Files
             End Get
         End Property
 
+        Public ReadOnly Property DataBlocksAvailable() As Integer
+            Get
+                Dim unusedPointerIndex As Integer = m_dataBlockPointers.IndexOf(New ArchiveDataBlockPointer())
+                If unusedPointerIndex >= 0 Then
+                    Return m_dataBlockCount - unusedPointerIndex
+                Else
+                    Return 0
+                End If
+            End Get
+        End Property
+
         Public ReadOnly Property DataBlockPointers() As List(Of ArchiveDataBlockPointer)
             Get
                 Return m_dataBlockPointers
@@ -231,7 +242,7 @@ Namespace Files
 
 #Region " IBinaryDataProvider Implementation "
 
-        Public ReadOnly Property BinaryData() As Byte() Implements IBinaryDataProvider.BinaryData
+        Public ReadOnly Property BinaryData() As Byte() Implements IBinaryDataProvider.BinaryImage
             Get
                 Dim data As Byte() = CreateArray(Of Byte)(BinaryDataLength)
                 Dim arrayDescriptor As VBArrayDescriptor = VBArrayDescriptor.OneBasedOneDimensionalArray(m_dataBlockCount)
@@ -254,7 +265,7 @@ Namespace Files
             End Get
         End Property
 
-        Public ReadOnly Property BinaryDataLength() As Integer Implements IBinaryDataProvider.BinaryDataLength
+        Public ReadOnly Property BinaryDataLength() As Integer Implements IBinaryDataProvider.BinaryLength
             Get
                 ' We add 10 bytes for the array descriptor that required for reading the file from VB.
                 Return (10 + (m_dataBlockCount * ArchiveDataBlockPointer.Size) + MinimumBinaryLength)
