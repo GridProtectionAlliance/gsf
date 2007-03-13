@@ -49,6 +49,8 @@ Namespace BpaPdcStream
         Inherits ConnectionParametersBase
 
         Private m_configurationFileName As String
+        Private m_reloadConfigurationFrameOnChange As Boolean
+        Private m_refreshConfigurationFileOnChange As Boolean
 
         Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
 
@@ -58,6 +60,9 @@ Namespace BpaPdcStream
         End Sub
 
         Public Sub New()
+
+            m_reloadConfigurationFrameOnChange = True
+
         End Sub
 
         <Category("Required Connection Parameters"), Description("Defines required external BPA PDCstream INI based configuration file."), _
@@ -68,6 +73,26 @@ Namespace BpaPdcStream
             End Get
             Set(ByVal value As String)
                 m_configurationFileName = value
+            End Set
+        End Property
+
+        <Category("Optional Connection Parameters"), Description("Set to False to always use latest configuration frame parsed from stream, set to True to only use configuration frame from stream if it has changed. BPA PDCstream configuration frame arrives in stream every minute and is typically the same so this property defaults to True so that the configuration frame parsed from stream is only updated if it has changed."), DefaultValue(True)> _
+        Public Property ReloadConfigurationFrameOnChange() As Boolean
+            Get
+                Return m_reloadConfigurationFrameOnChange
+            End Get
+            Set(ByVal value As Boolean)
+                m_reloadConfigurationFrameOnChange = value
+            End Set
+        End Property
+
+        <Category("Optional Connection Parameters"), Description("Set to True to automatically reload configuration file when it has changed on disk."), DefaultValue(True)> _
+        Public Property RefreshConfigurationFileOnChange() As Boolean
+            Get
+                Return m_refreshConfigurationFileOnChange
+            End Get
+            Set(ByVal value As Boolean)
+                m_refreshConfigurationFileOnChange = value
             End Set
         End Property
 

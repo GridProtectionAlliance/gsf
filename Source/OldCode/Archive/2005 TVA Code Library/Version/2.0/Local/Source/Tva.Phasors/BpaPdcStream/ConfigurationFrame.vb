@@ -41,6 +41,7 @@ Namespace BpaPdcStream
 
         Private m_readWriteLock As ReaderWriterLock
         Private m_iniFile As IniFile
+        Private m_configurationFileCells As ConfigurationCellCollection
         Private m_defaultPhasorV As PhasorDefinition
         Private m_defaultPhasorI As PhasorDefinition
         Private m_defaultFrequency As FrequencyDefinition
@@ -122,6 +123,12 @@ Namespace BpaPdcStream
         Public Shadows ReadOnly Property Cells() As ConfigurationCellCollection
             Get
                 Return MyBase.Cells
+            End Get
+        End Property
+
+        Public ReadOnly Property ConfigurationFileCells() As ConfigurationCellCollection
+            Get
+                Return m_configurationFileCells
             End Get
         End Property
 
@@ -207,7 +214,11 @@ Namespace BpaPdcStream
                     m_defaultFrequency = New FrequencyDefinition(Nothing, m_iniFile.KeyValue("DEFAULT", "Frequency", DefaultFrequencyEntry))
                     FrameRate = Convert.ToInt16(m_iniFile.KeyValue("CONFIG", "SampleRate", "30"))
 
-                    Cells.Clear()
+                    ' We read all cells in the config file into their own configuration cell collection - cells parsed
+                    ' from the configuration frame will be mapped to their associated config file cell by ID label
+                    ' when the configuration cell is parsed from the configuration frame
+                    If m_configurationFileCells Is Nothing Then m_configurationFileCells = New ConfigurationCellCollection
+                    m_configurationFileCells.Clear()
 
                     ' Load phasor data for each section in config file...
                     For Each section As String In m_iniFile.SectionNames()
@@ -229,7 +240,7 @@ Namespace BpaPdcStream
 
                                 pmuCell.FrequencyDefinition = New FrequencyDefinition(pmuCell, m_iniFile.KeyValue(section, "Frequency", DefaultFrequencyEntry))
 
-                                Cells.Add(pmuCell)
+                                m_configurationFileCells.Add(pmuCell)
                             End If
                         End If
                     Next
@@ -486,7 +497,7 @@ Namespace BpaPdcStream
             ' The data that's in the data stream will take precedence over what's in the
             ' in the configuration file.  The configuration file may define more PMU's than
             ' are in the stream - in my opinion that's OK - it's when you have PMU's in the
-            ' stream that aren't defined in the INI file that you'll have trouble..
+            ' stream that aren't defined in the INI file that you'll have trouble...
 
         End Sub
 

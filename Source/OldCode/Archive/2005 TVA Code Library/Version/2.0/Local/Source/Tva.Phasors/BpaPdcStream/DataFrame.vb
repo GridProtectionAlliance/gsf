@@ -199,7 +199,7 @@ Namespace BpaPdcStream
             Get
                 Dim buffer As Byte() = CreateArray(Of Byte)(HeaderLength)
 
-                ' Common in common frame header portion of header image
+                ' Copy in common frame header portion of header image
                 System.Buffer.BlockCopy(CommonFrameHeader.BinaryImage(Me), 0, buffer, 0, CommonFrameHeader.BinaryLength)
 
                 If ConfigurationFrame.RevisionNumber = RevisionNumber.Revision0 Then

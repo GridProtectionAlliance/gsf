@@ -27,6 +27,7 @@ Namespace BpaPdcStream
 
         Inherits ConfigurationCellBase
 
+        Private m_configurationFileCell As ConfigurationCell
         Private m_ieeeFormatFlags As IEEEFormatFlags
         Private m_offset As UInt16
         Private m_reserved As Int16
@@ -82,6 +83,77 @@ Namespace BpaPdcStream
             Get
                 Return MyBase.Parent
             End Get
+        End Property
+
+        Public Property ConfigurationFileCell() As ConfigurationCell
+            Get
+                Return m_configurationFileCell
+            End Get
+            Set(ByVal value As ConfigurationCell)
+                m_configurationFileCell = value
+            End Set
+        End Property
+
+        ' We use phasor definitions, station name, ID code and frequency definition of associated configuration cell that was read from INI file
+        Public Overrides ReadOnly Property PhasorDefinitions() As PhasorDefinitionCollection
+            Get
+                If m_configurationFileCell Is Nothing Then
+                    Return MyBase.PhasorDefinitions
+                Else
+                    Return m_configurationFileCell.PhasorDefinitions
+                End If
+            End Get
+        End Property
+
+        Public Overrides Property StationName() As String
+            Get
+                If m_configurationFileCell Is Nothing Then
+                    Return MyBase.StationName
+                Else
+                    Return m_configurationFileCell.StationName
+                End If
+            End Get
+            Set(ByVal value As String)
+                If m_configurationFileCell Is Nothing Then
+                    MyBase.StationName = value
+                Else
+                    m_configurationFileCell.StationName = value
+                End If
+            End Set
+        End Property
+
+        Public Overrides Property IDCode() As UInt16
+            Get
+                If m_configurationFileCell Is Nothing Then
+                    Return MyBase.IDCode
+                Else
+                    Return m_configurationFileCell.IDCode
+                End If
+            End Get
+            Set(ByVal value As UInt16)
+                If m_configurationFileCell Is Nothing Then
+                    MyBase.IDCode = value
+                Else
+                    m_configurationFileCell.IDCode = value
+                End If
+            End Set
+        End Property
+
+        Public Overrides Property FrequencyDefinition() As IFrequencyDefinition
+            Get
+                If m_configurationFileCell Is Nothing Then
+                    Return MyBase.FrequencyDefinition
+                Else
+                    Return m_configurationFileCell.FrequencyDefinition
+                End If
+            End Get
+            Set(ByVal value As IFrequencyDefinition)
+                If m_configurationFileCell Is Nothing Then
+                    MyBase.FrequencyDefinition = value
+                Else
+                    m_configurationFileCell.FrequencyDefinition = value
+                End If
+            End Set
         End Property
 
         Public Overrides ReadOnly Property MaximumStationNameLength() As Int32
@@ -218,6 +290,9 @@ Namespace BpaPdcStream
             IDLabel = Encoding.ASCII.GetString(binaryImage, startIndex, 4)
             Reserved = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 4)
             Offset = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 6)
+
+            ' Attempt to associate this configuration cell with information read from external INI based configuration file
+            Parent.ConfigurationFileCells.TryGetByIDLabel(IDLabel, m_configurationFileCell)
 
         End Sub
 

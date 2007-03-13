@@ -370,22 +370,26 @@ Namespace BpaPdcStream
                 analogs = 0
             End If
 
-            ' Algorithm Case: Determine best course of action when stream counts don't match
-            ' configuration file.  Think about what *will* happen when new data appears in
-            ' the stream that's not in the config file - you could raise an event notifying
-            ' consumer about the mismatch instead of raising an exception - could even make
-            ' a boolean property that would allow either case.  The important thing to consider
-            ' is that to parse the cell images you have to have a defined definition (see base
-            ' class "Phasors.DataCellBase.ParseBodyImage" - more in stream than in config file
-            ' and you won't get the new value, too few and you don't have enough definitions -
-            ' that would be bad - either way the definitions won't line up with the appropriate
-            ' data value and you won't know which one is missing or added.  I can't change the
-            ' protocol so this is enough argument to just raise an error for config file/stream
-            ' mismatch.  So for now we'll just throw an exception and deal with consequences :)
-            ' Note that this only applies to PDCstream protocol
+            ' Algorithm Case: Determine best course of action when stream counts don't match counts defined in the
+            ' external INI based configuration file.  Think about what *will* happen when new data appears in the
+            ' stream that's not in the config file - you could raise an event notifying consumer about the mismatch
+            ' instead of raising an exception - could even make a boolean property that would allow either case.
+            ' The important thing to consider is that to parse the cell images you have to have a defined
+            ' definition (see base class "Phasors.DataCellBase.ParseBodyImage").  If you have more items defined
+            ' in the stream than you do in the config file then you won't get the new value, too few items and you
+            ' don't have enough definitions to correctly interpret the data (that would be bad) - either way the
+            ' definitions won't line up with the appropriate data value and you won't know which one is missing or
+            ' added.  I can't change the protocol so this is enough argument to just raise an error for config
+            ' file/stream mismatch.  So for now we'll just throw an exception and deal with consequences :)
+            ' Note that this only applies to PDCstream protocol.
+
+            ' Addendum: After running this with several protocol implementations I noticed that if a device wasn't
+            ' reporting, the phasor count dropped to zero even if there were phasors defined in the configuration
+            ' file, so the only time an exception is thrown is if there are more phasors defined in the the stream
+            ' than there are defined in the INI file...
 
             ' Phasors should be already defined in BPA PDCstream configuration file - we'll stop if they're not
-            If phasors <> configurationCell.PhasorDefinitions.Count Then
+            If phasors > configurationCell.PhasorDefinitions.Count Then
                 Throw New InvalidOperationException("Stream/Config File Mismatch: Phasor value count in stream (" & phasors & ") does not match defined count in configuration file (" & configurationCell.PhasorDefinitions.Count & ") for " & configurationCell.IDLabel)
             End If
 

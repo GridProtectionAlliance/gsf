@@ -20,6 +20,7 @@ Imports System.Text
 Imports System.ComponentModel
 Imports Tva.Collections
 Imports Tva.IO.Common
+Imports Tva.IO.FilePath
 Imports Tva.Phasors.Common
 
 Namespace BpaPdcStream
@@ -37,6 +38,7 @@ Namespace BpaPdcStream
         Public Event ReceivedCommonFrameHeader(ByVal frame As ICommonFrameHeader)
         Public Shadows Event ReceivedConfigurationFrame(ByVal frame As ConfigurationFrame)
         Public Shadows Event ReceivedDataFrame(ByVal frame As DataFrame)
+        Public Event ConfigurationFileChanged()
 
 #End Region
 
@@ -44,6 +46,10 @@ Namespace BpaPdcStream
 
         Private m_configurationFrame As ConfigurationFrame
         Private m_configurationFileName As String
+        Private m_configurationFileChanged As Boolean
+        Private WithEvents m_configurationFileWatcher As FileSystemWatcher
+        Private m_reloadConfigurationFrameOnChange As Boolean
+        Private m_refreshConfigurationFileOnChange As Boolean
 
 #End Region
 
@@ -55,6 +61,9 @@ Namespace BpaPdcStream
         Public Sub New(ByVal configurationFileName As String)
 
             m_configurationFileName = configurationFileName
+            m_reloadConfigurationFrameOnChange = True
+            m_refreshConfigurationFileOnChange = True
+            ResetFileWatcher()
 
         End Sub
 
@@ -62,6 +71,9 @@ Namespace BpaPdcStream
 
             m_configurationFrame = CastToDerivedConfigurationFrame(configurationFrame)
             m_configurationFileName = m_configurationFrame.ConfigurationFileName
+            m_reloadConfigurationFrameOnChange = True
+            m_refreshConfigurationFileOnChange = True
+            ResetFileWatcher()
 
         End Sub
 
@@ -69,6 +81,9 @@ Namespace BpaPdcStream
 
             m_configurationFrame = configurationFrame
             m_configurationFileName = m_configurationFrame.ConfigurationFileName
+            m_reloadConfigurationFrameOnChange = True
+            m_refreshConfigurationFileOnChange = True
+            ResetFileWatcher()
 
         End Sub
 
@@ -101,6 +116,35 @@ Namespace BpaPdcStream
             End Get
             Set(ByVal value As String)
                 m_configurationFileName = value
+                ResetFileWatcher()
+            End Set
+        End Property
+
+        ''' <summary>
+        ''' Set to False to always use latest configuration frame parsed from stream - set to True to only use
+        ''' configuration frame from stream if it has changed
+        ''' </summary>
+        ''' <remarks>
+        ''' BPA PDCstream configuration frame arrives every minute and is typically the same so this property
+        ''' defaults to True so that the configuration frame parsed from stream is only updated if it has changed
+        ''' </remarks>
+        Public Property ReloadConfigurationFrameOnChange() As Boolean
+            Get
+                Return m_reloadConfigurationFrameOnChange
+            End Get
+            Set(ByVal value As Boolean)
+                m_reloadConfigurationFrameOnChange = value
+            End Set
+        End Property
+
+        ''' <summary>Set to True to automatically reload configuration file when it has changed on disk</summary>
+        Public Property RefreshConfigurationFileOnChange() As Boolean
+            Get
+                Return m_refreshConfigurationFileOnChange
+            End Get
+            Set(ByVal value As Boolean)
+                m_refreshConfigurationFileOnChange = value
+                ResetFileWatcher()
             End Set
         End Property
 
@@ -135,6 +179,9 @@ Namespace BpaPdcStream
 
                     ' Assign new incoming connection parameter values
                     m_configurationFileName = parameters.ConfigurationFileName
+                    m_reloadConfigurationFrameOnChange = parameters.ReloadConfigurationFrameOnChange
+                    m_refreshConfigurationFileOnChange = parameters.RefreshConfigurationFileOnChange
+                    ResetFileWatcher()
                 End If
             End Set
         End Property
@@ -167,8 +214,12 @@ Namespace BpaPdcStream
                                 RaiseReceivedDataFrame(New DataFrame(parsedFrameHeader, m_configurationFrame, buffer, offset))
                             End If
                         Case FrameType.ConfigurationFrame
-                            If m_configurationFrame Is Nothing OrElse CompareBuffers(buffer, offset, parsedFrameHeader.FrameLength, m_configurationFrame.BinaryImage, 0, m_configurationFrame.BinaryLength) <> 0 Then
-                                If m_configurationFrame IsNot Nothing Then MyBase.RaiseConfigurationChangeDetected()
+                            If m_configurationFrame Is Nothing OrElse m_configurationFileChanged OrElse Not m_reloadConfigurationFrameOnChange _
+                                OrElse CompareBuffers(buffer, offset, parsedFrameHeader.FrameLength, m_configurationFrame.BinaryImage, 0, m_configurationFrame.BinaryLength) <> 0 Then
+
+                                ' Reset configuration file changed flag
+                                m_configurationFileChanged = False
+
                                 With New ConfigurationFrame(parsedFrameHeader, m_configurationFileName, buffer, offset)
                                     m_configurationFrame = .This
                                     RaiseReceivedConfigurationFrame(.This)
@@ -217,6 +268,29 @@ Namespace BpaPdcStream
             End If
 
         End Function
+
+        Private Sub m_configurationFileWatcher_Changed(ByVal sender As Object, ByVal e As System.IO.FileSystemEventArgs) Handles m_configurationFileWatcher.Changed
+
+            If m_configurationFrame IsNot Nothing Then m_configurationFrame.Refresh()
+            m_configurationFileChanged = True
+            MyBase.RaiseConfigurationChangeDetected()
+
+        End Sub
+
+        Private Sub ResetFileWatcher()
+
+            If m_refreshConfigurationFileOnChange AndAlso Not String.IsNullOrEmpty(m_configurationFileName) AndAlso File.Exists(m_configurationFileName) Then
+                ' Create a new file watcher for configuration file - we'll automatically refresh configuration file
+                ' when this file gets updated...
+                m_configurationFileWatcher = New FileSystemWatcher(JustPath(m_configurationFileName), JustFileName(m_configurationFileName))
+                m_configurationFileWatcher.EnableRaisingEvents = True
+                m_configurationFileWatcher.IncludeSubdirectories = False
+                m_configurationFileWatcher.NotifyFilter = NotifyFilters.LastWrite
+            Else
+                m_configurationFileWatcher = Nothing
+            End If
+
+        End Sub
 
 #End Region
 
