@@ -47,8 +47,16 @@ Public MustInherit Class ChannelBase
         End Get
     End Property
 
+    ' Phasor classes use an unsigned 16-bit integer for data lengths - so we expose the IBinaryDataProvider binary length
+    ' property as a private property
+    Private ReadOnly Property IBinaryDataProviderBinaryLength() As Integer Implements IBinaryDataProvider.BinaryLength
+        Get
+            Return BinaryLength
+        End Get
+    End Property
+
     ' This property is not typically overriden
-    Public Overridable ReadOnly Property BinaryImage() As Byte() Implements IChannel.BinaryImage
+    Public Overridable ReadOnly Property BinaryImage() As Byte() Implements IBinaryDataProvider.BinaryImage
         Get
             Dim buffer As Byte() = CreateArray(Of Byte)(BinaryLength)
             Dim index As Int32

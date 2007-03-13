@@ -84,7 +84,7 @@ Public MustInherit Class ChannelCollectionBase(Of T As IChannel)
 
     End Sub
 
-    Public Overridable ReadOnly Property BinaryLength() As UInt16 Implements IChannelCollection(Of T).BinaryLength
+    Public Overridable ReadOnly Property BinaryLength() As UInt16 Implements IChannel.BinaryLength
         Get
             If Count > 0 Then
                 Return Item(0).BinaryLength * Count
@@ -94,7 +94,13 @@ Public MustInherit Class ChannelCollectionBase(Of T As IChannel)
         End Get
     End Property
 
-    Public Overridable ReadOnly Property BinaryImage() As Byte() Implements IChannelCollection(Of T).BinaryImage
+    Private ReadOnly Property IBinaryDataProviderBinaryLength() As Integer Implements IBinaryDataProvider.BinaryLength
+        Get
+            Return BinaryLength
+        End Get
+    End Property
+
+    Public Overridable ReadOnly Property BinaryImage() As Byte() Implements IBinaryDataProvider.BinaryImage
         Get
             Dim buffer As Byte() = CreateArray(Of Byte)(BinaryLength)
             Dim index As Int32

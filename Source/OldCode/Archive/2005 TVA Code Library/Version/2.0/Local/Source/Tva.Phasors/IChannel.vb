@@ -19,6 +19,8 @@
 <CLSCompliant(False)> _
 Public Interface IChannel
 
+    Inherits IBinaryDataProvider
+
     ReadOnly Property DerivedType() As Type
 
     ReadOnly Property This() As IChannel
@@ -28,9 +30,7 @@ Public Interface IChannel
 
     Sub ParseBinaryImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
-    ReadOnly Property BinaryLength() As UInt16
-
-    ReadOnly Property BinaryImage() As Byte()
+    Shadows ReadOnly Property BinaryLength() As UInt16
 
     ReadOnly Property Attributes() As Dictionary(Of String, String)
 

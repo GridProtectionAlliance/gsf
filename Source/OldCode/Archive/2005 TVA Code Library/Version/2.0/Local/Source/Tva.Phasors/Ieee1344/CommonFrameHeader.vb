@@ -229,13 +229,19 @@ Namespace Ieee1344
                 End Get
             End Property
 
-            Public ReadOnly Property BinaryImage() As Byte() Implements IChannel.BinaryImage
+            Public ReadOnly Property BinaryImage() As Byte() Implements IBinaryDataProvider.BinaryImage
                 Get
                     If m_frameQueue Is Nothing Then
                         Return Nothing
                     Else
                         Return m_frameQueue.ToArray()
                     End If
+                End Get
+            End Property
+
+            Private ReadOnly Property IBinaryDataProviderBinaryLength() As Integer Implements IBinaryDataProvider.BinaryLength
+                Get
+                    Return BinaryLength
                 End Get
             End Property
 

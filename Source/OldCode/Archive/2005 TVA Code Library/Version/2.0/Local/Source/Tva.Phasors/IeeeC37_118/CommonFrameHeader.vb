@@ -179,9 +179,15 @@ Namespace IeeeC37_118
                 End Get
             End Property
 
-            Public ReadOnly Property BinaryImage() As Byte() Implements IChannel.BinaryImage
+            Public ReadOnly Property BinaryImage() As Byte() Implements IBinaryDataProvider.BinaryImage
                 Get
                     Throw New NotImplementedException()
+                End Get
+            End Property
+
+            Private ReadOnly Property IBinaryDataProviderBinaryLength() As Integer Implements IBinaryDataProvider.BinaryLength
+                Get
+                    Return 0
                 End Get
             End Property
 
