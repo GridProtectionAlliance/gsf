@@ -87,8 +87,8 @@ Namespace Files
 
             If SlotsAvailable > 0 Then
                 ' We have enough space to write the provided point data to the data block.
-                'm_fileStream.Seek(m_writeCursor - m_fileStream.Position, SeekOrigin.Current)   ' This is slower than
-                m_fileStream.Seek(m_writeCursor, SeekOrigin.Begin)                              ' <--------------This
+                m_fileStream.Seek(m_writeCursor - m_fileStream.Position, SeekOrigin.Current)   ' This is slower than
+                'm_fileStream.Seek(m_writeCursor, SeekOrigin.Begin)                              ' <--------------This
                 m_fileStream.Write(pointData.BinaryData, 0, StandardPointData.Size)
                 m_writeCursor = m_fileStream.Position   ' Update the write cursor.
             Else
