@@ -44,4 +44,17 @@ Public Class ConfigurationCellCollection
         End Get
     End Property
 
+    Public Overridable Function TryGetByIDLabel(ByVal label As String, ByRef configurationCell As IConfigurationCell) As Boolean
+
+        For Each configurationCell In Me
+            If String.Compare(configurationCell.IDLabel, label, True) = 0 Then
+                Return True
+            End If
+        Next
+
+        configurationCell = Nothing
+        Return False
+
+    End Function
+
 End Class
