@@ -69,6 +69,7 @@ Namespace BpaPdcStream
             m_streamType = info.GetValue("streamType", GetType(StreamType))
             m_revisionNumber = info.GetValue("revisionNumber", GetType(RevisionNumber))
             m_iniFile = New IniFile(info.GetString("configurationFileName"))
+            Refresh()
 
         End Sub
 
@@ -244,6 +245,17 @@ Namespace BpaPdcStream
                             End If
                         End If
                     Next
+
+                    ' Associate parsed cells with cells defined in INI file
+                    If m_configurationFileCells.Count > 0 Then
+                        Dim configurationFileCell As ConfigurationCell = Nothing
+
+                        For Each cell As ConfigurationCell In Me.Cells
+                            ' Attempt to associate this configuration cell with information read from external INI based configuration file
+                            m_configurationFileCells.TryGetByIDLabel(cell.IDLabel, configurationFileCell)
+                            cell.ConfigurationFileCell = configurationFileCell
+                        Next
+                    End If
                 Else
                     Throw New InvalidOperationException("PDC config file """ & m_iniFile.FileName & """ does not exist.")
                 End If

@@ -291,9 +291,6 @@ Namespace BpaPdcStream
             Reserved = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 4)
             Offset = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 6)
 
-            ' Attempt to associate this configuration cell with information read from external INI based configuration file
-            Parent.ConfigurationFileCells.TryGetByIDLabel(IDLabel, m_configurationFileCell)
-
         End Sub
 
         Protected Overrides ReadOnly Property FooterLength() As UShort

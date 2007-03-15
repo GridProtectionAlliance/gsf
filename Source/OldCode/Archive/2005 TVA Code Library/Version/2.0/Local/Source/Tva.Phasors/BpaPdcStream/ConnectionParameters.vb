@@ -56,12 +56,15 @@ Namespace BpaPdcStream
 
             ' Deserialize connection parameters
             m_configurationFileName = info.GetString("configurationFileName")
+            m_reloadConfigurationFrameOnChange = info.GetBoolean("reloadConfigurationFrameOnChange")
+            m_refreshConfigurationFileOnChange = info.GetBoolean("refreshConfigurationFileOnChange")
 
         End Sub
 
         Public Sub New()
 
             m_reloadConfigurationFrameOnChange = True
+            m_refreshConfigurationFileOnChange = True
 
         End Sub
 
@@ -106,6 +109,8 @@ Namespace BpaPdcStream
 
             ' Serialize connection parameters
             info.AddValue("configurationFileName", m_configurationFileName)
+            info.AddValue("reloadConfigurationFrameOnChange", m_reloadConfigurationFrameOnChange)
+            info.AddValue("refreshConfigurationFileOnChange", m_refreshConfigurationFileOnChange)
 
         End Sub
 
