@@ -126,20 +126,32 @@ Public Class UdpServer
 
         If MyBase.Enabled AndAlso Not MyBase.IsRunning AndAlso ValidConfigurationString(MyBase.ConfigurationString) Then
             Try
+                Dim serverPort As Integer = 0
+                If m_configurationData.ContainsKey("port") Then serverPort = Convert.ToInt32(m_configurationData("port"))
+
                 m_udpServer = New StateKeeper(Of Socket)()
                 m_udpServer.ID = MyBase.ServerID
                 m_udpServer.Passphrase = MyBase.HandshakePassphrase
                 m_udpServer.Client = New Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp)
-                m_udpServer.Client.Bind(New IPEndPoint(IPAddress.Any, Convert.ToInt32(m_configurationData("port"))))
+                If MyBase.Handshake Then
+                    ' We will listen for data only when Handshake is enabled and a valid port has been specified in 
+                    ' the configuration string. We do this in order to keep the server stable and besides that, the 
+                    ' main purpose of a UDP server is to serve data in most cases.
+                    If serverPort > 0 Then
+                        m_udpServer.Client.Bind(New IPEndPoint(IPAddress.Any, serverPort))
 
-                With New Thread(AddressOf ReceiveClientData)
-                    .Start()
-                End With
+                        With New Thread(AddressOf ReceiveClientData)
+                            .Start()
+                        End With
+                    Else
+                        Throw New ArgumentException("Server port must be specified in the configuration string.")
+                    End If
+                End If
 
                 OnServerStarted(EventArgs.Empty)
 
-                Dim serverPort As Integer = Convert.ToInt32(m_configurationData("port"))
-                If Not MyBase.Handshake Then
+                If Not MyBase.Handshake AndAlso m_configurationData.ContainsKey("clients") Then
+                    ' We will ignore the client list in configuration string when Handshake is enabled.
                     For Each clientString As String In m_configurationData("clients").Replace(" ", "").Split(","c)
                         Try
                             Dim clientPort As Integer = serverPort
@@ -183,6 +195,8 @@ Public Class UdpServer
             If m_udpServer IsNot Nothing AndAlso m_udpServer.Client IsNot Nothing Then
                 m_udpServer.Client.Close()
             End If
+
+            OnServerStopped(EventArgs.Empty)
         End If
 
     End Sub
@@ -219,11 +233,13 @@ Public Class UdpServer
 
         If Not String.IsNullOrEmpty(configurationString) Then
             m_configurationData = Tva.Text.Common.ParseKeyValuePairs(configurationString)
-            If m_configurationData.ContainsKey("port") AndAlso _
-                    ValidPortNumber(m_configurationData("port")) Then
-                ' The configuration string must always contain the following:
+            If (m_configurationData.ContainsKey("port") AndAlso _
+                    ValidPortNumber(m_configurationData("port"))) OrElse _
+                    (m_configurationData.ContainsKey("clients") AndAlso _
+                    Not String.IsNullOrEmpty(m_configurationData("clients"))) Then
+                ' The configuration string must contain either of the following:
                 ' >> port - Port number on which the server will be listening for incoming data.
-                ' The configuration string can optionally contain the following:
+                ' OR
                 ' >> clients - A list of clients the server will be sending data to.
                 Return True
             Else
@@ -231,7 +247,7 @@ Public Class UdpServer
                 With New StringBuilder()
                     .Append("Configuration string must be in the following format:")
                     .Append(Environment.NewLine)
-                    .Append("   Port=Local port number; [Clients=Client name or IP[:Port number], ..., Client name or IP[:Port number]]")
+                    .Append("   [Port=Local port number;] [Clients=Client name or IP[:Port number], ..., Client name or IP[:Port number]]")
                     .Append(Environment.NewLine)
                     .Append("Text between square brackets, [...], is optional.")
                     Throw New ArgumentException(.ToString())
@@ -304,7 +320,6 @@ Public Class UdpServer
             If m_udpServer IsNot Nothing AndAlso m_udpServer.Client IsNot Nothing Then
                 m_udpServer.Client.Close()
             End If
-            OnServerStopped(EventArgs.Empty)
         End Try
 
     End Sub

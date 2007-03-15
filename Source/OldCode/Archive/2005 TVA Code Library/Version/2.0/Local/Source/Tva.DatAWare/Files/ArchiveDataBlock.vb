@@ -5,19 +5,27 @@ Imports System.IO
 Namespace Files
 
     Public Class ArchiveDataBlock
+        Implements IDisposable
 
         Private m_location As Long
         Private m_size As Integer
         Private m_fileStream As FileStream
-        Private m_writeCursor As Long
+        'Private m_writeCursor As Long
 
         Public Sub New(ByVal archiveFileStream As FileStream, ByVal location As Long, ByVal size As Integer)
 
+            MyClass.New(archiveFileStream.Name, location, size)
+
+        End Sub
+
+        Public Sub New(ByVal archiveFileName As String, ByVal location As Long, ByVal size As Integer)
+
             MyBase.New()
-            m_fileStream = archiveFileStream
+            m_fileStream = New FileStream(archiveFileName, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite)
             m_location = location
             m_size = size
-            m_writeCursor = location    ' This is where we'll start writing data to begin with.
+            'm_writeCursor = location    ' This is where we'll start writing data to begin with.
+            m_fileStream.Seek(location, SeekOrigin.Begin)
 
         End Sub
 
@@ -47,7 +55,8 @@ Namespace Files
 
         Public ReadOnly Property SlotsUsed() As Integer
             Get
-                Return Convert.ToInt32((m_writeCursor - m_location) \ StandardPointData.Size)
+                'Return Convert.ToInt32((m_writeCursor - m_location) \ StandardPointData.Size)
+                Return Convert.ToInt32((m_fileStream.Position - m_location) \ StandardPointData.Size)
             End Get
         End Property
 
@@ -77,7 +86,7 @@ Namespace Files
                     Exit For
                 End If
             Next
-            If m_writeCursor <> m_fileStream.Position Then m_writeCursor = m_fileStream.Position
+            'If m_writeCursor <> m_fileStream.Position Then m_writeCursor = m_fileStream.Position
 
             Return data
 
@@ -87,15 +96,42 @@ Namespace Files
 
             If SlotsAvailable > 0 Then
                 ' We have enough space to write the provided point data to the data block.
-                m_fileStream.Seek(m_writeCursor - m_fileStream.Position, SeekOrigin.Current)   ' This is slower than
+                'm_fileStream.Seek(m_writeCursor - m_fileStream.Position, SeekOrigin.Current)   ' This is slower than
                 'm_fileStream.Seek(m_writeCursor, SeekOrigin.Begin)                              ' <--------------This
                 m_fileStream.Write(pointData.BinaryData, 0, StandardPointData.Size)
-                m_writeCursor = m_fileStream.Position   ' Update the write cursor.
+                'm_writeCursor = m_fileStream.Position   ' Update the write cursor.
+                'm_fileStream.BeginWrite(pointData.BinaryData, 0, StandardPointData.Size, Nothing, Nothing)
             Else
                 Throw New InvalidOperationException("No slots available for writing new data.")
             End If
 
         End Sub
+
+#Region " IDisposable Implementation "
+
+        Private m_disposed As Boolean = False        ' To detect redundant calls
+
+        Protected Overridable Sub Dispose(ByVal disposing As Boolean)
+
+            If Not m_disposed Then
+                If disposing Then
+                    m_fileStream.Dispose()
+                End If
+            End If
+            m_disposed = True
+
+        End Sub
+
+#Region " IDisposable Support "
+        ' This code added by Visual Basic to correctly implement the disposable pattern.
+        Public Sub Dispose() Implements IDisposable.Dispose
+            ' Do not change this code.  Put cleanup code in Dispose(ByVal disposing As Boolean) above.
+            Dispose(True)
+            GC.SuppressFinalize(Me)
+        End Sub
+#End Region
+
+#End Region
 
     End Class
 

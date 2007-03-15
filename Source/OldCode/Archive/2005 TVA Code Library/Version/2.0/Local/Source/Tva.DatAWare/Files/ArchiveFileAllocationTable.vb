@@ -146,6 +146,12 @@ Namespace Files
             End Get
         End Property
 
+        Public ReadOnly Property DataBlocksUsed() As Integer
+            Get
+                Return m_dataBlockCount - DataBlocksAvailable
+            End Get
+        End Property
+
         Public ReadOnly Property DataBlocksAvailable() As Integer
             Get
                 Dim unusedPointerIndex As Integer = m_dataBlockPointers.IndexOf(New ArchiveDataBlockPointer())

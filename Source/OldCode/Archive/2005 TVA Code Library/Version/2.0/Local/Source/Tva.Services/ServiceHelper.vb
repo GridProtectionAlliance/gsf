@@ -23,7 +23,6 @@ Public Class ServiceHelper
     Private m_configurationString As String
     Private m_secureSession As Boolean
     Private m_encryption As Tva.Security.Cryptography.EncryptLevel
-    Private m_logFile As LogFile
     Private m_processes As Dictionary(Of String, ServiceProcess)
     Private m_clientInfo As Dictionary(Of Guid, ClientInfo)
     Private m_requestHistory As List(Of RequestInfo)
@@ -31,6 +30,7 @@ Public Class ServiceHelper
     Private m_startedEventHandlerList As List(Of StartedEventHandler)
     Private m_stoppedEventHandlerList As List(Of EventHandler)
 
+    Private WithEvents m_logFile As LogFile
     Private WithEvents m_scheduleManager As ScheduleManager
     Private WithEvents m_communicationServer As ICommunicationServer
 
@@ -543,6 +543,19 @@ Public Class ServiceHelper
         If m_processes.TryGetValue(e.Schedule.Name, scheduledProcess) Then
             scheduledProcess.Start() ' Start the process execution if it exists.
         End If
+
+    End Sub
+
+#End Region
+
+#Region " LogFile Events "
+
+    Private Sub m_logFile_LogException(ByVal ex As System.Exception) Handles m_logFile.LogException
+
+        ' We'll let the connected clients know that we encountered an exception while logging the status update.
+        m_logStatusUpdates = False
+        UpdateStatus(String.Format("Error occurred while logging status update: {0}", ex.ToString()))
+        m_logStatusUpdates = True
 
     End Sub
 

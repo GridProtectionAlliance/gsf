@@ -188,7 +188,7 @@ Namespace Files
                 If saveFile Then Save()
 
                 ' Release all of the used resources.
-                m_fileStream.Close()
+                m_fileStream.Dispose()
                 m_fileStream = Nothing
                 m_fileRecords.Clear()
                 m_fileRecords = Nothing

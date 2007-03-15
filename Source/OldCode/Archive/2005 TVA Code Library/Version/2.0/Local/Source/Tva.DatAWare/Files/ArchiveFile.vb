@@ -172,38 +172,40 @@ Namespace Files
         Public Sub Open()
 
             If Not IsOpen Then
-                RaiseEvent FileOpening(Me, EventArgs.Empty)
+                If m_stateFile IsNot Nothing AndAlso m_intercomFile IsNot Nothing Then
+                    RaiseEvent FileOpening(Me, EventArgs.Empty)
 
-                m_name = AbsolutePath(m_name)
-                If File.Exists(m_name) Then
-                    ' File has been created already, so we just need to read it.
-                    m_fileStream = New FileStream(m_name, FileMode.Open, FileAccess.ReadWrite, FileShare.Read)
-                    m_fat = New ArchiveFileAllocationTable(m_fileStream)
-                Else
-                    ' File does not exist, so we have to create it and initialize it.
-                    m_fileStream = New FileStream(m_name, FileMode.Create, FileAccess.ReadWrite, FileShare.Read)
-                    m_fat = New ArchiveFileAllocationTable(m_fileStream, m_blockSize, MaximumDataBlocks(m_size, m_blockSize))
-                    m_fat.Persist()
-                End If
+                    m_name = AbsolutePath(m_name)
+                    If File.Exists(m_name) Then
+                        ' File has been created already, so we just need to read it.
+                        m_fileStream = New FileStream(m_name, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite)
+                        m_fat = New ArchiveFileAllocationTable(m_fileStream)
+                    Else
+                        ' File does not exist, so we have to create it and initialize it.
+                        m_fileStream = New FileStream(m_name, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite)
+                        m_fat = New ArchiveFileAllocationTable(m_fileStream, m_blockSize, MaximumDataBlocks(m_size, m_blockSize))
+                        m_fat.Persist()
+                    End If
 
-                ' Make sure that the necessary files are available and ready for use.
-                If m_stateFile IsNot Nothing Then
+                    ' Make sure that the necessary files are available and ready for use.
                     If Not m_stateFile.IsOpen Then m_stateFile.Open()
-                Else
-                    Throw New ArgumentNullException("StateFile")
-                End If
-                If m_intercomFile IsNot Nothing Then
                     If Not m_intercomFile.IsOpen Then m_intercomFile.Open()
-                Else
-                    Throw New ArgumentNullException("IntercomFile")
-                End If
 
-                RaiseEvent FileOpened(Me, EventArgs.Empty)
+                    RaiseEvent FileOpened(Me, EventArgs.Empty)
+                Else
+                    Throw New InvalidOperationException("StateFile and IntercomFile properties must be set.")
+                End If
             End If
 
         End Sub
 
         Public Sub Close()
+
+            Close(True)
+
+        End Sub
+
+        Public Sub Close(ByVal releaseAllFileLocks As Boolean)
 
             If IsOpen Then
                 RaiseEvent FileClosing(Me, EventArgs.Empty)
@@ -211,9 +213,18 @@ Namespace Files
                 If m_saveOnClose Then Save()
 
                 m_fat = Nothing
-                m_fileStream.Close()
+                m_fileStream.Dispose()
                 m_fileStream = Nothing
                 m_rolloverPreparationThread.Abort()
+                If releaseAllFileLocks Then
+                    For i As Integer = 0 To m_stateFile.Records.Count - 1
+                        ' We'll release all the data blocks that were being used by the file.
+                        If m_stateFile.Records(i).ActiveDataBlock IsNot Nothing Then
+                            m_stateFile.Records(i).ActiveDataBlock.Dispose()
+                            m_stateFile.Records(i).ActiveDataBlock = Nothing
+                        End If
+                    Next
+                End If
 
                 RaiseEvent FileClosed(Me, EventArgs.Empty)
             End If
@@ -242,7 +253,6 @@ Namespace Files
                 ' Signal the server that we're are performing rollover so it must let go of this file.
                 m_intercomFile.Records(0).FileWrap = True
                 m_intercomFile.Save()
-                m_stateFile.Close()             ' We do this to clear the states of all points.
                 Close()
 
                 WaitForWriteLock(m_name)        ' Wait for the server to release the file.
@@ -281,6 +291,7 @@ Namespace Files
                 Dim foundBlocks As List(Of ArchiveDataBlock) = m_fat.FindDataBlocks(pointID, startTime, endTime)
                 For i As Integer = 0 To foundBlocks.Count - 1
                     data.AddRange(foundBlocks(i).Read())
+                    foundBlocks(i).Dispose()
                 Next
 
                 Return data
@@ -305,6 +316,7 @@ Namespace Files
                                     (pointState.ActiveDataBlock IsNot Nothing AndAlso pointState.ActiveDataBlock.SlotsAvailable <= 0) Then
                                 ' We either don't have a active data block where we can archive the point data or we have a 
                                 ' active data block but it is full, so we have to request a new data block from the FAT.
+                                If pointState.ActiveDataBlock IsNot Nothing Then pointState.ActiveDataBlock.Dispose()
                                 pointState.ActiveDataBlock = m_fat.RequestDataBlock(pointData.Definition.ID, pointData.TimeTag)
 
                                 If m_fat.DataBlocksAvailable <= m_fat.DataBlockCount * (m_rolloverPreparationThreshold / 100) AndAlso _
@@ -368,7 +380,7 @@ Namespace Files
                     .StateFile = m_stateFile
                     .IntercomFile = m_intercomFile
                     .Open()
-                    .Close()
+                    .Close(False)
                 End With
 
                 m_rolloverPreparationDone = True
