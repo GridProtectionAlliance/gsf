@@ -288,8 +288,14 @@ Namespace BpaPdcStream
                     .SampleNumber = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 8)
 
                     If configurationFrame Is Nothing Then
-                        ' Until configuration is available, best we can do is assume Unix time tag
-                        .Ticks = (New DateTime.UnixTimeTag(secondOfCentury)).ToDateTime().Ticks
+                        ' Until configuration is available, we make a guess at time tag type.  If second of century
+                        ' is greater than 3155673600 (SOC value for NTP timestamp 1/1/2007), then this is likely an
+                        ' NTP time stamp (or people are still using this in the year 2069 - not likely)
+                        If secondOfCentury > 3155673600 Then
+                            .Ticks = (New DateTime.NtpTimeTag(secondOfCentury)).ToDateTime().Ticks
+                        Else
+                            .Ticks = (New DateTime.UnixTimeTag(secondOfCentury)).ToDateTime().Ticks
+                        End If
                     Else
                         If configurationFrame.RevisionNumber = RevisionNumber.Revision0 Then
                             .Ticks = (New DateTime.NtpTimeTag(secondOfCentury)).ToDateTime().Ticks + _
