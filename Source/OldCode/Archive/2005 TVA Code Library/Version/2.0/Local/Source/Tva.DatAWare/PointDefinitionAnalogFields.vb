@@ -64,7 +64,7 @@ Public Class PointDefinitionAnalogFields
             Return m_engineeringUnits
         End Get
         Set(ByVal value As String)
-            m_engineeringUnits = TruncateString(value, 8)
+            m_engineeringUnits = TruncateRight(value, 8)
         End Set
     End Property
 

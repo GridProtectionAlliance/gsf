@@ -592,9 +592,22 @@ Namespace Text
         End Function
 
         ''' <summary>
-        ''' Trims the provided string if it is longer that specified length.
+        ''' Truncates the provided string from left if it is longer that specified length.
         ''' </summary>
-        Public Shared Function TruncateString(ByVal value As String, ByVal maxLength As Integer) As String
+        Public Shared Function TruncateLeft(ByVal value As String, ByVal maxLength As Integer) As String
+
+            If value.Length > maxLength Then
+                value = value.Substring(value.Length - maxLength)
+            End If
+
+            Return value
+
+        End Function
+
+        ''' <summary>
+        ''' Truncates the provided string from right if it is longer that specified length.
+        ''' </summary>
+        Public Shared Function TruncateRight(ByVal value As String, ByVal maxLength As Integer) As String
 
             If value.Length > maxLength Then
                 value = value.Substring(0, maxLength)

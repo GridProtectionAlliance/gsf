@@ -211,7 +211,7 @@ Public Class PointDefinition
             Return m_description
         End Get
         Set(ByVal value As String)
-            m_description = TruncateString(value, 40)
+            m_description = TruncateRight(value, 40)
         End Set
     End Property
 
@@ -238,7 +238,7 @@ Public Class PointDefinition
             Return m_hardwareInfo
         End Get
         Set(ByVal value As String)
-            m_hardwareInfo = TruncateString(value, 64)
+            m_hardwareInfo = TruncateRight(value, 64)
         End Set
     End Property
 
@@ -283,7 +283,7 @@ Public Class PointDefinition
             Return m_name
         End Get
         Set(ByVal value As String)
-            m_name = TruncateString(value, 20)
+            m_name = TruncateRight(value, 20)
         End Set
     End Property
 
@@ -292,7 +292,7 @@ Public Class PointDefinition
             Return m_synonym1
         End Get
         Set(ByVal value As String)
-            m_synonym1 = TruncateString(value, 20)
+            m_synonym1 = TruncateRight(value, 20)
         End Set
     End Property
 
@@ -301,7 +301,7 @@ Public Class PointDefinition
             Return m_synonym2
         End Get
         Set(ByVal value As String)
-            m_synonym2 = TruncateString(value, 20)
+            m_synonym2 = TruncateRight(value, 20)
         End Set
     End Property
 
@@ -310,7 +310,7 @@ Public Class PointDefinition
             Return m_plantID
         End Get
         Set(ByVal value As String)
-            m_plantID = TruncateString(value, 2)
+            m_plantID = TruncateRight(value, 2)
         End Set
     End Property
 
@@ -346,7 +346,7 @@ Public Class PointDefinition
             Return m_system
         End Get
         Set(ByVal value As String)
-            m_system = TruncateString(value, 4)
+            m_system = TruncateRight(value, 4)
         End Set
     End Property
 
@@ -355,7 +355,7 @@ Public Class PointDefinition
             Return m_email
         End Get
         Set(ByVal value As String)
-            m_email = TruncateString(value, 50)
+            m_email = TruncateRight(value, 50)
         End Set
     End Property
 
@@ -364,7 +364,7 @@ Public Class PointDefinition
             Return m_pager
         End Get
         Set(ByVal value As String)
-            m_pager = TruncateString(value, 30)
+            m_pager = TruncateRight(value, 30)
         End Set
     End Property
 
@@ -373,7 +373,7 @@ Public Class PointDefinition
             Return m_phone
         End Get
         Set(ByVal value As String)
-            m_phone = TruncateString(value, 30)
+            m_phone = TruncateRight(value, 30)
         End Set
     End Property
 
@@ -382,7 +382,7 @@ Public Class PointDefinition
             Return m_remarks
         End Get
         Set(ByVal value As String)
-            m_remarks = TruncateString(value, 128)
+            m_remarks = TruncateRight(value, 128)
         End Set
     End Property
 

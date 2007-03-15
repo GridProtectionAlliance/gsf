@@ -50,7 +50,7 @@ Public Class PointDefinitionDigitalFields
             Return m_setDescription
         End Get
         Set(ByVal value As String)
-            m_setDescription = TruncateString(value, 13)
+            m_setDescription = TruncateRight(value, 13)
         End Set
     End Property
 
@@ -59,7 +59,7 @@ Public Class PointDefinitionDigitalFields
             Return m_clearDescription
         End Get
         Set(ByVal value As String)
-            m_clearDescription = TruncateString(value, 13)
+            m_clearDescription = TruncateRight(value, 13)
         End Set
     End Property
 

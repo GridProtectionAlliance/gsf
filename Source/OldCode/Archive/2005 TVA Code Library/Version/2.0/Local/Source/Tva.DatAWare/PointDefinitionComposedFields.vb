@@ -115,7 +115,7 @@ Public Class PointDefinitionComposedFields
             Return m_engineeringUnits
         End Get
         Set(ByVal value As String)
-            m_engineeringUnits = TruncateString(value, 8)
+            m_engineeringUnits = TruncateRight(value, 8)
         End Set
     End Property
 
@@ -124,7 +124,7 @@ Public Class PointDefinitionComposedFields
             Return m_equation
         End Get
         Set(ByVal value As String)
-            m_equation = TruncateString(value, 128)
+            m_equation = TruncateRight(value, 128)
         End Set
     End Property
 
