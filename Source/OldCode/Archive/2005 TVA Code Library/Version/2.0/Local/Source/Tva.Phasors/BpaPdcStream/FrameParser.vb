@@ -155,7 +155,7 @@ Namespace BpaPdcStream
                     .Append(m_configurationFrame.ConfigurationFileName)
                     .Append(Environment.NewLine)
                     .Append("       BPA PDC stream type: ")
-                    .Append([Enum].GetName(GetType(StreamType), m_configurationFrame.ConfigurationFileName))
+                    .Append([Enum].GetName(GetType(StreamType), m_configurationFrame.StreamType))
                     .Append(Environment.NewLine)
                     .Append("   BPA PDC revision number: ")
                     .Append([Enum].GetName(GetType(RevisionNumber), m_configurationFrame.RevisionNumber))
