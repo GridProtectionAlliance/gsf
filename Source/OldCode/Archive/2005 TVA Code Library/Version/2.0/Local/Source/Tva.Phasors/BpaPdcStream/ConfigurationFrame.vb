@@ -69,7 +69,6 @@ Namespace BpaPdcStream
             m_streamType = info.GetValue("streamType", GetType(StreamType))
             m_revisionNumber = info.GetValue("revisionNumber", GetType(RevisionNumber))
             m_iniFile = New IniFile(info.GetString("configurationFileName"))
-            Refresh()
 
         End Sub
 
