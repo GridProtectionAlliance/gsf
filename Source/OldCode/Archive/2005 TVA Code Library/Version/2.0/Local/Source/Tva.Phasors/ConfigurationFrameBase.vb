@@ -87,7 +87,7 @@ Public MustInherit Class ConfigurationFrameBase
         End Get
         Set(ByVal value As Int16)
             m_frameRate = value
-            m_ticksPerFrame = CDec(SecondsToTicks(1)) / CDec(FrameRate)
+            m_ticksPerFrame = CDec(SecondsToTicks(1)) / CDec(m_frameRate)
         End Set
     End Property
 
