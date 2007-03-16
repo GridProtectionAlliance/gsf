@@ -253,10 +253,10 @@ Namespace Files
                 Dim data As Byte() = CreateArray(Of Byte)(BinaryDataLength)
                 Dim arrayDescriptor As VBArrayDescriptor = VBArrayDescriptor.OneBasedOneDimensionalArray(m_dataBlockCount)
 
-                Array.Copy(arrayDescriptor.BinaryData, 0, data, 0, arrayDescriptor.BinaryDataLength)
+                Array.Copy(arrayDescriptor.BinaryImage, 0, data, 0, arrayDescriptor.BinaryLength)
                 For i As Integer = 0 To m_dataBlockPointers.Count - 1
                     Array.Copy(m_dataBlockPointers(i).BinaryData, 0, data, _
-                        (i * ArchiveDataBlockPointer.Size) + arrayDescriptor.BinaryDataLength, ArchiveDataBlockPointer.Size)
+                        (i * ArchiveDataBlockPointer.Size) + arrayDescriptor.BinaryLength, ArchiveDataBlockPointer.Size)
                 Next
 
                 Dim pointersBinaryLength As Integer = BinaryDataLength - MinimumBinaryLength

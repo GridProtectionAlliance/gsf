@@ -57,9 +57,9 @@ Namespace Interop
 
 #Region " IBinaryDataProvider Implementation "
 
-        Public ReadOnly Property BinaryData() As Byte() Implements IBinaryDataProvider.BinaryImage
+        Public ReadOnly Property BinaryImage() As Byte() Implements IBinaryDataProvider.BinaryImage
             Get
-                Dim image As Byte() = Tva.Common.CreateArray(Of Byte)(Me.BinaryDataLength)
+                Dim image As Byte() = Tva.Common.CreateArray(Of Byte)(Me.BinaryLength)
 
                 Array.Copy(BitConverter.GetBytes(m_arrayDimensionDescriptors.Count), 0, image, 0, 2)
                 For i As Integer = 0 To m_arrayDimensionDescriptors.Count - 1
@@ -73,7 +73,7 @@ Namespace Interop
             End Get
         End Property
 
-        Public ReadOnly Property BinaryDataLength() As Integer Implements IBinaryDataProvider.BinaryLength
+        Public ReadOnly Property BinaryLength() As Integer Implements IBinaryDataProvider.BinaryLength
             Get
                 Return 2 + 8 * m_arrayDimensionDescriptors.Count
             End Get
