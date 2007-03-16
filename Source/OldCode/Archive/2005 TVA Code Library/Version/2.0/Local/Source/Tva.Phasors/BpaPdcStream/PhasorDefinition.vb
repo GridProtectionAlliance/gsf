@@ -39,6 +39,7 @@ Namespace BpaPdcStream
 
             ' Deserialize phasor definition
             m_ratio = info.GetSingle("ratio")
+            m_calFactor = info.GetSingle("calFactor")
             m_shunt = info.GetSingle("shunt")
             m_voltageReferenceIndex = info.GetInt32("voltageReferenceIndex")
 
@@ -76,7 +77,7 @@ Namespace BpaPdcStream
             End If
 
             If entry.Length > 1 Then Ratio = CDbl(Trim(entry(1))) Else Ratio = defaultPhasor.Ratio
-            If entry.Length > 2 Then ConversionFactor = CDbl(Trim(entry(2))) Else ConversionFactor = defaultPhasor.ConversionFactor
+            If entry.Length > 2 Then CalFactor = CDbl(Trim(entry(2))) Else ConversionFactor = defaultPhasor.ConversionFactor
             If entry.Length > 3 Then Offset = CDbl(Trim(entry(3))) Else Offset = defaultPhasor.Offset
             If entry.Length > 4 Then Shunt = CDbl(Trim(entry(4))) Else Shunt = defaultPhasor.Shunt
             If entry.Length > 5 Then VoltageReferenceIndex = CInt(Trim(entry(5))) Else VoltageReferenceIndex = defaultPhasor.VoltageReferenceIndex
@@ -104,16 +105,13 @@ Namespace BpaPdcStream
             End Get
         End Property
 
+        ' BPA PDCstream uses a custom conversion factor (see shared overload below)
         Public Overrides Property ConversionFactor() As Single
             Get
-                Return PhasorDefinition.ConversionFactor(Me)
+                Return 1.0F
             End Get
             Set(ByVal value As Single)
-                If Type = PhasorType.Voltage Then
-                    m_calFactor = value / m_ratio
-                Else
-                    m_calFactor = value / m_ratio * m_shunt
-                End If
+                ' Ignore updates...
             End Set
         End Property
 
@@ -175,7 +173,7 @@ Namespace BpaPdcStream
 
                     .Append("," & _
                         phasor.Ratio & "," & _
-                        phasor.ConversionFactor & "," & _
+                        phasor.CalFactor & "," & _
                         phasor.Offset & "," & _
                         phasor.Shunt & "," & _
                         phasor.VoltageReferenceIndex & "," & _
@@ -210,10 +208,24 @@ Namespace BpaPdcStream
 
             ' Serialize phasor definition
             info.AddValue("ratio", m_ratio)
+            info.AddValue("calFactor", m_calFactor)
             info.AddValue("shunt", m_shunt)
             info.AddValue("voltageReferenceIndex", m_voltageReferenceIndex)
 
         End Sub
+
+        Public Overrides ReadOnly Property Attributes() As Dictionary(Of String, String)
+            Get
+                Dim baseAttributes As Dictionary(Of String, String) = MyBase.Attributes
+
+                baseAttributes.Add("Ratio", m_ratio)
+                baseAttributes.Add("CalFactor", m_calFactor)
+                baseAttributes.Add("Shunt", m_shunt)
+                baseAttributes.Add("Voltage Reference Index", m_voltageReferenceIndex)
+
+                Return baseAttributes
+            End Get
+        End Property
 
     End Class
 

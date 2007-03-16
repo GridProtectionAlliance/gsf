@@ -108,12 +108,23 @@ Namespace BpaPdcStream
             End Set
         End Property
 
+        ' BPA PDCstream defines an angle offset in the configuration file
         Public Overrides Property Angle() As Single
             Get
                 Return MyBase.Angle + Definition.Offset
             End Get
             Set(ByVal value As Single)
                 MyBase.Angle = value - Definition.Offset
+            End Set
+        End Property
+
+        ' Phasor magnitudes in BPA PDCstream are calculated use a custom conversion factor
+        Public Overrides Property Magnitude() As Single
+            Get
+                Return MyBase.Magnitude * PhasorDefinition.ConversionFactor(Definition)
+            End Get
+            Set(ByVal value As Single)
+                MyBase.Magnitude = value / PhasorDefinition.ConversionFactor(Definition)
             End Set
         End Property
 
