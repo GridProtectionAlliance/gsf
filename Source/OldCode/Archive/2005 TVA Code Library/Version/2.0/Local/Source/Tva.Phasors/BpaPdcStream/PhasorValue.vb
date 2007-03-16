@@ -108,6 +108,15 @@ Namespace BpaPdcStream
             End Set
         End Property
 
+        Public Overrides Property Angle() As Single
+            Get
+                Return MyBase.Angle + Definition.Offset
+            End Get
+            Set(ByVal value As Single)
+                MyBase.Angle = value - Definition.Offset
+            End Set
+        End Property
+
         Public Shared Function CalculateBinaryLength(ByVal definition As PhasorDefinition) As UInt16
 
             ' The phasor definition will determine the binary length based on data format
