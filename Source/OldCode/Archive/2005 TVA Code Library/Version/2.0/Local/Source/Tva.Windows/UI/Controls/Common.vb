@@ -36,6 +36,11 @@ Namespace UI.Controls
         ''' <remarks>
         ''' <para>Smaller ratio's (e.g., 1.75) produce a wider label column.</para>
         ''' <para>
+        ''' This function only has an effect on property grid's when their Visible property is set to True.  To use
+        ''' this on an initially hidden property grid - set the property grid's Visible property to True at design
+        ''' time, call this function during form load, then set the Visible property to False.
+        ''' </para>
+        ''' <para>
         ''' This function was written to work with the .NET 2.0 PropertyGrid control.  Note that reflection is used
         ''' to set private properties of the property grid and as a result this function may not work with future
         ''' versions of the .NET property grid.
@@ -53,6 +58,11 @@ Namespace UI.Controls
         ''' <param name="grid">Property grid to adjust</param>
         ''' <param name="lines">Number of lines to display in comment area</param>
         ''' <remarks>
+        ''' <para>
+        ''' This function only has an effect on property grid's when their Visible property is set to True.  To use
+        ''' this on an initially hidden property grid - set the property grid's Visible property to True at design
+        ''' time, call this function during form load, then set the Visible property to False.
+        ''' </para>
         ''' <para>
         ''' This function was written to work with the .NET 2.0 PropertyGrid control.  Note that reflection is used
         ''' to set private properties of the property grid and as a result this function may not work with future
