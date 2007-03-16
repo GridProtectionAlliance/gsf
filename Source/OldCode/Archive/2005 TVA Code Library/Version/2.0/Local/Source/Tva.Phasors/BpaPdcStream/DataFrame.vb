@@ -254,10 +254,8 @@ Namespace BpaPdcStream
                 m_legacyLabels = CreateArray(Of String)(configurationFrame.Cells.Count)
 
                 For x As Integer = 0 To configurationFrame.Cells.Count - 1
-                    With configurationFrame.Cells(x)
-                        m_legacyLabels(x) = Encoding.ASCII.GetString(binaryImage, index, 4)
-                        index += 8
-                    End With
+                    m_legacyLabels(x) = Encoding.ASCII.GetString(binaryImage, index, 4)
+                    index += 8
                 Next
             End If
 
