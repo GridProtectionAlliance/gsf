@@ -104,6 +104,19 @@ Namespace BpaPdcStream
             End Get
         End Property
 
+        Public Overrides Property ConversionFactor() As Single
+            Get
+                Return PhasorDefinition.ConversionFactor(Me)
+            End Get
+            Set(ByVal value As Single)
+                If Type = PhasorType.Voltage Then
+                    m_calFactor = value / m_ratio
+                Else
+                    m_calFactor = value / m_ratio * m_shunt
+                End If
+            End Set
+        End Property
+
         Public Property Ratio() As Single
             Get
                 Return m_ratio
@@ -113,7 +126,7 @@ Namespace BpaPdcStream
             End Set
         End Property
 
-        Public Overrides Property ConversionFactor() As Single
+        Public Property CalFactor() As Single
             Get
                 Return m_calFactor
             End Get
@@ -140,12 +153,12 @@ Namespace BpaPdcStream
             End Set
         End Property
 
-        Public Overloads Shared ReadOnly Property ScalingFactor(ByVal phasor As PhasorDefinition) As Single
+        Public Overloads Shared ReadOnly Property ConversionFactor(ByVal phasor As PhasorDefinition) As Single
             Get
                 If phasor.Type = PhasorType.Voltage Then
-                    Return phasor.ConversionFactor * phasor.Ratio
+                    Return phasor.CalFactor * phasor.Ratio
                 Else
-                    Return phasor.ConversionFactor * phasor.Ratio / phasor.Shunt
+                    Return phasor.CalFactor * phasor.Ratio / phasor.Shunt
                 End If
             End Get
         End Property
