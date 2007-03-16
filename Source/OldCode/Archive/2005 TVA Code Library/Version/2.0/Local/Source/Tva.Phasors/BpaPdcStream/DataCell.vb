@@ -83,7 +83,6 @@ Namespace BpaPdcStream
         '   ' Final dervived classes must expose Public Sub New(ByVal parent As IChannelFrame, ByVal state As IChannelFrameParsingState, ByVal index As Int32, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
         Public Sub New(ByVal parent As IDataFrame, ByVal state As DataFrameParsingState, ByVal index As Int32, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
-            ' TODO: Define static creation functions for data cell value types
             MyBase.New(parent, True, MaximumPhasorValues, MaximumAnalogValues, MaximumDigitalValues, _
                 New DataCellParsingState(state.ConfigurationFrame.Cells(index), _
                     AddressOf BpaPdcStream.PhasorValue.CreateNewPhasorValue, _
