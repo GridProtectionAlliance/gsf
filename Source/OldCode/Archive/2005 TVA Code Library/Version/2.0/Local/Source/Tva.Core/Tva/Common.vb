@@ -62,12 +62,27 @@ Public NotInheritable Class Common
 
     End Function
 
-    Public Shared Function CreateArray(Of T)(ByVal length As Integer, ByVal defaultValue As T) As T()
+    ''' <summary>Strongly typed Array creation function with initial value parameter.</summary>
+    ''' <returns>New array of specified type.</returns>
+    ''' <param name="length">Desired length of new array.</param>
+    ''' <param name="initialValue">Value used to initialize all array elements</param>
+    ''' <typeparam name="T">Return type for new array.</typeparam>
+    ''' <remarks>
+    ''' <para>
+    ''' Examples:
+    ''' <code>
+    '''     Dim elements As Integer() = CreateArray(12, -1)
+    '''     Dim names As String() = CreateArray(100, "undefined")
+    ''' </code>
+    ''' </para>
+    ''' </remarks>
+    Public Shared Function CreateArray(Of T)(ByVal length As Integer, ByVal initialValue As T) As T()
 
         Dim typedArray As T() = CreateArray(Of T)(length)
-        ' Initialized all elements with the default value.
-        For i As Integer = 0 To typedArray.Length - 1
-            typedArray(i) = defaultValue
+
+        ' Initialize all elements with the default value
+        For x As Integer = 0 To typedArray.Length - 1
+            typedArray(x) = initialValue
         Next
 
         Return typedArray
