@@ -61,6 +61,7 @@
     <Compile Include="UI\AboutDialog.vb">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="UI\Controls\Common.vb" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Tva.Core\Tva.Core.vbproj">
