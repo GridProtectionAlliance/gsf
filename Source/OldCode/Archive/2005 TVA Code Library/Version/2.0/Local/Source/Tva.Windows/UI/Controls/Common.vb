@@ -46,7 +46,7 @@ Namespace UI.Controls
         ''' versions of the .NET property grid.
         ''' </para>
         ''' </remarks>
-        Private Sub AdjustPropertyGridLabelRatio(ByVal grid As PropertyGrid, ByVal ratio As Double)
+        Public Shared Sub AdjustPropertyGridLabelRatio(ByVal grid As PropertyGrid, ByVal ratio As Double)
 
             GetType(PropertyGrid).GetField("gridView", BindingFlags.Instance Or BindingFlags.NonPublic).GetValue(grid).labelRatio = ratio
 
@@ -69,7 +69,7 @@ Namespace UI.Controls
         ''' versions of the .NET property grid.
         ''' </para>
         ''' </remarks>
-        Private Sub AdjustPropertyGridCommentAreaHeight(ByVal grid As PropertyGrid, ByVal lines As Integer)
+        Public Shared Sub AdjustPropertyGridCommentAreaHeight(ByVal grid As PropertyGrid, ByVal lines As Integer)
 
             Dim itemType As Type
 
