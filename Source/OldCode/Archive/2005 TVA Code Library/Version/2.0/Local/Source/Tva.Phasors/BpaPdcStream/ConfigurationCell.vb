@@ -156,6 +156,23 @@ Namespace BpaPdcStream
             End Set
         End Property
 
+        Public Overrides Property NominalFrequency() As LineFrequency
+            Get
+                If m_configurationFileCell Is Nothing Then
+                    Return MyBase.NominalFrequency
+                Else
+                    Return m_configurationFileCell.NominalFrequency
+                End If
+            End Get
+            Set(ByVal value As LineFrequency)
+                If m_configurationFileCell Is Nothing Then
+                    MyBase.NominalFrequency = value
+                Else
+                    m_configurationFileCell.NominalFrequency = value
+                End If
+            End Set
+        End Property
+
         Public Overrides ReadOnly Property MaximumStationNameLength() As Int32
             Get
                 ' The station name in the PDCstream is read from an INI file, so there is no set limit

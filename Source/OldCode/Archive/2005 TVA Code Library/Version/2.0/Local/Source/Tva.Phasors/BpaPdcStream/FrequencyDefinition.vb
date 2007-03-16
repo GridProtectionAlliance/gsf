@@ -58,14 +58,11 @@ Namespace BpaPdcStream
 
             ' First entry is an F - we just ignore this
             If entry.Length > 1 Then ScalingFactor = CInt(Trim(entry(1))) Else ScalingFactor = defaultFrequency.ScalingFactor
-            If entry.Length > 2 Then m_frequencyOffset = CSng(Trim(entry(2))) Else m_frequencyOffset = defaultFrequency.Offset
+            If entry.Length > 2 Then Offset = CSng(Trim(entry(2))) Else Offset = defaultFrequency.Offset
             If entry.Length > 3 Then DfDtScalingFactor = CInt(Trim(entry(3))) Else DfDtScalingFactor = defaultFrequency.DfDtScalingFactor
             If entry.Length > 4 Then DfDtOffset = CSng(Trim(entry(4))) Else DfDtOffset = defaultFrequency.DfDtOffset
             If entry.Length > 5 Then m_dummy = CInt(Trim(entry(5))) Else m_dummy = defaultFrequency.m_dummy
             If entry.Length > 6 Then Label = Trim(entry(6)) Else Label = defaultFrequency.Label
-
-            ' Frequency offset is stored as nominal frequency of parent cell
-            If parent IsNot Nothing Then parent.NominalFrequency = CType(CByte(m_frequencyOffset), LineFrequency)
 
         End Sub
 
@@ -112,7 +109,17 @@ Namespace BpaPdcStream
                 End If
             End Get
             Set(ByVal value As Single)
-                MyBase.Offset = value
+                If Parent Is Nothing Then
+                    ' Store local value for default frequency definition
+                    m_frequencyOffset = value
+                Else
+                    ' Frequency offset is stored as nominal frequency of parent cell
+                    If value >= 60.0F Then
+                        Parent.NominalFrequency = LineFrequency.Hz60
+                    Else
+                        Parent.NominalFrequency = LineFrequency.Hz50
+                    End If
+                End If
             End Set
         End Property
 
