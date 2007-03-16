@@ -398,6 +398,8 @@ Public MustInherit Class FrameParserBase
                 End If
             Loop
         Catch ex As Exception
+            m_initialized = False
+            m_dataStream = Nothing
             RaiseEvent DataStreamException(ex)
         End Try
 

@@ -51,6 +51,7 @@ Namespace BpaPdcStream
         Private m_configurationFileName As String
         Private m_reloadConfigurationFrameOnChange As Boolean
         Private m_refreshConfigurationFileOnChange As Boolean
+        Private m_parseWordCountFromByte As Boolean
 
         Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
 
@@ -58,6 +59,7 @@ Namespace BpaPdcStream
             m_configurationFileName = info.GetString("configurationFileName")
             m_reloadConfigurationFrameOnChange = info.GetBoolean("reloadConfigurationFrameOnChange")
             m_refreshConfigurationFileOnChange = info.GetBoolean("refreshConfigurationFileOnChange")
+            m_parseWordCountFromByte = info.GetBoolean("parseWordCountFromByte")
 
         End Sub
 
@@ -76,6 +78,16 @@ Namespace BpaPdcStream
             End Get
             Set(ByVal value As String)
                 m_configurationFileName = value
+            End Set
+        End Property
+
+        <Category("Required Connection Parameters"), Description("Set to True to interpret word count in packet header from a byte instead of a word - if the sync byte (0xAA) is at position one, then the word count would be interpreted from byte four.  Some older BPA PDC stream implementations have a 0x01 in byte three where there should be a 0x00 and this throws off the frame length, setting this property to True will correctly interpret the word count."), DefaultValue(False)> _
+        Public Property ParseWordCountFromByte() As Boolean
+            Get
+                Return m_parseWordCountFromByte
+            End Get
+            Set(ByVal value As Boolean)
+                m_parseWordCountFromByte = value
             End Set
         End Property
 
@@ -111,6 +123,7 @@ Namespace BpaPdcStream
             info.AddValue("configurationFileName", m_configurationFileName)
             info.AddValue("reloadConfigurationFrameOnChange", m_reloadConfigurationFrameOnChange)
             info.AddValue("refreshConfigurationFileOnChange", m_refreshConfigurationFileOnChange)
+            info.AddValue("parseWordCountFromByte", m_parseWordCountFromByte)
 
         End Sub
 

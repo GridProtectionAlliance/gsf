@@ -38,7 +38,6 @@ Namespace BpaPdcStream
         Public Event ReceivedCommonFrameHeader(ByVal frame As ICommonFrameHeader)
         Public Shadows Event ReceivedConfigurationFrame(ByVal frame As ConfigurationFrame)
         Public Shadows Event ReceivedDataFrame(ByVal frame As DataFrame)
-        Public Event ConfigurationFileChanged()
 
 #End Region
 
@@ -50,6 +49,7 @@ Namespace BpaPdcStream
         Private WithEvents m_configurationFileWatcher As FileSystemWatcher
         Private m_reloadConfigurationFrameOnChange As Boolean
         Private m_refreshConfigurationFileOnChange As Boolean
+        Private m_parseWordCountFromByte As Boolean
 
 #End Region
 
@@ -148,18 +148,36 @@ Namespace BpaPdcStream
             End Set
         End Property
 
+        ''' <summary>
+        ''' Set to True to interpret word count in packet header from a byte instead of a word - if the sync byte
+        ''' (0xAA) is at position one, then the word count would be interpreted from byte four.  Some older BPA PDC
+        ''' stream implementations have a 0x01 in byte three where there should be a 0x00 and this throws off the
+        ''' frame length, setting this property to True will correctly interpret the word count.
+        ''' </summary>
+        <Category("Required Connection Parameters"), Description("."), DefaultValue(False)> _
+        Public Property ParseWordCountFromByte() As Boolean
+            Get
+                Return m_parseWordCountFromByte
+            End Get
+            Set(ByVal value As Boolean)
+                m_parseWordCountFromByte = value
+            End Set
+        End Property
+
         Public Overrides ReadOnly Property Status() As String
             Get
                 With New StringBuilder
                     .Append("    INI configuration file: ")
-                    .Append(m_configurationFrame.ConfigurationFileName)
+                    .Append(m_configurationFileName)
                     .Append(Environment.NewLine)
-                    .Append("       BPA PDC stream type: ")
-                    .Append([Enum].GetName(GetType(StreamType), m_configurationFrame.StreamType))
-                    .Append(Environment.NewLine)
-                    .Append("   BPA PDC revision number: ")
-                    .Append([Enum].GetName(GetType(RevisionNumber), m_configurationFrame.RevisionNumber))
-                    .Append(Environment.NewLine)
+                    If m_configurationFrame IsNot Nothing Then
+                        .Append("       BPA PDC stream type: ")
+                        .Append([Enum].GetName(GetType(StreamType), m_configurationFrame.StreamType))
+                        .Append(Environment.NewLine)
+                        .Append("   BPA PDC revision number: ")
+                        .Append([Enum].GetName(GetType(RevisionNumber), m_configurationFrame.RevisionNumber))
+                        .Append(Environment.NewLine)
+                    End If
                     .Append(MyBase.Status)
 
                     Return .ToString()
@@ -179,6 +197,7 @@ Namespace BpaPdcStream
 
                     ' Assign new incoming connection parameter values
                     m_configurationFileName = parameters.ConfigurationFileName
+                    m_parseWordCountFromByte = parameters.ParseWordCountFromByte
                     m_reloadConfigurationFrameOnChange = parameters.ReloadConfigurationFrameOnChange
                     m_refreshConfigurationFileOnChange = parameters.RefreshConfigurationFileOnChange
                     ResetFileWatcher()
@@ -196,7 +215,7 @@ Namespace BpaPdcStream
             ' Note that in order to get time tag for data frames, we'll need at least six more bytes 
             If length >= CommonFrameHeader.BinaryLength + 6 Then
                 ' Parse frame header
-                Dim parsedFrameHeader As ICommonFrameHeader = CommonFrameHeader.ParseBinaryImage(m_configurationFrame, buffer, offset)
+                Dim parsedFrameHeader As ICommonFrameHeader = CommonFrameHeader.ParseBinaryImage(m_configurationFrame, m_parseWordCountFromByte, buffer, offset)
 
                 ' See if there is enough data in the buffer to parse the entire frame
                 If length >= parsedFrameHeader.FrameLength Then
@@ -273,19 +292,23 @@ Namespace BpaPdcStream
 
             If m_configurationFrame IsNot Nothing Then m_configurationFrame.Refresh()
             m_configurationFileChanged = True
-            MyBase.RaiseConfigurationChangeDetected()
+            RaiseConfigurationChangeDetected()
 
         End Sub
 
         Private Sub ResetFileWatcher()
 
             If m_refreshConfigurationFileOnChange AndAlso Not String.IsNullOrEmpty(m_configurationFileName) AndAlso File.Exists(m_configurationFileName) Then
-                ' Create a new file watcher for configuration file - we'll automatically refresh configuration file
-                ' when this file gets updated...
-                m_configurationFileWatcher = New FileSystemWatcher(JustPath(m_configurationFileName), JustFileName(m_configurationFileName))
-                m_configurationFileWatcher.EnableRaisingEvents = True
-                m_configurationFileWatcher.IncludeSubdirectories = False
-                m_configurationFileWatcher.NotifyFilter = NotifyFilters.LastWrite
+                Try
+                    ' Create a new file watcher for configuration file - we'll automatically refresh configuration file
+                    ' when this file gets updated...
+                    m_configurationFileWatcher = New FileSystemWatcher(JustPath(m_configurationFileName), JustFileName(m_configurationFileName))
+                    m_configurationFileWatcher.EnableRaisingEvents = True
+                    m_configurationFileWatcher.IncludeSubdirectories = False
+                    m_configurationFileWatcher.NotifyFilter = NotifyFilters.LastWrite
+                Catch ex As Exception
+                    RaiseDataStreamException(ex)
+                End Try
             Else
                 m_configurationFileWatcher = Nothing
             End If

@@ -270,14 +270,22 @@ Namespace BpaPdcStream
         End Sub
 
         ' Note: in order to parse timestamp from data frame, this parse procedure needs six more bytes above and beyond common frame header binary length
-        Public Shared Function ParseBinaryImage(ByVal configurationFrame As ConfigurationFrame, ByVal binaryImage As Byte(), ByVal startIndex As Int32) As ICommonFrameHeader
+        Public Shared Function ParseBinaryImage(ByVal configurationFrame As ConfigurationFrame, ByVal parseWordCountFromByte As Boolean, ByVal binaryImage As Byte(), ByVal startIndex As Int32) As ICommonFrameHeader
 
             If binaryImage(startIndex) <> SyncByte Then Throw New InvalidOperationException("Bad data stream, expected sync byte AA as first byte in BPA PDCstream frame, got " & binaryImage(startIndex).ToString("X"c).PadLeft(2, "0"c))
 
             With New CommonFrameHeaderInstance
                 ' Parse out packet flags and word count information...
                 .PacketFlag = binaryImage(startIndex + 1)
-                .WordCount = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 2)
+
+                ' Some older streams have a bad word count (e.g., the NYISO data stream has a 0x01 as the third byte
+                ' in the stream - this should be a 0x00 to make the word count come out correctly).  The following
+                ' compensates for this erratic behavior
+                If parseWordCountFromByte Then
+                    .WordCount = Convert.ToInt16(binaryImage(startIndex + 3))
+                Else
+                    .WordCount = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 2)
+                End If
 
                 If .FrameType = FrameType.ConfigurationFrame Then
                     ' We just assume current timestamp for configuration frames since they don't provide one
@@ -288,9 +296,10 @@ Namespace BpaPdcStream
                     .SampleNumber = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 8)
 
                     If configurationFrame Is Nothing Then
-                        ' Until configuration is available, we make a guess at time tag type.  If second of century
-                        ' is greater than 3155673600 (SOC value for NTP timestamp 1/1/2007), then this is likely an
-                        ' NTP time stamp (or people are still using this in the year 2069 - not likely)
+                        ' Until configuration is available, we make a guess at time tag type - this will just be
+                        ' used for display purposes until a configuration frame arrives.  If second of century
+                        ' is greater than 3155673600 (SOC value for NTP timestamp 1/1/2007), then this is likely
+                        ' an NTP time stamp (else this is a Unix time tag for the year 2069 - not likely).
                         If secondOfCentury > 3155673600 Then
                             .Ticks = (New DateTime.NtpTimeTag(secondOfCentury)).ToDateTime().Ticks
                         Else
