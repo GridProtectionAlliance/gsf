@@ -16,6 +16,7 @@
 '*******************************************************************************************************
 
 Imports System.Windows.Forms
+Imports System.Reflection
 
 Namespace UI.Controls
 
@@ -42,7 +43,7 @@ Namespace UI.Controls
         ''' </remarks>
         Private Sub AdjustPropertyGridLabelRatio(ByVal grid As PropertyGrid, ByVal ratio As Double)
 
-            GetType(PropertyGrid).GetField("gridView", Reflection.BindingFlags.Instance Or Reflection.BindingFlags.NonPublic).GetValue(grid).labelRatio = ratio
+            GetType(PropertyGrid).GetField("gridView", BindingFlags.Instance Or BindingFlags.NonPublic).GetValue(grid).labelRatio = ratio
 
         End Sub
 
@@ -65,7 +66,7 @@ Namespace UI.Controls
             For Each item As Control In CType(GetType(PropertyGrid).GetProperty("Controls").GetValue(grid, Nothing), Control.ControlCollection)
                 itemType = item.GetType()
                 If String.Compare(itemType.Name, "DocComment", True) = 0 Then
-                    itemType.GetField("userSized", System.Reflection.BindingFlags.Instance Or System.Reflection.BindingFlags.NonPublic).SetValue(item, True)
+                    itemType.GetField("userSized", BindingFlags.Instance Or BindingFlags.NonPublic).SetValue(item, True)
                     itemType.GetProperty("Lines").SetValue(item, lines, Nothing)
                     Exit For
                 End If
