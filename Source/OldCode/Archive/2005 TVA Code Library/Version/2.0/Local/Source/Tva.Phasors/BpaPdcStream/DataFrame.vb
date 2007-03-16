@@ -251,9 +251,9 @@ Namespace BpaPdcStream
             ' We'll at least retrieve legacy labels if defined (might be useful for debugging dynamic changes in data-stream)
             If configurationFrame.StreamType = StreamType.Legacy Then
                 Dim index As Integer = 12
+                m_legacyLabels = CreateArray(Of String)(configurationFrame.Cells.Count)
 
                 For x As Integer = 0 To configurationFrame.Cells.Count - 1
-                    m_legacyLabels = CreateArray(Of String)(configurationFrame.Cells.Count)
                     With configurationFrame.Cells(x)
                         m_legacyLabels(x) = Encoding.ASCII.GetString(binaryImage, index, 4)
                         index += 8

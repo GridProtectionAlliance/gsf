@@ -49,7 +49,6 @@ Namespace BpaPdcStream
         Inherits ConnectionParametersBase
 
         Private m_configurationFileName As String
-        Private m_reloadConfigurationFrameOnChange As Boolean
         Private m_refreshConfigurationFileOnChange As Boolean
         Private m_parseWordCountFromByte As Boolean
 
@@ -57,7 +56,6 @@ Namespace BpaPdcStream
 
             ' Deserialize connection parameters
             m_configurationFileName = info.GetString("configurationFileName")
-            m_reloadConfigurationFrameOnChange = info.GetBoolean("reloadConfigurationFrameOnChange")
             m_refreshConfigurationFileOnChange = info.GetBoolean("refreshConfigurationFileOnChange")
             m_parseWordCountFromByte = info.GetBoolean("parseWordCountFromByte")
 
@@ -65,7 +63,6 @@ Namespace BpaPdcStream
 
         Public Sub New()
 
-            m_reloadConfigurationFrameOnChange = True
             m_refreshConfigurationFileOnChange = True
 
         End Sub
@@ -91,16 +88,6 @@ Namespace BpaPdcStream
             End Set
         End Property
 
-        <Category("Optional Connection Parameters"), Description("Set to False to always use latest configuration frame parsed from stream, set to True to only use configuration frame from stream if it has changed. BPA PDCstream configuration frame arrives in stream every minute and is typically the same so this property defaults to True so that the configuration frame parsed from stream is only updated if it has changed."), DefaultValue(True)> _
-        Public Property ReloadConfigurationFrameOnChange() As Boolean
-            Get
-                Return m_reloadConfigurationFrameOnChange
-            End Get
-            Set(ByVal value As Boolean)
-                m_reloadConfigurationFrameOnChange = value
-            End Set
-        End Property
-
         <Category("Optional Connection Parameters"), Description("Set to True to automatically reload configuration file when it has changed on disk."), DefaultValue(True)> _
         Public Property RefreshConfigurationFileOnChange() As Boolean
             Get
@@ -121,7 +108,6 @@ Namespace BpaPdcStream
 
             ' Serialize connection parameters
             info.AddValue("configurationFileName", m_configurationFileName)
-            info.AddValue("reloadConfigurationFrameOnChange", m_reloadConfigurationFrameOnChange)
             info.AddValue("refreshConfigurationFileOnChange", m_refreshConfigurationFileOnChange)
             info.AddValue("parseWordCountFromByte", m_parseWordCountFromByte)
 
