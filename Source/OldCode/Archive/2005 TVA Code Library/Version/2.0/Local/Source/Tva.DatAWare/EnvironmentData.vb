@@ -101,23 +101,23 @@ Public Class EnvironmentData
         End Get
     End Property
 
-    Public ReadOnly Property BinaryData() As Byte() Implements IBinaryDataProvider.BinaryImage
+    Public ReadOnly Property BinaryImage() As Byte() Implements IBinaryDataProvider.BinaryImage
         Get
-            Dim data As Byte() = CreateArray(Of Byte)(Size)
+            Dim image As Byte() = CreateArray(Of Byte)(Size)
 
-            Array.Copy(BitConverter.GetBytes(m_blockMap), 0, data, 0, 4)
-            Array.Copy(BitConverter.GetBytes(Convert.ToInt32(m_fileWrap)), 0, data, 4, 4)
-            Array.Copy(BitConverter.GetBytes(m_lastCVTTimeTag.Value), 0, data, 8, 8)
-            Array.Copy(BitConverter.GetBytes(m_lastCVTIndex), 0, data, 16, 4)
+            Array.Copy(BitConverter.GetBytes(m_blockMap), 0, image, 0, 4)
+            Array.Copy(BitConverter.GetBytes(Convert.ToInt32(m_fileWrap)), 0, image, 4, 4)
+            Array.Copy(BitConverter.GetBytes(m_lastCVTTimeTag.Value), 0, image, 8, 8)
+            Array.Copy(BitConverter.GetBytes(m_lastCVTIndex), 0, image, 16, 4)
             For i As Integer = 0 To m_sourceIDs.Count - 1
-                Array.Copy(BitConverter.GetBytes(m_sourceIDs(i).Value), 0, data, (20 + (i * 8)), 8)
+                Array.Copy(BitConverter.GetBytes(m_sourceIDs(i).Value), 0, image, (20 + (i * 8)), 8)
             Next
 
-            Return data
+            Return image
         End Get
     End Property
 
-    Public ReadOnly Property BinaryDataLength() As Integer Implements IBinaryDataProvider.BinaryLength
+    Public ReadOnly Property BinaryLength() As Integer Implements IBinaryDataProvider.BinaryLength
         Get
             Return Size
         End Get

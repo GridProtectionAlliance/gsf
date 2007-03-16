@@ -61,7 +61,7 @@ Public Class ExtendedPointData
         End Set
     End Property
 
-    Public Overrides ReadOnly Property BinaryData() As Byte()
+    Public Overrides ReadOnly Property BinaryImage() As Byte()
         Get
             Dim data As Byte() = CreateArray(Of Byte)(Size)
 
@@ -73,7 +73,7 @@ Public Class ExtendedPointData
         End Get
     End Property
 
-    Public Overrides ReadOnly Property BinaryDataLength() As Integer
+    Public Overrides ReadOnly Property BinaryLength() As Integer
         Get
             Return Size
         End Get

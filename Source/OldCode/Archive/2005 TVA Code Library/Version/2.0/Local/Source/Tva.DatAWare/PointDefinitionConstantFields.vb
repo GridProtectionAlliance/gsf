@@ -68,18 +68,18 @@ Public Class PointDefinitionConstantFields
 
 #Region " IBinaryDataProvider Implementation "
 
-    Public ReadOnly Property BinaryData() As Byte() Implements IBinaryDataProvider.BinaryImage
+    Public ReadOnly Property BinaryImage() As Byte() Implements IBinaryDataProvider.BinaryImage
         Get
-            Dim data As Byte() = CreateArray(Of Byte)(Size)
+            Dim image As Byte() = CreateArray(Of Byte)(Size)
 
-            Array.Copy(BitConverter.GetBytes(m_value), 0, data, 0, 4)
-            Array.Copy(BitConverter.GetBytes(m_displayedDigits), 0, data, 4, 4)
+            Array.Copy(BitConverter.GetBytes(m_value), 0, image, 0, 4)
+            Array.Copy(BitConverter.GetBytes(m_displayedDigits), 0, image, 4, 4)
 
-            Return data
+            Return image
         End Get
     End Property
 
-    Public ReadOnly Property BinaryDataLength() As Integer Implements IBinaryDataProvider.BinaryLength
+    Public ReadOnly Property BinaryLength() As Integer Implements IBinaryDataProvider.BinaryLength
         Get
             Return Size
         End Get

@@ -151,23 +151,23 @@ Public Class PointState
 
 #Region " IBinaryDataProvider Implementation "
 
-    Public ReadOnly Property BinaryData() As Byte() Implements IBinaryDataProvider.BinaryImage
+    Public ReadOnly Property BinaryImage() As Byte() Implements IBinaryDataProvider.BinaryImage
         Get
-            Dim data As Byte() = CreateArray(Of Byte)(Size)
+            Dim image As Byte() = CreateArray(Of Byte)(Size)
 
-            Array.Copy(m_lastArchivedValue.BinaryData, 0, data, 0, ExtendedPointData.Size)
-            Array.Copy(m_previousValue.BinaryData, 0, data, 16, ExtendedPointData.Size)
-            Array.Copy(m_currentValue.BinaryData, 0, data, 32, ExtendedPointData.Size)
-            Array.Copy(BitConverter.GetBytes(m_activeDataBlockIndex), 0, data, 48, 4)
-            Array.Copy(BitConverter.GetBytes(m_activeDataBlockSlotNumber), 0, data, 52, 4)
-            Array.Copy(BitConverter.GetBytes(m_slope1), 0, data, 56, 8)
-            Array.Copy(BitConverter.GetBytes(m_slope2), 0, data, 64, 8)
+            Array.Copy(m_lastArchivedValue.BinaryImage, 0, image, 0, ExtendedPointData.Size)
+            Array.Copy(m_previousValue.BinaryImage, 0, image, 16, ExtendedPointData.Size)
+            Array.Copy(m_currentValue.BinaryImage, 0, image, 32, ExtendedPointData.Size)
+            Array.Copy(BitConverter.GetBytes(m_activeDataBlockIndex), 0, image, 48, 4)
+            Array.Copy(BitConverter.GetBytes(m_activeDataBlockSlotNumber), 0, image, 52, 4)
+            Array.Copy(BitConverter.GetBytes(m_slope1), 0, image, 56, 8)
+            Array.Copy(BitConverter.GetBytes(m_slope2), 0, image, 64, 8)
 
-            Return data
+            Return image
         End Get
     End Property
 
-    Public ReadOnly Property BinaryDataLength() As Integer Implements IBinaryDataProvider.BinaryLength
+    Public ReadOnly Property BinaryLength() As Integer Implements IBinaryDataProvider.BinaryLength
         Get
             Return Size
         End Get

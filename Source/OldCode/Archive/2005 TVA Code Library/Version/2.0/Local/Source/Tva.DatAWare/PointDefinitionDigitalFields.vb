@@ -99,19 +99,19 @@ Public Class PointDefinitionDigitalFields
 
 #Region " IBinaryDataProvider Implementation "
 
-    Public ReadOnly Property BinaryData() As Byte() Implements IBinaryDataProvider.BinaryImage
+    Public ReadOnly Property BinaryImage() As Byte() Implements IBinaryDataProvider.BinaryImage
         Get
-            Dim data As Byte() = CreateArray(Of Byte)(Size)
+            Dim image As Byte() = CreateArray(Of Byte)(Size)
 
-            Array.Copy(m_textEncoding.GetBytes(m_setDescription.PadRight(13)), 0, data, 0, 13)
-            Array.Copy(m_textEncoding.GetBytes(m_clearDescription.PadRight(13)), 0, data, 13, 13)
-            Array.Copy(BitConverter.GetBytes(m_alarmState), 0, data, 26, 2)
+            Array.Copy(m_textEncoding.GetBytes(m_setDescription.PadRight(13)), 0, image, 0, 13)
+            Array.Copy(m_textEncoding.GetBytes(m_clearDescription.PadRight(13)), 0, image, 13, 13)
+            Array.Copy(BitConverter.GetBytes(m_alarmState), 0, image, 26, 2)
 
-            Return data
+            Return image
         End Get
     End Property
 
-    Public ReadOnly Property BinaryDataLength() As Integer Implements IBinaryDataProvider.BinaryLength
+    Public ReadOnly Property BinaryLength() As Integer Implements IBinaryDataProvider.BinaryLength
         Get
             Return Size
         End Get

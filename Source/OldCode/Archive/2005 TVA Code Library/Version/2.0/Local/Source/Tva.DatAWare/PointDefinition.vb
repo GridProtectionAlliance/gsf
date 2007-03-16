@@ -454,48 +454,48 @@ Public Class PointDefinition
 
 #Region " IBinaryDataProvider Implementation "
 
-    Public ReadOnly Property BinaryData() As Byte() Implements IBinaryDataProvider.BinaryImage
+    Public ReadOnly Property BinaryImage() As Byte() Implements IBinaryDataProvider.BinaryImage
         Get
-            Dim data As Byte() = CreateArray(Of Byte)(Size)
+            Dim image As Byte() = CreateArray(Of Byte)(Size)
 
             ' Construct the binary IP buffer for this event
-            Array.Copy(m_textEncoding.GetBytes(m_description.PadRight(40)), 0, data, 0, 40)
-            Array.Copy(BitConverter.GetBytes(m_unitID), 0, data, 40, 2)
-            Array.Copy(BitConverter.GetBytes(m_securityFlags.Value), 0, data, 42, 2)
-            Array.Copy(m_textEncoding.GetBytes(m_hardwareInfo.PadRight(64)), 0, data, 44, 64)
-            Array.Copy(m_spares, 0, data, 108, 64)
-            Array.Copy(BitConverter.GetBytes(m_generalFlags.Value), 0, data, 172, 4)
-            Array.Copy(BitConverter.GetBytes(m_alarmFlags.Value), 0, data, 176, 4)
-            Array.Copy(BitConverter.GetBytes(m_scanRate), 0, data, 180, 4)
-            Array.Copy(m_textEncoding.GetBytes(m_name.PadRight(20)), 0, data, 184, 20)
-            Array.Copy(m_textEncoding.GetBytes(m_synonym1.PadRight(20)), 0, data, 204, 20)
-            Array.Copy(m_textEncoding.GetBytes(m_synonym2.PadRight(20)), 0, data, 224, 20)
-            Array.Copy(m_textEncoding.GetBytes(m_plantID.PadRight(2)), 0, data, 244, 2)
-            Array.Copy(BitConverter.GetBytes(m_sourceID), 0, data, 246, 2)
-            Array.Copy(BitConverter.GetBytes(m_compressionMinimumTime), 0, data, 248, 4)
-            Array.Copy(BitConverter.GetBytes(m_compressionMaximumTime), 0, data, 252, 4)
-            Array.Copy(m_textEncoding.GetBytes(m_system.PadRight(4)), 0, data, 256, 4)
-            Array.Copy(m_textEncoding.GetBytes(m_email.PadRight(50)), 0, data, 260, 50)
-            Array.Copy(m_textEncoding.GetBytes(m_pager.PadRight(30)), 0, data, 310, 30)
-            Array.Copy(m_textEncoding.GetBytes(m_phone.PadRight(30)), 0, data, 340, 30)
-            Array.Copy(m_textEncoding.GetBytes(m_remarks.PadRight(128)), 0, data, 370, 128)
+            Array.Copy(m_textEncoding.GetBytes(m_description.PadRight(40)), 0, image, 0, 40)
+            Array.Copy(BitConverter.GetBytes(m_unitID), 0, image, 40, 2)
+            Array.Copy(BitConverter.GetBytes(m_securityFlags.Value), 0, image, 42, 2)
+            Array.Copy(m_textEncoding.GetBytes(m_hardwareInfo.PadRight(64)), 0, image, 44, 64)
+            Array.Copy(m_spares, 0, image, 108, 64)
+            Array.Copy(BitConverter.GetBytes(m_generalFlags.Value), 0, image, 172, 4)
+            Array.Copy(BitConverter.GetBytes(m_alarmFlags.Value), 0, image, 176, 4)
+            Array.Copy(BitConverter.GetBytes(m_scanRate), 0, image, 180, 4)
+            Array.Copy(m_textEncoding.GetBytes(m_name.PadRight(20)), 0, image, 184, 20)
+            Array.Copy(m_textEncoding.GetBytes(m_synonym1.PadRight(20)), 0, image, 204, 20)
+            Array.Copy(m_textEncoding.GetBytes(m_synonym2.PadRight(20)), 0, image, 224, 20)
+            Array.Copy(m_textEncoding.GetBytes(m_plantID.PadRight(2)), 0, image, 244, 2)
+            Array.Copy(BitConverter.GetBytes(m_sourceID), 0, image, 246, 2)
+            Array.Copy(BitConverter.GetBytes(m_compressionMinimumTime), 0, image, 248, 4)
+            Array.Copy(BitConverter.GetBytes(m_compressionMaximumTime), 0, image, 252, 4)
+            Array.Copy(m_textEncoding.GetBytes(m_system.PadRight(4)), 0, image, 256, 4)
+            Array.Copy(m_textEncoding.GetBytes(m_email.PadRight(50)), 0, image, 260, 50)
+            Array.Copy(m_textEncoding.GetBytes(m_pager.PadRight(30)), 0, image, 310, 30)
+            Array.Copy(m_textEncoding.GetBytes(m_phone.PadRight(30)), 0, image, 340, 30)
+            Array.Copy(m_textEncoding.GetBytes(m_remarks.PadRight(128)), 0, image, 370, 128)
             Select Case m_generalFlags.PointType
                 Case PointType.Analog
-                    Array.Copy(m_analogFields.BinaryData, m_binaryInfo, PointDefinitionAnalogFields.Size)
+                    Array.Copy(m_analogFields.BinaryImage, m_binaryInfo, PointDefinitionAnalogFields.Size)
                 Case PointType.Digital
-                    Array.Copy(m_digitalFields.BinaryData, m_binaryInfo, PointDefinitionDigitalFields.Size)
+                    Array.Copy(m_digitalFields.BinaryImage, m_binaryInfo, PointDefinitionDigitalFields.Size)
                 Case PointType.Composed
-                    Array.Copy(m_composedFields.BinaryData, m_binaryInfo, PointDefinitionComposedFields.Size)
+                    Array.Copy(m_composedFields.BinaryImage, m_binaryInfo, PointDefinitionComposedFields.Size)
                 Case PointType.Constant
-                    Array.Copy(m_constantFields.BinaryData, m_binaryInfo, PointDefinitionConstantFields.Size)
+                    Array.Copy(m_constantFields.BinaryImage, m_binaryInfo, PointDefinitionConstantFields.Size)
             End Select
-            Array.Copy(m_binaryInfo, 0, data, 498, 256)
+            Array.Copy(m_binaryInfo, 0, image, 498, 256)
 
-            Return data
+            Return image
         End Get
     End Property
 
-    Public ReadOnly Property BinaryDataLength() As Integer Implements IBinaryDataProvider.BinaryLength
+    Public ReadOnly Property BinaryLength() As Integer Implements IBinaryDataProvider.BinaryLength
         Get
             Return Size
         End Get
