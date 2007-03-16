@@ -63,15 +63,15 @@ Public NotInheritable Class Common
 
         Select Case protocol
             Case PhasorProtocol.IeeeC37_118V1
-                Return "IEEE C37.118-2005"
+                Return "IEEE C37.118-2005 (Version 1)"
             Case PhasorProtocol.IeeeC37_118D6
-                Return "IEEE C37.118-D6"
+                Return "IEEE C37.118 (Draft 6)"
             Case PhasorProtocol.Ieee1344
                 Return "IEEE 1344-1995"
             Case PhasorProtocol.BpaPdcStream
                 Return "BPA PDCstream"
             Case PhasorProtocol.FNet
-                Return "FNET"
+                Return "Virgina Tech FNET"
             Case Else
                 Return [Enum].GetName(GetType(PhasorProtocol), protocol).Replace("_"c, "."c).ToUpper()
         End Select
