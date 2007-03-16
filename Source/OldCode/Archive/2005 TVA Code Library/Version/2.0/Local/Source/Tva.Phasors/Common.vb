@@ -58,4 +58,24 @@ Public NotInheritable Class Common
 
     End Function
 
+    ''' <summary>Returns display friendly protocol name</summary>
+    Public Shared Function GetFormattedProtocolName(ByVal protocol As PhasorProtocol) As String
+
+        Select Case protocol
+            Case PhasorProtocol.IeeeC37_118V1
+                Return "IEEE C37.118-2005"
+            Case PhasorProtocol.IeeeC37_118D6
+                Return "IEEE C37.118-D6"
+            Case PhasorProtocol.Ieee1344
+                Return "IEEE 1344-1995"
+            Case PhasorProtocol.BpaPdcStream
+                Return "BPA PDCstream"
+            Case PhasorProtocol.FNet
+                Return "FNET"
+            Case Else
+                Return [Enum].GetName(GetType(PhasorProtocol), protocol).Replace("_"c, "."c).ToUpper()
+        End Select
+
+    End Function
+
 End Class
