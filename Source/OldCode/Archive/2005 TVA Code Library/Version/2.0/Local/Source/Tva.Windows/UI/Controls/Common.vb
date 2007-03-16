@@ -34,9 +34,9 @@ Namespace UI.Controls
         ''' <param name="grid">Property grid to adjust</param>
         ''' <param name="ratio">Ratio to use use for label column</param>
         ''' <remarks>
-        ''' <para>Smaller ratio's (e.g., 1.75) produce a wider label column.</para>
+        ''' <para>Smaller ratios (e.g., 1.75) produce a wider label column.</para>
         ''' <para>
-        ''' This function only has an effect on property grid's when their Visible property is set to True.  To use
+        ''' This function only has an effect on property grids when their Visible property is set to True.  To use
         ''' this on an initially hidden property grid - set the property grid's Visible property to True at design
         ''' time, call this function during form load, then set the Visible property to False.
         ''' </para>
@@ -59,7 +59,7 @@ Namespace UI.Controls
         ''' <param name="lines">Number of lines to display in comment area</param>
         ''' <remarks>
         ''' <para>
-        ''' This function only has an effect on property grid's when their Visible property is set to True.  To use
+        ''' This function only has an effect on property grids when their Visible property is set to True.  To use
         ''' this on an initially hidden property grid - set the property grid's Visible property to True at design
         ''' time, call this function during form load, then set the Visible property to False.
         ''' </para>
