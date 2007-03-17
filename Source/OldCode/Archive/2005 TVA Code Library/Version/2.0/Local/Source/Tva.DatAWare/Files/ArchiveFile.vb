@@ -446,8 +446,8 @@ Namespace Files
                 If Directory.Exists(m_offloadPath) Then
                     ' The offload path that is specified is a valid one so we'll gather a list of all historic
                     ' files in the directory where the current (active) archive file is located.
-                    Dim historicFilePattern As String = NoFileExtension(m_name) & "_*" & Extension
-                    Dim historicFiles As String() = Directory.GetFiles(JustPath(m_name), historicFilePattern)
+                    Dim fileSearchPattern As String = NoFileExtension(m_name) & "_*_to_*" & Extension
+                    Dim historicFiles As String() = Directory.GetFiles(JustPath(m_name), fileSearchPattern)
 
                     ' Sorting the list will sort the historic files from oldest to newest.
                     Array.Sort(historicFiles)
@@ -491,14 +491,14 @@ Namespace Files
 
         Private Function ToBeArchived(ByVal pointState As PointState, ByRef pointData As StandardPointData) As Boolean
 
-            pointState.PreviousValue = pointState.CurrentValue
-            pointState.CurrentValue = pointData.ToExtended()
+            pointState.PreviousValue = pointState.CurrentValue  ' Promote old CurrentValue to PreviousValue.
+            pointState.CurrentValue = pointData.ToExtended()    ' Promote new value to CurrentValue.
 
             If Not pointState.PreviousValue.IsNull Then
                 ' TODO: Perform compression check here.
 
-                pointData = pointState.PreviousValue.ToStandard()
                 pointState.LastArchivedValue = pointState.PreviousValue
+                pointData = pointState.LastArchivedValue.ToStandard()
 
                 Return True
             End If
