@@ -22,7 +22,7 @@ Namespace Files
             InitializeComponent()
 
             m_name = Me.GetType().Name & Extension
-            m_initialRecordCount = 100
+            m_minimumRecordCount = 100
             m_saveOnClose = False
             m_alignOnSave = False
             m_autoSaveInterval = -1

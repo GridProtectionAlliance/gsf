@@ -15,7 +15,7 @@ Namespace Files
         Private m_alignOnSave As Boolean
         Private m_autoSaveInterval As Integer
         Private m_autoAlignInterval As Integer
-        Private m_initialRecordCount As Integer
+        Private m_minimumRecordCount As Integer
         Private m_fileStream As FileStream
         Private m_fileRecords As List(Of T)
 
@@ -93,12 +93,12 @@ Namespace Files
             End Set
         End Property
 
-        Public Property InitialRecordCount() As Integer
+        Public Property MinimumRecordCount() As Integer
             Get
-                Return m_initialRecordCount
+                Return m_minimumRecordCount
             End Get
             Set(ByVal value As Integer)
-                m_initialRecordCount = value
+                m_minimumRecordCount = value
             End Set
         End Property
 
@@ -134,10 +134,16 @@ Namespace Files
                         ' The file we're working with is a valid one.
                         Dim binaryImage As Byte() = Tva.Common.CreateArray(Of Byte)(RecordSize)
                         Dim recordCount As Integer = Convert.ToInt32(m_fileStream.Length \ binaryImage.Length)
+                        ' Create records from the data in the file.
                         For i As Integer = 1 To recordCount
                             m_fileStream.Read(binaryImage, 0, binaryImage.Length)
                             m_fileRecords.Add(NewRecord(i, binaryImage))
                             RaiseEvent DataLoading(Me, New ProgressEventArgs(Of Integer)(recordCount, i))
+                        Next
+
+                        ' Make sure that we have the minimum number of records specified.
+                        For i As Integer = recordCount + 1 To m_minimumRecordCount
+                            m_fileRecords.Add(NewRecord(i))
                         Next
                     Else
                         Close(False)
@@ -150,7 +156,7 @@ Namespace Files
                     ' Since we're working with a new file, we'll populate the in-memory list of records with the default
                     ' number of records as per the settings. These points will be witten back to the file when Save() is 
                     ' called or Close() is called and SaveOnClose is set to True.
-                    For i As Integer = 1 To m_initialRecordCount
+                    For i As Integer = 1 To m_minimumRecordCount
                         m_fileRecords.Add(NewRecord(i))
                     Next
                 End If

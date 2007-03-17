@@ -7,7 +7,7 @@ Namespace Files
 
 #Region " Member Declaration "
 
-        Private m_pointIndex As Integer
+        Private m_pointID As Integer
         Private m_startTime As TimeTag
 
 #End Region
@@ -22,9 +22,9 @@ Namespace Files
 
         End Sub
 
-        Public Sub New(ByVal pointIndex As Integer, ByVal startTime As TimeTag)
+        Public Sub New(ByVal pointID As Integer, ByVal startTime As TimeTag)
 
-            m_pointIndex = pointIndex
+            m_pointID = pointID
             m_startTime = startTime
 
         End Sub
@@ -33,7 +33,7 @@ Namespace Files
 
             If binaryImage IsNot Nothing Then
                 If binaryImage.Length - startIndex >= Size Then
-                    m_pointIndex = BitConverter.ToInt32(binaryImage, startIndex)
+                    m_pointID = BitConverter.ToInt32(binaryImage, startIndex)
                     m_startTime = New TimeTag(BitConverter.ToDouble(binaryImage, startIndex + 4))
                 Else
                     Throw New ArgumentException("Binary image size from startIndex is too small.")
@@ -44,12 +44,12 @@ Namespace Files
 
         End Sub
 
-        Public Property PointIndex() As Integer
+        Public Property PointID() As Integer
             Get
-                Return m_pointIndex
+                Return m_pointID
             End Get
             Set(ByVal value As Integer)
-                m_pointIndex = value
+                m_pointID = value
             End Set
         End Property
 
@@ -74,7 +74,7 @@ Namespace Files
 
             Dim other As ArchiveDataBlockPointer = TryCast(obj, ArchiveDataBlockPointer)
             If other IsNot Nothing Then
-                Dim pointIndexCompare As Integer = m_pointIndex.CompareTo(other.PointIndex)
+                Dim pointIndexCompare As Integer = m_pointID.CompareTo(other.PointID)
                 Return IIf(pointIndexCompare = 0, m_startTime.CompareTo(other.StartTime), pointIndexCompare)
             Else
                 Throw New ArgumentException(String.Format("Cannot compare {0} with {1}.", Me.GetType().Name, other.GetType().Name))
@@ -90,7 +90,7 @@ Namespace Files
             Get
                 Dim image As Byte() = CreateArray(Of Byte)(Size)
 
-                Array.Copy(BitConverter.GetBytes(m_pointIndex), 0, image, 0, 4)
+                Array.Copy(BitConverter.GetBytes(m_pointID), 0, image, 0, 4)
                 Array.Copy(BitConverter.GetBytes(m_startTime.Value), 0, image, 4, 8)
 
                 Return image

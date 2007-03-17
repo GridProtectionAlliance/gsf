@@ -29,6 +29,12 @@ Namespace Files
 
         End Sub
 
+        Public ReadOnly Property Index() As Integer
+            Get
+                Return Convert.ToInt32(m_location \ m_size)
+            End Get
+        End Property
+
         Public ReadOnly Property Location() As Long
             Get
                 Return m_location

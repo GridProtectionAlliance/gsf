@@ -33,7 +33,14 @@ Public MustInherit Class PointDataBase
         MyClass.New()
         m_timeTag = timeTag
         m_value = value
-        Quality = quality
+        Me.Quality = quality
+
+    End Sub
+
+    Public Sub New(ByVal timeTag As TimeTag, ByVal value As Single, ByVal quality As Quality, ByVal definition As PointDefinition)
+
+        MyClass.New(timeTag, value, quality)
+        m_definition = definition
 
     End Sub
 

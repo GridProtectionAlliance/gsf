@@ -109,6 +109,7 @@ Public Class PointState
         End Set
     End Property
 
+    <Obsolete("This property is here for legacy purpose only and is not to be used.")> _
     Public Property ActiveDataBlockIndex() As Integer
         Get
             Return m_activeDataBlockIndex - 1
@@ -120,6 +121,7 @@ Public Class PointState
         End Set
     End Property
 
+    <Obsolete("This property is here for legacy purpose only and is not to be used.")> _
     Public Property ActiveDataBlockSlotNumber() As Integer
         Get
             Return m_activeDataBlockSlotNumber

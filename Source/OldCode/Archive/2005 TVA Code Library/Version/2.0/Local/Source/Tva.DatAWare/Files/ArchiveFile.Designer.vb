@@ -20,11 +20,13 @@ Namespace Files
             InitializeComponent()
 
             m_name = Me.GetType().Name & Extension
-            m_size = 650D
+            m_size = 100L
             m_blockSize = 8
             m_saveOnClose = True
             m_rolloverOnFull = True
-            m_rolloverPreparationThreshold = 50
+            m_rolloverPreparationThreshold = 75
+            m_offloadCount = 5
+            m_offloadThreshold = 90
             m_rolloverPreparationThread = New System.Threading.Thread(AddressOf PrepareForRollover)
 
         End Sub

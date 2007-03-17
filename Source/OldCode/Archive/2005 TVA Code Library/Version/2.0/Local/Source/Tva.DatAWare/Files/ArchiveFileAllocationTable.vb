@@ -173,13 +173,6 @@ Namespace Files
 
             ' Leave space for data blocks.
             m_fileStream.Seek(m_dataBlockCount * (m_dataBlockSize * 1024L), SeekOrigin.Begin)
-            'If m_fileStream.Length > 0 Then
-            '    ' Existing file...
-            '    m_fileStream.Seek(-BinaryLength, SeekOrigin.End)
-            'Else
-            '    ' New file...
-            '    m_fileStream.Seek(m_dataBlockCount * (m_dataBlockSize * 1024L), SeekOrigin.Begin)
-            'End If
             m_fileStream.Write(BinaryImage, 0, BinaryLength)
             m_fileStream.Flush()
 
@@ -205,7 +198,7 @@ Namespace Files
             Dim unusedPointerIndex As Integer = m_dataBlockPointers.IndexOf(New ArchiveDataBlockPointer())
             If unusedPointerIndex >= 0 Then
                 ' Assign the data block to the specified point index.
-                m_dataBlockPointers(unusedPointerIndex).PointIndex = pointIndex
+                m_dataBlockPointers(unusedPointerIndex).PointID = pointIndex
                 m_dataBlockPointers(unusedPointerIndex).StartTime = startTime
                 ' Get the data block that corresponds to data block pointer.
                 Return GetDataBlock(m_dataBlockPointers(unusedPointerIndex))
@@ -318,7 +311,7 @@ Namespace Files
         ''' <returns></returns>
         Private Function FindDataBlockPointer(ByVal dataBlockPointer As ArchiveDataBlockPointer) As Boolean
 
-            Return (dataBlockPointer.PointIndex = m_searchPointIndex AndAlso _
+            Return (dataBlockPointer.PointID = m_searchPointIndex AndAlso _
                     (m_searchStartTime.CompareTo(TimeTag.MinValue) = 0 OrElse _
                         dataBlockPointer.StartTime.CompareTo(m_searchStartTime) >= 0) AndAlso _
                     (m_searchEndTime.CompareTo(TimeTag.MaxValue) = 0 OrElse _

@@ -19,6 +19,9 @@ Namespace Files
         Private m_saveOnClose As Boolean
         Private m_rolloverOnFull As Boolean
         Private m_rolloverPreparationThreshold As Short
+        Private m_offloadPath As String
+        Private m_offloadCount As Integer
+        Private m_offloadThreshold As Short
         Private m_stateFile As StateFile
         Private m_intercomFile As IntercomFile
         Private m_fat As ArchiveFileAllocationTable
@@ -40,6 +43,9 @@ Namespace Files
         Public Event RolloverPreparationStart As EventHandler
         Public Event RolloverPreparationComplete As EventHandler
         Public Event RolloverPreparationException As EventHandler(Of ExceptionEventArgs)
+        Public Event OffloadStart As EventHandler
+        Public Event OffloadComplete As EventHandler
+        Public Event OffloadException As EventHandler(Of ExceptionEventArgs)
 
         'Public Event DataReceived As EventHandler
         'Public Event DataArchived As EventHandler
@@ -122,6 +128,33 @@ Namespace Files
             End Get
             Set(ByVal value As Short)
                 m_rolloverPreparationThreshold = value
+            End Set
+        End Property
+
+        Public Property OffloadPath() As String
+            Get
+                Return m_offloadPath
+            End Get
+            Set(ByVal value As String)
+                m_offloadPath = value
+            End Set
+        End Property
+
+        Property OffloadCount() As Integer
+            Get
+                Return m_offloadCount
+            End Get
+            Set(ByVal value As Integer)
+                m_offloadCount = value
+            End Set
+        End Property
+
+        Public Property OffloadThreshold() As Short
+            Get
+                Return m_offloadThreshold
+            End Get
+            Set(ByVal value As Short)
+                m_offloadThreshold = value
             End Set
         End Property
 
@@ -216,7 +249,7 @@ Namespace Files
                 m_fileStream.Dispose()
                 m_fileStream = Nothing
                 m_rolloverPreparationThread.Abort()
-                If releaseAllFileLocks Then
+                If releaseAllFileLocks AndAlso m_stateFile.IsOpen Then
                     For i As Integer = 0 To m_stateFile.Records.Count - 1
                         ' We'll release all the data blocks that were being used by the file.
                         If m_stateFile.Records(i).ActiveDataBlock IsNot Nothing Then
@@ -310,39 +343,44 @@ Namespace Files
                     If pointData.TimeTag.CompareTo(m_fat.FileStartTime) >= 0 Then
                         ' The data to be written has a timetag that is the same as newer than the file's start time.
                         Dim pointState As PointState = m_stateFile.Read(pointData.Definition.ID)
-                        If ToBeArchived(pointData) Then
-                            ' Archive the data
-                            If pointState.ActiveDataBlock Is Nothing OrElse _
-                                    (pointState.ActiveDataBlock IsNot Nothing AndAlso pointState.ActiveDataBlock.SlotsAvailable <= 0) Then
-                                ' We either don't have a active data block where we can archive the point data or we have a 
-                                ' active data block but it is full, so we have to request a new data block from the FAT.
-                                If pointState.ActiveDataBlock IsNot Nothing Then pointState.ActiveDataBlock.Dispose()
-                                pointState.ActiveDataBlock = m_fat.RequestDataBlock(pointData.Definition.ID, pointData.TimeTag)
+                        If pointData.TimeTag.CompareTo(pointState.LastArchivedValue.TimeTag) >= 0 Then
+                            If ToBeArchived(pointState, pointData) Then
+                                ' Archive the data
+                                If pointState.ActiveDataBlock Is Nothing OrElse _
+                                        (pointState.ActiveDataBlock IsNot Nothing AndAlso pointState.ActiveDataBlock.SlotsAvailable <= 0) Then
+                                    ' We either don't have a active data block where we can archive the point data or we have a 
+                                    ' active data block but it is full, so we have to request a new data block from the FAT.
+                                    If pointState.ActiveDataBlock IsNot Nothing Then pointState.ActiveDataBlock.Dispose()
+                                    pointState.ActiveDataBlock = m_fat.RequestDataBlock(pointData.Definition.ID, pointData.TimeTag)
 
-                                If m_fat.DataBlocksAvailable <= m_fat.DataBlockCount * (m_rolloverPreparationThreshold / 100) AndAlso _
-                                        Not m_rolloverPreparationDone AndAlso Not m_rolloverPreparationThread.IsAlive Then
-                                    ' We've requested the specified percent of the total number of data blocks in the file, 
-                                    ' so we must now prepare for the rollver process since has not been done yet and it is 
-                                    ' not already in progress.
-                                    m_rolloverPreparationThread = New Thread(AddressOf PrepareForRollover)
-                                    m_rolloverPreparationThread.Priority = ThreadPriority.Lowest
-                                    m_rolloverPreparationThread.Start()
+                                    If m_fat.DataBlocksAvailable < m_fat.DataBlockCount * (1 - (m_rolloverPreparationThreshold / 100)) AndAlso _
+                                            Not m_rolloverPreparationDone AndAlso Not m_rolloverPreparationThread.IsAlive Then
+                                        ' We've requested the specified percent of the total number of data blocks in the file, 
+                                        ' so we must now prepare for the rollver process since has not been done yet and it is 
+                                        ' not already in progress.
+                                        m_rolloverPreparationThread = New Thread(AddressOf PrepareForRollover)
+                                        m_rolloverPreparationThread.Priority = ThreadPriority.Lowest
+                                        m_rolloverPreparationThread.Start()
+                                    End If
                                 End If
-                            End If
 
-                            If pointState.ActiveDataBlock IsNot Nothing Then
-                                ' We were able to obtain a data block for writing data.
-                                pointState.ActiveDataBlock.Write(pointData)
+                                If pointState.ActiveDataBlock IsNot Nothing Then
+                                    ' We were able to obtain a data block for writing data.
+                                    pointState.ActiveDataBlock.Write(pointData)
 
-                                m_fat.EventsArchived += 1
-                                m_fat.FileEndTime = pointData.TimeTag
-                                If m_fat.FileStartTime.CompareTo(TimeTag.MinValue) = 0 Then m_fat.FileStartTime = pointData.TimeTag
+                                    m_fat.EventsArchived += 1
+                                    m_fat.FileEndTime = pointData.TimeTag
+                                    If m_fat.FileStartTime.CompareTo(TimeTag.MinValue) = 0 Then m_fat.FileStartTime = pointData.TimeTag
+                                Else
+                                    ' We were unable to obtain a data block for writing data to because all data block are in use.
+                                    RaiseEvent FileFull(Me, EventArgs.Empty)
+                                End If
                             Else
-                                ' We were unable to obtain a data block for writing data to because all data block are in use.
-                                RaiseEvent FileFull(Me, EventArgs.Empty)
+                                ' Discard the data
                             End If
                         Else
-                            ' Discard the data
+                            ' Insert the data into the current file.
+                            InsertInCurrentArchiveFile()
                         End If
                     Else
                         ' The data to be written has a timetag that is older than the file's start time, so the data
@@ -371,6 +409,12 @@ Namespace Files
         Private Sub PrepareForRollover()
 
             Try
+                Dim archiveDrive As New DriveInfo(Path.GetPathRoot(m_name))
+                If archiveDrive.AvailableFreeSpace < archiveDrive.TotalSize * (1 - (m_offloadThreshold / 100)) Then
+                    ' We'll start offloading historic files if we've reached the offload threshold.
+                    OffloadHistoricFiles()
+                End If
+
                 RaiseEvent RolloverPreparationStart(Me, EventArgs.Empty)
 
                 With New ArchiveFile()
@@ -390,6 +434,37 @@ Namespace Files
                 ' We can safely ignore this exception.
             Catch ex As Exception
                 RaiseEvent RolloverPreparationException(Me, New ExceptionEventArgs(ex))
+            End Try
+
+        End Sub
+
+        Public Sub OffloadHistoricFiles()
+
+            Try
+                RaiseEvent OffloadStart(Me, EventArgs.Empty)
+
+                If Directory.Exists(m_offloadPath) Then
+                    ' The offload path that is specified is a valid one so we'll gather a list of all historic
+                    ' files in the directory where the current (active) archive file is located.
+                    Dim historicFilePattern As String = NoFileExtension(m_name) & "_*" & Extension
+                    Dim historicFiles As String() = Directory.GetFiles(JustPath(m_name), historicFilePattern)
+
+                    ' Sorting the list will sort the historic files from oldest to newest.
+                    Array.Sort(historicFiles)
+
+                    ' We'll offload the specified number of oldest historic files to the offload location if the 
+                    ' number of historic files is more than the offload count or all of the historic files if the 
+                    ' offload count is smaller the available number of historic files.
+                    For i As Integer = 0 To IIf(historicFiles.Length < m_offloadCount, historicFiles.Length, m_offloadCount) - 1
+                        File.Move(historicFiles(i), AddPathSuffix(m_offloadPath) & JustFileName(historicFiles(i)))
+                    Next
+                Else
+                    Throw New ArgumentException(String.Format("The offload path ""{0}"" is invalid.", m_offloadPath))
+                End If
+
+                RaiseEvent RolloverComplete(Me, EventArgs.Empty)
+            Catch ex As Exception
+                RaiseEvent OffloadException(Me, New ExceptionEventArgs(ex))
             End Try
 
         End Sub
@@ -414,10 +489,19 @@ Namespace Files
 
         End Function
 
-        Private Function ToBeArchived(ByVal pointData As StandardPointData) As Boolean
+        Private Function ToBeArchived(ByVal pointState As PointState, ByRef pointData As StandardPointData) As Boolean
 
-            ' TODO: Perform compression check here.
-            Return True
+            pointState.PreviousValue = pointState.CurrentValue
+            pointState.CurrentValue = pointData.ToExtended()
+
+            If Not pointState.PreviousValue.IsNull Then
+                ' TODO: Perform compression check here.
+
+                pointData = pointState.PreviousValue.ToStandard()
+                pointState.LastArchivedValue = pointState.PreviousValue
+
+                Return True
+            End If
 
         End Function
 

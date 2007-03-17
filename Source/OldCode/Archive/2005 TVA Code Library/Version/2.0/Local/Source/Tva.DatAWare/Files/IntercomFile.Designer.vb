@@ -21,7 +21,7 @@ Namespace Files
             'This call is required by the Component Designer.
             InitializeComponent()
 
-            InitialRecordCount = 1
+            MinimumRecordCount = 1
 
         End Sub
 

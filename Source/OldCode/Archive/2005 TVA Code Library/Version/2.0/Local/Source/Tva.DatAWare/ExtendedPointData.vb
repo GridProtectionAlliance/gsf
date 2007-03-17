@@ -39,6 +39,18 @@ Public Class ExtendedPointData
 
     End Sub
 
+    Public Sub New(ByVal timeTag As TimeTag, ByVal value As Single, ByVal quality As Quality)
+
+        MyBase.New(timeTag, value, quality)
+
+    End Sub
+
+    Public Sub New(ByVal timeTag As TimeTag, ByVal value As Single, ByVal quality As Quality, ByVal definition As PointDefinition)
+
+        MyBase.New(timeTag, value, quality, definition)
+
+    End Sub
+
     Public Property TimeZoneIndex() As Short
         Get
             Return Convert.ToInt16((Flags And TimeZoneIndexMask) \ 32)
@@ -78,6 +90,12 @@ Public Class ExtendedPointData
             Return Size
         End Get
     End Property
+
+    Public Function ToStandard() As StandardPointData
+
+        Return New StandardPointData(TimeTag, Value, Quality, Definition)
+
+    End Function
 
 End Class
 

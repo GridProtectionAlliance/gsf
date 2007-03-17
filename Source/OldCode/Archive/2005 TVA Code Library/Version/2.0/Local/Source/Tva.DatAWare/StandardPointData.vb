@@ -19,12 +19,6 @@ Public Class StandardPointData
 
     End Sub
 
-    Public Sub New(ByVal timeTag As TimeTag, ByVal value As Single, ByVal quality As Quality)
-
-        MyBase.New(timeTag, value, quality)
-
-    End Sub
-
     Public Sub New(ByVal binaryImage As Byte())
 
         MyClass.New(binaryImage, 0)
@@ -48,6 +42,20 @@ Public Class StandardPointData
 
     End Sub
 
+    Public Sub New(ByVal timeTag As TimeTag, ByVal value As Single, ByVal quality As Quality)
+
+        MyBase.New(timeTag, value, quality)
+        Millisecond = timeTag.ToDateTime().Millisecond
+
+    End Sub
+
+    Public Sub New(ByVal timeTag As TimeTag, ByVal value As Single, ByVal quality As Quality, ByVal definition As PointDefinition)
+
+        MyBase.New(timeTag, value, quality, definition)
+        Millisecond = timeTag.ToDateTime().Millisecond
+
+    End Sub
+
     Public Overrides ReadOnly Property BinaryImage() As Byte()
         Get
             Dim data As Byte() = CreateArray(Of Byte)(Size)
@@ -68,6 +76,12 @@ Public Class StandardPointData
             Return Size
         End Get
     End Property
+
+    Public Function ToExtended() As ExtendedPointData
+
+        Return New ExtendedPointData(TimeTag, Value, Quality, Definition)
+
+    End Function
 
 #End Region
 
