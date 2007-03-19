@@ -22,10 +22,12 @@ Namespace Files
         Private m_offloadPath As String
         Private m_offloadCount As Integer
         Private m_offloadThreshold As Short
+        Private m_compressData As Boolean
         Private m_stateFile As StateFile
         Private m_intercomFile As IntercomFile
         Private m_fat As ArchiveFileAllocationTable
         Private m_fileStream As FileStream
+        Private m_historicFileList As List(Of ArchiveFileInfo)
         Private m_rolloverPreparationDone As Boolean
         Private m_rolloverPreparationThread As Thread
 
@@ -155,6 +157,15 @@ Namespace Files
             End Get
             Set(ByVal value As Short)
                 m_offloadThreshold = value
+            End Set
+        End Property
+
+        Public Property CompressData() As Boolean
+            Get
+                Return m_compressData
+            End Get
+            Set(ByVal value As Boolean)
+                m_compressData = value
             End Set
         End Property
 
@@ -337,58 +348,54 @@ Namespace Files
         Public Sub Write(ByVal pointData As StandardPointData)
 
             If IsOpen Then
-                If pointData.Definition IsNot Nothing Then
-                    m_fat.EventsReceived += 1
+                m_fat.EventsReceived += 1
 
-                    If pointData.TimeTag.CompareTo(m_fat.FileStartTime) >= 0 Then
-                        ' The data to be written has a timetag that is the same as newer than the file's start time.
-                        Dim pointState As PointState = m_stateFile.Read(pointData.Definition.ID)
-                        If pointData.TimeTag.CompareTo(pointState.LastArchivedValue.TimeTag) >= 0 Then
-                            If ToBeArchived(pointState, pointData) Then
-                                ' Archive the data
-                                If pointState.ActiveDataBlock Is Nothing OrElse _
-                                        (pointState.ActiveDataBlock IsNot Nothing AndAlso pointState.ActiveDataBlock.SlotsAvailable <= 0) Then
-                                    ' We either don't have a active data block where we can archive the point data or we have a 
-                                    ' active data block but it is full, so we have to request a new data block from the FAT.
-                                    If pointState.ActiveDataBlock IsNot Nothing Then pointState.ActiveDataBlock.Dispose()
-                                    pointState.ActiveDataBlock = m_fat.RequestDataBlock(pointData.Definition.ID, pointData.TimeTag)
+                If pointData.TimeTag.CompareTo(m_fat.FileStartTime) >= 0 Then
+                    ' The data to be written has a timetag that is the same as newer than the file's start time.
+                    Dim pointState As PointState = m_stateFile.Read(pointData.Definition.ID)
+                    If pointData.TimeTag.CompareTo(pointState.LastArchivedValue.TimeTag) >= 0 Then
+                        If ToBeArchived(pointData, pointState) Then
+                            ' Archive the data
+                            If pointState.ActiveDataBlock Is Nothing OrElse _
+                                    (pointState.ActiveDataBlock IsNot Nothing AndAlso pointState.ActiveDataBlock.SlotsAvailable <= 0) Then
+                                ' We either don't have a active data block where we can archive the point data or we have a 
+                                ' active data block but it is full, so we have to request a new data block from the FAT.
+                                If pointState.ActiveDataBlock IsNot Nothing Then pointState.ActiveDataBlock.Dispose()
+                                pointState.ActiveDataBlock = m_fat.RequestDataBlock(pointData.Definition.ID, pointData.TimeTag)
 
-                                    If m_fat.DataBlocksAvailable < m_fat.DataBlockCount * (1 - (m_rolloverPreparationThreshold / 100)) AndAlso _
-                                            Not m_rolloverPreparationDone AndAlso Not m_rolloverPreparationThread.IsAlive Then
-                                        ' We've requested the specified percent of the total number of data blocks in the file, 
-                                        ' so we must now prepare for the rollver process since has not been done yet and it is 
-                                        ' not already in progress.
-                                        m_rolloverPreparationThread = New Thread(AddressOf PrepareForRollover)
-                                        m_rolloverPreparationThread.Priority = ThreadPriority.Lowest
-                                        m_rolloverPreparationThread.Start()
-                                    End If
+                                If m_fat.DataBlocksAvailable < m_fat.DataBlockCount * (1 - (m_rolloverPreparationThreshold / 100)) AndAlso _
+                                        Not m_rolloverPreparationDone AndAlso Not m_rolloverPreparationThread.IsAlive Then
+                                    ' We've requested the specified percent of the total number of data blocks in the file, 
+                                    ' so we must now prepare for the rollver process since has not been done yet and it is 
+                                    ' not already in progress.
+                                    m_rolloverPreparationThread = New Thread(AddressOf PrepareForRollover)
+                                    m_rolloverPreparationThread.Priority = ThreadPriority.Lowest
+                                    m_rolloverPreparationThread.Start()
                                 End If
+                            End If
 
-                                If pointState.ActiveDataBlock IsNot Nothing Then
-                                    ' We were able to obtain a data block for writing data.
-                                    pointState.ActiveDataBlock.Write(pointData)
+                            If pointState.ActiveDataBlock IsNot Nothing Then
+                                ' We were able to obtain a data block for writing data.
+                                pointState.ActiveDataBlock.Write(pointData)
 
-                                    m_fat.EventsArchived += 1
-                                    m_fat.FileEndTime = pointData.TimeTag
-                                    If m_fat.FileStartTime.CompareTo(TimeTag.MinValue) = 0 Then m_fat.FileStartTime = pointData.TimeTag
-                                Else
-                                    ' We were unable to obtain a data block for writing data to because all data block are in use.
-                                    RaiseEvent FileFull(Me, EventArgs.Empty)
-                                End If
+                                m_fat.EventsArchived += 1
+                                m_fat.FileEndTime = pointData.TimeTag
+                                If m_fat.FileStartTime.CompareTo(TimeTag.MinValue) = 0 Then m_fat.FileStartTime = pointData.TimeTag
                             Else
-                                ' Discard the data
+                                ' We were unable to obtain a data block for writing data to because all data block are in use.
+                                RaiseEvent FileFull(Me, EventArgs.Empty)
                             End If
                         Else
-                            ' Insert the data into the current file.
-                            InsertInCurrentArchiveFile()
+                            ' Discard the data
                         End If
                     Else
-                        ' The data to be written has a timetag that is older than the file's start time, so the data
-                        ' does not belong in this file but in a historic archive file instead.
-                        WriteToHistoricArchiveFile()    ' <- This is just a stub for now.
+                        ' Insert the data into the current file.
+                        InsertInCurrentArchiveFile()
                     End If
                 Else
-                    Throw New ArgumentException("Definition property for point data is not set.")
+                    ' The data to be written has a timetag that is older than the file's start time, so the data
+                    ' does not belong in this file but in a historic archive file instead.
+                    WriteToHistoricArchiveFile()    ' <- This is just a stub for now.
                 End If
             Else
                 Throw New InvalidOperationException(String.Format("{0} ""{1}"" is not open.", Me.GetType().Name, m_name))
@@ -489,19 +496,58 @@ Namespace Files
 
         End Function
 
-        Private Function ToBeArchived(ByVal pointState As PointState, ByRef pointData As StandardPointData) As Boolean
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <param name="pointData"></param>
+        ''' <param name="pointState"></param>
+        ''' <returns>True if the point data fails compression test and is to be archived; otherwise False.</returns>
+        Private Function ToBeArchived(ByRef pointData As StandardPointData, ByVal pointState As PointState) As Boolean
 
-            pointState.PreviousValue = pointState.CurrentValue  ' Promote old CurrentValue to PreviousValue.
-            pointState.CurrentValue = pointData.ToExtended()    ' Promote new value to CurrentValue.
+            Dim result As Boolean = False
+            Dim calculateSlopes As Boolean = False
 
-            If Not pointState.PreviousValue.IsNull Then
-                ' TODO: Perform compression check here.
+            If pointData.Definition IsNot Nothing Then
+                pointState.PreviousValue = pointState.CurrentValue  ' Promote old CurrentValue to PreviousValue.
+                pointState.CurrentValue = pointData.ToExtended()    ' Promote new value received to CurrentValue.
 
-                pointState.LastArchivedValue = pointState.PreviousValue
-                pointData = pointState.LastArchivedValue.ToStandard()
+                If m_compressData Then
+                    If pointState.LastArchivedValue.IsNull Then
+                        ' This is the first time data is received for the point.
+                        pointState.LastArchivedValue = pointState.CurrentValue
+                        result = True
+                    ElseIf pointState.PreviousValue.IsNull Then
+                        ' This is the second time data is received for the point.
+                        calculateSlopes = True
+                    ElseIf pointState.CurrentValue.Quality <> pointState.LastArchivedValue.Quality OrElse _
+                            pointState.CurrentValue.Quality <> pointState.PreviousValue.Quality OrElse _
+                             pointState.PreviousValue.TimeTag.Value - pointState.LastArchivedValue.TimeTag.Value > pointData.Definition.CompressionMaximumTime Then
+                        result = True
+                        calculateSlopes = True
+                    Else
 
-                Return True
+                    End If
+                Else
+                    pointState.LastArchivedValue = pointState.CurrentValue
+                    result = True
+                End If
+
+                If calculateSlopes Then
+                    With pointState
+                        If .CurrentValue.TimeTag.CompareTo(.LastArchivedValue.TimeTag) <> 0 Then
+                            .Slope1 = (.CurrentValue.Value - (.LastArchivedValue.Value + pointData.Definition.AnalogFields.CompressionLimit)) / _
+                                        (.CurrentValue.TimeTag.Value - .LastArchivedValue.TimeTag.Value)
+                            .Slope2 = (.CurrentValue.Value - (.LastArchivedValue.Value - pointData.Definition.AnalogFields.CompressionLimit)) / _
+                                        (.CurrentValue.TimeTag.Value - .LastArchivedValue.TimeTag.Value)
+                        Else
+                            .Slope1 = 0
+                            .Slope2 = 0
+                        End If
+                    End With
+                End If
             End If
+
+            Return result
 
         End Function
 
@@ -517,13 +563,13 @@ Namespace Files
 
         Private Class HistoricPointData
 
-            Public ArchiveFile As HistoricArchiveFile
+            Public ArchiveFile As ArchiveFileInfo
 
             Public PointData As List(Of StandardPointData)
 
         End Class
 
-        Public Class HistoricArchiveFile
+        Public Class ArchiveFileInfo
 
             Public FileName As String
 
