@@ -134,7 +134,6 @@ Namespace BpaPdcStream
         ''' stream implementations have a 0x01 in byte three where there should be a 0x00 and this throws off the
         ''' frame length, setting this property to True will correctly interpret the word count.
         ''' </summary>
-        <Category("Required Connection Parameters"), Description("."), DefaultValue(False)> _
         Public Property ParseWordCountFromByte() As Boolean
             Get
                 Return m_parseWordCountFromByte
@@ -205,10 +204,10 @@ Namespace BpaPdcStream
                     Select Case parsedFrameHeader.FrameType
                         Case FrameType.DataFrame
                             If m_configurationFrame Is Nothing Then
-                                ' Until we receive configuration frame 2, we at least expose the part of the frame we have parsed
+                                ' Until we receive configuration frame, we at least expose the part of the frame we have parsed
                                 RaiseReceivedCommonFrameHeader(parsedFrameHeader)
                             Else
-                                ' We can only start parsing data frames once we have successfully received a configuration frame 2...
+                                ' We can only start parsing data frames once we have successfully received a configuration frame...
                                 RaiseReceivedDataFrame(New DataFrame(parsedFrameHeader, m_configurationFrame, buffer, offset))
                             End If
                         Case FrameType.ConfigurationFrame
@@ -263,7 +262,7 @@ Namespace BpaPdcStream
 
         Private Sub m_configurationFileWatcher_Changed(ByVal sender As Object, ByVal e As System.IO.FileSystemEventArgs) Handles m_configurationFileWatcher.Changed
 
-            ' File watcher sends several notfications for file change - we only want to report one,
+            ' File watcher sends several notifications for file change - we only want to report one,
             ' so we ignore repeated file change notifications that occur within 1/2 a second
             If m_lastUpdateNotification = 0 OrElse TicksToSeconds(Date.Now.Ticks - m_lastUpdateNotification) > 0.5 Then
                 If m_configurationFrame IsNot Nothing Then m_configurationFrame.Refresh()

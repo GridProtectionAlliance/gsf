@@ -291,7 +291,7 @@ Namespace BpaPdcStream
                     ' We just assume current timestamp for configuration frames since they don't provide one
                     .Ticks = Date.UtcNow.Ticks
                 Else
-                    ' Next six bytes in data frame is the timestamp - so we go ahead an get it
+                    ' Next six bytes in data frame is the timestamp - so we go ahead and get it
                     Dim secondOfCentury As UInt32 = EndianOrder.BigEndian.ToUInt32(binaryImage, startIndex + 4)
                     .SampleNumber = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 8)
 

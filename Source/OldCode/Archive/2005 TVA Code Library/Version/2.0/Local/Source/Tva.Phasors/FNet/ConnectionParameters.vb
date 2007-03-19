@@ -60,7 +60,7 @@ Namespace FNet
             End Set
         End Property
 
-        <Category("Optional Connection Parameters"), Description("Configured nominal frequency for FNET device."), DefaultValue(DefaultNominalFrequency)> _
+        <Category("Optional Connection Parameters"), Description("Configured nominal frequency for FNET device."), DefaultValue(GetType(LineFrequency), "Hz60")> _
         Public Property NominalFrequency() As LineFrequency
             Get
                 Return m_nominalFrequency

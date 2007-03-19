@@ -512,7 +512,7 @@ Public Class MultiProtocolFrameParser
                 .Append(m_connectionString)
                 .Append(Environment.NewLine)
                 .Append("           Phasor protocol: ")
-                .Append([Enum].GetName(GetType(PhasorProtocol), PhasorProtocol))
+                .Append(Common.GetFormattedProtocolName(PhasorProtocol))
                 .Append(Environment.NewLine)
                 .Append("               Buffer size: ")
                 .Append(m_bufferSize)
