@@ -28,6 +28,8 @@ Namespace Files
             m_offloadCount = 5
             m_offloadThreshold = 90
             m_compressData = True
+            m_historicFileList = New List(Of ArchiveFileInfo)()
+            m_historicFileListThread = New System.Threading.Thread(AddressOf BuildHistoricFileList)
             m_rolloverPreparationThread = New System.Threading.Thread(AddressOf PrepareForRollover)
 
         End Sub
@@ -53,8 +55,28 @@ Namespace Files
         'Do not modify it using the code editor.
         <System.Diagnostics.DebuggerStepThrough()> _
         Private Sub InitializeComponent()
-            components = New System.ComponentModel.Container()
+            Me.CurrentLocationFileSystemWatcher = New System.IO.FileSystemWatcher
+            Me.OffloadLocationFileSystemWatcher = New System.IO.FileSystemWatcher
+            CType(Me.CurrentLocationFileSystemWatcher, System.ComponentModel.ISupportInitialize).BeginInit()
+            CType(Me.OffloadLocationFileSystemWatcher, System.ComponentModel.ISupportInitialize).BeginInit()
+            '
+            'CurrentLocationFileSystemWatcher
+            '
+            Me.CurrentLocationFileSystemWatcher.EnableRaisingEvents = True
+            Me.CurrentLocationFileSystemWatcher.Filter = "*.d"
+            Me.CurrentLocationFileSystemWatcher.IncludeSubdirectories = True
+            '
+            'OffloadLocationFileSystemWatcher
+            '
+            Me.OffloadLocationFileSystemWatcher.EnableRaisingEvents = True
+            Me.OffloadLocationFileSystemWatcher.Filter = "*.d"
+            Me.OffloadLocationFileSystemWatcher.IncludeSubdirectories = True
+            CType(Me.CurrentLocationFileSystemWatcher, System.ComponentModel.ISupportInitialize).EndInit()
+            CType(Me.OffloadLocationFileSystemWatcher, System.ComponentModel.ISupportInitialize).EndInit()
+
         End Sub
+        Friend WithEvents CurrentLocationFileSystemWatcher As System.IO.FileSystemWatcher
+        Friend WithEvents OffloadLocationFileSystemWatcher As System.IO.FileSystemWatcher
 
     End Class
 

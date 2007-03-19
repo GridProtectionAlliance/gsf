@@ -28,6 +28,7 @@ Namespace Files
         Private m_fat As ArchiveFileAllocationTable
         Private m_fileStream As FileStream
         Private m_historicFileList As List(Of ArchiveFileInfo)
+        Private m_historicFileListThread As Thread
         Private m_rolloverPreparationDone As Boolean
         Private m_rolloverPreparationThread As Thread
 
@@ -215,6 +216,12 @@ Namespace Files
 
         Public Sub Open()
 
+            Open(True)
+
+        End Sub
+
+        Public Sub Open(scanForHistoricFiles as Boolean)
+
             If Not IsOpen Then
                 If m_stateFile IsNot Nothing AndAlso m_intercomFile IsNot Nothing Then
                     RaiseEvent FileOpening(Me, EventArgs.Empty)
@@ -234,6 +241,18 @@ Namespace Files
                     ' Make sure that the necessary files are available and ready for use.
                     If Not m_stateFile.IsOpen Then m_stateFile.Open()
                     If Not m_intercomFile.IsOpen Then m_intercomFile.Open()
+
+                    If scanForHistoricFiles Then
+                        ' Start preparing the list of historic files on a seperate thread.
+                        m_historicFileListThread = New Thread(AddressOf BuildHistoricFileList)
+                        m_historicFileListThread.Priority = ThreadPriority.Lowest
+                        m_historicFileListThread.Start()
+
+                        CurrentLocationFileSystemWatcher.Filter = HistoricFilesSearchPattern
+                        CurrentLocationFileSystemWatcher.Path = JustPath(m_name)
+                        OffloadLocationFileSystemWatcher.Filter = HistoricFilesSearchPattern
+                        OffloadLocationFileSystemWatcher.Path = m_offloadPath
+                    End If
 
                     RaiseEvent FileOpened(Me, EventArgs.Empty)
                 Else
@@ -259,6 +278,8 @@ Namespace Files
                 m_fat = Nothing
                 m_fileStream.Dispose()
                 m_fileStream = Nothing
+                m_historicFileList.Clear()
+                m_historicFileListThread.Abort()
                 m_rolloverPreparationThread.Abort()
                 If releaseAllFileLocks AndAlso m_stateFile.IsOpen Then
                     For i As Integer = 0 To m_stateFile.Records.Count - 1
@@ -291,8 +312,8 @@ Namespace Files
             If m_rolloverPreparationDone Then
                 RaiseEvent RolloverStart(Me, EventArgs.Empty)
 
-                Dim standbyFile As String = GetStandbyArchiveFileName()
-                Dim historyFile As String = GetHistoryArchiveFileName()
+                Dim standbyFile As String = StandbyArchiveFileName()
+                Dim historyFile As String = HistoryArchiveFileName()
 
                 ' Signal the server that we're are performing rollover so it must let go of this file.
                 m_intercomFile.Records(0).FileWrap = True
@@ -413,6 +434,44 @@ Namespace Files
 
 #Region " Private Code "
 
+        Private ReadOnly Property StandbyArchiveFileName() As String
+            Get
+                Return JustPath(m_name) & NoFileExtension(m_name) & "_standby" & Extension
+            End Get
+        End Property
+
+        Private ReadOnly Property HistoryArchiveFileName() As String
+            Get
+                Return JustPath(m_name) & (NoFileExtension(m_name) & "_" & m_fat.FileStartTime.ToString() & "_to_" & m_fat.FileEndTime.ToString() & Extension).Replace(":"c, "!"c)
+            End Get
+        End Property
+
+        Private ReadOnly Property HistoricFilesSearchPattern() As String
+            Get
+                Return NoFileExtension(m_name) & "_*_to_*" & Extension
+            End Get
+        End Property
+
+        Private Sub BuildHistoricFileList()
+
+            Dim historicFile As New ArchiveFile()
+
+            historicFile.SaveOnClose = False
+            historicFile.StateFile = m_stateFile
+            historicFile.IntercomFile = m_intercomFile
+
+            For Each historicFileName As String In Directory.GetFiles(JustPath(m_name), HistoricFilesSearchPattern)
+                m_historicFileList.Add(GetFileInfo(historicFileName, historicFile))
+            Next
+
+            If Not String.IsNullOrEmpty(m_offloadPath) Then
+                For Each historicFileName As String In Directory.GetFiles(m_offloadPath, HistoricFilesSearchPattern)
+                    m_historicFileList.Add(GetFileInfo(historicFileName, historicFile))
+                Next
+            End If
+
+        End Sub
+
         Private Sub PrepareForRollover()
 
             Try
@@ -425,12 +484,12 @@ Namespace Files
                 RaiseEvent RolloverPreparationStart(Me, EventArgs.Empty)
 
                 With New ArchiveFile()
-                    .Name = GetStandbyArchiveFileName()
+                    .Name = StandbyArchiveFileName()
                     .Size = m_size
                     .BlockSize = m_blockSize
                     .StateFile = m_stateFile
                     .IntercomFile = m_intercomFile
-                    .Open()
+                    .Open(False)
                     .Close(False)
                 End With
 
@@ -453,8 +512,7 @@ Namespace Files
                 If Directory.Exists(m_offloadPath) Then
                     ' The offload path that is specified is a valid one so we'll gather a list of all historic
                     ' files in the directory where the current (active) archive file is located.
-                    Dim fileSearchPattern As String = NoFileExtension(m_name) & "_*_to_*" & Extension
-                    Dim historicFiles As String() = Directory.GetFiles(JustPath(m_name), fileSearchPattern)
+                    Dim historicFiles As String() = Directory.GetFiles(JustPath(m_name), HistoricFilesSearchPattern)
 
                     ' Sorting the list will sort the historic files from oldest to newest.
                     Array.Sort(historicFiles)
@@ -465,8 +523,6 @@ Namespace Files
                     For i As Integer = 0 To IIf(historicFiles.Length < m_offloadCount, historicFiles.Length, m_offloadCount) - 1
                         File.Move(historicFiles(i), AddPathSuffix(m_offloadPath) & JustFileName(historicFiles(i)))
                     Next
-                Else
-                    Throw New ArgumentException(String.Format("The offload path ""{0}"" is invalid.", m_offloadPath))
                 End If
 
                 RaiseEvent RolloverComplete(Me, EventArgs.Empty)
@@ -484,15 +540,33 @@ Namespace Files
 
         End Sub
 
-        Private Function GetStandbyArchiveFileName() As String
+        Private Function GetFileInfo(ByVal fileName As String) As ArchiveFileInfo
 
-            Return JustPath(m_name) & NoFileExtension(m_name) & "_standby" & Extension
+            Dim fileInstance As New ArchiveFile()
+            fileInstance.SaveOnClose = False
+            fileInstance.StateFile = m_stateFile
+            fileInstance.IntercomFile = m_intercomFile
+
+            Return GetFileInfo(fileName, fileInstance)
 
         End Function
 
-        Private Function GetHistoryArchiveFileName() As String
+        Private Function GetFileInfo(ByVal fileName As String, ByVal fileInstance As ArchiveFile) As ArchiveFileInfo
 
-            Return JustPath(m_name) & (NoFileExtension(m_name) & "_" & m_fat.FileStartTime.ToString() & "_to_" & m_fat.FileEndTime.ToString() & Extension).Replace(":"c, "!"c)
+            Dim fileInfo As New ArchiveFileInfo()
+
+            Try
+                fileInstance.Name = fileName
+                fileInstance.Open(False)
+                fileInfo.FileName = fileInstance.Name
+                fileInfo.StartTimeTag = fileInstance.FileAllocationTable.FileStartTime
+                fileInfo.EndTimeTag = fileInstance.FileAllocationTable.FileEndTime
+                fileInstance.Close(False)
+            Catch ex As Exception
+                ' We'll ignore any exception we might encounter here if the file is malformed or something.
+            End Try
+
+            Return fileInfo
 
         End Function
 
@@ -551,7 +625,9 @@ Namespace Files
 
         End Function
 
-#Region " ArchiveFile Events "
+#Region " Event Handlers "
+
+#Region " ArchiveFile "
 
         Private Sub ArchiveFile_FileFull(ByVal sender As Object, ByVal e As System.EventArgs) Handles Me.FileFull
 
@@ -561,13 +637,63 @@ Namespace Files
 
 #End Region
 
-        Private Class HistoricPointData
+#Region " CurrentLocationFileSystemWatcher "
 
-            Public ArchiveFile As ArchiveFileInfo
+        Private Sub CurrentLocationFileSystemWatcher_Created(ByVal sender As Object, ByVal e As System.IO.FileSystemEventArgs) Handles CurrentLocationFileSystemWatcher.Created
 
-            Public PointData As List(Of StandardPointData)
+            Dim historicFileInfo As ArchiveFileInfo = GetFileInfo(e.FullPath)
+            If Not m_historicFileList.Contains(historicFileInfo) Then m_historicFileList.Add(historicFileInfo)
 
-        End Class
+        End Sub
+
+        Private Sub CurrentLocationFileSystemWatcher_Deleted(ByVal sender As Object, ByVal e As System.IO.FileSystemEventArgs) Handles CurrentLocationFileSystemWatcher.Deleted
+
+            Dim historicFileInfo As ArchiveFileInfo = GetFileInfo(e.FullPath)
+            If m_historicFileList.Contains(historicFileInfo) Then m_historicFileList.Remove(historicFileInfo)
+
+        End Sub
+
+        Private Sub CurrentLocationFileSystemWatcher_Renamed(ByVal sender As Object, ByVal e As System.IO.RenamedEventArgs) Handles CurrentLocationFileSystemWatcher.Renamed
+
+            If String.Compare(JustFileExtension(e.OldFullPath), Extension, True) = 0 Then
+                Dim oldFileInfo As ArchiveFileInfo = GetFileInfo(e.OldFullPath)
+                If m_historicFileList.Contains(oldFileInfo) Then m_historicFileList.Remove(oldFileInfo)
+            End If
+
+            If String.Compare(JustFileExtension(e.FullPath), Extension, True) = 0 Then
+                Dim newFileInfo As ArchiveFileInfo = GetFileInfo(e.FullPath)
+                If Not m_historicFileList.Contains(newFileInfo) Then m_historicFileList.Add(newFileInfo)
+            End If
+
+        End Sub
+
+#End Region
+
+#Region " OffloadLocationFileSystemWatcher "
+
+        Private Sub OffloadLocationFileSystemWatcher_Created(ByVal sender As Object, ByVal e As System.IO.FileSystemEventArgs) Handles OffloadLocationFileSystemWatcher.Created
+
+            CurrentLocationFileSystemWatcher_Created(sender, e)
+
+        End Sub
+
+        Private Sub OffloadLocationFileSystemWatcher_Deleted(ByVal sender As Object, ByVal e As System.IO.FileSystemEventArgs) Handles OffloadLocationFileSystemWatcher.Deleted
+
+            CurrentLocationFileSystemWatcher_Deleted(sender, e)
+
+        End Sub
+
+        Private Sub OffloadLocationFileSystemWatcher_Renamed(ByVal sender As Object, ByVal e As System.IO.RenamedEventArgs) Handles OffloadLocationFileSystemWatcher.Renamed
+
+            CurrentLocationFileSystemWatcher_Renamed(sender, e)
+
+        End Sub
+
+#End Region
+
+#End Region
+
+#Region " Classes "
 
         Public Class ArchiveFileInfo
 
@@ -577,7 +703,28 @@ Namespace Files
 
             Public EndTimeTag As TimeTag
 
+            Public Overrides Function Equals(ByVal obj As Object) As Boolean
+
+                Dim other As ArchiveFileInfo = TryCast(obj, ArchiveFileInfo)
+                If other IsNot Nothing Then
+                    Return FileName.Equals(other.FileName) And _
+                        StartTimeTag.Equals(other.StartTimeTag) And _
+                        EndTimeTag.Equals(other.EndTimeTag)
+                End If
+
+            End Function
+
         End Class
+
+        Private Class HistoricPointData
+
+            Public ArchiveFile As ArchiveFileInfo
+
+            Public PointData As List(Of StandardPointData)
+
+        End Class
+
+#End Region
 
 #End Region
 

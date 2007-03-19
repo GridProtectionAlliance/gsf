@@ -180,6 +180,10 @@
   <ItemGroup>
     <EmbeddedResource Include="Embedded Resources\Files.StateFile.bmp" />
     <EmbeddedResource Include="Embedded Resources\Files.IntercomFile.bmp" />
+    <EmbeddedResource Include="Files\ArchiveFile.resx">
+      <SubType>Designer</SubType>
+      <DependentUpon>ArchiveFile.vb</DependentUpon>
+    </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.VisualBasic.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
