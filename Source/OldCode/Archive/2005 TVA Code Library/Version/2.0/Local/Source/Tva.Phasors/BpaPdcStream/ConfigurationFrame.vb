@@ -69,6 +69,8 @@ Namespace BpaPdcStream
             m_streamType = info.GetValue("streamType", GetType(StreamType))
             m_revisionNumber = info.GetValue("revisionNumber", GetType(RevisionNumber))
             m_iniFile = New IniFile(info.GetString("configurationFileName"))
+            m_readWriteLock = New ReaderWriterLock
+            Refresh()
 
         End Sub
 
@@ -246,10 +248,10 @@ Namespace BpaPdcStream
                     Next
 
                     ' Associate parsed cells with cells defined in INI file
-                    If m_configurationFileCells.Count > 0 Then
+                    If m_configurationFileCells.Count > 0 AndAlso Cells IsNot Nothing Then
                         Dim configurationFileCell As ConfigurationCell = Nothing
 
-                        For Each cell As ConfigurationCell In Me.Cells
+                        For Each cell As ConfigurationCell In Cells
                             ' Attempt to associate this configuration cell with information read from external INI based configuration file
                             m_configurationFileCells.TryGetByIDLabel(cell.IDLabel, configurationFileCell)
                             cell.ConfigurationFileCell = configurationFileCell
