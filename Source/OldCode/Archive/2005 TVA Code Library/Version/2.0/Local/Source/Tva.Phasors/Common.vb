@@ -71,7 +71,7 @@ Public NotInheritable Class Common
             Case PhasorProtocol.BpaPdcStream
                 Return "BPA PDCstream"
             Case PhasorProtocol.FNet
-                Return "Virgina Tech FNET"
+                Return "Virginia Tech FNET"
             Case Else
                 Return [Enum].GetName(GetType(PhasorProtocol), protocol).Replace("_"c, "."c).ToUpper()
         End Select
