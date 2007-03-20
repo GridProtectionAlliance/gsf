@@ -33,6 +33,8 @@ Namespace BpaPdcStream
         Private m_pdcBlockPmuCount As Byte
         Private m_isPdcBlockPmu As Boolean
 
+        Public Const PdcBlockPmuBinaryLength As Integer = 28
+
         Protected Sub New()
         End Sub
 
@@ -95,6 +97,7 @@ Namespace BpaPdcStream
 
         End Sub
 
+        ' This overload allows construction of PMU's that exist within a PDCexchange block
         Public Sub New(ByVal parent As IDataFrame, ByVal state As DataFrameParsingState, ByVal index As Int32, ByVal isPdcBlockPmu As Boolean, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
             MyBase.New(parent, True, MaximumPhasorValues, MaximumAnalogValues, MaximumDigitalValues, _
@@ -379,14 +382,15 @@ Namespace BpaPdcStream
             Dim parsingState As DataCellParsingState = DirectCast(state, DataCellParsingState)
             Dim revision As RevisionNumber = Parent.ConfigurationFrame.RevisionNumber
             Dim analogs As Byte = binaryImage(startIndex + 1)
+            Dim digitals As Byte
 
             ' Parse PDCstream specific header image
             If revision >= 2 Then
                 ' Strip off reserved flags
-                m_reservedFlags = (analogs And ReservedFlags.AnalogWordsMask)
+                m_reservedFlags = (analogs And Not ReservedFlags.AnalogWordsMask)
 
                 ' Leave analog word count
-                analogs = (analogs And Not ReservedFlags.AnalogWordsMask)
+                analogs = (analogs And ReservedFlags.AnalogWordsMask)
             Else
                 ' Older revisions didn't allow analogs
                 m_dataRate = analogs
@@ -395,10 +399,13 @@ Namespace BpaPdcStream
 
             m_flags = binaryImage(startIndex)
 
-            ' PDC block PMU header is restricted to above
-            If Not parsingState.IsPdcBlockPmu Then
-                Dim digitals As Byte = binaryImage(startIndex + 2)
+            If parsingState.IsPdcBlockPmu Then
+                ' PDC block PMU's use only one digital
+                digitals = 1
+            Else
                 Dim phasors As Byte = binaryImage(startIndex + 3)
+
+                digitals = binaryImage(startIndex + 2)
 
                 If revision >= 2 Then
                     ' Strip off IEEE flags
@@ -410,6 +417,7 @@ Namespace BpaPdcStream
 
                 ' Check for PDC exchange format
                 If UsingPDCExchangeFormat Then
+                    ' In cases where we are using PDC exchange - the phasor count is the number of PMU's in the PDC block
                     m_pdcBlockPmuCount = phasors
 
                     ' Parse PMU's from PDC block...
@@ -419,6 +427,7 @@ Namespace BpaPdcStream
 
                     ' This PDC block header has no data values of its own (only PMU's) - so we cancel
                     ' data parsing for any other elements (see ParseBodyImage override below)
+                    parsingState.IsPdcBlockHeader = True
                 Else
                     ' Algorithm Case: Determine best course of action when stream counts don't match counts defined in the
                     ' external INI based configuration file.  Think about what *will* happen when new data appears in the
@@ -438,46 +447,42 @@ Namespace BpaPdcStream
                     ' file, so the only time an exception is thrown is if there are more phasors defined in the the stream
                     ' than there are defined in the INI file...
 
-                    ' TODO: Base class parses phasors based on number of phasors defined in configuration file, not
-                    ' on number of phasors stream says it has defined.  May need to override base class such that
-                    ' minimum count is used...
-
                     ' Phasors should be already defined in BPA PDCstream configuration file - we'll stop if they're not
                     If phasors > ConfigurationCell.PhasorDefinitions.Count Then
                         Throw New InvalidOperationException("Stream/Config File Mismatch: Phasor value count in stream (" & phasors & ") does not match defined count in configuration file (" & ConfigurationCell.PhasorDefinitions.Count & ") for " & ConfigurationCell.IDLabel)
                     End If
 
-                    ' If analog values get a clear definition in INI file at some point, we can validate the number in the stream to the number in the config file...
-                    'If analogWords <> ConfigurationCell.AnalogDefinitions.Count Then
-                    '    Throw New InvalidOperationException("Stream/Config File Mismatch: Analog value count in stream (" analogWords & ") does not match defined count in configuration file (" & ConfigurationCell.AnalogDefinitions.Count & ")")
-                    'End If
-
-                    ' If digital values get a clear definition in INI file at some point, we can validate the number in the stream to the number in the config file...
-                    'If digitalWords <> ConfigurationCell.DigitalDefinitions.Count Then
-                    '    Throw New InvalidOperationException("Stream/Config File Mismatch: Digital value count in stream (" digitalWords & ") does not match defined count in configuration file (" & ConfigurationCell.DigitalDefinitions.Count & ")")
-                    'End If
-
-                    ' Dyanmically add analog definitions to configuration cell as needed (they are only defined in data frame of BPA PDCstream)
-                    With ConfigurationCell.AnalogDefinitions
-                        If analogs > .Count Then
-                            For x As Integer = .Count To analogs - 1
-                                .Add(New BpaPdcStream.AnalogDefinition(ConfigurationCell, x, "Analog " & (x + 1), 1, 0.0F))
-                            Next
-                        End If
-                    End With
-
-                    ' Dyanmically add digital definitions to configuration cell as needed (they are only defined in data frame of BPA PDCstream)
-                    With ConfigurationCell.DigitalDefinitions
-                        If digitals > .Count Then
-                            For x As Integer = .Count To digitals - 1
-                                .Add(New BpaPdcStream.DigitalDefinition(ConfigurationCell, x, "Digital Word " & (x + 1)))
-                            Next
-                        End If
-                    End With
-
                     m_sampleNumber = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 4)
                 End If
             End If
+
+            ' If analog values get a clear definition in INI file at some point, we can validate the number in the stream to the number in the config file...
+            'If analogWords > ConfigurationCell.AnalogDefinitions.Count Then
+            '    Throw New InvalidOperationException("Stream/Config File Mismatch: Analog value count in stream (" analogWords & ") does not match defined count in configuration file (" & ConfigurationCell.AnalogDefinitions.Count & ")")
+            'End If
+
+            ' If digital values get a clear definition in INI file at some point, we can validate the number in the stream to the number in the config file...
+            'If digitalWords > ConfigurationCell.DigitalDefinitions.Count Then
+            '    Throw New InvalidOperationException("Stream/Config File Mismatch: Digital value count in stream (" digitalWords & ") does not match defined count in configuration file (" & ConfigurationCell.DigitalDefinitions.Count & ")")
+            'End If
+
+            ' Dyanmically add analog definitions to configuration cell as needed (they are only defined in data frame of BPA PDCstream)
+            With ConfigurationCell.AnalogDefinitions
+                If analogs > .Count Then
+                    For x As Integer = .Count To analogs - 1
+                        .Add(New BpaPdcStream.AnalogDefinition(ConfigurationCell, x, "Analog " & (x + 1), 1, 0.0F))
+                    Next
+                End If
+            End With
+
+            ' Dyanmically add digital definitions to configuration cell as needed (they are only defined in data frame of BPA PDCstream)
+            With ConfigurationCell.DigitalDefinitions
+                If digitals > .Count Then
+                    For x As Integer = .Count To digitals - 1
+                        .Add(New BpaPdcStream.DigitalDefinition(ConfigurationCell, x, "Digital Word " & (x + 1)))
+                    Next
+                End If
+            End With
 
             ' Status flags and remaining data elements will parsed by base class in the ParseBodyImage method
 
@@ -485,7 +490,7 @@ Namespace BpaPdcStream
 
         Protected Overrides Sub ParseBodyImage(ByVal state As IChannelParsingState, ByVal binaryImage() As Byte, ByVal startIndex As Integer)
 
-            ' PDC Block headers have no elements to parse (children PMU's will have already been parsed at this point)
+            ' PDC Block headers have no body elements to parse other than children and they will have already been parsed at this point
             If Not DirectCast(state, DataCellParsingState).IsPdcBlockHeader Then MyBase.ParseBodyImage(state, binaryImage, startIndex)
 
         End Sub

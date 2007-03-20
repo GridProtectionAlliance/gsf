@@ -226,7 +226,7 @@ Public MustInherit Class DataCellBase
         ' By the very nature of the three protocols supporting the same order of phasors, frequency, dfreq, analog and digitals
         ' we are able to "automatically" parse this data out in the data cell base class - BEAUTIFUL!!!
         ' Parse out phasor values
-        For x = 0 To m_configurationCell.PhasorDefinitions.Count - 1
+        For x = 0 To parsingState.PhasorCount - 1
             m_phasorValues.Add(parsingState.CreateNewPhasorValueFunction.Invoke(Me, m_configurationCell.PhasorDefinitions(x), binaryImage, startIndex))
             startIndex += m_phasorValues(x).BinaryLength
         Next
@@ -236,13 +236,13 @@ Public MustInherit Class DataCellBase
         startIndex += m_frequencyValue.BinaryLength
 
         ' Parse out analog values
-        For x = 0 To m_configurationCell.AnalogDefinitions.Count - 1
+        For x = 0 To parsingState.AnalogCount - 1
             m_analogValues.Add(parsingState.CreateNewAnalogValueFunction.Invoke(Me, m_configurationCell.AnalogDefinitions(x), binaryImage, startIndex))
             startIndex += m_analogValues(x).BinaryLength
         Next
 
         ' Parse out digital values
-        For x = 0 To m_configurationCell.DigitalDefinitions.Count - 1
+        For x = 0 To parsingState.DigitalCount - 1
             m_digitalValues.Add(parsingState.CreateNewDigitalValueFunction.Invoke(Me, m_configurationCell.DigitalDefinitions(x), binaryImage, startIndex))
             startIndex += m_digitalValues(x).BinaryLength
         Next

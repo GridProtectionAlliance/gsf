@@ -49,7 +49,7 @@ Namespace BpaPdcStream
 
             m_isPdcBlockPmu = isPdcBlockPmu
 
-            ' PDC Block PMU's phase 2 phasors, 0 analogs and 1 digital
+            ' PDC Block PMU's contain exactly 2 phasors, 0 analogs and 1 digital
             If isPdcBlockPmu Then
                 PhasorCount = 2
                 AnalogCount = 0
