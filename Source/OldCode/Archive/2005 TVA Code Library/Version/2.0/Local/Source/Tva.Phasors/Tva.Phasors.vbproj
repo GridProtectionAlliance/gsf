@@ -245,6 +245,7 @@
     <None Include="Relationship Diagrams\Analog Value Relationships.cd" />
     <None Include="Relationship Diagrams\Digital Definition Relationships.cd" />
     <None Include="Relationship Diagrams\Digital Value Relationships.cd" />
+    <None Include="Relationship Diagrams\Frequency Definition Relationships.cd" />
     <None Include="Relationship Diagrams\Frequency Value Relationships.cd" />
     <None Include="Relationship Diagrams\Phasor Class Diagram.cd" />
     <None Include="Relationship Diagrams\Phasor Definition Relationships.cd" />
