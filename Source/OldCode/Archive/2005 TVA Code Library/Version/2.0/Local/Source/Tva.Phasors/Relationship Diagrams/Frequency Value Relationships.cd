@@ -7,7 +7,7 @@
   <Comment CommentText="BPA PDCStream">
     <Position X="1.937" Y="6.104" Height="0.371" Width="1.7" />
   </Comment>
-  <Comment CommentText="FNET">
+  <Comment CommentText="Virginia Tech FNET">
     <Position X="4.175" Y="6.093" Height="0.345" Width="1.7" />
   </Comment>
   <Comment CommentText="IEEE 1344">
@@ -17,7 +17,7 @@
     <Position X="8.728" Y="6.159" Height="0.293" Width="1.7" />
   </Comment>
   <Class Name="Tva.Phasors.FrequencyValueBase">
-    <Position X="5.25" Y="1.75" Width="1.5" />
+    <Position X="5.25" Y="1.25" Width="1.5" />
     <TypeIdentifier>
       <FileName>FrequencyValueBase.vb</FileName>
       <HashCode>AABAAIAAAAAAAAABIAAISAAwAJAgAAAgEAAAAAAAAAA=</HashCode>
@@ -32,7 +32,7 @@
     <Lollipop Position="0.2" />
   </Class>
   <Class Name="Tva.Phasors.ChannelValueBase(Of T)">
-    <Position X="2.75" Y="1.5" Width="1.5" />
+    <Position X="2.75" Y="1.25" Width="1.5" />
     <TypeIdentifier>
       <FileName>ChannelValueBase.vb</FileName>
       <HashCode>AABAAIAAEAAACAAAAAAAQAAwABAgIAIAAAAQAAAAAAA=</HashCode>
@@ -76,28 +76,28 @@
     </TypeIdentifier>
   </Class>
   <Interface Name="Tva.Phasors.IFrequencyValue">
-    <Position X="12" Y="2.25" Width="1.5" />
+    <Position X="11.25" Y="1.5" Width="1.5" />
     <TypeIdentifier>
       <FileName>IFrequencyValue.vb</FileName>
       <HashCode>AAAAAAAAAAAAAAAAAAAASAAAAJAAAAAAAAAAAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Interface>
   <Interface Name="Tva.Phasors.IChannelValue(Of T)">
-    <Position X="10" Y="2.25" Width="1.5" />
+    <Position X="9.25" Y="1.5" Width="1.5" />
     <TypeIdentifier>
       <FileName>IChannelValue.vb</FileName>
       <HashCode>AABAAIAAEAAACAAAAAAAQAAAAAAgAAIAAAAQAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Interface>
   <Interface Name="Tva.Phasors.IChannel">
-    <Position X="8" Y="2.25" Width="1.5" />
+    <Position X="7.25" Y="1.5" Width="1.5" />
     <TypeIdentifier>
       <FileName>IChannel.vb</FileName>
       <HashCode>AAAAAAAAAAAoAAAAAAAAAAARAAAAAACAAAEAAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Interface>
   <Interface Name="System.Runtime.Serialization.ISerializable">
-    <Position X="10" Y="0.75" Width="1.5" />
+    <Position X="9.25" Y="4.25" Width="1.5" />
     <TypeIdentifier />
   </Interface>
 </ClassDiagram>

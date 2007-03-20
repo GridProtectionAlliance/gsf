@@ -1,1 +1,103 @@
- 
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Font Name="Tahoma" Size="8.25" />
+  <Comment CommentText="Phasor Value Relationship">
+    <Position X="6.183" Y="0.5" Height="0.386" Width="1.7" />
+  </Comment>
+  <Comment CommentText="BPA PDCStream&#xD;&#xA;">
+    <Position X="1.159" Y="7.784" Height="0.432" Width="1.7" />
+  </Comment>
+  <Comment CommentText="IEEE 1344&#xD;&#xA;">
+    <Position X="3.432" Y="7.852" Height="0.352" Width="1.7" />
+  </Comment>
+  <Comment CommentText="IEEE C37 118">
+    <Position X="5.682" Y="7.83" Height="0.375" Width="1.7" />
+  </Comment>
+  <Comment CommentText="Virginia Tech FNET">
+    <Position X="7.977" Y="7.816" Height="0.411" Width="1.7" />
+  </Comment>
+  <Class Name="Tva.Phasors.PhasorValueBase">
+    <Position X="4.5" Y="0.75" Width="1.5" />
+    <TypeIdentifier>
+      <FileName>PhasorValueBase.vb</FileName>
+      <HashCode>CADAIIQAAAAAIIABAEAIACAyEAQgAIAgAUGBCCFIAAA=</HashCode>
+    </TypeIdentifier>
+    <NestedTypes>
+      <Delegate Name="Tva.Phasors.PhasorValueBase.CreateNewPhasorValueFunctionSignature" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>PhasorValueBase.vb</NewMemberFileName>
+        </TypeIdentifier>
+      </Delegate>
+    </NestedTypes>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="Tva.Phasors.ChannelValueBase(Of T)">
+    <Position X="2.5" Y="1" Width="1.5" />
+    <TypeIdentifier>
+      <FileName>ChannelValueBase.vb</FileName>
+      <HashCode>AABAAIAAEAAACAAAAAAAQAAwABAgIAIAAAAQAAAAAAA=</HashCode>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="Tva.Phasors.ChannelBase">
+    <Position X="0.5" Y="0.75" Width="1.5" />
+    <TypeIdentifier>
+      <FileName>ChannelBase.vb</FileName>
+      <HashCode>AAAAAAAAgAAoQAAFAAAMAAARQABAAACgEAkAAAAAAAA=</HashCode>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="Tva.Phasors.BpaPdcStream.PhasorValue">
+    <Position X="1.25" Y="8.25" Width="1.5" />
+    <TypeIdentifier>
+      <FileName>BpaPdcStream\PhasorValue.vb</FileName>
+      <HashCode>AACAAAAAAEAACAAAAAAAQAAigAAAAACAAEAAAAEAAAA=</HashCode>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Tva.Phasors.Ieee1344.PhasorValue">
+    <Position X="3.5" Y="8.25" Width="1.5" />
+    <TypeIdentifier>
+      <FileName>Ieee1344\PhasorValue.vb</FileName>
+      <HashCode>AACAAAAAAEAACAAAAAAAQAAiAAAAAACAAAAAAAAAAAA=</HashCode>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Tva.Phasors.IeeeC37_118.PhasorValue">
+    <Position X="5.75" Y="8.25" Width="1.5" />
+    <TypeIdentifier>
+      <FileName>IeeeC37_118\PhasorValue.vb</FileName>
+      <HashCode>AACAAAAAAEAACAAAAAAAQAAiAAAAAACAAAAAAAAAAAA=</HashCode>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Tva.Phasors.FNet.PhasorValue">
+    <Position X="8" Y="8.25" Width="1.5" />
+    <TypeIdentifier>
+      <FileName>FNet\PhasorValue.vb</FileName>
+      <HashCode>AACAAAAAAEAACAAAAAAAQAAiAAAAAACAAAAAAAAAAAA=</HashCode>
+    </TypeIdentifier>
+  </Class>
+  <Interface Name="Tva.Phasors.IPhasorValue">
+    <Position X="10.25" Y="1.25" Width="1.5" />
+    <TypeIdentifier>
+      <FileName>IPhasorValue.vb</FileName>
+      <HashCode>AAAAAAQAAAAAIIAAAAAAACAAAAAAAAAAAUEAAAEAAAA=</HashCode>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="Tva.Phasors.IChannelValue(Of T)">
+    <Position X="8.25" Y="1.25" Width="1.5" />
+    <TypeIdentifier>
+      <FileName>IChannelValue.vb</FileName>
+      <HashCode>AABAAIAAEAAACAAAAAAAQAAAAAAgAAIAAAAQAAAAAAA=</HashCode>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="Tva.Phasors.IChannel" Collapsed="true">
+    <Position X="6.5" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <FileName>IChannel.vb</FileName>
+      <HashCode>AAAAAAAAAAAoAAAAAAAAAAARAAAAAACAAAEAAAAAAAA=</HashCode>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="System.Runtime.Serialization.ISerializable" Collapsed="true">
+    <Position X="8.25" Y="4.25" Width="1.5" />
+    <TypeIdentifier />
+  </Interface>
+</ClassDiagram>
