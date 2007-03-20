@@ -1,1 +1,96 @@
- 
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Font Name="Tahoma" Size="8.25" />
+  <Comment CommentText="ConfigurationCell Relationships">
+    <Position X="2.912" Y="0.5" Height="0.379" Width="2.128" />
+  </Comment>
+  <Comment CommentText="BPA PDCStream">
+    <Position X="1.669" Y="9.59" Height="0.356" Width="1.306" />
+  </Comment>
+  <Comment CommentText="IEEE 1344">
+    <Position X="3.543" Y="9.569" Height="0.412" Width="1.115" />
+  </Comment>
+  <Comment CommentText="IEEE C37 118">
+    <Position X="5.242" Y="9.603" Height="0.367" Width="1.171" />
+  </Comment>
+  <Comment CommentText="Virginia Tech FNET">
+    <Position X="7.041" Y="9.597" Height="0.356" Width="1.238" />
+  </Comment>
+  <Class Name="Tva.Phasors.ConfigurationCellBase">
+    <Position X="4.25" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <FileName>ConfigurationCellBase.vb</FileName>
+      <HashCode>QCAAIAAAAAAARAYVAQIcQAAxACIAIAAhEihLAAgAIgA=</HashCode>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="Tva.Phasors.ChannelCellBase">
+    <Position X="2.5" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <FileName>ChannelCellBase.vb</FileName>
+      <HashCode>AAAAAhAAAAAAEAAAAAAAQAAxAAAAIACAAAAAAAAAAAA=</HashCode>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="Tva.Phasors.ChannelBase">
+    <Position X="0.5" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <FileName>ChannelBase.vb</FileName>
+      <HashCode>AAAAAAAAgAAoQAAFAAAMAAARQABAAACgEAkAAAAAAAA=</HashCode>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="Tva.Phasors.BpaPdcStream.ConfigurationCell">
+    <Position X="1.75" Y="10" Width="1.5" />
+    <TypeIdentifier>
+      <FileName>BpaPdcStream\ConfigurationCell.vb</FileName>
+      <HashCode>QAAAABAAAAgBRACFAQIYQAAxAAAAIAChEAhBAAAgggI=</HashCode>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Tva.Phasors.Ieee1344.ConfigurationCell">
+    <Position X="3.5" Y="10" Width="1.5" />
+    <TypeIdentifier>
+      <FileName>Ieee1344\ConfigurationCell.vb</FileName>
+      <HashCode>AAAAABAAgAAAQAAEAAIIYAAxABKAIECAEAhAAAAgAgA=</HashCode>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Tva.Phasors.IeeeC37_118.ConfigurationCell">
+    <Position X="5.25" Y="10" Width="1.5" />
+    <TypeIdentifier>
+      <FileName>IeeeC37_118\ConfigurationCell.vb</FileName>
+      <HashCode>AAAAAAAAAAAAQAAEAAIIQAAxAAAAJACAEAhAAAAgAgA=</HashCode>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Tva.Phasors.FNet.ConfigurationCell">
+    <Position X="7" Y="10" Width="1.5" />
+    <TypeIdentifier>
+      <FileName>FNet\ConfigurationCell.vb</FileName>
+      <HashCode>AAABABAAAEAAAAAAAAIYQAgwAAAgIACAAABAAAAAAgA=</HashCode>
+    </TypeIdentifier>
+  </Class>
+  <Interface Name="Tva.Phasors.IConfigurationCell">
+    <Position X="10.5" Y="2" Width="1.5" />
+    <TypeIdentifier>
+      <FileName>IConfigurationCell.vb</FileName>
+      <HashCode>QAAAIAAAAAAAAAIAAQIUQAAAAAAAIAABAiBDAAAAAgA=</HashCode>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="Tva.Phasors.IChannelCell">
+    <Position X="8.5" Y="2" Width="1.5" />
+    <TypeIdentifier>
+      <FileName>IChannelCell.vb</FileName>
+      <HashCode>AAAAAhAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="System.IComparable">
+    <Position X="8.5" Y="4.25" Width="1.5" />
+    <TypeIdentifier />
+  </Interface>
+  <Interface Name="Tva.Phasors.IChannel">
+    <Position X="6.5" Y="2" Width="1.5" />
+    <TypeIdentifier>
+      <FileName>IChannel.vb</FileName>
+      <HashCode>AAAAAAAAAAAoAAAAAAAAAAARAAAAAACAAAEAAAAAAAA=</HashCode>
+    </TypeIdentifier>
+  </Interface>
+</ClassDiagram>
