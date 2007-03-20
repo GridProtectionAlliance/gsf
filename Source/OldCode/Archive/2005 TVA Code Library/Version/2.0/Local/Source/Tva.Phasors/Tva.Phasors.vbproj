@@ -243,12 +243,22 @@
   <ItemGroup>
     <None Include="Relationship Diagrams\Analog Definition Relationships.cd" />
     <None Include="Relationship Diagrams\Analog Value Relationships.cd" />
+    <None Include="Relationship Diagrams\CommandCell Collection Relationships.cd" />
+    <None Include="Relationship Diagrams\CommandCell Relationships.cd" />
+    <None Include="Relationship Diagrams\CommandFrame Relationships.cd" />
+    <None Include="Relationship Diagrams\ConfigurationCell Collection Relationships.cd" />
+    <None Include="Relationship Diagrams\ConfigurationCell Relationships.cd" />
     <None Include="Relationship Diagrams\ConfigurationFrame Relationships.cd" />
+    <None Include="Relationship Diagrams\DataCell Collection Relationships.cd" />
+    <None Include="Relationship Diagrams\DataCell Relationships.cd" />
     <None Include="Relationship Diagrams\DataFrame Relationships.cd" />
     <None Include="Relationship Diagrams\Digital Definition Relationships.cd" />
     <None Include="Relationship Diagrams\Digital Value Relationships.cd" />
     <None Include="Relationship Diagrams\Frequency Definition Relationships.cd" />
     <None Include="Relationship Diagrams\Frequency Value Relationships.cd" />
+    <None Include="Relationship Diagrams\HeaderCell Collection Relationships.cd" />
+    <None Include="Relationship Diagrams\HeaderCell Relationships.cd" />
+    <None Include="Relationship Diagrams\HeadFrame Relationships.cd" />
     <None Include="Relationship Diagrams\Phasor Class Diagram.cd" />
     <None Include="Relationship Diagrams\Phasor Definition Relationships.cd" />
     <None Include="Relationship Diagrams\Phasor Value Relationships.cd" />
