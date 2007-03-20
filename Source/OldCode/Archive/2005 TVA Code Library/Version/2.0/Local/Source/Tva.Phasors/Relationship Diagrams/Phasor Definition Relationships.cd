@@ -1,1 +1,92 @@
- 
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Font Name="Tahoma" Size="8.25" />
+  <Comment CommentText="Phasor Definition Relationships">
+    <Position X="3.698" Y="0.5" Height="0.396" Width="1.971" />
+  </Comment>
+  <Comment CommentText="BPA PDC Stream">
+    <Position X="4.208" Y="4.344" Height="0.365" Width="1.575" />
+  </Comment>
+  <Comment CommentText="IEEE 1344 ">
+    <Position X="5.99" Y="4.344" Height="0.388" Width="1.502" />
+  </Comment>
+  <Comment CommentText="IEEE C37 118">
+    <Position X="7.781" Y="4.323" Height="0.406" Width="1.408" />
+  </Comment>
+  <Comment CommentText="Virginia Tech FNET">
+    <Position X="9.479" Y="4.344" Height="0.385" Width="1.408" />
+  </Comment>
+  <Class Name="Tva.Phasors.PhasorDefinitionBase">
+    <Position X="5.25" Y="1.25" Width="1.75" />
+    <TypeIdentifier>
+      <FileName>PhasorDefinitionBase.vb</FileName>
+      <HashCode>AAAAIAAAAAAAIAAAAAAAAAAxAAAAAAIAAQAAQAAAAAA=</HashCode>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="Tva.Phasors.ChannelDefinitionBase">
+    <Position X="2.5" Y="1.25" Width="1.5" />
+    <TypeIdentifier>
+      <FileName>ChannelDefinitionBase.vb</FileName>
+      <HashCode>AQAAAAAAEAAAACQhgIAIQAgwAAAAIAIgAIEABAAAgAA=</HashCode>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="Tva.Phasors.ChannelBase">
+    <Position X="0.5" Y="1.25" Width="1.5" />
+    <TypeIdentifier>
+      <FileName>ChannelBase.vb</FileName>
+      <HashCode>AAAAAAAAgAAoQAAFAAAMAAARQABAAACgEAkAAAAAAAA=</HashCode>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="Tva.Phasors.BpaPdcStream.PhasorDefinition">
+    <Position X="4.25" Y="4.75" Width="1.5" />
+    <TypeIdentifier>
+      <FileName>BpaPdcStream\PhasorDefinition.vb</FileName>
+      <HashCode>AwAAAAAAAAAACAAAABQIQAAwAABAACCgAEAABAAAQAA=</HashCode>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Tva.Phasors.Ieee1344.PhasorDefinition">
+    <Position X="6" Y="4.75" Width="1.5" />
+    <TypeIdentifier>
+      <FileName>Ieee1344\PhasorDefinition.vb</FileName>
+      <HashCode>AAAAAIAAAAACCAAAAAAAQAAAAAAAAACAAAAAIAAAAAA=</HashCode>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Tva.Phasors.IeeeC37_118.PhasorDefinition">
+    <Position X="7.75" Y="4.75" Width="1.5" />
+    <TypeIdentifier>
+      <FileName>IeeeC37_118\PhasorDefinition.vb</FileName>
+      <HashCode>AAAAAIAAAAACCAAAAAAAQAAAAAAAAACAAAAAIAAAAAA=</HashCode>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Tva.Phasors.FNet.PhasorDefinition">
+    <Position X="9.5" Y="4.75" Width="1.5" />
+    <TypeIdentifier>
+      <FileName>FNet\PhasorDefinition.vb</FileName>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAQAAAAAAAAACAAAAAAAAAAAA=</HashCode>
+    </TypeIdentifier>
+  </Class>
+  <Interface Name="Tva.Phasors.IPhasorDefinition">
+    <Position X="15.25" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <FileName>IPhasorDefinition.vb</FileName>
+      <HashCode>AAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAQAAQAAAAAA=</HashCode>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="Tva.Phasors.IChannelDefinition">
+    <Position X="13" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <FileName>IChannelDefinition.vb</FileName>
+      <HashCode>AQAAAAAAEAAAAAAAAIAAQAgAAAAAIAIAAIEABAAAgAA=</HashCode>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="Tva.Phasors.IChannel">
+    <Position X="11" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <FileName>IChannel.vb</FileName>
+      <HashCode>AAAAAAAAAAAoAAAAAAAAAAARAAAAAACAAAEAAAAAAAA=</HashCode>
+    </TypeIdentifier>
+  </Interface>
+</ClassDiagram>
