@@ -245,6 +245,7 @@
     <None Include="Relationship Diagrams\Digital Value Relationships.cd" />
     <None Include="Relationship Diagrams\Frequency Value Relationships.cd" />
     <None Include="Relationship Diagrams\Phasor Class Diagram.cd" />
+    <None Include="Relationship Diagrams\Phasor Value Relationships.cd" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.VisualBasic.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
