@@ -73,6 +73,7 @@
     <Compile Include="BpaPdcStream\ConnectionParameters.vb" />
     <Compile Include="BpaPdcStream\DataCell.vb" />
     <Compile Include="BpaPdcStream\DataCellCollection.vb" />
+    <Compile Include="BpaPdcStream\DataCellParsingState.vb" />
     <Compile Include="BpaPdcStream\DataFrame.vb" />
     <Compile Include="BpaPdcStream\DigitalDefinition.vb" />
     <Compile Include="BpaPdcStream\DigitalValue.vb" />

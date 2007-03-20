@@ -261,6 +261,32 @@ Namespace BpaPdcStream
 
         End Sub
 
+        Protected Overrides Sub ParseBodyImage(ByVal state As IChannelParsingState, ByVal binaryImage() As Byte, ByVal startIndex As Integer)
+
+            ' We override normal frame body image parsing because some cells in PDCexchange format
+            ' can contain several PMU's within a "PDC Block" - when we encounter these we must
+            ' advance the cell index by the number of PMU's parsed instead of one at a time
+            With DirectCast(state, IChannelFrameParsingState(Of IDataCell))
+                Dim index As Int32
+                Dim cell As DataCell
+
+                Do Until index >= .CellCount - 1
+                    cell = New DataCell(Me, state, index, binaryImage, startIndex)
+
+                    If cell.UsingPDCExchangeFormat Then
+                        index += cell.PdcBlockPmuCount
+
+                        ' TODO: startIndex += cell.PDCBlockCount * DataCell.PdcPmuBinaryLength
+                    Else
+                        Cells.Add(cell)
+                        startIndex += cell.BinaryLength
+                        index += 1
+                    End If
+                Loop
+            End With
+
+        End Sub
+
         Public Overrides Sub GetObjectData(ByVal info As System.Runtime.Serialization.SerializationInfo, ByVal context As System.Runtime.Serialization.StreamingContext)
 
             MyBase.GetObjectData(info, context)
