@@ -25,6 +25,7 @@ Namespace BpaPdcStream
 
         Private m_isPdcBlockHeader As Boolean
         Private m_isPdcBlockPmu As Boolean
+        Private m_index As Integer
 
         Public Sub New( _
             ByVal configurationCell As IConfigurationCell, _
@@ -43,11 +44,13 @@ Namespace BpaPdcStream
             ByVal createNewFrequencyValueFunction As IDataCellParsingState.CreateNewValueFunctionSignature(Of IFrequencyDefinition, IFrequencyValue), _
             ByVal createNewAnalogValueFunction As IDataCellParsingState.CreateNewValueFunctionSignature(Of IAnalogDefinition, IAnalogValue), _
             ByVal createNewDigitalValueFunction As IDataCellParsingState.CreateNewValueFunctionSignature(Of IDigitalDefinition, IDigitalValue), _
-            ByVal isPdcBlockPmu As Boolean)
+            ByVal isPdcBlockPmu As Boolean, _
+            ByVal index As Integer)
 
             MyBase.New(configurationCell, createNewPhasorValueFunction, createNewFrequencyValueFunction, createNewAnalogValueFunction, createNewDigitalValueFunction)
 
             m_isPdcBlockPmu = isPdcBlockPmu
+            m_index = index
 
             ' PDC Block PMU's contain exactly 2 phasors, 0 analogs and 1 digital
             If isPdcBlockPmu Then
@@ -82,6 +85,15 @@ Namespace BpaPdcStream
             End Get
             Set(ByVal value As Boolean)
                 m_isPdcBlockHeader = value
+            End Set
+        End Property
+
+        Public Property Index() As Integer
+            Get
+                Return m_index
+            End Get
+            Set(ByVal value As Integer)
+                m_index = value
             End Set
         End Property
 

@@ -269,15 +269,22 @@ Namespace BpaPdcStream
             With DirectCast(state, IChannelFrameParsingState(Of IDataCell))
                 Dim index As Int32
                 Dim cell As DataCell
+                Dim cellCount As Int32 = .CellCount
 
-                Do Until index >= .CellCount - 1
+                Do Until index >= cellCount
                     cell = New DataCell(Me, state, index, binaryImage, startIndex)
 
                     If cell.UsingPDCExchangeFormat Then
-                        index += cell.PdcBlockPmuCount
+                        ' Advance start index beyond PMU's added from PDC block
+                        For x As Integer = index To index + cell.PdcBlockPmuCount - 1
+                            startIndex += Cells(x).BinaryLength
+                        Next
 
-                        ' TODO: startIndex += cell.PDCBlockCount * DataCell.PdcPmuBinaryLength
+                        ' Advance current cell index and total cell count
+                        index += cell.PdcBlockPmuCount
+                        cellCount += cell.PdcBlockPmuCount - 1 ' Subtract one since PDC block counted as one cell
                     Else
+                        ' Handle normal case of adding an individual PMU
                         Cells.Add(cell)
                         startIndex += cell.BinaryLength
                         index += 1

@@ -350,7 +350,11 @@ Namespace BpaPdcStream
 
         Protected Overrides ReadOnly Property HeaderLength() As UInt16
             Get
-                Return 6
+                If m_isPdcBlockPmu Then
+                    Return 2
+                Else
+                    Return 6
+                End If
             End Get
         End Property
 
@@ -358,8 +362,10 @@ Namespace BpaPdcStream
             Get
                 Dim buffer As Byte() = CreateArray(Of Byte)(HeaderLength)
 
-                ' Add PDCstream specific image
-                buffer(0) = m_flags
+                ' Add PDCstream specific image - note that although this stream will
+                ' correctly parse a PDCexhange style stream - we will not produce one.
+                ' Only a fully formatted stream will ever be produced
+                buffer(0) = (m_flags And Not ChannelFlags.PDCExchangeFormat)
 
                 If Parent.ConfigurationFrame.RevisionNumber >= 2 Then
                     buffer(1) = (Convert.ToByte(AnalogValues.Count) Or m_reservedFlags)
@@ -420,14 +426,15 @@ Namespace BpaPdcStream
                     ' In cases where we are using PDC exchange - the phasor count is the number of PMU's in the PDC block
                     m_pdcBlockPmuCount = phasors
 
-                    ' Parse PMU's from PDC block...
-
-                    ' TODO: Loop through and call parsing constructor - need overloaded constructor with a boolean
-                    ' "IsPDCBlockPMU" or similar...
-
                     ' This PDC block header has no data values of its own (only PMU's) - so we cancel
                     ' data parsing for any other elements (see ParseBodyImage override below)
                     parsingState.IsPdcBlockHeader = True
+
+                    ' Parse PMU's from PDC block...
+
+
+                    ' TODO: Loop through and call parsing constructor - need overloaded constructor with a boolean
+                    ' "IsPDCBlockPMU" or similar...
                 Else
                     ' Algorithm Case: Determine best course of action when stream counts don't match counts defined in the
                     ' external INI based configuration file.  Think about what *will* happen when new data appears in the
