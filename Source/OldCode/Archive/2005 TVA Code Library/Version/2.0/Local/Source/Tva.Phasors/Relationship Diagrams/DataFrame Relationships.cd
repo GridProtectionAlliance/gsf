@@ -7,7 +7,7 @@
   <Comment CommentText="BPA PDC Stream">
     <Position X="4.344" Y="4.312" Height="0.396" Width="1.7" />
   </Comment>
-  <Comment CommentText="IEEE 1334 ">
+  <Comment CommentText="IEEE 1344">
     <Position X="6.25" Y="4.333" Height="0.344" Width="1.325" />
   </Comment>
   <Comment CommentText="IEEE C37 118">
