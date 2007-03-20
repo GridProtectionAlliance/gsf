@@ -106,7 +106,7 @@ Namespace BpaPdcStream
                     AddressOf BpaPdcStream.FrequencyValue.CreateNewFrequencyValue, _
                     AddressOf BpaPdcStream.AnalogValue.CreateNewAnalogValue, _
                     AddressOf BpaPdcStream.DigitalValue.CreateNewDigitalValue, _
-                    isPdcBlockPmu), _
+                    isPdcBlockPmu, index), _
                 binaryImage, startIndex)
 
             m_isPdcBlockPmu = isPdcBlockPmu
