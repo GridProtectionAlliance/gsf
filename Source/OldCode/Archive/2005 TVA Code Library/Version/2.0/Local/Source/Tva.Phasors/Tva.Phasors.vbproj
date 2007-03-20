@@ -247,6 +247,7 @@
     <None Include="Relationship Diagrams\Digital Value Relationships.cd" />
     <None Include="Relationship Diagrams\Frequency Value Relationships.cd" />
     <None Include="Relationship Diagrams\Phasor Class Diagram.cd" />
+    <None Include="Relationship Diagrams\Phasor Definition Relationships.cd" />
     <None Include="Relationship Diagrams\Phasor Value Relationships.cd" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.VisualBasic.targets" />
