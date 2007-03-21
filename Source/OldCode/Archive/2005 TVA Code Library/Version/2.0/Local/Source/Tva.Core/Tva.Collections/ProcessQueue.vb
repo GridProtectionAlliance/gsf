@@ -791,7 +791,7 @@ Namespace Collections
         ''' is destructed, there may be items that remain unprocessed in the queue.
         ''' </para>
         ''' </remarks>
-        Public Sub Flush() Implements IDisposable.Dispose
+        Public Overridable Sub Flush() Implements IDisposable.Dispose
 
             If m_enabled Then
                 ' Only wait around if there's something to process :)
