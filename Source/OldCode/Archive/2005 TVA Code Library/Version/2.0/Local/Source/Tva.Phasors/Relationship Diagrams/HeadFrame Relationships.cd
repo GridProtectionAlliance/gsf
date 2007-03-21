@@ -71,4 +71,11 @@
       <HashCode>AAAAAAAAAAAoAAAAAAAAAAARAAAAAACAAAEAAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Interface>
+  <Interface Name="Tva.Phasors.IChannelCell">
+    <Position X="12.75" Y="0.75" Width="1.75" />
+    <TypeIdentifier>
+      <FileName>IChannelCell.vb</FileName>
+      <HashCode>AAAAAhAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+    </TypeIdentifier>
+  </Interface>
 </ClassDiagram>

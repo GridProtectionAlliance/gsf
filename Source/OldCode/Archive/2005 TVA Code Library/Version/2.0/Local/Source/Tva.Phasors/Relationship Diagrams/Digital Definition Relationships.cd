@@ -2,19 +2,19 @@
 <ClassDiagram MajorVersion="1" MinorVersion="1">
   <Font Name="Tahoma" Size="8.25" />
   <Comment CommentText="Digital Definition Relationships">
-    <Position X="4.354" Y="0.615" Height="0.267" Width="1.801" />
+    <Position X="5.604" Y="0.615" Height="0.267" Width="1.801" />
   </Comment>
   <Comment CommentText="   PBA PDCStream&#xD;&#xA;">
-    <Position X="4.434" Y="3.906" Height="0.292" Width="1.21" />
+    <Position X="6.172" Y="3.969" Height="0.292" Width="1.21" />
   </Comment>
   <Comment CommentText="IEEE 1344">
-    <Position X="6.387" Y="3.896" Height="0.315" Width="0.799" />
+    <Position X="8.367" Y="3.988" Height="0.274" Width="0.799" />
   </Comment>
   <Comment CommentText="IEEE C37 118">
-    <Position X="8.095" Y="3.896" Height="0.312" Width="0.886" />
+    <Position X="10.5" Y="4" Height="0.312" Width="0.886" />
   </Comment>
   <Class Name="Tva.Phasors.DigitalDefinitionBase">
-    <Position X="5.5" Y="1.75" Width="1.75" />
+    <Position X="7.75" Y="1.75" Width="2" />
     <TypeIdentifier>
       <FileName>DigitalDefinitionBase.vb</FileName>
       <HashCode>AAAAAAAAAAAAAAAAAAAAAAgAAAAAAAIAAAAAAAAAgAA=</HashCode>
@@ -22,7 +22,7 @@
     <Lollipop Position="0.2" />
   </Class>
   <Class Name="Tva.Phasors.ChannelDefinitionBase">
-    <Position X="2.5" Y="1.75" Width="1.5" />
+    <Position X="3.25" Y="1.75" Width="2" />
     <TypeIdentifier>
       <FileName>ChannelDefinitionBase.vb</FileName>
       <HashCode>AQAAAAAAEAAAACQhgIAIQAgwAAAAIAIgAIEABAAAgAA=</HashCode>
@@ -30,7 +30,7 @@
     <Lollipop Position="0.2" />
   </Class>
   <Class Name="Tva.Phasors.ChannelBase">
-    <Position X="0.5" Y="1.75" Width="1.5" />
+    <Position X="0.5" Y="1.75" Width="2.25" />
     <TypeIdentifier>
       <FileName>ChannelBase.vb</FileName>
       <HashCode>AAAAAAAAgAAoQAAFAAAMAAARQABAAACgEAkAAAAAAAA=</HashCode>
@@ -38,45 +38,87 @@
     <Lollipop Position="0.2" />
   </Class>
   <Class Name="Tva.Phasors.BpaPdcStream.DigitalDefinition">
-    <Position X="4.25" Y="4.25" Width="1.5" />
+    <Position X="5.75" Y="4.5" Width="1.75" />
     <TypeIdentifier>
       <FileName>BpaPdcStream\DigitalDefinition.vb</FileName>
       <HashCode>AAAAAAAAAAAAAAAAAAAIQAAAAAAAAACgAAAABAAAAAA=</HashCode>
     </TypeIdentifier>
+    <InheritanceLine Type="Tva.Phasors.DigitalDefinitionBase" ManuallyRouted="true">
+      <Path>
+        <Point X="8.75" Y="3.562" />
+        <Point X="8.75" Y="3.87" />
+        <Point X="6.625" Y="3.87" />
+        <Point X="6.625" Y="4.5" />
+      </Path>
+    </InheritanceLine>
   </Class>
   <Class Name="Tva.Phasors.Ieee1344.DigitalDefinition">
-    <Position X="6" Y="4.25" Width="1.5" />
+    <Position X="7.75" Y="4.5" Width="2" />
     <TypeIdentifier>
       <FileName>Ieee1344\DigitalDefinition.vb</FileName>
       <HashCode>AAAAAACAAAACCAAAAAAIYAAwAQAAAACAAAAAIAAAAAA=</HashCode>
     </TypeIdentifier>
+    <InheritanceLine Type="Tva.Phasors.DigitalDefinitionBase" ManuallyRouted="true">
+      <Path>
+        <Point X="8.75" Y="3.562" />
+        <Point X="8.75" Y="4.5" />
+      </Path>
+    </InheritanceLine>
   </Class>
   <Class Name="Tva.Phasors.IeeeC37_118.DigitalDefinition">
-    <Position X="7.75" Y="4.25" Width="1.5" />
+    <Position X="10" Y="4.5" Width="2" />
     <TypeIdentifier>
       <FileName>IeeeC37_118\DigitalDefinition.vb</FileName>
       <HashCode>AQAgAACAEBACCAAhAAAIQAAwAAAAgACBAAAAJAEIAAA=</HashCode>
     </TypeIdentifier>
+    <InheritanceLine Type="Tva.Phasors.DigitalDefinitionBase" ManuallyRouted="true">
+      <Path>
+        <Point X="8.75" Y="3.562" />
+        <Point X="8.75" Y="3.863" />
+        <Point X="11" Y="3.863" />
+        <Point X="11" Y="4.5" />
+      </Path>
+    </InheritanceLine>
   </Class>
   <Interface Name="Tva.Phasors.IDigitalDefinition">
-    <Position X="13.25" Y="1.5" Width="1.5" />
+    <Position X="16.5" Y="2" Width="1.5" />
     <TypeIdentifier>
       <FileName>IDigitalDefinition.vb</FileName>
       <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Interface>
   <Interface Name="Tva.Phasors.IChannelDefinition">
-    <Position X="11.25" Y="1.5" Width="1.5" />
+    <Position X="14.25" Y="2" Width="2" />
     <TypeIdentifier>
       <FileName>IChannelDefinition.vb</FileName>
       <HashCode>AQAAAAAAEAAAAAAAAIAAQAgAAAAAIAIAAIEABAAAgAA=</HashCode>
     </TypeIdentifier>
   </Interface>
   <Interface Name="Tva.Phasors.IChannel">
-    <Position X="9.25" Y="1.5" Width="1.5" />
+    <Position X="12.25" Y="2" Width="1.5" />
     <TypeIdentifier>
       <FileName>IChannel.vb</FileName>
       <HashCode>AAAAAAAAAAAoAAAAAAAAAAARAAAAAACAAAEAAAAAAAA=</HashCode>
     </TypeIdentifier>
+  </Interface>
+  <Interface Name="System.Runtime.Serialization.ISerializable" Collapsed="true">
+    <Position X="9.75" Y="0.75" Width="1.5" />
+    <TypeIdentifier />
+  </Interface>
+  <Interface Name="System.IEquatable(Of T)" Collapsed="true">
+    <Position X="12.75" Y="0.75" Width="1.5" />
+    <TypeIdentifier />
+  </Interface>
+  <Interface Name="System.IComparable(Of T)" Collapsed="true">
+    <Position X="14.5" Y="0.75" Width="1.5" />
+    <TypeIdentifier />
+  </Interface>
+  <Interface Name="System.IComparable" Collapsed="true">
+    <Position X="16.5" Y="0.75" Width="1.5" />
+    <TypeIdentifier />
+  </Interface>
+  <Interface Name="Tva.IBinaryDataProvider">
+    <Position X="10" Y="2" Width="1.75" />
+    <TypeIdentifier />
   </Interface>
 </ClassDiagram>

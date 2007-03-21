@@ -1,23 +1,23 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <ClassDiagram MajorVersion="1" MinorVersion="1">
   <Font Name="Tahoma" Size="8.25" />
-  <Comment CommentText="   DataCell Relationships">
-    <Position X="3.469" Y="0.5" Height="0.263" Width="1.45" />
+  <Comment CommentText="Data Cell Relationships">
+    <Position X="7.219" Y="0.5" Height="0.263" Width="1.518" />
   </Comment>
   <Comment CommentText=" BPA PDC Stream">
-    <Position X="1.833" Y="10.146" Height="0.263" Width="1.096" />
+    <Position X="9.601" Y="6.116" Height="0.263" Width="1.096" />
   </Comment>
   <Comment CommentText="   IEEE 1344">
-    <Position X="3.875" Y="10.219" Height="0.263" Width="0.867" />
+    <Position X="11.871" Y="6.147" Height="0.263" Width="0.867" />
   </Comment>
   <Comment CommentText="   IEEE C37 118">
-    <Position X="5.521" Y="10.195" Height="0.263" Width="1.023" />
+    <Position X="14.076" Y="6.123" Height="0.263" Width="1.023" />
   </Comment>
   <Comment CommentText="  Virginia Tech FNET">
-    <Position X="7.094" Y="10.167" Height="0.263" Width="1.325" />
+    <Position X="16.155" Y="6.095" Height="0.263" Width="1.325" />
   </Comment>
   <Class Name="Tva.Phasors.DataCellBase">
-    <Position X="4.25" Y="1.25" Width="1.5" />
+    <Position X="6" Y="1.25" Width="2.75" />
     <TypeIdentifier>
       <FileName>DataCellBase.vb</FileName>
       <HashCode>AClAANQAIAAIRAARCQAYYAAwBBZAAlQgAEABAAAGAgA=</HashCode>
@@ -25,15 +25,21 @@
     <Lollipop Position="0.2" />
   </Class>
   <Class Name="Tva.Phasors.ChannelCellBase">
-    <Position X="2.5" Y="1.25" Width="1.5" />
+    <Position X="3.5" Y="1.25" Width="2" />
     <TypeIdentifier>
       <FileName>ChannelCellBase.vb</FileName>
       <HashCode>AAAAAhAAAAAAEAAAAAAAQAAxAAAAIACAAAAAAAAAAAA=</HashCode>
     </TypeIdentifier>
+    <InheritanceLine Type="Tva.Phasors.ChannelBase" FixedToPoint="true">
+      <Path>
+        <Point X="3" Y="2.75" />
+        <Point X="3.5" Y="2.75" />
+      </Path>
+    </InheritanceLine>
     <Lollipop Position="0.2" />
   </Class>
   <Class Name="Tva.Phasors.ChannelBase">
-    <Position X="0.5" Y="1.25" Width="1.5" />
+    <Position X="0.5" Y="1.25" Width="2.5" />
     <TypeIdentifier>
       <FileName>ChannelBase.vb</FileName>
       <HashCode>AAAAAAAAgAAoQAAFAAAMAAARQABAAACgEAkAAAAAAAA=</HashCode>
@@ -41,52 +47,128 @@
     <Lollipop Position="0.2" />
   </Class>
   <Class Name="Tva.Phasors.BpaPdcStream.DataCell">
-    <Position X="1.75" Y="10.5" Width="1.5" />
+    <Position X="9.25" Y="6.5" Width="2" />
     <TypeIdentifier>
       <FileName>BpaPdcStream\DataCell.vb</FileName>
       <HashCode>IAAAAQBgAEABIAFEkAYIQAIxAJIBAADIAAACAAAEAAA=</HashCode>
     </TypeIdentifier>
+    <InheritanceLine Type="Tva.Phasors.DataCellBase" FixedFromPoint="true" FixedToPoint="true">
+      <Path>
+        <Point X="8.75" Y="6" />
+        <Point X="10.083" Y="6" />
+        <Point X="10.083" Y="6.5" />
+      </Path>
+    </InheritanceLine>
   </Class>
   <Class Name="Tva.Phasors.Ieee1344.DataCell">
-    <Position X="3.5" Y="10.5" Width="1.5" />
+    <Position X="11.5" Y="6.5" Width="1.75" />
     <TypeIdentifier>
       <FileName>Ieee1344\DataCell.vb</FileName>
       <HashCode>AAAAAQAAgAAAAAAAAAAAQAAQABIAAACAAAAAAAAEAAA=</HashCode>
     </TypeIdentifier>
+    <InheritanceLine Type="Tva.Phasors.DataCellBase" FixedFromPoint="true">
+      <Path>
+        <Point X="8.75" Y="6" />
+        <Point X="12.375" Y="6" />
+        <Point X="12.375" Y="6.5" />
+      </Path>
+    </InheritanceLine>
   </Class>
   <Class Name="Tva.Phasors.IeeeC37_118.DataCell">
-    <Position X="5.25" Y="10.5" Width="1.5" />
+    <Position X="13.5" Y="6.5" Width="2.25" />
     <TypeIdentifier>
       <FileName>IeeeC37_118\DataCell.vb</FileName>
       <HashCode>IQAAAQEAAAAAAAABAAAAQAAQAhIAAECIAAAAAAAEAAA=</HashCode>
     </TypeIdentifier>
+    <InheritanceLine Type="Tva.Phasors.DataCellBase" ManuallyRouted="true" FixedFromPoint="true" FixedToPoint="true">
+      <Path>
+        <Point X="8.75" Y="6" />
+        <Point X="14.625" Y="6" />
+        <Point X="14.625" Y="6.5" />
+      </Path>
+    </InheritanceLine>
   </Class>
   <Class Name="Tva.Phasors.FNet.DataCell">
-    <Position X="7" Y="10.5" Width="1.5" />
+    <Position X="16" Y="6.5" Width="1.75" />
     <TypeIdentifier>
       <FileName>FNet\DataCell.vb</FileName>
       <HashCode>AAgAIQAIABAAAAABAAAIQIAQABIBAACgAAAAAAAEAAA=</HashCode>
     </TypeIdentifier>
+    <InheritanceLine Type="Tva.Phasors.DataCellBase" ManuallyRouted="true" FixedFromPoint="true">
+      <Path>
+        <Point X="8.75" Y="6" />
+        <Point X="16.875" Y="6" />
+        <Point X="16.875" Y="6.5" />
+      </Path>
+    </InheritanceLine>
   </Class>
   <Interface Name="Tva.Phasors.IDataCell">
-    <Position X="10" Y="1.25" Width="1.5" />
+    <Position X="14.25" Y="2.75" Width="1.75" />
     <TypeIdentifier>
       <FileName>IDataCell.vb</FileName>
       <HashCode>AAkAAAAAAAAIAAAAAQAAQAAAABIAAEAAAEABAAAEAAA=</HashCode>
     </TypeIdentifier>
   </Interface>
   <Interface Name="Tva.Phasors.IChannelCell">
-    <Position X="8" Y="1.25" Width="1.5" />
+    <Position X="12" Y="3" Width="1.75" />
     <TypeIdentifier>
       <FileName>IChannelCell.vb</FileName>
       <HashCode>AAAAAhAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Interface>
   <Interface Name="Tva.Phasors.IChannel">
-    <Position X="6" Y="1.25" Width="1.5" />
+    <Position X="10" Y="3" Width="1.5" />
     <TypeIdentifier>
       <FileName>IChannel.vb</FileName>
       <HashCode>AAAAAAAAAAAoAAAAAAAAAAARAAAAAACAAAEAAAAAAAA=</HashCode>
     </TypeIdentifier>
+  </Interface>
+  <Interface Name="System.Runtime.Serialization.ISerializable">
+    <Position X="12" Y="1.5" Width="1.75" />
+    <TypeIdentifier />
+  </Interface>
+  <Interface Name="Tva.IBinaryDataProvider">
+    <Position X="9.75" Y="1.5" Width="2" />
+    <TypeIdentifier />
+  </Interface>
+  <Interface Name="Tva.Measurements.IMeasurement" Collapsed="true">
+    <Position X="14" Y="1.5" Width="2.25" />
+    <TypeIdentifier />
+    <InheritanceLine Type="System.IEquatable(Of T)" FixedFromPoint="true" FixedToPoint="true">
+      <Path>
+        <Point X="11" Y="1.009" />
+        <Point X="11" Y="1.26" />
+        <Point X="14.75" Y="1.26" />
+        <Point X="14.75" Y="1.5" />
+      </Path>
+    </InheritanceLine>
+    <InheritanceLine Type="System.IComparable(Of T)" FixedFromPoint="true" FixedToPoint="true">
+      <Path>
+        <Point X="13.448" Y="1.009" />
+        <Point X="13.448" Y="1.26" />
+        <Point X="14.75" Y="1.26" />
+        <Point X="14.75" Y="1.5" />
+      </Path>
+    </InheritanceLine>
+    <InheritanceLine Type="System.IComparable" FixedToPoint="true">
+      <Path>
+        <Point X="15.375" Y="1.009" />
+        <Point X="15.375" Y="1.26" />
+        <Point X="14.75" Y="1.26" />
+        <Point X="14.75" Y="1.5" />
+      </Path>
+    </InheritanceLine>
+  </Interface>
+  <Interface Name="System.IEquatable(Of T)" Collapsed="true">
+    <Position X="10.25" Y="0.5" Width="1.5" />
+    <TypeIdentifier />
+  </Interface>
+  <Interface Name="System.IComparable(Of T)" Collapsed="true">
+    <Position X="12.5" Y="0.5" Width="1.75" />
+    <TypeIdentifier />
+  </Interface>
+  <Interface Name="System.IComparable" Collapsed="true">
+    <Position X="14.75" Y="0.5" Width="1.25" />
+    <TypeIdentifier />
   </Interface>
 </ClassDiagram>
