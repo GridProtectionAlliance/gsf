@@ -783,22 +783,8 @@ Namespace Collections
         ''' Note that it is possible for items to be added to the queue while the flush is executing - the flush
         ''' will continue to process items as quickly as possible until the queue is empty.  Unless the user stops
         ''' queueing items to be processed, the flush call may never return (not a happy situtation on shutdown).
-        ''' </para>
-        ''' <para>
-        ''' On the same note, if you are requeueing items on exception or process timeout you may want to disable
-        ''' these features before calling this function because this flush call blocks the current thread until
-        ''' the queue is empty - exceptions and/or timeouts may result in the flush call never returning.  Because
-        ''' user's may have implemented custom exception and time-out handling that may still need to be called
-        ''' during shutdown, the requeuing of items on exception and/or timeout is not automatically disabled.
-        ''' </para>
-        ''' <para>
-        ''' To disable requeueing of items on exception or process timeout, execute the following before the flush call:
-        ''' <code>
-        '''     myProcessQueue.RequeueOnTimeout = False
-        '''     myProcessQueue.RequeueOnException = False
-        '''     myProcessQueue.Flush()
-        ''' </code>
-        ''' You can safely set these properties at any time regardless of the type of queue you have created.
+        ''' For this reason, during this function call requeueing of items on exception or process timeout will
+        ''' be disabled.
         ''' </para>
         ''' <para>
         ''' The process queue does not implement a finalizer - if user's fail to call this method before the class
@@ -811,6 +797,12 @@ Namespace Collections
                 ' Only wait around if there's something to process :)
                 If Count > 0 Then
                     Dim originalInterval As Double
+                    Dim originalRequeueOnTimeout As Boolean = m_requeueOnTimeout
+                    Dim originalRequeueOnException As Boolean = m_requeueOnException
+
+                    ' We must disable requeueing of items or this method may never end!
+                    m_requeueOnTimeout = False
+                    m_requeueOnException = False
 
                     ' We need to get out of town - if we're running a process timer, we'll reduce time between calls to a minimum
                     If Not m_processingIsRealTime Then
@@ -827,8 +819,10 @@ Namespace Collections
                     ' Delete wait handle - only needed while flushing
                     m_waitHandle = Nothing
 
-                    ' Just in case user continues to use queue after disposal, we'll restore the original process interval
+                    ' Just in case user continues to use queue after disposal, we'll restore original states
                     If Not m_processingIsRealTime Then m_processTimer.Interval = originalInterval
+                    m_requeueOnTimeout = originalRequeueOnTimeout
+                    m_requeueOnException = originalRequeueOnException
                 End If
 
                 ' All items have been processed - stop queue
