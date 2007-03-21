@@ -27,8 +27,11 @@ Namespace Files
             m_alignOnSave = False
             m_autoSaveInterval = -1
             m_autoAlignInterval = -1
+            m_configurationCategory = Me.GetType().Name
             m_autoSaveTimer = New System.Timers.Timer()
             m_autoAnalyzeTimer = New System.Timers.Timer()
+
+            LoadSettings()  ' Load settings from the config file.
 
         End Sub
 
@@ -36,7 +39,8 @@ Namespace Files
         <System.Diagnostics.DebuggerNonUserCode()> _
         Protected Overrides Sub Dispose(ByVal disposing As Boolean)
             Try
-                Close() ' Close the file.
+                Close()         ' Close the file.
+                SaveSettings()  ' Saves settings to the config file.
                 If disposing AndAlso components IsNot Nothing Then
                     components.Dispose()
                 End If

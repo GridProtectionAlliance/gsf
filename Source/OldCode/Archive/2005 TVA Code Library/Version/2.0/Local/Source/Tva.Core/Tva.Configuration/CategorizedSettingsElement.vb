@@ -151,22 +151,6 @@ Namespace Configuration
         End Function
 
         ''' <summary>
-        ''' Gets the element value as a boolean.
-        ''' </summary>
-        ''' <param name="defaultValue">The default value to return if the value string is empty.</param>
-        ''' <returns>The parsed boolean value of the referenced setting</returns>
-        ''' <remarks>If this function fails to properly coerce value to a boolean, default value is returned</remarks>
-        Public Function GetTypedValue(ByVal defaultValue As Boolean) As Boolean
-
-            Try
-                Return ParseBoolean(Value)
-            Catch
-                Return defaultValue
-            End Try
-
-        End Function
-
-        ''' <summary>
         ''' Gets or sets the description string of the element.
         ''' </summary>
         ''' <value></value>

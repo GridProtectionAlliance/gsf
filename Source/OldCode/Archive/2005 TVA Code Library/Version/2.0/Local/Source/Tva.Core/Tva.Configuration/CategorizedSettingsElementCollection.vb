@@ -60,6 +60,24 @@ Namespace Configuration
         ''' <remarks></remarks>
         Default Public Shadows ReadOnly Property Item(ByVal name As String) As CategorizedSettingsElement
             Get
+                Return Item(name, False)
+            End Get
+        End Property
+
+        ''' <summary>
+        ''' Gets the Tva.Configuration.CategorizedSettingsElement object with the specified name.
+        ''' </summary>
+        ''' <param name="name">The name of the Tva.Configuration.CategorizedSettingsElement to return.</param>
+        ''' <param name="ensureExistance">True if the setting is to be created if it doesn't exist; otherwise False.</param>
+        ''' <value></value>
+        ''' <returns>The Tva.Configuration.CategorizedSettingsElement with the specified name; otherwise null.</returns>
+        ''' <remarks></remarks>
+        Default Public Shadows ReadOnly Property Item(ByVal name As String, ByVal ensureExistance As Boolean) As CategorizedSettingsElement
+            Get
+                If ensureExistance AndAlso MyBase.BaseGet(name) Is Nothing Then
+                    Add(name, "")
+                End If
+
                 Return DirectCast(MyBase.BaseGet(name), CategorizedSettingsElement)
             End Get
         End Property

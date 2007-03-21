@@ -3,10 +3,12 @@
 Imports System.IO
 Imports System.ComponentModel
 Imports Tva.IO.FilePath
+Imports Tva.Configuration.Common
 
 Namespace Files
 
     Public MustInherit Class SequentialBinaryFileBase(Of T As IBinaryDataProvider)
+        Implements IPersistsSettings
 
 #Region " Member Declaration "
 
@@ -16,6 +18,7 @@ Namespace Files
         Private m_autoSaveInterval As Integer
         Private m_autoAlignInterval As Integer
         Private m_minimumRecordCount As Integer
+        Private m_configurationCategory As String
         Private m_fileStream As FileStream
         Private m_fileRecords As List(Of T)
 
@@ -296,6 +299,62 @@ Namespace Files
         Public MustOverride Function NewRecord(ByVal id As Integer) As T
 
         Public MustOverride Function NewRecord(ByVal id As Integer, ByVal binaryImage As Byte()) As T
+
+#Region " Interface Implementations "
+
+#Region " IPersistsSettings "
+
+        Public Property ConfigurationCategory() As String Implements IPersistsSettings.ConfigurationCategory
+            Get
+                Return m_configurationCategory
+            End Get
+            Set(ByVal value As String)
+                If Not String.IsNullOrEmpty(value) Then
+                    m_configurationCategory = value
+                Else
+                    Throw New ArgumentNullException("ConfigurationCategory")
+                End If
+            End Set
+        End Property
+
+        Public Sub LoadSettings() Implements IPersistsSettings.LoadSettings
+
+            Try
+                With CategorizedSettings(m_configurationCategory)
+                    m_name = .Item("Name").Value
+                    m_saveOnClose = .Item("SaveOnClose").GetTypedValue(m_saveOnClose)
+                    m_alignOnSave = .Item("AlignOnSave").GetTypedValue(m_alignOnSave)
+                    m_autoSaveInterval = .Item("AutoSaveInterval").GetTypedValue(m_autoSaveInterval)
+                    m_autoAlignInterval = .Item("AutoAlignInterval").GetTypedValue(m_autoAlignInterval)
+                    m_minimumRecordCount = .Item("MinimumRecordCount").GetTypedValue(m_minimumRecordCount)
+                End With
+            Catch ex As Exception
+                ' We'll encounter exceptions if the settings are not present in the config file.
+            End Try
+
+        End Sub
+
+        Public Sub SaveSettings() Implements IPersistsSettings.SaveSettings
+
+            Try
+                With CategorizedSettings(m_configurationCategory)
+                    .Item("Name", True).Value = m_name
+                    .Item("SaveOnClose", True).Value = m_saveOnClose.ToString()
+                    .Item("AlignOnSave", True).Value = m_alignOnSave.ToString()
+                    .Item("AutoSaveInterval", True).Value = m_autoSaveInterval.ToString()
+                    .Item("AutoAlignInterval", True).Value = m_autoAlignInterval.ToString()
+                    .Item("MinimumRecordCount", True).Value = m_minimumRecordCount.ToString()
+                End With
+                Tva.Configuration.Common.SaveSettings()
+            Catch ex As Exception
+                ' We might encounter an exception if for some reason the settings cannot be saved to the config file.
+            End Try
+
+        End Sub
+
+#End Region
+
+#End Region
 
 #End Region
 

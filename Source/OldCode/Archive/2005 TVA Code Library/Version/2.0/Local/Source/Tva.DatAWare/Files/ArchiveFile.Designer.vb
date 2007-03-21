@@ -28,6 +28,7 @@ Namespace Files
             m_offloadCount = 5
             m_offloadThreshold = 90
             m_compressData = True
+            m_configurationCategory = Me.GetType().Name
             m_historicFileList = New List(Of ArchiveFileInfo)()
             m_historicFileListThread = New System.Threading.Thread(AddressOf BuildHistoricFileList)
             m_rolloverPreparationThread = New System.Threading.Thread(AddressOf PrepareForRollover)
@@ -35,13 +36,16 @@ Namespace Files
             m_historicDataQueue = Tva.Collections.ProcessQueue(Of StandardPointData).CreateRealTimeQueue(AddressOf WriteToHistoricArchiveFile)
             m_outOfSequenceDataQueue = Tva.Collections.ProcessQueue(Of StandardPointData).CreateRealTimeQueue(AddressOf InsertInCurrentArchiveFile)
 
+            LoadSettings()  ' Load settings from the config file.
+
         End Sub
 
         'Component overrides dispose to clean up the component list.
         <System.Diagnostics.DebuggerNonUserCode()> _
         Protected Overrides Sub Dispose(ByVal disposing As Boolean)
-            Close() ' Close the file.
             Try
+                Close()         ' Close the file.
+                SaveSettings()  ' Saves settings to the config file.
                 If disposing AndAlso components IsNot Nothing Then
                     components.Dispose()
                 End If

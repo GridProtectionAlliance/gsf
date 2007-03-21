@@ -6,11 +6,13 @@ Imports System.Threading
 Imports System.ComponentModel
 Imports Tva.Collections
 Imports Tva.IO.FilePath
+Imports Tva.Configuration.Common
 
 Namespace Files
 
     <ToolboxBitmap(GetType(ArchiveFile))> _
     Public Class ArchiveFile
+        Implements IPersistsSettings
 
 #Region " Member Declaration "
 
@@ -24,6 +26,7 @@ Namespace Files
         Private m_offloadCount As Integer
         Private m_offloadThreshold As Short
         Private m_compressData As Boolean
+        Private m_configurationCategory As String
         Private m_stateFile As StateFile
         Private m_intercomFile As IntercomFile
         Private m_fat As ArchiveFileAllocationTable
@@ -224,7 +227,7 @@ Namespace Files
 
         End Sub
 
-        Public Sub Open(scanForHistoricFiles as Boolean)
+        Public Sub Open(ByVal scanForHistoricFiles As Boolean)
 
             If Not IsOpen Then
                 If m_stateFile IsNot Nothing AndAlso m_intercomFile IsNot Nothing Then
@@ -463,6 +466,70 @@ Namespace Files
 
         End Function
 
+#Region " Interface Implementations "
+
+#Region " IPersistsSettings "
+
+        Public Property ConfigurationCategory() As String Implements IPersistsSettings.ConfigurationCategory
+            Get
+                Return m_configurationCategory
+            End Get
+            Set(ByVal value As String)
+                If Not String.IsNullOrEmpty(value) Then
+                    m_configurationCategory = value
+                Else
+                    Throw New ArgumentNullException("ConfigurationCategory")
+                End If
+            End Set
+        End Property
+
+        Public Sub LoadSettings() Implements IPersistsSettings.LoadSettings
+
+            Try
+                With CategorizedSettings(m_configurationCategory)
+                    m_name = .Item("Name").Value
+                    m_size = .Item("Size").GetTypedValue(m_size)
+                    m_blockSize = .Item("BlockSize").GetTypedValue(m_blockSize)
+                    m_saveOnClose = .Item("SaveOnClose").GetTypedValue(m_saveOnClose)
+                    m_rolloverOnFull = .Item("RolloverOnFull").GetTypedValue(m_rolloverOnFull)
+                    m_rolloverPreparationThreshold = .Item("RolloverPreparationThreshold").GetTypedValue(m_rolloverPreparationThreshold)
+                    m_offloadPath = .Item("OffloadPath").Value
+                    m_offloadCount = .Item("OffloadCount").GetTypedValue(m_offloadCount)
+                    m_offloadThreshold = .Item("OffloadThreshold").GetTypedValue(m_offloadThreshold)
+                    m_compressData = .Item("CompressData").GetTypedValue(m_compressData)
+                End With
+            Catch ex As Exception
+                ' We'll encounter exceptions if the settings are not present in the config file.
+            End Try
+
+        End Sub
+
+        Public Sub SaveSettings() Implements IPersistsSettings.SaveSettings
+
+            Try
+                With CategorizedSettings(m_configurationCategory)
+                    .Item("Name", True).Value = m_name
+                    .Item("Size", True).Value = m_size.ToString()
+                    .Item("BlockSize", True).Value = m_blockSize.ToString()
+                    .Item("SaveOnClose", True).Value = m_saveOnClose.ToString()
+                    .Item("RolloverOnFull", True).Value = m_rolloverOnFull.ToString()
+                    .Item("RolloverPreparationThreshold", True).Value = m_rolloverPreparationThreshold.ToString()
+                    .Item("OffloadPath", True).Value = m_offloadPath
+                    .Item("OffloadCount", True).Value = m_offloadCount.ToString()
+                    .Item("OffloadThreshold", True).Value = m_offloadThreshold.ToString()
+                    .Item("CompressData", True).Value = m_compressData.ToString()
+                End With
+                Tva.Configuration.Common.SaveSettings()
+            Catch ex As Exception
+                ' We might encounter an exception if for some reason the settings cannot be saved to the config file.
+            End Try
+
+        End Sub
+
+#End Region
+
+#End Region
+
 #End Region
 
 #Region " Private Code "
@@ -538,7 +605,7 @@ Namespace Files
 
         End Sub
 
-        Public Sub OffloadHistoricFiles()
+        Private Sub OffloadHistoricFiles()
 
             Try
                 RaiseEvent OffloadStart(Me, EventArgs.Empty)
@@ -594,6 +661,7 @@ Namespace Files
             Dim calculateSlopes As Boolean = False
 
             If pointData.Definition IsNot Nothing Then
+                ' We'll only allow archival of points with a corresponding definition.
                 pointState.PreviousValue = pointState.CurrentValue  ' Promote old CurrentValue to PreviousValue.
                 pointState.CurrentValue = pointData.ToExtended()    ' Promote new value received to CurrentValue.
 
@@ -637,6 +705,7 @@ Namespace Files
                 End If
 
                 If m_compressData Then
+                    ' We have to perform compression on data, so we'll do just that.
                     If pointState.LastArchivedValue.IsNull Then
                         ' This is the first time data is received for the point.
                         pointState.LastArchivedValue = pointState.CurrentValue
@@ -653,6 +722,7 @@ Namespace Files
 
                     End If
                 Else
+                    ' We don't need to perform compression on the data and save all of it.
                     pointState.LastArchivedValue = pointState.CurrentValue
                     result = True
                 End If
@@ -723,10 +793,15 @@ Namespace Files
         Private Sub CurrentLocationFileSystemWatcher_Renamed(ByVal sender As Object, ByVal e As System.IO.RenamedEventArgs) Handles CurrentLocationFileSystemWatcher.Renamed, OffloadLocationFileSystemWatcher.Renamed
 
             If String.Compare(JustFileExtension(e.OldFullPath), Extension, True) = 0 Then
-                Dim oldFileInfo As ArchiveFileInfo = GetFileInfo(e.OldFullPath)
-                SyncLock m_historicFileList
-                    If m_historicFileList.Contains(oldFileInfo) Then m_historicFileList.Remove(oldFileInfo)
-                End SyncLock
+                Try
+                    Dim oldFileInfo As ArchiveFileInfo = GetFileInfo(e.OldFullPath)
+                    SyncLock m_historicFileList
+                        If m_historicFileList.Contains(oldFileInfo) Then m_historicFileList.Remove(oldFileInfo)
+                    End SyncLock
+                Catch ex As Exception
+                    ' The FileSystemWatcher.Renamed event will also be raised when the current archive file is rolled 
+                    ' over. It is during this time that we'll encounter an exception in the GetFileInfo() function.
+                End Try
             End If
 
             If String.Compare(JustFileExtension(e.FullPath), Extension, True) = 0 Then
