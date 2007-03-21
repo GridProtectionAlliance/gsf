@@ -1,20 +1,20 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <ClassDiagram MajorVersion="1" MinorVersion="1">
   <Font Name="Tahoma" Size="8.25" />
-  <Comment CommentText="Frequency Value Relationship&#xD;&#xA;">
-    <Position X="4.392" Y="0.5" Height="0.332" Width="1.7" />
+  <Comment CommentText=" Frequency Value Relationship&#xD;&#xA;">
+    <Position X="4.392" Y="0.5" Height="0.332" Width="1.783" />
   </Comment>
-  <Comment CommentText="BPA PDCStream">
-    <Position X="1.937" Y="6.104" Height="0.371" Width="1.7" />
+  <Comment CommentText="   BPA PDCStream">
+    <Position X="2.125" Y="6.166" Height="0.263" Width="1.169" />
   </Comment>
-  <Comment CommentText="Virginia Tech FNET">
-    <Position X="4.175" Y="6.093" Height="0.345" Width="1.7" />
+  <Comment CommentText="  Virginia Tech FNET">
+    <Position X="4.362" Y="6.156" Height="0.263" Width="1.263" />
   </Comment>
-  <Comment CommentText="IEEE 1344">
-    <Position X="6.425" Y="6.093" Height="0.332" Width="1.7" />
+  <Comment CommentText="    IEEE 1344">
+    <Position X="6.738" Y="6.156" Height="0.263" Width="0.981" />
   </Comment>
   <Comment CommentText="IEEE C37 118">
-    <Position X="8.728" Y="6.159" Height="0.293" Width="1.7" />
+    <Position X="9.04" Y="6.159" Height="0.263" Width="0.887" />
   </Comment>
   <Class Name="Tva.Phasors.FrequencyValueBase">
     <Position X="5.25" Y="1.25" Width="1.5" />

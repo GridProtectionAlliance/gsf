@@ -1,8 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <ClassDiagram MajorVersion="1" MinorVersion="1">
   <Font Name="Tahoma" Size="8.25" />
-  <Comment CommentText="HeaderCell Relationships">
-    <Position X="3.979" Y="0.5" Height="0.438" Width="1.523" />
+  <Comment CommentText=" HeaderCell Relationships">
+    <Position X="3.979" Y="0.5" Height="0.263" Width="1.523" />
   </Comment>
   <Class Name="Tva.Phasors.HeaderCell">
     <Position X="4.25" Y="1.25" Width="1.5" />

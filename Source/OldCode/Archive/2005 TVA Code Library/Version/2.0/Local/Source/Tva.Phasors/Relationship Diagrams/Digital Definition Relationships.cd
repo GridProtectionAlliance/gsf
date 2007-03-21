@@ -2,16 +2,16 @@
 <ClassDiagram MajorVersion="1" MinorVersion="1">
   <Font Name="Tahoma" Size="8.25" />
   <Comment CommentText="Digital Definition Relationships">
-    <Position X="4.354" Y="0.615" Height="0.396" Width="1.981" />
+    <Position X="4.354" Y="0.615" Height="0.267" Width="1.801" />
   </Comment>
-  <Comment CommentText="PBA PDCStream&#xD;&#xA;">
-    <Position X="4.125" Y="3.906" Height="0.292" Width="1.7" />
+  <Comment CommentText="   PBA PDCStream&#xD;&#xA;">
+    <Position X="4.434" Y="3.906" Height="0.292" Width="1.21" />
   </Comment>
   <Comment CommentText="IEEE 1344">
-    <Position X="6" Y="3.896" Height="0.315" Width="1.533" />
+    <Position X="6.387" Y="3.896" Height="0.315" Width="0.799" />
   </Comment>
   <Comment CommentText="IEEE C37 118">
-    <Position X="7.708" Y="3.896" Height="0.312" Width="1.544" />
+    <Position X="8.095" Y="3.896" Height="0.312" Width="0.886" />
   </Comment>
   <Class Name="Tva.Phasors.DigitalDefinitionBase">
     <Position X="5.5" Y="1.75" Width="1.75" />

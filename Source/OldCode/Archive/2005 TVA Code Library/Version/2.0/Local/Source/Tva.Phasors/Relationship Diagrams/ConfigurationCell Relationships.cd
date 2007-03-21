@@ -1,20 +1,20 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <ClassDiagram MajorVersion="1" MinorVersion="1">
   <Font Name="Tahoma" Size="8.25" />
-  <Comment CommentText="ConfigurationCell Relationships">
-    <Position X="2.912" Y="0.5" Height="0.379" Width="2.128" />
+  <Comment CommentText="   ConfigurationCell Relationships">
+    <Position X="4.151" Y="0.5" Height="0.266" Width="1.903" />
   </Comment>
-  <Comment CommentText="BPA PDCStream">
-    <Position X="1.669" Y="9.59" Height="0.356" Width="1.306" />
+  <Comment CommentText="  BPA PDCStream">
+    <Position X="2.007" Y="9.657" Height="0.263" Width="1.148" />
   </Comment>
   <Comment CommentText="IEEE 1344">
-    <Position X="3.543" Y="9.569" Height="0.412" Width="1.115" />
+    <Position X="3.88" Y="9.637" Height="0.263" Width="0.721" />
   </Comment>
-  <Comment CommentText="IEEE C37 118">
-    <Position X="5.242" Y="9.603" Height="0.367" Width="1.171" />
+  <Comment CommentText="  IEEE C37 118">
+    <Position X="5.444" Y="9.671" Height="0.263" Width="0.98" />
   </Comment>
-  <Comment CommentText="Virginia Tech FNET">
-    <Position X="7.041" Y="9.597" Height="0.356" Width="1.238" />
+  <Comment CommentText=" Virginia Tech FNET">
+    <Position X="7.108" Y="9.664" Height="0.263" Width="1.261" />
   </Comment>
   <Class Name="Tva.Phasors.ConfigurationCellBase">
     <Position X="4.25" Y="1.5" Width="1.5" />
@@ -81,10 +81,6 @@
       <FileName>IChannelCell.vb</FileName>
       <HashCode>AAAAAhAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
     </TypeIdentifier>
-  </Interface>
-  <Interface Name="System.IComparable">
-    <Position X="8.5" Y="4.25" Width="1.5" />
-    <TypeIdentifier />
   </Interface>
   <Interface Name="Tva.Phasors.IChannel">
     <Position X="6.5" Y="2" Width="1.5" />

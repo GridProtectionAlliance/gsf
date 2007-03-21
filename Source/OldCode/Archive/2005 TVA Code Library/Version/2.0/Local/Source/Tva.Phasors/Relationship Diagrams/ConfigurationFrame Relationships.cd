@@ -1,20 +1,20 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <ClassDiagram MajorVersion="1" MinorVersion="1">
   <Font Name="Tahoma" Size="8.25" />
-  <Comment CommentText="ConfigurationFrame Relationships">
-    <Position X="5.76" Y="0.5" Height="0.427" Width="1.929" />
+  <Comment CommentText=" ConfigurationFrame Relationships">
+    <Position X="5.76" Y="0.5" Height="0.281" Width="2.023" />
   </Comment>
-  <Comment CommentText="BPA PDC Stream">
-    <Position X="4.271" Y="4.667" Height="0.292" Width="1.19" />
+  <Comment CommentText="  BPA PDC Stream">
+    <Position X="4.333" Y="4.521" Height="0.263" Width="1.19" />
   </Comment>
-  <Comment CommentText="IEEE 1344">
-    <Position X="6.031" Y="4.656" Height="0.302" Width="1.304" />
+  <Comment CommentText="   IEEE 1344">
+    <Position X="6.271" Y="4.521" Height="0.263" Width="0.887" />
   </Comment>
-  <Comment CommentText="IEEE C37 118">
-    <Position X="7.75" Y="4.646" Height="0.323" Width="1.325" />
+  <Comment CommentText="  IEEE C37 118">
+    <Position X="7.938" Y="4.521" Height="0.263" Width="1.054" />
   </Comment>
-  <Comment CommentText="Virginia Tech FNET">
-    <Position X="9.479" Y="4.656" Height="0.323" Width="1.356" />
+  <Comment CommentText="  Virginia Tech FNET">
+    <Position X="9.604" Y="4.531" Height="0.263" Width="1.242" />
   </Comment>
   <Class Name="Tva.Phasors.ConfigurationFrameBase">
     <Position X="4.5" Y="1.25" Width="1.5" />

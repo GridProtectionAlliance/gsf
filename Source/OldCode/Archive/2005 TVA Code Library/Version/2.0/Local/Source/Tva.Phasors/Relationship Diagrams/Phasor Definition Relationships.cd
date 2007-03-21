@@ -2,19 +2,19 @@
 <ClassDiagram MajorVersion="1" MinorVersion="1">
   <Font Name="Tahoma" Size="8.25" />
   <Comment CommentText="Phasor Definition Relationships">
-    <Position X="3.698" Y="0.5" Height="0.396" Width="1.971" />
+    <Position X="3.698" Y="0.5" Height="0.263" Width="1.823" />
   </Comment>
   <Comment CommentText="BPA PDC Stream">
-    <Position X="4.208" Y="4.344" Height="0.365" Width="1.575" />
+    <Position X="4.505" Y="4.418" Height="0.263" Width="1.068" />
   </Comment>
   <Comment CommentText="IEEE 1344 ">
-    <Position X="5.99" Y="4.344" Height="0.388" Width="1.502" />
+    <Position X="6.249" Y="4.393" Height="0.263" Width="0.81" />
   </Comment>
   <Comment CommentText="IEEE C37 118">
-    <Position X="7.781" Y="4.323" Height="0.406" Width="1.408" />
+    <Position X="8.004" Y="4.397" Height="0.27" Width="0.914" />
   </Comment>
   <Comment CommentText="Virginia Tech FNET">
-    <Position X="9.479" Y="4.344" Height="0.385" Width="1.408" />
+    <Position X="9.553" Y="4.418" Height="0.263" Width="1.186" />
   </Comment>
   <Class Name="Tva.Phasors.PhasorDefinitionBase">
     <Position X="5.25" Y="1.25" Width="1.75" />
@@ -69,21 +69,21 @@
     </TypeIdentifier>
   </Class>
   <Interface Name="Tva.Phasors.IPhasorDefinition">
-    <Position X="15.25" Y="1.75" Width="1.5" />
+    <Position X="14" Y="1" Width="1.5" />
     <TypeIdentifier>
       <FileName>IPhasorDefinition.vb</FileName>
       <HashCode>AAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAQAAQAAAAAA=</HashCode>
     </TypeIdentifier>
   </Interface>
   <Interface Name="Tva.Phasors.IChannelDefinition">
-    <Position X="13" Y="1.75" Width="1.5" />
+    <Position X="11.75" Y="1" Width="1.5" />
     <TypeIdentifier>
       <FileName>IChannelDefinition.vb</FileName>
       <HashCode>AQAAAAAAEAAAAAAAAIAAQAgAAAAAIAIAAIEABAAAgAA=</HashCode>
     </TypeIdentifier>
   </Interface>
   <Interface Name="Tva.Phasors.IChannel">
-    <Position X="11" Y="1.75" Width="1.5" />
+    <Position X="9.75" Y="1" Width="1.5" />
     <TypeIdentifier>
       <FileName>IChannel.vb</FileName>
       <HashCode>AAAAAAAAAAAoAAAAAAAAAAARAAAAAACAAAEAAAAAAAA=</HashCode>

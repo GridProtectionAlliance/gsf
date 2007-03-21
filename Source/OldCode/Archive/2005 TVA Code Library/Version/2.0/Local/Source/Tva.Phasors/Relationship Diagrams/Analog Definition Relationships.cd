@@ -1,14 +1,14 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <ClassDiagram MajorVersion="1" MinorVersion="1">
   <Font Name="Tahoma" Size="8.25" />
-  <Comment CommentText="Analog Definition Relationships">
-    <Position X="4.25" Y="0.5" Height="0.49" Width="1.96" />
+  <Comment CommentText="   Analog Definition Relationships">
+    <Position X="4.25" Y="0.5" Height="0.271" Width="1.96" />
   </Comment>
-  <Comment CommentText="BPA PDCStream&#xD;&#xA;">
-    <Position X="4.177" Y="3.396" Height="0.302" Width="1.7" />
+  <Comment CommentText="  BPA PDCStream&#xD;&#xA;">
+    <Position X="4.427" Y="3.458" Height="0.263" Width="1.127" />
   </Comment>
-  <Comment CommentText="IEEE C37 118">
-    <Position X="6.156" Y="3.375" Height="0.344" Width="1.7" />
+  <Comment CommentText="  IEEE C37 118">
+    <Position X="6.531" Y="3.438" Height="0.281" Width="0.95" />
   </Comment>
   <Class Name="Tva.Phasors.AnalogDefinitionBase">
     <Position X="5" Y="1.5" Width="1.75" />
@@ -68,9 +68,5 @@
       <FileName>IChannel.vb</FileName>
       <HashCode>AAAAAAAAAAAoAAAAAAAAAAARAAAAAACAAAEAAAAAAAA=</HashCode>
     </TypeIdentifier>
-  </Interface>
-  <Interface Name="System.Runtime.Serialization.ISerializable" Collapsed="true">
-    <Position X="10" Y="4.25" Width="1.5" />
-    <TypeIdentifier />
   </Interface>
 </ClassDiagram>

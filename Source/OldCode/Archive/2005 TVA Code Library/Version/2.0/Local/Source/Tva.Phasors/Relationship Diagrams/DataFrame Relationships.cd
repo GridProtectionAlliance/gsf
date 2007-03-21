@@ -1,20 +1,20 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <ClassDiagram MajorVersion="1" MinorVersion="1">
   <Font Name="Tahoma" Size="8.25" />
-  <Comment CommentText="DataFrame Relationship">
-    <Position X="4" Y="0.5" Height="0.302" Width="1.7" />
+  <Comment CommentText="   DataFrame Relationship">
+    <Position X="4" Y="0.5" Height="0.302" Width="1.617" />
   </Comment>
   <Comment CommentText="BPA PDC Stream">
-    <Position X="4.344" Y="4.312" Height="0.396" Width="1.7" />
+    <Position X="4.74" Y="4.25" Height="0.263" Width="1.033" />
   </Comment>
   <Comment CommentText="IEEE 1344">
-    <Position X="6.25" Y="4.333" Height="0.344" Width="1.325" />
+    <Position X="6.208" Y="4.25" Height="0.263" Width="0.721" />
   </Comment>
   <Comment CommentText="IEEE C37 118">
-    <Position X="8.302" Y="4.302" Height="0.396" Width="1.346" />
+    <Position X="8.406" Y="4.25" Height="0.263" Width="0.919" />
   </Comment>
   <Comment CommentText="Virginia Tech FNET">
-    <Position X="10.375" Y="4.333" Height="0.406" Width="1.221" />
+    <Position X="10.438" Y="4.27" Height="0.263" Width="1.231" />
   </Comment>
   <Class Name="Tva.Phasors.DataFrameBase">
     <Position X="4.5" Y="1.5" Width="1.5" />

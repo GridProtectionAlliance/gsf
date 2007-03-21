@@ -4,11 +4,11 @@
   <Comment CommentText="HeaderFrame Relationships">
     <Position X="4.25" Y="0.75" Height="0.281" Width="1.7" />
   </Comment>
-  <Comment CommentText="IEEE 1344">
-    <Position X="4.475" Y="4.394" Height="0.356" Width="1.7" />
+  <Comment CommentText="  IEEE 1344">
+    <Position X="4.813" Y="4.259" Height="0.263" Width="0.846" />
   </Comment>
-  <Comment CommentText="IEEE C37 118">
-    <Position X="6.849" Y="4.371" Height="0.333" Width="1.216" />
+  <Comment CommentText="  IEEE C37 118">
+    <Position X="6.984" Y="4.236" Height="0.263" Width="1.058" />
   </Comment>
   <Class Name="Tva.Phasors.HeaderFrameBase">
     <Position X="4.5" Y="2" Width="1.5" />

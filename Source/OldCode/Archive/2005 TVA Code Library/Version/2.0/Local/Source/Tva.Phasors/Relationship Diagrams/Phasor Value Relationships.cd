@@ -1,20 +1,20 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <ClassDiagram MajorVersion="1" MinorVersion="1">
   <Font Name="Tahoma" Size="8.25" />
-  <Comment CommentText="Phasor Value Relationship">
-    <Position X="6.183" Y="0.5" Height="0.386" Width="1.7" />
+  <Comment CommentText="  Phasor Value Relationship">
+    <Position X="6.183" Y="0.5" Height="0.263" Width="1.689" />
   </Comment>
   <Comment CommentText="BPA PDCStream&#xD;&#xA;">
-    <Position X="1.159" Y="7.784" Height="0.432" Width="1.7" />
+    <Position X="1.455" Y="7.909" Height="0.263" Width="1.041" />
   </Comment>
-  <Comment CommentText="IEEE 1344&#xD;&#xA;">
-    <Position X="3.432" Y="7.852" Height="0.352" Width="1.7" />
+  <Comment CommentText="  IEEE 1344&#xD;&#xA;">
+    <Position X="3.773" Y="7.92" Height="0.263" Width="0.848" />
   </Comment>
   <Comment CommentText="IEEE C37 118">
-    <Position X="5.682" Y="7.83" Height="0.375" Width="1.7" />
+    <Position X="6.023" Y="7.898" Height="0.263" Width="0.916" />
   </Comment>
   <Comment CommentText="Virginia Tech FNET">
-    <Position X="7.977" Y="7.816" Height="0.411" Width="1.7" />
+    <Position X="8.114" Y="7.884" Height="0.263" Width="1.2" />
   </Comment>
   <Class Name="Tva.Phasors.PhasorValueBase">
     <Position X="4.5" Y="0.75" Width="1.5" />
@@ -95,9 +95,5 @@
       <FileName>IChannel.vb</FileName>
       <HashCode>AAAAAAAAAAAoAAAAAAAAAAARAAAAAACAAAEAAAAAAAA=</HashCode>
     </TypeIdentifier>
-  </Interface>
-  <Interface Name="System.Runtime.Serialization.ISerializable" Collapsed="true">
-    <Position X="8.25" Y="4.25" Width="1.5" />
-    <TypeIdentifier />
   </Interface>
 </ClassDiagram>

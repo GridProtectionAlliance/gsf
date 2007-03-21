@@ -1,20 +1,20 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <ClassDiagram MajorVersion="1" MinorVersion="1">
   <Font Name="Tahoma" Size="8.25" />
-  <Comment CommentText="ConfigurationCell Collection Relationships">
-    <Position X="4.25" Y="0.5" Height="0.385" Width="2.502" />
+  <Comment CommentText="   ConfigurationCell Collection Relationships">
+    <Position X="4.25" Y="0.5" Height="0.263" Width="2.512" />
   </Comment>
-  <Comment CommentText="BPA PDCStream">
-    <Position X="2.562" Y="3.458" Height="0.323" Width="1.252" />
+  <Comment CommentText="  BPA PDCStream">
+    <Position X="2.625" Y="3.458" Height="0.263" Width="1.075" />
   </Comment>
-  <Comment CommentText="IEEE 1344">
-    <Position X="4.354" Y="3.427" Height="0.365" Width="1.148" />
+  <Comment CommentText=" IEEE 1344">
+    <Position X="4.5" Y="3.448" Height="0.263" Width="0.752" />
   </Comment>
-  <Comment CommentText="IEEE C37 118">
-    <Position X="6.146" Y="3.375" Height="0.427" Width="1.179" />
+  <Comment CommentText="   IEEE C37 118">
+    <Position X="6.146" Y="3.438" Height="0.263" Width="1.065" />
   </Comment>
-  <Comment CommentText="Virginia Tech FNET">
-    <Position X="7.792" Y="3.365" Height="0.427" Width="1.2" />
+  <Comment CommentText="  Virginia Tech FNET">
+    <Position X="7.792" Y="3.427" Height="0.263" Width="1.294" />
   </Comment>
   <Class Name="Tva.Phasors.ConfigurationCellCollection">
     <Position X="4" Y="1.25" Width="1.5" />

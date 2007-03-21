@@ -1,18 +1,18 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <ClassDiagram MajorVersion="1" MinorVersion="1">
   <Font Name="Tahoma" Size="8.25" />
-  <Comment CommentText="CommandCell Collection Relationships">
-    <Position X="4.229" Y="0.5" Height="0.438" Width="2.315" />
+  <Comment CommentText="  CommandCell Collection Relationships">
+    <Position X="4.229" Y="0.5" Height="0.263" Width="2.335" />
   </Comment>
   <Class Name="Tva.Phasors.CommandCellCollection">
-    <Position X="6" Y="1.75" Width="1.5" />
+    <Position X="7.25" Y="1.75" Width="1.5" />
     <TypeIdentifier>
       <FileName>CommandCellCollection.vb</FileName>
       <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Class>
   <Class Name="Tva.Phasors.ChannelCellCollectionBase(Of T)">
-    <Position X="4.25" Y="1.75" Width="1.5" />
+    <Position X="4.25" Y="1.75" Width="2.5" />
     <TypeIdentifier>
       <FileName>ChannelCellCollectionBase.vb</FileName>
       <HashCode>AAAAAAAAAAAAAAAAAAAAAAAxAAAAAAAAAAAAAAAAAAQ=</HashCode>

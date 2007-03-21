@@ -1,14 +1,14 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <ClassDiagram MajorVersion="1" MinorVersion="1">
   <Font Name="Tahoma" Size="8.25" />
-  <Comment CommentText="CommandFrame Relationships">
-    <Position X="5.75" Y="0.5" Height="0.354" Width="1.898" />
+  <Comment CommentText=" CommandFrame Relationships">
+    <Position X="5.75" Y="0.5" Height="0.287" Width="1.808" />
   </Comment>
   <Comment CommentText="IEEE 1344">
-    <Position X="4.07" Y="4.953" Height="0.277" Width="1.238" />
+    <Position X="4.396" Y="4.908" Height="0.277" Width="0.709" />
   </Comment>
-  <Comment CommentText="IEEE C37 118">
-    <Position X="6.345" Y="4.871" Height="0.367" Width="1.081" />
+  <Comment CommentText=" IEEE C37 118">
+    <Position X="6.491" Y="4.793" Height="0.263" Width="0.912" />
   </Comment>
   <Class Name="Tva.Phasors.CommandFrameBase">
     <Position X="4" Y="1.25" Width="1.5" />
