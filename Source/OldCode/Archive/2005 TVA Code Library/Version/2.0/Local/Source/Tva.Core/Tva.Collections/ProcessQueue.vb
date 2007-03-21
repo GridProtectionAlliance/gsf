@@ -15,7 +15,10 @@
 '  02/12/2006 - J. Ritchie Carroll
 '       Added multi-item bulk processing functionality
 '  04/10/2006 - J. Ritchie Carroll
-'       Added Debug property to disable "catch" so exceptions are debugged in originating source
+'       Added "DebugMode" property to disable "catch" so exceptions are debugged in originating source
+'  03/21/2007 - J. Ritchie Carroll
+'       Added "ItemsBeingProcessed" property to return current total number of items being processed
+'       Added "Flush" method to allow any remaining items in queue to be processed before shutdown
 '
 '*******************************************************************************************************
 
@@ -38,7 +41,7 @@ Namespace Collections
     ''' </remarks>
     Public Class ProcessQueue(Of T)
 
-        Implements IList(Of T), ICollection
+        Implements IList(Of T), ICollection, IDisposable
 
 #Region " Public Member Declarations "
 
@@ -162,6 +165,7 @@ Namespace Collections
         Private m_processingIsRealTime As Boolean
         Private m_threadCount As Integer
         Private m_enabled As Boolean
+        Private m_itemsProcessing As Long
         Private m_itemsProcessed As Long
         Private m_startTime As Long
         Private m_stopTime As Long
@@ -169,6 +173,7 @@ Namespace Collections
         Private m_realTimeProcessThreadPriority As ThreadPriority
         Private WithEvents m_processTimer As System.Timers.Timer
         Private m_debugMode As Boolean
+        Private m_waitHandle As AutoResetEvent
 
 #End Region
 
@@ -764,6 +769,75 @@ Namespace Collections
         End Property
 
         ''' <summary>
+        ''' If queue is active (i.e., user has called "Start" method), this method will block the current thread
+        ''' until all items in process queue are processed then stop the queue.
+        ''' </summary>
+        ''' <remarks>
+        ''' <para>
+        ''' This function will begin to process items as quickly as possible, regardless of currently defined process
+        ''' interval, until all items in the queue have been processed.  The queue will be stopped when this function
+        ''' ends.  This method is typically called on shutdown to make sure any remaining queued items get processed
+        ''' before the process queue is destructed.
+        ''' </para>
+        ''' <para>
+        ''' Note that it is possible for items to be added to the queue while the flush is executing - the flush
+        ''' will continue to process items as quickly as possible until the queue is empty.  Unless the user stops
+        ''' queueing items to be processed, the flush call may never return (not a happy situtation on shutdown).
+        ''' </para>
+        ''' <para>
+        ''' On the same note, if you are requeueing items on exception or process timeout you may want to disable
+        ''' these features before calling this function because this flush call blocks the current thread until
+        ''' the queue is empty - exceptions and/or timeouts may result in the flush call never returning.  Because
+        ''' user's may have implemented custom exception and time-out handling that may still need to be called
+        ''' during shutdown, the requeuing of items on exception and/or timeout is not automatically disabled.
+        ''' </para>
+        ''' <para>
+        ''' To disable requeueing of items on exception or process timeout, execute the following before the flush call:
+        ''' <code>
+        '''     myProcessQueue.RequeueOnTimeout = False
+        '''     myProcessQueue.RequeueOnException = False
+        '''     myProcessQueue.Flush()
+        ''' </code>
+        ''' You can safely set these properties at any time regardless of the type of queue you have created.
+        ''' </para>
+        ''' <para>
+        ''' The process queue does not implement a finalizer - if user's fail to call this method before the class
+        ''' is destructed, there may be items that remain unprocessed in the queue.
+        ''' </para>
+        ''' </remarks>
+        Public Sub Flush() Implements IDisposable.Dispose
+
+            If m_enabled Then
+                ' Only wait around if there's something to process :)
+                If Count > 0 Then
+                    Dim originalInterval As Double
+
+                    ' We need to get out of town - if we're running a process timer, we'll reduce time between calls to a minimum
+                    If Not m_processingIsRealTime Then
+                        originalInterval = m_processTimer.Interval
+                        m_processTimer.Interval = 1
+                    End If
+
+                    ' Create a new auto-resetting wait event
+                    m_waitHandle = New AutoResetEvent(False)
+
+                    ' Wait until all data has been processed
+                    m_waitHandle.WaitOne()
+
+                    ' Delete wait handle - only needed while flushing
+                    m_waitHandle = Nothing
+
+                    ' Just in case user continues to use queue after disposal, we'll restore the original process interval
+                    If Not m_processingIsRealTime Then m_processTimer.Interval = originalInterval
+                End If
+
+                ' All items have been processed - stop queue
+                [Stop]()
+            End If
+
+        End Sub
+
+        ''' <summary>
         ''' Determines if the list is actively processing items
         ''' </summary>
         Public Overridable ReadOnly Property Processing() As Boolean
@@ -773,6 +847,15 @@ Namespace Collections
                 Else
                     Return m_processTimer.Enabled
                 End If
+            End Get
+        End Property
+
+        ''' <summary>
+        ''' Returns the total number of items currently being processed
+        ''' </summary>
+        Public Overridable ReadOnly Property ItemsBeingProcessed() As Long
+            Get
+                Return m_itemsProcessing
             End Get
         End Property
 
@@ -835,11 +918,11 @@ Namespace Collections
         ''' </summary>
         ''' <remarks>
         ''' <para>This name is used for class identification in strings (e.g., used in error message)</para>
-        ''' <para>Derived classes should override this method with a proper class name</para>
+        ''' <para>Derived classes can override this method, if needed, with a proper class name - defaults to Me.GetType().Name</para>
         ''' </remarks>
         Public Overridable ReadOnly Property Name() As String
             Get
-                Return Me.GetType.Name
+                Return Me.GetType().Name
             End Get
         End Property
 
@@ -901,11 +984,14 @@ Namespace Collections
                     .Append("    Total process run time: ")
                     .Append(SecondsToText(RunTime))
                     .Append(Environment.NewLine)
+                    .Append("      Total active threads: ")
+                    .Append(m_threadCount)
+                    .Append(Environment.NewLine)
                     .Append("   Queued items to process: ")
                     .Append(Count)
                     .Append(Environment.NewLine)
-                    .Append("      Total active threads: ")
-                    .Append(m_threadCount)
+                    .Append("     Items being processed: ")
+                    .Append(m_itemsProcessing)
                     .Append(Environment.NewLine)
                     .Append("     Total items processed: ")
                     .Append(m_itemsProcessed)
@@ -982,7 +1068,43 @@ Namespace Collections
         ''' </summary>
         Protected Sub IncrementItemsProcessed(ByVal totalProcessed As Integer)
 
-            Interlocked.Add(m_itemsProcessed, totalProcessed)
+            Interlocked.Add(m_itemsProcessed, Convert.ToInt64(totalProcessed))
+
+        End Sub
+
+        ''' <summary>
+        ''' Performs thread-safe atomic increment on current number of processing items
+        ''' </summary>
+        Protected Sub IncrementItemsProcessing()
+
+            Interlocked.Increment(m_itemsProcessing)
+
+        End Sub
+
+        ''' <summary>
+        ''' Performs thread-safe atomic addition on current number of processing items
+        ''' </summary>
+        Protected Sub IncrementItemsProcessing(ByVal totalProcessing As Integer)
+
+            Interlocked.Add(m_itemsProcessing, Convert.ToInt64(totalProcessing))
+
+        End Sub
+
+        ''' <summary>
+        ''' Performs thread-safe atomic decrement on current number of processing items
+        ''' </summary>
+        Protected Sub DecrementItemsProcessing()
+
+            Interlocked.Decrement(m_itemsProcessing)
+
+        End Sub
+
+        ''' <summary>
+        ''' Performs thread-safe atomic negated addition on current number of processing items
+        ''' </summary>
+        Protected Sub DecrementItemsProcessing(ByVal totalProcessed As Integer)
+
+            Interlocked.Add(m_itemsProcessing, Convert.ToInt64(-totalProcessed))
 
         End Sub
 
@@ -1032,10 +1154,7 @@ Namespace Collections
         ''' </remarks>
         Protected Overridable Function CanProcessItems(ByVal items As T()) As Boolean
 
-            If m_canProcessItemFunction Is Nothing Then
-                ' If user provided no implementation for this function, we assume all items can be processed
-                Return True
-            Else
+            If m_canProcessItemFunction IsNot Nothing Then
                 ' Otherwise we call user function for each item to determine if all items are ready for processing
                 Dim allItemsCanBeProcessed As Boolean = True
 
@@ -1048,6 +1167,9 @@ Namespace Collections
 
                 Return allItemsCanBeProcessed
             End If
+
+            ' If user provided no implementation for this function or function failed, we assume item can be processed
+            Return True
 
         End Function
 
@@ -1177,6 +1299,11 @@ Namespace Collections
                 ' Invoke user function to process item
                 m_processItemFunction(item)
                 IncrementItemsProcessed()
+
+                ' Signal completion of processed items if we're flushing data on shutdown
+                If m_waitHandle IsNot Nothing AndAlso Count = 0 Then m_waitHandle.Set()
+
+                ' Notify consumers of successfully processed items
                 RaiseEvent ItemProcessed(item)
             Catch ex As ThreadAbortException
                 ' Rethrow thread abort so calling method can respond appropriately
@@ -1198,6 +1325,11 @@ Namespace Collections
                 ' Invoke user function to process items
                 m_processItemsFunction(items)
                 IncrementItemsProcessed(items.Length)
+
+                ' Signal completion of processed items if we're flushing data on shutdown
+                If m_waitHandle IsNot Nothing AndAlso Count = 0 Then m_waitHandle.Set()
+
+                ' Notify consumers of successfully processed items
                 RaiseEvent ItemsProcessed(items)
             Catch ex As ThreadAbortException
                 ' Rethrow thread abort so calling method can respond appropriately
@@ -1276,6 +1408,7 @@ Namespace Collections
                                 .RemoveAt(0)
 
                                 processingItem = True
+                                IncrementItemsProcessing()
                             End If
                         End If
                     End With
@@ -1316,7 +1449,10 @@ Namespace Collections
                 RaiseEvent ProcessException(ex)
             Finally
                 ' Decrement thread count if item was retrieved for processing
-                If processingItem Then DecrementThreadCount()
+                If processingItem Then
+                    DecrementThreadCount()
+                    DecrementItemsProcessing()
+                End If
             End Try
 
         End Sub
@@ -1347,6 +1483,7 @@ Namespace Collections
                                 .Clear()
 
                                 processingItems = True
+                                IncrementItemsProcessing(nextItems.Length)
                             End If
                         End If
                     End With
@@ -1387,7 +1524,10 @@ Namespace Collections
                 RaiseEvent ProcessException(ex)
             Finally
                 ' Decrement thread count if items were retrieved for processing
-                If processingItems Then DecrementThreadCount()
+                If processingItems Then
+                    DecrementThreadCount()
+                    DecrementItemsProcessing(nextItems.Length)
+                End If
             End Try
 
         End Sub
