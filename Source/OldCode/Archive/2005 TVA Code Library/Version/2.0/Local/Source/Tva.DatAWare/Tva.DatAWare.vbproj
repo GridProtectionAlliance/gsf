@@ -172,7 +172,6 @@
     <EmbeddedResource Include="Embedded Resources\Files.MetadataFile.bmp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Relationship Diagrams\File Diagram.cd" />
     <None Include="Relationship Diagrams\Packet Diagram.cd" />
     <None Include="Relationship Diagrams\Point Definition Diagram.cd" />
     <None Include="Relationship Diagrams\Point Data Diagram.cd" />

@@ -845,8 +845,7 @@ Namespace Files
                         If m_historicFileList.Contains(oldFileInfo) Then m_historicFileList.Remove(oldFileInfo)
                     End SyncLock
                 Catch ex As Exception
-                    ' The FileSystemWatcher.Renamed event will also be raised when the current archive file is rolled 
-                    ' over. It is during this time that we'll encounter an exception in the GetFileInfo() function.
+                    ' We'll encounter an exception when the current file is rolled over to a historic file.
                 End Try
             End If
 
