@@ -723,7 +723,7 @@ Namespace Collections
             m_startTime = Date.Now.Ticks
 
             ' Note that real-time queues have their main thread running continually, but for
-            ' intervaled queues processing occurs only when data is available to processed
+            ' intervaled queues processing occurs only when data is available to be processed
             If m_processingIsRealTime Then
                 ' Start real-time processing thread
                 m_realTimeProcessThread = New Thread(AddressOf RealTimeThreadProc)
