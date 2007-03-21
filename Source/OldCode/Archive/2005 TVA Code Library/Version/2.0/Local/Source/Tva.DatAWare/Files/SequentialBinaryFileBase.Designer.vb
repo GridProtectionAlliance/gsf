@@ -31,8 +31,6 @@ Namespace Files
             m_autoSaveTimer = New System.Timers.Timer()
             m_autoAnalyzeTimer = New System.Timers.Timer()
 
-            LoadSettings()  ' Load settings from the config file.
-
         End Sub
 
         'Component overrides dispose to clean up the component list.

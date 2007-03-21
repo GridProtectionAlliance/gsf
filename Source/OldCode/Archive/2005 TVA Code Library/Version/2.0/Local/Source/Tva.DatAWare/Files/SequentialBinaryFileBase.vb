@@ -8,7 +8,7 @@ Imports Tva.Configuration.Common
 Namespace Files
 
     Public MustInherit Class SequentialBinaryFileBase(Of T As IBinaryDataProvider)
-        Implements IPersistsSettings
+        Implements ISupportInitialize, IPersistsSettings
 
 #Region " Member Declaration "
 
@@ -302,6 +302,22 @@ Namespace Files
 
 #Region " Interface Implementations "
 
+#Region " ISupportInitialize "
+
+        Public Sub BeginInit() Implements System.ComponentModel.ISupportInitialize.BeginInit
+
+        End Sub
+
+        Public Sub EndInit() Implements System.ComponentModel.ISupportInitialize.EndInit
+
+            If Not DesignMode Then
+                LoadSettings()  ' Load settings from the config file.
+            End If
+
+        End Sub
+
+#End Region
+
 #Region " IPersistsSettings "
 
         Public Property ConfigurationCategory() As String Implements IPersistsSettings.ConfigurationCategory
@@ -321,12 +337,12 @@ Namespace Files
 
             Try
                 With CategorizedSettings(m_configurationCategory)
-                    m_name = .Item("Name").Value
-                    m_saveOnClose = .Item("SaveOnClose").GetTypedValue(m_saveOnClose)
-                    m_alignOnSave = .Item("AlignOnSave").GetTypedValue(m_alignOnSave)
-                    m_autoSaveInterval = .Item("AutoSaveInterval").GetTypedValue(m_autoSaveInterval)
-                    m_autoAlignInterval = .Item("AutoAlignInterval").GetTypedValue(m_autoAlignInterval)
-                    m_minimumRecordCount = .Item("MinimumRecordCount").GetTypedValue(m_minimumRecordCount)
+                    Name = .Item("Name").Value
+                    SaveOnClose = .Item("SaveOnClose").GetTypedValue(m_saveOnClose)
+                    AlignOnSave = .Item("AlignOnSave").GetTypedValue(m_alignOnSave)
+                    AutoSaveInterval = .Item("AutoSaveInterval").GetTypedValue(m_autoSaveInterval)
+                    AutoAlignInterval = .Item("AutoAlignInterval").GetTypedValue(m_autoAlignInterval)
+                    MinimumRecordCount = .Item("MinimumRecordCount").GetTypedValue(m_minimumRecordCount)
                 End With
             Catch ex As Exception
                 ' We'll encounter exceptions if the settings are not present in the config file.
@@ -338,12 +354,30 @@ Namespace Files
 
             Try
                 With CategorizedSettings(m_configurationCategory)
-                    .Item("Name", True).Value = m_name
-                    .Item("SaveOnClose", True).Value = m_saveOnClose.ToString()
-                    .Item("AlignOnSave", True).Value = m_alignOnSave.ToString()
-                    .Item("AutoSaveInterval", True).Value = m_autoSaveInterval.ToString()
-                    .Item("AutoAlignInterval", True).Value = m_autoAlignInterval.ToString()
-                    .Item("MinimumRecordCount", True).Value = m_minimumRecordCount.ToString()
+                    With .Item("Name", True)
+                        .Value = m_name
+                        .Description = "Name of the file including its path."
+                    End With
+                    With .Item("SaveOnClose", True)
+                        .Value = m_saveOnClose.ToString()
+                        .Description = "True if file is to be saved when closed; otherwise False."
+                    End With
+                    With .Item("AlignOnSave", True)
+                        .Value = m_alignOnSave.ToString()
+                        .Description = "True if alignment of file data is to be performed before saving; otherwise False."
+                    End With
+                    With .Item("AutoSaveInterval", True)
+                        .Value = m_autoSaveInterval.ToString()
+                        .Description = "Interval in milliseconds at which the file is to be saved automatically. A value of -1 indicates that automatic saving is disabled."
+                    End With
+                    With .Item("AutoAlignInterval", True)
+                        .Value = m_autoAlignInterval.ToString()
+                        .Description = "Interval in milliseconds at which the file data is to be aligned automatically. A value of -1 indicates that automatic alignment is disabled."
+                    End With
+                    With .Item("MinimumRecordCount", True)
+                        .Value = m_minimumRecordCount.ToString()
+                        .Description = "Minimum number of records that the file must have."
+                    End With
                 End With
                 Tva.Configuration.Common.SaveSettings()
             Catch ex As Exception

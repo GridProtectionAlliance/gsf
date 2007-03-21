@@ -36,8 +36,6 @@ Namespace Files
             m_historicDataQueue = Tva.Collections.ProcessQueue(Of StandardPointData).CreateRealTimeQueue(AddressOf WriteToHistoricArchiveFile)
             m_outOfSequenceDataQueue = Tva.Collections.ProcessQueue(Of StandardPointData).CreateRealTimeQueue(AddressOf InsertInCurrentArchiveFile)
 
-            LoadSettings()  ' Load settings from the config file.
-
         End Sub
 
         'Component overrides dispose to clean up the component list.

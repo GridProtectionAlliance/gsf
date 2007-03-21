@@ -12,7 +12,7 @@ Namespace Files
 
     <ToolboxBitmap(GetType(ArchiveFile))> _
     Public Class ArchiveFile
-        Implements IPersistsSettings
+        Implements ISupportInitialize, IPersistsSettings
 
 #Region " Member Declaration "
 
@@ -468,6 +468,22 @@ Namespace Files
 
 #Region " Interface Implementations "
 
+#Region " ISupportInitialize "
+
+        Public Sub BeginInit() Implements System.ComponentModel.ISupportInitialize.BeginInit
+
+        End Sub
+
+        Public Sub EndInit() Implements System.ComponentModel.ISupportInitialize.EndInit
+
+            If Not DesignMode Then
+                LoadSettings()  ' Load settings from the config file.
+            End If
+
+        End Sub
+
+#End Region
+
 #Region " IPersistsSettings "
 
         Public Property ConfigurationCategory() As String Implements IPersistsSettings.ConfigurationCategory
@@ -487,16 +503,16 @@ Namespace Files
 
             Try
                 With CategorizedSettings(m_configurationCategory)
-                    m_name = .Item("Name").Value
-                    m_size = .Item("Size").GetTypedValue(m_size)
-                    m_blockSize = .Item("BlockSize").GetTypedValue(m_blockSize)
-                    m_saveOnClose = .Item("SaveOnClose").GetTypedValue(m_saveOnClose)
-                    m_rolloverOnFull = .Item("RolloverOnFull").GetTypedValue(m_rolloverOnFull)
-                    m_rolloverPreparationThreshold = .Item("RolloverPreparationThreshold").GetTypedValue(m_rolloverPreparationThreshold)
-                    m_offloadPath = .Item("OffloadPath").Value
-                    m_offloadCount = .Item("OffloadCount").GetTypedValue(m_offloadCount)
-                    m_offloadThreshold = .Item("OffloadThreshold").GetTypedValue(m_offloadThreshold)
-                    m_compressData = .Item("CompressData").GetTypedValue(m_compressData)
+                    Name = .Item("Name").Value
+                    Size = .Item("Size").GetTypedValue(m_size)
+                    BlockSize = .Item("BlockSize").GetTypedValue(m_blockSize)
+                    SaveOnClose = .Item("SaveOnClose").GetTypedValue(m_saveOnClose)
+                    RolloverOnFull = .Item("RolloverOnFull").GetTypedValue(m_rolloverOnFull)
+                    RolloverPreparationThreshold = .Item("RolloverPreparationThreshold").GetTypedValue(m_rolloverPreparationThreshold)
+                    OffloadPath = .Item("OffloadPath").Value
+                    OffloadCount = .Item("OffloadCount").GetTypedValue(m_offloadCount)
+                    OffloadThreshold = .Item("OffloadThreshold").GetTypedValue(m_offloadThreshold)
+                    CompressData = .Item("CompressData").GetTypedValue(m_compressData)
                 End With
             Catch ex As Exception
                 ' We'll encounter exceptions if the settings are not present in the config file.
@@ -508,16 +524,46 @@ Namespace Files
 
             Try
                 With CategorizedSettings(m_configurationCategory)
-                    .Item("Name", True).Value = m_name
-                    .Item("Size", True).Value = m_size.ToString()
-                    .Item("BlockSize", True).Value = m_blockSize.ToString()
-                    .Item("SaveOnClose", True).Value = m_saveOnClose.ToString()
-                    .Item("RolloverOnFull", True).Value = m_rolloverOnFull.ToString()
-                    .Item("RolloverPreparationThreshold", True).Value = m_rolloverPreparationThreshold.ToString()
-                    .Item("OffloadPath", True).Value = m_offloadPath
-                    .Item("OffloadCount", True).Value = m_offloadCount.ToString()
-                    .Item("OffloadThreshold", True).Value = m_offloadThreshold.ToString()
-                    .Item("CompressData", True).Value = m_compressData.ToString()
+                    With .Item("Name", True)
+                        .Value = m_name
+                        .Description = "Name of the file including its path."
+                    End With
+                    With .Item("Size", True)
+                        .Value = m_size.ToString()
+                        .Description = "Initial size of the file in MB."
+                    End With
+                    With .Item("BlockSize", True)
+                        .Value = m_blockSize.ToString()
+                        .Description = "Size of the data blocks in the file."
+                    End With
+                    With .Item("SaveOnClose", True)
+                        .Value = m_saveOnClose.ToString()
+                        .Description = "True if file is to be saved when closed; otherwise False."
+                    End With
+                    With .Item("RolloverOnFull", True)
+                        .Value = m_rolloverOnFull.ToString()
+                        .Description = "True if rollover of the file is to be performed when it is full; otherwise False."
+                    End With
+                    With .Item("RolloverPreparationThreshold", True)
+                        .Value = m_rolloverPreparationThreshold.ToString()
+                        .Description = "Percentage file full when the rollover preparation should begin."
+                    End With
+                    With .Item("OffloadPath", True)
+                        .Value = m_offloadPath
+                        .Description = "Path to the location where historic files are to be moved when disk start getting full."
+                    End With
+                    With .Item("OffloadCount", True)
+                        .Value = m_offloadCount.ToString()
+                        .Description = "Number of files that are to be moved to the offload location when the disk starts getting full."
+                    End With
+                    With .Item("OffloadThreshold", True)
+                        .Value = m_offloadThreshold.ToString()
+                        .Description = "Percentage disk full when the historic files should be moved to the offload location."
+                    End With
+                    With .Item("CompressData", True)
+                        .Value = m_compressData.ToString()
+                        .Description = "True if compression is to be performed on the data; otherwise False."
+                    End With
                 End With
                 Tva.Configuration.Common.SaveSettings()
             Catch ex As Exception
