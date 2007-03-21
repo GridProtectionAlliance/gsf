@@ -53,7 +53,7 @@ Public Class PointDefinition
 
 #Region " Member Declaration "
 
-    Private m_id As Integer
+    Private m_pointID As Integer
     Private m_description As String = ""
     Private m_unitID As Short
     Private m_securityFlags As PointDefinitionSecurityFlags
@@ -90,7 +90,7 @@ Public Class PointDefinition
     Public Sub New(ByVal index As Integer)
 
         MyBase.New()
-        m_id = index
+        m_pointID = index
         m_securityFlags = New PointDefinitionSecurityFlags(0)
         m_spares = CreateArray(Of Byte)(64)
         m_generalFlags = New PointDefinitionGeneralFlags(0)
@@ -104,21 +104,21 @@ Public Class PointDefinition
 
     End Sub
 
-    Public Sub New(ByVal id As Integer, ByVal binaryImage As Byte())
+    Public Sub New(ByVal pointID As Integer, ByVal binaryImage As Byte())
 
-        MyClass.New(id, binaryImage, 0)
-
-    End Sub
-
-    Public Sub New(ByVal id As Integer, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
-
-        MyClass.New(id, binaryImage, startIndex, Nothing)
+        MyClass.New(pointID, binaryImage, 0)
 
     End Sub
 
-    Public Sub New(ByVal id As Integer, ByVal binaryImage As Byte(), ByVal startIndex As Integer, ByVal encoding As Encoding)
+    Public Sub New(ByVal pointID As Integer, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
 
-        MyClass.New(id)
+        MyClass.New(pointID, binaryImage, startIndex, Nothing)
+
+    End Sub
+
+    Public Sub New(ByVal pointID As Integer, ByVal binaryImage As Byte(), ByVal startIndex As Integer, ByVal encoding As Encoding)
+
+        MyClass.New(pointID)
 
         If encoding IsNot Nothing Then m_textEncoding = encoding
 
@@ -164,9 +164,9 @@ Public Class PointDefinition
 
     End Sub
 
-    Public Shared Function Clone(ByVal pointDefinition As PointDefinition, ByVal newIndex As Integer) As PointDefinition
+    Public Shared Function Clone(ByVal pointDefinition As PointDefinition, ByVal newPointID As Integer) As PointDefinition
 
-        Dim newPointDefinition As New PointDefinition(newIndex)
+        Dim newPointDefinition As New PointDefinition(newPointID)
 
         With newPointDefinition
             .Description = pointDefinition.Description
@@ -200,9 +200,9 @@ Public Class PointDefinition
 
     End Function
 
-    Public ReadOnly Property ID() As Integer
+    Public ReadOnly Property PointID() As Integer
         Get
-            Return m_id
+            Return m_pointID
         End Get
     End Property
 
@@ -443,7 +443,7 @@ Public Class PointDefinition
 
         Dim other As PointDefinition = TryCast(obj, PointDefinition)
         If other IsNot Nothing Then
-            Return m_id.CompareTo(other.ID)
+            Return m_pointID.CompareTo(other.PointID)
         Else
             Throw New ArgumentException(String.Format("Cannot compare {0} with {1}.", Me.GetType().Name, other.GetType().Name))
         End If

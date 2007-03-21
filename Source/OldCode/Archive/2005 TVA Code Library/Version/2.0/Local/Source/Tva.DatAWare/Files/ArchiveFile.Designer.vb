@@ -32,6 +32,9 @@ Namespace Files
             m_historicFileListThread = New System.Threading.Thread(AddressOf BuildHistoricFileList)
             m_rolloverPreparationThread = New System.Threading.Thread(AddressOf PrepareForRollover)
 
+            m_historicDataQueue = Tva.Collections.ProcessQueue(Of StandardPointData).CreateRealTimeQueue(AddressOf WriteToHistoricArchiveFile)
+            m_outOfSequenceDataQueue = Tva.Collections.ProcessQueue(Of StandardPointData).CreateRealTimeQueue(AddressOf InsertInCurrentArchiveFile)
+
         End Sub
 
         'Component overrides dispose to clean up the component list.

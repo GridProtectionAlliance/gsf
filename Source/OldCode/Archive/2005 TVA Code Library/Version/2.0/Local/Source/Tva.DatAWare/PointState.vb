@@ -19,7 +19,7 @@ Public Class PointState
 
 #Region " Member Declaration "
 
-    Private m_id As Integer
+    Private m_pointID As Integer
     Private m_lastArchivedValue As ExtendedPointData
     Private m_previousValue As ExtendedPointData
     Private m_currentValue As ExtendedPointData
@@ -35,25 +35,25 @@ Public Class PointState
 
     Public Const Size As Integer = 72
 
-    Public Sub New(ByVal id As Integer)
+    Public Sub New(ByVal pointID As Integer)
 
         MyBase.New()
-        m_id = id
+        m_pointID = pointID
         m_lastArchivedValue = New ExtendedPointData()
         m_previousValue = New ExtendedPointData()
         m_currentValue = New ExtendedPointData()
 
     End Sub
 
-    Public Sub New(ByVal id As Integer, ByVal binaryImage As Byte())
+    Public Sub New(ByVal pointID As Integer, ByVal binaryImage As Byte())
 
-        MyClass.New(id, binaryImage, 0)
+        MyClass.New(pointID, binaryImage, 0)
 
     End Sub
 
-    Public Sub New(ByVal id As Integer, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+    Public Sub New(ByVal pointID As Integer, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
 
-        MyClass.New(id)
+        MyClass.New(pointID)
 
         If binaryImage IsNot Nothing Then
             If binaryImage.Length - startIndex >= Size Then
@@ -72,6 +72,12 @@ Public Class PointState
         End If
 
     End Sub
+
+    Public ReadOnly Property PointID() As Integer
+        Get
+            Return m_pointID
+        End Get
+    End Property
 
     Public Property LastArchivedValue() As ExtendedPointData
         Get

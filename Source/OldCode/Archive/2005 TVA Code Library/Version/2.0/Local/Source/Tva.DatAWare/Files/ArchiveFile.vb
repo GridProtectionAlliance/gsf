@@ -4,6 +4,7 @@ Imports System.IO
 Imports System.Drawing
 Imports System.Threading
 Imports System.ComponentModel
+Imports Tva.Collections
 Imports Tva.IO.FilePath
 
 Namespace Files
@@ -31,6 +32,9 @@ Namespace Files
         Private m_historicFileListThread As Thread
         Private m_rolloverPreparationDone As Boolean
         Private m_rolloverPreparationThread As Thread
+
+        Private WithEvents m_historicDataQueue As ProcessQueue(Of StandardPointData)
+        Private WithEvents m_outOfSequenceDataQueue As ProcessQueue(Of StandardPointData)
 
 #End Region
 
@@ -238,6 +242,9 @@ Namespace Files
                         m_fat.Persist()
                     End If
 
+                    m_historicDataQueue.Start()
+                    m_outOfSequenceDataQueue.Start()
+
                     ' Make sure that the necessary files are available and ready for use.
                     If Not m_stateFile.IsOpen Then m_stateFile.Open()
                     If Not m_intercomFile.IsOpen Then m_intercomFile.Open()
@@ -281,6 +288,8 @@ Namespace Files
                 m_historicFileList.Clear()
                 m_historicFileListThread.Abort()
                 m_rolloverPreparationThread.Abort()
+                m_historicDataQueue.Stop()
+                m_outOfSequenceDataQueue.Stop()
                 If releaseAllFileLocks AndAlso m_stateFile.IsOpen Then
                     For i As Integer = 0 To m_stateFile.Records.Count - 1
                         ' We'll release all the data blocks that were being used by the file.
@@ -316,7 +325,7 @@ Namespace Files
                 Dim historyFile As String = HistoryArchiveFileName()
 
                 ' Signal the server that we're are performing rollover so it must let go of this file.
-                m_intercomFile.Records(0).FileWrap = True
+                m_intercomFile.Records(0).RolloverInProgress = True
                 m_intercomFile.Save()
                 Close()
 
@@ -327,7 +336,7 @@ Namespace Files
 
                 ' We're now done with the rollover process, so we must inform the server of this.
                 Open()
-                m_intercomFile.Records(0).FileWrap = False
+                m_intercomFile.Records(0).RolloverInProgress = False
                 m_intercomFile.Save()
 
                 m_rolloverPreparationDone = False
@@ -373,7 +382,7 @@ Namespace Files
 
                 If pointData.TimeTag.CompareTo(m_fat.FileStartTime) >= 0 Then
                     ' The data to be written has a timetag that is the same as newer than the file's start time.
-                    Dim pointState As PointState = m_stateFile.Read(pointData.Definition.ID)
+                    Dim pointState As PointState = m_stateFile.Read(pointData.Definition.PointID)
                     If pointData.TimeTag.CompareTo(pointState.LastArchivedValue.TimeTag) >= 0 Then
                         If ToBeArchived(pointData, pointState) Then
                             ' Archive the data
@@ -382,7 +391,7 @@ Namespace Files
                                 ' We either don't have a active data block where we can archive the point data or we have a 
                                 ' active data block but it is full, so we have to request a new data block from the FAT.
                                 If pointState.ActiveDataBlock IsNot Nothing Then pointState.ActiveDataBlock.Dispose()
-                                pointState.ActiveDataBlock = m_fat.RequestDataBlock(pointData.Definition.ID, pointData.TimeTag)
+                                pointState.ActiveDataBlock = m_fat.RequestDataBlock(pointData.Definition.PointID, pointData.TimeTag)
 
                                 If m_fat.DataBlocksAvailable < m_fat.DataBlockCount * (1 - (m_rolloverPreparationThreshold / 100)) AndAlso _
                                         Not m_rolloverPreparationDone AndAlso Not m_rolloverPreparationThread.IsAlive Then
@@ -411,16 +420,40 @@ Namespace Files
                         End If
                     Else
                         ' Insert the data into the current file.
-                        InsertInCurrentArchiveFile()
+                        m_outOfSequenceDataQueue.Add(pointData)
                     End If
                 Else
                     ' The data to be written has a timetag that is older than the file's start time, so the data
                     ' does not belong in this file but in a historic archive file instead.
-                    WriteToHistoricArchiveFile()    ' <- This is just a stub for now.
+                    m_historicDataQueue.Add(pointData)
                 End If
             Else
                 Throw New InvalidOperationException(String.Format("{0} ""{1}"" is not open.", Me.GetType().Name, m_name))
             End If
+
+        End Sub
+
+        Public Sub Write(ByVal pointData() As StandardPointData)
+
+        End Sub
+
+        Public Sub HistoricWrite(ByVal pointData As StandardPointData)
+
+        End Sub
+
+        Public Sub HistoricWrite(ByVal pointData() As StandardPointData)
+
+            Dim sortedPointData As New Dictionary(Of Integer, List(Of StandardPointData))()
+            For i As Integer = 0 To pointData.Length - 1
+                If pointData(i).Definition IsNot Nothing Then
+                    ' Only process point data that has an associated definition.
+                    If Not sortedPointData.ContainsKey(pointData(i).Definition.PointID) Then
+                        sortedPointData.Add(pointData(i).Definition.PointID, New List(Of StandardPointData)())
+                    End If
+
+                    sortedPointData(pointData(i).Definition.PointID).Add(pointData(i))
+                End If
+            Next
 
         End Sub
 
@@ -455,20 +488,26 @@ Namespace Files
         Private Sub BuildHistoricFileList()
 
             Dim historicFile As New ArchiveFile()
+            Dim historicFileList As New List(Of ArchiveFileInfo)()
 
             historicFile.SaveOnClose = False
             historicFile.StateFile = m_stateFile
             historicFile.IntercomFile = m_intercomFile
 
             For Each historicFileName As String In Directory.GetFiles(JustPath(m_name), HistoricFilesSearchPattern)
-                m_historicFileList.Add(GetFileInfo(historicFileName, historicFile))
+                historicFileList.Add(GetFileInfo(historicFileName, historicFile))
             Next
 
             If Not String.IsNullOrEmpty(m_offloadPath) Then
                 For Each historicFileName As String In Directory.GetFiles(m_offloadPath, HistoricFilesSearchPattern)
-                    m_historicFileList.Add(GetFileInfo(historicFileName, historicFile))
+                    historicFileList.Add(GetFileInfo(historicFileName, historicFile))
                 Next
             End If
+
+            SyncLock m_historicDataQueue
+                m_historicFileList.Clear()
+                m_historicFileList.AddRange(historicFileList)
+            End SyncLock
 
         End Sub
 
@@ -532,14 +571,6 @@ Namespace Files
 
         End Sub
 
-        Public Sub WriteToHistoricArchiveFile()
-
-        End Sub
-
-        Public Sub InsertInCurrentArchiveFile()
-
-        End Sub
-
         Private Function GetFileInfo(ByVal fileName As String) As ArchiveFileInfo
 
             Dim fileInstance As New ArchiveFile()
@@ -585,6 +616,45 @@ Namespace Files
                 pointState.PreviousValue = pointState.CurrentValue  ' Promote old CurrentValue to PreviousValue.
                 pointState.CurrentValue = pointData.ToExtended()    ' Promote new value received to CurrentValue.
 
+                ' Update the environment data that is periodically written to the Intercom File.
+                m_intercomFile.Records(0).DataBlocksUsed = m_fat.DataBlocksUsed
+                m_intercomFile.Records(0).LastestCurrentValueTimeTag = pointState.CurrentValue.TimeTag
+                m_intercomFile.Records(0).latestCurrentValuePointID = pointState.CurrentValue.Definition.PointID
+
+                If pointData.Quality = 31 Then
+                    ' We have to check the quality of this data since the sender didn't provide it. Here we're 
+                    ' checking if the Quality is 31 instead of -1 because the quality value is stored in the first
+                    ' 5 bits (QualityMask = 31) of Flags in the point data. Initially when the Quality is set to -1,
+                    ' all the bits Flags (a 32-bit integer) are set to 1. And therefore, when we get the Quality, 
+                    ' which is a masked value of Flags, we get 31 and not -1.
+                    Select Case pointData.Definition.GeneralFlags.PointType
+                        Case PointType.Analog
+                            Select Case pointData.Value
+                                Case Is >= pointData.Definition.AnalogFields.HighRange
+                                    pointData.Quality = Quality.UnreasonableHigh
+                                Case Is >= pointData.Definition.AnalogFields.HighAlarm
+                                    pointData.Quality = Quality.ValueAboveHiHiAlarm
+                                Case Is >= pointData.Definition.AnalogFields.HighWarning
+                                    pointData.Quality = Quality.ValueAboveHiAlarm
+                                Case Is >= pointData.Definition.AnalogFields.LowRange
+                                    pointData.Quality = Quality.UnreasonableLow
+                                Case Is >= pointData.Definition.AnalogFields.LowAlarm
+                                    pointData.Quality = Quality.ValueBelowLoLoAlarm
+                                Case Is >= pointData.Definition.AnalogFields.LowWarning
+                                    pointData.Quality = Quality.ValueBelowLoAlarm
+                                Case Else
+                                    pointData.Quality = Quality.Good
+                            End Select
+                        Case PointType.Digital
+                            Select Case pointData.Value
+                                Case pointData.Definition.DigitalFields.AlarmState
+                                    pointData.Quality = Quality.LogicalAlarm
+                                Case Else
+                                    pointData.Quality = Quality.Good
+                            End Select
+                    End Select
+                End If
+
                 If m_compressData Then
                     If pointState.LastArchivedValue.IsNull Then
                         ' This is the first time data is received for the point.
@@ -595,7 +665,7 @@ Namespace Files
                         calculateSlopes = True
                     ElseIf pointState.CurrentValue.Quality <> pointState.LastArchivedValue.Quality OrElse _
                             pointState.CurrentValue.Quality <> pointState.PreviousValue.Quality OrElse _
-                             pointState.PreviousValue.TimeTag.Value - pointState.LastArchivedValue.TimeTag.Value > pointData.Definition.CompressionMaximumTime Then
+                            pointState.PreviousValue.TimeTag.Value - pointState.LastArchivedValue.TimeTag.Value > pointData.Definition.AnalogFields.CompressionLimit Then
                         result = True
                         calculateSlopes = True
                     Else
@@ -625,6 +695,18 @@ Namespace Files
 
         End Function
 
+#Region " Queue Delegates "
+
+        Public Sub WriteToHistoricArchiveFile(ByVal items() As StandardPointData)
+
+        End Sub
+
+        Public Sub InsertInCurrentArchiveFile(ByVal items() As StandardPointData)
+
+        End Sub
+
+#End Region
+
 #Region " Event Handlers "
 
 #Region " ArchiveFile "
@@ -637,55 +719,41 @@ Namespace Files
 
 #End Region
 
-#Region " CurrentLocationFileSystemWatcher "
+#Region " FileSystemWatcher "
 
-        Private Sub CurrentLocationFileSystemWatcher_Created(ByVal sender As Object, ByVal e As System.IO.FileSystemEventArgs) Handles CurrentLocationFileSystemWatcher.Created
+        Private Sub CurrentLocationFileSystemWatcher_Created(ByVal sender As Object, ByVal e As System.IO.FileSystemEventArgs) Handles CurrentLocationFileSystemWatcher.Created, OffloadLocationFileSystemWatcher.Created
 
             Dim historicFileInfo As ArchiveFileInfo = GetFileInfo(e.FullPath)
-            If Not m_historicFileList.Contains(historicFileInfo) Then m_historicFileList.Add(historicFileInfo)
+            SyncLock m_historicFileList
+                If Not m_historicFileList.Contains(historicFileInfo) Then m_historicFileList.Add(historicFileInfo)
+            End SyncLock
 
         End Sub
 
-        Private Sub CurrentLocationFileSystemWatcher_Deleted(ByVal sender As Object, ByVal e As System.IO.FileSystemEventArgs) Handles CurrentLocationFileSystemWatcher.Deleted
+        Private Sub CurrentLocationFileSystemWatcher_Deleted(ByVal sender As Object, ByVal e As System.IO.FileSystemEventArgs) Handles CurrentLocationFileSystemWatcher.Deleted, OffloadLocationFileSystemWatcher.Deleted
 
             Dim historicFileInfo As ArchiveFileInfo = GetFileInfo(e.FullPath)
-            If m_historicFileList.Contains(historicFileInfo) Then m_historicFileList.Remove(historicFileInfo)
+            SyncLock m_historicFileList
+                If m_historicFileList.Contains(historicFileInfo) Then m_historicFileList.Remove(historicFileInfo)
+            End SyncLock
 
         End Sub
 
-        Private Sub CurrentLocationFileSystemWatcher_Renamed(ByVal sender As Object, ByVal e As System.IO.RenamedEventArgs) Handles CurrentLocationFileSystemWatcher.Renamed
+        Private Sub CurrentLocationFileSystemWatcher_Renamed(ByVal sender As Object, ByVal e As System.IO.RenamedEventArgs) Handles CurrentLocationFileSystemWatcher.Renamed, OffloadLocationFileSystemWatcher.Renamed
 
             If String.Compare(JustFileExtension(e.OldFullPath), Extension, True) = 0 Then
                 Dim oldFileInfo As ArchiveFileInfo = GetFileInfo(e.OldFullPath)
-                If m_historicFileList.Contains(oldFileInfo) Then m_historicFileList.Remove(oldFileInfo)
+                SyncLock m_historicFileList
+                    If m_historicFileList.Contains(oldFileInfo) Then m_historicFileList.Remove(oldFileInfo)
+                End SyncLock
             End If
 
             If String.Compare(JustFileExtension(e.FullPath), Extension, True) = 0 Then
                 Dim newFileInfo As ArchiveFileInfo = GetFileInfo(e.FullPath)
-                If Not m_historicFileList.Contains(newFileInfo) Then m_historicFileList.Add(newFileInfo)
+                SyncLock m_historicFileList
+                    If Not m_historicFileList.Contains(newFileInfo) Then m_historicFileList.Add(newFileInfo)
+                End SyncLock
             End If
-
-        End Sub
-
-#End Region
-
-#Region " OffloadLocationFileSystemWatcher "
-
-        Private Sub OffloadLocationFileSystemWatcher_Created(ByVal sender As Object, ByVal e As System.IO.FileSystemEventArgs) Handles OffloadLocationFileSystemWatcher.Created
-
-            CurrentLocationFileSystemWatcher_Created(sender, e)
-
-        End Sub
-
-        Private Sub OffloadLocationFileSystemWatcher_Deleted(ByVal sender As Object, ByVal e As System.IO.FileSystemEventArgs) Handles OffloadLocationFileSystemWatcher.Deleted
-
-            CurrentLocationFileSystemWatcher_Deleted(sender, e)
-
-        End Sub
-
-        Private Sub OffloadLocationFileSystemWatcher_Renamed(ByVal sender As Object, ByVal e As System.IO.RenamedEventArgs) Handles OffloadLocationFileSystemWatcher.Renamed
-
-            CurrentLocationFileSystemWatcher_Renamed(sender, e)
 
         End Sub
 
@@ -695,6 +763,9 @@ Namespace Files
 
 #Region " Classes "
 
+        ''' <summary>
+        ''' Represents information about an Archive File.
+        ''' </summary>
         Public Class ArchiveFileInfo
 
             Public FileName As String

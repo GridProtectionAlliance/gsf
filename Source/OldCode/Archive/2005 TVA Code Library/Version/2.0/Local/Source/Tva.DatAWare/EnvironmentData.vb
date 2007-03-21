@@ -6,18 +6,18 @@ Public Class EnvironmentData
     ' *******************************************************************************
     ' * # Of Bytes  Byte Index  Data Type   Description                             *
     ' * ----------  ----------  ----------  ----------------------------------------*
-    ' * 4           0-3         Int32       m_blockMap                              *
-    ' * 4           4-7         Boolean     m_fileWrap                              *
-    ' * 8           8-15        Double      m_lastCVTTimeTag                        *
-    ' * 4           16-19       Int32       m_lastCVTIndex                          *
-    ' * 160         20-179      Double(20)  m_sourceIDs                             *
+    ' * 4           0-3         Int32       Number of used DataBlocks               *
+    ' * 4           4-7         Boolean     Indicated if rollover is in progress    *
+    ' * 8           8-15        Double      TimeTag of the latest current value     *
+    ' * 4           16-19       Int32       Point ID of the latest current value    *
+    ' * 160         20-179      Double(20)  ???                                     *
     ' *******************************************************************************
 
     Private m_id As Integer
-    Private m_blockMap As Integer
-    Private m_fileWrap As Boolean
-    Private m_lastCVTTimeTag As TimeTag
-    Private m_lastCVTIndex As Integer
+    Private m_dataBlocksUsed As Integer
+    Private m_rolloverInProgress As Boolean
+    Private m_latestCurrentValueTimeTag As TimeTag
+    Private m_latestCurrentValuePointID As Integer
     Private m_sourceIDs As List(Of TimeTag)
 
     Public Const Size As Integer = 180
@@ -26,7 +26,7 @@ Public Class EnvironmentData
 
         MyBase.New()
         m_id = id
-        m_lastCVTTimeTag = TimeTag.MinValue
+        m_latestCurrentValueTimeTag = TimeTag.MinValue
         m_sourceIDs = New List(Of TimeTag)(CreateArray(Of TimeTag)(20, TimeTag.MinValue))
 
     End Sub
@@ -43,10 +43,10 @@ Public Class EnvironmentData
 
         If binaryImage IsNot Nothing Then
             If binaryImage.Length - startIndex >= Size Then
-                m_blockMap = BitConverter.ToInt32(binaryImage, 0)
-                m_fileWrap = BitConverter.ToBoolean(binaryImage, 4)
-                m_lastCVTTimeTag = New TimeTag(BitConverter.ToDouble(binaryImage, 8))
-                m_lastCVTIndex = BitConverter.ToInt32(binaryImage, 16)
+                m_dataBlocksUsed = BitConverter.ToInt32(binaryImage, 0)
+                m_rolloverInProgress = BitConverter.ToBoolean(binaryImage, 4)
+                m_latestCurrentValueTimeTag = New TimeTag(BitConverter.ToDouble(binaryImage, 8))
+                m_latestCurrentValuePointID = BitConverter.ToInt32(binaryImage, 16)
                 For i As Integer = 0 To m_sourceIDs.Count - 1
                     m_sourceIDs(i) = New TimeTag(BitConverter.ToDouble(binaryImage, (20 + (i * 8))))
                 Next
@@ -59,39 +59,39 @@ Public Class EnvironmentData
 
     End Sub
 
-    Public Property BlockMap() As Integer
+    Public Property DataBlocksUsed() As Integer
         Get
-            Return m_blockMap
+            Return m_dataBlocksUsed
         End Get
         Set(ByVal value As Integer)
-            m_blockMap = value
+            m_dataBlocksUsed = value
         End Set
     End Property
 
-    Public Property FileWrap() As Boolean
+    Public Property RolloverInProgress() As Boolean
         Get
-            Return m_fileWrap
+            Return m_rolloverInProgress
         End Get
         Set(ByVal value As Boolean)
-            m_fileWrap = value
+            m_rolloverInProgress = value
         End Set
     End Property
 
-    Public Property LastCVTTimeTag() As TimeTag
+    Public Property LastestCurrentValueTimeTag() As TimeTag
         Get
-            Return m_lastCVTTimeTag
+            Return m_latestCurrentValueTimeTag
         End Get
         Set(ByVal value As TimeTag)
-            m_lastCVTTimeTag = value
+            m_latestCurrentValueTimeTag = value
         End Set
     End Property
 
-    Public Property LastCVTIndex() As Integer
+    Public Property latestCurrentValuePointID() As Integer
         Get
-            Return m_lastCVTIndex
+            Return m_latestCurrentValuePointID
         End Get
         Set(ByVal value As Integer)
-            m_lastCVTIndex = value
+            m_latestCurrentValuePointID = value
         End Set
     End Property
 
@@ -105,10 +105,10 @@ Public Class EnvironmentData
         Get
             Dim image As Byte() = CreateArray(Of Byte)(Size)
 
-            Array.Copy(BitConverter.GetBytes(m_blockMap), 0, image, 0, 4)
-            Array.Copy(BitConverter.GetBytes(Convert.ToInt32(m_fileWrap)), 0, image, 4, 4)
-            Array.Copy(BitConverter.GetBytes(m_lastCVTTimeTag.Value), 0, image, 8, 8)
-            Array.Copy(BitConverter.GetBytes(m_lastCVTIndex), 0, image, 16, 4)
+            Array.Copy(BitConverter.GetBytes(m_dataBlocksUsed), 0, image, 0, 4)
+            Array.Copy(BitConverter.GetBytes(Convert.ToInt32(m_rolloverInProgress)), 0, image, 4, 4)
+            Array.Copy(BitConverter.GetBytes(m_latestCurrentValueTimeTag.Value), 0, image, 8, 8)
+            Array.Copy(BitConverter.GetBytes(m_latestCurrentValuePointID), 0, image, 16, 4)
             For i As Integer = 0 To m_sourceIDs.Count - 1
                 Array.Copy(BitConverter.GetBytes(m_sourceIDs(i).Value), 0, image, (20 + (i * 8)), 8)
             Next
