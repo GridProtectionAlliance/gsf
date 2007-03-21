@@ -487,20 +487,15 @@ Namespace Files
 
         Private Sub BuildHistoricFileList()
 
-            Dim historicFile As New ArchiveFile()
             Dim historicFileList As New List(Of ArchiveFileInfo)()
 
-            historicFile.SaveOnClose = False
-            historicFile.StateFile = m_stateFile
-            historicFile.IntercomFile = m_intercomFile
-
             For Each historicFileName As String In Directory.GetFiles(JustPath(m_name), HistoricFilesSearchPattern)
-                historicFileList.Add(GetFileInfo(historicFileName, historicFile))
+                historicFileList.Add(GetFileInfo(historicFileName))
             Next
 
             If Not String.IsNullOrEmpty(m_offloadPath) Then
                 For Each historicFileName As String In Directory.GetFiles(m_offloadPath, HistoricFilesSearchPattern)
-                    historicFileList.Add(GetFileInfo(historicFileName, historicFile))
+                    historicFileList.Add(GetFileInfo(historicFileName))
                 Next
             End If
 
@@ -573,29 +568,15 @@ Namespace Files
 
         Private Function GetFileInfo(ByVal fileName As String) As ArchiveFileInfo
 
-            Dim fileInstance As New ArchiveFile()
-            fileInstance.SaveOnClose = False
-            fileInstance.StateFile = m_stateFile
-            fileInstance.IntercomFile = m_intercomFile
-
-            Return GetFileInfo(fileName, fileInstance)
-
-        End Function
-
-        Private Function GetFileInfo(ByVal fileName As String, ByVal fileInstance As ArchiveFile) As ArchiveFileInfo
+            Dim datesString As String = NoFileExtension(fileName).Substring((NoFileExtension(m_name) & "_").Length)
+            Dim fileStartEndDates As String() = datesString.Split(New String() {"_to_"}, StringSplitOptions.None)
 
             Dim fileInfo As New ArchiveFileInfo()
-
-            Try
-                fileInstance.Name = fileName
-                fileInstance.Open(False)
-                fileInfo.FileName = fileInstance.Name
-                fileInfo.StartTimeTag = fileInstance.FileAllocationTable.FileStartTime
-                fileInfo.EndTimeTag = fileInstance.FileAllocationTable.FileEndTime
-                fileInstance.Close(False)
-            Catch ex As Exception
-                ' We'll ignore any exception we might encounter here if the file is malformed or something.
-            End Try
+            fileInfo.FileName = fileName
+            If fileStartEndDates.Length = 2 Then
+                fileInfo.StartTimeTag = New TimeTag(Convert.ToDateTime(fileStartEndDates(0).Replace("!"c, ":"c)))
+                fileInfo.EndTimeTag = New TimeTag(Convert.ToDateTime(fileStartEndDates(1).Replace("!"c, ":"c)))
+            End If
 
             Return fileInfo
 
@@ -778,9 +759,9 @@ Namespace Files
 
                 Dim other As ArchiveFileInfo = TryCast(obj, ArchiveFileInfo)
                 If other IsNot Nothing Then
-                    Return FileName.Equals(other.FileName) And _
-                        StartTimeTag.Equals(other.StartTimeTag) And _
-                        EndTimeTag.Equals(other.EndTimeTag)
+                    Return StartTimeTag.Equals(other.StartTimeTag) And EndTimeTag.Equals(other.EndTimeTag) And _
+                        String.Compare(JustPath(FileName), JustPath(other.FileName), True) = 0 And _
+                        String.Compare(JustFileName(FileName), JustFileName(other.FileName), True) = 0
                 End If
 
             End Function
