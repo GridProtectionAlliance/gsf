@@ -263,8 +263,8 @@ Namespace BpaPdcStream
 
         Protected Overrides Sub ParseBodyImage(ByVal state As IChannelParsingState, ByVal binaryImage() As Byte, ByVal startIndex As Integer)
 
-            ' We override normal frame body image parsing because some cells in PDCexchange format
-            ' can contain several PMU's within a "PDC Block" - when we encounter these we must
+            ' We override normal frame body image parsing because any cells in PDCxchng format
+            ' will contain several PMU's within a "PDC Block" - when we encounter these we must
             ' advance the cell index by the number of PMU's parsed instead of one at a time
             With DirectCast(state, DataFrameParsingState)
                 Dim index As Int32

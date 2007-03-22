@@ -96,7 +96,7 @@ Namespace BpaPdcStream
 
         End Sub
 
-        ' This overload allows construction of PMU's that exist within a PDCexchange block
+        ' This overload allows construction of PMU's that exist within a PDCxchng block
         Public Sub New(ByVal parent As IDataFrame, ByVal configurationCell As ConfigurationCell, ByVal isPdcBlockPmu As Boolean, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
             MyBase.New(parent, True, MaximumPhasorValues, MaximumAnalogValues, MaximumDigitalValues, _
@@ -362,7 +362,7 @@ Namespace BpaPdcStream
                 Dim buffer As Byte() = CreateArray(Of Byte)(HeaderLength)
 
                 ' Add PDCstream specific image - note that although this stream will
-                ' correctly parse a PDCexchange style stream - we will not produce one.
+                ' correctly parse a PDCxchng style stream - we will not produce one.
                 ' Only a fully formatted stream will ever be produced
                 buffer(0) = (m_flags And Not ChannelFlags.PDCExchangeFormat)
 
@@ -411,6 +411,7 @@ Namespace BpaPdcStream
                 phasors = 2
                 analogs = 0
                 digitals = 1
+                UsingPDCExchangeFormat = True
             Else
                 ' Parse number of digitals and phasors for normal PMU cells
                 digitals = binaryImage(startIndex + 2)
