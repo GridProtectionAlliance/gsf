@@ -32,9 +32,12 @@ Namespace BpaPdcStream
             ByVal createNewPhasorValueFunction As IDataCellParsingState.CreateNewValueFunctionSignature(Of IPhasorDefinition, IPhasorValue), _
             ByVal createNewFrequencyValueFunction As IDataCellParsingState.CreateNewValueFunctionSignature(Of IFrequencyDefinition, IFrequencyValue), _
             ByVal createNewAnalogValueFunction As IDataCellParsingState.CreateNewValueFunctionSignature(Of IAnalogDefinition, IAnalogValue), _
-            ByVal createNewDigitalValueFunction As IDataCellParsingState.CreateNewValueFunctionSignature(Of IDigitalDefinition, IDigitalValue))
+            ByVal createNewDigitalValueFunction As IDataCellParsingState.CreateNewValueFunctionSignature(Of IDigitalDefinition, IDigitalValue), _
+            ByVal index As Integer)
 
             MyBase.New(configurationCell, createNewPhasorValueFunction, createNewFrequencyValueFunction, createNewAnalogValueFunction, createNewDigitalValueFunction)
+
+            m_index = index
 
         End Sub
 
@@ -44,20 +47,11 @@ Namespace BpaPdcStream
             ByVal createNewFrequencyValueFunction As IDataCellParsingState.CreateNewValueFunctionSignature(Of IFrequencyDefinition, IFrequencyValue), _
             ByVal createNewAnalogValueFunction As IDataCellParsingState.CreateNewValueFunctionSignature(Of IAnalogDefinition, IAnalogValue), _
             ByVal createNewDigitalValueFunction As IDataCellParsingState.CreateNewValueFunctionSignature(Of IDigitalDefinition, IDigitalValue), _
-            ByVal isPdcBlockPmu As Boolean, _
-            ByVal index As Integer)
+            ByVal isPdcBlockPmu As Boolean)
 
             MyBase.New(configurationCell, createNewPhasorValueFunction, createNewFrequencyValueFunction, createNewAnalogValueFunction, createNewDigitalValueFunction)
 
             m_isPdcBlockPmu = isPdcBlockPmu
-            m_index = index
-
-            ' PDC Block PMU's contain exactly 2 phasors, 0 analogs and 1 digital
-            If isPdcBlockPmu Then
-                PhasorCount = 2
-                AnalogCount = 0
-                DigitalCount = 1
-            End If
 
         End Sub
 
@@ -88,13 +82,10 @@ Namespace BpaPdcStream
             End Set
         End Property
 
-        Public Property Index() As Integer
+        Public ReadOnly Property Index() As Integer
             Get
                 Return m_index
             End Get
-            Set(ByVal value As Integer)
-                m_index = value
-            End Set
         End Property
 
     End Class

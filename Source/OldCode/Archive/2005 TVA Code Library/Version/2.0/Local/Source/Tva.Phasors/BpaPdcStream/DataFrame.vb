@@ -266,16 +266,19 @@ Namespace BpaPdcStream
             ' We override normal frame body image parsing because some cells in PDCexchange format
             ' can contain several PMU's within a "PDC Block" - when we encounter these we must
             ' advance the cell index by the number of PMU's parsed instead of one at a time
-            With DirectCast(state, IChannelFrameParsingState(Of IDataCell))
+            With DirectCast(state, DataFrameParsingState)
                 Dim index As Int32
                 Dim cell As DataCell
                 Dim cellCount As Int32 = .CellCount
 
                 Do Until index >= cellCount
-                    cell = New DataCell(Me, state, index, binaryImage, startIndex)
+                    ' No need to call delegate since this is a custom override anyway
+                    cell = New DataCell(Me, DirectCast(state, DataFrameParsingState), index, binaryImage, startIndex)
 
                     If cell.UsingPDCExchangeFormat Then
                         ' Advance start index beyond PMU's added from PDC block
+                        startIndex += 4 ' PDC block header
+
                         For x As Integer = index To index + cell.PdcBlockPmuCount - 1
                             startIndex += Cells(x).BinaryLength
                         Next
