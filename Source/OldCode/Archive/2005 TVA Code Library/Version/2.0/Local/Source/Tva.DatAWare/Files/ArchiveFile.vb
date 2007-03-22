@@ -703,6 +703,8 @@ Namespace Files
         ''' <returns>True if the point data fails compression test and is to be archived; otherwise False.</returns>
         Private Function ToBeArchived(ByRef pointData As StandardPointData, ByVal pointState As PointState) As Boolean
 
+            ' TODO: Validate compression logic with Brian Fox
+
             Dim result As Boolean = False
             Dim calculateSlopes As Boolean = False
 

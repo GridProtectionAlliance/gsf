@@ -81,6 +81,7 @@ Public Class DataParser
 
     Public Sub [Stop]()
 
+        m_dataQueue.Flush()     ' Make sure all of the data is parsed.
         m_dataQueue.Stop()      ' Stop processing of queued data.
         m_packetTypes.Clear()   ' Clear the cached packet type available.
 
