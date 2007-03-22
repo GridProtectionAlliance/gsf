@@ -1,1 +1,105 @@
- 
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Font Name="Tahoma" Size="8.25" />
+  <Comment CommentText="Frame Phaser Relationships">
+    <Position X="8.012" Y="0.646" Height="0.357" Width="1.782" />
+  </Comment>
+  <Comment CommentText="BPA PDC Stream">
+    <Position X="6.906" Y="5.115" Height="0.302" Width="1.169" />
+  </Comment>
+  <Comment CommentText="Virginia Tech FNET">
+    <Position X="9.583" Y="5.104" Height="0.312" Width="1.179" />
+  </Comment>
+  <Comment CommentText="IEEE 1344">
+    <Position X="12.625" Y="5.094" Height="0.292" Width="0.887" />
+  </Comment>
+  <Comment CommentText="IEEE C37 118">
+    <Position X="15.271" Y="5.094" Height="0.263" Width="0.929" />
+  </Comment>
+  <Class Name="Tva.Phasors.FrameParserBase">
+    <Position X="3.25" Y="1.75" Width="2.5" />
+    <TypeIdentifier>
+      <FileName>FrameParserBase.vb</FileName>
+      <HashCode>AwAMItMkACAAQIggGCCAAAJhAoABAECAIEECAAkIBCg=</HashCode>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="System.IO.Stream">
+    <Position X="0.75" Y="0.5" Width="2" />
+    <TypeIdentifier />
+    <InheritanceLine Type="System.MarshalByRefObject" FixedToPoint="true">
+      <Path>
+        <Point X="1.625" Y="6.25" />
+        <Point X="1.625" Y="5.981" />
+      </Path>
+    </InheritanceLine>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="Tva.Phasors.BpaPdcStream.FrameParser">
+    <Position X="6.25" Y="6" Width="2.5" />
+    <TypeIdentifier>
+      <FileName>BpaPdcStream\FrameParser.vb</FileName>
+      <HashCode>ggAAAJAEAAAAYAgABACBAAAAAAAABAHAAkCCAAgBAQA=</HashCode>
+    </TypeIdentifier>
+    <InheritanceLine Type="Tva.Phasors.FrameParserBase" FixedFromPoint="true" FixedToPoint="true">
+      <Path>
+        <Point X="5.75" Y="4.75" />
+        <Point X="7.5" Y="4.75" />
+        <Point X="7.5" Y="6" />
+      </Path>
+    </InheritanceLine>
+  </Class>
+  <Class Name="Tva.Phasors.FNet.FrameParser">
+    <Position X="9" Y="6" Width="2.5" />
+    <TypeIdentifier>
+      <FileName>FNet\FrameParser.vb</FileName>
+      <HashCode>AgAAAJAAAAAAJAgAAQCAAAAAAAKAAACBAGACAAgAAQA=</HashCode>
+    </TypeIdentifier>
+    <InheritanceLine Type="Tva.Phasors.FrameParserBase" FixedFromPoint="true" FixedToPoint="true">
+      <Path>
+        <Point X="5.75" Y="4.75" />
+        <Point X="10.146" Y="4.75" />
+        <Point X="10.146" Y="6" />
+      </Path>
+    </InheritanceLine>
+  </Class>
+  <Class Name="Tva.Phasors.Ieee1344.FrameParser">
+    <Position X="11.75" Y="6" Width="2.5" />
+    <TypeIdentifier>
+      <FileName>Ieee1344\FrameParser.vb</FileName>
+      <HashCode>AAAAIBAAAAAAIAgAAACCAAAAAAAAAAHAAECCAAgAAQg=</HashCode>
+    </TypeIdentifier>
+    <InheritanceLine Type="Tva.Phasors.FrameParserBase" FixedFromPoint="true">
+      <Path>
+        <Point X="5.75" Y="4.75" />
+        <Point X="13" Y="4.75" />
+        <Point X="13" Y="6" />
+      </Path>
+    </InheritanceLine>
+  </Class>
+  <Class Name="Tva.Phasors.IeeeC37_118.FrameParser">
+    <Position X="14.5" Y="6" Width="2.5" />
+    <TypeIdentifier>
+      <FileName>IeeeC37_118\FrameParser.vb</FileName>
+      <HashCode>BAAAIBAEADAAKAgAACAAAAAAAAAIAADABECCAAgIAQg=</HashCode>
+    </TypeIdentifier>
+    <InheritanceLine Type="Tva.Phasors.FrameParserBase" FixedFromPoint="true">
+      <Path>
+        <Point X="5.75" Y="4.75" />
+        <Point X="15.75" Y="4.75" />
+        <Point X="15.75" Y="6" />
+      </Path>
+    </InheritanceLine>
+  </Class>
+  <Class Name="System.MarshalByRefObject">
+    <Position X="0.5" Y="6.25" Width="2.25" />
+    <TypeIdentifier />
+  </Class>
+  <Interface Name="Tva.Phasors.IFrameParser">
+    <Position X="11.75" Y="0.5" Width="3.25" />
+    <TypeIdentifier>
+      <FileName>IFrameParser.vb</FileName>
+      <HashCode>AAAIAIEkACAAAIgAAAAAAAABAgAAAAAAIEACAAkABAg=</HashCode>
+    </TypeIdentifier>
+  </Interface>
+</ClassDiagram>
