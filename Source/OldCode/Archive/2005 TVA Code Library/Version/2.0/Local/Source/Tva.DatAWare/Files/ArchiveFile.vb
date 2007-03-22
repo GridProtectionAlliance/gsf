@@ -750,32 +750,60 @@ Namespace Files
                     End Select
                 End If
 
-                If m_compressData Then
-                    ' We have to perform compression on data, so we'll do just that.
-                    If pointState.LastArchivedValue.IsNull Then
-                        ' This is the first time data is received for the point.
-                        pointState.LastArchivedValue = pointState.CurrentValue
-                        result = True
-                    ElseIf pointState.PreviousValue.IsNull Then
-                        ' This is the second time data is received for the point.
-                        calculateSlopes = True
-                    ElseIf pointState.CurrentValue.Quality <> pointState.LastArchivedValue.Quality OrElse _
-                            pointState.CurrentValue.Quality <> pointState.PreviousValue.Quality OrElse _
-                            pointState.PreviousValue.TimeTag.Value - pointState.LastArchivedValue.TimeTag.Value > pointData.Definition.AnalogFields.CompressionLimit Then
-                        result = True
-                        calculateSlopes = True
+                With pointState
+                    If m_compressData Then
+                        ' We have to perform compression on data, so we'll do just that.
+                        If .LastArchivedValue.IsNull Then
+                            ' This is the first time data is received for the point.
+                            .LastArchivedValue = .CurrentValue
+                            result = True
+                        ElseIf .PreviousValue.IsNull Then
+                            ' This is the second time data is received for the point.
+                            calculateSlopes = True
+                        ElseIf .CurrentValue.Definition.CompressionMinimumTime > 0 AndAlso _
+                                .CurrentValue.TimeTag.Value - .LastArchivedValue.TimeTag.Value < .CurrentValue.Definition.CompressionMinimumTime Then
+                            ' the "cmpMinTime" parameter specifies (when > 0), that a point should
+                            ' not be archived if it was already archived less than "cmpMinTime" seconds
+                            ' ago.  Determine difference between current event time and Last Archived
+                            ' Value time, and exit if less than this amount of seconds.
+                            result = False
+                        ElseIf .CurrentValue.Quality <> .LastArchivedValue.Quality OrElse _
+                                .CurrentValue.Quality <> .PreviousValue.Quality OrElse _
+                                .PreviousValue.TimeTag.Value - .LastArchivedValue.TimeTag.Value > .CurrentValue.Definition.CompressionMaximumTime Then
+                            ' The "cmpMaxTime" parameter specifies (when > 0) that a point should
+                            ' be archived if the last time it was archived is more than "cmpMaxTime"
+                            ' seconds ago.  Determine this difference and set flag accordingly.
+                            ' If quality changed, or MaxTimeExceeded, archive it,
+                            ' and recalculate slopes
+                            result = True
+                            calculateSlopes = True
+                        Else
+                            Dim slope1 As Double
+                            Dim slope2 As Double
+                            Dim currentSlope As Double
+
+                            slope1 = (.CurrentValue.Value - (.LastArchivedValue.Value + .CurrentValue.Definition.AnalogFields.CompressionLimit)) / _
+                                        (.CurrentValue.TimeTag.Value - .LastArchivedValue.TimeTag.Value)
+                            slope2 = (.CurrentValue.Value - (.LastArchivedValue.Value - .CurrentValue.Definition.AnalogFields.CompressionLimit)) / _
+                                        (.CurrentValue.TimeTag.Value - .LastArchivedValue.TimeTag.Value)
+                            currentSlope = (.CurrentValue.Value - .LastArchivedValue.Value) / _
+                                        (.CurrentValue.TimeTag.Value - .LastArchivedValue.TimeTag.Value)
+
+                            If slope1 >= .Slope1 Then .Slope1 = slope1
+                            If slope2 <= .Slope2 Then .Slope2 = slope2
+                            If currentSlope <= .Slope1 OrElse currentSlope >= .Slope2 Then
+                                result = True
+                                calculateSlopes = True
+                            End If
+                        End If
                     Else
-
+                        ' We don't need to perform compression on the data and save all of it.
+                        .LastArchivedValue = .CurrentValue
+                        result = True
                     End If
-                Else
-                    ' We don't need to perform compression on the data and save all of it.
-                    pointState.LastArchivedValue = pointState.CurrentValue
-                    result = True
-                End If
 
-                If calculateSlopes Then
-                    With pointState
-                        If .CurrentValue.TimeTag.CompareTo(.LastArchivedValue.TimeTag) <> 0 Then
+                    If calculateSlopes Then
+                        If .CurrentValue.TimeTag.Value <> .LastArchivedValue.TimeTag.Value Then
                             .Slope1 = (.CurrentValue.Value - (.LastArchivedValue.Value + pointData.Definition.AnalogFields.CompressionLimit)) / _
                                         (.CurrentValue.TimeTag.Value - .LastArchivedValue.TimeTag.Value)
                             .Slope2 = (.CurrentValue.Value - (.LastArchivedValue.Value - pointData.Definition.AnalogFields.CompressionLimit)) / _
@@ -784,8 +812,8 @@ Namespace Files
                             .Slope1 = 0
                             .Slope2 = 0
                         End If
-                    End With
-                End If
+                    End If
+                End With
             End If
 
             Return result
