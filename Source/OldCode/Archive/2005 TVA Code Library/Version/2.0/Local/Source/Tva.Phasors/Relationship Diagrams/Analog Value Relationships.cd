@@ -19,7 +19,7 @@
     <Lollipop Position="0.2" />
   </Class>
   <Class Name="Tva.Phasors.ChannelValueBase(Of T)">
-    <Position X="3" Y="1.25" Width="2" />
+    <Position X="3.25" Y="1.25" Width="2" />
     <TypeIdentifier>
       <FileName>ChannelValueBase.vb</FileName>
       <HashCode>AABAAIAAEAAACAAAAAAAQAAwABAgIAIAAAAQAAAAAAA=</HashCode>
@@ -27,7 +27,7 @@
     <Lollipop Position="0.2" />
   </Class>
   <Class Name="Tva.Phasors.ChannelBase">
-    <Position X="0.5" Y="1.25" Width="1.75" />
+    <Position X="0.5" Y="1.25" Width="2.25" />
     <TypeIdentifier>
       <FileName>ChannelBase.vb</FileName>
       <HashCode>AAAAAAAAgAAoQAAFAAAMAAARQABAAACgEAkAAAAAAAA=</HashCode>
@@ -65,32 +65,32 @@
     </InheritanceLine>
   </Class>
   <Interface Name="Tva.Phasors.IChannelValue(Of T)">
-    <Position X="12.25" Y="1.75" Width="1.75" />
+    <Position X="10.25" Y="2.75" Width="1.75" />
     <TypeIdentifier>
       <FileName>IChannelValue.vb</FileName>
       <HashCode>AABAAIAAEAAACAAAAAAAQAAAAAAgAAIAAAAQAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Interface>
   <Interface Name="Tva.Phasors.IChannel">
-    <Position X="11.75" Y="4.75" Width="1.5" />
+    <Position X="10" Y="5.75" Width="1.5" />
     <TypeIdentifier>
       <FileName>IChannel.vb</FileName>
       <HashCode>AAAAAAAAAAAoAAAAAAAAAAARAAAAAACAAAEAAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Interface>
   <Interface Name="Tva.Phasors.IAnalogValue">
-    <Position X="14.5" Y="1.75" Width="2" />
+    <Position X="12.5" Y="2.75" Width="2" />
     <TypeIdentifier>
       <FileName>IAnalogValue.vb</FileName>
       <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAQAAAA=</HashCode>
     </TypeIdentifier>
   </Interface>
   <Interface Name="Tva.IBinaryDataProvider">
-    <Position X="8.25" Y="1.75" Width="1.75" />
+    <Position X="8.25" Y="3.25" Width="1.75" />
     <TypeIdentifier />
   </Interface>
   <Interface Name="System.Runtime.Serialization.ISerializable">
-    <Position X="10.25" Y="1.75" Width="1.5" />
+    <Position X="10.25" Y="1.5" Width="1.75" />
     <TypeIdentifier />
   </Interface>
 </ClassDiagram>
