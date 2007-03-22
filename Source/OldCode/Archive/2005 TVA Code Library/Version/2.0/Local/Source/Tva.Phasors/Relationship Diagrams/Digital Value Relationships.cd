@@ -2,7 +2,7 @@
 <ClassDiagram MajorVersion="1" MinorVersion="1">
   <Font Name="Tahoma" Size="8.25" />
   <Comment CommentText="        Digital Value Relationships">
-    <Position X="3.5" Y="0.59" Height="0.263" Width="2.002" />
+    <Position X="5.833" Y="0.5" Height="0.263" Width="2.002" />
   </Comment>
   <Comment CommentText="       BPA PDCstream">
     <Position X="3.761" Y="5.541" Height="0.263" Width="1.512" />

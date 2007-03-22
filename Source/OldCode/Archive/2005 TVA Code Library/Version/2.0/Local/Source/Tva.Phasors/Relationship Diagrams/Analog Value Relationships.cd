@@ -5,10 +5,10 @@
     <Position X="4.813" Y="0.542" Height="0.305" Width="1.762" />
   </Comment>
   <Comment CommentText="  BPA PDCStream">
-    <Position X="4.354" Y="5.438" Height="0.263" Width="1.096" />
+    <Position X="4.364" Y="5.605" Height="0.263" Width="1.096" />
   </Comment>
   <Comment CommentText="IEEE C37 118">
-    <Position X="7.938" Y="5.406" Height="0.271" Width="0.898" />
+    <Position X="7.907" Y="5.583" Height="0.271" Width="0.898" />
   </Comment>
   <Class Name="Tva.Phasors.AnalogValueBase">
     <Position X="5.75" Y="1.5" Width="2.25" />
@@ -35,38 +35,62 @@
     <Lollipop Position="0.2" />
   </Class>
   <Class Name="Tva.Phasors.BpaPdcStream.AnalogValue">
-    <Position X="4" Y="5.75" Width="1.75" />
+    <Position X="4" Y="6" Width="1.75" />
     <TypeIdentifier>
       <FileName>BpaPdcStream\AnalogValue.vb</FileName>
       <HashCode>AAAAAAAAAAAACAAAAAAAQAAAAAAAAACAAAAAAAAEAAA=</HashCode>
     </TypeIdentifier>
+    <InheritanceLine Type="Tva.Phasors.AnalogValueBase" ManuallyRouted="true">
+      <Path>
+        <Point X="6.875" Y="4.844" />
+        <Point X="6.875" Y="5.385" />
+        <Point X="4.875" Y="5.385" />
+        <Point X="4.875" Y="6" />
+      </Path>
+    </InheritanceLine>
   </Class>
   <Class Name="Tva.Phasors.IeeeC37_118.AnalogValue">
-    <Position X="7.5" Y="5.75" Width="1.75" />
+    <Position X="7.5" Y="6" Width="1.75" />
     <TypeIdentifier>
       <FileName>IeeeC37_118\AnalogValue.vb</FileName>
       <HashCode>AAAAAAAAAAAACAAAAAAAQAAAAAAAAACAAAAAAAAEAAA=</HashCode>
     </TypeIdentifier>
+    <InheritanceLine Type="Tva.Phasors.AnalogValueBase" ManuallyRouted="true">
+      <Path>
+        <Point X="6.875" Y="4.844" />
+        <Point X="6.875" Y="5.375" />
+        <Point X="8.375" Y="5.375" />
+        <Point X="8.375" Y="6" />
+      </Path>
+    </InheritanceLine>
   </Class>
   <Interface Name="Tva.Phasors.IChannelValue(Of T)">
-    <Position X="10.5" Y="1.75" Width="1.75" />
+    <Position X="12.25" Y="1.75" Width="1.75" />
     <TypeIdentifier>
       <FileName>IChannelValue.vb</FileName>
       <HashCode>AABAAIAAEAAACAAAAAAAQAAAAAAgAAIAAAAQAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Interface>
   <Interface Name="Tva.Phasors.IChannel">
-    <Position X="8.5" Y="1.75" Width="1.5" />
+    <Position X="11.75" Y="4.75" Width="1.5" />
     <TypeIdentifier>
       <FileName>IChannel.vb</FileName>
       <HashCode>AAAAAAAAAAAoAAAAAAAAAAARAAAAAACAAAEAAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Interface>
   <Interface Name="Tva.Phasors.IAnalogValue">
-    <Position X="12.5" Y="1.75" Width="2" />
+    <Position X="14.5" Y="1.75" Width="2" />
     <TypeIdentifier>
       <FileName>IAnalogValue.vb</FileName>
       <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAQAAAA=</HashCode>
     </TypeIdentifier>
+  </Interface>
+  <Interface Name="Tva.IBinaryDataProvider">
+    <Position X="8.25" Y="1.75" Width="1.75" />
+    <TypeIdentifier />
+  </Interface>
+  <Interface Name="System.Runtime.Serialization.ISerializable">
+    <Position X="10.25" Y="1.75" Width="1.5" />
+    <TypeIdentifier />
   </Interface>
 </ClassDiagram>

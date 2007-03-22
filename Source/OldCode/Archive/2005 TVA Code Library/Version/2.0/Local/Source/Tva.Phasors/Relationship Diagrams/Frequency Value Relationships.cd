@@ -1,23 +1,23 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <ClassDiagram MajorVersion="1" MinorVersion="1">
   <Font Name="Tahoma" Size="8.25" />
-  <Comment CommentText=" Frequency Value Relationship&#xD;&#xA;">
-    <Position X="4.392" Y="0.5" Height="0.332" Width="1.783" />
+  <Comment CommentText=" Frequency Value Relationships&#xD;&#xA;">
+    <Position X="7.602" Y="0.591" Height="0.332" Width="1.783" />
   </Comment>
   <Comment CommentText="   BPA PDCStream">
-    <Position X="2.125" Y="6.166" Height="0.263" Width="1.169" />
+    <Position X="3.402" Y="6.19" Height="0.263" Width="1.169" />
   </Comment>
   <Comment CommentText="  Virginia Tech FNET">
-    <Position X="4.362" Y="6.156" Height="0.263" Width="1.263" />
+    <Position X="5.473" Y="6.194" Height="0.263" Width="1.263" />
   </Comment>
   <Comment CommentText="    IEEE 1344">
-    <Position X="6.738" Y="6.156" Height="0.263" Width="0.981" />
+    <Position X="7.78" Y="6.189" Height="0.263" Width="0.981" />
   </Comment>
   <Comment CommentText="IEEE C37 118">
-    <Position X="9.04" Y="6.159" Height="0.263" Width="0.887" />
+    <Position X="10.12" Y="6.188" Height="0.263" Width="0.887" />
   </Comment>
   <Class Name="Tva.Phasors.FrequencyValueBase">
-    <Position X="5.25" Y="1.25" Width="1.5" />
+    <Position X="6.25" Y="1.25" Width="2.5" />
     <TypeIdentifier>
       <FileName>FrequencyValueBase.vb</FileName>
       <HashCode>AABAAIAAAAAAAAABIAAISAAwAJAgAAAgEAAAAAAAAAA=</HashCode>
@@ -32,7 +32,7 @@
     <Lollipop Position="0.2" />
   </Class>
   <Class Name="Tva.Phasors.ChannelValueBase(Of T)">
-    <Position X="2.75" Y="1.25" Width="1.5" />
+    <Position X="3.5" Y="1.25" Width="2" />
     <TypeIdentifier>
       <FileName>ChannelValueBase.vb</FileName>
       <HashCode>AABAAIAAEAAACAAAAAAAQAAwABAgIAIAAAAQAAAAAAA=</HashCode>
@@ -40,7 +40,7 @@
     <Lollipop Position="0.2" />
   </Class>
   <Class Name="Tva.Phasors.ChannelBase">
-    <Position X="0.5" Y="1.25" Width="1.5" />
+    <Position X="0.5" Y="1.25" Width="2.25" />
     <TypeIdentifier>
       <FileName>ChannelBase.vb</FileName>
       <HashCode>AAAAAAAAgAAoQAAFAAAMAAARQABAAACgEAkAAAAAAAA=</HashCode>
@@ -48,56 +48,60 @@
     <Lollipop Position="0.2" />
   </Class>
   <Class Name="Tva.Phasors.BpaPdcStream.FrequencyValue">
-    <Position X="2" Y="6.5" Width="1.5" />
+    <Position X="3" Y="6.5" Width="2" />
     <TypeIdentifier>
       <FileName>BpaPdcStream\FrequencyValue.vb</FileName>
       <HashCode>AAAAAAAAAAAACAAAAAAAQAAAgAAAAACAAAAAAACAAAA=</HashCode>
     </TypeIdentifier>
   </Class>
   <Class Name="Tva.Phasors.FNet.FrequencyValue">
-    <Position X="4.25" Y="6.5" Width="1.5" />
+    <Position X="5.25" Y="6.5" Width="1.75" />
     <TypeIdentifier>
       <FileName>FNet\FrequencyValue.vb</FileName>
       <HashCode>AAAAAAAAAAAACAAAAAAAQAAAAAAAAACAAAAAAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Class>
   <Class Name="Tva.Phasors.Ieee1344.FrequencyValue">
-    <Position X="6.5" Y="6.5" Width="1.5" />
+    <Position X="7.5" Y="6.5" Width="2" />
     <TypeIdentifier>
       <FileName>Ieee1344\FrequencyValue.vb</FileName>
       <HashCode>AAAAAAAAAAAACAABAAAIQAAAAAAAAACgAAAAAACAAAA=</HashCode>
     </TypeIdentifier>
   </Class>
   <Class Name="Tva.Phasors.IeeeC37_118.FrequencyValue">
-    <Position X="8.75" Y="6.5" Width="1.5" />
+    <Position X="9.75" Y="6.5" Width="2" />
     <TypeIdentifier>
       <FileName>IeeeC37_118\FrequencyValue.vb</FileName>
       <HashCode>AAAAAAAAAAAAAAAAAAAAQAAAAAAAAACAAAAAAACAAAA=</HashCode>
     </TypeIdentifier>
   </Class>
   <Interface Name="Tva.Phasors.IFrequencyValue">
-    <Position X="11.25" Y="1.5" Width="1.5" />
+    <Position X="14.25" Y="2.5" Width="2.25" />
     <TypeIdentifier>
       <FileName>IFrequencyValue.vb</FileName>
       <HashCode>AAAAAAAAAAAAAAAAAAAASAAAAJAAAAAAAAAAAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Interface>
   <Interface Name="Tva.Phasors.IChannelValue(Of T)">
-    <Position X="9.25" Y="1.5" Width="1.5" />
+    <Position X="11.75" Y="2.5" Width="2" />
     <TypeIdentifier>
       <FileName>IChannelValue.vb</FileName>
       <HashCode>AABAAIAAEAAACAAAAAAAQAAAAAAgAAIAAAAQAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Interface>
   <Interface Name="Tva.Phasors.IChannel">
-    <Position X="7.25" Y="1.5" Width="1.5" />
+    <Position X="9.5" Y="2.5" Width="1.75" />
     <TypeIdentifier>
       <FileName>IChannel.vb</FileName>
       <HashCode>AAAAAAAAAAAoAAAAAAAAAAARAAAAAACAAAEAAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Interface>
   <Interface Name="System.Runtime.Serialization.ISerializable">
-    <Position X="9.25" Y="4.25" Width="1.5" />
+    <Position X="11.75" Y="5.25" Width="2" />
+    <TypeIdentifier />
+  </Interface>
+  <Interface Name="Tva.IBinaryDataProvider">
+    <Position X="9.5" Y="1" Width="1.75" />
     <TypeIdentifier />
   </Interface>
 </ClassDiagram>
