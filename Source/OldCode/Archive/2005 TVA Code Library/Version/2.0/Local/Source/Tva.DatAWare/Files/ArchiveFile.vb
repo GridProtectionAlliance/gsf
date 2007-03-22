@@ -264,6 +264,14 @@ Namespace Files
                         OffloadLocationFileSystemWatcher.Path = m_offloadPath
                     End If
 
+                    If m_fat.FileStartTime.CompareTo(TimeTag.MinValue) = 0 Then
+                        ' If the file's start time is not set (i.e. we're working with a brand new file with no data), 
+                        ' we set it to the timetag of the latest value from the intercom file. This latest value
+                        ' timetag will be 0 only when the archiver is initialized the very first time and if that's
+                        ' the case, the file's start time will be set when the very first point data is written.
+                        m_fat.FileStartTime = m_intercomFile.Records(0).LastestCurrentValueTimeTag
+                    End If
+
                     RaiseEvent FileOpened(Me, EventArgs.Empty)
                 Else
                     Throw New InvalidOperationException("StateFile and IntercomFile properties must be set.")
