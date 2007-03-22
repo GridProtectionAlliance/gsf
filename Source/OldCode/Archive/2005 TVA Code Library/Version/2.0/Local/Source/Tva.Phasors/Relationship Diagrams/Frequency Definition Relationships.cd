@@ -2,19 +2,19 @@
 <ClassDiagram MajorVersion="1" MinorVersion="1">
   <Font Name="Tahoma" Size="8.25" />
   <Comment CommentText="Frequency Definition Relationships&#xD;&#xA;">
-    <Position X="5.756" Y="0.625" Height="0.263" Width="1.96" />
+    <Position X="6.76" Y="0.647" Height="0.263" Width="1.96" />
   </Comment>
   <Comment CommentText="   BPA PDC Stream">
-    <Position X="3.253" Y="6.221" Height="0.263" Width="1.158" />
+    <Position X="3.561" Y="5.99" Height="0.263" Width="1.158" />
   </Comment>
   <Comment CommentText="  IEEE 1344">
-    <Position X="6.017" Y="6.25" Height="0.263" Width="0.825" />
+    <Position X="5.963" Y="6.021" Height="0.263" Width="0.825" />
   </Comment>
   <Comment CommentText="IEEE C37 118">
-    <Position X="8.427" Y="6.264" Height="0.263" Width="0.929" />
+    <Position X="8.437" Y="6.034" Height="0.263" Width="0.929" />
   </Comment>
   <Comment CommentText=" Virginia Tech FNET">
-    <Position X="10.5" Y="6.25" Height="0.263" Width="1.2" />
+    <Position X="10.611" Y="6.031" Height="0.263" Width="1.2" />
   </Comment>
   <Class Name="Tva.Phasors.FrequencyDefinitionBase">
     <Position X="3.25" Y="2.25" Width="1.75" />
@@ -41,22 +41,22 @@
     <Lollipop Position="0.2" />
   </Class>
   <Class Name="Tva.Phasors.BpaPdcStream.FrequencyDefinition">
-    <Position X="3" Y="7" Width="1.75" />
+    <Position X="3.25" Y="6.5" Width="1.75" />
     <TypeIdentifier>
       <FileName>BpaPdcStream\FrequencyDefinition.vb</FileName>
       <HashCode>AAAAABAAAAAAAAAAAAAIQAACAAAAAACgAAAABAAAwAA=</HashCode>
     </TypeIdentifier>
-    <InheritanceLine Type="Tva.Phasors.FrequencyDefinitionBase" ManuallyRouted="true">
+    <InheritanceLine Type="Tva.Phasors.FrequencyDefinitionBase" ManuallyRouted="true" FixedToPoint="true">
       <Path>
         <Point X="4.125" Y="5.43" />
-        <Point X="4.125" Y="5.916" />
-        <Point X="3.875" Y="5.916" />
-        <Point X="3.875" Y="7" />
+        <Point X="4.125" Y="5.892" />
+        <Point X="4.125" Y="5.892" />
+        <Point X="4.125" Y="6.5" />
       </Path>
     </InheritanceLine>
   </Class>
   <Class Name="Tva.Phasors.Ieee1344.FrequencyDefinition">
-    <Position X="5.25" Y="7" Width="2.25" />
+    <Position X="5.25" Y="6.5" Width="2.25" />
     <TypeIdentifier>
       <FileName>Ieee1344\FrequencyDefinition.vb</FileName>
       <HashCode>AAAAAAAAAAAAAAABAAAIYAA8AAAAAACgAAAAAABAAAA=</HashCode>
@@ -64,14 +64,14 @@
     <InheritanceLine Type="Tva.Phasors.FrequencyDefinitionBase" ManuallyRouted="true">
       <Path>
         <Point X="4.125" Y="5.43" />
-        <Point X="4.125" Y="5.875" />
-        <Point X="6.375" Y="5.875" />
-        <Point X="6.375" Y="7" />
+        <Point X="4.125" Y="5.881" />
+        <Point X="6.375" Y="5.881" />
+        <Point X="6.375" Y="6.5" />
       </Path>
     </InheritanceLine>
   </Class>
   <Class Name="Tva.Phasors.IeeeC37_118.FrequencyDefinition">
-    <Position X="7.75" Y="7" Width="2.25" />
+    <Position X="7.75" Y="6.5" Width="2.25" />
     <TypeIdentifier>
       <FileName>IeeeC37_118\FrequencyDefinition.vb</FileName>
       <HashCode>AAAAAAAAAAAAAAABAAAIQAAAAAAAAACgAAAAAABAAAA=</HashCode>
@@ -79,24 +79,24 @@
     <InheritanceLine Type="Tva.Phasors.FrequencyDefinitionBase" ManuallyRouted="true">
       <Path>
         <Point X="4.125" Y="5.43" />
-        <Point X="4.125" Y="5.891" />
-        <Point X="8.875" Y="5.891" />
-        <Point X="8.875" Y="7" />
+        <Point X="4.125" Y="5.881" />
+        <Point X="8.875" Y="5.881" />
+        <Point X="8.875" Y="6.5" />
       </Path>
     </InheritanceLine>
   </Class>
   <Class Name="Tva.Phasors.FNet.FrequencyDefinition">
-    <Position X="10.25" Y="7" Width="1.75" />
+    <Position X="10.25" Y="6.5" Width="1.75" />
     <TypeIdentifier>
       <FileName>FNet\FrequencyDefinition.vb</FileName>
       <HashCode>AAAAAAAAAAAAAAAAAAAAQAAAAAAAAACAAAAAAAAAAAA=</HashCode>
     </TypeIdentifier>
-    <InheritanceLine Type="Tva.Phasors.FrequencyDefinitionBase" ManuallyRouted="true">
+    <InheritanceLine Type="Tva.Phasors.FrequencyDefinitionBase" ManuallyRouted="true" FixedToPoint="true">
       <Path>
         <Point X="4.125" Y="5.43" />
-        <Point X="4.125" Y="5.875" />
-        <Point X="11.125" Y="5.875" />
-        <Point X="11.125" Y="7" />
+        <Point X="4.125" Y="5.892" />
+        <Point X="11.125" Y="5.892" />
+        <Point X="11.125" Y="6.5" />
       </Path>
     </InheritanceLine>
   </Class>

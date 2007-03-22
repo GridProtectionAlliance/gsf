@@ -1,8 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <ClassDiagram MajorVersion="1" MinorVersion="1">
   <Font Name="Tahoma" Size="8.25" />
-  <Comment CommentText="   Data Frame Relationship">
-    <Position X="7.278" Y="0.5" Height="0.302" Width="1.617" />
+  <Comment CommentText="   Data Frame Relationships">
+    <Position X="7.475" Y="0.5" Height="0.302" Width="1.617" />
   </Comment>
   <Comment CommentText="BPA PDC Stream">
     <Position X="3.497" Y="4.729" Height="0.263" Width="1.033" />
@@ -110,14 +110,14 @@
     </InheritanceLine>
   </Class>
   <Interface Name="Tva.Phasors.IDataFrame">
-    <Position X="9.5" Y="2.25" Width="1.5" />
+    <Position X="10" Y="2.25" Width="1.5" />
     <TypeIdentifier>
       <FileName>IDataFrame.vb</FileName>
       <HashCode>AAAAAAAAAAAAAAgAAAIAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Interface>
   <Interface Name="Tva.Phasors.IChannelFrame">
-    <Position X="7.5" Y="2.25" Width="1.5" />
+    <Position X="8" Y="2.25" Width="1.5" />
     <TypeIdentifier>
       <FileName>IChannelFrame.vb</FileName>
       <HashCode>AAAAABAAAAAAAAAAAAIAAAAAAAAAAACgAAAAAAAAIAA=</HashCode>
@@ -135,15 +135,15 @@
     <TypeIdentifier />
   </Interface>
   <Interface Name="Tva.Measurements.IFrame" Collapsed="true">
-    <Position X="9.5" Y="1.25" Width="1.5" />
+    <Position X="10" Y="1.25" Width="1.5" />
     <TypeIdentifier />
   </Interface>
   <Interface Name="System.IComparable" Collapsed="true">
-    <Position X="11.75" Y="1.25" Width="1.5" />
+    <Position X="12.25" Y="1.25" Width="1.5" />
     <TypeIdentifier />
   </Interface>
   <Interface Name="System.Runtime.Serialization.ISerializable" Collapsed="true">
-    <Position X="7.5" Y="1.25" Width="1.5" />
+    <Position X="8" Y="1.25" Width="1.5" />
     <TypeIdentifier />
   </Interface>
 </ClassDiagram>
