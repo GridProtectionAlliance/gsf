@@ -706,9 +706,13 @@ Namespace Files
             ' TODO: Validate compression logic with Brian Fox
 
             Dim result As Boolean = False
-            Dim calculateSlopes As Boolean = False
 
             If pointData.Definition IsNot Nothing Then
+                Dim calculateSlopes As Boolean = False
+                Dim compressionLimit As Single = pointData.Definition.AnalogFields.CompressionLimit
+
+                If pointData.Definition.GeneralFlags.PointType = PointType.Digital Then compressionLimit = 0.000000001
+
                 ' We'll only allow archival of points with a corresponding definition.
                 pointState.PreviousValue = pointState.CurrentValue  ' Promote old CurrentValue to PreviousValue.
                 pointState.CurrentValue = pointData.ToExtended()    ' Promote new value received to CurrentValue.
@@ -784,9 +788,9 @@ Namespace Files
                             Dim slope2 As Double
                             Dim currentSlope As Double
 
-                            slope1 = (.CurrentValue.Value - (.LastArchivedValue.Value + .CurrentValue.Definition.AnalogFields.CompressionLimit)) / _
+                            slope1 = (.CurrentValue.Value - (.LastArchivedValue.Value + compressionLimit)) / _
                                         (.CurrentValue.TimeTag.Value - .LastArchivedValue.TimeTag.Value)
-                            slope2 = (.CurrentValue.Value - (.LastArchivedValue.Value - .CurrentValue.Definition.AnalogFields.CompressionLimit)) / _
+                            slope2 = (.CurrentValue.Value - (.LastArchivedValue.Value - compressionLimit)) / _
                                         (.CurrentValue.TimeTag.Value - .LastArchivedValue.TimeTag.Value)
                             currentSlope = (.CurrentValue.Value - .LastArchivedValue.Value) / _
                                         (.CurrentValue.TimeTag.Value - .LastArchivedValue.TimeTag.Value)
@@ -806,9 +810,9 @@ Namespace Files
 
                     If calculateSlopes Then
                         If .CurrentValue.TimeTag.Value <> .LastArchivedValue.TimeTag.Value Then
-                            .Slope1 = (.CurrentValue.Value - (.LastArchivedValue.Value + pointData.Definition.AnalogFields.CompressionLimit)) / _
+                            .Slope1 = (.CurrentValue.Value - (.LastArchivedValue.Value + compressionLimit)) / _
                                         (.CurrentValue.TimeTag.Value - .LastArchivedValue.TimeTag.Value)
-                            .Slope2 = (.CurrentValue.Value - (.LastArchivedValue.Value - pointData.Definition.AnalogFields.CompressionLimit)) / _
+                            .Slope2 = (.CurrentValue.Value - (.LastArchivedValue.Value - compressionLimit)) / _
                                         (.CurrentValue.TimeTag.Value - .LastArchivedValue.TimeTag.Value)
                         Else
                             .Slope1 = 0
