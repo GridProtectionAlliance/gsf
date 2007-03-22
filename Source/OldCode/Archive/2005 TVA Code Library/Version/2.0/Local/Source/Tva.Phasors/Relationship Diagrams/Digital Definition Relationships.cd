@@ -83,44 +83,44 @@
     </InheritanceLine>
   </Class>
   <Interface Name="Tva.Phasors.IDigitalDefinition">
-    <Position X="12.5" Y="2.5" Width="1.5" />
+    <Position X="15" Y="3" Width="1.5" />
     <TypeIdentifier>
       <FileName>IDigitalDefinition.vb</FileName>
       <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Interface>
   <Interface Name="Tva.Phasors.IChannelDefinition">
-    <Position X="10.25" Y="2.5" Width="2" />
+    <Position X="12.75" Y="3" Width="2" />
     <TypeIdentifier>
       <FileName>IChannelDefinition.vb</FileName>
       <HashCode>AQAAAAAAEAAAAAAAAIAAQAgAAAAAIAIAAIEABAAAgAA=</HashCode>
     </TypeIdentifier>
   </Interface>
   <Interface Name="Tva.Phasors.IChannel">
-    <Position X="8.25" Y="2.5" Width="1.5" />
+    <Position X="10.75" Y="3" Width="1.5" />
     <TypeIdentifier>
       <FileName>IChannel.vb</FileName>
       <HashCode>AAAAAAAAAAAoAAAAAAAAAAARAAAAAACAAAEAAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Interface>
-  <Interface Name="System.Runtime.Serialization.ISerializable" Collapsed="true">
-    <Position X="5.75" Y="1.25" Width="1.5" />
+  <Interface Name="System.Runtime.Serialization.ISerializable">
+    <Position X="8.25" Y="1.25" Width="1.5" />
     <TypeIdentifier />
   </Interface>
-  <Interface Name="System.IEquatable(Of T)" Collapsed="true">
-    <Position X="8" Y="1.25" Width="1.5" />
-    <TypeIdentifier />
-  </Interface>
-  <Interface Name="System.IComparable(Of T)" Collapsed="true">
+  <Interface Name="System.IEquatable(Of T)">
     <Position X="10.5" Y="1.25" Width="1.5" />
     <TypeIdentifier />
   </Interface>
-  <Interface Name="System.IComparable" Collapsed="true">
-    <Position X="12.5" Y="1.25" Width="1.5" />
+  <Interface Name="System.IComparable(Of T)">
+    <Position X="13" Y="1.25" Width="1.5" />
+    <TypeIdentifier />
+  </Interface>
+  <Interface Name="System.IComparable">
+    <Position X="15" Y="1.25" Width="1.5" />
     <TypeIdentifier />
   </Interface>
   <Interface Name="Tva.IBinaryDataProvider">
-    <Position X="6" Y="2.5" Width="1.75" />
+    <Position X="8.5" Y="3" Width="1.75" />
     <TypeIdentifier />
   </Interface>
 </ClassDiagram>

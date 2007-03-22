@@ -258,7 +258,7 @@
     <None Include="Relationship Diagrams\Frequency Value Relationships.cd" />
     <None Include="Relationship Diagrams\HeaderCell Collection Relationships.cd" />
     <None Include="Relationship Diagrams\HeaderCell Relationships.cd" />
-    <None Include="Relationship Diagrams\HeadFrame Relationships.cd" />
+    <None Include="Relationship Diagrams\HeaderFrame Relationships.cd" />
     <None Include="Relationship Diagrams\Phasor Class Diagram.cd" />
     <None Include="Relationship Diagrams\Phasor Definition Relationships.cd" />
     <None Include="Relationship Diagrams\Phasor Value Relationships.cd" />
