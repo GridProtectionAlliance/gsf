@@ -254,6 +254,7 @@
     <None Include="Relationship Diagrams\DataFrame Relationships.cd" />
     <None Include="Relationship Diagrams\Digital Definition Relationships.cd" />
     <None Include="Relationship Diagrams\Digital Value Relationships.cd" />
+    <None Include="Relationship Diagrams\FramePhaser Relationships.cd" />
     <None Include="Relationship Diagrams\Frequency Definition Relationships.cd" />
     <None Include="Relationship Diagrams\Frequency Value Relationships.cd" />
     <None Include="Relationship Diagrams\HeaderCell Collection Relationships.cd" />
