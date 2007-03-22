@@ -49,8 +49,8 @@
     <InheritanceLine Type="Tva.Phasors.PhasorDefinitionBase" ManuallyRouted="true">
       <Path>
         <Point X="5.125" Y="4.601" />
-        <Point X="5.125" Y="5.125" />
-        <Point X="4" Y="5.125" />
+        <Point X="5.125" Y="4.811" />
+        <Point X="4" Y="4.811" />
         <Point X="4" Y="5.5" />
       </Path>
     </InheritanceLine>
@@ -64,8 +64,8 @@
     <InheritanceLine Type="Tva.Phasors.PhasorDefinitionBase" ManuallyRouted="true">
       <Path>
         <Point X="5.125" Y="4.601" />
-        <Point X="5.125" Y="4.814" />
-        <Point X="6.25" Y="4.814" />
+        <Point X="5.125" Y="4.805" />
+        <Point X="6.25" Y="4.805" />
         <Point X="6.25" Y="5.5" />
       </Path>
     </InheritanceLine>
@@ -79,8 +79,8 @@
     <InheritanceLine Type="Tva.Phasors.PhasorDefinitionBase" ManuallyRouted="true">
       <Path>
         <Point X="5.125" Y="4.601" />
-        <Point X="5.125" Y="4.805" />
-        <Point X="8.5" Y="4.805" />
+        <Point X="5.125" Y="4.811" />
+        <Point X="8.5" Y="4.811" />
         <Point X="8.5" Y="5.5" />
       </Path>
     </InheritanceLine>
@@ -91,11 +91,11 @@
       <FileName>FNet\PhasorDefinition.vb</FileName>
       <HashCode>AAAAAAAAAAAAAAAAAAAAQAAAAAAAAACAAAAAAAAAAAA=</HashCode>
     </TypeIdentifier>
-    <InheritanceLine Type="Tva.Phasors.PhasorDefinitionBase" ManuallyRouted="true">
+    <InheritanceLine Type="Tva.Phasors.PhasorDefinitionBase" ManuallyRouted="true" FixedFromPoint="true">
       <Path>
         <Point X="5.125" Y="4.601" />
-        <Point X="5.125" Y="4.826" />
-        <Point X="10.625" Y="4.826" />
+        <Point X="5.125" Y="4.8" />
+        <Point X="10.625" Y="4.8" />
         <Point X="10.625" Y="5.5" />
       </Path>
     </InheritanceLine>
