@@ -52,6 +52,19 @@ Namespace BpaPdcStream
             End Get
         End Property
 
+        Public Function TryGetBySectionEntry(ByVal sectionEntry As String, ByRef configurationCell As ConfigurationCell) As Boolean
+
+            For Each configurationCell In Me
+                If String.Compare(configurationCell.SectionEntry, sectionEntry, True) = 0 Then
+                    Return True
+                End If
+            Next
+
+            configurationCell = Nothing
+            Return False
+
+        End Function
+
     End Class
 
 End Namespace

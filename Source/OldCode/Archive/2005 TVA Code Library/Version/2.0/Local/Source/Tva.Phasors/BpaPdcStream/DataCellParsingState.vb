@@ -23,7 +23,6 @@ Namespace BpaPdcStream
 
         Inherits Phasors.DataCellParsingState
 
-        Private m_isPdcBlockHeader As Boolean
         Private m_isPdcBlockPmu As Boolean
         Private m_index As Integer
 
@@ -71,15 +70,6 @@ Namespace BpaPdcStream
             Get
                 Return m_isPdcBlockPmu
             End Get
-        End Property
-
-        Public Property IsPdcBlockHeader() As Boolean
-            Get
-                Return m_isPdcBlockHeader
-            End Get
-            Set(ByVal value As Boolean)
-                m_isPdcBlockHeader = value
-            End Set
         End Property
 
         Public ReadOnly Property Index() As Integer

@@ -35,6 +35,7 @@ Namespace BpaPdcStream
         Private m_packetNumber As Byte
         Private m_sampleNumber As Int16
         Private m_legacyLabels As String()
+        Private m_parsedCellCount As Integer
 
         Public Sub New()
 
@@ -188,7 +189,11 @@ Namespace BpaPdcStream
         Protected Overrides ReadOnly Property HeaderLength() As UInt16
             Get
                 If ConfigurationFrame.StreamType = StreamType.Legacy Then
-                    Return 12 + ConfigurationFrame.Cells.Count * 8
+                    If m_parsedCellCount > 0 Then
+                        Return 12 + m_parsedCellCount * 8 ' PDCxchng correction
+                    Else
+                        Return 12 + ConfigurationFrame.Cells.Count * 8
+                    End If
                 Else
                     Return 12
                 End If
@@ -234,15 +239,19 @@ Namespace BpaPdcStream
 
         Protected Overrides Sub ParseHeaderImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
-            Dim configurationFrame As BpaPdcStream.ConfigurationFrame = DirectCast(DirectCast(state, IDataFrameParsingState).ConfigurationFrame, BpaPdcStream.ConfigurationFrame)
-            Dim dataCellCount As Int16
-
             ' Only need to parse what wan't already parsed in common frame header
-            dataCellCount = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 10)
+            Dim frameParsingState As DataFrameParsingState = DirectCast(state, DataFrameParsingState)
+            Dim configurationFrame As BpaPdcStream.ConfigurationFrame = DirectCast(frameParsingState.ConfigurationFrame, BpaPdcStream.ConfigurationFrame)
 
-            If dataCellCount <> configurationFrame.Cells.Count Then
-                Throw New InvalidOperationException("Stream/Config File Mismatch: PMU count (" & dataCellCount & ") in stream does not match defined count in configuration file (" & configurationFrame.Cells.Count & ")")
+            ' Because in cases where PDCxchng is being used the data cell count will be smaller than the
+            ' configuration cell count - we save this count to calculate the offsets later
+            frameParsingState.CellCount = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 10)
+
+            If frameParsingState.CellCount > configurationFrame.Cells.Count Then
+                Throw New InvalidOperationException("Stream/Config File Mismatch: PMU count (" & frameParsingState.CellCount & ") in stream does not match defined count in configuration file (" & configurationFrame.Cells.Count & ")")
             End If
+
+            m_parsedCellCount = frameParsingState.CellCount
 
             ' Note: because "HeaderLength" needs configuration frame and is called before associated configuration frame
             ' assignment normally occurs - we assign configuration frame in advance...
@@ -251,9 +260,9 @@ Namespace BpaPdcStream
             ' We'll at least retrieve legacy labels if defined (might be useful for debugging dynamic changes in data-stream)
             If configurationFrame.StreamType = StreamType.Legacy Then
                 Dim index As Integer = 12
-                m_legacyLabels = CreateArray(Of String)(configurationFrame.Cells.Count)
+                m_legacyLabels = CreateArray(Of String)(frameParsingState.CellCount)
 
-                For x As Integer = 0 To configurationFrame.Cells.Count - 1
+                For x As Integer = 0 To frameParsingState.CellCount - 1
                     m_legacyLabels(x) = Encoding.ASCII.GetString(binaryImage, index, 4)
                     index += 8
                 Next

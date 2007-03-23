@@ -70,7 +70,7 @@ Namespace BpaPdcStream
             m_revisionNumber = info.GetValue("revisionNumber", GetType(RevisionNumber))
             m_iniFile = New IniFile(info.GetString("configurationFileName"))
             m_readWriteLock = New ReaderWriterLock
-            Refresh()
+            Refresh(False)
 
         End Sub
 
@@ -81,7 +81,7 @@ Namespace BpaPdcStream
             m_iniFile = New IniFile(configurationFileName)
             m_readWriteLock = New ReaderWriterLock
             m_packetsPerSample = 1
-            Refresh()
+            Refresh(False)
 
         End Sub
 
@@ -106,7 +106,7 @@ Namespace BpaPdcStream
             m_readWriteLock = New ReaderWriterLock
             m_packetsPerSample = 1
 
-            Refresh()
+            Refresh(True)
 
         End Sub
 
@@ -203,6 +203,12 @@ Namespace BpaPdcStream
 
         Public Sub Refresh()
 
+            Refresh(False)
+
+        End Sub
+
+        Private Sub Refresh(ByVal refreshCausedByFrameParse As Boolean)
+
             ' The only time we need a write lock is when we reload the config file...
             m_readWriteLock.AcquireWriterLock(-1)
 
@@ -232,7 +238,7 @@ Namespace BpaPdcStream
 
                                 pmuCell = New ConfigurationCell(Me, 0, LineFrequency.Hz60)
 
-                                pmuCell.IDLabel = section
+                                pmuCell.SectionEntry = section  ' This will automatically assign ID label as first 4 digits of section
                                 pmuCell.StationName = m_iniFile.KeyValue(section, "Name", section)
                                 pmuCell.IDCode = Convert.ToUInt16(m_iniFile.KeyValue(section, "PMU", Cells.Count.ToString))
 
@@ -251,11 +257,55 @@ Namespace BpaPdcStream
                     If m_configurationFileCells.Count > 0 AndAlso Cells IsNot Nothing Then
                         Dim configurationFileCell As ConfigurationCell = Nothing
 
-                        For Each cell As ConfigurationCell In Cells
-                            ' Attempt to associate this configuration cell with information read from external INI based configuration file
-                            m_configurationFileCells.TryGetByIDLabel(cell.IDLabel, configurationFileCell)
-                            cell.ConfigurationFileCell = configurationFileCell
-                        Next
+                        If refreshCausedByFrameParse Then
+                            ' Create a new configuration cell collection that will account for PDC block cells
+                            Dim cellCollection As New ConfigurationCellCollection
+                            Dim cell As ConfigurationCell
+
+                            ' For freshly parsed configuration frames we'll have no PMU's in configuration
+                            ' frame for PDCxchng blocks - so we'll need to dynamically create them
+                            For x = 0 To Cells.Count - 1
+                                ' Get current configuration cell
+                                cell = Cells(x)
+
+                                ' Lookup INI file configuration cell by ID label
+                                m_configurationFileCells.TryGetByIDLabel(cell.IDLabel, configurationFileCell)
+
+                                If configurationFileCell Is Nothing Then
+                                    ' Couldn't find associated INI file cell - just append the parsed cell to the collection
+                                    cellCollection.Add(cell)
+                                Else
+                                    If configurationFileCell.IsPDCBlockSection Then
+                                        ' This looks like a PDC block section - so we'll keep adding cells for each defined PMU in the PDC block
+                                        Dim index As Integer
+
+                                        Do
+                                            ' Lookup PMU by section name
+                                            m_configurationFileCells.TryGetBySectionEntry(cell.IDLabel & "pmu" & index, configurationFileCell)
+
+                                            ' Add PDC block PMU configuration cell to the collection
+                                            If configurationFileCell IsNot Nothing Then cellCollection.Add(configurationFileCell)
+                                            index += 1
+                                        Loop Until configurationFileCell Is Nothing
+                                    Else
+                                        ' As far as we can tell from INI file, this is just a regular PMU
+                                        cell.ConfigurationFileCell = configurationFileCell
+                                        cellCollection.Add(cell)
+                                    End If
+                                End If
+                            Next
+
+                            ' Assign "new" cell collection which will include PMU's from defined PDC blocks
+                            Cells.Clear()
+                            Cells.AddRange(cellCollection)
+                        Else
+                            ' For simple INI file updates, we just re-assign INI file cells associating by section entry
+                            For Each cell As ConfigurationCell In Cells
+                                ' Attempt to associate this configuration cell with information read from external INI based configuration file
+                                m_configurationFileCells.TryGetBySectionEntry(cell.SectionEntry, configurationFileCell)
+                                cell.ConfigurationFileCell = configurationFileCell
+                            Next
+                        End If
                     End If
                 Else
                     Throw New InvalidOperationException("PDC config file """ & m_iniFile.FileName & """ does not exist.")

@@ -32,6 +32,8 @@ Namespace BpaPdcStream
         Private m_dataRate As Byte
         Private m_pdcBlockPmuCount As Byte
         Private m_isPdcBlockPmu As Boolean
+        Private m_isPdcBlockHeader As Boolean
+        Private m_pdcBlockLength As Integer
 
         Protected Sub New()
         End Sub
@@ -99,7 +101,7 @@ Namespace BpaPdcStream
         ' This overload allows construction of PMU's that exist within a PDCxchng block
         Public Sub New(ByVal parent As IDataFrame, ByVal configurationCell As ConfigurationCell, ByVal isPdcBlockPmu As Boolean, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
-            MyBase.New(parent, True, MaximumPhasorValues, MaximumAnalogValues, MaximumDigitalValues, _
+            MyBase.New(parent, Not isPdcBlockPmu, MaximumPhasorValues, MaximumAnalogValues, MaximumDigitalValues, _
                 New DataCellParsingState(configurationCell, _
                     AddressOf BpaPdcStream.PhasorValue.CreateNewPhasorValue, _
                     AddressOf BpaPdcStream.FrequencyValue.CreateNewFrequencyValue, _
@@ -107,8 +109,6 @@ Namespace BpaPdcStream
                     AddressOf BpaPdcStream.DigitalValue.CreateNewDigitalValue, _
                     isPdcBlockPmu), _
                 binaryImage, startIndex)
-
-            m_isPdcBlockPmu = isPdcBlockPmu
 
         End Sub
 
@@ -327,7 +327,7 @@ Namespace BpaPdcStream
                 Return ((m_flags And ChannelFlags.TimestampIncluded) = 0)
             End Get
             Set(ByVal value As Boolean)
-                If Value Then
+                If value Then
                     m_flags = m_flags And Not ChannelFlags.TimestampIncluded
                 Else
                     m_flags = m_flags Or ChannelFlags.TimestampIncluded
@@ -351,6 +351,8 @@ Namespace BpaPdcStream
             Get
                 If m_isPdcBlockPmu Then
                     Return 2
+                ElseIf m_isPdcBlockHeader Then
+                    Return m_pdcBlockLength
                 Else
                     Return 6
                 End If
@@ -411,6 +413,7 @@ Namespace BpaPdcStream
                 phasors = 2
                 analogs = 0
                 digitals = 1
+                m_isPdcBlockPmu = True  ' Have to take note of our smaller size for HeaderLength calculation!
                 UsingPDCExchangeFormat = True
             Else
                 ' Parse number of digitals and phasors for normal PMU cells
@@ -432,15 +435,21 @@ Namespace BpaPdcStream
 
                     ' This PDC block header has no data values of its own (only PMU's) - so we cancel
                     ' data parsing for any other elements (see ParseBodyImage override below)
-                    parsingState.IsPdcBlockHeader = True
+                    m_isPdcBlockHeader = True
 
                     ' Parse PMU's from PDC block...
+                    Dim parentFrame As DataFrame = Parent
                     Dim index As Integer = parsingState.Index
+                    Dim cellLength As UInt16
+
+                    m_pdcBlockLength = 4
                     startIndex += 4
 
                     For x As Integer = 0 To m_pdcBlockPmuCount - 1
-                        Parent.Cells.Add(New DataCell(Parent, Parent.ConfigurationFrame.Cells(index + x), True, binaryImage, startIndex))
-                        startIndex += Parent.Cells(index + x).BinaryLength
+                        parentFrame.Cells.Add(New DataCell(parentFrame, parentFrame.ConfigurationFrame.Cells(index + x), True, binaryImage, startIndex))
+                        cellLength = parentFrame.Cells(index + x).BinaryLength
+                        startIndex += cellLength
+                        m_pdcBlockLength += cellLength
                     Next
                 Else
                     ' Parse PMU's sample number
@@ -514,9 +523,20 @@ Namespace BpaPdcStream
         Protected Overrides Sub ParseBodyImage(ByVal state As IChannelParsingState, ByVal binaryImage() As Byte, ByVal startIndex As Integer)
 
             ' PDC Block headers have no body elements to parse other than children and they will have already been parsed at this point
-            If Not DirectCast(state, DataCellParsingState).IsPdcBlockHeader Then MyBase.ParseBodyImage(state, binaryImage, startIndex)
+            If Not m_isPdcBlockHeader Then MyBase.ParseBodyImage(state, binaryImage, startIndex)
 
         End Sub
+
+        Protected Overrides ReadOnly Property BodyLength() As UShort
+            Get
+                If m_isPdcBlockHeader Then
+                    ' PDC Block headers have no body elements, so no length
+                    Return 0
+                Else
+                    Return MyBase.BodyLength
+                End If
+            End Get
+        End Property
 
         Public Overrides Sub GetObjectData(ByVal info As System.Runtime.Serialization.SerializationInfo, ByVal context As System.Runtime.Serialization.StreamingContext)
 

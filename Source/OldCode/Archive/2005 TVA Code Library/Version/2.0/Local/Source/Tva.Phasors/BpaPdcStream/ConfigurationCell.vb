@@ -28,6 +28,7 @@ Namespace BpaPdcStream
         Inherits ConfigurationCellBase
 
         Private m_configurationFileCell As ConfigurationCell
+        Private m_sectionEntry As String
         Private m_ieeeFormatFlags As IEEEFormatFlags
         Private m_offset As UInt16
         Private m_reserved As Int16
@@ -40,6 +41,7 @@ Namespace BpaPdcStream
             MyBase.New(info, context)
 
             ' Deserialize configuration cell
+            m_sectionEntry = info.GetString("sectionEntry")
             m_ieeeFormatFlags = info.GetValue("IEEEFormatFlags", GetType(IEEEFormatFlags))
             m_offset = info.GetUInt16("offset")
             m_reserved = info.GetUInt16("reserved")
@@ -120,6 +122,36 @@ Namespace BpaPdcStream
                     m_configurationFileCell.StationName = value
                 End If
             End Set
+        End Property
+
+        Public Property SectionEntry() As String
+            Get
+                If m_configurationFileCell Is Nothing Then
+                    Return m_sectionEntry
+                Else
+                    Return m_configurationFileCell.SectionEntry
+                End If
+            End Get
+            Set(ByVal value As String)
+                m_sectionEntry = value
+
+                ' Get ID label as substring of section entry
+                If Not String.IsNullOrEmpty(value) Then MyBase.IDLabel = m_sectionEntry.Substring(0, MyBase.IDLabelLength)
+            End Set
+        End Property
+
+        Public ReadOnly Property IsPDCBlockSection() As Boolean
+            Get
+                If m_configurationFileCell Is Nothing Then
+                    If String.IsNullOrEmpty(m_sectionEntry) Then
+                        Return False
+                    Else
+                        Return (m_sectionEntry.Length > MyBase.IDLabelLength)
+                    End If
+                Else
+                    Return m_configurationFileCell.IsPDCBlockSection
+                End If
+            End Get
         End Property
 
         Public Overrides Property IDCode() As UInt16
@@ -333,6 +365,7 @@ Namespace BpaPdcStream
             MyBase.GetObjectData(info, context)
 
             ' Serialize configuration cell
+            info.AddValue("sectionEntry", SectionEntry)
             info.AddValue("IEEEFormatFlags", m_ieeeFormatFlags, GetType(IEEEFormatFlags))
             info.AddValue("offset", m_offset)
             info.AddValue("reserved", m_reserved)
@@ -343,6 +376,7 @@ Namespace BpaPdcStream
             Get
                 Dim baseAttributes As Dictionary(Of String, String) = MyBase.Attributes
 
+                baseAttributes.Add("INI File Section Entry", SectionEntry)
                 baseAttributes.Add("Offset", m_offset)
                 baseAttributes.Add("Reserved", m_reserved)
 
