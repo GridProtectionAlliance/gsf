@@ -645,6 +645,7 @@ Namespace Files
                     .StateFile = m_stateFile
                     .IntercomFile = m_intercomFile
                     .Open(False)
+                    .FileAllocationTable.FileStartTime = TimeTag.MinValue
                     .Close(False)
                 End With
 
