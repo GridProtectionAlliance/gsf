@@ -84,6 +84,32 @@ Namespace BpaPdcStream
             End Set
         End Property
 
+        Protected Overrides ReadOnly Property BodyLength() As UShort
+            Get
+                ' PMUs in PDC block do not include Df/Dt
+                If Definition.Parent.IsPDCBlockSection Then
+                    Return MyBase.BodyLength \ 2
+                Else
+                    Return MyBase.BodyLength
+                End If
+            End Get
+        End Property
+
+        Protected Overrides Sub ParseBodyImage(ByVal state As IChannelParsingState, ByVal binaryImage() As Byte, ByVal startIndex As Integer)
+
+            ' PMUs in PDC block do not include Df/Dt
+            If Definition.Parent.IsPDCBlockSection Then
+                If DataFormat = Phasors.DataFormat.FixedInteger Then
+                    UnscaledFrequency = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex)
+                Else
+                    Frequency = EndianOrder.BigEndian.ToSingle(binaryImage, startIndex)
+                End If
+            Else
+                MyBase.ParseBodyImage(state, binaryImage, startIndex)
+            End If
+
+        End Sub
+
         Public Shared Function CalculateBinaryLength(ByVal definition As FrequencyDefinition) As UInt16
 
             ' The frequency definition will determine the binary length based on data format

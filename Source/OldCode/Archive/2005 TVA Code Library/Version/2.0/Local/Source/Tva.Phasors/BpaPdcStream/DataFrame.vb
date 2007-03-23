@@ -286,11 +286,7 @@ Namespace BpaPdcStream
 
                     If cell.UsingPDCExchangeFormat Then
                         ' Advance start index beyond PMU's added from PDC block
-                        startIndex += 4 ' PDC block header
-
-                        For x As Integer = index To index + cell.PdcBlockPmuCount - 1
-                            startIndex += Cells(x).BinaryLength
-                        Next
+                        startIndex += cell.PdcBlockLength
 
                         ' Advance current cell index and total cell count
                         index += cell.PdcBlockPmuCount
