@@ -26,7 +26,7 @@ Namespace Files
         Private m_searchStartTime As TimeTag    ' <=| Used for finding data block pointer in m_dataBlockPointers 
         Private m_searchEndTime As TimeTag      ' <=|
 
-        Private Const MinimumBinaryLength As Integer = 32
+        Private Const FixedBinaryLength As Integer = 32
 
 #End Region
 
@@ -51,7 +51,7 @@ Namespace Files
             MyClass.New()
             If archiveFileStream IsNot Nothing Then
                 m_fileStream = archiveFileStream
-                Dim fixedFatData As Byte() = CreateArray(Of Byte)(MinimumBinaryLength)
+                Dim fixedFatData As Byte() = CreateArray(Of Byte)(FixedBinaryLength)
                 m_fileStream.Seek(-fixedFatData.Length, SeekOrigin.End)
                 m_fileStream.Read(fixedFatData, 0, fixedFatData.Length)
                 m_fileStartTime = New TimeTag(BitConverter.ToDouble(fixedFatData, 0))
@@ -62,7 +62,7 @@ Namespace Files
                 m_dataBlockCount = BitConverter.ToInt32(fixedFatData, 28)
 
                 Dim variableFatData As Byte() = CreateArray(Of Byte)(m_dataBlockCount * ArchiveDataBlockPointer.Size)
-                m_fileStream.Seek(-(variableFatData.Length + MinimumBinaryLength), SeekOrigin.End)
+                m_fileStream.Seek(-(variableFatData.Length + FixedBinaryLength), SeekOrigin.End)
                 m_fileStream.Read(variableFatData, 0, variableFatData.Length)
                 For i As Integer = 0 To variableFatData.Length - 1 Step ArchiveDataBlockPointer.Size
                     m_dataBlockPointers.Add(New ArchiveDataBlockPointer(variableFatData, i))
@@ -252,7 +252,7 @@ Namespace Files
                         (i * ArchiveDataBlockPointer.Size) + arrayDescriptor.BinaryLength, ArchiveDataBlockPointer.Size)
                 Next
 
-                Dim pointersBinaryLength As Integer = BinaryLength - MinimumBinaryLength
+                Dim pointersBinaryLength As Integer = BinaryLength - FixedBinaryLength
                 Array.Copy(BitConverter.GetBytes(m_fileStartTime.Value), 0, image, pointersBinaryLength, 8)
                 Array.Copy(BitConverter.GetBytes(m_fileEndTime.Value), 0, image, pointersBinaryLength + 8, 8)
                 Array.Copy(BitConverter.GetBytes(m_eventsReceived), 0, image, pointersBinaryLength + 16, 4)
@@ -267,7 +267,7 @@ Namespace Files
         Public ReadOnly Property BinaryLength() As Integer Implements IBinaryDataProvider.BinaryLength
             Get
                 ' We add 10 bytes for the array descriptor that required for reading the file from VB.
-                Return (10 + (m_dataBlockCount * ArchiveDataBlockPointer.Size) + MinimumBinaryLength)
+                Return (10 + (m_dataBlockCount * ArchiveDataBlockPointer.Size) + FixedBinaryLength)
             End Get
         End Property
 
