@@ -72,6 +72,12 @@ Namespace Files
             End Get
         End Property
 
+        Public ReadOnly Property IsForHistoricData() As Boolean
+            Get
+
+            End Get
+        End Property
+
         Public Function Read() As List(Of StandardPointData)
 
             Dim data As New List(Of StandardPointData)()

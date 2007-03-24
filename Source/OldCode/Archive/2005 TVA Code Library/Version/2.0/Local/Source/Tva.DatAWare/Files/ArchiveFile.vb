@@ -17,6 +17,7 @@ Namespace Files
 #Region " Member Declaration "
 
         Private m_name As String
+        Private m_type As ArchiveFileType
         Private m_size As Double
         Private m_blockSize As Integer
         Private m_saveOnClose As Boolean
@@ -26,16 +27,16 @@ Namespace Files
         Private m_offloadCount As Integer
         Private m_offloadThreshold As Short
         Private m_compressData As Boolean
+        Private m_discardOoSData As Boolean
         Private m_configurationCategory As String
-        Private m_isStandbyFile As Boolean
         Private m_stateFile As StateFile
         Private m_intercomFile As IntercomFile
         Private m_fat As ArchiveFileAllocationTable
         Private m_fileStream As FileStream
         Private m_historicFileList As List(Of ArchiveFileInfo)
-        Private m_historicFileListThread As Thread
         Private m_rolloverPreparationDone As Boolean
         Private m_rolloverPreparationThread As Thread
+        Private m_buildHistoricFileListThread As Thread
 
         Private WithEvents m_historicDataQueue As ProcessQueue(Of StandardPointData)
         Private WithEvents m_outOfSequenceDataQueue As ProcessQueue(Of StandardPointData)
@@ -59,9 +60,14 @@ Namespace Files
         Public Event RolloverPreparationStart As EventHandler
         Public Event RolloverPreparationComplete As EventHandler
         Public Event RolloverPreparationException As EventHandler(Of ExceptionEventArgs)
-        Public Event BuildHistoricFileListStart As EventHandler
-        Public Event BuildHistoricFileListComplete As EventHandler
-        Public Event BuildHistoricFileListException As EventHandler(Of ExceptionEventArgs)
+        Public Event HistoricFileListBuildStart As EventHandler
+        Public Event HistoricFileListBuildComplete As EventHandler
+        Public Event HistoricFileListBuildException As EventHandler(Of ExceptionEventArgs)
+        Public Event HistoricFileListUpdated As EventHandler
+
+        Public Event RealTimeDataReceived As EventHandler
+        Public Event HistoricDataReceived As EventHandler
+        Public Event OutOfSequenceDataReceived As EventHandler
 
         'Public Event DataReceived As EventHandler
         'Public Event DataArchived As EventHandler
@@ -72,33 +78,6 @@ Namespace Files
 #Region " Public Code "
 
         Public Const Extension As String = ".d"
-
-        Public Sub New(ByVal isStandbyFile As Boolean)
-
-            MyBase.New()
-
-            'This call is required by the Component Designer.
-            InitializeComponent()
-
-            m_name = Me.GetType().Name & Extension
-            m_size = 100L
-            m_blockSize = 8
-            m_saveOnClose = True
-            m_rolloverOnFull = True
-            m_rolloverPreparationThreshold = 75
-            m_offloadCount = 5
-            m_offloadThreshold = 90
-            m_compressData = True
-            m_configurationCategory = Me.GetType().Name
-            m_isStandbyFile = isStandbyFile
-            m_historicFileList = New List(Of ArchiveFileInfo)()
-            m_historicFileListThread = New System.Threading.Thread(AddressOf BuildHistoricFileList)
-            m_rolloverPreparationThread = New System.Threading.Thread(AddressOf PrepareForRollover)
-
-            m_historicDataQueue = Tva.Collections.ProcessQueue(Of StandardPointData).CreateRealTimeQueue(AddressOf WriteToHistoricArchiveFile)
-            m_outOfSequenceDataQueue = Tva.Collections.ProcessQueue(Of StandardPointData).CreateRealTimeQueue(AddressOf InsertInCurrentArchiveFile)
-
-        End Sub
 
         Public Property Name() As String
             Get
@@ -114,6 +93,15 @@ Namespace Files
                 Else
                     Throw New ArgumentNullException("Name")
                 End If
+            End Set
+        End Property
+
+        Public Property Type() As ArchiveFileType
+            Get
+                Return m_type
+            End Get
+            Set(ByVal value As ArchiveFileType)
+                m_type = value
             End Set
         End Property
 
@@ -210,6 +198,15 @@ Namespace Files
             End Set
         End Property
 
+        Public Property DiscardOoSData() As Boolean
+            Get
+                Return m_discardOoSData
+            End Get
+            Set(ByVal value As Boolean)
+                m_discardOoSData = value
+            End Set
+        End Property
+
         ''' <summary>
         ''' 
         ''' </summary>
@@ -261,7 +258,8 @@ Namespace Files
                     RaiseEvent FileOpening(Me, EventArgs.Empty)
 
                     m_name = AbsolutePath(m_name)
-                    If m_isStandbyFile Then m_name = Path.ChangeExtension(m_name, StandbyFileExtension)
+                    If m_type = ArchiveFileType.Standby Then m_name = Path.ChangeExtension(m_name, StandbyFileExtension)
+
                     If File.Exists(m_name) Then
                         ' File has been created already, so we just need to read it.
                         m_fileStream = New FileStream(m_name, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite)
@@ -280,22 +278,27 @@ Namespace Files
                     If Not m_stateFile.IsOpen Then m_stateFile.Open()
                     If Not m_intercomFile.IsOpen Then m_intercomFile.Open()
 
-                    If Not m_isStandbyFile Then
+                    ' We can safely mark the file as historic if it doesn't have space for data unless extended.
+                    If m_fat.DataBlocksAvailable = 0 Then m_type = ArchiveFileType.Historic
+
+                    If m_type = ArchiveFileType.Active Then
                         ' Start preparing the list of historic files on a seperate thread.
-                        m_historicFileListThread = New Thread(AddressOf BuildHistoricFileList)
-                        m_historicFileListThread.Priority = ThreadPriority.Lowest
-                        m_historicFileListThread.Start()
+                        m_buildHistoricFileListThread = New Thread(AddressOf BuildHistoricFileList)
+                        m_buildHistoricFileListThread.Priority = ThreadPriority.Lowest
+                        m_buildHistoricFileListThread.Start()
 
                         CurrentLocationFileSystemWatcher.Filter = HistoricFilesSearchPattern
                         CurrentLocationFileSystemWatcher.Path = JustPath(m_name)
+                        CurrentLocationFileSystemWatcher.EnableRaisingEvents = True
                         OffloadLocationFileSystemWatcher.Filter = HistoricFilesSearchPattern
                         OffloadLocationFileSystemWatcher.Path = m_offloadPath
+                        OffloadLocationFileSystemWatcher.EnableRaisingEvents = True
 
                         If m_fat.FileStartTime.CompareTo(TimeTag.MinValue) = 0 Then
-                            ' If the current file is not a "standby" file and if its file's start time is not set 
-                            ' (i.e. we're working with a brand new file with no data), we set it to the timetag of 
-                            ' the latest value from the intercom file. This latest value timetag will be 0 only when 
-                            ' the archiver is initialized the very first time and if that's the case, the file's 
+                            ' If the current file is the "active" archive file and if its file's start time is not 
+                            ' set (i.e. we're working with a brand new file with no data), we set it to the timetag 
+                            ' of the latest value from the intercom file. This latest value timetag will be 0 only 
+                            ' when the archiver is being run for the first time and if that's the case, the file's 
                             ' start time will be set when the very first point data is written.
                             m_fat.FileStartTime = m_intercomFile.Records(0).LastestCurrentValueTimeTag
                         End If
@@ -320,18 +323,28 @@ Namespace Files
                 m_fat = Nothing
                 m_fileStream.Dispose()
                 m_fileStream = Nothing
-                m_historicFileList.Clear()
-                m_historicFileListThread.Abort()
                 m_rolloverPreparationThread.Abort()
+                m_buildHistoricFileListThread.Abort()
                 m_historicDataQueue.Stop()
                 m_outOfSequenceDataQueue.Stop()
-                If Not m_isStandbyFile AndAlso m_stateFile.IsOpen Then
-                    ' The current archive file is open multiple times (by ArchiveDataBlock) only when data is being
+
+                If m_type = ArchiveFileType.Active Then
+                    m_historicFileList.Clear()
+                    m_historicFileList = Nothing
+                    CurrentLocationFileSystemWatcher.EnableRaisingEvents = False
+                    OffloadLocationFileSystemWatcher.EnableRaisingEvents = False
+                End If
+
+                If m_type <> ArchiveFileType.Standby AndAlso m_stateFile.IsOpen Then
+                    ' The archive file is open multiple times (by ArchiveDataBlock) only when data is being
                     ' written to the file. In case the current file is for "standby" purpose, no data will be 
-                    ' written to it and therefore, the file will not be opened multiple time when in "standby" mode.
+                    ' written to it and therefore, the file will not be opened multiple time in "standby" mode.
                     For i As Integer = 0 To m_stateFile.Records.Count - 1
                         ' We'll release all the data blocks that were being used by the file.
-                        If m_stateFile.Records(i).ActiveDataBlock IsNot Nothing Then
+                        If m_stateFile.Records(i).ActiveDataBlock IsNot Nothing AndAlso _
+                                (m_type = ArchiveFileType.Active OrElse (m_type = ArchiveFileType.Historic AndAlso m_stateFile.Records(i).ActiveDataBlock.IsForHistoricData)) Then
+                            ' We'll deallocate the data block if the current file is "active" or if it is "historic" 
+                            ' and the block was used to append historical data into it.
                             m_stateFile.Records(i).ActiveDataBlock.Dispose()
                             m_stateFile.Records(i).ActiveDataBlock = Nothing
                         End If
@@ -457,8 +470,10 @@ Namespace Files
                             ' Discard the data
                         End If
                     Else
-                        ' Insert the data into the current file.
-                        m_outOfSequenceDataQueue.Add(pointData)
+                        If Not m_discardOoSData Then
+                            ' Insert the data into the current file.
+                            m_outOfSequenceDataQueue.Add(pointData)
+                        End If
                     End If
                 Else
                     ' The data to be written has a timetag that is older than the file's start time, so the data
@@ -494,6 +509,10 @@ Namespace Files
             Next
 
         End Sub
+
+        Public Shared Function IsFileHistoric(ByVal fileName As String) As Boolean
+
+        End Function
 
         Public Shared Function MaximumDataBlocks(ByVal fileSize As Double, ByVal blockSize As Integer) As Integer
 
@@ -538,16 +557,18 @@ Namespace Files
 
             Try
                 With CategorizedSettings(m_configurationCategory)
-                    Name = .Item("Name").Value
+                    Name = .Item("Name").GetTypedValue(m_name)
+                    Type = .Item("Type").GetTypedValue(m_type)
                     Size = .Item("Size").GetTypedValue(m_size)
                     BlockSize = .Item("BlockSize").GetTypedValue(m_blockSize)
                     SaveOnClose = .Item("SaveOnClose").GetTypedValue(m_saveOnClose)
                     RolloverOnFull = .Item("RolloverOnFull").GetTypedValue(m_rolloverOnFull)
                     RolloverPreparationThreshold = .Item("RolloverPreparationThreshold").GetTypedValue(m_rolloverPreparationThreshold)
-                    OffloadPath = .Item("OffloadPath").Value
+                    OffloadPath = .Item("OffloadPath").GetTypedValue(m_offloadPath)
                     OffloadCount = .Item("OffloadCount").GetTypedValue(m_offloadCount)
                     OffloadThreshold = .Item("OffloadThreshold").GetTypedValue(m_offloadThreshold)
                     CompressData = .Item("CompressData").GetTypedValue(m_compressData)
+                    DiscardOoSData = .Item("DiscardOoSData").GetTypedValue(m_discardOoSData)
                 End With
             Catch ex As Exception
                 ' We'll encounter exceptions if the settings are not present in the config file.
@@ -559,9 +580,14 @@ Namespace Files
 
             Try
                 With CategorizedSettings(m_configurationCategory)
+                    .Clear()
                     With .Item("Name", True)
                         .Value = m_name
                         .Description = "Name of the file including its path."
+                    End With
+                    With .Item("Type", True)
+                        .Value = m_type.ToString()
+                        .Description = "Type of the file (Active; Standby; Historic)."
                     End With
                     With .Item("Size", True)
                         .Value = m_size.ToString()
@@ -599,6 +625,10 @@ Namespace Files
                         .Value = m_compressData.ToString()
                         .Description = "True if compression is to be performed on the data; otherwise False."
                     End With
+                    With .Item("DiscardOoSData", True)
+                        .Value = m_discardOoSData.ToString()
+                        .Description = "True if out-of-sequence data is to be discarded; otherwise False."
+                    End With
                 End With
                 Tva.Configuration.Common.SaveSettings()
             Catch ex As Exception
@@ -630,28 +660,28 @@ Namespace Files
         Private Sub BuildHistoricFileList()
 
             Try
-                Dim historicFileList As New List(Of ArchiveFileInfo)()
+                m_historicFileList = New List(Of ArchiveFileInfo)()
 
-                RaiseEvent BuildHistoricFileListStart(Me, EventArgs.Empty)
+                RaiseEvent HistoricFileListBuildStart(Me, EventArgs.Empty)
 
-                For Each historicFileName As String In Directory.GetFiles(JustPath(m_name), HistoricFilesSearchPattern)
-                    historicFileList.Add(GetFileInfo(historicFileName))
-                Next
-
-                If Not String.IsNullOrEmpty(m_offloadPath) Then
-                    For Each historicFileName As String In Directory.GetFiles(m_offloadPath, HistoricFilesSearchPattern)
-                        historicFileList.Add(GetFileInfo(historicFileName))
-                    Next
-                End If
-
+                ' We can safely assume that we'll always get information about the historic file because, the
+                ' the search pattern ensures that we only can a list of historic archive files and not all files.
                 SyncLock m_historicDataQueue
-                    m_historicFileList.Clear()
-                    m_historicFileList.AddRange(historicFileList)
+                    ' Prevent the historic file list from being updated by the file watchers.
+                    For Each historicFileName As String In Directory.GetFiles(JustPath(m_name), HistoricFilesSearchPattern)
+                        m_historicFileList.Add(GetHistoricFileInfo(historicFileName))
+                    Next
+
+                    If Not String.IsNullOrEmpty(m_offloadPath) Then
+                        For Each historicFileName As String In Directory.GetFiles(m_offloadPath, HistoricFilesSearchPattern)
+                            m_historicFileList.Add(GetHistoricFileInfo(historicFileName))
+                        Next
+                    End If
                 End SyncLock
 
-                RaiseEvent BuildHistoricFileListComplete(Me, EventArgs.Empty)
+                RaiseEvent HistoricFileListBuildComplete(Me, EventArgs.Empty)
             Catch ex As Exception
-                RaiseEvent BuildHistoricFileListException(Me, New ExceptionEventArgs(ex))
+                RaiseEvent HistoricFileListBuildException(Me, New ExceptionEventArgs(ex))
             End Try
 
         End Sub
@@ -668,8 +698,9 @@ Namespace Files
                 RaiseEvent RolloverPreparationStart(Me, EventArgs.Empty)
 
                 ' Opening and closing a new archive file in "standby" mode will create a "standby" file.
-                With New ArchiveFile(True)
+                With New ArchiveFile()
                     .Name = m_name
+                    .Type = ArchiveFileType.Standby
                     .Size = m_size
                     .BlockSize = m_blockSize
                     .StateFile = m_stateFile
@@ -717,17 +748,44 @@ Namespace Files
 
         End Sub
 
-        Private Function GetFileInfo(ByVal fileName As String) As ArchiveFileInfo
+        Private Function GetHistoricFileInfo(ByVal fileName As String) As ArchiveFileInfo
 
-            Dim datesString As String = NoFileExtension(fileName).Substring((NoFileExtension(m_name) & "_").Length)
-            Dim fileStartEndDates As String() = datesString.Split(New String() {"_to_"}, StringSplitOptions.None)
+            Dim fileInfo As ArchiveFileInfo = Nothing
 
-            Dim fileInfo As New ArchiveFileInfo()
-            fileInfo.FileName = fileName
-            If fileStartEndDates.Length = 2 Then
-                fileInfo.StartTimeTag = New TimeTag(Convert.ToDateTime(fileStartEndDates(0).Replace("!"c, ":"c)))
-                fileInfo.EndTimeTag = New TimeTag(Convert.ToDateTime(fileStartEndDates(1).Replace("!"c, ":"c)))
-            End If
+            Try
+                If File.Exists(fileName) Then
+                    ' We'll open the file and get relevant information about it.
+
+                    fileInfo = New ArchiveFileInfo()
+                    With New ArchiveFile()
+                        .Name = fileName
+                        .Type = ArchiveFileType.Historic
+                        .SaveOnClose = False
+                        .StateFile = m_stateFile
+                        .IntercomFile = m_intercomFile
+                        .Open()
+                        fileInfo.FileName = fileName
+                        fileInfo.StartTimeTag = .FileAllocationTable.FileStartTime
+                        fileInfo.EndTimeTag = .FileAllocationTable.FileEndTime
+                        .Close()
+                    End With
+                Else
+                    ' We'll resolve to getting the file information from its name only if the file no longer exists
+                    ' at the location. This will be the case when file is moved to a different location. In this
+                    ' case the file information we provide is only as good as the file name.
+                    Dim datesString As String = NoFileExtension(fileName).Substring((NoFileExtension(m_name) & "_").Length)
+                    Dim fileStartEndDates As String() = datesString.Split(New String() {"_to_"}, StringSplitOptions.None)
+
+                    fileInfo = New ArchiveFileInfo()
+                    fileInfo.FileName = fileName
+                    If fileStartEndDates.Length = 2 Then
+                        fileInfo.StartTimeTag = New TimeTag(Convert.ToDateTime(fileStartEndDates(0).Replace("!"c, ":"c)))
+                        fileInfo.EndTimeTag = New TimeTag(Convert.ToDateTime(fileStartEndDates(1).Replace("!"c, ":"c)))
+                    End If
+                End If
+            Catch ex As Exception
+
+            End Try
 
             Return fileInfo
 
@@ -891,40 +949,67 @@ Namespace Files
 
         Private Sub CurrentLocationFileSystemWatcher_Created(ByVal sender As Object, ByVal e As System.IO.FileSystemEventArgs) Handles CurrentLocationFileSystemWatcher.Created, OffloadLocationFileSystemWatcher.Created
 
-            Dim historicFileInfo As ArchiveFileInfo = GetFileInfo(e.FullPath)
-            SyncLock m_historicFileList
-                If Not m_historicFileList.Contains(historicFileInfo) Then m_historicFileList.Add(historicFileInfo)
-            End SyncLock
+            If IsOpen Then
+                ' Attempt to update the historic file list only if the current file is open.
+                Dim historicFileInfo As ArchiveFileInfo = GetHistoricFileInfo(e.FullPath)
+                SyncLock m_historicFileList
+                    If historicFileInfo IsNot Nothing AndAlso Not m_historicFileList.Contains(historicFileInfo) Then
+                        m_historicFileList.Add(historicFileInfo)
+                        RaiseEvent HistoricFileListUpdated(Me, EventArgs.Empty)
+                    End If
+                End SyncLock
+            End If
 
         End Sub
 
         Private Sub CurrentLocationFileSystemWatcher_Deleted(ByVal sender As Object, ByVal e As System.IO.FileSystemEventArgs) Handles CurrentLocationFileSystemWatcher.Deleted, OffloadLocationFileSystemWatcher.Deleted
 
-            Dim historicFileInfo As ArchiveFileInfo = GetFileInfo(e.FullPath)
-            SyncLock m_historicFileList
-                If m_historicFileList.Contains(historicFileInfo) Then m_historicFileList.Remove(historicFileInfo)
-            End SyncLock
+            If IsOpen Then
+                ' Attempt to update the historic file list only if the current file is open.
+                Dim historicFileInfo As ArchiveFileInfo = GetHistoricFileInfo(e.FullPath)
+                SyncLock m_historicFileList
+                    If historicFileInfo IsNot Nothing AndAlso m_historicFileList.Contains(historicFileInfo) Then
+                        m_historicFileList.Remove(historicFileInfo)
+                        RaiseEvent HistoricFileListUpdated(Me, EventArgs.Empty)
+                    End If
+                End SyncLock
+            End If
 
         End Sub
 
         Private Sub CurrentLocationFileSystemWatcher_Renamed(ByVal sender As Object, ByVal e As System.IO.RenamedEventArgs) Handles CurrentLocationFileSystemWatcher.Renamed, OffloadLocationFileSystemWatcher.Renamed
 
-            If String.Compare(JustFileExtension(e.OldFullPath), Extension, True) = 0 Then
-                Try
-                    Dim oldFileInfo As ArchiveFileInfo = GetFileInfo(e.OldFullPath)
-                    SyncLock m_historicFileList
-                        If m_historicFileList.Contains(oldFileInfo) Then m_historicFileList.Remove(oldFileInfo)
-                    End SyncLock
-                Catch ex As Exception
-                    ' We'll encounter an exception when the current file is rolled over to a historic file.
-                End Try
-            End If
+            If IsOpen Then
+                ' Attempt to update the historic file list only if the current file is open.
+                If String.Compare(JustFileExtension(e.OldFullPath), Extension, True) = 0 Then
+                    Try
+                        Dim oldFileInfo As ArchiveFileInfo = GetHistoricFileInfo(e.OldFullPath)
+                        SyncLock m_historicFileList
+                            If oldFileInfo IsNot Nothing AndAlso m_historicFileList.Contains(oldFileInfo) Then
+                                m_historicFileList.Remove(oldFileInfo)
+                                RaiseEvent HistoricFileListUpdated(Me, EventArgs.Empty)
+                            End If
+                        End SyncLock
+                    Catch ex As Exception
+                        ' Ignore any exception we might encounter here if an archive file being renamed to a 
+                        ' historic archive file. This might happen if someone is renaming files manually.
+                    End Try
+                End If
 
-            If String.Compare(JustFileExtension(e.FullPath), Extension, True) = 0 Then
-                Dim newFileInfo As ArchiveFileInfo = GetFileInfo(e.FullPath)
-                SyncLock m_historicFileList
-                    If Not m_historicFileList.Contains(newFileInfo) Then m_historicFileList.Add(newFileInfo)
-                End SyncLock
+                If String.Compare(JustFileExtension(e.FullPath), Extension, True) = 0 Then
+                    Try
+                        Dim newFileInfo As ArchiveFileInfo = GetHistoricFileInfo(e.FullPath)
+                        SyncLock m_historicFileList
+                            If newFileInfo IsNot Nothing AndAlso Not m_historicFileList.Contains(newFileInfo) Then
+                                m_historicFileList.Add(newFileInfo)
+                                RaiseEvent HistoricFileListUpdated(Me, EventArgs.Empty)
+                            End If
+                        End SyncLock
+                    Catch ex As Exception
+                        ' Ignore any exception we might encounter if a historic archive file is being renamed to 
+                        ' something else. This might happen if someone is renaming files manually.
+                    End Try
+                End If
             End If
 
         End Sub

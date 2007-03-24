@@ -337,7 +337,7 @@ Namespace Files
 
             Try
                 With CategorizedSettings(m_configurationCategory)
-                    Name = .Item("Name").Value
+                    Name = .Item("Name").GetTypedValue(m_name)
                     SaveOnClose = .Item("SaveOnClose").GetTypedValue(m_saveOnClose)
                     AlignOnSave = .Item("AlignOnSave").GetTypedValue(m_alignOnSave)
                     AutoSaveInterval = .Item("AutoSaveInterval").GetTypedValue(m_autoSaveInterval)
@@ -354,6 +354,7 @@ Namespace Files
 
             Try
                 With CategorizedSettings(m_configurationCategory)
+                    .Clear()
                     With .Item("Name", True)
                         .Value = m_name
                         .Description = "Name of the file including its path."

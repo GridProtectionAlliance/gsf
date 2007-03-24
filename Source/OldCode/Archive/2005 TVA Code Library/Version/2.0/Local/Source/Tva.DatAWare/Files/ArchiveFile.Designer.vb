@@ -14,8 +14,28 @@ Namespace Files
 
         <System.Diagnostics.DebuggerNonUserCode()> _
         Public Sub New()
+            MyBase.New()
 
-            MyClass.New(False)
+            'This call is required by the Component Designer.
+            InitializeComponent()
+
+            m_name = Me.GetType().Name & Extension
+            m_type = ArchiveFileType.Active
+            m_size = 100L
+            m_blockSize = 8
+            m_saveOnClose = True
+            m_rolloverOnFull = True
+            m_rolloverPreparationThreshold = 75
+            m_offloadCount = 5
+            m_offloadThreshold = 90
+            m_compressData = True
+            m_discardOoSData = True
+            m_configurationCategory = Me.GetType().Name
+            m_rolloverPreparationThread = New System.Threading.Thread(AddressOf PrepareForRollover)
+            m_buildHistoricFileListThread = New System.Threading.Thread(AddressOf BuildHistoricFileList)
+
+            m_historicDataQueue = Tva.Collections.ProcessQueue(Of StandardPointData).CreateRealTimeQueue(AddressOf WriteToHistoricArchiveFile)
+            m_outOfSequenceDataQueue = Tva.Collections.ProcessQueue(Of StandardPointData).CreateRealTimeQueue(AddressOf InsertInCurrentArchiveFile)
 
         End Sub
 
