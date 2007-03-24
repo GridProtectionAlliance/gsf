@@ -71,6 +71,7 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Enumerations.vb" />
+    <Compile Include="Files\Enumerations.vb" />
     <Compile Include="Files\IntercomFile.Designer.vb">
       <DependentUpon>IntercomFile.vb</DependentUpon>
     </Compile>
