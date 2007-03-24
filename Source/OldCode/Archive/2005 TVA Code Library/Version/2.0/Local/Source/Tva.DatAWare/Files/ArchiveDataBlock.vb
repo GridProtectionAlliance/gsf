@@ -113,7 +113,9 @@ Namespace Files
 
         End Sub
 
-#Region " IDisposable Implementation "
+#Region " Interface Implementations "
+
+#Region " IDisposable "
 
         Private m_disposed As Boolean = False        ' To detect redundant calls
 
@@ -137,6 +139,7 @@ Namespace Files
         End Sub
 #End Region
 
+#End Region
 #End Region
 
     End Class

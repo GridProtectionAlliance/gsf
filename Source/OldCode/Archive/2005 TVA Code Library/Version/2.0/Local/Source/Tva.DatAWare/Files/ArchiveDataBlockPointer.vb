@@ -74,8 +74,8 @@ Namespace Files
 
             Dim other As ArchiveDataBlockPointer = TryCast(obj, ArchiveDataBlockPointer)
             If other IsNot Nothing Then
-                Dim pointIndexCompare As Integer = m_pointID.CompareTo(other.PointID)
-                Return IIf(pointIndexCompare = 0, m_startTime.CompareTo(other.StartTime), pointIndexCompare)
+                Dim pointIDCompare As Integer = m_pointID.CompareTo(other.PointID)
+                Return IIf(pointIDCompare = 0, m_startTime.CompareTo(other.StartTime), pointIDCompare)
             Else
                 Throw New ArgumentException(String.Format("Cannot compare {0} with {1}.", Me.GetType().Name, other.GetType().Name))
             End If

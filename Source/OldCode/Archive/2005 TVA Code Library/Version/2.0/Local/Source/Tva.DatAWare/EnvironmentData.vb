@@ -86,7 +86,7 @@ Public Class EnvironmentData
         End Set
     End Property
 
-    Public Property latestCurrentValuePointID() As Integer
+    Public Property LatestCurrentValuePointID() As Integer
         Get
             Return m_latestCurrentValuePointID
         End Get

@@ -6,7 +6,7 @@ Imports Tva.Interop
 Namespace Files
 
     Public Class ArchiveFileAllocationTable
-        Implements IBinaryDataProvider
+        Implements IDisposable, IBinaryDataProvider
 
         ' *******************************************************
         ' *                     FAT structure                   *
@@ -22,11 +22,14 @@ Namespace Files
         Private m_dataBlockCount As Integer
         Private m_dataBlockPointers As List(Of ArchiveDataBlockPointer)
         Private m_fileStream As FileStream
-        Private m_searchPointIndex As Integer   ' <=|
+        Private m_searchPointID As Integer      ' <=|
         Private m_searchStartTime As TimeTag    ' <=| Used for finding data block pointer in m_dataBlockPointers 
         Private m_searchEndTime As TimeTag      ' <=|
 
-        Private Const FixedBinaryLength As Integer = 32
+        Private WithEvents m_fatUpdateTimer As System.Timers.Timer
+
+        Private Const FatUpdateInterval As Integer = 3000
+        Private Const ArrayDescriptorLength As Integer = 10
 
 #End Region
 
@@ -36,6 +39,7 @@ Namespace Files
             m_fileStartTime = TimeTag.MinValue
             m_fileEndTime = TimeTag.MinValue
             m_dataBlockPointers = New List(Of ArchiveDataBlockPointer)()
+            m_fatUpdateTimer = New System.Timers.Timer(FatUpdateInterval)
 
         End Sub
 
@@ -67,6 +71,8 @@ Namespace Files
                 For i As Integer = 0 To variableFatData.Length - 1 Step ArchiveDataBlockPointer.Size
                     m_dataBlockPointers.Add(New ArchiveDataBlockPointer(variableFatData, i))
                 Next
+
+                m_fatUpdateTimer.Start()
             Else
                 Throw New ArgumentNullException("archiveFileStream")
             End If
@@ -89,6 +95,8 @@ Namespace Files
             For i As Integer = 1 To m_dataBlockCount
                 m_dataBlockPointers.Add(New ArchiveDataBlockPointer())
             Next
+
+            m_fatUpdateTimer.Start()
 
         End Sub
 
@@ -172,9 +180,11 @@ Namespace Files
         Public Sub Persist()
 
             ' Leave space for data blocks.
-            m_fileStream.Seek(m_dataBlockCount * (m_dataBlockSize * 1024L), SeekOrigin.Begin)
-            m_fileStream.Write(BinaryImage, 0, BinaryLength)
-            m_fileStream.Flush()
+            SyncLock m_fileStream
+                m_fileStream.Seek(DataBinaryLength, SeekOrigin.Begin)
+                m_fileStream.Write(BinaryImage, 0, BinaryLength)
+                m_fileStream.Flush()
+            End SyncLock
 
         End Sub
 
@@ -192,14 +202,21 @@ Namespace Files
 
         End Sub
 
-        Public Function RequestDataBlock(ByVal pointIndex As Integer, ByVal startTime As TimeTag) As ArchiveDataBlock
+        Public Function RequestDataBlock(ByVal pointID As Integer, ByVal startTime As TimeTag) As ArchiveDataBlock
 
             ' Get the index of the first available data block's pointer.
             Dim unusedPointerIndex As Integer = m_dataBlockPointers.IndexOf(New ArchiveDataBlockPointer())
             If unusedPointerIndex >= 0 Then
                 ' Assign the data block to the specified point index.
-                m_dataBlockPointers(unusedPointerIndex).PointID = pointIndex
+                m_dataBlockPointers(unusedPointerIndex).PointID = pointID
                 m_dataBlockPointers(unusedPointerIndex).StartTime = startTime
+
+                SyncLock m_fileStream
+                    ' We'll write information about the just allocateddata block to the file.
+                    m_fileStream.Seek(DataBinaryLength + ArrayDescriptorLength + (unusedPointerIndex * ArchiveDataBlockPointer.Size), SeekOrigin.Begin)
+                    m_fileStream.Write(m_dataBlockPointers(unusedPointerIndex).BinaryImage, 0, ArchiveDataBlockPointer.Size)
+                End SyncLock
+
                 ' Get the data block that corresponds to data block pointer.
                 Return GetDataBlock(m_dataBlockPointers(unusedPointerIndex))
             Else
@@ -208,22 +225,22 @@ Namespace Files
 
         End Function
 
-        Public Function FindDataBlocks(ByVal pointIndex As Integer) As List(Of ArchiveDataBlock)
+        Public Function FindDataBlocks(ByVal pointID As Integer) As List(Of ArchiveDataBlock)
 
-            Return FindDataBlocks(pointIndex, TimeTag.MinValue)
-
-        End Function
-
-        Public Function FindDataBlocks(ByVal pointIndex As Integer, ByVal startTime As TimeTag) As List(Of ArchiveDataBlock)
-
-            Return FindDataBlocks(pointIndex, startTime, TimeTag.MaxValue)
+            Return FindDataBlocks(pointID, TimeTag.MinValue)
 
         End Function
 
-        Public Function FindDataBlocks(ByVal pointIndex As Integer, ByVal startTime As TimeTag, ByVal endTime As TimeTag) As List(Of ArchiveDataBlock)
+        Public Function FindDataBlocks(ByVal pointID As Integer, ByVal startTime As TimeTag) As List(Of ArchiveDataBlock)
+
+            Return FindDataBlocks(pointID, startTime, TimeTag.MaxValue)
+
+        End Function
+
+        Public Function FindDataBlocks(ByVal pointID As Integer, ByVal startTime As TimeTag, ByVal endTime As TimeTag) As List(Of ArchiveDataBlock)
 
             ' Setup the search criteria that will be used for finding data block pointers.
-            m_searchPointIndex = pointIndex
+            m_searchPointID = pointID
             m_searchStartTime = IIf(startTime IsNot Nothing, startTime, TimeTag.MinValue)
             m_searchEndTime = IIf(endTime IsNot Nothing, endTime, TimeTag.MaxValue)
 
@@ -239,26 +256,42 @@ Namespace Files
 
         End Function
 
-#Region " IBinaryDataProvider Implementation "
+#Region " Interface Implementations "
+
+#Region " IDisposable "
+
+        Private m_disposedValue As Boolean = False        ' To detect redundant calls
+
+        Protected Overridable Sub Dispose(ByVal disposing As Boolean)
+
+            If Not m_disposedValue Then
+                If disposing Then
+                    m_fatUpdateTimer.Dispose()
+                End If
+            End If
+            m_disposedValue = True
+
+        End Sub
+
+#Region " IDisposable Support "
+        ' This code added by Visual Basic to correctly implement the disposable pattern.
+        Public Sub Dispose() Implements IDisposable.Dispose
+            ' Do not change this code.  Put cleanup code in Dispose(ByVal disposing As Boolean) above.
+            Dispose(True)
+            GC.SuppressFinalize(Me)
+        End Sub
+#End Region
+
+#End Region
+
+#Region " IBinaryDataProvider "
 
         Public ReadOnly Property BinaryImage() As Byte() Implements IBinaryDataProvider.BinaryImage
             Get
                 Dim image As Byte() = CreateArray(Of Byte)(BinaryLength)
-                Dim arrayDescriptor As VBArrayDescriptor = VBArrayDescriptor.OneBasedOneDimensionalArray(m_dataBlockCount)
 
-                Array.Copy(arrayDescriptor.BinaryImage, 0, image, 0, arrayDescriptor.BinaryLength)
-                For i As Integer = 0 To m_dataBlockPointers.Count - 1
-                    Array.Copy(m_dataBlockPointers(i).BinaryImage, 0, image, _
-                        (i * ArchiveDataBlockPointer.Size) + arrayDescriptor.BinaryLength, ArchiveDataBlockPointer.Size)
-                Next
-
-                Dim pointersBinaryLength As Integer = BinaryLength - FixedBinaryLength
-                Array.Copy(BitConverter.GetBytes(m_fileStartTime.Value), 0, image, pointersBinaryLength, 8)
-                Array.Copy(BitConverter.GetBytes(m_fileEndTime.Value), 0, image, pointersBinaryLength + 8, 8)
-                Array.Copy(BitConverter.GetBytes(m_eventsReceived), 0, image, pointersBinaryLength + 16, 4)
-                Array.Copy(BitConverter.GetBytes(m_eventsArchived), 0, image, pointersBinaryLength + 20, 4)
-                Array.Copy(BitConverter.GetBytes(m_dataBlockSize), 0, image, pointersBinaryLength + 24, 4)
-                Array.Copy(BitConverter.GetBytes(m_dataBlockCount), 0, image, pointersBinaryLength + 28, 4)
+                Array.Copy(VariableBinaryImage, 0, image, 0, VariableBinaryLength)
+                Array.Copy(FixedBinaryImage, 0, image, VariableBinaryLength, FixedBinaryLength)
 
                 Return image
             End Get
@@ -267,7 +300,7 @@ Namespace Files
         Public ReadOnly Property BinaryLength() As Integer Implements IBinaryDataProvider.BinaryLength
             Get
                 ' We add 10 bytes for the array descriptor that required for reading the file from VB.
-                Return (10 + (m_dataBlockCount * ArchiveDataBlockPointer.Size) + FixedBinaryLength)
+                Return VariableBinaryLength + FixedBinaryLength
             End Get
         End Property
 
@@ -275,7 +308,58 @@ Namespace Files
 
 #End Region
 
+#End Region
+
 #Region " Private Code "
+
+        Private ReadOnly Property DataBinaryLength() As Long
+            Get
+                Return (m_dataBlockCount * (m_dataBlockSize * 1024L))
+            End Get
+        End Property
+
+        Private ReadOnly Property FixedBinaryLength() As Integer
+            Get
+                Return 32
+            End Get
+        End Property
+
+        Private ReadOnly Property VariableBinaryLength() As Integer
+            Get
+                ' We add the extra bytes for the array descriptor that required for reading the file from VB.
+                Return (ArrayDescriptorLength + (m_dataBlockCount * ArchiveDataBlockPointer.Size))
+            End Get
+        End Property
+
+        Private ReadOnly Property FixedBinaryImage() As Byte()
+            Get
+                Dim fixedImage As Byte() = CreateArray(Of Byte)(FixedBinaryLength)
+
+                Array.Copy(BitConverter.GetBytes(m_fileStartTime.Value), 0, fixedImage, 0, 8)
+                Array.Copy(BitConverter.GetBytes(m_fileEndTime.Value), 0, fixedImage, 8, 8)
+                Array.Copy(BitConverter.GetBytes(m_eventsReceived), 0, fixedImage, 16, 4)
+                Array.Copy(BitConverter.GetBytes(m_eventsArchived), 0, fixedImage, 20, 4)
+                Array.Copy(BitConverter.GetBytes(m_dataBlockSize), 0, fixedImage, 24, 4)
+                Array.Copy(BitConverter.GetBytes(m_dataBlockCount), 0, fixedImage, 28, 4)
+
+                Return fixedImage
+            End Get
+        End Property
+
+        Private ReadOnly Property VariableBinaryImage() As Byte()
+            Get
+                Dim variableImage As Byte() = CreateArray(Of Byte)(VariableBinaryLength)
+                Dim arrayDescriptor As VBArrayDescriptor = VBArrayDescriptor.OneBasedOneDimensionalArray(m_dataBlockCount)
+
+                Array.Copy(arrayDescriptor.BinaryImage, 0, variableImage, 0, arrayDescriptor.BinaryLength)
+                For i As Integer = 0 To m_dataBlockPointers.Count - 1
+                    Array.Copy(m_dataBlockPointers(i).BinaryImage, 0, variableImage, _
+                        (i * ArchiveDataBlockPointer.Size) + arrayDescriptor.BinaryLength, ArchiveDataBlockPointer.Size)
+                Next
+
+                Return variableImage
+            End Get
+        End Property
 
         Private Function GetDataBlock(ByVal blockPointer As ArchiveDataBlockPointer) As ArchiveDataBlock
 
@@ -311,13 +395,33 @@ Namespace Files
         ''' <returns></returns>
         Private Function FindDataBlockPointer(ByVal dataBlockPointer As ArchiveDataBlockPointer) As Boolean
 
-            Return (dataBlockPointer.PointID = m_searchPointIndex AndAlso _
+            Return (dataBlockPointer.PointID = m_searchPointID AndAlso _
                     (m_searchStartTime.CompareTo(TimeTag.MinValue) = 0 OrElse _
                         dataBlockPointer.StartTime.CompareTo(m_searchStartTime) >= 0) AndAlso _
                     (m_searchEndTime.CompareTo(TimeTag.MaxValue) = 0 OrElse _
                         dataBlockPointer.StartTime.CompareTo(m_searchEndTime) <= 0))
 
         End Function
+
+#Region " Event Handlers "
+
+#Region " m_fatUpdateTimer "
+
+        Private Sub m_fatUpdateTimer_Elapsed(ByVal sender As Object, ByVal e As System.Timers.ElapsedEventArgs) Handles m_fatUpdateTimer.Elapsed
+
+            ' We'll periodically write the fixed part of the FAT to the file.
+            If m_fileStream IsNot Nothing Then
+                SyncLock m_fileStream
+                    m_fileStream.Seek(DataBinaryLength + VariableBinaryLength, SeekOrigin.Begin)
+                    m_fileStream.Write(FixedBinaryImage, 0, FixedBinaryLength)
+                End SyncLock
+            End If
+
+        End Sub
+
+#End Region
+
+#End Region
 
 #End Region
 

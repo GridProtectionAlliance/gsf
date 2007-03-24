@@ -27,6 +27,7 @@ Namespace Files
         Private m_offloadThreshold As Short
         Private m_compressData As Boolean
         Private m_configurationCategory As String
+        Private m_isStandbyFile As Boolean
         Private m_stateFile As StateFile
         Private m_intercomFile As IntercomFile
         Private m_fat As ArchiveFileAllocationTable
@@ -39,6 +40,8 @@ Namespace Files
         Private WithEvents m_historicDataQueue As ProcessQueue(Of StandardPointData)
         Private WithEvents m_outOfSequenceDataQueue As ProcessQueue(Of StandardPointData)
 
+        Private StandbyFileExtension As String = ".standby"
+
 #End Region
 
 #Region " Event Declaration "
@@ -50,12 +53,15 @@ Namespace Files
         Public Event FileClosed As EventHandler
         Public Event RolloverStart As EventHandler
         Public Event RolloverComplete As EventHandler
-        Public Event RolloverPreparationStart As EventHandler
-        Public Event RolloverPreparationComplete As EventHandler
-        Public Event RolloverPreparationException As EventHandler(Of ExceptionEventArgs)
         Public Event OffloadStart As EventHandler
         Public Event OffloadComplete As EventHandler
         Public Event OffloadException As EventHandler(Of ExceptionEventArgs)
+        Public Event RolloverPreparationStart As EventHandler
+        Public Event RolloverPreparationComplete As EventHandler
+        Public Event RolloverPreparationException As EventHandler(Of ExceptionEventArgs)
+        Public Event BuildHistoricFileListStart As EventHandler
+        Public Event BuildHistoricFileListComplete As EventHandler
+        Public Event BuildHistoricFileListException As EventHandler(Of ExceptionEventArgs)
 
         'Public Event DataReceived As EventHandler
         'Public Event DataArchived As EventHandler
@@ -66,6 +72,33 @@ Namespace Files
 #Region " Public Code "
 
         Public Const Extension As String = ".d"
+
+        Public Sub New(ByVal isStandbyFile As Boolean)
+
+            MyBase.New()
+
+            'This call is required by the Component Designer.
+            InitializeComponent()
+
+            m_name = Me.GetType().Name & Extension
+            m_size = 100L
+            m_blockSize = 8
+            m_saveOnClose = True
+            m_rolloverOnFull = True
+            m_rolloverPreparationThreshold = 75
+            m_offloadCount = 5
+            m_offloadThreshold = 90
+            m_compressData = True
+            m_configurationCategory = Me.GetType().Name
+            m_isStandbyFile = isStandbyFile
+            m_historicFileList = New List(Of ArchiveFileInfo)()
+            m_historicFileListThread = New System.Threading.Thread(AddressOf BuildHistoricFileList)
+            m_rolloverPreparationThread = New System.Threading.Thread(AddressOf PrepareForRollover)
+
+            m_historicDataQueue = Tva.Collections.ProcessQueue(Of StandardPointData).CreateRealTimeQueue(AddressOf WriteToHistoricArchiveFile)
+            m_outOfSequenceDataQueue = Tva.Collections.ProcessQueue(Of StandardPointData).CreateRealTimeQueue(AddressOf InsertInCurrentArchiveFile)
+
+        End Sub
 
         Public Property Name() As String
             Get
@@ -223,17 +256,12 @@ Namespace Files
 
         Public Sub Open()
 
-            Open(True)
-
-        End Sub
-
-        Public Sub Open(ByVal scanForHistoricFiles As Boolean)
-
             If Not IsOpen Then
                 If m_stateFile IsNot Nothing AndAlso m_intercomFile IsNot Nothing Then
                     RaiseEvent FileOpening(Me, EventArgs.Empty)
 
                     m_name = AbsolutePath(m_name)
+                    If m_isStandbyFile Then m_name = Path.ChangeExtension(m_name, StandbyFileExtension)
                     If File.Exists(m_name) Then
                         ' File has been created already, so we just need to read it.
                         m_fileStream = New FileStream(m_name, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite)
@@ -252,7 +280,7 @@ Namespace Files
                     If Not m_stateFile.IsOpen Then m_stateFile.Open()
                     If Not m_intercomFile.IsOpen Then m_intercomFile.Open()
 
-                    If scanForHistoricFiles Then
+                    If Not m_isStandbyFile Then
                         ' Start preparing the list of historic files on a seperate thread.
                         m_historicFileListThread = New Thread(AddressOf BuildHistoricFileList)
                         m_historicFileListThread.Priority = ThreadPriority.Lowest
@@ -262,14 +290,15 @@ Namespace Files
                         CurrentLocationFileSystemWatcher.Path = JustPath(m_name)
                         OffloadLocationFileSystemWatcher.Filter = HistoricFilesSearchPattern
                         OffloadLocationFileSystemWatcher.Path = m_offloadPath
-                    End If
 
-                    If m_fat.FileStartTime.CompareTo(TimeTag.MinValue) = 0 Then
-                        ' If the file's start time is not set (i.e. we're working with a brand new file with no data), 
-                        ' we set it to the timetag of the latest value from the intercom file. This latest value
-                        ' timetag will be 0 only when the archiver is initialized the very first time and if that's
-                        ' the case, the file's start time will be set when the very first point data is written.
-                        m_fat.FileStartTime = m_intercomFile.Records(0).LastestCurrentValueTimeTag
+                        If m_fat.FileStartTime.CompareTo(TimeTag.MinValue) = 0 Then
+                            ' If the current file is not a "standby" file and if its file's start time is not set 
+                            ' (i.e. we're working with a brand new file with no data), we set it to the timetag of 
+                            ' the latest value from the intercom file. This latest value timetag will be 0 only when 
+                            ' the archiver is initialized the very first time and if that's the case, the file's 
+                            ' start time will be set when the very first point data is written.
+                            m_fat.FileStartTime = m_intercomFile.Records(0).LastestCurrentValueTimeTag
+                        End If
                     End If
 
                     RaiseEvent FileOpened(Me, EventArgs.Empty)
@@ -282,17 +311,12 @@ Namespace Files
 
         Public Sub Close()
 
-            Close(True)
-
-        End Sub
-
-        Public Sub Close(ByVal releaseAllFileLocks As Boolean)
-
             If IsOpen Then
                 RaiseEvent FileClosing(Me, EventArgs.Empty)
 
                 If m_saveOnClose Then Save()
 
+                m_fat.Dispose()
                 m_fat = Nothing
                 m_fileStream.Dispose()
                 m_fileStream = Nothing
@@ -301,7 +325,10 @@ Namespace Files
                 m_rolloverPreparationThread.Abort()
                 m_historicDataQueue.Stop()
                 m_outOfSequenceDataQueue.Stop()
-                If releaseAllFileLocks AndAlso m_stateFile.IsOpen Then
+                If Not m_isStandbyFile AndAlso m_stateFile.IsOpen Then
+                    ' The current archive file is open multiple times (by ArchiveDataBlock) only when data is being
+                    ' written to the file. In case the current file is for "standby" purpose, no data will be 
+                    ' written to it and therefore, the file will not be opened multiple time when in "standby" mode.
                     For i As Integer = 0 To m_stateFile.Records.Count - 1
                         ' We'll release all the data blocks that were being used by the file.
                         If m_stateFile.Records(i).ActiveDataBlock IsNot Nothing Then
@@ -332,8 +359,8 @@ Namespace Files
             If m_rolloverPreparationDone Then
                 RaiseEvent RolloverStart(Me, EventArgs.Empty)
 
-                Dim standbyFile As String = StandbyArchiveFileName()
-                Dim historyFile As String = HistoryArchiveFileName()
+                Dim historyFile As String = HistoryArchiveFileName
+                Dim standbyFile As String = Path.ChangeExtension(m_name, StandbyFileExtension)
 
                 ' Signal the server that we're are performing rollover so it must let go of this file.
                 m_intercomFile.Records(0).RolloverInProgress = True
@@ -588,12 +615,6 @@ Namespace Files
 
 #Region " Private Code "
 
-        Private ReadOnly Property StandbyArchiveFileName() As String
-            Get
-                Return JustPath(m_name) & NoFileExtension(m_name) & "_standby" & Extension
-            End Get
-        End Property
-
         Private ReadOnly Property HistoryArchiveFileName() As String
             Get
                 Return JustPath(m_name) & (NoFileExtension(m_name) & "_" & m_fat.FileStartTime.ToString() & "_to_" & m_fat.FileEndTime.ToString() & Extension).Replace(":"c, "!"c)
@@ -608,22 +629,30 @@ Namespace Files
 
         Private Sub BuildHistoricFileList()
 
-            Dim historicFileList As New List(Of ArchiveFileInfo)()
+            Try
+                Dim historicFileList As New List(Of ArchiveFileInfo)()
 
-            For Each historicFileName As String In Directory.GetFiles(JustPath(m_name), HistoricFilesSearchPattern)
-                historicFileList.Add(GetFileInfo(historicFileName))
-            Next
+                RaiseEvent BuildHistoricFileListStart(Me, EventArgs.Empty)
 
-            If Not String.IsNullOrEmpty(m_offloadPath) Then
-                For Each historicFileName As String In Directory.GetFiles(m_offloadPath, HistoricFilesSearchPattern)
+                For Each historicFileName As String In Directory.GetFiles(JustPath(m_name), HistoricFilesSearchPattern)
                     historicFileList.Add(GetFileInfo(historicFileName))
                 Next
-            End If
 
-            SyncLock m_historicDataQueue
-                m_historicFileList.Clear()
-                m_historicFileList.AddRange(historicFileList)
-            End SyncLock
+                If Not String.IsNullOrEmpty(m_offloadPath) Then
+                    For Each historicFileName As String In Directory.GetFiles(m_offloadPath, HistoricFilesSearchPattern)
+                        historicFileList.Add(GetFileInfo(historicFileName))
+                    Next
+                End If
+
+                SyncLock m_historicDataQueue
+                    m_historicFileList.Clear()
+                    m_historicFileList.AddRange(historicFileList)
+                End SyncLock
+
+                RaiseEvent BuildHistoricFileListComplete(Me, EventArgs.Empty)
+            Catch ex As Exception
+                RaiseEvent BuildHistoricFileListException(Me, New ExceptionEventArgs(ex))
+            End Try
 
         End Sub
 
@@ -638,15 +667,15 @@ Namespace Files
 
                 RaiseEvent RolloverPreparationStart(Me, EventArgs.Empty)
 
-                With New ArchiveFile()
-                    .Name = StandbyArchiveFileName()
+                ' Opening and closing a new archive file in "standby" mode will create a "standby" file.
+                With New ArchiveFile(True)
+                    .Name = m_name
                     .Size = m_size
                     .BlockSize = m_blockSize
                     .StateFile = m_stateFile
                     .IntercomFile = m_intercomFile
-                    .Open(False)
-                    .FileAllocationTable.FileStartTime = TimeTag.MinValue
-                    .Close(False)
+                    .Open()
+                    .Close()
                 End With
 
                 m_rolloverPreparationDone = True
@@ -727,9 +756,8 @@ Namespace Files
                 pointState.CurrentValue = pointData.ToExtended()    ' Promote new value received to CurrentValue.
 
                 ' Update the environment data that is periodically written to the Intercom File.
-                m_intercomFile.Records(0).DataBlocksUsed = m_fat.DataBlocksUsed
                 m_intercomFile.Records(0).LastestCurrentValueTimeTag = pointState.CurrentValue.TimeTag
-                m_intercomFile.Records(0).latestCurrentValuePointID = pointState.CurrentValue.Definition.PointID
+                m_intercomFile.Records(0).LatestCurrentValuePointID = pointState.CurrentValue.Definition.PointID
 
                 If pointData.Quality = 31 Then
                     ' We have to check the quality of this data since the sender didn't provide it. Here we're 
