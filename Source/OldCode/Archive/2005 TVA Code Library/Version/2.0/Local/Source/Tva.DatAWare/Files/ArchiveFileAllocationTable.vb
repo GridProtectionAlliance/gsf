@@ -204,6 +204,12 @@ Namespace Files
 
         Public Function RequestDataBlock(ByVal pointID As Integer, ByVal startTime As TimeTag) As ArchiveDataBlock
 
+            Return RequestDataBlock(pointID, startTime, False)
+
+        End Function
+
+        Public Function RequestDataBlock(ByVal pointID As Integer, ByVal startTime As TimeTag, ByVal isForHistoricData As Boolean) As ArchiveDataBlock
+
             ' Get the index of the first available data block's pointer.
             Dim unusedPointerIndex As Integer = m_dataBlockPointers.IndexOf(New ArchiveDataBlockPointer())
             If unusedPointerIndex >= 0 Then
@@ -219,11 +225,29 @@ Namespace Files
 
                 ' Get the data block that corresponds to data block pointer.
                 Return GetDataBlock(m_dataBlockPointers(unusedPointerIndex))
+                'ElseIf isForHistoricData Then
+                '    m_searchPointID = pointID
+                '    m_searchStartTime = TimeTag.MinValue
+                '    m_searchEndTime = TimeTag.MaxValue
+
+
             Else
                 Return Nothing
             End If
 
         End Function
+
+        'Public Function FindDataBlock(ByVal pointID As Integer) As ArchiveDataBlock
+
+        '    m_searchPointID = pointID
+        '    m_searchStartTime = TimeTag.MinValue
+        '    m_searchEndTime = TimeTag.MaxValue
+
+        'End Function
+
+        'Public Function FindLastDataBlock(ByVal pointID As Integer) As ArchiveDataBlock
+
+        'End Function
 
         Public Function FindDataBlocks(ByVal pointID As Integer) As List(Of ArchiveDataBlock)
 
@@ -367,7 +391,7 @@ Namespace Files
             Dim location As Long = GetDataBlockLocation(blockPointer)
             If location >= 0 Then
                 ' We have a valid location, so we'll create a data block instance using this information.
-                Return New ArchiveDataBlock(m_fileStream, location, m_dataBlockSize)
+                Return New ArchiveDataBlock(m_fileStream.Name, location, m_dataBlockSize)
             Else
                 ' We don't a valid location, so the specified data block pointer must not be valid.
                 Return Nothing
