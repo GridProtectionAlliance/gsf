@@ -536,9 +536,13 @@ Namespace Files
 
         Public Sub Write(ByVal pointData() As StandardPointData)
 
-        End Sub
-
-        Public Sub HistoricWrite(ByVal pointData As StandardPointData)
+            If IsOpen Then
+                For i As Integer = 0 To pointData.Length - 1
+                    Write(pointData(i))
+                Next
+            Else
+                Throw New InvalidOperationException(String.Format("{0} ""{1}"" is not open.", Me.GetType().Name, m_name))
+            End If
 
         End Sub
 
