@@ -403,6 +403,30 @@ Namespace Files
 
         End Function
 
+        Public Function Read(ByVal pointID As Integer, ByVal startTime As String) As List(Of StandardPointData)
+
+            Return Read(pointID, startTime, TimeTag.MinValue.ToString())
+
+        End Function
+
+        Public Function Read(ByVal pointID As Integer, ByVal startTime As String, ByVal endTime As String) As List(Of StandardPointData)
+
+            Return Read(pointID, Convert.ToDateTime(startTime), Convert.ToDateTime(endTime))
+
+        End Function
+
+        Public Function Read(ByVal pointID As Integer, ByVal startTime As Date) As List(Of StandardPointData)
+
+            Return Read(pointID, startTime, TimeTag.MinValue.ToDateTime())
+
+        End Function
+
+        Public Function Read(ByVal pointID As Integer, ByVal startTime As Date, ByVal endTime As Date) As List(Of StandardPointData)
+
+            Return Read(pointID, New TimeTag(startTime), New TimeTag(endTime))
+
+        End Function
+
         Public Function Read(ByVal pointID As Integer, ByVal startTime As TimeTag) As List(Of StandardPointData)
 
             Return Read(pointID, startTime, TimeTag.MaxValue)
@@ -415,7 +439,19 @@ Namespace Files
                 Dim data As New List(Of StandardPointData)()
                 Dim foundBlocks As List(Of ArchiveDataBlock) = m_fat.FindDataBlocks(pointID, startTime, endTime)
                 For i As Integer = 0 To foundBlocks.Count - 1
-                    data.AddRange(foundBlocks(i).Read())
+                    If i < foundBlocks.Count - 1 Then
+                        data.AddRange(foundBlocks(i).Read())
+                    Else
+                        ' We have to scan the data of the last block and only add the data that have a timetag
+                        ' that's less than or equal to the specified end time. If we don't do this we might
+                        ' return data that is beyond the specified time range.
+                        Dim blockData As List(Of StandardPointData) = foundBlocks(i).Read()
+                        For j As Integer = 0 To blockData.Count - 1
+                            If blockData(j).TimeTag.CompareTo(endTime) <= 0 Then
+                                data.Add(blockData(j))
+                            End If
+                        Next
+                    End If
                     foundBlocks(i).Dispose()
                 Next
 
@@ -432,27 +468,39 @@ Namespace Files
                 m_fat.EventsReceived += 1
 
                 If pointData.TimeTag.CompareTo(m_fat.FileStartTime) >= 0 Then
-                    ' The data to be written has a timetag that is the same as newer than the file's start time.
+                    ' The data belongs to this file.
                     Dim pointState As PointState = m_stateFile.Read(pointData.Definition.PointID)
                     If pointData.TimeTag.CompareTo(pointState.LastArchivedValue.TimeTag) >= 0 Then
+                        ' The data is in sequence.
                         If ToBeArchived(pointData, pointState) Then
-                            ' Archive the data
+                            ' The data failed the compression test, so we have to write it.
                             If pointState.ActiveDataBlock Is Nothing OrElse _
                                     (pointState.ActiveDataBlock IsNot Nothing AndAlso pointState.ActiveDataBlock.SlotsAvailable <= 0) Then
-                                ' We either don't have a active data block where we can archive the point data or we have a 
-                                ' active data block but it is full, so we have to request a new data block from the FAT.
-                                If pointState.ActiveDataBlock IsNot Nothing Then pointState.ActiveDataBlock.Dispose()
-                                pointState.ActiveDataBlock = m_fat.RequestDataBlock(pointData.Definition.PointID, pointData.TimeTag)
+                                ' We either don't have a active data block where we can archive the point data or   
+                                ' we have a active data block but it is full. So, we have to request a new data block 
+                                ' from the FAT in order to write the data.
 
-                                If m_fat.DataBlocksAvailable < m_fat.DataBlockCount * (1 - (m_rolloverPreparationThreshold / 100)) AndAlso _
-                                        Not m_rolloverPreparationDone AndAlso Not m_rolloverPreparationThread.IsAlive Then
-                                    ' We've requested the specified percent of the total number of data blocks in the file, 
-                                    ' so we must now prepare for the rollver process since has not been done yet and it is 
-                                    ' not already in progress.
-                                    m_rolloverPreparationThread = New Thread(AddressOf PrepareForRollover)
-                                    m_rolloverPreparationThread.Priority = ThreadPriority.Lowest
-                                    m_rolloverPreparationThread.Start()
+                                If pointState.ActiveDataBlock IsNot Nothing Then
+                                    ' We must release the previously used data block before we request a new one.
+                                    pointState.ActiveDataBlock.Dispose()
                                 End If
+
+                                Select Case m_type
+                                    Case ArchiveFileType.Active
+                                        pointState.ActiveDataBlock = m_fat.RequestDataBlock(pointData.Definition.PointID, pointData.TimeTag)
+
+                                        If m_fat.DataBlocksAvailable < m_fat.DataBlockCount * (1 - (m_rolloverPreparationThreshold / 100)) AndAlso _
+                                                Not m_rolloverPreparationDone AndAlso Not m_rolloverPreparationThread.IsAlive Then
+                                            ' We've requested the specified percent of the total number of data 
+                                            ' blocks in the file, so we must now prepare for the rollover process 
+                                            ' since it has not been done yet and it is not already in progress.
+                                            m_rolloverPreparationThread = New Thread(AddressOf PrepareForRollover)
+                                            m_rolloverPreparationThread.Priority = ThreadPriority.Lowest
+                                            m_rolloverPreparationThread.Start()
+                                        End If
+                                    Case ArchiveFileType.Historic
+                                        pointState.ActiveDataBlock = m_fat.RequestDataBlock(pointData.Definition.PointID, pointData.TimeTag, True)
+                                End Select
                             End If
 
                             If pointState.ActiveDataBlock IsNot Nothing Then
@@ -460,24 +508,24 @@ Namespace Files
                                 pointState.ActiveDataBlock.Write(pointData)
 
                                 m_fat.EventsArchived += 1
-                                m_fat.FileEndTime = pointData.TimeTag
+                                If m_type = ArchiveFileType.Active Then m_fat.FileEndTime = pointData.TimeTag
                                 If m_fat.FileStartTime.CompareTo(TimeTag.MinValue) = 0 Then m_fat.FileStartTime = pointData.TimeTag
                             Else
                                 ' We were unable to obtain a data block for writing data to because all data block are in use.
                                 RaiseEvent FileFull(Me, EventArgs.Empty)
                             End If
                         Else
-                            ' Discard the data
+                            ' The data passed the compression test, so we don't have to write it.
                         End If
                     Else
+                        ' The data is in out-of-sequence.
                         If Not m_discardOoSData Then
                             ' Insert the data into the current file.
                             m_outOfSequenceDataQueue.Add(pointData)
                         End If
                     End If
                 Else
-                    ' The data to be written has a timetag that is older than the file's start time, so the data
-                    ' does not belong in this file but in a historic archive file instead.
+                    ' The data belongs to a historic archive file.
                     m_historicDataQueue.Add(pointData)
                 End If
             Else

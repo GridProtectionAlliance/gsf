@@ -7,39 +7,32 @@ Namespace Files
     Public Class ArchiveDataBlock
         Implements IDisposable
 
-        Private m_location As Long
+        Private m_index As Integer
         Private m_size As Integer
         Private m_isForHistoricData As Boolean
         Private m_fileStream As FileStream
         'Private m_writeCursor As Long
 
-        Public Sub New(ByVal archiveFileName As String, ByVal location As Long, ByVal size As Integer)
+        Public Sub New(ByVal index As Integer, ByVal size As Integer, ByVal archiveFileName As String)
 
-            MyClass.New(archiveFileName, location, size, False)
+            MyClass.New(index, size, archiveFileName, False)
 
         End Sub
 
-        Public Sub New(ByVal archiveFileName As String, ByVal location As Long, ByVal size As Integer, ByVal isForHistoricData As Boolean)
+        Public Sub New(ByVal index As Integer, ByVal size As Integer, ByVal archiveFileName As String, ByVal isForHistoricData As Boolean)
 
             MyBase.New()
-            m_fileStream = New FileStream(archiveFileName, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite)
-            m_location = location
+            m_index = index
             m_size = size
             m_isForHistoricData = isForHistoricData
-            'm_writeCursor = location    ' This is where we'll start writing data to begin with.
-            m_fileStream.Seek(location, SeekOrigin.Begin)
+            m_fileStream = New FileStream(archiveFileName, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite)
+            m_fileStream.Seek(Location, SeekOrigin.Begin)
 
         End Sub
 
         Public ReadOnly Property Index() As Integer
             Get
-                Return Convert.ToInt32(m_location \ m_size)
-            End Get
-        End Property
-
-        Public ReadOnly Property Location() As Long
-            Get
-                Return m_location
+                Return m_index
             End Get
         End Property
 
@@ -55,16 +48,22 @@ Namespace Files
             End Get
         End Property
 
+        Public ReadOnly Property Location() As Long
+            Get
+                Return (m_index * (m_size * 1024L))
+            End Get
+        End Property
+
         Public ReadOnly Property Capacity() As Integer
             Get
-                Return (m_size * 1024) \ StandardPointData.Size
+                Return ((m_size * 1024) \ StandardPointData.Size)
             End Get
         End Property
 
         Public ReadOnly Property SlotsUsed() As Integer
             Get
                 'Return Convert.ToInt32((m_writeCursor - m_location) \ StandardPointData.Size)
-                Return Convert.ToInt32((m_fileStream.Position - m_location) \ StandardPointData.Size)
+                Return Convert.ToInt32((m_fileStream.Position - Location) \ StandardPointData.Size)
             End Get
         End Property
 
@@ -88,7 +87,7 @@ Namespace Files
             Dim data As New List(Of StandardPointData)()
 
             ' We'll start reading from where the data block begins.
-            m_fileStream.Seek(m_location, SeekOrigin.Begin)
+            m_fileStream.Seek(Location, SeekOrigin.Begin)
 
             Dim binaryImage As Byte() = CreateArray(Of Byte)(StandardPointData.Size)
             For i As Integer = 1 To Capacity
@@ -135,11 +134,11 @@ Namespace Files
         Public Sub Initialize()
 
             If m_isForHistoricData Then
-                m_fileStream.Seek(m_location, SeekOrigin.Begin)
+                m_fileStream.Seek(Location, SeekOrigin.Begin)
                 For i As Integer = 1 To Capacity
                     Write(New StandardPointData())
                 Next
-                m_fileStream.Seek(m_location, SeekOrigin.Begin)
+                m_fileStream.Seek(Location, SeekOrigin.Begin)
             End If
 
         End Sub

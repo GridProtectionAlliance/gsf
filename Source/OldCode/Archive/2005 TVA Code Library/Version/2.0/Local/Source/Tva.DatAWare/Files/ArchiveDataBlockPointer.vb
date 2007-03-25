@@ -7,6 +7,7 @@ Namespace Files
 
 #Region " Member Declaration "
 
+        Private m_index As Integer
         Private m_pointID As Integer
         Private m_startTime As TimeTag
 
@@ -16,23 +17,32 @@ Namespace Files
 
         Public Const Size As Integer = 12
 
-        Public Sub New()
+        'Public Sub New()
 
-            MyClass.New(-1, TimeTag.MinValue)
+        '    MyClass.New(-1, TimeTag.MinValue)
+
+        'End Sub
+
+        Public Sub New(ByVal index As Integer)
+
+            MyClass.New(index, -1, TimeTag.MinValue)
 
         End Sub
 
-        Public Sub New(ByVal pointID As Integer, ByVal startTime As TimeTag)
+        Public Sub New(ByVal index As Integer, ByVal pointID As Integer, ByVal startTime As TimeTag)
 
+            MyBase.New()
+            m_index = index
             m_pointID = pointID
             m_startTime = startTime
 
         End Sub
 
-        Public Sub New(ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+        Public Sub New(ByVal index As Integer, ByVal binaryImage As Byte(), ByVal startIndex As Integer)
 
             If binaryImage IsNot Nothing Then
                 If binaryImage.Length - startIndex >= Size Then
+                    m_index = index
                     m_pointID = BitConverter.ToInt32(binaryImage, startIndex)
                     m_startTime = New TimeTag(BitConverter.ToDouble(binaryImage, startIndex + 4))
                 Else
@@ -43,6 +53,12 @@ Namespace Files
             End If
 
         End Sub
+
+        Public ReadOnly Property Index() As Integer
+            Get
+                Return m_index
+            End Get
+        End Property
 
         Public Property PointID() As Integer
             Get

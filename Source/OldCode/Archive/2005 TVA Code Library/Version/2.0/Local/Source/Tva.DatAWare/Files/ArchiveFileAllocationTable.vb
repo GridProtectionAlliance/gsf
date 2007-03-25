@@ -68,8 +68,8 @@ Namespace Files
                 Dim variableFatData As Byte() = CreateArray(Of Byte)(m_dataBlockCount * ArchiveDataBlockPointer.Size)
                 m_fileStream.Seek(-(variableFatData.Length + FixedBinaryLength), SeekOrigin.End)
                 m_fileStream.Read(variableFatData, 0, variableFatData.Length)
-                For i As Integer = 0 To variableFatData.Length - 1 Step ArchiveDataBlockPointer.Size
-                    m_dataBlockPointers.Add(New ArchiveDataBlockPointer(variableFatData, i))
+                For i As Integer = 0 To m_dataBlockCount - 1
+                    m_dataBlockPointers.Add(New ArchiveDataBlockPointer(i, variableFatData, i * ArchiveDataBlockPointer.Size))
                 Next
 
                 m_fatUpdateTimer.Start()
@@ -92,8 +92,8 @@ Namespace Files
             m_fileStream = archiveFileStream
             m_dataBlockSize = blockSize
             m_dataBlockCount = blockCount
-            For i As Integer = 1 To m_dataBlockCount
-                m_dataBlockPointers.Add(New ArchiveDataBlockPointer())
+            For i As Integer = 0 To m_dataBlockCount - 1
+                m_dataBlockPointers.Add(New ArchiveDataBlockPointer(i))
             Next
 
             m_fatUpdateTimer.Start()
@@ -162,9 +162,9 @@ Namespace Files
 
         Public ReadOnly Property DataBlocksAvailable() As Integer
             Get
-                Dim unusedPointerIndex As Integer = m_dataBlockPointers.IndexOf(New ArchiveDataBlockPointer())
-                If unusedPointerIndex >= 0 Then
-                    Return m_dataBlockCount - unusedPointerIndex
+                Dim unusedDataBlock As ArchiveDataBlock = FindDataBlock(-1)
+                If unusedDataBlock IsNot Nothing Then
+                    Return m_dataBlockCount - unusedDataBlock.Index
                 Else
                     Return 0
                 End If
@@ -197,7 +197,9 @@ Namespace Files
         Public Sub Extend(ByVal dataBlocksToAdd As Integer)
 
             m_dataBlockCount += dataBlocksToAdd
-            m_dataBlockPointers.Add(New ArchiveDataBlockPointer())
+            For i As Integer = 1 To dataBlocksToAdd
+                m_dataBlockPointers.Add(New ArchiveDataBlockPointer(m_dataBlockPointers.Count))
+            Next
             Persist()
 
         End Sub
@@ -210,44 +212,63 @@ Namespace Files
 
         Public Function RequestDataBlock(ByVal pointID As Integer, ByVal startTime As TimeTag, ByVal isForHistoricData As Boolean) As ArchiveDataBlock
 
-            ' Get the index of the first available data block's pointer.
-            Dim unusedPointerIndex As Integer = m_dataBlockPointers.IndexOf(New ArchiveDataBlockPointer())
-            If unusedPointerIndex >= 0 Then
+            ' First, we'll try to find the first unused data block.
+            Dim unusedDataBlock As ArchiveDataBlock = FindDataBlock(-1)
+
+            If unusedDataBlock Is Nothing AndAlso isForHistoricData Then
+                ' In all of the data blocks have been used and if the request has been made for historic data, then 
+                ' we have to return a data block no matter what. So, first we'll see if the last used block for the 
+                ' specified point ID has space for writting data to it. If so, we'll return it and if not, we'll 
+                ' create a new data  block by extending the file and return this newly created data block.
+                unusedDataBlock = FindLastDataBlock(pointID)
+                unusedDataBlock.IsForHistoricData = True
+                unusedDataBlock.Scan()
+
+                If unusedDataBlock.SlotsAvailable = 0 Then
+                    ' The last data block for the point ID is full so we'll create a new data block.
+                    Extend()    ' Extend the file by one data block.
+                    unusedDataBlock = FindDataBlock(-1)
+                    unusedDataBlock.IsForHistoricData = True
+                    unusedDataBlock.Initialize()
+                End If
+            End If
+
+            If unusedDataBlock IsNot Nothing Then
                 ' Assign the data block to the specified point index.
-                m_dataBlockPointers(unusedPointerIndex).PointID = pointID
-                m_dataBlockPointers(unusedPointerIndex).StartTime = startTime
+                Dim unusedDataBlockPointer As ArchiveDataBlockPointer = m_dataBlockPointers(unusedDataBlock.Index)
+                unusedDataBlockPointer.PointID = pointID
+                unusedDataBlockPointer.StartTime = startTime
 
                 SyncLock m_fileStream
                     ' We'll write information about the just allocateddata block to the file.
-                    m_fileStream.Seek(DataBinaryLength + ArrayDescriptorLength + (unusedPointerIndex * ArchiveDataBlockPointer.Size), SeekOrigin.Begin)
-                    m_fileStream.Write(m_dataBlockPointers(unusedPointerIndex).BinaryImage, 0, ArchiveDataBlockPointer.Size)
+                    m_fileStream.Seek(DataBinaryLength + ArrayDescriptorLength + (unusedDataBlockPointer.Index * ArchiveDataBlockPointer.Size), SeekOrigin.Begin)
+                    m_fileStream.Write(unusedDataBlockPointer.BinaryImage, 0, ArchiveDataBlockPointer.Size)
                 End SyncLock
-
-                ' Get the data block that corresponds to data block pointer.
-                Return GetDataBlock(m_dataBlockPointers(unusedPointerIndex))
-                'ElseIf isForHistoricData Then
-                '    m_searchPointID = pointID
-                '    m_searchStartTime = TimeTag.MinValue
-                '    m_searchEndTime = TimeTag.MaxValue
-
-
-            Else
-                Return Nothing
             End If
+
+            Return unusedDataBlock
 
         End Function
 
-        'Public Function FindDataBlock(ByVal pointID As Integer) As ArchiveDataBlock
+        Public Function FindDataBlock(ByVal pointID As Integer) As ArchiveDataBlock
 
-        '    m_searchPointID = pointID
-        '    m_searchStartTime = TimeTag.MinValue
-        '    m_searchEndTime = TimeTag.MaxValue
+            m_searchPointID = pointID
+            m_searchStartTime = TimeTag.MinValue
+            m_searchEndTime = TimeTag.MaxValue
 
-        'End Function
+            Return GetDataBlock(m_dataBlockPointers.Find(AddressOf FindDataBlockPointer))
 
-        'Public Function FindLastDataBlock(ByVal pointID As Integer) As ArchiveDataBlock
+        End Function
 
-        'End Function
+        Public Function FindLastDataBlock(ByVal pointID As Integer) As ArchiveDataBlock
+
+            m_searchPointID = pointID
+            m_searchStartTime = TimeTag.MinValue
+            m_searchEndTime = TimeTag.MaxValue
+
+            Return GetDataBlock(m_dataBlockPointers.FindLast(AddressOf FindDataBlockPointer))
+
+        End Function
 
         Public Function FindDataBlocks(ByVal pointID As Integer) As List(Of ArchiveDataBlock)
 
@@ -387,27 +408,10 @@ Namespace Files
 
         Private Function GetDataBlock(ByVal blockPointer As ArchiveDataBlockPointer) As ArchiveDataBlock
 
-            ' First, get the location of the data block corresponding to the specified data block pointer.
-            Dim location As Long = GetDataBlockLocation(blockPointer)
-            If location >= 0 Then
-                ' We have a valid location, so we'll create a data block instance using this information.
-                Return New ArchiveDataBlock(m_fileStream.Name, location, m_dataBlockSize)
+            If blockPointer IsNot Nothing Then
+                Return New ArchiveDataBlock(blockPointer.Index, m_dataBlockSize, m_fileStream.Name)
             Else
-                ' We don't a valid location, so the specified data block pointer must not be valid.
                 Return Nothing
-            End If
-
-        End Function
-
-        Private Function GetDataBlockLocation(ByVal dataBlockPointer As ArchiveDataBlockPointer) As Long
-
-            ' First, we'll get the index of the specified data block pointer.
-            Dim pointerIndex As Integer = m_dataBlockPointers.IndexOf(dataBlockPointer)
-            If pointerIndex >= 0 Then
-                ' We calculate the data block's location based on the data block pointer's index.
-                Return pointerIndex * (m_dataBlockSize * 1024L)
-            Else
-                Return -1
             End If
 
         End Function
@@ -419,6 +423,10 @@ Namespace Files
         ''' <returns></returns>
         Private Function FindDataBlockPointer(ByVal dataBlockPointer As ArchiveDataBlockPointer) As Boolean
 
+            ' Note: The StartTime value of the pointer is ignored if m_searchStartTime = TimeTag.MinValue and
+            '       m_searchEndTime = TimeTag.MaxValue. In this case only the PointID value is compared. This
+            '       comes in handy when the first or last pointer is to be found from the list of pointers for
+            '       a point ID in addition to all the pointer for a point ID.
             Return (dataBlockPointer.PointID = m_searchPointID AndAlso _
                     (m_searchStartTime.CompareTo(TimeTag.MinValue) = 0 OrElse _
                         dataBlockPointer.StartTime.CompareTo(m_searchStartTime) >= 0) AndAlso _
