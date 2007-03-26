@@ -33,10 +33,11 @@ Namespace Files
         Private m_intercomFile As IntercomFile
         Private m_fat As ArchiveFileAllocationTable
         Private m_fileStream As FileStream
-        Private m_historicFileList As List(Of ArchiveFileInfo)
+        Private m_historicArchiveFileList As List(Of ArchiveFileInfo)
         Private m_rolloverPreparationDone As Boolean
         Private m_rolloverPreparationThread As Thread
         Private m_buildHistoricFileListThread As Thread
+        Private m_searchTimeTag As TimeTag  ' Used for finding a historic archive file for historic data.
 
         Private WithEvents m_historicDataQueue As ProcessQueue(Of StandardPointData)
         Private WithEvents m_outOfSequenceDataQueue As ProcessQueue(Of StandardPointData)
@@ -329,8 +330,8 @@ Namespace Files
                 m_outOfSequenceDataQueue.Stop()
 
                 If m_type = ArchiveFileType.Active Then
-                    m_historicFileList.Clear()
-                    m_historicFileList = Nothing
+                    m_historicArchiveFileList.Clear()
+                    m_historicArchiveFileList = Nothing
                     CurrentLocationFileSystemWatcher.EnableRaisingEvents = False
                     OffloadLocationFileSystemWatcher.EnableRaisingEvents = False
                 End If
@@ -526,7 +527,9 @@ Namespace Files
                     End If
                 Else
                     ' The data belongs to a historic archive file.
-                    m_historicDataQueue.Add(pointData)
+                    If m_type = ArchiveFileType.Active Then
+                        m_historicDataQueue.Add(pointData)
+                    End If
                 End If
             Else
                 Throw New InvalidOperationException(String.Format("{0} ""{1}"" is not open.", Me.GetType().Name, m_name))
@@ -548,23 +551,9 @@ Namespace Files
 
         Public Sub HistoricWrite(ByVal pointData() As StandardPointData)
 
-            Dim sortedPointData As New Dictionary(Of Integer, List(Of StandardPointData))()
-            For i As Integer = 0 To pointData.Length - 1
-                If pointData(i).Definition IsNot Nothing Then
-                    ' Only process point data that has an associated definition.
-                    If Not sortedPointData.ContainsKey(pointData(i).Definition.PointID) Then
-                        sortedPointData.Add(pointData(i).Definition.PointID, New List(Of StandardPointData)())
-                    End If
 
-                    sortedPointData(pointData(i).Definition.PointID).Add(pointData(i))
-                End If
-            Next
 
         End Sub
-
-        Public Shared Function IsFileHistoric(ByVal fileName As String) As Boolean
-
-        End Function
 
         Public Shared Function MaximumDataBlocks(ByVal fileSize As Double, ByVal blockSize As Integer) As Integer
 
@@ -712,7 +701,7 @@ Namespace Files
         Private Sub BuildHistoricFileList()
 
             Try
-                m_historicFileList = New List(Of ArchiveFileInfo)()
+                m_historicArchiveFileList = New List(Of ArchiveFileInfo)()
 
                 RaiseEvent HistoricFileListBuildStart(Me, EventArgs.Empty)
 
@@ -721,12 +710,12 @@ Namespace Files
                 SyncLock m_historicDataQueue
                     ' Prevent the historic file list from being updated by the file watchers.
                     For Each historicFileName As String In Directory.GetFiles(JustPath(m_name), HistoricFilesSearchPattern)
-                        m_historicFileList.Add(GetHistoricFileInfo(historicFileName))
+                        m_historicArchiveFileList.Add(GetHistoricFileInfo(historicFileName))
                     Next
 
                     If Not String.IsNullOrEmpty(m_offloadPath) Then
                         For Each historicFileName As String In Directory.GetFiles(m_offloadPath, HistoricFilesSearchPattern)
-                            m_historicFileList.Add(GetHistoricFileInfo(historicFileName))
+                            m_historicArchiveFileList.Add(GetHistoricFileInfo(historicFileName))
                         Next
                     End If
                 End SyncLock
@@ -973,9 +962,81 @@ Namespace Files
 
         End Function
 
+        Private Function FindHistoricArchiveFile(ByVal historicArchiveFile As ArchiveFileInfo) As Boolean
+
+            Return m_searchTimeTag.CompareTo(historicArchiveFile.StartTimeTag) >= 0 And _
+                    m_searchTimeTag.CompareTo(historicArchiveFile.EndTimeTag) <= 0
+
+        End Function
+
 #Region " Queue Delegates "
 
         Public Sub WriteToHistoricArchiveFile(ByVal items() As StandardPointData)
+
+            Dim sortedPointData As New Dictionary(Of Integer, List(Of StandardPointData))()
+            ' First we'll seperate all point data by ID.
+            For i As Integer = 0 To items.Length - 1
+                If items(i).Definition IsNot Nothing Then
+                    ' We only process point data that has an associated definition.
+                    If Not sortedPointData.ContainsKey(items(i).Definition.PointID) Then
+                        sortedPointData.Add(items(i).Definition.PointID, New List(Of StandardPointData)())
+                    End If
+
+                    sortedPointData(items(i).Definition.PointID).Add(items(i))
+                End If
+            Next
+
+            For Each pointID As Integer In sortedPointData.Keys
+                ' We'll sort the point data for the current point ID by time.
+                sortedPointData(pointID).Sort()
+
+                Dim writeData As Boolean = False
+                Dim pointData As New List(Of StandardPointData)()
+                Dim historicArchiveFile As ArchiveFileInfo = Nothing
+                For i As Integer = 0 To sortedPointData(pointID).Count - 1
+                    If historicArchiveFile Is Nothing Then
+                        ' We'll try to find a historic file when the current point data belongs.
+                        m_searchTimeTag = sortedPointData(pointID)(i).TimeTag
+                        SyncLock m_historicArchiveFileList
+                            historicArchiveFile = m_historicArchiveFileList.Find(AddressOf FindHistoricArchiveFile)
+                        End SyncLock
+                    End If
+
+                    If historicArchiveFile IsNot Nothing Then
+                        If sortedPointData(pointID)(i).TimeTag.CompareTo(historicArchiveFile.StartTimeTag) >= 0 AndAlso _
+                                sortedPointData(pointID)(i).TimeTag.CompareTo(historicArchiveFile.EndTimeTag) <= 0 Then
+                            ' The current point data belongs to the current historic archive file.
+                            pointData.Add(sortedPointData(pointID)(i))
+                        Else
+                            ' The current point data doesn't belong to the current historic archive file, so we have
+                            ' to write all the point data we have so far for the current historic archive file to it.
+                            i -= 1
+                            writeData = True
+                        End If
+
+                        ' This is last point data for the current point ID, so we must write all the point data so
+                        ' far to the current historic archive file.
+                        If i = sortedPointData(pointID).Count - 1 Then writeData = True
+
+                        If writeData AndAlso pointData.Count > 0 Then
+                            With New ArchiveFile()
+                                .Name = historicArchiveFile.FileName
+                                .CompressData = m_compressData
+                                .DiscardOoSData = m_discardOoSData
+                                .StateFile = m_stateFile
+                                .IntercomFile = m_intercomFile
+                                .Open()
+                                .Write(pointData.ToArray())
+                                .Close()
+                            End With
+
+                            writeData = False
+                            pointData.Clear()
+                            historicArchiveFile = Nothing
+                        End If
+                    End If
+                Next
+            Next
 
         End Sub
 
@@ -1004,9 +1065,9 @@ Namespace Files
             If IsOpen Then
                 ' Attempt to update the historic file list only if the current file is open.
                 Dim historicFileInfo As ArchiveFileInfo = GetHistoricFileInfo(e.FullPath)
-                SyncLock m_historicFileList
-                    If historicFileInfo IsNot Nothing AndAlso Not m_historicFileList.Contains(historicFileInfo) Then
-                        m_historicFileList.Add(historicFileInfo)
+                SyncLock m_historicArchiveFileList
+                    If historicFileInfo IsNot Nothing AndAlso Not m_historicArchiveFileList.Contains(historicFileInfo) Then
+                        m_historicArchiveFileList.Add(historicFileInfo)
                         RaiseEvent HistoricFileListUpdated(Me, EventArgs.Empty)
                     End If
                 End SyncLock
@@ -1019,9 +1080,9 @@ Namespace Files
             If IsOpen Then
                 ' Attempt to update the historic file list only if the current file is open.
                 Dim historicFileInfo As ArchiveFileInfo = GetHistoricFileInfo(e.FullPath)
-                SyncLock m_historicFileList
-                    If historicFileInfo IsNot Nothing AndAlso m_historicFileList.Contains(historicFileInfo) Then
-                        m_historicFileList.Remove(historicFileInfo)
+                SyncLock m_historicArchiveFileList
+                    If historicFileInfo IsNot Nothing AndAlso m_historicArchiveFileList.Contains(historicFileInfo) Then
+                        m_historicArchiveFileList.Remove(historicFileInfo)
                         RaiseEvent HistoricFileListUpdated(Me, EventArgs.Empty)
                     End If
                 End SyncLock
@@ -1036,9 +1097,9 @@ Namespace Files
                 If String.Compare(JustFileExtension(e.OldFullPath), Extension, True) = 0 Then
                     Try
                         Dim oldFileInfo As ArchiveFileInfo = GetHistoricFileInfo(e.OldFullPath)
-                        SyncLock m_historicFileList
-                            If oldFileInfo IsNot Nothing AndAlso m_historicFileList.Contains(oldFileInfo) Then
-                                m_historicFileList.Remove(oldFileInfo)
+                        SyncLock m_historicArchiveFileList
+                            If oldFileInfo IsNot Nothing AndAlso m_historicArchiveFileList.Contains(oldFileInfo) Then
+                                m_historicArchiveFileList.Remove(oldFileInfo)
                                 RaiseEvent HistoricFileListUpdated(Me, EventArgs.Empty)
                             End If
                         End SyncLock
@@ -1051,9 +1112,9 @@ Namespace Files
                 If String.Compare(JustFileExtension(e.FullPath), Extension, True) = 0 Then
                     Try
                         Dim newFileInfo As ArchiveFileInfo = GetHistoricFileInfo(e.FullPath)
-                        SyncLock m_historicFileList
-                            If newFileInfo IsNot Nothing AndAlso Not m_historicFileList.Contains(newFileInfo) Then
-                                m_historicFileList.Add(newFileInfo)
+                        SyncLock m_historicArchiveFileList
+                            If newFileInfo IsNot Nothing AndAlso Not m_historicArchiveFileList.Contains(newFileInfo) Then
+                                m_historicArchiveFileList.Add(newFileInfo)
                                 RaiseEvent HistoricFileListUpdated(Me, EventArgs.Empty)
                             End If
                         End SyncLock
@@ -1093,14 +1154,6 @@ Namespace Files
                 End If
 
             End Function
-
-        End Class
-
-        Private Class HistoricPointData
-
-            Public ArchiveFile As ArchiveFileInfo
-
-            Public PointData As List(Of StandardPointData)
 
         End Class
 
