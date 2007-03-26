@@ -2,13 +2,13 @@
 <ClassDiagram MajorVersion="1" MinorVersion="1">
   <Font Name="Tahoma" Size="8.25" />
   <Comment CommentText=" Command Frame Relationships">
-    <Position X="6.759" Y="0.5" Height="0.287" Width="2.059" />
+    <Position X="6.509" Y="0.5" Height="0.287" Width="1.944" />
   </Comment>
   <Comment CommentText="IEEE 1344">
     <Position X="6.279" Y="5.005" Height="0.277" Width="0.709" />
   </Comment>
   <Comment CommentText=" IEEE C37 118">
-    <Position X="9.078" Y="5.064" Height="0.263" Width="0.912" />
+    <Position X="8.516" Y="5.002" Height="0.263" Width="0.912" />
   </Comment>
   <Class Name="Tva.Phasors.CommandFrameBase">
     <Position X="6" Y="1.25" Width="2.25" />
@@ -50,7 +50,7 @@
     </InheritanceLine>
   </Class>
   <Class Name="Tva.Phasors.IeeeC37_118.CommandFrame">
-    <Position X="8.5" Y="5.75" Width="2" />
+    <Position X="8" Y="5.75" Width="2" />
     <TypeIdentifier>
       <FileName>IeeeC37_118\CommandFrame.vb</FileName>
       <HashCode>LAAIAAAAIAAAAAAEACAAAIgxAAAAAACAAABAAAgAAAA=</HashCode>
@@ -59,43 +59,43 @@
       <Path>
         <Point X="7.125" Y="4.43" />
         <Point X="7.125" Y="4.87" />
-        <Point X="9.5" Y="4.87" />
-        <Point X="9.5" Y="5.75" />
+        <Point X="9" Y="4.87" />
+        <Point X="9" Y="5.75" />
       </Path>
     </InheritanceLine>
     <Lollipop Position="0.2" />
   </Class>
   <Interface Name="Tva.Phasors.ICommandFrame">
-    <Position X="13.25" Y="1" Width="1.5" />
+    <Position X="12.75" Y="1" Width="1.5" />
     <TypeIdentifier>
       <FileName>ICommandFrame.vb</FileName>
       <HashCode>AAAAAAAAAQAAAAAAAAIABAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Interface>
   <Interface Name="Tva.Phasors.IChannelFrame">
-    <Position X="11.25" Y="0.75" Width="1.5" />
+    <Position X="10.75" Y="0.75" Width="1.5" />
     <TypeIdentifier>
       <FileName>IChannelFrame.vb</FileName>
       <HashCode>AAAAABAAAAAAAAAAAAIAAAAAAAAAAACgAAAAAAAAIAA=</HashCode>
     </TypeIdentifier>
   </Interface>
   <Interface Name="Tva.Phasors.IChannel">
-    <Position X="9.25" Y="0.5" Width="1.5" />
+    <Position X="8.75" Y="0.5" Width="1.5" />
     <TypeIdentifier>
       <FileName>IChannel.vb</FileName>
       <HashCode>AAAAAAAAAAAoAAAAAAAAAAARAAAAAACAAAEAAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Interface>
   <Interface Name="Tva.Measurements.IFrame">
-    <Position X="10.25" Y="3.5" Width="1.5" />
+    <Position X="9.75" Y="3.5" Width="1.5" />
     <TypeIdentifier />
   </Interface>
   <Interface Name="System.IComparable">
-    <Position X="12" Y="3.5" Width="1.5" />
+    <Position X="11.5" Y="3.5" Width="1.5" />
     <TypeIdentifier />
   </Interface>
   <Interface Name="System.Runtime.Serialization.ISerializable">
-    <Position X="14" Y="3.5" Width="1.5" />
+    <Position X="13.5" Y="3.5" Width="1.5" />
     <TypeIdentifier />
   </Interface>
 </ClassDiagram>
