@@ -8,7 +8,7 @@ Imports Tva.Configuration.Common
 Namespace Files
 
     Public MustInherit Class SequentialBinaryFileBase(Of T As IBinaryDataProvider)
-        Implements ISupportInitialize, IPersistsSettings
+        Implements ISupportInitialize, IPersistSettings
 
 #Region " Member Declaration "
 
@@ -18,8 +18,11 @@ Namespace Files
         Private m_autoSaveInterval As Integer
         Private m_autoAlignInterval As Integer
         Private m_minimumRecordCount As Integer
-        Private m_fileStream As FileStream
         Private m_fileRecords As List(Of T)
+        Private m_persistSettings As Boolean
+        Private m_configurationCategory As String
+
+        Private m_fileStream As FileStream
 
         Private WithEvents m_autoSaveTimer As System.Timers.Timer
         Private WithEvents m_autoAnalyzeTimer As System.Timers.Timer
@@ -322,12 +325,9 @@ Namespace Files
 
 #End Region
 
-#Region " IPersistsSettings "
+#Region " IPersistSettings "
 
-        Private m_persistSettings As Boolean
-        Private m_configurationCategory As String
-
-        Public Property PersistSettings() As Boolean Implements IPersistsSettings.PersistSettings
+        Public Property PersistSettings() As Boolean Implements IPersistSettings.PersistSettings
             Get
                 Return m_persistSettings
             End Get
@@ -336,7 +336,7 @@ Namespace Files
             End Set
         End Property
 
-        Public Property ConfigurationCategory() As String Implements IPersistsSettings.ConfigurationCategory
+        Public Property ConfigurationCategory() As String Implements IPersistSettings.ConfigurationCategory
             Get
                 Return m_configurationCategory
             End Get
@@ -349,7 +349,7 @@ Namespace Files
             End Set
         End Property
 
-        Public Sub LoadSettings() Implements IPersistsSettings.LoadSettings
+        Public Sub LoadSettings() Implements IPersistSettings.LoadSettings
 
             If m_persistSettings Then
                 Try
@@ -368,7 +368,7 @@ Namespace Files
 
         End Sub
 
-        Public Sub SaveSettings() Implements IPersistsSettings.SaveSettings
+        Public Sub SaveSettings() Implements IPersistSettings.SaveSettings
 
             If m_persistSettings Then
                 Try

@@ -12,7 +12,7 @@ Namespace Files
 
     <ToolboxBitmap(GetType(ArchiveFile))> _
     Public Class ArchiveFile
-        Implements ISupportInitialize, IPersistsSettings
+        Implements ISupportInitialize, IPersistSettings
 
 #Region " Member Declaration "
 
@@ -31,6 +31,9 @@ Namespace Files
         Private m_stateFile As StateFile
         Private m_intercomFile As IntercomFile
         Private m_fat As ArchiveFileAllocationTable
+        Private m_persistSettings As Boolean
+        Private m_configurationCategory As String
+
         Private m_fileStream As FileStream
         Private m_historicArchiveFileList As List(Of ArchiveFileInfo)
         Private m_rolloverPreparationThread As Thread
@@ -582,12 +585,9 @@ Namespace Files
 
 #End Region
 
-#Region " IPersistsSettings "
+#Region " IPersistSettings "
 
-        Private m_persistSettings As Boolean
-        Private m_configurationCategory As String
-
-        Public Property PersistSettings() As Boolean Implements IPersistsSettings.PersistSettings
+        Public Property PersistSettings() As Boolean Implements IPersistSettings.PersistSettings
             Get
                 Return m_persistSettings
             End Get
@@ -596,7 +596,7 @@ Namespace Files
             End Set
         End Property
 
-        Public Property ConfigurationCategory() As String Implements IPersistsSettings.ConfigurationCategory
+        Public Property ConfigurationCategory() As String Implements IPersistSettings.ConfigurationCategory
             Get
                 Return m_configurationCategory
             End Get
@@ -609,7 +609,7 @@ Namespace Files
             End Set
         End Property
 
-        Public Sub LoadSettings() Implements IPersistsSettings.LoadSettings
+        Public Sub LoadSettings() Implements IPersistSettings.LoadSettings
 
             If m_persistSettings Then
                 Try
@@ -634,7 +634,7 @@ Namespace Files
 
         End Sub
 
-        Public Sub SaveSettings() Implements IPersistsSettings.SaveSettings
+        Public Sub SaveSettings() Implements IPersistSettings.SaveSettings
 
             If m_persistSettings Then
                 Try

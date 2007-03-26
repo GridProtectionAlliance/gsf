@@ -1,6 +1,6 @@
 ' 03/21/2007
 
-Public Interface IPersistsSettings
+Public Interface IPersistSettings
 
     Property PersistSettings() As Boolean
 

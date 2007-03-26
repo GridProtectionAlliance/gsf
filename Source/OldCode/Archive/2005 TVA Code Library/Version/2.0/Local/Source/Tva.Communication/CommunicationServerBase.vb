@@ -34,7 +34,7 @@ Imports Tva.Communication.Common
 ''' </summary>
 <ToolboxBitmap(GetType(CommunicationServerBase)), DefaultEvent("ReceivedClientData")> _
 Public MustInherit Class CommunicationServerBase
-    Implements ICommunicationServer
+    Implements ICommunicationServer, IPersistSettings
 
     Private m_configurationString As String
     Private m_receiveBufferSize As Integer
@@ -51,6 +51,9 @@ Public MustInherit Class CommunicationServerBase
     Private m_serverID As Guid
     Private m_clientIDs As List(Of Guid)
     Private m_isRunning As Boolean
+    Private m_persistSettings As Boolean
+    Private m_configurationCategory As String
+
     Private m_startTime As Long
     Private m_stopTime As Long
 
@@ -767,6 +770,40 @@ Public MustInherit Class CommunicationServerBase
             Case ServiceState.Shutdown
                 Me.Dispose()
         End Select
+
+    End Sub
+
+#End Region
+
+#Region " IPersistsSettings Implementation "
+
+    Public Property PersistSettings() As Boolean Implements IPersistSettings.PersistSettings
+        Get
+            Return m_persistSettings
+        End Get
+        Set(ByVal value As Boolean)
+            m_persistSettings = value
+        End Set
+    End Property
+
+    Public Property ConfigurationCategory() As String Implements IPersistSettings.ConfigurationCategory
+        Get
+            Return m_configurationCategory
+        End Get
+        Set(ByVal value As String)
+            If Not String.IsNullOrEmpty(value) Then
+                m_configurationCategory = value
+            Else
+                Throw New ArgumentNullException("ConfigurationCategory")
+            End If
+        End Set
+    End Property
+
+    Public Sub LoadSettings() Implements IPersistSettings.LoadSettings
+
+    End Sub
+
+    Public Sub SaveSettings() Implements IPersistSettings.SaveSettings
 
     End Sub
 
