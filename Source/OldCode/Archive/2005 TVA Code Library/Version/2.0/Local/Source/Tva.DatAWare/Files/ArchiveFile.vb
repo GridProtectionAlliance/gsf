@@ -66,13 +66,11 @@ Namespace Files
         Public Event HistoricFileListBuildException As EventHandler(Of ExceptionEventArgs)
         Public Event HistoricFileListUpdated As EventHandler
 
-        Public Event RealTimeDataReceived As EventHandler
+        Public Event CurrentDataReceived As EventHandler
+        Public Event CurrentDataWritten As EventHandler
+        Public Event CurrentDataDiscarded As EventHandler
         Public Event HistoricDataReceived As EventHandler
         Public Event OutOfSequenceDataReceived As EventHandler
-
-        'Public Event DataReceived As EventHandler
-        'Public Event DataArchived As EventHandler
-        'Public Event DataDiscarded As EventHandler
 
 #End Region
 
@@ -437,6 +435,9 @@ Namespace Files
         Public Function Read(ByVal pointID As Integer, ByVal startTime As TimeTag, ByVal endTime As TimeTag) As List(Of StandardPointData)
 
             If IsOpen Then
+                ' We don't allow data to be read from a "standby" file.
+                If m_type = ArchiveFileType.Standby Then Return Nothing
+
                 Dim data As New List(Of StandardPointData)()
                 Dim foundBlocks As List(Of ArchiveDataBlock) = m_fat.FindDataBlocks(pointID, startTime, endTime)
                 For i As Integer = 0 To foundBlocks.Count - 1
@@ -466,6 +467,9 @@ Namespace Files
         Public Sub Write(ByVal pointData As StandardPointData)
 
             If IsOpen Then
+                ' We don't allow data to be written to a "standby" file.
+                If m_type = ArchiveFileType.Standby Then Exit Sub
+
                 m_fat.EventsReceived += 1
 
                 If pointData.TimeTag.CompareTo(m_fat.FileStartTime) >= 0 Then
@@ -473,50 +477,53 @@ Namespace Files
                     Dim pointState As PointState = m_stateFile.Read(pointData.Definition.PointID)
                     If pointData.TimeTag.CompareTo(pointState.LastArchivedValue.TimeTag) >= 0 Then
                         ' The data is in sequence.
-                        If ToBeArchived(pointData, pointState) Then
-                            ' The data failed the compression test, so we have to write it.
-                            If pointState.ActiveDataBlock Is Nothing OrElse _
-                                    (pointState.ActiveDataBlock IsNot Nothing AndAlso pointState.ActiveDataBlock.SlotsAvailable <= 0) Then
-                                ' We either don't have a active data block where we can archive the point data or   
-                                ' we have a active data block but it is full. So, we have to request a new data block 
-                                ' from the FAT in order to write the data.
 
-                                If pointState.ActiveDataBlock IsNot Nothing Then
-                                    ' We must release the previously used data block before we request a new one.
-                                    pointState.ActiveDataBlock.Dispose()
-                                End If
+                        ' Data passed compression test - don't write it.
+                        If Not ToBeArchived(pointData, pointState) Then Exit Sub
 
-                                Select Case m_type
-                                    Case ArchiveFileType.Active
-                                        pointState.ActiveDataBlock = m_fat.RequestDataBlock(pointData.Definition.PointID, pointData.TimeTag)
-
-                                        If m_fat.DataBlocksAvailable < m_fat.DataBlockCount * (1 - (m_rolloverPreparationThreshold / 100)) AndAlso _
-                                                Not m_rolloverPreparationDone AndAlso Not m_rolloverPreparationThread.IsAlive Then
-                                            ' We've requested the specified percent of the total number of data 
-                                            ' blocks in the file, so we must now prepare for the rollover process 
-                                            ' since it has not been done yet and it is not already in progress.
-                                            m_rolloverPreparationThread = New Thread(AddressOf PrepareForRollover)
-                                            m_rolloverPreparationThread.Priority = ThreadPriority.Lowest
-                                            m_rolloverPreparationThread.Start()
-                                        End If
-                                    Case ArchiveFileType.Historic
-                                        pointState.ActiveDataBlock = m_fat.RequestDataBlock(pointData.Definition.PointID, pointData.TimeTag, True)
-                                End Select
-                            End If
+                        ' Data failed compression test - write it to current file.
+                        If pointState.ActiveDataBlock Is Nothing OrElse _
+                                (pointState.ActiveDataBlock IsNot Nothing AndAlso pointState.ActiveDataBlock.SlotsAvailable <= 0) Then
+                            ' We either don't have a active data block where we can archive the point data or   
+                            ' we have a active data block but it is full. So, we have to request a new data block 
+                            ' from the FAT in order to write the data.
 
                             If pointState.ActiveDataBlock IsNot Nothing Then
-                                ' We were able to obtain a data block for writing data.
-                                pointState.ActiveDataBlock.Write(pointData)
-
-                                m_fat.EventsArchived += 1
-                                If m_type = ArchiveFileType.Active Then m_fat.FileEndTime = pointData.TimeTag
-                                If m_fat.FileStartTime.CompareTo(TimeTag.MinValue) = 0 Then m_fat.FileStartTime = pointData.TimeTag
-                            Else
-                                ' We were unable to obtain a data block for writing data to because all data block are in use.
-                                RaiseEvent FileFull(Me, EventArgs.Empty)
+                                ' We must release the previously used data block before we request a new one.
+                                pointState.ActiveDataBlock.Dispose()
                             End If
+
+                            Select Case m_type
+                                Case ArchiveFileType.Active
+                                    pointState.ActiveDataBlock = m_fat.RequestDataBlock(pointData.Definition.PointID, pointData.TimeTag)
+
+                                    If m_fat.DataBlocksAvailable < m_fat.DataBlockCount * (1 - (m_rolloverPreparationThreshold / 100)) AndAlso _
+                                            Not m_rolloverPreparationDone AndAlso Not m_rolloverPreparationThread.IsAlive Then
+                                        ' We've requested the specified percent of the total number of data 
+                                        ' blocks in the file, so we must now prepare for the rollover process 
+                                        ' since it has not been done yet and it is not already in progress.
+                                        m_rolloverPreparationThread = New Thread(AddressOf PrepareForRollover)
+                                        m_rolloverPreparationThread.Priority = ThreadPriority.Lowest
+                                        m_rolloverPreparationThread.Start()
+                                    End If
+                                Case ArchiveFileType.Historic
+                                    pointState.ActiveDataBlock = m_fat.RequestDataBlock(pointData.Definition.PointID, pointData.TimeTag, True)
+                            End Select
+                        End If
+
+                        If pointState.ActiveDataBlock IsNot Nothing Then
+                            ' We were able to obtain a data block for writing data.
+                            If m_type = ArchiveFileType.Active OrElse _
+                                    (m_type = ArchiveFileType.Historic AndAlso pointState.ActiveDataBlock.IsForHistoricData) Then
+                                pointState.ActiveDataBlock.Write(pointData)
+                                m_fat.EventsArchived += 1
+                            End If
+
+                            If m_type = ArchiveFileType.Active Then m_fat.FileEndTime = pointData.TimeTag
+                            If m_fat.FileStartTime.CompareTo(TimeTag.MinValue) = 0 Then m_fat.FileStartTime = pointData.TimeTag
                         Else
-                            ' The data passed the compression test, so we don't have to write it.
+                            ' We were unable to obtain a data block for writing data to because all data block are in use.
+                            RaiseEvent FileFull(Me, EventArgs.Empty)
                         End If
                     Else
                         ' The data is in out-of-sequence.

@@ -62,7 +62,6 @@ Namespace Files
 
         Public ReadOnly Property SlotsUsed() As Integer
             Get
-                'Return Convert.ToInt32((m_writeCursor - m_location) \ StandardPointData.Size)
                 Return Convert.ToInt32((m_fileStream.Position - Location) \ StandardPointData.Size)
             End Get
         End Property
