@@ -2,7 +2,7 @@
 <ClassDiagram MajorVersion="1" MinorVersion="1">
   <Font Name="Tahoma" Size="8.25" />
   <Comment CommentText="     Configuration Cell Relationships">
-    <Position X="7.776" Y="0.5" Height="0.347" Width="2.047" />
+    <Position X="6.401" Y="0.5" Height="0.347" Width="2.047" />
   </Comment>
   <Comment CommentText="  BPA PDCStream">
     <Position X="6.575" Y="1.246" Height="0.263" Width="1.148" />
@@ -117,7 +117,7 @@
     </InheritanceLine>
   </Interface>
   <Interface Name="Tva.Phasors.IChannel">
-    <Position X="8.5" Y="8.75" Width="1.5" />
+    <Position X="8.5" Y="8.25" Width="1.5" />
     <TypeIdentifier>
       <FileName>IChannel.vb</FileName>
       <HashCode>AAAAAAAAAAAoAAAAAAAAAAARAAAAAACAAAEAAAAAAAA=</HashCode>
@@ -132,7 +132,7 @@
     <TypeIdentifier />
   </Interface>
   <Interface Name="Tva.IBinaryDataProvider">
-    <Position X="8.5" Y="7.25" Width="1.5" />
+    <Position X="6.25" Y="8.75" Width="1.75" />
     <TypeIdentifier />
   </Interface>
 </ClassDiagram>
