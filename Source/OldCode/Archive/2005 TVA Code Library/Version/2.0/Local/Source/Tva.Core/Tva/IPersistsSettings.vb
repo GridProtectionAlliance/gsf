@@ -2,6 +2,8 @@
 
 Public Interface IPersistsSettings
 
+    Property PersistSettings() As Boolean
+
     Property ConfigurationCategory() As String
 
     Sub SaveSettings()
