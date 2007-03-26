@@ -18,7 +18,6 @@ Namespace Files
         Private m_autoSaveInterval As Integer
         Private m_autoAlignInterval As Integer
         Private m_minimumRecordCount As Integer
-        Private m_configurationCategory As String
         Private m_fileStream As FileStream
         Private m_fileRecords As List(Of T)
 
@@ -137,12 +136,15 @@ Namespace Files
                         ' The file we're working with is a valid one.
                         Dim binaryImage As Byte() = Tva.Common.CreateArray(Of Byte)(RecordSize)
                         Dim recordCount As Integer = Convert.ToInt32(m_fileStream.Length \ binaryImage.Length)
-                        ' Create records from the data in the file.
-                        For i As Integer = 1 To recordCount
-                            m_fileStream.Read(binaryImage, 0, binaryImage.Length)
-                            m_fileRecords.Add(NewRecord(i, binaryImage))
-                            RaiseEvent DataLoading(Me, New ProgressEventArgs(Of Integer)(recordCount, i))
-                        Next
+
+                        SyncLock m_fileStream
+                            ' Create records from the data in the file.
+                            For i As Integer = 1 To recordCount
+                                m_fileStream.Read(binaryImage, 0, binaryImage.Length)
+                                m_fileRecords.Add(NewRecord(i, binaryImage))
+                                RaiseEvent DataLoading(Me, New ProgressEventArgs(Of Integer)(recordCount, i))
+                            Next
+                        End SyncLock
 
                         ' Make sure that we have the minimum number of records specified.
                         For i As Integer = recordCount + 1 To m_minimumRecordCount
@@ -213,14 +215,16 @@ Namespace Files
                 ' Align the records before writing them to the file if specified.
                 If m_alignOnSave Then Align()
 
-                ' Set the cursor to BOF before we start writing to the file.
-                m_fileStream.Seek(0, SeekOrigin.Begin)
-                ' Write all of the records to the file.
-                For i As Integer = 0 To m_fileRecords.Count - 1
-                    m_fileStream.Write(m_fileRecords(i).BinaryImage, 0, RecordSize)
-                    RaiseEvent DataSaving(Me, New ProgressEventArgs(Of Integer)(i + 1, m_fileRecords.Count))
-                Next
-                m_fileStream.Flush()    ' Ensure that the data is written to the file.
+                SyncLock m_fileStream
+                    ' Set the cursor to BOF before we start writing to the file.
+                    m_fileStream.Seek(0, SeekOrigin.Begin)
+                    ' Write all of the records to the file.
+                    For i As Integer = 0 To m_fileRecords.Count - 1
+                        m_fileStream.Write(m_fileRecords(i).BinaryImage, 0, RecordSize)
+                        RaiseEvent DataSaving(Me, New ProgressEventArgs(Of Integer)(i + 1, m_fileRecords.Count))
+                    Next
+                    m_fileStream.Flush()    ' Ensure that the data is written to the file.
+                End SyncLock
             Else
                 Throw New InvalidOperationException(String.Format("{0} ""{1}"" is not open.", Me.GetType().Name, m_name))
             End If
@@ -320,6 +324,18 @@ Namespace Files
 
 #Region " IPersistsSettings "
 
+        Private m_persistSettings As Boolean
+        Private m_configurationCategory As String
+
+        Public Property PersistSettings() As Boolean Implements IPersistsSettings.PersistSettings
+            Get
+                Return m_persistSettings
+            End Get
+            Set(ByVal value As Boolean)
+                m_persistSettings = value
+            End Set
+        End Property
+
         Public Property ConfigurationCategory() As String Implements IPersistsSettings.ConfigurationCategory
             Get
                 Return m_configurationCategory
@@ -335,55 +351,59 @@ Namespace Files
 
         Public Sub LoadSettings() Implements IPersistsSettings.LoadSettings
 
-            Try
-                With CategorizedSettings(m_configurationCategory)
-                    Name = .Item("Name").GetTypedValue(m_name)
-                    SaveOnClose = .Item("SaveOnClose").GetTypedValue(m_saveOnClose)
-                    AlignOnSave = .Item("AlignOnSave").GetTypedValue(m_alignOnSave)
-                    AutoSaveInterval = .Item("AutoSaveInterval").GetTypedValue(m_autoSaveInterval)
-                    AutoAlignInterval = .Item("AutoAlignInterval").GetTypedValue(m_autoAlignInterval)
-                    MinimumRecordCount = .Item("MinimumRecordCount").GetTypedValue(m_minimumRecordCount)
-                End With
-            Catch ex As Exception
-                ' We'll encounter exceptions if the settings are not present in the config file.
-            End Try
+            If m_persistSettings Then
+                Try
+                    With CategorizedSettings(m_configurationCategory)
+                        Name = .Item("Name").GetTypedValue(m_name)
+                        SaveOnClose = .Item("SaveOnClose").GetTypedValue(m_saveOnClose)
+                        AlignOnSave = .Item("AlignOnSave").GetTypedValue(m_alignOnSave)
+                        AutoSaveInterval = .Item("AutoSaveInterval").GetTypedValue(m_autoSaveInterval)
+                        AutoAlignInterval = .Item("AutoAlignInterval").GetTypedValue(m_autoAlignInterval)
+                        MinimumRecordCount = .Item("MinimumRecordCount").GetTypedValue(m_minimumRecordCount)
+                    End With
+                Catch ex As Exception
+                    ' We'll encounter exceptions if the settings are not present in the config file.
+                End Try
+            End If
 
         End Sub
 
         Public Sub SaveSettings() Implements IPersistsSettings.SaveSettings
 
-            Try
-                With CategorizedSettings(m_configurationCategory)
-                    .Clear()
-                    With .Item("Name", True)
-                        .Value = m_name
-                        .Description = "Name of the file including its path."
+            If m_persistSettings Then
+                Try
+                    With CategorizedSettings(m_configurationCategory)
+                        .Clear()
+                        With .Item("Name", True)
+                            .Value = m_name
+                            .Description = "Name of the file including its path."
+                        End With
+                        With .Item("SaveOnClose", True)
+                            .Value = m_saveOnClose.ToString()
+                            .Description = "True if file is to be saved when closed; otherwise False."
+                        End With
+                        With .Item("AlignOnSave", True)
+                            .Value = m_alignOnSave.ToString()
+                            .Description = "True if alignment of file data is to be performed before saving; otherwise False."
+                        End With
+                        With .Item("AutoSaveInterval", True)
+                            .Value = m_autoSaveInterval.ToString()
+                            .Description = "Interval in milliseconds at which the file is to be saved automatically. A value of -1 indicates that automatic saving is disabled."
+                        End With
+                        With .Item("AutoAlignInterval", True)
+                            .Value = m_autoAlignInterval.ToString()
+                            .Description = "Interval in milliseconds at which the file data is to be aligned automatically. A value of -1 indicates that automatic alignment is disabled."
+                        End With
+                        With .Item("MinimumRecordCount", True)
+                            .Value = m_minimumRecordCount.ToString()
+                            .Description = "Minimum number of records that the file must have."
+                        End With
                     End With
-                    With .Item("SaveOnClose", True)
-                        .Value = m_saveOnClose.ToString()
-                        .Description = "True if file is to be saved when closed; otherwise False."
-                    End With
-                    With .Item("AlignOnSave", True)
-                        .Value = m_alignOnSave.ToString()
-                        .Description = "True if alignment of file data is to be performed before saving; otherwise False."
-                    End With
-                    With .Item("AutoSaveInterval", True)
-                        .Value = m_autoSaveInterval.ToString()
-                        .Description = "Interval in milliseconds at which the file is to be saved automatically. A value of -1 indicates that automatic saving is disabled."
-                    End With
-                    With .Item("AutoAlignInterval", True)
-                        .Value = m_autoAlignInterval.ToString()
-                        .Description = "Interval in milliseconds at which the file data is to be aligned automatically. A value of -1 indicates that automatic alignment is disabled."
-                    End With
-                    With .Item("MinimumRecordCount", True)
-                        .Value = m_minimumRecordCount.ToString()
-                        .Description = "Minimum number of records that the file must have."
-                    End With
-                End With
-                Tva.Configuration.Common.SaveSettings()
-            Catch ex As Exception
-                ' We might encounter an exception if for some reason the settings cannot be saved to the config file.
-            End Try
+                    Tva.Configuration.Common.SaveSettings()
+                Catch ex As Exception
+                    ' We might encounter an exception if for some reason the settings cannot be saved to the config file.
+                End Try
+            End If
 
         End Sub
 

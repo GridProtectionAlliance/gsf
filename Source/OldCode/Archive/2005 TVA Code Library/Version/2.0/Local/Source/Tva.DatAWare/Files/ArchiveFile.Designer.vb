@@ -30,12 +30,14 @@ Namespace Files
             m_offloadThreshold = 90
             m_compressData = True
             m_discardOoSData = True
-            m_configurationCategory = Me.GetType().Name
             m_rolloverPreparationThread = New System.Threading.Thread(AddressOf PrepareForRollover)
             m_buildHistoricFileListThread = New System.Threading.Thread(AddressOf BuildHistoricFileList)
 
             m_historicDataQueue = Tva.Collections.ProcessQueue(Of StandardPointData).CreateRealTimeQueue(AddressOf WriteToHistoricArchiveFile)
             m_outOfSequenceDataQueue = Tva.Collections.ProcessQueue(Of StandardPointData).CreateRealTimeQueue(AddressOf InsertInCurrentArchiveFile)
+
+            m_persistSettings = False
+            m_configurationCategory = Me.GetType().Name
 
         End Sub
 

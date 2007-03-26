@@ -27,9 +27,11 @@ Namespace Files
             m_alignOnSave = False
             m_autoSaveInterval = -1
             m_autoAlignInterval = -1
-            m_configurationCategory = Me.GetType().Name
             m_autoSaveTimer = New System.Timers.Timer()
             m_autoAnalyzeTimer = New System.Timers.Timer()
+
+            m_persistSettings = False
+            m_configurationCategory = Me.GetType().Name
 
         End Sub
 

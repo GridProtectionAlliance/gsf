@@ -28,13 +28,11 @@ Namespace Files
         Private m_offloadThreshold As Short
         Private m_compressData As Boolean
         Private m_discardOoSData As Boolean
-        Private m_configurationCategory As String
         Private m_stateFile As StateFile
         Private m_intercomFile As IntercomFile
         Private m_fat As ArchiveFileAllocationTable
         Private m_fileStream As FileStream
         Private m_historicArchiveFileList As List(Of ArchiveFileInfo)
-        Private m_rolloverPreparationDone As Boolean
         Private m_rolloverPreparationThread As Thread
         Private m_buildHistoricFileListThread As Thread
         Private m_searchTimeTag As TimeTag  ' Used for finding a historic archive file for historic data.
@@ -257,7 +255,7 @@ Namespace Files
                     RaiseEvent FileOpening(Me, EventArgs.Empty)
 
                     m_name = AbsolutePath(m_name)
-                    If m_type = ArchiveFileType.Standby Then m_name = Path.ChangeExtension(m_name, StandbyFileExtension)
+                    If m_type = ArchiveFileType.Standby Then m_name = StandbyArchiveFileName
 
                     If File.Exists(m_name) Then
                         ' File has been created already, so we just need to read it.
@@ -368,11 +366,11 @@ Namespace Files
 
         Public Sub Rollover()
 
-            If m_rolloverPreparationDone Then
+            If m_type = ArchiveFileType.Active AndAlso File.Exists(StandbyArchiveFileName) Then
                 RaiseEvent RolloverStart(Me, EventArgs.Empty)
 
                 Dim historyFile As String = HistoryArchiveFileName
-                Dim standbyFile As String = Path.ChangeExtension(m_name, StandbyFileExtension)
+                Dim standbyFile As String = StandbyArchiveFileName
 
                 ' Signal the server that we're are performing rollover so it must let go of this file.
                 m_intercomFile.Records(0).RolloverInProgress = True
@@ -388,8 +386,6 @@ Namespace Files
                 Open()
                 m_intercomFile.Records(0).RolloverInProgress = False
                 m_intercomFile.Save()
-
-                m_rolloverPreparationDone = False
 
                 RaiseEvent RolloverComplete(Me, EventArgs.Empty)
             End If
@@ -498,7 +494,7 @@ Namespace Files
                                     pointState.ActiveDataBlock = m_fat.RequestDataBlock(pointData.Definition.PointID, pointData.TimeTag)
 
                                     If m_fat.DataBlocksAvailable < m_fat.DataBlockCount * (1 - (m_rolloverPreparationThreshold / 100)) AndAlso _
-                                            Not m_rolloverPreparationDone AndAlso Not m_rolloverPreparationThread.IsAlive Then
+                                            Not File.Exists(StandbyArchiveFileName) AndAlso Not m_rolloverPreparationThread.IsAlive Then
                                         ' We've requested the specified percent of the total number of data 
                                         ' blocks in the file, so we must now prepare for the rollover process 
                                         ' since it has not been done yet and it is not already in progress.
@@ -588,6 +584,18 @@ Namespace Files
 
 #Region " IPersistsSettings "
 
+        Private m_persistSettings As Boolean
+        Private m_configurationCategory As String
+
+        Public Property PersistSettings() As Boolean Implements IPersistsSettings.PersistSettings
+            Get
+                Return m_persistSettings
+            End Get
+            Set(ByVal value As Boolean)
+                m_persistSettings = value
+            End Set
+        End Property
+
         Public Property ConfigurationCategory() As String Implements IPersistsSettings.ConfigurationCategory
             Get
                 Return m_configurationCategory
@@ -603,85 +611,89 @@ Namespace Files
 
         Public Sub LoadSettings() Implements IPersistsSettings.LoadSettings
 
-            Try
-                With CategorizedSettings(m_configurationCategory)
-                    Name = .Item("Name").GetTypedValue(m_name)
-                    Type = .Item("Type").GetTypedValue(m_type)
-                    Size = .Item("Size").GetTypedValue(m_size)
-                    BlockSize = .Item("BlockSize").GetTypedValue(m_blockSize)
-                    SaveOnClose = .Item("SaveOnClose").GetTypedValue(m_saveOnClose)
-                    RolloverOnFull = .Item("RolloverOnFull").GetTypedValue(m_rolloverOnFull)
-                    RolloverPreparationThreshold = .Item("RolloverPreparationThreshold").GetTypedValue(m_rolloverPreparationThreshold)
-                    OffloadPath = .Item("OffloadPath").GetTypedValue(m_offloadPath)
-                    OffloadCount = .Item("OffloadCount").GetTypedValue(m_offloadCount)
-                    OffloadThreshold = .Item("OffloadThreshold").GetTypedValue(m_offloadThreshold)
-                    CompressData = .Item("CompressData").GetTypedValue(m_compressData)
-                    DiscardOoSData = .Item("DiscardOoSData").GetTypedValue(m_discardOoSData)
-                End With
-            Catch ex As Exception
-                ' We'll encounter exceptions if the settings are not present in the config file.
-            End Try
+            If m_persistSettings Then
+                Try
+                    With CategorizedSettings(m_configurationCategory)
+                        Name = .Item("Name").GetTypedValue(m_name)
+                        Type = .Item("Type").GetTypedValue(m_type)
+                        Size = .Item("Size").GetTypedValue(m_size)
+                        BlockSize = .Item("BlockSize").GetTypedValue(m_blockSize)
+                        SaveOnClose = .Item("SaveOnClose").GetTypedValue(m_saveOnClose)
+                        RolloverOnFull = .Item("RolloverOnFull").GetTypedValue(m_rolloverOnFull)
+                        RolloverPreparationThreshold = .Item("RolloverPreparationThreshold").GetTypedValue(m_rolloverPreparationThreshold)
+                        OffloadPath = .Item("OffloadPath").GetTypedValue(m_offloadPath)
+                        OffloadCount = .Item("OffloadCount").GetTypedValue(m_offloadCount)
+                        OffloadThreshold = .Item("OffloadThreshold").GetTypedValue(m_offloadThreshold)
+                        CompressData = .Item("CompressData").GetTypedValue(m_compressData)
+                        DiscardOoSData = .Item("DiscardOoSData").GetTypedValue(m_discardOoSData)
+                    End With
+                Catch ex As Exception
+                    ' We'll encounter exceptions if the settings are not present in the config file.
+                End Try
+            End If
 
         End Sub
 
         Public Sub SaveSettings() Implements IPersistsSettings.SaveSettings
 
-            Try
-                With CategorizedSettings(m_configurationCategory)
-                    .Clear()
-                    With .Item("Name", True)
-                        .Value = m_name
-                        .Description = "Name of the file including its path."
+            If m_persistSettings Then
+                Try
+                    With CategorizedSettings(m_configurationCategory)
+                        .Clear()
+                        With .Item("Name", True)
+                            .Value = m_name
+                            .Description = "Name of the file including its path."
+                        End With
+                        With .Item("Type", True)
+                            .Value = m_type.ToString()
+                            .Description = "Type of the file (Active; Standby; Historic)."
+                        End With
+                        With .Item("Size", True)
+                            .Value = m_size.ToString()
+                            .Description = "Initial size of the file in MB."
+                        End With
+                        With .Item("BlockSize", True)
+                            .Value = m_blockSize.ToString()
+                            .Description = "Size of the data blocks in the file."
+                        End With
+                        With .Item("SaveOnClose", True)
+                            .Value = m_saveOnClose.ToString()
+                            .Description = "True if file is to be saved when closed; otherwise False."
+                        End With
+                        With .Item("RolloverOnFull", True)
+                            .Value = m_rolloverOnFull.ToString()
+                            .Description = "True if rollover of the file is to be performed when it is full; otherwise False."
+                        End With
+                        With .Item("RolloverPreparationThreshold", True)
+                            .Value = m_rolloverPreparationThreshold.ToString()
+                            .Description = "Percentage file full when the rollover preparation should begin."
+                        End With
+                        With .Item("OffloadPath", True)
+                            .Value = m_offloadPath
+                            .Description = "Path to the location where historic files are to be moved when disk start getting full."
+                        End With
+                        With .Item("OffloadCount", True)
+                            .Value = m_offloadCount.ToString()
+                            .Description = "Number of files that are to be moved to the offload location when the disk starts getting full."
+                        End With
+                        With .Item("OffloadThreshold", True)
+                            .Value = m_offloadThreshold.ToString()
+                            .Description = "Percentage disk full when the historic files should be moved to the offload location."
+                        End With
+                        With .Item("CompressData", True)
+                            .Value = m_compressData.ToString()
+                            .Description = "True if compression is to be performed on the data; otherwise False."
+                        End With
+                        With .Item("DiscardOoSData", True)
+                            .Value = m_discardOoSData.ToString()
+                            .Description = "True if out-of-sequence data is to be discarded; otherwise False."
+                        End With
                     End With
-                    With .Item("Type", True)
-                        .Value = m_type.ToString()
-                        .Description = "Type of the file (Active; Standby; Historic)."
-                    End With
-                    With .Item("Size", True)
-                        .Value = m_size.ToString()
-                        .Description = "Initial size of the file in MB."
-                    End With
-                    With .Item("BlockSize", True)
-                        .Value = m_blockSize.ToString()
-                        .Description = "Size of the data blocks in the file."
-                    End With
-                    With .Item("SaveOnClose", True)
-                        .Value = m_saveOnClose.ToString()
-                        .Description = "True if file is to be saved when closed; otherwise False."
-                    End With
-                    With .Item("RolloverOnFull", True)
-                        .Value = m_rolloverOnFull.ToString()
-                        .Description = "True if rollover of the file is to be performed when it is full; otherwise False."
-                    End With
-                    With .Item("RolloverPreparationThreshold", True)
-                        .Value = m_rolloverPreparationThreshold.ToString()
-                        .Description = "Percentage file full when the rollover preparation should begin."
-                    End With
-                    With .Item("OffloadPath", True)
-                        .Value = m_offloadPath
-                        .Description = "Path to the location where historic files are to be moved when disk start getting full."
-                    End With
-                    With .Item("OffloadCount", True)
-                        .Value = m_offloadCount.ToString()
-                        .Description = "Number of files that are to be moved to the offload location when the disk starts getting full."
-                    End With
-                    With .Item("OffloadThreshold", True)
-                        .Value = m_offloadThreshold.ToString()
-                        .Description = "Percentage disk full when the historic files should be moved to the offload location."
-                    End With
-                    With .Item("CompressData", True)
-                        .Value = m_compressData.ToString()
-                        .Description = "True if compression is to be performed on the data; otherwise False."
-                    End With
-                    With .Item("DiscardOoSData", True)
-                        .Value = m_discardOoSData.ToString()
-                        .Description = "True if out-of-sequence data is to be discarded; otherwise False."
-                    End With
-                End With
-                Tva.Configuration.Common.SaveSettings()
-            Catch ex As Exception
-                ' We might encounter an exception if for some reason the settings cannot be saved to the config file.
-            End Try
+                    Tva.Configuration.Common.SaveSettings()
+                Catch ex As Exception
+                    ' We might encounter an exception if for some reason the settings cannot be saved to the config file.
+                End Try
+            End If
 
         End Sub
 
@@ -692,6 +704,12 @@ Namespace Files
 #End Region
 
 #Region " Private Code "
+
+        Private ReadOnly Property StandbyArchiveFileName() As String
+            Get
+                Return Path.ChangeExtension(m_name, StandbyFileExtension)
+            End Get
+        End Property
 
         Private ReadOnly Property HistoryArchiveFileName() As String
             Get
@@ -728,6 +746,8 @@ Namespace Files
                 End SyncLock
 
                 RaiseEvent HistoricFileListBuildComplete(Me, EventArgs.Empty)
+            Catch ex As ThreadAbortException
+                ' We can safely ignore this exception.
             Catch ex As Exception
                 RaiseEvent HistoricFileListBuildException(Me, New ExceptionEventArgs(ex))
             End Try
@@ -757,8 +777,6 @@ Namespace Files
                     .Close()
                 End With
 
-                m_rolloverPreparationDone = True
-
                 RaiseEvent RolloverPreparationComplete(Me, EventArgs.Empty)
             Catch ex As ThreadAbortException
                 ' We can safely ignore this exception.
@@ -770,29 +788,43 @@ Namespace Files
 
         Private Sub OffloadHistoricFiles()
 
-            Try
-                RaiseEvent OffloadStart(Me, EventArgs.Empty)
 
-                If Directory.Exists(m_offloadPath) Then
-                    ' The offload path that is specified is a valid one so we'll gather a list of all historic
-                    ' files in the directory where the current (active) archive file is located.
-                    Dim historicFiles As String() = Directory.GetFiles(JustPath(m_name), HistoricFilesSearchPattern)
+            RaiseEvent OffloadStart(Me, EventArgs.Empty)
 
-                    ' Sorting the list will sort the historic files from oldest to newest.
-                    Array.Sort(historicFiles)
+            If m_buildHistoricFileListThread.IsAlive Then
+                ' Wait until the historic file list has been built.
+                m_buildHistoricFileListThread.Join()
+            End If
 
-                    ' We'll offload the specified number of oldest historic files to the offload location if the 
-                    ' number of historic files is more than the offload count or all of the historic files if the 
-                    ' offload count is smaller the available number of historic files.
-                    For i As Integer = 0 To IIf(historicFiles.Length < m_offloadCount, historicFiles.Length, m_offloadCount) - 1
-                        File.Move(historicFiles(i), AddPathSuffix(m_offloadPath) & JustFileName(historicFiles(i)))
-                    Next
-                End If
+            If Directory.Exists(m_offloadPath) Then
+                ' The offload path that is specified is a valid one so we'll gather a list of all historic
+                ' files in the directory where the current (active) archive file is located.
+                Dim historicFiles As String() = Directory.GetFiles(JustPath(m_name), HistoricFilesSearchPattern)
 
-                RaiseEvent RolloverComplete(Me, EventArgs.Empty)
-            Catch ex As Exception
-                RaiseEvent OffloadException(Me, New ExceptionEventArgs(ex))
-            End Try
+                ' Sorting the list will sort the historic files from oldest to newest.
+                Array.Sort(historicFiles)
+
+                ' We'll offload the specified number of oldest historic files to the offload location if the 
+                ' number of historic files is more than the offload count or all of the historic files if the 
+                ' offload count is smaller the available number of historic files.
+                For i As Integer = 0 To IIf(historicFiles.Length < m_offloadCount, historicFiles.Length, m_offloadCount) - 1
+                    Try
+                        Dim destinationFileName As String = AddPathSuffix(m_offloadPath) & JustFileName(historicFiles(i))
+                        If File.Exists(destinationFileName) Then
+                            ' Delete the destination file is it already exists.
+                            File.Delete(destinationFileName)
+                        End If
+
+                        File.Move(historicFiles(i), destinationFileName)
+                    Catch ex As ThreadAbortException
+                        Throw
+                    Catch ex As Exception
+                        RaiseEvent OffloadException(Me, New ExceptionEventArgs(ex))
+                    End Try
+                Next
+            End If
+
+            RaiseEvent OffloadComplete(Me, EventArgs.Empty)
 
         End Sub
 
@@ -803,19 +835,23 @@ Namespace Files
             Try
                 If File.Exists(fileName) Then
                     ' We'll open the file and get relevant information about it.
-
-                    fileInfo = New ArchiveFileInfo()
                     With New ArchiveFile()
                         .Name = fileName
                         .Type = ArchiveFileType.Historic
                         .SaveOnClose = False
                         .StateFile = m_stateFile
                         .IntercomFile = m_intercomFile
-                        .Open()
-                        fileInfo.FileName = fileName
-                        fileInfo.StartTimeTag = .FileAllocationTable.FileStartTime
-                        fileInfo.EndTimeTag = .FileAllocationTable.FileEndTime
-                        .Close()
+                        Try
+                            .Open()
+                            fileInfo = New ArchiveFileInfo()
+                            fileInfo.FileName = fileName
+                            fileInfo.StartTimeTag = .FileAllocationTable.FileStartTime
+                            fileInfo.EndTimeTag = .FileAllocationTable.FileEndTime
+                        Catch ex As Exception
+
+                        Finally
+                            .Close()
+                        End Try
                     End With
                 Else
                     ' We'll resolve to getting the file information from its name only if the file no longer exists
