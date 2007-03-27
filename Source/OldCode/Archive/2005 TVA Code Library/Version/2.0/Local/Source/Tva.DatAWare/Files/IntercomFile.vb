@@ -7,6 +7,8 @@ Namespace Files
     <ToolboxBitmap(GetType(IntercomFile))> _
     Public Class IntercomFile
 
+#Region " Code Scope: Public "
+
         Public Overrides ReadOnly Property RecordSize() As Integer
             Get
                 Return EnvironmentData.Size
@@ -24,6 +26,8 @@ Namespace Files
             Return New EnvironmentData(id, binaryImage)
 
         End Function
+
+#End Region
 
     End Class
 

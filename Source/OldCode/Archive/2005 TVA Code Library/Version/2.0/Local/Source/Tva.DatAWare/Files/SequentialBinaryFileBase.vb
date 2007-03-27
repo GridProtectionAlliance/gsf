@@ -41,7 +41,7 @@ Namespace Files
 
 #End Region
 
-#Region " Public Code "
+#Region " Code Scope: Public "
 
         Public Const Extension As String = ".dat"
 
@@ -307,7 +307,7 @@ Namespace Files
 
         Public MustOverride Function NewRecord(ByVal id As Integer, ByVal binaryImage As Byte()) As T
 
-#Region " Interface Implementations "
+#Region " Interface Implementation "
 
 #Region " IPersistSettings "
 
@@ -415,9 +415,11 @@ Namespace Files
 
 #End Region
 
-#Region " Private Code "
+#Region " Code Scope: Private "
 
-#Region " m_autoSaveTimer Events "
+#Region " Event Handlers "
+
+#Region " m_autoSaveTimer "
 
         Private Sub m_autoSaveTimer_Elapsed(ByVal sender As Object, ByVal e As System.Timers.ElapsedEventArgs) Handles m_autoSaveTimer.Elapsed
 
@@ -427,13 +429,15 @@ Namespace Files
 
 #End Region
 
-#Region " m_autoAnalyzeTimer Events "
+#Region " m_autoAnalyzeTimer "
 
         Private Sub m_autoAnalyzeTimer_Elapsed(ByVal sender As Object, ByVal e As System.Timers.ElapsedEventArgs) Handles m_autoAnalyzeTimer.Elapsed
 
             Align()   ' Automatically align the records in the list.
 
         End Sub
+
+#End Region
 
 #End Region
 

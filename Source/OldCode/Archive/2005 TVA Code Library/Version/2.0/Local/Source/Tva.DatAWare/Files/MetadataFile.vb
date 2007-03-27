@@ -7,6 +7,8 @@ Namespace Files
     <ToolboxBitmap(GetType(MetadataFile))> _
     Public Class MetadataFile
 
+#Region " Code Scope: Public "
+
         Public Overrides ReadOnly Property RecordSize() As Integer
             Get
                 Return PointDefinition.Size
@@ -63,6 +65,8 @@ Namespace Files
             End If
 
         End Sub
+
+#End Region
 
     End Class
 

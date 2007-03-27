@@ -75,7 +75,7 @@ Namespace Files
 
 #End Region
 
-#Region " Public Code "
+#Region " Code Scope: Public "
 
         Public Const Extension As String = ".d"
 
@@ -567,7 +567,7 @@ Namespace Files
 
         End Function
 
-#Region " Interface Implementations "
+#Region " Interface Implementation "
 
 #Region " IPersistSettings "
 
@@ -705,7 +705,7 @@ Namespace Files
 
 #End Region
 
-#Region " Private Code "
+#Region " Code Scope: Private "
 
         Private ReadOnly Property StandbyArchiveFileName() As String
             Get

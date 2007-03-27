@@ -130,12 +130,6 @@
     <Compile Include="PointDefinitionGeneralFlags.vb" />
     <Compile Include="My Project\AssemblyInfo.vb" />
     <Compile Include="ExtendedPointData.vb" />
-    <Compile Include="DataProcessor.Designer.vb">
-      <DependentUpon>DataProcessor.vb</DependentUpon>
-    </Compile>
-    <Compile Include="DataProcessor.vb">
-      <SubType>Component</SubType>
-    </Compile>
     <Compile Include="Packets\ExtendedPacket.vb" />
     <Compile Include="Packets\IPacket.vb" />
     <Compile Include="Packets\PacketBase.vb" />
@@ -160,10 +154,6 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="DataProcessor.resx">
-      <SubType>Designer</SubType>
-      <DependentUpon>DataProcessor.vb</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="Embedded Resources\DataParser.bmp" />
   </ItemGroup>
   <ItemGroup>
