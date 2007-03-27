@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  Tva.Services.ClientHelper.vb - Client Request to Service
+'  TVA.Services.ClientHelper.vb - Client Request to Service
 '  Copyright © 2006 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005
@@ -18,9 +18,9 @@
 Imports System.Text
 Imports System.Drawing
 Imports System.ComponentModel
-Imports Tva.Communication
-Imports Tva.Serialization
-Imports Tva.Configuration.Common
+Imports TVA.Communication
+Imports TVA.Serialization
+Imports TVA.Configuration.Common
 
 <ToolboxBitmap(GetType(ClientHelper))> _
 Public Class ClientHelper
@@ -28,7 +28,7 @@ Public Class ClientHelper
 
     Private m_serviceName As String
     Private m_connectionString As String
-    Private m_encryption As Tva.Security.Cryptography.EncryptLevel
+    Private m_encryption As TVA.Security.Cryptography.EncryptLevel
     Private m_secureSession As Boolean
 
     Private WithEvents m_communicationClient As ICommunicationClient
@@ -74,7 +74,7 @@ Public Class ClientHelper
         End Get
         Set(ByVal value As String)
             If Not String.IsNullOrEmpty(value) Then
-                If Tva.Text.Common.ParseKeyValuePairs(value).ContainsKey("protocol") Then
+                If TVA.Text.Common.ParseKeyValuePairs(value).ContainsKey("protocol") Then
                     m_connectionString = value
                 Else
                     Throw New ArgumentException("Communication protocol must be specified.", "ConnectionString")
@@ -85,12 +85,12 @@ Public Class ClientHelper
         End Set
     End Property
 
-    <Category("Communication"), DefaultValue(GetType(Tva.Security.Cryptography.EncryptLevel), "Level1")> _
-    Public Property Encryption() As Tva.Security.Cryptography.EncryptLevel
+    <Category("Communication"), DefaultValue(GetType(TVA.Security.Cryptography.EncryptLevel), "Level1")> _
+    Public Property Encryption() As TVA.Security.Cryptography.EncryptLevel
         Get
             Return m_encryption
         End Get
-        Set(ByVal value As Tva.Security.Cryptography.EncryptLevel)
+        Set(ByVal value As TVA.Security.Cryptography.EncryptLevel)
             m_encryption = value
         End Set
     End Property
@@ -108,7 +108,7 @@ Public Class ClientHelper
     <Browsable(False)> _
     Public ReadOnly Property CommunicationUri() As String
         Get
-            Dim connectionString As Dictionary(Of String, String) = Tva.Text.Common.ParseKeyValuePairs(m_connectionString)
+            Dim connectionString As Dictionary(Of String, String) = TVA.Text.Common.ParseKeyValuePairs(m_connectionString)
             Return String.Format("{0}://{1}:{2}/{3}", connectionString("protocol").ToLower(), connectionString("server").ToLower(), connectionString("port").ToLower(), m_serviceName)
         End Get
     End Property
@@ -133,7 +133,7 @@ Public Class ClientHelper
 
         UpdateStatus(String.Format("Attempting connection to ""{0}""...", Me.CommunicationUri), 2)
 
-        m_communicationClient = Tva.Communication.Common.CreateCommunicationClient(m_connectionString)
+        m_communicationClient = TVA.Communication.Common.CreateCommunicationClient(m_connectionString)
         ' We'll always use handshaking to ensure the availability of SecureSession.
         m_communicationClient.Handshake = True
         m_communicationClient.HandshakePassphrase = m_serviceName
@@ -312,7 +312,7 @@ Public Class ClientHelper
             ' Update the variable with values that are defined in the config file.
             m_serviceName = CategorizedSettings("ClientHelper")("ServiceName").Value
             m_connectionString = CategorizedSettings("Communication")("ConnectionString").Value
-            m_encryption = CategorizedSettings("Communication")("Encryption").GetTypedValue(Tva.Security.Cryptography.EncryptLevel.Level1)
+            m_encryption = CategorizedSettings("Communication")("Encryption").GetTypedValue(TVA.Security.Cryptography.EncryptLevel.Level1)
             m_secureSession = CategorizedSettings("Communication")("SecureSession").GetTypedValue(True)
         End If
 

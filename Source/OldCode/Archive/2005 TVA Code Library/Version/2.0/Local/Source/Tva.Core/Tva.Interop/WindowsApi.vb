@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  Tva.Interop.WindowsApi.vb - Common Windows API Functions
+'  TVA.Interop.WindowsApi.vb - Common Windows API Functions
 '  Copyright © 2006 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005

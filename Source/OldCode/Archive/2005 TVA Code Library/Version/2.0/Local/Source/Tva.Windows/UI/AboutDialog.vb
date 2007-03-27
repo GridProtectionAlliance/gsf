@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  Tva.Windows.UI.AboutDialog.vb - Standard TVA About Dialog
+'  TVA.Windows.UI.AboutDialog.vb - Standard TVA About Dialog
 '  Copyright © 2006 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005
@@ -18,7 +18,7 @@
 Imports System.IO
 Imports System.Windows.Forms
 Imports System.Reflection.Assembly
-Imports Tva.Assembly
+Imports TVA.Assembly
 
 Namespace UI
 
@@ -46,8 +46,8 @@ Namespace UI
             ' Set the defaults.
             Dim thisAssembly As Assembly = New Assembly(GetExecutingAssembly())
             SetCompanyUrl("http://www.tva.gov")
-            SetCompanyLogo(thisAssembly.GetEmbeddedResource("Tva.Windows.UI.TVALogo.bmp"))
-            SetCompanyDisclaimer(thisAssembly.GetEmbeddedResource("Tva.Windows.UI.TVADisclaimer.txt"))
+            SetCompanyLogo(thisAssembly.GetEmbeddedResource("TVA.Windows.UI.TVALogo.bmp"))
+            SetCompanyDisclaimer(thisAssembly.GetEmbeddedResource("TVA.Windows.UI.TVADisclaimer.txt"))
 
         End Sub
 

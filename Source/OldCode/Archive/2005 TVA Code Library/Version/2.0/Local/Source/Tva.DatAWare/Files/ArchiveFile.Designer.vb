@@ -35,8 +35,8 @@ Namespace Files
             m_rolloverPreparationThread = New System.Threading.Thread(AddressOf PrepareForRollover)
             m_buildHistoricFileListThread = New System.Threading.Thread(AddressOf BuildHistoricFileList)
 
-            m_historicDataQueue = Tva.Collections.ProcessQueue(Of StandardPointData).CreateRealTimeQueue(AddressOf WriteToHistoricArchiveFile)
-            m_outOfSequenceDataQueue = Tva.Collections.ProcessQueue(Of StandardPointData).CreateRealTimeQueue(AddressOf InsertInCurrentArchiveFile)
+            m_historicDataQueue = TVA.Collections.ProcessQueue(Of StandardPointData).CreateRealTimeQueue(AddressOf WriteToHistoricArchiveFile)
+            m_outOfSequenceDataQueue = TVA.Collections.ProcessQueue(Of StandardPointData).CreateRealTimeQueue(AddressOf InsertInCurrentArchiveFile)
 
 
         End Sub

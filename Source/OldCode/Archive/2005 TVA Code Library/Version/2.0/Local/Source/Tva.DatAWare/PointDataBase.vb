@@ -1,7 +1,7 @@
 ' 02/24/2007
 
-Imports Tva.Interop.Bit
-Imports Tva.Measurements
+Imports TVA.Interop.Bit
+Imports TVA.Measurements
 
 Public MustInherit Class PointDataBase
     Implements IPointData, IComparable 'IMeasurement 

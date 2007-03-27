@@ -16,7 +16,7 @@
   <Comment CommentText=" Virginia Tech FNET">
     <Position X="10.611" Y="6.031" Height="0.263" Width="1.2" />
   </Comment>
-  <Class Name="Tva.Phasors.FrequencyDefinitionBase">
+  <Class Name="TVA.Phasors.FrequencyDefinitionBase">
     <Position X="3.25" Y="2.25" Width="1.75" />
     <TypeIdentifier>
       <FileName>FrequencyDefinitionBase.vb</FileName>
@@ -24,7 +24,7 @@
     </TypeIdentifier>
     <Lollipop Position="0.2" />
   </Class>
-  <Class Name="Tva.Phasors.ChannelDefinitionBase">
+  <Class Name="TVA.Phasors.ChannelDefinitionBase">
     <Position X="0.5" Y="0.75" Width="2.25" />
     <TypeIdentifier>
       <FileName>ChannelDefinitionBase.vb</FileName>
@@ -32,7 +32,7 @@
     </TypeIdentifier>
     <Lollipop Position="0.2" />
   </Class>
-  <Class Name="Tva.Phasors.ChannelBase">
+  <Class Name="TVA.Phasors.ChannelBase">
     <Position X="0.5" Y="6.5" Width="2.25" />
     <TypeIdentifier>
       <FileName>ChannelBase.vb</FileName>
@@ -40,13 +40,13 @@
     </TypeIdentifier>
     <Lollipop Position="0.2" />
   </Class>
-  <Class Name="Tva.Phasors.BpaPdcStream.FrequencyDefinition">
+  <Class Name="TVA.Phasors.BpaPdcStream.FrequencyDefinition">
     <Position X="3.25" Y="6.5" Width="1.75" />
     <TypeIdentifier>
       <FileName>BpaPdcStream\FrequencyDefinition.vb</FileName>
       <HashCode>AAAAABAAAAAAAAAAAAAIQAACAAAAAACgAAAABAAAwAA=</HashCode>
     </TypeIdentifier>
-    <InheritanceLine Type="Tva.Phasors.FrequencyDefinitionBase" ManuallyRouted="true" FixedToPoint="true">
+    <InheritanceLine Type="TVA.Phasors.FrequencyDefinitionBase" ManuallyRouted="true" FixedToPoint="true">
       <Path>
         <Point X="4.125" Y="5.43" />
         <Point X="4.125" Y="5.892" />
@@ -55,13 +55,13 @@
       </Path>
     </InheritanceLine>
   </Class>
-  <Class Name="Tva.Phasors.Ieee1344.FrequencyDefinition">
+  <Class Name="TVA.Phasors.Ieee1344.FrequencyDefinition">
     <Position X="5.25" Y="6.5" Width="2.25" />
     <TypeIdentifier>
       <FileName>Ieee1344\FrequencyDefinition.vb</FileName>
       <HashCode>AAAAAAAAAAAAAAABAAAIYAA8AAAAAACgAAAAAABAAAA=</HashCode>
     </TypeIdentifier>
-    <InheritanceLine Type="Tva.Phasors.FrequencyDefinitionBase" ManuallyRouted="true">
+    <InheritanceLine Type="TVA.Phasors.FrequencyDefinitionBase" ManuallyRouted="true">
       <Path>
         <Point X="4.125" Y="5.43" />
         <Point X="4.125" Y="5.881" />
@@ -70,13 +70,13 @@
       </Path>
     </InheritanceLine>
   </Class>
-  <Class Name="Tva.Phasors.IeeeC37_118.FrequencyDefinition">
+  <Class Name="TVA.Phasors.IeeeC37_118.FrequencyDefinition">
     <Position X="7.75" Y="6.5" Width="2.25" />
     <TypeIdentifier>
       <FileName>IeeeC37_118\FrequencyDefinition.vb</FileName>
       <HashCode>AAAAAAAAAAAAAAABAAAIQAAAAAAAAACgAAAAAABAAAA=</HashCode>
     </TypeIdentifier>
-    <InheritanceLine Type="Tva.Phasors.FrequencyDefinitionBase" ManuallyRouted="true">
+    <InheritanceLine Type="TVA.Phasors.FrequencyDefinitionBase" ManuallyRouted="true">
       <Path>
         <Point X="4.125" Y="5.43" />
         <Point X="4.125" Y="5.881" />
@@ -85,13 +85,13 @@
       </Path>
     </InheritanceLine>
   </Class>
-  <Class Name="Tva.Phasors.FNet.FrequencyDefinition">
+  <Class Name="TVA.Phasors.FNet.FrequencyDefinition">
     <Position X="10.25" Y="6.5" Width="1.75" />
     <TypeIdentifier>
       <FileName>FNet\FrequencyDefinition.vb</FileName>
       <HashCode>AAAAAAAAAAAAAAAAAAAAQAAAAAAAAACAAAAAAAAAAAA=</HashCode>
     </TypeIdentifier>
-    <InheritanceLine Type="Tva.Phasors.FrequencyDefinitionBase" ManuallyRouted="true" FixedToPoint="true">
+    <InheritanceLine Type="TVA.Phasors.FrequencyDefinitionBase" ManuallyRouted="true" FixedToPoint="true">
       <Path>
         <Point X="4.125" Y="5.43" />
         <Point X="4.125" Y="5.892" />
@@ -100,21 +100,21 @@
       </Path>
     </InheritanceLine>
   </Class>
-  <Interface Name="Tva.Phasors.IFrequencyDefinition">
+  <Interface Name="TVA.Phasors.IFrequencyDefinition">
     <Position X="10.75" Y="2.25" Width="1.75" />
     <TypeIdentifier>
       <FileName>IFrequencyDefinition.vb</FileName>
       <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAEBAAAABAAAAAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Interface>
-  <Interface Name="Tva.Phasors.IChannelDefinition">
+  <Interface Name="TVA.Phasors.IChannelDefinition">
     <Position X="7.75" Y="2.25" Width="2" />
     <TypeIdentifier>
       <FileName>IChannelDefinition.vb</FileName>
       <HashCode>AQAAAAAAEAAAAAAAAIAAQAgAAAAAIAIAAIEABAAAgAA=</HashCode>
     </TypeIdentifier>
   </Interface>
-  <Interface Name="Tva.Phasors.IChannel">
+  <Interface Name="TVA.Phasors.IChannel">
     <Position X="5.25" Y="2.5" Width="1.5" />
     <TypeIdentifier>
       <FileName>IChannel.vb</FileName>
@@ -137,7 +137,7 @@
     <Position X="12.5" Y="1.25" Width="1.5" />
     <TypeIdentifier />
   </Interface>
-  <Interface Name="Tva.IBinaryDataProvider" Collapsed="true">
+  <Interface Name="TVA.IBinaryDataProvider" Collapsed="true">
     <Position X="5" Y="1.75" Width="2" />
     <TypeIdentifier />
   </Interface>

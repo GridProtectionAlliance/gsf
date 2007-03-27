@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  Tva.Communication.TcpServer.Designer.vb - TCP-based communication server
+'  TVA.Communication.TcpServer.Designer.vb - TCP-based communication server
 '  Copyright © 2006 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005
@@ -16,7 +16,7 @@
 '*******************************************************************************************************
 
 Partial Class TcpServer
-    Inherits Tva.Communication.CommunicationServerBase
+    Inherits TVA.Communication.CommunicationServerBase
 
     <System.Diagnostics.DebuggerNonUserCode()> _
     Public Sub New(ByVal Container As System.ComponentModel.IContainer)

@@ -24,7 +24,7 @@ Partial Class ServiceHelper
         m_encryption = Security.Cryptography.EncryptLevel.Level1
         m_secureSession = True
         m_configurationString = "Protocol=Tcp; Port=6500"
-        m_logFile = New Tva.IO.LogFile("StatusUpdates.txt")
+        m_logFile = New TVA.IO.LogFile("StatusUpdates.txt")
         m_processes = New Dictionary(Of String, ServiceProcess)()
         m_clientInfo = New Dictionary(Of Guid, ClientInfo)()
         m_requestHistory = New List(Of RequestInfo)()

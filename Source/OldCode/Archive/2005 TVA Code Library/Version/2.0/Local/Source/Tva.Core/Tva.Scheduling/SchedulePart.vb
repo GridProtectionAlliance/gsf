@@ -7,7 +7,7 @@ Namespace Scheduling
 #Region " Member Declaration "
 
         Private m_text As String
-        Private m_dateTimePart As Tva.DateTime.DateTimePart
+        Private m_dateTimePart As TVA.DateTime.DateTimePart
         Private m_textSyntax As SchedulePartTextSyntax
         Private m_values As List(Of Integer)
 
@@ -15,7 +15,7 @@ Namespace Scheduling
 
 #Region " Public Code "
 
-        Public Sub New(ByVal text As String, ByVal dateTimePart As Tva.DateTime.DateTimePart)
+        Public Sub New(ByVal text As String, ByVal dateTimePart As TVA.DateTime.DateTimePart)
 
             MyBase.New()
             If ValidateAndPopulate(text, dateTimePart) Then
@@ -40,11 +40,11 @@ Namespace Scheduling
         End Property
 
         ''' <summary>
-        ''' Gets the date-time part that the schedule part represents in a Tva.Scheduling.Schedule.
+        ''' Gets the date-time part that the schedule part represents in a TVA.Scheduling.Schedule.
         ''' </summary>
         ''' <value></value>
-        ''' <returns>The date-time part that the schedule part represents in a Tva.Scheduling.Schedule.</returns>
-        Public ReadOnly Property DateTimePart() As Tva.DateTime.DateTimePart
+        ''' <returns>The date-time part that the schedule part represents in a TVA.Scheduling.Schedule.</returns>
+        Public ReadOnly Property DateTimePart() As TVA.DateTime.DateTimePart
             Get
                 Return m_dateTimePart
             End Get
@@ -119,7 +119,7 @@ Namespace Scheduling
 
 #Region " Private Code"
 
-        Private Function ValidateAndPopulate(ByVal schedulePart As String, ByVal dateTimePart As Tva.DateTime.DateTimePart) As Boolean
+        Private Function ValidateAndPopulate(ByVal schedulePart As String, ByVal dateTimePart As TVA.DateTime.DateTimePart) As Boolean
 
             Dim minValue As Integer = 0
             Dim maxValue As Integer = 0

@@ -1,7 +1,7 @@
 ' 07-27-06
 
 Partial Class SerialClient
-    Inherits Tva.Communication.CommunicationClientBase
+    Inherits TVA.Communication.CommunicationClientBase
 
     <System.Diagnostics.DebuggerNonUserCode()> _
     Public Sub New(ByVal Container As System.ComponentModel.IContainer)

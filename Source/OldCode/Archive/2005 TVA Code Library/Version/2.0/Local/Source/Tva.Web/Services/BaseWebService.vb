@@ -2,11 +2,11 @@
 
 Imports System.Xml
 Imports System.Data.SqlClient
-Imports Tva.Security.Cryptography
-Imports Tva.Security.Cryptography.Common
-Imports Tva.Security.Application
-Imports Tva.Identity.Common
-Imports Tva.Web.Services.Common
+Imports TVA.Security.Cryptography
+Imports TVA.Security.Cryptography.Common
+Imports TVA.Security.Application
+Imports TVA.Identity.Common
+Imports TVA.Web.Services.Common
 Imports System.security.Principal
 
 Namespace Services
@@ -22,7 +22,7 @@ Namespace Services
 
         Protected DllName As String
         Protected FullyQualifiedClassName As String
-        Protected TvaWebServiceCredentials As AuthenticationSoapHeader
+        Protected TVAWebServiceCredentials As AuthenticationSoapHeader
 
         Public Sub New()
 
@@ -32,7 +32,7 @@ Namespace Services
 
         Public Function UserHasAccessToData(ByVal roleName As String) As Boolean
 
-            With TvaWebServiceCredentials
+            With TVAWebServiceCredentials
                 Return AuthenticateUser( _
                     Decrypt(.UserName, WebServiceSecurityKey, EncryptLevel.Level4), _
                     Decrypt(.Password, WebServiceSecurityKey, EncryptLevel.Level4), _
@@ -71,9 +71,9 @@ Namespace Services
         Public Shared Function AuthenticateUser(ByVal userID As String, ByVal password As String, ByVal roleName As String, ByVal server As SecurityServer, ByVal passThroughAuthentication As Boolean) As Boolean
 
             '' Don't allow users to spoof authentication :)
-            'Tva.Configuration.Common.CategorizedSettings("WebServicesDetails").Add("TestUser", My.User.CurrentPrincipal.Identity.Name, "test", False)
+            'TVA.Configuration.Common.CategorizedSettings("WebServicesDetails").Add("TestUser", My.User.CurrentPrincipal.Identity.Name, "test", False)
 
-            'Tva.Configuration.Common.SaveSettings()
+            'TVA.Configuration.Common.SaveSettings()
             'If passThroughAuthentication Then
             '    Dim userName As String = System.Threading.Thread.CurrentPrincipal.Identity.Name
             '    If userName.Contains("\") Then userName = userName.Split("\"c)(1).Trim()

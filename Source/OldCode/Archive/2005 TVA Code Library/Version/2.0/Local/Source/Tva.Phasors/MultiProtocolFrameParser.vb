@@ -13,7 +13,7 @@
 '  03/16/2006 - J. Ritchie Carroll
 '       Initial version of source generated
 '  06/26/2006 - Pinal C. Patel
-'       Changed out the socket code with TcpClient and UdpClient components from Tva.Communication
+'       Changed out the socket code with TcpClient and UdpClient components from TVA.Communication
 '  01/31/2007 - J. Ritchie Carroll
 '       Added TCP "server" support to allow listening connections from devices that act as data
 '       clients, e.g., FNET devices
@@ -25,13 +25,13 @@ Imports System.Text
 Imports System.Net
 Imports System.Threading
 Imports System.ComponentModel
-Imports Tva.Collections
-Imports Tva.DateTime.Common
-Imports Tva.Phasors
-Imports Tva.Communication
-Imports Tva.Communication.Common
-Imports Tva.IO.Common
-Imports Tva.Text.Common
+Imports TVA.Collections
+Imports TVA.DateTime.Common
+Imports TVA.Phasors
+Imports TVA.Communication
+Imports TVA.Communication.Common
+Imports TVA.IO.Common
+Imports TVA.Text.Common
 
 ''' <summary>Protocol independent frame parser</summary>
 <CLSCompliant(False)> _

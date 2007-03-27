@@ -18,7 +18,7 @@
 '*******************************************************************************************************
 
 Imports System.Runtime.Serialization
-Imports Tva.DateTime
+Imports TVA.DateTime
 
 ''' <summary>Standard DatAWare Timetag</summary>
 Public Class TimeTag

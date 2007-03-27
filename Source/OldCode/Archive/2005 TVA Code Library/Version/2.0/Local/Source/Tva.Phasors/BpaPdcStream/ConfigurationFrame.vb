@@ -22,10 +22,10 @@ Imports System.Reflection.Assembly
 Imports System.Security.Principal
 Imports System.Threading
 Imports System.Buffer
-Imports Tva.Assembly
-Imports Tva.Math.Common
-Imports Tva.Phasors.Common
-Imports Tva.Phasors.BpaPdcStream.Common
+Imports TVA.Assembly
+Imports TVA.Math.Common
+Imports TVA.Phasors.Common
+Imports TVA.Phasors.BpaPdcStream.Common
 
 Namespace BpaPdcStream
 

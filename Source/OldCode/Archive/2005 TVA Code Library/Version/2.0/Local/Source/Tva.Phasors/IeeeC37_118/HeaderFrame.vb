@@ -16,7 +16,7 @@
 '*******************************************************************************************************
 
 Imports System.Runtime.Serialization
-Imports Tva.Phasors.IeeeC37_118.Common
+Imports TVA.Phasors.IeeeC37_118.Common
 
 Namespace IeeeC37_118
 

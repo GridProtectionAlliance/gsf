@@ -1,4 +1,4 @@
-Imports Tva.Common
+Imports TVA.Common
 
 Friend NotInheritable Class PayloadAwareHelper
 
@@ -63,7 +63,7 @@ Friend NotInheritable Class PayloadAwareHelper
                 payloadSize = data.Length - PayloadHeaderSize
             End If
 
-            Return Tva.IO.Common.CopyBuffer(data, PayloadHeaderSize, payloadSize)
+            Return TVA.IO.Common.CopyBuffer(data, PayloadHeaderSize, payloadSize)
         Else
             Return New Byte() {}
         End If

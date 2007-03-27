@@ -17,11 +17,11 @@
 
 Imports System.Runtime.Serialization
 Imports System.Buffer
-Imports Tva.DateTime
-Imports Tva.DateTime.Common
-Imports Tva.IO.Compression.Common
-Imports Tva.Phasors.Common
-Imports Tva.Measurements
+Imports TVA.DateTime
+Imports TVA.DateTime.Common
+Imports TVA.IO.Compression.Common
+Imports TVA.Phasors.Common
+Imports TVA.Measurements
 
 ''' <summary>This class represents the protocol independent common implementation of any frame of data that can be sent or received from a PMU.</summary>
 <CLSCompliant(False), Serializable()> _

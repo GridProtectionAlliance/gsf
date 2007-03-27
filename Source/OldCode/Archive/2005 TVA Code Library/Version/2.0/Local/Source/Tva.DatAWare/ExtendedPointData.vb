@@ -1,6 +1,6 @@
 ' 02/24/2007
 
-Imports Tva.Interop.Bit
+Imports TVA.Interop.Bit
 
 Public Class ExtendedPointData
     Inherits PointDataBase
@@ -118,7 +118,7 @@ End Class
 ''
 ''*******************************************************************************************************
 
-'Imports Tva.Interop.Bit
+'Imports TVA.Interop.Bit
 
 '' This is the most basic form of a point of data in DatAWare (used by ReadEvent and ReadRange)
 '<Serializable()> _

@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  Tva.Configuration.CategorizedSettingsSection.vb - Categorized Settings Section
+'  TVA.Configuration.CategorizedSettingsSection.vb - Categorized Settings Section
 '  Copyright © 2006 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005
@@ -21,18 +21,18 @@ Imports System.Configuration
 Namespace Configuration
 
     ''' <summary>
-    ''' Represents a section in the configuration with one or more Tva.Configuration.CategorizedSettingsCollection.
+    ''' Represents a section in the configuration with one or more TVA.Configuration.CategorizedSettingsCollection.
     ''' </summary>
     ''' <remarks></remarks>
     Public Class CategorizedSettingsSection
         Inherits ConfigurationSection
 
         ''' <summary>
-        ''' Gets the Tva.Configuration.CategorizedSettingsCollection for the specified category name.
+        ''' Gets the TVA.Configuration.CategorizedSettingsCollection for the specified category name.
         ''' </summary>
-        ''' <param name="name">The name of the Tva.Configuration.CategorizedSettingsCollection to return.</param>
+        ''' <param name="name">The name of the TVA.Configuration.CategorizedSettingsCollection to return.</param>
         ''' <value></value>
-        ''' <returns>The Tva.Configuration.CategorizedSettingsCollection with the specified name; otherwise null.</returns>
+        ''' <returns>The TVA.Configuration.CategorizedSettingsCollection with the specified name; otherwise null.</returns>
         ''' <remarks></remarks>
         Default Public ReadOnly Property Category(ByVal name As String) As CategorizedSettingsElementCollection
             Get
@@ -44,7 +44,7 @@ Namespace Configuration
                 Dim nameChars() As Char = name.ToCharArray()
                 nameChars(0) = Char.ToLower(nameChars(0))
                 ' Don't allow spaces in the category name to prevent underlying .Net configuration API from breaking.
-                name = Tva.Text.Common.RemoveWhiteSpace(Convert.ToString(nameChars))
+                name = TVA.Text.Common.RemoveWhiteSpace(Convert.ToString(nameChars))
                 Dim configProperty As New ConfigurationProperty(name, GetType(CategorizedSettingsElementCollection))
 
                 MyBase.Properties.Add(configProperty)
@@ -60,7 +60,7 @@ Namespace Configuration
         ''' Gets the "general" category under the "categorizedSettings" of the configuration file.
         ''' </summary>
         ''' <value></value>
-        ''' <returns>The Tva.Configuration.CategorizedSettingsCollection of the "general" category.</returns>
+        ''' <returns>The TVA.Configuration.CategorizedSettingsCollection of the "general" category.</returns>
         ''' <remarks></remarks>
         Public ReadOnly Property General() As CategorizedSettingsElementCollection
             Get

@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  Tva.Common.vb - Globally available common functions
+'  TVA.Common.vb - Globally available common functions
 '  Copyright © 2006 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005

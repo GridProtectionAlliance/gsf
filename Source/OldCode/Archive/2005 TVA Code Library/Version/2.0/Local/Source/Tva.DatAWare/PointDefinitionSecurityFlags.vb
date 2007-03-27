@@ -1,6 +1,6 @@
 ' 03/06/2007
 
-Imports Tva.Interop.Bit
+Imports TVA.Interop.Bit
 
 Public Class PointDefinitionSecurityFlags
 

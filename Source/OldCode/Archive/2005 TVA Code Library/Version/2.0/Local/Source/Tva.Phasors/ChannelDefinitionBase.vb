@@ -17,8 +17,8 @@
 
 Imports System.Runtime.Serialization
 Imports System.Text
-Imports Tva.Phasors.Common
-Imports Tva.Text.Common
+Imports TVA.Phasors.Common
+Imports TVA.Text.Common
 
 ''' <summary>This class represents the common implementation of the protocol independent definition of any kind of data.</summary>
 <CLSCompliant(False), Serializable()> _

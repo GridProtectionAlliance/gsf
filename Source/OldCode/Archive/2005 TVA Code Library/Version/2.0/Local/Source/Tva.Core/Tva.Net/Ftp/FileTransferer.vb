@@ -4,7 +4,7 @@ Option Explicit On
 Imports System.IO
 Imports System.Threading
 Imports System.Net.Sockets
-Imports Tva.IO.FilePath
+Imports TVA.IO.FilePath
 
 Namespace Net.Ftp
 

@@ -11,7 +11,7 @@ using namespace System::ComponentModel;
 using namespace System::Runtime::InteropServices;
 using namespace System::Text::RegularExpressions;
 
-namespace Tva
+namespace TVA
 {
 	namespace IO
 	{
@@ -34,7 +34,7 @@ namespace Tva
 
 			public __delegate void CurrentFileEventHandler(String* fullFileName, String* relativeFileName);
 
-			[ToolboxBitmap(__typeof(System::Object), S"Tva.IO.Compression.ZipFile.bmp"), DefaultProperty(S"FileName"), DefaultMember(S"Files")]
+			[ToolboxBitmap(__typeof(System::Object), S"TVA.IO.Compression.ZipFile.bmp"), DefaultProperty(S"FileName"), DefaultMember(S"Files")]
 			public __gc class ZipFile :  public Component
 			{
 				public:

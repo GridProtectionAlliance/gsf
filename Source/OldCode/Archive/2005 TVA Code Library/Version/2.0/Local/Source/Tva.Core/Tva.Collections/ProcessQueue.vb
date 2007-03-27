@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  Tva.Collections.ProcessQueue.vb - Multi-threaded Item Processing Queue
+'  TVA.Collections.ProcessQueue.vb - Multi-threaded Item Processing Queue
 '  Copyright © 2006 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005
@@ -24,8 +24,8 @@
 
 Imports System.Threading
 Imports System.Text
-Imports Tva.Common
-Imports Tva.DateTime.Common
+Imports TVA.Common
+Imports TVA.DateTime.Common
 
 Namespace Collections
 

@@ -16,10 +16,10 @@
 '*******************************************************************************************************
 
 Imports System.Runtime.Serialization
-Imports Tva.DateTime
-Imports Tva.DateTime.Common
-Imports Tva.Phasors.Common
-Imports Tva.Phasors.IeeeC37_118.Common
+Imports TVA.DateTime
+Imports TVA.DateTime.Common
+Imports TVA.Phasors.Common
+Imports TVA.Phasors.IeeeC37_118.Common
 
 Namespace BpaPdcStream
 

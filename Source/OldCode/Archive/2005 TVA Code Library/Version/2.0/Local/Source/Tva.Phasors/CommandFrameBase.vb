@@ -17,7 +17,7 @@
 
 Imports System.Runtime.Serialization
 Imports System.Text
-Imports Tva.Phasors.Common
+Imports TVA.Phasors.Common
 
 ''' <summary>This class represents the protocol independent common implementation of a command frame that can be sent or received from a PMU.</summary>
 <CLSCompliant(False), Serializable()> _

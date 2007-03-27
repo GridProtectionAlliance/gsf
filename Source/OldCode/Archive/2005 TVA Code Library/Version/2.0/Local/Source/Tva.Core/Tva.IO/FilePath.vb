@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  Tva.IO.FilePath.vb - File/Path Manipulation Functions
+'  TVA.IO.FilePath.vb - File/Path Manipulation Functions
 '  Copyright © 2006 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005
@@ -24,9 +24,9 @@ Imports System.Text
 Imports System.Text.RegularExpressions
 Imports System.Runtime.InteropServices
 Imports System.Reflection.Assembly
-Imports Tva.DateTime.Common
-Imports Tva.Text.Common
-Imports Tva.Interop.WindowsApi
+Imports TVA.DateTime.Common
+Imports TVA.Text.Common
+Imports TVA.Interop.WindowsApi
 
 Namespace IO
 
@@ -281,7 +281,7 @@ Namespace IO
         Public Shared Function AbsolutePath(ByVal filePath As String) As String
 
             If Not Path.IsPathRooted(filePath) Then
-                filePath = JustPath(Tva.Assembly.EntryAssembly.Location) & filePath
+                filePath = JustPath(TVA.Assembly.EntryAssembly.Location) & filePath
             End If
 
             Return filePath

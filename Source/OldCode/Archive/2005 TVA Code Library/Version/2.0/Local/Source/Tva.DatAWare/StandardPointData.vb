@@ -1,6 +1,6 @@
 ' 02/23/2007
 
-Imports Tva.Interop.Bit
+Imports TVA.Interop.Bit
 
 ''' <summary>
 ''' 
@@ -106,7 +106,7 @@ End Class
 
 '' 02/23/2007
 
-'Imports Tva.Interop.Bit
+'Imports TVA.Interop.Bit
 
 'Public Class StandardPointData
 

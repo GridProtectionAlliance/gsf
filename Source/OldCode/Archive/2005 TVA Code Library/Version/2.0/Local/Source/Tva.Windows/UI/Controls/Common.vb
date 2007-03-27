@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  Tva.Windows.UI.Controls.Commmon.vb - Common Functions for Windows UI Controls
+'  TVA.Windows.UI.Controls.Commmon.vb - Common Functions for Windows UI Controls
 '  Copyright © 2006 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005

@@ -16,7 +16,7 @@
 '*******************************************************************************************************
 
 Imports System.Runtime.Serialization
-Imports Tva.Measurements
+Imports TVA.Measurements
 
 ''' <summary>This class represents the common implementation of the protocol independent representation of any kind of data value.</summary>
 <CLSCompliant(False), Serializable()> _

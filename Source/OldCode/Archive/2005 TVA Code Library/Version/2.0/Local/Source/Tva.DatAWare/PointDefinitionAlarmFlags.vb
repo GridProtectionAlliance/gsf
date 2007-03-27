@@ -1,6 +1,6 @@
 ' 02/22/2007
 
-Imports Tva.Interop.Bit
+Imports TVA.Interop.Bit
 
 Public Class PointDefinitionAlarmFlags
 

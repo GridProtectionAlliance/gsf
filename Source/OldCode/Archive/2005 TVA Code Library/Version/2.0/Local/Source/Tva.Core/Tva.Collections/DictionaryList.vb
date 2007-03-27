@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  Tva.Collections.DictionaryList.vb - Sorted dictionary style list that supports IList
+'  TVA.Collections.DictionaryList.vb - Sorted dictionary style list that supports IList
 '  Copyright © 2006 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005

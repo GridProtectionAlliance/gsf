@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  Tva.Xml.Common.vb - Common XML Functions
+'  TVA.Xml.Common.vb - Common XML Functions
 '  Copyright © 2006 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005

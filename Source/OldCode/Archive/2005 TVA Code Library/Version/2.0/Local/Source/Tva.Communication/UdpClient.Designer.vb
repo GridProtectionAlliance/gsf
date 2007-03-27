@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  Tva.Communication.UdpClient.Designer.vb - UDP-based communication client
+'  TVA.Communication.UdpClient.Designer.vb - UDP-based communication client
 '  Copyright © 2006 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005
@@ -15,11 +15,11 @@
 '
 '*******************************************************************************************************
 
-Imports Tva.Communication.Common
+Imports TVA.Communication.Common
 
 Partial Class UdpClient
 
-    Inherits Tva.Communication.CommunicationClientBase
+    Inherits TVA.Communication.CommunicationClientBase
 
     <System.Diagnostics.DebuggerNonUserCode()> _
     Public Sub New(ByVal Container As System.ComponentModel.IContainer)

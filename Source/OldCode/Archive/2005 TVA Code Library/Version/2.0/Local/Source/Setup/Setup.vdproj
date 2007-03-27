@@ -689,16 +689,16 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Tva.IO.Compression, Version=2.1.58.45508, Culture=neutral, processorArchitecture=x86"
+            "AssemblyAsmDisplayName" = "8:TVA.IO.Compression, Version=2.1.58.45508, Culture=neutral, processorArchitecture=x86"
                 "ScatterAssemblies"
                 {
                     "_08B668A0CDB9CB8976942092EF18D41A"
                     {
-                    "Name" = "8:Tva.IO.Compression.dll"
+                    "Name" = "8:TVA.IO.Compression.dll"
                     "Attributes" = "3:512"
                     }
                 }
-            "SourcePath" = "8:Tva.IO.Compression.dll"
+            "SourcePath" = "8:TVA.IO.Compression.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_9E7C016FD9E547E3AF15E21A16A15E3F"
@@ -718,8 +718,8 @@
             }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_3361E7865F1F244B27AFC1D0C0923253"
             {
-            "SourcePath" = "8:Tva.Communication.xml"
-            "TargetName" = "8:Tva.Communication.xml"
+            "SourcePath" = "8:TVA.Communication.xml"
+            "TargetName" = "8:TVA.Communication.xml"
             "Tag" = "8:"
             "Folder" = "8:_B8E9B9AEC8ED449BA5F696547D1E6CF9"
             "Condition" = "8:"
@@ -760,16 +760,16 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Tva.Security, Version=2.1.58.45508, Culture=neutral, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:TVA.Security, Version=2.1.58.45508, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
                     "_63EC7447509E6A9F625A3AA0630D4318"
                     {
-                    "Name" = "8:Tva.Security.dll"
+                    "Name" = "8:TVA.Security.dll"
                     "Attributes" = "3:512"
                     }
                 }
-            "SourcePath" = "8:Tva.Security.dll"
+            "SourcePath" = "8:TVA.Security.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_9E7C016FD9E547E3AF15E21A16A15E3F"
@@ -791,16 +791,16 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Tva.Communication, Version=2.1.58.45508, Culture=neutral, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:TVA.Communication, Version=2.1.58.45508, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
                     "_9E874258AE0349614832FD00A8938FBD"
                     {
-                    "Name" = "8:Tva.Communication.dll"
+                    "Name" = "8:TVA.Communication.dll"
                     "Attributes" = "3:512"
                     }
                 }
-            "SourcePath" = "8:Tva.Communication.dll"
+            "SourcePath" = "8:TVA.Communication.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_9E7C016FD9E547E3AF15E21A16A15E3F"
@@ -820,8 +820,8 @@
             }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_AC000219A852BA806E6E213161998573"
             {
-            "SourcePath" = "8:Tva.Security.xml"
-            "TargetName" = "8:Tva.Security.xml"
+            "SourcePath" = "8:TVA.Security.xml"
+            "TargetName" = "8:TVA.Security.xml"
             "Tag" = "8:"
             "Folder" = "8:_B8E9B9AEC8ED449BA5F696547D1E6CF9"
             "Condition" = "8:"
@@ -842,16 +842,16 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Tva.Core, Version=2.1.58.45508, Culture=neutral, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:TVA.Core, Version=2.1.58.45508, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
                     "_BDB62A0DF522EAA41DC13662521E2FE2"
                     {
-                    "Name" = "8:Tva.Core.dll"
+                    "Name" = "8:TVA.Core.dll"
                     "Attributes" = "3:512"
                     }
                 }
-            "SourcePath" = "8:Tva.Core.dll"
+            "SourcePath" = "8:TVA.Core.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_9E7C016FD9E547E3AF15E21A16A15E3F"
@@ -871,8 +871,8 @@
             }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_C8ECA56893A734903BA3E2AD9046EC8E"
             {
-            "SourcePath" = "8:Tva.Core.xml"
-            "TargetName" = "8:Tva.Core.xml"
+            "SourcePath" = "8:TVA.Core.xml"
+            "TargetName" = "8:TVA.Core.xml"
             "Tag" = "8:"
             "Folder" = "8:_B8E9B9AEC8ED449BA5F696547D1E6CF9"
             "Condition" = "8:"
@@ -1519,7 +1519,7 @@
         {
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_218197BA875A4613B787C7016854A754"
             {
-            "SourcePath" = "8:..\\Tva.Core\\obj\\Debug\\Tva.Core.dll"
+            "SourcePath" = "8:..\\TVA.Core\\obj\\Debug\\TVA.Core.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_9E7C016FD9E547E3AF15E21A16A15E3F"
@@ -1547,7 +1547,7 @@
             }
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_2504B49837D444AD889905326539DFA9"
             {
-            "SourcePath" = "8:..\\Tva.Windows\\obj\\Debug\\Tva.Windows.xml"
+            "SourcePath" = "8:..\\TVA.Windows\\obj\\Debug\\TVA.Windows.xml"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_B8E9B9AEC8ED449BA5F696547D1E6CF9"
@@ -1575,7 +1575,7 @@
             }
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_2D7DFC5A3BEA4066BF374C2DC633B504"
             {
-            "SourcePath" = "8:..\\Tva.Phasors\\obj\\Debug\\Tva.Phasors.dll"
+            "SourcePath" = "8:..\\TVA.Phasors\\obj\\Debug\\TVA.Phasors.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_B8E9B9AEC8ED449BA5F696547D1E6CF9"
@@ -1603,7 +1603,7 @@
             }
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_31B1B5AA47204698829A4C5CE2E85844"
             {
-            "SourcePath" = "8:..\\Tva.Phasors\\obj\\Debug\\Tva.Phasors.dll"
+            "SourcePath" = "8:..\\TVA.Phasors\\obj\\Debug\\TVA.Phasors.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_9E7C016FD9E547E3AF15E21A16A15E3F"
@@ -1631,7 +1631,7 @@
             }
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_47E256E424F24F329C8BD5452675BA77"
             {
-            "SourcePath" = "8:..\\Tva.Windows\\obj\\Debug\\Tva.Windows.dll"
+            "SourcePath" = "8:..\\TVA.Windows\\obj\\Debug\\TVA.Windows.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_B8E9B9AEC8ED449BA5F696547D1E6CF9"
@@ -1659,7 +1659,7 @@
             }
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_47F84D34E186441D905CFBDA20230CAE"
             {
-            "SourcePath" = "8:..\\Tva.Web\\obj\\Debug\\Tva.Web.dll"
+            "SourcePath" = "8:..\\TVA.Web\\obj\\Debug\\TVA.Web.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_9E7C016FD9E547E3AF15E21A16A15E3F"
@@ -1715,7 +1715,7 @@
             }
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_68B002EFF1004532A5852A1B9662E8A4"
             {
-            "SourcePath" = "8:..\\Tva.Security\\obj\\Debug\\Tva.Security.xml"
+            "SourcePath" = "8:..\\TVA.Security\\obj\\Debug\\TVA.Security.xml"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_B8E9B9AEC8ED449BA5F696547D1E6CF9"
@@ -1743,7 +1743,7 @@
             }
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_6A8796FEB4CA4FB981D8DD50DF2F9516"
             {
-            "SourcePath" = "8:..\\Tva.Windows\\obj\\Debug\\Tva.Windows.dll"
+            "SourcePath" = "8:..\\TVA.Windows\\obj\\Debug\\TVA.Windows.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_9E7C016FD9E547E3AF15E21A16A15E3F"
@@ -1771,7 +1771,7 @@
             }
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_6FD5DD2385AF4BB293424553C9C6AF71"
             {
-            "SourcePath" = "8:..\\Tva.Tro\\obj\\Debug\\Tva.Tro.dll"
+            "SourcePath" = "8:..\\TVA.TRO\\obj\\Debug\\TVA.TRO.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_9E7C016FD9E547E3AF15E21A16A15E3F"
@@ -1799,7 +1799,7 @@
             }
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_7D84D67C96C9417B8F75B0CB74DC279A"
             {
-            "SourcePath" = "8:..\\Tva.Communication\\obj\\Debug\\Tva.Communication.xml"
+            "SourcePath" = "8:..\\TVA.Communication\\obj\\Debug\\TVA.Communication.xml"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_B8E9B9AEC8ED449BA5F696547D1E6CF9"
@@ -1827,7 +1827,7 @@
             }
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_7D9A4B553885428B859C6FA68B497231"
             {
-            "SourcePath" = "8:..\\bin\\Tva.IO.Compression.dll"
+            "SourcePath" = "8:..\\bin\\TVA.IO.Compression.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_B8E9B9AEC8ED449BA5F696547D1E6CF9"
@@ -1855,7 +1855,7 @@
             }
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_84AAA7B9888945FDB49CFCE2D081743D"
             {
-            "SourcePath" = "8:..\\Tva.Web\\obj\\Debug\\Tva.Web.xml"
+            "SourcePath" = "8:..\\TVA.Web\\obj\\Debug\\TVA.Web.xml"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_B8E9B9AEC8ED449BA5F696547D1E6CF9"
@@ -1883,7 +1883,7 @@
             }
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_97E7D1D604CD402CB4F4D3498D4700B9"
             {
-            "SourcePath" = "8:..\\Tva.Tro\\obj\\Debug\\Tva.Tro.xml"
+            "SourcePath" = "8:..\\TVA.TRO\\obj\\Debug\\TVA.TRO.xml"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_B8E9B9AEC8ED449BA5F696547D1E6CF9"
@@ -1911,7 +1911,7 @@
             }
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_9AEE3DA019E0409EB2834404625D6DDD"
             {
-            "SourcePath" = "8:..\\Tva.Core\\obj\\Debug\\Tva.Core.dll"
+            "SourcePath" = "8:..\\TVA.Core\\obj\\Debug\\TVA.Core.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_B8E9B9AEC8ED449BA5F696547D1E6CF9"
@@ -1939,7 +1939,7 @@
             }
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_9E173EE79D4E4CD3A24B1DE0AB07E192"
             {
-            "SourcePath" = "8:..\\Tva.Core\\obj\\Debug\\Tva.Core.xml"
+            "SourcePath" = "8:..\\TVA.Core\\obj\\Debug\\TVA.Core.xml"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_B8E9B9AEC8ED449BA5F696547D1E6CF9"
@@ -1967,7 +1967,7 @@
             }
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_A27D28C1100A4276ABC7D988BEE0207B"
             {
-            "SourcePath" = "8:..\\Tva.Web\\obj\\Debug\\Tva.Web.dll"
+            "SourcePath" = "8:..\\TVA.Web\\obj\\Debug\\TVA.Web.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_B8E9B9AEC8ED449BA5F696547D1E6CF9"
@@ -1995,7 +1995,7 @@
             }
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_A539B2047CF549958D93DED31BB95383"
             {
-            "SourcePath" = "8:..\\Tva.Services\\obj\\Debug\\Tva.Services.xml"
+            "SourcePath" = "8:..\\TVA.Services\\obj\\Debug\\TVA.Services.xml"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_B8E9B9AEC8ED449BA5F696547D1E6CF9"
@@ -2023,7 +2023,7 @@
             }
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_B141E21B2FE24614A3FD098FD5003489"
             {
-            "SourcePath" = "8:..\\Tva.Security\\obj\\Debug\\Tva.Security.dll"
+            "SourcePath" = "8:..\\TVA.Security\\obj\\Debug\\TVA.Security.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_9E7C016FD9E547E3AF15E21A16A15E3F"
@@ -2051,7 +2051,7 @@
             }
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_B33FE55DEDF84DF8B760C57FC367E4BD"
             {
-            "SourcePath" = "8:..\\Tva.Services\\obj\\Debug\\Tva.Services.dll"
+            "SourcePath" = "8:..\\TVA.Services\\obj\\Debug\\TVA.Services.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_9E7C016FD9E547E3AF15E21A16A15E3F"
@@ -2079,7 +2079,7 @@
             }
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_BB6A47EB35D14E07962E7784557DF366"
             {
-            "SourcePath" = "8:..\\Tva.Security\\obj\\Debug\\Tva.Security.dll"
+            "SourcePath" = "8:..\\TVA.Security\\obj\\Debug\\TVA.Security.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_B8E9B9AEC8ED449BA5F696547D1E6CF9"
@@ -2107,7 +2107,7 @@
             }
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_D27B881A32794C52B8521E4D7E742AA8"
             {
-            "SourcePath" = "8:..\\Tva.Tro\\obj\\Debug\\Tva.Tro.dll"
+            "SourcePath" = "8:..\\TVA.TRO\\obj\\Debug\\TVA.TRO.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_B8E9B9AEC8ED449BA5F696547D1E6CF9"
@@ -2135,7 +2135,7 @@
             }
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_D8CAE8FF8BDB4DC483DDBFCBD5184816"
             {
-            "SourcePath" = "8:..\\Tva.Services\\obj\\Debug\\Tva.Services.dll"
+            "SourcePath" = "8:..\\TVA.Services\\obj\\Debug\\TVA.Services.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_B8E9B9AEC8ED449BA5F696547D1E6CF9"
@@ -2163,7 +2163,7 @@
             }
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_DCF88E18C8DB4211BEC08A8A26C19A1F"
             {
-            "SourcePath" = "8:..\\Tva.Communication\\obj\\Debug\\Tva.Communication.dll"
+            "SourcePath" = "8:..\\TVA.Communication\\obj\\Debug\\TVA.Communication.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_B8E9B9AEC8ED449BA5F696547D1E6CF9"
@@ -2191,7 +2191,7 @@
             }
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_E8BB63A1A52E4C5AAF39ABA352BB17FC"
             {
-            "SourcePath" = "8:..\\Tva.Communication\\obj\\Debug\\Tva.Communication.dll"
+            "SourcePath" = "8:..\\TVA.Communication\\obj\\Debug\\TVA.Communication.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_9E7C016FD9E547E3AF15E21A16A15E3F"
@@ -2219,7 +2219,7 @@
             }
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_F6D9778D217E49FB967CCFB858554C4D"
             {
-            "SourcePath" = "8:..\\Tva.Phasors\\obj\\Debug\\Tva.Phasors.xml"
+            "SourcePath" = "8:..\\TVA.Phasors\\obj\\Debug\\TVA.Phasors.xml"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_B8E9B9AEC8ED449BA5F696547D1E6CF9"
@@ -2247,7 +2247,7 @@
             }
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_FCAE5B03253444CB8AC5AB0F8AEB940F"
             {
-            "SourcePath" = "8:..\\bin\\Tva.IO.Compression.dll"
+            "SourcePath" = "8:..\\bin\\TVA.IO.Compression.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_9E7C016FD9E547E3AF15E21A16A15E3F"

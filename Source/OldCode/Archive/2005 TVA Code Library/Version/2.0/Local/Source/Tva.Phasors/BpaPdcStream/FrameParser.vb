@@ -18,11 +18,11 @@
 Imports System.IO
 Imports System.Text
 Imports System.ComponentModel
-Imports Tva.Collections
-Imports Tva.IO.Common
-Imports Tva.IO.FilePath
-Imports Tva.DateTime.Common
-Imports Tva.Phasors.Common
+Imports TVA.Collections
+Imports TVA.IO.Common
+Imports TVA.IO.FilePath
+Imports TVA.DateTime.Common
+Imports TVA.Phasors.Common
 
 Namespace BpaPdcStream
 

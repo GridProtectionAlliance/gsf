@@ -18,7 +18,7 @@ Partial Class DataParser
         InitializeComponent()
 
         m_packetTypes = New Dictionary(Of Short, PacketTypeInfo)
-        m_dataQueue = Tva.Collections.ProcessQueue(Of IdentifiableItem(Of Byte())).CreateRealTimeQueue(AddressOf ParseData)
+        m_dataQueue = TVA.Collections.ProcessQueue(Of IdentifiableItem(Of Byte())).CreateRealTimeQueue(AddressOf ParseData)
 
     End Sub
 

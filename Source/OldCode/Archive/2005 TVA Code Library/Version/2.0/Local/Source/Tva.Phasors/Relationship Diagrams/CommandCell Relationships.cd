@@ -4,7 +4,7 @@
   <Comment CommentText="  Command Cell Relationships&#xD;&#xA;">
     <Position X="6.823" Y="0.5" Height="0.263" Width="1.721" />
   </Comment>
-  <Class Name="Tva.Phasors.CommandCell">
+  <Class Name="TVA.Phasors.CommandCell">
     <Position X="7" Y="1.5" Width="2" />
     <TypeIdentifier>
       <FileName>CommandCell.vb</FileName>
@@ -12,7 +12,7 @@
     </TypeIdentifier>
     <Lollipop Position="0.2" />
   </Class>
-  <Class Name="Tva.Phasors.ChannelCellBase">
+  <Class Name="TVA.Phasors.ChannelCellBase">
     <Position X="4.5" Y="1.5" Width="2" />
     <TypeIdentifier>
       <FileName>ChannelCellBase.vb</FileName>
@@ -20,7 +20,7 @@
     </TypeIdentifier>
     <Lollipop Position="0.2" />
   </Class>
-  <Class Name="Tva.Phasors.ChannelBase">
+  <Class Name="TVA.Phasors.ChannelBase">
     <Position X="1.75" Y="1.5" Width="2.25" />
     <TypeIdentifier>
       <FileName>ChannelBase.vb</FileName>
@@ -28,28 +28,28 @@
     </TypeIdentifier>
     <Lollipop Position="0.2" />
   </Class>
-  <Interface Name="Tva.Phasors.ICommandCell">
+  <Interface Name="TVA.Phasors.ICommandCell">
     <Position X="11" Y="6.5" Width="1.5" />
     <TypeIdentifier>
       <FileName>ICommandCell.vb</FileName>
       <HashCode>AAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAEAAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Interface>
-  <Interface Name="Tva.Phasors.IChannelCell">
+  <Interface Name="TVA.Phasors.IChannelCell">
     <Position X="8.75" Y="6.5" Width="1.75" />
     <TypeIdentifier>
       <FileName>IChannelCell.vb</FileName>
       <HashCode>AAAAAhAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Interface>
-  <Interface Name="Tva.Phasors.IChannel">
+  <Interface Name="TVA.Phasors.IChannel">
     <Position X="6.5" Y="6.5" Width="1.75" />
     <TypeIdentifier>
       <FileName>IChannel.vb</FileName>
       <HashCode>AAAAAAAAAAAoAAAAAAAAAAARAAAAAACAAAEAAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Interface>
-  <Interface Name="Tva.IBinaryDataProvider">
+  <Interface Name="TVA.IBinaryDataProvider">
     <Position X="6.5" Y="5" Width="1.75" />
     <TypeIdentifier />
   </Interface>

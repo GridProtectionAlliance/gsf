@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  Tva.Windows.Commmon.vb - Common Functions for Windows Applications
+'  TVA.Windows.Commmon.vb - Common Functions for Windows Applications
 '  Copyright © 2006 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005
@@ -21,8 +21,8 @@
 '*******************************************************************************************************
 
 Imports System.Windows.Forms
-Imports Tva.Collections.Common
-Imports Tva.Configuration.Common
+Imports TVA.Collections.Common
+Imports TVA.Configuration.Common
 
 Public NotInheritable Class Common
 

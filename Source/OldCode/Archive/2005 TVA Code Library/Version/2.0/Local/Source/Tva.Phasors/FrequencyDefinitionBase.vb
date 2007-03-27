@@ -17,7 +17,7 @@
 
 Imports System.Runtime.Serialization
 Imports System.ComponentModel
-Imports Tva.Phasors.Common
+Imports TVA.Phasors.Common
 
 ''' <summary>This class represents the common implementation of the protocol independent definition of a frequency and df/dt value.</summary>
 <CLSCompliant(False), Serializable()> _

@@ -18,7 +18,7 @@
 Imports System.Runtime.Serialization
 Imports System.Buffer
 Imports System.Text
-Imports Tva.Phasors.Common
+Imports TVA.Phasors.Common
 
 ''' <summary>This class represents the protocol independent common implementation of an element of header frame data that can be received from a PMU.</summary>
 <CLSCompliant(False), Serializable()> _

@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  Tva.Measurements.ImmediateMeasurements.vb - Lastest received measurements collection
+'  TVA.Measurements.ImmediateMeasurements.vb - Lastest received measurements collection
 '  Copyright © 2006 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005

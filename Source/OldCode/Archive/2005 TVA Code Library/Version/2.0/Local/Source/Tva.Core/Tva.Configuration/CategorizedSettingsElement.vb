@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  Tva.Configuration.CategorizedSettingsElement.vb - Categorized Settings Element
+'  TVA.Configuration.CategorizedSettingsElement.vb - Categorized Settings Element
 '  Copyright © 2006 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005
@@ -20,10 +20,10 @@
 '*******************************************************************************************************
 
 Imports System.Configuration
-Imports Tva.Common
-Imports Tva.Text.Common
-Imports Tva.Security.Cryptography
-Imports Tva.Security.Cryptography.Common
+Imports TVA.Common
+Imports TVA.Text.Common
+Imports TVA.Security.Cryptography
+Imports TVA.Security.Cryptography.Common
 
 Namespace Configuration
 
@@ -54,7 +54,7 @@ Namespace Configuration
         End Sub
 
         ''' <summary>
-        ''' Initializes a new instance of Tva.Configuration.CategorizedSettingsElement with the specified
+        ''' Initializes a new instance of TVA.Configuration.CategorizedSettingsElement with the specified
         ''' name and value information.
         ''' </summary>
         ''' <param name="name">The identifier string of the element.</param>
@@ -65,7 +65,7 @@ Namespace Configuration
         End Sub
 
         ''' <summary>
-        ''' Initializes a new instance of Tva.Configuration.CategorizedSettingsElement with the specified
+        ''' Initializes a new instance of TVA.Configuration.CategorizedSettingsElement with the specified
         ''' name and value information.
         ''' </summary>
         ''' <param name="name">The identifier string of the element.</param>
@@ -77,7 +77,7 @@ Namespace Configuration
         End Sub
 
         ''' <summary>
-        ''' Initializes a new instance of Tva.Configuration.CategorizedSettingsElement with the specified
+        ''' Initializes a new instance of TVA.Configuration.CategorizedSettingsElement with the specified
         ''' name and value information.
         ''' </summary>
         ''' <param name="name">The identifier string of the element.</param>

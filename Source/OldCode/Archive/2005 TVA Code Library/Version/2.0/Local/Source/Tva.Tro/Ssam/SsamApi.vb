@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  Tva.Tro.Ssam.SsamApi.vb - SSAM API
+'  TVA.TRO.Ssam.SsamApi.vb - SSAM API
 '  Copyright © 2006 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005
@@ -18,8 +18,8 @@
 
 Imports System.Data.SqlClient
 Imports System.ComponentModel
-Imports Tva.Data.Common
-Imports Tva.Configuration.Common
+Imports TVA.Data.Common
+Imports TVA.Configuration.Common
 
 Namespace Ssam
 
@@ -39,24 +39,24 @@ Namespace Ssam
         Private Const ConfigurationElement As String = "Ssam"
 
         ''' <summary>
-        ''' Initializes a default instance of Tva.Tro.Ssam.SsamApi.
+        ''' Initializes a default instance of TVA.TRO.Ssam.SsamApi.
         ''' </summary>
         Public Sub New()
             MyClass.New(SsamServer.Development)
         End Sub
 
         ''' <summary>
-        ''' Initializes a instance of Tva.Tro.Ssam.SsamApi with the specified information.
+        ''' Initializes a instance of TVA.TRO.Ssam.SsamApi with the specified information.
         ''' </summary>
-        ''' <param name="server">One of the Tva.Tro.Ssam.SsamApi.SsamServer values.</param>
+        ''' <param name="server">One of the TVA.TRO.Ssam.SsamApi.SsamServer values.</param>
         Public Sub New(ByVal server As SsamServer)
             MyClass.New(server, True)
         End Sub
 
         ''' <summary>
-        ''' Initializes a instance of Tva.Tro.Ssam.SsamApi with the specified information.
+        ''' Initializes a instance of TVA.TRO.Ssam.SsamApi with the specified information.
         ''' </summary>
-        ''' <param name="server">One of the Tva.Tro.Ssam.SsamApi.SsamServer values.</param>
+        ''' <param name="server">One of the TVA.TRO.Ssam.SsamApi.SsamServer values.</param>
         ''' <param name="keepConnectionOpen">
         ''' True if connection with the SSAM server is to be kept open after the first event is logged for 
         ''' any consecutive events that will follow; otherwise False.
@@ -191,8 +191,8 @@ Namespace Ssam
         ''' Logs an event with the specified information and queues it for logging to the SSAM server.
         ''' </summary>
         ''' <param name="entityID">The mnemonic key or the numeric value of the entity to which the event belongs.</param>
-        ''' <param name="entityType">One of the Tva.Tro.Ssam.SsamEntityType values.</param>
-        ''' <param name="eventType">One of the Tva.Tro.Ssam.SsamEvent.SsamEventType values.</param>
+        ''' <param name="entityType">One of the TVA.TRO.Ssam.SsamEntityType values.</param>
+        ''' <param name="eventType">One of the TVA.TRO.Ssam.SsamEvent.SsamEventType values.</param>
         Public Sub LogEvent(ByVal entityID As String, ByVal entityType As SsamEntityType, _
                 ByVal eventType As SsamEventType)
 
@@ -204,8 +204,8 @@ Namespace Ssam
         ''' Logs an event with the specified information and queues it for logging to the SSAM server.
         ''' </summary>
         ''' <param name="entityID">The mnemonic key or the numeric value of the entity to which the event belongs.</param>
-        ''' <param name="entityType">One of the Tva.Tro.Ssam.SsamEntityType values.</param>
-        ''' <param name="eventType">One of the Tva.Tro.Ssam.SsamEvent.SsamEventType values.</param>
+        ''' <param name="entityType">One of the TVA.TRO.Ssam.SsamEntityType values.</param>
+        ''' <param name="eventType">One of the TVA.TRO.Ssam.SsamEvent.SsamEventType values.</param>
         ''' <param name="message">A brief description of the event (max 120 characters).</param>
         Public Sub LogEvent(ByVal entityID As String, ByVal entityType As SsamEntityType, _
                 ByVal eventType As SsamEventType, ByVal message As String)
@@ -218,8 +218,8 @@ Namespace Ssam
         ''' Logs an event with the specified information and queues it for logging to the SSAM server.
         ''' </summary>
         ''' <param name="entityID">The mnemonic key or the numeric value of the entity to which the event belongs.</param>
-        ''' <param name="entityType">One of the Tva.Tro.Ssam.SsamEntityType values.</param>
-        ''' <param name="eventType">One of the Tva.Tro.Ssam.SsamEvent.SsamEventType values.</param>
+        ''' <param name="entityType">One of the TVA.TRO.Ssam.SsamEntityType values.</param>
+        ''' <param name="eventType">One of the TVA.TRO.Ssam.SsamEvent.SsamEventType values.</param>
         ''' <param name="errorNumber">The error number encountered, if any, for which the event is being logged.</param>
         ''' <param name="message">A brief description of the event (max 120 characters).</param>
         ''' <param name="description">A detailed description of the event (max 2GB).</param>
@@ -232,9 +232,9 @@ Namespace Ssam
         End Sub
 
         ''' <summary>
-        ''' Logs the specified Tva.Tro.Ssam.SsamEvent to the current SSAM server.
+        ''' Logs the specified TVA.TRO.Ssam.SsamEvent to the current SSAM server.
         ''' </summary>
-        ''' <param name="newEvent">The Tva.Tro.Ssam.SsamEvent to log.</param>
+        ''' <param name="newEvent">The TVA.TRO.Ssam.SsamEvent to log.</param>
         ''' <returns>True if the event is logged successfully; otherwise False.</returns>
         Public Function LogEvent(ByVal newEvent As SsamEvent) As Boolean
 
@@ -289,7 +289,7 @@ Namespace Ssam
         End Property
 
         ''' <summary>
-        ''' Attempts to free resources and perform other cleanup operations before the Tva.Tro.Ssam.SsamApi 
+        ''' Attempts to free resources and perform other cleanup operations before the TVA.TRO.Ssam.SsamApi 
         ''' is reclaimed by garbage collection.
         ''' </summary>
         Protected Overrides Sub Finalize()
@@ -313,7 +313,7 @@ Namespace Ssam
         End Sub
 
         ''' <summary>
-        ''' Releases the unmanaged resources used by the Tva.Tro.Ssam.SsamApi and and optionally releases the 
+        ''' Releases the unmanaged resources used by the TVA.TRO.Ssam.SsamApi and and optionally releases the 
         ''' managed resources.
         ''' </summary>
         ''' <param name="disposing">
@@ -331,7 +331,7 @@ Namespace Ssam
 
 #Region " IDisposable Support "
         ''' <summary>
-        ''' Releases all resources used by the Tva.Tro.Ssam.SsamApi.
+        ''' Releases all resources used by the TVA.TRO.Ssam.SsamApi.
         ''' </summary>
         ''' <remarks></remarks>
         Public Sub Dispose() Implements IDisposable.Dispose

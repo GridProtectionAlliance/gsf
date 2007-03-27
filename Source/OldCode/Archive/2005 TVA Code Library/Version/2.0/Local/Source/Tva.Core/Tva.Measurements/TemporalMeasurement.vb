@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  Tva.Measurements.TemporalMeasurement.vb - Time sensitive measurement implementation
+'  TVA.Measurements.TemporalMeasurement.vb - Time sensitive measurement implementation
 '  Copyright © 2006 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005
@@ -17,7 +17,7 @@
 '
 '*******************************************************************************************************
 
-Imports Tva.DateTime.Common
+Imports TVA.DateTime.Common
 
 Namespace Measurements
 

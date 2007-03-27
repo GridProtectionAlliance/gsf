@@ -16,7 +16,7 @@
 '*******************************************************************************************************
 
 Imports System.Runtime.Serialization
-Imports Tva.Phasors.Ieee1344.Common
+Imports TVA.Phasors.Ieee1344.Common
 
 Namespace Ieee1344
 

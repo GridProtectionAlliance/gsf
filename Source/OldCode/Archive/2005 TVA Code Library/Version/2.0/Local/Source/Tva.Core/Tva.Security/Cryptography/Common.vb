@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  Tva.Security.Cryptography.Common.vb - Handy Cryptography Functions
+'  TVA.Security.Cryptography.Common.vb - Handy Cryptography Functions
 '  Copyright © 2006 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005
@@ -23,10 +23,10 @@
 Imports System.IO
 Imports System.Text
 Imports System.Security.Cryptography
-Imports Tva.Common
-Imports Tva.Math.Common
-Imports Tva.IO.Common
-Imports Tva.Interop.Bit
+Imports TVA.Common
+Imports TVA.Math.Common
+Imports TVA.IO.Common
+Imports TVA.Interop.Bit
 
 Namespace Security.Cryptography
 

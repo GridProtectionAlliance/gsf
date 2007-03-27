@@ -17,8 +17,8 @@
 
 Imports System.Runtime.Serialization
 Imports System.Text
-Imports Tva.Phasors.Common
-Imports Tva.Phasors.Ieee1344.Common
+Imports TVA.Phasors.Common
+Imports TVA.Phasors.Ieee1344.Common
 
 Namespace Ieee1344
 

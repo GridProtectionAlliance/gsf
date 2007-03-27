@@ -5,9 +5,9 @@ Option Strict On
 Imports System.Drawing
 Imports System.ComponentModel
 Imports System.Threading
-Imports Tva.Services
-Imports Tva.Configuration
-Imports Tva.Configuration.Common
+Imports TVA.Services
+Imports TVA.Configuration
+Imports TVA.Configuration.Common
 
 Namespace Scheduling
 
@@ -110,7 +110,7 @@ Namespace Scheduling
 
         ''' <summary>
         ''' Gets or sets a boolean value indicating whether the schedules will be saved to the application 
-        ''' configuration file when this instance of Tva.ScheduleManager is stopped or disposed.
+        ''' configuration file when this instance of TVA.ScheduleManager is stopped or disposed.
         ''' </summary>
         ''' <value>True if the schedules will be saved to the application configuration file; otherwise False.</value>
         <Category("Configuration"), DefaultValue(GetType(Boolean), "True")> _

@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  Tva.Date.Win32TimeZone.vb - Win32 Time Zone Classes
+'  TVA.Date.Win32TimeZone.vb - Win32 Time Zone Classes
 '  Copyright © 2006 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005

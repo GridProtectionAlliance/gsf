@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  Tva.Net.Smtp.Common.vb - Common e-mail related functions
+'  TVA.Net.Smtp.Common.vb - Common e-mail related functions
 '  Copyright © 2006 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005

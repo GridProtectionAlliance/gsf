@@ -17,7 +17,7 @@
 
 Imports System.Runtime.Serialization
 Imports System.Buffer
-Imports Tva.Phasors.Common
+Imports TVA.Phasors.Common
 
 ''' <summary>This class represents the protocol independent common implementation of an element of extended frame data of a command frame that can be received from a PMU.</summary>
 <CLSCompliant(False), Serializable()> _

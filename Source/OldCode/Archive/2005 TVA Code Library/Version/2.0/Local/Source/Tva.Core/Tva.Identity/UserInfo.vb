@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  Tva.Identity.UserInfo.vb - ActiveDirectory User Information Class
+'  TVA.Identity.UserInfo.vb - ActiveDirectory User Information Class
 '  Copyright © 2006 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005

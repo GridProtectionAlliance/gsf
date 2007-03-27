@@ -5,10 +5,10 @@ Imports System.Net
 Imports System.Text
 Imports System.Drawing
 Imports System.ComponentModel
-Imports Tva.Assembly
-Imports Tva.IO.Common
-Imports Tva.IO.Compression
-Imports Tva.Security.Cryptography.Common
+Imports TVA.Assembly
+Imports TVA.IO.Common
+Imports TVA.IO.Compression
+Imports TVA.Security.Cryptography.Common
 
 Namespace Application
 
@@ -226,7 +226,7 @@ Namespace Application
                     Dim webFiles As ZipFile = Nothing
                     Dim zipFilePath As String = m_parent.Server.MapPath("~/")
                     Dim zipFileName As String = zipFilePath & "WebFiles.dat"
-                    File.WriteAllBytes(zipFileName, ReadStream(CallingAssembly.GetEmbeddedResource("Tva.Security.Application.WebFiles.dat")))
+                    File.WriteAllBytes(zipFileName, ReadStream(CallingAssembly.GetEmbeddedResource("TVA.Security.Application.WebFiles.dat")))
                     webFiles = ZipFile.Open(zipFileName)
                     webFiles.Extract("*.*", zipFilePath, UpdateOption.ZipFileIsNewer, True)
                     webFiles.Close()

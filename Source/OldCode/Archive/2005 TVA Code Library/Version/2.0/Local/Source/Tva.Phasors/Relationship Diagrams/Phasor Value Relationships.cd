@@ -16,7 +16,7 @@
   <Comment CommentText="Virginia Tech FNET">
     <Position X="16" Y="6.5" Height="0.263" Width="1.2" />
   </Comment>
-  <Class Name="Tva.Phasors.PhasorValueBase">
+  <Class Name="TVA.Phasors.PhasorValueBase">
     <Position X="3.25" Y="1.75" Width="2.75" />
     <TypeIdentifier>
       <FileName>PhasorValueBase.vb</FileName>
@@ -26,7 +26,7 @@
       <Compartment Name="Nested Types" Collapsed="false" />
     </Compartments>
     <NestedTypes>
-      <Delegate Name="Tva.Phasors.PhasorValueBase.CreateNewPhasorValueFunctionSignature">
+      <Delegate Name="TVA.Phasors.PhasorValueBase.CreateNewPhasorValueFunctionSignature">
         <TypeIdentifier>
           <NewMemberFileName>PhasorValueBase.vb</NewMemberFileName>
         </TypeIdentifier>
@@ -34,13 +34,13 @@
     </NestedTypes>
     <Lollipop Position="0.2" />
   </Class>
-  <Class Name="Tva.Phasors.ChannelValueBase(Of T)">
+  <Class Name="TVA.Phasors.ChannelValueBase(Of T)">
     <Position X="1" Y="1.5" Width="2" />
     <TypeIdentifier>
       <FileName>ChannelValueBase.vb</FileName>
       <HashCode>AABAAIAAEAAACAAAAAAAQAAwABAgIAIAAAAQAAAAAAA=</HashCode>
     </TypeIdentifier>
-    <InheritanceLine Type="Tva.Phasors.ChannelBase" FixedToPoint="true">
+    <InheritanceLine Type="TVA.Phasors.ChannelBase" FixedToPoint="true">
       <Path>
         <Point X="1.75" Y="5.75" />
         <Point X="1.75" Y="5.173" />
@@ -48,7 +48,7 @@
     </InheritanceLine>
     <Lollipop Position="0.2" />
   </Class>
-  <Class Name="Tva.Phasors.ChannelBase">
+  <Class Name="TVA.Phasors.ChannelBase">
     <Position X="0.5" Y="5.75" Width="2.5" />
     <TypeIdentifier>
       <FileName>ChannelBase.vb</FileName>
@@ -56,13 +56,13 @@
     </TypeIdentifier>
     <Lollipop Position="0.2" />
   </Class>
-  <Class Name="Tva.Phasors.BpaPdcStream.PhasorValue">
+  <Class Name="TVA.Phasors.BpaPdcStream.PhasorValue">
     <Position X="6.25" Y="7" Width="2.75" />
     <TypeIdentifier>
       <FileName>BpaPdcStream\PhasorValue.vb</FileName>
       <HashCode>AACAAAAAAEAACAAAAAAAQAAigAAAAACAAEAAAAEAAAA=</HashCode>
     </TypeIdentifier>
-    <InheritanceLine Type="Tva.Phasors.PhasorValueBase" FixedFromPoint="true" FixedToPoint="true">
+    <InheritanceLine Type="TVA.Phasors.PhasorValueBase" FixedFromPoint="true" FixedToPoint="true">
       <Path>
         <Point X="6" Y="5.625" />
         <Point X="7.51" Y="5.625" />
@@ -70,13 +70,13 @@
       </Path>
     </InheritanceLine>
   </Class>
-  <Class Name="Tva.Phasors.Ieee1344.PhasorValue">
+  <Class Name="TVA.Phasors.Ieee1344.PhasorValue">
     <Position X="9.25" Y="7" Width="2.75" />
     <TypeIdentifier>
       <FileName>Ieee1344\PhasorValue.vb</FileName>
       <HashCode>AACAAAAAAEAACAAAAAAAQAAiAAAAAACAAAAAAAAAAAA=</HashCode>
     </TypeIdentifier>
-    <InheritanceLine Type="Tva.Phasors.PhasorValueBase" ManuallyRouted="true" FixedFromPoint="true" FixedToPoint="true">
+    <InheritanceLine Type="TVA.Phasors.PhasorValueBase" ManuallyRouted="true" FixedFromPoint="true" FixedToPoint="true">
       <Path>
         <Point X="6" Y="5.625" />
         <Point X="10.74" Y="5.625" />
@@ -84,13 +84,13 @@
       </Path>
     </InheritanceLine>
   </Class>
-  <Class Name="Tva.Phasors.IeeeC37_118.PhasorValue">
+  <Class Name="TVA.Phasors.IeeeC37_118.PhasorValue">
     <Position X="12.25" Y="7" Width="2.75" />
     <TypeIdentifier>
       <FileName>IeeeC37_118\PhasorValue.vb</FileName>
       <HashCode>AACAAAAAAEAACAAAAAAAQAAiAAAAAACAAAAAAAAAAAA=</HashCode>
     </TypeIdentifier>
-    <InheritanceLine Type="Tva.Phasors.PhasorValueBase" ManuallyRouted="true" FixedFromPoint="true" FixedToPoint="true">
+    <InheritanceLine Type="TVA.Phasors.PhasorValueBase" ManuallyRouted="true" FixedFromPoint="true" FixedToPoint="true">
       <Path>
         <Point X="6" Y="5.625" />
         <Point X="13.625" Y="5.625" />
@@ -98,13 +98,13 @@
       </Path>
     </InheritanceLine>
   </Class>
-  <Class Name="Tva.Phasors.FNet.PhasorValue">
+  <Class Name="TVA.Phasors.FNet.PhasorValue">
     <Position X="15.25" Y="7" Width="2.75" />
     <TypeIdentifier>
       <FileName>FNet\PhasorValue.vb</FileName>
       <HashCode>AACAAAAAAEAACAAAAAAAQAAiAAAAAACAAAAAAAAAAAA=</HashCode>
     </TypeIdentifier>
-    <InheritanceLine Type="Tva.Phasors.PhasorValueBase" ManuallyRouted="true" FixedFromPoint="true" FixedToPoint="true">
+    <InheritanceLine Type="TVA.Phasors.PhasorValueBase" ManuallyRouted="true" FixedFromPoint="true" FixedToPoint="true">
       <Path>
         <Point X="6" Y="5.625" />
         <Point X="16.51" Y="5.625" />
@@ -112,28 +112,28 @@
       </Path>
     </InheritanceLine>
   </Class>
-  <Interface Name="Tva.Phasors.IPhasorValue">
+  <Interface Name="TVA.Phasors.IPhasorValue">
     <Position X="12.75" Y="2.75" Width="2" />
     <TypeIdentifier>
       <FileName>IPhasorValue.vb</FileName>
       <HashCode>AAAAAAQAAAAAIIAAAAAAACAAAAAAAAAAAUEAAAEAAAA=</HashCode>
     </TypeIdentifier>
   </Interface>
-  <Interface Name="Tva.Phasors.IChannelValue(Of T)">
+  <Interface Name="TVA.Phasors.IChannelValue(Of T)">
     <Position X="10.25" Y="2.75" Width="2" />
     <TypeIdentifier>
       <FileName>IChannelValue.vb</FileName>
       <HashCode>AABAAIAAEAAACAAAAAAAQAAAAAAgAAIAAAAQAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Interface>
-  <Interface Name="Tva.Phasors.IChannel">
+  <Interface Name="TVA.Phasors.IChannel">
     <Position X="8.5" Y="3" Width="1.5" />
     <TypeIdentifier>
       <FileName>IChannel.vb</FileName>
       <HashCode>AAAAAAAAAAAoAAAAAAAAAAARAAAAAACAAAEAAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Interface>
-  <Interface Name="Tva.IBinaryDataProvider">
+  <Interface Name="TVA.IBinaryDataProvider">
     <Position X="6.25" Y="3" Width="1.75" />
     <TypeIdentifier />
   </Interface>

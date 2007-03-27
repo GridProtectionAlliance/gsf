@@ -16,8 +16,8 @@
 '*******************************************************************************************************
 
 Imports System.Runtime.Serialization
-Imports Tva.DateTime
-Imports Tva.IO.Compression.Common
+Imports TVA.DateTime
+Imports TVA.IO.Compression.Common
 
 Namespace FNet
 

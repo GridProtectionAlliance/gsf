@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  Tva.Communication.ClientBase.Designer.vb - Base functionality of a client for transporting data
+'  TVA.Communication.ClientBase.Designer.vb - Base functionality of a client for transporting data
 '  Copyright © 2006 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005
@@ -15,7 +15,7 @@
 '
 '*******************************************************************************************************
 
-Imports Tva.Common
+Imports TVA.Common
 
 Partial Class CommunicationClientBase
 
@@ -45,8 +45,8 @@ Partial Class CommunicationClientBase
         m_textEncoding = System.Text.Encoding.ASCII()
         m_secureSession = False
         m_handshake = True
-        m_encryption = Tva.Security.Cryptography.EncryptLevel.None
-        m_compression = Tva.IO.Compression.CompressLevel.NoCompression
+        m_encryption = TVA.Security.Cryptography.EncryptLevel.None
+        m_compression = TVA.IO.Compression.CompressLevel.NoCompression
         m_crcCheck = CRCCheckType.None
         m_enabled = True
         m_clientID = Guid.NewGuid()

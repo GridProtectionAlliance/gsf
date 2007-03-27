@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  Tva.Identity.Common.vb - Common User Identity Functions
+'  TVA.Identity.Common.vb - Common User Identity Functions
 '  Copyright © 2006 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005
@@ -22,7 +22,7 @@
 Imports System.Runtime.InteropServices
 Imports System.Security.Principal
 Imports System.DirectoryServices
-Imports Tva.Interop.WindowsApi
+Imports TVA.Interop.WindowsApi
 
 Namespace Identity
 

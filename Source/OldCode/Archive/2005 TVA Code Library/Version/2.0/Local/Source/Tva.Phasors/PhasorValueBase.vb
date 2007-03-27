@@ -18,7 +18,7 @@
 '*******************************************************************************************************
 
 Imports System.Runtime.Serialization
-Imports Tva.Math
+Imports TVA.Math
 
 ''' <summary>This class represents the protocol independent representation of a phasor value.</summary>
 <CLSCompliant(False), Serializable()> _

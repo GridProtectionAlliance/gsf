@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  Tva.Interop.BitwiseCast.vb - Bitwise Integer Data Type Conversion Functions
+'  TVA.Interop.BitwiseCast.vb - Bitwise Integer Data Type Conversion Functions
 '  Copyright © 2006 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005

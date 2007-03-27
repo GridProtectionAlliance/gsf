@@ -1,6 +1,6 @@
 Imports System.Text
-Imports Tva.Text.Common
-Imports Tva.DateTime
+Imports TVA.Text.Common
+Imports TVA.DateTime
 
 Namespace Scheduling
 

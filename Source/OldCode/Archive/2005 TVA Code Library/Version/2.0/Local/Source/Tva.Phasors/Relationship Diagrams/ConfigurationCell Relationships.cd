@@ -16,7 +16,7 @@
   <Comment CommentText=" Virginia Tech FNET">
     <Position X="13.5" Y="1.25" Height="0.263" Width="1.261" />
   </Comment>
-  <Class Name="Tva.Phasors.ConfigurationCellBase">
+  <Class Name="TVA.Phasors.ConfigurationCellBase">
     <Position X="3.5" Y="1" Width="2.25" />
     <TypeIdentifier>
       <FileName>ConfigurationCellBase.vb</FileName>
@@ -24,7 +24,7 @@
     </TypeIdentifier>
     <Lollipop Position="0.2" />
   </Class>
-  <Class Name="Tva.Phasors.ChannelCellBase">
+  <Class Name="TVA.Phasors.ChannelCellBase">
     <Position X="0.5" Y="5.75" Width="2.25" />
     <TypeIdentifier>
       <FileName>ChannelCellBase.vb</FileName>
@@ -32,7 +32,7 @@
     </TypeIdentifier>
     <Lollipop Position="0.2" />
   </Class>
-  <Class Name="Tva.Phasors.ChannelBase">
+  <Class Name="TVA.Phasors.ChannelBase">
     <Position X="0.5" Y="0.75" Width="2.25" />
     <TypeIdentifier>
       <FileName>ChannelBase.vb</FileName>
@@ -40,13 +40,13 @@
     </TypeIdentifier>
     <Lollipop Position="0.2" />
   </Class>
-  <Class Name="Tva.Phasors.BpaPdcStream.ConfigurationCell">
+  <Class Name="TVA.Phasors.BpaPdcStream.ConfigurationCell">
     <Position X="6" Y="1.75" Width="2.25" />
     <TypeIdentifier>
       <FileName>BpaPdcStream\ConfigurationCell.vb</FileName>
       <HashCode>QAAAABAAAAgBRACFAQIYQAAxAAAAIAChEAhBAAAgggI=</HashCode>
     </TypeIdentifier>
-    <InheritanceLine Type="Tva.Phasors.ConfigurationCellBase" FixedFromPoint="true" FixedToPoint="true">
+    <InheritanceLine Type="TVA.Phasors.ConfigurationCellBase" FixedFromPoint="true" FixedToPoint="true">
       <Path>
         <Point X="5.75" Y="1.188" />
         <Point X="7.125" Y="1.188" />
@@ -54,13 +54,13 @@
       </Path>
     </InheritanceLine>
   </Class>
-  <Class Name="Tva.Phasors.Ieee1344.ConfigurationCell">
+  <Class Name="TVA.Phasors.Ieee1344.ConfigurationCell">
     <Position X="8.5" Y="1.75" Width="2" />
     <TypeIdentifier>
       <FileName>Ieee1344\ConfigurationCell.vb</FileName>
       <HashCode>AAAAABAAgAAAQAAEAAIIYAAxABKAIECAEAhAAAAgAgA=</HashCode>
     </TypeIdentifier>
-    <InheritanceLine Type="Tva.Phasors.ConfigurationCellBase" FixedFromPoint="true">
+    <InheritanceLine Type="TVA.Phasors.ConfigurationCellBase" FixedFromPoint="true">
       <Path>
         <Point X="5.75" Y="1.188" />
         <Point X="9.5" Y="1.188" />
@@ -68,13 +68,13 @@
       </Path>
     </InheritanceLine>
   </Class>
-  <Class Name="Tva.Phasors.IeeeC37_118.ConfigurationCell">
+  <Class Name="TVA.Phasors.IeeeC37_118.ConfigurationCell">
     <Position X="10.75" Y="1.75" Width="2" />
     <TypeIdentifier>
       <FileName>IeeeC37_118\ConfigurationCell.vb</FileName>
       <HashCode>AAAAAAAAAAAAQAAEAAIIQAAxAAAAJACAEAhAAAAgAgA=</HashCode>
     </TypeIdentifier>
-    <InheritanceLine Type="Tva.Phasors.ConfigurationCellBase" ManuallyRouted="true" FixedFromPoint="true">
+    <InheritanceLine Type="TVA.Phasors.ConfigurationCellBase" ManuallyRouted="true" FixedFromPoint="true">
       <Path>
         <Point X="5.75" Y="1.188" />
         <Point X="11.75" Y="1.188" />
@@ -82,13 +82,13 @@
       </Path>
     </InheritanceLine>
   </Class>
-  <Class Name="Tva.Phasors.FNet.ConfigurationCell">
+  <Class Name="TVA.Phasors.FNet.ConfigurationCell">
     <Position X="13" Y="1.75" Width="2.25" />
     <TypeIdentifier>
       <FileName>FNet\ConfigurationCell.vb</FileName>
       <HashCode>AAABABAAAEAAAAAAAAIYQAgwAAAgIACAAABAAAAAAgA=</HashCode>
     </TypeIdentifier>
-    <InheritanceLine Type="Tva.Phasors.ConfigurationCellBase" ManuallyRouted="true" FixedFromPoint="true">
+    <InheritanceLine Type="TVA.Phasors.ConfigurationCellBase" ManuallyRouted="true" FixedFromPoint="true">
       <Path>
         <Point X="5.75" Y="1.188" />
         <Point X="14.125" Y="1.188" />
@@ -96,14 +96,14 @@
       </Path>
     </InheritanceLine>
   </Class>
-  <Interface Name="Tva.Phasors.IConfigurationCell">
+  <Interface Name="TVA.Phasors.IConfigurationCell">
     <Position X="13.25" Y="6.5" Width="2" />
     <TypeIdentifier>
       <FileName>IConfigurationCell.vb</FileName>
       <HashCode>QAAAIAAAAAAAAAIAAQIUQAAAAAAAIAABAiBDAAAAAgA=</HashCode>
     </TypeIdentifier>
   </Interface>
-  <Interface Name="Tva.Phasors.IChannelCell">
+  <Interface Name="TVA.Phasors.IChannelCell">
     <Position X="10.75" Y="9" Width="1.75" />
     <TypeIdentifier>
       <FileName>IChannelCell.vb</FileName>
@@ -116,7 +116,7 @@
       </Path>
     </InheritanceLine>
   </Interface>
-  <Interface Name="Tva.Phasors.IChannel">
+  <Interface Name="TVA.Phasors.IChannel">
     <Position X="8.5" Y="8.25" Width="1.5" />
     <TypeIdentifier>
       <FileName>IChannel.vb</FileName>
@@ -131,7 +131,7 @@
     <Position X="11" Y="6.25" Width="1.5" />
     <TypeIdentifier />
   </Interface>
-  <Interface Name="Tva.IBinaryDataProvider">
+  <Interface Name="TVA.IBinaryDataProvider">
     <Position X="6.25" Y="8.75" Width="1.75" />
     <TypeIdentifier />
   </Interface>

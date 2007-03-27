@@ -7,7 +7,7 @@ Public Class ExceptionEventArgs
     Private m_occurrenceCount As Integer
 
     ''' <summary>
-    ''' Initializes a new instance of the Tva.ExceptionEventArgs class.
+    ''' Initializes a new instance of the TVA.ExceptionEventArgs class.
     ''' </summary>
     ''' <param name="exception">The exception that was encountered.</param>
     Public Sub New(ByVal exception As Exception)
@@ -17,7 +17,7 @@ Public Class ExceptionEventArgs
     End Sub
 
     ''' <summary>
-    ''' Initializes a new instance of the Tva.ExceptionEventArgs class.
+    ''' Initializes a new instance of the TVA.ExceptionEventArgs class.
     ''' </summary>
     ''' <param name="exception">The exception that was encountered.</param>
     ''' <param name="occurrenceCount">The number of time the exception has been encountered.</param>

@@ -4,14 +4,14 @@
   <Comment CommentText="  Command Cell Collection Relationships">
     <Position X="5.25" Y="0.5" Height="0.263" Width="2.335" />
   </Comment>
-  <Class Name="Tva.Phasors.CommandCellCollection">
+  <Class Name="TVA.Phasors.CommandCellCollection">
     <Position X="9.25" Y="1.5" Width="2.5" />
     <TypeIdentifier>
       <FileName>CommandCellCollection.vb</FileName>
       <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Class>
-  <Class Name="Tva.Phasors.ChannelCellCollectionBase(Of T)">
+  <Class Name="TVA.Phasors.ChannelCellCollectionBase(Of T)">
     <Position X="6.25" Y="1.5" Width="2.5" />
     <TypeIdentifier>
       <FileName>ChannelCellCollectionBase.vb</FileName>
@@ -19,7 +19,7 @@
     </TypeIdentifier>
     <Lollipop Position="0.2" />
   </Class>
-  <Class Name="Tva.Phasors.ChannelCollectionBase(Of T)">
+  <Class Name="TVA.Phasors.ChannelCollectionBase(Of T)">
     <Position X="3.5" Y="1.5" Width="2.25" />
     <TypeIdentifier>
       <FileName>ChannelCollectionBase.vb</FileName>
@@ -41,21 +41,21 @@
     </NestedTypes>
     <Lollipop Position="0.2" />
   </Class>
-  <Interface Name="Tva.Phasors.IChannelCellCollection(Of T)">
+  <Interface Name="TVA.Phasors.IChannelCellCollection(Of T)">
     <Position X="12.25" Y="6.75" Width="2.25" />
     <TypeIdentifier>
       <FileName>IChannelCellCollection.vb</FileName>
       <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Interface>
-  <Interface Name="Tva.Phasors.IChannelCollection(Of T)">
+  <Interface Name="TVA.Phasors.IChannelCollection(Of T)">
     <Position X="9.5" Y="6.75" Width="2" />
     <TypeIdentifier>
       <FileName>IChannelCollection.vb</FileName>
       <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Interface>
-  <Interface Name="Tva.Phasors.IChannel">
+  <Interface Name="TVA.Phasors.IChannel">
     <Position X="11.5" Y="4" Width="1.5" />
     <TypeIdentifier>
       <FileName>IChannel.vb</FileName>
@@ -93,7 +93,7 @@
     <Position X="13.25" Y="4" Width="1.5" />
     <TypeIdentifier />
   </Interface>
-  <Interface Name="Tva.IBinaryDataProvider">
+  <Interface Name="TVA.IBinaryDataProvider">
     <Position X="9.25" Y="4" Width="1.75" />
     <TypeIdentifier />
   </Interface>

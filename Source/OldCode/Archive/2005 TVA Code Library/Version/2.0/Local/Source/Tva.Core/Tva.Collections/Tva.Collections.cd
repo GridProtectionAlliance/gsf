@@ -1,65 +1,65 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <ClassDiagram MajorVersion="1" MinorVersion="1">
   <Font Name="Tahoma" Size="8.25" />
-  <Comment CommentText="Tva.Collections Class Diagram">
+  <Comment CommentText="TVA.Collections Class Diagram">
     <Position X="0.5" Y="0.5" Height="0.263" Width="1.763" />
   </Comment>
-  <Class Name="Tva.Collections.ProcessQueue(Of T)">
+  <Class Name="TVA.Collections.ProcessQueue(Of T)">
     <Position X="0.5" Y="1.25" Width="3.5" />
     <TypeIdentifier>
-      <FileName>Tva.Collections\ProcessQueue.vb</FileName>
+      <FileName>TVA.Collections\ProcessQueue.vb</FileName>
       <HashCode>BH6AKuyExLHASN8QCAF1HFwGlIKJggIEKgmC0IXUPFA=</HashCode>
     </TypeIdentifier>
     <Compartments>
       <Compartment Name="Nested Types" Collapsed="false" />
     </Compartments>
     <NestedTypes>
-      <Delegate Name="Tva.Collections.ProcessQueue(Of T).ProcessItemFunctionSignature">
+      <Delegate Name="TVA.Collections.ProcessQueue(Of T).ProcessItemFunctionSignature">
         <TypeIdentifier>
-          <NewMemberFileName>Tva.Collections\ProcessQueue.vb</NewMemberFileName>
+          <NewMemberFileName>TVA.Collections\ProcessQueue.vb</NewMemberFileName>
         </TypeIdentifier>
       </Delegate>
-      <Delegate Name="Tva.Collections.ProcessQueue(Of T).ProcessItemsFunctionSignature">
+      <Delegate Name="TVA.Collections.ProcessQueue(Of T).ProcessItemsFunctionSignature">
         <TypeIdentifier>
-          <NewMemberFileName>Tva.Collections\ProcessQueue.vb</NewMemberFileName>
+          <NewMemberFileName>TVA.Collections\ProcessQueue.vb</NewMemberFileName>
         </TypeIdentifier>
       </Delegate>
-      <Delegate Name="Tva.Collections.ProcessQueue(Of T).CanProcessItemFunctionSignature">
+      <Delegate Name="TVA.Collections.ProcessQueue(Of T).CanProcessItemFunctionSignature">
         <TypeIdentifier>
-          <NewMemberFileName>Tva.Collections\ProcessQueue.vb</NewMemberFileName>
+          <NewMemberFileName>TVA.Collections\ProcessQueue.vb</NewMemberFileName>
         </TypeIdentifier>
       </Delegate>
-      <Class Name="Tva.Collections.ProcessQueue(Of T).ProcessThread">
+      <Class Name="TVA.Collections.ProcessQueue(Of T).ProcessThread">
         <TypeIdentifier>
-          <NewMemberFileName>Tva.Collections\ProcessQueue.vb</NewMemberFileName>
+          <NewMemberFileName>TVA.Collections\ProcessQueue.vb</NewMemberFileName>
         </TypeIdentifier>
       </Class>
     </NestedTypes>
     <Lollipop Position="0.2" />
   </Class>
-  <Class Name="Tva.Collections.KeyedProcessQueue(Of TKey, TValue)">
+  <Class Name="TVA.Collections.KeyedProcessQueue(Of TKey, TValue)">
     <Position X="4.75" Y="1.25" Width="3.5" />
     <TypeIdentifier>
-      <FileName>Tva.Collections\KeyedProcessQueue.vb</FileName>
+      <FileName>TVA.Collections\KeyedProcessQueue.vb</FileName>
       <HashCode>DAoAAIAAAIAEQAAACQAEBBUFEAAAAAAAAAAgEACAABA=</HashCode>
     </TypeIdentifier>
     <Compartments>
       <Compartment Name="Nested Types" Collapsed="false" />
     </Compartments>
     <NestedTypes>
-      <Delegate Name="Tva.Collections.KeyedProcessQueue(Of TKey, TValue).ProcessItemFunctionSignature">
+      <Delegate Name="TVA.Collections.KeyedProcessQueue(Of TKey, TValue).ProcessItemFunctionSignature">
         <TypeIdentifier>
-          <NewMemberFileName>Tva.Collections\KeyedProcessQueue.vb</NewMemberFileName>
+          <NewMemberFileName>TVA.Collections\KeyedProcessQueue.vb</NewMemberFileName>
         </TypeIdentifier>
       </Delegate>
-      <Delegate Name="Tva.Collections.KeyedProcessQueue(Of TKey, TValue).ProcessItemsFunctionSignature">
+      <Delegate Name="TVA.Collections.KeyedProcessQueue(Of TKey, TValue).ProcessItemsFunctionSignature">
         <TypeIdentifier>
-          <NewMemberFileName>Tva.Collections\KeyedProcessQueue.vb</NewMemberFileName>
+          <NewMemberFileName>TVA.Collections\KeyedProcessQueue.vb</NewMemberFileName>
         </TypeIdentifier>
       </Delegate>
-      <Delegate Name="Tva.Collections.KeyedProcessQueue(Of TKey, TValue).CanProcessItemFunctionSignature">
+      <Delegate Name="TVA.Collections.KeyedProcessQueue(Of TKey, TValue).CanProcessItemFunctionSignature">
         <TypeIdentifier>
-          <NewMemberFileName>Tva.Collections\KeyedProcessQueue.vb</NewMemberFileName>
+          <NewMemberFileName>TVA.Collections\KeyedProcessQueue.vb</NewMemberFileName>
         </TypeIdentifier>
       </Delegate>
     </NestedTypes>

@@ -2,7 +2,7 @@
 
 Imports System.Text
 Imports System.Threading
-Imports Tva.DateTime.Common
+Imports TVA.DateTime.Common
 
 Public Class ServiceProcess
 

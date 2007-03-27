@@ -74,10 +74,10 @@ BEGIN
             VALUE "CompanyName", "TVA"
             VALUE "FileDescription", "TVA .NET Code Library: Compression"
             VALUE "FileVersion", "2.1.93.56452"
-            VALUE "InternalName", "Tva.IO.Compression.dll"
+            VALUE "InternalName", "TVA.IO.Compression.dll"
             VALUE "LegalCopyright", "Copyright © 2006, TVA - All rights reserved.  This .NET library uses ""zlib"" compression code written by Jean-loup Gailly and Mark Adler, Copyright © 1995-2002, and general zip file format manipulation code written by Gilles Vollant, Copyright © 1998-2003"
             VALUE "LegalTrademarks", "Authors: James Ritchie Carroll (.NET wrapper), Jean-loup Gailly and Mark Adler (zlib), Gilles Vollant (zip/unzip)"
-            VALUE "OriginalFilename", "Tva.IO.Compression.dll"
+            VALUE "OriginalFilename", "TVA.IO.Compression.dll"
             VALUE "ProductName", "Shared .NET Code Library for TVA"
             VALUE "ProductVersion", "2.1.93.56452"
         END

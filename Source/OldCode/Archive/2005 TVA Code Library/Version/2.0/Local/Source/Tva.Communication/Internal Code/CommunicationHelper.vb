@@ -3,9 +3,9 @@
 Imports System.IO
 Imports System.Net
 Imports System.Net.Sockets
-Imports Tva.IO.Compression.Common
-Imports Tva.Security.Cryptography
-Imports Tva.Security.Cryptography.Common
+Imports TVA.IO.Compression.Common
+Imports TVA.Security.Cryptography
+Imports TVA.Security.Cryptography.Common
 
 Friend NotInheritable Class CommunicationHelper
 
@@ -57,7 +57,7 @@ Friend NotInheritable Class CommunicationHelper
     End Function
 
     Public Shared Function CompressData(ByVal data As Byte(), _
-            ByVal compressionLevel As Tva.IO.Compression.CompressLevel) As Byte()
+            ByVal compressionLevel As TVA.IO.Compression.CompressLevel) As Byte()
 
         Try
             If compressionLevel <> IO.Compression.CompressLevel.NoCompression Then
@@ -74,7 +74,7 @@ Friend NotInheritable Class CommunicationHelper
     End Function
 
     Public Shared Function UncompressData(ByVal data As Byte(), _
-            ByVal compressionLevel As Tva.IO.Compression.CompressLevel) As Byte()
+            ByVal compressionLevel As TVA.IO.Compression.CompressLevel) As Byte()
 
         Try
             If compressionLevel <> IO.Compression.CompressLevel.NoCompression Then
@@ -91,7 +91,7 @@ Friend NotInheritable Class CommunicationHelper
     End Function
 
     Public Shared Function EncryptData(ByVal data As Byte(), ByVal encryptionKey As String, _
-            ByVal encryptionLevel As Tva.Security.Cryptography.EncryptLevel) As Byte()
+            ByVal encryptionLevel As TVA.Security.Cryptography.EncryptLevel) As Byte()
 
         If Not String.IsNullOrEmpty(encryptionKey) AndAlso encryptionLevel <> EncryptLevel.None Then
             Dim key As Byte() = System.Text.Encoding.ASCII.GetBytes(encryptionKey)
@@ -105,7 +105,7 @@ Friend NotInheritable Class CommunicationHelper
     End Function
 
     Public Shared Function DecryptData(ByVal data As Byte(), ByVal encryptionKey As String, _
-            ByVal encryptionLevel As Tva.Security.Cryptography.EncryptLevel) As Byte()
+            ByVal encryptionLevel As TVA.Security.Cryptography.EncryptLevel) As Byte()
 
         If Not String.IsNullOrEmpty(encryptionKey) AndAlso encryptionLevel <> EncryptLevel.None Then
             Dim key As Byte() = System.Text.Encoding.ASCII.GetBytes(encryptionKey)

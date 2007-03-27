@@ -7,8 +7,8 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{54CA98CC-2F0A-41F2-879D-0E42B17E8544}</ProjectGuid>
     <OutputType>Library</OutputType>
-    <RootNamespace>Tva.Phasors</RootNamespace>
-    <AssemblyName>Tva.Phasors</AssemblyName>
+    <RootNamespace>TVA.Phasors</RootNamespace>
+    <AssemblyName>TVA.Phasors</AssemblyName>
     <MyType>Windows</MyType>
     <SccProjectName>SAK</SccProjectName>
     <SccLocalPath>SAK</SccLocalPath>
@@ -24,7 +24,7 @@
     <DefineDebug>true</DefineDebug>
     <DefineTrace>true</DefineTrace>
     <OutputPath>..\bin\</OutputPath>
-    <DocumentationFile>Tva.Phasors.xml</DocumentationFile>
+    <DocumentationFile>TVA.Phasors.xml</DocumentationFile>
     <NoWarn>41999,42016</NoWarn>
     <WarningsAsErrors>
     </WarningsAsErrors>
@@ -36,7 +36,7 @@
     <DefineTrace>true</DefineTrace>
     <Optimize>true</Optimize>
     <OutputPath>..\bin\</OutputPath>
-    <DocumentationFile>Tva.Phasors.xml</DocumentationFile>
+    <DocumentationFile>TVA.Phasors.xml</DocumentationFile>
     <NoWarn>41999,42016</NoWarn>
     <WarningsAsErrors>
     </WarningsAsErrors>
@@ -54,9 +54,9 @@
     <Import Include="System.Collections" />
     <Import Include="System.Collections.Generic" />
     <Import Include="System.Diagnostics" />
-    <Import Include="Tva.Common" />
-    <Import Include="Tva.Interop" />
-    <Import Include="Tva.Interop.Bit" />
+    <Import Include="TVA.Common" />
+    <Import Include="TVA.Interop" />
+    <Import Include="TVA.Interop.Bit" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AnalogDefinitionBase.vb" />
@@ -227,17 +227,17 @@
     <Compile Include="PhasorValueCollection.vb" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Tva.Communication\Tva.Communication.vbproj">
+    <ProjectReference Include="..\TVA.Communication\TVA.Communication.vbproj">
       <Project>{99F93056-9EDE-4EB8-BF8B-61E3B8728F9D}</Project>
-      <Name>Tva.Communication</Name>
+      <Name>TVA.Communication</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Tva.Core\Tva.Core.vbproj">
+    <ProjectReference Include="..\TVA.Core\TVA.Core.vbproj">
       <Project>{29A7B606-D1BC-4A4B-96D0-258D5A72C3EC}</Project>
-      <Name>Tva.Core</Name>
+      <Name>TVA.Core</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Tva.IO.Compression\Tva.IO.Compression.vcproj">
+    <ProjectReference Include="..\TVA.IO.Compression\TVA.IO.Compression.vcproj">
       <Project>{F611B9BA-C69D-449B-B596-FABFB746EA2A}</Project>
-      <Name>Tva.IO.Compression</Name>
+      <Name>TVA.IO.Compression</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

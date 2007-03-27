@@ -18,11 +18,11 @@
 Imports System.IO
 Imports System.Text
 Imports System.ComponentModel
-Imports Tva.Collections
-Imports Tva.IO.Common
-Imports Tva.Text.Common
-Imports Tva.Phasors.Common
-Imports Tva.Phasors.FNet.Common
+Imports TVA.Collections
+Imports TVA.IO.Common
+Imports TVA.Text.Common
+Imports TVA.Phasors.Common
+Imports TVA.Phasors.FNet.Common
 
 Namespace FNet
 

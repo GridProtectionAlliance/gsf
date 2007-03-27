@@ -1,4 +1,4 @@
-Imports Tva.Configuration.Common
+Imports TVA.Configuration.Common
 
 Namespace Application
 

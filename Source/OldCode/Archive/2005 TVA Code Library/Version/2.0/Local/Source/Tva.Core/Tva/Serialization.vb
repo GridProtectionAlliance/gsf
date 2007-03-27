@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  Tva.Serialization.vb - Common serialization related functions
+'  TVA.Serialization.vb - Common serialization related functions
 '  Copyright © 2006 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005

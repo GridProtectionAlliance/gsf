@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  Tva.Security.Application.Enumerations.vb - Common enumerations used for application security
+'  TVA.Security.Application.Enumerations.vb - Common enumerations used for application security
 '  Copyright © 2006 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005

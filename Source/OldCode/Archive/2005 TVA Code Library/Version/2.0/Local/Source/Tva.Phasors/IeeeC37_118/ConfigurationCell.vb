@@ -17,8 +17,8 @@
 
 Imports System.Runtime.Serialization
 Imports System.Text
-Imports Tva.Phasors.Common
-Imports Tva.Phasors.IeeeC37_118.Common
+Imports TVA.Phasors.Common
+Imports TVA.Phasors.IeeeC37_118.Common
 
 Namespace IeeeC37_118
 

@@ -4,7 +4,7 @@
   <Comment CommentText=" Header Cell Relationships">
     <Position X="5.25" Y="0.75" Height="0.263" Width="1.523" />
   </Comment>
-  <Class Name="Tva.Phasors.HeaderCell">
+  <Class Name="TVA.Phasors.HeaderCell">
     <Position X="3" Y="1.25" Width="1.75" />
     <TypeIdentifier>
       <FileName>HeaderCell.vb</FileName>
@@ -12,13 +12,13 @@
     </TypeIdentifier>
     <Lollipop Position="0.2" />
   </Class>
-  <Class Name="Tva.Phasors.ChannelCellBase">
+  <Class Name="TVA.Phasors.ChannelCellBase">
     <Position X="0.5" Y="1.25" Width="2" />
     <TypeIdentifier>
       <FileName>ChannelCellBase.vb</FileName>
       <HashCode>AAAAAhAAAAAAEAAAAAAAQAAxAAAAIACAAAAAAAAAAAA=</HashCode>
     </TypeIdentifier>
-    <InheritanceLine Type="Tva.Phasors.ChannelBase" FixedToPoint="true">
+    <InheritanceLine Type="TVA.Phasors.ChannelBase" FixedToPoint="true">
       <Path>
         <Point X="1.625" Y="4.75" />
         <Point X="1.625" Y="4.265" />
@@ -26,7 +26,7 @@
     </InheritanceLine>
     <Lollipop Position="0.2" />
   </Class>
-  <Class Name="Tva.Phasors.ChannelBase">
+  <Class Name="TVA.Phasors.ChannelBase">
     <Position X="0.5" Y="4.75" Width="2.25" />
     <TypeIdentifier>
       <FileName>ChannelBase.vb</FileName>
@@ -34,49 +34,49 @@
     </TypeIdentifier>
     <Lollipop Position="0.2" />
   </Class>
-  <Interface Name="Tva.Phasors.IHeaderCell">
+  <Interface Name="TVA.Phasors.IHeaderCell">
     <Position X="5.25" Y="5.5" Width="1.5" />
     <TypeIdentifier>
       <FileName>IHeaderCell.vb</FileName>
       <HashCode>AAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAACAA=</HashCode>
     </TypeIdentifier>
   </Interface>
-  <Interface Name="Tva.Phasors.IChannelCell">
+  <Interface Name="TVA.Phasors.IChannelCell">
     <Position X="8.75" Y="2.25" Width="1.75" />
     <TypeIdentifier>
       <FileName>IChannelCell.vb</FileName>
       <HashCode>AAAAAhAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Interface>
-  <Interface Name="Tva.Phasors.IChannel">
+  <Interface Name="TVA.Phasors.IChannel">
     <Position X="7" Y="2.25" Width="1.5" />
     <TypeIdentifier>
       <FileName>IChannel.vb</FileName>
       <HashCode>AAAAAAAAAAAoAAAAAAAAAAARAAAAAACAAAEAAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Interface>
-  <Interface Name="Tva.Phasors.ICommandCell" Collapsed="true">
+  <Interface Name="TVA.Phasors.ICommandCell" Collapsed="true">
     <Position X="3" Y="5.5" Width="1.5" />
     <TypeIdentifier>
       <FileName>ICommandCell.vb</FileName>
       <HashCode>AAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAEAAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Interface>
-  <Interface Name="Tva.Phasors.IConfigurationCell" Collapsed="true">
+  <Interface Name="TVA.Phasors.IConfigurationCell" Collapsed="true">
     <Position X="7.5" Y="5.5" Width="1.5" />
     <TypeIdentifier>
       <FileName>IConfigurationCell.vb</FileName>
       <HashCode>QAAAIAAAAAAAAAIAAQIUQAAAAAAAIAABAiBDAAAAAgA=</HashCode>
     </TypeIdentifier>
   </Interface>
-  <Interface Name="Tva.Phasors.IDataCell" Collapsed="true">
+  <Interface Name="TVA.Phasors.IDataCell" Collapsed="true">
     <Position X="9.75" Y="5.5" Width="1.5" />
     <TypeIdentifier>
       <FileName>IDataCell.vb</FileName>
       <HashCode>AAkAAAAAAAAIAAAAAQAAQAAAABIAAEAAAEABAAAEAAA=</HashCode>
     </TypeIdentifier>
   </Interface>
-  <Interface Name="Tva.IBinaryDataProvider">
+  <Interface Name="TVA.IBinaryDataProvider">
     <Position X="5" Y="2.5" Width="1.75" />
     <TypeIdentifier />
   </Interface>

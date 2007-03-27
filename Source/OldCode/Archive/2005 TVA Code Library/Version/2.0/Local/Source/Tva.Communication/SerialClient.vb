@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  Tva.Communication.SerialClient.vb - Serial port communication client
+'  TVA.Communication.SerialClient.vb - Serial port communication client
 '  Copyright © 2006 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005
@@ -20,8 +20,8 @@
 Imports System.Text
 Imports System.IO.Ports
 Imports System.Threading
-Imports Tva.Common
-Imports Tva.IO.Common
+Imports TVA.Common
+Imports TVA.IO.Common
 
 ''' <summary>
 ''' Represents a serial port communication client.
@@ -39,7 +39,7 @@ Public Class SerialClient
 #Region " Code Scope: Public "
 
     ''' <summary>
-    ''' Initializes a instance of Tva.Communication.SerialClient with the specified data.
+    ''' Initializes a instance of TVA.Communication.SerialClient with the specified data.
     ''' </summary>
     ''' <param name="connectionString">The data that is required by the client to initialize.</param>
     Public Sub New(ByVal connectionString As String)
@@ -120,7 +120,7 @@ Public Class SerialClient
     Protected Overrides Function ValidConnectionString(ByVal connectionString As String) As Boolean
 
         If Not String.IsNullOrEmpty(connectionString) Then
-            m_connectionData = Tva.Text.Common.ParseKeyValuePairs(connectionString)
+            m_connectionData = TVA.Text.Common.ParseKeyValuePairs(connectionString)
             If m_connectionData.ContainsKey("port") AndAlso m_connectionData.ContainsKey("baudrate") AndAlso _
                     m_connectionData.ContainsKey("parity") AndAlso m_connectionData.ContainsKey("stopbits") AndAlso _
                     m_connectionData.ContainsKey("databits") Then

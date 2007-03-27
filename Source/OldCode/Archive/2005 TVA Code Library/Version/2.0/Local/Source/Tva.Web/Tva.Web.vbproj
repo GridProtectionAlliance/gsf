@@ -7,8 +7,8 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{1A51E8F7-BE43-4353-A6E6-E7189911BA53}</ProjectGuid>
     <OutputType>Library</OutputType>
-    <RootNamespace>Tva.Web</RootNamespace>
-    <AssemblyName>Tva.Web</AssemblyName>
+    <RootNamespace>TVA.Web</RootNamespace>
+    <AssemblyName>TVA.Web</AssemblyName>
     <MyType>Windows</MyType>
     <SccProjectName>SAK</SccProjectName>
     <SccLocalPath>SAK</SccLocalPath>
@@ -24,7 +24,7 @@
     <DefineDebug>true</DefineDebug>
     <DefineTrace>true</DefineTrace>
     <OutputPath>..\bin\</OutputPath>
-    <DocumentationFile>Tva.Web.xml</DocumentationFile>
+    <DocumentationFile>TVA.Web.xml</DocumentationFile>
     <NoWarn>41999,42016,42017,42018,42019,42020,42021,42022,42032,42036</NoWarn>
     <WarningsAsErrors>
     </WarningsAsErrors>
@@ -35,7 +35,7 @@
     <DefineTrace>true</DefineTrace>
     <Optimize>true</Optimize>
     <OutputPath>..\bin\</OutputPath>
-    <DocumentationFile>Tva.Web.xml</DocumentationFile>
+    <DocumentationFile>TVA.Web.xml</DocumentationFile>
     <NoWarn>41999,42016,42017,42018,42019,42020,42021,42022,42032,42036</NoWarn>
     <WarningsAsErrors>
     </WarningsAsErrors>
@@ -73,13 +73,13 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Tva.Core\Tva.Core.vbproj">
+    <ProjectReference Include="..\TVA.Core\TVA.Core.vbproj">
       <Project>{29A7B606-D1BC-4A4B-96D0-258D5A72C3EC}</Project>
-      <Name>Tva.Core</Name>
+      <Name>TVA.Core</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Tva.Security\Tva.Security.vbproj">
+    <ProjectReference Include="..\TVA.Security\TVA.Security.vbproj">
       <Project>{7E20F0D7-CD03-4C51-ADB2-03C522A71A84}</Project>
-      <Name>Tva.Security</Name>
+      <Name>TVA.Security</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.VisualBasic.targets" />

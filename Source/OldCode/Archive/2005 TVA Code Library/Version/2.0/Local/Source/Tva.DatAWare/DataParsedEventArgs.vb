@@ -1,6 +1,6 @@
 ' 11/22/2006
 
-Imports Tva.DatAWare.Packets
+Imports TVA.DatAWare.Packets
 
 Public Class DataParsedEventArgs
     Inherits EventArgs

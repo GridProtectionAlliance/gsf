@@ -16,7 +16,7 @@
 '*******************************************************************************************************
 
 Imports System.Runtime.Serialization
-Imports Tva.DateTime
+Imports TVA.DateTime
 
 ''' <summary>This class represents the protocol independent common implementation of a data frame that can be sent or received from a PMU.</summary>
 <CLSCompliant(False), Serializable()> _

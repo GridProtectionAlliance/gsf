@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  Tva.Web.Commmon.vb - Common Functions for Web Pages
+'  TVA.Web.Commmon.vb - Common Functions for Web Pages
 '  Copyright © 2006 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005
@@ -1336,10 +1336,10 @@ Public NotInheritable Class Common
     End Enum
 
     ''' <summary>
-    ''' Creates the appropriate client-side script based on the specified Tva.Web.ClientSideScript value.
+    ''' Creates the appropriate client-side script based on the specified TVA.Web.ClientSideScript value.
     ''' </summary>
-    ''' <param name="script">One of the Tva.Web.ClientSideScript values.</param>
-    ''' <returns>The client-side script for the specified Tva.Web.ClientSideScript value</returns>
+    ''' <param name="script">One of the TVA.Web.ClientSideScript values.</param>
+    ''' <returns>The client-side script for the specified TVA.Web.ClientSideScript value</returns>
     ''' <remarks></remarks>
     Private Shared Function CreateClientSideScript(ByVal script As ClientSideScript) As String
 

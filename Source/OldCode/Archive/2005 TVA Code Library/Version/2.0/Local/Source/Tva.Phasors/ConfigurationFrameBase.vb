@@ -16,8 +16,8 @@
 '*******************************************************************************************************
 
 Imports System.Runtime.Serialization
-Imports Tva.DateTime
-Imports Tva.DateTime.Common
+Imports TVA.DateTime
+Imports TVA.DateTime.Common
 
 ''' <summary>This class represents the protocol independent common implementation of a configuration frame that can be sent or received from a PMU.</summary>
 <CLSCompliant(False), Serializable()> _

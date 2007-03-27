@@ -16,7 +16,7 @@
 '*******************************************************************************************************
 
 Imports System.Buffer
-Imports Tva.Text.Common
+Imports TVA.Text.Common
 
 ''' <summary>Common constants and functions for phasor classes</summary>
 <CLSCompliant(False)> _

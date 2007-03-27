@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  Tva.Interop.EndianOrder.vb - Endian byte order interoperability class
+'  TVA.Interop.EndianOrder.vb - Endian byte order interoperability class
 '  Copyright © 2006 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005
@@ -21,7 +21,7 @@
 '
 '*******************************************************************************************************
 
-Imports Tva.Common
+Imports TVA.Common
 
 Namespace Interop
 

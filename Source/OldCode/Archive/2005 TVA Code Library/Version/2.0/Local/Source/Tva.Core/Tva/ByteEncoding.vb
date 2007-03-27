@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  Tva.ByteEncoding.vb - Byte encoding functions
+'  TVA.ByteEncoding.vb - Byte encoding functions
 '  Copyright © 2006 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005
@@ -22,9 +22,9 @@
 Imports System.Text
 Imports System.Text.RegularExpressions
 Imports System.ComponentModel
-Imports Tva.Common
-Imports Tva.Interop
-Imports Tva.Interop.Bit
+Imports TVA.Common
+Imports TVA.Interop
+Imports TVA.Interop.Bit
 
 ''' <summary>Handles conversion of byte buffers to and from user presentable data formats</summary>
 Public MustInherit Class ByteEncoding

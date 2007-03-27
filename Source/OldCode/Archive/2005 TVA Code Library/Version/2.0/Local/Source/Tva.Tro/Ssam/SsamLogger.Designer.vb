@@ -1,7 +1,7 @@
 ' 04-24-06
 
 Imports System.ComponentModel
-Imports Tva.Collections
+Imports TVA.Collections
 
 Namespace Ssam
 

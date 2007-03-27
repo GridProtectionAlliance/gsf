@@ -5,7 +5,7 @@ Imports System.Drawing
 Imports System.Windows.Forms
 Imports System.ComponentModel
 Imports System.Data.SqlClient
-Imports Tva.Data.Common
+Imports TVA.Data.Common
 
 Namespace Application
 

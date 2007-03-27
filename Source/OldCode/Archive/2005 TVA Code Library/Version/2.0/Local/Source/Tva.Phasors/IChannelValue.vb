@@ -16,7 +16,7 @@
 '*******************************************************************************************************
 
 Imports System.Runtime.Serialization
-Imports Tva.Measurements
+Imports TVA.Measurements
 
 ''' <summary>This interface represents a protocol independent representation of any kind of data value.</summary>
 <CLSCompliant(False)> _

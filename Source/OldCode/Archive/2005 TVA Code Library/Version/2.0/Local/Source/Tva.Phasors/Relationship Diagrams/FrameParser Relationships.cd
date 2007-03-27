@@ -16,7 +16,7 @@
   <Comment CommentText="  IEEE C37.118">
     <Position X="11.188" Y="11.916" Height="0.305" Width="1.075" />
   </Comment>
-  <Class Name="Tva.Phasors.FrameParserBase">
+  <Class Name="TVA.Phasors.FrameParserBase">
     <Position X="4.5" Y="1.75" Width="2.5" />
     <TypeIdentifier>
       <FileName>FrameParserBase.vb</FileName>
@@ -35,13 +35,13 @@
     </InheritanceLine>
     <Lollipop Position="0.2" />
   </Class>
-  <Class Name="Tva.Phasors.BpaPdcStream.FrameParser">
+  <Class Name="TVA.Phasors.BpaPdcStream.FrameParser">
     <Position X="0.5" Y="12.5" Width="2.5" />
     <TypeIdentifier>
       <FileName>BpaPdcStream\FrameParser.vb</FileName>
       <HashCode>ggAAAJAEAAAAYAgABACBAAAAAAAABAHAAkCCAAgBAQA=</HashCode>
     </TypeIdentifier>
-    <InheritanceLine Type="Tva.Phasors.FrameParserBase" ManuallyRouted="true" FixedFromPoint="true" FixedToPoint="true">
+    <InheritanceLine Type="TVA.Phasors.FrameParserBase" ManuallyRouted="true" FixedFromPoint="true" FixedToPoint="true">
       <Path>
         <Point X="5.625" Y="10.899" />
         <Point X="5.625" Y="12.125" />
@@ -50,13 +50,13 @@
       </Path>
     </InheritanceLine>
   </Class>
-  <Class Name="Tva.Phasors.FNet.FrameParser">
+  <Class Name="TVA.Phasors.FNet.FrameParser">
     <Position X="3.75" Y="12.5" Width="2.5" />
     <TypeIdentifier>
       <FileName>FNet\FrameParser.vb</FileName>
       <HashCode>AgAAAJAAAAAAJAgAAQCAAAAAAAKAAACBAGACAAgAAQA=</HashCode>
     </TypeIdentifier>
-    <InheritanceLine Type="Tva.Phasors.FrameParserBase" ManuallyRouted="true" FixedFromPoint="true">
+    <InheritanceLine Type="TVA.Phasors.FrameParserBase" ManuallyRouted="true" FixedFromPoint="true">
       <Path>
         <Point X="5.625" Y="10.899" />
         <Point X="5.625" Y="12.112" />
@@ -65,13 +65,13 @@
       </Path>
     </InheritanceLine>
   </Class>
-  <Class Name="Tva.Phasors.Ieee1344.FrameParser">
+  <Class Name="TVA.Phasors.Ieee1344.FrameParser">
     <Position X="7" Y="12.5" Width="2.5" />
     <TypeIdentifier>
       <FileName>Ieee1344\FrameParser.vb</FileName>
       <HashCode>AAAAIBAAAAAAIAgAAACCAAAAAAAAAAHAAECCAAgAAQg=</HashCode>
     </TypeIdentifier>
-    <InheritanceLine Type="Tva.Phasors.FrameParserBase" ManuallyRouted="true" FixedFromPoint="true">
+    <InheritanceLine Type="TVA.Phasors.FrameParserBase" ManuallyRouted="true" FixedFromPoint="true">
       <Path>
         <Point X="5.625" Y="10.899" />
         <Point X="5.625" Y="12.135" />
@@ -80,13 +80,13 @@
       </Path>
     </InheritanceLine>
   </Class>
-  <Class Name="Tva.Phasors.IeeeC37_118.FrameParser">
+  <Class Name="TVA.Phasors.IeeeC37_118.FrameParser">
     <Position X="10.5" Y="12.5" Width="2.5" />
     <TypeIdentifier>
       <FileName>IeeeC37_118\FrameParser.vb</FileName>
       <HashCode>BAAAIBAEADAAKAgAACAAAAAAAAAIAADABECCAAgIAQg=</HashCode>
     </TypeIdentifier>
-    <InheritanceLine Type="Tva.Phasors.FrameParserBase" ManuallyRouted="true" FixedFromPoint="true">
+    <InheritanceLine Type="TVA.Phasors.FrameParserBase" ManuallyRouted="true" FixedFromPoint="true">
       <Path>
         <Point X="5.625" Y="10.899" />
         <Point X="5.625" Y="12.113" />
@@ -99,7 +99,7 @@
     <Position X="0.5" Y="7" Width="2.25" />
     <TypeIdentifier />
   </Class>
-  <Class Name="Tva.Phasors.MultiProtocolFrameParser">
+  <Class Name="TVA.Phasors.MultiProtocolFrameParser">
     <Position X="14.25" Y="1.25" Width="3.25" />
     <TypeIdentifier>
       <FileName>MultiProtocolFrameParser.vb</FileName>
@@ -159,7 +159,7 @@
     </Members>
     <Lollipop Position="0.2" />
   </Class>
-  <Interface Name="Tva.Phasors.IFrameParser">
+  <Interface Name="TVA.Phasors.IFrameParser">
     <Position X="9" Y="2.75" Width="3.25" />
     <TypeIdentifier>
       <FileName>IFrameParser.vb</FileName>

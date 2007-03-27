@@ -20,9 +20,9 @@ Imports System.Net
 Imports System.Net.Sockets
 Imports System.Threading
 Imports System.Text
-Imports Tva.DateTime.Common
-Imports Tva.Threading
-Imports Tva.Services
+Imports TVA.DateTime.Common
+Imports TVA.Threading
+Imports TVA.Services
 
 Namespace DatAWare
 

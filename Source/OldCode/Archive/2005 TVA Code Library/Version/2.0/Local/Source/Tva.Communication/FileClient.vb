@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  Tva.Communication.FileClient.vb - File-based communication client
+'  TVA.Communication.FileClient.vb - File-based communication client
 '  Copyright © 2006 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005
@@ -21,8 +21,8 @@ Imports System.IO
 Imports System.Text
 Imports System.Threading
 Imports System.ComponentModel
-Imports Tva.Common
-Imports Tva.IO.Common
+Imports TVA.Common
+Imports TVA.IO.Common
 
 ''' <summary>
 ''' Represents a File-based communication client.
@@ -45,7 +45,7 @@ Public Class FileClient
 #Region " Code Scope: Public "
 
     ''' <summary>
-    ''' Initializes a instance of Tva.Communication.FileClient with the specified data.
+    ''' Initializes a instance of TVA.Communication.FileClient with the specified data.
     ''' </summary>
     ''' <param name="connectionString">The data that is required by the client to initialize.</param>
     Public Sub New(ByVal connectionString As String)
@@ -179,7 +179,7 @@ Public Class FileClient
 
         If PersistSettings Then
             Try
-                With Tva.Configuration.Common.CategorizedSettings(ConfigurationCategory)
+                With TVA.Configuration.Common.CategorizedSettings(ConfigurationCategory)
                     ReceiveOnDemand = .Item("ReceiveOnDemand").GetTypedValue(m_receiveOnDemand)
                     ReceiveInterval = .Item("ReceiveInterval").GetTypedValue(m_receiveInterval)
                     StartingOffset = .Item("StartingOffset").GetTypedValue(m_startingOffset)
@@ -197,7 +197,7 @@ Public Class FileClient
 
         If PersistSettings Then
             Try
-                With Tva.Configuration.Common.CategorizedSettings(ConfigurationCategory)
+                With TVA.Configuration.Common.CategorizedSettings(ConfigurationCategory)
                     With .Item("ReceiveOnDemand", True)
                         .Value = m_receiveOnDemand.ToString()
                         .Description = "True if receiving (reading) of data will be initiated manually; otherwise False."
@@ -211,7 +211,7 @@ Public Class FileClient
                         .Description = "The starting point relative to the beginning of the file from where the data is to be received (read)."
                     End With
                 End With
-                Tva.Configuration.Common.SaveSettings()
+                TVA.Configuration.Common.SaveSettings()
             Catch ex As Exception
                 ' We might encounter an exception if for some reason the settings cannot be saved to the config file.
             End Try
@@ -237,7 +237,7 @@ Public Class FileClient
     Protected Overrides Function ValidConnectionString(ByVal connectionString As String) As Boolean
 
         If Not String.IsNullOrEmpty(connectionString) Then
-            m_connectionData = Tva.Text.Common.ParseKeyValuePairs(connectionString)
+            m_connectionData = TVA.Text.Common.ParseKeyValuePairs(connectionString)
             If m_connectionData.ContainsKey("file") Then
                 Return True
             Else

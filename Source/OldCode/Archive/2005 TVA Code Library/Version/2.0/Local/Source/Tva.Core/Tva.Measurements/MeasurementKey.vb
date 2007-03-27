@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  Tva.Measurements.MeasurementKey.vb - Defines primary key elements for a measurement
+'  TVA.Measurements.MeasurementKey.vb - Defines primary key elements for a measurement
 '  Copyright © 2006 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005
@@ -15,8 +15,8 @@
 '
 '*******************************************************************************************************
 
-Imports Tva.Common
-Imports Tva.Text.Common
+Imports TVA.Common
+Imports TVA.Text.Common
 
 Namespace Measurements
 

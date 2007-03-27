@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <ClassDiagram MajorVersion="1" MinorVersion="1" GroupingSetting="Access" MembersFormat="FullSignature">
   <Font Name="Tahoma" Size="8.25" />
-  <Class Name="Tva.Phasors.AnalogDefinitionBase">
+  <Class Name="TVA.Phasors.AnalogDefinitionBase">
     <Position X="204.25" Y="34.25" Width="6" />
     <TypeIdentifier>
       <FileName>AnalogDefinitionBase.vb</FileName>
@@ -9,14 +9,14 @@
     </TypeIdentifier>
     <Lollipop Position="0.2" />
   </Class>
-  <Class Name="Tva.Phasors.AnalogDefinitionCollection">
+  <Class Name="TVA.Phasors.AnalogDefinitionCollection">
     <Position X="67" Y="16.25" Width="3.75" />
     <TypeIdentifier>
       <FileName>AnalogDefinitionCollection.vb</FileName>
       <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAg=</HashCode>
     </TypeIdentifier>
   </Class>
-  <Class Name="Tva.Phasors.AnalogValueBase">
+  <Class Name="TVA.Phasors.AnalogValueBase">
     <Position X="139" Y="32.25" Width="6.25" />
     <TypeIdentifier>
       <FileName>AnalogValueBase.vb</FileName>
@@ -24,14 +24,14 @@
     </TypeIdentifier>
     <Lollipop Position="0.2" />
   </Class>
-  <Class Name="Tva.Phasors.AnalogValueCollection">
+  <Class Name="TVA.Phasors.AnalogValueCollection">
     <Position X="7.75" Y="17.25" Width="3.75" />
     <TypeIdentifier>
       <FileName>AnalogValueCollection.vb</FileName>
       <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAg=</HashCode>
     </TypeIdentifier>
   </Class>
-  <Class Name="Tva.Phasors.ChannelBase">
+  <Class Name="TVA.Phasors.ChannelBase">
     <Position X="180.5" Y="23.5" Width="5.75" />
     <TypeIdentifier>
       <FileName>ChannelBase.vb</FileName>
@@ -39,7 +39,7 @@
     </TypeIdentifier>
     <Lollipop Position="0.2" />
   </Class>
-  <Class Name="Tva.Phasors.ChannelCellBase">
+  <Class Name="TVA.Phasors.ChannelCellBase">
     <Position X="58.5" Y="27.5" Width="5" />
     <TypeIdentifier>
       <FileName>ChannelCellBase.vb</FileName>
@@ -47,7 +47,7 @@
     </TypeIdentifier>
     <Lollipop Position="0.2" />
   </Class>
-  <Class Name="Tva.Phasors.ChannelCellCollectionBase(Of T)">
+  <Class Name="TVA.Phasors.ChannelCellCollectionBase(Of T)">
     <Position X="39.5" Y="13.5" Width="4" />
     <TypeIdentifier>
       <FileName>ChannelCellCollectionBase.vb</FileName>
@@ -55,7 +55,7 @@
     </TypeIdentifier>
     <Lollipop Position="0.2" />
   </Class>
-  <Class Name="Tva.Phasors.ChannelCellParsingStateBase">
+  <Class Name="TVA.Phasors.ChannelCellParsingStateBase">
     <Position X="54.75" Y="50.5" Width="2.25" />
     <TypeIdentifier>
       <FileName>ChannelCellParsingStateBase.vb</FileName>
@@ -63,7 +63,7 @@
     </TypeIdentifier>
     <Lollipop Position="0.2" />
   </Class>
-  <Class Name="Tva.Phasors.ChannelCollectionBase(Of T)">
+  <Class Name="TVA.Phasors.ChannelCollectionBase(Of T)">
     <Position X="43.25" Y="9.5" Width="5.75" />
     <TypeIdentifier>
       <FileName>ChannelCollectionBase.vb</FileName>
@@ -71,7 +71,7 @@
     </TypeIdentifier>
     <Lollipop Position="0.2" />
   </Class>
-  <Class Name="Tva.Phasors.ChannelDefinitionBase">
+  <Class Name="TVA.Phasors.ChannelDefinitionBase">
     <Position X="237.25" Y="27.5" Width="6" />
     <TypeIdentifier>
       <FileName>ChannelDefinitionBase.vb</FileName>
@@ -79,14 +79,14 @@
     </TypeIdentifier>
     <Lollipop Position="0.2" />
   </Class>
-  <Class Name="Tva.Phasors.ChannelDefinitionCollectionBase(Of T)">
+  <Class Name="TVA.Phasors.ChannelDefinitionCollectionBase(Of T)">
     <Position X="69.25" Y="13.5" Width="3.75" />
     <TypeIdentifier>
       <FileName>ChannelDefinitionCollectionBase.vb</FileName>
       <HashCode>AAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Class>
-  <Class Name="Tva.Phasors.ChannelFrameBase(Of T)">
+  <Class Name="TVA.Phasors.ChannelFrameBase(Of T)">
     <Position X="313" Y="27.5" Width="5.75" />
     <TypeIdentifier>
       <FileName>ChannelFrameBase.vb</FileName>
@@ -94,14 +94,14 @@
     </TypeIdentifier>
     <Lollipop Position="0.2" />
   </Class>
-  <Class Name="Tva.Phasors.ChannelFrameCollectionBase(Of T)">
+  <Class Name="TVA.Phasors.ChannelFrameCollectionBase(Of T)">
     <Position X="82.75" Y="13.5" Width="3.75" />
     <TypeIdentifier>
       <FileName>ChannelFrameCollectionBase.vb</FileName>
       <HashCode>AAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Class>
-  <Class Name="Tva.Phasors.ChannelFrameParsingStateBase(Of T)">
+  <Class Name="TVA.Phasors.ChannelFrameParsingStateBase(Of T)">
     <Position X="13.25" Y="50.5" Width="7.5" />
     <TypeIdentifier>
       <FileName>ChannelFrameParsingStateBase.vb</FileName>
@@ -109,7 +109,7 @@
     </TypeIdentifier>
     <Lollipop Position="0.2" />
   </Class>
-  <Class Name="Tva.Phasors.ChannelParsingStateBase">
+  <Class Name="TVA.Phasors.ChannelParsingStateBase">
     <Position X="40.5" Y="48.5" Width="2.25" />
     <TypeIdentifier>
       <FileName>ChannelParsingStateBase.vb</FileName>
@@ -117,7 +117,7 @@
     </TypeIdentifier>
     <Lollipop Position="0.2" />
   </Class>
-  <Class Name="Tva.Phasors.ChannelValueBase(Of T)">
+  <Class Name="TVA.Phasors.ChannelValueBase(Of T)">
     <Position X="151.25" Y="27.5" Width="4.25" />
     <TypeIdentifier>
       <FileName>ChannelValueBase.vb</FileName>
@@ -125,14 +125,14 @@
     </TypeIdentifier>
     <Lollipop Position="0.2" />
   </Class>
-  <Class Name="Tva.Phasors.ChannelValueCollectionBase(Of TDefinition, TValue)">
+  <Class Name="TVA.Phasors.ChannelValueCollectionBase(Of TDefinition, TValue)">
     <Position X="10" Y="13.5" Width="3.75" />
     <TypeIdentifier>
       <FileName>ChannelValueCollectionBase.vb</FileName>
       <HashCode>AAIAAAAAAAAAAAAAKAAAAAABAAAAAAAAAEAAAABAAAA=</HashCode>
     </TypeIdentifier>
   </Class>
-  <Class Name="Tva.Phasors.ChannelValueMeasurement(Of T)" Collapsed="true" BaseTypeListCollapsed="true">
+  <Class Name="TVA.Phasors.ChannelValueMeasurement(Of T)" Collapsed="true" BaseTypeListCollapsed="true">
     <Position X="351.75" Y="0.5" Width="1.5" />
     <TypeIdentifier>
       <FileName>ChannelValueMeasurement.vb</FileName>
@@ -140,7 +140,7 @@
     </TypeIdentifier>
     <Lollipop Position="0.2" Collapsed="true" />
   </Class>
-  <Class Name="Tva.Phasors.CommandCell">
+  <Class Name="TVA.Phasors.CommandCell">
     <Position X="31.5" Y="31.75" Width="10.5" />
     <TypeIdentifier>
       <FileName>CommandCell.vb</FileName>
@@ -148,14 +148,14 @@
     </TypeIdentifier>
     <Lollipop Position="0.2" />
   </Class>
-  <Class Name="Tva.Phasors.CommandCellCollection">
+  <Class Name="TVA.Phasors.CommandCellCollection">
     <Position X="44.5" Y="16.5" Width="3.75" />
     <TypeIdentifier>
       <FileName>CommandCellCollection.vb</FileName>
       <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAg=</HashCode>
     </TypeIdentifier>
   </Class>
-  <Class Name="Tva.Phasors.CommandFrameBase">
+  <Class Name="TVA.Phasors.CommandFrameBase">
     <Position X="342" Y="35.5" Width="5.5" />
     <TypeIdentifier>
       <FileName>CommandFrameBase.vb</FileName>
@@ -163,7 +163,7 @@
     </TypeIdentifier>
     <Lollipop Position="0.2" />
   </Class>
-  <Class Name="Tva.Phasors.CommandFrameParsingState">
+  <Class Name="TVA.Phasors.CommandFrameParsingState">
     <Position X="16.25" Y="53.75" Width="5" />
     <TypeIdentifier>
       <FileName>CommandFrameParsingState.vb</FileName>
@@ -171,14 +171,14 @@
     </TypeIdentifier>
     <Lollipop Position="0.2" />
   </Class>
-  <Class Name="Tva.Phasors.Common" Collapsed="true">
+  <Class Name="TVA.Phasors.Common" Collapsed="true">
     <Position X="357" Y="0.5" Width="1.5" />
     <TypeIdentifier>
       <FileName>Common.vb</FileName>
       <HashCode>AAAIAAAABAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Class>
-  <Class Name="Tva.Phasors.ConfigurationCellBase">
+  <Class Name="TVA.Phasors.ConfigurationCellBase">
     <Position X="79.5" Y="31.75" Width="19.25" />
     <TypeIdentifier>
       <FileName>ConfigurationCellBase.vb</FileName>
@@ -186,14 +186,14 @@
     </TypeIdentifier>
     <Lollipop Position="0.2" />
   </Class>
-  <Class Name="Tva.Phasors.ConfigurationCellCollection">
+  <Class Name="TVA.Phasors.ConfigurationCellCollection">
     <Position X="53.5" Y="16.5" Width="4" />
     <TypeIdentifier>
       <FileName>ConfigurationCellCollection.vb</FileName>
       <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAg=</HashCode>
     </TypeIdentifier>
   </Class>
-  <Class Name="Tva.Phasors.ConfigurationCellParsingState">
+  <Class Name="TVA.Phasors.ConfigurationCellParsingState">
     <Position X="58.25" Y="53.25" Width="22" />
     <TypeIdentifier>
       <FileName>ConfigurationCellParsingState.vb</FileName>
@@ -201,7 +201,7 @@
     </TypeIdentifier>
     <Lollipop Position="0.2" />
   </Class>
-  <Class Name="Tva.Phasors.ConfigurationFrameBase">
+  <Class Name="TVA.Phasors.ConfigurationFrameBase">
     <Position X="288" Y="35.5" Width="5.5" />
     <TypeIdentifier>
       <FileName>ConfigurationFrameBase.vb</FileName>
@@ -209,14 +209,14 @@
     </TypeIdentifier>
     <Lollipop Position="0.2" />
   </Class>
-  <Class Name="Tva.Phasors.ConfigurationFrameCollection">
+  <Class Name="TVA.Phasors.ConfigurationFrameCollection">
     <Position X="80.5" Y="16.25" Width="3.75" />
     <TypeIdentifier>
       <FileName>ConfigurationFrameCollection.vb</FileName>
       <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAg=</HashCode>
     </TypeIdentifier>
   </Class>
-  <Class Name="Tva.Phasors.ConfigurationFrameParsingState">
+  <Class Name="TVA.Phasors.ConfigurationFrameParsingState">
     <Position X="3" Y="53.75" Width="7" />
     <TypeIdentifier>
       <FileName>ConfigurationFrameParsingState.vb</FileName>
@@ -224,7 +224,7 @@
     </TypeIdentifier>
     <Lollipop Position="0.2" />
   </Class>
-  <Class Name="Tva.Phasors.DataCellBase">
+  <Class Name="TVA.Phasors.DataCellBase">
     <Position X="49.25" Y="31.75" Width="15.25" />
     <TypeIdentifier>
       <FileName>DataCellBase.vb</FileName>
@@ -232,14 +232,14 @@
     </TypeIdentifier>
     <Lollipop Position="0.2" />
   </Class>
-  <Class Name="Tva.Phasors.DataCellCollection">
+  <Class Name="TVA.Phasors.DataCellCollection">
     <Position X="35.5" Y="16.5" Width="4" />
     <TypeIdentifier>
       <FileName>DataCellCollection.vb</FileName>
       <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAg=</HashCode>
     </TypeIdentifier>
   </Class>
-  <Class Name="Tva.Phasors.DataCellParsingState">
+  <Class Name="TVA.Phasors.DataCellParsingState">
     <Position X="31.75" Y="53.25" Width="25.75" />
     <TypeIdentifier>
       <FileName>DataCellParsingState.vb</FileName>
@@ -247,7 +247,7 @@
     </TypeIdentifier>
     <Lollipop Position="0.2" />
   </Class>
-  <Class Name="Tva.Phasors.DataFrameBase">
+  <Class Name="TVA.Phasors.DataFrameBase">
     <Position X="323.5" Y="35.5" Width="5.5" />
     <TypeIdentifier>
       <FileName>DataFrameBase.vb</FileName>
@@ -255,14 +255,14 @@
     </TypeIdentifier>
     <Lollipop Position="0.2" />
   </Class>
-  <Class Name="Tva.Phasors.DataFrameCollection">
+  <Class Name="TVA.Phasors.DataFrameCollection">
     <Position X="85" Y="16.25" Width="3.75" />
     <TypeIdentifier>
       <FileName>DataFrameCollection.vb</FileName>
       <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAg=</HashCode>
     </TypeIdentifier>
   </Class>
-  <Class Name="Tva.Phasors.DataFrameParsingState">
+  <Class Name="TVA.Phasors.DataFrameParsingState">
     <Position X="22" Y="53.75" Width="9" />
     <TypeIdentifier>
       <FileName>DataFrameParsingState.vb</FileName>
@@ -270,7 +270,7 @@
     </TypeIdentifier>
     <Lollipop Position="0.2" />
   </Class>
-  <Class Name="Tva.Phasors.DigitalDefinitionBase">
+  <Class Name="TVA.Phasors.DigitalDefinitionBase">
     <Position X="222.25" Y="34.25" Width="4.75" />
     <TypeIdentifier>
       <FileName>DigitalDefinitionBase.vb</FileName>
@@ -278,14 +278,14 @@
     </TypeIdentifier>
     <Lollipop Position="0.2" />
   </Class>
-  <Class Name="Tva.Phasors.DigitalDefinitionCollection">
+  <Class Name="TVA.Phasors.DigitalDefinitionCollection">
     <Position X="71.5" Y="16.25" Width="3.75" />
     <TypeIdentifier>
       <FileName>DigitalDefinitionCollection.vb</FileName>
       <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAg=</HashCode>
     </TypeIdentifier>
   </Class>
-  <Class Name="Tva.Phasors.DigitalValueBase">
+  <Class Name="TVA.Phasors.DigitalValueBase">
     <Position X="158.75" Y="32.25" Width="6.25" />
     <TypeIdentifier>
       <FileName>DigitalValueBase.vb</FileName>
@@ -293,14 +293,14 @@
     </TypeIdentifier>
     <Lollipop Position="0.2" />
   </Class>
-  <Class Name="Tva.Phasors.DigitalValueCollection">
+  <Class Name="TVA.Phasors.DigitalValueCollection">
     <Position X="12.25" Y="17.25" Width="3.75" />
     <TypeIdentifier>
       <FileName>DigitalValueCollection.vb</FileName>
       <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAg=</HashCode>
     </TypeIdentifier>
   </Class>
-  <Class Name="Tva.Phasors.FrequencyDefinitionBase">
+  <Class Name="TVA.Phasors.FrequencyDefinitionBase">
     <Position X="241.5" Y="34.25" Width="7.25" />
     <TypeIdentifier>
       <FileName>FrequencyDefinitionBase.vb</FileName>
@@ -308,21 +308,21 @@
     </TypeIdentifier>
     <Lollipop Position="0.2" />
   </Class>
-  <Class Name="Tva.Phasors.FrequencyDefinitionCollection">
+  <Class Name="TVA.Phasors.FrequencyDefinitionCollection">
     <Position X="76" Y="16.25" Width="3.75" />
     <TypeIdentifier>
       <FileName>FrequencyDefinitionCollection.vb</FileName>
       <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAg=</HashCode>
     </TypeIdentifier>
   </Class>
-  <Class Name="Tva.Phasors.FrequencyValueBase">
+  <Class Name="TVA.Phasors.FrequencyValueBase">
     <Position X="183.5" Y="32.25" Width="7" />
     <TypeIdentifier>
       <FileName>FrequencyValueBase.vb</FileName>
       <HashCode>AABAAIAAAAAAAAABIAAISAAgAJAgAAAgEAAAAAAAAAA=</HashCode>
     </TypeIdentifier>
     <NestedTypes>
-      <Enum Name="Tva.Phasors.FrequencyValueBase.CompositeValueType" Collapsed="true">
+      <Enum Name="TVA.Phasors.FrequencyValueBase.CompositeValueType" Collapsed="true">
         <TypeIdentifier>
           <NewMemberFileName>FrequencyValueBase.vb</NewMemberFileName>
         </TypeIdentifier>
@@ -330,14 +330,14 @@
     </NestedTypes>
     <Lollipop Position="0.2" />
   </Class>
-  <Class Name="Tva.Phasors.FrequencyValueCollection">
+  <Class Name="TVA.Phasors.FrequencyValueCollection">
     <Position X="16.75" Y="17.25" Width="3.75" />
     <TypeIdentifier>
       <FileName>FrequencyValueCollection.vb</FileName>
       <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAg=</HashCode>
     </TypeIdentifier>
   </Class>
-  <Class Name="Tva.Phasors.HeaderCell">
+  <Class Name="TVA.Phasors.HeaderCell">
     <Position X="20.75" Y="31.75" Width="10" />
     <TypeIdentifier>
       <FileName>HeaderCell.vb</FileName>
@@ -345,14 +345,14 @@
     </TypeIdentifier>
     <Lollipop Position="0.2" />
   </Class>
-  <Class Name="Tva.Phasors.HeaderCellCollection">
+  <Class Name="TVA.Phasors.HeaderCellCollection">
     <Position X="21.25" Y="16.5" Width="3.75" />
     <TypeIdentifier>
       <FileName>HeaderCellCollection.vb</FileName>
       <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAg=</HashCode>
     </TypeIdentifier>
   </Class>
-  <Class Name="Tva.Phasors.HeaderFrameBase">
+  <Class Name="TVA.Phasors.HeaderFrameBase">
     <Position X="305" Y="35.5" Width="5.25" />
     <TypeIdentifier>
       <FileName>HeaderFrameBase.vb</FileName>
@@ -360,7 +360,7 @@
     </TypeIdentifier>
     <Lollipop Position="0.2" />
   </Class>
-  <Class Name="Tva.Phasors.HeaderFrameParsingState">
+  <Class Name="TVA.Phasors.HeaderFrameParsingState">
     <Position X="10.75" Y="53.75" Width="4.75" />
     <TypeIdentifier>
       <FileName>HeaderFrameParsingState.vb</FileName>
@@ -368,7 +368,7 @@
     </TypeIdentifier>
     <Lollipop Position="0.2" />
   </Class>
-  <Class Name="Tva.Phasors.MultiProtocolFrameParser" Collapsed="true" BaseTypeListCollapsed="true">
+  <Class Name="TVA.Phasors.MultiProtocolFrameParser" Collapsed="true" BaseTypeListCollapsed="true">
     <Position X="360.5" Y="1.5" Width="1.5" />
     <TypeIdentifier>
       <FileName>MultiProtocolFrameParser.vb</FileName>
@@ -376,7 +376,7 @@
     </TypeIdentifier>
     <Lollipop Position="0.2" Collapsed="true" />
   </Class>
-  <Class Name="Tva.Phasors.PhasorDefinitionBase">
+  <Class Name="TVA.Phasors.PhasorDefinitionBase">
     <Position X="263.5" Y="34.25" Width="9" />
     <TypeIdentifier>
       <FileName>PhasorDefinitionBase.vb</FileName>
@@ -384,21 +384,21 @@
     </TypeIdentifier>
     <Lollipop Position="0.2" />
   </Class>
-  <Class Name="Tva.Phasors.PhasorDefinitionCollection">
+  <Class Name="TVA.Phasors.PhasorDefinitionCollection">
     <Position X="62.5" Y="16.25" Width="3.75" />
     <TypeIdentifier>
       <FileName>PhasorDefinitionCollection.vb</FileName>
       <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAg=</HashCode>
     </TypeIdentifier>
   </Class>
-  <Class Name="Tva.Phasors.PhasorValueBase">
+  <Class Name="TVA.Phasors.PhasorValueBase">
     <Position X="114.25" Y="32.25" Width="12.5" />
     <TypeIdentifier>
       <FileName>PhasorValueBase.vb</FileName>
       <HashCode>CADAIIQAAABAIIABAEAIACAiEAQgAAAgAUGBACFIAAI=</HashCode>
     </TypeIdentifier>
     <NestedTypes>
-      <Delegate Name="Tva.Phasors.PhasorValueBase.CreateNewPhasorValueFunctionSignature" Collapsed="true">
+      <Delegate Name="TVA.Phasors.PhasorValueBase.CreateNewPhasorValueFunctionSignature" Collapsed="true">
         <TypeIdentifier>
           <NewMemberFileName>PhasorValueBase.vb</NewMemberFileName>
         </TypeIdentifier>
@@ -406,77 +406,77 @@
     </NestedTypes>
     <Lollipop Position="0.2" />
   </Class>
-  <Class Name="Tva.Phasors.PhasorValueCollection">
+  <Class Name="TVA.Phasors.PhasorValueCollection">
     <Position X="3.25" Y="17.25" Width="3.75" />
     <TypeIdentifier>
       <FileName>PhasorValueCollection.vb</FileName>
       <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAg=</HashCode>
     </TypeIdentifier>
   </Class>
-  <Class Name="Tva.Phasors.BpaPdcStream.AnalogDefinition">
+  <Class Name="TVA.Phasors.BpaPdcStream.AnalogDefinition">
     <Position X="200.5" Y="37.25" Width="5.75" />
     <TypeIdentifier>
       <FileName>BpaPdcStream\AnalogDefinition.vb</FileName>
       <HashCode>AAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAgAAAABAAAAAg=</HashCode>
     </TypeIdentifier>
   </Class>
-  <Class Name="Tva.Phasors.BpaPdcStream.AnalogValue">
+  <Class Name="TVA.Phasors.BpaPdcStream.AnalogValue">
     <Position X="134.75" Y="37.25" Width="6.25" />
     <TypeIdentifier>
       <FileName>BpaPdcStream\AnalogValue.vb</FileName>
       <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAg=</HashCode>
     </TypeIdentifier>
   </Class>
-  <Class Name="Tva.Phasors.BpaPdcStream.Common" Collapsed="true">
+  <Class Name="TVA.Phasors.BpaPdcStream.Common" Collapsed="true">
     <Position X="353.5" Y="0.5" Width="1.5" />
     <TypeIdentifier>
       <FileName>BpaPdcStream\Common.vb</FileName>
       <HashCode>AgAAAAAAAAAAIAAAAAAAAAABAAAEAAAAAAAAAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Class>
-  <Class Name="Tva.Phasors.BpaPdcStream.ConfigurationCell">
+  <Class Name="TVA.Phasors.BpaPdcStream.ConfigurationCell">
     <Position X="95.25" Y="40.75" Width="11" />
     <TypeIdentifier>
       <FileName>BpaPdcStream\ConfigurationCell.vb</FileName>
       <HashCode>AAAAAAAAAAgBBAABAAIYAAAgAAAAIAAgAABAAAAgggg=</HashCode>
     </TypeIdentifier>
   </Class>
-  <Class Name="Tva.Phasors.BpaPdcStream.ConfigurationCellCollection">
+  <Class Name="TVA.Phasors.BpaPdcStream.ConfigurationCellCollection">
     <Position X="58" Y="19" Width="3.75" />
     <TypeIdentifier>
       <FileName>BpaPdcStream\ConfigurationCellCollection.vb</FileName>
       <HashCode>AAIAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Class>
-  <Class Name="Tva.Phasors.BpaPdcStream.ConfigurationFrame">
+  <Class Name="TVA.Phasors.BpaPdcStream.ConfigurationFrame">
     <Position X="295" Y="39.75" Width="5.75" />
     <TypeIdentifier>
       <FileName>BpaPdcStream\ConfigurationFrame.vb</FileName>
       <HashCode>AAUAYAEgAABAEAAEAKoICBAlAAiBAAAAIAAAAAAjIgg=</HashCode>
     </TypeIdentifier>
   </Class>
-  <Class Name="Tva.Phasors.BpaPdcStream.DataCell">
+  <Class Name="TVA.Phasors.BpaPdcStream.DataCell">
     <Position X="63.75" Y="41.25" Width="7.25" />
     <TypeIdentifier>
       <FileName>BpaPdcStream\DataCell.vb</FileName>
       <HashCode>IAAAAABgAEABAAFEkAQIAAIhAJIBAABIAAACAAAEAAg=</HashCode>
     </TypeIdentifier>
   </Class>
-  <Class Name="Tva.Phasors.BpaPdcStream.DataCellCollection">
+  <Class Name="TVA.Phasors.BpaPdcStream.DataCellCollection">
     <Position X="40" Y="19" Width="3.75" />
     <TypeIdentifier>
       <FileName>BpaPdcStream\DataCellCollection.vb</FileName>
       <HashCode>AAIAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Class>
-  <Class Name="Tva.Phasors.BpaPdcStream.DataFrame">
+  <Class Name="TVA.Phasors.BpaPdcStream.DataFrame">
     <Position X="332" Y="39.75" Width="5.75" />
     <TypeIdentifier>
       <FileName>BpaPdcStream\DataFrame.vb</FileName>
       <HashCode>gAEAAAAAAAAAAABEACYIAAAhAAAABAAAAAAAAAAAAAg=</HashCode>
     </TypeIdentifier>
   </Class>
-  <Class Name="Tva.Phasors.BpaPdcStream.DataPacket" Collapsed="true" BaseTypeListCollapsed="true">
+  <Class Name="TVA.Phasors.BpaPdcStream.DataPacket" Collapsed="true" BaseTypeListCollapsed="true">
     <Position X="353.5" Y="1.5" Width="1.5" />
     <TypeIdentifier>
       <FileName>BpaPdcStream\DataPacket.vb</FileName>
@@ -484,21 +484,21 @@
     </TypeIdentifier>
     <Lollipop Position="0.2" Collapsed="true" />
   </Class>
-  <Class Name="Tva.Phasors.BpaPdcStream.DigitalDefinition">
+  <Class Name="TVA.Phasors.BpaPdcStream.DigitalDefinition">
     <Position X="214.75" Y="37.5" Width="4" />
     <TypeIdentifier>
       <FileName>BpaPdcStream\DigitalDefinition.vb</FileName>
       <HashCode>AAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAgAAAABAAAAAg=</HashCode>
     </TypeIdentifier>
   </Class>
-  <Class Name="Tva.Phasors.BpaPdcStream.DigitalValue">
+  <Class Name="TVA.Phasors.BpaPdcStream.DigitalValue">
     <Position X="150.25" Y="37" Width="6.25" />
     <TypeIdentifier>
       <FileName>BpaPdcStream\DigitalValue.vb</FileName>
       <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAg=</HashCode>
     </TypeIdentifier>
   </Class>
-  <Class Name="Tva.Phasors.BpaPdcStream.FrameParser" Collapsed="true" BaseTypeListCollapsed="true">
+  <Class Name="TVA.Phasors.BpaPdcStream.FrameParser" Collapsed="true" BaseTypeListCollapsed="true">
     <Position X="357" Y="1.5" Width="1.5" />
     <TypeIdentifier>
       <FileName>BpaPdcStream\FrameParser.vb</FileName>
@@ -506,42 +506,42 @@
     </TypeIdentifier>
     <Lollipop Position="0.2" Collapsed="true" />
   </Class>
-  <Class Name="Tva.Phasors.BpaPdcStream.FrequencyDefinition">
+  <Class Name="TVA.Phasors.BpaPdcStream.FrequencyDefinition">
     <Position X="251.5" Y="38.75" Width="3.75" />
     <TypeIdentifier>
       <FileName>BpaPdcStream\FrequencyDefinition.vb</FileName>
       <HashCode>AAAAAgAAAAAAAAAAAAAIAAAAAAAAAAAgAAAABAAAQAg=</HashCode>
     </TypeIdentifier>
   </Class>
-  <Class Name="Tva.Phasors.BpaPdcStream.FrequencyValue">
+  <Class Name="TVA.Phasors.BpaPdcStream.FrequencyValue">
     <Position X="192.75" Y="38" Width="7" />
     <TypeIdentifier>
       <FileName>BpaPdcStream\FrequencyValue.vb</FileName>
       <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAAAg=</HashCode>
     </TypeIdentifier>
   </Class>
-  <Class Name="Tva.Phasors.BpaPdcStream.PhasorDefinition">
+  <Class Name="TVA.Phasors.BpaPdcStream.PhasorDefinition">
     <Position X="256" Y="38.5" Width="4.5" />
     <TypeIdentifier>
       <FileName>BpaPdcStream\PhasorDefinition.vb</FileName>
       <HashCode>AgAAAAAAAAAACAAAABQIAAggAABAACAgAEAABAAAQAg=</HashCode>
     </TypeIdentifier>
   </Class>
-  <Class Name="Tva.Phasors.BpaPdcStream.PhasorValue">
+  <Class Name="TVA.Phasors.BpaPdcStream.PhasorValue">
     <Position X="116.25" Y="40.75" Width="8.5" />
     <TypeIdentifier>
       <FileName>BpaPdcStream\PhasorValue.vb</FileName>
       <HashCode>AACAAAAAAEAAAAAAAAAAAAAigAAAAAAAAAAAAAAAAAg=</HashCode>
     </TypeIdentifier>
   </Class>
-  <Class Name="Tva.Phasors.BpaPdcStream.PMUCell">
+  <Class Name="TVA.Phasors.BpaPdcStream.PMUCell">
     <Position X="15.75" Y="31.75" Width="4.25" />
     <TypeIdentifier>
       <FileName>BpaPdcStream\PMUCell.vb</FileName>
       <HashCode>AAAAAAAAAEAAAAAAAAAAIAAgAACAAEAAACACAAAAAAg=</HashCode>
     </TypeIdentifier>
   </Class>
-  <Class Name="Tva.Phasors.BpaPdcStream.PMUCellCollection">
+  <Class Name="TVA.Phasors.BpaPdcStream.PMUCellCollection">
     <Position X="25.75" Y="16.5" Width="4.5" />
     <TypeIdentifier>
       <FileName>BpaPdcStream\PMUCellCollection.vb</FileName>
@@ -549,28 +549,28 @@
     </TypeIdentifier>
     <Lollipop Position="0.2" />
   </Class>
-  <Class Name="Tva.Phasors.Ieee1344.CommandFrame">
+  <Class Name="TVA.Phasors.Ieee1344.CommandFrame">
     <Position X="338.5" Y="40" Width="5.75" />
     <TypeIdentifier>
       <FileName>Ieee1344\CommandFrame.vb</FileName>
       <HashCode>CAEAABAAAQAAEAAEAAIIAAAhAAAAAAAAAAAAAAAAIAg=</HashCode>
     </TypeIdentifier>
   </Class>
-  <Class Name="Tva.Phasors.Ieee1344.Common" Collapsed="true">
+  <Class Name="TVA.Phasors.Ieee1344.Common" Collapsed="true">
     <Position X="355.25" Y="0.5" Width="1.5" />
     <TypeIdentifier>
       <FileName>Ieee1344\Common.vb</FileName>
       <HashCode>AwAAAAAAEAAAIAAIAAAAACABACAAAQAAAgAAAAAAIAA=</HashCode>
     </TypeIdentifier>
   </Class>
-  <Class Name="Tva.Phasors.Ieee1344.CommonFrameHeader" Collapsed="true">
+  <Class Name="TVA.Phasors.Ieee1344.CommonFrameHeader" Collapsed="true">
     <Position X="351.75" Y="1.5" Width="1.5" />
     <TypeIdentifier>
       <FileName>Ieee1344\CommonFrameHeader.vb</FileName>
       <HashCode>CAAAAAAAQAAAAAAAAQACACABQAAAAACAAAEAAAAAIBA=</HashCode>
     </TypeIdentifier>
     <NestedTypes>
-      <Class Name="Tva.Phasors.Ieee1344.CommonFrameHeader.CommonFrameHeaderInstance" Collapsed="true">
+      <Class Name="TVA.Phasors.Ieee1344.CommonFrameHeader.CommonFrameHeaderInstance" Collapsed="true">
         <TypeIdentifier>
           <NewMemberFileName>Ieee1344\CommonFrameHeader.vb</NewMemberFileName>
         </TypeIdentifier>
@@ -578,21 +578,21 @@
       </Class>
     </NestedTypes>
   </Class>
-  <Class Name="Tva.Phasors.Ieee1344.ConfigurationCell">
+  <Class Name="TVA.Phasors.Ieee1344.ConfigurationCell">
     <Position X="83.5" Y="40.75" Width="11" />
     <TypeIdentifier>
       <FileName>Ieee1344\ConfigurationCell.vb</FileName>
       <HashCode>AAAAABAAgAAAQAAEAAIIYAAhABKAIEAAEAhAAAAgAgg=</HashCode>
     </TypeIdentifier>
   </Class>
-  <Class Name="Tva.Phasors.Ieee1344.ConfigurationCellCollection">
+  <Class Name="TVA.Phasors.Ieee1344.ConfigurationCellCollection">
     <Position X="53.5" Y="19" Width="3.75" />
     <TypeIdentifier>
       <FileName>Ieee1344\ConfigurationCellCollection.vb</FileName>
       <HashCode>AAIAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Class>
-  <Class Name="Tva.Phasors.Ieee1344.ConfigurationFrame">
+  <Class Name="TVA.Phasors.Ieee1344.ConfigurationFrame">
     <Position X="288.5" Y="39.75" Width="5.75" />
     <TypeIdentifier>
       <FileName>Ieee1344\ConfigurationFrame.vb</FileName>
@@ -600,21 +600,21 @@
     </TypeIdentifier>
     <Lollipop Position="0.2" />
   </Class>
-  <Class Name="Tva.Phasors.Ieee1344.DataCell">
+  <Class Name="TVA.Phasors.Ieee1344.DataCell">
     <Position X="53.25" Y="41.25" Width="9.75" />
     <TypeIdentifier>
       <FileName>Ieee1344\DataCell.vb</FileName>
       <HashCode>AAAAAQAAgAAAAAAAAAAAQAAAABIAAAAAAAAAAAAAAAg=</HashCode>
     </TypeIdentifier>
   </Class>
-  <Class Name="Tva.Phasors.Ieee1344.DataCellCollection">
+  <Class Name="TVA.Phasors.Ieee1344.DataCellCollection">
     <Position X="35.5" Y="19" Width="3.75" />
     <TypeIdentifier>
       <FileName>Ieee1344\DataCellCollection.vb</FileName>
       <HashCode>AAIAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Class>
-  <Class Name="Tva.Phasors.Ieee1344.DataFrame">
+  <Class Name="TVA.Phasors.Ieee1344.DataFrame">
     <Position X="323.25" Y="39.75" Width="8" />
     <TypeIdentifier>
       <FileName>Ieee1344\DataFrame.vb</FileName>
@@ -622,21 +622,21 @@
     </TypeIdentifier>
     <Lollipop Position="0.2" />
   </Class>
-  <Class Name="Tva.Phasors.Ieee1344.DigitalDefinition">
+  <Class Name="TVA.Phasors.Ieee1344.DigitalDefinition">
     <Position X="227.25" Y="37.5" Width="7" />
     <TypeIdentifier>
       <FileName>Ieee1344\DigitalDefinition.vb</FileName>
       <HashCode>AAAAAACAAAACCAAAAAAIYAAgAQAAAAAAAAAAIAAAAAg=</HashCode>
     </TypeIdentifier>
   </Class>
-  <Class Name="Tva.Phasors.Ieee1344.DigitalValue">
+  <Class Name="TVA.Phasors.Ieee1344.DigitalValue">
     <Position X="165.75" Y="37" Width="7.75" />
     <TypeIdentifier>
       <FileName>Ieee1344\DigitalValue.vb</FileName>
       <HashCode>AAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAg=</HashCode>
     </TypeIdentifier>
   </Class>
-  <Class Name="Tva.Phasors.Ieee1344.FrameParser" Collapsed="true" BaseTypeListCollapsed="true">
+  <Class Name="TVA.Phasors.Ieee1344.FrameParser" Collapsed="true" BaseTypeListCollapsed="true">
     <Position X="358.75" Y="1.5" Width="1.5" />
     <TypeIdentifier>
       <FileName>Ieee1344\FrameParser.vb</FileName>
@@ -644,21 +644,21 @@
     </TypeIdentifier>
     <Lollipop Position="0.2" Collapsed="true" />
   </Class>
-  <Class Name="Tva.Phasors.Ieee1344.FrequencyDefinition">
+  <Class Name="TVA.Phasors.Ieee1344.FrequencyDefinition">
     <Position X="235" Y="38.75" Width="7.5" />
     <TypeIdentifier>
       <FileName>Ieee1344\FrequencyDefinition.vb</FileName>
       <HashCode>AAAAAAAAAAAAAAABAAAIIAAgAAAAAAAgAAAAAAhCAAg=</HashCode>
     </TypeIdentifier>
   </Class>
-  <Class Name="Tva.Phasors.Ieee1344.FrequencyValue">
+  <Class Name="TVA.Phasors.Ieee1344.FrequencyValue">
     <Position X="174.25" Y="38" Width="8.5" />
     <TypeIdentifier>
       <FileName>Ieee1344\FrequencyValue.vb</FileName>
       <HashCode>AAAAAAAAAAAACAABAAAIAAAAAAAAAAAgAAAAAACAAAg=</HashCode>
     </TypeIdentifier>
   </Class>
-  <Class Name="Tva.Phasors.Ieee1344.HeaderFrame">
+  <Class Name="TVA.Phasors.Ieee1344.HeaderFrame">
     <Position X="301.5" Y="38.75" Width="5.75" />
     <TypeIdentifier>
       <FileName>Ieee1344\HeaderFrame.vb</FileName>
@@ -666,35 +666,35 @@
     </TypeIdentifier>
     <Lollipop Position="0.2" />
   </Class>
-  <Class Name="Tva.Phasors.Ieee1344.PhasorDefinition">
+  <Class Name="TVA.Phasors.Ieee1344.PhasorDefinition">
     <Position X="261.25" Y="38.5" Width="9" />
     <TypeIdentifier>
       <FileName>Ieee1344\PhasorDefinition.vb</FileName>
       <HashCode>AAAAAIAAAAACCAAAAAAAAAAAAAAAAAAAAAAAIAAAAAg=</HashCode>
     </TypeIdentifier>
   </Class>
-  <Class Name="Tva.Phasors.Ieee1344.PhasorValue">
+  <Class Name="TVA.Phasors.Ieee1344.PhasorValue">
     <Position X="107" Y="40.75" Width="8.5" />
     <TypeIdentifier>
       <FileName>Ieee1344\PhasorValue.vb</FileName>
       <HashCode>AACAAAAAAEAAAAAAAAAAAAAiAAAAAAAAAAAAAAAAAAg=</HashCode>
     </TypeIdentifier>
   </Class>
-  <Class Name="Tva.Phasors.IeeeC37_118.AnalogDefinition">
+  <Class Name="TVA.Phasors.IeeeC37_118.AnalogDefinition">
     <Position X="207" Y="37.25" Width="7" />
     <TypeIdentifier>
       <FileName>IeeeC37_118\AnalogDefinition.vb</FileName>
       <HashCode>AAAAIACAAAACCAAAAAAAAAAgAAAAAAAAAQAAIAAAAAg=</HashCode>
     </TypeIdentifier>
   </Class>
-  <Class Name="Tva.Phasors.IeeeC37_118.AnalogValue">
+  <Class Name="TVA.Phasors.IeeeC37_118.AnalogValue">
     <Position X="141.75" Y="37.25" Width="7.75" />
     <TypeIdentifier>
       <FileName>IeeeC37_118\AnalogValue.vb</FileName>
       <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAg=</HashCode>
     </TypeIdentifier>
   </Class>
-  <Class Name="Tva.Phasors.IeeeC37_118.CommandFrame">
+  <Class Name="TVA.Phasors.IeeeC37_118.CommandFrame">
     <Position X="345" Y="40" Width="5.75" />
     <TypeIdentifier>
       <FileName>IeeeC37_118\CommandFrame.vb</FileName>
@@ -702,21 +702,21 @@
     </TypeIdentifier>
     <Lollipop Position="0.2" />
   </Class>
-  <Class Name="Tva.Phasors.IeeeC37_118.Common" Collapsed="true">
+  <Class Name="TVA.Phasors.IeeeC37_118.Common" Collapsed="true">
     <Position X="358.75" Y="0.5" Width="1.5" />
     <TypeIdentifier>
       <FileName>IeeeC37_118\Common.vb</FileName>
       <HashCode>CgEAAAAAAAAAIAAAAAAAAAABAAAAAQAAAAAAAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Class>
-  <Class Name="Tva.Phasors.IeeeC37_118.CommonFrameHeader" Collapsed="true">
+  <Class Name="TVA.Phasors.IeeeC37_118.CommonFrameHeader" Collapsed="true">
     <Position X="360.5" Y="0.5" Width="1.5" />
     <TypeIdentifier>
       <FileName>IeeeC37_118\CommonFrameHeader.vb</FileName>
       <HashCode>IAAIAAAAIAAAAAAAAAAAAAABQAAAAAAAAAFAAAgAIBA=</HashCode>
     </TypeIdentifier>
     <NestedTypes>
-      <Class Name="Tva.Phasors.IeeeC37_118.CommonFrameHeader.CommonFrameHeaderInstance" Collapsed="true">
+      <Class Name="TVA.Phasors.IeeeC37_118.CommonFrameHeader.CommonFrameHeaderInstance" Collapsed="true">
         <TypeIdentifier>
           <NewMemberFileName>IeeeC37_118\CommonFrameHeader.vb</NewMemberFileName>
         </TypeIdentifier>
@@ -724,21 +724,21 @@
       </Class>
     </NestedTypes>
   </Class>
-  <Class Name="Tva.Phasors.IeeeC37_118.ConfigurationCell">
+  <Class Name="TVA.Phasors.IeeeC37_118.ConfigurationCell">
     <Position X="71.75" Y="40.75" Width="11" />
     <TypeIdentifier>
       <FileName>IeeeC37_118\ConfigurationCell.vb</FileName>
       <HashCode>AAAAAAAAAAAAQAAECAIIQAAhAAAAJAAAEAxAAAAgAgg=</HashCode>
     </TypeIdentifier>
   </Class>
-  <Class Name="Tva.Phasors.IeeeC37_118.ConfigurationCellCollection">
+  <Class Name="TVA.Phasors.IeeeC37_118.ConfigurationCellCollection">
     <Position X="49" Y="19" Width="3.75" />
     <TypeIdentifier>
       <FileName>IeeeC37_118\ConfigurationCellCollection.vb</FileName>
       <HashCode>AAIAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Class>
-  <Class Name="Tva.Phasors.IeeeC37_118.ConfigurationFrame">
+  <Class Name="TVA.Phasors.IeeeC37_118.ConfigurationFrame">
     <Position X="280.75" Y="39.75" Width="7" />
     <TypeIdentifier>
       <FileName>IeeeC37_118\ConfigurationFrame.vb</FileName>
@@ -746,28 +746,28 @@
     </TypeIdentifier>
     <Lollipop Position="0.2" />
   </Class>
-  <Class Name="Tva.Phasors.IeeeC37_118.ConfigurationFrameDraft6">
+  <Class Name="TVA.Phasors.IeeeC37_118.ConfigurationFrameDraft6">
     <Position X="280.75" Y="47" Width="7" />
     <TypeIdentifier>
       <FileName>IeeeC37_118\ConfigurationFrameDraft6.vb</FileName>
       <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAg=</HashCode>
     </TypeIdentifier>
   </Class>
-  <Class Name="Tva.Phasors.IeeeC37_118.DataCell">
+  <Class Name="TVA.Phasors.IeeeC37_118.DataCell">
     <Position X="42.75" Y="41.25" Width="9.75" />
     <TypeIdentifier>
       <FileName>IeeeC37_118\DataCell.vb</FileName>
       <HashCode>IQAAAQEAAAAAAAABAAAAAAAAAhIAAEAIAAAAAAAAAAg=</HashCode>
     </TypeIdentifier>
   </Class>
-  <Class Name="Tva.Phasors.IeeeC37_118.DataCellCollection">
+  <Class Name="TVA.Phasors.IeeeC37_118.DataCellCollection">
     <Position X="31" Y="19" Width="3.75" />
     <TypeIdentifier>
       <FileName>IeeeC37_118\DataCellCollection.vb</FileName>
       <HashCode>AAIAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Class>
-  <Class Name="Tva.Phasors.IeeeC37_118.DataFrame">
+  <Class Name="TVA.Phasors.IeeeC37_118.DataFrame">
     <Position X="314.5" Y="39.75" Width="8" />
     <TypeIdentifier>
       <FileName>IeeeC37_118\DataFrame.vb</FileName>
@@ -775,21 +775,21 @@
     </TypeIdentifier>
     <Lollipop Position="0.2" />
   </Class>
-  <Class Name="Tva.Phasors.IeeeC37_118.DigitalDefinition">
+  <Class Name="TVA.Phasors.IeeeC37_118.DigitalDefinition">
     <Position X="219.5" Y="37.5" Width="7" />
     <TypeIdentifier>
       <FileName>IeeeC37_118\DigitalDefinition.vb</FileName>
       <HashCode>AQAgAACAEBACCAAhAAAIQAAgAAAAgAABAAAAJAEIAAg=</HashCode>
     </TypeIdentifier>
   </Class>
-  <Class Name="Tva.Phasors.IeeeC37_118.DigitalValue">
+  <Class Name="TVA.Phasors.IeeeC37_118.DigitalValue">
     <Position X="157.25" Y="37" Width="7.75" />
     <TypeIdentifier>
       <FileName>IeeeC37_118\DigitalValue.vb</FileName>
       <HashCode>AAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAg=</HashCode>
     </TypeIdentifier>
   </Class>
-  <Class Name="Tva.Phasors.IeeeC37_118.FrameParser" Collapsed="true" BaseTypeListCollapsed="true">
+  <Class Name="TVA.Phasors.IeeeC37_118.FrameParser" Collapsed="true" BaseTypeListCollapsed="true">
     <Position X="355.25" Y="1.5" Width="1.5" />
     <TypeIdentifier>
       <FileName>IeeeC37_118\FrameParser.vb</FileName>
@@ -797,21 +797,21 @@
     </TypeIdentifier>
     <Lollipop Position="0.2" Collapsed="true" />
   </Class>
-  <Class Name="Tva.Phasors.IeeeC37_118.FrequencyDefinition">
+  <Class Name="TVA.Phasors.IeeeC37_118.FrequencyDefinition">
     <Position X="243.25" Y="38.75" Width="7.5" />
     <TypeIdentifier>
       <FileName>IeeeC37_118\FrequencyDefinition.vb</FileName>
       <HashCode>AAAAAAAAAAAAAAABAAAIAAAAAAAAAAAgAAAAAABAAAg=</HashCode>
     </TypeIdentifier>
   </Class>
-  <Class Name="Tva.Phasors.IeeeC37_118.FrequencyValue">
+  <Class Name="TVA.Phasors.IeeeC37_118.FrequencyValue">
     <Position X="183.5" Y="38" Width="8.5" />
     <TypeIdentifier>
       <FileName>IeeeC37_118\FrequencyValue.vb</FileName>
       <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAg=</HashCode>
     </TypeIdentifier>
   </Class>
-  <Class Name="Tva.Phasors.IeeeC37_118.HeaderFrame">
+  <Class Name="TVA.Phasors.IeeeC37_118.HeaderFrame">
     <Position X="308" Y="38.75" Width="5.75" />
     <TypeIdentifier>
       <FileName>IeeeC37_118\HeaderFrame.vb</FileName>
@@ -819,462 +819,462 @@
     </TypeIdentifier>
     <Lollipop Position="0.2" />
   </Class>
-  <Class Name="Tva.Phasors.IeeeC37_118.PhasorDefinition">
+  <Class Name="TVA.Phasors.IeeeC37_118.PhasorDefinition">
     <Position X="271" Y="38.5" Width="9" />
     <TypeIdentifier>
       <FileName>IeeeC37_118\PhasorDefinition.vb</FileName>
       <HashCode>AAAAAIAAAAACCAAAAAAAAAAAAAAAAAAAAAAAIAAAAAg=</HashCode>
     </TypeIdentifier>
   </Class>
-  <Class Name="Tva.Phasors.IeeeC37_118.PhasorValue">
+  <Class Name="TVA.Phasors.IeeeC37_118.PhasorValue">
     <Position X="125.5" Y="40.75" Width="8.5" />
     <TypeIdentifier>
       <FileName>IeeeC37_118\PhasorValue.vb</FileName>
       <HashCode>AACAAAAAAEAAAAAAAAAAAAAiAAAAAAAAAAAAAAAAAAg=</HashCode>
     </TypeIdentifier>
   </Class>
-  <Interface Name="Tva.Phasors.IAnalogDefinition">
+  <Interface Name="TVA.Phasors.IAnalogDefinition">
     <Position X="29" Y="6.5" Width="1.5" />
     <TypeIdentifier>
       <FileName>IAnalogDefintion.vb</FileName>
       <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Interface>
-  <Interface Name="Tva.Phasors.IAnalogValue">
+  <Interface Name="TVA.Phasors.IAnalogValue">
     <Position X="43.5" Y="5.75" Width="2" />
     <TypeIdentifier>
       <FileName>IAnalogValue.vb</FileName>
       <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAQAAAA=</HashCode>
     </TypeIdentifier>
   </Interface>
-  <Interface Name="Tva.Phasors.IChannel">
+  <Interface Name="TVA.Phasors.IChannel">
     <Position X="29" Y="0.5" Width="5.75" />
     <TypeIdentifier>
       <FileName>IChannel.vb</FileName>
       <HashCode>AAAAAAAAAAAIAAAAAAAAAAABQAAAAAAAAAEAAAAAAAg=</HashCode>
     </TypeIdentifier>
   </Interface>
-  <Interface Name="Tva.Phasors.IChannelCell">
+  <Interface Name="TVA.Phasors.IChannelCell">
     <Position X="54.5" Y="3" Width="2.5" />
     <TypeIdentifier>
       <FileName>IChannelCell.vb</FileName>
       <HashCode>AAAAAhAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Interface>
-  <Interface Name="Tva.Phasors.IChannelCellCollection(Of T)">
+  <Interface Name="TVA.Phasors.IChannelCellCollection(Of T)">
     <Position X="34.75" Y="4.75" Width="2.25" />
     <TypeIdentifier>
       <FileName>IChannelCellCollection.vb</FileName>
       <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Interface>
-  <Interface Name="Tva.Phasors.IChannelCellParsingState">
+  <Interface Name="TVA.Phasors.IChannelCellParsingState">
     <Position X="20" Y="25.5" Width="2" />
     <TypeIdentifier>
       <FileName>IChannelCellParsingState.vb</FileName>
       <HashCode>AAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAEBAAA=</HashCode>
     </TypeIdentifier>
   </Interface>
-  <Interface Name="Tva.Phasors.IChannelCollection(Of T)">
+  <Interface Name="TVA.Phasors.IChannelCollection(Of T)">
     <Position X="35" Y="3" Width="2" />
     <TypeIdentifier>
       <FileName>IChannelCollection.vb</FileName>
       <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Interface>
-  <Interface Name="Tva.Phasors.IChannelDefinition">
+  <Interface Name="TVA.Phasors.IChannelDefinition">
     <Position X="27.75" Y="3" Width="2.25" />
     <TypeIdentifier>
       <FileName>IChannelDefinition.vb</FileName>
       <HashCode>AQAAAAAAEAAAAAAAAIAAQAgAAAAAIAIAAIEABAAAgAA=</HashCode>
     </TypeIdentifier>
   </Interface>
-  <Interface Name="Tva.Phasors.IChannelFrame">
+  <Interface Name="TVA.Phasors.IChannelFrame">
     <Position X="11" Y="3" Width="2.75" />
     <TypeIdentifier>
       <FileName>IChannelFrame.vb</FileName>
       <HashCode>AAAAABAAAAAAAAAAAAIAAAAAAAAAAACgAAAAAAAAIAA=</HashCode>
     </TypeIdentifier>
   </Interface>
-  <Interface Name="Tva.Phasors.IChannelFrameParsingState(Of T)">
+  <Interface Name="TVA.Phasors.IChannelFrameParsingState(Of T)">
     <Position X="5" Y="25.5" Width="3.75" />
     <TypeIdentifier>
       <FileName>IChannelFrameParsingState.vb</FileName>
       <HashCode>AAAAAAEAAAAAAAAAAAIAAAAAAAAAAAAAAAAAACAABAA=</HashCode>
     </TypeIdentifier>
     <NestedTypes>
-      <Delegate Name="Tva.Phasors.IChannelFrameParsingState(Of T).CreateNewCellFunctionSignature" Collapsed="true">
+      <Delegate Name="TVA.Phasors.IChannelFrameParsingState(Of T).CreateNewCellFunctionSignature" Collapsed="true">
         <TypeIdentifier>
           <NewMemberFileName>IChannelFrameParsingState.vb</NewMemberFileName>
         </TypeIdentifier>
       </Delegate>
     </NestedTypes>
   </Interface>
-  <Interface Name="Tva.Phasors.IChannelParsingState">
+  <Interface Name="TVA.Phasors.IChannelParsingState">
     <Position X="13" Y="23.5" Width="2.25" />
     <TypeIdentifier>
       <FileName>IChannelParsingState.vb</FileName>
       <HashCode>AAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAg=</HashCode>
     </TypeIdentifier>
   </Interface>
-  <Interface Name="Tva.Phasors.IChannelValue(Of T)">
+  <Interface Name="TVA.Phasors.IChannelValue(Of T)">
     <Position X="42" Y="3" Width="3" />
     <TypeIdentifier>
       <FileName>IChannelValue.vb</FileName>
       <HashCode>AABAAIAAAAAACAAAAAAAQAAAAAAgAAIAAAAQAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Interface>
-  <Interface Name="Tva.Phasors.ICommandCell">
+  <Interface Name="TVA.Phasors.ICommandCell">
     <Position X="52.5" Y="5.25" Width="2" />
     <TypeIdentifier>
       <FileName>ICommandCell.vb</FileName>
       <HashCode>AAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAEAAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Interface>
-  <Interface Name="Tva.Phasors.ICommandFrame">
+  <Interface Name="TVA.Phasors.ICommandFrame">
     <Position X="5.75" Y="5.75" Width="2.25" />
     <TypeIdentifier>
       <FileName>ICommandFrame.vb</FileName>
       <HashCode>AAAAAAAAAQAAAAAAAAIABAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Interface>
-  <Interface Name="Tva.Phasors.ICommandFrameParsingState">
+  <Interface Name="TVA.Phasors.ICommandFrameParsingState">
     <Position X="4.25" Y="28" Width="2.5" />
     <TypeIdentifier>
       <FileName>ICommandFrameParsingState.vb</FileName>
       <HashCode>AAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Interface>
-  <Interface Name="Tva.Phasors.IConfigurationCell">
+  <Interface Name="TVA.Phasors.IConfigurationCell">
     <Position X="55.25" Y="5.25" Width="3" />
     <TypeIdentifier>
       <FileName>IConfigurationCell.vb</FileName>
       <HashCode>QAAAIAAAAAAAAAIAAQIQQAAAAAAAIAABAiBDAAAAAgA=</HashCode>
     </TypeIdentifier>
   </Interface>
-  <Interface Name="Tva.Phasors.IConfigurationCellParsingState">
+  <Interface Name="TVA.Phasors.IConfigurationCellParsingState">
     <Position X="14.25" Y="27.5" Width="6.25" />
     <TypeIdentifier>
       <FileName>IConfigurationCellParsingState.vb</FileName>
       <HashCode>EAAAAAAAAAAAAAAEAAAAAAAMAAAAAAAAAAAAAAAAAAA=</HashCode>
     </TypeIdentifier>
     <NestedTypes>
-      <Delegate Name="Tva.Phasors.IConfigurationCellParsingState.CreateNewDefinitionFunctionSignature(Of T)" Collapsed="true">
+      <Delegate Name="TVA.Phasors.IConfigurationCellParsingState.CreateNewDefinitionFunctionSignature(Of T)" Collapsed="true">
         <TypeIdentifier>
           <NewMemberFileName>IConfigurationCellParsingState.vb</NewMemberFileName>
         </TypeIdentifier>
       </Delegate>
     </NestedTypes>
   </Interface>
-  <Interface Name="Tva.Phasors.IConfigurationFrame">
+  <Interface Name="TVA.Phasors.IConfigurationFrame">
     <Position X="2" Y="5.75" Width="3" />
     <TypeIdentifier>
       <FileName>IConfigurationFrame.vb</FileName>
       <HashCode>AAAAAAAAAAAQAAAAAAIAAAAAAAAAAAAAACAAAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Interface>
-  <Interface Name="Tva.Phasors.IConfigurationFrameParsingState">
+  <Interface Name="TVA.Phasors.IConfigurationFrameParsingState">
     <Position X="10.75" Y="28" Width="2.75" />
     <TypeIdentifier>
       <FileName>IConfigurationFrameParsingState.vb</FileName>
       <HashCode>AAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Interface>
-  <Interface Name="Tva.Phasors.IDataCell">
+  <Interface Name="TVA.Phasors.IDataCell">
     <Position X="59" Y="5.25" Width="2.75" />
     <TypeIdentifier>
       <FileName>IDataCell.vb</FileName>
       <HashCode>AAkAAAAAAAAIAAAAAAAAQAAAABIAAEAAAEAAAAAEAAA=</HashCode>
     </TypeIdentifier>
   </Interface>
-  <Interface Name="Tva.Phasors.IDataCellParsingState">
+  <Interface Name="TVA.Phasors.IDataCellParsingState">
     <Position X="21.25" Y="27.5" Width="6.75" />
     <TypeIdentifier>
       <FileName>IDataCellParsingState.vb</FileName>
       <HashCode>AAAAAAAAAQAQAAAAAgAAAAAAAIAAAAAAAAAAAAAEAAA=</HashCode>
     </TypeIdentifier>
     <NestedTypes>
-      <Delegate Name="Tva.Phasors.IDataCellParsingState.CreateNewValueFunctionSignature(Of TDefinition, TValue)" Collapsed="true">
+      <Delegate Name="TVA.Phasors.IDataCellParsingState.CreateNewValueFunctionSignature(Of TDefinition, TValue)" Collapsed="true">
         <TypeIdentifier>
           <NewMemberFileName>IDataCellParsingState.vb</NewMemberFileName>
         </TypeIdentifier>
       </Delegate>
     </NestedTypes>
   </Interface>
-  <Interface Name="Tva.Phasors.IDataFrame">
+  <Interface Name="TVA.Phasors.IDataFrame">
     <Position X="19.75" Y="5.75" Width="3" />
     <TypeIdentifier>
       <FileName>IDataFrame.vb</FileName>
       <HashCode>AAAAAAAAAAAAAAgAAAIAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Interface>
-  <Interface Name="Tva.Phasors.IDataFrameParsingState">
+  <Interface Name="TVA.Phasors.IDataFrameParsingState">
     <Position X="0.5" Y="28" Width="3" />
     <TypeIdentifier>
       <FileName>IDataFrameParsingState.vb</FileName>
       <HashCode>AAAAAAAAAAAAAAgAAAIAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Interface>
-  <Interface Name="Tva.Phasors.IDigitalDefinition">
+  <Interface Name="TVA.Phasors.IDigitalDefinition">
     <Position X="26.75" Y="6.5" Width="1.5" />
     <TypeIdentifier>
       <FileName>IDigitalDefinition.vb</FileName>
       <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Interface>
-  <Interface Name="Tva.Phasors.IDigitalValue">
+  <Interface Name="TVA.Phasors.IDigitalValue">
     <Position X="37.75" Y="5.75" Width="2" />
     <TypeIdentifier>
       <FileName>IDigitalValue.vb</FileName>
       <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Interface>
-  <Interface Name="Tva.Phasors.IFrameParser" Collapsed="true">
+  <Interface Name="TVA.Phasors.IFrameParser" Collapsed="true">
     <Position X="351.75" Y="2.75" Width="1.5" />
     <TypeIdentifier>
       <FileName>IFrameParser.vb</FileName>
       <HashCode>AAAIAAEkACAAAIgAAAAAAAABAgAAAAAAIEACAAkABAg=</HashCode>
     </TypeIdentifier>
   </Interface>
-  <Interface Name="Tva.Phasors.IFrequencyDefinition">
+  <Interface Name="TVA.Phasors.IFrequencyDefinition">
     <Position X="23.5" Y="6.5" Width="2.5" />
     <TypeIdentifier>
       <FileName>IFrequencyDefinition.vb</FileName>
       <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAEBAAAABAAAAAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Interface>
-  <Interface Name="Tva.Phasors.IFrequencyValue">
+  <Interface Name="TVA.Phasors.IFrequencyValue">
     <Position X="40.5" Y="5.75" Width="2.25" />
     <TypeIdentifier>
       <FileName>IFrequencyValue.vb</FileName>
       <HashCode>AAAAAAAAAAAAAAAAAAAASAAAAJAAAAAAAAAAAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Interface>
-  <Interface Name="Tva.Phasors.IHeaderCell">
+  <Interface Name="TVA.Phasors.IHeaderCell">
     <Position X="49.75" Y="5.25" Width="2" />
     <TypeIdentifier>
       <FileName>IHeaderCell.vb</FileName>
       <HashCode>AAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAACAA=</HashCode>
     </TypeIdentifier>
   </Interface>
-  <Interface Name="Tva.Phasors.IHeaderFrame">
+  <Interface Name="TVA.Phasors.IHeaderFrame">
     <Position X="12.75" Y="5.75" Width="2" />
     <TypeIdentifier>
       <FileName>IHeaderFrame.vb</FileName>
       <HashCode>AAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAQAAAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Interface>
-  <Interface Name="Tva.Phasors.IHeaderFrameParsingState">
+  <Interface Name="TVA.Phasors.IHeaderFrameParsingState">
     <Position X="7.5" Y="28" Width="2.5" />
     <TypeIdentifier>
       <FileName>IHeaderFrameParsingState.vb</FileName>
       <HashCode>AAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Interface>
-  <Interface Name="Tva.Phasors.IPhasorDefinition">
+  <Interface Name="TVA.Phasors.IPhasorDefinition">
     <Position X="31.25" Y="6.5" Width="2.75" />
     <TypeIdentifier>
       <FileName>IPhasorDefinition.vb</FileName>
       <HashCode>AAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAQAAQAAAAAA=</HashCode>
     </TypeIdentifier>
   </Interface>
-  <Interface Name="Tva.Phasors.IPhasorValue">
+  <Interface Name="TVA.Phasors.IPhasorValue">
     <Position X="46.25" Y="5.75" Width="2.75" />
     <TypeIdentifier>
       <FileName>IPhasorValue.vb</FileName>
       <HashCode>AAAAAAQAAAAAIIAAAAAAACAAAAAAAAAAAUEAAAEAAAA=</HashCode>
     </TypeIdentifier>
   </Interface>
-  <Interface Name="Tva.Phasors.Ieee1344.ICommonFrameHeader">
+  <Interface Name="TVA.Phasors.Ieee1344.ICommonFrameHeader">
     <Position X="8.75" Y="5.75" Width="3.25" />
     <TypeIdentifier>
       <FileName>Ieee1344\ICommonFrameHeader.vb</FileName>
       <HashCode>CAAAABAAAAAAAAAAQCACAAAAEAAAAACAAAAAAAAAIAA=</HashCode>
     </TypeIdentifier>
   </Interface>
-  <Interface Name="Tva.Phasors.IeeeC37_118.ICommonFrameHeader">
+  <Interface Name="TVA.Phasors.IeeeC37_118.ICommonFrameHeader">
     <Position X="15.5" Y="5.75" Width="3.5" />
     <TypeIdentifier>
       <FileName>IeeeC37_118\ICommonFrameHeader.vb</FileName>
       <HashCode>LAAIAAAAIAAAAAAAACAAAAgAAAAAAACAAABAAAgAAAA=</HashCode>
     </TypeIdentifier>
   </Interface>
-  <Enum Name="Tva.Phasors.CoordinateFormat" Collapsed="true">
+  <Enum Name="TVA.Phasors.CoordinateFormat" Collapsed="true">
     <Position X="358.75" Y="3.75" Width="1.5" />
     <TypeIdentifier>
       <FileName>Enumerations.vb</FileName>
       <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAIAAAAAA=</HashCode>
     </TypeIdentifier>
   </Enum>
-  <Enum Name="Tva.Phasors.CompositePhasorValue" Collapsed="true">
+  <Enum Name="TVA.Phasors.CompositePhasorValue" Collapsed="true">
     <Position X="357" Y="3.75" Width="1.5" />
     <TypeIdentifier>
       <FileName>Enumerations.vb</FileName>
       <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAEAAAA=</HashCode>
     </TypeIdentifier>
   </Enum>
-  <Enum Name="Tva.Phasors.CompositeFrequencyValue" Collapsed="true">
+  <Enum Name="TVA.Phasors.CompositeFrequencyValue" Collapsed="true">
     <Position X="355.25" Y="3.75" Width="1.5" />
     <TypeIdentifier>
       <FileName>Enumerations.vb</FileName>
       <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAJAAAAAAAAAAAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Enum>
-  <Enum Name="Tva.Phasors.PhasorType" Collapsed="true">
+  <Enum Name="TVA.Phasors.PhasorType" Collapsed="true">
     <Position X="357" Y="5.25" Width="1.5" />
     <TypeIdentifier>
       <FileName>Enumerations.vb</FileName>
       <HashCode>AAAAAAAAAAAAAAAAgACAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Enum>
-  <Enum Name="Tva.Phasors.DataFormat" Collapsed="true">
+  <Enum Name="TVA.Phasors.DataFormat" Collapsed="true">
     <Position X="360.5" Y="3.75" Width="1.5" />
     <TypeIdentifier>
       <FileName>Enumerations.vb</FileName>
       <HashCode>AAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAA=</HashCode>
     </TypeIdentifier>
   </Enum>
-  <Enum Name="Tva.Phasors.LineFrequency" Collapsed="true">
+  <Enum Name="TVA.Phasors.LineFrequency" Collapsed="true">
     <Position X="353.5" Y="5.25" Width="1.5" />
     <TypeIdentifier>
       <FileName>Enumerations.vb</FileName>
       <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Enum>
-  <Enum Name="Tva.Phasors.FundamentalFrameType" Collapsed="true">
+  <Enum Name="TVA.Phasors.FundamentalFrameType" Collapsed="true">
     <Position X="360.5" Y="4.5" Width="1.5" />
     <TypeIdentifier>
       <FileName>Enumerations.vb</FileName>
       <HashCode>AAAAAAAAAAAQAAgAAAAQAABAAAAAAAAAEAAAAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Enum>
-  <Enum Name="Tva.Phasors.PhasorProtocol" Collapsed="true">
+  <Enum Name="TVA.Phasors.PhasorProtocol" Collapsed="true">
     <Position X="355.25" Y="5.25" Width="1.5" />
     <TypeIdentifier>
       <FileName>Enumerations.vb</FileName>
       <HashCode>AAAAAAAIAAAABAAAAEAIAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Enum>
-  <Enum Name="Tva.Phasors.DeviceCommand" Collapsed="true">
+  <Enum Name="TVA.Phasors.DeviceCommand" Collapsed="true">
     <Position X="351.75" Y="4.5" Width="1.5" />
     <TypeIdentifier>
       <FileName>Enumerations.vb</FileName>
       <HashCode>EAAAAAAAAAAAIAAAAgAIAQAAACAAAAAAAAAAAAAAEAA=</HashCode>
     </TypeIdentifier>
   </Enum>
-  <Enum Name="Tva.Phasors.BpaPdcStream.StreamType" Collapsed="true">
+  <Enum Name="TVA.Phasors.BpaPdcStream.StreamType" Collapsed="true">
     <Position X="355.25" Y="6" Width="1.5" />
     <TypeIdentifier>
       <FileName>BpaPdcStream\Enumerations.vb</FileName>
       <HashCode>AAAAAAAAAAAAAgAAAAAAAAAAAAAAAAAAAAAAAIAAAAA=</HashCode>
     </TypeIdentifier>
   </Enum>
-  <Enum Name="Tva.Phasors.BpaPdcStream.RevisionNumber" Collapsed="true">
+  <Enum Name="TVA.Phasors.BpaPdcStream.RevisionNumber" Collapsed="true">
     <Position X="351.75" Y="6" Width="1.5" />
     <TypeIdentifier>
       <FileName>BpaPdcStream\Enumerations.vb</FileName>
       <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Enum>
-  <Enum Name="Tva.Phasors.BpaPdcStream.ChannelFlags" Collapsed="true">
+  <Enum Name="TVA.Phasors.BpaPdcStream.ChannelFlags" Collapsed="true">
     <Position X="353.5" Y="3.75" Width="1.5" />
     <TypeIdentifier>
       <FileName>BpaPdcStream\Enumerations.vb</FileName>
       <HashCode>ABAAAAAgAAAABCAAAAEAAAAAQAIAAAAAAAAAAAIAAAA=</HashCode>
     </TypeIdentifier>
   </Enum>
-  <Enum Name="Tva.Phasors.BpaPdcStream.ReservedFlags" Collapsed="true">
+  <Enum Name="TVA.Phasors.BpaPdcStream.ReservedFlags" Collapsed="true">
     <Position X="360.5" Y="5.25" Width="1.5" />
     <TypeIdentifier>
       <FileName>BpaPdcStream\Enumerations.vb</FileName>
       <HashCode>AAAAAAAAAAgAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Enum>
-  <Enum Name="Tva.Phasors.BpaPdcStream.IEEEFormatFlags" Collapsed="true">
+  <Enum Name="TVA.Phasors.BpaPdcStream.IEEEFormatFlags" Collapsed="true">
     <Position X="351.75" Y="5.25" Width="1.5" />
     <TypeIdentifier>
       <FileName>BpaPdcStream\Enumerations.vb</FileName>
       <HashCode>AAAAABAAAAAAAAAAAgAAAAQAIIAAAAAAAAAAAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Enum>
-  <Enum Name="Tva.Phasors.BpaPdcStream.PMUStatusFlags" Collapsed="true">
+  <Enum Name="TVA.Phasors.BpaPdcStream.PMUStatusFlags" Collapsed="true">
     <Position X="358.75" Y="5.25" Width="1.5" />
     <TypeIdentifier>
       <FileName>BpaPdcStream\Enumerations.vb</FileName>
       <HashCode>AAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAAAAAAQ=</HashCode>
     </TypeIdentifier>
   </Enum>
-  <Enum Name="Tva.Phasors.Ieee1344.FrameType" Collapsed="true">
+  <Enum Name="TVA.Phasors.Ieee1344.FrameType" Collapsed="true">
     <Position X="357" Y="4.5" Width="1.5" />
     <TypeIdentifier>
       <FileName>Ieee1344\Enumerations.vb</FileName>
       <HashCode>AAAAAAAAAAgAAAgAEAAQAAAAAAAAAAAAEAAAAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Enum>
-  <Enum Name="Tva.Phasors.Ieee1344.TriggerStatus" Collapsed="true">
+  <Enum Name="TVA.Phasors.Ieee1344.TriggerStatus" Collapsed="true">
     <Position X="351.75" Y="6.75" Width="1.5" />
     <TypeIdentifier>
       <FileName>Ieee1344\Enumerations.vb</FileName>
       <HashCode>AAAAAAAAgACAAgAgEAAAgAAAAAAAAAAgAAAAAAAgAAA=</HashCode>
     </TypeIdentifier>
   </Enum>
-  <Enum Name="Tva.Phasors.IeeeC37_118.DraftRevision" Collapsed="true">
+  <Enum Name="TVA.Phasors.IeeeC37_118.DraftRevision" Collapsed="true">
     <Position X="353.5" Y="4.5" Width="1.5" />
     <TypeIdentifier>
       <FileName>IeeeC37_118\Enumerations.vb</FileName>
       <HashCode>AAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Enum>
-  <Enum Name="Tva.Phasors.IeeeC37_118.FormatFlags" Collapsed="true">
+  <Enum Name="TVA.Phasors.IeeeC37_118.FormatFlags" Collapsed="true">
     <Position X="355.25" Y="4.5" Width="1.5" />
     <TypeIdentifier>
       <FileName>IeeeC37_118\Enumerations.vb</FileName>
       <HashCode>AAAAABAAAQAAAAAAAgAAAAAAIIAAAAAAAAAAAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Enum>
-  <Enum Name="Tva.Phasors.IeeeC37_118.TimeQualityFlags" Collapsed="true">
+  <Enum Name="TVA.Phasors.IeeeC37_118.TimeQualityFlags" Collapsed="true">
     <Position X="357" Y="6" Width="1.5" />
     <TypeIdentifier>
       <FileName>IeeeC37_118\Enumerations.vb</FileName>
       <HashCode>RAAAAAAAgAgAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Enum>
-  <Enum Name="Tva.Phasors.IeeeC37_118.TimeQualityIndicatorCode" Collapsed="true">
+  <Enum Name="TVA.Phasors.IeeeC37_118.TimeQualityIndicatorCode" Collapsed="true">
     <Position X="358.75" Y="6" Width="1.5" />
     <TypeIdentifier>
       <FileName>IeeeC37_118\Enumerations.vb</FileName>
       <HashCode>AAAAAAQggAAAAIAAAAJAAAQAAAAAAICAAAIAAAACAEA=</HashCode>
     </TypeIdentifier>
   </Enum>
-  <Enum Name="Tva.Phasors.IeeeC37_118.FrameType" Collapsed="true">
+  <Enum Name="TVA.Phasors.IeeeC37_118.FrameType" Collapsed="true">
     <Position X="358.75" Y="4.5" Width="1.5" />
     <TypeIdentifier>
       <FileName>IeeeC37_118\Enumerations.vb</FileName>
       <HashCode>AAAAAAAAAAgAAAIAAAAQAABAAAAkAAAAEAAAAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Enum>
-  <Enum Name="Tva.Phasors.IeeeC37_118.StatusFlags" Collapsed="true">
+  <Enum Name="TVA.Phasors.IeeeC37_118.StatusFlags" Collapsed="true">
     <Position X="353.5" Y="6" Width="1.5" />
     <TypeIdentifier>
       <FileName>IeeeC37_118\Enumerations.vb</FileName>
       <HashCode>AAAgAAEAAAAAAAAAgACgAAAAAgIAAAEIAAAAAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Enum>
-  <Enum Name="Tva.Phasors.IeeeC37_118.UnlockedTime" Collapsed="true">
+  <Enum Name="TVA.Phasors.IeeeC37_118.UnlockedTime" Collapsed="true">
     <Position X="353.5" Y="6.75" Width="1.5" />
     <TypeIdentifier>
       <FileName>IeeeC37_118\Enumerations.vb</FileName>
       <HashCode>AAAAAgAAAAIAAAAAAAAAAAAAAAAAAAAAAAAACAACAAA=</HashCode>
     </TypeIdentifier>
   </Enum>
-  <Enum Name="Tva.Phasors.IeeeC37_118.TriggerReason" Collapsed="true">
+  <Enum Name="TVA.Phasors.IeeeC37_118.TriggerReason" Collapsed="true">
     <Position X="360.5" Y="6" Width="1.5" />
     <TypeIdentifier>
       <FileName>IeeeC37_118\Enumerations.vb</FileName>
       <HashCode>AAAAEAAAQIgAAAAgAAAAAQAgIAAAAAAIAAAAAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Enum>
-  <Enum Name="Tva.Phasors.IeeeC37_118.AnalogType" Collapsed="true">
+  <Enum Name="TVA.Phasors.IeeeC37_118.AnalogType" Collapsed="true">
     <Position X="351.75" Y="3.75" Width="1.5" />
     <TypeIdentifier>
       <FileName>IeeeC37_118\Enumerations.vb</FileName>

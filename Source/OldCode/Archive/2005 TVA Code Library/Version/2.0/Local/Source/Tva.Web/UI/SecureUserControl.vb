@@ -1,7 +1,7 @@
 ' 12/14/2006
 
 Imports System.ComponentModel
-Imports Tva.Security.Application
+Imports TVA.Security.Application
 
 Namespace UI
 
@@ -37,7 +37,7 @@ Namespace UI
 #Region " Public Code "
 
         ''' <summary>
-        ''' Initializes a new instance of Tva.Web.UI.SecureUserControl class.
+        ''' Initializes a new instance of TVA.Web.UI.SecureUserControl class.
         ''' </summary>
         Public Sub New()
 
@@ -46,7 +46,7 @@ Namespace UI
         End Sub
 
         ''' <summary>
-        ''' Initializes a new instance of Tva.Web.UI.SecurePage class.
+        ''' Initializes a new instance of TVA.Web.UI.SecurePage class.
         ''' </summary>
         ''' <param name="applicationName">Name of the application as in the security database.</param>
         Public Sub New(ByVal applicationName As String)
@@ -56,10 +56,10 @@ Namespace UI
         End Sub
 
         ''' <summary>
-        ''' Initializes a new instance of Tva.Web.UI.SecureUserControl class.
+        ''' Initializes a new instance of TVA.Web.UI.SecureUserControl class.
         ''' </summary>
         ''' <param name="applicationName">Name of the application as in the security database.</param>
-        ''' <param name="securityServer">One of the Tva.Security.Application.SecurityServer values.</param>
+        ''' <param name="securityServer">One of the TVA.Security.Application.SecurityServer values.</param>
         Public Sub New(ByVal applicationName As String, ByVal securityServer As SecurityServer)
 
             MyClass.New(applicationName, securityServer, True)
@@ -67,10 +67,10 @@ Namespace UI
         End Sub
 
         ''' <summary>
-        ''' Initializes a new instance of Tva.Web.UI.SecureUserControl class.
+        ''' Initializes a new instance of TVA.Web.UI.SecureUserControl class.
         ''' </summary>
         ''' <param name="applicationName">Name of the application as in the security database.</param>
-        ''' <param name="securityServer">One of the Tva.Security.Application.SecurityServer values.</param>
+        ''' <param name="securityServer">One of the TVA.Security.Application.SecurityServer values.</param>
         ''' <param name="enableCaching">
         ''' Boolean value indicating whether the current user's information is to be cached upon successful login 
         ''' for improved performance.
@@ -85,10 +85,10 @@ Namespace UI
         End Sub
 
         ''' <summary>
-        ''' Gets the Tva.Security.Application.WebSecurityProvider component that handles the security.
+        ''' Gets the TVA.Security.Application.WebSecurityProvider component that handles the security.
         ''' </summary>
         ''' <value></value>
-        ''' <returns>The Tva.Security.Application.WebSecurityProvider component.</returns>
+        ''' <returns>The TVA.Security.Application.WebSecurityProvider component.</returns>
         <Browsable(False)> _
         Public ReadOnly Property SecurityProvider() As WebSecurityProvider
             Get
@@ -101,7 +101,7 @@ Namespace UI
 #Region " Protected Code "
 
         ''' <summary>
-        ''' Raises the Tva.Web.UI.SecureUserControl.LoginSuccessful event.
+        ''' Raises the TVA.Web.UI.SecureUserControl.LoginSuccessful event.
         ''' </summary>
         ''' <param name="e">A System.ComponentModel.CancelEventArgs that contains the event data.</param>
         ''' <remarks>
@@ -115,7 +115,7 @@ Namespace UI
         End Sub
 
         ''' <summary>
-        ''' Raises the Tva.Web.UI.SecureUserControl.LoginUnsuccessful event.
+        ''' Raises the TVA.Web.UI.SecureUserControl.LoginUnsuccessful event.
         ''' </summary>
         ''' <param name="e">A System.ComponentModel.CancelEventArgs that contains the event data.</param>
         ''' <remarks>

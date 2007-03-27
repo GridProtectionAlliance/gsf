@@ -26,7 +26,7 @@ using namespace System::Runtime::InteropServices;
 String* CharBufferToString(const char* str);
 char* StringToCharBuffer(String* gcStr);
 
-namespace Tva
+namespace TVA
 {
 	namespace IO
 	{

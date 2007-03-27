@@ -15,7 +15,7 @@
 '
 '*******************************************************************************************************
 
-Imports Tva.Measurements
+Imports TVA.Measurements
 
 ''' <summary>This interface represents the protocol independent representation of a set of phasor related data values.</summary>
 <CLSCompliant(False)> _

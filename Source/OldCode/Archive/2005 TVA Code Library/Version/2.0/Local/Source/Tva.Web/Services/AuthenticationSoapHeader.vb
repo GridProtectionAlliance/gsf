@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  Tva.Web.Services.AuthenticationSoapHeader.vb - Soap header used for authentication
+'  TVA.Web.Services.AuthenticationSoapHeader.vb - Soap header used for authentication
 '  Copyright © 2006 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005
@@ -17,7 +17,7 @@
 
 Imports System.Xml.Serialization
 Imports System.Web.Services.Protocols
-Imports Tva.Security.Application
+Imports TVA.Security.Application
 
 Namespace Services
 

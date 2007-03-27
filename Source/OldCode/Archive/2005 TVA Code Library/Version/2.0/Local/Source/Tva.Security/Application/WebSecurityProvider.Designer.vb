@@ -3,7 +3,7 @@
 Namespace Application
 
     Partial Class WebSecurityProvider
-        Inherits Tva.Security.Application.SecurityProviderBase
+        Inherits TVA.Security.Application.SecurityProviderBase
 
         <System.Diagnostics.DebuggerNonUserCode()> _
         Public Sub New(ByVal Container As System.ComponentModel.IContainer)

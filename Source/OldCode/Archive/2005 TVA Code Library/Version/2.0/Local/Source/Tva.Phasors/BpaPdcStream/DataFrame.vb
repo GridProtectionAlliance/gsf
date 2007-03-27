@@ -18,10 +18,10 @@
 Imports System.Runtime.Serialization
 Imports System.Buffer
 Imports System.Text
-Imports Tva.DateTime.Common
-Imports Tva.Math.Common
-Imports Tva.Phasors.Common
-Imports Tva.Phasors.BpaPdcStream.Common
+Imports TVA.DateTime.Common
+Imports TVA.Math.Common
+Imports TVA.Phasors.Common
+Imports TVA.Phasors.BpaPdcStream.Common
 
 Namespace BpaPdcStream
 

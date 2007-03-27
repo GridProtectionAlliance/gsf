@@ -6,7 +6,7 @@ Imports System.Drawing
 
 ' This FTP library is based on a similar C# library found on "The Code Project" web site written by
 ' Uwe Keim of Germany.  It was translated into VB with most of classes being renamed (removed Ftp prefix)
-' and the namespace was changed to Tva.Ftp. Many bug fixes, additions and modifications have been made to
+' and the namespace was changed to TVA.Ftp. Many bug fixes, additions and modifications have been made to
 ' this code as well as extensive testing.  Note worthy changes:  converted the C# delegates to standard
 ' .NET events for ease of use, made the library work with IIS based FTP servers that were in Unix mode,
 ' added detailed file system information for FTP files and directories (size, timestamp, etc), coverted

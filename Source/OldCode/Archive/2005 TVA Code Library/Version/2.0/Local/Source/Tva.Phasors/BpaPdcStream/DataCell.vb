@@ -16,7 +16,7 @@
 '*******************************************************************************************************
 
 Imports System.Runtime.Serialization
-Imports Tva.Phasors.BpaPdcStream.Common
+Imports TVA.Phasors.BpaPdcStream.Common
 
 Namespace BpaPdcStream
 

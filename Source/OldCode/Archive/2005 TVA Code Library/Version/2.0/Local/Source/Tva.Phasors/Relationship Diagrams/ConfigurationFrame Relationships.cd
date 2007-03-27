@@ -16,7 +16,7 @@
   <Comment CommentText="  Virginia Tech FNET">
     <Position X="8.25" Y="1.75" Height="0.263" Width="1.242" />
   </Comment>
-  <Class Name="Tva.Phasors.ConfigurationFrameBase">
+  <Class Name="TVA.Phasors.ConfigurationFrameBase">
     <Position X="5.5" Y="1.25" Width="2.25" />
     <TypeIdentifier>
       <FileName>ConfigurationFrameBase.vb</FileName>
@@ -24,7 +24,7 @@
     </TypeIdentifier>
     <Lollipop Position="0.2" />
   </Class>
-  <Class Name="Tva.Phasors.ChannelFrameBase(Of T)">
+  <Class Name="TVA.Phasors.ChannelFrameBase(Of T)">
     <Position X="3.25" Y="0.5" Width="2" />
     <TypeIdentifier>
       <FileName>ChannelFrameBase.vb</FileName>
@@ -32,7 +32,7 @@
     </TypeIdentifier>
     <Lollipop Position="0.2" />
   </Class>
-  <Class Name="Tva.Phasors.ChannelBase">
+  <Class Name="TVA.Phasors.ChannelBase">
     <Position X="0.5" Y="0.5" Width="2.5" />
     <TypeIdentifier>
       <FileName>ChannelBase.vb</FileName>
@@ -40,13 +40,13 @@
     </TypeIdentifier>
     <Lollipop Position="0.2" />
   </Class>
-  <Class Name="Tva.Phasors.BpaPdcStream.ConfigurationFrame">
+  <Class Name="TVA.Phasors.BpaPdcStream.ConfigurationFrame">
     <Position X="14.5" Y="2.5" Width="2" />
     <TypeIdentifier>
       <FileName>BpaPdcStream\ConfigurationFrame.vb</FileName>
       <HashCode>iAUIYAEoAABIEADEAKoJCBA1AAmBAACAIAAABAAjIgA=</HashCode>
     </TypeIdentifier>
-    <InheritanceLine Type="Tva.Phasors.ConfigurationFrameBase" FixedFromPoint="true" FixedToPoint="true">
+    <InheritanceLine Type="TVA.Phasors.ConfigurationFrameBase" FixedFromPoint="true" FixedToPoint="true">
       <Path>
         <Point X="7.75" Y="1.438" />
         <Point X="15.583" Y="1.438" />
@@ -55,13 +55,13 @@
     </InheritanceLine>
     <Lollipop Position="0.2" />
   </Class>
-  <Class Name="Tva.Phasors.Ieee1344.ConfigurationFrame">
+  <Class Name="TVA.Phasors.Ieee1344.ConfigurationFrame">
     <Position X="10" Y="2.5" Width="1.75" />
     <TypeIdentifier>
       <FileName>Ieee1344\ConfigurationFrame.vb</FileName>
       <HashCode>CAEAABAAAAAAUAAEQCIKAAAxEAAAAACBEAgAAAAAIAI=</HashCode>
     </TypeIdentifier>
-    <InheritanceLine Type="Tva.Phasors.ConfigurationFrameBase" FixedFromPoint="true" FixedToPoint="true">
+    <InheritanceLine Type="TVA.Phasors.ConfigurationFrameBase" FixedFromPoint="true" FixedToPoint="true">
       <Path>
         <Point X="7.75" Y="1.438" />
         <Point X="10.802" Y="1.438" />
@@ -70,13 +70,13 @@
     </InheritanceLine>
     <Lollipop Position="0.2" />
   </Class>
-  <Class Name="Tva.Phasors.IeeeC37_118.ConfigurationFrame">
+  <Class Name="TVA.Phasors.IeeeC37_118.ConfigurationFrame">
     <Position X="12" Y="2.5" Width="2.25" />
     <TypeIdentifier>
       <FileName>IeeeC37_118\ConfigurationFrame.vb</FileName>
       <HashCode>LAAIAAIAIAAAQAAEACJYAIgxAAAAAACEEAhAAAgIAAA=</HashCode>
     </TypeIdentifier>
-    <InheritanceLine Type="Tva.Phasors.ConfigurationFrameBase" FixedFromPoint="true">
+    <InheritanceLine Type="TVA.Phasors.ConfigurationFrameBase" FixedFromPoint="true">
       <Path>
         <Point X="7.75" Y="1.438" />
         <Point X="13.125" Y="1.438" />
@@ -85,13 +85,13 @@
     </InheritanceLine>
     <Lollipop Position="0.2" />
   </Class>
-  <Class Name="Tva.Phasors.FNet.ConfigurationFrame">
+  <Class Name="TVA.Phasors.FNet.ConfigurationFrame">
     <Position X="8" Y="2.5" Width="1.75" />
     <TypeIdentifier>
       <FileName>FNet\ConfigurationFrame.vb</FileName>
       <HashCode>AAAAAAAAAEAAAAAAAAIIAAAAAAAgAACBAAAAAAAAAAA=</HashCode>
     </TypeIdentifier>
-    <InheritanceLine Type="Tva.Phasors.ConfigurationFrameBase" FixedFromPoint="true" FixedToPoint="true">
+    <InheritanceLine Type="TVA.Phasors.ConfigurationFrameBase" FixedFromPoint="true" FixedToPoint="true">
       <Path>
         <Point X="7.75" Y="1.438" />
         <Point X="8.812" Y="1.438" />
@@ -99,28 +99,28 @@
       </Path>
     </InheritanceLine>
   </Class>
-  <Interface Name="Tva.Phasors.IConfigurationFrame">
+  <Interface Name="TVA.Phasors.IConfigurationFrame">
     <Position X="12" Y="8.75" Width="1.75" />
     <TypeIdentifier>
       <FileName>IConfigurationFrame.vb</FileName>
       <HashCode>AAAAAAAAAAAQAAAAAAIAAAAAAAAQAAAAACAAAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Interface>
-  <Interface Name="Tva.Phasors.IChannelFrame">
+  <Interface Name="TVA.Phasors.IChannelFrame">
     <Position X="9.75" Y="8.75" Width="1.5" />
     <TypeIdentifier>
       <FileName>IChannelFrame.vb</FileName>
       <HashCode>AAAAABAAAAAAAAAAAAIAAAAAAAAAAACgAAAAAAAAIAA=</HashCode>
     </TypeIdentifier>
   </Interface>
-  <Interface Name="Tva.Phasors.IChannel">
+  <Interface Name="TVA.Phasors.IChannel">
     <Position X="7.5" Y="8.75" Width="1.5" />
     <TypeIdentifier>
       <FileName>IChannel.vb</FileName>
       <HashCode>AAAAAAAAAAAoAAAAAAAAAAARAAAAAACAAAEAAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Interface>
-  <Interface Name="Tva.Measurements.IFrame">
+  <Interface Name="TVA.Measurements.IFrame">
     <Position X="6.5" Y="6.5" Width="1.5" />
     <TypeIdentifier />
   </Interface>
@@ -132,7 +132,7 @@
     <Position X="8.25" Y="7" Width="1.5" />
     <TypeIdentifier />
   </Interface>
-  <Interface Name="Tva.IBinaryDataProvider">
+  <Interface Name="TVA.IBinaryDataProvider">
     <Position X="5.25" Y="8.75" Width="1.75" />
     <TypeIdentifier />
   </Interface>

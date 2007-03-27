@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  Tva.Communication.FileClient.Designer.vb - File-based communication client
+'  TVA.Communication.FileClient.Designer.vb - File-based communication client
 '  Copyright © 2006 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005
@@ -16,7 +16,7 @@
 '*******************************************************************************************************
 
 Partial Class FileClient
-    Inherits Tva.Communication.CommunicationClientBase
+    Inherits TVA.Communication.CommunicationClientBase
 
     <System.Diagnostics.DebuggerNonUserCode()> _
     Public Sub New(ByVal Container As System.ComponentModel.IContainer)

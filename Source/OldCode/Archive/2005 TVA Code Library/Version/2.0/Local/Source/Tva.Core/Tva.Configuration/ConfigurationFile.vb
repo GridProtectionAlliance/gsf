@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  Tva.Configuration.ConfigurationFile.vb - Application Configuration File
+'  TVA.Configuration.ConfigurationFile.vb - Application Configuration File
 '  Copyright © 2006 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005
@@ -22,8 +22,8 @@
 Imports System.Xml
 Imports System.Configuration
 Imports System.Web.Configuration
-Imports Tva.Xml.Common
-Imports Tva.IO.FilePath
+Imports TVA.Xml.Common
+Imports TVA.IO.FilePath
 
 Namespace Configuration
 
@@ -36,7 +36,7 @@ Namespace Configuration
         Private m_configuration As System.Configuration.Configuration
 
         Private Const CustomSectionName As String = "categorizedSettings"
-        Private Const CustomSectionType As String = "Tva.Configuration.CategorizedSettingsSection, Tva.Core"
+        Private Const CustomSectionType As String = "TVA.Configuration.CategorizedSettingsSection, TVA.Core"
 
         ''' <summary>
         ''' Specifies the environment of the application to which the configuration file belongs.
@@ -56,7 +56,7 @@ Namespace Configuration
         End Enum
 
         ''' <summary>
-        ''' Initializes a default instance of Tva.Configuration.ConfigurationFile.
+        ''' Initializes a default instance of TVA.Configuration.ConfigurationFile.
         ''' </summary>
         ''' <remarks></remarks>
         Public Sub New()
@@ -64,7 +64,7 @@ Namespace Configuration
         End Sub
 
         ''' <summary>
-        ''' Initializes a instance of Tva.Configuration.ConfigurationFile for the specified configuration file
+        ''' Initializes a instance of TVA.Configuration.ConfigurationFile for the specified configuration file
         ''' that belongs to a windows or web application.
         ''' </summary>
         ''' <param name="configFilePath">Path of the configuration file that belongs to a windows or web application.</param>
@@ -94,10 +94,10 @@ Namespace Configuration
         End Property
 
         ''' <summary>
-        ''' Gets the Tva.Configuration.CategorizedSettingsSection representing the "categorizedSettings" section of the configuration file.
+        ''' Gets the TVA.Configuration.CategorizedSettingsSection representing the "categorizedSettings" section of the configuration file.
         ''' </summary>
         ''' <value></value>
-        ''' <returns>The Tva.Configuration.CategorizedSettingsSection representing the "categorizedSettings" section of the configuration file.</returns>
+        ''' <returns>The TVA.Configuration.CategorizedSettingsSection representing the "categorizedSettings" section of the configuration file.</returns>
         ''' <remarks></remarks>
         Public ReadOnly Property CategorizedSettings() As CategorizedSettingsSection
             Get
@@ -130,10 +130,10 @@ Namespace Configuration
         End Property
 
         ''' <summary>
-        ''' Gets the physical path to the configuration file represented by this Tva.Configuration.Configuration object.
+        ''' Gets the physical path to the configuration file represented by this TVA.Configuration.Configuration object.
         ''' </summary>
         ''' <value></value>
-        ''' <returns>The physical path to the configuration file represented by this Tva.Configuration.ConfigurationFile object.</returns>
+        ''' <returns>The physical path to the configuration file represented by this TVA.Configuration.ConfigurationFile object.</returns>
         ''' <remarks></remarks>
         Public ReadOnly Property FilePath() As String
             Get
@@ -142,7 +142,7 @@ Namespace Configuration
         End Property
 
         ''' <summary>
-        ''' Writes the configuration settings contained within this Tva.Configuration.ConfigurationFile object 
+        ''' Writes the configuration settings contained within this TVA.Configuration.ConfigurationFile object 
         ''' to the configuration file that it represents.
         ''' </summary>
         ''' <remarks></remarks>
@@ -153,7 +153,7 @@ Namespace Configuration
         End Sub
 
         ''' <summary>
-        ''' Writes the configuration settings contained within this Tva.Configuration.ConfigurationFile object 
+        ''' Writes the configuration settings contained within this TVA.Configuration.ConfigurationFile object 
         ''' to the configuration file that it represents.
         ''' </summary>
         ''' <param name="saveMode">A System.Configuration.ConfigurationSaveMode value that determines which property values to save.</param>
@@ -165,7 +165,7 @@ Namespace Configuration
         End Sub
 
         ''' <summary>
-        ''' Writes the configuration settings contained within this Tva.Configuration.ConfigurationFile object 
+        ''' Writes the configuration settings contained within this TVA.Configuration.ConfigurationFile object 
         ''' to the specified configuration file.
         ''' </summary>
         ''' <param name="fileName">The path and file name to save the configuration file to.</param>

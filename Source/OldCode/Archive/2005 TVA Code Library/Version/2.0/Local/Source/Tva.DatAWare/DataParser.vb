@@ -2,9 +2,9 @@ Imports System.IO
 Imports System.Drawing
 Imports System.Reflection
 Imports System.ComponentModel
-Imports Tva.IO
-Imports Tva.Collections
-Imports Tva.DatAWare.Packets
+Imports TVA.IO
+Imports TVA.Collections
+Imports TVA.DatAWare.Packets
 
 <ToolboxBitmap(GetType(DataParser)), DefaultEvent("DataParsed")> _
 Public Class DataParser
@@ -41,13 +41,13 @@ Public Class DataParser
     Public Sub Start()
 
         ' We'll scan all of the assemblies and keep a cached list of all available packet types.
-        Dim binDirectory As String = FilePath.JustPath(Tva.Assembly.EntryAssembly.Location)
+        Dim binDirectory As String = FilePath.JustPath(TVA.Assembly.EntryAssembly.Location)
         For Each dll As String In Directory.GetFiles(binDirectory, "*.dll")
             Try
                 Dim asm As Reflection.Assembly = Reflection.Assembly.LoadFrom(dll)
                 For Each asmType As Type In asm.GetTypes()
                     If Not asmType.IsAbstract AndAlso _
-                            asmType.GetInterface("Tva.DatAWare.Packets.IPacket", True) IsNot Nothing Then
+                            asmType.GetInterface("TVA.DatAWare.Packets.IPacket", True) IsNot Nothing Then
                         ' We need to cache this type since it implements the IPacket interface.
                         Dim typeInfo As New PacketTypeInfo()
 

@@ -59,7 +59,7 @@ Namespace Interop
 
         Public ReadOnly Property BinaryImage() As Byte() Implements IBinaryDataProvider.BinaryImage
             Get
-                Dim image As Byte() = Tva.Common.CreateArray(Of Byte)(Me.BinaryLength)
+                Dim image As Byte() = TVA.Common.CreateArray(Of Byte)(Me.BinaryLength)
 
                 Array.Copy(BitConverter.GetBytes(m_arrayDimensionDescriptors.Count), 0, image, 0, 2)
                 For i As Integer = 0 To m_arrayDimensionDescriptors.Count - 1

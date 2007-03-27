@@ -1,7 +1,7 @@
 ' 02/18/2007
 
 Imports System.IO
-Imports Tva.Interop
+Imports TVA.Interop
 
 Namespace Files
 

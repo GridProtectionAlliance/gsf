@@ -16,8 +16,8 @@
 '*******************************************************************************************************
 
 Imports System.Runtime.Serialization
-Imports Tva.DateTime
-Imports Tva.Measurements
+Imports TVA.DateTime
+Imports TVA.Measurements
 
 ''' <summary>This interface represents the protocol independent representation of any frame of data.</summary>
 <CLSCompliant(False)> _

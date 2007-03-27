@@ -10,7 +10,7 @@
   <Comment CommentText="  IEEE C37 118">
     <Position X="6.198" Y="4.677" Height="0.263" Width="1.058" />
   </Comment>
-  <Class Name="Tva.Phasors.HeaderFrameBase">
+  <Class Name="TVA.Phasors.HeaderFrameBase">
     <Position X="3.25" Y="2" Width="2" />
     <TypeIdentifier>
       <FileName>HeaderFrameBase.vb</FileName>
@@ -18,7 +18,7 @@
     </TypeIdentifier>
     <Lollipop Position="0.2" />
   </Class>
-  <Class Name="Tva.Phasors.ChannelFrameBase(Of T)">
+  <Class Name="TVA.Phasors.ChannelFrameBase(Of T)">
     <Position X="0.5" Y="0.5" Width="2.25" />
     <TypeIdentifier>
       <FileName>ChannelFrameBase.vb</FileName>
@@ -26,7 +26,7 @@
     </TypeIdentifier>
     <Lollipop Position="0.2" />
   </Class>
-  <Class Name="Tva.Phasors.ChannelBase">
+  <Class Name="TVA.Phasors.ChannelBase">
     <Position X="0.5" Y="7.25" Width="2.25" />
     <TypeIdentifier>
       <FileName>ChannelBase.vb</FileName>
@@ -34,13 +34,13 @@
     </TypeIdentifier>
     <Lollipop Position="0.2" />
   </Class>
-  <Class Name="Tva.Phasors.Ieee1344.HeaderFrame">
+  <Class Name="TVA.Phasors.Ieee1344.HeaderFrame">
     <Position X="3.5" Y="5.25" Width="2" />
     <TypeIdentifier>
       <FileName>Ieee1344\HeaderFrame.vb</FileName>
       <HashCode>CAEAABAAAAAAEAAEQCACIAAxEAAAAACAAAAAAAAAIAA=</HashCode>
     </TypeIdentifier>
-    <InheritanceLine Type="Tva.Phasors.HeaderFrameBase" ManuallyRouted="true">
+    <InheritanceLine Type="TVA.Phasors.HeaderFrameBase" ManuallyRouted="true">
       <Path>
         <Point X="4.25" Y="3.976" />
         <Point X="4.25" Y="4.49" />
@@ -50,13 +50,13 @@
     </InheritanceLine>
     <Lollipop Position="0.2" />
   </Class>
-  <Class Name="Tva.Phasors.IeeeC37_118.HeaderFrame">
+  <Class Name="TVA.Phasors.IeeeC37_118.HeaderFrame">
     <Position X="5.75" Y="5.25" Width="2" />
     <TypeIdentifier>
       <FileName>IeeeC37_118\HeaderFrame.vb</FileName>
       <HashCode>LAAIAAAAIAAAAAAEACAAAIgxAAAAAACAAABAAAgAAAA=</HashCode>
     </TypeIdentifier>
-    <InheritanceLine Type="Tva.Phasors.HeaderFrameBase" ManuallyRouted="true">
+    <InheritanceLine Type="TVA.Phasors.HeaderFrameBase" ManuallyRouted="true">
       <Path>
         <Point X="4.25" Y="3.976" />
         <Point X="4.25" Y="4.5" />
@@ -66,20 +66,20 @@
     </InheritanceLine>
     <Lollipop Position="0.2" />
   </Class>
-  <Interface Name="Tva.Phasors.IHeaderFrame">
+  <Interface Name="TVA.Phasors.IHeaderFrame">
     <Position X="12.5" Y="0.5" Width="1.5" />
     <TypeIdentifier>
       <FileName>IHeaderFrame.vb</FileName>
       <HashCode>AAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAQAAAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Interface>
-  <Interface Name="Tva.Phasors.IChannelFrame">
+  <Interface Name="TVA.Phasors.IChannelFrame">
     <Position X="12.5" Y="2.5" Width="1.5" />
     <TypeIdentifier>
       <FileName>IChannelFrame.vb</FileName>
       <HashCode>AAAAABAAAAAAAAAAAAIAAAAAAAAAAACgAAAAAAAAIAA=</HashCode>
     </TypeIdentifier>
-    <InheritanceLine Type="Tva.Measurements.IFrame" ManuallyRouted="true">
+    <InheritanceLine Type="TVA.Measurements.IFrame" ManuallyRouted="true">
       <Path>
         <Point X="11.25" Y="5.25" />
         <Point X="11.25" Y="5.061" />
@@ -96,14 +96,14 @@
       </Path>
     </InheritanceLine>
   </Interface>
-  <Interface Name="Tva.Phasors.IChannel">
+  <Interface Name="TVA.Phasors.IChannel">
     <Position X="10.5" Y="2" Width="1.5" />
     <TypeIdentifier>
       <FileName>IChannel.vb</FileName>
       <HashCode>AAAAAAAAAAAoAAAAAAAAAAARAAAAAACAAAEAAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Interface>
-  <Interface Name="Tva.Phasors.IChannelCell">
+  <Interface Name="TVA.Phasors.IChannelCell">
     <Position X="8.25" Y="2" Width="1.75" />
     <TypeIdentifier>
       <FileName>IChannelCell.vb</FileName>
@@ -114,11 +114,11 @@
     <Position X="6" Y="2.25" Width="1.5" />
     <TypeIdentifier />
   </Interface>
-  <Interface Name="Tva.Measurements.IFrame">
+  <Interface Name="TVA.Measurements.IFrame">
     <Position X="10.5" Y="5.25" Width="1.5" />
     <TypeIdentifier />
   </Interface>
-  <Interface Name="Tva.IBinaryDataProvider">
+  <Interface Name="TVA.IBinaryDataProvider">
     <Position X="10.25" Y="0.5" Width="2" />
     <TypeIdentifier />
   </Interface>

@@ -17,8 +17,8 @@
 
 Imports System.Runtime.Serialization
 Imports System.Buffer
-Imports Tva.Phasors.Common
-Imports Tva.Measurements
+Imports TVA.Phasors.Common
+Imports TVA.Measurements
 
 ''' <summary>This class represents the protocol independent common implementation of a set of phasor related data values that can be sent or received from a PMU.</summary>
 <CLSCompliant(False), Serializable()> _

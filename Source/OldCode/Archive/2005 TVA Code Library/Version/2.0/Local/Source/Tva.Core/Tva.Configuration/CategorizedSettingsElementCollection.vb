@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  Tva.Configuration.CategorizedSettingsCollection.vb - Categorized Settings Collection
+'  TVA.Configuration.CategorizedSettingsCollection.vb - Categorized Settings Collection
 '  Copyright © 2006 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005
@@ -22,7 +22,7 @@ Imports System.Configuration
 Namespace Configuration
 
     ''' <summary>
-    ''' Represents a configuration element containing a collection of Tva.Configuration.CategorizedSettingsElement 
+    ''' Represents a configuration element containing a collection of TVA.Configuration.CategorizedSettingsElement 
     ''' within a configuration file.
     ''' </summary>
     ''' <remarks></remarks>
@@ -30,11 +30,11 @@ Namespace Configuration
         Inherits ConfigurationElementCollection
 
         ''' <summary>
-        ''' Gets or sets the Tva.Configuration.CategorizedSettingsElement object at the specified index.
+        ''' Gets or sets the TVA.Configuration.CategorizedSettingsElement object at the specified index.
         ''' </summary>
-        ''' <param name="index">The zero-based index of the Tva.Configuration.CategorizedSettingsElement to return.</param>
+        ''' <param name="index">The zero-based index of the TVA.Configuration.CategorizedSettingsElement to return.</param>
         ''' <value></value>
-        ''' <returns>The Tva.Configuration.CategorizedSettingsElement at the specified index; otherwise null.</returns>
+        ''' <returns>The TVA.Configuration.CategorizedSettingsElement at the specified index; otherwise null.</returns>
         ''' <remarks></remarks>
         Default Public Shadows Property Item(ByVal index As Integer) As CategorizedSettingsElement
             Get
@@ -52,11 +52,11 @@ Namespace Configuration
         End Property
 
         ''' <summary>
-        ''' Gets the Tva.Configuration.CategorizedSettingsElement object with the specified name.
+        ''' Gets the TVA.Configuration.CategorizedSettingsElement object with the specified name.
         ''' </summary>
-        ''' <param name="name">The name of the Tva.Configuration.CategorizedSettingsElement to return.</param>
+        ''' <param name="name">The name of the TVA.Configuration.CategorizedSettingsElement to return.</param>
         ''' <value></value>
-        ''' <returns>The Tva.Configuration.CategorizedSettingsElement with the specified name; otherwise null.</returns>
+        ''' <returns>The TVA.Configuration.CategorizedSettingsElement with the specified name; otherwise null.</returns>
         ''' <remarks></remarks>
         Default Public Shadows ReadOnly Property Item(ByVal name As String) As CategorizedSettingsElement
             Get
@@ -65,12 +65,12 @@ Namespace Configuration
         End Property
 
         ''' <summary>
-        ''' Gets the Tva.Configuration.CategorizedSettingsElement object with the specified name.
+        ''' Gets the TVA.Configuration.CategorizedSettingsElement object with the specified name.
         ''' </summary>
-        ''' <param name="name">The name of the Tva.Configuration.CategorizedSettingsElement to return.</param>
+        ''' <param name="name">The name of the TVA.Configuration.CategorizedSettingsElement to return.</param>
         ''' <param name="ensureExistance">True if the setting is to be created if it doesn't exist; otherwise False.</param>
         ''' <value></value>
-        ''' <returns>The Tva.Configuration.CategorizedSettingsElement with the specified name; otherwise null.</returns>
+        ''' <returns>The TVA.Configuration.CategorizedSettingsElement with the specified name; otherwise null.</returns>
         ''' <remarks></remarks>
         Default Public Shadows ReadOnly Property Item(ByVal name As String, ByVal ensureExistance As Boolean) As CategorizedSettingsElement
             Get
@@ -83,10 +83,10 @@ Namespace Configuration
         End Property
 
         ''' <summary>
-        ''' Gets the index of the specified Tva.Configuration.CategorizedSettingsElement.
+        ''' Gets the index of the specified TVA.Configuration.CategorizedSettingsElement.
         ''' </summary>
-        ''' <param name="setting">The Tva.Configuration.CategorizedSettingsElement whose index is to be returned.</param>
-        ''' <returns>The index of the specified Tva.Configuration.CategorizedSettingsElement; otherwise -1.</returns>
+        ''' <param name="setting">The TVA.Configuration.CategorizedSettingsElement whose index is to be returned.</param>
+        ''' <returns>The index of the specified TVA.Configuration.CategorizedSettingsElement; otherwise -1.</returns>
         ''' <remarks></remarks>
         Public Function IndexOf(ByVal setting As CategorizedSettingsElement) As Integer
 
@@ -95,7 +95,7 @@ Namespace Configuration
         End Function
 
         ''' <summary>
-        ''' Adds a Tva.Configuration.CategorizedSettingsElement with the specified name and value string.
+        ''' Adds a TVA.Configuration.CategorizedSettingsElement with the specified name and value string.
         ''' </summary>
         ''' <param name="name">The name string of the element.</param>
         ''' <param name="value">The value string of the element.</param>
@@ -107,7 +107,7 @@ Namespace Configuration
         End Sub
 
         ''' <summary>
-        ''' Adds a Tva.Configuration.CategorizedSettingsElement with the specified name and value string.
+        ''' Adds a TVA.Configuration.CategorizedSettingsElement with the specified name and value string.
         ''' </summary>
         ''' <param name="name">The name string of the element.</param>
         ''' <param name="value">The value string of the element.</param>
@@ -120,7 +120,7 @@ Namespace Configuration
         End Sub
 
         ''' <summary>
-        ''' Adds a Tva.Configuration.CategorizedSettingsElement with the specified name, value and description string.
+        ''' Adds a TVA.Configuration.CategorizedSettingsElement with the specified name, value and description string.
         ''' </summary>
         ''' <param name="name">The name string of the element.</param>
         ''' <param name="value">The value string of the element.</param>
@@ -133,7 +133,7 @@ Namespace Configuration
         End Sub
 
         ''' <summary>
-        ''' Adds a Tva.Configuration.CategorizedSettingsElement with the specified name, value and description string.
+        ''' Adds a TVA.Configuration.CategorizedSettingsElement with the specified name, value and description string.
         ''' </summary>
         ''' <param name="name">The name string of the element.</param>
         ''' <param name="value">The value string of the element.</param>
@@ -147,9 +147,9 @@ Namespace Configuration
         End Sub
 
         ''' <summary>
-        ''' Adds the specified Tva.Configuration.CategorizedSettingsElement to the Tva.Configuration.CategorizedSettingsCollection.
+        ''' Adds the specified TVA.Configuration.CategorizedSettingsElement to the TVA.Configuration.CategorizedSettingsCollection.
         ''' </summary>
-        ''' <param name="setting">The Tva.Configuration.CategorizedSettingsElement to add.</param>
+        ''' <param name="setting">The TVA.Configuration.CategorizedSettingsElement to add.</param>
         ''' <remarks></remarks>
         Public Sub Add(ByVal setting As CategorizedSettingsElement)
 
@@ -161,9 +161,9 @@ Namespace Configuration
         End Sub
 
         ''' <summary>
-        ''' Removes a Tva.Configuration.CategorizedSettingsElement with the specified name from the Tva.Configuration.CategorizedSettingsCollection.
+        ''' Removes a TVA.Configuration.CategorizedSettingsElement with the specified name from the TVA.Configuration.CategorizedSettingsCollection.
         ''' </summary>
-        ''' <param name="name">The name of the Tva.Configuration.CategorizedSettingsElement to remove.</param>
+        ''' <param name="name">The name of the TVA.Configuration.CategorizedSettingsElement to remove.</param>
         ''' <remarks></remarks>
         Public Sub Remove(ByVal name As String)
 
@@ -172,9 +172,9 @@ Namespace Configuration
         End Sub
 
         ''' <summary>
-        ''' Removes the specified Tva.Configuration.CategorizedSettingsElement from the Tva.Configuration.CategorizedSettingsCollection.
+        ''' Removes the specified TVA.Configuration.CategorizedSettingsElement from the TVA.Configuration.CategorizedSettingsCollection.
         ''' </summary>
-        ''' <param name="setting">The Tva.Configuration.CategorizedSettingsElement to remove.</param>
+        ''' <param name="setting">The TVA.Configuration.CategorizedSettingsElement to remove.</param>
         ''' <remarks></remarks>
         Public Sub Remove(ByVal setting As CategorizedSettingsElement)
 
@@ -185,9 +185,9 @@ Namespace Configuration
         End Sub
 
         ''' <summary>
-        ''' Remove the Tva.Configuration.CategorizedSettingsElement at the specified location from the Tva.Configuration.CategorizedSettingsCollection.
+        ''' Remove the TVA.Configuration.CategorizedSettingsElement at the specified location from the TVA.Configuration.CategorizedSettingsCollection.
         ''' </summary>
-        ''' <param name="index">The index location of the Tva.Configuration.CategorizedSettingsElement to remove.</param>
+        ''' <param name="index">The index location of the TVA.Configuration.CategorizedSettingsElement to remove.</param>
         ''' <remarks></remarks>
         Public Sub RemoveAt(ByVal index As Integer)
 
@@ -196,7 +196,7 @@ Namespace Configuration
         End Sub
 
         ''' <summary>
-        ''' Removes all Tva.Configuration.CategorizedSettingsElement from the Tva.Configuration.CategorizedSettingsCollection.
+        ''' Removes all TVA.Configuration.CategorizedSettingsElement from the TVA.Configuration.CategorizedSettingsCollection.
         ''' </summary>
         ''' <remarks></remarks>
         Public Sub Clear()

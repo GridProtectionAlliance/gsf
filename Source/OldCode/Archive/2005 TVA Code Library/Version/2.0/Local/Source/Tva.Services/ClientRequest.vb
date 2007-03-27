@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  Tva.Services.ClientRequest.vb - Client Request to Service
+'  TVA.Services.ClientRequest.vb - Client Request to Service
 '  Copyright © 2006 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005
@@ -18,8 +18,8 @@
 '
 '*******************************************************************************************************
 
-Imports Tva.Common
-Imports Tva.Text.Common
+Imports TVA.Common
+Imports TVA.Text.Common
 
 <Serializable()> _
 Public Class ClientRequest
@@ -92,12 +92,12 @@ Public Class ClientRequest
     ''' Parses text into a type and parameters array.
     ''' </summary>
     ''' <param name="text">The text to be parsed.</param>
-    ''' <returns>A Tva.Services.ClientRequest instance.</returns>
+    ''' <returns>A TVA.Services.ClientRequest instance.</returns>
     Public Shared Function Parse(ByVal text As String) As ClientRequest
 
         Dim request As ClientRequest = Nothing
         If Not String.IsNullOrEmpty(text) Then
-            Dim textSegments As String() = Tva.Console.Common.ParseCommand(text)
+            Dim textSegments As String() = TVA.Console.Common.ParseCommand(text)
 
             If textSegments.Length > 0 Then
                 request = New ClientRequest()

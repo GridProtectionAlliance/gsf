@@ -4,9 +4,9 @@ Imports System.IO
 Imports System.Drawing
 Imports System.Threading
 Imports System.ComponentModel
-Imports Tva.Collections
-Imports Tva.IO.FilePath
-Imports Tva.Configuration.Common
+Imports TVA.Collections
+Imports TVA.IO.FilePath
+Imports TVA.Configuration.Common
 
 Namespace Files
 
@@ -673,7 +673,7 @@ Namespace Files
                             .Description = "True if out-of-sequence data is to be discarded; otherwise False."
                         End With
                     End With
-                    Tva.Configuration.Common.SaveSettings()
+                    TVA.Configuration.Common.SaveSettings()
                 Catch ex As Exception
                     ' We might encounter an exception if for some reason the settings cannot be saved to the config file.
                 End Try

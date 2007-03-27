@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  Tva.Configuration.Common.vb - Common Configuration Functions
+'  TVA.Configuration.Common.vb - Common Configuration Functions
 '  Copyright © 2006 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005
@@ -36,12 +36,12 @@ Namespace Configuration
         Private Shared m_defaultConfigFile As ConfigurationFile
 
         ''' <summary>
-        ''' Gets or sets the Tva.Configuration.ConfigurationFile object that represents the configuration
+        ''' Gets or sets the TVA.Configuration.ConfigurationFile object that represents the configuration
         ''' file of the currently executing windows or web application.
         ''' </summary>
         ''' <value></value>
         ''' <returns>
-        ''' The Tva.Configuration.ConfigurationFile object that represents the configuration file of the 
+        ''' The TVA.Configuration.ConfigurationFile object that represents the configuration file of the 
         ''' currently executing windows or web application.
         ''' </returns>
         ''' <remarks>
@@ -81,7 +81,7 @@ Namespace Configuration
         End Property
 
         ''' <summary>
-        ''' Gets the Tva.Configuration.ConfigurationFile object that represent the specified configuration
+        ''' Gets the TVA.Configuration.ConfigurationFile object that represent the specified configuration
         ''' file that belongs a windows or web application.
         ''' </summary>
         ''' <param name="filePath">Path of the configuration file that belongs to a windows or web application.</param>
@@ -141,12 +141,12 @@ Namespace Configuration
 #Region " General Settings Shortcuts "
 
         ''' <summary>
-        ''' Gets the Tva.Configuration.CategorizedSettingsCollection representing the settings under "general"
+        ''' Gets the TVA.Configuration.CategorizedSettingsCollection representing the settings under "general"
         ''' category of the "categorizedSettings" section within the default configuration file.
         ''' </summary>
         ''' <value></value>
         ''' <returns>
-        ''' The Tva.Configuration.CategorizedSettingsCollection representing the settings under "general"
+        ''' The TVA.Configuration.CategorizedSettingsCollection representing the settings under "general"
         ''' category of the "categorizedSettings" section.
         ''' </returns>
         ''' <remarks>
@@ -173,13 +173,13 @@ Namespace Configuration
         End Property
 
         ''' <summary>
-        ''' Gets the Tva.Configuration.CategorizedSettingsCollection representing the settings under the specified
+        ''' Gets the TVA.Configuration.CategorizedSettingsCollection representing the settings under the specified
         ''' category of the "categorizedSettings" section within the default configuration file.
         ''' </summary>
         ''' <param name="category">The name of the category whose settings are to be retreived.</param>
         ''' <value></value>
         ''' <returns>
-        ''' The Tva.Configuration.CategorizedSettingsCollection representing the settings under the specified
+        ''' The TVA.Configuration.CategorizedSettingsCollection representing the settings under the specified
         ''' category of the "categorizedSettings" section.
         ''' </returns>
         ''' <remarks>

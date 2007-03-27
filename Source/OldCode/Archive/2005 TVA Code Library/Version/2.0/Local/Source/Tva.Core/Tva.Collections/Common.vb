@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  Tva.Collections.Common.vb - Common Collection Functions
+'  TVA.Collections.Common.vb - Common Collection Functions
 '  Copyright © 2006 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005
@@ -18,7 +18,7 @@
 '*******************************************************************************************************
 
 Imports System.Text
-Imports Tva.Math.Common
+Imports TVA.Math.Common
 
 Namespace Collections
 

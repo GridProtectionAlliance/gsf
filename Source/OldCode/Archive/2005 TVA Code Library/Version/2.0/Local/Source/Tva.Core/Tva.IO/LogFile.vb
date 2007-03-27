@@ -18,8 +18,8 @@
 Imports System.Threading
 Imports System.Text
 Imports System.IO
-Imports Tva.Collections
-Imports Tva.IO.FilePath
+Imports TVA.Collections
+Imports TVA.IO.FilePath
 
 Namespace IO
 

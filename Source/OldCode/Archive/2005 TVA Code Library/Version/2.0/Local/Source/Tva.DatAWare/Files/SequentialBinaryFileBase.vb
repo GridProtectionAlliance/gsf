@@ -2,8 +2,8 @@
 
 Imports System.IO
 Imports System.ComponentModel
-Imports Tva.IO.FilePath
-Imports Tva.Configuration.Common
+Imports TVA.IO.FilePath
+Imports TVA.Configuration.Common
 
 Namespace Files
 
@@ -137,7 +137,7 @@ Namespace Files
                     ' Once we have the file open, we'll process the file data.
                     If m_fileStream.Length Mod RecordSize = 0 Then
                         ' The file we're working with is a valid one.
-                        Dim binaryImage As Byte() = Tva.Common.CreateArray(Of Byte)(RecordSize)
+                        Dim binaryImage As Byte() = TVA.Common.CreateArray(Of Byte)(RecordSize)
                         Dim recordCount As Integer = Convert.ToInt32(m_fileStream.Length \ binaryImage.Length)
 
                         SyncLock m_fileStream
@@ -383,7 +383,7 @@ Namespace Files
                             .Description = "Minimum number of records that the file must have."
                         End With
                     End With
-                    Tva.Configuration.Common.SaveSettings()
+                    TVA.Configuration.Common.SaveSettings()
                 Catch ex As Exception
                     ' We might encounter an exception if for some reason the settings cannot be saved to the config file.
                 End Try

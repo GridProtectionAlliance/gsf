@@ -1,11 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 9.00
 # Visual Studio 2005
-Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "Tva.Core", "Tva.Core\Tva.Core.vbproj", "{29A7B606-D1BC-4A4B-96D0-258D5A72C3EC}"
+Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "TVA.Core", "TVA.Core\TVA.Core.vbproj", "{29A7B606-D1BC-4A4B-96D0-258D5A72C3EC}"
 EndProject
-Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "Tva.Web", "Tva.Web\Tva.Web.vbproj", "{1A51E8F7-BE43-4353-A6E6-E7189911BA53}"
+Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "TVA.Web", "TVA.Web\TVA.Web.vbproj", "{1A51E8F7-BE43-4353-A6E6-E7189911BA53}"
 EndProject
-Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "Tva.Windows", "Tva.Windows\Tva.Windows.vbproj", "{20CBC100-D1D7-4DD2-A181-970359E92951}"
+Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "TVA.Windows", "TVA.Windows\TVA.Windows.vbproj", "{20CBC100-D1D7-4DD2-A181-970359E92951}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build Related", "Build Related", "{CDC349A8-4D7D-4D2F-8D15-8CE2359FBF3D}"
 EndProject
@@ -13,7 +13,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Source Code", "Source Code"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Documentation", "Documentation", "{6CBBC083-2AFB-48F2-97FB-F7BA12F4AFFE}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Tva.IO.Compression", "Tva.IO.Compression\Tva.IO.Compression.vcproj", "{F611B9BA-C69D-449B-B596-FABFB746EA2A}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TVA.IO.Compression", "TVA.IO.Compression\TVA.IO.Compression.vcproj", "{F611B9BA-C69D-449B-B596-FABFB746EA2A}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build Log and Version Setup Files", "Build Log and Version Setup Files", "{2E2A8AA0-A387-4245-A419-496B50CB7939}"
 	ProjectSection(SolutionItems) = preProject
@@ -29,13 +29,13 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build and Deploy Scripts", 
 		..\Build Scripts\RebuildAllNoDocs.bat = ..\Build Scripts\RebuildAllNoDocs.bat
 	EndProjectSection
 EndProject
-Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "Tva.Phasors", "Tva.Phasors\Tva.Phasors.vbproj", "{54CA98CC-2F0A-41F2-879D-0E42B17E8544}"
+Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "TVA.Phasors", "TVA.Phasors\TVA.Phasors.vbproj", "{54CA98CC-2F0A-41F2-879D-0E42B17E8544}"
 EndProject
-Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "Tva.Tro", "Tva.Tro\Tva.Tro.vbproj", "{150FD25F-8563-4F35-92DA-05754508B192}"
+Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "TVA.TRO", "TVA.TRO\TVA.TRO.vbproj", "{150FD25F-8563-4F35-92DA-05754508B192}"
 EndProject
-Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "Tva.DatAWare", "Tva.DatAWare\Tva.DatAWare.vbproj", "{86D45927-5D18-4A8D-BC5E-31093A800EB4}"
+Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "TVA.DatAWare", "TVA.DatAWare\TVA.DatAWare.vbproj", "{86D45927-5D18-4A8D-BC5E-31093A800EB4}"
 EndProject
-Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "Tva.Communication", "Tva.Communication\Tva.Communication.vbproj", "{99F93056-9EDE-4EB8-BF8B-61E3B8728F9D}"
+Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "TVA.Communication", "TVA.Communication\TVA.Communication.vbproj", "{99F93056-9EDE-4EB8-BF8B-61E3B8728F9D}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Strong Name Key File", "Strong Name Key File", "{9D316AAF-D094-4918-AABB-FE57CF1D2ECF}"
 	ProjectSection(SolutionItems) = preProject
@@ -44,9 +44,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Strong Name Key File", "Str
 EndProject
 Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "Setup", "Setup\Setup.vdproj", "{4DF64992-FEA6-49B3-BACE-1F11A98A1629}"
 EndProject
-Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "Tva.Services", "Tva.Services\Tva.Services.vbproj", "{072D5E46-0944-48DE-A1E1-C06D145FB366}"
+Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "TVA.Services", "TVA.Services\TVA.Services.vbproj", "{072D5E46-0944-48DE-A1E1-C06D145FB366}"
 EndProject
-Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "Tva.Security", "Tva.Security\Tva.Security.vbproj", "{7E20F0D7-CD03-4C51-ADB2-03C522A71A84}"
+Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "TVA.Security", "TVA.Security\TVA.Security.vbproj", "{7E20F0D7-CD03-4C51-ADB2-03C522A71A84}"
 EndProject
 Global
 	GlobalSection(SourceCodeControl) = preSolution
@@ -56,61 +56,61 @@ Global
 		SccProvider0 = MSSCCI:Microsoft\u0020Visual\u0020SourceSafe
 		CanCheckoutShared = false
 		SccProjectFilePathRelativizedFromConnection0 = Source\\
-		SccProjectUniqueName1 = Tva.Core\\Tva.Core.vbproj
+		SccProjectUniqueName1 = TVA.Core\\TVA.Core.vbproj
 		SccProjectTopLevelParentUniqueName1 = TVA\u0020Code\u0020Library.sln
 		SccLocalPath1 = ..
 		CanCheckoutShared = false
-		SccProjectFilePathRelativizedFromConnection1 = Source\\Tva.Core\\
-		SccProjectUniqueName2 = Tva.Web\\Tva.Web.vbproj
+		SccProjectFilePathRelativizedFromConnection1 = Source\\TVA.Core\\
+		SccProjectUniqueName2 = TVA.Web\\TVA.Web.vbproj
 		SccProjectTopLevelParentUniqueName2 = TVA\u0020Code\u0020Library.sln
 		SccLocalPath2 = ..
 		CanCheckoutShared = false
-		SccProjectFilePathRelativizedFromConnection2 = Source\\Tva.Web\\
-		SccProjectUniqueName3 = Tva.Windows\\Tva.Windows.vbproj
+		SccProjectFilePathRelativizedFromConnection2 = Source\\TVA.Web\\
+		SccProjectUniqueName3 = TVA.Windows\\TVA.Windows.vbproj
 		SccProjectTopLevelParentUniqueName3 = TVA\u0020Code\u0020Library.sln
 		SccLocalPath3 = ..
 		CanCheckoutShared = false
-		SccProjectFilePathRelativizedFromConnection3 = Source\\Tva.Windows\\
-		SccProjectUniqueName4 = Tva.IO.Compression\\Tva.IO.Compression.vcproj
+		SccProjectFilePathRelativizedFromConnection3 = Source\\TVA.Windows\\
+		SccProjectUniqueName4 = TVA.IO.Compression\\TVA.IO.Compression.vcproj
 		SccProjectTopLevelParentUniqueName4 = TVA\u0020Code\u0020Library.sln
 		SccLocalPath4 = ..
 		CanCheckoutShared = false
-		SccProjectFilePathRelativizedFromConnection4 = Source\\Tva.IO.Compression\\
-		SccProjectUniqueName5 = Tva.Phasors\\Tva.Phasors.vbproj
+		SccProjectFilePathRelativizedFromConnection4 = Source\\TVA.IO.Compression\\
+		SccProjectUniqueName5 = TVA.Phasors\\TVA.Phasors.vbproj
 		SccProjectTopLevelParentUniqueName5 = TVA\u0020Code\u0020Library.sln
 		SccLocalPath5 = ..
 		CanCheckoutShared = false
-		SccProjectFilePathRelativizedFromConnection5 = Source\\Tva.Phasors\\
-		SccProjectUniqueName6 = Tva.Tro\\Tva.Tro.vbproj
+		SccProjectFilePathRelativizedFromConnection5 = Source\\TVA.Phasors\\
+		SccProjectUniqueName6 = TVA.TRO\\TVA.TRO.vbproj
 		SccProjectTopLevelParentUniqueName6 = TVA\u0020Code\u0020Library.sln
 		SccLocalPath6 = ..
 		CanCheckoutShared = false
-		SccProjectFilePathRelativizedFromConnection6 = Source\\Tva.Tro\\
-		SccProjectUniqueName7 = Tva.DatAWare\\Tva.DatAWare.vbproj
+		SccProjectFilePathRelativizedFromConnection6 = Source\\TVA.TRO\\
+		SccProjectUniqueName7 = TVA.DatAWare\\TVA.DatAWare.vbproj
 		SccProjectTopLevelParentUniqueName7 = TVA\u0020Code\u0020Library.sln
-		SccProjectName7 = \u0022$/TVA\u0020Code\u0020Library/Version/2.0/Local/Source/Tva.DatAWare\u0022,\u0020WWHAAAAA
-		SccLocalPath7 = Tva.DatAWare
+		SccProjectName7 = \u0022$/TVA\u0020Code\u0020Library/Version/2.0/Local/Source/TVA.DatAWare\u0022,\u0020WWHAAAAA
+		SccLocalPath7 = TVA.DatAWare
 		CanCheckoutShared = false
-		SccProjectUniqueName8 = Tva.Communication\\Tva.Communication.vbproj
+		SccProjectUniqueName8 = TVA.Communication\\TVA.Communication.vbproj
 		SccProjectTopLevelParentUniqueName8 = TVA\u0020Code\u0020Library.sln
 		SccLocalPath8 = ..
 		CanCheckoutShared = false
-		SccProjectFilePathRelativizedFromConnection8 = Source\\Tva.Communication\\
+		SccProjectFilePathRelativizedFromConnection8 = Source\\TVA.Communication\\
 		SccProjectUniqueName9 = Setup\\Setup.vdproj
 		SccProjectTopLevelParentUniqueName9 = TVA\u0020Code\u0020Library.sln
 		SccLocalPath9 = ..
 		CanCheckoutShared = false
 		SccProjectFilePathRelativizedFromConnection9 = Source\\Setup\\
-		SccProjectUniqueName10 = Tva.Services\\Tva.Services.vbproj
+		SccProjectUniqueName10 = TVA.Services\\TVA.Services.vbproj
 		SccProjectTopLevelParentUniqueName10 = TVA\u0020Code\u0020Library.sln
 		SccLocalPath10 = ..
 		CanCheckoutShared = false
-		SccProjectFilePathRelativizedFromConnection10 = Source\\Tva.Services\\
-		SccProjectUniqueName11 = Tva.Security\\Tva.Security.vbproj
+		SccProjectFilePathRelativizedFromConnection10 = Source\\TVA.Services\\
+		SccProjectUniqueName11 = TVA.Security\\TVA.Security.vbproj
 		SccProjectTopLevelParentUniqueName11 = TVA\u0020Code\u0020Library.sln
 		SccLocalPath11 = ..
 		CanCheckoutShared = false
-		SccProjectFilePathRelativizedFromConnection11 = Source\\Tva.Security\\
+		SccProjectFilePathRelativizedFromConnection11 = Source\\TVA.Security\\
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

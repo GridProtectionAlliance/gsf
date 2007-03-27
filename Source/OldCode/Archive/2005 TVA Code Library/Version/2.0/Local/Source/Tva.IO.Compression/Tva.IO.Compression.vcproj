@@ -2,9 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="8.00"
-	Name="Tva.IO.Compression"
+	Name="TVA.IO.Compression"
 	ProjectGUID="{F611B9BA-C69D-449B-B596-FABFB746EA2A}"
-	RootNamespace="Tva.IO"
+	RootNamespace="TVA.IO"
 	SccProjectName="SAK"
 	SccAuxPath="SAK"
 	SccLocalPath="SAK"
@@ -69,11 +69,11 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="zlib\gvmat32.obj mscoree.lib"
-				OutputFile="$(OutDir)/Tva.IO.Compression.dll"
+				OutputFile="$(OutDir)/TVA.IO.Compression.dll"
 				LinkIncremental="1"
 				IgnoreAllDefaultLibraries="false"
 				IgnoreDefaultLibraryNames=""
-				EmbedManagedResourceFile="Tva.IO.Compression.ZipFile.bmp"
+				EmbedManagedResourceFile="TVA.IO.Compression.ZipFile.bmp"
 				GenerateDebugInformation="true"
 				AssemblyDebug="1"
 				ProgramDatabaseFile="$(OutDir)/$(ProjectName).pdb"
@@ -163,11 +163,11 @@
 				Name="VCLinkerTool"
 				AdditionalDependencies="zlib\gvmat32.obj mscoree.lib"
 				ShowProgress="0"
-				OutputFile="$(OutDir)/Tva.IO.Compression.dll"
+				OutputFile="$(OutDir)/TVA.IO.Compression.dll"
 				LinkIncremental="1"
 				IgnoreAllDefaultLibraries="false"
 				IgnoreDefaultLibraryNames=""
-				EmbedManagedResourceFile="Tva.IO.Compression.ZipFile.bmp"
+				EmbedManagedResourceFile="TVA.IO.Compression.ZipFile.bmp"
 				GenerateDebugInformation="false"
 				ProgramDatabaseFile=""
 				ResourceOnlyDLL="true"
@@ -257,7 +257,7 @@
 					>
 				</File>
 				<File
-					RelativePath=".\Tva.IO.Compression.ZipFile.bmp"
+					RelativePath=".\TVA.IO.Compression.ZipFile.bmp"
 					>
 				</File>
 			</Filter>

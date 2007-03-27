@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  Tva.Data.Common.vb - Common Database Functions
+'  TVA.Data.Common.vb - Common Database Functions
 '  Copyright © 2006 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005
@@ -32,7 +32,7 @@ Imports System.Data.OracleClient
 Imports System.ComponentModel
 Imports System.Text
 Imports System.Text.RegularExpressions
-Imports Tva.DateTime.Common
+Imports TVA.DateTime.Common
 
 Namespace Data
 

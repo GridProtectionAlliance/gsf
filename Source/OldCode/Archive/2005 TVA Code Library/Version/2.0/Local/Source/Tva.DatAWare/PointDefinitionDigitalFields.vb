@@ -1,7 +1,7 @@
 ' 02/21/2007
 
 Imports System.Text
-Imports Tva.Text.Common
+Imports TVA.Text.Common
 
 Public Class PointDefinitionDigitalFields
     Implements IBinaryDataProvider

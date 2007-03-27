@@ -15,7 +15,7 @@
 '
 '*******************************************************************************************************
 
-Imports Tva.Measurements
+Imports TVA.Measurements
 
 ''' <summary>This class represents the protocol independent representation of any kind of data value as an abstract measurement.</summary>
 <CLSCompliant(False)> _

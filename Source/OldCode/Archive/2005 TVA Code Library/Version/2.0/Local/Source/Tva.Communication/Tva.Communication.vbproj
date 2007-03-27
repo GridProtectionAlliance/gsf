@@ -7,8 +7,8 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{99F93056-9EDE-4EB8-BF8B-61E3B8728F9D}</ProjectGuid>
     <OutputType>Library</OutputType>
-    <RootNamespace>Tva.Communication</RootNamespace>
-    <AssemblyName>Tva.Communication</AssemblyName>
+    <RootNamespace>TVA.Communication</RootNamespace>
+    <AssemblyName>TVA.Communication</AssemblyName>
     <MyType>Windows</MyType>
     <OptionStrict>On</OptionStrict>
     <SccProjectName>SAK</SccProjectName>
@@ -24,7 +24,7 @@
     <DefineDebug>true</DefineDebug>
     <DefineTrace>true</DefineTrace>
     <OutputPath>..\bin\</OutputPath>
-    <DocumentationFile>Tva.Communication.xml</DocumentationFile>
+    <DocumentationFile>TVA.Communication.xml</DocumentationFile>
     <NoWarn>42016,41999,42017,42018,42019,42032,42036,42020,42021,42022</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
@@ -33,7 +33,7 @@
     <DefineTrace>true</DefineTrace>
     <Optimize>true</Optimize>
     <OutputPath>..\bin\</OutputPath>
-    <DocumentationFile>Tva.Communication.xml</DocumentationFile>
+    <DocumentationFile>TVA.Communication.xml</DocumentationFile>
     <NoWarn>42016,41999,42017,42018,42019,42032,42036,42020,42021,42022</NoWarn>
   </PropertyGroup>
   <ItemGroup>
@@ -112,13 +112,13 @@
     <EmbeddedResource Include="Embedded Resources\CommunicationServerBase.bmp" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Tva.Core\Tva.Core.vbproj">
+    <ProjectReference Include="..\TVA.Core\TVA.Core.vbproj">
       <Project>{29A7B606-D1BC-4A4B-96D0-258D5A72C3EC}</Project>
-      <Name>Tva.Core</Name>
+      <Name>TVA.Core</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Tva.IO.Compression\Tva.IO.Compression.vcproj">
+    <ProjectReference Include="..\TVA.IO.Compression\TVA.IO.Compression.vcproj">
       <Project>{F611B9BA-C69D-449B-B596-FABFB746EA2A}</Project>
-      <Name>Tva.IO.Compression</Name>
+      <Name>TVA.IO.Compression</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.VisualBasic.targets" />

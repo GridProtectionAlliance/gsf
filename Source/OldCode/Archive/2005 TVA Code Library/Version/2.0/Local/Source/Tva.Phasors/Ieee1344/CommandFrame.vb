@@ -17,8 +17,8 @@
 
 Imports System.Runtime.Serialization
 Imports System.ComponentModel
-Imports Tva.DateTime
-Imports Tva.IO.Compression.Common
+Imports TVA.DateTime
+Imports TVA.IO.Compression.Common
 
 Namespace Ieee1344
 

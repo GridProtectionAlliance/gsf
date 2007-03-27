@@ -4,12 +4,12 @@ Imports System.Text
 Imports System.Drawing
 Imports System.ComponentModel
 Imports System.ServiceProcess
-Imports Tva.IO
-Imports Tva.Common
-Imports Tva.Communication
-Imports Tva.Serialization
-Imports Tva.Scheduling
-Imports Tva.Configuration.Common
+Imports TVA.IO
+Imports TVA.Common
+Imports TVA.Communication
+Imports TVA.Serialization
+Imports TVA.Scheduling
+Imports TVA.Configuration.Common
 
 <ToolboxBitmap(GetType(ServiceHelper))> _
 Public Class ServiceHelper
@@ -22,7 +22,7 @@ Public Class ServiceHelper
     Private m_requestHistoryLimit As Integer
     Private m_configurationString As String
     Private m_secureSession As Boolean
-    Private m_encryption As Tva.Security.Cryptography.EncryptLevel
+    Private m_encryption As TVA.Security.Cryptography.EncryptLevel
     Private m_processes As Dictionary(Of String, ServiceProcess)
     Private m_clientInfo As Dictionary(Of Guid, ClientInfo)
     Private m_requestHistory As List(Of RequestInfo)
@@ -155,7 +155,7 @@ Public Class ServiceHelper
         End Get
         Set(ByVal value As String)
             If Not String.IsNullOrEmpty(value) Then
-                If Tva.Text.Common.ParseKeyValuePairs(value).ContainsKey("protocol") Then
+                If TVA.Text.Common.ParseKeyValuePairs(value).ContainsKey("protocol") Then
                     m_configurationString = value
                 Else
                     Throw New ArgumentException("Communication protocol must be specified.", "ConfigurationString")
@@ -166,12 +166,12 @@ Public Class ServiceHelper
         End Set
     End Property
 
-    <Category("Communication"), DefaultValue(GetType(Tva.Security.Cryptography.EncryptLevel), "Level1")> _
-    Public Property Encryption() As Tva.Security.Cryptography.EncryptLevel
+    <Category("Communication"), DefaultValue(GetType(TVA.Security.Cryptography.EncryptLevel), "Level1")> _
+    Public Property Encryption() As TVA.Security.Cryptography.EncryptLevel
         Get
             Return m_encryption
         End Get
-        Set(ByVal value As Tva.Security.Cryptography.EncryptLevel)
+        Set(ByVal value As TVA.Security.Cryptography.EncryptLevel)
             m_encryption = value
         End Set
     End Property
@@ -194,10 +194,10 @@ Public Class ServiceHelper
     End Property
 
     ''' <summary>
-    ''' Gets a list of all the components that implement the Tva.Services.IServiceComponent interface.
+    ''' Gets a list of all the components that implement the TVA.Services.IServiceComponent interface.
     ''' </summary>
     ''' <value></value>
-    ''' <returns>An instance of System.Collections.Generic.List(Of Tva.Services.IServiceComponent).</returns>
+    ''' <returns>An instance of System.Collections.Generic.List(Of TVA.Services.IServiceComponent).</returns>
     <Browsable(False)> _
     Public ReadOnly Property ServiceComponents() As List(Of IServiceComponent)
         Get
@@ -236,8 +236,8 @@ Public Class ServiceHelper
     Public Sub OnStart(ByVal args As String())
 
         If m_service IsNot Nothing Then
-            m_scheduleManager = New Tva.Scheduling.ScheduleManager()
-            m_communicationServer = Tva.Communication.Common.CreateCommunicationServer(m_configurationString)
+            m_scheduleManager = New TVA.Scheduling.ScheduleManager()
+            m_communicationServer = TVA.Communication.Common.CreateCommunicationServer(m_configurationString)
             m_communicationServer.Handshake = True
             m_communicationServer.HandshakePassphrase = m_service.ServiceName
             m_communicationServer.Encryption = m_encryption
@@ -612,7 +612,7 @@ Public Class ServiceHelper
             .Append(" ")
             .Append(New String("-"c, 30))
             For Each category As String In categories
-                For Each setting As Tva.Configuration.CategorizedSettingsElement In CategorizedSettings(category)
+                For Each setting As TVA.Configuration.CategorizedSettingsElement In CategorizedSettings(category)
                     .AppendLine()
                     .Append(category.PadRight(20))
                     .Append(" ")
@@ -670,7 +670,7 @@ Public Class ServiceHelper
         m_logStatusUpdates = CategorizedSettings("ServiceHelper")("LogStatusUpdates").GetTypedValue(True)
         m_requestHistoryLimit = CategorizedSettings("ServiceHelper")("RequestHistoryLimit").GetTypedValue(50)
         m_configurationString = CategorizedSettings("Communication")("ConfigurationString").Value
-        m_encryption = CategorizedSettings("Communication")("Encryption").GetTypedValue(Tva.Security.Cryptography.EncryptLevel.Level1)
+        m_encryption = CategorizedSettings("Communication")("Encryption").GetTypedValue(TVA.Security.Cryptography.EncryptLevel.Level1)
         m_secureSession = CategorizedSettings("Communication")("SecureSession").GetTypedValue(True)
 
     End Sub
@@ -681,7 +681,7 @@ Public Class ServiceHelper
             Dim category As String = request.Parameters(0)
             Dim name As String = request.Parameters(1)
             Dim value As String = request.Parameters(2)
-            Dim setting As Tva.Configuration.CategorizedSettingsElement = CategorizedSettings(category)(name)
+            Dim setting As TVA.Configuration.CategorizedSettingsElement = CategorizedSettings(category)(name)
             If setting IsNot Nothing Then
                 setting.Value = value
                 SaveSettings()      ' Save rettings to the config file.

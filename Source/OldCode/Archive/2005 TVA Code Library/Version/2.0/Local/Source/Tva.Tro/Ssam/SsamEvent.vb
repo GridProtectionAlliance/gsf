@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  Tva.Tro.Ssam.SsamEvent.vb - SSAM Event
+'  TVA.TRO.Ssam.SsamEvent.vb - SSAM Event
 '  Copyright © 2006 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005
@@ -33,11 +33,11 @@ Namespace Ssam
         Private m_description As String
 
         ''' <summary>
-        ''' Initializes a instance of Tva.Tro.Ssam.SsamEvent with the specified information.
+        ''' Initializes a instance of TVA.TRO.Ssam.SsamEvent with the specified information.
         ''' </summary>
         ''' <param name="entityID">The mnemonic key or the numeric value of the entity to which the event belongs.</param>
-        ''' <param name="entityType">One of the Tva.Tro.Ssam.SsamEntityType values.</param>
-        ''' <param name="eventType">One of the Tva.Tro.Ssam.SsamEvent.SsamEventType values.</param>
+        ''' <param name="entityType">One of the TVA.TRO.Ssam.SsamEntityType values.</param>
+        ''' <param name="eventType">One of the TVA.TRO.Ssam.SsamEvent.SsamEventType values.</param>
         Public Sub New(ByVal entityID As String, ByVal entityType As SsamEntityType, ByVal eventType As SsamEventType)
 
             MyClass.New(entityID, entityType, eventType, "", "", "")
@@ -45,11 +45,11 @@ Namespace Ssam
         End Sub
 
         ''' <summary>
-        ''' Initializes a instance of Tva.Tro.Ssam.SsamEvent with the specified information.
+        ''' Initializes a instance of TVA.TRO.Ssam.SsamEvent with the specified information.
         ''' </summary>
         ''' <param name="entityID">The mnemonic key or the numeric value of the entity to which the event belongs.</param>
-        ''' <param name="entityType">One of the Tva.Tro.Ssam.SsamEntityType values.</param>
-        ''' <param name="eventType">One of the Tva.Tro.Ssam.SsamEvent.SsamEventType values.</param>
+        ''' <param name="entityType">One of the TVA.TRO.Ssam.SsamEntityType values.</param>
+        ''' <param name="eventType">One of the TVA.TRO.Ssam.SsamEvent.SsamEventType values.</param>
         ''' <param name="message">A brief description of the event (max 120 characters).</param>
         Public Sub New(ByVal entityID As String, ByVal entityType As SsamEntityType, ByVal eventType As SsamEventType, ByVal message As String)
 
@@ -59,11 +59,11 @@ Namespace Ssam
 
 
         ''' <summary>
-        ''' Initializes a instance of Tva.Tro.Ssam.SsamEvent with the specified information.
+        ''' Initializes a instance of TVA.TRO.Ssam.SsamEvent with the specified information.
         ''' </summary>
         ''' <param name="entityID">The mnemonic key or the numeric value of the entity to which the event belongs.</param>
-        ''' <param name="entityType">One of the Tva.Tro.Ssam.SsamEntityType values.</param>
-        ''' <param name="eventType">One of the Tva.Tro.Ssam.SsamEvent.SsamEventType values.</param>
+        ''' <param name="entityType">One of the TVA.TRO.Ssam.SsamEntityType values.</param>
+        ''' <param name="eventType">One of the TVA.TRO.Ssam.SsamEvent.SsamEventType values.</param>
         ''' <param name="errorNumber">The error number encountered, if any, for which the event is being logged.</param>
         ''' <param name="message">A brief description of the event (max 120 characters).</param>
         ''' <param name="description">A detailed description of the event (max 2GB).</param>

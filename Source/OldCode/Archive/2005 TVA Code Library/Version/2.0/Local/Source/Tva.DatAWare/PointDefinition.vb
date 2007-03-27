@@ -16,7 +16,7 @@
 '*******************************************************************************************************
 
 Imports System.Text
-Imports Tva.Text.Common
+Imports TVA.Text.Common
 
 ' Standard database structure element
 <Serializable()> _

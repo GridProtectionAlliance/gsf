@@ -18,9 +18,9 @@
 Imports System.IO
 Imports System.Text
 Imports System.ComponentModel
-Imports Tva.Collections
-Imports Tva.IO.Common
-Imports Tva.Phasors.Common
+Imports TVA.Collections
+Imports TVA.IO.Common
+Imports TVA.Phasors.Common
 
 Namespace IeeeC37_118
 

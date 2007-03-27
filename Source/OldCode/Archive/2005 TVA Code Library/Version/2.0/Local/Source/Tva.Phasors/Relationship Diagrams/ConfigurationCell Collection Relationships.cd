@@ -16,14 +16,14 @@
   <Comment CommentText="Virginia Tech FNET">
     <Position X="11.573" Y="6.781" Height="0.312" Width="1.304" />
   </Comment>
-  <Class Name="Tva.Phasors.ConfigurationCellCollection">
+  <Class Name="TVA.Phasors.ConfigurationCellCollection">
     <Position X="6.75" Y="3.75" Width="2.75" />
     <TypeIdentifier>
       <FileName>ConfigurationCellCollection.vb</FileName>
       <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAACQAAAAAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Class>
-  <Class Name="Tva.Phasors.ChannelCellCollectionBase(Of T)">
+  <Class Name="TVA.Phasors.ChannelCellCollectionBase(Of T)">
     <Position X="6.75" Y="1.25" Width="2.75" />
     <TypeIdentifier>
       <FileName>ChannelCellCollectionBase.vb</FileName>
@@ -31,7 +31,7 @@
     </TypeIdentifier>
     <Lollipop Position="0.2" />
   </Class>
-  <Class Name="Tva.Phasors.ChannelCollectionBase(Of T)">
+  <Class Name="TVA.Phasors.ChannelCollectionBase(Of T)">
     <Position X="3.75" Y="1.25" Width="2.25" />
     <TypeIdentifier>
       <FileName>ChannelCollectionBase.vb</FileName>
@@ -53,13 +53,13 @@
     </NestedTypes>
     <Lollipop Position="0.2" />
   </Class>
-  <Class Name="Tva.Phasors.BpaPdcStream.ConfigurationCellCollection">
+  <Class Name="TVA.Phasors.BpaPdcStream.ConfigurationCellCollection">
     <Position X="3.5" Y="7.25" Width="2.25" />
     <TypeIdentifier>
       <FileName>BpaPdcStream\ConfigurationCellCollection.vb</FileName>
       <HashCode>AAIAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAA=</HashCode>
     </TypeIdentifier>
-    <InheritanceLine Type="Tva.Phasors.ConfigurationCellCollection" ManuallyRouted="true">
+    <InheritanceLine Type="TVA.Phasors.ConfigurationCellCollection" ManuallyRouted="true">
       <Path>
         <Point X="8.125" Y="5.398" />
         <Point X="8.125" Y="6.635" />
@@ -68,42 +68,42 @@
       </Path>
     </InheritanceLine>
   </Class>
-  <Class Name="Tva.Phasors.Ieee1344.ConfigurationCellCollection">
+  <Class Name="TVA.Phasors.Ieee1344.ConfigurationCellCollection">
     <Position X="6" Y="7.25" Width="2.25" />
     <TypeIdentifier>
       <FileName>Ieee1344\ConfigurationCellCollection.vb</FileName>
       <HashCode>AAIAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Class>
-  <Class Name="Tva.Phasors.IeeeC37_118.ConfigurationCellCollection">
+  <Class Name="TVA.Phasors.IeeeC37_118.ConfigurationCellCollection">
     <Position X="8.5" Y="7.25" Width="2.25" />
     <TypeIdentifier>
       <FileName>IeeeC37_118\ConfigurationCellCollection.vb</FileName>
       <HashCode>AAIAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Class>
-  <Class Name="Tva.Phasors.FNet.ConfigurationCellCollection">
+  <Class Name="TVA.Phasors.FNet.ConfigurationCellCollection">
     <Position X="11" Y="7.25" Width="2.5" />
     <TypeIdentifier>
       <FileName>FNet\ConfigurationCellCollection.vb</FileName>
       <HashCode>AAIAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Class>
-  <Interface Name="Tva.Phasors.IChannelCellCollection(Of T)">
+  <Interface Name="TVA.Phasors.IChannelCellCollection(Of T)">
     <Position X="13.75" Y="7.75" Width="2.25" />
     <TypeIdentifier>
       <FileName>IChannelCellCollection.vb</FileName>
       <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Interface>
-  <Interface Name="Tva.Phasors.IChannelCollection(Of T)">
+  <Interface Name="TVA.Phasors.IChannelCollection(Of T)">
     <Position X="13.75" Y="6.25" Width="2.25" />
     <TypeIdentifier>
       <FileName>IChannelCollection.vb</FileName>
       <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Interface>
-  <Interface Name="Tva.Phasors.IChannel">
+  <Interface Name="TVA.Phasors.IChannel">
     <Position X="14.25" Y="3.5" Width="1.5" />
     <TypeIdentifier>
       <FileName>IChannel.vb</FileName>
@@ -142,7 +142,7 @@
     <Position X="16" Y="3.5" Width="1.5" />
     <TypeIdentifier />
   </Interface>
-  <Interface Name="Tva.IBinaryDataProvider">
+  <Interface Name="TVA.IBinaryDataProvider">
     <Position X="12" Y="3.5" Width="1.75" />
     <TypeIdentifier />
   </Interface>

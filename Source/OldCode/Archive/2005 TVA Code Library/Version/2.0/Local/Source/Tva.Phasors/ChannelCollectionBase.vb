@@ -17,7 +17,7 @@
 
 Imports System.Runtime.Serialization
 Imports System.ComponentModel
-Imports Tva.Phasors.Common
+Imports TVA.Phasors.Common
 
 ''' <summary>This class represents the common implementation of the protocol independent representation of a collection of any kind of data.</summary>
 ''' <remarks>By having our collections implement IChannel (inherited via IChannelCollection), we have the benefit of providing a binary image of the entire collection</remarks>

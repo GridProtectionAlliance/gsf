@@ -16,14 +16,14 @@
   <Comment CommentText="  Virginia Tech FNET">
     <Position X="14.345" Y="4.384" Height="0.263" Width="1.273" />
   </Comment>
-  <Class Name="Tva.Phasors.DataCellCollection">
+  <Class Name="TVA.Phasors.DataCellCollection">
     <Position X="9.75" Y="1.5" Width="2.25" />
     <TypeIdentifier>
       <FileName>DataCellCollection.vb</FileName>
       <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Class>
-  <Class Name="Tva.Phasors.ChannelCellCollectionBase(Of T)">
+  <Class Name="TVA.Phasors.ChannelCellCollectionBase(Of T)">
     <Position X="6.75" Y="1.5" Width="2.5" />
     <TypeIdentifier>
       <FileName>ChannelCellCollectionBase.vb</FileName>
@@ -31,7 +31,7 @@
     </TypeIdentifier>
     <Lollipop Position="0.2" />
   </Class>
-  <Class Name="Tva.Phasors.ChannelCollectionBase(Of T)">
+  <Class Name="TVA.Phasors.ChannelCollectionBase(Of T)">
     <Position X="4" Y="1.5" Width="2.25" />
     <TypeIdentifier>
       <FileName>ChannelCollectionBase.vb</FileName>
@@ -53,49 +53,49 @@
     </NestedTypes>
     <Lollipop Position="0.2" />
   </Class>
-  <Class Name="Tva.Phasors.BpaPdcStream.DataCellCollection">
+  <Class Name="TVA.Phasors.BpaPdcStream.DataCellCollection">
     <Position X="7.25" Y="5" Width="2" />
     <TypeIdentifier>
       <FileName>BpaPdcStream\DataCellCollection.vb</FileName>
       <HashCode>AAIAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Class>
-  <Class Name="Tva.Phasors.Ieee1344.DataCellCollection">
+  <Class Name="TVA.Phasors.Ieee1344.DataCellCollection">
     <Position X="9.5" Y="5" Width="2" />
     <TypeIdentifier>
       <FileName>Ieee1344\DataCellCollection.vb</FileName>
       <HashCode>AAIAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Class>
-  <Class Name="Tva.Phasors.IeeeC37_118.DataCellCollection">
+  <Class Name="TVA.Phasors.IeeeC37_118.DataCellCollection">
     <Position X="11.75" Y="5" Width="2" />
     <TypeIdentifier>
       <FileName>IeeeC37_118\DataCellCollection.vb</FileName>
       <HashCode>AAIAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Class>
-  <Class Name="Tva.Phasors.FNet.DataCellCollection">
+  <Class Name="TVA.Phasors.FNet.DataCellCollection">
     <Position X="14" Y="5" Width="2" />
     <TypeIdentifier>
       <FileName>FNet\DataCellCollection.vb</FileName>
       <HashCode>AAIAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Class>
-  <Interface Name="Tva.Phasors.IChannelCellCollection(Of T)">
+  <Interface Name="TVA.Phasors.IChannelCellCollection(Of T)">
     <Position X="14.25" Y="7" Width="2.25" />
     <TypeIdentifier>
       <FileName>IChannelCellCollection.vb</FileName>
       <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Interface>
-  <Interface Name="Tva.Phasors.IChannelCollection(Of T)">
+  <Interface Name="TVA.Phasors.IChannelCollection(Of T)">
     <Position X="11.5" Y="7" Width="2" />
     <TypeIdentifier>
       <FileName>IChannelCollection.vb</FileName>
       <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Interface>
-  <Interface Name="Tva.Phasors.IChannel">
+  <Interface Name="TVA.Phasors.IChannel">
     <Position X="13.25" Y="8.75" Width="1.5" />
     <TypeIdentifier>
       <FileName>IChannel.vb</FileName>
@@ -131,7 +131,7 @@
     <Position X="15.25" Y="8.75" Width="1.5" />
     <TypeIdentifier />
   </Interface>
-  <Interface Name="Tva.IBinaryDataProvider">
+  <Interface Name="TVA.IBinaryDataProvider">
     <Position X="11" Y="8.75" Width="1.75" />
     <TypeIdentifier />
   </Interface>

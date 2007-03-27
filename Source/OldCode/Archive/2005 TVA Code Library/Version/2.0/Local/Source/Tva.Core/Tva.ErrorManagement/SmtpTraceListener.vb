@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  Tva.ErrorManagement.SmtpTraceListener.vb - Defines an e-mail based trace listener
+'  TVA.ErrorManagement.SmtpTraceListener.vb - Defines an e-mail based trace listener
 '  Copyright © 2006 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005
@@ -19,7 +19,7 @@
 
 Imports System.Text
 Imports System.Diagnostics
-Imports Tva.Net.Smtp.Common
+Imports TVA.Net.Smtp.Common
 
 Namespace ErrorManagement
 

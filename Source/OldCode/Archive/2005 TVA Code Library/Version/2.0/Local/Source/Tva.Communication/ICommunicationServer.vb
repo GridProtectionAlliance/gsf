@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  Tva.Communication.ICommunicationClient.vb - Abstract communications client interface
+'  TVA.Communication.ICommunicationClient.vb - Abstract communications client interface
 '  Copyright © 2006 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005
@@ -17,11 +17,11 @@
 '
 '*******************************************************************************************************
 
-Imports Tva.Communication.Common
+Imports TVA.Communication.Common
 
 Public Interface ICommunicationServer
 
-    Inherits Tva.Services.IServiceComponent
+    Inherits TVA.Services.IServiceComponent
 
     ''' <summary>
     ''' Occurs when the server is started.
@@ -106,7 +106,7 @@ Public Interface ICommunicationServer
     ''' </summary>
     ''' <value></value>
     ''' <returns>The encryption level to be used for encrypting the data exchanged between the server and clients.</returns>
-    Property Encryption() As Tva.Security.Cryptography.EncryptLevel
+    Property Encryption() As TVA.Security.Cryptography.EncryptLevel
 
     ''' <summary>
     ''' Gets or sets the compression level to be used for compressing the data exchanged between the server and 
@@ -114,7 +114,7 @@ Public Interface ICommunicationServer
     ''' </summary>
     ''' <value></value>
     ''' <returns>The compression level to be used for compressing the data exchanged between the server and clients.</returns>
-    Property Compression() As Tva.IO.Compression.CompressLevel
+    Property Compression() As TVA.IO.Compression.CompressLevel
 
     ''' <summary>
     ''' Gets or sets a boolean value indicating whether the server is enabled.

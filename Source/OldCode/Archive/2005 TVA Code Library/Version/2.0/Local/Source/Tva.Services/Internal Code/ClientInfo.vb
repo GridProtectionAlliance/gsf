@@ -1,6 +1,6 @@
 ' 09-12-06
 
-Imports Tva.Assembly
+Imports TVA.Assembly
 
 <Serializable()> _
 Friend Class ClientInfo

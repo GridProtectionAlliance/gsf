@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  Tva.Communication.UdpClient.vb - UDP-based communication client
+'  TVA.Communication.UdpClient.vb - UDP-based communication client
 '  Copyright © 2006 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005
@@ -22,9 +22,9 @@ Imports System.Net.Sockets
 Imports System.Text
 Imports System.Threading
 Imports System.ComponentModel
-Imports Tva.Common
-Imports Tva.Serialization
-Imports Tva.Communication.CommunicationHelper
+Imports TVA.Common
+Imports TVA.Serialization
+Imports TVA.Communication.CommunicationHelper
 
 ''' <summary>
 ''' Represents a UDP-based communication client.
@@ -61,7 +61,7 @@ Public Class UdpClient
     Public Const MaximumUdpDatagramSize As Integer = 32768
 
     ''' <summary>
-    ''' Initializes a instance of Tva.Communication.UdpClient with the specified data.
+    ''' Initializes a instance of TVA.Communication.UdpClient with the specified data.
     ''' </summary>
     ''' <param name="connectionString">The connection string containing the data required for initializing the UDP client.</param>
     Public Sub New(ByVal connectionString As String)
@@ -201,7 +201,7 @@ Public Class UdpClient
 
         If PersistSettings Then
             Try
-                With Tva.Configuration.Common.CategorizedSettings(ConfigurationCategory)
+                With TVA.Configuration.Common.CategorizedSettings(ConfigurationCategory)
                     PayloadAware = .Item("PayloadAware").GetTypedValue(m_payloadAware)
                     DestinationReachableCheck = .Item("DestinationReachableCheck").GetTypedValue(m_destinationReachableCheck)
                 End With
@@ -218,7 +218,7 @@ Public Class UdpClient
 
         If PersistSettings Then
             Try
-                With Tva.Configuration.Common.CategorizedSettings(ConfigurationCategory)
+                With TVA.Configuration.Common.CategorizedSettings(ConfigurationCategory)
                     With .Item("PayloadAware", True)
                         .Value = m_payloadAware.ToString()
                         .Description = "True if the messages that are broken down into multiple datagram for the purpose of transmission while being sent are to be assembled back when received; otherwise False."
@@ -228,7 +228,7 @@ Public Class UdpClient
                         .Description = "True if a test is to be performed to check if the destination endpoint that is to receive data is listening for data; otherwise False."
                     End With
                 End With
-                Tva.Configuration.Common.SaveSettings()
+                TVA.Configuration.Common.SaveSettings()
             Catch ex As Exception
                 ' We might encounter an exception if for some reason the settings cannot be saved to the config file.
             End Try
@@ -282,7 +282,7 @@ Public Class UdpClient
     Protected Overrides Function ValidConnectionString(ByVal connectionString As String) As Boolean
 
         If Not String.IsNullOrEmpty(connectionString) Then
-            m_connectionData = Tva.Text.Common.ParseKeyValuePairs(connectionString)
+            m_connectionData = TVA.Text.Common.ParseKeyValuePairs(connectionString)
             ' At the very least the connection string must have a local port specified and can optionally have a 
             ' server and a remote port. Server and remote port is required when Handshake is enable, but if they
             ' are not specified then an arbitrary server enpoint will be created and any attempt of sending data
@@ -435,7 +435,7 @@ Public Class UdpClient
                                     m_totalBytesReceived += bytesReceived
                                     Continue Do
                                 Else
-                                    ProcessReceivedServerData(Tva.IO.Common.CopyBuffer(m_buffer, 0, bytesReceived))
+                                    ProcessReceivedServerData(TVA.IO.Common.CopyBuffer(m_buffer, 0, bytesReceived))
                                 End If
 
                                 ' If Handshake is enabled and we haven't received server information than we're not
@@ -467,7 +467,7 @@ Public Class UdpClient
                         Dim totalBytesReceived As Integer = 0
                         Do While True
                             If payloadSize = -1 Then
-                                .DataBuffer = Tva.Common.CreateArray(Of Byte)(MyBase.ReceiveBufferSize)
+                                .DataBuffer = TVA.Common.CreateArray(Of Byte)(MyBase.ReceiveBufferSize)
                             End If
 
                             Try
@@ -489,7 +489,7 @@ Public Class UdpClient
                                         ' We'll extract the payload we've received in the datagram. It may be 
                                         ' that this is the only datagram in the series and that this datagram
                                         ' contains the entire payload; this is tested in the code below.
-                                        .DataBuffer = Tva.Common.CreateArray(Of Byte)(payloadSize)
+                                        .DataBuffer = TVA.Common.CreateArray(Of Byte)(payloadSize)
                                         Buffer.BlockCopy(payload, 0, .DataBuffer, 0, payload.Length)
                                         bytesReceived = payload.Length
                                     End If

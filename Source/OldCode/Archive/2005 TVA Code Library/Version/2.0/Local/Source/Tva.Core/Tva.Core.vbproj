@@ -7,8 +7,8 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{29A7B606-D1BC-4A4B-96D0-258D5A72C3EC}</ProjectGuid>
     <OutputType>Library</OutputType>
-    <RootNamespace>Tva</RootNamespace>
-    <AssemblyName>Tva.Core</AssemblyName>
+    <RootNamespace>TVA</RootNamespace>
+    <AssemblyName>TVA.Core</AssemblyName>
     <MyType>Windows</MyType>
     <SccProjectName>SAK</SccProjectName>
     <SccLocalPath>SAK</SccLocalPath>
@@ -24,7 +24,7 @@
     <DefineDebug>true</DefineDebug>
     <DefineTrace>true</DefineTrace>
     <OutputPath>..\bin\</OutputPath>
-    <DocumentationFile>Tva.Core.xml</DocumentationFile>
+    <DocumentationFile>TVA.Core.xml</DocumentationFile>
     <NoWarn>41999,42016,42017,42018,42019,42020,42021,42022,42030,42032,42036,42104,42108,42109</NoWarn>
     <WarningsAsErrors>
     </WarningsAsErrors>
@@ -35,7 +35,7 @@
     <DefineTrace>true</DefineTrace>
     <Optimize>true</Optimize>
     <OutputPath>..\bin\</OutputPath>
-    <DocumentationFile>Tva.Core.xml</DocumentationFile>
+    <DocumentationFile>TVA.Core.xml</DocumentationFile>
     <NoWarn>41999,42016,42017,42018,42019,42020,42021,42022,42030,42032,42036,42104,42108,42109</NoWarn>
     <WarningsAsErrors>
     </WarningsAsErrors>
@@ -59,104 +59,104 @@
     <Import Include="System.Diagnostics" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Tva.Collections\DictionaryList.vb" />
-    <Compile Include="Tva.Console\Arguments.vb" />
-    <Compile Include="Tva.Console\Common.vb" />
-    <Compile Include="Tva.Interop\VBArrayDescriptor.vb" />
-    <Compile Include="Tva.Measurements\MeasurementKey.vb" />
-    <Compile Include="Tva.Net\Ftp\AsyncResult.vb" />
-    <Compile Include="Tva.Net\Ftp\ControlChannel.vb" />
-    <Compile Include="Tva.Net\Ftp\DataStream.vb" />
-    <Compile Include="Tva.Net\Ftp\Directory.vb" />
-    <Compile Include="Tva.Net\Ftp\Exception.vb" />
-    <Compile Include="Tva.Net\Ftp\File.vb" />
-    <Compile Include="Tva.Net\Ftp\FileTransferer.vb" />
-    <Compile Include="Tva.Net\Ftp\FileWatcher.vb">
+    <Compile Include="TVA.Collections\DictionaryList.vb" />
+    <Compile Include="TVA.Console\Arguments.vb" />
+    <Compile Include="TVA.Console\Common.vb" />
+    <Compile Include="TVA.Interop\VBArrayDescriptor.vb" />
+    <Compile Include="TVA.Measurements\MeasurementKey.vb" />
+    <Compile Include="TVA.Net\Ftp\AsyncResult.vb" />
+    <Compile Include="TVA.Net\Ftp\ControlChannel.vb" />
+    <Compile Include="TVA.Net\Ftp\DataStream.vb" />
+    <Compile Include="TVA.Net\Ftp\Directory.vb" />
+    <Compile Include="TVA.Net\Ftp\Exception.vb" />
+    <Compile Include="TVA.Net\Ftp\File.vb" />
+    <Compile Include="TVA.Net\Ftp\FileTransferer.vb" />
+    <Compile Include="TVA.Net\Ftp\FileWatcher.vb">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="Tva.Net\Ftp\Response.vb" />
-    <Compile Include="Tva.Net\Ftp\Session.vb">
+    <Compile Include="TVA.Net\Ftp\Response.vb" />
+    <Compile Include="TVA.Net\Ftp\Session.vb">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="Tva.Net\Ftp\SessionConnected.vb" />
-    <Compile Include="Tva.Net\Ftp\SessionDisconnected.vb" />
-    <Compile Include="Tva.Net\Smtp\Common.vb" />
-    <Compile Include="Tva.Scheduling\Enumerations.vb" />
-    <Compile Include="Tva.Scheduling\Schedule.vb" />
-    <Compile Include="Tva.Scheduling\ScheduleEventArgs.vb" />
-    <Compile Include="Tva.Scheduling\ScheduleManager.Designer.vb">
+    <Compile Include="TVA.Net\Ftp\SessionConnected.vb" />
+    <Compile Include="TVA.Net\Ftp\SessionDisconnected.vb" />
+    <Compile Include="TVA.Net\Smtp\Common.vb" />
+    <Compile Include="TVA.Scheduling\Enumerations.vb" />
+    <Compile Include="TVA.Scheduling\Schedule.vb" />
+    <Compile Include="TVA.Scheduling\ScheduleEventArgs.vb" />
+    <Compile Include="TVA.Scheduling\ScheduleManager.Designer.vb">
       <DependentUpon>ScheduleManager.vb</DependentUpon>
     </Compile>
-    <Compile Include="Tva.Scheduling\ScheduleManager.vb">
+    <Compile Include="TVA.Scheduling\ScheduleManager.vb">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="Tva.Scheduling\SchedulePart.vb" />
-    <Compile Include="Tva\ExceptionEventArgs.vb" />
-    <Compile Include="Tva\GenericEventArgs.vb" />
-    <Compile Include="Tva\IBinaryDataProvider.vb" />
-    <Compile Include="Tva\IdentifiableItem.vb" />
-    <Compile Include="Tva\IdentifiableItemEventArgs.vb" />
-    <Compile Include="Tva\IdentifiableSourceEventArgs.vb" />
-    <Compile Include="Tva.Collections\Enumerations.vb" />
-    <Compile Include="Tva.Configuration\Common.vb" />
-    <Compile Include="Tva.Data\Enumerations.vb" />
-    <Compile Include="Tva.DateTime\TimeTagBase.vb" />
-    <Compile Include="Tva.DateTime\Enumerations.vb" />
-    <Compile Include="Tva.Measurements\Frame.vb" />
-    <Compile Include="Tva.Security\Cryptography\Common.vb" />
-    <Compile Include="Tva.Configuration\ConfigurationFile.vb" />
-    <Compile Include="Tva.Configuration\CategorizedSettingsElementCollection.vb" />
-    <Compile Include="Tva.Configuration\CategorizedSettingsElement.vb" />
-    <Compile Include="Tva.Configuration\CategorizedSettingsSection.vb" />
-    <Compile Include="Tva.Measurements\ImmediateMeasurements.vb" />
-    <Compile Include="Tva.Measurements\Sample.vb" />
-    <Compile Include="Tva.Security\Cryptography\Enumerations.vb" />
-    <Compile Include="Tva.Services\Enumerations.vb" />
-    <Compile Include="Tva.Services\IServiceComponent.vb" />
-    <Compile Include="Tva.Threading\QueueThread.vb" />
-    <Compile Include="Tva.Threading\RunThread.vb" />
-    <Compile Include="Tva.Threading\ThreadBase.vb" />
-    <Compile Include="Tva\Common.vb" />
-    <Compile Include="Tva.Data\Common.vb" />
-    <Compile Include="Tva\Assembly.vb" />
-    <Compile Include="Tva.Interop\Bit.vb" />
-    <Compile Include="Tva.Collections\Common.vb" />
-    <Compile Include="Tva.Collections\KeyedProcessQueue.vb">
+    <Compile Include="TVA.Scheduling\SchedulePart.vb" />
+    <Compile Include="TVA\ExceptionEventArgs.vb" />
+    <Compile Include="TVA\GenericEventArgs.vb" />
+    <Compile Include="TVA\IBinaryDataProvider.vb" />
+    <Compile Include="TVA\IdentifiableItem.vb" />
+    <Compile Include="TVA\IdentifiableItemEventArgs.vb" />
+    <Compile Include="TVA\IdentifiableSourceEventArgs.vb" />
+    <Compile Include="TVA.Collections\Enumerations.vb" />
+    <Compile Include="TVA.Configuration\Common.vb" />
+    <Compile Include="TVA.Data\Enumerations.vb" />
+    <Compile Include="TVA.DateTime\TimeTagBase.vb" />
+    <Compile Include="TVA.DateTime\Enumerations.vb" />
+    <Compile Include="TVA.Measurements\Frame.vb" />
+    <Compile Include="TVA.Security\Cryptography\Common.vb" />
+    <Compile Include="TVA.Configuration\ConfigurationFile.vb" />
+    <Compile Include="TVA.Configuration\CategorizedSettingsElementCollection.vb" />
+    <Compile Include="TVA.Configuration\CategorizedSettingsElement.vb" />
+    <Compile Include="TVA.Configuration\CategorizedSettingsSection.vb" />
+    <Compile Include="TVA.Measurements\ImmediateMeasurements.vb" />
+    <Compile Include="TVA.Measurements\Sample.vb" />
+    <Compile Include="TVA.Security\Cryptography\Enumerations.vb" />
+    <Compile Include="TVA.Services\Enumerations.vb" />
+    <Compile Include="TVA.Services\IServiceComponent.vb" />
+    <Compile Include="TVA.Threading\QueueThread.vb" />
+    <Compile Include="TVA.Threading\RunThread.vb" />
+    <Compile Include="TVA.Threading\ThreadBase.vb" />
+    <Compile Include="TVA\Common.vb" />
+    <Compile Include="TVA.Data\Common.vb" />
+    <Compile Include="TVA\Assembly.vb" />
+    <Compile Include="TVA.Interop\Bit.vb" />
+    <Compile Include="TVA.Collections\Common.vb" />
+    <Compile Include="TVA.Collections\KeyedProcessQueue.vb">
     </Compile>
-    <Compile Include="Tva.Collections\ProcessQueue.vb" />
-    <Compile Include="Tva.Identity\UserInfo.vb" />
-    <Compile Include="Tva.Interop\BitwiseCast.vb" />
-    <Compile Include="Tva.Identity\Common.vb" />
+    <Compile Include="TVA.Collections\ProcessQueue.vb" />
+    <Compile Include="TVA.Identity\UserInfo.vb" />
+    <Compile Include="TVA.Interop\BitwiseCast.vb" />
+    <Compile Include="TVA.Identity\Common.vb" />
     <Compile Include="My Project\AssemblyInfo.vb" />
-    <Compile Include="Tva.DateTime\Common.vb" />
-    <Compile Include="Tva.DateTime\NtpTimeTag.vb" />
-    <Compile Include="Tva.DateTime\Win32TimeZone.vb" />
-    <Compile Include="Tva.Interop\EndianOrder.vb" />
-    <Compile Include="Tva.DateTime\UnixTimeTag.vb" />
-    <Compile Include="Tva.Interop\WindowsApi.vb" />
-    <Compile Include="Tva.Interop\IniFile.vb" />
-    <Compile Include="Tva.IO\Common.vb" />
-    <Compile Include="Tva.IO\FilePath.vb" />
-    <Compile Include="Tva.IO\LogFile.vb" />
-    <Compile Include="Tva.Math\Common.vb" />
-    <Compile Include="Tva.Math\CompositeValues.vb" />
-    <Compile Include="Tva.Math\RealTimeSlope.vb" />
-    <Compile Include="Tva.Measurements\IFrame.vb" />
-    <Compile Include="Tva.Measurements\IMeasurement.vb" />
-    <Compile Include="Tva.Measurements\Measurement.vb" />
-    <Compile Include="Tva.Measurements\Concentrator.vb" />
-    <Compile Include="Tva.Measurements\TemporalMeasurement.vb" />
-    <Compile Include="Tva.ErrorManagement\SmtpTraceListener.vb" />
-    <Compile Include="Tva.Text\Common.vb" />
-    <Compile Include="Tva.Xml\Common.vb" />
-    <Compile Include="Tva\ByteEncoding.vb" />
-    <Compile Include="Tva\IPersistSettings.vb" />
-    <Compile Include="Tva\ProgressEventArgs.vb" />
-    <Compile Include="Tva\Serialization.vb" />
-    <Compile Include="Tva\ObjectStateChangedEventArgs.vb" />
+    <Compile Include="TVA.DateTime\Common.vb" />
+    <Compile Include="TVA.DateTime\NtpTimeTag.vb" />
+    <Compile Include="TVA.DateTime\Win32TimeZone.vb" />
+    <Compile Include="TVA.Interop\EndianOrder.vb" />
+    <Compile Include="TVA.DateTime\UnixTimeTag.vb" />
+    <Compile Include="TVA.Interop\WindowsApi.vb" />
+    <Compile Include="TVA.Interop\IniFile.vb" />
+    <Compile Include="TVA.IO\Common.vb" />
+    <Compile Include="TVA.IO\FilePath.vb" />
+    <Compile Include="TVA.IO\LogFile.vb" />
+    <Compile Include="TVA.Math\Common.vb" />
+    <Compile Include="TVA.Math\CompositeValues.vb" />
+    <Compile Include="TVA.Math\RealTimeSlope.vb" />
+    <Compile Include="TVA.Measurements\IFrame.vb" />
+    <Compile Include="TVA.Measurements\IMeasurement.vb" />
+    <Compile Include="TVA.Measurements\Measurement.vb" />
+    <Compile Include="TVA.Measurements\Concentrator.vb" />
+    <Compile Include="TVA.Measurements\TemporalMeasurement.vb" />
+    <Compile Include="TVA.ErrorManagement\SmtpTraceListener.vb" />
+    <Compile Include="TVA.Text\Common.vb" />
+    <Compile Include="TVA.Xml\Common.vb" />
+    <Compile Include="TVA\ByteEncoding.vb" />
+    <Compile Include="TVA\IPersistSettings.vb" />
+    <Compile Include="TVA\ProgressEventArgs.vb" />
+    <Compile Include="TVA\Serialization.vb" />
+    <Compile Include="TVA\ObjectStateChangedEventArgs.vb" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Tva.Collections\Tva.Collections.cd" />
+    <None Include="TVA.Collections\TVA.Collections.cd" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Embedded Resources\Scheduling.ScheduleManager.bmp" />
@@ -166,11 +166,11 @@
     <Content Include="Embedded Resources\Net.Ftp.Session.bmp" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Tva.Exception\" />
-    <Folder Include="Tva.Net\Http\" />
-    <Folder Include="Tva.Remoting\" />
-    <Folder Include="Tva.Web\" />
-    <Folder Include="Tva.Windows\" />
+    <Folder Include="TVA.Exception\" />
+    <Folder Include="TVA.Net\Http\" />
+    <Folder Include="TVA.Remoting\" />
+    <Folder Include="TVA.Web\" />
+    <Folder Include="TVA.Windows\" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.VisualBasic.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

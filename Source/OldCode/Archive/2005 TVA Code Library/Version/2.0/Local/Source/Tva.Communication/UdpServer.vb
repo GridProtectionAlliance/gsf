@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  Tva.Communication.UdpServer.vb - UDP-based communication server
+'  TVA.Communication.UdpServer.vb - UDP-based communication server
 '  Copyright © 2006 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005
@@ -22,9 +22,9 @@ Imports System.Net
 Imports System.Net.Sockets
 Imports System.Threading
 Imports System.ComponentModel
-Imports Tva.Serialization
-Imports Tva.Communication.CommunicationHelper
-Imports Tva.Security.Cryptography.Common
+Imports TVA.Serialization
+Imports TVA.Communication.CommunicationHelper
+Imports TVA.Security.Cryptography.Common
 
 ''' <summary>
 ''' Represents a UDP-based communication server.
@@ -59,7 +59,7 @@ Public Class UdpServer
     Public Const MaximumUdpDatagramSize As Integer = 32768
 
     ''' <summary>
-    ''' Initializes a instance of Tva.Communication.UdpServer with the specified data.
+    ''' Initializes a instance of TVA.Communication.UdpServer with the specified data.
     ''' </summary>
     ''' <param name="configurationString">The configuration string containing the data required for initializing the UDP server.</param>
     Public Sub New(ByVal configurationString As String)
@@ -213,7 +213,7 @@ Public Class UdpServer
 
         If PersistSettings Then
             Try
-                With Tva.Configuration.Common.CategorizedSettings(ConfigurationCategory)
+                With TVA.Configuration.Common.CategorizedSettings(ConfigurationCategory)
                     PayloadAware = .Item("PayloadAware").GetTypedValue(m_payloadAware)
                     DestinationReachableCheck = .Item("DestinationReachableCheck").GetTypedValue(m_destinationReachableCheck)
                 End With
@@ -230,7 +230,7 @@ Public Class UdpServer
 
         If PersistSettings Then
             Try
-                With Tva.Configuration.Common.CategorizedSettings(ConfigurationCategory)
+                With TVA.Configuration.Common.CategorizedSettings(ConfigurationCategory)
                     With .Item("PayloadAware", True)
                         .Value = m_payloadAware.ToString()
                         .Description = "True if the messages that are broken down into multiple datagram for the purpose of transmission while being sent are to be assembled back when received; otherwise False."
@@ -240,7 +240,7 @@ Public Class UdpServer
                         .Description = "True if a test is to be performed to check if the destination endpoint that is to receive data is listening for data; otherwise False."
                     End With
                 End With
-                Tva.Configuration.Common.SaveSettings()
+                TVA.Configuration.Common.SaveSettings()
             Catch ex As Exception
                 ' We might encounter an exception if for some reason the settings cannot be saved to the config file.
             End Try
@@ -283,7 +283,7 @@ Public Class UdpServer
     Protected Overrides Function ValidConfigurationString(ByVal configurationString As String) As Boolean
 
         If Not String.IsNullOrEmpty(configurationString) Then
-            m_configurationData = Tva.Text.Common.ParseKeyValuePairs(configurationString)
+            m_configurationData = TVA.Text.Common.ParseKeyValuePairs(configurationString)
             If (m_configurationData.ContainsKey("port") AndAlso _
                     ValidPortNumber(m_configurationData("port"))) OrElse _
                     (m_configurationData.ContainsKey("clients") AndAlso _
@@ -333,7 +333,7 @@ Public Class UdpServer
                         If m_receiveRawDataFunction IsNot Nothing Then
                             m_receiveRawDataFunction(m_buffer, 0, bytesReceived)
                         Else
-                            ProcessReceivedClientData(Tva.IO.Common.CopyBuffer(m_buffer, 0, bytesReceived), clientEndPoint)
+                            ProcessReceivedClientData(TVA.IO.Common.CopyBuffer(m_buffer, 0, bytesReceived), clientEndPoint)
                         End If
                     Loop
                 Else
@@ -341,7 +341,7 @@ Public Class UdpServer
                     Dim totalBytesReceived As Integer = 0
                     Do While True
                         If payloadSize = -1 Then
-                            .DataBuffer = Tva.Common.CreateArray(Of Byte)(MyBase.ReceiveBufferSize)
+                            .DataBuffer = TVA.Common.CreateArray(Of Byte)(MyBase.ReceiveBufferSize)
                         End If
 
                         bytesReceived = .Client.ReceiveFrom(.DataBuffer, totalBytesReceived, (.DataBuffer.Length - totalBytesReceived), SocketFlags.None, clientEndPoint)
@@ -351,7 +351,7 @@ Public Class UdpServer
                             If payloadSize <> -1 AndAlso payloadSize <= CommunicationClientBase.MaximumDataSize Then
                                 Dim payload As Byte() = PayloadAwareHelper.GetPayload(.DataBuffer)
 
-                                .DataBuffer = Tva.Common.CreateArray(Of Byte)(payloadSize)
+                                .DataBuffer = TVA.Common.CreateArray(Of Byte)(payloadSize)
                                 Buffer.BlockCopy(payload, 0, .DataBuffer, 0, payload.Length)
                                 bytesReceived = payload.Length
                             End If

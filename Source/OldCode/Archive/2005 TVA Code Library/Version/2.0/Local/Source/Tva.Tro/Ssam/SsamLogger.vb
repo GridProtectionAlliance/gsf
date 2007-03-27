@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  Tva.Tro.Ssam.SsamLogger.vb - SSAM Logger
+'  TVA.TRO.Ssam.SsamLogger.vb - SSAM Logger
 '  Copyright © 2006 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005
@@ -21,8 +21,8 @@
 Imports System.Text
 Imports System.Drawing
 Imports System.ComponentModel
-Imports Tva.Services
-Imports Tva.Collections
+Imports TVA.Services
+Imports TVA.Collections
 
 Namespace Ssam
 
@@ -45,9 +45,9 @@ Namespace Ssam
         Public Event LogException As EventHandler(Of ExceptionEventArgs)
 
         ''' <summary>
-        ''' Initializes a instance of Tva.Tro.Ssam.SsamLogger with the specified information.
+        ''' Initializes a instance of TVA.TRO.Ssam.SsamLogger with the specified information.
         ''' </summary>
-        ''' <param name="server">One of the Tva.Tro.Ssam.SsamApi.SsamServer values.</param>
+        ''' <param name="server">One of the TVA.TRO.Ssam.SsamApi.SsamServer values.</param>
         ''' <param name="keepConnectionOpen">
         ''' True if connection with the SSAM server is to be kept open after the first event is loggged for 
         ''' any consecutive events that will follow; otherwise False.
@@ -93,12 +93,12 @@ Namespace Ssam
         End Property
 
         ''' <summary>
-        ''' Gets the Tva.Tro.Ssam.SsamApi inistance used for logging events to the SSAM server.
+        ''' Gets the TVA.TRO.Ssam.SsamApi inistance used for logging events to the SSAM server.
         ''' </summary>
         ''' <value></value>
-        ''' <returns>The Tva.Tro.Ssam.SsamApi inistance used for logging events to the SSAM server.</returns>
+        ''' <returns>The TVA.TRO.Ssam.SsamApi inistance used for logging events to the SSAM server.</returns>
         ''' <remarks></remarks>
-        <Description("The Tva.Tro.Ssam.SsamApi inistance used for logging events to the SSAM server."), Category("Configuration"), TypeConverter(GetType(ExpandableObjectConverter)), DesignerSerializationVisibility(DesignerSerializationVisibility.Content)> _
+        <Description("The TVA.TRO.Ssam.SsamApi inistance used for logging events to the SSAM server."), Category("Configuration"), TypeConverter(GetType(ExpandableObjectConverter)), DesignerSerializationVisibility(DesignerSerializationVisibility.Content)> _
         Public ReadOnly Property SsamApi() As SsamApi
             Get
                 Return m_ssamApi
@@ -106,12 +106,12 @@ Namespace Ssam
         End Property
 
         ''' <summary>
-        ''' Gets the Tva.Collections.ProcessQueue(Of SsamEvent) in which events are queued for logging to the 
+        ''' Gets the TVA.Collections.ProcessQueue(Of SsamEvent) in which events are queued for logging to the 
         ''' SSAM server.
         ''' </summary>
         ''' <value></value>
         ''' <returns>
-        ''' The Tva.Collections.ProcessQueue(Of SsamEvent) in which events are queued for logging to the 
+        ''' The TVA.Collections.ProcessQueue(Of SsamEvent) in which events are queued for logging to the 
         ''' SSAM server.
         ''' </returns>
         ''' <remarks></remarks>
@@ -126,8 +126,8 @@ Namespace Ssam
         ''' Creates an event with the specified information and queues it for logging to the SSAM server.
         ''' </summary>
         ''' <param name="entityID">The mnemonic key or the numeric value of the entity to which the event belongs.</param>
-        ''' <param name="entityType">One of the Tva.Tro.Ssam.SsamEntityType values.</param>
-        ''' <param name="eventType">One of the Tva.Tro.Ssam.SsamEvent.SsamEventType values.</param>
+        ''' <param name="entityType">One of the TVA.TRO.Ssam.SsamEntityType values.</param>
+        ''' <param name="eventType">One of the TVA.TRO.Ssam.SsamEvent.SsamEventType values.</param>
         Public Sub LogEvent(ByVal entityID As String, ByVal entityType As SsamEntityType, _
                 ByVal eventType As SsamEventType)
 
@@ -139,8 +139,8 @@ Namespace Ssam
         ''' Creates an event with the specified information and queues it for logging to the SSAM server.
         ''' </summary>
         ''' <param name="entityID">The mnemonic key or the numeric value of the entity to which the event belongs.</param>
-        ''' <param name="entityType">One of the Tva.Tro.Ssam.SsamEntityType values.</param>
-        ''' <param name="eventType">One of the Tva.Tro.Ssam.SsamEvent.SsamEventType values.</param>
+        ''' <param name="entityType">One of the TVA.TRO.Ssam.SsamEntityType values.</param>
+        ''' <param name="eventType">One of the TVA.TRO.Ssam.SsamEvent.SsamEventType values.</param>
         ''' <param name="message">A brief description of the event (max 120 characters).</param>
         Public Sub LogEvent(ByVal entityID As String, ByVal entityType As SsamEntityType, _
                 ByVal eventType As SsamEventType, ByVal message As String)
@@ -153,8 +153,8 @@ Namespace Ssam
         ''' Creates an event with the specified information and queues it for logging to the SSAM server.
         ''' </summary>
         ''' <param name="entityID">The mnemonic key or the numeric value of the entity to which the event belongs.</param>
-        ''' <param name="entityType">One of the Tva.Tro.Ssam.SsamEntityType values.</param>
-        ''' <param name="eventType">One of the Tva.Tro.Ssam.SsamEvent.SsamEventType values.</param>
+        ''' <param name="entityType">One of the TVA.TRO.Ssam.SsamEntityType values.</param>
+        ''' <param name="eventType">One of the TVA.TRO.Ssam.SsamEvent.SsamEventType values.</param>
         ''' <param name="errorNumber">The error number encountered, if any, for which the event is being logged.</param>
         ''' <param name="message">A brief description of the event (max 120 characters).</param>
         ''' <param name="description">A detailed description of the event (max 2GB).</param>

@@ -17,9 +17,9 @@
 
 Imports System.Runtime.Serialization
 Imports System.Text
-Imports Tva.DateTime
-Imports Tva.Phasors.Common
-Imports Tva.IO.Compression.Common
+Imports TVA.DateTime
+Imports TVA.Phasors.Common
+Imports TVA.IO.Compression.Common
 
 Namespace FNet
 

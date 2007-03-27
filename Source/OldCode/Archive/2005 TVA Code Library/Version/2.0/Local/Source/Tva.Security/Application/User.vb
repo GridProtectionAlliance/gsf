@@ -3,8 +3,8 @@
 Imports System.Data
 Imports System.Data.SqlClient
 Imports System.Security.Principal
-Imports Tva.Data.Common
-Imports Tva.Identity
+Imports TVA.Data.Common
+Imports TVA.Identity
 
 Namespace Application
 

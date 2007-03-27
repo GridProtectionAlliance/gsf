@@ -17,8 +17,8 @@
 
 Imports System.Runtime.Serialization
 Imports System.Text
-Imports Tva.Phasors.Common
-Imports Tva.Phasors.BpaPdcStream.Common
+Imports TVA.Phasors.Common
+Imports TVA.Phasors.BpaPdcStream.Common
 
 Namespace BpaPdcStream
 

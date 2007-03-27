@@ -13,7 +13,7 @@
   <Comment CommentText="IEEE C37 118">
     <Position X="8" Y="5.5" Height="0.312" Width="0.886" />
   </Comment>
-  <Class Name="Tva.Phasors.DigitalDefinitionBase">
+  <Class Name="TVA.Phasors.DigitalDefinitionBase">
     <Position X="3.5" Y="2.5" Width="2" />
     <TypeIdentifier>
       <FileName>DigitalDefinitionBase.vb</FileName>
@@ -21,7 +21,7 @@
     </TypeIdentifier>
     <Lollipop Position="0.2" />
   </Class>
-  <Class Name="Tva.Phasors.ChannelDefinitionBase">
+  <Class Name="TVA.Phasors.ChannelDefinitionBase">
     <Position X="0.5" Y="1" Width="2.25" />
     <TypeIdentifier>
       <FileName>ChannelDefinitionBase.vb</FileName>
@@ -29,7 +29,7 @@
     </TypeIdentifier>
     <Lollipop Position="0.2" />
   </Class>
-  <Class Name="Tva.Phasors.ChannelBase">
+  <Class Name="TVA.Phasors.ChannelBase">
     <Position X="0.5" Y="6.75" Width="2.25" />
     <TypeIdentifier>
       <FileName>ChannelBase.vb</FileName>
@@ -37,13 +37,13 @@
     </TypeIdentifier>
     <Lollipop Position="0.2" />
   </Class>
-  <Class Name="Tva.Phasors.BpaPdcStream.DigitalDefinition">
+  <Class Name="TVA.Phasors.BpaPdcStream.DigitalDefinition">
     <Position X="3.25" Y="6" Width="1.75" />
     <TypeIdentifier>
       <FileName>BpaPdcStream\DigitalDefinition.vb</FileName>
       <HashCode>AAAAAAAAAAAAAAAAAAAIQAAAAAAAAACgAAAABAAAAAA=</HashCode>
     </TypeIdentifier>
-    <InheritanceLine Type="Tva.Phasors.DigitalDefinitionBase" ManuallyRouted="true">
+    <InheritanceLine Type="TVA.Phasors.DigitalDefinitionBase" ManuallyRouted="true">
       <Path>
         <Point X="4.5" Y="4.312" />
         <Point X="4.5" Y="4.87" />
@@ -52,13 +52,13 @@
       </Path>
     </InheritanceLine>
   </Class>
-  <Class Name="Tva.Phasors.Ieee1344.DigitalDefinition">
+  <Class Name="TVA.Phasors.Ieee1344.DigitalDefinition">
     <Position X="5.25" Y="6" Width="2" />
     <TypeIdentifier>
       <FileName>Ieee1344\DigitalDefinition.vb</FileName>
       <HashCode>AAAAAACAAAACCAAAAAAIYAAwAQAAAACAAAAAIAAAAAA=</HashCode>
     </TypeIdentifier>
-    <InheritanceLine Type="Tva.Phasors.DigitalDefinitionBase" ManuallyRouted="true">
+    <InheritanceLine Type="TVA.Phasors.DigitalDefinitionBase" ManuallyRouted="true">
       <Path>
         <Point X="4.5" Y="4.312" />
         <Point X="4.5" Y="4.864" />
@@ -67,13 +67,13 @@
       </Path>
     </InheritanceLine>
   </Class>
-  <Class Name="Tva.Phasors.IeeeC37_118.DigitalDefinition">
+  <Class Name="TVA.Phasors.IeeeC37_118.DigitalDefinition">
     <Position X="7.5" Y="6" Width="2" />
     <TypeIdentifier>
       <FileName>IeeeC37_118\DigitalDefinition.vb</FileName>
       <HashCode>AQAgAACAEBACCAAhAAAIQAAwAAAAgACBAAAAJAEIAAA=</HashCode>
     </TypeIdentifier>
-    <InheritanceLine Type="Tva.Phasors.DigitalDefinitionBase" ManuallyRouted="true">
+    <InheritanceLine Type="TVA.Phasors.DigitalDefinitionBase" ManuallyRouted="true">
       <Path>
         <Point X="4.5" Y="4.312" />
         <Point X="4.5" Y="4.863" />
@@ -82,21 +82,21 @@
       </Path>
     </InheritanceLine>
   </Class>
-  <Interface Name="Tva.Phasors.IDigitalDefinition">
+  <Interface Name="TVA.Phasors.IDigitalDefinition">
     <Position X="15" Y="3" Width="1.5" />
     <TypeIdentifier>
       <FileName>IDigitalDefinition.vb</FileName>
       <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Interface>
-  <Interface Name="Tva.Phasors.IChannelDefinition">
+  <Interface Name="TVA.Phasors.IChannelDefinition">
     <Position X="12.75" Y="3" Width="2" />
     <TypeIdentifier>
       <FileName>IChannelDefinition.vb</FileName>
       <HashCode>AQAAAAAAEAAAAAAAAIAAQAgAAAAAIAIAAIEABAAAgAA=</HashCode>
     </TypeIdentifier>
   </Interface>
-  <Interface Name="Tva.Phasors.IChannel">
+  <Interface Name="TVA.Phasors.IChannel">
     <Position X="10.75" Y="3" Width="1.5" />
     <TypeIdentifier>
       <FileName>IChannel.vb</FileName>
@@ -119,7 +119,7 @@
     <Position X="15" Y="1.25" Width="1.5" />
     <TypeIdentifier />
   </Interface>
-  <Interface Name="Tva.IBinaryDataProvider">
+  <Interface Name="TVA.IBinaryDataProvider">
     <Position X="8.5" Y="3" Width="1.75" />
     <TypeIdentifier />
   </Interface>

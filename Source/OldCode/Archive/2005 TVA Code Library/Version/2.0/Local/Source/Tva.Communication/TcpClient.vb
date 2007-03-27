@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  Tva.Communication.TcpClient.vb - TCP-based communication client
+'  TVA.Communication.TcpClient.vb - TCP-based communication client
 '  Copyright © 2006 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005
@@ -24,8 +24,8 @@ Imports System.Net.Sockets
 Imports System.Text
 Imports System.Threading
 Imports System.ComponentModel
-Imports Tva.Serialization
-Imports Tva.Communication.CommunicationHelper
+Imports TVA.Serialization
+Imports TVA.Communication.CommunicationHelper
 
 ''' <summary>
 ''' Represents a TCP-based communication client.
@@ -44,7 +44,7 @@ Public Class TcpClient
 #Region " Code Scope: Public "
 
     ''' <summary>
-    ''' Initializes a instance of Tva.Communication.TcpClient with the specified data.
+    ''' Initializes a instance of TVA.Communication.TcpClient with the specified data.
     ''' </summary>
     ''' <param name="connectionString">The connection string containing the data required for connecting to a TCP server.</param>
     Public Sub New(ByVal connectionString As String)
@@ -120,7 +120,7 @@ Public Class TcpClient
 
         If PersistSettings Then
             Try
-                With Tva.Configuration.Common.CategorizedSettings(ConfigurationCategory)
+                With TVA.Configuration.Common.CategorizedSettings(ConfigurationCategory)
                     PayloadAware = .Item("PayloadAware").GetTypedValue(m_payloadAware)
                 End With
             Catch ex As Exception
@@ -136,13 +136,13 @@ Public Class TcpClient
 
         If PersistSettings Then
             Try
-                With Tva.Configuration.Common.CategorizedSettings(ConfigurationCategory)
+                With TVA.Configuration.Common.CategorizedSettings(ConfigurationCategory)
                     With .Item("PayloadAware", True)
                         .Value = m_payloadAware.ToString()
                         .Description = "True if the message boundaries are to be preserved during transmission; otherwise False."
                     End With
                 End With
-                Tva.Configuration.Common.SaveSettings()
+                TVA.Configuration.Common.SaveSettings()
             Catch ex As Exception
                 ' We might encounter an exception if for some reason the settings cannot be saved to the config file.
             End Try
@@ -185,7 +185,7 @@ Public Class TcpClient
     Protected Overrides Function ValidConnectionString(ByVal connectionString As String) As Boolean
 
         If Not String.IsNullOrEmpty(connectionString) Then
-            m_connectionData = Tva.Text.Common.ParseKeyValuePairs(connectionString)
+            m_connectionData = TVA.Text.Common.ParseKeyValuePairs(connectionString)
             If m_connectionData.ContainsKey("server") AndAlso _
                     Not String.IsNullOrEmpty(m_connectionData("server")) AndAlso _
                     m_connectionData.ContainsKey("port") AndAlso _
@@ -305,7 +305,7 @@ Public Class TcpClient
                                 m_receiveRawDataFunction(m_buffer, 0, bytesReceived)
                                 m_totalBytesReceived += bytesReceived
                             Else
-                                ProcessReceivedServerData(Tva.IO.Common.CopyBuffer(m_buffer, 0, bytesReceived))
+                                ProcessReceivedServerData(TVA.IO.Common.CopyBuffer(m_buffer, 0, bytesReceived))
                             End If
                         Catch ex As SocketException
                             If ex.SocketErrorCode = SocketError.TimedOut Then
@@ -327,7 +327,7 @@ Public Class TcpClient
                         If payloadSize = -1 Then
                             ' If we don't have the payload size, we'll begin by reading the payload header which 
                             ' contains the payload size. Once we have the payload size we can receive payload.
-                            .DataBuffer = Tva.Common.CreateArray(Of Byte)(PayloadAwareHelper.PayloadHeaderSize)
+                            .DataBuffer = TVA.Common.CreateArray(Of Byte)(PayloadAwareHelper.PayloadHeaderSize)
                         End If
 
                         Try
@@ -345,7 +345,7 @@ Public Class TcpClient
                                     ' We have a valid payload size, so we'll create a buffer that's big enough 
                                     ' to hold the entire payload. Remember, the payload at the most can be as big
                                     ' as whatever the MaximumDataSize is.
-                                    .DataBuffer = Tva.Common.CreateArray(Of Byte)(payloadSize)
+                                    .DataBuffer = TVA.Common.CreateArray(Of Byte)(payloadSize)
                                 End If
                             Else
                                 totalBytesReceived += bytesReceived

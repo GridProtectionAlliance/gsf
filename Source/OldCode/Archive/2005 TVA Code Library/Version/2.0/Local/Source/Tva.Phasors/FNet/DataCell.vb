@@ -17,9 +17,9 @@
 
 Imports System.Runtime.Serialization
 Imports System.Text
-Imports Tva.Phasors.Common
-Imports Tva.Phasors.FNet.Common
-Imports Tva.Text.Common
+Imports TVA.Phasors.Common
+Imports TVA.Phasors.FNet.Common
+Imports TVA.Text.Common
 
 Namespace FNet
 

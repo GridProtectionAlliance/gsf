@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  Tva.Measurements.Concentrator.vb - Measurement concentrator
+'  TVA.Measurements.Concentrator.vb - Measurement concentrator
 '  Copyright © 2006 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005
@@ -25,10 +25,10 @@
 
 Imports System.Text
 Imports System.Threading
-Imports Tva.Collections
-Imports Tva.DateTime
-Imports Tva.DateTime.Common
-Imports Tva.Math.Common
+Imports TVA.Collections
+Imports TVA.DateTime
+Imports TVA.DateTime.Common
+Imports TVA.Math.Common
 
 Namespace Measurements
 

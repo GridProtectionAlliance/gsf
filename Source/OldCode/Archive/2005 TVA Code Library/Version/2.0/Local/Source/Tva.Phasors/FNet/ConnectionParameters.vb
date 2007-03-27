@@ -17,7 +17,7 @@
 
 Imports System.ComponentModel
 Imports System.Runtime.Serialization
-Imports Tva.Phasors.FNet.Common
+Imports TVA.Phasors.FNet.Common
 
 Namespace FNet
 

@@ -18,9 +18,9 @@
 Imports System.IO
 Imports System.Text
 Imports System.ComponentModel
-Imports Tva.Collections
-Imports Tva.IO.Common
-Imports Tva.Phasors.Common
+Imports TVA.Collections
+Imports TVA.IO.Common
+Imports TVA.Phasors.Common
 
 ''' <summary>This class defines the basic functionality for a protocol to parse a binary data stream and return the parsed data via events</summary>
 ''' <remarks>Frame parsers are implemented as a write-only stream - this way data can come from any source</remarks>

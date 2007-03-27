@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  Tva.Math.Common.vb - Math Functions
+'  TVA.Math.Common.vb - Math Functions
 '  Copyright © 2006 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005
@@ -25,8 +25,8 @@
 '
 '*******************************************************************************************************
 
-Imports Tva.Common
-Imports Tva.Interop
+Imports TVA.Common
+Imports TVA.Interop
 
 Namespace Math
 

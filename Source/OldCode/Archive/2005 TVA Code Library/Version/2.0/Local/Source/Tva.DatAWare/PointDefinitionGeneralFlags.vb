@@ -1,4 +1,4 @@
-Imports Tva.Interop.Bit
+Imports TVA.Interop.Bit
 
 ' 02/20/2007
 

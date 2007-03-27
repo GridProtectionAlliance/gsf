@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  Tva.Communication.ServerBase.vb - Base functionality of a server for transporting data
+'  TVA.Communication.ServerBase.vb - Base functionality of a server for transporting data
 '  Copyright © 2006 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005
@@ -21,13 +21,13 @@ Imports System.Text
 Imports System.Threading
 Imports System.Drawing
 Imports System.ComponentModel
-Imports Tva.Common
-Imports Tva.Serialization
-Imports Tva.Services
-Imports Tva.IO.Common
-Imports Tva.DateTime.Common
-Imports Tva.Communication.CommunicationHelper
-Imports Tva.Communication.Common
+Imports TVA.Common
+Imports TVA.Serialization
+Imports TVA.Services
+Imports TVA.IO.Common
+Imports TVA.DateTime.Common
+Imports TVA.Communication.CommunicationHelper
+Imports TVA.Communication.Common
 
 ''' <summary>
 ''' Represents a server involved in the transportation of data.
@@ -44,8 +44,8 @@ Public MustInherit Class CommunicationServerBase
     Private m_secureSession As Boolean
     Private m_handshake As Boolean
     Private m_handshakePassphrase As String
-    Private m_encryption As Tva.Security.Cryptography.EncryptLevel
-    Private m_compression As Tva.IO.Compression.CompressLevel
+    Private m_encryption As TVA.Security.Cryptography.EncryptLevel
+    Private m_compression As TVA.IO.Compression.CompressLevel
     Private m_crcCheck As CRCCheckType
     Private m_enabled As Boolean
     Private m_textEncoding As Encoding
@@ -259,12 +259,12 @@ Public MustInherit Class CommunicationServerBase
     ''' 3) A private session key will be used as the key when SecureSession is enabled.
     ''' </para>
     ''' </remarks>
-    <Description("The encryption level to be used for encrypting the data exchanged between the server and clients."), Category("Data"), DefaultValue(GetType(Tva.Security.Cryptography.EncryptLevel), "None")> _
-    Public Overridable Property Encryption() As Tva.Security.Cryptography.EncryptLevel Implements ICommunicationServer.Encryption
+    <Description("The encryption level to be used for encrypting the data exchanged between the server and clients."), Category("Data"), DefaultValue(GetType(TVA.Security.Cryptography.EncryptLevel), "None")> _
+    Public Overridable Property Encryption() As TVA.Security.Cryptography.EncryptLevel Implements ICommunicationServer.Encryption
         Get
             Return m_encryption
         End Get
-        Set(ByVal value As Tva.Security.Cryptography.EncryptLevel)
+        Set(ByVal value As TVA.Security.Cryptography.EncryptLevel)
             If (Not m_secureSession) OrElse _
                     (m_secureSession AndAlso value <> Security.Cryptography.EncryptLevel.None) Then
                 m_encryption = value
@@ -281,12 +281,12 @@ Public MustInherit Class CommunicationServerBase
     ''' <value></value>
     ''' <returns>The compression level to be used for compressing the data exchanged between the server and clients.</returns>
     ''' <remarks>Set Compression = NoCompression to disable compression.</remarks>
-    <Description("The compression level to be used for compressing the data exchanged between the server and clients."), Category("Data"), DefaultValue(GetType(Tva.IO.Compression.CompressLevel), "NoCompression")> _
-    Public Overridable Property Compression() As Tva.IO.Compression.CompressLevel Implements ICommunicationServer.Compression
+    <Description("The compression level to be used for compressing the data exchanged between the server and clients."), Category("Data"), DefaultValue(GetType(TVA.IO.Compression.CompressLevel), "NoCompression")> _
+    Public Overridable Property Compression() As TVA.IO.Compression.CompressLevel Implements ICommunicationServer.Compression
         Get
             Return m_compression
         End Get
-        Set(ByVal value As Tva.IO.Compression.CompressLevel)
+        Set(ByVal value As TVA.IO.Compression.CompressLevel)
             m_compression = value
         End Set
     End Property
@@ -481,7 +481,7 @@ Public MustInherit Class CommunicationServerBase
                 If dataToSend.Length() <= MaximumDataSize Then
                     'SendPreparedDataTo(clientID, dataToSend)
                     ' JRC: Removed reflective thread invocation and changed to thread pool for speed...
-                    '   Tva.Threading.RunThread.ExecuteNonPublicMethod(Me, "SendPreparedDataTo", clientID, dataToSend)
+                    '   TVA.Threading.RunThread.ExecuteNonPublicMethod(Me, "SendPreparedDataTo", clientID, dataToSend)
 
                     ' Begin sending data on a seperate thread.
                     ThreadPool.QueueUserWorkItem(AddressOf SendPreparedDataTo, New Object() {clientID, dataToSend})
@@ -540,7 +540,7 @@ Public MustInherit Class CommunicationServerBase
                     For Each clientID As Guid In m_clientIDs
                         'SendPreparedDataTo(clientID, dataToSend)
                         ' JRC: Removed reflective thread invocation and changed to thread pool for speed...
-                        '   Tva.Threading.RunThread.ExecuteNonPublicMethod(Me, "SendPreparedDataTo", clientID, dataToSend)
+                        '   TVA.Threading.RunThread.ExecuteNonPublicMethod(Me, "SendPreparedDataTo", clientID, dataToSend)
 
                         ' Begin sending data on a seperate thread.
                         ThreadPool.QueueUserWorkItem(AddressOf SendPreparedDataTo, New Object() {clientID, dataToSend})
@@ -660,7 +660,7 @@ Public MustInherit Class CommunicationServerBase
 
         If m_persistSettings Then
             Try
-                With Tva.Configuration.Common.CategorizedSettings(m_configurationCategory)
+                With TVA.Configuration.Common.CategorizedSettings(m_configurationCategory)
                     ConfigurationString = .Item("ConfigurationString").GetTypedValue(m_configurationString)
                     ReceiveBufferSize = .Item("ReceiveBufferSize").GetTypedValue(m_receiveBufferSize)
                     MaximumClients = .Item("MaximumClients").GetTypedValue(m_maximumClients)
@@ -682,7 +682,7 @@ Public MustInherit Class CommunicationServerBase
 
         If m_persistSettings Then
             Try
-                With Tva.Configuration.Common.CategorizedSettings(m_configurationCategory)
+                With TVA.Configuration.Common.CategorizedSettings(m_configurationCategory)
                     .Clear()
                     With .Item("ConfigurationString", True)
                         .Value = m_configurationString
@@ -721,7 +721,7 @@ Public MustInherit Class CommunicationServerBase
                         .Description = "True if the server is enabled; otherwise False."
                     End With
                 End With
-                Tva.Configuration.Common.SaveSettings()
+                TVA.Configuration.Common.SaveSettings()
             Catch ex As Exception
                 ' We might encounter an exception if for some reason the settings cannot be saved to the config file.
             End Try
@@ -765,7 +765,7 @@ Public MustInherit Class CommunicationServerBase
     Protected Const DefaultCryptoKey As String = "6572a33d-826f-4d96-8c28-8be66bbc700e"
 
     ''' <summary>
-    ''' Raises the Tva.Communication.ServerBase.ServerStarted event.
+    ''' Raises the TVA.Communication.ServerBase.ServerStarted event.
     ''' </summary>
     ''' <param name="e">A System.EventArgs that contains the event data.</param>
     ''' <remarks>This method is to be called after the server has been started.</remarks>
@@ -779,7 +779,7 @@ Public MustInherit Class CommunicationServerBase
     End Sub
 
     ''' <summary>
-    ''' Raises the Tva.Communication.ServerBase.ServerStopped event.
+    ''' Raises the TVA.Communication.ServerBase.ServerStopped event.
     ''' </summary>
     ''' <param name="e">A System.EventArgs that contains the event data.</param>
     ''' <remarks>This method is to be called after the server has been stopped.</remarks>
@@ -792,9 +792,9 @@ Public MustInherit Class CommunicationServerBase
     End Sub
 
     ''' <summary>
-    ''' Raises the Tva.Communication.ServerBase.ServerStartupException event.
+    ''' Raises the TVA.Communication.ServerBase.ServerStartupException event.
     ''' </summary>
-    ''' <param name="e">A Tva.ExceptionEventArgs that contains the event data.</param>
+    ''' <param name="e">A TVA.ExceptionEventArgs that contains the event data.</param>
     ''' <remarks>This method is to be called if the server throws an exception during startup.</remarks>
     Protected Overridable Sub OnServerStartupException(ByVal e As ExceptionEventArgs)
 
@@ -803,9 +803,9 @@ Public MustInherit Class CommunicationServerBase
     End Sub
 
     ''' <summary>
-    ''' Raises the Tva.Communication.ServerBase.ClientConnected event.
+    ''' Raises the TVA.Communication.ServerBase.ClientConnected event.
     ''' </summary>
-    ''' <param name="e">A Tva.IdentifiableSourceEventArgs that contains the event data.</param>
+    ''' <param name="e">A TVA.IdentifiableSourceEventArgs that contains the event data.</param>
     ''' <remarks>This method is to be called when a client is connected to the server.</remarks>
     Protected Overridable Sub OnClientConnected(ByVal e As IdentifiableSourceEventArgs)
 
@@ -815,9 +815,9 @@ Public MustInherit Class CommunicationServerBase
     End Sub
 
     ''' <summary>
-    ''' Raises the Tva.Communication.ServerBase.ClientDisconnected event.
+    ''' Raises the TVA.Communication.ServerBase.ClientDisconnected event.
     ''' </summary>
-    ''' <param name="e">A Tva.IdentifiableSourceEventArgs that contains the event data.</param>
+    ''' <param name="e">A TVA.IdentifiableSourceEventArgs that contains the event data.</param>
     ''' <remarks>This method is to be called when a client has disconnected from the server.</remarks>
     Protected Overridable Sub OnClientDisconnected(ByVal e As IdentifiableSourceEventArgs)
 
@@ -827,9 +827,9 @@ Public MustInherit Class CommunicationServerBase
     End Sub
 
     ''' <summary>
-    ''' Raises the Tva.Communication.ServerBase.ReceivedClientData event.
+    ''' Raises the TVA.Communication.ServerBase.ReceivedClientData event.
     ''' </summary>
-    ''' <param name="e">A Tva.DataEventArgs that contains the event data.</param>
+    ''' <param name="e">A TVA.DataEventArgs that contains the event data.</param>
     ''' <remarks>This method is to be called when the server receives data from a client.</remarks>
     Protected Overridable Sub OnReceivedClientData(ByVal e As IdentifiableItemEventArgs(Of Byte()))
 

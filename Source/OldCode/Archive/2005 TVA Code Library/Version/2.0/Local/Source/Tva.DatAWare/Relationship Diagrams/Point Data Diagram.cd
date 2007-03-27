@@ -1,14 +1,14 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <ClassDiagram MajorVersion="1" MinorVersion="1" MembersFormat="FullSignature">
   <Font Name="Tahoma" Size="8.25" />
-  <Class Name="Tva.DatAWare.ExtendedPointData">
+  <Class Name="TVA.DatAWare.ExtendedPointData">
     <Position X="9" Y="6.5" Width="3.25" />
     <TypeIdentifier>
       <FileName>ExtendedPointData.vb</FileName>
       <HashCode>AAAAAAAAAAAAAAAAAAAAAAABQAAAAAAAAAAAAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Class>
-  <Class Name="Tva.DatAWare.PointDataBase">
+  <Class Name="TVA.DatAWare.PointDataBase">
     <Position X="4.75" Y="1" Width="3.75" />
     <TypeIdentifier>
       <FileName>PointDataBase.vb</FileName>
@@ -16,14 +16,14 @@
     </TypeIdentifier>
     <Lollipop Position="0.2" />
   </Class>
-  <Class Name="Tva.DatAWare.StandardPointData">
+  <Class Name="TVA.DatAWare.StandardPointData">
     <Position X="0.75" Y="6.5" Width="3.75" />
     <TypeIdentifier>
       <FileName>StandardPointData.vb</FileName>
       <HashCode>AAAAAAAAAACAAAAAAAAAAAABQAAAAAAAAAAAAAAAACA=</HashCode>
     </TypeIdentifier>
   </Class>
-  <Interface Name="Tva.DatAWare.IPointData">
+  <Interface Name="TVA.DatAWare.IPointData">
     <Position X="9.75" Y="1" Width="2" />
     <TypeIdentifier>
       <FileName>IPointData.vb</FileName>

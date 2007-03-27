@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  Tva.Measurements.Frame.vb - Basic frame implementation
+'  TVA.Measurements.Frame.vb - Basic frame implementation
 '  Copyright © 2006 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005

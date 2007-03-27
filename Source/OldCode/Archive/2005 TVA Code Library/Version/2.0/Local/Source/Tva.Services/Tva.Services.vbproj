@@ -7,8 +7,8 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{072D5E46-0944-48DE-A1E1-C06D145FB366}</ProjectGuid>
     <OutputType>Library</OutputType>
-    <RootNamespace>Tva.Services</RootNamespace>
-    <AssemblyName>Tva.Services</AssemblyName>
+    <RootNamespace>TVA.Services</RootNamespace>
+    <AssemblyName>TVA.Services</AssemblyName>
     <MyType>Windows</MyType>
     <SignAssembly>false</SignAssembly>
     <AssemblyOriginatorKeyFile>..\TVA.snk</AssemblyOriginatorKeyFile>
@@ -24,7 +24,7 @@
     <DefineDebug>true</DefineDebug>
     <DefineTrace>true</DefineTrace>
     <OutputPath>..\bin\</OutputPath>
-    <DocumentationFile>Tva.Services.xml</DocumentationFile>
+    <DocumentationFile>TVA.Services.xml</DocumentationFile>
     <NoWarn>42016,41999,42017,42018,42019,42032,42036,42020,42021,42022</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
@@ -33,7 +33,7 @@
     <DefineTrace>true</DefineTrace>
     <Optimize>true</Optimize>
     <OutputPath>..\bin\</OutputPath>
-    <DocumentationFile>Tva.Services.xml</DocumentationFile>
+    <DocumentationFile>TVA.Services.xml</DocumentationFile>
     <NoWarn>42016,41999,42017,42018,42019,42032,42036,42020,42021,42022</NoWarn>
   </PropertyGroup>
   <ItemGroup>
@@ -73,13 +73,13 @@
     <Compile Include="UpdateClientStatusEventArgs.vb" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Tva.Communication\Tva.Communication.vbproj">
+    <ProjectReference Include="..\TVA.Communication\TVA.Communication.vbproj">
       <Project>{99F93056-9EDE-4EB8-BF8B-61E3B8728F9D}</Project>
-      <Name>Tva.Communication</Name>
+      <Name>TVA.Communication</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Tva.Core\Tva.Core.vbproj">
+    <ProjectReference Include="..\TVA.Core\TVA.Core.vbproj">
       <Project>{29A7B606-D1BC-4A4B-96D0-258D5A72C3EC}</Project>
-      <Name>Tva.Core</Name>
+      <Name>TVA.Core</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

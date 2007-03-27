@@ -16,9 +16,9 @@
 '*******************************************************************************************************
 
 Imports System.Runtime.Serialization
-Imports Tva.DateTime
-Imports Tva.Phasors.Ieee1344.Common
-Imports Tva.IO.Compression.Common
+Imports TVA.DateTime
+Imports TVA.Phasors.Ieee1344.Common
+Imports TVA.IO.Compression.Common
 
 Namespace Ieee1344
 

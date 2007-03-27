@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  Tva.Math.RealTimeSlope.vb - Calculates slope of real-time data stream using linear regression
+'  TVA.Math.RealTimeSlope.vb - Calculates slope of real-time data stream using linear regression
 '  Copyright © 2006 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005
@@ -19,8 +19,8 @@
 
 Imports System.Threading
 Imports System.Math
-Imports Tva.Math.Common
-Imports Tva.DateTime.Common
+Imports TVA.Math.Common
+Imports TVA.DateTime.Common
 
 Namespace Math
 

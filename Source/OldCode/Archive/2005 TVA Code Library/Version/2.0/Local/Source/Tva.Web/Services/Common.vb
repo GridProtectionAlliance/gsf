@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  Tva.Web.Services.Common.vb - Common web service related functions
+'  TVA.Web.Services.Common.vb - Common web service related functions
 '  Copyright © 2006 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005
@@ -17,11 +17,11 @@
 
 Imports System.Data
 Imports System.Data.SqlClient
-Imports Tva.Configuration.Common
-Imports Tva.Security.Cryptography
-Imports Tva.Security.Cryptography.Common
-Imports Tva.Security.Application
-Imports Tva.Identity.Common
+Imports TVA.Configuration.Common
+Imports TVA.Security.Cryptography
+Imports TVA.Security.Cryptography.Common
+Imports TVA.Security.Application
+Imports TVA.Identity.Common
 
 Namespace Services
 

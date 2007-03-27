@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  Tva.Collections.KeyedProcessQueue.vb - Multi-threaded Keyed Item Processing Queue
+'  TVA.Collections.KeyedProcessQueue.vb - Multi-threaded Keyed Item Processing Queue
 '  Copyright © 2006 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005
@@ -16,7 +16,7 @@
 '*******************************************************************************************************
 
 Imports System.ComponentModel
-Imports Tva.Common
+Imports TVA.Common
 
 Namespace Collections
 

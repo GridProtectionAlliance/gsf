@@ -18,8 +18,8 @@
 Imports System.Runtime.Serialization
 Imports System.Buffer
 Imports System.Text
-Imports Tva.Phasors.Common
-Imports Tva.Text.Common
+Imports TVA.Phasors.Common
+Imports TVA.Text.Common
 
 ''' <summary>This class represents the protocol independent common implementation of a set of configuration related data settings that can be sent or received from a PMU.</summary>
 <CLSCompliant(False), Serializable()> _

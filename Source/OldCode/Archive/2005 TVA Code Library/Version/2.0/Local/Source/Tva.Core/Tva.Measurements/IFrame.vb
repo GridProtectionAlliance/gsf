@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  Tva.Measurements.IFrame.vb - Abstract frame interface
+'  TVA.Measurements.IFrame.vb - Abstract frame interface
 '  Copyright © 2006 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005
