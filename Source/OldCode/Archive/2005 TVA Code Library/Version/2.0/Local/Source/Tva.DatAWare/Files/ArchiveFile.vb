@@ -12,7 +12,7 @@ Namespace Files
 
     <ToolboxBitmap(GetType(ArchiveFile))> _
     Public Class ArchiveFile
-        Implements ISupportInitialize, IPersistSettings
+        Implements IPersistSettings, ISupportInitialize
 
 #Region " Member Declaration "
 
@@ -569,22 +569,6 @@ Namespace Files
 
 #Region " Interface Implementations "
 
-#Region " ISupportInitialize "
-
-        Public Sub BeginInit() Implements System.ComponentModel.ISupportInitialize.BeginInit
-
-        End Sub
-
-        Public Sub EndInit() Implements System.ComponentModel.ISupportInitialize.EndInit
-
-            If Not DesignMode Then
-                LoadSettings()  ' Load settings from the config file.
-            End If
-
-        End Sub
-
-#End Region
-
 #Region " IPersistSettings "
 
         Public Property PersistSettings() As Boolean Implements IPersistSettings.PersistSettings
@@ -646,7 +630,7 @@ Namespace Files
                         End With
                         With .Item("Type", True)
                             .Value = m_type.ToString()
-                            .Description = "Type of the file (Active; Standby; Historic)."
+                            .Description = "Type (Active; Standby; Historic) of the file."
                         End With
                         With .Item("Size", True)
                             .Value = m_size.ToString()
@@ -693,6 +677,24 @@ Namespace Files
                 Catch ex As Exception
                     ' We might encounter an exception if for some reason the settings cannot be saved to the config file.
                 End Try
+            End If
+
+        End Sub
+
+#End Region
+
+#Region " ISupportInitialize "
+
+        Public Sub BeginInit() Implements System.ComponentModel.ISupportInitialize.BeginInit
+
+            ' We don't need to do anything before the component is initialized.
+
+        End Sub
+
+        Public Sub EndInit() Implements System.ComponentModel.ISupportInitialize.EndInit
+
+            If Not DesignMode Then
+                LoadSettings()  ' Load settings from the config file.
             End If
 
         End Sub

@@ -28,13 +28,14 @@ Imports Tva.IO.Common
 Imports Tva.DateTime.Common
 Imports Tva.Communication.CommunicationHelper
 Imports Tva.Communication.Common
+Imports Tva.Configuration.Common
 
 ''' <summary>
 ''' Represents a server involved in the transportation of data.
 ''' </summary>
 <ToolboxBitmap(GetType(CommunicationServerBase)), DefaultEvent("ReceivedClientData")> _
 Public MustInherit Class CommunicationServerBase
-    Implements ICommunicationServer, IPersistSettings
+    Implements ICommunicationServer, IPersistSettings, ISupportInitialize
 
     Private m_configurationString As String
     Private m_receiveBufferSize As Integer
@@ -777,6 +778,7 @@ Public MustInherit Class CommunicationServerBase
 
 #Region " IPersistsSettings Implementation "
 
+    <Category("Settings")> _
     Public Property PersistSettings() As Boolean Implements IPersistSettings.PersistSettings
         Get
             Return m_persistSettings
@@ -786,6 +788,7 @@ Public MustInherit Class CommunicationServerBase
         End Set
     End Property
 
+    <Category("Settings")> _
     Public Property ConfigurationCategory() As String Implements IPersistSettings.ConfigurationCategory
         Get
             Return m_configurationCategory
@@ -799,13 +802,96 @@ Public MustInherit Class CommunicationServerBase
         End Set
     End Property
 
-    Public Sub LoadSettings() Implements IPersistSettings.LoadSettings
+    Public Overridable Sub LoadSettings() Implements IPersistSettings.LoadSettings
+
+        If m_persistSettings Then
+            Try
+                With CategorizedSettings(m_configurationCategory)
+                    ConfigurationString = .Item("ConfigurationString").GetTypedValue(m_configurationString)
+                    ReceiveBufferSize = .Item("ReceiveBufferSize").GetTypedValue(m_receiveBufferSize)
+                    MaximumClients = .Item("MaximumClients").GetTypedValue(m_maximumClients)
+                    SecureSession = .Item("SecureSession").GetTypedValue(m_secureSession)
+                    Handshake = .Item("Handshake").GetTypedValue(m_handshake)
+                    HandshakePassphrase = .Item("HandshakePassphrase").GetTypedValue(m_handshakePassphrase)
+                    Encryption = .Item("Encryption").GetTypedValue(m_encryption)
+                    Compression = .Item("Compression").GetTypedValue(m_compression)
+                    Enabled = .Item("Enabled").GetTypedValue(m_enabled)
+                End With
+            Catch ex As Exception
+                ' We'll encounter exceptions if the settings are not present in the config file.
+            End Try
+        End If
 
     End Sub
 
-    Public Sub SaveSettings() Implements IPersistSettings.SaveSettings
+    Public Overridable Sub SaveSettings() Implements IPersistSettings.SaveSettings
+
+        If m_persistSettings Then
+            Try
+                With CategorizedSettings(m_configurationCategory)
+                    .Clear()
+                    With .Item("ConfigurationString", True)
+                        .Value = m_configurationString
+                        .Description = "Data required by the server to initialize."
+                    End With
+                    With .Item("ReceiveBufferSize", True)
+                        .Value = m_receiveBufferSize.ToString()
+                        .Description = "Maximum number of bytes that can be received at a time by the server from the clients."
+                    End With
+                    With .Item("MaximumClients", True)
+                        .Value = m_maximumClients.ToString()
+                        .Description = "Maximum number of clients that can connect to the server."
+                    End With
+                    With .Item("SecureSession", True)
+                        .Value = m_secureSession.ToString()
+                        .Description = "True if the data exchanged between the server and clients will be encrypted using a private session passphrase; otherwise False."
+                    End With
+                    With .Item("Handshake", True)
+                        .Value = m_handshake.ToString()
+                        .Description = "True if the server will do a handshake with the client; otherwise False."
+                    End With
+                    With .Item("HandshakePassphrase", True)
+                        .Value = m_handshakePassphrase
+                        .Description = "Passpharse that the clients must provide for authentication during the handshake process."
+                    End With
+                    With .Item("Encryption", True)
+                        .Value = m_encryption.ToString()
+                        .Description = "Encryption level (None; Level1; Level2; Level3; Level4) to be used for encrypting the data exchanged between the server and clients."
+                    End With
+                    With .Item("Compression", True)
+                        .Value = m_compression.ToString()
+                        .Description = "Compression level (NoCompression; DefaultCompression; BestSpeed; BestCompression; MultiPass) to be used for compressing the data exchanged between the server and clients."
+                    End With
+                    With .Item("Enabled", True)
+                        .Value = m_enabled.ToString()
+                        .Description = "True if the server is enabled; otherwise False."
+                    End With
+                End With
+                Tva.Configuration.Common.SaveSettings()
+            Catch ex As Exception
+                ' We might encounter an exception if for some reason the settings cannot be saved to the config file.
+            End Try
+        End If
 
     End Sub
+
+#Region " ISupportInitialize Implementation "
+
+    Public Sub BeginInit() Implements System.ComponentModel.ISupportInitialize.BeginInit
+
+        ' We don't need to do anything before the component is initialized.
+
+    End Sub
+
+    Public Sub EndInit() Implements System.ComponentModel.ISupportInitialize.EndInit
+
+        If Not DesignMode Then
+            LoadSettings()  ' Load settings from the config file.
+        End If
+
+    End Sub
+
+#End Region
 
 #End Region
 

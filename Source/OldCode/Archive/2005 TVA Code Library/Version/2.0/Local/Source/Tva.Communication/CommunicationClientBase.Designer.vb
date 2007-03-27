@@ -55,6 +55,9 @@ Partial Class CommunicationClientBase
         m_disconnectTime = 0
         m_totalBytesSent = 0
         m_totalBytesReceived = 0
+        m_persistSettings = False
+        m_configurationCategory = Me.GetType().Name
+
         m_buffer = CreateArray(Of Byte)(m_receiveBufferSize)
 
     End Sub

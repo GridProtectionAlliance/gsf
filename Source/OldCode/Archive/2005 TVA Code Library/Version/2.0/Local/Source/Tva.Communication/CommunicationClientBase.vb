@@ -28,13 +28,14 @@ Imports Tva.IO.Common
 Imports Tva.DateTime.Common
 Imports Tva.Communication.CommunicationHelper
 Imports Tva.Communication.Common
+Imports Tva.Configuration.Common
 
 ''' <summary>
 ''' Represents a client involved in the transportation of data.
 ''' </summary>
 <ToolboxBitmap(GetType(CommunicationClientBase)), DefaultEvent("ReceivedData")> _
 Public MustInherit Class CommunicationClientBase
-    Implements ICommunicationClient
+    Implements ICommunicationClient, IPersistSettings, ISupportInitialize
 
     Private m_connectionString As String
     Private m_receiveBufferSize As Integer
@@ -52,9 +53,12 @@ Public MustInherit Class CommunicationClientBase
     Private m_serverID As Guid
     Private m_clientID As Guid
     Private m_isConnected As Boolean
+    Private m_totalBytesSent As Integer
+    Private m_persistSettings As Boolean
+    Private m_configurationCategory As String
+
     Private m_connectTime As Long
     Private m_disconnectTime As Long
-    Private m_totalBytesSent As Integer
 
     ' We expose these two members to derived classes for their own internal use
     Protected m_totalBytesReceived As Integer
@@ -879,6 +883,130 @@ Public MustInherit Class CommunicationClientBase
             Case ServiceState.Shutdown
                 Me.Dispose()
         End Select
+
+    End Sub
+
+#End Region
+
+#Region " IPersistSettings Implementation "
+
+    <Category("Settings")> _
+    Public Property PersistSettings() As Boolean Implements IPersistSettings.PersistSettings
+        Get
+            Return m_persistSettings
+        End Get
+        Set(ByVal value As Boolean)
+            m_persistSettings = value
+        End Set
+    End Property
+
+    <Category("Settings")> _
+    Public Property ConfigurationCategory() As String Implements IPersistSettings.ConfigurationCategory
+        Get
+            Return m_configurationCategory
+        End Get
+        Set(ByVal value As String)
+            If Not String.IsNullOrEmpty(value) Then
+                m_configurationCategory = value
+            Else
+                Throw New ArgumentNullException("ConfigurationCategory")
+            End If
+        End Set
+    End Property
+
+    Public Overridable Sub LoadSettings() Implements IPersistSettings.LoadSettings
+
+        If m_persistSettings Then
+            Try
+                With CategorizedSettings(m_configurationCategory)
+                    ConnectionString = .Item("ConnectionString").GetTypedValue(m_connectionString)
+                    ReceiveBufferSize = .Item("ReceiveBufferSize").GetTypedValue(m_receiveBufferSize)
+                    ReceiveTimeout = .Item("ReceiveTimeout").GetTypedValue(m_receiveTimeout)
+                    MaximumConnectionAttempts = .Item("MaximumConnectionAttempts").GetTypedValue(m_maximumConnectionAttempts)
+                    SecureSession = .Item("SecureSession").GetTypedValue(m_secureSession)
+                    Handshake = .Item("Handshake").GetTypedValue(m_handshake)
+                    HandshakePassphrase = .Item("HandshakePassphrase").GetTypedValue(m_handshakePassphrase)
+                    Encryption = .Item("Encryption").GetTypedValue(m_encryption)
+                    Compression = .Item("Compression").GetTypedValue(m_compression)
+                    Enabled = .Item("Enabled").GetTypedValue(m_enabled)
+                End With
+            Catch ex As Exception
+                ' We'll encounter exceptions if the settings are not present in the config file.
+            End Try
+        End If
+
+    End Sub
+
+    Public Overridable Sub SaveSettings() Implements IPersistSettings.SaveSettings
+
+        If m_persistSettings Then
+            Try
+                With CategorizedSettings(m_configurationCategory)
+                    .Clear()
+                    With .Item("ConnectionString", True)
+                        .Value = m_connectionString
+                        .Description = "Data required by the client to connect to the server."
+                    End With
+                    With .Item("ReceiveBufferSize", True)
+                        .Value = m_receiveBufferSize.ToString()
+                        .Description = "Maximum number of bytes that can be received at a time by the client from the server."
+                    End With
+                    With .Item("ReceiveTimeout", True)
+                        .Value = m_receiveTimeout.ToString()
+                        .Description = "Time to wait in milliseconds for data to be received from the server before timing out."
+                    End With
+                    With .Item("MaximumConnectionAttempts", True)
+                        .Value = m_maximumConnectionAttempts.ToString()
+                        .Description = "Maximum number of times the client will attempt to connect to the server."
+                    End With
+                    With .Item("SecureSession", True)
+                        .Value = m_secureSession.ToString()
+                        .Description = "True if the data exchanged between the client and server will be encrypted using a private session passphrase; otherwise False."
+                    End With
+                    With .Item("Handshake", True)
+                        .Value = m_handshake.ToString()
+                        .Description = "True if the client will do a handshake with the server; otherwise False."
+                    End With
+                    With .Item("HandshakePassphrase", True)
+                        .Value = m_handshakePassphrase
+                        .Description = "Passpharse that will provided to the server for authentication during the handshake process."
+                    End With
+                    With .Item("Encryption", True)
+                        .Value = m_encryption.ToString()
+                        .Description = "Encryption level (None; Level1; Level2; Level3; Level4) to be used for encrypting the data exchanged between the client and server."
+                    End With
+                    With .Item("Compression", True)
+                        .Value = m_compression.ToString()
+                        .Description = "Compression level (NoCompression; DefaultCompression; BestSpeed; BestCompression; MultiPass) to be used for compressing the data exchanged between the client and server."
+                    End With
+                    With .Item("Enabled", True)
+                        .Value = m_enabled.ToString()
+                        .Description = "True if the client is enabled; otherwise False."
+                    End With
+                End With
+                Tva.Configuration.Common.SaveSettings()
+            Catch ex As Exception
+                ' We might encounter an exception if for some reason the settings cannot be saved to the config file.
+            End Try
+        End If
+
+    End Sub
+
+#End Region
+
+#Region " ISupportInitialize Implementation "
+
+    Public Sub BeginInit() Implements System.ComponentModel.ISupportInitialize.BeginInit
+
+        ' We don't need to do anything before the component is initialized.
+
+    End Sub
+
+    Public Sub EndInit() Implements System.ComponentModel.ISupportInitialize.EndInit
+
+        If Not DesignMode Then
+            LoadSettings()  ' Load settings from the config file.
+        End If
 
     End Sub
 

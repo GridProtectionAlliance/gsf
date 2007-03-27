@@ -52,6 +52,9 @@ Partial Class CommunicationServerBase
         m_serverID = Guid.NewGuid()    ' Create an ID for the server.
         m_clientIDs = New List(Of Guid)
         m_isRunning = False
+        m_persistSettings = False
+        m_configurationCategory = Me.GetType().Name
+
         m_startTime = 0
         m_stopTime = 0
         m_buffer = CreateArray(Of Byte)(m_receiveBufferSize)
@@ -61,7 +64,8 @@ Partial Class CommunicationServerBase
     'Component overrides dispose to clean up the component list.
     <System.Diagnostics.DebuggerNonUserCode()> _
     Protected Overrides Sub Dispose(ByVal disposing As Boolean)
-        [Stop]()    ' Stop the server.
+        [Stop]()        ' Stop the server.
+        SaveSettings()  ' Saves settings to the config file.
         If disposing AndAlso components IsNot Nothing Then
             components.Dispose()
         End If
