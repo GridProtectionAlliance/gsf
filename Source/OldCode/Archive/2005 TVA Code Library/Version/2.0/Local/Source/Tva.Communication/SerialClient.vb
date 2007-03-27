@@ -28,9 +28,15 @@ Imports Tva.IO.Common
 ''' </summary>
 Public Class SerialClient
 
+#Region " Member Declaration "
+
     Private m_connectionThread As Thread
     Private m_connectionData As Dictionary(Of String, String)
     Private WithEvents m_serialClient As SerialPort
+
+#End Region
+
+#Region " Code Scope: Public "
 
     ''' <summary>
     ''' Initializes a instance of Tva.Communication.SerialClient with the specified data.
@@ -88,6 +94,10 @@ Public Class SerialClient
 
     End Sub
 
+#End Region
+
+#Region " Code Scope: Protected "
+
     ''' <summary>
     ''' Sends prepared data to the server.
     ''' </summary>
@@ -129,6 +139,10 @@ Public Class SerialClient
         End If
 
     End Function
+
+#End Region
+
+#Region " Code Scope: Private "
 
     ''' <summary>
     ''' Connects to the serial port.
@@ -179,5 +193,7 @@ Public Class SerialClient
         Next
 
     End Sub
+
+#End Region
 
 End Class

@@ -32,10 +32,16 @@ Imports Tva.Communication.CommunicationHelper
 ''' </summary>
 Public Class TcpClient
 
+#Region " Member Declaration "
+
     Private m_payloadAware As Boolean
     Private m_tcpClient As StateKeeper(Of Socket)
     Private m_connectionThread As Thread
     Private m_connectionData As Dictionary(Of String, String)
+
+#End Region
+
+#Region " Code Scope: Public "
 
     ''' <summary>
     ''' Initializes a instance of Tva.Communication.TcpClient with the specified data.
@@ -108,6 +114,46 @@ Public Class TcpClient
 
     End Sub
 
+    Public Overrides Sub LoadSettings()
+
+        MyBase.LoadSettings()
+
+        If PersistSettings Then
+            Try
+                With Tva.Configuration.Common.CategorizedSettings(ConfigurationCategory)
+                    PayloadAware = .Item("PayloadAware").GetTypedValue(m_payloadAware)
+                End With
+            Catch ex As Exception
+                ' We'll encounter exceptions if the settings are not present in the config file.
+            End Try
+        End If
+
+    End Sub
+
+    Public Overrides Sub SaveSettings()
+
+        MyBase.SaveSettings()
+
+        If PersistSettings Then
+            Try
+                With Tva.Configuration.Common.CategorizedSettings(ConfigurationCategory)
+                    With .Item("PayloadAware", True)
+                        .Value = m_payloadAware.ToString()
+                        .Description = "True if the message boundaries are to be preserved during transmission; otherwise False."
+                    End With
+                End With
+                Tva.Configuration.Common.SaveSettings()
+            Catch ex As Exception
+                ' We might encounter an exception if for some reason the settings cannot be saved to the config file.
+            End Try
+        End If
+
+    End Sub
+
+#End Region
+
+#Region " Code Scope: Protected "
+
     ''' <summary>
     ''' Sends prepared data to the server.
     ''' </summary>
@@ -162,6 +208,10 @@ Public Class TcpClient
         End If
 
     End Function
+
+#End Region
+
+#Region " Code Scope: Private "
 
     ''' <summary>
     ''' Connects to the server.
@@ -370,5 +420,7 @@ Public Class TcpClient
         End If
 
     End Sub
+
+#End Region
 
 End Class

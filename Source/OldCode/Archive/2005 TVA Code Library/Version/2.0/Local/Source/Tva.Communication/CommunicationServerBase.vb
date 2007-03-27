@@ -28,7 +28,6 @@ Imports Tva.IO.Common
 Imports Tva.DateTime.Common
 Imports Tva.Communication.CommunicationHelper
 Imports Tva.Communication.Common
-Imports Tva.Configuration.Common
 
 ''' <summary>
 ''' Represents a server involved in the transportation of data.
@@ -36,6 +35,8 @@ Imports Tva.Configuration.Common
 <ToolboxBitmap(GetType(CommunicationServerBase)), DefaultEvent("ReceivedClientData")> _
 Public MustInherit Class CommunicationServerBase
     Implements ICommunicationServer, IPersistSettings, ISupportInitialize
+
+#Region " Member Declaration "
 
     Private m_configurationString As String
     Private m_receiveBufferSize As Integer
@@ -58,14 +59,9 @@ Public MustInherit Class CommunicationServerBase
     Private m_startTime As Long
     Private m_stopTime As Long
 
-    ' We expose these two members to derived classes for their own internal use
-    Protected m_receiveRawDataFunction As ReceiveRawDataFunctionSignature
-    Protected m_buffer As Byte()
+#End Region
 
-    ''' <summary>
-    ''' The maximum number of bytes that can be sent from the server to clients in a single send operation.
-    ''' </summary>
-    Public Const MaximumDataSize As Integer = 524288000  ' 500 MB
+#Region " Event Declaration "
 
     ''' <summary>
     ''' Occurs when the server is started.
@@ -102,6 +98,15 @@ Public MustInherit Class CommunicationServerBase
     ''' </summary>
     <Description("Occurs when data is received from a client."), Category("Data")> _
     Public Event ReceivedClientData(ByVal sender As Object, ByVal e As IdentifiableItemEventArgs(Of Byte())) Implements ICommunicationServer.ReceivedClientData
+
+#End Region
+
+#Region " Code Scope: Public "
+
+    ''' <summary>
+    ''' The maximum number of bytes that can be sent from the server to clients in a single send operation.
+    ''' </summary>
+    Public Const MaximumDataSize As Integer = 524288000  ' 500 MB
 
     ''' <summary>
     ''' Gets or sets the data that is required by the server to initialize.
@@ -549,6 +554,211 @@ Public MustInherit Class CommunicationServerBase
 
     End Sub
 
+#Region " Interface Implementation "
+
+#Region " IServiceComponent "
+
+    Private m_previouslyEnabled As Boolean = False
+
+    <Browsable(False)> _
+    Public Overridable ReadOnly Property Name() As String Implements Services.IServiceComponent.Name
+        Get
+            Return Me.GetType().Name
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' Gets the current status of the server.
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns>The current status of the server.</returns>
+    <Browsable(False)> _
+    Public Overridable ReadOnly Property Status() As String Implements Services.IServiceComponent.Status
+        Get
+            With New StringBuilder()
+                .Append("                 Server ID: ")
+                .Append(m_serverID.ToString())
+                .Append(Environment.NewLine)
+                .Append("              Server state: ")
+                .Append(IIf(m_isRunning, "Running", "Not Running"))
+                .Append(Environment.NewLine)
+                .Append("            Server runtime: ")
+                .Append(SecondsToText(RunTime()))
+                .Append(Environment.NewLine)
+                .Append("        Subscribed clients: ")
+                .Append(m_clientIDs.Count())
+                .Append(Environment.NewLine)
+                .Append("           Maximum clients: ")
+                .Append(IIf(m_maximumClients = -1, "Infinite", m_maximumClients.ToString()))
+                .Append(Environment.NewLine)
+                .Append("            Receive buffer: ")
+                .Append(m_receiveBufferSize.ToString())
+                .Append(Environment.NewLine)
+                .Append("        Transport protocol: ")
+                .Append(m_protocol.ToString())
+                .Append(Environment.NewLine)
+                .Append("        Text encoding used: ")
+                .Append(m_textEncoding.EncodingName())
+                .Append(Environment.NewLine)
+
+                Return .ToString()
+            End With
+        End Get
+    End Property
+
+    Public Overridable Sub ProcessStateChanged(ByVal processName As String, ByVal newState As Services.ProcessState) Implements Services.IServiceComponent.ProcessStateChanged
+
+    End Sub
+
+    Public Overridable Sub ServiceStateChanged(ByVal newState As Services.ServiceState) Implements Services.IServiceComponent.ServiceStateChanged
+
+        Select Case newState
+            Case ServiceState.Started
+                Me.Start()
+            Case ServiceState.Stopped, ServiceState.Shutdown
+                Me.Stop()
+            Case ServiceState.Paused
+                m_previouslyEnabled = Me.Enabled
+                Me.Enabled = False
+            Case ServiceState.Resumed
+                Me.Enabled = m_previouslyEnabled
+            Case ServiceState.Shutdown
+                Me.Dispose()
+        End Select
+
+    End Sub
+
+#End Region
+
+#Region " IPersistsSettings "
+
+    <Category("Settings")> _
+    Public Property PersistSettings() As Boolean Implements IPersistSettings.PersistSettings
+        Get
+            Return m_persistSettings
+        End Get
+        Set(ByVal value As Boolean)
+            m_persistSettings = value
+        End Set
+    End Property
+
+    <Category("Settings")> _
+    Public Property ConfigurationCategory() As String Implements IPersistSettings.ConfigurationCategory
+        Get
+            Return m_configurationCategory
+        End Get
+        Set(ByVal value As String)
+            If Not String.IsNullOrEmpty(value) Then
+                m_configurationCategory = value
+            Else
+                Throw New ArgumentNullException("ConfigurationCategory")
+            End If
+        End Set
+    End Property
+
+    Public Overridable Sub LoadSettings() Implements IPersistSettings.LoadSettings
+
+        If m_persistSettings Then
+            Try
+                With Tva.Configuration.Common.CategorizedSettings(m_configurationCategory)
+                    ConfigurationString = .Item("ConfigurationString").GetTypedValue(m_configurationString)
+                    ReceiveBufferSize = .Item("ReceiveBufferSize").GetTypedValue(m_receiveBufferSize)
+                    MaximumClients = .Item("MaximumClients").GetTypedValue(m_maximumClients)
+                    SecureSession = .Item("SecureSession").GetTypedValue(m_secureSession)
+                    Handshake = .Item("Handshake").GetTypedValue(m_handshake)
+                    HandshakePassphrase = .Item("HandshakePassphrase").GetTypedValue(m_handshakePassphrase)
+                    Encryption = .Item("Encryption").GetTypedValue(m_encryption)
+                    Compression = .Item("Compression").GetTypedValue(m_compression)
+                    Enabled = .Item("Enabled").GetTypedValue(m_enabled)
+                End With
+            Catch ex As Exception
+                ' We'll encounter exceptions if the settings are not present in the config file.
+            End Try
+        End If
+
+    End Sub
+
+    Public Overridable Sub SaveSettings() Implements IPersistSettings.SaveSettings
+
+        If m_persistSettings Then
+            Try
+                With Tva.Configuration.Common.CategorizedSettings(m_configurationCategory)
+                    .Clear()
+                    With .Item("ConfigurationString", True)
+                        .Value = m_configurationString
+                        .Description = "Data required by the server to initialize."
+                    End With
+                    With .Item("ReceiveBufferSize", True)
+                        .Value = m_receiveBufferSize.ToString()
+                        .Description = "Maximum number of bytes that can be received at a time by the server from the clients."
+                    End With
+                    With .Item("MaximumClients", True)
+                        .Value = m_maximumClients.ToString()
+                        .Description = "Maximum number of clients that can connect to the server."
+                    End With
+                    With .Item("SecureSession", True)
+                        .Value = m_secureSession.ToString()
+                        .Description = "True if the data exchanged between the server and clients will be encrypted using a private session passphrase; otherwise False."
+                    End With
+                    With .Item("Handshake", True)
+                        .Value = m_handshake.ToString()
+                        .Description = "True if the server will do a handshake with the client; otherwise False."
+                    End With
+                    With .Item("HandshakePassphrase", True)
+                        .Value = m_handshakePassphrase
+                        .Description = "Passpharse that the clients must provide for authentication during the handshake process."
+                    End With
+                    With .Item("Encryption", True)
+                        .Value = m_encryption.ToString()
+                        .Description = "Encryption level (None; Level1; Level2; Level3; Level4) to be used for encrypting the data exchanged between the server and clients."
+                    End With
+                    With .Item("Compression", True)
+                        .Value = m_compression.ToString()
+                        .Description = "Compression level (NoCompression; DefaultCompression; BestSpeed; BestCompression; MultiPass) to be used for compressing the data exchanged between the server and clients."
+                    End With
+                    With .Item("Enabled", True)
+                        .Value = m_enabled.ToString()
+                        .Description = "True if the server is enabled; otherwise False."
+                    End With
+                End With
+                Tva.Configuration.Common.SaveSettings()
+            Catch ex As Exception
+                ' We might encounter an exception if for some reason the settings cannot be saved to the config file.
+            End Try
+        End If
+
+    End Sub
+
+#End Region
+
+#Region " ISupportInitialize "
+
+    Public Sub BeginInit() Implements System.ComponentModel.ISupportInitialize.BeginInit
+
+        ' We don't need to do anything before the component is initialized.
+
+    End Sub
+
+    Public Sub EndInit() Implements System.ComponentModel.ISupportInitialize.EndInit
+
+        If Not DesignMode Then
+            LoadSettings()  ' Load settings from the config file.
+        End If
+
+    End Sub
+
+#End Region
+
+#End Region
+
+#End Region
+
+#Region " Code Scope: Protected "
+
+    ' We expose these two members to derived classes for their own internal use
+    Protected m_receiveRawDataFunction As ReceiveRawDataFunctionSignature
+    Protected m_buffer As Byte()
+
     ''' <summary>
     ''' The key used for encryption and decryption when Encryption is enabled but HandshakePassphrase is not set.
     ''' </summary>
@@ -686,6 +896,10 @@ Public MustInherit Class CommunicationServerBase
     ''' <returns>True is the configuration string is valid; otherwise False.</returns>
     Protected MustOverride Function ValidConfigurationString(ByVal configurationString As String) As Boolean
 
+#End Region
+
+#Region " Code Scope: Private "
+
     ''' <summary>
     ''' This function proxies data to proper derived class function from thread pool.
     ''' </summary>
@@ -701,197 +915,6 @@ Public MustInherit Class CommunicationServerBase
         End Try
 
     End Sub
-
-#Region " IServiceComponent Implementation "
-
-    Private m_previouslyEnabled As Boolean = False
-
-    <Browsable(False)> _
-    Public Overridable ReadOnly Property Name() As String Implements Services.IServiceComponent.Name
-        Get
-            Return Me.GetType().Name
-        End Get
-    End Property
-
-    ''' <summary>
-    ''' Gets the current status of the server.
-    ''' </summary>
-    ''' <value></value>
-    ''' <returns>The current status of the server.</returns>
-    <Browsable(False)> _
-    Public Overridable ReadOnly Property Status() As String Implements Services.IServiceComponent.Status
-        Get
-            With New StringBuilder()
-                .Append("                 Server ID: ")
-                .Append(m_serverID.ToString())
-                .Append(Environment.NewLine)
-                .Append("              Server state: ")
-                .Append(IIf(m_isRunning, "Running", "Not Running"))
-                .Append(Environment.NewLine)
-                .Append("            Server runtime: ")
-                .Append(SecondsToText(RunTime()))
-                .Append(Environment.NewLine)
-                .Append("        Subscribed clients: ")
-                .Append(m_clientIDs.Count())
-                .Append(Environment.NewLine)
-                .Append("           Maximum clients: ")
-                .Append(IIf(m_maximumClients = -1, "Infinite", m_maximumClients.ToString()))
-                .Append(Environment.NewLine)
-                .Append("            Receive buffer: ")
-                .Append(m_receiveBufferSize.ToString())
-                .Append(Environment.NewLine)
-                .Append("        Transport protocol: ")
-                .Append(m_protocol.ToString())
-                .Append(Environment.NewLine)
-                .Append("        Text encoding used: ")
-                .Append(m_textEncoding.EncodingName())
-                .Append(Environment.NewLine)
-
-                Return .ToString()
-            End With
-        End Get
-    End Property
-
-    Public Overridable Sub ProcessStateChanged(ByVal processName As String, ByVal newState As Services.ProcessState) Implements Services.IServiceComponent.ProcessStateChanged
-
-    End Sub
-
-    Public Overridable Sub ServiceStateChanged(ByVal newState As Services.ServiceState) Implements Services.IServiceComponent.ServiceStateChanged
-
-        Select Case newState
-            Case ServiceState.Started
-                Me.Start()
-            Case ServiceState.Stopped, ServiceState.Shutdown
-                Me.Stop()
-            Case ServiceState.Paused
-                m_previouslyEnabled = Me.Enabled
-                Me.Enabled = False
-            Case ServiceState.Resumed
-                Me.Enabled = m_previouslyEnabled
-            Case ServiceState.Shutdown
-                Me.Dispose()
-        End Select
-
-    End Sub
-
-#End Region
-
-#Region " IPersistsSettings Implementation "
-
-    <Category("Settings")> _
-    Public Property PersistSettings() As Boolean Implements IPersistSettings.PersistSettings
-        Get
-            Return m_persistSettings
-        End Get
-        Set(ByVal value As Boolean)
-            m_persistSettings = value
-        End Set
-    End Property
-
-    <Category("Settings")> _
-    Public Property ConfigurationCategory() As String Implements IPersistSettings.ConfigurationCategory
-        Get
-            Return m_configurationCategory
-        End Get
-        Set(ByVal value As String)
-            If Not String.IsNullOrEmpty(value) Then
-                m_configurationCategory = value
-            Else
-                Throw New ArgumentNullException("ConfigurationCategory")
-            End If
-        End Set
-    End Property
-
-    Public Overridable Sub LoadSettings() Implements IPersistSettings.LoadSettings
-
-        If m_persistSettings Then
-            Try
-                With CategorizedSettings(m_configurationCategory)
-                    ConfigurationString = .Item("ConfigurationString").GetTypedValue(m_configurationString)
-                    ReceiveBufferSize = .Item("ReceiveBufferSize").GetTypedValue(m_receiveBufferSize)
-                    MaximumClients = .Item("MaximumClients").GetTypedValue(m_maximumClients)
-                    SecureSession = .Item("SecureSession").GetTypedValue(m_secureSession)
-                    Handshake = .Item("Handshake").GetTypedValue(m_handshake)
-                    HandshakePassphrase = .Item("HandshakePassphrase").GetTypedValue(m_handshakePassphrase)
-                    Encryption = .Item("Encryption").GetTypedValue(m_encryption)
-                    Compression = .Item("Compression").GetTypedValue(m_compression)
-                    Enabled = .Item("Enabled").GetTypedValue(m_enabled)
-                End With
-            Catch ex As Exception
-                ' We'll encounter exceptions if the settings are not present in the config file.
-            End Try
-        End If
-
-    End Sub
-
-    Public Overridable Sub SaveSettings() Implements IPersistSettings.SaveSettings
-
-        If m_persistSettings Then
-            Try
-                With CategorizedSettings(m_configurationCategory)
-                    .Clear()
-                    With .Item("ConfigurationString", True)
-                        .Value = m_configurationString
-                        .Description = "Data required by the server to initialize."
-                    End With
-                    With .Item("ReceiveBufferSize", True)
-                        .Value = m_receiveBufferSize.ToString()
-                        .Description = "Maximum number of bytes that can be received at a time by the server from the clients."
-                    End With
-                    With .Item("MaximumClients", True)
-                        .Value = m_maximumClients.ToString()
-                        .Description = "Maximum number of clients that can connect to the server."
-                    End With
-                    With .Item("SecureSession", True)
-                        .Value = m_secureSession.ToString()
-                        .Description = "True if the data exchanged between the server and clients will be encrypted using a private session passphrase; otherwise False."
-                    End With
-                    With .Item("Handshake", True)
-                        .Value = m_handshake.ToString()
-                        .Description = "True if the server will do a handshake with the client; otherwise False."
-                    End With
-                    With .Item("HandshakePassphrase", True)
-                        .Value = m_handshakePassphrase
-                        .Description = "Passpharse that the clients must provide for authentication during the handshake process."
-                    End With
-                    With .Item("Encryption", True)
-                        .Value = m_encryption.ToString()
-                        .Description = "Encryption level (None; Level1; Level2; Level3; Level4) to be used for encrypting the data exchanged between the server and clients."
-                    End With
-                    With .Item("Compression", True)
-                        .Value = m_compression.ToString()
-                        .Description = "Compression level (NoCompression; DefaultCompression; BestSpeed; BestCompression; MultiPass) to be used for compressing the data exchanged between the server and clients."
-                    End With
-                    With .Item("Enabled", True)
-                        .Value = m_enabled.ToString()
-                        .Description = "True if the server is enabled; otherwise False."
-                    End With
-                End With
-                Tva.Configuration.Common.SaveSettings()
-            Catch ex As Exception
-                ' We might encounter an exception if for some reason the settings cannot be saved to the config file.
-            End Try
-        End If
-
-    End Sub
-
-#Region " ISupportInitialize Implementation "
-
-    Public Sub BeginInit() Implements System.ComponentModel.ISupportInitialize.BeginInit
-
-        ' We don't need to do anything before the component is initialized.
-
-    End Sub
-
-    Public Sub EndInit() Implements System.ComponentModel.ISupportInitialize.EndInit
-
-        If Not DesignMode Then
-            LoadSettings()  ' Load settings from the config file.
-        End If
-
-    End Sub
-
-#End Region
 
 #End Region
 

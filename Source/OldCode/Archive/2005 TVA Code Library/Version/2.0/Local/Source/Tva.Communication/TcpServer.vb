@@ -33,12 +33,18 @@ Imports Tva.Security.Cryptography.Common
 ''' </summary>
 Public Class TcpServer
 
+#Region " Member Declaration "
+
     Private m_payloadAware As Boolean
     Private m_tcpServer As Socket
     Private m_tcpClients As Dictionary(Of Guid, StateKeeper(Of Socket))
     Private m_pendingTcpClients As List(Of StateKeeper(Of Socket))
     Private m_configurationData As Dictionary(Of String, String)
     Private m_listenerThread As Thread
+
+#End Region
+
+#Region " Code Scope: Public "
 
     ''' <summary>
     ''' Initializes a instance of Tva.Communication.TcpServer with the specified data.
@@ -114,6 +120,46 @@ Public Class TcpServer
 
     End Sub
 
+    Public Overrides Sub LoadSettings()
+
+        MyBase.LoadSettings()
+
+        If PersistSettings Then
+            Try
+                With Tva.Configuration.Common.CategorizedSettings(ConfigurationCategory)
+                    PayloadAware = .Item("PayloadAware").GetTypedValue(m_payloadAware)
+                End With
+            Catch ex As Exception
+                ' We'll encounter exceptions if the settings are not present in the config file.
+            End Try
+        End If
+
+    End Sub
+
+    Public Overrides Sub SaveSettings()
+
+        MyBase.SaveSettings()
+
+        If PersistSettings Then
+            Try
+                With Tva.Configuration.Common.CategorizedSettings(ConfigurationCategory)
+                    With .Item("PayloadAware", True)
+                        .Value = m_payloadAware.ToString()
+                        .Description = "True if the message boundaries are to be preserved during transmission; otherwise False."
+                    End With
+                End With
+                Tva.Configuration.Common.SaveSettings()
+            Catch ex As Exception
+                ' We might encounter an exception if for some reason the settings cannot be saved to the config file.
+            End Try
+        End If
+
+    End Sub
+
+#End Region
+
+#Region " Code Scope: Protected "
+
     ''' <summary>
     ''' Sends prepared data to the specified client.
     ''' </summary>
@@ -169,6 +215,10 @@ Public Class TcpServer
         End If
 
     End Function
+
+#End Region
+
+#Region " Code Scope: Private"
 
     ''' <summary>
     ''' Listens for incoming client connections.
@@ -393,4 +443,6 @@ Public Class TcpServer
 
     End Sub
 
+#End Region
+    
 End Class

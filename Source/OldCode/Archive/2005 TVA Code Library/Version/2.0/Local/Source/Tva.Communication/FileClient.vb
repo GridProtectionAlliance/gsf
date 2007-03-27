@@ -29,6 +29,8 @@ Imports Tva.IO.Common
 ''' </summary>
 Public Class FileClient
 
+#Region " Member Declaration "
+
     Private m_receiveOnDemand As Boolean
     Private m_receiveInterval As Double
     Private m_startingOffset As Long
@@ -37,6 +39,10 @@ Public Class FileClient
     Private m_connectionThread As Thread
     Private m_connectionData As Dictionary(Of String, String)
     Private WithEvents m_receiveDataTimer As System.Timers.Timer
+
+#End Region
+
+#Region " Code Scope: Public "
 
     ''' <summary>
     ''' Initializes a instance of Tva.Communication.FileClient with the specified data.
@@ -114,6 +120,20 @@ Public Class FileClient
     End Property
 
     ''' <summary>
+    ''' Initiates receiving to data from the file.
+    ''' </summary>
+    ''' <remarks>This method is functional only when ReceiveOnDemand is enabled.</remarks>
+    Public Sub ReceiveData()
+
+        If MyBase.Enabled AndAlso MyBase.IsConnected _
+                AndAlso m_receiveOnDemand AndAlso Not m_receivingThread.IsAlive Then
+            m_receivingThread = New Thread(AddressOf ReceiveFileData)
+            m_receivingThread.Start()
+        End If
+
+    End Sub
+
+    ''' <summary>
     ''' Cancels any active attempts of connecting to the file.
     ''' </summary>
     Public Overrides Sub CancelConnect()
@@ -153,19 +173,54 @@ Public Class FileClient
 
     End Sub
 
-    ''' <summary>
-    ''' Initiates receiving to data from the file.
-    ''' </summary>
-    ''' <remarks>This method is functional only when ReceiveOnDemand is enabled.</remarks>
-    Public Sub ReceiveData()
+    Public Overrides Sub LoadSettings()
 
-        If MyBase.Enabled AndAlso MyBase.IsConnected _
-                AndAlso m_receiveOnDemand AndAlso Not m_receivingThread.IsAlive Then
-            m_receivingThread = New Thread(AddressOf ReceiveFileData)
-            m_receivingThread.Start()
+        MyBase.LoadSettings()
+
+        If PersistSettings Then
+            Try
+                With Tva.Configuration.Common.CategorizedSettings(ConfigurationCategory)
+                    ReceiveOnDemand = .Item("ReceiveOnDemand").GetTypedValue(m_receiveOnDemand)
+                    ReceiveInterval = .Item("ReceiveInterval").GetTypedValue(m_receiveInterval)
+                    StartingOffset = .Item("StartingOffset").GetTypedValue(m_startingOffset)
+                End With
+            Catch ex As Exception
+                ' We'll encounter exceptions if the settings are not present in the config file.
+            End Try
         End If
 
     End Sub
+
+    Public Overrides Sub SaveSettings()
+
+        MyBase.SaveSettings()
+
+        If PersistSettings Then
+            Try
+                With Tva.Configuration.Common.CategorizedSettings(ConfigurationCategory)
+                    With .Item("ReceiveOnDemand", True)
+                        .Value = m_receiveOnDemand.ToString()
+                        .Description = "True if receiving (reading) of data will be initiated manually; otherwise False."
+                    End With
+                    With .Item("ReceiveInterval", True)
+                        .Value = m_receiveInterval.ToString()
+                        .Description = "Time in milliseconds to pause before receiving (reading) the next available set of data."
+                    End With
+                    With .Item("StartingOffset", True)
+                        .Value = m_startingOffset.ToString()
+                        .Description = "The starting point relative to the beginning of the file from where the data is to be received (read)."
+                    End With
+                End With
+                Tva.Configuration.Common.SaveSettings()
+            Catch ex As Exception
+                ' We might encounter an exception if for some reason the settings cannot be saved to the config file.
+            End Try
+        End If
+    End Sub
+
+#End Region
+
+#Region " Code Scope: Protected "
 
     <EditorBrowsable(EditorBrowsableState.Never)> _
     Protected Overrides Sub SendPreparedData(ByVal data As Byte())
@@ -199,6 +254,10 @@ Public Class FileClient
         End If
 
     End Function
+
+#End Region
+
+#Region " Code Scope: Private "
 
     ''' <summary>
     ''' Connects to the file.
@@ -282,5 +341,7 @@ Public Class FileClient
         End If
 
     End Sub
+
+#End Region
 
 End Class

@@ -36,11 +36,17 @@ Imports Tva.Security.Cryptography.Common
 ''' </remarks>
 Public Class UdpServer
 
+#Region " Member Declaration "
+
     Private m_payloadAware As Boolean
     Private m_destinationReachableCheck As Boolean
     Private m_udpServer As StateKeeper(Of Socket)
     Private m_udpClients As Dictionary(Of Guid, StateKeeper(Of IPEndPoint))
     Private m_configurationData As Dictionary(Of String, String)
+
+#End Region
+
+#Region " Code Scope: Public "
 
     ''' <summary>
     ''' The minimum size of the receive buffer for UDP.
@@ -201,6 +207,51 @@ Public Class UdpServer
 
     End Sub
 
+    Public Overrides Sub LoadSettings()
+
+        MyBase.LoadSettings()
+
+        If PersistSettings Then
+            Try
+                With Tva.Configuration.Common.CategorizedSettings(ConfigurationCategory)
+                    PayloadAware = .Item("PayloadAware").GetTypedValue(m_payloadAware)
+                    DestinationReachableCheck = .Item("DestinationReachableCheck").GetTypedValue(m_destinationReachableCheck)
+                End With
+            Catch ex As Exception
+                ' We'll encounter exceptions if the settings are not present in the config file.
+            End Try
+        End If
+
+    End Sub
+
+    Public Overrides Sub SaveSettings()
+
+        MyBase.SaveSettings()
+
+        If PersistSettings Then
+            Try
+                With Tva.Configuration.Common.CategorizedSettings(ConfigurationCategory)
+                    With .Item("PayloadAware", True)
+                        .Value = m_payloadAware.ToString()
+                        .Description = "True if the messages that are broken down into multiple datagram for the purpose of transmission while being sent are to be assembled back when received; otherwise False."
+                    End With
+                    With .Item("DestinationReachableCheck", True)
+                        .Value = m_destinationReachableCheck.ToString()
+                        .Description = "True if a test is to be performed to check if the destination endpoint that is to receive data is listening for data; otherwise False."
+                    End With
+                End With
+                Tva.Configuration.Common.SaveSettings()
+            Catch ex As Exception
+                ' We might encounter an exception if for some reason the settings cannot be saved to the config file.
+            End Try
+        End If
+
+    End Sub
+
+#End Region
+
+#Region " Code Scope: Protected "
+
     Protected Overrides Sub SendPreparedDataTo(ByVal clientID As System.Guid, ByVal data As Byte())
 
         If MyBase.Enabled AndAlso MyBase.IsRunning Then
@@ -258,6 +309,10 @@ Public Class UdpServer
         End If
 
     End Function
+
+#End Region
+
+#Region " Code Scope: Private "
 
     Private Sub ReceiveClientData()
 
@@ -374,5 +429,7 @@ Public Class UdpServer
         End If
 
     End Sub
+
+#End Region
 
 End Class
