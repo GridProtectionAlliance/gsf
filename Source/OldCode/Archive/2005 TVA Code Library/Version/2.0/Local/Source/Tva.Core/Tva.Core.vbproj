@@ -169,6 +169,7 @@
     <Folder Include="Tva.Exception\" />
     <Folder Include="Tva.Net\Http\" />
     <Folder Include="Tva.Remoting\" />
+    <Folder Include="Tva.Web\" />
     <Folder Include="Tva.Windows\" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.VisualBasic.targets" />
