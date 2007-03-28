@@ -58,6 +58,7 @@ Partial Class CommunicationClientBase
         m_persistSettings = False
         m_configurationCategory = Me.GetType().Name
 
+        m_connectionSignal = New System.Threading.AutoResetEvent(False)
         m_buffer = CreateArray(Of Byte)(m_receiveBufferSize)
 
     End Sub

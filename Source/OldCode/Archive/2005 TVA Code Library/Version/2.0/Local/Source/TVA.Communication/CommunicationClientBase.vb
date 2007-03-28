@@ -60,6 +60,7 @@ Public MustInherit Class CommunicationClientBase
 
     Private m_connectTime As Long
     Private m_disconnectTime As Long
+    Private m_connectionSignal As AutoResetEvent
 
 #End Region
 
@@ -520,7 +521,7 @@ Public MustInherit Class CommunicationClientBase
     ''' retrying connection attempts if the client is unable to connect to the server within the specified time.
     ''' </summary>
     ''' <param name="waitTime">
-    ''' The time in milliseconds to wait for the client to connect to the server. Specifying a value of -1 or 0 
+    ''' The time in milliseconds to wait for the client to connect to the server. Specifying a value of -1  
     ''' will cause this method to wait indefinately until the client establishes connection with the server.
     ''' </param>
     Public Sub WaitForConnection(ByVal waitTime As Integer) Implements ICommunicationClient.WaitForConnection
@@ -534,7 +535,7 @@ Public MustInherit Class CommunicationClientBase
     ''' retrying connection attempts if the client is unable to connect to the server within the specified time.
     ''' </summary>
     ''' <param name="waitTime">
-    ''' The time in milliseconds to wait for the client to connect to the server. Specifying a value of -1 or 0 
+    ''' The time in milliseconds to wait for the client to connect to the server. Specifying a value of -1  
     ''' will cause this method to wait indefinately until the client establishes connection with the server.
     ''' </param>
     ''' <param name="stopRetrying">
@@ -543,18 +544,12 @@ Public MustInherit Class CommunicationClientBase
     ''' </param>
     Public Sub WaitForConnection(ByVal waitTime As Integer, ByVal stopRetrying As Boolean) Implements ICommunicationClient.WaitForConnection
 
-        ' By default we'll wait indefinately for the client to connect.
-        Dim stopTime As System.DateTime = System.DateTime.MaxValue
-        ' We have to wait for the specified milliseconds for the client to connect.
-        If waitTime > 0 Then stopTime = System.DateTime.Now.AddMilliseconds(Convert.ToDouble(waitTime))
-
-        Do While Not (m_isConnected OrElse System.DateTime.Now > stopTime)
-            ' We'll wait until client has connected or the time to wait for connection has expired.
-        Loop
+        ' We'll wait until client has connected or until the time to wait for connection is reached.
+        m_connectionSignal.WaitOne(waitTime, False)
 
         ' If the client hasn't connected after waiting for the specified time and if it is specified to stop 
         ' attempting to connect to the server, then we'll call the CancelConnect() method.
-        If Not m_isConnected AndAlso stopRetrying Then CancelConnect()
+        If stopRetrying AndAlso Not m_isConnected Then CancelConnect()
 
     End Sub
 
@@ -888,6 +883,7 @@ Public MustInherit Class CommunicationClientBase
         m_disconnectTime = 0
         m_totalBytesSent = 0    ' Reset the number of bytes sent and received between the client and server.
         m_totalBytesReceived = 0
+        m_connectionSignal.Set()
         RaiseEvent Connected(Me, e)
 
     End Sub
