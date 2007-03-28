@@ -166,6 +166,7 @@
     <Content Include="Embedded Resources\Net.Ftp.Session.bmp" />
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="Components\" />
     <Folder Include="TVA.Exception\" />
     <Folder Include="TVA.Net\Http\" />
     <Folder Include="TVA.Remoting\" />
