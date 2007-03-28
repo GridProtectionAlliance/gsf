@@ -28,7 +28,7 @@ Namespace Packets
 
         Public Shadows Const TypeID As Short = 1
 
-        Public Shadows Const BinaryLength As Integer = 22
+        Public Shadows Const Size As Integer = 22
 
         Public Sub New()
 
@@ -46,7 +46,7 @@ Namespace Packets
 
             MyClass.New()
 
-            If binaryImage.Length - startIndex >= BinaryLength Then
+            If binaryImage.Length - startIndex >= Size Then
                 ' We have a binary image of valid size.
                 Dim packetTypeID As Short = BitConverter.ToInt16(binaryImage, startIndex)
                 If packetTypeID = TypeID Then
@@ -59,7 +59,7 @@ Namespace Packets
                     Throw New ArgumentException(String.Format("Unexpected packet type ID {0}. Expected packet type ID {1}.", packetTypeID, TypeID))
                 End If
             Else
-                Throw New ArgumentException(String.Format("Binary image smaller than expected. Expected binary image size {0}.", BinaryLength))
+                Throw New ArgumentException(String.Format("Binary image smaller than expected. Expected binary image size {0}.", Size))
             End If
 
         End Sub
@@ -120,9 +120,9 @@ Namespace Packets
         Public Shared Shadows Function TryParse(ByVal binaryImage As Byte(), ByRef packets As List(Of IPacket)) As Boolean
 
             If binaryImage IsNot Nothing Then
-                If binaryImage.Length >= BinaryLength Then
+                If binaryImage.Length >= Size Then
                     packets = New List(Of IPacket)()
-                    For i As Integer = 0 To binaryImage.Length - 1 Step BinaryLength
+                    For i As Integer = 0 To binaryImage.Length - 1 Step Size
                         Try
                             packets.Add(New StandardPacket(binaryImage, i))
                         Catch ex As Exception

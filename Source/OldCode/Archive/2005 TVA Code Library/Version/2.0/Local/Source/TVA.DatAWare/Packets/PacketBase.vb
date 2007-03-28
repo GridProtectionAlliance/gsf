@@ -24,7 +24,7 @@ Namespace Packets
         ''' This constant is required only for packet types of fixed length.
         ''' </summary>
         ''' <remarks>A value of -1 indicates that the packets is of variable length.</remarks>
-        Public Const BinaryLength As Integer = -1
+        Public Const Size As Integer = -1
 
         Public Sub New(ByVal actionType As PacketActionType)
 
