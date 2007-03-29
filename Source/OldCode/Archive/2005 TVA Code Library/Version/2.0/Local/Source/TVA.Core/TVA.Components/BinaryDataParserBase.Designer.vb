@@ -34,7 +34,8 @@ Namespace Components
         <System.Diagnostics.DebuggerNonUserCode()> _
         Protected Overrides Sub Dispose(ByVal disposing As Boolean)
             Try
-                [Stop]()    ' Stop the binary data parser.
+                [Stop]()        ' Stop the binary data parser.
+                SaveSettings()  ' Saves settings to the config file.
                 If disposing AndAlso components IsNot Nothing Then
                     components.Dispose()
                 End If
