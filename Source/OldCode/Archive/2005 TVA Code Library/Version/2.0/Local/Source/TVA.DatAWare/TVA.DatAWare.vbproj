@@ -143,12 +143,6 @@
     <Compile Include="PointDataBase.vb" />
     <Compile Include="PointDefinition.vb" />
     <Compile Include="PointDefinitionSecurityFlags.vb" />
-    <Compile Include="Files\SequentialBinaryFileBase.Designer.vb">
-      <DependentUpon>SequentialBinaryFileBase.vb</DependentUpon>
-    </Compile>
-    <Compile Include="Files\SequentialBinaryFileBase.vb">
-      <SubType>Component</SubType>
-    </Compile>
     <Compile Include="PointState.vb" />
     <Compile Include="StandardPointData.vb" />
     <Compile Include="TimeTag.vb" />
