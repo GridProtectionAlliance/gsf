@@ -60,6 +60,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="TVA.Collections\DictionaryList.vb" />
+    <Compile Include="TVA.Components\BinaryDataParserBase.Designer.vb">
+      <DependentUpon>BinaryDataParserBase.vb</DependentUpon>
+    </Compile>
+    <Compile Include="TVA.Components\BinaryDataParserBase.vb">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="TVA.Console\Arguments.vb" />
     <Compile Include="TVA.Console\Common.vb" />
     <Compile Include="TVA.Interop\VBArrayDescriptor.vb" />
@@ -93,6 +99,7 @@
     <Compile Include="TVA.Scheduling\SchedulePart.vb" />
     <Compile Include="TVA\ExceptionEventArgs.vb" />
     <Compile Include="TVA\GenericEventArgs.vb" />
+    <Compile Include="TVA\IBinaryDataConsumer.vb" />
     <Compile Include="TVA\IBinaryDataProvider.vb" />
     <Compile Include="TVA\IdentifiableItem.vb" />
     <Compile Include="TVA\IdentifiableItemEventArgs.vb" />
@@ -166,7 +173,6 @@
     <Content Include="Embedded Resources\Net.Ftp.Session.bmp" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="TVA.Components\" />
     <Folder Include="TVA.Exception\" />
     <Folder Include="TVA.Net\Http\" />
     <Folder Include="TVA.Remoting\" />

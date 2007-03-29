@@ -89,4 +89,20 @@ Public NotInheritable Class Common
 
     End Function
 
+    ''' <summary>
+    ''' Gets the root type in the inheritace hierarchy from which the specified type inherits. 
+    ''' </summary>
+    ''' <param name="type">The System.Type whose root type is to be found.</param>
+    ''' <returns>The root type in the inheritace hierarchy from which the specified type inherits.</returns>
+    ''' <remarks>The type returned will never by System.Object even though all types ultimately inerit from it.</remarks>
+    Public Shared Function GetRootType(ByVal type As Type) As Type
+
+        If type.BaseType IsNot GetType(System.Object) Then
+            Return GetRootType(type.BaseType)
+        Else
+            Return type
+        End If
+
+    End Function
+
 End Class
