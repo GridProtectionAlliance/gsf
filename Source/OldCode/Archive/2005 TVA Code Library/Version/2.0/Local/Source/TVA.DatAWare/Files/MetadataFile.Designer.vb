@@ -1,7 +1,7 @@
 Namespace Files
 
     Partial Class MetadataFile
-        Inherits SequentialBinaryFileBase(Of PointDefinition)
+        Inherits TVA.Components.SequentialBinaryFileBase(Of PointDefinition)
 
         <System.Diagnostics.DebuggerNonUserCode()> _
         Public Sub New(ByVal container As System.ComponentModel.IContainer)
