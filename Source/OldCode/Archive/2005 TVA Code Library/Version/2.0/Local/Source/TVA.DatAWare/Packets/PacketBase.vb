@@ -3,7 +3,7 @@ Imports TVA.DatAWare.Files
 Namespace Packets
 
     Public MustInherit Class PacketBase
-        Implements IPacket
+        Implements IPacket, IBinaryDataConsumer
 
 #Region " Member Declaration "
 
@@ -71,6 +71,14 @@ Namespace Packets
         End Function
 
 #End Region
+
+        Public Function Initialize(ByVal binaryImage() As Byte) As Integer Implements IBinaryDataConsumer.Initialize
+
+            Return Initialize(binaryImage, 0)
+
+        End Function
+
+        Public MustOverride Function Initialize(ByVal binaryImage() As Byte, ByVal startIndex As Integer) As Integer Implements IBinaryDataConsumer.Initialize
 
     End Class
 

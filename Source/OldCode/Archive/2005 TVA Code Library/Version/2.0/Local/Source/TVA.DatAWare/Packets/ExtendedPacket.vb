@@ -224,30 +224,10 @@ Namespace Packets
 
         End Function
 
+        Public Overloads Overrides Function Initialize(ByVal binaryImage() As Byte, ByVal startIndex As Integer) As Integer
+
+        End Function
+
     End Class
 
 End Namespace
-
-'Public Shadows Const TypeID As Short = 2
-
-'MyBase.ActionType = PacketActionType.SaveAndReply
-'MyBase.SaveLocation = PacketSaveLocation.ArchiveFile
-
-'Public Overrides Function GetReplyData() As Byte()
-
-'    Return Encoding.ASCII.GetBytes("ACK")
-
-'End Function
-
-'Public Overrides Function GetSaveData() As Byte()
-
-'    Dim timestamp As New System.DateTime(Convert.ToInt32(m_year), _
-'        Convert.ToInt32(m_month), Convert.ToInt32(m_day), _
-'        Convert.ToInt32(m_hour) + Convert.ToInt32(m_gmtOffset), _
-'        Convert.ToInt32(m_minute), Convert.ToInt32(m_second), _
-'        Convert.ToInt32(m_millisecond), DateTimeKind.Utc)
-
-'    'Return New ExtendedPointData(timestamp, m_value, m_quality).BinaryImage
-'    Return Nothing
-
-'End Function

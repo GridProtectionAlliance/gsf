@@ -139,24 +139,30 @@ Namespace Packets
 
         End Function
 
+        Public Overloads Overrides Function Initialize(ByVal binaryImage() As Byte, ByVal startIndex As Integer) As Integer
+
+            If binaryImage.Length - startIndex >= Size Then
+                ' We have a binary image of valid size.
+                Dim packetTypeID As Short = BitConverter.ToInt16(binaryImage, startIndex)
+                If packetTypeID = TypeID Then
+                    ' We have a binary image with the correct type ID.
+                    m_index = BitConverter.ToInt32(binaryImage, startIndex + 2)
+                    m_timeTag = New TimeTag(BitConverter.ToDouble(binaryImage, startIndex + 6))
+                    m_quality = CType(BitConverter.ToInt32(binaryImage, startIndex + 14), Quality)
+                    m_value = BitConverter.ToSingle(binaryImage, startIndex + 18)
+
+                    If startIndex + Size = binaryImage.Length Then ActionType = PacketActionType.SaveAndReply
+
+                    Return Size
+                Else
+                    Throw New ArgumentException(String.Format("Unexpected packet type ID {0}. Expected packet type ID {1}.", packetTypeID, TypeID))
+                End If
+            Else
+                Throw New ArgumentException(String.Format("Binary image smaller than expected. Expected binary image size {0}.", Size))
+            End If
+
+        End Function
+
     End Class
 
 End Namespace
-
-'Public Shadows Const TypeID As Short = 1
-
-'MyBase.ActionType = PacketActionType.SaveAndReply
-'MyBase.SaveLocation = PacketSaveLocation.ArchiveFile
-
-'Public Overrides Function GetReplyData() As Byte()
-
-'    Return Encoding.ASCII.GetBytes("ACK")
-
-'End Function
-
-'Public Overrides Function GetSaveData() As Byte()
-
-'    'Return New ExtendedPointData(m_timeTag, m_value, m_quality).BinaryImage
-'    Return Nothing
-
-'End Function
