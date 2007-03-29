@@ -24,7 +24,7 @@ Imports TVA.Text.Common
 Imports TVA.Phasors.Common
 Imports TVA.Phasors.FNet.Common
 
-Namespace FNet
+Namespace Phasors.FNet
 
     ''' <summary>This class parses an FNet binary data stream and returns parsed data via events</summary>
     ''' <remarks>Frame parser is implemented as a write-only stream - this way data can come from any source</remarks>

@@ -17,12 +17,12 @@
 
 Imports System.Runtime.Serialization
 
-Namespace IeeeC37_118
+Namespace Phasors.IeeeC37_118
 
     <CLSCompliant(False), Serializable()> _
     Public Class ConfigurationCellCollection
 
-        Inherits Phasors.ConfigurationCellCollection
+        Inherits TVA.Phasors.ConfigurationCellCollection
 
         Public Sub New()
 

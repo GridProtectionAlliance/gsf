@@ -24,7 +24,7 @@ Imports TVA.IO.FilePath
 Imports TVA.DateTime.Common
 Imports TVA.Phasors.Common
 
-Namespace BpaPdcStream
+Namespace Phasors.BpaPdcStream
 
     ''' <summary>This class parses a BPA PDC binary data stream and returns parsed data via events</summary>
     ''' <remarks>Frame parser is implemented as a write-only stream - this way data can come from any source</remarks>

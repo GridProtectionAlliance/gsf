@@ -20,7 +20,7 @@ Imports System.Text
 Imports TVA.Phasors.Common
 Imports TVA.Phasors.FNet.Common
 
-Namespace FNet
+Namespace Phasors.FNet
 
     <CLSCompliant(False), Serializable()> _
     Public Class ConfigurationCell

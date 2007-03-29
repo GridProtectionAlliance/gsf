@@ -19,7 +19,7 @@ Imports System.ComponentModel
 Imports System.Runtime.Serialization
 Imports TVA.Phasors.FNet.Common
 
-Namespace FNet
+Namespace Phasors.FNet
 
     <Serializable()> _
     Public Class ConnectionParameters

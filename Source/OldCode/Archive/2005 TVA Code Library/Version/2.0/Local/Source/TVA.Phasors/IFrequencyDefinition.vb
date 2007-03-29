@@ -15,16 +15,20 @@
 '
 '*******************************************************************************************************
 
-''' <summary>This interface represents a protocol independent frequency and df/dt value definition.</summary>
-<CLSCompliant(False)> _
-Public Interface IFrequencyDefinition
+Namespace Phasors
 
-    Inherits IChannelDefinition
+    ''' <summary>This interface represents a protocol independent frequency and df/dt value definition.</summary>
+    <CLSCompliant(False)> _
+    Public Interface IFrequencyDefinition
 
-    ReadOnly Property NominalFrequency() As LineFrequency
+        Inherits IChannelDefinition
 
-    Property DfDtOffset() As Single
+        ReadOnly Property NominalFrequency() As LineFrequency
 
-    Property DfDtScalingFactor() As Int32
+        Property DfDtOffset() As Single
 
-End Interface
+        Property DfDtScalingFactor() As Int32
+
+    End Interface
+
+End Namespace

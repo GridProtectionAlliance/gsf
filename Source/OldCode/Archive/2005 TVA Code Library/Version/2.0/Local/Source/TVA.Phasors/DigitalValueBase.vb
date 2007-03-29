@@ -18,140 +18,144 @@
 Imports System.Runtime.Serialization
 Imports System.ComponentModel
 
-''' <summary>This class represents the common implementation of the protocol independent representation of a digital value.</summary>
-<CLSCompliant(False), Serializable()> _
-Public MustInherit Class DigitalValueBase
+Namespace Phasors
 
-    Inherits ChannelValueBase(Of IDigitalDefinition)
-    Implements IDigitalValue
+    ''' <summary>This class represents the common implementation of the protocol independent representation of a digital value.</summary>
+    <CLSCompliant(False), Serializable()> _
+    Public MustInherit Class DigitalValueBase
 
-    Private m_value As Int16
+        Inherits ChannelValueBase(Of IDigitalDefinition)
+        Implements IDigitalValue
 
-    Protected Sub New()
-    End Sub
+        Private m_value As Int16
 
-    Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
+        Protected Sub New()
+        End Sub
 
-        MyBase.New(info, context)
+        Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
 
-        ' Deserialize digital value
-        m_value = info.GetInt16("value")
+            MyBase.New(info, context)
 
-    End Sub
+            ' Deserialize digital value
+            m_value = info.GetInt16("value")
 
-    Protected Sub New(ByVal parent As IDataCell)
+        End Sub
 
-        MyBase.New(parent)
+        Protected Sub New(ByVal parent As IDataCell)
 
-    End Sub
+            MyBase.New(parent)
 
-    ' Derived classes are expected expose a Public Sub New(ByVal parent As IDataCell, ByVal digitalDefinition As IDigitalDefinition, ByVal value As Int16)
-    Protected Sub New(ByVal parent As IDataCell, ByVal digitalDefinition As IDigitalDefinition, ByVal value As Int16)
+        End Sub
 
-        MyBase.New(parent, digitalDefinition)
+        ' Derived classes are expected expose a Public Sub New(ByVal parent As IDataCell, ByVal digitalDefinition As IDigitalDefinition, ByVal value As Int16)
+        Protected Sub New(ByVal parent As IDataCell, ByVal digitalDefinition As IDigitalDefinition, ByVal value As Int16)
 
-        m_value = value
+            MyBase.New(parent, digitalDefinition)
 
-    End Sub
-
-    ' Derived classes are expected expose a Public Sub New(ByVal parent As IDataCell, ByVal digitalDefinition As IDigitalDefinition, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
-    Protected Sub New(ByVal parent As IDataCell, ByVal digitalDefinition As IDigitalDefinition, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
-
-        MyBase.New(parent, digitalDefinition)
-        ParseBinaryImage(Nothing, binaryImage, startIndex)
-
-    End Sub
-
-    ' Derived classes are expected to expose a Public Sub New(ByVal digitalValue As IDigitalValue)
-    Protected Sub New(ByVal digitalValue As IDigitalValue)
-
-        MyClass.New(digitalValue.Parent, digitalValue.Definition, digitalValue.Value)
-
-    End Sub
-
-    <EditorBrowsable(EditorBrowsableState.Never)> _
-    Public NotOverridable Overrides ReadOnly Property DataFormat() As DataFormat
-        Get
-            Return MyBase.DataFormat
-        End Get
-    End Property
-
-    Public Overridable Property Value() As Int16 Implements IDigitalValue.Value
-        Get
-            Return m_value
-        End Get
-        Set(ByVal value As Int16)
             m_value = value
-        End Set
-    End Property
 
-    Default Public Overrides Property CompositeValue(ByVal index As Integer) As Single
-        Get
-            Return Convert.ToSingle(m_value)
-        End Get
-        Set(ByVal value As Single)
-            Try
-                m_value = Convert.ToInt16(value)
-            Catch ex As OverflowException
-                m_value = Int16.MinValue
-            End Try
-        End Set
-    End Property
+        End Sub
 
-    Public Overrides ReadOnly Property CompositeValueCount() As Integer
-        Get
-            Return 1
-        End Get
-    End Property
+        ' Derived classes are expected expose a Public Sub New(ByVal parent As IDataCell, ByVal digitalDefinition As IDigitalDefinition, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
+        Protected Sub New(ByVal parent As IDataCell, ByVal digitalDefinition As IDigitalDefinition, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
-    Public Overrides ReadOnly Property IsEmpty() As Boolean
-        Get
-            Return (m_value = 0)
-        End Get
-    End Property
+            MyBase.New(parent, digitalDefinition)
+            ParseBinaryImage(Nothing, binaryImage, startIndex)
 
-    Protected Overrides ReadOnly Property BodyLength() As UInt16
-        Get
-            Return 2
-        End Get
-    End Property
+        End Sub
 
-    Protected Overrides ReadOnly Property BodyImage() As Byte()
-        Get
-            Dim buffer As Byte() = CreateArray(Of Byte)(BodyLength)
+        ' Derived classes are expected to expose a Public Sub New(ByVal digitalValue As IDigitalValue)
+        Protected Sub New(ByVal digitalValue As IDigitalValue)
 
-            EndianOrder.BigEndian.CopyBytes(m_value, buffer, 0)
+            MyClass.New(digitalValue.Parent, digitalValue.Definition, digitalValue.Value)
 
-            Return buffer
-        End Get
-    End Property
+        End Sub
 
-    Protected Overrides Sub ParseBodyImage(ByVal state As IChannelParsingState, ByVal binaryImage() As Byte, ByVal startIndex As Integer)
+        <EditorBrowsable(EditorBrowsableState.Never)> _
+        Public NotOverridable Overrides ReadOnly Property DataFormat() As DataFormat
+            Get
+                Return MyBase.DataFormat
+            End Get
+        End Property
 
-        m_value = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex)
+        Public Overridable Property Value() As Int16 Implements IDigitalValue.Value
+            Get
+                Return m_value
+            End Get
+            Set(ByVal value As Int16)
+                m_value = value
+            End Set
+        End Property
 
-    End Sub
+        Default Public Overrides Property CompositeValue(ByVal index As Integer) As Single
+            Get
+                Return Convert.ToSingle(m_value)
+            End Get
+            Set(ByVal value As Single)
+                Try
+                    m_value = Convert.ToInt16(value)
+                Catch ex As OverflowException
+                    m_value = Int16.MinValue
+                End Try
+            End Set
+        End Property
 
-    Public Overrides Sub GetObjectData(ByVal info As System.Runtime.Serialization.SerializationInfo, ByVal context As System.Runtime.Serialization.StreamingContext)
+        Public Overrides ReadOnly Property CompositeValueCount() As Integer
+            Get
+                Return 1
+            End Get
+        End Property
 
-        MyBase.GetObjectData(info, context)
+        Public Overrides ReadOnly Property IsEmpty() As Boolean
+            Get
+                Return (m_value = 0)
+            End Get
+        End Property
 
-        ' Serialize digital value
-        info.AddValue("value", m_value)
+        Protected Overrides ReadOnly Property BodyLength() As UInt16
+            Get
+                Return 2
+            End Get
+        End Property
 
-    End Sub
+        Protected Overrides ReadOnly Property BodyImage() As Byte()
+            Get
+                Dim buffer As Byte() = CreateArray(Of Byte)(BodyLength)
 
-    Public Overrides ReadOnly Property Attributes() As Dictionary(Of String, String)
-        Get
-            Dim baseAttributes As Dictionary(Of String, String) = MyBase.Attributes
-            Dim valueBytes As Byte() = BitConverter.GetBytes(Value)
+                EndianOrder.BigEndian.CopyBytes(m_value, buffer, 0)
 
-            baseAttributes.Add("Digital Value", Value)
-            baseAttributes.Add("Digital Value (Big Endian Bits)", ByteEncoding.BigEndianBinary.GetString(valueBytes))
-            baseAttributes.Add("Digital Value (Hexadecimal)", "0x" & ByteEncoding.Hexadecimal.GetString(valueBytes))
+                Return buffer
+            End Get
+        End Property
 
-            Return baseAttributes
-        End Get
-    End Property
+        Protected Overrides Sub ParseBodyImage(ByVal state As IChannelParsingState, ByVal binaryImage() As Byte, ByVal startIndex As Integer)
 
-End Class
+            m_value = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex)
+
+        End Sub
+
+        Public Overrides Sub GetObjectData(ByVal info As System.Runtime.Serialization.SerializationInfo, ByVal context As System.Runtime.Serialization.StreamingContext)
+
+            MyBase.GetObjectData(info, context)
+
+            ' Serialize digital value
+            info.AddValue("value", m_value)
+
+        End Sub
+
+        Public Overrides ReadOnly Property Attributes() As Dictionary(Of String, String)
+            Get
+                Dim baseAttributes As Dictionary(Of String, String) = MyBase.Attributes
+                Dim valueBytes As Byte() = BitConverter.GetBytes(Value)
+
+                baseAttributes.Add("Digital Value", Value)
+                baseAttributes.Add("Digital Value (Big Endian Bits)", ByteEncoding.BigEndianBinary.GetString(valueBytes))
+                baseAttributes.Add("Digital Value (Hexadecimal)", "0x" & ByteEncoding.Hexadecimal.GetString(valueBytes))
+
+                Return baseAttributes
+            End Get
+        End Property
+
+    End Class
+
+End Namespace

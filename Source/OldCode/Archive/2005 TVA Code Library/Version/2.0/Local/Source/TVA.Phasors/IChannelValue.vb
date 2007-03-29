@@ -18,37 +18,40 @@
 Imports System.Runtime.Serialization
 Imports TVA.Measurements
 
-''' <summary>This interface represents a protocol independent representation of any kind of data value.</summary>
-<CLSCompliant(False)> _
-Public Interface IChannelValue(Of T As IChannelDefinition)
+Namespace Phasors
 
-    Inherits IChannel, ISerializable
+    ''' <summary>This interface represents a protocol independent representation of any kind of data value.</summary>
+    <CLSCompliant(False)> _
+    Public Interface IChannelValue(Of T As IChannelDefinition)
 
-    ReadOnly Property Parent() As IDataCell
+        Inherits IChannel, ISerializable
 
-    Property Definition() As T
+        ReadOnly Property Parent() As IDataCell
 
-    ReadOnly Property DataFormat() As DataFormat
+        Property Definition() As T
 
-    ReadOnly Property Label() As String
+        ReadOnly Property DataFormat() As DataFormat
 
-    ''' <summary>Composite measurements of channel value</summary>
-    ''' <remarks>
-    ''' Because derived value classes may consist of more than one measured value,
-    ''' we use the composite value properties to abstractly expose each value
-    ''' </remarks>
-    Default Property CompositeValue(ByVal index As Integer) As Single
+        ReadOnly Property Label() As String
 
-    ''' <summary>Total number of composite measurements exposed by the channel value</summary>
-    ''' <remarks>
-    ''' Because derived value classes may consist of more than one measured value,
-    ''' we use the composite value properties to abstractly expose each value
-    ''' </remarks>
-    ReadOnly Property CompositeValueCount() As Integer
+        ''' <summary>Composite measurements of channel value</summary>
+        ''' <remarks>
+        ''' Because derived value classes may consist of more than one measured value,
+        ''' we use the composite value properties to abstractly expose each value
+        ''' </remarks>
+        Default Property CompositeValue(ByVal index As Integer) As Single
 
-    ReadOnly Property IsEmpty() As Boolean
+        ''' <summary>Total number of composite measurements exposed by the channel value</summary>
+        ''' <remarks>
+        ''' Because derived value classes may consist of more than one measured value,
+        ''' we use the composite value properties to abstractly expose each value
+        ''' </remarks>
+        ReadOnly Property CompositeValueCount() As Integer
 
-    ReadOnly Property Measurements() As IMeasurement()
+        ReadOnly Property IsEmpty() As Boolean
 
-End Interface
+        ReadOnly Property Measurements() As IMeasurement()
 
+    End Interface
+
+End Namespace

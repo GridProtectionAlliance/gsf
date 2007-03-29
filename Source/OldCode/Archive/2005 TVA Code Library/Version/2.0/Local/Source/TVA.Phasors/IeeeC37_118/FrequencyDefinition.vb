@@ -18,7 +18,7 @@
 Imports System.Runtime.Serialization
 Imports System.Text
 
-Namespace IeeeC37_118
+Namespace Phasors.IeeeC37_118
 
     <CLSCompliant(False), Serializable()> _
     Public Class FrequencyDefinition

@@ -27,7 +27,7 @@ Imports TVA.Math.Common
 Imports TVA.Phasors.Common
 Imports TVA.Phasors.BpaPdcStream.Common
 
-Namespace BpaPdcStream
+Namespace Phasors.BpaPdcStream
 
     ' Note that it is expected that the end user will typically create only one instance of this class per INI file for use by any
     ' number of different threads and a request can be made at anytime to "reload" the config file, so we make sure all publically

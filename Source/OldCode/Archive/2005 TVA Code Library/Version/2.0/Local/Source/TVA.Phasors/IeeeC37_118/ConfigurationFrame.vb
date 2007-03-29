@@ -21,7 +21,7 @@ Imports TVA.DateTime
 Imports TVA.Phasors.Common
 Imports TVA.Phasors.IeeeC37_118.Common
 
-Namespace IeeeC37_118
+Namespace Phasors.IeeeC37_118
 
     <CLSCompliant(False), Serializable()> _
     Public Class ConfigurationFrame

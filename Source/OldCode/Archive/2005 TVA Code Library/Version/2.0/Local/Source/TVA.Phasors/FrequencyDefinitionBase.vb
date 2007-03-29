@@ -19,126 +19,130 @@ Imports System.Runtime.Serialization
 Imports System.ComponentModel
 Imports TVA.Phasors.Common
 
-''' <summary>This class represents the common implementation of the protocol independent definition of a frequency and df/dt value.</summary>
-<CLSCompliant(False), Serializable()> _
-Public MustInherit Class FrequencyDefinitionBase
+Namespace Phasors
 
-    Inherits ChannelDefinitionBase
-    Implements IFrequencyDefinition
+    ''' <summary>This class represents the common implementation of the protocol independent definition of a frequency and df/dt value.</summary>
+    <CLSCompliant(False), Serializable()> _
+    Public MustInherit Class FrequencyDefinitionBase
 
-    Private m_dfdtScale As Int32
-    Private m_dfdtOffset As Single
+        Inherits ChannelDefinitionBase
+        Implements IFrequencyDefinition
 
-    Protected Sub New()
-    End Sub
+        Private m_dfdtScale As Int32
+        Private m_dfdtOffset As Single
 
-    Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
+        Protected Sub New()
+        End Sub
 
-        MyBase.New(info, context)
+        Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
 
-        ' Deserialize frequency definition
-        m_dfdtScale = info.GetInt32("dfdtScale")
-        m_dfdtOffset = info.GetSingle("dfdtOffset")
+            MyBase.New(info, context)
 
-    End Sub
+            ' Deserialize frequency definition
+            m_dfdtScale = info.GetInt32("dfdtScale")
+            m_dfdtOffset = info.GetSingle("dfdtOffset")
 
-    Protected Sub New(ByVal parent As IConfigurationCell)
+        End Sub
 
-        MyBase.New(parent)
+        Protected Sub New(ByVal parent As IConfigurationCell)
 
-    End Sub
+            MyBase.New(parent)
 
-    Protected Sub New(ByVal parent As IConfigurationCell, ByVal label As String, ByVal scale As Int32, ByVal offset As Single, ByVal dfdtScale As Int32, ByVal dfdtOffset As Single)
+        End Sub
 
-        MyBase.New(parent, 0, label, scale, offset)
+        Protected Sub New(ByVal parent As IConfigurationCell, ByVal label As String, ByVal scale As Int32, ByVal offset As Single, ByVal dfdtScale As Int32, ByVal dfdtOffset As Single)
 
-        m_dfdtScale = dfdtScale
-        m_dfdtOffset = dfdtOffset
+            MyBase.New(parent, 0, label, scale, offset)
 
-    End Sub
+            m_dfdtScale = dfdtScale
+            m_dfdtOffset = dfdtOffset
 
-    Protected Sub New(ByVal parent As IConfigurationCell, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
+        End Sub
 
-        MyBase.New(parent, binaryImage, startIndex)
+        Protected Sub New(ByVal parent As IConfigurationCell, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
-    End Sub
+            MyBase.New(parent, binaryImage, startIndex)
 
-    ' Derived classes are expected to expose a Public Sub New(ByVal frequencyDefinition As IFrequencyDefinition)
-    Protected Sub New(ByVal frequencyDefinition As IFrequencyDefinition)
+        End Sub
 
-        MyClass.New(frequencyDefinition.Parent, frequencyDefinition.Label, frequencyDefinition.ScalingFactor, _
-            frequencyDefinition.Offset, frequencyDefinition.DfDtScalingFactor, frequencyDefinition.DfDtOffset)
+        ' Derived classes are expected to expose a Public Sub New(ByVal frequencyDefinition As IFrequencyDefinition)
+        Protected Sub New(ByVal frequencyDefinition As IFrequencyDefinition)
 
-    End Sub
+            MyClass.New(frequencyDefinition.Parent, frequencyDefinition.Label, frequencyDefinition.ScalingFactor, _
+                frequencyDefinition.Offset, frequencyDefinition.DfDtScalingFactor, frequencyDefinition.DfDtOffset)
 
-    Public Overrides ReadOnly Property DataFormat() As DataFormat
-        Get
-            Return Parent.FrequencyDataFormat
-        End Get
-    End Property
+        End Sub
 
-    Public Overridable ReadOnly Property NominalFrequency() As LineFrequency Implements IFrequencyDefinition.NominalFrequency
-        Get
-            Return Parent.NominalFrequency
-        End Get
-    End Property
+        Public Overrides ReadOnly Property DataFormat() As DataFormat
+            Get
+                Return Parent.FrequencyDataFormat
+            End Get
+        End Property
 
-    <EditorBrowsable(EditorBrowsableState.Never)> _
-    Public Overrides Property Index() As Integer
-        Get
-            Return MyBase.Index
-        End Get
-        Set(ByVal value As Integer)
-            MyBase.Index = value
-        End Set
-    End Property
+        Public Overridable ReadOnly Property NominalFrequency() As LineFrequency Implements IFrequencyDefinition.NominalFrequency
+            Get
+                Return Parent.NominalFrequency
+            End Get
+        End Property
 
-    Public Overrides Property Offset() As Single
-        Get
-            Return Convert.ToSingle(Parent.NominalFrequency)
-        End Get
-        Set(ByVal value As Single)
-            Throw New NotSupportedException("Frequency offset is read-only - it is determined by nominal frequency specified in containing condiguration cell")
-        End Set
-    End Property
+        <EditorBrowsable(EditorBrowsableState.Never)> _
+        Public Overrides Property Index() As Integer
+            Get
+                Return MyBase.Index
+            End Get
+            Set(ByVal value As Integer)
+                MyBase.Index = value
+            End Set
+        End Property
 
-    Public Overridable Property DfDtOffset() As Single Implements IFrequencyDefinition.DfDtOffset
-        Get
-            Return m_dfdtOffset
-        End Get
-        Set(ByVal value As Single)
-            m_dfdtOffset = value
-        End Set
-    End Property
+        Public Overrides Property Offset() As Single
+            Get
+                Return Convert.ToSingle(Parent.NominalFrequency)
+            End Get
+            Set(ByVal value As Single)
+                Throw New NotSupportedException("Frequency offset is read-only - it is determined by nominal frequency specified in containing condiguration cell")
+            End Set
+        End Property
 
-    Public Overridable Property DfDtScalingFactor() As Int32 Implements IFrequencyDefinition.DfDtScalingFactor
-        Get
-            Return m_dfdtScale
-        End Get
-        Set(ByVal value As Int32)
-            m_dfdtScale = value
-        End Set
-    End Property
+        Public Overridable Property DfDtOffset() As Single Implements IFrequencyDefinition.DfDtOffset
+            Get
+                Return m_dfdtOffset
+            End Get
+            Set(ByVal value As Single)
+                m_dfdtOffset = value
+            End Set
+        End Property
 
-    Public Overrides Sub GetObjectData(ByVal info As System.Runtime.Serialization.SerializationInfo, ByVal context As System.Runtime.Serialization.StreamingContext)
+        Public Overridable Property DfDtScalingFactor() As Int32 Implements IFrequencyDefinition.DfDtScalingFactor
+            Get
+                Return m_dfdtScale
+            End Get
+            Set(ByVal value As Int32)
+                m_dfdtScale = value
+            End Set
+        End Property
 
-        MyBase.GetObjectData(info, context)
+        Public Overrides Sub GetObjectData(ByVal info As System.Runtime.Serialization.SerializationInfo, ByVal context As System.Runtime.Serialization.StreamingContext)
 
-        ' Serialize frequency definition
-        info.AddValue("dfdtScale", m_dfdtScale)
-        info.AddValue("dfdtOffset", m_dfdtOffset)
+            MyBase.GetObjectData(info, context)
 
-    End Sub
+            ' Serialize frequency definition
+            info.AddValue("dfdtScale", m_dfdtScale)
+            info.AddValue("dfdtOffset", m_dfdtOffset)
 
-    Public Overrides ReadOnly Property Attributes() As Dictionary(Of String, String)
-        Get
-            Dim baseAttributes As Dictionary(Of String, String) = MyBase.Attributes
+        End Sub
 
-            baseAttributes.Add("df/dt Offset", DfDtOffset)
-            baseAttributes.Add("df/dt Scaling Factor", DfDtScalingFactor)
+        Public Overrides ReadOnly Property Attributes() As Dictionary(Of String, String)
+            Get
+                Dim baseAttributes As Dictionary(Of String, String) = MyBase.Attributes
 
-            Return baseAttributes
-        End Get
-    End Property
+                baseAttributes.Add("df/dt Offset", DfDtOffset)
+                baseAttributes.Add("df/dt Scaling Factor", DfDtScalingFactor)
 
-End Class
+                Return baseAttributes
+            End Get
+        End Property
+
+    End Class
+
+End Namespace

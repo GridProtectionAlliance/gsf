@@ -15,26 +15,30 @@
 '
 '*******************************************************************************************************
 
-''' <summary>This class represents the protocol independent interface of a phasor value.</summary>
-<CLSCompliant(False)> _
-Public Interface IPhasorValue
+Namespace Phasors
 
-    Inherits IChannelValue(Of IPhasorDefinition)
+    ''' <summary>This class represents the protocol independent interface of a phasor value.</summary>
+    <CLSCompliant(False)> _
+    Public Interface IPhasorValue
 
-    ReadOnly Property CoordinateFormat() As CoordinateFormat
+        Inherits IChannelValue(Of IPhasorDefinition)
 
-    ReadOnly Property [Type]() As PhasorType
+        ReadOnly Property CoordinateFormat() As CoordinateFormat
 
-    Property Angle() As Single
+        ReadOnly Property [Type]() As PhasorType
 
-    Property Magnitude() As Single
+        Property Angle() As Single
 
-    Property Real() As Single
+        Property Magnitude() As Single
 
-    Property Imaginary() As Single
+        Property Real() As Single
 
-    Property UnscaledReal() As Int16
+        Property Imaginary() As Single
 
-    Property UnscaledImaginary() As Int16
+        Property UnscaledReal() As Int16
 
-End Interface
+        Property UnscaledImaginary() As Int16
+
+    End Interface
+
+End Namespace

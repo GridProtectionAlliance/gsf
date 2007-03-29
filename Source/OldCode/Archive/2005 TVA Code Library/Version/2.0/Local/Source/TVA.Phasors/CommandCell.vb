@@ -19,115 +19,119 @@ Imports System.Runtime.Serialization
 Imports System.Buffer
 Imports TVA.Phasors.Common
 
-''' <summary>This class represents the protocol independent common implementation of an element of extended frame data of a command frame that can be received from a PMU.</summary>
-<CLSCompliant(False), Serializable()> _
-Public Class CommandCell
+Namespace Phasors
 
-    Inherits ChannelCellBase
-    Implements ICommandCell
+    ''' <summary>This class represents the protocol independent common implementation of an element of extended frame data of a command frame that can be received from a PMU.</summary>
+    <CLSCompliant(False), Serializable()> _
+    Public Class CommandCell
 
-    Private m_extendedDataByte As Byte
+        Inherits ChannelCellBase
+        Implements ICommandCell
 
-    Protected Sub New()
-    End Sub
+        Private m_extendedDataByte As Byte
 
-    Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
+        Protected Sub New()
+        End Sub
 
-        MyBase.New(info, context)
+        Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
 
-        ' Deserialize command cell value
-        m_extendedDataByte = info.GetByte("extendedDataByte")
+            MyBase.New(info, context)
 
-    End Sub
+            ' Deserialize command cell value
+            m_extendedDataByte = info.GetByte("extendedDataByte")
 
-    Public Sub New(ByVal parent As ICommandFrame)
+        End Sub
 
-        MyBase.New(parent, False)
+        Public Sub New(ByVal parent As ICommandFrame)
 
-    End Sub
+            MyBase.New(parent, False)
 
-    Public Sub New(ByVal parent As ICommandFrame, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
+        End Sub
 
-        MyClass.New(parent)
-        ParseBinaryImage(Nothing, binaryImage, startIndex)
+        Public Sub New(ByVal parent As ICommandFrame, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
-    End Sub
+            MyClass.New(parent)
+            ParseBinaryImage(Nothing, binaryImage, startIndex)
 
-    Public Sub New(ByVal parent As ICommandFrame, ByVal extendedDataByte As Byte)
+        End Sub
 
-        MyBase.New(parent, False)
-        m_extendedDataByte = extendedDataByte
+        Public Sub New(ByVal parent As ICommandFrame, ByVal extendedDataByte As Byte)
 
-    End Sub
+            MyBase.New(parent, False)
+            m_extendedDataByte = extendedDataByte
 
-    Public Sub New(ByVal headerCell As IHeaderCell)
+        End Sub
 
-        MyClass.New(headerCell.Parent, headerCell.Character)
+        Public Sub New(ByVal headerCell As IHeaderCell)
 
-    End Sub
+            MyClass.New(headerCell.Parent, headerCell.Character)
 
-    Friend Shared Function CreateNewCommandCell(ByVal parent As IChannelFrame, ByVal state As IChannelFrameParsingState(Of ICommandCell), ByVal index As Int32, ByVal binaryImage As Byte(), ByVal startIndex As Int32) As ICommandCell
+        End Sub
 
-        Return New CommandCell(parent, binaryImage, startIndex)
+        Friend Shared Function CreateNewCommandCell(ByVal parent As IChannelFrame, ByVal state As IChannelFrameParsingState(Of ICommandCell), ByVal index As Int32, ByVal binaryImage As Byte(), ByVal startIndex As Int32) As ICommandCell
 
-    End Function
+            Return New CommandCell(parent, binaryImage, startIndex)
 
-    Public Overrides ReadOnly Property DerivedType() As System.Type
-        Get
-            Return Me.GetType()
-        End Get
-    End Property
+        End Function
 
-    Public Overridable Shadows ReadOnly Property Parent() As ICommandFrame Implements ICommandCell.Parent
-        Get
-            Return MyBase.Parent
-        End Get
-    End Property
+        Public Overrides ReadOnly Property DerivedType() As System.Type
+            Get
+                Return Me.GetType()
+            End Get
+        End Property
 
-    Public Overridable Property ExtendedDataByte() As Byte Implements ICommandCell.ExtendedDataByte
-        Get
-            Return m_extendedDataByte
-        End Get
-        Set(ByVal value As Byte)
-            m_extendedDataByte = value
-        End Set
-    End Property
+        Public Overridable Shadows ReadOnly Property Parent() As ICommandFrame Implements ICommandCell.Parent
+            Get
+                Return MyBase.Parent
+            End Get
+        End Property
 
-    Protected Overrides ReadOnly Property BodyLength() As UInt16
-        Get
-            Return 1
-        End Get
-    End Property
+        Public Overridable Property ExtendedDataByte() As Byte Implements ICommandCell.ExtendedDataByte
+            Get
+                Return m_extendedDataByte
+            End Get
+            Set(ByVal value As Byte)
+                m_extendedDataByte = value
+            End Set
+        End Property
 
-    Protected Overrides ReadOnly Property BodyImage() As Byte()
-        Get
-            Return New Byte() {m_extendedDataByte}
-        End Get
-    End Property
+        Protected Overrides ReadOnly Property BodyLength() As UInt16
+            Get
+                Return 1
+            End Get
+        End Property
 
-    Protected Overrides Sub ParseBodyImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
+        Protected Overrides ReadOnly Property BodyImage() As Byte()
+            Get
+                Return New Byte() {m_extendedDataByte}
+            End Get
+        End Property
 
-        m_extendedDataByte = binaryImage(startIndex)
+        Protected Overrides Sub ParseBodyImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
-    End Sub
+            m_extendedDataByte = binaryImage(startIndex)
 
-    Public Overrides Sub GetObjectData(ByVal info As System.Runtime.Serialization.SerializationInfo, ByVal context As System.Runtime.Serialization.StreamingContext)
+        End Sub
 
-        MyBase.GetObjectData(info, context)
+        Public Overrides Sub GetObjectData(ByVal info As System.Runtime.Serialization.SerializationInfo, ByVal context As System.Runtime.Serialization.StreamingContext)
 
-        ' Serialize command cell value
-        info.AddValue("extendedDataByte", m_extendedDataByte)
+            MyBase.GetObjectData(info, context)
 
-    End Sub
+            ' Serialize command cell value
+            info.AddValue("extendedDataByte", m_extendedDataByte)
 
-    Public Overrides ReadOnly Property Attributes() As Dictionary(Of String, String)
-        Get
-            Dim baseAttributes As Dictionary(Of String, String) = MyBase.Attributes
+        End Sub
 
-            baseAttributes.Add("Extended Data Byte", ExtendedDataByte.ToString("x"c))
+        Public Overrides ReadOnly Property Attributes() As Dictionary(Of String, String)
+            Get
+                Dim baseAttributes As Dictionary(Of String, String) = MyBase.Attributes
 
-            Return baseAttributes
-        End Get
-    End Property
+                baseAttributes.Add("Extended Data Byte", ExtendedDataByte.ToString("x"c))
 
-End Class
+                Return baseAttributes
+            End Get
+        End Property
+
+    End Class
+
+End Namespace

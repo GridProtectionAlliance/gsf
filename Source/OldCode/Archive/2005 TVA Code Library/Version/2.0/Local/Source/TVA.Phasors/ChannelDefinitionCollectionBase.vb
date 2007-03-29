@@ -17,33 +17,36 @@
 
 Imports System.Runtime.Serialization
 
-''' <summary>This class represents the common implementation of the protocol independent collection of definitions of any kind of data.</summary>
-<CLSCompliant(False), Serializable()> _
-Public MustInherit Class ChannelDefinitionCollectionBase(Of T As IChannelDefinition)
+Namespace Phasors
 
-    Inherits ChannelCollectionBase(Of T)
+    ''' <summary>This class represents the common implementation of the protocol independent collection of definitions of any kind of data.</summary>
+    <CLSCompliant(False), Serializable()> _
+    Public MustInherit Class ChannelDefinitionCollectionBase(Of T As IChannelDefinition)
 
-    Protected Sub New()
-    End Sub
+        Inherits ChannelCollectionBase(Of T)
 
-    Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
+        Protected Sub New()
+        End Sub
 
-        MyBase.New(info, context)
+        Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
 
-    End Sub
+            MyBase.New(info, context)
 
-    Protected Sub New(ByVal maximumCount As Int32)
+        End Sub
 
-        MyBase.New(maximumCount)
+        Protected Sub New(ByVal maximumCount As Int32)
 
-    End Sub
+            MyBase.New(maximumCount)
 
-    Public Overrides Sub Add(ByVal value As T)
+        End Sub
 
-        MyBase.Add(value)
-        value.Index = Count - 1
+        Public Overrides Sub Add(ByVal value As T)
 
-    End Sub
+            MyBase.Add(value)
+            value.Index = Count - 1
 
-End Class
+        End Sub
 
+    End Class
+
+End Namespace

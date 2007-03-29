@@ -15,22 +15,26 @@
 '
 '*******************************************************************************************************
 
-''' <summary>This interface represents the protocol independent parsing state of a set of phasor related data values.</summary>
-<CLSCompliant(False)> _
-Public Interface IDataCellParsingState
+Namespace Phasors
 
-    Inherits IChannelCellParsingState
+    ''' <summary>This interface represents the protocol independent parsing state of a set of phasor related data values.</summary>
+    <CLSCompliant(False)> _
+    Public Interface IDataCellParsingState
 
-    Delegate Function CreateNewValueFunctionSignature(Of TDefinition As IChannelDefinition, TValue As IChannelValue(Of TDefinition))(ByVal parent As IDataCell, ByVal definition As TDefinition, ByVal binaryImage As Byte(), ByVal startIndex As Int32) As TValue
+        Inherits IChannelCellParsingState
 
-    ReadOnly Property ConfigurationCell() As IConfigurationCell
+        Delegate Function CreateNewValueFunctionSignature(Of TDefinition As IChannelDefinition, TValue As IChannelValue(Of TDefinition))(ByVal parent As IDataCell, ByVal definition As TDefinition, ByVal binaryImage As Byte(), ByVal startIndex As Int32) As TValue
 
-    ReadOnly Property CreateNewPhasorValueFunction() As CreateNewValueFunctionSignature(Of IPhasorDefinition, IPhasorValue)
+        ReadOnly Property ConfigurationCell() As IConfigurationCell
 
-    ReadOnly Property CreateNewFrequencyValueFunction() As CreateNewValueFunctionSignature(Of IFrequencyDefinition, IFrequencyValue)
+        ReadOnly Property CreateNewPhasorValueFunction() As CreateNewValueFunctionSignature(Of IPhasorDefinition, IPhasorValue)
 
-    ReadOnly Property CreateNewAnalogValueFunction() As CreateNewValueFunctionSignature(Of IAnalogDefinition, IAnalogValue)
+        ReadOnly Property CreateNewFrequencyValueFunction() As CreateNewValueFunctionSignature(Of IFrequencyDefinition, IFrequencyValue)
 
-    ReadOnly Property CreateNewDigitalValueFunction() As CreateNewValueFunctionSignature(Of IDigitalDefinition, IDigitalValue)
+        ReadOnly Property CreateNewAnalogValueFunction() As CreateNewValueFunctionSignature(Of IAnalogDefinition, IAnalogValue)
 
-End Interface
+        ReadOnly Property CreateNewDigitalValueFunction() As CreateNewValueFunctionSignature(Of IDigitalDefinition, IDigitalValue)
+
+    End Interface
+
+End Namespace

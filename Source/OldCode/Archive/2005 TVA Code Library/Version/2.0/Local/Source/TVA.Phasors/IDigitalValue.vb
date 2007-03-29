@@ -15,12 +15,16 @@
 '
 '*******************************************************************************************************
 
-''' <summary>This interface represents a protocol independent digital value.</summary>
-<CLSCompliant(False)> _
-Public Interface IDigitalValue
+Namespace Phasors
 
-    Inherits IChannelValue(Of IDigitalDefinition)
+    ''' <summary>This interface represents a protocol independent digital value.</summary>
+    <CLSCompliant(False)> _
+    Public Interface IDigitalValue
 
-    Property Value() As Int16
+        Inherits IChannelValue(Of IDigitalDefinition)
 
-End Interface
+        Property Value() As Int16
+
+    End Interface
+
+End Namespace

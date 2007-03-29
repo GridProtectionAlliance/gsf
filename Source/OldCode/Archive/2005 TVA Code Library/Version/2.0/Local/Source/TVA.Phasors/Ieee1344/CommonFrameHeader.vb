@@ -22,7 +22,7 @@ Imports TVA.Phasors.Common
 Imports TVA.Phasors.Ieee1344.Common
 Imports TVA.IO.Compression.Common
 
-Namespace Ieee1344
+Namespace Phasors.Ieee1344
 
     ' This class generates and parses a frame header specfic to C37.118
     <CLSCompliant(False), Serializable()> _

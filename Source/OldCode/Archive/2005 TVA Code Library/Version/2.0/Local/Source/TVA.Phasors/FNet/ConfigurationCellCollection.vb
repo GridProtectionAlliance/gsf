@@ -17,14 +17,14 @@
 
 Imports System.Runtime.Serialization
 
-Namespace FNet
+Namespace Phasors.FNet
     ''' <summary>
     ''' Collection of ConfigureCell
     ''' </summary>
     <CLSCompliant(False), Serializable()> _
     Public Class ConfigurationCellCollection
 
-        Inherits Phasors.ConfigurationCellCollection
+        Inherits TVA.Phasors.ConfigurationCellCollection
 
         Public Sub New()
 

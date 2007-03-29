@@ -15,7 +15,7 @@
 '
 '*******************************************************************************************************
 
-Namespace Ieee1344
+Namespace Phasors.Ieee1344
 
     ''' <summary>Frame type</summary>
     <Serializable()> _

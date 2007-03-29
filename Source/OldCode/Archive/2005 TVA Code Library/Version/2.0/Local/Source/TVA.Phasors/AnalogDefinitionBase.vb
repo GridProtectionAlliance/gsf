@@ -17,52 +17,56 @@
 
 Imports System.Runtime.Serialization
 
-''' <summary>This class represents the common implementation of the protocol independent definition of an analog value.</summary>
-<CLSCompliant(False), Serializable()> _
-Public MustInherit Class AnalogDefinitionBase
+Namespace Phasors
 
-    Inherits ChannelDefinitionBase
-    Implements IAnalogDefinition
+    ''' <summary>This class represents the common implementation of the protocol independent definition of an analog value.</summary>
+    <CLSCompliant(False), Serializable()> _
+    Public MustInherit Class AnalogDefinitionBase
 
-    Protected Sub New()
-    End Sub
+        Inherits ChannelDefinitionBase
+        Implements IAnalogDefinition
 
-    Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
+        Protected Sub New()
+        End Sub
 
-        MyBase.New(info, context)
+        Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
 
-    End Sub
+            MyBase.New(info, context)
 
-    Protected Sub New(ByVal parent As IConfigurationCell)
+        End Sub
 
-        MyBase.New(parent)
+        Protected Sub New(ByVal parent As IConfigurationCell)
 
-    End Sub
+            MyBase.New(parent)
 
-    Protected Sub New(ByVal parent As IConfigurationCell, ByVal index As Int32, ByVal label As String, ByVal scale As Int32, ByVal offset As Single)
+        End Sub
 
-        MyBase.New(parent, index, label, scale, offset)
+        Protected Sub New(ByVal parent As IConfigurationCell, ByVal index As Int32, ByVal label As String, ByVal scale As Int32, ByVal offset As Single)
 
-    End Sub
+            MyBase.New(parent, index, label, scale, offset)
 
-    Protected Sub New(ByVal parent As IConfigurationCell, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
+        End Sub
 
-        MyBase.New(parent, binaryImage, startIndex)
+        Protected Sub New(ByVal parent As IConfigurationCell, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
-    End Sub
+            MyBase.New(parent, binaryImage, startIndex)
 
-    ' Derived classes are expected to expose a Public Sub New(ByVal analogDefinition As IAnalogDefinition)
-    Protected Sub New(ByVal analogDefinition As IAnalogDefinition)
+        End Sub
 
-        MyClass.New(analogDefinition.Parent, analogDefinition.Index, analogDefinition.Label, _
-            analogDefinition.ScalingFactor, analogDefinition.Offset)
+        ' Derived classes are expected to expose a Public Sub New(ByVal analogDefinition As IAnalogDefinition)
+        Protected Sub New(ByVal analogDefinition As IAnalogDefinition)
 
-    End Sub
+            MyClass.New(analogDefinition.Parent, analogDefinition.Index, analogDefinition.Label, _
+                analogDefinition.ScalingFactor, analogDefinition.Offset)
 
-    Public Overrides ReadOnly Property DataFormat() As DataFormat
-        Get
-            Return Parent.AnalogDataFormat
-        End Get
-    End Property
+        End Sub
 
-End Class
+        Public Overrides ReadOnly Property DataFormat() As DataFormat
+            Get
+                Return Parent.AnalogDataFormat
+            End Get
+        End Property
+
+    End Class
+
+End Namespace

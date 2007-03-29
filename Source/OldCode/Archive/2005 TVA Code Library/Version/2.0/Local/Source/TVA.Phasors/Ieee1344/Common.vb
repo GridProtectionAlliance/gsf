@@ -15,7 +15,7 @@
 '
 '*******************************************************************************************************
 
-Namespace Ieee1344
+Namespace Phasors.Ieee1344
 
     <CLSCompliant(False)> _
     Public NotInheritable Class Common

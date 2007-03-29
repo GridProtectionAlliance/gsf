@@ -19,73 +19,77 @@ Imports System.Runtime.Serialization
 Imports System.Text
 Imports TVA.DateTime
 
-''' <summary>This class represents the protocol independent common implementation of a header frame that can be sent or received from a PMU.</summary>
-<CLSCompliant(False), Serializable()> _
-Public MustInherit Class HeaderFrameBase
+Namespace Phasors
 
-    Inherits ChannelFrameBase(Of IHeaderCell)
-    Implements IHeaderFrame
+    ''' <summary>This class represents the protocol independent common implementation of a header frame that can be sent or received from a PMU.</summary>
+    <CLSCompliant(False), Serializable()> _
+    Public MustInherit Class HeaderFrameBase
 
-    Protected Sub New()
-    End Sub
+        Inherits ChannelFrameBase(Of IHeaderCell)
+        Implements IHeaderFrame
 
-    Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
+        Protected Sub New()
+        End Sub
 
-        MyBase.New(info, context)
+        Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
 
-    End Sub
+            MyBase.New(info, context)
 
-    Protected Sub New(ByVal cells As HeaderCellCollection)
+        End Sub
 
-        MyBase.New(cells)
+        Protected Sub New(ByVal cells As HeaderCellCollection)
 
-    End Sub
+            MyBase.New(cells)
 
-    ' Derived classes are expected to expose a Public Sub New(ByVal binaryImage As Byte(), ByVal startIndex As Int32)
-    ' and automatically pass in parsing state
-    Protected Sub New(ByVal state As IHeaderFrameParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
+        End Sub
 
-        MyBase.New(state, binaryImage, startIndex)
+        ' Derived classes are expected to expose a Public Sub New(ByVal binaryImage As Byte(), ByVal startIndex As Int32)
+        ' and automatically pass in parsing state
+        Protected Sub New(ByVal state As IHeaderFrameParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
-    End Sub
+            MyBase.New(state, binaryImage, startIndex)
 
-    ' Derived classes are expected to expose a Public Sub New(ByVal headerFrame As IHeaderFrame)
-    Protected Sub New(ByVal headerFrame As IHeaderFrame)
+        End Sub
 
-        MyClass.New(headerFrame.Cells)
+        ' Derived classes are expected to expose a Public Sub New(ByVal headerFrame As IHeaderFrame)
+        Protected Sub New(ByVal headerFrame As IHeaderFrame)
 
-    End Sub
+            MyClass.New(headerFrame.Cells)
 
-    Protected Overrides ReadOnly Property FundamentalFrameType() As FundamentalFrameType
-        Get
-            Return Phasors.FundamentalFrameType.HeaderFrame
-        End Get
-    End Property
+        End Sub
 
-    Public Overridable Shadows ReadOnly Property Cells() As HeaderCellCollection Implements IHeaderFrame.Cells
-        Get
-            Return MyBase.Cells
-        End Get
-    End Property
+        Protected Overrides ReadOnly Property FundamentalFrameType() As FundamentalFrameType
+            Get
+                Return TVA.Phasors.FundamentalFrameType.HeaderFrame
+            End Get
+        End Property
 
-    Public Overridable Property HeaderData() As String Implements IHeaderFrame.HeaderData
-        Get
-            Return Encoding.ASCII.GetString(Cells.BinaryImage)
-        End Get
-        Set(ByVal value As String)
-            Cells.Clear()
-            ParseBodyImage(New HeaderFrameParsingState(Cells, 0, value.Length), Encoding.ASCII.GetBytes(value), 0)
-        End Set
-    End Property
+        Public Overridable Shadows ReadOnly Property Cells() As HeaderCellCollection Implements IHeaderFrame.Cells
+            Get
+                Return MyBase.Cells
+            End Get
+        End Property
 
-    Public Overrides ReadOnly Property Attributes() As Dictionary(Of String, String)
-        Get
-            Dim baseAttributes As Dictionary(Of String, String) = MyBase.Attributes
+        Public Overridable Property HeaderData() As String Implements IHeaderFrame.HeaderData
+            Get
+                Return Encoding.ASCII.GetString(Cells.BinaryImage)
+            End Get
+            Set(ByVal value As String)
+                Cells.Clear()
+                ParseBodyImage(New HeaderFrameParsingState(Cells, 0, value.Length), Encoding.ASCII.GetBytes(value), 0)
+            End Set
+        End Property
 
-            baseAttributes.Add("Header Data", HeaderData)
+        Public Overrides ReadOnly Property Attributes() As Dictionary(Of String, String)
+            Get
+                Dim baseAttributes As Dictionary(Of String, String) = MyBase.Attributes
 
-            Return baseAttributes
-        End Get
-    End Property
+                baseAttributes.Add("Header Data", HeaderData)
 
-End Class
+                Return baseAttributes
+            End Get
+        End Property
+
+    End Class
+
+End Namespace

@@ -19,110 +19,114 @@ Imports System.Runtime.Serialization
 Imports TVA.DateTime
 Imports TVA.DateTime.Common
 
-''' <summary>This class represents the protocol independent common implementation of a configuration frame that can be sent or received from a PMU.</summary>
-<CLSCompliant(False), Serializable()> _
-Public MustInherit Class ConfigurationFrameBase
+Namespace Phasors
 
-    Inherits ChannelFrameBase(Of IConfigurationCell)
-    Implements IConfigurationFrame
+    ''' <summary>This class represents the protocol independent common implementation of a configuration frame that can be sent or received from a PMU.</summary>
+    <CLSCompliant(False), Serializable()> _
+    Public MustInherit Class ConfigurationFrameBase
 
-    Private m_frameRate As Int16
-    Private m_ticksPerFrame As Decimal
+        Inherits ChannelFrameBase(Of IConfigurationCell)
+        Implements IConfigurationFrame
 
-    Protected Sub New()
-    End Sub
+        Private m_frameRate As Int16
+        Private m_ticksPerFrame As Decimal
 
-    Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
+        Protected Sub New()
+        End Sub
 
-        MyBase.New(info, context)
+        Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
 
-        ' Deserialize configuration frame
-        FrameRate = info.GetInt16("frameRate")
+            MyBase.New(info, context)
 
-    End Sub
+            ' Deserialize configuration frame
+            FrameRate = info.GetInt16("frameRate")
 
-    Protected Sub New(ByVal cells As ConfigurationCellCollection)
+        End Sub
 
-        MyBase.New(cells)
+        Protected Sub New(ByVal cells As ConfigurationCellCollection)
 
-    End Sub
+            MyBase.New(cells)
 
-    Protected Sub New(ByVal idCode As UInt16, ByVal cells As ConfigurationCellCollection, ByVal ticks As Long, ByVal frameRate As Int16)
+        End Sub
 
-        MyBase.New(idCode, cells, ticks)
-        MyClass.FrameRate = frameRate
+        Protected Sub New(ByVal idCode As UInt16, ByVal cells As ConfigurationCellCollection, ByVal ticks As Long, ByVal frameRate As Int16)
 
-    End Sub
+            MyBase.New(idCode, cells, ticks)
+            MyClass.FrameRate = frameRate
 
-    ' Derived classes are expected to expose a Public Sub New(ByVal binaryImage As Byte(), ByVal startIndex As Int32)
-    ' and automatically pass in state parameter
-    Protected Sub New(ByVal state As IConfigurationFrameParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
+        End Sub
 
-        MyBase.New(state, binaryImage, startIndex)
+        ' Derived classes are expected to expose a Public Sub New(ByVal binaryImage As Byte(), ByVal startIndex As Int32)
+        ' and automatically pass in state parameter
+        Protected Sub New(ByVal state As IConfigurationFrameParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
-    End Sub
+            MyBase.New(state, binaryImage, startIndex)
 
-    ' Derived classes are expected to expose a Public Sub New(ByVal configurationFrame As IConfigurationFrame)
-    Protected Sub New(ByVal configurationFrame As IConfigurationFrame)
+        End Sub
 
-        MyClass.New(configurationFrame.IDCode, configurationFrame.Cells, configurationFrame.Ticks, configurationFrame.FrameRate)
+        ' Derived classes are expected to expose a Public Sub New(ByVal configurationFrame As IConfigurationFrame)
+        Protected Sub New(ByVal configurationFrame As IConfigurationFrame)
 
-    End Sub
+            MyClass.New(configurationFrame.IDCode, configurationFrame.Cells, configurationFrame.Ticks, configurationFrame.FrameRate)
 
-    Protected Overrides ReadOnly Property FundamentalFrameType() As FundamentalFrameType
-        Get
-            Return Phasors.FundamentalFrameType.ConfigurationFrame
-        End Get
-    End Property
+        End Sub
 
-    Public Overridable Shadows ReadOnly Property Cells() As ConfigurationCellCollection Implements IConfigurationFrame.Cells
-        Get
-            Return MyBase.Cells
-        End Get
-    End Property
+        Protected Overrides ReadOnly Property FundamentalFrameType() As FundamentalFrameType
+            Get
+                Return TVA.Phasors.FundamentalFrameType.ConfigurationFrame
+            End Get
+        End Property
 
-    Public Overridable Property FrameRate() As Int16 Implements IConfigurationFrame.FrameRate
-        Get
-            Return m_frameRate
-        End Get
-        Set(ByVal value As Int16)
-            m_frameRate = value
-            m_ticksPerFrame = CDec(SecondsToTicks(1)) / CDec(m_frameRate)
-        End Set
-    End Property
+        Public Overridable Shadows ReadOnly Property Cells() As ConfigurationCellCollection Implements IConfigurationFrame.Cells
+            Get
+                Return MyBase.Cells
+            End Get
+        End Property
 
-    Public Overridable ReadOnly Property TicksPerFrame() As Decimal Implements IConfigurationFrame.TicksPerFrame
-        Get
-            Return m_ticksPerFrame
-        End Get
-    End Property
+        Public Overridable Property FrameRate() As Int16 Implements IConfigurationFrame.FrameRate
+            Get
+                Return m_frameRate
+            End Get
+            Set(ByVal value As Int16)
+                m_frameRate = value
+                m_ticksPerFrame = CDec(SecondsToTicks(1)) / CDec(m_frameRate)
+            End Set
+        End Property
 
-    Public Overridable Sub SetNominalFrequency(ByVal value As LineFrequency) Implements IConfigurationFrame.SetNominalFrequency
+        Public Overridable ReadOnly Property TicksPerFrame() As Decimal Implements IConfigurationFrame.TicksPerFrame
+            Get
+                Return m_ticksPerFrame
+            End Get
+        End Property
 
-        For Each cell As IConfigurationCell In Cells
-            cell.NominalFrequency = value
-        Next
+        Public Overridable Sub SetNominalFrequency(ByVal value As LineFrequency) Implements IConfigurationFrame.SetNominalFrequency
 
-    End Sub
+            For Each cell As IConfigurationCell In Cells
+                cell.NominalFrequency = value
+            Next
 
-    Public Overrides Sub GetObjectData(ByVal info As System.Runtime.Serialization.SerializationInfo, ByVal context As System.Runtime.Serialization.StreamingContext)
+        End Sub
 
-        MyBase.GetObjectData(info, context)
+        Public Overrides Sub GetObjectData(ByVal info As System.Runtime.Serialization.SerializationInfo, ByVal context As System.Runtime.Serialization.StreamingContext)
 
-        ' Serialize configuration frame
-        info.AddValue("frameRate", m_frameRate)
+            MyBase.GetObjectData(info, context)
 
-    End Sub
+            ' Serialize configuration frame
+            info.AddValue("frameRate", m_frameRate)
 
-    Public Overrides ReadOnly Property Attributes() As Dictionary(Of String, String)
-        Get
-            Dim baseAttributes As Dictionary(Of String, String) = MyBase.Attributes
+        End Sub
 
-            baseAttributes.Add("Frame Rate", FrameRate)
-            baseAttributes.Add("Ticks Per Frame", TicksPerFrame)
+        Public Overrides ReadOnly Property Attributes() As Dictionary(Of String, String)
+            Get
+                Dim baseAttributes As Dictionary(Of String, String) = MyBase.Attributes
 
-            Return baseAttributes
-        End Get
-    End Property
+                baseAttributes.Add("Frame Rate", FrameRate)
+                baseAttributes.Add("Ticks Per Frame", TicksPerFrame)
 
-End Class
+                Return baseAttributes
+            End Get
+        End Property
+
+    End Class
+
+End Namespace

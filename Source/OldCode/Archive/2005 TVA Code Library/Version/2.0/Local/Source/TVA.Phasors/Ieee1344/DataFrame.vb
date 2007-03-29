@@ -19,7 +19,7 @@ Imports System.Runtime.Serialization
 Imports TVA.DateTime
 Imports TVA.IO.Compression.Common
 
-Namespace Ieee1344
+Namespace Phasors.Ieee1344
 
     ' This is essentially a "row" of PMU data at a given timestamp
     <CLSCompliant(False), Serializable()> _

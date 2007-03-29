@@ -17,31 +17,35 @@
 
 Imports System.Runtime.Serialization
 
-''' <summary>This class represents the protocol independent collection of the common implementation of a set of header data that can be received from a PMU.</summary>
-<CLSCompliant(False), Serializable()> _
-Public Class HeaderCellCollection
+Namespace Phasors
 
-    Inherits ChannelCellCollectionBase(Of IHeaderCell)
+    ''' <summary>This class represents the protocol independent collection of the common implementation of a set of header data that can be received from a PMU.</summary>
+    <CLSCompliant(False), Serializable()> _
+    Public Class HeaderCellCollection
 
-    Protected Sub New()
-    End Sub
+        Inherits ChannelCellCollectionBase(Of IHeaderCell)
 
-    Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
+        Protected Sub New()
+        End Sub
 
-        MyBase.New(info, context)
+        Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
 
-    End Sub
+            MyBase.New(info, context)
 
-    Public Sub New(ByVal maximumCount As Int32)
+        End Sub
 
-        MyBase.New(maximumCount, True)
+        Public Sub New(ByVal maximumCount As Int32)
 
-    End Sub
+            MyBase.New(maximumCount, True)
 
-    Public Overrides ReadOnly Property DerivedType() As Type
-        Get
-            Return Me.GetType()
-        End Get
-    End Property
+        End Sub
 
-End Class
+        Public Overrides ReadOnly Property DerivedType() As Type
+            Get
+                Return Me.GetType()
+            End Get
+        End Property
+
+    End Class
+
+End Namespace

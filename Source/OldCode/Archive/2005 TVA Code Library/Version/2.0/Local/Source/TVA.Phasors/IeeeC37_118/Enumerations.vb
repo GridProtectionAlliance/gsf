@@ -15,7 +15,7 @@
 '
 '*******************************************************************************************************
 
-Namespace IeeeC37_118
+Namespace Phasors.IeeeC37_118
 
     ''' <summary>Protocol draft revision number</summary>
     <Serializable()> _

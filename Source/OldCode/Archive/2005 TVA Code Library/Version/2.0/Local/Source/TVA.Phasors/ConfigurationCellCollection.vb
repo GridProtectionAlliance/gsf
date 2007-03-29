@@ -17,44 +17,48 @@
 
 Imports System.Runtime.Serialization
 
-''' <summary>This class represents the protocol independent collection of the common implementation of a set of configuration related data settings that can be sent or received from a PMU.</summary>
-<CLSCompliant(False), Serializable()> _
-Public Class ConfigurationCellCollection
+Namespace Phasors
 
-    Inherits ChannelCellCollectionBase(Of IConfigurationCell)
+    ''' <summary>This class represents the protocol independent collection of the common implementation of a set of configuration related data settings that can be sent or received from a PMU.</summary>
+    <CLSCompliant(False), Serializable()> _
+    Public Class ConfigurationCellCollection
 
-    Protected Sub New()
-    End Sub
+        Inherits ChannelCellCollectionBase(Of IConfigurationCell)
 
-    Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
+        Protected Sub New()
+        End Sub
 
-        MyBase.New(info, context)
+        Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
 
-    End Sub
+            MyBase.New(info, context)
 
-    Public Sub New(ByVal maximumCount As Int32, ByVal constantCellLength As Boolean)
+        End Sub
 
-        MyBase.New(maximumCount, constantCellLength)
+        Public Sub New(ByVal maximumCount As Int32, ByVal constantCellLength As Boolean)
 
-    End Sub
+            MyBase.New(maximumCount, constantCellLength)
 
-    Public Overrides ReadOnly Property DerivedType() As Type
-        Get
-            Return Me.GetType()
-        End Get
-    End Property
+        End Sub
 
-    Public Overridable Function TryGetByIDLabel(ByVal label As String, ByRef configurationCell As IConfigurationCell) As Boolean
+        Public Overrides ReadOnly Property DerivedType() As Type
+            Get
+                Return Me.GetType()
+            End Get
+        End Property
 
-        For Each configurationCell In Me
-            If String.Compare(configurationCell.IDLabel, label, True) = 0 Then
-                Return True
-            End If
-        Next
+        Public Overridable Function TryGetByIDLabel(ByVal label As String, ByRef configurationCell As IConfigurationCell) As Boolean
 
-        configurationCell = Nothing
-        Return False
+            For Each configurationCell In Me
+                If String.Compare(configurationCell.IDLabel, label, True) = 0 Then
+                    Return True
+                End If
+            Next
 
-    End Function
+            configurationCell = Nothing
+            Return False
 
-End Class
+        End Function
+
+    End Class
+
+End Namespace

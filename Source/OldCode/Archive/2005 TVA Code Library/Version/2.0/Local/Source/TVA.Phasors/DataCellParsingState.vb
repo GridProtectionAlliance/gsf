@@ -15,72 +15,76 @@
 '
 '*******************************************************************************************************
 
-''' <summary>This class represents the protocol independent common implementation of the parsing state of a data frame cell that can be sent or received from a PMU.</summary>
-<CLSCompliant(False)> _
-Public Class DataCellParsingState
+Namespace Phasors
 
-    Inherits ChannelCellParsingStateBase
-    Implements IDataCellParsingState
+    ''' <summary>This class represents the protocol independent common implementation of the parsing state of a data frame cell that can be sent or received from a PMU.</summary>
+    <CLSCompliant(False)> _
+    Public Class DataCellParsingState
 
-    Private m_configurationCell As IConfigurationCell
-    Private m_createNewPhasorValueFunction As IDataCellParsingState.CreateNewValueFunctionSignature(Of IPhasorDefinition, IPhasorValue)
-    Private m_createNewFrequencyValueFunction As IDataCellParsingState.CreateNewValueFunctionSignature(Of IFrequencyDefinition, IFrequencyValue)
-    Private m_createNewAnalogValueFunction As IDataCellParsingState.CreateNewValueFunctionSignature(Of IAnalogDefinition, IAnalogValue)
-    Private m_createNewDigitalValueFunction As IDataCellParsingState.CreateNewValueFunctionSignature(Of IDigitalDefinition, IDigitalValue)
+        Inherits ChannelCellParsingStateBase
+        Implements IDataCellParsingState
 
-    Public Sub New( _
-        ByVal configurationCell As IConfigurationCell, _
-        ByVal createNewPhasorValueFunction As IDataCellParsingState.CreateNewValueFunctionSignature(Of IPhasorDefinition, IPhasorValue), _
-        ByVal createNewFrequencyValueFunction As IDataCellParsingState.CreateNewValueFunctionSignature(Of IFrequencyDefinition, IFrequencyValue), _
-        ByVal createNewAnalogValueFunction As IDataCellParsingState.CreateNewValueFunctionSignature(Of IAnalogDefinition, IAnalogValue), _
-        ByVal createNewDigitalValueFunction As IDataCellParsingState.CreateNewValueFunctionSignature(Of IDigitalDefinition, IDigitalValue))
+        Private m_configurationCell As IConfigurationCell
+        Private m_createNewPhasorValueFunction As IDataCellParsingState.CreateNewValueFunctionSignature(Of IPhasorDefinition, IPhasorValue)
+        Private m_createNewFrequencyValueFunction As IDataCellParsingState.CreateNewValueFunctionSignature(Of IFrequencyDefinition, IFrequencyValue)
+        Private m_createNewAnalogValueFunction As IDataCellParsingState.CreateNewValueFunctionSignature(Of IAnalogDefinition, IAnalogValue)
+        Private m_createNewDigitalValueFunction As IDataCellParsingState.CreateNewValueFunctionSignature(Of IDigitalDefinition, IDigitalValue)
 
-        m_configurationCell = configurationCell
-        m_createNewPhasorValueFunction = createNewPhasorValueFunction
-        m_createNewFrequencyValueFunction = createNewFrequencyValueFunction
-        m_createNewAnalogValueFunction = createNewAnalogValueFunction
-        m_createNewDigitalValueFunction = createNewDigitalValueFunction
+        Public Sub New( _
+            ByVal configurationCell As IConfigurationCell, _
+            ByVal createNewPhasorValueFunction As IDataCellParsingState.CreateNewValueFunctionSignature(Of IPhasorDefinition, IPhasorValue), _
+            ByVal createNewFrequencyValueFunction As IDataCellParsingState.CreateNewValueFunctionSignature(Of IFrequencyDefinition, IFrequencyValue), _
+            ByVal createNewAnalogValueFunction As IDataCellParsingState.CreateNewValueFunctionSignature(Of IAnalogDefinition, IAnalogValue), _
+            ByVal createNewDigitalValueFunction As IDataCellParsingState.CreateNewValueFunctionSignature(Of IDigitalDefinition, IDigitalValue))
 
-        PhasorCount = m_configurationCell.PhasorDefinitions.Count
-        AnalogCount = m_configurationCell.AnalogDefinitions.Count
-        DigitalCount = m_configurationCell.DigitalDefinitions.Count
+            m_configurationCell = configurationCell
+            m_createNewPhasorValueFunction = createNewPhasorValueFunction
+            m_createNewFrequencyValueFunction = createNewFrequencyValueFunction
+            m_createNewAnalogValueFunction = createNewAnalogValueFunction
+            m_createNewDigitalValueFunction = createNewDigitalValueFunction
 
-    End Sub
+            PhasorCount = m_configurationCell.PhasorDefinitions.Count
+            AnalogCount = m_configurationCell.AnalogDefinitions.Count
+            DigitalCount = m_configurationCell.DigitalDefinitions.Count
 
-    Public Overrides ReadOnly Property DerivedType() As System.Type
-        Get
-            Return Me.GetType()
-        End Get
-    End Property
+        End Sub
 
-    Public Overridable ReadOnly Property ConfigurationCell() As IConfigurationCell Implements IDataCellParsingState.ConfigurationCell
-        Get
-            Return m_configurationCell
-        End Get
-    End Property
+        Public Overrides ReadOnly Property DerivedType() As System.Type
+            Get
+                Return Me.GetType()
+            End Get
+        End Property
 
-    Public Overridable ReadOnly Property CreateNewPhasorValueFunction() As IDataCellParsingState.CreateNewValueFunctionSignature(Of IPhasorDefinition, IPhasorValue) Implements IDataCellParsingState.CreateNewPhasorValueFunction
-        Get
-            Return m_createNewPhasorValueFunction
-        End Get
-    End Property
+        Public Overridable ReadOnly Property ConfigurationCell() As IConfigurationCell Implements IDataCellParsingState.ConfigurationCell
+            Get
+                Return m_configurationCell
+            End Get
+        End Property
 
-    Public Overridable ReadOnly Property CreateNewFrequencyValueFunction() As IDataCellParsingState.CreateNewValueFunctionSignature(Of IFrequencyDefinition, IFrequencyValue) Implements IDataCellParsingState.CreateNewFrequencyValueFunction
-        Get
-            Return m_createNewFrequencyValueFunction
-        End Get
-    End Property
+        Public Overridable ReadOnly Property CreateNewPhasorValueFunction() As IDataCellParsingState.CreateNewValueFunctionSignature(Of IPhasorDefinition, IPhasorValue) Implements IDataCellParsingState.CreateNewPhasorValueFunction
+            Get
+                Return m_createNewPhasorValueFunction
+            End Get
+        End Property
 
-    Public Overridable ReadOnly Property CreateNewAnalogValueFunction() As IDataCellParsingState.CreateNewValueFunctionSignature(Of IAnalogDefinition, IAnalogValue) Implements IDataCellParsingState.CreateNewAnalogValueFunction
-        Get
-            Return m_createNewAnalogValueFunction
-        End Get
-    End Property
+        Public Overridable ReadOnly Property CreateNewFrequencyValueFunction() As IDataCellParsingState.CreateNewValueFunctionSignature(Of IFrequencyDefinition, IFrequencyValue) Implements IDataCellParsingState.CreateNewFrequencyValueFunction
+            Get
+                Return m_createNewFrequencyValueFunction
+            End Get
+        End Property
 
-    Public Overridable ReadOnly Property CreateNewDigitalValueFunction() As IDataCellParsingState.CreateNewValueFunctionSignature(Of IDigitalDefinition, IDigitalValue) Implements IDataCellParsingState.CreateNewDigitalValueFunction
-        Get
-            Return m_createNewDigitalValueFunction
-        End Get
-    End Property
+        Public Overridable ReadOnly Property CreateNewAnalogValueFunction() As IDataCellParsingState.CreateNewValueFunctionSignature(Of IAnalogDefinition, IAnalogValue) Implements IDataCellParsingState.CreateNewAnalogValueFunction
+            Get
+                Return m_createNewAnalogValueFunction
+            End Get
+        End Property
 
-End Class
+        Public Overridable ReadOnly Property CreateNewDigitalValueFunction() As IDataCellParsingState.CreateNewValueFunctionSignature(Of IDigitalDefinition, IDigitalValue) Implements IDataCellParsingState.CreateNewDigitalValueFunction
+            Get
+                Return m_createNewDigitalValueFunction
+            End Get
+        End Property
+
+    End Class
+
+End Namespace

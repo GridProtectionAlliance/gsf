@@ -15,18 +15,22 @@
 '
 '*******************************************************************************************************
 
-''' <summary>This interface represents the protocol independent representation of any configuration frame.</summary>
-<CLSCompliant(False)> _
-Public Interface IConfigurationFrame
+Namespace Phasors
 
-    Inherits IChannelFrame
+    ''' <summary>This interface represents the protocol independent representation of any configuration frame.</summary>
+    <CLSCompliant(False)> _
+    Public Interface IConfigurationFrame
 
-    Shadows ReadOnly Property Cells() As ConfigurationCellCollection
+        Inherits IChannelFrame
 
-    Property FrameRate() As Int16
+        Shadows ReadOnly Property Cells() As ConfigurationCellCollection
 
-    ReadOnly Property TicksPerFrame() As Decimal
+        Property FrameRate() As Int16
 
-    Sub SetNominalFrequency(ByVal value As LineFrequency)
+        ReadOnly Property TicksPerFrame() As Decimal
 
-End Interface
+        Sub SetNominalFrequency(ByVal value As LineFrequency)
+
+    End Interface
+
+End Namespace

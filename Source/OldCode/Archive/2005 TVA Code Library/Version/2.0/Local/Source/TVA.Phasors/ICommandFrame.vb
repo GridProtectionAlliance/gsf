@@ -15,16 +15,20 @@
 '
 '*******************************************************************************************************
 
-''' <summary>This interface represents the protocol independent representation of a command frame.</summary>
-<CLSCompliant(False)> _
-Public Interface ICommandFrame
+Namespace Phasors
 
-    Inherits IChannelFrame
+    ''' <summary>This interface represents the protocol independent representation of a command frame.</summary>
+    <CLSCompliant(False)> _
+    Public Interface ICommandFrame
 
-    Shadows ReadOnly Property Cells() As CommandCellCollection
+        Inherits IChannelFrame
 
-    Property Command() As DeviceCommand
+        Shadows ReadOnly Property Cells() As CommandCellCollection
 
-    Property ExtendedData() As Byte()
+        Property Command() As DeviceCommand
 
-End Interface
+        Property ExtendedData() As Byte()
+
+    End Interface
+
+End Namespace

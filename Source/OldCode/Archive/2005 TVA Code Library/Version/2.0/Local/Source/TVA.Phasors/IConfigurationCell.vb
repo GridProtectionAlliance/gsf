@@ -15,46 +15,50 @@
 '
 '*******************************************************************************************************
 
-''' <summary>This interface represents the protocol independent representation of a set of configuration related data settings (typically related to a PMU).</summary>
-<CLSCompliant(False)> _
-Public Interface IConfigurationCell
+Namespace Phasors
 
-    Inherits IChannelCell, IComparable
+    ''' <summary>This interface represents the protocol independent representation of a set of configuration related data settings (typically related to a PMU).</summary>
+    <CLSCompliant(False)> _
+    Public Interface IConfigurationCell
 
-    Shadows ReadOnly Property Parent() As IConfigurationFrame
+        Inherits IChannelCell, IComparable
 
-    Property StationName() As String
+        Shadows ReadOnly Property Parent() As IConfigurationFrame
 
-    ReadOnly Property StationNameImage() As Byte()
+        Property StationName() As String
 
-    ReadOnly Property MaximumStationNameLength() As Int32
+        ReadOnly Property StationNameImage() As Byte()
 
-    Property IDLabel() As String
+        ReadOnly Property MaximumStationNameLength() As Int32
 
-    ReadOnly Property IDLabelImage() As Byte()
+        Property IDLabel() As String
 
-    ReadOnly Property IDLabelLength() As Int32
+        ReadOnly Property IDLabelImage() As Byte()
 
-    ReadOnly Property PhasorDefinitions() As PhasorDefinitionCollection
+        ReadOnly Property IDLabelLength() As Int32
 
-    Property PhasorDataFormat() As DataFormat
+        ReadOnly Property PhasorDefinitions() As PhasorDefinitionCollection
 
-    Property PhasorCoordinateFormat() As CoordinateFormat
+        Property PhasorDataFormat() As DataFormat
 
-    Property FrequencyDefinition() As IFrequencyDefinition
+        Property PhasorCoordinateFormat() As CoordinateFormat
 
-    Property FrequencyDataFormat() As DataFormat
+        Property FrequencyDefinition() As IFrequencyDefinition
 
-    Property NominalFrequency() As LineFrequency
+        Property FrequencyDataFormat() As DataFormat
 
-    ReadOnly Property AnalogDefinitions() As AnalogDefinitionCollection
+        Property NominalFrequency() As LineFrequency
 
-    Property AnalogDataFormat() As DataFormat
+        ReadOnly Property AnalogDefinitions() As AnalogDefinitionCollection
 
-    ReadOnly Property DigitalDefinitions() As DigitalDefinitionCollection
+        Property AnalogDataFormat() As DataFormat
 
-    ReadOnly Property FrameRate() As Int16
+        ReadOnly Property DigitalDefinitions() As DigitalDefinitionCollection
 
-    Property RevisionCount() As UInt16
+        ReadOnly Property FrameRate() As Int16
 
-End Interface
+        Property RevisionCount() As UInt16
+
+    End Interface
+
+End Namespace

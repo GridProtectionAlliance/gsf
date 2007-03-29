@@ -22,7 +22,7 @@ Imports TVA.Collections
 Imports TVA.IO.Common
 Imports TVA.Phasors.Common
 
-Namespace Ieee1344
+Namespace Phasors.Ieee1344
 
     ''' <summary>This class parses an IEEE 1344 binary data stream and returns parsed data via events</summary>
     ''' <remarks>Frame parser is implemented as a write-only stream - this way data can come from any source</remarks>

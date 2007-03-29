@@ -17,38 +17,42 @@
 
 Imports System.Runtime.Serialization
 
-''' <summary>This class represents the protocol independent common implementation of a collection of any frame of data that can be sent or received from a PMU.</summary>
-<CLSCompliant(False), Serializable()> _
-Public MustInherit Class ChannelFrameCollectionBase(Of T As IChannelFrame)
+Namespace Phasors
 
-    Inherits ChannelCollectionBase(Of T)
+    ''' <summary>This class represents the protocol independent common implementation of a collection of any frame of data that can be sent or received from a PMU.</summary>
+    <CLSCompliant(False), Serializable()> _
+    Public MustInherit Class ChannelFrameCollectionBase(Of T As IChannelFrame)
 
-    Protected Sub New()
-    End Sub
+        Inherits ChannelCollectionBase(Of T)
 
-    Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
+        Protected Sub New()
+        End Sub
 
-        MyBase.New(info, context)
+        Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
 
-    End Sub
+            MyBase.New(info, context)
 
-    Protected Sub New(ByVal maximumCount As Int32)
+        End Sub
 
-        MyBase.New(maximumCount)
+        Protected Sub New(ByVal maximumCount As Int32)
 
-    End Sub
+            MyBase.New(maximumCount)
 
-    Public Overrides ReadOnly Property BinaryLength() As UInt16
-        Get
-            ' Frames will be different lengths, so we must manually sum lengths
-            Dim length As UInt16
+        End Sub
 
-            For x As Int32 = 0 To Count - 1
-                length += Item(x).BinaryLength
-            Next
+        Public Overrides ReadOnly Property BinaryLength() As UInt16
+            Get
+                ' Frames will be different lengths, so we must manually sum lengths
+                Dim length As UInt16
 
-            Return length
-        End Get
-    End Property
+                For x As Int32 = 0 To Count - 1
+                    length += Item(x).BinaryLength
+                Next
 
-End Class
+                Return length
+            End Get
+        End Property
+
+    End Class
+
+End Namespace

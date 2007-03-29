@@ -20,372 +20,376 @@
 Imports System.Runtime.Serialization
 Imports TVA.Math
 
-''' <summary>This class represents the protocol independent representation of a phasor value.</summary>
-<CLSCompliant(False), Serializable()> _
-Public MustInherit Class PhasorValueBase
+Namespace Phasors
 
-    Inherits ChannelValueBase(Of IPhasorDefinition)
-    Implements IPhasorValue
+    ''' <summary>This class represents the protocol independent representation of a phasor value.</summary>
+    <CLSCompliant(False), Serializable()> _
+    Public MustInherit Class PhasorValueBase
 
-    Protected Delegate Function CreateNewPhasorValueFunctionSignature(ByVal parent As IDataCell, ByVal phasorDefintion As IPhasorDefinition, ByVal real As Single, ByVal imaginary As Single) As IPhasorValue
+        Inherits ChannelValueBase(Of IPhasorDefinition)
+        Implements IPhasorValue
 
-    Private Const DegreesToRadians As Double = System.Math.PI / 180.0R
-    Private Const RadiansToDegrees As Double = 180.0R / System.Math.PI
+        Protected Delegate Function CreateNewPhasorValueFunctionSignature(ByVal parent As IDataCell, ByVal phasorDefintion As IPhasorDefinition, ByVal real As Single, ByVal imaginary As Single) As IPhasorValue
 
-    Private m_real As Single
-    Private m_imaginary As Single
-    Private m_compositeValues As CompositeValues
+        Private Const DegreesToRadians As Double = System.Math.PI / 180.0R
+        Private Const RadiansToDegrees As Double = 180.0R / System.Math.PI
 
-    ''' <summary>Create phasor from polar coordinates (angle expected in Degrees)</summary>
-    ''' <remarks>Note: This method is expected to be implemented as a public shared method in derived class automatically passing in createNewPhasorValueFunction</remarks>
-    Protected Shared Function CreateFromPolarValues(ByVal createNewPhasorValueFunction As CreateNewPhasorValueFunctionSignature, ByVal parent As IDataCell, ByVal phasorDefinition As IPhasorDefinition, ByVal angle As Single, ByVal magnitude As Single) As IPhasorValue
+        Private m_real As Single
+        Private m_imaginary As Single
+        Private m_compositeValues As CompositeValues
 
-        Return CreateFromRectangularValues(createNewPhasorValueFunction, parent, phasorDefinition, CalculateRealComponent(angle, magnitude), CalculateImaginaryComponent(angle, magnitude))
+        ''' <summary>Create phasor from polar coordinates (angle expected in Degrees)</summary>
+        ''' <remarks>Note: This method is expected to be implemented as a public shared method in derived class automatically passing in createNewPhasorValueFunction</remarks>
+        Protected Shared Function CreateFromPolarValues(ByVal createNewPhasorValueFunction As CreateNewPhasorValueFunctionSignature, ByVal parent As IDataCell, ByVal phasorDefinition As IPhasorDefinition, ByVal angle As Single, ByVal magnitude As Single) As IPhasorValue
 
-    End Function
+            Return CreateFromRectangularValues(createNewPhasorValueFunction, parent, phasorDefinition, CalculateRealComponent(angle, magnitude), CalculateImaginaryComponent(angle, magnitude))
 
-    ''' <summary>Create phasor from rectangular coordinates</summary>
-    ''' <remarks>Note: This method is expected to be implemented as a public shared method in derived class automatically passing in createNewPhasorValueFunction</remarks>
-    Protected Shared Function CreateFromRectangularValues(ByVal createNewPhasorValueFunction As CreateNewPhasorValueFunctionSignature, ByVal parent As IDataCell, ByVal phasorDefinition As IPhasorDefinition, ByVal real As Single, ByVal imaginary As Single) As IPhasorValue
+        End Function
 
-        If phasorDefinition Is Nothing Then Throw New ArgumentNullException("No phasor definition specified")
-        Return createNewPhasorValueFunction.Invoke(parent, phasorDefinition, real, imaginary)
+        ''' <summary>Create phasor from rectangular coordinates</summary>
+        ''' <remarks>Note: This method is expected to be implemented as a public shared method in derived class automatically passing in createNewPhasorValueFunction</remarks>
+        Protected Shared Function CreateFromRectangularValues(ByVal createNewPhasorValueFunction As CreateNewPhasorValueFunctionSignature, ByVal parent As IDataCell, ByVal phasorDefinition As IPhasorDefinition, ByVal real As Single, ByVal imaginary As Single) As IPhasorValue
 
-    End Function
+            If phasorDefinition Is Nothing Then Throw New ArgumentNullException("No phasor definition specified")
+            Return createNewPhasorValueFunction.Invoke(parent, phasorDefinition, real, imaginary)
 
-    ''' <summary>Create phasor from unscaled rectangular coordinates</summary>
-    ''' <remarks>Note: This method is expected to be implemented as a public shared method in derived class automatically passing in createNewPhasorValueFunction</remarks>
-    Protected Shared Function CreateFromUnscaledRectangularValues(ByVal createNewPhasorValueFunction As CreateNewPhasorValueFunctionSignature, ByVal parent As IDataCell, ByVal phasorDefinition As IPhasorDefinition, ByVal real As Int16, ByVal imaginary As Int16) As IPhasorValue
+        End Function
 
-        Dim factor As Single = phasorDefinition.ConversionFactor
-        Return CreateFromRectangularValues(createNewPhasorValueFunction, parent, phasorDefinition, real * factor, imaginary * factor)
+        ''' <summary>Create phasor from unscaled rectangular coordinates</summary>
+        ''' <remarks>Note: This method is expected to be implemented as a public shared method in derived class automatically passing in createNewPhasorValueFunction</remarks>
+        Protected Shared Function CreateFromUnscaledRectangularValues(ByVal createNewPhasorValueFunction As CreateNewPhasorValueFunctionSignature, ByVal parent As IDataCell, ByVal phasorDefinition As IPhasorDefinition, ByVal real As Int16, ByVal imaginary As Int16) As IPhasorValue
 
-    End Function
+            Dim factor As Single = phasorDefinition.ConversionFactor
+            Return CreateFromRectangularValues(createNewPhasorValueFunction, parent, phasorDefinition, real * factor, imaginary * factor)
 
-    ''' <summary>Gets real component from angle (in Degrees) and magnitude</summary>
-    Public Shared Function CalculateRealComponent(ByVal angle As Single, ByVal magnitude As Single) As Single
+        End Function
 
-        Return magnitude * System.Math.Cos(angle * DegreesToRadians)
+        ''' <summary>Gets real component from angle (in Degrees) and magnitude</summary>
+        Public Shared Function CalculateRealComponent(ByVal angle As Single, ByVal magnitude As Single) As Single
 
-    End Function
+            Return magnitude * System.Math.Cos(angle * DegreesToRadians)
 
-    ''' <summary>Gets imaginary component from angle (in Degrees) and magnitude</summary>
-    Public Shared Function CalculateImaginaryComponent(ByVal angle As Single, ByVal magnitude As Single) As Single
+        End Function
 
-        Return magnitude * System.Math.Sin(angle * DegreesToRadians)
+        ''' <summary>Gets imaginary component from angle (in Degrees) and magnitude</summary>
+        Public Shared Function CalculateImaginaryComponent(ByVal angle As Single, ByVal magnitude As Single) As Single
 
-    End Function
+            Return magnitude * System.Math.Sin(angle * DegreesToRadians)
 
-    ''' <summary>Calculate watts from imaginary and real components of two phasors</summary>
-    Public Shared Function CalculatePower(ByVal voltage As IPhasorValue, ByVal current As IPhasorValue) As Single
+        End Function
 
-        If voltage Is Nothing Then Throw New ArgumentNullException("No voltage specified")
-        If current Is Nothing Then Throw New ArgumentNullException("No current specified")
+        ''' <summary>Calculate watts from imaginary and real components of two phasors</summary>
+        Public Shared Function CalculatePower(ByVal voltage As IPhasorValue, ByVal current As IPhasorValue) As Single
 
-        Return 3 * (voltage.Real * current.Real + voltage.Imaginary * current.Imaginary)
-        'Return 3 * voltage.Magnitude * current.Magnitude * System.Math.Cos((voltage.Angle - current.Angle) * DegreesToRadians)
+            If voltage Is Nothing Then Throw New ArgumentNullException("No voltage specified")
+            If current Is Nothing Then Throw New ArgumentNullException("No current specified")
 
-    End Function
+            Return 3 * (voltage.Real * current.Real + voltage.Imaginary * current.Imaginary)
+            'Return 3 * voltage.Magnitude * current.Magnitude * System.Math.Cos((voltage.Angle - current.Angle) * DegreesToRadians)
 
-    ''' <summary>Calculate vars from imaginary and real components of two phasors</summary>
-    Public Shared Function CalculateVars(ByVal voltage As IPhasorValue, ByVal current As IPhasorValue) As Single
+        End Function
 
-        If voltage Is Nothing Then Throw New ArgumentNullException("No voltage specified")
-        If current Is Nothing Then Throw New ArgumentNullException("No current specified")
+        ''' <summary>Calculate vars from imaginary and real components of two phasors</summary>
+        Public Shared Function CalculateVars(ByVal voltage As IPhasorValue, ByVal current As IPhasorValue) As Single
 
-        Return 3 * (voltage.Imaginary * current.Real - voltage.Real * current.Imaginary)
-        'Return 3 * voltage.Magnitude * current.Magnitude * System.Math.Sin((voltage.Angle - current.Angle) * DegreesToRadians)
+            If voltage Is Nothing Then Throw New ArgumentNullException("No voltage specified")
+            If current Is Nothing Then Throw New ArgumentNullException("No current specified")
 
-    End Function
+            Return 3 * (voltage.Imaginary * current.Real - voltage.Real * current.Imaginary)
+            'Return 3 * voltage.Magnitude * current.Magnitude * System.Math.Sin((voltage.Angle - current.Angle) * DegreesToRadians)
 
-    Protected Sub New()
-    End Sub
+        End Function
 
-    Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
+        Protected Sub New()
+        End Sub
 
-        MyBase.New(info, context)
+        Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
 
-        ' Deserialize phasor value
-        m_real = info.GetSingle("real")
-        m_imaginary = info.GetSingle("imaginary")
+            MyBase.New(info, context)
 
-    End Sub
+            ' Deserialize phasor value
+            m_real = info.GetSingle("real")
+            m_imaginary = info.GetSingle("imaginary")
 
-    Protected Sub New(ByVal parent As IDataCell)
+        End Sub
 
-        MyBase.New(parent)
+        Protected Sub New(ByVal parent As IDataCell)
 
-        m_compositeValues = New CompositeValues(2)
+            MyBase.New(parent)
 
-    End Sub
+            m_compositeValues = New CompositeValues(2)
 
-    ' Derived classes are expected expose a Public Sub New(ByVal parent As IDataCell, ByVal phasorDefinition As IPhasorDefinition, ByVal real As Single, ByVal imaginary As Single)
-    Protected Sub New(ByVal parent As IDataCell, ByVal phasorDefinition As IPhasorDefinition, ByVal real As Single, ByVal imaginary As Single)
+        End Sub
 
-        MyBase.New(parent, phasorDefinition)
+        ' Derived classes are expected expose a Public Sub New(ByVal parent As IDataCell, ByVal phasorDefinition As IPhasorDefinition, ByVal real As Single, ByVal imaginary As Single)
+        Protected Sub New(ByVal parent As IDataCell, ByVal phasorDefinition As IPhasorDefinition, ByVal real As Single, ByVal imaginary As Single)
 
-        m_real = real
-        m_imaginary = imaginary
-        m_compositeValues = New CompositeValues(2)
+            MyBase.New(parent, phasorDefinition)
 
-    End Sub
-
-    ' Derived classes are expected expose a Public Sub New(ByVal parent As IDataCell, ByVal phasorDefinition As IPhasorDefinition, ByVal unscaledReal As Int16, ByVal unscaledImaginary As Int16)
-    Protected Sub New(ByVal parent As IDataCell, ByVal phasorDefinition As IPhasorDefinition, ByVal unscaledReal As Int16, ByVal unscaledImaginary As Int16)
-
-        MyClass.New(parent, phasorDefinition, unscaledReal * phasorDefinition.ConversionFactor, unscaledImaginary * phasorDefinition.ConversionFactor)
-
-    End Sub
-
-    ' Derived classes are expected expose a Public Sub New(ByVal parent As IDataCell, ByVal phasorDefinition As IPhasorDefinition, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
-    Protected Sub New(ByVal parent As IDataCell, ByVal phasorDefinition As IPhasorDefinition, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
-
-        MyBase.New(parent, phasorDefinition)
-        ParseBinaryImage(Nothing, binaryImage, startIndex)
-        m_compositeValues = New CompositeValues(2)
-
-    End Sub
-
-    ' Derived classes are expected to expose a Public Sub New(ByVal phasorValue As IPhasorValue)
-    Protected Sub New(ByVal phasorValue As IPhasorValue)
-
-        MyClass.New(phasorValue.Parent, phasorValue.Definition, phasorValue.Real, phasorValue.Imaginary)
-
-    End Sub
-
-    Public Overridable ReadOnly Property CoordinateFormat() As CoordinateFormat Implements IPhasorValue.CoordinateFormat
-        Get
-            Return Definition.CoordinateFormat
-        End Get
-    End Property
-
-    Public Overridable ReadOnly Property Type() As PhasorType Implements IPhasorValue.Type
-        Get
-            Return Definition.Type
-        End Get
-    End Property
-
-    Public Overridable Property Angle() As Single Implements IPhasorValue.Angle
-        Get
-            Return System.Math.Atan2(m_imaginary, m_real) * RadiansToDegrees
-        End Get
-        Set(ByVal value As Single)
-            ' We store angle as one of our required composite values
-            m_compositeValues(CompositePhasorValue.Angle) = value
-
-            ' If all composite values have been received, we can calculate phasor's real and imaginary values
-            CalculatePhasorValueFromComposites()
-        End Set
-    End Property
-
-    Public Overridable ReadOnly Property AngleAssigned() As Boolean
-        Get
-            Return m_compositeValues.Received(CompositePhasorValue.Angle)
-        End Get
-    End Property
-
-    Public Overridable Property Magnitude() As Single Implements IPhasorValue.Magnitude
-        Get
-            Return System.Math.Sqrt(m_real * m_real + m_imaginary * m_imaginary)
-        End Get
-        Set(ByVal value As Single)
-            m_compositeValues(CompositePhasorValue.Magnitude) = value
-
-            ' If all composite values have been received, we can calculate phasor's real and imaginary values
-            CalculatePhasorValueFromComposites()
-        End Set
-    End Property
-
-    Public Overridable ReadOnly Property MagnitudeAssigned() As Boolean
-        Get
-            Return m_compositeValues.Received(CompositePhasorValue.Magnitude)
-        End Get
-    End Property
-
-    Private Sub CalculatePhasorValueFromComposites()
-
-        If m_compositeValues.AllReceived Then
-            Dim angle, magnitude As Single
-
-            ' All values received, create a new phasor value from composite values
-            angle = m_compositeValues(CompositePhasorValue.Angle)
-            magnitude = m_compositeValues(CompositePhasorValue.Magnitude)
-
-            m_real = CalculateRealComponent(angle, magnitude)
-            m_imaginary = CalculateImaginaryComponent(angle, magnitude)
-        End If
-
-    End Sub
-
-    Public Overridable Property Real() As Single Implements IPhasorValue.Real
-        Get
-            Return m_real
-        End Get
-        Set(ByVal value As Single)
-            m_real = value
-        End Set
-    End Property
-
-    Public Overridable Property Imaginary() As Single Implements IPhasorValue.Imaginary
-        Get
-            Return m_imaginary
-        End Get
-        Set(ByVal value As Single)
-            m_imaginary = value
-        End Set
-    End Property
-
-    Public Overridable Property UnscaledReal() As Int16 Implements IPhasorValue.UnscaledReal
-        Get
-            Try
-                Return Convert.ToInt16(m_real / Definition.ConversionFactor)
-            Catch ex As OverflowException
-                Return Int16.MinValue
-            End Try
-        End Get
-        Set(ByVal value As Int16)
-            m_real = value * Definition.ConversionFactor
-        End Set
-    End Property
-
-    Public Overridable Property UnscaledImaginary() As Int16 Implements IPhasorValue.UnscaledImaginary
-        Get
-            Try
-                Return Convert.ToInt16(m_imaginary / Definition.ConversionFactor)
-            Catch ex As OverflowException
-                Return Int16.MinValue
-            End Try
-        End Get
-        Set(ByVal value As Int16)
-            m_imaginary = value * Definition.ConversionFactor
-        End Set
-    End Property
-
-    Default Public Overrides Property CompositeValue(ByVal index As Integer) As Single
-        Get
-            Select Case index
-                Case CompositePhasorValue.Angle
-                    Return Angle
-                Case CompositePhasorValue.Magnitude
-                    Return Magnitude
-                Case Else
-                    Throw New IndexOutOfRangeException("Specified phasor value composite index, " & index & ", is out of range - there are only two composite values for a phasor value: angle (0) and magnitude (1)")
-            End Select
-        End Get
-        Set(ByVal value As Single)
-            Select Case index
-                Case CompositePhasorValue.Angle
-                    Angle = value
-                Case CompositePhasorValue.Magnitude
-                    Magnitude = value
-                Case Else
-                    Throw New IndexOutOfRangeException("Specified phasor value composite index, " & index & ", is out of range - there are only two composite values for a phasor value: angle (0) and magnitude (1)")
-            End Select
-        End Set
-    End Property
-
-    Public Overrides ReadOnly Property CompositeValueCount() As Integer
-        Get
-            Return 2
-        End Get
-    End Property
-
-    Public Overrides ReadOnly Property IsEmpty() As Boolean
-        Get
-            Return (m_real = 0 And m_imaginary = 0)
-        End Get
-    End Property
-
-    Protected Overrides ReadOnly Property BodyLength() As UInt16
-        Get
-            If DataFormat = Phasors.DataFormat.FixedInteger Then
-                Return 4
-            Else
-                Return 8
+            m_real = real
+            m_imaginary = imaginary
+            m_compositeValues = New CompositeValues(2)
+
+        End Sub
+
+        ' Derived classes are expected expose a Public Sub New(ByVal parent As IDataCell, ByVal phasorDefinition As IPhasorDefinition, ByVal unscaledReal As Int16, ByVal unscaledImaginary As Int16)
+        Protected Sub New(ByVal parent As IDataCell, ByVal phasorDefinition As IPhasorDefinition, ByVal unscaledReal As Int16, ByVal unscaledImaginary As Int16)
+
+            MyClass.New(parent, phasorDefinition, unscaledReal * phasorDefinition.ConversionFactor, unscaledImaginary * phasorDefinition.ConversionFactor)
+
+        End Sub
+
+        ' Derived classes are expected expose a Public Sub New(ByVal parent As IDataCell, ByVal phasorDefinition As IPhasorDefinition, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
+        Protected Sub New(ByVal parent As IDataCell, ByVal phasorDefinition As IPhasorDefinition, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
+
+            MyBase.New(parent, phasorDefinition)
+            ParseBinaryImage(Nothing, binaryImage, startIndex)
+            m_compositeValues = New CompositeValues(2)
+
+        End Sub
+
+        ' Derived classes are expected to expose a Public Sub New(ByVal phasorValue As IPhasorValue)
+        Protected Sub New(ByVal phasorValue As IPhasorValue)
+
+            MyClass.New(phasorValue.Parent, phasorValue.Definition, phasorValue.Real, phasorValue.Imaginary)
+
+        End Sub
+
+        Public Overridable ReadOnly Property CoordinateFormat() As CoordinateFormat Implements IPhasorValue.CoordinateFormat
+            Get
+                Return Definition.CoordinateFormat
+            End Get
+        End Property
+
+        Public Overridable ReadOnly Property Type() As PhasorType Implements IPhasorValue.Type
+            Get
+                Return Definition.Type
+            End Get
+        End Property
+
+        Public Overridable Property Angle() As Single Implements IPhasorValue.Angle
+            Get
+                Return System.Math.Atan2(m_imaginary, m_real) * RadiansToDegrees
+            End Get
+            Set(ByVal value As Single)
+                ' We store angle as one of our required composite values
+                m_compositeValues(CompositePhasorValue.Angle) = value
+
+                ' If all composite values have been received, we can calculate phasor's real and imaginary values
+                CalculatePhasorValueFromComposites()
+            End Set
+        End Property
+
+        Public Overridable ReadOnly Property AngleAssigned() As Boolean
+            Get
+                Return m_compositeValues.Received(CompositePhasorValue.Angle)
+            End Get
+        End Property
+
+        Public Overridable Property Magnitude() As Single Implements IPhasorValue.Magnitude
+            Get
+                Return System.Math.Sqrt(m_real * m_real + m_imaginary * m_imaginary)
+            End Get
+            Set(ByVal value As Single)
+                m_compositeValues(CompositePhasorValue.Magnitude) = value
+
+                ' If all composite values have been received, we can calculate phasor's real and imaginary values
+                CalculatePhasorValueFromComposites()
+            End Set
+        End Property
+
+        Public Overridable ReadOnly Property MagnitudeAssigned() As Boolean
+            Get
+                Return m_compositeValues.Received(CompositePhasorValue.Magnitude)
+            End Get
+        End Property
+
+        Private Sub CalculatePhasorValueFromComposites()
+
+            If m_compositeValues.AllReceived Then
+                Dim angle, magnitude As Single
+
+                ' All values received, create a new phasor value from composite values
+                angle = m_compositeValues(CompositePhasorValue.Angle)
+                magnitude = m_compositeValues(CompositePhasorValue.Magnitude)
+
+                m_real = CalculateRealComponent(angle, magnitude)
+                m_imaginary = CalculateImaginaryComponent(angle, magnitude)
             End If
-        End Get
-    End Property
 
-    Protected Overrides ReadOnly Property BodyImage() As Byte()
-        Get
-            Dim buffer As Byte() = CreateArray(Of Byte)(BodyLength)
+        End Sub
 
-            If CoordinateFormat = Phasors.CoordinateFormat.Rectangular Then
-                If DataFormat = Phasors.DataFormat.FixedInteger Then
-                    EndianOrder.BigEndian.CopyBytes(UnscaledReal, buffer, 0)
-                    EndianOrder.BigEndian.CopyBytes(UnscaledImaginary, buffer, 2)
+        Public Overridable Property Real() As Single Implements IPhasorValue.Real
+            Get
+                Return m_real
+            End Get
+            Set(ByVal value As Single)
+                m_real = value
+            End Set
+        End Property
+
+        Public Overridable Property Imaginary() As Single Implements IPhasorValue.Imaginary
+            Get
+                Return m_imaginary
+            End Get
+            Set(ByVal value As Single)
+                m_imaginary = value
+            End Set
+        End Property
+
+        Public Overridable Property UnscaledReal() As Int16 Implements IPhasorValue.UnscaledReal
+            Get
+                Try
+                    Return Convert.ToInt16(m_real / Definition.ConversionFactor)
+                Catch ex As OverflowException
+                    Return Int16.MinValue
+                End Try
+            End Get
+            Set(ByVal value As Int16)
+                m_real = value * Definition.ConversionFactor
+            End Set
+        End Property
+
+        Public Overridable Property UnscaledImaginary() As Int16 Implements IPhasorValue.UnscaledImaginary
+            Get
+                Try
+                    Return Convert.ToInt16(m_imaginary / Definition.ConversionFactor)
+                Catch ex As OverflowException
+                    Return Int16.MinValue
+                End Try
+            End Get
+            Set(ByVal value As Int16)
+                m_imaginary = value * Definition.ConversionFactor
+            End Set
+        End Property
+
+        Default Public Overrides Property CompositeValue(ByVal index As Integer) As Single
+            Get
+                Select Case index
+                    Case CompositePhasorValue.Angle
+                        Return Angle
+                    Case CompositePhasorValue.Magnitude
+                        Return Magnitude
+                    Case Else
+                        Throw New IndexOutOfRangeException("Specified phasor value composite index, " & index & ", is out of range - there are only two composite values for a phasor value: angle (0) and magnitude (1)")
+                End Select
+            End Get
+            Set(ByVal value As Single)
+                Select Case index
+                    Case CompositePhasorValue.Angle
+                        Angle = value
+                    Case CompositePhasorValue.Magnitude
+                        Magnitude = value
+                    Case Else
+                        Throw New IndexOutOfRangeException("Specified phasor value composite index, " & index & ", is out of range - there are only two composite values for a phasor value: angle (0) and magnitude (1)")
+                End Select
+            End Set
+        End Property
+
+        Public Overrides ReadOnly Property CompositeValueCount() As Integer
+            Get
+                Return 2
+            End Get
+        End Property
+
+        Public Overrides ReadOnly Property IsEmpty() As Boolean
+            Get
+                Return (m_real = 0 And m_imaginary = 0)
+            End Get
+        End Property
+
+        Protected Overrides ReadOnly Property BodyLength() As UInt16
+            Get
+                If DataFormat = TVA.Phasors.DataFormat.FixedInteger Then
+                    Return 4
                 Else
-                    EndianOrder.BigEndian.CopyBytes(m_real, buffer, 0)
-                    EndianOrder.BigEndian.CopyBytes(m_imaginary, buffer, 4)
+                    Return 8
+                End If
+            End Get
+        End Property
+
+        Protected Overrides ReadOnly Property BodyImage() As Byte()
+            Get
+                Dim buffer As Byte() = CreateArray(Of Byte)(BodyLength)
+
+                If CoordinateFormat = TVA.Phasors.CoordinateFormat.Rectangular Then
+                    If DataFormat = TVA.Phasors.DataFormat.FixedInteger Then
+                        EndianOrder.BigEndian.CopyBytes(UnscaledReal, buffer, 0)
+                        EndianOrder.BigEndian.CopyBytes(UnscaledImaginary, buffer, 2)
+                    Else
+                        EndianOrder.BigEndian.CopyBytes(m_real, buffer, 0)
+                        EndianOrder.BigEndian.CopyBytes(m_imaginary, buffer, 4)
+                    End If
+                Else
+                    If DataFormat = TVA.Phasors.DataFormat.FixedInteger Then
+                        EndianOrder.BigEndian.CopyBytes(Convert.ToUInt16(Magnitude), buffer, 0)
+                        EndianOrder.BigEndian.CopyBytes(Convert.ToInt16(Angle * DegreesToRadians * 10000), buffer, 2)
+                    Else
+                        EndianOrder.BigEndian.CopyBytes(Magnitude, buffer, 0)
+                        EndianOrder.BigEndian.CopyBytes(Convert.ToSingle(Angle * DegreesToRadians), buffer, 4)
+                    End If
+                End If
+
+                Return buffer
+            End Get
+        End Property
+
+        Protected Overrides Sub ParseBodyImage(ByVal state As IChannelParsingState, ByVal binaryImage() As Byte, ByVal startIndex As Integer)
+
+            If CoordinateFormat = TVA.Phasors.CoordinateFormat.Rectangular Then
+                If DataFormat = TVA.Phasors.DataFormat.FixedInteger Then
+                    UnscaledReal = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex)
+                    UnscaledImaginary = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 2)
+                Else
+                    m_real = EndianOrder.BigEndian.ToSingle(binaryImage, startIndex)
+                    m_imaginary = EndianOrder.BigEndian.ToSingle(binaryImage, startIndex + 4)
                 End If
             Else
-                If DataFormat = Phasors.DataFormat.FixedInteger Then
-                    EndianOrder.BigEndian.CopyBytes(Convert.ToUInt16(Magnitude), buffer, 0)
-                    EndianOrder.BigEndian.CopyBytes(Convert.ToInt16(Angle * DegreesToRadians * 10000), buffer, 2)
+                Dim magnitude As Single
+                Dim angle As Single
+
+                If DataFormat = TVA.Phasors.DataFormat.FixedInteger Then
+                    magnitude = Convert.ToSingle(EndianOrder.BigEndian.ToUInt16(binaryImage, startIndex))
+                    angle = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 2) * RadiansToDegrees / 10000
                 Else
-                    EndianOrder.BigEndian.CopyBytes(Magnitude, buffer, 0)
-                    EndianOrder.BigEndian.CopyBytes(Convert.ToSingle(Angle * DegreesToRadians), buffer, 4)
+                    magnitude = EndianOrder.BigEndian.ToSingle(binaryImage, startIndex)
+                    angle = EndianOrder.BigEndian.ToSingle(binaryImage, startIndex + 4) * RadiansToDegrees
                 End If
+
+                m_real = CalculateRealComponent(angle, magnitude)
+                m_imaginary = CalculateImaginaryComponent(angle, magnitude)
             End If
 
-            Return buffer
-        End Get
-    End Property
+        End Sub
 
-    Protected Overrides Sub ParseBodyImage(ByVal state As IChannelParsingState, ByVal binaryImage() As Byte, ByVal startIndex As Integer)
+        Public Overrides Sub GetObjectData(ByVal info As System.Runtime.Serialization.SerializationInfo, ByVal context As System.Runtime.Serialization.StreamingContext)
 
-        If CoordinateFormat = Phasors.CoordinateFormat.Rectangular Then
-            If DataFormat = Phasors.DataFormat.FixedInteger Then
-                UnscaledReal = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex)
-                UnscaledImaginary = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 2)
-            Else
-                m_real = EndianOrder.BigEndian.ToSingle(binaryImage, startIndex)
-                m_imaginary = EndianOrder.BigEndian.ToSingle(binaryImage, startIndex + 4)
-            End If
-        Else
-            Dim magnitude As Single
-            Dim angle As Single
+            MyBase.GetObjectData(info, context)
 
-            If DataFormat = Phasors.DataFormat.FixedInteger Then
-                magnitude = Convert.ToSingle(EndianOrder.BigEndian.ToUInt16(binaryImage, startIndex))
-                angle = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 2) * RadiansToDegrees / 10000
-            Else
-                magnitude = EndianOrder.BigEndian.ToSingle(binaryImage, startIndex)
-                angle = EndianOrder.BigEndian.ToSingle(binaryImage, startIndex + 4) * RadiansToDegrees
-            End If
+            ' Serialize phasor value
+            info.AddValue("real", m_real)
+            info.AddValue("imaginary", m_imaginary)
 
-            m_real = CalculateRealComponent(angle, magnitude)
-            m_imaginary = CalculateImaginaryComponent(angle, magnitude)
-        End If
+        End Sub
 
-    End Sub
+        Public Overrides ReadOnly Property Attributes() As Dictionary(Of String, String)
+            Get
+                Dim baseAttributes As Dictionary(Of String, String) = MyBase.Attributes
 
-    Public Overrides Sub GetObjectData(ByVal info As System.Runtime.Serialization.SerializationInfo, ByVal context As System.Runtime.Serialization.StreamingContext)
+                baseAttributes.Add("Phasor Type", [Type] & ": " & [Enum].GetName(GetType(PhasorType), [Type]))
+                baseAttributes.Add("Angle Value", Angle & "°")
+                baseAttributes.Add("Magnitude Value", Magnitude)
+                baseAttributes.Add("Real Value", Real)
+                baseAttributes.Add("Imaginary Value", Imaginary)
+                baseAttributes.Add("Unscaled Real Value", UnscaledReal)
+                baseAttributes.Add("Unscaled Imaginary Value", UnscaledImaginary)
+                baseAttributes.Add("Angle Value was Assigned", AngleAssigned)
+                baseAttributes.Add("Magnitude Value was Assigned", MagnitudeAssigned)
 
-        MyBase.GetObjectData(info, context)
+                Return baseAttributes
+            End Get
+        End Property
 
-        ' Serialize phasor value
-        info.AddValue("real", m_real)
-        info.AddValue("imaginary", m_imaginary)
+    End Class
 
-    End Sub
-
-    Public Overrides ReadOnly Property Attributes() As Dictionary(Of String, String)
-        Get
-            Dim baseAttributes As Dictionary(Of String, String) = MyBase.Attributes
-
-            baseAttributes.Add("Phasor Type", [Type] & ": " & [Enum].GetName(GetType(PhasorType), [Type]))
-            baseAttributes.Add("Angle Value", Angle & "°")
-            baseAttributes.Add("Magnitude Value", Magnitude)
-            baseAttributes.Add("Real Value", Real)
-            baseAttributes.Add("Imaginary Value", Imaginary)
-            baseAttributes.Add("Unscaled Real Value", UnscaledReal)
-            baseAttributes.Add("Unscaled Imaginary Value", UnscaledImaginary)
-            baseAttributes.Add("Angle Value was Assigned", AngleAssigned)
-            baseAttributes.Add("Magnitude Value was Assigned", MagnitudeAssigned)
-
-            Return baseAttributes
-        End Get
-    End Property
-
-End Class
+End Namespace

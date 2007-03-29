@@ -23,7 +23,7 @@ Imports TVA.Math.Common
 Imports TVA.Phasors.Common
 Imports TVA.Phasors.BpaPdcStream.Common
 
-Namespace BpaPdcStream
+Namespace Phasors.BpaPdcStream
 
     ' This is essentially a "row" of PMU data at a given timestamp
     <CLSCompliant(False), Serializable()> _

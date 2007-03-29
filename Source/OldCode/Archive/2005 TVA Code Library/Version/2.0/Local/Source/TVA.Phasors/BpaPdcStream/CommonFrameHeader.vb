@@ -21,7 +21,7 @@ Imports TVA.DateTime.Common
 Imports TVA.Phasors.Common
 Imports TVA.Phasors.IeeeC37_118.Common
 
-Namespace BpaPdcStream
+Namespace Phasors.BpaPdcStream
 
     ' This class generates and parses a frame header specfic to BPA PDCstream
     <CLSCompliant(False), Serializable()> _

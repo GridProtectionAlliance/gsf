@@ -18,7 +18,7 @@
 Imports System.Runtime.Serialization
 Imports System.Text
 
-Namespace BpaPdcStream
+Namespace Phasors.BpaPdcStream
 
     <CLSCompliant(False), Serializable()> _
     Public Class PhasorDefinition

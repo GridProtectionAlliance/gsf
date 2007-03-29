@@ -21,7 +21,7 @@ Imports TVA.Phasors.Common
 Imports TVA.Phasors.FNet.Common
 Imports TVA.Text.Common
 
-Namespace FNet
+Namespace Phasors.FNet
 
     ' This data cell represents what most might call a "field" in table of rows - it is a single unit of data for a specific PMU
     <CLSCompliant(False), Serializable()> _

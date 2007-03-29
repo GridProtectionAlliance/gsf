@@ -17,12 +17,12 @@
 
 Imports System.Runtime.Serialization
 
-Namespace BpaPdcStream
+Namespace Phasors.BpaPdcStream
 
     <CLSCompliant(False), Serializable()> _
     Public Class DataCellCollection
 
-        Inherits Phasors.DataCellCollection
+        Inherits TVA.Phasors.DataCellCollection
 
         Public Sub New()
 

@@ -15,7 +15,7 @@
 '
 '*******************************************************************************************************
 
-Namespace BpaPdcStream
+Namespace Phasors.BpaPdcStream
 
     ''' <summary>Stream type</summary>
     <Serializable()> _

@@ -15,12 +15,16 @@
 '
 '*******************************************************************************************************
 
-''' <summary>This interface represents the protocol independent parsing state of any command frame.</summary>
-<CLSCompliant(False)> _
-Public Interface ICommandFrameParsingState
+Namespace Phasors
 
-    Inherits IChannelFrameParsingState(Of ICommandCell)
+    ''' <summary>This interface represents the protocol independent parsing state of any command frame.</summary>
+    <CLSCompliant(False)> _
+    Public Interface ICommandFrameParsingState
 
-    Shadows ReadOnly Property Cells() As CommandCellCollection
+        Inherits IChannelFrameParsingState(Of ICommandCell)
 
-End Interface
+        Shadows ReadOnly Property Cells() As CommandCellCollection
+
+    End Interface
+
+End Namespace

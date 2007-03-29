@@ -21,7 +21,7 @@ Imports TVA.DateTime
 Imports TVA.Phasors.Common
 Imports TVA.IO.Compression.Common
 
-Namespace Ieee1344
+Namespace Phasors.Ieee1344
 
     <CLSCompliant(False), Serializable()> _
     Public Class ConfigurationFrame

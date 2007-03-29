@@ -15,10 +15,14 @@
 '
 '*******************************************************************************************************
 
-''' <summary>This interface represents a protocol independent analog value definition.</summary>
-<CLSCompliant(False)> _
-Public Interface IAnalogDefinition
+Namespace Phasors
 
-    Inherits IChannelDefinition
+    ''' <summary>This interface represents a protocol independent analog value definition.</summary>
+    <CLSCompliant(False)> _
+    Public Interface IAnalogDefinition
 
-End Interface
+        Inherits IChannelDefinition
+
+    End Interface
+
+End Namespace

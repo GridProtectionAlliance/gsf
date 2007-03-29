@@ -19,7 +19,7 @@ Imports System.Runtime.Serialization
 Imports TVA.DateTime
 Imports TVA.IO.Compression.Common
 
-Namespace FNet
+Namespace Phasors.FNet
 
     ' This is essentially a "row" of PMU data at a given timestamp
     <CLSCompliant(False), Serializable()> _
@@ -63,7 +63,7 @@ Namespace FNet
         ''' <summary>
         ''' Return the type
         ''' </summary>
-      
+
         Public Overrides ReadOnly Property DerivedType() As System.Type
             Get
                 Return Me.GetType()
@@ -88,7 +88,7 @@ Namespace FNet
         ''' <summary>
         ''' Set and Return the SampleIndex
         ''' </summary>
-                Public Property SampleIndex() As Int16
+        Public Property SampleIndex() As Int16
             Get
                 Return m_sampleIndex
             End Get

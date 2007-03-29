@@ -17,11 +17,14 @@
 
 Imports System.Runtime.Serialization
 
-''' <summary>This interface represents a protocol independent representation of a collection of any data type.</summary>
-<CLSCompliant(False)> _
-Public Interface IChannelCollection(Of T As IChannel)
+Namespace Phasors
 
-    Inherits IChannel, IList(Of T), ISerializable
+    ''' <summary>This interface represents a protocol independent representation of a collection of any data type.</summary>
+    <CLSCompliant(False)> _
+    Public Interface IChannelCollection(Of T As IChannel)
 
-End Interface
+        Inherits IChannel, IList(Of T), ISerializable
 
+    End Interface
+
+End Namespace

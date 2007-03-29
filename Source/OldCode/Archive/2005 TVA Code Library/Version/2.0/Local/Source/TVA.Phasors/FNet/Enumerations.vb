@@ -15,7 +15,7 @@
 '
 '*******************************************************************************************************
 
-Namespace FNet
+Namespace Phasors.FNet
 
     ''' <summary>FNet data elements</summary>
     Public Enum Element

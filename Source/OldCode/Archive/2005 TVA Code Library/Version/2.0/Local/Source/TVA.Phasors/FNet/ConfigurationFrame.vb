@@ -21,7 +21,7 @@ Imports TVA.DateTime
 Imports TVA.Phasors.Common
 Imports TVA.IO.Compression.Common
 
-Namespace FNet
+Namespace Phasors.FNet
 
     <CLSCompliant(False), Serializable()> _
     Public Class ConfigurationFrame

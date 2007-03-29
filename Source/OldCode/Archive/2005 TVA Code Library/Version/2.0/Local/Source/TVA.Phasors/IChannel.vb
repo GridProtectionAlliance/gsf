@@ -15,26 +15,29 @@
 '
 '*******************************************************************************************************
 
-''' <summary>This interface represents a protocol independent representation of any data type.</summary>
-<CLSCompliant(False)> _
-Public Interface IChannel
+Namespace Phasors
 
-    Inherits IBinaryDataProvider
+    ''' <summary>This interface represents a protocol independent representation of any data type.</summary>
+    <CLSCompliant(False)> _
+    Public Interface IChannel
 
-    ReadOnly Property DerivedType() As Type
+        Inherits IBinaryDataProvider
 
-    ReadOnly Property This() As IChannel
+        ReadOnly Property DerivedType() As Type
 
-    ' At its most basic level - all data represented by the protocols can either be "parsed" or "generated"
-    ' hence the following methods common to all elements
+        ReadOnly Property This() As IChannel
 
-    Sub ParseBinaryImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
+        ' At its most basic level - all data represented by the protocols can either be "parsed" or "generated"
+        ' hence the following methods common to all elements
 
-    Shadows ReadOnly Property BinaryLength() As UInt16
+        Sub ParseBinaryImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
-    ReadOnly Property Attributes() As Dictionary(Of String, String)
+        Shadows ReadOnly Property BinaryLength() As UInt16
 
-    Property Tag() As Object
+        ReadOnly Property Attributes() As Dictionary(Of String, String)
 
-End Interface
+        Property Tag() As Object
 
+    End Interface
+
+End Namespace

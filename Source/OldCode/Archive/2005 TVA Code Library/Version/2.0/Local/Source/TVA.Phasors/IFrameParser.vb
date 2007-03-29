@@ -15,26 +15,30 @@
 '
 '*******************************************************************************************************
 
-''' <summary>This interface represents the protocol independent representation of a frame parser.</summary>
-Public Interface IFrameParser
+Namespace Phasors
 
-    Event ReceivedConfigurationFrame(ByVal frame As IConfigurationFrame)
-    Event ReceivedDataFrame(ByVal frame As IDataFrame)
-    Event ReceivedHeaderFrame(ByVal frame As IHeaderFrame)
-    Event ReceivedCommandFrame(ByVal frame As ICommandFrame)
-    Event ReceivedUndeterminedFrame(ByVal frame As IChannelFrame)
-    Event ReceivedFrameBufferImage(ByVal frameType As FundamentalFrameType, ByVal binaryImage As Byte(), ByVal offset As Integer, ByVal length As Integer)
-    Event ConfigurationChanged()
-    Event DataStreamException(ByVal ex As Exception)
+    ''' <summary>This interface represents the protocol independent representation of a frame parser.</summary>
+    Public Interface IFrameParser
 
-    Sub Start()
-    Sub [Stop]()
-    ReadOnly Property Enabled() As Boolean
-    Property ExecuteParseOnSeparateThread() As Boolean
-    ReadOnly Property QueuedBuffers() As Int32
-    Property ConfigurationFrame() As IConfigurationFrame
-    Sub Write(ByVal buffer As Byte(), ByVal offset As Int32, ByVal count As Int32)
-    ReadOnly Property Status() As String
-    Property ConnectionParameters() As IConnectionParameters
+        Event ReceivedConfigurationFrame(ByVal frame As IConfigurationFrame)
+        Event ReceivedDataFrame(ByVal frame As IDataFrame)
+        Event ReceivedHeaderFrame(ByVal frame As IHeaderFrame)
+        Event ReceivedCommandFrame(ByVal frame As ICommandFrame)
+        Event ReceivedUndeterminedFrame(ByVal frame As IChannelFrame)
+        Event ReceivedFrameBufferImage(ByVal frameType As FundamentalFrameType, ByVal binaryImage As Byte(), ByVal offset As Integer, ByVal length As Integer)
+        Event ConfigurationChanged()
+        Event DataStreamException(ByVal ex As Exception)
 
-End Interface
+        Sub Start()
+        Sub [Stop]()
+        ReadOnly Property Enabled() As Boolean
+        Property ExecuteParseOnSeparateThread() As Boolean
+        ReadOnly Property QueuedBuffers() As Int32
+        Property ConfigurationFrame() As IConfigurationFrame
+        Sub Write(ByVal buffer As Byte(), ByVal offset As Int32, ByVal count As Int32)
+        ReadOnly Property Status() As String
+        Property ConnectionParameters() As IConnectionParameters
+
+    End Interface
+
+End Namespace

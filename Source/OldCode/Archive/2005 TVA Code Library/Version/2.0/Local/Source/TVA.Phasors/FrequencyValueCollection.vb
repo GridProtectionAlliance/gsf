@@ -17,31 +17,35 @@
 
 Imports System.Runtime.Serialization
 
-''' <summary>This class represents the protocol independent collection of frequency and dfdt values.</summary>
-<CLSCompliant(False), Serializable()> _
-Public Class FrequencyValueCollection
+Namespace Phasors
 
-    Inherits ChannelValueCollectionBase(Of IFrequencyDefinition, IFrequencyValue)
+    ''' <summary>This class represents the protocol independent collection of frequency and dfdt values.</summary>
+    <CLSCompliant(False), Serializable()> _
+    Public Class FrequencyValueCollection
 
-    Protected Sub New()
-    End Sub
+        Inherits ChannelValueCollectionBase(Of IFrequencyDefinition, IFrequencyValue)
 
-    Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
+        Protected Sub New()
+        End Sub
 
-        MyBase.New(info, context)
+        Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
 
-    End Sub
+            MyBase.New(info, context)
 
-    Public Sub New(ByVal maximumCount As Int32)
+        End Sub
 
-        MyBase.New(maximumCount)
+        Public Sub New(ByVal maximumCount As Int32)
 
-    End Sub
+            MyBase.New(maximumCount)
 
-    Public Overrides ReadOnly Property DerivedType() As Type
-        Get
-            Return Me.GetType()
-        End Get
-    End Property
+        End Sub
 
-End Class
+        Public Overrides ReadOnly Property DerivedType() As Type
+            Get
+                Return Me.GetType()
+            End Get
+        End Property
+
+    End Class
+
+End Namespace

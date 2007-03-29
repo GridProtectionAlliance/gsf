@@ -17,7 +17,7 @@
 
 Imports System.Runtime.Serialization
 
-Namespace FNet
+Namespace Phasors.FNet
 
     <CLSCompliant(False), Serializable()> _
     Public Class PhasorDefinition

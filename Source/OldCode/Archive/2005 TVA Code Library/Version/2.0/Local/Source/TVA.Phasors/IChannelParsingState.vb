@@ -15,12 +15,16 @@
 '
 '*******************************************************************************************************
 
-''' <summary>This interface represents a protocol independent parsing state used by any kind of data.</summary>
-''' <remarks>Data parsing is very format specific, classes implementing this interface create a common form for parsing state information particular to a data type.</remarks>
-Public Interface IChannelParsingState
+Namespace Phasors
 
-    ReadOnly Property DerivedType() As Type
+    ''' <summary>This interface represents a protocol independent parsing state used by any kind of data.</summary>
+    ''' <remarks>Data parsing is very format specific, classes implementing this interface create a common form for parsing state information particular to a data type.</remarks>
+    Public Interface IChannelParsingState
 
-    ReadOnly Property This() As IChannelParsingState
+        ReadOnly Property DerivedType() As Type
 
-End Interface
+        ReadOnly Property This() As IChannelParsingState
+
+    End Interface
+
+End Namespace

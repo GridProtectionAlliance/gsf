@@ -15,13 +15,13 @@
 '
 '*******************************************************************************************************
 
-Namespace BpaPdcStream
+Namespace Phasors.BpaPdcStream
 
     ''' <summary>This class represents the BPA PDCstream protocol implementation of the parsing state of a data frame cell that can be sent or received from a PMU.</summary>
     <CLSCompliant(False)> _
     Public Class DataCellParsingState
 
-        Inherits Phasors.DataCellParsingState
+        Inherits TVA.Phasors.DataCellParsingState
 
         Private m_isPdcBlockPmu As Boolean
         Private m_index As Integer

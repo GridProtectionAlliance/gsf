@@ -17,101 +17,104 @@
 
 Imports System.Runtime.Serialization
 
-''' <summary>This class represents the common implementation of the protocol independent representation of a collection of any kind of data value.</summary>
-<CLSCompliant(False), Serializable()> _
-Public MustInherit Class ChannelValueCollectionBase(Of TDefinition As IChannelDefinition, TValue As IChannelValue(Of TDefinition))
+Namespace Phasors
 
-    Inherits ChannelCollectionBase(Of TValue)
+    ''' <summary>This class represents the common implementation of the protocol independent representation of a collection of any kind of data value.</summary>
+    <CLSCompliant(False), Serializable()> _
+    Public MustInherit Class ChannelValueCollectionBase(Of TDefinition As IChannelDefinition, TValue As IChannelValue(Of TDefinition))
 
-    Private m_fixedCount As Int32
-    Private m_floatCount As Int32
+        Inherits ChannelCollectionBase(Of TValue)
 
-    Protected Sub New()
-    End Sub
+        Private m_fixedCount As Int32
+        Private m_floatCount As Int32
 
-    Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
+        Protected Sub New()
+        End Sub
 
-        MyBase.New(info, context)
+        Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
 
-    End Sub
+            MyBase.New(info, context)
 
-    Protected Sub New(ByVal maximumCount As Int32)
+        End Sub
 
-        MyBase.New(maximumCount)
+        Protected Sub New(ByVal maximumCount As Int32)
 
-    End Sub
+            MyBase.New(maximumCount)
 
-    Public Overridable Shadows Sub Add(ByVal value As TValue)
+        End Sub
 
-        ' In typical usage, all channel values will be of the same data type - but we can't anticipate all
-        ' possible uses of collection, so we track totals of each data type so we can quickly ascertain if
-        ' all the items in the collection are of the same data type
-        If value.DataFormat = Phasors.DataFormat.FixedInteger Then
-            m_fixedCount += 1
-        Else
-            m_floatCount += 1
-        End If
+        Public Overridable Shadows Sub Add(ByVal value As TValue)
 
-        MyBase.Add(value)
-
-    End Sub
-
-    Public Overrides ReadOnly Property BinaryLength() As UInt16
-        Get
-            If Count > 0 Then
-                If m_fixedCount = 0 Or m_floatCount = 0 Then
-                    ' Data types in list are consistent, a simple calculation will derive total binary length
-                    Return Item(0).BinaryLength * Count
-                Else
-                    ' List has items of different data types, will have to traverse list to calculate total binary length
-                    Dim length As UInt16
-
-                    For x As Int32 = 0 To Count - 1
-                        length += Item(x).BinaryLength
-                    Next
-
-                    Return length
-                End If
+            ' In typical usage, all channel values will be of the same data type - but we can't anticipate all
+            ' possible uses of collection, so we track totals of each data type so we can quickly ascertain if
+            ' all the items in the collection are of the same data type
+            If value.DataFormat = TVA.Phasors.DataFormat.FixedInteger Then
+                m_fixedCount += 1
             Else
-                Return 0
+                m_floatCount += 1
             End If
-        End Get
-    End Property
 
-    Public Overridable ReadOnly Property AllValuesAreEmpty() As Boolean
-        Get
-            Dim allEmpty As Boolean = True
+            MyBase.Add(value)
 
-            For x As Int32 = 0 To Count - 1
-                If Not Item(x).IsEmpty Then
-                    allEmpty = False
-                    Exit For
+        End Sub
+
+        Public Overrides ReadOnly Property BinaryLength() As UInt16
+            Get
+                If Count > 0 Then
+                    If m_fixedCount = 0 Or m_floatCount = 0 Then
+                        ' Data types in list are consistent, a simple calculation will derive total binary length
+                        Return Item(0).BinaryLength * Count
+                    Else
+                        ' List has items of different data types, will have to traverse list to calculate total binary length
+                        Dim length As UInt16
+
+                        For x As Int32 = 0 To Count - 1
+                            length += Item(x).BinaryLength
+                        Next
+
+                        Return length
+                    End If
+                Else
+                    Return 0
                 End If
-            Next
+            End Get
+        End Property
 
-            Return allEmpty
-        End Get
-    End Property
+        Public Overridable ReadOnly Property AllValuesAreEmpty() As Boolean
+            Get
+                Dim allEmpty As Boolean = True
 
-    Public Overridable Shadows Sub Clear()
+                For x As Int32 = 0 To Count - 1
+                    If Not Item(x).IsEmpty Then
+                        allEmpty = False
+                        Exit For
+                    End If
+                Next
 
-        MyBase.Clear()
-        m_fixedCount = 0
-        m_floatCount = 0
+                Return allEmpty
+            End Get
+        End Property
 
-    End Sub
+        Public Overridable Shadows Sub Clear()
 
-    Public Overrides ReadOnly Property Attributes() As Dictionary(Of String, String)
-        Get
-            Dim baseAttributes As Dictionary(Of String, String) = MyBase.Attributes
+            MyBase.Clear()
+            m_fixedCount = 0
+            m_floatCount = 0
 
-            baseAttributes.Add("Fixed Count", m_fixedCount)
-            baseAttributes.Add("Float Count", m_floatCount)
-            baseAttributes.Add("All Values Empty", AllValuesAreEmpty)
+        End Sub
 
-            Return baseAttributes
-        End Get
-    End Property
+        Public Overrides ReadOnly Property Attributes() As Dictionary(Of String, String)
+            Get
+                Dim baseAttributes As Dictionary(Of String, String) = MyBase.Attributes
 
-End Class
+                baseAttributes.Add("Fixed Count", m_fixedCount)
+                baseAttributes.Add("Float Count", m_floatCount)
+                baseAttributes.Add("All Values Empty", AllValuesAreEmpty)
 
+                Return baseAttributes
+            End Get
+        End Property
+
+    End Class
+
+End Namespace

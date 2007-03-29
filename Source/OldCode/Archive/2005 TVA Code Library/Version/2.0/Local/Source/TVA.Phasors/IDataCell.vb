@@ -17,36 +17,40 @@
 
 Imports TVA.Measurements
 
-''' <summary>This interface represents the protocol independent representation of a set of phasor related data values.</summary>
-<CLSCompliant(False)> _
-Public Interface IDataCell
+Namespace Phasors
 
-    Inherits IChannelCell, IMeasurement
+    ''' <summary>This interface represents the protocol independent representation of a set of phasor related data values.</summary>
+    <CLSCompliant(False)> _
+    Public Interface IDataCell
 
-    Shadows ReadOnly Property Parent() As IDataFrame
+        Inherits IChannelCell, IMeasurement
 
-    Shadows ReadOnly Property This() As IDataCell
+        Shadows ReadOnly Property Parent() As IDataFrame
 
-    Property ConfigurationCell() As IConfigurationCell
+        Shadows ReadOnly Property This() As IDataCell
 
-    ReadOnly Property StationName() As String
+        Property ConfigurationCell() As IConfigurationCell
 
-    ReadOnly Property IDLabel() As String
+        ReadOnly Property StationName() As String
 
-    Property StatusFlags() As Int16
+        ReadOnly Property IDLabel() As String
 
-    ReadOnly Property AllValuesAreEmpty() As Boolean
+        Property StatusFlags() As Int16
 
-    ReadOnly Property PhasorValues() As PhasorValueCollection
+        ReadOnly Property AllValuesAreEmpty() As Boolean
 
-    Property FrequencyValue() As IFrequencyValue
+        ReadOnly Property PhasorValues() As PhasorValueCollection
 
-    ReadOnly Property AnalogValues() As AnalogValueCollection
+        Property FrequencyValue() As IFrequencyValue
 
-    ReadOnly Property DigitalValues() As DigitalValueCollection
+        ReadOnly Property AnalogValues() As AnalogValueCollection
 
-    Property SynchronizationIsValid() As Boolean
+        ReadOnly Property DigitalValues() As DigitalValueCollection
 
-    Property DataIsValid() As Boolean
+        Property SynchronizationIsValid() As Boolean
 
-End Interface
+        Property DataIsValid() As Boolean
+
+    End Interface
+
+End Namespace

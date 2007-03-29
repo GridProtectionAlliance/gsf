@@ -15,40 +15,44 @@
 '
 '*******************************************************************************************************
 
-''' <summary>This class represents the protocol independent common implementation the parsing state of a data frame that can be sent or received from a PMU.</summary>
-<CLSCompliant(False)> _
-Public Class DataFrameParsingState
+Namespace Phasors
 
-    Inherits ChannelFrameParsingStateBase(Of IDataCell)
-    Implements IDataFrameParsingState
+    ''' <summary>This class represents the protocol independent common implementation the parsing state of a data frame that can be sent or received from a PMU.</summary>
+    <CLSCompliant(False)> _
+    Public Class DataFrameParsingState
 
-    Private m_configurationFrame As IConfigurationFrame
+        Inherits ChannelFrameParsingStateBase(Of IDataCell)
+        Implements IDataFrameParsingState
 
-    Public Sub New(ByVal cells As DataCellCollection, ByVal frameLength As Int16, ByVal configurationFrame As IConfigurationFrame, ByVal createNewCellFunction As IChannelFrameParsingState(Of IDataCell).CreateNewCellFunctionSignature)
+        Private m_configurationFrame As IConfigurationFrame
 
-        MyBase.New(cells, frameLength, createNewCellFunction)
+        Public Sub New(ByVal cells As DataCellCollection, ByVal frameLength As Int16, ByVal configurationFrame As IConfigurationFrame, ByVal createNewCellFunction As IChannelFrameParsingState(Of IDataCell).CreateNewCellFunctionSignature)
 
-        CellCount = configurationFrame.Cells.Count
-        m_configurationFrame = configurationFrame
+            MyBase.New(cells, frameLength, createNewCellFunction)
 
-    End Sub
+            CellCount = configurationFrame.Cells.Count
+            m_configurationFrame = configurationFrame
 
-    Public Overrides ReadOnly Property DerivedType() As System.Type
-        Get
-            Return Me.GetType()
-        End Get
-    End Property
+        End Sub
 
-    Public Overridable ReadOnly Property ConfigurationFrame() As IConfigurationFrame Implements IDataFrameParsingState.ConfigurationFrame
-        Get
-            Return m_configurationFrame
-        End Get
-    End Property
+        Public Overrides ReadOnly Property DerivedType() As System.Type
+            Get
+                Return Me.GetType()
+            End Get
+        End Property
 
-    Public Overridable Shadows ReadOnly Property Cells() As DataCellCollection Implements IDataFrameParsingState.Cells
-        Get
-            Return MyBase.Cells
-        End Get
-    End Property
+        Public Overridable ReadOnly Property ConfigurationFrame() As IConfigurationFrame Implements IDataFrameParsingState.ConfigurationFrame
+            Get
+                Return m_configurationFrame
+            End Get
+        End Property
 
-End Class
+        Public Overridable Shadows ReadOnly Property Cells() As DataCellCollection Implements IDataFrameParsingState.Cells
+            Get
+                Return MyBase.Cells
+            End Get
+        End Property
+
+    End Class
+
+End Namespace

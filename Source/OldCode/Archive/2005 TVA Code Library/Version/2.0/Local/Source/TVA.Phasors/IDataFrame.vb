@@ -15,14 +15,18 @@
 '
 '*******************************************************************************************************
 
-''' <summary>This interface represents the protocol independent representation of any frame of data.</summary>
-<CLSCompliant(False)> _
-Public Interface IDataFrame
+Namespace Phasors
 
-    Inherits IChannelFrame
+    ''' <summary>This interface represents the protocol independent representation of any frame of data.</summary>
+    <CLSCompliant(False)> _
+    Public Interface IDataFrame
 
-    Property ConfigurationFrame() As IConfigurationFrame
+        Inherits IChannelFrame
 
-    Shadows ReadOnly Property Cells() As DataCellCollection
+        Property ConfigurationFrame() As IConfigurationFrame
 
-End Interface
+        Shadows ReadOnly Property Cells() As DataCellCollection
+
+    End Interface
+
+End Namespace

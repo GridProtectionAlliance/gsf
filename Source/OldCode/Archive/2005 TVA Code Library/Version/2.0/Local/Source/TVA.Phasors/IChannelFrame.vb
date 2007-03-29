@@ -19,20 +19,24 @@ Imports System.Runtime.Serialization
 Imports TVA.DateTime
 Imports TVA.Measurements
 
-''' <summary>This interface represents the protocol independent representation of any frame of data.</summary>
-<CLSCompliant(False)> _
-Public Interface IChannelFrame
+Namespace Phasors
 
-    Inherits IChannel, IFrame, IComparable, ISerializable
+    ''' <summary>This interface represents the protocol independent representation of any frame of data.</summary>
+    <CLSCompliant(False)> _
+    Public Interface IChannelFrame
 
-    ReadOnly Property FrameType() As FundamentalFrameType
+        Inherits IChannel, IFrame, IComparable, ISerializable
 
-    ReadOnly Property Cells() As Object
+        ReadOnly Property FrameType() As FundamentalFrameType
 
-    Property IDCode() As UInt16
+        ReadOnly Property Cells() As Object
 
-    ReadOnly Property TimeTag() As UnixTimeTag  ' UNIX based time of this frame
+        Property IDCode() As UInt16
 
-    ReadOnly Property IsPartial() As Boolean
+        ReadOnly Property TimeTag() As UnixTimeTag  ' UNIX based time of this frame
 
-End Interface
+        ReadOnly Property IsPartial() As Boolean
+
+    End Interface
+
+End Namespace

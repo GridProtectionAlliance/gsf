@@ -15,31 +15,35 @@
 '
 '*******************************************************************************************************
 
-''' <summary>This class represents the protocol independent common implementation the parsing state of a command frame that can be sent or received from a PMU.</summary>
-<CLSCompliant(False)> _
-Public Class CommandFrameParsingState
+Namespace Phasors
 
-    Inherits ChannelFrameParsingStateBase(Of ICommandCell)
-    Implements ICommandFrameParsingState
+    ''' <summary>This class represents the protocol independent common implementation the parsing state of a command frame that can be sent or received from a PMU.</summary>
+    <CLSCompliant(False)> _
+    Public Class CommandFrameParsingState
 
-    Public Sub New(ByVal cells As CommandCellCollection, ByVal frameLength As Int16, ByVal dataLength As Int16)
+        Inherits ChannelFrameParsingStateBase(Of ICommandCell)
+        Implements ICommandFrameParsingState
 
-        MyBase.New(cells, frameLength, AddressOf CommandCell.CreateNewCommandCell)
+        Public Sub New(ByVal cells As CommandCellCollection, ByVal frameLength As Int16, ByVal dataLength As Int16)
 
-        CellCount = dataLength
+            MyBase.New(cells, frameLength, AddressOf CommandCell.CreateNewCommandCell)
 
-    End Sub
+            CellCount = dataLength
 
-    Public Overrides ReadOnly Property DerivedType() As System.Type
-        Get
-            Return Me.GetType()
-        End Get
-    End Property
+        End Sub
 
-    Public Overridable Shadows ReadOnly Property Cells() As CommandCellCollection Implements ICommandFrameParsingState.Cells
-        Get
-            Return MyBase.Cells
-        End Get
-    End Property
+        Public Overrides ReadOnly Property DerivedType() As System.Type
+            Get
+                Return Me.GetType()
+            End Get
+        End Property
 
-End Class
+        Public Overridable Shadows ReadOnly Property Cells() As CommandCellCollection Implements ICommandFrameParsingState.Cells
+            Get
+                Return MyBase.Cells
+            End Get
+        End Property
+
+    End Class
+
+End Namespace

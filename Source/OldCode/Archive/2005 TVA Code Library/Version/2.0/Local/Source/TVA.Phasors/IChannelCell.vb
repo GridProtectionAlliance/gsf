@@ -17,17 +17,20 @@
 
 Imports System.Runtime.Serialization
 
-''' <summary>This interface represents a protocol independent representation of any kind of data cell.</summary>
-<CLSCompliant(False)> _
-Public Interface IChannelCell
+Namespace Phasors
 
-    Inherits IChannel, ISerializable
+    ''' <summary>This interface represents a protocol independent representation of any kind of data cell.</summary>
+    <CLSCompliant(False)> _
+    Public Interface IChannelCell
 
-    ReadOnly Property Parent() As IChannelFrame
+        Inherits IChannel, ISerializable
 
-    Property IDCode() As UInt16
+        ReadOnly Property Parent() As IChannelFrame
 
-    ReadOnly Property AlignOnDWordBoundry() As Boolean
+        Property IDCode() As UInt16
 
-End Interface
+        ReadOnly Property AlignOnDWordBoundry() As Boolean
 
+    End Interface
+
+End Namespace

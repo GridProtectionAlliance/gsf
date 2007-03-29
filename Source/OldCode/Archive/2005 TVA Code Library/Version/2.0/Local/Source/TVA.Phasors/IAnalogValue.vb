@@ -15,14 +15,18 @@
 '
 '*******************************************************************************************************
 
-''' <summary>This interface represents a protocol independent analog value.</summary>
-<CLSCompliant(False)> _
-Public Interface IAnalogValue
+Namespace Phasors
 
-    Inherits IChannelValue(Of IAnalogDefinition)
+    ''' <summary>This interface represents a protocol independent analog value.</summary>
+    <CLSCompliant(False)> _
+    Public Interface IAnalogValue
 
-    Property Value() As Single
+        Inherits IChannelValue(Of IAnalogDefinition)
 
-    Property IntegerValue() As Int16
+        Property Value() As Single
 
-End Interface
+        Property IntegerValue() As Int16
+
+    End Interface
+
+End Namespace

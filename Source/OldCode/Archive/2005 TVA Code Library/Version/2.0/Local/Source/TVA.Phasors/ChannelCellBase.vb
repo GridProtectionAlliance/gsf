@@ -17,108 +17,111 @@
 
 Imports System.Runtime.Serialization
 
-''' <summary>This class represents the common implementation of the protocol independent representation of any kind of data cell.</summary>
-<CLSCompliant(False), Serializable()> _
-Public MustInherit Class ChannelCellBase
+Namespace Phasors
 
-    Inherits ChannelBase
-    Implements IChannelCell
+    ''' <summary>This class represents the common implementation of the protocol independent representation of any kind of data cell.</summary>
+    <CLSCompliant(False), Serializable()> _
+    Public MustInherit Class ChannelCellBase
 
-    Private m_parent As IChannelFrame
-    Private m_idCode As UInt16
-    Private m_alignOnDWordBoundry As Boolean
+        Inherits ChannelBase
+        Implements IChannelCell
 
-    Protected Sub New()
-    End Sub
+        Private m_parent As IChannelFrame
+        Private m_idCode As UInt16
+        Private m_alignOnDWordBoundry As Boolean
 
-    Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
+        Protected Sub New()
+        End Sub
 
-        ' Deserialize basic channel cell values
-        m_parent = info.GetValue("parent", GetType(IChannelFrame))
-        m_idCode = info.GetUInt16("id")
-        m_alignOnDWordBoundry = info.GetBoolean("alignOnDWordBoundry")
+        Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
 
-    End Sub
+            ' Deserialize basic channel cell values
+            m_parent = info.GetValue("parent", GetType(IChannelFrame))
+            m_idCode = info.GetUInt16("id")
+            m_alignOnDWordBoundry = info.GetBoolean("alignOnDWordBoundry")
 
-    Protected Sub New(ByVal parent As IChannelFrame, ByVal alignOnDWordBoundry As Boolean)
+        End Sub
 
-        m_parent = parent
-        m_alignOnDWordBoundry = alignOnDWordBoundry
+        Protected Sub New(ByVal parent As IChannelFrame, ByVal alignOnDWordBoundry As Boolean)
 
-    End Sub
+            m_parent = parent
+            m_alignOnDWordBoundry = alignOnDWordBoundry
 
-    Protected Sub New(ByVal parent As IChannelFrame, ByVal alignOnDWordBoundry As Boolean, ByVal idCode As UInt16)
+        End Sub
 
-        MyClass.New(parent, alignOnDWordBoundry)
-        m_idCode = idCode
+        Protected Sub New(ByVal parent As IChannelFrame, ByVal alignOnDWordBoundry As Boolean, ByVal idCode As UInt16)
 
-    End Sub
+            MyClass.New(parent, alignOnDWordBoundry)
+            m_idCode = idCode
 
-    ' Final dervived classes must expose Public Sub New(ByVal parent As IChannelFrame, ByVal state As IChannelFrameParsingState, ByVal index As Int32, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
+        End Sub
 
-    ' Derived classes are expected to expose a Protected Sub New(ByVal channelCell As IChannelCell)
-    Protected Sub New(ByVal channelCell As IChannelCell)
+        ' Final dervived classes must expose Public Sub New(ByVal parent As IChannelFrame, ByVal state As IChannelFrameParsingState, ByVal index As Int32, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
-        MyClass.New(channelCell.Parent, channelCell.AlignOnDWordBoundry, channelCell.IDCode)
+        ' Derived classes are expected to expose a Protected Sub New(ByVal channelCell As IChannelCell)
+        Protected Sub New(ByVal channelCell As IChannelCell)
 
-    End Sub
+            MyClass.New(channelCell.Parent, channelCell.AlignOnDWordBoundry, channelCell.IDCode)
 
-    Public Overridable ReadOnly Property Parent() As IChannelFrame Implements IChannelCell.Parent
-        Get
-            Return m_parent
-        End Get
-    End Property
+        End Sub
 
-    Public Overridable Property IDCode() As UInt16 Implements IChannelCell.IDCode
-        Get
-            Return m_idCode
-        End Get
-        Set(ByVal value As UInt16)
-            m_idCode = value
-        End Set
-    End Property
+        Public Overridable ReadOnly Property Parent() As IChannelFrame Implements IChannelCell.Parent
+            Get
+                Return m_parent
+            End Get
+        End Property
 
-    Public Overridable ReadOnly Property AlignOnDWordBoundry() As Boolean Implements IChannelCell.AlignOnDWordBoundry
-        Get
-            Return m_alignOnDWordBoundry
-        End Get
-    End Property
+        Public Overridable Property IDCode() As UInt16 Implements IChannelCell.IDCode
+            Get
+                Return m_idCode
+            End Get
+            Set(ByVal value As UInt16)
+                m_idCode = value
+            End Set
+        End Property
 
-    Public Overrides ReadOnly Property BinaryLength() As UInt16
-        Get
-            Dim length As UInt16 = MyBase.BinaryLength
+        Public Overridable ReadOnly Property AlignOnDWordBoundry() As Boolean Implements IChannelCell.AlignOnDWordBoundry
+            Get
+                Return m_alignOnDWordBoundry
+            End Get
+        End Property
 
-            If m_alignOnDWordBoundry Then
-                ' If requested, we align frame cells on 32-bit word boundries
-                Do Until length Mod 4 = 0
-                    length += 1
-                Loop
-            End If
+        Public Overrides ReadOnly Property BinaryLength() As UInt16
+            Get
+                Dim length As UInt16 = MyBase.BinaryLength
 
-            Return length
+                If m_alignOnDWordBoundry Then
+                    ' If requested, we align frame cells on 32-bit word boundries
+                    Do Until length Mod 4 = 0
+                        length += 1
+                    Loop
+                End If
 
-        End Get
-    End Property
+                Return length
 
-    Public Overridable Sub GetObjectData(ByVal info As System.Runtime.Serialization.SerializationInfo, ByVal context As System.Runtime.Serialization.StreamingContext) Implements System.Runtime.Serialization.ISerializable.GetObjectData
+            End Get
+        End Property
 
-        ' Serialize basic channel cell values
-        info.AddValue("parent", m_parent, GetType(IChannelFrame))
-        info.AddValue("id", m_idCode)
-        info.AddValue("alignOnDWordBoundry", m_alignOnDWordBoundry)
+        Public Overridable Sub GetObjectData(ByVal info As System.Runtime.Serialization.SerializationInfo, ByVal context As System.Runtime.Serialization.StreamingContext) Implements System.Runtime.Serialization.ISerializable.GetObjectData
 
-    End Sub
+            ' Serialize basic channel cell values
+            info.AddValue("parent", m_parent, GetType(IChannelFrame))
+            info.AddValue("id", m_idCode)
+            info.AddValue("alignOnDWordBoundry", m_alignOnDWordBoundry)
 
-    Public Overrides ReadOnly Property Attributes() As Dictionary(Of String, String)
-        Get
-            Dim baseAttributes As Dictionary(Of String, String) = MyBase.Attributes
+        End Sub
 
-            baseAttributes.Add("ID Code", IDCode)
-            baseAttributes.Add("Align on DWord Boundry", AlignOnDWordBoundry)
+        Public Overrides ReadOnly Property Attributes() As Dictionary(Of String, String)
+            Get
+                Dim baseAttributes As Dictionary(Of String, String) = MyBase.Attributes
 
-            Return baseAttributes
-        End Get
-    End Property
+                baseAttributes.Add("ID Code", IDCode)
+                baseAttributes.Add("Align on DWord Boundry", AlignOnDWordBoundry)
 
-End Class
+                Return baseAttributes
+            End Get
+        End Property
 
+    End Class
+
+End Namespace

@@ -18,95 +18,99 @@
 Imports System.Runtime.Serialization
 Imports TVA.DateTime
 
-''' <summary>This class represents the protocol independent common implementation of a data frame that can be sent or received from a PMU.</summary>
-<CLSCompliant(False), Serializable()> _
-Public MustInherit Class DataFrameBase
+Namespace Phasors
 
-    Inherits ChannelFrameBase(Of IDataCell)
-    Implements IDataFrame
+    ''' <summary>This class represents the protocol independent common implementation of a data frame that can be sent or received from a PMU.</summary>
+    <CLSCompliant(False), Serializable()> _
+    Public MustInherit Class DataFrameBase
 
-    Private m_configurationFrame As IConfigurationFrame
+        Inherits ChannelFrameBase(Of IDataCell)
+        Implements IDataFrame
 
-    Protected Sub New()
-    End Sub
+        Private m_configurationFrame As IConfigurationFrame
 
-    Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
+        Protected Sub New()
+        End Sub
 
-        MyBase.New(info, context)
+        Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
 
-        ' Deserialize data frame
-        m_configurationFrame = info.GetValue("configurationFrame", GetType(IConfigurationFrame))
+            MyBase.New(info, context)
 
-    End Sub
+            ' Deserialize data frame
+            m_configurationFrame = info.GetValue("configurationFrame", GetType(IConfigurationFrame))
 
-    Protected Sub New(ByVal cells As DataCellCollection)
+        End Sub
 
-        MyBase.New(cells)
+        Protected Sub New(ByVal cells As DataCellCollection)
 
-    End Sub
+            MyBase.New(cells)
 
-    Protected Sub New(ByVal cells As DataCellCollection, ByVal ticks As Long, ByVal configurationFrame As IConfigurationFrame)
+        End Sub
 
-        MyBase.New(0, cells, ticks)
+        Protected Sub New(ByVal cells As DataCellCollection, ByVal ticks As Long, ByVal configurationFrame As IConfigurationFrame)
 
-        m_configurationFrame = configurationFrame
+            MyBase.New(0, cells, ticks)
 
-    End Sub
+            m_configurationFrame = configurationFrame
 
-    ' Derived classes are expected to expose a Public Sub New(ByVal configurationFrame As IConfigurationFrame, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
-    ' and automatically pass in parsing state
-    Protected Sub New(ByVal state As IDataFrameParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
+        End Sub
 
-        MyBase.New(state, binaryImage, startIndex)
+        ' Derived classes are expected to expose a Public Sub New(ByVal configurationFrame As IConfigurationFrame, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
+        ' and automatically pass in parsing state
+        Protected Sub New(ByVal state As IDataFrameParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
-        m_configurationFrame = state.ConfigurationFrame
+            MyBase.New(state, binaryImage, startIndex)
 
-    End Sub
+            m_configurationFrame = state.ConfigurationFrame
 
-    ' Derived classes are expected to expose a Public Sub New(ByVal dataFrame As IDataFrame)
-    Protected Sub New(ByVal dataFrame As IDataFrame)
+        End Sub
 
-        MyClass.New(dataFrame.Cells, dataFrame.Ticks, dataFrame.ConfigurationFrame)
+        ' Derived classes are expected to expose a Public Sub New(ByVal dataFrame As IDataFrame)
+        Protected Sub New(ByVal dataFrame As IDataFrame)
 
-    End Sub
+            MyClass.New(dataFrame.Cells, dataFrame.Ticks, dataFrame.ConfigurationFrame)
 
-    Protected Overrides ReadOnly Property FundamentalFrameType() As FundamentalFrameType
-        Get
-            Return Phasors.FundamentalFrameType.DataFrame
-        End Get
-    End Property
+        End Sub
 
-    Public Overridable Property ConfigurationFrame() As IConfigurationFrame Implements IDataFrame.ConfigurationFrame
-        Get
-            Return m_configurationFrame
-        End Get
-        Set(ByVal value As IConfigurationFrame)
-            m_configurationFrame = value
-        End Set
-    End Property
+        Protected Overrides ReadOnly Property FundamentalFrameType() As FundamentalFrameType
+            Get
+                Return TVA.Phasors.FundamentalFrameType.DataFrame
+            End Get
+        End Property
 
-    Public Overrides Property IDCode() As UInt16
-        Get
-            Return m_configurationFrame.IDCode
-        End Get
-        Set(ByVal value As UInt16)
-            Throw New NotSupportedException("IDCode of a data frame is read-only, change IDCode of associated configuration frame instead")
-        End Set
-    End Property
+        Public Overridable Property ConfigurationFrame() As IConfigurationFrame Implements IDataFrame.ConfigurationFrame
+            Get
+                Return m_configurationFrame
+            End Get
+            Set(ByVal value As IConfigurationFrame)
+                m_configurationFrame = value
+            End Set
+        End Property
 
-    Public Overridable Shadows ReadOnly Property Cells() As DataCellCollection Implements IDataFrame.Cells
-        Get
-            Return MyBase.Cells
-        End Get
-    End Property
+        Public Overrides Property IDCode() As UInt16
+            Get
+                Return m_configurationFrame.IDCode
+            End Get
+            Set(ByVal value As UInt16)
+                Throw New NotSupportedException("IDCode of a data frame is read-only, change IDCode of associated configuration frame instead")
+            End Set
+        End Property
 
-    Public Overrides Sub GetObjectData(ByVal info As System.Runtime.Serialization.SerializationInfo, ByVal context As System.Runtime.Serialization.StreamingContext)
+        Public Overridable Shadows ReadOnly Property Cells() As DataCellCollection Implements IDataFrame.Cells
+            Get
+                Return MyBase.Cells
+            End Get
+        End Property
 
-        MyBase.GetObjectData(info, context)
+        Public Overrides Sub GetObjectData(ByVal info As System.Runtime.Serialization.SerializationInfo, ByVal context As System.Runtime.Serialization.StreamingContext)
 
-        ' Serialize data frame
-        info.AddValue("configurationFrame", m_configurationFrame, GetType(IConfigurationFrame))
+            MyBase.GetObjectData(info, context)
 
-    End Sub
+            ' Serialize data frame
+            info.AddValue("configurationFrame", m_configurationFrame, GetType(IConfigurationFrame))
 
-End Class
+        End Sub
+
+    End Class
+
+End Namespace

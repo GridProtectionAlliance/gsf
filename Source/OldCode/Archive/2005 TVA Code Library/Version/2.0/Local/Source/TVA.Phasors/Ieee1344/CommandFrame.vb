@@ -20,7 +20,7 @@ Imports System.ComponentModel
 Imports TVA.DateTime
 Imports TVA.IO.Compression.Common
 
-Namespace Ieee1344
+Namespace Phasors.Ieee1344
 
     <CLSCompliant(False), Serializable()> _
     Public Class CommandFrame

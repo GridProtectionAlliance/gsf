@@ -15,20 +15,24 @@
 '
 '*******************************************************************************************************
 
-''' <summary>This interface represents the protocol independent parsing state of a set of configuration related data settings (typically related to a PMU).</summary>
-<CLSCompliant(False)> _
-Public Interface IConfigurationCellParsingState
+Namespace Phasors
 
-    Inherits IChannelCellParsingState
+    ''' <summary>This interface represents the protocol independent parsing state of a set of configuration related data settings (typically related to a PMU).</summary>
+    <CLSCompliant(False)> _
+    Public Interface IConfigurationCellParsingState
 
-    Delegate Function CreateNewDefinitionFunctionSignature(Of T As IChannelDefinition)(ByVal parent As IConfigurationCell, ByVal binaryImage As Byte(), ByVal startIndex As Int32) As T
+        Inherits IChannelCellParsingState
 
-    ReadOnly Property CreateNewPhasorDefintionFunction() As CreateNewDefinitionFunctionSignature(Of IPhasorDefinition)
+        Delegate Function CreateNewDefinitionFunctionSignature(Of T As IChannelDefinition)(ByVal parent As IConfigurationCell, ByVal binaryImage As Byte(), ByVal startIndex As Int32) As T
 
-    ReadOnly Property CreateNewFrequencyDefintionFunction() As CreateNewDefinitionFunctionSignature(Of IFrequencyDefinition)
+        ReadOnly Property CreateNewPhasorDefintionFunction() As CreateNewDefinitionFunctionSignature(Of IPhasorDefinition)
 
-    ReadOnly Property CreateNewAnalogDefintionFunction() As CreateNewDefinitionFunctionSignature(Of IAnalogDefinition)
+        ReadOnly Property CreateNewFrequencyDefintionFunction() As CreateNewDefinitionFunctionSignature(Of IFrequencyDefinition)
 
-    ReadOnly Property CreateNewDigitalDefintionFunction() As CreateNewDefinitionFunctionSignature(Of IDigitalDefinition)
+        ReadOnly Property CreateNewAnalogDefintionFunction() As CreateNewDefinitionFunctionSignature(Of IAnalogDefinition)
 
-End Interface
+        ReadOnly Property CreateNewDigitalDefintionFunction() As CreateNewDefinitionFunctionSignature(Of IDigitalDefinition)
+
+    End Interface
+
+End Namespace

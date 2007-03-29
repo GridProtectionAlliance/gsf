@@ -17,12 +17,12 @@
 
 Imports System.Runtime.Serialization
 
-Namespace FNet
+Namespace Phasors.FNet
 
     <CLSCompliant(False), Serializable()> _
     Public Class DataCellCollection
 
-        Inherits Phasors.DataCellCollection
+        Inherits TVA.Phasors.DataCellCollection
 
         Public Sub New()
 

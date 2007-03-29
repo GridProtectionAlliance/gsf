@@ -15,21 +15,24 @@
 '
 '*******************************************************************************************************
 
-''' <summary>This interface represents the protocol independent parsing state of any frame of data.</summary>
-<CLSCompliant(False)> _
-Public Interface IChannelFrameParsingState(Of T As IChannelCell)
+Namespace Phasors
 
-    Inherits IChannelParsingState
+    ''' <summary>This interface represents the protocol independent parsing state of any frame of data.</summary>
+    <CLSCompliant(False)> _
+    Public Interface IChannelFrameParsingState(Of T As IChannelCell)
 
-    Delegate Function CreateNewCellFunctionSignature(ByVal parent As IChannelFrame, ByVal state As IChannelFrameParsingState(Of T), ByVal index As Int32, ByVal binaryImage As Byte(), ByVal startIndex As Int32) As T
+        Inherits IChannelParsingState
 
-    ReadOnly Property CreateNewCellFunction() As CreateNewCellFunctionSignature
+        Delegate Function CreateNewCellFunctionSignature(ByVal parent As IChannelFrame, ByVal state As IChannelFrameParsingState(Of T), ByVal index As Int32, ByVal binaryImage As Byte(), ByVal startIndex As Int32) As T
 
-    ReadOnly Property Cells() As IChannelCellCollection(Of T)
+        ReadOnly Property CreateNewCellFunction() As CreateNewCellFunctionSignature
 
-    Property CellCount() As Int32
+        ReadOnly Property Cells() As IChannelCellCollection(Of T)
 
-    Property ParsedBinaryLength() As UInt16
+        Property CellCount() As Int32
 
-End Interface
+        Property ParsedBinaryLength() As UInt16
 
+    End Interface
+
+End Namespace

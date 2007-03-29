@@ -21,7 +21,7 @@ Imports TVA.DateTime.Common
 Imports TVA.Phasors.Common
 Imports TVA.Phasors.IeeeC37_118.Common
 
-Namespace IeeeC37_118
+Namespace Phasors.IeeeC37_118
 
     ' This class generates and parses a frame header specfic to C37.118
     <CLSCompliant(False), Serializable()> _

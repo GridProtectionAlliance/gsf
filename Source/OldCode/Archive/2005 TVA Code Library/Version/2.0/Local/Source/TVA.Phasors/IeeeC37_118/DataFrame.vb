@@ -17,7 +17,7 @@
 
 Imports System.Runtime.Serialization
 
-Namespace IeeeC37_118
+Namespace Phasors.IeeeC37_118
 
     ' This is essentially a "row" of PMU data at a given timestamp
     <CLSCompliant(False), Serializable()> _

@@ -17,7 +17,7 @@
 
 Imports System.Runtime.Serialization
 
-Namespace IeeeC37_118
+Namespace Phasors.IeeeC37_118
 
     ''' <summary>
     ''' IEEE C37.118 Analog Value Class

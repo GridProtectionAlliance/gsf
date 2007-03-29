@@ -20,7 +20,7 @@ Imports System.Text
 Imports TVA.Phasors.Common
 Imports TVA.Phasors.Ieee1344.Common
 
-Namespace Ieee1344
+Namespace Phasors.Ieee1344
 
     <CLSCompliant(False), Serializable()> _
     Public Class ConfigurationCell

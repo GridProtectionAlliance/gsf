@@ -20,115 +20,119 @@ Imports System.Buffer
 Imports System.Text
 Imports TVA.Phasors.Common
 
-''' <summary>This class represents the protocol independent common implementation of an element of header frame data that can be received from a PMU.</summary>
-<CLSCompliant(False), Serializable()> _
-Public Class HeaderCell
+Namespace Phasors
 
-    Inherits ChannelCellBase
-    Implements IHeaderCell
+    ''' <summary>This class represents the protocol independent common implementation of an element of header frame data that can be received from a PMU.</summary>
+    <CLSCompliant(False), Serializable()> _
+    Public Class HeaderCell
 
-    Private m_character As Byte
+        Inherits ChannelCellBase
+        Implements IHeaderCell
 
-    Protected Sub New()
-    End Sub
+        Private m_character As Byte
 
-    Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
+        Protected Sub New()
+        End Sub
 
-        MyBase.New(info, context)
+        Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
 
-        ' Deserialize header cell value
-        m_character = info.GetByte("character")
+            MyBase.New(info, context)
 
-    End Sub
+            ' Deserialize header cell value
+            m_character = info.GetByte("character")
 
-    Public Sub New(ByVal parent As IHeaderFrame)
+        End Sub
 
-        MyBase.New(parent, False)
+        Public Sub New(ByVal parent As IHeaderFrame)
 
-    End Sub
+            MyBase.New(parent, False)
 
-    Public Sub New(ByVal parent As IHeaderFrame, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
+        End Sub
 
-        MyClass.New(parent)
-        ParseBinaryImage(Nothing, binaryImage, startIndex)
+        Public Sub New(ByVal parent As IHeaderFrame, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
-    End Sub
+            MyClass.New(parent)
+            ParseBinaryImage(Nothing, binaryImage, startIndex)
 
-    Public Sub New(ByVal parent As IHeaderFrame, ByVal character As Byte)
+        End Sub
 
-        MyBase.New(parent, False)
-        m_character = character
+        Public Sub New(ByVal parent As IHeaderFrame, ByVal character As Byte)
 
-    End Sub
+            MyBase.New(parent, False)
+            m_character = character
 
-    Public Sub New(ByVal headerCell As IHeaderCell)
+        End Sub
 
-        MyClass.New(headerCell.Parent, headerCell.Character)
+        Public Sub New(ByVal headerCell As IHeaderCell)
 
-    End Sub
+            MyClass.New(headerCell.Parent, headerCell.Character)
 
-    Friend Shared Function CreateNewHeaderCell(ByVal parent As IChannelFrame, ByVal state As IChannelFrameParsingState(Of IHeaderCell), ByVal index As Int32, ByVal binaryImage As Byte(), ByVal startIndex As Int32) As IHeaderCell
+        End Sub
 
-        Return New HeaderCell(parent, binaryImage, startIndex)
+        Friend Shared Function CreateNewHeaderCell(ByVal parent As IChannelFrame, ByVal state As IChannelFrameParsingState(Of IHeaderCell), ByVal index As Int32, ByVal binaryImage As Byte(), ByVal startIndex As Int32) As IHeaderCell
 
-    End Function
+            Return New HeaderCell(parent, binaryImage, startIndex)
 
-    Public Overrides ReadOnly Property DerivedType() As System.Type
-        Get
-            Return Me.GetType()
-        End Get
-    End Property
+        End Function
 
-    Public Overridable Shadows ReadOnly Property Parent() As IHeaderFrame Implements IHeaderCell.Parent
-        Get
-            Return MyBase.Parent
-        End Get
-    End Property
+        Public Overrides ReadOnly Property DerivedType() As System.Type
+            Get
+                Return Me.GetType()
+            End Get
+        End Property
 
-    Public Overridable Property Character() As Byte Implements IHeaderCell.Character
-        Get
-            Return m_character
-        End Get
-        Set(ByVal value As Byte)
-            m_character = value
-        End Set
-    End Property
+        Public Overridable Shadows ReadOnly Property Parent() As IHeaderFrame Implements IHeaderCell.Parent
+            Get
+                Return MyBase.Parent
+            End Get
+        End Property
 
-    Protected Overrides ReadOnly Property BodyLength() As UInt16
-        Get
-            Return 1
-        End Get
-    End Property
+        Public Overridable Property Character() As Byte Implements IHeaderCell.Character
+            Get
+                Return m_character
+            End Get
+            Set(ByVal value As Byte)
+                m_character = value
+            End Set
+        End Property
 
-    Protected Overrides ReadOnly Property BodyImage() As Byte()
-        Get
-            Return New Byte() {m_character}
-        End Get
-    End Property
+        Protected Overrides ReadOnly Property BodyLength() As UInt16
+            Get
+                Return 1
+            End Get
+        End Property
 
-    Protected Overrides Sub ParseBodyImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
+        Protected Overrides ReadOnly Property BodyImage() As Byte()
+            Get
+                Return New Byte() {m_character}
+            End Get
+        End Property
 
-        m_character = binaryImage(startIndex)
+        Protected Overrides Sub ParseBodyImage(ByVal state As IChannelParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
-    End Sub
+            m_character = binaryImage(startIndex)
 
-    Public Overrides Sub GetObjectData(ByVal info As System.Runtime.Serialization.SerializationInfo, ByVal context As System.Runtime.Serialization.StreamingContext)
+        End Sub
 
-        MyBase.GetObjectData(info, context)
+        Public Overrides Sub GetObjectData(ByVal info As System.Runtime.Serialization.SerializationInfo, ByVal context As System.Runtime.Serialization.StreamingContext)
 
-        ' Serialize header cell value
-        info.AddValue("character", m_character)
+            MyBase.GetObjectData(info, context)
 
-    End Sub
+            ' Serialize header cell value
+            info.AddValue("character", m_character)
 
-    Public Overrides ReadOnly Property Attributes() As Dictionary(Of String, String)
-        Get
-            Dim baseAttributes As Dictionary(Of String, String) = MyBase.Attributes
+        End Sub
 
-            baseAttributes.Add("Character", Encoding.ASCII.GetString(New Byte() {Character}))
+        Public Overrides ReadOnly Property Attributes() As Dictionary(Of String, String)
+            Get
+                Dim baseAttributes As Dictionary(Of String, String) = MyBase.Attributes
 
-            Return baseAttributes
-        End Get
-    End Property
+                baseAttributes.Add("Character", Encoding.ASCII.GetString(New Byte() {Character}))
 
-End Class
+                Return baseAttributes
+            End Get
+        End Property
+
+    End Class
+
+End Namespace

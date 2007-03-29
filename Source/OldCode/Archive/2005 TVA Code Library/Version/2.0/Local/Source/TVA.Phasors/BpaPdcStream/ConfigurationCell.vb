@@ -20,7 +20,7 @@ Imports System.Text
 Imports TVA.Phasors.Common
 Imports TVA.Phasors.BpaPdcStream.Common
 
-Namespace BpaPdcStream
+Namespace Phasors.BpaPdcStream
 
     <CLSCompliant(False), Serializable()> _
     Public Class ConfigurationCell

@@ -15,16 +15,19 @@
 '
 '*******************************************************************************************************
 
-''' <summary>This interface represents a protocol independent parsing state of any kind of data cell.</summary>
-Public Interface IChannelCellParsingState
+Namespace Phasors
 
-    Inherits IChannelParsingState
+    ''' <summary>This interface represents a protocol independent parsing state of any kind of data cell.</summary>
+    Public Interface IChannelCellParsingState
 
-    Property PhasorCount() As Int32
+        Inherits IChannelParsingState
 
-    Property AnalogCount() As Int32
+        Property PhasorCount() As Int32
 
-    Property DigitalCount() As Int32
+        Property AnalogCount() As Int32
 
-End Interface
+        Property DigitalCount() As Int32
 
+    End Interface
+
+End Namespace

@@ -15,7 +15,7 @@
 '
 '*******************************************************************************************************
 
-Namespace BpaPdcStream
+Namespace Phasors.BpaPdcStream
 
     <CLSCompliant(False)> _
     Public Interface ICommonFrameHeader

@@ -17,7 +17,7 @@
 
 Imports System.Runtime.Serialization
 
-Namespace BpaPdcStream
+Namespace Phasors.BpaPdcStream
 
     ''' <summary>
     ''' BPA PDCstream Analog Value Class

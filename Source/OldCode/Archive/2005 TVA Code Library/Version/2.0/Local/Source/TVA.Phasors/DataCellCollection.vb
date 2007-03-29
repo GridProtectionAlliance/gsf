@@ -17,31 +17,35 @@
 
 Imports System.Runtime.Serialization
 
-''' <summary>This class represents the protocol independent collection of the common implementation of a set of phasor related data values that can be sent or received from a PMU.</summary>
-<CLSCompliant(False), Serializable()> _
-Public Class DataCellCollection
+Namespace Phasors
 
-    Inherits ChannelCellCollectionBase(Of IDataCell)
+    ''' <summary>This class represents the protocol independent collection of the common implementation of a set of phasor related data values that can be sent or received from a PMU.</summary>
+    <CLSCompliant(False), Serializable()> _
+    Public Class DataCellCollection
 
-    Protected Sub New()
-    End Sub
+        Inherits ChannelCellCollectionBase(Of IDataCell)
 
-    Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
+        Protected Sub New()
+        End Sub
 
-        MyBase.New(info, context)
+        Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
 
-    End Sub
+            MyBase.New(info, context)
 
-    Public Sub New(ByVal maximumCount As Int32, ByVal constantCellLength As Boolean)
+        End Sub
 
-        MyBase.New(maximumCount, constantCellLength)
+        Public Sub New(ByVal maximumCount As Int32, ByVal constantCellLength As Boolean)
 
-    End Sub
+            MyBase.New(maximumCount, constantCellLength)
 
-    Public Overrides ReadOnly Property DerivedType() As Type
-        Get
-            Return Me.GetType()
-        End Get
-    End Property
+        End Sub
 
-End Class
+        Public Overrides ReadOnly Property DerivedType() As Type
+            Get
+                Return Me.GetType()
+            End Get
+        End Property
+
+    End Class
+
+End Namespace

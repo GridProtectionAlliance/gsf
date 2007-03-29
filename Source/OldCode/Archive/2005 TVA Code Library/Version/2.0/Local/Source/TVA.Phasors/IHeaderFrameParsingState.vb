@@ -15,12 +15,16 @@
 '
 '*******************************************************************************************************
 
-''' <summary>This interface represents the protocol independent parsing state of any header frame.</summary>
-<CLSCompliant(False)> _
-Public Interface IHeaderFrameParsingState
+Namespace Phasors
 
-    Inherits IChannelFrameParsingState(Of IHeaderCell)
+    ''' <summary>This interface represents the protocol independent parsing state of any header frame.</summary>
+    <CLSCompliant(False)> _
+    Public Interface IHeaderFrameParsingState
 
-    Shadows ReadOnly Property Cells() As HeaderCellCollection
+        Inherits IChannelFrameParsingState(Of IHeaderCell)
 
-End Interface
+        Shadows ReadOnly Property Cells() As HeaderCellCollection
+
+    End Interface
+
+End Namespace

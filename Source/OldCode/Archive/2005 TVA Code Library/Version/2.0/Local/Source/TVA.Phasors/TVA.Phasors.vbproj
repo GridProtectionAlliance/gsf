@@ -7,7 +7,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{54CA98CC-2F0A-41F2-879D-0E42B17E8544}</ProjectGuid>
     <OutputType>Library</OutputType>
-    <RootNamespace>TVA.Phasors</RootNamespace>
+    <RootNamespace>TVA</RootNamespace>
     <AssemblyName>TVA.Phasors</AssemblyName>
     <MyType>Windows</MyType>
     <SccProjectName>SAK</SccProjectName>
@@ -260,7 +260,6 @@
     <None Include="Relationship Diagrams\HeaderCell Collection Relationships.cd" />
     <None Include="Relationship Diagrams\HeaderCell Relationships.cd" />
     <None Include="Relationship Diagrams\HeaderFrame Relationships.cd" />
-    <None Include="Relationship Diagrams\Phasor Class Diagram.cd" />
     <None Include="Relationship Diagrams\Phasor Definition Relationships.cd" />
     <None Include="Relationship Diagrams\Phasor Value Relationships.cd" />
   </ItemGroup>

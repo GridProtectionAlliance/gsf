@@ -15,18 +15,22 @@
 '
 '*******************************************************************************************************
 
-''' <summary>This class represents the protocol independent interface of a frequency value.</summary>
-<CLSCompliant(False)> _
-Public Interface IFrequencyValue
+Namespace Phasors
 
-    Inherits IChannelValue(Of IFrequencyDefinition)
+    ''' <summary>This class represents the protocol independent interface of a frequency value.</summary>
+    <CLSCompliant(False)> _
+    Public Interface IFrequencyValue
 
-    Property Frequency() As Single
+        Inherits IChannelValue(Of IFrequencyDefinition)
 
-    Property DfDt() As Single
+        Property Frequency() As Single
 
-    Property UnscaledFrequency() As Int16
+        Property DfDt() As Single
 
-    Property UnscaledDfDt() As Int16
+        Property UnscaledFrequency() As Int16
 
-End Interface
+        Property UnscaledDfDt() As Int16
+
+    End Interface
+
+End Namespace

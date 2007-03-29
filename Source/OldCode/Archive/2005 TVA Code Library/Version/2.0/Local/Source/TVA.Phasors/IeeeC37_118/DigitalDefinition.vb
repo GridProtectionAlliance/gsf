@@ -20,7 +20,7 @@ Imports System.ComponentModel
 Imports System.Text
 Imports TVA.Phasors.Common
 
-Namespace IeeeC37_118
+Namespace Phasors.IeeeC37_118
 
     <CLSCompliant(False), Serializable()> _
     Public Class DigitalDefinition

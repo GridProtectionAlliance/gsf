@@ -17,120 +17,124 @@
 
 Imports System.Runtime.Serialization
 
-''' <summary>This class represents the common implementation of the protocol independent definition of a phasor value.</summary>
-<CLSCompliant(False), Serializable()> _
-Public MustInherit Class PhasorDefinitionBase
+Namespace Phasors
 
-    Inherits ChannelDefinitionBase
-    Implements IPhasorDefinition
+    ''' <summary>This class represents the common implementation of the protocol independent definition of a phasor value.</summary>
+    <CLSCompliant(False), Serializable()> _
+    Public MustInherit Class PhasorDefinitionBase
 
-    Private m_type As PhasorType
-    Private m_voltageReference As IPhasorDefinition
+        Inherits ChannelDefinitionBase
+        Implements IPhasorDefinition
 
-    Protected Sub New()
-    End Sub
+        Private m_type As PhasorType
+        Private m_voltageReference As IPhasorDefinition
 
-    Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
+        Protected Sub New()
+        End Sub
 
-        MyBase.New(info, context)
+        Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
 
-        ' Deserialize phasor definition
-        m_type = info.GetValue("type", GetType(PhasorType))
-        m_voltageReference = info.GetValue("voltageReference", GetType(IPhasorDefinition))
+            MyBase.New(info, context)
 
-    End Sub
+            ' Deserialize phasor definition
+            m_type = info.GetValue("type", GetType(PhasorType))
+            m_voltageReference = info.GetValue("voltageReference", GetType(IPhasorDefinition))
 
-    Protected Sub New(ByVal parent As IConfigurationCell)
+        End Sub
 
-        MyBase.New(parent)
+        Protected Sub New(ByVal parent As IConfigurationCell)
 
-        m_type = PhasorType.Voltage
-        m_voltageReference = Me
+            MyBase.New(parent)
 
-    End Sub
-
-    Protected Sub New(ByVal parent As IConfigurationCell, ByVal index As Int32, ByVal label As String, ByVal scale As Int32, ByVal offset As Single, ByVal type As PhasorType, ByVal voltageReference As IPhasorDefinition)
-
-        MyBase.New(parent, index, label, scale, offset)
-
-        m_type = type
-
-        If type = PhasorType.Voltage Then
+            m_type = PhasorType.Voltage
             m_voltageReference = Me
-        Else
-            m_voltageReference = voltageReference
-        End If
 
-    End Sub
+        End Sub
 
-    Protected Sub New(ByVal parent As IConfigurationCell, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
+        Protected Sub New(ByVal parent As IConfigurationCell, ByVal index As Int32, ByVal label As String, ByVal scale As Int32, ByVal offset As Single, ByVal type As PhasorType, ByVal voltageReference As IPhasorDefinition)
 
-        MyBase.New(parent, binaryImage, startIndex)
+            MyBase.New(parent, index, label, scale, offset)
 
-    End Sub
+            m_type = type
 
-    ' Derived classes are expected to expose a Public Sub New(ByVal phasorDefinition As IPhasorDefinition)
-    Protected Sub New(ByVal phasorDefinition As IPhasorDefinition)
-
-        MyClass.New(phasorDefinition.Parent, phasorDefinition.Index, phasorDefinition.Label, _
-            phasorDefinition.ScalingFactor, phasorDefinition.Offset, phasorDefinition.Type, phasorDefinition.VoltageReference)
-
-    End Sub
-
-    Public Overrides ReadOnly Property DataFormat() As DataFormat
-        Get
-            Return Parent.PhasorDataFormat
-        End Get
-    End Property
-
-    Public Overridable ReadOnly Property CoordinateFormat() As CoordinateFormat Implements IPhasorDefinition.CoordinateFormat
-        Get
-            Return Parent.PhasorCoordinateFormat
-        End Get
-    End Property
-
-    Public Overridable Property [Type]() As PhasorType Implements IPhasorDefinition.Type
-        Get
-            Return m_type
-        End Get
-        Set(ByVal value As PhasorType)
-            m_type = value
-        End Set
-    End Property
-
-    Public Overridable Property VoltageReference() As IPhasorDefinition Implements IPhasorDefinition.VoltageReference
-        Get
-            Return m_voltageReference
-        End Get
-        Set(ByVal value As IPhasorDefinition)
-            If m_type = PhasorType.Voltage Then
-                If Not value Is Me Then
-                    Throw New NotImplementedException("Voltage phasors do not have a voltage reference")
-                End If
+            If type = PhasorType.Voltage Then
+                m_voltageReference = Me
             Else
-                m_voltageReference = value
+                m_voltageReference = voltageReference
             End If
-        End Set
-    End Property
 
-    Public Overrides Sub GetObjectData(ByVal info As System.Runtime.Serialization.SerializationInfo, ByVal context As System.Runtime.Serialization.StreamingContext)
+        End Sub
 
-        MyBase.GetObjectData(info, context)
+        Protected Sub New(ByVal parent As IConfigurationCell, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
-        ' Serialize phasor definition
-        info.AddValue("type", m_type, GetType(PhasorType))
-        info.AddValue("voltageReference", m_voltageReference, GetType(IPhasorDefinition))
+            MyBase.New(parent, binaryImage, startIndex)
 
-    End Sub
+        End Sub
 
-    Public Overrides ReadOnly Property Attributes() As Dictionary(Of String, String)
-        Get
-            Dim baseAttributes As Dictionary(Of String, String) = MyBase.Attributes
+        ' Derived classes are expected to expose a Public Sub New(ByVal phasorDefinition As IPhasorDefinition)
+        Protected Sub New(ByVal phasorDefinition As IPhasorDefinition)
 
-            baseAttributes.Add("Phasor Type", [Type] & ": " & [Enum].GetName(GetType(PhasorType), [Type]))
+            MyClass.New(phasorDefinition.Parent, phasorDefinition.Index, phasorDefinition.Label, _
+                phasorDefinition.ScalingFactor, phasorDefinition.Offset, phasorDefinition.Type, phasorDefinition.VoltageReference)
 
-            Return baseAttributes
-        End Get
-    End Property
+        End Sub
 
-End Class
+        Public Overrides ReadOnly Property DataFormat() As DataFormat
+            Get
+                Return Parent.PhasorDataFormat
+            End Get
+        End Property
+
+        Public Overridable ReadOnly Property CoordinateFormat() As CoordinateFormat Implements IPhasorDefinition.CoordinateFormat
+            Get
+                Return Parent.PhasorCoordinateFormat
+            End Get
+        End Property
+
+        Public Overridable Property [Type]() As PhasorType Implements IPhasorDefinition.Type
+            Get
+                Return m_type
+            End Get
+            Set(ByVal value As PhasorType)
+                m_type = value
+            End Set
+        End Property
+
+        Public Overridable Property VoltageReference() As IPhasorDefinition Implements IPhasorDefinition.VoltageReference
+            Get
+                Return m_voltageReference
+            End Get
+            Set(ByVal value As IPhasorDefinition)
+                If m_type = PhasorType.Voltage Then
+                    If Not value Is Me Then
+                        Throw New NotImplementedException("Voltage phasors do not have a voltage reference")
+                    End If
+                Else
+                    m_voltageReference = value
+                End If
+            End Set
+        End Property
+
+        Public Overrides Sub GetObjectData(ByVal info As System.Runtime.Serialization.SerializationInfo, ByVal context As System.Runtime.Serialization.StreamingContext)
+
+            MyBase.GetObjectData(info, context)
+
+            ' Serialize phasor definition
+            info.AddValue("type", m_type, GetType(PhasorType))
+            info.AddValue("voltageReference", m_voltageReference, GetType(IPhasorDefinition))
+
+        End Sub
+
+        Public Overrides ReadOnly Property Attributes() As Dictionary(Of String, String)
+            Get
+                Dim baseAttributes As Dictionary(Of String, String) = MyBase.Attributes
+
+                baseAttributes.Add("Phasor Type", [Type] & ": " & [Enum].GetName(GetType(PhasorType), [Type]))
+
+                Return baseAttributes
+            End Get
+        End Property
+
+    End Class
+
+End Namespace

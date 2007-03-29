@@ -15,7 +15,7 @@
 '
 '*******************************************************************************************************
 
-Namespace IeeeC37_118
+Namespace Phasors.IeeeC37_118
 
     <CLSCompliant(False)> _
     Public Interface ICommonFrameHeader

@@ -15,29 +15,33 @@
 '
 '*******************************************************************************************************
 
-''' <summary>This class represents the protocol independent common implementation the parsing state of a data frame that can be sent or received from a PMU.</summary>
-<CLSCompliant(False)> _
-Public Class ConfigurationFrameParsingState
+Namespace Phasors
 
-    Inherits ChannelFrameParsingStateBase(Of IConfigurationCell)
-    Implements IConfigurationFrameParsingState
+    ''' <summary>This class represents the protocol independent common implementation the parsing state of a data frame that can be sent or received from a PMU.</summary>
+    <CLSCompliant(False)> _
+    Public Class ConfigurationFrameParsingState
 
-    Public Sub New(ByVal cells As ConfigurationCellCollection, ByVal frameLength As Int16, ByVal createNewCellFunction As IChannelFrameParsingState(Of IConfigurationCell).CreateNewCellFunctionSignature)
+        Inherits ChannelFrameParsingStateBase(Of IConfigurationCell)
+        Implements IConfigurationFrameParsingState
 
-        MyBase.New(cells, frameLength, createNewCellFunction)
+        Public Sub New(ByVal cells As ConfigurationCellCollection, ByVal frameLength As Int16, ByVal createNewCellFunction As IChannelFrameParsingState(Of IConfigurationCell).CreateNewCellFunctionSignature)
 
-    End Sub
+            MyBase.New(cells, frameLength, createNewCellFunction)
 
-    Public Overrides ReadOnly Property DerivedType() As System.Type
-        Get
-            Return Me.GetType()
-        End Get
-    End Property
+        End Sub
 
-    Public Overridable Shadows ReadOnly Property Cells() As ConfigurationCellCollection Implements IConfigurationFrameParsingState.Cells
-        Get
-            Return MyBase.Cells
-        End Get
-    End Property
+        Public Overrides ReadOnly Property DerivedType() As System.Type
+            Get
+                Return Me.GetType()
+            End Get
+        End Property
 
-End Class
+        Public Overridable Shadows ReadOnly Property Cells() As ConfigurationCellCollection Implements IConfigurationFrameParsingState.Cells
+            Get
+                Return MyBase.Cells
+            End Get
+        End Property
+
+    End Class
+
+End Namespace

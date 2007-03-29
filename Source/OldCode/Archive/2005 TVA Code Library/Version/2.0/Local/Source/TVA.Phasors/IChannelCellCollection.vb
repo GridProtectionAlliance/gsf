@@ -15,11 +15,14 @@
 '
 '*******************************************************************************************************
 
-''' <summary>This interface represents a protocol independent representation of a collection of any kind of data cell.</summary>
-<CLSCompliant(False)> _
-Public Interface IChannelCellCollection(Of T As IChannelCell)
+Namespace Phasors
 
-    Inherits IChannelCollection(Of T)
+    ''' <summary>This interface represents a protocol independent representation of a collection of any kind of data cell.</summary>
+    <CLSCompliant(False)> _
+    Public Interface IChannelCellCollection(Of T As IChannelCell)
 
-End Interface
+        Inherits IChannelCollection(Of T)
 
+    End Interface
+
+End Namespace

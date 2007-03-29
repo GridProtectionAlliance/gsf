@@ -15,7 +15,7 @@
 '
 '*******************************************************************************************************
 
-Namespace FNet
+Namespace Phasors.FNet
 
     <CLSCompliant(False)> _
     Public NotInheritable Class Common

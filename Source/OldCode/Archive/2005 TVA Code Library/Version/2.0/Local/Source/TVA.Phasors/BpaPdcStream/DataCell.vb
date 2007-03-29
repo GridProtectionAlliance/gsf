@@ -18,7 +18,7 @@
 Imports System.Runtime.Serialization
 Imports TVA.Phasors.BpaPdcStream.Common
 
-Namespace BpaPdcStream
+Namespace Phasors.BpaPdcStream
 
     ' This data cell represents what most might call a "field" in table of rows - it is a single unit of data for a specific PMU
     <CLSCompliant(False), Serializable()> _

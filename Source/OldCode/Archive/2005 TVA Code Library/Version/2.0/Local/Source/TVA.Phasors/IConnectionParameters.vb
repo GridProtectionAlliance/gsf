@@ -17,12 +17,16 @@
 
 Imports System.Runtime.Serialization
 
-''' <summary>This interface represents the protocol independent representation of any specific needed connection parameters.</summary>
-Public Interface IConnectionParameters
+Namespace Phasors
 
-    Inherits ISerializable
+    ''' <summary>This interface represents the protocol independent representation of any specific needed connection parameters.</summary>
+    Public Interface IConnectionParameters
 
-    ''' <summary>Returns True if all connection parmaters are valid</summary>
-    ReadOnly Property ValuesAreValid() As Boolean
+        Inherits ISerializable
 
-End Interface
+        ''' <summary>Returns True if all connection parmaters are valid</summary>
+        ReadOnly Property ValuesAreValid() As Boolean
+
+    End Interface
+
+End Namespace

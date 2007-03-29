@@ -17,70 +17,74 @@
 
 Imports System.Runtime.Serialization
 
-''' <summary>This class represents the common implementation of the protocol independent representation of a collection of any kind of data cell.</summary>
-<CLSCompliant(False), Serializable()> _
-Public MustInherit Class ChannelCellCollectionBase(Of T As IChannelCell)
+Namespace Phasors
 
-    Inherits ChannelCollectionBase(Of T)
-    Implements IChannelCellCollection(Of T)
+    ''' <summary>This class represents the common implementation of the protocol independent representation of a collection of any kind of data cell.</summary>
+    <CLSCompliant(False), Serializable()> _
+    Public MustInherit Class ChannelCellCollectionBase(Of T As IChannelCell)
 
-    Private m_constantCellLength As Boolean
+        Inherits ChannelCollectionBase(Of T)
+        Implements IChannelCellCollection(Of T)
 
-    Protected Sub New()
-    End Sub
+        Private m_constantCellLength As Boolean
 
-    Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
+        Protected Sub New()
+        End Sub
 
-        MyBase.New(info, context)
+        Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
 
-        ' Deserialize extra elements
-        m_constantCellLength = info.GetBoolean("constantCellLength")
+            MyBase.New(info, context)
 
-    End Sub
+            ' Deserialize extra elements
+            m_constantCellLength = info.GetBoolean("constantCellLength")
 
-    Protected Sub New(ByVal maximumCount As Int32, ByVal constantCellLength As Boolean)
+        End Sub
 
-        MyBase.New(maximumCount)
+        Protected Sub New(ByVal maximumCount As Int32, ByVal constantCellLength As Boolean)
 
-        m_constantCellLength = constantCellLength
+            MyBase.New(maximumCount)
 
-    End Sub
+            m_constantCellLength = constantCellLength
 
-    Public Overrides ReadOnly Property BinaryLength() As UInt16
-        Get
-            If m_constantCellLength Then
-                ' Cells will be constant length, so we can quickly calculate lengths
-                Return MyBase.BinaryLength
-            Else
-                ' Cells will be different lengths, so we must manually sum lengths
-                Dim length As UInt16
+        End Sub
 
-                For x As Int32 = 0 To Count - 1
-                    length += Item(x).BinaryLength
-                Next
+        Public Overrides ReadOnly Property BinaryLength() As UInt16
+            Get
+                If m_constantCellLength Then
+                    ' Cells will be constant length, so we can quickly calculate lengths
+                    Return MyBase.BinaryLength
+                Else
+                    ' Cells will be different lengths, so we must manually sum lengths
+                    Dim length As UInt16
 
-                Return length
-            End If
-        End Get
-    End Property
+                    For x As Int32 = 0 To Count - 1
+                        length += Item(x).BinaryLength
+                    Next
 
-    Public Overrides Sub GetObjectData(ByVal info As System.Runtime.Serialization.SerializationInfo, ByVal context As System.Runtime.Serialization.StreamingContext)
+                    Return length
+                End If
+            End Get
+        End Property
 
-        MyBase.GetObjectData(info, context)
+        Public Overrides Sub GetObjectData(ByVal info As System.Runtime.Serialization.SerializationInfo, ByVal context As System.Runtime.Serialization.StreamingContext)
 
-        ' Serialize extra elements
-        info.AddValue("constantCellLength", m_constantCellLength)
+            MyBase.GetObjectData(info, context)
 
-    End Sub
+            ' Serialize extra elements
+            info.AddValue("constantCellLength", m_constantCellLength)
 
-    Public Overrides ReadOnly Property Attributes() As Dictionary(Of String, String)
-        Get
-            Dim baseAttributes As Dictionary(Of String, String) = MyBase.Attributes
+        End Sub
 
-            baseAttributes.Add("Constant Cell Length", m_constantCellLength)
+        Public Overrides ReadOnly Property Attributes() As Dictionary(Of String, String)
+            Get
+                Dim baseAttributes As Dictionary(Of String, String) = MyBase.Attributes
 
-            Return baseAttributes
-        End Get
-    End Property
+                baseAttributes.Add("Constant Cell Length", m_constantCellLength)
 
-End Class
+                Return baseAttributes
+            End Get
+        End Property
+
+    End Class
+
+End Namespace

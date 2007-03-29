@@ -19,7 +19,7 @@ Imports System.ComponentModel
 Imports System.Runtime.Serialization
 Imports System.IO
 
-Namespace BpaPdcStream
+Namespace Phasors.BpaPdcStream
 
 #Region " INI File Name Editor for Property Grid "
 

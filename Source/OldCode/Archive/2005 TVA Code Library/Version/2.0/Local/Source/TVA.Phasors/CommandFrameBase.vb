@@ -19,128 +19,132 @@ Imports System.Runtime.Serialization
 Imports System.Text
 Imports TVA.Phasors.Common
 
-''' <summary>This class represents the protocol independent common implementation of a command frame that can be sent or received from a PMU.</summary>
-<CLSCompliant(False), Serializable()> _
-Public MustInherit Class CommandFrameBase
+Namespace Phasors
 
-    Inherits ChannelFrameBase(Of ICommandCell)
-    Implements ICommandFrame
+    ''' <summary>This class represents the protocol independent common implementation of a command frame that can be sent or received from a PMU.</summary>
+    <CLSCompliant(False), Serializable()> _
+    Public MustInherit Class CommandFrameBase
 
-    Private m_command As DeviceCommand
+        Inherits ChannelFrameBase(Of ICommandCell)
+        Implements ICommandFrame
 
-    Protected Sub New()
-    End Sub
+        Private m_command As DeviceCommand
 
-    Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
+        Protected Sub New()
+        End Sub
 
-        MyBase.New(info, context)
+        Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
 
-        ' Deserialize command frame
-        m_command = info.GetValue("command", GetType(DeviceCommand))
+            MyBase.New(info, context)
 
-    End Sub
+            ' Deserialize command frame
+            m_command = info.GetValue("command", GetType(DeviceCommand))
 
-    Protected Sub New(ByVal cells As CommandCellCollection, ByVal command As DeviceCommand)
+        End Sub
 
-        MyBase.New(cells)
-        m_command = command
+        Protected Sub New(ByVal cells As CommandCellCollection, ByVal command As DeviceCommand)
 
-    End Sub
+            MyBase.New(cells)
+            m_command = command
 
-    ' Derived classes are expected to expose a Public Sub New(ByVal binaryImage As Byte(), ByVal startIndex As Int32)
-    ' and automatically pass in parsing state
-    Protected Sub New(ByVal state As ICommandFrameParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
+        End Sub
 
-        MyBase.New(state, binaryImage, startIndex)
+        ' Derived classes are expected to expose a Public Sub New(ByVal binaryImage As Byte(), ByVal startIndex As Int32)
+        ' and automatically pass in parsing state
+        Protected Sub New(ByVal state As ICommandFrameParsingState, ByVal binaryImage As Byte(), ByVal startIndex As Int32)
 
-    End Sub
+            MyBase.New(state, binaryImage, startIndex)
 
-    ' Derived classes are expected to expose a Public Sub New(ByVal commandFrame As ICommandFrame)
-    Protected Sub New(ByVal commandFrame As ICommandFrame)
+        End Sub
 
-        MyClass.New(commandFrame.Cells, commandFrame.Command)
+        ' Derived classes are expected to expose a Public Sub New(ByVal commandFrame As ICommandFrame)
+        Protected Sub New(ByVal commandFrame As ICommandFrame)
 
-    End Sub
+            MyClass.New(commandFrame.Cells, commandFrame.Command)
 
-    Protected Overrides ReadOnly Property FundamentalFrameType() As FundamentalFrameType
-        Get
-            Return Phasors.FundamentalFrameType.CommandFrame
-        End Get
-    End Property
+        End Sub
 
-    Public Overridable Shadows ReadOnly Property Cells() As CommandCellCollection Implements ICommandFrame.Cells
-        Get
-            Return MyBase.Cells
-        End Get
-    End Property
+        Protected Overrides ReadOnly Property FundamentalFrameType() As FundamentalFrameType
+            Get
+                Return TVA.Phasors.FundamentalFrameType.CommandFrame
+            End Get
+        End Property
 
-    Public Overridable Property Command() As DeviceCommand Implements ICommandFrame.Command
-        Get
-            Return m_command
-        End Get
-        Set(ByVal value As DeviceCommand)
-            m_command = value
-        End Set
-    End Property
+        Public Overridable Shadows ReadOnly Property Cells() As CommandCellCollection Implements ICommandFrame.Cells
+            Get
+                Return MyBase.Cells
+            End Get
+        End Property
 
-    Public Overridable Property ExtendedData() As Byte() Implements ICommandFrame.ExtendedData
-        Get
-            Return Cells.BinaryImage
-        End Get
-        Set(ByVal value As Byte())
-            Cells.Clear()
-            MyBase.ParseBodyImage(New CommandFrameParsingState(Cells, 0, value.Length), value, 0)
-        End Set
-    End Property
+        Public Overridable Property Command() As DeviceCommand Implements ICommandFrame.Command
+            Get
+                Return m_command
+            End Get
+            Set(ByVal value As DeviceCommand)
+                m_command = value
+            End Set
+        End Property
 
-    Protected Overrides ReadOnly Property BodyLength() As UInt16
-        Get
-            Return MyBase.BodyLength + 2
-        End Get
-    End Property
+        Public Overridable Property ExtendedData() As Byte() Implements ICommandFrame.ExtendedData
+            Get
+                Return Cells.BinaryImage
+            End Get
+            Set(ByVal value As Byte())
+                Cells.Clear()
+                MyBase.ParseBodyImage(New CommandFrameParsingState(Cells, 0, value.Length), value, 0)
+            End Set
+        End Property
 
-    Protected Overrides ReadOnly Property BodyImage() As Byte()
-        Get
-            Dim buffer As Byte() = CreateArray(Of Byte)(BodyLength)
-            Dim index As Int32 = 2
+        Protected Overrides ReadOnly Property BodyLength() As UInt16
+            Get
+                Return MyBase.BodyLength + 2
+            End Get
+        End Property
 
-            EndianOrder.BigEndian.CopyBytes(m_command, buffer, 0)
-            CopyImage(MyBase.BodyImage, buffer, index, MyBase.BodyLength)
+        Protected Overrides ReadOnly Property BodyImage() As Byte()
+            Get
+                Dim buffer As Byte() = CreateArray(Of Byte)(BodyLength)
+                Dim index As Int32 = 2
 
-            Return buffer
-        End Get
-    End Property
+                EndianOrder.BigEndian.CopyBytes(m_command, buffer, 0)
+                CopyImage(MyBase.BodyImage, buffer, index, MyBase.BodyLength)
 
-    Protected Overrides Sub ParseBodyImage(ByVal state As IChannelParsingState, ByVal binaryImage() As Byte, ByVal startIndex As Int32)
+                Return buffer
+            End Get
+        End Property
 
-        m_command = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex)
-        MyBase.ParseBodyImage(state, binaryImage, startIndex + 2)
+        Protected Overrides Sub ParseBodyImage(ByVal state As IChannelParsingState, ByVal binaryImage() As Byte, ByVal startIndex As Int32)
 
-    End Sub
+            m_command = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex)
+            MyBase.ParseBodyImage(state, binaryImage, startIndex + 2)
 
-    Public Overrides Sub GetObjectData(ByVal info As System.Runtime.Serialization.SerializationInfo, ByVal context As System.Runtime.Serialization.StreamingContext)
+        End Sub
 
-        MyBase.GetObjectData(info, context)
+        Public Overrides Sub GetObjectData(ByVal info As System.Runtime.Serialization.SerializationInfo, ByVal context As System.Runtime.Serialization.StreamingContext)
 
-        ' Serialize command frame
-        info.AddValue("command", m_command, GetType(DeviceCommand))
+            MyBase.GetObjectData(info, context)
 
-    End Sub
+            ' Serialize command frame
+            info.AddValue("command", m_command, GetType(DeviceCommand))
 
-    Public Overrides ReadOnly Property Attributes() As Dictionary(Of String, String)
-        Get
-            Dim baseAttributes As Dictionary(Of String, String) = MyBase.Attributes
+        End Sub
 
-            baseAttributes.Add("Device Command", Command & ": " & [Enum].GetName(GetType(DeviceCommand), Command))
+        Public Overrides ReadOnly Property Attributes() As Dictionary(Of String, String)
+            Get
+                Dim baseAttributes As Dictionary(Of String, String) = MyBase.Attributes
 
-            If Cells.Count > 0 Then
-                baseAttributes.Add("Extended Data", ByteEncoding.Hexadecimal.GetString(Cells.BinaryImage, 0, Cells.Count))
-            Else
-                baseAttributes.Add("Extended Data", "<null>")
-            End If
+                baseAttributes.Add("Device Command", Command & ": " & [Enum].GetName(GetType(DeviceCommand), Command))
 
-            Return baseAttributes
-        End Get
-    End Property
+                If Cells.Count > 0 Then
+                    baseAttributes.Add("Extended Data", ByteEncoding.Hexadecimal.GetString(Cells.BinaryImage, 0, Cells.Count))
+                Else
+                    baseAttributes.Add("Extended Data", "<null>")
+                End If
 
-End Class
+                Return baseAttributes
+            End Get
+        End Property
+
+    End Class
+
+End Namespace

@@ -15,42 +15,45 @@
 '
 '*******************************************************************************************************
 
-''' <summary>This class represents the common implementation of the protocol independent parsing state of any kind of data cell.</summary>
-Public MustInherit Class ChannelCellParsingStateBase
+Namespace Phasors
 
-    Inherits ChannelParsingStateBase
-    Implements IChannelCellParsingState
+    ''' <summary>This class represents the common implementation of the protocol independent parsing state of any kind of data cell.</summary>
+    Public MustInherit Class ChannelCellParsingStateBase
 
-    Private m_phasorCount As Int32
-    Private m_analogCount As Int32
-    Private m_digitalCount As Int32
+        Inherits ChannelParsingStateBase
+        Implements IChannelCellParsingState
 
-    Public Overridable Property PhasorCount() As Int32 Implements IChannelCellParsingState.PhasorCount
-        Get
-            Return m_phasorCount
-        End Get
-        Set(ByVal value As Int32)
-            m_phasorCount = value
-        End Set
-    End Property
+        Private m_phasorCount As Int32
+        Private m_analogCount As Int32
+        Private m_digitalCount As Int32
 
-    Public Overridable Property AnalogCount() As Int32 Implements IChannelCellParsingState.AnalogCount
-        Get
-            Return m_analogCount
-        End Get
-        Set(ByVal value As Int32)
-            m_analogCount = value
-        End Set
-    End Property
+        Public Overridable Property PhasorCount() As Int32 Implements IChannelCellParsingState.PhasorCount
+            Get
+                Return m_phasorCount
+            End Get
+            Set(ByVal value As Int32)
+                m_phasorCount = value
+            End Set
+        End Property
 
-    Public Overridable Property DigitalCount() As Int32 Implements IChannelCellParsingState.DigitalCount
-        Get
-            Return m_digitalCount
-        End Get
-        Set(ByVal value As Int32)
-            m_digitalCount = value
-        End Set
-    End Property
+        Public Overridable Property AnalogCount() As Int32 Implements IChannelCellParsingState.AnalogCount
+            Get
+                Return m_analogCount
+            End Get
+            Set(ByVal value As Int32)
+                m_analogCount = value
+            End Set
+        End Property
 
-End Class
+        Public Overridable Property DigitalCount() As Int32 Implements IChannelCellParsingState.DigitalCount
+            Get
+                Return m_digitalCount
+            End Get
+            Set(ByVal value As Int32)
+                m_digitalCount = value
+            End Set
+        End Property
 
+    End Class
+
+End Namespace

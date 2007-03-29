@@ -18,7 +18,7 @@
 Imports System.Runtime.Serialization
 Imports TVA.Phasors.IeeeC37_118.Common
 
-Namespace IeeeC37_118
+Namespace Phasors.IeeeC37_118
 
     ' This data cell represents what most might call a "field" in table of rows - it is a single unit of data for a specific PMU
     <CLSCompliant(False), Serializable()> _

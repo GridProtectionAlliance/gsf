@@ -17,7 +17,7 @@
 
 Imports System.Runtime.Serialization
 
-Namespace BpaPdcStream
+Namespace Phasors.BpaPdcStream
 
     <CLSCompliant(False), Serializable()> _
     Public Class FrequencyValue
@@ -99,7 +99,7 @@ Namespace BpaPdcStream
 
             ' PMUs in PDC block do not include Df/Dt
             If Definition.Parent.IsPDCBlockSection Then
-                If DataFormat = Phasors.DataFormat.FixedInteger Then
+                If DataFormat = TVA.Phasors.DataFormat.FixedInteger Then
                     UnscaledFrequency = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex)
                 Else
                     Frequency = EndianOrder.BigEndian.ToSingle(binaryImage, startIndex)

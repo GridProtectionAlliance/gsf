@@ -15,14 +15,18 @@
 '
 '*******************************************************************************************************
 
-''' <summary>This interface represents the protocol independent representation of any frame of header data.</summary>
-<CLSCompliant(False)> _
-Public Interface IHeaderFrame
+Namespace Phasors
 
-    Inherits IChannelFrame
+    ''' <summary>This interface represents the protocol independent representation of any frame of header data.</summary>
+    <CLSCompliant(False)> _
+    Public Interface IHeaderFrame
 
-    Shadows ReadOnly Property Cells() As HeaderCellCollection
+        Inherits IChannelFrame
 
-    Property HeaderData() As String
+        Shadows ReadOnly Property Cells() As HeaderCellCollection
 
-End Interface
+        Property HeaderData() As String
+
+    End Interface
+
+End Namespace

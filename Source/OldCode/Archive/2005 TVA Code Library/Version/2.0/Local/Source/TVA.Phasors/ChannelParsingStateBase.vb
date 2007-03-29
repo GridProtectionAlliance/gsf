@@ -15,19 +15,23 @@
 '
 '*******************************************************************************************************
 
-''' <summary>This class represents the common implementation of the protocol independent parsing state class used by any kind of data.</summary>
-''' <remarks>This class is inherited by subsequent classes to provide parsing state information particular to a data type's needs.</remarks>
-Public MustInherit Class ChannelParsingStateBase
+Namespace Phasors
 
-    Implements IChannelParsingState
+    ''' <summary>This class represents the common implementation of the protocol independent parsing state class used by any kind of data.</summary>
+    ''' <remarks>This class is inherited by subsequent classes to provide parsing state information particular to a data type's needs.</remarks>
+    Public MustInherit Class ChannelParsingStateBase
 
-    ' This is expected to be overriden by the final derived class
-    Public MustOverride ReadOnly Property DerivedType() As Type Implements IChannelParsingState.DerivedType
+        Implements IChannelParsingState
 
-    Public Overridable ReadOnly Property This() As IChannelParsingState Implements IChannelParsingState.This
-        Get
-            Return Me
-        End Get
-    End Property
+        ' This is expected to be overriden by the final derived class
+        Public MustOverride ReadOnly Property DerivedType() As Type Implements IChannelParsingState.DerivedType
 
-End Class
+        Public Overridable ReadOnly Property This() As IChannelParsingState Implements IChannelParsingState.This
+            Get
+                Return Me
+            End Get
+        End Property
+
+    End Class
+
+End Namespace

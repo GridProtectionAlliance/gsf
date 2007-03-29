@@ -17,7 +17,7 @@
 
 Imports TVA.DateTime
 
-Namespace Ieee1344
+Namespace Phasors.Ieee1344
 
     <CLSCompliant(False)> _
     Public Interface ICommonFrameHeader

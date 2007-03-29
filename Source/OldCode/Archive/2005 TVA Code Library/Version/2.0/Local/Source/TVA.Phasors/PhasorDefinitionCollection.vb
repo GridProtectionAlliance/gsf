@@ -17,32 +17,35 @@
 
 Imports System.Runtime.Serialization
 
-''' <summary>This class represents the common implementation collection of protocol independent definitions of phasor values.</summary>
-<CLSCompliant(False), Serializable()> _
-Public Class PhasorDefinitionCollection
+Namespace Phasors
 
-    Inherits ChannelDefinitionCollectionBase(Of IPhasorDefinition)
+    ''' <summary>This class represents the common implementation collection of protocol independent definitions of phasor values.</summary>
+    <CLSCompliant(False), Serializable()> _
+    Public Class PhasorDefinitionCollection
 
-    Protected Sub New()
-    End Sub
+        Inherits ChannelDefinitionCollectionBase(Of IPhasorDefinition)
 
-    Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
+        Protected Sub New()
+        End Sub
 
-        MyBase.New(info, context)
+        Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
 
-    End Sub
+            MyBase.New(info, context)
 
-    Public Sub New(ByVal maximumCount As Int32)
+        End Sub
 
-        MyBase.New(maximumCount)
+        Public Sub New(ByVal maximumCount As Int32)
 
-    End Sub
+            MyBase.New(maximumCount)
 
-    Public Overrides ReadOnly Property DerivedType() As Type
-        Get
-            Return Me.GetType()
-        End Get
-    End Property
+        End Sub
 
-End Class
+        Public Overrides ReadOnly Property DerivedType() As Type
+            Get
+                Return Me.GetType()
+            End Get
+        End Property
 
+    End Class
+
+End Namespace

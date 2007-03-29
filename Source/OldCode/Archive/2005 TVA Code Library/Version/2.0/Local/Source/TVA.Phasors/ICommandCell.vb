@@ -15,14 +15,18 @@
 '
 '*******************************************************************************************************
 
-''' <summary>This interface represents the protocol independent representation of an element of extended command frame data.</summary>
-<CLSCompliant(False)> _
-Public Interface ICommandCell
+Namespace Phasors
 
-    Inherits IChannelCell
+    ''' <summary>This interface represents the protocol independent representation of an element of extended command frame data.</summary>
+    <CLSCompliant(False)> _
+    Public Interface ICommandCell
 
-    Shadows ReadOnly Property Parent() As ICommandFrame
+        Inherits IChannelCell
 
-    Property ExtendedDataByte() As Byte
+        Shadows ReadOnly Property Parent() As ICommandFrame
 
-End Interface
+        Property ExtendedDataByte() As Byte
+
+    End Interface
+
+End Namespace

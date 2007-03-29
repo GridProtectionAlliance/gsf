@@ -17,33 +17,36 @@
 
 Imports System.Runtime.Serialization
 
-''' <summary>This interface represents a protocol independent definition of any kind of data.</summary>
-<CLSCompliant(False)> _
-Public Interface IChannelDefinition
+Namespace Phasors
 
-    Inherits IChannel, ISerializable, IEquatable(Of IChannelDefinition), IComparable(Of IChannelDefinition), IComparable
+    ''' <summary>This interface represents a protocol independent definition of any kind of data.</summary>
+    <CLSCompliant(False)> _
+    Public Interface IChannelDefinition
 
-    ReadOnly Property Parent() As IConfigurationCell
+        Inherits IChannel, ISerializable, IEquatable(Of IChannelDefinition), IComparable(Of IChannelDefinition), IComparable
 
-    ReadOnly Property DataFormat() As DataFormat
+        ReadOnly Property Parent() As IConfigurationCell
 
-    Property Index() As Int32
+        ReadOnly Property DataFormat() As DataFormat
 
-    Property Offset() As Single
+        Property Index() As Int32
 
-    Property ScalingFactor() As Int32
+        Property Offset() As Single
 
-    ReadOnly Property MaximumScalingFactor() As Int32
+        Property ScalingFactor() As Int32
 
-    Property ConversionFactor() As Single
+        ReadOnly Property MaximumScalingFactor() As Int32
 
-    ReadOnly Property ScalePerBit() As Single
+        Property ConversionFactor() As Single
 
-    Property Label() As String
+        ReadOnly Property ScalePerBit() As Single
 
-    ReadOnly Property LabelImage() As Byte()
+        Property Label() As String
 
-    ReadOnly Property MaximumLabelLength() As Int32
+        ReadOnly Property LabelImage() As Byte()
 
-End Interface
+        ReadOnly Property MaximumLabelLength() As Int32
 
+    End Interface
+
+End Namespace
