@@ -66,6 +66,12 @@
     <Compile Include="TVA.Components\BinaryDataParserBase.vb">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="TVA.Components\SequentialBinaryFileBase.Designer.vb">
+      <DependentUpon>SequentialBinaryFileBase.vb</DependentUpon>
+    </Compile>
+    <Compile Include="TVA.Components\SequentialBinaryFileBase.vb">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="TVA.Console\Arguments.vb" />
     <Compile Include="TVA.Console\Common.vb" />
     <Compile Include="TVA.Interop\VBArrayDescriptor.vb" />
