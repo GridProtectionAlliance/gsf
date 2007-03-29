@@ -19,7 +19,7 @@ Namespace Packets
 
 #Region " Member Declaration "
 
-        Private m_index As Integer
+        Private m_pointID As Integer
         Private m_timeTag As TimeTag
         Private m_quality As Quality
         Private m_value As Single
@@ -51,7 +51,7 @@ Namespace Packets
                 Dim packetTypeID As Short = BitConverter.ToInt16(binaryImage, startIndex)
                 If packetTypeID = TypeID Then
                     ' We have a binary image with the correct type ID.
-                    m_index = BitConverter.ToInt32(binaryImage, startIndex + 2)
+                    m_pointID = BitConverter.ToInt32(binaryImage, startIndex + 2)
                     m_timeTag = New TimeTag(BitConverter.ToDouble(binaryImage, startIndex + 6))
                     m_quality = CType(BitConverter.ToInt32(binaryImage, startIndex + 14), Quality)
                     m_value = BitConverter.ToSingle(binaryImage, startIndex + 18)
@@ -64,12 +64,12 @@ Namespace Packets
 
         End Sub
 
-        Public Property Index() As Integer
+        Public Property PointID() As Integer
             Get
-                Return m_index
+                Return m_pointID
             End Get
             Set(ByVal value As Integer)
-                m_index = value
+                m_pointID = value
             End Set
         End Property
 
@@ -110,7 +110,7 @@ Namespace Packets
 
             If ArchiveFile IsNot Nothing AndAlso MetadataFile IsNot Nothing Then
                 Dim pointData As New StandardPointData(m_timeTag, m_value, m_quality)
-                pointData.Definition = MetadataFile.Read(m_index)
+                pointData.Definition = MetadataFile.Read(m_pointID)
 
                 ArchiveFile.Write(pointData)
             End If
@@ -146,7 +146,7 @@ Namespace Packets
                 Dim packetTypeID As Short = BitConverter.ToInt16(binaryImage, startIndex)
                 If packetTypeID = TypeID Then
                     ' We have a binary image with the correct type ID.
-                    m_index = BitConverter.ToInt32(binaryImage, startIndex + 2)
+                    m_pointID = BitConverter.ToInt32(binaryImage, startIndex + 2)
                     m_timeTag = New TimeTag(BitConverter.ToDouble(binaryImage, startIndex + 6))
                     m_quality = CType(BitConverter.ToInt32(binaryImage, startIndex + 14), Quality)
                     m_value = BitConverter.ToSingle(binaryImage, startIndex + 18)

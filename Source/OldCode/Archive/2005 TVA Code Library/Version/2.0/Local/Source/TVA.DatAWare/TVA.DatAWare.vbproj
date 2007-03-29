@@ -154,7 +154,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Embedded Resources\DataParser.bmp" />
+    <EmbeddedResource Include="Embedded Resources\Packets.PacketDataParser.bmp" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Embedded Resources\Files.ArchiveFile.bmp" />

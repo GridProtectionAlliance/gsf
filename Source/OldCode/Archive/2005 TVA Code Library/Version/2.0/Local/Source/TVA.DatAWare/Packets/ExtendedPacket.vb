@@ -26,7 +26,7 @@ Namespace Packets
 
 #Region " Member Declaration "
 
-        Private m_index As Integer
+        Private m_pointID As Integer
         Private m_year As Short
         Private m_month As Short ' Byte
         Private m_day As Short 'Byte
@@ -65,7 +65,7 @@ Namespace Packets
                 Dim packetTypeID As Short = BitConverter.ToInt16(binaryImage, startIndex)
                 If packetTypeID = TypeID Then
                     ' We have a binary image with the correct type ID.
-                    m_index = BitConverter.ToInt32(binaryImage, startIndex + 2)
+                    m_pointID = BitConverter.ToInt32(binaryImage, startIndex + 2)
                     m_year = BitConverter.ToInt16(binaryImage, startIndex + 6)
                     m_month = Convert.ToInt16(binaryImage(startIndex + 8))
                     m_day = Convert.ToInt16(binaryImage(startIndex + 9))
@@ -85,12 +85,12 @@ Namespace Packets
 
         End Sub
 
-        Public Property Index() As Integer
+        Public Property PointID() As Integer
             Get
-                Return m_index
+                Return m_pointID
             End Get
             Set(ByVal value As Integer)
-                m_index = value
+                m_pointID = value
             End Set
         End Property
 
@@ -197,7 +197,7 @@ Namespace Packets
                     m_second, m_millisecond, DateTimeKind.Utc)
 
                 Dim pointData As New StandardPointData(New TimeTag(timestamp), m_value, m_quality)
-                pointData.Definition = MetadataFile.Read(m_index)
+                pointData.Definition = MetadataFile.Read(m_pointID)
 
                 ArchiveFile.Write(pointData)
             End If

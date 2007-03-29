@@ -1,6 +1,6 @@
 Namespace Components
 
-    Partial Class BinaryDataParserBase(Of T)
+    Partial Class BinaryDataParserBase(Of TIdentifier, TResult)
         Inherits System.ComponentModel.Component
 
         <System.Diagnostics.DebuggerNonUserCode()> _
@@ -22,9 +22,8 @@ Namespace Components
             InitializeComponent()
 
             m_idFieldName = "ID"
-            m_idValueLocation = 0
             m_optimizeParsing = True
-            m_parserTypes = New Dictionary(Of Short, ParserTypeInfo)
+            m_parserTypes = New Dictionary(Of TIdentifier, ParserTypeInfo)
             m_dataQueue = TVA.Collections.ProcessQueue(Of IdentifiableItem(Of Byte())).CreateRealTimeQueue(AddressOf ParseData)
 
         End Sub

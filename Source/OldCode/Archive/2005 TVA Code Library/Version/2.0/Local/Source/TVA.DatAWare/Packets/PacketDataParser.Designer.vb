@@ -1,7 +1,7 @@
 Namespace Packets
 
     Partial Class PacketDataParser
-        Inherits TVA.Components.BinaryDataParserBase(Of PacketBase)
+        Inherits TVA.Components.BinaryDataParserBase(Of Short, PacketBase)
 
         <System.Diagnostics.DebuggerNonUserCode()> _
         Public Sub New(ByVal container As System.ComponentModel.IContainer)

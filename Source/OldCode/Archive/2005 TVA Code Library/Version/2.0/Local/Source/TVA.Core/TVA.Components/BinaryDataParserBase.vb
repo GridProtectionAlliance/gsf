@@ -11,16 +11,16 @@ Imports TVA.IO.FilePath
 
 Namespace Components
 
-    Public MustInherit Class BinaryDataParserBase(Of T As IBinaryDataConsumer)
+    <DefaultEvent("DataParsed")> _
+    Public MustInherit Class BinaryDataParserBase(Of TIdentifier, TResult As IBinaryDataConsumer)
 
 #Region " Member Declaration "
 
         Private m_idFieldName As String
-        Private m_idValueLocation As Integer
         Private m_optimizeParsing As Boolean
-        Private m_parserTypes As Dictionary(Of Short, ParserTypeInfo)
+        Private m_parserTypes As Dictionary(Of TIdentifier, ParserTypeInfo)
 
-        Private Delegate Function DefaultConstructor() As T
+        Private Delegate Function DefaultConstructor() As TResult
 
         Private WithEvents m_dataQueue As ProcessQueue(Of IdentifiableItem(Of Byte()))
 
@@ -28,7 +28,7 @@ Namespace Components
 
 #Region " Event Declaration "
 
-        Public Event DataParsed As EventHandler(Of IdentifiableItemEventArgs(Of List(Of T)))
+        Public Event DataParsed As EventHandler(Of IdentifiableItemEventArgs(Of List(Of TResult)))
         Public Event DataDiscarded As EventHandler(Of IdentifiableItemEventArgs(Of Byte()))
 
 #End Region
@@ -43,15 +43,6 @@ Namespace Components
             End Get
             Set(ByVal value As String)
                 m_idFieldName = value
-            End Set
-        End Property
-
-        Public Property IDValueLocation() As Integer
-            Get
-                Return m_idValueLocation
-            End Get
-            Set(ByVal value As Integer)
-                m_idValueLocation = value
             End Set
         End Property
 
@@ -92,11 +83,11 @@ Namespace Components
                     idField = asmType.GetField(m_idFieldName)
                     typeCtor = asmType.GetConstructor(Type.EmptyTypes)
                     If idField IsNot Nothing AndAlso typeCtor IsNot Nothing AndAlso _
-                            Not asmType.IsAbstract AndAlso TVA.Common.GetRootType(asmType) Is GetType(T) Then
+                            Not asmType.IsAbstract AndAlso TVA.Common.GetRootType(asmType) Is GetType(TResult) Then
 
                         Dim parserType As New ParserTypeInfo()
                         parserType.RuntimeType = asmType
-                        parserType.ID = Convert.ToInt16(idField.GetValue(Nothing))
+                        parserType.ID = CType(idField.GetValue(Nothing), TIdentifier)
 
                         If m_optimizeParsing Then
                             Dim dynamicTypeCtor As MethodBuilder = typeBuilder.DefineMethod(asmType.Name, MethodAttributes.Public Or MethodAttributes.Static, asmType, Type.EmptyTypes)
@@ -124,7 +115,7 @@ Namespace Components
             Next
 
             Dim bakedType As Type = typeBuilder.CreateType()
-            For Each parserTypeID As Short In m_parserTypes.Keys
+            For Each parserTypeID As TIdentifier In m_parserTypes.Keys
                 With m_parserTypes(parserTypeID)
                     .CreateNew = CType(System.Delegate.CreateDelegate(GetType(DefaultConstructor), bakedType.GetMethod(.RuntimeType.Name)), DefaultConstructor)
                 End With
@@ -159,6 +150,8 @@ Namespace Components
 
         End Sub
 
+        Public MustOverride Function GetID(ByVal binaryImage As Byte()) As TIdentifier
+
 #End Region
 
 #Region " Code Scope: Private "
@@ -167,12 +160,12 @@ Namespace Components
 
             For i As Integer = 0 To item.Length - 1
                 If item(i).Item IsNot Nothing AndAlso item(i).Item.Length > 0 Then
-                    Dim typeID As Short = BitConverter.ToInt16(item(i).Item, m_idValueLocation)
+                    Dim typeID As TIdentifier = GetID(item(i).Item) 'BitConverter.ToInt16(item(i).Item, m_idValueLocation)
                     Dim parserType As ParserTypeInfo = Nothing
 
                     If m_parserTypes.TryGetValue(typeID, parserType) Then
-                        Dim parsedData As New List(Of T)()
-                        Dim newData As T = Nothing
+                        Dim parsedData As New List(Of TResult)()
+                        Dim newData As TResult = Nothing
 
                         Dim j As Integer = 0
                         Do While j < item(i).Item.Length
@@ -185,7 +178,7 @@ Namespace Components
                             End Try
                         Loop
 
-                        RaiseEvent DataParsed(Me, New IdentifiableItemEventArgs(Of List(Of T))(item(i).Source, parsedData))
+                        RaiseEvent DataParsed(Me, New IdentifiableItemEventArgs(Of List(Of TResult))(item(i).Source, parsedData))
                     Else
                         RaiseEvent DataDiscarded(Me, New IdentifiableItemEventArgs(Of Byte())(item(i).Source, item(i).Item))
                     End If
@@ -198,7 +191,7 @@ Namespace Components
 
         Private Class ParserTypeInfo
 
-            Public ID As Short
+            Public ID As TIdentifier
 
             Public CreateNew As DefaultConstructor
 
