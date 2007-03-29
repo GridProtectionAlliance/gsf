@@ -18,16 +18,16 @@
 Imports System.Text
 Imports System.Security.Principal
 Imports System.Data.SqlClient
-Imports Tva.Common
-Imports Tva.Assembly
-Imports Tva.IO
-Imports Tva.IO.FilePath
-Imports Tva.Configuration.Common
-Imports Tva.Text.Common
-Imports Tva.Data.Common
-Imports Tva.Measurements
-Imports Tva.DateTime.Common
-Imports Tva.Phasors
+Imports TVA.Common
+Imports TVA.Assembly
+Imports TVA.IO
+Imports TVA.IO.FilePath
+Imports TVA.Configuration.Common
+Imports TVA.Text.Common
+Imports TVA.Data.Common
+Imports TVA.Measurements
+Imports TVA.DateTime.Common
+Imports TVA.Phasors
 Imports InterfaceAdapters
 Imports System.Reflection
 
@@ -429,7 +429,7 @@ Module MainModule
 
     End Function
 
-    Private Function ParseDeviceCommand(ByVal consoleLine As String) As Tva.Phasors.DeviceCommand
+    Private Function ParseDeviceCommand(ByVal consoleLine As String) As TVA.Phasors.DeviceCommand
 
         Select Case RemoveDuplicateWhiteSpace(consoleLine).Split(" "c)(2).ToLower()
             Case "disabledata"

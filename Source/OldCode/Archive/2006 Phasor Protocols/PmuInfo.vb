@@ -15,7 +15,7 @@
 '
 '*******************************************************************************************************
 
-Imports Tva.Measurements
+Imports TVA.Measurements
 
 Public Class PmuInfo
 

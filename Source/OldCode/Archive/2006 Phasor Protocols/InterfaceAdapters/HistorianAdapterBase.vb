@@ -17,7 +17,7 @@
 
 Imports System.Text
 Imports System.Threading
-Imports Tva.Measurements
+Imports TVA.Measurements
 
 Public MustInherit Class HistorianAdapterBase
 

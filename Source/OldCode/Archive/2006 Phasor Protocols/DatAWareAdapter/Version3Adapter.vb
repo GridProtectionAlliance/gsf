@@ -19,12 +19,12 @@ Imports InterfaceAdapters
 Imports System.IO
 Imports System.Text
 Imports System.Threading
-Imports Tva.Common
-Imports Tva.Collections.Common
-Imports Tva.Measurements
-Imports Tva.DatAWare
-Imports Tva.Text.Common
-Imports Tva.Communication
+Imports TVA.Common
+Imports TVA.Collections.Common
+Imports TVA.Measurements
+Imports TVA.DatAWare
+Imports TVA.Text.Common
+Imports TVA.Communication
 
 Public Class Version3Adapter
 
@@ -74,6 +74,7 @@ Public Class Version3Adapter
         ' Connect to DatAWare archiver using TCP
         m_connection = New TcpClient("server=" & m_archiverIP & "; port=" & m_archiverPort)
         m_connection.Handshake = True
+        m_connection.HandshakePassphrase = "DatAWareArchiver"
         m_connection.PayloadAware = True
         m_connection.MaximumConnectionAttempts = 1
 
@@ -144,7 +145,7 @@ Public Class Version3Adapter
 
     End Sub
 
-    Private Sub m_connection_ConnectingException(ByVal sender As Object, ByVal e As Tva.ExceptionEventArgs) Handles m_connection.ConnectingException
+    Private Sub m_connection_ConnectingException(ByVal sender As Object, ByVal e As TVA.ExceptionEventArgs) Handles m_connection.ConnectingException
 
         ' Take note of connection exception
         m_connectionException = e.Exception

@@ -37,9 +37,9 @@
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
-    <Reference Include="Tva.Core, Version=2.1.63.53023, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="TVA.Core, Version=2.1.63.53023, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\TVA Code Library\Source\bin\Tva.Core.dll</HintPath>
+      <HintPath>..\..\..\TVA Code Library\Source\bin\TVA.Core.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>

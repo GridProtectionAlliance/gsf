@@ -1,8 +1,8 @@
 Imports System.Data.OleDb
-Imports Tva.Measurements
-Imports Tva.Data.Common
-Imports Tva.Common
-Imports Tva.Phasors
+Imports TVA.Measurements
+Imports TVA.Data.Common
+Imports TVA.Common
+Imports TVA.Phasors
 
 Public Class PhasorDataConcentrator
 
@@ -95,7 +95,7 @@ Public Class PhasorDataConcentrator
 
     End Sub
 
-    Private Sub m_concentrator_SamplePublished(ByVal sample As Tva.Measurements.Sample) Handles m_concentrator.SamplePublished
+    Private Sub m_concentrator_SamplePublished(ByVal sample As TVA.Measurements.Sample) Handles m_concentrator.SamplePublished
 
     End Sub
 

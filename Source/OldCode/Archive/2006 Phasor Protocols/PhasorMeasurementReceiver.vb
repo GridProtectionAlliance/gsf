@@ -17,12 +17,12 @@
 
 Imports System.Text
 Imports System.Data.SqlClient
-Imports Tva.DateTime.Common
-Imports Tva.Data.Common
-Imports Tva.Phasors
-Imports Tva.Phasors.Common
-Imports Tva.Communication
-Imports Tva.Measurements
+Imports TVA.DateTime.Common
+Imports TVA.Data.Common
+Imports TVA.Phasors
+Imports TVA.Phasors.Common
+Imports TVA.Communication
+Imports TVA.Measurements
 Imports InterfaceAdapters
 
 Public Class PhasorMeasurementReceiver

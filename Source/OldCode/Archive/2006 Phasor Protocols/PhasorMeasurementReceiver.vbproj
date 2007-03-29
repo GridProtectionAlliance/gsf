@@ -40,17 +40,17 @@
     <Reference Include="System.configuration" />
     <Reference Include="System.Data" />
     <Reference Include="System.Runtime.Serialization.Formatters.Soap" />
-    <Reference Include="Tva.Communication, Version=2.1.63.53023, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="TVA.Communication, Version=2.1.63.53023, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\TVA Code Library\Source\bin\Tva.Communication.dll</HintPath>
+      <HintPath>..\..\TVA Code Library\Source\bin\TVA.Communication.dll</HintPath>
     </Reference>
-    <Reference Include="Tva.Core, Version=2.1.63.53023, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="TVA.Core, Version=2.1.63.53023, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\TVA Code Library\Source\bin\Tva.Core.dll</HintPath>
+      <HintPath>..\..\TVA Code Library\Source\bin\TVA.Core.dll</HintPath>
     </Reference>
-    <Reference Include="Tva.Phasors, Version=2.1.63.53023, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="TVA.Phasors, Version=2.1.63.53023, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\TVA Code Library\Source\bin\Tva.Phasors.dll</HintPath>
+      <HintPath>..\..\TVA Code Library\Source\bin\TVA.Phasors.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>

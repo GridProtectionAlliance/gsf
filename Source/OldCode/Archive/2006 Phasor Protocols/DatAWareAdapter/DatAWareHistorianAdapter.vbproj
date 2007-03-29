@@ -37,17 +37,17 @@
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
-    <Reference Include="Tva.Communication, Version=2.1.91.55141, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="TVA.Communication, Version=2.1.91.55141, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\TVA Code Library\Source\bin\Tva.Communication.dll</HintPath>
+      <HintPath>..\..\..\TVA Code Library\Source\bin\TVA.Communication.dll</HintPath>
     </Reference>
-    <Reference Include="Tva.Core, Version=2.1.63.53023, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="TVA.Core, Version=2.1.63.53023, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\TVA Code Library\Source\bin\Tva.Core.dll</HintPath>
+      <HintPath>..\..\..\TVA Code Library\Source\bin\TVA.Core.dll</HintPath>
     </Reference>
-    <Reference Include="Tva.DatAWare, Version=2.1.63.53023, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="TVA.DatAWare, Version=2.1.63.53023, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\TVA Code Library\Source\bin\Tva.DatAWare.dll</HintPath>
+      <HintPath>..\..\..\TVA Code Library\Source\bin\TVA.DatAWare.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>

@@ -20,11 +20,11 @@ Imports System.Threading
 Imports System.IO
 Imports System.Runtime.Serialization.Formatters
 Imports System.Runtime.Serialization.Formatters.Soap
-Imports Tva.DateTime
-Imports Tva.Phasors
-Imports Tva.Communication
-Imports Tva.Measurements
-Imports Tva.IO.FilePath
+Imports TVA.DateTime
+Imports TVA.Phasors
+Imports TVA.Communication
+Imports TVA.Measurements
+Imports TVA.IO.FilePath
 
 ''' <summary>
 ''' <para>This class takes parsed phasor frames and maps measured elements to historian points</para>

@@ -18,11 +18,11 @@
 Imports System.Text
 Imports System.IO
 Imports System.Data.SqlClient
-Imports Tva.Measurements
-Imports Tva.Configuration.Common
-Imports Tva.IO.FilePath
-Imports Tva.Data.Common
-Imports Tva.DateTime.Common
+Imports TVA.Measurements
+Imports TVA.Configuration.Common
+Imports TVA.IO.FilePath
+Imports TVA.Data.Common
+Imports TVA.DateTime.Common
 Imports InterfaceAdapters
 
 Public Class MeasurementExporter

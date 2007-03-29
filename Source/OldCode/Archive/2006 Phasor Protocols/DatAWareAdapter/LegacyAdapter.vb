@@ -19,11 +19,11 @@ Imports InterfaceAdapters
 Imports System.IO
 Imports System.Text
 Imports System.Net.Sockets
-Imports Tva.Common
-Imports Tva.Collections.Common
-Imports Tva.Measurements
-Imports Tva.DatAWare
-Imports Tva.Text.Common
+Imports TVA.Common
+Imports TVA.Collections.Common
+Imports TVA.Measurements
+Imports TVA.DatAWare
+Imports TVA.Text.Common
 
 Public Class LegacyAdapter
 

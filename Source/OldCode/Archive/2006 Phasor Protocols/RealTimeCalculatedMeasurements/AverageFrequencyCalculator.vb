@@ -16,7 +16,7 @@
 '*******************************************************************************************************
 
 Imports System.Text
-Imports Tva.Measurements
+Imports TVA.Measurements
 Imports InterfaceAdapters
 
 Public Class AverageFrequencyCalculator

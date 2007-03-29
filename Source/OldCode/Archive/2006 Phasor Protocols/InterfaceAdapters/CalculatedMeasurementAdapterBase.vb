@@ -17,9 +17,9 @@
 
 Imports System.Text
 Imports System.Threading
-Imports Tva.Common
-Imports Tva.Measurements
-Imports Tva.Collections.Common
+Imports TVA.Common
+Imports TVA.Measurements
+Imports TVA.Collections.Common
 
 Public MustInherit Class CalculatedMeasurementAdapterBase
 

@@ -17,12 +17,12 @@
 
 Imports System.Text
 Imports System.Math
-Imports Tva.Common
-Imports Tva.Measurements
-Imports Tva.Collections.Common
-Imports Tva.Math.Common
-Imports Tva.IO
-Imports Tva.IO.FilePath
+Imports TVA.Common
+Imports TVA.Measurements
+Imports TVA.Collections.Common
+Imports TVA.Math.Common
+Imports TVA.IO
+Imports TVA.IO.FilePath
 Imports InterfaceAdapters
 
 Public Class CumberlandPowerDeviationCalculator
