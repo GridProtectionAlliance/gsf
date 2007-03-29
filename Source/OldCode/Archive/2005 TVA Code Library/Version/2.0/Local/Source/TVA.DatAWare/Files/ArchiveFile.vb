@@ -6,7 +6,6 @@ Imports System.Threading
 Imports System.ComponentModel
 Imports TVA.Collections
 Imports TVA.IO.FilePath
-Imports TVA.Configuration.Common
 
 Namespace Files
 
@@ -597,7 +596,7 @@ Namespace Files
 
             If m_persistSettings Then
                 Try
-                    With CategorizedSettings(m_configurationCategory)
+                    With TVA.Configuration.Common.CategorizedSettings(m_configurationCategory)
                         Name = .Item("Name").GetTypedValue(m_name)
                         Type = .Item("Type").GetTypedValue(m_type)
                         Size = .Item("Size").GetTypedValue(m_size)
@@ -622,7 +621,7 @@ Namespace Files
 
             If m_persistSettings Then
                 Try
-                    With CategorizedSettings(m_configurationCategory)
+                    With TVA.Configuration.Common.CategorizedSettings(m_configurationCategory)
                         .Clear()
                         With .Item("Name", True)
                             .Value = m_name

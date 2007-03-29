@@ -3,7 +3,6 @@
 Imports System.IO
 Imports System.ComponentModel
 Imports TVA.IO.FilePath
-Imports TVA.Configuration.Common
 
 Namespace Components
 
@@ -337,7 +336,7 @@ Namespace Components
 
             If m_persistSettings Then
                 Try
-                    With CategorizedSettings(m_configurationCategory)
+                    With TVA.Configuration.Common.CategorizedSettings(m_configurationCategory)
                         Name = .Item("Name").GetTypedValue(m_name)
                         SaveOnClose = .Item("SaveOnClose").GetTypedValue(m_saveOnClose)
                         AlignOnSave = .Item("AlignOnSave").GetTypedValue(m_alignOnSave)
@@ -356,7 +355,7 @@ Namespace Components
 
             If m_persistSettings Then
                 Try
-                    With CategorizedSettings(m_configurationCategory)
+                    With TVA.Configuration.Common.CategorizedSettings(m_configurationCategory)
                         .Clear()
                         With .Item("Name", True)
                             .Value = m_name

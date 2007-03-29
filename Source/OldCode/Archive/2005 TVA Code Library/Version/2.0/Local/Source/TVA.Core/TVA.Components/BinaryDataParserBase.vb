@@ -13,11 +13,14 @@ Namespace Components
 
     <DefaultEvent("DataParsed")> _
     Public MustInherit Class BinaryDataParserBase(Of TIdentifier, TResult As IBinaryDataConsumer)
+        Implements IPersistSettings
 
 #Region " Member Declaration "
 
         Private m_idFieldName As String
         Private m_optimizeParsing As Boolean
+        Private m_persistSettings As Boolean
+        Private m_configurationCategory As String
         Private m_parserTypes As Dictionary(Of TIdentifier, ParserTypeInfo)
 
         Private Delegate Function DefaultConstructor() As TResult
@@ -151,6 +154,74 @@ Namespace Components
         End Sub
 
         Public MustOverride Function GetID(ByVal binaryImage As Byte()) As TIdentifier
+
+#Region " Interface Implementation "
+
+#Region " IPersistSettings "
+
+        Public Property PersistSettings() As Boolean Implements IPersistSettings.PersistSettings
+            Get
+                Return m_persistSettings
+            End Get
+            Set(ByVal value As Boolean)
+                m_persistSettings = value
+            End Set
+        End Property
+
+        Public Property ConfigurationCategory() As String Implements IPersistSettings.ConfigurationCategory
+            Get
+                Return m_configurationCategory
+            End Get
+            Set(ByVal value As String)
+                If Not String.IsNullOrEmpty(value) Then
+                    m_configurationCategory = value
+                Else
+                    Throw New ArgumentNullException("ConfigurationCategory")
+                End If
+            End Set
+        End Property
+
+        Public Sub LoadSettings() Implements IPersistSettings.LoadSettings
+
+            If m_persistSettings Then
+                Try
+                    With TVA.Configuration.Common.CategorizedSettings(m_configurationCategory)
+                        IDFieldName = .Item("IDFieldName").GetTypedValue(m_idFieldName)
+                        OptimizeParsing = .Item("OptimizeParsing").GetTypedValue(m_optimizeParsing)
+                    End With
+                Catch ex As Exception
+                    ' We'll encounter exceptions if the settings are not present in the config file.
+                End Try
+            End If
+
+        End Sub
+
+        Public Sub SaveSettings() Implements IPersistSettings.SaveSettings
+
+            If m_persistSettings Then
+                Try
+                    With TVA.Configuration.Common.CategorizedSettings(m_configurationCategory)
+                        .Clear()
+                        With .Item("IDFieldName", True)
+                            .Value = m_idFieldName
+                            .Description = ""
+                        End With
+                        With .Item("OptimizeParsing", True)
+                            .Value = m_optimizeParsing.ToString()
+                            .Description = ""
+                        End With
+                    End With
+                    TVA.Configuration.Common.SaveSettings()
+                Catch ex As Exception
+                    ' We might encounter an exception if for some reason the settings cannot be saved to the config file.
+                End Try
+            End If
+
+        End Sub
+
+#End Region
+
+#End Region
 
 #End Region
 
