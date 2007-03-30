@@ -318,17 +318,23 @@ Namespace Files
 
                 If m_saveOnClose Then Save()
 
-                m_fat.Dispose()
-                m_fat = Nothing
-                m_fileStream.Dispose()
-                m_fileStream = Nothing
+                If m_fat IsNot Nothing Then
+                    m_fat.Dispose()
+                    m_fat = Nothing
+                End If
+                If m_fileStream IsNot Nothing Then
+                    m_fileStream.Dispose()
+                    m_fileStream = Nothing
+                End If
                 m_rolloverPreparationThread.Abort()
                 m_buildHistoricFileListThread.Abort()
                 m_historicDataQueue.Stop()
                 m_outOfSequenceDataQueue.Stop()
 
                 If m_type = ArchiveFileType.Active Then
-                    m_historicArchiveFileList.Clear()
+                    SyncLock m_historicArchiveFileList
+                        m_historicArchiveFileList.Clear()
+                    End SyncLock
                     m_historicArchiveFileList = Nothing
                     CurrentLocationFileSystemWatcher.EnableRaisingEvents = False
                     OffloadLocationFileSystemWatcher.EnableRaisingEvents = False
@@ -733,15 +739,18 @@ Namespace Files
 
                 ' We can safely assume that we'll always get information about the historic file because, the
                 ' the search pattern ensures that we only can a list of historic archive files and not all files.
-                SyncLock m_historicDataQueue
+                Dim historicFileInfo As ArchiveFileInfo = Nothing
+                SyncLock m_historicArchiveFileList
                     ' Prevent the historic file list from being updated by the file watchers.
                     For Each historicFileName As String In Directory.GetFiles(JustPath(m_name), HistoricFilesSearchPattern)
-                        m_historicArchiveFileList.Add(GetHistoricFileInfo(historicFileName))
+                        historicFileInfo = GetHistoricFileInfo(historicFileName)
+                        If historicFileInfo IsNot Nothing Then m_historicArchiveFileList.Add(historicFileInfo)
                     Next
 
                     If Not String.IsNullOrEmpty(m_offloadPath) Then
                         For Each historicFileName As String In Directory.GetFiles(m_offloadPath, HistoricFilesSearchPattern)
-                            m_historicArchiveFileList.Add(GetHistoricFileInfo(historicFileName))
+                            historicFileInfo = GetHistoricFileInfo(historicFileName)
+                            If historicFileInfo IsNot Nothing Then m_historicArchiveFileList.Add(historicFileInfo)
                         Next
                     End If
                 End SyncLock
@@ -767,16 +776,20 @@ Namespace Files
                 RaiseEvent RolloverPreparationStart(Me, EventArgs.Empty)
 
                 ' Opening and closing a new archive file in "standby" mode will create a "standby" file.
-                With New ArchiveFile()
-                    .Name = m_name
-                    .Type = ArchiveFileType.Standby
-                    .Size = m_size
-                    .BlockSize = m_blockSize
-                    .StateFile = m_stateFile
-                    .IntercomFile = m_intercomFile
-                    .Open()
-                    .Close()
-                End With
+                Dim standbyArchiveFile As New ArchiveFile()
+                standbyArchiveFile.Name = m_name
+                standbyArchiveFile.Type = ArchiveFileType.Standby
+                standbyArchiveFile.Size = m_size
+                standbyArchiveFile.BlockSize = m_blockSize
+                standbyArchiveFile.StateFile = m_stateFile
+                standbyArchiveFile.IntercomFile = m_intercomFile
+                Try
+                    standbyArchiveFile.Open()
+                Catch ex As Exception
+                    If standbyArchiveFile IsNot Nothing AndAlso standbyArchiveFile.IsOpen Then
+                        standbyArchiveFile.Close()
+                    End If
+                End Try
 
                 RaiseEvent RolloverPreparationComplete(Me, EventArgs.Empty)
             Catch ex As ThreadAbortException
@@ -836,24 +849,25 @@ Namespace Files
             Try
                 If File.Exists(fileName) Then
                     ' We'll open the file and get relevant information about it.
-                    With New ArchiveFile()
-                        .Name = fileName
-                        .Type = ArchiveFileType.Historic
-                        .SaveOnClose = False
-                        .StateFile = m_stateFile
-                        .IntercomFile = m_intercomFile
-                        Try
-                            .Open()
-                            fileInfo = New ArchiveFileInfo()
-                            fileInfo.FileName = fileName
-                            fileInfo.StartTimeTag = .FileAllocationTable.FileStartTime
-                            fileInfo.EndTimeTag = .FileAllocationTable.FileEndTime
-                        Catch ex As Exception
+                    Dim historicArchiveFile As New ArchiveFile()
+                    historicArchiveFile.Name = fileName
+                    historicArchiveFile.Type = ArchiveFileType.Historic
+                    historicArchiveFile.SaveOnClose = False
+                    historicArchiveFile.StateFile = m_stateFile
+                    historicArchiveFile.IntercomFile = m_intercomFile
+                    Try
+                        historicArchiveFile.Open()
+                        fileInfo = New ArchiveFileInfo()
+                        fileInfo.FileName = fileName
+                        fileInfo.StartTimeTag = historicArchiveFile.FileAllocationTable.FileStartTime
+                        fileInfo.EndTimeTag = historicArchiveFile.FileAllocationTable.FileEndTime
+                    Catch ex As Exception
 
-                        Finally
-                            .Close()
-                        End Try
-                    End With
+                    Finally
+                        If historicArchiveFile IsNot Nothing AndAlso historicArchiveFile.IsOpen Then
+                            historicArchiveFile.Close()
+                        End If
+                    End Try
                 Else
                     ' We'll resolve to getting the file information from its name only if the file no longer exists
                     ' at the location. This will be the case when file is moved to a different location. In this
@@ -1006,12 +1020,32 @@ Namespace Files
 
         End Function
 
-        Private Function FindHistoricArchiveFile(ByVal historicArchiveFile As ArchiveFileInfo) As Boolean
+#Region " Find Predicates "
 
-            Return m_searchTimeTag.CompareTo(historicArchiveFile.StartTimeTag) >= 0 And _
-                    m_searchTimeTag.CompareTo(historicArchiveFile.EndTimeTag) <= 0
+        Private Function FindHistoricArchiveFile(ByVal fileInfo As ArchiveFileInfo) As Boolean
+
+            Return fileInfo IsNot Nothing And _
+                m_searchTimeTag.CompareTo(fileInfo.StartTimeTag) >= 0 And _
+                m_searchTimeTag.CompareTo(fileInfo.EndTimeTag) <= 0
 
         End Function
+
+        Private Function IsNewHistoricArchiveFile(ByVal fileInfo As ArchiveFileInfo) As Boolean
+
+            Return fileInfo IsNot Nothing And _
+                String.Compare(JustPath(m_name), JustPath(fileInfo.FileName), True) = 0
+
+        End Function
+
+        Private Function IsOldHistoricArchiveFile(ByVal fileInfo As ArchiveFileInfo) As Boolean
+
+            Return fileInfo IsNot Nothing And _
+                Not String.IsNullOrEmpty(m_offloadPath) And _
+                String.Compare(JustPath(m_offloadPath), JustPath(fileInfo.FileName), True) = 0
+
+        End Function
+
+#End Region
 
 #Region " Queue Delegates "
 
@@ -1036,19 +1070,19 @@ Namespace Files
 
                 Dim writeData As Boolean = False
                 Dim pointData As New List(Of StandardPointData)()
-                Dim historicArchiveFile As ArchiveFileInfo = Nothing
+                Dim historicFileInfo As ArchiveFileInfo = Nothing
                 For i As Integer = 0 To sortedPointData(pointID).Count - 1
-                    If historicArchiveFile Is Nothing Then
+                    If historicFileInfo Is Nothing Then
                         ' We'll try to find a historic file when the current point data belongs.
                         m_searchTimeTag = sortedPointData(pointID)(i).TimeTag
                         SyncLock m_historicArchiveFileList
-                            historicArchiveFile = m_historicArchiveFileList.Find(AddressOf FindHistoricArchiveFile)
+                            historicFileInfo = m_historicArchiveFileList.Find(AddressOf FindHistoricArchiveFile)
                         End SyncLock
                     End If
 
-                    If historicArchiveFile IsNot Nothing Then
-                        If sortedPointData(pointID)(i).TimeTag.CompareTo(historicArchiveFile.StartTimeTag) >= 0 AndAlso _
-                                sortedPointData(pointID)(i).TimeTag.CompareTo(historicArchiveFile.EndTimeTag) <= 0 Then
+                    If historicFileInfo IsNot Nothing Then
+                        If sortedPointData(pointID)(i).TimeTag.CompareTo(historicFileInfo.StartTimeTag) >= 0 AndAlso _
+                                sortedPointData(pointID)(i).TimeTag.CompareTo(historicFileInfo.EndTimeTag) <= 0 Then
                             ' The current point data belongs to the current historic archive file.
                             pointData.Add(sortedPointData(pointID)(i))
                         Else
@@ -1063,20 +1097,26 @@ Namespace Files
                         If i = sortedPointData(pointID).Count - 1 Then writeData = True
 
                         If writeData AndAlso pointData.Count > 0 Then
-                            With New ArchiveFile()
-                                .Name = historicArchiveFile.FileName
-                                .CompressData = m_compressData
-                                .DiscardOoSData = m_discardOoSData
-                                .StateFile = m_stateFile
-                                .IntercomFile = m_intercomFile
-                                .Open()
-                                .Write(pointData.ToArray())
-                                .Close()
-                            End With
+                            Dim historicArchiveFile As New ArchiveFile()
+                            historicArchiveFile.Name = historicFileInfo.FileName
+                            historicArchiveFile.CompressData = m_compressData
+                            historicArchiveFile.DiscardOoSData = m_discardOoSData
+                            historicArchiveFile.StateFile = m_stateFile
+                            historicArchiveFile.IntercomFile = m_intercomFile
+                            Try
+                                historicArchiveFile.Open()
+                                historicArchiveFile.Write(pointData.ToArray())
+                            Catch ex As Exception
+
+                            Finally
+                                If historicArchiveFile IsNot Nothing AndAlso historicArchiveFile.IsOpen Then
+                                    historicArchiveFile.Close()
+                                End If
+                            End Try
 
                             writeData = False
                             pointData.Clear()
-                            historicArchiveFile = Nothing
+                            historicFileInfo = Nothing
                         End If
                     End If
                 Next
@@ -1181,6 +1221,7 @@ Namespace Files
         ''' Represents information about an Archive File.
         ''' </summary>
         Public Class ArchiveFileInfo
+            Implements IComparable
 
             Public FileName As String
 
@@ -1195,6 +1236,18 @@ Namespace Files
                     Return StartTimeTag.Equals(other.StartTimeTag) And EndTimeTag.Equals(other.EndTimeTag) And _
                         String.Compare(JustPath(FileName), JustPath(other.FileName), True) = 0 And _
                         String.Compare(JustFileName(FileName), JustFileName(other.FileName), True) = 0
+                End If
+
+            End Function
+
+            Public Function CompareTo(ByVal obj As Object) As Integer Implements System.IComparable.CompareTo
+
+                Dim other As ArchiveFileInfo = TryCast(obj, ArchiveFileInfo)
+                If other IsNot Nothing Then
+                    Dim startTTagCompare As Integer = StartTimeTag.CompareTo(other.StartTimeTag)
+                    Return IIf(startTTagCompare = 0, EndTimeTag.CompareTo(other.EndTimeTag), startTTagCompare)
+                Else
+                    Throw New ArgumentException(String.Format("Cannot compare {0} with {1}.", Me.GetType().Name, other.GetType().Name))
                 End If
 
             End Function

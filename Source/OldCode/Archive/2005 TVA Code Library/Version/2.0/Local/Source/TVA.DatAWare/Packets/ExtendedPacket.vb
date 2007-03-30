@@ -46,7 +46,7 @@ Namespace Packets
 
         Public Sub New()
 
-            MyBase.New(PacketActionType.SaveAndReply)
+            MyBase.New(PacketActionType.SaveOnly)
 
         End Sub
 
@@ -60,28 +60,7 @@ Namespace Packets
 
             MyClass.New()
 
-            If (binaryImage.Length - startIndex) >= Size Then
-                ' We have a binary image of valid size.
-                Dim packetTypeID As Short = BitConverter.ToInt16(binaryImage, startIndex)
-                If packetTypeID = TypeID Then
-                    ' We have a binary image with the correct type ID.
-                    m_pointID = BitConverter.ToInt32(binaryImage, startIndex + 2)
-                    m_year = BitConverter.ToInt16(binaryImage, startIndex + 6)
-                    m_month = Convert.ToInt16(binaryImage(startIndex + 8))
-                    m_day = Convert.ToInt16(binaryImage(startIndex + 9))
-                    m_hour = Convert.ToInt16(binaryImage(startIndex + 10))
-                    m_minute = Convert.ToInt16(binaryImage(startIndex + 11))
-                    m_second = Convert.ToInt16(binaryImage(startIndex + 12))
-                    m_quality = CType(binaryImage(startIndex + 13), Quality)
-                    m_millisecond = BitConverter.ToInt16(binaryImage, startIndex + 14)
-                    m_gmtOffset = BitConverter.ToInt16(binaryImage, startIndex + 16)
-                    m_value = BitConverter.ToSingle(binaryImage, startIndex + 18)
-                Else
-                    Throw New ArgumentException(String.Format("Unexpected packet type ID {0}. Expected packet type ID {1}.", packetTypeID, TypeID))
-                End If
-            Else
-                Throw New ArgumentException(String.Format("Binary image smaller than expected. Expected binary image size {0}.", Size))
-            End If
+            Initialize(binaryImage, startIndex)
 
         End Sub
 
@@ -184,6 +163,8 @@ Namespace Packets
             End Set
         End Property
 
+#Region " Overrides "
+
         Public Overrides ReadOnly Property ReplyData() As Byte()
             Get
                 Return Encoding.Default.GetBytes("ACK")
@@ -204,29 +185,38 @@ Namespace Packets
 
         End Sub
 
-        Public Shared Shadows Function TryParse(ByVal binaryImage As Byte(), ByRef packets As List(Of IPacket)) As Boolean
-
-            If binaryImage IsNot Nothing Then
-                If binaryImage.Length >= Size Then
-                    packets = New List(Of IPacket)()
-                    For i As Integer = 0 To binaryImage.Length - 1 Step Size
-                        Try
-                            packets.Add(New StandardPacket(binaryImage, i))
-                        Catch ex As Exception
-                            ' Its likely that we encounter an exception here if the entire buffer is not well formed.
-                        End Try
-                    Next
-                    Return True
-                End If
-            End If
-
-            Return False
-
-        End Function
-
         Public Overloads Overrides Function Initialize(ByVal binaryImage() As Byte, ByVal startIndex As Integer) As Integer
 
+            If binaryImage.Length - startIndex >= Size Then
+                ' We have a binary image of valid size.
+                Dim packetTypeID As Short = BitConverter.ToInt16(binaryImage, startIndex)
+                If packetTypeID = TypeID Then
+                    ' We have a binary image with the correct type ID.
+                    m_pointID = BitConverter.ToInt32(binaryImage, startIndex + 2)
+                    m_year = BitConverter.ToInt16(binaryImage, startIndex + 6)
+                    m_month = Convert.ToInt16(binaryImage(startIndex + 8))
+                    m_day = Convert.ToInt16(binaryImage(startIndex + 9))
+                    m_hour = Convert.ToInt16(binaryImage(startIndex + 10))
+                    m_minute = Convert.ToInt16(binaryImage(startIndex + 11))
+                    m_second = Convert.ToInt16(binaryImage(startIndex + 12))
+                    m_quality = CType(binaryImage(startIndex + 13), Quality)
+                    m_millisecond = BitConverter.ToInt16(binaryImage, startIndex + 14)
+                    m_gmtOffset = BitConverter.ToInt16(binaryImage, startIndex + 16)
+                    m_value = BitConverter.ToSingle(binaryImage, startIndex + 18)
+
+                    If startIndex + Size = binaryImage.Length Then ActionType = PacketActionType.SaveAndReply
+
+                    Return Size
+                Else
+                    Throw New ArgumentException(String.Format("Unexpected packet type ID {0}. Expected packet type ID {1}.", packetTypeID, TypeID))
+                End If
+            Else
+                Throw New ArgumentException(String.Format("Binary image smaller than expected. Expected binary image size {0}.", Size))
+            End If
+
         End Function
+
+#End Region
 
     End Class
 

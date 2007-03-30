@@ -423,15 +423,19 @@ Namespace Files
         ''' <returns></returns>
         Private Function FindDataBlockPointer(ByVal dataBlockPointer As ArchiveDataBlockPointer) As Boolean
 
-            ' Note: The StartTime value of the pointer is ignored if m_searchStartTime = TimeTag.MinValue and
-            '       m_searchEndTime = TimeTag.MaxValue. In this case only the PointID value is compared. This
-            '       comes in handy when the first or last pointer is to be found from the list of pointers for
-            '       a point ID in addition to all the pointer for a point ID.
-            Return (dataBlockPointer.PointID = m_searchPointID AndAlso _
-                    (m_searchStartTime.CompareTo(TimeTag.MinValue) = 0 OrElse _
-                        dataBlockPointer.StartTime.CompareTo(m_searchStartTime) >= 0) AndAlso _
-                    (m_searchEndTime.CompareTo(TimeTag.MaxValue) = 0 OrElse _
-                        dataBlockPointer.StartTime.CompareTo(m_searchEndTime) <= 0))
+            If dataBlockPointer IsNot Nothing Then
+                ' Note: The StartTime value of the pointer is ignored if m_searchStartTime = TimeTag.MinValue and
+                '       m_searchEndTime = TimeTag.MaxValue. In this case only the PointID value is compared. This
+                '       comes in handy when the first or last pointer is to be found from the list of pointers for
+                '       a point ID in addition to all the pointer for a point ID.
+                Return (dataBlockPointer.PointID = m_searchPointID AndAlso _
+                        (m_searchStartTime.CompareTo(TimeTag.MinValue) = 0 OrElse _
+                            dataBlockPointer.StartTime.CompareTo(m_searchStartTime) >= 0) AndAlso _
+                        (m_searchEndTime.CompareTo(TimeTag.MaxValue) = 0 OrElse _
+                            dataBlockPointer.StartTime.CompareTo(m_searchEndTime) <= 0))
+            Else
+                Return False
+            End If
 
         End Function
 

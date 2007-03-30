@@ -33,6 +33,10 @@ Namespace Packets
 
         End Sub
 
+#Region " Interface Implementation "
+
+#Region " IPacket "
+
         Public Property ArchiveFile() As ArchiveFile Implements IPacket.ArchiveFile
             Get
                 Return m_archiveFile
@@ -64,13 +68,9 @@ Namespace Packets
 
         Public MustOverride Sub SaveData() Implements IPacket.SaveData
 
-        Public Shared Function TryParse(ByVal binaryImage As Byte(), ByRef packets As List(Of IPacket)) As Boolean
-
-            Throw New NotImplementedException("This static method has not been implemented by the derived class.")
-
-        End Function
-
 #End Region
+
+#Region " IBinaryDataConsumer "
 
         Public Function Initialize(ByVal binaryImage() As Byte) As Integer Implements IBinaryDataConsumer.Initialize
 
@@ -79,6 +79,12 @@ Namespace Packets
         End Function
 
         Public MustOverride Function Initialize(ByVal binaryImage() As Byte, ByVal startIndex As Integer) As Integer Implements IBinaryDataConsumer.Initialize
+
+#End Region
+
+#End Region
+
+#End Region
 
     End Class
 
