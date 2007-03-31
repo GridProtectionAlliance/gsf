@@ -786,6 +786,8 @@ Namespace Files
                 Try
                     standbyArchiveFile.Open()
                 Catch ex As Exception
+
+                Finally
                     If standbyArchiveFile IsNot Nothing AndAlso standbyArchiveFile.IsOpen Then
                         standbyArchiveFile.Close()
                     End If
@@ -802,7 +804,6 @@ Namespace Files
 
         Private Sub OffloadHistoricFiles()
 
-
             RaiseEvent OffloadStart(Me, EventArgs.Empty)
 
             If m_buildHistoricFileListThread.IsAlive Then
@@ -813,23 +814,26 @@ Namespace Files
             If Directory.Exists(m_offloadPath) Then
                 ' The offload path that is specified is a valid one so we'll gather a list of all historic
                 ' files in the directory where the current (active) archive file is located.
-                Dim historicFiles As String() = Directory.GetFiles(JustPath(m_name), HistoricFilesSearchPattern)
+                Dim newHistoricFiles As List(Of ArchiveFileInfo) = Nothing
+                SyncLock m_historicArchiveFileList
+                    newHistoricFiles = m_historicArchiveFileList.FindAll(AddressOf IsNewHistoricArchiveFile)
+                End SyncLock
 
                 ' Sorting the list will sort the historic files from oldest to newest.
-                Array.Sort(historicFiles)
+                newHistoricFiles.Sort()
 
                 ' We'll offload the specified number of oldest historic files to the offload location if the 
                 ' number of historic files is more than the offload count or all of the historic files if the 
                 ' offload count is smaller the available number of historic files.
-                For i As Integer = 0 To IIf(historicFiles.Length < m_offloadCount, historicFiles.Length, m_offloadCount) - 1
+                For i As Integer = 0 To IIf(newHistoricFiles.Count < m_offloadCount, newHistoricFiles.Count, m_offloadCount) - 1
                     Try
-                        Dim destinationFileName As String = AddPathSuffix(m_offloadPath) & JustFileName(historicFiles(i))
+                        Dim destinationFileName As String = AddPathSuffix(m_offloadPath) & JustFileName(newHistoricFiles(i).FileName)
                         If File.Exists(destinationFileName) Then
                             ' Delete the destination file is it already exists.
                             File.Delete(destinationFileName)
                         End If
 
-                        File.Move(historicFiles(i), destinationFileName)
+                        File.Move(newHistoricFiles(i).FileName, destinationFileName)
                     Catch ex As ThreadAbortException
                         Throw
                     Catch ex As Exception
@@ -1233,9 +1237,9 @@ Namespace Files
 
                 Dim other As ArchiveFileInfo = TryCast(obj, ArchiveFileInfo)
                 If other IsNot Nothing Then
-                    Return StartTimeTag.Equals(other.StartTimeTag) And EndTimeTag.Equals(other.EndTimeTag) And _
-                        String.Compare(JustPath(FileName), JustPath(other.FileName), True) = 0 And _
-                        String.Compare(JustFileName(FileName), JustFileName(other.FileName), True) = 0
+                    ' We will only compare file name for equality because the result will be incorrent if one of 
+                    ' the ArchiveFileInfo instance is created from the filename by GetHistoricFileInfo() function.
+                    Return String.Compare(JustFileName(FileName), JustFileName(other.FileName), True) = 0
                 End If
 
             End Function
