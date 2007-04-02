@@ -38,8 +38,6 @@ Namespace Components
 
 #Region " Code Scope: Public "
 
-        Public Const InterfaceName As String = "TVA.IBinaryDataConsumer"
-
         Public Property IDFieldName() As String
             Get
                 Return m_idFieldName

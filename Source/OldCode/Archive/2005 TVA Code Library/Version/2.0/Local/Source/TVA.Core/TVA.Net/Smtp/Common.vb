@@ -33,6 +33,13 @@ Namespace Net.Smtp
 
         End Sub
 
+        Public Shared Sub SendMail(ByVal from As String, ByVal toRecipients As String, ByVal subject As String, _
+                ByVal body As String, ByVal isBodyHtml As Boolean)
+
+            SendMail(from, toRecipients, subject, body, isBodyHtml, DefaultSmtpServer)
+
+        End Sub
+
         ''' <summary>Creates a mail message from the specified information and sends it to an SMTP server for delivery.</summary>
         ''' <param name="from">The address of the mail message sender.</param>
         ''' <param name="toRecipients">A comma-seperated address list of the mail message recipients.</param>
@@ -44,6 +51,13 @@ Namespace Net.Smtp
                 ByVal body As String, ByVal isBodyHtml As Boolean, ByVal smtpServer As String)
 
             SendMail(from, toRecipients, Nothing, Nothing, subject, body, isBodyHtml, smtpServer)
+
+        End Sub
+
+        Public Shared Sub SendMail(ByVal from As String, ByVal toRecipients As String, ByVal ccRecipients As String, _
+                ByVal bccRecipients As String, ByVal subject As String, ByVal body As String, ByVal isBodyHtml As Boolean)
+
+            SendMail(from, toRecipients, ccRecipients, bccRecipients, subject, body, isBodyHtml, DefaultSmtpServer)
 
         End Sub
 

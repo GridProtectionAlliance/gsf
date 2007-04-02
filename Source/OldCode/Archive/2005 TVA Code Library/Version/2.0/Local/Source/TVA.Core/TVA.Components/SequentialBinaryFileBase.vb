@@ -12,6 +12,7 @@ Namespace Components
 #Region " Member Declaration "
 
         Private m_name As String
+        Private m_loadOnOpen As Boolean
         Private m_saveOnClose As Boolean
         Private m_alignOnSave As Boolean
         Private m_autoSaveInterval As Integer
@@ -34,9 +35,15 @@ Namespace Components
         Public Event FileOpened As EventHandler
         Public Event FileClosing As EventHandler
         Public Event FileClosed As EventHandler
-        Public Event DataLoading As EventHandler(Of ProgressEventArgs(Of Integer))
-        Public Event DataSaving As EventHandler(Of ProgressEventArgs(Of Integer))
-        Public Event DataAligning As EventHandler(Of ProgressEventArgs(Of Integer))
+        Public Event DataLoadStart As EventHandler
+        Public Event DataLoadComplete As EventHandler
+        Public Event DataLoadProgress As EventHandler(Of ProgressEventArgs(Of Integer))
+        Public Event DataSaveStart As EventHandler
+        Public Event DataSaveComplete As EventHandler
+        Public Event DataSaveProgress As EventHandler(Of ProgressEventArgs(Of Integer))
+        Public Event DataAlignStart As EventHandler
+        Public Event DataAlignComplete As EventHandler
+        Public Event DataAlignProgress As EventHandler(Of ProgressEventArgs(Of Integer))
 
 #End Region
 
@@ -58,6 +65,15 @@ Namespace Components
                 Else
                     Throw New ArgumentNullException("Name")
                 End If
+            End Set
+        End Property
+
+        Public Property LoadOnOpen() As Boolean
+            Get
+                Return m_loadOnOpen
+            End Get
+            Set(ByVal value As Boolean)
+                m_loadOnOpen = value
             End Set
         End Property
 
@@ -136,22 +152,7 @@ Namespace Components
                     ' Once we have the file open, we'll process the file data.
                     If m_fileStream.Length Mod RecordSize = 0 Then
                         ' The file we're working with is a valid one.
-                        Dim binaryImage As Byte() = TVA.Common.CreateArray(Of Byte)(RecordSize)
-                        Dim recordCount As Integer = Convert.ToInt32(m_fileStream.Length \ binaryImage.Length)
-
-                        SyncLock m_fileStream
-                            ' Create records from the data in the file.
-                            For i As Integer = 1 To recordCount
-                                m_fileStream.Read(binaryImage, 0, binaryImage.Length)
-                                m_fileRecords.Add(NewRecord(i, binaryImage))
-                                RaiseEvent DataLoading(Me, New ProgressEventArgs(Of Integer)(recordCount, i))
-                            Next
-                        End SyncLock
-
-                        ' Make sure that we have the minimum number of records specified.
-                        For i As Integer = recordCount + 1 To m_minimumRecordCount
-                            m_fileRecords.Add(NewRecord(i))
-                        Next
+                        If m_loadOnOpen Then Load()
                     Else
                         Close(False)
                         Throw New InvalidOperationException(String.Format("File """"{0}"""" is corrupt.", m_name))
@@ -211,11 +212,42 @@ Namespace Components
 
         End Sub
 
+        Public Sub Load()
+
+            If IsOpen Then
+                RaiseEvent DataLoadStart(Me, EventArgs.Empty)
+
+                Dim binaryImage As Byte() = TVA.Common.CreateArray(Of Byte)(RecordSize)
+                Dim recordCount As Integer = Convert.ToInt32(m_fileStream.Length \ binaryImage.Length)
+
+                m_fileRecords.Clear()
+                SyncLock m_fileStream
+                    ' Create records from the data in the file.
+                    For i As Integer = 1 To recordCount
+                        m_fileStream.Read(binaryImage, 0, binaryImage.Length)
+                        m_fileRecords.Add(NewRecord(i, binaryImage))
+
+                        RaiseEvent DataLoadProgress(Me, New ProgressEventArgs(Of Integer)(recordCount, i))
+                    Next
+                End SyncLock
+
+                ' Make sure that we have the minimum number of records specified.
+                For i As Integer = m_fileRecords.Count + 1 To m_minimumRecordCount
+                    m_fileRecords.Add(NewRecord(i))
+                Next
+
+                RaiseEvent DataLoadComplete(Me, EventArgs.Empty)
+            End If
+
+        End Sub
+
         Public Sub Save()
 
             If IsOpen Then
                 ' Align the records before writing them to the file if specified.
                 If m_alignOnSave Then Align()
+
+                RaiseEvent DataSaveStart(Me, EventArgs.Empty)
 
                 SyncLock m_fileStream
                     ' Set the cursor to BOF before we start writing to the file.
@@ -223,10 +255,13 @@ Namespace Components
                     ' Write all of the records to the file.
                     For i As Integer = 0 To m_fileRecords.Count - 1
                         m_fileStream.Write(m_fileRecords(i).BinaryImage, 0, RecordSize)
-                        RaiseEvent DataSaving(Me, New ProgressEventArgs(Of Integer)(i + 1, m_fileRecords.Count))
+
+                        RaiseEvent DataSaveProgress(Me, New ProgressEventArgs(Of Integer)(m_fileRecords.Count, i + 1))
                     Next
                     m_fileStream.Flush()    ' Ensure that the data is written to the file.
                 End SyncLock
+
+                RaiseEvent DataSaveComplete(Me, EventArgs.Empty)
             Else
                 Throw New InvalidOperationException(String.Format("{0} ""{1}"" is not open.", Me.GetType().Name, m_name))
             End If
@@ -238,6 +273,9 @@ Namespace Components
             If m_fileRecords IsNot Nothing AndAlso m_fileRecords.Count > 0 Then
                 ' We can proceed with aligning the records since they have been initialized.
                 ' First, we'll make a working copy of the records.
+
+                RaiseEvent DataAlignStart(Me, EventArgs.Empty)
+
                 Dim nonAlignedRecords As New List(Of T)(m_fileRecords)
                 ' Sorting will ensure that the records are in proper order.
                 nonAlignedRecords.Sort()
@@ -247,8 +285,11 @@ Namespace Components
                     ' We'll use the Write() method for adding records, so that we make use of any special record 
                     ' alignment that may be performed in deriving classes.
                     Write(nonAlignedRecords(i))
-                    RaiseEvent DataAligning(Me, New ProgressEventArgs(Of Integer)(nonAlignedRecords.Count, i + 1))
+
+                    RaiseEvent DataAlignProgress(Me, New ProgressEventArgs(Of Integer)(nonAlignedRecords.Count, i + 1))
                 Next
+
+                RaiseEvent DataAlignComplete(Me, EventArgs.Empty)
             End If
 
         End Sub
@@ -256,6 +297,9 @@ Namespace Components
         Public Overridable Function Read() As List(Of T)
 
             If IsOpen Then
+                ' We'll load records from the file if they were not loaded when the file was opened.
+                If Not m_loadOnOpen Then Load()
+
                 Return m_fileRecords
             Else
                 Throw New InvalidOperationException(String.Format("{0} ""{1}"" is not open.", Me.GetType().Name, m_name))
@@ -266,6 +310,9 @@ Namespace Components
         Public Overridable Function Read(ByVal id As Integer) As T
 
             If IsOpen Then
+                ' We'll load records from the file if they were not loaded when the file was opened.
+                If Not m_loadOnOpen Then Load()
+
                 If id <= m_fileRecords.Count Then
                     Return m_fileRecords(id - 1)
                 Else
