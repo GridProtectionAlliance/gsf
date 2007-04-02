@@ -66,10 +66,10 @@
     <Compile Include="TVA.Components\BinaryDataParserBase.vb">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="TVA.Components\SequentialBinaryFileBase.Designer.vb">
-      <DependentUpon>SequentialBinaryFileBase.vb</DependentUpon>
+    <Compile Include="TVA.Components\BinaryDataFileBase.Designer.vb">
+      <DependentUpon>BinaryDataFileBase.vb</DependentUpon>
     </Compile>
-    <Compile Include="TVA.Components\SequentialBinaryFileBase.vb">
+    <Compile Include="TVA.Components\BinaryDataFileBase.vb">
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="TVA.Console\Arguments.vb" />
@@ -173,6 +173,10 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Embedded Resources\Scheduling.ScheduleManager.bmp" />
+    <EmbeddedResource Include="TVA.Components\BinaryDataFileBase.resx">
+      <SubType>Designer</SubType>
+      <DependentUpon>BinaryDataFileBase.vb</DependentUpon>
+    </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
     <Content Include="Embedded Resources\Net.Ftp.FileWatcher.bmp" />

@@ -6,13 +6,14 @@ Imports TVA.IO.FilePath
 
 Namespace Components
 
-    Public MustInherit Class SequentialBinaryFileBase(Of T As IBinaryDataProvider)
+    Public MustInherit Class BinaryDataFileBase(Of T As IBinaryDataProvider)
         Implements IPersistSettings, ISupportInitialize
 
 #Region " Member Declaration "
 
         Private m_name As String
         Private m_loadOnOpen As Boolean
+        Private m_loadOnChange As Boolean
         Private m_saveOnClose As Boolean
         Private m_alignOnSave As Boolean
         Private m_autoSaveInterval As Integer
@@ -74,6 +75,15 @@ Namespace Components
             End Get
             Set(ByVal value As Boolean)
                 m_loadOnOpen = value
+            End Set
+        End Property
+
+        Public Property LoadOnChange() As Boolean
+            Get
+                Return m_loadOnChange
+            End Get
+            Set(ByVal value As Boolean)
+                m_loadOnChange = value
             End Set
         End Property
 
@@ -169,6 +179,11 @@ Namespace Components
                     Next
                 End If
 
+                If m_loadOnChange Then
+                    FileSystemWatcher.Path = JustPath(m_name)
+                    FileSystemWatcher.Filter = JustFileName(m_name)
+                    FileSystemWatcher.EnableRaisingEvents = True
+                End If
                 If m_autoSaveInterval > 0 Then
                     m_autoSaveTimer.Interval = m_autoSaveInterval
                     m_autoSaveTimer.Start()
@@ -206,6 +221,7 @@ Namespace Components
                 m_fileStream = Nothing
                 m_fileRecords.Clear()
                 m_fileRecords = Nothing
+                FileSystemWatcher.EnableRaisingEvents = False
 
                 RaiseEvent FileClosed(Me, EventArgs.Empty)
             End If
@@ -385,6 +401,8 @@ Namespace Components
                 Try
                     With TVA.Configuration.Common.CategorizedSettings(m_configurationCategory)
                         Name = .Item("Name").GetTypedValue(m_name)
+                        LoadOnOpen = .Item("LoadOnOpen").GetTypedValue(m_loadOnOpen)
+                        LoadOnChange = .Item("LoadOnChange").GetTypedValue(m_loadOnChange)
                         SaveOnClose = .Item("SaveOnClose").GetTypedValue(m_saveOnClose)
                         AlignOnSave = .Item("AlignOnSave").GetTypedValue(m_alignOnSave)
                         AutoSaveInterval = .Item("AutoSaveInterval").GetTypedValue(m_autoSaveInterval)
@@ -407,6 +425,14 @@ Namespace Components
                         With .Item("Name", True)
                             .Value = m_name
                             .Description = "Name of the file including its path."
+                        End With
+                        With .Item("LoadOnOpen", True)
+                            .Value = m_loadOnOpen.ToString()
+                            .Description = "True if file is to be loaded when opened; otherwise False."
+                        End With
+                        With .Item("LoadOnChange", True)
+                            .Value = m_loadOnChange.ToString()
+                            .Description = "True if file is to be re-loaded when modified externally; otherwise False."
                         End With
                         With .Item("SaveOnClose", True)
                             .Value = m_saveOnClose.ToString()
@@ -485,6 +511,17 @@ Namespace Components
 
 #End Region
 
+#Region " FileSystemWatcher "
+
+        Private Sub FileSystemWatcher_Changed(ByVal sender As Object, ByVal e As System.IO.FileSystemEventArgs) Handles FileSystemWatcher.Changed
+
+            ' Reload the file when it is modified externally, but only if it has been loaded once.
+            If m_fileRecords.Count > 0 Then Load()
+
+        End Sub
+
+#End Region
+        
 #End Region
 
 #End Region

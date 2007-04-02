@@ -1,6 +1,6 @@
 Namespace Components
 
-    Partial Class SequentialBinaryFileBase(Of T As IBinaryDataProvider)
+    Partial Class BinaryDataFileBase(Of T As IBinaryDataProvider)
         Inherits System.ComponentModel.Component
 
         <System.Diagnostics.DebuggerNonUserCode()> _
@@ -24,6 +24,7 @@ Namespace Components
             m_name = Me.GetType().Name & Extension
             m_minimumRecordCount = 100
             m_loadOnOpen = True
+            m_loadOnChange = True
             m_saveOnClose = False
             m_alignOnSave = False
             m_autoSaveInterval = -1
@@ -57,8 +58,16 @@ Namespace Components
         'Do not modify it using the code editor.
         <System.Diagnostics.DebuggerStepThrough()> _
         Private Sub InitializeComponent()
-            components = New System.ComponentModel.Container()
+            Me.FileSystemWatcher = New System.IO.FileSystemWatcher
+            CType(Me.FileSystemWatcher, System.ComponentModel.ISupportInitialize).BeginInit()
+            '
+            'FileSystemWatcher
+            '
+            Me.FileSystemWatcher.EnableRaisingEvents = True
+            CType(Me.FileSystemWatcher, System.ComponentModel.ISupportInitialize).EndInit()
+
         End Sub
+        Friend WithEvents FileSystemWatcher As System.IO.FileSystemWatcher
 
     End Class
 
