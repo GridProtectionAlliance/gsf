@@ -60,7 +60,7 @@ Public MustInherit Class CommunicationClientBase
 
     Private m_connectTime As Long
     Private m_disconnectTime As Long
-    Private m_connectionSignal As AutoResetEvent
+    Private m_connectionWaitHandle As AutoResetEvent
 
 #End Region
 
@@ -545,7 +545,7 @@ Public MustInherit Class CommunicationClientBase
     Public Sub WaitForConnection(ByVal waitTime As Integer, ByVal stopRetrying As Boolean) Implements ICommunicationClient.WaitForConnection
 
         ' We'll wait until client has connected or until the time to wait for connection is reached.
-        m_connectionSignal.WaitOne(waitTime, False)
+        m_connectionWaitHandle.WaitOne(waitTime, False)
 
         ' If the client hasn't connected after waiting for the specified time and if it is specified to stop 
         ' attempting to connect to the server, then we'll call the CancelConnect() method.
@@ -883,7 +883,7 @@ Public MustInherit Class CommunicationClientBase
         m_disconnectTime = 0
         m_totalBytesSent = 0    ' Reset the number of bytes sent and received between the client and server.
         m_totalBytesReceived = 0
-        m_connectionSignal.Set()
+        m_connectionWaitHandle.Set()
         RaiseEvent Connected(Me, e)
 
     End Sub
