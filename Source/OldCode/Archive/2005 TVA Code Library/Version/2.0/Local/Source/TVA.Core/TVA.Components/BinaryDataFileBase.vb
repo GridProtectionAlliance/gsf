@@ -13,7 +13,7 @@ Namespace Components
 
         Private m_name As String
         Private m_loadOnOpen As Boolean
-        Private m_loadOnChange As Boolean
+        Private m_reloadOnModify As Boolean
         Private m_saveOnClose As Boolean
         Private m_alignOnSave As Boolean
         Private m_autoSaveInterval As Integer
@@ -36,6 +36,7 @@ Namespace Components
         Public Event FileOpened As EventHandler
         Public Event FileClosing As EventHandler
         Public Event FileClosed As EventHandler
+        Public Event FileModified As EventHandler
         Public Event DataLoadStart As EventHandler
         Public Event DataLoadComplete As EventHandler
         Public Event DataLoadProgress As EventHandler(Of ProgressEventArgs(Of Integer))
@@ -78,12 +79,12 @@ Namespace Components
             End Set
         End Property
 
-        Public Property LoadOnChange() As Boolean
+        Public Property ReloadOnModify() As Boolean
             Get
-                Return m_loadOnChange
+                Return m_reloadOnModify
             End Get
             Set(ByVal value As Boolean)
-                m_loadOnChange = value
+                m_reloadOnModify = value
             End Set
         End Property
 
@@ -179,7 +180,7 @@ Namespace Components
                     Next
                 End If
 
-                If m_loadOnChange Then
+                If m_reloadOnModify Then
                     FileSystemWatcher.Path = JustPath(m_name)
                     FileSystemWatcher.Filter = JustFileName(m_name)
                     FileSystemWatcher.EnableRaisingEvents = True
@@ -402,7 +403,7 @@ Namespace Components
                     With TVA.Configuration.Common.CategorizedSettings(m_configurationCategory)
                         Name = .Item("Name").GetTypedValue(m_name)
                         LoadOnOpen = .Item("LoadOnOpen").GetTypedValue(m_loadOnOpen)
-                        LoadOnChange = .Item("LoadOnChange").GetTypedValue(m_loadOnChange)
+                        ReloadOnModify = .Item("ReloadOnModify").GetTypedValue(m_reloadOnModify)
                         SaveOnClose = .Item("SaveOnClose").GetTypedValue(m_saveOnClose)
                         AlignOnSave = .Item("AlignOnSave").GetTypedValue(m_alignOnSave)
                         AutoSaveInterval = .Item("AutoSaveInterval").GetTypedValue(m_autoSaveInterval)
@@ -430,8 +431,8 @@ Namespace Components
                             .Value = m_loadOnOpen.ToString()
                             .Description = "True if file is to be loaded when opened; otherwise False."
                         End With
-                        With .Item("LoadOnChange", True)
-                            .Value = m_loadOnChange.ToString()
+                        With .Item("ReloadOnModify", True)
+                            .Value = m_reloadOnModify.ToString()
                             .Description = "True if file is to be re-loaded when modified externally; otherwise False."
                         End With
                         With .Item("SaveOnClose", True)
@@ -514,6 +515,8 @@ Namespace Components
 #Region " FileSystemWatcher "
 
         Private Sub FileSystemWatcher_Changed(ByVal sender As Object, ByVal e As System.IO.FileSystemEventArgs) Handles FileSystemWatcher.Changed
+
+            RaiseEvent FileModified(Me, EventArgs.Empty)
 
             ' Reload the file when it is modified externally, but only if it has been loaded once.
             If m_fileRecords.Count > 0 Then Load()

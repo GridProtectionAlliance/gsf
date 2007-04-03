@@ -24,7 +24,7 @@ Namespace Components
             m_name = Me.GetType().Name & Extension
             m_minimumRecordCount = 100
             m_loadOnOpen = True
-            m_loadOnChange = True
+            m_reloadOnModify = True
             m_saveOnClose = False
             m_alignOnSave = False
             m_autoSaveInterval = -1
