@@ -314,8 +314,8 @@ Namespace Components
         Public Overridable Function Read() As List(Of T)
 
             If IsOpen Then
-                ' We'll load records from the file if they were not loaded when the file was opened.
-                If Not m_loadOnOpen Then Load()
+                ' We'll load records from the file if they have not been loaded already.
+                If Not m_loadOnOpen AndAlso m_fileRecords.Count = 0 Then Load()
 
                 Return m_fileRecords
             Else
@@ -327,8 +327,8 @@ Namespace Components
         Public Overridable Function Read(ByVal id As Integer) As T
 
             If IsOpen Then
-                ' We'll load records from the file if they were not loaded when the file was opened.
-                If Not m_loadOnOpen Then Load()
+                ' We'll load records from the file if they have not been loaded already.
+                If Not m_loadOnOpen AndAlso m_fileRecords.Count = 0 Then Load()
 
                 If id <= m_fileRecords.Count Then
                     Return m_fileRecords(id - 1)

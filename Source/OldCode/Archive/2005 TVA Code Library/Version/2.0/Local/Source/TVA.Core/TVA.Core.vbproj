@@ -179,6 +179,7 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Embedded Resources\IO.LogFile.bmp" />
     <Content Include="Embedded Resources\Net.Ftp.FileWatcher.bmp" />
     <Content Include="Embedded Resources\Net.Ftp.Session.bmp" />
   </ItemGroup>
