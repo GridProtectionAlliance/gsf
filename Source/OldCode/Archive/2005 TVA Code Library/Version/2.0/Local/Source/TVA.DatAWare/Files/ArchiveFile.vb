@@ -356,8 +356,9 @@ Namespace Files
                         If m_stateFile.Records(i).ActiveDataBlock IsNot Nothing AndAlso _
                                 ((m_type = ArchiveFileType.Active AndAlso Not m_stateFile.Records(i).ActiveDataBlock.IsForHistoricData) OrElse _
                                 (m_type = ArchiveFileType.Historic AndAlso m_stateFile.Records(i).ActiveDataBlock.IsForHistoricData)) Then
-                            ' We'll deallocate the data block if the current file is "active" or if it is "historic" 
-                            ' and the block was used to append historical data into it.
+                            ' We'll deallocate the data block used by this file. If the current file is a historic 
+                            ' file, it is safe to assume that a data block marked as "for historic data" is being
+                            ' used by the current file because no more than one historic file will be open at once.
                             m_stateFile.Records(i).ActiveDataBlock.Dispose()
                             m_stateFile.Records(i).ActiveDataBlock = Nothing
                         End If
