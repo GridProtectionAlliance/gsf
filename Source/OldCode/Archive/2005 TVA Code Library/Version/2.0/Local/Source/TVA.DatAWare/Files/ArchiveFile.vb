@@ -287,6 +287,11 @@ Namespace Files
                     If Not m_intercomFile.IsOpen Then m_intercomFile.Open()
 
                     If m_type = ArchiveFileType.Active Then
+                        ' We'll make sure that the intercom file has the right information. This is done to ensure
+                        ' that the server is able to read this file because the server will not read the "active"
+                        ' archive file if the file is being rolled over.
+                        m_intercomFile.Records(0).RolloverInProgress = False
+
                         ' Start preparing the list of historic files on a seperate thread.
                         m_buildHistoricFileListThread = New Thread(AddressOf BuildHistoricFileList)
                         m_buildHistoricFileListThread.Priority = ThreadPriority.Lowest
