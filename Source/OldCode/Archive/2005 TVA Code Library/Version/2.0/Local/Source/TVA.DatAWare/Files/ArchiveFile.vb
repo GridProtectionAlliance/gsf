@@ -348,13 +348,14 @@ Namespace Files
                 End If
 
                 If m_type <> ArchiveFileType.Standby AndAlso m_stateFile.IsOpen Then
-                    ' The archive file is open multiple times (by ArchiveDataBlock) only when data is being
+                    ' The archive file is opened multiple times (by ArchiveDataBlock) only when data is being
                     ' written to the file. In case the current file is for "standby" purpose, no data will be 
                     ' written to it and therefore, the file will not be opened multiple time in "standby" mode.
                     For i As Integer = 0 To m_stateFile.Records.Count - 1
                         ' We'll release all the data blocks that were being used by the file.
                         If m_stateFile.Records(i).ActiveDataBlock IsNot Nothing AndAlso _
-                                (m_type = ArchiveFileType.Active OrElse (m_type = ArchiveFileType.Historic AndAlso m_stateFile.Records(i).ActiveDataBlock.IsForHistoricData)) Then
+                                ((m_type = ArchiveFileType.Active AndAlso Not m_stateFile.Records(i).ActiveDataBlock.IsForHistoricData) OrElse _
+                                (m_type = ArchiveFileType.Historic AndAlso m_stateFile.Records(i).ActiveDataBlock.IsForHistoricData)) Then
                             ' We'll deallocate the data block if the current file is "active" or if it is "historic" 
                             ' and the block was used to append historical data into it.
                             m_stateFile.Records(i).ActiveDataBlock.Dispose()
