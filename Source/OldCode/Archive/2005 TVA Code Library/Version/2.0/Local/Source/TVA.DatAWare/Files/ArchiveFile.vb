@@ -329,22 +329,31 @@ Namespace Files
 
                 If m_saveOnClose Then Save()
 
+                ' Dispose the file allocation table of the file.
                 If m_fat IsNot Nothing Then
                     m_fat.Dispose()
                     m_fat = Nothing
                 End If
+
+                ' Dispose the file stream used primarily by the file allocation table.
                 If m_fileStream IsNot Nothing Then
                     m_fileStream.Dispose()
                     m_fileStream = Nothing
                 End If
 
+                ' Abort any asynchronous processing.
                 m_rolloverPreparationThread.Abort()
                 m_buildHistoricFileListThread.Abort()
+
+                ' Stop the historic and out-of-sequence data queues.
                 m_historicDataQueue.Stop()
                 m_outOfSequenceDataQueue.Stop()
+
+                ' Stop watching to historic archive files.
                 CurrentLocationFileSystemWatcher.EnableRaisingEvents = False
                 OffloadLocationFileSystemWatcher.EnableRaisingEvents = False
 
+                ' Clear the list of historic archive files.
                 If m_historicArchiveFileList IsNot Nothing Then
                     SyncLock m_historicArchiveFileList
                         m_historicArchiveFileList.Clear()
@@ -506,8 +515,8 @@ Namespace Files
                             ' Data failed compression test - write it to current file.
                             If pointState.ActiveDataBlock Is Nothing OrElse _
                                     (pointState.ActiveDataBlock IsNot Nothing AndAlso pointState.ActiveDataBlock.SlotsAvailable <= 0) Then
-                                ' We either don't have a active data block where we can archive the point data or   
-                                ' we have a active data block but it is full. So, we have to request a new data block 
+                                ' We either don't have a active data block where we can archive the point data or we 
+                                ' have a active data block but it is full. So, we have to request a new data block 
                                 ' from the FAT in order to write the data.
 
                                 If pointState.ActiveDataBlock IsNot Nothing Then
@@ -521,9 +530,9 @@ Namespace Files
 
                                         If m_fat.DataBlocksAvailable < m_fat.DataBlockCount * (1 - (m_rolloverPreparationThreshold / 100)) AndAlso _
                                                 Not File.Exists(StandbyArchiveFileName) AndAlso Not m_rolloverPreparationThread.IsAlive Then
-                                            ' We've requested the specified percent of the total number of data 
-                                            ' blocks in the file, so we must now prepare for the rollover process 
-                                            ' since it has not been done yet and it is not already in progress.
+                                            ' We've requested the specified percent of the total number of data blocks 
+                                            ' in the file, so we must now prepare for the rollover process since it 
+                                            ' has not been done yet and it is not already in progress.
                                             m_rolloverPreparationThread = New Thread(AddressOf PrepareForRollover)
                                             m_rolloverPreparationThread.Priority = ThreadPriority.Lowest
                                             m_rolloverPreparationThread.Start()
@@ -533,23 +542,27 @@ Namespace Files
                                 End Select
                             End If
 
-                            If pointState.ActiveDataBlock IsNot Nothing Then
-                                ' We were able to obtain a data block for writing data.
-                                If m_type = ArchiveFileType.Active OrElse _
-                                        (m_type = ArchiveFileType.Historic AndAlso pointState.ActiveDataBlock.IsForHistoricData) Then
-                                    ' This condition ensures that historic data is written to a block that was requested
-                                    ' for the purpose of writting historic data.
-                                    pointState.ActiveDataBlock.Write(pointData)
-                                    m_fat.EventsArchived += 1
-
-                                    RaiseEvent CurrentDataWritten(Me, EventArgs.Empty)
-                                End If
+                            If pointState.ActiveDataBlock IsNot Nothing AndAlso _
+                                    ((m_type = ArchiveFileType.Active AndAlso Not pointState.ActiveDataBlock.IsForHistoricData) OrElse _
+                                    (m_type = ArchiveFileType.Historic AndAlso pointState.ActiveDataBlock.IsForHistoricData)) Then
+                                ' We have a data block to which we can write the data.
+                                pointState.ActiveDataBlock.Write(pointData)
+                                m_fat.EventsArchived += 1
 
                                 If m_type = ArchiveFileType.Active Then m_fat.FileEndTime = pointData.TimeTag
                                 If m_fat.FileStartTime.CompareTo(TimeTag.MinValue) = 0 Then m_fat.FileStartTime = pointData.TimeTag
+
+                                RaiseEvent CurrentDataWritten(Me, EventArgs.Empty)
                             Else
-                                ' We were unable to obtain a data block for writing data to because all data block are in use.
-                                RaiseEvent FileFull(Me, EventArgs.Empty)
+                                ' We either don't have a data block for writing data or we have one but it doesn't 
+                                ' belong to this file. This is possible under the following circumstances:
+                                ' 1) 
+                                ' 2)
+
+                                If m_fat.DataBlocksAvailable = 0 Then
+                                    ' There are no more data blocks available for writing data to.
+                                    RaiseEvent FileFull(Me, EventArgs.Empty)
+                                End If
                             End If
                         Else
                             ' Data passed compression test - don't write it.
@@ -1081,6 +1094,11 @@ Namespace Files
 #Region " Queue Delegates "
 
         Public Sub WriteToHistoricArchiveFile(ByVal items As StandardPointData())
+
+            If m_buildHistoricFileListThread.IsAlive Then
+                ' Wait until the historic file list has been built.
+                m_buildHistoricFileListThread.Join()
+            End If
 
             RaiseEvent HistoricDataWriteStart(Me, EventArgs.Empty)
 
