@@ -214,6 +214,9 @@ Namespace Components
                 m_autoSaveTimer.Stop()
                 m_autoAnalyzeTimer.Stop()
 
+                ' Stop monitoring for changes to the file.
+                FileSystemWatcher.EnableRaisingEvents = False
+
                 ' Save records back to the file if specified.
                 If saveFile Then Save()
 
@@ -222,7 +225,6 @@ Namespace Components
                 m_fileStream = Nothing
                 m_fileRecords.Clear()
                 m_fileRecords = Nothing
-                FileSystemWatcher.EnableRaisingEvents = False
 
                 RaiseEvent FileClosed(Me, EventArgs.Empty)
             End If
