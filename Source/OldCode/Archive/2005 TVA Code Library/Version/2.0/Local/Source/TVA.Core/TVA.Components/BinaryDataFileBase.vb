@@ -435,7 +435,7 @@ Namespace Components
                         End With
                         With .Item("ReloadOnModify", True)
                             .Value = m_reloadOnModify.ToString()
-                            .Description = "True if file is to be re-loaded when modified externally; otherwise False."
+                            .Description = "True if file is to be re-loaded when modified; otherwise False."
                         End With
                         With .Item("SaveOnClose", True)
                             .Value = m_saveOnClose.ToString()
