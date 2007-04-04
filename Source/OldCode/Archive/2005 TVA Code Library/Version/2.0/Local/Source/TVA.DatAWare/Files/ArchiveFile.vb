@@ -332,18 +332,19 @@ Namespace Files
                     m_fileStream.Dispose()
                     m_fileStream = Nothing
                 End If
+
                 m_rolloverPreparationThread.Abort()
                 m_buildHistoricFileListThread.Abort()
                 m_historicDataQueue.Stop()
                 m_outOfSequenceDataQueue.Stop()
+                CurrentLocationFileSystemWatcher.EnableRaisingEvents = False
+                OffloadLocationFileSystemWatcher.EnableRaisingEvents = False
 
-                If m_type = ArchiveFileType.Active Then
+                If m_historicArchiveFileList IsNot Nothing Then
                     SyncLock m_historicArchiveFileList
                         m_historicArchiveFileList.Clear()
                     End SyncLock
                     m_historicArchiveFileList = Nothing
-                    CurrentLocationFileSystemWatcher.EnableRaisingEvents = False
-                    OffloadLocationFileSystemWatcher.EnableRaisingEvents = False
                 End If
 
                 If m_type <> ArchiveFileType.Standby AndAlso m_stateFile.IsOpen Then
