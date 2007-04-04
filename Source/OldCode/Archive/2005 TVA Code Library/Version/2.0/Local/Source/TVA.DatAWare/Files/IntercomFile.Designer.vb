@@ -1,7 +1,7 @@
 Namespace Files
 
     Partial Class IntercomFile
-        Inherits TVA.Components.SequentialBinaryFileBase(Of EnvironmentData)
+        Inherits TVA.Components.BinaryDataFileBase(Of EnvironmentData)
 
         <System.Diagnostics.DebuggerNonUserCode()> _
         Public Sub New(ByVal container As System.ComponentModel.IContainer)

@@ -447,10 +447,14 @@ Namespace Files
 
             ' We'll periodically write the fixed part of the FAT to the file.
             If m_fileStream IsNot Nothing Then
-                SyncLock m_fileStream
-                    m_fileStream.Seek(DataBinaryLength + VariableBinaryLength, SeekOrigin.Begin)
-                    m_fileStream.Write(FixedBinaryImage, 0, FixedBinaryLength)
-                End SyncLock
+                Try
+                    SyncLock m_fileStream
+                        m_fileStream.Seek(DataBinaryLength + VariableBinaryLength, SeekOrigin.Begin)
+                        m_fileStream.Write(FixedBinaryImage, 0, FixedBinaryLength)
+                    End SyncLock
+                Catch ex As Exception
+                    ' Absorb any exceptions we might encounter when writing fixed part of the FAT.
+                End Try
             End If
 
         End Sub

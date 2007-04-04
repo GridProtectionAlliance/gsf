@@ -1,7 +1,7 @@
 Namespace Files
 
     Partial Class StateFile
-        Inherits TVA.Components.SequentialBinaryFileBase(Of PointState)
+        Inherits TVA.Components.BinaryDataFileBase(Of PointState)
 
         <System.Diagnostics.DebuggerNonUserCode()> _
         Public Sub New(ByVal container As System.ComponentModel.IContainer)
