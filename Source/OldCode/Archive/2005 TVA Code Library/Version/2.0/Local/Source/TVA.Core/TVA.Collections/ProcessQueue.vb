@@ -19,6 +19,9 @@
 '  03/21/2007 - J. Ritchie Carroll
 '       Added "ItemsBeingProcessed" property to return current total number of items being processed
 '       Added "Flush" method to allow any remaining items in queue to be processed before shutdown
+'  04/05/2007 - J. Ritchie Carroll
+'       Added "RequeueMode" properties to allow users to specify how data gets reinserted back into
+'       the list (prefix or suffix) after processing timeouts or exceptions
 '
 '*******************************************************************************************************
 
@@ -144,8 +147,14 @@ Namespace Collections
         ''' <summary>Default setting for requeuing items on processing timeout</summary>
         Public Const DefaultRequeueOnTimeout As Boolean = False
 
+        ''' <summary>Default setting for requeuing mode on processing timeout</summary>
+        Public Const DefaultRequeueModeOnTimeout As RequeueMode = RequeueMode.Prefix
+
         ''' <summary>Default setting for requeuing items on processing exceptions</summary>
         Public Const DefaultRequeueOnException As Boolean = False
+
+        ''' <summary>Default setting for requeuing mode on processing exceptions</summary>
+        Public Const DefaultRequeueModeOnException As RequeueMode = RequeueMode.Prefix
 
         ''' <summary>Default real-time processing interval (in milliseconds)</summary>
         Public Const RealTimeProcessInterval As Double = 0.0#
@@ -161,7 +170,9 @@ Namespace Collections
         Private m_maximumThreads As Integer
         Private m_processTimeout As Integer
         Private m_requeueOnTimeout As Boolean
+        Private m_requeueModeOnTimeout As RequeueMode
         Private m_requeueOnException As Boolean
+        Private m_requeueModeOnException As RequeueMode
         Private m_processingIsRealTime As Boolean
         Private m_threadCount As Integer
         Private m_enabled As Boolean
@@ -480,7 +491,9 @@ Namespace Collections
             m_maximumThreads = maximumThreads
             m_processTimeout = processTimeout
             m_requeueOnTimeout = requeueOnTimeout
+            m_requeueModeOnTimeout = DefaultRequeueModeOnTimeout
             m_requeueOnException = requeueOnException
+            m_requeueModeOnException = DefaultRequeueModeOnException
             m_realTimeProcessThreadPriority = ThreadPriority.Highest
 
             If processInterval = RealTimeProcessInterval Then
@@ -682,6 +695,19 @@ Namespace Collections
         End Property
 
         ''' <summary>
+        ''' This property determines the mode of insertion used (prefix or suffix) when at item is placed back into the list after processing times out
+        ''' </summary>
+        ''' <remarks>This property is only relevant when RequeueOnTimeout is set to True</remarks>
+        Public Overridable Property RequeueModeOnTimeout() As RequeueMode
+            Get
+                Return m_requeueModeOnTimeout
+            End Get
+            Set(ByVal value As RequeueMode)
+                m_requeueModeOnTimeout = value
+            End Set
+        End Property
+
+        ''' <summary>
         ''' This property determines whether or not to automatically place an item back into the list if an exception occurs while processing
         ''' </summary>
         Public Overridable Property RequeueOnException() As Boolean
@@ -690,6 +716,19 @@ Namespace Collections
             End Get
             Set(ByVal value As Boolean)
                 m_requeueOnException = value
+            End Set
+        End Property
+
+        ''' <summary>
+        ''' This property determines the mode of insertion used (prefix or suffix) when at item is placed back into the list after an exception occurs while processing
+        ''' </summary>
+        ''' <remarks>This property is only relevant when RequeueOnException is set to True</remarks>
+        Public Overridable Property RequeueModeOnException() As RequeueMode
+            Get
+                Return m_requeueModeOnException
+            End Get
+            Set(ByVal value As RequeueMode)
+                m_requeueModeOnException = value
             End Set
         End Property
 
@@ -784,7 +823,7 @@ Namespace Collections
         ''' will continue to process items as quickly as possible until the queue is empty.  Unless the user stops
         ''' queueing items to be processed, the flush call may never return (not a happy situtation on shutdown).
         ''' For this reason, during this function call requeueing of items on exception or process timeout will
-        ''' be disabled.
+        ''' be temporarily disabled.
         ''' </para>
         ''' <para>
         ''' The process queue does not implement a finalizer - if user's fail to call this method before the class
@@ -1168,6 +1207,32 @@ Namespace Collections
         End Function
 
         ''' <summary>
+        ''' Requeues item into list according to specified requeue mode
+        ''' </summary>
+        Protected Overridable Sub RequeueItem(ByVal item As T, ByVal mode As RequeueMode)
+
+            If mode = RequeueMode.Prefix Then
+                Insert(0, item)
+            Else
+                Add(item)
+            End If
+
+        End Sub
+
+        ''' <summary>
+        ''' Requeues items into list according to specified requeue mode
+        ''' </summary>
+        Protected Overridable Sub RequeueItems(ByVal items As T(), ByVal mode As RequeueMode)
+
+            If mode = RequeueMode.Prefix Then
+                InsertRange(0, items)
+            Else
+                AddRange(items)
+            End If
+
+        End Sub
+
+        ''' <summary>
         ''' Raises the base class ItemProcessed event
         ''' </summary>
         ''' <remarks>
@@ -1304,7 +1369,7 @@ Namespace Collections
                 Throw ex
             Catch ex As Exception When Not m_debugMode
                 ' We requeue item on processing exception if requested
-                If m_requeueOnException Then Insert(0, item)
+                If m_requeueOnException Then RequeueItem(item, m_requeueModeOnException)
 
                 ' Processing won't stop for any errors thrown by the user function, but we will report them...
                 RaiseEvent ProcessException(ex)
@@ -1330,7 +1395,7 @@ Namespace Collections
                 Throw ex
             Catch ex As Exception When Not m_debugMode
                 ' We requeue items on processing exception if requested
-                If m_requeueOnException Then InsertRange(0, items)
+                If m_requeueOnException Then RequeueItems(items, m_requeueModeOnException)
 
                 ' Processing won't stop for any errors thrown by the user function, but we will report them...
                 RaiseEvent ProcessException(ex)
@@ -1430,7 +1495,7 @@ Namespace Collections
                                 RaiseEvent ItemTimedOut(nextItem)
 
                                 ' We requeue item on processing timeout if requested
-                                If m_requeueOnTimeout Then Insert(0, nextItem)
+                                If m_requeueOnTimeout Then RequeueItem(nextItem, m_requeueModeOnTimeout)
                             End If
                         End With
                     End If
@@ -1505,7 +1570,7 @@ Namespace Collections
                                 RaiseEvent ItemsTimedOut(nextItems)
 
                                 ' We requeue items on processing timeout if requested
-                                If m_requeueOnTimeout Then InsertRange(0, nextItems)
+                                If m_requeueOnTimeout Then RequeueItems(nextItems, m_requeueModeOnTimeout)
                             End If
                         End With
                     End If
