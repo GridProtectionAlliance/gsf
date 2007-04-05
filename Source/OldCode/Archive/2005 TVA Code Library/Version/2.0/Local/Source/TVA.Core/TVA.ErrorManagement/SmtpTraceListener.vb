@@ -19,7 +19,7 @@
 
 Imports System.Text
 Imports System.Diagnostics
-Imports TVA.Net.Smtp.Common
+Imports TVA.Net.Smtp
 
 Namespace ErrorManagement
 
@@ -58,20 +58,23 @@ Namespace ErrorManagement
 
         Public Overloads Overrides Sub Write(ByVal message As String)
 
-            With New StringBuilder()
-                .Append(message)
-                ' Append standard information to the bottom of the message.
-                .Append(Environment.NewLine() & Environment.NewLine())
-                .Append("This trace message was sent from the machine ")
-                .Append(System.Net.Dns.GetHostName())
-                .Append(" (")
-                .Append(System.Net.Dns.GetHostEntry(System.Net.Dns.GetHostName()).AddressList(0).ToString())
-                .Append(") at ")
-                .Append(System.DateTime.Now())
+            Dim messageBuilder As New StringBuilder()
+            messageBuilder.Append(message)
+            ' Append standard information to the bottom of the message.
+            messageBuilder.Append(Environment.NewLine() & Environment.NewLine())
+            messageBuilder.Append("This trace message was sent from the machine ")
+            messageBuilder.Append(System.Net.Dns.GetHostName())
+            messageBuilder.Append(" (")
+            messageBuilder.Append(System.Net.Dns.GetHostEntry(System.Net.Dns.GetHostName()).AddressList(0).ToString())
+            messageBuilder.Append(") at ")
+            messageBuilder.Append(System.DateTime.Now)
 
-                'Email the trace message.
-                SendMail(m_sender, m_recipient, "Trace Message From " & m_sender, .ToString(), False, m_smtpServer)
-            End With
+            Dim mailMessage As New SimpleMailMessage()
+            mailMessage.Sender = m_sender
+            mailMessage.Recipients = m_recipient
+            mailMessage.Subject = "Trace message for " & System.AppDomain.CurrentDomain.FriendlyName
+            mailMessage.Body = messageBuilder.ToString()
+            mailMessage.Send()
 
         End Sub
 
