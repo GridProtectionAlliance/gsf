@@ -544,12 +544,14 @@ Public MustInherit Class CommunicationClientBase
     ''' </param>
     Public Sub WaitForConnection(ByVal waitTime As Integer, ByVal stopRetrying As Boolean) Implements ICommunicationClient.WaitForConnection
 
-        ' We'll wait until client has connected or until the time to wait for connection is reached.
-        m_connectionWaitHandle.WaitOne(waitTime, False)
+        If Not IsConnected Then
+            ' We'll wait until client has connected or until the time to wait for connection is reached.
+            m_connectionWaitHandle.WaitOne(waitTime, False)
 
-        ' If the client hasn't connected after waiting for the specified time and if it is specified to stop 
-        ' attempting to connect to the server, then we'll call the CancelConnect() method.
-        If stopRetrying AndAlso Not m_isConnected Then CancelConnect()
+            ' If the client hasn't connected after waiting for the specified time and if it is specified to stop 
+            ' attempting to connect to the server, then we'll call the CancelConnect() method.
+            If stopRetrying AndAlso Not m_isConnected Then CancelConnect()
+        End If
 
     End Sub
 
