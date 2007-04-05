@@ -2,13 +2,13 @@
 <ClassDiagram MajorVersion="1" MinorVersion="1">
   <Font Name="Tahoma" Size="8.25" />
   <Comment CommentText="TVA.Collections Class Diagram">
-    <Position X="0.5" Y="0.5" Height="0.263" Width="1.763" />
+    <Position X="0.51" Y="0.5" Height="0.263" Width="1.763" />
   </Comment>
   <Class Name="TVA.Collections.ProcessQueue(Of T)">
-    <Position X="0.5" Y="1.25" Width="3.5" />
+    <Position X="0.5" Y="1.5" Width="3.5" />
     <TypeIdentifier>
       <FileName>TVA.Collections\ProcessQueue.vb</FileName>
-      <HashCode>BH6AKuyExLHASN8QCAF1HFwGlIKJggIEKgmC0IXUPFA=</HashCode>
+      <HashCode>BH+AauyExLPQSN8QCAF1HHwGlKKJggIEKo2C0IXcPFA=</HashCode>
     </TypeIdentifier>
     <Compartments>
       <Compartment Name="Nested Types" Collapsed="false" />
@@ -38,10 +38,10 @@
     <Lollipop Position="0.2" />
   </Class>
   <Class Name="TVA.Collections.KeyedProcessQueue(Of TKey, TValue)">
-    <Position X="4.75" Y="1.25" Width="3.5" />
+    <Position X="4.75" Y="1.5" Width="3.5" />
     <TypeIdentifier>
       <FileName>TVA.Collections\KeyedProcessQueue.vb</FileName>
-      <HashCode>DAoAAIAAAIAEQAAACQAEBBUFEAAAAAAAAAAgEACAABA=</HashCode>
+      <HashCode>DGoAAIAAAIAEQAAACQAUFBUFEIAAAAAAAAAkEACAABA=</HashCode>
     </TypeIdentifier>
     <Compartments>
       <Compartment Name="Nested Types" Collapsed="false" />
