@@ -534,8 +534,8 @@ Namespace Files
                                     Case ArchiveFileType.Active
                                         pointState.ActiveDataBlock = m_fat.RequestDataBlock(pointData.Definition.PointID, pointData.TimeTag)
 
-                                        If m_fat.DataBlocksAvailable < m_fat.DataBlockCount * (1 - (m_rolloverPreparationThreshold / 100)) AndAlso _
-                                                Not File.Exists(StandbyArchiveFileName) AndAlso Not m_rolloverPreparationThread.IsAlive Then
+                                        If Not File.Exists(StandbyArchiveFileName) AndAlso Not m_rolloverPreparationThread.IsAlive AndAlso _
+                                                m_fat.DataBlocksAvailable < m_fat.DataBlockCount * (1 - (m_rolloverPreparationThreshold / 100)) Then
                                             ' We've requested the specified percent of the total number of data blocks 
                                             ' in the file, so we must now prepare for the rollover process since it 
                                             ' has not been done yet and it is not already in progress.
@@ -802,7 +802,7 @@ Namespace Files
 
                 RaiseEvent HistoricFileListBuildComplete(Me, EventArgs.Empty)
             Catch ex As ThreadAbortException
-                ' We can safely ignore this exception.
+                ' This thread must die now...
             Catch ex As Exception
                 RaiseEvent HistoricFileListBuildException(Me, New ExceptionEventArgs(ex))
             End Try
@@ -820,7 +820,7 @@ Namespace Files
 
                 RaiseEvent RolloverPreparationStart(Me, EventArgs.Empty)
 
-                ' Opening and closing a new archive file in "standby" mode will create a "standby" file.
+                ' Opening and closing a new archive file in "standby" mode will create a "standby" archive file.
                 Dim standbyArchiveFile As New ArchiveFile()
                 standbyArchiveFile.Name = m_name
                 standbyArchiveFile.Type = ArchiveFileType.Standby
@@ -830,16 +830,24 @@ Namespace Files
                 standbyArchiveFile.IntercomFile = m_intercomFile
                 Try
                     standbyArchiveFile.Open()
-                Catch ex As Exception
-
-                Finally
                     standbyArchiveFile.Close()
                     standbyArchiveFile = Nothing
+                Catch ex As Exception
+                    Dim standbyFileName As String = standbyArchiveFile.Name
+                    standbyArchiveFile.Close()
+                    standbyArchiveFile = Nothing
+                    ' We didn't succeed in creating a "standby" archive file, so we'll delete it if it was created
+                    ' partially (might happen if there isn't enough disk space or thread is aborted). This is to 
+                    ' ensure that this preparation processes is kicked off again until a valid "standby" archive 
+                    ' file is successfully created.
+                    If File.Exists(standbyFileName) Then File.Delete(standbyFileName)
+
+                    Throw ' Rethrow the exception so the appropriate action is taken.
                 End Try
 
                 RaiseEvent RolloverPreparationComplete(Me, EventArgs.Empty)
             Catch ex As ThreadAbortException
-                ' We can safely ignore this exception.
+                ' This thread must die now...
             Catch ex As Exception
                 RaiseEvent RolloverPreparationException(Me, New ExceptionEventArgs(ex))
             End Try
@@ -854,24 +862,24 @@ Namespace Files
                     m_buildHistoricFileListThread.Join()
                 End If
 
-                RaiseEvent OffloadStart(Me, EventArgs.Empty)
+                Try
+                    RaiseEvent OffloadStart(Me, EventArgs.Empty)
 
-                ' The offload path that is specified is a valid one so we'll gather a list of all historic
-                ' files in the directory where the current (active) archive file is located.
-                Dim newHistoricFiles As List(Of ArchiveFileInfo) = Nothing
-                SyncLock m_historicArchiveFileList
-                    newHistoricFiles = m_historicArchiveFileList.FindAll(AddressOf IsNewHistoricArchiveFile)
-                End SyncLock
+                    ' The offload path that is specified is a valid one so we'll gather a list of all historic
+                    ' files in the directory where the current (active) archive file is located.
+                    Dim newHistoricFiles As List(Of ArchiveFileInfo) = Nothing
+                    SyncLock m_historicArchiveFileList
+                        newHistoricFiles = m_historicArchiveFileList.FindAll(AddressOf IsNewHistoricArchiveFile)
+                    End SyncLock
 
-                ' Sorting the list will sort the historic files from oldest to newest.
-                newHistoricFiles.Sort()
+                    ' Sorting the list will sort the historic files from oldest to newest.
+                    newHistoricFiles.Sort()
 
-                ' We'll offload the specified number of oldest historic files to the offload location if the 
-                ' number of historic files is more than the offload count or all of the historic files if the 
-                ' offload count is smaller the available number of historic files.
-                Dim offloadCount As Integer = IIf(newHistoricFiles.Count < m_offloadCount, newHistoricFiles.Count, m_offloadCount) - 1
-                For i As Integer = 0 To offloadCount
-                    Try
+                    ' We'll offload the specified number of oldest historic files to the offload location if the 
+                    ' number of historic files is more than the offload count or all of the historic files if the 
+                    ' offload count is smaller the available number of historic files.
+                    Dim offloadCount As Integer = IIf(newHistoricFiles.Count < m_offloadCount, newHistoricFiles.Count, m_offloadCount)
+                    For i As Integer = 0 To offloadCount - 1
                         Dim destinationFileName As String = AddPathSuffix(m_offloadPath) & JustFileName(newHistoricFiles(i).FileName)
                         If File.Exists(destinationFileName) Then
                             ' Delete the destination file is it already exists.
@@ -881,14 +889,14 @@ Namespace Files
                         File.Move(newHistoricFiles(i).FileName, destinationFileName)
 
                         RaiseEvent OffloadProgress(Me, New ProgressEventArgs(Of Integer)(offloadCount, i + 1))
-                    Catch ex As ThreadAbortException
-                        Throw ' Bubble up the ThreadAbortException.
-                    Catch ex As Exception
-                        RaiseEvent OffloadException(Me, New ExceptionEventArgs(ex))
-                    End Try
-                Next
+                    Next
 
-                RaiseEvent OffloadComplete(Me, EventArgs.Empty)
+                    RaiseEvent OffloadComplete(Me, EventArgs.Empty)
+                Catch ex As ThreadAbortException
+                    Throw ' Bubble up the ThreadAbortException.
+                Catch ex As Exception
+                    RaiseEvent OffloadException(Me, New ExceptionEventArgs(ex))
+                End Try
             End If
 
         End Sub
