@@ -310,7 +310,9 @@ Namespace Files
         Protected Overridable Sub Dispose(ByVal disposing As Boolean)
 
             If Not m_disposedValue Then
+                ' Dispose unmanaged resources.
                 If disposing Then
+                    ' Dispose managed resources.
                     m_fatUpdateTimer.Dispose()
                 End If
             End If
