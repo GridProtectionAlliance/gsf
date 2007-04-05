@@ -37,6 +37,7 @@ Namespace Files
         Private m_historicArchiveFileList As List(Of ArchiveFileInfo)
         Private m_rolloverPreparationThread As Thread
         Private m_buildHistoricFileListThread As Thread
+        Private m_rolloverWaitHandle As ManualResetEvent
         Private m_searchTimeTag As TimeTag  ' Used for finding a historic archive file for historic data.
 
         Private WithEvents m_historicDataQueue As ProcessQueue(Of StandardPointData)
@@ -55,6 +56,7 @@ Namespace Files
         Public Event FileClosed As EventHandler
         Public Event RolloverStart As EventHandler
         Public Event RolloverComplete As EventHandler
+        Public Event RolloverException As EventHandler(Of ExceptionEventArgs)
         Public Event OffloadStart As EventHandler
         Public Event OffloadComplete As EventHandler
         Public Event OffloadException As EventHandler(Of ExceptionEventArgs)
@@ -404,22 +406,26 @@ Namespace Files
                 Try
                     RaiseEvent RolloverStart(Me, EventArgs.Empty)
 
-                    ' Signal the server that we're are performing rollover so it must let go of this file.
+                    ' Signal other threads using the current archive file to wait until the rollover is complete.
+                    m_rolloverWaitHandle.Reset()
+
+                    ' Signal the server that we're are performing rollover so it'll let go of this file.
                     m_intercomFile.Records(0).RolloverInProgress = True
                     m_intercomFile.Save()
                     Close()
 
                     WaitForWriteLock(m_name, 60)        ' Wait for the server to release the file.
                     File.Move(m_name, historyFile)      ' Make the active archive file, historic archive file.
-                    WaitForWriteLock(standbyFile, 60)
                     File.Move(standbyFile, m_name)      ' Make the standby archive file, active archive file.
+
+                    ' At this point, rollover is considered to be complete, so other threads can resume operation.
+                    m_rolloverWaitHandle.Set()
 
                     RaiseEvent RolloverComplete(Me, EventArgs.Empty)
                 Catch ex As Exception
-                    Throw
+                    RaiseEvent RolloverException(Me, New ExceptionEventArgs(ex))
                 Finally
-                    ' We'll just make sure that we're back to business as usual even if there was a problem rolling
-                    ' over to a new archive file. This might happen if we were unable to rename files during rollover.
+                    ' We're now done with the rollover process, so we must inform the server of this.
                     Open()
                     m_intercomFile.Records(0).RolloverInProgress = False
                     m_intercomFile.Save()
@@ -842,14 +848,14 @@ Namespace Files
 
         Private Sub OffloadHistoricFiles()
 
-            RaiseEvent OffloadStart(Me, EventArgs.Empty)
-
-            If m_buildHistoricFileListThread.IsAlive Then
-                ' Wait until the historic file list has been built.
-                m_buildHistoricFileListThread.Join()
-            End If
-
             If Directory.Exists(m_offloadPath) Then
+                If m_buildHistoricFileListThread.IsAlive Then
+                    ' Wait until the historic file list has been built.
+                    m_buildHistoricFileListThread.Join()
+                End If
+
+                RaiseEvent OffloadStart(Me, EventArgs.Empty)
+
                 ' The offload path that is specified is a valid one so we'll gather a list of all historic
                 ' files in the directory where the current (active) archive file is located.
                 Dim newHistoricFiles As List(Of ArchiveFileInfo) = Nothing
@@ -876,14 +882,14 @@ Namespace Files
 
                         RaiseEvent OffloadProgress(Me, New ProgressEventArgs(Of Integer)(offloadCount, i + 1))
                     Catch ex As ThreadAbortException
-                        Throw
+                        Throw ' Bubble up the ThreadAbortException.
                     Catch ex As Exception
                         RaiseEvent OffloadException(Me, New ExceptionEventArgs(ex))
                     End Try
                 Next
-            End If
 
-            RaiseEvent OffloadComplete(Me, EventArgs.Empty)
+                RaiseEvent OffloadComplete(Me, EventArgs.Empty)
+            End If
 
         End Sub
 
@@ -1149,13 +1155,19 @@ Namespace Files
                         If i = sortedPointData(pointID).Count - 1 Then writeData = True
 
                         If writeData AndAlso pointData.Count > 0 Then
+                            ' Before we start writing data to a historic file, we make sure that rollover is not in
+                            ' progress. Not sure if this is necessary, but trying to be safe than sorry!
+                            m_rolloverWaitHandle.WaitOne()
+
                             Dim historicArchiveFile As New ArchiveFile()
                             historicArchiveFile.Name = historicFileInfo.FileName
+                            historicArchiveFile.Type = ArchiveFileType.Historic
                             historicArchiveFile.CompressData = m_compressData
                             historicArchiveFile.DiscardOoSData = m_discardOoSData
                             historicArchiveFile.StateFile = m_stateFile
                             historicArchiveFile.IntercomFile = m_intercomFile
                             Try
+                                ' Write all data to the historic file in which it belongs.
                                 historicArchiveFile.Open()
                                 historicArchiveFile.Write(pointData.ToArray())
                                 progressCount += 1
