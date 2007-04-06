@@ -399,7 +399,7 @@ Namespace Files
 
         Public Sub Rollover()
 
-            If m_type = ArchiveFileType.Active AndAlso File.Exists(StandbyArchiveFileName) Then
+            If m_type = ArchiveFileType.Active Then
                 Dim historyFile As String = HistoryArchiveFileName
                 Dim standbyFile As String = StandbyArchiveFileName
 
@@ -414,9 +414,30 @@ Namespace Files
                     m_intercomFile.Save()
                     Close()
 
+                    ' CRITICAL: Exception can be encountered if exclusive lock to the current file cannot be obtained.
+                    '           Possible if the server fails to give up the file or for some reason the current file
+                    '           doesn't release all locks on the file.
                     WaitForWriteLock(m_name, 60)        ' Wait for the server to release the file.
                     File.Move(m_name, historyFile)      ' Make the active archive file, historic archive file.
-                    File.Move(standbyFile, m_name)      ' Make the standby archive file, active archive file.
+                    If File.Exists(standbyFile) Then
+                        ' We have a "standby" archive file for us to use, so we'll use it. It is possible that the
+                        ' "standby" file may not be available for use if it could not be created due to insufficient
+                        ' disk space. If that's the case, Open() below will try to create a new archive file, but
+                        ' will only succeed if there is enough disk space.
+                        File.Move(standbyFile, m_name)  ' Make the standby archive file, active archive file.
+                    End If
+
+                    ' CRITICAL: Exception can be encountered if a "standby" archive is not present for us to use and
+                    '           we cannot create a new archive file probably because there isn't enough disk space.
+                    Try
+                        Open()
+                        ' We're now done with the rollover process, so we must inform the server of this.
+                        m_intercomFile.Records(0).RolloverInProgress = False
+                        m_intercomFile.Save()
+                    Catch ex As Exception
+                        Close() ' Close the file if we fail to open it.
+                        Throw   ' Rethrow the exception so that the exception event can be raised.
+                    End Try
 
                     ' At this point, rollover is considered to be complete, so other threads can resume operation.
                     m_rolloverWaitHandle.Set()
@@ -424,11 +445,6 @@ Namespace Files
                     RaiseEvent RolloverComplete(Me, EventArgs.Empty)
                 Catch ex As Exception
                     RaiseEvent RolloverException(Me, New ExceptionEventArgs(ex))
-                Finally
-                    ' We're now done with the rollover process, so we must inform the server of this.
-                    Open()
-                    m_intercomFile.Records(0).RolloverInProgress = False
-                    m_intercomFile.Save()
                 End Try
             End If
 
@@ -1218,7 +1234,12 @@ Namespace Files
 
         Private Sub ArchiveFile_FileFull(ByVal sender As Object, ByVal e As System.EventArgs) Handles Me.FileFull
 
-            Rollover()
+            If m_rolloverOnFull Then
+                Do While True
+                    Rollover()  ' Start the rollover process.
+                    If m_rolloverWaitHandle.WaitOne(1, False) Then Exit Do ' Rollover is successful.
+                Loop
+            End If
 
         End Sub
 
