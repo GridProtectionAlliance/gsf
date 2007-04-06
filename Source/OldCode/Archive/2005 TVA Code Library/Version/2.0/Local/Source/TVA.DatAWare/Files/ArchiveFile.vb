@@ -476,6 +476,9 @@ Namespace Files
                 ' We don't allow data to be read from a "standby" file.
                 If m_type = ArchiveFileType.Standby Then Return Nothing
 
+                ' Yeild to the rollover process if it is in progress.
+                m_rolloverWaitHandle.WaitOne()
+
                 Dim data As New List(Of StandardPointData)()
                 Dim foundBlocks As List(Of ArchiveDataBlock) = m_fat.FindDataBlocks(pointID, startTime, endTime)
                 For i As Integer = 0 To foundBlocks.Count - 1
@@ -507,6 +510,9 @@ Namespace Files
             If IsOpen Then
                 ' We don't allow data to be written to a "standby" file.
                 If m_type = ArchiveFileType.Standby Then Exit Sub
+
+                ' Yeild to the rollover process if it is in progress.
+                m_rolloverWaitHandle.WaitOne()
 
                 m_fat.EventsReceived += 1
 
