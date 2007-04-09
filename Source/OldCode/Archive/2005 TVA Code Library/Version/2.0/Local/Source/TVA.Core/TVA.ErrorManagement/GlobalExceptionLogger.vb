@@ -240,7 +240,7 @@ Namespace ErrorManagement
                 .AppendLine()
                 .AppendFormat("Assembly Full Name:    {0}", TVA.Assembly.EntryAssembly.FullName)
                 .AppendLine()
-                .AppendFormat("Assembly Version:      {0}", TVA.Assembly.EntryAssembly.ToString)
+                .AppendFormat("Assembly Version:      {0}", TVA.Assembly.EntryAssembly.Version.ToString())
                 .AppendLine()
                 .AppendFormat("Assembly Build Date:   {0}", TVA.Assembly.EntryAssembly.BuildDate.ToString())
                 .AppendLine()

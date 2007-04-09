@@ -1,7 +1,7 @@
-Namespace Files
+Namespace IO
 
-    Partial Class StateFile
-        Inherits TVA.IO.IsamDataFileBase(Of PointState)
+    Partial Class IsamDataFileBase(Of T As IBinaryDataProvider)
+        Inherits System.ComponentModel.Component
 
         <System.Diagnostics.DebuggerNonUserCode()> _
         Public Sub New(ByVal container As System.ComponentModel.IContainer)
@@ -21,12 +21,27 @@ Namespace Files
             'This call is required by the Component Designer.
             InitializeComponent()
 
+            m_name = Me.GetType().Name & Extension
+            m_minimumRecordCount = 100
+            m_loadOnOpen = True
+            m_reloadOnModify = True
+            m_saveOnClose = False
+            m_alignOnSave = False
+            m_autoSaveInterval = -1
+            m_autoAlignInterval = -1
+            m_persistSettings = False
+            m_configurationCategory = Me.GetType().Name
+            m_autoSaveTimer = New System.Timers.Timer()
+            m_autoAnalyzeTimer = New System.Timers.Timer()
+
         End Sub
 
         'Component overrides dispose to clean up the component list.
         <System.Diagnostics.DebuggerNonUserCode()> _
         Protected Overrides Sub Dispose(ByVal disposing As Boolean)
             Try
+                Close()         ' Close the file.
+                SaveSettings()  ' Saves settings to the config file.
                 If disposing AndAlso components IsNot Nothing Then
                     components.Dispose()
                 End If
@@ -43,8 +58,16 @@ Namespace Files
         'Do not modify it using the code editor.
         <System.Diagnostics.DebuggerStepThrough()> _
         Private Sub InitializeComponent()
-            components = New System.ComponentModel.Container()
+            Me.FileSystemWatcher = New System.IO.FileSystemWatcher
+            CType(Me.FileSystemWatcher, System.ComponentModel.ISupportInitialize).BeginInit()
+            '
+            'FileSystemWatcher
+            '
+            Me.FileSystemWatcher.EnableRaisingEvents = True
+            CType(Me.FileSystemWatcher, System.ComponentModel.ISupportInitialize).EndInit()
+
         End Sub
+        Friend WithEvents FileSystemWatcher As System.IO.FileSystemWatcher
 
     End Class
 

@@ -67,12 +67,6 @@
     <Compile Include="TVA.Components\BinaryDataParserBase.vb">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="TVA.Components\BinaryDataFileBase.Designer.vb">
-      <DependentUpon>BinaryDataFileBase.vb</DependentUpon>
-    </Compile>
-    <Compile Include="TVA.Components\BinaryDataFileBase.vb">
-      <SubType>Component</SubType>
-    </Compile>
     <Compile Include="TVA.Console\Arguments.vb" />
     <Compile Include="TVA.Console\Common.vb" />
     <Compile Include="TVA.ErrorManagement\GlobalExceptionLogger.Designer.vb">
@@ -82,6 +76,12 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="TVA.Interop\VBArrayDescriptor.vb" />
+    <Compile Include="TVA.IO\IsamDataFileBase.Designer.vb">
+      <DependentUpon>IsamDataFileBase.vb</DependentUpon>
+    </Compile>
+    <Compile Include="TVA.IO\IsamDataFileBase.vb">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="TVA.Measurements\MeasurementKey.vb" />
     <Compile Include="TVA.Net\Ftp\AsyncResult.vb" />
     <Compile Include="TVA.Net\Ftp\ControlChannel.vb" />
@@ -181,13 +181,13 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Embedded Resources\Scheduling.ScheduleManager.bmp" />
-    <EmbeddedResource Include="TVA.Components\BinaryDataFileBase.resx">
-      <SubType>Designer</SubType>
-      <DependentUpon>BinaryDataFileBase.vb</DependentUpon>
-    </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Embedded Resources\IO.LogFile.bmp" />
+    <EmbeddedResource Include="TVA.IO\IsamDataFileBase.resx">
+      <DependentUpon>IsamDataFileBase.vb</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
     <Content Include="Embedded Resources\Net.Ftp.FileWatcher.bmp" />
     <Content Include="Embedded Resources\Net.Ftp.Session.bmp" />
     <Content Include="Embedded Resources\ErrorManagement.GlobalExceptionLogger.bmp" />
