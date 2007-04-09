@@ -93,6 +93,7 @@ Namespace IO
             If Not Directory.Exists(JustPath(m_name)) Then Directory.CreateDirectory(JustPath(m_name))
             ' Open the log file is it exists, or create it if it doesn't.
             m_fileStream = New FileStream(m_name, FileMode.OpenOrCreate)
+
             ' Start the queue to which log entries are going to be added.
             m_logEntryQueue.Start()
 
@@ -100,8 +101,8 @@ Namespace IO
 
         Public Sub Close()
 
-            ' Finish writing all queued entries.
             m_logEntryQueue.Stop()
+
             ' Close the log file.
             m_fileStream.Dispose()
             m_fileStream = Nothing
@@ -109,9 +110,6 @@ Namespace IO
         End Sub
 
         Public Sub Write(ByVal text As String)
-
-            ' Open the file if closed.
-            If Not IsOpen Then Open()
 
             ' Queue the text for writting to the log file.
             m_logEntryQueue.Add(text)
@@ -181,8 +179,8 @@ Namespace IO
                                 Open()
                             Case LogFileFullAction.Rollover
                                 Dim historyFileName As String = JustPath(m_name) & NoFileExtension(m_name) & "_" & _
-                                                                File.GetCreationTime(m_name).ToString("yyyy-mm-dd hh!MM!ss") & "_to_" & _
-                                                                File.GetLastWriteTime(m_name).ToString("yyyy-mm-dd hh!MM!ss") & JustFileExtension(m_name)
+                                                                File.GetCreationTime(m_name).ToString("yyyy-MM-dd hh!mm!ss") & "_to_" & _
+                                                                File.GetLastWriteTime(m_name).ToString("yyyy-MM-dd hh!mm!ss") & JustFileExtension(m_name)
 
                                 Close()
                                 File.Move(m_name, historyFileName)
