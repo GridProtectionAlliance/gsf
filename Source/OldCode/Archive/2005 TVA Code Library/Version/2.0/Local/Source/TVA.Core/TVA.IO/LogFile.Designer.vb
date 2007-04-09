@@ -22,8 +22,8 @@ Namespace IO
             InitializeComponent()
 
             m_name = Me.GetType().Name & DefaultExtension
-            m_maximumSize = 1
-            m_rolloverOnFull = False
+            m_size = MinimumFileSize
+            m_fileFullAction = LogFileFullAction.Rollover
 
             m_logEntryQueue = TVA.Collections.ProcessQueue(Of String).CreateSynchronousQueue(AddressOf WriteLogEntries)
 

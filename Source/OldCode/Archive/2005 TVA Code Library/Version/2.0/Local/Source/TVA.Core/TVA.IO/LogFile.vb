@@ -1,12 +1,20 @@
 ' PCP: 04-09-2007
 
+Option Strict On
+
 Imports System.IO
 Imports System.Text
 Imports System.Drawing
+Imports System.ComponentModel
 Imports TVA.Collections
 Imports TVA.IO.FilePath
 
 Namespace IO
+
+    Public Enum LogFileFullAction As Integer
+        Scroll
+        Rollover
+    End Enum
 
     <ToolboxBitmap(GetType(LogFile))> _
     Public Class LogFile
@@ -14,8 +22,8 @@ Namespace IO
 #Region " Member Declaration "
 
         Private m_name As String
-        Private m_maximumSize As Integer
-        Private m_rolloverOnFull As Boolean
+        Private m_size As Integer
+        Private m_fileFullAction As LogFileFullAction
         Private m_fileStream As FileStream
 
         Private WithEvents m_logEntryQueue As ProcessQueue(Of String)
@@ -24,11 +32,15 @@ Namespace IO
 
 #Region " Event Declaration "
 
+        Public Event FileFull As EventHandler
+        Public Event LogException As EventHandler(Of ExceptionEventArgs)
 
 #End Region
 
 #Region " Code Scope: Public "
 
+        Public Const MinimumFileSize As Integer = 1
+        Public Const MaximumFileSize As Integer = 5
         Public Const DefaultExtension As String = ".txt"
 
         Public Property Name() As String
@@ -44,24 +56,29 @@ Namespace IO
             End Set
         End Property
 
-        Public Property MaximumSize() As Integer
+        Public Property Size() As Integer
             Get
-                Return m_maximumSize
+                Return m_size
             End Get
             Set(ByVal value As Integer)
-                m_maximumSize = value
+                If value >= MinimumFileSize AndAlso value <= MaximumFileSize Then
+                    m_size = value
+                Else
+                    Throw New ArgumentOutOfRangeException("Size", String.Format("Value must be between {0} and {1}", MinimumFileSize, MaximumFileSize))
+                End If
             End Set
         End Property
 
-        Public Property RolloverOnFull() As Boolean
+        Public Property FileFullAction() As LogFileFullAction
             Get
-                Return m_rolloverOnFull
+                Return m_fileFullAction
             End Get
-            Set(ByVal value As Boolean)
-                m_rolloverOnFull = value
+            Set(ByVal value As LogFileFullAction)
+                m_fileFullAction = value
             End Set
         End Property
 
+        <Browsable(False)> _
         Public ReadOnly Property IsOpen() As Boolean
             Get
                 Return m_fileStream IsNot Nothing
@@ -84,19 +101,10 @@ Namespace IO
         Public Sub Close()
 
             ' Finish writing all queued entries.
-            m_logEntryQueue.Flush()
             m_logEntryQueue.Stop()
             ' Close the log file.
             m_fileStream.Dispose()
             m_fileStream = Nothing
-
-        End Sub
-
-        Public Sub Rollover()
-
-            Dim fileStartTime As Date = File.GetCreationTime(m_name)
-            Dim fileEndTime As Date = File.GetLastWriteTime(m_name)
-            Dim historyFileName As String = JustPath(m_name) & NoFileExtension(m_name)
 
         End Sub
 
@@ -122,18 +130,18 @@ Namespace IO
 
         End Sub
 
-        Public Function Read() As String
+        Public Function Read() As List(Of String)
 
             If Not IsOpen Then Open()
 
-            Dim text As Byte() = Nothing
+            Dim buffer As Byte() = Nothing
             SyncLock m_fileStream
-                text = TVA.Common.CreateArray(Of Byte)(m_fileStream.Length)
+                buffer = TVA.Common.CreateArray(Of Byte)(Convert.ToInt32(m_fileStream.Length))
                 m_fileStream.Seek(0, SeekOrigin.Begin)
-                m_fileStream.Read(text, 0, text.Length)
+                m_fileStream.Read(buffer, 0, buffer.Length)
             End SyncLock
 
-            Return Encoding.Default.GetString(text)
+            Return New List(Of String)(Encoding.Default.GetString(buffer).Split(New String() {Environment.NewLine}, StringSplitOptions.None))
 
         End Function
 
@@ -143,13 +151,53 @@ Namespace IO
 
         Private Sub WriteLogEntries(ByVal items As String())
 
+            Dim currentFileSize As Long = 0
+            Dim maximumFileSize As Long = Convert.ToInt64(m_size * (1024 ^ 2))
             SyncLock m_fileStream
-                For i As Integer = 0 To items.Length - 1
-                    Dim text As Byte() = Encoding.Default.GetBytes(items(i))
-                    m_fileStream.Write(text, 0, text.Length)
-                Next
-                m_fileStream.Flush()
+                currentFileSize = m_fileStream.Length
             End SyncLock
+
+            For i As Integer = 0 To items.Length - 1
+                If Not String.IsNullOrEmpty(items(i)) Then
+                    Dim buffer As Byte() = Encoding.Default.GetBytes(items(i))
+
+                    If currentFileSize + buffer.Length > maximumFileSize Then
+                        ' The log file has reached the maximum size, so we'll have to either scroll the file or rollover.
+                        RaiseEvent FileFull(Me, EventArgs.Empty)
+
+                        For j As Integer = items.Length - 1 To i Step -1
+                            m_logEntryQueue.Insert(0, items(j))
+                        Next
+
+                        Select Case m_fileFullAction
+                            Case LogFileFullAction.Scroll
+                                Dim entries As List(Of String) = Read()
+                                For k As Integer = entries.Count - 1 To entries.Count - items.Length - 1 Step -1
+                                    m_logEntryQueue.Insert(0, entries(k) & Environment.NewLine)
+                                Next
+
+                                Close()
+                                File.Delete(m_name)
+                                Open()
+                            Case LogFileFullAction.Rollover
+                                Dim historyFileName As String = JustPath(m_name) & NoFileExtension(m_name) & "_" & _
+                                                                File.GetCreationTime(m_name).ToString("yyyy-mm-dd hh!MM!ss") & "_to_" & _
+                                                                File.GetLastWriteTime(m_name).ToString("yyyy-mm-dd hh!MM!ss") & JustFileExtension(m_name)
+
+                                Close()
+                                File.Move(m_name, historyFileName)
+                                Open()
+                        End Select
+
+                        Exit For
+                    End If
+
+                    SyncLock m_fileStream
+                        m_fileStream.Write(buffer, 0, buffer.Length)
+                    End SyncLock
+                    currentFileSize += buffer.Length
+                End If
+            Next
 
         End Sub
 
