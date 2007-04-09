@@ -546,14 +546,13 @@ Namespace Files
                                 ' We either don't have a active data block where we can archive the point data or we 
                                 ' have a active data block but it is full. So, we have to request a new data block 
                                 ' from the FAT in order to write the data.
-
-                                If pointState.ActiveDataBlock IsNot Nothing Then
-                                    ' We must release the previously used data block before we request a new one.
-                                    pointState.ActiveDataBlock.Dispose()
-                                End If
-
                                 Select Case m_type
                                     Case ArchiveFileType.Active
+                                        If pointState.ActiveDataBlock IsNot Nothing AndAlso _
+                                                Not pointState.ActiveDataBlock.IsForHistoricData Then
+                                            ' Release the previously used data block before requesting a new one.
+                                            pointState.ActiveDataBlock.Dispose()
+                                        End If
                                         pointState.ActiveDataBlock = m_fat.RequestDataBlock(pointData.Definition.PointID, pointData.TimeTag)
 
                                         If Not File.Exists(StandbyArchiveFileName) AndAlso Not m_rolloverPreparationThread.IsAlive AndAlso _
@@ -566,6 +565,11 @@ Namespace Files
                                             m_rolloverPreparationThread.Start()
                                         End If
                                     Case ArchiveFileType.Historic
+                                        If pointState.ActiveDataBlock IsNot Nothing AndAlso _
+                                                pointState.ActiveDataBlock.IsForHistoricData Then
+                                            ' Release the previously used data block before requesting a new one.
+                                            pointState.ActiveDataBlock.Dispose()
+                                        End If
                                         pointState.ActiveDataBlock = m_fat.RequestDataBlock(pointData.Definition.PointID, pointData.TimeTag, True)
                                 End Select
                             End If
