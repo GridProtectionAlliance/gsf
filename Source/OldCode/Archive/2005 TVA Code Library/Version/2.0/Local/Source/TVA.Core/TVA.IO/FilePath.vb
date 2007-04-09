@@ -278,10 +278,20 @@ Namespace IO
 
         End Function
 
+        ''' <summary>
+        ''' Returns the absolute path for the specified file name.
+        ''' </summary>
         Public Shared Function AbsolutePath(ByVal filePath As String) As String
 
             If Not Path.IsPathRooted(filePath) Then
-                filePath = JustPath(TVA.Assembly.EntryAssembly.Location) & filePath
+                ' The specified path is a relative one since it is not rooted.
+                Select Case TVA.Common.GetApplicationType()
+                    ' We'll prepend the application's root to the file path.
+                    Case ApplicationType.Win
+                        filePath = JustPath(TVA.Assembly.EntryAssembly.Location) & filePath
+                    Case ApplicationType.Web
+                        filePath = System.Web.HttpContext.Current.Request.MapPath("~/") & filePath
+                End Select
             End If
 
             Return filePath

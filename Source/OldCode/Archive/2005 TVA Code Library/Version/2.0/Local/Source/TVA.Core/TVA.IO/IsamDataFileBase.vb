@@ -156,6 +156,7 @@ Namespace IO
                 m_fileRecords = New List(Of T)()
 
                 m_name = AbsolutePath(m_name)
+                If Not Directory.Exists(JustPath(m_name)) Then Directory.CreateDirectory(JustPath(m_name))
                 If File.Exists(m_name) Then
                     ' File exists, so we'll open it.
                     m_fileStream = New FileStream(m_name, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite)
