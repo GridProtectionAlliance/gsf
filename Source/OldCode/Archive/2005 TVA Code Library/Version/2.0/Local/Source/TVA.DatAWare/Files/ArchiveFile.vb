@@ -269,7 +269,7 @@ Namespace Files
 
                     m_name = AbsolutePath(m_name)
                     If m_type = ArchiveFileType.Standby Then m_name = StandbyArchiveFileName
-
+                    If Not Directory.Exists(JustPath(m_name)) Then Directory.CreateDirectory(JustPath(m_name))
                     If File.Exists(m_name) Then
                         ' File has been created already, so we just need to read it.
                         m_fileStream = New FileStream(m_name, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite)
