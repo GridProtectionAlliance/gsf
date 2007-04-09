@@ -101,7 +101,7 @@ Namespace ErrorManagement
                 AddHandler System.Windows.Forms.Application.ThreadException, AddressOf UnhandledThreadException
 
                 ' For console applications.
-                AddHandler AppDomain.CurrentDomain.UnhandledException, AddressOf UnhandledExceptionHandler
+                AddHandler AppDomain.CurrentDomain.UnhandledException, AddressOf UnhandledException
             End If
 
         End Sub
@@ -110,104 +110,18 @@ Namespace ErrorManagement
 
             If Not Debugger.IsAttached Then
                 RemoveHandler System.Windows.Forms.Application.ThreadException, AddressOf UnhandledThreadException
-                RemoveHandler System.AppDomain.CurrentDomain.UnhandledException, AddressOf UnhandledExceptionHandler
+                RemoveHandler System.AppDomain.CurrentDomain.UnhandledException, AddressOf UnhandledException
             End If
 
         End Sub
 
-        Public Sub HandleException(ByVal ex As Exception)
+        Public Sub Log(ByVal ex As Exception)
+
+            GenericExceptionHandler(ex)
 
         End Sub
 
-#Region " Interface Implementation "
-
-#Region " IPersistSettings "
-
-        <Category("Settings")> _
-        Public Property PersistSettings() As Boolean Implements IPersistSettings.PersistSettings
-            Get
-                Return m_persistSettings
-            End Get
-            Set(ByVal value As Boolean)
-                m_persistSettings = value
-            End Set
-        End Property
-
-        <Category("Settings")> _
-        Public Property ConfigurationCategory() As String Implements IPersistSettings.ConfigurationCategory
-            Get
-                Return m_configurationCategory
-            End Get
-            Set(ByVal value As String)
-                If Not String.IsNullOrEmpty(value) Then
-                    m_configurationCategory = value
-                Else
-                    Throw New ArgumentNullException("ConfigurationCategory")
-                End If
-            End Set
-        End Property
-
-        Public Sub LoadSettings() Implements IPersistSettings.LoadSettings
-
-        End Sub
-
-        Public Sub SaveSettings() Implements IPersistSettings.SaveSettings
-
-        End Sub
-
-#End Region
-
-#Region " ISupportInitialize "
-
-        Public Sub BeginInit() Implements System.ComponentModel.ISupportInitialize.BeginInit
-
-        End Sub
-
-        Public Sub EndInit() Implements System.ComponentModel.ISupportInitialize.EndInit
-
-        End Sub
-
-#End Region
-
-#End Region
-
-#End Region
-
-#Region " Code Scope: Private "
-
-        Private Sub UnhandledThreadException(ByVal sender As Object, ByVal e As System.Threading.ThreadExceptionEventArgs)
-
-            GenericExceptionHandler(e.Exception)
-
-        End Sub
-
-        Private Sub UnhandledExceptionHandler(ByVal sender As Object, ByVal e As System.UnhandledExceptionEventArgs)
-
-            GenericExceptionHandler(CType(e.ExceptionObject, Exception))
-
-        End Sub
-
-        Private Sub GenericExceptionHandler(ByVal ex As Exception)
-
-            Dim exceptionString As String = ExceptionToString(ex)
-
-            If m_logToScreenshot Then
-
-            End If
-
-            If m_logToEventLog Then
-                EventLog.WriteEntry(System.AppDomain.CurrentDomain.FriendlyName, exceptionString, EventLogEntryType.Error)
-            End If
-
-            If m_logToEmail Then
-
-            End If
-
-            If m_logToFile Then
-
-            End If
-
-        End Sub
+#Region " Shared "
 
         Public Shared Function ExceptionToString(ByVal ex As Exception) As String
 
@@ -303,6 +217,102 @@ Namespace ErrorManagement
             End With
 
         End Function
+
+#End Region
+
+#Region " Interface Implementation "
+
+#Region " IPersistSettings "
+
+        <Category("Settings")> _
+        Public Property PersistSettings() As Boolean Implements IPersistSettings.PersistSettings
+            Get
+                Return m_persistSettings
+            End Get
+            Set(ByVal value As Boolean)
+                m_persistSettings = value
+            End Set
+        End Property
+
+        <Category("Settings")> _
+        Public Property ConfigurationCategory() As String Implements IPersistSettings.ConfigurationCategory
+            Get
+                Return m_configurationCategory
+            End Get
+            Set(ByVal value As String)
+                If Not String.IsNullOrEmpty(value) Then
+                    m_configurationCategory = value
+                Else
+                    Throw New ArgumentNullException("ConfigurationCategory")
+                End If
+            End Set
+        End Property
+
+        Public Sub LoadSettings() Implements IPersistSettings.LoadSettings
+
+        End Sub
+
+        Public Sub SaveSettings() Implements IPersistSettings.SaveSettings
+
+        End Sub
+
+#End Region
+
+#Region " ISupportInitialize "
+
+        Public Sub BeginInit() Implements System.ComponentModel.ISupportInitialize.BeginInit
+
+        End Sub
+
+        Public Sub EndInit() Implements System.ComponentModel.ISupportInitialize.EndInit
+
+        End Sub
+
+#End Region
+
+#End Region
+
+#End Region
+
+#Region " Code Scope: Private "
+
+        Private Sub GenericExceptionHandler(ByVal ex As Exception)
+
+            Dim exceptionString As String = ExceptionToString(ex)
+
+            If m_logToScreenshot Then
+
+            End If
+
+            If m_logToEventLog Then
+                EventLog.WriteEntry(System.AppDomain.CurrentDomain.FriendlyName, exceptionString, EventLogEntryType.Error)
+            End If
+
+            If m_logToEmail Then
+
+            End If
+
+            If m_logToFile Then
+
+            End If
+
+        End Sub
+
+#Region " Event Handlers "
+
+        Private Sub UnhandledThreadException(ByVal sender As Object, ByVal e As System.Threading.ThreadExceptionEventArgs)
+
+            GenericExceptionHandler(e.Exception)
+
+        End Sub
+
+        Private Sub UnhandledException(ByVal sender As Object, ByVal e As System.UnhandledExceptionEventArgs)
+
+            GenericExceptionHandler(CType(e.ExceptionObject, Exception))
+
+        End Sub
+
+#End Region
 
 #End Region
 
