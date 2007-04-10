@@ -11,19 +11,23 @@ Imports TVA.IO.FilePath
 
 Namespace IO
 
-    Public Enum LogFileFullAction As Integer
+    Public Enum LogFileFullOperation As Integer
         Scroll
         Rollover
     End Enum
 
     <ToolboxBitmap(GetType(LogFile))> _
     Public Class LogFile
+        Implements IPersistSettings, ISupportInitialize
 
 #Region " Member Declaration "
 
         Private m_name As String
         Private m_size As Integer
-        Private m_fileFullAction As LogFileFullAction
+        Private m_autoOpen As Boolean
+        Private m_fileFullOperation As LogFileFullOperation
+        Private m_persistSettings As Boolean
+        Private m_configurationCategory As String
         Private m_fileStream As FileStream
 
         Private WithEvents m_logEntryQueue As ProcessQueue(Of String)
@@ -32,6 +36,10 @@ Namespace IO
 
 #Region " Event Declaration "
 
+        Public Event FileOpening As EventHandler
+        Public Event FileOpened As EventHandler
+        Public Event FileClosing As EventHandler
+        Public Event FileClosed As EventHandler
         Public Event FileFull As EventHandler
         Public Event LogException As EventHandler(Of ExceptionEventArgs)
 
@@ -69,12 +77,21 @@ Namespace IO
             End Set
         End Property
 
-        Public Property FileFullAction() As LogFileFullAction
+        Public Property AutoOpen() As Boolean
             Get
-                Return m_fileFullAction
+                Return m_autoOpen
             End Get
-            Set(ByVal value As LogFileFullAction)
-                m_fileFullAction = value
+            Set(ByVal value As Boolean)
+                m_autoOpen = value
+            End Set
+        End Property
+
+        Public Property FileFullOperation() As LogFileFullOperation
+            Get
+                Return m_fileFullOperation
+            End Get
+            Set(ByVal value As LogFileFullOperation)
+                m_fileFullOperation = value
             End Set
         End Property
 
@@ -87,32 +104,58 @@ Namespace IO
 
         Public Sub Open()
 
-            ' Get the absolute file path if a relative path is specified.
-            m_name = AbsolutePath(m_name)
-            ' Create the folder in which the log file will reside it if it doesn't exist.
-            If Not Directory.Exists(JustPath(m_name)) Then Directory.CreateDirectory(JustPath(m_name))
-            ' Open the log file is it exists, or create it if it doesn't.
-            m_fileStream = New FileStream(m_name, FileMode.OpenOrCreate)
+            If Not IsOpen Then
+                RaiseEvent FileOpening(Me, EventArgs.Empty)
 
-            ' Start the queue to which log entries are going to be added.
-            m_logEntryQueue.Start()
+                ' Get the absolute file path if a relative path is specified.
+                m_name = AbsolutePath(m_name)
+                ' Create the folder in which the log file will reside it if it doesn't exist.
+                If Not Directory.Exists(JustPath(m_name)) Then Directory.CreateDirectory(JustPath(m_name))
+                ' Open the log file if it exists, or create it if it doesn't.
+                m_fileStream = New FileStream(m_name, FileMode.OpenOrCreate)
+
+                ' Start the queue to which log entries are going to be added.
+                m_logEntryQueue.Start()
+
+                RaiseEvent FileClosed(Me, EventArgs.Empty)
+            End If
 
         End Sub
 
         Public Sub Close()
 
-            m_logEntryQueue.Stop()
+            Close(True)
 
-            ' Close the log file.
-            m_fileStream.Dispose()
-            m_fileStream = Nothing
+        End Sub
+
+        Public Sub Close(ByVal flushQueuedEntries As Boolean)
+
+            If IsOpen Then
+                RaiseEvent FileClosing(Me, EventArgs.Empty)
+
+                If flushQueuedEntries Then
+                    ' Write all queued log entries to the file.
+                    m_logEntryQueue.Flush()
+                Else
+                    ' Stop processing the queued log entries.
+                    m_logEntryQueue.Stop()
+                End If
+
+                ' Close the log file.
+                m_fileStream.Dispose()
+                m_fileStream = Nothing
+            End If
 
         End Sub
 
         Public Sub Write(ByVal text As String)
 
-            ' Queue the text for writting to the log file.
-            m_logEntryQueue.Add(text)
+            If IsOpen Then
+                ' Queue the text for writting to the log file.
+                m_logEntryQueue.Add(text)
+            Else
+                Throw New InvalidOperationException(String.Format("{0} ""{1}"" is not open.", Me.GetType().Name, m_name))
+            End If
 
         End Sub
 
@@ -130,18 +173,117 @@ Namespace IO
 
         Public Function Read() As List(Of String)
 
-            If Not IsOpen Then Open()
+            If IsOpen Then
+                Dim buffer As Byte() = Nothing
+                SyncLock m_fileStream
+                    buffer = TVA.Common.CreateArray(Of Byte)(Convert.ToInt32(m_fileStream.Length))
+                    m_fileStream.Seek(0, SeekOrigin.Begin)
+                    m_fileStream.Read(buffer, 0, buffer.Length)
+                End SyncLock
 
-            Dim buffer As Byte() = Nothing
-            SyncLock m_fileStream
-                buffer = TVA.Common.CreateArray(Of Byte)(Convert.ToInt32(m_fileStream.Length))
-                m_fileStream.Seek(0, SeekOrigin.Begin)
-                m_fileStream.Read(buffer, 0, buffer.Length)
-            End SyncLock
-
-            Return New List(Of String)(Encoding.Default.GetString(buffer).Split(New String() {Environment.NewLine}, StringSplitOptions.None))
+                Return New List(Of String)(Encoding.Default.GetString(buffer).Split(New String() {Environment.NewLine}, StringSplitOptions.None))
+            Else
+                Throw New InvalidOperationException(String.Format("{0} ""{1}"" is not open.", Me.GetType().Name, m_name))
+            End If
 
         End Function
+
+#Region " Interface Implementation "
+
+#Region " IPersistSettings "
+
+        Public Property PersistSettings() As Boolean Implements IPersistSettings.PersistSettings
+            Get
+                Return m_persistSettings
+            End Get
+            Set(ByVal value As Boolean)
+                m_persistSettings = value
+            End Set
+        End Property
+
+        Public Property ConfigurationCategory() As String Implements IPersistSettings.ConfigurationCategory
+            Get
+                Return m_configurationCategory
+            End Get
+            Set(ByVal value As String)
+                If Not String.IsNullOrEmpty(value) Then
+                    m_configurationCategory = value
+                Else
+                    Throw New ArgumentNullException("ConfigurationCategory")
+                End If
+            End Set
+        End Property
+
+        Public Sub LoadSettings() Implements IPersistSettings.LoadSettings
+
+            If m_persistSettings Then
+                Try
+                    With TVA.Configuration.Common.CategorizedSettings(m_configurationCategory)
+                        Name = .Item("Name").GetTypedValue(m_name)
+                        Size = .Item("Size").GetTypedValue(m_size)
+                        AutoOpen = .Item("AutoOpen").GetTypedValue(m_autoOpen)
+                        FileFullOperation = .Item("FileFullOperation").GetTypedValue(m_fileFullOperation)
+                    End With
+                Catch ex As Exception
+                    ' Most likely we'll never encounter an exception here.
+                End Try
+            End If
+
+        End Sub
+
+        Public Sub SaveSettings() Implements IPersistSettings.SaveSettings
+
+            If m_persistSettings Then
+                Try
+                    With TVA.Configuration.Common.CategorizedSettings(m_configurationCategory)
+                        .Clear()
+                        With .Item("Name", True)
+                            .Value = m_name
+                            .Description = "Name of the log file including its path."
+                        End With
+                        With .Item("Size", True)
+                            .Value = m_size.ToString()
+                            .Description = "Maximum size of the log file in MB."
+                        End With
+                        With .Item("AutoOpen", True)
+                            .Value = m_autoOpen.ToString()
+                            .Description = "True if the log file is to be open automatically when the component is initialize; otherwise False."
+                        End With
+                        With .Item("FileFullOperation", True)
+                            .Value = m_fileFullOperation.ToString()
+                            .Description = "Operation (Scroll; Rollover) that is to be performed on the file when it is full."
+                        End With
+                    End With
+                    TVA.Configuration.Common.SaveSettings()
+                Catch ex As Exception
+                    ' We might encounter an exception if for some reason the settings cannot be saved to the config file.
+                End Try
+            End If
+
+        End Sub
+
+#End Region
+
+#Region " ISupportInitialize "
+
+        Public Sub BeginInit() Implements System.ComponentModel.ISupportInitialize.BeginInit
+
+            ' We don't need to do anything before the component is initialized.
+
+        End Sub
+
+        Public Sub EndInit() Implements System.ComponentModel.ISupportInitialize.EndInit
+
+            If Not DesignMode Then
+                LoadSettings()            ' Load settings from the config file.
+                If m_autoOpen Then Open() ' Open the file automatically if specified.
+            End If
+
+        End Sub
+
+#End Region
+
+#End Region
 
 #End Region
 
@@ -167,22 +309,22 @@ Namespace IO
                             m_logEntryQueue.Insert(0, items(j))
                         Next
 
-                        Select Case m_fileFullAction
-                            Case LogFileFullAction.Scroll
+                        Select Case m_fileFullOperation
+                            Case LogFileFullOperation.Scroll
                                 Dim entries As List(Of String) = Read()
                                 For k As Integer = entries.Count - 1 To entries.Count - items.Length - 1 Step -1
                                     m_logEntryQueue.Insert(0, entries(k) & Environment.NewLine)
                                 Next
 
-                                Close()
+                                Close(False)
                                 File.Delete(m_name)
                                 Open()
-                            Case LogFileFullAction.Rollover
+                            Case LogFileFullOperation.Rollover
                                 Dim historyFileName As String = JustPath(m_name) & NoFileExtension(m_name) & "_" & _
                                                                 File.GetCreationTime(m_name).ToString("yyyy-MM-dd hh!mm!ss") & "_to_" & _
                                                                 File.GetLastWriteTime(m_name).ToString("yyyy-MM-dd hh!mm!ss") & JustFileExtension(m_name)
 
-                                Close()
+                                Close(False)
                                 File.Move(m_name, historyFileName)
                                 Open()
                         End Select

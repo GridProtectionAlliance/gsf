@@ -23,7 +23,10 @@ Namespace IO
 
             m_name = Me.GetType().Name & DefaultExtension
             m_size = MinimumFileSize
-            m_fileFullAction = LogFileFullAction.Rollover
+            m_autoOpen = True
+            m_fileFullOperation = LogFileFullOperation.Rollover
+            m_persistSettings = False
+            m_configurationCategory = Me.GetType().Name
 
             m_logEntryQueue = TVA.Collections.ProcessQueue(Of String).CreateSynchronousQueue(AddressOf WriteLogEntries)
 
@@ -33,7 +36,8 @@ Namespace IO
         <System.Diagnostics.DebuggerNonUserCode()> _
         Protected Overrides Sub Dispose(ByVal disposing As Boolean)
             Try
-                Close()
+                Close()         ' Close the file.
+                SaveSettings()  ' Saves settings to the config file.
                 If disposing AndAlso components IsNot Nothing Then
                     components.Dispose()
                 End If

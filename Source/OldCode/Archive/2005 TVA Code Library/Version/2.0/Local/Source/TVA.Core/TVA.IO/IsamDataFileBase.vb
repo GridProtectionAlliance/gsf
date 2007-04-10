@@ -182,15 +182,18 @@ Namespace IO
                 End If
 
                 If m_reloadOnModify Then
+                    ' Watch for any modifications made to the file.
                     FileSystemWatcher.Path = JustPath(m_name)
                     FileSystemWatcher.Filter = JustFileName(m_name)
                     FileSystemWatcher.EnableRaisingEvents = True
                 End If
                 If m_autoSaveInterval > 0 Then
+                    ' Start the timer for saving data automatically.
                     m_autoSaveTimer.Interval = m_autoSaveInterval
                     m_autoSaveTimer.Start()
                 End If
                 If m_autoAlignInterval > 0 Then
+                    ' Start the timer for aligning data automatically.
                     m_autoAnalyzeTimer.Interval = m_autoAlignInterval
                     m_autoAnalyzeTimer.Start()
                 End If
@@ -257,6 +260,8 @@ Namespace IO
                 Next
 
                 RaiseEvent DataLoadComplete(Me, EventArgs.Empty)
+            Else
+                Throw New InvalidOperationException(String.Format("{0} ""{1}"" is not open.", Me.GetType().Name, m_name))
             End If
 
         End Sub
@@ -414,7 +419,7 @@ Namespace IO
                         MinimumRecordCount = .Item("MinimumRecordCount").GetTypedValue(m_minimumRecordCount)
                     End With
                 Catch ex As Exception
-                    ' We'll encounter exceptions if the settings are not present in the config file.
+                    ' Most likely we'll never encounter an exception here.
                 End Try
             End If
 
