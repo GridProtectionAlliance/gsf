@@ -165,7 +165,7 @@
     <Compile Include="TVA.Interop\IniFile.vb" />
     <Compile Include="TVA.IO\Common.vb" />
     <Compile Include="TVA.IO\FilePath.vb" />
-    <Compile Include="TVA.IO\LogFile1.vb" />
+    <Compile Include="TVA.IO\InternalLogFile.vb" />
     <Compile Include="TVA.Math\Common.vb" />
     <Compile Include="TVA.Math\CompositeValues.vb" />
     <Compile Include="TVA.Math\RealTimeSlope.vb" />

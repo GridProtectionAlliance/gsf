@@ -28,7 +28,7 @@ Namespace IO
     ' has reached maximum size), or to be able to "roll-over" to a new file once maximum file size has been reached
 
     ''' <summary>This implements a simple multi-thread-happy log file class</summary>
-    Public Class LogFile1
+    Public Class InternalLogFile
 
         Private m_logFileName As String
         Private m_logFileLock As ReaderWriterLock

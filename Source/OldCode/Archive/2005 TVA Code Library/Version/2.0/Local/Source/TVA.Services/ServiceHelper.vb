@@ -30,7 +30,7 @@ Public Class ServiceHelper
     Private m_startedEventHandlerList As List(Of StartedEventHandler)
     Private m_stoppedEventHandlerList As List(Of EventHandler)
 
-    Private WithEvents m_logFile As LogFile1
+    Private WithEvents m_logFile As InternalLogFile
     Private WithEvents m_scheduleManager As ScheduleManager
     Private WithEvents m_communicationServer As ICommunicationServer
 

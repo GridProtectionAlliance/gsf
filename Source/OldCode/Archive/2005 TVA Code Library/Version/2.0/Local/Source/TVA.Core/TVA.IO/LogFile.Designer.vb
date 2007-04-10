@@ -24,7 +24,7 @@ Namespace IO
             m_name = Me.GetType().Name & DefaultExtension
             m_size = MinimumFileSize
             m_autoOpen = True
-            m_fileFullOperation = LogFileFullOperation.Rollover
+            m_fileFullOperation = LogFileFullOperation.Truncate
             m_persistSettings = False
             m_settingsCategoryName = Me.GetType().Name
 

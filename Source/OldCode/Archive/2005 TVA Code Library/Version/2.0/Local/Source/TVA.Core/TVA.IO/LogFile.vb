@@ -15,14 +15,13 @@ Namespace IO
     ''' <summary>
     ''' Specifies the operation to be performed on the log file when it is full.
     ''' </summary>
-    ''' <remarks></remarks>
     Public Enum LogFileFullOperation As Integer
         ''' <summary>
         ''' Truncate the existing entries in the log file to make space for new entries.
         ''' </summary>
         Truncate
         ''' <summary>
-        ''' Rollover to a new log file and keep the full log file for history.
+        ''' Rollover to a new log file and keep the full log file for reference.
         ''' </summary>
         Rollover
     End Enum
@@ -49,33 +48,39 @@ Namespace IO
 #Region " Event Declaration "
 
         ''' <summary>
-        ''' Occurs when the log is being opened.
+        ''' Occurs when the log file is being opened.
         ''' </summary>
+        <Description("Occurs when the log file is being opened.")> _
         Public Event FileOpening As EventHandler
 
         ''' <summary>
         ''' Occurs when the log file has been opened.
         ''' </summary>
+        <Description("Occurs when the log file has been opened.")> _
         Public Event FileOpened As EventHandler
 
         ''' <summary>
         ''' Occurs when the log file is being closed.
         ''' </summary>
+        <Description("Occurs when the log file is being closed.")> _
         Public Event FileClosing As EventHandler
 
         ''' <summary>
         ''' Occurs when the log file has been closed.
         ''' </summary>
+        <Description("Occurs when the log file has been closed.")> _
         Public Event FileClosed As EventHandler
 
         ''' <summary>
         ''' Occurs when the log file is full.
         ''' </summary>
+        <Description("Occurs when the log file is full.")> _
         Public Event FileFull As EventHandler
 
         ''' <summary>
         ''' Occurs when an exception is encountered while writing entries to the log file.
         ''' </summary>
+        <Description("Occurs when an exception is encountered while writing entries to the log file.")> _
         Public Event LogException As EventHandler(Of ExceptionEventArgs)
 
 #End Region
@@ -102,6 +107,7 @@ Namespace IO
         ''' </summary>
         ''' <value></value>
         ''' <returns>The name of the log file including the file extension.</returns>
+        <Description("The name of the log file including the file extension.")> _
         Public Property Name() As String
             Get
                 Return m_name
@@ -120,6 +126,7 @@ Namespace IO
         ''' </summary>
         ''' <value></value>
         ''' <returns>The size of the log file in MB.</returns>
+        <Description("The size of the log file in MB."), DefaultValue(GetType(Integer), "1")> _
         Public Property Size() As Integer
             Get
                 Return m_size
@@ -138,7 +145,8 @@ Namespace IO
         ''' component has finished initializing.
         ''' </summary>
         ''' <value></value>
-        ''' <returns>True is the log file os to be opened after the component has finished initializing; otherwise False.</returns>
+        ''' <returns>True is the log file is to be opened after the component has finished initializing; otherwise False.</returns>
+        <Description("Indicates whether the log file is to be opened automatically after the component has finished initializing."), DefaultValue(GetType(Boolean), "True")> _
         Public Property AutoOpen() As Boolean
             Get
                 Return m_autoOpen
@@ -153,6 +161,7 @@ Namespace IO
         ''' </summary>
         ''' <value></value>
         ''' <returns>One of the TVA.IO.LogFileFullOperation values.</returns>
+        <Description("The type of operation to be performed when the log file is full."), DefaultValue(GetType(LogFileFullOperation), "Truncate")> _
         Public Property FileFullOperation() As LogFileFullOperation
             Get
                 Return m_fileFullOperation
@@ -274,7 +283,7 @@ Namespace IO
         End Sub
 
         ''' <summary>
-        ''' Reads and returns text from the log file.
+        ''' Reads and returns the text from the log file.
         ''' </summary>
         ''' <returns>The text read from the log file.</returns>
         Public Function ReadText() As String
@@ -313,10 +322,11 @@ Namespace IO
 #Region " IPersistSettings "
 
         ''' <summary>
-        ''' Gets or sets a boolean value indicating whether the component settings are to the persisted to the config file.
+        ''' Gets or sets a boolean value indicating whether the component settings are to be persisted to the config file.
         ''' </summary>
         ''' <value></value>
-        ''' <returns>True if the component settings are to be persisted to the consfig file; otherwise False.</returns>
+        ''' <returns>True if the component settings are to be persisted to the config file; otherwise False.</returns>
+        <Description("Indicates whether the component settings are to be persisted to the config file."), DefaultValue(GetType(Boolean), "False")> _
         Public Property PersistSettings() As Boolean Implements IPersistSettings.PersistSettings
             Get
                 Return m_persistSettings
@@ -331,6 +341,7 @@ Namespace IO
         ''' </summary>
         ''' <value></value>
         ''' <returns>The category name under which the component settings are to be saved in the config file.</returns>
+        <Description("The category name under which the component settings are to be saved in the config file."), DefaultValue(GetType(String), "LogFile")> _
         Public Property SettingsCategoryName() As String Implements IPersistSettings.SettingsCategoryName
             Get
                 Return m_settingsCategoryName
