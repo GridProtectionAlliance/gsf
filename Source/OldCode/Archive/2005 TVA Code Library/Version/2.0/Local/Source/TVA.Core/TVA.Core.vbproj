@@ -197,7 +197,7 @@
     </EmbeddedResource>
     <Content Include="Embedded Resources\Net.Ftp.FileWatcher.bmp" />
     <Content Include="Embedded Resources\Net.Ftp.Session.bmp" />
-    <Content Include="Embedded Resources\ErrorManagement.GlobalExceptionLogger.bmp" />
+    <EmbeddedResource Include="Embedded Resources\ErrorManagement.GlobalExceptionLogger.bmp" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="TVA.Exception\" />

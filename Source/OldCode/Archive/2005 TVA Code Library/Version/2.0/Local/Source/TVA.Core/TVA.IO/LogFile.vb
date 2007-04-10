@@ -438,77 +438,54 @@ Namespace IO
 
         Private Sub WriteLogEntries(ByVal items As String())
 
-            Try
-                Dim currentFileSize As Long = 0
-                Dim maximumFileSize As Long = Convert.ToInt64(m_size * (1024 ^ 2))
-                SyncLock m_fileStream
-                    currentFileSize = m_fileStream.Length
-                End SyncLock
+            Dim currentFileSize As Long = 0
+            Dim maximumFileSize As Long = Convert.ToInt64(m_size * (1024 ^ 2))
+            SyncLock m_fileStream
+                currentFileSize = m_fileStream.Length
+            End SyncLock
 
-                For i As Integer = 0 To items.Length - 1
-                    If Not String.IsNullOrEmpty(items(i)) Then
-                        Dim buffer As Byte() = Encoding.Default.GetBytes(items(i))
+            For i As Integer = 0 To items.Length - 1
+                If Not String.IsNullOrEmpty(items(i)) Then
+                    ' We'll only write entries with text.
+                    Dim buffer As Byte() = Encoding.Default.GetBytes(items(i))
 
-                        If currentFileSize + buffer.Length > maximumFileSize Then
-                            ' The log file has reached the maximum size, so we'll have to either scroll the file or rollover.
-                            RaiseEvent FileFull(Me, EventArgs.Empty)
-
-                            ' Signal the main thread to wait until the "file full operation" is complete.
-                            m_operationWaitHandle.Reset()
-
-                            ' Requeue the entries that have not been written to the file.
-                            For j As Integer = items.Length - 1 To i Step -1
-                                m_logEntryQueue.Insert(0, items(j))
-                            Next
-
-                            Select Case m_fileFullOperation
-                                Case LogFileFullOperation.Truncate
-                                    ' We'll delete the existing log entries and make way from new ones.
-                                    Try
-                                        Close(False)
-                                        File.Delete(m_name)
-                                    Catch ex As Exception
-                                        Throw
-                                    Finally
-                                        Open()
-                                    End Try
-                                Case LogFileFullOperation.Rollover
-                                    Dim historyFileName As String = JustPath(m_name) & NoFileExtension(m_name) & "_" & _
-                                                                    File.GetCreationTime(m_name).ToString("yyyy-MM-dd hh!mm!ss") & "_to_" & _
-                                                                    File.GetLastWriteTime(m_name).ToString("yyyy-MM-dd hh!mm!ss") & JustFileExtension(m_name)
-
-                                    ' We'll rollover to a new log file and keep the current file for history.
-                                    Try
-                                        Close(False)
-                                        File.Move(m_name, historyFileName)
-                                    Catch ex As Exception
-                                        Throw
-                                    Finally
-                                        Open()
-                                    End Try
-                            End Select
-
-                            ' Signal the main thread that the "file full operation" is complete.
-                            m_operationWaitHandle.Set()
-
-                            Exit For
-                        End If
-
-                        ' Write the entry to the log file.
+                    If currentFileSize + buffer.Length <= maximumFileSize Then
+                        ' There is enough space in the file, so we'll write the entry.
                         SyncLock m_fileStream
                             m_fileStream.Write(buffer, 0, buffer.Length)
                             m_fileStream.Flush()
                         End SyncLock
                         currentFileSize += buffer.Length
+                    Else
+                        ' The file is full, so we'll either have to truncate it or rollover to a new file. But 
+                        ' before we do that, we'll requeue the entries that have not been written to the file.
+                        For j As Integer = items.Length - 1 To i Step -1
+                            m_logEntryQueue.Insert(0, items(j))
+                        Next
+
+                        ' Here's where the file will be truncated or rolled-over.
+                        RaiseEvent FileFull(Me, EventArgs.Empty)
+
+                        Exit Sub
                     End If
-                Next
-            Catch ex As Exception
-                RaiseEvent LogException(Me, New ExceptionEventArgs(ex))
-            End Try
+                End If
+            Next
+
+        End Sub
+
+#Region " Event Handlers "
+
+#Region " m_logEntryQueue "
+
+        Private Sub m_logEntryQueue_ProcessException(ByVal ex As System.Exception) Handles m_logEntryQueue.ProcessException
+
+            RaiseEvent LogException(Me, New ExceptionEventArgs(ex))
 
         End Sub
 
 #End Region
+
+#Region " LogFile "
 
         Private Sub LogFile_FileFull(ByVal sender As Object, ByVal e As System.EventArgs) Handles Me.FileFull
 
@@ -546,6 +523,12 @@ Namespace IO
             m_operationWaitHandle.Set()
 
         End Sub
+
+#End Region
+
+#End Region
+
+#End Region
 
     End Class
 
