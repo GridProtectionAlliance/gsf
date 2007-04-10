@@ -126,7 +126,7 @@ Namespace IO
         ''' </summary>
         ''' <value></value>
         ''' <returns>The size of the log file in MB.</returns>
-        <Description("The size of the log file in MB."), DefaultValue(GetType(Integer), "1")> _
+        <Description("The size of the log file in MB."), DefaultValue(GetType(Integer), "3")> _
         Public Property Size() As Integer
             Get
                 Return m_size
@@ -438,73 +438,114 @@ Namespace IO
 
         Private Sub WriteLogEntries(ByVal items As String())
 
-            Dim currentFileSize As Long = 0
-            Dim maximumFileSize As Long = Convert.ToInt64(m_size * (1024 ^ 2))
-            SyncLock m_fileStream
-                currentFileSize = m_fileStream.Length
-            End SyncLock
+            Try
+                Dim currentFileSize As Long = 0
+                Dim maximumFileSize As Long = Convert.ToInt64(m_size * (1024 ^ 2))
+                SyncLock m_fileStream
+                    currentFileSize = m_fileStream.Length
+                End SyncLock
 
-            For i As Integer = 0 To items.Length - 1
-                If Not String.IsNullOrEmpty(items(i)) Then
-                    Dim buffer As Byte() = Encoding.Default.GetBytes(items(i))
+                For i As Integer = 0 To items.Length - 1
+                    If Not String.IsNullOrEmpty(items(i)) Then
+                        Dim buffer As Byte() = Encoding.Default.GetBytes(items(i))
 
-                    If currentFileSize + buffer.Length > maximumFileSize Then
-                        ' The log file has reached the maximum size, so we'll have to either scroll the file or rollover.
-                        RaiseEvent FileFull(Me, EventArgs.Empty)
+                        If currentFileSize + buffer.Length > maximumFileSize Then
+                            ' The log file has reached the maximum size, so we'll have to either scroll the file or rollover.
+                            RaiseEvent FileFull(Me, EventArgs.Empty)
 
-                        ' Signal the main thread to wait until the "file full operation" is complete.
-                        m_operationWaitHandle.Reset()
+                            ' Signal the main thread to wait until the "file full operation" is complete.
+                            m_operationWaitHandle.Reset()
 
-                        ' Requeue the entries that have not been written to the file.
-                        For j As Integer = items.Length - 1 To i Step -1
-                            m_logEntryQueue.Insert(0, items(j))
-                        Next
+                            ' Requeue the entries that have not been written to the file.
+                            For j As Integer = items.Length - 1 To i Step -1
+                                m_logEntryQueue.Insert(0, items(j))
+                            Next
 
-                        Select Case m_fileFullOperation
-                            Case LogFileFullOperation.Truncate
-                                Close(False)
-                                File.Delete(m_name)
-                                Open()
-                            Case LogFileFullOperation.Rollover
-                                Dim historyFileName As String = JustPath(m_name) & NoFileExtension(m_name) & "_" & _
-                                                                File.GetCreationTime(m_name).ToString("yyyy-MM-dd hh!mm!ss") & "_to_" & _
-                                                                File.GetLastWriteTime(m_name).ToString("yyyy-MM-dd hh!mm!ss") & JustFileExtension(m_name)
+                            Select Case m_fileFullOperation
+                                Case LogFileFullOperation.Truncate
+                                    ' We'll delete the existing log entries and make way from new ones.
+                                    Try
+                                        Close(False)
+                                        File.Delete(m_name)
+                                    Catch ex As Exception
+                                        Throw
+                                    Finally
+                                        Open()
+                                    End Try
+                                Case LogFileFullOperation.Rollover
+                                    Dim historyFileName As String = JustPath(m_name) & NoFileExtension(m_name) & "_" & _
+                                                                    File.GetCreationTime(m_name).ToString("yyyy-MM-dd hh!mm!ss") & "_to_" & _
+                                                                    File.GetLastWriteTime(m_name).ToString("yyyy-MM-dd hh!mm!ss") & JustFileExtension(m_name)
 
-                                Close(False)
-                                File.Move(m_name, historyFileName)
-                                Open()
-                        End Select
+                                    ' We'll rollover to a new log file and keep the current file for history.
+                                    Try
+                                        Close(False)
+                                        File.Move(m_name, historyFileName)
+                                    Catch ex As Exception
+                                        Throw
+                                    Finally
+                                        Open()
+                                    End Try
+                            End Select
 
-                        ' Signal the main thread that the "file full operation" is complete.
-                        m_operationWaitHandle.Set()
+                            ' Signal the main thread that the "file full operation" is complete.
+                            m_operationWaitHandle.Set()
 
-                        Exit For
+                            Exit For
+                        End If
+
+                        ' Write the entry to the log file.
+                        SyncLock m_fileStream
+                            m_fileStream.Write(buffer, 0, buffer.Length)
+                            m_fileStream.Flush()
+                        End SyncLock
+                        currentFileSize += buffer.Length
                     End If
-
-                    SyncLock m_fileStream
-                        m_fileStream.Write(buffer, 0, buffer.Length)
-                    End SyncLock
-                    currentFileSize += buffer.Length
-                End If
-            Next
-
-        End Sub
-
-#Region " Event Handlers "
-
-#Region " ProcessQueue "
-
-        Private Sub m_logEntryQueue_ProcessException(ByVal ex As System.Exception) Handles m_logEntryQueue.ProcessException
-
-            RaiseEvent LogException(Me, New ExceptionEventArgs(ex))
+                Next
+            Catch ex As Exception
+                RaiseEvent LogException(Me, New ExceptionEventArgs(ex))
+            End Try
 
         End Sub
 
 #End Region
 
-#End Region
+        Private Sub LogFile_FileFull(ByVal sender As Object, ByVal e As System.EventArgs) Handles Me.FileFull
 
-#End Region
+            ' Signal that the "file full operation" is in progress.
+            m_operationWaitHandle.Reset()
+
+            Select Case m_fileFullOperation
+                Case LogFileFullOperation.Truncate
+                    ' We'll delete the existing log entries and make way from new ones.
+                    Try
+                        Close(False)
+                        File.Delete(m_name)
+                    Catch ex As Exception
+                        Throw
+                    Finally
+                        Open()
+                    End Try
+                Case LogFileFullOperation.Rollover
+                    Dim historyFileName As String = JustPath(m_name) & NoFileExtension(m_name) & "_" & _
+                                                    File.GetCreationTime(m_name).ToString("yyyy-MM-dd hh!mm!ss") & "_to_" & _
+                                                    File.GetLastWriteTime(m_name).ToString("yyyy-MM-dd hh!mm!ss") & JustFileExtension(m_name)
+
+                    ' We'll rollover to a new log file and keep the current file for history.
+                    Try
+                        Close(False)
+                        File.Move(m_name, historyFileName)
+                    Catch ex As Exception
+                        Throw
+                    Finally
+                        Open()
+                    End Try
+            End Select
+
+            ' Signal that the "file full operation" is complete.
+            m_operationWaitHandle.Set()
+
+        End Sub
 
     End Class
 

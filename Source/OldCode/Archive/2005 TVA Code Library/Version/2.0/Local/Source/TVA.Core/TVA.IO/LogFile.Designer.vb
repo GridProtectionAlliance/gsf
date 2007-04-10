@@ -22,7 +22,7 @@ Namespace IO
             InitializeComponent()
 
             m_name = Me.GetType().Name & DefaultExtension
-            m_size = MinimumFileSize
+            m_size = 3
             m_autoOpen = True
             m_fileFullOperation = LogFileFullOperation.Truncate
             m_persistSettings = False
