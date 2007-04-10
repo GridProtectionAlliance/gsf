@@ -30,7 +30,7 @@ Namespace IO
             m_autoSaveInterval = -1
             m_autoAlignInterval = -1
             m_persistSettings = False
-            m_configurationCategory = Me.GetType().Name
+            m_settingsCategoryName = Me.GetType().Name
             m_autoSaveTimer = New System.Timers.Timer()
             m_autoAnalyzeTimer = New System.Timers.Timer()
 

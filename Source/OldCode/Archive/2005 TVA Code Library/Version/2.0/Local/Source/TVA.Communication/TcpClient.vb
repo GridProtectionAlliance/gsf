@@ -120,7 +120,7 @@ Public Class TcpClient
 
         If PersistSettings Then
             Try
-                With TVA.Configuration.Common.CategorizedSettings(ConfigurationCategory)
+                With TVA.Configuration.Common.CategorizedSettings(SettingsCategoryName)
                     PayloadAware = .Item("PayloadAware").GetTypedValue(m_payloadAware)
                 End With
             Catch ex As Exception
@@ -136,7 +136,7 @@ Public Class TcpClient
 
         If PersistSettings Then
             Try
-                With TVA.Configuration.Common.CategorizedSettings(ConfigurationCategory)
+                With TVA.Configuration.Common.CategorizedSettings(SettingsCategoryName)
                     With .Item("PayloadAware", True)
                         .Value = m_payloadAware.ToString()
                         .Description = "True if the message boundaries are to be preserved during transmission; otherwise False."

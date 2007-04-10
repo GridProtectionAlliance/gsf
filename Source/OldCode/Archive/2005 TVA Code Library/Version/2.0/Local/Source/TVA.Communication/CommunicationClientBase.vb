@@ -56,7 +56,7 @@ Public MustInherit Class CommunicationClientBase
     Private m_isConnected As Boolean
     Private m_totalBytesSent As Integer
     Private m_persistSettings As Boolean
-    Private m_configurationCategory As String
+    Private m_settingsCategoryName As String
 
     Private m_connectTime As Long
     Private m_disconnectTime As Long
@@ -707,13 +707,13 @@ Public MustInherit Class CommunicationClientBase
     End Property
 
     <Category("Settings")> _
-    Public Property ConfigurationCategory() As String Implements IPersistSettings.ConfigurationCategory
+    Public Property SettingsCategoryName() As String Implements IPersistSettings.SettingsCategoryName
         Get
-            Return m_configurationCategory
+            Return m_settingsCategoryName
         End Get
         Set(ByVal value As String)
             If Not String.IsNullOrEmpty(value) Then
-                m_configurationCategory = value
+                m_settingsCategoryName = value
             Else
                 Throw New ArgumentNullException("ConfigurationCategory")
             End If
@@ -724,7 +724,7 @@ Public MustInherit Class CommunicationClientBase
 
         If m_persistSettings Then
             Try
-                With TVA.Configuration.Common.CategorizedSettings(m_configurationCategory)
+                With TVA.Configuration.Common.CategorizedSettings(m_settingsCategoryName)
                     ConnectionString = .Item("ConnectionString").GetTypedValue(m_connectionString)
                     ReceiveBufferSize = .Item("ReceiveBufferSize").GetTypedValue(m_receiveBufferSize)
                     ReceiveTimeout = .Item("ReceiveTimeout").GetTypedValue(m_receiveTimeout)
@@ -747,7 +747,7 @@ Public MustInherit Class CommunicationClientBase
 
         If m_persistSettings Then
             Try
-                With TVA.Configuration.Common.CategorizedSettings(m_configurationCategory)
+                With TVA.Configuration.Common.CategorizedSettings(m_settingsCategoryName)
                     .Clear()
                     With .Item("ConnectionString", True)
                         .Value = m_connectionString

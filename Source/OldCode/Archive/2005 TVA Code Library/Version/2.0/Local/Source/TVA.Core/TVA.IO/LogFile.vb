@@ -6,13 +6,24 @@ Imports System.IO
 Imports System.Text
 Imports System.Drawing
 Imports System.ComponentModel
+Imports System.Threading
 Imports TVA.Collections
 Imports TVA.IO.FilePath
 
 Namespace IO
 
+    ''' <summary>
+    ''' Specifies the operation to be performed on the log file when it is full.
+    ''' </summary>
+    ''' <remarks></remarks>
     Public Enum LogFileFullOperation As Integer
-        Scroll
+        ''' <summary>
+        ''' Truncate the existing entries in the log file to make space for new entries.
+        ''' </summary>
+        Truncate
+        ''' <summary>
+        ''' Rollover to a new log file and keep the full log file for history.
+        ''' </summary>
         Rollover
     End Enum
 
@@ -27,8 +38,9 @@ Namespace IO
         Private m_autoOpen As Boolean
         Private m_fileFullOperation As LogFileFullOperation
         Private m_persistSettings As Boolean
-        Private m_configurationCategory As String
+        Private m_settingsCategoryName As String
         Private m_fileStream As FileStream
+        Private m_operationWaitHandle As ManualResetEvent
 
         Private WithEvents m_logEntryQueue As ProcessQueue(Of String)
 
@@ -36,21 +48,60 @@ Namespace IO
 
 #Region " Event Declaration "
 
+        ''' <summary>
+        ''' Occurs when the log is being opened.
+        ''' </summary>
         Public Event FileOpening As EventHandler
+
+        ''' <summary>
+        ''' Occurs when the log file has been opened.
+        ''' </summary>
         Public Event FileOpened As EventHandler
+
+        ''' <summary>
+        ''' Occurs when the log file is being closed.
+        ''' </summary>
         Public Event FileClosing As EventHandler
+
+        ''' <summary>
+        ''' Occurs when the log file has been closed.
+        ''' </summary>
         Public Event FileClosed As EventHandler
+
+        ''' <summary>
+        ''' Occurs when the log file is full.
+        ''' </summary>
         Public Event FileFull As EventHandler
+
+        ''' <summary>
+        ''' Occurs when an exception is encountered while writing entries to the log file.
+        ''' </summary>
         Public Event LogException As EventHandler(Of ExceptionEventArgs)
 
 #End Region
 
 #Region " Code Scope: Public "
 
+        ''' <summary>
+        ''' The minimum size for a log file.
+        ''' </summary>
         Public Const MinimumFileSize As Integer = 1
-        Public Const MaximumFileSize As Integer = 5
+
+        ''' <summary>
+        ''' The maximum size for a log file.
+        ''' </summary>
+        Public Const MaximumFileSize As Integer = 10
+
+        ''' <summary>
+        ''' The default extension for a log file.
+        ''' </summary>
         Public Const DefaultExtension As String = ".txt"
 
+        ''' <summary>
+        ''' Gets or sets the name of the log file including the file extension.
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns>The name of the log file including the file extension.</returns>
         Public Property Name() As String
             Get
                 Return m_name
@@ -64,6 +115,11 @@ Namespace IO
             End Set
         End Property
 
+        ''' <summary>
+        ''' Gets or sets the size of the log file in MB.
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns>The size of the log file in MB.</returns>
         Public Property Size() As Integer
             Get
                 Return m_size
@@ -77,6 +133,12 @@ Namespace IO
             End Set
         End Property
 
+        ''' <summary>
+        ''' Gets or sets a boolean value indicating whether the log file is to be opened automatically after the 
+        ''' component has finished initializing.
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns>True is the log file os to be opened after the component has finished initializing; otherwise False.</returns>
         Public Property AutoOpen() As Boolean
             Get
                 Return m_autoOpen
@@ -86,6 +148,11 @@ Namespace IO
             End Set
         End Property
 
+        ''' <summary>
+        ''' Gets or sets the type of operation to be performed when the log file is full.
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns>One of the TVA.IO.LogFileFullOperation values.</returns>
         Public Property FileFullOperation() As LogFileFullOperation
             Get
                 Return m_fileFullOperation
@@ -95,6 +162,11 @@ Namespace IO
             End Set
         End Property
 
+        ''' <summary>
+        ''' Gets a boolean value indicating whether the log file is open.
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns>True if the log file is open; otherwise False.</returns>
         <Browsable(False)> _
         Public ReadOnly Property IsOpen() As Boolean
             Get
@@ -102,6 +174,9 @@ Namespace IO
             End Get
         End Property
 
+        ''' <summary>
+        ''' Opens the log file if it is closed.
+        ''' </summary>
         Public Sub Open()
 
             If Not IsOpen Then
@@ -122,12 +197,19 @@ Namespace IO
 
         End Sub
 
+        ''' <summary>
+        ''' Closes the log file if it is open.
+        ''' </summary>
         Public Sub Close()
 
             Close(True)
 
         End Sub
 
+        ''' <summary>
+        ''' Closes the log file if it is open.
+        ''' </summary>
+        ''' <param name="flushQueuedEntries">True if queued log entries are to be written to the log file; otherwise False.</param>
         Public Sub Close(ByVal flushQueuedEntries As Boolean)
 
             If IsOpen Then
@@ -148,7 +230,14 @@ Namespace IO
 
         End Sub
 
+        ''' <summary>
+        ''' Queues the text for writting to the log file.
+        ''' </summary>
+        ''' <param name="text">The text to be written to the log file.</param>
         Public Sub Write(ByVal text As String)
+
+            ' Yeild to the "file full operation" to complete if in progress.
+            m_operationWaitHandle.WaitOne()
 
             If IsOpen Then
                 ' Queue the text for writting to the log file.
@@ -159,19 +248,39 @@ Namespace IO
 
         End Sub
 
+        ''' <summary>
+        ''' Queues the text for writting to the log file.
+        ''' </summary>
+        ''' <param name="text">The text to be written to the log file.</param>
+        ''' <remarks>A "newline" character will automatically be appended to the text.</remarks>
         Public Sub WriteLine(ByVal text As String)
 
             Write(text & Environment.NewLine)
 
         End Sub
 
+        ''' <summary>
+        ''' Queues the text for writting to the log file.
+        ''' </summary>
+        ''' <param name="text">The text to be written to the log file.</param>
+        ''' <remarks>
+        ''' <para>A timestamp will automatically be preprended to the text.</para>
+        ''' <para>A "newline" character will automatically be appended to the text.</para>
+        ''' </remarks>
         Public Sub WriteTimestampedLine(ByVal text As String)
 
             Write("[" & System.DateTime.Now.ToString() & "] " & text & Environment.NewLine)
 
         End Sub
 
-        Public Function Read() As List(Of String)
+        ''' <summary>
+        ''' Reads and returns text from the log file.
+        ''' </summary>
+        ''' <returns>The text read from the log file.</returns>
+        Public Function ReadText() As String
+
+            ' Yeild to the "file full operation" to complete if in progress.
+            m_operationWaitHandle.WaitOne()
 
             If IsOpen Then
                 Dim buffer As Byte() = Nothing
@@ -181,10 +290,21 @@ Namespace IO
                     m_fileStream.Read(buffer, 0, buffer.Length)
                 End SyncLock
 
-                Return New List(Of String)(Encoding.Default.GetString(buffer).Split(New String() {Environment.NewLine}, StringSplitOptions.None))
+                Return Encoding.Default.GetString(buffer)
             Else
                 Throw New InvalidOperationException(String.Format("{0} ""{1}"" is not open.", Me.GetType().Name, m_name))
             End If
+
+        End Function
+
+        ''' <summary>
+        ''' Reads text from the log file and returns a list of lines created by seperating the text by the "newline" 
+        ''' characters if and where present.
+        ''' </summary>
+        ''' <returns>A list of lines from the text read from the log file.</returns>
+        Public Function ReadLines() As List(Of String)
+
+            Return New List(Of String)(ReadText.Split(New String() {Environment.NewLine}, StringSplitOptions.None))
 
         End Function
 
@@ -192,6 +312,11 @@ Namespace IO
 
 #Region " IPersistSettings "
 
+        ''' <summary>
+        ''' Gets or sets a boolean value indicating whether the component settings are to the persisted to the config file.
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns>True if the component settings are to be persisted to the consfig file; otherwise False.</returns>
         Public Property PersistSettings() As Boolean Implements IPersistSettings.PersistSettings
             Get
                 Return m_persistSettings
@@ -201,24 +326,32 @@ Namespace IO
             End Set
         End Property
 
-        Public Property ConfigurationCategory() As String Implements IPersistSettings.ConfigurationCategory
+        ''' <summary>
+        ''' Gets or sets the category name under which the component settings are to be saved in the config file.
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns>The category name under which the component settings are to be saved in the config file.</returns>
+        Public Property SettingsCategoryName() As String Implements IPersistSettings.SettingsCategoryName
             Get
-                Return m_configurationCategory
+                Return m_settingsCategoryName
             End Get
             Set(ByVal value As String)
                 If Not String.IsNullOrEmpty(value) Then
-                    m_configurationCategory = value
+                    m_settingsCategoryName = value
                 Else
                     Throw New ArgumentNullException("ConfigurationCategory")
                 End If
             End Set
         End Property
 
+        ''' <summary>
+        ''' Loads the component settings from the config file if present.
+        ''' </summary>
         Public Sub LoadSettings() Implements IPersistSettings.LoadSettings
 
             If m_persistSettings Then
                 Try
-                    With TVA.Configuration.Common.CategorizedSettings(m_configurationCategory)
+                    With TVA.Configuration.Common.CategorizedSettings(m_settingsCategoryName)
                         Name = .Item("Name").GetTypedValue(m_name)
                         Size = .Item("Size").GetTypedValue(m_size)
                         AutoOpen = .Item("AutoOpen").GetTypedValue(m_autoOpen)
@@ -231,11 +364,14 @@ Namespace IO
 
         End Sub
 
+        ''' <summary>
+        ''' Saves the component settings to the config file.
+        ''' </summary>
         Public Sub SaveSettings() Implements IPersistSettings.SaveSettings
 
             If m_persistSettings Then
                 Try
-                    With TVA.Configuration.Common.CategorizedSettings(m_configurationCategory)
+                    With TVA.Configuration.Common.CategorizedSettings(m_settingsCategoryName)
                         .Clear()
                         With .Item("Name", True)
                             .Value = m_name
@@ -251,7 +387,7 @@ Namespace IO
                         End With
                         With .Item("FileFullOperation", True)
                             .Value = m_fileFullOperation.ToString()
-                            .Description = "Operation (Scroll; Rollover) that is to be performed on the file when it is full."
+                            .Description = "Operation (Truncate; Rollover) that is to be performed on the file when it is full."
                         End With
                     End With
                     TVA.Configuration.Common.SaveSettings()
@@ -305,17 +441,16 @@ Namespace IO
                         ' The log file has reached the maximum size, so we'll have to either scroll the file or rollover.
                         RaiseEvent FileFull(Me, EventArgs.Empty)
 
+                        ' Signal the main thread to wait until the "file full operation" is complete.
+                        m_operationWaitHandle.Reset()
+
+                        ' Requeue the entries that have not been written to the file.
                         For j As Integer = items.Length - 1 To i Step -1
                             m_logEntryQueue.Insert(0, items(j))
                         Next
 
                         Select Case m_fileFullOperation
-                            Case LogFileFullOperation.Scroll
-                                Dim entries As List(Of String) = Read()
-                                For k As Integer = entries.Count - 1 To entries.Count - items.Length - 1 Step -1
-                                    m_logEntryQueue.Insert(0, entries(k) & Environment.NewLine)
-                                Next
-
+                            Case LogFileFullOperation.Truncate
                                 Close(False)
                                 File.Delete(m_name)
                                 Open()
@@ -329,6 +464,9 @@ Namespace IO
                                 Open()
                         End Select
 
+                        ' Signal the main thread that the "file full operation" is complete.
+                        m_operationWaitHandle.Set()
+
                         Exit For
                     End If
 
@@ -340,6 +478,20 @@ Namespace IO
             Next
 
         End Sub
+
+#Region " Event Handlers "
+
+#Region " ProcessQueue "
+
+        Private Sub m_logEntryQueue_ProcessException(ByVal ex As System.Exception) Handles m_logEntryQueue.ProcessException
+
+            RaiseEvent LogException(Me, New ExceptionEventArgs(ex))
+
+        End Sub
+
+#End Region
+
+#End Region
 
 #End Region
 

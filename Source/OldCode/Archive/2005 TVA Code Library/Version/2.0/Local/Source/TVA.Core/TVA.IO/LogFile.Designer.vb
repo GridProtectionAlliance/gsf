@@ -26,7 +26,9 @@ Namespace IO
             m_autoOpen = True
             m_fileFullOperation = LogFileFullOperation.Rollover
             m_persistSettings = False
-            m_configurationCategory = Me.GetType().Name
+            m_settingsCategoryName = Me.GetType().Name
+
+            m_operationWaitHandle = New System.Threading.ManualResetEvent(True)
 
             m_logEntryQueue = TVA.Collections.ProcessQueue(Of String).CreateSynchronousQueue(AddressOf WriteLogEntries)
 

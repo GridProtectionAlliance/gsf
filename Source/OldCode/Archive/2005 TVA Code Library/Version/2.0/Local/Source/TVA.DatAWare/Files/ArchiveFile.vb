@@ -31,7 +31,7 @@ Namespace Files
         Private m_intercomFile As IntercomFile
         Private m_fat As ArchiveFileAllocationTable
         Private m_persistSettings As Boolean
-        Private m_configurationCategory As String
+        Private m_settingsCategoryName As String
 
         Private m_fileStream As FileStream
         Private m_historicArchiveFileList As List(Of ArchiveFileInfo)
@@ -450,85 +450,14 @@ Namespace Files
 
         End Sub
 
-        Public Function Read(ByVal pointID As Integer) As List(Of StandardPointData)
-
-            Return Read(pointID, TimeTag.MinValue)
-
-        End Function
-
-        Public Function Read(ByVal pointID As Integer, ByVal startTime As String) As List(Of StandardPointData)
-
-            Return Read(pointID, startTime, TimeTag.MinValue.ToString())
-
-        End Function
-
-        Public Function Read(ByVal pointID As Integer, ByVal startTime As String, ByVal endTime As String) As List(Of StandardPointData)
-
-            Return Read(pointID, Convert.ToDateTime(startTime), Convert.ToDateTime(endTime))
-
-        End Function
-
-        Public Function Read(ByVal pointID As Integer, ByVal startTime As Date) As List(Of StandardPointData)
-
-            Return Read(pointID, startTime, TimeTag.MinValue.ToDateTime())
-
-        End Function
-
-        Public Function Read(ByVal pointID As Integer, ByVal startTime As Date, ByVal endTime As Date) As List(Of StandardPointData)
-
-            Return Read(pointID, New TimeTag(startTime), New TimeTag(endTime))
-
-        End Function
-
-        Public Function Read(ByVal pointID As Integer, ByVal startTime As TimeTag) As List(Of StandardPointData)
-
-            Return Read(pointID, startTime, TimeTag.MaxValue)
-
-        End Function
-
-        Public Function Read(ByVal pointID As Integer, ByVal startTime As TimeTag, ByVal endTime As TimeTag) As List(Of StandardPointData)
-
-            If IsOpen Then
-                ' We don't allow data to be read from a "standby" file.
-                If m_type = ArchiveFileType.Standby Then Return Nothing
-
-                ' Yeild to the rollover process if it is in progress.
-                m_rolloverWaitHandle.WaitOne()
-
-                Dim data As New List(Of StandardPointData)()
-                Dim foundBlocks As List(Of ArchiveDataBlock) = m_fat.FindDataBlocks(pointID, startTime, endTime)
-                For i As Integer = 0 To foundBlocks.Count - 1
-                    If i < foundBlocks.Count - 1 Then
-                        data.AddRange(foundBlocks(i).Read())
-                    Else
-                        ' We have to scan the data of the last block and only add the data that have a timetag
-                        ' that's less than or equal to the specified end time. If we don't do this we might
-                        ' return data that is beyond the specified time range.
-                        Dim blockData As List(Of StandardPointData) = foundBlocks(i).Read()
-                        For j As Integer = 0 To blockData.Count - 1
-                            If blockData(j).TimeTag.CompareTo(endTime) <= 0 Then
-                                data.Add(blockData(j))
-                            End If
-                        Next
-                    End If
-                    foundBlocks(i).Dispose()
-                Next
-
-                Return data
-            Else
-                Throw New InvalidOperationException(String.Format("{0} ""{1}"" is not open.", Me.GetType().Name, m_name))
-            End If
-
-        End Function
-
         Public Sub Write(ByVal pointData As StandardPointData)
+
+            ' Yeild to the rollover process if it is in progress.
+            m_rolloverWaitHandle.WaitOne()
 
             If IsOpen Then
                 ' We don't allow data to be written to a "standby" file.
                 If m_type = ArchiveFileType.Standby Then Exit Sub
-
-                ' Yeild to the rollover process if it is in progress.
-                m_rolloverWaitHandle.WaitOne()
 
                 m_fat.EventsReceived += 1
 
@@ -627,6 +556,9 @@ Namespace Files
 
         Public Sub Write(ByVal pointData() As StandardPointData)
 
+            ' Yeild to the rollover process if it is in progress.
+            m_rolloverWaitHandle.WaitOne()
+
             If IsOpen Then
                 For i As Integer = 0 To pointData.Length - 1
                     Write(pointData(i))
@@ -636,6 +568,77 @@ Namespace Files
             End If
 
         End Sub
+
+        Public Function Read(ByVal pointID As Integer) As List(Of StandardPointData)
+
+            Return Read(pointID, TimeTag.MinValue)
+
+        End Function
+
+        Public Function Read(ByVal pointID As Integer, ByVal startTime As String) As List(Of StandardPointData)
+
+            Return Read(pointID, startTime, TimeTag.MinValue.ToString())
+
+        End Function
+
+        Public Function Read(ByVal pointID As Integer, ByVal startTime As String, ByVal endTime As String) As List(Of StandardPointData)
+
+            Return Read(pointID, Convert.ToDateTime(startTime), Convert.ToDateTime(endTime))
+
+        End Function
+
+        Public Function Read(ByVal pointID As Integer, ByVal startTime As Date) As List(Of StandardPointData)
+
+            Return Read(pointID, startTime, TimeTag.MinValue.ToDateTime())
+
+        End Function
+
+        Public Function Read(ByVal pointID As Integer, ByVal startTime As Date, ByVal endTime As Date) As List(Of StandardPointData)
+
+            Return Read(pointID, New TimeTag(startTime), New TimeTag(endTime))
+
+        End Function
+
+        Public Function Read(ByVal pointID As Integer, ByVal startTime As TimeTag) As List(Of StandardPointData)
+
+            Return Read(pointID, startTime, TimeTag.MaxValue)
+
+        End Function
+
+        Public Function Read(ByVal pointID As Integer, ByVal startTime As TimeTag, ByVal endTime As TimeTag) As List(Of StandardPointData)
+
+            ' Yeild to the rollover process if it is in progress.
+            m_rolloverWaitHandle.WaitOne()
+
+            If IsOpen Then
+                ' We don't allow data to be read from a "standby" file.
+                If m_type = ArchiveFileType.Standby Then Return Nothing
+
+                Dim data As New List(Of StandardPointData)()
+                Dim foundBlocks As List(Of ArchiveDataBlock) = m_fat.FindDataBlocks(pointID, startTime, endTime)
+                For i As Integer = 0 To foundBlocks.Count - 1
+                    If i < foundBlocks.Count - 1 Then
+                        data.AddRange(foundBlocks(i).Read())
+                    Else
+                        ' We have to scan the data of the last block and only add the data that have a timetag
+                        ' that's less than or equal to the specified end time. If we don't do this we might
+                        ' return data that is beyond the specified time range.
+                        Dim blockData As List(Of StandardPointData) = foundBlocks(i).Read()
+                        For j As Integer = 0 To blockData.Count - 1
+                            If blockData(j).TimeTag.CompareTo(endTime) <= 0 Then
+                                data.Add(blockData(j))
+                            End If
+                        Next
+                    End If
+                    foundBlocks(i).Dispose()
+                Next
+
+                Return data
+            Else
+                Throw New InvalidOperationException(String.Format("{0} ""{1}"" is not open.", Me.GetType().Name, m_name))
+            End If
+
+        End Function
 
         Public Shared Function MaximumDataBlocks(ByVal fileSize As Double, ByVal blockSize As Integer) As Integer
 
@@ -656,13 +659,13 @@ Namespace Files
             End Set
         End Property
 
-        Public Property ConfigurationCategory() As String Implements IPersistSettings.ConfigurationCategory
+        Public Property SettingsCategoryName() As String Implements IPersistSettings.SettingsCategoryName
             Get
-                Return m_configurationCategory
+                Return m_settingsCategoryName
             End Get
             Set(ByVal value As String)
                 If Not String.IsNullOrEmpty(value) Then
-                    m_configurationCategory = value
+                    m_settingsCategoryName = value
                 Else
                     Throw New ArgumentNullException("ConfigurationCategory")
                 End If
@@ -673,7 +676,7 @@ Namespace Files
 
             If m_persistSettings Then
                 Try
-                    With TVA.Configuration.Common.CategorizedSettings(m_configurationCategory)
+                    With TVA.Configuration.Common.CategorizedSettings(m_settingsCategoryName)
                         Name = .Item("Name").GetTypedValue(m_name)
                         Type = .Item("Type").GetTypedValue(m_type)
                         Size = .Item("Size").GetTypedValue(m_size)
@@ -698,7 +701,7 @@ Namespace Files
 
             If m_persistSettings Then
                 Try
-                    With TVA.Configuration.Common.CategorizedSettings(m_configurationCategory)
+                    With TVA.Configuration.Common.CategorizedSettings(m_settingsCategoryName)
                         .Clear()
                         With .Item("Name", True)
                             .Value = m_name

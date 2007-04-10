@@ -24,7 +24,7 @@ Namespace Components
             m_idFieldName = "ID"
             m_optimizeParsing = True
             m_persistSettings = False
-            m_configurationCategory = Me.GetType().Name
+            m_settingsCategoryName = Me.GetType().Name
             m_parserTypes = New Dictionary(Of TIdentifier, ParserTypeInfo)
             m_dataQueue = TVA.Collections.ProcessQueue(Of IdentifiableItem(Of Byte())).CreateRealTimeQueue(AddressOf ParseData)
 

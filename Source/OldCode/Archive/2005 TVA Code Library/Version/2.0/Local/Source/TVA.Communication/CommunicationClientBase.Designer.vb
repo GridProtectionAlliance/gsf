@@ -56,7 +56,7 @@ Partial Class CommunicationClientBase
         m_totalBytesSent = 0
         m_totalBytesReceived = 0
         m_persistSettings = False
-        m_configurationCategory = Me.GetType().Name
+        m_settingsCategoryName = Me.GetType().Name
 
         m_connectionWaitHandle = New System.Threading.AutoResetEvent(False)
         m_buffer = CreateArray(Of Byte)(m_receiveBufferSize)

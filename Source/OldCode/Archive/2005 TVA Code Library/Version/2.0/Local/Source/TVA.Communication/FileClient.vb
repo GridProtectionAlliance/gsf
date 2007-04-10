@@ -179,7 +179,7 @@ Public Class FileClient
 
         If PersistSettings Then
             Try
-                With TVA.Configuration.Common.CategorizedSettings(ConfigurationCategory)
+                With TVA.Configuration.Common.CategorizedSettings(SettingsCategoryName)
                     ReceiveOnDemand = .Item("ReceiveOnDemand").GetTypedValue(m_receiveOnDemand)
                     ReceiveInterval = .Item("ReceiveInterval").GetTypedValue(m_receiveInterval)
                     StartingOffset = .Item("StartingOffset").GetTypedValue(m_startingOffset)
@@ -197,7 +197,7 @@ Public Class FileClient
 
         If PersistSettings Then
             Try
-                With TVA.Configuration.Common.CategorizedSettings(ConfigurationCategory)
+                With TVA.Configuration.Common.CategorizedSettings(SettingsCategoryName)
                     With .Item("ReceiveOnDemand", True)
                         .Value = m_receiveOnDemand.ToString()
                         .Description = "True if receiving (reading) of data will be initiated manually; otherwise False."

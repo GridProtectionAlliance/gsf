@@ -20,7 +20,7 @@ Namespace Components
         Private m_idFieldName As String
         Private m_optimizeParsing As Boolean
         Private m_persistSettings As Boolean
-        Private m_configurationCategory As String
+        Private m_settingsCategoryName As String
         Private m_parserTypes As Dictionary(Of TIdentifier, ParserTypeInfo)
 
         Private Delegate Function DefaultConstructor() As TResult
@@ -166,13 +166,13 @@ Namespace Components
             End Set
         End Property
 
-        Public Property ConfigurationCategory() As String Implements IPersistSettings.ConfigurationCategory
+        Public Property SettingsCategoryName() As String Implements IPersistSettings.SettingsCategoryName
             Get
-                Return m_configurationCategory
+                Return m_settingsCategoryName
             End Get
             Set(ByVal value As String)
                 If Not String.IsNullOrEmpty(value) Then
-                    m_configurationCategory = value
+                    m_settingsCategoryName = value
                 Else
                     Throw New ArgumentNullException("ConfigurationCategory")
                 End If
@@ -183,7 +183,7 @@ Namespace Components
 
             If m_persistSettings Then
                 Try
-                    With TVA.Configuration.Common.CategorizedSettings(m_configurationCategory)
+                    With TVA.Configuration.Common.CategorizedSettings(m_settingsCategoryName)
                         IDFieldName = .Item("IDFieldName").GetTypedValue(m_idFieldName)
                         OptimizeParsing = .Item("OptimizeParsing").GetTypedValue(m_optimizeParsing)
                     End With
@@ -198,7 +198,7 @@ Namespace Components
 
             If m_persistSettings Then
                 Try
-                    With TVA.Configuration.Common.CategorizedSettings(m_configurationCategory)
+                    With TVA.Configuration.Common.CategorizedSettings(m_settingsCategoryName)
                         .Clear()
                         With .Item("IDFieldName", True)
                             .Value = m_idFieldName

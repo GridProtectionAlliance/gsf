@@ -21,7 +21,7 @@ Namespace IO
         Private m_minimumRecordCount As Integer
         Private m_fileRecords As List(Of T)
         Private m_persistSettings As Boolean
-        Private m_configurationCategory As String
+        Private m_settingsCategoryName As String
 
         Private m_fileStream As FileStream
 
@@ -391,13 +391,13 @@ Namespace IO
             End Set
         End Property
 
-        Public Property ConfigurationCategory() As String Implements IPersistSettings.ConfigurationCategory
+        Public Property SettingsCategoryName() As String Implements IPersistSettings.SettingsCategoryName
             Get
-                Return m_configurationCategory
+                Return m_settingsCategoryName
             End Get
             Set(ByVal value As String)
                 If Not String.IsNullOrEmpty(value) Then
-                    m_configurationCategory = value
+                    m_settingsCategoryName = value
                 Else
                     Throw New ArgumentNullException("ConfigurationCategory")
                 End If
@@ -408,7 +408,7 @@ Namespace IO
 
             If m_persistSettings Then
                 Try
-                    With TVA.Configuration.Common.CategorizedSettings(m_configurationCategory)
+                    With TVA.Configuration.Common.CategorizedSettings(m_settingsCategoryName)
                         Name = .Item("Name").GetTypedValue(m_name)
                         LoadOnOpen = .Item("LoadOnOpen").GetTypedValue(m_loadOnOpen)
                         ReloadOnModify = .Item("ReloadOnModify").GetTypedValue(m_reloadOnModify)
@@ -429,7 +429,7 @@ Namespace IO
 
             If m_persistSettings Then
                 Try
-                    With TVA.Configuration.Common.CategorizedSettings(m_configurationCategory)
+                    With TVA.Configuration.Common.CategorizedSettings(m_settingsCategoryName)
                         .Clear()
                         With .Item("Name", True)
                             .Value = m_name

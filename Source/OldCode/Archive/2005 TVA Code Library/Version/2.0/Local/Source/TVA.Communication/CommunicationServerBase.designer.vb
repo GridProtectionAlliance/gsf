@@ -53,7 +53,7 @@ Partial Class CommunicationServerBase
         m_clientIDs = New List(Of Guid)
         m_isRunning = False
         m_persistSettings = False
-        m_configurationCategory = Me.GetType().Name
+        m_settingsCategoryName = Me.GetType().Name
 
         m_startTime = 0
         m_stopTime = 0

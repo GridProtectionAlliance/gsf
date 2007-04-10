@@ -201,7 +201,7 @@ Public Class UdpClient
 
         If PersistSettings Then
             Try
-                With TVA.Configuration.Common.CategorizedSettings(ConfigurationCategory)
+                With TVA.Configuration.Common.CategorizedSettings(SettingsCategoryName)
                     PayloadAware = .Item("PayloadAware").GetTypedValue(m_payloadAware)
                     DestinationReachableCheck = .Item("DestinationReachableCheck").GetTypedValue(m_destinationReachableCheck)
                 End With
@@ -218,7 +218,7 @@ Public Class UdpClient
 
         If PersistSettings Then
             Try
-                With TVA.Configuration.Common.CategorizedSettings(ConfigurationCategory)
+                With TVA.Configuration.Common.CategorizedSettings(SettingsCategoryName)
                     With .Item("PayloadAware", True)
                         .Value = m_payloadAware.ToString()
                         .Description = "True if the messages that are broken down into multiple datagram for the purpose of transmission while being sent are to be assembled back when received; otherwise False."

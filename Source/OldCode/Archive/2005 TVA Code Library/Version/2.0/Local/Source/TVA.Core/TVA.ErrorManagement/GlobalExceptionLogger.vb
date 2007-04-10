@@ -22,7 +22,7 @@ Namespace ErrorManagement
         Private m_logToScreenshot As Boolean
         Private m_emailRecipients As String
         Private m_persistSettings As Boolean
-        Private m_configurationCategory As String
+        Private m_settingsCategoryName As String
         Private m_customLoggers As List(Of LoggerMethodSignature)
 
         Public Delegate Sub LoggerMethodSignature(ByVal ex As Exception)
@@ -235,13 +235,13 @@ Namespace ErrorManagement
         End Property
 
         <Category("Settings")> _
-        Public Property ConfigurationCategory() As String Implements IPersistSettings.ConfigurationCategory
+        Public Property SettingsCategoryName() As String Implements IPersistSettings.SettingsCategoryName
             Get
-                Return m_configurationCategory
+                Return m_settingsCategoryName
             End Get
             Set(ByVal value As String)
                 If Not String.IsNullOrEmpty(value) Then
-                    m_configurationCategory = value
+                    m_settingsCategoryName = value
                 Else
                     Throw New ArgumentNullException("ConfigurationCategory")
                 End If

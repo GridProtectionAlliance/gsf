@@ -54,7 +54,7 @@ Public MustInherit Class CommunicationServerBase
     Private m_clientIDs As List(Of Guid)
     Private m_isRunning As Boolean
     Private m_persistSettings As Boolean
-    Private m_configurationCategory As String
+    Private m_settingsCategoryName As String
 
     Private m_startTime As Long
     Private m_stopTime As Long
@@ -643,13 +643,13 @@ Public MustInherit Class CommunicationServerBase
     End Property
 
     <Category("Settings")> _
-    Public Property ConfigurationCategory() As String Implements IPersistSettings.ConfigurationCategory
+    Public Property SettingsCategoryName() As String Implements IPersistSettings.SettingsCategoryName
         Get
-            Return m_configurationCategory
+            Return m_settingsCategoryName
         End Get
         Set(ByVal value As String)
             If Not String.IsNullOrEmpty(value) Then
-                m_configurationCategory = value
+                m_settingsCategoryName = value
             Else
                 Throw New ArgumentNullException("ConfigurationCategory")
             End If
@@ -660,7 +660,7 @@ Public MustInherit Class CommunicationServerBase
 
         If m_persistSettings Then
             Try
-                With TVA.Configuration.Common.CategorizedSettings(m_configurationCategory)
+                With TVA.Configuration.Common.CategorizedSettings(m_settingsCategoryName)
                     ConfigurationString = .Item("ConfigurationString").GetTypedValue(m_configurationString)
                     ReceiveBufferSize = .Item("ReceiveBufferSize").GetTypedValue(m_receiveBufferSize)
                     MaximumClients = .Item("MaximumClients").GetTypedValue(m_maximumClients)
@@ -682,7 +682,7 @@ Public MustInherit Class CommunicationServerBase
 
         If m_persistSettings Then
             Try
-                With TVA.Configuration.Common.CategorizedSettings(m_configurationCategory)
+                With TVA.Configuration.Common.CategorizedSettings(m_settingsCategoryName)
                     .Clear()
                     With .Item("ConfigurationString", True)
                         .Value = m_configurationString
