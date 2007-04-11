@@ -192,6 +192,10 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Embedded Resources\IO.LogFile.bmp" />
+    <EmbeddedResource Include="TVA.ErrorManagement\GlobalExceptionLogger.resx">
+      <SubType>Designer</SubType>
+      <DependentUpon>GlobalExceptionLogger.vb</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="TVA.IO\IsamDataFileBase.resx">
       <DependentUpon>IsamDataFileBase.vb</DependentUpon>
       <SubType>Designer</SubType>

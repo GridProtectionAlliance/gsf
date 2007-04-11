@@ -208,16 +208,18 @@ Namespace Net.Smtp
                 If Not String.IsNullOrEmpty(Attachments) Then
                     ' Attach all of the specified files to the e-mail message.
                     For Each attachment As String In Attachments.Split(New Char() {";"c, ","c})
-                        ' Create the file attachment for the e-mail message.
-                        Dim data As New Attachment(attachment, MediaTypeNames.Application.Octet)
-                        With data.ContentDisposition
-                            ' Add time stamp information for the file.
-                            .CreationDate = File.GetCreationTime(attachment)
-                            .ModificationDate = File.GetLastWriteTime(attachment)
-                            .ReadDate = File.GetLastAccessTime(attachment)
-                        End With
+                        If File.Exists(attachment) Then
+                            ' Create the file attachment for the e-mail message.
+                            Dim data As New Attachment(attachment, MediaTypeNames.Application.Octet)
+                            With data.ContentDisposition
+                                ' Add time stamp information for the file.
+                                .CreationDate = File.GetCreationTime(attachment)
+                                .ModificationDate = File.GetLastWriteTime(attachment)
+                                .ReadDate = File.GetLastAccessTime(attachment)
+                            End With
 
-                        email.Attachments.Add(data)  ' Attach the file.
+                            email.Attachments.Add(data)  ' Attach the file.
+                        End If
                     Next
                 End If
 

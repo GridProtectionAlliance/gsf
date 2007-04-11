@@ -146,7 +146,7 @@ Namespace IO
         ''' </summary>
         ''' <value></value>
         ''' <returns>True is the log file is to be opened after the component has finished initializing; otherwise False.</returns>
-        <Description("Indicates whether the log file is to be opened automatically after the component has finished initializing."), DefaultValue(GetType(Boolean), "True")> _
+        <Description("Indicates whether the log file is to be opened automatically after the component has finished initializing."), DefaultValue(GetType(Boolean), "False")> _
         Public Property AutoOpen() As Boolean
             Get
                 Return m_autoOpen
@@ -197,6 +197,8 @@ Namespace IO
                 If Not Directory.Exists(JustPath(m_name)) Then Directory.CreateDirectory(JustPath(m_name))
                 ' Open the log file if it exists, or create it if it doesn't.
                 m_fileStream = New FileStream(m_name, FileMode.OpenOrCreate)
+                ' Scroll to the end of the file so that existing data is not overwritten.
+                m_fileStream.Seek(0, SeekOrigin.End)
 
                 ' Start the queue to which log entries are going to be added.
                 m_logEntryQueue.Start()
@@ -232,9 +234,11 @@ Namespace IO
                     m_logEntryQueue.Stop()
                 End If
 
-                ' Close the log file.
-                m_fileStream.Dispose()
-                m_fileStream = Nothing
+                If m_fileStream IsNot Nothing Then
+                    ' Close the log file.
+                    m_fileStream.Dispose()
+                    m_fileStream = Nothing
+                End If
             End If
 
         End Sub

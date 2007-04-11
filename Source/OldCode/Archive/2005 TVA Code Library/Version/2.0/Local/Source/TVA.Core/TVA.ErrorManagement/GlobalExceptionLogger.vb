@@ -4,7 +4,7 @@ Imports System.Text
 Imports System.Reflection
 Imports System.Drawing
 Imports System.ComponentModel
-Imports System.Diagnostics
+Imports System.Windows.Forms
 Imports TVA.Net.Smtp
 
 Namespace ErrorManagement
@@ -23,6 +23,7 @@ Namespace ErrorManagement
         Private m_emailRecipients As String
         Private m_persistSettings As Boolean
         Private m_settingsCategoryName As String
+        Private m_isRunning As Boolean
         Private m_customLoggers As List(Of LoggerMethodSignature)
 
         Public Delegate Sub LoggerMethodSignature(ByVal ex As Exception)
@@ -101,8 +102,11 @@ Namespace ErrorManagement
                 AddHandler System.Windows.Forms.Application.ThreadException, AddressOf UnhandledThreadException
 
                 ' For console applications.
-                AddHandler AppDomain.CurrentDomain.UnhandledException, AddressOf UnhandledException
+                AddHandler System.AppDomain.CurrentDomain.UnhandledException, AddressOf UnhandledException
             End If
+
+            LogFile.Name = LogFileName
+            m_isRunning = True
 
         End Sub
 
@@ -113,11 +117,17 @@ Namespace ErrorManagement
                 RemoveHandler System.AppDomain.CurrentDomain.UnhandledException, AddressOf UnhandledException
             End If
 
+            m_isRunning = False
+
         End Sub
 
         Public Sub Log(ByVal ex As Exception)
 
-            GenericExceptionHandler(ex)
+            If m_isRunning Then
+                GenericExceptionHandler(ex)
+            Else
+                Throw New InvalidOperationException(String.Format("{0} is not running.", Me.GetType().Name))
+            End If
 
         End Sub
 
@@ -160,16 +170,21 @@ Namespace ErrorManagement
                 .AppendLine()
                 .AppendLine()
 
-                ' get exception-specific information
-                .AppendFormat("Exception Source:      {0}", ex.Source)
-                .AppendLine()
-                .AppendFormat("Exception Type:        {0}", ex.GetType().FullName)
-                .AppendLine()
-                .AppendFormat("Exception Message:     {0}", ex.Message)
-                .AppendLine()
-                .AppendFormat("Exception Target Site: {0}", ex.TargetSite.Name)
-                .AppendLine()
-                .AppendLine()
+                Try
+                    ' get exception-specific information
+                    .AppendFormat("Exception Source:      {0}", ex.Source)
+                    .AppendLine()
+                    .AppendFormat("Exception Type:        {0}", ex.GetType().FullName)
+                    .AppendLine()
+                    .AppendFormat("Exception Message:     {0}", ex.Message)
+                    .AppendLine()
+                    .AppendFormat("Exception Target Site: {0}", ex.TargetSite.Name)
+                    .AppendLine()
+                Catch
+
+                Finally
+                    .AppendLine()
+                End Try
 
                 .Append("---- Stack Trace ----")
                 .AppendLine()
@@ -266,6 +281,11 @@ Namespace ErrorManagement
 
         Public Sub EndInit() Implements System.ComponentModel.ISupportInitialize.EndInit
 
+            If Not DesignMode Then
+                LoadSettings()
+                If m_autoStart Then Start()
+            End If
+
         End Sub
 
 #End Region
@@ -276,24 +296,102 @@ Namespace ErrorManagement
 
 #Region " Code Scope: Private "
 
+        Private ReadOnly Property ApplicationName() As String
+            Get
+                Return System.AppDomain.CurrentDomain.FriendlyName
+            End Get
+        End Property
+
+        Private ReadOnly Property LogFileName() As String
+            Get
+                Return ApplicationName & ".ExceptionLog.txt"
+            End Get
+        End Property
+
+        Private ReadOnly Property ScreenshotFileName() As String
+            Get
+                Return ApplicationName & ".ExceptionScreenshot.png"
+            End Get
+        End Property
+
         Private Sub GenericExceptionHandler(ByVal ex As Exception)
 
             Dim exceptionString As String = ExceptionToString(ex)
 
-            If m_logToScreenshot Then
+            ExceptionToScreenshot(exceptionString)
+            ExceptionToEventLog(exceptionString)
+            ExceptionToEmail(exceptionString)
+            ExceptionToFile(exceptionString)
 
-            End If
+        End Sub
 
-            If m_logToEventLog Then
-                EventLog.WriteEntry(System.AppDomain.CurrentDomain.FriendlyName, exceptionString, EventLogEntryType.Error)
-            End If
-
-            If m_logToEmail Then
-
-            End If
+        Private Sub ExceptionToFile(ByVal exceptionMessage As String)
 
             If m_logToFile Then
+                Try
+                    If Not LogFile.IsOpen Then LogFile.Open()
+                    LogFile.WriteTimestampedLine(exceptionMessage)
+                Catch ex As Exception
 
+                Finally
+                    LogFile.Close()
+                End Try
+            End If
+
+        End Sub
+
+        Private Sub ExceptionToEmail(ByVal exceptionMessage As String)
+
+            If m_logToEmail AndAlso Not String.IsNullOrEmpty(m_emailRecipients) Then
+                Try
+                    With New SimpleMailMessage()
+                        .Sender = String.Format("{0}@tva.gov", Me.GetType().Name)
+                        .Recipients = m_emailRecipients
+                        .Subject = String.Format("Exception in {0} at {1}", ApplicationName, Date.Now.ToString())
+                        .Body = exceptionMessage
+                        .Attachments = TVA.IO.FilePath.AbsolutePath(ScreenshotFileName)
+                        .Send()
+                    End With
+                Catch ex As Exception
+
+                End Try
+            End If
+
+        End Sub
+
+        Private Sub ExceptionToEventLog(ByVal exceptionMessage As String)
+
+            If m_logToEventLog Then
+                Try
+                    ' Write the formatted exception message to the event log.
+                    EventLog.WriteEntry(ApplicationName, exceptionMessage, EventLogEntryType.Error)
+                Catch ex As Exception
+
+                End Try
+            End If
+
+        End Sub
+
+        Private Sub ExceptionToScreenshot(ByVal exceptionMessage As String)
+
+            If m_logToScreenshot Then
+                Try
+                    Dim fullScreen As New Size(0, 0)
+                    For Each myScreen As Screen In Screen.AllScreens
+                        If fullScreen.IsEmpty Then
+                            fullScreen = myScreen.Bounds.Size
+                        Else
+                            If myScreen.Bounds.Location.X > 0 Then fullScreen.Width += myScreen.Bounds.Width
+                            If myScreen.Bounds.Location.Y > 0 Then fullScreen.Height += myScreen.Bounds.Height
+                        End If
+                    Next
+
+                    Using snap As Bitmap = TVA.Drawing.Image.CaptureScreenshot(fullScreen, Imaging.ImageFormat.Png)
+                        snap.Save(ScreenshotFileName)
+                    End Using
+                Catch ex As Exception
+
+                End Try
             End If
 
         End Sub

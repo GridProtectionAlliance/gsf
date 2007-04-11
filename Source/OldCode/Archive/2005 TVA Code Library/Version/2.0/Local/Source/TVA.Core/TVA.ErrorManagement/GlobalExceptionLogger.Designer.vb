@@ -29,6 +29,8 @@ Namespace ErrorManagement
         <System.Diagnostics.DebuggerNonUserCode()> _
         Protected Overrides Sub Dispose(ByVal disposing As Boolean)
             Try
+                [Stop]()
+                SaveSettings()
                 If disposing AndAlso components IsNot Nothing Then
                     components.Dispose()
                 End If
@@ -45,8 +47,18 @@ Namespace ErrorManagement
         'Do not modify it using the code editor.
         <System.Diagnostics.DebuggerStepThrough()> _
         Private Sub InitializeComponent()
-            components = New System.ComponentModel.Container()
+            Me.components = New System.ComponentModel.Container
+            Me.LogFile = New TVA.IO.LogFile(Me.components)
+            CType(Me.LogFile, System.ComponentModel.ISupportInitialize).BeginInit()
+            '
+            'LogFile
+            '
+            Me.LogFile.AutoOpen = False
+            Me.LogFile.Name = "LogFile.txt"
+            CType(Me.LogFile, System.ComponentModel.ISupportInitialize).EndInit()
+
         End Sub
+        Friend WithEvents LogFile As TVA.IO.LogFile
 
     End Class
 
