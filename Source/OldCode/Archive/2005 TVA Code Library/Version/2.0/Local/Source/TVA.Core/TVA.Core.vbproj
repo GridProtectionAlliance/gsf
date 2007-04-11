@@ -69,6 +69,7 @@
     </Compile>
     <Compile Include="TVA.Console\Arguments.vb" />
     <Compile Include="TVA.Console\Common.vb" />
+    <Compile Include="TVA.Drawing\Image.vb" />
     <Compile Include="TVA.ErrorManagement\GlobalExceptionLogger.Designer.vb">
       <DependentUpon>GlobalExceptionLogger.vb</DependentUpon>
     </Compile>
