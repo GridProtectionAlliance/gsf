@@ -148,46 +148,119 @@ Namespace ErrorManagement
                     .AppendLine()
                 End If
 
-                ' get general system and app information
-                .AppendFormat("Date and Time:         {0}", System.DateTime.Now)
+                ' Get general system information.
+                .Append(SystemInfo)
                 .AppendLine()
-                .AppendFormat("Machine Name:          {0}", Environment.MachineName)
+                ' Get general application information.
+                .Append(ApplicationInfo)
                 .AppendLine()
-                .AppendFormat("IP Address:            {0}", System.Net.Dns.GetHostName())
+                ' Get general exception information.
+                .Append(ExceptionGeneralInfo(ex))
                 .AppendLine()
-                .AppendFormat("Current User:          {0}", System.Threading.Thread.CurrentPrincipal.Identity.Name)
-                .AppendLine()
-                .AppendLine()
-                .AppendFormat("Application Domain:    {0}", System.AppDomain.CurrentDomain.FriendlyName)
-                .AppendLine()
-                .AppendFormat("Assembly Codebase:     {0}", TVA.Assembly.EntryAssembly.CodeBase)
-                .AppendLine()
-                .AppendFormat("Assembly Full Name:    {0}", TVA.Assembly.EntryAssembly.FullName)
-                .AppendLine()
-                .AppendFormat("Assembly Version:      {0}", TVA.Assembly.EntryAssembly.Version.ToString())
-                .AppendLine()
-                .AppendFormat("Assembly Build Date:   {0}", TVA.Assembly.EntryAssembly.BuildDate.ToString())
-                .AppendLine()
-                .AppendLine()
-
-                Try
-                    ' get exception-specific information
-                    .AppendFormat("Exception Source:      {0}", ex.Source)
-                    .AppendLine()
-                    .AppendFormat("Exception Type:        {0}", ex.GetType().FullName)
-                    .AppendLine()
-                    .AppendFormat("Exception Message:     {0}", ex.Message)
-                    .AppendLine()
-                    .AppendFormat("Exception Target Site: {0}", ex.TargetSite.Name)
-                    .AppendLine()
-                Catch
-
-                Finally
-                    .AppendLine()
-                End Try
-
+                ' Get the stack trace for the exception.
                 .Append("---- Stack Trace ----")
                 .AppendLine()
+                .Append(ExceptionStackTrace(ex))
+                .AppendLine()
+
+                Return .ToString()
+            End With
+
+        End Function
+
+        Public Shared Function SystemInfo() As String
+
+            With New StringBuilder()
+                .AppendFormat("Date and Time:         {0}", System.DateTime.Now)
+                .AppendLine()
+                Select Case TVA.Common.GetApplicationType()
+                    Case ApplicationType.Win
+                        .AppendFormat("Machine Name:          {0}", System.Environment.MachineName)
+                        .AppendLine()
+                        .AppendFormat("Machine IP:            {0}", System.Net.Dns.GetHostEntry(System.Environment.MachineName).AddressList(0).ToString())
+                        .AppendLine()
+                        .AppendFormat("Current User:          {0}", System.Threading.Thread.CurrentPrincipal.Identity.Name)
+                        .AppendLine()
+                    Case ApplicationType.Web
+                        .AppendFormat("Server Name:           {0}", System.Environment.MachineName)
+                        .AppendLine()
+                        .AppendFormat("Server IP:             {0}", System.Net.Dns.GetHostEntry(System.Environment.MachineName).AddressList(0).ToString())
+                        .AppendLine()
+                        .AppendFormat("Process User:          {0}", System.Security.Principal.WindowsIdentity.GetCurrent().Name)
+                        .AppendLine()
+                        .AppendFormat("Remote User:           {0}", System.Web.HttpContext.Current.Request.ServerVariables("REMOTE_USER"))
+                        .AppendLine()
+                        .AppendFormat("Remote Host:           {0}", System.Web.HttpContext.Current.Request.ServerVariables("REMOTE_HOST"))
+                        .AppendLine()
+                        .AppendFormat("Remote Address:        {0}", System.Web.HttpContext.Current.Request.ServerVariables("REMOTE_ADDR"))
+                        .AppendLine()
+                        .AppendFormat("HTTP Agent:            {0}", System.Web.HttpContext.Current.Request.ServerVariables("HTTP_USER_AGENT"))
+                        .AppendLine()
+                        .AppendFormat("HTTP Referer:          {0}", System.Web.HttpContext.Current.Request.ServerVariables("HTTP_REFERER"))
+                        .AppendLine()
+                        .AppendFormat("Web Page URL:          {0}", System.Web.HttpContext.Current.Request.Url.ToString())
+                        .AppendLine()
+                End Select
+
+                Return .ToString()
+            End With
+
+        End Function
+
+        Public Shared Function ApplicationInfo() As String
+
+            With New StringBuilder()
+                Dim asm As TVA.Assembly = Nothing
+                Select Case TVA.Common.GetApplicationType()
+                    Case ApplicationType.Win
+                        ' For a windows application the entry assembly will be the executable.
+                        asm = TVA.Assembly.EntryAssembly
+                    Case ApplicationType.Web
+                        ' For a web site in .Net 2.0 we don't have an entry assembly. However, at this point the
+                        ' calling assembly will be consumer of this function (i.e. one of the web site DLLs).
+                        ' See: http://msdn.microsoft.com/msdnmag/issues/06/01/ExtremeASPNET/
+                        asm = New TVA.Assembly(System.Reflection.Assembly.GetCallingAssembly())
+                End Select
+                .AppendFormat("Application Domain:    {0}", System.AppDomain.CurrentDomain.FriendlyName)
+                .AppendLine()
+                .AppendFormat("Assembly Codebase:     {0}", asm.CodeBase)
+                .AppendLine()
+                .AppendFormat("Assembly Full Name:    {0}", asm.FullName)
+                .AppendLine()
+                .AppendFormat("Assembly Version:      {0}", asm.Version.ToString())
+                .AppendLine()
+                .AppendFormat("Assembly Build Date:   {0}", asm.BuildDate.ToString())
+                .AppendLine()
+                .AppendFormat(".Net Runtime Version:  {0}", System.Environment.Version.ToString())
+                .AppendLine()
+
+                Return .ToString()
+            End With
+
+        End Function
+
+        Public Shared Function ExceptionGeneralInfo(ByVal ex As Exception) As String
+
+            With New StringBuilder()
+                .AppendFormat("Exception Source:      {0}", ex.Source)
+                .AppendLine()
+                .AppendFormat("Exception Type:        {0}", ex.GetType().FullName)
+                .AppendLine()
+                .AppendFormat("Exception Message:     {0}", ex.Message)
+                .AppendLine()
+                If ex.TargetSite IsNot Nothing Then
+                    .AppendFormat("Exception Target Site: {0}", ex.TargetSite.Name)
+                    .AppendLine()
+                End If
+
+                Return .ToString()
+            End With
+
+        End Function
+
+        Public Shared Function ExceptionStackTrace(ByVal ex As Exception) As String
+
+            With New StringBuilder()
                 Dim stack As New StackTrace(ex, True)
                 For i As Integer = 0 To stack.FrameCount - 1
                     Dim stackFrame As StackFrame = stack.GetFrame(i)
@@ -226,7 +299,6 @@ Namespace ErrorManagement
                     End If
                     .AppendLine()
                 Next
-                .AppendLine()
 
                 Return .ToString()
             End With
@@ -323,6 +395,14 @@ Namespace ErrorManagement
             ExceptionToEmail(exceptionString)
             ExceptionToFile(exceptionString)
 
+            For Each logger As LoggerMethodSignature In m_customLoggers
+                Try
+                    logger.Invoke(ex)
+                Catch
+
+                End Try
+            Next
+
         End Sub
 
         Private Sub ExceptionToFile(ByVal exceptionMessage As String)
@@ -347,7 +427,7 @@ Namespace ErrorManagement
                     With New SimpleMailMessage()
                         .Sender = String.Format("{0}@tva.gov", Me.GetType().Name)
                         .Recipients = m_emailRecipients
-                        .Subject = String.Format("Exception in {0} at {1}", ApplicationName, Date.Now.ToString())
+                        .Subject = String.Format("Exception in {0} at {1}", ApplicationName, System.DateTime.Now.ToString())
                         .Body = exceptionMessage
                         .Attachments = TVA.IO.FilePath.AbsolutePath(ScreenshotFileName)
                         .Send()
@@ -386,8 +466,8 @@ Namespace ErrorManagement
                         End If
                     Next
 
-                    Using snap As Bitmap = TVA.Drawing.Image.CaptureScreenshot(fullScreen, Imaging.ImageFormat.Png)
-                        snap.Save(ScreenshotFileName)
+                    Using screenshot As Bitmap = TVA.Drawing.Image.CaptureScreenshot(fullScreen, Imaging.ImageFormat.Png)
+                        screenshot.Save(ScreenshotFileName)
                     End Using
                 Catch ex As Exception
 
