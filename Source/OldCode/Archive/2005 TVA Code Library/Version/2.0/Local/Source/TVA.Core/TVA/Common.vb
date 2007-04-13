@@ -110,7 +110,7 @@ Public NotInheritable Class Common
     End Function
 
     ''' <summary>
-    ''' Gets the type (Windows or Web) of the application.
+    ''' Gets the type of the currently executing application.
     ''' </summary>
     ''' <returns>One of the TVA.ApplicationType values.</returns>
     Public Shared Function GetApplicationType() As ApplicationType
