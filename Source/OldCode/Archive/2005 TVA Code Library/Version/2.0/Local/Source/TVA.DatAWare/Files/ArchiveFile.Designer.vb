@@ -30,7 +30,6 @@ Namespace Files
             m_offloadThreshold = 90
             m_compressData = True
             m_discardOoSData = True
-            m_persistSettings = False
             m_settingsCategoryName = Me.GetType().Name
 
             m_rolloverPreparationThread = New System.Threading.Thread(AddressOf PrepareForRollover)

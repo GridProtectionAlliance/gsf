@@ -38,24 +38,16 @@ Partial Class CommunicationClientBase
         InitializeComponent()
 
         ' Setup the default values.
-        m_connectionString = ""
         m_receiveBufferSize = 8192
         m_receiveTimeout = -1
         m_maximumConnectionAttempts = -1
         m_textEncoding = System.Text.Encoding.ASCII()
-        m_secureSession = False
         m_handshake = True
         m_encryption = TVA.Security.Cryptography.EncryptLevel.None
         m_compression = TVA.IO.Compression.CompressLevel.NoCompression
         m_crcCheck = CRCCheckType.None
         m_enabled = True
         m_clientID = Guid.NewGuid()
-        m_isConnected = False
-        m_connectTime = 0
-        m_disconnectTime = 0
-        m_totalBytesSent = 0
-        m_totalBytesReceived = 0
-        m_persistSettings = False
         m_settingsCategoryName = Me.GetType().Name
 
         m_connectionWaitHandle = New System.Threading.AutoResetEvent(False)

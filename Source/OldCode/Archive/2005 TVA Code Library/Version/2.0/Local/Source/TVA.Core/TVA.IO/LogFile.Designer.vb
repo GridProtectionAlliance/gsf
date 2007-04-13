@@ -23,9 +23,7 @@ Namespace IO
 
             m_name = Me.GetType().Name & DefaultExtension
             m_size = 3
-            m_autoOpen = False
             m_fileFullOperation = LogFileFullOperation.Truncate
-            m_persistSettings = False
             m_settingsCategoryName = Me.GetType().Name
 
             m_operationWaitHandle = New System.Threading.ManualResetEvent(True)

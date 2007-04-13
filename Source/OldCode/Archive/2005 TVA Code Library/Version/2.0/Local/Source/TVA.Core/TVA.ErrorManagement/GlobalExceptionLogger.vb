@@ -1,4 +1,4 @@
-' 04/03/2007
+' PCP: 04/03/2007
 
 Imports System.Text
 Imports System.Reflection
@@ -9,22 +9,38 @@ Imports TVA.Net.Smtp
 
 Namespace ErrorManagement
 
+    ''' <summary>
+    ''' 
+    ''' </summary>
+    ''' <remarks>
+    ''' Adapted from exception handling code by Jeff Atwood of CodingHorror.com. Demo projects for handling unhandled
+    ''' exception in both windows and web environment by Jeff Atwood are available at The Code Project web site. 
+    ''' See: http://www.codeproject.com/script/articles/list_articles.asp?userid=450027
+    ''' </remarks>
     <ToolboxBitmap(GetType(GlobalExceptionLogger))> _
     Public Class GlobalExceptionLogger
         Implements IPersistSettings, ISupportInitialize
 
-#Region " Code Scope: Public "
+#Region " Member Declaration "
 
         Private m_autoStart As Boolean
+        Private m_logToUI As Boolean
         Private m_logToFile As Boolean
         Private m_logToEmail As Boolean
         Private m_logToEventLog As Boolean
         Private m_logToScreenshot As Boolean
+        Private m_emailServer As String
         Private m_emailRecipients As String
+        Private m_contactPersonName As String
+        Private m_contactPersonPhone As String
         Private m_persistSettings As Boolean
         Private m_settingsCategoryName As String
-        Private m_isRunning As Boolean
         Private m_customLoggers As List(Of LoggerMethodSignature)
+        Private m_parentAssembly As System.Reflection.Assembly
+
+#End Region
+
+#Region " Code Scope: Public "
 
         Public Delegate Sub LoggerMethodSignature(ByVal ex As Exception)
 
@@ -79,6 +95,16 @@ Namespace ErrorManagement
         End Property
 
         <Category("Logging")> _
+        Public Property EmailServer() As String
+            Get
+                Return m_emailServer
+            End Get
+            Set(ByVal value As String)
+                m_emailServer = value
+            End Set
+        End Property
+
+        <Category("Logging")> _
         Public Property EmailRecipients() As String
             Get
                 Return m_emailRecipients
@@ -86,6 +112,47 @@ Namespace ErrorManagement
             Set(ByVal value As String)
                 m_emailRecipients = value
             End Set
+        End Property
+
+        Public Property ContactPersonName() As String
+            Get
+                Return m_contactPersonName
+            End Get
+            Set(ByVal value As String)
+                m_contactPersonName = value
+            End Set
+        End Property
+
+        Public Property ContactPersonPhone() As String
+            Get
+                Return m_contactPersonPhone
+            End Get
+            Set(ByVal value As String)
+                m_contactPersonPhone = value
+            End Set
+        End Property
+
+        <Browsable(False)> _
+        Public Property ParentAssembly() As System.Reflection.Assembly
+            Get
+                Return m_parentAssembly
+            End Get
+            Set(ByVal value As System.Reflection.Assembly)
+                m_parentAssembly = value
+            End Set
+        End Property
+
+        <Browsable(False)> _
+        Public ReadOnly Property ApplicationName() As String
+            Get
+                Return System.AppDomain.CurrentDomain.FriendlyName
+            End Get
+        End Property
+
+        Public ReadOnly Property ApplicationType() As ApplicationType
+            Get
+                Return TVA.Common.GetApplicationType()
+            End Get
         End Property
 
         <Browsable(False)> _
@@ -106,7 +173,6 @@ Namespace ErrorManagement
             End If
 
             LogFile.Name = LogFileName
-            m_isRunning = True
 
         End Sub
 
@@ -117,17 +183,11 @@ Namespace ErrorManagement
                 RemoveHandler System.AppDomain.CurrentDomain.UnhandledException, AddressOf UnhandledException
             End If
 
-            m_isRunning = False
-
         End Sub
 
         Public Sub Log(ByVal ex As Exception)
 
-            If m_isRunning Then
-                GenericExceptionHandler(ex)
-            Else
-                Throw New InvalidOperationException(String.Format("{0} is not running.", Me.GetType().Name))
-            End If
+            GenericExceptionHandler(ex)
 
         End Sub
 
@@ -135,36 +195,15 @@ Namespace ErrorManagement
 
         Public Shared Function ExceptionToString(ByVal ex As Exception) As String
 
-            With New StringBuilder()
-                If ex.InnerException IsNot Nothing Then
-                    ' sometimes the original exception is wrapped in a more relevant outer exception
-                    ' the detail exception is the "inner" exception
-                    ' see http://msdn.microsoft.com/library/default.asp?url=/library/en-us/dnbda/html/exceptdotnet.asp
-                    .Append("(Inner Exception)")
-                    .AppendLine()
-                    .Append(ExceptionToString(ex.InnerException))
-                    .AppendLine()
-                    .Append("(Outer Exception)")
-                    .AppendLine()
-                End If
+            Dim parentAssembly As System.Reflection.Assembly
+            Select Case TVA.Common.GetApplicationType()
+                Case ApplicationType.WindowsGui, TVA.ApplicationType.WindowsCui
+                    parentAssembly = System.Reflection.Assembly.GetEntryAssembly()
+                Case ApplicationType.Web
+                    parentAssembly = System.Reflection.Assembly.GetCallingAssembly()
+            End Select
 
-                ' Get general system information.
-                .Append(SystemInfo)
-                .AppendLine()
-                ' Get general application information.
-                .Append(ApplicationInfo)
-                .AppendLine()
-                ' Get general exception information.
-                .Append(ExceptionGeneralInfo(ex))
-                .AppendLine()
-                ' Get the stack trace for the exception.
-                .Append("---- Stack Trace ----")
-                .AppendLine()
-                .Append(ExceptionStackTrace(ex))
-                .AppendLine()
-
-                Return .ToString()
-            End With
+            Return ExceptionToString(ex, parentAssembly)
 
         End Function
 
@@ -174,7 +213,7 @@ Namespace ErrorManagement
                 .AppendFormat("Date and Time:         {0}", System.DateTime.Now)
                 .AppendLine()
                 Select Case TVA.Common.GetApplicationType()
-                    Case ApplicationType.Win
+                    Case ApplicationType.WindowsGui, TVA.ApplicationType.WindowsCui
                         .AppendFormat("Machine Name:          {0}", System.Environment.MachineName)
                         .AppendLine()
                         .AppendFormat("Machine IP:            {0}", System.Net.Dns.GetHostEntry(System.Environment.MachineName).AddressList(0).ToString())
@@ -209,33 +248,19 @@ Namespace ErrorManagement
 
         Public Shared Function ApplicationInfo() As String
 
-            With New StringBuilder()
-                Dim asm As TVA.Assembly = Nothing
-                Select Case TVA.Common.GetApplicationType()
-                    Case ApplicationType.Win
-                        ' For a windows application the entry assembly will be the executable.
-                        asm = TVA.Assembly.EntryAssembly
-                    Case ApplicationType.Web
-                        ' For a web site in .Net 2.0 we don't have an entry assembly. However, at this point the
-                        ' calling assembly will be consumer of this function (i.e. one of the web site DLLs).
-                        ' See: http://msdn.microsoft.com/msdnmag/issues/06/01/ExtremeASPNET/
-                        asm = New TVA.Assembly(System.Reflection.Assembly.GetCallingAssembly())
-                End Select
-                .AppendFormat("Application Domain:    {0}", System.AppDomain.CurrentDomain.FriendlyName)
-                .AppendLine()
-                .AppendFormat("Assembly Codebase:     {0}", asm.CodeBase)
-                .AppendLine()
-                .AppendFormat("Assembly Full Name:    {0}", asm.FullName)
-                .AppendLine()
-                .AppendFormat("Assembly Version:      {0}", asm.Version.ToString())
-                .AppendLine()
-                .AppendFormat("Assembly Build Date:   {0}", asm.BuildDate.ToString())
-                .AppendLine()
-                .AppendFormat(".Net Runtime Version:  {0}", System.Environment.Version.ToString())
-                .AppendLine()
+            Dim parentAssembly As System.Reflection.Assembly
+            Select Case TVA.Common.GetApplicationType()
+                Case ApplicationType.WindowsGui, TVA.ApplicationType.WindowsCui
+                    ' For a windows application the entry assembly will be the executable.
+                    parentAssembly = System.Reflection.Assembly.GetEntryAssembly()
+                Case ApplicationType.Web
+                    ' For a web site in .Net 2.0 we don't have an entry assembly. However, at this point the
+                    ' calling assembly will be consumer of this function (i.e. one of the web site DLLs).
+                    ' See: http://msdn.microsoft.com/msdnmag/issues/06/01/ExtremeASPNET/
+                    parentAssembly = System.Reflection.Assembly.GetCallingAssembly()
+            End Select
 
-                Return .ToString()
-            End With
+            Return ApplicationInfo(parentAssembly)
 
         End Function
 
@@ -293,7 +318,12 @@ Namespace ErrorManagement
                             .AppendFormat(", IL {0:#0000}", stackFrame.GetILOffset())
                         End If
                     Else
-                        .Append(System.IO.Path.GetFileName(TVA.Assembly.EntryAssembly.CodeBase))
+                        Dim appType As ApplicationType = TVA.Common.GetApplicationType()
+                        If appType = ApplicationType.WindowsGui OrElse appType = TVA.ApplicationType.WindowsCui Then
+                            .Append(System.IO.Path.GetFileName(TVA.Assembly.EntryAssembly.CodeBase))
+                        Else
+                            .Append("(unknown file)")
+                        End If
                         ' native code offset is always available
                         .AppendFormat(": N {0:#00000}", stackFrame.GetNativeOffset())
                     End If
@@ -337,9 +367,74 @@ Namespace ErrorManagement
 
         Public Sub LoadSettings() Implements IPersistSettings.LoadSettings
 
+            If m_persistSettings Then
+                Try
+                    With TVA.Configuration.Common.CategorizedSettings(m_settingsCategoryName)
+                        AutoStart = .Item("AutoStart").GetTypedValue(m_autoStart)
+                        LogToFile = .Item("LogToFile").GetTypedValue(m_logToFile)
+                        LogToEmail = .Item("LogToEmail").GetTypedValue(m_logToEmail)
+                        LogToEventLog = .Item("LogToEventLog").GetTypedValue(m_logToEventLog)
+                        LogToScreenshot = .Item("LogToScreenshot").GetTypedValue(m_logToScreenshot)
+                        EmailServer = .Item("EmailServer").GetTypedValue(m_emailServer)
+                        EmailRecipients = .Item("EmailRecipients").GetTypedValue(m_emailRecipients)
+                        ContactPersonName = .Item("ContactPersonName").GetTypedValue(m_contactPersonName)
+                        ContactPersonPhone = .Item("ContactPersonPhone").GetTypedValue(m_contactPersonPhone)
+                    End With
+                Catch ex As Exception
+                    ' Most likely we'll never encounter an exception here.
+                End Try
+            End If
+
         End Sub
 
         Public Sub SaveSettings() Implements IPersistSettings.SaveSettings
+
+            If m_persistSettings Then
+                Try
+                    With TVA.Configuration.Common.CategorizedSettings(m_settingsCategoryName)
+                        .Clear()
+                        With .Item("AutoStart", True)
+                            .Value = m_autoStart.ToString()
+                            .Description = ""
+                        End With
+                        With .Item("LogToFile", True)
+                            .Value = m_logToFile.ToString()
+                            .Description = ""
+                        End With
+                        With .Item("LogToEmail", True)
+                            .Value = m_logToEmail.ToString()
+                            .Description = ""
+                        End With
+                        With .Item("LogToEventLog", True)
+                            .Value = m_logToEventLog.ToString()
+                            .Description = ""
+                        End With
+                        With .Item("LogToScreenshot", True)
+                            .Value = m_logToScreenshot.ToString()
+                            .Description = ""
+                        End With
+                        With .Item("EmailServer", True)
+                            .Value = m_emailServer
+                            .Description = ""
+                        End With
+                        With .Item("EmailRecipients", True)
+                            .Value = m_emailRecipients
+                            .Description = ""
+                        End With
+                        With .Item("ContactPersonName", True)
+                            .Value = m_contactPersonName
+                            .Description = ""
+                        End With
+                        With .Item("ContactPersonPhone", True)
+                            .Value = m_contactPersonPhone
+                            .Description = ""
+                        End With
+                    End With
+                    TVA.Configuration.Common.SaveSettings()
+                Catch ex As Exception
+                    ' We might encounter an exception if for some reason the settings cannot be saved to the config file.
+                End Try
+            End If
 
         End Sub
 
@@ -354,8 +449,8 @@ Namespace ErrorManagement
         Public Sub EndInit() Implements System.ComponentModel.ISupportInitialize.EndInit
 
             If Not DesignMode Then
-                LoadSettings()
-                If m_autoStart Then Start()
+                LoadSettings()              ' Load settings from the config file.
+                If m_autoStart Then Start() ' Start the logger automatically if specified.
             End If
 
         End Sub
@@ -367,12 +462,6 @@ Namespace ErrorManagement
 #End Region
 
 #Region " Code Scope: Private "
-
-        Private ReadOnly Property ApplicationName() As String
-            Get
-                Return System.AppDomain.CurrentDomain.FriendlyName
-            End Get
-        End Property
 
         Private ReadOnly Property LogFileName() As String
             Get
@@ -388,7 +477,7 @@ Namespace ErrorManagement
 
         Private Sub GenericExceptionHandler(ByVal ex As Exception)
 
-            Dim exceptionString As String = ExceptionToString(ex)
+            Dim exceptionString As String = ExceptionToString(ex, m_parentAssembly)
 
             ExceptionToScreenshot(exceptionString)
             ExceptionToEventLog(exceptionString)
@@ -402,6 +491,21 @@ Namespace ErrorManagement
 
                 End Try
             Next
+
+        End Sub
+
+        Private Sub ExceptionToUI()
+
+            If m_logToUI Then
+                Select Case ApplicationType
+                    Case TVA.ApplicationType.WindowsGui
+
+                    Case TVA.ApplicationType.WindowsCui
+
+                    Case TVA.ApplicationType.Web
+
+                End Select
+            End If
 
         End Sub
 
@@ -430,6 +534,7 @@ Namespace ErrorManagement
                         .Subject = String.Format("Exception in {0} at {1}", ApplicationName, System.DateTime.Now.ToString())
                         .Body = exceptionMessage
                         .Attachments = TVA.IO.FilePath.AbsolutePath(ScreenshotFileName)
+                        .MailServer = m_emailServer
                         .Send()
                     End With
                 Catch ex As Exception
@@ -454,7 +559,8 @@ Namespace ErrorManagement
 
         Private Sub ExceptionToScreenshot(ByVal exceptionMessage As String)
 
-            If m_logToScreenshot Then
+            If m_logToScreenshot AndAlso _
+                    (ApplicationType = ApplicationType.WindowsGui OrElse ApplicationType = ApplicationType.WindowsCui) Then
                 Try
                     Dim fullScreen As New Size(0, 0)
                     For Each myScreen As Screen In Screen.AllScreens
@@ -475,6 +581,67 @@ Namespace ErrorManagement
             End If
 
         End Sub
+
+#Region " Shared "
+
+        Private Shared Function ExceptionToString(ByVal ex As Exception, ByVal parentAssembly As System.Reflection.Assembly) As String
+
+            With New StringBuilder()
+                If ex.InnerException IsNot Nothing Then
+                    ' sometimes the original exception is wrapped in a more relevant outer exception
+                    ' the detail exception is the "inner" exception
+                    ' see http://msdn.microsoft.com/library/default.asp?url=/library/en-us/dnbda/html/exceptdotnet.asp
+                    .Append("(Inner Exception)")
+                    .AppendLine()
+                    .Append(ExceptionToString(ex.InnerException))
+                    .AppendLine()
+                    .Append("(Outer Exception)")
+                    .AppendLine()
+                End If
+
+                ' Get general system information.
+                .Append(SystemInfo)
+                .AppendLine()
+                ' Get general application information.
+                .Append(ApplicationInfo(parentAssembly))
+                .AppendLine()
+                ' Get general exception information.
+                .Append(ExceptionGeneralInfo(ex))
+                .AppendLine()
+                ' Get the stack trace for the exception.
+                .Append("---- Stack Trace ----")
+                .AppendLine()
+                .Append(ExceptionStackTrace(ex))
+                .AppendLine()
+
+                Return .ToString()
+            End With
+
+        End Function
+
+        Private Shared Function ApplicationInfo(ByVal parentAssembly As System.Reflection.Assembly) As String
+
+            With New StringBuilder()
+                Dim parentAssemblyInfo As New TVA.Assembly(parentAssembly)
+                .AppendFormat("Application Domain:    {0}", System.AppDomain.CurrentDomain.FriendlyName)
+                .AppendLine()
+                .AppendFormat("Assembly Codebase:     {0}", parentAssemblyInfo.CodeBase)
+                .AppendLine()
+                .AppendFormat("Assembly Full Name:    {0}", parentAssemblyInfo.FullName)
+                .AppendLine()
+                .AppendFormat("Assembly Version:      {0}", parentAssemblyInfo.Version.ToString())
+                .AppendLine()
+                .AppendFormat("Assembly Build Date:   {0}", parentAssemblyInfo.BuildDate.ToString())
+                .AppendLine()
+                .AppendFormat(".Net Runtime Version:  {0}", System.Environment.Version.ToString())
+                .AppendLine()
+
+                Return .ToString()
+            End With
+
+        End Function
+
+#End Region
 
 #Region " Event Handlers "
 

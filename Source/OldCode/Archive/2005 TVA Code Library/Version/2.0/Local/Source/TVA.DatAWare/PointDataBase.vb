@@ -89,7 +89,7 @@ Public MustInherit Class PointDataBase
         End Set
     End Property
 
-    Public ReadOnly Property IsNull() As Boolean Implements IPointData.IsNull
+    Public ReadOnly Property IsEmpty() As Boolean Implements IPointData.IsNull
         Get
             Return m_timeTag.CompareTo(TimeTag.MinValue) = 0
         End Get

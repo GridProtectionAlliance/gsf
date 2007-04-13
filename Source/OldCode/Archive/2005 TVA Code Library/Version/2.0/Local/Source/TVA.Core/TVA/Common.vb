@@ -17,6 +17,10 @@
 '
 '*******************************************************************************************************
 
+Option Strict On
+
+Imports System.IO
+
 ''' <summary>Defines common global functions</summary>
 Public NotInheritable Class Common
 
@@ -112,7 +116,23 @@ Public NotInheritable Class Common
     Public Shared Function GetApplicationType() As ApplicationType
 
         If System.Web.HttpContext.Current Is Nothing Then
-            Return ApplicationType.Win
+            ' References:
+            ' - http://support.microsoft.com/kb/65122
+            ' - http://support.microsoft.com/kb/90493/en-us
+            ' - http://www.codeguru.com/cpp/w-p/system/misc/article.php/c2897/
+            ' We'll always have an entry assembly for windows application.
+            Dim exe As New FileStream(TVA.Assembly.EntryAssembly.Location, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)
+            Dim dosHeader As Byte() = CreateArray(Of Byte)(64)
+            Dim exeHeader As Byte() = CreateArray(Of Byte)(248)
+            Dim subSystem As Byte() = CreateArray(Of Byte)(2)
+            exe.Read(dosHeader, 0, dosHeader.Length)
+            exe.Seek(BitConverter.ToInt16(dosHeader, 60), SeekOrigin.Begin)
+            exe.Read(exeHeader, 0, exeHeader.Length)
+            exe.Close()
+
+            Array.Copy(exeHeader, 92, subSystem, 0, 2)
+
+            Return CType(BitConverter.ToInt16(subSystem, 0), ApplicationType)
         Else
             Return ApplicationType.Web
         End If

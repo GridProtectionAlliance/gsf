@@ -93,7 +93,7 @@ Namespace Files
                 ' Read the binary data from the file and create StandardPointData instance form it.
                 m_fileStream.Read(binaryImage, 0, binaryImage.Length)
                 Dim pointData As New StandardPointData(binaryImage)
-                If Not pointData.IsNull Then
+                If Not pointData.IsEmpty Then
                     data.Add(pointData)
                 Else
                     ' The data we just read is blank so we'll roll-back the cursor and stop reading further.

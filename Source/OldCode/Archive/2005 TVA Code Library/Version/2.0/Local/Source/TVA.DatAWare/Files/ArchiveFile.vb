@@ -75,12 +75,14 @@ Namespace Files
         Public Event HistoricDataQueued As EventHandler
         Public Event HistoricDataWriteStart As EventHandler
         Public Event HistoricDataWriteComplete As EventHandler
+        Public Event HistoricDataWriteException As EventHandler(Of ExceptionEventArgs)
         Public Event HistoricDataWriteProgress As EventHandler(Of ProgressEventArgs(Of Integer))
         Public Event OutOfSequenceDataReceived As EventHandler
         Public Event OutOfSequenceDataDiscarded As EventHandler
         Public Event OutOfSequenceDataQueued As EventHandler
         Public Event OutOfSequenceDataWriteStart As EventHandler
         Public Event OutOfSequenceDataWriteComplete As EventHandler
+        Public Event OutOfSequenceDataWriteException As EventHandler(Of ExceptionEventArgs)
         Public Event OutOfSequenceDataWriteProgress As EventHandler(Of ProgressEventArgs(Of Integer))
 
 #End Region
@@ -1040,11 +1042,11 @@ Namespace Files
                 With pointState
                     If m_compressData Then
                         ' We have to perform compression on data, so we'll do just that.
-                        If .LastArchivedValue.IsNull Then
+                        If .LastArchivedValue.IsEmpty Then
                             ' This is the first time data is received for the point.
                             .LastArchivedValue = .CurrentValue
                             result = True
-                        ElseIf .PreviousValue.IsNull Then
+                        ElseIf .PreviousValue.IsEmpty Then
                             ' This is the second time data is received for the point.
                             calculateSlopes = True
                         ElseIf .CurrentValue.Definition.CompressionMinimumTime > 0 AndAlso _
@@ -1236,6 +1238,26 @@ Namespace Files
 #End Region
 
 #Region " Event Handlers "
+
+#Region " m_historicDataQueue "
+
+        Private Sub m_historicDataQueue_ProcessException(ByVal ex As System.Exception) Handles m_historicDataQueue.ProcessException
+
+            RaiseEvent HistoricDataWriteException(Me, New ExceptionEventArgs(ex))
+
+        End Sub
+
+#End Region
+
+#Region " m_outOfSequenceDataQueue "
+
+        Private Sub m_outOfSequenceDataQueue_ProcessException(ByVal ex As System.Exception) Handles m_outOfSequenceDataQueue.ProcessException
+
+            RaiseEvent OutOfSequenceDataWriteException(Me, New ExceptionEventArgs(ex))
+
+        End Sub
+
+#End Region
 
 #Region " ArchiveFile "
 

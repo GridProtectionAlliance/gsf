@@ -119,7 +119,7 @@ Namespace UI
         Public Sub SetCompanyLogo(ByVal logoStream As Stream)
 
             If logoStream IsNot Nothing Then
-                PictureBoxLogo.Image = New Drawing.Bitmap(logoStream)
+                PictureBoxLogo.Image = New System.Drawing.Bitmap(logoStream)
             End If
 
         End Sub

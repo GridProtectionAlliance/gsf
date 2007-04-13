@@ -38,12 +38,9 @@ Partial Class CommunicationServerBase
         InitializeComponent()
 
         ' Setup the default values.
-        m_configurationString = ""
         m_receiveBufferSize = 8192
         m_maximumClients = -1
-        m_secureSession = False
         m_handshake = True
-        m_handshakePassphrase = ""
         m_encryption = TVA.Security.Cryptography.EncryptLevel.None
         m_compression = TVA.IO.Compression.CompressLevel.NoCompression
         m_crcCheck = CRCCheckType.None
@@ -51,8 +48,6 @@ Partial Class CommunicationServerBase
         m_textEncoding = System.Text.Encoding.ASCII()
         m_serverID = Guid.NewGuid()    ' Create an ID for the server.
         m_clientIDs = New List(Of Guid)
-        m_isRunning = False
-        m_persistSettings = False
         m_settingsCategoryName = Me.GetType().Name
 
         m_startTime = 0

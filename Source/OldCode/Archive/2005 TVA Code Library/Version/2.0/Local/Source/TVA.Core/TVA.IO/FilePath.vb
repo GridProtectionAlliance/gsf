@@ -287,7 +287,7 @@ Namespace IO
                 ' The specified path is a relative one since it is not rooted.
                 Select Case TVA.Common.GetApplicationType()
                     ' We'll prepend the application's root to the file path.
-                    Case ApplicationType.Win
+                    Case ApplicationType.WindowsGui, ApplicationType.WindowsCui
                         filePath = JustPath(TVA.Assembly.EntryAssembly.Location) & filePath
                     Case ApplicationType.Web
                         filePath = System.Web.HttpContext.Current.Request.MapPath("~/") & filePath

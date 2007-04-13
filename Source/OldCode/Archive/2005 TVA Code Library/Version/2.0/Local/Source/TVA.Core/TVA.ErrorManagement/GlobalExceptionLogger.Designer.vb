@@ -21,7 +21,11 @@ Namespace ErrorManagement
             'This call is required by the Component Designer.
             InitializeComponent()
 
-            m_customloggers = New List(Of LoggerMethodSignature)()
+            m_emailServer = TVA.Net.Smtp.SimpleMailMessage.DefaultMailServer
+            m_settingsCategoryName = Me.GetType().Name
+            m_customLoggers = New List(Of LoggerMethodSignature)()
+
+            m_parentAssembly = System.Reflection.Assembly.GetCallingAssembly()
 
         End Sub
 
