@@ -1266,7 +1266,7 @@ Namespace Files
             If m_rolloverOnFull Then
                 Do While True
                     Rollover()  ' Start the rollover process.
-                    If m_rolloverWaitHandle.WaitOne(1, False) Then Exit Do ' Rollover is successful.
+                    If IsOpen Then Exit Do ' Rollover is successful.
                 Loop
             End If
 
