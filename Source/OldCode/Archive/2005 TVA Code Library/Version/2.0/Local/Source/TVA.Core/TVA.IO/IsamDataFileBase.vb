@@ -1,5 +1,7 @@
 ' 03/08/2007
 
+Option Strict On
+
 Imports System.IO
 Imports System.ComponentModel
 Imports TVA.IO.FilePath
@@ -406,9 +408,9 @@ Namespace IO
 
         Public Sub LoadSettings() Implements IPersistSettings.LoadSettings
 
-            If m_persistSettings Then
-                Try
-                    With TVA.Configuration.Common.CategorizedSettings(m_settingsCategoryName)
+            Try
+                With TVA.Configuration.Common.CategorizedSettings(m_settingsCategoryName)
+                    If .Count > 0 Then
                         Name = .Item("Name").GetTypedValue(m_name)
                         LoadOnOpen = .Item("LoadOnOpen").GetTypedValue(m_loadOnOpen)
                         ReloadOnModify = .Item("ReloadOnModify").GetTypedValue(m_reloadOnModify)
@@ -417,11 +419,11 @@ Namespace IO
                         AutoSaveInterval = .Item("AutoSaveInterval").GetTypedValue(m_autoSaveInterval)
                         AutoAlignInterval = .Item("AutoAlignInterval").GetTypedValue(m_autoAlignInterval)
                         MinimumRecordCount = .Item("MinimumRecordCount").GetTypedValue(m_minimumRecordCount)
-                    End With
-                Catch ex As Exception
-                    ' Most likely we'll never encounter an exception here.
-                End Try
-            End If
+                    End If
+                End With
+            Catch ex As Exception
+                ' We'll encounter exceptions if the settings are not present in the config file.
+            End Try
 
         End Sub
 

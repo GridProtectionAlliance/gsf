@@ -203,7 +203,7 @@ Namespace IO
                 ' Start the queue to which log entries are going to be added.
                 m_logEntryQueue.Start()
 
-                RaiseEvent FileClosed(Me, EventArgs.Empty)
+                RaiseEvent FileOpened(Me, EventArgs.Empty)
             End If
 
         End Sub
@@ -239,6 +239,8 @@ Namespace IO
                     m_fileStream.Dispose()
                     m_fileStream = Nothing
                 End If
+
+                RaiseEvent FileClosed(Me, EventArgs.Empty)
             End If
 
         End Sub
@@ -364,18 +366,18 @@ Namespace IO
         ''' </summary>
         Public Sub LoadSettings() Implements IPersistSettings.LoadSettings
 
-            If m_persistSettings Then
-                Try
-                    With TVA.Configuration.Common.CategorizedSettings(m_settingsCategoryName)
+            Try
+                With TVA.Configuration.Common.CategorizedSettings(m_settingsCategoryName)
+                    If .Count > 0 Then
                         Name = .Item("Name").GetTypedValue(m_name)
                         Size = .Item("Size").GetTypedValue(m_size)
                         AutoOpen = .Item("AutoOpen").GetTypedValue(m_autoOpen)
                         FileFullOperation = .Item("FileFullOperation").GetTypedValue(m_fileFullOperation)
-                    End With
-                Catch ex As Exception
-                    ' Most likely we'll never encounter an exception here.
-                End Try
-            End If
+                    End If
+                End With
+            Catch ex As Exception
+                ' We'll encounter exceptions if the settings are not present in the config file.
+            End Try
 
         End Sub
 
@@ -398,7 +400,7 @@ Namespace IO
                         End With
                         With .Item("AutoOpen", True)
                             .Value = m_autoOpen.ToString()
-                            .Description = "True if the log file is to be open automatically when the component is initialize; otherwise False."
+                            .Description = "True if the log file is to be open automatically after initialization is complete; otherwise False."
                         End With
                         With .Item("FileFullOperation", True)
                             .Value = m_fileFullOperation.ToString()

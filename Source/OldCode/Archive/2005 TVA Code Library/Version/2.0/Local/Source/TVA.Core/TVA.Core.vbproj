@@ -70,12 +70,13 @@
     <Compile Include="TVA.Console\Arguments.vb" />
     <Compile Include="TVA.Console\Common.vb" />
     <Compile Include="TVA.Drawing\Image.vb" />
-    <Compile Include="TVA.ErrorManagement\GelDialog.Designer.vb">
-      <DependentUpon>GelDialog.vb</DependentUpon>
+    <Compile Include="TVA.ErrorManagement\GELDialog.Designer.vb">
+      <DependentUpon>GELDialog.vb</DependentUpon>
     </Compile>
-    <Compile Include="TVA.ErrorManagement\GelDialog.vb">
+    <Compile Include="TVA.ErrorManagement\GELDialog.vb">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="TVA.ErrorManagement\GELHttpModule.vb" />
     <Compile Include="TVA.ErrorManagement\GlobalExceptionLogger.Designer.vb">
       <DependentUpon>GlobalExceptionLogger.vb</DependentUpon>
     </Compile>
@@ -198,9 +199,9 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Embedded Resources\IO.LogFile.bmp" />
-    <EmbeddedResource Include="TVA.ErrorManagement\GelDialog.resx">
+    <EmbeddedResource Include="TVA.ErrorManagement\GELDialog.resx">
       <SubType>Designer</SubType>
-      <DependentUpon>GelDialog.vb</DependentUpon>
+      <DependentUpon>GELDialog.vb</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="TVA.ErrorManagement\GlobalExceptionLogger.resx">
       <SubType>Designer</SubType>

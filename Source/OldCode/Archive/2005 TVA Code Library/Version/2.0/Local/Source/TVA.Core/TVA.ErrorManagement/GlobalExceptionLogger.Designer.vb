@@ -22,8 +22,12 @@ Namespace ErrorManagement
             InitializeComponent()
 
             m_emailServer = TVA.Net.Smtp.SimpleMailMessage.DefaultMailServer
-            m_settingsCategoryName = Me.GetType().Name
+            m_errorTextMethod = AddressOf GetErrorText
+            m_scopeTextMethod = AddressOf GetScopeText
+            m_actionTextMethod = AddressOf GetActionText
+            m_moreInfoTextMethod = AddressOf GetMoreInfoText
             m_customLoggers = New List(Of LoggerMethodSignature)()
+            m_settingsCategoryName = Me.GetType().Name
 
             m_parentAssembly = System.Reflection.Assembly.GetCallingAssembly()
 

@@ -181,16 +181,16 @@ Namespace Components
 
         Public Sub LoadSettings() Implements IPersistSettings.LoadSettings
 
-            If m_persistSettings Then
-                Try
-                    With TVA.Configuration.Common.CategorizedSettings(m_settingsCategoryName)
+            Try
+                With TVA.Configuration.Common.CategorizedSettings(m_settingsCategoryName)
+                    If .Count > 0 Then
                         IDFieldName = .Item("IDFieldName").GetTypedValue(m_idFieldName)
                         OptimizeParsing = .Item("OptimizeParsing").GetTypedValue(m_optimizeParsing)
-                    End With
-                Catch ex As Exception
-                    ' We'll encounter exceptions if the settings are not present in the config file.
-                End Try
-            End If
+                    End If
+                End With
+            Catch ex As Exception
+                ' We'll encounter exceptions if the settings are not present in the config file.
+            End Try
 
         End Sub
 

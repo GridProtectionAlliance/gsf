@@ -1,11 +1,14 @@
 ' PCP: 04/03/2007
 
+Option Strict On
+
 Imports System.Text
 Imports System.Reflection
 Imports System.Drawing
 Imports System.ComponentModel
 Imports System.Windows.Forms
 Imports TVA.Net.Smtp
+Imports TVA.IO.FilePath
 
 Namespace ErrorManagement
 
@@ -33,15 +36,28 @@ Namespace ErrorManagement
         Private m_emailRecipients As String
         Private m_contactPersonName As String
         Private m_contactPersonPhone As String
+        Private m_exitOnUnhandledException As Boolean
+        Private m_parentAssembly As System.Reflection.Assembly
+        Private m_errorTextMethod As UITextMethodSignature
+        Private m_scopeTextMethod As UITextMethodSignature
+        Private m_actionTextMethod As UITextMethodSignature
+        Private m_moreInfoTextMethod As UITextMethodSignature
+        Private m_customLoggers As List(Of LoggerMethodSignature)
         Private m_persistSettings As Boolean
         Private m_settingsCategoryName As String
-        Private m_customLoggers As List(Of LoggerMethodSignature)
-        Private m_parentAssembly As System.Reflection.Assembly
+
+        Private m_logToFileOK As Boolean
+        Private m_logToEmailOK As Boolean
+        Private m_logToEventLogOK As Boolean
+        Private m_logToScreenshotOK As Boolean
+        Private m_lastException As Exception
+        Private m_applicationType As ApplicationType
 
 #End Region
 
 #Region " Code Scope: Public "
 
+        Public Delegate Function UITextMethodSignature() As String
         Public Delegate Sub LoggerMethodSignature(ByVal ex As Exception)
 
         <Category("Behavior")> _
@@ -63,6 +79,17 @@ Namespace ErrorManagement
                 m_logToFile = value
             End Set
         End Property
+
+        <Category("Logging")> _
+        Public Property LogToUI() As Boolean
+            Get
+                Return m_logToUI
+            End Get
+            Set(ByVal value As Boolean)
+                m_logToUI = value
+            End Set
+        End Property
+
 
         <Category("Logging")> _
         Public Property LogToEmail() As Boolean
@@ -132,13 +159,62 @@ Namespace ErrorManagement
             End Set
         End Property
 
-        <Browsable(False)> _
+        Public Property ExitOnUnhandledException() As Boolean
+            Get
+                Return m_exitOnUnhandledException
+            End Get
+            Set(ByVal value As Boolean)
+                m_exitOnUnhandledException = value
+            End Set
+        End Property
+
+        <Browsable(False), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)> _
         Public Property ParentAssembly() As System.Reflection.Assembly
             Get
                 Return m_parentAssembly
             End Get
             Set(ByVal value As System.Reflection.Assembly)
                 m_parentAssembly = value
+            End Set
+        End Property
+
+        <Browsable(False), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)> _
+        Public Property ErrorTextMethod() As UITextMethodSignature
+            Get
+                Return m_errorTextMethod
+            End Get
+            Set(ByVal value As UITextMethodSignature)
+                m_errorTextMethod = value
+            End Set
+        End Property
+
+        <Browsable(False), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)> _
+        Public Property ScopeTextMethod() As UITextMethodSignature
+            Get
+                Return m_scopeTextMethod
+            End Get
+            Set(ByVal value As UITextMethodSignature)
+                m_scopeTextMethod = value
+            End Set
+        End Property
+
+        <Browsable(False), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)> _
+        Public Property ActionTextMethod() As UITextMethodSignature
+            Get
+                Return m_actionTextMethod
+            End Get
+            Set(ByVal value As UITextMethodSignature)
+                m_actionTextMethod = value
+            End Set
+        End Property
+
+        <Browsable(False), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)> _
+        Public Property MoreInfoTextMethod() As UITextMethodSignature
+            Get
+                Return m_moreInfoTextMethod
+            End Get
+            Set(ByVal value As UITextMethodSignature)
+                m_moreInfoTextMethod = value
             End Set
         End Property
 
@@ -149,9 +225,20 @@ Namespace ErrorManagement
             End Get
         End Property
 
+        <Browsable(False)> _
         Public ReadOnly Property ApplicationType() As ApplicationType
             Get
-                Return TVA.Common.GetApplicationType()
+                If m_applicationType = TVA.ApplicationType.Unknown Then
+                    m_applicationType = TVA.Common.GetApplicationType()
+                End If
+                Return m_applicationType
+            End Get
+        End Property
+
+        <Browsable(False)> _
+        Public ReadOnly Property LastException() As Exception
+            Get
+                Return m_lastException
             End Get
         End Property
 
@@ -187,7 +274,13 @@ Namespace ErrorManagement
 
         Public Sub Log(ByVal ex As Exception)
 
-            GenericExceptionHandler(ex)
+            Log(ex, False)
+
+        End Sub
+
+        Public Sub Log(ByVal ex As Exception, ByVal exitApplication As Boolean)
+
+            HandleException(ex, exitApplication)
 
         End Sub
 
@@ -289,7 +382,7 @@ Namespace ErrorManagement
                 Dim stack As New StackTrace(ex, True)
                 For i As Integer = 0 To stack.FrameCount - 1
                     Dim stackFrame As StackFrame = stack.GetFrame(i)
-                    Dim method As MethodInfo = stackFrame.GetMethod()
+                    Dim method As MemberInfo = stackFrame.GetMethod()
                     Dim codeFileName As String = stackFrame.GetFileName()
 
                     ' build method name
@@ -367,10 +460,11 @@ Namespace ErrorManagement
 
         Public Sub LoadSettings() Implements IPersistSettings.LoadSettings
 
-            If m_persistSettings Then
-                Try
-                    With TVA.Configuration.Common.CategorizedSettings(m_settingsCategoryName)
+            Try
+                With TVA.Configuration.Common.CategorizedSettings(m_settingsCategoryName)
+                    If .Count > 0 Then
                         AutoStart = .Item("AutoStart").GetTypedValue(m_autoStart)
+                        LogToUI = .Item("LogToUI").GetTypedValue(m_logToUI)
                         LogToFile = .Item("LogToFile").GetTypedValue(m_logToFile)
                         LogToEmail = .Item("LogToEmail").GetTypedValue(m_logToEmail)
                         LogToEventLog = .Item("LogToEventLog").GetTypedValue(m_logToEventLog)
@@ -379,11 +473,11 @@ Namespace ErrorManagement
                         EmailRecipients = .Item("EmailRecipients").GetTypedValue(m_emailRecipients)
                         ContactPersonName = .Item("ContactPersonName").GetTypedValue(m_contactPersonName)
                         ContactPersonPhone = .Item("ContactPersonPhone").GetTypedValue(m_contactPersonPhone)
-                    End With
-                Catch ex As Exception
-                    ' Most likely we'll never encounter an exception here.
-                End Try
-            End If
+                    End If
+                End With
+            Catch ex As Exception
+                ' We'll encounter exceptions if the settings are not present in the config file.
+            End Try
 
         End Sub
 
@@ -395,39 +489,43 @@ Namespace ErrorManagement
                         .Clear()
                         With .Item("AutoStart", True)
                             .Value = m_autoStart.ToString()
-                            .Description = ""
+                            .Description = "True if the logger is to be started automatically after initialization is complete; otherwise False."
+                        End With
+                        With .Item("LogToUI", True)
+                            .Value = m_logToUI.ToString()
+                            .Description = "True if an encountered exception is to be logged to the User Interface; otherwise False."
                         End With
                         With .Item("LogToFile", True)
                             .Value = m_logToFile.ToString()
-                            .Description = ""
+                            .Description = "True if an encountered exception is to be logged to a file; otherwise False."
                         End With
                         With .Item("LogToEmail", True)
                             .Value = m_logToEmail.ToString()
-                            .Description = ""
+                            .Description = "True if an email is to be sent with the details of an encountered exception; otherwise False."
                         End With
                         With .Item("LogToEventLog", True)
                             .Value = m_logToEventLog.ToString()
-                            .Description = ""
+                            .Description = "True if an encountered exception is to be logged to the Event Log; otherwise False."
                         End With
                         With .Item("LogToScreenshot", True)
                             .Value = m_logToScreenshot.ToString()
-                            .Description = ""
+                            .Description = "True if a screenshot is to be taken when an exception is encountered; otherwise False."
                         End With
                         With .Item("EmailServer", True)
                             .Value = m_emailServer
-                            .Description = ""
+                            .Description = "Name of the email server to be used for sending the email message."
                         End With
                         With .Item("EmailRecipients", True)
                             .Value = m_emailRecipients
-                            .Description = ""
+                            .Description = "Comma-seperated list of recipients email addresses for the email message."
                         End With
                         With .Item("ContactPersonName", True)
                             .Value = m_contactPersonName
-                            .Description = ""
+                            .Description = "Name of the person that the end-user can contact when an exception is encountered."
                         End With
                         With .Item("ContactPersonPhone", True)
                             .Value = m_contactPersonPhone
-                            .Description = ""
+                            .Description = "Phone number of the person that the end-user can contact when an exception is encountered."
                         End With
                     End With
                     TVA.Configuration.Common.SaveSettings()
@@ -451,6 +549,7 @@ Namespace ErrorManagement
             If Not DesignMode Then
                 LoadSettings()              ' Load settings from the config file.
                 If m_autoStart Then Start() ' Start the logger automatically if specified.
+                m_parentAssembly = System.Reflection.Assembly.GetCallingAssembly()
             End If
 
         End Sub
@@ -465,24 +564,30 @@ Namespace ErrorManagement
 
         Private ReadOnly Property LogFileName() As String
             Get
-                Return ApplicationName & ".ExceptionLog.txt"
+                Return AbsolutePath(ApplicationName & ".ExceptionLog.txt")
             End Get
         End Property
 
         Private ReadOnly Property ScreenshotFileName() As String
             Get
-                Return ApplicationName & ".ExceptionScreenshot.png"
+                Return AbsolutePath(ApplicationName & ".ExceptionScreenshot.png")
             End Get
         End Property
 
-        Private Sub GenericExceptionHandler(ByVal ex As Exception)
+        Private Sub HandleException(ByVal ex As Exception, ByVal exitApplication As Boolean)
 
-            Dim exceptionString As String = ExceptionToString(ex, m_parentAssembly)
+            Try
+                m_lastException = ex
+                Dim exceptionString As String = ExceptionToString(ex, m_parentAssembly)
 
-            ExceptionToScreenshot(exceptionString)
-            ExceptionToEventLog(exceptionString)
-            ExceptionToEmail(exceptionString)
-            ExceptionToFile(exceptionString)
+                ExceptionToScreenshot(exceptionString)
+                ExceptionToEventLog(exceptionString)
+                ExceptionToEmail(exceptionString)
+                ExceptionToFile(exceptionString)
+                ExceptionToUI()
+            Catch
+
+            End Try
 
             For Each logger As LoggerMethodSignature In m_customLoggers
                 Try
@@ -492,20 +597,170 @@ Namespace ErrorManagement
                 End Try
             Next
 
+            If exitApplication AndAlso _
+                    (ApplicationType = TVA.ApplicationType.WindowsGui OrElse ApplicationType = TVA.ApplicationType.WindowsCui) Then
+                Application.Exit()
+                System.Diagnostics.Process.GetCurrentProcess().Kill()
+            End If
+
         End Sub
 
         Private Sub ExceptionToUI()
 
             If m_logToUI Then
-                Select Case ApplicationType
-                    Case TVA.ApplicationType.WindowsGui
+                Try
+                    Select Case ApplicationType
+                        Case TVA.ApplicationType.WindowsGui
+                            ExceptionToWindowsGui()
+                        Case TVA.ApplicationType.WindowsCui
+                            ExceptionToWindowsCui()
+                        Case TVA.ApplicationType.Web
+                            ExceptionToWebPage()
+                    End Select
+                Catch ex As Exception
 
-                    Case TVA.ApplicationType.WindowsCui
-
-                    Case TVA.ApplicationType.Web
-
-                End Select
+                End Try
             End If
+
+        End Sub
+
+        Private Sub ExceptionToWindowsGui()
+
+            With New GelDialog()
+                .Text = String.Format(.Text, ApplicationName)
+                .PictureBoxIcon.Image = System.Drawing.SystemIcons.Error.ToBitmap()
+                .RichTextBoxError.Text = m_errorTextMethod()
+                .RichTextBoxScope.Text = m_scopeTextMethod()
+                .RichTextBoxAction.Text = m_actionTextMethod()
+                .RichTextBoxMoreInfo.Text = m_moreInfoTextMethod()
+
+                .ShowDialog()
+            End With
+
+        End Sub
+
+        Private Sub ExceptionToWindowsCui()
+
+            With New StringBuilder()
+                .AppendFormat("{0} has encountered a problem", ApplicationName)
+                .AppendLine()
+                .AppendLine()
+                .Append("What happened:")
+                .AppendLine()
+                .Append(m_errorTextMethod())
+                .AppendLine()
+                .AppendLine()
+                .Append("How this will affect you:")
+                .AppendLine()
+                .Append(m_scopeTextMethod())
+                .AppendLine()
+                .AppendLine()
+                .Append("What you can do about it:")
+                .AppendLine()
+                .Append(m_actionTextMethod())
+                .AppendLine()
+                .AppendLine()
+                .Append("More information:")
+                .AppendLine()
+                .Append(m_moreInfoTextMethod())
+                .AppendLine()
+
+                System.Console.Write(.ToString())
+            End With
+
+        End Sub
+
+        Private Sub ExceptionToWebPage()
+
+            With New StringBuilder()
+                .Append("<HTML>")
+                .AppendLine()
+                .Append("<HEAD>")
+                .AppendLine()
+                .Append("<TITLE>")
+                .AppendLine()
+                .AppendFormat("{0} has encountered a problem", ApplicationName)
+                .AppendLine()
+                .Append("</TITLE>")
+                .AppendLine()
+                .Append("<STYLE>")
+                .AppendLine()
+                .Append("body {font-family:""Verdana"";font-weight:normal;font-size: .7em;color:black; background-color:white;}")
+                .AppendLine()
+                .Append("b {font-family:""Verdana"";font-weight:bold;color:black;margin-top: -5px}")
+                .AppendLine()
+                .Append("H1 { font-family:""Verdana"";font-weight:normal;font-size:18pt;color:red }")
+                .AppendLine()
+                .Append("H2 { font-family:""Verdana"";font-weight:normal;font-size:14pt;color:maroon }")
+                .AppendLine()
+                .Append("pre {font-family:""Lucida Console"";font-size: .9em}")
+                .AppendLine()
+                .Append("</STYLE>")
+                .AppendLine()
+                .Append("</HEAD>")
+                .AppendLine()
+                .Append("<BODY>")
+                .AppendLine()
+                .Append("<H1>")
+                .AppendLine()
+                .AppendFormat("The {0} web site has encountered a problem", ApplicationName)
+                .AppendLine()
+                .Append("<hr width=100% size=1 color=silver></H1>")
+                .AppendLine()
+                .Append("<H2>What Happened:</H2>")
+                .AppendLine()
+                .Append("<BLOCKQUOTE>")
+                .AppendLine()
+                .Append(m_errorTextMethod())
+                .AppendLine()
+                .Append("</BLOCKQUOTE>")
+                .AppendLine()
+                .Append("<H2>How this will affect you:</H2>")
+                .AppendLine()
+                .Append("<BLOCKQUOTE>")
+                .AppendLine()
+                .Append(m_scopeTextMethod())
+                .AppendLine()
+                .Append("</BLOCKQUOTE>")
+                .AppendLine()
+                .Append("<H2>What you can do about it:</H2>")
+                .AppendLine()
+                .Append("<BLOCKQUOTE>")
+                .AppendLine()
+                .Append(m_actionTextMethod())
+                .AppendLine()
+                .Append("</BLOCKQUOTE>")
+                .AppendLine()
+                .Append("<INPUT type=button value=""More Info &gt;&gt;"" onclick=""this.style.display='none'; document.getElementById('MoreInfo').style.display='block'"">")
+                .AppendLine()
+                .Append("<DIV style='display:none;' id='MoreInfo'>")
+                .AppendLine()
+                .Append("<H2>More info:</H2>")
+                .AppendLine()
+                .Append("<TABLE width=""100%"" bgcolor=""#ffffcc"">")
+                .AppendLine()
+                .Append("<TR><TD>")
+                .AppendLine()
+                .Append("<CODE><PRE>")
+                .AppendLine()
+                .Append(m_moreInfoTextMethod())
+                .AppendLine()
+                .Append("</PRE></CODE>")
+                .AppendLine()
+                .Append("<TD><TR>")
+                .AppendLine()
+                .Append("</DIV>")
+                .AppendLine()
+                .Append("</BODY>")
+                .AppendLine()
+                .Append("</HTML>")
+                .AppendLine()
+
+                System.Web.HttpContext.Current.Response.Write(.ToString())
+                System.Web.HttpContext.Current.Response.Flush()
+                System.Web.HttpContext.Current.Response.End()
+                System.Web.HttpContext.Current.Server.ClearError()
+            End With
 
         End Sub
 
@@ -513,8 +768,12 @@ Namespace ErrorManagement
 
             If m_logToFile Then
                 Try
+                    m_logToFileOK = False
+
                     If Not LogFile.IsOpen Then LogFile.Open()
                     LogFile.WriteTimestampedLine(exceptionMessage)
+
+                    m_logToFileOK = True
                 Catch ex As Exception
 
                 Finally
@@ -528,6 +787,8 @@ Namespace ErrorManagement
 
             If m_logToEmail AndAlso Not String.IsNullOrEmpty(m_emailRecipients) Then
                 Try
+                    m_logToEmailOK = False
+
                     With New SimpleMailMessage()
                         .Sender = String.Format("{0}@tva.gov", Me.GetType().Name)
                         .Recipients = m_emailRecipients
@@ -537,6 +798,8 @@ Namespace ErrorManagement
                         .MailServer = m_emailServer
                         .Send()
                     End With
+
+                    m_logToEmailOK = True
                 Catch ex As Exception
 
                 End Try
@@ -548,8 +811,12 @@ Namespace ErrorManagement
 
             If m_logToEventLog Then
                 Try
+                    m_logToEventLogOK = False
+
                     ' Write the formatted exception message to the event log.
                     EventLog.WriteEntry(ApplicationName, exceptionMessage, EventLogEntryType.Error)
+
+                    m_logToEventLogOK = True
                 Catch ex As Exception
 
                 End Try
@@ -562,6 +829,8 @@ Namespace ErrorManagement
             If m_logToScreenshot AndAlso _
                     (ApplicationType = ApplicationType.WindowsGui OrElse ApplicationType = ApplicationType.WindowsCui) Then
                 Try
+                    m_logToScreenshotOK = False
+
                     Dim fullScreen As New Size(0, 0)
                     For Each myScreen As Screen In Screen.AllScreens
                         If fullScreen.IsEmpty Then
@@ -575,12 +844,134 @@ Namespace ErrorManagement
                     Using screenshot As Bitmap = TVA.Drawing.Image.CaptureScreenshot(fullScreen, Imaging.ImageFormat.Png)
                         screenshot.Save(ScreenshotFileName)
                     End Using
+
+                    m_logToScreenshotOK = True
                 Catch ex As Exception
 
                 End Try
             End If
 
         End Sub
+
+#Region " UI Text Delegates "
+
+        Private Function GetErrorText() As String
+
+            With New StringBuilder()
+                .AppendFormat("There was an unexpected error in {0}. ", ApplicationName)
+                .Append("This may be due to a programming bug and the development team was automatically notified of this problem.")
+
+                Return .ToString()
+            End With
+
+        End Function
+
+        Private Function GetScopeText() As String
+
+            With New StringBuilder()
+                Select Case ApplicationType
+                    Case TVA.ApplicationType.WindowsGui, TVA.ApplicationType.WindowsCui
+                        .Append("The action you requested was not performed.")
+                    Case TVA.ApplicationType.Web
+                        .Append("The current page will not load.")
+                End Select
+
+                Return .ToString()
+            End With
+
+        End Function
+
+        Private Function GetActionText() As String
+
+            With New StringBuilder()
+                Select Case ApplicationType
+                    Case TVA.ApplicationType.WindowsGui, TVA.ApplicationType.WindowsCui
+                        .AppendFormat("Restart {0}, and try repeating your last action. ", ApplicationName)
+                    Case TVA.ApplicationType.Web
+                        .AppendFormat("Close your browser, navigate back to the {0} website, and try repeating you last action. ", ApplicationName)
+                End Select
+                .Append("Try alternative methods of performing the same action. ")
+                If Not String.IsNullOrEmpty(m_contactPersonName) AndAlso Not String.IsNullOrEmpty(m_contactPersonPhone) Then
+                    .AppendFormat("If you need immediate assistance, contact {0} at {1}.", m_contactPersonName, m_contactPersonPhone)
+                End If
+
+                Return .ToString()
+            End With
+
+        End Function
+
+        Private Function GetMoreInfoText() As String
+
+            Dim bullet As String
+            Select Case ApplicationType
+                Case TVA.ApplicationType.WindowsGui
+                    bullet = "•"
+                Case TVA.ApplicationType.WindowsCui
+                    bullet = "-"
+            End Select
+
+            With New StringBuilder()
+                .Append("The following information about the error was automatically captured:")
+                .AppendLine()
+                .AppendLine()
+                If m_logToScreenshot Then
+                    .AppendFormat(" {0} ", bullet)
+                    If m_logToScreenshotOK Then
+                        .Append("a screenshot was taken of the desktop at:")
+                        .AppendLine()
+                        .Append("   ")
+                        .Append(ScreenshotFileName)
+                    Else
+                        .Append("a screenshot could NOT be taken of the desktop.")
+                    End If
+                    .AppendLine()
+                End If
+                If m_logToEventLog Then
+                    .AppendFormat(" {0} ", bullet)
+                    If m_logToEventLogOK Then
+                        .Append("an event was written to the application log")
+                    Else
+                        .Append("an event could NOT be written to the application log")
+                    End If
+                    .AppendLine()
+                End If
+                If m_logToFile Then
+                    .AppendFormat(" {0} ", bullet)
+                    If m_logToFileOK Then
+                        .Append("details were written to a text log at:")
+                    Else
+                        .Append("details could NOT be written to the text log at:")
+                    End If
+                    .AppendLine()
+                    .Append("   ")
+                    .Append(LogFileName)
+                    .AppendLine()
+                End If
+                If m_logToEmail Then
+                    .AppendFormat(" {0} ", bullet)
+                    If m_logToEmailOK Then
+                        .Append("an email has been sent to:")
+                    Else
+                        .Append("an email could NOT be sent to:")
+                    End If
+                    .AppendLine()
+                    .Append("   ")
+                    .Append(m_emailRecipients)
+                    .AppendLine()
+                End If
+                .AppendLine()
+                .AppendLine()
+                .Append("Detailed error information follows:")
+                .AppendLine()
+                .AppendLine()
+                .Append(ExceptionToString(m_lastException, m_parentAssembly))
+
+                Return .ToString()
+            End With
+
+        End Function
+
+#End Region
 
 #Region " Shared "
 
@@ -647,13 +1038,13 @@ Namespace ErrorManagement
 
         Private Sub UnhandledThreadException(ByVal sender As Object, ByVal e As System.Threading.ThreadExceptionEventArgs)
 
-            GenericExceptionHandler(e.Exception)
+            HandleException(e.Exception, m_exitOnUnhandledException)
 
         End Sub
 
         Private Sub UnhandledException(ByVal sender As Object, ByVal e As System.UnhandledExceptionEventArgs)
 
-            GenericExceptionHandler(CType(e.ExceptionObject, Exception))
+            HandleException(CType(e.ExceptionObject, Exception), m_exitOnUnhandledException)
 
         End Sub
 

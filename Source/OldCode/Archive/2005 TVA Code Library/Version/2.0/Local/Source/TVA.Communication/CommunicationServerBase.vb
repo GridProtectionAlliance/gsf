@@ -658,9 +658,9 @@ Public MustInherit Class CommunicationServerBase
 
     Public Overridable Sub LoadSettings() Implements IPersistSettings.LoadSettings
 
-        If m_persistSettings Then
-            Try
-                With TVA.Configuration.Common.CategorizedSettings(m_settingsCategoryName)
+        Try
+            With TVA.Configuration.Common.CategorizedSettings(m_settingsCategoryName)
+                If .Count > 0 Then
                     ConfigurationString = .Item("ConfigurationString").GetTypedValue(m_configurationString)
                     ReceiveBufferSize = .Item("ReceiveBufferSize").GetTypedValue(m_receiveBufferSize)
                     MaximumClients = .Item("MaximumClients").GetTypedValue(m_maximumClients)
@@ -670,11 +670,11 @@ Public MustInherit Class CommunicationServerBase
                     Encryption = .Item("Encryption").GetTypedValue(m_encryption)
                     Compression = .Item("Compression").GetTypedValue(m_compression)
                     Enabled = .Item("Enabled").GetTypedValue(m_enabled)
-                End With
-            Catch ex As Exception
-                ' We'll encounter exceptions if the settings are not present in the config file.
-            End Try
-        End If
+                End If
+            End With
+        Catch ex As Exception
+            ' We'll encounter exceptions if the settings are not present in the config file.
+        End Try
 
     End Sub
 
