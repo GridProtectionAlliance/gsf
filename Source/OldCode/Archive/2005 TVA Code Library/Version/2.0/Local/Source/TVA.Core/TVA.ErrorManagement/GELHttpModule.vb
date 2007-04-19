@@ -36,6 +36,7 @@ Namespace ErrorManagement
         Private Sub OnError(ByVal sender As Object, ByVal e As System.EventArgs)
 
             With New GlobalExceptionLogger()
+                ' We'll log the encountered exception.
                 .LoadSettings()
                 .Log(HttpContext.Current.Server.GetLastError())
             End With

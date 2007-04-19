@@ -2,6 +2,7 @@
 
 Option Strict On
 
+Imports System.Web
 Imports System.Text
 Imports System.Reflection
 Imports System.Drawing
@@ -221,7 +222,14 @@ Namespace ErrorManagement
         <Browsable(False)> _
         Public ReadOnly Property ApplicationName() As String
             Get
-                Return System.AppDomain.CurrentDomain.FriendlyName
+                Select Case ApplicationType
+                    Case TVA.ApplicationType.WindowsCui, TVA.ApplicationType.WindowsGui
+                        Return NoFileExtension(AppDomain.CurrentDomain.FriendlyName)
+                    Case TVA.ApplicationType.Web
+                        Return HttpContext.Current.Request.ApplicationPath.Replace("/", "")
+                    Case Else
+                        Return ""
+                End Select
             End Get
         End Property
 
@@ -290,7 +298,7 @@ Namespace ErrorManagement
 
             Dim parentAssembly As System.Reflection.Assembly
             Select Case TVA.Common.GetApplicationType()
-                Case ApplicationType.WindowsGui, TVA.ApplicationType.WindowsCui
+                Case TVA.ApplicationType.WindowsCui, ApplicationType.WindowsGui
                     parentAssembly = System.Reflection.Assembly.GetEntryAssembly()
                 Case ApplicationType.Web
                     parentAssembly = System.Reflection.Assembly.GetCallingAssembly()
@@ -306,7 +314,7 @@ Namespace ErrorManagement
                 .AppendFormat("Date and Time:         {0}", System.DateTime.Now)
                 .AppendLine()
                 Select Case TVA.Common.GetApplicationType()
-                    Case ApplicationType.WindowsGui, TVA.ApplicationType.WindowsCui
+                    Case TVA.ApplicationType.WindowsCui, ApplicationType.WindowsGui
                         .AppendFormat("Machine Name:          {0}", System.Environment.MachineName)
                         .AppendLine()
                         .AppendFormat("Machine IP:            {0}", System.Net.Dns.GetHostEntry(System.Environment.MachineName).AddressList(0).ToString())
@@ -320,17 +328,17 @@ Namespace ErrorManagement
                         .AppendLine()
                         .AppendFormat("Process User:          {0}", System.Security.Principal.WindowsIdentity.GetCurrent().Name)
                         .AppendLine()
-                        .AppendFormat("Remote User:           {0}", System.Web.HttpContext.Current.Request.ServerVariables("REMOTE_USER"))
+                        .AppendFormat("Remote User:           {0}", HttpContext.Current.Request.ServerVariables("REMOTE_USER"))
                         .AppendLine()
-                        .AppendFormat("Remote Host:           {0}", System.Web.HttpContext.Current.Request.ServerVariables("REMOTE_HOST"))
+                        .AppendFormat("Remote Host:           {0}", HttpContext.Current.Request.ServerVariables("REMOTE_HOST"))
                         .AppendLine()
-                        .AppendFormat("Remote Address:        {0}", System.Web.HttpContext.Current.Request.ServerVariables("REMOTE_ADDR"))
+                        .AppendFormat("Remote Address:        {0}", HttpContext.Current.Request.ServerVariables("REMOTE_ADDR"))
                         .AppendLine()
-                        .AppendFormat("HTTP Agent:            {0}", System.Web.HttpContext.Current.Request.ServerVariables("HTTP_USER_AGENT"))
+                        .AppendFormat("HTTP Agent:            {0}", HttpContext.Current.Request.ServerVariables("HTTP_USER_AGENT"))
                         .AppendLine()
-                        .AppendFormat("HTTP Referer:          {0}", System.Web.HttpContext.Current.Request.ServerVariables("HTTP_REFERER"))
+                        .AppendFormat("HTTP Referer:          {0}", HttpContext.Current.Request.ServerVariables("HTTP_REFERER"))
                         .AppendLine()
-                        .AppendFormat("Web Page URL:          {0}", System.Web.HttpContext.Current.Request.Url.ToString())
+                        .AppendFormat("Web Page URL:          {0}", HttpContext.Current.Request.Url.ToString())
                         .AppendLine()
                 End Select
 
@@ -343,7 +351,7 @@ Namespace ErrorManagement
 
             Dim parentAssembly As System.Reflection.Assembly
             Select Case TVA.Common.GetApplicationType()
-                Case ApplicationType.WindowsGui, TVA.ApplicationType.WindowsCui
+                Case TVA.ApplicationType.WindowsCui, ApplicationType.WindowsGui
                     ' For a windows application the entry assembly will be the executable.
                     parentAssembly = System.Reflection.Assembly.GetEntryAssembly()
                 Case ApplicationType.Web
@@ -412,7 +420,7 @@ Namespace ErrorManagement
                         End If
                     Else
                         Dim appType As ApplicationType = TVA.Common.GetApplicationType()
-                        If appType = ApplicationType.WindowsGui OrElse appType = TVA.ApplicationType.WindowsCui Then
+                        If appType = ApplicationType.WindowsCui OrElse appType = TVA.ApplicationType.WindowsGui Then
                             .Append(System.IO.Path.GetFileName(TVA.Assembly.EntryAssembly.CodeBase))
                         Else
                             .Append("(unknown file)")
@@ -598,7 +606,7 @@ Namespace ErrorManagement
             Next
 
             If exitApplication AndAlso _
-                    (ApplicationType = TVA.ApplicationType.WindowsGui OrElse ApplicationType = TVA.ApplicationType.WindowsCui) Then
+                    (ApplicationType = TVA.ApplicationType.WindowsCui OrElse ApplicationType = TVA.ApplicationType.WindowsGui) Then
                 Application.Exit()
                 System.Diagnostics.Process.GetCurrentProcess().Kill()
             End If
@@ -610,10 +618,10 @@ Namespace ErrorManagement
             If m_logToUI Then
                 Try
                     Select Case ApplicationType
-                        Case TVA.ApplicationType.WindowsGui
-                            ExceptionToWindowsGui()
                         Case TVA.ApplicationType.WindowsCui
                             ExceptionToWindowsCui()
+                        Case TVA.ApplicationType.WindowsGui
+                            ExceptionToWindowsGui()
                         Case TVA.ApplicationType.Web
                             ExceptionToWebPage()
                     End Select
@@ -703,11 +711,11 @@ Namespace ErrorManagement
                 .AppendLine()
                 .Append("<H1>")
                 .AppendLine()
-                .AppendFormat("The {0} web site has encountered a problem", ApplicationName)
+                .AppendFormat("The {0} website has encountered a problem", ApplicationName)
                 .AppendLine()
                 .Append("<hr width=100% size=1 color=silver></H1>")
                 .AppendLine()
-                .Append("<H2>What Happened:</H2>")
+                .Append("<H2>What Happened</H2>")
                 .AppendLine()
                 .Append("<BLOCKQUOTE>")
                 .AppendLine()
@@ -715,7 +723,7 @@ Namespace ErrorManagement
                 .AppendLine()
                 .Append("</BLOCKQUOTE>")
                 .AppendLine()
-                .Append("<H2>How this will affect you:</H2>")
+                .Append("<H2>How this will affect you</H2>")
                 .AppendLine()
                 .Append("<BLOCKQUOTE>")
                 .AppendLine()
@@ -723,7 +731,7 @@ Namespace ErrorManagement
                 .AppendLine()
                 .Append("</BLOCKQUOTE>")
                 .AppendLine()
-                .Append("<H2>What you can do about it:</H2>")
+                .Append("<H2>What you can do about it</H2>")
                 .AppendLine()
                 .Append("<BLOCKQUOTE>")
                 .AppendLine()
@@ -731,11 +739,11 @@ Namespace ErrorManagement
                 .AppendLine()
                 .Append("</BLOCKQUOTE>")
                 .AppendLine()
-                .Append("<INPUT type=button value=""More Info &gt;&gt;"" onclick=""this.style.display='none'; document.getElementById('MoreInfo').style.display='block'"">")
+                .Append("<INPUT type=button value=""More Information &gt;&gt;"" onclick=""this.style.display='none'; document.getElementById('MoreInfo').style.display='block'"">")
                 .AppendLine()
                 .Append("<DIV style='display:none;' id='MoreInfo'>")
                 .AppendLine()
-                .Append("<H2>More info:</H2>")
+                .Append("<H2>More information</H2>")
                 .AppendLine()
                 .Append("<TABLE width=""100%"" bgcolor=""#ffffcc"">")
                 .AppendLine()
@@ -756,10 +764,10 @@ Namespace ErrorManagement
                 .Append("</HTML>")
                 .AppendLine()
 
-                System.Web.HttpContext.Current.Response.Write(.ToString())
-                System.Web.HttpContext.Current.Response.Flush()
-                System.Web.HttpContext.Current.Response.End()
-                System.Web.HttpContext.Current.Server.ClearError()
+                HttpContext.Current.Response.Write(.ToString())
+                HttpContext.Current.Response.Flush()
+                HttpContext.Current.Response.End()
+                HttpContext.Current.Server.ClearError()
             End With
 
         End Sub
@@ -827,7 +835,7 @@ Namespace ErrorManagement
         Private Sub ExceptionToScreenshot(ByVal exceptionMessage As String)
 
             If m_logToScreenshot AndAlso _
-                    (ApplicationType = ApplicationType.WindowsGui OrElse ApplicationType = ApplicationType.WindowsCui) Then
+                    (ApplicationType = ApplicationType.WindowsCui OrElse ApplicationType = ApplicationType.WindowsGui) Then
                 Try
                     m_logToScreenshotOK = False
 
@@ -870,7 +878,7 @@ Namespace ErrorManagement
 
             With New StringBuilder()
                 Select Case ApplicationType
-                    Case TVA.ApplicationType.WindowsGui, TVA.ApplicationType.WindowsCui
+                    Case TVA.ApplicationType.WindowsCui, TVA.ApplicationType.WindowsGui
                         .Append("The action you requested was not performed.")
                     Case TVA.ApplicationType.Web
                         .Append("The current page will not load.")
@@ -885,7 +893,7 @@ Namespace ErrorManagement
 
             With New StringBuilder()
                 Select Case ApplicationType
-                    Case TVA.ApplicationType.WindowsGui, TVA.ApplicationType.WindowsCui
+                    Case TVA.ApplicationType.WindowsCui, TVA.ApplicationType.WindowsGui
                         .AppendFormat("Restart {0}, and try repeating your last action. ", ApplicationName)
                     Case TVA.ApplicationType.Web
                         .AppendFormat("Close your browser, navigate back to the {0} website, and try repeating you last action. ", ApplicationName)
@@ -904,10 +912,10 @@ Namespace ErrorManagement
 
             Dim bullet As String
             Select Case ApplicationType
-                Case TVA.ApplicationType.WindowsGui
-                    bullet = "•"
                 Case TVA.ApplicationType.WindowsCui
                     bullet = "-"
+                Case TVA.ApplicationType.Web, TVA.ApplicationType.WindowsGui
+                    bullet = "•"
             End Select
 
             With New StringBuilder()
