@@ -19,8 +19,10 @@
 
 Namespace Services
 
-    ' Defines an interface for user created components used by the service so that components
-    ' can inform service of current status and automatically react to service events
+    ''' <summary>
+    ''' Defines an interface for user created components used by the service so that components can inform service 
+    ''' of current status and automatically react to service events.
+    ''' </summary>
     Public Interface IServiceComponent
 
         Inherits IDisposable
