@@ -39,23 +39,6 @@ Namespace Configuration
         Private Const CustomSectionType As String = "TVA.Configuration.CategorizedSettingsSection, TVA.Core"
 
         ''' <summary>
-        ''' Specifies the environment of the application to which the configuration file belongs.
-        ''' </summary>
-        ''' <remarks></remarks>
-        Public Enum ApplicationEnvironment As Integer
-            ''' <summary>
-            ''' The configuration file belongs to a windows application.
-            ''' </summary>
-            ''' <remarks></remarks>
-            Win
-            ''' <summary>
-            ''' The configuration file belongs to a web application.
-            ''' </summary>
-            ''' <remarks></remarks>
-            Web
-        End Enum
-
-        ''' <summary>
         ''' Initializes a default instance of TVA.Configuration.ConfigurationFile.
         ''' </summary>
         ''' <remarks></remarks>
@@ -78,20 +61,6 @@ Namespace Configuration
             End If
             m_configuration = GetConfiguration(configFilePath)
         End Sub
-
-        ''' <summary>
-        ''' Gets the environment of the application to which the current configuration file belongs.
-        ''' </summary>
-        ''' <value></value>
-        ''' <returns>The environment of the application to which the current configuration file belongs.</returns>
-        ''' <remarks></remarks>
-        Public ReadOnly Property Environment() As ApplicationEnvironment
-            Get
-                Dim currentEnvironment As ApplicationEnvironment = ApplicationEnvironment.Win
-                If System.Web.HttpContext.Current() IsNot Nothing Then currentEnvironment = ApplicationEnvironment.Web
-                Return currentEnvironment
-            End Get
-        End Property
 
         ''' <summary>
         ''' Gets the TVA.Configuration.CategorizedSettingsSection representing the "categorizedSettings" section of the configuration file.
@@ -185,10 +154,10 @@ Namespace Configuration
                     ' PCP - 12/12/2006: Using the TrimEnd function to get the correct value that needs to be passed
                     ' to the method call for getting the Configuration object. The previous method (String.TrimEnd()) 
                     ' yielded incorrect output resulting in the Configuration object not being initialized correctly.
-                    Select Case Environment()
-                        Case ApplicationEnvironment.Win
+                    Select Case TVA.Common.GetApplicationType()
+                        Case ApplicationType.WindowsCui, ApplicationType.WindowsGui
                             configuration = ConfigurationManager.OpenExeConfiguration(TrimEnd(configFilePath, ".config"))
-                        Case ApplicationEnvironment.Web
+                        Case ApplicationType.Web
                             If configFilePath = "" Then configFilePath = System.Web.HttpContext.Current.Request.ApplicationPath()
                             configuration = WebConfigurationManager.OpenWebConfiguration(TrimEnd(configFilePath, "web.config"))
                     End Select
