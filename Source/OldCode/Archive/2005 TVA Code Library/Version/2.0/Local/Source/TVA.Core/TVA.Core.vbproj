@@ -78,6 +78,7 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="TVA.Interop\VBArrayDescriptor.vb" />
+    <Compile Include="TVA.IO\Enumerations.vb" />
     <Compile Include="TVA.IO\IsamDataFileBase.Designer.vb">
       <DependentUpon>IsamDataFileBase.vb</DependentUpon>
     </Compile>
