@@ -20,6 +20,8 @@
 '       Initial version of source generated for Super Phasor Data Concentrator
 '  02/23/2006 - J. Ritchie Carroll
 '       Classes abstracted for general use and added to TVA code library
+'  04/23/2007 - J. Ritchie Carroll
+'       Migrated concentrator to use a base class model instead of using delegates
 '
 '*******************************************************************************************************
 
@@ -32,17 +34,11 @@ Imports TVA.Math.Common
 
 Namespace Measurements
 
-    Public Class Concentrator
+    Public MustInherit Class Concentrator
 
         Implements IDisposable
 
 #Region " Public Member Declarations "
-
-        ''' <summary>Consumers must implement this delegate to publish a frame</summary>
-        Public Delegate Sub PublishFrameFunctionSignature(ByVal frame As IFrame, ByVal index As Integer)
-
-        ''' <summary>Consumers must implement this delegate to create a new frame</summary>
-        Public Delegate Function CreateNewFrameFunctionSignature(ByVal ticks As Long) As IFrame
 
         ''' <summary>This event is raised after a sample is published so that consumers may handle any last minute operations on a sample before it gets released</summary>
         Public Event SamplePublished(ByVal sample As Sample)
@@ -73,8 +69,6 @@ Namespace Measurements
         Private m_publishedFrames As Long                                       ' Total number of published frames
         Private m_enabled As Boolean                                            ' Enabled state of concentrator
         Private m_latestMeasurements As ImmediateMeasurements                   ' Absolute latest received measurement values
-        Private m_publishFrameFunction As PublishFrameFunctionSignature         ' Frame publishing function
-        Private m_createNewFrameFunction As CreateNewFrameFunctionSignature     ' New frame creation function
         Private WithEvents m_sampleQueue As KeyedProcessQueue(Of Long, Sample)  ' Sample processing queue
         Private WithEvents m_monitorTimer As Timers.Timer                       ' Sample monitor
 
@@ -83,8 +77,6 @@ Namespace Measurements
 #Region " Construction Functions "
 
         ''' <summary>Creates a new measurement concentrator</summary>
-        ''' <param name="publishFrameFunction">User function used to publish a frame</param>
-        ''' <param name="createNewFrameFunction">User function used to create a new frame</param>
         ''' <param name="framesPerSecond">Number of frames to publish per second</param>
         ''' <param name="lagTime">Allowed past time deviation tolerance, in seconds - this becomes the amount of time to wait before publishing begins</param>
         ''' <param name="leadTime">Allowed future time deviation tolerance, in seconds</param>
@@ -97,9 +89,7 @@ Namespace Measurements
         ''' <para>Note that concentration will not begin until consumer sets Enabled = True.</para>
         ''' </remarks>
         ''' <exception cref="ArgumentOutOfRangeException">Specified argument is outside of allowed value range (see remarks).</exception>
-        Public Sub New( _
-            ByVal publishFrameFunction As PublishFrameFunctionSignature, _
-            ByVal createNewFrameFunction As CreateNewFrameFunctionSignature, _
+        Protected Sub New( _
             ByVal framesPerSecond As Integer, _
             ByVal lagTime As Double, _
             ByVal leadTime As Double)
@@ -110,13 +100,6 @@ Namespace Measurements
 
             ' We create a real-time processing queue so we can process frames as quickly as needed (e.g., 30 frames per second)
             m_sampleQueue = KeyedProcessQueue(Of Long, Sample).CreateRealTimeQueue(AddressOf PublishSample, AddressOf CanPublishSample)
-            m_publishFrameFunction = publishFrameFunction
-
-            If createNewFrameFunction Is Nothing Then
-                m_createNewFrameFunction = AddressOf CreateBasicFrame
-            Else
-                m_createNewFrameFunction = createNewFrameFunction
-            End If
 
             Dim currentTime As Date = Date.UtcNow
 
@@ -139,29 +122,6 @@ Namespace Measurements
 
         End Sub
 
-        ''' <summary>Creates a new measurement concentrator using default frame creation function</summary>
-        ''' <param name="publishFrameFunction">User function used to publish a frame</param>
-        ''' <param name="framesPerSecond">Number of frames to publish per second</param>
-        ''' <param name="lagTime">Allowed past time deviation tolerance, in seconds - this becomes the amount of time to wait before publishing begins</param>
-        ''' <param name="leadTime">Allowed future time deviation tolerance, in seconds</param>
-        ''' <remarks>
-        ''' <para>framesPerSecond must be at least one.</para>
-        ''' <para>lagTime must be greater than zero but can be specified in sub-second intervals (e.g., set to .25 for a quarter-second lag time) - note that this defines time sensitivity to past timestamps.</para>
-        ''' <para>leadTime must be greater than zero but can be specified in sub-second intervals (e.g., set to .5 for a half-second lead time) - note that this defines time sensitivity to future timestamps.</para>
-        ''' <para>Publish frame function delegate parameter may be initialized to null, but must be defined before concentrator is enabled.</para>
-        ''' <para>Note that concentration will not begin until consumer sets Enabled = True.</para>
-        ''' </remarks>
-        ''' <exception cref="ArgumentOutOfRangeException">Specified argument is outside of allowed value range (see remarks).</exception>
-        Public Sub New( _
-            ByVal publishFrameFunction As PublishFrameFunctionSignature, _
-            ByVal framesPerSecond As Integer, _
-            ByVal lagTime As Double, _
-            ByVal leadTime As Double)
-
-            MyClass.New(publishFrameFunction, Nothing, framesPerSecond, lagTime, leadTime)
-
-        End Sub
-
 #End Region
 
 #Region " Public Methods Implementation "
@@ -171,31 +131,6 @@ Namespace Measurements
             Get
                 Return Me
             End Get
-        End Property
-
-        ''' <summary>User function used to publish a frame</summary>
-        Public Property PublishFrameFunction() As PublishFrameFunctionSignature
-            Get
-                Return m_publishFrameFunction
-            End Get
-            Set(ByVal value As PublishFrameFunctionSignature)
-                m_publishFrameFunction = value
-            End Set
-        End Property
-
-        ''' <summary>User function used to create a new frame</summary>
-        ''' <remarks>If you assign function delegate to null, default frame creation function will be used</remarks>
-        Public Property CreateNewFrameFunction() As CreateNewFrameFunctionSignature
-            Get
-                Return m_createNewFrameFunction
-            End Get
-            Set(ByVal value As CreateNewFrameFunctionSignature)
-                If value Is Nothing Then
-                    m_createNewFrameFunction = AddressOf CreateBasicFrame
-                Else
-                    m_createNewFrameFunction = value
-                End If
-            End Set
         End Property
 
         ''' <summary>Allowed past time deviation tolerance in seconds (can be subsecond)</summary>
@@ -260,17 +195,13 @@ Namespace Measurements
         ''' <summary>Gets or sets current enabled state of concentrator</summary>
         ''' <returns>Current enabled state of concentrator</returns>
         ''' <remarks>Concentrator must be enabled (i.e., Enabled = True) before concentration will begin</remarks>
-        ''' <exception cref="NullReferenceException">This exception will be thrown if the PublishFrameFunction is null when Enabled is set to True.</exception>
-        Public Property Enabled() As Boolean
+        Public Overridable Property Enabled() As Boolean
             Get
                 Return m_enabled
             End Get
             Set(ByVal value As Boolean)
                 If value Then
                     If Not m_enabled Then
-                        ' Make sure consumer has defined the publish frame delegate before starting process queue
-                        If m_publishFrameFunction Is Nothing Then Throw New NullReferenceException("PublishFrameFunction delegate must be defined before enabling concentrator")
-
                         ' Start real-time process queue
                         m_frameIndex = 0
                         m_sampleQueue.Start()
@@ -350,34 +281,26 @@ Namespace Measurements
         ''' <summary>Data comes in one-point at a time, so we use this function to place the point in its proper sample and row/cell position</summary>
         Public Sub SortMeasurement(ByVal measurement As IMeasurement)
 
-            With measurement
-                ' Get sample for this timestamp, creating it if needed
-                Dim sample As Sample = GetSample(.Ticks)
+            ' Get sample for this timestamp, creating it if needed
+            Dim sample As Sample = GetSample(measurement.Ticks)
 
-                If sample Is Nothing Then
-                    ' No samples exist for this timestamp - measurement must have been outside time deviation tolerance (past or future) 
-                    m_discardedMeasurements += 1
-                Else
-                    ' We've found the right sample for this data, so we access the proper data cell by first calculating the
-                    ' proper frame index (i.e., the row) - we can then directly access the correct measurement using its key
-                    Dim frame As IFrame = sample.Frames(Convert.ToInt32(TicksBeyondSecond(.Ticks) / m_ticksPerFrame))
-                    Dim frameMeasurement As IMeasurement
+            If sample Is Nothing Then
+                ' No samples exist for this timestamp - measurement must have been outside time deviation tolerance (past or future) 
+                m_discardedMeasurements += 1
+            Else
+                ' We've found the right sample for this data, so we access the proper data cell by first calculating the
+                ' proper frame index (i.e., the row) - we can then directly access the correct measurement using its key
+                Dim frame As IFrame = sample.Frames(Convert.ToInt32(TicksBeyondSecond(measurement.Ticks) / m_ticksPerFrame))
 
-                    SyncLock frame.Measurements
-                        If frame.Measurements.TryGetValue(.Key, frameMeasurement) Then
-                            ' Measurement already exists, so we just update value with the latest value
-                            frameMeasurement.Value = .Value
-                        Else
-                            ' Create new frame measurement if it doesn't exist
-                            frame.Measurements.Add(.Key, measurement)
-                        End If
-                    End SyncLock
+                ' Call user customizable function to assign new measurement to its frame
+                SyncLock frame.Measurements
+                    AssignMeasurementToFrame(frame, measurement)
+                End SyncLock
 
-                    ' Track absolute lastest timestamp and immediate measurement values...
-                    RealTimeTicks = .Ticks
-                    m_latestMeasurements.UpdateMeasurementValue(measurement)
-                End If
-            End With
+                ' Track absolute lastest timestamp and immediate measurement values...
+                RealTimeTicks = measurement.Ticks
+                m_latestMeasurements.UpdateMeasurementValue(measurement)
+            End If
 
         End Sub
 
@@ -393,7 +316,7 @@ Namespace Measurements
         End Sub
 
         ''' <summary>Detailed current state and status of concentrator</summary>
-        Public ReadOnly Property Status() As String
+        Public Overridable ReadOnly Property Status() As String
             Get
                 Dim publishingSampleTimestamp As Date
                 Dim sampleDetail As New StringBuilder
@@ -505,6 +428,36 @@ Namespace Measurements
 #End Region
 
 #Region " Protected Methods Implementation "
+
+        ''' <summary>Consumers must override this method in order to publish a frame</summary>
+        Protected MustOverride Sub PublishFrame(ByVal frame As IFrame, ByVal index As Integer)
+
+        ''' <summary>Consumers can choose to override this method to create a new custom frame</summary>
+        ''' <remarks>Override is optional, the base class will create a basic frame to hold synchronized measurements</remarks>
+        Protected Friend Overridable Function CreateNewFrame(ByVal ticks As Long) As IFrame
+
+            Return New Frame(ticks)
+
+        End Function
+
+        ''' <summary>Consumers can choose to override this method to handle customize assignment of a measurement to its frame</summary>
+        ''' <remarks>
+        ''' <para>Override is optional, a measurement will simply be assigned to frame's measurement list otherwise</para>
+        ''' <para>The frame's measurement dictionary will by synclocked prior to call.  You should still assign measurement to frame's measurement dictionary even if not used (call MyBase.AssignMeasurementToFrame)</para>
+        ''' </remarks>
+        Protected Overridable Sub AssignMeasurementToFrame(ByVal frame As IFrame, ByVal measurement As IMeasurement)
+
+            Dim frameMeasurement As IMeasurement
+
+            If frame.Measurements.TryGetValue(measurement.Key, frameMeasurement) Then
+                ' Measurement already exists, so we just update value with the latest value
+                frameMeasurement.Value = measurement.Value
+            Else
+                ' Create new frame measurement if it doesn't exist
+                frame.Measurements.Add(measurement.Key, measurement)
+            End If
+
+        End Sub
 
         ''' <summary>We implement finalizer for this class to ensure sample queue shuts down in an orderly fashion</summary>
         Protected Overrides Sub Finalize()
@@ -618,7 +571,7 @@ Namespace Measurements
                     Try
                         SyncLock .Measurements
                             ' Publish current frame
-                            m_publishFrameFunction(.This, m_frameIndex)
+                            PublishFrame(.This, m_frameIndex)
                         End SyncLock
                     Catch ex As Exception
                         RaiseEvent ProcessException(ex)
@@ -676,13 +629,6 @@ Namespace Measurements
             RaiseEvent UnpublishedSamples(m_sampleQueue.Count - 1)
 
         End Sub
-
-        ' We define a default frame creation function to use when consumer only needs a basic frame to hold synchronized measurements
-        Private Function CreateBasicFrame(ByVal ticks As Long) As IFrame
-
-            Return New Frame(ticks)
-
-        End Function
 
         ' We expose any process exceptions to user
         Private Sub m_sampleQueue_ProcessException(ByVal ex As System.Exception) Handles m_sampleQueue.ProcessException
