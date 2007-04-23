@@ -193,31 +193,34 @@ Namespace Phasors.FNet
             ' Parse FNet data frame into individual fields separated by spaces
             data = RemoveDuplicateWhiteSpace(Encoding.ASCII.GetString(binaryImage, startIndex + 1, stopByteIndex - startIndex - 1)).Trim().Split(" "c)
 
-            ' Assign sample index
-            Parent.SampleIndex = Convert.ToInt32(data(Element.SampleIndex))
+            ' Make sure all the needed data elements exist (could be a bad frame)
+            If data.Length >= 8 Then
+                ' Assign sample index
+                Parent.SampleIndex = Convert.ToInt32(data(Element.SampleIndex))
 
-            ' Get timestamp of data record
-            Parent.Ticks = ParseTimestamp(data(Element.Date), data(Element.Time), Parent.SampleIndex, configurationCell.FrameRate)
+                ' Get timestamp of data record
+                Parent.Ticks = ParseTimestamp(data(Element.Date), data(Element.Time), Parent.SampleIndex, configurationCell.FrameRate)
 
-            ' Parse out first frequency (can be long/lat at top of minute)
-            m_analogValue = Convert.ToSingle(data(Element.Analog))
+                ' Parse out first frequency (can be long/lat at top of minute)
+                m_analogValue = Convert.ToSingle(data(Element.Analog))
 
-            If Convert.ToInt32(data(Element.Time).Substring(4, 2)) = 0 Then
-                Select Case Parent.SampleIndex
-                    Case 1
-                        configurationCell.Latitude = m_analogValue
-                    Case 2
-                        configurationCell.Longitude = m_analogValue
-                    Case 3
-                        configurationCell.NumberOfSatellites = m_analogValue
-                End Select
+                If Convert.ToInt32(data(Element.Time).Substring(4, 2)) = 0 Then
+                    Select Case Parent.SampleIndex
+                        Case 1
+                            configurationCell.Latitude = m_analogValue
+                        Case 2
+                            configurationCell.Longitude = m_analogValue
+                        Case 3
+                            configurationCell.NumberOfSatellites = m_analogValue
+                    End Select
+                End If
+
+                ' Create frequency value
+                FrequencyValue = New FrequencyValue(Me, configurationCell.FrequencyDefinition, Convert.ToSingle(data(Element.Frequency)), 0)
+
+                ' Create single phasor value
+                PhasorValues.Add(PhasorValue.CreateFromPolarValues(Me, configurationCell.PhasorDefinitions(0), Convert.ToSingle(data(Element.Angle)), Convert.ToSingle(data(Element.Voltage))))
             End If
-
-            ' Create frequency value
-            FrequencyValue = New FrequencyValue(Me, configurationCell.FrequencyDefinition, Convert.ToSingle(data(Element.Frequency)), 0)
-
-            ' Create single phasor value
-            PhasorValues.Add(PhasorValue.CreateFromPolarValues(Me, configurationCell.PhasorDefinitions(0), Convert.ToSingle(data(Element.Angle)), Convert.ToSingle(data(Element.Voltage))))
 
         End Sub
 

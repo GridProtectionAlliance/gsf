@@ -199,11 +199,14 @@ Namespace Phasors.FNet
                     ' Pre-parse first FNet data frame to get unit ID field and establish a virutal configuration frame
                     Dim data As String() = RemoveDuplicateWhiteSpace(Encoding.ASCII.GetString(buffer, startByteIndex + 1, endByteIndex - startByteIndex - 1)).Trim().Split(" "c)
 
-                    ' Create virtual configuration frame
-                    m_configurationFrame = New ConfigurationFrame(Convert.ToUInt16(data(Element.UnitID)), Date.Now.Ticks, m_frameRate, m_nominalFrequency, m_stationName)
+                    ' Make sure all the needed data elements exist (could be a bad frame)
+                    If data.Length >= 8 Then
+                        ' Create virtual configuration frame
+                        m_configurationFrame = New ConfigurationFrame(Convert.ToUInt16(data(Element.UnitID)), Date.Now.Ticks, m_frameRate, m_nominalFrequency, m_stationName)
 
-                    ' Notify clients of new configuration frame
-                    RaiseReceivedConfigurationFrame(m_configurationFrame)
+                        ' Notify clients of new configuration frame
+                        RaiseReceivedConfigurationFrame(m_configurationFrame)
+                    End If
                 End If
 
                 ' Provide new FNet data frame to clients
