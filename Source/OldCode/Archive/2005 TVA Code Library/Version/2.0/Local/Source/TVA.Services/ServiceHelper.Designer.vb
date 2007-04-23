@@ -24,8 +24,7 @@ Partial Class ServiceHelper
         m_encryption = Security.Cryptography.EncryptLevel.Level1
         m_secureSession = True
         m_configurationString = "Protocol=Tcp; Port=6500"
-        m_logFile = New TVA.IO.InternalLogFile("StatusUpdates.txt")
-        m_processes = New Dictionary(Of String, ServiceProcess)()
+        m_processes = New Dictionary(Of String, ServiceProcess)(StringComparer.CurrentCultureIgnoreCase)
         m_clientInfo = New Dictionary(Of Guid, ClientInfo)()
         m_requestHistory = New List(Of RequestInfo)()
         m_serviceComponents = New List(Of IServiceComponent)()
@@ -51,7 +50,21 @@ Partial Class ServiceHelper
     'Do not modify it using the code editor.
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
-        components = New System.ComponentModel.Container()
+        Me.components = New System.ComponentModel.Container
+        Me.LogFile = New TVA.IO.LogFile(Me.components)
+        Me.ScheduleManager = New TVA.Scheduling.ScheduleManager(Me.components)
+        CType(Me.LogFile, System.ComponentModel.ISupportInitialize).BeginInit()
+        '
+        'LogFile
+        '
+        Me.LogFile.Name = "StatusLog.txt"
+        '
+        'ScheduleManager
+        '
+        CType(Me.LogFile, System.ComponentModel.ISupportInitialize).EndInit()
+
     End Sub
+    Public WithEvents ScheduleManager As TVA.Scheduling.ScheduleManager
+    Public WithEvents LogFile As TVA.IO.LogFile
 
 End Class

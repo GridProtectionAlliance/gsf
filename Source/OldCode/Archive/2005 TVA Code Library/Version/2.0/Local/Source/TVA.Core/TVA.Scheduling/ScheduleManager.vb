@@ -1,4 +1,21 @@
-' 08-01-06
+'*******************************************************************************************************
+'  TVA.Scheduling.ScheduleManager.vb - Monitors multiples schedules defined as TVA.Scheduling.Schedule
+'  Copyright © 2006 - TVA, all rights reserved - Gbtc
+'
+'  Build Environment: VB.NET, Visual Studio 2005
+'  Primary Developer: Pinal C. Patel, Operations Data Architecture [TVA]
+'      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
+'       Phone: 423/751-2250
+'       Email: pcpatel@tva.gov
+'
+'  Code Modification History:
+'  -----------------------------------------------------------------------------------------------------
+'  08/01/2006 - Pinal C. Patel
+'       Original version of source code generated
+'  04/23/2007 - Pinal C. Patel
+'       Made the schedules dictionary case-insensitive
+'
+'*******************************************************************************************************
 
 Option Strict On
 
@@ -83,7 +100,7 @@ Namespace Scheduling
             Me.ConfigurationElement = "ScheduleManager"
             Me.PersistSchedules = persistSchedules
             Me.Enabled = True
-            m_schedules = New Dictionary(Of String, Schedule)()
+            m_schedules = New Dictionary(Of String, Schedule)(StringComparer.CurrentCultureIgnoreCase)
             m_scheduleDueEventHandlerList = New List(Of EventHandler(Of ScheduleEventArgs))()
             m_timer = New System.Timers.Timer(60000)
 

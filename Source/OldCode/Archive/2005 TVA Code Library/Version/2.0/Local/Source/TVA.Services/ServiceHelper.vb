@@ -30,8 +30,6 @@ Public Class ServiceHelper
     Private m_startedEventHandlerList As List(Of StartedEventHandler)
     Private m_stoppedEventHandlerList As List(Of EventHandler)
 
-    Private WithEvents m_logFile As InternalLogFile
-    Private WithEvents m_scheduleManager As ScheduleManager
     Private WithEvents m_communicationServer As ICommunicationServer
 
     ''' <summary>
@@ -205,17 +203,17 @@ Public Class ServiceHelper
         End Get
     End Property
 
-    ''' <summary>
-    ''' Gets the instance of schedule manager that can be used for scheduling jobs/tasks.
-    ''' </summary>
-    ''' <value></value>
-    ''' <returns>An instance of schedule manager.</returns>
-    <Browsable(False)> _
-    Public ReadOnly Property ScheduleManager() As ScheduleManager
-        Get
-            Return m_scheduleManager
-        End Get
-    End Property
+    '''' <summary>
+    '''' Gets the instance of schedule manager that can be used for scheduling jobs/tasks.
+    '''' </summary>
+    '''' <value></value>
+    '''' <returns>An instance of schedule manager.</returns>
+    '<Browsable(False)> _
+    'Public ReadOnly Property ScheduleManager() As ScheduleManager
+    '    Get
+    '        Return m_scheduleManager
+    '    End Get
+    'End Property
 
     ''' <summary>
     ''' Gets the instance of TCP server used for communicating with the clients.
@@ -236,7 +234,6 @@ Public Class ServiceHelper
     Public Sub OnStart(ByVal args As String())
 
         If m_service IsNot Nothing Then
-            m_scheduleManager = New TVA.Scheduling.ScheduleManager()
             m_communicationServer = TVA.Communication.Common.CreateCommunicationServer(m_configurationString)
             m_communicationServer.Handshake = True
             m_communicationServer.HandshakePassphrase = m_service.ServiceName
@@ -249,12 +246,14 @@ Public Class ServiceHelper
                     DirectCast(m_communicationServer, UdpServer).PayloadAware = True
             End Select
 
-            m_serviceComponents.Add(m_scheduleManager)
+            m_serviceComponents.Add(ScheduleManager)
             m_serviceComponents.Add(m_communicationServer)
 
             For Each component As IServiceComponent In m_serviceComponents
                 If component IsNot Nothing Then component.ServiceStateChanged(ServiceState.Started)
             Next
+
+            If m_logStatusUpdates Then LogFile.Open()
 
             RaiseEvent Started(Me, New GenericEventArgs(args))
 
@@ -282,6 +281,8 @@ Public Class ServiceHelper
         For Each component As IServiceComponent In m_serviceComponents
             If component IsNot Nothing Then component.ServiceStateChanged(ServiceState.Stopped)
         Next
+
+        If m_logStatusUpdates Then LogFile.Close()
 
         RaiseEvent Stopped(Me, EventArgs.Empty)
 
@@ -366,7 +367,7 @@ Public Class ServiceHelper
     Public Sub AddProcess(ByVal processExecutionMethod As ServiceProcess.ExecutionMethodSignature, _
             ByVal processName As String, ByVal processParameters As Object())
 
-        processName = processName.ToUpper().Trim()
+        processName = processName.Trim()
 
         If Not m_processes.ContainsKey(processName) Then
             m_processes.Add(processName, New ServiceProcess(processExecutionMethod, processName, processParameters, Me))
@@ -393,18 +394,18 @@ Public Class ServiceHelper
 
     Public Sub ScheduleProcess(ByVal processName As String, ByVal scheduleRule As String)
 
-        processName = processName.ToUpper().Trim()
+        processName = processName.Trim()
 
         If m_processes.ContainsKey(processName) Then
             ' The specified process exists, so we'll schedule it, or update its schedule if it is acheduled already.
             Dim schedule As Schedule = Nothing
             Try
-                If m_scheduleManager.Schedules.TryGetValue(processName, schedule) Then
+                If ScheduleManager.Schedules.TryGetValue(processName, schedule) Then
                     ' Update the process schedule if it is already exists.
                     schedule.Rule = scheduleRule
                 Else
                     ' Schedule the process if it is not scheduled already.
-                    m_scheduleManager.Schedules.Add(processName, New Schedule(processName, scheduleRule))
+                    ScheduleManager.Schedules.Add(processName, New Schedule(processName, scheduleRule))
                 End If
             Catch ex As Exception
                 UpdateStatus(ex.Message)
@@ -455,7 +456,7 @@ Public Class ServiceHelper
             SendUpdateClientStatusResponse(.ToString())
 
             ' Log the status update to the log file if logging is enabled.
-            If m_logStatusUpdates Then m_logFile.AppendTimestampedLine(.ToString())
+            If m_logStatusUpdates Then Me.LogFile.WriteTimestampedLine(.ToString())
         End With
 
     End Sub
@@ -537,7 +538,7 @@ Public Class ServiceHelper
 
 #Region " ScheduleManager Events "
 
-    Private Sub m_scheduleManager_ScheduleDue(ByVal sender As Object, ByVal e As ScheduleEventArgs) Handles m_scheduleManager.ScheduleDue
+    Private Sub ScheduleManager_ScheduleDue(ByVal sender As Object, ByVal e As ScheduleEventArgs) Handles ScheduleManager.ScheduleDue
 
         Dim scheduledProcess As ServiceProcess = Nothing
         If m_processes.TryGetValue(e.Schedule.Name, scheduledProcess) Then
@@ -550,11 +551,11 @@ Public Class ServiceHelper
 
 #Region " LogFile Events "
 
-    Private Sub m_logFile_LogException(ByVal ex As System.Exception) Handles m_logFile.LogException
+    Private Sub LogFile_LogException(ByVal sender As Object, ByVal e As ExceptionEventArgs) Handles LogFile.LogException
 
         ' We'll let the connected clients know that we encountered an exception while logging the status update.
         m_logStatusUpdates = False
-        UpdateStatus(String.Format("Error occurred while logging status update: {0}", ex.ToString()))
+        UpdateStatus(String.Format("Error occurred while logging status update: {0}", e.Exception.ToString()))
         m_logStatusUpdates = True
 
     End Sub
@@ -639,7 +640,7 @@ Public Class ServiceHelper
                     .AppendLine()
                     .Append(process.Status)
                     Dim processSchedule As Schedule = Nothing
-                    If m_scheduleManager.Schedules.TryGetValue(process.Name, processSchedule) Then
+                    If ScheduleManager.Schedules.TryGetValue(process.Name, processSchedule) Then
                         .Append("                 Scheduled: Yes")
                         .AppendLine()
                         .AppendFormat("             Schedule Rule: {0}", processSchedule.Rule)
@@ -701,7 +702,7 @@ Public Class ServiceHelper
         Dim processToStart As ServiceProcess = Nothing
         If request.Parameters IsNot Nothing AndAlso request.Parameters.Length > 0 Then
             ' The user has specified the name of the process to start, so we'll see if the process exists.
-            Dim processName As String = request.Parameters(0).ToUpper()
+            Dim processName As String = request.Parameters(0).Trim()
             If Not m_processes.TryGetValue(processName, processToStart) Then
                 ' The specified process does not exist.
                 UpdateStatus(String.Format("Process ""{0}"" cannot be started. Process does not exist.", processName))
@@ -745,7 +746,7 @@ Public Class ServiceHelper
         Dim processToAbort As ServiceProcess = Nothing
         If request.Parameters IsNot Nothing AndAlso request.Parameters.Length > 0 Then
             ' The user has specified the name of the process to abort, so we'll see if the process exists.
-            Dim processName As String = request.Parameters(0).ToUpper()
+            Dim processName As String = request.Parameters(0).Trim()
             If Not m_processes.TryGetValue(processName, processToAbort) Then
                 ' The specified process does not exist.
                 UpdateStatus(String.Format("Process ""{0}"" cannot be aborted. Process does not exist.", processName))
@@ -782,14 +783,14 @@ Public Class ServiceHelper
 
         If request.Parameters.Length > 1 Then
             ' Parameters required for scheduling a process are provided.
-            Dim processName As String = request.Parameters(0).ToUpper()
+            Dim processName As String = request.Parameters(0).Trim()
             Dim scheduleRule As String = request.Parameters(1).Trim(""""c)
 
             ' Schedule the specified process. Process will not be scheduled if process does not exist.
             ScheduleProcess(processName, scheduleRule)
 
             Dim processSchedule As Schedule = Nothing
-            If m_scheduleManager.Schedules.TryGetValue(processName, processSchedule) Then
+            If ScheduleManager.Schedules.TryGetValue(processName, processSchedule) Then
                 ' A schedule for the process exists, so the process was scheduled successfully.
                 UpdateStatus(String.Format("Process ""{0}"" scheduled for {1}.", processSchedule.Name, processSchedule.Description))
             End If
@@ -803,11 +804,11 @@ Public Class ServiceHelper
 
         If request.Parameters.Length > 0 Then
             ' We have the name of the process that is to be unscheduled.
-            Dim processName As String = request.Parameters(0).ToUpper()
+            Dim processName As String = request.Parameters(0).Trim()
 
-            If m_scheduleManager.Schedules.ContainsKey(processName) Then
+            If ScheduleManager.Schedules.ContainsKey(processName) Then
                 ' The specified process is scheduled, so we'll unschedule it.
-                m_scheduleManager.Schedules.Remove(processName)
+                ScheduleManager.Schedules.Remove(processName)
                 UpdateStatus(String.Format("Process ""{0}"" has been unscheduled.", processName))
             Else
                 ' We cannot unschedule the specified process because it is not scheduled.
@@ -821,14 +822,14 @@ Public Class ServiceHelper
 
     Private Sub SaveSchedules()
 
-        m_scheduleManager.SaveSchedules()
+        ScheduleManager.SaveSchedules()
         UpdateStatus("Schedules saved to the configuration file successfully.")
 
     End Sub
 
     Private Sub LoadSchedules()
 
-        m_scheduleManager.LoadSchedules()
+        ScheduleManager.LoadSchedules()
         UpdateStatus("Schedules loaded from the configuration file successfully.")
 
     End Sub

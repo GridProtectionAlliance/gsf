@@ -2,6 +2,7 @@
 
 Option Strict On
 
+Imports System.Net
 Imports System.Web
 Imports System.Text
 Imports System.Reflection
@@ -10,6 +11,7 @@ Imports System.ComponentModel
 Imports System.Windows.Forms
 Imports TVA.Net.Smtp
 Imports TVA.IO.FilePath
+Imports TVA.Identity
 
 Namespace ErrorManagement
 
@@ -315,20 +317,34 @@ Namespace ErrorManagement
                 .AppendLine()
                 Select Case TVA.Common.GetApplicationType()
                     Case TVA.ApplicationType.WindowsCui, ApplicationType.WindowsGui
-                        .AppendFormat("Machine Name:          {0}", System.Environment.MachineName)
+                        Dim currentUserInfo As New UserInfo(System.Threading.Thread.CurrentPrincipal.Identity.Name)
+                        .AppendFormat("Machine Name:          {0}", Environment.MachineName)
                         .AppendLine()
-                        .AppendFormat("Machine IP:            {0}", System.Net.Dns.GetHostEntry(System.Environment.MachineName).AddressList(0).ToString())
+                        .AppendFormat("Machine IP:            {0}", Dns.GetHostEntry(Environment.MachineName).AddressList(0).ToString())
                         .AppendLine()
-                        .AppendFormat("Current User:          {0}", System.Threading.Thread.CurrentPrincipal.Identity.Name)
+                        .AppendFormat("Current User ID:       {0}", currentUserInfo.LoginID)
+                        .AppendLine()
+                        .AppendFormat("Current User Name:     {0}", currentUserInfo.FullName)
+                        .AppendLine()
+                        .AppendFormat("Current User Phone:    {0}", currentUserInfo.Telephone)
+                        .AppendLine()
+                        .AppendFormat("Current User Email:    {0}", currentUserInfo.Email)
                         .AppendLine()
                     Case ApplicationType.Web
-                        .AppendFormat("Server Name:           {0}", System.Environment.MachineName)
+                        Dim remoteUserInfo As New UserInfo(System.Threading.Thread.CurrentPrincipal.Identity.Name, True)
+                        .AppendFormat("Server Name:           {0}", Environment.MachineName)
                         .AppendLine()
-                        .AppendFormat("Server IP:             {0}", System.Net.Dns.GetHostEntry(System.Environment.MachineName).AddressList(0).ToString())
+                        .AppendFormat("Server IP:             {0}", Dns.GetHostEntry(Environment.MachineName).AddressList(0).ToString())
                         .AppendLine()
                         .AppendFormat("Process User:          {0}", System.Security.Principal.WindowsIdentity.GetCurrent().Name)
                         .AppendLine()
-                        .AppendFormat("Remote User:           {0}", HttpContext.Current.Request.ServerVariables("REMOTE_USER"))
+                        .AppendFormat("Remote User ID:        {0}", remoteUserInfo.LoginID)
+                        .AppendLine()
+                        .AppendFormat("Remote User Name:      {0}", remoteUserInfo.FullName)
+                        .AppendLine()
+                        .AppendFormat("Remote User Phone:     {0}", remoteUserInfo.Telephone)
+                        .AppendLine()
+                        .AppendFormat("Remote User Email:     {0}", remoteUserInfo.Email)
                         .AppendLine()
                         .AppendFormat("Remote Host:           {0}", HttpContext.Current.Request.ServerVariables("REMOTE_HOST"))
                         .AppendLine()
@@ -798,11 +814,11 @@ Namespace ErrorManagement
                     m_logToEmailOK = False
 
                     With New SimpleMailMessage()
-                        .Sender = String.Format("{0}@tva.gov", Me.GetType().Name)
+                        .Sender = String.Format("{0}@tva.gov", Environment.MachineName)
                         .Recipients = m_emailRecipients
                         .Subject = String.Format("Exception in {0} at {1}", ApplicationName, System.DateTime.Now.ToString())
                         .Body = exceptionMessage
-                        .Attachments = TVA.IO.FilePath.AbsolutePath(ScreenshotFileName)
+                        .Attachments = AbsolutePath(ScreenshotFileName)
                         .MailServer = m_emailServer
                         .Send()
                     End With
@@ -1032,7 +1048,7 @@ Namespace ErrorManagement
                 .AppendLine()
                 .AppendFormat("Assembly Build Date:   {0}", parentAssemblyInfo.BuildDate.ToString())
                 .AppendLine()
-                .AppendFormat(".Net Runtime Version:  {0}", System.Environment.Version.ToString())
+                .AppendFormat(".Net Runtime Version:  {0}", Environment.Version.ToString())
                 .AppendLine()
 
                 Return .ToString()
