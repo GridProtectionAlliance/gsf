@@ -220,6 +220,8 @@ Namespace Phasors.FNet
 
                 ' Create single phasor value
                 PhasorValues.Add(PhasorValue.CreateFromPolarValues(Me, configurationCell.PhasorDefinitions(0), Convert.ToSingle(data(Element.Angle)), Convert.ToSingle(data(Element.Voltage))))
+            Else
+                Throw New InvalidOperationException("Invalid number of data elements encountered in FNET data stream line: """ & Encoding.ASCII.GetString(binaryImage, startIndex + 1, stopByteIndex - startIndex - 1) & """.  Got " & data.Length & " elements, expected 8.")
             End If
 
         End Sub
