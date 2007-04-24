@@ -14,6 +14,8 @@
 '       Original version of source code generated
 '  04/23/2007 - Pinal C. Patel
 '       Made the schedules dictionary case-insensitive
+'  04/24/2007 - Pinal C. Patel
+'       Implemented the IPersistSettings and ISupportInitialize interfaces
 '
 '*******************************************************************************************************
 
@@ -24,22 +26,22 @@ Imports System.ComponentModel
 Imports System.Threading
 Imports TVA.Services
 Imports TVA.Configuration
-Imports TVA.Configuration.Common
 
 Namespace Scheduling
 
     <ToolboxBitmap(GetType(ScheduleManager)), DefaultEvent("ScheduleDue")> _
     Public Class ScheduleManager
-        Implements IServiceComponent
+        Implements IServiceComponent, IPersistSettings, ISupportInitialize
 
 #Region " Member Declaration "
 
-        Private m_configurationElement As String
-        Private m_persistSchedules As Boolean
         Private m_enabled As Boolean
         Private m_schedules As Dictionary(Of String, Schedule)
+        Private m_persistSettings As Boolean
+        Private m_settingsCategoryName As String
         Private m_startTimerThread As Thread
         Private m_scheduleDueEventHandlerList As List(Of EventHandler(Of ScheduleEventArgs))
+
         Private WithEvents m_timer As System.Timers.Timer
 
 #End Region
@@ -92,53 +94,7 @@ Namespace Scheduling
 
 #End Region
 
-#Region " Public Code "
-
-        Public Sub New(ByVal persistSchedules As Boolean)
-
-            MyBase.New()
-            Me.ConfigurationElement = "ScheduleManager"
-            Me.PersistSchedules = persistSchedules
-            Me.Enabled = True
-            m_schedules = New Dictionary(Of String, Schedule)(StringComparer.CurrentCultureIgnoreCase)
-            m_scheduleDueEventHandlerList = New List(Of EventHandler(Of ScheduleEventArgs))()
-            m_timer = New System.Timers.Timer(60000)
-
-        End Sub
-
-        ''' <summary>
-        ''' Gets or sets the element name of the application configuration file under which the schedules will be saved.
-        ''' </summary>
-        ''' <value></value>
-        ''' <returns>The element name of the application configuration file under which the schedules will be saved.</returns>
-        <Category("Configuration"), DefaultValue(GetType(String), "ScheduleManager")> _
-        Public Property ConfigurationElement() As String
-            Get
-                Return m_configurationElement
-            End Get
-            Set(ByVal value As String)
-                If Not String.IsNullOrEmpty(value) Then
-                    m_configurationElement = value
-                Else
-                    Throw New ArgumentNullException("value")
-                End If
-            End Set
-        End Property
-
-        ''' <summary>
-        ''' Gets or sets a boolean value indicating whether the schedules will be saved to the application 
-        ''' configuration file when this instance of TVA.ScheduleManager is stopped or disposed.
-        ''' </summary>
-        ''' <value>True if the schedules will be saved to the application configuration file; otherwise False.</value>
-        <Category("Configuration"), DefaultValue(GetType(Boolean), "True")> _
-        Public Property PersistSchedules() As Boolean
-            Get
-                Return m_persistSchedules
-            End Get
-            Set(ByVal value As Boolean)
-                m_persistSchedules = value
-            End Set
-        End Property
+#Region " Code Scope: Public "
 
         ''' <summary>
         ''' Gets or sets a boolean value indicating whether the schedule manager is enabled.
@@ -185,8 +141,6 @@ Namespace Scheduling
         Public Sub Start()
 
             If m_enabled AndAlso Not m_timer.Enabled Then
-                LoadSchedules()
-
                 m_startTimerThread = New Thread(AddressOf StartTimer)
                 m_startTimerThread.Start()
             End If
@@ -204,47 +158,6 @@ Namespace Scheduling
                     m_timer.Stop()
                     RaiseEvent Stopped(Me, EventArgs.Empty)
                 End If
-
-                SaveSchedules()
-            End If
-
-        End Sub
-
-        ''' <summary>
-        ''' Loads previously saved schedules from the application configuration file.
-        ''' </summary>
-        Public Sub LoadSchedules()
-
-            If m_enabled AndAlso m_persistSchedules Then
-                Try
-                    For Each schedule As CategorizedSettingsElement In CategorizedSettings(m_configurationElement)
-                        ' Add the schedule if it doesn't exist or update it otherwise with data from the config file.
-                        m_schedules(schedule.Name) = New Schedule(schedule.Name, schedule.Value, schedule.Description)
-                    Next
-                Catch ex As Exception
-                    ' We can safely ignore any exceptions encountered while loading schedules from the config file.
-                End Try
-            End If
-
-        End Sub
-
-        ''' <summary>
-        ''' Saves all schedules to the application configuration file.
-        ''' </summary>
-        Public Sub SaveSchedules()
-
-            If m_enabled AndAlso m_persistSchedules Then
-                Try
-                    With CategorizedSettings(m_configurationElement)
-                        .Clear()
-                        For Each schedule As Schedule In m_schedules.Values
-                            .Add(schedule.Name, schedule.Rule, schedule.Description)
-                        Next
-                    End With
-                    SaveSettings()
-                Catch ex As Exception
-                    ' We can safely ignore any exceptions encountered while saving schedules to the config file.
-                End Try
             End If
 
         End Sub
@@ -279,7 +192,7 @@ Namespace Scheduling
 
 #End Region
 
-#Region " Private Code "
+#Region " Code Scope: Private "
 
         Private Sub StartTimer()
 
@@ -309,7 +222,7 @@ Namespace Scheduling
 
 #Region " Interface Implementation "
 
-#Region " IServiceComponent Implementation "
+#Region " IServiceComponent "
 
         Private m_previouslyEnabled As Boolean = False
 
@@ -357,6 +270,99 @@ Namespace Scheduling
                 Case ServiceState.Shutdown
                     Me.Dispose()
             End Select
+
+        End Sub
+
+#End Region
+
+#Region " IPersistSettings "
+
+        ''' <summary>
+        ''' Gets or sets a boolean value indicating whether the component settings are to be persisted to the config file.
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns>True if the component settings are to be persisted to the config file; otherwise False.</returns>
+        <Description("Indicates whether the component settings are to be persisted to the config file."), DefaultValue(GetType(Boolean), "False")> _
+        Public Property PersistSettings() As Boolean Implements IPersistSettings.PersistSettings
+            Get
+                Return m_persistSettings
+            End Get
+            Set(ByVal value As Boolean)
+                m_persistSettings = value
+            End Set
+        End Property
+
+        ''' <summary>
+        ''' Gets or sets the category name under which the component settings are to be saved in the config file.
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns>The category name under which the component settings are to be saved in the config file.</returns>
+        <Description("The category name under which the component settings are to be saved in the config file."), DefaultValue(GetType(String), "LogFile")> _
+        Public Property SettingsCategoryName() As String Implements IPersistSettings.SettingsCategoryName
+            Get
+                Return m_settingsCategoryName
+            End Get
+            Set(ByVal value As String)
+                If Not String.IsNullOrEmpty(value) Then
+                    m_settingsCategoryName = value
+                Else
+                    Throw New ArgumentNullException("ConfigurationCategory")
+                End If
+            End Set
+        End Property
+
+        ''' <summary>
+        ''' Loads previously saved schedules from the config file.
+        ''' </summary>
+        Public Sub LoadSettings() Implements IPersistSettings.LoadSettings
+
+            Try
+                For Each schedule As CategorizedSettingsElement In TVA.Configuration.Common.CategorizedSettings(m_settingsCategoryName)
+                    ' Add the schedule if it doesn't exist or update it otherwise with data from the config file.
+                    m_schedules(schedule.Name) = New Schedule(schedule.Name, schedule.Value, schedule.Description)
+                Next
+            Catch ex As Exception
+                ' We'll encounter exceptions if the settings are not present in the config file.
+            End Try
+
+        End Sub
+
+        ''' <summary>
+        ''' Saves all schedules to the config file.
+        ''' </summary>
+        Public Sub SaveSettings() Implements IPersistSettings.SaveSettings
+
+            If m_persistSettings Then
+                Try
+                    With TVA.Configuration.Common.CategorizedSettings(m_settingsCategoryName)
+                        .Clear()
+                        For Each schedule As Schedule In m_schedules.Values
+                            .Add(schedule.Name, schedule.Rule, schedule.Description)
+                        Next
+                    End With
+                    TVA.Configuration.Common.SaveSettings()
+                Catch ex As Exception
+                    ' We might encounter an exception if for some reason the settings cannot be saved to the config file.
+                End Try
+            End If
+
+        End Sub
+
+#End Region
+
+#Region " ISupportInitialize "
+
+        Public Sub BeginInit() Implements System.ComponentModel.ISupportInitialize.BeginInit
+
+            ' We don't need to do anything before the component is initialized.
+
+        End Sub
+
+        Public Sub EndInit() Implements System.ComponentModel.ISupportInitialize.EndInit
+
+            If Not DesignMode Then
+                LoadSettings()            ' Load settings from the config file.
+            End If
 
         End Sub
 

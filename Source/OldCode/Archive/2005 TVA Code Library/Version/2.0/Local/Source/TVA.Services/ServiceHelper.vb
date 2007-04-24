@@ -203,18 +203,6 @@ Public Class ServiceHelper
         End Get
     End Property
 
-    '''' <summary>
-    '''' Gets the instance of schedule manager that can be used for scheduling jobs/tasks.
-    '''' </summary>
-    '''' <value></value>
-    '''' <returns>An instance of schedule manager.</returns>
-    '<Browsable(False)> _
-    'Public ReadOnly Property ScheduleManager() As ScheduleManager
-    '    Get
-    '        Return m_scheduleManager
-    '    End Get
-    'End Property
-
     ''' <summary>
     ''' Gets the instance of TCP server used for communicating with the clients.
     ''' </summary>
@@ -822,14 +810,14 @@ Public Class ServiceHelper
 
     Private Sub SaveSchedules()
 
-        ScheduleManager.SaveSchedules()
+        ScheduleManager.SaveSettings()
         UpdateStatus("Schedules saved to the configuration file successfully.")
 
     End Sub
 
     Private Sub LoadSchedules()
 
-        ScheduleManager.LoadSchedules()
+        ScheduleManager.LoadSettings()
         UpdateStatus("Schedules loaded from the configuration file successfully.")
 
     End Sub

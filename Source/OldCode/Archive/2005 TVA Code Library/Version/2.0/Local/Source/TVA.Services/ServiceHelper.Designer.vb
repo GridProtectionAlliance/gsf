@@ -53,18 +53,43 @@ Partial Class ServiceHelper
         Me.components = New System.ComponentModel.Container
         Me.LogFile = New TVA.IO.LogFile(Me.components)
         Me.ScheduleManager = New TVA.Scheduling.ScheduleManager(Me.components)
+        Me.GlobalExceptionLogger = New TVA.ErrorManagement.GlobalExceptionLogger(Me.components)
         CType(Me.LogFile, System.ComponentModel.ISupportInitialize).BeginInit()
+        CType(Me.ScheduleManager, System.ComponentModel.ISupportInitialize).BeginInit()
+        CType(Me.GlobalExceptionLogger, System.ComponentModel.ISupportInitialize).BeginInit()
         '
         'LogFile
         '
         Me.LogFile.Name = "StatusLog.txt"
+        Me.LogFile.PersistSettings = True
         '
         'ScheduleManager
         '
+        Me.ScheduleManager.PersistSettings = True
+        Me.ScheduleManager.SettingsCategoryName = "ScheduleManager"
+        '
+        'GlobalExceptionLogger
+        '
+        Me.GlobalExceptionLogger.AutoStart = False
+        Me.GlobalExceptionLogger.ContactPersonName = Nothing
+        Me.GlobalExceptionLogger.ContactPersonPhone = Nothing
+        Me.GlobalExceptionLogger.EmailRecipients = Nothing
+        Me.GlobalExceptionLogger.EmailServer = "mailhost.cha.tva.gov"
+        Me.GlobalExceptionLogger.ExitOnUnhandledException = False
+        Me.GlobalExceptionLogger.LogToEmail = False
+        Me.GlobalExceptionLogger.LogToEventLog = False
+        Me.GlobalExceptionLogger.LogToFile = False
+        Me.GlobalExceptionLogger.LogToScreenshot = False
+        Me.GlobalExceptionLogger.LogToUI = False
+        Me.GlobalExceptionLogger.PersistSettings = True
+        Me.GlobalExceptionLogger.SettingsCategoryName = "GlobalExceptionLogger"
         CType(Me.LogFile, System.ComponentModel.ISupportInitialize).EndInit()
+        CType(Me.ScheduleManager, System.ComponentModel.ISupportInitialize).EndInit()
+        CType(Me.GlobalExceptionLogger, System.ComponentModel.ISupportInitialize).EndInit()
 
     End Sub
-    Public WithEvents ScheduleManager As TVA.Scheduling.ScheduleManager
-    Public WithEvents LogFile As TVA.IO.LogFile
+    Friend WithEvents GlobalExceptionLogger As TVA.ErrorManagement.GlobalExceptionLogger
+    Friend WithEvents ScheduleManager As TVA.Scheduling.ScheduleManager
+    Friend WithEvents LogFile As TVA.IO.LogFile
 
 End Class

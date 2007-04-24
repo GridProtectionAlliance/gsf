@@ -14,17 +14,25 @@ Namespace Scheduling
 
         <System.Diagnostics.DebuggerNonUserCode()> _
         Public Sub New()
-            MyClass.New(True)
+            MyBase.New()
 
             'This call is required by the Component Designer.
             InitializeComponent()
+
+            m_enabled = True
+            m_settingsCategoryName = Me.GetType().Name
+            m_schedules = New Dictionary(Of String, Schedule)(StringComparer.CurrentCultureIgnoreCase)
+            m_scheduleDueEventHandlerList = New List(Of EventHandler(Of ScheduleEventArgs))()
+
+            m_timer = New System.Timers.Timer(60000)
 
         End Sub
 
         'Component overrides dispose to clean up the component list.
         <System.Diagnostics.DebuggerNonUserCode()> _
         Protected Overrides Sub Dispose(ByVal disposing As Boolean)
-            [Stop]()    ' Stop the schedule manager.
+            [Stop]()        ' Stop the schedule manager.
+            SaveSettings()  ' Saves settings to the config file.
             If disposing AndAlso components IsNot Nothing Then
                 components.Dispose()
             End If
