@@ -117,6 +117,7 @@ Namespace Packets
                     m_quality = CType(BitConverter.ToInt32(binaryImage, startIndex + 14), Quality)
                     m_value = BitConverter.ToSingle(binaryImage, startIndex + 18)
 
+                    ' We'll send an "ACK" to the sender if this is the last packet in the transmission.
                     If startIndex + Size = binaryImage.Length Then ActionType = PacketActionType.SaveAndReply
 
                     Return Size

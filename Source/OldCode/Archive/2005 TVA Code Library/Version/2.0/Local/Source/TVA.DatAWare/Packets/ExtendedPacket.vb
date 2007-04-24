@@ -204,6 +204,7 @@ Namespace Packets
                     m_gmtOffset = BitConverter.ToInt16(binaryImage, startIndex + 16)
                     m_value = BitConverter.ToSingle(binaryImage, startIndex + 18)
 
+                    ' We'll send an "ACK" to the sender if this is the last packet in the transmission.
                     If startIndex + Size = binaryImage.Length Then ActionType = PacketActionType.SaveAndReply
 
                     Return Size

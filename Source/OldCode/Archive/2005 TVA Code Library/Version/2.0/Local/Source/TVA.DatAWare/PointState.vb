@@ -106,14 +106,14 @@ Public Class PointState
         End Set
     End Property
 
-    Public Property ActiveDataBlock() As Files.ArchiveDataBlock
-        Get
-            Return m_activeDataBlock
-        End Get
-        Set(ByVal value As Files.ArchiveDataBlock)
-            m_activeDataBlock = value
-        End Set
-    End Property
+    'Public Property ActiveDataBlock() As Files.ArchiveDataBlock
+    '    Get
+    '        Return m_activeDataBlock
+    '    End Get
+    '    Set(ByVal value As Files.ArchiveDataBlock)
+    '        m_activeDataBlock = value
+    '    End Set
+    'End Property
 
     <Obsolete("This property is here for legacy purpose only and is not to be used.")> _
     Public Property ActiveDataBlockIndex() As Integer

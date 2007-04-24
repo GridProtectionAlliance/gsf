@@ -411,7 +411,11 @@ Namespace Files
         Private Function GetDataBlock(ByVal blockPointer As ArchiveDataBlockPointer) As ArchiveDataBlock
 
             If blockPointer IsNot Nothing Then
-                Return New ArchiveDataBlock(blockPointer.Index, m_dataBlockSize, m_fileStream.Name)
+                Dim fileName As String
+                SyncLock m_fileStream
+                    fileName = m_fileStream.Name
+                End SyncLock
+                Return New ArchiveDataBlock(blockPointer.Index, m_dataBlockSize, fileName)
             Else
                 Return Nothing
             End If

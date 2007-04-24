@@ -34,6 +34,7 @@ Namespace Files
         Private m_settingsCategoryName As String
 
         Private m_fileStream As FileStream
+        Private m_dataBlockList As List(Of ArchiveDataBlock)
         Private m_historicArchiveFileList As List(Of ArchiveFileInfo)
         Private m_rolloverPreparationThread As Thread
         Private m_buildHistoricFileListThread As Thread
@@ -271,6 +272,7 @@ Namespace Files
 
                     m_name = AbsolutePath(m_name)
                     If m_type = ArchiveFileType.Standby Then m_name = StandbyArchiveFileName
+
                     If Not Directory.Exists(JustPath(m_name)) Then Directory.CreateDirectory(JustPath(m_name))
                     If File.Exists(m_name) Then
                         ' File has been created already, so we just need to read it.
@@ -289,6 +291,8 @@ Namespace Files
                     ' Make sure that the necessary files are available and ready for use.
                     If Not m_stateFile.IsOpen Then m_stateFile.Open()
                     If Not m_intercomFile.IsOpen Then m_intercomFile.Open()
+
+                    m_dataBlockList = New List(Of ArchiveDataBlock)(CreateArray(Of ArchiveDataBlock)(m_stateFile.Records.Count))
 
                     If m_type = ArchiveFileType.Active Then
                         ' We'll make sure that the intercom file has the right information. This is done to ensure
@@ -333,6 +337,14 @@ Namespace Files
 
                 If m_saveOnClose Then Save()
 
+                ' Abort any asynchronous processing.
+                m_rolloverPreparationThread.Abort()
+                m_buildHistoricFileListThread.Abort()
+
+                ' Stop the historic and out-of-sequence data queues.
+                m_historicDataQueue.Stop()
+                m_outOfSequenceDataQueue.Stop()
+
                 ' Dispose the file allocation table of the file.
                 If m_fat IsNot Nothing Then
                     m_fat.Dispose()
@@ -341,17 +353,19 @@ Namespace Files
 
                 ' Dispose the file stream used primarily by the file allocation table.
                 If m_fileStream IsNot Nothing Then
-                    m_fileStream.Dispose()
+                    SyncLock m_fileStream
+                        m_fileStream.Dispose()
+                    End SyncLock
                     m_fileStream = Nothing
                 End If
 
-                ' Abort any asynchronous processing.
-                m_rolloverPreparationThread.Abort()
-                m_buildHistoricFileListThread.Abort()
-
-                ' Stop the historic and out-of-sequence data queues.
-                m_historicDataQueue.Stop()
-                m_outOfSequenceDataQueue.Stop()
+                If m_dataBlockList IsNot Nothing Then
+                    For Each datablock As ArchiveDataBlock In m_dataBlockList
+                        If datablock IsNot Nothing Then datablock.Dispose()
+                    Next
+                    m_dataBlockList.Clear()
+                    m_dataBlockList = Nothing
+                End If
 
                 ' Stop watching to historic archive files.
                 CurrentLocationFileSystemWatcher.EnableRaisingEvents = False
@@ -365,23 +379,23 @@ Namespace Files
                     m_historicArchiveFileList = Nothing
                 End If
 
-                If m_type <> ArchiveFileType.Standby AndAlso m_stateFile.IsOpen Then
-                    ' The archive file is opened multiple times (by ArchiveDataBlock) only when data is being
-                    ' written to the file. In case the current file is for "standby" purpose, no data will be 
-                    ' written to it and therefore, the file will not be opened multiple time in "standby" mode.
-                    For i As Integer = 0 To m_stateFile.Records.Count - 1
-                        ' We'll release all the data blocks that were being used by the file.
-                        If m_stateFile.Records(i).ActiveDataBlock IsNot Nothing AndAlso _
-                                ((m_type = ArchiveFileType.Active AndAlso Not m_stateFile.Records(i).ActiveDataBlock.IsForHistoricData) OrElse _
-                                (m_type = ArchiveFileType.Historic AndAlso m_stateFile.Records(i).ActiveDataBlock.IsForHistoricData)) Then
-                            ' We'll deallocate the data block used by this file. If the current file is a historic 
-                            ' file, it is safe to assume that a data block marked as "for historic data" is being
-                            ' used by the current file because no more than one historic file will be open at once.
-                            m_stateFile.Records(i).ActiveDataBlock.Dispose()
-                            m_stateFile.Records(i).ActiveDataBlock = Nothing
-                        End If
-                    Next
-                End If
+                'If m_type <> ArchiveFileType.Standby AndAlso m_stateFile.IsOpen Then
+                '    ' The archive file is opened multiple times (by ArchiveDataBlock) only when data is being
+                '    ' written to the file. In case the current file is for "standby" purpose, no data will be 
+                '    ' written to it and therefore, the file will not be opened multiple time in "standby" mode.
+                '    For i As Integer = 0 To m_stateFile.Records.Count - 1
+                '        ' We'll release all the data blocks that were being used by the file.
+                '        If m_stateFile.Records(i).ActiveDataBlock IsNot Nothing AndAlso _
+                '                ((m_type = ArchiveFileType.Active AndAlso Not m_stateFile.Records(i).ActiveDataBlock.IsForHistoricData) OrElse _
+                '                (m_type = ArchiveFileType.Historic AndAlso m_stateFile.Records(i).ActiveDataBlock.IsForHistoricData)) Then
+                '            ' We'll deallocate the data block used by this file. If the current file is a historic 
+                '            ' file, it is safe to assume that a data block marked as "for historic data" is being
+                '            ' used by the current file because no more than one historic file will be open at once.
+                '            m_stateFile.Records(i).ActiveDataBlock.Dispose()
+                '            m_stateFile.Records(i).ActiveDataBlock = Nothing
+                '        End If
+                '    Next
+                'End If
 
                 RaiseEvent FileClosed(Me, EventArgs.Empty)
             End If
@@ -402,16 +416,16 @@ Namespace Files
         Public Sub Rollover()
 
             If m_type = ArchiveFileType.Active Then
-                Dim historyFile As String = HistoryArchiveFileName
-                Dim standbyFile As String = StandbyArchiveFileName
-
                 Try
                     RaiseEvent RolloverStart(Me, EventArgs.Empty)
 
-                    ' Signal other threads using the current archive file to wait until the rollover is complete.
+                    ' Notify other threads that rollover is in progress.
                     m_rolloverWaitHandle.Reset()
 
-                    ' Signal the server that we're are performing rollover so it'll let go of this file.
+                    Dim historyFileName As String = HistoryArchiveFileName
+                    Dim standbyFileName As String = StandbyArchiveFileName
+
+                    ' Notify DW Server that rollover is in progress.
                     m_intercomFile.Records(0).RolloverInProgress = True
                     m_intercomFile.Save()
                     Close()
@@ -419,32 +433,41 @@ Namespace Files
                     ' CRITICAL: Exception can be encountered if exclusive lock to the current file cannot be obtained.
                     '           Possible if the server fails to give up the file or for some reason the current file
                     '           doesn't release all locks on the file.
-                    WaitForWriteLock(m_name, 60)        ' Wait for the server to release the file.
-                    File.Move(m_name, historyFile)      ' Make the active archive file, historic archive file.
-                    If File.Exists(standbyFile) Then
-                        ' We have a "standby" archive file for us to use, so we'll use it. It is possible that the
-                        ' "standby" file may not be available for use if it could not be created due to insufficient
-                        ' disk space. If that's the case, Open() below will try to create a new archive file, but
-                        ' will only succeed if there is enough disk space.
-                        File.Move(standbyFile, m_name)  ' Make the standby archive file, active archive file.
+                    If File.Exists(m_name) Then
+                        Try
+                            WaitForWriteLock(m_name, 60)        ' Wait for the server to release the file.
+                            File.Move(m_name, historyFileName)  ' Make the active archive file historic.
+                            If File.Exists(standbyFileName) Then
+                                ' We have a "standby" archive file for us to use, so we'll use it. It is possible that
+                                ' the "standby" file may not be available for use if it could not be created due to 
+                                ' insufficient disk space during the "rollover preparation stage". If that's the case, 
+                                ' Open() below will try to create a new archive file, but will only succeed if there 
+                                ' is enough disk space.
+                                File.Move(standbyFileName, m_name)  ' Make the standby archive file active.
+                            End If
+                        Catch ex As Exception
+                            Open()
+                            Throw
+                        End Try
                     End If
 
                     ' CRITICAL: Exception can be encountered if a "standby" archive is not present for us to use and
                     '           we cannot create a new archive file probably because there isn't enough disk space.
                     Try
                         Open()
-                        ' We're now done with the rollover process, so we must inform the server of this.
+                        ' Notify DW Server that rollover is complete.
                         m_intercomFile.Records(0).RolloverInProgress = False
                         m_intercomFile.Save()
+
+                        ' Notify other threads that rollover is complete.
+                        m_rolloverWaitHandle.Set()
+
+                        RaiseEvent RolloverComplete(Me, EventArgs.Empty)
                     Catch ex As Exception
                         Close() ' Close the file if we fail to open it.
+                        File.Delete(m_name)
                         Throw   ' Rethrow the exception so that the exception event can be raised.
                     End Try
-
-                    ' At this point, rollover is considered to be complete, so other threads can resume operation.
-                    m_rolloverWaitHandle.Set()
-
-                    RaiseEvent RolloverComplete(Me, EventArgs.Empty)
                 Catch ex As Exception
                     RaiseEvent RolloverException(Me, New ExceptionEventArgs(ex))
                 End Try
@@ -465,26 +488,30 @@ Namespace Files
 
                 If pointData.TimeTag.CompareTo(m_fat.FileStartTime) >= 0 Then
                     ' The data belongs to this file.
-                    Dim pointState As PointState = m_stateFile.Read(pointData.Definition.PointID)
+                    Dim pointID As Integer = pointData.Definition.PointID
+                    Dim pointIndex As Integer = pointID - 1
+                    Dim pointState As PointState = m_stateFile.Read(pointID)
                     If pointData.TimeTag.CompareTo(pointState.LastArchivedValue.TimeTag) >= 0 Then
                         ' The data is in sequence.
                         RaiseEvent CurrentDataReceived(Me, EventArgs.Empty)
 
                         If ToBeArchived(pointData, pointState) Then
                             ' Data failed compression test - write it to current file.
-                            If pointState.ActiveDataBlock Is Nothing OrElse _
-                                    (pointState.ActiveDataBlock IsNot Nothing AndAlso pointState.ActiveDataBlock.SlotsAvailable <= 0) Then
+                            If m_dataBlockList(pointIndex) Is Nothing OrElse _
+                                    (m_dataBlockList(pointIndex) IsNot Nothing AndAlso m_dataBlockList(pointIndex).SlotsAvailable <= 0) Then
                                 ' We either don't have a active data block where we can archive the point data or we 
                                 ' have a active data block but it is full. So, we have to request a new data block 
                                 ' from the FAT in order to write the data.
+
+                                If m_dataBlockList(pointIndex) IsNot Nothing Then
+                                    ' Release the previously used data block before requesting a new one.
+                                    m_dataBlockList(pointIndex).Dispose()
+                                    m_dataBlockList(pointIndex) = Nothing
+                                End If
+
                                 Select Case m_type
                                     Case ArchiveFileType.Active
-                                        If pointState.ActiveDataBlock IsNot Nothing AndAlso _
-                                                Not pointState.ActiveDataBlock.IsForHistoricData Then
-                                            ' Release the previously used data block before requesting a new one.
-                                            pointState.ActiveDataBlock.Dispose()
-                                        End If
-                                        pointState.ActiveDataBlock = m_fat.RequestDataBlock(pointData.Definition.PointID, pointData.TimeTag)
+                                        m_dataBlockList(pointIndex) = m_fat.RequestDataBlock(pointID, pointData.TimeTag)
 
                                         If Not File.Exists(StandbyArchiveFileName) AndAlso Not m_rolloverPreparationThread.IsAlive AndAlso _
                                                 m_fat.DataBlocksAvailable < m_fat.DataBlockCount * (1 - (m_rolloverPreparationThreshold / 100)) Then
@@ -496,20 +523,13 @@ Namespace Files
                                             m_rolloverPreparationThread.Start()
                                         End If
                                     Case ArchiveFileType.Historic
-                                        If pointState.ActiveDataBlock IsNot Nothing AndAlso _
-                                                pointState.ActiveDataBlock.IsForHistoricData Then
-                                            ' Release the previously used data block before requesting a new one.
-                                            pointState.ActiveDataBlock.Dispose()
-                                        End If
-                                        pointState.ActiveDataBlock = m_fat.RequestDataBlock(pointData.Definition.PointID, pointData.TimeTag, True)
+                                        m_dataBlockList(pointIndex) = m_fat.RequestDataBlock(pointID, pointData.TimeTag, True)
                                 End Select
                             End If
 
-                            If pointState.ActiveDataBlock IsNot Nothing AndAlso _
-                                    ((m_type = ArchiveFileType.Active AndAlso Not pointState.ActiveDataBlock.IsForHistoricData) OrElse _
-                                    (m_type = ArchiveFileType.Historic AndAlso pointState.ActiveDataBlock.IsForHistoricData)) Then
+                            If m_dataBlockList(pointIndex) IsNot Nothing Then
                                 ' We have a data block to which we can write the data.
-                                pointState.ActiveDataBlock.Write(pointData)
+                                m_dataBlockList(pointIndex).Write(pointData)
                                 m_fat.EventsArchived += 1
 
                                 If m_type = ArchiveFileType.Active Then m_fat.FileEndTime = pointData.TimeTag
@@ -676,9 +696,9 @@ Namespace Files
 
         Public Sub LoadSettings() Implements IPersistSettings.LoadSettings
 
-            If m_persistSettings Then
-                Try
-                    With TVA.Configuration.Common.CategorizedSettings(m_settingsCategoryName)
+            Try
+                With TVA.Configuration.Common.CategorizedSettings(m_settingsCategoryName)
+                    If .Count > 0 Then
                         Name = .Item("Name").GetTypedValue(m_name)
                         Type = .Item("Type").GetTypedValue(m_type)
                         Size = .Item("Size").GetTypedValue(m_size)
@@ -691,11 +711,11 @@ Namespace Files
                         OffloadThreshold = .Item("OffloadThreshold").GetTypedValue(m_offloadThreshold)
                         CompressData = .Item("CompressData").GetTypedValue(m_compressData)
                         DiscardOoSData = .Item("DiscardOoSData").GetTypedValue(m_discardOoSData)
-                    End With
-                Catch ex As Exception
-                    ' We'll encounter exceptions if the settings are not present in the config file.
-                End Try
-            End If
+                    End If
+                End With
+            Catch ex As Exception
+                ' We'll encounter exceptions if the settings are not present in the config file.
+            End Try
 
         End Sub
 
@@ -1266,7 +1286,7 @@ Namespace Files
             If m_rolloverOnFull Then
                 Do While True
                     Rollover()  ' Start the rollover process.
-                    If IsOpen Then Exit Do ' Rollover is successful.
+                    If m_rolloverWaitHandle.WaitOne(1, False) Then Exit Do ' Rollover is successful.
                 Loop
             End If
 

@@ -29,7 +29,7 @@ Namespace ErrorManagement
 
 #Region " Member Declaration "
 
-        Private m_autoStart As Boolean
+        Private m_autoRegister As Boolean
         Private m_logToUI As Boolean
         Private m_logToFile As Boolean
         Private m_logToEmail As Boolean
@@ -64,12 +64,12 @@ Namespace ErrorManagement
         Public Delegate Sub LoggerMethodSignature(ByVal ex As Exception)
 
         <Category("Behavior")> _
-        Public Property AutoStart() As Boolean
+        Public Property AutoRegister() As Boolean
             Get
-                Return m_autoStart
+                Return m_autoRegister
             End Get
             Set(ByVal value As Boolean)
-                m_autoStart = value
+                m_autoRegister = value
             End Set
         End Property
 
@@ -259,7 +259,7 @@ Namespace ErrorManagement
             End Get
         End Property
 
-        Public Sub Start()
+        Public Sub Register()
 
             If Not Debugger.IsAttached Then
                 ' For winform applications. 
@@ -269,11 +269,9 @@ Namespace ErrorManagement
                 AddHandler System.AppDomain.CurrentDomain.UnhandledException, AddressOf UnhandledException
             End If
 
-            LogFile.Name = LogFileName
-
         End Sub
 
-        Public Sub [Stop]()
+        Public Sub Unregister()
 
             If Not Debugger.IsAttached Then
                 RemoveHandler System.Windows.Forms.Application.ThreadException, AddressOf UnhandledThreadException
@@ -487,7 +485,7 @@ Namespace ErrorManagement
             Try
                 With TVA.Configuration.Common.CategorizedSettings(m_settingsCategoryName)
                     If .Count > 0 Then
-                        AutoStart = .Item("AutoStart").GetTypedValue(m_autoStart)
+                        AutoRegister = .Item("AutoRegister").GetTypedValue(m_autoRegister)
                         LogToUI = .Item("LogToUI").GetTypedValue(m_logToUI)
                         LogToFile = .Item("LogToFile").GetTypedValue(m_logToFile)
                         LogToEmail = .Item("LogToEmail").GetTypedValue(m_logToEmail)
@@ -511,9 +509,9 @@ Namespace ErrorManagement
                 Try
                     With TVA.Configuration.Common.CategorizedSettings(m_settingsCategoryName)
                         .Clear()
-                        With .Item("AutoStart", True)
-                            .Value = m_autoStart.ToString()
-                            .Description = "True if the logger is to be started automatically after initialization is complete; otherwise False."
+                        With .Item("AutoRegister", True)
+                            .Value = m_autoRegister.ToString()
+                            .Description = "True if the logger is to be automatically registered for handling unhandled exceptions after initialization is complete; otherwise False."
                         End With
                         With .Item("LogToUI", True)
                             .Value = m_logToUI.ToString()
@@ -572,7 +570,7 @@ Namespace ErrorManagement
 
             If Not DesignMode Then
                 LoadSettings()              ' Load settings from the config file.
-                If m_autoStart Then Start() ' Start the logger automatically if specified.
+                If m_autoRegister Then Register() ' Start the logger automatically if specified.
                 m_parentAssembly = System.Reflection.Assembly.GetCallingAssembly()
             End If
 
@@ -794,6 +792,7 @@ Namespace ErrorManagement
                 Try
                     m_logToFileOK = False
 
+                    LogFile.Name = LogFileName
                     If Not LogFile.IsOpen Then LogFile.Open()
                     LogFile.WriteTimestampedLine(exceptionMessage)
 

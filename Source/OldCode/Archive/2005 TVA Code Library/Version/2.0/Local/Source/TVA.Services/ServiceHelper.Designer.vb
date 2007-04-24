@@ -70,7 +70,7 @@ Partial Class ServiceHelper
         '
         'GlobalExceptionLogger
         '
-        Me.GlobalExceptionLogger.AutoStart = False
+        Me.GlobalExceptionLogger.AutoRegister = False
         Me.GlobalExceptionLogger.ContactPersonName = Nothing
         Me.GlobalExceptionLogger.ContactPersonPhone = Nothing
         Me.GlobalExceptionLogger.EmailRecipients = Nothing
