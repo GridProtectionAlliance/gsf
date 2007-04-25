@@ -1300,13 +1300,15 @@ Namespace Files
 
             If IsOpen Then
                 ' Attempt to update the historic file list only if the current file is open.
+                Dim historicFileListUpdated As Boolean = False
                 Dim historicFileInfo As ArchiveFileInfo = GetHistoricFileInfo(e.FullPath)
                 SyncLock m_historicArchiveFileList
                     If historicFileInfo IsNot Nothing AndAlso Not m_historicArchiveFileList.Contains(historicFileInfo) Then
                         m_historicArchiveFileList.Add(historicFileInfo)
-                        RaiseEvent HistoricFileListUpdated(Me, EventArgs.Empty)
+                        historicFileListUpdated = True
                     End If
                 End SyncLock
+                If historicFileListUpdated Then RaiseEvent HistoricFileListUpdated(Me, EventArgs.Empty)
             End If
 
         End Sub
@@ -1315,13 +1317,15 @@ Namespace Files
 
             If IsOpen Then
                 ' Attempt to update the historic file list only if the current file is open.
+                Dim historicFileListUpdated As Boolean = False
                 Dim historicFileInfo As ArchiveFileInfo = GetHistoricFileInfo(e.FullPath)
                 SyncLock m_historicArchiveFileList
                     If historicFileInfo IsNot Nothing AndAlso m_historicArchiveFileList.Contains(historicFileInfo) Then
                         m_historicArchiveFileList.Remove(historicFileInfo)
-                        RaiseEvent HistoricFileListUpdated(Me, EventArgs.Empty)
+                        historicFileListUpdated = True
                     End If
                 End SyncLock
+                If historicFileListUpdated Then RaiseEvent HistoricFileListUpdated(Me, EventArgs.Empty)
             End If
 
         End Sub
@@ -1332,13 +1336,15 @@ Namespace Files
                 ' Attempt to update the historic file list only if the current file is open.
                 If String.Compare(JustFileExtension(e.OldFullPath), Extension, True) = 0 Then
                     Try
+                        Dim historicFileListUpdated As Boolean = False
                         Dim oldFileInfo As ArchiveFileInfo = GetHistoricFileInfo(e.OldFullPath)
                         SyncLock m_historicArchiveFileList
                             If oldFileInfo IsNot Nothing AndAlso m_historicArchiveFileList.Contains(oldFileInfo) Then
                                 m_historicArchiveFileList.Remove(oldFileInfo)
-                                RaiseEvent HistoricFileListUpdated(Me, EventArgs.Empty)
+                                historicFileListUpdated = True
                             End If
                         End SyncLock
+                        If historicFileListUpdated Then RaiseEvent HistoricFileListUpdated(Me, EventArgs.Empty)
                     Catch ex As Exception
                         ' Ignore any exception we might encounter here if an archive file being renamed to a 
                         ' historic archive file. This might happen if someone is renaming files manually.
@@ -1347,13 +1353,15 @@ Namespace Files
 
                 If String.Compare(JustFileExtension(e.FullPath), Extension, True) = 0 Then
                     Try
+                        Dim historicFileListUpdated As Boolean = False
                         Dim newFileInfo As ArchiveFileInfo = GetHistoricFileInfo(e.FullPath)
                         SyncLock m_historicArchiveFileList
                             If newFileInfo IsNot Nothing AndAlso Not m_historicArchiveFileList.Contains(newFileInfo) Then
                                 m_historicArchiveFileList.Add(newFileInfo)
-                                RaiseEvent HistoricFileListUpdated(Me, EventArgs.Empty)
+                                historicFileListUpdated = True
                             End If
                         End SyncLock
+                        If historicFileListUpdated Then RaiseEvent HistoricFileListUpdated(Me, EventArgs.Empty)
                     Catch ex As Exception
                         ' Ignore any exception we might encounter if a historic archive file is being renamed to 
                         ' something else. This might happen if someone is renaming files manually.
