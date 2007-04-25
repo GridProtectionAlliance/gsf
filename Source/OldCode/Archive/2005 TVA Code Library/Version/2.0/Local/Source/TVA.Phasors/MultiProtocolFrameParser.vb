@@ -83,6 +83,7 @@ Namespace Phasors
         Private m_configurationFrame As IConfigurationFrame
         Private m_dataStreamStartTime As Long
         Private m_executeParseOnSeparateThread As Boolean
+        Private m_autoRepeatCapturedPlayback As Boolean
         Private m_totalFramesReceived As Long
         Private m_frameRateTotal As Int32
         Private m_byteRateTotal As Int32
@@ -315,7 +316,11 @@ Namespace Phasors
                     Case TransportProtocol.Serial
                         m_communicationClient = New SerialClient
                     Case TransportProtocol.File
-                        m_communicationClient = New FileClient
+                        With New FileClient
+                            ' For file based playback, we allow the option of auto-repeat
+                            .AutoRepeat = m_autoRepeatCapturedPlayback
+                            m_communicationClient = .This
+                        End With
                 End Select
 
                 If m_communicationClient IsNot Nothing Then
@@ -378,6 +383,15 @@ Namespace Phasors
                 ' Since frame parsers support dynamic changes in this value, we'll pass this value along to the
                 ' the frame parser if one has been established...
                 If m_frameParser IsNot Nothing Then m_frameParser.ExecuteParseOnSeparateThread = value
+            End Set
+        End Property
+
+        Public Property AutoRepeatCapturedPlayback() As Boolean
+            Get
+                Return m_autoRepeatCapturedPlayback
+            End Get
+            Set(ByVal value As Boolean)
+                m_autoRepeatCapturedPlayback = value
             End Set
         End Property
 
