@@ -29,8 +29,6 @@ Namespace ErrorManagement
             m_customLoggers = New List(Of LoggerMethodSignature)()
             m_settingsCategoryName = Me.GetType().Name
 
-            m_parentAssembly = System.Reflection.Assembly.GetCallingAssembly()
-
         End Sub
 
         'Component overrides dispose to clean up the component list.

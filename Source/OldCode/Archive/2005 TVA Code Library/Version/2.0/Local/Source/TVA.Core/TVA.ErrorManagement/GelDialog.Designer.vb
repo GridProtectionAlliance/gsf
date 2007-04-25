@@ -167,6 +167,7 @@ Partial Class GelDialog
             Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
             Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
             Me.ClientSize = New System.Drawing.Size(472, 573)
+            Me.ControlBox = False
             Me.Controls.Add(Me.ButtonOK)
             Me.Controls.Add(Me.ButtonMore)
             Me.Controls.Add(Me.RichTextBoxMoreInfo)
@@ -178,7 +179,10 @@ Partial Class GelDialog
             Me.Controls.Add(Me.RichTextBoxError)
             Me.Controls.Add(Me.LabelError)
             Me.Controls.Add(Me.PictureBoxIcon)
+            Me.MaximizeBox = False
+            Me.MinimizeBox = False
             Me.Name = "GelDialog"
+            Me.ShowInTaskbar = False
             Me.Text = "{0} has encountered a problem"
             CType(Me.PictureBoxIcon, System.ComponentModel.ISupportInitialize).EndInit()
             Me.ResumeLayout(False)

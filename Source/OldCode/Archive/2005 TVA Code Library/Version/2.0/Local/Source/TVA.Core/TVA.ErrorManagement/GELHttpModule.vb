@@ -37,7 +37,8 @@ Namespace ErrorManagement
 
             With New GlobalExceptionLogger()
                 ' We'll log the encountered exception.
-                .LoadSettings()
+                .BeginInit()
+                .EndInit()
                 .Log(HttpContext.Current.Server.GetLastError())
             End With
 
