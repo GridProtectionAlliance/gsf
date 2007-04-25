@@ -133,10 +133,16 @@ Namespace Phasors.BpaPdcStream
                 End If
             End Get
             Set(ByVal value As String)
-                m_sectionEntry = value
+                m_sectionEntry = value.Trim()
 
                 ' Get ID label as substring of section entry
-                If Not String.IsNullOrEmpty(value) Then MyBase.IDLabel = m_sectionEntry.Substring(0, MyBase.IDLabelLength)
+                If Not String.IsNullOrEmpty(m_sectionEntry) Then
+                    If m_sectionEntry.Length > MyBase.IDLabelLength Then
+                        MyBase.IDLabel = m_sectionEntry.Substring(0, MyBase.IDLabelLength)
+                    Else
+                        MyBase.IDLabel = m_sectionEntry
+                    End If
+                End If
             End Set
         End Property
 
