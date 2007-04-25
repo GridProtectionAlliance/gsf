@@ -246,15 +246,15 @@ Namespace IO
                 Dim recordCount As Integer = Convert.ToInt32(m_fileStream.Length \ binaryImage.Length)
 
                 m_fileRecords.Clear()
-                SyncLock m_fileStream
-                    ' Create records from the data in the file.
-                    For i As Integer = 1 To recordCount
+                ' Create records from the data in the file.
+                For i As Integer = 1 To recordCount
+                    SyncLock m_fileStream
                         m_fileStream.Read(binaryImage, 0, binaryImage.Length)
                         m_fileRecords.Add(NewRecord(i, binaryImage))
+                    End SyncLock
 
-                        RaiseEvent DataLoadProgress(Me, New ProgressEventArgs(Of Integer)(recordCount, i))
-                    Next
-                End SyncLock
+                    RaiseEvent DataLoadProgress(Me, New ProgressEventArgs(Of Integer)(recordCount, i))
+                Next
 
                 ' Make sure that we have the minimum number of records specified.
                 For i As Integer = m_fileRecords.Count + 1 To m_minimumRecordCount
@@ -276,17 +276,20 @@ Namespace IO
 
                 RaiseEvent DataSaveStart(Me, EventArgs.Empty)
 
+                ' Set the cursor to BOF before we start writing to the file.
                 SyncLock m_fileStream
-                    ' Set the cursor to BOF before we start writing to the file.
                     m_fileStream.Seek(0, SeekOrigin.Begin)
-                    ' Write all of the records to the file.
-                    For i As Integer = 0 To m_fileRecords.Count - 1
-                        m_fileStream.Write(m_fileRecords(i).BinaryImage, 0, RecordSize)
-
-                        RaiseEvent DataSaveProgress(Me, New ProgressEventArgs(Of Integer)(m_fileRecords.Count, i + 1))
-                    Next
-                    m_fileStream.Flush()    ' Ensure that the data is written to the file.
                 End SyncLock
+
+                ' Write all of the records to the file.
+                For i As Integer = 0 To m_fileRecords.Count - 1
+                    SyncLock m_fileStream
+                        m_fileStream.Write(m_fileRecords(i).BinaryImage, 0, RecordSize)
+                    End SyncLock
+
+                    RaiseEvent DataSaveProgress(Me, New ProgressEventArgs(Of Integer)(m_fileRecords.Count, i + 1))
+                Next
+                m_fileStream.Flush()    ' Ensure that the data is written to the file.
 
                 RaiseEvent DataSaveComplete(Me, EventArgs.Empty)
             Else
