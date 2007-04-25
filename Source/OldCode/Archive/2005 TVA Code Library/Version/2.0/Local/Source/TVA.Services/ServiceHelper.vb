@@ -141,48 +141,48 @@ Public Class ServiceHelper
         End Set
     End Property
 
-    '''' <summary>
-    '''' Gets or sets the data used for initializing the communication server.
-    '''' </summary>
-    '''' <value></value>
-    '''' <returns>The data used for initializing the communication server.</returns>
-    '<Category("Communication"), DefaultValue(GetType(String), "Protocol=Tcp; Port=6500")> _
-    'Public Property ConfigurationString() As String
-    '    Get
-    '        Return m_configurationString
-    '    End Get
-    '    Set(ByVal value As String)
-    '        If Not String.IsNullOrEmpty(value) Then
-    '            If TVA.Text.Common.ParseKeyValuePairs(value).ContainsKey("protocol") Then
-    '                m_configurationString = value
-    '            Else
-    '                Throw New ArgumentException("Communication protocol must be specified.", "ConfigurationString")
-    '            End If
-    '        Else
-    '            Throw New ArgumentNullException("ConfigurationString")
-    '        End If
-    '    End Set
-    'End Property
+    ''' <summary>
+    ''' Gets or sets the data used for initializing the communication server.
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns>The data used for initializing the communication server.</returns>
+    <Category("Communication"), DefaultValue(GetType(String), "Protocol=Tcp; Port=6500")> _
+    Public Property ConfigurationString() As String
+        Get
+            Return m_configurationString
+        End Get
+        Set(ByVal value As String)
+            If Not String.IsNullOrEmpty(value) Then
+                If TVA.Text.Common.ParseKeyValuePairs(value).ContainsKey("protocol") Then
+                    m_configurationString = value
+                Else
+                    Throw New ArgumentException("Communication protocol must be specified.", "ConfigurationString")
+                End If
+            Else
+                Throw New ArgumentNullException("ConfigurationString")
+            End If
+        End Set
+    End Property
 
-    '<Category("Communication"), DefaultValue(GetType(TVA.Security.Cryptography.EncryptLevel), "Level1")> _
-    'Public Property Encryption() As TVA.Security.Cryptography.EncryptLevel
-    '    Get
-    '        Return m_encryption
-    '    End Get
-    '    Set(ByVal value As TVA.Security.Cryptography.EncryptLevel)
-    '        m_encryption = value
-    '    End Set
-    'End Property
+    <Category("Communication"), DefaultValue(GetType(TVA.Security.Cryptography.EncryptLevel), "Level1")> _
+    Public Property Encryption() As TVA.Security.Cryptography.EncryptLevel
+        Get
+            Return m_encryption
+        End Get
+        Set(ByVal value As TVA.Security.Cryptography.EncryptLevel)
+            m_encryption = value
+        End Set
+    End Property
 
-    '<Category("Communication"), DefaultValue(GetType(Boolean), "True")> _
-    'Public Property SecureSession() As Boolean
-    '    Get
-    '        Return m_secureSession
-    '    End Get
-    '    Set(ByVal value As Boolean)
-    '        m_secureSession = value
-    '    End Set
-    'End Property
+    <Category("Communication"), DefaultValue(GetType(Boolean), "True")> _
+    Public Property SecureSession() As Boolean
+        Get
+            Return m_secureSession
+        End Get
+        Set(ByVal value As Boolean)
+            m_secureSession = value
+        End Set
+    End Property
 
     <Browsable(False)> _
     Public ReadOnly Property Processes() As Dictionary(Of String, ServiceProcess)
@@ -222,25 +222,25 @@ Public Class ServiceHelper
     Public Sub OnStart(ByVal args As String())
 
         If m_service IsNot Nothing Then
-            Select Case True
-                Case TcpServer.Enabled
-                    m_communicationServer = TcpServer
-                Case UdpServer.Enabled
-                    m_communicationServer = UdpServer
-            End Select
-            TcpServer.HandshakePassphrase = m_service.ServiceName
-            UdpServer.HandshakePassphrase = m_service.ServiceName
-            'm_communicationServer = TVA.Communication.Common.CreateCommunicationServer(m_configurationString)
-            'm_communicationServer.Handshake = True
-            'm_communicationServer.HandshakePassphrase = m_service.ServiceName
-            'm_communicationServer.Encryption = m_encryption
-            'm_communicationServer.SecureSession = m_secureSession
-            'Select Case m_communicationServer.Protocol
-            '    Case TransportProtocol.Tcp
-            '        DirectCast(m_communicationServer, TcpServer).PayloadAware = True
-            '    Case TransportProtocol.Udp
-            '        DirectCast(m_communicationServer, UdpServer).PayloadAware = True
+            'Select Case True
+            '    Case TcpServer.Enabled
+            '        m_communicationServer = TcpServer
+            '    Case UdpServer.Enabled
+            '        m_communicationServer = UdpServer
             'End Select
+            'TcpServer.HandshakePassphrase = m_service.ServiceName
+            'UdpServer.HandshakePassphrase = m_service.ServiceName
+            m_communicationServer = TVA.Communication.Common.CreateCommunicationServer(m_configurationString)
+            m_communicationServer.Handshake = True
+            m_communicationServer.HandshakePassphrase = m_service.ServiceName
+            m_communicationServer.Encryption = m_encryption
+            m_communicationServer.SecureSession = m_secureSession
+            Select Case m_communicationServer.Protocol
+                Case TransportProtocol.Tcp
+                    DirectCast(m_communicationServer, TcpServer).PayloadAware = True
+                Case TransportProtocol.Udp
+                    DirectCast(m_communicationServer, UdpServer).PayloadAware = True
+            End Select
 
             m_serviceComponents.Add(ScheduleManager)
             m_serviceComponents.Add(m_communicationServer)
