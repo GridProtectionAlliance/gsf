@@ -24,14 +24,22 @@ Imports TVA.Configuration.Common
 
 <ToolboxBitmap(GetType(ClientHelper))> _
 Public Class ClientHelper
-    Implements ISupportInitialize
+    Implements IPersistSettings, ISupportInitialize
+
+#Region " Member Declaration "
 
     Private m_serviceName As String
     Private m_connectionString As String
     Private m_encryption As TVA.Security.Cryptography.EncryptLevel
     Private m_secureSession As Boolean
+    Private m_persistSettings As Boolean
+    Private m_settingsCategoryName As String
 
     Private WithEvents m_communicationClient As ICommunicationClient
+
+#End Region
+
+#Region " Event Declaration "
 
     ''' <summary>
     ''' Occurs when the service client must update its status.
@@ -53,8 +61,12 @@ Public Class ClientHelper
     ''' </summary>
     Public Event ProcessStateChanged(ByVal sender As Object, ByVal e As ObjectStateChangedEventArgs(Of ProcessState))
 
+#End Region
+
+#Region " Code Scope: Public "
+
     <Category("Client Helper")> _
-    Public Property ServiceName() As String
+Public Property ServiceName() As String
         Get
             Return m_serviceName
         End Get
@@ -198,7 +210,109 @@ Public Class ClientHelper
 
     End Sub
 
-#Region " CommunicationClient Events "
+#Region " Interface Implementation "
+
+#Region " IPersistSettings "
+
+    Public Property PersistSettings() As Boolean Implements IPersistSettings.PersistSettings
+        Get
+            Return m_persistSettings
+        End Get
+        Set(ByVal value As Boolean)
+            m_persistSettings = value
+        End Set
+    End Property
+
+    Public Property SettingsCategoryName() As String Implements IPersistSettings.SettingsCategoryName
+        Get
+            Return m_settingsCategoryName
+        End Get
+        Set(ByVal value As String)
+            If Not String.IsNullOrEmpty(value) Then
+                m_settingsCategoryName = value
+            Else
+                Throw New ArgumentNullException("ConfigurationCategory")
+            End If
+        End Set
+    End Property
+
+    Public Sub LoadSettings() Implements IPersistSettings.LoadSettings
+
+        Try
+            With TVA.Configuration.Common.CategorizedSettings(m_settingsCategoryName)
+                If .Count > 0 Then
+                    ServiceName = .Item("ServiceName").GetTypedValue(m_serviceName)
+                    ConnectionString = .Item("ConnectionString").GetTypedValue(m_connectionString)
+                    Encryption = .Item("Encryption").GetTypedValue(m_encryption)
+                    SecureSession = .Item("SecureSession").GetTypedValue(m_secureSession)
+                End If
+            End With
+        Catch ex As Exception
+            ' We'll encounter exceptions if the settings are not present in the config file.
+        End Try
+
+    End Sub
+
+    Public Sub SaveSettings() Implements IPersistSettings.SaveSettings
+
+        If m_persistSettings Then
+            Try
+                With TVA.Configuration.Common.CategorizedSettings(m_settingsCategoryName)
+                    .Clear()
+                    With .Item("ServiceName", True)
+                        .Value = ServiceName
+                        .Description = ""
+                    End With
+                    With .Item("ConnectionString", True)
+                        .Value = ConnectionString
+                        .Description = ""
+                    End With
+                    With .Item("Encryption", True)
+                        .Value = Encryption.ToString()
+                        .Description = ""
+                    End With
+                    With .Item("SecureSession", True)
+                        .Value = SecureSession.ToString()
+                        .Description = ""
+                    End With
+                End With
+                TVA.Configuration.Common.SaveSettings()
+            Catch ex As Exception
+                ' We might encounter an exception if for some reason the settings cannot be saved to the config file.
+            End Try
+        End If
+
+    End Sub
+
+#End Region
+
+#Region " ISupportInitialize "
+
+    Public Sub BeginInit() Implements System.ComponentModel.ISupportInitialize.BeginInit
+
+        ' We don't need to do anything before the component is initialized.
+
+    End Sub
+
+    Public Sub EndInit() Implements System.ComponentModel.ISupportInitialize.EndInit
+
+        If Not DesignMode Then
+            LoadSettings()  ' Load settings from the config file.
+        End If
+
+    End Sub
+
+#End Region
+
+#End Region
+
+#End Region
+
+#Region " Code Scope: Private "
+
+#Region " Event Handlers "
+
+#Region " CommunicationClient "
 
     Private Sub m_communicationClient_Connected(ByVal sender As Object, ByVal e As System.EventArgs) Handles m_communicationClient.Connected
 
@@ -291,32 +405,7 @@ Public Class ClientHelper
 
 #End Region
 
-#Region " ISupportInitialize Implementation "
-
-    Public Sub BeginInit() Implements System.ComponentModel.ISupportInitialize.BeginInit
-
-        ' We don't need to do anything before the component is initialized.
-
-    End Sub
-
-    Public Sub EndInit() Implements System.ComponentModel.ISupportInitialize.EndInit
-
-        If Not DesignMode Then
-            ' Make sure that all of the required settings exist in the config file.
-            CategorizedSettings("ClientHelper").Add("ServiceName", m_serviceName, "Name of the service that the client will be connecting to.")
-            CategorizedSettings("Communication").Add("ConnectionString", m_connectionString, "The connection string that defines how the client will communicate with the service.")
-            CategorizedSettings("Communication").Add("Encryption", m_encryption.ToString(), "Level of encryption to be used for the communication between the client and the service (None, Level1, Level2, Level3, Level4).")
-            CategorizedSettings("Communication").Add("SecureSession", m_secureSession.ToString(), "True if SSL level encryption is to be used for communication between the client and the service; otherwise False.")
-            SaveSettings()
-
-            ' Update the variable with values that are defined in the config file.
-            m_serviceName = CategorizedSettings("ClientHelper")("ServiceName").Value
-            m_connectionString = CategorizedSettings("Communication")("ConnectionString").Value
-            m_encryption = CategorizedSettings("Communication")("Encryption").GetTypedValue(TVA.Security.Cryptography.EncryptLevel.Level1)
-            m_secureSession = CategorizedSettings("Communication")("SecureSession").GetTypedValue(True)
-        End If
-
-    End Sub
+#End Region
 
 #End Region
 

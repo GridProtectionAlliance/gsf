@@ -25,6 +25,7 @@ Partial Class ServiceHelper
         m_secureSession = True
         m_configurationString = "Protocol=Tcp; Port=6500"
         m_processes = New Dictionary(Of String, ServiceProcess)(StringComparer.CurrentCultureIgnoreCase)
+        m_settingsCategoryName = Me.GetType().Name
         m_clientInfo = New Dictionary(Of Guid, ClientInfo)()
         m_requestHistory = New List(Of RequestInfo)()
         m_serviceComponents = New List(Of IServiceComponent)()
@@ -36,10 +37,14 @@ Partial Class ServiceHelper
     'Component overrides dispose to clean up the component list.
     <System.Diagnostics.DebuggerNonUserCode()> _
     Protected Overrides Sub Dispose(ByVal disposing As Boolean)
-        If disposing AndAlso components IsNot Nothing Then
-            components.Dispose()
-        End If
-        MyBase.Dispose(disposing)
+        Try
+            SaveSettings()  ' Saves settings to the config file.
+            If disposing AndAlso components IsNot Nothing Then
+                components.Dispose()
+            End If
+        Finally
+            MyBase.Dispose(disposing)
+        End Try
     End Sub
 
     'Required by the Component Designer
@@ -51,34 +56,12 @@ Partial Class ServiceHelper
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
         Me.components = New System.ComponentModel.Container
-        Me.TcpServer = New TVA.Communication.TcpServer(Me.components)
-        Me.UdpServer = New TVA.Communication.UdpServer(Me.components)
         Me.ScheduleManager = New TVA.Scheduling.ScheduleManager(Me.components)
         Me.LogFile = New TVA.IO.LogFile(Me.components)
         Me.GlobalExceptionLogger = New TVA.ErrorManagement.GlobalExceptionLogger(Me.components)
-        CType(Me.TcpServer, System.ComponentModel.ISupportInitialize).BeginInit()
-        CType(Me.UdpServer, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.ScheduleManager, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.LogFile, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.GlobalExceptionLogger, System.ComponentModel.ISupportInitialize).BeginInit()
-        '
-        'TcpServer
-        '
-        Me.TcpServer.ConfigurationString = "Port=8888"
-        Me.TcpServer.HandshakePassphrase = Nothing
-        Me.TcpServer.PayloadAware = True
-        Me.TcpServer.PersistSettings = True
-        Me.TcpServer.SettingsCategoryName = "ServiceHelper.TcpServer"
-        '
-        'UdpServer
-        '
-        Me.UdpServer.ConfigurationString = "Port=8888; Clients=255.255.255.255:8888"
-        Me.UdpServer.Enabled = False
-        Me.UdpServer.HandshakePassphrase = Nothing
-        Me.UdpServer.PayloadAware = True
-        Me.UdpServer.PersistSettings = True
-        Me.UdpServer.ReceiveBufferSize = 32768
-        Me.UdpServer.SettingsCategoryName = "ServiceHelper.UdpServer"
         '
         'ScheduleManager
         '
@@ -93,7 +76,7 @@ Partial Class ServiceHelper
         '
         'GlobalExceptionLogger
         '
-        Me.GlobalExceptionLogger.AutoRegister = False
+        Me.GlobalExceptionLogger.AutoRegister = True
         Me.GlobalExceptionLogger.ContactPersonName = Nothing
         Me.GlobalExceptionLogger.ContactPersonPhone = Nothing
         Me.GlobalExceptionLogger.EmailRecipients = Nothing
@@ -105,9 +88,7 @@ Partial Class ServiceHelper
         Me.GlobalExceptionLogger.LogToScreenshot = False
         Me.GlobalExceptionLogger.LogToUI = False
         Me.GlobalExceptionLogger.PersistSettings = True
-        Me.GlobalExceptionLogger.SettingsCategoryName = "ServiceHelper.GlobalExceptionLogger"
-        CType(Me.TcpServer, System.ComponentModel.ISupportInitialize).EndInit()
-        CType(Me.UdpServer, System.ComponentModel.ISupportInitialize).EndInit()
+        Me.GlobalExceptionLogger.SettingsCategoryName = "ServerHelper.GlobalExceptionLogger"
         CType(Me.ScheduleManager, System.ComponentModel.ISupportInitialize).EndInit()
         CType(Me.LogFile, System.ComponentModel.ISupportInitialize).EndInit()
         CType(Me.GlobalExceptionLogger, System.ComponentModel.ISupportInitialize).EndInit()
@@ -116,9 +97,5 @@ Partial Class ServiceHelper
     Friend WithEvents ScheduleManager As TVA.Scheduling.ScheduleManager
     Friend WithEvents LogFile As TVA.IO.LogFile
     Friend WithEvents GlobalExceptionLogger As TVA.ErrorManagement.GlobalExceptionLogger
-    <DesignerSerializationVisibility(DesignerSerializationVisibility.Content)> _
-    Public WithEvents TcpServer As TVA.Communication.TcpServer
-    <DesignerSerializationVisibility(DesignerSerializationVisibility.Content)> _
-    Public WithEvents UdpServer As TVA.Communication.UdpServer
 
 End Class

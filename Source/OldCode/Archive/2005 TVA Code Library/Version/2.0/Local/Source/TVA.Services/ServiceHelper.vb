@@ -13,9 +13,9 @@ Imports TVA.Configuration.Common
 
 <ToolboxBitmap(GetType(ServiceHelper))> _
 Public Class ServiceHelper
-    Implements ISupportInitialize
+    Implements IPersistSettings, ISupportInitialize
 
-    Public Delegate Sub StartedEventHandler(ByVal sender As Object, ByVal e As GenericEventArgs)
+#Region " Member Declaration "
 
     Private m_service As ServiceBase
     Private m_logStatusUpdates As Boolean
@@ -24,6 +24,8 @@ Public Class ServiceHelper
     Private m_secureSession As Boolean
     Private m_encryption As TVA.Security.Cryptography.EncryptLevel
     Private m_processes As Dictionary(Of String, ServiceProcess)
+    Private m_persistsettings As Boolean
+    Private m_settingsCategoryName As String
     Private m_clientInfo As Dictionary(Of Guid, ClientInfo)
     Private m_requestHistory As List(Of RequestInfo)
     Private m_serviceComponents As List(Of IServiceComponent)
@@ -31,6 +33,10 @@ Public Class ServiceHelper
     Private m_stoppedEventHandlerList As List(Of EventHandler)
 
     Private WithEvents m_communicationServer As ICommunicationServer
+
+#End Region
+
+#Region " Event Declaration "
 
     ''' <summary>
     ''' Occurs when the service has started.
@@ -91,6 +97,12 @@ Public Class ServiceHelper
     ''' Occurs when a request is received from a client.
     ''' </summary>
     Public Event ReceivedClientRequest(ByVal sender As Object, ByVal e As ClientRequestEventArgs)
+
+#End Region
+
+#Region " Code Scope: Public "
+
+    Public Delegate Sub StartedEventHandler(ByVal sender As Object, ByVal e As GenericEventArgs)
 
     ''' <summary>
     ''' Gets or sets the parent service to which the service helper belongs.
@@ -457,108 +469,95 @@ Public Class ServiceHelper
 
     End Sub
 
-#Region " CommunicationServer Events "
+#Region " Interface Implementation "
 
-    Private Sub m_communicationServer_ClientConnected(ByVal sender As Object, ByVal e As IdentifiableSourceEventArgs) Handles m_communicationServer.ClientConnected
+#Region " IPersistSettings "
 
-        m_clientInfo.Add(e.Source, Nothing)
+    Public Property PersistSettings() As Boolean Implements IPersistSettings.PersistSettings
+        Get
+            Return m_persistSettings
+        End Get
+        Set(ByVal value As Boolean)
+            m_persistSettings = value
+        End Set
+    End Property
 
-    End Sub
-
-    Private Sub m_communicationServer_ClientDisconnected(ByVal sender As Object, ByVal e As IdentifiableSourceEventArgs) Handles m_communicationServer.ClientDisconnected
-
-        m_clientInfo.Remove(e.Source)
-
-    End Sub
-
-    Private Sub m_communicationServer_ReceivedClientData(ByVal sender As Object, ByVal e As IdentifiableItemEventArgs(Of Byte())) Handles m_communicationServer.ReceivedClientData
-
-        Dim info As ClientInfo = GetObject(Of ClientInfo)(e.Item)
-        Dim request As ClientRequest = GetObject(Of ClientRequest)(e.Item)
-
-        If info IsNot Nothing Then
-            ' We've received client information from a recently connected client.
-            m_clientInfo(e.Source) = info
-        ElseIf request IsNot Nothing Then
-            Dim receivedClientRequestEvent As New ClientRequestEventArgs(e.Source, request)
-
-            ' Log the received request.
-            m_requestHistory.Add(New RequestInfo(request.Type, e.Source, System.DateTime.Now))
-            If m_requestHistory.Count > m_requestHistoryLimit Then
-                ' We'll remove old request entries if we've exceeded the limit for request history.
-                m_requestHistory.RemoveRange(0, (m_requestHistory.Count - m_requestHistoryLimit))
+    Public Property SettingsCategoryName() As String Implements IPersistSettings.SettingsCategoryName
+        Get
+            Return m_settingsCategoryName
+        End Get
+        Set(ByVal value As String)
+            If Not String.IsNullOrEmpty(value) Then
+                m_settingsCategoryName = value
+            Else
+                Throw New ArgumentNullException("ConfigurationCategory")
             End If
+        End Set
+    End Property
 
-            ' Notify the consumer about the incoming request from client.
-            RaiseEvent ReceivedClientRequest(Me, receivedClientRequestEvent)
-            If receivedClientRequestEvent.Cancel Then Exit Sub
+    Public Sub LoadSettings() Implements IPersistSettings.LoadSettings
 
-            ' We'll process the request only if the service didn't handle it.
-            Select Case request.Type.ToUpper()
-                Case "CLIENTS", "LISTCLIENTS"
-                    ListClients()
-                Case "SETTINGS", "LISTSETTINGS"
-                    ListSettings()
-                Case "PROCESSES", "LISTPROCESSES"
-                    ListProcesses()
-                Case "RELOADSETTINGS"
-                    ReloadSettings()
-                Case "UPDATESETTINGS"
-                    UpdateSettings(request)
-                Case "START", "STARTPROCESS"
-                    StartProcess(request)
-                Case "ABORT", "ABORTPROCESS"
-                    AbortProcess(request)
-                Case "RESCHEDULE", "RESCHEDULEPROCESS"
-                    RescheduleProcess(request)
-                Case "UNSCHEDULE", "UNSCHEDULEPROCESS"
-                    UnscheduleProcess(request)
-                Case "SAVESCHEDULES"
-                    SaveSchedules()
-                Case "LOADSCHEDULES"
-                    LoadSchedules()
-                Case "STATUS", "GETSERVICESTATUS"
-                    GetServiceStatus()
-                Case "HISTORY", "GETREQUESTHISTORY"
-                    GetRequestHistory()
-                Case Else
-                    HandleInvalidClientRequest(request)
-            End Select
-        Else
-            HandleInvalidClientRequest(request)
+        Try
+            With TVA.Configuration.Common.CategorizedSettings(m_settingsCategoryName)
+                If .Count > 0 Then
+                    LogStatusUpdates = .Item("LogStatusUpdates").GetTypedValue(m_logStatusUpdates)
+                    RequestHistoryLimit = .Item("RequestHistoryLimit").GetTypedValue(m_requestHistoryLimit)
+                End If
+            End With
+        Catch ex As Exception
+            ' We'll encounter exceptions if the settings are not present in the config file.
+        End Try
+
+    End Sub
+
+    Public Sub SaveSettings() Implements IPersistSettings.SaveSettings
+
+        If m_persistsettings Then
+            Try
+                With TVA.Configuration.Common.CategorizedSettings(m_settingsCategoryName)
+                    .Clear()
+                    With .Item("LogStatusUpdates", True)
+                        .Value = LogStatusUpdates.ToString()
+                        .Description = ""
+                    End With
+                    With .Item("RequestHistoryLimit", True)
+                        .Value = RequestHistoryLimit.ToString()
+                        .Description = ""
+                    End With
+                End With
+                TVA.Configuration.Common.SaveSettings()
+            Catch ex As Exception
+                ' We might encounter an exception if for some reason the settings cannot be saved to the config file.
+            End Try
         End If
 
     End Sub
 
 #End Region
 
-#Region " ScheduleManager Events "
+#Region " ISupportInitialize "
 
-    Private Sub ScheduleManager_ScheduleDue(ByVal sender As Object, ByVal e As ScheduleEventArgs)
+    Public Sub BeginInit() Implements System.ComponentModel.ISupportInitialize.BeginInit
 
-        Dim scheduledProcess As ServiceProcess = Nothing
-        If m_processes.TryGetValue(e.Schedule.Name, scheduledProcess) Then
-            scheduledProcess.Start() ' Start the process execution if it exists.
+        ' We don't need to do anything before the component is initialized.
+
+    End Sub
+
+    Public Sub EndInit() Implements System.ComponentModel.ISupportInitialize.EndInit
+
+        If Not DesignMode Then
+            LoadSettings()  ' Load settings from the config file.
         End If
 
     End Sub
 
 #End Region
 
-#Region " LogFile Events "
-
-    Private Sub LogFile_LogException(ByVal sender As Object, ByVal e As ExceptionEventArgs)
-
-        ' We'll let the connected clients know that we encountered an exception while logging the status update.
-        m_logStatusUpdates = False
-        UpdateStatus(String.Format("Error occurred while logging status update: {0}", e.Exception.ToString()))
-        m_logStatusUpdates = True
-
-    End Sub
+#End Region
 
 #End Region
 
-#Region " Private Methods "
+#Region " Code Scope: Private "
 
     Private Sub ListClients()
 
@@ -916,32 +915,110 @@ Public Class ServiceHelper
 
     End Sub
 
-#End Region
+#Region " Event Handlers "
 
-#Region " ISupportInitialize Implementation "
+#Region " CommunicationServer "
 
-    Public Sub BeginInit() Implements System.ComponentModel.ISupportInitialize.BeginInit
+    Private Sub m_communicationServer_ClientConnected(ByVal sender As Object, ByVal e As IdentifiableSourceEventArgs) Handles m_communicationServer.ClientConnected
 
-        ' We don't need to do anything before the component is initialized.
+        m_clientInfo.Add(e.Source, Nothing)
 
     End Sub
 
-    Public Sub EndInit() Implements System.ComponentModel.ISupportInitialize.EndInit
+    Private Sub m_communicationServer_ClientDisconnected(ByVal sender As Object, ByVal e As IdentifiableSourceEventArgs) Handles m_communicationServer.ClientDisconnected
 
-        If Not DesignMode Then
-            ' Make sure that all of the required settings exist in the config file.
-            CategorizedSettings("ServiceHelper").Add("LogStatusUpdates", m_logStatusUpdates.ToString(), "True if status updates are to be logged to a text file; otherwise False.")
-            CategorizedSettings("ServiceHelper").Add("RequestHistoryLimit", m_requestHistoryLimit.ToString(), "The number of request entries to be kept in the history.")
-            CategorizedSettings("Communication").Add("ConfigurationString", m_configurationString, "The configuration string that defines how the service will communicate with the clients.")
-            CategorizedSettings("Communication").Add("Encryption", m_encryption.ToString(), "Level of encryption to be used for the communication between the service and the clients (None, Level1, Level2, Level3, Level4).")
-            CategorizedSettings("Communication").Add("SecureSession", m_secureSession.ToString(), "True if SSL level encryption is to be used for communication between the service and the clients; otherwise False.")
-            SaveSettings()
+        m_clientInfo.Remove(e.Source)
 
-            ' Initialize the member variable with the values from config file.
-            ReloadSettings()
+    End Sub
+
+    Private Sub m_communicationServer_ReceivedClientData(ByVal sender As Object, ByVal e As IdentifiableItemEventArgs(Of Byte())) Handles m_communicationServer.ReceivedClientData
+
+        Dim info As ClientInfo = GetObject(Of ClientInfo)(e.Item)
+        Dim request As ClientRequest = GetObject(Of ClientRequest)(e.Item)
+
+        If info IsNot Nothing Then
+            ' We've received client information from a recently connected client.
+            m_clientInfo(e.Source) = info
+        ElseIf request IsNot Nothing Then
+            Dim receivedClientRequestEvent As New ClientRequestEventArgs(e.Source, request)
+
+            ' Log the received request.
+            m_requestHistory.Add(New RequestInfo(request.Type, e.Source, System.DateTime.Now))
+            If m_requestHistory.Count > m_requestHistoryLimit Then
+                ' We'll remove old request entries if we've exceeded the limit for request history.
+                m_requestHistory.RemoveRange(0, (m_requestHistory.Count - m_requestHistoryLimit))
+            End If
+
+            ' Notify the consumer about the incoming request from client.
+            RaiseEvent ReceivedClientRequest(Me, receivedClientRequestEvent)
+            If receivedClientRequestEvent.Cancel Then Exit Sub
+
+            ' We'll process the request only if the service didn't handle it.
+            Select Case request.Type.ToUpper()
+                Case "CLIENTS", "LISTCLIENTS"
+                    ListClients()
+                Case "SETTINGS", "LISTSETTINGS"
+                    ListSettings()
+                Case "PROCESSES", "LISTPROCESSES"
+                    ListProcesses()
+                Case "RELOADSETTINGS"
+                    ReloadSettings()
+                Case "UPDATESETTINGS"
+                    UpdateSettings(request)
+                Case "START", "STARTPROCESS"
+                    StartProcess(request)
+                Case "ABORT", "ABORTPROCESS"
+                    AbortProcess(request)
+                Case "RESCHEDULE", "RESCHEDULEPROCESS"
+                    RescheduleProcess(request)
+                Case "UNSCHEDULE", "UNSCHEDULEPROCESS"
+                    UnscheduleProcess(request)
+                Case "SAVESCHEDULES"
+                    SaveSchedules()
+                Case "LOADSCHEDULES"
+                    LoadSchedules()
+                Case "STATUS", "GETSERVICESTATUS"
+                    GetServiceStatus()
+                Case "HISTORY", "GETREQUESTHISTORY"
+                    GetRequestHistory()
+                Case Else
+                    HandleInvalidClientRequest(request)
+            End Select
+        Else
+            HandleInvalidClientRequest(request)
         End If
 
     End Sub
+
+#End Region
+
+#Region " ScheduleManager "
+
+    Private Sub ScheduleManager_ScheduleDue(ByVal sender As Object, ByVal e As ScheduleEventArgs) Handles ScheduleManager.ScheduleDue
+
+        Dim scheduledProcess As ServiceProcess = Nothing
+        If m_processes.TryGetValue(e.Schedule.Name, scheduledProcess) Then
+            scheduledProcess.Start() ' Start the process execution if it exists.
+        End If
+
+    End Sub
+
+#End Region
+
+#Region " LogFile "
+
+    Private Sub LogFile_LogException(ByVal sender As Object, ByVal e As ExceptionEventArgs) Handles LogFile.LogException
+
+        ' We'll let the connected clients know that we encountered an exception while logging the status update.
+        m_logStatusUpdates = False
+        UpdateStatus(String.Format("Error occurred while logging status update: {0}", e.Exception.ToString()))
+        m_logStatusUpdates = True
+
+    End Sub
+
+#End Region
+
+#End Region
 
 #End Region
 

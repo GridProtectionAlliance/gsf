@@ -21,19 +21,24 @@ Partial Class ClientHelper
         m_encryption = Security.Cryptography.EncryptLevel.Level1
         m_secureSession = True
         m_connectionString = "Protocol=Tcp; Server=localhost; Port=6500"
+        m_settingsCategoryName = Me.GetType().Name
 
     End Sub
 
     'Component overrides dispose to clean up the component list.
     <System.Diagnostics.DebuggerNonUserCode()> _
     Protected Overrides Sub Dispose(ByVal disposing As Boolean)
-        ' Since we don't have our communication client as a component, we must call the ClientHelper's disconnect
-        ' method when ClientHelper is disposed and this in-turn will cause the communication client to disconnect.
-        Disconnect()
-        If disposing AndAlso components IsNot Nothing Then
-            components.Dispose()
-        End If
-        MyBase.Dispose(disposing)
+        Try
+            ' Since we don't have our communication client as a component, we must call the ClientHelper's disconnect
+            ' method when ClientHelper is disposed and this in-turn will cause the communication client to disconnect.
+            Disconnect()
+            SaveSettings()  ' Saves settings to the config file.
+            If disposing AndAlso components IsNot Nothing Then
+                components.Dispose()
+            End If
+        Finally
+            MyBase.Dispose(disposing)
+        End Try
     End Sub
 
     'Required by the Component Designer
