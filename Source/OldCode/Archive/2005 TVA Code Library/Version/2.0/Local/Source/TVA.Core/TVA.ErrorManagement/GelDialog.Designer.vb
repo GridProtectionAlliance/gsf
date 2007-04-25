@@ -179,8 +179,6 @@ Partial Class GelDialog
             Me.Controls.Add(Me.RichTextBoxError)
             Me.Controls.Add(Me.LabelError)
             Me.Controls.Add(Me.PictureBoxIcon)
-            Me.MaximizeBox = False
-            Me.MinimizeBox = False
             Me.Name = "GelDialog"
             Me.ShowInTaskbar = False
             Me.Text = "{0} has encountered a problem"
