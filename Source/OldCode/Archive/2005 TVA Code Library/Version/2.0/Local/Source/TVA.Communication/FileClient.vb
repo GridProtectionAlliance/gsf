@@ -31,6 +31,7 @@ Public Class FileClient
 
 #Region " Member Declaration "
 
+    Private m_autoRepeat As Boolean
     Private m_receiveOnDemand As Boolean
     Private m_receiveInterval As Double
     Private m_startingOffset As Long
@@ -54,6 +55,21 @@ Public Class FileClient
         MyBase.ConnectionString = connectionString
 
     End Sub
+
+    ''' <summary>
+    ''' Gets or sets a boolean value indicating whether receiving (reading) of data is to be repeated endlessly.
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns>True if receiving (reading) of data is to be repeated endlessly; otherwise False.</returns>
+    <Description("Indicates whether receiving (reading) of data is to be repeated endlessly."), Category("Data"), DefaultValue(GetType(Boolean), "False")> _
+    Public Property AutoRepeat() As Boolean
+        Get
+            Return m_autoRepeat
+        End Get
+        Set(ByVal value As Boolean)
+            m_autoRepeat = value
+        End Set
+    End Property
 
     ''' <summary>
     ''' Gets or sets a boolean value indicating whether receiving (reading) of data will be initiated manually 
@@ -320,6 +336,9 @@ Public Class FileClient
                         ' Unpack data and make available via event
                         OnReceivedData(New IdentifiableItemEventArgs(Of Byte())(ServerID, CopyBuffer(m_buffer, 0, received)))
                     End If
+
+                    ' We'll re-read the file if the user wants to repeat when we're done reading the file.
+                    If m_autoRepeat AndAlso .Client.Position = .Client.Length Then .Client.Seek(0, SeekOrigin.Begin)
 
                     ' We must stop processing the file if user has either opted to receive data on 
                     ' demand or receive data at a predefined interval.
