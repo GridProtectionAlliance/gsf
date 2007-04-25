@@ -388,9 +388,7 @@ Public Class TcpServer
                 clientDisconnected = m_tcpClients.ContainsKey(tcpClient.ID)
                 m_tcpClients.Remove(tcpClient.ID)
             End SyncLock
-            If clientDisconnected Then
-                OnClientDisconnected(New IdentifiableSourceEventArgs(tcpClient.ID))
-            End If
+            If clientDisconnected Then OnClientDisconnected(New IdentifiableSourceEventArgs(tcpClient.ID))
         End Try
 
     End Sub
