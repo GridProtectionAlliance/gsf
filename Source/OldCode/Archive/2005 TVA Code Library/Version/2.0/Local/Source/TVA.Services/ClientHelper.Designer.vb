@@ -18,9 +18,6 @@ Partial Class ClientHelper
         InitializeComponent()
 
         m_serviceName = "WindowsService"
-        m_encryption = Security.Cryptography.EncryptLevel.Level1
-        m_secureSession = True
-        m_connectionString = "Protocol=Tcp; Server=localhost; Port=6500"
         m_settingsCategoryName = Me.GetType().Name
 
     End Sub

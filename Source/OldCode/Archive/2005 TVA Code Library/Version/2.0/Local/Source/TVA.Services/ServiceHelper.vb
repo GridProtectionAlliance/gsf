@@ -20,15 +20,13 @@ Public Class ServiceHelper
     Private m_service As ServiceBase
     Private m_logStatusUpdates As Boolean
     Private m_requestHistoryLimit As Integer
-    Private m_configurationString As String
-    Private m_secureSession As Boolean
-    Private m_encryption As TVA.Security.Cryptography.EncryptLevel
+    Private m_lastRequest As ClientRequest
     Private m_processes As Dictionary(Of String, ServiceProcess)
+    Private m_serviceComponents As List(Of IServiceComponent)
     Private m_persistsettings As Boolean
     Private m_settingsCategoryName As String
     Private m_clientInfo As Dictionary(Of Guid, ClientInfo)
     Private m_requestHistory As List(Of RequestInfo)
-    Private m_serviceComponents As List(Of IServiceComponent)
     Private m_startedEventHandlerList As List(Of StartedEventHandler)
     Private m_stoppedEventHandlerList As List(Of EventHandler)
 
@@ -109,13 +107,26 @@ Public Class ServiceHelper
     ''' </summary>
     ''' <value></value>
     ''' <returns>The parent service to which the service helper belongs.</returns>
-    <Category("Service Helper")> _
     Public Property Service() As ServiceBase
         Get
             Return m_service
         End Get
         Set(ByVal value As ServiceBase)
             m_service = value
+        End Set
+    End Property
+
+    ''' <summary>
+    ''' Gets or sets the instance of TCP server used for communicating with the clients.
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns>An instance of TCP server.</returns>
+    Public Property CommunicationServer() As ICommunicationServer
+        Get
+            Return m_communicationServer
+        End Get
+        Set(ByVal value As ICommunicationServer)
+            m_communicationServer = value
         End Set
     End Property
 
@@ -153,47 +164,11 @@ Public Class ServiceHelper
         End Set
     End Property
 
-    ''' <summary>
-    ''' Gets or sets the data used for initializing the communication server.
-    ''' </summary>
-    ''' <value></value>
-    ''' <returns>The data used for initializing the communication server.</returns>
-    <Category("Communication"), DefaultValue(GetType(String), "Protocol=Tcp; Port=6500")> _
-    Public Property ConfigurationString() As String
+    <Browsable(False)> _
+    Public ReadOnly Property LastRequest() As ClientRequest
         Get
-            Return m_configurationString
+            Return m_lastRequest
         End Get
-        Set(ByVal value As String)
-            If Not String.IsNullOrEmpty(value) Then
-                If TVA.Text.Common.ParseKeyValuePairs(value).ContainsKey("protocol") Then
-                    m_configurationString = value
-                Else
-                    Throw New ArgumentException("Communication protocol must be specified.", "ConfigurationString")
-                End If
-            Else
-                Throw New ArgumentNullException("ConfigurationString")
-            End If
-        End Set
-    End Property
-
-    <Category("Communication"), DefaultValue(GetType(TVA.Security.Cryptography.EncryptLevel), "Level1")> _
-    Public Property Encryption() As TVA.Security.Cryptography.EncryptLevel
-        Get
-            Return m_encryption
-        End Get
-        Set(ByVal value As TVA.Security.Cryptography.EncryptLevel)
-            m_encryption = value
-        End Set
-    End Property
-
-    <Category("Communication"), DefaultValue(GetType(Boolean), "True")> _
-    Public Property SecureSession() As Boolean
-        Get
-            Return m_secureSession
-        End Get
-        Set(ByVal value As Boolean)
-            m_secureSession = value
-        End Set
     End Property
 
     <Browsable(False)> _
@@ -216,46 +191,19 @@ Public Class ServiceHelper
     End Property
 
     ''' <summary>
-    ''' Gets the instance of TCP server used for communicating with the clients.
-    ''' </summary>
-    ''' <value></value>
-    ''' <returns>An instance of TCP server.</returns>
-    <Browsable(False)> _
-    Public ReadOnly Property CommunicationServer() As ICommunicationServer
-        Get
-            Return m_communicationServer
-        End Get
-    End Property
-
-    ''' <summary>
     ''' To be called when the service is starts (inside the service's OnStart method).
     ''' </summary>
     <EditorBrowsable(EditorBrowsableState.Advanced)> _
     Public Sub OnStart(ByVal args As String())
 
         If m_service IsNot Nothing Then
-            'Select Case True
-            '    Case TcpServer.Enabled
-            '        m_communicationServer = TcpServer
-            '    Case UdpServer.Enabled
-            '        m_communicationServer = UdpServer
-            'End Select
-            'TcpServer.HandshakePassphrase = m_service.ServiceName
-            'UdpServer.HandshakePassphrase = m_service.ServiceName
-            m_communicationServer = TVA.Communication.Common.CreateCommunicationServer(m_configurationString)
-            m_communicationServer.Handshake = True
-            m_communicationServer.HandshakePassphrase = m_service.ServiceName
-            m_communicationServer.Encryption = m_encryption
-            m_communicationServer.SecureSession = m_secureSession
-            Select Case m_communicationServer.Protocol
-                Case TransportProtocol.Tcp
-                    DirectCast(m_communicationServer, TcpServer).PayloadAware = True
-                Case TransportProtocol.Udp
-                    DirectCast(m_communicationServer, UdpServer).PayloadAware = True
-            End Select
-
             m_serviceComponents.Add(ScheduleManager)
             m_serviceComponents.Add(m_communicationServer)
+
+            If m_communicationServer IsNot Nothing Then
+                m_communicationServer.Handshake = True
+                m_communicationServer.HandshakePassphrase = m_service.ServiceName
+            End If
 
             For Each component As IServiceComponent In m_serviceComponents
                 If component IsNot Nothing Then component.ServiceStateChanged(ServiceState.Started)
@@ -665,18 +613,18 @@ Public Class ServiceHelper
         ' Initialize the member variable with the values from config file.
         m_logStatusUpdates = CategorizedSettings("ServiceHelper")("LogStatusUpdates").GetTypedValue(True)
         m_requestHistoryLimit = CategorizedSettings("ServiceHelper")("RequestHistoryLimit").GetTypedValue(50)
-        m_configurationString = CategorizedSettings("Communication")("ConfigurationString").Value
-        m_encryption = CategorizedSettings("Communication")("Encryption").GetTypedValue(TVA.Security.Cryptography.EncryptLevel.Level1)
-        m_secureSession = CategorizedSettings("Communication")("SecureSession").GetTypedValue(True)
+        'm_configurationString = CategorizedSettings("Communication")("ConfigurationString").Value
+        'm_encryption = CategorizedSettings("Communication")("Encryption").GetTypedValue(TVA.Security.Cryptography.EncryptLevel.Level1)
+        'm_secureSession = CategorizedSettings("Communication")("SecureSession").GetTypedValue(True)
 
     End Sub
 
-    Private Sub UpdateSettings(ByVal request As ClientRequest)
+    Private Sub UpdateSettings()
 
-        If request.Parameters.Length > 2 Then
-            Dim category As String = request.Parameters(0)
-            Dim name As String = request.Parameters(1)
-            Dim value As String = request.Parameters(2)
+        If m_lastRequest.Parameters.Length > 2 Then
+            Dim category As String = m_lastRequest.Parameters(0)
+            Dim name As String = m_lastRequest.Parameters(1)
+            Dim value As String = m_lastRequest.Parameters(2)
             Dim setting As TVA.Configuration.CategorizedSettingsElement = CategorizedSettings(category)(name)
             If setting IsNot Nothing Then
                 setting.Value = value
@@ -692,12 +640,12 @@ Public Class ServiceHelper
 
     End Sub
 
-    Private Sub StartProcess(ByVal request As ClientRequest)
+    Private Sub StartProcess()
 
         Dim processToStart As ServiceProcess = Nothing
-        If request.Parameters IsNot Nothing AndAlso request.Parameters.Length > 0 Then
+        If m_lastRequest.Parameters IsNot Nothing AndAlso m_lastRequest.Parameters.Length > 0 Then
             ' The user has specified the name of the process to start, so we'll see if the process exists.
-            Dim processName As String = request.Parameters(0).Trim()
+            Dim processName As String = m_lastRequest.Parameters(0).Trim()
             If Not m_processes.TryGetValue(processName, processToStart) Then
                 ' The specified process does not exist.
                 UpdateStatus(String.Format("Process ""{0}"" cannot be started. Process does not exist.", processName))
@@ -721,10 +669,10 @@ Public Class ServiceHelper
             If Not processToStart.CurrentState = ProcessState.Processing Then
                 ' The specified process is currently not executing, so we'll start its execution.
                 UpdateStatus(String.Format("Process ""{0}"" is being started...", processToStart.Name))
-                If request.Parameters.Length > 1 Then
+                If m_lastRequest.Parameters.Length > 1 Then
                     ' We'll provide any additional parameters received to the process for consumption.
-                    Dim processParameters As Object() = CreateArray(Of Object)(request.Parameters.Length - 1)
-                    Array.Copy(request.Parameters, 1, processParameters, 0, processParameters.Length)
+                    Dim processParameters As Object() = CreateArray(Of Object)(m_lastRequest.Parameters.Length - 1)
+                    Array.Copy(m_lastRequest.Parameters, 1, processParameters, 0, processParameters.Length)
                     processToStart.Parameters = processParameters
                 End If
                 processToStart.Start()
@@ -736,12 +684,12 @@ Public Class ServiceHelper
 
     End Sub
 
-    Private Sub AbortProcess(ByVal request As ClientRequest)
+    Private Sub AbortProcess()
 
         Dim processToAbort As ServiceProcess = Nothing
-        If request.Parameters IsNot Nothing AndAlso request.Parameters.Length > 0 Then
+        If m_lastRequest.Parameters IsNot Nothing AndAlso m_lastRequest.Parameters.Length > 0 Then
             ' The user has specified the name of the process to abort, so we'll see if the process exists.
-            Dim processName As String = request.Parameters(0).Trim()
+            Dim processName As String = m_lastRequest.Parameters(0).Trim()
             If Not m_processes.TryGetValue(processName, processToAbort) Then
                 ' The specified process does not exist.
                 UpdateStatus(String.Format("Process ""{0}"" cannot be aborted. Process does not exist.", processName))
@@ -774,12 +722,12 @@ Public Class ServiceHelper
 
     End Sub
 
-    Private Sub RescheduleProcess(ByVal request As ClientRequest)
+    Private Sub RescheduleProcess()
 
-        If request.Parameters.Length > 1 Then
+        If m_lastRequest.Parameters.Length > 1 Then
             ' Parameters required for scheduling a process are provided.
-            Dim processName As String = request.Parameters(0).Trim()
-            Dim scheduleRule As String = request.Parameters(1).Trim(""""c)
+            Dim processName As String = m_lastRequest.Parameters(0).Trim()
+            Dim scheduleRule As String = m_lastRequest.Parameters(1).Trim(""""c)
 
             ' Schedule the specified process. Process will not be scheduled if process does not exist.
             ScheduleProcess(processName, scheduleRule)
@@ -795,11 +743,11 @@ Public Class ServiceHelper
 
     End Sub
 
-    Private Sub UnscheduleProcess(ByVal request As ClientRequest)
+    Private Sub UnscheduleProcess()
 
-        If request.Parameters.Length > 0 Then
+        If m_lastRequest.Parameters.Length > 0 Then
             ' We have the name of the process that is to be unscheduled.
-            Dim processName As String = request.Parameters(0).Trim()
+            Dim processName As String = m_lastRequest.Parameters(0).Trim()
 
             If ScheduleManager.Schedules.ContainsKey(processName) Then
                 ' The specified process is scheduled, so we'll unschedule it.
@@ -835,10 +783,12 @@ Public Class ServiceHelper
             .Append(String.Format("Status of components used by {0}:", m_service.ServiceName))
             .Append(Environment.NewLine)
             For Each serviceComponent As IServiceComponent In m_serviceComponents
-                .Append(Environment.NewLine)
-                .Append(String.Format("Status of {0}:", serviceComponent.Name))
-                .Append(Environment.NewLine)
-                .Append(serviceComponent.Status)
+                If serviceComponent IsNot Nothing Then
+                    .Append(Environment.NewLine)
+                    .Append(String.Format("Status of {0}:", serviceComponent.Name))
+                    .Append(Environment.NewLine)
+                    .Append(serviceComponent.Status)
+                End If
             Next
 
             UpdateStatus(.ToString())
@@ -943,6 +893,7 @@ Public Class ServiceHelper
             Dim receivedClientRequestEvent As New ClientRequestEventArgs(e.Source, request)
 
             ' Log the received request.
+            m_lastRequest = request
             m_requestHistory.Add(New RequestInfo(request.Type, e.Source, System.DateTime.Now))
             If m_requestHistory.Count > m_requestHistoryLimit Then
                 ' We'll remove old request entries if we've exceeded the limit for request history.
@@ -964,15 +915,15 @@ Public Class ServiceHelper
                 Case "RELOADSETTINGS"
                     ReloadSettings()
                 Case "UPDATESETTINGS"
-                    UpdateSettings(request)
+                    UpdateSettings()
                 Case "START", "STARTPROCESS"
-                    StartProcess(request)
+                    StartProcess()
                 Case "ABORT", "ABORTPROCESS"
-                    AbortProcess(request)
+                    AbortProcess()
                 Case "RESCHEDULE", "RESCHEDULEPROCESS"
-                    RescheduleProcess(request)
+                    RescheduleProcess()
                 Case "UNSCHEDULE", "UNSCHEDULEPROCESS"
-                    UnscheduleProcess(request)
+                    UnscheduleProcess()
                 Case "SAVESCHEDULES"
                     SaveSchedules()
                 Case "LOADSCHEDULES"

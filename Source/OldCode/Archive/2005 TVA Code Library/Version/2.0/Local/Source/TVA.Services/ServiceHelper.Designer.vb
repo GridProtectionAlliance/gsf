@@ -21,9 +21,6 @@ Partial Class ServiceHelper
 
         m_logStatusUpdates = True
         m_requestHistoryLimit = 50
-        m_encryption = Security.Cryptography.EncryptLevel.Level1
-        m_secureSession = True
-        m_configurationString = "Protocol=Tcp; Port=6500"
         m_processes = New Dictionary(Of String, ServiceProcess)(StringComparer.CurrentCultureIgnoreCase)
         m_settingsCategoryName = Me.GetType().Name
         m_clientInfo = New Dictionary(Of Guid, ClientInfo)()
@@ -56,17 +53,12 @@ Partial Class ServiceHelper
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
         Me.components = New System.ComponentModel.Container
-        Me.ScheduleManager = New TVA.Scheduling.ScheduleManager(Me.components)
         Me.LogFile = New TVA.IO.LogFile(Me.components)
+        Me.ScheduleManager = New TVA.Scheduling.ScheduleManager(Me.components)
         Me.GlobalExceptionLogger = New TVA.ErrorManagement.GlobalExceptionLogger(Me.components)
-        CType(Me.ScheduleManager, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.LogFile, System.ComponentModel.ISupportInitialize).BeginInit()
+        CType(Me.ScheduleManager, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.GlobalExceptionLogger, System.ComponentModel.ISupportInitialize).BeginInit()
-        '
-        'ScheduleManager
-        '
-        Me.ScheduleManager.PersistSettings = True
-        Me.ScheduleManager.SettingsCategoryName = "ServiceHelper.ScheduleManager"
         '
         'LogFile
         '
@@ -74,13 +66,17 @@ Partial Class ServiceHelper
         Me.LogFile.PersistSettings = True
         Me.LogFile.SettingsCategoryName = "ServiceHelper.LogFile"
         '
+        'ScheduleManager
+        '
+        Me.ScheduleManager.PersistSettings = True
+        Me.ScheduleManager.SettingsCategoryName = "ServiceHelper.ScheduleManager"
+        '
         'GlobalExceptionLogger
         '
         Me.GlobalExceptionLogger.AutoRegister = True
-        Me.GlobalExceptionLogger.ContactPersonName = Nothing
-        Me.GlobalExceptionLogger.ContactPersonPhone = Nothing
-        Me.GlobalExceptionLogger.EmailRecipients = Nothing
-        Me.GlobalExceptionLogger.EmailServer = "mailhost.cha.tva.gov"
+        Me.GlobalExceptionLogger.ContactEmail = Nothing
+        Me.GlobalExceptionLogger.ContactName = Nothing
+        Me.GlobalExceptionLogger.ContactPhone = Nothing
         Me.GlobalExceptionLogger.ExitOnUnhandledException = False
         Me.GlobalExceptionLogger.LogToEmail = False
         Me.GlobalExceptionLogger.LogToEventLog = False
@@ -89,13 +85,14 @@ Partial Class ServiceHelper
         Me.GlobalExceptionLogger.LogToUI = False
         Me.GlobalExceptionLogger.PersistSettings = True
         Me.GlobalExceptionLogger.SettingsCategoryName = "ServerHelper.GlobalExceptionLogger"
-        CType(Me.ScheduleManager, System.ComponentModel.ISupportInitialize).EndInit()
+        Me.GlobalExceptionLogger.SmtpServer = "mailhost.cha.tva.gov"
         CType(Me.LogFile, System.ComponentModel.ISupportInitialize).EndInit()
+        CType(Me.ScheduleManager, System.ComponentModel.ISupportInitialize).EndInit()
         CType(Me.GlobalExceptionLogger, System.ComponentModel.ISupportInitialize).EndInit()
 
     End Sub
-    Friend WithEvents ScheduleManager As TVA.Scheduling.ScheduleManager
     Friend WithEvents LogFile As TVA.IO.LogFile
+    Friend WithEvents ScheduleManager As TVA.Scheduling.ScheduleManager
     Friend WithEvents GlobalExceptionLogger As TVA.ErrorManagement.GlobalExceptionLogger
 
 End Class

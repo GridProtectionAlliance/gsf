@@ -29,9 +29,6 @@ Public Class ClientHelper
 #Region " Member Declaration "
 
     Private m_serviceName As String
-    Private m_connectionString As String
-    Private m_encryption As TVA.Security.Cryptography.EncryptLevel
-    Private m_secureSession As Boolean
     Private m_persistSettings As Boolean
     Private m_settingsCategoryName As String
 
@@ -66,7 +63,7 @@ Public Class ClientHelper
 #Region " Code Scope: Public "
 
     <Category("Client Helper")> _
-Public Property ServiceName() As String
+    Public Property ServiceName() As String
         Get
             Return m_serviceName
         End Get
@@ -79,62 +76,18 @@ Public Property ServiceName() As String
         End Set
     End Property
 
-    <Category("Communication"), DefaultValue(GetType(String), "Protocol=Tcp; Server=localhost; Port=6500")> _
-    Public Property ConnectionString() As String
-        Get
-            Return m_connectionString
-        End Get
-        Set(ByVal value As String)
-            If Not String.IsNullOrEmpty(value) Then
-                If TVA.Text.Common.ParseKeyValuePairs(value).ContainsKey("protocol") Then
-                    m_connectionString = value
-                Else
-                    Throw New ArgumentException("Communication protocol must be specified.", "ConnectionString")
-                End If
-            Else
-                Throw New ArgumentNullException("ConnectionString")
-            End If
-        End Set
-    End Property
-
-    <Category("Communication"), DefaultValue(GetType(TVA.Security.Cryptography.EncryptLevel), "Level1")> _
-    Public Property Encryption() As TVA.Security.Cryptography.EncryptLevel
-        Get
-            Return m_encryption
-        End Get
-        Set(ByVal value As TVA.Security.Cryptography.EncryptLevel)
-            m_encryption = value
-        End Set
-    End Property
-
-    <Category("Communication"), DefaultValue(GetType(Boolean), "True")> _
-    Public Property SecureSession() As Boolean
-        Get
-            Return m_secureSession
-        End Get
-        Set(ByVal value As Boolean)
-            m_secureSession = value
-        End Set
-    End Property
-
-    <Browsable(False)> _
-    Public ReadOnly Property CommunicationUri() As String
-        Get
-            Dim connectionString As Dictionary(Of String, String) = TVA.Text.Common.ParseKeyValuePairs(m_connectionString)
-            Return String.Format("{0}://{1}:{2}/{3}", connectionString("protocol").ToLower(), connectionString("server").ToLower(), connectionString("port").ToLower(), m_serviceName)
-        End Get
-    End Property
-
     ''' <summary>
-    ''' Gets the instance of TCP client used for communicating with the service.
+    ''' Gets or sets the instance of TCP client used for communicating with the service.
     ''' </summary>
     ''' <value></value>
     ''' <returns>An instance of TCP client.</returns>
-    <Browsable(False)> _
-    Public ReadOnly Property CommunicationClient() As ICommunicationClient
+    Public Property CommunicationClient() As ICommunicationClient
         Get
             Return m_communicationClient
         End Get
+        Set(ByVal value As ICommunicationClient)
+            m_communicationClient = value
+        End Set
     End Property
 
     ''' <summary>
@@ -143,23 +96,18 @@ Public Property ServiceName() As String
     ''' <remarks>This method must be called in order to establish connection with the service.</remarks>
     Public Sub Connect()
 
-        UpdateStatus(String.Format("Attempting connection to ""{0}""...", Me.CommunicationUri), 2)
+        If m_communicationClient IsNot Nothing Then
+            UpdateStatus(String.Format("Connecting to {0} [{1}]", m_serviceName, System.DateTime.Now.ToString()), 2)
 
-        m_communicationClient = TVA.Communication.Common.CreateCommunicationClient(m_connectionString)
-        ' We'll always use handshaking to ensure the availability of SecureSession.
-        m_communicationClient.Handshake = True
-        m_communicationClient.HandshakePassphrase = m_serviceName
-        m_communicationClient.Encryption = m_encryption
-        m_communicationClient.SecureSession = m_secureSession
-        Select Case m_communicationClient.Protocol
-            Case TransportProtocol.Tcp
-                DirectCast(m_communicationClient, TcpClient).PayloadAware = True
-            Case TransportProtocol.Udp
-                DirectCast(m_communicationClient, UdpClient).PayloadAware = True
-        End Select
+            ' We'll always use handshaking to ensure the availability of SecureSession.
+            m_communicationClient.Handshake = True
+            m_communicationClient.HandshakePassphrase = m_serviceName
 
-        ' Initiate connection to the service's communication server.
-        m_communicationClient.Connect()
+            ' Initiate connection to the service's communication server.
+            m_communicationClient.Connect()
+        Else
+            UpdateStatus(String.Format("Cannot connect to {0}. No communication client is specified.", m_serviceName))
+        End If
 
     End Sub
 
@@ -242,9 +190,6 @@ Public Property ServiceName() As String
             With TVA.Configuration.Common.CategorizedSettings(m_settingsCategoryName)
                 If .Count > 0 Then
                     ServiceName = .Item("ServiceName").GetTypedValue(m_serviceName)
-                    ConnectionString = .Item("ConnectionString").GetTypedValue(m_connectionString)
-                    Encryption = .Item("Encryption").GetTypedValue(m_encryption)
-                    SecureSession = .Item("SecureSession").GetTypedValue(m_secureSession)
                 End If
             End With
         Catch ex As Exception
@@ -261,18 +206,6 @@ Public Property ServiceName() As String
                     .Clear()
                     With .Item("ServiceName", True)
                         .Value = ServiceName
-                        .Description = ""
-                    End With
-                    With .Item("ConnectionString", True)
-                        .Value = ConnectionString
-                        .Description = ""
-                    End With
-                    With .Item("Encryption", True)
-                        .Value = Encryption.ToString()
-                        .Description = ""
-                    End With
-                    With .Item("SecureSession", True)
-                        .Value = SecureSession.ToString()
                         .Description = ""
                     End With
                 End With
@@ -321,9 +254,9 @@ Public Property ServiceName() As String
         m_communicationClient.Send(New ClientInfo())
 
         With New StringBuilder()
-            .Append(String.Format("Connected to {0} [{1}]", m_serviceName, System.DateTime.Now.ToString()))
-            .Append(Environment.NewLine)
-            .Append(Environment.NewLine)
+            .AppendFormat("Connected to {0} [{1}]", m_serviceName, System.DateTime.Now.ToString())
+            .AppendLine()
+            .AppendLine()
             .Append(m_communicationClient.Status)
 
             UpdateStatus(.ToString())
@@ -340,9 +273,9 @@ Public Property ServiceName() As String
     Private Sub m_communicationClient_Disconnected(ByVal sender As Object, ByVal e As System.EventArgs) Handles m_communicationClient.Disconnected
 
         With New StringBuilder()
-            .Append(String.Format("Disconnected from {0} [{1}]", m_serviceName, System.DateTime.Now.ToString()))
-            .Append(Environment.NewLine)
-            .Append(Environment.NewLine)
+            .AppendFormat("Disconnected from {0} [{1}]", m_serviceName, System.DateTime.Now.ToString())
+            .AppendLine()
+            .AppendLine()
             .Append(m_communicationClient.Status)
 
             UpdateStatus(.ToString())
@@ -357,7 +290,7 @@ Public Property ServiceName() As String
             RaiseEvent ReceivedServiceResponse(Me, New ServiceResponseEventArgs(response))
             Select Case response.Type
                 Case "UPDATECLIENTSTATUS"
-                    UpdateStatus(response.Message, 1)
+                    UpdateStatus(response.Message)
                 Case "SERVICESTATECHANGED"
                     Dim messageSegments As String() = response.Message.Split(">"c)
                     If messageSegments.Length = 2 Then
@@ -365,18 +298,7 @@ Public Property ServiceName() As String
                         Dim newServiceState As ServiceState = DirectCast(System.Enum.Parse(GetType(ServiceState), messageSegments(1)), ServiceState)
                         RaiseEvent ServiceStateChanged(Me, New ObjectStateChangedEventArgs(Of ServiceState)(messageSegments(0), newServiceState))
 
-                        With New StringBuilder()
-                            .Append("State of the following service has changed:")
-                            .Append(Environment.NewLine)
-                            .Append("              Service Name: ")
-                            .Append(messageSegments(0))
-                            .Append(Environment.NewLine)
-                            .Append("             Service State: ")
-                            .Append(messageSegments(1))
-                            .Append(Environment.NewLine)
-
-                            UpdateStatus(.ToString())
-                        End With
+                        UpdateStatus(String.Format("State of service ""{0}"" has changed to ""{1}""", messageSegments(0), messageSegments(1)), 2)
                     End If
                 Case "PROCESSSTATECHANGED"
                     Dim messageSegments As String() = response.Message.Split(">"c)
@@ -385,18 +307,7 @@ Public Property ServiceName() As String
                         Dim newProcessState As ProcessState = DirectCast(System.Enum.Parse(GetType(ProcessState), messageSegments(1)), ProcessState)
                         RaiseEvent ProcessStateChanged(Me, New ObjectStateChangedEventArgs(Of ProcessState)(messageSegments(0), newProcessState))
 
-                        With New StringBuilder()
-                            .Append("State of the following process has changed:")
-                            .Append(Environment.NewLine)
-                            .Append("              Process Name: ")
-                            .Append(messageSegments(0))
-                            .Append(Environment.NewLine)
-                            .Append("             Process State: ")
-                            .Append(messageSegments(1))
-                            .Append(Environment.NewLine)
-
-                            UpdateStatus(.ToString())
-                        End With
+                        UpdateStatus(String.Format("State of process ""{0}"" has changed to ""{1}""", messageSegments(0), messageSegments(1)), 2)
                     End If
             End Select
         End If
