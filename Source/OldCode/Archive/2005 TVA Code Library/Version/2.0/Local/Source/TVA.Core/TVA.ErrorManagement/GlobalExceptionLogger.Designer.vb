@@ -26,7 +26,7 @@ Namespace ErrorManagement
             m_scopeTextMethod = AddressOf GetScopeText
             m_actionTextMethod = AddressOf GetActionText
             m_moreInfoTextMethod = AddressOf GetMoreInfoText
-            m_customLoggers = New List(Of LoggerMethodSignature)()
+            m_loggers = New List(Of LoggerMethodSignature)()
             m_settingsCategoryName = Me.GetType().Name
 
         End Sub

@@ -45,7 +45,7 @@ Namespace ErrorManagement
         Private m_scopeTextMethod As UITextMethodSignature
         Private m_actionTextMethod As UITextMethodSignature
         Private m_moreInfoTextMethod As UITextMethodSignature
-        Private m_customLoggers As List(Of LoggerMethodSignature)
+        Private m_loggers As List(Of LoggerMethodSignature)
         Private m_persistSettings As Boolean
         Private m_settingsCategoryName As String
 
@@ -81,9 +81,9 @@ Namespace ErrorManagement
             End Get
             Set(ByVal value As Boolean)
                 If value Then
-                    m_customLoggers.Add(AddressOf ExceptionToFile)
+                    m_loggers.Add(AddressOf ExceptionToFile)
                 Else
-                    m_customLoggers.Remove(AddressOf ExceptionToFile)
+                    m_loggers.Remove(AddressOf ExceptionToFile)
                 End If
                 m_logToFile = value
             End Set
@@ -96,9 +96,9 @@ Namespace ErrorManagement
             End Get
             Set(ByVal value As Boolean)
                 If value Then
-                    m_customLoggers.Add(AddressOf ExceptionToUI)
+                    m_loggers.Add(AddressOf ExceptionToUI)
                 Else
-                    m_customLoggers.Remove(AddressOf ExceptionToUI)
+                    m_loggers.Remove(AddressOf ExceptionToUI)
                 End If
                 m_logToUI = value
             End Set
@@ -111,9 +111,9 @@ Namespace ErrorManagement
             End Get
             Set(ByVal value As Boolean)
                 If value Then
-                    m_customLoggers.Add(AddressOf ExceptionToEmail)
+                    m_loggers.Add(AddressOf ExceptionToEmail)
                 Else
-                    m_customLoggers.Remove(AddressOf ExceptionToEmail)
+                    m_loggers.Remove(AddressOf ExceptionToEmail)
                 End If
                 m_logToEmail = value
             End Set
@@ -126,9 +126,9 @@ Namespace ErrorManagement
             End Get
             Set(ByVal value As Boolean)
                 If value Then
-                    m_customLoggers.Add(AddressOf ExceptionToEventLog)
+                    m_loggers.Add(AddressOf ExceptionToEventLog)
                 Else
-                    m_customLoggers.Remove(AddressOf ExceptionToEventLog)
+                    m_loggers.Remove(AddressOf ExceptionToEventLog)
                 End If
                 m_logToEventLog = value
             End Set
@@ -141,9 +141,9 @@ Namespace ErrorManagement
             End Get
             Set(ByVal value As Boolean)
                 If value Then
-                    m_customLoggers.Add(AddressOf ExceptionToScreenshot)
+                    m_loggers.Add(AddressOf ExceptionToScreenshot)
                 Else
-                    m_customLoggers.Remove(AddressOf ExceptionToScreenshot)
+                    m_loggers.Remove(AddressOf ExceptionToScreenshot)
                 End If
                 m_logToScreenshot = value
             End Set
@@ -276,9 +276,9 @@ Namespace ErrorManagement
         End Property
 
         <Browsable(False)> _
-        Public ReadOnly Property CustomLoggers() As List(Of LoggerMethodSignature)
+        Public ReadOnly Property Loggers() As List(Of LoggerMethodSignature)
             Get
-                Return m_customLoggers
+                Return m_loggers
             End Get
         End Property
 
@@ -623,7 +623,7 @@ Namespace ErrorManagement
 
             m_lastException = ex
 
-            For Each logger As LoggerMethodSignature In m_customLoggers
+            For Each logger As LoggerMethodSignature In m_loggers
                 Try
                     logger.Invoke(ex)
                 Catch
