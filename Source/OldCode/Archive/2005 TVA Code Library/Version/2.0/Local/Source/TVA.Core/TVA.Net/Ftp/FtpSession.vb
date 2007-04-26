@@ -28,8 +28,8 @@ Namespace Net.Ftp
 
     End Interface
 
-    <ToolboxBitmap(GetType(Session)), DefaultProperty("Server"), DefaultEvent("FileTransferProgress")> _
-    Public Class Session
+    <ToolboxBitmap(GetType(FtpSession)), DefaultProperty("Server"), DefaultEvent("FileTransferProgress")> _
+    Public Class FtpSession
 
         Inherits Component
 

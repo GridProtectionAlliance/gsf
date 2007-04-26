@@ -9,14 +9,14 @@ Namespace Net.Ftp
 
         Implements ISessionState
 
-        Private m_host As Session
+        Private m_host As FtpSession
         Private m_ctrlChannel As ControlChannel
         Private m_root As Directory
         Private m_current As Directory
         Private m_dataStream As DataStream
         Private m_caseInsensitive As Boolean
 
-        Friend Sub New(ByVal h As Session, ByVal ctrl As ControlChannel, ByVal CaseInsensitive As Boolean)
+        Friend Sub New(ByVal h As FtpSession, ByVal ctrl As ControlChannel, ByVal CaseInsensitive As Boolean)
 
             m_host = h
             m_ctrlChannel = ctrl
@@ -73,7 +73,7 @@ Namespace Net.Ftp
             End Get
         End Property
 
-        Friend ReadOnly Property Host() As Session
+        Friend ReadOnly Property Host() As FtpSession
             Get
                 Return m_host
             End Get

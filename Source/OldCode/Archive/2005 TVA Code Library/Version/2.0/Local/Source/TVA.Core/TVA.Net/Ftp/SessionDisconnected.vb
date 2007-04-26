@@ -9,12 +9,12 @@ Namespace Net.Ftp
 
         Implements ISessionState
 
-        Private m_host As Session
+        Private m_host As FtpSession
         Private m_server As String
         Private m_port As Integer
         Private m_caseInsensitive As Boolean
 
-        Friend Sub New(ByVal h As Session, ByVal CaseInsensitive As Boolean)
+        Friend Sub New(ByVal h As FtpSession, ByVal CaseInsensitive As Boolean)
 
             m_port = 21
             m_host = h
