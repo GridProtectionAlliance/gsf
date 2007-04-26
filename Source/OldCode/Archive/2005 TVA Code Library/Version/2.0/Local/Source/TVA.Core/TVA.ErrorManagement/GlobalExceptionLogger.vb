@@ -35,10 +35,10 @@ Namespace ErrorManagement
         Private m_logToEmail As Boolean
         Private m_logToEventLog As Boolean
         Private m_logToScreenshot As Boolean
-        Private m_emailServer As String
-        Private m_emailRecipients As String
-        Private m_contactPersonName As String
-        Private m_contactPersonPhone As String
+        Private m_smtpServer As String
+        Private m_contactEmail As String
+        Private m_contactName As String
+        Private m_contactPhone As String
         Private m_exitOnUnhandledException As Boolean
         Private m_parentAssembly As System.Reflection.Assembly
         Private m_errorTextMethod As UITextMethodSignature
@@ -124,41 +124,39 @@ Namespace ErrorManagement
             End Set
         End Property
 
-        <Category("Logging")> _
-        Public Property EmailServer() As String
+        Public Property SmtpServer() As String
             Get
-                Return m_emailServer
+                Return m_smtpServer
             End Get
             Set(ByVal value As String)
-                m_emailServer = value
+                m_smtpServer = value
             End Set
         End Property
 
-        <Category("Logging")> _
-        Public Property EmailRecipients() As String
+        Public Property ContactName() As String
             Get
-                Return m_emailRecipients
+                Return m_contactName
             End Get
             Set(ByVal value As String)
-                m_emailRecipients = value
+                m_contactName = value
             End Set
         End Property
 
-        Public Property ContactPersonName() As String
+        Public Property ContactEmail() As String
             Get
-                Return m_contactPersonName
+                Return m_contactEmail
             End Get
             Set(ByVal value As String)
-                m_contactPersonName = value
+                m_contactEmail = value
             End Set
         End Property
 
-        Public Property ContactPersonPhone() As String
+        Public Property ContactPhone() As String
             Get
-                Return m_contactPersonPhone
+                Return m_contactPhone
             End Get
             Set(ByVal value As String)
-                m_contactPersonPhone = value
+                m_contactPhone = value
             End Set
         End Property
 
@@ -491,10 +489,10 @@ Namespace ErrorManagement
                         LogToEmail = .Item("LogToEmail").GetTypedValue(m_logToEmail)
                         LogToEventLog = .Item("LogToEventLog").GetTypedValue(m_logToEventLog)
                         LogToScreenshot = .Item("LogToScreenshot").GetTypedValue(m_logToScreenshot)
-                        EmailServer = .Item("EmailServer").GetTypedValue(m_emailServer)
-                        EmailRecipients = .Item("EmailRecipients").GetTypedValue(m_emailRecipients)
-                        ContactPersonName = .Item("ContactPersonName").GetTypedValue(m_contactPersonName)
-                        ContactPersonPhone = .Item("ContactPersonPhone").GetTypedValue(m_contactPersonPhone)
+                        SmtpServer = .Item("EmailServer").GetTypedValue(m_smtpServer)
+                        ContactEmail = .Item("EmailRecipients").GetTypedValue(m_contactEmail)
+                        ContactName = .Item("ContactPersonName").GetTypedValue(m_contactName)
+                        ContactPhone = .Item("ContactPersonPhone").GetTypedValue(m_contactPhone)
                     End If
                 End With
             Catch ex As Exception
@@ -533,20 +531,20 @@ Namespace ErrorManagement
                             .Value = m_logToScreenshot.ToString()
                             .Description = "True if a screenshot is to be taken when an exception is encountered; otherwise False."
                         End With
-                        With .Item("EmailServer", True)
-                            .Value = m_emailServer
-                            .Description = "Name of the email server to be used for sending the email message."
+                        With .Item("SmtpServer", True)
+                            .Value = m_smtpServer
+                            .Description = "Name of the SMTP server to be used for sending the email message."
                         End With
-                        With .Item("EmailRecipients", True)
-                            .Value = m_emailRecipients
-                            .Description = "Comma-seperated list of recipients email addresses for the email message."
-                        End With
-                        With .Item("ContactPersonName", True)
-                            .Value = m_contactPersonName
+                        With .Item("ContactName", True)
+                            .Value = m_contactName
                             .Description = "Name of the person that the end-user can contact when an exception is encountered."
                         End With
-                        With .Item("ContactPersonPhone", True)
-                            .Value = m_contactPersonPhone
+                        With .Item("ContactEmail", True)
+                            .Value = m_contactEmail
+                            .Description = "Comma-seperated list of recipient email addresses for the email message."
+                        End With
+                        With .Item("ContactPhone", True)
+                            .Value = m_contactPhone
                             .Description = "Phone number of the person that the end-user can contact when an exception is encountered."
                         End With
                     End With
@@ -808,17 +806,17 @@ Namespace ErrorManagement
 
         Private Sub ExceptionToEmail(ByVal exceptionMessage As String)
 
-            If m_logToEmail AndAlso Not String.IsNullOrEmpty(m_emailRecipients) Then
+            If m_logToEmail AndAlso Not String.IsNullOrEmpty(m_contactEmail) Then
                 Try
                     m_logToEmailOK = False
 
                     With New SimpleMailMessage()
                         .Sender = String.Format("{0}@tva.gov", Environment.MachineName)
-                        .Recipients = m_emailRecipients
+                        .Recipients = m_contactEmail
                         .Subject = String.Format("Exception in {0} at {1}", ApplicationName, System.DateTime.Now.ToString())
                         .Body = exceptionMessage
                         .Attachments = AbsolutePath(ScreenshotFileName)
-                        .MailServer = m_emailServer
+                        .MailServer = m_smtpServer
                         .Send()
                     End With
 
@@ -882,7 +880,7 @@ Namespace ErrorManagement
 
             With New StringBuilder()
                 .AppendFormat("There was an unexpected error in {0}. ", ApplicationName)
-                .Append("This may be due to a programming bug and the development team was automatically notified of this problem.")
+                .Append("This may be due to an inconsistent system state or a programming error.")
 
                 Return .ToString()
             End With
@@ -914,8 +912,19 @@ Namespace ErrorManagement
                         .AppendFormat("Close your browser, navigate back to the {0} website, and try repeating you last action. ", ApplicationName)
                 End Select
                 .Append("Try alternative methods of performing the same action. ")
-                If Not String.IsNullOrEmpty(m_contactPersonName) AndAlso Not String.IsNullOrEmpty(m_contactPersonPhone) Then
-                    .AppendFormat("If you need immediate assistance, contact {0} at {1}.", m_contactPersonName, m_contactPersonPhone)
+                If Not String.IsNullOrEmpty(m_contactName) AndAlso _
+                        (Not String.IsNullOrEmpty(m_contactPhone) OrElse Not String.IsNullOrEmpty(m_contactPhone)) Then
+                    .AppendFormat("If you need immediate assistance, contact {0} ", m_contactName)
+                    If Not String.IsNullOrEmpty(m_contactEmail) Then
+                        .AppendFormat("via email at mailto:{0}", m_contactEmail)
+                        If Not String.IsNullOrEmpty(m_contactPhone) Then
+                            .Append(" or ")
+                        End If
+                    End If
+                    If Not String.IsNullOrEmpty(m_contactPhone) Then
+                        .AppendFormat("via phone at {0}", m_contactPhone)
+                    End If
+                    .Append(".")
                 End If
 
                 Return .ToString()
@@ -979,7 +988,7 @@ Namespace ErrorManagement
                     End If
                     .AppendLine()
                     .Append("   ")
-                    .Append(m_emailRecipients)
+                    .Append(m_contactEmail)
                     .AppendLine()
                 End If
                 .AppendLine()

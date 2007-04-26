@@ -53,7 +53,7 @@ Partial Class GelDialog
             Me.LabelError.Location = New System.Drawing.Point(67, 12)
             Me.LabelError.Name = "LabelError"
             Me.LabelError.Size = New System.Drawing.Size(97, 13)
-            Me.LabelError.TabIndex = 1
+            Me.LabelError.TabIndex = 0
             Me.LabelError.Text = "What happened"
             '
             'RichTextBoxError
@@ -67,7 +67,8 @@ Partial Class GelDialog
             Me.RichTextBoxError.ReadOnly = True
             Me.RichTextBoxError.ScrollBars = System.Windows.Forms.RichTextBoxScrollBars.Vertical
             Me.RichTextBoxError.Size = New System.Drawing.Size(390, 62)
-            Me.RichTextBoxError.TabIndex = 2
+            Me.RichTextBoxError.TabIndex = 1
+            Me.RichTextBoxError.TabStop = False
             Me.RichTextBoxError.Text = ""
             '
             'RichTextBoxScope
@@ -81,7 +82,8 @@ Partial Class GelDialog
             Me.RichTextBoxScope.ReadOnly = True
             Me.RichTextBoxScope.ScrollBars = System.Windows.Forms.RichTextBoxScrollBars.Vertical
             Me.RichTextBoxScope.Size = New System.Drawing.Size(432, 62)
-            Me.RichTextBoxScope.TabIndex = 4
+            Me.RichTextBoxScope.TabIndex = 3
+            Me.RichTextBoxScope.TabStop = False
             Me.RichTextBoxScope.Text = ""
             '
             'LabelScope
@@ -91,7 +93,7 @@ Partial Class GelDialog
             Me.LabelScope.Location = New System.Drawing.Point(9, 105)
             Me.LabelScope.Name = "LabelScope"
             Me.LabelScope.Size = New System.Drawing.Size(139, 13)
-            Me.LabelScope.TabIndex = 3
+            Me.LabelScope.TabIndex = 2
             Me.LabelScope.Text = "How this will affect you"
             '
             'RichTextBoxAction
@@ -105,7 +107,8 @@ Partial Class GelDialog
             Me.RichTextBoxAction.ReadOnly = True
             Me.RichTextBoxAction.ScrollBars = System.Windows.Forms.RichTextBoxScrollBars.Vertical
             Me.RichTextBoxAction.Size = New System.Drawing.Size(432, 62)
-            Me.RichTextBoxAction.TabIndex = 6
+            Me.RichTextBoxAction.TabIndex = 5
+            Me.RichTextBoxAction.TabStop = False
             Me.RichTextBoxAction.Text = ""
             '
             'LabelAction
@@ -115,7 +118,7 @@ Partial Class GelDialog
             Me.LabelAction.Location = New System.Drawing.Point(9, 196)
             Me.LabelAction.Name = "LabelAction"
             Me.LabelAction.Size = New System.Drawing.Size(151, 13)
-            Me.LabelAction.TabIndex = 5
+            Me.LabelAction.TabIndex = 4
             Me.LabelAction.Text = "What you can do about it"
             '
             'LabelMoreInfo
@@ -125,7 +128,7 @@ Partial Class GelDialog
             Me.LabelMoreInfo.Location = New System.Drawing.Point(9, 290)
             Me.LabelMoreInfo.Name = "LabelMoreInfo"
             Me.LabelMoreInfo.Size = New System.Drawing.Size(101, 13)
-            Me.LabelMoreInfo.TabIndex = 7
+            Me.LabelMoreInfo.TabIndex = 6
             Me.LabelMoreInfo.Text = "More information"
             '
             'RichTextBoxMoreInfo
@@ -141,6 +144,7 @@ Partial Class GelDialog
             Me.RichTextBoxMoreInfo.ScrollBars = System.Windows.Forms.RichTextBoxScrollBars.Vertical
             Me.RichTextBoxMoreInfo.Size = New System.Drawing.Size(448, 212)
             Me.RichTextBoxMoreInfo.TabIndex = 8
+            Me.RichTextBoxMoreInfo.TabStop = False
             Me.RichTextBoxMoreInfo.Text = ""
             '
             'ButtonMore
@@ -148,7 +152,7 @@ Partial Class GelDialog
             Me.ButtonMore.Location = New System.Drawing.Point(116, 285)
             Me.ButtonMore.Name = "ButtonMore"
             Me.ButtonMore.Size = New System.Drawing.Size(32, 23)
-            Me.ButtonMore.TabIndex = 9
+            Me.ButtonMore.TabIndex = 7
             Me.ButtonMore.Text = ">>"
             Me.ButtonMore.UseVisualStyleBackColor = True
             '
@@ -158,12 +162,13 @@ Partial Class GelDialog
             Me.ButtonOK.Location = New System.Drawing.Point(385, 538)
             Me.ButtonOK.Name = "ButtonOK"
             Me.ButtonOK.Size = New System.Drawing.Size(75, 23)
-            Me.ButtonOK.TabIndex = 10
+            Me.ButtonOK.TabIndex = 9
             Me.ButtonOK.Text = "OK"
             Me.ButtonOK.UseVisualStyleBackColor = True
             '
             'GelDialog
             '
+            Me.AcceptButton = Me.ButtonOK
             Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
             Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
             Me.ClientSize = New System.Drawing.Size(472, 573)
