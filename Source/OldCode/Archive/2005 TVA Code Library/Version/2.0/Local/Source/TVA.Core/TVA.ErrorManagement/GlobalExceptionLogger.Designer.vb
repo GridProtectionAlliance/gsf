@@ -21,6 +21,7 @@ Namespace ErrorManagement
             'This call is required by the Component Designer.
             InitializeComponent()
 
+            m_autoRegister = True
             m_smtpServer = TVA.Net.Smtp.SimpleMailMessage.DefaultMailServer
             m_errorTextMethod = AddressOf GetErrorText
             m_scopeTextMethod = AddressOf GetScopeText
