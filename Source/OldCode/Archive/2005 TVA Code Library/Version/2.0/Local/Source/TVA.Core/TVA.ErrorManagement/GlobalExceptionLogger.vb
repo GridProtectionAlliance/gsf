@@ -33,11 +33,12 @@ Namespace ErrorManagement
         Private m_logToUI As Boolean
         Private m_logToFile As Boolean
         Private m_logToEmail As Boolean
+        Private m_logToPhone As Boolean
         Private m_logToEventLog As Boolean
         Private m_logToScreenshot As Boolean
         Private m_smtpServer As String
-        Private m_contactEmail As String
         Private m_contactName As String
+        Private m_contactEmail As String
         Private m_contactPhone As String
         Private m_exitOnUnhandledException As Boolean
         Private m_parentAssembly As System.Reflection.Assembly
@@ -51,6 +52,7 @@ Namespace ErrorManagement
 
         Private m_logToFileOK As Boolean
         Private m_logToEmailOK As Boolean
+        Private m_logToPhoneOK As Boolean
         Private m_logToEventLogOK As Boolean
         Private m_logToScreenshotOK As Boolean
         Private m_lastException As Exception
@@ -79,6 +81,11 @@ Namespace ErrorManagement
                 Return m_logToFile
             End Get
             Set(ByVal value As Boolean)
+                If value Then
+                    m_customLoggers.Add(AddressOf ExceptionToFile)
+                Else
+                    m_customLoggers.Remove(AddressOf ExceptionToFile)
+                End If
                 m_logToFile = value
             End Set
         End Property
@@ -89,10 +96,14 @@ Namespace ErrorManagement
                 Return m_logToUI
             End Get
             Set(ByVal value As Boolean)
+                If value Then
+                    m_customLoggers.Add(AddressOf ExceptionToUI)
+                Else
+                    m_customLoggers.Remove(AddressOf ExceptionToUI)
+                End If
                 m_logToUI = value
             End Set
         End Property
-
 
         <Category("Logging")> _
         Public Property LogToEmail() As Boolean
@@ -100,7 +111,27 @@ Namespace ErrorManagement
                 Return m_logToEmail
             End Get
             Set(ByVal value As Boolean)
+                If value Then
+                    m_customLoggers.Add(AddressOf ExceptionToEmail)
+                Else
+                    m_customLoggers.Remove(AddressOf ExceptionToEmail)
+                End If
                 m_logToEmail = value
+            End Set
+        End Property
+
+        <Category("Logging")> _
+        Public Property LogToPhone() As Boolean
+            Get
+                Return m_logToPhone
+            End Get
+            Set(ByVal value As Boolean)
+                If value Then
+                    m_customLoggers.Add(AddressOf ExceptionToPhone)
+                Else
+                    m_customLoggers.Remove(AddressOf ExceptionToPhone)
+                End If
+                m_logToPhone = value
             End Set
         End Property
 
@@ -110,6 +141,11 @@ Namespace ErrorManagement
                 Return m_logToEventLog
             End Get
             Set(ByVal value As Boolean)
+                If value Then
+                    m_customLoggers.Add(AddressOf ExceptionToEventLog)
+                Else
+                    m_customLoggers.Remove(AddressOf ExceptionToEventLog)
+                End If
                 m_logToEventLog = value
             End Set
         End Property
@@ -120,6 +156,11 @@ Namespace ErrorManagement
                 Return m_logToScreenshot
             End Get
             Set(ByVal value As Boolean)
+                If value Then
+                    m_customLoggers.Add(AddressOf ExceptionToScreenshot)
+                Else
+                    m_customLoggers.Remove(AddressOf ExceptionToScreenshot)
+                End If
                 m_logToScreenshot = value
             End Set
         End Property
@@ -487,6 +528,7 @@ Namespace ErrorManagement
                         LogToUI = .Item("LogToUI").GetTypedValue(m_logToUI)
                         LogToFile = .Item("LogToFile").GetTypedValue(m_logToFile)
                         LogToEmail = .Item("LogToEmail").GetTypedValue(m_logToEmail)
+                        LogToPhone = .Item("LogToPhone").GetTypedValue(m_logToPhone)
                         LogToEventLog = .Item("LogToEventLog").GetTypedValue(m_logToEventLog)
                         LogToScreenshot = .Item("LogToScreenshot").GetTypedValue(m_logToScreenshot)
                         SmtpServer = .Item("EmailServer").GetTypedValue(m_smtpServer)
@@ -521,7 +563,11 @@ Namespace ErrorManagement
                         End With
                         With .Item("LogToEmail", True)
                             .Value = m_logToEmail.ToString()
-                            .Description = "True if an email is to be sent with the details of an encountered exception; otherwise False."
+                            .Description = "True if an email is to be sent to ContactEmail with the details of an encountered exception; otherwise False."
+                        End With
+                        With .Item("LogToPhone", True)
+                            .Value = m_logToPhone.ToString()
+                            .Description = "True if a phone call is to be placed to ContactPhone with the details of an encountered exception; otherwise False."
                         End With
                         With .Item("LogToEventLog", True)
                             .Value = m_logToEventLog.ToString()
@@ -596,18 +642,7 @@ Namespace ErrorManagement
 
         Private Sub HandleException(ByVal ex As Exception, ByVal exitApplication As Boolean)
 
-            Try
-                m_lastException = ex
-                Dim exceptionString As String = ExceptionToString(ex, m_parentAssembly)
-
-                ExceptionToScreenshot(exceptionString)
-                ExceptionToEventLog(exceptionString)
-                ExceptionToEmail(exceptionString)
-                ExceptionToFile(exceptionString)
-                ExceptionToUI()
-            Catch
-
-            End Try
+            m_lastException = ex
 
             For Each logger As LoggerMethodSignature In m_customLoggers
                 Try
@@ -625,7 +660,7 @@ Namespace ErrorManagement
 
         End Sub
 
-        Private Sub ExceptionToUI()
+        Private Sub ExceptionToUI(ByVal exception As Exception)
 
             If m_logToUI Then
                 Try
@@ -784,7 +819,7 @@ Namespace ErrorManagement
 
         End Sub
 
-        Private Sub ExceptionToFile(ByVal exceptionMessage As String)
+        Private Sub ExceptionToFile(ByVal exception As Exception)
 
             If m_logToFile Then
                 Try
@@ -792,7 +827,7 @@ Namespace ErrorManagement
 
                     LogFile.Name = LogFileName
                     If Not LogFile.IsOpen Then LogFile.Open()
-                    LogFile.WriteTimestampedLine(exceptionMessage)
+                    LogFile.WriteTimestampedLine(ExceptionToString(exception, m_parentAssembly))
 
                     m_logToFileOK = True
                 Catch ex As Exception
@@ -804,7 +839,7 @@ Namespace ErrorManagement
 
         End Sub
 
-        Private Sub ExceptionToEmail(ByVal exceptionMessage As String)
+        Private Sub ExceptionToEmail(ByVal exception As Exception)
 
             If m_logToEmail AndAlso Not String.IsNullOrEmpty(m_contactEmail) Then
                 Try
@@ -814,7 +849,7 @@ Namespace ErrorManagement
                         .Sender = String.Format("{0}@tva.gov", Environment.MachineName)
                         .Recipients = m_contactEmail
                         .Subject = String.Format("Exception in {0} at {1}", ApplicationName, System.DateTime.Now.ToString())
-                        .Body = exceptionMessage
+                        .Body = ExceptionToString(exception, m_parentAssembly)
                         .Attachments = AbsolutePath(ScreenshotFileName)
                         .MailServer = m_smtpServer
                         .Send()
@@ -828,14 +863,43 @@ Namespace ErrorManagement
 
         End Sub
 
-        Private Sub ExceptionToEventLog(ByVal exceptionMessage As String)
+        Private Sub ExceptionToPhone(ByVal exception As Exception)
+
+            If m_logToPhone AndAlso Not String.IsNullOrEmpty(m_contactPhone) Then
+                Try
+                    m_logToPhoneOK = False
+
+                    'Dim queue As New MessageQueue("Formatname:DIRECT=OS:rgocmsspeech2\acts")
+                    'Dim voiceMessage As New System.Messaging.Message()
+                    'With New StringBuilder()
+                    '    .Append("http://localhost/ELCPSpeechTest/Default.aspx?PhNum=")
+                    '    .Append(m_contactPhone.Replace(" ", "").Replace("-", "").Replace("(", "").Replace(")", ""))
+                    '    .Append("&Msg=")
+                    '    If Not String.IsNullOrEmpty(m_contactName) Then
+                    '        .AppendFormat("Hello {0}! ", m_contactName)
+                    '    End If
+                    '    .AppendFormat("An unexpected exception of type {0} has occurred in {1}.", exception.GetType().Name, ApplicationName)
+                    '    voiceMessage.Body = .ToString()
+                    'End With
+                    'voiceMessage.Priority = MessagePriority.Normal
+                    'queue.Send(voiceMessage)
+
+                    'm_logToPhoneOK = True
+                Catch ex As Exception
+
+                End Try
+            End If
+
+        End Sub
+
+        Private Sub ExceptionToEventLog(ByVal exception As Exception)
 
             If m_logToEventLog Then
                 Try
                     m_logToEventLogOK = False
 
                     ' Write the formatted exception message to the event log.
-                    EventLog.WriteEntry(ApplicationName, exceptionMessage, EventLogEntryType.Error)
+                    EventLog.WriteEntry(ApplicationName, ExceptionToString(exception, m_parentAssembly), EventLogEntryType.Error)
 
                     m_logToEventLogOK = True
                 Catch ex As Exception
@@ -845,7 +909,7 @@ Namespace ErrorManagement
 
         End Sub
 
-        Private Sub ExceptionToScreenshot(ByVal exceptionMessage As String)
+        Private Sub ExceptionToScreenshot(ByVal exception As Exception)
 
             If m_logToScreenshot AndAlso _
                     (ApplicationType = ApplicationType.WindowsCui OrElse ApplicationType = ApplicationType.WindowsGui) Then
@@ -879,7 +943,7 @@ Namespace ErrorManagement
         Private Function GetErrorText() As String
 
             With New StringBuilder()
-                .AppendFormat("There was an unexpected error in {0}. ", ApplicationName)
+                .AppendFormat("An unexpected exception has occurred in {0}. ", ApplicationName)
                 .Append("This may be due to an inconsistent system state or a programming error.")
 
                 Return .ToString()
@@ -916,7 +980,7 @@ Namespace ErrorManagement
                         (Not String.IsNullOrEmpty(m_contactPhone) OrElse Not String.IsNullOrEmpty(m_contactPhone)) Then
                     .AppendFormat("If you need immediate assistance, contact {0} ", m_contactName)
                     If Not String.IsNullOrEmpty(m_contactEmail) Then
-                        .AppendFormat("via email at mailto:{0}", m_contactEmail)
+                        .AppendFormat("via email at {0}", m_contactEmail)
                         If Not String.IsNullOrEmpty(m_contactPhone) Then
                             .Append(" or ")
                         End If
@@ -989,6 +1053,18 @@ Namespace ErrorManagement
                     .AppendLine()
                     .Append("   ")
                     .Append(m_contactEmail)
+                    .AppendLine()
+                End If
+                If m_logToPhone Then
+                    .AppendFormat(" {0} ", bullet)
+                    If m_logToPhoneOK Then
+                        .Append("a phone call has been placed to:")
+                    Else
+                        .Append("a phone call could NOT be placed to:")
+                    End If
+                    .AppendLine()
+                    .Append("   ")
+                    .Append(m_contactPhone)
                     .AppendLine()
                 End If
                 .AppendLine()
