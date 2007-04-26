@@ -9,139 +9,139 @@ Namespace Console
         Implements IEnumerable
 
         Public OrderedArgID As String
-        Private OrderedArg As Integer
-        Private Parameters As StringDictionary
+        Private m_orderedArg As Integer
+        Private m_parameters As StringDictionary
 
         Public Sub New(ByVal CommandLine As String, Optional ByVal OrderedArgID As String = "OrderedArg")
 
-            Dim Spliter As New Regex("^-{1,2}|^/|=|:", RegexOptions.IgnoreCase Or RegexOptions.Compiled)
-            Dim Remover As New Regex("^['""]?(.*?)['""]?$", RegexOptions.IgnoreCase Or RegexOptions.Compiled)
-            Dim Parameter As String
-            Dim Parts As String()
+            Dim spliter As New Regex("^-{1,2}|^/|=|:", RegexOptions.IgnoreCase Or RegexOptions.Compiled)
+            Dim remover As New Regex("^['""]?(.*?)['""]?$", RegexOptions.IgnoreCase Or RegexOptions.Compiled)
+            Dim parameter As String
+            Dim parts As String()
 
-            Me.Parameters = New StringDictionary
-            Me.OrderedArgID = OrderedArgID
-            Me.OrderedArg = 0
+            m_parameters = New StringDictionary
+            OrderedArgID = OrderedArgID
+            m_orderedArg = 0
 
             ' Valid parameters forms:
             '   {-,/,--}param{=,:}((",')value(",'))
             ' Examples: 
             '   -param1=value1 --param2 /param3:"Test-:-work" 
             '   /param4=happy -param5 '--=nice=--'
-            For Each Arg As String In Common.ParseCommand(CommandLine)
-                If Len(Arg) > 0 Then
+            For Each arg As String In Common.ParseCommand(CommandLine)
+                If Not String.IsNullOrEmpty(arg) Then
                     ' If this argument begins with a quote, we treat it as a stand-alone argument
-                    If Arg.Chars(0) = """"c Or Arg.Chars(0) = "'"c Then
+                    If arg.Chars(0) = """"c Or arg.Chars(0) = "'"c Then
                         ' Handle stand alone ordered arguments
-                        OrderedArg += 1
-                        Parameter = OrderedArgID & OrderedArg
+                        m_orderedArg += 1
+                        parameter = OrderedArgID & m_orderedArg
 
                         ' Remove possible enclosing characters (",')
-                        If Not Parameters.ContainsKey(Parameter) Then
-                            Arg = Remover.Replace(Arg, "$1")
-                            Parameters.Add(Parameter, Arg)
+                        If Not m_parameters.ContainsKey(parameter) Then
+                            arg = remover.Replace(arg, "$1")
+                            m_parameters.Add(parameter, arg)
                         End If
 
-                        Parameter = Nothing
+                        parameter = Nothing
                     Else
                         ' Look for new parameters (-,/ or --) and a
                         ' possible enclosed value (=,:)
-                        Parts = Spliter.Split(Arg, 3)
+                        parts = spliter.Split(arg, 3)
 
-                        Select Case Parts.Length
+                        Select Case parts.Length
                             Case 1
                                 ' Found just a parameter
                                 ' The last parameter is still waiting. 
                                 ' With no value, set it to true.
-                                If Not Parameter Is Nothing Then
-                                    If Not Parameters.ContainsKey(Parameter) Then Parameters.Add(Parameter, "True")
+                                If Not parameter Is Nothing Then
+                                    If Not m_parameters.ContainsKey(parameter) Then m_parameters.Add(parameter, "True")
                                 End If
 
-                                Parameter = Nothing
+                                parameter = Nothing
 
                                 ' Handle stand alone ordered arguments
-                                OrderedArg += 1
-                                Parameter = OrderedArgID & OrderedArg
+                                m_orderedArg += 1
+                                parameter = OrderedArgID & m_orderedArg
 
                                 ' Remove possible enclosing characters (",')
-                                If Not Parameters.ContainsKey(Parameter) Then
-                                    Arg = Remover.Replace(Arg, "$1")
-                                    Parameters.Add(Parameter, Arg)
+                                If Not m_parameters.ContainsKey(parameter) Then
+                                    arg = remover.Replace(arg, "$1")
+                                    m_parameters.Add(parameter, arg)
                                 End If
 
-                                Parameter = Nothing
+                                parameter = Nothing
                             Case 2
                                 ' Found just a parameter
                                 ' The last parameter is still waiting. 
                                 ' With no value, set it to true.
-                                If Not Parameter Is Nothing Then
-                                    If Not Parameters.ContainsKey(Parameter) Then Parameters.Add(Parameter, "True")
+                                If Not parameter Is Nothing Then
+                                    If Not m_parameters.ContainsKey(parameter) Then m_parameters.Add(parameter, "True")
                                 End If
 
-                                Parameter = Parts(1)
+                                parameter = parts(1)
                             Case 3
                                 ' Parameter with enclosed value
                                 ' The last parameter is still waiting. 
                                 ' With no value, set it to true.
-                                If Not Parameter Is Nothing Then
-                                    If Not Parameters.ContainsKey(Parameter) Then Parameters.Add(Parameter, "True")
+                                If Not parameter Is Nothing Then
+                                    If Not m_parameters.ContainsKey(parameter) Then m_parameters.Add(parameter, "True")
                                 End If
 
-                                Parameter = Parts(1)
+                                parameter = parts(1)
 
                                 ' Remove possible enclosing characters (",')
-                                If Not Parameters.ContainsKey(Parameter) Then
-                                    Parts(2) = Remover.Replace(Parts(2), "$1")
-                                    Parameters.Add(Parameter, Parts(2))
+                                If Not m_parameters.ContainsKey(parameter) Then
+                                    parts(2) = remover.Replace(parts(2), "$1")
+                                    m_parameters.Add(parameter, parts(2))
                                 End If
 
-                                Parameter = Nothing
+                                parameter = Nothing
                         End Select
                     End If
                 End If
             Next
 
             ' In case a parameter is still waiting
-            If Not Parameter Is Nothing Then
-                If Not Parameters.ContainsKey(Parameter) Then Parameters.Add(Parameter, "True")
+            If Not parameter Is Nothing Then
+                If Not m_parameters.ContainsKey(parameter) Then m_parameters.Add(parameter, "True")
             End If
 
         End Sub
 
         ' Retrieve a parameter value if it exists 
-        Default Public ReadOnly Property Item(ByVal Param As String) As String
+        Default Public ReadOnly Property Item(ByVal param As String) As String
             Get
-                Return Parameters(Param)
+                Return m_parameters(param)
             End Get
         End Property
 
-        Public ReadOnly Property Exists(ByVal Param As String) As Boolean
+        Public ReadOnly Property Exists(ByVal param As String) As Boolean
             Get
-                Return (Len(Trim(Me(Param))) > 0)
+                Return (Len(Trim(Me(param))) > 0)
             End Get
         End Property
 
         Public ReadOnly Property Count() As Integer
             Get
-                Return Parameters.Count
+                Return m_parameters.Count
             End Get
         End Property
 
         Public ReadOnly Property OrderedArgCount() As Integer
             Get
-                Return OrderedArg
+                Return m_orderedArg
             End Get
         End Property
 
         Public ReadOnly Property ContainHelpRequest() As Boolean
             Get
-                Return (Parameters.ContainsKey("?") Or Parameters.ContainsKey("Help"))
+                Return (m_parameters.ContainsKey("?") Or m_parameters.ContainsKey("Help"))
             End Get
         End Property
 
         Public Function GetEnumerator() As IEnumerator Implements IEnumerable.GetEnumerator
 
-            Return Parameters.GetEnumerator()
+            Return m_parameters.GetEnumerator()
 
         End Function
 
