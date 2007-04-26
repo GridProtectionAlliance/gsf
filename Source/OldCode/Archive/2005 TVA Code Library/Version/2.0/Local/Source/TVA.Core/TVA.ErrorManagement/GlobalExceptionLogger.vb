@@ -33,7 +33,6 @@ Namespace ErrorManagement
         Private m_logToUI As Boolean
         Private m_logToFile As Boolean
         Private m_logToEmail As Boolean
-        Private m_logToPhone As Boolean
         Private m_logToEventLog As Boolean
         Private m_logToScreenshot As Boolean
         Private m_smtpServer As String
@@ -117,21 +116,6 @@ Namespace ErrorManagement
                     m_customLoggers.Remove(AddressOf ExceptionToEmail)
                 End If
                 m_logToEmail = value
-            End Set
-        End Property
-
-        <Category("Logging")> _
-        Public Property LogToPhone() As Boolean
-            Get
-                Return m_logToPhone
-            End Get
-            Set(ByVal value As Boolean)
-                If value Then
-                    m_customLoggers.Add(AddressOf ExceptionToPhone)
-                Else
-                    m_customLoggers.Remove(AddressOf ExceptionToPhone)
-                End If
-                m_logToPhone = value
             End Set
         End Property
 
@@ -528,7 +512,6 @@ Namespace ErrorManagement
                         LogToUI = .Item("LogToUI").GetTypedValue(m_logToUI)
                         LogToFile = .Item("LogToFile").GetTypedValue(m_logToFile)
                         LogToEmail = .Item("LogToEmail").GetTypedValue(m_logToEmail)
-                        LogToPhone = .Item("LogToPhone").GetTypedValue(m_logToPhone)
                         LogToEventLog = .Item("LogToEventLog").GetTypedValue(m_logToEventLog)
                         LogToScreenshot = .Item("LogToScreenshot").GetTypedValue(m_logToScreenshot)
                         SmtpServer = .Item("EmailServer").GetTypedValue(m_smtpServer)
@@ -564,10 +547,6 @@ Namespace ErrorManagement
                         With .Item("LogToEmail", True)
                             .Value = m_logToEmail.ToString()
                             .Description = "True if an email is to be sent to ContactEmail with the details of an encountered exception; otherwise False."
-                        End With
-                        With .Item("LogToPhone", True)
-                            .Value = m_logToPhone.ToString()
-                            .Description = "True if a phone call is to be placed to ContactPhone with the details of an encountered exception; otherwise False."
                         End With
                         With .Item("LogToEventLog", True)
                             .Value = m_logToEventLog.ToString()
@@ -863,35 +842,6 @@ Namespace ErrorManagement
 
         End Sub
 
-        Private Sub ExceptionToPhone(ByVal exception As Exception)
-
-            If m_logToPhone AndAlso Not String.IsNullOrEmpty(m_contactPhone) Then
-                Try
-                    m_logToPhoneOK = False
-
-                    'Dim queue As New MessageQueue("Formatname:DIRECT=OS:rgocmsspeech2\acts")
-                    'Dim voiceMessage As New System.Messaging.Message()
-                    'With New StringBuilder()
-                    '    .Append("http://localhost/ELCPSpeechTest/Default.aspx?PhNum=")
-                    '    .Append(m_contactPhone.Replace(" ", "").Replace("-", "").Replace("(", "").Replace(")", ""))
-                    '    .Append("&Msg=")
-                    '    If Not String.IsNullOrEmpty(m_contactName) Then
-                    '        .AppendFormat("Hello {0}! ", m_contactName)
-                    '    End If
-                    '    .AppendFormat("An unexpected exception of type {0} has occurred in {1}.", exception.GetType().Name, ApplicationName)
-                    '    voiceMessage.Body = .ToString()
-                    'End With
-                    'voiceMessage.Priority = MessagePriority.Normal
-                    'queue.Send(voiceMessage)
-
-                    'm_logToPhoneOK = True
-                Catch ex As Exception
-
-                End Try
-            End If
-
-        End Sub
-
         Private Sub ExceptionToEventLog(ByVal exception As Exception)
 
             If m_logToEventLog Then
@@ -1053,18 +1003,6 @@ Namespace ErrorManagement
                     .AppendLine()
                     .Append("   ")
                     .Append(m_contactEmail)
-                    .AppendLine()
-                End If
-                If m_logToPhone Then
-                    .AppendFormat(" {0} ", bullet)
-                    If m_logToPhoneOK Then
-                        .Append("a phone call has been placed to:")
-                    Else
-                        .Append("a phone call could NOT be placed to:")
-                    End If
-                    .AppendLine()
-                    .Append("   ")
-                    .Append(m_contactPhone)
                     .AppendLine()
                 End If
                 .AppendLine()
