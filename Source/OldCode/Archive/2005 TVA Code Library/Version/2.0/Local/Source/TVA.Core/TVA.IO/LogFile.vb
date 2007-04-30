@@ -101,6 +101,10 @@ Namespace IO
             Set(ByVal value As String)
                 If Not String.IsNullOrEmpty(value) Then
                     m_name = value
+                    If IsOpen() Then
+                        Close()
+                        Open()
+                    End If
                 Else
                     Throw New ArgumentNullException("Name")
                 End If
