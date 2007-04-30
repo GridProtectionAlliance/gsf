@@ -263,7 +263,7 @@ Public MustInherit Class ByteEncoding
             If m_byteImages Is Nothing Then
                 m_byteImages = CreateArray(Of String)(256)
 
-                For imageByte As Byte = Byte.MinValue To Byte.MaxValue
+                For imageByte As Integer = Byte.MinValue To Byte.MaxValue
                     With New StringBuilder
                         If m_reverse Then
                             If (imageByte And Bit7) > 0 Then .Append("1"c) Else .Append("0"c)
