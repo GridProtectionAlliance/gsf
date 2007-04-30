@@ -294,7 +294,7 @@ Public MustInherit Class ByteEncoding
                 If bytes IsNot Nothing Then
                     For x As Integer = 0 To length - 1
                         If spacingCharacter <> NoSpacing AndAlso x > 0 Then .Append(spacingCharacter)
-                        .Append(m_byteImages(bytes(x)))
+                        .Append(m_byteImages(bytes(offset + x)))
                     Next
                 End If
 
