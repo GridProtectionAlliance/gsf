@@ -16,6 +16,8 @@
 '       Transformed code into System.Text.Encoding styled hierarchy
 '  02/13/2007 - J. Ritchie Carroll
 '       Added ASCII character extraction as an encoding option
+'  04/30/2007 - J. Ritchie Carroll
+'       Cached binary bit images when first called to optimize generation
 '
 '*******************************************************************************************************
 
@@ -166,6 +168,7 @@ Public MustInherit Class ByteEncoding
 
         Inherits ByteEncoding
 
+        Private m_byteImages As String()
         Private m_reverse As Boolean
 
         ' This class is meant for internal instatiation only
@@ -256,30 +259,42 @@ Public MustInherit Class ByteEncoding
         ''' <returns>String of encoded bytes</returns>
         Public Overrides Function GetString(ByVal bytes() As Byte, ByVal offset As Integer, ByVal length As Integer, ByVal spacingCharacter As Char) As String
 
+            ' Initialize byte image array on first call for speed in future calls
+            If m_byteImages Is Nothing Then
+                m_byteImages = CreateArray(Of String)(256)
+
+                For imageByte As Byte = Byte.MinValue To Byte.MaxValue
+                    With New StringBuilder
+                        If m_reverse Then
+                            If (imageByte And Bit7) > 0 Then .Append("1"c) Else .Append("0"c)
+                            If (imageByte And Bit6) > 0 Then .Append("1"c) Else .Append("0"c)
+                            If (imageByte And Bit5) > 0 Then .Append("1"c) Else .Append("0"c)
+                            If (imageByte And Bit4) > 0 Then .Append("1"c) Else .Append("0"c)
+                            If (imageByte And Bit3) > 0 Then .Append("1"c) Else .Append("0"c)
+                            If (imageByte And Bit2) > 0 Then .Append("1"c) Else .Append("0"c)
+                            If (imageByte And Bit1) > 0 Then .Append("1"c) Else .Append("0"c)
+                            If (imageByte And Bit0) > 0 Then .Append("1"c) Else .Append("0"c)
+                        Else
+                            If (imageByte And Bit0) > 0 Then .Append("1"c) Else .Append("0"c)
+                            If (imageByte And Bit1) > 0 Then .Append("1"c) Else .Append("0"c)
+                            If (imageByte And Bit2) > 0 Then .Append("1"c) Else .Append("0"c)
+                            If (imageByte And Bit3) > 0 Then .Append("1"c) Else .Append("0"c)
+                            If (imageByte And Bit4) > 0 Then .Append("1"c) Else .Append("0"c)
+                            If (imageByte And Bit5) > 0 Then .Append("1"c) Else .Append("0"c)
+                            If (imageByte And Bit6) > 0 Then .Append("1"c) Else .Append("0"c)
+                            If (imageByte And Bit7) > 0 Then .Append("1"c) Else .Append("0"c)
+                        End If
+
+                        m_byteImages(imageByte) = .ToString()
+                    End With
+                Next
+            End If
+
             With New StringBuilder
                 If bytes IsNot Nothing Then
                     For x As Integer = 0 To length - 1
                         If spacingCharacter <> NoSpacing AndAlso x > 0 Then .Append(spacingCharacter)
-
-                        If m_reverse Then
-                            If (bytes(x) And Bit7) > 0 Then .Append("1"c) Else .Append("0"c)
-                            If (bytes(x) And Bit6) > 0 Then .Append("1"c) Else .Append("0"c)
-                            If (bytes(x) And Bit5) > 0 Then .Append("1"c) Else .Append("0"c)
-                            If (bytes(x) And Bit4) > 0 Then .Append("1"c) Else .Append("0"c)
-                            If (bytes(x) And Bit3) > 0 Then .Append("1"c) Else .Append("0"c)
-                            If (bytes(x) And Bit2) > 0 Then .Append("1"c) Else .Append("0"c)
-                            If (bytes(x) And Bit1) > 0 Then .Append("1"c) Else .Append("0"c)
-                            If (bytes(x) And Bit0) > 0 Then .Append("1"c) Else .Append("0"c)
-                        Else
-                            If (bytes(x) And Bit0) > 0 Then .Append("1"c) Else .Append("0"c)
-                            If (bytes(x) And Bit1) > 0 Then .Append("1"c) Else .Append("0"c)
-                            If (bytes(x) And Bit2) > 0 Then .Append("1"c) Else .Append("0"c)
-                            If (bytes(x) And Bit3) > 0 Then .Append("1"c) Else .Append("0"c)
-                            If (bytes(x) And Bit4) > 0 Then .Append("1"c) Else .Append("0"c)
-                            If (bytes(x) And Bit5) > 0 Then .Append("1"c) Else .Append("0"c)
-                            If (bytes(x) And Bit6) > 0 Then .Append("1"c) Else .Append("0"c)
-                            If (bytes(x) And Bit7) > 0 Then .Append("1"c) Else .Append("0"c)
-                        End If
+                        .Append(m_byteImages(bytes(x)))
                     Next
                 End If
 
