@@ -63,6 +63,10 @@ Namespace IO
                 If Not String.IsNullOrEmpty(value) Then
                     If String.Compare(JustFileExtension(value), Extension) = 0 Then
                         m_name = value
+                        If IsOpen() Then
+                            Close()
+                            Open()
+                        End If
                     Else
                         Throw New ArgumentException(String.Format("Name must have an extension of {0}.", Extension))
                     End If
