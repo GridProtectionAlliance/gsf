@@ -2,6 +2,7 @@
 
 Option Strict On
 
+Imports System.IO
 Imports System.Net
 Imports System.Web
 Imports System.Text
@@ -865,6 +866,8 @@ Namespace ErrorManagement
                     (ApplicationType = ApplicationType.WindowsCui OrElse ApplicationType = ApplicationType.WindowsGui) Then
                 Try
                     m_logToScreenshotOK = False
+
+                    If File.Exists(ScreenshotFileName) Then File.Delete(ScreenshotFileName)
 
                     Dim fullScreen As New Size(0, 0)
                     For Each myScreen As Screen In Screen.AllScreens
