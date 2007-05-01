@@ -60,7 +60,7 @@ Public MustInherit Class CommunicationClientBase
 
     Private m_connectTime As Long
     Private m_disconnectTime As Long
-    Private m_connectionWaitHandle As AutoResetEvent
+    Private m_connectionWaitHandle As ManualResetEvent
 
 #End Region
 
@@ -517,45 +517,6 @@ Public MustInherit Class CommunicationClientBase
     Public MustOverride Sub Disconnect() Implements ICommunicationClient.Disconnect
 
     ''' <summary>
-    ''' Waits for the client to connect to the server for the specified time and optionally stop the client from
-    ''' retrying connection attempts if the client is unable to connect to the server within the specified time.
-    ''' </summary>
-    ''' <param name="waitTime">
-    ''' The time in milliseconds to wait for the client to connect to the server. Specifying a value of -1  
-    ''' will cause this method to wait indefinately until the client establishes connection with the server.
-    ''' </param>
-    Public Sub WaitForConnection(ByVal waitTime As Integer) Implements ICommunicationClient.WaitForConnection
-
-        WaitForConnection(waitTime, False)
-
-    End Sub
-
-    ''' <summary>
-    ''' Waits for the client to connect to the server for the specified time and optionally stop the client from
-    ''' retrying connection attempts if the client is unable to connect to the server within the specified time.
-    ''' </summary>
-    ''' <param name="waitTime">
-    ''' The time in milliseconds to wait for the client to connect to the server. Specifying a value of -1  
-    ''' will cause this method to wait indefinately until the client establishes connection with the server.
-    ''' </param>
-    ''' <param name="stopRetrying">
-    ''' Boolean value indicating whether the client should stop trying to connect to the server if it is unable to 
-    ''' connect to the server after waiting for the specified duration.
-    ''' </param>
-    Public Sub WaitForConnection(ByVal waitTime As Integer, ByVal stopRetrying As Boolean) Implements ICommunicationClient.WaitForConnection
-
-        If Not IsConnected Then
-            ' We'll wait until client has connected or until the time to wait for connection is reached.
-            m_connectionWaitHandle.WaitOne(waitTime, False)
-
-            ' If the client hasn't connected after waiting for the specified time and if it is specified to stop 
-            ' attempting to connect to the server, then we'll call the CancelConnect() method.
-            If stopRetrying AndAlso Not m_isConnected Then CancelConnect()
-        End If
-
-    End Sub
-
-    ''' <summary>
     ''' Sends data to the server.
     ''' </summary>
     ''' <param name="data">The plain-text data that is to be sent to the server.</param>
@@ -614,6 +575,49 @@ Public MustInherit Class CommunicationClientBase
         End If
 
     End Sub
+
+    ''' <summary>
+    ''' Waits for the client to connect to the server for the specified time and optionally stop the client from
+    ''' retrying connection attempts if the client is unable to connect to the server within the specified time.
+    ''' </summary>
+    ''' <param name="waitTime">
+    ''' The time in milliseconds to wait for the client to connect to the server. Specifying a value of -1  
+    ''' will cause this method to wait indefinately until the client establishes connection with the server.
+    ''' </param>
+    ''' <returns>True if the connection was successful; otherwise False.</returns>
+    Public Function WaitForConnection(ByVal waitTime As Integer) As Boolean Implements ICommunicationClient.WaitForConnection
+
+        Return WaitForConnection(waitTime, False)
+
+    End Function
+
+    ''' <summary>
+    ''' Waits for the client to connect to the server for the specified time and optionally stop the client from
+    ''' retrying connection attempts if the client is unable to connect to the server within the specified time.
+    ''' </summary>
+    ''' <param name="waitTime">
+    ''' The time in milliseconds to wait for the client to connect to the server. Specifying a value of -1  
+    ''' will cause this method to wait indefinately until the client establishes connection with the server.
+    ''' </param>
+    ''' <param name="stopRetrying">
+    ''' Boolean value indicating whether the client should stop trying to connect to the server if it is unable to 
+    ''' connect to the server after waiting for the specified duration.
+    ''' </param>
+    ''' <returns>True if the connection was successful; otherwise False.</returns>
+    Public Function WaitForConnection(ByVal waitTime As Integer, ByVal stopRetrying As Boolean) As Boolean Implements ICommunicationClient.WaitForConnection
+
+        If Not m_isConnected Then
+            ' We'll wait until client has connected or until the time to wait for connection is reached.
+            Dim connected As Boolean = m_connectionWaitHandle.WaitOne(waitTime, False)
+
+            ' If the client hasn't connected after waiting for the specified time and if it is specified to stop 
+            ' attempting to connect to the server, then we'll call the CancelConnect() method.
+            If stopRetrying AndAlso Not connected Then CancelConnect()
+
+            Return connected
+        End If
+
+    End Function
 
 #Region " Interface Implementation"
 
@@ -841,6 +845,7 @@ Public MustInherit Class CommunicationClientBase
     ''' <remarks>This method is to be called when the client is attempting connection to the server.</remarks>
     Protected Overridable Sub OnConnecting(ByVal e As EventArgs)
 
+        m_connectionWaitHandle.Reset()
         RaiseEvent Connecting(Me, e)
 
     End Sub

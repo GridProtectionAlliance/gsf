@@ -14,6 +14,8 @@
 '       Original version of source code generated
 '  09/06/2006 - J. Ritchie Carroll
 '       Added ReceiveRawDataFunction delegate to allow bypass optimizations for high-speed data access
+'  05/01/2007 - Pinal C. Patel
+'       Made WaitForConnection() functions that returns a boolean value indicating success or failure
 '
 '*******************************************************************************************************
 
@@ -230,30 +232,6 @@ Public Interface ICommunicationClient
     Sub Disconnect()
 
     ''' <summary>
-    ''' Waits for the client to connect to the server for the specified time and optionally stop the client from
-    ''' retrying connection attempts if the client is unable to connect to the server within the specified time.
-    ''' </summary>
-    ''' <param name="waitTime">
-    ''' The time in milliseconds to wait for the client to connect to the server. Specifying a value of -1 or 0 
-    ''' will cause this method to wait indefinately until the client establishes connection with the server.
-    ''' </param>
-    Sub WaitForConnection(ByVal waitTime As Integer)
-
-    ''' <summary>
-    ''' Waits for the client to connect to the server for the specified time and optionally stop the client from
-    ''' retrying connection attempts if the client is unable to connect to the server within the specified time.
-    ''' </summary>
-    ''' <param name="waitTime">
-    ''' The time in milliseconds to wait for the client to connect to the server. Specifying a value of -1 or 0 
-    ''' will cause this method to wait indefinately until the client establishes connection with the server.
-    ''' </param>
-    ''' <param name="stopRetrying">
-    ''' Boolean value indicating whether the client should stop trying to connect to the server if it is unable to 
-    ''' connect to the server after waiting for the specified duration.
-    ''' </param>
-    Sub WaitForConnection(ByVal waitTime As Integer, ByVal stopRetrying As Boolean)
-
-    ''' <summary>
     ''' Sends data to the server.
     ''' </summary>
     ''' <param name="data">The plain-text data that is to be sent to the server.</param>
@@ -278,5 +256,29 @@ Public Interface ICommunicationClient
     ''' <param name="offset">The zero-based position in the buffer parameter at which to begin sending data.</param>
     ''' <param name="size">The number of bytes to be sent.</param>
     Sub Send(ByVal data As Byte(), ByVal offset As Integer, ByVal size As Integer)
+
+    ''' <summary>
+    ''' Waits for the client to connect to the server for the specified time and optionally stop the client from
+    ''' retrying connection attempts if the client is unable to connect to the server within the specified time.
+    ''' </summary>
+    ''' <param name="waitTime">
+    ''' The time in milliseconds to wait for the client to connect to the server. Specifying a value of -1 or 0 
+    ''' will cause this method to wait indefinately until the client establishes connection with the server.
+    ''' </param>
+    Function WaitForConnection(ByVal waitTime As Integer) As Boolean
+
+    ''' <summary>
+    ''' Waits for the client to connect to the server for the specified time and optionally stop the client from
+    ''' retrying connection attempts if the client is unable to connect to the server within the specified time.
+    ''' </summary>
+    ''' <param name="waitTime">
+    ''' The time in milliseconds to wait for the client to connect to the server. Specifying a value of -1 or 0 
+    ''' will cause this method to wait indefinately until the client establishes connection with the server.
+    ''' </param>
+    ''' <param name="stopRetrying">
+    ''' Boolean value indicating whether the client should stop trying to connect to the server if it is unable to 
+    ''' connect to the server after waiting for the specified duration.
+    ''' </param>
+    Function WaitForConnection(ByVal waitTime As Integer, ByVal stopRetrying As Boolean) As Boolean
 
 End Interface
