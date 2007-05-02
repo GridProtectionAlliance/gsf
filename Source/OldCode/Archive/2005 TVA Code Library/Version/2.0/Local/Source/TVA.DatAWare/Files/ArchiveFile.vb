@@ -100,6 +100,10 @@ Namespace Files
                 If Not String.IsNullOrEmpty(value) Then
                     If String.Compare(JustFileExtension(value), Extension) = 0 Then
                         m_name = value
+                        If IsOpen() Then
+                            Close()
+                            Open()
+                        End If
                     Else
                         Throw New ArgumentException(String.Format("Name of {0} must have an extension of {1}.", Me.GetType().Name, Extension))
                     End If

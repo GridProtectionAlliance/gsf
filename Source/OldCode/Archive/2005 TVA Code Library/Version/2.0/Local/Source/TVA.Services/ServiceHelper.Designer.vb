@@ -21,13 +21,15 @@ Partial Class ServiceHelper
 
         m_logStatusUpdates = True
         m_requestHistoryLimit = 50
-        m_processes = New Dictionary(Of String, ServiceProcess)(StringComparer.CurrentCultureIgnoreCase)
-        m_settingsCategoryName = Me.GetType().Name
-        m_clientInfo = New Dictionary(Of Guid, ClientInfo)()
-        m_requestHistory = New List(Of RequestInfo)()
+        m_updatableSettingsCategories = "SH.General, SH.LogFile, SH.GlobalExceptionLogger"
+        m_processes = New List(Of ServiceProcess)()
+        m_settingsCategoryName = Me.GetType().Name & ".General"
+        m_connectedClients = New List(Of ClientInfo)()
+        m_clientRequestHistory = New List(Of ClientRequestInfo)()
         m_serviceComponents = New List(Of IServiceComponent)()
         m_startedEventHandlerList = New List(Of StartedEventHandler)()
         m_stoppedEventHandlerList = New List(Of EventHandler)()
+        m_clientRequestHandlers = New List(Of ClientRequestHandlerInfo)()
 
     End Sub
 
@@ -64,12 +66,12 @@ Partial Class ServiceHelper
         '
         Me.LogFile.Name = "StatusLog.txt"
         Me.LogFile.PersistSettings = True
-        Me.LogFile.SettingsCategoryName = "ServiceHelper.LogFile"
+        Me.LogFile.SettingsCategoryName = "SH.LogFile"
         '
         'ScheduleManager
         '
         Me.ScheduleManager.PersistSettings = True
-        Me.ScheduleManager.SettingsCategoryName = "ServiceHelper.ScheduleManager"
+        Me.ScheduleManager.SettingsCategoryName = "SH.ScheduleManager"
         '
         'GlobalExceptionLogger
         '
@@ -79,12 +81,12 @@ Partial Class ServiceHelper
         Me.GlobalExceptionLogger.ContactPhone = Nothing
         Me.GlobalExceptionLogger.ExitOnUnhandledException = False
         Me.GlobalExceptionLogger.LogToEmail = False
-        Me.GlobalExceptionLogger.LogToEventLog = False
-        Me.GlobalExceptionLogger.LogToFile = False
+        Me.GlobalExceptionLogger.LogToEventLog = True
+        Me.GlobalExceptionLogger.LogToFile = True
         Me.GlobalExceptionLogger.LogToScreenshot = False
         Me.GlobalExceptionLogger.LogToUI = False
         Me.GlobalExceptionLogger.PersistSettings = True
-        Me.GlobalExceptionLogger.SettingsCategoryName = "ServerHelper.GlobalExceptionLogger"
+        Me.GlobalExceptionLogger.SettingsCategoryName = "SH.GlobalExceptionLogger"
         Me.GlobalExceptionLogger.SmtpServer = "mailhost.cha.tva.gov"
         CType(Me.LogFile, System.ComponentModel.ISupportInitialize).EndInit()
         CType(Me.ScheduleManager, System.ComponentModel.ISupportInitialize).EndInit()

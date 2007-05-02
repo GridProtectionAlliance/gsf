@@ -12,21 +12,21 @@
 '  -----------------------------------------------------------------------------------------------------
 '  08/29/2006 - Pinal C. Patel
 '       Original version of source code generated
-'  10/26/2006 - J. Ritchie Carroll
-'       Modified TryParse to make sure extraneous spaces were removed from command string and
-'       made all command parameters upper-case for easier compare
+'  04/27/2007 - Pinal C. Patel
+'       Added Attachments property for clients to send serializable objects as part of the request
 '
 '*******************************************************************************************************
 
 Imports TVA.Common
 Imports TVA.Text.Common
+Imports TVA.Console
 
 <Serializable()> _
 Public Class ClientRequest
 
     Private m_type As String
-    Private m_parameters As String()
-    Private m_serviceHandled As Boolean
+    Private m_arguments As Arguments
+    Private m_attachments As List(Of Object)
 
     ''' <summary>
     ''' Initializes a default instance of client request.
@@ -43,7 +43,7 @@ Public Class ClientRequest
     ''' <param name="type">The type of client request.</param>
     Public Sub New(ByVal type As String)
 
-        MyClass.New(type, New String() {})
+        MyClass.New(type, New Arguments(""))
 
     End Sub
 
@@ -51,13 +51,13 @@ Public Class ClientRequest
     ''' Initializes a instance of client request with the specified type and parameters
     ''' </summary>
     ''' <param name="type"></param>
-    ''' <param name="parameters"></param>
-    Public Sub New(ByVal type As String, ByVal parameters As String())
+    ''' <param name="arguments"></param>
+    Public Sub New(ByVal type As String, ByVal arguments As Arguments)
 
         MyBase.New()
         m_type = type.ToUpper()
-        m_parameters = parameters
-        m_serviceHandled = False
+        m_arguments = arguments
+        m_attachments = New List(Of Object)()
 
     End Sub
 
@@ -75,21 +75,32 @@ Public Class ClientRequest
     End Property
 
     ''' <summary>
-    ''' Gets or sets the additional parameters being sent to the service.
+    ''' Gets or sets additional parameters being sent to the service.
     ''' </summary>
     ''' <value></value>
     ''' <returns>Additional parameters being sent to the service.</returns>
-    Public Property Parameters() As String()
+    Public Property Arguments() As Arguments
         Get
-            Return m_parameters
+            Return m_arguments
         End Get
-        Set(ByVal value As String())
-            m_parameters = value
+        Set(ByVal value As Arguments)
+            m_arguments = value
         End Set
     End Property
 
     ''' <summary>
-    ''' Parses text into a type and parameters array.
+    ''' Gets a list of attachments being sent to the service.
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns>A list of attachments being sent to the service.</returns>
+    Public ReadOnly Property Attachments() As List(Of Object)
+        Get
+            Return m_attachments
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' Parses the specified text into TVA.Services.ClientRequest.
     ''' </summary>
     ''' <param name="text">The text to be parsed.</param>
     ''' <returns>A TVA.Services.ClientRequest instance.</returns>
@@ -97,15 +108,14 @@ Public Class ClientRequest
 
         Dim request As ClientRequest = Nothing
         If Not String.IsNullOrEmpty(text) Then
-            Dim textSegments As String() = TVA.Console.Common.ParseCommand(text)
-
+            Dim textSegments As String() = text.Split(" "c)
             If textSegments.Length > 0 Then
                 request = New ClientRequest()
                 request.Type = textSegments(0).ToUpper()
-
-                If textSegments.Length > 1 Then
-                    request.Parameters = CreateArray(Of String)(textSegments.Length - 1)
-                    Array.ConstrainedCopy(textSegments, 1, request.Parameters, 0, request.Parameters.Length)
+                If textSegments.Length = 1 Then
+                    request.Arguments = New Arguments("")
+                Else
+                    request.Arguments = New Arguments(text.Remove(0, text.IndexOf(" "c)))
                 End If
             End If
         End If

@@ -21,7 +21,7 @@ Namespace Scheduling
 
             m_enabled = True
             m_settingsCategoryName = Me.GetType().Name
-            m_schedules = New Dictionary(Of String, Schedule)(StringComparer.CurrentCultureIgnoreCase)
+            m_schedules = New List(Of Schedule)()
             m_scheduleDueEventHandlerList = New List(Of EventHandler(Of ScheduleEventArgs))()
 
             m_timer = New System.Timers.Timer(60000)

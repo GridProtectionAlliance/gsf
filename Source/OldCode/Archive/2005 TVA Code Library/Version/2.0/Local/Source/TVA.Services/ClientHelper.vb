@@ -251,7 +251,7 @@ Public Class ClientHelper
 
         ' Upon establishing connection with the service's communication client, we'll send our information to the 
         ' service so the service can keep track of all the client that are connected to its communication server.
-        m_communicationClient.Send(New ClientInfo())
+        m_communicationClient.Send(New ClientInfo(m_communicationClient.ClientID))
 
         With New StringBuilder()
             .AppendFormat("Connected to {0} [{1}]", m_serviceName, System.DateTime.Now.ToString())
@@ -259,7 +259,7 @@ Public Class ClientHelper
             .AppendLine()
             .Append(m_communicationClient.Status)
 
-            UpdateStatus(.ToString())
+            UpdateStatus(.ToString(), 2)
         End With
 
     End Sub
@@ -278,7 +278,7 @@ Public Class ClientHelper
             .AppendLine()
             .Append(m_communicationClient.Status)
 
-            UpdateStatus(.ToString())
+            UpdateStatus(.ToString(), 2)
         End With
 
     End Sub
@@ -298,7 +298,7 @@ Public Class ClientHelper
                         Dim newServiceState As ServiceState = DirectCast(System.Enum.Parse(GetType(ServiceState), messageSegments(1)), ServiceState)
                         RaiseEvent ServiceStateChanged(Me, New ObjectStateChangedEventArgs(Of ServiceState)(messageSegments(0), newServiceState))
 
-                        UpdateStatus(String.Format("State of service ""{0}"" has changed to ""{1}""", messageSegments(0), messageSegments(1)), 2)
+                        UpdateStatus(String.Format("State of service ""{0}"" has changed to ""{1}"".", messageSegments(0), messageSegments(1)), 3)
                     End If
                 Case "PROCESSSTATECHANGED"
                     Dim messageSegments As String() = response.Message.Split(">"c)
@@ -307,7 +307,7 @@ Public Class ClientHelper
                         Dim newProcessState As ProcessState = DirectCast(System.Enum.Parse(GetType(ProcessState), messageSegments(1)), ProcessState)
                         RaiseEvent ProcessStateChanged(Me, New ObjectStateChangedEventArgs(Of ProcessState)(messageSegments(0), newProcessState))
 
-                        UpdateStatus(String.Format("State of process ""{0}"" has changed to ""{1}""", messageSegments(0), messageSegments(1)), 2)
+                        UpdateStatus(String.Format("State of process ""{0}"" has changed to ""{1}"".", messageSegments(0), messageSegments(1)), 3)
                     End If
             End Select
         End If

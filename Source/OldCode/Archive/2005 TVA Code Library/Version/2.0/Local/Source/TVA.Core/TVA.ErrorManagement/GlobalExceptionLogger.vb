@@ -2,7 +2,6 @@
 
 Option Strict On
 
-Imports System.IO
 Imports System.Net
 Imports System.Web
 Imports System.Text
@@ -76,32 +75,22 @@ Namespace ErrorManagement
         End Property
 
         <Category("Logging")> _
-        Public Property LogToFile() As Boolean
-            Get
-                Return m_logToFile
-            End Get
-            Set(ByVal value As Boolean)
-                If value Then
-                    m_loggers.Add(AddressOf ExceptionToFile)
-                Else
-                    m_loggers.Remove(AddressOf ExceptionToFile)
-                End If
-                m_logToFile = value
-            End Set
-        End Property
-
-        <Category("Logging")> _
         Public Property LogToUI() As Boolean
             Get
                 Return m_logToUI
             End Get
             Set(ByVal value As Boolean)
-                If value Then
-                    m_loggers.Add(AddressOf ExceptionToUI)
-                Else
-                    m_loggers.Remove(AddressOf ExceptionToUI)
-                End If
                 m_logToUI = value
+            End Set
+        End Property
+
+        <Category("Logging")> _
+        Public Property LogToFile() As Boolean
+            Get
+                Return m_logToFile
+            End Get
+            Set(ByVal value As Boolean)
+                m_logToFile = value
             End Set
         End Property
 
@@ -111,11 +100,6 @@ Namespace ErrorManagement
                 Return m_logToEmail
             End Get
             Set(ByVal value As Boolean)
-                If value Then
-                    m_loggers.Add(AddressOf ExceptionToEmail)
-                Else
-                    m_loggers.Remove(AddressOf ExceptionToEmail)
-                End If
                 m_logToEmail = value
             End Set
         End Property
@@ -126,11 +110,6 @@ Namespace ErrorManagement
                 Return m_logToEventLog
             End Get
             Set(ByVal value As Boolean)
-                If value Then
-                    m_loggers.Add(AddressOf ExceptionToEventLog)
-                Else
-                    m_loggers.Remove(AddressOf ExceptionToEventLog)
-                End If
                 m_logToEventLog = value
             End Set
         End Property
@@ -141,11 +120,6 @@ Namespace ErrorManagement
                 Return m_logToScreenshot
             End Get
             Set(ByVal value As Boolean)
-                If value Then
-                    m_loggers.Add(AddressOf ExceptionToScreenshot)
-                Else
-                    m_loggers.Remove(AddressOf ExceptionToScreenshot)
-                End If
                 m_logToScreenshot = value
             End Set
         End Property
@@ -624,6 +598,26 @@ Namespace ErrorManagement
 
             m_lastException = ex
 
+            Try
+                If Not m_loggers.Contains(AddressOf ExceptionToScreenshot) Then
+                    m_loggers.Add(AddressOf ExceptionToScreenshot)
+                End If
+                If Not m_loggers.Contains(AddressOf ExceptionToEventLog) Then
+                    m_loggers.Add(AddressOf ExceptionToEventLog)
+                End If
+                If Not m_loggers.Contains(AddressOf ExceptionToEmail) Then
+                    m_loggers.Add(AddressOf ExceptionToEmail)
+                End If
+                If Not m_loggers.Contains(AddressOf ExceptionToFile) Then
+                    m_loggers.Add(AddressOf ExceptionToFile)
+                End If
+                If Not m_loggers.Contains(AddressOf ExceptionToUI) Then
+                    m_loggers.Add(AddressOf ExceptionToUI)
+                End If
+            Catch
+
+            End Try
+
             For Each logger As LoggerMethodSignature In m_loggers
                 Try
                     logger.Invoke(ex)
@@ -866,8 +860,6 @@ Namespace ErrorManagement
                     (ApplicationType = ApplicationType.WindowsCui OrElse ApplicationType = ApplicationType.WindowsGui) Then
                 Try
                     m_logToScreenshotOK = False
-
-                    If File.Exists(ScreenshotFileName) Then File.Delete(ScreenshotFileName)
 
                     Dim fullScreen As New Size(0, 0)
                     For Each myScreen As Screen In Screen.AllScreens

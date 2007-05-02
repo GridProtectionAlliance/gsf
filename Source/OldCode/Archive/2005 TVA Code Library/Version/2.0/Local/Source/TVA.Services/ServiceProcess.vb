@@ -153,6 +153,7 @@ Public Class ServiceProcess
         If m_executionMethod IsNot Nothing Then
             CurrentState = ProcessState.Processing
             m_executionStartTime = System.DateTime.Now
+            m_executionStopTime = System.DateTime.MinValue
             Try
                 ' We'll keep the invokation of the delegate in Try...Catch to absorb any exceptions that
                 ' were not handled by the consumer.

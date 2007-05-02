@@ -1,23 +1,23 @@
 ' 11/24/20006
 
-Public Class GenericEventArgs
+Public Class GenericEventArgs(Of T)
     Inherits EventArgs
 
-    Private m_arguments As Object()
+    Private m_argument As T
 
-    Public Sub New(ByVal arguments As Object())
+    Public Sub New(ByVal argument As T)
 
         MyBase.New()
-        m_arguments = arguments
+        m_argument = argument
 
     End Sub
 
-    Public Property Arguments() As Object()
+    Public Property Argument() As T
         Get
-            Return m_arguments
+            Return m_argument
         End Get
-        Set(ByVal value As Object())
-            m_arguments = value
+        Set(ByVal value As T)
+            m_argument = value
         End Set
     End Property
 

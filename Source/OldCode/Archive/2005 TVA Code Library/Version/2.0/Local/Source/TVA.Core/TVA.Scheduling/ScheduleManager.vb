@@ -16,6 +16,8 @@
 '       Made the schedules dictionary case-insensitive
 '  04/24/2007 - Pinal C. Patel
 '       Implemented the IPersistSettings and ISupportInitialize interfaces
+'  05/02/2007 - Pinal C. Patel
+'       Converted schedules to a list instead of a dictionary
 '
 '*******************************************************************************************************
 
@@ -36,7 +38,7 @@ Namespace Scheduling
 #Region " Member Declaration "
 
         Private m_enabled As Boolean
-        Private m_schedules As Dictionary(Of String, Schedule)
+        Private m_schedules As List(Of Schedule)
         Private m_persistSettings As Boolean
         Private m_settingsCategoryName As String
         Private m_startTimerThread As Thread
@@ -129,7 +131,7 @@ Namespace Scheduling
         ''' <value></value>
         ''' <returns>A list of the schedules.</returns>
         <Browsable(False)> _
-        Public ReadOnly Property Schedules() As Dictionary(Of String, Schedule)
+        Public ReadOnly Property Schedules() As List(Of Schedule)
             Get
                 Return m_schedules
             End Get
@@ -163,32 +165,38 @@ Namespace Scheduling
         End Sub
 
         ''' <summary>
-        ''' Checks the specified schedule to determine if it is due.
-        ''' </summary>
-        ''' <param name="scheduleName">Name of the schedule to be checked.</param>
-        Public Sub CheckSchedule(ByVal scheduleName As String)
-
-            If m_enabled Then
-                RaiseEvent CheckingSchedule(Me, New ScheduleEventArgs(m_schedules(scheduleName)))
-                If m_schedules(scheduleName).IsDue() Then
-                    RaiseEvent ScheduleDue(Me, New ScheduleEventArgs(m_schedules(scheduleName)))   ' This event will be raised asynchronously.
-                End If
-            End If
-
-        End Sub
-
-        ''' <summary>
         ''' Checks all of the schedules to determine if they are due.
         ''' </summary>
         Public Sub CheckAllSchedules()
 
             If m_enabled Then
-                For Each scheduleName As String In m_schedules.Keys
-                    CheckSchedule(scheduleName)
+                For Each schedule As Schedule In m_schedules
+                    RaiseEvent CheckingSchedule(Me, New ScheduleEventArgs(schedule))
+                    If schedule.IsDue() Then
+                        RaiseEvent ScheduleDue(Me, New ScheduleEventArgs(schedule))   ' Event raised asynchronously.
+                    End If
                 Next
             End If
 
         End Sub
+
+        ''' <summary>
+        ''' Finds the schedule with the specified schedule name.
+        ''' </summary>
+        ''' <param name="scheduleName">Name of the schedule that is to be found.</param>
+        ''' <returns>The TVA.Scheduling.Schedule instance for the specified schedule name if found; otherwise Nothing.</returns>
+        Public Function FindSchedule(ByVal scheduleName As String) As Schedule
+
+            Dim match As Schedule = Nothing
+            For Each schedule As Schedule In m_schedules
+                If String.Compare(schedule.Name, scheduleName, True) = 0 Then
+                    match = schedule
+                    Exit For
+                End If
+            Next
+            Return match
+
+        End Function
 
 #End Region
 
@@ -239,11 +247,11 @@ Namespace Scheduling
                 With New System.Text.StringBuilder()
                     .Append("        Number of schedules: ")
                     .Append(m_schedules.Count)
-                    .Append(Environment.NewLine)
-                    .Append(Environment.NewLine)
-                    For Each scheduleName As String In m_schedules.Keys
-                        .Append(m_schedules(scheduleName).Status)
-                        .Append(Environment.NewLine)
+                    .AppendLine()
+                    .AppendLine()
+                    For Each schedule As Schedule In m_schedules
+                        .Append(schedule.Status)
+                        .AppendLine()
                     Next
 
                     Return .ToString()
@@ -319,7 +327,7 @@ Namespace Scheduling
             Try
                 For Each schedule As CategorizedSettingsElement In TVA.Configuration.Common.CategorizedSettings(m_settingsCategoryName)
                     ' Add the schedule if it doesn't exist or update it otherwise with data from the config file.
-                    m_schedules(schedule.Name) = New Schedule(schedule.Name, schedule.Value, schedule.Description)
+                    m_schedules.Add(New Schedule(schedule.Name, schedule.Value, schedule.Description))
                 Next
             Catch ex As Exception
                 ' We'll encounter exceptions if the settings are not present in the config file.
@@ -336,7 +344,7 @@ Namespace Scheduling
                 Try
                     With TVA.Configuration.Common.CategorizedSettings(m_settingsCategoryName)
                         .Clear()
-                        For Each schedule As Schedule In m_schedules.Values
+                        For Each schedule As Schedule In m_schedules
                             .Add(schedule.Name, schedule.Rule, schedule.Description)
                         Next
                     End With

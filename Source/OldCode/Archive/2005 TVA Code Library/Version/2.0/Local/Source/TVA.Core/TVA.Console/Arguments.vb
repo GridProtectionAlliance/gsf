@@ -5,36 +5,45 @@ Imports System.Text.RegularExpressions
 
 Namespace Console
 
+    <Serializable()> _
     Public Class Arguments
         Implements IEnumerable
 
-        Public OrderedArgID As String
-        Private m_orderedArg As Integer
+        Private m_orderedArgID As String
+        Private m_orderedArgCount As Integer
         Private m_parameters As StringDictionary
 
-        Public Sub New(ByVal CommandLine As String, Optional ByVal OrderedArgID As String = "OrderedArg")
+        Public Sub New(ByVal commandLine As String)
+
+            MyClass.New(commandLine, "OrderedArg")
+
+        End Sub
+
+        Public Sub New(ByVal commandLine As String, ByVal orderedArgID As String)
+
+            MyBase.New()
 
             Dim spliter As New Regex("^-{1,2}|^/|=|:", RegexOptions.IgnoreCase Or RegexOptions.Compiled)
             Dim remover As New Regex("^['""]?(.*?)['""]?$", RegexOptions.IgnoreCase Or RegexOptions.Compiled)
             Dim parameter As String
             Dim parts As String()
 
-            m_parameters = New StringDictionary
-            OrderedArgID = OrderedArgID
-            m_orderedArg = 0
+            m_parameters = New StringDictionary()
+            m_orderedArgID = orderedArgID
+            m_orderedArgCount = 0
 
             ' Valid parameters forms:
             '   {-,/,--}param{=,:}((",')value(",'))
             ' Examples: 
             '   -param1=value1 --param2 /param3:"Test-:-work" 
             '   /param4=happy -param5 '--=nice=--'
-            For Each arg As String In Common.ParseCommand(CommandLine)
+            For Each arg As String In Common.ParseCommand(commandLine)
                 If Not String.IsNullOrEmpty(arg) Then
                     ' If this argument begins with a quote, we treat it as a stand-alone argument
                     If arg.Chars(0) = """"c Or arg.Chars(0) = "'"c Then
                         ' Handle stand alone ordered arguments
-                        m_orderedArg += 1
-                        parameter = OrderedArgID & m_orderedArg
+                        m_orderedArgCount += 1
+                        parameter = orderedArgID & m_orderedArgCount
 
                         ' Remove possible enclosing characters (",')
                         If Not m_parameters.ContainsKey(parameter) Then
@@ -60,8 +69,8 @@ Namespace Console
                                 parameter = Nothing
 
                                 ' Handle stand alone ordered arguments
-                                m_orderedArg += 1
-                                parameter = OrderedArgID & m_orderedArg
+                                m_orderedArgCount += 1
+                                parameter = orderedArgID & m_orderedArgCount
 
                                 ' Remove possible enclosing characters (",')
                                 If Not m_parameters.ContainsKey(parameter) Then
@@ -127,13 +136,19 @@ Namespace Console
             End Get
         End Property
 
-        Public ReadOnly Property OrderedArgCount() As Integer
+        Public ReadOnly Property OrderedArgID() As String
             Get
-                Return m_orderedArg
+                Return m_orderedArgID
             End Get
         End Property
 
-        Public ReadOnly Property ContainHelpRequest() As Boolean
+        Public ReadOnly Property OrderedArgCount() As Integer
+            Get
+                Return m_orderedArgCount
+            End Get
+        End Property
+
+        Public ReadOnly Property ContainsHelpRequest() As Boolean
             Get
                 Return (m_parameters.ContainsKey("?") Or m_parameters.ContainsKey("Help"))
             End Get
