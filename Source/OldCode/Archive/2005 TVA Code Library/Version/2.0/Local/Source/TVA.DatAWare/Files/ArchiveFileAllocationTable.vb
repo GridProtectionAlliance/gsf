@@ -233,8 +233,8 @@ Namespace Files
                 End If
             End If
 
-            If availableDataBlock IsNot Nothing Then
-                ' Assign the data block to the specified point index.
+            If availableDataBlock IsNot Nothing AndAlso availableDataBlock.SlotsUsed = 0 Then
+                ' Assign the data block to the specified point index if it has not been used previously.
                 Dim unusedDataBlockPointer As ArchiveDataBlockPointer = m_dataBlockPointers(availableDataBlock.Index)
                 unusedDataBlockPointer.PointID = pointID
                 unusedDataBlockPointer.StartTime = startTime
