@@ -124,21 +124,17 @@ Namespace Files
 
         Public Sub Scan()
 
-            If m_isForHistoricData Then
-                Read()
-            End If
+            Read()
 
         End Sub
 
         Public Sub Initialize()
 
-            If m_isForHistoricData Then
-                m_fileStream.Seek(Location, SeekOrigin.Begin)
-                For i As Integer = 1 To Capacity
-                    Write(New StandardPointData())
-                Next
-                m_fileStream.Seek(Location, SeekOrigin.Begin)
-            End If
+            m_fileStream.Seek(Location, SeekOrigin.Begin)
+            For i As Integer = 1 To Capacity
+                Write(New StandardPointData())
+            Next
+            m_fileStream.Seek(Location, SeekOrigin.Begin)
 
         End Sub
 
