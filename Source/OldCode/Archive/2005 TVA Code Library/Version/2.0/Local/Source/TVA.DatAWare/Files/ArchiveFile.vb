@@ -500,61 +500,68 @@ Namespace Files
                         ' The data is in sequence.
                         RaiseEvent CurrentDataReceived(Me, EventArgs.Empty)
 
-                        If ToBeArchived(pointData, pointState) Then
-                            ' Data failed compression test - write it to current file.
-                            If m_dataBlockList(pointIndex) Is Nothing OrElse _
-                                    (m_dataBlockList(pointIndex) IsNot Nothing AndAlso m_dataBlockList(pointIndex).SlotsAvailable <= 0) Then
-                                ' We either don't have a active data block where we can archive the point data or we 
-                                ' have a active data block but it is full. So, we have to request a new data block 
-                                ' from the FAT in order to write the data.
+                        If pointData.Definition IsNot Nothing AndAlso pointData.Definition.GeneralFlags.Archived Then
+                            ' The received data has a corresponding definition and is marked for archival.
+                            If ToBeArchived(pointData, pointState) Then
+                                ' Data failed compression test - write it to current file.
+                                If m_dataBlockList(pointIndex) Is Nothing OrElse _
+                                        (m_dataBlockList(pointIndex) IsNot Nothing AndAlso m_dataBlockList(pointIndex).SlotsAvailable <= 0) Then
+                                    ' We either don't have a active data block where we can archive the point data or we 
+                                    ' have a active data block but it is full. So, we have to request a new data block 
+                                    ' from the FAT in order to write the data.
+
+                                    If m_dataBlockList(pointIndex) IsNot Nothing Then
+                                        ' Release the previously used data block before requesting a new one.
+                                        m_dataBlockList(pointIndex).Dispose()
+                                        m_dataBlockList(pointIndex) = Nothing
+                                    End If
+
+                                    Select Case m_type
+                                        Case ArchiveFileType.Active
+                                            m_dataBlockList(pointIndex) = m_fat.RequestDataBlock(pointID, pointData.TimeTag)
+
+                                            If Not File.Exists(StandbyArchiveFileName) AndAlso Not m_rolloverPreparationThread.IsAlive AndAlso _
+                                                    m_fat.DataBlocksAvailable < m_fat.DataBlockCount * (1 - (m_rolloverPreparationThreshold / 100)) Then
+                                                ' We've requested the specified percent of the total number of data blocks 
+                                                ' in the file, so we must now prepare for the rollover process since it 
+                                                ' has not been done yet and it is not already in progress.
+                                                m_rolloverPreparationThread = New Thread(AddressOf PrepareForRollover)
+                                                m_rolloverPreparationThread.Priority = ThreadPriority.Lowest
+                                                m_rolloverPreparationThread.Start()
+                                            End If
+                                        Case ArchiveFileType.Historic
+                                            m_dataBlockList(pointIndex) = m_fat.RequestDataBlock(pointID, pointData.TimeTag, True)
+                                    End Select
+                                End If
 
                                 If m_dataBlockList(pointIndex) IsNot Nothing Then
-                                    ' Release the previously used data block before requesting a new one.
-                                    m_dataBlockList(pointIndex).Dispose()
-                                    m_dataBlockList(pointIndex) = Nothing
+                                    ' We have a data block to which we can write the data.
+                                    m_dataBlockList(pointIndex).Write(pointData)
+                                    m_fat.EventsArchived += 1
+
+                                    If m_type = ArchiveFileType.Active Then m_fat.FileEndTime = pointData.TimeTag
+                                    If m_fat.FileStartTime.CompareTo(TimeTag.MinValue) = 0 Then m_fat.FileStartTime = pointData.TimeTag
+
+                                    RaiseEvent CurrentDataWritten(Me, EventArgs.Empty)
+                                Else
+                                    ' We either don't have a data block for writing data or we have one but it doesn't 
+                                    ' belong to this file. This is possible under the following circumstances:
+                                    ' 1) 
+                                    ' 2)
+
+                                    If m_fat.DataBlocksAvailable = 0 Then
+                                        ' There are no more data blocks available for writing data to.
+                                        RaiseEvent FileFull(Me, EventArgs.Empty)
+                                    End If
                                 End If
-
-                                Select Case m_type
-                                    Case ArchiveFileType.Active
-                                        m_dataBlockList(pointIndex) = m_fat.RequestDataBlock(pointID, pointData.TimeTag)
-
-                                        If Not File.Exists(StandbyArchiveFileName) AndAlso Not m_rolloverPreparationThread.IsAlive AndAlso _
-                                                m_fat.DataBlocksAvailable < m_fat.DataBlockCount * (1 - (m_rolloverPreparationThreshold / 100)) Then
-                                            ' We've requested the specified percent of the total number of data blocks 
-                                            ' in the file, so we must now prepare for the rollover process since it 
-                                            ' has not been done yet and it is not already in progress.
-                                            m_rolloverPreparationThread = New Thread(AddressOf PrepareForRollover)
-                                            m_rolloverPreparationThread.Priority = ThreadPriority.Lowest
-                                            m_rolloverPreparationThread.Start()
-                                        End If
-                                    Case ArchiveFileType.Historic
-                                        m_dataBlockList(pointIndex) = m_fat.RequestDataBlock(pointID, pointData.TimeTag, True)
-                                End Select
-                            End If
-
-                            If m_dataBlockList(pointIndex) IsNot Nothing Then
-                                ' We have a data block to which we can write the data.
-                                m_dataBlockList(pointIndex).Write(pointData)
-                                m_fat.EventsArchived += 1
-
-                                If m_type = ArchiveFileType.Active Then m_fat.FileEndTime = pointData.TimeTag
-                                If m_fat.FileStartTime.CompareTo(TimeTag.MinValue) = 0 Then m_fat.FileStartTime = pointData.TimeTag
-
-                                RaiseEvent CurrentDataWritten(Me, EventArgs.Empty)
                             Else
-                                ' We either don't have a data block for writing data or we have one but it doesn't 
-                                ' belong to this file. This is possible under the following circumstances:
-                                ' 1) 
-                                ' 2)
-
-                                If m_fat.DataBlocksAvailable = 0 Then
-                                    ' There are no more data blocks available for writing data to.
-                                    RaiseEvent FileFull(Me, EventArgs.Empty)
-                                End If
+                                ' Data passed compression test - don't write it.
+                                RaiseEvent CurrentDataCompressed(Me, EventArgs.Empty)
                             End If
                         Else
-                            ' Data passed compression test - don't write it.
-                            RaiseEvent CurrentDataCompressed(Me, EventArgs.Empty)
+                            ' We'll discard the data if it doesn't has a corresponding definition or is not
+                            ' marked for archival in the metadata file.
+                            RaiseEvent CurrentDataDiscarded(Me, EventArgs.Empty)
                         End If
                     Else
                         ' The data is out-of-sequence.
@@ -1015,120 +1022,117 @@ Namespace Files
             ' TODO: Validate compression logic with Brian Fox
 
             Dim result As Boolean = False
+            Dim calculateSlopes As Boolean = False
+            Dim compressionLimit As Single = pointData.Definition.AnalogFields.CompressionLimit
 
-            If pointData.Definition IsNot Nothing Then
-                Dim calculateSlopes As Boolean = False
-                Dim compressionLimit As Single = pointData.Definition.AnalogFields.CompressionLimit
+            If pointData.Definition.GeneralFlags.PointType = PointType.Digital Then compressionLimit = 0.000000001
 
-                If pointData.Definition.GeneralFlags.PointType = PointType.Digital Then compressionLimit = 0.000000001
+            ' We'll only allow archival of points with a corresponding definition.
+            pointState.PreviousValue = pointState.CurrentValue  ' Promote old CurrentValue to PreviousValue.
+            pointState.CurrentValue = pointData.ToExtended()    ' Promote new value received to CurrentValue.
 
-                ' We'll only allow archival of points with a corresponding definition.
-                pointState.PreviousValue = pointState.CurrentValue  ' Promote old CurrentValue to PreviousValue.
-                pointState.CurrentValue = pointData.ToExtended()    ' Promote new value received to CurrentValue.
+            ' Update the environment data that is periodically written to the Intercom File.
+            m_intercomFile.Records(0).LastestCurrentValueTimeTag = pointState.CurrentValue.TimeTag
+            m_intercomFile.Records(0).LatestCurrentValuePointID = pointState.CurrentValue.Definition.PointID
 
-                ' Update the environment data that is periodically written to the Intercom File.
-                m_intercomFile.Records(0).LastestCurrentValueTimeTag = pointState.CurrentValue.TimeTag
-                m_intercomFile.Records(0).LatestCurrentValuePointID = pointState.CurrentValue.Definition.PointID
+            If pointData.Quality = 31 Then
+                ' We have to check the quality of this data since the sender didn't provide it. Here we're 
+                ' checking if the Quality is 31 instead of -1 because the quality value is stored in the first
+                ' 5 bits (QualityMask = 31) of Flags in the point data. Initially when the Quality is set to -1,
+                ' all the bits Flags (a 32-bit integer) are set to 1. And therefore, when we get the Quality, 
+                ' which is a masked value of Flags, we get 31 and not -1.
+                Select Case pointData.Definition.GeneralFlags.PointType
+                    Case PointType.Analog
+                        Select Case pointData.Value
+                            Case Is >= pointData.Definition.AnalogFields.HighRange
+                                pointData.Quality = Quality.UnreasonableHigh
+                            Case Is >= pointData.Definition.AnalogFields.HighAlarm
+                                pointData.Quality = Quality.ValueAboveHiHiAlarm
+                            Case Is >= pointData.Definition.AnalogFields.HighWarning
+                                pointData.Quality = Quality.ValueAboveHiAlarm
+                            Case Is >= pointData.Definition.AnalogFields.LowRange
+                                pointData.Quality = Quality.UnreasonableLow
+                            Case Is >= pointData.Definition.AnalogFields.LowAlarm
+                                pointData.Quality = Quality.ValueBelowLoLoAlarm
+                            Case Is >= pointData.Definition.AnalogFields.LowWarning
+                                pointData.Quality = Quality.ValueBelowLoAlarm
+                            Case Else
+                                pointData.Quality = Quality.Good
+                        End Select
+                    Case PointType.Digital
+                        Select Case pointData.Value
+                            Case pointData.Definition.DigitalFields.AlarmState
+                                pointData.Quality = Quality.LogicalAlarm
+                            Case Else
+                                pointData.Quality = Quality.Good
+                        End Select
+                End Select
+            End If
 
-                If pointData.Quality = 31 Then
-                    ' We have to check the quality of this data since the sender didn't provide it. Here we're 
-                    ' checking if the Quality is 31 instead of -1 because the quality value is stored in the first
-                    ' 5 bits (QualityMask = 31) of Flags in the point data. Initially when the Quality is set to -1,
-                    ' all the bits Flags (a 32-bit integer) are set to 1. And therefore, when we get the Quality, 
-                    ' which is a masked value of Flags, we get 31 and not -1.
-                    Select Case pointData.Definition.GeneralFlags.PointType
-                        Case PointType.Analog
-                            Select Case pointData.Value
-                                Case Is >= pointData.Definition.AnalogFields.HighRange
-                                    pointData.Quality = Quality.UnreasonableHigh
-                                Case Is >= pointData.Definition.AnalogFields.HighAlarm
-                                    pointData.Quality = Quality.ValueAboveHiHiAlarm
-                                Case Is >= pointData.Definition.AnalogFields.HighWarning
-                                    pointData.Quality = Quality.ValueAboveHiAlarm
-                                Case Is >= pointData.Definition.AnalogFields.LowRange
-                                    pointData.Quality = Quality.UnreasonableLow
-                                Case Is >= pointData.Definition.AnalogFields.LowAlarm
-                                    pointData.Quality = Quality.ValueBelowLoLoAlarm
-                                Case Is >= pointData.Definition.AnalogFields.LowWarning
-                                    pointData.Quality = Quality.ValueBelowLoAlarm
-                                Case Else
-                                    pointData.Quality = Quality.Good
-                            End Select
-                        Case PointType.Digital
-                            Select Case pointData.Value
-                                Case pointData.Definition.DigitalFields.AlarmState
-                                    pointData.Quality = Quality.LogicalAlarm
-                                Case Else
-                                    pointData.Quality = Quality.Good
-                            End Select
-                    End Select
-                End If
-
-                With pointState
-                    If m_compressData Then
-                        ' We have to perform compression on data, so we'll do just that.
-                        If .LastArchivedValue.IsEmpty Then
-                            ' This is the first time data is received for the point.
-                            .LastArchivedValue = .CurrentValue
-                            result = True
-                        ElseIf .PreviousValue.IsEmpty Then
-                            ' This is the second time data is received for the point.
-                            calculateSlopes = True
-                        ElseIf .CurrentValue.Definition.CompressionMinimumTime > 0 AndAlso _
-                                .CurrentValue.TimeTag.Value - .LastArchivedValue.TimeTag.Value < .CurrentValue.Definition.CompressionMinimumTime Then
-                            ' the "cmpMinTime" parameter specifies (when > 0), that a point should
-                            ' not be archived if it was already archived less than "cmpMinTime" seconds
-                            ' ago.  Determine difference between current event time and Last Archived
-                            ' Value time, and exit if less than this amount of seconds.
-                            result = False
-                        ElseIf .CurrentValue.Quality <> .LastArchivedValue.Quality OrElse _
-                                .CurrentValue.Quality <> .PreviousValue.Quality OrElse _
-                                .PreviousValue.TimeTag.Value - .LastArchivedValue.TimeTag.Value > .CurrentValue.Definition.CompressionMaximumTime Then
-                            ' The "cmpMaxTime" parameter specifies (when > 0) that a point should
-                            ' be archived if the last time it was archived is more than "cmpMaxTime"
-                            ' seconds ago.  Determine this difference and set flag accordingly.
-                            ' If quality changed, or MaxTimeExceeded, archive it,
-                            ' and recalculate slopes
-                            result = True
-                            calculateSlopes = True
-                        Else
-                            Dim slope1 As Double
-                            Dim slope2 As Double
-                            Dim currentSlope As Double
-
-                            slope1 = (.CurrentValue.Value - (.LastArchivedValue.Value + compressionLimit)) / _
-                                        (.CurrentValue.TimeTag.Value - .LastArchivedValue.TimeTag.Value)
-                            slope2 = (.CurrentValue.Value - (.LastArchivedValue.Value - compressionLimit)) / _
-                                        (.CurrentValue.TimeTag.Value - .LastArchivedValue.TimeTag.Value)
-                            currentSlope = (.CurrentValue.Value - .LastArchivedValue.Value) / _
-                                        (.CurrentValue.TimeTag.Value - .LastArchivedValue.TimeTag.Value)
-
-                            If slope1 >= .Slope1 Then .Slope1 = slope1
-                            If slope2 <= .Slope2 Then .Slope2 = slope2
-                            If currentSlope <= .Slope1 OrElse currentSlope >= .Slope2 Then
-                                result = True
-                                calculateSlopes = True
-                            End If
-                        End If
-                    Else
-                        ' We don't need to perform compression on the data and save all of it.
+            With pointState
+                If m_compressData Then
+                    ' We have to perform compression on data, so we'll do just that.
+                    If .LastArchivedValue.IsEmpty Then
+                        ' This is the first time data is received for the point.
                         .LastArchivedValue = .CurrentValue
                         result = True
-                    End If
+                    ElseIf .PreviousValue.IsEmpty Then
+                        ' This is the second time data is received for the point.
+                        calculateSlopes = True
+                    ElseIf .CurrentValue.Definition.CompressionMinimumTime > 0 AndAlso _
+                            .CurrentValue.TimeTag.Value - .LastArchivedValue.TimeTag.Value < .CurrentValue.Definition.CompressionMinimumTime Then
+                        ' the "cmpMinTime" parameter specifies (when > 0), that a point should
+                        ' not be archived if it was already archived less than "cmpMinTime" seconds
+                        ' ago.  Determine difference between current event time and Last Archived
+                        ' Value time, and exit if less than this amount of seconds.
+                        result = False
+                    ElseIf .CurrentValue.Quality <> .LastArchivedValue.Quality OrElse _
+                            .CurrentValue.Quality <> .PreviousValue.Quality OrElse _
+                            .PreviousValue.TimeTag.Value - .LastArchivedValue.TimeTag.Value > .CurrentValue.Definition.CompressionMaximumTime Then
+                        ' The "cmpMaxTime" parameter specifies (when > 0) that a point should
+                        ' be archived if the last time it was archived is more than "cmpMaxTime"
+                        ' seconds ago.  Determine this difference and set flag accordingly.
+                        ' If quality changed, or MaxTimeExceeded, archive it,
+                        ' and recalculate slopes
+                        result = True
+                        calculateSlopes = True
+                    Else
+                        Dim slope1 As Double
+                        Dim slope2 As Double
+                        Dim currentSlope As Double
 
-                    If calculateSlopes Then
-                        If .CurrentValue.TimeTag.Value <> .LastArchivedValue.TimeTag.Value Then
-                            .Slope1 = (.CurrentValue.Value - (.LastArchivedValue.Value + compressionLimit)) / _
-                                        (.CurrentValue.TimeTag.Value - .LastArchivedValue.TimeTag.Value)
-                            .Slope2 = (.CurrentValue.Value - (.LastArchivedValue.Value - compressionLimit)) / _
-                                        (.CurrentValue.TimeTag.Value - .LastArchivedValue.TimeTag.Value)
-                        Else
-                            .Slope1 = 0
-                            .Slope2 = 0
+                        slope1 = (.CurrentValue.Value - (.LastArchivedValue.Value + compressionLimit)) / _
+                                    (.CurrentValue.TimeTag.Value - .LastArchivedValue.TimeTag.Value)
+                        slope2 = (.CurrentValue.Value - (.LastArchivedValue.Value - compressionLimit)) / _
+                                    (.CurrentValue.TimeTag.Value - .LastArchivedValue.TimeTag.Value)
+                        currentSlope = (.CurrentValue.Value - .LastArchivedValue.Value) / _
+                                    (.CurrentValue.TimeTag.Value - .LastArchivedValue.TimeTag.Value)
+
+                        If slope1 >= .Slope1 Then .Slope1 = slope1
+                        If slope2 <= .Slope2 Then .Slope2 = slope2
+                        If currentSlope <= .Slope1 OrElse currentSlope >= .Slope2 Then
+                            result = True
+                            calculateSlopes = True
                         End If
                     End If
-                End With
-            End If
+                Else
+                    ' We don't need to perform compression on the data and save all of it.
+                    .LastArchivedValue = .CurrentValue
+                    result = True
+                End If
+
+                If calculateSlopes Then
+                    If .CurrentValue.TimeTag.Value <> .LastArchivedValue.TimeTag.Value Then
+                        .Slope1 = (.CurrentValue.Value - (.LastArchivedValue.Value + compressionLimit)) / _
+                                    (.CurrentValue.TimeTag.Value - .LastArchivedValue.TimeTag.Value)
+                        .Slope2 = (.CurrentValue.Value - (.LastArchivedValue.Value - compressionLimit)) / _
+                                    (.CurrentValue.TimeTag.Value - .LastArchivedValue.TimeTag.Value)
+                    Else
+                        .Slope1 = 0
+                        .Slope2 = 0
+                    End If
+                End If
+            End With
 
             Return result
 
