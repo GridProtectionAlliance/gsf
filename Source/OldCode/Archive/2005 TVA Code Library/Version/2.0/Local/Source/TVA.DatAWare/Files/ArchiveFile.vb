@@ -72,6 +72,7 @@ Namespace Files
         Public Event CurrentDataReceived As EventHandler
         Public Event CurrentDataWritten As EventHandler
         Public Event CurrentDataCompressed As EventHandler
+        Public Event CurrentDataDiscarded As EventHandler
         Public Event HistoricDataReceived As EventHandler
         Public Event HistoricDataQueued As EventHandler
         Public Event HistoricDataWriteStart As EventHandler
