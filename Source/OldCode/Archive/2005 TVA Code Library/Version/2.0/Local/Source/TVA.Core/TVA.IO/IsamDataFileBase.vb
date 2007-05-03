@@ -350,7 +350,7 @@ Namespace IO
                 If id <= m_fileRecords.Count Then
                     Return m_fileRecords(id - 1)
                 Else
-                    Throw New ArgumentException(String.Format("The ID ""{0}"" is invalid. No record exists for this ID.", id))
+                    Return Nothing
                 End If
             Else
                 Throw New InvalidOperationException(String.Format("{0} ""{1}"" is not open.", Me.GetType().Name, m_name))
