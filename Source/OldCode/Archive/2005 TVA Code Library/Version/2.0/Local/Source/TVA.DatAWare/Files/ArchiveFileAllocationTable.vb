@@ -213,29 +213,29 @@ Namespace Files
         Public Function RequestDataBlock(ByVal pointID As Integer, ByVal startTime As TimeTag, ByVal isForHistoricData As Boolean) As ArchiveDataBlock
 
             ' First, we'll try to find the first unused data block.
-            Dim unusedDataBlock As ArchiveDataBlock = FindDataBlock(-1)
+            Dim availableDataBlock As ArchiveDataBlock = FindDataBlock(-1)
 
-            If unusedDataBlock Is Nothing AndAlso isForHistoricData Then
+            If availableDataBlock Is Nothing AndAlso isForHistoricData Then
                 ' In all of the data blocks have been used and if the request has been made for historic data, then 
                 ' we have to return a data block no matter what. So, first we'll see if the last used block for the 
                 ' specified point ID has space for writting data to it. If so, we'll return it and if not, we'll 
                 ' create a new data  block by extending the file and return this newly created data block.
-                unusedDataBlock = FindLastDataBlock(pointID)
-                unusedDataBlock.IsForHistoricData = True
-                unusedDataBlock.Scan()
+                availableDataBlock = FindLastDataBlock(pointID)
+                availableDataBlock.IsForHistoricData = True
+                availableDataBlock.Scan()
 
-                If unusedDataBlock.SlotsAvailable = 0 Then
+                If availableDataBlock.SlotsAvailable = 0 Then
                     ' The last data block for the point ID is full so we'll create a new data block.
                     Extend()    ' Extend the file by one data block.
-                    unusedDataBlock = FindDataBlock(-1)
-                    unusedDataBlock.IsForHistoricData = True
-                    unusedDataBlock.Initialize()
+                    availableDataBlock = FindDataBlock(-1)
+                    availableDataBlock.IsForHistoricData = True
+                    availableDataBlock.Initialize()
                 End If
             End If
 
-            If unusedDataBlock IsNot Nothing Then
+            If availableDataBlock IsNot Nothing Then
                 ' Assign the data block to the specified point index.
-                Dim unusedDataBlockPointer As ArchiveDataBlockPointer = m_dataBlockPointers(unusedDataBlock.Index)
+                Dim unusedDataBlockPointer As ArchiveDataBlockPointer = m_dataBlockPointers(availableDataBlock.Index)
                 unusedDataBlockPointer.PointID = pointID
                 unusedDataBlockPointer.StartTime = startTime
 
@@ -246,7 +246,7 @@ Namespace Files
                 End SyncLock
             End If
 
-            Return unusedDataBlock
+            Return availableDataBlock
 
         End Function
 
