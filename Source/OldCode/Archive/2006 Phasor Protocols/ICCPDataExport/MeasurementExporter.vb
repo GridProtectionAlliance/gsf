@@ -186,7 +186,7 @@ Public Class MeasurementExporter
     ''' LagTime.  Note that this function will be called with a frequency specified by the ExpectedMeasurementsPerSecond
     ''' property, so make sure all work to be done is executed as efficiently as possible.
     ''' </remarks>
-    Protected Overrides Sub PerformCalculation(ByVal frame As IFrame, ByVal index As Integer)
+    Protected Overrides Sub PublishFrame(ByVal frame As IFrame, ByVal index As Integer)
 
         ' We only export data at the specified interval
         If IsTimeToExport(frame.Ticks) Then

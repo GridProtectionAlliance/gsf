@@ -23,21 +23,28 @@ Imports TVA.Collections.Common
 
 Public MustInherit Class CalculatedMeasurementAdapterBase
 
-    Inherits AdapterBase
+    Inherits Concentrator
     Implements ICalculatedMeasurementAdapter
+
+    Public Event StatusMessage(ByVal status As String) Implements IAdapter.StatusMessage
 
     Public Event NewCalculatedMeasurements(ByVal measurements As IList(Of IMeasurement)) Implements ICalculatedMeasurementAdapter.NewCalculatedMeasurements
 
     Public Event CalculationException(ByVal source As String, ByVal ex As Exception) Implements ICalculatedMeasurementAdapter.CalculationException
 
     ' We need to time align incoming measurements before attempting to calculate new outgoing measurement
-    Private WithEvents m_concentrator As Concentrator
     Private m_calculationName As String
     Private m_configurationSection As String
     Private m_outputMeasurements As IMeasurement()
     Private m_inputMeasurementKeys As MeasurementKey()
     Private m_inputMeasurementKeysHash As List(Of MeasurementKey)
     Private m_minimumMeasurementsToUse As Integer
+
+    Public Sub New()
+
+        MyBase.New(30, 1, 1)
+
+    End Sub
 
     Public Overridable Sub Initialize( _
         ByVal calculationName As String, _
@@ -66,14 +73,16 @@ Public MustInherit Class CalculatedMeasurementAdapterBase
             m_minimumMeasurementsToUse = minimumMeasurementsToUse
         End If
 
-        m_concentrator = New Concentrator(AddressOf PerformCalculation, expectedMeasurementsPerSecond, lagTime, leadTime)
-        m_concentrator.Enabled = True
+        Me.FramesPerSecond = expectedMeasurementsPerSecond
+        Me.LagTime = lagTime
+        Me.LeadTime = leadTime
+        Me.Enabled = True
 
     End Sub
 
     Public Overrides Sub Dispose()
 
-        m_concentrator.Enabled = False
+        Enabled = False
 
     End Sub
 
@@ -84,7 +93,7 @@ Public MustInherit Class CalculatedMeasurementAdapterBase
     Public Overridable Sub QueueMeasurementForCalculation(ByVal measurement As IMeasurement) Implements ICalculatedMeasurementAdapter.QueueMeasurementForCalculation
 
         ' If this is an input measurement to this calculation, sort it!
-        If IsInputMeasurement(measurement.Key) Then m_concentrator.SortMeasurement(measurement)
+        If IsInputMeasurement(measurement.Key) Then SortMeasurement(measurement)
 
     End Sub
 
@@ -107,21 +116,6 @@ Public MustInherit Class CalculatedMeasurementAdapterBase
         End If
 
     End Sub
-
-    Public Overridable Property ExpectedMeasurementsPerSecond() As Integer Implements ICalculatedMeasurementAdapter.ExpectedMeasurementsPerSecond
-        Get
-            If m_concentrator Is Nothing Then
-                Return -1
-            Else
-                Return m_concentrator.FramesPerSecond
-            End If
-        End Get
-        Set(ByVal value As Integer)
-            If m_concentrator IsNot Nothing Then
-                m_concentrator.FramesPerSecond = value
-            End If
-        End Set
-    End Property
 
     Public Overridable Property OutputMeasurements() As IMeasurement() Implements ICalculatedMeasurementAdapter.OutputMeasurements
         Get
@@ -160,56 +154,6 @@ Public MustInherit Class CalculatedMeasurementAdapterBase
         End Set
     End Property
 
-    Protected ReadOnly Property MeasurementConcentrator() As Concentrator
-        Get
-            Return m_concentrator
-        End Get
-    End Property
-
-    Public ReadOnly Property TicksPerFrame() As Decimal
-        Get
-            If m_concentrator Is Nothing Then
-                Return -1D
-            Else
-                Return m_concentrator.TicksPerFrame
-            End If
-        End Get
-    End Property
-
-    Public Property LagTime() As Double Implements ICalculatedMeasurementAdapter.LagTime
-        Get
-            If m_concentrator Is Nothing Then
-                Return -1.0R
-            Else
-                Return m_concentrator.LagTime
-            End If
-        End Get
-        Set(ByVal value As Double)
-            If m_concentrator Is Nothing Then
-                Throw New InvalidOperationException("Cannot change allowed lag time until calculated measurement has been initialized")
-            Else
-                m_concentrator.LagTime = value
-            End If
-        End Set
-    End Property
-
-    Public Property LeadTime() As Double Implements ICalculatedMeasurementAdapter.LeadTime
-        Get
-            If m_concentrator Is Nothing Then
-                Return -1.0R
-            Else
-                Return m_concentrator.LeadTime
-            End If
-        End Get
-        Set(ByVal value As Double)
-            If m_concentrator Is Nothing Then
-                Throw New InvalidOperationException("Cannot change allowed lead time until calculated measurement has been initialized")
-            Else
-                m_concentrator.LeadTime = value
-            End If
-        End Set
-    End Property
-
     Public Overridable Property ConfigurationSection() As String Implements ICalculatedMeasurementAdapter.ConfigurationSection
         Get
             Return m_configurationSection
@@ -219,13 +163,13 @@ Public MustInherit Class CalculatedMeasurementAdapterBase
         End Set
     End Property
 
-    Public Overrides ReadOnly Property Name() As String
+    Public ReadOnly Property Name() As String Implements IAdapter.Name
         Get
             Return m_calculationName
         End Get
     End Property
 
-    Public Overrides ReadOnly Property Status() As String
+    Public Overrides ReadOnly Property Status() As String Implements IAdapter.Status
         Get
             Const MaxMeasurementsToShow As Integer = 6
 
@@ -255,9 +199,7 @@ Public MustInherit Class CalculatedMeasurementAdapterBase
                 .Append(" Minimum measurements used: ")
                 .Append(m_minimumMeasurementsToUse)
                 .Append(Environment.NewLine)
-                If m_concentrator IsNot Nothing Then
-                    .Append(m_concentrator.Status)
-                End If
+                .Append(MyBase.Status)
                 Return .ToString()
             End With
         End Get
@@ -283,19 +225,6 @@ Public MustInherit Class CalculatedMeasurementAdapterBase
         RaiseEvent NewCalculatedMeasurements(DirectCast(state, IList(Of IMeasurement)))
 
     End Sub
-
-    ''' <summary>
-    ''' Users inheriting this class must override this method to implement the needed "calculation" algorithm.
-    ''' </summary>
-    ''' <param name="frame">Single frame of measurement data within a one second sample</param>
-    ''' <param name="index">Index of frame within the one second sample</param>
-    ''' <remarks>
-    ''' The frame.Measurements property references a dictionary, keyed on each measurement's MeasurementKey, containing
-    ''' all available measurements as defined by the InputMeasurementKeys property that arrived within the specified
-    ''' LagTime.  Note that this function will be called with a frequency specified by the ExpectedMeasurementsPerSecond
-    ''' property, so make sure all work to be done is executed as efficiently as possible.
-    ''' </remarks>
-    Protected MustOverride Sub PerformCalculation(ByVal frame As IFrame, ByVal index As Integer)
 
     ''' <summary>
     ''' Attempts to retrieve the minimum needed number of measurements from the frame (as specified by MinimumMeasurementsToUse)
@@ -334,10 +263,43 @@ Public MustInherit Class CalculatedMeasurementAdapterBase
     End Function
 
     ' Bubble any exceptions out to the consumer
-    Protected Sub RaiseCalculationException(ByVal ex As Exception) Handles m_concentrator.ProcessException
+    Protected Sub RaiseCalculationException(ByVal ex As Exception) Handles Me.ProcessException
 
         RaiseEvent CalculationException(Name, ex)
 
     End Sub
+
+    Protected Overridable Sub UpdateStatus(ByVal message As String)
+
+        RaiseEvent StatusMessage(message)
+
+    End Sub
+
+    Private Property InternalLagTime() As Double Implements ICalculatedMeasurementAdapter.LagTime
+        Get
+            Return MyBase.LagTime
+        End Get
+        Set(ByVal value As Double)
+            MyBase.LagTime = value
+        End Set
+    End Property
+
+    Private Property InternalLeadTime() As Double Implements ICalculatedMeasurementAdapter.LeadTime
+        Get
+            Return MyBase.LeadTime
+        End Get
+        Set(ByVal value As Double)
+            MyBase.LeadTime = value
+        End Set
+    End Property
+
+    Private Property InternalExpectedMeasurementsPerSecond() As Integer Implements ICalculatedMeasurementAdapter.ExpectedMeasurementsPerSecond
+        Get
+            Return MyBase.FramesPerSecond
+        End Get
+        Set(ByVal value As Integer)
+            MyBase.FramesPerSecond = value
+        End Set
+    End Property
 
 End Class

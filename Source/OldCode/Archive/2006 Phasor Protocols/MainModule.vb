@@ -301,7 +301,7 @@ Module MainModule
                                 Next
                             End With
                         Catch ex As Exception
-                            DisplayStatusMessage("Faile to load output measurement for """ & calculatedMeasurementName & """: " & ex.Message)
+                            DisplayStatusMessage("Failed to load output measurement for """ & calculatedMeasurementName & """: " & ex.Message)
                         End Try
                     End If
 
@@ -565,8 +565,11 @@ Module MainModule
         End If
 
         If m_systemLogEnabled Then
-            If m_systemLogFile Is Nothing Then m_systemLogFile = New LogFile(GetApplicationPath() & "System Log " & DateTime.Now.ToString("yyyy-MM-dd HH.mm.ss.fff") & ".txt")
-            m_systemLogFile.AppendTimestampedLine(status)
+            If m_systemLogFile Is Nothing Then m_systemLogFile = New LogFile()
+            m_systemLogFile.Name = "SystemLog.txt"
+            m_systemLogFile.FileFullOperation = LogFileFullOperation.Rollover
+            m_systemLogFile.Open()
+            m_systemLogFile.WriteTimestampedLine(status)
         End If
 
     End Sub

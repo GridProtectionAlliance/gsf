@@ -168,6 +168,16 @@ Public Class PhasorMeasurementReceiver
                             ' Example UDP connect string supporting remote UDP commands
                             '.ConnectionString = "server=" & row("IPAddress") & "; localport=" & row("IPPort") & "; remoteport=" & row("IPCommandPort")
                             '.DeviceSupportsCommands = True
+
+                            ' Handle special connection information
+                            If .PhasorProtocol = PhasorProtocol.BpaPdcStream Then
+                                ' BPA PDCstream has special connection needs
+                                With DirectCast(.ConnectionParameters, BpaPdcStream.ConnectionParameters)
+                                    .ConfigurationFileName = TVA.IO.FilePath.GetApplicationPath() & row("IPAddress")
+                                    .RefreshConfigurationFileOnChange = True
+                                    .ParseWordCountFromByte = False
+                                End With
+                            End If
                         End If
 
                         .DeviceID = accessID

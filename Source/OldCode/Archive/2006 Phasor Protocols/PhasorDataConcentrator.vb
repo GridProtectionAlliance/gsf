@@ -63,7 +63,7 @@ Public Class PhasorDataConcentrator
             Next
         End With
 
-        m_concentrator = New Concentrator(AddressOf PublishFrame, Nothing, framesPerSecond, lagTime, leadTime)
+        'm_concentrator = New Concentrator(AddressOf PublishFrame, Nothing, framesPerSecond, lagTime, leadTime)
 
     End Sub
 
