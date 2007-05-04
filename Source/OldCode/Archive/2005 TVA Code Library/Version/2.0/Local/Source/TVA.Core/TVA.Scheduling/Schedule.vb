@@ -15,11 +15,11 @@ Namespace Scheduling
         Private m_dayPart As SchedulePart
         Private m_monthPart As SchedulePart
         Private m_dayOfWeekPart As SchedulePart
-        Private m_lastRunDateTime As System.DateTime
+        Private m_lastDueAt As System.DateTime
 
 #End Region
 
-#Region " Public Code "
+#Region " Code Scope: Public "
 
         Public Sub New(ByVal name As String)
 
@@ -114,6 +114,12 @@ Namespace Scheduling
             End Set
         End Property
 
+        Public ReadOnly Property LastDueAt() As System.DateTime
+            Get
+                Return m_lastDueAt
+            End Get
+        End Property
+
         Public ReadOnly Property MinutePart() As SchedulePart
             Get
                 Return m_minutePart
@@ -159,7 +165,7 @@ Namespace Scheduling
                     .Append(Rule)
                     .Append(Environment.NewLine)
                     .Append("             Last run time: ")
-                    .Append(IIf(m_lastRunDateTime = System.DateTime.MinValue, "Never", m_lastRunDateTime))
+                    .Append(IIf(m_lastDueAt = System.DateTime.MinValue, "Never", m_lastDueAt))
                     .Append(Environment.NewLine)
 
                     Return .ToString()
@@ -177,7 +183,7 @@ Namespace Scheduling
             If m_minutePart.Matches(currentDateTime) AndAlso m_hourPart.Matches(currentDateTime) AndAlso _
                     m_dayPart.Matches(currentDateTime) AndAlso m_monthPart.Matches(currentDateTime) AndAlso _
                     m_dayOfWeekPart.Matches(currentDateTime) Then
-                m_lastRunDateTime = currentDateTime
+                m_lastDueAt = currentDateTime
                 Return True
             Else
                 Return False

@@ -21,7 +21,7 @@ Partial Class ServiceHelper
 
         m_logStatusUpdates = True
         m_requestHistoryLimit = 50
-        m_updatableSettingsCategories = "SH.General, SH.LogFile, SH.GlobalExceptionLogger"
+        m_queryableSettingsCategories = "SH.General, SH.LogFile, SH.GlobalExceptionLogger"
         m_processes = New List(Of ServiceProcess)()
         m_settingsCategoryName = Me.GetType().Name & ".General"
         m_connectedClients = New List(Of ClientInfo)()

@@ -2,17 +2,17 @@
 
 Public Class ClientRequestInfo
 
-    Public Sub New(ByVal text As String, ByVal sender As Guid, ByVal receivedAt As System.DateTime)
+    Public Sub New(ByVal command As String, ByVal sender As ClientInfo, ByVal receivedAt As Date)
 
         MyBase.New()
-        RequestType = text
-        RequestSender = sender
-        RequestReceivedAt = receivedAt
+        Me.Command = command
+        Me.Sender = sender
+        Me.ReceivedAt = receivedAt
 
     End Sub
 
-    Public RequestType As String
-    Public RequestSender As Guid
-    Public RequestReceivedAt As System.DateTime
+    Public Command As String
+    Public Sender As ClientInfo
+    Public ReceivedAt As Date
 
 End Class

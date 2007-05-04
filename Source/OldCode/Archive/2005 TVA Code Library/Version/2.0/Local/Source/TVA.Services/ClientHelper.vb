@@ -97,7 +97,7 @@ Public Class ClientHelper
     Public Sub Connect()
 
         If m_communicationClient IsNot Nothing Then
-            UpdateStatus(String.Format("Connecting to {0} [{1}]", m_serviceName, System.DateTime.Now.ToString()), 2)
+            UpdateStatus(String.Format("Connecting to {0} [{1}]", m_serviceName, Date.Now.ToString()), 2)
 
             ' We'll always use handshaking to ensure the availability of SecureSession.
             m_communicationClient.Handshake = True
@@ -205,7 +205,7 @@ Public Class ClientHelper
                 With TVA.Configuration.Common.CategorizedSettings(m_settingsCategoryName)
                     .Clear()
                     With .Item("ServiceName", True)
-                        .Value = ServiceName
+                        .Value = m_serviceName
                         .Description = ""
                     End With
                 End With
@@ -254,7 +254,7 @@ Public Class ClientHelper
         m_communicationClient.Send(New ClientInfo(m_communicationClient.ClientID))
 
         With New StringBuilder()
-            .AppendFormat("Connected to {0} [{1}]", m_serviceName, System.DateTime.Now.ToString())
+            .AppendFormat("Connected to {0} [{1}]", m_serviceName, Date.Now.ToString())
             .AppendLine()
             .AppendLine()
             .Append(m_communicationClient.Status)
@@ -273,7 +273,7 @@ Public Class ClientHelper
     Private Sub m_communicationClient_Disconnected(ByVal sender As Object, ByVal e As System.EventArgs) Handles m_communicationClient.Disconnected
 
         With New StringBuilder()
-            .AppendFormat("Disconnected from {0} [{1}]", m_serviceName, System.DateTime.Now.ToString())
+            .AppendFormat("Disconnected from {0} [{1}]", m_serviceName, Date.Now.ToString())
             .AppendLine()
             .AppendLine()
             .Append(m_communicationClient.Status)

@@ -12,8 +12,8 @@ Public Class ServiceProcess
     Private m_executionMethod As ExecutionMethodSignature
     Private m_serviceHelper As ServiceHelper
     Private m_currentState As ProcessState
-    Private m_executionStartTime As System.DateTime
-    Private m_executionStopTime As System.DateTime
+    Private m_executionStartTime As Date
+    Private m_executionStopTime As Date
 
     Public Delegate Sub ExecutionMethodSignature(ByVal name As String, ByVal parameters As Object())
 
@@ -81,13 +81,13 @@ Public Class ServiceProcess
         End Set
     End Property
 
-    Public ReadOnly Property ExecutionStartTime() As System.DateTime
+    Public ReadOnly Property ExecutionStartTime() As Date
         Get
             Return m_executionStartTime
         End Get
     End Property
 
-    Public ReadOnly Property ExecutionStopTime() As System.DateTime
+    Public ReadOnly Property ExecutionStopTime() As Date
         Get
             Return m_executionStopTime
         End Get
@@ -109,14 +109,14 @@ Public Class ServiceProcess
                 .Append(m_currentState.ToString())
                 .Append(Environment.NewLine)
                 .Append("      Execution Start Time: ")
-                If m_executionStartTime <> System.DateTime.MinValue Then
+                If m_executionStartTime <> Date.MinValue Then
                     .Append(m_executionStartTime.ToString())
                 Else
                     .Append("N/A")
                 End If
                 .Append(Environment.NewLine)
                 .Append("       Execution Stop Time: ")
-                If m_executionStopTime <> System.DateTime.MinValue Then
+                If m_executionStopTime <> Date.MinValue Then
                     .Append(m_executionStopTime.ToString())
                 Else
                     .Append("N/A")
@@ -152,8 +152,8 @@ Public Class ServiceProcess
 
         If m_executionMethod IsNot Nothing Then
             CurrentState = ProcessState.Processing
-            m_executionStartTime = System.DateTime.Now
-            m_executionStopTime = System.DateTime.MinValue
+            m_executionStartTime = Date.Now
+            m_executionStopTime = Date.MinValue
             Try
                 ' We'll keep the invokation of the delegate in Try...Catch to absorb any exceptions that
                 ' were not handled by the consumer.
@@ -165,7 +165,7 @@ Public Class ServiceProcess
                 ' We'll absorb any exceptions if unhandled by the client.
                 Me.CurrentState = ProcessState.Exception
             Finally
-                m_executionStopTime = System.DateTime.Now
+                m_executionStopTime = Date.Now
             End Try
         End If
         m_processThread = Nothing

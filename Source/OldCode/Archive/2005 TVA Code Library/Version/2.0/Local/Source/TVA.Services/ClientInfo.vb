@@ -11,6 +11,9 @@ Public Class ClientInfo
         Me.ClientID = clientID
         ClientType = TVA.Common.GetApplicationType()
         UserName = System.Threading.Thread.CurrentPrincipal.Identity.Name
+        If String.IsNullOrEmpty(UserName) Then
+            UserName = Environment.UserDomainName & "\" & Environment.UserName
+        End If
         MachineName = Environment.MachineName
         Select Case ClientType
             Case ApplicationType.WindowsCui, ApplicationType.WindowsGui
@@ -26,6 +29,6 @@ Public Class ClientInfo
     Public ClientName As String
     Public UserName As String
     Public MachineName As String
-    Public ConnectedSince As Date
+    Public ConnectedAt As Date
 
 End Class

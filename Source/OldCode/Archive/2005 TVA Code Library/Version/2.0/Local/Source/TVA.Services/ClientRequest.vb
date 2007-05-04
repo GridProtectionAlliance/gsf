@@ -24,7 +24,7 @@ Imports TVA.Console
 <Serializable()> _
 Public Class ClientRequest
 
-    Private m_type As String
+    Private m_command As String
     Private m_arguments As Arguments
     Private m_attachments As List(Of Object)
 
@@ -33,44 +33,44 @@ Public Class ClientRequest
     ''' </summary>
     Public Sub New()
 
-        MyClass.New("UNDETERMINED")
+        MyClass.New("UNDEFINED")
 
     End Sub
 
     ''' <summary>
-    ''' Initializes a instance of client request with the specified type.
+    ''' Initializes a instance of client request with the specified command.
     ''' </summary>
-    ''' <param name="type">The type of client request.</param>
-    Public Sub New(ByVal type As String)
+    ''' <param name="command">The command for the client request.</param>
+    Public Sub New(ByVal command As String)
 
-        MyClass.New(type, New Arguments(""))
+        MyClass.New(command, New Arguments(""))
 
     End Sub
 
     ''' <summary>
-    ''' Initializes a instance of client request with the specified type and parameters
+    ''' Initializes a instance of client request with the specified command and arguments.
     ''' </summary>
-    ''' <param name="type"></param>
+    ''' <param name="command"></param>
     ''' <param name="arguments"></param>
-    Public Sub New(ByVal type As String, ByVal arguments As Arguments)
+    Public Sub New(ByVal command As String, ByVal arguments As Arguments)
 
         MyBase.New()
-        m_type = type.ToUpper()
+        m_command = command.ToUpper()
         m_arguments = arguments
         m_attachments = New List(Of Object)()
 
     End Sub
 
     ''' <summary>
-    ''' Gets or sets the type of request being sent to the service.
+    ''' Gets or sets the command for the request being sent to the service.
     ''' </summary>
-    ''' <value>The type of request being sent to the service.</value>
-    Public Property Type() As String
+    ''' <value>The command for the request being sent to the service.</value>
+    Public Property Command() As String
         Get
-            Return m_type
+            Return m_command
         End Get
         Set(ByVal value As String)
-            m_type = value.ToUpper()
+            m_command = value.ToUpper()
         End Set
     End Property
 
@@ -111,7 +111,7 @@ Public Class ClientRequest
             Dim textSegments As String() = text.Split(" "c)
             If textSegments.Length > 0 Then
                 request = New ClientRequest()
-                request.Type = textSegments(0).ToUpper()
+                request.Command = textSegments(0).ToUpper()
                 If textSegments.Length = 1 Then
                     request.Arguments = New Arguments("")
                 Else

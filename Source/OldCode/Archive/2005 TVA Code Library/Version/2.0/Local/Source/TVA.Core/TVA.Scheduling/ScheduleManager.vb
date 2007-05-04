@@ -327,7 +327,16 @@ Namespace Scheduling
             Try
                 For Each schedule As CategorizedSettingsElement In TVA.Configuration.Common.CategorizedSettings(m_settingsCategoryName)
                     ' Add the schedule if it doesn't exist or update it otherwise with data from the config file.
-                    m_schedules.Add(New Schedule(schedule.Name, schedule.Value, schedule.Description))
+                    Dim existingSchedule As Schedule = FindSchedule(schedule.Name)
+                    If existingSchedule Is Nothing Then
+                        ' Schedule doesn't exist, so we'll add it.
+                        m_schedules.Add(New Schedule(schedule.Name, schedule.Value, schedule.Description))
+                    Else
+                        ' Schedule does exist, so we'll update it.
+                        existingSchedule.Name = schedule.Name
+                        existingSchedule.Rule = schedule.Value
+                        existingSchedule.Description = schedule.Description
+                    End If
                 Next
             Catch ex As Exception
                 ' We'll encounter exceptions if the settings are not present in the config file.
