@@ -651,7 +651,7 @@ Public Class ServiceHelper
                 .AppendLine()
                 .Append("   Options:")
                 .AppendLine()
-                .Append("       -?".PadRight(25))
+                .Append("       -?".PadRight(20))
                 .Append("Displays this help message")
 
                 UpdateStatus(.ToString(), 2)
@@ -717,7 +717,7 @@ Public Class ServiceHelper
                 .AppendLine()
                 .Append("   Options:")
                 .AppendLine()
-                .Append("       -?".PadRight(25))
+                .Append("       -?".PadRight(20))
                 .Append("Displays this help message")
 
                 UpdateStatus(.ToString(), 2)
@@ -780,10 +780,10 @@ Public Class ServiceHelper
                 .AppendLine()
                 .Append("   Options:")
                 .AppendLine()
-                .Append("       -?".PadRight(25))
+                .Append("       -?".PadRight(20))
                 .Append("Displays this help message")
                 .AppendLine()
-                .Append("       -system".PadRight(25))
+                .Append("       -system".PadRight(20))
                 .Append("Displays system processes instead of service processes")
 
                 UpdateStatus(.ToString(), 2)
@@ -905,7 +905,7 @@ Public Class ServiceHelper
                 .AppendLine()
                 .Append("   Options:")
                 .AppendLine()
-                .Append("       -?".PadRight(25))
+                .Append("       -?".PadRight(20))
                 .Append("Displays this help message")
 
                 UpdateStatus(.ToString(), 2)
@@ -964,7 +964,7 @@ Public Class ServiceHelper
                 .AppendLine()
                 .Append("   Options:")
                 .AppendLine()
-                .Append("       -?".PadRight(25))
+                .Append("       -?".PadRight(20))
                 .Append("Displays this help message")
 
                 UpdateStatus(.ToString(), 2)
@@ -1015,7 +1015,7 @@ Public Class ServiceHelper
                 .AppendLine()
                 .Append("   Options:")
                 .AppendLine()
-                .Append("       -?".PadRight(25))
+                .Append("       -?".PadRight(20))
                 .Append("Displays this help message")
 
                 UpdateStatus(.ToString(), 2)
@@ -1061,7 +1061,7 @@ Public Class ServiceHelper
                 .AppendLine()
                 .Append("   Options:")
                 .AppendLine()
-                .Append("       -?".PadRight(25))
+                .Append("       -?".PadRight(20))
                 .Append("Displays this help message")
                 .AppendLine()
                 .AppendLine()
@@ -1131,19 +1131,19 @@ Public Class ServiceHelper
                 .AppendLine()
                 .Append("   Options:")
                 .AppendLine()
-                .Append("       -?".PadRight(25))
+                .Append("       -?".PadRight(20))
                 .Append("Displays this help message")
                 .AppendLine()
-                .Append("       -add".PadRight(25))
+                .Append("       -add".PadRight(20))
                 .Append("Adds specified setting to the specified category")
                 .AppendLine()
-                .Append("       -delete".PadRight(25))
+                .Append("       -delete".PadRight(20))
                 .Append("Deletes specified setting from the specified category")
                 .AppendLine()
-                .Append("       -reload".PadRight(25))
+                .Append("       -reload".PadRight(20))
                 .Append("Causes corresponding component to reload settings")
                 .AppendLine()
-                .Append("       -list".PadRight(25))
+                .Append("       -list".PadRight(20))
                 .Append("Displays list all of the queryable settings")
                 .AppendLine()
                 .AppendLine()
@@ -1165,28 +1165,31 @@ Public Class ServiceHelper
                 ' The specified category is one of the defined queryable categories.
                 Select Case True
                     Case addSetting
+                        UpdateStatus(String.Format("Attempting to add setting ""{0}"" under category ""{1}""...", settingName, categoryName), 2)
                         CategorizedSettings(categoryName).Add(settingName, settingValue)
                         TVA.Configuration.Common.SaveSettings()
-                        UpdateStatus(String.Format("Successfully added setting ""{0}"" with value ""{1}"" to category ""{2}"".", settingName, settingValue, categoryName), 2)
+                        UpdateStatus(String.Format("Successfully added setting ""{0}"" under category ""{1}"".", settingName, categoryName), 2)
                     Case deleteSetting
                         Dim setting As CategorizedSettingsElement = CategorizedSettings(categoryName)(settingName)
                         If setting IsNot Nothing Then
+                            UpdateStatus(String.Format("Attempting to delete setting ""{0}"" under category ""{1}""...", settingName, categoryName), 2)
                             CategorizedSettings(categoryName).Remove(setting)
                             TVA.Configuration.Common.SaveSettings()
-                            UpdateStatus(String.Format("Successfully deleted setting ""{0}"" from category ""{1}"".", settingName, categoryName), 2)
+                            UpdateStatus(String.Format("Successfully deleted setting ""{0}"" under category ""{1}"".", settingName, categoryName), 2)
                         Else
-                            UpdateStatus(String.Format("Failed to delete setting ""{0}"" from category ""{1}""- Setting does not exist.", settingName, categoryName), 2)
+                            UpdateStatus(String.Format("Failed to delete setting ""{0}"" under category ""{1}"" - Setting does not exist.", settingName, categoryName), 2)
                         End If
                     Case Else
                         Dim setting As CategorizedSettingsElement = CategorizedSettings(categoryName)(settingName)
                         If setting IsNot Nothing Then
                             ' The requested setting does exist under the specified category.
+                            UpdateStatus(String.Format("Attempting to update setting ""{0}"" under category ""{1}""...", settingName, categoryName), 2)
                             setting.Value = settingValue
                             TVA.Configuration.Common.SaveSettings()
-                            UpdateStatus(String.Format("Successfully updated value of setting ""{0}"" under category ""{1}"" to ""{2}"".", settingName, categoryName, settingValue), 2)
+                            UpdateStatus(String.Format("Successfully updated setting ""{0}"" under category ""{1}"".", settingName, categoryName), 2)
                         Else
                             ' The requested setting does not exist under the specified category.
-                            UpdateStatus(String.Format("Failed to update value of setting ""{0}"" under category ""{1}""- Setting does not exist.", settingName, categoryName), 2)
+                            UpdateStatus(String.Format("Failed to update value of setting ""{0}"" under category ""{1}"" - Setting does not exist.", settingName, categoryName), 2)
                         End If
                 End Select
 
@@ -1207,7 +1210,7 @@ Public Class ServiceHelper
                 End If
             Else
                 ' The specified category is not one of the defined queryable categories.
-                UpdateStatus(String.Format("Failed to update value of setting ""{0}"" under category ""{1}""- Category is not one of the queryable categories.", settingName, categoryName), 2)
+                UpdateStatus(String.Format("Failed to update value of setting ""{0}"" under category ""{1}"" - Category is not one of the queryable categories.", settingName, categoryName), 2)
             End If
         End If
 
@@ -1227,16 +1230,16 @@ Public Class ServiceHelper
                 .AppendLine()
                 .Append("   Options:")
                 .AppendLine()
-                .Append("       -?".PadRight(25))
+                .Append("       -?".PadRight(20))
                 .Append("Displays this help message")
                 .AppendLine()
-                .Append("       -system".PadRight(25))
+                .Append("       -system".PadRight(20))
                 .Append("Treats the specified process as a system process")
                 .AppendLine()
-                .Append("       -restart".PadRight(25))
+                .Append("       -restart".PadRight(20))
                 .Append("Aborts the process if executing and start it again")
                 .AppendLine()
-                .Append("       -list".PadRight(25))
+                .Append("       -list".PadRight(20))
                 .Append("Displays list of all service or system processes")
 
                 UpdateStatus(.ToString(), 2)
@@ -1306,13 +1309,13 @@ Public Class ServiceHelper
                 .AppendLine()
                 .Append("   Options:")
                 .AppendLine()
-                .Append("       -?".PadRight(25))
+                .Append("       -?".PadRight(20))
                 .Append("Displays this help message")
                 .AppendLine()
-                .Append("       -system".PadRight(25))
+                .Append("       -system".PadRight(20))
                 .Append("Treats the specified process as a system process")
                 .AppendLine()
-                .Append("       -list".PadRight(25))
+                .Append("       -list".PadRight(20))
                 .Append("Displays list of all service or system processes")
 
                 UpdateStatus(.ToString(), 2)
@@ -1398,13 +1401,13 @@ Public Class ServiceHelper
                 .AppendLine()
                 .Append("   Options:")
                 .AppendLine()
-                .Append("       -?".PadRight(25))
+                .Append("       -?".PadRight(20))
                 .Append("Displays this help message")
                 .AppendLine()
-                .Append("       -save".PadRight(25))
+                .Append("       -save".PadRight(20))
                 .Append("Saves all process schedules to the config file")
                 .AppendLine()
-                .Append("       -list".PadRight(25))
+                .Append("       -list".PadRight(20))
                 .Append("Displays list of all process schedules")
                 .AppendLine()
                 .AppendLine()
@@ -1499,13 +1502,13 @@ Public Class ServiceHelper
                 .AppendLine()
                 .Append("   Options:")
                 .AppendLine()
-                .Append("       -?".PadRight(25))
+                .Append("       -?".PadRight(20))
                 .Append("Displays this help message")
                 .AppendLine()
-                .Append("       -save".PadRight(25))
+                .Append("       -save".PadRight(20))
                 .Append("Saves all process schedules to the config file")
                 .AppendLine()
-                .Append("       -list".PadRight(25))
+                .Append("       -list".PadRight(20))
                 .Append("Displays list of all process schedules")
 
                 UpdateStatus(.ToString(), 2)
@@ -1555,10 +1558,10 @@ Public Class ServiceHelper
                 .AppendLine()
                 .Append("   Options:")
                 .AppendLine()
-                .Append("       -?".PadRight(25))
+                .Append("       -?".PadRight(20))
                 .Append("Displays this help message")
                 .AppendLine()
-                .Append("       -list".PadRight(25))
+                .Append("       -list".PadRight(20))
                 .Append("Displays list of all process schedules")
 
                 UpdateStatus(.ToString(), 2)
@@ -1594,10 +1597,10 @@ Public Class ServiceHelper
                 .AppendLine()
                 .Append("   Options:")
                 .AppendLine()
-                .Append("       -?".PadRight(25))
+                .Append("       -?".PadRight(20))
                 .Append("Displays this help message")
                 .AppendLine()
-                .Append("       -list".PadRight(25))
+                .Append("       -list".PadRight(20))
                 .Append("Displays list of all process schedules")
 
                 UpdateStatus(.ToString(), 2)
