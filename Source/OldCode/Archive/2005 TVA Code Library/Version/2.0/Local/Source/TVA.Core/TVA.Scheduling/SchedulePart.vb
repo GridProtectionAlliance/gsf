@@ -70,7 +70,7 @@ Namespace Scheduling
             Get
                 Select Case m_textSyntax
                     Case SchedulePartTextSyntax.Any
-                        Return "Every " & m_dateTimePart.ToString()
+                        Return "Any " & m_dateTimePart.ToString()
                     Case SchedulePartTextSyntax.EveryN
                         Return "Every " & m_text.Split("/"c)(1) & " " & m_dateTimePart.ToString()
                     Case SchedulePartTextSyntax.Range
