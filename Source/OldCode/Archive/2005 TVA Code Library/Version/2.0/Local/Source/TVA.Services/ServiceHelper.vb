@@ -1359,6 +1359,7 @@ Public Class ServiceHelper
 
                     If Integer.TryParse(processName, processID) AndAlso processID > 0 Then
                         processToAbort = Process.GetProcessById(processID)
+                        processName = processToAbort.ProcessName
                     End If
                 End If
 
