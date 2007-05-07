@@ -22,7 +22,6 @@ Public Class ServiceHelper
     Private m_logStatusUpdates As Boolean
     Private m_requestHistoryLimit As Integer
     Private m_queryableSettingsCategories As String
-    Private m_lastClientRequest As ClientRequest
     Private m_processes As List(Of ServiceProcess)
     Private m_serviceComponents As List(Of IServiceComponent)
     Private m_persistsettings As Boolean
@@ -180,13 +179,6 @@ Public Class ServiceHelper
                 Throw New ArgumentNullException("QueryableSettingsCategories")
             End If
         End Set
-    End Property
-
-    <Browsable(False)> _
-    Public ReadOnly Property LastClientRequest() As ClientRequest
-        Get
-            Return m_lastClientRequest
-        End Get
     End Property
 
     <Browsable(False)> _
@@ -374,7 +366,7 @@ Public Class ServiceHelper
     ''' <param name="response">The response to be sent to the clients.</param>
     Public Sub SendResponse(ByVal response As ServiceResponse)
 
-        m_communicationServer.Multicast(response)
+        SendResponse(Guid.Empty, response)
 
     End Sub
 
@@ -385,17 +377,33 @@ Public Class ServiceHelper
     ''' <param name="response">The response to be sent to the client.</param>
     Public Sub SendResponse(ByVal clientID As Guid, ByVal response As ServiceResponse)
 
-        m_communicationServer.SendTo(clientID, response)
+        If clientID = Guid.Empty Then
+            m_communicationServer.Multicast(response)
+        Else
+            m_communicationServer.SendTo(clientID, response)
+        End If
 
     End Sub
 
     Public Sub UpdateStatus(ByVal message As String)
 
-        UpdateStatus(message, 1)
+        UpdateStatus(Guid.Empty, message)
+
+    End Sub
+
+    Public Sub UpdateStatus(ByVal clientID As Guid, ByVal message As String)
+
+        UpdateStatus(clientID, message, 1)
 
     End Sub
 
     Public Sub UpdateStatus(ByVal message As String, ByVal crlfCount As Integer)
+
+        UpdateStatus(Guid.Empty, message, crlfCount)
+
+    End Sub
+
+    Public Sub UpdateStatus(ByVal clientID As Guid, ByVal message As String, ByVal crlfCount As Integer)
 
         With New StringBuilder()
             .Append(message)
@@ -405,7 +413,7 @@ Public Class ServiceHelper
             Next
 
             ' Send the status update to all connected clients.
-            SendUpdateClientStatusResponse(.ToString())
+            SendUpdateClientStatusResponse(clientID, .ToString())
 
             ' Log the status update to the log file if logging is enabled.
             If m_logStatusUpdates Then
@@ -610,10 +618,16 @@ Public Class ServiceHelper
 
     Private Sub SendUpdateClientStatusResponse(ByVal response As String)
 
+        SendUpdateClientStatusResponse(Guid.Empty, response)
+
+    End Sub
+
+    Private Sub SendUpdateClientStatusResponse(ByVal clientID As Guid, ByVal response As String)
+
         Dim serviceResponse As New ServiceResponse()
         serviceResponse.Type = "UPDATECLIENTSTATUS"
         serviceResponse.Message = response
-        SendResponse(serviceResponse)
+        SendResponse(clientID, serviceResponse)
 
     End Sub
 
@@ -637,9 +651,9 @@ Public Class ServiceHelper
 
 #Region " Request Handlers "
 
-    Private Sub ListClients()
+    Private Sub ListClients(ByVal requestInfo As ClientRequestInfo)
 
-        If m_lastClientRequest.Arguments.ContainsHelpRequest Then
+        If requestInfo.Request.Arguments.ContainsHelpRequest Then
             With New StringBuilder()
                 .Append("Displays a list of clients currently connected to the service.")
                 .AppendLine()
@@ -654,7 +668,7 @@ Public Class ServiceHelper
                 .Append("       -?".PadRight(20))
                 .Append("Displays this help message")
 
-                UpdateStatus(.ToString(), 2)
+                UpdateStatus(requestInfo.Sender.ClientID, .ToString(), 2)
             End With
         Else
             If m_connectedClients.Count > 0 Then
@@ -693,19 +707,19 @@ Public Class ServiceHelper
                         .Append(clientInfo.ConnectedAt.ToString("MM/dd/yy hh:mm:ss tt").PadRight(20))
                     Next
 
-                    UpdateStatus(.ToString(), 2)
+                    UpdateStatus(requestInfo.Sender.ClientID, .ToString(), 2)
                 End With
             Else
                 ' This will never be the case because at the least the client sending the request will be connected.
-                UpdateStatus(String.Format("No clients are connected to {0}", m_service.ServiceName), 2)
+                UpdateStatus(requestInfo.Sender.ClientID, String.Format("No clients are connected to {0}", m_service.ServiceName), 2)
             End If
         End If
 
     End Sub
 
-    Private Sub ListSettings()
+    Private Sub ListSettings(ByVal requestInfo As ClientRequestInfo)
 
-        If m_lastClientRequest.Arguments.ContainsHelpRequest Then
+        If requestInfo.Request.Arguments.ContainsHelpRequest Then
             With New StringBuilder()
                 .Append("Displays a list of queryable settings of the service from the config file.")
                 .AppendLine()
@@ -720,7 +734,7 @@ Public Class ServiceHelper
                 .Append("       -?".PadRight(20))
                 .Append("Displays this help message")
 
-                UpdateStatus(.ToString(), 2)
+                UpdateStatus(requestInfo.Sender.ClientID, .ToString(), 2)
             End With
         Else
             Dim settingsCategories As String() = m_queryableSettingsCategories.Replace(" ", "").Split(","c)
@@ -756,19 +770,19 @@ Public Class ServiceHelper
                         Next
                     Next
 
-                    UpdateStatus(.ToString(), 2)
+                    UpdateStatus(requestInfo.Sender.ClientID, .ToString(), 2)
                 End With
             Else
                 ' No queryable settings are defined in the service.
-                UpdateStatus(String.Format("No queryable settings are defined in {0}.", m_service.ServiceName), 2)
+                UpdateStatus(requestInfo.Sender.ClientID, String.Format("No queryable settings are defined in {0}.", m_service.ServiceName), 2)
             End If
         End If
 
     End Sub
 
-    Private Sub ListProcesses()
+    Private Sub ListProcesses(ByVal requestInfo As ClientRequestInfo)
 
-        If m_lastClientRequest.Arguments.ContainsHelpRequest Then
+        If requestInfo.Request.Arguments.ContainsHelpRequest Then
             With New StringBuilder()
                 .Append("Displays a list of defined service processes or running system processes.")
                 .AppendLine()
@@ -786,10 +800,10 @@ Public Class ServiceHelper
                 .Append("       -system".PadRight(20))
                 .Append("Displays system processes instead of service processes")
 
-                UpdateStatus(.ToString(), 2)
+                UpdateStatus(requestInfo.Sender.ClientID, .ToString(), 2)
             End With
         Else
-            Dim listSystemProcesses As Boolean = m_lastClientRequest.Arguments.Exists("system")
+            Dim listSystemProcesses As Boolean = requestInfo.Request.Arguments.Exists("system")
 
             If Not listSystemProcesses Then
                 If m_processes.Count > 0 Then
@@ -836,11 +850,11 @@ Public Class ServiceHelper
                             End If
                         Next
 
-                        UpdateStatus(.ToString(), 2)
+                        UpdateStatus(requestInfo.Sender.ClientID, .ToString(), 2)
                     End With
                 Else
                     ' No processes defined in the service to be displayed.
-                    UpdateStatus(String.Format("No processes are defined in {0}.", m_service.ServiceName), 2)
+                    UpdateStatus(requestInfo.Sender.ClientID, String.Format("No processes are defined in {0}.", m_service.ServiceName), 2)
                 End If
             Else
                 With New StringBuilder()
@@ -884,16 +898,16 @@ Public Class ServiceHelper
                         End Try
                     Next
 
-                    UpdateStatus(.ToString(), 2)
+                    UpdateStatus(requestInfo.Sender.ClientID, .ToString(), 2)
                 End With
             End If
         End If
 
     End Sub
 
-    Private Sub ListSchedules()
+    Private Sub ListSchedules(ByVal requestInfo As ClientRequestInfo)
 
-        If m_lastClientRequest.Arguments.ContainsHelpRequest Then
+        If requestInfo.Request.Arguments.ContainsHelpRequest Then
             With New StringBuilder()
                 .Append("Displays a list of schedules for processes defined in the service.")
                 .AppendLine()
@@ -908,7 +922,7 @@ Public Class ServiceHelper
                 .Append("       -?".PadRight(20))
                 .Append("Displays this help message")
 
-                UpdateStatus(.ToString(), 2)
+                UpdateStatus(requestInfo.Sender.ClientID, .ToString(), 2)
             End With
         Else
             If ScheduleManager.Schedules.Count > 0 Then
@@ -941,18 +955,18 @@ Public Class ServiceHelper
                         End If
                     Next
 
-                    UpdateStatus(.ToString(), 2)
+                    UpdateStatus(requestInfo.Sender.ClientID, .ToString(), 2)
                 End With
             Else
-                UpdateStatus(String.Format("No process schedules are defined in {0}.", m_service.ServiceName), 2)
+                UpdateStatus(requestInfo.Sender.ClientID, String.Format("No process schedules are defined in {0}.", m_service.ServiceName), 2)
             End If
         End If
 
     End Sub
 
-    Private Sub ListRequestHistory()
+    Private Sub ListRequestHistory(ByVal requestInfo As ClientRequestInfo)
 
-        If m_lastClientRequest.Arguments.ContainsHelpRequest Then
+        If requestInfo.Request.Arguments.ContainsHelpRequest Then
             With New StringBuilder()
                 .Append("Displays a list of recent requests received from the clients.")
                 .AppendLine()
@@ -967,7 +981,7 @@ Public Class ServiceHelper
                 .Append("       -?".PadRight(20))
                 .Append("Displays this help message")
 
-                UpdateStatus(.ToString(), 2)
+                UpdateStatus(requestInfo.Sender.ClientID, .ToString(), 2)
             End With
         Else
             With New StringBuilder()
@@ -985,25 +999,25 @@ Public Class ServiceHelper
                 .Append(New String("-"c, 25))
                 .Append(" ")
                 .Append(New String("-"c, 30))
-                For Each request As ClientRequestInfo In m_clientRequestHistory
+                For Each historicRequest As ClientRequestInfo In m_clientRequestHistory
                     .AppendLine()
-                    .Append(request.Command.PadRight(20))
+                    .Append(historicRequest.Request.Command.PadRight(20))
                     .Append(" ")
-                    .Append(request.ReceivedAt.ToString().PadRight(25))
+                    .Append(historicRequest.ReceivedAt.ToString().PadRight(25))
                     .Append(" ")
                     ' For some reason StringBuilder.AppendFormat() doesn't work as expected with String.PadRight()
-                    .Append((request.Sender.UserName & " from " & request.Sender.MachineName).PadRight(30))
+                    .Append((historicRequest.Sender.UserName & " from " & historicRequest.Sender.MachineName).PadRight(30))
                 Next
 
-                UpdateStatus(.ToString(), 2)
+                UpdateStatus(requestInfo.Sender.ClientID, .ToString(), 2)
             End With
         End If
 
     End Sub
 
-    Private Sub ListRequestHelp()
+    Private Sub ListRequestHelp(ByVal requestInfo As ClientRequestInfo)
 
-        If m_lastClientRequest.Arguments.ContainsHelpRequest Then
+        If requestInfo.Request.Arguments.ContainsHelpRequest Then
             With New StringBuilder()
                 .Append("Displays a list of commands supported by the service.")
                 .AppendLine()
@@ -1018,7 +1032,7 @@ Public Class ServiceHelper
                 .Append("       -?".PadRight(20))
                 .Append("Displays this help message")
 
-                UpdateStatus(.ToString(), 2)
+                UpdateStatus(requestInfo.Sender.ClientID, .ToString(), 2)
             End With
         Else
             With New StringBuilder()
@@ -1041,15 +1055,15 @@ Public Class ServiceHelper
                     End If
                 Next
 
-                UpdateStatus(.ToString(), 2)
+                UpdateStatus(requestInfo.Sender.ClientID, .ToString(), 2)
             End With
         End If
 
     End Sub
 
-    Private Sub ReloadSettings()
+    Private Sub ReloadSettings(ByVal requestInfo As ClientRequestInfo)
 
-        If m_lastClientRequest.Arguments.ContainsHelpRequest OrElse m_lastClientRequest.Arguments.OrderedArgCount < 1 Then
+        If requestInfo.Request.Arguments.ContainsHelpRequest OrElse requestInfo.Request.Arguments.OrderedArgCount < 1 Then
             With New StringBuilder()
                 .Append("Reloads settings of the component whose settings are saved under the specified category in the config file.")
                 .AppendLine()
@@ -1068,11 +1082,11 @@ Public Class ServiceHelper
                 .Append("IMPORTANT: Category name must be defined as one of the queryable settings categories in the QueryableSettingsCategories property of ServiceHelper. ")
                 .Append("Also, category name is case sensitive so it must be the same case as it appears in the settings listing.")
 
-                UpdateStatus(.ToString(), 2)
+                UpdateStatus(requestInfo.Sender.ClientID, .ToString(), 2)
             End With
         Else
             Dim targetComponent As Component = Nothing
-            Dim categoryName As String = m_lastClientRequest.Arguments("orderedarg1")
+            Dim categoryName As String = requestInfo.Request.Arguments("orderedarg1")
             If m_queryableSettingsCategories.IndexOf(categoryName) >= 0 Then
                 If m_settingsCategoryName = categoryName Then
                     LoadSettings()
@@ -1104,20 +1118,20 @@ Public Class ServiceHelper
                 End If
 
                 If targetComponent IsNot Nothing Then
-                    UpdateStatus(String.Format("Successfully loaded settings for component ""{0}"" from category ""{1}"".", targetComponent.GetType().Name, categoryName), 2)
+                    UpdateStatus(requestInfo.Sender.ClientID, String.Format("Successfully loaded settings for component ""{0}"" from category ""{1}"".", targetComponent.GetType().Name, categoryName), 2)
                 Else
-                    UpdateStatus(String.Format("Failed to load component settings from category ""{0}"" - No corresponding component found.", categoryName), 2)
+                    UpdateStatus(requestInfo.Sender.ClientID, String.Format("Failed to load component settings from category ""{0}"" - No corresponding component found.", categoryName), 2)
                 End If
             Else
-                UpdateStatus(String.Format("Failed to load component settings from category ""{0}"" - Category is not one of the queryable categories.", categoryName), 2)
+                UpdateStatus(requestInfo.Sender.ClientID, String.Format("Failed to load component settings from category ""{0}"" - Category is not one of the queryable categories.", categoryName), 2)
             End If
         End If
 
     End Sub
 
-    Private Sub UpdateSettings()
+    Private Sub UpdateSettings(ByVal requestInfo As ClientRequestInfo)
 
-        If m_lastClientRequest.Arguments.ContainsHelpRequest OrElse m_lastClientRequest.Arguments.OrderedArgCount < 3 Then
+        If requestInfo.Request.Arguments.ContainsHelpRequest OrElse requestInfo.Request.Arguments.OrderedArgCount < 3 Then
             ' We'll display help about the request since we either don't have the required arguments or the user
             ' has explicitly requested for the help to be displayed for this request type.
             With New StringBuilder()
@@ -1150,75 +1164,69 @@ Public Class ServiceHelper
                 .Append("IMPORTANT: Category name must be defined as one of the queryable settings categories in the QueryableSettingsCategories property of ServiceHelper. ")
                 .Append("Also, category and setting names are case sensitive so they must be the same case as they appears in the settings listing.")
 
-                UpdateStatus(.ToString(), 2)
+                UpdateStatus(requestInfo.Sender.ClientID, .ToString(), 2)
             End With
         Else
-            Dim categoryName As String = m_lastClientRequest.Arguments("orderedarg1")
-            Dim settingName As String = m_lastClientRequest.Arguments("orderedarg2")
-            Dim settingValue As String = m_lastClientRequest.Arguments("orderedarg3")
-            Dim addSetting As Boolean = m_lastClientRequest.Arguments.Exists("add")
-            Dim deleteSetting As Boolean = m_lastClientRequest.Arguments.Exists("delete")
-            Dim doReloadSettings As Boolean = m_lastClientRequest.Arguments.Exists("reload")
-            Dim doListSettings As Boolean = m_lastClientRequest.Arguments.Exists("list")
+            Dim categoryName As String = requestInfo.Request.Arguments("orderedarg1")
+            Dim settingName As String = requestInfo.Request.Arguments("orderedarg2")
+            Dim settingValue As String = requestInfo.Request.Arguments("orderedarg3")
+            Dim addSetting As Boolean = requestInfo.Request.Arguments.Exists("add")
+            Dim deleteSetting As Boolean = requestInfo.Request.Arguments.Exists("delete")
+            Dim doReloadSettings As Boolean = requestInfo.Request.Arguments.Exists("reload")
+            Dim doListSettings As Boolean = requestInfo.Request.Arguments.Exists("list")
 
             If m_queryableSettingsCategories.IndexOf(categoryName) >= 0 Then
                 ' The specified category is one of the defined queryable categories.
                 Select Case True
                     Case addSetting
-                        UpdateStatus(String.Format("Attempting to add setting ""{0}"" under category ""{1}""...", settingName, categoryName), 2)
+                        UpdateStatus(requestInfo.Sender.ClientID, String.Format("Attempting to add setting ""{0}"" under category ""{1}""...", settingName, categoryName), 2)
                         CategorizedSettings(categoryName).Add(settingName, settingValue)
                         TVA.Configuration.Common.SaveSettings()
-                        UpdateStatus(String.Format("Successfully added setting ""{0}"" under category ""{1}"".", settingName, categoryName), 2)
+                        UpdateStatus(requestInfo.Sender.ClientID, String.Format("Successfully added setting ""{0}"" under category ""{1}"".", settingName, categoryName), 2)
                     Case deleteSetting
                         Dim setting As CategorizedSettingsElement = CategorizedSettings(categoryName)(settingName)
                         If setting IsNot Nothing Then
-                            UpdateStatus(String.Format("Attempting to delete setting ""{0}"" under category ""{1}""...", settingName, categoryName), 2)
+                            UpdateStatus(requestInfo.Sender.ClientID, String.Format("Attempting to delete setting ""{0}"" under category ""{1}""...", settingName, categoryName), 2)
                             CategorizedSettings(categoryName).Remove(setting)
                             TVA.Configuration.Common.SaveSettings()
-                            UpdateStatus(String.Format("Successfully deleted setting ""{0}"" under category ""{1}"".", settingName, categoryName), 2)
+                            UpdateStatus(requestInfo.Sender.ClientID, String.Format("Successfully deleted setting ""{0}"" under category ""{1}"".", settingName, categoryName), 2)
                         Else
-                            UpdateStatus(String.Format("Failed to delete setting ""{0}"" under category ""{1}"" - Setting does not exist.", settingName, categoryName), 2)
+                            UpdateStatus(requestInfo.Sender.ClientID, String.Format("Failed to delete setting ""{0}"" under category ""{1}"" - Setting does not exist.", settingName, categoryName), 2)
                         End If
                     Case Else
                         Dim setting As CategorizedSettingsElement = CategorizedSettings(categoryName)(settingName)
                         If setting IsNot Nothing Then
                             ' The requested setting does exist under the specified category.
-                            UpdateStatus(String.Format("Attempting to update setting ""{0}"" under category ""{1}""...", settingName, categoryName), 2)
+                            UpdateStatus(requestInfo.Sender.ClientID, String.Format("Attempting to update setting ""{0}"" under category ""{1}""...", settingName, categoryName), 2)
                             setting.Value = settingValue
                             TVA.Configuration.Common.SaveSettings()
-                            UpdateStatus(String.Format("Successfully updated setting ""{0}"" under category ""{1}"".", settingName, categoryName), 2)
+                            UpdateStatus(requestInfo.Sender.ClientID, String.Format("Successfully updated setting ""{0}"" under category ""{1}"".", settingName, categoryName), 2)
                         Else
                             ' The requested setting does not exist under the specified category.
-                            UpdateStatus(String.Format("Failed to update value of setting ""{0}"" under category ""{1}"" - Setting does not exist.", settingName, categoryName), 2)
+                            UpdateStatus(requestInfo.Sender.ClientID, String.Format("Failed to update value of setting ""{0}"" under category ""{1}"" - Setting does not exist.", settingName, categoryName), 2)
                         End If
                 End Select
 
                 If doReloadSettings Then
                     ' The user has requested to reload settings for all the components.
-                    Dim originalRequest As ClientRequest = m_lastClientRequest
-                    m_lastClientRequest = ClientRequest.Parse(String.Format("reloadsettings {0}", categoryName))
-                    ReloadSettings()
-                    m_lastClientRequest = originalRequest
+                    ReloadSettings(New ClientRequestInfo(ClientRequest.Parse(String.Format("ReloadSettings {0}", categoryName)), requestInfo.Sender))
                 End If
 
                 If doListSettings Then
                     ' The user has requested to list all of the queryable settings.
-                    Dim originalRequest As ClientRequest = m_lastClientRequest
-                    m_lastClientRequest = ClientRequest.Parse("Settings")
-                    ListSettings()
-                    m_lastClientRequest = originalRequest
+                    ListSettings(New ClientRequestInfo(ClientRequest.Parse("Settings"), requestInfo.Sender))
                 End If
             Else
                 ' The specified category is not one of the defined queryable categories.
-                UpdateStatus(String.Format("Failed to update value of setting ""{0}"" under category ""{1}"" - Category is not one of the queryable categories.", settingName, categoryName), 2)
+                UpdateStatus(requestInfo.Sender.ClientID, String.Format("Failed to update value of setting ""{0}"" under category ""{1}"" - Category is not one of the queryable categories.", settingName, categoryName), 2)
             End If
         End If
 
     End Sub
 
-    Private Sub StartProcess()
+    Private Sub StartProcess(ByVal requestInfo As ClientRequestInfo)
 
-        If m_lastClientRequest.Arguments.ContainsHelpRequest OrElse m_lastClientRequest.Arguments.OrderedArgCount < 1 Then
+        If requestInfo.Request.Arguments.ContainsHelpRequest OrElse requestInfo.Request.Arguments.OrderedArgCount < 1 Then
             With New StringBuilder()
                 .Append("Starts execution of the specified service or system process.")
                 .AppendLine()
@@ -1242,19 +1250,16 @@ Public Class ServiceHelper
                 .Append("       -list".PadRight(20))
                 .Append("Displays list of all service or system processes")
 
-                UpdateStatus(.ToString(), 2)
+                UpdateStatus(requestInfo.Sender.ClientID, .ToString(), 2)
             End With
         Else
-            Dim processName As String = m_lastClientRequest.Arguments("orderedarg1")
-            Dim isSystemProcess As Boolean = m_lastClientRequest.Arguments.Exists("system")
-            Dim doRestartProcess As Boolean = m_lastClientRequest.Arguments.Exists("restart")
-            Dim doListProcesses As Boolean = m_lastClientRequest.Arguments.Exists("list")
+            Dim processName As String = requestInfo.Request.Arguments("orderedarg1")
+            Dim isSystemProcess As Boolean = requestInfo.Request.Arguments.Exists("system")
+            Dim doRestartProcess As Boolean = requestInfo.Request.Arguments.Exists("restart")
+            Dim doListProcesses As Boolean = requestInfo.Request.Arguments.Exists("list")
 
             If doRestartProcess Then
-                Dim originalRequest As ClientRequest = m_lastClientRequest
-                m_lastClientRequest = ClientRequest.Parse(String.Format("Abort ""{0}"" -{1}", processName, IIf(isSystemProcess, "system", "")))
-                AbortProcess()
-                m_lastClientRequest = originalRequest
+                AbortProcess(New ClientRequestInfo(ClientRequest.Parse(String.Format("Abort ""{0}"" {1}", processName, IIf(isSystemProcess, "-system", ""))), requestInfo.Sender))
             End If
 
             If Not isSystemProcess Then
@@ -1262,42 +1267,39 @@ Public Class ServiceHelper
 
                 If processToStart IsNot Nothing Then
                     If processToStart.CurrentState <> ProcessState.Processing Then
-                        UpdateStatus(String.Format("Attempting to start service process ""{0}""...", processName), 2)
+                        UpdateStatus(requestInfo.Sender.ClientID, String.Format("Attempting to start service process ""{0}""...", processName), 2)
                         processToStart.Start()
-                        UpdateStatus(String.Format("Successfully started service process ""{0}"".", processName), 2)
+                        UpdateStatus(requestInfo.Sender.ClientID, String.Format("Successfully started service process ""{0}"".", processName), 2)
                     Else
-                        UpdateStatus(String.Format("Failed to start process ""{0}"" - Process is already executing.", processName), 2)
+                        UpdateStatus(requestInfo.Sender.ClientID, String.Format("Failed to start process ""{0}"" - Process is already executing.", processName), 2)
                     End If
                 Else
-                    UpdateStatus(String.Format("Failed to start service process ""{0}"" - Process is not defined.", processName), 2)
+                    UpdateStatus(requestInfo.Sender.ClientID, String.Format("Failed to start service process ""{0}"" - Process is not defined.", processName), 2)
                 End If
             Else
                 Try
-                    UpdateStatus(String.Format("Attempting to start system process ""{0}""...", processName), 2)
+                    UpdateStatus(requestInfo.Sender.ClientID, String.Format("Attempting to start system process ""{0}""...", processName), 2)
                     Dim startedProcess As Process = Process.Start(processName)
                     If startedProcess IsNot Nothing Then
-                        UpdateStatus(String.Format("Successfully started system process ""{0}"".", processName), 2)
+                        UpdateStatus(requestInfo.Sender.ClientID, String.Format("Successfully started system process ""{0}"".", processName), 2)
                     Else
-                        UpdateStatus(String.Format("Failed to start system process ""{0}"" - Reason unknown.", processName), 2)
+                        UpdateStatus(requestInfo.Sender.ClientID, String.Format("Failed to start system process ""{0}"" - Reason unknown.", processName), 2)
                     End If
                 Catch ex As Exception
-                    UpdateStatus(String.Format("Failed to start system process ""{0}"" - {1}.", processName, ex.Message), 2)
+                    UpdateStatus(requestInfo.Sender.ClientID, String.Format("Failed to start system process ""{0}"" - {1}.", processName, ex.Message), 2)
                 End Try
             End If
 
             If doListProcesses Then
-                Dim originalRequest As ClientRequest = m_lastClientRequest
-                m_lastClientRequest = ClientRequest.Parse(String.Format("Processes -{0}", IIf(isSystemProcess, "system", "")))
-                ListProcesses()
-                m_lastClientRequest = originalRequest
+                ListProcesses(New ClientRequestInfo(ClientRequest.Parse(String.Format("Processes {0}", IIf(isSystemProcess, "-system", ""))), requestInfo.Sender))
             End If
         End If
 
     End Sub
 
-    Private Sub AbortProcess()
+    Private Sub AbortProcess(ByVal requestInfo As ClientRequestInfo)
 
-        If m_lastClientRequest.Arguments.ContainsHelpRequest OrElse m_lastClientRequest.Arguments.OrderedArgCount < 1 Then
+        If requestInfo.Request.Arguments.ContainsHelpRequest OrElse requestInfo.Request.Arguments.OrderedArgCount < 1 Then
             With New StringBuilder()
                 .Append("Aborts the specified service or system process if executing.")
                 .AppendLine()
@@ -1318,26 +1320,26 @@ Public Class ServiceHelper
                 .Append("       -list".PadRight(20))
                 .Append("Displays list of all service or system processes")
 
-                UpdateStatus(.ToString(), 2)
+                UpdateStatus(requestInfo.Sender.ClientID, .ToString(), 2)
             End With
         Else
-            Dim processName As String = m_lastClientRequest.Arguments("orderedarg1")
-            Dim isSystemProcess As Boolean = m_lastClientRequest.Arguments.Exists("system")
-            Dim doListProcesses As Boolean = m_lastClientRequest.Arguments.Exists("list")
+            Dim processName As String = requestInfo.Request.Arguments("orderedarg1")
+            Dim isSystemProcess As Boolean = requestInfo.Request.Arguments.Exists("system")
+            Dim doListProcesses As Boolean = requestInfo.Request.Arguments.Exists("list")
 
             If Not isSystemProcess Then
                 Dim processToAbort As ServiceProcess = FindProcess(processName)
 
                 If processToAbort IsNot Nothing Then
                     If processToAbort.CurrentState = ProcessState.Processing Then
-                        UpdateStatus(String.Format("Attempting to abort service process ""{0}""...", processName), 2)
+                        UpdateStatus(requestInfo.Sender.ClientID, String.Format("Attempting to abort service process ""{0}""...", processName), 2)
                         processToAbort.Abort()
-                        UpdateStatus(String.Format("Successfully aborted service process ""{0}"".", processName), 2)
+                        UpdateStatus(requestInfo.Sender.ClientID, String.Format("Successfully aborted service process ""{0}"".", processName), 2)
                     Else
-                        UpdateStatus(String.Format("Failed to abort service process ""{0}"" - Process is not executing.", processName), 2)
+                        UpdateStatus(requestInfo.Sender.ClientID, String.Format("Failed to abort service process ""{0}"" - Process is not executing.", processName), 2)
                     End If
                 Else
-                    UpdateStatus(String.Format("Failed to abort service process ""{0}"" - Process is not defined.", processName), 2)
+                    UpdateStatus(requestInfo.Sender.ClientID, String.Format("Failed to abort service process ""{0}"" - Process is not defined.", processName), 2)
                 End If
             Else
                 Dim processToAbort As Process = Nothing
@@ -1362,34 +1364,31 @@ Public Class ServiceHelper
 
                 If processToAbort IsNot Nothing Then
                     Try
-                        UpdateStatus(String.Format("Attempting to abort system process ""{0}""...", processName), 2)
+                        UpdateStatus(requestInfo.Sender.ClientID, String.Format("Attempting to abort system process ""{0}""...", processName), 2)
                         processToAbort.Kill()
                         If processToAbort.WaitForExit(10000) Then
-                            UpdateStatus(String.Format("Successfully aborted system process ""{0}"".", processName), 2)
+                            UpdateStatus(requestInfo.Sender.ClientID, String.Format("Successfully aborted system process ""{0}"".", processName), 2)
                         Else
-                            UpdateStatus(String.Format("Failed to abort system process ""{0}"" - Process not responding.", processName), 2)
+                            UpdateStatus(requestInfo.Sender.ClientID, String.Format("Failed to abort system process ""{0}"" - Process not responding.", processName), 2)
                         End If
                     Catch ex As Exception
-                        UpdateStatus(String.Format("Failed to abort system process ""{0}"" - {1}.", processName, ex.Message), 2)
+                        UpdateStatus(requestInfo.Sender.ClientID, String.Format("Failed to abort system process ""{0}"" - {1}.", processName, ex.Message), 2)
                     End Try
                 Else
-                    UpdateStatus(String.Format("Failed to abort system process ""{0}"" - Process is not running.", processName), 2)
+                    UpdateStatus(requestInfo.Sender.ClientID, String.Format("Failed to abort system process ""{0}"" - Process is not running.", processName), 2)
                 End If
             End If
 
             If doListProcesses Then
-                Dim originalRequest As ClientRequest = m_lastClientRequest
-                m_lastClientRequest = ClientRequest.Parse(String.Format("Processes -{0}", IIf(isSystemProcess, "system", "")))
-                ListProcesses()
-                m_lastClientRequest = originalRequest
+                ListProcesses(New ClientRequestInfo(ClientRequest.Parse(String.Format("Processes {0}", IIf(isSystemProcess, "-system", ""))), requestInfo.Sender))
             End If
         End If
 
     End Sub
 
-    Private Sub RescheduleProcess()
+    Private Sub RescheduleProcess(ByVal requestInfo As ClientRequestInfo)
 
-        If m_lastClientRequest.Arguments.ContainsHelpRequest OrElse m_lastClientRequest.Arguments.OrderedArgCount < 2 Then
+        If requestInfo.Request.Arguments.ContainsHelpRequest OrElse requestInfo.Request.Arguments.OrderedArgCount < 2 Then
             With New StringBuilder()
                 .Append("Schedules or re-schedules an existing process defined in the service.")
                 .AppendLine()
@@ -1457,42 +1456,36 @@ Public Class ServiceHelper
                 .AppendLine()
                 .Append("   ""5,10 0-2 * * *""  - Process executes 5 and 10 past hours 12am to 2am.")
 
-                UpdateStatus(.ToString(), 2)
+                UpdateStatus(requestInfo.Sender.ClientID, .ToString(), 2)
             End With
         Else
-            Dim processName As String = m_lastClientRequest.Arguments("orderedarg1")
-            Dim scheduleRule As String = m_lastClientRequest.Arguments("orderedarg2")
-            Dim doSaveSchedules As Boolean = m_lastClientRequest.Arguments.Exists("save")
-            Dim doListSchedules As Boolean = m_lastClientRequest.Arguments.Exists("list")
+            Dim processName As String = requestInfo.Request.Arguments("orderedarg1")
+            Dim scheduleRule As String = requestInfo.Request.Arguments("orderedarg2")
+            Dim doSaveSchedules As Boolean = requestInfo.Request.Arguments.Exists("save")
+            Dim doListSchedules As Boolean = requestInfo.Request.Arguments.Exists("list")
 
             Try
-                UpdateStatus(String.Format("Attempting to schedule process ""{0}"" with rule ""{1}""...", processName, scheduleRule), 2)
+                UpdateStatus(requestInfo.Sender.ClientID, String.Format("Attempting to schedule process ""{0}"" with rule ""{1}""...", processName, scheduleRule), 2)
                 ScheduleProcess(processName, scheduleRule)
-                UpdateStatus(String.Format("Successfully scheduled process ""{0}"" with rule ""{1}"".", processName, scheduleRule), 2)
+                UpdateStatus(requestInfo.Sender.ClientID, String.Format("Successfully scheduled process ""{0}"" with rule ""{1}"".", processName, scheduleRule), 2)
 
                 If doSaveSchedules Then
-                    Dim originalRequest As ClientRequest = m_lastClientRequest
-                    m_lastClientRequest = ClientRequest.Parse("SaveSchedules")
-                    SaveSchedules()
-                    m_lastClientRequest = originalRequest
+                    SaveSchedules(New ClientRequestInfo(ClientRequest.Parse("SaveSchedules"), requestInfo.Sender))
                 End If
             Catch ex As Exception
-                UpdateStatus(String.Format("Failed to schedule process ""{0}"" - {1}", processName, ex.Message), 2)
+                UpdateStatus(requestInfo.Sender.ClientID, String.Format("Failed to schedule process ""{0}"" - {1}", processName, ex.Message), 2)
             End Try
 
             If doListSchedules Then
-                Dim originalRequest As ClientRequest = m_lastClientRequest
-                m_lastClientRequest = ClientRequest.Parse("Schedules")
-                ListSchedules()
-                m_lastClientRequest = originalRequest
+                ListSchedules(New ClientRequestInfo(ClientRequest.Parse("Schedules"), requestInfo.Sender))
             End If
         End If
 
     End Sub
 
-    Private Sub UnscheduleProcess()
+    Private Sub UnscheduleProcess(ByVal requestInfo As ClientRequestInfo)
 
-        If m_lastClientRequest.Arguments.ContainsHelpRequest OrElse m_lastClientRequest.Arguments.OrderedArgCount < 1 Then
+        If requestInfo.Request.Arguments.ContainsHelpRequest OrElse requestInfo.Request.Arguments.OrderedArgCount < 1 Then
             With New StringBuilder()
                 .Append("Unschedules a scheduled process defined in the service.")
                 .AppendLine()
@@ -1513,42 +1506,36 @@ Public Class ServiceHelper
                 .Append("       -list".PadRight(20))
                 .Append("Displays list of all process schedules")
 
-                UpdateStatus(.ToString(), 2)
+                UpdateStatus(requestInfo.Sender.ClientID, .ToString(), 2)
             End With
         Else
-            Dim processName As String = m_lastClientRequest.Arguments("orderedarg1")
-            Dim doSaveSchedules As Boolean = m_lastClientRequest.Arguments.Exists("save")
-            Dim doListSchedules As Boolean = m_lastClientRequest.Arguments.Exists("list")
+            Dim processName As String = requestInfo.Request.Arguments("orderedarg1")
+            Dim doSaveSchedules As Boolean = requestInfo.Request.Arguments.Exists("save")
+            Dim doListSchedules As Boolean = requestInfo.Request.Arguments.Exists("list")
             Dim scheduleToRemove As Schedule = ScheduleManager.FindSchedule(processName)
 
             If scheduleToRemove IsNot Nothing Then
-                UpdateStatus(String.Format("Attempting to unschedule process ""{0}""...", processName), 2)
+                UpdateStatus(requestInfo.Sender.ClientID, String.Format("Attempting to unschedule process ""{0}""...", processName), 2)
                 ScheduleManager.Schedules.Remove(scheduleToRemove)
-                UpdateStatus(String.Format("Successfully unscheduled process ""{0}"".", processName), 2)
+                UpdateStatus(requestInfo.Sender.ClientID, String.Format("Successfully unscheduled process ""{0}"".", processName), 2)
 
                 If doSaveSchedules Then
-                    Dim originalRequest As ClientRequest = m_lastClientRequest
-                    m_lastClientRequest = ClientRequest.Parse("SaveSchedules")
-                    SaveSchedules()
-                    m_lastClientRequest = originalRequest
+                    SaveSchedules(New ClientRequestInfo(ClientRequest.Parse("SaveSchedules"), requestInfo.Sender))
                 End If
             Else
-                UpdateStatus(String.Format("Failed to unschedule process ""{0}"" - Process is not scheduled."))
+                UpdateStatus(requestInfo.Sender.ClientID, String.Format("Failed to unschedule process ""{0}"" - Process is not scheduled."), 2)
             End If
 
             If doListSchedules Then
-                Dim originalRequest As ClientRequest = m_lastClientRequest
-                m_lastClientRequest = ClientRequest.Parse("Schedules")
-                ListSchedules()
-                m_lastClientRequest = originalRequest
+                ListSchedules(New ClientRequestInfo(ClientRequest.Parse("Schedules"), requestInfo.Sender))
             End If
         End If
 
     End Sub
 
-    Private Sub SaveSchedules()
+    Private Sub SaveSchedules(ByVal requestInfo As ClientRequestInfo)
 
-        If m_lastClientRequest.Arguments.ContainsHelpRequest Then
+        If requestInfo.Request.Arguments.ContainsHelpRequest Then
             With New StringBuilder()
                 .Append("Saves all process schedules to the config file.")
                 .AppendLine()
@@ -1566,28 +1553,25 @@ Public Class ServiceHelper
                 .Append("       -list".PadRight(20))
                 .Append("Displays list of all process schedules")
 
-                UpdateStatus(.ToString(), 2)
+                UpdateStatus(requestInfo.Sender.ClientID, .ToString(), 2)
             End With
         Else
-            Dim doListSchedules As Boolean = m_lastClientRequest.Arguments.Exists("list")
+            Dim doListSchedules As Boolean = requestInfo.Request.Arguments.Exists("list")
 
-            UpdateStatus("Attempting to save process schedules to the config file...", 2)
+            UpdateStatus(requestInfo.Sender.ClientID, "Attempting to save process schedules to the config file...", 2)
             ScheduleManager.SaveSettings()
-            UpdateStatus("Successfully saved process schedules to the config file.", 2)
+            UpdateStatus(requestInfo.Sender.ClientID, "Successfully saved process schedules to the config file.", 2)
 
             If doListSchedules Then
-                Dim originalRequest As ClientRequest = m_lastClientRequest
-                m_lastClientRequest = ClientRequest.Parse("Schedules")
-                ListSchedules()
-                m_lastClientRequest = originalRequest
+                ListSchedules(New ClientRequestInfo(ClientRequest.Parse("Schedules"), requestInfo.Sender))
             End If
         End If
 
     End Sub
 
-    Private Sub LoadSchedules()
+    Private Sub LoadSchedules(ByVal requestInfo As ClientRequestInfo)
 
-        If m_lastClientRequest.Arguments.ContainsHelpRequest Then
+        If requestInfo.Request.Arguments.ContainsHelpRequest Then
             With New StringBuilder()
                 .Append("Loads all process schedules from the config file.")
                 .AppendLine()
@@ -1605,26 +1589,23 @@ Public Class ServiceHelper
                 .Append("       -list".PadRight(20))
                 .Append("Displays list of all process schedules")
 
-                UpdateStatus(.ToString(), 2)
+                UpdateStatus(requestInfo.Sender.ClientID, .ToString(), 2)
             End With
         Else
-            Dim doListSchedules As Boolean = m_lastClientRequest.Arguments.Exists("list")
+            Dim doListSchedules As Boolean = requestInfo.Request.Arguments.Exists("list")
 
-            UpdateStatus("Attempting to load process schedules from the config file...", 2)
+            UpdateStatus(requestInfo.Sender.ClientID, "Attempting to load process schedules from the config file...", 2)
             ScheduleManager.LoadSettings()
-            UpdateStatus("Successfully loaded process schedules from the config file.", 2)
+            UpdateStatus(requestInfo.Sender.ClientID, "Successfully loaded process schedules from the config file.", 2)
 
             If doListSchedules Then
-                Dim originalRequest As ClientRequest = m_lastClientRequest
-                m_lastClientRequest = ClientRequest.Parse("Schedules")
-                ListSchedules()
-                m_lastClientRequest = originalRequest
+                ListSchedules(New ClientRequestInfo(ClientRequest.Parse("Schedules"), requestInfo.Sender))
             End If
         End If
 
     End Sub
 
-    Private Sub GetServiceStatus()
+    Private Sub GetServiceStatus(ByVal requestInfo As ClientRequestInfo)
 
         With New StringBuilder()
             .Append(String.Format("Status of components used by {0}:", m_service.ServiceName))
@@ -1638,14 +1619,8 @@ Public Class ServiceHelper
                 End If
             Next
 
-            UpdateStatus(.ToString(), 2)
+            UpdateStatus(requestInfo.Sender.ClientID, .ToString(), 2)
         End With
-
-    End Sub
-
-    Private Sub InvalidClientRequest()
-
-        UpdateStatus(String.Format("Failed to process request of type ""{0}"" - Request is invalid.", m_lastClientRequest.Command), 2)
 
     End Sub
 
@@ -1657,26 +1632,32 @@ Public Class ServiceHelper
 
     Private Sub m_communicationServer_ClientDisconnected(ByVal sender As Object, ByVal e As IdentifiableSourceEventArgs) Handles m_communicationServer.ClientDisconnected
 
-        m_connectedClients.Remove(FindClient(e.Source))
+        Dim disconnectedClient As ClientInfo = FindClient(e.Source)
+        If disconnectedClient IsNot Nothing Then
+            m_connectedClients.Remove(FindClient(e.Source))
+            UpdateStatus(String.Format("Remote client disconnected - {0} from {1}.", disconnectedClient.UserName, disconnectedClient.MachineName), 2)
+        End If
 
     End Sub
 
     Private Sub m_communicationServer_ReceivedClientData(ByVal sender As Object, ByVal e As IdentifiableItemEventArgs(Of Byte())) Handles m_communicationServer.ReceivedClientData
 
-        Dim info As ClientInfo = GetObject(Of ClientInfo)(e.Item)
+        Dim client As ClientInfo = GetObject(Of ClientInfo)(e.Item)
         Dim request As ClientRequest = GetObject(Of ClientRequest)(e.Item)
+        Dim requestSender As ClientInfo = FindClient(e.Source)
 
-        If info IsNot Nothing Then
+        If client IsNot Nothing Then
             ' We've received client information from a recently connected client.
-            info.ConnectedAt = Date.Now
-            m_connectedClients.Add(info)
+            client.ConnectedAt = Date.Now
+            m_connectedClients.Add(client)
+            UpdateStatus(String.Format("Remote client connected - {0} from {1}.", client.UserName, client.MachineName), 2)
         ElseIf request IsNot Nothing Then
             Try
                 Dim receivedClientRequestEvent As New ClientRequestEventArgs(e.Source, request)
 
                 ' Log the received request.
-                m_lastClientRequest = request
-                m_clientRequestHistory.Add(New ClientRequestInfo(request.Command, FindClient(e.Source), Date.Now))
+                request = request
+                m_clientRequestHistory.Add(New ClientRequestInfo(request, FindClient(e.Source)))
                 If m_clientRequestHistory.Count > m_requestHistoryLimit Then
                     ' We'll remove old request entries if we've exceeded the limit for request history.
                     m_clientRequestHistory.RemoveRange(0, (m_clientRequestHistory.Count - m_requestHistoryLimit))
@@ -1688,15 +1669,15 @@ Public Class ServiceHelper
 
                 Dim requestHandler As ClientRequestHandlerInfo = FindRequestHandler(request.Command)
                 If requestHandler IsNot Nothing Then
-                    requestHandler.HandlerMethod()
+                    requestHandler.HandlerMethod(New ClientRequestInfo(request, requestSender))
                 Else
-                    InvalidClientRequest()
+                    UpdateStatus(requestSender.ClientID, String.Format("Failed to process request of type ""{0}"" - Request is invalid.", request.Command), 2)
                 End If
             Catch ex As Exception
-                UpdateStatus(String.Format("Failed to process request of type ""{0}"" - {1}.", m_lastClientRequest.Command, ex.Message), 2)
+                UpdateStatus(requestSender.ClientID, String.Format("Failed to process request of type ""{0}"" - {1}.", request.Command, ex.Message), 2)
             End Try
         Else
-            InvalidClientRequest()
+            UpdateStatus(requestSender.ClientID, "Failed to process request - Request could not be deserialized.", 2)
         End If
 
     End Sub
@@ -1722,7 +1703,7 @@ Public Class ServiceHelper
 
         ' We'll let the connected clients know that we encountered an exception while logging the status update.
         m_logStatusUpdates = False
-        UpdateStatus(String.Format("Error occurred while logging status update: {0}", e.Exception.ToString()))
+        UpdateStatus(String.Format("Error occurred while logging status update - {0}", e.Exception.ToString()), 2)
         m_logStatusUpdates = True
 
     End Sub

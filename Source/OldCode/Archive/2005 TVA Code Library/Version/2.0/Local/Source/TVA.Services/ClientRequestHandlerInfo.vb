@@ -2,7 +2,7 @@
 
 Public Class ClientRequestHandlerInfo
 
-    Public Delegate Sub HandlerMethodSignature()
+    Public Delegate Sub HandlerMethodSignature(ByVal requestInfo As ClientRequestInfo)
 
     Public Sub New(ByVal requestCommand As String, ByVal requestDescription As String, _
         ByVal handlerMethod As HandlerMethodSignature)
