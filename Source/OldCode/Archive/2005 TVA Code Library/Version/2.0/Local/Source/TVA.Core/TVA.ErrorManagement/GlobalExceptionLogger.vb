@@ -493,6 +493,7 @@ Namespace ErrorManagement
                         ContactEmail = .Item("EmailRecipients").GetTypedValue(m_contactEmail)
                         ContactName = .Item("ContactPersonName").GetTypedValue(m_contactName)
                         ContactPhone = .Item("ContactPersonPhone").GetTypedValue(m_contactPhone)
+                        ExitOnUnhandledException = .Item("ExitOnUnhandledException").GetTypedValue(m_exitOnUnhandledException)
                     End If
                 End With
             Catch ex As Exception
@@ -546,6 +547,10 @@ Namespace ErrorManagement
                         With .Item("ContactPhone", True)
                             .Value = m_contactPhone
                             .Description = "Phone number of the person that the end-user can contact when an exception is encountered."
+                        End With
+                        With .Item("ExitOnUnhandledException", True)
+                            .Value = m_exitOnUnhandledException.ToString()
+                            .Description = "True if the application must exit when an unhandled exception is encountered; otherwise False."
                         End With
                     End With
                     TVA.Configuration.Common.SaveSettings()
