@@ -4,8 +4,8 @@ Imports System.Drawing
 
 Namespace Files
 
-    <ToolboxBitmap(GetType(MetadataFile))> _
-    Public Class MetadataFile
+    <ToolboxBitmap(GetType(DwMetadataFile))> _
+    Public Class DwMetadataFile
 
 #Region " Code Scope: Public "
 

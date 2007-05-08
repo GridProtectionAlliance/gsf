@@ -4,8 +4,8 @@ Imports System.Drawing
 
 Namespace Files
 
-    <ToolboxBitmap(GetType(IntercomFile))> _
-    Public Class IntercomFile
+    <ToolboxBitmap(GetType(DwIntercomFile))> _
+    Public Class DwIntercomFile
 
 #Region " Code Scope: Public "
 

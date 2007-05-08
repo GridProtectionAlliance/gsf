@@ -4,8 +4,8 @@ Imports System.Drawing
 
 Namespace Files
 
-    <ToolboxBitmap(GetType(StateFile))> _
-    Public Class StateFile
+    <ToolboxBitmap(GetType(DwStateFile))> _
+    Public Class DwStateFile
 
         Public Overrides ReadOnly Property RecordSize() As Integer
             Get

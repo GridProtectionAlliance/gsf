@@ -9,8 +9,8 @@ Imports TVA.IO.FilePath
 
 Namespace Files
 
-    <ToolboxBitmap(GetType(ArchiveFile))> _
-    Public Class ArchiveFile
+    <ToolboxBitmap(GetType(DwArchiveFile))> _
+    Public Class DwArchiveFile
         Implements IPersistSettings, ISupportInitialize
 
 #Region " Member Declaration "
@@ -27,8 +27,8 @@ Namespace Files
         Private m_offloadThreshold As Short
         Private m_compressPoints As Boolean
         Private m_discardOutOfSequencePoints As Boolean
-        Private m_stateFile As StateFile
-        Private m_intercomFile As IntercomFile
+        Private m_stateFile As DwStateFile
+        Private m_intercomFile As DwIntercomFile
         Private m_fat As ArchiveFileAllocationTable
         Private m_persistSettings As Boolean
         Private m_settingsCategoryName As String
@@ -235,11 +235,11 @@ Namespace Files
         ''' <value></value>
         ''' <returns></returns>
         ''' <remarks>Used for backwards compatibility with old version of DatAWare Server.</remarks>
-        Public Property StateFile() As StateFile
+        Public Property StateFile() As DwStateFile
             Get
                 Return m_stateFile
             End Get
-            Set(ByVal value As StateFile)
+            Set(ByVal value As DwStateFile)
                 m_stateFile = value
             End Set
         End Property
@@ -250,11 +250,11 @@ Namespace Files
         ''' <value></value>
         ''' <returns></returns>
         ''' <remarks>Used for backwards compatibility with old version of DatAWare Server.</remarks>
-        Public Property IntercomFile() As IntercomFile
+        Public Property IntercomFile() As DwIntercomFile
             Get
                 Return m_intercomFile
             End Get
-            Set(ByVal value As IntercomFile)
+            Set(ByVal value As DwIntercomFile)
                 m_intercomFile = value
             End Set
         End Property
@@ -907,7 +907,7 @@ Namespace Files
                 RaiseEvent RolloverPreparationStart(Me, EventArgs.Empty)
 
                 ' Opening and closing a new archive file in "standby" mode will create a "standby" archive file.
-                Dim standbyArchiveFile As New ArchiveFile()
+                Dim standbyArchiveFile As New DwArchiveFile()
                 standbyArchiveFile.Name = m_name
                 standbyArchiveFile.Type = ArchiveFileType.Standby
                 standbyArchiveFile.Size = m_size
@@ -994,7 +994,7 @@ Namespace Files
             Try
                 If File.Exists(fileName) Then
                     ' We'll open the file and get relevant information about it.
-                    Dim historicArchiveFile As New ArchiveFile()
+                    Dim historicArchiveFile As New DwArchiveFile()
                     historicArchiveFile.Name = fileName
                     historicArchiveFile.Type = ArchiveFileType.Historic
                     historicArchiveFile.SaveOnClose = False
@@ -1250,7 +1250,7 @@ Namespace Files
                             ' progress. Not sure if this is necessary, but trying to be safe than sorry!
                             m_rolloverWaitHandle.WaitOne()
 
-                            Dim historicArchiveFile As New ArchiveFile()
+                            Dim historicArchiveFile As New DwArchiveFile()
                             historicArchiveFile.Name = historicFileInfo.FileName
                             historicArchiveFile.Type = ArchiveFileType.Historic
                             historicArchiveFile.CompressPoints = m_compressPoints

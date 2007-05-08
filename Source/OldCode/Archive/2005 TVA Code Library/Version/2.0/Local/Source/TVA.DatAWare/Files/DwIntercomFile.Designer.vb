@@ -1,6 +1,6 @@
 Namespace Files
 
-    Partial Class IntercomFile
+    Partial Class DwIntercomFile
         Inherits TVA.IO.IsamDataFileBase(Of EnvironmentData)
 
         <System.Diagnostics.DebuggerNonUserCode()> _

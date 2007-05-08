@@ -1,6 +1,6 @@
 Namespace Files
 
-    Partial Class ArchiveFile
+    Partial Class DwArchiveFile
         Inherits System.ComponentModel.Component
 
         <System.Diagnostics.DebuggerNonUserCode()> _
