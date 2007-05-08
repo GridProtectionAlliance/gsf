@@ -224,8 +224,14 @@ Namespace Net.Smtp
                 End If
 
                 email.IsBodyHtml = IsBodyHtml
-                emailSender.Send(email) ' Send the e-mail message.
-                email.Dispose()         ' Release the resources used by the e-mail message.
+
+                Try
+                    emailSender.Send(email) ' Send the e-mail message.
+                Catch ex As Exception
+
+                Finally
+                    email.Dispose()         ' Release the resources used by the e-mail message.
+                End Try
             Else
                 Throw New InvalidOperationException("Recipients must be specified before sending the mail message.")
             End If
