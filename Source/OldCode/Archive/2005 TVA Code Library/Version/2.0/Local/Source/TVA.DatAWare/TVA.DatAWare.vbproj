@@ -117,10 +117,10 @@
     <Compile Include="Legacy Interfaces\TimeTag.vb">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Packets\PacketDataParser.Designer.vb">
-      <DependentUpon>PacketDataParser.vb</DependentUpon>
+    <Compile Include="Packets\DwPacketParser.Designer.vb">
+      <DependentUpon>DwPacketParser.vb</DependentUpon>
     </Compile>
-    <Compile Include="Packets\PacketDataParser.vb">
+    <Compile Include="Packets\DwPacketParser.vb">
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="PointDefinitionAlarmFlags.vb" />
@@ -149,7 +149,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Embedded Resources\Packets.PacketDataParser.bmp" />
+    <EmbeddedResource Include="Embedded Resources\Packets.DwPacketParser.bmp" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Embedded Resources\Files.ArchiveFile.bmp" />

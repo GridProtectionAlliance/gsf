@@ -28,8 +28,8 @@ Namespace Files
             m_rolloverPreparationThreshold = 75
             m_offloadCount = 5
             m_offloadThreshold = 90
-            m_compressData = True
-            m_discardOoSData = True
+            m_compressPoints = True
+            m_discardOutOfSequencePoints = True
             m_settingsCategoryName = Me.GetType().Name
 
             m_rolloverPreparationThread = New System.Threading.Thread(AddressOf PrepareForRollover)

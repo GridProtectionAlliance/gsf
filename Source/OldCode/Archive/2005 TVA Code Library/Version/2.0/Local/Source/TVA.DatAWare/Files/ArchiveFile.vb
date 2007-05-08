@@ -25,13 +25,17 @@ Namespace Files
         Private m_offloadPath As String
         Private m_offloadCount As Integer
         Private m_offloadThreshold As Short
-        Private m_compressData As Boolean
-        Private m_discardOoSData As Boolean
+        Private m_compressPoints As Boolean
+        Private m_discardOutOfSequencePoints As Boolean
         Private m_stateFile As StateFile
         Private m_intercomFile As IntercomFile
         Private m_fat As ArchiveFileAllocationTable
         Private m_persistSettings As Boolean
         Private m_settingsCategoryName As String
+        Private m_pointsDiscarded As Integer
+        Private m_pointsCompressed As Integer
+        Private m_pointsHistorical As Integer
+        Private m_pointsOutOfSequence As Integer
 
         Private m_fileStream As FileStream
         Private m_dataBlockList As List(Of ArchiveDataBlock)
@@ -69,23 +73,23 @@ Namespace Files
         Public Event HistoricFileListBuildComplete As EventHandler
         Public Event HistoricFileListBuildException As EventHandler(Of ExceptionEventArgs)
         Public Event HistoricFileListUpdated As EventHandler
-        Public Event CurrentDataReceived As EventHandler
-        Public Event CurrentDataWritten As EventHandler
-        Public Event CurrentDataCompressed As EventHandler
-        Public Event CurrentDataDiscarded As EventHandler
-        Public Event HistoricDataReceived As EventHandler
-        Public Event HistoricDataQueued As EventHandler
-        Public Event HistoricDataWriteStart As EventHandler
-        Public Event HistoricDataWriteComplete As EventHandler
-        Public Event HistoricDataWriteException As EventHandler(Of ExceptionEventArgs)
-        Public Event HistoricDataWriteProgress As EventHandler(Of ProgressEventArgs(Of Integer))
-        Public Event OutOfSequenceDataReceived As EventHandler
-        Public Event OutOfSequenceDataDiscarded As EventHandler
-        Public Event OutOfSequenceDataQueued As EventHandler
-        Public Event OutOfSequenceDataWriteStart As EventHandler
-        Public Event OutOfSequenceDataWriteComplete As EventHandler
-        Public Event OutOfSequenceDataWriteException As EventHandler(Of ExceptionEventArgs)
-        Public Event OutOfSequenceDataWriteProgress As EventHandler(Of ProgressEventArgs(Of Integer))
+        Public Event CurrentPointReceived As EventHandler
+        Public Event CurrentPointWritten As EventHandler
+        Public Event CurrentPointCompressed As EventHandler
+        Public Event CurrentPointDiscarded As EventHandler
+        Public Event HistoricPointReceived As EventHandler
+        Public Event HistoricPointQueued As EventHandler
+        Public Event HistoricPointsWriteStart As EventHandler
+        Public Event HistoricPointsWriteComplete As EventHandler
+        Public Event HistoricPointsWriteException As EventHandler(Of ExceptionEventArgs)
+        Public Event HistoricPointsWriteProgress As EventHandler(Of ProgressEventArgs(Of Integer))
+        Public Event OutOfSequencePointReceived As EventHandler
+        Public Event OutOfSequencePointDiscarded As EventHandler
+        Public Event OutOfSequencePointQueued As EventHandler
+        Public Event OutOfSequencePointsWriteStart As EventHandler
+        Public Event OutOfSequencePointsWriteComplete As EventHandler
+        Public Event OutOfSequencePointsWriteException As EventHandler(Of ExceptionEventArgs)
+        Public Event OutOfSequencePointsWriteProgress As EventHandler(Of ProgressEventArgs(Of Integer))
 
 #End Region
 
@@ -207,21 +211,21 @@ Namespace Files
             End Set
         End Property
 
-        Public Property CompressData() As Boolean
+        Public Property CompressPoints() As Boolean
             Get
-                Return m_compressData
+                Return m_compressPoints
             End Get
             Set(ByVal value As Boolean)
-                m_compressData = value
+                m_compressPoints = value
             End Set
         End Property
 
-        Public Property DiscardOoSData() As Boolean
+        Public Property DiscardOutOfSequencePoints() As Boolean
             Get
-                Return m_discardOoSData
+                Return m_discardOutOfSequencePoints
             End Get
             Set(ByVal value As Boolean)
-                m_discardOoSData = value
+                m_discardOutOfSequencePoints = value
             End Set
         End Property
 
@@ -253,6 +257,34 @@ Namespace Files
             Set(ByVal value As IntercomFile)
                 m_intercomFile = value
             End Set
+        End Property
+
+        <Browsable(False)> _
+        Public ReadOnly Property PointsDiscarded() As Integer
+            Get
+                Return m_pointsDiscarded
+            End Get
+        End Property
+
+        <Browsable(False)> _
+        Public ReadOnly Property PointsCompressed() As Integer
+            Get
+                Return m_pointsCompressed
+            End Get
+        End Property
+
+        <Browsable(False)> _
+        Public ReadOnly Property PointsHistorical() As Integer
+            Get
+                Return m_pointsHistorical
+            End Get
+        End Property
+
+        <Browsable(False)> _
+        Public ReadOnly Property PointsOutOfSequence() As Integer
+            Get
+                Return m_pointsOutOfSequence
+            End Get
         End Property
 
         <Browsable(False)> _
@@ -384,23 +416,10 @@ Namespace Files
                     m_historicArchiveFileList = Nothing
                 End If
 
-                'If m_type <> ArchiveFileType.Standby AndAlso m_stateFile.IsOpen Then
-                '    ' The archive file is opened multiple times (by ArchiveDataBlock) only when data is being
-                '    ' written to the file. In case the current file is for "standby" purpose, no data will be 
-                '    ' written to it and therefore, the file will not be opened multiple time in "standby" mode.
-                '    For i As Integer = 0 To m_stateFile.Records.Count - 1
-                '        ' We'll release all the data blocks that were being used by the file.
-                '        If m_stateFile.Records(i).ActiveDataBlock IsNot Nothing AndAlso _
-                '                ((m_type = ArchiveFileType.Active AndAlso Not m_stateFile.Records(i).ActiveDataBlock.IsForHistoricData) OrElse _
-                '                (m_type = ArchiveFileType.Historic AndAlso m_stateFile.Records(i).ActiveDataBlock.IsForHistoricData)) Then
-                '            ' We'll deallocate the data block used by this file. If the current file is a historic 
-                '            ' file, it is safe to assume that a data block marked as "for historic data" is being
-                '            ' used by the current file because no more than one historic file will be open at once.
-                '            m_stateFile.Records(i).ActiveDataBlock.Dispose()
-                '            m_stateFile.Records(i).ActiveDataBlock = Nothing
-                '        End If
-                '    Next
-                'End If
+                m_pointsDiscarded = 0
+                m_pointsCompressed = 0
+                m_pointsHistorical = 0
+                m_pointsOutOfSequence = 0
 
                 RaiseEvent FileClosed(Me, EventArgs.Empty)
             End If
@@ -489,7 +508,7 @@ Namespace Files
                 ' We don't allow data to be written to a "standby" file.
                 If m_type = ArchiveFileType.Standby Then Exit Sub
 
-                m_fat.EventsReceived += 1
+                m_fat.PointsReceived += 1
 
                 If pointData.TimeTag.CompareTo(m_fat.FileStartTime) >= 0 Then
                     ' The data belongs to this file.
@@ -498,7 +517,7 @@ Namespace Files
                     Dim pointState As PointState = m_stateFile.Read(pointID)
                     If pointData.TimeTag.CompareTo(pointState.LastArchivedValue.TimeTag) >= 0 Then
                         ' The data is in sequence.
-                        RaiseEvent CurrentDataReceived(Me, EventArgs.Empty)
+                        RaiseEvent CurrentPointReceived(Me, EventArgs.Empty)
 
                         If pointData.Definition IsNot Nothing AndAlso pointData.Definition.GeneralFlags.Archived Then
                             ' The received data has a corresponding definition and is marked for archival.
@@ -537,12 +556,12 @@ Namespace Files
                                 If m_dataBlockList(pointIndex) IsNot Nothing Then
                                     ' We have a data block to which we can write the data.
                                     m_dataBlockList(pointIndex).Write(pointData)
-                                    m_fat.EventsArchived += 1
+                                    m_fat.PointsArchived += 1
 
                                     If m_type = ArchiveFileType.Active Then m_fat.FileEndTime = pointData.TimeTag
                                     If m_fat.FileStartTime.CompareTo(TimeTag.MinValue) = 0 Then m_fat.FileStartTime = pointData.TimeTag
 
-                                    RaiseEvent CurrentDataWritten(Me, EventArgs.Empty)
+                                    RaiseEvent CurrentPointWritten(Me, EventArgs.Empty)
                                 Else
                                     ' We either don't have a data block for writing data or we have one but it doesn't 
                                     ' belong to this file. This is possible under the following circumstances:
@@ -556,30 +575,34 @@ Namespace Files
                                 End If
                             Else
                                 ' Data passed compression test - don't write it.
-                                RaiseEvent CurrentDataCompressed(Me, EventArgs.Empty)
+                                m_pointsCompressed += 1
+                                RaiseEvent CurrentPointCompressed(Me, EventArgs.Empty)
                             End If
                         Else
                             ' We'll discard the data if it doesn't has a corresponding definition or is not
                             ' marked for archival in the metadata file.
-                            RaiseEvent CurrentDataDiscarded(Me, EventArgs.Empty)
+                            m_pointsDiscarded += 1
+                            RaiseEvent CurrentPointDiscarded(Me, EventArgs.Empty)
                         End If
                     Else
                         ' The data is out-of-sequence.
-                        RaiseEvent OutOfSequenceDataReceived(Me, EventArgs.Empty)
-                        If Not m_discardOoSData Then
+                        m_pointsOutOfSequence += 1
+                        RaiseEvent OutOfSequencePointReceived(Me, EventArgs.Empty)
+                        If Not m_discardOutOfSequencePoints Then
                             ' Insert the data into the current file.
                             m_outOfSequenceDataQueue.Add(pointData)
-                            RaiseEvent OutOfSequenceDataQueued(Me, EventArgs.Empty)
+                            RaiseEvent OutOfSequencePointQueued(Me, EventArgs.Empty)
                         Else
-                            RaiseEvent OutOfSequenceDataDiscarded(Me, EventArgs.Empty)
+                            RaiseEvent OutOfSequencePointDiscarded(Me, EventArgs.Empty)
                         End If
                     End If
                 Else
                     ' The data is historic.
-                    RaiseEvent HistoricDataReceived(Me, EventArgs.Empty)
+                    m_pointsHistorical += 1
+                    RaiseEvent HistoricPointReceived(Me, EventArgs.Empty)
                     If m_type = ArchiveFileType.Active Then
                         m_historicDataQueue.Add(pointData)
-                        RaiseEvent HistoricDataQueued(Me, EventArgs.Empty)
+                        RaiseEvent HistoricPointQueued(Me, EventArgs.Empty)
                     End If
                 End If
             Else
@@ -721,8 +744,8 @@ Namespace Files
                         OffloadPath = .Item("OffloadPath").GetTypedValue(m_offloadPath)
                         OffloadCount = .Item("OffloadCount").GetTypedValue(m_offloadCount)
                         OffloadThreshold = .Item("OffloadThreshold").GetTypedValue(m_offloadThreshold)
-                        CompressData = .Item("CompressData").GetTypedValue(m_compressData)
-                        DiscardOoSData = .Item("DiscardOoSData").GetTypedValue(m_discardOoSData)
+                        CompressPoints = .Item("CompressPoints").GetTypedValue(m_compressPoints)
+                        DiscardOutOfSequencePoints = .Item("DiscardOutOfSequencePoints").GetTypedValue(m_discardOutOfSequencePoints)
                     End If
                 End With
             Catch ex As Exception
@@ -777,13 +800,13 @@ Namespace Files
                             .Value = m_offloadThreshold.ToString()
                             .Description = "Percentage disk full when the historic files should be moved to the offload location."
                         End With
-                        With .Item("CompressData", True)
-                            .Value = m_compressData.ToString()
-                            .Description = "True if compression is to be performed on the data; otherwise False."
+                        With .Item("CompressPoints", True)
+                            .Value = m_compressPoints.ToString()
+                            .Description = "True if compression is to be performed on the points; otherwise False."
                         End With
-                        With .Item("DiscardOoSData", True)
-                            .Value = m_discardOoSData.ToString()
-                            .Description = "True if out-of-sequence data is to be discarded; otherwise False."
+                        With .Item("DiscardOutOfSequencePoints", True)
+                            .Value = m_discardOutOfSequencePoints.ToString()
+                            .Description = "True if out-of-sequence points are to be discarded; otherwise False."
                         End With
                     End With
                     TVA.Configuration.Common.SaveSettings()
@@ -1070,7 +1093,7 @@ Namespace Files
             End If
 
             With pointState
-                If m_compressData Then
+                If m_compressPoints Then
                     ' We have to perform compression on data, so we'll do just that.
                     If .LastArchivedValue.IsEmpty Then
                         ' This is the first time data is received for the point.
@@ -1174,7 +1197,7 @@ Namespace Files
                 m_buildHistoricFileListThread.Join()
             End If
 
-            RaiseEvent HistoricDataWriteStart(Me, EventArgs.Empty)
+            RaiseEvent HistoricPointsWriteStart(Me, EventArgs.Empty)
 
             Dim sortedPointData As New Dictionary(Of Integer, List(Of StandardPointData))()
             ' First we'll seperate all point data by ID.
@@ -1230,8 +1253,8 @@ Namespace Files
                             Dim historicArchiveFile As New ArchiveFile()
                             historicArchiveFile.Name = historicFileInfo.FileName
                             historicArchiveFile.Type = ArchiveFileType.Historic
-                            historicArchiveFile.CompressData = m_compressData
-                            historicArchiveFile.DiscardOoSData = m_discardOoSData
+                            historicArchiveFile.CompressPoints = m_compressPoints
+                            historicArchiveFile.DiscardOutOfSequencePoints = m_discardOutOfSequencePoints
                             historicArchiveFile.StateFile = m_stateFile
                             historicArchiveFile.IntercomFile = m_intercomFile
                             Try
@@ -1240,7 +1263,7 @@ Namespace Files
                                 historicArchiveFile.Write(pointData.ToArray())
                                 progressCount += 1
 
-                                RaiseEvent HistoricDataWriteProgress(Me, New ProgressEventArgs(Of Integer)(sortedPointData.Count, progressCount))
+                                RaiseEvent HistoricPointsWriteProgress(Me, New ProgressEventArgs(Of Integer)(sortedPointData.Count, progressCount))
                             Catch ex As Exception
 
                             Finally
@@ -1256,7 +1279,7 @@ Namespace Files
                 Next
             Next
 
-            RaiseEvent HistoricDataWriteComplete(Me, EventArgs.Empty)
+            RaiseEvent HistoricPointsWriteComplete(Me, EventArgs.Empty)
 
         End Sub
 
@@ -1272,7 +1295,7 @@ Namespace Files
 
         Private Sub m_historicDataQueue_ProcessException(ByVal ex As System.Exception) Handles m_historicDataQueue.ProcessException
 
-            RaiseEvent HistoricDataWriteException(Me, New ExceptionEventArgs(ex))
+            RaiseEvent HistoricPointsWriteException(Me, New ExceptionEventArgs(ex))
 
         End Sub
 
@@ -1282,7 +1305,7 @@ Namespace Files
 
         Private Sub m_outOfSequenceDataQueue_ProcessException(ByVal ex As System.Exception) Handles m_outOfSequenceDataQueue.ProcessException
 
-            RaiseEvent OutOfSequenceDataWriteException(Me, New ExceptionEventArgs(ex))
+            RaiseEvent OutOfSequencePointsWriteException(Me, New ExceptionEventArgs(ex))
 
         End Sub
 

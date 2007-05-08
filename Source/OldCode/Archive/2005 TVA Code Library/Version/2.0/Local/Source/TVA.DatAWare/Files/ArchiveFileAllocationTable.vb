@@ -16,8 +16,8 @@ Namespace Files
 
         Private m_fileStartTime As TimeTag
         Private m_fileEndTime As TimeTag
-        Private m_eventsReceived As Integer
-        Private m_eventsArchived As Integer
+        Private m_pointsReceived As Integer
+        Private m_pointsArchived As Integer
         Private m_dataBlockSize As Integer
         Private m_dataBlockCount As Integer
         Private m_dataBlockPointers As List(Of ArchiveDataBlockPointer)
@@ -60,8 +60,8 @@ Namespace Files
                 m_fileStream.Read(fixedFatData, 0, fixedFatData.Length)
                 m_fileStartTime = New TimeTag(BitConverter.ToDouble(fixedFatData, 0))
                 m_fileEndTime = New TimeTag(BitConverter.ToDouble(fixedFatData, 8))
-                m_eventsReceived = BitConverter.ToInt32(fixedFatData, 16)
-                m_eventsArchived = BitConverter.ToInt32(fixedFatData, 20)
+                m_pointsReceived = BitConverter.ToInt32(fixedFatData, 16)
+                m_pointsArchived = BitConverter.ToInt32(fixedFatData, 20)
                 m_dataBlockSize = BitConverter.ToInt32(fixedFatData, 24)
                 m_dataBlockCount = BitConverter.ToInt32(fixedFatData, 28)
 
@@ -118,21 +118,21 @@ Namespace Files
             End Set
         End Property
 
-        Public Property EventsReceived() As Integer
+        Public Property PointsReceived() As Integer
             Get
-                Return m_eventsReceived
+                Return m_pointsReceived
             End Get
             Set(ByVal value As Integer)
-                m_eventsReceived = value
+                m_pointsReceived = value
             End Set
         End Property
 
-        Public Property EventsArchived() As Integer
+        Public Property PointsArchived() As Integer
             Get
-                Return m_eventsArchived
+                Return m_pointsArchived
             End Get
             Set(ByVal value As Integer)
-                m_eventsArchived = value
+                m_pointsArchived = value
             End Set
         End Property
 
@@ -384,8 +384,8 @@ Namespace Files
 
                 Array.Copy(BitConverter.GetBytes(m_fileStartTime.Value), 0, fixedImage, 0, 8)
                 Array.Copy(BitConverter.GetBytes(m_fileEndTime.Value), 0, fixedImage, 8, 8)
-                Array.Copy(BitConverter.GetBytes(m_eventsReceived), 0, fixedImage, 16, 4)
-                Array.Copy(BitConverter.GetBytes(m_eventsArchived), 0, fixedImage, 20, 4)
+                Array.Copy(BitConverter.GetBytes(m_pointsReceived), 0, fixedImage, 16, 4)
+                Array.Copy(BitConverter.GetBytes(m_pointsArchived), 0, fixedImage, 20, 4)
                 Array.Copy(BitConverter.GetBytes(m_dataBlockSize), 0, fixedImage, 24, 4)
                 Array.Copy(BitConverter.GetBytes(m_dataBlockCount), 0, fixedImage, 28, 4)
 
