@@ -489,10 +489,10 @@ Namespace ErrorManagement
                         LogToEmail = .Item("LogToEmail").GetTypedValue(m_logToEmail)
                         LogToEventLog = .Item("LogToEventLog").GetTypedValue(m_logToEventLog)
                         LogToScreenshot = .Item("LogToScreenshot").GetTypedValue(m_logToScreenshot)
-                        SmtpServer = .Item("EmailServer").GetTypedValue(m_smtpServer)
-                        ContactEmail = .Item("EmailRecipients").GetTypedValue(m_contactEmail)
-                        ContactName = .Item("ContactPersonName").GetTypedValue(m_contactName)
-                        ContactPhone = .Item("ContactPersonPhone").GetTypedValue(m_contactPhone)
+                        SmtpServer = .Item("SmtpServer").GetTypedValue(m_smtpServer)
+                        ContactEmail = .Item("ContactEmail").GetTypedValue(m_contactEmail)
+                        ContactName = .Item("ContactName").GetTypedValue(m_contactName)
+                        ContactPhone = .Item("ContactPhone").GetTypedValue(m_contactPhone)
                         ExitOnUnhandledException = .Item("ExitOnUnhandledException").GetTypedValue(m_exitOnUnhandledException)
                     End If
                 End With
