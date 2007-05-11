@@ -59,6 +59,7 @@ Partial Class CommunicationClientBase
     <System.Diagnostics.DebuggerNonUserCode()> _
     Protected Overrides Sub Dispose(ByVal disposing As Boolean)
         Disconnect()    ' Disconnect client from the server.
+        SaveSettings()  ' Saves settings to the config file.
         If disposing AndAlso components IsNot Nothing Then
             components.Dispose()
         End If
