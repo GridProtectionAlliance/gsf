@@ -100,11 +100,11 @@
     <Compile Include="TVA.Net\Ftp\Exception.vb" />
     <Compile Include="TVA.Net\Ftp\File.vb" />
     <Compile Include="TVA.Net\Ftp\FileTransferer.vb" />
-    <Compile Include="TVA.Net\Ftp\FtpFileWatcher.vb">
+    <Compile Include="TVA.Net\Ftp\FileWatcher.vb">
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="TVA.Net\Ftp\Response.vb" />
-    <Compile Include="TVA.Net\Ftp\FtpSession.vb">
+    <Compile Include="TVA.Net\Ftp\Session.vb">
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="TVA.Net\Ftp\SessionConnected.vb" />

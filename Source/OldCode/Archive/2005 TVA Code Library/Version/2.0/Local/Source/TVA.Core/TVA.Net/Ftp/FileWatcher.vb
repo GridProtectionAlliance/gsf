@@ -7,12 +7,12 @@ Imports System.Runtime.CompilerServices
 
 Namespace Net.Ftp
 
-    <ToolboxBitmap(GetType(FtpFileWatcher)), DefaultProperty("Server"), DefaultEvent("FileAdded")> _
-    Public Class FtpFileWatcher
+    <ToolboxBitmap(GetType(FileWatcher)), DefaultProperty("Server"), DefaultEvent("FileAdded")> _
+    Public Class FileWatcher
 
         Inherits Component
 
-        Protected WithEvents FtpSession As FtpSession
+        Protected WithEvents FtpSession As Session
         Protected FtpUserName As String
         Protected FtpPassword As String
         Protected WatchDirectory As String
@@ -34,7 +34,7 @@ Namespace Net.Ftp
 
             flgEnabled = True
             flgNotifyOnComplete = True
-            FtpSession = New FtpSession(False)
+            FtpSession = New Session(False)
 
             ' Define a timer to watch for new files
             WatchTimer.AutoReset = False
@@ -176,13 +176,13 @@ Namespace Net.Ftp
 
         End Sub
 
-        Public Overridable Function NewDirectorySession() As FtpSession
+        Public Overridable Function NewDirectorySession() As Session
 
             ' This method is just for convenience.  We can't allow the end user to use the
             ' actual internal directory for sending files or other work because it is
             ' constantly being refreshed/used etc., so we instead create a new FTP Session
             ' based on the current internal session and watch directory information
-            Dim DirectorySession As New FtpSession(FtpSession.CaseInsensitive)
+            Dim DirectorySession As New Session(FtpSession.CaseInsensitive)
 
             With DirectorySession
                 .Server = FtpSession.Server

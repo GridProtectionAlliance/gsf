@@ -15,7 +15,7 @@ Namespace Net.Ftp
 
     Public Class ControlChannel
 
-        Private m_sessionHost As FtpSession
+        Private m_sessionHost As Session
         Private m_session As SessionConnected
         Private m_connection As TcpClient
         Private m_server As String
@@ -26,7 +26,7 @@ Namespace Net.Ftp
         Private Shared m_regularExpression As New Regex("(\()(.*)(\))")
         Private Shared m_pwdExpression As New Regex("("")(.*)("")")
 
-        Friend Sub New(ByVal host As FtpSession)
+        Friend Sub New(ByVal host As Session)
 
             m_connection = New TcpClient
             m_server = "localhost"
