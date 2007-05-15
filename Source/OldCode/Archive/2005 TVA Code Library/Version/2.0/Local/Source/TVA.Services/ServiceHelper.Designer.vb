@@ -23,12 +23,12 @@ Partial Class ServiceHelper
         m_requestHistoryLimit = 50
         m_queryableSettingsCategories = "SH.General, SH.LogFile, SH.GlobalExceptionLogger"
         m_processes = New List(Of ServiceProcess)()
-        m_settingsCategoryName = Me.GetType().Name & ".General"
+        m_settingsCategoryName = Me.GetType().Name
         m_connectedClients = New List(Of ClientInfo)()
         m_clientRequestHistory = New List(Of ClientRequestInfo)()
         m_serviceComponents = New List(Of IServiceComponent)()
-        m_startedEventHandlerList = New List(Of StartedEventHandler)()
-        m_stoppedEventHandlerList = New List(Of EventHandler)()
+        'm_serviceStartingEventHandlerList = New List(Of ServiceStartingEventHandler)()
+        'm_serviceStoppingEventHandlerList = New List(Of EventHandler)()
         m_clientRequestHandlers = New List(Of ClientRequestHandlerInfo)()
 
     End Sub
@@ -79,7 +79,7 @@ Partial Class ServiceHelper
         Me.GlobalExceptionLogger.ContactEmail = Nothing
         Me.GlobalExceptionLogger.ContactName = Nothing
         Me.GlobalExceptionLogger.ContactPhone = Nothing
-        Me.GlobalExceptionLogger.ExitOnUnhandledException = False
+        Me.GlobalExceptionLogger.ExitOnUnhandledException = True
         Me.GlobalExceptionLogger.LogToEmail = False
         Me.GlobalExceptionLogger.LogToEventLog = True
         Me.GlobalExceptionLogger.LogToFile = True
@@ -93,8 +93,11 @@ Partial Class ServiceHelper
         CType(Me.GlobalExceptionLogger, System.ComponentModel.ISupportInitialize).EndInit()
 
     End Sub
-    Friend WithEvents LogFile As TVA.IO.LogFile
-    Friend WithEvents ScheduleManager As TVA.Scheduling.ScheduleManager
-    Friend WithEvents GlobalExceptionLogger As TVA.ErrorManagement.GlobalExceptionLogger
+    <Browsable(False), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)> _
+    Public WithEvents LogFile As TVA.IO.LogFile
+    <Browsable(False), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)> _
+    Public WithEvents ScheduleManager As TVA.Scheduling.ScheduleManager
+    <Browsable(False), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)> _
+    Public WithEvents GlobalExceptionLogger As TVA.ErrorManagement.GlobalExceptionLogger
 
 End Class

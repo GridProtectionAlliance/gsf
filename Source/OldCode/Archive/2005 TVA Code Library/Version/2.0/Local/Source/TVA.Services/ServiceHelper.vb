@@ -31,9 +31,6 @@ Public Class ServiceHelper
     Private m_clientRequestHistory As List(Of ClientRequestInfo)
     Private m_clientRequestHandlers As List(Of ClientRequestHandlerInfo)
 
-    Private m_startedEventHandlerList As List(Of StartedEventHandler)
-    Private m_stoppedEventHandlerList As List(Of EventHandler)
-
     Private WithEvents m_communicationServer As ICommunicationServer
 
 #End Region
@@ -41,59 +38,49 @@ Public Class ServiceHelper
 #Region " Event Declaration "
 
     ''' <summary>
+    ''' Occurs when the service is starting.
+    ''' </summary>
+    Public Event ServiceStarting As EventHandler(Of GenericEventArgs(Of Object()))
+
+    ''' <summary>
     ''' Occurs when the service has started.
     ''' </summary>
-    ''' <remarks>This is a non-blocking event.</remarks>
-    Public Custom Event Started As StartedEventHandler
-        AddHandler(ByVal value As StartedEventHandler)
-            m_startedEventHandlerList.Add(value)
-        End AddHandler
+    Public Event ServiceStarted As EventHandler
 
-        RemoveHandler(ByVal value As StartedEventHandler)
-            m_startedEventHandlerList.Remove(value)
-        End RemoveHandler
-
-        RaiseEvent(ByVal sender As Object, ByVal e As GenericEventArgs(Of Object()))
-            For Each handler As StartedEventHandler In m_startedEventHandlerList
-                handler.BeginInvoke(sender, e, Nothing, Nothing)
-            Next
-        End RaiseEvent
-    End Event
+    ''' <summary>
+    ''' Occurs when the service is stopping.
+    ''' </summary>
+    Public Event ServiceStopping As EventHandler
 
     ''' <summary>
     ''' Occurs when the service has stopped.
     ''' </summary>
-    ''' <remarks>This is a non-blocking event.</remarks>
-    Public Custom Event Stopped As EventHandler
-        AddHandler(ByVal value As EventHandler)
-            m_stoppedEventHandlerList.Add(value)
-        End AddHandler
-
-        RemoveHandler(ByVal value As EventHandler)
-            m_stoppedEventHandlerList.Remove(value)
-        End RemoveHandler
-
-        RaiseEvent(ByVal sender As Object, ByVal e As System.EventArgs)
-            For Each handler As EventHandler In m_stoppedEventHandlerList
-                handler.BeginInvoke(sender, e, Nothing, Nothing)
-            Next
-        End RaiseEvent
-    End Event
+    Public Event ServiceStopped As EventHandler
 
     ''' <summary>
-    ''' Occurs when the service is paused.
+    ''' Occurs when the service is pausing.
     ''' </summary>
-    Public Event Paused As EventHandler
+    Public Event ServicePausing As EventHandler
 
     ''' <summary>
-    ''' Occurs when the service is resumed.
+    ''' Occurs when the service has paused.
     ''' </summary>
-    Public Event Resumed As EventHandler
+    Public Event ServicePaused As EventHandler
+
+    ''' <summary>
+    ''' Occurs when the service is resuming.
+    ''' </summary>
+    Public Event ServiceResuming As EventHandler
+
+    ''' <summary>
+    ''' Occurs when the service has resumed.
+    ''' </summary>
+    Public Event ServiceResumed As EventHandler
 
     ''' <summary>
     ''' Occurs when the system is being shutdowm.
     ''' </summary>
-    Public Event Shutdown As EventHandler
+    Public Event SystemShutdown As EventHandler
 
     ''' <summary>
     ''' Occurs when a request is received from a client.
@@ -103,8 +90,6 @@ Public Class ServiceHelper
 #End Region
 
 #Region " Code Scope: Public "
-
-    Public Delegate Sub StartedEventHandler(ByVal sender As Object, ByVal e As GenericEventArgs(Of Object()))
 
     ''' <summary>
     ''' Gets or sets the parent service to which the service helper belongs.
@@ -228,6 +213,8 @@ Public Class ServiceHelper
     Public Sub OnStart(ByVal args As String())
 
         If m_service IsNot Nothing Then
+            RaiseEvent ServiceStarting(Me, New GenericEventArgs(Of Object())(args))
+
             m_clientRequestHandlers.Add(New ClientRequestHandlerInfo("Clients", "Displays list of clients connected to the service", AddressOf ListClients))
             m_clientRequestHandlers.Add(New ClientRequestHandlerInfo("Settings", "Displays queryable service settings from config file", AddressOf ListSettings))
             m_clientRequestHandlers.Add(New ClientRequestHandlerInfo("Processes", "Displays list of service or system processes", AddressOf ListProcesses))
@@ -258,9 +245,9 @@ Public Class ServiceHelper
 
             If m_logStatusUpdates Then LogFile.Open()
 
-            RaiseEvent Started(Me, New GenericEventArgs(Of Object())(args))
-
             SendServiceStateChangedResponse(ServiceState.Started)
+
+            RaiseEvent ServiceStarted(Me, EventArgs.Empty)
         Else
             Throw New InvalidOperationException("Service cannot be started. The Service property of ServiceHelper is not set.")
         End If
@@ -272,6 +259,8 @@ Public Class ServiceHelper
     ''' </summary>
     <EditorBrowsable(EditorBrowsableState.Advanced)> _
     Public Sub OnStop()
+
+        RaiseEvent ServiceStopping(Me, EventArgs.Empty)
 
         SendServiceStateChangedResponse(ServiceState.Stopped)
 
@@ -287,7 +276,7 @@ Public Class ServiceHelper
 
         If LogFile.IsOpen Then LogFile.Close()
 
-        RaiseEvent Stopped(Me, EventArgs.Empty)
+        RaiseEvent ServiceStopped(Me, EventArgs.Empty)
 
     End Sub
 
@@ -297,13 +286,15 @@ Public Class ServiceHelper
     <EditorBrowsable(EditorBrowsableState.Advanced)> _
     Public Sub OnPause()
 
+        RaiseEvent ServicePausing(Me, EventArgs.Empty)
+
+        SendServiceStateChangedResponse(ServiceState.Paused)
+
         For Each component As IServiceComponent In m_serviceComponents
             If component IsNot Nothing Then component.ServiceStateChanged(ServiceState.Paused)
         Next
 
-        RaiseEvent Paused(Me, EventArgs.Empty)
-
-        SendServiceStateChangedResponse(ServiceState.Paused)
+        RaiseEvent ServicePaused(Me, EventArgs.Empty)
 
     End Sub
 
@@ -313,13 +304,15 @@ Public Class ServiceHelper
     <EditorBrowsable(EditorBrowsableState.Advanced)> _
     Public Sub OnResume()
 
+        RaiseEvent ServiceResuming(Me, EventArgs.Empty)
+
         For Each component As IServiceComponent In m_serviceComponents
             If component IsNot Nothing Then component.ServiceStateChanged(ServiceState.Resumed)
         Next
 
-        RaiseEvent Resumed(Me, EventArgs.Empty)
-
         SendServiceStateChangedResponse(ServiceState.Resumed)
+
+        RaiseEvent ServiceResumed(Me, EventArgs.Empty)
 
     End Sub
 
@@ -341,7 +334,7 @@ Public Class ServiceHelper
             If component IsNot Nothing Then component.ServiceStateChanged(ServiceState.Shutdown)
         Next
 
-        RaiseEvent Shutdown(Me, EventArgs.Empty)
+        RaiseEvent SystemShutdown(Me, EventArgs.Empty)
 
     End Sub
 
@@ -1675,6 +1668,7 @@ Public Class ServiceHelper
                     UpdateStatus(requestSender.ClientID, String.Format("Failed to process request of type ""{0}"" - Request is invalid.", request.Command), 2)
                 End If
             Catch ex As Exception
+                GlobalExceptionLogger.Log(ex)
                 UpdateStatus(requestSender.ClientID, String.Format("Failed to process request of type ""{0}"" - {1}.", request.Command, ex.Message), 2)
             End Try
         Else
