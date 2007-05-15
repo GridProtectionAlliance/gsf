@@ -7,7 +7,7 @@ Imports System.Runtime.CompilerServices
 
 Namespace Net.Ftp
 
-    <ToolboxBitmap(GetType(FileWatcher)), DefaultProperty("Server"), DefaultEvent("FileAdded")> _
+    <ToolboxBitmap(GetType(FileWatcher)), DisplayName("FTP File Watcher"), DefaultProperty("Server"), DefaultEvent("FileAdded")> _
     Public Class FileWatcher
 
         Inherits Component
