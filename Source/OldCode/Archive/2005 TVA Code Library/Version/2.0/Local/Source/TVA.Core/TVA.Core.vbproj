@@ -212,8 +212,8 @@
       <DependentUpon>IsamDataFileBase.vb</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="Embedded Resources\Net.Ftp.FtpFileWatcher.bmp" />
-    <EmbeddedResource Include="Embedded Resources\Net.Ftp.FtpSession.bmp" />
+    <EmbeddedResource Include="Embedded Resources\Net.Ftp.FileWatcher.bmp" />
+    <EmbeddedResource Include="Embedded Resources\Net.Ftp.Session.bmp" />
     <EmbeddedResource Include="Embedded Resources\ErrorManagement.GlobalExceptionLogger.bmp" />
   </ItemGroup>
   <ItemGroup>
