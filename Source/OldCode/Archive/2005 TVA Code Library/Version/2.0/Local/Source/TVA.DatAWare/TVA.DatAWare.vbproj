@@ -149,7 +149,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Embedded Resources\Packets.DwDataParser.bmp" />
+    <EmbeddedResource Include="Embedded Resources\Packets.DataParser.bmp" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Embedded Resources\Files.ArchiveFile.bmp" />
