@@ -1050,13 +1050,8 @@ Namespace Files
 
             If pointData.Definition.GeneralFlags.PointType = PointType.Digital Then compressionLimit = 0.000000001
 
-            ' We'll only allow archival of points with a corresponding definition.
-            pointState.PreviousValue = pointState.CurrentValue  ' Promote old CurrentValue to PreviousValue.
-            pointState.CurrentValue = pointData.ToExtended()    ' Promote new value received to CurrentValue.
-
-            ' Update the environment data that is periodically written to the Intercom File.
-            m_intercomFile.Records(0).LastestCurrentValueTimeTag = pointState.CurrentValue.TimeTag
-            m_intercomFile.Records(0).LatestCurrentValuePointID = pointState.CurrentValue.Definition.PointID
+            'pointState.PreviousValue = pointState.CurrentValue  ' Promote old CurrentValue to PreviousValue.
+            'pointState.CurrentValue = pointData.ToExtended()    ' Promote new value received to CurrentValue.
 
             If pointData.Quality = 31 Then
                 ' We have to check the quality of this data since the sender didn't provide it. Here we're 
@@ -1093,55 +1088,59 @@ Namespace Files
             End If
 
             With pointState
-                If m_compressPoints Then
-                    ' We have to perform compression on data, so we'll do just that.
-                    If .LastArchivedValue.IsEmpty Then
-                        ' This is the first time data is received for the point.
-                        .LastArchivedValue = .CurrentValue
-                        result = True
-                    ElseIf .PreviousValue.IsEmpty Then
-                        ' This is the second time data is received for the point.
-                        calculateSlopes = True
-                    ElseIf .CurrentValue.Definition.CompressionMinimumTime > 0 AndAlso _
-                            .CurrentValue.TimeTag.Value - .LastArchivedValue.TimeTag.Value < .CurrentValue.Definition.CompressionMinimumTime Then
-                        ' the "cmpMinTime" parameter specifies (when > 0), that a point should
-                        ' not be archived if it was already archived less than "cmpMinTime" seconds
-                        ' ago.  Determine difference between current event time and Last Archived
-                        ' Value time, and exit if less than this amount of seconds.
-                        result = False
-                    ElseIf .CurrentValue.Quality <> .LastArchivedValue.Quality OrElse _
-                            .CurrentValue.Quality <> .PreviousValue.Quality OrElse _
-                            .PreviousValue.TimeTag.Value - .LastArchivedValue.TimeTag.Value > .CurrentValue.Definition.CompressionMaximumTime Then
-                        ' The "cmpMaxTime" parameter specifies (when > 0) that a point should
-                        ' be archived if the last time it was archived is more than "cmpMaxTime"
-                        ' seconds ago.  Determine this difference and set flag accordingly.
-                        ' If quality changed, or MaxTimeExceeded, archive it,
-                        ' and recalculate slopes
-                        result = True
-                        calculateSlopes = True
-                    Else
-                        Dim slope1 As Double
-                        Dim slope2 As Double
-                        Dim currentSlope As Double
+                .CurrentValue = pointData.ToExtended()
 
-                        slope1 = (.CurrentValue.Value - (.LastArchivedValue.Value + compressionLimit)) / _
-                                    (.CurrentValue.TimeTag.Value - .LastArchivedValue.TimeTag.Value)
-                        slope2 = (.CurrentValue.Value - (.LastArchivedValue.Value - compressionLimit)) / _
-                                    (.CurrentValue.TimeTag.Value - .LastArchivedValue.TimeTag.Value)
-                        currentSlope = (.CurrentValue.Value - .LastArchivedValue.Value) / _
-                                    (.CurrentValue.TimeTag.Value - .LastArchivedValue.TimeTag.Value)
+                ' Update the environment data that is periodically written to the Intercom File.
+                m_intercomFile.Records(0).LastestCurrentValueTimeTag = .CurrentValue.TimeTag
+                m_intercomFile.Records(0).LatestCurrentValuePointID = .CurrentValue.Definition.PointID
 
-                        If slope1 >= .Slope1 Then .Slope1 = slope1
-                        If slope2 <= .Slope2 Then .Slope2 = slope2
-                        If currentSlope <= .Slope1 OrElse currentSlope >= .Slope2 Then
+                If .LastArchivedValue.IsEmpty Then
+                    ' This is the first time data is received for the point.
+                    .LastArchivedValue = .CurrentValue
+                    Return True
+                ElseIf .PreviousValue.IsEmpty Then
+                    ' This is the second time data is received for the point.
+                    calculateSlopes = True
+                Else
+                    ' TODO: Notify on change in quality
+                    If m_compressPoints Then
+                        ' Perform compression check.
+                        If .CurrentValue.Definition.CompressionMinimumTime > 0 AndAlso _
+                                .CurrentValue.TimeTag.Value - .LastArchivedValue.TimeTag.Value < .CurrentValue.Definition.CompressionMinimumTime Then
+                            result = False
+                        ElseIf .CurrentValue.Quality <> .LastArchivedValue.Quality OrElse _
+                                .CurrentValue.Quality <> .PreviousValue.Quality OrElse _
+                                .PreviousValue.TimeTag.Value - .LastArchivedValue.TimeTag.Value > .CurrentValue.Definition.CompressionMaximumTime Then
                             result = True
                             calculateSlopes = True
+                        Else
+                            Dim slope1 As Double
+                            Dim slope2 As Double
+                            Dim currentSlope As Double
+
+                            slope1 = (.CurrentValue.Value - (.LastArchivedValue.Value + compressionLimit)) / _
+                                        (.CurrentValue.TimeTag.Value - .LastArchivedValue.TimeTag.Value)
+                            slope2 = (.CurrentValue.Value - (.LastArchivedValue.Value - compressionLimit)) / _
+                                        (.CurrentValue.TimeTag.Value - .LastArchivedValue.TimeTag.Value)
+                            currentSlope = (.CurrentValue.Value - .LastArchivedValue.Value) / _
+                                        (.CurrentValue.TimeTag.Value - .LastArchivedValue.TimeTag.Value)
+
+                            If slope1 >= .Slope1 Then .Slope1 = slope1
+                            If slope2 <= .Slope2 Then .Slope2 = slope2
+                            If currentSlope <= .Slope1 OrElse currentSlope >= .Slope2 Then
+                                result = True
+                                calculateSlopes = True
+                            End If
                         End If
+                    Else
+                        ' No compression check required.
+                        result = True
                     End If
-                Else
-                    ' We don't need to perform compression on the data and save all of it.
-                    .LastArchivedValue = .CurrentValue
-                    result = True
+                End If
+
+                If result Then
+                    .LastArchivedValue = .PreviousValue
+                    pointData = .LastArchivedValue.ToStandard()
                 End If
 
                 If calculateSlopes Then
@@ -1155,6 +1154,8 @@ Namespace Files
                         .Slope2 = 0
                     End If
                 End If
+
+                .PreviousValue = .CurrentValue
             End With
 
             Return result
