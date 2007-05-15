@@ -1,11 +1,12 @@
 ' 03/08/2007
 
 Imports System.Drawing
+Imports System.ComponentModel
 
 Namespace Files
 
-    <ToolboxBitmap(GetType(DwStateFile))> _
-    Public Class DwStateFile
+    <ToolboxBitmap(GetType(StateFile)), DisplayName("DatAWare State File")> _
+    Public Class StateFile
 
         Public Overrides ReadOnly Property RecordSize() As Integer
             Get

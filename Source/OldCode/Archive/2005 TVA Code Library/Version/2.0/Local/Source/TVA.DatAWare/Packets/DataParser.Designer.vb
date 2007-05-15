@@ -1,6 +1,6 @@
 Namespace Packets
 
-    Partial Class DwDataParser
+    Partial Class DataParser
         Inherits TVA.BinaryDataParserBase(Of Short, PacketBase)
 
         <System.Diagnostics.DebuggerNonUserCode()> _

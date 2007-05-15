@@ -8,8 +8,8 @@ Namespace Packets
 #Region " Member Declaration "
 
         Private m_actionType As PacketActionType
-        Private m_archiveFile As DwArchiveFile
-        Private m_metadataFile As DwMetadataFile
+        Private m_archiveFile As ArchiveFile
+        Private m_metadataFile As MetadataFile
 
 #End Region
 
@@ -37,20 +37,20 @@ Namespace Packets
 
 #Region " IPacket "
 
-        Public Property ArchiveFile() As DwArchiveFile Implements IPacket.ArchiveFile
+        Public Property ArchiveFile() As ArchiveFile Implements IPacket.ArchiveFile
             Get
                 Return m_archiveFile
             End Get
-            Set(ByVal value As DwArchiveFile)
+            Set(ByVal value As ArchiveFile)
                 m_archiveFile = value
             End Set
         End Property
 
-        Public Property MetadataFile() As DwMetadataFile Implements IPacket.MetadataFile
+        Public Property MetadataFile() As MetadataFile Implements IPacket.MetadataFile
             Get
                 Return m_metadataFile
             End Get
-            Set(ByVal value As DwMetadataFile)
+            Set(ByVal value As MetadataFile)
                 m_metadataFile = value
             End Set
         End Property

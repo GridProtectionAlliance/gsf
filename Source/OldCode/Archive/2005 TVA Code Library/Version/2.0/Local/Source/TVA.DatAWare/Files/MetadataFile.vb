@@ -1,11 +1,12 @@
 ' 03/08/2007
 
 Imports System.Drawing
+Imports System.ComponentModel
 
 Namespace Files
 
-    <ToolboxBitmap(GetType(DwMetadataFile))> _
-    Public Class DwMetadataFile
+    <ToolboxBitmap(GetType(MetadataFile)), DisplayName("DatAWare Metadata File")> _
+    Public Class MetadataFile
 
 #Region " Code Scope: Public "
 
@@ -40,7 +41,7 @@ Namespace Files
 
                 Return Nothing
             Else
-                Throw New InvalidOperationException(String.Format("{0} ""{1}"" is not open.", Me.GetType().Name, Name))
+                Throw New InvalidOperationException(String.Format("{0} ""{1}"" is not open.", Me.GetType().Name, name))
             End If
 
         End Function

@@ -1,6 +1,6 @@
 Namespace Files
 
-    Partial Class DwMetadataFile
+    Partial Class MetadataFile
         Inherits TVA.IO.IsamDataFileBase(Of PointDefinition)
 
         <System.Diagnostics.DebuggerNonUserCode()> _

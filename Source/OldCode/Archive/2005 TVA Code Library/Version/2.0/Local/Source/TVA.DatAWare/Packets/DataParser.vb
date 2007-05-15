@@ -5,8 +5,8 @@ Imports System.ComponentModel
 
 Namespace Packets
 
-    <ToolboxBitmap(GetType(DwDataParser))> _
-    Public Class DwDataParser
+    <ToolboxBitmap(GetType(DataParser)), DisplayName("DatAWare Data Parser")> _
+    Public Class DataParser
 
         Public Overrides Function GetID(ByVal binaryImage() As Byte) As Short
 

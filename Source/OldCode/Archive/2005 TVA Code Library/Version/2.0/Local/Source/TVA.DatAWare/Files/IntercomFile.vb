@@ -1,11 +1,12 @@
 ' 03/09/2007
 
 Imports System.Drawing
+Imports System.ComponentModel
 
 Namespace Files
 
-    <ToolboxBitmap(GetType(DwIntercomFile))> _
-    Public Class DwIntercomFile
+    <ToolboxBitmap(GetType(IntercomFile)), DisplayName("DatAWare Intercom File")> _
+    Public Class IntercomFile
 
 #Region " Code Scope: Public "
 

@@ -1,6 +1,6 @@
 Namespace Files
 
-    Partial Class DwStateFile
+    Partial Class StateFile
         Inherits TVA.IO.IsamDataFileBase(Of PointState)
 
         <System.Diagnostics.DebuggerNonUserCode()> _

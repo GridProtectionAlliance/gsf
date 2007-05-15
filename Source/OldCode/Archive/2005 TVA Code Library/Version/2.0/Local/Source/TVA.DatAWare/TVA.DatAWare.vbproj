@@ -57,32 +57,32 @@
   <ItemGroup>
     <Compile Include="Files\ArchiveDataBlock.vb" />
     <Compile Include="Files\ArchiveDataBlockPointer.vb" />
-    <Compile Include="Files\DwArchiveFile.Designer.vb">
-      <DependentUpon>DwArchiveFile.vb</DependentUpon>
+    <Compile Include="Files\ArchiveFile.Designer.vb">
+      <DependentUpon>ArchiveFile.vb</DependentUpon>
     </Compile>
-    <Compile Include="Files\DwArchiveFile.vb">
+    <Compile Include="Files\ArchiveFile.vb">
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Files\ArchiveFileAllocationTable.vb" />
     <Compile Include="DataParsedEventArgs.vb" />
     <Compile Include="Enumerations.vb" />
     <Compile Include="Files\Enumerations.vb" />
-    <Compile Include="Files\DwIntercomFile.Designer.vb">
-      <DependentUpon>DwIntercomFile.vb</DependentUpon>
+    <Compile Include="Files\IntercomFile.Designer.vb">
+      <DependentUpon>IntercomFile.vb</DependentUpon>
     </Compile>
-    <Compile Include="Files\DwIntercomFile.vb">
+    <Compile Include="Files\IntercomFile.vb">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="Files\DwMetadataFile.Designer.vb">
-      <DependentUpon>DwMetadataFile.vb</DependentUpon>
+    <Compile Include="Files\MetadataFile.Designer.vb">
+      <DependentUpon>MetadataFile.vb</DependentUpon>
     </Compile>
-    <Compile Include="Files\DwMetadataFile.vb">
+    <Compile Include="Files\MetadataFile.vb">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="Files\DwStateFile.Designer.vb">
-      <DependentUpon>DwStateFile.vb</DependentUpon>
+    <Compile Include="Files\StateFile.Designer.vb">
+      <DependentUpon>StateFile.vb</DependentUpon>
     </Compile>
-    <Compile Include="Files\DwStateFile.vb">
+    <Compile Include="Files\StateFile.vb">
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="EnvironmentData.vb" />
@@ -117,10 +117,10 @@
     <Compile Include="Legacy Interfaces\TimeTag.vb">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Packets\DwDataParser.Designer.vb">
-      <DependentUpon>DwDataParser.vb</DependentUpon>
+    <Compile Include="Packets\DataParser.Designer.vb">
+      <DependentUpon>DataParser.vb</DependentUpon>
     </Compile>
-    <Compile Include="Packets\DwDataParser.vb">
+    <Compile Include="Packets\DataParser.vb">
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="PointDefinitionAlarmFlags.vb" />
@@ -152,10 +152,10 @@
     <EmbeddedResource Include="Embedded Resources\Packets.DwDataParser.bmp" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Embedded Resources\Files.DwArchiveFile.bmp" />
+    <EmbeddedResource Include="Embedded Resources\Files.ArchiveFile.bmp" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Embedded Resources\Files.DwMetadataFile.bmp" />
+    <EmbeddedResource Include="Embedded Resources\Files.MetadataFile.bmp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Relationship Diagrams\Packet Diagram.cd" />
@@ -163,11 +163,11 @@
     <None Include="Relationship Diagrams\Point Data Diagram.cd" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Embedded Resources\Files.DwStateFile.bmp" />
-    <EmbeddedResource Include="Embedded Resources\Files.DwIntercomFile.bmp" />
-    <EmbeddedResource Include="Files\DwArchiveFile.resx">
+    <EmbeddedResource Include="Embedded Resources\Files.StateFile.bmp" />
+    <EmbeddedResource Include="Embedded Resources\Files.IntercomFile.bmp" />
+    <EmbeddedResource Include="Files\ArchiveFile.resx">
       <SubType>Designer</SubType>
-      <DependentUpon>DwArchiveFile.vb</DependentUpon>
+      <DependentUpon>ArchiveFile.vb</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.VisualBasic.targets" />
