@@ -231,7 +231,7 @@ Public Class ServiceHelper
             m_clientRequestHandlers.Add(New ClientRequestHandlerInfo("Unschedule", "Unschedules a process defined in the service", AddressOf UnscheduleProcess))
             m_clientRequestHandlers.Add(New ClientRequestHandlerInfo("SaveSchedules", "Saves process schedules to the config file", AddressOf SaveSchedules))
             m_clientRequestHandlers.Add(New ClientRequestHandlerInfo("LoadSchedules", "Loads process schedules from the config file", AddressOf LoadSchedules))
-            m_clientRequestHandlers.Add(New ClientRequestHandlerInfo("Status", "Displays the current service status", AddressOf GetServiceStatus))
+            m_clientRequestHandlers.Add(New ClientRequestHandlerInfo("Status", "Displays the current service status", AddressOf ShowServiceStatus))
             m_clientRequestHandlers.Add(New ClientRequestHandlerInfo("Remote", "Establishes a remote command session", AddressOf RemoteCommandSession, False))
 
             m_serviceComponents.Add(ScheduleManager)
@@ -1602,7 +1602,7 @@ Public Class ServiceHelper
 
     End Sub
 
-    Private Sub GetServiceStatus(ByVal requestInfo As ClientRequestInfo)
+    Private Sub ShowServiceStatus(ByVal requestInfo As ClientRequestInfo)
 
         With New StringBuilder()
             .Append(String.Format("Status of components used by {0}:", m_service.ServiceName))
@@ -1623,6 +1623,65 @@ Public Class ServiceHelper
 
     Private Sub RemoteCommandSession(ByVal requestinfo As ClientRequestInfo)
 
+        If m_remoteCommandProcess Is Nothing AndAlso requestinfo.Request.Arguments.ContainsHelpRequest Then
+            With New StringBuilder()
+                .Append("Allows for a remote telnet-like command session.")
+                .AppendLine()
+                .AppendLine()
+                .Append("   Usage:")
+                .AppendLine()
+                .Append("       Remote ""Admin Password"" -options")
+                .AppendLine()
+                .AppendLine()
+                .Append("   Options:")
+                .AppendLine()
+                .Append("       -?".PadRight(20))
+                .Append("Displays this help message")
+                .AppendLine()
+                .Append("       -connect".PadRight(20))
+                .Append("Established a remote command session")
+                .AppendLine()
+                .Append("       -disconnect".PadRight(20))
+                .Append("Terminates established remote command session")
+
+                UpdateStatus(requestinfo.Sender.ClientID, .ToString(), 3)
+            End With
+        Else
+            Dim password As String = requestinfo.Request.Arguments("orderedarg1")
+            Dim connectSession As Boolean = requestinfo.Request.Arguments.Exists("connect")
+            Dim disconnectSession As Boolean = requestinfo.Request.Arguments.Exists("disconnect")
+
+            Select Case True
+                Case String.Compare(requestinfo.Request.Command, "Remote", True) = 0 AndAlso connectSession
+                    If password = m_service.ServiceName Then
+                        m_remoteCommandProcess = New Process()
+                        m_remoteCommandProcess.StartInfo.FileName = "cmd.exe"
+                        m_remoteCommandProcess.StartInfo.UseShellExecute = False
+                        m_remoteCommandProcess.StartInfo.RedirectStandardInput = True
+                        m_remoteCommandProcess.StartInfo.RedirectStandardOutput = True
+                        m_remoteCommandProcess.StartInfo.RedirectStandardError = True
+
+                        m_remoteCommandProcess.Start()
+                        m_remoteCommandProcess.BeginOutputReadLine()
+                        m_remoteCommandProcess.BeginErrorReadLine()
+
+                        m_remoteCommandClientID = requestinfo.Sender.ClientID
+                    Else
+
+                    End If
+                Case String.Compare(requestinfo.Request.Command, "Remote", True) = 0 AndAlso disconnectSession
+                    If m_remoteCommandProcess IsNot Nothing Then
+                        m_remoteCommandProcess.Kill()
+                        m_remoteCommandProcess = Nothing
+                        m_remoteCommandClientID = Guid.Empty
+                    End If
+                Case m_remoteCommandProcess IsNot Nothing
+                    Dim input As String = requestinfo.Request.Command & " " & requestinfo.Request.Arguments.ToString()
+                    m_remoteCommandProcess.StandardInput.WriteLine(input)
+                Case Else
+
+            End Select
+        End If
 
     End Sub
 
@@ -1636,6 +1695,10 @@ Public Class ServiceHelper
 
         Dim disconnectedClient As ClientInfo = FindClient(e.Argument)
         If disconnectedClient IsNot Nothing Then
+            If e.Argument = m_remoteCommandClientID Then
+                RemoteCommandSession(New ClientRequestInfo(disconnectedClient, ClientRequest.Parse("Remote -disconnect")))
+            End If
+
             m_connectedClients.Remove(FindClient(e.Argument))
             UpdateStatus(String.Format("Remote client disconnected - {0} from {1}.", disconnectedClient.UserName, disconnectedClient.MachineName), 3)
         End If
@@ -1655,21 +1718,25 @@ Public Class ServiceHelper
             UpdateStatus(String.Format("Remote client connected - {0} from {1}.", client.UserName, client.MachineName), 3)
         ElseIf request IsNot Nothing Then
             Try
-                ' Log the received request.
-                m_clientRequestHistory.Add(New ClientRequestInfo(FindClient(e.Argument.Source), request))
-                If m_clientRequestHistory.Count > m_requestHistoryLimit Then
-                    ' We'll remove old request entries if we've exceeded the limit for request history.
-                    m_clientRequestHistory.RemoveRange(0, (m_clientRequestHistory.Count - m_requestHistoryLimit))
-                End If
+                If m_remoteCommandProcess Is Nothing Then
+                    ' Log the received request.
+                    m_clientRequestHistory.Add(New ClientRequestInfo(FindClient(e.Argument.Source), request))
+                    If m_clientRequestHistory.Count > m_requestHistoryLimit Then
+                        ' We'll remove old request entries if we've exceeded the limit for request history.
+                        m_clientRequestHistory.RemoveRange(0, (m_clientRequestHistory.Count - m_requestHistoryLimit))
+                    End If
 
-                ' Notify the consumer about the incoming request from client.
-                RaiseEvent ReceivedClientRequest(Me, New GenericEventArgs(Of IdentifiableItem(Of Guid, ClientRequest))(New IdentifiableItem(Of Guid, ClientRequest)(e.Argument.Source, request)))
+                    ' Notify the consumer about the incoming request from client.
+                    RaiseEvent ReceivedClientRequest(Me, New GenericEventArgs(Of IdentifiableItem(Of Guid, ClientRequest))(New IdentifiableItem(Of Guid, ClientRequest)(e.Argument.Source, request)))
 
-                Dim requestHandler As ClientRequestHandlerInfo = FindRequestHandler(request.Command)
-                If requestHandler IsNot Nothing Then
-                    requestHandler.HandlerMethod(New ClientRequestInfo(requestSender, request))
+                    Dim requestHandler As ClientRequestHandlerInfo = FindRequestHandler(request.Command)
+                    If requestHandler IsNot Nothing Then
+                        requestHandler.HandlerMethod(New ClientRequestInfo(requestSender, request))
+                    Else
+                        UpdateStatus(requestSender.ClientID, String.Format("Failed to process request of type ""{0}"" - Request is invalid.", request.Command), 3)
+                    End If
                 Else
-                    UpdateStatus(requestSender.ClientID, String.Format("Failed to process request of type ""{0}"" - Request is invalid.", request.Command), 3)
+                    RemoteCommandSession(New ClientRequestInfo(requestSender, request))
                 End If
             Catch ex As Exception
                 GlobalExceptionLogger.Log(ex)
@@ -1713,4 +1780,15 @@ Public Class ServiceHelper
 
 #End Region
 
+    Private Sub m_remoteCommandProcess_ErrorDataReceived(ByVal sender As Object, ByVal e As System.Diagnostics.DataReceivedEventArgs) Handles m_remoteCommandProcess.ErrorDataReceived
+
+        UpdateStatus(m_remoteCommandClientID, e.Data, 1)
+
+    End Sub
+
+    Private Sub m_remoteCommandProcess_OutputDataReceived(ByVal sender As Object, ByVal e As System.Diagnostics.DataReceivedEventArgs) Handles m_remoteCommandProcess.OutputDataReceived
+
+        UpdateStatus(m_remoteCommandClientID, e.Data, 1)
+
+    End Sub
 End Class
