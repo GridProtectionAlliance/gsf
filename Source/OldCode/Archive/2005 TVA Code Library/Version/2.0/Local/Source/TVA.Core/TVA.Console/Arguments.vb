@@ -9,6 +9,7 @@ Namespace Console
     Public Class Arguments
         Implements IEnumerable
 
+        Private m_commandLine As String
         Private m_orderedArgID As String
         Private m_orderedArgCount As Integer
         Private m_parameters As StringDictionary
@@ -29,15 +30,16 @@ Namespace Console
             Dim parts As String()
 
             m_parameters = New StringDictionary()
-            m_orderedArgID = orderedArgID
             m_orderedArgCount = 0
+            m_commandLine = commandLine
+            m_orderedArgID = orderedArgID
 
             ' Valid parameters forms:
             '   {-,/,--}param{=,:}((",')value(",'))
             ' Examples: 
             '   -param1=value1 --param2 /param3:"Test-:-work" 
             '   /param4=happy -param5 '--=nice=--'
-            For Each arg As String In Common.ParseCommand(commandLine)
+            For Each arg As String In Common.ParseCommand(m_commandLine)
                 If Not String.IsNullOrEmpty(arg) Then
                     ' If this argument begins with a quote, we treat it as a stand-alone argument
                     If arg.Chars(0) = """"c Or arg.Chars(0) = "'"c Then
@@ -157,6 +159,12 @@ Namespace Console
         Public Function GetEnumerator() As IEnumerator Implements IEnumerable.GetEnumerator
 
             Return m_parameters.GetEnumerator()
+
+        End Function
+
+        Public Overrides Function ToString() As String
+
+            Return m_commandLine
 
         End Function
 
