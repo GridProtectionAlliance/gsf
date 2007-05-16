@@ -133,8 +133,6 @@
     <Compile Include="TVA\IBinaryDataConsumer.vb" />
     <Compile Include="TVA\IBinaryDataProvider.vb" />
     <Compile Include="TVA\IdentifiableItem.vb" />
-    <Compile Include="TVA\IdentifiableItemEventArgs.vb" />
-    <Compile Include="TVA\IdentifiableSourceEventArgs.vb" />
     <Compile Include="TVA.Collections\Enumerations.vb" />
     <Compile Include="TVA.Configuration\Common.vb" />
     <Compile Include="TVA.Data\Enumerations.vb" />

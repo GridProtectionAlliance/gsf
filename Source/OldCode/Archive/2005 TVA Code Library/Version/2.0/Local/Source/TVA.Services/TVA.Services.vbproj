@@ -57,7 +57,6 @@
     <Compile Include="ClientHelper.vb">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="ClientRequestEventArgs.vb" />
     <Compile Include="ClientInfo.vb" />
     <Compile Include="ClientRequestHandlerInfo.vb" />
     <Compile Include="ClientRequestInfo.vb" />
@@ -71,7 +70,6 @@
     <Compile Include="ClientRequest.vb" />
     <Compile Include="ServiceProcess.vb" />
     <Compile Include="ServiceResponse.vb" />
-    <Compile Include="ServiceResponseEventArgs.vb" />
     <Compile Include="UpdateClientStatusEventArgs.vb" />
   </ItemGroup>
   <ItemGroup>
